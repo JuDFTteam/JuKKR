@@ -1,0 +1,135 @@
+#!/usr/bin/bash
+if test -f SOURCES.tar
+then
+tar -xf SOURCES.tar
+else
+mkdir SOURCES
+mkdir SOURCES/SRC0
+mkdir SOURCES/SRC2
+fi
+#
+# ==================================================
+# find out which platform is used
+#
+JUG=`hostname | grep -c jug`
+JUR=`hostname | grep -c jj`
+IFF=`hostname | grep -c iff`
+MAC=`hostname | grep -c iff1247`
+echo "==================================="
+echo "JUGENE: "$JUG
+echo "JUROPA: "$JUR
+echo "820c:   "$IFF
+echo "MAC:    "$MAC
+echo "==================================="
+
+
+
+#
+if [ $JUG -eq 1 ]
+then
+  SRCPATH=${HOME}/code/develope/KKRnano/SRCS/trunk
+elif [ $JUR -eq 1 ]
+then
+  SRCPATH=${HOME}/code/develope/KKRnano/SRCS/trunk
+elif [ $MAC -eq 1 ]
+then
+  SRCPATH=${HOME}/WORK/KKRnano/SRCS/trunk
+elif [ $IFF -eq 1 ]
+then
+  SRCPATH=~/kkr_nano/experimental
+else
+echo "platform not supported > edit makefiles manually"
+fi
+#
+echo "copy source files from ..."
+echo $SRCPATH
+echo "==================================="
+#
+#
+#
+cp $SRCPATH/makefile* ../
+#
+#
+#
+# modify makefiles for JUGENE:
+if [ $JUG -eq 1 ]
+then
+sed 's/#JU/   /g' ../makefile0 > ../make0
+sed 's/#JUG/    /g' ../makefile2 > ../make2
+#
+
+# modify makefiles for JUROPA
+elif [ $JUR -eq 1 ]
+then
+sed 's/#JO/   /g' ../makefile0 > ../make0
+sed 's/#JO/    /g' ../makefile2 > ../make2
+#
+
+# modify makefiles for iff cluster
+elif [ $IFF -eq 1 ]
+then
+sed 's/#IFF/   /g' ../makefile0 > ../make0
+sed 's/#IFF/   /g' ../makefile2 > ../make2
+#
+# modify makefiles for MAC
+elif [ $MAC -eq 1 ]
+then
+sed 's/#MAC/   /g' ../makefile0 > ../make0
+sed 's/#MAC/   /g' ../makefile2 > ../make2
+#
+
+else
+echo "platform not supported > edit makefiles manually"
+fi
+#
+#
+# ==================================================
+#
+#
+
+cp ../make0 SOURCES/SRC0/makefile
+cp ../make2 SOURCES/SRC2/makefile
+
+rm ../make0 ../make2
+#
+#
+  cp -p $SRCPATH/*.f SOURCES/SRC0/
+  cp -p $SRCPATH/*.f SOURCES/SRC2/
+  cp -p $SRCPATH/*.F SOURCES/SRC2/
+
+     cd SOURCES
+     cd SRC0
+     cp -p ../../inc.* .
+     make
+     mv kr0.exe ../../kkr0.exe
+     rm inc.p inc.cls
+     cd ../..
+     tar -cf SOURCES.tar SOURCES
+     rm -r SOURCES
+#
+#
+#
+# ==================================================
+#
+
+if [ $JUG -eq 1 ]
+then
+echo "==================================="
+echo "KKRnano compiled for JUGENE"
+echo "==================================="
+elif [ $JUR -eq 1 ]
+then
+echo "==================================="
+echo "KKRnano compiled for JUROPA"
+echo "==================================="
+elif [ $JUR -eq 1 ]
+then
+echo "==================================="
+echo "KKRnano compiled for iff820c"
+echo "==================================="
+elif [ $JUR -eq 1 ]
+then
+echo "==================================="
+echo "KKRnano compiled for MACBOOK"
+echo "==================================="
+fi
