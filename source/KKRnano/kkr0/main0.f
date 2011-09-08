@@ -88,6 +88,10 @@ C                              : in spherical harmonics expansion
 C     LCORE(20,NPOTD)          : angular momentum of core states
 C     NCORE(NPOTD)             : number of core states
 C ----------------------------------------------------------------------
+
+      !USE kkr0_interfaces
+      USE inputcard_reader
+
       IMPLICIT NONE
 C
       INCLUDE 'inc.p'
@@ -106,7 +110,7 @@ C     .. Parameters ..
       PARAMETER (LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20))
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION ABASIS,ALAT,BBASIS,CBASIS,RMAX,GMAX,
+      DOUBLE PRECISION ALAT,ABASIS,BBASIS,CBASIS,RMAX,GMAX,
      +                 E1,E2,E2IN,EFERMI,FCM,
      +                 HFIELD,MIXING,PI,QBOUND,
      +                 RCUTXY,RCUTZ,RCUTJIJ,RCUTTRC,
@@ -163,16 +167,20 @@ C-----------------------------------------------------------------------
 C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
-      EXTERNAL OPT,TEST
+C     EXTERNAL OPT,TEST
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL BZKINT0,CLSGEN99,EMESHT,GAUNT,GAUNT2,
-     +         LATTIX99,RINPUT99,SCALEVEC,STARTB1,TESTDIM,SHAPE
+C      EXTERNAL BZKINT0,CLSGEN99,EMESHT,GAUNT,GAUNT2,
+C     +         LATTIX99,RINPUT99,SCALEVEC,STARTB1,TESTDIM,SHAPE
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT
 C     ..
 C
+
+      TYPE (InputcardParams) :: input_params
+      TYPE (InputcardArrays) :: input_arrays
+
 C===================================================================
 C next short section used to search for file 'VREF'
 C if present - DP-value given in that file will be used as EREF
@@ -191,7 +199,12 @@ C===================================================================
 C===================================================================
       PI = 4.0D0*ATAN(1.0D0)
       EFERMI = 0.0d0
+
+      CALL createInputcardArrays(input_arrays, NAEZD, NREFD)
+
 C
+      CALL readInput(input_params, input_arrays)
+
       CALL RINPUT99(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      +              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
      +              SCFSTEPS,IMIX,MIXING,QBOUND,FCM,
@@ -207,7 +220,9 @@ C
      +              LDAU,
      +              RMTREF,KFORCE,
      +              IGUESS,BCP,QMRBOUND)
-      IF(NAEZD.GT.100) IPE=0
+
+
+C     IF(NAEZD.GT.100) IPE=0
 
 C
       E2IN = E2
@@ -218,7 +233,7 @@ C
      +             IRNS,NCLS)
 C
       OPEN (19,FILE=I19,STATUS='old',FORM='formatted')
-      IF ( IFILE.EQ.13 ) OPEN (IFILE,FILE=I13,STATUS='old',
+      OPEN (IFILE,FILE=I13,STATUS='old',
      &                         FORM='formatted')
 C
 C
@@ -229,6 +244,9 @@ C
      +             THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,LRECPOT,
      +             VBC,RWS,LCORE,NCORE,DRDI,
      +             R,ZAT,A,B,IRWS,INIPOL,1)
+
+      CLOSE(IFILE)
+      CLOSE(19)
 C
 C ----------------------------------------------------------------------
 C update Fermi energy, adjust energy window according to running options
@@ -239,7 +257,6 @@ C
 C
 C --> set up energy contour
 C
-      IF(TEST('fix-EF  ')) READ(41,*) E2
       CALL EMESHT(EZ,DEZ,IELAST,E1,E2,E2IN,TK,
      &            NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
       DO IE = 1,IELAST
@@ -370,4 +387,7 @@ C
      &              NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
 C ======================================================================
 C
+
+      CALL destroyInputCardArrays(input_arrays)
+
       END
