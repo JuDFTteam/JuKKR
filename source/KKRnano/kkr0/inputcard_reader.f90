@@ -63,6 +63,9 @@ module inputcard_reader
     integer :: IGUESS
     integer :: BCP
     double precision :: QMRBOUND
+    logical :: LCARTESIAN
+    double precision :: RMAX
+    double precision :: GMAX
   end type
 
    type InputcardArrays
@@ -182,7 +185,8 @@ module inputcard_reader
   & input_params%KFORCE, &
   & input_params%IGUESS, &
   & input_params%BCP, &
-  & input_params%QMRBOUND)
+  & input_params%QMRBOUND, input_params%LCARTESIAN, &
+  & input_params%RMAX, input_params%GMAX)
 
   end subroutine readinput
 

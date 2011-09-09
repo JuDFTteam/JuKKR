@@ -1,7 +1,7 @@
       SUBROUTINE SCALEVEC(RBASIS,ABASIS,BBASIS,CBASIS,
-     &                    NAEZ,BRAVAIS)
+     &                    NAEZ,BRAVAIS, LCARTESIAN)
       IMPLICIT NONE
-      INCLUDE 'inc.p'
+C      INCLUDE 'inc.p'
 C
 C PARAMETER definitions
 C
@@ -10,12 +10,12 @@ C
       DOUBLE PRECISION ABASIS,BBASIS,CBASIS
       INTEGER NAEZ
       DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,*)
+      LOGICAL LCARTESIAN
 C
 C Local variables
 C
       INTEGER I,I1,IER,J
-      LOGICAL LCARTESIAN
-      DOUBLE PRECISION RBASIS1(3,NAEZD),TEMP(3),TX,TY,TZ
+      DOUBLE PRECISION RBASIS1(3,NAEZ),TEMP(3)
       CHARACTER*80 UIO
 C
       WRITE(6,'(79(1H=))')
@@ -48,12 +48,6 @@ C
 C      if lcartesian is true cartesian coordinates are used
 C      else the basis atoms are in units of the lattice vectors
 C
-      LCARTESIAN = .FALSE.
-      IER = 0
-      CALL IOINPUT('CARTESIAN ',UIO,1,7,IER)
-      READ (UNIT=UIO,FMT=*) LCARTESIAN
-      IF ( IER.NE.0 ) 
-     &     STOP ' ERROR: Invalid LCARTESIAN setting in the input'
 C
       WRITE (6,'(5X,A,$)')
      &     'Position of atoms in the unit cell READ IN as:'

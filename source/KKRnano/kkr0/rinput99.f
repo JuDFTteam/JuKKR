@@ -16,7 +16,7 @@
      +           RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC,
      +           LDAU,
      +           RMTREF,KFORCE,
-     +           IGUESS,BCP,QMRBOUND)
+     +           IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX)
       IMPLICIT NONE
 c
       include 'inc.p'
@@ -60,6 +60,9 @@ C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,QMRBOUND
       INTEGER INTERVX,INTERVY,INTERVZ,NREF,NCLS,NLDAU,LRECLDAU
       LOGICAL LINIPOL,JIJ,LDAU,LWLDAU,LLDAUINFO
+
+      LOGICAL LCARTESIAN
+      DOUBLE PRECISION RMAX, GMAX
                                  ! atom types located at a given site
       INTEGER IO,IA,IQ
 C-----------------------------------------------------------------------
@@ -226,6 +229,10 @@ c
                       READ (UNIT=UIO,FMT=*) hfield
       CALL IoInput('VCONST    ',UIO,1,7,IER)
                       READ (UNIT=UIO,FMT=*) vconst
+      CALL IoInput('CARTESIAN ',UIO,1,7,IER)
+                      READ (UNIT=UIO,FMT=*) lcartesian
+
+C
 C----------------------------------------------------------------------
 C
 C --> determination of properties at Fermi level
@@ -504,6 +511,15 @@ c
       WRITE(6,2104)
       WRITE(6,2015) INTERVX,INTERVY,INTERVZ 
       WRITE(6,2102)
+
+      IER = 0
+      CALL IOINPUT('RMAX      ',UIO,1,7,IER)
+      READ (UNIT=UIO,FMT=*) RMAX
+      IF ( IER.NE.0 ) STOP ' ERROR: Invalid RMAX setting in the input'
+C
+      CALL IOINPUT('GMAX      ',UIO,1,7,IER)
+      READ (UNIT=UIO,FMT=*) GMAX
+      IF ( IER.NE.0 ) STOP ' ERROR: Invalid RMAX setting in the input'
 c ------------------------------------------------------------------------
 
       NCLS = 0

@@ -4,11 +4,9 @@
        include 'inc.p'
        include 'inc.cls'
        INTEGER nspin,naez,lmax,irm,ncls
-       INTEGER nref,nlayer,stop_mark
+       INTEGER nref,stop_mark
        INTEGER IRNS(*)
        INTEGER I,J
-       LOGICAL TEST,OPT
-       EXTERNAL TEST,OPT
 c
 c ---> dimension tests
 c
@@ -49,12 +47,6 @@ c
      *   ' inc.p to',j
         stop_mark=1
       endif
-c
-!       if(ncls.ne.nclsd) then
-!         write(6,*) 'Please, change the parameter nclsd in',
-!      *   ' inc.cls to',ncls
-!         stop_mark=1
-!       endif
 c
       if(nref.gt.NAEZ) then
         write(6,*) 'There are some inconsistencies in the input file./',

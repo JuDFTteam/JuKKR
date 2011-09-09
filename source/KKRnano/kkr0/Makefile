@@ -8,7 +8,7 @@ FC = gfortran
 FC90 = gfortran
 #FC90 = ifort -warn 
 FCFLAGS = -g
-FC90FLAGS = -g -Wall -fimplicit-none
+FC90FLAGS = -g -Wall -std=f95 -fimplicit-none
 #LDFLAGS=-L/ -llapack_ifort -lblas_ifort
 LDFLAGS= -llapack_gfortran -lblas_gfortran
 
@@ -27,7 +27,7 @@ OBJS90 = ${SRCS90:.f90=.o}
 .f.o:
 	$(FC) $(FCFLAGS) -c $<
 
-all:	$(OBJS90) $(OBJS)
+all:	$(OBJS90) $(OBJS) $(SRCS) $(SRCS90)
 		$(FC) $(FCFLAGS) -o $(PROGRAM) $(OBJS) $(OBJS90) $(LDFLAGS) 
 
 clean:

@@ -89,7 +89,7 @@ C     LCORE(20,NPOTD)          : angular momentum of core states
 C     NCORE(NPOTD)             : number of core states
 C ----------------------------------------------------------------------
 
-      !USE kkr0_interfaces
+      USE kkr0_interfaces
       USE inputcard_reader
 
       IMPLICIT NONE
@@ -111,56 +111,58 @@ C     .. Parameters ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,ABASIS,BBASIS,CBASIS,RMAX,GMAX,
-     +                 E1,E2,E2IN,EFERMI,FCM,
-     +                 HFIELD,MIXING,PI,QBOUND,
-     +                 RCUTXY,RCUTZ,RCUTJIJ,RCUTTRC,
-     +                 TK,VCONST,VOLUME0,QMRBOUND
+     &                 E1,E2,E2IN,EFERMI,FCM,
+     &                 HFIELD,MIXING,PI,QBOUND,
+     &                 RCUTXY,RCUTZ,RCUTJIJ,RCUTTRC,
+     &                 TK,VCONST,VOLUME0,QMRBOUND
       INTEGER I,I1,ICST,IE,IELAST,IEND,IFILE,
-     +        IMIX,INTERVX,INTERVY,INTERVZ,
-     +        IER,IPE,IPF,IPFE,IRM,ISHIFT,
-     +        ITDBRY,IFUN,KHFELD,KPRE,
-     +        KTE,KVMAD,KVREL,KXC,LM,LMAX,
-     +        LMPOT,LPOT,MAXMESH,NAEZ,
-     +        NCLS,
-     +        NPNT1,NPNT2,NPNT3,NPOL,NR,NREF,
-     +        NSPIN,NSRA,NSYMAT,IGUESS,BCP
-      CHARACTER*40 I13,I19
-      CHARACTER*80 UIO
+     &        IMIX,INTERVX,INTERVY,INTERVZ,
+     &        IER,IPE,IPF,IPFE,IRM,ISHIFT,
+     &        ITDBRY,IFUN,KHFELD,KPRE,
+     &        KTE,KVMAD,KVREL,KXC,LM,LMAX,
+     &        LMPOT,LPOT,MAXMESH,NAEZ,
+     &        NCLS,
+     &        NPNT1,NPNT2,NPNT3,NPOL,NR,NREF,
+     &        NSPIN,NSRA,NSYMAT,IGUESS,BCP
+      CHARACTER(len=40) I13,I19
+      CHARACTER(len=80) UIO
       LOGICAL       JIJ,LDAU
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX DEZ(IEMXD),DSYMLL(LMMAXD,LMMAXD,NSYMAXD),EZ(IEMXD),
-     +               WEZ(IEMXD)
+     &               WEZ(IEMXD)
       DOUBLE PRECISION A(NAEZD),B(NAEZD),BRAVAIS(3,3),CLEB(NCLEB,2),
-     +                 DRDI(IRMD,NAEZD),
-     +                 R(IRMD,NAEZD),
-     +                 RBASIS(3,NAEZD),RCLS(3,NACLSD,NCLSD),
-     +                 RECBV(3,3),
-     +                 RMT(NAEZD),RMTNEW(NAEZD),
-     +                 RMTREF(NREFD),RR(3,0:NRD),
-     +                 RWS(NAEZD),
-     +                 VBC(2),
-     +                 THETAS(IRID,NFUND,NCELLD),
-     +                 VREF(NAEZD),WG(LASSLD),
-     +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
-     +                 ZAT(NAEZD)
+     &                 DRDI(IRMD,NAEZD),
+     &                 R(IRMD,NAEZD),
+     &                 RBASIS(3,NAEZD),RCLS(3,NACLSD,NCLSD),
+     &                 RECBV(3,3),
+     &                 RMT(NAEZD),RMTNEW(NAEZD),
+     &                 RMTREF(NREFD),RR(3,0:NRD),
+     &                 RWS(NAEZD),
+     &                 VBC(2),
+     &                 THETAS(IRID,NFUND,NCELLD),
+     &                 VREF(NAEZD),WG(LASSLD),
+     &                 YRG(LASSLD,0:LASSLD,0:LASSLD),
+     &                 ZAT(NAEZD)
       INTEGER ATOM(NACLSD,NAEZD),CLS(NAEZD),
-     +        EZOA(NACLSD,NAEZD),
-     +        ICLEB(NCLEB,3),IFUNM(LMXSPD,NAEZD),
-     +        IMT(NAEZD),INIPOL(NAEZD),IPAN(NAEZD),IRC(NAEZD),
-     +        IRCUT(0:IPAND,NAEZD),IRMIN(NAEZD),IRNS(NAEZD),
-     +        IRWS(NAEZD),ISYMINDEX(NSYMAXD),ITITLE(20,NPOTD),
-     +        JEND(LMPOTD,0:LMAXD,0:LMAXD),
-     +        LCORE(20,NPOTD),LOFLM(LM2D),
-     +        LLMSP(NFUND,NAEZD),LMSP(LMXSPD,NAEZD),
-     +        NACLS(NCLSD),NCORE(NPOTD),NFU(NAEZD),
-     +        NTCELL(NAEZD),REFPOT(NAEZD)
+     &        EZOA(NACLSD,NAEZD),
+     &        ICLEB(NCLEB,3),IFUNM(LMXSPD,NAEZD),
+     &        IMT(NAEZD),INIPOL(NAEZD),IPAN(NAEZD),IRC(NAEZD),
+     &        IRCUT(0:IPAND,NAEZD),IRMIN(NAEZD),IRNS(NAEZD),
+     &        IRWS(NAEZD),ISYMINDEX(NSYMAXD),ITITLE(20,NPOTD),
+     &        JEND(LMPOTD,0:LMAXD,0:LMAXD),
+     &        LCORE(20,NPOTD),LOFLM(LM2D),
+     &        LLMSP(NFUND,NAEZD),LMSP(LMXSPD,NAEZD),
+     &        NACLS(NCLSD),NCORE(NPOTD),NFU(NAEZD),
+     &        NTCELL(NAEZD),REFPOT(NAEZD)
       INTEGER NUMN0(NAEZD),INDN0(NAEZD,NACLSD)
       INTEGER KMESH(IEMXD)
       INTEGER SCFSTEPS,KFORCE
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD)
       DOUBLE PRECISION GSH(NGSHD),EREF
       LOGICAL EVREF
+
+      LOGICAL LCARTESIAN
 C
 C
 C-----------------------------------------------------------------------
@@ -206,20 +208,20 @@ C
       CALL readInput(input_params, input_arrays)
 
       CALL RINPUT99(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
-     +              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
-     +              SCFSTEPS,IMIX,MIXING,QBOUND,FCM,
-     +              ITDBRY,IRNS,NTCELL,NAEZ,IRM,ZAT,
-     +              NREF,ICST,IFILE,IPE,IPF,IPFE,
-     +              KHFELD,KPRE,KTE,
-     +              KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT,
-     +              NSPIN,REFPOT,
-     +              ISHIFT,INTERVX,INTERVY,INTERVZ,
-     +              HFIELD,VBC,VCONST,INIPOL,
-     +              I13,I19,
-     +              RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC,
-     +              LDAU,
-     +              RMTREF,KFORCE,
-     +              IGUESS,BCP,QMRBOUND)
+     &              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
+     &              SCFSTEPS,IMIX,MIXING,QBOUND,FCM,
+     &              ITDBRY,IRNS,NTCELL,NAEZ,IRM,ZAT,
+     &              NREF,ICST,IFILE,IPE,IPF,IPFE,
+     &              KHFELD,KPRE,KTE,
+     &              KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT,
+     &              NSPIN,REFPOT,
+     &              ISHIFT,INTERVX,INTERVY,INTERVZ,
+     &              HFIELD,VBC,VCONST,INIPOL,
+     &              I13,I19,
+     &              RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC,
+     &              LDAU,
+     &              RMTREF,KFORCE,
+     &              IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX)
 
 
 C     IF(NAEZD.GT.100) IPE=0
@@ -230,7 +232,7 @@ C
       IF (KVREL.GE.1) NSRA = 2
 C
       CALL TESTDIM(NSPIN,NAEZ,LMAX,IRM,NREF,
-     +             IRNS,NCLS)
+     &             IRNS,NCLS)
 C
       OPEN (19,FILE=I19,STATUS='old',FORM='formatted')
       OPEN (IFILE,FILE=I13,STATUS='old',
@@ -238,12 +240,12 @@ C
 C
 C
       CALL STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KHFELD,LMAX,
-     +             1,NAEZ,
-     +             RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
-     +             IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
-     +             THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,LRECPOT,
-     +             VBC,RWS,LCORE,NCORE,DRDI,
-     +             R,ZAT,A,B,IRWS,INIPOL,1)
+     &             1,NAEZ,
+     &             RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
+     &             IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
+     &             THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,LRECPOT,
+     &             VBC,RWS,LCORE,NCORE,DRDI,
+     &             R,ZAT,A,B,IRWS,INIPOL,1)
 
       CLOSE(IFILE)
       CLOSE(19)
@@ -252,7 +254,7 @@ C ----------------------------------------------------------------------
 C update Fermi energy, adjust energy window according to running options
 C
       IF ( NPOL.EQ.0 ) EFERMI = E2IN
-C
+C     a test if E2IN is changed after call to STARTB1
       IF ( DABS(E2IN-E2).GT.1D-10 .AND. NPOL.NE.0 ) E2 = E2IN
 C
 C --> set up energy contour
@@ -266,32 +268,32 @@ C
 C
       CALL GAUNT2(WG,YRG)
       CALL GAUNT(LMAX,LPOT,WG,YRG,CLEB,LOFLM,ICLEB,IEND,JEND)
-      OPEN(56,FILE='gaunt',FORM='formatted')
-      WRITE(56,FMT='(I10)') IEND
-      DO I = 1,IEND
-      WRITE(56,FMT='(3I5,1P,D25.17)')
-     +            ICLEB(I,1),ICLEB(I,2),ICLEB(I,3),CLEB(I,1)
-      END DO
-      CLOSE(56)
+C      OPEN(56,FILE='gaunt',FORM='formatted')
+C      WRITE(56,FMT='(I10)') IEND
+C      DO I = 1,IEND
+C      WRITE(56,FMT='(3I5,1P,D25.17)')
+C     +            ICLEB(I,1),ICLEB(I,2),ICLEB(I,3),CLEB(I,1)
+C      END DO
+C      CLOSE(56)
 C
 C --> setup of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
       CALL SHAPE(LPOT,NAEZ,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG)
-      OPEN(56,FILE='gaunt_shape',FORM='formatted')
-      WRITE(56,FMT='(I10)') IMAXSH(LMPOTD)
-      DO I = 1,IMAXSH(LMPOTD)
-      WRITE(56,FMT='(3I5,1P,D25.17)')
-     +            ILM(I,1),ILM(I,2),ILM(I,3),GSH(I)
-      END DO
-      CLOSE(56)
+C      OPEN(56,FILE='gaunt_shape',FORM='formatted')
+C      WRITE(56,FMT='(I10)') IMAXSH(LMPOTD)
+C      DO I = 1,IMAXSH(LMPOTD)
+C      WRITE(56,FMT='(3I5,1P,D25.17)')
+C     +            ILM(I,1),ILM(I,2),ILM(I,3),GSH(I)
+C      END DO
+C      CLOSE(56)
 C
 C ================================================ deal with the lattice
       CALL LATTIX99(ALAT,BRAVAIS,
      &              RECBV,VOLUME0,RR,NR,NRD)
 C
       CALL SCALEVEC(RBASIS,ABASIS,BBASIS,CBASIS,
-     +              NAEZ,BRAVAIS)
+     &              NAEZ,BRAVAIS,LCARTESIAN)
 C ======================================================================
 C
 C ======================================================================
@@ -299,9 +301,9 @@ C ======================================================================
 
 
       CALL CLSGEN99(NAEZ,RR,NR,RBASIS,CLS,NACLS,REFPOT,ATOM,
-     +              EZOA,
-     +              RCLS,RCUTZ,RCUTXY,
-     +              NUMN0,INDN0)
+     &              EZOA,
+     &              RCLS,RCUTZ,RCUTXY,
+     &              NUMN0,INDN0)
 
 cxxcpl test dimensions for Jij-calculation ..
       CALL CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ)
@@ -313,7 +315,7 @@ CGC2 ===================================================================
 C
       IF (TRC.EQ.1) THEN
         CALL CLSGEN_TRC(NAEZ,RR,NR,RBASIS,
-     +                  RCUTTRC,ALAT)
+     &                  RCUTTRC,ALAT)
       ENDIF
 CGC2 ===================================================================
 CGC2 ===================================================================
@@ -324,11 +326,11 @@ C ======================================================================
 C     setting up kpoints
 C ======================================================================
       CALL BZKINT0(NAEZ,
-     +             RBASIS,BRAVAIS,RECBV,
-     +             NSYMAT,ISYMINDEX,
-     +             DSYMLL,
-     +             INTERVX,INTERVY,INTERVZ,
-     +             IELAST,EZ,KMESH,MAXMESH,MAXMSHD)
+     &             RBASIS,BRAVAIS,RECBV,
+     &             NSYMAT,ISYMINDEX,
+     &             DSYMLL,
+     &             INTERVX,INTERVY,INTERVZ,
+     &             IELAST,EZ,KMESH,MAXMESH,MAXMSHD)
 C ======================================================================
 C ======================================================================
 C
@@ -344,17 +346,7 @@ C
         STOP ' ERROR: to activate bc-preconditioning, set BCPD=1'
       ENDIF
 C
-C
-C
-      IER = 0
-      CALL IOINPUT('RMAX      ',UIO,1,7,IER)
-      READ (UNIT=UIO,FMT=*) RMAX
-      IF ( IER.NE.0 ) STOP ' ERROR: Invalid RMAX setting in the input'
-C
-      CALL IOINPUT('GMAX      ',UIO,1,7,IER)
-      READ (UNIT=UIO,FMT=*) GMAX
-      IF ( IER.NE.0 ) STOP ' ERROR: Invalid RMAX setting in the input'
-C
+C     Conversion of RMAX and GMAX to units of ALAT
       RMAX = RMAX*ALAT
       GMAX = GMAX/ALAT
 C
