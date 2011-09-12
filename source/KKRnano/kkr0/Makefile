@@ -19,7 +19,19 @@ SRCS90 = $(wildcard *.f90)
 OBJS = ${SRCS:.f=.o}
 OBJS90 = ${SRCS90:.f90=.o}
 
+#MODULESRC = inc_p_replace_vars.f inc_p_replace.f
+#MODULESRC90 = inputcard_reader.f90
+
 .SUFFIXES:	.f .f90
+
+inc_replace_vars.o:
+	$(FC) $(FCFLAGS) -c inc_p_replace_vars.f
+
+inc_p_replace.o:	inc_replace_vars.o
+	$(FC) $(FCFLAGS) -c inc_p_replace.f
+
+inputcard_reader.o:	inc_p_replace.o
+	$(FC90) $(FC90FLAGS) -c inputcard_reader.f90
 
 .f90.o:
 	$(FC90) $(FC90FLAGS) -c $<

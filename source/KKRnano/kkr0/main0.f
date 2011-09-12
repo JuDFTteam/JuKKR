@@ -183,6 +183,9 @@ C
       TYPE (InputcardParams) :: input_params
       TYPE (InputcardArrays) :: input_arrays
 
+C ------------ end of declarations ---------------------------------
+      CALL use_global_inc_p_params()
+
 C===================================================================
 C next short section used to search for file 'VREF'
 C if present - DP-value given in that file will be used as EREF
@@ -204,8 +207,8 @@ C===================================================================
 
       CALL createInputcardArrays(input_arrays, NAEZD, NREFD)
 
-C
-      CALL readInput(input_params, input_arrays)
+      !broken
+      !CALL readInput(input_params, input_arrays)
 
       CALL RINPUT99(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      &              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
@@ -221,7 +224,15 @@ C
      &              RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC,
      &              LDAU,
      &              RMTREF,KFORCE,
-     &              IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX)
+     &              IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX,
+     &              LMAXD, IRNSD, TRC, LPOTD, NSPIND,
+     &              IRMD, NAEZD)
+
+C     in case of a LDA+U calculation - read file 'ldauinfo'
+C     and write 'wldau.unf', if it does not exist already
+      IF (LDAU) THEN
+        CALL lda_u_init(LMAXD, NSPIND, ZAT, NAEZD)
+      END IF
 
 
 C     IF(NAEZD.GT.100) IPE=0
@@ -383,3 +394,12 @@ C
       CALL destroyInputCardArrays(input_arrays)
 
       END
+
+C     remove this subroutine when the inc.p problem is solved
+C     helper function to initialise inc_p parameters from helper
+C     module inc_p_replace for use in all subroutines that use the
+C     module
+      SUBROUTINE use_global_inc_p_params()
+        USE inc_p_replace
+        call inc_p_replace_init()
+      END SUBROUTINE

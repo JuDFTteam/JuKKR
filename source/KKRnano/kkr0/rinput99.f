@@ -16,15 +16,14 @@
      +           RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC,
      +           LDAU,
      +           RMTREF,KFORCE,
-     +           IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX)
+     +           IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX,
+     &           LMAXD, IRNSD, TRC, LPOTD, NSPIND,
+     &           IRMD, NAEZD)
+
       IMPLICIT NONE
 c
-      include 'inc.p'
 c
-      INTEGER             LMAXD1
-      PARAMETER          (LMAXD1 = LMAXD + 1)
-      INTEGER             MMAXD
-      PARAMETER          (MMAXD  = 2*LMAXD + 1)
+
 C     .. Local Arrays ..
       CHARACTER*4 TSPIN(3)
       CHARACTER*43 TKCOR(0:3),TVREL(0:2)
@@ -37,13 +36,13 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. Array Arguments ..
       INTEGER IRNS(*),KFG(4),LMXC,NTCELL(*),CLS(*),REFPOT(*)
-      INTEGER INIPOL(*),
-     +        LLDAU(LMAXD1)
+      INTEGER INIPOL(*)
+
       DOUBLE PRECISION Z(*),MTFAC,VBC(*),RBASIS(3,*),RMTREF(*)
-      DOUBLE PRECISION ULDAU(LMAXD1),JLDAU(LMAXD1)
+
       CHARACTER*24 TXC(4)
       CHARACTER*80 UIO
-      CHARACTER*10 TXTLDAU(0:3)
+
       CHARACTER*40 I12,I13,I19,I40
 C     ..
 C     .. Scalar Arguments ..
@@ -58,13 +57,14 @@ C     .. Scalar Arguments ..
      +        NPNT1,NPNT2,NPNT3,NPOL,NSPIN,IGUESS,BCP
       INTEGER NSTEPS,NAEZ
       DOUBLE PRECISION ALAT,QMRBOUND
-      INTEGER INTERVX,INTERVY,INTERVZ,NREF,NCLS,NLDAU,LRECLDAU
-      LOGICAL LINIPOL,JIJ,LDAU,LWLDAU,LLDAUINFO
+      INTEGER INTERVX,INTERVY,INTERVZ,NREF,NCLS
+      LOGICAL LINIPOL,JIJ,LDAU
 
-      LOGICAL LCARTESIAN
-      DOUBLE PRECISION RMAX, GMAX
+      LOGICAL :: LCARTESIAN
+      DOUBLE PRECISION :: RMAX, GMAX
+      INTEGER, intent(in) :: LMAXD, IRNSD, TRC, LPOTD, NSPIND,
+     &                       IRMD, NAEZD
                                  ! atom types located at a given site
-      INTEGER IO,IA,IQ
 C-----------------------------------------------------------------------
       
 C     
@@ -92,9 +92,15 @@ C     .. Data statements ..
      +     ' core relaxation s.r.a.                    ',
      +     ' core relaxation nonsra                    ',
      +     ' core relaxation                           '/
-C
-C     ..
-c
+
+      INTEGER LMAXD1
+      INTEGER MMAXD
+
+C      CALL inc_p_replace_init()
+
+      LMAXD1 = LMAXD + 1
+      MMAXD  = 2*LMAXD + 1
+
 c------------ array set up and definition of input parameter -----------
 c
       KWS = 2
@@ -416,83 +422,83 @@ c read flag in inputcard: LOGICAL LLDAU
 c
       CALL IoInput('LLDAU ',UIO,IL,7,IER) 
       READ (UNIT=UIO,FMT=*) LDAU
-c
-c only if LLDAU is set to .true. go on initializing
-c
-      IF (LDAU) THEN
-c
-        TXTLDAU(0) = 's'
-        TXTLDAU(1) = 'p'
-        TXTLDAU(2) = 'd'
-        TXTLDAU(3) = 'f'
-c
-c verify that file 'ldauinfo' exists
-c
-        INQUIRE(FILE='ldauinfo',EXIST=LLDAUINFO)
-        IF (.NOT.LLDAUINFO) THEN
-          WRITE(6,*) 'file ldauinfo has to be provided!'
-          CALL RCSTOP('LDAUINFO')
-        ENDIF
-c
-c open 'ldauinfo'
-c
-        OPEN(77,FILE='ldauinfo',FORM='formatted')
-        WRITE(6,2100)
-        WRITE(6,*) 'LDA:'
-c
-c-------------------------------------------------------------
-c    read L,U, and J for each atom from ldauinfo
-c-------------------------------------------------------------
-c
-        LWLDAU = .false.
-        INQUIRE(FILE='wldau.unf',EXIST=LWLDAU)
-c
-c determine rec-length for file 'wldau.unf', opened here and accessed
-c in LDAUSTART
-c
-        LRECLDAU = 4*(1+LMAXD1)                   ! NLDAU & LLDAU
-     +           + 8*2*LMAXD1                     ! ULDAU & JLDAU
-     +           + 8*MMAXD*MMAXD*NSPIND*LMAXD1    ! WMLDAU
-c
-        OPEN (65,ACCESS='direct',RECL=LRECLDAU,FILE='wldau.unf',
-     +        FORM='unformatted')
-c
-c
-        DO I=1,NAEZ
-          READ (77,FMT=*) NLDAU,(LLDAU(J), J=1,NLDAU),
-     +                   (ULDAU(J),J=1,NLDAU),
-     +                   (JLDAU(J), J=1,NLDAU)
-          IF (NLDAU.GT.4) CALL RCSTOP('NLDAU')
-          IF (NLDAU.GT.0) THEN
-            WRITE(6,*) 'atom=',I,' (Z=',INT(Z(I)),') with ',NLDAU,
-     +                 ' Coulomb rep. coeff.'
-            DO J=1,NLDAU
-              WRITE(6,*) TXTLDAU(LLDAU(J)),ULDAU(J),JLDAU(J)
-            ENDDO
-          ENDIF
-c
-c initialize or read matrix WMLDAU
-c
-          CALL LDAUSTART(I,NLDAU,LLDAU,ULDAU,JLDAU,LWLDAU)
-c
-        ENDDO
-c
-c
-        CLOSE(65)
-c
-c-------------------------------------------------------------
-
-        WRITE(6,2100)
-        CLOSE(77)
-C
-      ENDIF
-c
-c-------------------------------------------------------------
-c-------------------------------------------------------------
-c end of initialization of LDAU arrays
-c-------------------------------------------------------------
-c-------------------------------------------------------------
-c
+!c
+!c only if LLDAU is set to .true. go on initializing
+!c
+!      IF (LDAU) THEN
+!c
+!        TXTLDAU(0) = 's'
+!        TXTLDAU(1) = 'p'
+!        TXTLDAU(2) = 'd'
+!        TXTLDAU(3) = 'f'
+!c
+!c verify that file 'ldauinfo' exists
+!c
+!        INQUIRE(FILE='ldauinfo',EXIST=LLDAUINFO)
+!        IF (.NOT.LLDAUINFO) THEN
+!          WRITE(6,*) 'file ldauinfo has to be provided!'
+!          CALL RCSTOP('LDAUINFO')
+!        ENDIF
+!c
+!c open 'ldauinfo'
+!c
+!        OPEN(77,FILE='ldauinfo',FORM='formatted')
+!        WRITE(6,2100)
+!        WRITE(6,*) 'LDA:'
+!c
+!c-------------------------------------------------------------
+!c    read L,U, and J for each atom from ldauinfo
+!c-------------------------------------------------------------
+!c
+!        LWLDAU = .false.
+!        INQUIRE(FILE='wldau.unf',EXIST=LWLDAU)
+!c
+!c determine rec-length for file 'wldau.unf', opened here and accessed
+!c in LDAUSTART
+!c
+!        LRECLDAU = 4*(1+LMAXD1)                   ! NLDAU & LLDAU
+!     +           + 8*2*LMAXD1                     ! ULDAU & JLDAU
+!     +           + 8*MMAXD*MMAXD*NSPIND*LMAXD1    ! WMLDAU
+!c
+!        OPEN (65,ACCESS='direct',RECL=LRECLDAU,FILE='wldau.unf',
+!     +        FORM='unformatted')
+!c
+!c
+!        DO I=1,NAEZ
+!          READ (77,FMT=*) NLDAU,(LLDAU(J), J=1,NLDAU),
+!     +                   (ULDAU(J),J=1,NLDAU),
+!     +                   (JLDAU(J), J=1,NLDAU)
+!          IF (NLDAU.GT.4) CALL RCSTOP('NLDAU')
+!          IF (NLDAU.GT.0) THEN
+!            WRITE(6,*) 'atom=',I,' (Z=',INT(Z(I)),') with ',NLDAU,
+!     +                 ' Coulomb rep. coeff.'
+!            DO J=1,NLDAU
+!              WRITE(6,*) TXTLDAU(LLDAU(J)),ULDAU(J),JLDAU(J)
+!            ENDDO
+!          ENDIF
+!c
+!c initialize or read matrix WMLDAU
+!c
+!          CALL LDAUSTART(I,NLDAU,LLDAU,ULDAU,JLDAU,LWLDAU)
+!c
+!        ENDDO
+!c
+!c
+!        CLOSE(65)
+!c
+!c-------------------------------------------------------------
+!
+!        WRITE(6,2100)
+!        CLOSE(77)
+!C
+!      ENDIF
+!c
+!c-------------------------------------------------------------
+!c-------------------------------------------------------------
+!c end of initialization of LDAU arrays
+!c-------------------------------------------------------------
+!c-------------------------------------------------------------
+!c
 
       CALL IoInput('BASISCALE ',UIO,IL,7,IER)
                       READ (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)

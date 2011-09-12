@@ -118,9 +118,13 @@ module inputcard_reader
 
   subroutine readInput(input_params, input_arrays)
 
+  use inc_p_replace
+  implicit none
+
   type (InputcardParams), intent(inout) :: input_params
   type (InputcardArrays), intent(inout) :: input_arrays
 
+  call inc_p_replace_init()
 
   call RINPUT99( &
   & input_params%ALAT, &
@@ -186,7 +190,9 @@ module inputcard_reader
   & input_params%IGUESS, &
   & input_params%BCP, &
   & input_params%QMRBOUND, input_params%LCARTESIAN, &
-  & input_params%RMAX, input_params%GMAX)
+  & input_params%RMAX, input_params%GMAX, &
+  & LMAXD, IRNSD, TRC, LPOTD, NSPIND, &
+  & IRMD, NAEZD)
 
   end subroutine readinput
 

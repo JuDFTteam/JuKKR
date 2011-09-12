@@ -1,11 +1,11 @@
 c ************************************************************************
       SUBROUTINE STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KHFELD,LMAX,
-     +                   NBEG,NEND,
-     +                   RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
-     +                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
-     +                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,LRECPOT,
-     +                   VBC,RWS,LCORE,NCORE,DRDI,
-     +                   R,ZAT,A,B,IRWS,INIPOL,IINFO)
+     &                   NBEG,NEND,
+     &                   RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
+     &                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
+     &                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,LRECPOT,
+     &                   VBC,RWS,LCORE,NCORE,DRDI,
+     &                   R,ZAT,A,B,IRWS,INIPOL,IINFO)
 c ************************************************************************
 c   reads the input potentials
 c
@@ -47,46 +47,48 @@ c
 c                                 b.drittler nov. 1989
 c-----------------------------------------------------------------------
 C     .. Parameters ..
+      USE inc_p_replace
       IMPLICIT NONE
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND,INSLPD
-      PARAMETER (IRMIND=IRMD-IRNSD,INSLPD= (IRNSD+1)*LMPOTD*NSPOTD)
-      INTEGER LMXSPD
-      PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+
+C      include 'inc.p'
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,HFIELD,VBC(*),VCONST
       INTEGER IFILE,IINFO,IPE,IPF,IPFE,
-     +        KHFELD,KVREL,
-     +        LMAX,LPOT,LRECPOT,
-     +        NBEG,NEND,NSPIN
+     &        KHFELD,KVREL,
+     &        LMAX,LPOT,LRECPOT,
+     &        NBEG,NEND,NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),ECORE(20,2),
-     +                 R(IRMD,*),RMT(*),RMTNEW(*),
-     +                 RWS(*),THETAS(IRID,NFUND,*),
-     +                 VINS(IRMIND:IRMD,LMPOTD,2),
-     +                 VISP(IRMD,2),ZAT(*),ZATINFO(NAEZD)
-      INTEGER IFUNM(LMXSPD,NAEZD),IMT(*),INIPOL(*),IPAN(*),
-     +        IRC(*),IRCUT(0:IPAND,*),
-     +        IRMIN(*),IRNS(*),IRWS(*),ITITLE(20,*),
-     +        LCORE(20,*),LLMSP(NFUND,NAEZD),LMSP(LMXSPD,NAEZD),
-     +        NCORE(*),NFU(*),NTCELL(*)
+     &                 R(IRMD,*),RMT(*),RMTNEW(*),
+     &                 RWS(*),THETAS(IRID,NFUND,*),
+C                      VINS(IRMIND,LMPOTD,2)
+     &                 VINS(IRMD-IRNSD:IRMD,(LPOTD+1)**2,2),
+     &                 VISP(IRMD,2),
+     &                 ZAT(*),ZATINFO(NAEZD)
+
+C             IFUNM(LMXSPD,NAEZD)
+      INTEGER IFUNM((2*LPOTD+1)**2,NAEZD),
+     &        IMT(*),INIPOL(*),IPAN(*),
+     &        IRC(*),IRCUT(0:IPAND,*),
+     &        IRMIN(*),IRNS(*),IRWS(*),ITITLE(20,*),
+     &        LCORE(20,*),LLMSP(NFUND,NAEZD),
+     &        LMSP((2*LPOTD+1)**2,NAEZD),
+     &        NCORE(*),NFU(*),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,B1,EA,EFNEW
       INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRC1,IRI,
-     +        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
-     +        J,
-     +        L,LM,LM1,LMPOT,LMPOTP,
-     +        N,NCELL,NFUN,NR
+     &        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
+     &        J,
+     &        L,LM,LM1,LMPOT,LMPOTP,
+     &        N,NCELL,NFUN,NR
       LOGICAL TEST
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION DRN(IRID,NCELLD),SCALE(NCELLD),U(IRMD),
-     +                 XRN(IRID,NCELLD)
+     &                 XRN(IRID,NCELLD)
       DOUBLE PRECISION VSPSME(IRMD) ! dummy for potcut IMPURITY-compatible
       INTEGER MESHN(NCELLD),NM(IPAND,NCELLD),NPAN(NCELLD)
 C     ..
@@ -100,9 +102,21 @@ C     .. Save statement ..
       SAVE
       INTEGER ISHAPE
       DATA ISHAPE / 0 /
+
+
+      INTEGER LMPOTD
+      INTEGER IRMIND,INSLPD
+      INTEGER LMXSPD
+
 C     ..
 c-----------------------------------------------------------------------
 c
+      CALL inc_p_replace_init()
+      IRMIND= IRMD-IRNSD
+      INSLPD= (IRNSD+1)*LMPOTD*NSPOTD
+      LMPOTD= (LPOTD+1)**2
+      LMXSPD= (2*LPOTD+1)**2
+
 c ---> output of radial mesh information
 c
       IO = 0
