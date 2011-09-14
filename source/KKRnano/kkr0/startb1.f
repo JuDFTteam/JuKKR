@@ -5,7 +5,10 @@ c ************************************************************************
      &                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
      &                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,LRECPOT,
      &                   VBC,RWS,LCORE,NCORE,DRDI,
-     &                   R,ZAT,A,B,IRWS,INIPOL,IINFO)
+     &                   R,ZAT,A,B,IRWS,INIPOL,IINFO,
+c     new after inc.p replace
+     &                   IPAND, IRID, NFUND, IRMD, NCELLD,
+     &                   NAEZD, IRNSD, NSPOTD)
 c ************************************************************************
 c   reads the input potentials
 c
@@ -47,10 +50,19 @@ c
 c                                 b.drittler nov. 1989
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      USE inc_p_replace
       IMPLICIT NONE
 
 C      include 'inc.p'
+C      from inc.p
+      INTEGER, INTENT(IN) :: IPAND
+      INTEGER, INTENT(IN) :: IRID
+      INTEGER, INTENT(IN) :: NFUND
+      INTEGER, INTENT(IN) :: IRMD
+      INTEGER, INTENT(IN) :: NCELLD
+      INTEGER, INTENT(IN) :: NAEZD
+      INTEGER, INTENT(IN) :: IRNSD
+      INTEGER, INTENT(IN) :: NSPOTD
+
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,HFIELD,VBC(*),VCONST
@@ -64,17 +76,17 @@ C     .. Array Arguments ..
      &                 R(IRMD,*),RMT(*),RMTNEW(*),
      &                 RWS(*),THETAS(IRID,NFUND,*),
 C                      VINS(IRMIND,LMPOTD,2)
-     &                 VINS(IRMD-IRNSD:IRMD,(LPOTD+1)**2,2),
+     &                 VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2),
      &                 VISP(IRMD,2),
      &                 ZAT(*),ZATINFO(NAEZD)
 
 C             IFUNM(LMXSPD,NAEZD)
-      INTEGER IFUNM((2*LPOTD+1)**2,NAEZD),
+      INTEGER IFUNM((2*LPOT+1)**2,NAEZD),
      &        IMT(*),INIPOL(*),IPAN(*),
      &        IRC(*),IRCUT(0:IPAND,*),
      &        IRMIN(*),IRNS(*),IRWS(*),ITITLE(20,*),
      &        LCORE(20,*),LLMSP(NFUND,NAEZD),
-     &        LMSP((2*LPOTD+1)**2,NAEZD),
+     &        LMSP((2*LPOT+1)**2,NAEZD),
      &        NCORE(*),NFU(*),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
@@ -111,11 +123,11 @@ C     .. Save statement ..
 C     ..
 c-----------------------------------------------------------------------
 c
-      CALL inc_p_replace_init()
+c      CALL inc_p_replace_init()
       IRMIND= IRMD-IRNSD
       INSLPD= (IRNSD+1)*LMPOTD*NSPOTD
-      LMPOTD= (LPOTD+1)**2
-      LMXSPD= (2*LPOTD+1)**2
+      LMPOTD= (LPOT+1)**2
+      LMXSPD= (2*LPOT+1)**2
 
 c ---> output of radial mesh information
 c

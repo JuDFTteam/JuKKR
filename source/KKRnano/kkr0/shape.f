@@ -1,5 +1,6 @@
 c ************************************************************************
-      SUBROUTINE SHAPE(LPOT,NAEZ,GSH,ILM,IMAXSH,LMSP,NTCELL,W,YR)
+      SUBROUTINE SHAPE(LPOT,NAEZ,GSH,ILM,IMAXSH,LMSP,NTCELL,W,YR,
+     &                 LMAX, NGSHD)
 c ************************************************************************
 c   - prepares shape corrections
 c     (the parameter n has to be chosen that l1+l2+l3 .le. 2*n)
@@ -8,17 +9,28 @@ c     m. abramowitz and i.a. stegun, handbook of mathematical functions,
 c     nbs applied mathematics series 55 (1968), pages 887 and 916
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER N,LASSLD,LMPOTD,LMXSPD
-      PARAMETER (N=4*LMAXD,LASSLD=N,LMPOTD= (LPOTD+1)**2)
-      PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+C      include 'inc.p'
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: NGSHD
+      INTEGER, INTENT(IN) :: LMAX
+
 C     ..
 C     .. Scalar Arguments ..
       INTEGER LPOT,NAEZ
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION GSH(*),W(N),YR(N,0:LASSLD,0:LASSLD)
-      INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),LMSP(LMXSPD,NAEZD),NTCELL(*)
+C     DOUBLE PRECISION GSH(*),YR(N,0:LASSLD,0:LASSLD)
+      DOUBLE PRECISION GSH(*)
+      DOUBLE PRECISION YR(4*LMAX,0:4*LMAX,0:4*LMAX)
+      DOUBLE PRECISION W(*)
+
+
+C     INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),LMSP(LMXSPD,NAEZD),NTCELL(*)
+      INTEGER ILM(NGSHD,3)
+      INTEGER IMAXSH(0:(LPOT+1)**2)
+      INTEGER LMSP((2*LPOT+1)**2,NAEZ)
+      INTEGER NTCELL(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FACTOR,GAUNT,S
@@ -30,6 +42,12 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. External Subroutines ..
       EXTERNAL RCSTOP
+
+      INTEGER N,LASSLD,LMPOTD,LMXSPD
+      N=4*LMAX
+      LASSLD=N
+      LMPOTD= (LPOT+1)**2
+      LMXSPD= (2*LPOT+1)**2
 C     ..
 c
 c---> set up of the gaunt coefficients with an index field

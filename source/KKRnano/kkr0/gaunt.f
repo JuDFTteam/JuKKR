@@ -1,5 +1,7 @@
 C ************************************************************************
-      SUBROUTINE GAUNT(LMAX,LPOT,W,YR,CLEB,LOFLM,ICLEB,IEND,JEND)
+      SUBROUTINE GAUNT(LMAX,LPOT,W,YR,CLEB,LOFLM,ICLEB,IEND,JEND,
+     &                 NCLEB)
+C     NCLEB is a new argument after inc.p remove
 C ************************************************************************
 c
 c   - fills the array cleb with the gaunt coeffients ,i.e.
@@ -30,24 +32,34 @@ c
 c---> attention : ncleb is an empirical factor - it has to be optimized
 c
 C     .. Parameters ..
-      include 'inc.p'
+c      include 'inc.p'
 C     ..
+
+      IMPLICIT NONE
+
       DOUBLE COMPLEX CI
       PARAMETER (CI= (0.0D0,1.0D0))
 C     ..
-      INTEGER LMMAXD,LMPOTD,LMGF0D
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      PARAMETER (LMMAXD= (LMAXD+1)**2)
-      PARAMETER (LMGF0D= (LMAXD+1)**2)
-      INTEGER N
-      PARAMETER (N=4*LMAXD)
-C     ..
 C     .. Scalar Arguments ..
-      INTEGER IEND,LMAX,LPOT
+      INTEGER, INTENT(OUT) :: IEND
+      INTEGER, INTENT(IN) :: LMAX
+      INTEGER, INTENT(IN) :: LPOT
+
+      INTEGER, INTENT(IN) :: NCLEB
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION CLEB(NCLEB,2),W(*),YR(N,0:N,0:N)
-      INTEGER ICLEB(NCLEB,3),JEND(LMPOTD,0:LMAXD,0:LMAXD),LOFLM(*)
+
+C      DOUBLE PRECISION CLEB(NCLEB,2),W(*),YR(N,0:N,0:N)
+C      INTEGER ICLEB(NCLEB,3),JEND(LMPOTD,0:LMAXD,0:LMAXD),LOFLM(*)
+      DOUBLE PRECISION CLEB(NCLEB,2)
+      DOUBLE PRECISION W(*)
+      DOUBLE PRECISION YR(4*LMAX,0:4*LMAX,0:4*LMAX)
+C     INTEGER ICLEB(NCLEB,3)
+      INTEGER ICLEB(NCLEB,3)
+C      INTEGER JEND(LMPOTD,0:LMAXD,0:LMAXD)
+      INTEGER JEND((LPOT+1)**2,0:LMAX,0:LMAX)
+      INTEGER LOFLM(*)
+
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION CLECG,FACTOR,FCI,S
@@ -60,6 +72,11 @@ C     ..
 C     .. External Subroutines ..
       EXTERNAL RCSTOP
 C     ..
+
+      INTEGER N
+
+      N=4*LMAX
+
       I = 1
       DO 20 L = 0,2*LMAX
         DO 10 M = -L,L

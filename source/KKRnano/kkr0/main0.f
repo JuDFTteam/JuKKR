@@ -89,7 +89,7 @@ C     LCORE(20,NPOTD)          : angular momentum of core states
 C     NCORE(NPOTD)             : number of core states
 C ----------------------------------------------------------------------
 
-      USE kkr0_interfaces
+      !USE kkr0_interfaces
       USE inputcard_reader
 
       IMPLICIT NONE
@@ -105,8 +105,12 @@ C     .. Parameters ..
       PARAMETER (LMXSPD= (2*LPOTD+1)**2)
       PARAMETER (LASSLD=4*LMAXD)
       PARAMETER (LM2D= (2*LMAXD+1)**2)
+C     Maximal number of Brillouin zone symmetries, 48 is largest
+C     possible number
       PARAMETER (NSYMAXD=48)
+C     Maximal number of k-meshes used
       PARAMETER (MAXMSHD=8)
+C     I/O Record length for potential file
       PARAMETER (LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20))
 C     ..
 C     .. Local Scalars ..
@@ -256,7 +260,10 @@ C
      &             IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
      &             THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,LRECPOT,
      &             VBC,RWS,LCORE,NCORE,DRDI,
-     &             R,ZAT,A,B,IRWS,INIPOL,1)
+     &             R,ZAT,A,B,IRWS,INIPOL,1,
+C                  New after inc.p replace
+     &             IPAND, IRID, NFUND, IRMD, NCELLD,
+     &             NAEZD, IRNSD, NSPOTD)
 
       CLOSE(IFILE)
       CLOSE(19)
@@ -277,8 +284,8 @@ C
       END DO
 
 C
-      CALL GAUNT2(WG,YRG)
-      CALL GAUNT(LMAX,LPOT,WG,YRG,CLEB,LOFLM,ICLEB,IEND,JEND)
+      CALL GAUNT2(WG,YRG,LMAX)
+      CALL GAUNT(LMAX,LPOT,WG,YRG,CLEB,LOFLM,ICLEB,IEND,JEND,NCLEB)
 C      OPEN(56,FILE='gaunt',FORM='formatted')
 C      WRITE(56,FMT='(I10)') IEND
 C      DO I = 1,IEND
@@ -290,7 +297,7 @@ C
 C --> setup of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
-      CALL SHAPE(LPOT,NAEZ,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG)
+      CALL SHAPE(LPOT,NAEZ,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,LMAX,NGSHD)
 C      OPEN(56,FILE='gaunt_shape',FORM='formatted')
 C      WRITE(56,FMT='(I10)') IMAXSH(LMPOTD)
 C      DO I = 1,IMAXSH(LMPOTD)
@@ -362,7 +369,11 @@ C     Conversion of RMAX and GMAX to units of ALAT
       GMAX = GMAX/ALAT
 C
       CALL TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX)
-C
+
+      OPEN(84, file='debugfile', form='formatted')
+      write(84,*) kmesh
+      CLOSE(84)
+
       CALL WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ,
      &              BRAVAIS,RECBV,VOLUME0,RMAX,GMAX,
      &              EFERMI,VBC,
@@ -399,6 +410,7 @@ C     remove this subroutine when the inc.p problem is solved
 C     helper function to initialise inc_p parameters from helper
 C     module inc_p_replace for use in all subroutines that use the
 C     module
+C     TODO: Remove
       SUBROUTINE use_global_inc_p_params()
         USE inc_p_replace
         call inc_p_replace_init()
