@@ -1,5 +1,5 @@
-      SUBROUTINE RINPUT99(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
-     +           E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
+      SUBROUTINE RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,
+     &           CLS,NCLS,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
      +           NSTEPS,IMIX,MIXING,QBOUND,FCM,ITDBRY,
      +           IRNS,NTCELL,NAEZ,IRM,Z,
      +           NREF,
@@ -39,6 +39,7 @@ C     .. Array Arguments ..
       INTEGER INIPOL(*)
 
       DOUBLE PRECISION Z(*),MTFAC,VBC(*),RBASIS(3,*),RMTREF(*)
+      DOUBLE PRECISION BRAVAIS(3,3)
 
       CHARACTER*24 TXC(4)
       CHARACTER*80 UIO
@@ -499,6 +500,24 @@ c
 !c-------------------------------------------------------------
 !c-------------------------------------------------------------
 !c
+
+C ----------------------------------------------------------------------
+C Read in the bravais vectors (normalised to alat)
+C Notation: BRAVAIS(J,I) J=x,y,z I=1,2,3
+C ----------------------------------------------------------------------
+C
+      DO I=1,3
+        DO J=1,3
+            BRAVAIS(J,I) = 0D0
+         END DO
+      END DO
+
+      IER = 0
+      DO I = 1,3
+         CALL IOINPUT('BRAVAIS   ',UIO,I,7,IER)
+         READ (UNIT=UIO,FMT=*) (BRAVAIS(J,I),J=1,3)
+      END DO
+
 
       CALL IoInput('BASISCALE ',UIO,IL,7,IER)
                       READ (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)

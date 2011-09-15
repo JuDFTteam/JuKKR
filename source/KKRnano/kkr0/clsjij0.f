@@ -1,26 +1,29 @@
 c ************************************************************************
       SUBROUTINE CLSJIJ0(
-     >                   NAEZ,RR,NR,RBASIS,RCUT,JIJ)
+     &                   NAEZ,RR,NR,RBASIS,RCUT,JIJ,NRD,NXIJD)
 c ************************************************************************
 c This subroutine is used check the cluster size around each atom 
 c where Jij's are calculated
+c all arguments are input arguments
 c
 c called by: main0
 c                                                          A.Thiess 7/2009
 c ************************************************************************
       IMPLICIT NONE
 c
-      INCLUDE 'inc.p'
+c      INCLUDE 'inc.p'
 c
 c
 c     .. array arguments
 c
-      DOUBLE PRECISION RBASIS(3,NAEZD),   ! pos. of basis atoms in EZ
+      DOUBLE PRECISION RBASIS(3,NAEZ),   ! pos. of basis atoms in EZ
      +                 RR(3,0:NRD)        ! set of lattice vectors
 c
 c
 c     .. scalar arguments
 c
+      INTEGER, INTENT(IN) :: NRD
+      INTEGER, INTENT(IN) :: NXIJD
       DOUBLE PRECISION RCUT
       INTEGER          NAEZ,            ! number of atoms in EZ
      +                 NR               ! number of lattice vectors RR

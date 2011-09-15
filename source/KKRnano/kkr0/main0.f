@@ -214,7 +214,7 @@ C===================================================================
       !broken
       !CALL readInput(input_params, input_arrays)
 
-      CALL RINPUT99(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
+      CALL RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      &              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
      &              SCFSTEPS,IMIX,MIXING,QBOUND,FCM,
      &              ITDBRY,IRNS,NTCELL,NAEZ,IRM,ZAT,
@@ -321,10 +321,11 @@ C ======================================================================
       CALL CLSGEN99(NAEZ,RR,NR,RBASIS,CLS,NACLS,REFPOT,ATOM,
      &              EZOA,
      &              RCLS,RCUTZ,RCUTXY,
-     &              NUMN0,INDN0)
+     &              NUMN0,INDN0,
+     &              NRD, NCLSD, NACLSD)
 
 cxxcpl test dimensions for Jij-calculation ..
-      CALL CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ)
+      CALL CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ,NRD,NXIJD)
 cxxcpl .
 
 CGC2 ===================================================================
@@ -333,7 +334,8 @@ CGC2 ===================================================================
 C
       IF (TRC.EQ.1) THEN
         CALL CLSGEN_TRC(NAEZ,RR,NR,RBASIS,
-     &                  RCUTTRC,ALAT)
+     &                  RCUTTRC,ALAT,
+     &                  NRD, NATRCD, NUTRCD)
       ENDIF
 CGC2 ===================================================================
 CGC2 ===================================================================
@@ -370,9 +372,11 @@ C     Conversion of RMAX and GMAX to units of ALAT
 C
       CALL TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX)
 
-      OPEN(84, file='debugfile', form='formatted')
-      write(84,*) kmesh
-      CLOSE(84)
+!     TODO: remove
+!
+!      OPEN(84, file='debugfile', form='formatted')
+!      write(84,*) kmesh
+!      CLOSE(84)
 
       CALL WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ,
      &              BRAVAIS,RECBV,VOLUME0,RMAX,GMAX,

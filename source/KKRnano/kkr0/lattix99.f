@@ -4,9 +4,10 @@ C **********************************************************************
 C *                                                                    *
 C * LATTIX99 generates the real space and reciprocal lattices.         *
 C * BRAVAIS(I,J) are basis vectors, with I=X,Y,Z and J=A,B,C           *
-C * RECIPROCAL space vectors are in UNITS OF 2*PI/ALATC                *
-C * RR are the direct space vectors                                    *
-C * NR+1 is the number of direct space vectors created                 *
+C *              input - normalised vectors                            *
+C * RECIPROCAL space vectors are in UNITS OF 2*PI/ALATC - output       *
+C * RR are the direct space vectors - output                           *
+C * NR+1 is the number of direct space vectors created - output        *
 C * (structure dependent output).                                      *
 C *                                                                    *
 C **********************************************************************
@@ -14,7 +15,6 @@ C **********************************************************************
 C     ..
 C     .. Scalar arguments ..
       INTEGER NR,NRD            ! number of real space vectors
-      INTEGER NAEZD
       DOUBLE PRECISION ALAT,VOLUME0
 C     ..
 C     .. Array arguments ..
@@ -26,9 +26,8 @@ C
       DOUBLE PRECISION RECBV(3,3),RR(3,0:NRD)
 C     ..
 C     .. Local Scalars ..
-      INTEGER I,J,IER
+      INTEGER I,J
       DOUBLE PRECISION VOLUC,DET,DDET33,PI,TPIA
-      CHARACTER*80 UIO
 C     ..
 C     .. External declarations ..
       EXTERNAL CROSPR,SPATPR,DDET33,IOINPUT
@@ -45,12 +44,6 @@ C
 C
       DO I=1,3
          DO J=1,3
-            BRAVAIS(J,I) = 0D0
-         END DO
-      END DO
-C
-      DO I=1,3
-         DO J=1,3
             RECBV(J,I)=0D0
          ENDDO
       ENDDO
@@ -63,18 +56,8 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       WRITE (6,'(5X,A,F12.8,4X,A,F12.8,/)') 
      &     'Lattice constants :  ALAT =',ALAT,' 2*PI/ALAT =',TPIA
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-C
-C ----------------------------------------------------------------------
-C Read in the bravais vectors (normalised to alat)
-C Notation: BRAVAIS(J,I) J=x,y,z I=1,2,3
-C ----------------------------------------------------------------------
-C
-      IER = 0
-      DO I = 1,3
-         CALL IOINPUT('BRAVAIS   ',UIO,I,7,IER)
-         READ (UNIT=UIO,FMT=*) (BRAVAIS(J,I),J=1,3)
-      END DO
-C
+
+
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       WRITE (6,'(5X,A,/)') 'Direct lattice cell vectors :'
       WRITE (6,'(9X,A,21X,A)') 'normalised (ALAT)','a.u.'

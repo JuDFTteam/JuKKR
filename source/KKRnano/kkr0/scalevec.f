@@ -14,9 +14,8 @@ C
 C
 C Local variables
 C
-      INTEGER I,I1,IER,J
-      DOUBLE PRECISION RBASIS1(3,NAEZ),TEMP(3)
-      CHARACTER*80 UIO
+      INTEGER I,J
+      DOUBLE PRECISION RBASIS1(3,NAEZ)
 C
       WRITE(6,'(79(1H=))')
       WRITE (6,'(23X,A)') 'SCALEVEC: scale site coordinates'

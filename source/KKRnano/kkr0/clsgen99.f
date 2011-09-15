@@ -3,7 +3,9 @@ c ************************************************************************
      &                   CLS,
      &                   NACLS,REFPOT,ATOM,EZOA, 
      &                   RCLS,RCUT,RCUTXY,
-     &                   NUMN0,INDN0)
+     &                   NUMN0,INDN0,
+C                        new after inc.p removal
+     &                   NRD, NCLSD, NACLSD)
       IMPLICIT NONE
 c ************************************************************************
 c This subroutine is used to create the clusters around each atom 
@@ -17,11 +19,15 @@ c a difference. If not keep only previous clusters and make indexing if
 c a new cluster is found then check dimensions and continue for the new
 c atom.  
 c
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
+c      INCLUDE 'inc.p'
+c      INCLUDE 'inc.cls'
 c
 c     .. arguments
 c
+      INTEGER, INTENT(IN) :: NRD
+      INTEGER, INTENT(IN) :: NCLSD
+      INTEGER, INTENT(IN) :: NACLSD
+
       DOUBLE PRECISION RCUT,RCUTXY
       DOUBLE PRECISION
      +     RBASIS(3,*),             ! pos. of basis atoms in EZ
@@ -32,7 +38,7 @@ c
      +     NAEZ,                    ! number of atoms in EZ
      +     NR                       ! number of lattice vectors RR
 c
-      INTEGER NUMN0(NAEZD),INDN0(NAEZD,NACLSD),
+      INTEGER NUMN0(NAEZ),INDN0(NAEZ,NACLSD),
      +     CLS(*),                  ! sort of cluster around atom
      +     REFPOT(*),              
      +     NACLS(*),                ! number of atoms in cluster
@@ -48,7 +54,7 @@ c
       INTEGER IATOM(NACLSD),IEZOA(NACLSD),
      +     ISORT(NACLSD)
       INTEGER IATCLS(NCLSD)
-      LOGICAL*1 ICOUPLMAT(NAEZD)
+      LOGICAL*1 ICOUPLMAT(NAEZ)
 c
       DOUBLE PRECISION  
      +     R2,EPSSHL,

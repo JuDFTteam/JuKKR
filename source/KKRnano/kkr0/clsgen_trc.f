@@ -1,7 +1,8 @@
 c ************************************************************************
       SUBROUTINE CLSGEN_TRC(
      >                      NAEZ,RR,NR,RBASIS,
-     >                      RCUTTRC,ALAT)
+     >                      RCUTTRC,ALAT,
+     &                      NRD, NATRCD, NUTRCD)
 C
       IMPLICIT NONE
 c ************************************************************************
@@ -13,14 +14,20 @@ c Calculate the truncation-cluster of each atom by the lattice
 c parameters avaliable. Sort the atoms in a unique way :big r, big z, big y
 c
 c
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
+C      INCLUDE 'inc.p'
+C      INCLUDE 'inc.cls'
 c
 c     .. input arguments
 c
+
+c     new after inc.p replace
+      INTEGER NRD
+      INTEGER NATRCD
+      INTEGER NUTRCD
+
       DOUBLE PRECISION ALAT,               ! lattice constant A
      +                 RCUTTRC,            ! cutoff radius defining truncation zone
-     +                 RBASIS(3,NAEZD),    ! pos. of basis atoms in EZ
+     +                 RBASIS(3,NAEZ),    ! pos. of basis atoms in EZ
      +                 RR(3,0:NRD)         ! set of lattice vectors
       INTEGER          NAEZ,               ! number of atoms in EZ
      +                 NR                  ! number of lattice vectors RR
@@ -35,13 +42,15 @@ c
 c
 c     .. locals
 c
+      INTEGER          LRECTRC
+
       INTEGER          I,N1,
      +                 NA,NUMBER,N,
      +                 POS,IA,IN,IB,JATOM,IAT,
      +                 MXNATRC,MNNATRC,MXNUTRC,MNNUTRC
       INTEGER          IATOM(NATRCD),IEZOA(NATRCD),
      +                 ISORT(NATRCD)
-      LOGICAL*1        ICOUPLMAT(NAEZD)
+      LOGICAL          ICOUPLMAT(NAEZ)
       DOUBLE PRECISION RCLS1(3,NATRCD),
      +                 RG(3,NATRCD),TMP(3),RSORT(NATRCD)
       DOUBLE PRECISION R,RCUTTOL,R2,EPSSHL
@@ -52,6 +61,9 @@ c
       INTRINSIC        MIN,SQRT
 c
       DATA             EPSSHL   / 1.0D-4 /
+
+c     initialise record length for trnc.unf file
+      LRECTRC   = 4*(NATRCD*3+2)
 c
 c ------------------------------------------------------------------------
 c This is generating the clusters which have a distance smaller
