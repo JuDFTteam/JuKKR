@@ -26,7 +26,7 @@ C
 C
 C Dummy arguments
 C
-      INTEGER IPRINT,KREL,NKMMAX,NL,NQ,NQMAX,NSYM,NSYMAXD,LM1,LM2
+      INTEGER IPRINT,KREL,NKMMAX,NL,NQ,NQMAX,NSYM,NSYMAXD
       COMPLEX*16 DROT(NKMMAX,NKMMAX,48)
       INTEGER ISYMINDEX(NSYMAXD)
       DOUBLE PRECISION ROTMAT(64,3,3)
@@ -296,7 +296,10 @@ C
                SK = +1D0
             END IF
             RJ = L + SK*0.5D0
-            DO RMJ = -RJ, + RJ
+C           DO RMJ = -RJ, + RJ ! real do loop iterator transformed
+C                              ! to integer do loop iterator E.Rabel
+            DO J = 0, (2*L + NINT(SK))
+               RMJ = -RJ + DBLE(J)
                I1 = NINT(2*L*(RJ+0.5D0)+RJ+RMJ+1)
                I2 = NINT(2*L*(RJ+0.5D0)+RJ-RMJ+1)
                DTIM(I1,I2) = SK*(-1)**NINT(RMJ+0.5D0)

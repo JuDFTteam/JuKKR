@@ -383,7 +383,7 @@ c print number of points
       ELSE
 C The following statements for NPOL > 0 are kept for backwards compatibility.
 C They were used before the year 2009 in older versions of the 
-C KKR-GF programs.
+C KKR-GF programs. (remark E.R.: kkrnano - this code is used if NPOL>0)
 C *                                                                    *
 C * The three lines in the backwards compatibility code are defined by:*
 C *                                                                    *

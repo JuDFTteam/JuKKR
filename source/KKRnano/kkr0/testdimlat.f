@@ -1,4 +1,5 @@
-      SUBROUTINE TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX)
+      SUBROUTINE TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX,
+     &                      NMAXD, ISHLD)
 C **********************************************************************
 C *  modified version of lattice3d.f                                   *
 C *  this one only tests the dimension of arrays!                      *
@@ -26,8 +27,12 @@ C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
 C      
-      INCLUDE 'inc.p'
+C      INCLUDE 'inc.p'
 C     ..
+
+      INTEGER NMAXD
+      INTEGER ISHLD
+
 C     .. Scalar arguments ..
       INTEGER 			NGMAX,NRMAX,NSHLG,NSHLR
       DOUBLE PRECISION 	ALAT
@@ -40,12 +45,12 @@ C     ..
 C     .. Local scalars ..
       DOUBLE PRECISION 	A,ABSGM,ABSRM,AG,AR,B,C,DA,DB,GMAX,GX,GY,GZ,PI,
      &                 	RMAX,RX,RY,RZ,VMIN
-      INTEGER 			I,IER,K,L,M,N,N1,NG,NR,
+      INTEGER 			I,K,L,M,N,N1,NG,NR,
      &					NSH,NSHL,NUMG,NUMGH,NUMR,
      &        			NUMRH
       DOUBLE PRECISION  DBLE
       INTEGER 			IDINT
-      CHARACTER*80 		UIO
+
 C     ..
 C     .. Local arrays ..
       DOUBLE PRECISION 	ABSG(3),ABSR(3),BG(3,3),BR(3,3),CJ(4,NMAXD)
@@ -288,16 +293,5 @@ C
 C
 99001 FORMAT (10X,'R max =',F9.5,' (a.u.)',/,10X,'G max =',F9.5,
      &        ' (1/a.u.)',/)
-99002 FORMAT (10X,'               vectors  shells  max. R ',/,10X,
-     &        '               ------------------------------')
-99003 FORMAT (10X,A,I7,2X,I6,2X,F9.5)
-99004 FORMAT (10X,'               ------------------------------',/)
-99005 FORMAT (10X,55('+'),/,18X,'generated ',A,' lattice vectors',/,10X,
-     &        55('+'),/,10X,
-     &        'shell Nvec    radius          x         y         z',/,
-     &        10X,55('-'))
-99006 FORMAT (10X,I5,I5,F12.6,2X,3F10.5)
-99007 FORMAT (34X,3F10.5)
-99008 FORMAT (13X,52('-'))
-99009 FORMAT (10X,55('+'),/)
+
       END

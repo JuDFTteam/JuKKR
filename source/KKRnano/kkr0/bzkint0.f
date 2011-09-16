@@ -3,27 +3,36 @@
      +                   NSYMAT,ISYMINDEX,
      +                   DSYMLL,
      +                   INTERVX,INTERVY,INTERVZ,
-     +                   IELAST,EZ,KMESH,MAXMESH,MAXMSHD)
+     +                   IELAST,EZ,KMESH,MAXMESH,MAXMSHD,
+C                        new after inc.p replacement
+     &                   LMAX, IEMXD, KREL, KPOIBZ, EKMD, IGUESSD)
 C
       IMPLICIT NONE
+
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
+c      INCLUDE 'inc.p'
+c      INCLUDE 'inc.cls'
+
+C     new after inc.p replace
+      INTEGER LMAX
+      INTEGER IEMXD
+      INTEGER KREL
+      INTEGER KPOIBZ
+      INTEGER EKMD
+      INTEGER IGUESSD
+
       INTEGER NSYMAXD
       PARAMETER (NSYMAXD=48)
-      INTEGER LMAX
-      PARAMETER (LMAX=LMAXD)
-      INTEGER LMMAXD
-      PARAMETER (LMMAXD= (LMAXD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER NAEZ,NSYMAT
       INTEGER INTERVX,INTERVY,INTERVZ,MAXMESH,MAXMSHD,IELAST
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD),EZ(IEMXD)
+C     DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD),EZ(IEMXD)
+      DOUBLE COMPLEX DSYMLL((LMAX+1)**2,(LMAX+1)**2,NSYMAXD),EZ(IEMXD)
       DOUBLE PRECISION BRAVAIS(3,3),
-     +                 RBASIS(3,NAEZD),
+     +                 RBASIS(3,NAEZ),
      +                 RECBV(3,3),
      +                 RSYMAT(64,3,3)
       INTEGER ISYMINDEX(NSYMAXD)
@@ -46,6 +55,12 @@ C     .. External Functions ..
 C     ..
 C     .. External Subroutines ..
       EXTERNAL BZKMESH,FINDGROUP,POINTGRP,SYMTAUMAT
+
+      INTEGER LMMAXD
+      INTEGER NAEZD
+
+      LMMAXD= (LMAX+1)**2
+      NAEZD = NAEZ
 C     ..
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
@@ -76,7 +91,8 @@ C --> generate BZ k-mesh
 C
       CALL BZKMESH(INTERVX,INTERVY,INTERVZ,MAXMESH,LIRR,BRAVAIS,RECBV,
      &             NSYMAT,RSYMAT,ISYMINDEX,
-     &             IELAST,EZ,KMESH,IPRINT,MAXMSHD)
+     &             IELAST,EZ,KMESH,IPRINT,MAXMSHD,
+     &             IEMXD, KPOIBZ, EKMD, IGUESSD)
 C
       CALL SYMTAUMAT(ROTNAME,RSYMAT,DSYMLL,NSYMAT,ISYMINDEX,
      &               NAEZD,LMMAXD,NAEZ,LMAX+1,KREL,

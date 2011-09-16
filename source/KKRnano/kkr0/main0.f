@@ -90,7 +90,7 @@ C     NCORE(NPOTD)             : number of core states
 C ----------------------------------------------------------------------
 
       !USE kkr0_interfaces
-      USE inputcard_reader
+      !USE inputcard_reader
 
       IMPLICIT NONE
 C
@@ -119,17 +119,16 @@ C     .. Local Scalars ..
      &                 HFIELD,MIXING,PI,QBOUND,
      &                 RCUTXY,RCUTZ,RCUTJIJ,RCUTTRC,
      &                 TK,VCONST,VOLUME0,QMRBOUND
-      INTEGER I,I1,ICST,IE,IELAST,IEND,IFILE,
+      INTEGER I1,ICST,IE,IELAST,IEND,IFILE,
      &        IMIX,INTERVX,INTERVY,INTERVZ,
-     &        IER,IPE,IPF,IPFE,IRM,ISHIFT,
-     &        ITDBRY,IFUN,KHFELD,KPRE,
-     &        KTE,KVMAD,KVREL,KXC,LM,LMAX,
+     &        IPE,IPF,IPFE,IRM,ISHIFT,
+     &        ITDBRY,KHFELD,KPRE,
+     &        KTE,KVMAD,KVREL,KXC,LMAX,
      &        LMPOT,LPOT,MAXMESH,NAEZ,
      &        NCLS,
      &        NPNT1,NPNT2,NPNT3,NPOL,NR,NREF,
      &        NSPIN,NSRA,NSYMAT,IGUESS,BCP
       CHARACTER(len=40) I13,I19
-      CHARACTER(len=80) UIO
       LOGICAL       JIJ,LDAU
 C     ..
 C     .. Local Arrays ..
@@ -172,7 +171,6 @@ C
 C-----------------------------------------------------------------------
 C     ..
 C     .. External Functions ..
-      LOGICAL OPT,TEST
 C     EXTERNAL OPT,TEST
 C     ..
 C     .. External Subroutines ..
@@ -184,11 +182,11 @@ C     .. Intrinsic Functions ..
 C     ..
 C
 
-      TYPE (InputcardParams) :: input_params
-      TYPE (InputcardArrays) :: input_arrays
+C      TYPE (InputcardParams) :: input_params
+C      TYPE (InputcardArrays) :: input_arrays
 
 C ------------ end of declarations ---------------------------------
-      CALL use_global_inc_p_params()
+
 
 C===================================================================
 C next short section used to search for file 'VREF'
@@ -209,7 +207,7 @@ C===================================================================
       PI = 4.0D0*ATAN(1.0D0)
       EFERMI = 0.0d0
 
-      CALL createInputcardArrays(input_arrays, NAEZD, NREFD)
+      !CALL createInputcardArrays(input_arrays, NAEZD, NREFD)
 
       !broken
       !CALL readInput(input_params, input_arrays)
@@ -247,14 +245,14 @@ C
       IF (KVREL.GE.1) NSRA = 2
 C
       CALL TESTDIM(NSPIN,NAEZ,LMAX,IRM,NREF,
-     &             IRNS,NCLS)
+     &             IRNS)
 C
       OPEN (19,FILE=I19,STATUS='old',FORM='formatted')
       OPEN (IFILE,FILE=I13,STATUS='old',
      &                         FORM='formatted')
 C
 C
-      CALL STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KHFELD,LMAX,
+      CALL STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,
      &             1,NAEZ,
      &             RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
      &             IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
@@ -350,7 +348,8 @@ C ======================================================================
      &             NSYMAT,ISYMINDEX,
      &             DSYMLL,
      &             INTERVX,INTERVY,INTERVZ,
-     &             IELAST,EZ,KMESH,MAXMESH,MAXMSHD)
+     &             IELAST,EZ,KMESH,MAXMESH,MAXMSHD,
+     &             LMAX, IEMXD, KREL, KPOIBZ, EKMD, IGUESSD)
 C ======================================================================
 C ======================================================================
 C
@@ -370,13 +369,9 @@ C     Conversion of RMAX and GMAX to units of ALAT
       RMAX = RMAX*ALAT
       GMAX = GMAX/ALAT
 C
-      CALL TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX)
+      CALL TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX,
+     &                NMAXD, ISHLD)
 
-!     TODO: remove
-!
-!      OPEN(84, file='debugfile', form='formatted')
-!      write(84,*) kmesh
-!      CLOSE(84)
 
       CALL WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ,
      &              BRAVAIS,RECBV,VOLUME0,RMAX,GMAX,
@@ -406,16 +401,7 @@ C
 C ======================================================================
 C
 
-      CALL destroyInputCardArrays(input_arrays)
+      !CALL destroyInputCardArrays(input_arrays)
 
       END
 
-C     remove this subroutine when the inc.p problem is solved
-C     helper function to initialise inc_p parameters from helper
-C     module inc_p_replace for use in all subroutines that use the
-C     module
-C     TODO: Remove
-      SUBROUTINE use_global_inc_p_params()
-        USE inc_p_replace
-        call inc_p_replace_init()
-      END SUBROUTINE

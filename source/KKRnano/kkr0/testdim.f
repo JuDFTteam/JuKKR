@@ -1,9 +1,9 @@
        SUBROUTINE TESTDIM(nspin,naez,lmax,irm,
-     &                    nref,IRNS,ncls)
+     &                    nref,IRNS)
        implicit none
        include 'inc.p'
        include 'inc.cls'
-       INTEGER nspin,naez,lmax,irm,ncls
+       INTEGER nspin,naez,lmax,irm
        INTEGER nref,stop_mark
        INTEGER IRNS(*)
        INTEGER I,J

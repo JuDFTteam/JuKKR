@@ -1,13 +1,21 @@
       SUBROUTINE BZKMESH(NBXIN,NBYIN,NBZIN,MAXMESH,LIRR,BRAVAIS,RECBV,
      &                   NSYMAT,RSYMAT,ISYMINDEX,
-     &                   IELAST,EZ,KMESH,IPRINT,MAXMSHD)
+     &                   IELAST,EZ,KMESH,IPRINT,MAXMSHD,
+C                        new after inc.p remove
+     &                   IEMXD, KPOIBZ, EKMD, IGUESSD)
 C     .. called by ..
 C     BZKINT0
 C     ..
       IMPLICIT NONE
 C     .. Parameters ..
-      INCLUDE 'inc.p'
+C      INCLUDE 'inc.p'
 C     ..
+
+      INTEGER IEMXD
+      INTEGER KPOIBZ
+      INTEGER EKMD
+      INTEGER IGUESSD
+
 C     .. Scalar Arguments ..
       INTEGER MAXMESH,NBXIN,NBYIN,NBZIN,NSYMAT,IPRINT,IELAST,MAXMSHD
       LOGICAL LIRR

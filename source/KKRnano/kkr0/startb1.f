@@ -1,5 +1,5 @@
 c ************************************************************************
-      SUBROUTINE STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KHFELD,LMAX,
+      SUBROUTINE STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,
      &                   NBEG,NEND,
      &                   RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
      &                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
@@ -67,8 +67,8 @@ C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,HFIELD,VBC(*),VCONST
       INTEGER IFILE,IINFO,IPE,IPF,IPFE,
-     &        KHFELD,KVREL,
-     &        LMAX,LPOT,LRECPOT,
+     &        KHFELD,
+     &        LPOT,LRECPOT,
      &        NBEG,NEND,NSPIN
 C     ..
 C     .. Array Arguments ..
@@ -91,17 +91,17 @@ C             IFUNM(LMXSPD,NAEZD)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,B1,EA,EFNEW
-      INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRC1,IRI,
+      INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRI,
      &        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
      &        J,
-     &        L,LM,LM1,LMPOT,LMPOTP,
+     &        LM,LM1,LMPOT,LMPOTP,
      &        N,NCELL,NFUN,NR
       LOGICAL TEST
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION DRN(IRID,NCELLD),SCALE(NCELLD),U(IRMD),
      &                 XRN(IRID,NCELLD)
-      DOUBLE PRECISION VSPSME(IRMD) ! dummy for potcut IMPURITY-compatible
+
       INTEGER MESHN(NCELLD),NM(IPAND,NCELLD),NPAN(NCELLD)
 C     ..
 C     .. External Subroutines ..
@@ -428,8 +428,6 @@ C
  9030 FORMAT (3f12.8)
  9040 FORMAT (f10.5,/,f10.5,2f15.10)
  9050 FORMAT (i3,/,2d15.8,/,2i2)
- 9060 FORMAT (1p,2d15.6,1p,d15.8)
- 9061 FORMAT (1p,5d15.8)
  9070 FORMAT (i5,1p,d20.11)
  9080 FORMAT (' <#',20a4)
  9090 FORMAT (10i5)
