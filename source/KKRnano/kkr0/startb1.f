@@ -3,12 +3,12 @@ c ************************************************************************
      &                   NBEG,NEND,
      &                   RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
      &                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
-     &                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,LRECPOT,
+     &                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,
      &                   VBC,RWS,LCORE,NCORE,DRDI,
      &                   R,ZAT,A,B,IRWS,INIPOL,IINFO,
 c     new after inc.p replace
      &                   IPAND, IRID, NFUND, IRMD, NCELLD,
-     &                   NAEZD, IRNSD, NSPOTD)
+     &                   NAEZD, IRNSD)
 c ************************************************************************
 c   reads the input potentials
 c
@@ -61,14 +61,13 @@ C      from inc.p
       INTEGER, INTENT(IN) :: NCELLD
       INTEGER, INTENT(IN) :: NAEZD
       INTEGER, INTENT(IN) :: IRNSD
-      INTEGER, INTENT(IN) :: NSPOTD
 
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,HFIELD,VBC(*),VCONST
       INTEGER IFILE,IINFO,IPE,IPF,IPFE,
      &        KHFELD,
-     &        LPOT,LRECPOT,
+     &        LPOT,
      &        NBEG,NEND,NSPIN
 C     ..
 C     .. Array Arguments ..
@@ -111,23 +110,25 @@ C     .. Intrinsic Functions ..
       INTRINSIC ANINT,EXP,LOG,MAX,MOD,REAL,SQRT
 C     ..
 C     .. Save statement ..
-      SAVE
+C      SAVE
       INTEGER ISHAPE
       DATA ISHAPE / 0 /
 
 
       INTEGER LMPOTD
-      INTEGER IRMIND,INSLPD
+      INTEGER IRMIND
       INTEGER LMXSPD
+      INTEGER LRECPOT
 
 C     ..
 c-----------------------------------------------------------------------
 c
-c      CALL inc_p_replace_init()
       IRMIND= IRMD-IRNSD
-      INSLPD= (IRNSD+1)*LMPOTD*NSPOTD
       LMPOTD= (LPOT+1)**2
       LMXSPD= (2*LPOT+1)**2
+
+C     I/O Record length for potential file
+      LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
 
 c ---> output of radial mesh information
 c
