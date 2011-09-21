@@ -2,7 +2,7 @@ C     Initialises a LDA+U calculation
 C     Read file 'ldauinfo' and write 'wldau.unf',
 C     if this file does not already exist with the correct set of
 C     parameters (given in ldauinfo)
-      SUBROUTINE lda_u_init(LMAXD, NSPIND, Z, NAEZD)
+      SUBROUTINE ldauinfo_read(LMAXD, NSPIND, Z, NAEZD)
 
       IMPLICIT NONE
 c ----------------------------------------------------------------------

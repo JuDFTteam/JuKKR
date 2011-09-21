@@ -89,8 +89,6 @@ C     LCORE(20,NPOTD)          : angular momentum of core states
 C     NCORE(NPOTD)             : number of core states
 C ----------------------------------------------------------------------
 
-      !USE kkr0_interfaces
-      !USE inputcard_reader
 
       IMPLICIT NONE
 C
@@ -228,8 +226,10 @@ C===================================================================
         READ(87,*) EREF
         CLOSE(87)
       ENDIF
+
 C     The default value for the repulsive reference potential is 8
 C     This value is used if file VREF does not exist
+C     (VREF should contain only one double precision value used as EREF)
 C     in future: move as parameter to inputfile
       DO I1 = 1,NAEZD
         VREF(I1) = 8.D0
@@ -240,10 +240,6 @@ C===================================================================
       PI = 4.0D0*ATAN(1.0D0)
       EFERMI = 0.0d0
 
-      !CALL createInputcardArrays(input_arrays, NAEZD, NREFD)
-
-      !broken
-      !CALL readInput(input_params, input_arrays)
 
       CALL RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      &              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
@@ -266,7 +262,7 @@ C===================================================================
 C     in case of a LDA+U calculation - read file 'ldauinfo'
 C     and write 'wldau.unf', if it does not exist already
       IF (LDAU) THEN
-        CALL lda_u_init(LMAXD, NSPIND, ZAT, NAEZD)
+        CALL ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
       END IF
 
 
@@ -433,8 +429,6 @@ C
      &              NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
 C ======================================================================
 C
-
-      !CALL destroyInputCardArrays(input_arrays)
 
       END
 
