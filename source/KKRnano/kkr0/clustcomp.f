@@ -1,4 +1,6 @@
-      LOGICAL FUNCTION CLUSTCOMP(RCLS,REFPOT,ATOM,IC1,N1,RCLS1,N2,JATOM)
+      LOGICAL FUNCTION CLUSTCOMP(RCLS,REFPOT,ATOM,IC1,N1,RCLS1,N2,JATOM,
+C                                new after inc.cls replace
+     &                           NACLSD)
 c  This function returns true if cluster number ic1
 c  is equal to cluster ic2
 c  RCLS        clusters coordinates
@@ -6,9 +8,13 @@ c  IC1         First cluster
 c  N1          Number of atoms in IC1 cluster
 c  IC2         Second cluster
 c
-      INCLUDE 'inc.cls'
+
+      IMPLICIT NONE
+
+C      INCLUDE 'inc.cls'
 C     .. Scalar Arguments ..
       INTEGER IC1,JATOM,N1,N2
+      INTEGER NACLSD
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION RCLS(3,NACLSD,*),RCLS1(3,NACLSD)

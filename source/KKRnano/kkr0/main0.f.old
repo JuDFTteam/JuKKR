@@ -89,11 +89,13 @@ C     LCORE(20,NPOTD)          : angular momentum of core states
 C     NCORE(NPOTD)             : number of core states
 C ----------------------------------------------------------------------
 
-
+C     the inc.p wrapper module is used to include the inc.p and inc.cls
+C     parameters - this works also for free form source files
+      USE inc_p_wrapper_module
       IMPLICIT NONE
 C
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
+C      INCLUDE 'inc.p'
+C      INCLUDE 'inc.cls'
 C     .. Parameters ..
       INTEGER   LASSLD,LMMAXD,LMPOTD,LMXSPD,LM2D,
      &          MAXMSHD,NPOTD,NSYMAXD
@@ -109,109 +111,225 @@ C     possible number
 C     Maximal number of k-meshes used
       PARAMETER (MAXMSHD=8)
 
+C     inc.p, inc.cls parameters
+C     LMAXD
+C     NAEZD
+C     LPOTD
+C     LMAXD
+C     NREFD
+C     IRID
+C     BCPD
+C     NACLSD
+C     NCLEB
+C     IRMD
+C     IEXMD
+C     NGSHD
+C     IGUESSD
+C     IPAND
+C     ISHLD
+C     IRNSD
+C     KPOIBZ
+C     KREL
+C     NFUND
+C     NATRCD
+C     NCLSD
+C     NMAXD
+C     NRD
+C     NSPIND
+C     NUTRCD
+C     NXIJD
+
+
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION ALAT,ABASIS,BBASIS,CBASIS,RMAX,GMAX,
-     &                 E1,E2,E2IN,EFERMI,FCM,
-     &                 HFIELD,MIXING,PI,QBOUND,
-     &                 RCUTXY,RCUTZ,RCUTJIJ,RCUTTRC,
-     &                 TK,VCONST,VOLUME0,QMRBOUND
-      DOUBLE PRECISION EREF
-      INTEGER I1,ICST,IE,IELAST,IEND,IFILE,
-     &        IMIX,INTERVX,INTERVY,INTERVZ,
-     &        IPE,IPF,IPFE,IRM,ISHIFT,
-     &        ITDBRY,KHFELD,KPRE,
-     &        KTE,KVMAD,KVREL,KXC,LMAX,
-     &        LMPOT,LPOT,MAXMESH,NAEZ,
-     &        NCLS,
-     &        NPNT1,NPNT2,NPNT3,NPOL,NR,NREF,
-     &        NSPIN,NSRA,NSYMAT,IGUESS,BCP
-      INTEGER SCFSTEPS
+
+      DOUBLE PRECISION RMAX
+      DOUBLE PRECISION GMAX
+
+      DOUBLE PRECISION RCUTJIJ
+      DOUBLE PRECISION RCUTTRC
+      DOUBLE PRECISION VCONST
+
+      INTEGER ICST
+C     eq IRMD ?
+      INTEGER IRM
+      INTEGER ISHIFT
+      INTEGER KHFELD
+      INTEGER KPRE
+      INTEGER KTE
+      INTEGER KVMAD
+      INTEGER KVREL
+      INTEGER KXC
+      INTEGER LMAX
+      INTEGER LMPOT
+      INTEGER LPOT
+      INTEGER MAXMESH
+
+      INTEGER NREF
+      INTEGER NSPIN
+      INTEGER NSRA
+
       INTEGER KFORCE
-      CHARACTER(len=40) I13,I19
-      LOGICAL       JIJ,LDAU
+
+      LOGICAL JIJ
+      LOGICAL LDAU
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX DEZ(IEMXD)
-      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
+      DOUBLE PRECISION VBC(2)
+
+C     .. Energy Mesh ..
+      DOUBLE PRECISION E1
+      DOUBLE PRECISION E2
+      DOUBLE PRECISION E2IN
+      DOUBLE PRECISION EFERMI
+      DOUBLE PRECISION TK
+
+      INTEGER NPNT1
+      INTEGER NPNT2
+      INTEGER NPNT3
+      INTEGER NPOL
+      INTEGER IE
+      INTEGER IELAST
+
       DOUBLE COMPLEX EZ(IEMXD)
       DOUBLE COMPLEX WEZ(IEMXD)
+      INTEGER KMESH(IEMXD)
 
+C     .. Lattice ..
+      INTEGER NAEZ
+      INTEGER NR
 
-      DOUBLE PRECISION A(NAEZD)
-      DOUBLE PRECISION B(NAEZD)
+      DOUBLE PRECISION ALAT
+      DOUBLE PRECISION VOLUME0
+
       DOUBLE PRECISION BRAVAIS(3,3)
-      DOUBLE PRECISION CLEB(NCLEB,2)
-      DOUBLE PRECISION DRDI(IRMD,NAEZD)
-      DOUBLE PRECISION R(IRMD,NAEZD)
-      DOUBLE PRECISION RBASIS(3,NAEZD)
-      DOUBLE PRECISION RCLS(3,NACLSD,NCLSD)
       DOUBLE PRECISION RECBV(3,3)
+
+      DOUBLE PRECISION RBASIS(3,NAEZD)
       DOUBLE PRECISION RMT(NAEZD)
-      DOUBLE PRECISION RMTNEW(NAEZD)
       DOUBLE PRECISION RMTREF(NREFD)
       DOUBLE PRECISION RR(3,0:NRD)
       DOUBLE PRECISION RWS(NAEZD)
-      DOUBLE PRECISION VBC(2)
-      DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD)
-      DOUBLE PRECISION VREF(NAEZD)
-      DOUBLE PRECISION WG(LASSLD)
-      DOUBLE PRECISION YRG(LASSLD,0:LASSLD,0:LASSLD)
       DOUBLE PRECISION ZAT(NAEZD)
-      DOUBLE PRECISION GSH(NGSHD)
 
+C     .. Lattice aux. ..
+      DOUBLE PRECISION ABASIS
+      DOUBLE PRECISION BBASIS
+      DOUBLE PRECISION CBASIS
+
+
+C     .. shape functions ..
+      DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD)
+      DOUBLE PRECISION GSH(NGSHD)
+      INTEGER IFUNM(LMXSPD,NAEZD)
+      INTEGER IPAN(NAEZD)
+      INTEGER LLMSP(NFUND,NAEZD)
+      INTEGER LMSP(LMXSPD,NAEZD)
+      INTEGER ILM(NGSHD,3)
+      INTEGER NFU(NAEZD)
+      INTEGER NTCELL(NAEZD)
+      INTEGER IMAXSH(0:LMPOTD)
+
+C     .. reference clusters
+      DOUBLE PRECISION RCUTXY
+      DOUBLE PRECISION RCUTZ
+
+      INTEGER NCLS
+
+      DOUBLE PRECISION RCLS(3,NACLSD,NCLSD)
       INTEGER ATOM(NACLSD,NAEZD)
       INTEGER CLS(NAEZD)
       INTEGER EZOA(NACLSD,NAEZD)
-      INTEGER ICLEB(NCLEB,3)
-      INTEGER IFUNM(LMXSPD,NAEZD)
+      INTEGER NACLS(NCLSD)
+C     NUMN0(i) gives number of ref. cluster atoms around atom i
+      INTEGER NUMN0(NAEZD)
+C     INDN0(i,j) gives the atom index (from basis) of cluster atom j
+C     around central atom i
+      INTEGER INDN0(NAEZD,NACLSD)
+      INTEGER REFPOT(NAEZD)
+
+C     .. reference system ..
+      DOUBLE PRECISION VREF(NAEZD)
+
+
+C     .. radial mesh(es) ..
+      DOUBLE PRECISION A(NAEZD)
+      DOUBLE PRECISION B(NAEZD)
+      DOUBLE PRECISION DRDI(IRMD,NAEZD)
+      DOUBLE PRECISION R(IRMD,NAEZD)
       INTEGER IMT(NAEZD)
-      INTEGER INIPOL(NAEZD)
-      INTEGER IPAN(NAEZD)
       INTEGER IRC(NAEZD)
       INTEGER IRCUT(0:IPAND,NAEZD)
       INTEGER IRMIN(NAEZD)
       INTEGER IRNS(NAEZD)
       INTEGER IRWS(NAEZD)
+
+C     .. Brillouin zone ..
+C     kpoints in each direction
+      INTEGER INTERVX
+      INTEGER INTERVY
+      INTEGER INTERVZ
+C     number of symmetries = number of symmetry matrices
+      INTEGER NSYMAT
+
+C     symmetry matrices
+      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
       INTEGER ISYMINDEX(NSYMAXD)
-      INTEGER ITITLE(20,NPOTD)
+
+C     .. Clebsch-Gordon coefficients and spherical harmonics
+      INTEGER IEND
+
+      DOUBLE PRECISION CLEB(NCLEB,2)
+      DOUBLE PRECISION WG(LASSLD)
+      DOUBLE PRECISION YRG(LASSLD,0:LASSLD,0:LASSLD)
+      INTEGER ICLEB(NCLEB,3)
       INTEGER JEND(LMPOTD,0:LMAXD,0:LMAXD)
-      INTEGER LCORE(20,NPOTD)
       INTEGER LOFLM(LM2D)
-      INTEGER LLMSP(NFUND,NAEZD)
-      INTEGER LMSP(LMXSPD,NAEZD)
-      INTEGER NACLS(NCLSD)
+
+C     .. core states ..
+      INTEGER ITITLE(20,NPOTD)
+      INTEGER LCORE(20,NPOTD)
       INTEGER NCORE(NPOTD)
-      INTEGER NFU(NAEZD)
-      INTEGER NTCELL(NAEZD)
-      INTEGER REFPOT(NAEZD)
-      INTEGER NUMN0(NAEZD)
-      INTEGER INDN0(NAEZD,NACLSD)
-      INTEGER KMESH(IEMXD)
-      INTEGER ILM(NGSHD,3)
-      INTEGER IMAXSH(0:LMPOTD)
+
+C     .. Self-consistency parameters ..
+      DOUBLE PRECISION FCM
+      DOUBLE PRECISION MIXING
+      DOUBLE PRECISION QBOUND
+
+      INTEGER SCFSTEPS
+      INTEGER IMIX
+C     has no effect, use ITDBRYD in inc.p instead
+      INTEGER ITDBRY
+
+C     .. Iterative solver options ..
+      DOUBLE PRECISION QMRBOUND
+
+      INTEGER IGUESS
+      INTEGER BCP
+
+C     .. auxillary variables, not passed to kkr2
+      DOUBLE PRECISION PI
+      DOUBLE PRECISION EREF
+      DOUBLE PRECISION HFIELD
+
+      INTEGER I1
+      INTEGER IPE
+      INTEGER IPF
+      INTEGER IPFE
+      INTEGER IFILE
 
       LOGICAL EVREF
-
       LOGICAL LCARTESIAN
-C
-C
-C-----------------------------------------------------------------------
-C     ..
-C     .. External Functions ..
-C     EXTERNAL OPT,TEST
-C     ..
-C     .. External Subroutines ..
-C      EXTERNAL BZKINT0,CLSGEN99,EMESHT,GAUNT,GAUNT2,
-C     +         LATTIX99,RINPUT99,SCALEVEC,STARTB1,TESTDIM,SHAPE
-C     ..
-C     .. Intrinsic Functions ..
-      INTRINSIC ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT
-C     ..
-C
 
-C      TYPE (InputcardParams) :: input_params
-C      TYPE (InputcardArrays) :: input_arrays
+      CHARACTER(len=40) I13
+      CHARACTER(len=40) I19
+
+C     needed for EMESHT
+      DOUBLE COMPLEX DEZ(IEMXD)
+
+      DOUBLE PRECISION RMTNEW(NAEZD)
+
+      INTEGER INIPOL(NAEZD)
 
 C ------------ end of declarations ---------------------------------
 
@@ -269,7 +387,6 @@ C     and write 'wldau.unf', if it does not exist already
 C     IF(NAEZD.GT.100) IPE=0
 
 C
-      E2IN = E2
       NSRA = 1
       IF (KVREL.GE.1) NSRA = 2
 C
@@ -281,6 +398,8 @@ C
      &                         FORM='formatted')
 C
 C
+      E2IN = E2
+
       CALL STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,
      &             1,NAEZ,
      &             RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
@@ -299,7 +418,8 @@ C ----------------------------------------------------------------------
 C update Fermi energy, adjust energy window according to running options
 C
       IF ( NPOL.EQ.0 ) EFERMI = E2IN
-C     a test if E2IN is changed after call to STARTB1
+C     a test if E2IN is different from E2 after call to STARTB1,
+C     before it was =E2
       IF ( DABS(E2IN-E2).GT.1D-10 .AND. NPOL.NE.0 ) E2 = E2IN
 C
 C --> set up energy contour

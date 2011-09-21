@@ -24,6 +24,9 @@ OBJS90 = ${SRCS90:.f90=.o}
 
 .SUFFIXES:	.f .f90
 
+inc_p_wrapper_module.o:
+	$(FC) $(FCFLAGS) -c inc_p_wrapper_module.f
+
 inc_replace_vars.o:
 	$(FC) $(FCFLAGS) -c inc_p_replace_vars.f
 
@@ -39,7 +42,7 @@ inputcard_reader.o:	inc_p_replace.o
 .f.o:
 	$(FC) $(FCFLAGS) -c $<
 
-all:	$(OBJS90) $(OBJS) $(SRCS) $(SRCS90)
+all:	$(OBJS) $(OBJS90) $(SRCS) $(SRCS90)
 		$(FC) $(FCFLAGS) -o $(PROGRAM) $(OBJS) $(OBJS90) $(LDFLAGS) 
 
 clean:

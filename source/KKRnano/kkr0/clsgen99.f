@@ -169,7 +169,7 @@ c
            N1 = NACLS(ICU)
 c return true if found before
            IF( CLUSTCOMP(RCLS,REFPOT,ATOM,IATCLS(ICU),N1,RCLS1,
-     &          NUMBER,JATOM)) CLS(JATOM) = ICU
+     &          NUMBER,JATOM,NACLSD)) CLS(JATOM) = ICU
          END DO
          IF (CLS(JATOM).EQ.0) THEN
             IF (ICLUSTER.GT.NCLSD) THEN
