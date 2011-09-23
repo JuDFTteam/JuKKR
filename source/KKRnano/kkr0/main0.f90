@@ -1,4 +1,4 @@
-    program MAIN0
+  program MAIN0
 
 ! Explanation of most variables follows below
 
@@ -148,9 +148,10 @@
 
     double precision :: RMAX
     double precision :: GMAX
-
     double precision :: RCUTJIJ
     double precision :: RCUTTRC
+
+!     .. KKR calculation options ..
     double precision :: VCONST
 
     integer :: ICST
@@ -164,18 +165,17 @@
     integer :: KVREL
     integer :: KXC
     integer :: LMAX
-    integer :: LMPOT
-    integer :: LPOT
-    integer :: MAXMESH
-
-    integer :: NREF
     integer :: NSPIN
-    integer :: NSRA
-
     integer :: KFORCE
 
     logical :: JIJ
     logical :: LDAU
+
+!     .. KKR calculation options options derived from others ..
+    integer :: LMPOT
+    integer :: LPOT
+    integer :: NSRA
+
 !     ..
 !     .. Local Arrays ..
     double precision :: VBC(2)
@@ -183,7 +183,6 @@
 !     .. Energy Mesh ..
     double precision :: E1
     double precision :: E2
-    double precision :: E2IN
     double precision :: EFERMI
     double precision :: TK
 
@@ -191,8 +190,8 @@
     integer :: NPNT2
     integer :: NPNT3
     integer :: NPOL
-    integer :: IE
     integer :: IELAST
+    integer :: MAXMESH
 
     complex(kind=DP) :: EZ(IEMXD)
     complex(kind=DP) :: WEZ(IEMXD)
@@ -238,6 +237,7 @@
     double precision :: RCUTZ
 
     integer :: NCLS
+    integer :: NREF
 
     double precision :: RCLS(3,NACLSD,NCLSD)
     integer :: ATOM(NACLSD,NAEZD)
@@ -275,19 +275,22 @@
 !     number of symmetries = number of symmetry matrices
     integer :: NSYMAT
 
-!     symmetry matrices
+!         symmetry matrices
     complex(kind=DP) DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
     integer :: ISYMINDEX(NSYMAXD)
+
+!     .. Spherical harmonics ..
+    double precision :: WG(LASSLD) ! not passed to kkr2
+    double precision :: YRG(LASSLD,0:LASSLD,0:LASSLD) ! not passed to kkr2
 
 !     .. Clebsch-Gordon coefficients and spherical harmonics
     integer :: IEND
 
     double precision :: CLEB(NCLEB,2)
-    double precision :: WG(LASSLD)
-    double precision :: YRG(LASSLD,0:LASSLD,0:LASSLD)
+
     integer :: ICLEB(NCLEB,3)
     integer :: JEND(LMPOTD,0:LMAXD,0:LMAXD)
-    integer :: LOFLM(LM2D)
+    integer :: LOFLM(LM2D) ! gives l from LM index
 
 !     .. core states ..
     integer :: ITITLE(20,NPOTD)
@@ -314,12 +317,14 @@
     double precision :: PI
     double precision :: EREF
     double precision :: HFIELD
+    double precision :: E2IN
 
     integer :: I1
     integer :: IPE
     integer :: IPF
     integer :: IPFE
     integer :: IFILE
+    integer :: IE
 
     logical :: EVREF
     logical :: LCARTESIAN
@@ -550,5 +555,5 @@
     NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
 ! ======================================================================
 
-    end program
+  end program
 
