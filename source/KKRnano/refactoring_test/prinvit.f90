@@ -46,13 +46,12 @@
     integer::         SPRS(NGUESSD*LMMAXD+1)
 
     !     .. LOCAL SCALARS ..
-    integer::I1
+    integer::site_index
     integer::LM1
     integer::LM2
-    integer::JLM
-    integer::IL1
-    integer::JSP
-    integer::ISP
+    integer::site_lm_index
+    integer::site_lm_index2
+    integer::sparse_index
     logical::LSAME
     !     ..
     !     .. LOCAL ARRAYS ..
@@ -73,16 +72,16 @@
     
         call CINIT(ALM*LMMAXD,X0)
     
-        do JSP = 1, NGUESSD*LMMAXD
+        do sparse_index = 1, NGUESSD*LMMAXD
         
-            if (SPRS(JSP) == (NAEZD*LMMAXD*LMMAXD+9999)) &
+            if (SPRS(sparse_index) == (NAEZD*LMMAXD*LMMAXD+9999)) &
             goto 99
         
-            JLM = INT((SPRS(JSP)-1)/LMMAXD) + 1
-            LM2 = MOD((SPRS(JSP)-1),LMMAXD) + 1
+            site_lm_index = INT((SPRS(sparse_index)-1)/LMMAXD) + 1
+            LM2 = MOD((SPRS(sparse_index)-1),LMMAXD) + 1
         
-            X0(JLM,LM2) = &
-            DCMPLX(REAL(PRSC(JSP)),AIMAG(PRSC(JSP)))
+            X0(site_lm_index,LM2) = &
+            DCMPLX(REAL(PRSC(sparse_index)),AIMAG(PRSC(sparse_index)))
         
         enddo
     
@@ -112,15 +111,15 @@
 
     !----------   \Delta t' = \Delta t - X0 + \Delta t * G_ref * X0------
     
-        do I1=1,NAEZD
+        do site_index=1,NAEZD
             do LM1=1,LMMAXD
-                IL1=LMMAXD*(I1-1)+LM1
+                site_lm_index2=LMMAXD*(site_index-1)+LM1
                 do LM2=1,LMMAXD
 
-                    if (I1 == IAT) then
-                        TMATLL(LM1,LM2,I1) = TMATP(IL1,LM2) + TMATLL(LM1,LM2,I1)
+                    if (site_index == IAT) then
+                        TMATLL(LM1,LM2,site_index) = TMATP(site_lm_index2,LM2) + TMATLL(LM1,LM2,site_index)
                     else
-                        TMATLL(LM1,LM2,I1) = TMATP(IL1,LM2)
+                        TMATLL(LM1,LM2,site_index) = TMATP(site_lm_index2,LM2)
                     endif
 
                 enddo
@@ -137,11 +136,11 @@
     ! ================================================================
     ! Fa) determine true solution by adding initial guess ..
     
-        do I1=1,NAEZD
+        do site_index=1,NAEZD
             do LM1=1,LMMAXD
-                IL1=LMMAXD*(I1-1)+LM1
+                site_lm_index2=LMMAXD*(site_index-1)+LM1
                 do LM2=1,LMMAXD
-                    GLLKE1(IL1,LM2) = GLLKE1(IL1,LM2) + X0(IL1,LM2)
+                    GLLKE1(site_lm_index2,LM2) = GLLKE1(site_lm_index2,LM2) + X0(site_lm_index2,LM2)
                 enddo
             enddo
         enddo
@@ -152,24 +151,24 @@
     ! Fb) store new result as initial guess for the next self-consistency
     !     iteration in sparse format ..
     
-        ISP = 1
+        sparse_index = 1
     
-        do I1=1,NAEZD
+        do site_index=1,NAEZD
             do LM1=1,LMMAXD
-                JLM=LMMAXD*(I1-1)+LM1
+                site_lm_index=LMMAXD*(site_index-1)+LM1  ! use a combined site and lm-index
                 do LM2=1,LMMAXD
 
                 ! sparse >>
-                    if ((ABS(DREAL(GLLKE1(JLM,LM2))) > CUT) .or. &
-                    (ABS(DIMAG(GLLKE1(JLM,LM2))) > CUT)) then
+                    if ((ABS(DREAL(GLLKE1(site_lm_index,LM2))) > CUT) .or. &
+                    (ABS(DIMAG(GLLKE1(site_lm_index,LM2))) > CUT)) then
                     
-                        SPRS(ISP)=  LMMAXD*(JLM-1) + LM2
+                        SPRS(sparse_index)=  LMMAXD*(site_lm_index-1) + LM2
                     
                     !             Convert to single precision
-                        PRSC(ISP) = &
-                        CMPLX(DREAL(GLLKE1(JLM,LM2)),DIMAG(GLLKE1(JLM,LM2)))
+                        PRSC(sparse_index) = &
+                        CMPLX(DREAL(GLLKE1(site_lm_index,LM2)),DIMAG(GLLKE1(site_lm_index,LM2)))
                     
-                        ISP  =  ISP + 1
+                        sparse_index  =  sparse_index + 1
                     
                     endif
                 ! sparse <<
@@ -178,7 +177,7 @@
             enddo
         enddo
     
-        SPRS(ISP) = NAEZD*LMMAXD*LMMAXD + 9999 !STOP signature
+        SPRS(sparse_index) = NAEZD*LMMAXD*LMMAXD + 9999 !STOP signature
     ! ..
     ! ================================================================
     

@@ -23,9 +23,9 @@
     integer::          MAXMSHD
     parameter        (MAXMSHD=8)
 
-    !     .. global scalars ..
+    !     .. scalar arguments ..
     integer::          IELAST
-    !     .. global arrays ..
+    !     .. array arguments ..
     complex::          PRSC(NGUESSD*LMMAXD,EKMD)
     double precision:: CNVFAC(EKMD)
     integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
@@ -36,7 +36,7 @@
     !     .. local scalars ..
     integer::IDIM
     integer::IE
-    integer::JEKM
+    integer::JEKM  ! index for initial guess array
     integer::RECV
     integer::SEND
     !     .. local arrays ..
@@ -120,8 +120,5 @@
         JEKM = JEKM + NOFKS(KMESH(IE))
     
     enddo
-
-
-    return
 
     end subroutine EPRDIST

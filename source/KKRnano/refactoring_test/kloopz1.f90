@@ -50,6 +50,7 @@
     integer::BCP
     integer::EKM
     integer::NOITER
+    integer::NSYMAT
     !     ..
     !     .. Array Arguments ..
     !     ..
@@ -87,23 +88,24 @@
     !     ..
     double complex :: TAUVBZ
     double precision:: RFCTOR
-    integer::          LM1
+    integer::LM1
     integer::LM2
-    integer::NSYMAT
-    integer::INFO
+
+    integer::INFO    ! for LAPACK calls
     integer::IERR
-    integer::IU
+    integer::symmetry_index
     !     ..
     !     .. Local Arrays ..
     !     ..
     !     effective (site-dependent) Delta_t^(-1) matrix
     double complex :: MSSQ(LMMAXD,LMMAXD)
+
     double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)
-    double complex :: W1(LMMAXD,LMMAXD)
+    double complex :: work_array(LMMAXD,LMMAXD)    ! work array for LAPACK ZGETRI
     double complex :: DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
     double complex :: TPG(LMMAXD,LMMAXD)
-    double complex :: XC(LMMAXD,LMMAXD)
-    integer::         IPVT(LMMAXD)
+    double complex :: XC(LMMAXD,LMMAXD)            ! to store temporary matrix-matrix mult. result
+    integer::         IPVT(LMMAXD)                 ! work array for LAPACK
 
     !----- Initial Guess arrays-----------------------------------------------
     complex::          PRSC(NGUESSD*LMMAXD,EKMD)
@@ -131,7 +133,7 @@
     ZCOPY,ZAXPY,ZGETRF,ZGETRS,ZGETRI,ZGEMM,ZSCAL
 !     ..
 !     .. Intrinsic Functions ..
-    intrinsic ATAN,DBLE
+    intrinsic ATAN
 !     ..
 
 !     RFCTOR=A/(2*PI) conversion factor to p.u.
@@ -141,8 +143,8 @@
 
     if ( TEST('flow    ') ) write (6,*) &
     '>>> KLOOPZ1: invert delta_t and do Fourier transformation'
-! --> convert inverted delta_t-matrices to p.u.
 
+! --> convert inverted delta_t-matrices to p.u.
 !     Also a symmetrisation of the matrix is performed
 
     do LM2 = 1,LMMAXD
@@ -180,7 +182,7 @@
 !     The (local) Delta_t matrix is inverted and stored in MSSQ
 
     call ZGETRF(LMMAXD,LMMAXD,MSSQ,LMMAXD,IPVT,INFO)
-    call ZGETRI(LMMAXD,MSSQ,LMMAXD,IPVT,W1, &
+    call ZGETRI(LMMAXD,MSSQ,LMMAXD,IPVT,work_array, &
     LMMAXD*LMMAXD,INFO)
 
 
@@ -222,11 +224,11 @@
 !     - the result is stored in GLL
 !      Note: the symmetry operations apply on the (LL')-space
 
-    do IU = 1,NSYMAT
+    do symmetry_index = 1,NSYMAT
     
     ! --->    GLL = sum(i=1,iumax)(tauvbz * DLL(i) * GS * DLL(i)^H)
     
-        if ( IU == 1 ) then
+        if ( symmetry_index == 1 ) then
         
         ! --->    ull(1) is equal to unity matrix
         
@@ -238,14 +240,14 @@
         ! --->      tpg = tauvbz * DLL * GS
         
             call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,TAUVBZ, &
-            DSYMLL(1,1,IU),LMMAXD,GS(1,1,IU),LMMAXD, &
+            DSYMLL(1,1,symmetry_index),LMMAXD,GS(1,1,symmetry_index),LMMAXD, &
             CZERO,TPG,LMMAXD)
         
         ! --->    GLL = GLL + TPG * DLL(i)^H
         !                           C  ! dsymll might be complex in REL case
         
             call ZGEMM('N','C',LMMAXD,LMMAXD,LMMAXD,CONE,TPG,LMMAXD, &
-            DSYMLL(1,1,IU),LMMAXD,CONE,GLL,LMMAXD)
+            DSYMLL(1,1,symmetry_index),LMMAXD,CONE,GLL,LMMAXD)
         end if
     
     end do
@@ -303,7 +305,5 @@
 
 
     if ( TEST('flow    ') ) write (6,*) '<<< KLOOPZ1'
-
-    return
 
     end subroutine KLOOPZ1

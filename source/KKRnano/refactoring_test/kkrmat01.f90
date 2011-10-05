@@ -38,8 +38,6 @@
     parameter      (LMMAXD= (LMAX+1)**2)
     integer::        ALM
     parameter      (ALM = NAEZD*LMMAXD)
-    integer::        ALMGF0
-    parameter      (ALMGF0 = NAEZD*LMGF0D)
     integer::        NGTBD
     parameter      (NGTBD = NACLSD*LMMAXD)
     integer::        NBLCKD
@@ -55,7 +53,7 @@
     double complex :: CZERO
     parameter      (CZERO=(0.0D0,0.0D0))
     !     ..
-    !     .. GLOBAL SCALER ARGUMENTS ..
+    !     .. SCALAR ARGUMENTS ..
     double precision:: ALAT
     double precision::VOLBZ
     integer::NAEZ
@@ -72,7 +70,7 @@
     integer::NOITER
     integer::IAT
     !     ..
-    !     .. GLOBAL ARRAY ARGUMENTS ..
+    !     .. ARRAY ARGUMENTS ..
     double complex :: DGINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
     double complex :: GINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
     double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
@@ -87,7 +85,7 @@
     double complex :: TR_ALPH
     double complex :: DPDE_LOCAL(LLYALM,LMMAXD)
     double complex :: LLY_GRDT
-    ! .. precond
+
     double complex :: EZ(IEMXD)
     complex        :: PRSC(NGUESSD*LMMAXD,EKMD)
     double precision::BZKP(3,KPOIBZ)
@@ -109,31 +107,31 @@
     integer:: EZTRC(NATRCD)  !index to bravais lattice  at site in truncation cluster
     !     ..
     !     .. LOCAL SCALARS ..
-    double complex::   TRACE
+    double complex::TRACE
     double complex::TRACEK
     double complex::GTDPDE
     double complex::BZTR2
     double complex::CFCTORINV
-    double precision::TPI
+    double precision::TWO_PI
     double precision::QMRBOUND
-    double precision::DZNRM2
-    integer::IC
-    integer::I1
-    integer::I2
+    double precision::DZNRM2   ! external function for 2-norm
+    integer::ref_cluster_index
+    integer::site_index
+    integer::cluster_site_index
     integer::ILM
     integer::ISYM
-    integer::IU
-    integer::IL1
+    integer::symmetry_index
+    integer::site_lm_index
     integer::IL1B
-    integer::IL2
+    integer::cluster_site_lm_index
     integer::IL2B
-    integer::KPT
+    integer::k_point_index
     integer::LM
     integer::LM1
     integer::LM2
     integer::LM3
     integer::XIJ
-    integer::ITCOUNT
+    integer::iteration_counter
     logical::XCCPL
     !     ..
     !     .. LOCAL ARRAYS ..
@@ -176,13 +174,13 @@
 !     ..
 !-----------------------------------------------------------------------
 
-    TPI = 8.D0*ATAN(1.D0)    ! = 2*PI
-    CFCTORINV = (CONE*TPI)/ALAT
+    TWO_PI = 8.D0*ATAN(1.D0)    ! = 2*PI
+    CFCTORINV = (CONE*TWO_PI)/ALAT
 
     BZTR2 = CZERO
 
-    do 20 IU = 1,NSYMAXD
-        call CINIT(LMMAXD**2,GS(1,1,IU))
+    do 20 symmetry_index = 1,NSYMAXD
+        call CINIT(LMMAXD**2,GS(1,1,symmetry_index))
     20 end do
 
     if (XCCPL) then
@@ -199,7 +197,7 @@
 
 
 !=======================================================================
-    do 300 KPT = 1, NOFKS                               ! K-POINT-LOOP
+    do 300 k_point_index = 1, NOFKS                               ! K-POINT-LOOP
     !=======================================================================
     
     ! ---> fourier transformation
@@ -224,23 +222,23 @@
         if (LLY == 1) then
             call CINIT(ALM*NGTBD,GLLH)
 
-            do I1 = 1,NAEZ
+            do site_index = 1,NAEZ
 
-                IC = CLS(I1)
-                call DLKE1(ALAT,NACLS,RR,EZOA(1,I1), &
-                BZKP(1,KPT),IC,EIKRM,EIKRP)
-                call DLKE0(I1,GLLH,EIKRP,EIKRM, &
-                IC,NACLS,ATOM(1,I1),NUMN0,INDN0,DGINP(1,1,1,IC))
+                ref_cluster_index = CLS(site_index)
+                call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+                BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+                call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
+                ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index))
             end do
 
-            do I1=1,NAEZ
-                do I2=1,NUMN0(I1)
+            do site_index=1,NAEZ
+                do cluster_site_index=1,NUMN0(site_index)
                     do LM2=1,LMMAXD
-                        IL2=LMMAXD*(I2-1)+LM2
-                        if (INDN0(I1,I2) == IAT) then
+                        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+                        if (INDN0(site_index,cluster_site_index) == IAT) then
                             do LM1=1,LMMAXD
-                                IL1=LMMAXD*(I1-1)+LM1
-                                DGDE(IL1,LM2)= GLLH(LM1,IL2,I1)
+                                site_lm_index=LMMAXD*(site_index-1)+LM1
+                                DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
                             enddo
                         endif
                     enddo
@@ -256,26 +254,26 @@
 
         call CINIT(ALM*NGTBD,GLLH)
 
-        do I1 = 1,NAEZ
-            IC = CLS(I1)
-            call DLKE1(ALAT,NACLS,RR,EZOA(1,I1), &
-            BZKP(1,KPT),IC,EIKRM,EIKRP)
-            call DLKE0(I1,GLLH,EIKRP,EIKRM, &
-            IC,NACLS,ATOM(1,I1),NUMN0,INDN0, &
-            GINP(1,1,1,IC))
+        do site_index = 1,NAEZ
+            ref_cluster_index = CLS(site_index)
+            call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+            BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+            call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
+            ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+            GINP(1,1,1,ref_cluster_index))
         end do
 
     !=========== Lloyd's Formula ==========================================
 
         if (LLY == 1) then
-            do I1=1,NAEZ
-                do I2=1,NUMN0(I1)
+            do site_index=1,NAEZ
+                do cluster_site_index=1,NUMN0(site_index)
                     do LM2=1,LMMAXD
-                        IL2=LMMAXD*(I2-1)+LM2
-                        if (INDN0(I1,I2) == IAT) then
+                        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+                        if (INDN0(site_index,cluster_site_index) == IAT) then
                             do LM1=1,LMMAXD
-                                IL1=LMMAXD*(I1-1)+LM1
-                                GLLKE_X(IL1,LM2)= GLLH(LM1,IL2,I1)
+                                site_lm_index=LMMAXD*(site_index-1)+LM1
+                                GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
                             enddo
                         endif
                     enddo
@@ -291,42 +289,49 @@
 
         call CINIT(ALM*NGTBD,GLLH)
 
-        do I1 = 1,NAEZ
-            IC = CLS(I1)
-            call DLKE1(ALAT,NACLS,RR,EZOA(1,I1), &
-            BZKP(1,KPT),IC,EIKRM,EIKRP)
-            call DLKE0(I1,GLLH,EIKRM,EIKRP, &
-            IC,NACLS,ATOM(1,I1),NUMN0,INDN0, &
-            GINP(1,1,1,IC))
+        do site_index = 1,NAEZ
+            ref_cluster_index = CLS(site_index)
+            call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+            BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+            call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
+            ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+            GINP(1,1,1,ref_cluster_index))
         end do
 
     ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
+    !                = inverse of scattering path operator
+    !
+    ! NUMN0(site_index) is the number of atoms in the reference cluster
+    ! of atom/site 'site_index'
     ! INDN0 stores the index of the atom in the basis corresponding to
     ! the reference cluster atom
+    ! -------------------------------------------------------------------
 
-        do I1=1,NAEZ
-            IL1B=LMMAXD*(I1-1)
-            do I2=1,NUMN0(I1)
+        do site_index=1,NAEZ
+            IL1B=LMMAXD*(site_index-1)
+            do cluster_site_index=1,NUMN0(site_index)
                 do LM2=1,LMMAXD
-                    IL2=LMMAXD*(I2-1)+LM2
-                    IL2B=LMMAXD*(INDN0(I1,I2)-1)+LM2
+                    cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+                    IL2B=LMMAXD*(INDN0(site_index,cluster_site_index)-1)+LM2
                     do LM1=1,LMMAXD
                         TGH(LM1) = CZERO
                         do LM3=1,LMMAXD
-                            TGH(LM1)=TGH(LM1)+TMATLL(LM1,LM3,I1)*GLLH(LM3,IL2,I1)
+                            TGH(LM1)=TGH(LM1)+TMATLL(LM1,LM3,site_index)*GLLH(LM3,cluster_site_lm_index,site_index)
                         enddo
                     enddo
                     do LM1=1,LMMAXD
-                        IL1=IL1B+LM1
-                        GLLH(LM1,IL2,I1) = TGH(LM1)
-                        if (IL1 == IL2B) then
+                        site_lm_index=IL1B+LM1
+                        GLLH(LM1,cluster_site_lm_index,site_index) = TGH(LM1)
+                        if (site_lm_index == IL2B) then
                         !                    substract 1 only at the 'diagonal'
-                            GLLH(LM1,IL2,I1) = GLLH(LM1,IL2,I1) - CONE
+                            GLLH(LM1,cluster_site_lm_index,site_index) = GLLH(LM1,cluster_site_lm_index,site_index) - CONE
                         endif
                     enddo
                 enddo
             enddo
         enddo
+
+    ! ==> now GLLH holds the inverse of the scattering path operator (Delta_t * G_ref - 1)
 
 
     ! ####################################################################
@@ -375,15 +380,15 @@
     !    the norm of |b| is used as convergence criterion
     !    note that if the initial guess optimisation is used, the matrix
     !    equation is solved using a modified b' - nevertheless the norm
-    !    |b| of the original right hand side of the equation is used for
-    !    convergence
+    !    |b| of the original right hand side of the equation is used
+    !    to test for convergence
     
         call CINIT(ALM*LMMAXD,DUMMY)
     
         do LM1=1,LMMAXD
-            IL1=LMMAXD*(IAT-1)+LM1
+            site_lm_index=LMMAXD*(IAT-1)+LM1
             do LM2=1,LMMAXD
-                DUMMY(IL1,LM2)=-TMATLL(LM1,LM2,IAT)
+                DUMMY(site_lm_index,LM2)=-TMATLL(LM1,LM2,IAT)
             enddo
         enddo
 
@@ -405,11 +410,11 @@
             call CINIT(ALM*LMMAXD,X0)
             call CINIT(ALM*LMMAXD,DUMMY)
         
-            do I1=1,NAEZD
+            do site_index=1,NAEZD
                 do LM1=1,LMMAXD
-                    IL1=LMMAXD*(I1-1)+LM1
+                    site_lm_index=LMMAXD*(site_index-1)+LM1
                     do LM2=1,LMMAXD
-                        DUMMY(IL1,LM2)=TMATLL(LM1,LM2,I1)
+                        DUMMY(site_lm_index,LM2)=TMATLL(LM1,LM2,site_index)
                     enddo
                 enddo
             enddo
@@ -419,7 +424,7 @@
                 'I',IAT, &
                 NUMN0,INDN0, &
                 TMATLL,GLLH,X0, &
-                PRSC(1,EKM+KPT),SPRS(1,EKM+KPT), &
+                PRSC(1,EKM+k_point_index),SPRS(1,EKM+k_point_index), &
                 GLLKE1)
             endif
         endif
@@ -445,11 +450,11 @@
     
         call MMINVMOD( &
         GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
-        IAT,ITER,ITCOUNT, &
-        GLLHBLCK,BCP,IGUESS,CNVFAC(EKM+KPT), &
+        IAT,ITER,iteration_counter, &
+        GLLHBLCK,BCP,IGUESS,CNVFAC(EKM+k_point_index), &
         QMRBOUND)
     
-        NOITER = NOITER + ITCOUNT
+        NOITER = NOITER + iteration_counter
     
     ! ..
     !===================================================================
@@ -465,14 +470,14 @@
             'F',IAT, &
             NUMN0,INDN0, &
             TMATLL,GLLH,X0, &
-            PRSC(1,EKM+KPT),SPRS(1,EKM+KPT), &
+            PRSC(1,EKM+k_point_index),SPRS(1,EKM+k_point_index), &
             GLLKE1)
         
-            do I1=1,NAEZD
+            do site_index=1,NAEZD
                 do LM1=1,LMMAXD
-                    IL1=LMMAXD*(I1-1)+LM1
+                    site_lm_index=LMMAXD*(site_index-1)+LM1
                     do LM2=1,LMMAXD
-                        TMATLL(LM1,LM2,I1)=DUMMY(IL1,LM2)
+                        TMATLL(LM1,LM2,site_index)=DUMMY(site_lm_index,LM2)
                     enddo
                 enddo
             enddo
@@ -504,14 +509,14 @@
             do LM1=1,LMMAXD
                 do LM2=1,LMMAXD
                     GTDPDE = CZERO
-                    do IL1 = 1,LLYALM
-                        GTDPDE = GTDPDE + GLLKE1(IL1,LM2)*DPDE_LOCAL(IL1,LM1)
+                    do site_lm_index = 1,LLYALM
+                        GTDPDE = GTDPDE + GLLKE1(site_lm_index,LM2)*DPDE_LOCAL(site_lm_index,LM1)
                     enddo
                     TRACEK = TRACEK + MSSQ(LM1,LM2)*GTDPDE
                 enddo
             enddo
         
-            BZTR2 = BZTR2 + TRACEK*VOLCUB(KPT)
+            BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)
         
         endif
     !#######################################################################
@@ -522,7 +527,7 @@
     
     
     
-
+    !   combined atom/lm index
         ILM = LMMAXD*(IAT-1) + 1
 
     !                                      nn
@@ -541,11 +546,10 @@
             do LM1=1,LMMAXD
                 do LM2=1,LMMAXD
                     GS(LM1,LM2,ISYM) = GS(LM1,LM2,ISYM) + &
-                    VOLCUB(KPT) * G(LM1,LM2)
+                    VOLCUB(k_point_index) * G(LM1,LM2)
                 end do
             end do
-            continue             ! ISYM = 1,NSYMAT
-        110 end do
+        110 end do        ! ISYM = 1,NSYMAT
     
     
     
@@ -557,7 +561,7 @@
         ! ================================================================
         
             call KKRJIJ( &
-            BZKP,VOLCUB,KPT, &
+            BZKP,VOLCUB,k_point_index, &
             NSYMAT,NAEZ,IAT, &
             NXIJ,IXCP,ZKRXIJ, &
             GLLKE1, &
@@ -591,9 +595,5 @@
         LLY_GRDT = TRACE
     endif
 !========== END Lloyd's Formula ==================================
-
-    return
-
-    9100 format (2e24.5)
 
     end subroutine KKRMAT01
