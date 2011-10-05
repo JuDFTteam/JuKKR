@@ -193,9 +193,12 @@
     integer :: IELAST
     integer :: MAXMESH
 
-    complex(kind=DP) :: EZ(IEMXD)
-    complex(kind=DP) :: WEZ(IEMXD)
-    integer :: KMESH(IEMXD)
+!    complex(kind=DP) :: EZ(IEMXD)
+!    complex(kind=DP) :: WEZ(IEMXD)
+!    integer :: KMESH(IEMXD)
+    complex(kind=DP), dimension(:), pointer :: EZ
+    complex(kind=DP), dimension(:), pointer :: WEZ
+    integer, dimension(:), pointer :: KMESH
 
 !     .. Lattice ..
     integer :: NAEZ
@@ -207,12 +210,18 @@
     double precision :: BRAVAIS(3,3)
     double precision :: RECBV(3,3)
 
-    double precision :: RBASIS(3,NAEZD)
-    double precision :: RMT(NAEZD)
-    double precision :: RMTREF(NREFD)
-    double precision :: RR(3,0:NRD)
-    double precision :: RWS(NAEZD)
-    double precision :: ZAT(NAEZD)
+!    double precision :: RBASIS(3,NAEZD)
+!    double precision :: RMT(NAEZD)
+!    double precision :: RMTREF(NREFD)
+!    double precision :: RR(3,0:NRD)
+!    double precision :: RWS(NAEZD)
+!    double precision :: ZAT(NAEZD)
+    double precision, dimension(:,:), pointer :: RBASIS
+    double precision, dimension(:),   pointer :: RMT
+    double precision, dimension(:),   pointer :: RMTREF
+    double precision, dimension(:,:), pointer :: RR
+    double precision, dimension(:),   pointer :: RWS
+    double precision, dimension(:),   pointer :: ZAT
 
 !     .. Lattice aux. ..
     double precision :: ABASIS
@@ -221,16 +230,26 @@
 
 
 !     .. shape functions ..
-    double precision :: THETAS(IRID,NFUND,NCELLD)
-    double precision :: GSH(NGSHD)
-    integer :: IFUNM(LMXSPD,NAEZD)
-    integer :: IPAN(NAEZD)
-    integer :: LLMSP(NFUND,NAEZD)
-    integer :: LMSP(LMXSPD,NAEZD)
-    integer :: ILM(NGSHD,3)
-    integer :: NFU(NAEZD)
-    integer :: NTCELL(NAEZD)
-    integer :: IMAXSH(0:LMPOTD)
+!    double precision :: THETAS(IRID,NFUND,NCELLD)
+!    double precision :: GSH(NGSHD)
+!    integer :: IFUNM(LMXSPD,NAEZD)
+!    integer :: IPAN(NAEZD)
+!    integer :: LLMSP(NFUND,NAEZD)
+!    integer :: LMSP(LMXSPD,NAEZD)
+!    integer :: ILM(NGSHD,3)
+!    integer :: NFU(NAEZD)
+!    integer :: NTCELL(NAEZD)
+!    integer :: IMAXSH(0:LMPOTD)
+    double precision, dimension(:,:,:), pointer :: THETAS
+    double precision, dimension(:),     pointer :: GSH
+    integer, dimension(:,:), pointer :: IFUNM
+    integer, dimension(:),   pointer :: IPAN
+    integer, dimension(:,:), pointer :: LLMSP
+    integer, dimension(:,:), pointer :: LMSP
+    integer, dimension(:,:), pointer :: ILM
+    integer, dimension(:),   pointer :: NFU
+    integer, dimension(:),   pointer :: NTCELL
+    integer, dimension(:),   pointer :: IMAXSH
 
 !     .. reference clusters
     double precision :: RCUTXY
@@ -239,33 +258,52 @@
     integer :: NCLS
     integer :: NREF
 
-    double precision :: RCLS(3,NACLSD,NCLSD)
-    integer :: ATOM(NACLSD,NAEZD)
-    integer :: CLS(NAEZD)
-    integer :: EZOA(NACLSD,NAEZD)
-    integer :: NACLS(NCLSD)
+!    double precision :: RCLS(3,NACLSD,NCLSD)
+!    integer :: ATOM(NACLSD,NAEZD)
+!    integer :: CLS(NAEZD)
+!    integer :: EZOA(NACLSD,NAEZD)
+!    integer :: NACLS(NCLSD)
+!    integer :: NUMN0(NAEZD)
+!    integer :: INDN0(NAEZD,NACLSD)
+!    integer :: REFPOT(NAEZD)
+    double precision, dimension(:,:,:), pointer :: RCLS
+
+    integer, dimension(:,:), pointer :: ATOM
+    integer, dimension(:),   pointer :: CLS
+    integer, dimension(:,:), pointer :: EZOA
+    integer, dimension(:),   pointer :: NACLS
 !     NUMN0(i) gives number of ref. cluster atoms around atom i
-    integer :: NUMN0(NAEZD)
+    integer, dimension(:),   pointer :: NUMN0
 !     INDN0(i,j) gives the atom index (from basis) of cluster atom j
 !     around central atom i
-    integer :: INDN0(NAEZD,NACLSD)
-    integer :: REFPOT(NAEZD)
+    integer, dimension(:,:), pointer :: INDN0
+    integer, dimension(:),   pointer :: REFPOT
 
 !     .. reference system ..
-    double precision :: VREF(NAEZD)
-
+!    double precision :: VREF(NAEZD)
+    double precision, dimension(:), pointer :: VREF
 
 !     .. radial mesh(es) ..
-    double precision :: A(NAEZD)
-    double precision :: B(NAEZD)
-    double precision :: DRDI(IRMD,NAEZD)
-    double precision :: R(IRMD,NAEZD)
-    integer :: IMT(NAEZD)
-    integer :: IRC(NAEZD)
-    integer :: IRCUT(0:IPAND,NAEZD)
-    integer :: IRMIN(NAEZD)
-    integer :: IRNS(NAEZD)
-    integer :: IRWS(NAEZD)
+!    double precision :: A(NAEZD)
+!    double precision :: B(NAEZD)
+!    double precision :: DRDI(IRMD,NAEZD)
+!    double precision :: R(IRMD,NAEZD)
+!    integer :: IMT(NAEZD)
+!    integer :: IRC(NAEZD)
+!    integer :: IRCUT(0:IPAND,NAEZD)
+!    integer :: IRMIN(NAEZD)
+!    integer :: IRNS(NAEZD)
+!    integer :: IRWS(NAEZD)
+    double precision, dimension(:),   pointer  :: A
+    double precision, dimension(:),   pointer  :: B
+    double precision, dimension(:,:), pointer  :: DRDI
+    double precision, dimension(:,:), pointer  :: R
+    integer, dimension(:),  pointer  :: IMT
+    integer, dimension(:),  pointer  :: IRC
+    integer, dimension(:,:),pointer  :: IRCUT
+    integer, dimension(:),  pointer  :: IRMIN
+    integer, dimension(:),  pointer  :: IRNS
+    integer, dimension(:),  pointer  :: IRWS
 
 !     .. Brillouin zone ..
 !     kpoints in each direction
@@ -276,26 +314,39 @@
     integer :: NSYMAT
 
 !         symmetry matrices
-    complex(kind=DP) DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
-    integer :: ISYMINDEX(NSYMAXD)
+!    complex(kind=DP) DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
+!    integer :: ISYMINDEX(NSYMAXD)
+    complex(kind=DP), dimension(:,:,:), pointer :: DSYMLL
+    integer, dimension(:), pointer :: ISYMINDEX
 
 !     .. Spherical harmonics ..
-    double precision :: WG(LASSLD) ! not passed to kkr2
-    double precision :: YRG(LASSLD,0:LASSLD,0:LASSLD) ! not passed to kkr2
+!    double precision :: WG(LASSLD) ! not passed to kkr2
+!    double precision :: YRG(LASSLD,0:LASSLD,0:LASSLD) ! not passed to kkr2
+    double precision, dimension(:),     pointer :: WG ! not passed to kkr2
+    double precision, dimension(:,:,:), pointer :: YRG ! not passed to kkr2
 
-!     .. Clebsch-Gordon coefficients and spherical harmonics
+!     .. Clebsch-Gordon coefficients
     integer :: IEND
 
-    double precision :: CLEB(NCLEB,2)
+!    double precision :: CLEB(NCLEB,2)
+!    integer :: ICLEB(NCLEB,3)
+!    integer :: JEND(LMPOTD,0:LMAXD,0:LMAXD)
+!    integer :: LOFLM(LM2D) ! gives l from LM index
 
-    integer :: ICLEB(NCLEB,3)
-    integer :: JEND(LMPOTD,0:LMAXD,0:LMAXD)
-    integer :: LOFLM(LM2D) ! gives l from LM index
+    double precision, dimension(:,:), pointer :: CLEB
+    integer, dimension(:,:),          pointer :: ICLEB
+    integer, dimension(:,:,:),        pointer :: JEND
+    integer, dimension(:),            pointer :: LOFLM ! gives l from LM index
+
 
 !     .. core states ..
-    integer :: ITITLE(20,NPOTD)
-    integer :: LCORE(20,NPOTD)
-    integer :: NCORE(NPOTD)
+!    integer :: ITITLE(20,NPOTD)
+!    integer :: LCORE(20,NPOTD)
+!    integer :: NCORE(NPOTD)
+    integer, dimension(:,:), pointer :: ITITLE
+    integer, dimension(:,:), pointer :: LCORE
+    integer, dimension(:),   pointer :: NCORE
+
 
 !     .. Self-consistency parameters ..
     double precision :: FCM
@@ -326,43 +377,102 @@
     integer :: IFILE
     integer :: IE
 
+    ! error code for allocations
+    integer :: ierror
+
     logical :: EVREF
     logical :: LCARTESIAN
 
     character(len=40) I13
     character(len=40) I19
 
-!     needed for EMESHT
-    complex(kind=DP) DEZ(IEMXD)
 
-    double precision :: RMTNEW(NAEZD)
+!    complex(kind=DP) DEZ(IEMXD)
+!    double precision :: RMTNEW(NAEZD)
+!    integer :: INIPOL(NAEZD)
 
-    integer :: INIPOL(NAEZD)
+    complex(kind=DP), dimension(:), pointer :: DEZ ! needed for EMESHT
+    double precision, dimension(:), pointer :: RMTNEW
+    integer, dimension(:), pointer :: INIPOL
 
 ! ------------ end of declarations ---------------------------------
 
+! allocations
 
-!===================================================================
-! next short section used to search for file 'VREF'
-! if present - DP-value given in that file will be used as EREF
-!===================================================================
-    inquire(file='VREF',exist=EVREF)
-    if (EVREF) then
-      open(87,file='VREF',form='formatted')
-      read(87,*) EREF
-      close(87)
-    endif
+    ! Energy mesh
+    allocate(EZ(IEMXD), stat=ierror)
+    allocate(WEZ(IEMXD), stat=ierror)
+    allocate(KMESH(IEMXD), stat=ierror)
 
-    !     The default value for the repulsive reference potential is 8
-    !     This value is used if file VREF does not exist
-    !     (VREF should contain only one double precision value used as EREF)
-    !     in future: move as parameter to inputfile
-    do I1 = 1,NAEZD
-      VREF(I1) = 8.D0
-      if (EVREF) VREF(I1) = EREF
-    end do
-!===================================================================
-!===================================================================
+    ! Lattice
+    allocate(RBASIS(3,NAEZD), stat=ierror)
+    allocate(RMT(NAEZD), stat=ierror)
+    allocate(RMTREF(NREFD), stat=ierror)
+    allocate(RR(3,0:NRD), stat=ierror)
+    allocate(RWS(NAEZD), stat=ierror)
+    allocate(ZAT(NAEZD), stat=ierror)
+
+    !Shape functions
+    allocate(THETAS(IRID,NFUND,NCELLD), stat=ierror)
+    allocate(GSH(NGSHD), stat=ierror)
+    allocate(IFUNM(LMXSPD,NAEZD), stat=ierror)
+    allocate(IPAN(NAEZD), stat=ierror)
+    allocate(LLMSP(NFUND,NAEZD), stat=ierror)
+    allocate(LMSP(LMXSPD,NAEZD), stat=ierror)
+    allocate(ILM(NGSHD,3), stat=ierror)
+    allocate(NFU(NAEZD), stat=ierror)
+    allocate(NTCELL(NAEZD), stat=ierror)
+    allocate(IMAXSH(0:LMPOTD), stat=ierror)
+
+    ! Reference Cluster
+    allocate(RCLS(3,NACLSD,NCLSD), stat=ierror)
+    allocate(ATOM(NACLSD,NAEZD), stat=ierror)
+    allocate(CLS(NAEZD), stat=ierror)
+    allocate(EZOA(NACLSD,NAEZD), stat=ierror)
+    allocate(NACLS(NCLSD), stat=ierror)
+    allocate(NUMN0(NAEZD), stat=ierror)
+    allocate(INDN0(NAEZD,NACLSD), stat=ierror)
+    allocate(REFPOT(NAEZD), stat=ierror)
+
+    ! Reference system
+    allocate(VREF(NAEZD), stat=ierror)
+
+    ! Radial mesh(es)
+    allocate(A(NAEZD), stat=ierror)
+    allocate(B(NAEZD), stat=ierror)
+    allocate(DRDI(IRMD,NAEZD), stat=ierror)
+    allocate(R(IRMD,NAEZD), stat=ierror)
+    allocate(IMT(NAEZD), stat=ierror)
+    allocate(IRC(NAEZD), stat=ierror)
+    allocate(IRCUT(0:IPAND,NAEZD), stat=ierror)
+    allocate(IRMIN(NAEZD), stat=ierror)
+    allocate(IRNS(NAEZD), stat=ierror)
+    allocate(IRWS(NAEZD), stat=ierror)
+
+    !         symmetry matrices
+    allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD), stat=ierror)
+    allocate(ISYMINDEX(NSYMAXD), stat=ierror)
+
+    ! spherical harmonics
+    allocate(WG(LASSLD), stat=ierror)
+    allocate(YRG(LASSLD,0:LASSLD,0:LASSLD), stat=ierror)
+
+    ! Clebsch-Gordon coefficients
+    allocate(CLEB(NCLEB,2), stat=ierror)
+    allocate(ICLEB(NCLEB,3), stat=ierror)
+    allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat=ierror)
+    allocate(LOFLM(LM2D), stat=ierror)
+
+!     .. core states ..
+    allocate(ITITLE(20,NPOTD), stat=ierror)
+    allocate(LCORE(20,NPOTD), stat=ierror)
+    allocate(NCORE(NPOTD), stat=ierror)
+
+!   auxillary
+    allocate(DEZ(IEMXD), stat=ierror)
+    allocate(RMTNEW(NAEZD), stat=ierror)
+    allocate(INIPOL(NAEZD), stat=ierror)
+
     PI = 4.0D0*ATAN(1.0D0)
     EFERMI = 0.0d0
 
@@ -390,6 +500,28 @@
     if (LDAU) then
       call ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
     end if
+
+!===================================================================
+! next short section used to search for file 'VREF'
+! if present - DP-value given in that file will be used as EREF
+!===================================================================
+    inquire(file='VREF',exist=EVREF)
+    if (EVREF) then
+      open(87,file='VREF',form='formatted')
+      read(87,*) EREF
+      close(87)
+    endif
+
+    !     The default value for the repulsive reference potential is 8
+    !     This value is used if file VREF does not exist
+    !     (VREF should contain only one double precision value used as EREF)
+    !     in future: move as parameter to inputfile
+    do I1 = 1,NAEZD
+      VREF(I1) = 8.D0
+      if (EVREF) VREF(I1) = EREF
+    end do
+!===================================================================
+!===================================================================
 
 
 !     IF(NAEZD.GT.100) IPE=0
@@ -554,6 +686,82 @@
     IGUESS,BCP,QMRBOUND, &
     NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
 ! ======================================================================
+
+! deallocations
+
+    ! Energy mesh
+    deallocate(EZ, stat=ierror)
+    deallocate(WEZ, stat=ierror)
+    deallocate(KMESH, stat=ierror)
+
+    ! Lattice
+    deallocate(RBASIS, stat=ierror)
+    deallocate(RMT, stat=ierror)
+    deallocate(RMTREF, stat=ierror)
+    deallocate(RR, stat=ierror)
+    deallocate(RWS, stat=ierror)
+    deallocate(ZAT, stat=ierror)
+
+    !Shape functions
+    deallocate(THETAS, stat=ierror)
+    deallocate(GSH, stat=ierror)
+    deallocate(IFUNM, stat=ierror)
+    deallocate(IPAN, stat=ierror)
+    deallocate(LLMSP, stat=ierror)
+    deallocate(LMSP, stat=ierror)
+    deallocate(ILM, stat=ierror)
+    deallocate(NFU, stat=ierror)
+    deallocate(NTCELL, stat=ierror)
+    deallocate(IMAXSH, stat=ierror)
+
+    ! Reference Cluster
+    deallocate(RCLS, stat=ierror)
+    deallocate(ATOM, stat=ierror)
+    deallocate(CLS, stat=ierror)
+    deallocate(EZOA, stat=ierror)
+    deallocate(NACLS, stat=ierror)
+    deallocate(NUMN0, stat=ierror)
+    deallocate(INDN0, stat=ierror)
+    deallocate(REFPOT, stat=ierror)
+
+    ! Reference system
+    deallocate(VREF, stat=ierror)
+
+    ! Radial mesh(es)
+    deallocate(A, stat=ierror)
+    deallocate(B, stat=ierror)
+    deallocate(DRDI, stat=ierror)
+    deallocate(R, stat=ierror)
+    deallocate(IMT, stat=ierror)
+    deallocate(IRC, stat=ierror)
+    deallocate(IRCUT, stat=ierror)
+    deallocate(IRMIN, stat=ierror)
+    deallocate(IRNS, stat=ierror)
+    deallocate(IRWS, stat=ierror)
+
+    ! Symmetry matrices
+    deallocate(DSYMLL, stat=ierror)
+    deallocate(ISYMINDEX, stat=ierror)
+
+    ! spherical harmonics
+    deallocate(WG, stat=ierror)
+    deallocate(YRG, stat=ierror)
+
+    ! Clebsch-Gordon coefficients
+    deallocate(CLEB, stat=ierror)
+    deallocate(ICLEB, stat=ierror)
+    deallocate(JEND, stat=ierror)
+    deallocate(LOFLM, stat=ierror)
+
+    !     .. core states ..
+    deallocate(ITITLE, stat=ierror)
+    deallocate(LCORE, stat=ierror)
+    deallocate(NCORE, stat=ierror)
+
+    !   auxillary
+    deallocate(DEZ, stat=ierror)
+    deallocate(RMTNEW, stat=ierror)
+    deallocate(INIPOL, stat=ierror)
 
   end program
 

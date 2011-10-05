@@ -97,7 +97,6 @@ C     .. Data statements ..
       INTEGER LMAXD1
       INTEGER MMAXD
 
-C      CALL inc_p_replace_init()
 
       LMAXD1 = LMAXD + 1
       MMAXD  = 2*LMAXD + 1
@@ -244,6 +243,8 @@ C----------------------------------------------------------------------
 C
 C --> determination of properties at Fermi level
 C
+C     has some effect in EMESHT
+C     IGF = 1 has no effect
       IF ( OPT('GF-EF   ') ) THEN
          IGF = 1
          IF (NPOL.GT.0) NPOL = 0
