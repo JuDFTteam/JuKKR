@@ -313,14 +313,12 @@ program MAIN2
 ! =                     End read in variables                          =
 ! ======================================================================
 
-  call IMPI( &
-  NAEZ, &
-  MYRANK,NROFNODES, &
-  LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
-  LSMPIB,LSMPIC,LSRANK,LSMYRANK, &
-  SMPIB,SMPIC,SRANK,SMYRANK, &
-  EMPIB,EMPIC,ERANK,EMYRANK, &
-  MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE)
+  call IMPI(NAEZ,MYRANK,NROFNODES, &
+            LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
+            LSMPIB,LSMPIC,LSRANK,LSMYRANK, &
+            SMPIB,SMPIC,SRANK,SMYRANK, &
+            EMPIB,EMPIC,ERANK,EMYRANK, &
+            MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE)
 
 !====================================================================
 
@@ -329,8 +327,8 @@ program MAIN2
 ! ... and wait after SC-ITER loop
 !=====================================================================
 
-!     ACTVGROUP
-  if (LMPIC/=0.or.LSMPIC/=0) then
+
+  if (LMPIC/=0.or.LSMPIC/=0) then   !     ACTVGROUP
 
     MYBCRANK = 0
 
@@ -339,12 +337,16 @@ program MAIN2
 
 ! ======================================================================
 ! ========= TIMING ======================================================
-    if (MYLRANK(1)==0) then
+    if (MYLRANK(1) == 0) then
       RATETIME = 100
       MAXTIME  = 100000
+
       call SYSTEM_CLOCK(SYSTEM_I,RATETIME,MAXTIME)
+
       WALLCLOCK_I = MPI_WTIME()
+
       call CPU_TIME(TIME_I)
+
       open (2,file='time-info',form='formatted')
     endif
 !========= TIMING ======================================================
@@ -361,6 +363,7 @@ program MAIN2
       enddo
     enddo
 
+! initialise the arrays for (gen. Anderson/Broyden) potential mixing
     do IH=1,NTIRD
       do LM1=2,ITDBRYD
         UI2(IH,LM1)=0.00
@@ -389,7 +392,7 @@ program MAIN2
         write(2,'(79(1H=))')
       endif
 
-      LDORHOEF = NPOL/=0
+      LDORHOEF = NPOL/=0  ! needed in RHOVAL
 
       call GAUNT2(WG,YRG)
 
@@ -417,8 +420,11 @@ program MAIN2
       form='unformatted')
       open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
       form='unformatted')
-      if (TRC==1) open (37,access='direct',recl=LRECTRC, &
-      file='trnc.unf',form='unformatted')
+
+      if (TRC==1) then
+        open (37,access='direct',recl=LRECTRC, &
+              file='trnc.unf',form='unformatted')
+      end if
 
 
 !N ====================================================================
@@ -432,15 +438,16 @@ program MAIN2
 ! ccpl
 
           XCCPL = .false.
+
+          ! calculate exchange couplings only at last self-consistency step and when Jij=true
           if ((ITER==SCFSTEPS).and.JIJ) XCCPL = .true.
 
           if (XCCPL) then
 
             inquire(file='ERESJIJ',exist=ERESJIJ)
 
-            call CLSJIJ( &
-            I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,LMPIC,NSYMAT,ISYMINDEX, &
-            IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ)
+            call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,LMPIC,NSYMAT,ISYMINDEX, &
+                        IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ)
 
             do ISPIN = 1, NSPIN
               do XIJ = 1, NXIJ
@@ -468,11 +475,10 @@ program MAIN2
             EREFLDAU = EFERMI
             EREFLDAU = 0.48
 
-            call LDAUINIT( &
-            I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
-            VISP,NSPIN,R(1,I1),DRDI(1,I1), &
-            ZAT(I1),IPAN(I1),IRCUT(0,I1), &
-            PHILDAU,UMLDAU,WMLDAU)
+            call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
+                          VISP,NSPIN,R(1,I1),DRDI(1,I1), &
+                          ZAT(I1),IPAN(I1),IRCUT(0,I1), &
+                          PHILDAU,UMLDAU,WMLDAU)
 
           endif
 ! LDA+U
@@ -493,11 +499,10 @@ program MAIN2
 
             if (ITER==1.and.IE==1) then
 
-              call EBALANCE( &
-              'I',ITER,SCFSTEPS, &
-              IELAST,NPNT1, &
-              MYACTVRANK,ACTVCOMM, &
-              ETIME,EPROC,EPROCO)
+              call EBALANCE('I',ITER,SCFSTEPS, &
+                            IELAST,NPNT1, &
+                            MYACTVRANK,ACTVCOMM, &
+                            ETIME,EPROC,EPROCO)
 
             endif
 
@@ -509,39 +514,39 @@ program MAIN2
               do RF = 1,NREF
 
                 call TREF(EZ(IE),VREF(RF),LMAX,RMTREF(RF), &
-                TREFLL(1,1,RF),DTREFLL(1,1,RF))
+                          TREFLL(1,1,RF),DTREFLL(1,1,RF))
 
               end do
 
               call GREF(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
-              CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
-              REFPOT, &
-              TREFLL(1,1,1),DTREFLL(1,1,1),GREFN,DGREFN, &
-              IE, &
-              LLY_G0TR,I1, &
-              LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
+                        CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
+                        REFPOT, &
+                        TREFLL(1,1,1),DTREFLL(1,1,1),GREFN,DGREFN, &
+                        IE, &
+                        LLY_G0TR,I1, &
+                        LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
 
-              do 370 ISPIN = 1,NSPIN
+spinloop:     do ISPIN = 1,NSPIN
 
                 call CALCTMAT(LDAU,NLDAU,ICST, &
-                NSRA,EZ(IE), &
-                DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
-                VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
-                IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
-                LLDAU,WMLDAU)
+                              NSRA,EZ(IE), &
+                              DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
+                              VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
+                              IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
+                              TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
+                              LLDAU,WMLDAU)
 
-                if(LLY==1) then
+                if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
                   call CALCDTMAT(LDAU,NLDAU,ICST, &
-                  NSRA,EZ(IE),IE,NPNT1,NPNT2,NPNT3,PI,TK, &
-                  DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
-                  VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
-                  IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
-                  LLDAU,WMLDAU)
+                                NSRA,EZ(IE),IE,NPNT1,NPNT2,NPNT3,PI,TK, &
+                                DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
+                                VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
+                                IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
+                                DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
+                                LLDAU,WMLDAU)
                 end if
 
-
+                ! calculate DTIXIJ = T_down - T_up
                 if (XCCPL) then
                   if (ISPIN==1) then
                     do LM1 = 1,LMMAXD
@@ -560,16 +565,15 @@ program MAIN2
 
 
                 RF = REFPOT(I1)
-
-!         DO ISPIN = 1,NSPIN
                 do LM1 = 1,LMMAXD
                   TMATN(LM1,LM1,ISPIN) =  TMATN(LM1,LM1,ISPIN) &
                   - TREFLL(LM1,LM1,RF)
                   DTDE(LM1,LM1,ISPIN) =  DTDE(LM1,LM1,ISPIN) &
                   - DTREFLL(LM1,LM1,RF)
                 end do
-!         END DO
 
+                ! TMATN now contains Delta t = t - t_ref !!!
+                ! DTDE now contains Delta dt !!!
 
 
 ! PIN ==================================================================
@@ -601,9 +605,7 @@ program MAIN2
                     ' KMESH = ', NMESH,' ISPIN = ',ISPIN
                   end if
 
-
 ! <<>>
-
 
                   call KLOOPZ1( &
                   GMATN(1,1,1,ISPIN), &
@@ -626,7 +628,8 @@ program MAIN2
                   LSMYRANK,LSRANK,LSMPIB,LSMPIC)
 
                 endif
-370           continue                               ! ISPIN = 1,NSPIN
+
+              end do spinloop                          ! ISPIN = 1,NSPIN
 
 ! PIN ==================================================================
 !     END do loop over spins (SMPID-parallel)
@@ -673,7 +676,7 @@ program MAIN2
 
           end do                   ! IE = 1,IELAST
 
-          if (ERESJIJ) close(75)
+          if (ERESJIJ) close(75)   ! FIXME: is opened in XCCPLJIJ, but not closed?!
 
 ! E ====================================================================
 !     END do loop over energies (EMPID-parallel) to be implemented
@@ -683,13 +686,12 @@ program MAIN2
 !=======================================================================
 !     "allreduce" information of 1 .. EMPID and 1 .. SMPID processors
 !=======================================================================
-          call SREDGM( &
-          NSPIN,IELAST, &
-          MYRANK, &
-          SMPIC,SMYRANK,SRANK, &
-          EMPIC,EMYRANK,ERANK,EPROC, &
-          GMATN,LLY_GRDT, &
-          GMATN_ALL,LLY_GRDT_ALL)
+          call SREDGM(NSPIN,IELAST, &
+                      MYRANK, &
+                      SMPIC,SMYRANK,SRANK, &
+                      EMPIC,EMYRANK,ERANK,EPROC, &
+                      GMATN,LLY_GRDT, &
+                      GMATN_ALL,LLY_GRDT_ALL)
 !=======================================================================
 !=======================================================================
 
@@ -701,13 +703,13 @@ program MAIN2
 !     output of Jij's .. calling xccpljij with flag 'F'
 !=======================================================================
           if (XCCPL) then
-            call XCCPLJIJ( &
-            'F',I1,IE,JSCAL, &
-            RXIJ,NXIJ,IXCP,RXCCLS, &
-            GXIJ_ALL,DTIXIJ, &
-            LMPIC,LCOMM, &
-            MYRANK,EMPIC,EMYRANK, &
-            JXCIJINT,ERESJIJ)
+
+            call XCCPLJIJ('F',I1,IE,JSCAL, &
+                          RXIJ,NXIJ,IXCP,RXCCLS, &
+                          GXIJ_ALL,DTIXIJ, &
+                          LMPIC,LCOMM, &
+                          MYRANK,EMPIC,EMYRANK, &
+                          JXCIJINT,ERESJIJ)
           endif
 !=======================================================================
 !=======================================================================
@@ -716,11 +718,10 @@ program MAIN2
 !     on the basis of new timings determine now new distribution of
 !     work to 1 .. EMPID processors
 !=======================================================================
-          call EBALANCE( &
-          'R',ITER,SCFSTEPS, &
-          IELAST,NPNT1, &
-          MYACTVRANK,ACTVCOMM, &
-          ETIME,EPROC,EPROCO)
+          call EBALANCE('R',ITER,SCFSTEPS, &
+                        IELAST,NPNT1, &
+                        MYACTVRANK,ACTVCOMM, &
+                        ETIME,EPROC,EPROCO)
 !=======================================================================
 !=======================================================================
 
@@ -745,13 +746,12 @@ program MAIN2
 
               if(SRANK(SMPIB,SMPIC)==MAPSPIN) then
 
-                call EPRDIST( &
-                IELAST,KMESH,NOFKS, &
-                PRSC(1,1,PRSPIN), &
-                SPRS(1,1,PRSPIN), &
-                CNVFAC(1,PRSPIN), &
-                MYRANK,EMPIC,EMYRANK, &
-                EPROC,EPROCO)
+                call EPRDIST(IELAST,KMESH,NOFKS, &
+                             PRSC(1,1,PRSPIN), &
+                             SPRS(1,1,PRSPIN), &
+                             CNVFAC(1,PRSPIN), &
+                             MYRANK,EMPIC,EMYRANK, &
+                             EPROC,EPROCO)
 
               endif
             enddo
@@ -768,28 +768,30 @@ program MAIN2
 
             if (LLY==1) then
               call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
-              THETAS,ZAT,ICLEB1C, &
-              IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
-              NTCELL,ICST, &
-              IELAST,IEND1,NAEZ,NSPIN,NSRA, &
-              WEZRN,RNORM, &
-              GMATN_ALL, &
-              LLY_GRDT_ALL, &
-              LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-              DMATLDAU, &
-              LMPIC,MYLRANK, &
-              LGROUP,LCOMM,LSIZE)
+                          THETAS,ZAT,ICLEB1C, &
+                          IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
+                          NTCELL,ICST, &
+                          IELAST,IEND1,NAEZ,NSPIN,NSRA, &
+                          WEZRN,RNORM, &
+                          GMATN_ALL, &
+                          LLY_GRDT_ALL, &
+                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
+                          DMATLDAU, &
+                          LMPIC,MYLRANK, &
+                          LGROUP,LCOMM,LSIZE)
 
 ! IME
               call OUTTIME(MYLRANK(1),'Lloyd processed......',TIME_I,ITER)
 ! IME
+            else ! no Lloyd
 
-            else
               do IE=1,IELAST
                 WEZRN(IE,1) = WEZ(IE)
                 WEZRN(IE,2) = WEZ(IE)
               enddo
             endif
+
+            ! now WEZRN stores the weights for E-integration
 
             call CINIT(IEMXD*(LMAXD+2)*NSPIND,DEN)
             DENEF = 0.0D0
@@ -799,26 +801,26 @@ program MAIN2
               call CINIT(MMAXD*MMAXD*NSPIND*LMAXD1,DMATLDAU(1,1,1,1))
             endif
 
-! PIN ==================================================================
+! SPIN ==================================================================
 !     BEGIN do loop over spins
-! PIN===================================================================
+! SPIN ==================================================================
 
             do ISPIN = 1,NSPIN
               ICELL = NTCELL(I1)
               IPOT = (I1-1) * NSPIN + ISPIN
 
               call RHOVAL(LDORHOEF,ICST,IELAST, &
-              NSRA,ISPIN,NSPIN,EZ,WEZRN(1,ISPIN), &
-              DRDI(1,I1),R(1,I1),IRMIN(I1), &
-              VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &
-              ZAT(I1),IPAN(I1),IRCUT(0,I1), &
-              THETAS(1,1,ICELL),IFUNM(1,ICELL),LMSP(1,ICELL), &
-              RHO2NS,R2NEF, &
-              DEN(0,1,ISPIN),ESPV(0,ISPIN), &
-              CLEB1C,LOFLM1C,ICLEB1C,IEND1,JEND, &
-              GMATN_ALL, &
-              LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-              DMATLDAU)
+                          NSRA,ISPIN,NSPIN,EZ,WEZRN(1,ISPIN), &
+                          DRDI(1,I1),R(1,I1),IRMIN(I1), &
+                          VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &
+                          ZAT(I1),IPAN(I1),IRCUT(0,I1), &
+                          THETAS(1,1,ICELL),IFUNM(1,ICELL),LMSP(1,ICELL), &
+                          RHO2NS,R2NEF, &
+                          DEN(0,1,ISPIN),ESPV(0,ISPIN), &
+                          CLEB1C,LOFLM1C,ICLEB1C,IEND1,JEND, &
+                          GMATN_ALL, &
+                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
+                          DMATLDAU)
 
               if (LLY==1) then
                 do IE=1,IELAST
@@ -829,16 +831,18 @@ program MAIN2
               end if
 
               EBOT = E1
+
               call RHOCORE(EBOT,NSRA,ISPIN,NSPIN,I1, &
-              DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
-              A(I1),B(I1),ZAT(I1), &
-              IRCUT(0,I1),RHOCAT,QC, &
-              ECORE(1,ISPIN),NCORE(IPOT),LCORE(1,IPOT))
+                           DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
+                           A(I1),B(I1),ZAT(I1), &
+                           IRCUT(0,I1),RHOCAT,QC, &
+                           ECORE(1,ISPIN),NCORE(IPOT),LCORE(1,IPOT))
+
             end do
 
-! PIN ==================================================================
-!     END do loop over spins
-! PIN===================================================================
+! SPIN ==================================================================
+!      END do loop over spins
+! SPIN ===================================================================
 
             do ISPIN = 1,NSPIN
               do L = 0,LMAXD1
@@ -871,7 +875,7 @@ program MAIN2
             if (LDAU.and.NLDAU>=1) then
 
               call LDAUWMAT(I1,NSPIN,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
-              ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU)
+                            ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU)
 
             endif
 
@@ -885,13 +889,15 @@ program MAIN2
 ! -------------------------------------------------------------- density
 
             call RHOTOTB(NAEZ,I1,NSPIN,RHO2NS,RHOCAT, &
-            ZAT,DRDI,IRCUT, &
-            LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
-            CATOM)
+                         ZAT,DRDI,IRCUT, &
+                         LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
+                         CATOM)
 
             CHRGNT = CHRGNT + CATOM(1) - ZAT(I1)
+
+            ! write to 'results1'
             if (NPOL==0 .or. TEST('DOS     ')) then
-              write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
+              write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
             else
               write(71,rec=I1) QC,CATOM,CHARGE,ECORE
             end if
@@ -900,8 +906,6 @@ program MAIN2
 !----------------------------------------------------------------------
 ! END L-MPI: only processes with LMPIC = 1 are working
 !----------------------------------------------------------------------
-
-
         end if
       end do
 
@@ -946,9 +950,10 @@ program MAIN2
         E2SHIFT = CHRGNT/DENEF
         E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT)
         EFOLD = E2
-        if (ISHIFT<2) E2 = E2 - E2SHIFT
 
-        if( MYLRANK(LMPIC)==0 ) then
+        if (ISHIFT < 2) E2 = E2 - E2SHIFT
+
+        if( MYLRANK(LMPIC) == 0 ) then
           write (6,fmt=9020) EFOLD,E2SHIFT
 
 ! --> divided by NAEZ because the weight of each atom has been already
@@ -1078,6 +1083,7 @@ program MAIN2
               LGROUP,LCOMM,LSIZE)
 ! ---------------------------------------------------------------------
             end if
+
             write(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
             EULDAU,EDCLDAU
 
@@ -1139,14 +1145,18 @@ program MAIN2
 ! =====================================================================
             do ISPIN = 1,NSPIN
               IPOT = NSPIN* (I1-1) + ISPIN
+
               do IR = 1,IRCUT(IPAN(I1),I1)
                 VONS(IR,1,ISPIN) = VONS(IR,1,ISPIN) + RFPI*VBC(ISPIN)
               end do
+
               call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
               IMAXSH(LMPOT),ILM,IFUNM(1,ICELL),LMPOT,GSH, &
               THETAS,ZAT(I1),RFPI, &
               R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL))
+
             end do
+
 ! -->   final construction of the potentials (straight mixing)
             MIX = MIXING
             RMSAVQ = 0.0D0
@@ -1162,6 +1172,7 @@ program MAIN2
             I1BRYD=I1
           end if
         end do
+
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
           call BRYDBM(VISP,VONS,VINS, &
@@ -1172,6 +1183,7 @@ program MAIN2
           LMPIC,MYLRANK, &
           LGROUP,LCOMM,LSIZE)
         endif
+
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1198,7 +1210,7 @@ program MAIN2
 ! ----------------------------------------------------- output_potential
           end if
         end do
-! !       CLOSE(66)
+
         close(72)
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
@@ -1236,9 +1248,8 @@ program MAIN2
 
 ! --> update energy contour
 
-
-          if(TEST('fix-EF  ')) rewind(41)
-          if(TEST('fix-EF  ')) read(41,*) E2
+!          if(TEST('fix-EF  ')) rewind(41)
+!          if(TEST('fix-EF  ')) read(41,*) E2
 
           call EMESHT(EZ,DEZ,IELAST,E1,E2,E2,TK, &
           NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
@@ -1258,14 +1269,12 @@ program MAIN2
 ! L-MPI: only process with MYLRANK(LMPIC = 1) = 0 is working here
 ! -----------------------------------------------------------------
 
-
 ! ..
       endif
 ! -----------------------------------------------------------------
 ! L-MPI: only processes with LMPIC = 1 are working here
 ! -----------------------------------------------------------------
-      close(66)
-! !      CLOSE(72)
+      close(66)  ! close 'vpotnew'
 ! -----------------------------------------------------------------
 
 !      CALL MPI_BARRIER(ACTVCOMM,IERR)
@@ -1351,7 +1360,6 @@ program MAIN2
 ! .. .
 
 
-
   endif ! ACTVGROUP
 
 !=====================================================================
@@ -1364,6 +1372,6 @@ program MAIN2
   call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 !      WRITE(6,*) 'BARRIER f:',MYRANK
   call MPI_FINALIZE(IERR)
-  stop
+
 end program MAIN2
         
