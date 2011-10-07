@@ -1,55 +1,73 @@
 # Makefile for kkr0
 
-BUILDDIR = ~/build/kkr0/
+# default values
+PLATFORM = gfortran
+TYPE = debug
+
 PROGRAM = kkr0.exe
 
+# Path to put object files
+# and module files
+BUILDDIR = ~/build/kkr0
+
+ifeq ($(PLATFORM),gfortran)
 FC = gfortran
-#FC = ifort
 FC90 = gfortran
-#FC90 = ifort -warn 
-FCFLAGS = -g
-FC90FLAGS = -g -Wall -std=f95 -fimplicit-none
-#LDFLAGS=-L/ -llapack_ifort -lblas_ifort
-LDFLAGS= -llapack_gfortran -lblas_gfortran
+FCFLAGS = -g -M $(BUILDDIR)
+FC90FLAGS = -Wall -std=f95 -fimplicit-none
+FCFLAGS += -I $(BUILDDIR)
+LDFLAGS = -llapack_gfortran -lblas_gfortran
+endif
 
-# add -std=f95
+ifeq ($(PLATFORM),ifort)
+FC = ifort
+FC90 = ifort
+# -module <path> specifies where to put .mod files
+FCFLAGS = -debug -module $(BUILDDIR)
+FC90FLAGS = -warn
+FCFLAGS += -I $(BUILDDIR) 
+LDFLAGS =-L/ -llapack_ifort -lblas_ifort
+endif
 
-SRCS = $(wildcard *.f)
-SRCS90 = $(wildcard *.f90)
-OBJS = ${SRCS:.f=.o}
-OBJS90 = ${SRCS90:.f90=.o}
+# Paths to look for files
+#DIRS = . dir1 dir2
+DIRS = .
+VPATH = $(DIRS)
 
-#MODULESRC = inc_p_replace_vars.f inc_p_replace.f
-#MODULESRC90 = inputcard_reader.f90
+SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
+SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
 
-.SUFFIXES:	.f .f90
+# notdir extracts only filename
+OBJS =  $(notdir ${SRCS:.f=.o})
+OBJS += $(notdir ${SRCS90:.f90=.o})
 
-inc_p_wrapper_module.o:
-	$(FC) $(FCFLAGS) -c inc_p_wrapper_module.f
+.PHONY: all
+all:	$(PROGRAM)
 
-inc_replace_vars.o:
-	$(FC) $(FCFLAGS) -c inc_p_replace_vars.f
+$(PROGRAM): $(OBJS)
+	$(FC90) $(FCFLAGS) $(FC90FLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
-inc_p_replace.o:	inc_replace_vars.o
-	$(FC) $(FCFLAGS) -c inc_p_replace.f
-
-inputcard_reader.o:	inc_p_replace.o
-	$(FC90) $(FC90FLAGS) -c inputcard_reader.f90
-
-.f90.o:
-	$(FC90) $(FC90FLAGS) -c $<
+%.o: %.f
+	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
 	
-.f.o:
-	$(FC) $(FCFLAGS) -c $<
+%.o: %.f90
+	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
-all:	$(OBJS) $(OBJS90) $(SRCS) $(SRCS90)
-		$(FC) $(FCFLAGS) -o $(PROGRAM) $(OBJS) $(OBJS90) $(LDFLAGS) 
-
+.PHONY: clean
 clean:
-	rm *.o 
-	rm *.mod
+	rm $(BUILDDIR)/*.o 
+	rm $(BUILDDIR)/*.mod
 	rm *.exe
-	
+
+.PHONY: test
 test:
-	cd $(BUILDDIR)
-	pwd
+	@echo $(SRCS)
+	@echo $(SRCS90)
+	@echo $(OBJS)
+	@echo $(VPATH)
+	
+#Module dependencies
+
+inc_p_wrapper_module.o: inc.p inc.cls
+inc_p_replace_vars.o: inc.p inc.cls
+inc_p_replace.o: inc_p_replace_vars.o
