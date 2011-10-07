@@ -10,239 +10,372 @@ program MAIN2
   use inc_p_wrapper_module
   implicit none
 
-!     .. Parameters ..
-  integer ::   LMMAXD
+  !     .. Parameters ..
+  integer::   LMMAXD
   parameter (LMMAXD= (LMAXD+1)**2)
-  integer ::   NPOTD
+  integer::   NPOTD
   parameter (NPOTD=NSPIND*NAEZD)
-  integer ::   LMAXD1
+  integer::   LMAXD1
   parameter (LMAXD1=LMAXD+1)
-  integer ::    MMAXD
+  integer::    MMAXD
   parameter (MMAXD  = 2*LMAXD + 1)
-  integer ::   LM2D
+  integer::   LM2D
   parameter (LM2D= (2*LMAXD+1)**2)
-  integer ::   LMXSPD
+  integer::   LMXSPD
   parameter (LMXSPD= (2*LPOTD+1)**2)
-  integer ::   LASSLD
+  integer::   LASSLD
   parameter (LASSLD=4*LMAXD)
-  integer ::   LMPOTD
+  integer::   LMPOTD
   parameter (LMPOTD= (LPOTD+1)**2)
-  integer ::   IRMIND
+  integer::   IRMIND
   parameter (IRMIND=IRMD-IRNSD)
-  integer ::   LRECPOT
+  integer::   LRECPOT
   parameter (LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20))
-  integer ::   LRECRES1,LRECRES2
+  integer::   LRECRES1
+  integer::LRECRES2
   parameter (LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2))
-  integer ::   NTIRD
+  integer::   NTIRD
   parameter (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
-  integer ::   MAXMSHD
+  integer::   MAXMSHD
   parameter (MAXMSHD=8)
-  integer ::   LLYALM
+  integer::   LLYALM
   parameter (LLYALM=LLY*(NAEZD*LMMAXD-1)+1)
-  integer ::   LLYNGD
+  integer::   LLYNGD
   parameter (LLYNGD=LLY*(NACLSD*LMMAXD-1)+1)
-  integer ::   NSYMAXD
+  integer::   NSYMAXD
   parameter (NSYMAXD=48)
-  double complex CZERO
+  double complex :: CZERO
   parameter      (CZERO=(0.0D0,0.0D0))
-!     ..
-!     .. Local Scalars ..
-! scaling factor for Jij calculation
-  double complex   JSCAL
-  double precision :: DENEF,E1,E2,TK,EFERMI,EBOT,EFOLD, &
-  CHRGNT,E2SHIFT,RCUTJIJ,DF, &
-  ALAT,FCM,MIX,MIXING,QBOUND,VOLUME0, &
-  RMAX,GMAX,FPI,PI,RFPI,RMSAVM,RMSAVQ, &
-  EREFLDAU, &                                      ! LDA+U
-  WALLCLOCK_I,WALLCLOCK_F                          ! time management
-  real ::             TIME_I,TIME_S, &             ! time management
-  TIME_E,TIME_EX
-  integer ::          ICELL,IR,LMAX, &
-  NPNT1,NPNT2,NPNT3,NPOL, &
-  NSPIN, &
-  ITER,SCFSTEPS,IMIX,NOITER,NOITER_ALL, &
-  IPF,ISHIFT, &
-  KPRE,KTE,KVMAD,KXC,KFORCE, &
-  L,LPOT,LMPOT,NAEZ,IEND,NCLEBD,LM1,LM2, &
-  IEND1, &
-  I,J,IPOT,ISPIN,I1,I1BRYD, &
-  IH,IRC1,IRMIN1,LM,NR,EKM, &
-  SYSTEM_I,SYSTEM_F, &
-  RATETIME,MAXTIME
-  logical ::          TEST,LCORDENS,XCCPL,JIJ,STOPIT,LDORHOEF,LDAU, &
-  ERESJIJ
-!     ..
+  !     ..
+  !     .. Local Scalars ..
 
-!     .. Local Arrays ..
-  double complex   EZ(IEMXD),WEZ(IEMXD)
-  double complex   DEZ(IEMXD), &
-  WEZRN(IEMXD,2), &
-  DEN(0:LMAXD1,IEMXD,NSPIND), &
-  DSYMLL(LMMAXD,LMMAXD,48), &
-  PHILDAU(IRMD,LMAXD1),                      &    ! LDA+U
-  DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  double precision :: WG(LASSLD),YRG(LASSLD,0:LASSLD,0:LASSLD), &
-  BRAVAIS(3,3),RBASIS(3,NAEZD),RECBV(3,3), &
-  VBC(2),VAV0,VOL0, &
-  SMAT(LMXSPD,NAEZD),CLEB(LMXSPD*LMPOTD), &
-  CLEB1C(NCLEB,2),RNORM(IEMXD,2), &
-  DFAC(0:LPOTD,0:LPOTD),RWS(NAEZD),RMT(NAEZD), &
-  GN(3,NMAXD),RM(3,NMAXD), &
-  BZKP(3,KPOIBZ,MAXMSHD), &
-  VOLCUB(KPOIBZ,MAXMSHD),VOLBZ(MAXMSHD), &
-  RR(3,0:NRD), &
+  double complex :: JSCAL        ! scaling factor for Jij calculation
+  double precision::DENEF
+  double precision::E1
+  double precision::E2
+  double precision::TK
+  double precision::EFERMI
+  double precision::EBOT
+  double precision::EFOLD
+  double precision::CHRGNT
+  double precision::E2SHIFT
+  double precision::RCUTJIJ
+  double precision::DF
+  double precision::ALAT
+  double precision::FCM
+  double precision::MIX
+  double precision::MIXING
+  double precision::QBOUND
+  double precision::VOLUME0
+  double precision::RMAX
+  double precision::GMAX
+  double precision::FPI
+  double precision::PI
+  double precision::RFPI
+  double precision::RMSAVM
+  double precision::RMSAVQ
+  double precision::EREFLDAU    ! LDA+U
 
-  VINS(IRMIND:IRMD,LMPOTD,2), &  ! .. input potential (spherical VISP, nonspherical VINS)
-  VISP(IRMD,2), &
-  VONS(IRMD,LMPOTD,2), &         !     .. output potential (nonspherical VONS)
-  ULDAU(LMAXD1),JLDAU(LMAXD1), &             ! LDA+U
-  UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1), &  ! LDA+U
-  WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)          ! LDA+U
-  integer ::          NMESH,KMESH(IEMXD),NOFKS(MAXMSHD), &
-  EZOA(NACLSD,NAEZD),NSYMAT, &
-  NUMN0(NAEZD),INDN0(NAEZD,NACLSD), &
-  ID,MAXMESH, &
-  NSG(ISHLD),NSR(ISHLD), &
-  LLDAU(LMAXD1), &                           ! LDA+U
-  NGMAX,NRMAX,NSHLG,NSHLR
-!     ..
-! ----------------------------------------------------------------------
-!   ECOU(0:LPOTD,NAEZD)    ! Coulomb energy
-!   EPOTIN(NAEZD),         ! energy of input potential (EPOTINB
-!   ESPC(0:3,NPOTD),        ! energy single particle core
-!   ESPV(0:LMAXD1,NPOTD)    ! energy single particle valence
-!   EXC(0:LPOTD,NAEZD),    ! E_xc
-! ----------------------------------------------------------------------
-  double complex &
-  TMATN(LMMAXD,LMMAXD,NSPIND), &
-  DTDE(LMMAXD,LMMAXD,NSPIND), &
-  TREFLL(LMMAXD,LMMAXD,NREFD), &
-  DTREFLL(LMMAXD,LMMAXD,NREFD), &
-  DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD), &
-  GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD), &
-  GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND), &
-  GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIND), &
-  DTIXIJ(LMMAXD,LMMAXD), &
-  GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND), &
-  GXIJ_ALL(LMMAXD,LMMAXD,NXIJD,NSPIND)
+  double precision::WALLCLOCK_I ! time management
+  double precision::WALLCLOCK_F
+  real::TIME_I
+  real::TIME_S
+  real::TIME_E
+  real::TIME_EX
 
-!----- Initial guess ---------------------------------------------------
-  complex ::          PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1)
-  double precision :: QMRBOUND
-  double precision :: CNVFAC(EKMD,NSPIND-SMPID+1)
-  integer ::          IGUESS,BCP,PRSPIN
-  integer ::          SPRS(NGUESSD*LMMAXD+1,EKMD+1,NSPIND-SMPID+1)
+  integer::ICELL
+  integer::IR
+  integer::LMAX
+  integer::NPNT1
+  integer::NPNT2
+  integer::NPNT3
+  integer::NPOL
+  integer::NSPIN
+  integer::ITER
+  integer::SCFSTEPS
+  integer::IMIX
+  integer::NOITER
+  integer::NOITER_ALL
+  integer::IPF
+  integer::ISHIFT
+  integer::KPRE
+  integer::KTE
+  integer::KVMAD
+  integer::KXC
+  integer::KFORCE
+  integer::L
+  integer::LPOT
+  integer::LMPOT
+  integer::NAEZ
+  integer::IEND
+  integer::NCLEBD
+  integer::LM1
+  integer::LM2
+  integer::IEND1
+  integer::I
+  integer::J
+  integer::IPOT
+  integer::ISPIN
+  integer::I1
+  integer::I1BRYD
+  integer::IH
+  integer::IRC1
+  integer::IRMIN1
+  integer::LM
+  integer::NR
+  integer::EKM
+  integer::SYSTEM_I
+  integer::SYSTEM_F
+  integer::RATETIME
+  integer::MAXTIME
+  logical::TEST
+  logical::LCORDENS
+  logical::XCCPL
+  logical::JIJ
+  logical::STOPIT
+  logical::LDORHOEF
+  logical::LDAU
+  logical::ERESJIJ
 
-!----- Lloyd -----------------------------------------------------------
-  double complex LLY_G0TR(IEMXD,NCLSD), &
-  LLY_GRDT(IEMXD,NSPIND), &
-  LLY_GRDT_ALL(IEMXD,NSPIND), &
-  TR_ALPH(NSPIND), &
-  JXCIJINT(NXIJD)
-! ----------------------------------------------------------------------
 
-! ----------------------------------------------------------------------
-  double precision :: ECOU(0:LPOTD),EPOTIN, &
-  ESPC(0:3,NSPIND),ESPV(0:LMAXD1,NSPIND), &
-  EXC(0:LPOTD),EULDAU,EDCLDAU
-  double precision :: A(NAEZD),B(NAEZD),DRDI(IRMD,NAEZD)
-  double precision :: R(IRMD,NAEZD),ECORE(20,2)
-  double precision :: THETAS(IRID,NFUND,NCELLD),ZAT(NAEZD)
+  !     .. Local Arrays ..
+  double complex :: EZ(IEMXD)
+  double complex :: WEZ(IEMXD)
+  double complex :: DEZ(IEMXD)
+  double complex :: WEZRN(IEMXD,2)
+  double complex :: DEN(0:LMAXD1,IEMXD,NSPIND)
+  double complex :: DSYMLL(LMMAXD,LMMAXD,48)
+  double complex :: PHILDAU(IRMD,LMAXD1)
+  double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1) ! LDA+U
+  double precision::WG(LASSLD)
+  double precision::YRG(LASSLD,0:LASSLD,0:LASSLD)
+  double precision::BRAVAIS(3,3)
+  double precision::RBASIS(3,NAEZD)
+  double precision::RECBV(3,3)
+  double precision::VBC(2)
+  double precision::VAV0
+  double precision::VOL0
+  double precision::SMAT(LMXSPD,NAEZD)
+  double precision::CLEB(LMXSPD*LMPOTD)
+  double precision::CLEB1C(NCLEB,2)
+  double precision::RNORM(IEMXD,2)
+  double precision::DFAC(0:LPOTD,0:LPOTD)
+  double precision::RWS(NAEZD)
+  double precision::RMT(NAEZD)
+  double precision::GN(3,NMAXD)
+  double precision::RM(3,NMAXD)
+  double precision::BZKP(3,KPOIBZ,MAXMSHD)
+  double precision::VOLCUB(KPOIBZ,MAXMSHD)
+  double precision::VOLBZ(MAXMSHD)
+  double precision::RR(3,0:NRD)
+  double precision::VINS(IRMIND:IRMD,LMPOTD,2) ! .. input potential (spherical VISP, nonspherical VINS)
+  double precision::VISP(IRMD,2)
+  double precision::VONS(IRMD,LMPOTD,2)        !     .. output potential (nonspherical VONS)
+  double precision::ULDAU(LMAXD1)              ! LDA+U
+  double precision::JLDAU(LMAXD1)              ! LDA+U
+  double precision::UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1) ! LDA+U
+  double precision::WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
 
-! ----------------------------------------------------------------------
-  double precision :: RHOCAT(IRMD,2), &
-  R2NEF(IRMD,LMPOTD,2)
-  double precision :: RHO2NS(IRMD,LMPOTD,2)
-  double precision :: CHARGE(0:LMAXD1,2)
-!     ..
-  double precision :: GSH(NGSHD)
-! ----------------------------------------------------------------------
-!  CMINST(LMPOTD,NAEZD)            ! charge moment of interstitial
-!  CMOM(LMPOTD,NAEZD)              ! LM moment of total charge
-!  CATOM                            ! total charge per atom
-!  QC                               ! core charge
-! ----------------------------------------------------------------------
-  double precision :: CMINST(LMPOTD),CMOM(LMPOTD),CATOM(NSPIND),QC
-  double precision :: VMAD
-!     ,,
-!     .. FORCES
-  double precision :: FLM(-1:1,NAEZD),FLMC(-1:1,NAEZD)
-!     .. MIXING
-  double precision :: SM1S(NTIRD),FM1S(NTIRD)
-  double precision :: UI2(NTIRD,2:ITDBRYD),VI2(NTIRD,2:ITDBRYD), &
-  WIT(2:ITDBRYD)
-! ----------------------------------------------------------------------
-  integer :: IMT(NAEZD),IPAN(NAEZD),IRC(NAEZD), &
-  IRNS(NAEZD), &
-  IRCUT(0:IPAND,NAEZD),IRMIN(NAEZD), &
-  IRWS(NAEZD),ITITLE(20,NPOTD)
-  integer :: LCORE(20,NPOTD),LCOREMAX,LLMSP(NFUND,NAEZD)
-  integer :: NCORE(NPOTD),NFU(NAEZD), &
-  NTCELL(NAEZD),ISYMINDEX(48)
-  integer :: ILM(NGSHD,3),IMAXSH(0:LMPOTD)
-  integer :: ICLEB(LMXSPD*LMPOTD,3),LOFLM(LMXSPD)
-  integer :: ICLEB1C(NCLEB,3),LOFLM1C(LM2D)
-  integer :: IFUNM(LMXSPD,NAEZD),ICST,NSRA, &
-  LMSP(LMXSPD,NAEZD),JEND(LMPOTD,0:LMAXD,0:LMAXD)
-  integer :: NCLS,NREF,RF,NLDAU
-  double precision :: RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NAEZD)
-  double precision :: RXIJ(NXIJD),        &  ! interatomic distance Ri-Rj
-  RXCCLS(3,NXIJD),    &                      ! position relative of j rel. to i (sorted)
-  ZKRXIJ(48,3,NXIJD)                         ! set up in clsjij, used in kkrmat01
-  integer ::          IXCP(NXIJD), &         ! index to atom in elem/cell at site in cluster
-  NXCP(NXIJD), &                             ! index to bravais lattice at site in cluster
-  XIJ,NXIJ
-  integer ::          ATOM(NACLSD,NAEZD), &
-  CLS(NAEZD), &
-  NACLS(NCLSD), &
-  REFPOT(NAEZD)
-  integer ::          NUTRC, & ! number of inequivalent atoms in the cluster
-  INTRC(NATRCD), &             ! pointer to atoms in the unit cell
-  NATRC,               & ! number of atoms in cluster
-  ATTRC(NATRCD), & ! index to atom in elem/cell at site in cluster
-  EZTRC(NATRCD) ! index to bravais lattice  at site in cluster
-!-----------------------------------------------------------------------
-!     ..
-!-----------------------------------------------------------------------
-!     .. MPI ..
-!     .. N-MPI
+  integer::NMESH
+  integer::KMESH(IEMXD)
+  integer::NOFKS(MAXMSHD)
+  integer::EZOA(NACLSD,NAEZD)
+  integer::NSYMAT
+  integer::NUMN0(NAEZD)
+  integer::INDN0(NAEZD,NACLSD)
+  integer::ID
+  integer::MAXMESH
+  integer::NSG(ISHLD)
+  integer::NSR(ISHLD)
+  integer::LLDAU(LMAXD1)    ! LDA+U
+  integer::NGMAX
+  integer::NRMAX
+  integer::NSHLG
+  integer::NSHLR
+  !     ..
+  ! ----------------------------------------------------------------------
+  !   ECOU(0:LPOTD,NAEZD)    ! Coulomb energy
+  !   EPOTIN(NAEZD),         ! energy of input potential (EPOTINB
+  !   ESPC(0:3,NPOTD),        ! energy single particle core
+  !   ESPV(0:LMAXD1,NPOTD)    ! energy single particle valence
+  !   EXC(0:LPOTD,NAEZD),    ! E_xc
+  ! ----------------------------------------------------------------------
+  double complex :: TMATN(LMMAXD,LMMAXD,NSPIND)
+  double complex :: DTDE(LMMAXD,LMMAXD,NSPIND)
+  double complex :: TREFLL(LMMAXD,LMMAXD,NREFD)
+  double complex :: DTREFLL(LMMAXD,LMMAXD,NREFD)
+  double complex :: DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD)
+  double complex :: GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD)
+  double complex :: GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND)
+  double complex :: GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIND)
+  double complex :: DTIXIJ(LMMAXD,LMMAXD)
+  double complex :: GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND)
+  double complex :: GXIJ_ALL(LMMAXD,LMMAXD,NXIJD,NSPIND)
 
-  integer ::   IERR
-  integer ::   MAPBLOCK
+  !----- Initial guess ---------------------------------------------------
+  complex::          PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1)
+  double precision:: QMRBOUND
+  double precision:: CNVFAC(EKMD,NSPIND-SMPID+1)
+  integer::          IGUESS
+  integer::BCP
+  integer::PRSPIN
+  integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1,NSPIND-SMPID+1)
+
+  !----- Lloyd -----------------------------------------------------------
+  double complex :: LLY_G0TR(IEMXD,NCLSD)
+  double complex :: LLY_GRDT(IEMXD,NSPIND)
+  double complex :: LLY_GRDT_ALL(IEMXD,NSPIND)
+  double complex :: TR_ALPH(NSPIND)
+  double complex :: JXCIJINT(NXIJD)
+  ! ----------------------------------------------------------------------
+
+  ! ----------------------------------------------------------------------
+  double precision::ECOU(0:LPOTD)
+  double precision::EPOTIN
+  double precision::ESPC(0:3,NSPIND)
+  double precision::ESPV(0:LMAXD1,NSPIND)
+  double precision::EXC(0:LPOTD)
+  double precision::EULDAU
+  double precision::EDCLDAU
+  double precision::A(NAEZD)
+  double precision::B(NAEZD)
+  double precision::DRDI(IRMD,NAEZD)
+  double precision::R(IRMD,NAEZD)
+  double precision::ECORE(20,2)
+  double precision::THETAS(IRID,NFUND,NCELLD)
+  double precision::ZAT(NAEZD)
+
+  ! ----------------------------------------------------------------------
+  double precision:: RHOCAT(IRMD,2)
+  double precision:: R2NEF(IRMD,LMPOTD,2)
+  double precision:: RHO2NS(IRMD,LMPOTD,2)
+  double precision:: CHARGE(0:LMAXD1,2)
+  !     ..
+  double precision::GSH(NGSHD)
+  double precision::CMINST(LMPOTD)    ! charge moment of interstitial
+  double precision::CMOM(LMPOTD)      ! LM moment of total charge
+  double precision::CATOM(NSPIND)     ! total charge per atom
+  double precision::QC                ! core charge
+  double precision::VMAD
+  !     ,,
+  !     .. FORCES
+  double precision::FLM(-1:1,NAEZD)
+  double precision::FLMC(-1:1,NAEZD)
+  !     .. MIXING
+  double precision::SM1S(NTIRD)
+  double precision::FM1S(NTIRD)
+  double precision::UI2(NTIRD,2:ITDBRYD)
+  double precision::VI2(NTIRD,2:ITDBRYD)
+  double precision::WIT(2:ITDBRYD)
+
+  ! ----------------------------------------------------------------------
+  integer::IMT(NAEZD)
+  integer::IPAN(NAEZD)
+  integer::IRC(NAEZD)
+  integer::IRNS(NAEZD)
+  integer::IRCUT(0:IPAND,NAEZD)
+  integer::IRMIN(NAEZD)
+  integer::IRWS(NAEZD)
+  integer::ITITLE(20,NPOTD)
+  integer::LCORE(20,NPOTD)
+  integer::LCOREMAX
+  integer::LLMSP(NFUND,NAEZD)
+  integer::NCORE(NPOTD)
+  integer::NFU(NAEZD)
+  integer::NTCELL(NAEZD)
+  integer::ISYMINDEX(48)
+  integer::ILM(NGSHD,3)
+  integer::IMAXSH(0:LMPOTD)
+  integer::ICLEB(LMXSPD*LMPOTD,3)
+  integer::LOFLM(LMXSPD)
+  integer::ICLEB1C(NCLEB,3)
+  integer::LOFLM1C(LM2D)
+  integer::IFUNM(LMXSPD,NAEZD)
+  integer::ICST
+  integer::NSRA
+  integer::LMSP(LMXSPD,NAEZD)
+  integer::JEND(LMPOTD,0:LMAXD,0:LMAXD)
+  integer::NCLS
+  integer::NREF
+  integer::RF
+  integer::NLDAU
+  double precision::RCLS(3,NACLSD,NCLSD)
+  double precision::RMTREF(NREFD)
+  double precision::VREF(NAEZD)
+
+  double precision::RXIJ(NXIJD)          ! interatomic distance Ri-Rj
+  double precision::RXCCLS(3,NXIJD)      ! position relative of j rel. to i (sorted)
+  double precision::ZKRXIJ(48,3,NXIJD)   ! set up in clsjij, used in kkrmat01
+  integer::IXCP(NXIJD)                   ! index to atom in elem/cell at site in cluster
+  integer::NXCP(NXIJD)                   ! index to bravais lattice at site in cluster
+  integer::XIJ
+  integer::NXIJ
+  integer::ATOM(NACLSD,NAEZD)
+  integer::CLS(NAEZD)
+  integer::NACLS(NCLSD)
+  integer::REFPOT(NAEZD)
+
+  integer::NUTRC                         ! number of inequivalent atoms in the cluster
+  integer::INTRC(NATRCD)                 ! pointer to atoms in the unit cell
+  integer::NATRC                         ! number of atoms in cluster
+  integer::ATTRC(NATRCD)                 ! index to atom in elem/cell at site in cluster
+  integer::EZTRC(NATRCD)                 ! index to bravais lattice  at site in cluster
+
+  !-----------------------------------------------------------------------
+  !     ..
+  !-----------------------------------------------------------------------
+  !     .. MPI ..
+  !     .. N-MPI
+
+  integer::   IERR
+  integer::   MAPBLOCK
   external     MAPBLOCK
 
-!    Now in common_mpi
-!    COMMON       /MPI/MYRANK,NROFNODES
-!    INTEGER ::      MYRANK,NROFNODES
+  !    Now in common_mpi
+  !    COMMON       /MPI/MYRANK,NROFNODES
+  !    INTEGER ::      MYRANK,NROFNODES
 
-!     .. L-MPI
-  integer ::      MYLRANK(LMPID*SMPID*EMPID), &
-  LCOMM(LMPID*SMPID*EMPID), &
-  LGROUP(LMPID*SMPID*EMPID), &
-  LSIZE(LMPID*SMPID*EMPID), &
-  LMPIC
-!     .. LS-MPI
-  integer ::      LSRANK(LMPID,NAEZD*SMPID*EMPID), &
-  LSMYRANK(LMPID,NAEZD*SMPID*EMPID), &
-  LSMPIC,LSMPIB
-!     .. S-MPI
-  integer ::      SRANK(SMPID,NAEZD*LMPID*EMPID), &
-  SMYRANK(SMPID,NAEZD*LMPID*EMPID), &
-  SMPIC,SMPIB,MAPSPIN
-!     .. E-MPI
-  real ::         ETIME(IEMXD)
-  integer ::      EMYRANK(EMPID,NAEZD*LMPID*SMPID), &
-  ERANK(EMPID,NAEZD*LMPID*SMPID), &
-  EMPIC,EMPIB, &
-  IE,IELAST, &
-  EPROC(IEMXD),EPROCO(IEMXD)
-!     .. ACTV-MPI
-  integer ::      MYACTVRANK, &
-  ACTVCOMM,ACTVGROUP,ACTVSIZE, &
-  MYBCRANK,BCRANK
-  double precision WORK1(2),WORK2(2)
-  external MPI_ALLREDUCE, &
-  MPI_FINALIZE,MPI_SEND
+  !     .. L-MPI
+  integer::MYLRANK(LMPID*SMPID*EMPID)
+  integer::LCOMM(LMPID*SMPID*EMPID)
+  integer::LGROUP(LMPID*SMPID*EMPID)
+  integer::LSIZE(LMPID*SMPID*EMPID)
+  integer::LMPIC
+
+  !     .. LS-MPI
+  integer::LSRANK(LMPID,NAEZD*SMPID*EMPID)
+  integer::LSMYRANK(LMPID,NAEZD*SMPID*EMPID)
+  integer::LSMPIC
+  integer::LSMPIB
+  !     .. S-MPI
+  integer::SRANK(SMPID,NAEZD*LMPID*EMPID)
+  integer::SMYRANK(SMPID,NAEZD*LMPID*EMPID)
+  integer::SMPIC
+  integer::SMPIB
+  integer::MAPSPIN
+
+  !     .. E-MPI
+  real::ETIME(IEMXD)
+  integer::EMYRANK(EMPID,NAEZD*LMPID*SMPID)
+  integer::ERANK(EMPID,NAEZD*LMPID*SMPID)
+  integer::EMPIC
+  integer::EMPIB
+  integer::IE
+  integer::IELAST
+  integer::EPROC(IEMXD)
+  integer::EPROCO(IEMXD)
+
+  !     .. ACTV-MPI
+  integer::MYACTVRANK
+  integer::ACTVCOMM
+  integer::ACTVGROUP
+  integer::ACTVSIZE
+  integer::MYBCRANK
+  integer::BCRANK
+  double precision :: WORK1(2)
+  double precision :: WORK2(2)
+
+  external MPI_ALLREDUCE,MPI_FINALIZE,MPI_SEND
   !     ..
   !     .. Arrays in Common ..
   character(len=8)::OPTC(8)
@@ -473,7 +606,7 @@ program MAIN2
           if (LDAU) then
 
             EREFLDAU = EFERMI
-            EREFLDAU = 0.48
+            EREFLDAU = 0.48       ! FIXME: hardcoded
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
                           VISP,NSPIN,R(1,I1),DRDI(1,I1), &
@@ -948,7 +1081,7 @@ spinloop:     do ISPIN = 1,NSPIN
 !     old Fermi level E2 and density of states DENEF
 
         E2SHIFT = CHRGNT/DENEF
-        E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT)
+        E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT) !FIXME: hardcoded
         EFOLD = E2
 
         if (ISHIFT < 2) E2 = E2 - E2SHIFT
@@ -976,8 +1109,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
         do I1 = 1,NAEZ
-          if(MYLRANK(LMPIC)== &
-          MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+          if(MYLRANK(LMPIC) == MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
             ICELL = NTCELL(I1)
 
             do ISPIN = 1,NSPIN
@@ -1032,7 +1164,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
 
-            if (KFORCE==1.and.ITER==SCFSTEPS) then
+            if (KFORCE==1 .and. ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
               call FORCEH(CMOM,FLM,LPOT,NSPIN,I1,RHO2NS,VONS, &
               R,DRDI,IMT,ZAT)
@@ -1224,6 +1356,7 @@ spinloop:     do ISPIN = 1,NSPIN
         ECORE,LCORE,NCORE,ZAT,ITITLE, &
         LMPIC,MYLRANK, &
         LGROUP,LCOMM,LSIZE)
+
 9020    format ('                old', &
         ' E FERMI ',F12.6,' Delta E_F = ',f12.6)
 9030    format ('                new', &
