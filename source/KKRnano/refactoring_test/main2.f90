@@ -1322,6 +1322,23 @@ spinloop:     do ISPIN = 1,NSPIN
         do I1 = 1,NAEZ
           if(MYLRANK(LMPIC)== &
           MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+
+            !initialise VINS
+            do ISPIN = 1,2
+              do LM = 1, LMPOTD
+                do J = IRMIND, IRMD
+                  VINS(J,LM,ISPIN) = 0.0D0
+                enddo
+              enddo
+            enddo
+
+            !initialise VISP
+            do ISPIN = 1,2
+              do J = 1, IRMD
+                VISP(J,ISPIN) = 0.0D0
+              enddo
+            enddo
+
             do ISPIN = 1,NSPIN
               IPOT = (I1-1)*NSPIN + ISPIN
 
