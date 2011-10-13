@@ -1,18 +1,16 @@
     subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,VOLBZ, &
     TMATLL,MSSQ, &
-    IE,IELAST,ITER, &
+    ITER, &
     ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
     GINP,DGINP, &
     NUMN0,INDN0,IAT, &
-    NATRC,ATTRC,EZTRC,NUTRC,INTRC, &
     SPRS,PRSC,EKM,NOITER, &
-    EZ,QMRBOUND,IGUESS,BCP,CNVFAC, &
+    QMRBOUND,IGUESS,BCP,CNVFAC, &
     DTDE_LOCAL, &
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH, &
-    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
-    LSMYRANK,LSRANK,LSMPIB,LSMPIC)
+    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
 
     use inc_p_wrapper_module
     use mpi
@@ -61,8 +59,6 @@
     integer::NSYMAT
     integer::IGUESS
     integer::BCP
-    integer::IE
-    integer::IELAST
     integer::ITER
     integer::NXIJ
     integer::IXCP(NXIJD)
@@ -86,7 +82,6 @@
     double complex :: DPDE_LOCAL(LLYALM,LMMAXD)
     double complex :: LLY_GRDT
 
-    double complex :: EZ(IEMXD)
     complex        :: PRSC(NGUESSD*LMMAXD,EKMD)
     double precision::BZKP(3,KPOIBZ)
     double precision::VOLCUB(KPOIBZ)
@@ -100,12 +95,7 @@
     integer:: EZOA(NACLSD,*)
     integer:: NACLS(*)
     integer:: SPRS(NGUESSD*LMMAXD+1,EKMD+1)
-    integer:: NUTRC          !number of inequivalent atoms in the trunation cluster
-    integer:: INTRC(NATRCD)  !pointer to atoms in the unit cell
-    integer:: NATRC          !number of atoms in truncation cluster
-    integer:: ATTRC(NATRCD)  !index to atom in elem/cell at site in truncation cluster
-    integer:: EZTRC(NATRCD)  !index to bravais lattice  at site in truncation cluster
-    !     ..
+
     !     .. LOCAL SCALARS ..
     double complex::TRACE
     double complex::TRACEK
@@ -162,12 +152,7 @@
     integer:: &
         LSIZE(LMPID*SMPID*EMPID)
     integer::LMPIC
-    !     .. LS-MPI
-    integer:: LSMYRANK(LMPID,NAEZD*SMPID*EMPID)
-    integer:: &
-        LSRANK(LMPID,NAEZD*SMPID*EMPID)
-    integer::LSMPIB
-    integer::LSMPIC
+
     !     .. N-MPI
     integer:: IERR
 
@@ -225,8 +210,10 @@
             do site_index = 1,NAEZ
 
                 ref_cluster_index = CLS(site_index)
+
                 call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+                           BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+
                 call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
                 ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index))
             end do
@@ -291,11 +278,14 @@
 
         do site_index = 1,NAEZ
             ref_cluster_index = CLS(site_index)
+
             call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-            BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+                       BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+
             call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
-            ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
-            GINP(1,1,1,ref_cluster_index))
+                       ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+                       GINP(1,1,1,ref_cluster_index))
+
         end do
 
     ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------

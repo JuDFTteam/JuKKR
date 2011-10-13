@@ -62,9 +62,6 @@ C     .. Local Arrays ..
       DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD)
       DOUBLE PRECISION BVMAD(LMPOTD)
 C----- MPI ---------------------------------------------------------------
-C     .. N-MPI .. 
-      INTEGER MYRANK,NROFNODES
-      COMMON /MPI/MYRANK,NROFNODES
       INTEGER IERR,MAPBLOCK
 C     .. L-MPI
       INTEGER      MYLRANK(LMPID*SMPID*EMPID),

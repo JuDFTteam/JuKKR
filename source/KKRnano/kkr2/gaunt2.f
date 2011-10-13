@@ -1,5 +1,5 @@
 C***********************************************************************
-      SUBROUTINE GAUNT2(W,YR)
+      SUBROUTINE GAUNT2(W,YR,LMAX)
 C ************************************************************************
 c     sets up values needed for gaunt
 c        m. weinert  january 1982
@@ -7,25 +7,26 @@ c
 c     changed for calculating with real spherical harmonics
 c                                           b.drittler  july 1987
 c
-c     W(N)        integration weights on 4*LMAXD points in the intervall
+c     W(N)        integration weights on 4*LMAX points in the intervall
 c                 (-1,0) (from routine GRULE)
 c
-c     YR(N,L,M)   spherical harmonics on 4*LMAXD points to angular 
+c     YR(N,L,M)   spherical harmonics on 4*LMAX points to angular
 c                 momentum indices (l,m) scaled with a factor 
 c                 of RF=(4*pi)**(1/3)
 c
+c     LMAX        l-cutoff, added after inc.p remove
+c
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER N
-      PARAMETER (N=4*LMAXD)
+C      include 'inc.p'
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: LMAX
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A,CD,CTH,FAC,FPI,RF,STH,T
       INTEGER K,L,LOMAX,M
 C     ..
-C     .. Local Arrays ..
-      DOUBLE PRECISION P(0:N+1,0:N),X(N)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL GRULE
@@ -34,11 +35,21 @@ C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
 C     ..
 C     .. Save statement ..
+C     E.Rabel: is it really needed?
       SAVE
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION W(*),YR(N,0:N,0:N)
+C      DOUBLE PRECISION W(*),YR(N,0:N,0:N)
+C      N = 4 * LMAX
+      DOUBLE PRECISION W(*),YR(4*LMAX,0:4*LMAX,0:4*LMAX)
 C     ..
+
+C     .. Local Arrays ..
+      DOUBLE PRECISION P(0:4*LMAX+1,0:4*LMAX),X(4*LMAX)
+
+      INTEGER N
+      N=4*LMAX
+
       FPI = 16.D0*ATAN(1.0D0)
       RF = FPI** (1.0D0/3.0D0)
       LOMAX = N

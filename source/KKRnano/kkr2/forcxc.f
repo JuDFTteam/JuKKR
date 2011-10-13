@@ -44,9 +44,8 @@ C     .. Save statement ..
       SAVE PI
 C     ..
 C     .. MPI variables ..
-C     .. N-MPI ..
-      INTEGER IERR,MYRANK,NROFNODES
-      COMMON /MPI/MYRANK,NROFNODES
+      INTEGER IERR
+
 C     .. L-MPI ..
       INTEGER      MYLRANK(LMPID*SMPID*EMPID),
      +             LCOMM(LMPID*SMPID*EMPID),

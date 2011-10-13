@@ -18,7 +18,8 @@ C
       PARAMETER        (CONE=(1.0D0,0.0D0),CZERO=(0.0D0,0.0D0))
 C     ..
 C     ... Global Scalars ..
-      INTEGER          IAT,OMEGA,DELTA  ! scalars in Matrix-Matrix-Mult.
+      INTEGER          IAT
+      DOUBLE COMPLEX   OMEGA,DELTA  ! scalars in Matrix-Matrix-Mult.
 C     ... Global Arrays ..
       DOUBLE COMPLEX   X(NDIM,LMMAXD),AX(NDIM,LMMAXD),
      +                  GLLH(LMMAXD,NGTBD,NAEZD)

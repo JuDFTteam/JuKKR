@@ -383,7 +383,7 @@ c print number of points
       ELSE
 C The following statements for NPOL > 0 are kept for backwards compatibility.
 C They were used before the year 2009 in older versions of the 
-C KKR-GF programs.
+C KKR-GF programs. (remark E.R.: kkrnano - this code is used if NPOL>0)
 C *                                                                    *
 C * The three lines in the backwards compatibility code are defined by:*
 C *                                                                    *
@@ -540,7 +540,15 @@ C     .. Array Arguments ..
 C     .. 
 C     .. Local Scalars .. 
       INTEGER I 
-C     .. 
+C     ..
+
+C     FIXME
+      WRITE(*,*) "STOP in GAULEGE, file emesht.f"
+      WRITE(*,*) "This routine should not be called."
+      WRITE(*,*) "It dependes on values of implicit, uninitialised"
+      WRITE(*,*) "variables NCASE and NC"
+      STOP
+
       IF (N.GT.32) N = ((N-1)/4+1)*4 
       IF (N.GT.64) N = ((N-1)/8+1)*8 
       IF(NCASE.EQ.0) THEN 

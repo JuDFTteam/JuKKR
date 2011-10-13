@@ -22,6 +22,7 @@ C *  Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th    *
 C *  one it is used only locally (GNR/RMR)       v.popescu May 2004    *
 C *                                                                    *
 C **********************************************************************
+      USE common_mpi
       IMPLICIT NONE
 C     ..
 C     .. Scalar arguments ..
@@ -50,8 +51,8 @@ C     .. Intrinsic functions ..
       INTRINSIC ABS,ATAN,DBLE,IDINT,MAX,MOD,SQRT
 C     ..
 C .. MPI ..
-      INTEGER MYRANK,NROFNODES
-      COMMON /MPI/MYRANK,NROFNODES
+C      INTEGER MYRANK,NROFNODES
+C      COMMON /MPI/MYRANK,NROFNODES
 C     .. External subroutines ..
       EXTERNAL IOINPUT
 C     ..................................................................

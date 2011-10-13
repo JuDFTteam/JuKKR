@@ -102,8 +102,8 @@ C     .. Data statements ..
 C     ..
 C     .. MPI variables ..
 C     .. N-MPI ..
-      INTEGER IERR,MYRANK,NROFNODES
-      COMMON /MPI/MYRANK,NROFNODES
+C      INTEGER IERR,MYRANK,NROFNODES
+C      COMMON /MPI/MYRANK,NROFNODES
 C     .. L-MPI ..
       INTEGER      MYLRANK(LMPID*SMPID*EMPID),
      +             LCOMM(LMPID*SMPID*EMPID),

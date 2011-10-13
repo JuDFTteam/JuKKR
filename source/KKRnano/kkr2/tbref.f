@@ -196,8 +196,8 @@ C     .. External Subroutines ..
       EXTERNAL         GLL95
 C     ..
 C     .. N-MPI .. 
-      INTEGER          MYRANK,NROFNODES
-      COMMON          /MPI/MYRANK,NROFNODES
+C      INTEGER          MYRANK,NROFNODES
+C      COMMON          /MPI/MYRANK,NROFNODES
       INTEGER          IERR,MAPBLOCK
 C     .. L-MPI
       INTEGER          MYLRANK(LMPID*SMPID*EMPID),

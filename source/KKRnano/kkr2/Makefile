@@ -8,15 +8,15 @@ PROGRAM = kkr2.exe
 
 # Path to put object files
 # and module files
-BUILDDIR = ~/build/kkr2
+BUILDDIR = $(HOME)/build/kkr2
 
 
 ifeq ($(PLATFORM),ifort_IFF)
-FC = mpif77
+FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -O2 -module $(BUILDDIR)
-FC90FLAGS = -warn
+FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =
 # set run paths to look for shared libraries (-Wl means pass to linker)
@@ -65,9 +65,13 @@ test:
 	
 #Module dependencies
 
-inc_p_wrapper_module.o: inc.p inc.cls
+# only main2 and lattice3d use common_mpi
 main2.o: inc_p_wrapper_module.o common_mpi.o
+lattice3d.o: common_mpi.o
+
+inc_p_wrapper_module.o: inc.p inc.cls
 kloopz1.o: inc_p_wrapper_module.o
 kkrmat01.o: inc_p_wrapper_module.o
 eprdist.o: inc_p_wrapper_module.o
 prinvit.o: inc_p_wrapper_module.o
+

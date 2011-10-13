@@ -1,17 +1,15 @@
-    subroutine KLOOPZ1(GMATN,ALAT,IE,IELAST,ITER, &
+    subroutine KLOOPZ1(GMATN,ALAT,IE,ITER, &
     NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS, &
     NACLS,RR,EZOA,ATOM,GINP_LOCAL,DGINP, &
     NSYMAT,DSYMLL, &
     TSST_LOCAL,DTDE_LOCAL, &
     NUMN0,INDN0,I2, &
-    NATRC,ATTRC,EZTRC,NUTRC,INTRC, &
     SPRS, &
     PRSC,EKM,NOITER, &
-    EZPRE,QMRBOUND,IGUESS,BCP,CNVFAC, &
+    QMRBOUND,IGUESS,BCP,CNVFAC, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH,GMATXIJ, &
-    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
-    LSMYRANK,LSRANK,LSMPIB,LSMPIC)
+    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
 
 ! **********************************************************************
 
@@ -40,7 +38,6 @@
     double precision::VOLBZ
     double precision::QMRBOUND
     integer::IE
-    integer::IELAST
     integer::ITER
     integer::NOFKS
     integer::I2
@@ -74,11 +71,6 @@
     integer:: CLS(*)
     integer:: EZOA(NACLSD,*)
     integer:: NACLS(*)
-    integer:: NUTRC         ! number of inequivalent atoms in the cluster
-    integer:: INTRC(NATRCD) ! pointer to atoms in the unit cell
-    integer:: NATRC         ! number of atoms in cluster
-    integer:: ATTRC(NATRCD) ! index to atom in elem/cell at site in cluster
-    integer:: EZTRC(NATRCD) ! index to bravais lattice  at site in cluster
     !     ..
     integer::NUMN0(NAEZD)
     integer::INDN0(NAEZD,NACLSD)
@@ -109,7 +101,6 @@
 
     !----- Initial Guess arrays-----------------------------------------------
     complex::          PRSC(NGUESSD*LMMAXD,EKMD)
-    double complex ::  EZPRE(IEMXD)
     integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
     !=======================================================================
     !-----------------------------------------------------------------------
@@ -120,11 +111,7 @@
     integer:: LGROUP(LMPID*SMPID*EMPID)
     integer:: LSIZE(LMPID*SMPID*EMPID)
     integer::LMPIC
-    !     .. LS-MPI
-    integer:: LSMYRANK(LMPID,NAEZD*SMPID*EMPID)
-    integer:: LSRANK(LMPID,NAEZD*SMPID*EMPID)
-    integer::LSMPIB
-    integer::LSMPIC
+
     !     .. External Subroutines ..
     logical:: TEST
     logical::XCCPL
@@ -196,20 +183,18 @@
     TAUVBZ = 1.D0/VOLBZ
 
     call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,MSSQ, &
-    IE,IELAST,ITER, &
+    ITER, &
     ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
     GINP_LOCAL,DGINP, &
     NUMN0,INDN0,I2, &
-    NATRC,ATTRC,EZTRC,NUTRC,INTRC, &
     SPRS,PRSC, &
     EKM,NOITER, &
-    EZPRE,QMRBOUND,IGUESS,BCP,CNVFAC, &
+    QMRBOUND,IGUESS,BCP,CNVFAC, &
     DTDE_LOCAL, &
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH, &
-    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
-    LSMYRANK,LSRANK,LSMPIB,LSMPIC)
+    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
 
 
 !-------------------------------------------------------- SYMMETRISE GLL

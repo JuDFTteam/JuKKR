@@ -527,7 +527,7 @@ program MAIN2
 
       LDORHOEF = NPOL/=0  ! needed in RHOVAL
 
-      call GAUNT2(WG,YRG)
+      call GAUNT2(WG,YRG,LMAX)
 
       call MADELUNG3D(LPOT,YRG,WG,ALAT, &
       RMAX,GMAX,BRAVAIS,RECBV, &
@@ -742,7 +742,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
                   call KLOOPZ1( &
                   GMATN(1,1,1,ISPIN), &
-                  ALAT,IE,IELAST,ITER,NAEZ, &
+                  ALAT,IE,ITER,NAEZ, &
                   NOFKS(NMESH),VOLBZ(NMESH), &
                   BZKP(1,1,NMESH),VOLCUB(1,NMESH), &
                   CLS,NACLS,RR, &
@@ -750,15 +750,13 @@ spinloop:     do ISPIN = 1,NSPIN
                   NSYMAT,DSYMLL, &
                   TMATN(:,:,ISPIN),DTDE(:,:,ISPIN), &
                   NUMN0,INDN0,I1, &
-                  NATRC,ATTRC,EZTRC,NUTRC,INTRC, &
                   SPRS(1,1,PRSPIN),PRSC(1,1,PRSPIN), &
                   EKM,NOITER, &
-                  EZ,QMRBOUND,IGUESS,BCP,CNVFAC(1,PRSPIN), &
+                  QMRBOUND,IGUESS,BCP,CNVFAC(1,PRSPIN), &
                   NXIJ,XCCPL,IXCP,ZKRXIJ, &
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
-                  LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
-                  LSMYRANK,LSRANK,LSMPIB,LSMPIC)
+                  LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
 
                 endif
 

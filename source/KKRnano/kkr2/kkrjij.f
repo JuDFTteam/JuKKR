@@ -68,8 +68,9 @@ C     .. L-MPI
      +                 LSIZE(LMPID*SMPID*EMPID),
      +                 LMPI,LMPIC
 C     .. N-MPI
-      INTEGER          MYRANK,NROFNODES,MAPBLOCK,IERR
-      COMMON           /MPI/MYRANK,NROFNODES
+      INTEGER          MAPBLOCK,IERR
+C      INTEGER          MYRANK,NROFNODES
+C      COMMON           /MPI/MYRANK,NROFNODES
 c     ..
 c ------------------------------------------------------------------------
 
