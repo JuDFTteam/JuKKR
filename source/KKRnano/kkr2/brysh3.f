@@ -1,6 +1,8 @@
 c ************************************************************************
       SUBROUTINE BRYSH3(Y,X,Z,IRMIN,IRC,IATOM,
-     +                  NAEZ,NSPIN,IMAP,LMPOT)
+     &                  NAEZ,NSPIN,IMAP,LMPOT,
+C                       new parameters after inc.p removal
+     &                  IRMD, IRNSD)
 c*********************************************************************
 c     shifts the density or potential of all mt-cell into one single
 c     vector and projects out the coulomb part only.
@@ -10,18 +12,23 @@ c
 c     modified for parallelization
 c                                    a. thiess , jun 2008   
 c ------------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
+C      include 'inc.p'
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      INTEGER IRMIND
+C      PARAMETER (IRMIND=IRMD-IRNSD)
 C     ..
+
+      INTEGER IRMD
+      INTEGER IRNSD
+
 C     .. Scalar Arguments ..
       INTEGER IMAP,LMPOT,IATOM,NAEZ,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION X(IRMD,*),Y(*),Z(IRMIND:IRMD,LMPOTD,*)
+      DOUBLE PRECISION X(IRMD,*),Y(*),Z((IRMD-IRNSD):IRMD,LMPOT,*)
       INTEGER IRC(*),IRMIN(*)
 C     ..
 C     .. Local Scalars ..

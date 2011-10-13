@@ -580,7 +580,8 @@ program MAIN2
             inquire(file='ERESJIJ',exist=ERESJIJ)
 
             call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,LMPIC,NSYMAT,ISYMINDEX, &
-                        IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ)
+                        IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
+                        nrd, nxijd)
 
             do ISPIN = 1, NSPIN
               do XIJ = 1, NXIJ
@@ -667,7 +668,8 @@ spinloop:     do ISPIN = 1,NSPIN
                               VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                               IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
                               TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
-                              LLDAU,WMLDAU)
+                              LLDAU,WMLDAU, &
+                              nspind, ncleb, ipand, irmd, irnsd)
 
                 if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
                   call CALCDTMAT(LDAU,NLDAU,ICST, &
@@ -676,7 +678,8 @@ spinloop:     do ISPIN = 1,NSPIN
                                 VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                                 IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
                                 DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
-                                LLDAU,WMLDAU)
+                                LLDAU,WMLDAU, &
+                                nspind, ncleb, ipand, irmd, irnsd)
                 end if
 
                 ! calculate DTIXIJ = T_down - T_up
@@ -1281,9 +1284,10 @@ spinloop:     do ISPIN = 1,NSPIN
               end do
 
               call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
-              IMAXSH(LMPOT),ILM,IFUNM(1,ICELL),LMPOT,GSH, &
-              THETAS,ZAT(I1),RFPI, &
-              R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL))
+                          IMAXSH(LMPOT),ILM,IFUNM(1,ICELL),LMPOT,GSH, &
+                          THETAS,ZAT(I1),RFPI, &
+                          R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
+                          irid, nfund, irmd, ngshd)
 
             end do
 
@@ -1311,7 +1315,9 @@ spinloop:     do ISPIN = 1,NSPIN
           IMIX,IPF,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
           LMPIC,MYLRANK, &
-          LGROUP,LCOMM,LSIZE)
+          LGROUP,LCOMM,LSIZE, &
+          itdbryd, irmd, irnsd, nspind, &
+          LMPID * SMPID * EMPID)
         endif
 
 !----------------------------------------------------------------------

@@ -1,6 +1,8 @@
 c ************************************************************************
       SUBROUTINE BRYSH2(Y,X,IRMIN,IRC,IATOM,
-     &                  NAEZ,NSPIN,IMAP,LMPOT)
+     &                  NAEZ,NSPIN,IMAP,LMPOT,
+c                       new parameter after inc.p removal
+     &                  IRMD)
 c*********************************************************************
 c     maps the density or potential back from one single vector into
 c     the proper bins of each single mt-cell . the magnetization
@@ -8,22 +10,27 @@ c     density is also added in.
 c                                    s. bluegel , kfa , 1987
 c
 c ------------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
-      include 'inc.p'
+C      include 'inc.p'
 c      INTEGER IRMD,LPOTD
 c      PARAMETER (IRMD=424,LPOTD=8)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
+
+      INTEGER IRMD
+
 C     .. Scalar Arguments ..
       INTEGER IMAP,LMPOT,NATPS,NAEZ,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION X(IRMD,LMPOTD,*),Y(*)
+      DOUBLE PRECISION X(IRMD,LMPOT,*),Y(*)
       INTEGER IRC(*),IRMIN(*)
 C     ..
 C     .. Local Scalars ..
       INTEGER IP,IR,IRC1,IRMIN1,IS,LM
+      INTEGER IATOM
 C     ..
       IMAP = 0
 

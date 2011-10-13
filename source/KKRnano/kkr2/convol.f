@@ -1,11 +1,21 @@
 c ************************************************************************
       SUBROUTINE CONVOL(IMT1,IRC1,ICELL,IMAXSH,ILM,IFUNM,LMPOT,GSH,
-     +                  THETAS,Z,RFPI,R,VONS,LMSP)
+     +                  THETAS,Z,RFPI,R,VONS,LMSP,
+C                       new parameters after inc.p removal
+     &                  irid, nfund, irmd, ngshd)
 c ************************************************************************
+      IMPLICIT NONE
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      include 'inc.p'
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+C     Number of radial mesh points for shape functions
+      INTEGER irid
+C     maximal number of shape functions
+      INTEGER nfund
+      INTEGER irmd
+      INTEGER ngshd
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION RFPI,Z
@@ -20,7 +30,7 @@ C     .. Local Scalars ..
       INTEGER I,IFUN,IR,IRH,LM,LM1,LM2,LM3
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION VSTORE(IRID,LMPOTD)
+      DOUBLE PRECISION VSTORE(IRID,LMPOT)
 C     ..
       DO 20 LM = 1,LMPOT
         DO 10 IR = 1,IRC1 - IMT1

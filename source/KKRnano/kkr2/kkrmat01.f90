@@ -428,8 +428,10 @@
     
         call CINIT(LMMAXD*NATBLD*LMMAXD*NATBLD*NBLCKD,GLLHBLCK)
     
-        if (BCP == 1) &
-        call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0)
+        if (BCP == 1) then
+          call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
+                         lmax, nthrds, natbld, xdim, ydim, zdim, naclsd)
+        endif
     ! ..
     !===================================================================
 

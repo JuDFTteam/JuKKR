@@ -2,7 +2,9 @@ c ************************************************************************
       SUBROUTINE CLSJIJ(
      >                  I1,NAEZ,RR,NR,RBASIS,RCUT,LMPIC,NSYMAT,
      >                  ISYMINDEX,
-     <                  IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ)
+     <                  IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ,
+C                       new parameters after inc.p removal
+     &                  nrd, nxijd)
 c ************************************************************************
 c This subroutine is used to create the clusters around each atom 
 c where Jij's are calculated
@@ -18,12 +20,15 @@ c                                                          A.Thiess 7/2009
 c ************************************************************************
       IMPLICIT NONE
 c
-      INCLUDE 'inc.p'
+C     INCLUDE 'inc.p'
 c
 c
+      INTEGER nrd
+      INTEGER nxijd
+
 c     .. array arguments
 c
-      DOUBLE PRECISION RBASIS(3,NAEZD),   ! pos. of basis atoms in EZ
+      DOUBLE PRECISION RBASIS(3,NAEZ),   ! pos. of basis atoms in EZ
      +                 RR(3,0:NRD),       ! set of lattice vectors
      +                 RXIJ(NXIJD),       ! interatomic distance Ri-Rj 
      +                 ZKRXIJ(48,3,NXIJD) ! enters the exp-factor of G in kkrmat01

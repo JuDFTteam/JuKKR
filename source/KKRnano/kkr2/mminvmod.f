@@ -219,7 +219,8 @@ C            WRITE(*,*) IT,LM2,DZNRM2(NDIM,DUMMY(1,LM2),1),
 C     +                 BETA(LM2)
           ENDDO
 C
-          CALL APPBLCKCIRC('R',DUMMY,GLLHBLCK)
+          CALL APPBLCKCIRC(DUMMY,GLLHBLCK,
+     &                     naez,lmaxd,nthrds,natbld,xdim,ydim,zdim)
 C
         ELSE
 C
@@ -299,7 +300,8 @@ C
             CALL ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
           ENDDO
 C
-          CALL APPBLCKCIRC('R',DUMMY,GLLHBLCK)
+          CALL APPBLCKCIRC(DUMMY,GLLHBLCK,
+     &                     naez,lmaxd,nthrds,natbld,xdim,ydim,zdim)
 C
         ELSE
 C
@@ -357,7 +359,8 @@ C
             CALL ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
           ENDDO
 C
-          CALL APPBLCKCIRC('R',DUMMY,GLLHBLCK)
+          CALL APPBLCKCIRC(DUMMY,GLLHBLCK,
+     &                     naez,lmaxd,nthrds,natbld,xdim,ydim,zdim)
 C
         ELSE
 C
@@ -455,7 +458,8 @@ C
             CALL ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
           ENDDO
 C
-          CALL APPBLCKCIRC('R',DUMMY,GLLHBLCK)
+          CALL APPBLCKCIRC(DUMMY,GLLHBLCK,
+     &                     naez,lmaxd,nthrds,natbld,xdim,ydim,zdim)
 C
           DO LM2 = 1,LMMAXD
             CALL ZCOPY(NDIM,DUMMY(1,LM2),1,VECS(1,LM2,1),1)

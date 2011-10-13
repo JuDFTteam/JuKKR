@@ -4,7 +4,10 @@ c*********************************************************************
      +                  IATOM,NAEZNAEZ,IMIX,IPF,ITER,
      +                  UI2,VI2,WIT,SM1S,FM1S,
      >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE)
+     >                  LGROUP,LCOMM,LSIZE,
+C                       new input parameters after inc.p removal
+     &                  itdbryd, irmd, irnsd, nspind,
+     &                  prod_lmpid_smpid_empid)
 c*********************************************************************
 c     imix :
 c       3      broyden's            f i r s t  m e t h o d
@@ -38,22 +41,35 @@ c                  a. thiess , jun. 2008
 c*********************************************************************
 C     .. Parameters ..
 
-      INCLUDE 'inc.p'
+C      INCLUDE 'inc.p'
       INCLUDE 'mpif.h'
 
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
+C     array dimension for broyden mixing history
+      INTEGER itdbryd
+C     number of radial mesh points - total
+      INTEGER irmd
+C     number of radial mesh points of non-spherical part
+      INTEGER irnsd
+C     number of spin directions
+      INTEGER nspind
+C     the following product: LMPID*SMPID*EMPID
+      INTEGER prod_lmpid_smpid_empid
+
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      INTEGER IRMIND
+C      PARAMETER (IRMIND=IRMD-IRNSD)
       INTEGER NTIRD
-      PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
+C      PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
       INTEGER ITDTHD
       PARAMETER (ITDTHD=40)
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,*),R(IRMD,*),
-     +                 V(IRMD,LMPOTD,*),VINS(IRMIND:IRMD,LMPOTD,*),
-     +                 VISP(IRMD,*)
+      DOUBLE PRECISION DRDI(IRMD,*),R(IRMD,*)
+      DOUBLE PRECISION V(IRMD,LMPOT,*)
+C     DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOT,*)
+      DOUBLE PRECISION VINS(IRMD-IRNSD:IRMD,LMPOT,*)
+      DOUBLE PRECISION VISP(IRMD,*)
       INTEGER IRC(*),IRMIN(*)
 C     ..
 C     .. Local Scalars ..
@@ -76,21 +92,31 @@ C     .. Save statement ..
       SAVE ZERO,ONE
 C     ..
 C     .. Local Arrays ..
+C     .. these arrays are automatic (dynamically allocated)
+C        Fortran arrays
       DOUBLE PRECISION AM(2:ITDBRYD),BM(2:ITDBRYD),
-     +                 AM_LOCAL(2:ITDBRYD),BM_LOCAL(2:ITDBRYD), 
-     +                 FM(NTIRD),
-     +                 FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),
-     +                 SM1S(NTIRD),FM1S(NTIRD),WORK(NTIRD),
-     +                 VI3(NTIRD)
+     +                 AM_LOCAL(2:ITDBRYD),BM_LOCAL(2:ITDBRYD)
 
-C     ..
-C     .. Common blocks ..
-C      COMMON /CHEBY/UI2,UI3,VI2
-C     ..
-C     .. Arrays in Common ..
-      DOUBLE PRECISION UI3(NTIRD)
-      DOUBLE PRECISION UI2(NTIRD,2:ITDBRYD),VI2(NTIRD,2:ITDBRYD),
-     +                 WIT(2:ITDBRYD) 
+C     the following arrays have dimension NTIRD
+C     PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
+      DOUBLE PRECISION FM  ((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION FM1 ((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION G   ((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION SM  ((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION SM1 ((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION SM1S((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION FM1S((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION WORK((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+      DOUBLE PRECISION VI3 ((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+
+
+      DOUBLE PRECISION UI3((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND)
+
+      DOUBLE PRECISION UI2((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND,
+     &                     2:ITDBRYD)
+      DOUBLE PRECISION VI2((IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND,
+     &                     2:ITDBRYD)
+      DOUBLE PRECISION WIT(2:ITDBRYD)
 
 C     ..
 C     .. Scalar Arguments ..
@@ -105,15 +131,17 @@ C     .. N-MPI ..
 C      INTEGER IERR,MYRANK,NROFNODES
 C      COMMON /MPI/MYRANK,NROFNODES
 C     .. L-MPI ..
-      INTEGER      MYLRANK(LMPID*SMPID*EMPID),
-     +             LCOMM(LMPID*SMPID*EMPID),
-     +             LGROUP(LMPID*SMPID*EMPID),
-     +             LSIZE(LMPID*SMPID*EMPID),
+      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
+     +             LCOMM  (prod_lmpid_smpid_empid),
+     +             LGROUP (prod_lmpid_smpid_empid),
+     +             LSIZE  (prod_lmpid_smpid_empid),
      +             LMPI,LMPIC
 C
       EXTERNAL MPI_ALLREDUCE
 C
 C
+      NTIRD=(IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND
+
       IF (MYLRANK(LMPIC).EQ.0) WRITE(*,*) 'ITERATION: ',ITER
 
       IF (ITDBRYD.GT.ITDTHD .OR. ITDTHD.GT.200) CALL RCSTOP('ITDBRYD  ')
@@ -147,11 +175,13 @@ c---->  map data of all muffin-tin spheres into one single vector
 c
 c
       CALL BRYSH3(SM1,VISP,VINS,IRMIN,IRC,IATOM,
-     +            NAEZ,NSPIN,IMAP,LMPOT)
+     &            NAEZ,NSPIN,IMAP,LMPOT,
+     &            IRMD, IRNSD)
 
 
       CALL BRYSH1(FM1,V,IRMIN,IRC,IATOM,
-     +            NAEZ,NSPIN,IMAP,LMPOT)
+     +            NAEZ,NSPIN,IMAP,LMPOT,
+     &            irmd)
 
 
       IF (IMAP.GT.NTIRD) CALL RCSTOP('NIRDBRY ')
@@ -203,14 +233,16 @@ c
 c----> map rho(m) of all mt-spheres into one single vector
 c
         CALL BRYSH3(SM,VISP,VINS,IRMIN,IRC,IATOM,
-     +              NAEZ,NSPIN,IMAP,LMPOT)
+     &              NAEZ,NSPIN,IMAP,LMPOT,
+     &              IRMD, IRNSD)
 
 c
 c----> map f[m] = f(m) - rho(m) = f(rho(m)) - rho(m) of all mt-spheres
 c      into one single vector
 c
         CALL BRYSH1(FM,V,IRMIN,IRC,IATOM,
-     +              NAEZ,NSPIN,IMAP,LMPOT)
+     +              NAEZ,NSPIN,IMAP,LMPOT,
+     &              irmd)
 
         DO 70 IJ = 1,IMAP
           FM(IJ) = RMIXIV* (FM(IJ)-SM(IJ))
@@ -437,7 +469,8 @@ c
 c----> map solution back into each mt-sphere
 c
         CALL BRYSH2(SM,V,IRMIN,IRC,IATOM,
-     +              NAEZ,NSPIN,IMAP,LMPOT)
+     &              NAEZ,NSPIN,IMAP,LMPOT,
+     &              IRMD)
 c
 
       END IF

@@ -5,24 +5,30 @@
      +                   VISP,ZAT,IPAN,
      +                   IRCUT,CLEB,LOFLM,ICLEB,IEND,
      <                   DTDE,TR_ALPH,LMAX,ISPIN,
-     >                   LLDAU,WMLDAU)
+     >                   LLDAU,WMLDAU,
+C                        new input parameters after inc.p replace
+     &                   nspind, ncleb, ipand, irmd, irnsd)
 C
       IMPLICIT NONE
 C
-      INCLUDE 'inc.p'
+C      INCLUDE 'inc.p'
 C     .. Parameters ..
-      INTEGER             LMMAXD
-      PARAMETER          (LMMAXD= (LMAXD+1)**2)
-      INTEGER             LMAXD1
-      PARAMETER          (LMAXD1 = LMAXD + 1)
-      INTEGER             MMAXD
-      PARAMETER          (MMAXD=2*LMAXD+1)
-      INTEGER             LM2D
-      PARAMETER          (LM2D= (2*LMAXD+1)**2)
-      INTEGER             LMPOTD
-      PARAMETER          (LMPOTD= (LPOTD+1)**2)
-      INTEGER             IRMIND
-      PARAMETER          (IRMIND=IRMD-IRNSD)
+
+
+      INTEGER nspind
+      INTEGER ncleb
+      INTEGER ipand
+      INTEGER irmd
+      INTEGER irnsd
+
+C      PARAMETER          (LMMAXD= (LMAXD+1)**2)
+C      PARAMETER          (LMAXD1 = LMAXD + 1)
+C      PARAMETER          (MMAXD=2*LMAXD+1)
+C      PARAMETER          (LM2D= (2*LMAXD+1)**2)
+C      PARAMETER          (LMPOTD= (LPOTD+1)**2)
+C                                = (2*LMAX+1)**2)
+C      PARAMETER          (IRMIND=IRMD-IRNSD)
+
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION   TK,KB,PI,REALX,IMAGX
@@ -33,24 +39,40 @@ C     .. Local Scalars ..
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX     EZ,EZ1,EZ2
-      DOUBLE PRECISION   CLEB(NCLEB,2),
-     +                   VINS(IRMIND:IRMD,LMPOTD),
+      DOUBLE PRECISION   CLEB(NCLEB,2)
+
+C     DOUBLE PRECISION   VINS(IRMIND:IRMD,LMPOTD),
+C    +                   VISP(IRMD),
+C    +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+      DOUBLE PRECISION   VINS((IRMD-IRNSD):IRMD,(2*LMAX+1)**2),
      +                   VISP(IRMD),
-     +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+     +                   WMLDAU(2*LMAX+1, 2*LMAX+1, NSPIND, LMAX + 1)
 C     ..
-      DOUBLE COMPLEX     DTDE(LMMAXD,LMMAXD)
+C     DOUBLE COMPLEX     DTDE(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX     DTDE((LMAX+1)**2,(LMAX+1)**2)
       DOUBLE COMPLEX     TR_ALPH,TR_ALPH1,TR_ALPH2,DZ
-      DOUBLE COMPLEX     TMATN1(LMMAXD,LMMAXD),TMATN2(LMMAXD,LMMAXD)
+
+C     DOUBLE COMPLEX     TMATN1(LMMAXD,LMMAXD),TMATN2(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX     TMATN1((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE COMPLEX     TMATN2((LMAX+1)**2,(LMAX+1)**2)
       DOUBLE PRECISION   DRDI(IRMD)
       DOUBLE PRECISION   R(IRMD)
       DOUBLE PRECISION   ZAT
 C ----------------------------------------------------------------------
       INTEGER            IPAN,NLDAU
-      INTEGER            IRCUT(0:IPAND),LLDAU(LMAXD1)
-      INTEGER            ICLEB(NCLEB,3),LOFLM(LM2D)
+
+C     INTEGER            IRCUT(0:IPAND),LLDAU(LMAXD1)
+      INTEGER            IRCUT(0:IPAND),LLDAU(LMAX + 1)
+C     INTEGER            ICLEB(NCLEB,3),LOFLM(LM2D)
+      INTEGER            ICLEB(NCLEB,3),LOFLM((2*LMAX+1)**2)
+
       INTEGER            ICST,NSRA,IE,IERR
       LOGICAL            LDAU
 C     ..
+
+      INTEGER             LMMAXD
+
+      LMMAXD= (LMAX+1)**2
 
       KB = 0.6333659D-5
       IF (IE.LE.NPNT1 .OR. IE.GT.(NPNT1+NPNT2+NPNT3)) THEN
@@ -69,7 +91,8 @@ C.. parallel to the contour
      +                   VISP,ZAT,IPAN,
      +                   IRCUT,CLEB,LOFLM,ICLEB,IEND,
      <                   TMATN1,TR_ALPH1,LMAX,ISPIN,
-     >                   LLDAU,WMLDAU)
+     >                   LLDAU,WMLDAU,
+     &                   nspind, ncleb, ipand, irmd, irnsd)
  
            CALL CALCTMAT(LDAU,NLDAU,ICST,
      +                   NSRA,EZ2,
@@ -77,7 +100,8 @@ C.. parallel to the contour
      +                   VISP,ZAT,IPAN,
      +                   IRCUT,CLEB,LOFLM,ICLEB,IEND,
      <                   TMATN2,TR_ALPH2,LMAX,ISPIN,
-     >                   LLDAU,WMLDAU)
+     >                   LLDAU,WMLDAU,
+     &                   nspind, ncleb, ipand, irmd, irnsd)
 C====================================================================
 C
 C dT(E)

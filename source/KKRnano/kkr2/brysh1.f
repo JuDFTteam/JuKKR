@@ -1,6 +1,8 @@
 c ************************************************************************
       SUBROUTINE BRYSH1(Y,X,IRMIN,IRC,IATOM,
-     &                  NAEZ,NSPIN,IMAP,LMPOT)
+     &                  NAEZ,NSPIN,IMAP,LMPOT,
+C                       new input parameter after inc.p removal
+     &                  IRMD)
 c*********************************************************************
 c     shifts the density or potential of all mt-cell into one single
 c     vector and projects out the coulomb part only.
@@ -9,17 +11,16 @@ c     modified for parallelization
 c                                    a. thiess, jun 2008
 c ------------------------------------------------------------------------
 C     .. Parameters ..
-      include 'inc.p'
-c      INTEGER IRMD,LPOTD
-c      PARAMETER (IRMD=424,LPOTD=8)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      include 'inc.p'
+
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER IMAP,LMPOT,IATOM,NAEZ,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION X(IRMD,LMPOTD,*),Y(*)
+      DOUBLE PRECISION X(IRMD,LMPOT,*),Y(*)
       INTEGER IRC(*),IRMIN(*)
 C     ..
 C     .. Local Scalars ..

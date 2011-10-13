@@ -1,7 +1,10 @@
       SUBROUTINE BCPWUPPER(
      >                     GLLH,
      <                     GLLHBLCK,
-     >                     NAEZ,NUMN0,INDN0)
+     >                     NAEZ,NUMN0,INDN0,
+C                          new input after inc.p removal
+     &                     lmax, nthrds, natbld, xdim, ydim, zdim,
+     &                     naclsd)
 C
       IMPLICIT NONE
 C ------------------------------------------------------------------------
@@ -10,36 +13,68 @@ C
 C
 C ------------------------------------------------------------------------
 C     .. parameters ..
-      include 'inc.p'
-      include 'inc.cls'
+C      include 'inc.p'
+C      include 'inc.cls'
+
+      INTEGER NAEZ
+
+C     number of preconditioning blocks in each direction
+      integer xdim
+      integer ydim
+      integer zdim
+
+      integer lmax
+
+C     number of atoms in the reference cluster
+      integer naclsd
+C     number of atoms per preconditioning block
+      integer natbld
+C     number of OpenMP threads
+      INTEGER nthrds
+
 C
       INTEGER          NBLCKD
-      PARAMETER       (NBLCKD = XDIM*YDIM*ZDIM)
-      INTEGER   LMAX,NSYMAXD
-      PARAMETER (LMAX=LMAXD,NSYMAXD=48)
+C     NBLCKD = XDIM*YDIM*ZDIM
+
+      INTEGER   NSYMAXD
+      PARAMETER (NSYMAXD=48)
+
       INTEGER   LMMAXD
-      PARAMETER (LMMAXD= (LMAX+1)**2)
+C     LMMAXD= (LMAX+1)**2
+
       INTEGER   ALM
-      PARAMETER (ALM = NAEZD*LMMAXD)
+C     PARAMETER (ALM = NAEZD*LMMAXD)
+
       INTEGER   NGTBD
-      PARAMETER (NGTBD = NACLSD*LMMAXD)
+C      PARAMETER (NGTBD = NACLSD*LMMAXD)
+C                       = NACLSD*(LMAX+1)**2
+
       INTEGER   NINTACTD
       PARAMETER (NINTACTD = 19)     ! Ecken des "Interaktions-wuerfels"
 C                                     nicht mit einbezogen, incl. waere
 C                                     27
 C
-C global arrays
-      DOUBLE COMPLEX     GLLH(LMMAXD,NGTBD,NAEZD),
-     +                   GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD)
-      INTEGER            INDN0(NAEZD,NACLSD),NUMN0(NAEZD)
+
+C      DOUBLE COMPLEX     GLLH(LMMAXD,NGTBD,NAEZD),
+C     +                   GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD)
+
+      DOUBLE COMPLEX     GLLH((LMAX+1)**2,NACLSD*(LMAX+1)**2,NAEZ),
+     &                   GLLHBLCK(NATBLD*(LMAX+1)**2,
+     &                            NATBLD*XDIM*YDIM*ZDIM*(LMAX+1)**2)
+
+      INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)
 C ..
-C global scalars
-      INTEGER            NAEZ
 C ..
 C local arrays ..
-      DOUBLE COMPLEX     BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD,NINTACTD),
-     +                   TMPBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD)
-      INTEGER            IPIV(NATBLD*LMMAXD)
+C      DOUBLE COMPLEX     BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD,NINTACTD),
+C     +                   TMPBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD)
+
+      DOUBLE COMPLEX     BLAV(NATBLD*(LMAX+1)**2,
+     &                        NATBLD*(LMAX+1)**2, NINTACTD),
+
+     &                   TMPBLCK(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2)
+
+      INTEGER            IPIV(NATBLD*(LMAX+1)**2)
 C ..
 C local scalars ..
       DOUBLE COMPLEX     CONE,IMONE,CZERO
@@ -61,6 +96,10 @@ C intrinsic functions ..
 C ..
 C=======================================================================
 C
+
+      NBLCKD = XDIM*YDIM*ZDIM
+      LMMAXD= (LMAX+1)**2
+
       PI = 4.D0*ATAN(1.D0)
 C
       CONE  = ( 1.0D0,0.0D0 )
@@ -337,29 +376,36 @@ C
 C
 C
       SUBROUTINE GENBLAV(GLLH,BLAV,I,J,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
 C
       IMPLICIT NONE
 C
-      include 'inc.p'
-      include 'inc.cls'
+C      include 'inc.p'
+C      include 'inc.cls'
+
+      INTEGER naez
+      INTEGER lmax
+      INTEGER natbld
+      INTEGER naclsd
 C
       INTEGER            LMMAXD
-      PARAMETER         (LMMAXD= (LMAXD+1)**2)
+C     PARAMETER         (LMMAXD= (LMAXD+1)**2)
 C
       INTEGER            I,J,BS,II,JJ,I1,I2,LM1,LM2,IL1,IL2,IL2B,
-     +                   ISRH,
-     +                   INDN0(NAEZD,NACLSD),NUMN0(NAEZD)
-      DOUBLE COMPLEX     GLLH(LMMAXD,NACLSD*LMMAXD,NAEZD),
-     +                   BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD)
-C
-C      DO II =1, NATBLD*LMMAXD
-C        DO JJ =1, NATBLD*LMMAXD
-C          BLAV(II,JJ) = BLAV(II,JJ) + 
-C     +    GLL_WUPPER_FULL((I-1)*NATBLD*LMMAXD+II,(J-1)*NATBLD*LMMAXD+JJ)
-C        ENDDO
-C      ENDDO
-C
+     +                   ISRH
+
+      INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)
+
+C     DOUBLE COMPLEX     GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ),
+C     +                   BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD)
+
+      DOUBLE COMPLEX     GLLH((LMAX+1)**2,NACLSD*(LMAX+1)**2,NAEZ),
+     &                   BLAV(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2)
+
+
+      LMMAXD = (LMAX+1)**2
+
       DO I1 = 1, NATBLD
         DO I2 =1, NATBLD
 C
