@@ -17,16 +17,13 @@ c
 c                 modified for bandstructure code
 c                               b.drittler   jan 1990
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-      include 'inc.p'
-C
-      INTEGER LMAXD1
-      PARAMETER (LMAXD1= LMAXD+1)
+      IMPLICIT NONE
+
 C     .. Scalar Arguments ..
       INTEGER NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION ECORE(20,2),ESPC(0:3,NSPIND)
+      DOUBLE PRECISION ECORE(20,2),ESPC(0:3,NSPIN)
       INTEGER LCORE(20,*),NCORE(*),LCOREMAX
 C     ..
 C     .. Local Scalars ..

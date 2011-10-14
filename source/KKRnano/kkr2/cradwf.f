@@ -1,6 +1,8 @@
       SUBROUTINE CRADWF(E,EK,NSRA,ALPHA,IPAN,IRCUT,CVLIGHT,RS,S,PZ,FZ,
      +                  QZ,SZ,TMAT,VM2Z,DRDI,R,Z,
-     >                  LDAU,NLDAU,LLDAU,WMLDAUAV,LDAUCUT)
+     >                  LDAU,NLDAU,LLDAU,WMLDAUAV,LDAUCUT,
+C                       new input parameters after inc.p removal
+     &                  lmaxd, irmd, ipand)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c  subroutine for radial wave functions of spherical potentials
@@ -18,13 +20,11 @@ c             directly with the renormalization alphal .
 c                                           b.drittler nov.1987
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER             LMAXP1
-      PARAMETER          (LMAXP1=LMAXD+1)
-      INTEGER             LMAXD1
-      PARAMETER          (LMAXD1 = LMAXD + 1)
-      INTEGER             MMAXD
-      PARAMETER          (MMAXD=2*LMAXD+1)
+C      INCLUDE 'inc.p'
+      INTEGER lmaxd
+      INTEGER irmd
+      INTEGER ipand
+
       DOUBLE COMPLEX      CI,CZERO
       PARAMETER          (CI= (0.D0,1.D0),CZERO= (0.0D0,0.0D0))
 C     ..
@@ -41,9 +41,9 @@ C     .. Array Arguments ..
      +                   RS(IRMD,0:LMAXD),S(0:LMAXD),
      +                   VM2Z(IRMD),
      +                   LDAUCUT(IRMD),
-     +                   WMLDAUAV(LMAXD1)
+     +                   WMLDAUAV(LMAXD + 1)
       INTEGER            IRCUT(0:IPAND),
-     +                   LLDAU(LMAXD1)
+     +                   LLDAU(LMAXD + 1)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX ALPHAL,ARG,BL,EKLFAC,HL,PN,QF,SLOPE,TL,TLSQEZ,
@@ -52,18 +52,23 @@ C     .. Local Scalars ..
       INTEGER I,IR,IRC1,L,N
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX BESSJW(0:LMAXP1),BESSYW(0:LMAXP1),DLOGDP(0:LMAXD),
-     +               HAMF(IRMD,0:LMAXD),HANKWS(0:LMAXP1),MASS(IRMD)
+      DOUBLE COMPLEX BESSJW(0:LMAXD+1),BESSYW(0:LMAXD+1),DLOGDP(0:LMAXD)
+      DOUBLE COMPLEX HAMF(IRMD,0:LMAXD),HANKWS(0:LMAXD+1),MASS(IRMD)
       DOUBLE PRECISION DROR(IRMD)
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL BESHAN,IRWSOL,REGSOL
+C      EXTERNAL BESHAN,IRWSOL,REGSOL
 C     ..
 C     .. Save statement ..
-      SAVE
+C      SAVE
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC DBLE
+
+      INTEGER LMAXP1
+
+      LMAXP1=LMAXD+1
+
 C     ..
       IRC1 = IRCUT(IPAN)
       DO IR = 2,IRC1

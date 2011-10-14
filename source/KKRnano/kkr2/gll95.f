@@ -71,7 +71,7 @@ c           changed P.Z. 4.7.97
    10     CONTINUE
           IF (N1.NE.N2) THEN
 
-            CALL GFREE(RDIFF,E,GLL,CLEB,ICLEB,LOFLM,IEND)
+            CALL GFREE(RDIFF,E,GLL,CLEB,ICLEB,LOFLM,IEND, lmaxd, ncleb)
 
             DO 30 LM2 = 1,LMGF0D
               NLM2 = (N2-1)*LMGF0D + LM2
@@ -106,7 +106,8 @@ c
           END DO
           IF (N1.NE.N2) THEN
 
-            CALL DGFREE(RDIFF,E,DGLLDE,CLEB,ICLEB,LOFLM,IEND)
+            CALL DGFREE(RDIFF,E,DGLLDE,CLEB,ICLEB,LOFLM,IEND,
+     &                  lmaxd, ncleb)
 
             DO LM2 = 1,LMGF0D
               NLM2 = (N2-1)*LMGF0D + LM2

@@ -9,6 +9,7 @@ c     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
 c                                      krypton core: 4430=4s,4p,3d
 c                                      xenon core: 5540=5s,5p,4d
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
       INTEGER NITMAX,IRNUMX
       PARAMETER (NITMAX=40,IRNUMX=10)

@@ -1,8 +1,9 @@
-    subroutine EPRDIST( &
-    IELAST,KMESH,NOFKS, &
-    PRSC,SPRS,CNVFAC, &
-    MYRANK,EMPIC,EMYRANK, &
-    EPROC,EPROCO)
+    subroutine EPRDIST(IELAST,KMESH,NOFKS, &
+                       PRSC,SPRS,CNVFAC, &
+                       MYRANK,EMPIC,EMYRANK, &
+                       EPROC,EPROCO, &
+                       ! new input parameters after inc.p removal
+                       lmpid, smpid, empid, naez, lmax, nguessd, ekmd, iemxd)
 ! ======================================================================
 
 ! this routine redistributes on demand the initial guess
@@ -11,24 +12,35 @@
 !                               Alexander Thiess, 14th of December 2009
 ! =======================================================================
 
-    use inc_p_wrapper_module
     use mpi
 
     implicit none
 
+    integer, intent(in) :: lmpid
+    integer, intent(in) :: smpid
+    integer, intent(in) :: empid
+    integer, intent(in) :: naez
+    integer, intent(in) :: lmax
+    integer, intent(in) :: nguessd
+    integer, intent(in) :: ekmd
+    integer, intent(in) :: iemxd
+
     !     .. Parameters ..
 
-    integer::          LMMAXD
-    parameter        (LMMAXD= (LMAXD+1)**2)
-    integer::          MAXMSHD
+    integer::         LMMAXD
+    !parameter        (LMMAXD= (LMAXD+1)**2)
+    integer::         MAXMSHD
     parameter        (MAXMSHD=8)
 
     !     .. scalar arguments ..
     integer::          IELAST
     !     .. array arguments ..
-    complex::          PRSC(NGUESSD*LMMAXD,EKMD)
+   !complex::          PRSC(NGUESSD*LMMAXD,EKMD)
+    complex::          PRSC(NGUESSD*(LMAX+1)**2,EKMD)
     double precision:: CNVFAC(EKMD)
-    integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
+
+   !integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
+    integer::          SPRS(NGUESSD*(LMAX+1)**2+1,EKMD+1)
     integer::          EPROC(IEMXD)
     integer::          EPROCO(IEMXD)
     integer::          KMESH(IEMXD)
@@ -49,9 +61,10 @@
     !     .. N-MPI
     integer::MYRANK
     !     .. E-MPI
-    integer::EMYRANK(EMPID,NAEZD*LMPID*SMPID)
+    integer::EMYRANK(EMPID,NAEZ*LMPID*SMPID)
     integer::EMPIC
 
+    LMMAXD = (LMAX+1)**2
 
     JEKM = 0
 

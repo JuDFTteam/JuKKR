@@ -1,7 +1,9 @@
-      SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,IATYP,RHOC,V,R,ALAT,
+      SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,IATYP,RHOC,V,R,ALAT,
      +                  DRDI,IRWS,ZAT,
      >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE)
+     >                  LGROUP,LCOMM,LSIZE,
+C                       new input parameters after inc.p replace
+     &                  naez, irmd, prod_lmpid_smpid_empid)
 C
       IMPLICIT NONE
 c-----------------------------------------------------------------------
@@ -10,32 +12,41 @@ c     from a given non spherical charge density at the nucleus site r
 c     with core correction(exchange contribution)
  
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-      include 'inc.p'
+
       include 'mpif.h'
+
+      INTEGER naez
+      INTEGER irmd
+C     LMPID * SMPID * EMPID
+      INTEGER prod_lmpid_smpid_empid
 C
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT
-      INTEGER LMAX,NSPIN
+      INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
+C      DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
+C     &       RHOC(IRMD,*),ZAT(NAEZD),
+C     &       V(IRMD,LMPOTD,2)
+
       DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
-     +       RHOC(IRMD,*),ZAT(NAEZD),
-     $     V(IRMD,LMPOTD,2)
-       INTEGER IRWS(*)
+     &       RHOC(IRMD,*),ZAT(NAEZ),
+     &       V(IRMD,(LPOT+1)**2,2)
+
+      INTEGER IRWS(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION DV,DVOL,FAC,PI,RWS,TRP,VINT1,VOL
       INTEGER I,IATYP,IPER,IPOT,IREP,IRWS1,ISPIN,J,LM,M
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION F(3,NAEZD),
-     +                 FALL(3,NAEZD),
-     +                 FLMH(-1:1,NAEZD),
-     +                 FLMXC(-1:1,NAEZD),V1(IRMD)
+      DOUBLE PRECISION F(3,NAEZ),
+     +                 FALL(3,NAEZ),
+     +                 FLMH(-1:1,NAEZ),
+     +                 FLMXC(-1:1,NAEZ),V1(IRMD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL SIMP3
@@ -47,21 +58,25 @@ C     .. MPI variables ..
       INTEGER IERR
 
 C     .. L-MPI ..
-      INTEGER      MYLRANK(LMPID*SMPID*EMPID),
-     +             LCOMM(LMPID*SMPID*EMPID),
-     +             LGROUP(LMPID*SMPID*EMPID),
-     +             LSIZE(LMPID*SMPID*EMPID),
+      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
+     +             LCOMM(prod_lmpid_smpid_empid),
+     +             LGROUP(prod_lmpid_smpid_empid),
+     +             LSIZE(prod_lmpid_smpid_empid),
      +             LMPI,LMPIC
 C
       EXTERNAL MPI_ALLREDUCE
 c
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DSQRT
+
+      INTEGER NAEZD
+
+      NAEZD = NAEZ
 C     ..
       PI  = 4.D0*ATAN(1.D0)
       FAC = DSQRT((4.0D0*PI)/3.0D0)
       TRP = 0.0D0
-      IF (LMAX.LT.1) THEN
+      IF (LPOT.LT.1) THEN
          WRITE (6,FMT=9000)
          STOP
  

@@ -1,17 +1,32 @@
       SUBROUTINE DLKE1(ALAT,NACLS,RR,EZOA,
-     +                 BZKP,IC,EIKRM,EIKRP)
+     &                 BZKP,IC,EIKRM,EIKRP,
+C                      new input parameters after inc.p removal
+     &                 nrd, naclsd)
       IMPLICIT NONE
 c ----------------------------------------------------------------------
 c
 c     Fourier transformation of the cluster Greens function
-c
+c     Prepares the calculation (calculates Fourier factors) for dlke0
 c ----------------------------------------------------------------------
-C     .. Parameters ..
-      include 'inc.p'
-      include 'inc.cls'
-C
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAXD+1)**2)
+
+
+C     >> Input parameters
+C     ALAT .. lattice constant a
+C     NACLS . array that contains number of atoms in each cluster
+C     RR .... array of real space vectors
+C     EZOA ..
+C     BZKP ..
+C     IC .... reference cluster index
+C     nrd ... There are nrd+1 real space vectors in RR
+C     naclsd. maximal number of atoms in cluster
+
+C     << Output parameters
+C     EIKRM . Fourier exponential factor with minus sign
+C     EIKRP . Fourier exponential factor with plus sign
+
+      INTEGER nrd
+      INTEGER naclsd
+
       DOUBLE COMPLEX CI,CONE
       PARAMETER (CI= (0.0D0,1.0D0),CONE=(1.D0,0.D0))
 C     ..

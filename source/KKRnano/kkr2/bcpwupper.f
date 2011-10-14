@@ -156,19 +156,26 @@ C
 C
 C
             CALL GENBLAV(GLLH,BLAV(1,1,1),CEN,CEN,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,2),CEN,LEF,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,3),CEN,RIG,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,4),CEN,DOW,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,5),CEN,UPP,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,6),CEN,BAC,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,7),CEN,FOW,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
 C
 C
             LEDO = MOD(IX2,XDIM) + 1 +
@@ -209,29 +216,41 @@ C
      +             MOD(IZ,ZDIM)*XDIM*YDIM
 C  
             CALL GENBLAV(GLLH,BLAV(1,1,8),CEN,LEDO,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,9),CEN,LEUP,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,10),CEN,LEBA,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,11),CEN,LEFO,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,12),CEN,RIDO,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,13),CEN,RIUP,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,14),CEN,RIBA,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,15),CEN,RIFO,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,16),CEN,DOBA,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,17),CEN,DOFO,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,18),CEN,UPBA,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,19),CEN,UPFO,
-     +                   INDN0,NUMN0)
+     &                   INDN0,NUMN0,
+     &                   naez, lmax, natbld, naclsd )
 C
 C
           ENDDO

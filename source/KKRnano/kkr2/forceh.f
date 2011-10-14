@@ -1,5 +1,7 @@
-      SUBROUTINE FORCEH(CMOM,FLMH,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,
-     +                  IRWS,Z)
+      SUBROUTINE FORCEH(CMOM,FLMH,LPOT,NSPIN,IATYP,RHO2NS,V,R,DRDI,
+     &                  IRWS,Z,
+C                       new input parameter after inc.p replace
+     &                  irmd)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     calculates the force on nucleus m with hellmann - feynman theorem
@@ -8,17 +10,23 @@ c
  
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+      INTEGER irmd
+
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LMAX,NSPIN
+      INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),FLMH(-1:1,*),
-     +       R(IRMD,*),
-     +       RHO2NS(IRMD,LMPOTD),V(IRMD,LMPOTD,2),Z(*)
+C     DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),FLMH(-1:1,*),
+C    +       R(IRMD,*),
+C    +       RHO2NS(IRMD,LMPOTD),V(IRMD,LMPOTD,2),Z(*)
+
+      DOUBLE PRECISION CMOM((LPOT+1)**2),DRDI(IRMD,*),FLMH(-1:1,*),
+     &       R(IRMD,*),
+     &       RHO2NS(IRMD,(LPOT+1)**2), V(IRMD,(LPOT+1)**2,2), Z(*)
       INTEGER IRWS(*)
 C     ..
 C     .. Local Scalars ..
@@ -39,7 +47,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC ATAN
 C     ..
       PI = 4.D0*ATAN(1.D0)
-      IF (LMAX.LT.1) THEN
+      IF (LPOT.LT.1) THEN
          WRITE (6,FMT=9000)
          STOP
  

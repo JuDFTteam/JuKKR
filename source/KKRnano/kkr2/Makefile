@@ -23,6 +23,11 @@ LDFLAGS =
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/em64t'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib'
 LDFLAGS += -lfftw3
+
+ifeq ($(TYPE),debug)
+FCFLAGS += -gen-interfaces -warn interfaces
+endif
+
 endif
 
 # Paths to look for files
@@ -54,6 +59,7 @@ $(PROGRAM): $(OBJS)
 clean:
 	rm -f $(BUILDDIR)/*.o 
 	rm -f $(BUILDDIR)/*.mod
+	rm -f $(BUILDDIR)/*__genmod.f90
 	rm -f *.exe
 
 .PHONY: test
@@ -72,6 +78,5 @@ lattice3d.o: common_mpi.o
 inc_p_wrapper_module.o: inc.p inc.cls
 kloopz1.o: inc_p_wrapper_module.o
 kkrmat01.o: inc_p_wrapper_module.o
-eprdist.o: inc_p_wrapper_module.o
 prinvit.o: inc_p_wrapper_module.o
 

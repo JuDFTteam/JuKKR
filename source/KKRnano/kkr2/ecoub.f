@@ -1,7 +1,9 @@
 c 13.10.95 ***************************************************************
-      SUBROUTINE ECOUB(CMOM,ECOU,LMAX,NSPIN,IATYP,RHO2NS,VONS,Z,R,DRDI,
+      SUBROUTINE ECOUB(CMOM,ECOU,LPOT,NSPIN,IATYP,RHO2NS,VONS,Z,R,DRDI,
      +                 IRWS,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM,ILM,
-     +                 ICELL,GSH,THETAS,LMSP)
+     +                 ICELL,GSH,THETAS,LMSP,
+C                      new parameters after inc.p removal
+     &                 irmd, irid, nfund, ipand, ngshd)
 c ************************************************************************
 c
 c     attention : energy zero ---> electro static zero
@@ -48,21 +50,42 @@ c
 c                 modified for band structure code
 c                               b.drittler   jan. 1990
 c-----------------------------------------------------------------------
+
+      IMPLICIT NONE
 C     .. Parameters ..
-      include 'inc.p'
 C     ..
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
+
+      INTEGER irmd
+      INTEGER irid
+      INTEGER nfund
+      INTEGER ipand
+      INTEGER ngshd
+
 C     .. Scalar Arguments ..
-      INTEGER KVMAD,LMAX,NSPIN
+      INTEGER KVMAD,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),ECOU(0:LPOTD),
-     +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
-     +                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,2),Z(*)
-      INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
-     +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+C     DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),ECOU(0:LPOTD),
+C    +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
+C    +                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,2),Z(*)
+C     INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
+C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+
+C     LPOTD = LPOT
+C     LMPOTD = (LPOT+1)**2
+
+      DOUBLE PRECISION CMOM((LPOT + 1)**2),DRDI(IRMD,*),
+     &                 ECOU(0:LPOT),
+     &                 GSH(*),R(IRMD,*),
+     &                 RHO2NS(IRMD,(LPOT + 1)**2,2),
+     &                 THETAS(IRID,NFUND,*),
+     &                 VONS(IRMD,(LPOT + 1)**2,2),
+     &                 Z(*)
+
+      INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:(LPOT + 1)**2),IPAN(*),
+     &        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RFPI,RHOSP,SIGN,VM,VMAD
@@ -89,7 +112,7 @@ c       is not spin dependend
 c
       IPOT = NSPIN
 
-      DO 80 L = 0,LMAX
+      DO 80 L = 0,LPOT
 
         DO 10 I = 1,IRC1
           ER(I) = 0.0D0
@@ -160,7 +183,7 @@ c
         CALL SIMPK(ER,ECOU(L),IPAN1,IRCUT(0,IATYP),
      +             DRDI(1,IATYP))
 
-   80   CONTINUE                    ! L = 0,LMAX
+   80   CONTINUE                    ! L = 0,LPOT
 
 c
 c--->   calculate the madelung potential

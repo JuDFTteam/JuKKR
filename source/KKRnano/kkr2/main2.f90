@@ -387,7 +387,7 @@ program MAIN2
 !     ..
 !     .. External Subroutines ..
   external CINIT,CONVOL,ECOUB,EPOTINB,ESPCB, &
-  ETOTB1,FORCE,FORCEH,FORCXC,MTZERO,KLOOPZ1, &
+  FORCE,FORCEH,FORCXC,MTZERO,KLOOPZ1, &
   TEST,VMADELBLK,VXCDRV,RMSOUT, &
   OUTTIME,TIME
 
@@ -636,7 +636,8 @@ program MAIN2
               call EBALANCE('I',ITER,SCFSTEPS, &
                             IELAST,NPNT1, &
                             MYACTVRANK,ACTVCOMM, &
-                            ETIME,EPROC,EPROCO)
+                            ETIME,EPROC,EPROCO, &
+                            empid, iemxd)
 
             endif
 
@@ -855,7 +856,8 @@ spinloop:     do ISPIN = 1,NSPIN
           call EBALANCE('R',ITER,SCFSTEPS, &
                         IELAST,NPNT1, &
                         MYACTVRANK,ACTVCOMM, &
-                        ETIME,EPROC,EPROCO)
+                        ETIME,EPROC,EPROCO, &
+                        empid, iemxd)
 !=======================================================================
 !=======================================================================
 
@@ -878,14 +880,15 @@ spinloop:     do ISPIN = 1,NSPIN
 
 !       true beginning of SMPID-parallel section
 
-              if(SRANK(SMPIB,SMPIC)==MAPSPIN) then
+              if(SRANK(SMPIB,SMPIC) == MAPSPIN) then
 
                 call EPRDIST(IELAST,KMESH,NOFKS, &
                              PRSC(1,1,PRSPIN), &
                              SPRS(1,1,PRSPIN), &
                              CNVFAC(1,PRSPIN), &
                              MYRANK,EMPIC,EMYRANK, &
-                             EPROC,EPROCO)
+                             EPROC,EPROCO, &
+                             lmpid, smpid, empid, naez, lmax, nguessd, ekmd, iemxd)
 
               endif
             enddo
@@ -1168,9 +1171,9 @@ spinloop:     do ISPIN = 1,NSPIN
             if (KFORCE==1 .and. ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
               call FORCEH(CMOM,FLM,LPOT,NSPIN,I1,RHO2NS,VONS, &
-              R,DRDI,IMT,ZAT)
+              R,DRDI,IMT,ZAT,irmd)
               call FORCE(FLM,FLMC,LPOT,NSPIN,I1,RHOCAT,VONS,R, &
-              DRDI,IMT)
+              DRDI,IMT,naez,irmd)
 ! ---------------------------------------------------------------------
             end if
 
@@ -1184,12 +1187,14 @@ spinloop:     do ISPIN = 1,NSPIN
               call ESPCB(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE)
 
               call EPOTINB(EPOTIN,NSPIN,I1,RHO2NS,VISP,R,DRDI, &
-              IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT)
+              IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT, &
+              irmd, irnsd, ipand)
 
               call ECOUB(CMOM,ECOU,LPOT,NSPIN,I1,RHO2NS, &
               VONS,ZAT,R, &
               DRDI,IRWS,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM(1,ICELL), &
-              ILM,ICELL,GSH,THETAS,LMSP(1,ICELL))
+              ILM,ICELL,GSH,THETAS,LMSP(1,ICELL), &
+              irmd, irid, nfund, ipand, ngshd)
 
             end if
             call OUTTIME(MYLRANK(1),'KTE ......',TIME_I,ITER)
@@ -1213,7 +1218,8 @@ spinloop:     do ISPIN = 1,NSPIN
               call FORCXC(FLM,FLMC,LPOT,NSPIN,I1,RHOCAT,VONS,R, &
               ALAT,DRDI,IMT,ZAT, &
               LMPIC,MYLRANK, &
-              LGROUP,LCOMM,LSIZE)
+              LGROUP,LCOMM,LSIZE, &
+              naez, irmd, lmpid*smpid*empid)
 ! ---------------------------------------------------------------------
             end if
 

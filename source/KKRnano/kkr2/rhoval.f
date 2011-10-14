@@ -148,7 +148,8 @@ C=======================================================================
      &                  IRMD,LMAXD)
             CALL CRADWF(ERYD,EK,NSRA,ALPHA,IPAN,IRCUT,CVLIGHT,RS,S,
      +                  PZ,FZ,QZ,SZ,TMAT,VISP,DRDI,R,ZAT,
-     >                  LDAU,NLDAU,LLDAU,WMLDAUAV,LDAUCUT)
+     >                  LDAU,NLDAU,LLDAU,WMLDAUAV,LDAUCUT,
+     &                  lmaxd, irmd, ipand)
 C-----------------------------------------------------------------------
 C non-spherical
 C

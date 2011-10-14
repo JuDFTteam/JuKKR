@@ -1,14 +1,18 @@
 c ************************************************************************
-      SUBROUTINE GFREE(RDIFF,E0,GMLL,CLEB,ICLEB,LOFLM,IEND)
+      SUBROUTINE GFREE(RDIFF,E0,GMLL,CLEB,ICLEB,LOFLM,IEND,
+C                      new input parameters after inc.p removal
+     &                 lmax, ncleb)
 c ************************************************************************
-C     .. Parameters ..
-      include 'inc.p'
+      IMPLICIT NONE
+
       INTEGER LMAX
-      PARAMETER (LMAX=LMAXD)
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAX+1)**2)
-      INTEGER LMAX2P,LMX2SQ
-      PARAMETER (LMAX2P=LMAX*2+1,LMX2SQ=LMAX2P**2)
+      INTEGER ncleb
+
+C      INTEGER LMGF0D
+C      PARAMETER (LMGF0D= (LMAX+1)**2)
+C      INTEGER LMAX2P,LMX2SQ
+C      PARAMETER (LMAX2P=LMAX*2+1,LMX2SQ=LMAX2P**2)
+C                                       =(LMAX*2+1)**2
       DOUBLE COMPLEX CZERO,CI
       PARAMETER (CZERO= (0.0D0,0.0D0),CI= (0.0D0,1.0D0))
 C     ..
@@ -17,7 +21,8 @@ C     .. Scalar Arguments ..
       INTEGER IEND
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX GMLL(LMGF0D,LMGF0D)
+C     DOUBLE COMPLEX GMLL(LMGF0D,LMGF0D)
+      DOUBLE COMPLEX GMLL((LMAX +1 )**2, (LMAX + 1)**2)
       DOUBLE PRECISION CLEB(NCLEB),RDIFF(*)
       INTEGER ICLEB(NCLEB,3),LOFLM(*)
 C     ..
@@ -26,15 +31,28 @@ C     .. Local Scalars ..
       INTEGER IFAC,J,LM1,LM2,LM3
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX BL(LMAX2P),HL(LMAX2P),HYL(LMX2SQ),NL(LMAX2P)
-      DOUBLE PRECISION YL(LMX2SQ)
-      INTEGER LF(LMX2SQ)
+C     DOUBLE COMPLEX BL(LMAX2P),HL(LMAX2P),HYL(LMX2SQ),NL(LMAX2P)
+C     DOUBLE PRECISION YL(LMX2SQ)
+C     INTEGER LF(LMX2SQ)
+
+      DOUBLE COMPLEX BL(LMAX*2+1),HL(LMAX*2+1)
+      DOUBLE COMPLEX HYL((LMAX*2+1)**2),NL(LMAX*2+1)
+      DOUBLE PRECISION YL((LMAX*2+1)**2)
+      INTEGER LF((LMAX*2+1)**2)
+
 C     ..
 C     .. External Subroutines ..
       EXTERNAL BESHAN,YMY
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
+
+      INTEGER LMGF0D
+      INTEGER LMX2SQ
+
+      LMGF0D = (LMAX+1)**2
+      LMX2SQ = (LMAX*2+1)**2
+
 C     ..
       PI = 4.D0*ATAN(1.D0)
       FPI = 4.D0*PI
@@ -75,16 +93,20 @@ C-----------------------------------------------------------------------
 
       END
 c ************************************************************************
-      SUBROUTINE DGFREE(RDIFF,E0,DGMLL,CLEB,ICLEB,LOFLM,IEND)
+      SUBROUTINE DGFREE(RDIFF,E0,DGMLL,CLEB,ICLEB,LOFLM,IEND,
+C                       new input parameters after inc.p removal
+     &                  lmax, ncleb)
 c ************************************************************************
-C     .. Parameters ..
-      include 'inc.p'
+      IMPLICIT NONE
+
       INTEGER LMAX
-      PARAMETER (LMAX=LMAXD)
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAX+1)**2)
-      INTEGER LMAX2P,LMX2SQ
-      PARAMETER (LMAX2P=LMAX*2+1,LMX2SQ=LMAX2P**2)
+      INTEGER ncleb
+
+C     INTEGER LMGF0D
+C     PARAMETER (LMGF0D= (LMAX+1)**2)
+C     INTEGER LMAX2P,LMX2SQ
+C     PARAMETER (LMAX2P=LMAX*2+1,LMX2SQ=LMAX2P**2)
+
       DOUBLE COMPLEX CZERO,CI
       PARAMETER (CZERO= (0.0D0,0.0D0),CI= (0.0D0,1.0D0))
 C     ..
@@ -93,7 +115,8 @@ C     .. Scalar Arguments ..
       INTEGER IEND
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX DGMLL(LMGF0D,LMGF0D)
+C     DOUBLE COMPLEX DGMLL(LMGF0D,LMGF0D)
+      DOUBLE COMPLEX DGMLL((LMAX+1)**2,(LMAX+1)**2)
       DOUBLE PRECISION CLEB(NCLEB),RDIFF(*)
       INTEGER ICLEB(NCLEB,3),LOFLM(*)
 C     ..
@@ -102,16 +125,33 @@ C     .. Local Scalars ..
       INTEGER IFAC,J,LM1,LM2,LM3
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX BL(LMAX2P),HL(LMAX2P),NL(LMAX2P)
-      DOUBLE COMPLEX DHL(LMAX2P),DHYL(LMX2SQ)
-      DOUBLE PRECISION YL(LMX2SQ)
-      INTEGER LF(LMX2SQ)
+C     DOUBLE COMPLEX BL(LMAX2P),HL(LMAX2P),NL(LMAX2P)
+C     DOUBLE COMPLEX DHL(LMAX2P),DHYL(LMX2SQ)
+C     DOUBLE PRECISION YL(LMX2SQ)
+C     INTEGER LF(LMX2SQ)
+
+      DOUBLE COMPLEX BL(LMAX*2+1),HL(LMAX*2+1),NL(LMAX*2+1)
+      DOUBLE COMPLEX DHL(LMAX*2+1),DHYL((LMAX*2+1)**2)
+      DOUBLE PRECISION YL((LMAX*2+1)**2)
+      INTEGER LF((LMAX*2+1)**2)
+
+
 C     ..
 C     .. External Subroutines ..
       EXTERNAL BESHAN,YMY
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
+
+      INTEGER LMGF0D
+      INTEGER LMAX2P
+      INTEGER LMX2SQ
+      INTEGER LP1
+
+      LMGF0D= (LMAX+1)**2
+      LMAX2P=  LMAX*2+1
+      LMX2SQ= (LMAX*2+1)**2
+
 C     ..
       PI = 4.D0*ATAN(1.D0)
       FPI = 4.D0*PI

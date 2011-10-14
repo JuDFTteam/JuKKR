@@ -1,5 +1,6 @@
-      SUBROUTINE FORCE(FLM,FLMC,LMAX,NSPIN,IATYP,RHOC,V,R,DRDI,
-     +                 IRWS)
+      SUBROUTINE FORCE(FLM,FLMC,LPOT,NSPIN,IATYP,RHOC,V,R,DRDI,IRWS,
+C                      new input parameters after inc.p removal
+     &                 naez,irmd)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     calculates the force on nucleus m
@@ -7,17 +8,25 @@ c     from a given non spherical charge density at the nucleus site r
 c     with core correction (coulomb contribution)
  
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LMAX,NSPIN
+
+      INTEGER naez
+      INTEGER irmd
+
+      INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
+C     DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
+C    +       RHOC(IRMD,*),V(IRMD,LMPOTD,2)
+
       DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
-     +       RHOC(IRMD,*),V(IRMD,LMPOTD,2)
+     +       RHOC(IRMD,*),V(IRMD,(LPOT+1)**2,2)
+
       INTEGER IRWS(*)
 C     ..
 C     .. Local Scalars ..
@@ -25,7 +34,7 @@ C     .. Local Scalars ..
       INTEGER I,IATYP,IPOT,IRWS1,ISPIN,LM,M
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION FLMH(-1:1,NAEZD),V1(IRMD)
+      DOUBLE PRECISION FLMH(-1:1,NAEZ),V1(IRMD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL SIMP3
@@ -39,7 +48,7 @@ C     .. Intrinsic Functions ..
 C     ..
       PI = 4.D0*ATAN(1.D0)
       FAC = DSQRT((4.0D0*PI)/3.0D0)
-      IF (LMAX.LT.1) THEN
+      IF (LPOT.LT.1) THEN
          WRITE (6,FMT=9000)
          STOP
  

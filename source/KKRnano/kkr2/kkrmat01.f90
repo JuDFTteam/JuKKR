@@ -212,10 +212,12 @@
                 ref_cluster_index = CLS(site_index)
 
                 call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                           BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+                           BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
+                           nrd, naclsd)
 
                 call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
-                ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index))
+                           ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
+                           naez, lmax, naclsd)
             end do
 
             do site_index=1,NAEZ
@@ -243,11 +245,16 @@
 
         do site_index = 1,NAEZ
             ref_cluster_index = CLS(site_index)
+
             call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-            BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+                       BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
+                       nrd, naclsd)
+
             call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
-            ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
-            GINP(1,1,1,ref_cluster_index))
+                       ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+                       GINP(1,1,1,ref_cluster_index), &
+                       naez, lmax, naclsd)
+
         end do
 
     !=========== Lloyd's Formula ==========================================
@@ -280,11 +287,13 @@
             ref_cluster_index = CLS(site_index)
 
             call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                       BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP)
+                       BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
+                       nrd, naclsd)
 
             call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
                        ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
-                       GINP(1,1,1,ref_cluster_index))
+                       GINP(1,1,1,ref_cluster_index), &
+                       naez, lmax, naclsd)
 
         end do
 

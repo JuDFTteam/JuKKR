@@ -27,18 +27,23 @@ C
 C-----------------------------------------------------------------------
       IMPLICIT NONE
 
-      INCLUDE 'inc.p'
-C
+
       INTEGER LMAXD1
-      PARAMETER (LMAXD1=LMAXD+1)
+C     PARAMETER (LMAXD1=LMAXD+1)
 C
 C Dummy arguments
 C
       DOUBLE PRECISION EFERMI
       INTEGER KPRE,LMAX,LPOT,NAEZ,NSPIN
-      DOUBLE PRECISION ECOU(0:LPOTD),EPOTIN,ESPC(0:3,NSPIND),
-     &                 ESPV(0:LMAXD1,NSPIND),EXC(0:LPOTD),
+
+C     DOUBLE PRECISION ECOU(0:LPOTD),EPOTIN,ESPC(0:3,NSPIND),
+C    &                 ESPV(0:LMAXD1,NSPIND),EXC(0:LPOTD),
+C    &                 EULDAU,EDCLDAU
+
+      DOUBLE PRECISION ECOU(0:LPOT),EPOTIN,ESPC(0:3,NSPIN),
+     &                 ESPV(0:LMAX+1,NSPIN),EXC(0:LPOT),
      &                 EULDAU,EDCLDAU
+
       INTEGER LCOREMAX
 C
 C Local variables
@@ -60,6 +65,8 @@ C     .. Data statements ..
       DATA TEXTS/' spin down   ',' spin  up    ',' paramagnetic'/
       DATA TEXTNS/' ns ='/
 C ------------------------------------------------------------------------
+      LMAXD1 = LMAX + 1
+
       EFCTOR = 1.0D0/13.6058D0
 C
       IF(I1.EQ.1) THEN

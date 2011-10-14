@@ -2,7 +2,9 @@
      >                    INFO,ITER,SCFSTEPS,
      >                    IERLAST,NPNT1,
      >                    MYACTVRANK,ACTVCOMM,
-     >                    ETIME,EPROC,EPROCO)
+     >                    ETIME,EPROC,EPROCO,
+C                         new input parameters after inc.p removal
+     &                    empid, iemxd)
 C ======================================================================
 C                       build MPI_Groups 
 C ======================================================================
@@ -17,8 +19,9 @@ C
       IMPLICIT NONE
 C
       include 'mpif.h'
-C     .. Parameters ..
-      include 'inc.p'
+
+      INTEGER empid
+      INTEGER iemxd
 C
 C     .. global scalars ..
       INTEGER        ITER,SCFSTEPS,IERLAST,NPNT1

@@ -1,6 +1,8 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE EPOTINB(EPOTIN,NSPIN,IATYP,RHO2NS,VM2Z,R,DRDI,
-     +                   IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,Z)
+     &                   IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,Z,
+C                        new input parameters after inc.p removal
+     &                   irmd, irnsd, ipand)
 c ************************************************************************
 c
 c     attention : energy zero ---> electro static zero
@@ -49,28 +51,39 @@ c                  tions
 c
 c                               b.drittler   oct. 1989
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
+
+      INTEGER irmd
+      INTEGER irnsd
+      INTEGER ipand
+
 C     .. Parameters ..
-      include 'inc.p'
 C     ..
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
+C      INTEGER LMPOTD
+C      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C      INTEGER IRMIND
+C      PARAMETER (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
+C     DOUBLE PRECISION DRDI(IRMD,*),EPOTIN,R(IRMD,*),
+C    +                 RHO2NS(IRMD,LMPOTD,2),
+C    +                 VINS(IRMIND:IRMD,LMPOTD,2),VM2Z(IRMD,2),Z(*)
+
       DOUBLE PRECISION DRDI(IRMD,*),EPOTIN,R(IRMD,*),
-     +                 RHO2NS(IRMD,LMPOTD,2),
-     +                 VINS(IRMIND:IRMD,LMPOTD,2),VM2Z(IRMD,2),Z(*)
+     &                 RHO2NS(IRMD,(LPOT+1)**2,2),
+     &                 VINS((IRMD-IRNSD):IRMD,(LPOT+1)**2,2),
+     &                 VM2Z(IRMD,2),Z(*)
+
       INTEGER IPAN(*),IRCUT(0:IPAND,*),IRMIN(*),IRWS(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION PI,R2RHOD,R2RHOU,RFPI,TEMP,ZZOR
       INTEGER I,IATYP,IC,IPAN1,IPOTD,IPOTU,IRC1,IRMIN1,IRS1,L1,LM,M1
 C     ..
-C     .. Local Arrays ..
+C     .. Local Arrays ..(automatic Fortran arrays)
       DOUBLE PRECISION ER(IRMD)
       INTEGER IRCUTM(0:IPAND)
 C     ..

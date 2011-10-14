@@ -1,27 +1,35 @@
 c **********************************************************************
       SUBROUTINE DLKE0(I,GLLH,EIKRM,EIKRP,IC,NACLS,
-     +                  ATOM,NUMN0,INDN0,GINP)
+     +                  ATOM,NUMN0,INDN0,GINP,
+C                       new input parameters after inc.p removal
+     &                  naez, lmax, naclsd)
 c **********************************************************************
       IMPLICIT NONE
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
 C
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAXD+1)**2)
-      INTEGER ALMGF0
-      PARAMETER (ALMGF0=LMGF0D*NAEZD)
-      INTEGER NGTBD
-      PARAMETER (NGTBD = NACLSD*LMGF0D)
+      INTEGER naez
+      INTEGER lmax
+      INTEGER naclsd
+
+C     LMGF0D= (LMAX+1)**2
+C     NGTBD = NACLSD*LMGF0D
 C     ..
-      DOUBLE COMPLEX GINP(LMGF0D,LMGF0D,NACLSD)
-      DOUBLE COMPLEX GLLH(LMGF0D,NGTBD,*)
+C     DOUBLE COMPLEX GINP(LMGF0D,LMGF0D,NACLSD)
+C     DOUBLE COMPLEX GLLH(LMGF0D,NGTBD,*)
+C     DOUBLE COMPLEX EIKRM(NACLSD),EIKRP(NACLSD)
+C     INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZD,*),NUMN0(*)
+
+      DOUBLE COMPLEX GINP((LMAX+1)**2, (LMAX+1)**2, NACLSD)
+      DOUBLE COMPLEX GLLH((LMAX+1)**2, NACLSD * (LMAX+1)**2, *)
       DOUBLE COMPLEX EIKRM(NACLSD),EIKRP(NACLSD)
-      INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZD,*),NUMN0(*)
+      INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZ,*),NUMN0(*)
 C     ..
       INTEGER AM,AN,I,IC,IN,J,LM1,LM2,M,N1,N2,IND1,IND2
 C     ..
 c ----------------------------------------------------------------------
+      INTEGER LMGF0D
+
+      LMGF0D= (LMAX+1)**2
 
       DO M = 1,NACLS(IC)
         DO N1 = 1,NUMN0(I)
