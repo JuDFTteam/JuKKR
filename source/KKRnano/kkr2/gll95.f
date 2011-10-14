@@ -1,7 +1,9 @@
 c**********************************************************************
       SUBROUTINE GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM,
      +                 REFPOT,RATOM,NATOM,ALAT,GREF0,DGDEOUT,
-     +                 LLY_G0TR,ICLS,CLS,I3 )
+     +                 LLY_G0TR,ICLS,CLS,I3,
+C                      new input parameters after inc.p removal
+     &                 naezd, lmaxd, naclsd, ncleb, nrefd, LLY)
 c **********************************************************************
 c
 c     solution of the DYSON equation for a cluster of potentials
@@ -9,28 +11,57 @@ c     (TREFLL) centered at positions RATOM in free space,
 c
 c ----------------------------------------------------------------------
       IMPLICIT NONE
-C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
+
+      INTEGER naezd
+      INTEGER lmaxd
+      INTEGER naclsd
+      INTEGER ncleb
+      INTEGER nrefd
+      INTEGER LLY
+
 c
-      INTEGER LMGF0D,NGD
-      PARAMETER (LMGF0D= (LMAXD+1)**2,NGD=LMGF0D*NACLSD)
-      INTEGER LLYNGD
-      PARAMETER (LLYNGD=LLY*(LMGF0D*NACLSD-1)+1)
+C     INTEGER LMGF0D,NGD
+C     PARAMETER (LMGF0D= (LMAXD+1)**2,NGD=LMGF0D*NACLSD)
+C     INTEGER LLYNGD
+C     PARAMETER (LLYNGD=LLY*(LMGF0D*NACLSD-1)+1)
+
       DOUBLE COMPLEX CONE,CZERO
       PARAMETER (CONE= (1.D0,0.D0),CZERO= (0.D0,0.D0))
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX E,LLY_G0TR
       DOUBLE PRECISION ALAT
-      INTEGER I3,IEND,NATOM,ICLS,IPVT(NGD),INFO
+      INTEGER I3,IEND,NATOM,ICLS
+      INTEGER INFO
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX DTREFLL(LMGF0D,LMGF0D,NREFD)
-      DOUBLE COMPLEX GREF0(NGD,LMGF0D),TREFLL(LMGF0D,LMGF0D,NREFD),
-     +               DGTDE(LLYNGD,LMGF0D),
-     +               DGTDE0(LLYNGD,LLYNGD),
-     +               DGDE(LLYNGD,LLYNGD),DGDEOUT(LLYNGD,LMGF0D)
+      INTEGER IPVT(NACLSD*(LMAXD+1)**2)
+
+C     DOUBLE COMPLEX GREF0(NGD,LMGF0D)
+      DOUBLE COMPLEX GREF0(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
+
+C     DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D,NREFD)
+      DOUBLE COMPLEX TREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
+
+C     DOUBLE COMPLEX DTREFLL(LMGF0D,LMGF0D,NREFD)
+      DOUBLE COMPLEX DTREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
+
+C     DOUBLE COMPLEX DGTDE(LLYNGD,LMGF0D)
+      DOUBLE COMPLEX DGTDE(LLY*(NACLSD*(LMAXD+1)**2-1)+1,(LMAXD+1)**2)
+
+C     DOUBLE COMPLEX DGTDE0(LLYNGD,LLYNGD)
+      DOUBLE COMPLEX DGTDE0(LLY*(NACLSD*(LMAXD+1)**2-1)+1,
+     &                      LLY*(NACLSD*(LMAXD+1)**2-1)+1)
+
+C     DOUBLE COMPLEX DGDE(LLYNGD,LLYNGD),DGDEOUT(LLYNGD,LMGF0D)
+      DOUBLE COMPLEX DGDE(LLY*(NACLSD*(LMAXD+1)**2-1)+1,
+     &                    LLY*(NACLSD*(LMAXD+1)**2-1)+1)
+
+      DOUBLE COMPLEX DGDEOUT(LLY*(NACLSD*(LMAXD+1)**2-1)+1,
+     &                      (LMAXD+1)**2)
+
+
+
       DOUBLE PRECISION CLEB(*),RATOM(3,*)
       INTEGER ATOM(*),ICLEB(NCLEB,3),LOFLM(*),REFPOT(*),CLS(NAEZD)
 C     ..
@@ -38,8 +69,15 @@ C     .. Local Scalars ..
       INTEGER I,LM1,LM2,N1,N2,NDIM,NLM1,NLM2
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX DGLLDE(LMGF0D,LMGF0D)
-      DOUBLE COMPLEX GLL(LMGF0D,LMGF0D),GREF(NGD,NGD),GTREF(NGD,LMGF0D)
+C     DOUBLE COMPLEX DGLLDE(LMGF0D,LMGF0D)
+C     DOUBLE COMPLEX GLL(LMGF0D,LMGF0D),GREF(NGD,NGD),GTREF(NGD,LMGF0D)
+
+      DOUBLE COMPLEX DGLLDE((LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX GLL((LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX GREF (NACLSD*(LMAXD+1)**2,NACLSD*(LMAXD+1)**2)
+      DOUBLE COMPLEX GTREF(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
+
+
       DOUBLE PRECISION RDIFF(3)
 C     ..
 C     .. External Subroutines ..
@@ -55,6 +93,17 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,DBLE
 C     ..
+
+      INTEGER LMGF0D
+      INTEGER NGD
+C      INTEGER LLYNGD
+
+      LMGF0D= (LMAXD+1)**2
+      NGD=LMGF0D*NACLSD
+C      LLYNGD=LLY*(LMGF0D*NACLSD-1)+1
+
+
+
       IF (TEST('flow    ')) WRITE (6,FMT=*) '>>> GLL95'
 
       NDIM = LMGF0D*NATOM
@@ -165,7 +214,8 @@ c
 
 
       CALL GREFSY(GREF,GREF0,IPVT,NDIM,ICLS,DGTDE,
-     +            I3,CLS,LLY_G0TR)
+     &            I3,CLS,LLY_G0TR,
+     &            naezd, lmaxd, naclsd, LLY)
 
       IF (LLY.EQ.1) THEN
 

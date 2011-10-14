@@ -451,7 +451,8 @@ program MAIN2
             LSMPIB,LSMPIC,LSRANK,LSMYRANK, &
             SMPIB,SMPIC,SRANK,SMYRANK, &
             EMPIB,EMPIC,ERANK,EMYRANK, &
-            MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE)
+            MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE, &
+            lmpid, smpid, empid, nthrds)
 
 !====================================================================
 

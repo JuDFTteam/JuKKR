@@ -231,10 +231,12 @@ C
             I1 = I1 + 1
           END DO
           IF (IC.EQ.0) STOP 'Error in CLS(*) array in tbref'
+
           CALL GLL95(E,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
      +               ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      +               ALATC,GINP,DGINP,
-     +               LLY_G0TR(IE,ICLS),ICLS,CLS,I3 )
+     +               LLY_G0TR(IE,ICLS),ICLS,CLS,I3,
+     &               naezd, lmaxd, naclsd, ncleb, nrefd, LLY )
 
           DO IG=1,NACLSD
           DO LM2=1,LMGF0D
