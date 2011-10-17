@@ -62,7 +62,8 @@ C local scalars ..
       INTEGER*8      FFTWPLAN
 
       LOGICAL        LSAME
-      INTEGER        MYTHRD,OMP_GET_THREAD_NUM
+      INTEGER        MYTHRD
+!$    INTEGER        OMP_GET_THREAD_NUM
 
 C..
 C
@@ -91,9 +92,10 @@ C
      +                              FFTW_BACKWARD,FFTW_ESTIMATE)
 C
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        CALL OMP_SET_NUM_THREADS(NTHRDS)
+!$      CALL OMP_SET_NUM_THREADS(NTHRDS)
 !$OMP  PARALLEL PRIVATE (LMATBL,IX,IY,IZ,X,MYTHRD)
-        MYTHRD = OMP_GET_THREAD_NUM()
+        MYTHRD = 0
+!$      MYTHRD = OMP_GET_THREAD_NUM()
 C
         DO LMATBL = 1,LMMAXD*NATBLD
         IF (MOD(LMATBL,NTHRDS).EQ.MYTHRD) THEN
@@ -132,9 +134,10 @@ C perform Fourier-transform backward              end
 C-----------------------------------------------------------------------
 C
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        CALL OMP_SET_NUM_THREADS(NTHRDS)
+!$      CALL OMP_SET_NUM_THREADS(NTHRDS)
 !$OMP  PARALLEL PRIVATE (IX,IY,IZ,TBLCK,TXK,TYK,MYTHRD)
-        MYTHRD = OMP_GET_THREAD_NUM()
+        MYTHRD = 0
+!$      MYTHRD = OMP_GET_THREAD_NUM()
 
         DO IZ =1,ZDIM
         IF (MOD(IZ,MIN(ZDIM,NTHRDS)).EQ.MYTHRD) THEN
@@ -176,9 +179,10 @@ C
      +                              FFTW_FORWARD,FFTW_ESTIMATE)
 C
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        CALL OMP_SET_NUM_THREADS(NTHRDS)
+!$      CALL OMP_SET_NUM_THREADS(NTHRDS)
 !$OMP  PARALLEL PRIVATE (LMATBL,IX,IY,IZ,Y,MYTHRD)
-        MYTHRD = OMP_GET_THREAD_NUM()
+        MYTHRD = 0
+!$      MYTHRD = OMP_GET_THREAD_NUM()
 C
         DO LMATBL = 1,LMMAXD*NATBLD
         IF (MOD(LMATBL,NTHRDS).EQ.MYTHRD) THEN

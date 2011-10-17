@@ -89,7 +89,8 @@ C local scalars ..
      +                   INFO
 C ..
 C openMP ..
-      INTEGER        MYTHRD,OMP_GET_THREAD_NUM
+      INTEGER        MYTHRD
+!$    INTEGER        OMP_GET_THREAD_NUM
 C ..
 C intrinsic functions ..
       INTRINSIC          ZEXP,ATAN
@@ -273,9 +274,10 @@ C ..
 C
       NDIM = (NATBLD*LMMAXD)*(NATBLD*LMMAXD)
 C
-      CALL OMP_SET_NUM_THREADS(NTHRDS)
+!$    CALL OMP_SET_NUM_THREADS(NTHRDS)
 !$OMP PARALLEL PRIVATE (IX,IY,IZ,TMPBLCK,MYTHRD,INFO,IPIV)
-      MYTHRD = OMP_GET_THREAD_NUM()
+      MYTHRD = 0
+!$    MYTHRD = OMP_GET_THREAD_NUM()
 C
       DO IX = 1, XDIM
       IF (MOD(IX,MIN(XDIM,NTHRDS)).EQ.MYTHRD) THEN

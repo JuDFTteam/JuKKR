@@ -35,16 +35,18 @@ C ..
 C     .. Local Scalars ..
       INTEGER          I1,I2,I3,LM2,IL1B,I2H,I3H
 C#ifndef FPP_OMP
-      INTEGER          MYTHRD,OMP_GET_THREAD_NUM
+      INTEGER          MYTHRD
+!$    INTEGER          OMP_GET_THREAD_NUM
 C#endif
 C ..
 C
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C#ifndef FPP_OMP
-      CALL OMP_SET_NUM_THREADS(NTHRDS)
+!$    CALL OMP_SET_NUM_THREADS(NTHRDS)
 !$OMP PARALLEL PRIVATE (I1,LM2,I2,I3H,I2H,
 !$OMP&                  IL1B,SPRSX,MYTHRD)
-      MYTHRD = OMP_GET_THREAD_NUM()
+      MYTHRD = 0
+!$    MYTHRD = OMP_GET_THREAD_NUM()
 C#endif
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C
