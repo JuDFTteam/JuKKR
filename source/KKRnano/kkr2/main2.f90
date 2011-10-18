@@ -572,6 +572,7 @@ program MAIN2
 ! ccpl
 
           XCCPL = .false.
+          ERESJIJ = .false.
 
           ! calculate exchange couplings only at last self-consistency step and when Jij=true
           if ((ITER==SCFSTEPS).and.JIJ) XCCPL = .true.

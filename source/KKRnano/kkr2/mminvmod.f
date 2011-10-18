@@ -72,6 +72,7 @@ C=======================================================================
 C INITIALIZATION I
 C=======================================================================
 C
+      TOLAV = 0.0
       QMRABS = .TRUE.           ! QMRABS tolerance for residual norm is defined globally
       CNVCONST = .TRUE.         ! CNVFAC is constant for all sc-steps
 C

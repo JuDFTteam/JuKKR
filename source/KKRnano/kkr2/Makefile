@@ -26,11 +26,6 @@ LDFLAGS =
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/em64t'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib'
 LDFLAGS += -lfftw3
-
-ifeq ($(TYPE),debug)
-FCFLAGS += -debug -check all
-endif
-
 endif
 
 ifeq ($(PLATFORM),ifort_IFF_NOOMP)
@@ -45,11 +40,10 @@ LDFLAGS =
 # set run paths to look for shared libraries (-Wl means pass to linker)
 LDFLAGS +=  -llapack_ifort -lblas_ifort
 LDFLAGS += -lfftw3
-
-ifeq ($(TYPE),debug)
-FCFLAGS += -debug -check all
 endif
 
+ifeq ($(TYPE),debug)
+FCFLAGS += -g -traceback -check all
 endif
 
 
