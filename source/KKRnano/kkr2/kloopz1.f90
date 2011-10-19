@@ -9,28 +9,48 @@
     QMRBOUND,IGUESS,BCP,CNVFAC, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH,GMATXIJ, &
-    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
+    LMPIC,LCOMM,LSIZE, &
+    ! new parameters after inc.p removal
+    iemxd, &
+    prod_lmpid_smpid_empid, nthrds, &
+    lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+    nxijd, nguessd, kpoibz, nrd, ekmd)
 
 ! **********************************************************************
 
-    use inc_p_wrapper_module
     use mpi
 
     implicit none
+
+    integer, intent(in) :: iemxd
+    integer, intent(in) :: prod_lmpid_smpid_empid
+    integer, intent(in) :: nthrds  ! number of OpenMP threads
+    integer, intent(in) :: lmax
+    integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
+    integer, intent(in) :: nclsd   ! number of reference clusters
+    integer, intent(in) :: xdim
+    integer, intent(in) :: ydim
+    integer, intent(in) :: zdim
+    integer, intent(in) :: natbld  ! number of atoms in preconditioning blocks
+    integer, intent(in) :: LLY
+    integer, intent(in) :: nxijd   ! max. number of atoms in cluster for exchange coupling-calculation
+    integer, intent(in) :: nguessd
+    integer, intent(in) :: kpoibz
+    integer, intent(in) :: nrd
+    integer, intent(in) :: ekmd
+
     !     .. Parameters ..
 
-
-    integer::          NSYMAXD
-    parameter        (NSYMAXD=48)
-    integer::          LMMAXD
-    parameter        (LMMAXD= (KREL+1) * (LMAXD+1)**2)
-    integer::          LMGF0D
-    parameter        (LMGF0D= (LMAXD+1)**2)
-    integer::          LLYALM
-    parameter        (LLYALM=LLY*(NAEZD*LMMAXD-1)+1)
+    integer, parameter :: NSYMAXD = 48
     double complex :: CONE
     double complex :: CZERO
-    parameter        (CONE  = ( 1.0D0,0.0D0),CZERO  = ( 0.0D0,0.0D0))
+    parameter        (CONE  = ( 1.0D0,0.0D0), CZERO  = ( 0.0D0,0.0D0))
+
+    !integer::          LMMAXD
+    !parameter        (LMMAXD= (KREL+1) * (LMAXD+1)**2)
+    !integer::          LMGF0D
+    !parameter        (LMGF0D= (LMAXD+1)**2)
+
     !     ..
     !     .. Scalar Arguments ..
     !     ..
@@ -48,32 +68,44 @@
     integer::EKM
     integer::NOITER
     integer::NSYMAT
+    double complex :: LLY_GRDT
+    double complex :: TR_ALPH
     !     ..
     !     .. Array Arguments ..
     !     ..
-    double complex :: GMATN(LMMAXD,LMMAXD,IEMXD)
-    double complex :: DGINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
-    double complex :: GINP_LOCAL(LMGF0D,LMGF0D,NACLSD,NCLSD)
-    double complex :: GMATXIJ(LMMAXD,LMMAXD,NXIJD)
-    double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
-    double complex :: TSST_LOCAL(LMMAXD,LMMAXD)
-    double complex :: DTDE_LOCAL(LMMAXD,LMMAXD)
-    double complex :: LLY_GRDT
-    double complex :: TR_ALPH
-    double complex :: GLL(LMMAXD,LMMAXD)
-    double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
+!    double complex :: GMATN(LMMAXD,LMMAXD,IEMXD)
+!    double complex :: DGINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
+!    double complex :: GINP_LOCAL(LMGF0D,LMGF0D,NACLSD,NCLSD)
+!    double complex :: GMATXIJ(LMMAXD,LMMAXD,NXIJD)
+!    double complex :: TSST_LOCAL(LMMAXD,LMMAXD)
+!    double complex :: DTDE_LOCAL(LMMAXD,LMMAXD)
+
+    !----- Initial Guess arrays-----------------------------------------------
+    complex::          PRSC(NGUESSD*(LMAX+1)**2,EKMD)
+    integer::          SPRS(NGUESSD*(LMAX+1)**2+1,EKMD+1)
+    !-------------------------------------------------------------------------
+
+    double complex :: DSYMLL((LMAX+1)**2,(LMAX+1)**2,NSYMAXD)
+
+    double complex :: GMATN((LMAX+1)**2,(LMAX+1)**2,IEMXD)
+    double complex :: DGINP((LMAX+1)**2,(LMAX+1)**2, NACLSD, NCLSD)
+    double complex :: GINP_LOCAL((LMAX+1)**2, (LMAX+1)**2, NACLSD, NCLSD)
+    double complex :: GMATXIJ   ((LMAX+1)**2, (LMAX+1)**2, NXIJD)
+    double complex :: TSST_LOCAL((LMAX+1)**2, (LMAX+1)**2)
+    double complex :: DTDE_LOCAL((LMAX+1)**2, (LMAX+1)**2)
+
     double precision::RR(3,0:NRD)
     double precision::ZKRXIJ(48,3,NXIJD)
     double precision::BZKP(3,KPOIBZ)
     double precision::VOLCUB(KPOIBZ)
     double precision::CNVFAC(EKMD)
-    integer::          ATOM(NACLSD,*)
+    integer:: ATOM(NACLSD,*)
     integer:: CLS(*)
     integer:: EZOA(NACLSD,*)
     integer:: NACLS(*)
     !     ..
-    integer::NUMN0(NAEZD)
-    integer::INDN0(NAEZD,NACLSD)
+    integer::NUMN0(NAEZ)
+    integer::INDN0(NAEZ,NACLSD)
     integer::IXCP(NXIJD)
     !     ..
     !     .. Local Scalars ..
@@ -89,28 +121,40 @@
     !     ..
     !     .. Local Arrays ..
     !     ..
+
+    !double complex :: GLL(LMMAXD,LMMAXD)
+    !double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
+    !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
+    double complex :: GLL  ((LMAX+1)**2, (LMAX+1)**2)
+    double complex :: GS   ((LMAX+1)**2, (LMAX+1)**2, NSYMAXD)
+
+    double complex, allocatable, dimension(:,:,:,:) :: GSXIJ ! local, large?
+
     !     effective (site-dependent) Delta_t^(-1) matrix
-    double complex :: MSSQ(LMMAXD,LMMAXD)
+    !double complex :: MSSQ(LMMAXD,LMMAXD)
+    double complex ::      MSSQ ((LMAX+1)**2, (LMAX+1)**2)
 
-    double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)
-    double complex :: work_array(LMMAXD,LMMAXD)    ! work array for LAPACK ZGETRI
-    double complex :: DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
-    double complex :: TPG(LMMAXD,LMMAXD)
-    double complex :: XC(LMMAXD,LMMAXD)            ! to store temporary matrix-matrix mult. result
-    integer::         IPVT(LMMAXD)                 ! work array for LAPACK
+    !double complex :: work_array(LMMAXD,LMMAXD)
+    double complex :: work_array((LMAX+1)**2, (LMAX+1)**2)    ! work array for LAPACK ZGETRI
 
-    !----- Initial Guess arrays-----------------------------------------------
-    complex::          PRSC(NGUESSD*LMMAXD,EKMD)
-    integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
-    !=======================================================================
+    !double complex :: TPG(LMMAXD,LMMAXD)
+    double complex ::       TPG ((LMAX+1)**2, (LMAX+1)**2)
+
+    !double complex :: XC(LMMAXD,LMMAXD)
+    double complex ::        XC ((LMAX+1)**2, (LMAX+1)**2)      ! to store temporary matrix-matrix mult. result
+
+    !integer::         IPVT(LMMAXD)
+    integer::         IPVT((LMAX+1)**2)                 ! work array for LAPACK
+
+    !double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD) ! large
+    double complex, allocatable, dimension(:,:,:) :: TMATLL
+
     !-----------------------------------------------------------------------
     !     .. MPI ..
     !     .. L-MPI
-    integer:: MYLRANK(LMPID*SMPID*EMPID)
-    integer:: LCOMM(LMPID*SMPID*EMPID)
-    integer:: LGROUP(LMPID*SMPID*EMPID)
-    integer:: LSIZE(LMPID*SMPID*EMPID)
-    integer::LMPIC
+    integer:: LCOMM(prod_lmpid_smpid_empid)
+    integer:: LSIZE(prod_lmpid_smpid_empid)
+    integer:: LMPIC
 
     !     .. External Subroutines ..
     logical:: TEST
@@ -122,10 +166,33 @@
 !     .. Intrinsic Functions ..
     intrinsic ATAN
 !     ..
+    integer :: memory_stat
+    logical :: memory_fail
+
+    integer::          LMMAXD
+
+    LMMAXD = (LMAX+1)**2
+
+! -------------------------------------------------------------------
+! Allocate Arrays
+! -------------------------------------------------------------------
+    memory_stat = 0
+    memory_fail = .false.
+
+    allocate(TMATLL(LMMAXD,LMMAXD,NAEZ))
+    if (memory_stat /= 0) memory_fail = .true.
+
+    allocate(GSXIJ(LMMAXD, LMMAXD, NSYMAXD, NXIJD))
+    if (memory_stat /= 0) memory_fail = .true.
+
+    if (memory_fail == .true.) then
+      write(*,*) "KLOOPZ1: FATAL Error, failure to allocate memory."
+      write(*,*) "       Probably out of memory."
+      stop
+    end if
 
 !     RFCTOR=A/(2*PI) conversion factor to p.u.
     RFCTOR = ALAT/(8.D0*ATAN(1.0D0))           ! = ALAT/(2*PI)
-
 
 
     if ( TEST('flow    ') ) write (6,*) &
@@ -194,7 +261,10 @@
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH, &
-    LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
+    LMPIC,LCOMM,LSIZE, &
+    prod_lmpid_smpid_empid, nthrds, &
+    lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+    nxijd, nguessd, kpoibz, nrd, ekmd)
 
 
 !-------------------------------------------------------- SYMMETRISE GLL
@@ -263,7 +333,7 @@
     MSSQ,LMMAXD,-CONE,GLL,LMMAXD)
 
 
-! --->  GMATN = GMATLL = GLL/RFCTOR...............renamed
+! --->  GMATN = GMATLL = GLL/RFCTOR...............rescaled and copied into output array
 
     do LM1 = 1,LMMAXD
         do LM2 = 1,LMMAXD
@@ -274,7 +344,7 @@
 
 !================================
     if (XCCPL) then
-    !================================
+!================================
 
         call SYMJIJ( &
         ALAT,TAUVBZ, &
@@ -284,9 +354,16 @@
         GSXIJ, &
         GMATXIJ)
 
-    !================================
+!================================
     endif
 !================================
+
+! -------------------------------------------------------------------
+! Deallocate Arrays
+! -------------------------------------------------------------------
+
+    deallocate(TMATLL)
+    deallocate(GSXIJ)
 
 
     if ( TEST('flow    ') ) write (6,*) '<<< KLOOPZ1'

@@ -93,7 +93,5 @@ main2.o: inc_p_wrapper_module.o common_mpi.o
 lattice3d.o: common_mpi.o
 
 inc_p_wrapper_module.o: inc.p inc.cls
-kloopz1.o: inc_p_wrapper_module.o
-kkrmat01.o: inc_p_wrapper_module.o
 prinvit.o: inc_p_wrapper_module.o
 

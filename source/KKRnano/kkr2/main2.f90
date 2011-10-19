@@ -762,7 +762,10 @@ spinloop:     do ISPIN = 1,NSPIN
                   NXIJ,XCCPL,IXCP,ZKRXIJ, &
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
-                  LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
+                  LMPIC,LCOMM,LSIZE, &
+                  iemxd, lmpid * smpid * empid, nthrds, &
+                  lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+                  nxijd, nguessd, kpoibz, nrd, ekmd)
 
                 endif
 

@@ -193,7 +193,8 @@ C
           CALL LDAUDMAT(DF,PZ,QZ,PNS,QNS,AR,CR,DR,GMATLL,
      >                  IPAN,IRCUT,DRDI,EK,
      >                  IRMIN,LLDAU,PHILDAU,NLDAU,
-     <                  DMATLDAU,ISPIN)
+     <                  DMATLDAU,ISPIN,
+     &                  lmaxd, nspind, irmd, irnsd, ipand)
 C
         ENDIF
 

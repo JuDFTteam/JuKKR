@@ -3,7 +3,9 @@ C*==densitymat.f    processed by SPAG 6.05Rc at 15:54 on 21 Dec 2004
      &                    DR,GMATLL,IPAN,IRCUT,DRDI,EK,IRMIN,
      >                    LLDAU,PHILDAU,NLDAU,
      <                    DMATLDAU,
-     >                    ISPIN)
+     >                    ISPIN,
+C                         new input parameters after inc.p removal
+     &                    lmax, nspind, irmd, irnsd, ipand)
 C **********************************************************************
 C *                                                                    *
 C * Calculation of density matrix needed in evaluating the Coulomb     *
@@ -32,20 +34,24 @@ C *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
 C **********************************************************************
       IMPLICIT NONE
 C
-      INCLUDE 'inc.p'
-C
 C PARAMETER definitions
 C
-      INTEGER        LMMAXD
-      PARAMETER     (LMMAXD= (KREL+1) * (LMAXD+1)**2)
-      INTEGER        LMAXD1
-      PARAMETER     (LMAXD1 = LMAXD + 1 )
-      INTEGER        MMAXD
-      PARAMETER     (MMAXD = 2*LMAXD + 1 )
-      INTEGER        IRMIND
-      PARAMETER     (IRMIND=IRMD-IRNSD) 
-      INTEGER        LMPOTD
-      PARAMETER     (LMPOTD= (LPOTD+1)**2)
+      INTEGER lmax
+      INTEGER nspind
+      INTEGER irmd
+      INTEGER irnsd
+      INTEGER ipand
+
+C     INTEGER        LMMAXD
+C     PARAMETER     (LMMAXD= (KREL+1) * (LMAXD+1)**2)
+C     INTEGER        LMAXD1
+C     PARAMETER     (LMAXD1 = LMAXD + 1 )
+C     INTEGER        MMAXD
+C     PARAMETER     (MMAXD = 2*LMAXD + 1 )
+C     INTEGER        IRMIND
+C     PARAMETER     (IRMIND=IRMD-IRNSD)
+C     INTEGER        LMPOTD
+C     PARAMETER     (LMPOTD= (LPOTD+1)**2)
 C
       DOUBLE COMPLEX CZERO,CONE
       PARAMETER     (CZERO=(0.0D0,0.0D0),CONE=(1.D0,0.D0))
@@ -54,30 +60,72 @@ C Dummy arguments
 C
       DOUBLE COMPLEX     DF,EK
       INTEGER            IRMIN,LMLO,LMHI,MMAX,NLDAU
-      DOUBLE COMPLEX     AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),
-     &                   DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
-     &                   DR(LMMAXD,LMMAXD),
-     &                   GMATLL(LMMAXD,LMMAXD),PHILDAU(IRMD,LMAXD1),
-     &                   PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-     &                   PZ(IRMD,0:LMAXD),
-     &                   QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-     &                   QZ(IRMD,0:LMAXD)
+
+C     DOUBLE COMPLEX     AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),
+C    &                   DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
+C    &                   DR(LMMAXD,LMMAXD),
+C    &                   GMATLL(LMMAXD,LMMAXD),PHILDAU(IRMD,LMAXD1),
+C    &                   PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
+C    &                   PZ(IRMD,0:LMAXD),
+C    &                   QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
+C    &                   QZ(IRMD,0:LMAXD)
+
+      DOUBLE COMPLEX     AR((LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX     CR((LMAX+1)**2, (LMAX+1)**2)
+
+      DOUBLE COMPLEX     DMATLDAU(2*LMAX + 1, 2*LMAX + 1,
+     &                            NSPIND    , LMAX + 1)
+
+      DOUBLE COMPLEX     DR    ((LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX     GMATLL((LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX     PHILDAU(IRMD,LMAX + 1)
+
+      DOUBLE COMPLEX     PNS((LMAX+1)**2, (LMAX+1)**2,
+     &                       (IRMD-IRNSD):IRMD, 2)
+
+      DOUBLE COMPLEX     PZ(IRMD,0:LMAX)
+
+      DOUBLE COMPLEX     QNS((LMAX+1)**2, (LMAX+1)**2,
+     &                       (IRMD-IRNSD):IRMD, 2)
+
+      DOUBLE COMPLEX     QZ(IRMD,0:LMAX)
+
       DOUBLE PRECISION   DRDI(IRMD)
       INTEGER            IPAN,IRCUT(0:IPAND),
-     +                   LLDAU(LMAXD1),
+     +                   LLDAU(LMAX + 1),
      +                   ISPIN
 C
 C Local variables
 C
-      DOUBLE COMPLEX     DENMATC2(MMAXD,MMAXD),GTEMP(MMAXD,MMAXD),
-     &                   PHIQ(MMAXD,MMAXD),PHIR(MMAXD,MMAXD)
+C     DOUBLE COMPLEX     DENMATC2(MMAXD,MMAXD),GTEMP(MMAXD,MMAXD),
+C    &                   PHIQ(MMAXD,MMAXD),PHIR(MMAXD,MMAXD)
+
+C     Fortran 90 automatic arrays - matrices with dimension MMAXD
+      DOUBLE COMPLEX     DENMATC2(2*LMAX + 1, 2*LMAX + 1)
+      DOUBLE COMPLEX     GTEMP   (2*LMAX + 1, 2*LMAX + 1)
+      DOUBLE COMPLEX     PHIQ    (2*LMAX + 1, 2*LMAX + 1)
+      DOUBLE COMPLEX     PHIR    (2*LMAX + 1, 2*LMAX + 1)
+
       INTEGER            LM1,LM2,M1,M2,ILDAU
 C     ..
       EXTERNAL CINIT,OVERLAP,RINIT
-C
+
+      INTEGER        LMMAXD
+      INTEGER        MMAXD
+      INTEGER        IRMIND
+      INTEGER        LMPOTD
+      INTEGER        LMAXD
+
+C     LMPOTD= (LPOTD+1)**2
+      LMPOTD= (2*LMAX + 1) ** 2
+      LMMAXD= (LMAX+1)**2
+      MMAXD = 2*LMAX + 1
+      IRMIND=IRMD-IRNSD
+      LMAXD = LMAX
+
       DO ILDAU=1,NLDAU
       IF (LLDAU(ILDAU).GE.0) THEN
-C
+
         LMLO = LLDAU(ILDAU)*LLDAU(ILDAU) + 1
         LMHI = (LLDAU(ILDAU)+1)*(LLDAU(ILDAU)+1)
         MMAX = LMHI - LMLO + 1

@@ -4,8 +4,10 @@
      >                  NXIJ,IXCP,ZKRXIJ,
      >                  GLLKE1,
      <                  GSXIJ,
-     >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE)
+     >                  LMPIC,
+     >                  LCOMM,LSIZE,
+C                       new input parameters after inc.p removal
+     &                  lmax, nxijd, prod_lmpid_smpid_empid)
 
       IMPLICIT NONE
 C ------------------------------------------------------------------------
@@ -15,63 +17,83 @@ C b) multiplication with appropriate exp-factor, k-dependent
 C                                                         A. Thiess Sep'09
 C ------------------------------------------------------------------------
       include 'mpif.h'
-C     .. parameters ..
-      include 'inc.p'
-C
+
+      INTEGER lmax
+      INTEGER nxijd
+      INTEGER prod_lmpid_smpid_empid
+
       INTEGER          NSYMAXD
       PARAMETER        (NSYMAXD=48)
-      INTEGER          LMMAXD
-      PARAMETER        (LMMAXD= (LMAXD+1)**2)
-      INTEGER          ALM
-      PARAMETER        (ALM = NAEZD*LMMAXD)
+
+C     INTEGER          LMMAXD
+C     PARAMETER        (LMMAXD= (LMAXD+1)**2)
+C     INTEGER          ALM
+C     PARAMETER        (ALM = NAEZD*LMMAXD) ! = NAEZ * (LMAX+1)**2
+
       DOUBLE COMPLEX   CZERO
       PARAMETER        (CZERO=(0.0D0,0.0D0))
       DOUBLE COMPLEX   CIONE
       PARAMETER        (CIONE  = ( 0.0D0,-1.0D0))
 c     ..
-c     .. GLOBAL SCALER ARGUMENTS ..
-      INTEGER          NAEZ,              ! number of atoms per unit cell
-     +                 NSYMAT,            ! number of active symmetries
-     +                 KPT,               ! k-point - run. index in kkrmat01
-     +                 NXIJ               ! number of atoms in Jij-cluster
+c     .. GLOBAL SCALAR ARGUMENTS ..
+      INTEGER          NAEZ,          ! number of atoms per unit cell
+     +                 NSYMAT,        ! number of active symmetries
+     +                 KPT,           ! k-point - run. index in kkrmat01
+     +                 NXIJ           ! number of atoms in Jij-cluster
 c     ..
-c     .. GLOBAL ARRAY ARGUMENTS ..
-      DOUBLE COMPLEX   GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
+
+c     .. ARRAY ARGUMENTS ..
+C     DOUBLE COMPLEX   GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
+      DOUBLE COMPLEX   GSXIJ((LMAX+1)**2,(LMAX+1)**2,NSYMAXD,NXIJD)
+
       DOUBLE PRECISION BZKP(3,*),
      +                 VOLCUB(*),
      +                 ZKRXIJ(48,3,NXIJD) ! position of atoms and sites
                                           ! connected by symmetry
-      INTEGER          IXCP(NXIJD)        ! corresp. to Jij no. XIJ on the 
-                                          ! real space lattice
-C     ..
-C     .. LOCAL SCALARS ..
-      INTEGER          I3,I5,IV,ISYM,IU,LM1,LM2,LM,ILM,XIJ
-      DOUBLE COMPLEX   CARG
-C     ..
+      INTEGER          IXCP(NXIJD)      ! corresp. to Jij no. XIJ on the
+                                        ! real space lattice
+
+
+C     DOUBLE COMPLEX   GLLKE1(ALM,LMMAXD),
+C    +                 GSEND(LMMAXD,LMMAXD),
+C    +                 GRECV(LMMAXD,LMMAXD),
+C    +                 GXIJ(LMMAXD,LMMAXD,NXIJD),
+C    +                 EKRXIJ(48,NXIJD)
+
+      DOUBLE COMPLEX   GLLKE1(NAEZ * (LMAX+1)**2, (LMAX+1)**2)
+
 C     .. LOCAL ARRAYS ..
-      DOUBLE COMPLEX   GLLKE1(ALM,LMMAXD),
-     +                 GSEND(LMMAXD,LMMAXD),
-     +                 GRECV(LMMAXD,LMMAXD),
-     +                 GXIJ(LMMAXD,LMMAXD,NXIJD),
-     +                 EKRXIJ(48,NXIJD)
+C     .. Fortran 90 automatic arrays
+      DOUBLE COMPLEX   GSEND((LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX   GRECV((LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX   GXIJ ((LMAX+1)**2, (LMAX+1)**2, NXIJD)
+      DOUBLE COMPLEX   EKRXIJ(48, NXIJD)
+
       INTEGER          IXCPS(NXIJD)       ! copydummy for IXCP used MPI
-C     ..
+
 C     .. INTRINSIC FUNCTIONS ..
       INTRINSIC ATAN,EXP
-C     ..
+
+
+C     .. LOCAL SCALARS ..
+      INTEGER          I3,I5,IV,ISYM,LM1,LM2,LM,ILM,XIJ
+      DOUBLE COMPLEX   CARG
+
 C     .. MPI ..
       INTEGER, dimension(MPI_STATUS_SIZE) :: STATUS
 C     .. L-MPI
-      INTEGER          MYLRANK(LMPID*SMPID*EMPID),
-     +                 LCOMM(LMPID*SMPID*EMPID),
-     +                 LGROUP(LMPID*SMPID*EMPID),
-     +                 LSIZE(LMPID*SMPID*EMPID),
-     +                 LMPI,LMPIC
+
+      INTEGER          LCOMM(prod_lmpid_smpid_empid)
+      INTEGER          LSIZE(prod_lmpid_smpid_empid)
+      INTEGER          LMPIC
 C     .. N-MPI
       INTEGER          MAPBLOCK,IERR
-C      INTEGER          MYRANK,NROFNODES
-C      COMMON           /MPI/MYRANK,NROFNODES
 c     ..
+
+      INTEGER          LMMAXD
+
+      LMMAXD = (LMAX+1)**2
+
 c ------------------------------------------------------------------------
 
 
