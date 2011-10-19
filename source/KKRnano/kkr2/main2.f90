@@ -614,7 +614,8 @@ program MAIN2
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
                           VISP,NSPIN,R(1,I1),DRDI(1,I1), &
                           ZAT(I1),IPAN(I1),IRCUT(0,I1), &
-                          PHILDAU,UMLDAU,WMLDAU)
+                          PHILDAU,UMLDAU,WMLDAU, &
+                          lmax, irmd, ipand)
 
           endif
 ! LDA+U
@@ -1017,7 +1018,8 @@ spinloop:     do ISPIN = 1,NSPIN
             if (LDAU.and.NLDAU>=1) then
 
               call LDAUWMAT(I1,NSPIN,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
-                            ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU)
+                            ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
+                            lmaxd)
 
             endif
 

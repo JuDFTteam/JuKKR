@@ -1,6 +1,8 @@
       SUBROUTINE LDAUPHI(LPHI,VISP,IPAN,IRCUT,R,DRDI,ZAT,
      &                   EREFLDAU,PHI,NSPIN,NSRA,
-     &                   NLDAU,LLDAU)
+     &                   NLDAU,LLDAU,
+C                        new input parameters after inc.p removal
+     &                   lmaxd, irmd, ipand)
 C *********************************************************************
 C *                                                                   *
 C * Calculates test functions PHI for LDA+U.                          *
@@ -15,20 +17,20 @@ C *                                  ph. mavropoulos, juelich 2004    *
 C *                                                                   *
 C *********************************************************************
       IMPLICIT NONE
-C
-      INCLUDE 'inc.p'
-C     ..
+
+      INTEGER lmaxd
+      INTEGER irmd
+      INTEGER ipand
+
       DOUBLE PRECISION CVLIGHT
       PARAMETER        (CVLIGHT=274.0720442D0)
-      INTEGER          LMAXD1
-      PARAMETER        (LMAXD1 = LMAXD + 1)
 C
 C global arrays ..
       DOUBLE COMPLEX   PHI(IRMD)
       DOUBLE PRECISION R(IRMD),
      +                 VISP(IRMD,2),
      +                 DRDI(IRMD)
-      INTEGER          LLDAU(LMAXD1),IRCUT(0:IPAND)
+      INTEGER          LLDAU(LMAXD + 1),IRCUT(0:IPAND)
 C global scalars ..
       DOUBLE PRECISION EREFLDAU,ZAT
       INTEGER          IPAN,NSPIN,NSRA,LPHI,NLDAU
@@ -38,7 +40,7 @@ C local arrays ..
      +                 HAMF(IRMD,0:LMAXD),MASS(IRMD),DLOGDP(0:LMAXD)
       DOUBLE PRECISION RS(IRMD,0:LMAXD),S(0:LMAXD),
      +                 DROR(IRMD),VPOT(IRMD),
-     +                 WINT(IRMD),WMLDAUAV(LMAXD1),
+     +                 WINT(IRMD),WMLDAUAV(LMAXD + 1),
      +                 LDAUCUT(IRMD)
 C ..
 C local scalars ..

@@ -1,7 +1,9 @@
 C*==wmatldau.f    processed by SPAG 6.05Rc at 16:58 on 22 Dec 2004
       SUBROUTINE LDAUWMAT(I1,NSPIN,ITER,MIXING,DMATLDAU,NLDAU,LLDAU,
      &                    ULDAU,JLDAU,UMLDAU,WMLDAU,
-     &                    EULDAU,EDCLDAU)
+     &                    EULDAU,EDCLDAU,
+C                         new input parameters after inc.p removal
+     &                    lmaxd)
 C **********************************************************************
 C *                                                                    *
 C * Calculation of Coulomb interaction potential in LDA+U              *
@@ -22,45 +24,69 @@ C *                                                                    *
 C *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
 C **********************************************************************
       IMPLICIT NONE
-C
-      INCLUDE 'inc.p'
-C
+
+      INTEGER lmaxd
+
 C PARAMETER definitions
 C
-      INTEGER            LMAXD1
-      PARAMETER          (LMAXD1 = LMAXD + 1 )
-      INTEGER            MMAXD
-      PARAMETER          (MMAXD  = 2*LMAXD + 1 )
+C     INTEGER            LMAXD1
+C     PARAMETER          (LMAXD1 = LMAXD + 1 )
+C     INTEGER            MMAXD
+C     PARAMETER          (MMAXD  = 2*LMAXD + 1 )
+
       DOUBLE COMPLEX     CZERO
       PARAMETER          (CZERO=(0.0D0,0.0D0))
 C
 C Global arguments
 C
       INTEGER            I1,NSPIN,ITER,NLDAU
-      INTEGER            LLDAU(LMAXD1)
-      DOUBLE PRECISION   UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1),
-     &                   ULDAU(LMAXD1),JLDAU(LMAXD1),
-     &                   EDCLDAU,EULDAU,
-     &                   EDC(LMAXD1),EU(LMAXD1),
-     &                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
-     &                   MIXING
-      DOUBLE COMPLEX     DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
-     +                   DDUMMY(MMAXD,MMAXD,NSPIND)
+      INTEGER            LLDAU(LMAXD + 1)
+C     DOUBLE PRECISION   UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1)
+      DOUBLE PRECISION   UMLDAU(2*LMAXD + 1,2*LMAXD + 1,
+     &                          2*LMAXD + 1,2*LMAXD + 1,LMAXD + 1)
+      DOUBLE PRECISION   ULDAU(LMAXD + 1)
+      DOUBLE PRECISION   JLDAU(LMAXD + 1)
+      DOUBLE PRECISION   EDCLDAU
+      DOUBLE PRECISION   EULDAU
+      DOUBLE PRECISION   EDC(LMAXD + 1)
+      DOUBLE PRECISION   EU(LMAXD + 1)
+C     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+      DOUBLE PRECISION   WMLDAU(2*LMAXD + 1,2*LMAXD + 1,NSPIN,LMAXD + 1)
+      DOUBLE PRECISION   MIXING
+C     DOUBLE COMPLEX     DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+C     DOUBLE COMPLEX     DDUMMY(MMAXD,MMAXD,NSPIND)
+
+      DOUBLE COMPLEX     DMATLDAU(2*LMAXD + 1,2*LMAXD + 1,NSPIN,LMAXD+1)
+      DOUBLE COMPLEX     DDUMMY(2*LMAXD + 1,2*LMAXD + 1,NSPIN)
 C
 C Local variables
 C
-      DOUBLE COMPLEX     CSUM,CSUM2,
-     +                   VMLDAU(MMAXD,MMAXD,NSPIND)
-      DOUBLE PRECISION   DENMAT(MMAXD,MMAXD,NSPIND),DENTOT,
-     &                   DENTOTS(NSPIND),
+      DOUBLE COMPLEX     CSUM,CSUM2
+C     DOUBLE COMPLEX     VMLDAU(MMAXD,MMAXD,NSPIND)
+C     DOUBLE PRECISION   DENMAT(MMAXD,MMAXD,NSPIND)
+
+      DOUBLE COMPLEX     VMLDAU(2*LMAXD + 1, 2*LMAXD + 1, NSPIN)
+      DOUBLE PRECISION   DENMAT(2*LMAXD + 1, 2*LMAXD + 1, NSPIN)
+
+      DOUBLE PRECISION   DENTOT,
+     &                   DENTOTS(NSPIN),
      &                   ALPHA
       INTEGER            ISPIN,JSPIN,M1,M2,M3,M4,MM,MMAX,ILDAU
       INTEGER            IPRINT,LRECLDAU
-      CHARACTER*15       STR15
+      CHARACTER(LEN=15)  STR15
       LOGICAL            SLOW,FREEZE
 C     ..
       DATA               IPRINT /0/
 C    ..
+      INTEGER            LMAXD1
+      INTEGER            MMAXD
+      INTEGER            NSPIND
+
+      LMAXD1 = LMAXD + 1
+      MMAXD  = 2*LMAXD + 1
+      NSPIND = NSPIN
+
+
       WRITE (6,'(/,79(1H#),/,16X,A,/,79(1H#))') 
      &     'LDA+U: Calculating interaction potential VLDAU'
 C

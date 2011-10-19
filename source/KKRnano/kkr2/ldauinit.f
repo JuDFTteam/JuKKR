@@ -6,40 +6,62 @@ C
      >                    I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU,
      >                    VISP,NSPIN,
      >                    R,DRDI,ZAT,IPAN,IRCUT,
-     <                    PHILDAU,UMLDAU,WMLDAU)
+     <                    PHILDAU,UMLDAU,WMLDAU,
+C                         new input parameters after inc.p removal
+     &                    lmax, irmd, ipand)
 C
       IMPLICIT NONE
+
+      INTEGER lmax
+      INTEGER irmd
+      INTEGER ipand
 C
-      INCLUDE 'inc.p'
-C
-      INTEGER             LMAXD1
-      PARAMETER          (LMAXD1 = LMAXD + 1)
-      INTEGER             MMAXD
-      PARAMETER          (MMAXD=2*LMAXD+1)
+C     INTEGER             LMAXD1
+C     PARAMETER          (LMAXD1 = LMAXD + 1)
+C     INTEGER             MMAXD
+C     PARAMETER          (MMAXD=2*LMAXD+1)
 C
 C global arrays ..
-      DOUBLE COMPLEX     PHILDAU(IRMD,LMAXD1)
-      DOUBLE PRECISION   UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1),
-     +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
-     +                   ULDAU(LMAXD1),
-     +                   JLDAU(LMAXD1),
-     +                   VISP(IRMD,2),
-     +                   R(IRMD),
-     +                   DRDI(IRMD)
-      INTEGER            LLDAU(LMAXD1),
-     +                   IRCUT(0:IPAND)
+C     DOUBLE COMPLEX     PHILDAU(IRMD,LMAXD1)
+C     DOUBLE PRECISION   UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1),
+C    +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
+C    +                   ULDAU(LMAXD1),
+C    +                   JLDAU(LMAXD1),
+C    +                   VISP(IRMD,2),
+C    +                   R(IRMD),
+C    +                   DRDI(IRMD)
+C     INTEGER            LLDAU(LMAXD1),
+C    +                   IRCUT(0:IPAND)
+
+      DOUBLE COMPLEX     PHILDAU(IRMD,LMAX + 1)
+      DOUBLE PRECISION   UMLDAU(2*LMAX+1, 2*LMAX+1,
+     &                          2*LMAX+1, 2*LMAX+1, LMAX + 1)
+
+      DOUBLE PRECISION   WMLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX + 1)
+      DOUBLE PRECISION   ULDAU(LMAX + 1)
+      DOUBLE PRECISION   JLDAU(LMAX + 1)
+      DOUBLE PRECISION   VISP(IRMD,2)
+      DOUBLE PRECISION   R(IRMD)
+      DOUBLE PRECISION   DRDI(IRMD)
+      INTEGER            LLDAU(LMAX + 1)
+      INTEGER            IRCUT(0:IPAND)
 C ..
 C global scalars
       DOUBLE PRECISION   ZAT,EREFLDAU
       INTEGER            I1,ITER,NLDAU,NSPIN,NSRA,IPAN
 C ..
 C local arrays ..
-      DOUBLE PRECISION   AA(MMAXD,MMAXD,MMAXD,MMAXD,0:2*LMAXD),
-     +                   FACT(0:100),
-     +                   RPW(IRMD,2*LMAXD+1),
+
+C     Fortran 90 - automatic arrays
+C     DOUBLE PRECISION   AA(MMAXD,MMAXD,MMAXD,MMAXD,0:2*LMAX) ! large?
+      DOUBLE PRECISION   AA(2*LMAX+1,2*LMAX+1,
+     &                      2*LMAX+1,2*LMAX+1,0:2*LMAX)
+
+      DOUBLE PRECISION   FACT(0:100),
+     +                   RPW(IRMD,2*LMAX+1),
      +                   TG(IRMD),TL(IRMD),SG(IRMD),SL(IRMD),
-     +                   WINT(IRMD),W2(IRMD),WGTFCLMB(0:2*LMAXD+1),
-     +                   FCLMB(0:2*LMAXD+1)
+     +                   WINT(IRMD),W2(IRMD),WGTFCLMB(0:2*LMAX+1),
+     +                   FCLMB(0:2*LMAX+1)
 C ..
 C local scalars
       DOUBLE PRECISION   PI,RLOP,SUMFCLMB,WIG3J,SCL,SUM,G12,G34,
@@ -52,6 +74,16 @@ C local scalars
       LOGICAL            WINFO
 C ..
 C
+      INTEGER             LMAXD1
+      INTEGER             MMAXD
+      INTEGER             NSPIND
+      INTEGER             LMAXD
+
+      LMAXD1 = LMAX + 1
+      MMAXD  = 2*LMAX+1
+      NSPIND = NSPIN
+      LMAXD = LMAX
+
       PI = 4.D0*ATAN(1.0D0)
       FACT(0) = 1.0D0
       DO IU = 1,100
@@ -90,7 +122,8 @@ C    int phi**2 dr =1, thus it also contains factor r.
 C
           CALL LDAUPHI(LLDAU(ILDAU),VISP,IPAN,IRCUT,R,DRDI,ZAT,
      &                 EREFLDAU,PHILDAU(1,ILDAU),NSPIN,NSRA,
-     &                 NLDAU,LLDAU)
+     &                 NLDAU,LLDAU,
+     &                 lmaxd, irmd, ipand)
 C
         ENDDO
 C
