@@ -540,7 +540,15 @@ C     .. Array Arguments ..
 C     .. 
 C     .. Local Scalars .. 
       INTEGER I 
-C     .. 
+C     ..
+
+C     FIXME
+      WRITE(*,*) "STOP in GAULEGE, file emesht.f"
+      WRITE(*,*) "This routine should not be called."
+      WRITE(*,*) "It dependes on values of implicit, uninitialised"
+      WRITE(*,*) "variables NCASE and NC"
+      STOP
+
       IF (N.GT.32) N = ((N-1)/4+1)*4 
       IF (N.GT.64) N = ((N-1)/8+1)*8 
       IF(NCASE.EQ.0) THEN 

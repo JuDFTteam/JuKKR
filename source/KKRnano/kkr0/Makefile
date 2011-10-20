@@ -32,7 +32,8 @@ endif
 # Paths to look for files
 #DIRS = . dir1 dir2
 DIRS = .
-VPATH = $(DIRS)
+#also add BUILDDIR to VPATH to look if object files have changed
+VPATH = $(DIRS) $(BUILDDIR)
 
 SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
@@ -55,9 +56,9 @@ $(PROGRAM): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm $(BUILDDIR)/*.o 
-	rm $(BUILDDIR)/*.mod
-	rm *.exe
+	rm -f $(BUILDDIR)/*.o 
+	rm -f $(BUILDDIR)/*.mod
+	rm -f *.exe
 
 .PHONY: test
 test:
