@@ -540,7 +540,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,ITER,iteration_counter, &
                     GLLHBLCK,BCP,IGUESS,CNVFAC(EKM+k_point_index), &
-                    QMRBOUND)
+                    QMRBOUND, &
+                    naez, lmax, naclsd, xdim, ydim, zdim, &
+                    natbld, nthrds)
     
       NOITER = NOITER + iteration_counter
     

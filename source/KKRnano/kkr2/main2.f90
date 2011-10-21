@@ -921,7 +921,9 @@ spinloop:     do ISPIN = 1,NSPIN
                           LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
                           DMATLDAU, &
                           LMPIC,MYLRANK, &
-                          LGROUP,LCOMM,LSIZE)
+                          LCOMM,LSIZE, &
+                          lmpid*smpid*empid, lmax, irmd, irnsd, iemxd, &
+                          irid, nfund, ncelld, ipand, ncleb)
 
 ! IME
               call OUTTIME(MYLRANK(1),'Lloyd processed......',TIME_I,ITER)
@@ -1314,7 +1316,8 @@ spinloop:     do ISPIN = 1,NSPIN
             ITER,RFPI,FPI,IPF, &
             MIX, &
             FCM,IRC,IRMIN,R,DRDI,VONS, &
-            VISP,VINS)
+            VISP,VINS, &
+            naez, irmd, irnsd)
 
             I1BRYD=I1
           end if

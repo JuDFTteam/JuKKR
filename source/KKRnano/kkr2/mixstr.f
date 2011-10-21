@@ -1,24 +1,31 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOT,
      +                  I1,NSPIN,ITER,RFPI,FPI,IPF,
-     +                  MIXING,FCM,IRC,IRMIN,R,DRDI,VONS,VISP,VINS)
+     +                  MIXING,FCM,IRC,IRMIN,R,DRDI,VONS,VISP,VINS,
+C                       new parameters after inc.p removal
+     &                  naez, irmd, irnsd)
 c ************************************************************************
       IMPLICIT NONE
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD,IRMIND
-      PARAMETER (LMPOTD= (LPOTD+1)**2,
-     +          IRMIND=IRMD-IRNSD)
+C     include 'inc.p'
+
+      INTEGER naez
+      INTEGER irmd
+      INTEGER irnsd
+
+C     INTEGER LMPOTD,IRMIND
+C     PARAMETER (LMPOTD= (LPOTD+1)**2,
+C    +          IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION FCM,FPI,MIXING,RFPI,RMSAVM,RMSAVQ
       INTEGER IPF,ITER,LMPOT,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,NAEZD),R(IRMD,NAEZD),
-     +                 VINS(IRMIND:IRMD,LMPOTD,2),VISP(IRMD,2),
-     +                 VONS(IRMD,LMPOTD,2)
-      INTEGER IRC(NAEZD),IRMIN(NAEZD)
+      DOUBLE PRECISION DRDI(IRMD,NAEZ),R(IRMD,NAEZ),
+     +                 VINS((IRMD-IRNSD):IRMD,LMPOT,2),VISP(IRMD,2),
+     +                 VONS(IRMD,LMPOT,2)
+      INTEGER IRC(NAEZ),IRMIN(NAEZ)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FAC,RMSERM,RMSERQ,VMN,VNM,VNP,VOLDM,VOLDP,VPN
@@ -49,9 +56,10 @@ c         IHP1 = IH
         END IF
 
 C       ok, that means that for
-C       NSPIN=1 (or not 2)  -> IH=1 and IHP1=1
+C       NSPIN=1 (or not 2)  -> IH=1 and IHP1=2
 C       NSPIN=2             -> IH=1 and IHP1=1
 C       IHP1 means IH plus 1
+C       :-P
 
         IRC1 = IRC(I1)
         RMSERQ = 0.0D0
@@ -80,10 +88,10 @@ C
 
         IF (NSPIN.EQ.2) THEN
 !          WRITE (IPF,FMT=9000) I1,SQRT(RMSERQ),SQRT(RMSERM)
-          WRITE(IPF, REC=(ITER-1)*2*NAEZD + 2*I1-1 ) RMSERQ,RMSERM
+          WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1-1 ) RMSERQ,RMSERM
         ELSE
  !         WRITE (IPF,FMT=9020) I1,SQRT(RMSERQ)
-          WRITE(IPF, REC=(ITER-1)*2*NAEZD + 2*I1-1 ) RMSERQ
+          WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1-1 ) RMSERQ
         END IF
 
         IF (LPOT.GT.0) THEN
@@ -114,10 +122,10 @@ C
 
           IF (NSPIN.EQ.2) THEN
 !            WRITE (IPF,FMT=9010) I1,SQRT(RMSERQ),SQRT(RMSERM)
-            WRITE(IPF, REC=(ITER-1)*2*NAEZD + 2*I1) RMSERQ,RMSERM
+            WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1) RMSERQ,RMSERM
           ELSE
 !            WRITE (IPF,FMT=9030) I1,SQRT(RMSERQ)
-            WRITE(IPF, REC=(ITER-1)*2*NAEZD + 2*I1) RMSERQ
+            WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1) RMSERQ
           END IF
 
         END IF
