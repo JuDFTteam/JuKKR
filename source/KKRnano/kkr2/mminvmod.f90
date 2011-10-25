@@ -308,10 +308,10 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
         
     endif
     
-    call SPRSZMM( &
-    IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
-    CONE,CZERO, &
-    VECS(1,1,9))
+    call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+                  CONE,CZERO, &
+                  VECS(1,1,9), &
+                  naezd, lmaxd, naclsd, nthrds)
     
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,9) result
@@ -391,10 +391,9 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
         
     endif
     
-    call SPRSZMM( &
-    IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
-    CONE,CZERO, &
-    VECS(1,1,8))
+    call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+                  CONE,CZERO, VECS(1,1,8), &
+                  naezd, lmaxd, naclsd, nthrds)
     
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,8) result
@@ -449,10 +448,10 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
             
       endif
         
-      call SPRSZMM( &
-      IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
-      CONE,CZERO, &
-      VECS(1,1,9))
+      call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+                    CONE,CZERO, &
+                    VECS(1,1,9), &
+                    naezd, lmaxd, naclsd, nthrds)
         
       !     VECS(:,:,1) input vector to be multiplied by A = GLLH1
       !     VECS(:,:,9) result

@@ -3,7 +3,7 @@
                        TMATLL,GLLH1,X0,PRSC,SPRS, &
                        GLLKE1, &
                        ! new parameters after inc.p removal
-                       naez, lmax, naclsd, nguessd)
+                       naez, lmax, naclsd, nguessd, nthrds)
 
     !use inc_p_wrapper_module
 
@@ -21,6 +21,7 @@
     integer, intent(in) :: lmax
     integer, intent(in) :: naclsd
     integer, intent(in) :: nguessd
+    integer, intent(in) :: nthrds
 
     !integer::          LMMAXD
     !parameter        (LMMAXD= (LMAXD+1)**2)
@@ -117,10 +118,10 @@
     !--?------  initialize TMATLL for the next IE by GLLKE0 ??? ---------
     ! sparse matrix multiplication: (-1) * GLLH1 * X0 = TMATP
 
-        call SPRSZMM( &
-        IAT,GLLH1,NUMN0,INDN0,X0,DONE, &
-        -CONE,CZERO, &
-        TMATP)
+        call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,X0,DONE, &
+                      -CONE,CZERO, &
+                      TMATP, &
+                      naez, lmax, naclsd, nthrds)
 
     !----------   \Delta t' = \Delta t - X0 + \Delta t * G_ref * X0------
     
