@@ -36,6 +36,8 @@ C     PARAMETER (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
 
+      IMPLICIT NONE
+
       INTEGER lmaxd
       INTEGER irmd
       INTEGER ncleb
@@ -87,8 +89,13 @@ C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
       DATA CONE/ (1.0D0,0.0D0)/
-C     ..
-c
+
+      INTEGER IRMIND
+      INTEGER LMMAXD
+
+      LMMAXD= (LMAXD+1)**2
+      IRMIND=IRMD-IRNSD
+
 C     C0LL = 1/sqrt(4*pi)
       C0LL = 1.0d0/SQRT(16.0D0*ATAN(1.0D0))
 c

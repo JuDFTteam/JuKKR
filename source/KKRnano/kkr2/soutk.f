@@ -20,15 +20,15 @@ c    subroutine .
 c
 c                                     b. drittler oct. 1989
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-      include 'inc.p'
+      IMPLICIT NONE
+
 C     ..
 C     .. Scalar Arguments ..
       INTEGER IPAN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION F(*),FINT(*)
-      INTEGER IRCUT(0:IPAND)
+      INTEGER IRCUT(0:IPAN)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,A2

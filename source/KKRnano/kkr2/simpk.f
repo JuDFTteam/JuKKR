@@ -15,14 +15,15 @@ c     attention : input f is destroyed !
 c
 c-----------------------------------------------------------------------
 
-      INCLUDE 'inc.p'
+      IMPLICIT NONE
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION FINT
       INTEGER IPAN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DRDI(*),F(*)
-      INTEGER IRCUT(0:IPAND)
+      INTEGER IRCUT(0:IPAN)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,A2

@@ -1,7 +1,9 @@
       SUBROUTINE RITES(IFILE,I1,NAEZ,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,
      +                 ITITLE,R,DRDI,VISP,A,B,KXC,IRNS,
      +                 LPOT,VINS,QBOUND,IRC,EFERMI,VBC,ECORE,
-     +                 LCORE,NCORE)
+     +                 LCORE,NCORE,
+C                      new after inc.p removal
+     &                 irmd, irnsd)
 c ************************************************************************
 c      this subroutine stores in 'ifile' the necessary results
 c      (potentials e.t.c.) to start self-consistency iterations
@@ -12,24 +14,47 @@ c       component will not be stored .
 c
 c-----------------------------------------------------------------------
       IMPLICIT NONE
+
+      INTEGER irmd
+      INTEGER irnsd
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
+C     include 'inc.p'
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
+C     INTEGER IRMIND
+C     PARAMETER (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,QBOUND
       INTEGER IFILE,KXC,LPOT,NAEZ,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),ECORE(20,2),EFERMI,
-     +                 R(IRMD,*),RMT(*),RMTNEW(*),RWS(*),VBC(2),
-     +                 VINS(IRMIND:IRMD,LMPOTD,2),VISP(IRMD,2),Z(*)
-      INTEGER IRC(*),IRNS(*),ITITLE(20,NAEZD*NSPIND),
-     +        LCORE(20,*),NCORE(*)
-      CHARACTER*24 TXC(4)
+C     DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),ECORE(20,2),EFERMI,
+C    +                 R(IRMD,*),RMT(*),RMTNEW(*),RWS(*),VBC(2),
+C    +                 VINS(IRMIND:IRMD,LMPOTD,2),VISP(IRMD,2),Z(*)
+C     INTEGER IRC(*),IRNS(*),ITITLE(20,NAEZD*NSPIND),
+C    +        LCORE(20,*),NCORE(*)
+
+      DOUBLE PRECISION A(*)
+      DOUBLE PRECISION B(*)
+      DOUBLE PRECISION DRDI(IRMD,*)
+      DOUBLE PRECISION ECORE(20,2)
+      DOUBLE PRECISION EFERMI
+      DOUBLE PRECISION R(IRMD,*)
+      DOUBLE PRECISION RMT(*)
+      DOUBLE PRECISION RMTNEW(*)
+      DOUBLE PRECISION RWS(*)
+      DOUBLE PRECISION VBC(2)
+      DOUBLE PRECISION VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2)
+      DOUBLE PRECISION VISP(IRMD,2)
+      DOUBLE PRECISION Z(*)
+      INTEGER IRC(*)
+      INTEGER IRNS(*)
+      INTEGER ITITLE(20,NAEZ*NSPIN)
+      INTEGER LCORE(20,*)
+      INTEGER NCORE(*)
+
+      CHARACTER(LEN=24) TXC(4)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RV,SUM

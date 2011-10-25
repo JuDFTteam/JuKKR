@@ -185,7 +185,8 @@ C
 C
         CALL RITES(11,I1,NAEZ,NSPIN,ZAT,ALAT,RMT,RMT,RWS,
      +             ITITLE,R,DRDI,VISP,A,B,KXC,IRNS,LPOT,VINS,
-     +             QBOUND,IRC,EFNEW,VBC,ECORE,LCORE,NCORE)
+     +             QBOUND,IRC,EFNEW,VBC,ECORE,LCORE,NCORE,
+     &             irmd, irnsd)
 C
         CLOSE (11)
 C
