@@ -1,10 +1,11 @@
-    subroutine PRINVIT( &
-    INFO,IAT, &
-    NUMN0,INDN0, &
-    TMATLL,GLLH1,X0,PRSC,SPRS, &
-    GLLKE1)
+    subroutine PRINVIT(INFO,IAT, &
+                       NUMN0,INDN0, &
+                       TMATLL,GLLH1,X0,PRSC,SPRS, &
+                       GLLKE1, &
+                       ! new parameters after inc.p removal
+                       naez, lmax, naclsd, nguessd)
 
-    use inc_p_wrapper_module
+    !use inc_p_wrapper_module
 
     implicit none
     ! ------------------------------------------------------------------------
@@ -15,35 +16,41 @@
     !    store solution obtained at the last self-consistency iteration
     !                                                         A. Thiess Nov'09
     ! ------------------------------------------------------------------------
-    !     .. parameters ..
 
+    integer, intent(in) :: naez
+    integer, intent(in) :: lmax
+    integer, intent(in) :: naclsd
+    integer, intent(in) :: nguessd
 
-    integer::          LMMAXD
-    parameter        (LMMAXD= (LMAXD+1)**2)
-    integer::          ALM
-    parameter        (ALM   = NAEZD*LMMAXD)
-    integer::          NGTBD
-    parameter        (NGTBD = NACLSD*LMMAXD)
-    real::             CUT
+    !integer::          LMMAXD
+    !parameter        (LMMAXD= (LMAXD+1)**2)
+    !integer::          ALM
+    !parameter        (ALM   = NAEZD*LMMAXD) ! NAEZ*(LMAX+1)**2
+    !integer::          NGTBD
+    !parameter        (NGTBD = NACLSD*LMMAXD) ! NACLSD*(LMAX+1)**2
+
+    real::            CUT
     parameter        (CUT   = 1.0D-5)
     double complex :: CZERO
     parameter        (CZERO = ( 0.0D0,0.0D0 ))
     double complex :: CONE
     parameter        (CONE  = ( 1.0D0,0.0D0 ))
-    !     ..
+
     !     .. SCALAR ARGUMENTS ..
     character :: INFO
     integer::    IAT
     !     ..
     !     .. ARRAY ARGUMENTS ..
-    double complex :: GLLH1(LMMAXD,NGTBD,NAEZD)
-    double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)
-    double complex :: TMATP(ALM,LMMAXD)
-    double complex :: GLLKE1(ALM,LMMAXD)
-    complex::         PRSC(NGUESSD*LMMAXD)
-    integer::         NUMN0(NAEZD)
-    integer::         INDN0(NAEZD,NACLSD)
-    integer::         SPRS(NGUESSD*LMMAXD+1)
+    !double complex :: GLLH1(LMMAXD,NGTBD,NAEZD)
+    double complex :: GLLH1((LMAX+1)**2,NACLSD*(LMAX+1)**2,NAEZ)
+    double complex :: TMATLL((LMAX+1)**2,(LMAX+1)**2,NAEZ)
+    double complex :: TMATP(NAEZ*(LMAX+1)**2,(LMAX+1)**2)
+    double complex :: GLLKE1(NAEZ*(LMAX+1)**2,(LMAX+1)**2)
+    complex::         PRSC(NGUESSD*(LMAX+1)**2)
+    integer::         NUMN0(NAEZ)
+    integer::         INDN0(NAEZ,NACLSD)
+    integer::         SPRS(NGUESSD*(LMAX+1)**2+1)
+    double complex :: X0(NAEZ*(LMAX+1)**2,(LMAX+1)**2)
 
     !     .. LOCAL SCALARS ..
     integer::site_index
@@ -55,14 +62,20 @@
     logical::LSAME
     !     ..
     !     .. LOCAL ARRAYS ..
-    double complex :: X0(ALM,LMMAXD)
-    logical        :: DONE(LMMAXD)
+    logical        :: DONE((LMAX+1)**2)
 !     ..
 !     .. EXTERNAL FUNCTIONS ..
 !   LSAME is a routine from LAPACK
     external         LSAME
-!     ..
-!     ..
+
+    integer::          LMMAXD
+    integer::          ALM
+    integer::          NAEZD
+
+    LMMAXD= (LMAX+1)**2
+    ALM   = NAEZ*LMMAXD
+    NAEZD = NAEZ
+
 !-----------------------------------------------------------------------
 
 ! ================================================================

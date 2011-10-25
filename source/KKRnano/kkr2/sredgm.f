@@ -88,7 +88,7 @@ CEMPI
 C
 C         check if communication is necessary
             IF (RECV.EQ.SEND.AND.RECV.EQ.MYRANK) THEN
-C
+C             in this case: no communication necessary
               DO ISPIN=1,NSPIN
                 DO LM1=1,LMMAXD
                   DO LM2=1,LMMAXD
@@ -101,7 +101,7 @@ C
             ELSE
 C
               IF (MYRANK.EQ.SEND) THEN
-C
+C                i am the sender
                 DO ISPIN=1,NSPIN
                   CALL ZCOPY(LMMAXD*LMMAXD,GMATN(1,1,IE,ISPIN),1,
      +                       GESEND(1,ISPIN),1)
@@ -116,7 +116,7 @@ C
               ENDIF
 C
               IF (MYRANK.EQ.RECV) THEN
-C
+C                i am the receiver
                 CALL MPI_RECV(GERECV,(LMMAXD*LMMAXD+1)*NSPIND,
      +                        MPI_DOUBLE_COMPLEX,
      +                        SEND,96,MPI_COMM_WORLD,STATUS,IERR)

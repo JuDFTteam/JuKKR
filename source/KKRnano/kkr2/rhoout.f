@@ -1,5 +1,7 @@
       SUBROUTINE RHOOUT(CDEN,DF,GMAT,EK,PNS,QNS,RHO2NS,THETAS,IFUNM,
-     +                    IPAN1,IMT1,LMSP,CDENNS,NSRA,CLEB,ICLEB,IEND)
+     +                    IPAN1,IMT1,LMSP,CDENNS,NSRA,CLEB,ICLEB,IEND,
+C                         new parameters after inc.p removal
+     &                    lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 c-----------------------------------------------------------------------
 c
 c     calculates the charge density from r(irmin) to r(irc)
@@ -24,33 +26,54 @@ c
 c                               b.drittler   aug. 1988
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER LMMAXD
-      PARAMETER (LMMAXD= (LMAXD+1)**2)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
+
+C     INTEGER LMMAXD
+C     PARAMETER (LMMAXD= (LMAXD+1)**2)
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAXD+1)**2
+C     INTEGER IRMIND
+C     PARAMETER (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
+
+      INTEGER lmaxd
+      INTEGER irmd
+      INTEGER ncleb
+      INTEGER irnsd
+      INTEGER irid
+      INTEGER ipand
+      INTEGER nfund
+
       DOUBLE COMPLEX DF,EK
       INTEGER IEND,IMT1,IPAN1,NSRA
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX CDEN(IRMD,0:*),CDENNS(*),GMAT(LMMAXD,LMMAXD),
-     +               PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-     +              QNSI(LMMAXD,LMMAXD),
-     +               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
-      DOUBLE PRECISION CLEB(*),RHO2NS(IRMD,LMPOTD),THETAS(IRID,NFUND)
+C     DOUBLE COMPLEX CDEN(IRMD,0:*),CDENNS(*),GMAT(LMMAXD,LMMAXD),
+C    +               PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
+C    +               QNSI(LMMAXD,LMMAXD),
+C    +               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
+C     DOUBLE PRECISION CLEB(*),RHO2NS(IRMD,LMPOTD),THETAS(IRID,NFUND)
+
+      DOUBLE COMPLEX CDEN(IRMD,0:*)
+      DOUBLE COMPLEX CDENNS(*)
+      DOUBLE COMPLEX GMAT((LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX PNS((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD,2)
+      DOUBLE COMPLEX QNSI((LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX QNS((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD,2)
+      DOUBLE PRECISION CLEB(*)
+      DOUBLE PRECISION RHO2NS(IRMD,(2*LMAXD+1)**2)
+      DOUBLE PRECISION THETAS(IRID,NFUND)
+
       INTEGER ICLEB(NCLEB,3),IFUNM(*),LMSP(*)
-C     ..
+
 C     .. Local Scalars ..
       DOUBLE COMPLEX CLTDF,CONE,CZERO
       DOUBLE PRECISION C0LL
       INTEGER I,IFUN,IR,J,L1,LM1,LM2,LM3,M1
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX WR(LMMAXD,LMMAXD,IRMIND:IRMD)
+C     DOUBLE COMPLEX WR(LMMAXD,LMMAXD,IRMIND:IRMD)
+      DOUBLE COMPLEX WR((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL ZGEMM

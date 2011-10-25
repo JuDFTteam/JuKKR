@@ -1,6 +1,8 @@
 c ************************************************************************
       SUBROUTINE MTZERO(LMPOT,IH,NSPIN,VONS,Z,R,DRDI,IMT,IRCUT,
-     +                IPAN,ICELL,LMSP,IFUNM,THETAS,IRWS,VAV0,VOL0)
+     +                IPAN,ICELL,LMSP,IFUNM,THETAS,IRWS,VAV0,VOL0,
+C                     new input parameters after inc.p removal
+     &                irmd, irid, nfund, ipand)
       implicit none
 c ************************************************************************
 c
@@ -13,10 +15,15 @@ c                                            may,2000 (new version)
 c
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-C     ..
+C      include 'inc.p'
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+      INTEGER irmd
+      INTEGER irid
+      INTEGER nfund
+      INTEGER ipand
+
 C     .. Scalar Arguments ..
       INTEGER LMPOT,NSPIN
 C     ..
@@ -25,7 +32,7 @@ C     .. Array Arguments ..
      +     DRDI(IRMD,*),
      +     R(IRMD,*),
      +     THETAS(IRID,NFUND,*),
-     +     VONS(IRMD,LMPOTD,2),
+     +     VONS(IRMD,LMPOT,2),
      +     Z(*)
       INTEGER 
      +     IFUNM(*),IMT(*),IPAN(*),IRCUT(0:IPAND,*),IRWS(*),

@@ -1,21 +1,31 @@
       SUBROUTINE PNSQNS(AR,CR,DR,DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS,QNS,NSRA,
      +                  VINS,IPAN,IRCUT,CLEB,ICLEB,IEND,LOFLM,LKONV,
      &                  ISPIN,LDAU,NLDAU,LLDAU,
-     &                  WMLDAU,WMLDAUAV,LDAUCUT)
-C
+     &                  WMLDAU,WMLDAUAV,LDAUCUT,
+C                       new after inc.p removal
+     &                  lmaxd, nspind, irmd, irnsd, ipand, ncleb)
+
       IMPLICIT NONE
+
+      INTEGER lmaxd
+      INTEGER nspind
+      INTEGER irmd
+      INTEGER irnsd
+      INTEGER ipand
+      INTEGER ncleb
+
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER             IRMIND
-      PARAMETER          (IRMIND=IRMD-IRNSD)
-      INTEGER             LMMAXD
-      PARAMETER          (LMMAXD= (LMAXD+1)**2)
-      INTEGER             LMPOTD
-      PARAMETER          (LMPOTD= (LPOTD+1)**2)
-      INTEGER             LMAXD1
-      PARAMETER          (LMAXD1= LMAXD+1)
-      INTEGER             MMAXD
-      PARAMETER          (MMAXD = 2*LMAXD+1 )
+C     INTEGER             IRMIND
+C     PARAMETER          (IRMIND=IRMD-IRNSD)
+C     INTEGER             LMMAXD
+C     PARAMETER          (LMMAXD= (LMAXD+1)**2)
+C     INTEGER             LMPOTD
+C     PARAMETER          (LMPOTD= (LPOTD+1)**2)
+C                               = (2*LMAXD+1)**2
+C     INTEGER             LMAXD1
+C     PARAMETER          (LMAXD1= LMAXD+1)
+C     INTEGER             MMAXD
+C     PARAMETER          (MMAXD = 2*LMAXD+1 )
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX     EK
@@ -23,38 +33,80 @@ C     .. Scalar Arguments ..
       LOGICAL            LDAU
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX     AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),
-     +                   FZ(IRMD,0:LMAXD),
-     +                   PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-     +                   PZ(IRMD,0:LMAXD),
-     +                   QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-     +                   QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD)
-      DOUBLE PRECISION   CLEB(NCLEB,2),DRDI(IRMD),
-     +                   VINS(IRMIND:IRMD,LMPOTD),
-     +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1),
-     +                   LDAUCUT(IRMD)
-      INTEGER            ICLEB(NCLEB,3),IRCUT(0:IPAND),LOFLM(*),
-     +                   LLDAU(LMAXD1)
+
+
+C     DOUBLE COMPLEX     PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
+C     DOUBLE COMPLEX     PZ(IRMD,0:LMAXD)
+C     DOUBLE COMPLEX     QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
+C     DOUBLE COMPLEX     QZ(IRMD,0:LMAXD)
+C     DOUBLE COMPLEX     SZ(IRMD,0:LMAXD)
+
+C     DOUBLE COMPLEX     AR(LMMAXD,LMMAXD)
+C     DOUBLE COMPLEX     CR(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX     AR((LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX     CR((LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX     FZ(IRMD,0:LMAXD)
+
+C     DOUBLE COMPLEX     PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
+      DOUBLE COMPLEX     PNS((LMAXD+1)**2,(LMAXD+1)**2,
+     &                       (IRMD-IRNSD):IRMD,2)
+
+      DOUBLE COMPLEX     PZ(IRMD,0:LMAXD)
+C     DOUBLE COMPLEX     QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
+      DOUBLE COMPLEX     QNS((LMAXD+1)**2,(LMAXD+1)**2,
+     &                       (IRMD-IRNSD):IRMD,2)
+
+      DOUBLE COMPLEX     QZ(IRMD,0:LMAXD)
+      DOUBLE COMPLEX     SZ(IRMD,0:LMAXD)
+
+      DOUBLE PRECISION   CLEB(NCLEB,2)
+      DOUBLE PRECISION   DRDI(IRMD)
+C     DOUBLE PRECISION   VINS(IRMIND:IRMD,LMPOTD)
+      DOUBLE PRECISION   VINS(IRMD-IRNSD:IRMD,(2*LMAXD+1)**2)
+C     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+      DOUBLE PRECISION   WMLDAU(2*LMAXD+1,2*LMAXD+1,NSPIND,LMAXD+1)
+      DOUBLE PRECISION   LDAUCUT(IRMD)
+
+      INTEGER            ICLEB(NCLEB,3),IRCUT(0:IPAND),LOFLM(*)
+      INTEGER            LLDAU(LMAXD+1)
 C     ..
 C     .. Local Scalars ..
       INTEGER            I,IR,IRC1,LM1,LM2,LMMKONV,M1,M2,
      +                   LMLO,LMHI,ILDAU
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX     CMAT(LMMAXD,LMMAXD,IRMIND:IRMD),
-     +                   DMAT(LMMAXD,LMMAXD,IRMIND:IRMD),
-     +                   DR(LMMAXD,LMMAXD),
-     +                   EFAC(LMMAXD),PZEKDR(LMMAXD,IRMIND:IRMD,2),
-     +                   PZLM(LMMAXD,IRMIND:IRMD,2),
-     +                   QZEKDR(LMMAXD,IRMIND:IRMD,2),
-     +                   QZLM(LMMAXD,IRMIND:IRMD,2),
-     +                   TMATLL(LMMAXD,LMMAXD)
-      DOUBLE PRECISION   VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD),
-     +                   WMLDAUAV(LMAXD1)
+C     DOUBLE COMPLEX     CMAT(LMMAXD,LMMAXD,IRMIND:IRMD)
+      DOUBLE COMPLEX     CMAT((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD)
+C     DOUBLE COMPLEX     DMAT(LMMAXD,LMMAXD,IRMIND:IRMD)
+      DOUBLE COMPLEX     DMAT((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD)
+C     DOUBLE COMPLEX     DR(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX     DR((LMAXD+1)**2, (LMAXD+1)**2)
+C     DOUBLE COMPLEX     EFAC(LMMAXD),PZEKDR(LMMAXD,IRMIND:IRMD,2)
+      DOUBLE COMPLEX     EFAC((LMAXD+1)**2)
+      DOUBLE COMPLEX     PZEKDR((LMAXD+1)**2,IRMD-IRNSD:IRMD,2)
+C     DOUBLE COMPLEX     PZLM(LMMAXD,IRMIND:IRMD,2)
+      DOUBLE COMPLEX     PZLM((LMAXD+1)**2,(IRMD-IRNSD):IRMD,2)
+C     DOUBLE COMPLEX     QZEKDR(LMMAXD,IRMIND:IRMD,2)
+      DOUBLE COMPLEX     QZEKDR((LMAXD+1)**2,(IRMD-IRNSD):IRMD,2)
+C     DOUBLE COMPLEX     QZLM(LMMAXD,IRMIND:IRMD,2)
+      DOUBLE COMPLEX     QZLM((LMAXD+1)**2, (IRMD-IRNSD):IRMD,2)
+C     DOUBLE COMPLEX     TMATLL(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX     TMATLL((LMAXD+1)**2, (LMAXD+1)**2)
+C     DOUBLE PRECISION   VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
+      DOUBLE PRECISION   VNSPLL((LMAXD+1)**2, (LMAXD+1)**2,
+     &                          IRMD-IRNSD:IRMD)
+
+      DOUBLE PRECISION   WMLDAUAV(LMAXD+1)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL IRWNS,REGNS,VLLNS,WFTSCA
-C     ..
+
+      INTEGER             LMMAXD
+      INTEGER             IRMIND
+
+      IRMIND= IRMD-IRNSD
+      LMMAXD= (LMAXD+1)**2
+
       IRC1 = IRCUT(IPAN)
 c
 

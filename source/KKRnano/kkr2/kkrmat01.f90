@@ -511,9 +511,11 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                         NUMN0,INDN0, &
                         TMATLL,GLLH,X0, &
                         PRSC(1,EKM + k_point_index),SPRS(1,EKM + k_point_index), &
-                        GLLKE1)
+                        GLLKE1, &
+                        naez, lmax, naclsd, nguessd)
         endif
-      endif
+
+      endif ! IGUESS == 1
 
 ! ..
 !===================================================================
@@ -560,7 +562,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                       NUMN0,INDN0, &
                       TMATLL,GLLH,X0, &
                       PRSC(1,EKM+k_point_index),SPRS(1,EKM+k_point_index), &
-                      GLLKE1)
+                      GLLKE1, &
+                      naez, lmax, naclsd, nguessd)
         
         do site_index=1,NAEZ
           do LM1=1,LMMAXD

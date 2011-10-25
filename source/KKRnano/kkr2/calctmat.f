@@ -9,7 +9,6 @@ C                        new input parameters after inc.p removal
       IMPLICIT NONE
 C
 C     .. Parameters ..
-C      INCLUDE 'inc.p'
 
       INTEGER nspind
       INTEGER ncleb
@@ -158,7 +157,8 @@ C-----------------------------------------------------------------------
      &                   VINS,IPAN,IRCUT,NSRA,CLEB,ICLEB,IEND,LOFLM,
      &                   TMAT,DET,LMAX,ISPIN,
      >                   LDAU,NLDAU,LLDAU,
-     >                   WMLDAU,WMLDAUAV,LDAUCUT)
+     >                   WMLDAU,WMLDAUAV,LDAUCUT,
+     &                   lmax, nspind, irmd, irnsd, ipand, ncleb)
 C
             TR_ALPH = LOG(DET)
             DO L=0,LMAX 

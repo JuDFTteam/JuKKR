@@ -1,9 +1,12 @@
       SUBROUTINE RHOCORE(EBOT,NSRA,ISPIN,NSPIN,I1,DRDI,R,VISP,A,B,ZAT,
-     &              IRCUT,RHOC,QC,ECORE,NCORE,LCORE)
+     &              IRCUT,RHOC,QC,ECORE,NCORE,LCORE,
+C                   new input parameters after inc.p removal
+     &              irmd, ipand)
 C
       IMPLICIT NONE
-C     .. Parameters ..
-      INCLUDE 'inc.p'
+
+      INTEGER irmd
+      INTEGER ipand
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A,B,ZAT,EBOT

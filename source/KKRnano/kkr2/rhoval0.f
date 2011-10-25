@@ -1,20 +1,29 @@
       SUBROUTINE RHOVAL0(EZ,WEZ,DRDI,R,IPAN,IRCUT,
-     &                  THETAS,DOS0,DOS1)
+     &                  THETAS,DOS0,DOS1,
+C                       new parameters after inc.p removal
+     &                  lmaxd, irmd, irid, ipand, nfund)
 C
       IMPLICIT NONE
 C
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER LMXSPD
-      PARAMETER (LMXSPD= (2*LPOTD+1)**2)
-      INTEGER LMMAXD
-      PARAMETER (LMMAXD= (LMAXD+1)**2)
-      INTEGER LMAXD1
-      PARAMETER (LMAXD1= LMAXD+1)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
+
+      INTEGER lmaxd
+      INTEGER irmd
+      INTEGER irid
+      INTEGER ipand
+      INTEGER nfund
+
+C     INTEGER LMXSPD
+C     PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+C     INTEGER LMMAXD
+C     PARAMETER (LMMAXD= (LMAXD+1)**2)
+C     INTEGER LMAXD1
+C     PARAMETER (LMAXD1= LMAXD+1)
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
+C     INTEGER IRMIND
+C     PARAMETER (IRMIND=IRMD-IRNSD)
+
       DOUBLE COMPLEX CONE,CZERO,CI
       PARAMETER ( CONE=(1.D0,0.D0),CZERO=(0.D0,0.D0),CI=(0.D0,1.D0) )
 C     ..
@@ -35,11 +44,18 @@ C     .. Local Scalars ..
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX PZ(IRMD,0:LMAXD),QZ(IRMD,0:LMAXD)
-      DOUBLE COMPLEX BESSJW(0:LMAXD1),BESSYW(0:LMAXD1),HANKWS(0:LMAXD1)
-      DOUBLE COMPLEX CDEN0(IRMD,0:LMAXD1),CDEN1(IRMD,0:LMAXD1)
+      DOUBLE COMPLEX BESSJW(0:LMAXD+1)
+      DOUBLE COMPLEX BESSYW(0:LMAXD+1)
+      DOUBLE COMPLEX HANKWS(0:LMAXD+1)
+      DOUBLE COMPLEX CDEN0(IRMD,0:LMAXD+1)
+      DOUBLE COMPLEX CDEN1(IRMD,0:LMAXD+1)
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,SQRT
+
+      INTEGER LMAXD1
+
+      LMAXD1 = LMAXD+1
 C     ..
 C
          EK = SQRT(EZ)

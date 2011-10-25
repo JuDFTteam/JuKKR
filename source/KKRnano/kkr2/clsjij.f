@@ -19,10 +19,7 @@ c responsible processor
 c                                                          A.Thiess 7/2009
 c ************************************************************************
       IMPLICIT NONE
-c
-C     INCLUDE 'inc.p'
-c
-c
+
       INTEGER nrd
       INTEGER nxijd
 

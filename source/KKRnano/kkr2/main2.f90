@@ -899,7 +899,7 @@ spinloop:     do ISPIN = 1,NSPIN
               endif
             enddo
 
-          endif
+          endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 !=======================================================================
 
@@ -965,7 +965,9 @@ spinloop:     do ISPIN = 1,NSPIN
                           CLEB1C,LOFLM1C,ICLEB1C,IEND1,JEND, &
                           GMATN_ALL, &
                           LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-                          DMATLDAU)
+                          DMATLDAU, &
+                          iemxd, &
+                          lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
               if (LLY==1) then
                 do IE=1,IELAST
@@ -981,7 +983,8 @@ spinloop:     do ISPIN = 1,NSPIN
                            DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
                            A(I1),B(I1),ZAT(I1), &
                            IRCUT(0,I1),RHOCAT,QC, &
-                           ECORE(1,ISPIN),NCORE(IPOT),LCORE(1,IPOT))
+                           ECORE(1,ISPIN),NCORE(IPOT),LCORE(1,IPOT), &
+                           irmd, ipand)
 
             end do
 
@@ -1037,7 +1040,8 @@ spinloop:     do ISPIN = 1,NSPIN
             call RHOTOTB(NAEZ,I1,NSPIN,RHO2NS,RHOCAT, &
                          ZAT,DRDI,IRCUT, &
                          LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
-                         CATOM)
+                         CATOM, &
+                         lmax, irmd, irid, ipand, nfund)
 
             CHRGNT = CHRGNT + CATOM(1) - ZAT(I1)
 
@@ -1144,7 +1148,8 @@ spinloop:     do ISPIN = 1,NSPIN
 
             call RHOMOM(CMOM,CMINST,LPOT,I1,RHO2NS, &
             R,DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-            THETAS,LMSP(1,ICELL))
+            THETAS,LMSP(1,ICELL), &
+            irmd, irid, nfund, ipand, ngshd)
 
             call OUTTIME(MYLRANK(1),'RHOMOM ......',TIME_I,ITER)
 
@@ -1240,10 +1245,14 @@ spinloop:     do ISPIN = 1,NSPIN
 ! =====================================================================
             VAV0 = 0.0D0
             VOL0 = 0.0D0
+
             call MTZERO(LMPOT,I1,NSPIN,VONS,ZAT,R,DRDI,IMT,IRCUT, &
-            IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
-            THETAS,IRWS,VAV0,VOL0)
+                        IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
+                        THETAS,IRWS,VAV0,VOL0, &
+                        irmd, irid, nfund, ipand)
+
             call OUTTIME(MYLRANK(1),'MTZERO ......',TIME_I,ITER)
+
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
@@ -1414,7 +1423,8 @@ spinloop:     do ISPIN = 1,NSPIN
 
           call RESULTS(LRECRES2,IELAST,ITER,LMAX,NAEZ,NPOL, &
           NSPIN,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
-          ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU)
+          ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
+          iemxd)
 
 ! --> update energy contour
 

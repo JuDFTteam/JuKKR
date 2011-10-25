@@ -1,5 +1,7 @@
       SUBROUTINE RHOIN(AR,CDEN,CR,DF,GMAT,EK,RHO2NS,IRC1,NSRA,EFAC,PZ,
-     +                   FZ,QZ,SZ,CLEB,ICLEB,JEND,IEND,EKL)
+     &                   FZ,QZ,SZ,CLEB,ICLEB,JEND,IEND,EKL,
+C                        new input parameters after inc.p removal
+     &                   lmax, irmd, ncleb)
 c-----------------------------------------------------------------------
 c
 c     calculates the charge density inside r(irmin) in case
@@ -55,23 +57,43 @@ c                               b.drittler   aug. 1988
 c-----------------------------------------------------------------------
 C     .. Parameters ..
       IMPLICIT NONE
-      INCLUDE 'inc.p'
-      INTEGER LMMAXD
-      INTEGER LMPOTD
-      parameter (lmmaxd= (lmaxd+1)**2)
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+c     INTEGER LMMAXD
+c     INTEGER LMPOTD
+c     parameter (lmmaxd= (lmaxd+1)**2)
+c     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
 C     ..
+      INTEGER lmax
+      INTEGER irmd
+      INTEGER ncleb
+
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX DF,EK
       INTEGER IEND,IRC1,NSRA
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX AR(LMMAXD,*),CDEN(IRMD,0:LMAXD),CR(LMMAXD,*),
-     +               EFAC(*),EKL(0:LMAXD),FZ(IRMD,0:LMAXD),
-     +               GMAT(LMMAXD,LMMAXD),PZ(IRMD,0:LMAXD),
-     +               QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD)
-      DOUBLE PRECISION CLEB(*),RHO2NS(IRMD,LMPOTD)
-      INTEGER ICLEB(NCLEB,3),JEND(LMPOTD,0:LMAXD,0:LMAXD)
+C     DOUBLE COMPLEX AR(LMMAXD,*),CDEN(IRMD,0:LMAXD),CR(LMMAXD,*),
+C    +               EFAC(*),EKL(0:LMAXD),FZ(IRMD,0:LMAXD),
+C    +               GMAT(LMMAXD,LMMAXD),PZ(IRMD,0:LMAXD),
+C    +               QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD)
+C     DOUBLE PRECISION CLEB(*),RHO2NS(IRMD,LMPOTD)
+C     INTEGER ICLEB(NCLEB,3),JEND(LMPOTD,0:LMAXD,0:LMAXD)
+
+      DOUBLE COMPLEX AR((LMAX+1)**2,*)
+      DOUBLE COMPLEX CDEN(IRMD,0:LMAX)
+      DOUBLE COMPLEX CR((LMAX+1)**2,*)
+      DOUBLE COMPLEX EFAC(*)
+      DOUBLE COMPLEX EKL(0:LMAX)
+      DOUBLE COMPLEX FZ(IRMD,0:LMAX)
+      DOUBLE COMPLEX GMAT((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE COMPLEX PZ(IRMD,0:LMAX)
+      DOUBLE COMPLEX QZ(IRMD,0:LMAX)
+      DOUBLE COMPLEX SZ(IRMD,0:LMAX)
+      DOUBLE PRECISION CLEB(*)
+      DOUBLE PRECISION RHO2NS(IRMD,(2*LMAX+1)**2)
+      INTEGER ICLEB(NCLEB,3)
+      INTEGER JEND((2*LMAX+1)**2,0:LMAX,0:LMAX)
+
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX CZERO,EFAC1,EFAC2,FFZ,GMATL,PPZ,V1,V2
@@ -79,8 +101,11 @@ C     .. Local Scalars ..
       INTEGER I,IR,J,J0,J1,L,L1,L2,LM1,LM2,LM3,LM3MAX,LN2,LN3,M
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX VR(LMMAXD,LMMAXD),WF(IRMD,0:LMAXD,0:LMAXD),
-     +               WR(LMMAXD,LMMAXD)
+C     DOUBLE COMPLEX VR(LMMAXD,LMMAXD),WF(IRMD,0:LMAXD,0:LMAXD),
+C    +               WR(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX VR((LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX WF(IRMD,0:LMAX,0:LMAX)
+      DOUBLE COMPLEX WR((LMAX+1)**2, (LMAX+1)**2)
 C     ..
 C     .. External Functions ..
       DOUBLE COMPLEX ZDOTU
@@ -96,6 +121,11 @@ C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
 C     ..
 c
+      INTEGER LMMAXD
+      INTEGER LMAXD
+      lmaxd = lmax
+      lmmaxd= (lmaxd+1)**2
+
 C     C0LL = 1/sqrt(4*pi)
       C0LL = 1.0d0/SQRT(16.0D0*ATAN(1.0D0))
 c

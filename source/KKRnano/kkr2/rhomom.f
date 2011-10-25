@@ -1,7 +1,9 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE RHOMOM(CMOM,CMINST,LMAX,IATYP,RHO2NS,R,
      +                  DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM,
-     +                  IMAXSH,GSH,THETAS,LMSP)
+     +                  IMAXSH,GSH,THETAS,LMSP,
+C                       new input parameters after inc.p removal
+     &                  irmd, irid, nfund, ipand, ngshd)
 c ************************************************************************
 c     calculate charge moments of given charge densities 
 c
@@ -9,21 +11,39 @@ c                             rcut
 c              cmom(lm,i) =    s dr' r'** l rho2ns(r',lm,i,1)
 c                              0
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-      include 'inc.p'
-C
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+      INTEGER irmd
+      INTEGER irid
+      INTEGER nfund
+      INTEGER ipand
+      INTEGER ngshd
+
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
 C     ..
 C     .. Scalar Arguments ..
       INTEGER LMAX
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION CMINST(LMPOTD),CMOM(LMPOTD),DRDI(IRMD,*),
-     +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD),
-     +                 THETAS(IRID,NFUND,*)
-      INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
-     +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+C     DOUBLE PRECISION CMINST(LMPOTD),CMOM(LMPOTD),DRDI(IRMD,*),
+C    +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD),
+C    +                 THETAS(IRID,NFUND,*)
+C     INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
+C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+      DOUBLE PRECISION CMINST((2*LMAX+1)**2)
+      DOUBLE PRECISION CMOM((2*LMAX+1)**2)
+      DOUBLE PRECISION DRDI(IRMD,*)
+      DOUBLE PRECISION GSH(*)
+      DOUBLE PRECISION R(IRMD,*)
+      DOUBLE PRECISION RHO2NS(IRMD,(2*LMAX+1)**2)
+      DOUBLE PRECISION THETAS(IRID,NFUND,*)
+      INTEGER IFUNM(*)
+      INTEGER ILM(NGSHD,3)
+      INTEGER IMAXSH(0:(2*LMAX+1)**2)
+      INTEGER IPAN(*)
+      INTEGER IRCUT(0:IPAND,*)
+      INTEGER IRWS(*)
+      INTEGER LMSP(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FAC,PI,RL

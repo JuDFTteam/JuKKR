@@ -1,7 +1,9 @@
       SUBROUTINE RHOTOTB(NAEZ,IATYP,NSPIN,RHO2NS,RHOC,
      +                   Z,DRDI,
      +                   IRCUT,LPOT,NFU,LLMSP,THETAS,ICELL,IPAN,
-     +                   CATOM)
+     +                   CATOM,
+C                        new input parameters after inc.p removal
+     &                   lmax, irmd, irid, ipand, nfund)
       implicit none
 c ************************************************************************
 c     add core and valence density expanded in spherical harmonics
@@ -26,17 +28,30 @@ c                               b.drittler   nov. 1989
 c
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+      INTEGER lmax
+      INTEGER irmd
+      INTEGER irid
+      INTEGER ipand
+      INTEGER nfund
+
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
 C     ..
 C     .. Scalar Arguments ..
       INTEGER LPOT,NSPIN,NAEZ
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
-     +                 RHOC(IRMD,2),THETAS(IRID,NFUND,*),Z(*)
-      DOUBLE PRECISION CATOM(NSPIND)
+C     DOUBLE PRECISION DRDI(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
+C    +                 RHOC(IRMD,2),THETAS(IRID,NFUND,*),Z(*)
+C     DOUBLE PRECISION CATOM(NSPIND)
+
+      DOUBLE PRECISION DRDI(IRMD,*)
+      DOUBLE PRECISION RHO2NS(IRMD,(2*LMAX+1)**2,2)
+      DOUBLE PRECISION RHOC(IRMD,2)
+      DOUBLE PRECISION THETAS(IRID,NFUND,*)
+      DOUBLE PRECISION Z(*)
+      DOUBLE PRECISION CATOM(NSPIN)
 
       INTEGER IPAN(*),IRCUT(0:IPAND,*),LLMSP(*),NFU(*)
 

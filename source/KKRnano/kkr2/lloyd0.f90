@@ -172,7 +172,9 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                     CLEB,LOFLM,ICLEB,IEND,JEND, &
                     GMATN, &
                     LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-                    DMATLDAU)
+                    DMATLDAU, &
+                    iemxd, &
+                    lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
         do IE = 1,IELAST
           do L = 0,LMAXD1
@@ -183,12 +185,11 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
       end do
 
       do IE = 1,IELAST
-        call RHOVAL0( &
-        EZ(IE),WEZ(IE), &
-        DRDI(1,I1),R(1,I1), &
-        IPAN(I1),IRCUT(0,I1), &
-        THETAS(1,1,ICELL), &
-        DOS0(IE),DOS1(IE))
+        call RHOVAL0(EZ(IE),WEZ(IE),DRDI(1,I1),R(1,I1), &
+                     IPAN(I1),IRCUT(0,I1), &
+                     THETAS(1,1,ICELL), &
+                     DOS0(IE),DOS1(IE), &
+                     lmaxd, irmd, irid, ipand, nfund)
       end do
 
     endif
