@@ -352,7 +352,8 @@
         NXIJ,IXCP, &
         TMATLL,MSSQ, &
         GSXIJ, &
-        GMATXIJ)
+        GMATXIJ, &
+        naez, lmax, nxijd)
 
 !================================
     endif

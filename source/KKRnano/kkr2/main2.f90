@@ -569,7 +569,7 @@ program MAIN2
         if(MYLRANK(LMPIC)==MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
 
 !=======================================================================
-! ccpl
+! xccpl
 
           XCCPL = .false.
           ERESJIJ = .false.
@@ -597,7 +597,7 @@ program MAIN2
 
           endif
 
-! ccpl
+! xccpl
 !=======================================================================
 
 
@@ -620,13 +620,13 @@ program MAIN2
           endif
 ! LDA+U
 
-! IME
+! TIME
           call OUTTIME(MYLRANK(1),'initialized .........',TIME_I,ITER)
-! IME
+! TIME
 
-! E ====================================================================
+! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
-! E ====================================================================
+! IE ====================================================================
 
           do IE = 1,IELAST
 
@@ -644,9 +644,9 @@ program MAIN2
 
             endif
 
-! E ====================================================================
+! IE ====================================================================
             if (EMPIB==EPROC(IE)) then
-! E ====================================================================
+! IE ====================================================================
 
 
               do RF = 1,NREF
@@ -716,9 +716,9 @@ spinloop:     do ISPIN = 1,NSPIN
                 ! DTDE now contains Delta dt !!!
 
 
-! PIN ==================================================================
+! SPIN ==================================================================
 !     BEGIN do loop over spins (SMPID-parallel)
-! PIN===================================================================
+! SPIN===================================================================
 
 !         initialize LLY_GRDT
 
@@ -772,56 +772,55 @@ spinloop:     do ISPIN = 1,NSPIN
 
               end do spinloop                          ! ISPIN = 1,NSPIN
 
-! PIN ==================================================================
+! SPIN ==================================================================
 !     END do loop over spins (SMPID-parallel)
-! PIN===================================================================
+! SPIN===================================================================
 
 ! =====================================================================
 ! Calculate Jij for the in CLSJIJ predefined atom pairs i,j
-! ccpl
+! xccpl
 
               if (XCCPL) then
 
-                call SREDGX( &
-                ISPIN,NSPIN, &
-                MYRANK,NROFNODES, &
-                SMPIB,SMPIC,SMYRANK,SRANK, &
-                GMATXIJ, &
-                GXIJ_ALL)
+                call SREDGX( ISPIN,NSPIN, &
+                             MYRANK, &
+                             SMPIC,SMYRANK, &
+                             GMATXIJ, &
+                             GXIJ_ALL, &
+                             naez, lmax, lmpid, empid, smpid, nxijd)
 
                 JSCAL = WEZ(IE)/DBLE(NSPIN)
 
-                call XCCPLJIJ( &
-                'R',I1,IE,JSCAL, &
-                RXIJ,NXIJ,IXCP,RXCCLS, &
-                GXIJ_ALL,DTIXIJ, &
-                LMPIC,LCOMM, &
-                MYRANK,EMPIC,EMYRANK, &
-                JXCIJINT,ERESJIJ)
+                call XCCPLJIJ( 'R',I1,IE,JSCAL, &
+                               RXIJ,NXIJ,IXCP,RXCCLS, &
+                               GXIJ_ALL,DTIXIJ, &
+                               LMPIC,LCOMM, &
+                               MYRANK,EMPIC,EMYRANK, &
+                               JXCIJINT,ERESJIJ)
 
               end if
 
-! ccpl
+! xccpl
 ! End of Jij calculation
 ! =====================================================================
 
               call CPU_TIME(TIME_EX)
               ETIME(IE) = TIME_EX-TIME_E
 
-! E ====================================================================
+! IE ====================================================================
             endif
-! E ====================================================================
+! IE ====================================================================
 
-! for preconditioning purposes calculate sparse indices combining IE.KPT
+! for initial guess calculate sparse indices combining IE.KPT
             EKM = EKM + NOFKS(KMESH(IE))
 
           end do                   ! IE = 1,IELAST
 
           if (ERESJIJ) close(75)   ! FIXME: is opened in XCCPLJIJ, but not closed?!
 
-! E ====================================================================
+! IE ====================================================================
 !     END do loop over energies (EMPID-parallel) to be implemented
-! E ====================================================================
+! IE ====================================================================
 
 
 !=======================================================================
@@ -829,16 +828,17 @@ spinloop:     do ISPIN = 1,NSPIN
 !=======================================================================
           call SREDGM(NSPIN,IELAST, &
                       MYRANK, &
-                      SMPIC,SMYRANK,SRANK, &
-                      EMPIC,EMYRANK,ERANK,EPROC, &
+                      SMPIC,SMYRANK, &
+                      EMPIC,EMYRANK,EPROC, &
                       GMATN,LLY_GRDT, &
-                      GMATN_ALL,LLY_GRDT_ALL)
+                      GMATN_ALL,LLY_GRDT_ALL, &
+                      naez, lmax, lmpid, smpid, empid, iemxd)
 !=======================================================================
 !=======================================================================
 
-! IME
+! TIME
           call OUTTIME(MYLRANK(1),'G obtained ..........',TIME_I,ITER)
-! IME
+! TIME
 
 !=======================================================================
 !     output of Jij's .. calling xccpljij with flag 'F'
