@@ -1,12 +1,13 @@
-      SUBROUTINE TREF(E,VREF,LMAX,RMTREF,TREFLL,DTREFLL)
+      SUBROUTINE TREF(E,VREF,LMAX,RMTREF,TREFLL,DTREFLL,
+C                     new input parameter after inc.p removal
+     &                LLY)
 C
       IMPLICIT NONE
-C
-C     .. Parameters ..
-      INCLUDE 'inc.p'
-C
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAXD+1)**2)
+
+      INTEGER LLY
+
+C     INTEGER LMGF0D
+C     PARAMETER (LMGF0D= (LMAXD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER LMAX
@@ -20,17 +21,17 @@ C     .. Local Scalars ..
       LOGICAL LCALL
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX BESSJW1(0:LMAXD+1),BESSJW2(0:LMAXD+1),
-     +               BESSYW1(0:LMAXD+1),BESSYW2(0:LMAXD+1),
-     +               HANKWS1(0:LMAXD+1),HANKWS2(0:LMAXD+1),
-     +               TREFLL(LMGF0D,LMGF0D)
-      DOUBLE COMPLEX DBESSJW1(0:LMAXD+1),DBESSJW2(0:LMAXD+1),
-     +               DHANKWS1(0:LMAXD+1),DTREFLL(LMGF0D,LMGF0D)
-C     ..
-C     .. External Functions ..
-      LOGICAL TEST
-      EXTERNAL TEST
-C     ..
+      DOUBLE COMPLEX BESSJW1(0:LMAX+1),BESSJW2(0:LMAX+1),
+     +               BESSYW1(0:LMAX+1),BESSYW2(0:LMAX+1),
+     +               HANKWS1(0:LMAX+1),HANKWS2(0:LMAX+1)
+C     DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D)
+      DOUBLE COMPLEX TREFLL((LMAX+1)**2, (LMAX+1)**2)
+
+      DOUBLE COMPLEX DBESSJW1(0:LMAX+1),DBESSJW2(0:LMAX+1),
+     +               DHANKWS1(0:LMAX+1)
+C     DOUBLE COMPLEX DTREFLL(LMGF0D,LMGF0D)
+      DOUBLE COMPLEX DTREFLL((LMAX+1)**2, (LMAX+1)**2)
+
 C     .. External Subroutines ..
       EXTERNAL BESSEL
 C     ..
@@ -38,8 +39,10 @@ C     .. Intrinsic Functions ..
       INTRINSIC SQRT
 C     ..
 C     .. Save statement ..
-      SAVE
-C     ..
+C     SAVE
+      INTEGER LMAXD
+      INTEGER LMGF0D
+
 C-----------------------------------------------------------------------
 C---- t-matrix and derivative of t-matrix of the reference system
 C
@@ -65,6 +68,9 @@ C     --- j (x) = - --- j (x)
 C     dE0  0        2 x  1
 C
 C-----------------------------------------------------------------------
+
+      LMAXD = LMAX
+      LMGF0D= (LMAXD+1)**2
 
           LCALL = .false.
           A1 = SQRT(E)*RMTREF
@@ -153,21 +159,33 @@ C
      +                TREFLL,DTREFLL,GREFN,DGREFN,
      +                IE,
      +                LLY_G0TR,I3,
-     +                LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
+     +                LMPIC,MYLRANK,LCOMM,LSIZE,
+     &                naezd, lmaxd, naclsd, ncleb, nrefd, iemxd, nclsd,
+     &                LLY, prod_lmpid_smpid_empid)
 C
       IMPLICIT NONE
 C
 C     .. Parameters ..
       INCLUDE 'mpif.h'
-      INCLUDE 'inc.p'
-      INCLUDE 'inc.cls'
+C     INCLUDE 'inc.p'
+C     INCLUDE 'inc.cls'
 C
-      INTEGER          LMGF0D
-      PARAMETER       (LMGF0D= (LMAXD+1)**2)
-      INTEGER          LMMAXD
-      PARAMETER       (LMMAXD= (LMAXD+1)**2)
-      INTEGER          LM2D
-      PARAMETER       (LM2D= (2*LMAXD+1)**2)
+      integer  naezd
+      integer  lmaxd
+      integer  naclsd
+      integer  ncleb
+      integer  nrefd
+      integer  iemxd
+      integer  nclsd
+      integer  LLY
+      integer  prod_lmpid_smpid_empid
+
+C     INTEGER          LMGF0D
+C     PARAMETER       (LMGF0D= (LMAXD+1)**2)
+C     INTEGER          LMMAXD
+C     PARAMETER       (LMMAXD= (LMAXD+1)**2)
+C     INTEGER          LM2D
+C     PARAMETER       (LM2D= (2*LMAXD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALATC
@@ -175,42 +193,64 @@ C     .. Scalar Arguments ..
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION CLEB(NCLEB,2),RCLS(3,NACLSD,NCLSD)
-      INTEGER          ATOM(NACLSD,NAEZD),CLS(NAEZD),ICLEB(NCLEB,3),
-     +                 LOFLM(LM2D),NACLS(NCLSD),REFPOT(NAEZD)
+      INTEGER          ATOM(NACLSD,NAEZD),CLS(NAEZD),ICLEB(NCLEB,3)
+C     INTEGER          LOFLM(LM2D)
+      INTEGER          LOFLM((2*LMAXD+1)**2)
+      INTEGER          NACLS(NCLSD)
+      INTEGER          REFPOT(NAEZD)
       DOUBLE COMPLEX   LLY_G0TR(IEMXD,NCLSD)
+
+C     DOUBLE COMPLEX   TREFLL(LMGF0D,LMGF0D,NREFD),
+C    +                 DTREFLL(LMGF0D,LMGF0D,NREFD),
+C    +                 DGREFN(LMGF0D,LMGF0D,NACLSD,NCLSD),
+C    +                 GREFN(LMGF0D,LMGF0D,NACLSD,NCLSD)
+
+      DOUBLE COMPLEX   TREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD),
+     +                 DTREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
+      DOUBLE COMPLEX   DGREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD),
+     +                 GREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD)
+
+C     .. L-MPI
+      INTEGER          MYLRANK(prod_lmpid_smpid_empid),
+     +                 LCOMM(prod_lmpid_smpid_empid),
+     +                 LSIZE(prod_lmpid_smpid_empid),
+     +                 LMPIC
+
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX   E
       INTEGER          I1,IC,ICLS,IG,IG1,LM1,LM2
 C     ..
-C     .. Local Arrays ..
-      DOUBLE COMPLEX   TREFLL(LMGF0D,LMGF0D,NREFD),
-     +                 DTREFLL(LMGF0D,LMGF0D,NREFD),
-     +                 DGREFN(LMGF0D,LMGF0D,NACLSD,NCLSD),
-     +                 GREFN(LMGF0D,LMGF0D,NACLSD,NCLSD),
-     +                 DGINP(NACLSD*LMGF0D,LMGF0D),
-     +                 GINP(NACLSD*LMGF0D,LMGF0D),
-     +                 GBCAST(LMMAXD,LMMAXD,NACLSD)
+
+C     Local arrays
+C     Fortran 90 automatic arrays - medium size
+
+C     DOUBLE COMPLEX   DGINP(NACLSD*LMGF0D,LMGF0D),
+C    +                 GINP(NACLSD*LMGF0D,LMGF0D),
+C    +                 GBCAST(LMMAXD,LMMAXD,NACLSD)
+
+      DOUBLE COMPLEX   DGINP(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX   GINP(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
+      DOUBLE COMPLEX   GBCAST((LMAXD+1)**2,(LMAXD+1)**2,NACLSD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL         GLL95
-C     ..
-C     .. N-MPI .. 
-C      INTEGER          MYRANK,NROFNODES
-C      COMMON          /MPI/MYRANK,NROFNODES
+
       INTEGER          IERR,MAPBLOCK
-C     .. L-MPI
-      INTEGER          MYLRANK(LMPID*SMPID*EMPID),
-     +                 LCOMM(LMPID*SMPID*EMPID),
-     +                 LGROUP(LMPID*SMPID*EMPID),
-     +                 LSIZE(LMPID*SMPID*EMPID),
-     +                 LMPI,LMPIC
+
 C
       EXTERNAL         MPI_BCAST
 C
 C     .. Save statement ..
-      SAVE
+C     SAVE
 C     ..
+
+      INTEGER          LMGF0D
+      INTEGER          LMMAXD
+
+      LMMAXD= (LMAXD+1)**2
+      LMGF0D= (LMAXD+1)**2
+
 C attention in this subroutine I3 labels the fixed atom - I1 is a variable !
 C
 C=====================================================================

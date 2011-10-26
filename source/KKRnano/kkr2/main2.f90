@@ -652,7 +652,7 @@ program MAIN2
               do RF = 1,NREF
 
                 call TREF(EZ(IE),VREF(RF),LMAX,RMTREF(RF), &
-                          TREFLL(1,1,RF),DTREFLL(1,1,RF))
+                          TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
 
               end do
 
@@ -662,7 +662,9 @@ program MAIN2
                         TREFLL(1,1,1),DTREFLL(1,1,1),GREFN,DGREFN, &
                         IE, &
                         LLY_G0TR,I1, &
-                        LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE)
+                        LMPIC,MYLRANK,LCOMM,LSIZE, &
+                        naez, lmax, naclsd, ncleb, nrefd, iemxd, nclsd, &
+                        LLY, LMPID*SMPID*EMPID)
 
 spinloop:     do ISPIN = 1,NSPIN
 
