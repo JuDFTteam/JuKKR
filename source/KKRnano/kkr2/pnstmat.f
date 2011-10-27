@@ -7,7 +7,6 @@ C                        new input parameters after inc.p removal
      &                   lmaxd, nspind, irmd, irnsd, ipand, ncleb)
       IMPLICIT NONE
 C     .. Parameters ..
-C      INCLUDE 'inc.p'
 
       INTEGER lmaxd
       INTEGER nspind
@@ -103,7 +102,8 @@ C          ENDDO
 C        ENDDO
 C      ENDDO
 
-      CALL VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND)
+      CALL VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,
+     &           lmaxd, irmd, irnsd, ncleb)
 
       IF (LKONV.NE.LMAXD) THEN
         LMMKONV = (LKONV+1)* (LKONV+1)

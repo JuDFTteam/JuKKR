@@ -1,9 +1,11 @@
-      SUBROUTINE VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,VONS,ZAT,R,
+      SUBROUTINE VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,VONS,ZAT,R,
      &                     IRCUT,IPAN,VMAD,
      &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
      &                     LMXSPD,NCLEBD,LOFLM,DFAC,I1,
      >                     LMPIC,MYLRANK,
-     >                     LGROUP,LCOMM,LSIZE)
+     >                     LGROUP,LCOMM,LSIZE,
+C                          new input parameters after inc.p removal
+     &                     irmd, ipand, prod_lmpid_smpid_empid)
 C **********************************************************************
 C
 C     calculate the madelung potentials and add these to the poten-
@@ -34,51 +36,77 @@ C
 C **********************************************************************
       IMPLICIT NONE
       INCLUDE 'mpif.h'
-      INCLUDE 'inc.p'
+
+      INTEGER irmd
+      INTEGER ipand
+      INTEGER prod_lmpid_smpid_empid
 C     ..
 C     .. PARAMETER definitions
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD=(LPOTD+1)**2)
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD=(LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER IEND,LMAX,LMXSPD,NCLEBD,LMPOT,NSPIN,NAEZ
+      INTEGER IEND,LPOT,LMXSPD,NCLEBD,LMPOT,NSPIN,NAEZ
       DOUBLE PRECISION VMAD
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION CMOM(LMPOTD),CMINST(LMPOTD),
-     &                 CMOM_SAVE(LMPOTD),CMINST_SAVE(LMPOTD),
-     &                 VONS(IRMD,LMPOTD,2),R(IRMD,*),ZAT(*)
-      DOUBLE PRECISION SMAT(LMXSPD,*),CLEB(NCLEBD)
-      DOUBLE PRECISION DFAC(0:LPOTD,0:LPOTD)
-      INTEGER ICLEB(NCLEBD,3),LOFLM(LMXSPD)
-      INTEGER IRCUT(0:IPAND,*),IPAN(*)
+C     DOUBLE PRECISION CMOM(LMPOTD)
+C     DOUBLE PRECISION CMINST(LMPOTD)
+C     DOUBLE PRECISION VONS(IRMD,LMPOTD,2)
+      DOUBLE PRECISION CMOM((LPOT+1)**2)
+      DOUBLE PRECISION CMINST((LPOT+1)**2)
+      DOUBLE PRECISION VONS(IRMD,(LPOT+1)**2,2)
+
+      DOUBLE PRECISION R(IRMD,*)
+      DOUBLE PRECISION ZAT(*)
+      DOUBLE PRECISION SMAT(LMXSPD,*)
+      DOUBLE PRECISION CLEB(NCLEBD)
+      DOUBLE PRECISION DFAC(0:LPOT,0:LPOT)
+      INTEGER ICLEB(NCLEBD,3)
+      INTEGER LOFLM(LMXSPD)
+      INTEGER IRCUT(0:IPAND,*)
+      INTEGER IPAN(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION AC(LMPOTD),PI,FPI
+      DOUBLE PRECISION PI,FPI
       INTEGER I,L,L1,L2,LM,LM1,LM2,LM3,LMMAX,M,IPOT,I1,I2,
      &        IRS1,ISPIN,ILM
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD)
-      DOUBLE PRECISION BVMAD(LMPOTD)
+C     Fortran 90 automatic arrays
+C     DOUBLE PRECISION AC(LMPOTD)
+C     DOUBLE PRECISION CMOM_SAVE(LMPOTD)
+C     DOUBLE PRECISION CMINST_SAVE(LMPOTD)
+C     DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD)
+C     DOUBLE PRECISION BVMAD(LMPOTD)
+
+      DOUBLE PRECISION AC((LPOT+1)**2)
+      DOUBLE PRECISION CMOM_SAVE((LPOT+1)**2)
+      DOUBLE PRECISION CMINST_SAVE((LPOT+1)**2)
+      DOUBLE PRECISION AVMAD((LPOT+1)**2,(LPOT+1)**2)
+      DOUBLE PRECISION BVMAD((LPOT+1)**2)
+
 C----- MPI ---------------------------------------------------------------
       INTEGER IERR,MAPBLOCK
 C     .. L-MPI
-      INTEGER      MYLRANK(LMPID*SMPID*EMPID),
-     +             LCOMM(LMPID*SMPID*EMPID),
-     +             LGROUP(LMPID*SMPID*EMPID),
-     +             LSIZE(LMPID*SMPID*EMPID),
+      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
+     +             LCOMM(prod_lmpid_smpid_empid),
+     +             LGROUP(prod_lmpid_smpid_empid),
+     +             LSIZE(prod_lmpid_smpid_empid),
      +             LMPI,LMPIC
 C
       EXTERNAL MPI_BCAST
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
+
+      INTEGER LMPOTD
+      LMPOTD=(LPOT+1)**2
 C     ..................................................................
 C
       PI = 4.0D0*ATAN(1.0D0) 
       FPI = 4.0D0*PI
 C
-      LMMAX = (LMAX+1)*(LMAX+1)
+      LMMAX = (LPOT+1)*(LPOT+1)
          IRS1 = IRCUT(IPAN(I1),I1)
 
 C===== save information on each proc/atom in order to bcast ==============
@@ -180,7 +208,7 @@ C
 C
 C
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-      DO L = 0,LMAX
+      DO L = 0,LPOT
 C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
          DO M = -L,L
             LM = L*L + L + M + 1

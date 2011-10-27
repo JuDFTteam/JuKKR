@@ -5,6 +5,7 @@
 C                      new after inc.p removal
      &                 irmd, irnsd)
 c ************************************************************************
+C      Formatted output of potential.
 c      this subroutine stores in 'ifile' the necessary results
 c      (potentials e.t.c.) to start self-consistency iterations
 c

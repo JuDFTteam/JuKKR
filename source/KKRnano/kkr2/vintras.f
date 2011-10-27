@@ -1,7 +1,9 @@
 c 13.10.95 ***************************************************************
-      SUBROUTINE VINTRAS(LMAX,NSPIN,IATYP,RHO2NS,VONS,R,
+      SUBROUTINE VINTRAS(LPOT,NSPIN,IATYP,RHO2NS,VONS,R,
      +                   DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM,
-     +                   IMAXSH,GSH,THETAS,LMSP)
+     +                   IMAXSH,GSH,THETAS,LMSP,
+C                        new input parameters after inc.p removal
+     &                   irmd, irid, nfund, ngshd, ipand)
 c ************************************************************************
 c     calculate the electron-intracell-potentials and the charge-
 c     moments of given charge densities . ( for each spin-direc-
@@ -25,21 +27,50 @@ c                 developed into spherical harmonics . (see deck rholm)
 c
 c                               b.drittler   may 1987
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
-      include 'inc.p'
+
+      INTEGER irmd
+      INTEGER irid
+      INTEGER nfund
+      INTEGER ngshd
+      INTEGER npand
+      INTEGER ipand
+
 C
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LMAX,NSPIN
+      INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,*),
-     +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD),
-     +                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,2)
-      INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
-     +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+
+C     DOUBLE PRECISION DRDI(IRMD,*),
+C    +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD),
+C    +                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,2)
+C     INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
+C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+
+      DOUBLE PRECISION DRDI(IRMD,*)
+      DOUBLE PRECISION GSH(*)
+      DOUBLE PRECISION R(IRMD,*)
+C     DOUBLE PRECISION RHO2NS(IRMD,LMPOTD)
+      DOUBLE PRECISION RHO2NS(IRMD,(LPOT+1)**2)
+
+      DOUBLE PRECISION THETAS(IRID,NFUND,*)
+C     DOUBLE PRECISION VONS(IRMD,LMPOTD,2)
+      DOUBLE PRECISION VONS(IRMD,(LPOT+1)**2,2)
+
+      INTEGER IFUNM(*)
+      INTEGER ILM(NGSHD,3)
+C     INTEGER IMAXSH(0:LMPOTD)
+      INTEGER IMAXSH(0:(LPOT+1)**2)
+      INTEGER IPAN(*)
+      INTEGER IRCUT(0:IPAND,*)
+      INTEGER IRWS(*)
+      INTEGER LMSP(*)
+
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FAC,PI,RL
@@ -47,6 +78,7 @@ C     .. Local Scalars ..
      +        LM3,M
 C     ..
 C     .. Local Arrays ..
+C     Fortran 90 automatic arrays
       DOUBLE PRECISION V1(IRMD),V2(IRMD),VINT1(IRMD),VINT2(IRMD)
       INTEGER IRCUTM(0:IPAND)
 C     ..
@@ -67,7 +99,7 @@ c
 c---> determine the right potential numbers
       IPOT = NSPIN
 
-      DO 100 L = 0,LMAX
+      DO 100 L = 0,LPOT
         FAC = 8.0D0*PI/REAL(2*L+1)
         DO 90 M = -L,L
           LM = L*L + L + M + 1

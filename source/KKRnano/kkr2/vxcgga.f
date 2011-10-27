@@ -1,7 +1,9 @@
-      SUBROUTINE VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,
+      SUBROUTINE VXCGGA(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,
      +                  IRWS,IRCUT,IPAN,GSH,ILM,IMAXSH,
      +                  IFUNM,THETAS,YR,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,
-     +                  DYLMT2,DYLMF1,DYLMF2,DYLMTF)
+     +                  DYLMT2,DYLMF1,DYLMF2,DYLMTF,
+C                       new input parameters after inc.p removal
+     &                  irmd, irid, nfund, ngshd, ipand)
 c-----------------------------------------------------------------------
 c     add the exchange-correlation-potential to the given potential
 c     and if total energies should be calculated (kte=1) the exchange-
@@ -35,29 +37,57 @@ c                                       b. drittler oct. 1989
 c     simplified and modified for Paragon X/PS
 c                                       R. Zeller Nov. 1993
 c-----------------------------------------------------------------------
-      INCLUDE 'inc.p'
-C     .. Parameters ..
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER LMXSPD
-      PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+      IMPLICIT NONE
+
+      INTEGER irmd
+      INTEGER irid
+      INTEGER nfund
+      INTEGER ngshd
+      INTEGER ipand
+
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
+C     INTEGER LMXSPD
+C     PARAMETER (LMXSPD= (2*LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A
-      INTEGER IATYP,IJEND,IPAN,IRWS,KTE,KXC,LMAX,NSPIN
+      INTEGER IATYP,IJEND,IPAN,IRWS,KTE,KXC,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-C     INTEGER IGGA
-      DOUBLE PRECISION DRDI(IRMD),R(IRMD),
-     +                 DYLMF1(IJEND,LMPOTD),DYLMF2(IJEND,LMPOTD),
-     +                 DYLMT1(IJEND,LMPOTD),DYLMT2(IJEND,LMPOTD),
-     +                 DYLMTF(IJEND,LMPOTD),EXC(0:LPOTD),GSH(*),
-     +                 RHO2NS(IRMD,LMPOTD,2),THET(IJEND),WTYR(IJEND,*),
-     +                 THETAS(IRID,NFUND),V(IRMD,LMPOTD,2),
-     +                 YLM(IJEND,LMPOTD),YR(IJEND,*)
-      INTEGER IFUNM(LMXSPD)
-      INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
-     +        LMSP(LMXSPD)
+C     DOUBLE PRECISION DRDI(IRMD),R(IRMD),
+C    +                 DYLMF1(IJEND,LMPOTD),DYLMF2(IJEND,LMPOTD),
+C    +                 DYLMT1(IJEND,LMPOTD),DYLMT2(IJEND,LMPOTD),
+C    +                 DYLMTF(IJEND,LMPOTD),EXC(0:LPOTD),GSH(*),
+C    +                 RHO2NS(IRMD,LMPOTD,2),THET(IJEND),WTYR(IJEND,*),
+C    +                 THETAS(IRID,NFUND),V(IRMD,LMPOTD,2),
+C    +                 YLM(IJEND,LMPOTD),YR(IJEND,*)
+C     INTEGER IFUNM(LMXSPD)
+C     INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
+C    +        LMSP(LMXSPD)
+
+      DOUBLE PRECISION DRDI(IRMD)
+      DOUBLE PRECISION R(IRMD)
+      DOUBLE PRECISION DYLMF1(IJEND,(LPOT+1)**2)
+      DOUBLE PRECISION DYLMF2(IJEND,(LPOT+1)**2)
+      DOUBLE PRECISION DYLMT1(IJEND,(LPOT+1)**2)
+      DOUBLE PRECISION DYLMT2(IJEND,(LPOT+1)**2)
+      DOUBLE PRECISION DYLMTF(IJEND,(LPOT+1)**2)
+      DOUBLE PRECISION EXC(0:(LPOT+1)**2)
+      DOUBLE PRECISION GSH(*)
+      DOUBLE PRECISION RHO2NS(IRMD,(LPOT+1)**2,2)
+      DOUBLE PRECISION THET(IJEND)
+      DOUBLE PRECISION WTYR(IJEND,*)
+      DOUBLE PRECISION THETAS(IRID,NFUND)
+      DOUBLE PRECISION V(IRMD,(LPOT+1)**2,2)
+      DOUBLE PRECISION YLM(IJEND,(LPOT+1)**2)
+      DOUBLE PRECISION YR(IJEND,*)
+
+      INTEGER IFUNM((2*LPOT+1)**2)
+      INTEGER ILM(NGSHD,3)
+      INTEGER IMAXSH(0:(LPOT+1)**2)
+      INTEGER IRCUT(0:IPAND)
+      INTEGER LMSP((2*LPOT+1)**2)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION CHGDEN,DX,ELMXC,FPI,R1,R2,RPOINT,SPIDEN,VLMXC,
@@ -66,11 +96,23 @@ C     .. Local Scalars ..
      +        LM2,LMMAX,M,MESH,NSPIN2
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION DDRRL(IRMD,LMPOTD),DDRRUL(IRMD,LMPOTD),
-     +                 DRRL(IRMD,LMPOTD),DRRUL(IRMD,LMPOTD),
-     +                 ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND),
-     +                 RHOL(IRMD,2,LMPOTD),RHOLM(LMPOTD,2),VXC(IJEND,2),
-     +                 VXCR(2:3,2)
+C     DOUBLE PRECISION DDRRL(IRMD,LMPOTD),DDRRUL(IRMD,LMPOTD),
+C    +                 DRRL(IRMD,LMPOTD),DRRUL(IRMD,LMPOTD),
+C    +                 ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND),
+C    +                 RHOL(IRMD,2,LMPOTD),RHOLM(LMPOTD,2),VXC(IJEND,2),
+C    +                 VXCR(2:3,2)
+
+      DOUBLE PRECISION DDRRL(IRMD,(LPOT+1)**2)
+      DOUBLE PRECISION DDRRUL(IRMD,(LPOT+1)**2)
+      DOUBLE PRECISION DRRL(IRMD,(LPOT+1)**2)
+      DOUBLE PRECISION DRRUL(IRMD,(LPOT+1)**2)
+      DOUBLE PRECISION ER(IRMD,0:(LPOT+1)**2)
+      DOUBLE PRECISION ESTOR(IRMD,(LPOT+1)**2)
+      DOUBLE PRECISION EXCIJ(IJEND)
+      DOUBLE PRECISION RHOL(IRMD,2,(LPOT+1)**2)
+      DOUBLE PRECISION RHOLM((LPOT+1)**2,2)
+      DOUBLE PRECISION VXC(IJEND,2)
+      DOUBLE PRECISION VXCR(2:3,2)
 C     ..
 
 C     .. External Functions ..
@@ -88,10 +130,14 @@ C     ..
 
 C     .. Data statements ..
       DATA ZERO,ZERO1/0.d0,1.d-12/
+
+      INTEGER LMPOTD
+      LMPOTD= (LPOT+1)**2
+
 C     ..
       WRITE (6,FMT=*) ' GGA CALCULATION '
       FPI = 16.0D0*ATAN(1.0D0)
-      LMMAX = (LMAX+1)* (LMAX+1)
+      LMMAX = (LPOT+1)* (LPOT+1)
 c
 c---> loop over given representive atoms
 c
@@ -108,7 +154,7 @@ c
 c---> initialize for ex.-cor. energy
 c
       IF (KTE.EQ.1) THEN
-        DO 30 L = 0,LMAX
+        DO 30 L = 0,LPOT
           EXC(L) = 0.0D0
           DO 20 IR = 1,IRC1
             ER(IR,L) = 0.0D0
@@ -122,7 +168,7 @@ c
    50   CONTINUE
       END IF
 C
-      L1MAX = LMAX + 1
+      L1MAX = LPOT + 1
       MESH = IRWS
       DX = A
 C
@@ -221,7 +267,7 @@ c
 c---> expand ex.-cor. energy into spherical harmonics
 c       using the orthogonality
 c
-          DO 150 L = 0,LMAX
+          DO 150 L = 0,LPOT
             DO 140 M = -L,L
               LM = L*L + L + M + 1
               ELMXC = DDOT(IJEND,EXCIJ,1,WTYR(1,LM),1)
@@ -250,7 +296,7 @@ c---> integrate er in case of total energies to get exc
 c
       IF (KTE.EQ.1) THEN
 
-        DO 210 L = 0,LMAX
+        DO 210 L = 0,LPOT
           DO 200 M = -L,L
             LM = L*L + L + M + 1
 c

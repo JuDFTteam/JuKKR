@@ -1,6 +1,9 @@
-      SUBROUTINE VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND)
+      SUBROUTINE VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,
+C                      new input parameters after inc.p removal
+     &                 lmax, irmd, irnsd, ncleb)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
+C     Calculates V_LL' from V_L.
 c     to determine the non - spherical wavefunctions the potential
 c         has to be lm1 and lm2 dependent . the potential is stored
 c         only as lm dependent , therefore a transformation in the
@@ -20,26 +23,39 @@ c                               b.drittler   july 1988
 c-----------------------------------------------------------------------
 c                          modified by R. Zeller Sep. 2000
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-      INTEGER LMMAXD
-      PARAMETER (LMMAXD= (LMAXD+1)**2)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+      INTEGER lmax
+      INTEGER irmd
+      INTEGER irnsd
+      INTEGER ncleb
+
+C     INTEGER IRMIND
+C     PARAMETER (IRMIND=IRMD-IRNSD)
+C     INTEGER LMMAXD
+C     PARAMETER (LMMAXD= (LMAXD+1)**2)
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
 C     ..
 C     .. Scalar Arguments ..
       INTEGER IEND
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION CLEB(NCLEB,2),VINS(IRMIND:IRMD,LMPOTD),
-     +                 VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
+C     DOUBLE PRECISION CLEB(NCLEB,2),VINS(IRMIND:IRMD,LMPOTD),
+C    +                 VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
+
+      DOUBLE PRECISION CLEB(NCLEB,2)
+      DOUBLE PRECISION VINS(IRMD-IRNSD:IRMD,(2*LMAX+1)**2)
+      DOUBLE PRECISION VNSPLL((LMAX+1)**2, (LMAX+1)**2,IRMD-IRNSD:IRMD)
+
       INTEGER ICLEB(NCLEB,3)
 C     ..
 C     .. Local Scalars ..
       INTEGER IR,J,LM1,LM2,LM3
 C     ..
+      INTEGER LMMAXD
+      INTEGER IRMIND
+      IRMIND=IRMD-IRNSD
+      LMMAXD= (LMAX+1)**2
 
       DO 30 LM1 = 1,LMMAXD
         DO 20 LM2 = 1,LM1

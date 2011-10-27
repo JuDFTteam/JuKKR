@@ -1,6 +1,8 @@
-      SUBROUTINE VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,
+      SUBROUTINE VXCLM(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2NS,V,R,DRDI,
      +                 IRWS,IRCUT,IPAN,GSH,ILM,IMAXSH,
-     +                 IFUNM,THETAS,YR,WTYR,IJEND,LMSP)
+     +                 IFUNM,THETAS,YR,WTYR,IJEND,LMSP,
+C                      new input parameters after inc.p removal
+     &                 irmd, irid, nfund, ngshd, ipand)
 c-----------------------------------------------------------------------
 c     add the exchange-correlation-potential to the given potential
 c     and if total energies should be calculated (kte=1) the exchange-
@@ -34,31 +36,59 @@ c     simplified and modified for Paragon X/PS
 c                                       R. Zeller Nov. 1993
 c                            cor error 23/6/1996
 c-----------------------------------------------------------------------
-      INCLUDE 'inc.p'
+      IMPLICIT NONE
+
+      INTEGER irmd
+      INTEGER irid
+      INTEGER nfund
+      INTEGER ngshd
+      INTEGER ipand
+
 C     .. Parameters ..
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER LMXSPD
-      PARAMETER (LMXSPD= (2*LPOTD+1)**2)
-C     ..
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
+C     INTEGER LMXSPD
+C     PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+
 C     .. Scalar Arguments ..
-      INTEGER IATYP,IJEND,IPAN,IRWS,KTE,KXC,LMAX,NSPIN
+      INTEGER IATYP,IJEND,IPAN,IRWS,KTE,KXC,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD),EXC(0:LPOTD),GSH(*),R(IRMD),
-     +                 RHO2NS(IRMD,LMPOTD,2),THETAS(IRID,NFUND),
-     +                 V(IRMD,LMPOTD,2),WTYR(IJEND,*),YR(IJEND,*)
-      INTEGER IFUNM(LMXSPD)
-      INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
-     +        LMSP(LMXSPD)
+C     DOUBLE PRECISION DRDI(IRMD),EXC(0:LPOTD),GSH(*),R(IRMD),
+C    +                 RHO2NS(IRMD,LMPOTD,2),THETAS(IRID,NFUND),
+C    +                 V(IRMD,LMPOTD,2),WTYR(IJEND,*),YR(IJEND,*)
+C     INTEGER IFUNM(LMXSPD)
+C     INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
+C    +        LMSP(LMXSPD)
+
+      DOUBLE PRECISION DRDI(IRMD)
+      DOUBLE PRECISION EXC(0:LPOT)
+      DOUBLE PRECISION GSH(*)
+      DOUBLE PRECISION R(IRMD)
+      DOUBLE PRECISION RHO2NS(IRMD,(LPOT+1)**2,2)
+      DOUBLE PRECISION THETAS(IRID,NFUND)
+      DOUBLE PRECISION V(IRMD,(LPOT+1)**2,2)
+      DOUBLE PRECISION WTYR(IJEND,*)
+      DOUBLE PRECISION YR(IJEND,*)
+      INTEGER IFUNM((2*LPOT+1)**2)
+      INTEGER ILM(NGSHD,3)
+      INTEGER IMAXSH(0:(LPOT+1)**2)
+      INTEGER IRCUT(0:IPAND)
+      INTEGER LMSP((2*LPOT+1)**2)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION ELMXC,FPI,FPIPR2,VLMXC,VXC1,VXC2,VXC3
       INTEGER IFUN,IJ,IPOT,IR,IRC1,IRH,IRS1,IS,ISPIN,J,L,LM,LM2,LMMAX,M
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND),
-     +                 FPRHO(IJEND,2),VXC(IJEND,2),VXCR(2:3,2)
+C     DOUBLE PRECISION ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND),
+C    +                 FPRHO(IJEND,2),VXC(IJEND,2),VXCR(2:3,2)
+      DOUBLE PRECISION ER(IRMD,0:LPOT)
+      DOUBLE PRECISION ESTOR(IRMD,(LPOT+1)**2)
+      DOUBLE PRECISION EXCIJ(IJEND)
+      DOUBLE PRECISION FPRHO(IJEND,2)
+      DOUBLE PRECISION VXC(IJEND,2)
+      DOUBLE PRECISION VXCR(2:3,2)
 C     ..
 C     .. External Functions ..
       DOUBLE PRECISION DDOT
@@ -71,7 +101,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC ATAN
 C     ..
       FPI = 16.0D0*ATAN(1.0D0)
-      LMMAX = (LMAX+1)* (LMAX+1)
+      LMMAX = (LPOT+1)* (LPOT+1)
 c
 c---> loop over given representive atoms
 c
@@ -86,7 +116,7 @@ c
 c---> initialize for ex.-cor. energy
 c
       IF (KTE.EQ.1) THEN
-        DO 30 L = 0,LMAX
+        DO 30 L = 0,LPOT
           EXC(L) = 0.0D0
           DO 20 IR = 1,IRC1
             ER(IR,L) = 0.0D0
@@ -156,7 +186,7 @@ c
 c---> expand ex.-cor. energy into spherical harmonics
 c       using the orthogonality
 c
-          DO 130 L = 0,LMAX
+          DO 130 L = 0,LPOT
             DO 120 M = -L,L
               LM = L*L + L + M + 1
               ELMXC = DDOT(IJEND,EXCIJ,1,WTYR(1,LM),1)
@@ -186,7 +216,7 @@ c---> integrate er in case of total energies to get exc
 c
       IF (KTE.EQ.1) THEN
 
-        DO 190 L = 0,LMAX
+        DO 190 L = 0,LPOT
           DO 180 M = -L,L
             LM = L*L + L + M + 1
 c

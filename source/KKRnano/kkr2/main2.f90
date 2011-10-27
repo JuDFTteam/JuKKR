@@ -72,8 +72,8 @@ program MAIN2
   double precision::FPI
   double precision::PI
   double precision::RFPI
-  double precision::RMSAVM
-  double precision::RMSAVQ
+  double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
+  double precision::RMSAVQ      ! rms error charge density (contribution of single site)
   double precision::EREFLDAU    ! LDA+U
 
   double precision::WALLCLOCK_I ! time management
@@ -1161,7 +1161,8 @@ spinloop:     do ISPIN = 1,NSPIN
 
             call VINTRAS(LPOT,NSPIN,I1,RHO2NS,VONS, &
             R,DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-            THETAS,LMSP(1,ICELL))
+            THETAS,LMSP(1,ICELL), &
+            irmd, irid, nfund, ngshd, ipand)
 
             call OUTTIME(MYLRANK(1),'VINTRAS ......',TIME_I,ITER)
 
@@ -1176,7 +1177,8 @@ spinloop:     do ISPIN = 1,NSPIN
             LMPOT,SMAT,CLEB,ICLEB,IEND, &
             LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
             LMPIC,MYLRANK, &
-            LGROUP,LCOMM,LSIZE)
+            LGROUP,LCOMM,LSIZE, &
+            irmd, ipand, lmpid*smpid*empid)
 
             call OUTTIME(MYLRANK(1),'VMADELBLK ......',TIME_I,ITER)
 
@@ -1220,7 +1222,8 @@ spinloop:     do ISPIN = 1,NSPIN
             call VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,I1,RHO2NS, &
             VONS,R,DRDI,A, &
             IRWS,IRCUT,IPAN,ICELL,GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
-            THETAS,LMSP(1,ICELL))
+            THETAS,LMSP(1,ICELL), &
+            naez, irmd, irid, nfund, ngshd, ipand)
 
             call OUTTIME(MYLRANK(1),'VXCDRV ......',TIME_I,ITER)
 ! =====================================================================
@@ -1397,13 +1400,15 @@ spinloop:     do ISPIN = 1,NSPIN
 ! =====================================================================
 ! ====== write RMS convergency data - not parallelized, written by
 ! MYRANK=0   (RMSOUT) =================================================
+
         call RMSOUT(RMSAVQ,RMSAVM,ITER,E2,EFOLD, &
         SCFSTEPS,VBC,QBOUND,NSPIN,NAEZ, &
         KXC,LPOT,A,B,IRC, &
         VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
         ECORE,LCORE,NCORE,ZAT,ITITLE, &
         LMPIC,MYLRANK, &
-        LGROUP,LCOMM,LSIZE)
+        LGROUP,LCOMM,LSIZE, &
+        irmd, irnsd, lmpid*smpid*empid)
 
 9020    format ('                old', &
         ' E FERMI ',F12.6,' Delta E_F = ',f12.6)

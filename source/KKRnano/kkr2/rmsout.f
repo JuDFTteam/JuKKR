@@ -1,4 +1,7 @@
 C================================================================
+C Collects contributions to the rms errors from all sites and
+C prints rms errors. Sets new Fermi energy
+C Does formatted output of potential if file VFORM exists.
 C
 C output of a) rms-error
 C and       b) (optional) potential in formatted format
@@ -16,35 +19,41 @@ C
      >                  VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT,
      >                  ECORE,LCORE,NCORE,ZAT,ITITLE,
      >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE)
+     >                  LGROUP,LCOMM,LSIZE,
+C                       new input parameters after inc.p removal
+     &                  irmd, irnsd, prod_lmpid_smpid_empid)
 C
       IMPLICIT NONE
 C
       INCLUDE 'mpif.h'
-      INCLUDE 'inc.p'
-C
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
+
+      INTEGER irmd
+      INTEGER irnsd
+      INTEGER prod_lmpid_smpid_empid
+
+C     INTEGER LMPOTD
+C     PARAMETER (LMPOTD= (LPOTD+1)**2)
 C
       DOUBLE PRECISION QBOUND,RMSAVM,RMSAVQ,RMSAV0,
      +                 E2,EFOLD,EFNEW,ALAT,VBC(2),
      +                 WORK1(2),WORK2(2),
-     +                 A(NAEZD),B(NAEZD)
-      DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,2),
+     +                 A(NAEZ),B(NAEZ)
+
+C     DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,2)
+
+      DOUBLE PRECISION VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2),
      +                 VISP(IRMD,2),
-     +                 DRDI(IRMD,NAEZD),
+     +                 DRDI(IRMD,NAEZ),
      +                 ECORE(20,2),
-     +                 ZAT(NAEZD),
-     +                 R(IRMD,NAEZD),RWS(NAEZD),RMT(NAEZD)
+     +                 ZAT(NAEZ),
+     +                 R(IRMD,NAEZ),RWS(NAEZ),RMT(NAEZ)
 
       INTEGER ITER,SCFSTEPS,NSPIN,NAEZ,KXC,LPOT
 C
-      INTEGER IRNS(NAEZD),IRC(NAEZD),
-     +        LCORE(20,NSPIND*NAEZD),
-     +        NCORE(NSPIND*NAEZD),
-     +        ITITLE(20,NAEZD*NSPIND)
+      INTEGER IRNS(NAEZ),IRC(NAEZ),
+     +        LCORE(20,NSPIN*NAEZ),
+     +        NCORE(NSPIN*NAEZ),
+     +        ITITLE(20,NAEZ*NSPIN)
 
       LOGICAL OPT
 C     .. local scalars ..
@@ -55,10 +64,10 @@ C     .. local scalars ..
 C     ..
 C     .. MPI variables ..
 C     .. L-MPI ..
-      INTEGER      MYLRANK(LMPID*SMPID*EMPID),
-     +             LCOMM(LMPID*SMPID*EMPID),
-     +             LGROUP(LMPID*SMPID*EMPID),
-     +             LSIZE(LMPID*SMPID*EMPID),
+      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
+     +             LCOMM(prod_lmpid_smpid_empid),
+     +             LGROUP(prod_lmpid_smpid_empid),
+     +             LSIZE(prod_lmpid_smpid_empid),
      +             LMPI,LMPIC
 C
 C     .. N-MPI ..

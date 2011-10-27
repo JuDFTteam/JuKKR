@@ -110,7 +110,8 @@ C     .. External Subroutines ..
       IRC1 = IRCUT(IPAN)
 c
 
-      CALL VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND)
+      CALL VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,
+     &           lmaxd, irmd, irnsd, ncleb)
 
 
       IF (LKONV.NE.LMAXD) THEN
