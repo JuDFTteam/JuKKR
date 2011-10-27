@@ -131,57 +131,55 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       CLOSE (52)
 C
 C
-C check dimensions of EKMD precond. array in case of IGUESSD=1
+C check dimensions of EKMD precond. array
+C fix: check regardless of IGUESSD
+
+      EKMIN = 0
+      DO I = 1,IELAST
+          EKMIN = EKMIN + NOFKS0(KMESH(I))
+      ENDDO
 C
-      IF (IGUESSD.EQ.1) THEN
+      WRITE (6,'(79(1H=))')
+      WRITE (6,'(12X,A)')
+   &       'BZKMESH: checking dimensions of precond. arrays ...'
+C
+      IF (EKMIN.GT.EKMD) THEN
+        WRITE (6,*)
+   &    ' ERROR: Dimension EKMD in inc.p too small',
+   &    EKMIN, EKMD
+        STOP '< BZKMESH >'
+      ELSE
+        WRITE(6,*) '           EKMIN=',EKMIN,'  EKMD=',EKMD
+      ENDIF
+C
+      INQUIRE(FILE='new.kpoints',EXIST=NEWKP)
+C
+      IF (NEWKP) THEN
+C
+        OPEN(53,FILE='new.kpoints',FORM='formatted')
+        REWIND(53)
+        DO L = 1,MAXMESH
+          READ(53,FMT='(I8,f15.10)') NEWNOFKS(L),NEWVOLBZ
+          READ(53,FMT=*) (NEWBZKP(ID,1,L),ID=1,3),NEWVOLCUB(1,L)
+          DO I=2,NEWNOFKS(L)
+            READ(53,FMT=*) (NEWBZKP(ID,I,L),ID=1,3),NEWVOLCUB(I,L)
+          END DO
+        END DO
+        CLOSE(53)
 C
         EKMIN = 0
         DO I = 1,IELAST
-            EKMIN = EKMIN + NOFKS0(KMESH(I))
+            EKMIN = EKMIN + NEWNOFKS(KMESH(I))
         ENDDO
-C
-        WRITE (6,'(79(1H=))')
-        WRITE (6,'(12X,A)') 
-     &       'BZKMESH: checking dimensions of precond. arrays ...'
 C
         IF (EKMIN.GT.EKMD) THEN
           WRITE (6,*)
-     &    ' ERROR: Dimension EKMD in inc.p too small',
-     &    EKMIN, EKMD
-          STOP '< BZKMESH >'
-        ELSE
-          WRITE(6,*) '           EKMIN=',EKMIN,'  EKMD=',EKMD
+          WRITE (6,*)
+   &      '           WARNING: Dimension EKMD ',
+   &      ' too small for use of new.kpoints'
         ENDIF
+          WRITE(6,*) '      new: EKMIN=',EKMIN,'  EKMD=',EKMD
 C
-        INQUIRE(FILE='new.kpoints',EXIST=NEWKP)
-C
-        IF (NEWKP) THEN
-C
-          OPEN(53,FILE='new.kpoints',FORM='formatted')
-          REWIND(53)
-          DO L = 1,MAXMESH
-            READ(53,FMT='(I8,f15.10)') NEWNOFKS(L),NEWVOLBZ
-            READ(53,FMT=*) (NEWBZKP(ID,1,L),ID=1,3),NEWVOLCUB(1,L)
-            DO I=2,NEWNOFKS(L)
-              READ(53,FMT=*) (NEWBZKP(ID,I,L),ID=1,3),NEWVOLCUB(I,L)
-            END DO
-          END DO
-          CLOSE(53)
-C
-          EKMIN = 0
-          DO I = 1,IELAST
-              EKMIN = EKMIN + NEWNOFKS(KMESH(I))
-          ENDDO
-C
-          IF (EKMIN.GT.EKMD) THEN
-            WRITE (6,*)
-            WRITE (6,*)
-     &      '           WARNING: Dimension EKMD ',
-     &      ' too small for use of new.kpoints'
-          ENDIF
-            WRITE(6,*) '      new: EKMIN=',EKMIN,'  EKMD=',EKMD
-C
-        ENDIF
 C
         WRITE (6,'(79(1H=))')
         WRITE (6,*)
