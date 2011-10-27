@@ -89,7 +89,8 @@ C     ..
      +               VONS,R(1,IATYP),DRDI(1,IATYP),
      +               IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP),
      +               GSH,ILM,IMAXSH,IFUNM,THETAS(1,1,ICELL),
-     +               YR,WTYR,IJD,LMSP)
+     +               YR,WTYR,IJD,LMSP,
+     &               irmd, irid, nfund, ngshd, ipand)
         ELSE
 c
 c GGA EX-COR POTENTIAL
