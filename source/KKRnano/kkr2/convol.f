@@ -5,8 +5,7 @@ C                       new parameters after inc.p removal
      &                  irid, nfund, irmd, ngshd)
 c ************************************************************************
       IMPLICIT NONE
-C     .. Parameters ..
-C      include 'inc.p'
+
 C      INTEGER LMPOTD
 C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 

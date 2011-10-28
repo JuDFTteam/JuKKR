@@ -798,7 +798,9 @@ spinloop:     do ISPIN = 1,NSPIN
                                GXIJ_ALL,DTIXIJ, &
                                LMPIC,LCOMM, &
                                MYRANK,EMPIC,EMYRANK, &
-                               JXCIJINT,ERESJIJ)
+                               JXCIJINT,ERESJIJ, &
+                               naez, lmax, nxijd, nspind, &
+                               lmpid, smpid, empid)
 
               end if
 
@@ -852,7 +854,9 @@ spinloop:     do ISPIN = 1,NSPIN
                           GXIJ_ALL,DTIXIJ, &
                           LMPIC,LCOMM, &
                           MYRANK,EMPIC,EMYRANK, &
-                          JXCIJINT,ERESJIJ)
+                          JXCIJINT,ERESJIJ, &
+                          naez, lmax, nxijd, nspind, &
+                          lmpid, smpid, empid)
           endif
 !=======================================================================
 !=======================================================================

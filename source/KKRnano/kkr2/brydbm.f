@@ -41,7 +41,6 @@ c                  a. thiess , jun. 2008
 c*********************************************************************
 C     .. Parameters ..
 
-C      INCLUDE 'inc.p'
       INCLUDE 'mpif.h'
 
 C     array dimension for broyden mixing history

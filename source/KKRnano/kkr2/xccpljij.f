@@ -4,7 +4,10 @@
      >                    GMATXIJ,DTIXIJ,
      >                    LMPIC,LCOMM,
      >                    MYRANK,EMPIC,EMYRANK,
-     <                    JXCIJINT,ERESJIJ)
+     <                    JXCIJINT,ERESJIJ,
+C                         new input parameters after inc.p removal
+     &                    naez, lmax, nxijd, nspind,
+     &                    lmpid, smpid, empid)
 C   ********************************************************************
 C   *                                                                  *
 C   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -17,14 +20,22 @@ C
       IMPLICIT NONE
 C
       INCLUDE 'mpif.h'
-      INCLUDE 'inc.p'
-C     ..
+
+      INTEGER naez
+      INTEGER lmax
+      INTEGER nxijd
+      INTEGER nspind
+      INTEGER lmpid
+      INTEGER smpid
+      INTEGER empid
+
 C     .. Parameters
       DOUBLE COMPLEX   CONE,CZERO
       PARAMETER        ( CONE  = (1D0,0D0) )
       PARAMETER        ( CZERO = (0D0,0D0) )
-      INTEGER          LMMAXD
-      PARAMETER        (LMMAXD= (LMAXD+1)**2)
+
+C     INTEGER          LMMAXD
+C     PARAMETER        (LMMAXD= (LMAXD+1)**2)
 C     ..
 C     .. Scalar arguments
       DOUBLE COMPLEX   WGTE
@@ -34,10 +45,18 @@ C     .. Scalar arguments
       LOGICAL          ERESJIJ
 C     ..
 C     .. Array arguments
-      DOUBLE COMPLEX   GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND),
-     &                 DTIXIJ(LMMAXD,LMMAXD)
-      DOUBLE PRECISION RXIJ(NXIJD),RXCCLS(3,NXIJD)
-      INTEGER          IXCP(NXIJD),LCOMM(LMPID*SMPID*EMPID)
+C     DOUBLE COMPLEX   GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND),
+C    &                 DTIXIJ(LMMAXD,LMMAXD)
+C     DOUBLE PRECISION RXIJ(NXIJD),RXCCLS(3,NXIJD)
+C     INTEGER          IXCP(NXIJD),LCOMM(LMPID*SMPID*EMPID)
+
+      DOUBLE COMPLEX   GMATXIJ((LMAX+1)**2,(LMAX+1)**2,NXIJD,NSPIND)
+      DOUBLE COMPLEX   DTIXIJ((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE PRECISION RXIJ(NXIJD)
+      DOUBLE PRECISION RXCCLS(3,NXIJD)
+      INTEGER          IXCP(NXIJD)
+      INTEGER          LCOMM(LMPID*SMPID*EMPID)
+
 C     ..
 C     .. Local scalars
       INTEGER          XIJ,ISPIN,LM1,LM2,
@@ -50,21 +69,36 @@ C     .. Local scalars
 C     ..
 C     .. Local arrays
       INTEGER          OFF(3)
-      DOUBLE COMPLEX   JXCIJINT(NXIJD),
-     &                 JXCE(NXIJD,EMPID),
-     &                 JRECV(NXIJD),
-     &                 DTNXIJ(LMMAXD,LMMAXD,NAEZD),
-     &                 GMIJ(LMMAXD,LMMAXD),
-     &                 GMJI(LMMAXD,LMMAXD),
-     &                 W1(LMMAXD,LMMAXD),W2(LMMAXD,LMMAXD),
-     &                 W3(LMMAXD,LMMAXD)
+
+C     DOUBLE COMPLEX   JXCIJINT(NXIJD),
+C    &                 JXCE(NXIJD,EMPID),
+C    &                 JRECV(NXIJD),
+C    &                 DTNXIJ(LMMAXD,LMMAXD,NAEZD),
+C    &                 GMIJ(LMMAXD,LMMAXD),
+C    &                 GMJI(LMMAXD,LMMAXD),
+C    &                 W1(LMMAXD,LMMAXD),W2(LMMAXD,LMMAXD),
+C    &                 W3(LMMAXD,LMMAXD)
+
+      DOUBLE COMPLEX   JXCIJINT(NXIJD)
+      DOUBLE COMPLEX   JXCE(NXIJD,EMPID)
+      DOUBLE COMPLEX   JRECV(NXIJD)
+      DOUBLE COMPLEX   GMIJ((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE COMPLEX   GMJI((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE COMPLEX   W1((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE COMPLEX   W2((LMAX+1)**2,(LMAX+1)**2)
+      DOUBLE COMPLEX   W3((LMAX+1)**2,(LMAX+1)**2)
+
+C     large local array
+C     DOUBLE COMPLEX   DTNXIJ((LMAX+1)**2,(LMAX+1)**2,NAEZ)
+      DOUBLE COMPLEX, ALLOCATABLE, DIMENSION(:,:,:) :: DTNXIJ
+
 C     .. MPI ..
       INTEGER, dimension(MPI_STATUS_SIZE) :: STATUS
       INTEGER          IERR,MAPBLOCK
 C     .. N-MPI
       INTEGER          MYRANK
 C     .. E-MPI
-      INTEGER          EMYRANK(EMPID,NAEZD*LMPID*SMPID),
+      INTEGER          EMYRANK(EMPID,NAEZ*LMPID*SMPID),
      &                 EMPI,EMPIR,EMPIC
 C     ..
 C     .. Intrinsic Functions ..
@@ -73,7 +107,14 @@ C     ..
 C     .. External Subroutines ..
       EXTERNAL         CINIT,CMATMUL,ZCOPY,LSAME
 C     ..
-C
+
+      INTEGER memory_stat
+      LOGICAL memory_fail
+
+      INTEGER          LMMAXD
+
+      LMMAXD= (LMAX+1)**2
+
 C=======================================================================
 C energy parallelization requires splitting of this routine into
 C part 'R' = running over energy points and into part 'F' the 
@@ -89,6 +130,16 @@ C
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 C ==>                   IE.EQ.1 -- initialisation step --            <==
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+
+C     Allocate array
+      allocate(DTNXIJ(LMMAXD,LMMAXD,NAEZ), stat = memory_stat)
+      if (memory_stat /= 0) memory_fail = .true.
+
+      if (memory_fail == .true.) then
+        write(*,*) "XCCPLJIJ: FATAL Error, failure to allocate memory."
+        write(*,*) "       Probably out of memory."
+      stop
+      end if
 
         IF ( IER.EQ.1 ) THEN
           DO XIJ = 2, NXIJ
@@ -200,6 +251,9 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C
 !        ENDIF ! LMPIC = 1
 C
+
+      deallocate(DTNXIJ)
+
       ENDIF ! called with INFO='R'
 C=======================================================================
 C finished subroutine if called with INFO = 'R'

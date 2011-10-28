@@ -10,9 +10,6 @@ C                        new input parameters after inc.p replace
      &                   nspind, ncleb, ipand, irmd, irnsd)
 C
       IMPLICIT NONE
-C
-C      INCLUDE 'inc.p'
-C     .. Parameters ..
 
 
       INTEGER nspind

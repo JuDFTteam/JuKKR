@@ -11,7 +11,6 @@ c     modified for parallelization
 c                                    a. thiess, jun 2008
 c ------------------------------------------------------------------------
 C     .. Parameters ..
-C      include 'inc.p'
 
 C      INTEGER LMPOTD
 C      PARAMETER (LMPOTD= (LPOTD+1)**2)

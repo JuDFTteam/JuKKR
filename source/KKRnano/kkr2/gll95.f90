@@ -310,8 +310,5 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
    if (TEST('flow    ')) write (6,fmt=*) 'GREFSY o.k.'
 
-   ! ----------------------------------------------------------------------
-   return
-
  end subroutine GLL95
 

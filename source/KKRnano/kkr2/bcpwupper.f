@@ -12,9 +12,6 @@ C
 C
 C
 C ------------------------------------------------------------------------
-C     .. parameters ..
-C      include 'inc.p'
-C      include 'inc.cls'
 
       INTEGER NAEZ
 

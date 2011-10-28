@@ -12,7 +12,6 @@ c
 c ------------------------------------------------------------------------
       IMPLICIT NONE
 C     .. Parameters ..
-C      include 'inc.p'
 c      INTEGER IRMD,LPOTD
 c      PARAMETER (IRMD=424,LPOTD=8)
 C      INTEGER LMPOTD

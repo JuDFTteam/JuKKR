@@ -6,8 +6,6 @@ C                       new parameters after inc.p removal
      &                  naez, irmd, irnsd)
 c ************************************************************************
       IMPLICIT NONE
-C     .. Parameters ..
-C     include 'inc.p'
 
       INTEGER naez
       INTEGER irmd

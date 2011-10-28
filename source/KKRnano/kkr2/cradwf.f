@@ -19,8 +19,7 @@ c             the generalized phase shifts can be calculated
 c             directly with the renormalization alphal .
 c                                           b.drittler nov.1987
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-C      INCLUDE 'inc.p'
+
       INTEGER lmaxd
       INTEGER irmd
       INTEGER ipand

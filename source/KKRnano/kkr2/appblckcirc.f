@@ -4,8 +4,7 @@ C                            new after inc.p removal - arg. INFO removed
      &                       natbld, xdim, ydim, zdim)
 C
       IMPLICIT NONE
-C
-C      INCLUDE 'inc.p'
+
       INCLUDE 'fftw3.f'
 
       INTEGER naez

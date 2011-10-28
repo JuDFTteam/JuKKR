@@ -14,8 +14,6 @@ c
 c                                            may,2000 (new version)
 c
 c-----------------------------------------------------------------------
-C     .. Parameters ..
-C      include 'inc.p'
 C     INTEGER LMPOTD
 C     PARAMETER (LMPOTD= (LPOTD+1)**2)
 
