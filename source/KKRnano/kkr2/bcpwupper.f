@@ -39,10 +39,10 @@ C     NBLCKD = XDIM*YDIM*ZDIM
       INTEGER   LMMAXD
 C     LMMAXD= (LMAX+1)**2
 
-      INTEGER   ALM
+C     INTEGER   ALM
 C     PARAMETER (ALM = NAEZD*LMMAXD)
 
-      INTEGER   NGTBD
+C     INTEGER   NGTBD
 C      PARAMETER (NGTBD = NACLSD*LMMAXD)
 C                       = NACLSD*(LMAX+1)**2
 
@@ -76,7 +76,7 @@ C ..
 C local scalars ..
       DOUBLE COMPLEX     CONE,IMONE,CZERO
       DOUBLE PRECISION   PI
-      INTEGER            I1,I2,LM1,LM2,IL1,IL2,IL2B,
+      INTEGER            I1,I2,LM1,LM2,
      +                   IX,IY,IZ,NDIM,
      +                   IX2,IY2,IZ2,
      +                   IINT,
@@ -410,7 +410,7 @@ C
       INTEGER            LMMAXD
 C     PARAMETER         (LMMAXD= (LMAXD+1)**2)
 C
-      INTEGER            I,J,BS,II,JJ,I1,I2,LM1,LM2,IL1,IL2,IL2B,
+      INTEGER            I,J,I1,I2,LM1,LM2,IL1,IL2,IL2B,
      +                   ISRH
 
       INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)

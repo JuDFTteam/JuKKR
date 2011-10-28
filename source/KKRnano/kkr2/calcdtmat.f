@@ -28,7 +28,7 @@ C      PARAMETER          (IRMIND=IRMD-IRNSD)
 
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION   TK,KB,PI,REALX,IMAGX
+      DOUBLE PRECISION   TK,KB,PI
       INTEGER            LMAX,ISPIN,
      +                   NPNT1,NPNT2,NPNT3,
      +                   LM1,LM2,
@@ -63,7 +63,7 @@ C     INTEGER            IRCUT(0:IPAND),LLDAU(LMAXD1)
 C     INTEGER            ICLEB(NCLEB,3),LOFLM(LM2D)
       INTEGER            ICLEB(NCLEB,3),LOFLM((2*LMAX+1)**2)
 
-      INTEGER            ICST,NSRA,IE,IERR
+      INTEGER            ICST,NSRA,IE
       LOGICAL            LDAU
 C     ..
 

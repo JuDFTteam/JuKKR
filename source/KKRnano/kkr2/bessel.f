@@ -1,4 +1,4 @@
-      SUBROUTINE BESSEL(JL,NL,HL,Z,LMX,LMAXP1,LJ,LY,LH,LCALL)
+      SUBROUTINE BESSEL(JL,NL,HL,Z,LMX)
 c**********************************************************************
 c
 c    attention : contrary to abramowitz and stegun and
@@ -14,8 +14,7 @@ C     .. Parameters ..
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX Z
-      INTEGER LMAXP1,LMX
-      LOGICAL LCALL,LH,LJ,LY
+      INTEGER LMX
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX HL(0:LMX),JL(0:LMX),NL(0:LMX)

@@ -37,8 +37,7 @@ C     +               TXK(LMMAXD*NATBLD),TYK(LMMAXD*NATBLD)
 
       DOUBLE COMPLEX VECS(NAEZ*(LMAX+1)**2,(LMAX+1)**2),
      +               GLLHBLCK(NATBLD*(LMAX+1)**2,
-     +                        XDIM*YDIM*ZDIM*NATBLD*(LMAX+1)**2),
-     +               BLCK(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2),
+     +               XDIM*YDIM*ZDIM*NATBLD*(LMAX+1)**2),
      +               TBLCK(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2),
      +               TXK(NATBLD*(LMAX+1)**2),TYK(NATBLD*(LMAX+1)**2)
 
@@ -55,7 +54,6 @@ C     +               YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
 
 C ..
 C local scalars ..
-      DOUBLE COMPLEX TRACE
       DOUBLE PRECISION FAC
       INTEGER        LM1,LMATBL,IX,IY,IZ,I,J
       INTEGER*8      FFTWPLAN
@@ -155,9 +153,7 @@ C
      +                   CONE,TBLCK,
      +                   LMMAXD*NATBLD,TXK,
      +                   1,CZERO,TYK,1)
-C              CALL ZGEMV_SRC(LMMAXD*NATBLD,LMMAXD*NATBLD,
-C     +                       CONE,TBLCK,LMMAXD*NATBLD,TXK,TYK)
-C
+
               DO I=1,LMMAXD*NATBLD
                 YK(I,IX,IY,IZ) = TYK(I)
               ENDDO
@@ -229,32 +225,4 @@ C=======================================================================
 C outer loop over all columns LM1=1, LMMAXD       end
 C=======================================================================
 C
-      END
-C
-C
-C
-C
-      SUBROUTINE ZGEMV_SRC(M,N,ALPHA,A,LDA,X,Y)
-      DOUBLE COMPLEX ALPHA
-      INTEGER        LDA,M,N
-      DOUBLE COMPLEX A(LDA,*),X(*),Y(*)
-      DOUBLE COMPLEX ZERO
-      PARAMETER     (ZERO= (0.0D+0,0.0D+0))
-      DOUBLE COMPLEX TEMP
-      INTEGER        I,J,JX,JY
-C     ..
-      DO 10 I = 1,M
-          Y(I) = ZERO
-   10 CONTINUE
-      JX = 1
-      DO 60 J = 1,N
-          IF (X(JX).NE.ZERO) THEN
-              TEMP = ALPHA*X(JX)
-              DO 50 I = 1,M
-                  Y(I) = Y(I) + TEMP*A(I,J)
-   50         CONTINUE
-          END IF
-          JX = JX + INCX
-   60 CONTINUE
-      RETURN
       END

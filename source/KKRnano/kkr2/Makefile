@@ -29,7 +29,7 @@ LDFLAGS += -lfftw3
 endif
 
 ifeq ($(PLATFORM),ifort_IFF_NOOMP)
-FC = mpif77
+FC = mpif90 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -module $(BUILDDIR)
@@ -91,7 +91,6 @@ test:
 # only main2 and lattice3d use common_mpi
 main2.o: inc_p_wrapper_module.o common_mpi.o
 lattice3d.o: common_mpi.o
-
 inc_p_wrapper_module.o: inc.p inc.cls
-prinvit.o: inc_p_wrapper_module.o
+
 

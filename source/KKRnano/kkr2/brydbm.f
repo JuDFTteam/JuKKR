@@ -1,10 +1,10 @@
 c*********************************************************************
       SUBROUTINE BRYDBM(VISP,V,VINS,LMPOT,
      +                  R,DRDI,ALPHA,IRC,IRMIN,NSPIN,
-     +                  IATOM,NAEZNAEZ,IMIX,IPF,ITER,
+     +                  IATOM,IMIX,ITER,
      +                  UI2,VI2,WIT,SM1S,FM1S,
      >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE,
+     >                  LCOMM,
 C                       new input parameters after inc.p removal
      &                  itdbryd, irmd, irnsd, nspind,
      &                  prod_lmpid_smpid_empid)
@@ -39,7 +39,7 @@ c
 c     parallelized over the number of atoms 
 c                  a. thiess , jun. 2008
 c*********************************************************************
-C     .. Parameters ..
+      IMPLICIT NONE
 
       INCLUDE 'mpif.h'
 
@@ -75,7 +75,9 @@ C     .. Local Scalars ..
       DOUBLE PRECISION ONE,RMIXIV,VMDENO,VMNORM,VOLINV,ZERO,
      +                 SMNORM_LOCAL,SMNORM_GLOBAL,DDOT_LOCAL,
      +                 DDOT_GLOBAL,CMM_LOCAL,CMM_GLOBAL 
-      INTEGER IA,IJ,IMAP,IR,IRC1,IRMIN1,ISP,IT,LM,MIT,ITER,LM1
+      INTEGER IJ,IMAP,IR,IRC1,IRMIN1,ISP,IT,LM,MIT,ITER
+
+      INTEGER IERR
 C     ..
 C     .. External Functions ..
       DOUBLE PRECISION DDOT
@@ -120,7 +122,7 @@ C     PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALPHA
-      INTEGER IMIX,IPF,LMPOT,IATOM,NAEZ,NSPIN
+      INTEGER IMIX,LMPOT,IATOM,NAEZ,NSPIN
 C     ..
 C     .. Data statements ..
       DATA ZERO,ONE/0.0D0,1.0D0/
@@ -132,9 +134,7 @@ C      COMMON /MPI/MYRANK,NROFNODES
 C     .. L-MPI ..
       INTEGER      MYLRANK(prod_lmpid_smpid_empid),
      +             LCOMM  (prod_lmpid_smpid_empid),
-     +             LGROUP (prod_lmpid_smpid_empid),
-     +             LSIZE  (prod_lmpid_smpid_empid),
-     +             LMPI,LMPIC
+     +             LMPIC
 C
       EXTERNAL MPI_ALLREDUCE
 C
@@ -174,12 +174,12 @@ c---->  map data of all muffin-tin spheres into one single vector
 c
 c
       CALL BRYSH3(SM1,VISP,VINS,IRMIN,IRC,IATOM,
-     &            NAEZ,NSPIN,IMAP,LMPOT,
+     &            NSPIN,IMAP,LMPOT,
      &            IRMD, IRNSD)
 
 
       CALL BRYSH1(FM1,V,IRMIN,IRC,IATOM,
-     +            NAEZ,NSPIN,IMAP,LMPOT,
+     +            NSPIN,IMAP,LMPOT,
      &            irmd)
 
 
@@ -192,7 +192,8 @@ c
       IJ = 0
       DO 60 ISP = 1,NSPIN
 C        DO 50 IA = NATPS,NAEZ
-          IRC1 = IRC(IATOM)          !!! get the atom number from somewhere
+C         !!! get the atom number from somewhere
+          IRC1 = IRC(IATOM)
           VOLINV = 3.0D0/(R(IRC1,IATOM)**3)
           DO 20 IR = 1,IRC1
             IJ = IJ + 1
@@ -232,7 +233,7 @@ c
 c----> map rho(m) of all mt-spheres into one single vector
 c
         CALL BRYSH3(SM,VISP,VINS,IRMIN,IRC,IATOM,
-     &              NAEZ,NSPIN,IMAP,LMPOT,
+     &              NSPIN,IMAP,LMPOT,
      &              IRMD, IRNSD)
 
 c
@@ -240,7 +241,7 @@ c----> map f[m] = f(m) - rho(m) = f(rho(m)) - rho(m) of all mt-spheres
 c      into one single vector
 c
         CALL BRYSH1(FM,V,IRMIN,IRC,IATOM,
-     +              NAEZ,NSPIN,IMAP,LMPOT,
+     +              NSPIN,IMAP,LMPOT,
      &              irmd)
 
         DO 70 IJ = 1,IMAP
@@ -468,7 +469,7 @@ c
 c----> map solution back into each mt-sphere
 c
         CALL BRYSH2(SM,V,IRMIN,IRC,IATOM,
-     &              NAEZ,NSPIN,IMAP,LMPOT,
+     &              NSPIN,IMAP,LMPOT,
      &              IRMD)
 c
 

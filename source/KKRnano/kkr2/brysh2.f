@@ -1,6 +1,6 @@
 c ************************************************************************
       SUBROUTINE BRYSH2(Y,X,IRMIN,IRC,IATOM,
-     &                  NAEZ,NSPIN,IMAP,LMPOT,
+     &                  NSPIN,IMAP,LMPOT,
 c                       new parameter after inc.p removal
      &                  IRMD)
 c*********************************************************************
@@ -21,7 +21,7 @@ C     ..
       INTEGER IRMD
 
 C     .. Scalar Arguments ..
-      INTEGER IMAP,LMPOT,NATPS,NAEZ,NSPIN
+      INTEGER IMAP,LMPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION X(IRMD,LMPOT,*),Y(*)

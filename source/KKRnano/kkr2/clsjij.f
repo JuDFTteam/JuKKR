@@ -1,6 +1,6 @@
 c ************************************************************************
       SUBROUTINE CLSJIJ(
-     >                  I1,NAEZ,RR,NR,RBASIS,RCUT,LMPIC,NSYMAT,
+     >                  I1,NAEZ,RR,NR,RBASIS,RCUT,NSYMAT,
      >                  ISYMINDEX,
      <                  IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ,
 C                       new parameters after inc.p removal
@@ -41,7 +41,6 @@ c
      +                 NAEZ,            ! number of atoms in EZ
      +                 NR,              ! number of lattice vectors RR
      +                 I1,              ! processor calling this routines deals with atom I1
-     +                 LMPIC,
      +                 NSYMAT
 c
 c     .. local arrays

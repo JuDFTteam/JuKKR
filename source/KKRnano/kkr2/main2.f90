@@ -581,7 +581,7 @@ program MAIN2
 
             inquire(file='ERESJIJ',exist=ERESJIJ)
 
-            call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,LMPIC,NSYMAT,ISYMINDEX, &
+            call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,NSYMAT,ISYMINDEX, &
                         IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
                         nrd, nxijd)
 
@@ -1345,11 +1345,11 @@ spinloop:     do ISPIN = 1,NSPIN
         if (IMIX>=3) then
           call BRYDBM(VISP,VONS,VINS, &
           LMPOT,R,DRDI,MIX, &
-          IRC,IRMIN,NSPIN,I1BRYD,NAEZ, &
-          IMIX,IPF,ITER, &
+          IRC,IRMIN,NSPIN,I1BRYD, &
+          IMIX,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
           LMPIC,MYLRANK, &
-          LGROUP,LCOMM,LSIZE, &
+          LCOMM, &
           itdbryd, irmd, irnsd, nspind, &
           LMPID * SMPID * EMPID)
         endif

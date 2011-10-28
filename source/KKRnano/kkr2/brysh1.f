@@ -1,6 +1,6 @@
 c ************************************************************************
       SUBROUTINE BRYSH1(Y,X,IRMIN,IRC,IATOM,
-     &                  NAEZ,NSPIN,IMAP,LMPOT,
+     &                  NSPIN,IMAP,LMPOT,
 C                       new input parameter after inc.p removal
      &                  IRMD)
 c*********************************************************************
@@ -10,13 +10,15 @@ c                                    s. bluegel , kfa , 1987
 c     modified for parallelization
 c                                    a. thiess, jun 2008
 c ------------------------------------------------------------------------
-C     .. Parameters ..
+      IMPLICIT NONE
+
+      INTEGER IRMD
 
 C      INTEGER LMPOTD
 C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER IMAP,LMPOT,IATOM,NAEZ,NSPIN
+      INTEGER IMAP,LMPOT,IATOM,NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION X(IRMD,LMPOT,*),Y(*)

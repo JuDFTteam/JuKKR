@@ -18,7 +18,6 @@ C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX A1,B1,DA1,DB1,E
       INTEGER I,L,LM1
-      LOGICAL LCALL
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX BESSJW1(0:LMAX+1),BESSJW2(0:LMAX+1),
@@ -72,13 +71,10 @@ C-----------------------------------------------------------------------
       LMAXD = LMAX
       LMGF0D= (LMAXD+1)**2
 
-          LCALL = .false.
           A1 = SQRT(E)*RMTREF
           B1 = SQRT(E-VREF)*RMTREF
-          CALL BESSEL(BESSJW1,BESSYW1,HANKWS1,A1,LMAXD+1,LMAX+1,.true.,
-     +                .true.,.true.,LCALL)
-          CALL BESSEL(BESSJW2,BESSYW2,HANKWS2,B1,LMAXD+1,LMAX+1,.true.,
-     +                .true.,.true.,LCALL)
+          CALL BESSEL(BESSJW1,BESSYW1,HANKWS1,A1,LMAXD+1)
+          CALL BESSEL(BESSJW2,BESSYW2,HANKWS2,B1,LMAXD+1)
 
       IF(LLY.EQ.1) THEN
 
