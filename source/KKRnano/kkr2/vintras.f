@@ -1,6 +1,6 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE VINTRAS(LPOT,NSPIN,IATYP,RHO2NS,VONS,R,
-     +                   DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM,
+     +                   DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM,
      +                   IMAXSH,GSH,THETAS,LMSP,
 C                        new input parameters after inc.p removal
      &                   irmd, irid, nfund, ngshd, ipand)
@@ -34,7 +34,6 @@ C     .. Parameters ..
       INTEGER irid
       INTEGER nfund
       INTEGER ngshd
-      INTEGER npand
       INTEGER ipand
 
 C
@@ -68,7 +67,6 @@ C     INTEGER IMAXSH(0:LMPOTD)
       INTEGER IMAXSH(0:(LPOT+1)**2)
       INTEGER IPAN(*)
       INTEGER IRCUT(0:IPAND,*)
-      INTEGER IRWS(*)
       INTEGER LMSP(*)
 
 C     ..

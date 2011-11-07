@@ -1,6 +1,6 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE ECOUB(CMOM,ECOU,LPOT,NSPIN,IATYP,RHO2NS,VONS,Z,R,DRDI,
-     +                 IRWS,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM,ILM,
+     +                 KVMAD,IRCUT,IPAN,IMAXSH,IFUNM,ILM,
      +                 ICELL,GSH,THETAS,LMSP,
 C                      new parameters after inc.p removal
      &                 irmd, irid, nfund, ipand, ngshd)
@@ -84,7 +84,7 @@ C     LMPOTD = (LPOT+1)**2
      &                 Z(*)
 
       INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:(LPOT + 1)**2),IPAN(*),
-     &        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+     &        IRCUT(0:IPAND,*),LMSP(*)
 
 C     ..
 C     .. Local Scalars ..

@@ -140,7 +140,7 @@ c
 
       CALL RHOOUT(CDEN,DF,GMAT,EK,PNS,QNS,RHO2NS,THETAS,IFUNM,IPAN,
      +            IMT1,LMSP,CDENNS,NSRA,CLEB,ICLEB,IEND,
-     &            lmax, irmd, irnsd, irid, ipand, nfund, ncleb)
+     &            lmax, irmd, irnsd, irid, nfund, ncleb)
 
 c
       CALL RHOIN(AR,CDEN,CR,DF,GMAT,EK,RHO2NS,IRMIND,NSRA,EFAC,PZ,FZ,

@@ -1,6 +1,6 @@
 C ************************************************************************
-      SUBROUTINE GREFSY(GTMAT,GMAT,IPVT,NDIM,ICLS,DGTDE,
-     +                  I3,CLS,LLY_G0TR,
+      SUBROUTINE GREFSY(GTMAT,GMAT,IPVT,NDIM,DGTDE,
+     +                  LLY_G0TR,
 C                       new input parameters after inc.p removal
      &                  naez, lmax, naclsd, LLY)
 C ************************************************************************
@@ -32,7 +32,7 @@ C     .. SAVE STATEMENT ..
       SAVE
 C     ..
 C     .. SCALAR ARGUMENTS ..
-      INTEGER NDIM,ICLS,I3
+      INTEGER NDIM
       DOUBLE COMPLEX LLY_G0TR
 C     ..
 C     .. ARRAY ARGUMENTS ..
@@ -42,8 +42,6 @@ C    +               DGTDE(LLYNGD,LMGF0D)
      &               GTMAT(NACLSD*(LMAX+1)**2,NACLSD*(LMAX+1)**2),
      &               DGTDE(LLY*(NACLSD*((LMAX+1)**2)-1)+1,(LMAX+1)**2)
 
-
-      INTEGER CLS(NAEZ)
 C     ..
 C
 C     .. LOCAL SCALARS ..

@@ -1,5 +1,5 @@
-      SUBROUTINE RHOTOTB(NAEZ,IATYP,NSPIN,RHO2NS,RHOC,
-     +                   Z,DRDI,
+      SUBROUTINE RHOTOTB(IATYP,NSPIN,RHO2NS,RHOC,
+     +                   DRDI,
      +                   IRCUT,LPOT,NFU,LLMSP,THETAS,ICELL,IPAN,
      +                   CATOM,
 C                        new input parameters after inc.p removal
@@ -39,7 +39,7 @@ C     INTEGER LMPOTD
 C     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LPOT,NSPIN,NAEZ
+      INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
 C     DOUBLE PRECISION DRDI(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
@@ -50,7 +50,6 @@ C     DOUBLE PRECISION CATOM(NSPIND)
       DOUBLE PRECISION RHO2NS(IRMD,(2*LMAX+1)**2,2)
       DOUBLE PRECISION RHOC(IRMD,2)
       DOUBLE PRECISION THETAS(IRID,NFUND,*)
-      DOUBLE PRECISION Z(*)
       DOUBLE PRECISION CATOM(NSPIN)
 
       INTEGER IPAN(*),IRCUT(0:IPAND,*),LLMSP(*),NFU(*)
@@ -58,7 +57,7 @@ C     DOUBLE PRECISION CATOM(NSPIND)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RFPI
-      INTEGER I,I1,IATYP,ICELL,IFUN,IPAN1,IRC1,IRS1,ISPIN,
+      INTEGER I,IATYP,ICELL,IFUN,IPAN1,IRC1,IRS1,ISPIN,
      +        LM,LMPOT
 C     ..
 C     .. Local Arrays ..

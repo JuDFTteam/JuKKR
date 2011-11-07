@@ -1,6 +1,6 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE RHOMOM(CMOM,CMINST,LMAX,IATYP,RHO2NS,R,
-     +                  DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM,
+     +                  DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM,
      +                  IMAXSH,GSH,THETAS,LMSP,
 C                       new input parameters after inc.p removal
      &                  irmd, irid, nfund, ipand, ngshd)
@@ -42,7 +42,6 @@ C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
       INTEGER IMAXSH(0:(2*LMAX+1)**2)
       INTEGER IPAN(*)
       INTEGER IRCUT(0:IPAND,*)
-      INTEGER IRWS(*)
       INTEGER LMSP(*)
 C     ..
 C     .. Local Scalars ..

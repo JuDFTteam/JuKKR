@@ -1,7 +1,7 @@
       SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,IATYP,RHOC,V,R,ALAT,
      +                  DRDI,IRWS,ZAT,
      >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE,
+     >                  LCOMM,
 C                       new input parameters after inc.p replace
      &                  naez, irmd, prod_lmpid_smpid_empid)
 C
@@ -39,8 +39,8 @@ C     &       V(IRMD,LMPOTD,2)
       INTEGER IRWS(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION DV,DVOL,FAC,PI,RWS,TRP,VINT1,VOL
-      INTEGER I,IATYP,IPER,IPOT,IREP,IRWS1,ISPIN,J,LM,M
+      DOUBLE PRECISION DV,FAC,PI,RWS,TRP,VINT1,VOL
+      INTEGER I,IATYP,IPOT,IREP,IRWS1,ISPIN,LM,M
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION F(3,NAEZ),
@@ -60,9 +60,7 @@ C     .. MPI variables ..
 C     .. L-MPI ..
       INTEGER      MYLRANK(prod_lmpid_smpid_empid),
      +             LCOMM(prod_lmpid_smpid_empid),
-     +             LGROUP(prod_lmpid_smpid_empid),
-     +             LSIZE(prod_lmpid_smpid_empid),
-     +             LMPI,LMPIC
+     +             LMPIC
 C
       EXTERNAL MPI_ALLREDUCE
 c

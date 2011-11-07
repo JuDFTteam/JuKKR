@@ -24,7 +24,7 @@ C     INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZD,*),NUMN0(*)
       DOUBLE COMPLEX EIKRM(NACLSD),EIKRP(NACLSD)
       INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZ,*),NUMN0(*)
 C     ..
-      INTEGER AM,AN,I,IC,IN,J,LM1,LM2,M,N1,N2,IND1,IND2
+      INTEGER AM,AN,I,IC,J,LM1,LM2,M,N1,N2,IND1,IND2
 C     ..
 c ----------------------------------------------------------------------
       INTEGER LMGF0D

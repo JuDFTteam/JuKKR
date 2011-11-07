@@ -37,11 +37,10 @@ C     ..
 C     .. Local scalars ..
       DOUBLE PRECISION A,ABSGM,ABSRM,AG,AR,B,C,DA,DB,GMAX,GX,GY,GZ,PI,
      &                 RMAX,RX,RY,RZ,VMIN
-      INTEGER I,IER,K,L,M,N,N1,NG,NR,NSH,NSHL,NUMG,NUMGH,NUMR,
+      INTEGER I,K,L,M,N,N1,NG,NR,NSH,NSHL,NUMG,NUMGH,NUMR,
      &        NUMRH
       DOUBLE PRECISION DBLE
       INTEGER IDINT
-      CHARACTER*80 UIO
 C     ..
 C     .. Local arrays ..
       DOUBLE PRECISION ABSG(3),ABSR(3),BG(3,3),BR(3,3),CJ(4,NMAXD)

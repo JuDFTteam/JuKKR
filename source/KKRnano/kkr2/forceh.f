@@ -1,4 +1,4 @@
-      SUBROUTINE FORCEH(CMOM,FLMH,LPOT,NSPIN,IATYP,RHO2NS,V,R,DRDI,
+      SUBROUTINE FORCEH(CMOM,FLMH,LPOT,IATYP,RHO2NS,V,R,DRDI,
      &                  IRWS,Z,
 C                       new input parameter after inc.p replace
      &                  irmd)
@@ -17,7 +17,7 @@ C     INTEGER LMPOTD
 C     PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LPOT,NSPIN
+      INTEGER LPOT
 C     ..
 C     .. Array Arguments ..
 C     DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),FLMH(-1:1,*),

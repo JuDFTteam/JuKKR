@@ -3,7 +3,7 @@
      &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
      &                     LMXSPD,NCLEBD,LOFLM,DFAC,I1,
      >                     LMPIC,MYLRANK,
-     >                     LGROUP,LCOMM,LSIZE,
+     >                     LCOMM,LSIZE,
 C                          new input parameters after inc.p removal
      &                     irmd, ipand, prod_lmpid_smpid_empid)
 C **********************************************************************
@@ -69,7 +69,7 @@ C     DOUBLE PRECISION VONS(IRMD,LMPOTD,2)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION PI,FPI
-      INTEGER I,L,L1,L2,LM,LM1,LM2,LM3,LMMAX,M,IPOT,I1,I2,
+      INTEGER I,L,L1,L2,LM,LM1,LM2,LM3,LMMAX,M,I1,I2,
      &        IRS1,ISPIN,ILM
 C     ..
 C     .. Local Arrays ..
@@ -91,9 +91,8 @@ C----- MPI ---------------------------------------------------------------
 C     .. L-MPI
       INTEGER      MYLRANK(prod_lmpid_smpid_empid),
      +             LCOMM(prod_lmpid_smpid_empid),
-     +             LGROUP(prod_lmpid_smpid_empid),
      +             LSIZE(prod_lmpid_smpid_empid),
-     +             LMPI,LMPIC
+     +             LMPIC
 C
       EXTERNAL MPI_BCAST
 C     .. Intrinsic Functions ..

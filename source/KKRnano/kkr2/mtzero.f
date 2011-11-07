@@ -38,13 +38,13 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FPI,RFPI,VAV0,VOL0,ZZOR
-      INTEGER ICELL,IFUN,IH,IMT1,IPAN1,IPOT,IR,IRC1,IRH,IS,LM,II
+      INTEGER ICELL,IFUN,IH,IMT1,IPAN1,IPOT,IR,IRC1,IRH,IS,LM
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION V1(IRMD),V2(IRMD),VAV1(2),VOL1(2)
 C     ..
 C     .. External Subroutines ..
-      LOGICAL TEST,OPT
+      LOGICAL TEST
       EXTERNAL SIMP3,SIMPK,TEST
 C     ..
 C     .. Intrinsic Functions ..

@@ -72,12 +72,9 @@ C     DOUBLE PRECISION   DENMAT(MMAXD,MMAXD,NSPIND)
      &                   DENTOTS(NSPIN),
      &                   ALPHA
       INTEGER            ISPIN,JSPIN,M1,M2,M3,M4,MM,MMAX,ILDAU
-      INTEGER            IPRINT,LRECLDAU
-      CHARACTER(LEN=15)  STR15
+      INTEGER            LRECLDAU
       LOGICAL            SLOW,FREEZE
-C     ..
-      DATA               IPRINT /0/
-C    ..
+
       INTEGER            LMAXD1
       INTEGER            MMAXD
       INTEGER            NSPIND

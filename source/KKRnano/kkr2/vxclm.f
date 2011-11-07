@@ -1,5 +1,5 @@
-      SUBROUTINE VXCLM(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2NS,V,R,DRDI,
-     +                 IRWS,IRCUT,IPAN,GSH,ILM,IMAXSH,
+      SUBROUTINE VXCLM(EXC,KTE,KXC,LPOT,NSPIN,RHO2NS,V,R,DRDI,
+     +                 IRCUT,IPAN,GSH,ILM,IMAXSH,
      +                 IFUNM,THETAS,YR,WTYR,IJEND,LMSP,
 C                      new input parameters after inc.p removal
      &                 irmd, irid, nfund, ngshd, ipand)
@@ -51,7 +51,7 @@ C     INTEGER LMXSPD
 C     PARAMETER (LMXSPD= (2*LPOTD+1)**2)
 
 C     .. Scalar Arguments ..
-      INTEGER IATYP,IJEND,IPAN,IRWS,KTE,KXC,LPOT,NSPIN
+      INTEGER IJEND,IPAN,KTE,KXC,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
 C     DOUBLE PRECISION DRDI(IRMD),EXC(0:LPOTD),GSH(*),R(IRMD),

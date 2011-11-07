@@ -122,7 +122,7 @@ C     PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALPHA
-      INTEGER IMIX,LMPOT,IATOM,NAEZ,NSPIN
+      INTEGER IMIX,LMPOT,IATOM,NSPIN
 C     ..
 C     .. Data statements ..
       DATA ZERO,ONE/0.0D0,1.0D0/

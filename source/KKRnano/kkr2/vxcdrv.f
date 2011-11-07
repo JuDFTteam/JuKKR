@@ -21,7 +21,7 @@ C     FIX: hardcoded
       PARAMETER (IJD = 434)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER KTE,KXC,LPOT,NEND,NSPIN,NSTART
+      INTEGER KTE,KXC,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
 C     DOUBLE PRECISION A(NAEZD),DRDI(IRMD,*),EXC(0:LPOTD),GSH(*),
@@ -67,10 +67,9 @@ C     INTEGER IFUNMIAT(LMXSPD)
       DOUBLE PRECISION WTYR(IJD,(LPOT+1)**2)
       DOUBLE PRECISION YLM(IJD,(LPOT+1)**2)
       DOUBLE PRECISION YR(IJD,(LPOT+1)**2)
-      INTEGER IFUNMIAT((2*LPOT+1)**2)
 C     ..
 C     .. Local Scalars ..
-      INTEGER IATYP,ICELL,LMX1
+      INTEGER IATYP,ICELL
 
       INTEGER LMPOTD
 
@@ -85,9 +84,9 @@ C     ..
 
         IF (KXC.LT.3) THEN
 
-          CALL VXCLM(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2NS,
+          CALL VXCLM(EXC,KTE,KXC,LPOT,NSPIN,RHO2NS,
      +               VONS,R(1,IATYP),DRDI(1,IATYP),
-     +               IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP),
+     +               IRCUT(0,IATYP),IPAN(IATYP),
      +               GSH,ILM,IMAXSH,IFUNM,THETAS(1,1,ICELL),
      +               YR,WTYR,IJD,LMSP,
      &               irmd, irid, nfund, ngshd, ipand)
@@ -95,11 +94,11 @@ C     ..
 c
 c GGA EX-COR POTENTIAL
 c
-          CALL VXCGGA(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2NS,
+          CALL VXCGGA(EXC,KTE,LPOT,NSPIN,RHO2NS,
      +                VONS,R(1,IATYP),DRDI(1,IATYP),A(IATYP),
      +                IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP),
      +                GSH,ILM,IMAXSH,IFUNM,THETAS(1,1,ICELL),
-     +                YR,WTYR,IJD,LMSP,THET,YLM,DYLMT1,DYLMT2,
+     +                WTYR,IJD,LMSP,THET,YLM,DYLMT1,DYLMT2,
      +                DYLMF1,DYLMF2,DYLMTF,
      &                irmd, irid, nfund, ngshd, ipand)
         END IF

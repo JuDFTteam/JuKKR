@@ -1,7 +1,7 @@
       SUBROUTINE RHOOUT(CDEN,DF,GMAT,EK,PNS,QNS,RHO2NS,THETAS,IFUNM,
      +                    IPAN1,IMT1,LMSP,CDENNS,NSRA,CLEB,ICLEB,IEND,
 C                         new parameters after inc.p removal
-     &                    lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+     &                    lmaxd, irmd, irnsd, irid, nfund, ncleb)
 c-----------------------------------------------------------------------
 c
 c     calculates the charge density from r(irmin) to r(irc)
@@ -43,7 +43,6 @@ C     .. Scalar Arguments ..
       INTEGER ncleb
       INTEGER irnsd
       INTEGER irid
-      INTEGER ipand
       INTEGER nfund
 
       DOUBLE COMPLEX DF,EK

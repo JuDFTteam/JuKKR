@@ -19,7 +19,7 @@ C
      >                  VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT,
      >                  ECORE,LCORE,NCORE,ZAT,ITITLE,
      >                  LMPIC,MYLRANK,
-     >                  LGROUP,LCOMM,LSIZE,
+     >                  LCOMM,LSIZE,
 C                       new input parameters after inc.p removal
      &                  irmd, irnsd, prod_lmpid_smpid_empid)
 C
@@ -66,9 +66,8 @@ C     .. MPI variables ..
 C     .. L-MPI ..
       INTEGER      MYLRANK(prod_lmpid_smpid_empid),
      +             LCOMM(prod_lmpid_smpid_empid),
-     +             LGROUP(prod_lmpid_smpid_empid),
      +             LSIZE(prod_lmpid_smpid_empid),
-     +             LMPI,LMPIC
+     +             LMPIC
 C
 C     .. N-MPI ..
       INTEGER IERR, MAPBLOCK

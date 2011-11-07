@@ -137,7 +137,7 @@ C
         DO I1 = 1,NAEZ
           READ(72,REC=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX,
      +                    EULDAU,EDCLDAU
-          CALL ETOTB1(ECOU,E2,EPOTIN,ESPC,ESPV,EXC,
+          CALL ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC,
      &                EULDAU,EDCLDAU,LDAU,
      &                KPRE,LMAX,LPOT,
      &                LCOREMAX,NSPIN,I1,NAEZ)

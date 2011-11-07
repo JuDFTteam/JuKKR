@@ -1,6 +1,6 @@
-      SUBROUTINE VXCGGA(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,
+      SUBROUTINE VXCGGA(EXC,KTE,LPOT,NSPIN,RHO2NS,V,R,DRDI,A,
      +                  IRWS,IRCUT,IPAN,GSH,ILM,IMAXSH,
-     +                  IFUNM,THETAS,YR,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,
+     +                  IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,
      +                  DYLMT2,DYLMF1,DYLMF2,DYLMTF,
 C                       new input parameters after inc.p removal
      &                  irmd, irid, nfund, ngshd, ipand)
@@ -52,7 +52,7 @@ C     PARAMETER (LMXSPD= (2*LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A
-      INTEGER IATYP,IJEND,IPAN,IRWS,KTE,KXC,LPOT,NSPIN
+      INTEGER IJEND,IPAN,IRWS,KTE,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
 C     DOUBLE PRECISION DRDI(IRMD),R(IRMD),
@@ -81,7 +81,6 @@ C    +        LMSP(LMXSPD)
       DOUBLE PRECISION THETAS(IRID,NFUND)
       DOUBLE PRECISION V(IRMD,(LPOT+1)**2,2)
       DOUBLE PRECISION YLM(IJEND,(LPOT+1)**2)
-      DOUBLE PRECISION YR(IJEND,*)
 
       INTEGER IFUNM((2*LPOT+1)**2)
       INTEGER ILM(NGSHD,3)

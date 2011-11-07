@@ -1043,8 +1043,8 @@ spinloop:     do ISPIN = 1,NSPIN
 
 ! -------------------------------------------------------------- density
 
-            call RHOTOTB(NAEZ,I1,NSPIN,RHO2NS,RHOCAT, &
-                         ZAT,DRDI,IRCUT, &
+            call RHOTOTB(I1,NSPIN,RHO2NS,RHOCAT, &
+                         DRDI,IRCUT, &
                          LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
                          CATOM, &
                          lmax, irmd, irid, ipand, nfund)
@@ -1153,7 +1153,7 @@ spinloop:     do ISPIN = 1,NSPIN
             end do
 
             call RHOMOM(CMOM,CMINST,LPOT,I1,RHO2NS, &
-            R,DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS,LMSP(1,ICELL), &
             irmd, irid, nfund, ipand, ngshd)
 
@@ -1164,7 +1164,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! =====================================================================
 
             call VINTRAS(LPOT,NSPIN,I1,RHO2NS,VONS, &
-            R,DRDI,IRWS,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS,LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
 
@@ -1181,7 +1181,7 @@ spinloop:     do ISPIN = 1,NSPIN
             LMPOT,SMAT,CLEB,ICLEB,IEND, &
             LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
             LMPIC,MYLRANK, &
-            LGROUP,LCOMM,LSIZE, &
+            LCOMM,LSIZE, &
             irmd, ipand, lmpid*smpid*empid)
 
             call OUTTIME(MYLRANK(1),'VMADELBLK ......',TIME_I,ITER)
@@ -1192,7 +1192,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
             if (KFORCE==1 .and. ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
-              call FORCEH(CMOM,FLM,LPOT,NSPIN,I1,RHO2NS,VONS, &
+              call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
               R,DRDI,IMT,ZAT,irmd)
               call FORCE(FLM,FLMC,LPOT,NSPIN,I1,RHOCAT,VONS,R, &
               DRDI,IMT,naez,irmd)
@@ -1214,7 +1214,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
               call ECOUB(CMOM,ECOU,LPOT,NSPIN,I1,RHO2NS, &
               VONS,ZAT,R, &
-              DRDI,IRWS,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM(1,ICELL), &
+              DRDI,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM(1,ICELL), &
               ILM,ICELL,GSH,THETAS,LMSP(1,ICELL), &
               irmd, irid, nfund, ipand, ngshd)
 
@@ -1241,7 +1241,7 @@ spinloop:     do ISPIN = 1,NSPIN
               call FORCXC(FLM,FLMC,LPOT,NSPIN,I1,RHOCAT,VONS,R, &
               ALAT,DRDI,IMT,ZAT, &
               LMPIC,MYLRANK, &
-              LGROUP,LCOMM,LSIZE, &
+              LCOMM, &
               naez, irmd, lmpid*smpid*empid)
 ! ---------------------------------------------------------------------
             end if
@@ -1411,7 +1411,7 @@ spinloop:     do ISPIN = 1,NSPIN
         VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
         ECORE,LCORE,NCORE,ZAT,ITITLE, &
         LMPIC,MYLRANK, &
-        LGROUP,LCOMM,LSIZE, &
+        LCOMM,LSIZE, &
         irmd, irnsd, lmpid*smpid*empid)
 
 9020    format ('                old', &

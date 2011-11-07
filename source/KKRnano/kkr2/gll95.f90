@@ -281,8 +281,8 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
    endif
 
 
-   call GREFSY(GREF,GREF0,IPVT,NDIM,ICLS,DGTDE, &
-               I3,CLS,LLY_G0TR, &
+   call GREFSY(GREF,GREF0,IPVT,NDIM,DGTDE, &
+               LLY_G0TR, &
                naezd, lmaxd, naclsd, LLY)
 
    if (LLY==1) then

@@ -7,9 +7,9 @@
     SPRS, &
     PRSC,EKM,NOITER, &
     QMRBOUND,IGUESS,BCP,CNVFAC, &
-    NXIJ,XCCPL,IXCP,ZKRXIJ, &
-    LLY_GRDT,TR_ALPH,GMATXIJ, &
-    LMPIC,LCOMM,LSIZE, &
+    NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
+    LLY_GRDT,TR_ALPH,GMATXIJ, &          ! < output
+    LMPIC,LCOMM,LSIZE, &                 ! > input
     ! new parameters after inc.p removal
     iemxd, &
     prod_lmpid_smpid_empid, nthrds, &
@@ -17,6 +17,18 @@
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
 ! **********************************************************************
+
+! Only part of arrays for corresponding spin direction is passed
+! (GMATN, TSST_LOCAL, DTDE_LOCAL, LLY_GRDT, TR_ALPH, GMATXIJ)
+!
+! NOFKS .. number of k-points, integer
+! VOLBZ .. Brillouin zone volume, double
+! BZKP ... k-points of used k-mesh ... dimension (3, KPOIBZ)
+! VOLCUB . array of Brillouin zone integration weights for each k-point ... dimension (KPOIBZ)
+
+! GINP_LOCAL ... reference Green's function
+! DGINP ...      derivative of reference Green's function
+! TSST_LOCAL ..  t-matrix
 
     use mpi
 
@@ -128,7 +140,7 @@
     double complex :: GLL  ((LMAX+1)**2, (LMAX+1)**2)
     double complex :: GS   ((LMAX+1)**2, (LMAX+1)**2, NSYMAXD)
 
-    double complex, allocatable, dimension(:,:,:,:) :: GSXIJ ! local, large?
+    double complex, allocatable, dimension(:,:,:,:) :: GSXIJ
 
     !     effective (site-dependent) Delta_t^(-1) matrix
     !double complex :: MSSQ(LMMAXD,LMMAXD)
