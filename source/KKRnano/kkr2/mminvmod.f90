@@ -140,7 +140,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   allocate(DUMMY(LMMAXD*NAEZD,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
-  if (memory_fail == .true.) then
+  if (memory_fail .eqv. .true.) then
     write(*,*) "MMINVMOD: FATAL Error, failure to allocate memory."
     write(*,*) "       Probably out of memory."
     stop

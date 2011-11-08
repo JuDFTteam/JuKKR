@@ -1,9 +1,9 @@
 !**********************************************************************
 subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
                  REFPOT,RATOM,NATOM,ALAT,GREF0,DGDEOUT, &
-                 LLY_G0TR,ICLS,CLS,I3, &
+                 LLY_G0TR, &
 !                new input parameters after inc.p removal
-                 naezd, lmaxd, naclsd, ncleb, nrefd, LLY)
+                 lmaxd, naclsd, ncleb, nrefd, LLY)
 
 ! **********************************************************************
 !
@@ -14,12 +14,11 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
   implicit none
 
-  integer :: naezd
-  integer :: lmaxd
-  integer :: naclsd
-  integer :: ncleb
-  integer :: nrefd
-  integer :: LLY
+  integer, intent(in) :: lmaxd
+  integer, intent(in) :: naclsd
+  integer, intent(in) :: ncleb
+  integer, intent(in) :: nrefd
+  integer, intent(in) :: LLY
 
   !
   !     INTEGER LMGF0D,NGD
@@ -35,10 +34,8 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   double complex :: E
   double complex :: LLY_G0TR
   double precision :: ALAT
-  integer :: I3
   integer :: IEND
   integer :: NATOM
-  integer :: ICLS
   integer :: INFO
   !     ..
   !     .. Array Arguments ..
@@ -65,7 +62,6 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   integer :: ICLEB(NCLEB,3)
   integer :: LOFLM(*)
   integer :: REFPOT(*)
-  integer :: CLS(NAEZD)
   !     ..
   !     .. Local Scalars ..
   integer :: I
@@ -156,7 +152,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   allocate(DGDE(LLYNGD,LLYNGD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
-  if (memory_fail == .true.) then
+  if (memory_fail .eqv. .true.) then
     write(*,*) "GLL95: FATAL Error, failure to allocate memory."
     write(*,*) "       Probably out of memory."
     stop
@@ -283,7 +279,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
    call GREFSY(GREF,GREF0,IPVT,NDIM,DGTDE, &
                LLY_G0TR, &
-               naezd, lmaxd, naclsd, LLY)
+               lmaxd, naclsd, LLY)
 
    if (LLY==1) then
 

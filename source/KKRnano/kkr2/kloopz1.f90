@@ -197,7 +197,7 @@
     allocate(GSXIJ(LMMAXD, LMMAXD, NSYMAXD, NXIJD))
     if (memory_stat /= 0) memory_fail = .true.
 
-    if (memory_fail == .true.) then
+    if (memory_fail .eqv. .true.) then
       write(*,*) "KLOOPZ1: FATAL Error, failure to allocate memory."
       write(*,*) "       Probably out of memory."
       stop

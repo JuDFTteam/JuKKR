@@ -2,14 +2,13 @@ C ************************************************************************
       SUBROUTINE GREFSY(GTMAT,GMAT,IPVT,NDIM,DGTDE,
      +                  LLY_G0TR,
 C                       new input parameters after inc.p removal
-     &                  naez, lmax, naclsd, LLY)
+     &                  lmax, naclsd, LLY)
 C ************************************************************************
       IMPLICIT NONE
 C
 C---> SOLVE THE DYSON EQUATION TO GET REFERENCE GREEN FUNCTION
 C
 C
-      INTEGER naez
       INTEGER lmax
       INTEGER naclsd
 C     Lloyd's formula switch 0 (inactive)/ 1 (active)

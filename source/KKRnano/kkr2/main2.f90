@@ -661,7 +661,7 @@ program MAIN2
                         REFPOT, &
                         TREFLL(1,1,1),DTREFLL(1,1,1),GREFN,DGREFN, &
                         IE, &
-                        LLY_G0TR,I1, &
+                        LLY_G0TR, &
                         LMPIC,MYLRANK,LCOMM,LSIZE, &
                         naez, lmax, naclsd, ncleb, nrefd, iemxd, nclsd, &
                         LLY, LMPID*SMPID*EMPID)

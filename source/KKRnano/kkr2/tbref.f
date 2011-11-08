@@ -154,7 +154,7 @@ C
      +                REFPOT,
      +                TREFLL,DTREFLL,GREFN,DGREFN,
      +                IE,
-     +                LLY_G0TR,I3,
+     +                LLY_G0TR,
      +                LMPIC,MYLRANK,LCOMM,LSIZE,
      &                naezd, lmaxd, naclsd, ncleb, nrefd, iemxd, nclsd,
      &                LLY, prod_lmpid_smpid_empid)
@@ -185,7 +185,7 @@ C     PARAMETER       (LM2D= (2*LMAXD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALATC
-      INTEGER          I3,IE,IEND,NCLS,NAEZ
+      INTEGER          IE,IEND,NCLS,NAEZ
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION CLEB(NCLEB,2),RCLS(3,NACLSD,NCLSD)
@@ -271,8 +271,8 @@ C
           CALL GLL95(E,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
      +               ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      +               ALATC,GINP,DGINP,
-     +               LLY_G0TR(IE,ICLS),ICLS,CLS,I3,
-     &               naezd, lmaxd, naclsd, ncleb, nrefd, LLY )
+     +               LLY_G0TR(IE,ICLS),
+     &               lmaxd, naclsd, ncleb, nrefd, LLY )
 
           DO IG=1,NACLSD
           DO LM2=1,LMGF0D

@@ -52,8 +52,6 @@ C     ..
 C .. MPI ..
 C      INTEGER MYRANK,NROFNODES
 C      COMMON /MPI/MYRANK,NROFNODES
-C     .. External subroutines ..
-      EXTERNAL IOINPUT
 C     ..................................................................
 C
       PI = 4.0D0*ATAN(1.0D0)
