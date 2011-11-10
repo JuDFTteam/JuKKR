@@ -64,14 +64,14 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   integer :: REFPOT(*)
   !     ..
   !     .. Local Scalars ..
-  integer :: I
+  integer :: ind
   integer :: LM1
   integer :: LM2
   integer :: N1
   integer :: N2
   integer :: NDIM
-  integer :: NLM1
-  integer :: NLM2
+  integer :: site_lm_index1
+  integer :: site_lm_index2
   !     ..
   !     .. Local Arrays ..
   !     DOUBLE COMPLEX DGLLDE(LMGF0D,LMGF0D)
@@ -167,10 +167,10 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   !
   do N1 = 1,NATOM
     do N2 = 1,NATOM
-      do I = 1,3
+      do ind = 1,3
         !            RDIFF(I) = (RATOM(I,N1) - RATOM(I,N2))*ALAT
         !           changed P.Z. 4.7.97
-        RDIFF(I) = - (RATOM(I,N1)-RATOM(I,N2))*ALAT
+        RDIFF(ind) = - (RATOM(ind,N1)-RATOM(ind,N2))*ALAT
       end do
 
       if (N1/=N2) then
@@ -178,18 +178,18 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
         call GFREE(RDIFF,E,GLL,CLEB,ICLEB,LOFLM,IEND, lmaxd, ncleb)
 
         do LM2 = 1,LMGF0D
-          NLM2 = (N2-1)*LMGF0D + LM2
+          site_lm_index2 = (N2-1)*LMGF0D + LM2
           do LM1 = 1,LMGF0D
-            NLM1 = (N1-1)*LMGF0D + LM1
-            GREF(NLM1,NLM2) = GLL(LM1,LM2)
+            site_lm_index1 = (N1-1)*LMGF0D + LM1
+            GREF(site_lm_index1,site_lm_index2) = GLL(LM1,LM2)
           end do
         end do
       else
         do LM2 = 1,LMGF0D
-          NLM2 = (N2-1)*LMGF0D + LM2
+          site_lm_index2 = (N2-1)*LMGF0D + LM2
           do LM1 = 1,LMGF0D
-            NLM1 = (N1-1)*LMGF0D + LM1
-            GREF(NLM1,NLM2) = CZERO
+            site_lm_index1 = (N1-1)*LMGF0D + LM1
+            GREF(site_lm_index1,site_lm_index2) = CZERO
           end do
         end do
 
@@ -206,28 +206,27 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
      !
      do N1 = 1,NATOM
        do N2 = 1,NATOM
-         do I = 1,3
-           RDIFF(I) = - (RATOM(I,N1)-RATOM(I,N2))*ALAT
+         do ind = 1,3
+           RDIFF(ind) = - (RATOM(ind,N1)-RATOM(ind,N2))*ALAT
          end do
 
          if (N1/=N2) then
 
-           call DGFREE(RDIFF,E,DGLLDE,CLEB,ICLEB,LOFLM,IEND, &
-           lmaxd, ncleb)
+           call DGFREE(RDIFF,E,DGLLDE,CLEB,ICLEB,LOFLM,IEND,lmaxd, ncleb)
 
            do LM2 = 1,LMGF0D
-             NLM2 = (N2-1)*LMGF0D + LM2
+             site_lm_index2 = (N2-1)*LMGF0D + LM2
              do LM1 = 1,LMGF0D
-               NLM1 = (N1-1)*LMGF0D + LM1
-               DGDE(NLM1,NLM2) = DGLLDE(LM1,LM2)
+               site_lm_index1 = (N1-1)*LMGF0D + LM1
+               DGDE(site_lm_index1,site_lm_index2) = DGLLDE(LM1,LM2)
              end do
            end do
          else
            do LM2 = 1,LMGF0D
-             NLM2 = (N2-1)*LMGF0D + LM2
+             site_lm_index2 = (N2-1)*LMGF0D + LM2
              do LM1 = 1,LMGF0D
-               NLM1 = (N1-1)*LMGF0D + LM1
-               DGDE(NLM1,NLM2) = CZERO
+               site_lm_index1 = (N1-1)*LMGF0D + LM1
+               DGDE(site_lm_index1,site_lm_index2) = CZERO
              end do
            end do
 
@@ -236,7 +235,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
        end do
      end do
 
-   endif
+   endif ! LLY == 1
 
 
    call ZCOPY(NGD*LMGF0D,GREF,1,GREF0,1)
@@ -244,28 +243,33 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
    if (LLY==1) then
 
      do N2 = 1,NATOM
-       NLM2 = (N2-1)*LMGF0D + 1
+       site_lm_index2 = (N2-1)*LMGF0D + 1
 
-       call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,DGDE(1,NLM2),NGD, &
+       ! -dG_ref/dE * \Delta t    -- stored in GTREF
+       call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,DGDE(1,site_lm_index2),NGD, &
                   TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
                   CZERO,GTREF,NGD)
 
-       call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,NLM2),NGD, &
+       !   - G_ref * d(\Delta t)/dE + GTREF  -- stored again in GTREF
+       ! = -dG_ref/dE * \Delta t - G_ref * d(\Delta t)/dE
+
+       call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,site_lm_index2),NGD, &
                   DTREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
                   CONE,GTREF,NGD)
 
-       call ZCOPY(NGD*LMGF0D,GTREF,1,DGTDE0(1,NLM2),1)
+       call ZCOPY(NGD*LMGF0D,GTREF,1,DGTDE0(1,site_lm_index2),1)
      end do
-   end if
+   end if  ! LLY==1
 
    do N2 = 1,NATOM
-     NLM2 = (N2-1)*LMGF0D + 1
+     site_lm_index2 = (N2-1)*LMGF0D + 1
 
-     call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,NLM2),NGD, &
+     ! -G_ref * \Delta t  -- stored in GTREF
+     call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,site_lm_index2),NGD, &
      TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
      CZERO,GTREF,NGD)
 
-     call ZCOPY(NGD*LMGF0D,GTREF,1,GREF(1,NLM2),1)
+     call ZCOPY(NGD*LMGF0D,GTREF,1,GREF(1,site_lm_index2),1)
    end do
 
    if (LLY==1) then
@@ -277,6 +281,8 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
    endif
 
 
+   ! Solve Dyson-Equation for reference system
+   ! Solves (1 - g0 \Delta t) G_ref = g0 for G_ref.
    call GREFSY(GREF,GREF0,IPVT,NDIM,DGTDE, &
                LLY_G0TR, &
                lmaxd, naclsd, LLY)

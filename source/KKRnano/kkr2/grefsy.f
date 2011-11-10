@@ -5,6 +5,15 @@ C                       new input parameters after inc.p removal
      &                  lmax, naclsd, LLY)
 C ************************************************************************
       IMPLICIT NONE
+
+
+C     Solves (1 - g0 \Delta t) G_ref = g0 for G_ref. (Full inversion)
+C
+C     GTMAT ... on input it has to contain (-1) * g0 * \Delta t
+C               on output it contains G_ref
+C     GMAT  ... input: g0 free-space Green's function
+C     commented by E. Rabel, Nov 2011
+
 C
 C---> SOLVE THE DYSON EQUATION TO GET REFERENCE GREEN FUNCTION
 C
@@ -86,9 +95,5 @@ C        TRACEG0TR = CZERO
 
       ENDIF
 C .. Lloyd
-
-
-
-      RETURN
 
       END

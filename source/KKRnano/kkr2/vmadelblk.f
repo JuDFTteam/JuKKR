@@ -12,8 +12,8 @@ C     calculate the madelung potentials and add these to the poten-
 C     tial v  (in the spin-polarized case for each spin-direction
 C     this is the same)
 C     it uses the structure dependent matrices AVMAD and BVMAD which
-C     are calculated once in the subroutine MADELUNG3D and saved in
-C     the DA-file abvmad.unformatted                     ( may 2004)
+C     are calculated once in the subroutine MADELUNG3D
+C     ( may 2004)
 C     the charge-moments are calculated in the subroutine vintras,
 C     therefore vintras has to be called first.
 C     the madelung-potential is expanded into spherical harmonics.
