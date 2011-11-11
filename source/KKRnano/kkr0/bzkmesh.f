@@ -141,12 +141,12 @@ C fix: check regardless of IGUESSD
 C
       WRITE (6,'(79(1H=))')
       WRITE (6,'(12X,A)')
-   &       'BZKMESH: checking dimensions of precond. arrays ...'
+     &       'BZKMESH: checking dimensions of precond. arrays ...'
 C
       IF (EKMIN.GT.EKMD) THEN
         WRITE (6,*)
-   &    ' ERROR: Dimension EKMD in inc.p too small',
-   &    EKMIN, EKMD
+     &    ' ERROR: Dimension EKMD in inc.p too small',
+     &    EKMIN, EKMD
         STOP '< BZKMESH >'
       ELSE
         WRITE(6,*) '           EKMIN=',EKMIN,'  EKMD=',EKMD
@@ -175,8 +175,8 @@ C
         IF (EKMIN.GT.EKMD) THEN
           WRITE (6,*)
           WRITE (6,*)
-   &      '           WARNING: Dimension EKMD ',
-   &      ' too small for use of new.kpoints'
+     &      '           WARNING: Dimension EKMD ',
+     &      ' too small for use of new.kpoints'
         ENDIF
           WRITE(6,*) '      new: EKMIN=',EKMIN,'  EKMD=',EKMD
 C

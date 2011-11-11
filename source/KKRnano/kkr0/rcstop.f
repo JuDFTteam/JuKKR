@@ -2,7 +2,7 @@ C ************************************************************************
       SUBROUTINE RCSTOP(C)
 C ************************************************************************
 C     .. Scalar Arguments ..
-      CHARACTER*8 C
+      CHARACTER(len=*) C
 C     ..
       PRINT *,'ERROR: STOP AT POSITION ',C
       STOP

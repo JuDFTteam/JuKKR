@@ -97,8 +97,6 @@
 !   double precision KIND constant
     integer, parameter :: DP = kind(1.0D0)
 
-!      INCLUDE 'inc.p'
-!      INCLUDE 'inc.cls'
 !     .. Parameters ..
     integer ::   LASSLD,LMMAXD,LMPOTD,LMXSPD,LM2D, &
     MAXMSHD,NPOTD,NSYMAXD
@@ -115,7 +113,7 @@
     parameter (MAXMSHD=8)
 
 !     inc.p, inc.cls parameters
-!     LMAXD
+
 !     NAEZD
 !     LPOTD
 !     LMAXD
@@ -155,8 +153,7 @@
     double precision :: VCONST
 
     integer :: ICST
-!     eq IRMD ?
-    integer :: IRM
+    integer :: IRM    !     eq IRMD ?
     integer :: ISHIFT
     integer :: KHFELD
     integer :: KPRE
@@ -659,6 +656,14 @@
     call TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX, &
                     NMAXD, ISHLD)
 
+
+    call write_dimension_parameters(NAEZD, LMAXD, &
+                                    NREFD, IRID, BCPD, NACLSD, &
+                                    NCLEB, IRMD, IEMXD, NGSHD, &
+                                    IGUESSD, IPAND, ISHLD, IRNSD, &
+                                    KPOIBZ, KREL, NFUND, NATRCD, &
+                                    NCLSD, NMAXD, NRD, NSPIND, &
+                                    NUTRCD, NXIJD)
 
     call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
     BRAVAIS,RECBV,VOLUME0,RMAX,GMAX, &

@@ -394,7 +394,7 @@ c
 c-------------------------------------------------------------
 c JIJ calculation switched on by logical switch LJIJ
 c-------------------------------------------------------------
-      CALL IoInput('LJIJ  ',UIO,IL,7,IER)
+      CALL IoInput('LJIJ      ',UIO,IL,7,IER)
               READ (UNIT=UIO,FMT=*) JIJ
       IF (JIJ) THEN
       CALL IoInput('RCUTJIJ  ',UIO,IL,7,IER)

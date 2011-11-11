@@ -1,7 +1,7 @@
 # Makefile for kkr0
 
 # default values
-PLATFORM = gfortran
+PLATFORM = ifort
 TYPE = debug
 
 PROGRAM = kkr0.exe
@@ -23,7 +23,7 @@ ifeq ($(PLATFORM),ifort)
 FC = ifort
 FC90 = ifort
 # -module <path> specifies where to put .mod files
-FCFLAGS = -debug -module $(BUILDDIR)
+FCFLAGS = -debug -gen-interfaces -warn interfaces -module $(BUILDDIR)
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
 LDFLAGS =-L/ -llapack_ifort -lblas_ifort
@@ -58,6 +58,7 @@ $(PROGRAM): $(OBJS)
 clean:
 	rm -f $(BUILDDIR)/*.o 
 	rm -f $(BUILDDIR)/*.mod
+	rm -f $(BUILDDIR)/*__genmod.f90
 	rm -f *.exe
 
 .PHONY: test

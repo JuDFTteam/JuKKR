@@ -34,7 +34,7 @@ c * The error handler is not working yet in all cases ....
 c * In this version only files 123333 lines long can be read in
 c *******************************************************
       implicit none
-      CHARACTER CHARKEY*10
+      CHARACTER(len=*) CHARKEY
       CHARACTER CHARKEY1*11
       CHARACTER CHAR*80
       INTEGER ILINE,IERROR,IFILE
