@@ -127,9 +127,10 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   integer :: LMGF0D
   integer :: NGD
   integer :: LLYNGD
+  integer :: LMMAXD
 
-
-  LMGF0D = (LMAXD+1)**2
+  LMMAXD = (LMAXD+1)**2
+  LMGF0D = LMMAXD
   NGD = LMGF0D*NACLSD
   LLYNGD = LLY*(LMGF0D*NACLSD-1) + 1
 
@@ -164,6 +165,13 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
   !
   ! ---> construct free Green's function
+  ! The free space structural Green's function g0 is a matrix of dimension LMMAXD x LMMAXD
+  ! (for a certain pair of reference cluster atoms N and N')
+  ! It is calculated in routine GFREE and stored in GLL
+  !
+  ! Then the matrix GREF^{NN'}_{LL'} is constructed
+  ! The blocks N /= N' contain g0,
+  ! the other N=N' blocks are set to zero (Green's function is not defined for r=r')
   !
   do N1 = 1,NATOM
     do N2 = 1,NATOM
@@ -235,10 +243,15 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
        end do
      end do
 
-   endif ! LLY == 1
+   endif ! (LLY == 1)
 
-
+! construct right hand side of linear equation system for GREFSY
+! the first LMGF0D=LMMAXD columns of GREF are copied into GREF0
+! GREF0 then contains g0^{(1)N'}_{LL'}, the free space structural
+! Green's function for the central cluster atom
+! --------------------------------------------------------------
    call ZCOPY(NGD*LMGF0D,GREF,1,GREF0,1)
+! --------------------------------------------------------------
 
    if (LLY==1) then
 
@@ -259,12 +272,12 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
        call ZCOPY(NGD*LMGF0D,GTREF,1,DGTDE0(1,site_lm_index2),1)
      end do
-   end if  ! LLY==1
+   end if  ! (LLY==1)
 
    do N2 = 1,NATOM
      site_lm_index2 = (N2-1)*LMGF0D + 1
 
-     ! -G_ref * \Delta t  -- stored in GTREF
+     ! -G_ref * \Delta t_ref  -- stored in GTREF
      call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,site_lm_index2),NGD, &
      TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
      CZERO,GTREF,NGD)
@@ -285,7 +298,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
    ! Solves (1 - g0 \Delta t) G_ref = g0 for G_ref.
    call GREFSY(GREF,GREF0,IPVT,NDIM,DGTDE, &
                LLY_G0TR, &
-               lmaxd, naclsd, LLY)
+               LMMAXD, LLY)
 
    if (LLY==1) then
 
