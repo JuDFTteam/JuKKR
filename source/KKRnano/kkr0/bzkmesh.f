@@ -1,20 +1,19 @@
       SUBROUTINE BZKMESH(NBXIN,NBYIN,NBZIN,MAXMESH,LIRR,BRAVAIS,RECBV,
      &                   NSYMAT,RSYMAT,ISYMINDEX,
      &                   IELAST,EZ,KMESH,IPRINT,MAXMSHD,
-C                        new after inc.p remove
-     &                   IEMXD, KPOIBZ, EKMD, IGUESSD)
+C                        new after inc.p removal
+C                        input:
+     &                   IEMXD, KPOIBZ,
+C                        output:
+     &                   EKMD)
 C     .. called by ..
 C     BZKINT0
 C     ..
       IMPLICIT NONE
-C     .. Parameters ..
-C      INCLUDE 'inc.p'
-C     ..
 
       INTEGER IEMXD
       INTEGER KPOIBZ
       INTEGER EKMD
-      INTEGER IGUESSD
 
 C     .. Scalar Arguments ..
       INTEGER MAXMESH,NBXIN,NBYIN,NBZIN,NSYMAT,IPRINT,IELAST,MAXMSHD
@@ -143,14 +142,10 @@ C
       WRITE (6,'(12X,A)')
      &       'BZKMESH: checking dimensions of precond. arrays ...'
 C
-      IF (EKMIN.GT.EKMD) THEN
-        WRITE (6,*)
-     &    ' ERROR: Dimension EKMD in inc.p too small',
-     &    EKMIN, EKMD
-        STOP '< BZKMESH >'
-      ELSE
-        WRITE(6,*) '           EKMIN=',EKMIN,'  EKMD=',EKMD
-      ENDIF
+C     Set EKMD to the minimum value needed
+      EKMD = EKMIN
+      WRITE(6,*) '           EKMIN=',EKMIN,'  EKMD=',EKMD
+
 C
       INQUIRE(FILE='new.kpoints',EXIST=NEWKP)
 C
@@ -171,13 +166,10 @@ C
         DO I = 1,IELAST
             EKMIN = EKMIN + NEWNOFKS(KMESH(I))
         ENDDO
-C
-        IF (EKMIN.GT.EKMD) THEN
-          WRITE (6,*)
-          WRITE (6,*)
-     &      '           WARNING: Dimension EKMD ',
-     &      ' too small for use of new.kpoints'
-        ENDIF
+
+C       Set EKMD to the minimum value needed
+        EKMD = EKMIN
+
           WRITE(6,*) '      new: EKMIN=',EKMIN,'  EKMD=',EKMD
 C
 C

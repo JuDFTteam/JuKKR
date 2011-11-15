@@ -143,6 +143,7 @@ C
 C
       OPEN(77,FILE='atominfo',FORM='formatted')
       DO I=1,NAEZ
+
                            READ (UNIT=77,FMT=*)    Z(I),
      +                        LMXC,
      +                       (KFG(J),J=1,4),

@@ -89,23 +89,21 @@
 !     NCORE(NPOTD)             : number of core states
 ! ----------------------------------------------------------------------
 
+    use Config_Reader
+
 !     the inc.p wrapper module is used to include the inc.p and inc.cls
 !     parameters - this works also for free form source files
-    use inc_p_wrapper_module
+    !use inc_p_wrapper_module
     implicit none
 
 !   double precision KIND constant
     integer, parameter :: DP = kind(1.0D0)
 
 !     .. Parameters ..
-    integer ::   LASSLD,LMMAXD,LMPOTD,LMXSPD,LM2D, &
-    MAXMSHD,NPOTD,NSYMAXD
-    parameter (LMMAXD= (LMAXD+1)**2)
-    parameter (NPOTD= NSPIND*NAEZD)
-    parameter (LMPOTD= (LPOTD+1)**2)
-    parameter (LMXSPD= (2*LPOTD+1)**2)
-    parameter (LASSLD=4*LMAXD)
-    parameter (LM2D= (2*LMAXD+1)**2)
+
+    integer :: NSYMAXD
+    integer :: MAXMSHD
+
 !     Maximal number of Brillouin zone symmetries, 48 is largest
 !     possible number
     parameter (NSYMAXD=48)
@@ -392,14 +390,126 @@
     double precision, dimension(:), pointer :: RMTNEW
     integer, dimension(:), pointer :: INIPOL
 
+    integer ::   LASSLD,LMMAXD,LMPOTD,LMXSPD,LM2D,NPOTD
+
+! ------------- parameters derived from others or calculated
+    integer ::   LPOTD
+    integer ::   IEMXD
+    integer ::   NCLEB
+    integer, parameter :: KREL = 0
+
+! ------------- parameters from global.conf (former inc.p, inc.cls)
+
+    integer :: LMAXD
+    integer :: NSPIND
+    integer :: NAEZD
+    integer :: IRNSD
+    integer :: TRC
+    integer :: IRMD
+    integer :: NREFD
+    integer :: NRD
+    integer :: IRID
+    integer :: NFUND
+    integer :: NCELLD
+    integer :: NGSHD
+    integer :: NACLSD
+    integer :: NCLSD
+    integer :: IPAND
+    integer :: NXIJD
+    integer :: NATRCD
+    integer :: NUTRCD
+    integer :: KPOIBZ
+    integer :: EKMD
+    integer :: IGUESSD
+    integer :: BCPD
+    integer :: NMAXD
+    integer :: ISHLD
+    integer :: LLY
+
+    character(len=40) :: variable
+    integer :: next_ptr
+
 ! ------------ end of declarations ---------------------------------
 
-! allocations
+    type (ConfigReader) :: conf
 
-    ! Energy mesh
-    allocate(EZ(IEMXD), stat=ierror)
-    allocate(WEZ(IEMXD), stat=ierror)
-    allocate(KMESH(IEMXD), stat=ierror)
+    call createConfigReader(conf)
+    call parseFile(conf, 'global.conf', ierror)
+
+    call getValueInteger(conf, "LMAXD", LMAXD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NSPIND", NSPIND, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NAEZD", NAEZD, ierror)
+    if (ierror /= 0) stop
+    write(*,*) "NAEZD = ", NAEZD
+    call getValueInteger(conf, "IRNSD", IRNSD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "TRC", TRC, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "IRMD", IRMD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NREFD", NREFD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NRD", NRD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "IRID", IRID, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NFUND", NFUND, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NCELLD", NCELLD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NGSHD", NGSHD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NACLSD", NACLSD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NCLSD", NCLSD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "IPAND", IPAND, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NXIJD", NXIJD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NATRCD", NATRCD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NUTRCD", NUTRCD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "KPOIBZ", KPOIBZ, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "IGUESSD", IGUESSD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "BCPD", BCPD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NMAXD", NMAXD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "ISHLD", ISHLD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "LLY", LLY, ierror)
+    if (ierror /= 0) stop
+
+    write(*,*) "The following variables have not been read:"
+    next_ptr = 1
+    do
+      call getUnreadVariable(conf, variable, next_ptr, ierror)
+      if (ierror /= 0) exit
+      write (*,*) variable
+    end do
+
+    call destroyConfigReader(conf)
+
+    LPOTD = 2*LMAXD
+    LMMAXD= (LMAXD+1)**2
+    NPOTD= NSPIND*NAEZD
+    LMPOTD= (LPOTD+1)**2
+    LMXSPD= (2*LPOTD+1)**2
+    LASSLD=4*LMAXD
+    LM2D= (2*LMAXD+1)**2
+
+    PI = 4.0D0*ATAN(1.0D0)
+    EFERMI = 0.0d0
+
+!-----------------------------------------------------------------------------
+! Array allocations BEGIN 1
+!-----------------------------------------------------------------------------
 
     ! Lattice
     allocate(RBASIS(3,NAEZD), stat=ierror)
@@ -454,25 +564,18 @@
     allocate(WG(LASSLD), stat=ierror)
     allocate(YRG(LASSLD,0:LASSLD,0:LASSLD), stat=ierror)
 
-    ! Clebsch-Gordon coefficients
-    allocate(CLEB(NCLEB,2), stat=ierror)
-    allocate(ICLEB(NCLEB,3), stat=ierror)
-    allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat=ierror)
-    allocate(LOFLM(LM2D), stat=ierror)
-
-!     .. core states ..
+    !     .. core states ..
     allocate(ITITLE(20,NPOTD), stat=ierror)
     allocate(LCORE(20,NPOTD), stat=ierror)
     allocate(NCORE(NPOTD), stat=ierror)
 
-!   auxillary
-    allocate(DEZ(IEMXD), stat=ierror)
+    ! auxillary
     allocate(RMTNEW(NAEZD), stat=ierror)
     allocate(INIPOL(NAEZD), stat=ierror)
 
-    PI = 4.0D0*ATAN(1.0D0)
-    EFERMI = 0.0d0
-
+!-----------------------------------------------------------------------------
+! Array allocations END 1
+!-----------------------------------------------------------------------------
 
     call RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS, &
                   E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3, &
@@ -491,6 +594,37 @@
                   IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX, &
                   LMAXD, IRNSD, TRC, LPOTD, NSPIND, &
                   IRMD, NAEZD)
+
+! unnecessary parameters, read in for compatibility: IRM, KHFELD, ...
+
+! --------------- calculated parameters --------------------------------------
+    IEMXD = NPOL + NPNT1 + NPNT2 + NPNT3
+    NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
+
+!-----------------------------------------------------------------------------
+! Array allocations BEGIN 2
+!-----------------------------------------------------------------------------
+
+    ! Energy mesh
+    allocate(EZ(IEMXD), stat=ierror)
+    allocate(WEZ(IEMXD), stat=ierror)
+    allocate(KMESH(IEMXD), stat=ierror)
+
+    !   auxillary
+    allocate(DEZ(IEMXD), stat=ierror)
+
+    ! Clebsch-Gordon coefficients
+    allocate(CLEB(NCLEB,2), stat=ierror)
+    allocate(ICLEB(NCLEB,3), stat=ierror)
+    allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat=ierror)
+    allocate(LOFLM(LM2D), stat=ierror)
+
+
+!-----------------------------------------------------------------------------
+! Array allocations END 2
+!-----------------------------------------------------------------------------
+
+
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -633,7 +767,9 @@
                  DSYMLL, &
                  INTERVX,INTERVY,INTERVZ, &
                  IELAST,EZ,KMESH,MAXMESH,MAXMSHD, &
-                 LMAX, IEMXD, KREL, KPOIBZ, EKMD, IGUESSD)
+                 LMAX, IEMXD, KREL, KPOIBZ, EKMD)
+    ! after return from bzkint0, EKMD contains the right value
+
 ! ======================================================================
 ! ======================================================================
 
@@ -663,7 +799,7 @@
                                     IGUESSD, IPAND, ISHLD, IRNSD, &
                                     KPOIBZ, KREL, NFUND, NATRCD, &
                                     NCLSD, NMAXD, NRD, NSPIND, &
-                                    NUTRCD, NXIJD)
+                                    NUTRCD, NXIJD, LLY, EKMD)
 
     call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
     BRAVAIS,RECBV,VOLUME0,RMAX,GMAX, &

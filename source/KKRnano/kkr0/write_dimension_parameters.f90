@@ -2,6 +2,8 @@
 ! Writes array dimension parameters (previously in inc.p and inc.cls)
 ! to file inp0.unf
 !---------------------------------------------------------------------
+! missing: TRC (not used in kkr2)
+! could be removed: KREL ?
 subroutine write_dimension_parameters( &
      NAEZD, &
      LMAXD, &
@@ -26,7 +28,9 @@ subroutine write_dimension_parameters( &
      NRD, &
      NSPIND, &
      NUTRCD, &
-     NXIJD)
+     NXIJD, &
+     LLY, &
+     EKMD)
 
   implicit none
 
@@ -54,6 +58,8 @@ subroutine write_dimension_parameters( &
   integer, intent(in) :: NSPIND
   integer, intent(in) :: NUTRCD
   integer, intent(in) :: NXIJD
+  integer, intent(in) :: LLY
+  integer, intent(in) :: EKMD
 
   integer, parameter :: FILEHANDLE = 67
 
@@ -83,6 +89,8 @@ subroutine write_dimension_parameters( &
   write(FILEHANDLE) NSPIND
   write(FILEHANDLE) NUTRCD
   write(FILEHANDLE) NXIJD
+  write(FILEHANDLE) LLY
+  write(FILEHANDLE) EKMD
 
   close(FILEHANDLE)
 

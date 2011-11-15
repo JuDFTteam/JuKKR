@@ -23,7 +23,7 @@ ifeq ($(PLATFORM),ifort)
 FC = ifort
 FC90 = ifort
 # -module <path> specifies where to put .mod files
-FCFLAGS = -debug -gen-interfaces -warn interfaces -module $(BUILDDIR)
+FCFLAGS = -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR)
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
 LDFLAGS =-L/ -llapack_ifort -lblas_ifort
@@ -31,7 +31,7 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = .
+DIRS = . config_reader
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
 
@@ -71,5 +71,5 @@ test:
 #Module dependencies
 
 inc_p_wrapper_module.o: inc.p inc.cls
-inc_p_replace_vars.o: inc.p inc.cls
-inc_p_replace.o: inc_p_replace_vars.o
+config_reader.o: config_reader_dictionary.o
+main0.o: config_reader.o

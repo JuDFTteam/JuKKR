@@ -5,13 +5,11 @@
      +                   INTERVX,INTERVY,INTERVZ,
      +                   IELAST,EZ,KMESH,MAXMESH,MAXMSHD,
 C                        new after inc.p replacement
-     &                   LMAX, IEMXD, KREL, KPOIBZ, EKMD, IGUESSD)
+     &                   LMAX, IEMXD, KREL, KPOIBZ,
+C                        output: (required EKMD value)
+     &                   EKMD)
 C
       IMPLICIT NONE
-
-C     .. Parameters ..
-c      INCLUDE 'inc.p'
-c      INCLUDE 'inc.cls'
 
 C     new after inc.p replace
       INTEGER LMAX
@@ -19,7 +17,6 @@ C     new after inc.p replace
       INTEGER KREL
       INTEGER KPOIBZ
       INTEGER EKMD
-      INTEGER IGUESSD
 
       INTEGER NSYMAXD
       PARAMETER (NSYMAXD=48)
@@ -92,7 +89,7 @@ C
       CALL BZKMESH(INTERVX,INTERVY,INTERVZ,MAXMESH,LIRR,BRAVAIS,RECBV,
      &             NSYMAT,RSYMAT,ISYMINDEX,
      &             IELAST,EZ,KMESH,IPRINT,MAXMSHD,
-     &             IEMXD, KPOIBZ, EKMD, IGUESSD)
+     &             IEMXD, KPOIBZ, EKMD)
 C
       CALL SYMTAUMAT(ROTNAME,RSYMAT,DSYMLL,NSYMAT,ISYMINDEX,
      &               NAEZD,LMMAXD,NAEZ,LMAX+1,KREL,
