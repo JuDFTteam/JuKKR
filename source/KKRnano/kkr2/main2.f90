@@ -11,45 +11,18 @@ program MAIN2
   implicit none
 
   !     .. Parameters ..
-  integer::   LMMAXD
-  parameter (LMMAXD= (LMAXD+1)**2)
-  integer::   NPOTD
-  parameter (NPOTD=NSPIND*NAEZD)
-  integer::   LMAXD1
-  parameter (LMAXD1=LMAXD+1)
-  integer::    MMAXD
-  parameter (MMAXD  = 2*LMAXD + 1)
-  integer::   LM2D
-  parameter (LM2D= (2*LMAXD+1)**2)
-  integer::   LMXSPD
-  parameter (LMXSPD= (2*LPOTD+1)**2)
-  integer::   LASSLD
-  parameter (LASSLD=4*LMAXD)
-  integer::   LMPOTD
-  parameter (LMPOTD= (LPOTD+1)**2)
-  integer::   IRMIND
-  parameter (IRMIND=IRMD-IRNSD)
-  integer::   LRECPOT
-  parameter (LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20))
-  integer::   LRECRES1
-  integer::LRECRES2
-  parameter (LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2))
-  integer::   NTIRD
-  parameter (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
+
   integer::   MAXMSHD
   parameter (MAXMSHD=8)
-  integer::   LLYALM
-  parameter (LLYALM=LLY*(NAEZD*LMMAXD-1)+1)
-  integer::   LLYNGD
-  parameter (LLYNGD=LLY*(NACLSD*LMMAXD-1)+1)
   integer::   NSYMAXD
   parameter (NSYMAXD=48)
-  double complex :: CZERO
+  double complex:: CZERO
   parameter      (CZERO=(0.0D0,0.0D0))
+
   !     ..
   !     .. Local Scalars ..
 
-  double complex :: JSCAL        ! scaling factor for Jij calculation
+  double complex:: JSCAL        ! scaling factor for Jij calculation
   double precision::DENEF
   double precision::E1
   double precision::E2
@@ -138,232 +111,216 @@ program MAIN2
   logical::ERESJIJ
 
 
-  !     .. Local Arrays ..
-  double complex :: EZ(IEMXD)
-  double complex :: WEZ(IEMXD)
-  double complex :: DEZ(IEMXD)
-  double complex :: WEZRN(IEMXD,2)
-  double complex :: DEN(0:LMAXD1,IEMXD,NSPIND)
-  double complex :: DSYMLL(LMMAXD,LMMAXD,48)
-  double complex :: PHILDAU(IRMD,LMAXD1)
-  double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1) ! LDA+U
-  double precision::WG(LASSLD)
-  double precision::YRG(LASSLD,0:LASSLD,0:LASSLD)
+  ! static arrays
   double precision::BRAVAIS(3,3)
-  double precision::RBASIS(3,NAEZD)
   double precision::RECBV(3,3)
   double precision::VBC(2)
+  integer::ISYMINDEX(NSYMAXD)
+  double precision::ECORE(20,2)
+  double precision:: WORK1(2)
+  double precision:: WORK2(2)
+
+  !     .. Local Arrays ..
+  double complex, dimension(:), allocatable ::  EZ
+  double complex, dimension(:), allocatable ::  WEZ
+  double complex, dimension(:), allocatable ::  DEZ
+  double complex, dimension(:,:), allocatable ::  WEZRN
+  double complex, dimension(:,:,:), allocatable ::  DEN
+  double complex, dimension(:,:,:), allocatable ::  DSYMLL
+  double complex, dimension(:,:), allocatable ::  PHILDAU
+  double complex, dimension(:,:,:,:), allocatable ::  DMATLDAU ! LDA+U
+  double precision, dimension(:), allocatable :: WG
+  double precision, dimension(:,:,:), allocatable :: YRG
+  double precision, dimension(:,:), allocatable :: RBASIS
   double precision::VAV0
   double precision::VOL0
-  double precision::SMAT(LMXSPD,NAEZD)
-  double precision::CLEB(LMXSPD*LMPOTD)
-  double precision::CLEB1C(NCLEB,2)
-  double precision::RNORM(IEMXD,2)
-  double precision::DFAC(0:LPOTD,0:LPOTD)
-  double precision::RWS(NAEZD)
-  double precision::RMT(NAEZD)
-  double precision::GN(3,NMAXD)
-  double precision::RM(3,NMAXD)
-  double precision::BZKP(3,KPOIBZ,MAXMSHD)
-  double precision::VOLCUB(KPOIBZ,MAXMSHD)
-  double precision::VOLBZ(MAXMSHD)
-  double precision::RR(3,0:NRD)
-  double precision::VINS(IRMIND:IRMD,LMPOTD,2) ! .. input potential (spherical VISP, nonspherical VINS)
-  double precision::VISP(IRMD,2)
-  double precision::VONS(IRMD,LMPOTD,2)        !     .. output potential (nonspherical VONS)
-  double precision::ULDAU(LMAXD1)              ! LDA+U
-  double precision::JLDAU(LMAXD1)              ! LDA+U
-  double precision::UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1) ! LDA+U
-  double precision::WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+  double precision, dimension(:,:), allocatable :: SMAT
+  double precision, dimension(:), allocatable :: CLEB
+  double precision, dimension(:,:), allocatable :: CLEB1C
+  double precision, dimension(:,:), allocatable :: RNORM
+  double precision, dimension(:,:), allocatable :: DFAC
+  double precision, dimension(:), allocatable :: RWS
+  double precision, dimension(:), allocatable :: RMT
+  double precision, dimension(:,:), allocatable :: GN
+  double precision, dimension(:,:), allocatable :: RM
+  double precision, dimension(:,:,:), allocatable :: BZKP
+  double precision, dimension(:,:), allocatable :: VOLCUB
+  double precision, dimension(:), allocatable :: VOLBZ
+  double precision, dimension(:,:), allocatable :: RR
+  double precision, dimension(:,:,:), allocatable :: VINS        ! .. input potential
+  double precision, dimension(:,:), allocatable :: VISP
+  double precision, dimension(:,:,:), allocatable :: VONS        !     .. output potential
+  double precision, dimension(:), allocatable :: ULDAU              ! LDA+U
+  double precision, dimension(:), allocatable :: JLDAU              ! LDA+U
+  double precision, dimension(:,:,:,:,:), allocatable :: UMLDAU     ! LDA+U
+  double precision, dimension(:,:,:,:), allocatable :: WMLDAU
 
   integer::NMESH
-  integer::KMESH(IEMXD)
-  integer::NOFKS(MAXMSHD)
-  integer::EZOA(NACLSD,NAEZD)
+  integer, dimension(:), allocatable :: KMESH
+  integer, dimension(:), allocatable :: NOFKS
+  integer, dimension(:,:), allocatable :: EZOA
   integer::NSYMAT
-  integer::NUMN0(NAEZD)
-  integer::INDN0(NAEZD,NACLSD)
+  integer, dimension(:), allocatable :: NUMN0
+  integer, dimension(:,:), allocatable :: INDN0
   integer::ID
   integer::MAXMESH
-  integer::NSG(ISHLD)
-  integer::NSR(ISHLD)
-  integer::LLDAU(LMAXD1)    ! LDA+U
+  integer, dimension(:), allocatable :: NSG
+  integer, dimension(:), allocatable :: NSR
+  integer, dimension(:), allocatable :: LLDAU    ! LDA+U
   integer::NGMAX
   integer::NRMAX
   integer::NSHLG
   integer::NSHLR
-  !     ..
-  ! ----------------------------------------------------------------------
-  !   ECOU(0:LPOTD,NAEZD)    ! Coulomb energy
-  !   EPOTIN(NAEZD),         ! energy of input potential (EPOTINB
-  !   ESPC(0:3,NPOTD),        ! energy single particle core
-  !   ESPV(0:LMAXD1,NPOTD)    ! energy single particle valence
-  !   EXC(0:LPOTD,NAEZD),    ! E_xc
-  ! ----------------------------------------------------------------------
-  double complex :: TMATN(LMMAXD,LMMAXD,NSPIND)
-  double complex :: DTDE(LMMAXD,LMMAXD,NSPIND)
-  double complex :: TREFLL(LMMAXD,LMMAXD,NREFD)
-  double complex :: DTREFLL(LMMAXD,LMMAXD,NREFD)
-  double complex :: DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD)
-  double complex :: GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD)
-  double complex :: GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND)
-  double complex :: GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIND)
-  double complex :: DTIXIJ(LMMAXD,LMMAXD)
-  double complex :: GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND)
-  double complex :: GXIJ_ALL(LMMAXD,LMMAXD,NXIJD,NSPIND)
+
+  double complex, dimension(:,:,:), allocatable ::  TMATN
+  double complex, dimension(:,:,:), allocatable ::  DTDE
+  double complex, dimension(:,:,:), allocatable ::  TREFLL
+  double complex, dimension(:,:,:), allocatable ::  DTREFLL
+  double complex, dimension(:,:,:,:), allocatable ::  DGREFN
+  double complex, dimension(:,:,:,:), allocatable ::  GREFN
+  double complex, dimension(:,:,:,:), allocatable ::  GMATN
+  double complex, dimension(:,:,:,:), allocatable ::  GMATN_ALL
+  double complex, dimension(:,:), allocatable ::  DTIXIJ
+  double complex, dimension(:,:,:,:), allocatable ::  GMATXIJ
+  double complex, dimension(:,:,:,:), allocatable ::  GXIJ_ALL
 
   !----- Initial guess ---------------------------------------------------
-  complex::          PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1)
+  complex, dimension(:,:,:), allocatable :: PRSC
   double precision:: QMRBOUND
-  double precision:: CNVFAC(EKMD,NSPIND-SMPID+1)
-  integer::          IGUESS
+  double precision, dimension(:,:), allocatable ::  CNVFAC
+  integer::IGUESS
   integer::BCP
   integer::PRSPIN
-  integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1,NSPIND-SMPID+1)
+  integer, dimension(:,:,:), allocatable :: SPRS
 
   !----- Lloyd -----------------------------------------------------------
-  double complex :: LLY_G0TR(IEMXD,NCLSD)
-  double complex :: LLY_GRDT(IEMXD,NSPIND)
-  double complex :: LLY_GRDT_ALL(IEMXD,NSPIND)
-  double complex :: TR_ALPH(NSPIND)
-  double complex :: JXCIJINT(NXIJD)
+  double complex, dimension(:,:), allocatable ::  LLY_G0TR
+  double complex, dimension(:,:), allocatable ::  LLY_GRDT
+  double complex, dimension(:,:), allocatable ::  LLY_GRDT_ALL
+  double complex, dimension(:), allocatable ::  TR_ALPH
+  double complex, dimension(:), allocatable ::  JXCIJINT
   ! ----------------------------------------------------------------------
 
   ! ----------------------------------------------------------------------
-  double precision::ECOU(0:LPOTD)
+  double precision, dimension(:), allocatable :: ECOU
   double precision::EPOTIN
-  double precision::ESPC(0:3,NSPIND)
-  double precision::ESPV(0:LMAXD1,NSPIND)
-  double precision::EXC(0:LPOTD)
+  double precision, dimension(:,:), allocatable :: ESPC
+  double precision, dimension(:,:), allocatable :: ESPV
+  double precision, dimension(:), allocatable :: EXC
   double precision::EULDAU
   double precision::EDCLDAU
-  double precision::A(NAEZD)
-  double precision::B(NAEZD)
-  double precision::DRDI(IRMD,NAEZD)
-  double precision::R(IRMD,NAEZD)
-  double precision::ECORE(20,2)
-  double precision::THETAS(IRID,NFUND,NCELLD)
-  double precision::ZAT(NAEZD)
+  double precision, dimension(:), allocatable :: A
+  double precision, dimension(:), allocatable :: B
+  double precision, dimension(:,:), allocatable :: DRDI
+  double precision, dimension(:,:), allocatable :: R
+  double precision, dimension(:,:,:), allocatable :: THETAS
+  double precision, dimension(:), allocatable :: ZAT
 
   ! ----------------------------------------------------------------------
-  double precision:: RHOCAT(IRMD,2)
-  double precision:: R2NEF(IRMD,LMPOTD,2)
-  double precision:: RHO2NS(IRMD,LMPOTD,2)
-  double precision:: CHARGE(0:LMAXD1,2)
+  double precision, dimension(:,:), allocatable ::  RHOCAT
+  double precision, dimension(:,:,:), allocatable ::  R2NEF
+  double precision, dimension(:,:,:), allocatable ::  RHO2NS
+  double precision, dimension(:,:), allocatable ::  CHARGE
   !     ..
-  double precision::GSH(NGSHD)
-  double precision::CMINST(LMPOTD)    ! charge moment of interstitial
-  double precision::CMOM(LMPOTD)      ! LM moment of total charge
-  double precision::CATOM(NSPIND)     ! total charge per atom
+  double precision, dimension(:), allocatable :: GSH
+  double precision, dimension(:), allocatable :: CMINST    ! charge moment of interstitial
+  double precision, dimension(:), allocatable :: CMOM      ! LM moment of total charge
+  double precision, dimension(:), allocatable :: CATOM     ! total charge per atom
   double precision::QC                ! core charge
   double precision::VMAD
   !     ,,
   !     .. FORCES
-  double precision::FLM(-1:1,NAEZD)
-  double precision::FLMC(-1:1,NAEZD)
+  double precision, dimension(:,:), allocatable :: FLM
+  double precision, dimension(:,:), allocatable :: FLMC
   !     .. MIXING
-  double precision::SM1S(NTIRD)
-  double precision::FM1S(NTIRD)
-  double precision::UI2(NTIRD,2:ITDBRYD)
-  double precision::VI2(NTIRD,2:ITDBRYD)
-  double precision::WIT(2:ITDBRYD)
+  double precision, dimension(:), allocatable :: SM1S
+  double precision, dimension(:), allocatable :: FM1S
+  double precision, dimension(:,:), allocatable :: UI2
+  double precision, dimension(:,:), allocatable :: VI2
+  double precision, dimension(:), allocatable :: WIT
 
   ! ----------------------------------------------------------------------
-  integer::IMT(NAEZD)
-  integer::IPAN(NAEZD)
-  integer::IRC(NAEZD)
-  integer::IRNS(NAEZD)
-  integer::IRCUT(0:IPAND,NAEZD)
-  integer::IRMIN(NAEZD)
-  integer::IRWS(NAEZD)
-  integer::ITITLE(20,NPOTD)
-  integer::LCORE(20,NPOTD)
+  integer, dimension(:), allocatable :: IMT
+  integer, dimension(:), allocatable :: IPAN
+  integer, dimension(:), allocatable :: IRC
+  integer, dimension(:), allocatable :: IRNS
+  integer, dimension(:,:), allocatable :: IRCUT
+  integer, dimension(:), allocatable :: IRMIN
+  integer, dimension(:), allocatable :: IRWS
+  integer, dimension(:,:), allocatable :: ITITLE
+  integer, dimension(:,:), allocatable :: LCORE
   integer::LCOREMAX
-  integer::LLMSP(NFUND,NAEZD)
-  integer::NCORE(NPOTD)
-  integer::NFU(NAEZD)
-  integer::NTCELL(NAEZD)
-  integer::ISYMINDEX(48)
-  integer::ILM(NGSHD,3)
-  integer::IMAXSH(0:LMPOTD)
-  integer::ICLEB(LMXSPD*LMPOTD,3)
-  integer::LOFLM(LMXSPD)
-  integer::ICLEB1C(NCLEB,3)
-  integer::LOFLM1C(LM2D)
-  integer::IFUNM(LMXSPD,NAEZD)
+  integer, dimension(:,:), allocatable :: LLMSP
+  integer, dimension(:), allocatable :: NCORE
+  integer, dimension(:), allocatable :: NFU
+  integer, dimension(:), allocatable :: NTCELL
+
+  integer, dimension(:,:), allocatable :: ILM
+  integer, dimension(:), allocatable :: IMAXSH
+  integer, dimension(:,:), allocatable :: ICLEB
+  integer, dimension(:), allocatable :: LOFLM
+  integer, dimension(:,:), allocatable :: ICLEB1C
+  integer, dimension(:), allocatable :: LOFLM1C
+  integer, dimension(:,:), allocatable :: IFUNM
   integer::ICST
   integer::NSRA
-  integer::LMSP(LMXSPD,NAEZD)
-  integer::JEND(LMPOTD,0:LMAXD,0:LMAXD)
+  integer, dimension(:,:), allocatable :: LMSP
+  integer, dimension(:,:,:), allocatable :: JEND
   integer::NCLS
   integer::NREF
   integer::RF
   integer::NLDAU
-  double precision::RCLS(3,NACLSD,NCLSD)
-  double precision::RMTREF(NREFD)
-  double precision::VREF(NAEZD)
+  double precision, dimension(:,:,:), allocatable :: RCLS
+  double precision, dimension(:), allocatable :: RMTREF
+  double precision, dimension(:), allocatable :: VREF
 
-  double precision::RXIJ(NXIJD)          ! interatomic distance Ri-Rj
-  double precision::RXCCLS(3,NXIJD)      ! position relative of j rel. to i (sorted)
-  double precision::ZKRXIJ(48,3,NXIJD)   ! set up in clsjij, used in kkrmat01
-  integer::IXCP(NXIJD)                   ! index to atom in elem/cell at site in cluster
-  integer::NXCP(NXIJD)                   ! index to bravais lattice at site in cluster
+  double precision, dimension(:), allocatable :: RXIJ          ! interatomic distance Ri-Rj
+  double precision, dimension(:,:), allocatable :: RXCCLS      ! position relative of j rel. to i (sorted)
+  double precision, dimension(:,:,:), allocatable :: ZKRXIJ    ! set up in clsjij, used in kkrmat01
+  integer, dimension(:), allocatable :: IXCP                   ! index to atom in elem/cell at site in cluster
+  integer, dimension(:), allocatable :: NXCP                   ! index to bravais lattice at site in cluster
   integer::XIJ
   integer::NXIJ
-  integer::ATOM(NACLSD,NAEZD)
-  integer::CLS(NAEZD)
-  integer::NACLS(NCLSD)
-  integer::REFPOT(NAEZD)
+  integer, dimension(:,:), allocatable :: ATOM
+  integer, dimension(:), allocatable :: CLS
+  integer, dimension(:), allocatable :: NACLS
+  integer, dimension(:), allocatable :: REFPOT
 
-  integer::NUTRC                         ! number of inequivalent atoms in the cluster
-  integer::INTRC(NATRCD)                 ! pointer to atoms in the unit cell
-  integer::NATRC                         ! number of atoms in cluster
-  integer::ATTRC(NATRCD)                 ! index to atom in elem/cell at site in cluster
-  integer::EZTRC(NATRCD)                 ! index to bravais lattice  at site in cluster
-
-  !-----------------------------------------------------------------------
-  !     ..
-  !-----------------------------------------------------------------------
-  !     .. MPI ..
-  !     .. N-MPI
-
-  integer::   IERR
-  integer::   MAPBLOCK
-  external     MAPBLOCK
-
-  !    Now in common_mpi
-  !    COMMON       /MPI/MYRANK,NROFNODES
-  !    INTEGER ::      MYRANK,NROFNODES
+  integer::NUTRC                                          ! number of inequivalent atoms in the cluster
+  integer, dimension(:), allocatable :: INTRC                 ! allocatable to atoms in the unit cell
+  integer::NATRC                                          ! number of atoms in cluster
+  integer, dimension(:), allocatable :: ATTRC                 ! index to atom in elem/cell at site in cluster
+  integer, dimension(:), allocatable :: EZTRC                 ! index to bravais lattice  at site in cluster
 
   !     .. L-MPI
-  integer::MYLRANK(LMPID*SMPID*EMPID)
-  integer::LCOMM(LMPID*SMPID*EMPID)
-  integer::LGROUP(LMPID*SMPID*EMPID)
-  integer::LSIZE(LMPID*SMPID*EMPID)
+  integer, dimension(:), allocatable :: MYLRANK
+  integer, dimension(:), allocatable :: LCOMM
+  integer, dimension(:), allocatable :: LGROUP
+  integer, dimension(:), allocatable :: LSIZE
   integer::LMPIC
 
   !     .. LS-MPI
-  integer::LSRANK(LMPID,NAEZD*SMPID*EMPID)
-  integer::LSMYRANK(LMPID,NAEZD*SMPID*EMPID)
+  integer, dimension(:,:), allocatable :: LSRANK
+  integer, dimension(:,:), allocatable :: LSMYRANK
   integer::LSMPIC
   integer::LSMPIB
   !     .. S-MPI
-  integer::SRANK(SMPID,NAEZD*LMPID*EMPID)
-  integer::SMYRANK(SMPID,NAEZD*LMPID*EMPID)
+  integer, dimension(:,:), allocatable :: SRANK
+  integer, dimension(:,:), allocatable :: SMYRANK
   integer::SMPIC
   integer::SMPIB
   integer::MAPSPIN
 
   !     .. E-MPI
-  real::ETIME(IEMXD)
-  integer::EMYRANK(EMPID,NAEZD*LMPID*SMPID)
-  integer::ERANK(EMPID,NAEZD*LMPID*SMPID)
+  real, dimension(:), allocatable :: ETIME
+  integer, dimension(:,:), allocatable :: EMYRANK
+  integer, dimension(:,:), allocatable :: ERANK
   integer::EMPIC
   integer::EMPIB
   integer::IE
   integer::IELAST
-  integer::EPROC(IEMXD)
-  integer::EPROCO(IEMXD)
+  integer, dimension(:), allocatable :: EPROC
+  integer, dimension(:), allocatable :: EPROCO
 
   !     .. ACTV-MPI
   integer::MYACTVRANK
@@ -372,27 +329,63 @@ program MAIN2
   integer::ACTVSIZE
   integer::MYBCRANK
   integer::BCRANK
-  double precision :: WORK1(2)
-  double precision :: WORK2(2)
 
-  external MPI_ALLREDUCE,MPI_FINALIZE,MPI_SEND
+  integer::   IERR
+  integer::   MAPBLOCK
+  external     MAPBLOCK
+
+
   !     ..
   !     .. Arrays in Common ..
   character(len=8)::OPTC(8)
   character(len=8)::TESTC(16)
-!     ..
-!     .. Common blocks ..
-  common /OPTC/OPTC
-  common /TESTC/TESTC
+
+  ! Array allocations
+  integer:: memory_stat
+    !logical :: memory_fail
+
+  ! Parameters that changed to normal variables
+
+  integer::   LMMAXD
+  integer::   NPOTD
+  integer::   LMAXD1
+  integer::   MMAXD
+  integer::   LM2D
+  integer::   LMXSPD
+  integer::   LASSLD
+  integer::   LMPOTD
+  integer::   IRMIND
+  integer::   LRECPOT
+  integer::   LRECRES1
+  integer::   LRECRES2
+  integer::   NTIRD
+  integer::   LLYALM
+  integer::   LLYNGD
+
+  LMMAXD= (LMAXD+1)**2
+  NPOTD=NSPIND*NAEZD
+  LMAXD1=LMAXD+1
+  MMAXD  = 2*LMAXD + 1
+  LM2D= (2*LMAXD+1)**2
+  LMXSPD= (2*LPOTD+1)**2
+  LASSLD=4*LMAXD
+  LMPOTD= (LPOTD+1)**2
+  LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
+  LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
+  NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND
+  LLYALM=LLY*(NAEZD*LMMAXD-1)+1
+  LLYNGD=LLY*(NACLSD*LMMAXD-1)+1
+  IRMIND=IRMD-IRNSD
+
 !     ..
 !     .. External Subroutines ..
-  external CINIT,CONVOL,ECOUB,EPOTINB,ESPCB, &
-  FORCE,FORCEH,FORCXC,MTZERO,KLOOPZ1, &
-  TEST,VMADELBLK,VXCDRV,RMSOUT, &
-  OUTTIME,TIME
+! external CINIT,CONVOL,ECOUB,EPOTINB,ESPCB, &
+! FORCE,FORCEH,FORCXC,MTZERO,KLOOPZ1, &
+! TEST,VMADELBLK,VXCDRV,RMSOUT, &
+! OUTTIME,TIME
 
 !     .. Intrinsic Functions ..
-  intrinsic DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
+! intrinsic DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
 !     ..
 !============================================================= CONSTANTS
   LCORDENS=.true.
@@ -400,6 +393,146 @@ program MAIN2
   FPI = 4.0D0*PI
   RFPI = SQRT(FPI)
   IPF = 74
+
+!-----------------------------------------------------------------------------
+! Array allocations BEGIN
+!-----------------------------------------------------------------------------
+  allocate(EZ(IEMXD), stat = memory_stat)
+  allocate(WEZ(IEMXD), stat = memory_stat)
+  allocate(DEZ(IEMXD), stat = memory_stat)
+  allocate(WEZRN(IEMXD,2), stat = memory_stat)
+  allocate(DEN(0:LMAXD1,IEMXD,NSPIND), stat = memory_stat)
+  allocate(DSYMLL(LMMAXD,LMMAXD,48), stat = memory_stat)
+  allocate(PHILDAU(IRMD,LMAXD1), stat = memory_stat)
+  allocate(DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1), stat = memory_stat)
+  allocate(WG(LASSLD), stat = memory_stat)
+  allocate(YRG(LASSLD,0:LASSLD,0:LASSLD), stat = memory_stat)
+  allocate(RBASIS(3,NAEZD), stat = memory_stat)
+  allocate(SMAT(LMXSPD,NAEZD), stat = memory_stat)
+  allocate(CLEB(LMXSPD*LMPOTD), stat = memory_stat)
+  allocate(CLEB1C(NCLEB,2), stat = memory_stat)
+  allocate(RNORM(IEMXD,2), stat = memory_stat)
+  allocate(DFAC(0:LPOTD,0:LPOTD), stat = memory_stat)
+  allocate(RWS(NAEZD), stat = memory_stat)
+  allocate(RMT(NAEZD), stat = memory_stat)
+  allocate(GN(3,NMAXD), stat = memory_stat)
+  allocate(RM(3,NMAXD), stat = memory_stat)
+  allocate(BZKP(3,KPOIBZ,MAXMSHD), stat = memory_stat)
+  allocate(VOLCUB(KPOIBZ,MAXMSHD), stat = memory_stat)
+  allocate(VOLBZ(MAXMSHD), stat = memory_stat)
+  allocate(RR(3,0:NRD), stat = memory_stat)
+  allocate(VINS(IRMIND:IRMD,LMPOTD,2), stat = memory_stat)
+  allocate(VISP(IRMD,2), stat = memory_stat)
+  allocate(VONS(IRMD,LMPOTD,2), stat = memory_stat)
+  allocate(ULDAU(LMAXD1), stat = memory_stat)
+  allocate(JLDAU(LMAXD1), stat = memory_stat)
+  allocate(UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1), stat = memory_stat)
+  allocate(WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1), stat = memory_stat)
+  allocate(KMESH(IEMXD), stat = memory_stat)
+  allocate(NOFKS(MAXMSHD), stat = memory_stat)
+  allocate(EZOA(NACLSD,NAEZD), stat = memory_stat)
+  allocate(NUMN0(NAEZD), stat = memory_stat)
+  allocate(INDN0(NAEZD,NACLSD), stat = memory_stat)
+  allocate(NSG(ISHLD), stat = memory_stat)
+  allocate(NSR(ISHLD), stat = memory_stat)
+  allocate(LLDAU(LMAXD1), stat = memory_stat)
+  allocate(TMATN(LMMAXD,LMMAXD,NSPIND), stat = memory_stat)
+  allocate(DTDE(LMMAXD,LMMAXD,NSPIND), stat = memory_stat)
+  allocate(TREFLL(LMMAXD,LMMAXD,NREFD), stat = memory_stat)
+  allocate(DTREFLL(LMMAXD,LMMAXD,NREFD), stat = memory_stat)
+  allocate(DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD), stat = memory_stat)
+  allocate(GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD), stat = memory_stat)
+  allocate(GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND), stat = memory_stat)
+  allocate(GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIND), stat = memory_stat)
+  allocate(DTIXIJ(LMMAXD,LMMAXD), stat = memory_stat)
+  allocate(GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND), stat = memory_stat)
+  allocate(GXIJ_ALL(LMMAXD,LMMAXD,NXIJD,NSPIND), stat = memory_stat)
+  allocate(PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1), stat = memory_stat)
+  allocate(CNVFAC(EKMD,NSPIND-SMPID+1), stat = memory_stat)
+  allocate(SPRS(NGUESSD*LMMAXD+1,EKMD+1,NSPIND-SMPID+1), stat = memory_stat)
+  allocate(LLY_G0TR(IEMXD,NCLSD), stat = memory_stat)
+  allocate(LLY_GRDT(IEMXD,NSPIND), stat = memory_stat)
+  allocate(LLY_GRDT_ALL(IEMXD,NSPIND), stat = memory_stat)
+  allocate(TR_ALPH(NSPIND), stat = memory_stat)
+  allocate(JXCIJINT(NXIJD), stat = memory_stat)
+  allocate(ECOU(0:LPOTD), stat = memory_stat)
+  allocate(ESPC(0:3,NSPIND), stat = memory_stat)
+  allocate(ESPV(0:LMAXD1,NSPIND), stat = memory_stat)
+  allocate(EXC(0:LPOTD), stat = memory_stat)
+  allocate(A(NAEZD), stat = memory_stat)
+  allocate(B(NAEZD), stat = memory_stat)
+  allocate(DRDI(IRMD,NAEZD), stat = memory_stat)
+  allocate(R(IRMD,NAEZD), stat = memory_stat)
+  allocate(THETAS(IRID,NFUND,NCELLD), stat = memory_stat)
+  allocate(ZAT(NAEZD), stat = memory_stat)
+  allocate(RHOCAT(IRMD,2), stat = memory_stat)
+  allocate(R2NEF(IRMD,LMPOTD,2), stat = memory_stat)
+  allocate(RHO2NS(IRMD,LMPOTD,2), stat = memory_stat)
+  allocate(CHARGE(0:LMAXD1,2), stat = memory_stat)
+  allocate(GSH(NGSHD), stat = memory_stat)
+  allocate(CMINST(LMPOTD), stat = memory_stat)
+  allocate(CMOM(LMPOTD), stat = memory_stat)
+  allocate(CATOM(NSPIND), stat = memory_stat)
+  allocate(FLM(-1:1,NAEZD), stat = memory_stat)
+  allocate(FLMC(-1:1,NAEZD), stat = memory_stat)
+  allocate(SM1S(NTIRD), stat = memory_stat)
+  allocate(FM1S(NTIRD), stat = memory_stat)
+  allocate(UI2(NTIRD,2:ITDBRYD), stat = memory_stat)
+  allocate(VI2(NTIRD,2:ITDBRYD), stat = memory_stat)
+  allocate(WIT(2:ITDBRYD), stat = memory_stat)
+  allocate(IMT(NAEZD), stat = memory_stat)
+  allocate(IPAN(NAEZD), stat = memory_stat)
+  allocate(IRC(NAEZD), stat = memory_stat)
+  allocate(IRNS(NAEZD), stat = memory_stat)
+  allocate(IRCUT(0:IPAND,NAEZD), stat = memory_stat)
+  allocate(IRMIN(NAEZD), stat = memory_stat)
+  allocate(IRWS(NAEZD), stat = memory_stat)
+  allocate(ITITLE(20,NPOTD), stat = memory_stat)
+  allocate(LCORE(20,NPOTD), stat = memory_stat)
+  allocate(LLMSP(NFUND,NAEZD), stat = memory_stat)
+  allocate(NCORE(NPOTD), stat = memory_stat)
+  allocate(NFU(NAEZD), stat = memory_stat)
+  allocate(NTCELL(NAEZD), stat = memory_stat)
+  allocate(ILM(NGSHD,3), stat = memory_stat)
+  allocate(IMAXSH(0:LMPOTD), stat = memory_stat)
+  allocate(ICLEB(LMXSPD*LMPOTD,3), stat = memory_stat)
+  allocate(LOFLM(LMXSPD), stat = memory_stat)
+  allocate(ICLEB1C(NCLEB,3), stat = memory_stat)
+  allocate(LOFLM1C(LM2D), stat = memory_stat)
+  allocate(IFUNM(LMXSPD,NAEZD), stat = memory_stat)
+  allocate(LMSP(LMXSPD,NAEZD), stat = memory_stat)
+  allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat = memory_stat)
+  allocate(RCLS(3,NACLSD,NCLSD), stat = memory_stat)
+  allocate(RMTREF(NREFD), stat = memory_stat)
+  allocate(VREF(NAEZD), stat = memory_stat)
+  allocate(RXIJ(NXIJD), stat = memory_stat)
+  allocate(RXCCLS(3,NXIJD), stat = memory_stat)
+  allocate(ZKRXIJ(48,3,NXIJD), stat = memory_stat)
+  allocate(IXCP(NXIJD), stat = memory_stat)
+  allocate(NXCP(NXIJD), stat = memory_stat)
+  allocate(ATOM(NACLSD,NAEZD), stat = memory_stat)
+  allocate(CLS(NAEZD), stat = memory_stat)
+  allocate(NACLS(NCLSD), stat = memory_stat)
+  allocate(REFPOT(NAEZD), stat = memory_stat)
+  allocate(INTRC(NATRCD), stat = memory_stat)
+  allocate(ATTRC(NATRCD), stat = memory_stat)
+  allocate(EZTRC(NATRCD), stat = memory_stat)
+  allocate(MYLRANK(LMPID*SMPID*EMPID), stat = memory_stat)
+  allocate(LCOMM(LMPID*SMPID*EMPID), stat = memory_stat)
+  allocate(LGROUP(LMPID*SMPID*EMPID), stat = memory_stat)
+  allocate(LSIZE(LMPID*SMPID*EMPID), stat = memory_stat)
+  allocate(LSRANK(LMPID,NAEZD*SMPID*EMPID), stat = memory_stat)
+  allocate(LSMYRANK(LMPID,NAEZD*SMPID*EMPID), stat = memory_stat)
+  allocate(SRANK(SMPID,NAEZD*LMPID*EMPID), stat = memory_stat)
+  allocate(SMYRANK(SMPID,NAEZD*LMPID*EMPID), stat = memory_stat)
+  allocate(ETIME(IEMXD), stat = memory_stat)
+  allocate(EMYRANK(EMPID,NAEZD*LMPID*SMPID), stat = memory_stat)
+  allocate(ERANK(EMPID,NAEZD*LMPID*SMPID), stat = memory_stat)
+  allocate(EPROC(IEMXD), stat = memory_stat)
+  allocate(EPROCO(IEMXD), stat = memory_stat)
+!-----------------------------------------------------------------------------
+! Array allocations END
+!-----------------------------------------------------------------------------
 
 ! ======================================================================
 ! =             read in variables from unformatted files               =
@@ -1564,5 +1697,144 @@ spinloop:     do ISPIN = 1,NSPIN
 !      WRITE(6,*) 'BARRIER f:',MYRANK
   call MPI_FINALIZE(IERR)
 
+!-----------------------------------------------------------------------------
+! Array DEallocations BEGIN
+!-----------------------------------------------------------------------------
+  deallocate(EZ, stat = memory_stat)
+  deallocate(WEZ, stat = memory_stat)
+  deallocate(DEZ, stat = memory_stat)
+  deallocate(WEZRN, stat = memory_stat)
+  deallocate(DEN, stat = memory_stat)
+  deallocate(DSYMLL, stat = memory_stat)
+  deallocate(PHILDAU, stat = memory_stat)
+  deallocate(DMATLDAU, stat = memory_stat)
+  deallocate(WG, stat = memory_stat)
+  deallocate(YRG, stat = memory_stat)
+  deallocate(RBASIS, stat = memory_stat)
+  deallocate(SMAT, stat = memory_stat)
+  deallocate(CLEB, stat = memory_stat)
+  deallocate(CLEB1C, stat = memory_stat)
+  deallocate(RNORM, stat = memory_stat)
+  deallocate(DFAC, stat = memory_stat)
+  deallocate(RWS, stat = memory_stat)
+  deallocate(RMT, stat = memory_stat)
+  deallocate(GN, stat = memory_stat)
+  deallocate(RM, stat = memory_stat)
+  deallocate(BZKP, stat = memory_stat)
+  deallocate(VOLCUB, stat = memory_stat)
+  deallocate(VOLBZ, stat = memory_stat)
+  deallocate(RR, stat = memory_stat)
+  deallocate(VINS, stat = memory_stat)
+  deallocate(VISP, stat = memory_stat)
+  deallocate(VONS, stat = memory_stat)
+  deallocate(ULDAU, stat = memory_stat)
+  deallocate(JLDAU, stat = memory_stat)
+  deallocate(UMLDAU, stat = memory_stat)
+  deallocate(WMLDAU, stat = memory_stat)
+  deallocate(KMESH, stat = memory_stat)
+  deallocate(NOFKS, stat = memory_stat)
+  deallocate(EZOA, stat = memory_stat)
+  deallocate(NUMN0, stat = memory_stat)
+  deallocate(INDN0, stat = memory_stat)
+  deallocate(NSG, stat = memory_stat)
+  deallocate(NSR, stat = memory_stat)
+  deallocate(LLDAU, stat = memory_stat)
+  deallocate(TMATN, stat = memory_stat)
+  deallocate(DTDE, stat = memory_stat)
+  deallocate(TREFLL, stat = memory_stat)
+  deallocate(DTREFLL, stat = memory_stat)
+  deallocate(DGREFN, stat = memory_stat)
+  deallocate(GREFN, stat = memory_stat)
+  deallocate(GMATN, stat = memory_stat)
+  deallocate(GMATN_ALL, stat = memory_stat)
+  deallocate(DTIXIJ, stat = memory_stat)
+  deallocate(GMATXIJ, stat = memory_stat)
+  deallocate(GXIJ_ALL, stat = memory_stat)
+  deallocate(PRSC, stat = memory_stat)
+  deallocate(CNVFAC, stat = memory_stat)
+  deallocate(SPRS, stat = memory_stat)
+  deallocate(LLY_G0TR, stat = memory_stat)
+  deallocate(LLY_GRDT, stat = memory_stat)
+  deallocate(LLY_GRDT_ALL, stat = memory_stat)
+  deallocate(TR_ALPH, stat = memory_stat)
+  deallocate(JXCIJINT, stat = memory_stat)
+  deallocate(ECOU, stat = memory_stat)
+  deallocate(ESPC, stat = memory_stat)
+  deallocate(ESPV, stat = memory_stat)
+  deallocate(EXC, stat = memory_stat)
+  deallocate(A, stat = memory_stat)
+  deallocate(B, stat = memory_stat)
+  deallocate(DRDI, stat = memory_stat)
+  deallocate(R, stat = memory_stat)
+  deallocate(THETAS, stat = memory_stat)
+  deallocate(ZAT, stat = memory_stat)
+  deallocate(RHOCAT, stat = memory_stat)
+  deallocate(R2NEF, stat = memory_stat)
+  deallocate(RHO2NS, stat = memory_stat)
+  deallocate(CHARGE, stat = memory_stat)
+  deallocate(GSH, stat = memory_stat)
+  deallocate(CMINST, stat = memory_stat)
+  deallocate(CMOM, stat = memory_stat)
+  deallocate(CATOM, stat = memory_stat)
+  deallocate(FLM, stat = memory_stat)
+  deallocate(FLMC, stat = memory_stat)
+  deallocate(SM1S, stat = memory_stat)
+  deallocate(FM1S, stat = memory_stat)
+  deallocate(UI2, stat = memory_stat)
+  deallocate(VI2, stat = memory_stat)
+  deallocate(WIT, stat = memory_stat)
+  deallocate(IMT, stat = memory_stat)
+  deallocate(IPAN, stat = memory_stat)
+  deallocate(IRC, stat = memory_stat)
+  deallocate(IRNS, stat = memory_stat)
+  deallocate(IRCUT, stat = memory_stat)
+  deallocate(IRMIN, stat = memory_stat)
+  deallocate(IRWS, stat = memory_stat)
+  deallocate(ITITLE, stat = memory_stat)
+  deallocate(LCORE, stat = memory_stat)
+  deallocate(LLMSP, stat = memory_stat)
+  deallocate(NCORE, stat = memory_stat)
+  deallocate(NFU, stat = memory_stat)
+  deallocate(NTCELL, stat = memory_stat)
+  deallocate(ILM, stat = memory_stat)
+  deallocate(IMAXSH, stat = memory_stat)
+  deallocate(ICLEB, stat = memory_stat)
+  deallocate(LOFLM, stat = memory_stat)
+  deallocate(ICLEB1C, stat = memory_stat)
+  deallocate(LOFLM1C, stat = memory_stat)
+  deallocate(IFUNM, stat = memory_stat)
+  deallocate(LMSP, stat = memory_stat)
+  deallocate(JEND, stat = memory_stat)
+  deallocate(RCLS, stat = memory_stat)
+  deallocate(RMTREF, stat = memory_stat)
+  deallocate(VREF, stat = memory_stat)
+  deallocate(RXIJ, stat = memory_stat)
+  deallocate(RXCCLS, stat = memory_stat)
+  deallocate(ZKRXIJ, stat = memory_stat)
+  deallocate(IXCP, stat = memory_stat)
+  deallocate(NXCP, stat = memory_stat)
+  deallocate(ATOM, stat = memory_stat)
+  deallocate(CLS, stat = memory_stat)
+  deallocate(NACLS, stat = memory_stat)
+  deallocate(REFPOT, stat = memory_stat)
+  deallocate(INTRC, stat = memory_stat)
+  deallocate(ATTRC, stat = memory_stat)
+  deallocate(EZTRC, stat = memory_stat)
+  deallocate(MYLRANK, stat = memory_stat)
+  deallocate(LCOMM, stat = memory_stat)
+  deallocate(LGROUP, stat = memory_stat)
+  deallocate(LSIZE, stat = memory_stat)
+  deallocate(LSRANK, stat = memory_stat)
+  deallocate(LSMYRANK, stat = memory_stat)
+  deallocate(SRANK, stat = memory_stat)
+  deallocate(SMYRANK, stat = memory_stat)
+  deallocate(ETIME, stat = memory_stat)
+  deallocate(EMYRANK, stat = memory_stat)
+  deallocate(ERANK, stat = memory_stat)
+  deallocate(EPROC, stat = memory_stat)
+  deallocate(EPROCO, stat = memory_stat)
+!-----------------------------------------------------------------------------
+! Array DEallocations END
+!-----------------------------------------------------------------------------
+
 end program MAIN2
-        
