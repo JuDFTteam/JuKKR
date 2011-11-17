@@ -12,9 +12,9 @@
 !                               Alexander Thiess, 14th of December 2009
 ! =======================================================================
 
-    use mpi
-
+    !use mpi  ! problems on JUGENE
     implicit none
+    include 'mpif.h'
 
     integer, intent(in) :: lmpid
     integer, intent(in) :: smpid

@@ -5,10 +5,11 @@
 
 program MAIN2
 
-  use mpi
+  !use mpi
   use common_mpi
-  !use inc_p_wrapper_module
+
   implicit none
+  include 'mpif.h'
 
   !     .. Parameters ..
 

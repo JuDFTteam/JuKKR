@@ -12,9 +12,10 @@ subroutine SREDGX(ISPIN,NSPIN, &                 ! >
 !                               Alexander Thiess, 7th of December 2009
 ! =======================================================================
 
-  use mpi
+  !use mpi
 
   implicit none
+  include 'mpif.h'
 
   integer, intent(in) :: naez
   integer, intent(in) :: lmax

@@ -30,9 +30,10 @@
 ! DGINP ...      derivative of reference Green's function
 ! TSST_LOCAL ..  t-matrix
 
-    use mpi
+    !use mpi
 
     implicit none
+    include 'mpif.h'
 
     integer, intent(in) :: iemxd
     integer, intent(in) :: prod_lmpid_smpid_empid

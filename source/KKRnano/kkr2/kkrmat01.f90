@@ -16,9 +16,10 @@ prod_lmpid_smpid_empid, nthrds, &
 lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
-  use mpi
+  !use mpi
 
   implicit none
+  include 'mpif.h'
   ! ************************************************************************
   !   performs k-space integration,
   !   determines scattering path operator (g(k,e)-t**-1)**-1 and

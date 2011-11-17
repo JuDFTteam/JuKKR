@@ -15,8 +15,10 @@ subroutine SREDGM(  NSPIN,IELAST, &           ! >
 ! F90 conversion: Elias Rabel, Oct. 2011
 ! =======================================================================
 
-  use mpi
+  !use mpi
   implicit none
+
+  include 'mpif.h'
 
   integer, intent(in) :: naez
   integer, intent(in) :: lmax

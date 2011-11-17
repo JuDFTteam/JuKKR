@@ -13,9 +13,9 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   prod_lmpid_smpid_empid, lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ncelld, ipand, ncleb)
 
-  use mpi
+  !use mpi
   implicit none
-
+  include 'mpif.h'
 
   integer :: lmax
   integer :: irmd
