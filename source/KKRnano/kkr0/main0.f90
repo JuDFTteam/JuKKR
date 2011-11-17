@@ -121,7 +121,7 @@
 !     NACLSD
 !     NCLEB
 !     IRMD
-!     IEXMD
+!     IEMXD
 !     NGSHD
 !     IGUESSD
 !     IPAND
@@ -426,6 +426,15 @@
     integer :: ISHLD
     integer :: LLY
 
+    integer :: SMPID
+    integer :: EMPID
+    integer :: NTHRDS
+    integer :: XDIM
+    integer :: YDIM
+    integer :: ZDIM
+    integer :: NATBLD
+    integer :: ITDBRYD
+
     character(len=40) :: variable
     integer :: next_ptr
 
@@ -435,6 +444,7 @@
 
     call createConfigReader(conf)
     call parseFile(conf, 'global.conf', ierror)
+    if (ierror /= 0) stop
 
     call getValueInteger(conf, "LMAXD", LMAXD, ierror)
     if (ierror /= 0) stop
@@ -442,7 +452,6 @@
     if (ierror /= 0) stop
     call getValueInteger(conf, "NAEZD", NAEZD, ierror)
     if (ierror /= 0) stop
-    write(*,*) "NAEZD = ", NAEZD
     call getValueInteger(conf, "IRNSD", IRNSD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "TRC", TRC, ierror)
@@ -484,6 +493,23 @@
     call getValueInteger(conf, "ISHLD", ISHLD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "LLY", LLY, ierror)
+    if (ierror /= 0) stop
+
+    call getValueInteger(conf, "SMPID", SMPID, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "EMPID", EMPID, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NTHRDS", NTHRDS, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "XDIM", XDIM, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "YDIM", YDIM, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "ZDIM", ZDIM, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "NATBLD", NATBLD, ierror)
+    if (ierror /= 0) stop
+    call getValueInteger(conf, "ITDBRYD", ITDBRYD, ierror)
     if (ierror /= 0) stop
 
     write(*,*) "The following variables have not been read:"
@@ -793,13 +819,41 @@
                     NMAXD, ISHLD)
 
 
-    call write_dimension_parameters(NAEZD, LMAXD, &
-                                    NREFD, IRID, BCPD, NACLSD, &
-                                    NCLEB, IRMD, IEMXD, NGSHD, &
-                                    IGUESSD, IPAND, ISHLD, IRNSD, &
-                                    KPOIBZ, KREL, NFUND, NATRCD, &
-                                    NCLSD, NMAXD, NRD, NSPIND, &
-                                    NUTRCD, NXIJD, LLY, EKMD)
+    call write_dimension_parameters( &
+        LMAXD, &
+        NSPIND, &
+        NAEZD, &
+        IRNSD, &
+        TRC, &
+        IRMD, &
+        NREFD, &
+        NRD, &
+        IRID, &
+        NFUND, &
+        NCELLD, &
+        NGSHD, &
+        NACLSD, &
+        NCLSD, &
+        IPAND, &
+        NXIJD, &
+        NATRCD, &
+        NUTRCD, &
+        KPOIBZ, &
+        IGUESSD, &
+        BCPD, &
+        NMAXD, &
+        ISHLD, &
+        LLY, &
+        SMPID, &
+        EMPID, &
+        NTHRDS, &
+        XDIM, &
+        YDIM, &
+        ZDIM, &
+        NATBLD, &
+        ITDBRYD, &
+        IEMXD, &
+        EKMD)
 
     call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
     BRAVAIS,RECBV,VOLUME0,RMAX,GMAX, &

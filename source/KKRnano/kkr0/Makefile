@@ -29,6 +29,15 @@ FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =-L/ -llapack_ifort -lblas_ifort
 endif
 
+ifeq ($(PLATFORM),JUGENE)
+FC = xlf_r
+FC90 = xlf_r
+FCLAGS = -O2 -qmoddir=$(BUILDDIR) -I $(BUILDDIR)
+FC90FLAGS =
+LDFLAGS = -lessl
+endif
+
+
 # Paths to look for files
 #DIRS = . dir1 dir2
 DIRS = . config_reader
@@ -70,6 +79,5 @@ test:
 	
 #Module dependencies
 
-inc_p_wrapper_module.o: inc.p inc.cls
 config_reader.o: config_reader_dictionary.o
 main0.o: config_reader.o
