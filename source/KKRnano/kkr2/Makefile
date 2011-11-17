@@ -46,6 +46,31 @@ ifeq ($(TYPE),debug)
 FCFLAGS += -g -traceback -check all
 endif
 
+ifeq ($(PLATFORM),JUGENE)
+
+ifeq ($(USETOOL),scalasca)
+  FC = scalasca -instrument -user #end of line
+  TYPE = debug
+else
+  FC =
+endif
+
+
+FC += mpixlf77_r
+FC90 = mpixlf90_r
+FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/include
+FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
+LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
+
+ifeq ($(TYPE),debug)
+  FCFLAGS += -g -qcheck
+else
+  FCFLAGS += -O3 -qipa
+endif
+
+endif
+
+
 
 # Paths to look for files
 #DIRS = . dir1 dir2
@@ -89,8 +114,7 @@ test:
 #Module dependencies
 
 # only main2 and lattice3d use common_mpi
-main2.o: inc_p_wrapper_module.o common_mpi.o
+main2.o: common_mpi.o
 lattice3d.o: common_mpi.o
-inc_p_wrapper_module.o: inc.p inc.cls
 
 

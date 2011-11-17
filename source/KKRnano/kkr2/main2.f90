@@ -7,7 +7,7 @@ program MAIN2
 
   use mpi
   use common_mpi
-  use inc_p_wrapper_module
+  !use inc_p_wrapper_module
   implicit none
 
   !     .. Parameters ..
@@ -334,7 +334,6 @@ program MAIN2
   integer::   MAPBLOCK
   external     MAPBLOCK
 
-
   !     ..
   !     .. Arrays in Common ..
   character(len=8)::OPTC(8)
@@ -358,10 +357,100 @@ program MAIN2
   integer::   LRECPOT
   integer::   LRECRES1
   integer::   LRECRES2
-  integer::   NTIRD
-  integer::   LLYALM
-  integer::   LLYNGD
+  integer::   NTIRD    ! for Broyden mixing
 
+  ! dimension parameters
+  integer :: NAEZD
+  integer :: LMAXD
+  integer :: NREFD
+  integer :: IRID
+  integer :: BCPD
+  integer :: NACLSD
+  integer :: NCLEB
+  integer :: IRMD
+  integer :: IEMXD
+  integer :: NGSHD
+  integer :: IGUESSD
+  integer :: IPAND
+  integer :: ISHLD
+  integer :: IRNSD
+  integer :: KPOIBZ
+  integer :: NFUND
+  integer :: NATRCD
+  integer :: NCLSD
+  integer :: NMAXD
+  integer :: NRD
+  integer :: NSPIND
+  integer :: NUTRCD
+  integer :: NXIJD
+  integer :: LLY
+  integer :: EKMD
+  integer :: TRC
+  integer :: NCELLD
+
+  integer :: XDIM
+  integer :: YDIM
+  integer :: ZDIM
+  integer :: NATBLD
+  integer :: ITDBRYD
+  integer :: LRECTRC
+
+  !Parallelisation
+  integer, parameter :: LMPID = 1  ! L-parallelisation not supported anymore
+  integer :: SMPID
+  integer :: EMPID
+  integer :: NTHRDS
+
+  !derived parameters
+  integer :: LPOTD
+  integer :: NGUESSD
+
+!============================================================= CONSTANTS
+  LCORDENS=.true.
+  PI = 4.0D0*ATAN(1.0D0)
+  FPI = 4.0D0*PI
+  RFPI = SQRT(FPI)
+  IPF = 74
+!=============================================================
+
+  call read_dimension_parameters( &
+  LMAXD, &
+  NSPIND, &
+  NAEZD, &
+  IRNSD, &
+  TRC, &
+  IRMD, &
+  NREFD, &
+  NRD, &
+  IRID, &
+  NFUND, &
+  NCELLD, &
+  NGSHD, &
+  NACLSD, &
+  NCLSD, &
+  IPAND, &
+  NXIJD, &
+  NATRCD, &
+  NUTRCD, &
+  KPOIBZ, &
+  IGUESSD, &
+  BCPD, &
+  NMAXD, &
+  ISHLD, &
+  LLY, &
+  SMPID, &
+  EMPID, &
+  NTHRDS, &
+  XDIM, &
+  YDIM, &
+  ZDIM, &
+  NATBLD, &
+  ITDBRYD, &
+  IEMXD, &
+  EKMD)
+
+  ! derived dimension parameters
+  LPOTD = 2*LMAXD
   LMMAXD= (LMAXD+1)**2
   NPOTD=NSPIND*NAEZD
   LMAXD1=LMAXD+1
@@ -370,29 +459,17 @@ program MAIN2
   LMXSPD= (2*LPOTD+1)**2
   LASSLD=4*LMAXD
   LMPOTD= (LPOTD+1)**2
-  LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
-  LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
   NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND
-  LLYALM=LLY*(NAEZD*LMMAXD-1)+1
-  LLYNGD=LLY*(NACLSD*LMMAXD-1)+1
   IRMIND=IRMD-IRNSD
 
-!     ..
-!     .. External Subroutines ..
-! external CINIT,CONVOL,ECOUB,EPOTINB,ESPCB, &
-! FORCE,FORCEH,FORCXC,MTZERO,KLOOPZ1, &
-! TEST,VMADELBLK,VXCDRV,RMSOUT, &
-! OUTTIME,TIME
+  NGUESSD = 1 + IGUESSD * ( NAEZD * (LMAXD+1)**2 - 1 )
+  NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
-!     .. Intrinsic Functions ..
-! intrinsic DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
-!     ..
-!============================================================= CONSTANTS
-  LCORDENS=.true.
-  PI = 4.0D0*ATAN(1.0D0)
-  FPI = 4.0D0*PI
-  RFPI = SQRT(FPI)
-  IPF = 74
+  ! Record lengths
+  LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
+  LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
+  LRECTRC   = 4*(NATRCD*3+2)
+
 
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
@@ -573,7 +650,8 @@ program MAIN2
 
   if ( NPOL==0 ) read(67) EFERMI
   close (67)
-  if (KFORCE==1) open (54,file='force',form='formatted')
+
+  if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
 ! ======================================================================
 ! =                     End read in variables                          =
@@ -1153,8 +1231,7 @@ spinloop:     do ISPIN = 1,NSPIN
               end do
             end do
 
-
-! DAU
+! LDAU
 
             EULDAU = 0.0D0
             EDCLDAU = 0.0D0
@@ -1167,13 +1244,10 @@ spinloop:     do ISPIN = 1,NSPIN
 
             endif
 
-! DAU
-
+! LDAU
 
 ! ----------------------------------------------------------------------
-
 ! -->   determine total charge density expanded in spherical harmonics
-
 ! -------------------------------------------------------------- density
 
             call RHOTOTB(I1,NSPIN,RHO2NS,RHOCAT, &
