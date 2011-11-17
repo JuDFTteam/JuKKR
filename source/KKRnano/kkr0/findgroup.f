@@ -1,5 +1,7 @@
       subroutine findgroup(bravais,recbv,rbasis,nbasis,
-     &                     rsymat,rotname,isymindex,nsymat)
+     &                     rsymat,rotname,isymindex,nsymat,
+C                          new input parameter after inc.p removal
+     &                     NAEZD)
 c **********************************************************
 c This subroutine finds the rotation matrices that leave the
 c real lattice unchanged. 
@@ -21,13 +23,15 @@ c The array ISYMINDEX holds the numbers of the symmetry operations
 c that are stored in array RSYMAT
 c **********************************************************
       implicit none
-      include 'inc.p'
+
       integer NSYMAXD
       parameter (NSYMAXD=48)
+
       integer nbasis,nsymat
       integer isymindex(NSYMAXD)
       double precision BRAVAIS(3,3),RBASIS(3,NAEZD)
       double precision RSYMAT(64,3,3),recbv(3,3)
+      integer NAEZD
 c
 c Local variables
 c

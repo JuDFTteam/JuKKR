@@ -83,7 +83,8 @@ c
 c
 c initialize or read matrix WMLDAU
 c
-          CALL LDAUSTART(I,NLDAU,LLDAU,ULDAU,JLDAU,LWLDAU)
+          CALL LDAUSTART(I,NLDAU,LLDAU,ULDAU,JLDAU,LWLDAU,
+     &                   LMAXD, NSPIND)
 c
         ENDDO
 c

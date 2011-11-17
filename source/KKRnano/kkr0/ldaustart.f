@@ -13,24 +13,22 @@ C
 C=======================================================================
 C
       SUBROUTINE LDAUSTART(
-     >                     I,NLDAU,LLDAU,ULDAU,JLDAU,LWLDAU)
+     >                     I,NLDAU,LLDAU,ULDAU,JLDAU,LWLDAU,
+C                          new input parameters after inc.p removal
+     &                     LMAXD, NSPIND)
 C
       IMPLICIT NONE
-C
-      INCLUDE 'inc.p'
-C
-      INTEGER             LMAXD1
-      PARAMETER          (LMAXD1 = LMAXD + 1)
-      INTEGER             MMAXD
-      PARAMETER          (MMAXD  = 2*LMAXD + 1)
-C
+
+      INTEGER LMAXD
+      INTEGER NSPIND
+
 C global arrays ..
-      INTEGER            LLDAU(LMAXD1), ! quantum no. of affected orbital
-     +                   LLDAU0(LMAXD1)
-      DOUBLE PRECISION   ULDAU(LMAXD1), ! effective repulsion U
-     +                   ULDAU0(LMAXD1),
-     +                   JLDAU(LMAXD1), ! effective exchange J
-     +                   JLDAU0(LMAXD1)
+      INTEGER            LLDAU(LMAXD+1), ! quantum no. of affected orbital
+     +                   LLDAU0(LMAXD+1)
+      DOUBLE PRECISION   ULDAU(LMAXD+1), ! effective repulsion U
+     +                   ULDAU0(LMAXD+1),
+     +                   JLDAU(LMAXD+1), ! effective exchange J
+     +                   JLDAU0(LMAXD+1)
 C ..
 C global scalars ..
       INTEGER            I,        ! atomic index
@@ -39,13 +37,19 @@ C global scalars ..
       LOGICAL            LWLDAU
 C ..
 C local arrays ..
-      DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+C     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+      DOUBLE PRECISION   WMLDAU(2*LMAXD + 1,2*LMAXD + 1,NSPIND,LMAXD+1)
 C ..
 C local scalars ..
       INTEGER            ILDAU
       LOGICAL            LINIT
-C ..
-C
+
+      INTEGER             LMAXD1
+      INTEGER             MMAXD
+
+      MMAXD  = 2*LMAXD + 1
+      LMAXD1 = LMAXD + 1
+
       LINIT = .TRUE.
 C
       IF (LWLDAU) THEN
