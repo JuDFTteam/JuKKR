@@ -71,8 +71,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
      
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !$ call OMP_SET_NUM_THREADS(NTHRDS)
-!$OMP PARALLEL PRIVATE (I1,LM2,I2,I3H,I2H,
-!$OMP&                  IL1B,SPRSX,MYTHRD)
+!$omp parallel private (I1,LM2,I2,I3H,I2H,IL1B,SPRSX,MYTHRD)
    MYTHRD = 0
 !$ MYTHRD = OMP_GET_THREAD_NUM()
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -106,7 +105,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   enddo
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!$OMP END PARALLEL
+!$omp end parallel
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 end subroutine SPRSZMM

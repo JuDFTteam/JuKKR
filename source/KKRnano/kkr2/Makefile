@@ -1,8 +1,8 @@
 # Makefile for kkr2
 
 # default values
-#PLATFORM = ifort_IFF
-PLATFORM = ifort_IFF_NOOMP
+#PLATFORM = ifort_IFF_NOOMP
+PLATFORM = ifort_IFF
 TYPE = debug
 #TYPE = nodebug
 
