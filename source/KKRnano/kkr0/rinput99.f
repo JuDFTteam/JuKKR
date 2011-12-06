@@ -94,13 +94,6 @@ C     .. Data statements ..
      +     ' core relaxation nonsra                    ',
      +     ' core relaxation                           '/
 
-      INTEGER LMAXD1
-      INTEGER MMAXD
-
-
-      LMAXD1 = LMAXD + 1
-      MMAXD  = 2*LMAXD + 1
-
 c------------ array set up and definition of input parameter -----------
 c
       KWS = 2
@@ -411,14 +404,6 @@ c-------------------------------------------------------------
               READ (UNIT=UIO,FMT=*) RCUTTRC
       WRITE(6,*) 'Radius for Truncation is RCUTTRC=',RCUTTRC
       ENDIF
-c-------------------------------------------------------------
-c
-c
-c-------------------------------------------------------------
-c-------------------------------------------------------------
-c LLDAU is being initialized here
-c by calling LDAUSTART
-c-------------------------------------------------------------
 c-------------------------------------------------------------
 c
 c read flag in inputcard: LOGICAL LLDAU

@@ -2,6 +2,7 @@ c     **********************************************************
 c     ********************************************************
       SUBROUTINE GAULEG(XI,WI,N)
 c     ********************************************************
+      IMPLICIT NONE
 C     .. Scalar Arguments ..
       INTEGER N
 C     ..
@@ -10,9 +11,25 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       INTEGER I
+      INTEGER NNEW
 C     ..
-      IF (N.GT.32) N = ((N-1)/4+1)*4
-      IF (N.GT.64) N = ((N-1)/8+1)*8
+      NNEW = N
+      IF (N.GT.32) NNEW = ((N-1)/4+1)*4
+
+      IF (NNEW .NE. N) THEN
+        WRITE(*,*) "Error GAULEG: If N greater than 32 then N has to be
+     & multiple of 4."
+        STOP
+      END IF
+
+      IF (N.GT.64) NNEW = ((N-1)/8+1)*8
+
+      IF (NNEW .NE. N) THEN
+        WRITE(*,*) "Error GAULEG: If N greater than 64 then N has to be
+     & multiple of 8."
+        STOP
+      END IF
+
       IF (N.EQ.1) THEN
         XI(1) = 0.D0
         WI(1) = 2.D0

@@ -191,9 +191,9 @@
 !    complex(kind=DP) :: EZ(IEMXD)
 !    complex(kind=DP) :: WEZ(IEMXD)
 !    integer :: KMESH(IEMXD)
-    complex(kind=DP), dimension(:), pointer :: EZ
-    complex(kind=DP), dimension(:), pointer :: WEZ
-    integer, dimension(:), pointer :: KMESH
+    complex(kind=DP), dimension(:), allocatable :: EZ
+    complex(kind=DP), dimension(:), allocatable :: WEZ
+    integer, dimension(:), allocatable :: KMESH
 
 !     .. Lattice ..
     integer :: NAEZ
@@ -211,12 +211,12 @@
 !    double precision :: RR(3,0:NRD)
 !    double precision :: RWS(NAEZD)
 !    double precision :: ZAT(NAEZD)
-    double precision, dimension(:,:), pointer :: RBASIS
-    double precision, dimension(:),   pointer :: RMT
-    double precision, dimension(:),   pointer :: RMTREF
-    double precision, dimension(:,:), pointer :: RR
-    double precision, dimension(:),   pointer :: RWS
-    double precision, dimension(:),   pointer :: ZAT
+    double precision, dimension(:,:), allocatable :: RBASIS
+    double precision, dimension(:),   allocatable :: RMT
+    double precision, dimension(:),   allocatable :: RMTREF
+    double precision, dimension(:,:), allocatable :: RR
+    double precision, dimension(:),   allocatable :: RWS
+    double precision, dimension(:),   allocatable :: ZAT
 
 !     .. Lattice aux. ..
     double precision :: ABASIS
@@ -235,16 +235,16 @@
 !    integer :: NFU(NAEZD)
 !    integer :: NTCELL(NAEZD)
 !    integer :: IMAXSH(0:LMPOTD)
-    double precision, dimension(:,:,:), pointer :: THETAS
-    double precision, dimension(:),     pointer :: GSH
-    integer, dimension(:,:), pointer :: IFUNM
-    integer, dimension(:),   pointer :: IPAN
-    integer, dimension(:,:), pointer :: LLMSP
-    integer, dimension(:,:), pointer :: LMSP
-    integer, dimension(:,:), pointer :: ILM
-    integer, dimension(:),   pointer :: NFU
-    integer, dimension(:),   pointer :: NTCELL
-    integer, dimension(:),   pointer :: IMAXSH
+    double precision, dimension(:,:,:), allocatable :: THETAS
+    double precision, dimension(:),     allocatable :: GSH
+    integer, dimension(:,:), allocatable :: IFUNM
+    integer, dimension(:),   allocatable :: IPAN
+    integer, dimension(:,:), allocatable :: LLMSP
+    integer, dimension(:,:), allocatable :: LMSP
+    integer, dimension(:,:), allocatable :: ILM
+    integer, dimension(:),   allocatable :: NFU
+    integer, dimension(:),   allocatable :: NTCELL
+    integer, dimension(:),   allocatable :: IMAXSH
 
 !     .. reference clusters
     double precision :: RCUTXY
@@ -261,22 +261,22 @@
 !    integer :: NUMN0(NAEZD)
 !    integer :: INDN0(NAEZD,NACLSD)
 !    integer :: REFPOT(NAEZD)
-    double precision, dimension(:,:,:), pointer :: RCLS
+    double precision, dimension(:,:,:), allocatable :: RCLS
 
-    integer, dimension(:,:), pointer :: ATOM
-    integer, dimension(:),   pointer :: CLS
-    integer, dimension(:,:), pointer :: EZOA
-    integer, dimension(:),   pointer :: NACLS
+    integer, dimension(:,:), allocatable :: ATOM
+    integer, dimension(:),   allocatable :: CLS
+    integer, dimension(:,:), allocatable :: EZOA
+    integer, dimension(:),   allocatable :: NACLS
 !     NUMN0(i) gives number of ref. cluster atoms around atom i
-    integer, dimension(:),   pointer :: NUMN0
+    integer, dimension(:),   allocatable :: NUMN0
 !     INDN0(i,j) gives the atom index (from basis) of cluster atom j
 !     around central atom i
-    integer, dimension(:,:), pointer :: INDN0
-    integer, dimension(:),   pointer :: REFPOT
+    integer, dimension(:,:), allocatable :: INDN0
+    integer, dimension(:),   allocatable :: REFPOT
 
 !     .. reference system ..
 !    double precision :: VREF(NAEZD)
-    double precision, dimension(:), pointer :: VREF
+    double precision, dimension(:), allocatable :: VREF
 
 !     .. radial mesh(es) ..
 !    double precision :: A(NAEZD)
@@ -289,16 +289,16 @@
 !    integer :: IRMIN(NAEZD)
 !    integer :: IRNS(NAEZD)
 !    integer :: IRWS(NAEZD)
-    double precision, dimension(:),   pointer  :: A
-    double precision, dimension(:),   pointer  :: B
-    double precision, dimension(:,:), pointer  :: DRDI
-    double precision, dimension(:,:), pointer  :: R
-    integer, dimension(:),  pointer  :: IMT
-    integer, dimension(:),  pointer  :: IRC
-    integer, dimension(:,:),pointer  :: IRCUT
-    integer, dimension(:),  pointer  :: IRMIN
-    integer, dimension(:),  pointer  :: IRNS
-    integer, dimension(:),  pointer  :: IRWS
+    double precision, dimension(:),   allocatable  :: A
+    double precision, dimension(:),   allocatable  :: B
+    double precision, dimension(:,:), allocatable  :: DRDI
+    double precision, dimension(:,:), allocatable  :: R
+    integer, dimension(:),  allocatable  :: IMT
+    integer, dimension(:),  allocatable  :: IRC
+    integer, dimension(:,:),allocatable  :: IRCUT
+    integer, dimension(:),  allocatable  :: IRMIN
+    integer, dimension(:),  allocatable  :: IRNS
+    integer, dimension(:),  allocatable  :: IRWS
 
 !     .. Brillouin zone ..
 !     kpoints in each direction
@@ -311,14 +311,14 @@
 !         symmetry matrices
 !    complex(kind=DP) DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
 !    integer :: ISYMINDEX(NSYMAXD)
-    complex(kind=DP), dimension(:,:,:), pointer :: DSYMLL
-    integer, dimension(:), pointer :: ISYMINDEX
+    complex(kind=DP), dimension(:,:,:), allocatable :: DSYMLL
+    integer, dimension(:), allocatable :: ISYMINDEX
 
 !     .. Spherical harmonics ..
 !    double precision :: WG(LASSLD) ! not passed to kkr2
 !    double precision :: YRG(LASSLD,0:LASSLD,0:LASSLD) ! not passed to kkr2
-    double precision, dimension(:),     pointer :: WG ! not passed to kkr2
-    double precision, dimension(:,:,:), pointer :: YRG ! not passed to kkr2
+    double precision, dimension(:),     allocatable :: WG ! not passed to kkr2
+    double precision, dimension(:,:,:), allocatable :: YRG ! not passed to kkr2
 
 !     .. Clebsch-Gordon coefficients
     integer :: IEND
@@ -328,19 +328,19 @@
 !    integer :: JEND(LMPOTD,0:LMAXD,0:LMAXD)
 !    integer :: LOFLM(LM2D) ! gives l from LM index
 
-    double precision, dimension(:,:), pointer :: CLEB
-    integer, dimension(:,:),          pointer :: ICLEB
-    integer, dimension(:,:,:),        pointer :: JEND
-    integer, dimension(:),            pointer :: LOFLM ! gives l from LM index
+    double precision, dimension(:,:), allocatable :: CLEB
+    integer, dimension(:,:),          allocatable :: ICLEB
+    integer, dimension(:,:,:),        allocatable :: JEND
+    integer, dimension(:),            allocatable :: LOFLM ! gives l from LM index
 
 
 !     .. core states ..
 !    integer :: ITITLE(20,NPOTD)
 !    integer :: LCORE(20,NPOTD)
 !    integer :: NCORE(NPOTD)
-    integer, dimension(:,:), pointer :: ITITLE
-    integer, dimension(:,:), pointer :: LCORE
-    integer, dimension(:),   pointer :: NCORE
+    integer, dimension(:,:), allocatable :: ITITLE
+    integer, dimension(:,:), allocatable :: LCORE
+    integer, dimension(:),   allocatable :: NCORE
 
 
 !     .. Self-consistency parameters ..
@@ -378,17 +378,17 @@
     logical :: EVREF
     logical :: LCARTESIAN
 
-    character(len=40) I13
-    character(len=40) I19
+    character(len=40) POTENTIAL_FILENAME
+    character(len=40) SHAPEFUN_FILENAME
 
 
 !    complex(kind=DP) DEZ(IEMXD)
 !    double precision :: RMTNEW(NAEZD)
 !    integer :: INIPOL(NAEZD)
 
-    complex(kind=DP), dimension(:), pointer :: DEZ ! needed for EMESHT
-    double precision, dimension(:), pointer :: RMTNEW
-    integer, dimension(:), pointer :: INIPOL
+    complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
+    double precision, dimension(:), allocatable :: RMTNEW
+    integer, dimension(:), allocatable :: INIPOL
 
     integer ::   LASSLD,LMMAXD,LMPOTD,LMXSPD,LM2D,NPOTD
 
@@ -613,7 +613,7 @@
                   NSPIN,REFPOT, &
                   ISHIFT,INTERVX,INTERVY,INTERVZ, &
                   HFIELD,VBC,VCONST,INIPOL, &
-                  I13,I19, &
+                  POTENTIAL_FILENAME,SHAPEFUN_FILENAME, &
                   RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC, &
                   LDAU, &
                   RMTREF,KFORCE, &
@@ -690,11 +690,12 @@
     call TESTDIM(NSPIN,NAEZ,LMAX,IRM,NREF,IRNS, &
     LMAXD,IRMD,IRNSD,NREFD,NSPIND)
 
-    open (19,file=I19,status='old',form='formatted')
-    open (IFILE,file=I13,status='old',form='formatted')
+    open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
+    open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
 
     E2IN = E2
 
+    ! read starting potential and shapefunctions
     call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD, &
                  1,NAEZ, &
                  RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST, &
@@ -804,11 +805,13 @@
 ! =        write out information for the other program parts           =
 ! ======================================================================
 
-    if (IGUESS > IGUESSD) then
-      stop ' ERROR: to activate initial guess, set IGUESSD=1'
+    if (IGUESS .ne. IGUESSD) then
+      write(*,*) 'WARNING: IGUESS from inputcard ignored. Using IGUESSD = ', IGUESSD
+      IGUESS = IGUESSD
     endif
-    if (BCP > BCPD) then
-      stop ' ERROR: to activate bc-preconditioning, set BCPD=1'
+    if (BCP .ne. BCPD) then
+      write(*,*) 'WARNING: BCP from inputcard ignored. Using BCPD = ', BCPD
+      BCP = BCPD
     endif
 
 !     Conversion of RMAX and GMAX to units of ALAT
