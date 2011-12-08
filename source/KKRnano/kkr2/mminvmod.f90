@@ -198,7 +198,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     enddo
   enddo
 
-  NLIM = 2000
+  NLIM = 2000  ! limit of max. 2000 iterations
   INIT = 0
 
   !--------------

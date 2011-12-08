@@ -47,12 +47,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   !     .. parameters ..
   integer, parameter :: NSYMAXD = 48
-  double complex :: CI
-  parameter      (CI=(0.D0,1.D0))
   double complex :: CONE
   parameter      (CONE  = ( 1.0D0,0.0D0))
-  double complex :: CIONE
-  parameter      (CIONE  = ( 0.0D0,-1.0D0))
   double complex :: CZERO
   parameter      (CZERO=(0.0D0,0.0D0))
 

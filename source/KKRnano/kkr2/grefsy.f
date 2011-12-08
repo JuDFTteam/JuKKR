@@ -33,8 +33,6 @@ C     Lloyd's formula switch 0 (inactive)/ 1 (active)
       PARAMETER (CZERO= (0.D0,0.D0))
 
 C     ..
-C     .. LOCAL ARRAYS ..
-      INTEGER IPVT(NDIM)
 C     ..
 C     .. EXTERNAL SUBROUTINES ..
       EXTERNAL ZGETRF,ZGETRS
@@ -55,16 +53,18 @@ C    +               DGTDE(LLYNGD,LMGF0D)
 
 C     ..
 C
+C     .. LOCAL ARRAYS ..
+      INTEGER IPVT(NDIM)
+
 C     .. LOCAL SCALARS ..
       INTEGER I,INFO
 
       INTEGER LMGF0D,NGD
-      INTEGER LLYNGD
 
       LMGF0D = LMMAXD
       NGD = NDIM
 C     NGD=NACLSD*(LMAX+1)**2
-      LLYNGD=LLY*(NGD-1)+1
+C     LLYNGD=LLY*(NGD-1)+1
 C     LLYNGD=LLY*(NACLSD*((LMAX+1)**2)-1)+1
 
  

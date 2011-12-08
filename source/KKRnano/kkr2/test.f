@@ -6,11 +6,10 @@ C     TEST = 'STRING  ' IS CONTAINED IN /TESTC/.
 C                                                                    
 C ------------------------------------------------------------------------
 C                                                                      
-      COMMON/TESTC/ TESTC(16)                                         
-      save  /testc/
+      USE common_testc
 C                                                                    
       integer i
-      character*8      STRING   ,TESTC                              
+      character*8      STRING
 C                                                                       
       TEST=.FALSE.                                                    
       DO 1 I=1,16                                                    

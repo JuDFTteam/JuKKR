@@ -6,6 +6,8 @@
 program MAIN2
 
   !use mpi
+  use common_testc
+  use common_optc
   use common_mpi
 
   implicit none
@@ -336,9 +338,9 @@ program MAIN2
   external     MAPBLOCK
 
   !     ..
-  !     .. Arrays in Common ..
-  character(len=8)::OPTC(8)
-  character(len=8)::TESTC(16)
+  !     .. Arrays in modules common_optc and common_testc.
+  !character(len=8)::OPTC(8)
+  !character(len=8)::TESTC(16)
 
   ! Array allocations
   integer:: memory_stat

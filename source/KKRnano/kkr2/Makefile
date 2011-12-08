@@ -46,6 +46,7 @@ ifeq ($(TYPE),debug)
 FCFLAGS += -g -traceback -check all
 endif
 
+# ============================= JUGENE ========================================
 ifeq ($(PLATFORM),JUGENE)
 
 ifeq ($(USETOOL),scalasca)
@@ -58,17 +59,19 @@ endif
 
 FC += mpixlf77_r
 FC90 = mpixlf90_r
-FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/include
+FCFLAGS = -qsmp=omp -qsmallstack=dynlenonheap -I/bgsys/local/fftw3/include
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
 
 ifeq ($(TYPE),debug)
-  FCFLAGS += -g -qcheck
+  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF -qflttrap=zero:imp:nanq:enable -qarch=450
+#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
   FCFLAGS += -O3 -qipa
 endif
 
 endif
+
 
 
 
@@ -113,8 +116,9 @@ test:
 	
 #Module dependencies
 
-# only main2 and lattice3d use common_mpi
-main2.o: common_mpi.o
+main2.o: common_mpi.o common_testc.o common_optc.o
 lattice3d.o: common_mpi.o
+test.o: common_testc.o
+opt.o: common_optc.o
 
 

@@ -6,10 +6,9 @@ C     OPT = 'STRING  ' IS CONTAINED IN /OPTC/.
 C                                                                       
 C ------------------------------------------------------------------------
 C                                                                      
-      COMMON/OPTC/  OPTC(8)                                           
-      save  /optc/
+      use common_optc
 C                                                                    
-      character*8      STRING   ,OPTC                               
+      character*8      STRING
 C                                                                  
 C                                                                      
       OPT=.FALSE.                                                     
