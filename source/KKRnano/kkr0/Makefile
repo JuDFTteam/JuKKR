@@ -76,6 +76,8 @@ test:
 	@echo $(SRCS90)
 	@echo $(OBJS)
 	@echo $(VPATH)
+	@echo $(PLATFORM)
+	@echo $(TYPE)
 	
 #Module dependencies
 
