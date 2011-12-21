@@ -2,7 +2,7 @@ C ************************************************************************
       SUBROUTINE GREFSY(GTMAT,GMAT,IPVT,NDIM,DGTDE,
      +                  LLY_G0TR,
 C                       new input parameters after inc.p removal
-     &                  LMMAXD, LLY)
+     &                  NACLSD, LMMAXD, LLY)
 C ************************************************************************
       IMPLICIT NONE
 
@@ -11,18 +11,31 @@ C     Solves (1 - g0 \Delta t) G_ref = g0 for G_ref. (Full inversion)
 C
 C     GTMAT ... on input it has to contain (-1) * g0 * \Delta t
 C               on output it contains G_ref
-C               dimension NDIM x NDIM
+C               dimension (LMMAXD*NACLSD) x (LMMAXD*NACLSD)
 C     GMAT  ... input: g0 free-space Green's function for the central
 C                      reference cluster atom: g0^{(1)N'}_{LL'}
-C     IPVT  ... integer work array of dimension NDIM
-C     NDIM  ... GTMAT is a matrix of dimension NDIM x NDIM
-C           ... NDIM = NACLSD * LMMAXD (#cluster atoms * maximal LM)
+C     IPVT  ... integer work array of dimension (LMMAXD*NACLSD)
+C     NDIM  ... NDIM = #cluster atoms * maximal LM
+C               NDIM <= (LMMAXD*NACLSD)
+C
+C                  NDIM
+C          +---------+----+
+C          |         |    |
+C          | contents|    |
+C          |         |    |      (GTMAT)
+C          |         |    |
+C     NDIM +---------+    |
+C          |    (uninit.) |
+C          +--------------+ (LMMAXD*NACLSD)
+C
+C     NACLSD .. MAXIMAL number of cluster atoms
 C     commented by E. Rabel, Nov 2011
 
 C
 C---> SOLVE THE DYSON EQUATION TO GET REFERENCE GREEN FUNCTION
 C
 C
+      INTEGER NACLSD
       INTEGER LMMAXD
 C     Lloyd's formula switch 0 (inactive)/ 1 (active)
       INTEGER LLY
@@ -45,16 +58,21 @@ C     .. SCALAR ARGUMENTS ..
       DOUBLE COMPLEX LLY_G0TR
 C     ..
 C     .. ARRAY ARGUMENTS ..
+
 C     DOUBLE COMPLEX GMAT(NGD,LMGF0D),GTMAT(NGD,NGD),
 C    +               DGTDE(LLYNGD,LMGF0D)
-      DOUBLE COMPLEX GMAT (NDIM,LMMAXD)
-      DOUBLE COMPLEX GTMAT(NDIM,NDIM)
-      DOUBLE COMPLEX DGTDE(LLY*(NDIM-1)+1,LMMAXD)
+C     NGD = LMMAXD*NACLSD
+C     LLYNGD=LLY*(NGD-1)+1
+C     LLYNGD=LLY*(NACLSD*((LMAX+1)**2)-1)+1
+
+      DOUBLE COMPLEX GMAT (LMMAXD*NACLSD,LMMAXD)
+      DOUBLE COMPLEX GTMAT(LMMAXD*NACLSD,LMMAXD*NACLSD)
+      DOUBLE COMPLEX DGTDE(LLY*(LMMAXD*NACLSD-1)+1,LMMAXD)
 
 C     ..
 C
 C     .. LOCAL ARRAYS ..
-      INTEGER IPVT(NDIM)
+      INTEGER IPVT(LMMAXD*NACLSD)
 
 C     .. LOCAL SCALARS ..
       INTEGER I,INFO
@@ -62,14 +80,12 @@ C     .. LOCAL SCALARS ..
       INTEGER LMGF0D,NGD
 
       LMGF0D = LMMAXD
-      NGD = NDIM
-C     NGD=NACLSD*(LMAX+1)**2
-C     LLYNGD=LLY*(NGD-1)+1
-C     LLYNGD=LLY*(NACLSD*((LMAX+1)**2)-1)+1
+      NGD = LMMAXD*NACLSD
 
- 
+
       DO 10 I = 1,NDIM
-        GTMAT(I,I) = CONE + GTMAT(I,I) ! GTMAT= 1 - G0 * \Delta T
+C       GTMAT= 1 - G0 * \Delta T
+        GTMAT(I,I) = CONE + GTMAT(I,I)
    10 CONTINUE
 C
 C---> SOLVE THE SYSTEM OF LINEAR EQUATIONS

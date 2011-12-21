@@ -161,7 +161,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
   if (TEST('flow    ')) write (6,fmt=*) '>>> GLL95'
 
-  NDIM = LMGF0D*NATOM
+  NDIM = LMGF0D*NATOM     ! Warning: NDIM can be smaller than NGD=LMMAXD*NACLSD
 
   !
   ! ---> construct free Green's function
@@ -298,7 +298,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
    ! Solves (1 - g0 \Delta t) G_ref = g0 for G_ref.
    call GREFSY(GREF,GREF0,IPVT,NDIM,DGTDE, &
                LLY_G0TR, &
-               LMMAXD, LLY)
+               NACLSD, LMMAXD, LLY)
 
    if (LLY==1) then
 

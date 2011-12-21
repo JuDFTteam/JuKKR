@@ -8,7 +8,7 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &                 ! >
                   DMATLDAU, &                                        ! <
                   LMPIC,MYLRANK, &                                   ! >
-                  LCOMM,LSIZE, &                              ! >
+                  LCOMM,LSIZE, &                                     ! >
                   !   new input parameters after inc.p removal
                   prod_lmpid_smpid_empid, lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ncelld, ipand, ncleb)
@@ -58,22 +58,15 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer::NAEZ
   integer::NSPIN
   integer::NSRA
-  integer::NLDAU
-  logical::LDAU
 
-  double complex :: DOS(IEMXD,2)
-  double complex :: DOS0(IEMXD)
-  double complex :: DOS1(IEMXD)
-  double complex :: DEN0(0:LMAX+1,IEMXD,NSPIN)
   double complex :: WEZRN(IEMXD,2)
   double complex :: EZ(IEMXD)
   double complex :: WEZ(IEMXD)
   !double complex :: GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND)
   double complex :: GMATN((LMAX+1)**2, (LMAX+1)**2, IEMXD, NSPIN)
   double complex :: LLY_GRDT(IEMXD,NSPIN)
-  double complex :: PHILDAU(IRMD,LMAX+1)
-  !double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  double complex :: DMATLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)
+
+
   double precision::DLOYD
   double precision::DLOYDINT
   double precision::DLOC
@@ -85,18 +78,12 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   double precision::CLEB(NCLEB,2)
   double precision::DRDI(IRMD,NAEZ)
   double precision::R(IRMD,NAEZ)
-  double precision::ESPV(0:LMAX+1,NSPIN)
-
-  !double precision::RHO2N1(IRMD,LMPOTD,2)
-  double precision::RHO2N1(IRMD,(2*LMAX+1)**2, 2)
-  !double precision::RHO2N2(IRMD,LMPOTD,2)
-  double precision::RHO2N2(IRMD,(2*LMAX+1)**2, 2)
 
   double precision::VINS((IRMD-IRNSD):IRMD,(2*LMAX+1)**2, 2)
   double precision::VISP(IRMD,2)
   double precision::THETAS(IRID,NFUND,NCELLD)
   double precision::ZAT(NAEZ)
-  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)
+
   integer::ICLEB(NCLEB,3)
   !integer::IFUNM1(LMXSPD,NAEZ) (2*LPOTD+1)**2
   integer::IFUNM1((4*LMAX+1)**2,NAEZ)
@@ -108,7 +95,18 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer::JEND((LMAX+1)**2, 0:LMAX, 0:LMAX)
   integer::LOFLM((2*LMAX+1)**2)
   integer::NTCELL(NAEZ)
+
+
+  ! -------------- LDA+U --------------------------------------------
+  !double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+  double complex :: DMATLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)
+  double complex :: PHILDAU(IRMD,LMAX+1)
+  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)
+  integer::NLDAU
+  logical::LDAU
   integer::LLDAU(LMAX+1)
+  ! -----------------------------------------------------------------
+
   !     ..
   !     .. MPI ..
   !     .. N-MPI
@@ -120,9 +118,28 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer::LSIZE(prod_lmpid_smpid_empid)
   integer::LMPIC
 
-  !     Fortran 90 automatic arrays
-  double complex :: WORK1(4*IEMXD)
-  double complex :: WORK2(4*IEMXD)
+  !     Dynamically allocated arrays
+  !double complex :: WORK1(4*IEMXD)
+  !double complex :: WORK2(4*IEMXD)
+  !double complex :: DOS(IEMXD,2) ! local
+  !double complex :: DOS0(IEMXD)  ! loc
+  !double complex :: DOS1(IEMXD)  ! loc
+  !double complex :: DEN0(0:LMAX+1,IEMXD,NSPIN) ! loc
+  !double precision::RHO2N1(IRMD,LMPOTD,2)
+  !double precision::RHO2N1(IRMD,(2*LMAX+1)**2, 2)   ! loc
+  !double precision::RHO2N2(IRMD,LMPOTD,2)
+  !double precision::RHO2N2(IRMD,(2*LMAX+1)**2, 2)   ! loc
+  !double precision::ESPV(0:LMAX+1,NSPIN) ! loc
+
+  double complex, dimension(:),       allocatable :: WORK1
+  double complex, dimension(:),       allocatable :: WORK2
+  double complex, dimension(:,:),     allocatable :: DOS
+  double complex, dimension(:),       allocatable :: DOS0
+  double complex, dimension(:),       allocatable :: DOS1
+  double complex, dimension(:,:,:),   allocatable :: DEN0
+  double precision, dimension(:,:,:), allocatable :: RHO2N1
+  double precision, dimension(:,:,:), allocatable :: RHO2N2
+  double precision, dimension(:,:),   allocatable :: ESPV
 
   !     ..
   !     .. External Functions ..
@@ -134,11 +151,45 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer :: nspind
   integer :: irmind
   integer :: lmaxd1
+  integer :: lmpotd
+
+  integer :: memory_stat
+  logical :: memory_fail
 
   lmaxd = lmax
   nspind = nspin
   irmind = irmd - irnsd
   lmaxd1 = lmax + 1
+  lmpotd = (2*LMAX+1)**2
+
+  ! ----------- allocate work arrays ----------------------------------
+  memory_fail = .false.
+
+  allocate(WORK1(4*IEMXD), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(WORK2(4*IEMXD), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(DOS(IEMXD,2), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(DOS0(IEMXD), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(DOS1(IEMXD), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(DEN0(0:LMAX+1,IEMXD,NSPIN), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(RHO2N1(IRMD,LMPOTD,2), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(RHO2N2(IRMD,LMPOTD,2), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(ESPV(0:LMAX+1,NSPIN), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+
+  if (memory_fail .eqv. .true.) then
+    write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
+    write(*,*) "        Probably out of memory."
+    stop
+  end if
+  ! -------------------------------------------------------------------
 
   do IE=1,IELAST
     RNORM(IE,1)=1.D0
@@ -247,5 +298,17 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
     enddo
 
   enddo
+
+  ! ----------- deallocate work arrays ----------------------------------
+  deallocate(WORK1)
+  deallocate(WORK2)
+  deallocate(DOS)
+  deallocate(DOS0)
+  deallocate(DOS1)
+  deallocate(DEN0)
+  deallocate(RHO2N1)
+  deallocate(RHO2N2)
+  deallocate(ESPV)
+  ! -------------------------------------------------------------------
 
 end subroutine LLOYD0

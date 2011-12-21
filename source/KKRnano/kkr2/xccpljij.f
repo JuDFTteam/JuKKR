@@ -14,7 +14,7 @@ C   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
 C   *  according to  Lichtenstein et al. JMMM 67, 65 (1987)            *
 C   *                                                                  *
 C   *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
-C   *  adopted for KKRnano, Jun 2009                                                                 *
+C   *  adopted for KKRnano, Jun 2009                                   *
 C   ********************************************************************
 C
       IMPLICIT NONE
@@ -114,6 +114,7 @@ C     ..
       INTEGER          LMMAXD
 
       LMMAXD= (LMAX+1)**2
+      memory_fail = .false.
 
 C=======================================================================
 C energy parallelization requires splitting of this routine into
@@ -132,6 +133,7 @@ C ==>                   IE.EQ.1 -- initialisation step --            <==
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 
 C     Allocate array
+
       allocate(DTNXIJ(LMMAXD,LMMAXD,NAEZ), stat = memory_stat)
       if (memory_stat /= 0) memory_fail = .true.
 
