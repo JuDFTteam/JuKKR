@@ -96,7 +96,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   double precision::VAR((LMAXD+1)**2)
   double precision::TAU((LMAXD+1)**2)
   double precision::COS((LMAXD+1)**2)
-  double precision::N2B((LMAXD+1)**2)
+  double precision::N2B((LMAXD+1)**2)  ! not local
   double precision::TOLB((LMAXD+1)**2)
 
   integer::ITER((LMAXD+1)**2)
@@ -311,7 +311,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, &
                   VECS(1,1,9), &
-                  naezd, lmaxd, naclsd, nthrds)
+                  naezd, lmmaxd, naclsd, nthrds)
     
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,9) result
@@ -393,7 +393,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, VECS(1,1,8), &
-                  naezd, lmaxd, naclsd, nthrds)
+                  naezd, lmmaxd, naclsd, nthrds)
     
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,8) result
@@ -451,7 +451,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                     CONE,CZERO, &
                     VECS(1,1,9), &
-                    naezd, lmaxd, naclsd, nthrds)
+                    naezd, lmmaxd, naclsd, nthrds)
         
       !     VECS(:,:,1) input vector to be multiplied by A = GLLH1
       !     VECS(:,:,9) result

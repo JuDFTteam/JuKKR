@@ -1,7 +1,7 @@
 subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
                    AX, &                                       ! >
                    ! new input parameters after inc.p removal
-                   naez, lmax, naclsd, nthrds)
+                   naez, lmmaxd, naclsd, nthrds)
 
   ! This routine is called very often
   ! TODO: Optimise this routine if possible
@@ -9,12 +9,11 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   implicit none
 
   integer, intent(in) :: naez
-  integer, intent(in) :: lmax
+  integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd
   integer, intent(in) :: nthrds
 
   !     INTEGER           LMMAXD
-  !     PARAMETER        (LMMAXD= (LMAXD+1)**2)
   !     INTEGER           NDIM,NAEZ
   !     PARAMETER        (NAEZ=NAEZD,NDIM=NAEZD*LMMAXD)
   !     INTEGER           NGTBD
@@ -33,20 +32,17 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 !  double complex::   X(NDIM,LMMAXD)
 !  double complex::  AX(NDIM,LMMAXD)
 !  double complex::GLLH(LMMAXD,NGTBD,NAEZD)
-!  integer::           NUMN0(NAEZD)
-!  integer::           INDN0(NAEZD,NACLSD)
-!  logical::           DONE(LMMAXD)
 
-  double complex::   X(NAEZ*(LMAX+1)**2,(LMAX+1)**2)
-  double complex::  AX(NAEZ*(LMAX+1)**2,(LMAX+1)**2)
-  double complex::  GLLH((LMAX+1)**2, NACLSD*(LMAX+1)**2, NAEZ)
+  double complex::   X(NAEZ*LMMAXD,LMMAXD)
+  double complex::  AX(NAEZ*LMMAXD,LMMAXD)
+  double complex::  GLLH(LMMAXD, NACLSD*LMMAXD, NAEZ)
   integer::           NUMN0(NAEZ)
   integer::           INDN0(NAEZ,NACLSD)
-  logical::           DONE((LMAX+1)**2)
+  logical::           DONE(LMMAXD)
 
   !     .. Local Arrays .. Fortran 90 automatic array
   !double complex :: SPRSX(NGTBD,LMMAXD)
-  double complex :: SPRSX(NACLSD*(LMAX+1)**2, (LMAX+1)**2) ! medium size
+  double complex :: SPRSX(NACLSD*LMMAXD, LMMAXD) ! medium size
   ! ..
   !     .. Local Scalars ..
   integer::I1
@@ -60,11 +56,9 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   integer::MYTHRD
 !$  integer::       OMP_GET_THREAD_NUM
 
-  integer::LMMAXD
   integer::NGTBD
   integer::NDIM
 
-  LMMAXD= (LMAX+1)**2
   NGTBD = NACLSD*LMMAXD
   NDIM  = NAEZ*LMMAXD
 

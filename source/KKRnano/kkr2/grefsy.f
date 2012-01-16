@@ -51,7 +51,7 @@ C     .. EXTERNAL SUBROUTINES ..
       EXTERNAL ZGETRF,ZGETRS
 C     ..
 C     .. SAVE STATEMENT ..
-C     SAVE
+      SAVE
 C     ..
 C     .. SCALAR ARGUMENTS ..
       INTEGER NDIM

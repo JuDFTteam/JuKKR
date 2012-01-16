@@ -121,7 +121,7 @@
         call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,X0,DONE, &
                       -CONE,CZERO, &
                       TMATP, &
-                      naez, lmax, naclsd, nthrds)
+                      naez, lmmaxd, naclsd, nthrds)
 
     !----------   \Delta t' = \Delta t - X0 + \Delta t * G_ref * X0------
     
