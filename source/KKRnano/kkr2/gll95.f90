@@ -1,4 +1,24 @@
 !**********************************************************************
+!> @param E complex energy
+!> @param CLEB array of Gaunt coefficients
+!> @param ICLEB index array for Gaunt coefficients
+!> @param LOFLM array that maps (lm)-index to L-index
+!> @param IEND ???
+!> @param TREFLL reference T-matrix
+!> @param DTREFLL derivative of reference T-matrix
+!> @param ATOM ???
+!> @param REFPOT array of reference potentials
+!> @param RATOM real space positions of atoms in ref. cluster
+!> @param NATOM number of atoms in reference cluster
+!> @param ALAT length of unit vector in Bohr
+!> @param GREF0 TODO
+!> @param DGDEOUT ??? energy derivative of Green's function
+!> @param LLY_G0TR Trace(M^-1 dM/dE) with M = (1 - G \Delta t)
+!> @param lmaxd angular momentum cutoff (it would be better to rewrite routine to pass lmmaxd)
+!> @param naclsd dimension array: maximal number of atoms in reference clusters
+!> @param ncleb number of Gaunt coefficients in CLEB
+!> @param nrefd number of different reference systems
+!> @param LLY do Lloyd's formula calculations 1=yes/0=no
 subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
                  REFPOT,RATOM,NATOM,ALAT,GREF0,DGDEOUT, &
                  LLY_G0TR, &
