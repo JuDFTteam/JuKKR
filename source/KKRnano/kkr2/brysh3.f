@@ -1,3 +1,6 @@
+C>    @param Y single vector containing all lm,spin components
+C>    @param X spherical potential
+C>    @param Z non-spherical potential
 c ************************************************************************
       SUBROUTINE BRYSH3(Y,X,Z,IRMIN,IRC,IATOM,
      &                  NSPIN,IMAP,LMPOT,

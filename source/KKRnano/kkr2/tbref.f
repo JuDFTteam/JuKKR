@@ -1,3 +1,13 @@
+C>----------------------------------------------------------------------
+C>    Calculate reference system's T-matrix.
+C>    @param     E complex energy
+C>    @param     VREF repulsive reference potential field strength
+C>    @param     LMAX angular momentum cutoff
+C>    @param     RMTREF repulsive reference potential muffin-tin radius
+C>    @param     TREFLL reference system T-matrix
+C>    @param     DTREFLL energy derivative of reference system T-matrix
+C>               only calculated if LLY=1
+C>    @param     LLY do Lloyd's formula calculation 0=no/1=yes
       SUBROUTINE TREF(E,VREF,LMAX,RMTREF,TREFLL,DTREFLL,
 C                     new input parameter after inc.p removal
      &                LLY)
