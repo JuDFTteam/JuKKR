@@ -13,7 +13,7 @@
 !> @param ALAT length of unit vector in Bohr
 !> @param GREF0 TODO
 !> @param DGDEOUT ??? energy derivative of Green's function
-!> @param LLY_G0TR Trace(M^-1 dM/dE) with M = (1 - G \Delta t)
+!> @param LLY_G0TR Trace(M^-1 dM/dE) with M = (1 - g0 \Delta t_ref)
 !> @param lmaxd angular momentum cutoff (it would be better to rewrite routine to pass lmmaxd)
 !> @param naclsd dimension array: maximal number of atoms in reference clusters
 !> @param ncleb number of Gaunt coefficients in CLEB
@@ -54,7 +54,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   double complex :: E
   double complex :: LLY_G0TR
   double precision :: ALAT
-  integer :: IEND
+
   integer :: NATOM
   integer :: INFO
   !     ..
@@ -77,10 +77,12 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
 
   double precision :: CLEB(*)
-  double precision :: RATOM(3,*)
-  integer :: ATOM(*)
   integer :: ICLEB(NCLEB,3)
   integer :: LOFLM(*)
+  integer :: IEND
+
+  double precision :: RATOM(3,*)
+  integer :: ATOM(*)
   integer :: REFPOT(*)
   !     ..
   !     .. Local Scalars ..
@@ -192,7 +194,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   ! Then the matrix GREF^{NN'}_{LL'} is constructed
   ! The blocks N /= N' contain g0,
   ! the other N=N' blocks are set to zero (Green's function is not defined for r=r')
-  !
+  ! (E.R.)
   do N1 = 1,NATOM
     do N2 = 1,NATOM
       do ind = 1,3
@@ -268,7 +270,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 ! construct right hand side of linear equation system for GREFSY
 ! the first LMGF0D=LMMAXD columns of GREF are copied into GREF0
 ! GREF0 then contains g0^{(1)N'}_{LL'}, the free space structural
-! Green's function for the central cluster atom
+! Green's function for the central cluster atom (E.R.)
 ! --------------------------------------------------------------
    call ZCOPY(NGD*LMGF0D,GREF,1,GREF0,1)
 ! --------------------------------------------------------------
@@ -278,13 +280,13 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
      do N2 = 1,NATOM
        site_lm_index2 = (N2-1)*LMGF0D + 1
 
-       ! -dG_ref/dE * \Delta t    -- stored in GTREF
+       ! -dG_0/dE * \Delta t_ref    -- stored in GTREF
        call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,DGDE(1,site_lm_index2),NGD, &
                   TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
                   CZERO,GTREF,NGD)
 
-       !   - G_ref * d(\Delta t)/dE + GTREF  -- stored again in GTREF
-       ! = -dG_ref/dE * \Delta t - G_ref * d(\Delta t)/dE
+       !   - G_0 * d(\Delta t_ref)/dE + GTREF  -- stored again in GTREF
+       ! = -dG_0/dE * \Delta t_ref - G_0 * d(\Delta t_ref)/dE
 
        call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,site_lm_index2),NGD, &
                   DTREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
@@ -316,6 +318,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
    ! Solve Dyson-Equation for reference system
    ! Solves (1 - g0 \Delta t) G_ref = g0 for G_ref.
+   LLY_G0TR = CZERO
    call GREFSY(GREF,GREF0,IPVT,NDIM,DGTDE, &
                LLY_G0TR, &
                NACLSD, LMMAXD, LLY)

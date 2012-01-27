@@ -1072,6 +1072,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
 !         initialize LLY_GRDT
 
+                ! renormalize TR_ALPH
                 TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(IE,CLS(I1))
                 LLY_GRDT(IE,ISPIN) = CZERO
 

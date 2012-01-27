@@ -10,10 +10,11 @@ C ************************************************************************
 C     Solves (1 - g0 \Delta t) G_ref = g0 for G_ref. (Full inversion)
 C
 C     GTMAT ... on input it has to contain (-1) * g0 * \Delta t
-C               on output it contains G_ref
 C               dimension (LMMAXD*NACLSD) x (LMMAXD*NACLSD)
+C               on output: LU-factorisation of the input matrix
 C     GMAT  ... input: g0 free-space Green's function for the central
 C                      reference cluster atom: g0^{(1)N'}_{LL'}
+C               on output it contains G_ref
 C     IPVT  ... integer work array of dimension (LMMAXD*NACLSD)
 C     NDIM  ... NDIM = #cluster atoms * maximal LM
 C               NDIM <= (LMMAXD*NACLSD)
