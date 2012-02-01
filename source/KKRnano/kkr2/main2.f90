@@ -1070,11 +1070,9 @@ spinloop:     do ISPIN = 1,NSPIN
 !     BEGIN do loop over spins (SMPID-parallel)
 ! SPIN===================================================================
 
-!         initialize LLY_GRDT
-
                 ! renormalize TR_ALPH
                 TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(IE,CLS(I1))
-                LLY_GRDT(IE,ISPIN) = CZERO
+                LLY_GRDT(IE,ISPIN) = CZERO ! initialize LLY_GRDT, shouldn't be necessary
 
                 if (SMPID==1) then
                   MAPSPIN = 0

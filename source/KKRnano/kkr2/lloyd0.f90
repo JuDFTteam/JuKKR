@@ -1,3 +1,8 @@
+!> This routine uses the previously calculated Lloyd's formula terms
+!> to calculate the correction to the DOS and renormalized weights for
+!> the energy integration.
+!> the routine uses communication
+!> TODO: split, simplify, extract communication
 subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   VINS,VISP,THETAS,ZAT,ICLEB, &
                   IFUNM1,IPAN,IRCUT,LMSP1,JEND,LOFLM,NTCELL,ICST, &

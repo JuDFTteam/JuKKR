@@ -1,3 +1,7 @@
+!> Communication between the different spin processes.
+!> The diagonal part of the Green's function (needed for charge density) is
+!> thrown with Lloyd's formula results into one array and communicated
+!> (if necessary)
 subroutine SREDGM(  NSPIN,IELAST, &           ! >
                     MYRANK, &                 ! >
                     SMPIC,SMYRANK, &          ! >

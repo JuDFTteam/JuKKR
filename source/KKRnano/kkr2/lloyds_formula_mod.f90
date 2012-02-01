@@ -34,6 +34,8 @@ module lloyds_formula_mod
     integer, intent(in) :: NDIM  ! actual dimension
     integer, intent(in) :: LMGF0D
     integer, intent(in) :: NGD   ! lmmaxd*naclsd  leading dimension
+    integer, intent(inout), dimension(NGD) :: IPVT
+    double complex, intent(out) :: LLY_G0TR
 
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
     integer :: I
@@ -185,5 +187,183 @@ module lloyds_formula_mod
      end do
 
   end subroutine
+
+  !----------------------------------------------------------------------------
+  ! This routine should be useable unchanged for Gref, as well as for its
+  ! Derivative (used for Lloyd's formula)
+  ! NEEDS TO KNOW ALL REFERENCE CLUSTERS AND ALL REFERENCE GREEN'S FUNCS !!!!
+  ! HOW TO PARALLELISE ???
+
+!  subroutine fourierTransformReferenceGreen(ALAT, NACLS, RR, EZOA, k_vector )
+!
+!    ! GLLH: temporary array - changed on output
+!    ! DGDE: output -> RESULT
+!    ! DGINP: the input
+!
+!    use kkr_helpers_mod
+!    implicit none
+!
+!    double precision, dimension(3), intent(in) :: k_vector
+!
+!    ! local vars
+!    integer :: site_index
+!    integer :: ref_cluster_index
+!    integer :: cluster_site_index
+!    integer :: cluster_site_lm_index
+!    integer :: LM1
+!    integer :: LM2
+!
+!    ! local
+!
+!    GLLH = (0.0d0, 0.0d0)
+!
+!    do site_index = 1,NAEZ
+!
+!      ref_cluster_index = CLS(site_index)
+!
+!      call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+!                 k_vector, ref_cluster_index, EIKRM, EIKRP, &
+!                 nrd, naclsd)
+!
+!      call DLKE0(site_index,GLLH, EIKRP, EIKRM, &
+!                 ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
+!                 naez, lmax, naclsd)
+!    end do
+!
+!    do site_index=1,NAEZ
+!
+!      do cluster_site_index=1,NUMN0(site_index)
+!        do LM2=1,LMMAXD
+!          cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+!
+!          if (INDN0(site_index,cluster_site_index) == IAT) then
+!            do LM1=1,LMMAXD
+!              site_lm_index=LMMAXD*(site_index-1)+LM1
+!              DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+!            enddo
+!          endif
+!
+!        enddo
+!      enddo
+!
+!    enddo
+!
+!end subroutine
+
+
+  !> Calculates the energy derivative of the inverse of the
+  !> scattering path operator.
+  !>
+  !> @param[in]     site_lm_size   number of sites * lmmaxd (ALM)
+  !> @param[in]     lmmaxd
+  !> @param[in]     alat           lattice parameter
+  !> @param[in,out] DPDE_LOCAL
+  !> @param[in,out] GLLKE_X        reference Greens-Function at (k,E)
+  !> @param[in,out] DGDE           derivative of reference Greens-Function at (k,E)
+  !> @param[in,out] DTmatDE_LOCAL  derivative of Delta T-Matrix
+  !> @param[in,out] Tmat_local                   Delta T-Matrix
+  !!                unchanged on output???
+  subroutine calcDerivativeP(site_lm_size, lmmaxd, alat, &
+                             DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
+    ! calculate the following expression:
+
+    ! dP(E,k)   dGref(E,k)                             d \Delta T(E)
+    ! ------- = ---------- * \Delta T(E) + Gref(E,k) * -------------
+    !   dE        dE                                    dE
+
+     integer, intent(in) :: site_lm_size
+     integer, intent(in) :: lmmaxd
+     double precision, intent(in) :: alat
+
+     double complex, dimension(site_lm_size, lmmaxd), intent(inout) :: DPDE_LOCAL
+     double complex, dimension(site_lm_size, lmmaxd), intent(inout) :: GLLKE_X
+     double complex, dimension(site_lm_size, lmmaxd), intent(inout) :: DGDE
+     double complex, dimension(lmmaxd,lmmaxd), intent(inout) :: DTmatDE_LOCAL
+     double complex, dimension(lmmaxd,lmmaxd), intent(inout) :: Tmat_local
+
+     double complex, parameter :: CONE = ( 1.0D0,0.0D0)
+     double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+     double precision :: TWO_PI
+     double complex   :: CFCTORINV
+
+     TWO_PI = 8.D0*ATAN(1.D0)
+     CFCTORINV = (CONE*TWO_PI)/ALAT
+
+     DPDE_LOCAL = CZERO
+
+     call ZGEMM('N','N',site_lm_size,LMMAXD,LMMAXD,CONE, &
+                DGDE,site_lm_size, &
+                Tmat_local,LMMAXD,CZERO, &
+                DPDE_LOCAL,site_lm_size)
+
+     ! WHY CFCTORINV ??? - must be a remainder from Fourier-transform
+     call ZGEMM('N','N',site_lm_size,LMMAXD,LMMAXD,CFCTORINV, &
+                GLLKE_X,site_lm_size, &
+                DTmatDE_LOCAL,LMMAXD,CONE,DPDE_LOCAL,site_lm_size)
+
+   end subroutine calcDerivativeP
+
+
+   !---------------------------------------------------------------------------
+   !> Calculates TRACE(X) for the real system. Only the local contribution for
+   !> one k-point is calculated.
+   !
+   !                /  -1    dM  \
+   ! calculate  Tr  | M   * ---- |
+   !                \        dE  /
+
+   ! NOTE: Later, don't forget to integrate over k! BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)
+
+   !> @param[in]     site_lm_size   number of sites * lmmaxd (ALM)
+   !> @param[in]     lmmaxd
+   !> @param[in]     DPDE_LOCAL
+   !> @param[in]     GLLKE1             scattering path operator
+   !> @param[in]     inv_Tmat           inverse of local Delta T-Matrix (MSSQ) WHY???
+   !> @param[out]    TRACEK             resulting trace
+
+   subroutine calcLloydTraceXRealSystem(site_lm_size, lmmaxd)
+
+     integer, intent(in) :: site_lm_size
+     integer, intent(in) :: lmmaxd
+     double complex, dimension(site_lm_size, lmmaxd), intent(in) :: DPDE_LOCAL
+     double complex, dimension(site_lm_size, lmmaxd), intent(in) :: GLLKE1
+     double complex, dimension(lmmaxd, lmmaxd), intent(in) :: inv_Tmat
+     double complex, intent(out) :: TRACEK
+
+
+     double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+     double complex :: GTDPDE
+     integer :: LM1
+     integer :: LM2
+     integer :: site_lm_index
+
+     TRACEK=CZERO
+
+     do LM1=1,LMMAXD
+       do LM2=1,LMMAXD
+         GTDPDE = CZERO
+         do site_lm_index = 1, site_lm_size
+           GTDPDE = GTDPDE + GLLKE1(site_lm_index,LM2)*DPDE_LOCAL(site_lm_index,LM1)
+         enddo
+         TRACEK = TRACEK + inv_Tmat(LM1,LM2)*GTDPDE   ! ?????? why
+       enddo
+     enddo
+   ! NOTE: Later, don't forget to integrate over k! BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)
+   ! TODO:
+   ! after integration in k-space do the following:
+   ! *) multiply trace with norm. factor (from k-space integration) and add TR_ALPH
+   ! *) the contributions to the trace of all the processes have to be summed up (communication!)
+   ! This is the original code that does this:
+   !if(LLY == 1)  then
+   !  BZTR2 = BZTR2*NSYMAT/VOLBZ + TR_ALPH
+   !  TRACE=CZERO
+   !  call MPI_ALLREDUCE(BZTR2,TRACE,1, &
+   !  MPI_DOUBLE_COMPLEX,MPI_SUM, &
+   !  LCOMM(LMPIC),IERR)
+   !  LLY_GRDT = TRACE
+   !endif
+
+   end subroutine
 
 end module lloyds_formula_mod
