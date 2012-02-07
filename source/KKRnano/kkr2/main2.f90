@@ -12,6 +12,7 @@ program MAIN2
 
   use ErrorMessages_mod
   use lloyds_formula_mod
+  use KKRSelfConsistency_mod
 
   implicit none
   include 'mpif.h'
@@ -92,14 +93,11 @@ program MAIN2
   integer::LM2
   integer::IEND1
   integer::I
-  integer::J
   integer::IPOT
   integer::ISPIN
   integer::I1
   integer::I1BRYD
   integer::IH
-  integer::IRC1
-  integer::IRMIN1
   integer::LM
   integer::NR
   integer::EKM
@@ -339,11 +337,6 @@ program MAIN2
   integer::   IERR
   integer::   MAPBLOCK
   external     MAPBLOCK
-
-  !     ..
-  !     .. Arrays in modules common_optc and common_testc.
-  !character(len=8)::OPTC(8)
-  !character(len=8)::TESTC(16)
 
   ! Array allocations
   integer:: memory_stat
@@ -768,6 +761,7 @@ program MAIN2
   read (67) NR,RCUTJIJ,JIJ,LDAU
   read (67) ISYMINDEX,SCFSTEPS
   close (67)
+
 ! ---------------------------------------------------------- k_mesh
 
   open (52,file='kpoints',form='formatted')
@@ -795,6 +789,36 @@ program MAIN2
 ! ======================================================================
 ! =                     End read in variables                          =
 ! ======================================================================
+
+
+! -------------- Consistency checks -------------------------------
+  if (NSPIN /= NSPIND) then
+    write (*,*) "main2: NSPIN /= NSPIND"
+    stop
+  end if
+
+  if (NAEZ /= NAEZD) then
+    write (*,*) "main2: NAEZ /= NAEZD"
+    stop
+  end if
+
+  if (IEMXD /= IELAST) then
+    write (*,*) "main2: IEMXD /= IELAST"
+    stop
+  end if
+
+  if (NPOL /= 0) then
+    if (NPNT1 + NPNT2 + NPNT3 + NPOL /= IELAST) then
+      write(*,*) "main2: Energy point numbers inconsistent."
+    end if
+  end if
+
+  if (LMAX /= LMAXD) then
+    write (*,*) "main2: LMAX /= LMAXD"
+    stop
+  end if
+! ------------------------------------------------------------------
+
 
   call IMPI(NAEZ,MYRANK,NROFNODES, &
             LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
@@ -870,8 +894,6 @@ program MAIN2
         write(2,'(79(1H=))')
       endif
 
-      LDORHOEF = NPOL/=0  ! needed in RHOVAL
-
       call GAUNT2(WG,YRG,LMAX)
 
       call MADELUNG3D(LPOT,YRG,WG,ALAT, &
@@ -944,8 +966,9 @@ program MAIN2
 ! xccpl
 !=======================================================================
 
+          ! This read is probably NOT NECESSARY !!!
+          read(66,rec=I1) VINS,VISP,ECORE  ! Read potential from file!!!
 
-          read(66,rec=I1) VINS,VISP,ECORE
           if (TRC==1) read(37,rec=I1) NATRC,ATTRC,EZTRC,NUTRC,INTRC
 
 
@@ -1290,7 +1313,6 @@ spinloop:     do ISPIN = 1,NSPIN
             call CINIT(IEMXD*(LMAXD+2)*NSPIND,DEN)
             DENEF = 0.0D0
 
-
             if (LDAU) then
               call CINIT(MMAXD*MMAXD*NSPIND*LMAXD1,DMATLDAU(1,1,1,1))
             endif
@@ -1303,6 +1325,7 @@ spinloop:     do ISPIN = 1,NSPIN
               ICELL = NTCELL(I1)
               IPOT = (I1-1) * NSPIN + ISPIN
 
+              LDORHOEF = NPOL/=0  ! needed in RHOVAL
               call RHOVAL(LDORHOEF,ICST,IELAST, &
                           NSRA,ISPIN,NSPIN,EZ,WEZRN(1,ISPIN), &
                           DRDI(1,I1),R(1,I1),IRMIN(I1), &
@@ -1337,29 +1360,11 @@ spinloop:     do ISPIN = 1,NSPIN
               call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIN,IEMXD)
             end if
 
-            ! get density of states at Fermi-level
-            DENEF = 0.0d0
-            do ISPIN = 1,NSPIN
-              do L = 0,LMAXD1
-                DENEF = DENEF - 2.0D0 * &
-                DIMAG(DEN(L,IELAST,ISPIN))/PI/DBLE(NSPIN)
-              end do
-            end do
+            ! calculate DOS at Fermi level
+            DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIN)
 
-! ---> l/m_s/atom-resolved charges
-
-            do ISPIN = 1,NSPIN
-              do L = 0,LMAXD1
-                CHARGE(L,ISPIN) = 0.0D0
-
-                do IE = 1,IELAST
-                  CHARGE(L,ISPIN) = CHARGE(L,ISPIN) + &
-                  DIMAG(WEZ(IE)*DEN(L,IE,ISPIN))/ &
-                  DBLE(NSPIN)
-                end do
-
-              end do
-            end do
+            ! ---> l/m_s/atom-resolved charges, output -> CHARGE
+            call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIN, WEZ, IEMXD)
 
 ! LDAU
 
@@ -1435,7 +1440,7 @@ spinloop:     do ISPIN = 1,NSPIN
 !     old Fermi level E2 and density of states DENEF
 
         E2SHIFT = CHRGNT/DENEF
-        E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT) !FIXME: hardcoded
+        E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT) !FIXME: hardcoded maximal shift of 0.03
         EFOLD = E2
 
         if (ISHIFT < 2) E2 = E2 - E2SHIFT
@@ -1603,7 +1608,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
 
-
+! Calculate muffin-tin potential shift
 !****************************************************** MPI COLLECT DATA
         WORK1(1) = VAV0
         WORK1(2) = VOL0
@@ -1692,37 +1697,8 @@ spinloop:     do ISPIN = 1,NSPIN
           if(MYLRANK(LMPIC)== &
           MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
 
-            !initialise VINS
-            do ISPIN = 1,2
-              do LM = 1, LMPOTD
-                do J = IRMIND, IRMD
-                  VINS(J,LM,ISPIN) = 0.0D0
-                enddo
-              enddo
-            enddo
+            call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, NSPIN, VINS, VISP, VONS)
 
-            !initialise VISP
-            do ISPIN = 1,2
-              do J = 1, IRMD
-                VISP(J,ISPIN) = 0.0D0
-              enddo
-            enddo
-
-            do ISPIN = 1,NSPIN
-              IPOT = (I1-1)*NSPIN + ISPIN
-
-              IRC1 = IRC(I1)
-              call DCOPY(IRC1,VONS(1,1,ISPIN),1,VISP(1,ISPIN),1)
-
-              if (LPOT>0) then
-                IRMIN1 = IRMIN(I1)
-                do LM = 2,LMPOT
-                  do J = IRMIN1,IRC1
-                    VINS(J,LM,ISPIN) = VONS(J,LM,ISPIN)
-                  end do
-                end do
-              end if
-            enddo
 ! ----------------------------------------------------- output_potential
             write(66,rec=I1) VINS,VISP,ECORE
 ! ----------------------------------------------------- output_potential
@@ -1763,8 +1739,9 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -----------------------------------------------------------------
         if(MYLRANK(LMPIC)==0) then
 
-          ! DOS is written to file 'results1' and read out later just
+          ! DOS was written to file 'results1' and read out here just
           ! to be written in routine wrldos
+          ! also other stuff is read from results1
           call RESULTS(LRECRES2,IELAST,ITER,LMAX,NAEZ,NPOL, &
           NSPIN,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
           ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
@@ -1772,6 +1749,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
 ! --> update energy contour
 
+          ! E2 is used twice as a parameter - dangerous!
           call EMESHT(EZ,DEZ,IELAST,E1,E2,E2,TK, &
           NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
 
@@ -2030,6 +2008,7 @@ spinloop:     do ISPIN = 1,NSPIN
   deallocate(ERANK, stat = memory_stat)
   deallocate(EPROC, stat = memory_stat)
   deallocate(EPROCO, stat = memory_stat)
+
 !-----------------------------------------------------------------------------
 ! Array DEallocations END
 !-----------------------------------------------------------------------------
