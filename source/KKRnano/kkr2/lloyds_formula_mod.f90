@@ -322,7 +322,7 @@ module lloyds_formula_mod
    !> @param[in]     inv_Tmat           inverse of local Delta T-Matrix (MSSQ) WHY???
    !> @param[out]    TRACEK             resulting trace
 
-   subroutine calcLloydTraceXRealSystem(site_lm_size, lmmaxd)
+   subroutine calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
 
      integer, intent(in) :: site_lm_size
      integer, intent(in) :: lmmaxd
@@ -365,5 +365,51 @@ module lloyds_formula_mod
    !endif
 
    end subroutine
+
+!------------------------------------------------------------------------------
+! Renormalise calculated density of states.
+! previously in main2
+! @param[in] LMAXD1 lmax + 1
+! @param[in] IELAST number of energy points
+! @param[in] IEMXD stupid dimension parameter for energy points IELAST <= IEMXD
+! @param[in] RNORM normalisation factors: WARNING: 2nd dimension always 2 :-(
+! WARNING: included spin loop!!! was originally in spin loop - move out!!!
+
+  subroutine renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIN,IEMXD)
+    implicit none
+
+    integer, intent(in) :: LMAXD1
+    integer, intent(in) :: IELAST
+    integer, intent(in) :: NSPIN
+    integer, intent(in) :: IEMXD
+
+    double complex, dimension(0:LMAXD1,IEMXD,NSPIN), intent(inout) :: DEN
+    double precision, dimension(IEMXD,2), intent(in) :: RNORM
+
+    integer :: IE
+    integer :: ISPIN
+    integer :: L_ind
+
+    !DEBUG
+    if (IELAST > IEMXD) then
+      write(*,*) "renormalizeDOS: IELAST > IEMXD"
+      write(*,*) IELAST, IEMXD
+      stop
+    end if
+
+    if (NSPIN < 1 .or. NSPIN > 2) then
+      write(*,*) "renormalizeDOS: invalid NSPIN value", NSPIN
+      stop
+    end if
+
+    do ISPIN = 1,NSPIN
+      do IE=1,IELAST
+        do L_ind=0,LMAXD1
+          DEN(L_ind,IE,ISPIN)=DEN(L_ind,IE,ISPIN)*RNORM(IE,ISPIN)
+        end do
+      end do
+    end do
+
+  end subroutine
 
 end module lloyds_formula_mod

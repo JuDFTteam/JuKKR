@@ -11,6 +11,7 @@ program MAIN2
   use common_mpi
 
   use ErrorMessages_mod
+  use lloyds_formula_mod
 
   implicit none
   include 'mpif.h'
@@ -781,6 +782,7 @@ program MAIN2
   end do
 
   close (52)
+
   open (67,file='energy_mesh',form='unformatted')
   read (67) IELAST,EZ,WEZ,E1,E2
   read (67) NPOL,TK,NPNT1,NPNT2,NPNT3
@@ -832,12 +834,6 @@ program MAIN2
       open (2,file='time-info',form='formatted')
     endif
 !========= TIMING ======================================================
-
-! -------------------------------------------------------- not.converged
-
-    open (28,file='not.converged',form='formatted')
-    read (28,'(1P,4D17.10)') EFOLD,VBC
-    close (28)
 
     do IH=1,EKMD
       do ISPIN=1,NSPIND-SMPID+1
@@ -1322,14 +1318,6 @@ spinloop:     do ISPIN = 1,NSPIN
                           iemxd, &
                           lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
-              if (LLY==1) then
-                do IE=1,IELAST
-                  do L=0,LMAXD1
-                    DEN(L,IE,ISPIN)=DEN(L,IE,ISPIN)*RNORM(IE,ISPIN)
-                  end do
-                end do
-              end if
-
               EBOT = E1
 
               call RHOCORE(EBOT,NSRA,ISPIN,NSPIN,I1, &
@@ -1345,6 +1333,12 @@ spinloop:     do ISPIN = 1,NSPIN
 !      END do loop over spins
 ! SPIN ===================================================================
 
+            if (LLY == 1) then
+              call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIN,IEMXD)
+            end if
+
+            ! get density of states at Fermi-level
+            DENEF = 0.0d0
             do ISPIN = 1,NSPIN
               do L = 0,LMAXD1
                 DENEF = DENEF - 2.0D0 * &
@@ -1434,12 +1428,6 @@ spinloop:     do ISPIN = 1,NSPIN
         call DCOPY(1,WORK1,1,DENEF,1)
 
 !****************************************************** MPI COLLECT DATA
-
-! **************************  ITERATION NUMBER  ************************
-        open (28,file='not.converged',form='formatted')
-        read (28,'(1P,4D17.10)') EFOLD,VBC
-        close (28)
-! **********************************************************************
 
 ! ----------------------------------------------------------------------
 
@@ -1775,15 +1763,14 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -----------------------------------------------------------------
         if(MYLRANK(LMPIC)==0) then
 
+          ! DOS is written to file 'results1' and read out later just
+          ! to be written in routine wrldos
           call RESULTS(LRECRES2,IELAST,ITER,LMAX,NAEZ,NPOL, &
           NSPIN,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
           ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
           iemxd)
 
 ! --> update energy contour
-
-!          if(TEST('fix-EF  ')) rewind(41)
-!          if(TEST('fix-EF  ')) read(41,*) E2
 
           call EMESHT(EZ,DEZ,IELAST,E1,E2,E2,TK, &
           NPOL,NPNT1,NPNT2,NPNT3,IEMXD)

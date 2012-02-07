@@ -59,7 +59,7 @@ C
 C     .. local scalars ..
       DOUBLE PRECISION RMSQ,RMSM
       INTEGER          I1,D1,D10,D100,D1000,OFF(3)
-      CHARACTER*12     FNAME
+      CHARACTER(12)    FNAME
       LOGICAL          VFORM
 C     ..
 C     .. MPI variables ..
@@ -124,13 +124,13 @@ C
       IF (MAX(RMSQ,RMSM).LT.QBOUND) THEN
          WRITE(6,'(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
          WRITE(6,'(79(1H*))')
-         GO TO 260
+         GOTO 260
 C ----------------------------------------------------------------------
       ELSE
 C ----------------------------------------------------------------------
          IF (MAX(RMSQ,RMSM).GT.RMSAV0) THEN
             WRITE(6,*) 'ITERATION DIVERGED ---'
-            GO TO 260
+            GOTO 260
          END IF
 C ----------------------------------------------------------------------
          IF (ITER.GE.SCFSTEPS) THEN
@@ -143,16 +143,9 @@ C ----------------------------------------------------------------------
 C ----------------------------------------------------------------------
 C
  260  CONTINUE                  ! jump mark
-C
-C ======================================================================
-C =             write out information for the next iteration           =
-C ======================================================================
 
-      OPEN (28,FILE='not.converged',FORM='formatted')
-      WRITE (28,'(1P,4D17.10)') EFOLD,VBC
-      CLOSE (28)
+
       END IF
-
 C ============= MYRANK.EQ.0 ============================================
 C
 C
