@@ -1186,8 +1186,6 @@ spinloop:     do ISPIN = 1,NSPIN
 
           end do                   ! IE = 1,IELAST
 
-          if (ERESJIJ) close(75)   ! FIXME: is opened in XCCPLJIJ, but not closed?!
-
 ! IE ====================================================================
 !     END do loop over energies (EMPID-parallel) to be implemented
 ! IE ====================================================================

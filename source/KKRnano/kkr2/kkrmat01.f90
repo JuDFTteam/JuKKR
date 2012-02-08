@@ -16,7 +16,7 @@ prod_lmpid_smpid_empid, nthrds, &
 lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
-  !use mpi
+  use lloyds_formula_mod
 
   implicit none
   include 'mpif.h'
@@ -123,7 +123,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !     .. LOCAL SCALARS ..
   double complex::TRACE
   double complex::TRACEK
-  double complex::GTDPDE
   double complex::BZTR2
   double complex::CFCTORINV
   double precision::TWO_PI
@@ -198,7 +197,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer::        ALM
   integer::        NGTBD
   integer::        NBLCKD
-  integer::        LLYALM
 
   integer :: memory_stat
   logical :: memory_fail
@@ -209,7 +207,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   ALM = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
-  LLYALM =LLY*(NAEZ*LMMAXD-1)+1
 
   !-----------------------------------------------------------------------
   ! Allocate arrays
@@ -228,12 +225,14 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   allocate(X0(ALM,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
-  allocate(DGDE      (LLYALM,LMMAXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(GLLKE_X   (LLYALM,LMMAXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(DPDE_LOCAL(LLYALM,LMMAXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
+  if (LLY == 1) then
+    allocate(DGDE      (ALM,LMMAXD), stat = memory_stat)
+    if (memory_stat /= 0) memory_fail = .true.
+    allocate(GLLKE_X   (ALM,LMMAXD), stat = memory_stat)
+    if (memory_stat /= 0) memory_fail = .true.
+    allocate(DPDE_LOCAL(ALM,LMMAXD), stat = memory_stat)
+    if (memory_stat /= 0) memory_fail = .true.
+  end if
 
   if (memory_fail .eqv. .true.) then
     write(*,*) "KKRMAT01: FATAL Error, failure to allocate memory."
@@ -429,15 +428,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
       if (LLY == 1) then
 
-        call CINIT(LLYALM*LMMAXD,DPDE_LOCAL)
-
-        call ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CONE, &
-        DGDE,ALM, &
-        TMATLL(1,1,IAT),LMMAXD,CZERO, &
-        DPDE_LOCAL,ALM)
-        call ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CFCTORINV, &
-        GLLKE_X,ALM, &
-        DTDE_LOCAL,LMMAXD,CONE,DPDE_LOCAL,ALM)
+       !calcDerivativeP(site_lm_size, lmmaxd, alat, &
+       !                       DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
+        call calcDerivativeP(ALM, lmmaxd, alat, &
+                             DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
 
       endif
 !#######################################################################
@@ -486,7 +480,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !===================================================================
 
 !===================================================================
-! 2) if IGUESS is activated perform intitial step 'I' of
+! 2) if IGUESS is activated perform intitial step of
 !    intial guess - store original b in DUMMY and set up modified b'
     
       if (IGUESS == 1) then
@@ -504,12 +498,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         enddo
         
         if (ITER > 1) then
-          call PRINVIT( 'I',IAT, &
-                        NUMN0,INDN0, &
+          call initialGuess_start( IAT, NUMN0, INDN0, &
                         TMATLL,GLLH,X0, &
                         PRSC(1,EKM + k_point_index),SPRS(1,EKM + k_point_index), &
-                        GLLKE1, &
-                        naez, lmax, naclsd, nguessd, nthrds)
+                        naez, lmmaxd, naclsd, nguessd, nthrds)
         endif
 
       endif ! IGUESS == 1
@@ -549,18 +541,14 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !===================================================================
 
 !===================================================================
-! 5) if IGUESS is activated perform final step 'F' of
+! 5) if IGUESS is activated perform final step of
 !    intial guess           ~
 !                  X = X  + X
 !                       0          ..
     
       if (IGUESS == 1) then
-        call PRINVIT( 'F',IAT, &
-                      NUMN0,INDN0, &
-                      TMATLL,GLLH,X0, &
-                      PRSC(1,EKM+k_point_index),SPRS(1,EKM+k_point_index), &
-                      GLLKE1, &
-                      naez, lmax, naclsd, nguessd, nthrds)
+        call initialGuess_finish(X0, PRSC(1,EKM+k_point_index),SPRS(1,EKM+k_point_index), &
+                      GLLKE1, naez, lmmaxd, nguessd)
         
         do site_index=1,NAEZ
           do LM1=1,LMMAXD
@@ -592,20 +580,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !                \        dE  /
       !===================================================================
         
-
-        TRACEK=CZERO
-
-        do LM1=1,LMMAXD
-          do LM2=1,LMMAXD
-            GTDPDE = CZERO
-            do site_lm_index = 1,LLYALM
-              GTDPDE = GTDPDE + GLLKE1(site_lm_index,LM2)*DPDE_LOCAL(site_lm_index,LM1)
-            enddo
-            TRACEK = TRACEK + MSSQ(LM1,LM2)*GTDPDE
-          enddo
-        enddo
+        !call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
+        call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, MSSQ, TRACEK, ALM, lmmaxd)
         
-        BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)
+        BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)  ! k-space integration
         
       endif
 !#######################################################################
@@ -691,8 +669,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   deallocate(GLLHBLCK)
   deallocate(X0)
 
-  deallocate(DGDE)
-  deallocate(GLLKE_X)
-  deallocate(DPDE_LOCAL)
+  if (LLY == 1) then
+    deallocate(DGDE)
+    deallocate(GLLKE_X)
+    deallocate(DPDE_LOCAL)
+  end if
 
 end subroutine KKRMAT01

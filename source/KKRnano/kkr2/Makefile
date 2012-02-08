@@ -116,9 +116,12 @@ test:
 	
 #Module dependencies
 
-main2.o: common_mpi.o common_testc.o common_optc.o
+main2.o: common_mpi.o common_testc.o common_optc.o lloyds_formula_mod.o KKRSelfConsistency_mod.o error_messages_mod.o
+kkrmat01.o: lloyds_formula_mod.o
+lloyds_formula_mod.o: kkr_helpers_mod.o
 lattice3d.o: common_mpi.o
 test.o: common_testc.o
 opt.o: common_optc.o
+
 
 

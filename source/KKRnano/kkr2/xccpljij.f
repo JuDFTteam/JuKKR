@@ -256,6 +256,8 @@ C
 
       deallocate(DTNXIJ)
 
+      if (ERESJIJ) close(75)
+
       ENDIF ! called with INFO='R'
 C=======================================================================
 C finished subroutine if called with INFO = 'R'
