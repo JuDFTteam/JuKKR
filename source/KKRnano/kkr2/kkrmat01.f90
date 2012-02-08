@@ -540,7 +540,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                     IAT,ITER,iteration_counter, &
                     GLLHBLCK,BCP,IGUESS,CNVFAC(EKM+k_point_index), &
                     QMRBOUND, &
-                    naez, lmax, naclsd, xdim, ydim, zdim, &
+                    naez, lmmaxd, naclsd, xdim, ydim, zdim, &
                     natbld, nthrds)
     
       NOITER = NOITER + iteration_counter

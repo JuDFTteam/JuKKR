@@ -1,6 +1,6 @@
       SUBROUTINE APPBLCKCIRC(VECS,GLLHBLCK,
 C                            new after inc.p removal - arg. INFO removed
-     &                       naez,lmax,nthrds,
+     &                       naez,lmmaxd,nthrds,
      &                       natbld, xdim, ydim, zdim)
 C
       IMPLICIT NONE
@@ -8,7 +8,7 @@ C
       INCLUDE 'fftw3.f'
 
       INTEGER naez
-      INTEGER lmax
+      INTEGER lmmaxd
 C     number of OpenMP threads
       INTEGER nthrds
 C     number of atoms per preconditioning block
@@ -19,38 +19,22 @@ C     number of preconditioning blocks in each direction
       INTEGER zdim
 
 
-      INTEGER        LMMAXD
-
       DOUBLE COMPLEX CONE
       PARAMETER      (CONE  = ( 1.0D0,0.0D0))
       DOUBLE COMPLEX CZERO
       PARAMETER      (CZERO = ( 0.0D0,0.0D0))
-C
 
-C
-C     DOUBLE COMPLEX VECS(NAEZD*LMMAXD,LMMAXD),
-C     +               GLLHBLCK(LMMAXD*NATBLD,
-C     +                        LMMAXD*NATBLD*XDIM*YDIM*ZDIM),
-C     +               BLCK(LMMAXD*NATBLD,LMMAXD*NATBLD),
-C     +               TBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD),
-C     +               TXK(LMMAXD*NATBLD),TYK(LMMAXD*NATBLD)
+      DOUBLE COMPLEX VECS(NAEZ*LMMAXD,LMMAXD),
+     +               GLLHBLCK(NATBLD*LMMAXD,
+     +               XDIM*YDIM*ZDIM*NATBLD*LMMAXD),
+     +               TBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD),
+     +               TXK(NATBLD*LMMAXD),TYK(NATBLD*LMMAXD)
 
-      DOUBLE COMPLEX VECS(NAEZ*(LMAX+1)**2,(LMAX+1)**2),
-     +               GLLHBLCK(NATBLD*(LMAX+1)**2,
-     +               XDIM*YDIM*ZDIM*NATBLD*(LMAX+1)**2),
-     +               TBLCK(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2),
-     +               TXK(NATBLD*(LMAX+1)**2),TYK(NATBLD*(LMAX+1)**2)
-
-C
-C      DOUBLE COMPLEX X(XDIM,YDIM,ZDIM),
-C     +               XK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM),
-C     +               Y(XDIM,YDIM,ZDIM),
-C     +               YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
 
       DOUBLE COMPLEX X(XDIM,YDIM,ZDIM),
-     +               XK(NATBLD*(LMAX+1)**2,XDIM,YDIM,ZDIM),
+     +               XK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM),
      +               Y(XDIM,YDIM,ZDIM),
-     +               YK(NATBLD*(LMAX+1)**2,XDIM,YDIM,ZDIM)
+     +               YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
 
 C ..
 C local scalars ..
@@ -71,7 +55,6 @@ C=======================================================================
 C outer loop over all columns LM1=1, LMMAXD       begin
 C=======================================================================
 C
-      LMMAXD= (LMAX+1)**2
 
       FAC = 1/FLOAT(XDIM*YDIM*ZDIM)
 C

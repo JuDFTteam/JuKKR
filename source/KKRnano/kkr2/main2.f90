@@ -1364,6 +1364,7 @@ spinloop:     do ISPIN = 1,NSPIN
             DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIN)
 
             ! ---> l/m_s/atom-resolved charges, output -> CHARGE
+            ! Use WEZ or WEZRN ???? !!!
             call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIN, WEZ, IEMXD)
 
 ! LDAU
@@ -1778,6 +1779,9 @@ spinloop:     do ISPIN = 1,NSPIN
 
 !      CALL MPI_BARRIER(ACTVCOMM,IERR)
 
+      ! why? all processes except 1 have MYBCRANK = 0, this allreduce
+      ! tells all the other processes who is the root
+      ! not really necessary
       call MPI_ALLREDUCE(MYBCRANK,BCRANK,1,MPI_INTEGER,MPI_MAX, &
       ACTVCOMM,IERR)
 

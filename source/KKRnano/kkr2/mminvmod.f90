@@ -5,7 +5,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
                     GLLHBLCK,BCP,IGUESS,CNVFAC, &
                     TOL, &
                     !   new parameters after inc.p removal
-                    naezd, lmaxd, naclsd, xdim, ydim, zdim, &
+                    naezd, lmmaxd, naclsd, xdim, ydim, zdim, &
                     natbld, nthrds)
 
 
@@ -13,7 +13,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
 
   integer:: naezd
-  integer:: lmaxd
+  integer:: lmmaxd
   integer:: naclsd
   integer:: xdim
   integer:: ydim
@@ -21,7 +21,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   integer:: natbld
   integer:: nthrds
 
-  INTEGER :: LMMAXD
   !     PARAMETER         (LMMAXD= (LMAXD+1)**2)
   !     INTEGER            NDIM,NAEZ
   !     PARAMETER         (NAEZ=NAEZD,NDIM=NAEZD*LMMAXD)
@@ -55,10 +54,10 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   !    +                   GLLH1(LMMAXD,NGTBD,NAEZD),
   !    +                   GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD)
 
-  double complex :: TMATLL((LMAXD+1)**2,(LMAXD+1)**2,NAEZD)
-  double complex :: X2(NAEZD*(LMAXD+1)**2,(LMAXD+1)**2)
-  double complex :: GLLH1((LMAXD+1)**2,NACLSD*(LMAXD+1)**2,NAEZD)
-  double complex :: GLLHBLCK(NATBLD*(LMAXD+1)**2, NATBLD*XDIM*YDIM*ZDIM*(LMAXD+1)**2)
+  double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)
+  double complex :: X2(NAEZD*LMMAXD,LMMAXD)
+  double complex :: GLLH1(LMMAXD,NACLSD*LMMAXD,NAEZD)
+  double complex :: GLLHBLCK(NATBLD*LMMAXD, NATBLD*XDIM*YDIM*ZDIM*LMMAXD)
 
   integer:: NUMN0(NAEZD)
   integer:: INDN0(NAEZD,NACLSD)
@@ -86,21 +85,21 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   ! local arrays ..
 
   !     small, local arrays with dimension LMMAXD = (LMAXD+1)**2
-  double complex :: RHO((LMAXD+1)**2)
-  double complex :: ETA((LMAXD+1)**2)
-  double complex :: BETA((LMAXD+1)**2)
-  double complex :: ALPHA((LMAXD+1)**2)
+  double complex :: RHO(LMMAXD)
+  double complex :: ETA(LMMAXD)
+  double complex :: BETA(LMMAXD)
+  double complex :: ALPHA(LMMAXD)
 
-  double precision::R0((LMAXD+1)**2)
-  double precision::RESN((LMAXD+1)**2)
-  double precision::VAR((LMAXD+1)**2)
-  double precision::TAU((LMAXD+1)**2)
-  double precision::COS((LMAXD+1)**2)
-  double precision::N2B((LMAXD+1)**2)  ! not local
-  double precision::TOLB((LMAXD+1)**2)
+  double precision::R0(LMMAXD)
+  double precision::RESN(LMMAXD)
+  double precision::VAR(LMMAXD)
+  double precision::TAU(LMMAXD)
+  double precision::COS(LMMAXD)
+  double precision::N2B(LMMAXD)  ! not local
+  double precision::TOLB(LMMAXD)
 
-  integer::ITER((LMAXD+1)**2)
-  logical::DONE((LMAXD+1)**2)
+  integer::ITER(LMMAXD)
+  logical::DONE(LMMAXD)
 
   double precision::HSTR(10)
   integer::HSTI(3)
@@ -125,7 +124,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   ! INITIALIZATION I
   !=======================================================================
 
-  LMMAXD = (LMAXD+1)**2
   NDIM = NAEZD*LMMAXD
   NLEN = NAEZD*LMMAXD
 
@@ -298,7 +296,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       enddo
         
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
-      naezd,lmaxd,nthrds,natbld,xdim,ydim,zdim)
+      naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
         
     else
         
@@ -381,7 +379,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       enddo
         
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
-      naezd,lmaxd,nthrds,natbld,xdim,ydim,zdim)
+      naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
         
     else
         
@@ -438,7 +436,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
           call ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
         enddo
             
-        call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmaxd,nthrds,natbld,xdim,ydim,zdim)
+        call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
             
       else
             
@@ -537,7 +535,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
        call ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
      enddo
     
-     call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmaxd,nthrds,natbld,xdim,ydim,zdim)
+     call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
     
      do LM2 = 1,LMMAXD
        call ZCOPY(NDIM,DUMMY(1,LM2),1,VECS(1,LM2,1),1)
