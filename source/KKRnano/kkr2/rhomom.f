@@ -1,5 +1,5 @@
 c 13.10.95 ***************************************************************
-      SUBROUTINE RHOMOM(CMOM,CMINST,LMAX,IATYP,RHO2NS,R,
+      SUBROUTINE RHOMOM(CMOM,CMINST,LPOT,IATYP,RHO2NS,R,
      +                  DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM,
      +                  IMAXSH,GSH,THETAS,LMSP,
 C                       new input parameters after inc.p removal
@@ -22,7 +22,7 @@ C     INTEGER LMPOTD
 C     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LMAX
+      INTEGER LPOT
 C     ..
 C     .. Array Arguments ..
 C     DOUBLE PRECISION CMINST(LMPOTD),CMOM(LMPOTD),DRDI(IRMD,*),
@@ -30,16 +30,16 @@ C    +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD),
 C    +                 THETAS(IRID,NFUND,*)
 C     INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
 C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
-      DOUBLE PRECISION CMINST((2*LMAX+1)**2)
-      DOUBLE PRECISION CMOM((2*LMAX+1)**2)
+      DOUBLE PRECISION CMINST((LPOT+1)**2)
+      DOUBLE PRECISION CMOM((LPOT+1)**2)
       DOUBLE PRECISION DRDI(IRMD,*)
       DOUBLE PRECISION GSH(*)
       DOUBLE PRECISION R(IRMD,*)
-      DOUBLE PRECISION RHO2NS(IRMD,(2*LMAX+1)**2)
+      DOUBLE PRECISION RHO2NS(IRMD,(LPOT+1)**2)
       DOUBLE PRECISION THETAS(IRID,NFUND,*)
       INTEGER IFUNM(*)
       INTEGER ILM(NGSHD,3)
-      INTEGER IMAXSH(0:(2*LMAX+1)**2)
+      INTEGER IMAXSH(0:(LPOT+1)**2)
       INTEGER IPAN(*)
       INTEGER IRCUT(0:IPAND,*)
       INTEGER LMSP(*)
@@ -67,7 +67,7 @@ c
           IRCUTM(I) = IRCUT(I,IATYP)
    10   CONTINUE
 
-        DO 100 L = 0,LMAX
+        DO 100 L = 0,LPOT
           FAC = 8.0D0*PI/REAL(2*L+1)
           DO 90 M = -L,L
             LM = L*L + L + M + 1

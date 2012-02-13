@@ -817,9 +817,14 @@ program MAIN2
     write (*,*) "main2: LMAX /= LMAXD"
     stop
   end if
+
+  if (NSPIN /= NSPIND) then
+    write (*,*) "main2: NSPIN /= NSPIND"
+    stop
+  end if
 ! ------------------------------------------------------------------
 
-
+  ! TODO: get rid of LSMYRANK, LSRANK, LSMPIB, LSMPIC (see line 844)
   call IMPI(NAEZ,MYRANK,NROFNODES, &
             LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
             LSMPIB,LSMPIC,LSRANK,LSMYRANK, &
@@ -836,7 +841,7 @@ program MAIN2
 !=====================================================================
 
 
-  if (LMPIC/=0.or.LSMPIC/=0) then   !     ACTVGROUP
+  if (LMPIC/=0.or.LSMPIC/=0) then   !     ACTVGROUP could also test EMPIC
 
     MYBCRANK = 0
 
@@ -902,7 +907,7 @@ program MAIN2
       NMAXD,ISHLD, &
       LMPOT,CLEB,ICLEB,IEND, &
       NCLEBD,LOFLM,DFAC, &
-      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM)
+      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM) ! does it have to be in SCF-loop?
 
       do LM = 1,LMPOTD
         CMOM(LM) = 0.0D0
@@ -1362,7 +1367,8 @@ spinloop:     do ISPIN = 1,NSPIN
             DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIN)
 
             ! ---> l/m_s/atom-resolved charges, output -> CHARGE
-            ! Use WEZ or WEZRN ???? !!!
+            ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
+            ! CHARGE -> written to result file, only for informative purposes
             call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIN, WEZ, IEMXD)
 
 ! LDAU
@@ -1696,7 +1702,8 @@ spinloop:     do ISPIN = 1,NSPIN
           if(MYLRANK(LMPIC)== &
           MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
 
-            call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, NSPIN, VINS, VISP, VONS)
+            call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, &
+                                 NSPIN, VINS, VISP, VONS)
 
 ! ----------------------------------------------------- output_potential
             write(66,rec=I1) VINS,VISP,ECORE
@@ -1859,7 +1866,6 @@ spinloop:     do ISPIN = 1,NSPIN
     call MPI_COMM_FREE(ACTVCOMM,IERR)
     call MPI_GROUP_FREE(ACTVGROUP,IERR)
 ! .. .
-
 
   endif ! ACTVGROUP
 
