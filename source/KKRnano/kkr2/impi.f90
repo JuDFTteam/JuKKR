@@ -6,8 +6,7 @@ subroutine IMPI( &
   SMPIB,SMPIC,SRANK,SMYRANK, &                ! < out
   EMPIB,EMPIC,ERANK,EMYRANK, &                ! < out
   MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE, &   ! < out
-  ! new input parameters after inc.p removal
-  lmpid, smpid, empid, nthrds)                ! < in
+  lmpid, smpid, empid, nthrds)                ! < in  ! new input parameters after inc.p removal
 
   ! ======================================================================
   !                       build MPI_Groups
@@ -88,6 +87,7 @@ subroutine IMPI( &
   integer::ACTVGROUP
   integer::ACTVSIZE
 
+!$ integer::omp_get_max_threads
 
   ! intialize MPI and standard groups and communicator
 
@@ -187,14 +187,20 @@ subroutine IMPI( &
 
   if (MYRANK == 0) then
     write(6,'(79(1H=))')
+    write(6,*) '  total no. of MPI ranks  = ',NROFNODES
+!$omp parallel
+!$omp single
+!$  write(6,*) '  OMP max. threads        = ',omp_get_max_threads()
+!$omp end single
+!$omp end parallel
     write(6,*) '  groups of processes created'
     write(6,*) '  NMPI                    = ',NAEZ
     write(6,*) '  LMPI                    = ',LMPID
     write(6,*) '  SMPI                    = ',SMPID
     write(6,*) '  EMPI                    = ',EMPID
     write(6,*) '  NTHRDS                  = ',NTHRDS
-    write(6,*) '  MPI-processes           = ',NAEZ*LMPID*SMPID*EMPID
-    write(6,*) '  total no. of processors = ',NAEZ*LMPID*SMPID*EMPID*NTHRDS
+    write(6,*) '  MPI-processes (active)  = ',NAEZ*LMPID*SMPID*EMPID
+    write(6,*) '  total no. of tasks      = ',NAEZ*LMPID*SMPID*EMPID*NTHRDS
     write(6,'(79(1H=))')
   endif
 

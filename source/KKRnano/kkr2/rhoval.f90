@@ -200,17 +200,17 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
     !    A cutoff can be used if necessary to make the potential continuous
     !    for example (array bounds should be adjusted):
     
-    if(TEST('CUTOFF  ')) then
-      do IR = 1,IRMD
-        LDAUCUT(IR) = ( 1.D0 + DEXP( 20.D0*(R(IR)-R(349)) ) ) * &
-        ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
-        LDAUCUT(IR) = 1D0/LDAUCUT(IR)
-      enddo
-    else
-      do IR = 1,IRMD
-        LDAUCUT(IR) = 1.D0
-      enddo
-    endif
+!    if(TEST('CUTOFF  ')) then
+!      do IR = 1,IRMD
+!        LDAUCUT(IR) = ( 1.D0 + DEXP( 20.D0*(R(IR)-R(349)) ) ) * &
+!        ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
+!        LDAUCUT(IR) = 1D0/LDAUCUT(IR)
+!      enddo
+!    else
+!      do IR = 1,IRMD
+!        LDAUCUT(IR) = 1.D0
+!      enddo
+!    endif
   endif
 
   ! LDAU

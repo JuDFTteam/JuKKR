@@ -118,17 +118,17 @@ C -> Note: Application if WLDAU makes the potential discontinuous.
 C    A cutoff can be used if necessary to make the potential continuous
 C    for example (array bounds should be adjusted):
 C
-        IF(TEST('CUTOFF  ')) THEN
-          DO IR = 1,IRMD
-            LDAUCUT(IR) = ( 1.D0 + DEXP( 20.D0*(R(IR)-R(349)) ) ) *
-     &                    ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
-            LDAUCUT(IR) = 1D0/LDAUCUT(IR)
-          ENDDO
-        ELSE
-          DO IR = 1,IRMD
-            LDAUCUT(IR) = 1.D0
-          ENDDO
-        ENDIF
+C       IF(TEST('CUTOFF  ')) THEN
+C         DO IR = 1,IRMD
+C           LDAUCUT(IR) = ( 1.D0 + DEXP( 20.D0*(R(IR)-R(349)) ) ) *
+C    &                    ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
+C           LDAUCUT(IR) = 1D0/LDAUCUT(IR)
+C         ENDDO
+C       ELSE
+C         DO IR = 1,IRMD
+C           LDAUCUT(IR) = 1.D0
+C         ENDDO
+C       ENDIF
 C
       ENDIF
 C
