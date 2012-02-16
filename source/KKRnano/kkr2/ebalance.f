@@ -48,6 +48,16 @@ C
 C=======================================================================
 C 1st guess >>>
 C=======================================================================
+C     Trying to figure out what this code means:
+C     *) if there is only one energy process -> it calculates everything
+C     *) if there are two processes -> last two points calculated by
+C        process 1, rest is calculated by process 2
+C     *) 3 processes: 1st process calculates only last point
+C                     2nd process calculates first 2/3 of all points
+C                     3rd process calculates last 1/3 of points except
+C                     last
+C     *) MORE than 3 processes: USELESS! proc > 3 do nothing
+C        except for DOS
       IF (LSAME(INFO,'I')) THEN
 C
         IF (EMPID.EQ.1) THEN

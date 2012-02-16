@@ -18,7 +18,6 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   prod_lmpid_smpid_empid, lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ncelld, ipand, ncleb)
 
-  !use mpi
   implicit none
   include 'mpif.h'
 
@@ -33,44 +32,66 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer :: ipand
   integer :: ncleb
 
+  double complex :: EZ(IEMXD)  ! in
+  double complex :: WEZ(IEMXD) ! in
+  double precision::CLEB(NCLEB,2)   !in
+  double precision::DRDI(IRMD,NAEZ) !in
+  double precision::R(IRMD,NAEZ)    !in
+  integer::IRMIN(NAEZ) !in
+  double precision::VINS((IRMD-IRNSD):IRMD,(2*LMAX+1)**2, 2)  !in?
+  double precision::VISP(IRMD,2) ! in?
+  double precision::THETAS(IRID,NFUND,NCELLD) !in
+  double precision::ZAT(NAEZ) !in
+  integer::ICLEB(NCLEB,3)
+  !integer::IFUNM1(LMXSPD,NAEZ) (2*LPOTD+1)**2
+  integer::IFUNM1((4*LMAX+1)**2,NAEZ) !in?
+  integer::IPAN(NAEZ) !in
+  integer::IRCUT(0:IPAND,NAEZ) !in
+  !integer::LMSP1(LMXSPD,NAEZD)
+  integer::LMSP1((4*LMAX+1)**2, NAEZ) !in
+  integer::JEND((LMAX+1)**2, 0:LMAX, 0:LMAX) !in
+  integer::LOFLM((2*LMAX+1)**2) !in
+  integer::NTCELL(NAEZ) !in
+  integer::ICST
+  integer::IELAST
+  integer::IEND
+  integer::NAEZ  !in
+  integer::NSPIN !in
+  integer::NSRA  !in
+  double complex :: WEZRN(IEMXD,2)  ! out
+  double precision::RNORM(IEMXD,2)  !out
+  double complex :: GMATN((LMAX+1)**2, (LMAX+1)**2, IEMXD, NSPIN) ! inout?
+  double complex :: LLY_GRDT(IEMXD,NSPIN) ! in
+
+  ! -------------- LDA+U --------------------------------------------
+  !double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
+  double complex :: DMATLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)  ! out
+  double complex :: PHILDAU(IRMD,LMAX+1) !in?
+  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1) !in?
+  integer::NLDAU !in
+  logical::LDAU  !in
+  integer::LLDAU(LMAX+1) !in?
+  !------------------------------------------------------------------
+
+  integer::MYLRANK(prod_lmpid_smpid_empid) !in
+  integer::LCOMM(prod_lmpid_smpid_empid)   !in
+  integer::LSIZE(prod_lmpid_smpid_empid)   !in
+  integer::LMPIC                           !in
+
+!---------------- Local variables -----------------------------------
 
 !  !     .. Parameters ..
-!  INTEGER             LMMAXD,LMPOTD
-!  PARAMETER          (LMPOTD= (LPOTD+1)**2)
-!  PARAMETER          (LMMAXD= (LMAXD+1)**2)
-!  INTEGER             LMAXD1
-!  PARAMETER          (LMAXD1=LMAXD+1)
-!  INTEGER             MMAXD
-!  PARAMETER          (MMAXD=2*LMAXD+1)
-!  INTEGER             LM2D
-!  PARAMETER          (LM2D= (2*LMAXD+1)**2)
-!  INTEGER             LMXSPD
-!  PARAMETER          (LMXSPD= (2*LPOTD+1)**2)
-!  INTEGER             IRMIND
-!  PARAMETER          (IRMIND=IRMD-IRNSD)
+
   DOUBLE COMPLEX      CZERO
   PARAMETER          (CZERO=(0.0D0,0.0D0))
   !     ..
   !     .. Scalars ..
   integer::I1
   integer::ICELL
-  integer::ICST
   integer::IE
-  integer::IELAST
-  integer::IEND
+
   integer::ISPIN
   integer::L
-  integer::NAEZ
-  integer::NSPIN
-  integer::NSRA
-
-  double complex :: WEZRN(IEMXD,2)
-  double complex :: EZ(IEMXD)
-  double complex :: WEZ(IEMXD)
-  !double complex :: GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND)
-  double complex :: GMATN((LMAX+1)**2, (LMAX+1)**2, IEMXD, NSPIN)
-  double complex :: LLY_GRDT(IEMXD,NSPIN)
-
 
   double precision::DLOYD
   double precision::DLOYDINT
@@ -79,49 +100,12 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   double precision::D0LOCINT
   double precision::D1LOC
   double precision::D1LOCINT
-  double precision::RNORM(IEMXD,2)
-  double precision::CLEB(NCLEB,2)
-  double precision::DRDI(IRMD,NAEZ)
-  double precision::R(IRMD,NAEZ)
-
-  double precision::VINS((IRMD-IRNSD):IRMD,(2*LMAX+1)**2, 2)
-  double precision::VISP(IRMD,2)
-  double precision::THETAS(IRID,NFUND,NCELLD)
-  double precision::ZAT(NAEZ)
-
-  integer::ICLEB(NCLEB,3)
-  !integer::IFUNM1(LMXSPD,NAEZ) (2*LPOTD+1)**2
-  integer::IFUNM1((4*LMAX+1)**2,NAEZ)
-  integer::IPAN(NAEZ)
-  integer::IRCUT(0:IPAND,NAEZ)
-  integer::IRMIN(NAEZ)
-  !integer::LMSP1(LMXSPD,NAEZD)
-  integer::LMSP1((4*LMAX+1)**2, NAEZ)
-  integer::JEND((LMAX+1)**2, 0:LMAX, 0:LMAX)
-  integer::LOFLM((2*LMAX+1)**2)
-  integer::NTCELL(NAEZ)
-
-
-  ! -------------- LDA+U --------------------------------------------
-  !double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  double complex :: DMATLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)
-  double complex :: PHILDAU(IRMD,LMAX+1)
-  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)
-  integer::NLDAU
-  logical::LDAU
-  integer::LLDAU(LMAX+1)
-  ! -----------------------------------------------------------------
 
   !     ..
   !     .. MPI ..
   !     .. N-MPI
   integer:: IERR
   integer::MAPBLOCK
-
-  integer::MYLRANK(prod_lmpid_smpid_empid)
-  integer::LCOMM(prod_lmpid_smpid_empid)
-  integer::LSIZE(prod_lmpid_smpid_empid)
-  integer::LMPIC
 
   !     Dynamically allocated arrays
   !double complex :: WORK1(4*IEMXD)

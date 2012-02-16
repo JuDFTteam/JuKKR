@@ -4,30 +4,38 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,SCITER,ITCOUNT, &
                     GLLHBLCK,BCP,IGUESS,CNVFAC, &
                     TOL, &
-                    !   new parameters after inc.p removal
                     naezd, lmmaxd, naclsd, xdim, ydim, zdim, &
                     natbld, nthrds)
 
 
   implicit none
 
+  integer, intent(in) :: naezd
+  integer, intent(in) :: lmmaxd
+  integer, intent(in) :: naclsd
+  integer, intent(in) :: xdim
+  integer, intent(in) :: ydim
+  integer, intent(in) :: zdim
+  integer, intent(in) :: natbld
+  integer, intent(in) :: nthrds
 
-  integer:: naezd
-  integer:: lmmaxd
-  integer:: naclsd
-  integer:: xdim
-  integer:: ydim
-  integer:: zdim
-  integer:: natbld
-  integer:: nthrds
+  double complex :: GLLH1(LMMAXD,NACLSD*LMMAXD,NAEZD) ! in?
+  double complex :: X2(NAEZD*LMMAXD,LMMAXD)           ! out
+  double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)       ! in
+  integer:: NUMN0(NAEZD)                              ! in
+  integer:: INDN0(NAEZD,NACLSD)                       ! in
+  double precision::N2B(LMMAXD)                       ! in, calculated outside mminvmod (not optimal)
+  integer::IAT                                        ! in
+  integer::SCITER                                     ! in
+  integer::ITCOUNT                                    ! out
+  double complex :: GLLHBLCK(NATBLD*LMMAXD, NATBLD*XDIM*YDIM*ZDIM*LMMAXD) ! inout, work-array
+  integer::BCP                                        ! in
+  integer::IGUESS                                     ! in
+  double precision::CNVFAC                            ! inout - useless
+  double precision::TOL                               ! in
 
-  !     PARAMETER         (LMMAXD= (LMAXD+1)**2)
-  !     INTEGER            NDIM,NAEZ
-  !     PARAMETER         (NAEZ=NAEZD,NDIM=NAEZD*LMMAXD)
-  !     INTEGER            NGTBD
-  !     PARAMETER         (NGTBD = NACLSD*LMMAXD)
-  !     INTEGER            NBLCKD
-  !     PARAMETER         (NBLCKD= XDIM * YDIM * ZDIM)
+!----------------- local variables --------------------------------------------
+
   INTEGER :: NLEN
   INTEGER :: NDIM
   !     PARAMETER         (NLEN=NAEZD*LMMAXD)
@@ -37,31 +45,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   parameter         (CONE = (1.0D0,0.0D0),CZERO = (0.0D0,0.0D0))
   ! ..
 
-  ! global scalars ..
-  double precision::CNVFAC
-  double precision::TOL
-  integer::IAT
-  integer::SCITER
-  integer::ITCOUNT
-  integer::BCP
-  integer::IGUESS
   logical::QMRABS
-  ! ..
-
-  ! global arrays ..
-  !     DOUBLE COMPLEX     TMATLL(LMMAXD,LMMAXD,NAEZD),
-  !    +                   X2(LMMAXD*NAEZD,LMMAXD),
-  !    +                   GLLH1(LMMAXD,NGTBD,NAEZD),
-  !    +                   GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD)
-
-  double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)
-  double complex :: X2(NAEZD*LMMAXD,LMMAXD)
-  double complex :: GLLH1(LMMAXD,NACLSD*LMMAXD,NAEZD)
-  double complex :: GLLHBLCK(NATBLD*LMMAXD, NATBLD*XDIM*YDIM*ZDIM*LMMAXD)
-
-  integer:: NUMN0(NAEZD)
-  integer:: INDN0(NAEZD,NACLSD)
-  ! ..
 
   ! local scalars ..
   double complex :: ZTMP
@@ -69,7 +53,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   double precision::RESNAV
   double precision::TOLAV
   integer::NLIM
-  integer::INIT
   integer::LM2
   integer::LM1
   integer::IL1
@@ -84,7 +67,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
   ! local arrays ..
 
-  !     small, local arrays with dimension LMMAXD = (LMAXD+1)**2
+  !     small, local arrays with dimension LMMAXD
   double complex :: RHO(LMMAXD)
   double complex :: ETA(LMMAXD)
   double complex :: BETA(LMMAXD)
@@ -95,7 +78,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   double precision::VAR(LMMAXD)
   double precision::TAU(LMMAXD)
   double precision::COS(LMMAXD)
-  double precision::N2B(LMMAXD)  ! not local
   double precision::TOLB(LMMAXD)
 
   integer::ITER(LMMAXD)
@@ -197,7 +179,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   enddo
 
   NLIM = 2000  ! limit of max. 2000 iterations
-  INIT = 0
 
   !--------------
   do LM2=1,LMMAXD
@@ -235,7 +216,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     
     ! Check whether the auxiliary vector must be supplied.
     
-    if (INIT == 0) call ZRANDN (NLEN,VECS(1,LM2,3),1)
+    call ZRANDN (NLEN,VECS(1,LM2,3),1)
     
     !     Initialize the variables.
     
@@ -347,10 +328,9 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     enddo
     !--------------
     
-    !--------------
+
     do LM2=1,LMMAXD
       if ( .not. DONE(LM2)) then
-        !--------------
             
         call ZAXPBY(NLEN,VECS(1,LM2,6), &
                     CONE,VECS(1,LM2,6),-ALPHA(LM2),VECS(1,LM2,4))
@@ -360,10 +340,9 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
         call ZAXPBY(NLEN,VECS(1,LM2,7), &
                     CONE,VECS(1,LM2,6),ZTMP,VECS(1,LM2,7))
             
-      !--------------
       endif
     enddo
-    !--------------
+
     
     EXITIT = .true.
     do LM2 = 1, LMMAXD
@@ -503,7 +482,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       do LM2 = 1, LMMAXD
         if ( .not. DONE(LM2)) EXITIT = .false.
       enddo
-      if (EXITIT) go to 67
+      if (EXITIT) goto 67
         
     ! <<<<<<<<<<<<
     endif

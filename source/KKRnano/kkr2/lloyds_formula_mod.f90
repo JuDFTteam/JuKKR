@@ -369,6 +369,7 @@ module lloyds_formula_mod
 !------------------------------------------------------------------------------
 ! Renormalise calculated density of states.
 ! previously in main2
+! @param[in,out] DEN density of states - l-resolved + non-spherical part
 ! @param[in] LMAXD1 lmax + 1
 ! @param[in] IELAST number of energy points
 ! @param[in] IEMXD stupid dimension parameter for energy points IELAST <= IEMXD
