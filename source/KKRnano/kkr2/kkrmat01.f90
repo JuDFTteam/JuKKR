@@ -359,8 +359,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !===========END Lloyd's Formula=========================================
 
 
-      ! (!) The same calculation as some lines above is done all over again(!)
-      ! ???
+      ! The same calculation as some lines above is done all over again ???
+      ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
       call CINIT(ALM*NGTBD,GLLH)
 
@@ -652,9 +652,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   if(LLY == 1)  then
     BZTR2 = BZTR2*NSYMAT/VOLBZ + TR_ALPH
     TRACE=CZERO
-    call MPI_ALLREDUCE(BZTR2,TRACE,1, &
-    MPI_DOUBLE_COMPLEX,MPI_SUM, &
-    LCOMM(LMPIC),IERR)
+
+    call MPI_ALLREDUCE(BZTR2,TRACE,1,MPI_DOUBLE_COMPLEX,MPI_SUM, &
+                       LCOMM(LMPIC),IERR)
+
     LLY_GRDT = TRACE
   endif
   !========== END Lloyd's Formula ==================================

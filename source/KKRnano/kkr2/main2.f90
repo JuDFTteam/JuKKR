@@ -469,6 +469,33 @@ program MAIN2
   LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
   LRECTRC   = 4*(NATRCD*3+2)
 
+! ----------------------------------------------------------------------------
+! consistency checks
+  if (IEMXD < 1) then
+    write (*,*) "main2: IEMXD must be >= 1"
+    stop
+  end if
+
+  if (LMAXD < 0) then
+    write (*,*) "main2: LMAXD must be >= 0"
+    stop
+  end if
+
+  if (SMPID /= 1 .or. SMPID /=2) then
+    write (*,*) "main2: SMPID must be 1 or 2"
+    stop
+  end if
+
+  if (NSPIND /= 1 .or. NSPIND /=2) then
+    write (*,*) "main2: NSPIND must be 1 or 2"
+    stop
+  end if
+
+  if (IGUESS /= IGUESSD .or. IGUESS < 0 .or. IGUESS > 1) then
+    write (*,*) "main2: IGUESSD IGUESS inconsistent ", IGUESSD, IGUESS
+    stop
+  end if
+
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
@@ -822,6 +849,55 @@ program MAIN2
     write (*,*) "main2: NSPIN /= NSPIND"
     stop
   end if
+
+  if (NR > NRD .or. NR < 1) then
+    write (*,*) "main2: NR inconsistent NR NRD ", NR, NRD
+    stop
+  end if
+
+  do I1 = 1, NAEZ
+    if (CLS(I1) < 1 .or. CLS(I1) > NCLSD) then
+      write (*,*) "main2: CLS defect, site ", I1, " value ", CLS(I1)
+      stop
+    end if
+  end do
+
+  do I1 = 1, NCLSD
+    if (NACLS(I1) < 1 .or. NACLS(I1) > NACLSD) then
+      write (*,*) "main2: NACLS defect, cluster ", I1, " value ", NACLS(I1)
+      stop
+    end if
+  end do
+
+  do I1 = 1, NAEZ
+    do IE = 1, NACLS(CLS(I1))
+      if (ATOM(IE, I1) < 1 .or. ATOM(IE, I1) > NAEZ) then
+        write (*,*) "main2: ATOM defect value ", IE, I1, ATOM(IE, I1)
+        stop
+      end if
+
+      ! EZOA - index array to point to lattice vector
+      if (EZOA(IE, I1) < 1 .or. EZOA(IE, I1) > NR) then
+        write (*,*) "main2: EZOA defect value ", IE, I1, EZOA(IE, I1)
+        stop
+      end if
+    end do
+  end do
+
+  do I1 = 1, NAEZ
+    if (NUMN0(I1) < 1 .or. NUMN0(I1) > NAEZ) then
+      write (*,*) "main2: NUMN0 inconsistent site ", I1, " value ", NUMN0(I1)
+      stop
+    end if
+
+    do IE = 1, NUMN0(I1)
+      if (INDN0(I1, IE) < 1 .or. INDN0(I1, IE) > NAEZ) then
+        write (*,*) "main2: INDN0 inconsistent site ", I1, " value ", INDN0(I1, IE)
+        stop
+      end if
+    end do
+  end do
+
 ! ------------------------------------------------------------------
 
   ! TODO: get rid of LSMYRANK, LSRANK, LSMPIB, LSMPIC (see line 844)
@@ -1285,6 +1361,8 @@ spinloop:     do ISPIN = 1,NSPIN
           if (LMPIC==1) then
 
             if (LLY==1) then
+              ! get WEZRN and RNORM, the important input from previous
+              ! calculations is LLY_GRDT_ALL
               call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
                           THETAS,ZAT,ICLEB1C, &
                           IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &

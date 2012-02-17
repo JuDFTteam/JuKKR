@@ -759,7 +759,13 @@
 
 ! ======================================================================
 
-
+!   initialise arrays for clsgen99 to garbage values
+    EZOA = -1
+    ATOM = -1
+    NACLS = -1
+    CLS = -1
+    NUMN0 = -1
+    IND0 = -1
 
     call CLSGEN99(NAEZ,RR,NR,RBASIS,CLS,NACLS,REFPOT,ATOM, &
                   EZOA, &
