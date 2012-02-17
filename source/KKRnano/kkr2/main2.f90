@@ -481,12 +481,12 @@ program MAIN2
     stop
   end if
 
-  if (SMPID /= 1 .or. SMPID /=2) then
+  if (SMPID /= 1 .and. SMPID /=2) then
     write (*,*) "main2: SMPID must be 1 or 2"
     stop
   end if
 
-  if (NSPIND /= 1 .or. NSPIND /=2) then
+  if (NSPIND /= 1 .and. NSPIND /=2) then
     write (*,*) "main2: NSPIND must be 1 or 2"
     stop
   end if
