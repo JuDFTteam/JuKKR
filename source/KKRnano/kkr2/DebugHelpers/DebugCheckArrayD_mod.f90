@@ -32,35 +32,24 @@ module DebugCheckArrayD_mod
 
   end subroutine
 
-  logical function testDebugCheckArrayD(debug_array, array_to_check, num_elements, fail_message)
+  logical function testDebugCheckArrayD(debug_array, array_to_check, fail_message)
     implicit none
 
     type (DebugCheckArrayD), intent(in) :: debug_array
-    double precision, dimension(num_elements), intent(in) :: array_to_check
-    integer, intent(in), optional :: num_elements
+    double precision, dimension(*), intent(in) :: array_to_check ! accept any array
     character(len=*), intent(in), optional :: fail_message
 
     integer :: ii
 
     testDebugCheckArrayD = .false.
 
-    if (present(num_elements)) then
-      if (num_elements /= debug_array%num_elements) then
-        write(*,*) "testDebugCheckArrayD: Wrong number of elements specified. ", debug_array%array_name
-        if (present(fail_message)) then
-          write(*,*) fail_message
-        end if
-        return
-      end if
-    end if
-
     do ii = 1, debug_array%num_elements
       if(debug_array%array_data(ii) /= array_to_check(ii)) then
       write(*,*) "testDebugCheckArrayD: Arrays do not match. Element ", ii
         if (present(fail_message)) then
-          write(*,*) debug_array%array_name, " ", fail_message
+          write(*,*) debug_array%array_name, fail_message
         else
-          write(*,*) debug_array%array_name
+          write(*,*) debug_array%array_name 
         end if
       return
       end if  
@@ -79,7 +68,7 @@ module DebugCheckArrayD_mod
   end subroutine
 end module
 
-
+!
 !program TryDebugCheckArrayD
 !  use DebugCheckArrayD_mod
 !  implicit none
@@ -104,15 +93,12 @@ end module
 !
 !  ! .. do something
 !
-!  write(*,*) testDebugCheckArrayD(db, my_array, dimx*dimy)
+!  write(*,*) testDebugCheckArrayD(db, my_array)
 !
 !  ! .. do something bad
 !
 !  my_array(3,5) = -3
 !
-!  write(*,*) testDebugCheckArrayD(db, my_array, dimx*dimy)
-!
-!  ! size argument is optional for test
 !  write(*,*) testDebugCheckArrayD(db, my_array)
 !
 !  ! use optional fail_message

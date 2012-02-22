@@ -1,21 +1,21 @@
 
-module DebugCheckArrayI_mod
+module DebugCheckArrayZ_mod
   implicit none
 
-  type DebugCheckArrayI
+  type DebugCheckArrayZ
     private
-    integer, dimension(:), pointer :: array_data
+    double complex, dimension(:), pointer :: array_data
     integer :: num_elements
     character(len=32) :: array_name 
   end type
 
   contains
 
-  subroutine createDebugCheckArrayI(debug_array, array_to_check, num_elements, array_name)
+  subroutine createDebugCheckArrayZ(debug_array, array_to_check, num_elements, array_name)
     implicit none
 
-    type (DebugCheckArrayI), intent(inout) :: debug_array
-    integer, dimension(num_elements), intent(in) :: array_to_check
+    type (DebugCheckArrayZ), intent(inout) :: debug_array
+    double complex, dimension(num_elements), intent(in) :: array_to_check
     integer, intent(in) :: num_elements
     character(len=*), intent(in) :: array_name
 
@@ -32,20 +32,20 @@ module DebugCheckArrayI_mod
 
   end subroutine
 
-  logical function testDebugCheckArrayI(debug_array, array_to_check, fail_message)
+  logical function testDebugCheckArrayZ(debug_array, array_to_check, fail_message)
     implicit none
 
-    type (DebugCheckArrayI), intent(in) :: debug_array
-    integer, dimension(*), intent(in) :: array_to_check ! accept any array
+    type (DebugCheckArrayZ), intent(in) :: debug_array
+    double complex, dimension(*), intent(in) :: array_to_check ! accept any array
     character(len=*), intent(in), optional :: fail_message
 
     integer :: ii
 
-    testDebugCheckArrayI = .false.
+    testDebugCheckArrayZ = .false.
 
     do ii = 1, debug_array%num_elements
       if(debug_array%array_data(ii) /= array_to_check(ii)) then
-      write(*,*) "testDebugCheckArrayI: Arrays do not match. Element ", ii
+      write(*,*) "testDebugCheckArrayZ: Arrays do not match. Element ", ii
         if (present(fail_message)) then
           write(*,*) debug_array%array_name, fail_message
         else
@@ -55,33 +55,33 @@ module DebugCheckArrayI_mod
       end if  
     end do 
      
-    testDebugCheckArrayI = .true.
+    testDebugCheckArrayZ = .true.
 
-  end function testDebugCheckArrayI
+  end function testDebugCheckArrayZ
 
-  subroutine destroyDebugCheckArrayI(debug_array)
+  subroutine destroyDebugCheckArrayZ(debug_array)
     implicit none
 
-    type (DebugCheckArrayI), intent(inout) :: debug_array
+    type (DebugCheckArrayZ), intent(inout) :: debug_array
     
     deallocate(debug_array%array_data)
   end subroutine
 end module
 
-!
-!program TryDebugCheckArrayI
-!  use DebugCheckArrayI_mod
+
+!program TryDebugCheckArrayZ
+!  use DebugCheckArrayZ_mod
 !  implicit none
 !
 !  integer, parameter :: dimx = 10
 !  integer, parameter :: dimy = 10
 !
-!  integer, dimension(dimx, dimy) :: my_array
+!  double complex, dimension(dimx, dimy) :: my_array
 !
 !  integer :: x, y
 !  logical :: flag
 !
-!  type (DebugCheckArrayI) :: db
+!  type (DebugCheckArrayZ) :: db
 !
 !  do y = 1, dimy
 !    do x = 1, dimx
@@ -89,21 +89,21 @@ end module
 !    end do
 !  end do
 !
-!  call createDebugCheckArrayI(db, my_array, dimx*dimy, "my_array")
+!  call createDebugCheckArrayZ(db, my_array, dimx*dimy, "my_array")
 !
 !  ! .. do something
 !
-!  write(*,*) testDebugCheckArrayI(db, my_array)
+!  write(*,*) testDebugCheckArrayZ(db, my_array)
 !
 !  ! .. do something bad
 !
 !  my_array(3,5) = -3
 !
-!  write(*,*) testDebugCheckArrayI(db, my_array)
+!  write(*,*) testDebugCheckArrayZ(db, my_array)
 !
 !  ! use optional fail_message
-!  write(*,*) testDebugCheckArrayI(db, my_array, fail_message="location: main")
+!  write(*,*) testDebugCheckArrayZ(db, my_array, fail_message="location: main")
 !
 !
-!  call destroyDebugCheckArrayI(db)
+!  call destroyDebugCheckArrayZ(db)
 !end program
