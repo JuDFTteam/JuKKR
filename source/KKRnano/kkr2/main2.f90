@@ -491,11 +491,6 @@ program MAIN2
     stop
   end if
 
-  if (IGUESS /= IGUESSD .or. IGUESS < 0 .or. IGUESS > 1) then
-    write (*,*) "main2: IGUESSD IGUESS inconsistent ", IGUESSD, IGUESS
-    stop
-  end if
-
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
@@ -819,6 +814,11 @@ program MAIN2
 
 
 ! -------------- Consistency checks -------------------------------
+  if (IGUESS /= IGUESSD .or. IGUESS < 0 .or. IGUESS > 1) then
+    write (*,*) "main2: IGUESSD IGUESS inconsistent ", IGUESSD, IGUESS
+    stop
+  end if
+
   if (NSPIN /= NSPIND) then
     write (*,*) "main2: NSPIN /= NSPIND"
     stop
@@ -876,8 +876,8 @@ program MAIN2
         stop
       end if
 
-      ! EZOA - index array to point to lattice vector
-      if (EZOA(IE, I1) < 1 .or. EZOA(IE, I1) > NR) then
+      ! EZOA - index array to point to lattice vector (0 is allowed value)
+      if (EZOA(IE, I1) < 0 .or. EZOA(IE, I1) > NR) then
         write (*,*) "main2: EZOA defect value ", IE, I1, EZOA(IE, I1)
         stop
       end if
