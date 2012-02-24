@@ -13,10 +13,11 @@ LLY_GRDT,TR_ALPH, &
 LMPIC,LCOMM,LSIZE, &
 !new input parameters after inc.p removal
 prod_lmpid_smpid_empid, nthrds, &
-lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
   use lloyds_formula_mod
+  use kkr_helpers_mod
 
   implicit none
   include 'mpif.h'
@@ -31,7 +32,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   integer, intent(in) :: prod_lmpid_smpid_empid
   integer, intent(in) :: nthrds
-  integer, intent(in) :: lmax
+  integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
   integer, intent(in) :: nclsd   ! number of reference clusters
   integer, intent(in) :: xdim
@@ -81,30 +82,26 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !   double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
   !   double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
 
-  double complex :: TMATLL((LMAX+1)**2,(LMAX+1)**2,NAEZ)
+  double complex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
 
-  double complex :: DGINP((LMAX+1)**2,(LMAX+1)**2,NACLSD,NCLSD)
-  double complex :: GINP ((LMAX+1)**2,(LMAX+1)**2,NACLSD,NCLSD)
-  double complex :: GS   ((LMAX+1)**2,(LMAX+1)**2,NSYMAXD)
-  double complex :: GSXIJ((LMAX+1)**2,(LMAX+1)**2,NSYMAXD,NXIJD)
+  double complex :: DGINP(lmmaxd,lmmaxd,NACLSD,NCLSD)
+  double complex :: GINP (lmmaxd,lmmaxd,NACLSD,NCLSD)
+  double complex :: GS   (lmmaxd,lmmaxd,NSYMAXD)
+  double complex :: GSXIJ(lmmaxd,lmmaxd,NSYMAXD,NXIJD)
 
   integer        :: IXCP(NXIJD)
   double complex :: EIKRP(NACLSD)
   double complex :: EIKRM(NACLSD)
 
   ! .. Lloyd
-  !double complex :: DTDE_LOCAL(LMMAXD,LMMAXD)
-  !double complex :: MSSQ(LMMAXD,LMMAXD)
-  double complex :: DTDE_LOCAL((LMAX+1)**2,(LMAX+1)**2)
-  double complex :: MSSQ((LMAX+1)**2,(LMAX+1)**2)
+  double complex :: DTDE_LOCAL(lmmaxd,lmmaxd)
+  double complex :: MSSQ(lmmaxd,lmmaxd)
 
   double complex :: TR_ALPH
   double complex :: LLY_GRDT
 
-  !complex        :: PRSC(NGUESSD*LMMAXD,EKMD) ! array argument
-  !integer        :: SPRS(NGUESSD*LMMAXD+1,EKMD+1)! array argument
-  complex        :: PRSC(NGUESSD*(LMAX+1)**2,EKMD) ! array argument
-  integer        :: SPRS(NGUESSD*(LMAX+1)**2+1,EKMD+1)! array argument
+  complex        :: PRSC(NGUESSD*lmmaxd,EKMD) ! array argument
+  integer        :: SPRS(NGUESSD*lmmaxd+1,EKMD+1)! array argument
 
   double precision::BZKP(3,KPOIBZ)
   double precision::VOLCUB(KPOIBZ)
@@ -148,12 +145,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   logical::XCCPL
 
   !     .. LOCAL ARRAYS ..
-  !double complex::G(LMMAXD,LMMAXD) ! small
-  !double complex::TGH(LMMAXD) ! small
-  !double precision:: N2B(LMMAXD) ! small
-  double complex  ::G  ((LMAX+1)**2,(LMAX+1)**2) ! small
-  double complex  ::TGH((LMAX+1)**2) ! small
-  double precision::N2B((LMAX+1)**2) ! small
+  double complex  ::G  (lmmaxd,lmmaxd) ! small
+  double complex  ::TGH(lmmaxd) ! small
+  double precision::N2B(lmmaxd) ! small
 
   !    double complex::GLLKE1(ALM,LMMAXD) !large
   !    double complex::DUMMY(ALM,LMMAXD)  !large
@@ -193,7 +187,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer:: IERR
 
   integer::        LMGF0D
-  integer::        LMMAXD
+  integer::        lmax
   integer::        ALM
   integer::        NGTBD
   integer::        NBLCKD
@@ -202,11 +196,12 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   logical :: memory_fail
 
   ! array dimensions
-  LMGF0D= (LMAX+1)**2
-  LMMAXD= (LMAX+1)**2
+  LMGF0D= lmmaxd
   ALM = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
+
+  lmax = lmmaxToLmax(lmmaxd) ! TODO: remove
 
   !-----------------------------------------------------------------------
   ! Allocate arrays
@@ -301,22 +296,25 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                      naez, lmax, naclsd)
         end do
 
+        DGDE = CZERO
         do site_index=1,NAEZ
           do cluster_site_index=1,NUMN0(site_index)
             do LM2=1,LMMAXD
               cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-              if (INDN0(site_index,cluster_site_index) == IAT) then
-                do LM1=1,LMMAXD
-                  site_lm_index=LMMAXD*(site_index-1)+LM1
-                  DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-                enddo
-              else
-                DGDE(site_lm_index,LM2) = CZERO ! has to be 0, I looked 3 months for this bug
-              endif
+
+                if (INDN0(site_index,cluster_site_index) == IAT) then
+                  do LM1=1,LMMAXD
+                    site_lm_index=LMMAXD*(site_index-1)+LM1
+                    DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+                  end do
+                end if
+
             enddo
           enddo
         enddo
+
       endif
+
 
       !============ END Lloyd's Formula =====================================
     
@@ -343,21 +341,24 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !=========== Lloyd's Formula ==========================================
 
       if (LLY == 1) then
+
+        GLLKE_X = CZERO
         do site_index=1,NAEZ
           do cluster_site_index=1,NUMN0(site_index)
             do LM2=1,LMMAXD
               cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+
               if (INDN0(site_index,cluster_site_index) == IAT) then
                 do LM1=1,LMMAXD
                   site_lm_index=LMMAXD*(site_index-1)+LM1
                   GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-                enddo
-              else
-                GLLKE_X(site_lm_index,LM2) = CZERO
+                end do
               endif
+
             enddo
           enddo
         enddo
+
       end if
 
       !===========END Lloyd's Formula=========================================

@@ -276,7 +276,7 @@
     LLY_GRDT,TR_ALPH, &
     LMPIC,LCOMM,LSIZE, &
     prod_lmpid_smpid_empid, nthrds, &
-    lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+    lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
 

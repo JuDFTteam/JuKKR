@@ -64,7 +64,7 @@ FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
 
 ifeq ($(TYPE),debug)
-  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF -qflttrap=zero:imp:nanq:enable -qarch=450
+  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF
 #-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
   FCFLAGS += -O3 -qipa
