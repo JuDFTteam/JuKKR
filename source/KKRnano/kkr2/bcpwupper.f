@@ -3,7 +3,7 @@
      <                     GLLHBLCK,
      >                     NAEZ,NUMN0,INDN0,
 C                          new input after inc.p removal
-     &                     lmax, nthrds, natbld, xdim, ydim, zdim,
+     &                     lmmaxd, nthrds, natbld, xdim, ydim, zdim,
      &                     naclsd)
 C
       IMPLICIT NONE
@@ -20,7 +20,7 @@ C     number of preconditioning blocks in each direction
       integer ydim
       integer zdim
 
-      integer lmax
+      integer lmmaxd
 
 C     number of atoms in the reference cluster
       integer naclsd
@@ -35,9 +35,6 @@ C     NBLCKD = XDIM*YDIM*ZDIM
 
       INTEGER   NSYMAXD
       PARAMETER (NSYMAXD=48)
-
-      INTEGER   LMMAXD
-C     LMMAXD= (LMAX+1)**2
 
 C     INTEGER   ALM
 C     PARAMETER (ALM = NAEZD*LMMAXD)
@@ -55,9 +52,9 @@ C
 C      DOUBLE COMPLEX     GLLH(LMMAXD,NGTBD,NAEZD),
 C     +                   GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD)
 
-      DOUBLE COMPLEX     GLLH((LMAX+1)**2,NACLSD*(LMAX+1)**2,NAEZ),
-     &                   GLLHBLCK(NATBLD*(LMAX+1)**2,
-     &                            NATBLD*XDIM*YDIM*ZDIM*(LMAX+1)**2)
+      DOUBLE COMPLEX     GLLH(lmmaxd,NACLSD*lmmaxd,NAEZ),
+     &                   GLLHBLCK(NATBLD*lmmaxd,
+     &                            NATBLD*XDIM*YDIM*ZDIM*lmmaxd)
 
       INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)
 C ..
@@ -66,12 +63,11 @@ C local arrays ..
 C      DOUBLE COMPLEX     BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD,NINTACTD),
 C     +                   TMPBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD)
 
-      DOUBLE COMPLEX     BLAV(NATBLD*(LMAX+1)**2,
-     &                        NATBLD*(LMAX+1)**2, NINTACTD),
+      DOUBLE COMPLEX     BLAV(NATBLD*lmmaxd,
+     &                        NATBLD*lmmaxd, NINTACTD),
+     &                   TMPBLCK(NATBLD*lmmaxd,NATBLD*lmmaxd)
 
-     &                   TMPBLCK(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2)
-
-      INTEGER            IPIV(NATBLD*(LMAX+1)**2)
+      INTEGER            IPIV(NATBLD*lmmaxd)
 C ..
 C local scalars ..
       DOUBLE COMPLEX     CONE,IMONE,CZERO
@@ -96,7 +92,6 @@ C=======================================================================
 C
 
       NBLCKD = XDIM*YDIM*ZDIM
-      LMMAXD= (LMAX+1)**2
 
       PI = 4.D0*ATAN(1.D0)
 C
@@ -155,25 +150,25 @@ C
 C
             CALL GENBLAV(GLLH,BLAV(1,1,1),CEN,CEN,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,2),CEN,LEF,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,3),CEN,RIG,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,4),CEN,DOW,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,5),CEN,UPP,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,6),CEN,BAC,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,7),CEN,FOW,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
 C
 C
             LEDO = MOD(IX2,XDIM) + 1 +
@@ -215,40 +210,40 @@ C
 C  
             CALL GENBLAV(GLLH,BLAV(1,1,8),CEN,LEDO,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,9),CEN,LEUP,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,10),CEN,LEBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,11),CEN,LEFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,12),CEN,RIDO,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,13),CEN,RIUP,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,14),CEN,RIBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,15),CEN,RIFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,16),CEN,DOBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,17),CEN,DOFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,18),CEN,UPBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
             CALL GENBLAV(GLLH,BLAV(1,1,19),CEN,UPFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
 C
 C
           ENDDO
@@ -395,34 +390,23 @@ C
 C
       SUBROUTINE GENBLAV(GLLH,BLAV,I,J,
      &                   INDN0,NUMN0,
-     &                   naez, lmax, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, naclsd )
 C
       IMPLICIT NONE
-C
-C      include 'inc.p'
-C      include 'inc.cls'
 
       INTEGER naez
-      INTEGER lmax
+      INTEGER lmmaxd
       INTEGER natbld
       INTEGER naclsd
 C
-      INTEGER            LMMAXD
-C     PARAMETER         (LMMAXD= (LMAXD+1)**2)
 C
       INTEGER            I,J,I1,I2,LM1,LM2,IL1,IL2,IL2B,
      +                   ISRH
 
       INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)
 
-C     DOUBLE COMPLEX     GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ),
-C     +                   BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD)
-
-      DOUBLE COMPLEX     GLLH((LMAX+1)**2,NACLSD*(LMAX+1)**2,NAEZ),
-     &                   BLAV(NATBLD*(LMAX+1)**2,NATBLD*(LMAX+1)**2)
-
-
-      LMMAXD = (LMAX+1)**2
+      DOUBLE COMPLEX     GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ),
+     +                   BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD)
 
       DO I1 = 1, NATBLD
         DO I2 =1, NATBLD
@@ -451,7 +435,4 @@ C
         ENDDO
       ENDDO
 
-
-
-C
       END

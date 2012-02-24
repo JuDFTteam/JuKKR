@@ -2,13 +2,13 @@ c **********************************************************************
       SUBROUTINE DLKE0(I,GLLH,EIKRM,EIKRP,IC,NACLS,
      +                  ATOM,NUMN0,INDN0,GINP,
 C                       new input parameters after inc.p removal
-     &                  naez, lmax, naclsd)
+     &                  naez, lmmaxd, naclsd)
 c **********************************************************************
       IMPLICIT NONE
 C     .. Parameters ..
 C
       INTEGER naez
-      INTEGER lmax
+      INTEGER lmmaxd
       INTEGER naclsd
 
 C     LMGF0D= (LMAX+1)**2
@@ -19,8 +19,8 @@ C     DOUBLE COMPLEX GLLH(LMGF0D,NGTBD,*)
 C     DOUBLE COMPLEX EIKRM(NACLSD),EIKRP(NACLSD)
 C     INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZD,*),NUMN0(*)
 
-      DOUBLE COMPLEX GINP((LMAX+1)**2, (LMAX+1)**2, NACLSD)
-      DOUBLE COMPLEX GLLH((LMAX+1)**2, NACLSD * (LMAX+1)**2, *)
+      DOUBLE COMPLEX GINP(lmmaxd, lmmaxd, NACLSD)
+      DOUBLE COMPLEX GLLH(lmmaxd, NACLSD * lmmaxd, *)
       DOUBLE COMPLEX EIKRM(NACLSD),EIKRP(NACLSD)
       INTEGER ATOM(NACLSD),NACLS(*),INDN0(NAEZ,*),NUMN0(*)
 C     ..
@@ -29,7 +29,7 @@ C     ..
 c ----------------------------------------------------------------------
       INTEGER LMGF0D
 
-      LMGF0D= (LMAX+1)**2
+      LMGF0D= lmmaxd
 
       DO M = 1,NACLS(IC)
         DO N1 = 1,NUMN0(I)

@@ -17,7 +17,6 @@ lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
   use lloyds_formula_mod
-  use kkr_helpers_mod
 
   implicit none
   include 'mpif.h'
@@ -69,18 +68,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer::IAT
   !     ..
   !     .. ARRAY ARGUMENTS ..
-
-  !    LMGF0D= (LMAX+1)**2
-  !    LMMAXD= (LMAX+1)**2
-  !    ALM = NAEZ*LMMAXD
-  !    NGTBD = NACLSD*LMMAXD
-  !    NBLCKD = XDIM*YDIM*ZDIM
-  !    LLYALM =LLY*(NAEZ*LMMAXD-1)+1
-
-  !   double complex :: DGINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
-  !   double complex :: GINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
-  !   double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
-  !   double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
 
   double complex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
 
@@ -187,7 +174,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer:: IERR
 
   integer::        LMGF0D
-  integer::        lmax
   integer::        ALM
   integer::        NGTBD
   integer::        NBLCKD
@@ -200,8 +186,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   ALM = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
-
-  lmax = lmmaxToLmax(lmmaxd) ! TODO: remove
 
   !-----------------------------------------------------------------------
   ! Allocate arrays
@@ -293,7 +277,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
           call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
                      ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
-                     naez, lmax, naclsd)
+                     naez, lmmaxd, naclsd)
         end do
 
         DGDE = CZERO
@@ -334,7 +318,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
                    ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
                    GINP(1,1,1,ref_cluster_index), &
-                   naez, lmax, naclsd)
+                   naez, lmmaxd, naclsd)
 
       end do
 
@@ -379,7 +363,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
                    ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
                    GINP(1,1,1,ref_cluster_index), &
-                   naez, lmax, naclsd)
+                   naez, lmmaxd, naclsd)
 
       end do
 
@@ -523,7 +507,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       if (BCP == 1) then
 
         call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
-                       lmax, nthrds, natbld, xdim, ydim, zdim, naclsd)
+                       lmmaxd, nthrds, natbld, xdim, ydim, zdim, naclsd)
       endif
 ! ..
 !===================================================================
@@ -637,7 +621,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
             GLLKE1, &
             GSXIJ, &
             LMPIC, LCOMM, LSIZE, &
-            lmax, nxijd, prod_lmpid_smpid_empid)
+            lmmaxd, nxijd, prod_lmpid_smpid_empid)
         
 ! ================================================================
           endif

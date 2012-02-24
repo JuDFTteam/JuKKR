@@ -7,7 +7,7 @@
      >                  LMPIC,
      >                  LCOMM,LSIZE,
 C                       new input parameters after inc.p removal
-     &                  lmax, nxijd, prod_lmpid_smpid_empid)
+     &                  lmmaxd, nxijd, prod_lmpid_smpid_empid)
 
       IMPLICIT NONE
 C ------------------------------------------------------------------------
@@ -18,17 +18,12 @@ C                                                         A. Thiess Sep'09
 C ------------------------------------------------------------------------
       include 'mpif.h'
 
-      INTEGER lmax
+      INTEGER lmmaxd
       INTEGER nxijd
       INTEGER prod_lmpid_smpid_empid
 
       INTEGER          NSYMAXD
       PARAMETER        (NSYMAXD=48)
-
-C     INTEGER          LMMAXD
-C     PARAMETER        (LMMAXD= (LMAXD+1)**2)
-C     INTEGER          ALM
-C     PARAMETER        (ALM = NAEZD*LMMAXD) ! = NAEZ * (LMAX+1)**2
 
       DOUBLE COMPLEX   CZERO
       PARAMETER        (CZERO=(0.0D0,0.0D0))
@@ -43,30 +38,22 @@ c     .. GLOBAL SCALAR ARGUMENTS ..
 c     ..
 
 c     .. ARRAY ARGUMENTS ..
-C     DOUBLE COMPLEX   GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
-      DOUBLE COMPLEX   GSXIJ((LMAX+1)**2,(LMAX+1)**2,NSYMAXD,NXIJD)
+      DOUBLE COMPLEX   GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
 
-      DOUBLE PRECISION BZKP(3,*),
+      DOUBLE PRECISION BZKP(3,*),   ! TODO: better pass only 1 k-point
      +                 VOLCUB(*),
      +                 ZKRXIJ(48,3,NXIJD) ! position of atoms and sites
                                           ! connected by symmetry
       INTEGER          IXCP(NXIJD)      ! corresp. to Jij no. XIJ on the
                                         ! real space lattice
 
-
-C     DOUBLE COMPLEX   GLLKE1(ALM,LMMAXD),
-C    +                 GSEND(LMMAXD,LMMAXD),
-C    +                 GRECV(LMMAXD,LMMAXD),
-C    +                 GXIJ(LMMAXD,LMMAXD,NXIJD),
-C    +                 EKRXIJ(48,NXIJD)
-
-      DOUBLE COMPLEX   GLLKE1(NAEZ * (LMAX+1)**2, (LMAX+1)**2)
+      DOUBLE COMPLEX   GLLKE1(NAEZ * lmmaxd, lmmaxd)
 
 C     .. LOCAL ARRAYS ..
 C     .. Fortran 90 automatic arrays
-      DOUBLE COMPLEX   GSEND((LMAX+1)**2, (LMAX+1)**2)
-      DOUBLE COMPLEX   GRECV((LMAX+1)**2, (LMAX+1)**2)
-      DOUBLE COMPLEX   GXIJ ((LMAX+1)**2, (LMAX+1)**2, NXIJD)
+      DOUBLE COMPLEX   GSEND(lmmaxd, lmmaxd)
+      DOUBLE COMPLEX   GRECV(lmmaxd, lmmaxd)
+      DOUBLE COMPLEX   GXIJ (lmmaxd, lmmaxd, NXIJD)
       DOUBLE COMPLEX   EKRXIJ(48, NXIJD)
 
       INTEGER          IXCPS(NXIJD)       ! copydummy for IXCP used MPI
@@ -88,11 +75,6 @@ C     .. L-MPI
       INTEGER          LMPIC
 C     .. N-MPI
       INTEGER          MAPBLOCK,IERR
-c     ..
-
-      INTEGER          LMMAXD
-
-      LMMAXD = (LMAX+1)**2
 
 c ------------------------------------------------------------------------
 
