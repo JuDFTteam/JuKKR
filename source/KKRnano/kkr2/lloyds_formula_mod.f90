@@ -7,6 +7,7 @@ module lloyds_formula_mod
 
   contains
 
+  ! NOT USED YET
   !----------------------------------------------------------------------------
   !> Calculates TRACE(X) where
   !> X = (1 - g0 * \Delta t_ref)^(-1) * d/dE (1 - g0 * \Delta t_ref).
@@ -106,7 +107,7 @@ module lloyds_formula_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! previously in gll95
+  ! previously in gll95 NOT USED YET
   ! TODO: lmmaxd and LMGF0D are the same????
   subroutine calcDerivativeFreeGreens(energy, RATOM, NATOM, ALAT, &
                                       DGDE, NGD, &
@@ -271,6 +272,7 @@ module lloyds_formula_mod
     ! ------- = ---------- * \Delta T(E) + Gref(E,k) * -------------
     !   dE        dE                                    dE
 
+     implicit none
      integer, intent(in) :: site_lm_size
      integer, intent(in) :: lmmaxd
      double precision, intent(in) :: alat
@@ -324,6 +326,7 @@ module lloyds_formula_mod
 
    subroutine calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
 
+     implicit none
      integer, intent(in) :: site_lm_size
      integer, intent(in) :: lmmaxd
      double complex, dimension(site_lm_size, lmmaxd), intent(in) :: DPDE_LOCAL
@@ -374,7 +377,6 @@ module lloyds_formula_mod
 ! @param[in] IELAST number of energy points
 ! @param[in] IEMXD stupid dimension parameter for energy points IELAST <= IEMXD
 ! @param[in] RNORM normalisation factors: WARNING: 2nd dimension always 2 :-(
-! WARNING: included spin loop!!! was originally in spin loop - move out!!!
 
   subroutine renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIN,IEMXD)
     implicit none

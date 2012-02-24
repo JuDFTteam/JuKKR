@@ -310,6 +310,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                   site_lm_index=LMMAXD*(site_index-1)+LM1
                   DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
                 enddo
+              else
+                DGDE(site_lm_index,LM2) = CZERO ! has to be 0, I looked 3 months for this bug
               endif
             enddo
           enddo
@@ -350,6 +352,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                   site_lm_index=LMMAXD*(site_index-1)+LM1
                   GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
                 enddo
+              else
+                GLLKE_X(site_lm_index,LM2) = CZERO
               endif
             enddo
           enddo
@@ -600,21 +604,21 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !         dependent on (k,E) into matrix G
       !         (n = n' = IAT)
 
-      do 140 LM = 1,LMMAXD
+      do LM = 1,LMMAXD
         call ZCOPY(LMMAXD,GLLKE1(ILM,LM),1,G(1,LM),1)
-      140 end do
+      end do
 
         !         Perform the k-space integration for diagonal element of
         !         Green's function of atom IAT
 
-        do 110 ISYM = 1,NSYMAT
+        do ISYM = 1,NSYMAT
           do LM1=1,LMMAXD
             do LM2=1,LMMAXD
               GS(LM1,LM2,ISYM) = GS(LM1,LM2,ISYM) + &
               VOLCUB(k_point_index) * G(LM1,LM2)
             end do
           end do
-        110 end do        ! ISYM = 1,NSYMAT
+        end do        ! ISYM = 1,NSYMAT
     
     
     
@@ -638,14 +642,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
           endif
 ! ================================================================
     
-    
-    
-    
 !=======================================================================
     300 end do ! KPT = 1,NOFKS
 !=======================================================================
-
-
 
   !=========== Lloyd's Formula =====================================
 
