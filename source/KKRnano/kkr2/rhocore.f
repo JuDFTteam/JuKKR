@@ -33,6 +33,7 @@ C --------------------------------------------------------------
       IPR = 0
 C     
       IF ( ISPIN.EQ.1 ) QC = 0.0D0
+C     NR end of core region
       NR = IRCUT(1)
       RMAX = R(NR)
 C     

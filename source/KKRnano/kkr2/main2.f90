@@ -1294,7 +1294,7 @@ spinloop:     do ISPIN = 1,NSPIN
 !=======================================================================
           if (XCCPL) then
 
-            call XCCPLJIJ('F',I1,IE,JSCAL, &
+            call XCCPLJIJ('F',I1,IE,JSCAL, &  ! I1 needed for filenames
                           RXIJ,NXIJ,IXCP,RXCCLS, &
                           GXIJ_ALL,DTIXIJ, &
                           LMPIC,LCOMM, &
@@ -1320,7 +1320,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
 
 !=======================================================================
-!     in case of IGUESS and EMPID > 1 preconditioning arrays might
+!     in case of IGUESS and EMPID > 1 initial guess arrays might
 !     have to be adjusted to new distributions
 !=======================================================================
           if ((IGUESS==1).and.(EMPID>1)) then
@@ -1363,6 +1363,8 @@ spinloop:     do ISPIN = 1,NSPIN
             if (LLY==1) then
               ! get WEZRN and RNORM, the important input from previous
               ! calculations is LLY_GRDT_ALL
+              ! TODO: all THETAS passed, but only 1 needed
+              ! here atom processes communicate with each other
               call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
                           THETAS,ZAT,ICLEB1C, &
                           IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
@@ -1424,7 +1426,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
               EBOT = E1
 
-              call RHOCORE(EBOT,NSRA,ISPIN,NSPIN,I1, &
+              call RHOCORE(EBOT,NSRA,ISPIN,NSPIN,I1, &  ! I1 is used only for debugging output
                            DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
                            A(I1),B(I1),ZAT(I1), &
                            IRCUT(0,I1),RHOCAT,QC, &
@@ -1468,11 +1470,16 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -->   determine total charge density expanded in spherical harmonics
 ! -------------------------------------------------------------- density
 
-            call RHOTOTB(I1,NSPIN,RHO2NS,RHOCAT, &
-                         DRDI,IRCUT, &
-                         LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
+            !call RHOTOTB(I1,NSPIN,RHO2NS,RHOCAT, &
+            !             DRDI,IRCUT, &
+            !             LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
+            !             CATOM, &
+            !             lmax, irmd, irid, ipand, nfund)
+            call RHOTOTB_NEW(NSPIN,RHO2NS,RHOCAT, &
+                         DRDI(:,I1),IRCUT(:,I1), &
+                         LPOT,NFU(ICELL),LLMSP(1,ICELL),THETAS(:,:,ICELL),IPAN(I1), &
                          CATOM, &
-                         lmax, irmd, irid, ipand, nfund)
+                         irmd, irid, ipand, nfund)
 
             CHRGNT = CHRGNT + CATOM(1) - ZAT(I1)
 
@@ -1571,9 +1578,13 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ----------------------------------------------------------------------
             end do
 
-            call RHOMOM(CMOM,CMINST,LPOT,I1,RHO2NS, &
-            R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-            THETAS,LMSP(1,ICELL), &
+            !call RHOMOM(CMOM,CMINST,LPOT,I1,RHO2NS, &
+            !R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            !THETAS,LMSP(1,ICELL), &
+            !irmd, irid, nfund, ipand, ngshd)
+            call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
+            R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ipand, ngshd)
 
             call OUTTIME(MYLRANK(1),'RHOMOM ......',TIME_I,ITER)
@@ -1582,9 +1593,13 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-            call VINTRAS(LPOT,NSPIN,I1,RHO2NS,VONS, &
-            R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-            THETAS,LMSP(1,ICELL), &
+            !call VINTRAS(LPOT,NSPIN,I1,RHO2NS,VONS, &
+            !R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            !THETAS,LMSP(1,ICELL), &
+            !irmd, irid, nfund, ngshd, ipand)
+            call VINTRAS_NEW(LPOT,NSPIN,RHO2NS,VONS, &
+            R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
 
             call OUTTIME(MYLRANK(1),'VINTRAS ......',TIME_I,ITER)
@@ -1625,16 +1640,24 @@ spinloop:     do ISPIN = 1,NSPIN
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
             if (KTE==1) then
-              call ESPCB(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE)
+              call ESPCB(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE) !TODO
 
-              call EPOTINB(EPOTIN,NSPIN,I1,RHO2NS,VISP,R,DRDI, &
-              IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT, &
+              !call EPOTINB(EPOTIN,NSPIN,I1,RHO2NS,VISP,R,DRDI, &
+              !IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT, &
+              !irmd, irnsd, ipand)
+              call EPOTINB_NEW(EPOTIN,NSPIN,RHO2NS,VISP,R(:,I1),DRDI(:,I1), &
+              IRMIN(I1),IRWS(I1),LPOT,VINS,IRCUT(:,I1),IPAN(I1),ZAT(I1), &
               irmd, irnsd, ipand)
 
-              call ECOUB(CMOM,ECOU,LPOT,NSPIN,I1,RHO2NS, &
-              VONS,ZAT,R, &
-              DRDI,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM(1,ICELL), &
-              ILM,ICELL,GSH,THETAS,LMSP(1,ICELL), &
+              !call ECOUB(CMOM,ECOU,LPOT,NSPIN,I1,RHO2NS, &
+              !VONS,ZAT,R, &
+              !DRDI,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM(1,ICELL), &
+              !ILM,ICELL,GSH,THETAS,LMSP(1,ICELL), &
+              !irmd, irid, nfund, ipand, ngshd)
+              call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIN,RHO2NS, &
+              VONS,ZAT(I1),R(:,I1), &
+              DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
+              ILM,GSH,THETAS(:,:,ICELL),LMSP(1,ICELL), &
               irmd, irid, nfund, ipand, ngshd)
 
             end if

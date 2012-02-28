@@ -59,7 +59,7 @@ c
 c                                           Rudolf Berrendorf, July 1992
 c                                           last update: February 1994
 c-----------------------------------------------------------------------
-
+      IMPLICIT NONE
 
 C     .. Scalar Arguments ..
       INTEGER ITERCURR,ITERFIRST,ITERLAST,ITERSTEP,NODEFIRST,NODELAST
@@ -67,10 +67,6 @@ C     ..
 C     .. Intrinsic Functions ..
 
       INTRINSIC DBLE,MAX
-C     ..
-C     .. External Functions ..
-      INTEGER IOBEN
-      EXTERNAL IOBEN
 C     ..
 C     .. Local Scalars ..
       INTEGER LITERCURR,LITERLAST,LNODELAST,NPRIME,Q,R
@@ -90,7 +86,7 @@ C---    calculate iteration mapping
       IF (Q*LNODELAST.EQ.LITERLAST) THEN
 
 C---       equally sized blocks
-        MAPBLOCK = (NODEFIRST-1) + IOBEN(DBLE(LITERCURR)/DBLE(Q))
+        MAPBLOCK = (NODEFIRST-1) + CEILING(DBLE(LITERCURR)/DBLE(Q))
 
       ELSE
 
@@ -102,11 +98,11 @@ C---       up to nprime blocks of size (q+1)
 
         IF (LITERCURR.LE.NPRIME) THEN
 
-          MAPBLOCK = (NODEFIRST-1) + IOBEN(DBLE(LITERCURR)/DBLE(Q+1))
+          MAPBLOCK = (NODEFIRST-1) + CEILING(DBLE(LITERCURR)/DBLE(Q+1))
 
         ELSE
 
-          MAPBLOCK = (NODEFIRST-1) + IOBEN(DBLE(LITERCURR-NPRIME)/
+          MAPBLOCK = (NODEFIRST-1) + CEILING(DBLE(LITERCURR-NPRIME)/
      +               DBLE(Q)+DBLE(R))
         END IF
 
