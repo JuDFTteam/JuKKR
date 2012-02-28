@@ -1240,14 +1240,13 @@ spinloop:     do ISPIN = 1,NSPIN
 
                 JSCAL = WEZ(IE)/DBLE(NSPIN)
 
-                call XCCPLJIJ( 'R',I1,IE,JSCAL, &
+                call XCCPLJIJ_START(I1,IE,JSCAL, &
                                RXIJ,NXIJ,IXCP,RXCCLS, &
                                GXIJ_ALL,DTIXIJ, &
                                LMPIC,LCOMM, &
-                               MYRANK,EMPIC,EMYRANK, &
                                JXCIJINT,ERESJIJ, &
-                               naez, lmax, nxijd, nspind, &
-                               lmpid, smpid, empid)
+                               naez, lmmaxd, nxijd, nspind, &
+                               lmpid*smpid*empid)
 
               end if
 
@@ -1294,13 +1293,12 @@ spinloop:     do ISPIN = 1,NSPIN
 !=======================================================================
           if (XCCPL) then
 
-            call XCCPLJIJ('F',I1,IE,JSCAL, &  ! I1 needed for filenames
+            call XCCPLJIJ_OUT(I1, &  ! I1 needed for filenames
                           RXIJ,NXIJ,IXCP,RXCCLS, &
-                          GXIJ_ALL,DTIXIJ, &
-                          LMPIC,LCOMM, &
+                          LMPIC, &
                           MYRANK,EMPIC,EMYRANK, &
-                          JXCIJINT,ERESJIJ, &
-                          naez, lmax, nxijd, nspind, &
+                          JXCIJINT, &
+                          naez, nxijd, &
                           lmpid, smpid, empid)
           endif
 !=======================================================================
