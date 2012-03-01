@@ -624,7 +624,12 @@
 ! unnecessary parameters, read in for compatibility: IRM, KHFELD, ...
 
 ! --------------- calculated parameters --------------------------------------
-    IEMXD = NPOL + NPNT1 + NPNT2 + NPNT3
+    if (NPOL /= 0) then
+      IEMXD = NPOL + NPNT1 + NPNT2 + NPNT3
+    else
+      ! DOS-calculation
+      IEMXD = NPNT2
+    end if
     NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
 !-----------------------------------------------------------------------------
