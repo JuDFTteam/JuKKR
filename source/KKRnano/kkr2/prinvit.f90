@@ -91,6 +91,12 @@
             site_lm_index = INT((SPRS(sparse_index)-1)/LMMAXD) + 1
             LM2 = MOD((SPRS(sparse_index)-1),LMMAXD) + 1
 
+            ! TODO: debug - remove
+            if (SPRS(sparse_index) < 1 .or. SPRS(sparse_index) > NAEZD*LMMAXD*LMMAXD) then
+              write(*,*) "illegal value for SPRS: index value", sparse_index, SPRS(sparse_index)
+              stop
+            end if
+
             X0(site_lm_index,LM2) = &
             DCMPLX(REAL(PRSC(sparse_index)),AIMAG(PRSC(sparse_index)))
 

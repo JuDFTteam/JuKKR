@@ -9,10 +9,10 @@
     QMRBOUND,IGUESS,BCP,CNVFAC, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
     LLY_GRDT,TR_ALPH,GMATXIJ, &          ! < output
-    LMPIC,LCOMM,LSIZE, &                 ! > input
+    communicator, comm_size, &           ! > input
     ! new parameters after inc.p removal
     iemxd, &
-    prod_lmpid_smpid_empid, nthrds, &
+    nthrds, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -33,8 +33,10 @@
     implicit none
     include 'mpif.h'
 
+    integer, intent(in) :: communicator
+    integer, intent(in) :: comm_size
+
     integer, intent(in) :: iemxd
-    integer, intent(in) :: prod_lmpid_smpid_empid
     integer, intent(in) :: nthrds  ! number of OpenMP threads
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
@@ -122,12 +124,10 @@
     !     .. Local Arrays ..
     !     ..
 
-    !double complex :: GLL(LMMAXD,LMMAXD)
-    !double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
-    !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
     double complex :: GLL  (LMMAXD, LMMAXD)
     double complex :: GS   (LMMAXD, LMMAXD, NSYMAXD)
 
+    !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
     double complex, allocatable, dimension(:,:,:,:) :: GSXIJ
 
     !     effective (site-dependent) Delta_t^(-1) matrix
@@ -142,13 +142,7 @@
     double complex, allocatable, dimension(:,:,:) :: TMATLL
 
     !-----------------------------------------------------------------------
-    !     .. MPI ..
-    !     .. L-MPI
-    integer:: LCOMM(prod_lmpid_smpid_empid)
-    integer:: LSIZE(prod_lmpid_smpid_empid)
-    integer:: LMPIC
 
-    !     .. External Subroutines ..
     logical::XCCPL
 
     external ZCOPY,ZAXPY,ZGETRF,ZGETRS,ZGETRI,ZGEMM,ZSCAL
@@ -201,7 +195,7 @@
 
     call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
     TMATLL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-    LCOMM(LMPIC),IERR)
+    communicator,IERR)
 
 ! ---------------------------------------------------------------------
 
@@ -245,8 +239,8 @@
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH, &
-    LMPIC,LCOMM,LSIZE, &
-    prod_lmpid_smpid_empid, nthrds, &
+    communicator, comm_size, &
+    nthrds, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 

@@ -12,9 +12,9 @@ DTDE_LOCAL, &
 GSXIJ, &
 NXIJ,XCCPL,IXCP,ZKRXIJ, &
 LLY_GRDT,TR_ALPH, &
-LMPIC,LCOMM,LSIZE, &
+communicator, comm_size, &
 !new input parameters after inc.p removal
-prod_lmpid_smpid_empid, nthrds, &
+nthrds, &
 lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -31,7 +31,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !   up -> left , down -> right, for decimation
   ! ------------------------------------------------------------------------
 
-  integer, intent(in) :: prod_lmpid_smpid_empid
+  integer, intent(in) :: communicator
+  integer, intent(in) :: comm_size
+
   integer, intent(in) :: nthrds
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
@@ -164,13 +166,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !     ..
   !     .. INTRINSIC FUNCTIONS ..
   intrinsic ATAN,EXP
-  !     ..
-  !     .. MPI ..
-    
-  !     .. L-MPI
-  integer:: LCOMM(prod_lmpid_smpid_empid)
-  integer:: LSIZE(prod_lmpid_smpid_empid)
-  integer:: LMPIC
 
   !     .. N-MPI
   integer:: IERR
@@ -626,8 +621,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
             NXIJ,IXCP,ZKRXIJ, &
             GLLKE1, &
             GSXIJ, &
-            LMPIC, LCOMM, LSIZE, &
-            lmmaxd, nxijd, prod_lmpid_smpid_empid)
+            communicator, comm_size, &
+            lmmaxd, nxijd)
         
 ! ================================================================
           endif
@@ -644,7 +639,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     TRACE=CZERO
 
     call MPI_ALLREDUCE(BZTR2,TRACE,1,MPI_DOUBLE_COMPLEX,MPI_SUM, &
-                       LCOMM(LMPIC),IERR)
+                       communicator,IERR)
 
     LLY_GRDT = TRACE
   endif

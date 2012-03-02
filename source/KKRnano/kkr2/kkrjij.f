@@ -4,23 +4,24 @@
      >                  NXIJ,IXCP,ZKRXIJ,
      >                  GLLKE1,
      <                  GSXIJ,
-     >                  LMPIC,
-     >                  LCOMM,LSIZE,
+     >                  communicator, comm_size,
 C                       new input parameters after inc.p removal
-     &                  lmmaxd, nxijd, prod_lmpid_smpid_empid)
+     &                  lmmaxd, nxijd)
 
       IMPLICIT NONE
 C ------------------------------------------------------------------------
 C a) performs scattering of the off-diagonal GLLKE-elements
 C    required to calculate Jij's
 C b) multiplication with appropriate exp-factor, k-dependent
-C                                                         A. Thiess Sep'09
+C                                                       A. Thiess Sep'09
+C    "simplification": Elias Rabel, 2012
 C ------------------------------------------------------------------------
       include 'mpif.h'
 
+      integer communicator
+      integer comm_size
       INTEGER lmmaxd
       INTEGER nxijd
-      INTEGER prod_lmpid_smpid_empid
 
       INTEGER          NSYMAXD
       PARAMETER        (NSYMAXD=48)
@@ -68,16 +69,11 @@ C     .. LOCAL SCALARS ..
 
 C     .. MPI ..
       INTEGER, dimension(MPI_STATUS_SIZE) :: STATUS
-C     .. L-MPI
 
-      INTEGER          LCOMM(prod_lmpid_smpid_empid)
-      INTEGER          LSIZE(prod_lmpid_smpid_empid)
-      INTEGER          LMPIC
 C     .. N-MPI
       INTEGER          MAPBLOCK,IERR
 
 c ------------------------------------------------------------------------
-
 
 C ================================================================
 C       XCCPL communicate off-diagonal elements
@@ -95,10 +91,10 @@ C
 C         broadcast IXCPS from processor of atom I5 to all
 C
           CALL MPI_BCAST(IXCPS,NXIJD,MPI_INTEGER,
-     +                   MAPBLOCK(I5,1,NAEZ,1,0,LSIZE(LMPIC)-1),
-     +                   LCOMM(LMPIC),IERR)
+     +                   MAPBLOCK(I5,1,NAEZ,1,0,comm_size-1),
+     +                   communicator,IERR)
 C
-          CALL MPI_BARRIER(LCOMM(LMPIC),IERR)
+          CALL MPI_BARRIER(communicator,IERR)
 C
           DO XIJ = 2, NXIJ
 C ....
@@ -134,8 +130,8 @@ C .
                 ENDDO
 C
            CALL MPI_SEND(GSEND,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX,
-     +                   MAPBLOCK(I5,1,NAEZ,1,0,LSIZE(LMPIC)-1),
-     +                   99,LCOMM(LMPIC),IERR)
+     +                   MAPBLOCK(I5,1,NAEZ,1,0,comm_size-1),
+     +                   99,communicator,IERR)
 C ..
               ENDIF
 
@@ -143,8 +139,8 @@ C ..
               IF (I5.EQ.I3) THEN
 C ..
            CALL MPI_RECV(GRECV,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX,
-     +          MAPBLOCK(IXCPS(XIJ),1,NAEZ,1,0,LSIZE(LMPIC)-1),
-     +          99,LCOMM(LMPIC),STATUS,IERR)
+     +          MAPBLOCK(IXCPS(XIJ),1,NAEZ,1,0,comm_size-1),
+     +          99,communicator,STATUS,IERR)
 
                 DO LM = 1, LMMAXD
 C .
@@ -155,7 +151,7 @@ C .
 C ..
               ENDIF
 
-           CALL MPI_BARRIER(LCOMM(LMPIC),IERR)
+           CALL MPI_BARRIER(communicator,IERR)
 C ...
             ENDIF
 C ....
