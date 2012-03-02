@@ -1047,7 +1047,7 @@ program MAIN2
 ! xccpl
 !=======================================================================
 
-          ! This read is probably NOT NECESSARY !!!
+          ! This read is probably NOT NECESSARY (except for 1st iteration) !!!
           read(66,rec=I1) VINS,VISP,ECORE  ! Read potential from file!!!
 
           if (TRC==1) read(37,rec=I1) NATRC,ATTRC,EZTRC,NUTRC,INTRC
@@ -1214,7 +1214,7 @@ spinloop:     do ISPIN = 1,NSPIN
                   GMATXIJ(1,1,1,ISPIN), &
                   LMPIC,LCOMM,LSIZE, &
                   iemxd, lmpid * smpid * empid, nthrds, &
-                  lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+                  lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
 
                 endif
