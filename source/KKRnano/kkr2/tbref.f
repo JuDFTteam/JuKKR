@@ -1,4 +1,4 @@
-C>----------------------------------------------------------------------
+C-----------------------------------------------------------------------
 C>    Calculate reference system's T-matrix.
 C>    @param     E complex energy
 C>    @param     VREF repulsive reference potential field strength
@@ -334,6 +334,8 @@ C
 C
 C 2nd and if Lloyd's formula is going to be applied broadcast
 C derivative of reference structure constants
+C FIXME: Code duplication: same as above but with GREFN -> DGREFN
+C        -check! -extract to separate routine
 C
             IF (LLY.EQ.1) THEN
 C
