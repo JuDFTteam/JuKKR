@@ -76,7 +76,7 @@
         allocate(TMATP(NAEZ*LMMAXD,LMMAXD), stat=memory_stat)
 
         if (memory_stat /= 0) then
-          write(*,*) "KKRMAT01: FATAL Error, failure to allocate memory."
+          write(*,*) "initialGuess: FATAL Error, failure to allocate memory."
           write(*,*) "       Probably out of memory."
           stop
         end if
@@ -93,8 +93,10 @@
 
             ! TODO: debug - remove
             if (SPRS(sparse_index) < 1 .or. SPRS(sparse_index) > NAEZD*LMMAXD*LMMAXD) then
-              write(*,*) "illegal value for SPRS: index value", sparse_index, SPRS(sparse_index)
-              stop
+              ! write(*,*) "illegal value for SPRS: index value", sparse_index, SPRS(sparse_index)
+              ! stop
+              ! FIXME WORKAROUND: leave zeros in X0 array by leaving the loop
+              exit
             end if
 
             X0(site_lm_index,LM2) = &
