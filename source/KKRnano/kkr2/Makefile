@@ -23,10 +23,26 @@ FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =
 # set run paths to look for shared libraries (-Wl means pass to linker)
-LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/em64t'
-LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib'
+#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/em64t'  #The paths have changed
+LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
+#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib'
+LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 LDFLAGS += -lfftw3
 endif
+
+ifeq ($(PLATFORM),JUROPA)
+FC = mpif77
+FC90 = mpif90 -warn
+# -module <path> specifies where to put .mod files
+FCFLAGS = -openmp -mkl -module $(BUILDDIR)
+FCFLAGS += -gen-interfaces -warn interfaces -I/usr/local/fftw/3.2.1/include
+FC90FLAGS =
+FCFLAGS += -I$(BUILDDIR)
+LDFLAGS = -L/opt/intel/Compiler/11.0/074/mkl/lib/em64t -L/usr/local/fftw/3.2.1/lib
+# set run paths to look for shared libraries (-Wl means pass to linker)
+LDFLAGS += -lfftw3 -lmkl -lguide
+endif
+
 
 ifeq ($(PLATFORM),ifort_IFF_NOOMP)
 FC = mpif90 -warn
@@ -59,7 +75,8 @@ endif
 
 FC += mpixlf77_r
 FC90 = mpixlf90_r
-FCFLAGS = -qsmp=omp -qsmallstack=dynlenonheap -I/bgsys/local/fftw3/include
+FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/include
+#-qsmallstack=dynlenonheap
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
 

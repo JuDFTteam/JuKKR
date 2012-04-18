@@ -1,3 +1,5 @@
+! WARNING: Symmetry assumptions might have been used that are
+! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
 subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,VOLBZ, &
 TMATLL,MSSQ, &
 ITER, &
@@ -10,9 +12,9 @@ DTDE_LOCAL, &
 GSXIJ, &
 NXIJ,XCCPL,IXCP,ZKRXIJ, &
 LLY_GRDT,TR_ALPH, &
-LMPIC,LCOMM,LSIZE, &
+communicator, comm_size, &
 !new input parameters after inc.p removal
-prod_lmpid_smpid_empid, nthrds, &
+nthrds, &
 lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -29,7 +31,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !   up -> left , down -> right, for decimation
   ! ------------------------------------------------------------------------
 
-  integer, intent(in) :: prod_lmpid_smpid_empid
+  integer, intent(in) :: communicator
+  integer, intent(in) :: comm_size
+
   integer, intent(in) :: nthrds
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
@@ -162,19 +166,12 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !     ..
   !     .. INTRINSIC FUNCTIONS ..
   intrinsic ATAN,EXP
-  !     ..
-  !     .. MPI ..
-    
-  !     .. L-MPI
-  integer:: LCOMM(prod_lmpid_smpid_empid)
-  integer:: LSIZE(prod_lmpid_smpid_empid)
-  integer:: LMPIC
 
   !     .. N-MPI
   integer:: IERR
 
   integer::        LMGF0D
-  integer::        ALM
+  integer::        site_lm_size
   integer::        NGTBD
   integer::        NBLCKD
 
@@ -183,7 +180,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   ! array dimensions
   LMGF0D= lmmaxd
-  ALM = NAEZ*LMMAXD
+  site_lm_size = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
 
@@ -193,23 +190,23 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   memory_stat = 0
   memory_fail = .false.
 
-  allocate(GLLKE1(ALM,LMMAXD), stat = memory_stat)
+  allocate(GLLKE1(site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
-  allocate(DUMMY (ALM,LMMAXD), stat = memory_stat)
+  allocate(DUMMY (site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
   allocate(GLLH(LMMAXD,NGTBD,NAEZ), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
   allocate(GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
-  allocate(X0(ALM,LMMAXD), stat = memory_stat)
+  allocate(X0(site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
   if (LLY == 1) then
-    allocate(DGDE      (ALM,LMMAXD), stat = memory_stat)
+    allocate(DGDE      (site_lm_size,LMMAXD), stat = memory_stat)
     if (memory_stat /= 0) memory_fail = .true.
-    allocate(GLLKE_X   (ALM,LMMAXD), stat = memory_stat)
+    allocate(GLLKE_X   (site_lm_size,LMMAXD), stat = memory_stat)
     if (memory_stat /= 0) memory_fail = .true.
-    allocate(DPDE_LOCAL(ALM,LMMAXD), stat = memory_stat)
+    allocate(DPDE_LOCAL(site_lm_size,LMMAXD), stat = memory_stat)
     if (memory_stat /= 0) memory_fail = .true.
   end if
 
@@ -237,6 +234,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     endif
 
 
+    ! WARNING: Symmetry assumptions might have been used that are
+    ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
     ! ---> use sit
     !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
 
@@ -265,7 +264,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !================= Lloyd's Formula ====================================
 
       if (LLY == 1) then
-        call CINIT(ALM*NGTBD,GLLH)
+        call CINIT(site_lm_size*NGTBD,GLLH)
 
         do site_index = 1,NAEZ
 
@@ -306,7 +305,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !       Fourier transform of reference clusters' Green's function
       !       (from real space to k-space GINP -> GLLH)
 
-      call CINIT(ALM*NGTBD,GLLH)
+      call CINIT(site_lm_size*NGTBD,GLLH)
 
       do site_index = 1,NAEZ
         ref_cluster_index = CLS(site_index)
@@ -351,7 +350,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       ! The same calculation as some lines above is done all over again ???
       ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-      call CINIT(ALM*NGTBD,GLLH)
+      call CINIT(site_lm_size*NGTBD,GLLH)
 
       do site_index = 1,NAEZ
         ref_cluster_index = CLS(site_index)
@@ -368,12 +367,12 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       end do
 
       ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
-      !                = inverse of scattering path operator
+      !
       !
       ! NUMN0(site_index) is the number of atoms in the reference cluster
-      ! of atom/site 'site_index'
+      ! of atom/site 'site_index' (inequivalent atoms only!)
       ! INDN0 stores the index of the atom in the basis corresponding to
-      ! the reference cluster atom
+      ! the reference cluster atom (inequivalent atoms only!)
       ! -------------------------------------------------------------------
 
       do site_index=1,NAEZ
@@ -404,7 +403,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         enddo
       enddo
 
-! ==> now GLLH holds the inverse of the scattering path operator (Delta_t * G_ref - 1)
+! ==> now GLLH holds (Delta_t * G_ref - 1)
 
 
 ! ####################################################################
@@ -419,7 +418,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
        !calcDerivativeP(site_lm_size, lmmaxd, alat, &
        !                       DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
-        call calcDerivativeP(ALM, lmmaxd, alat, &
+        call calcDerivativeP(site_lm_size, lmmaxd, alat, &
                              DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
 
       endif
@@ -450,7 +449,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !    |b| of the original right hand side of the equation is used
 !    to test for convergence
     
-      call CINIT(ALM*LMMAXD,DUMMY)
+      call CINIT(site_lm_size*LMMAXD,DUMMY)
     
       do LM1=1,LMMAXD
         site_lm_index=LMMAXD*(IAT-1)+LM1
@@ -474,8 +473,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     
       if (IGUESS == 1) then
         
-        call CINIT(ALM*LMMAXD,X0)
-        call CINIT(ALM*LMMAXD,DUMMY)
+        call CINIT(site_lm_size*LMMAXD,X0)
+        call CINIT(site_lm_size*LMMAXD,DUMMY)
         
         do site_index=1,NAEZ
           do LM1=1,LMMAXD
@@ -514,8 +513,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
 !===================================================================
 ! 4) solve linear set of equations by iterative TFQMR scheme
+!    solve (\Delta t * G_ref - 1) X = - \Delta t
+!    the solution X is the scattering path operator
     
-      call CINIT(ALM*LMMAXD,GLLKE1)
+      call CINIT(site_lm_size*LMMAXD,GLLKE1)
     
       call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,ITER,iteration_counter, &
@@ -570,7 +571,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !===================================================================
         
         !call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
-        call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, MSSQ, TRACEK, ALM, lmmaxd)
+        call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, MSSQ, TRACEK, site_lm_size, lmmaxd)
         
         BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)  ! k-space integration
         
@@ -620,8 +621,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
             NXIJ,IXCP,ZKRXIJ, &
             GLLKE1, &
             GSXIJ, &
-            LMPIC, LCOMM, LSIZE, &
-            lmmaxd, nxijd, prod_lmpid_smpid_empid)
+            communicator, comm_size, &
+            lmmaxd, nxijd)
         
 ! ================================================================
           endif
@@ -638,7 +639,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     TRACE=CZERO
 
     call MPI_ALLREDUCE(BZTR2,TRACE,1,MPI_DOUBLE_COMPLEX,MPI_SUM, &
-                       LCOMM(LMPIC),IERR)
+                       communicator,IERR)
 
     LLY_GRDT = TRACE
   endif

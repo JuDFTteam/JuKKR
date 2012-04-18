@@ -1,3 +1,4 @@
+C>    Construct the t-matrix from radial solutions and potential
       SUBROUTINE PNSTMAT(DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS,TMATLL,VINS,
      +                   IPAN,IRCUT,NSRA,CLEB,ICLEB,IEND,LOFLM,TMAT,
      +                   DET,LKONV,ISPIN,

@@ -6,7 +6,7 @@
      >                  GSXIJ,
      <                  GMATXIJ,
 C                       new input parameters after inc.p removal
-     &                  naez, lmax, nxijd)
+     &                  naez, lmmaxd, nxijd)
 C =======================================================================
 C
 C  a) symmetrize GSXIJ
@@ -18,14 +18,11 @@ C
       IMPLICIT NONE
 
       INTEGER naez
-      INTEGER lmax
+      INTEGER lmmaxd
       INTEGER nxijd
 
       INTEGER          NSYMAXD
       PARAMETER        (NSYMAXD=48)
-
-C     INTEGER          LMMAXD
-C     PARAMETER        (LMMAXD= (KREL+1) * (LMAXD+1)**2)
 
       DOUBLE COMPLEX   CONE,CZERO
       PARAMETER        (CONE  = ( 1.0D0,0.0D0))
@@ -39,17 +36,12 @@ C     ..
 C     ..
 C     .. Array Arguments ..
 C     ..
-C     DOUBLE COMPLEX   GMATXIJ(LMMAXD,LMMAXD,NXIJD),
-C    +                 GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD),
-C    +                 TMATLL(LMMAXD,LMMAXD,NAEZD),
-C    +                 MSSQ(LMMAXD,LMMAXD),
-C    +                 DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
 
-      DOUBLE COMPLEX   GMATXIJ((LMAX+1)**2,(LMAX+1)**2,NXIJD)
-      DOUBLE COMPLEX   GSXIJ  ((LMAX+1)**2,(LMAX+1)**2,NSYMAXD,NXIJD)
-      DOUBLE COMPLEX   TMATLL ((LMAX+1)**2,(LMAX+1)**2,NAEZ)
-      DOUBLE COMPLEX   MSSQ   ((LMAX+1)**2,(LMAX+1)**2)
-      DOUBLE COMPLEX   DSYMLL ((LMAX+1)**2,(LMAX+1)**2,NSYMAXD)
+      DOUBLE COMPLEX   GMATXIJ(LMMAXD,LMMAXD,NXIJD)
+      DOUBLE COMPLEX   GSXIJ  (LMMAXD,LMMAXD,NSYMAXD,NXIJD)
+      DOUBLE COMPLEX   TMATLL (LMMAXD,LMMAXD,NAEZ)
+      DOUBLE COMPLEX   MSSQ   (LMMAXD,LMMAXD)
+      DOUBLE COMPLEX   DSYMLL (LMMAXD,LMMAXD,NSYMAXD)
 
       INTEGER          IXCP(NXIJD)
 C     ..
@@ -60,28 +52,19 @@ C     ..
 C     ..
 C     .. Local Arrays ..
 C     ..
-C     DOUBLE COMPLEX   GLL(LMMAXD,LMMAXD),
-C    +                 MSSXCPL(LMMAXD,LMMAXD),
-C    +                 TPG(LMMAXD,LMMAXD),
-C    +                 XC(LMMAXD,LMMAXD),
-C    +                 W1(LMMAXD,LMMAXD)
-C     INTEGER          IPVT(LMMAXD)
 
-      DOUBLE COMPLEX       GLL((LMAX+1)**2,(LMAX+1)**2)
-      DOUBLE COMPLEX   MSSXCPL((LMAX+1)**2,(LMAX+1)**2)
-      DOUBLE COMPLEX       TPG((LMAX+1)**2,(LMAX+1)**2)
-      DOUBLE COMPLEX        XC((LMAX+1)**2,(LMAX+1)**2)
-      DOUBLE COMPLEX        W1((LMAX+1)**2,(LMAX+1)**2)
-      INTEGER             IPVT((LMAX+1)**2)
+      DOUBLE COMPLEX       GLL(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX   MSSXCPL(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX       TPG(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX        XC(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX        W1(LMMAXD,LMMAXD)
+      INTEGER             IPVT(LMMAXD)
 C     ..
       EXTERNAL ZCOPY,ZAXPY,ZGETRF,ZGETRS,ZGETRI,ZGEMM,ZSCAL
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE
 
-      INTEGER LMMAXD
-
-      LMMAXD= (LMAX+1)**2
 C     ..
 C     ! = ALAT/(2*PI)
       RFCTOR = ALAT/(8.D0*ATAN(1.0D0))

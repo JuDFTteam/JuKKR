@@ -17,9 +17,7 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   !   new input parameters after inc.p removal
                   prod_lmpid_smpid_empid, lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ncelld, ipand, ncleb)
-
   implicit none
-  include 'mpif.h'
 
   integer :: lmax
   integer :: irmd
@@ -92,19 +90,9 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
   integer::ISPIN
   integer::L
-
-  double precision::DLOYD
-  double precision::DLOYDINT
-  double precision::DLOC
-  double precision::D0LOC
-  double precision::D0LOCINT
-  double precision::D1LOC
-  double precision::D1LOCINT
-
   !     ..
   !     .. MPI ..
   !     .. N-MPI
-  integer:: IERR
   integer::MAPBLOCK
 
   !     Dynamically allocated arrays
@@ -120,8 +108,6 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   !double precision::RHO2N2(IRMD,(2*LMAX+1)**2, 2)   ! loc
   !double precision::ESPV(0:LMAX+1,NSPIN) ! loc
 
-  double complex, dimension(:),       allocatable :: WORK1
-  double complex, dimension(:),       allocatable :: WORK2
   double complex, dimension(:,:),     allocatable :: DOS
   double complex, dimension(:),       allocatable :: DOS0
   double complex, dimension(:),       allocatable :: DOS1
@@ -129,12 +115,6 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   double precision, dimension(:,:,:), allocatable :: RHO2N1
   double precision, dimension(:,:,:), allocatable :: RHO2N2
   double precision, dimension(:,:),   allocatable :: ESPV
-
-  !     ..
-  !     .. External Functions ..
-  logical:: TEST
-  external TEST
-  !     ..
 
   integer :: lmaxd
   integer :: nspind
@@ -154,10 +134,6 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   ! ----------- allocate work arrays ----------------------------------
   memory_fail = .false.
 
-  allocate(WORK1(4*IEMXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(WORK2(4*IEMXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
   allocate(DOS(IEMXD,2), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
   allocate(DOS0(IEMXD), stat = memory_stat)
@@ -196,6 +172,7 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
   call CINIT(IEMXD*(LMAXD+2)*NSPIND,DEN0)
 
+  ! TODO: get rid of this "loop" somehow - we are already atom-parallel
   do I1 = 1,NAEZ
     if (MYLRANK(LMPIC) == MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
       do ISPIN = 1,NSPIN
@@ -216,6 +193,8 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                     iemxd, &
                     lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
+        ! result: DEN0
+
         do IE = 1,IELAST
           do L = 0,LMAXD1
             DOS(IE,ISPIN) = DOS(IE,ISPIN) + WEZ(IE)*DEN0(L,IE,ISPIN)
@@ -235,25 +214,48 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
     endif
   end do
 
+  ! communicate the DOS results
+  call lloyd_communicate(DOS, DOS0, DOS1, iemxd, LCOMM(LMPIC))
+  call lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
 
-  !==  allreduce DOS  ==============================================
+  ! ----------- deallocate work arrays ----------------------------------
+  deallocate(DOS)
+  deallocate(DOS0)
+  deallocate(DOS1)
+  deallocate(DEN0)
+  deallocate(RHO2N1)
+  deallocate(RHO2N2)
+  deallocate(ESPV)
+  ! -------------------------------------------------------------------
 
-  call ZCOPY(IEMXD,DOS0,1,WORK1,1)
-  call ZCOPY(IEMXD,DOS1,1,WORK1(IEMXD+1),1)
-  call ZCOPY(2*IEMXD,DOS,1,WORK1(2*IEMXD+1),1)
+end subroutine LLOYD0
 
-  call MPI_ALLREDUCE(WORK1,WORK2,4*IEMXD, &
-  MPI_DOUBLE_COMPLEX,MPI_SUM,LCOMM(LMPIC), &
-  IERR)
+!------------------------------------------------------------------------------
+subroutine lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
+  implicit none
+  integer :: iemxd
+  integer :: NSPIN
 
-  call ZCOPY(IEMXD,WORK2,1,DOS0,1)
-  call ZCOPY(IEMXD,WORK2(IEMXD+1),1,DOS1,1)
-  call ZCOPY(2*IEMXD,WORK2(2*IEMXD+1),1,DOS,1)
+  double complex :: DOS(IEMXD,2)
+  double complex :: DOS0(IEMXD)
+  double complex :: DOS1(IEMXD)
 
-  ! ================================================================ NAEZ
+  doublecomplex :: LLY_GRDT(IEMXD,NSPIN)
+  double precision :: RNORM(IEMXD,2)
+  double complex :: WEZ(IEMXD)
+  double complex :: WEZRN(IEMXD,2)
 
+  integer :: IE
+  integer :: IELAST
+  integer :: ISPIN
 
-
+  double precision :: D0LOC
+  double precision :: D0LOCINT
+  double precision :: D1LOC
+  double precision :: D1LOCINT
+  double precision :: DLOC
+  double precision :: DLOYD
+  double precision :: DLOYDINT
   ! ======================================================================
 
   do ISPIN=1,NSPIN
@@ -287,17 +289,54 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
     enddo
 
   enddo
+end subroutine
 
-  ! ----------- deallocate work arrays ----------------------------------
+
+!------------------------------------------------------------------------------
+subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
+  implicit none
+  include 'mpif.h'
+
+  double complex, intent(inout) :: DOS(IEMXD,2)
+  double complex, intent(inout) :: DOS0(IEMXD)
+  double complex, intent(inout) :: DOS1(IEMXD)
+  integer, intent(in) :: iemxd
+  integer, intent(in) :: communicator
+
+  integer :: IERR
+  double complex, dimension(:), allocatable :: WORK1
+  double complex, dimension(:), allocatable :: WORK2
+
+  integer :: memory_stat
+  logical :: memory_fail
+
+  memory_fail = .false.
+
+  allocate(WORK1(4*IEMXD), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+  allocate(WORK2(4*IEMXD), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+
+  if (memory_fail .eqv. .true.) then
+    write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
+    write(*,*) "        Probably out of memory."
+    stop
+  end if
+
+  !==  allreduce DOS  ==============================================
+
+  call ZCOPY(IEMXD,DOS0,1,WORK1,1)
+  call ZCOPY(IEMXD,DOS1,1,WORK1(IEMXD+1),1)
+  call ZCOPY(2*IEMXD,DOS,1,WORK1(2*IEMXD+1),1)
+
+  call MPI_ALLREDUCE(WORK1,WORK2,4*IEMXD, &
+  MPI_DOUBLE_COMPLEX,MPI_SUM,communicator, &
+  IERR)
+
+  call ZCOPY(IEMXD,WORK2,1,DOS0,1)
+  call ZCOPY(IEMXD,WORK2(IEMXD+1),1,DOS1,1)
+  call ZCOPY(2*IEMXD,WORK2(2*IEMXD+1),1,DOS,1)
+
   deallocate(WORK1)
   deallocate(WORK2)
-  deallocate(DOS)
-  deallocate(DOS0)
-  deallocate(DOS1)
-  deallocate(DEN0)
-  deallocate(RHO2N1)
-  deallocate(RHO2N2)
-  deallocate(ESPV)
-  ! -------------------------------------------------------------------
-
-end subroutine LLOYD0
+end subroutine

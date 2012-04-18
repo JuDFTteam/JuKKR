@@ -9,11 +9,11 @@
     QMRBOUND,IGUESS,BCP,CNVFAC, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
     LLY_GRDT,TR_ALPH,GMATXIJ, &          ! < output
-    LMPIC,LCOMM,LSIZE, &                 ! > input
+    communicator, comm_size, &           ! > input
     ! new parameters after inc.p removal
     iemxd, &
-    prod_lmpid_smpid_empid, nthrds, &
-    lmax, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+    nthrds, &
+    lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
 ! **********************************************************************
@@ -30,15 +30,15 @@
 ! DGINP ...      derivative of reference Green's function
 ! TSST_LOCAL ..  t-matrix
 
-    !use mpi
-
     implicit none
     include 'mpif.h'
 
+    integer, intent(in) :: communicator
+    integer, intent(in) :: comm_size
+
     integer, intent(in) :: iemxd
-    integer, intent(in) :: prod_lmpid_smpid_empid
     integer, intent(in) :: nthrds  ! number of OpenMP threads
-    integer, intent(in) :: lmax
+    integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
     integer, intent(in) :: nclsd   ! number of reference clusters
     integer, intent(in) :: xdim
@@ -58,11 +58,6 @@
     double complex :: CONE
     double complex :: CZERO
     parameter        (CONE  = ( 1.0D0,0.0D0), CZERO  = ( 0.0D0,0.0D0))
-
-    !integer::          LMMAXD
-    !parameter        (LMMAXD= (KREL+1) * (LMAXD+1)**2)
-    !integer::          LMGF0D
-    !parameter        (LMGF0D= (LMAXD+1)**2)
 
     !     ..
     !     .. Scalar Arguments ..
@@ -86,26 +81,20 @@
     !     ..
     !     .. Array Arguments ..
     !     ..
-!    double complex :: GMATN(LMMAXD,LMMAXD,IEMXD)
-!    double complex :: DGINP(LMGF0D,LMGF0D,NACLSD,NCLSD)
-!    double complex :: GINP_LOCAL(LMGF0D,LMGF0D,NACLSD,NCLSD)
-!    double complex :: GMATXIJ(LMMAXD,LMMAXD,NXIJD)
-!    double complex :: TSST_LOCAL(LMMAXD,LMMAXD)
-!    double complex :: DTDE_LOCAL(LMMAXD,LMMAXD)
 
     !----- Initial Guess arrays-----------------------------------------------
-    complex::          PRSC(NGUESSD*(LMAX+1)**2,EKMD)
-    integer::          SPRS(NGUESSD*(LMAX+1)**2+1,EKMD+1)
+    complex::          PRSC(NGUESSD*LMMAXD,EKMD)
+    integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
     !-------------------------------------------------------------------------
 
-    double complex :: DSYMLL((LMAX+1)**2,(LMAX+1)**2,NSYMAXD)
+    double complex :: DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
 
-    double complex :: GMATN((LMAX+1)**2,(LMAX+1)**2,IEMXD)
-    double complex :: DGINP((LMAX+1)**2,(LMAX+1)**2, NACLSD, NCLSD)
-    double complex :: GINP_LOCAL((LMAX+1)**2, (LMAX+1)**2, NACLSD, NCLSD)
-    double complex :: GMATXIJ   ((LMAX+1)**2, (LMAX+1)**2, NXIJD)
-    double complex :: TSST_LOCAL((LMAX+1)**2, (LMAX+1)**2)
-    double complex :: DTDE_LOCAL((LMAX+1)**2, (LMAX+1)**2)
+    double complex :: GMATN(LMMAXD,LMMAXD,IEMXD)
+    double complex :: DGINP(LMMAXD,LMMAXD, NACLSD, NCLSD)
+    double complex :: GINP_LOCAL(LMMAXD, LMMAXD, NACLSD, NCLSD)
+    double complex :: GMATXIJ   (LMMAXD, LMMAXD, NXIJD)
+    double complex :: TSST_LOCAL(LMMAXD, LMMAXD)
+    double complex :: DTDE_LOCAL(LMMAXD, LMMAXD)
 
     double precision::RR(3,0:NRD)
     double precision::ZKRXIJ(48,3,NXIJD)
@@ -135,56 +124,34 @@
     !     .. Local Arrays ..
     !     ..
 
-    !double complex :: GLL(LMMAXD,LMMAXD)
-    !double complex :: GS(LMMAXD,LMMAXD,NSYMAXD)
-    !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
-    double complex :: GLL  ((LMAX+1)**2, (LMAX+1)**2)
-    double complex :: GS   ((LMAX+1)**2, (LMAX+1)**2, NSYMAXD)
+    double complex :: GLL  (LMMAXD, LMMAXD)
+    double complex :: GS   (LMMAXD, LMMAXD, NSYMAXD)
 
+    !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
     double complex, allocatable, dimension(:,:,:,:) :: GSXIJ
 
     !     effective (site-dependent) Delta_t^(-1) matrix
-    !double complex :: MSSQ(LMMAXD,LMMAXD)
-    double complex ::      MSSQ ((LMAX+1)**2, (LMAX+1)**2)
+    double complex ::      MSSQ (LMMAXD, LMMAXD)
+    double complex :: work_array(LMMAXD, LMMAXD)    ! work array for LAPACK ZGETRI
+    double complex ::       TPG (LMMAXD, LMMAXD)
+    double complex ::        XC (LMMAXD, LMMAXD)      ! to store temporary matrix-matrix mult. result
 
-    !double complex :: work_array(LMMAXD,LMMAXD)
-    double complex :: work_array((LMAX+1)**2, (LMAX+1)**2)    ! work array for LAPACK ZGETRI
-
-    !double complex :: TPG(LMMAXD,LMMAXD)
-    double complex ::       TPG ((LMAX+1)**2, (LMAX+1)**2)
-
-    !double complex :: XC(LMMAXD,LMMAXD)
-    double complex ::        XC ((LMAX+1)**2, (LMAX+1)**2)      ! to store temporary matrix-matrix mult. result
-
-    !integer::         IPVT(LMMAXD)
-    integer::         IPVT((LMAX+1)**2)                 ! work array for LAPACK
+    integer::         IPVT(LMMAXD)                 ! work array for LAPACK
 
     !double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD) ! large
     double complex, allocatable, dimension(:,:,:) :: TMATLL
 
     !-----------------------------------------------------------------------
-    !     .. MPI ..
-    !     .. L-MPI
-    integer:: LCOMM(prod_lmpid_smpid_empid)
-    integer:: LSIZE(prod_lmpid_smpid_empid)
-    integer:: LMPIC
 
-    !     .. External Subroutines ..
-    logical:: TEST
     logical::XCCPL
 
-    external TEST,OPT,KKRMAT01, &
-    ZCOPY,ZAXPY,ZGETRF,ZGETRS,ZGETRI,ZGEMM,ZSCAL
+    external ZCOPY,ZAXPY,ZGETRF,ZGETRS,ZGETRI,ZGEMM,ZSCAL
 !     ..
 !     .. Intrinsic Functions ..
     intrinsic ATAN
 !     ..
     integer :: memory_stat
     logical :: memory_fail
-
-    integer::          LMMAXD
-
-    LMMAXD = (LMAX+1)**2
 
 ! -------------------------------------------------------------------
 ! Allocate Arrays
@@ -207,10 +174,6 @@
 !     RFCTOR=A/(2*PI) conversion factor to p.u.
     RFCTOR = ALAT/(8.D0*ATAN(1.0D0))           ! = ALAT/(2*PI)
 
-
-    if ( TEST('flow    ') ) write (6,*) &
-    '>>> KLOOPZ1: invert delta_t and do Fourier transformation'
-
 ! --> convert inverted delta_t-matrices to p.u.
 !     Also a symmetrisation of the matrix is performed
 
@@ -227,10 +190,12 @@
 !     processes working on (k, E)
 !     and stored in TMATLL (dimension(LMMAXD,LMMAXD, NAEZD))
 
+!     Optimisation possibility for real space truncation:
+!     communicate matrices only in truncation cluster
 
     call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
     TMATLL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-    LCOMM(LMPIC),IERR)
+    communicator,IERR)
 
 ! ---------------------------------------------------------------------
 
@@ -274,8 +239,8 @@
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     LLY_GRDT,TR_ALPH, &
-    LMPIC,LCOMM,LSIZE, &
-    prod_lmpid_smpid_empid, nthrds, &
+    communicator, comm_size, &
+    nthrds, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -353,7 +318,6 @@
             GMATN(LM2,LM1,IE) = GLL(LM2,LM1)/RFCTOR
         end do
     end do
-!      ENDIF
 
 !================================
     if (XCCPL) then
@@ -366,7 +330,7 @@
         TMATLL,MSSQ, &
         GSXIJ, &
         GMATXIJ, &
-        naez, lmax, nxijd)
+        naez, lmmaxd, nxijd)
 
 !================================
     endif
@@ -378,8 +342,5 @@
 
     deallocate(TMATLL)
     deallocate(GSXIJ)
-
-
-    if ( TEST('flow    ') ) write (6,*) '<<< KLOOPZ1'
 
     end subroutine KLOOPZ1
