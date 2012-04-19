@@ -94,7 +94,8 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . DebugHelpers
+DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung
+
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
 
@@ -115,6 +116,12 @@ $(PROGRAM): $(OBJS)
 	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
 	
 %.o: %.f90
+	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
+	
+%.o: %.F
+	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
+	
+%.o: %.F90
 	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
 .PHONY: clean
