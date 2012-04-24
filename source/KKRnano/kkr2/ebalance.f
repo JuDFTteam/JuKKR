@@ -200,6 +200,12 @@ C
         ENDIF
 C
 C
+C     Quick fix: if NPNT1=0 then IERI=0 -> leads to read out of bounds
+C     at line 212   E.R.
+      if (IERI .eq. 0) then
+        IERI = 1
+      end if
+
 C     loop over processors IER=IERI,IERLAST >>>
         DO IER = IERI, IERLAST
           IF (EMPI.LT.EMPID) THEN
