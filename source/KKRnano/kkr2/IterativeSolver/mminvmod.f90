@@ -102,6 +102,14 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   integer :: memory_stat
   logical :: memory_fail
 
+  !------------------------------------------------------------------
+  ! convergence parameters
+
+  double precision :: max_residual
+  double precision :: target_upper_bound
+  double precision :: max_upper_bound
+  double precision, parameter :: TEST_FACTOR = 100d0
+
   !=======================================================================
   ! INITIALIZATION I
   !=======================================================================
@@ -129,6 +137,8 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   TOLAV = 0.0
   QMRABS = .true.           ! QMRABS tolerance for residual norm is defined globally
   CNVCONST = .true.         ! CNVFAC is constant for all sc-steps
+
+  target_upper_bound = TOL * TEST_FACTOR
 
   if (CNVCONST) then
     CNVFAC  = 1000
@@ -375,6 +385,8 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,8) result
     
+
+    max_upper_bound = 0.0d0
     !--------------
     do LM2=1,LMMAXD
       if ( .not. DONE(LM2)) then
@@ -392,12 +404,19 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
             
         call ZAXPBY(NLEN,VECS(1,LM2,1), &
         CONE,VECS(1,LM2,1),ETA(LM2),VECS(1,LM2,7))
-            
+        
+        max_upper_bound = max(max_upper_bound, &
+                          sqrt( (2*IT+1)*TAU(LM2)) / N2B(LM2))    
     !--------------
       endif
     enddo
     !--------------
     
+    if (max_upper_bound <= target_upper_bound) then
+      PROBE = IT ! probe residual
+    else
+      PROBE = IT+1 ! don't probe residual
+    end if
     
     ! >>>>>>>>>>>
     if (MOD(IT,PROBE) == 0) then
@@ -476,7 +495,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       endif
       ! ..
         
-      PROBE  = MAX(1,INT( LOG( RESNAV/(TOLAV*CNVFAC) ) ) )
+      ! PROBE  = MAX(1,INT( LOG( RESNAV/(TOLAV*CNVFAC) ) ) )
         
       EXITIT = .true.
       do LM2 = 1, LMMAXD
