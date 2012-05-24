@@ -1234,7 +1234,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
             ! ---> l/m_s/atom-resolved charges, output -> CHARGE
             ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
-            ! CHARGE -> written to result file, only for informative purposes
+            ! CHARGE -> written to result file
             call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIN, WEZ, IEMXD)
 
 ! LDAU
