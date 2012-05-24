@@ -13,6 +13,8 @@ program MAIN2
   use KKRSelfConsistency_mod
 
   use main2_aux_mod
+  use muffin_tin_zero_mod
+  use EnergyMesh_mod
 
   implicit none
   include 'mpif.h'
@@ -118,12 +120,10 @@ program MAIN2
   integer::ISYMINDEX(NSYMAXD)
   double precision::ECORE(20,2)
   double precision:: WORK1(2)
-  double precision:: WORK2(2)
 
   !     .. Local Arrays ..
   double complex, dimension(:), allocatable ::  EZ
   double complex, dimension(:), allocatable ::  WEZ
-  double complex, dimension(:), allocatable ::  DEZ
   double complex, dimension(:,:), allocatable ::  WEZRN
   double complex, dimension(:,:,:), allocatable ::  DEN
   double complex, dimension(:,:,:), allocatable ::  DSYMLL
@@ -278,7 +278,6 @@ program MAIN2
   double precision, dimension(:,:,:), allocatable :: ZKRXIJ    ! set up in clsjij, used in kkrmat01
   integer, dimension(:), allocatable :: IXCP                   ! index to atom in elem/cell at site in cluster
   integer, dimension(:), allocatable :: NXCP                   ! index to bravais lattice at site in cluster
-  integer::XIJ
   integer::NXIJ
   integer, dimension(:,:), allocatable :: ATOM
   integer, dimension(:), allocatable :: CLS
@@ -417,8 +416,6 @@ program MAIN2
   allocate(EZ(IEMXD), stat = memory_stat)
   if(memory_stat /= 0) call fatalMemoryError("main2")
   allocate(WEZ(IEMXD), stat = memory_stat)
-  if(memory_stat /= 0) call fatalMemoryError("main2")
-  allocate(DEZ(IEMXD), stat = memory_stat)
   if(memory_stat /= 0) call fatalMemoryError("main2")
   allocate(WEZRN(IEMXD,2), stat = memory_stat)
   if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -822,15 +819,7 @@ program MAIN2
                         IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
                         nrd, nxijd)
 
-            do ISPIN = 1, NSPIN
-              do XIJ = 1, NXIJ
-                do LM1 = 1,LMMAXD
-                  do LM2 = 1,LMMAXD
-                    GMATXIJ(LM1,LM2,XIJ,ISPIN) = CZERO
-                  enddo
-                enddo
-              enddo
-            enddo
+            GMATXIJ = CZERO
 
           endif
 
@@ -1369,10 +1358,6 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-            !call VINTRAS(LPOT,NSPIN,I1,RHO2NS,VONS, &
-            !R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-            !THETAS,LMSP(1,ICELL), &
-            !irmd, irid, nfund, ngshd, ipand)
             call VINTRAS_NEW(LPOT,NSPIN,RHO2NS,VONS, &
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
@@ -1478,32 +1463,20 @@ spinloop:     do ISPIN = 1,NSPIN
 ! =====================================================================
           end if
         end do
-        call OUTTIME(MYLRANK(1),'calculated pot ......',TIME_I,ITER)
 ! =====================================================================
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
 
-! Calculate muffin-tin potential shift
-!****************************************************** MPI COLLECT DATA
-        WORK1(1) = VAV0
-        WORK1(2) = VOL0
-        call MPI_ALLREDUCE(WORK1,WORK2,2,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        LCOMM(LMPIC),IERR)
-        VAV0 = WORK2(1)
-        VOL0 = WORK2(2)
-!****************************************************** MPI COLLECT DATA
+        call OUTTIME(MYLRANK(1),'calculated pot ......',TIME_I,ITER)
 
+        call allreduceMuffinTinShift_com(LCOMM(LMPIC), VAV0, VBC, VOL0)
 
-        VBC(1) = -VAV0/VOL0
-        if (ISHIFT>0) VBC(1) = VBC(1) + E2SHIFT
-        VBC(2) = VBC(1)
+        call shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT)
 
         if(MYRANK==0) then
-          write (6,fmt=9103) VOL0,VAV0,VBC(1)
-          write(6,'(79(1H=),/)')
+          call printMuffinTinShift(VAV0, VBC, VOL0)
         end if
 
-9103    format ('  VOL INT.',F16.9,'  VAV INT.',F16.9,'  VMT ZERO',F16.9)
 ! =====================================================================
 
 ! ---------------------------------------------------------------------
@@ -1602,13 +1575,10 @@ spinloop:     do ISPIN = 1,NSPIN
 9030    format ('                new', &
         ' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)
 
-
-
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
 
         call MPI_BARRIER(LCOMM(LMPIC),IERR)
-
 
 ! -----------------------------------------------------------------
 ! L-MPI: only process with MYLRANK(LMPIC = 1) = 0 is working here
@@ -1623,14 +1593,8 @@ spinloop:     do ISPIN = 1,NSPIN
           ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
           iemxd)
 
-! --> update energy contour
-
-          call EMESHT(EZ,DEZ,IELAST,E1,E2,E2,TK, &
-          NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
-
-          do IE = 1,IELAST
-            WEZ(IE) = -2.D0/PI*DEZ(IE)
-          end do
+          ! only ranks with MYLRANK(LMPIC)==0 update, other ranks get it broadcasted later
+          call updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
 
           write(6,'(79(1H=))')
 
@@ -1651,37 +1615,21 @@ spinloop:     do ISPIN = 1,NSPIN
       close(66)  ! close 'vpotnew'
 ! -----------------------------------------------------------------
 
-!      CALL MPI_BARRIER(ACTVCOMM,IERR)
-
       ! why? all processes except 1 have MYBCRANK = 0, this allreduce
       ! tells all the other processes who is the root
       ! not really necessary
       call MPI_ALLREDUCE(MYBCRANK,BCRANK,1,MPI_INTEGER,MPI_MAX, &
       ACTVCOMM,IERR)
 
-      call MPI_BCAST(EZ,IEMXD,MPI_DOUBLE_COMPLEX, &
-      BCRANK,ACTVCOMM,IERR)
-
-      call MPI_BCAST(WEZ,IEMXD,MPI_DOUBLE_COMPLEX, &
-      BCRANK,ACTVCOMM,IERR)
-
-      call MPI_BCAST(E1,1,MPI_DOUBLE_PRECISION, &
-      BCRANK,ACTVCOMM,IERR)
-
-      call MPI_BCAST(E2,1,MPI_DOUBLE_PRECISION, &
-      BCRANK,ACTVCOMM,IERR)
+      call broadcastEnergyMesh_com(ACTVCOMM, BCRANK, E1, E2, EZ, IEMXD, WEZ)
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
       ACTVCOMM,IERR)
 
-!      CALL MPI_BARRIER(ACTVCOMM,IERR)
-
       if(MYLRANK(1)==0) then
 
-        open (67,file='energy_mesh',form='unformatted')
-        write (67) IELAST,EZ,WEZ,E1,E2
-        write (67) NPOL,TK,NPNT1,NPNT2,NPNT3
-        close (67)
+        ! write file 'energy_mesh'
+        call writeEnergyMesh(E1, E2, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
 
         write(6,'(79(1H=))')
         write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', &
@@ -1754,7 +1702,6 @@ spinloop:     do ISPIN = 1,NSPIN
 !-----------------------------------------------------------------------------
   deallocate(EZ, stat = memory_stat)
   deallocate(WEZ, stat = memory_stat)
-  deallocate(DEZ, stat = memory_stat)
   deallocate(WEZRN, stat = memory_stat)
   deallocate(DEN, stat = memory_stat)
   deallocate(DSYMLL, stat = memory_stat)

@@ -361,28 +361,4 @@ module main2_aux_mod
     close (52)
   end subroutine
 
-  !----------------------------------------------------------------------------
-  ! read energy mesh data from file 'energy_mesh'
-  subroutine readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
-    implicit none
-    double precision :: E1
-    double precision :: E2
-    double precision :: EFERMI
-    double complex :: EZ(:)
-    integer :: IELAST
-    integer :: NPNT1
-    integer :: NPNT2
-    integer :: NPNT3
-    integer :: NPOL
-    double precision :: TK
-    double complex :: WEZ(:)
-
-    open (67,file='energy_mesh',form='unformatted')
-    read (67) IELAST,EZ,WEZ,E1,E2
-    read (67) NPOL,TK,NPNT1,NPNT2,NPNT3
-
-    if ( NPOL==0 ) read(67) EFERMI
-    close (67)
-  end subroutine
-
 end module main2_aux_mod
