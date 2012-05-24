@@ -58,8 +58,6 @@ program MAIN2
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
   double precision::EREFLDAU    ! LDA+U
 
-  double precision::WALLCLOCK_I ! time management
-  double precision::WALLCLOCK_F
   real::TIME_I
   real::TIME_S
   real::TIME_E
@@ -99,10 +97,6 @@ program MAIN2
   integer::LM
   integer::NR
   integer::EKM
-  integer::SYSTEM_I
-  integer::SYSTEM_F
-  integer::RATETIME
-  integer::MAXTIME
   logical::TEST
   logical::LCORDENS
   logical::XCCPL
@@ -728,15 +722,7 @@ program MAIN2
 
 ! ========= TIMING ======================================================
     if (MYLRANK(1) == 0) then
-      RATETIME = 100
-      MAXTIME  = 100000
-
-      call SYSTEM_CLOCK(SYSTEM_I,RATETIME,MAXTIME)
-
-      WALLCLOCK_I = MPI_WTIME()
-
       call CPU_TIME(TIME_I)
-
       open (2,file='time-info',form='formatted')
     endif
 !========= TIMING END ======================================================
@@ -1635,12 +1621,6 @@ spinloop:     do ISPIN = 1,NSPIN
         write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', &
         ITER,' SUM of QMR ',NOITER_ALL
         write(6,'(79(1H=),/)')
-        call SYSTEM_CLOCK(SYSTEM_F,RATETIME,MAXTIME)
-        WALLCLOCK_F=MPI_WTIME()
-        write(6,'(79(1H=))')
-        write(6,*) 'Wallclock, System and CPU-time compared:'
-        write(6,*) 'MPI_WTIME=',(WALLCLOCK_F-WALLCLOCK_I),'sec'
-        write(6,*) 'SYSTEM_CLOCK=',(SYSTEM_F-SYSTEM_I)/100,'sec'
         call OUTTIME(MYLRANK(1),'end .................', &
         TIME_I,ITER)
         write(6,'(79(1H=))')
