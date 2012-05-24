@@ -1,4 +1,5 @@
 C*==wrmoms.f    processed by SPAG 6.05Rc at 15:39 on  1 Mar 2002
+C     Write angular momentum resolved charges to stdout
       SUBROUTINE WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAXD,LMAXD1)
 C
       IMPLICIT NONE

@@ -1,7 +1,5 @@
-
 ! KKRnano
 ! massive parallel KKR for nanoscaled systems
-
 
 program MAIN2
 
@@ -13,6 +11,8 @@ program MAIN2
   use ErrorMessages_mod
   use lloyds_formula_mod
   use KKRSelfConsistency_mod
+
+  use main2_aux_mod
 
   implicit none
   include 'mpif.h'
@@ -76,14 +76,12 @@ program MAIN2
   integer::IMIX
   integer::NOITER
   integer::NOITER_ALL
-  integer::IPF
   integer::ISHIFT
   integer::KPRE
   integer::KTE
   integer::KVMAD
   integer::KXC
   integer::KFORCE
-  integer::L
   integer::LPOT
   integer::LMPOT
   integer::NAEZ
@@ -92,12 +90,10 @@ program MAIN2
   integer::LM1
   integer::LM2
   integer::IEND1
-  integer::I
   integer::IPOT
   integer::ISPIN
   integer::I1
   integer::I1BRYD
-  integer::IH
   integer::LM
   integer::NR
   integer::EKM
@@ -166,7 +162,6 @@ program MAIN2
   integer::NSYMAT
   integer, dimension(:), allocatable :: NUMN0
   integer, dimension(:,:), allocatable :: INDN0
-  integer::ID
   integer::MAXMESH
   integer, dimension(:), allocatable :: NSG
   integer, dimension(:), allocatable :: NSR
@@ -290,12 +285,6 @@ program MAIN2
   integer, dimension(:), allocatable :: NACLS
   integer, dimension(:), allocatable :: REFPOT
 
-  integer::NUTRC                                          ! number of inequivalent atoms in the cluster
-  integer, dimension(:), allocatable :: INTRC                 ! allocatable to atoms in the unit cell
-  integer::NATRC                                          ! number of atoms in cluster
-  integer, dimension(:), allocatable :: ATTRC                 ! index to atom in elem/cell at site in cluster
-  integer, dimension(:), allocatable :: EZTRC                 ! index to bravais lattice  at site in cluster
-
   !     .. L-MPI
   integer, dimension(:), allocatable :: MYLRANK
   integer, dimension(:), allocatable :: LCOMM
@@ -375,16 +364,13 @@ program MAIN2
   integer :: IRNSD
   integer :: KPOIBZ
   integer :: NFUND
-  integer :: NATRCD
   integer :: NCLSD
   integer :: NMAXD
   integer :: NRD
   integer :: NSPIND
-  integer :: NUTRCD
   integer :: NXIJD
   integer :: LLY
   integer :: EKMD
-  integer :: TRC
   integer :: NCELLD
 
   integer :: XDIM
@@ -392,7 +378,6 @@ program MAIN2
   integer :: ZDIM
   integer :: NATBLD
   integer :: ITDBRYD
-  integer :: LRECTRC
 
   !Parallelisation
   integer, parameter :: LMPID = 1  ! L-parallelisation not supported anymore
@@ -409,87 +394,22 @@ program MAIN2
   PI = 4.0D0*ATAN(1.0D0)
   FPI = 4.0D0*PI
   RFPI = SQRT(FPI)
-  IPF = 74
 !=============================================================
 
-  call read_dimension_parameters( &
-  LMAXD, &
-  NSPIND, &
-  NAEZD, &
-  IRNSD, &
-  TRC, &
-  IRMD, &
-  NREFD, &
-  NRD, &
-  IRID, &
-  NFUND, &
-  NCELLD, &
-  NGSHD, &
-  NACLSD, &
-  NCLSD, &
-  IPAND, &
-  NXIJD, &
-  NATRCD, &
-  NUTRCD, &
-  KPOIBZ, &
-  IGUESSD, &
-  BCPD, &
-  NMAXD, &
-  ISHLD, &
-  LLY, &
-  SMPID, &
-  EMPID, &
-  NTHRDS, &
-  XDIM, &
-  YDIM, &
-  ZDIM, &
-  NATBLD, &
-  ITDBRYD, &
-  IEMXD, &
-  EKMD)
+  call read_dimension_parameters( LMAXD, NSPIND, NAEZD, IRNSD, &
+                                  IRMD, NREFD, NRD, IRID, NFUND, NCELLD, &
+                                  NGSHD, NACLSD, NCLSD, IPAND, NXIJD, KPOIBZ, &
+                                  IGUESSD, BCPD, NMAXD, ISHLD, &
+                                  LLY, SMPID, EMPID, NTHRDS, XDIM, YDIM, ZDIM, &
+                                  NATBLD, ITDBRYD, IEMXD, EKMD)
 
-  ! derived dimension parameters
-  LPOTD = 2*LMAXD
-  LMMAXD= (LMAXD+1)**2
-  NPOTD=NSPIND*NAEZD
-  LMAXD1=LMAXD+1
-  MMAXD  = 2*LMAXD + 1
-  LM2D= (2*LMAXD+1)**2
-  LMXSPD= (2*LPOTD+1)**2
-  LASSLD=4*LMAXD
-  LMPOTD= (LPOTD+1)**2
-  NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND
-  IRMIND=IRMD-IRNSD
+  ! from dimension parameters - calculate some derived parameters
+  call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, LMAXD, &
+                            LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, LRECPOT, &
+                            LRECRES2, MMAXD, NAEZD, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
 
-  NGUESSD = 1 + IGUESSD * ( NAEZD * (LMAXD+1)**2 - 1 )
-  NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
-
-  ! Record lengths
-  LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
-  LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
-  LRECTRC   = 4*(NATRCD*3+2)
-
-! ----------------------------------------------------------------------------
-! consistency checks
-  if (IEMXD < 1) then
-    write (*,*) "main2: IEMXD must be >= 1"
-    stop
-  end if
-
-  if (LMAXD < 0) then
-    write (*,*) "main2: LMAXD must be >= 0"
-    stop
-  end if
-
-  if (SMPID /= 1 .and. SMPID /=2) then
-    write (*,*) "main2: SMPID must be 1 or 2"
-    stop
-  end if
-
-  if (NSPIND /= 1 .and. NSPIND /=2) then
-    write (*,*) "main2: NSPIND must be 1 or 2"
-    stop
-  end if
+  ! consistency check of some dimension parameters
+  call consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
 
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
@@ -728,12 +648,6 @@ program MAIN2
   if(memory_stat /= 0) call fatalMemoryError("main2")
   allocate(REFPOT(NAEZD), stat = memory_stat)
   if(memory_stat /= 0) call fatalMemoryError("main2")
-  allocate(INTRC(NATRCD), stat = memory_stat)
-  if(memory_stat /= 0) call fatalMemoryError("main2")
-  allocate(ATTRC(NATRCD), stat = memory_stat)
-  if(memory_stat /= 0) call fatalMemoryError("main2")
-  allocate(EZTRC(NATRCD), stat = memory_stat)
-  if(memory_stat /= 0) call fatalMemoryError("main2")
   allocate(MYLRANK(LMPID*SMPID*EMPID), stat = memory_stat)
   if(memory_stat /= 0) call fatalMemoryError("main2")
   allocate(LCOMM(LMPID*SMPID*EMPID), stat = memory_stat)
@@ -760,147 +674,41 @@ program MAIN2
   if(memory_stat /= 0) call fatalMemoryError("main2")
   allocate(EPROCO(IEMXD), stat = memory_stat)
   if(memory_stat /= 0) call fatalMemoryError("main2")
-!-----------------------------------------------------------------------------
-! Array allocations END
-!-----------------------------------------------------------------------------
 
-! ======================================================================
-! =             read in variables from unformatted files               =
-! ======================================================================
-  open (67,file='inp.unf',form='unformatted')
-  read (67) KMESH,MAXMESH,RR,EZOA,NUMN0,INDN0,NSYMAT,DSYMLL
-  read (67) NAEZ,NSPIN,IPAN,IRNS,IRCUT,LCORE,NCORE,NTCELL, &
-  LMAX,LPOT,LMPOT
-  read (67) IMIX,MIXING,QBOUND,FCM,KPRE,KTE, &
-  KVMAD,KXC,ISHIFT,KFORCE,IGUESS,BCP,QMRBOUND
-  read (67) A,B,DRDI,R,THETAS,ZAT,IMT,IRC, &
-  IRMIN,IRWS,RWS,RMT,ITITLE,LLMSP,NFU
-  read (67) ALAT,GSH,ILM,IMAXSH,TESTC,OPTC
-  read (67) BRAVAIS,RBASIS,RECBV,VOLUME0,RMAX,GMAX
-  read (67) IEND1,CLEB1C,ICLEB1C,LOFLM1C,JEND,IFUNM,LMSP,NSRA,ICST
-  read (67) NCLS,NREF,RMTREF,VREF,RCLS, &
-  ATOM,CLS,NACLS,REFPOT
-  read (67) NR,RCUTJIJ,JIJ,LDAU
-  read (67) ISYMINDEX,SCFSTEPS
-  close (67)
+  !-----------------------------------------------------------------------------
+  ! Array allocations END
+  !-----------------------------------------------------------------------------
 
-! ---------------------------------------------------------- k_mesh
+  call readKKR0Input      (NSYMAXD, A, ALAT, ATOM, B, BCP, BRAVAIS, CLEB1C, &
+                           CLS, DRDI, DSYMLL, EZOA, FCM, GMAX, GSH, ICLEB1C, ICST, &
+                           IEND1, IFUNM, IGUESS, ILM, IMAXSH, IMIX, IMT, INDN0, IPAN, &
+                           IRC, IRCUT, IRMIN, IRNS, IRWS, ISHIFT, ISYMINDEX, ITITLE, &
+                           JEND, JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
+                           LDAU, LLMSP, LMAX, LMPOT, LMSP, LOFLM1C, LPOT, MAXMESH, &
+                           MIXING, NACLS, NAEZ, NCLS, NCORE, NFU, NR, NREF, NSPIN, &
+                           NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QBOUND, QMRBOUND, R, &
+                           RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
+                           RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
 
-  open (52,file='kpoints',form='formatted')
-  rewind (52)
+  ! ---------------------------------------------------------- k_mesh
+  call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
 
-  do L = 1,MAXMESH
-    read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-    read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
-    do I=2,NOFKS(L)
-      read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-    end do
-  end do
-
-  close (52)
-
-  open (67,file='energy_mesh',form='unformatted')
-  read (67) IELAST,EZ,WEZ,E1,E2
-  read (67) NPOL,TK,NPNT1,NPNT2,NPNT3
-
-  if ( NPOL==0 ) read(67) EFERMI
-  close (67)
+  call readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
 
   if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
-! ======================================================================
-! =                     End read in variables                          =
-! ======================================================================
+ ! ======================================================================
+ ! =                     End read in variables                          =
+ ! ======================================================================
 
+  call consistencyCheck02(IELAST, IEMXD, IGUESS, IGUESSD, LMAX, LMAXD, NAEZ, NAEZD, &
+                          NPNT1, NPNT2, NPNT3, NPOL, NR, NRD, NSPIN, NSPIND)
 
-! -------------- Consistency checks -------------------------------
-  if (IGUESS /= IGUESSD .or. IGUESS < 0 .or. IGUESS > 1) then
-    write (*,*) "main2: IGUESSD IGUESS inconsistent ", IGUESSD, IGUESS
-    stop
-  end if
-
-  if (NSPIN /= NSPIND) then
-    write (*,*) "main2: NSPIN /= NSPIND"
-    stop
-  end if
-
-  if (NAEZ /= NAEZD) then
-    write (*,*) "main2: NAEZ /= NAEZD"
-    stop
-  end if
-
-  if (IEMXD /= IELAST) then
-    write (*,*) "main2: IEMXD /= IELAST"
-    stop
-  end if
-
-  if (NPOL /= 0) then
-    if (NPNT1 + NPNT2 + NPNT3 + NPOL /= IELAST) then
-      write(*,*) "main2: Energy point numbers inconsistent."
-    end if
-  end if
-
-  if (LMAX /= LMAXD) then
-    write (*,*) "main2: LMAX /= LMAXD"
-    stop
-  end if
-
-  if (NSPIN /= NSPIND) then
-    write (*,*) "main2: NSPIN /= NSPIND"
-    stop
-  end if
-
-  if (NR > NRD .or. NR < 1) then
-    write (*,*) "main2: NR inconsistent NR NRD ", NR, NRD
-    stop
-  end if
-
-  do I1 = 1, NAEZ
-    if (CLS(I1) < 1 .or. CLS(I1) > NCLSD) then
-      write (*,*) "main2: CLS defect, site ", I1, " value ", CLS(I1)
-      stop
-    end if
-  end do
-
-  do I1 = 1, NCLSD
-    if (NACLS(I1) < 1 .or. NACLS(I1) > NACLSD) then
-      write (*,*) "main2: NACLS defect, cluster ", I1, " value ", NACLS(I1)
-      stop
-    end if
-  end do
-
-  do I1 = 1, NAEZ
-    do IE = 1, NACLS(CLS(I1))
-      if (ATOM(IE, I1) < 1 .or. ATOM(IE, I1) > NAEZ) then
-        write (*,*) "main2: ATOM defect value ", IE, I1, ATOM(IE, I1)
-        stop
-      end if
-
-      ! EZOA - index array to point to lattice vector (0 is allowed value)
-      if (EZOA(IE, I1) < 0 .or. EZOA(IE, I1) > NR) then
-        write (*,*) "main2: EZOA defect value ", IE, I1, EZOA(IE, I1)
-        stop
-      end if
-    end do
-  end do
-
-  do I1 = 1, NAEZ
-    if (NUMN0(I1) < 1 .or. NUMN0(I1) > NAEZ) then
-      write (*,*) "main2: NUMN0 inconsistent site ", I1, " value ", NUMN0(I1)
-      stop
-    end if
-
-    do IE = 1, NUMN0(I1)
-      if (INDN0(I1, IE) < 1 .or. INDN0(I1, IE) > NAEZ) then
-        write (*,*) "main2: INDN0 inconsistent site ", I1, " value ", INDN0(I1, IE)
-        stop
-      end if
-    end do
-  end do
+  call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
 
 ! ------------------------------------------------------------------
 
-  ! TODO: get rid of LSMYRANK, LSRANK, LSMPIB, LSMPIC (see line 844)
+  ! TODO: get rid of LSMYRANK, LSRANK, LSMPIB, LSMPIC
   call IMPI(NAEZ,MYRANK,NROFNODES, &
             LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
             LSMPIB,LSMPIC,LSRANK,LSMYRANK, &
@@ -921,10 +729,6 @@ program MAIN2
 
     MYBCRANK = 0
 
-    open (IPF,access='direct',recl=NSPIN*8,file='RMS.unf', &
-    form='unformatted')
-
-! ======================================================================
 ! ========= TIMING ======================================================
     if (MYLRANK(1) == 0) then
       RATETIME = 100
@@ -938,31 +742,21 @@ program MAIN2
 
       open (2,file='time-info',form='formatted')
     endif
-!========= TIMING ======================================================
+!========= TIMING END ======================================================
 
-    do IH=1,EKMD
-      do ISPIN=1,NSPIND-SMPID+1
-        CNVFAC(IH,ISPIN) = 1000.0D0
-      enddo
-    enddo
+    CNVFAC = 1000.0D0
 
 ! initialise the arrays for (gen. Anderson/Broyden) potential mixing
-    do IH=1,NTIRD
-      do LM1=2,ITDBRYD
-        UI2(IH,LM1)=0.00
-        VI2(IH,LM1)=0.00
-      enddo
-      SM1S(IH)=0.00
-      FM1S(IH)=0.00
-    enddo
-
+    UI2 = 0.00
+    VI2 = 0.00
+    SM1S = 0.00
+    FM1S = 0.00
 
 ! ######################################################################
 ! ######################################################################
     do ITER = 1, SCFSTEPS
 ! ######################################################################
 ! ######################################################################
-
 
       call CPU_TIME(TIME_S)
 
@@ -997,15 +791,11 @@ program MAIN2
         LRECRES1 = LRECRES1 + 32*(LMAXD+2)*IEMXD
       end if
 
+      ! needed for results.f - find better solution - unnecessary I/O
       open (71,access='direct',recl=LRECRES1,file='results1', &
       form='unformatted')
       open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
       form='unformatted')
-
-      if (TRC==1) then
-        open (37,access='direct',recl=LRECTRC, &
-              file='trnc.unf',form='unformatted')
-      end if
 
 
 !N ====================================================================
@@ -1048,10 +838,8 @@ program MAIN2
 !=======================================================================
 
           ! This read is probably NOT NECESSARY (except for 1st iteration) !!!
+          ! TURNS out it is necessary - otherwise wrong results - why?
           read(66,rec=I1) VINS,VISP,ECORE  ! Read potential from file!!!
-
-          if (TRC==1) read(37,rec=I1) NATRC,ATTRC,EZTRC,NUTRC,INTRC
-
 
 ! LDA+U
           if (LDAU) then
@@ -1468,11 +1256,6 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -->   determine total charge density expanded in spherical harmonics
 ! -------------------------------------------------------------- density
 
-            !call RHOTOTB(I1,NSPIN,RHO2NS,RHOCAT, &
-            !             DRDI,IRCUT, &
-            !             LPOT,NFU,LLMSP(1,ICELL),THETAS,ICELL,IPAN, &
-            !             CATOM, &
-            !             lmax, irmd, irid, ipand, nfund)
             call RHOTOTB_NEW(NSPIN,RHO2NS,RHOCAT, &
                          DRDI(:,I1),IRCUT(:,I1), &
                          LPOT,NFU(ICELL),LLMSP(1,ICELL),THETAS(:,:,ICELL),IPAN(I1), &
@@ -1481,7 +1264,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
             CHRGNT = CHRGNT + CATOM(1) - ZAT(I1)
 
-            ! write to 'results1'
+            ! write to 'results1' - only to be read in in results.f - very unnecessary
             if (NPOL==0 .or. TEST('DOS     ')) then
               write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
             else
@@ -1499,7 +1282,6 @@ spinloop:     do ISPIN = 1,NSPIN
 !     END do loop over atoms (NMPID-parallel)
 !N ====================================================================
 
-      if (TRC==1) close(37)
       close(66)
       close(71)
 
@@ -1576,10 +1358,6 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ----------------------------------------------------------------------
             end do
 
-            !call RHOMOM(CMOM,CMINST,LPOT,I1,RHO2NS, &
-            !R,DRDI,IRCUT,IPAN,ICELL,ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-            !THETAS,LMSP(1,ICELL), &
-            !irmd, irid, nfund, ipand, ngshd)
             call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
@@ -1640,18 +1418,11 @@ spinloop:     do ISPIN = 1,NSPIN
             if (KTE==1) then
               call ESPCB(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE) !TODO
 
-              !call EPOTINB(EPOTIN,NSPIN,I1,RHO2NS,VISP,R,DRDI, &
-              !IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT, &
-              !irmd, irnsd, ipand)
               call EPOTINB_NEW(EPOTIN,NSPIN,RHO2NS,VISP,R(:,I1),DRDI(:,I1), &
               IRMIN(I1),IRWS(I1),LPOT,VINS,IRCUT(:,I1),IPAN(I1),ZAT(I1), &
               irmd, irnsd, ipand)
 
-              !call ECOUB(CMOM,ECOU,LPOT,NSPIN,I1,RHO2NS, &
-              !VONS,ZAT,R, &
-              !DRDI,KVMAD,IRCUT,IPAN,IMAXSH,IFUNM(1,ICELL), &
-              !ILM,ICELL,GSH,THETAS,LMSP(1,ICELL), &
-              !irmd, irid, nfund, ipand, ngshd)
+
               call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIN,RHO2NS, &
               VONS,ZAT(I1),R(:,I1), &
               DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
@@ -1771,7 +1542,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
             call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOT, &
             I1,NSPIN, &
-            ITER,RFPI,FPI,IPF, &
+            ITER,RFPI,FPI, &
             MIX, &
             FCM,IRC,IRMIN,R,DRDI,VONS, &
             VISP,VINS, &
@@ -1949,7 +1720,7 @@ spinloop:     do ISPIN = 1,NSPIN
 200 continue
 
     if (MYLRANK(1)==0) close(2)    ! TIME
-    close(IPF)                       ! RMS
+
     if (KFORCE==1) close(54)
 ! ======================================================================
 ! ======================================================================
@@ -2099,9 +1870,6 @@ spinloop:     do ISPIN = 1,NSPIN
   deallocate(CLS, stat = memory_stat)
   deallocate(NACLS, stat = memory_stat)
   deallocate(REFPOT, stat = memory_stat)
-  deallocate(INTRC, stat = memory_stat)
-  deallocate(ATTRC, stat = memory_stat)
-  deallocate(EZTRC, stat = memory_stat)
   deallocate(MYLRANK, stat = memory_stat)
   deallocate(LCOMM, stat = memory_stat)
   deallocate(LGROUP, stat = memory_stat)

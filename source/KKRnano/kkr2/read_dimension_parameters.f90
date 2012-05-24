@@ -9,7 +9,6 @@ LMAXD, &
 NSPIND, &
 NAEZD, &
 IRNSD, &
-TRC, &
 IRMD, &
 NREFD, &
 NRD, &
@@ -21,8 +20,6 @@ NACLSD, &
 NCLSD, &
 IPAND, &
 NXIJD, &
-NATRCD, &
-NUTRCD, &
 KPOIBZ, &
 IGUESSD, &
 BCPD, &
@@ -46,7 +43,7 @@ EKMD)
   integer, intent(out) :: NSPIND
   integer, intent(out) :: NAEZD
   integer, intent(out) :: IRNSD
-  integer, intent(out) :: TRC
+  integer :: TRC ! not used anymore
   integer, intent(out) :: IRMD
   integer, intent(out) :: NREFD
   integer, intent(out) :: NRD
@@ -58,8 +55,8 @@ EKMD)
   integer, intent(out) :: NCLSD
   integer, intent(out) :: IPAND
   integer, intent(out) :: NXIJD
-  integer, intent(out) :: NATRCD
-  integer, intent(out) :: NUTRCD
+  integer :: NATRCD ! not used
+  integer :: NUTRCD ! not used
   integer, intent(out) :: KPOIBZ
   integer, intent(out) :: IGUESSD
   integer, intent(out) :: BCPD

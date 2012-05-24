@@ -1,6 +1,6 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOT,
-     +                  I1,NSPIN,ITER,RFPI,FPI,IPF,
+     +                  I1,NSPIN,ITER,RFPI,FPI,
      +                  MIXING,FCM,IRC,IRMIN,R,DRDI,VONS,VISP,VINS,
 C                       new parameters after inc.p removal
      &                  naez, irmd, irnsd)
@@ -17,7 +17,7 @@ C    +          IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION FCM,FPI,MIXING,RFPI,RMSAVM,RMSAVQ
-      INTEGER IPF,ITER,LMPOT,LPOT,NSPIN
+      INTEGER ITER,LMPOT,LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DRDI(IRMD,NAEZ),R(IRMD,NAEZ),
@@ -84,13 +84,13 @@ C
         RMSAVQ = RMSAVQ + RMSERQ
         RMSAVM = RMSAVM + RMSERM
 
-        IF (NSPIN.EQ.2) THEN
-!          WRITE (IPF,FMT=9000) I1,SQRT(RMSERQ),SQRT(RMSERM)
-          WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1-1 ) RMSERQ,RMSERM
-        ELSE
- !         WRITE (IPF,FMT=9020) I1,SQRT(RMSERQ)
-          WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1-1 ) RMSERQ
-        END IF
+C       IF (NSPIN.EQ.2) THEN
+C          WRITE (IPF,FMT=9000) I1,SQRT(RMSERQ),SQRT(RMSERM)
+C         WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1-1 ) RMSERQ,RMSERM
+C       ELSE
+C!         WRITE (IPF,FMT=9020) I1,SQRT(RMSERQ)
+C         WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1-1 ) RMSERQ
+C       END IF
 
         IF (LPOT.GT.0) THEN
 
@@ -118,13 +118,13 @@ C
           RMSAVQ = RMSAVQ + RMSERQ
           RMSAVM = RMSAVM + RMSERM
 
-          IF (NSPIN.EQ.2) THEN
-!            WRITE (IPF,FMT=9010) I1,SQRT(RMSERQ),SQRT(RMSERM)
-            WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1) RMSERQ,RMSERM
-          ELSE
-!            WRITE (IPF,FMT=9030) I1,SQRT(RMSERQ)
-            WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1) RMSERQ
-          END IF
+C         IF (NSPIN.EQ.2) THEN
+C            WRITE (IPF,FMT=9010) I1,SQRT(RMSERQ),SQRT(RMSERM)
+C           WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1) RMSERQ,RMSERM
+C         ELSE
+C            WRITE (IPF,FMT=9030) I1,SQRT(RMSERQ)
+C           WRITE(IPF, REC=(ITER-1)*2*NAEZ + 2*I1) RMSERQ
+C         END IF
 
         END IF
 
