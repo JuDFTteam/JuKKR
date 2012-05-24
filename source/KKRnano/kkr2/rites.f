@@ -1,6 +1,6 @@
       SUBROUTINE RITES(IFILE,I1,NAEZ,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,
      +                 ITITLE,R,DRDI,VISP,A,B,KXC,IRNS,
-     +                 LPOT,VINS,QBOUND,IRC,EFERMI,VBC,ECORE,
+     +                 LPOT,VINS,IRC,EFERMI,VBC,ECORE,
      +                 LCORE,NCORE,
 C                      new after inc.p removal
      &                 irmd, irnsd)
@@ -18,23 +18,10 @@ c-----------------------------------------------------------------------
 
       INTEGER irmd
       INTEGER irnsd
-C     .. Parameters ..
-C     include 'inc.p'
-C     INTEGER LMPOTD
-C     PARAMETER (LMPOTD= (LPOTD+1)**2)
-C     INTEGER IRMIND
-C     PARAMETER (IRMIND=IRMD-IRNSD)
-C     ..
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT,QBOUND
       INTEGER IFILE,KXC,LPOT,NAEZ,NSPIN
-C     ..
-C     .. Array Arguments ..
-C     DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),ECORE(20,2),EFERMI,
-C    +                 R(IRMD,*),RMT(*),RMTNEW(*),RWS(*),VBC(2),
-C    +                 VINS(IRMIND:IRMD,LMPOTD,2),VISP(IRMD,2),Z(*)
-C     INTEGER IRC(*),IRNS(*),ITITLE(20,NAEZD*NSPIND),
-C    +        LCORE(20,*),NCORE(*)
 
       DOUBLE PRECISION A(*)
       DOUBLE PRECISION B(*)
@@ -110,11 +97,11 @@ c
               SUM = SUM + RV*RV*DRDI(IR,I1)
    30       CONTINUE
 
-            IF (SQRT(SUM).GT.QBOUND) THEN
+C           IF (SQRT(SUM).GT.QBOUND) THEN
               LMNR = LMNR + 1
               WRITE (IFILE,FMT=9060) LM
               WRITE (IFILE,FMT=9070) (VINS(IR,LM,IS),IR=IRMIN,NR)
-            END IF
+C           END IF
 
    40     CONTINUE
 c

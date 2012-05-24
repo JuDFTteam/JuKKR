@@ -1573,7 +1573,7 @@ spinloop:     do ISPIN = 1,NSPIN
           MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
 
             call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, &
-                                 NSPIN, VINS, VISP, VONS)
+                                 NSPIN, VINS, VISP, VONS) ! not sure if correct?
 
 ! ----------------------------------------------------- output_potential
             write(66,rec=I1) VINS,VISP,ECORE
@@ -1587,8 +1587,8 @@ spinloop:     do ISPIN = 1,NSPIN
 ! =====================================================================
 ! ====== write RMS convergency data - not parallelized, written by
 ! MYRANK=0   (RMSOUT) =================================================
-
-        call RMSOUT(RMSAVQ,RMSAVM,ITER,E2,EFOLD, &
+! write formatted potential if file VFORM exists
+        call RMSOUT_com(RMSAVQ,RMSAVM,ITER,E2,EFOLD, &
         SCFSTEPS,VBC,QBOUND,NSPIN,NAEZ, &
         KXC,LPOT,A,B,IRC, &
         VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
@@ -1625,7 +1625,6 @@ spinloop:     do ISPIN = 1,NSPIN
 
 ! --> update energy contour
 
-          ! E2 is used twice as a parameter - dangerous!
           call EMESHT(EZ,DEZ,IELAST,E1,E2,E2,TK, &
           NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
 
