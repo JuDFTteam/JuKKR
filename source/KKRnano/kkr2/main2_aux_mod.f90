@@ -361,4 +361,27 @@ module main2_aux_mod
     close (52)
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Print Fermi-Energy information to screen.
+  subroutine printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
+    implicit none
+    double precision :: DENEF
+    double precision :: E2
+    double precision :: E2SHIFT
+    double precision :: EFOLD
+    integer :: NAEZ
+
+    write (6,fmt=9020) EFOLD,E2SHIFT
+
+    ! --> divided by NAEZ because the weight of each atom has been already
+    !     taken into account in 1c
+
+    write (6,fmt=9030) E2,DENEF/DBLE(NAEZ)
+    write(6,'(79(1H+),/)')
+9020 format ('                old', &
+    ' E FERMI ',F12.6,' Delta E_F = ',f12.6)
+9030 format ('                new', &
+    ' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)
+  end subroutine
+
 end module main2_aux_mod

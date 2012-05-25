@@ -827,13 +827,7 @@ spinloop:     do ISPIN = 1,NSPIN
         if (ISHIFT < 2) E2 = E2 - E2SHIFT
 
         if( MYLRANK(LMPIC) == 0 ) then
-          write (6,fmt=9020) EFOLD,E2SHIFT
-
-! --> divided by NAEZ because the weight of each atom has been already
-!     taken into account in 1c
-
-          write (6,fmt=9030) E2,DENEF/DBLE(NAEZ)
-          write(6,'(79(1H+),/)')
+          call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
 ! ----------------------------------------------------------------------
@@ -973,6 +967,7 @@ spinloop:     do ISPIN = 1,NSPIN
             VAV0 = 0.0D0
             VOL0 = 0.0D0
 
+            !TODO: all THETAS passed, only one used
             call MTZERO(LMPOT,I1,NSPIN,VONS,ZAT,R,DRDI,IMT,IRCUT, &
                         IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
                         THETAS,IRWS,VAV0,VOL0, &
@@ -993,7 +988,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
         call allreduceMuffinTinShift_com(LCOMM(LMPIC), VAV0, VBC, VOL0)
 
-        call shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT)
+        call shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT) ! purpose? ISHIFT usually=0
 
         if(MYRANK==0) then
           call printMuffinTinShift(VAV0, VBC, VOL0)
@@ -1006,6 +1001,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -->   shift potential to muffin tin zero and
 !       convolute potential with shape function for next iteration
 
+!+++++++++++++++++ BEGIN ATOM PARALLEL +++++++++++++++++++++++++++++++
         do I1 = 1,NAEZ
 
           if(MYLRANK(LMPIC)== &
@@ -1022,6 +1018,7 @@ spinloop:     do ISPIN = 1,NSPIN
                 VONS(IR,1,ISPIN) = VONS(IR,1,ISPIN) + RFPI*VBC(ISPIN)
               end do
 
+              ! TODO: all THETAS passed - only one used
               call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
                           IMAXSH(LMPOT),ILM,IFUNM(1,ICELL),LMPOT,GSH, &
                           THETAS,ZAT(I1),RFPI, &
@@ -1046,6 +1043,7 @@ spinloop:     do ISPIN = 1,NSPIN
             I1BRYD=I1
           end if
         end do
+!+++++++++++++++++ END ATOM PARALLEL +++++++++++++++++++++++++++++++
 
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
@@ -1063,6 +1061,8 @@ spinloop:     do ISPIN = 1,NSPIN
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+!--------- BEGIN Atom-parallel ----------------------------------------
         do I1 = 1,NAEZ
           if(MYLRANK(LMPIC)== &
           MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
@@ -1075,6 +1075,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ----------------------------------------------------- output_potential
           end if
         end do
+! -------- END Atom-parallel ------------------------------------------
 
         close(72)
 ! =====================================================================
@@ -1091,11 +1092,6 @@ spinloop:     do ISPIN = 1,NSPIN
         LMPIC,MYLRANK, &
         LCOMM,LSIZE, &
         irmd, irnsd, lmpid*smpid*empid)
-
-9020    format ('                old', &
-        ' E FERMI ',F12.6,' Delta E_F = ',f12.6)
-9030    format ('                new', &
-        ' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
