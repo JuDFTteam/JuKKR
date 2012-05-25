@@ -94,7 +94,7 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung EnergyMesh SingleSiteRef
+DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung EnergyMesh SingleSiteRef SingleSite
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)

@@ -30,6 +30,8 @@ program MAIN2
   !     .. Local Scalars ..
 
   double complex:: JSCAL        ! scaling factor for Jij calculation
+  double complex:: Delta_E_z
+
   double precision::DENEF
   double precision::E1
   double precision::E2
@@ -95,8 +97,6 @@ program MAIN2
   integer::LM
   integer::NR
   integer::EKM
-  logical::TEST
-  logical::LCORDENS
   logical::XCCPL
   logical::JIJ
   logical::STOPIT
@@ -177,7 +177,6 @@ program MAIN2
   external     MAPBLOCK
 
  !============================================================= CONSTANTS
-  LCORDENS=.true.
   PI = 4.0D0*ATAN(1.0D0)
   FPI = 4.0D0*PI
   RFPI = SQRT(FPI)
@@ -185,13 +184,14 @@ program MAIN2
 
   call read_dimension_parameters()
 
+  ! consistency check of some dimension parameters
+  call consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
+
   ! from dimension parameters - calculate some derived parameters
   call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, LMAXD, &
                             LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, LRECPOT, &
                             LRECRES2, MMAXD, NAEZD, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
 
-  ! consistency check of some dimension parameters
-  call consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
 
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
@@ -246,7 +246,7 @@ program MAIN2
 ! ... and wait after SC-ITER loop
 !=====================================================================
 
-
+  ! This if closes several hundreds of lines later!
   if (LMPIC/=0.or.LSMPIC/=0) then   !     ACTVGROUP could also test EMPIC
 
     MYBCRANK = 0
@@ -300,14 +300,9 @@ program MAIN2
 
       CHRGNT = 0.0D0
 
-      LRECRES1 = 8*43 + 16*(LMAXD+2)
-      if (NPOL==0 .or. TEST('DOS     ')) then
-        LRECRES1 = LRECRES1 + 32*(LMAXD+2)*IEMXD
-      end if
-
       ! needed for results.f - find better solution - unnecessary I/O
-      open (71,access='direct',recl=LRECRES1,file='results1', &
-      form='unformatted')
+      call openResults1File(IEMXD, LMAXD, NPOL)
+
       open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
       form='unformatted')
 
@@ -408,6 +403,10 @@ program MAIN2
                         naez, lmax, naclsd, ncleb, nrefd, iemxd, nclsd, &
                         LLY, LMPID*SMPID*EMPID)
 
+! SPIN ==================================================================
+!     BEGIN do loop over spins
+! SPIN===================================================================
+
 spinloop:     do ISPIN = 1,NSPIN
 
                 call CALCTMAT(LDAU,NLDAU,ICST, &
@@ -420,8 +419,11 @@ spinloop:     do ISPIN = 1,NSPIN
                               nspind, ncleb, ipand, irmd, irnsd)
 
                 if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
+
+                  call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
+
                   call CALCDTMAT(LDAU,NLDAU,ICST, &
-                                NSRA,EZ(IE),IE,NPNT1,NPNT2,NPNT3,PI,TK, &
+                                NSRA,EZ(IE),delta_E_z, &
                                 DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                 VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                                 IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
@@ -459,11 +461,6 @@ spinloop:     do ISPIN = 1,NSPIN
                 ! TMATN now contains Delta t = t - t_ref !!!
                 ! DTDE now contains Delta dt !!!
 
-
-! SPIN ==================================================================
-!     BEGIN do loop over spins
-! SPIN===================================================================
-
                 ! renormalize TR_ALPH
                 TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(IE,CLS(I1))
                 LLY_GRDT(IE,ISPIN) = CZERO ! initialize LLY_GRDT, shouldn't be necessary
@@ -485,9 +482,7 @@ spinloop:     do ISPIN = 1,NSPIN
                   NMESH = KMESH(IE)
 
                   if( MYLRANK(LMPIC)==0 ) then
-                    write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)')  &
-                    ' ** IE = ',IE,' ENERGY =',EZ(IE), &
-                    ' KMESH = ', NMESH,' ISPIN = ',ISPIN
+                    call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
                   end if
 
 ! <<>>
@@ -775,12 +770,10 @@ spinloop:     do ISPIN = 1,NSPIN
 
             CHRGNT = CHRGNT + CATOM(1) - ZAT(I1)
 
-            ! write to 'results1' - only to be read in in results.f - very unnecessary
-            if (NPOL==0 .or. TEST('DOS     ')) then
-              write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
-            else
-              write(71,rec=I1) QC,CATOM,CHARGE,ECORE
-            end if
+            ! write to 'results1' - only to be read in in results.f
+            ! necessary for density of states calculation, otherwise
+            ! only for informative reasons
+            call writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, QC)
 
           endif
 !----------------------------------------------------------------------
@@ -794,9 +787,10 @@ spinloop:     do ISPIN = 1,NSPIN
 !N ====================================================================
 
       close(66)
-      close(71)
+      call closeResults1File()
 
       call OUTTIME(MYLRANK(1),'density calculated ..',TIME_I,ITER)
+
 
 !----------------------------------------------------------------------
 ! BEGIN L-MPI: only processes with LMPIC = 1 are working
@@ -836,14 +830,14 @@ spinloop:     do ISPIN = 1,NSPIN
 
         open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
         form='unformatted')
-        open (72,access='direct',recl=LRECRES2,file='results2', &
-        form='unformatted')
+        call openResults2File(LRECRES2)
 
 ! =====================================================================
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
         do I1 = 1,NAEZ
           if(MYLRANK(LMPIC) == MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+
             ICELL = NTCELL(I1)
 
             do ISPIN = 1,NSPIN
@@ -852,14 +846,12 @@ spinloop:     do ISPIN = 1,NSPIN
 
               ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
               EFOLD*CHRGNT/DBLE(NSPIN*NAEZ)
-              if (LCORDENS) then
 
-                do LM = 1,LMPOT
-                  call DAXPY(IRC(I1),DF,R2NEF(1,LM,ISPIN),1, &
-                  RHO2NS(1,LM,ISPIN),1)
-                end do
+              do LM = 1,LMPOT
+                call DAXPY(IRC(I1),DF,R2NEF(1,LM,ISPIN),1, &
+                RHO2NS(1,LM,ISPIN),1)
+              end do
 
-              end if
 ! ----------------------------------------------------------------------
             end do
 
@@ -958,8 +950,8 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ---------------------------------------------------------------------
             end if
 
-            write(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
-            EULDAU,EDCLDAU
+            ! unnecessary I/O? see results.f
+            call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
 
 ! Force calculation ends
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -1077,7 +1069,8 @@ spinloop:     do ISPIN = 1,NSPIN
         end do
 ! -------- END Atom-parallel ------------------------------------------
 
-        close(72)
+        call closeResults2File()
+
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
 ! =====================================================================
@@ -1099,7 +1092,7 @@ spinloop:     do ISPIN = 1,NSPIN
         call MPI_BARRIER(LCOMM(LMPIC),IERR)
 
 ! -----------------------------------------------------------------
-! L-MPI: only process with MYLRANK(LMPIC = 1) = 0 is working here
+! BEGIN: only process with MYLRANK(LMPIC = 1) = 0 is working here
 ! -----------------------------------------------------------------
         if(MYLRANK(LMPIC)==0) then
 
@@ -1122,15 +1115,15 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ..
         endif
 ! -----------------------------------------------------------------
-! L-MPI: only process with MYLRANK(LMPIC = 1) = 0 is working here
+! END: only process with MYLRANK(LMPIC = 1) = 0 is working here
 ! -----------------------------------------------------------------
 
 ! ..
       endif
 ! -----------------------------------------------------------------
-! L-MPI: only processes with LMPIC = 1 are working here
+! END: L-MPI: only processes with LMPIC = 1 are working here
 ! -----------------------------------------------------------------
-      close(66)  ! close 'vpotnew'
+      close(66)  ! close 'vpotnew'  ! this may be misplaced - could belong into previous if clause
 ! -----------------------------------------------------------------
 
       ! why? all processes except 1 have MYBCRANK = 0, this allreduce
@@ -1142,25 +1135,15 @@ spinloop:     do ISPIN = 1,NSPIN
       call broadcastEnergyMesh_com(ACTVCOMM, BCRANK, E1, E2, EZ, IEMXD, WEZ)
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
-      ACTVCOMM,IERR)
+      ACTVCOMM,IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
       if(MYLRANK(1)==0) then
 
         ! write file 'energy_mesh'
         call writeEnergyMesh(E1, E2, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
 
-        write(6,'(79(1H=))')
-        write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', &
-        ITER,' SUM of QMR ',NOITER_ALL
-        write(6,'(79(1H=),/)')
-        call OUTTIME(MYLRANK(1),'end .................', &
-        TIME_I,ITER)
-        write(6,'(79(1H=))')
-        write(2,'(79(1H=))')
-        call OUTTIME(MYLRANK(1),'finished in .........', &
-        TIME_S,ITER)
-        write(2,'(79(1H=))')
-        write(6,'(79(1H=),/)')
+        call printSolverIterationNumber(ITER, NOITER_ALL)
+        call writeIterationTimings(ITER, TIME_I, TIME_S)
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory

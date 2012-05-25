@@ -218,7 +218,6 @@ module main2_arrays_mod
   integer::   LMPOTD
   integer::   IRMIND
   integer::   LRECPOT
-  integer::   LRECRES1
   integer::   LRECRES2
   integer::   NTIRD    ! for Broyden mixing
 

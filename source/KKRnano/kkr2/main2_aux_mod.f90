@@ -362,6 +362,20 @@ module main2_aux_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Print info about Energy-Point currently treated.
+  !>
+  subroutine printEnergyPoint(EZ_point, IE, ISPIN, NMESH)
+    implicit none
+    double complex :: EZ_point
+    integer :: IE
+    integer :: ISPIN
+    integer :: NMESH
+    write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)')  &
+    ' ** IE = ',IE,' ENERGY =',EZ_point, &
+    ' KMESH = ', NMESH,' ISPIN = ',ISPIN
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Print Fermi-Energy information to screen.
   subroutine printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
     implicit none
@@ -382,6 +396,121 @@ module main2_aux_mod
     ' E FERMI ',F12.6,' Delta E_F = ',f12.6)
 9030 format ('                new', &
     ' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Print total number of Iterative solver iterations
+  subroutine printSolverIterationNumber(ITER, NOITER_ALL)
+    implicit none
+    integer :: ITER
+    integer :: NOITER_ALL
+
+    write(6,'(79(1H=))')
+    write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', &
+    ITER,' SUM of QMR ',NOITER_ALL
+    write(6,'(79(1H=),/)')
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Print timing information for SCF iteration
+  subroutine writeIterationTimings(ITER, TIME_I, TIME_S)
+    implicit none
+    integer :: ITER
+    real :: TIME_I
+    real :: TIME_S
+
+    call OUTTIME(0 ,'end .................', &
+    TIME_I,ITER)
+    write(6,'(79(1H=))')
+    write(2,'(79(1H=))')
+    call OUTTIME(0 ,'finished in .........', &
+    TIME_S,ITER)
+    write(2,'(79(1H=))')
+    write(6,'(79(1H=),/)')
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Open Results2 File
+  subroutine openResults2File(LRECRES2)
+    implicit none
+    integer :: LRECRES2
+    open (72,access='direct',recl=LRECRES2,file='results2', &
+    form='unformatted')
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write calculated stuff into historical 'results2' file
+  subroutine writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+    implicit none
+    double precision :: CATOM(:)
+    double precision :: ECOU(:)
+    double precision :: EDCLDAU
+    double precision :: EPOTIN
+    double precision :: ESPC(:,:)
+    double precision :: ESPV(:,:)
+    double precision :: EULDAU
+    double precision :: EXC(:)
+    integer :: I1
+    integer :: LCOREMAX
+    double precision :: VMAD
+
+    write(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
+                     EULDAU,EDCLDAU
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Close the file 'results2'
+  subroutine closeResults2File()
+    implicit none
+    close(72)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Open the file 'results1'
+  subroutine openResults1File(IEMXD, LMAXD, NPOL)
+    implicit none
+    integer :: IEMXD
+    integer :: LMAXD
+    integer :: NPOL
+    logical :: TEST
+
+    integer :: LRECRES1
+
+    LRECRES1 = 8*43 + 16*(LMAXD+2)
+    if (NPOL==0 .or. TEST('DOS     ')) then
+      LRECRES1 = LRECRES1 + 32*(LMAXD+2)*IEMXD
+    end if
+
+    open (71,access='direct',recl=LRECRES1,file='results1', &
+    form='unformatted')
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write some stuff to the 'results1' file
+  subroutine writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, QC)
+    implicit none
+    double precision :: CATOM(:)
+    double precision :: CHARGE(:,:)
+    double complex :: DEN(:,:,:)
+    double precision :: ECORE(20,2)
+    integer :: I1
+    integer :: NPOL
+    double precision :: QC
+
+    logical :: TEST
+
+    if (NPOL==0 .or. TEST('DOS     ')) then
+      write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
+    else
+      write(71,rec=I1) QC,CATOM,CHARGE,ECORE
+    end if
+  end subroutine
+
+  !---------------------------------------------------------------------------
+  !> Closes the file 'results1'
+  subroutine closeResults1File()
+    implicit none
+    close(71)
   end subroutine
 
 end module main2_aux_mod
