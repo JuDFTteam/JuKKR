@@ -461,7 +461,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
 
 ! SPIN ==================================================================
-!     BEGIN do loop over spins (SMPID-parallel)
+!     BEGIN do loop over spins
 ! SPIN===================================================================
 
                 ! renormalize TR_ALPH
@@ -476,7 +476,9 @@ spinloop:     do ISPIN = 1,NSPIN
                   PRSPIN   = 1
                 endif
 
-!         true beginning of SMPID-parallel section
+!------------------------------------------------------------------------------
+!         beginning of SMPID-parallel section
+!------------------------------------------------------------------------------
 
                 if(SRANK(SMPIB,SMPIC)==MAPSPIN) then
 
@@ -512,11 +514,14 @@ spinloop:     do ISPIN = 1,NSPIN
                   nxijd, nguessd, kpoibz, nrd, ekmd)
 
                 endif
+!------------------------------------------------------------------------------
+!        End of SMPID-parallel section
+!------------------------------------------------------------------------------
 
               end do spinloop                          ! ISPIN = 1,NSPIN
 
 ! SPIN ==================================================================
-!     END do loop over spins (SMPID-parallel)
+!     END do loop over spins
 ! SPIN===================================================================
 
 ! =====================================================================
@@ -583,7 +588,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! TIME
 
 !=======================================================================
-!     output of Jij's .. calling xccpljij with flag 'F'
+!     output of Jij's
 !=======================================================================
           if (XCCPL) then
 

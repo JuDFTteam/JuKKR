@@ -94,7 +94,7 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung EnergyMesh
+DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung EnergyMesh SingleSiteRef
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -147,6 +147,9 @@ lloyds_formula_mod.o: kkr_helpers_mod.o
 lattice3d.o: common_mpi.o
 test.o: common_testc.o
 opt.o: common_optc.o
+
+tbref.o: SingleSiteRef_mod.o
+SingleSiteRef_mod.o: kkr_helpers_mod.o
 
 
 

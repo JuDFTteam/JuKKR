@@ -1,3 +1,7 @@
+module SingleSiteRef_mod
+
+CONTAINS
+
 !**********************************************************************
 !> @param E complex energy
 !> @param CLEB array of Gaunt coefficients
@@ -76,68 +80,37 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
                             (LMAXD+1)**2)
 
 
-  double precision :: CLEB(*)
+  double precision :: CLEB(ncleb)
   integer :: ICLEB(NCLEB,3)
-  integer :: LOFLM(*)
+  integer :: LOFLM(:)
   integer :: IEND
 
-  double precision :: RATOM(3,*)
+  double precision :: RATOM(3,*)  ! first dim: 3
   integer :: ATOM(*)
-  integer :: REFPOT(*)
+  integer :: REFPOT(:)
   !     ..
   !     .. Local Scalars ..
-  integer :: ind
-  integer :: LM1
-  integer :: LM2
   integer :: N1
   integer :: N2
   integer :: NDIM
-  integer :: site_lm_index1
   integer :: site_lm_index2
-  !     ..
-  !     .. Local Arrays ..
-  !     DOUBLE COMPLEX DGLLDE(LMGF0D,LMGF0D)
-  !     DOUBLE COMPLEX GLL(LMGF0D,LMGF0D),GREF(NGD,NGD),GTREF(NGD,LMGF0D)
-
-  double complex :: DGLLDE((LMAXD+1)**2,(LMAXD+1)**2)
-  double complex :: GLL((LMAXD+1)**2,(LMAXD+1)**2)
 
 ! ---------------------------------------------------------------------
 !     The following arrays can be very large (> 60 MB in typical cases)
 !     therefore they are allocated on the heap
 ! ---------------------------------------------------------------------
 
-  !     DOUBLE COMPLEX GREF (NACLSD*(LMAXD+1)**2,NACLSD*(LMAXD+1)**2)
-  !     DOUBLE COMPLEX GTREF(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
-
   double complex, allocatable, dimension(:,:) :: GREF
   double complex, allocatable, dimension(:,:) :: GTREF
 
-  !     DOUBLE COMPLEX DGTDE(LLYNGD,LMGF0D)
-  !     DOUBLE COMPLEX DGTDE(LLY*(NACLSD*(LMAXD+1)**2-1)+1,(LMAXD+1)**2)
   double complex, allocatable, dimension(:,:) ::  DGTDE
-
-  !     DOUBLE COMPLEX DGTDE0(LLYNGD,LLYNGD)
-  !     DOUBLE COMPLEX DGTDE0(LLY*(NACLSD*(LMAXD+1)**2-1)+1,
-  !    &                      LLY*(NACLSD*(LMAXD+1)**2-1)+1)
-
   double complex, allocatable, dimension(:,:) :: DGTDE0
-
-  !     DOUBLE COMPLEX DGDE(LLYNGD,LLYNGD)
-  !     DOUBLE COMPLEX DGDE(LLY*(NACLSD*(LMAXD+1)**2-1)+1,
-  !    &                    LLY*(NACLSD*(LMAXD+1)**2-1)+1)
-
   double complex, allocatable, dimension(:,:) :: DGDE
 
-
-  double precision :: RDIFF(3)
   !     ..
   !     .. External Subroutines ..
   external GFREE,GREFSY,ZCOPY,ZGEMM
 
-  !     .. External Functions ..
-  logical :: TEST
-  external TEST
   !     ..
   !     .. Intrinsic Functions ..
   intrinsic ABS,DBLE
@@ -148,13 +121,11 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
   integer :: LMGF0D
   integer :: NGD
-  integer :: LLYNGD
   integer :: LMMAXD
 
   LMMAXD = (LMAXD+1)**2
   LMGF0D = LMMAXD
-  NGD = LMGF0D*NACLSD
-  LLYNGD = LLY*(LMGF0D*NACLSD-1) + 1
+  NGD = LMMAXD*NACLSD
 
   !     Allocate arrays
   memory_stat = 0
@@ -163,17 +134,19 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   allocate(GREF(NGD,NGD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
-  allocate(GTREF(NGD,LMGF0D), stat = memory_stat)
+  allocate(GTREF(NGD,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
-  allocate(DGTDE(LLYNGD,LMGF0D), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
+  if (LLY == 1) then
+    allocate(DGTDE(NGD,LMMAXD), stat = memory_stat)
+    if (memory_stat /= 0) memory_fail = .true.
 
-  allocate(DGTDE0(LLYNGD,LLYNGD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
+    allocate(DGTDE0(NGD,NGD), stat = memory_stat)
+    if (memory_stat /= 0) memory_fail = .true.
 
-  allocate(DGDE(LLYNGD,LLYNGD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
+    allocate(DGDE(NGD,NGD), stat = memory_stat)
+    if (memory_stat /= 0) memory_fail = .true.
+  end if
 
   if (memory_fail .eqv. .true.) then
     write(*,*) "GLL95: FATAL Error, failure to allocate memory."
@@ -181,134 +154,56 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
     stop
   end if
 
-  if (TEST('flow    ')) write (6,fmt=*) '>>> GLL95'
+  NDIM = LMMAXD*NATOM     ! Warning: NDIM can be smaller than NGD=LMMAXD*NACLSD
+  call calcFreeGreens(GREF, E, LMMAXD, NATOM, RATOM, ALAT, CLEB, ICLEB, ncleb, IEND, LOFLM, .false.)
 
-  NDIM = LMGF0D*NATOM     ! Warning: NDIM can be smaller than NGD=LMMAXD*NACLSD
-
-  !
-  ! ---> construct free Green's function
-  ! The free space structural Green's function g0 is a matrix of dimension LMMAXD x LMMAXD
-  ! (for a certain pair of reference cluster atoms N and N')
-  ! It is calculated in routine GFREE and stored in GLL
-  !
-  ! Then the matrix GREF^{NN'}_{LL'} is constructed
-  ! The blocks N /= N' contain g0,
-  ! the other N=N' blocks are set to zero (Green's function is not defined for r=r')
-  ! (E.R.)
-  do N1 = 1,NATOM
-    do N2 = 1,NATOM
-      do ind = 1,3
-        !            RDIFF(I) = (RATOM(I,N1) - RATOM(I,N2))*ALAT
-        !           changed P.Z. 4.7.97
-        RDIFF(ind) = - (RATOM(ind,N1)-RATOM(ind,N2))*ALAT
-      end do
-
-      if (N1/=N2) then
-
-        call GFREE(RDIFF,E,GLL,CLEB,ICLEB,LOFLM,IEND, lmaxd, ncleb)
-
-        do LM2 = 1,LMGF0D
-          site_lm_index2 = (N2-1)*LMGF0D + LM2
-          do LM1 = 1,LMGF0D
-            site_lm_index1 = (N1-1)*LMGF0D + LM1
-            GREF(site_lm_index1,site_lm_index2) = GLL(LM1,LM2)
-          end do
-        end do
-      else
-        do LM2 = 1,LMGF0D
-          site_lm_index2 = (N2-1)*LMGF0D + LM2
-          do LM1 = 1,LMGF0D
-            site_lm_index1 = (N1-1)*LMGF0D + LM1
-            GREF(site_lm_index1,site_lm_index2) = CZERO
-          end do
-        end do
-
-      end if  ! (N1 /= N2)
-    end do
-   end do
-
-   if (TEST('flow    ')) write (6,fmt=*) 'GFREE o.k.'
-   ! ----------------------------------------------------------------------
-
-   if (LLY==1) then
-     !
-     ! ---> construct derivative of free Green's function
-     !
-     do N1 = 1,NATOM
-       do N2 = 1,NATOM
-         do ind = 1,3
-           RDIFF(ind) = - (RATOM(ind,N1)-RATOM(ind,N2))*ALAT
-         end do
-
-         if (N1/=N2) then
-
-           call DGFREE(RDIFF,E,DGLLDE,CLEB,ICLEB,LOFLM,IEND,lmaxd, ncleb)
-
-           do LM2 = 1,LMGF0D
-             site_lm_index2 = (N2-1)*LMGF0D + LM2
-             do LM1 = 1,LMGF0D
-               site_lm_index1 = (N1-1)*LMGF0D + LM1
-               DGDE(site_lm_index1,site_lm_index2) = DGLLDE(LM1,LM2)
-             end do
-           end do
-         else
-           do LM2 = 1,LMGF0D
-             site_lm_index2 = (N2-1)*LMGF0D + LM2
-             do LM1 = 1,LMGF0D
-               site_lm_index1 = (N1-1)*LMGF0D + LM1
-               DGDE(site_lm_index1,site_lm_index2) = CZERO
-             end do
-           end do
-
-         end if  ! (N1 /= N2)
-
-       end do
-     end do
-
-   endif ! (LLY == 1)
+  if (LLY==1) then
+    call calcFreeGreens(DGDE, E, LMMAXD, NATOM, RATOM, ALAT, CLEB, ICLEB, ncleb, IEND, LOFLM, .true.)
+  endif
 
 ! construct right hand side of linear equation system for GREFSY
-! the first LMGF0D=LMMAXD columns of GREF are copied into GREF0
+! the first LMMAXD columns of GREF are copied into GREF0
 ! GREF0 then contains g0^{(1)N'}_{LL'}, the free space structural
 ! Green's function for the central cluster atom (E.R.)
 ! --------------------------------------------------------------
-   call ZCOPY(NGD*LMGF0D,GREF,1,GREF0,1)
+   call ZCOPY(NGD*LMMAXD,GREF,1,GREF0,1)
 ! --------------------------------------------------------------
 
    if (LLY==1) then
 
      do N2 = 1,NATOM
-       site_lm_index2 = (N2-1)*LMGF0D + 1
+       site_lm_index2 = (N2-1)*LMMAXD + 1
 
        ! -dG_0/dE * \Delta t_ref    -- stored in GTREF
-       call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,DGDE(1,site_lm_index2),NGD, &
-                  TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
+       call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE,DGDE(1,site_lm_index2),NGD, &
+                  TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMMAXD, &
                   CZERO,GTREF,NGD)
 
        !   - G_0 * d(\Delta t_ref)/dE + GTREF  -- stored again in GTREF
        ! = -dG_0/dE * \Delta t_ref - G_0 * d(\Delta t_ref)/dE
 
-       call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,site_lm_index2),NGD, &
-                  DTREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
+       call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE,GREF(1,site_lm_index2),NGD, &
+                  DTREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMMAXD, &
                   CONE,GTREF,NGD)
 
-       call ZCOPY(NGD*LMGF0D,GTREF,1,DGTDE0(1,site_lm_index2),1)
+       ! copy GTREF to DGTDE0 - GTREF is reused
+       call ZCOPY(NGD*LMMAXD,GTREF,1,DGTDE0(1,site_lm_index2),1)
      end do
    end if  ! (LLY==1)
 
    do N2 = 1,NATOM
-     site_lm_index2 = (N2-1)*LMGF0D + 1
+     site_lm_index2 = (N2-1)*LMMAXD + 1
 
      ! -G_ref * \Delta t_ref  -- stored in GTREF
-     call ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,site_lm_index2),NGD, &
-     TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMGF0D, &
+     call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE,GREF(1,site_lm_index2),NGD, &
+     TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMMAXD, &
      CZERO,GTREF,NGD)
 
-     call ZCOPY(NGD*LMGF0D,GTREF,1,GREF(1,site_lm_index2),1)
+     call ZCOPY(NGD*LMMAXD,GTREF,1,GREF(1,site_lm_index2),1)
    end do
 
    if (LLY==1) then
-     do N2 = 1,LMGF0D
+     do N2 = 1,LMMAXD
        do N1 = 1,NGD
          DGTDE(N1,N2) = DGTDE0(N1,N2)
        enddo
@@ -325,12 +220,12 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
    if (LLY==1) then
 
-     call ZGEMM('N','N',NDIM,LMGF0D,NDIM,-CONE,DGTDE0,NGD, &
+     call ZGEMM('N','N',NDIM,LMMAXD,NDIM,-CONE,DGTDE0,NGD, &
                 GREF0,NGD,CONE,DGDE,NGD)
 
-     call ZGETRS('N',NDIM,LMGF0D,GREF,NGD,IPVT,DGDE,NGD,INFO)
+     call ZGETRS('N',NDIM,LMMAXD,GREF,NGD,IPVT,DGDE,NGD,INFO)
 
-     do N2 = 1,LMGF0D
+     do N2 = 1,LMMAXD
        do N1 = 1,NGD
          DGDEOUT(N1,N2) = DGDE(N1,N2)
        enddo
@@ -342,11 +237,97 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
    deallocate(GREF)
    deallocate(GTREF)
-   deallocate(DGTDE)
-   deallocate(DGTDE0)
-   deallocate(DGDE)
 
-   if (TEST('flow    ')) write (6,fmt=*) 'GREFSY o.k.'
+   if (LLY == 1) then
+     deallocate(DGTDE)
+     deallocate(DGTDE0)
+     deallocate(DGDE)
+   end if
 
  end subroutine GLL95
 
+ !> Calculates the Free-Space Green-Function or the Derivative of the Free-Space Green-Function
+ !> @param[out] greenFree   the free space Green-Function
+ !> @param      NATOM       number of atoms in reference cluster
+ !> @param[in]  derivative  .false. = calculate Free-Space-Greens Function
+ !>                         .true.  = calculate Derivative of Free-Space-Greens Function
+ subroutine calcFreeGreens(greenFree, energy, lmmaxd, NATOM, RATOM, ALAT, CLEB, ICLEB, ncleb, IEND, LOFLM, derivative)
+   use kkr_helpers_mod
+   implicit none
+   integer, intent(in) :: ncleb
+   double precision :: ALAT
+   double precision :: CLEB(:)
+   double complex :: energy
+   double complex :: greenFree(:,:)
+   integer :: ICLEB(NCLEB,3)
+   integer :: lmmaxd
+   integer :: LOFLM(:)
+   integer :: NATOM
+   double precision :: RATOM(3,*)
+   logical, intent(in) :: derivative
+
+   ! local
+   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+   double precision :: RDIFF(3)
+   integer :: ind
+   integer :: LM1
+   integer :: LM2
+   integer :: IEND
+   double complex :: GLL(lmmaxd,lmmaxd) ! automatic array
+   integer :: N1
+   integer :: N2
+   integer :: site_lm_index1
+   integer :: site_lm_index2
+   integer :: lmaxd
+
+   lmaxd = lmmaxToLmax(lmmaxd)
+
+   !
+   ! ---> construct free Green's function
+   ! The free space structural Green's function g0 is a matrix of dimension LMMAXD x LMMAXD
+   ! (for a certain pair of reference cluster atoms N and N')
+   ! It is calculated in routine GFREE and stored in GLL
+   !
+   ! Then the matrix GREF^{NN'}_{LL'} is constructed
+   ! The blocks N /= N' contain g0,
+   ! the other N=N' blocks are set to zero (Green's function is not defined for r=r')
+   ! (E.R.)
+   do N1 = 1,NATOM
+     do N2 = 1,NATOM
+       do ind = 1,3
+         !            RDIFF(I) = (RATOM(I,N1) - RATOM(I,N2))*ALAT
+         !           changed P.Z. 4.7.97
+         RDIFF(ind) = - (RATOM(ind,N1)-RATOM(ind,N2))*ALAT
+       end do
+
+       if (N1/=N2) then
+
+         if (derivative) then
+           call DGFREE(RDIFF,Energy,GLL,CLEB,ICLEB,LOFLM,IEND, lmaxd, ncleb)
+         else
+           call GFREE(RDIFF,Energy,GLL,CLEB,ICLEB,LOFLM,IEND, lmaxd, ncleb)
+         end if
+
+         do LM2 = 1,lmmaxd
+           site_lm_index2 = (N2-1)*lmmaxd + LM2
+           do LM1 = 1,lmmaxd
+             site_lm_index1 = (N1-1)*lmmaxd + LM1
+             greenFree(site_lm_index1,site_lm_index2) = GLL(LM1,LM2)
+           end do
+         end do
+       else
+         do LM2 = 1,lmmaxd
+           site_lm_index2 = (N2-1)*lmmaxd + LM2
+           do LM1 = 1,lmmaxd
+             site_lm_index1 = (N1-1)*lmmaxd + LM1
+             greenFree(site_lm_index1,site_lm_index2) = CZERO
+           end do
+         end do
+
+       end if  ! (N1 /= N2)
+     end do
+    end do
+ end subroutine
+
+
+ end module

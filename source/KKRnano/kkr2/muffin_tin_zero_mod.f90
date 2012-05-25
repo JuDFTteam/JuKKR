@@ -4,6 +4,8 @@ module muffin_tin_zero_mod
   contains
 
   !----------------------------------------------------------------------------
+  !> Communicate contributions to the muffin-tin-zero (potential)
+  !> of each process in 'communicator'
   subroutine allreduceMuffinTinShift_com(communicator, VAV0, VBC, VOL0)
     implicit none
 
@@ -35,6 +37,7 @@ module muffin_tin_zero_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Shift muffin tin zero by E2SHIFT if ISHIFT>0
   subroutine shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT)
     implicit none
 
@@ -47,6 +50,7 @@ module muffin_tin_zero_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Print muffin-tin zero information on screen.
   subroutine printMuffinTinShift(VAV0, VBC, VOL0)
     implicit none
     double precision :: VAV0
