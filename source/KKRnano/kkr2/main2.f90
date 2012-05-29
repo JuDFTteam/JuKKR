@@ -86,8 +86,6 @@ program MAIN2
   integer::NAEZ
   integer::IEND
   integer::NCLEBD
-  integer::LM1
-  integer::LM2
   integer::IEND1
   integer::IPOT
   integer::ISPIN
@@ -188,7 +186,7 @@ program MAIN2
 
   ! from dimension parameters - calculate some derived parameters
   call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, LMAXD, &
-                            LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, LRECPOT, &
+                            LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, &
                             LRECRES2, MMAXD, NAEZD, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
 
 
@@ -226,6 +224,11 @@ program MAIN2
                           NPNT1, NPNT2, NPNT3, NPOL, NR, NRD, NSPIN, NSPIND)
 
   call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
+
+  if (JIJ .eqv. .true. .and. SMPID /= 1) then
+    write(*,*) "ERROR: Jij calculation is broken for spin-parallel calc. Set SMPID=1"
+    stop
+  end if
 
 ! ------------------------------------------------------------------
 
@@ -300,10 +303,10 @@ program MAIN2
       CHRGNT = 0.0D0
 
       ! needed for results.f - find better solution - unnecessary I/O
+      ! actually only LMPIC==1 process needed to open these files!!!
       call openResults1File(IEMXD, LMAXD, NPOL)
 
-      open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
-      form='unformatted')
+      call openPotentialFile(LMPOTD, IRNSD, IRMD)
 
 
 !N ====================================================================
@@ -334,12 +337,9 @@ program MAIN2
 
           endif
 
-! xccpl
-!=======================================================================
-
           ! This read is probably NOT NECESSARY (except for 1st iteration) !!!
           ! TURNS out it is necessary - otherwise wrong results - why?
-          read(66,rec=I1) VINS,VISP,ECORE  ! Read potential from file!!!
+          call readPotential(I1, VISP, VINS, ECORE)
 
 ! LDA+U
           if (LDAU) then
@@ -425,9 +425,9 @@ spinloop:     do ISPIN = 1,NSPIN
                                 DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                 VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                                 IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
+                                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX, &
                                 LLDAU,WMLDAU(1,1,1,ISPIN), &
-                                nspind, ncleb, ipand, irmd, irnsd)
+                                ncleb, ipand, irmd, irnsd)
 
                   if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
 
@@ -438,36 +438,21 @@ spinloop:     do ISPIN = 1,NSPIN
                                   DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                   VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                                   IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
+                                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX, &
                                   LLDAU,WMLDAU(1,1,1,ISPIN), &
-                                  nspind, ncleb, ipand, irmd, irnsd)
+                                  ncleb, ipand, irmd, irnsd)
                   end if
 
                   ! calculate DTIXIJ = T_down - T_up
                   if (XCCPL) then
-                    if (ISPIN==1) then
-                      do LM1 = 1,LMMAXD
-                        do LM2 = 1,LMMAXD
-                          DTIXIJ(LM1,LM2) = TMATN(LM1,LM2,ISPIN)
-                        enddo
-                      enddo
-                    else
-                      do LM1 = 1,LMMAXD
-                        do LM2 = 1,LMMAXD
-                          DTIXIJ(LM1,LM2) = DTIXIJ(LM1,LM2)-TMATN(LM1,LM2,ISPIN)
-                        enddo
-                      enddo
-                    endif
+                    call calcDeltaTupTdown(DTIXIJ, ISPIN, LMMAXD, TMATN)
                   endif
 
 
                   RF = REFPOT(I1)
-                  do LM1 = 1,LMMAXD
-                    TMATN(LM1,LM1,ISPIN) =  TMATN(LM1,LM1,ISPIN) &
-                    - TREFLL(LM1,LM1,RF)
-                    DTDE(LM1,LM1,ISPIN) =  DTDE(LM1,LM1,ISPIN) &
-                    - DTREFLL(LM1,LM1,RF)
-                  end do
+                  call substractReferenceTmatrix(TMATN(:,:,ISPIN), TREFLL(:,:,RF), LMMAXD)
+                  ! do the same for derivative of T-matrix
+                  call substractReferenceTmatrix(DTDE(:,:,ISPIN), DTREFLL(:,:,RF), LMMAXD)
 
                   ! TMATN now contains Delta t = t - t_ref !!!
                   ! DTDE now contains Delta dt !!!
@@ -775,12 +760,11 @@ spinloop:     do ISPIN = 1,NSPIN
 !----------------------------------------------------------------------
         end if
       end do
-
 !N ====================================================================
 !     END do loop over atoms (NMPID-parallel)
 !N ====================================================================
 
-      close(66)
+      call closePotentialFile()
       call closeResults1File()
 
       call OUTTIME(MYLRANK(1),'density calculated ..',TIME_I,ITER)
@@ -818,14 +802,13 @@ spinloop:     do ISPIN = 1,NSPIN
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
+
+        call openPotentialFile(LMPOTD, IRNSD, IRMD)
+        call openResults2File(LRECRES2)
+
 ! ----------------------------------------------------------------------
         DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIN)
 ! ----------------------------------------------------------------------
-
-        open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
-        form='unformatted')
-        call openResults2File(LRECRES2)
-
 ! =====================================================================
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
@@ -1031,6 +1014,7 @@ spinloop:     do ISPIN = 1,NSPIN
         end do
 !+++++++++++++++++ END ATOM PARALLEL +++++++++++++++++++++++++++++++
 
+       ! it is weird that straight mixing is called in any case before
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
           call BRYDBM(VISP,VONS,VINS, &
@@ -1057,8 +1041,9 @@ spinloop:     do ISPIN = 1,NSPIN
                                  NSPIN, VINS, VISP, VONS) ! not sure if correct?
 
 ! ----------------------------------------------------- output_potential
-            write(66,rec=I1) VINS,VISP,ECORE
+            call writePotential(I1, VISP, VINS, ECORE)
 ! ----------------------------------------------------- output_potential
+
           end if
         end do
 ! -------- END Atom-parallel ------------------------------------------
@@ -1086,7 +1071,7 @@ spinloop:     do ISPIN = 1,NSPIN
         call MPI_BARRIER(LCOMM(LMPIC),IERR)
 
 ! -----------------------------------------------------------------
-! BEGIN: only process with MYLRANK(LMPIC = 1) = 0 is working here
+! BEGIN: only process with MYLRANK(LMPIC = 1) = 0 is working here - means MASTERRANK
 ! -----------------------------------------------------------------
         if(MYLRANK(LMPIC)==0) then
 
@@ -1106,19 +1091,19 @@ spinloop:     do ISPIN = 1,NSPIN
 ! .. get info on MYACTVRANK of this processor: to be used in
 !    subsequent reduce-commands
           MYBCRANK = MYACTVRANK
-! ..
+
         endif
 ! -----------------------------------------------------------------
 ! END: only process with MYLRANK(LMPIC = 1) = 0 is working here
 ! -----------------------------------------------------------------
 
-! ..
+! -----------------------------------------------------------------
+        call closePotentialFile()  ! close 'vpotnew' this was originally misplaced
+! -----------------------------------------------------------------
       endif
 ! -----------------------------------------------------------------
 ! END: L-MPI: only processes with LMPIC = 1 are working here
-! -----------------------------------------------------------------
-      close(66)  ! close 'vpotnew'  ! this may be misplaced - could belong into previous if clause
-! -----------------------------------------------------------------
+
 
       ! why? all processes except 1 have MYBCRANK = 0, this allreduce
       ! tells all the other processes who is the root
@@ -1142,8 +1127,8 @@ spinloop:     do ISPIN = 1,NSPIN
 
 ! manual exit possible by creation of file 'STOP' in home directory
 
-      inquire(file='STOP',exist=STOPIT)
-      if (STOPIT) goto 200
+      STOPIT = isManualAbort_com(MYACTVRANK, ACTVCOMM)
+      if (STOPIT) exit ! exit SCF-loop
 
 
 ! ######################################################################
@@ -1151,9 +1136,6 @@ spinloop:     do ISPIN = 1,NSPIN
     enddo          ! SC ITERATION LOOP ITER=1, SCFSTEPS
 ! ######################################################################
 ! ######################################################################
-
-
-200 continue
 
     if (MYLRANK(1)==0) close(2)    ! TIME
 
@@ -1180,10 +1162,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ... and wait here
 !=====================================================================
 
-
-!      WRITE(6,*) 'BARRIER i:',MYRANK
   call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-!      WRITE(6,*) 'BARRIER f:',MYRANK
   call MPI_FINALIZE(IERR)
 
 !-----------------------------------------------------------------------------

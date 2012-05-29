@@ -14,7 +14,7 @@ BUILDDIR = $(HOME)/build/kkr2
 
 
 ifeq ($(PLATFORM),ifort_IFF)
-FC = mpif77
+FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -O2 -module $(BUILDDIR)

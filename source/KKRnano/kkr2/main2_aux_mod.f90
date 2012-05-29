@@ -7,7 +7,7 @@ module main2_aux_mod
   !----------------------------------------------------------------------------
   subroutine getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, &
                                   LMAXD, LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, &
-                                  LRECPOT, LRECRES2, MMAXD, NAEZD, NCLEB, &
+                                  LRECRES2, MMAXD, NAEZD, NCLEB, &
                                   NGUESSD, NPOTD, NSPIND, NTIRD)
     implicit none
     integer :: IGUESSD
@@ -22,7 +22,6 @@ module main2_aux_mod
     integer :: LMPOTD
     integer :: LMXSPD
     integer :: LPOTD
-    integer :: LRECPOT
     integer :: LRECRES2
     integer :: MMAXD
     integer :: NAEZD
@@ -49,7 +48,6 @@ module main2_aux_mod
     NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
     ! Record lengths
-    LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
     LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
   end subroutine
 
@@ -512,5 +510,135 @@ module main2_aux_mod
     implicit none
     close(71)
   end subroutine
+
+  !---------------------------------------------------------------------------
+  !> Open file 'vpotnew'
+  subroutine openPotentialFile(LMPOTD, IRNSD, IRMD)
+    implicit none
+    integer, intent(in) :: LMPOTD
+    integer, intent(in) :: IRNSD
+    integer, intent(in) :: IRMD
+
+    integer :: LRECPOT
+
+    LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
+
+    open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
+    form='unformatted')
+  end subroutine
+
+  !--------------------------------------------------------------------------
+  !> Read potential for atom I1 from 'vpotnew' file.
+  subroutine readPotential(I1, VISP, VINS, ECORE)
+    implicit none
+    double precision, intent(inout) :: ECORE(20,2)
+    integer, intent(in) :: I1
+    double precision, intent(inout) :: VINS(:,:,:)
+    double precision, intent(inout) :: VISP(:,:)
+
+    read(66,rec=I1) VINS,VISP,ECORE
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Closes file 'vpotnew'.
+  subroutine closePotentialFile()
+    implicit none
+
+    close(66)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write potential for atom I1 to 'vpotnew' file.
+  subroutine writePotential(I1, VISP, VINS, ECORE)
+    implicit none
+    double precision, intent(inout) :: ECORE(20,2)
+    integer, intent(in) :: I1
+    double precision, intent(inout) :: VINS(:,:,:)
+    double precision, intent(inout) :: VISP(:,:)
+
+    write(66,rec=I1) VINS,VISP,ECORE
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Calculate \Delta T_up - T_down for exchange couplings calculation.
+  !> Call first for ISPIN=1 then for ISPIN=2 with same parameters.
+  subroutine calcDeltaTupTdown(DTIXIJ, ISPIN, LMMAXD, TMATN)
+    implicit none
+    double complex, intent(inout) :: DTIXIJ(:,:)
+    integer :: ISPIN
+    integer :: LMMAXD
+    double complex, intent(in) :: TMATN(:,:,:)
+
+    integer :: LM1
+    integer :: LM2
+
+    if (ISPIN==1) then
+      do LM1 = 1,LMMAXD
+        do LM2 = 1,LMMAXD
+          DTIXIJ(LM1,LM2) = TMATN(LM1,LM2,ISPIN)
+        enddo
+      enddo
+    else
+      do LM1 = 1,LMMAXD
+        do LM2 = 1,LMMAXD
+          DTIXIJ(LM1,LM2) = DTIXIJ(LM1,LM2)-TMATN(LM1,LM2,ISPIN)
+        enddo
+      enddo
+    endif
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Substract diagonal reference T matrix of certain spin channel
+  !> from real system's T matrix
+  subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
+    implicit none
+    integer :: LM1
+    integer :: LMMAXD
+    double complex :: TMATN(:,:)
+    double complex :: TREFLL(:,:)
+
+    ! Note: TREFLL is diagonal! - spherical reference potential
+    do LM1 = 1,LMMAXD
+      TMATN(LM1,LM1) =  TMATN(LM1,LM1) - TREFLL(LM1,LM1)
+    end do
+
+  end subroutine
+
+  !> Check if file 'STOP' exists. If yes, tell all ranks
+  !> in communicator to abort by returning .true.
+  !> The idea is to let only one rank to inquire if
+  !> 'STOP' exists.
+  logical function isManualAbort_com(rank, communicator)
+    implicit none
+
+    integer, intent(in) :: rank
+    integer, intent(in) :: communicator
+
+    integer :: ierr
+    integer :: stop_integer
+    integer :: master_rank
+    logical :: STOPIT
+
+    include 'mpif.h'
+
+    isManualAbort_com = .false.
+    stop_integer = 0
+    master_rank = 0
+
+    if (rank == master_rank) then
+      inquire(file='STOP',exist=STOPIT)
+      if (STOPIT) stop_integer = 1
+    end if
+
+    call MPI_BCAST(stop_integer,1,MPI_INTEGER, &
+    master_rank,communicator,ierr)
+
+    if (stop_integer == 1) then
+      isManualAbort_com = .true.
+    end if
+
+  end function
 
 end module main2_aux_mod

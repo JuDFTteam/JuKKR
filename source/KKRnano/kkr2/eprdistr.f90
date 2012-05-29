@@ -116,17 +116,17 @@
         
         !         third step: exchange CNVFAC
         
-            IDIM = NOFKS(KMESH(IE))
+!            IDIM = NOFKS(KMESH(IE))
         
-            if (MYRANK == SEND) then
-                call MPI_SEND(CNVFAC(JEKM+1),IDIM, &
-                MPI_DOUBLE_PRECISION, &
-                RECV,93,MPI_COMM_WORLD,IERR)
-            elseif (MYRANK == RECV) then
-                call MPI_RECV(CNVFAC(JEKM+1),IDIM, &
-                MPI_DOUBLE_PRECISION, &
-                SEND,93,MPI_COMM_WORLD,STATUS,IERR)
-            endif
+!            if (MYRANK == SEND) then
+!                call MPI_SEND(CNVFAC(JEKM+1),IDIM, &
+!                MPI_DOUBLE_PRECISION, &
+!                RECV,93,MPI_COMM_WORLD,IERR)
+!            elseif (MYRANK == RECV) then
+!                call MPI_RECV(CNVFAC(JEKM+1),IDIM, &
+!                MPI_DOUBLE_PRECISION, &
+!                SEND,93,MPI_COMM_WORLD,STATUS,IERR)
+!            endif
         
         endif
     

@@ -94,21 +94,21 @@ C
 C     check whether information on energy-point load-balancing is 
 C     available
 C
-      INQUIRE(FILE='balance',EXIST=READIT)
+C     INQUIRE(FILE='balance',EXIST=READIT)
 C
-        IF ((ITER.EQ.1).AND.(READIT)) THEN
+C       IF ((ITER.EQ.1).AND.(READIT)) THEN
 C
-          OPEN (50,FILE='balance',FORM='unformatted')
+C         OPEN (50,FILE='balance',FORM='unformatted')
 C
-          READ (50,IOSTAT=IOS) BLNCD,BLNCD1
+C         READ (50,IOSTAT=IOS) BLNCD,BLNCD1
 C
-          IF (IOS.EQ.0.AND.BLNCD.EQ.IERLAST.AND.BLNCD1.EQ.EMPID) THEN
-            READ (50) EPROC
-          ENDIF
+C         IF (IOS.EQ.0.AND.BLNCD.EQ.IERLAST.AND.BLNCD1.EQ.EMPID) THEN
+C           READ (50) EPROC
+C         ENDIF
 C
-          CLOSE(50)
+C         CLOSE(50)
 C
-        ENDIF
+C       ENDIF
 C
       ENDIF
 C=======================================================================
@@ -235,22 +235,22 @@ C
 C
 C     write information on load-balancing to formatted file 'balance'
 C
-      INQUIRE(FILE='STOP',EXIST=STOPIT)
-      IF ((ITER.EQ.SCFSTEPS).OR.(STOPIT)) THEN
+C     INQUIRE(FILE='STOP',EXIST=STOPIT)
+C     IF ((ITER.EQ.SCFSTEPS).OR.(STOPIT)) THEN
 C
-        IF (MYACTVRANK.EQ.0) THEN
+C       IF (MYACTVRANK.EQ.0) THEN
 C
-          OPEN (50,FILE='balance',FORM='unformatted')
-          WRITE(50) IERLAST,EMPID
-          WRITE(50) EPROC
-          CLOSE(50)
+C         OPEN (50,FILE='balance',FORM='unformatted')
+C         WRITE(50) IERLAST,EMPID
+C         WRITE(50) EPROC
+C         CLOSE(50)
 C          DO IER = 1,IERLAST
 C          WRITE(6,*) IER,MTIME(IER)
 C          END DO
 C
-        ENDIF
+C       ENDIF
 C
-      ENDIF
+C     ENDIF
 C
 C
       ENDIF

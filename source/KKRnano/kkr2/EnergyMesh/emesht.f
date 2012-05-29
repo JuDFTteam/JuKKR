@@ -102,9 +102,9 @@ C     .. Array Arguments ..
       DOUBLE COMPLEX DF(*),EZ(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE COMPLEX DE,DESUB
-      DOUBLE PRECISION EA,EB,EFDBOT,ER,ETK,XSCALE
-      INTEGER I,NLEG,NSUB
+      DOUBLE COMPLEX DE
+      DOUBLE PRECISION ER,ETK
+      INTEGER I,NLEG
       LOGICAL FINEGRID
 C     ..
 C     .. Local Arrays ..

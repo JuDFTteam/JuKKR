@@ -10,7 +10,6 @@ C                        new input parameters after inc.p removal
 C     .. Parameters ..
 
       INTEGER lmaxd
-      INTEGER nspind
       INTEGER irmd
       INTEGER irnsd
       INTEGER ipand
@@ -56,7 +55,7 @@ C     DOUBLE PRECISION   VINS(IRMIND:IRMD,LMPOTD)
      +                   LLDAU(LMAXD+1)
 C     ..
 C     .. Local Scalars ..
-      INTEGER            I,IRC1,LM1,LM2,LMMKONV,ISPIN,IR,M1,M2,
+      INTEGER            I,IRC1,LM1,LM2,LMMKONV,IR,M1,M2,
      +                   LMLO,LMHI,ILDAU
 C     ..
 C     .. Local Arrays ..
