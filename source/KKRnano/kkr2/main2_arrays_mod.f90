@@ -355,7 +355,7 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1), stat = memory_stat)
+    allocate(WMLDAU(MMAXD,MMAXD,LMAXD1,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(KMESH(IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")

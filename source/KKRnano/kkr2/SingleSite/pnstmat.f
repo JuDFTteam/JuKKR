@@ -1,11 +1,11 @@
 C>    Construct the t-matrix from radial solutions and potential
       SUBROUTINE PNSTMAT(DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS,TMATLL,VINS,
      +                   IPAN,IRCUT,NSRA,CLEB,ICLEB,IEND,LOFLM,TMAT,
-     +                   DET,LKONV,ISPIN,
+     +                   DET,LKONV,
      >                   LDAU,NLDAU,LLDAU,
-     >                   WMLDAU,WMLDAUAV,LDAUCUT,
+     >                   WMLDAU_ISPIN,WMLDAUAV,LDAUCUT,
 C                        new input parameters after inc.p removal
-     &                   lmaxd, nspind, irmd, irnsd, ipand, ncleb)
+     &                   lmaxd, irmd, irnsd, ipand, ncleb)
       IMPLICIT NONE
 C     .. Parameters ..
 
@@ -48,8 +48,8 @@ C     DOUBLE COMPLEX    TMATLL(LMMAXD,LMMAXD)
       DOUBLE PRECISION   DRDI(IRMD)
 C     DOUBLE PRECISION   VINS(IRMIND:IRMD,LMPOTD)
       DOUBLE PRECISION   VINS(IRMD-IRNSD:IRMD,(2*LMAXD+1)**2)
-C     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-      DOUBLE PRECISION   WMLDAU(2*LMAXD+1,2*LMAXD+1,NSPIND,LMAXD+1)
+
+      DOUBLE PRECISION   WMLDAU_ISPIN(2*LMAXD+1,2*LMAXD+1,LMAXD+1)
       DOUBLE PRECISION   LDAUCUT(IRMD)
       DOUBLE PRECISION   WMLDAUAV(LMAXD+1)
       INTEGER            ICLEB(NCLEB,3),IRCUT(0:IPAND),LOFLM(*),
@@ -145,7 +145,7 @@ C
             DO LM1 = LMLO,LMHI
               M1 = LM1 - LMLO + 1
               VNSPLL(LM1,LM2,IR) = VNSPLL(LM1,LM2,IR)
-     &                           + WMLDAU(M1,M2,ISPIN,ILDAU)*LDAUCUT(IR)
+     &                           + WMLDAU_ISPIN(M1,M2,ILDAU)*LDAUCUT(IR)
             ENDDO
 C
 C ... and then subtract average from diag. elements

@@ -4,15 +4,13 @@ NSRA,EZ,DZ, &
 DRDI,R,VINS, &
 VISP,ZAT,IPAN, &
 IRCUT,CLEB,LOFLM,ICLEB,IEND, &
-DTDE,TR_ALPH,LMAX,ISPIN, &
-LLDAU,WMLDAU, &
+DTDE,TR_ALPH,LMAX, &
+LLDAU,WMLDAU_ISPIN, &
 !                        new input parameters after inc.p replace
-nspind, ncleb, ipand, irmd, irnsd)
+ncleb, ipand, irmd, irnsd)
 
   implicit none
 
-
-  integer nspind
   integer ncleb
   integer ipand
   integer irmd
@@ -26,21 +24,16 @@ nspind, ncleb, ipand, irmd, irnsd)
   !                                = (2*LMAX+1)**2)
   !      PARAMETER          (IRMIND=IRMD-IRNSD)
 
-  integer            LMAX,ISPIN, &
-  LM1,LM2, &
-  IEND
+  integer            LMAX,LM1,LM2,IEND
   !     ..
 
   double complex     DZ
   double complex     EZ,EZ1,EZ2
   double precision   CLEB(NCLEB,2)
 
-  !     DOUBLE PRECISION   VINS(IRMIND:IRMD,LMPOTD),
-  !    +                   VISP(IRMD),
-  !    +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
   double precision   VINS((IRMD-IRNSD):IRMD,(2*LMAX+1)**2), &
   VISP(IRMD), &
-  WMLDAU(2*LMAX+1, 2*LMAX+1, NSPIND, LMAX + 1)
+  WMLDAU_ISPIN(2*LMAX+1, 2*LMAX+1, LMAX + 1)
   !     ..
   !     DOUBLE COMPLEX     DTDE(LMMAXD,LMMAXD)
   double complex     DTDE((LMAX+1)**2,(LMAX+1)**2)
@@ -60,7 +53,7 @@ nspind, ncleb, ipand, irmd, irnsd)
   !     INTEGER            ICLEB(NCLEB,3),LOFLM(LM2D)
   integer            ICLEB(NCLEB,3),LOFLM((2*LMAX+1)**2)
 
-  integer            ICST,NSRA,IE
+  integer            ICST,NSRA
   logical            LDAU
   !     ..
 
@@ -79,18 +72,18 @@ nspind, ncleb, ipand, irmd, irnsd)
   DRDI,R,VINS, &
   VISP,ZAT,IPAN, &
   IRCUT,CLEB,LOFLM,ICLEB,IEND, &
-  TMATN1,TR_ALPH1,LMAX,ISPIN, &
-  LLDAU,WMLDAU, &
-  nspind, ncleb, ipand, irmd, irnsd)
+  TMATN1,TR_ALPH1,LMAX, &
+  LLDAU,WMLDAU_ISPIN, &
+  ncleb, ipand, irmd, irnsd)
 
   call CALCTMAT(LDAU,NLDAU,ICST, &
   NSRA,EZ2, &
   DRDI,R,VINS, &
   VISP,ZAT,IPAN, &
   IRCUT,CLEB,LOFLM,ICLEB,IEND, &
-  TMATN2,TR_ALPH2,LMAX,ISPIN, &
-  LLDAU,WMLDAU, &
-  nspind, ncleb, ipand, irmd, irnsd)
+  TMATN2,TR_ALPH2,LMAX, &
+  LLDAU,WMLDAU_ISPIN, &
+  ncleb, ipand, irmd, irnsd)
   !====================================================================
 
   ! dT(E)

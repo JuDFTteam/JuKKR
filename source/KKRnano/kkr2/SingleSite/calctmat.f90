@@ -2,15 +2,14 @@ subroutine CALCTMAT(LDAU,NLDAU,ICST, &
 NSRA,EZ, &
 DRDI,R,VINS,VISP,ZAT,IPAN, &
 IRCUT,CLEB,LOFLM,ICLEB,IEND, &
-TMATN,TR_ALPH,LMAX,ISPIN, &
-LLDAU,WMLDAU, &
+TMATN,TR_ALPH,LMAX, &
+LLDAU,WMLDAU_ISPIN, &
 !                        new input parameters after inc.p removal
-nspind, ncleb, ipand, irmd, irnsd)
+ncleb, ipand, irmd, irnsd)
   implicit none
 
   !     .. Parameters ..
 
-  integer nspind
   integer ncleb
   integer ipand
   integer irmd
@@ -29,7 +28,7 @@ nspind, ncleb, ipand, irmd, irnsd)
   !     ..
   !     .. Scalar Arguments ..
   double precision   ZAT
-  integer            ICST,IEND,IPAN,NSRA,LMAX,NLDAU,ISPIN
+  integer            ICST,IEND,IPAN,NSRA,LMAX,NLDAU
   double complex     TR_ALPH,EZ
   logical            LDAU
   !     ..
@@ -44,8 +43,7 @@ nspind, ncleb, ipand, irmd, irnsd)
 
   double precision   VISP(IRMD)
 
-  !     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  double precision   WMLDAU(2*LMAX+1, 2*LMAX+1, NSPIND, LMAX + 1)
+  double precision   WMLDAU_ISPIN(2*LMAX+1, 2*LMAX+1, LMAX + 1)
 
   integer            ICLEB(NCLEB,3),IRCUT(0:IPAND)
 
@@ -108,7 +106,7 @@ nspind, ncleb, ipand, irmd, irnsd)
       LMHI = (LLDAU(ILDAU)+1)*(LLDAU(ILDAU)+1)
       MMAX = LMHI - LMLO + 1
       do IM = 1,MMAX
-        WMLDAUAV(ILDAU)=WMLDAUAV(ILDAU)+WMLDAU(IM,IM,ISPIN,ILDAU)
+        WMLDAUAV(ILDAU)=WMLDAUAV(ILDAU)+WMLDAU_ISPIN(IM,IM,ILDAU)
       enddo
       WMLDAUAV(ILDAU) = WMLDAUAV(ILDAU)/DBLE(MMAX)
 
@@ -154,10 +152,10 @@ nspind, ncleb, ipand, irmd, irnsd)
   call PNSTMAT(DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS, &
   TMATN, &
   VINS,IPAN,IRCUT,NSRA,CLEB,ICLEB,IEND,LOFLM, &
-  TMAT,DET,LMAX,ISPIN, &
+  TMAT,DET,LMAX, &
   LDAU,NLDAU,LLDAU, &
-  WMLDAU,WMLDAUAV,LDAUCUT, &
-  lmax, nspind, irmd, irnsd, ipand, ncleb)
+  WMLDAU_ISPIN,WMLDAUAV,LDAUCUT, &
+  lmax, irmd, irnsd, ipand, ncleb)
 
   TR_ALPH = LOG(DET)
   do L=0,LMAX

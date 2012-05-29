@@ -65,7 +65,7 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   !double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
   double complex :: DMATLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)  ! out
   double complex :: PHILDAU(IRMD,LMAX+1) !in?
-  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1) !in?
+  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,LMAX+1,NSPIN) !in?
   integer::NLDAU !in
   logical::LDAU  !in
   integer::LLDAU(LMAX+1) !in?

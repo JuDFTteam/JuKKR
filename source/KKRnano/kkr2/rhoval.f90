@@ -83,7 +83,7 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
   double precision ::   THETAS(IRID,NFUND)
   double precision ::   VINS(IRMD-IRNSD:IRMD,(2*LMAXD+1)**2)
   double precision ::   VISP(IRMD)
-  double precision ::   WMLDAU(2*LMAXD+1,2*LMAXD+1,NSPIN,LMAXD+1)
+  double precision ::   WMLDAU(2*LMAXD+1,2*LMAXD+1,LMAXD+1,NSPIN)
 
   integer ::            ICLEB(NCLEB,3)
   integer ::            IFUNM((4*LMAXD+1)**2)
@@ -191,7 +191,7 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
       LMHI = (LLDAU(ILDAU)+1)*(LLDAU(ILDAU)+1)
       MMAX = LMHI - LMLO + 1
       do IM = 1,MMAX
-        WMLDAUAV(ILDAU)=WMLDAUAV(ILDAU)+WMLDAU(IM,IM,ISPIN,ILDAU)
+        WMLDAUAV(ILDAU)=WMLDAUAV(ILDAU)+WMLDAU(IM,IM,ILDAU,ISPIN)
       enddo
       WMLDAUAV(ILDAU) = WMLDAUAV(ILDAU)/DBLE(MMAX)
     enddo

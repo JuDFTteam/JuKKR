@@ -37,7 +37,6 @@ program MAIN2
   double precision::E2
   double precision::TK
   double precision::EFERMI
-  double precision::EBOT
   double precision::EFOLD
   double precision::CHRGNT
   double precision::E2SHIFT
@@ -408,63 +407,9 @@ program MAIN2
 ! SPIN===================================================================
 
 spinloop:     do ISPIN = 1,NSPIN
-
-                call CALCTMAT(LDAU,NLDAU,ICST, &
-                              NSRA,EZ(IE), &
-                              DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
-                              VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
-                              IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                              TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
-                              LLDAU,WMLDAU, &
-                              nspind, ncleb, ipand, irmd, irnsd)
-
-                if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-
-                  call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
-
-                  call CALCDTMAT(LDAU,NLDAU,ICST, &
-                                NSRA,EZ(IE),delta_E_z, &
-                                DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
-                                VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
-                                IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                                DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
-                                LLDAU,WMLDAU, &
-                                nspind, ncleb, ipand, irmd, irnsd)
-                end if
-
-                ! calculate DTIXIJ = T_down - T_up
-                if (XCCPL) then
-                  if (ISPIN==1) then
-                    do LM1 = 1,LMMAXD
-                      do LM2 = 1,LMMAXD
-                        DTIXIJ(LM1,LM2) = TMATN(LM1,LM2,ISPIN)
-                      enddo
-                    enddo
-                  else
-                    do LM1 = 1,LMMAXD
-                      do LM2 = 1,LMMAXD
-                        DTIXIJ(LM1,LM2) = DTIXIJ(LM1,LM2)-TMATN(LM1,LM2,ISPIN)
-                      enddo
-                    enddo
-                  endif
-                endif
-
-
-                RF = REFPOT(I1)
-                do LM1 = 1,LMMAXD
-                  TMATN(LM1,LM1,ISPIN) =  TMATN(LM1,LM1,ISPIN) &
-                  - TREFLL(LM1,LM1,RF)
-                  DTDE(LM1,LM1,ISPIN) =  DTDE(LM1,LM1,ISPIN) &
-                  - DTREFLL(LM1,LM1,RF)
-                end do
-
-                ! TMATN now contains Delta t = t - t_ref !!!
-                ! DTDE now contains Delta dt !!!
-
-                ! renormalize TR_ALPH
-                TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(IE,CLS(I1))
-                LLY_GRDT(IE,ISPIN) = CZERO ! initialize LLY_GRDT, shouldn't be necessary
-
+!------------------------------------------------------------------------------
+!         beginning of SMPID-parallel section
+!------------------------------------------------------------------------------
                 if (SMPID==1) then
                   MAPSPIN = 0
                   PRSPIN   = ISPIN
@@ -473,11 +418,62 @@ spinloop:     do ISPIN = 1,NSPIN
                   PRSPIN   = 1
                 endif
 
-!------------------------------------------------------------------------------
-!         beginning of SMPID-parallel section
-!------------------------------------------------------------------------------
-
                 if(SRANK(SMPIB,SMPIC)==MAPSPIN) then
+
+                  call CALCTMAT(LDAU,NLDAU,ICST, &
+                                NSRA,EZ(IE), &
+                                DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
+                                VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
+                                IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
+                                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
+                                LLDAU,WMLDAU(1,1,1,ISPIN), &
+                                nspind, ncleb, ipand, irmd, irnsd)
+
+                  if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
+
+                    call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
+
+                    call CALCDTMAT(LDAU,NLDAU,ICST, &
+                                  NSRA,EZ(IE),delta_E_z, &
+                                  DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
+                                  VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
+                                  IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
+                                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX,ISPIN, &
+                                  LLDAU,WMLDAU(1,1,1,ISPIN), &
+                                  nspind, ncleb, ipand, irmd, irnsd)
+                  end if
+
+                  ! calculate DTIXIJ = T_down - T_up
+                  if (XCCPL) then
+                    if (ISPIN==1) then
+                      do LM1 = 1,LMMAXD
+                        do LM2 = 1,LMMAXD
+                          DTIXIJ(LM1,LM2) = TMATN(LM1,LM2,ISPIN)
+                        enddo
+                      enddo
+                    else
+                      do LM1 = 1,LMMAXD
+                        do LM2 = 1,LMMAXD
+                          DTIXIJ(LM1,LM2) = DTIXIJ(LM1,LM2)-TMATN(LM1,LM2,ISPIN)
+                        enddo
+                      enddo
+                    endif
+                  endif
+
+
+                  RF = REFPOT(I1)
+                  do LM1 = 1,LMMAXD
+                    TMATN(LM1,LM1,ISPIN) =  TMATN(LM1,LM1,ISPIN) &
+                    - TREFLL(LM1,LM1,RF)
+                    DTDE(LM1,LM1,ISPIN) =  DTDE(LM1,LM1,ISPIN) &
+                    - DTREFLL(LM1,LM1,RF)
+                  end do
+
+                  ! TMATN now contains Delta t = t - t_ref !!!
+                  ! DTDE now contains Delta dt !!!
+
+                  ! renormalize TR_ALPH
+                  TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(IE,CLS(I1))
 
                   NMESH = KMESH(IE)
 
@@ -485,7 +481,7 @@ spinloop:     do ISPIN = 1,NSPIN
                     call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
                   end if
 
-! <<>>
+! <<>> Multiple scattering part
 
                   call KLOOPZ1( &
                   GMATN(1,1,1,ISPIN), &
@@ -525,7 +521,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
               if (XCCPL) then
 
-                call SREDGX( ISPIN,NSPIN, &
+                call SREDGX( NSPIN, &
                              MYRANK, &
                              SMPIC,SMYRANK, &
                              GMATXIJ, &
@@ -561,7 +557,7 @@ spinloop:     do ISPIN = 1,NSPIN
           end do                   ! IE = 1,IELAST
 
 ! IE ====================================================================
-!     END do loop over energies (EMPID-parallel) to be implemented
+!     END do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
 
@@ -716,9 +712,7 @@ spinloop:     do ISPIN = 1,NSPIN
                           iemxd, &
                           lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
-              EBOT = E1
-
-              call RHOCORE(EBOT,NSRA,ISPIN,NSPIN,I1, &  ! I1 is used only for debugging output
+              call RHOCORE(E1,NSRA,ISPIN,NSPIN,I1, &  ! I1 is used only for debugging output
                            DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
                            A(I1),B(I1),ZAT(I1), &
                            IRCUT(0,I1),RHOCAT,QC, &

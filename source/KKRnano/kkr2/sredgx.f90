@@ -1,4 +1,4 @@
-subroutine SREDGX(ISPIN,NSPIN, &                 ! >
+subroutine SREDGX(NSPIN, &                 ! >
                   MYRANK, &                      ! >
                   SMPIC,SMYRANK, &               ! >
                   GMATXIJ, &                     ! >
@@ -28,7 +28,7 @@ subroutine SREDGX(ISPIN,NSPIN, &                 ! >
   !parameter      (LMMAXD= (LMAXD+1)**2)
 
   !     .. scalar arguments ..
-  integer::ISPIN
+
   integer::NSPIN
   !     .. array arguments ..
   !double complex :: GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND)
@@ -42,6 +42,7 @@ subroutine SREDGX(ISPIN,NSPIN, &                 ! >
   integer::LM2
   integer::SEND
   integer::RECV
+  integer::ISPIN
 
   !     .. local arrays ..
   !double complex :: GSEND(LMMAXD,LMMAXD,NXIJD)
