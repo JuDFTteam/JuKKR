@@ -64,12 +64,10 @@ program MAIN2
 
   integer::ICELL
   integer::IR
-  integer::LMAX
   integer::NPNT1
   integer::NPNT2
   integer::NPNT3
   integer::NPOL
-  integer::NSPIN
   integer::ITER
   integer::SCFSTEPS
   integer::IMIX
@@ -81,9 +79,6 @@ program MAIN2
   integer::KVMAD
   integer::KXC
   integer::KFORCE
-  integer::LPOT
-  integer::LMPOT
-  integer::NAEZ
   integer::IEND
   integer::NCLEBD
   integer::IEND1
@@ -96,7 +91,6 @@ program MAIN2
   integer::EKM
   logical::XCCPL
   logical::JIJ
-  logical::STOPIT
   logical::LDORHOEF
   logical::LDAU
   logical::ERESJIJ
@@ -166,8 +160,6 @@ program MAIN2
   integer::ACTVCOMM
   integer::ACTVGROUP
   integer::ACTVSIZE
-  integer::MYBCRANK
-  integer::BCRANK
 
   integer::   IERR
   integer::   MAPBLOCK
@@ -186,8 +178,8 @@ program MAIN2
 
   ! from dimension parameters - calculate some derived parameters
   call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, LMAXD, &
-                            LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, &
-                            LRECRES2, MMAXD, NAEZD, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
+                            LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
+                            LRECRES2, MMAXD, NAEZ, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
 
 
 !-----------------------------------------------------------------------------
@@ -203,8 +195,8 @@ program MAIN2
                            IEND1, IFUNM, IGUESS, ILM, IMAXSH, IMIX, IMT, INDN0, IPAN, &
                            IRC, IRCUT, IRMIN, IRNS, IRWS, ISHIFT, ISYMINDEX, ITITLE, &
                            JEND, JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
-                           LDAU, LLMSP, LMAX, LMPOT, LMSP, LOFLM1C, LPOT, MAXMESH, &
-                           MIXING, NACLS, NAEZ, NCLS, NCORE, NFU, NR, NREF, NSPIN, &
+                           LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
+                           MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
                            NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QBOUND, QMRBOUND, R, &
                            RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
                            RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
@@ -220,8 +212,8 @@ program MAIN2
  ! =                     End read in variables                          =
  ! ======================================================================
 
-  call consistencyCheck02(IELAST, IEMXD, IGUESS, IGUESSD, LMAX, LMAXD, NAEZ, NAEZD, &
-                          NPNT1, NPNT2, NPNT3, NPOL, NR, NRD, NSPIN, NSPIND)
+  !call consistencyCheck02(IELAST, IEMXD, IGUESS, IGUESSD, LMAX, LMAXD, NAEZ, NAEZD, &
+  !                        NPNT1, NPNT2, NPNT3, NPOL, NR, NRD, NSPIN, NSPIND)
 
   call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
 
@@ -251,8 +243,6 @@ program MAIN2
   ! This if closes several hundreds of lines later!
   if (LMPIC/=0.or.LSMPIC/=0) then   !     ACTVGROUP could also test EMPIC
 
-    MYBCRANK = 0
-
 ! ========= TIMING ======================================================
     if (MYLRANK(1) == 0) then
       call CPU_TIME(TIME_I)
@@ -280,18 +270,18 @@ program MAIN2
       NOITER = 0
 
       if (MYLRANK(1)==0) then
-        write(2,'(79(1H=))')
+        call printDoubleLineSep(unit_number = 2)
         call OUTTIME(MYLRANK(1),'started at ..........',TIME_I,ITER)
-        write(2,'(79(1H=))')
+        call printDoubleLineSep(unit_number = 2)
       endif
 
-      call GAUNT2(WG,YRG,LMAX)
+      call GAUNT2(WG,YRG,LMAXD)
 
       call MADELUNG3D(LPOT,YRG,WG,ALAT, &
       RMAX,GMAX,BRAVAIS,RECBV, &
-      LMXSPD,LASSLD,LPOTD,LMPOTD, &
+      LMXSPD,LASSLD,LPOT,LMPOTD, &
       NMAXD,ISHLD, &
-      LMPOT,CLEB,ICLEB,IEND, &
+      LMPOTD,CLEB,ICLEB,IEND, &
       NCLEBD,LOFLM,DFAC, &
       NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM) ! does it have to be in SCF-loop?
 
@@ -337,21 +327,19 @@ program MAIN2
 
           endif
 
-          ! This read is probably NOT NECESSARY (except for 1st iteration) !!!
-          ! TURNS out it is necessary - otherwise wrong results - why?
+          ! TODO: Find a better solution than exchanging potential by file I/O
           call readPotential(I1, VISP, VINS, ECORE)
 
 ! LDA+U
           if (LDAU) then
 
-            EREFLDAU = EFERMI
             EREFLDAU = 0.48       ! FIXME: hardcoded
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
-                          VISP,NSPIN,R(1,I1),DRDI(1,I1), &
+                          VISP,NSPIND,R(1,I1),DRDI(1,I1), &
                           ZAT(I1),IPAN(I1),IRCUT(0,I1), &
                           PHILDAU,UMLDAU,WMLDAU, &
-                          lmax, irmd, ipand)
+                          lmaxd, irmd, ipand)
 
           endif
 ! LDA+U
@@ -384,12 +372,9 @@ program MAIN2
             if (EMPIB==EPROC(IE)) then
 ! IE ====================================================================
 
-
               do RF = 1,NREF
-
-                call TREF(EZ(IE),VREF(RF),LMAX,RMTREF(RF), &
+                call TREF(EZ(IE),VREF(RF),LMAXD,RMTREF(RF), &
                           TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
-
               end do
 
               call GREF(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
@@ -399,14 +384,14 @@ program MAIN2
                         IE, &
                         LLY_G0TR, &
                         LMPIC,MYLRANK,LCOMM,LSIZE, &
-                        naez, lmax, naclsd, ncleb, nrefd, iemxd, nclsd, &
+                        naez, lmaxd, naclsd, ncleb, nrefd, iemxd, nclsd, &
                         LLY, LMPID*SMPID*EMPID)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
 ! SPIN===================================================================
 
-spinloop:     do ISPIN = 1,NSPIN
+spinloop:     do ISPIN = 1,NSPIND
 !------------------------------------------------------------------------------
 !         beginning of SMPID-parallel section
 !------------------------------------------------------------------------------
@@ -425,7 +410,7 @@ spinloop:     do ISPIN = 1,NSPIN
                                 DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                 VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                                 IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAX, &
+                                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                 LLDAU,WMLDAU(1,1,1,ISPIN), &
                                 ncleb, ipand, irmd, irnsd)
 
@@ -438,7 +423,7 @@ spinloop:     do ISPIN = 1,NSPIN
                                   DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                   VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
                                   IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
-                                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAX, &
+                                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                   LLDAU,WMLDAU(1,1,1,ISPIN), &
                                   ncleb, ipand, irmd, irnsd)
                   end if
@@ -506,14 +491,14 @@ spinloop:     do ISPIN = 1,NSPIN
 
               if (XCCPL) then
 
-                call SREDGX( NSPIN, &
+                call SREDGX( NSPIND, &
                              MYRANK, &
                              SMPIC,SMYRANK, &
                              GMATXIJ, &
                              GXIJ_ALL, &
-                             naez, lmax, lmpid, empid, smpid, nxijd)
+                             naez, lmaxd, lmpid, empid, smpid, nxijd)
 
-                JSCAL = WEZ(IE)/DBLE(NSPIN)
+                JSCAL = WEZ(IE)/DBLE(NSPIND)
 
                 call XCCPLJIJ_START(I1,IE,JSCAL, &
                                RXIJ,NXIJ,IXCP,RXCCLS, &
@@ -549,13 +534,13 @@ spinloop:     do ISPIN = 1,NSPIN
 !=======================================================================
 !     "allreduce" information of 1 .. EMPID and 1 .. SMPID processors
 !=======================================================================
-          call SREDGM(NSPIN,IELAST, &
+          call SREDGM(NSPIND,IELAST, &
                       MYRANK, &
                       SMPIC,SMYRANK, &
                       EMPIC,EMYRANK,EPROC, &
                       GMATN,LLY_GRDT, &
                       GMATN_ALL,LLY_GRDT_ALL, &
-                      naez, lmax, lmpid, smpid, empid, iemxd)
+                      naez, lmmaxd, lmpid, smpid, empid, iemxd)
 !=======================================================================
 !=======================================================================
 
@@ -598,7 +583,7 @@ spinloop:     do ISPIN = 1,NSPIN
 !=======================================================================
           if ((IGUESS==1).and.(EMPID>1)) then
 
-            do ISPIN = 1,NSPIN
+            do ISPIN = 1,NSPIND
 
               if (SMPID==1) then
                 MAPSPIN = 0
@@ -618,7 +603,7 @@ spinloop:     do ISPIN = 1,NSPIN
                              CNVFAC(1,PRSPIN), &
                              MYRANK,EMPIC,EMYRANK, &
                              EPROC,EPROCO, &
-                             lmpid, smpid, empid, naez, lmax, nguessd, ekmd, iemxd)
+                             lmpid, smpid, empid, naez, lmaxd, nguessd, ekmd, iemxd)
 
               endif
             enddo
@@ -642,7 +627,7 @@ spinloop:     do ISPIN = 1,NSPIN
                           THETAS,ZAT,ICLEB1C, &
                           IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
                           NTCELL,ICST, &
-                          IELAST,IEND1,NAEZ,NSPIN,NSRA, &
+                          IELAST,IEND1,NAEZ,NSPIND,NSRA, &
                           WEZRN,RNORM, &
                           GMATN_ALL, &
                           LLY_GRDT_ALL, &
@@ -650,7 +635,7 @@ spinloop:     do ISPIN = 1,NSPIN
                           DMATLDAU, &
                           LMPIC,MYLRANK, &
                           LCOMM,LSIZE, &
-                          lmpid*smpid*empid, lmax, irmd, irnsd, iemxd, &
+                          lmpid*smpid*empid, lmaxd, irmd, irnsd, iemxd, &
                           irid, nfund, ncelld, ipand, ncleb)
 
 ! IME
@@ -677,13 +662,13 @@ spinloop:     do ISPIN = 1,NSPIN
 !     BEGIN do loop over spins
 ! SPIN ==================================================================
 
-            do ISPIN = 1,NSPIN
+            do ISPIN = 1,NSPIND
               ICELL = NTCELL(I1)
-              IPOT = (I1-1) * NSPIN + ISPIN
+              IPOT = (I1-1) * NSPIND + ISPIN
 
               LDORHOEF = NPOL/=0  ! needed in RHOVAL
               call RHOVAL(LDORHOEF,ICST,IELAST, &
-                          NSRA,ISPIN,NSPIN,EZ,WEZRN(1,ISPIN), &
+                          NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &
                           DRDI(1,I1),R(1,I1),IRMIN(I1), &
                           VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &
                           ZAT(I1),IPAN(I1),IRCUT(0,I1), &
@@ -697,7 +682,7 @@ spinloop:     do ISPIN = 1,NSPIN
                           iemxd, &
                           lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
-              call RHOCORE(E1,NSRA,ISPIN,NSPIN,I1, &  ! I1 is used only for debugging output
+              call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
                            DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
                            A(I1),B(I1),ZAT(I1), &
                            IRCUT(0,I1),RHOCAT,QC, &
@@ -711,16 +696,16 @@ spinloop:     do ISPIN = 1,NSPIN
 ! SPIN ===================================================================
 
             if (LLY == 1) then
-              call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIN,IEMXD)
+              call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIND,IEMXD)
             end if
 
             ! calculate DOS at Fermi level
-            DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIN)
+            DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIND)
 
             ! ---> l/m_s/atom-resolved charges, output -> CHARGE
             ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
             ! CHARGE -> written to result file
-            call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIN, WEZ, IEMXD)
+            call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, WEZ, IEMXD)
 
 ! LDAU
 
@@ -729,7 +714,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
             if (LDAU.and.NLDAU>=1) then
 
-              call LDAUWMAT(I1,NSPIN,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
+              call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
                             ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
                             lmaxd)
 
@@ -741,7 +726,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -->   determine total charge density expanded in spherical harmonics
 ! -------------------------------------------------------------- density
 
-            call RHOTOTB_NEW(NSPIN,RHO2NS,RHOCAT, &
+            call RHOTOTB_NEW(NSPIND,RHO2NS,RHOCAT, &
                          DRDI(:,I1),IRCUT(:,I1), &
                          LPOT,NFU(ICELL),LLMSP(1,ICELL),THETAS(:,:,ICELL),IPAN(I1), &
                          CATOM, &
@@ -807,7 +792,7 @@ spinloop:     do ISPIN = 1,NSPIN
         call openResults2File(LRECRES2)
 
 ! ----------------------------------------------------------------------
-        DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIN)
+        DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
 ! ----------------------------------------------------------------------
 ! =====================================================================
 ! ======= I1 = 1,NAEZ ================================================
@@ -817,14 +802,14 @@ spinloop:     do ISPIN = 1,NSPIN
 
             ICELL = NTCELL(I1)
 
-            do ISPIN = 1,NSPIN
+            do ISPIN = 1,NSPIND
 
 ! -->     get correct density and valence band energies
 
               ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
-              EFOLD*CHRGNT/DBLE(NSPIN*NAEZ)
+              EFOLD*CHRGNT/DBLE(NSPIND*NAEZ)
 
-              do LM = 1,LMPOT
+              do LM = 1,LMPOTD
                 call DAXPY(IRC(I1),DF,R2NEF(1,LM,ISPIN),1, &
                 RHO2NS(1,LM,ISPIN),1)
               end do
@@ -843,7 +828,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-            call VINTRAS_NEW(LPOT,NSPIN,RHO2NS,VONS, &
+            call VINTRAS_NEW(LPOT,NSPIND,RHO2NS,VONS, &
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
@@ -851,14 +836,14 @@ spinloop:     do ISPIN = 1,NSPIN
             call OUTTIME(MYLRANK(1),'VINTRAS ......',TIME_I,ITER)
 
             call STRMAT(ALAT,LPOT,NAEZ,NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-            RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,NAEZD,I1)
+            RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1)
 
             call OUTTIME(MYLRANK(1),'STRMAT ......',TIME_I,ITER)
 
-            call VMADELBLK(CMOM,CMINST,LPOT,NSPIN, &
+            call VMADELBLK(CMOM,CMINST,LPOT,NSPIND, &
             NAEZ,VONS,ZAT,R,IRCUT,IPAN, &
             VMAD, &
-            LMPOT,SMAT,CLEB,ICLEB,IEND, &
+            LMPOTD,SMAT,CLEB,ICLEB,IEND, &
             LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
             LMPIC,MYLRANK, &
             LCOMM,LSIZE, &
@@ -874,7 +859,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ---------------------------------------------------------------------
               call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
               R,DRDI,IMT,ZAT,irmd)
-              call FORCE(FLM,FLMC,LPOT,NSPIN,I1,RHOCAT,VONS,R, &
+              call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
               DRDI,IMT,naez,irmd)
 ! ---------------------------------------------------------------------
             end if
@@ -886,14 +871,14 @@ spinloop:     do ISPIN = 1,NSPIN
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
             if (KTE==1) then
-              call ESPCB(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE) !TODO
+              call ESPCB(ESPC,NSPIND,I1,ECORE,LCORE,LCOREMAX,NCORE) !TODO
 
-              call EPOTINB_NEW(EPOTIN,NSPIN,RHO2NS,VISP,R(:,I1),DRDI(:,I1), &
+              call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,VISP,R(:,I1),DRDI(:,I1), &
               IRMIN(I1),IRWS(I1),LPOT,VINS,IRCUT(:,I1),IPAN(I1),ZAT(I1), &
               irmd, irnsd, ipand)
 
 
-              call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIN,RHO2NS, &
+              call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
               VONS,ZAT(I1),R(:,I1), &
               DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
               ILM,GSH,THETAS(:,:,ICELL),LMSP(1,ICELL), &
@@ -904,7 +889,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-            call VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,I1,RHO2NS, &
+            call VXCDRV(EXC,KTE,KXC,LPOT,NSPIND,I1,RHO2NS, &
             VONS,R,DRDI,A, &
             IRWS,IRCUT,IPAN,ICELL,GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
             THETAS,LMSP(1,ICELL), &
@@ -919,7 +904,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
             if (KFORCE==1.and.ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
-              call FORCXC(FLM,FLMC,LPOT,NSPIN,I1,RHOCAT,VONS,R, &
+              call FORCXC(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
               ALAT,DRDI,IMT,ZAT, &
               LMPIC,MYLRANK, &
               LCOMM, &
@@ -937,7 +922,7 @@ spinloop:     do ISPIN = 1,NSPIN
             VOL0 = 0.0D0
 
             !TODO: all THETAS passed, only one used
-            call MTZERO(LMPOT,I1,NSPIN,VONS,ZAT,R,DRDI,IMT,IRCUT, &
+            call MTZERO(LMPOTD,I1,NSPIND,VONS,ZAT,R,DRDI,IMT,IRCUT, &
                         IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
                         THETAS,IRWS,VAV0,VOL0, &
                         irmd, irid, nfund, ipand)
@@ -980,8 +965,8 @@ spinloop:     do ISPIN = 1,NSPIN
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
 ! =====================================================================
-            do ISPIN = 1,NSPIN
-              IPOT = NSPIN* (I1-1) + ISPIN
+            do ISPIN = 1,NSPIND
+              IPOT = NSPIND* (I1-1) + ISPIN
 
               do IR = 1,IRCUT(IPAN(I1),I1)
                 VONS(IR,1,ISPIN) = VONS(IR,1,ISPIN) + RFPI*VBC(ISPIN)
@@ -989,7 +974,7 @@ spinloop:     do ISPIN = 1,NSPIN
 
               ! TODO: all THETAS passed - only one used
               call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
-                          IMAXSH(LMPOT),ILM,IFUNM(1,ICELL),LMPOT,GSH, &
+                          IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
                           THETAS,ZAT(I1),RFPI, &
                           R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
                           irid, nfund, irmd, ngshd)
@@ -1001,8 +986,8 @@ spinloop:     do ISPIN = 1,NSPIN
             RMSAVQ = 0.0D0
             RMSAVM = 0.0D0
 
-            call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOT, &
-            I1,NSPIN, &
+            call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOTD, &
+            I1,NSPIND, &
             ITER,RFPI,FPI, &
             MIX, &
             FCM,IRC,IRMIN,R,DRDI,VONS, &
@@ -1018,8 +1003,8 @@ spinloop:     do ISPIN = 1,NSPIN
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
           call BRYDBM(VISP,VONS,VINS, &
-          LMPOT,R,DRDI,MIX, &
-          IRC,IRMIN,NSPIN,I1BRYD, &
+          LMPOTD,R,DRDI,MIX, &
+          IRC,IRMIN,NSPIND,I1BRYD, &
           IMIX,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
           LMPIC,MYLRANK, &
@@ -1038,7 +1023,7 @@ spinloop:     do ISPIN = 1,NSPIN
           MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
 
             call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, &
-                                 NSPIN, VINS, VISP, VONS) ! not sure if correct?
+                                 NSPIND, VINS, VISP, VONS) ! Note: only LMPIC=1 processes
 
 ! ----------------------------------------------------- output_potential
             call writePotential(I1, VISP, VINS, ECORE)
@@ -1056,8 +1041,10 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ====== write RMS convergency data - not parallelized, written by
 ! MYRANK=0   (RMSOUT) =================================================
 ! write formatted potential if file VFORM exists
+! Note: LMPIC is always 1 here!
+
         call RMSOUT_com(RMSAVQ,RMSAVM,ITER,E2,EFOLD, &
-        SCFSTEPS,VBC,QBOUND,NSPIN,NAEZ, &
+        SCFSTEPS,VBC,QBOUND,NSPIND,NAEZ, &
         KXC,LPOT,A,B,IRC, &
         VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
         ECORE,LCORE,NCORE,ZAT,ITITLE, &
@@ -1078,19 +1065,24 @@ spinloop:     do ISPIN = 1,NSPIN
           ! DOS was written to file 'results1' and read out here just
           ! to be written in routine wrldos
           ! also other stuff is read from results1
-          call RESULTS(LRECRES2,IELAST,ITER,LMAX,NAEZ,NPOL, &
-          NSPIN,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
+          call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,NPOL, &
+          NSPIND,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
           ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
           iemxd)
 
-          ! only ranks with MYLRANK(LMPIC)==0 update, other ranks get it broadcasted later
+          ! only rank with MYLRANK(1)==0 updates, other ranks get it broadcasted later
           call updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
 
-          write(6,'(79(1H=))')
+          if (MYACTVRANK /= 0) then   !DEBUG
+            write(*,*) "main2: Assertion MYACTVRANK==0 for rank with MYLRANK(1)==0 failed."
+            STOP
+          end if
+
+          call printDoubleLineSep()
 
 ! .. get info on MYACTVRANK of this processor: to be used in
 !    subsequent reduce-commands
-          MYBCRANK = MYACTVRANK
+          !MYBCRANK = MYACTVRANK
 
         endif
 ! -----------------------------------------------------------------
@@ -1108,10 +1100,10 @@ spinloop:     do ISPIN = 1,NSPIN
       ! why? all processes except 1 have MYBCRANK = 0, this allreduce
       ! tells all the other processes who is the root
       ! not really necessary
-      call MPI_ALLREDUCE(MYBCRANK,BCRANK,1,MPI_INTEGER,MPI_MAX, &
-      ACTVCOMM,IERR)
+      !call MPI_ALLREDUCE(MYBCRANK,BCRANK,1,MPI_INTEGER,MPI_MAX, &
+      !ACTVCOMM,IERR)  ! BCRANK seems to be always 0
 
-      call broadcastEnergyMesh_com(ACTVCOMM, BCRANK, E1, E2, EZ, IEMXD, WEZ)
+      call broadcastEnergyMesh_com(ACTVCOMM, 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
       ACTVCOMM,IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
@@ -1119,16 +1111,15 @@ spinloop:     do ISPIN = 1,NSPIN
       if(MYLRANK(1)==0) then
 
         ! write file 'energy_mesh'
-        call writeEnergyMesh(E1, E2, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
+        if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
+        call writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
 
         call printSolverIterationNumber(ITER, NOITER_ALL)
         call writeIterationTimings(ITER, TIME_I, TIME_S)
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory
-
-      STOPIT = isManualAbort_com(MYACTVRANK, ACTVCOMM)
-      if (STOPIT) exit ! exit SCF-loop
+      if (isManualAbort_com(MYACTVRANK, ACTVCOMM) .eqv. .true.) exit
 
 
 ! ######################################################################
@@ -1144,7 +1135,7 @@ spinloop:     do ISPIN = 1,NSPIN
 ! ======================================================================
 
 ! Free communicators and groups ..
-! ..
+
     if (MYLRANK(LMPIC)>=0) then
       call MPI_COMM_FREE(LCOMM(LMPIC),IERR)
     endif
@@ -1153,7 +1144,6 @@ spinloop:     do ISPIN = 1,NSPIN
 
     call MPI_COMM_FREE(ACTVCOMM,IERR)
     call MPI_GROUP_FREE(ACTVGROUP,IERR)
-! .. .
 
   endif ! ACTVGROUP
 

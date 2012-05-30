@@ -6,7 +6,7 @@ module main2_aux_mod
   ! from dimension parameters, calculate some derived parameters
   !----------------------------------------------------------------------------
   subroutine getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, &
-                                  LMAXD, LMAXD1, LMMAXD, LMPOTD, LMXSPD, LPOTD, &
+                                  LMAXD, LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
                                   LRECRES2, MMAXD, NAEZD, NCLEB, &
                                   NGUESSD, NPOTD, NSPIND, NTIRD)
     implicit none
@@ -21,7 +21,6 @@ module main2_aux_mod
     integer :: LMMAXD
     integer :: LMPOTD
     integer :: LMXSPD
-    integer :: LPOTD
     integer :: LRECRES2
     integer :: MMAXD
     integer :: NAEZD
@@ -30,6 +29,9 @@ module main2_aux_mod
     integer :: NPOTD
     integer :: NSPIND
     integer :: NTIRD
+
+    !--------- local
+    integer :: LPOTD
 
     ! derived dimension parameters
     LPOTD = 2*LMAXD
@@ -217,8 +219,8 @@ module main2_aux_mod
                            IEND1, IFUNM, IGUESS, ILM, IMAXSH, IMIX, IMT, INDN0, IPAN, &
                            IRC, IRCUT, IRMIN, IRNS, IRWS, ISHIFT, ISYMINDEX, ITITLE, &
                            JEND, JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
-                           LDAU, LLMSP, LMAX, LMPOT, LMSP, LOFLM1C, LPOT, MAXMESH, &
-                           MIXING, NACLS, NAEZ, NCLS, NCORE, NFU, NR, NREF, NSPIN, &
+                           LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
+                           MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
                            NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QBOUND, QMRBOUND, R, &
                            RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
                            RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
@@ -269,21 +271,16 @@ module main2_aux_mod
     integer, allocatable :: LCORE(:,:)
     logical :: LDAU
     integer, allocatable :: LLMSP(:,:)
-    integer :: LMAX
-    integer :: LMPOT
     integer, allocatable :: LMSP(:,:)
     integer, allocatable :: LOFLM1C(:)
-    integer :: LPOT
     integer :: MAXMESH
     double precision :: MIXING
     integer, allocatable :: NACLS(:)
-    integer :: NAEZ
     integer :: NCLS
     integer, allocatable :: NCORE(:)
     integer, allocatable :: NFU(:)
     integer :: NR
     integer :: NREF
-    integer :: NSPIN
     integer :: NSRA
     integer :: NSYMAT
     integer, allocatable :: NTCELL(:)
@@ -309,12 +306,19 @@ module main2_aux_mod
     double precision, allocatable :: VREF(:)
     double precision, allocatable :: ZAT(:)
 
+    !----- unused dummy variables
+    integer :: NSPIN
+    integer :: LMAX
+    integer :: LMPOT
+    integer :: NAEZ_dummy
+    integer :: LPOT
+
     ! ======================================================================
     ! =             read in variables from unformatted files               =
     ! ======================================================================
     open (67,file='inp.unf',form='unformatted')
     read (67) KMESH,MAXMESH,RR,EZOA,NUMN0,INDN0,NSYMAT,DSYMLL
-    read (67) NAEZ,NSPIN,IPAN,IRNS,IRCUT,LCORE,NCORE,NTCELL, &
+    read (67) NAEZ_dummy,NSPIN,IPAN,IRNS,IRCUT,LCORE,NCORE,NTCELL, &
     LMAX,LPOT,LMPOT
     read (67) IMIX,MIXING,QBOUND,FCM,KPRE,KTE, &
     KVMAD,KXC,ISHIFT,KFORCE,IGUESS,BCP,QMRBOUND
@@ -640,5 +644,20 @@ module main2_aux_mod
     end if
 
   end function
+
+  !----------------------------------------------------------------------------
+  !> Prints a double line separator. (=========)
+  !> @param unit_number  optional: write to file 'unit_number' otherwise to
+  !>                               stdout
+  subroutine printDoubleLineSep(unit_number)
+    implicit none
+    integer, intent(in), optional :: unit_number
+
+    if (.not. present(unit_number)) then
+      write(*,'(79("="))')
+    else
+      write(unit_number,'(79("="))')
+    end if
+  end subroutine
 
 end module main2_aux_mod

@@ -9,11 +9,9 @@ subroutine SREDGM(  NSPIN,IELAST, &           ! >
                     GMATN,LLY_GRDT, &         ! >
                     GMATN_ALL,LLY_GRDT_ALL, & ! < output
                     ! new input parameters after inc.p removal
-                    naez, lmax, lmpid, smpid, empid, iemxd)
+                    naez, lmmaxd, lmpid, smpid, empid, iemxd)
 
 ! ======================================================================
-! this routine preforms an MPI_ALLREDUCE command for
-! a given set of ranks
 !                               Alexander Thiess, 7th of December 2009
 !
 ! F90 conversion: Elias Rabel, Oct. 2011
@@ -25,23 +23,18 @@ subroutine SREDGM(  NSPIN,IELAST, &           ! >
   include 'mpif.h'
 
   integer, intent(in) :: naez
-  integer, intent(in) :: lmax
+  integer, intent(in) :: lmmaxd
   integer, intent(in) :: lmpid
   integer, intent(in) :: smpid
   integer, intent(in) :: empid
   integer, intent(in) :: iemxd
 
-  !integer::        LMMAXD
-  !parameter      (LMMAXD= (LMAXD+1)**2)
-
   !     .. scalars ..
   integer::ISPIN
   integer::NSPIN
   !     .. arrays ..
-  !double complex :: GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND)
-  !double complex :: GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIND)
-  double complex :: GMATN((LMAX+1)**2,(LMAX+1)**2,IEMXD,NSPIN)
-  double complex :: GMATN_ALL((LMAX+1)**2,(LMAX+1)**2,IEMXD,NSPIN)
+  double complex :: GMATN(LMMAXD,LMMAXD,IEMXD,NSPIN)
+  double complex :: GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIN)
 
   double complex :: LLY_GRDT(IEMXD,NSPIN)
   double complex :: LLY_GRDT_ALL(IEMXD,NSPIN)
@@ -55,15 +48,10 @@ subroutine SREDGM(  NSPIN,IELAST, &           ! >
   integer::RECV
 
   !     .. local arrays ..
-  !double complex :: GSEND(LMMAXD*LMMAXD*IEMXD+IEMXD)
-  !double complex :: GRECV(LMMAXD*LMMAXD*IEMXD+IEMXD)
-  !double complex :: GESEND(LMMAXD*LMMAXD+1,NSPIND)
-  !double complex :: GERECV(LMMAXD*LMMAXD+1,NSPIND)
-
-  double complex :: GSEND((LMAX+1)**2 * (LMAX+1)**2 * IEMXD + IEMXD)
-  double complex :: GRECV((LMAX+1)**2 * (LMAX+1)**2 * IEMXD + IEMXD)
-  double complex :: GESEND((LMAX+1)**2 * (LMAX+1)**2 + 1, NSPIN)
-  double complex :: GERECV((LMAX+1)**2 * (LMAX+1)**2 + 1, NSPIN)
+  double complex :: GSEND(LMMAXD*LMMAXD*IEMXD+IEMXD)
+  double complex :: GRECV(LMMAXD*LMMAXD*IEMXD+IEMXD)
+  double complex :: GESEND(LMMAXD*LMMAXD+1,NSPIN)
+  double complex :: GERECV(LMMAXD*LMMAXD+1,NSPIN)
 
   !     .. MPI ..
   integer, dimension(MPI_STATUS_SIZE) :: STATUS
@@ -82,11 +70,7 @@ subroutine SREDGM(  NSPIN,IELAST, &           ! >
   integer::EMPIC
   integer::EPROC(IEMXD)
 
-  integer::LMMAXD
-
-  LMMAXD= (LMAX+1)**2
-
-  !     fist copy the complete array to destination array:
+  !     first copy the complete array to destination array:
 
   call ZCOPY(LMMAXD*LMMAXD*IEMXD*NSPIN,GMATN,1,GMATN_ALL,1)
 

@@ -87,18 +87,19 @@ C
       OPEN (67,FILE='energy_mesh',FORM='unformatted')
       WRITE (67) IELAST,EZ,WEZ,E1,E2
       WRITE (67) NPOL,TK,NPNT1,NPNT2,NPNT3
-      IF ( NPOL.EQ.0 ) WRITE(67) EFERMI
+C     IF ( NPOL.EQ.0 ) WRITE(67) EFERMI
+      WRITE(67) EFERMI
       CLOSE (67)
 C ------------------------------------------------------ input_potential
 C                                          some data in this file change
 C
 C
 C
-      E1 = 0D0
+C     E1 = 0D0
 C
-      OPEN (28,FILE='not.converged',FORM='formatted')
-      WRITE (28,'(1P,3D17.10)') E1,VBC
-      CLOSE (28)
+C     OPEN (28,FILE='not.converged',FORM='formatted')
+C     WRITE (28,'(1P,3D17.10)') E1,VBC
+C     CLOSE (28)
 C -------------------------------------------------------------- input1b
 C                                 meant for MAIN1b, data does not change
 C

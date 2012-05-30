@@ -22,16 +22,18 @@ contains
     read (67) IELAST,EZ,WEZ,E1,E2
     read (67) NPOL,TK,NPNT1,NPNT2,NPNT3
 
-    if ( NPOL==0 ) read(67) EFERMI
+    !if ( NPOL==0 ) read(67) EFERMI
+    read(67) EFERMI
     close (67)
   end subroutine
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
-  subroutine writeEnergyMesh(E1, E2, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
+  subroutine writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
     implicit none
     double precision :: E1
     double precision :: E2
+    double precision :: EFERMI
     double complex :: EZ(:)
     integer :: IELAST
     integer :: NPNT1
@@ -44,6 +46,7 @@ contains
     open (67,file='energy_mesh',form='unformatted')
     write (67) IELAST,EZ,WEZ,E1,E2
     write (67) NPOL,TK,NPNT1,NPNT2,NPNT3
+    write (67) EFERMI
     close (67)
   end subroutine
 
@@ -82,12 +85,12 @@ subroutine updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
   !> Distribute EnergyMesh from rank 'BCRANK' to all other ranks
   subroutine broadcastEnergyMesh_com(ACTVCOMM, BCRANK, E1, E2, EZ, IEMXD, WEZ)
     implicit none
-    integer :: ACTVCOMM
-    integer :: BCRANK
+    integer, intent(in) :: ACTVCOMM
+    integer, intent(in) :: BCRANK
     double precision :: E1
     double precision :: E2
     double complex :: EZ(:)
-    integer :: IEMXD
+    integer, intent(in) :: IEMXD
     double complex :: WEZ(:)
 
     !---------------

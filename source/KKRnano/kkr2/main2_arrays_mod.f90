@@ -174,7 +174,7 @@ module main2_arrays_mod
   ! Dimension Parameters.
   !==============================================================================
 
-  integer :: NAEZD
+  integer :: NAEZ
   integer :: LMAXD
   integer :: NREFD
   integer :: IRID
@@ -221,7 +221,7 @@ module main2_arrays_mod
   integer::   NTIRD    ! for Broyden mixing
 
   !derived parameters
-  integer :: LPOTD
+  integer :: LPOT
   integer :: NGUESSD
 
   !Parallelisation
@@ -252,7 +252,7 @@ CONTAINS
 
     read(FILEHANDLE) LMAXD
     read(FILEHANDLE) NSPIND
-    read(FILEHANDLE) NAEZD
+    read(FILEHANDLE) NAEZ
     read(FILEHANDLE) IRNSD
     read(FILEHANDLE) TRC
     read(FILEHANDLE) IRMD
@@ -287,6 +287,9 @@ CONTAINS
 
     close(FILEHANDLE)
 
+    ! derived parameter
+    LPOT = 2*LMAXD
+
   end subroutine read_dimension_parameters
 
   !----------------------------------------------------------------------------
@@ -314,9 +317,9 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(YRG(LASSLD,0:LASSLD,0:LASSLD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RBASIS(3,NAEZD), stat = memory_stat)
+    allocate(RBASIS(3,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(SMAT(LMXSPD,NAEZD), stat = memory_stat)
+    allocate(SMAT(LMXSPD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CLEB(LMXSPD*LMPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -324,11 +327,11 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RNORM(IEMXD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(DFAC(0:LPOTD,0:LPOTD), stat = memory_stat)
+    allocate(DFAC(0:LPOT,0:LPOT), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RWS(NAEZD), stat = memory_stat)
+    allocate(RWS(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RMT(NAEZD), stat = memory_stat)
+    allocate(RMT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(GN(3,NMAXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -360,11 +363,11 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NOFKS(MAXMSHD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(EZOA(NACLSD,NAEZD), stat = memory_stat)
+    allocate(EZOA(NACLSD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NUMN0(NAEZD), stat = memory_stat)
+    allocate(NUMN0(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(INDN0(NAEZD,NACLSD), stat = memory_stat)
+    allocate(INDN0(NAEZ,NACLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NSG(ISHLD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -410,25 +413,25 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(JXCIJINT(NXIJD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ECOU(0:LPOTD), stat = memory_stat)
+    allocate(ECOU(0:LPOT), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ESPC(0:3,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ESPV(0:LMAXD1,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(EXC(0:LPOTD), stat = memory_stat)
+    allocate(EXC(0:LPOT), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(A(NAEZD), stat = memory_stat)
+    allocate(A(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(B(NAEZD), stat = memory_stat)
+    allocate(B(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(DRDI(IRMD,NAEZD), stat = memory_stat)
+    allocate(DRDI(IRMD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(R(IRMD,NAEZD), stat = memory_stat)
+    allocate(R(IRMD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(THETAS(IRID,NFUND,NCELLD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ZAT(NAEZD), stat = memory_stat)
+    allocate(ZAT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RHOCAT(IRMD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -446,9 +449,9 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CATOM(NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(FLM(-1:1,NAEZD), stat = memory_stat)
+    allocate(FLM(-1:1,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(FLMC(-1:1,NAEZD), stat = memory_stat)
+    allocate(FLMC(-1:1,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(SM1S(NTIRD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -460,31 +463,31 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(WIT(2:ITDBRYD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IMT(NAEZD), stat = memory_stat)
+    allocate(IMT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IPAN(NAEZD), stat = memory_stat)
+    allocate(IPAN(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRC(NAEZD), stat = memory_stat)
+    allocate(IRC(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRNS(NAEZD), stat = memory_stat)
+    allocate(IRNS(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRCUT(0:IPAND,NAEZD), stat = memory_stat)
+    allocate(IRCUT(0:IPAND,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRMIN(NAEZD), stat = memory_stat)
+    allocate(IRMIN(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRWS(NAEZD), stat = memory_stat)
+    allocate(IRWS(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ITITLE(20,NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LCORE(20,NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LLMSP(NFUND,NAEZD), stat = memory_stat)
+    allocate(LLMSP(NFUND,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NCORE(NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NFU(NAEZD), stat = memory_stat)
+    allocate(NFU(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NTCELL(NAEZD), stat = memory_stat)
+    allocate(NTCELL(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ILM(NGSHD,3), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -498,9 +501,9 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LOFLM1C(LM2D), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IFUNM(LMXSPD,NAEZD), stat = memory_stat)
+    allocate(IFUNM(LMXSPD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LMSP(LMXSPD,NAEZD), stat = memory_stat)
+    allocate(LMSP(LMXSPD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -508,7 +511,7 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RMTREF(NREFD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(VREF(NAEZD), stat = memory_stat)
+    allocate(VREF(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RXIJ(NXIJD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -520,13 +523,13 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NXCP(NXIJD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ATOM(NACLSD,NAEZD), stat = memory_stat)
+    allocate(ATOM(NACLSD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(CLS(NAEZD), stat = memory_stat)
+    allocate(CLS(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NACLS(NCLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(REFPOT(NAEZD), stat = memory_stat)
+    allocate(REFPOT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(MYLRANK(LMPID*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -536,19 +539,19 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LSIZE(LMPID*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LSRANK(LMPID,NAEZD*SMPID*EMPID), stat = memory_stat)
+    allocate(LSRANK(LMPID,NAEZ*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LSMYRANK(LMPID,NAEZD*SMPID*EMPID), stat = memory_stat)
+    allocate(LSMYRANK(LMPID,NAEZ*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(SRANK(SMPID,NAEZD*LMPID*EMPID), stat = memory_stat)
+    allocate(SRANK(SMPID,NAEZ*LMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(SMYRANK(SMPID,NAEZD*LMPID*EMPID), stat = memory_stat)
+    allocate(SMYRANK(SMPID,NAEZ*LMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ETIME(IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(EMYRANK(EMPID,NAEZD*LMPID*SMPID), stat = memory_stat)
+    allocate(EMYRANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ERANK(EMPID,NAEZD*LMPID*SMPID), stat = memory_stat)
+    allocate(ERANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(EPROC(IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")

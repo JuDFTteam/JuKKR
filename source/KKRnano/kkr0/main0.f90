@@ -718,7 +718,7 @@
 ! ----------------------------------------------------------------------
 ! update Fermi energy, adjust energy window according to running options
 
-    if ( NPOL == 0 ) EFERMI = E2IN
+    EFERMI = E2IN
 !     a test if E2IN is different from E2 after call to STARTB1,
 !     before it was =E2
     if ( DABS(E2IN-E2) > 1D-10 .and. NPOL /= 0 ) E2 = E2IN

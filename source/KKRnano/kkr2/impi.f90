@@ -157,7 +157,7 @@ subroutine IMPI( &
 
   ! ACTIVE GROUP (ACTVGROUP) ...............................................
 
-  call MPI_COMM_GROUP(MPI_COMM_WORLD,WGROUP,IERR) ! get default
+  call MPI_COMM_GROUP(MPI_COMM_WORLD,WGROUP,IERR) ! get group for MPI_COMM_WORLD
   call MPI_GROUP_INCL(WGROUP,NAEZ*LMPID*SMPID*EMPID, &
                       ACTVRANKS(1), &
                       ACTVGROUP,IERR) !create a group ACTVGROUP
