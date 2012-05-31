@@ -149,24 +149,7 @@ module main2_arrays_mod
   integer, dimension(:), allocatable :: NACLS
   integer, dimension(:), allocatable :: REFPOT
 
-  ! -------------- MPI --------------------------------------------------------
-  integer, dimension(:), allocatable :: MYLRANK
-  integer, dimension(:), allocatable :: LCOMM
-  integer, dimension(:), allocatable :: LGROUP
-  integer, dimension(:), allocatable :: LSIZE
-
-  !     .. LS-MPI
-  integer, dimension(:,:), allocatable :: LSRANK
-  integer, dimension(:,:), allocatable :: LSMYRANK
-
-  !     .. S-MPI
-  integer, dimension(:,:), allocatable :: SRANK
-  integer, dimension(:,:), allocatable :: SMYRANK
-
-  !     .. E-MPI
   real, dimension(:), allocatable :: ETIME
-  integer, dimension(:,:), allocatable :: EMYRANK
-  integer, dimension(:,:), allocatable :: ERANK
   integer, dimension(:), allocatable :: EPROC
   integer, dimension(:), allocatable :: EPROCO
 
@@ -531,27 +514,7 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(REFPOT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(MYLRANK(LMPID*SMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LCOMM(LMPID*SMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LGROUP(LMPID*SMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LSIZE(LMPID*SMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LSRANK(LMPID,NAEZ*SMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LSMYRANK(LMPID,NAEZ*SMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(SRANK(SMPID,NAEZ*LMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(SMYRANK(SMPID,NAEZ*LMPID*EMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ETIME(IEMXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(EMYRANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ERANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(EPROC(IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -682,17 +645,7 @@ CONTAINS
     deallocate(CLS, stat = memory_stat)
     deallocate(NACLS, stat = memory_stat)
     deallocate(REFPOT, stat = memory_stat)
-    deallocate(MYLRANK, stat = memory_stat)
-    deallocate(LCOMM, stat = memory_stat)
-    deallocate(LGROUP, stat = memory_stat)
-    deallocate(LSIZE, stat = memory_stat)
-    deallocate(LSRANK, stat = memory_stat)
-    deallocate(LSMYRANK, stat = memory_stat)
-    deallocate(SRANK, stat = memory_stat)
-    deallocate(SMYRANK, stat = memory_stat)
     deallocate(ETIME, stat = memory_stat)
-    deallocate(EMYRANK, stat = memory_stat)
-    deallocate(ERANK, stat = memory_stat)
     deallocate(EPROC, stat = memory_stat)
     deallocate(EPROCO, stat = memory_stat)
 

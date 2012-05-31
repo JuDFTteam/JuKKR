@@ -1,5 +1,6 @@
       SUBROUTINE LATTICE3D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,
-     +                     NSG,NSR,RMAX,GMAX,GN,RM,IPRINT,NMAXD,ISHLD)
+     +                     NSG,NSR,RMAX,GMAX,GN,RM,IPRINT,NMAXD,ISHLD,
+     &                     print_info)
 C **********************************************************************
 C *                                                                    *
 C *  generate lattice vectors of direct and reciprocal space from      *
@@ -22,10 +23,10 @@ C *  Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th    *
 C *  one it is used only locally (GNR/RMR)       v.popescu May 2004    *
 C *                                                                    *
 C **********************************************************************
-      USE common_mpi
       IMPLICIT NONE
 C     ..
 C     .. Scalar arguments ..
+      INTEGER print_info
       INTEGER IPRINT,NGMAX,NRMAX,NSHLG,NSHLR,NMAXD,ISHLD
       DOUBLE PRECISION ALAT
 C     ..
@@ -56,7 +57,7 @@ C     ..................................................................
 C
       PI = 4.0D0*ATAN(1.0D0)
 C
-      IF (MYRANK.EQ.0) THEN
+      IF (print_info.EQ.0) THEN
       WRITE (6,'(5X,2A,/)') '< LATTICE3D > : ',
      &                    'generating direct/reciprocal lattice vectors'
       ENDIF
@@ -279,7 +280,7 @@ C
 C **********************************************************************
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      IF (MYRANK.EQ.0) THEN
+      IF (print_info.EQ.0) THEN
         WRITE (6,FMT=99002)
         WRITE (6,FMT=99003) 'Direct  lattice',NRMAX,NSHLR,RMR(NRMAX)
         WRITE (6,FMT=99003) 'Recipr. lattice',NGMAX,NSHLG,GNR(NGMAX)

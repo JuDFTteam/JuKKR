@@ -1,10 +1,12 @@
+C>    @param print_info  0=print some info  1=print nothing
       SUBROUTINE MADELUNG3D(LPOT,YRG,WG,ALAT,
      &                      RMAX,GMAX,BRAVAIS,RECBV,
      &                      LMXSPD,LASSLD,LPOTD,LMPOTD,
      &                      NMAXD,ISHLD,
      &                      LMPOT,CLEB,ICLEB,IEND,
      &                      NCLEBD,LOFLM,DFAC,
-     &                      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM)
+     &                      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM,
+     &                      print_info)
 C **********************************************************************
 C *                                                                    *
 C * This subroutine calculates the Madelung potential coefficients     *
@@ -13,6 +15,8 @@ C **********************************************************************
       IMPLICIT NONE
 C     ..
 C     .. Scalar Arguments ..
+      INTEGER print_info
+
       INTEGER LPOT
       INTEGER LMXSPD,LASSLD,LPOTD,LMPOTD,NMAXD,ISHLD
       DOUBLE PRECISION ALAT,RMAX,GMAX
@@ -77,7 +81,7 @@ C
 C
 C ======================================================================
       CALL LATTICE3D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,NSG,NSR,
-     &               RMAX,GMAX,GN,RM,IPRINT,NMAXD,ISHLD)
+     &               RMAX,GMAX,GN,RM,IPRINT,NMAXD,ISHLD, print_info)
 C
 C ======================================================================
 C

@@ -6,7 +6,8 @@ program MAIN2
   !use mpi
   use common_testc
   use common_optc
-  use common_mpi
+
+  use KKRnano_mpi_mod
 
   use main2_arrays_mod ! If you can't find one of the unbelievable amount of arrays, look here
   use lloyds_formula_mod
@@ -139,27 +140,10 @@ program MAIN2
   integer::NLDAU
   integer::NXIJ
 
-  !     .. L-MPI
-  integer::LMPIC
-  integer::LSMPIC
-  integer::LSMPIB
-
-  ! S-MPI
-  integer::SMPIC
-  integer::SMPIB
   integer::MAPSPIN
 
-  ! E-MPI
-  integer::EMPIC
-  integer::EMPIB
   integer::IE
   integer::IELAST
-
-  !     .. ACTV-MPI
-  integer::MYACTVRANK
-  integer::ACTVCOMM
-  integer::ACTVGROUP
-  integer::ACTVSIZE
 
   integer::   IERR
   integer::   MAPBLOCK
@@ -217,23 +201,14 @@ program MAIN2
 
   call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
 
-  if (JIJ .eqv. .true. .and. SMPID /= 1) then
+  if ((JIJ .eqv. .true.) .and. (SMPID /= 1)) then
     write(*,*) "ERROR: Jij calculation is broken for spin-parallel calc. Set SMPID=1"
     stop
   end if
 
-! ------------------------------------------------------------------
-
-  ! TODO: get rid of LSMYRANK, LSRANK, LSMPIB, LSMPIC
-  call IMPI(NAEZ,MYRANK,NROFNODES, &
-            LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
-            LSMPIB,LSMPIC,LSRANK,LSMYRANK, &
-            SMPIB,SMPIC,SRANK,SMYRANK, &
-            EMPIB,EMPIC,ERANK,EMYRANK, &
-            MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE, &
-            lmpid, smpid, empid, nthrds)
-
-!====================================================================
+! -----------------------------------------------------------------------------
+   call initialiseKKRnano_mpi_com(SMPID, EMPID, NAEZ, nthrds)
+!------------------------------------------------------------------------------
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
@@ -241,7 +216,7 @@ program MAIN2
 !=====================================================================
 
   ! This if closes several hundreds of lines later!
-  if (LMPIC/=0.or.LSMPIC/=0) then   !     ACTVGROUP could also test EMPIC
+  if (LMPIC/=0) then   !     ACTVGROUP could also test EMPIC or MYACTVRANK (preferred)
 
 ! ========= TIMING ======================================================
     if (MYLRANK(1) == 0) then
@@ -283,7 +258,8 @@ program MAIN2
       NMAXD,ISHLD, &
       LMPOTD,CLEB,ICLEB,IEND, &
       NCLEBD,LOFLM,DFAC, &
-      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM) ! does it have to be in SCF-loop?
+      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
+      MYRANK) ! does it have to be in SCF-loop?
 
       do LM = 1,LMPOTD
         CMOM(LM) = 0.0D0
@@ -787,7 +763,6 @@ spinloop:     do ISPIN = 1,NSPIND
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
-
         call openPotentialFile(LMPOTD, IRNSD, IRMD)
         call openResults2File(LRECRES2)
 
@@ -1112,6 +1087,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
         ! write file 'energy_mesh'
         if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
+        ! could be moved
         call writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
 
         call printSolverIterationNumber(ITER, NOITER_ALL)
@@ -1134,26 +1110,15 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======================================================================
 ! ======================================================================
 
-! Free communicators and groups ..
-
-    if (MYLRANK(LMPIC)>=0) then
-      call MPI_COMM_FREE(LCOMM(LMPIC),IERR)
-    endif
-
-    call MPI_GROUP_FREE(LGROUP(LMPIC),IERR)
-
-    call MPI_COMM_FREE(ACTVCOMM,IERR)
-    call MPI_GROUP_FREE(ACTVGROUP,IERR)
-
   endif ! ACTVGROUP
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID do nothing ...
 ! ... and wait here
 !=====================================================================
+! Free communicators and groups ..
 
-  call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-  call MPI_FINALIZE(IERR)
+  call finaliseKKRnano_mpi_com()
 
 !-----------------------------------------------------------------------------
 ! Array DEallocations BEGIN
