@@ -10,25 +10,24 @@ module KKRnano_mpi_mod
   integer :: LMPIC
 
   ! E-MPI
-  integer::EMPIC
-  integer::EMPIB
+  integer :: EMPIC
+  integer :: EMPIB
 
   ! S-MPI
-  integer::SMPIC
-  integer::SMPIB
+  integer ::SMPIC
+  integer ::SMPIB
 
   !     .. ACTV-MPI
-  integer::MYACTVRANK
-  integer::ACTVCOMM
-  integer::ACTVGROUP
-  integer::ACTVSIZE
+  integer :: MYACTVRANK
+  integer :: ACTVCOMM
+  integer, private::ACTVGROUP
 
   ! ----------- arrays ----------------------------------------------------------
 
   ! -------------- MPI --------------------------------------------------------
   integer, dimension(:), allocatable :: MYLRANK
   integer, dimension(:), allocatable :: LCOMM
-  integer, dimension(:), allocatable :: LGROUP
+  integer, dimension(:), allocatable, private :: LGROUP
   integer, dimension(:), allocatable :: LSIZE
 
   !     .. S-MPI
@@ -37,7 +36,6 @@ module KKRnano_mpi_mod
 
   !     .. E-MPI
   integer, dimension(:,:), allocatable :: EMYRANK
-  integer, dimension(:,:), allocatable :: ERANK
 
   private :: fatalMemoryError
   private :: IMPI
@@ -83,8 +81,6 @@ contains
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
     allocate(EMYRANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
-    allocate(ERANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
   end subroutine
 
   !------------------------------------------------------------------------------
@@ -100,7 +96,6 @@ contains
     deallocate(SRANK, stat = memory_stat)
     deallocate(SMYRANK, stat = memory_stat)
     deallocate(EMYRANK, stat = memory_stat)
-    deallocate(ERANK, stat = memory_stat)
   end subroutine
 
   !------------------------------------------------------------------------------
@@ -116,13 +111,14 @@ contains
 
       ! not needed outside of this routine
     integer :: NROFNODES
+    integer :: ACTVSIZE
 
     call allocate_KKRnano_mpi_arrays(SMPID, EMPID, NAEZ)
 
     call IMPI(NAEZ,MYRANK,NROFNODES, &
     LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &
     SMPIB,SMPIC,SRANK,SMYRANK, &
-    EMPIB,EMPIC,ERANK,EMYRANK, &
+    EMPIB,EMPIC,EMYRANK, &
     MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE, &
     lmpid, smpid, empid, nthrds)
 
@@ -166,7 +162,7 @@ contains
   MYRANK,NROFNODES, &                         ! < out
   LMPIC,MYLRANK,LGROUP,LCOMM,LSIZE, &         ! < out
   SMPIB,SMPIC,SRANK,SMYRANK, &                ! < out
-  EMPIB,EMPIC,ERANK,EMYRANK, &                ! < out
+  EMPIB,EMPIC,EMYRANK, &                ! < out
   MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE, &   ! < out
   lmpid, smpid, empid, nthrds)                ! < in  ! new input parameters after inc.p removal
 
@@ -231,7 +227,6 @@ contains
 
     !     .. E-MPI
     integer::EMYRANK(EMPID,NAEZ*LMPID*SMPID)
-    integer::ERANK  (EMPID,NAEZ*LMPID*SMPID)
     integer::EMPI
     integer::EMPIC
     integer::EMPIB
@@ -278,7 +273,7 @@ contains
             SRANK(ISPIN,(LMPI-1)*NAEZ*EMPID+(I1-1)*EMPID+EMPI)   = ISPIN-1
 
             EMYRANK(EMPI,(ISPIN-1)*NAEZ*LMPID+(I1-1)*LMPID+LMPI)= IRANK
-            ERANK(EMPI,(ISPIN-1)*NAEZ*LMPID+(I1-1)*LMPID+LMPI)  = LMPI-1
+            !ERANK(EMPI,(ISPIN-1)*NAEZ*LMPID+(I1-1)*LMPID+LMPI)  = LMPI-1
 
             ACTVRANKS(IRANK+1) = IRANK
 

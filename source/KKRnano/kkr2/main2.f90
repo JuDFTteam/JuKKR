@@ -309,6 +309,7 @@ program MAIN2
 ! LDA+U
           if (LDAU) then
 
+            EREFLDAU = EFERMI
             EREFLDAU = 0.48       ! FIXME: hardcoded
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
@@ -896,7 +897,7 @@ spinloop:     do ISPIN = 1,NSPIND
             VAV0 = 0.0D0
             VOL0 = 0.0D0
 
-            !TODO: all THETAS passed, only one used
+            !TODO: all THETAS passed, only one used, initialise VAV0, VOL0 in MTZERO?
             call MTZERO(LMPOTD,I1,NSPIND,VONS,ZAT,R,DRDI,IMT,IRCUT, &
                         IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
                         THETAS,IRWS,VAV0,VOL0, &

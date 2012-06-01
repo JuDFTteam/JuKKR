@@ -1,4 +1,4 @@
-
+! Author: Elias Rabel
 module DebugCheckArrayD_mod
   implicit none
 
