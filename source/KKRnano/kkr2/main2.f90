@@ -45,7 +45,6 @@ program MAIN2
   double precision::DF
   double precision::ALAT
   double precision::FCM
-  double precision::MIX
   double precision::MIXING
   double precision::QBOUND
   double precision::VOLUME0
@@ -834,7 +833,7 @@ spinloop:     do ISPIN = 1,NSPIND
             if (KFORCE==1 .and. ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
               call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
-              R,DRDI,IMT,ZAT,irmd)
+              R,DRDI,IMT,ZAT,irmd)  ! TODO: get rid of atom parameter I1
               call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
               DRDI,IMT,naez,irmd)
 ! ---------------------------------------------------------------------
@@ -898,10 +897,14 @@ spinloop:     do ISPIN = 1,NSPIND
             VOL0 = 0.0D0
 
             !TODO: all THETAS passed, only one used, initialise VAV0, VOL0 in MTZERO?
-            call MTZERO(LMPOTD,I1,NSPIND,VONS,ZAT,R,DRDI,IMT,IRCUT, &
-                        IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
-                        THETAS,IRWS,VAV0,VOL0, &
-                        irmd, irid, nfund, ipand)
+            !call MTZERO(LMPOTD,I1,NSPIND,VONS,ZAT,R,DRDI,IMT,IRCUT, &
+            !            IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
+            !            THETAS,IRWS,VAV0,VOL0, &
+            !            irmd, irid, nfund, ipand)
+            call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
+                            IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
+                            THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
+                            irmd, irid, nfund, ipand)
 
             call OUTTIME(MYLRANK(1),'MTZERO ......',TIME_I,ITER)
 
@@ -948,24 +951,27 @@ spinloop:     do ISPIN = 1,NSPIND
                 VONS(IR,1,ISPIN) = VONS(IR,1,ISPIN) + RFPI*VBC(ISPIN)
               end do
 
-              ! TODO: all THETAS passed - only one used
-              call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
+              !call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
+              !            IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
+              !            THETAS,ZAT(I1),RFPI, &
+              !            R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
+              !            irid, nfund, irmd, ngshd)
+              call CONVOL_NEW(IRCUT(1,I1),IRC(I1), &
                           IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
-                          THETAS,ZAT(I1),RFPI, &
+                          THETAS(:,:,ICELL),ZAT(I1), &
                           R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
                           irid, nfund, irmd, ngshd)
 
             end do
 
 ! -->   final construction of the potentials (straight mixing)
-            MIX = MIXING
             RMSAVQ = 0.0D0
             RMSAVM = 0.0D0
 
             call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOTD, &
             I1,NSPIND, &
             ITER,RFPI,FPI, &
-            MIX, &
+            MIXING, &
             FCM,IRC,IRMIN,R,DRDI,VONS, &
             VISP,VINS, &
             naez, irmd, irnsd)
@@ -979,7 +985,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
           call BRYDBM(VISP,VONS,VINS, &
-          LMPOTD,R,DRDI,MIX, &
+          LMPOTD,R,DRDI,MIXING, &
           IRC,IRMIN,NSPIND,I1BRYD, &
           IMIX,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
@@ -1014,7 +1020,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
 ! =====================================================================
-! ====== write RMS convergency data - not parallelized, written by
+! ====== write RMS convergency data - written by
 ! MYRANK=0   (RMSOUT) =================================================
 ! write formatted potential if file VFORM exists
 ! Note: LMPIC is always 1 here!
