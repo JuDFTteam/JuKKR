@@ -31,7 +31,7 @@ C     maximal number of shape functions
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION RFPI,Z
-      INTEGER ICELL,IMAXSH,IMT1,IRC1,LMPOT
+      INTEGER IMAXSH,IMT1,IRC1,LMPOT
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION GSH(*),R(*),THETAS(IRID,NFUND),VONS(IRMD,*)
