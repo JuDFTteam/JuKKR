@@ -1,3 +1,7 @@
+C     Throws stuff from X and Z into Y
+C     Z after X
+C     Y = (X(:), Z(:))  - why so complicated
+
 C>    @param Y single vector containing all lm,spin components
 C>    @param X spherical potential
 C>    @param Z non-spherical potential
