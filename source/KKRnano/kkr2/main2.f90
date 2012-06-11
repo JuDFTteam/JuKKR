@@ -852,7 +852,6 @@ spinloop:     do ISPIN = 1,NSPIND
               IRMIN(I1),IRWS(I1),LPOT,VINS,IRCUT(:,I1),IPAN(I1),ZAT(I1), &
               irmd, irnsd, ipand)
 
-
               call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
               VONS,ZAT(I1),R(:,I1), &
               DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
@@ -860,6 +859,7 @@ spinloop:     do ISPIN = 1,NSPIND
               irmd, irid, nfund, ipand, ngshd)
 
             end if
+
             call OUTTIME(MYLRANK(1),'KTE ......',TIME_I,ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
@@ -896,11 +896,6 @@ spinloop:     do ISPIN = 1,NSPIND
             VAV0 = 0.0D0
             VOL0 = 0.0D0
 
-            !TODO: all THETAS passed, only one used, initialise VAV0, VOL0 in MTZERO?
-            !call MTZERO(LMPOTD,I1,NSPIND,VONS,ZAT,R,DRDI,IMT,IRCUT, &
-            !            IPAN,ICELL,LMSP(1,ICELL),IFUNM(1,ICELL), &
-            !            THETAS,IRWS,VAV0,VOL0, &
-            !            irmd, irid, nfund, ipand)
             call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
                             IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
@@ -951,11 +946,6 @@ spinloop:     do ISPIN = 1,NSPIND
                 VONS(IR,1,ISPIN) = VONS(IR,1,ISPIN) + RFPI*VBC(ISPIN)
               end do
 
-              !call CONVOL(IRCUT(1,I1),IRC(I1),ICELL, &
-              !            IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
-              !            THETAS,ZAT(I1),RFPI, &
-              !            R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
-              !            irid, nfund, irmd, ngshd)
               call CONVOL_NEW(IRCUT(1,I1),IRC(I1), &
                           IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
                           THETAS(:,:,ICELL),ZAT(I1), &
