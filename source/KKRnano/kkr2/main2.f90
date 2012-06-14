@@ -689,13 +689,10 @@ spinloop:     do ISPIN = 1,NSPIND
             EDCLDAU = 0.0D0
 
             if (LDAU.and.NLDAU>=1) then
-
               call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
                             ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
                             lmaxd)
-
             endif
-
 ! LDAU
 
 ! ----------------------------------------------------------------------
@@ -731,6 +728,8 @@ spinloop:     do ISPIN = 1,NSPIND
       call OUTTIME(MYLRANK(1),'density calculated ..',TIME_I,ITER)
 
 
+! TODO: Only necessary for non-DOS calculation - otherwise proceed to RESULTS
+!       Drawback: RESULTS has to be modified - extract DOS part
 !----------------------------------------------------------------------
 ! BEGIN L-MPI: only processes with LMPIC = 1 are working
 !----------------------------------------------------------------------
@@ -1032,6 +1031,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -----------------------------------------------------------------
 ! BEGIN: only process with MYLRANK(LMPIC = 1) = 0 is working here - means MASTERRANK
 ! -----------------------------------------------------------------
+!       TODO: don't nest with previous if, use if(MYLRANK(1)==0)
         if(MYLRANK(LMPIC)==0) then
 
           ! DOS was written to file 'results1' and read out here just
@@ -1052,10 +1052,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
           call printDoubleLineSep()
 
-! .. get info on MYACTVRANK of this processor: to be used in
-!    subsequent reduce-commands
-          !MYBCRANK = MYACTVRANK
-
         endif
 ! -----------------------------------------------------------------
 ! END: only process with MYLRANK(LMPIC = 1) = 0 is working here
@@ -1067,13 +1063,6 @@ spinloop:     do ISPIN = 1,NSPIND
       endif
 ! -----------------------------------------------------------------
 ! END: L-MPI: only processes with LMPIC = 1 are working here
-
-
-      ! why? all processes except 1 have MYBCRANK = 0, this allreduce
-      ! tells all the other processes who is the root
-      ! not really necessary
-      !call MPI_ALLREDUCE(MYBCRANK,BCRANK,1,MPI_INTEGER,MPI_MAX, &
-      !ACTVCOMM,IERR)  ! BCRANK seems to be always 0
 
       call broadcastEnergyMesh_com(ACTVCOMM, 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
 
