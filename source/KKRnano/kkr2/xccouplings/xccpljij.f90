@@ -19,10 +19,9 @@ subroutine XCCPLJIJ_START( &
 I1,IER,WGTE, &
 RXIJ,NXIJ,IXCP,RXCCLS, &
 GMATXIJ,DTIXIJ, &
-LMPIC,LCOMM, &
+communicator, &
 JXCIJINT,ERESJIJ, &
-naez, lmmaxd, nxijd, nspind, &
-prod_lmpid_smpid_empid)
+naez, lmmaxd, nxijd, nspind)
   !   ********************************************************************
   !   *                                                                  *
   !   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -40,7 +39,6 @@ prod_lmpid_smpid_empid)
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: nxijd
   integer, intent(in) :: nspind
-  integer, intent(in) :: prod_lmpid_smpid_empid
 
   !     ..
   !     .. Scalar arguments
@@ -48,21 +46,14 @@ prod_lmpid_smpid_empid)
   integer, intent(in) :: I1
   integer, intent(in) :: IER
   integer, intent(in) :: NXIJ
-  integer, intent(in) :: LMPIC
   logical, intent(in) :: ERESJIJ
-  !     ..
-  !     .. Array arguments
-  !     DOUBLE COMPLEX   GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND),
-  !    &                 DTIXIJ(LMMAXD,LMMAXD)
-  !     DOUBLE PRECISION RXIJ(NXIJD),RXCCLS(3,NXIJD)
-  !     INTEGER          IXCP(NXIJD),LCOMM(LMPID*SMPID*EMPID)
 
   double complex :: GMATXIJ(lmmaxd,lmmaxd,NXIJD,NSPIND)
   double complex :: DTIXIJ(lmmaxd,lmmaxd)
   double precision :: RXIJ(NXIJD)
   double precision :: RXCCLS(3,NXIJD)
   integer :: IXCP(NXIJD)
-  integer, intent(in) :: LCOMM(prod_lmpid_smpid_empid)
+  integer, intent(in) :: communicator
 
   double complex :: JXCIJINT(NXIJD)
 
@@ -179,7 +170,7 @@ prod_lmpid_smpid_empid)
 
   call MPI_ALLGATHER(DTIXIJ,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
   DTNXIJ,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-  LCOMM(LMPIC),IERR)
+  communicator,IERR)
 
 
   do XIJ = 2, NXIJ ! loop XIJ = 1, NXIJ(I1)

@@ -46,7 +46,6 @@ program MAIN2
   double precision::ALAT
   double precision::FCM
   double precision::MIXING
-  double precision::QBOUND
   double precision::VOLUME0
   double precision::RMAX
   double precision::GMAX
@@ -180,7 +179,7 @@ program MAIN2
                            JEND, JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
                            LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
                            MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
-                           NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QBOUND, QMRBOUND, R, &
+                           NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, R, &
                            RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
                            RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
 
@@ -194,9 +193,6 @@ program MAIN2
  ! ======================================================================
  ! =                     End read in variables                          =
  ! ======================================================================
-
-  !call consistencyCheck02(IELAST, IEMXD, IGUESS, IGUESSD, LMAX, LMAXD, NAEZ, NAEZD, &
-  !                        NPNT1, NPNT2, NPNT3, NPOL, NR, NRD, NSPIN, NSPIND)
 
   call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
 
@@ -218,7 +214,7 @@ program MAIN2
   if (LMPIC/=0) then   !     ACTVGROUP could also test EMPIC or MYACTVRANK (preferred)
 
 ! ========= TIMING ======================================================
-    if (MYLRANK(1) == 0) then
+    if (is_Masterrank) then
       call CPU_TIME(TIME_I)
       open (2,file='time-info',form='formatted')
     endif
@@ -243,9 +239,9 @@ program MAIN2
       EKM    = 0
       NOITER = 0
 
-      if (MYLRANK(1)==0) then
+      if (is_Masterrank) then
         call printDoubleLineSep(unit_number = 2)
-        call OUTTIME(MYLRANK(1),'started at ..........',TIME_I,ITER)
+        call OUTTIME(is_Masterrank,'started at ..........',TIME_I,ITER)
         call printDoubleLineSep(unit_number = 2)
       endif
 
@@ -279,7 +275,7 @@ program MAIN2
 !N ====================================================================
 
       do I1 = 1,NAEZ
-        if(MYLRANK(LMPIC)==MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+        if(my_SE_rank==MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
 
 !=======================================================================
 ! xccpl
@@ -321,7 +317,7 @@ program MAIN2
 ! LDA+U
 
 ! TIME
-          call OUTTIME(MYLRANK(1),'initialized .........',TIME_I,ITER)
+          call OUTTIME(is_Masterrank,'initialized .........',TIME_I,ITER)
 ! TIME
 
 ! IE ====================================================================
@@ -353,15 +349,14 @@ program MAIN2
                           TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
               end do
 
-              call GREF(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
-                        CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
-                        REFPOT, &
-                        TREFLL(1,1,1),DTREFLL(1,1,1),GREFN,DGREFN, &
-                        IE, &
-                        LLY_G0TR, &
-                        LMPIC,MYLRANK,LCOMM,LSIZE, &
-                        naez, lmaxd, naclsd, ncleb, nrefd, iemxd, nclsd, &
-                        LLY, LMPID*SMPID*EMPID)
+              call GREF_com(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
+                            CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
+                            REFPOT, &
+                            TREFLL,DTREFLL,GREFN,DGREFN, &
+                            LLY_G0TR(:,IE), &
+                            my_SE_rank,my_SE_communicator,my_SE_comm_size, &
+                            lmaxd, naclsd, ncleb, nrefd, nclsd, &
+                            LLY)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
@@ -419,11 +414,11 @@ spinloop:     do ISPIN = 1,NSPIND
                   ! DTDE now contains Delta dt !!!
 
                   ! renormalize TR_ALPH
-                  TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(IE,CLS(I1))
+                  TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(CLS(I1), IE)
 
                   NMESH = KMESH(IE)
 
-                  if( MYLRANK(LMPIC)==0 ) then
+                  if( my_SE_rank==0 ) then
                     call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
                   end if
 
@@ -445,7 +440,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   NXIJ,XCCPL,IXCP,ZKRXIJ, &
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
-                  LCOMM(LMPIC),LSIZE(LMPIC), &
+                  my_SE_communicator,my_SE_comm_size, &
                   iemxd, nthrds, &
                   lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
@@ -479,10 +474,9 @@ spinloop:     do ISPIN = 1,NSPIND
                 call XCCPLJIJ_START(I1,IE,JSCAL, &
                                RXIJ,NXIJ,IXCP,RXCCLS, &
                                GXIJ_ALL,DTIXIJ, &
-                               LMPIC,LCOMM, &
+                               my_SE_communicator, &
                                JXCIJINT,ERESJIJ, &
-                               naez, lmmaxd, nxijd, nspind, &
-                               lmpid*smpid*empid)
+                               naez, lmmaxd, nxijd, nspind)
 
               end if
 
@@ -521,7 +515,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
 
 ! TIME
-          call OUTTIME(MYLRANK(1),'G obtained ..........',TIME_I,ITER)
+          call OUTTIME(is_Masterrank,'G obtained ..........',TIME_I,ITER)
 ! TIME
 
 !=======================================================================
@@ -597,7 +591,7 @@ spinloop:     do ISPIN = 1,NSPIND
             if (LLY==1) then
               ! get WEZRN and RNORM, the important input from previous
               ! calculations is LLY_GRDT_ALL
-              ! TODO: all THETAS passed, but only 1 needed
+              ! TODO: all THETAS passed, but only 1 needed, also ZAT
               ! here atom processes communicate with each other
               call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
                           THETAS,ZAT,ICLEB1C, &
@@ -609,13 +603,13 @@ spinloop:     do ISPIN = 1,NSPIND
                           LLY_GRDT_ALL, &
                           LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
                           DMATLDAU, &
-                          LMPIC,MYLRANK, &
-                          LCOMM,LSIZE, &
-                          lmpid*smpid*empid, lmaxd, irmd, irnsd, iemxd, &
+                          my_SE_rank, &
+                          my_SE_communicator,my_SE_comm_size, &
+                          lmaxd, irmd, irnsd, iemxd, &
                           irid, nfund, ncelld, ipand, ncleb)
 
 ! IME
-              call OUTTIME(MYLRANK(1),'Lloyd processed......',TIME_I,ITER)
+              call OUTTIME(is_Masterrank,'Lloyd processed......',TIME_I,ITER)
 ! IME
             else ! no Lloyd
 
@@ -627,11 +621,11 @@ spinloop:     do ISPIN = 1,NSPIND
 
             ! now WEZRN stores the weights for E-integration
 
-            call CINIT(IEMXD*(LMAXD+2)*NSPIND,DEN)
+            DEN = CZERO
             DENEF = 0.0D0
 
             if (LDAU) then
-              call CINIT(MMAXD*MMAXD*NSPIND*LMAXD1,DMATLDAU(1,1,1,1))
+              DMATLDAU = CZERO
             endif
 
 ! SPIN ==================================================================
@@ -642,9 +636,11 @@ spinloop:     do ISPIN = 1,NSPIND
               ICELL = NTCELL(I1)
               IPOT = (I1-1) * NSPIND + ISPIN
 
-              LDORHOEF = NPOL/=0  ! needed in RHOVAL
+              LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
+
+              ! contains a loop over energies, TODO: remove spin dependence
               call RHOVAL(LDORHOEF,ICST,IELAST, &
-                          NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &
+                          NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
                           DRDI(1,I1),R(1,I1),IRMIN(I1), &
                           VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &
                           ZAT(I1),IPAN(I1),IRCUT(0,I1), &
@@ -725,7 +721,7 @@ spinloop:     do ISPIN = 1,NSPIND
       call closePotentialFile()
       call closeResults1File()
 
-      call OUTTIME(MYLRANK(1),'density calculated ..',TIME_I,ITER)
+      call OUTTIME(is_Masterrank,'density calculated ..',TIME_I,ITER)
 
 
 ! TODO: Only necessary for non-DOS calculation - otherwise proceed to RESULTS
@@ -738,11 +734,11 @@ spinloop:     do ISPIN = 1,NSPIND
 !****************************************************** MPI COLLECT DATA
 
         call MPI_ALLREDUCE(CHRGNT,WORK1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        LCOMM(LMPIC),IERR)
+        my_SE_communicator,IERR)
         call DCOPY(1,WORK1,1,CHRGNT,1)
 
         call MPI_ALLREDUCE(DENEF,WORK1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        LCOMM(LMPIC),IERR)
+        my_SE_communicator,IERR)
         call DCOPY(1,WORK1,1,DENEF,1)
 
 !****************************************************** MPI COLLECT DATA
@@ -758,7 +754,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
         if (ISHIFT < 2) E2 = E2 - E2SHIFT
 
-        if( MYLRANK(LMPIC) == 0 ) then
+        if( my_SE_rank == 0 ) then
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
@@ -772,7 +768,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
         do I1 = 1,NAEZ
-          if(MYLRANK(LMPIC) == MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+          if(my_SE_rank == MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
 
             ICELL = NTCELL(I1)
 
@@ -796,7 +792,7 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ipand, ngshd)
 
-            call OUTTIME(MYLRANK(1),'RHOMOM ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'RHOMOM ......',TIME_I,ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -807,23 +803,23 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
 
-            call OUTTIME(MYLRANK(1),'VINTRAS ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
 
             call STRMAT(ALAT,LPOT,NAEZ,NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
             RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1)
 
-            call OUTTIME(MYLRANK(1),'STRMAT ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
-            call VMADELBLK(CMOM,CMINST,LPOT,NSPIND, &
+            call VMADELBLK_com(CMOM,CMINST,LPOT,NSPIND, &
             NAEZ,VONS,ZAT,R,IRCUT,IPAN, &
             VMAD, &
             LMPOTD,SMAT,CLEB,ICLEB,IEND, &
             LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
-            LMPIC,MYLRANK, &
-            LCOMM,LSIZE, &
-            irmd, ipand, lmpid*smpid*empid)
+            my_SE_rank, &
+            my_SE_communicator,my_SE_comm_size, &
+            irmd, ipand)
 
-            call OUTTIME(MYLRANK(1),'VMADELBLK ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'VMADELBLK ......',TIME_I,ITER)
 
 ! =====================================================================
 
@@ -859,7 +855,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             end if
 
-            call OUTTIME(MYLRANK(1),'KTE ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'KTE ......',TIME_I,ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
@@ -869,7 +865,7 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS,LMSP(1,ICELL), &
             naez, irmd, irid, nfund, ngshd, ipand)
 
-            call OUTTIME(MYLRANK(1),'VXCDRV ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'VXCDRV ......',TIME_I,ITER)
 ! =====================================================================
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
@@ -878,11 +874,11 @@ spinloop:     do ISPIN = 1,NSPIND
 
             if (KFORCE==1.and.ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
-              call FORCXC(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
+              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
               ALAT,DRDI,IMT,ZAT, &
-              LMPIC,MYLRANK, &
-              LCOMM, &
-              naez, irmd, lmpid*smpid*empid)
+              my_SE_rank, &
+              my_SE_communicator, &
+              naez, irmd)
 ! ---------------------------------------------------------------------
             end if
 
@@ -900,7 +896,7 @@ spinloop:     do ISPIN = 1,NSPIND
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
 
-            call OUTTIME(MYLRANK(1),'MTZERO ......',TIME_I,ITER)
+            call OUTTIME(is_Masterrank,'MTZERO ......',TIME_I,ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -911,13 +907,13 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
 
-        call OUTTIME(MYLRANK(1),'calculated pot ......',TIME_I,ITER)
+        call OUTTIME(is_Masterrank,'calculated pot ......',TIME_I,ITER)
 
-        call allreduceMuffinTinShift_com(LCOMM(LMPIC), VAV0, VBC, VOL0)
+        call allreduceMuffinTinShift_com(my_SE_communicator, VAV0, VBC, VOL0)
 
         call shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT) ! purpose? ISHIFT usually=0
 
-        if(MYRANK==0) then
+        if(is_Masterrank) then
           call printMuffinTinShift(VAV0, VBC, VOL0)
         end if
 
@@ -931,8 +927,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !+++++++++++++++++ BEGIN ATOM PARALLEL +++++++++++++++++++++++++++++++
         do I1 = 1,NAEZ
 
-          if(MYLRANK(LMPIC)== &
-          MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+          if(my_SE_rank== MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
 
             ICELL = NTCELL(I1)
 ! =====================================================================
@@ -973,15 +968,14 @@ spinloop:     do ISPIN = 1,NSPIND
        ! it is weird that straight mixing is called in any case before
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
-          call BRYDBM(VISP,VONS,VINS, &
+          call BRYDBM_com(VISP,VONS,VINS, &
           LMPOTD,R,DRDI,MIXING, &
           IRC,IRMIN,NSPIND,I1BRYD, &
           IMIX,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
-          LMPIC,MYLRANK, &
-          LCOMM, &
-          itdbryd, irmd, irnsd, nspind, &
-          LMPID * SMPID * EMPID)
+          my_SE_rank, &
+          my_SE_communicator, &
+          itdbryd, irmd, irnsd, nspind)
         endif
 
 !----------------------------------------------------------------------
@@ -990,8 +984,8 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !--------- BEGIN Atom-parallel ----------------------------------------
         do I1 = 1,NAEZ
-          if(MYLRANK(LMPIC)== &
-          MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+          if(my_SE_rank== &
+          MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
 
             call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, &
                                  NSPIND, VINS, VISP, VONS) ! Note: only LMPIC=1 processes
@@ -1014,48 +1008,19 @@ spinloop:     do ISPIN = 1,NSPIND
 ! write formatted potential if file VFORM exists
 ! Note: LMPIC is always 1 here!
 
-        call RMSOUT_com(RMSAVQ,RMSAVM,ITER,E2,EFOLD, &
-        SCFSTEPS,VBC,QBOUND,NSPIND,NAEZ, &
+        call RMSOUT_com(RMSAVQ,RMSAVM,ITER,E2, &
+        SCFSTEPS,VBC,NSPIND,NAEZ, &
         KXC,LPOT,A,B,IRC, &
         VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
         ECORE,LCORE,NCORE,ZAT,ITITLE, &
-        LMPIC,MYLRANK, &
-        LCOMM,LSIZE, &
-        irmd, irnsd, lmpid*smpid*empid)
+        my_SE_rank, &
+        my_SE_communicator,my_SE_comm_size, &
+        irmd, irnsd)
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
 
-        call MPI_BARRIER(LCOMM(LMPIC),IERR)
-
-! -----------------------------------------------------------------
-! BEGIN: only process with MYLRANK(LMPIC = 1) = 0 is working here - means MASTERRANK
-! -----------------------------------------------------------------
-!       TODO: don't nest with previous if, use if(MYLRANK(1)==0)
-        if(MYLRANK(LMPIC)==0) then
-
-          ! DOS was written to file 'results1' and read out here just
-          ! to be written in routine wrldos
-          ! also other stuff is read from results1
-          call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,NPOL, &
-          NSPIND,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
-          ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
-          iemxd)
-
-          ! only rank with MYLRANK(1)==0 updates, other ranks get it broadcasted later
-          call updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
-
-          if (MYACTVRANK /= 0) then   !DEBUG
-            write(*,*) "main2: Assertion MYACTVRANK==0 for rank with MYLRANK(1)==0 failed."
-            STOP
-          end if
-
-          call printDoubleLineSep()
-
-        endif
-! -----------------------------------------------------------------
-! END: only process with MYLRANK(LMPIC = 1) = 0 is working here
-! -----------------------------------------------------------------
+        call MPI_BARRIER(my_SE_communicator,IERR)
 
 ! -----------------------------------------------------------------
         call closePotentialFile()  ! close 'vpotnew' this was originally misplaced
@@ -1064,12 +1029,41 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -----------------------------------------------------------------
 ! END: L-MPI: only processes with LMPIC = 1 are working here
 
+! -----------------------------------------------------------------
+! BEGIN: only MASTERRANK is working here
+! -----------------------------------------------------------------
+      if(is_Masterrank) then
+
+        ! DOS was written to file 'results1' and read out here just
+        ! to be written in routine wrldos
+        ! also other stuff is read from results1
+        call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,NPOL, &
+        NSPIND,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
+        ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
+        iemxd)
+
+        ! only MASTERRANK updates, other ranks get it broadcasted later
+        call updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
+
+        if (MYACTVRANK /= 0) then   !DEBUG
+          write(*,*) "main2: Assertion MYACTVRANK==0 for MASTERRANK failed."
+          write(*,*) MYACTVRANK, my_SE_rank
+          STOP
+        end if
+
+        call printDoubleLineSep()
+
+      endif
+! -----------------------------------------------------------------
+! END: only MASTERRANK is working here
+! -----------------------------------------------------------------
+
       call broadcastEnergyMesh_com(ACTVCOMM, 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
       ACTVCOMM,IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
-      if(MYLRANK(1)==0) then
+      if(is_Masterrank) then
 
         ! write file 'energy_mesh'
         if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
@@ -1090,7 +1084,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ######################################################################
 ! ######################################################################
 
-    if (MYLRANK(1)==0) close(2)    ! TIME
+    if (is_Masterrank) close(2)    ! TIME
 
     if (KFORCE==1) close(54)
 ! ======================================================================

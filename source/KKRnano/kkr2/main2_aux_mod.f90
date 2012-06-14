@@ -83,69 +83,10 @@ module main2_aux_mod
       write (*,*) "main2: NSPIND must be 1 or 2"
       stop
     end if
-  end subroutine
 
-  !----------------------------------------------------------------------------
-  subroutine consistencyCheck02(IELAST, IEMXD, IGUESS, IGUESSD, LMAX, LMAXD, &
-                                NAEZ, NAEZD, NPNT1, NPNT2, NPNT3, NPOL, &
-                                NR, NRD, NSPIN, NSPIND)
-    implicit none
-    integer :: IELAST
-    integer :: IEMXD
-    integer :: IGUESS
-    integer :: IGUESSD
-    integer :: LMAX
-    integer :: LMAXD
-    integer :: NAEZ
-    integer :: NAEZD
-    integer :: NPNT1
-    integer :: NPNT2
-    integer :: NPNT3
-    integer :: NPOL
-    integer :: NR
-    integer :: NRD
-    integer :: NSPIN
-    integer :: NSPIND
-
-    ! -------------- Consistency checks -------------------------------
-    if (IGUESS /= IGUESSD .or. IGUESS < 0 .or. IGUESS > 1) then
-      write (*,*) "main2: IGUESSD IGUESS inconsistent ", IGUESSD, IGUESS
-      stop
-    end if
-
-    if (NSPIN /= NSPIND) then
-      write (*,*) "main2: NSPIN /= NSPIND"
-      stop
-    end if
-
-    if (NAEZ /= NAEZD) then
-      write (*,*) "main2: NAEZ /= NAEZD"
-      stop
-    end if
-
-    if (IEMXD /= IELAST) then
-      write (*,*) "main2: IEMXD /= IELAST"
-      stop
-    end if
-
-    if (NPOL /= 0) then
-      if (NPNT1 + NPNT2 + NPNT3 + NPOL /= IELAST) then
-        write(*,*) "main2: Energy point numbers inconsistent."
-      end if
-    end if
-
-    if (LMAX /= LMAXD) then
-      write (*,*) "main2: LMAX /= LMAXD"
-      stop
-    end if
-
-    if (NSPIN /= NSPIND) then
-      write (*,*) "main2: NSPIN /= NSPIND"
-      stop
-    end if
-
-    if (NR > NRD .or. NR < 1) then
-      write (*,*) "main2: NR inconsistent NR NRD ", NR, NRD
+    if ((SMPID == 2) .and. (NSPIND /= 2)) then
+      write (*,*) "main2: Spin parallelism is only possible if NSPIND=2."
+      write (*,*) "Set SMPID=1"
       stop
     end if
   end subroutine
@@ -221,7 +162,7 @@ module main2_aux_mod
                            JEND, JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
                            LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
                            MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
-                           NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QBOUND, QMRBOUND, R, &
+                           NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, R, &
                            RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
                            RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
 
@@ -286,7 +227,6 @@ module main2_aux_mod
     integer, allocatable :: NTCELL(:)
     integer, allocatable :: NUMN0(:)
     character(len=8) :: OPTC(8)
-    double precision :: QBOUND
     double precision :: QMRBOUND
     double precision, allocatable :: R(:,:)
     double precision, allocatable :: RBASIS(:,:)
@@ -312,6 +252,7 @@ module main2_aux_mod
     integer :: LMPOT
     integer :: NAEZ_dummy
     integer :: LPOT
+    double precision :: QBOUND
 
     ! ======================================================================
     ! =             read in variables from unformatted files               =
@@ -414,18 +355,18 @@ module main2_aux_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Print timing information for SCF iteration
+  !> Print timing information for SCF iteration.
   subroutine writeIterationTimings(ITER, TIME_I, TIME_S)
     implicit none
     integer :: ITER
     real :: TIME_I
     real :: TIME_S
 
-    call OUTTIME(0 ,'end .................', &
+    call OUTTIME(.true. ,'end .................', &
     TIME_I,ITER)
     write(6,'(79(1H=))')
     write(2,'(79(1H=))')
-    call OUTTIME(0 ,'finished in .........', &
+    call OUTTIME(.true. ,'finished in .........', &
     TIME_S,ITER)
     write(2,'(79(1H=))')
     write(6,'(79(1H=),/)')

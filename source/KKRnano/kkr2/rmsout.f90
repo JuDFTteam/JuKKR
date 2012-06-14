@@ -13,30 +13,23 @@
 
 !================================================================
 
-subroutine RMSOUT_com(RMSAVQ,RMSAVM,ITER,fermiEnergy,EFOLD, &
-SCFSTEPS,VBC,QBOUND,NSPIN,NAEZ, &
+subroutine RMSOUT_com(RMSAVQ,RMSAVM,ITER,fermiEnergy, &
+SCFSTEPS,VBC,NSPIN,NAEZ, &
 KXC,LPOT,A,B,IRC, &
 VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
 ECORE,LCORE,NCORE,ZAT,ITITLE, &
-LMPIC,MYLRANK, &
-LCOMM,LSIZE, &
-!                       new input parameters after inc.p removal
-irmd, irnsd, prod_lmpid_smpid_empid)
+MYLRANK, &
+communicator,comm_size, &
+irmd, irnsd) ! new input parameters after inc.p removal
 
   implicit none
 
   integer irmd
   integer irnsd
-  integer prod_lmpid_smpid_empid
 
-  !     INTEGER LMPOTD
-  !     PARAMETER (LMPOTD= (LPOTD+1)**2)
-
-  double precision QBOUND,RMSAVM,RMSAVQ, &
-  fermiEnergy,EFOLD,ALAT,VBC(2), &
+  double precision RMSAVM,RMSAVQ, &
+  fermiEnergy,ALAT,VBC(2), &
   A(NAEZ),B(NAEZ)
-
-  !     DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,2)
 
   double precision VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2), &
   VISP(IRMD,2), &
@@ -58,24 +51,16 @@ irmd, irnsd, prod_lmpid_smpid_empid)
   !     ..
   !     .. MPI variables ..
   !     .. L-MPI ..
-  integer      MYLRANK(prod_lmpid_smpid_empid), &
-  LCOMM(prod_lmpid_smpid_empid), &
-  LSIZE(prod_lmpid_smpid_empid), &
-  LMPIC
+  integer      MYLRANK, &
+  communicator, &
+  comm_size
 
   double precision RMSQ, RMSM
 
-  !     .. N-MPI ..
-  
-
-  external MPI_REDUCE
-  external MAPBLOCK
-  !     ..
-
-  call allreduceRMS_com(RMSQ, RMSM, RMSAVQ,RMSAVM,NAEZ, LCOMM(LMPIC))
+  call allreduceRMS_com(RMSQ, RMSM, RMSAVQ,RMSAVM,NAEZ, communicator)
 
   ! ================== MYRANK.EQ.0 =======================================
-  if(MYLRANK(LMPIC).eq.0) then
+  if(MYLRANK.eq.0) then
 
     call printRMSerror(ITER, NSPIN, RMSM, RMSQ)
 
@@ -93,7 +78,7 @@ irmd, irnsd, prod_lmpid_smpid_empid)
       KXC,LPOT,A,B,IRC, &
       VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
       ECORE,LCORE,NCORE,ZAT,ITITLE, &
-      MYLRANK(LMPIC), LSIZE(LMPIC), &
+      MYLRANK, comm_size, &
       irmd, irnsd)
 
     end if

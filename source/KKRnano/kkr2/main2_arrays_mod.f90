@@ -386,7 +386,7 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(SPRS(NGUESSD*LMMAXD+1,EKMD+1,NSPIND-SMPID+1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LLY_G0TR(IEMXD,NCLSD), stat = memory_stat)
+    allocate(LLY_G0TR(NCLSD,IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LLY_GRDT(IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")

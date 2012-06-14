@@ -1,11 +1,11 @@
-      SUBROUTINE VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,VONS,ZAT,R,
+      SUBROUTINE VMADELBLK_com(CMOM,CMINST,LPOT,NSPIN,NAEZ,VONS,ZAT,R,
      &                     IRCUT,IPAN,VMAD,
      &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
      &                     LMXSPD,NCLEBD,LOFLM,DFAC,I1,
-     >                     LMPIC,MYLRANK,
-     >                     LCOMM,LSIZE,
+     >                     MYLRANK,
+     >                     communicator,comm_size,
 C                          new input parameters after inc.p removal
-     &                     irmd, ipand, prod_lmpid_smpid_empid)
+     &                     irmd, ipand)
 C **********************************************************************
 C
 C     calculate the madelung potentials and add these to the poten-
@@ -39,7 +39,6 @@ C **********************************************************************
 
       INTEGER irmd
       INTEGER ipand
-      INTEGER prod_lmpid_smpid_empid
 C     ..
 C     .. PARAMETER definitions
 C     INTEGER LMPOTD
@@ -89,10 +88,9 @@ C     DOUBLE PRECISION BVMAD(LMPOTD)
 C----- MPI ---------------------------------------------------------------
       INTEGER IERR,MAPBLOCK
 C     .. L-MPI
-      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
-     +             LCOMM(prod_lmpid_smpid_empid),
-     +             LSIZE(prod_lmpid_smpid_empid),
-     +             LMPIC
+      INTEGER      MYLRANK,
+     +             communicator,
+     +             comm_size
 C
       EXTERNAL MPI_BCAST
 C     .. Intrinsic Functions ..
@@ -121,8 +119,8 @@ C===== begin loop over all atoms =========================================
 
 C-------- bcast information of cmom and cminst begin --------------------
 
-         IF (MYLRANK(LMPIC).EQ.
-     +       MAPBLOCK(I2,1,NAEZ,1,0,LSIZE(LMPIC)-1)) THEN
+         IF (MYLRANK .EQ.
+     +       MAPBLOCK(I2,1,NAEZ,1,0,comm_size-1)) THEN
          DO ILM = 1, LMPOT
            CMOM(ILM) = CMOM_SAVE(ILM)
            CMINST(ILM) = CMINST_SAVE(ILM)
@@ -130,11 +128,11 @@ C-------- bcast information of cmom and cminst begin --------------------
          ENDIF
 
          CALL MPI_BCAST(CMOM,LMPOTD,MPI_DOUBLE_PRECISION,
-     +                  MAPBLOCK(I2,1,NAEZ,1,0,LSIZE(LMPIC)-1),
-     +                  LCOMM(LMPIC),IERR)
+     +                  MAPBLOCK(I2,1,NAEZ,1,0,comm_size-1),
+     +                  communicator,IERR)
          CALL MPI_BCAST(CMINST,LMPOTD,MPI_DOUBLE_PRECISION,
-     +                  MAPBLOCK(I2,1,NAEZ,1,0,LSIZE(LMPIC)-1),
-     +                  LCOMM(LMPIC),IERR)
+     +                  MAPBLOCK(I2,1,NAEZ,1,0,comm_size-1),
+     +                  communicator,IERR)
  
 C-------- bcast information of cmom and cminst end ----------------------
 

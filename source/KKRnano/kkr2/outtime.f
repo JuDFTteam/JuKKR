@@ -1,4 +1,4 @@
-      SUBROUTINE OUTTIME(RANK,NAME,TIME_I,ITER)
+      SUBROUTINE OUTTIME(OUTPUT,NAME,TIME_I,ITER)
 
 c**********************************************************************
 c     every time this subroutine is called it produces one line of
@@ -13,7 +13,8 @@ c**********************************************************************
 
 C     .. Scalar Arguments ..
       REAL          TIME_I
-      INTEGER       ITER,RANK
+      INTEGER       ITER
+      LOGICAL       OUTPUT
       CHARACTER*(*) NAME
 C     ..
 C     .. Local Scalars ..
@@ -25,7 +26,7 @@ C     .. Intrinsic Functions ..
 C     ..
 C     only one processor proceeds ...
 C
-      IF (RANK.EQ.0) THEN
+      IF (OUTPUT) THEN
 C
       CALL CPU_TIME(TIME_F)
 C

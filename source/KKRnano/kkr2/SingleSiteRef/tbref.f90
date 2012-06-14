@@ -155,47 +155,41 @@ end
 
 
 !------------------------------------------------------------------------------
-subroutine GREF(E,ALATC,IEND,NCLS,NAEZ, &
+subroutine GREF_com(E,ALATC,IEND,NCLS,NAEZ, &
 CLEB,RCLS,ATOM,CLS,ICLEB,LOFLM,NACLS, &
 REFPOT, &
 TREFLL,DTREFLL,GREFN,DGREFN, &
-IE, &
 LLY_G0TR, &
-LMPIC,MYLRANK,LCOMM,LSIZE, &
-naezd, lmaxd, naclsd, ncleb, nrefd, iemxd, nclsd, &
-LLY, prod_lmpid_smpid_empid)
+MYLRANK, communicator, comm_size, &
+lmaxd, naclsd, ncleb, nrefd, nclsd, &
+LLY)
 
   use SingleSiteRef_mod
   implicit none
 
   !     .. Parameters ..
 INCLUDE 'mpif.h'
-  !     INCLUDE 'inc.p'
-  !     INCLUDE 'inc.cls'
 
-  integer  naezd
   integer  lmaxd
   integer  naclsd
   integer  ncleb
   integer  nrefd
-  integer  iemxd
   integer  nclsd
   integer  LLY
-  integer  prod_lmpid_smpid_empid
 
   !     ..
   !     .. Scalar Arguments ..
   double precision ALATC
-  integer          IE,IEND,NCLS,NAEZ
+  integer          IEND,NCLS,NAEZ
   !     ..
   !     .. Array Arguments ..
   double precision CLEB(NCLEB,2),RCLS(3,NACLSD,NCLSD)
-  integer          ATOM(NACLSD,NAEZD),CLS(NAEZD),ICLEB(NCLEB,3)
+  integer          ATOM(NACLSD,NAEZ),CLS(NAEZ),ICLEB(NCLEB,3)
 
   integer          LOFLM((2*LMAXD+1)**2)
   integer          NACLS(NCLSD)
-  integer          REFPOT(NAEZD)
-  double complex   LLY_G0TR(IEMXD,NCLSD)
+  integer          REFPOT(NAEZ)
+  double complex   LLY_G0TR(NCLSD)
 
   !     DOUBLE COMPLEX   TREFLL(LMGF0D,LMGF0D,NREFD),
   !    +                 DTREFLL(LMGF0D,LMGF0D,NREFD),
@@ -208,10 +202,9 @@ INCLUDE 'mpif.h'
   GREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD)
 
   !     .. L-MPI
-  integer          MYLRANK(prod_lmpid_smpid_empid), &
-  LCOMM(prod_lmpid_smpid_empid), &
-  LSIZE(prod_lmpid_smpid_empid), &
-  LMPIC
+  integer  MYLRANK, &
+  communicator, &
+  comm_size
 
   !     ..
   !     .. Local Scalars ..
@@ -236,10 +229,6 @@ INCLUDE 'mpif.h'
 
   external         MPI_BCAST
 
-  !     .. Save statement ..
-  !     SAVE
-  !     ..
-
   integer          LMGF0D
   integer          LMMAXD
 
@@ -256,8 +245,8 @@ INCLUDE 'mpif.h'
     ! note that the parallelization of this routine is only active if there
     ! are more than four non-identical reference clusteres
 
-    if (MYLRANK(LMPIC).eq. &
-    MAPBLOCK(ICLS,1,NAEZ,1,0,LSIZE(LMPIC)-1).or.NCLS.lt.5) then
+    if (MYLRANK .eq. &
+    MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1).or.NCLS.lt.5) then
 
       I1 = 1
       IC = 0
@@ -270,7 +259,7 @@ INCLUDE 'mpif.h'
       call GLL95(E,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
       ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS), &
       ALATC,GINP,DGINP, &
-      LLY_G0TR(IE,ICLS), &
+      LLY_G0TR(ICLS), &
       lmaxd, naclsd, ncleb, nrefd, LLY )
 
       do IG=1,NACLSD
@@ -307,10 +296,10 @@ INCLUDE 'mpif.h'
 
       call MPI_BCAST(GBCAST,LMMAXD*LMMAXD*NACLSD, &
       MPI_DOUBLE_COMPLEX, &
-      MAPBLOCK(ICLS,1,NAEZ,1,0,LSIZE(LMPIC)-1), &
-      LCOMM(LMPIC),IERR)
+      MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1), &
+      communicator,IERR)
 
-      call MPI_BARRIER(LCOMM(LMPIC),IERR)
+      call MPI_BARRIER(communicator,IERR)
 
       do IG=1, NACLSD
         do LM2=1, LMMAXD
@@ -338,10 +327,10 @@ INCLUDE 'mpif.h'
 
         call MPI_BCAST(GBCAST,LMMAXD*LMMAXD*NACLSD, &
         MPI_DOUBLE_COMPLEX, &
-        MAPBLOCK(ICLS,1,NAEZ,1,0,LSIZE(LMPIC)-1), &
-        LCOMM(LMPIC),IERR)
+        MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1), &
+        communicator,IERR)
 
-        call MPI_BARRIER(LCOMM(LMPIC),IERR)
+        call MPI_BARRIER(communicator,IERR)
 
         do IG=1, NACLSD
           do LM2=1, LMMAXD

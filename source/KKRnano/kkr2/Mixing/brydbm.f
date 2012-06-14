@@ -1,13 +1,12 @@
 c*********************************************************************
-      SUBROUTINE BRYDBM(VISP,V,VINS,LMPOT,
+      SUBROUTINE BRYDBM_com(VISP,V,VINS,LMPOT,
      +                  R,DRDI,ALPHA,IRC,IRMIN,NSPIN,
      +                  IATOM,IMIX,ITER,
      +                  UI2,VI2,WIT,SM1S,FM1S,
-     >                  LMPIC,MYLRANK,
-     >                  LCOMM,
+     >                  MYLRANK,
+     >                  communicator,
 C                       new input parameters after inc.p removal
-     &                  itdbryd, irmd, irnsd, nspind,
-     &                  prod_lmpid_smpid_empid)
+     &                  itdbryd, irmd, irnsd, nspind)
 c*********************************************************************
 c     imix :
 c       3      broyden's            f i r s t  m e t h o d
@@ -51,8 +50,6 @@ C     number of radial mesh points of non-spherical part
       INTEGER irnsd
 C     number of spin directions
       INTEGER nspind
-C     the following product: LMPID*SMPID*EMPID
-      INTEGER prod_lmpid_smpid_empid
 
 C      INTEGER LMPOTD
 C      PARAMETER (LMPOTD= (LPOTD+1)**2)
@@ -128,20 +125,17 @@ C     .. Data statements ..
       DATA ZERO,ONE/0.0D0,1.0D0/
 C     ..
 C     .. MPI variables ..
-C     .. N-MPI ..
-C      INTEGER IERR,MYRANK,NROFNODES
-C      COMMON /MPI/MYRANK,NROFNODES
+
 C     .. L-MPI ..
-      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
-     +             LCOMM  (prod_lmpid_smpid_empid),
-     +             LMPIC
+      INTEGER      MYLRANK,
+     +             communicator
 C
       EXTERNAL MPI_ALLREDUCE
 C
 C
       NTIRD=(IRMD+(IRNSD+1)*(LMPOT-1))*NSPIND
 
-      IF (MYLRANK(LMPIC).EQ.0) WRITE(*,*) 'ITERATION: ',ITER
+      IF (MYLRANK.EQ.0) WRITE(*,*) 'ITERATION: ',ITER
 
       IF (ITDBRYD.GT.ITDTHD .OR. ITDTHD.GT.200) CALL RCSTOP('ITDBRYD  ')
       IF (IMIX.LE.2 .OR. IMIX.GT.5) CALL RCSTOP('IMIXD   ')
@@ -156,7 +150,7 @@ C     is exceeded - in principle also possible to make the transition
 C     continous                                         16/9/2008        
 
 
-      IF (MYLRANK(LMPIC).EQ.0) THEN
+      IF (MYLRANK.EQ.0) THEN
       IF (IMIX.EQ.3) WRITE (6,FMT='('' broyden"s 1st method used '')')
       IF (IMIX.EQ.4) WRITE (6,FMT='('' broyden"s 2nd method used '')')
       IF (IMIX.EQ.5) WRITE (6,FMT='('' gen. anderson method used '')')
@@ -273,7 +267,7 @@ c
         ENDDO
 
         CALL MPI_ALLREDUCE(AM_LOCAL,AM,(ITDBRYD-1),
-     &              MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &              MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
         DO IT = 2,MIT - 1
           DO IJ = 1,IMAP
@@ -307,7 +301,7 @@ c
   110     CONTINUE
 
         CALL MPI_ALLREDUCE(SMNORM_LOCAL,SMNORM_GLOBAL,1,
-     &              MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &              MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
 
 c
@@ -332,7 +326,7 @@ c
           ENDDO
 
         CALL MPI_ALLREDUCE(BM_LOCAL,BM,(ITDBRYD-1),
-     &              MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &              MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
           DO IT = 2,MIT - 1
             DO IJ = 1,IMAP
@@ -348,7 +342,7 @@ c
         DDOT_LOCAL = DDOT(IMAP,SM1,1,UI3,1)
 
         CALL MPI_ALLREDUCE(DDOT_LOCAL,DDOT_GLOBAL,1,
-     &              MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &              MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
         VMDENO = DDOT_GLOBAL - SMNORM_GLOBAL
 
@@ -383,7 +377,7 @@ c----> calculate #vm# and normalize v[m]
           DDOT_LOCAL = DDOT(IMAP,VI3,1,FM1,1)
 
           CALL MPI_ALLREDUCE(DDOT_LOCAL,DDOT_GLOBAL,1,
-     &                MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &                MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
           VMNORM = DDOT_GLOBAL
 
@@ -414,7 +408,7 @@ C----> complete the evaluation of v[m]
           DDOT_LOCAL = DDOT(IMAP,FM1,1,VI3,1)
 
           CALL MPI_ALLREDUCE(DDOT_LOCAL,DDOT_GLOBAL,1,
-     &                MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &                MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
           VMDENO = DDOT_GLOBAL
 
@@ -456,7 +450,7 @@ c
         CMM_LOCAL = DDOT(IMAP,FM,1,VI3,1)
 
         CALL MPI_ALLREDUCE(CMM_LOCAL,CMM_GLOBAL,1,
-     &              MPI_DOUBLE_PRECISION,MPI_SUM,LCOMM(LMPIC),IERR)
+     &              MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
 
 C           WRITE (IPF,FMT='(5X,'' CMM = '',1P,D12.4)') CMM
 c

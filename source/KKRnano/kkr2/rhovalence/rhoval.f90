@@ -301,7 +301,7 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
 
   end do
 
-
+  ! this should really be separated into another routine
   if (ISPIN == 2) then
     IDIM = IRMD*LMPOTD
     call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)

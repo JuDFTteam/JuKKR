@@ -1,9 +1,9 @@
-      SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,IATYP,RHOC,V,R,ALAT,
+      SUBROUTINE FORCXC_com(FLM,FLMC,LPOT,NSPIN,IATYP,RHOC,V,R,ALAT,
      +                  DRDI,IRWS,ZAT,
-     >                  LMPIC,MYLRANK,
-     >                  LCOMM,
+     >                  MYLRANK,
+     >                  communicator,
 C                       new input parameters after inc.p replace
-     &                  naez, irmd, prod_lmpid_smpid_empid)
+     &                  naez, irmd)
 C
       IMPLICIT NONE
 c-----------------------------------------------------------------------
@@ -17,8 +17,6 @@ c-----------------------------------------------------------------------
 
       INTEGER naez
       INTEGER irmd
-C     LMPID * SMPID * EMPID
-      INTEGER prod_lmpid_smpid_empid
 C
 C      INTEGER LMPOTD
 C      PARAMETER (LMPOTD= (LPOTD+1)**2)
@@ -58,9 +56,8 @@ C     .. MPI variables ..
       INTEGER IERR
 
 C     .. L-MPI ..
-      INTEGER      MYLRANK(prod_lmpid_smpid_empid),
-     +             LCOMM(prod_lmpid_smpid_empid),
-     +             LMPIC
+      INTEGER      MYLRANK,
+     +             communicator
 C
       EXTERNAL MPI_ALLREDUCE
 c
@@ -170,9 +167,9 @@ c
 C reduce array F to processor with rank 0 to write in correct order to file 'force'
 
         CALL MPI_ALLREDUCE(F,FALL,3*NAEZD,MPI_DOUBLE_PRECISION,
-     +                     MPI_SUM,LCOMM(LMPIC),IERR)
+     +                     MPI_SUM,communicator,IERR)
 
-        IF(MYLRANK(LMPIC).EQ.0) THEN
+        IF(MYLRANK.EQ.0) THEN
           DO I=1,NAEZD
             WRITE(54,8999) 'force on atom',I,' Z=',ZAT(I),' :',
      +                     FALL(1,I),FALL(2,I),FALL(3,I)

@@ -5,7 +5,7 @@ module KKRnano_mpi_mod
 
   integer, private, parameter :: LMPID = 1 ! TODO: remove
 
-  integer :: MYRANK   ! TODO: Move from COMMON_MPI needed in lattice3d
+  integer :: MYRANK
 
   integer :: LMPIC
 
@@ -22,13 +22,18 @@ module KKRnano_mpi_mod
   integer :: ACTVCOMM
   integer, private::ACTVGROUP
 
+  integer :: my_SE_communicator   !< MPI communicator for (spin, energy)-group of process
+  integer :: my_SE_comm_size      !< number of ranks in 'my_SE_communicator'
+  integer :: my_SE_rank           !< rank of process in 'my_SE_communicator'
+  logical :: is_Masterrank        !< true if process is the MASTERRANK
+
   ! ----------- arrays ----------------------------------------------------------
 
   ! -------------- MPI --------------------------------------------------------
-  integer, dimension(:), allocatable :: MYLRANK
-  integer, dimension(:), allocatable :: LCOMM
+  integer, dimension(:), allocatable, private :: MYLRANK
+  integer, dimension(:), allocatable, private :: LCOMM
   integer, dimension(:), allocatable, private :: LGROUP
-  integer, dimension(:), allocatable :: LSIZE
+  integer, dimension(:), allocatable, private :: LSIZE
 
   !     .. S-MPI
   integer, dimension(:,:), allocatable :: SRANK
@@ -39,6 +44,8 @@ module KKRnano_mpi_mod
 
   private :: fatalMemoryError
   private :: IMPI
+  private :: allocate_KKRnano_mpi_arrays
+  private :: deallocate_KKRnano_mpi_arrays
 
 contains
 
@@ -121,6 +128,13 @@ contains
     EMPIB,EMPIC,EMYRANK, &
     MYACTVRANK,ACTVGROUP,ACTVCOMM,ACTVSIZE, &
     lmpid, smpid, empid, nthrds)
+
+    ! Here comes the initialisation of the variables that define the status of
+    ! a process
+    my_SE_communicator = LCOMM(LMPIC)
+    my_SE_comm_size = LSIZE(LMPIC)
+    my_SE_rank = MYLRANK(LMPIC)
+    is_Masterrank = (MYLRANK(1) == 0)
 
   end subroutine
 

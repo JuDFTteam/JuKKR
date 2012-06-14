@@ -12,10 +12,10 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   LLY_GRDT, &                                        ! >
                   LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &                 ! >
                   DMATLDAU, &                                        ! <
-                  LMPIC,MYLRANK, &                                   ! >
-                  LCOMM,LSIZE, &                                     ! >
+                  MYLRANK, &                                         ! >
+                  communicator, comm_size, &                         ! >
                   !   new input parameters after inc.p removal
-                  prod_lmpid_smpid_empid, lmax, irmd, irnsd, iemxd, &
+                  lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ncelld, ipand, ncleb)
   implicit none
 
@@ -23,7 +23,6 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer :: irmd
   integer :: irnsd
   integer :: iemxd
-  integer :: prod_lmpid_smpid_empid
   integer :: irid
   integer :: nfund
   integer :: ncelld
@@ -71,10 +70,9 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer::LLDAU(LMAX+1) !in?
   !------------------------------------------------------------------
 
-  integer::MYLRANK(prod_lmpid_smpid_empid) !in
-  integer::LCOMM(prod_lmpid_smpid_empid)   !in
-  integer::LSIZE(prod_lmpid_smpid_empid)   !in
-  integer::LMPIC                           !in
+  integer, intent(in) :: MYLRANK
+  integer, intent(in) :: communicator
+  integer, intent(in) :: comm_size
 
 !---------------- Local variables -----------------------------------
 
@@ -174,7 +172,7 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
   ! TODO: get rid of this "loop" somehow - we are already atom-parallel
   do I1 = 1,NAEZ
-    if (MYLRANK(LMPIC) == MAPBLOCK(I1,1,NAEZ,1,0,LSIZE(LMPIC)-1)) then
+    if (MYLRANK == MAPBLOCK(I1,1,NAEZ,1,0,comm_size-1)) then
       do ISPIN = 1,NSPIN
         ICELL = NTCELL(I1)
 
@@ -215,7 +213,7 @@ subroutine LLOYD0(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   end do
 
   ! communicate the DOS results
-  call lloyd_communicate(DOS, DOS0, DOS1, iemxd, LCOMM(LMPIC))
+  call lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
   call lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
 
   ! ----------- deallocate work arrays ----------------------------------
