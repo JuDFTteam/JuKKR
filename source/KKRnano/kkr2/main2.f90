@@ -228,6 +228,17 @@ program MAIN2
     SM1S = 0.00
     FM1S = 0.00
 
+    call GAUNT2(WG,YRG,LMAXD)
+
+    call MADELUNG3D(LPOT,YRG,WG,ALAT, &
+    RMAX,GMAX,BRAVAIS,RECBV, &
+    LMXSPD,LASSLD,LPOT,LMPOTD, &
+    NMAXD,ISHLD, &
+    LMPOTD,CLEB,ICLEB,IEND, &
+    NCLEBD,LOFLM,DFAC, &
+    NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
+    MYRANK)
+
 ! ######################################################################
 ! ######################################################################
     do ITER = 1, SCFSTEPS
@@ -244,17 +255,6 @@ program MAIN2
         call OUTTIME(is_Masterrank,'started at ..........',TIME_I,ITER)
         call printDoubleLineSep(unit_number = 2)
       endif
-
-      call GAUNT2(WG,YRG,LMAXD)
-
-      call MADELUNG3D(LPOT,YRG,WG,ALAT, &
-      RMAX,GMAX,BRAVAIS,RECBV, &
-      LMXSPD,LASSLD,LPOT,LMPOTD, &
-      NMAXD,ISHLD, &
-      LMPOTD,CLEB,ICLEB,IEND, &
-      NCLEBD,LOFLM,DFAC, &
-      NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-      MYRANK) ! does it have to be in SCF-loop?
 
       do LM = 1,LMPOTD
         CMOM(LM) = 0.0D0
@@ -592,7 +592,7 @@ spinloop:     do ISPIN = 1,NSPIND
               ! get WEZRN and RNORM, the important input from previous
               ! calculations is LLY_GRDT_ALL
               ! TODO: all THETAS passed, but only 1 needed, also ZAT
-              ! here atom processes communicate with each other
+              ! here atom processes communicate with each other - LLOYD0_NEW already written
               call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
                           THETAS,ZAT,ICLEB1C, &
                           IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
@@ -859,11 +859,17 @@ spinloop:     do ISPIN = 1,NSPIND
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-            call VXCDRV(EXC,KTE,KXC,LPOT,NSPIND,I1,RHO2NS, &
-            VONS,R,DRDI,A, &
-            IRWS,IRCUT,IPAN,ICELL,GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
-            THETAS,LMSP(1,ICELL), &
-            naez, irmd, irid, nfund, ngshd, ipand)
+
+            !call VXCDRV(EXC,KTE,KXC,LPOT,NSPIND,I1,RHO2NS, &
+            !VONS,R,DRDI,A, &
+            !IRWS,IRCUT,IPAN,ICELL,GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
+            !THETAS,LMSP(1,ICELL), &
+            !naez, irmd, irid, nfund, ngshd, ipand)
+            call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
+            VONS,R(:,I1),DRDI(:,I1),A(I1), &
+            IRWS(I1),IRCUT(:,I1),IPAN(I1),GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
+            THETAS(:,:,ICELL),LMSP(1,ICELL), &
+            irmd, irid, nfund, ngshd, ipand)
 
             call OUTTIME(is_Masterrank,'VXCDRV ......',TIME_I,ITER)
 ! =====================================================================
