@@ -172,6 +172,7 @@ program MAIN2
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
+  !every process does this!
   call readKKR0Input      (NSYMAXD, A, ALAT, ATOM, B, BCP, BRAVAIS, CLEB1C, &
                            CLS, DRDI, DSYMLL, EZOA, FCM, GMAX, GSH, ICLEB1C, ICST, &
                            IEND1, IFUNM, IGUESS, ILM, IMAXSH, IMIX, IMT, INDN0, IPAN, &
@@ -184,9 +185,9 @@ program MAIN2
                            RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
 
   ! ---------------------------------------------------------- k_mesh
-  call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
+  call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)  !every process does this!
 
-  call readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
+  call readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ) !every process does this!
 
   if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
@@ -288,7 +289,7 @@ program MAIN2
 
           if (XCCPL) then
 
-            inquire(file='ERESJIJ',exist=ERESJIJ)
+            !inquire(file='ERESJIJ',exist=ERESJIJ)  ! deactivated, doesn't work anyway
 
             call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,NSYMAT,ISYMINDEX, &
                         IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
@@ -341,7 +342,7 @@ program MAIN2
             endif
 
 ! IE ====================================================================
-            if (EMPIB==EPROC(IE)) then
+            if (my_energy_rank==EPROC(IE)) then
 ! IE ====================================================================
 
               do RF = 1,NREF
@@ -374,7 +375,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   PRSPIN   = 1
                 endif
 
-                if(SRANK(SMPIB,SMPIC)==MAPSPIN) then
+                if(my_spin_rank==MAPSPIN) then
 
                   call CALCTMAT(LDAU,NLDAU,ICST, &
                                 NSRA,EZ(IE), &
@@ -565,7 +566,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !       true beginning of SMPID-parallel section
 
-              if(SRANK(SMPIB,SMPIC) == MAPSPIN) then
+              if(my_spin_rank == MAPSPIN) then
 
                 call EPRDIST(IELAST,KMESH,NOFKS, &
                              PRSC(1,1,PRSPIN), &
@@ -932,7 +933,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !+++++++++++++++++ BEGIN ATOM PARALLEL +++++++++++++++++++++++++++++++
         do I1 = 1,NAEZ
-
           if(my_SE_rank== MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
 
             ICELL = NTCELL(I1)
@@ -990,8 +990,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !--------- BEGIN Atom-parallel ----------------------------------------
         do I1 = 1,NAEZ
-          if(my_SE_rank== &
-          MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+          if(my_SE_rank == MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
 
             call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, &
                                  NSPIND, VINS, VISP, VONS) ! Note: only LMPIC=1 processes
@@ -1049,7 +1048,13 @@ spinloop:     do ISPIN = 1,NSPIND
         iemxd)
 
         ! only MASTERRANK updates, other ranks get it broadcasted later
+        ! (although other processes could update themselves)
         call updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
+
+        ! write file 'energy_mesh'
+        if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
+
+        call writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
 
         if (MYACTVRANK /= 0) then   !DEBUG
           write(*,*) "main2: Assertion MYACTVRANK==0 for MASTERRANK failed."
@@ -1071,13 +1076,9 @@ spinloop:     do ISPIN = 1,NSPIND
 
       if(is_Masterrank) then
 
-        ! write file 'energy_mesh'
-        if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
-        ! could be moved
-        call writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
-
         call printSolverIterationNumber(ITER, NOITER_ALL)
         call writeIterationTimings(ITER, TIME_I, TIME_S)
+
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory

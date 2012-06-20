@@ -3,29 +3,30 @@ module KKRnano_mpi_mod
 
   SAVE
 
+  integer :: my_SE_communicator   !< MPI communicator for (spin, energy)-group of process
+  integer :: my_SE_comm_size      !< number of ranks in 'my_SE_communicator'
+  integer :: my_SE_rank           !< rank of process in 'my_SE_communicator'
+  logical :: is_Masterrank        !< true if process is the MASTERRANK
+  integer :: my_spin_rank         !< The spin-index the process is working on
+  integer :: my_energy_rank       !< The energy-group a process belongs to
+
   integer, private, parameter :: LMPID = 1 ! TODO: remove
 
   integer :: MYRANK
-
   integer :: LMPIC
 
   ! E-MPI
   integer :: EMPIC
-  integer :: EMPIB
+  integer, private :: EMPIB
 
   ! S-MPI
   integer ::SMPIC
-  integer ::SMPIB
+  integer, private ::SMPIB
 
   !     .. ACTV-MPI
   integer :: MYACTVRANK
   integer :: ACTVCOMM
   integer, private::ACTVGROUP
-
-  integer :: my_SE_communicator   !< MPI communicator for (spin, energy)-group of process
-  integer :: my_SE_comm_size      !< number of ranks in 'my_SE_communicator'
-  integer :: my_SE_rank           !< rank of process in 'my_SE_communicator'
-  logical :: is_Masterrank        !< true if process is the MASTERRANK
 
   ! ----------- arrays ----------------------------------------------------------
 
@@ -36,7 +37,7 @@ module KKRnano_mpi_mod
   integer, dimension(:), allocatable, private :: LSIZE
 
   !     .. S-MPI
-  integer, dimension(:,:), allocatable :: SRANK
+  integer, dimension(:,:), allocatable, private :: SRANK
   integer, dimension(:,:), allocatable :: SMYRANK
 
   !     .. E-MPI
@@ -134,7 +135,10 @@ contains
     my_SE_communicator = LCOMM(LMPIC)
     my_SE_comm_size = LSIZE(LMPIC)
     my_SE_rank = MYLRANK(LMPIC)
+    my_spin_rank = SRANK(SMPIB,SMPIC)
+    my_energy_rank = EMPIB
     is_Masterrank = (MYLRANK(1) == 0)
+
 
   end subroutine
 
