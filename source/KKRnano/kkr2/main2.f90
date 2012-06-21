@@ -231,7 +231,7 @@ program MAIN2
 
     call GAUNT2(WG,YRG,LMAXD)
 
-    call MADELUNG3D(LPOT,YRG,WG,ALAT, &
+    call MADELUNG3D(LPOT,YRG,WG,ALAT, &   ! TODO: encapsulate?
     RMAX,GMAX,BRAVAIS,RECBV, &
     LMXSPD,LASSLD,LPOT,LMPOTD, &
     NMAXD,ISHLD, &
@@ -807,8 +807,8 @@ spinloop:     do ISPIN = 1,NSPIND
             call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
 
             call STRMAT(ALAT,LPOT,NAEZ,NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-            RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1)
-
+            RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1) ! TODO: contains NAEZD sized automatic array - use allocate
+            ! output is only SMAT - local for each atom!
             call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
             call VMADELBLK_com(CMOM,CMINST,LPOT,NSPIND, &

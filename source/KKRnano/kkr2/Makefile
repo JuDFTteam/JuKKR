@@ -30,6 +30,23 @@ LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 LDFLAGS += -lfftw3
 endif
 
+# ========= MAC ============ no openmp
+ifeq ($(PLATFORM),MAC)
+FC = mpif77 -warn
+FC90 = mpif90 -warn
+# -module <path> specifies where to put .mod files
+FCFLAGS = -O2 -module $(BUILDDIR)
+FCFLAGS += -gen-interfaces -warn interfaces
+FC90FLAGS =
+FCFLAGS += -I $(BUILDDIR)
+LDFLAGS =
+# set run paths to look for shared libraries (-Wl means pass to linker)
+#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/'
+#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/compiler/lib/intel64'
+LDFLAGS = -L/usr/local/lib -llapack -lblas
+LDFLAGS += -lfftw3
+endif
+
 ifeq ($(PLATFORM),JUROPA)
 FC = mpif77
 FC90 = mpif90 -warn
@@ -89,8 +106,36 @@ endif
 
 endif
 
+# ============================= JUQUEEN========================================
+ifeq ($(PLATFORM),JUQUEEN)
+
+ifeq ($(USETOOL),scalasca)
+FC = scalasca -instrument -user #end of line
+TYPE = debug
+else
+FC =
+endif
 
 
+FC += mpixlf77_r
+FC90 = mpixlf90_r
+FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
+#-qsmallstack=dynlenonheap
+FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
+LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
+#-lfftw3
+
+ifeq ($(TYPE),debug)
+FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF
+#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
+else
+FCFLAGS += -q64 -O3 -qstrict
+# -qipa
+endif
+
+endif
+
+#==============================================================================
 
 # Paths to look for files
 #DIRS = . dir1 dir2

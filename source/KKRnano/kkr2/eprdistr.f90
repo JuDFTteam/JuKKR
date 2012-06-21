@@ -1,3 +1,4 @@
+! TODO: This communication pattern could be wrong
     subroutine EPRDIST(IELAST,KMESH,NOFKS, &
                        PRSC,SPRS,CNVFAC, &
                        MYRANK,EMPIC,EMYRANK, &
@@ -12,7 +13,6 @@
 !                               Alexander Thiess, 14th of December 2009
 ! =======================================================================
 
-    !use mpi  ! problems on JUGENE
     implicit none
     include 'mpif.h'
 
