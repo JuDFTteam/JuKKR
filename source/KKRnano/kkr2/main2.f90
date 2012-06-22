@@ -811,11 +811,20 @@ spinloop:     do ISPIN = 1,NSPIND
             ! output is only SMAT - local for each atom!
             call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
-            call VMADELBLK_com(CMOM,CMINST,LPOT,NSPIND, &
-            NAEZ,VONS,ZAT,R,IRCUT,IPAN, &
+            !call VMADELBLK_com(CMOM,CMINST,LPOT,NSPIND, &
+            !NAEZ,VONS,ZAT,R,IRCUT,IPAN, &
+            !VMAD, &
+            !LMPOTD,SMAT,CLEB,ICLEB,IEND, &
+            !LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
+            !my_SE_rank, &
+            !my_SE_communicator,my_SE_comm_size, &
+            !irmd, ipand)
+
+            call VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIND, &
+            NAEZ,VONS,ZAT,R(:,I1),IRCUT(:,I1),IPAN(I1), &
             VMAD, &
             LMPOTD,SMAT,CLEB,ICLEB,IEND, &
-            LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
+            LMXSPD,NCLEBD,LOFLM,DFAC, &
             my_SE_rank, &
             my_SE_communicator,my_SE_comm_size, &
             irmd, ipand)
