@@ -11,19 +11,13 @@ module main2_arrays_mod
   double complex, dimension(:,:,:), allocatable ::  DSYMLL
   double complex, dimension(:,:), allocatable ::  PHILDAU
   double complex, dimension(:,:,:,:), allocatable ::  DMATLDAU ! LDA+U
-  double precision, dimension(:), allocatable :: WG
-  double precision, dimension(:,:,:), allocatable :: YRG
   double precision, dimension(:,:), allocatable :: RBASIS
 
   double precision, dimension(:,:), allocatable :: SMAT
-  double precision, dimension(:), allocatable :: CLEB
   double precision, dimension(:,:), allocatable :: CLEB1C
   double precision, dimension(:,:), allocatable :: RNORM
-  double precision, dimension(:,:), allocatable :: DFAC
   double precision, dimension(:), allocatable :: RWS
   double precision, dimension(:), allocatable :: RMT
-  double precision, dimension(:,:), allocatable :: GN
-  double precision, dimension(:,:), allocatable :: RM
   double precision, dimension(:,:,:), allocatable :: BZKP
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
@@ -43,8 +37,6 @@ module main2_arrays_mod
   integer, dimension(:), allocatable :: NUMN0
   integer, dimension(:,:), allocatable :: INDN0
 
-  integer, dimension(:), allocatable :: NSG
-  integer, dimension(:), allocatable :: NSR
   integer, dimension(:), allocatable :: LLDAU    ! LDA+U
 
   double complex, dimension(:,:,:), allocatable ::  TMATN
@@ -124,8 +116,6 @@ module main2_arrays_mod
 
   integer, dimension(:,:), allocatable :: ILM
   integer, dimension(:), allocatable :: IMAXSH
-  integer, dimension(:,:), allocatable :: ICLEB
-  integer, dimension(:), allocatable :: LOFLM
   integer, dimension(:,:), allocatable :: ICLEB1C
   integer, dimension(:), allocatable :: LOFLM1C
   integer, dimension(:,:), allocatable :: IFUNM
@@ -197,7 +187,6 @@ module main2_arrays_mod
   integer::   MMAXD
   integer::   LM2D
   integer::   LMXSPD
-  integer::   LASSLD
   integer::   LMPOTD
   integer::   IRMIND
   integer::   LRECRES2
@@ -296,29 +285,17 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(WG(LASSLD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(YRG(LASSLD,0:LASSLD,0:LASSLD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RBASIS(3,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(SMAT(LMXSPD,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(CLEB(LMXSPD*LMPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CLEB1C(NCLEB,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RNORM(IEMXD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(DFAC(0:LPOT,0:LPOT), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RWS(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RMT(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(GN(3,NMAXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RM(3,NMAXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(BZKP(3,KPOIBZ,MAXMSHD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -351,10 +328,6 @@ CONTAINS
     allocate(NUMN0(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(INDN0(NAEZ,NACLSD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NSG(ISHLD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NSR(ISHLD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LLDAU(LMAXD1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -476,10 +449,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(IMAXSH(0:LMPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ICLEB(LMXSPD*LMPOTD,3), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LOFLM(LMXSPD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ICLEB1C(NCLEB,3), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LOFLM1C(LM2D), stat = memory_stat)
@@ -536,18 +505,12 @@ CONTAINS
     deallocate(DSYMLL, stat = memory_stat)
     deallocate(PHILDAU, stat = memory_stat)
     deallocate(DMATLDAU, stat = memory_stat)
-    deallocate(WG, stat = memory_stat)
-    deallocate(YRG, stat = memory_stat)
     deallocate(RBASIS, stat = memory_stat)
     deallocate(SMAT, stat = memory_stat)
-    deallocate(CLEB, stat = memory_stat)
     deallocate(CLEB1C, stat = memory_stat)
     deallocate(RNORM, stat = memory_stat)
-    deallocate(DFAC, stat = memory_stat)
     deallocate(RWS, stat = memory_stat)
     deallocate(RMT, stat = memory_stat)
-    deallocate(GN, stat = memory_stat)
-    deallocate(RM, stat = memory_stat)
     deallocate(BZKP, stat = memory_stat)
     deallocate(VOLCUB, stat = memory_stat)
     deallocate(VOLBZ, stat = memory_stat)
@@ -564,8 +527,6 @@ CONTAINS
     deallocate(EZOA, stat = memory_stat)
     deallocate(NUMN0, stat = memory_stat)
     deallocate(INDN0, stat = memory_stat)
-    deallocate(NSG, stat = memory_stat)
-    deallocate(NSR, stat = memory_stat)
     deallocate(LLDAU, stat = memory_stat)
     deallocate(TMATN, stat = memory_stat)
     deallocate(DTDE, stat = memory_stat)
@@ -626,8 +587,6 @@ CONTAINS
     deallocate(NTCELL, stat = memory_stat)
     deallocate(ILM, stat = memory_stat)
     deallocate(IMAXSH, stat = memory_stat)
-    deallocate(ICLEB, stat = memory_stat)
-    deallocate(LOFLM, stat = memory_stat)
     deallocate(ICLEB1C, stat = memory_stat)
     deallocate(LOFLM1C, stat = memory_stat)
     deallocate(IFUNM, stat = memory_stat)

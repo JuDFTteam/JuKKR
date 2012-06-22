@@ -5,7 +5,7 @@ module main2_aux_mod
 
   ! from dimension parameters, calculate some derived parameters
   !----------------------------------------------------------------------------
-  subroutine getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, &
+  subroutine getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LM2D, &
                                   LMAXD, LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
                                   LRECRES2, MMAXD, NAEZD, NCLEB, &
                                   NGUESSD, NPOTD, NSPIND, NTIRD)
@@ -14,7 +14,7 @@ module main2_aux_mod
     integer :: IRMD
     integer :: IRMIND
     integer :: IRNSD
-    integer :: LASSLD
+
     integer :: LM2D
     integer :: LMAXD
     integer :: LMAXD1
@@ -41,7 +41,7 @@ module main2_aux_mod
     MMAXD  = 2*LMAXD + 1
     LM2D= (2*LMAXD+1)**2
     LMXSPD= (2*LPOTD+1)**2
-    LASSLD=4*LMAXD
+
     LMPOTD= (LPOTD+1)**2
     NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND
     IRMIND=IRMD-IRNSD

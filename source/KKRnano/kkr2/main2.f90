@@ -82,8 +82,6 @@ program MAIN2
   integer::KVMAD
   integer::KXC
   integer::KFORCE
-  integer::IEND
-  integer::NCLEBD
   integer::IEND1
   integer::IPOT
   integer::ISPIN
@@ -115,10 +113,6 @@ program MAIN2
   integer::NMESH
   integer::NSYMAT
   integer::MAXMESH
-  integer::NGMAX
-  integer::NRMAX
-  integer::NSHLG
-  integer::NSHLR
 
   double precision:: QMRBOUND
   integer::IGUESS
@@ -163,7 +157,7 @@ program MAIN2
   call consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
 
   ! from dimension parameters - calculate some derived parameters
-  call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LASSLD, LM2D, LMAXD, &
+  call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LM2D, LMAXD, &
                             LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
                             LRECRES2, MMAXD, NAEZ, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
 
@@ -803,20 +797,10 @@ spinloop:     do ISPIN = 1,NSPIND
 
             call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
 
-            !call STRMAT(ALAT,LPOT,NAEZ,NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-            !RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1)
             call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, volume0, smat)
 
             call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
-!            call VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIND, &
-!            NAEZ,VONS,ZAT,R(:,I1),IRCUT(:,I1),IPAN(I1), &
-!            VMAD, &
-!            LMPOTD,SMAT,CLEB,ICLEB,IEND, &
-!            LMXSPD,NCLEBD,LOFLM,DFAC, &
-!            my_SE_rank, &
-!            my_SE_communicator,my_SE_comm_size, &
-!            irmd, ipand)
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
                  NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
                  SMAT, my_SE_rank, my_SE_communicator, my_SE_comm_size, irmd, ipand)
