@@ -52,6 +52,7 @@ module MadelungCalculator_mod
     integer LPOT
     integer LMPOTD
     integer LASSLD
+    double precision VOLUME0
 
     double precision, dimension(:,:), allocatable :: DFAC
 
@@ -63,8 +64,10 @@ module MadelungCalculator_mod
   contains
 
   !----------------------------------------------------------------------------
+  !> Creates a MadelungCalculator object.
+  !> Don't forget to free resources with destroyMadelungCalculator
   subroutine createMadelungCalculator(madelung_calc, lmax, ALAT, RMAX, GMAX, &
-                                      BRAVAIS, RECBV, NMAXD, ISHLD)
+                                      BRAVAIS, NMAXD, ISHLD)
     implicit none
     type (MadelungCalculator), intent(inout) :: madelung_calc
     integer, intent(in) :: lmax
@@ -72,12 +75,14 @@ module MadelungCalculator_mod
     double precision, intent(in) :: RMAX
     double precision, intent(in) :: GMAX
     double precision, intent(in)::  BRAVAIS(3,3)
-    double precision, intent(in)::  RECBV(3,3)
+
     integer, intent(in) :: NMAXD
     integer, intent(in) :: ISHLD
     !---------------------------------------------------------
 
     type (MadelungHarmonics) :: harmonics
+
+    double precision ::  RECBV(3,3)
 
     integer :: LPOT
     integer :: LMXSPD
@@ -103,6 +108,8 @@ module MadelungCalculator_mod
       write(*,*) "MadelungCalculator: Allocation error, DFAC"
       stop
     end if
+
+    call LATTIX99(ALAT,BRAVAIS,RECBV,madelung_calc%VOLUME0, .false.)
 
     call createMadelungHarmonics(harmonics, lmax)
 
@@ -130,6 +137,7 @@ module MadelungCalculator_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Destroys a MadelungCalculator object.
   subroutine destroyMadelungCalculator(madelung_calc)
     implicit none
     type (MadelungCalculator), intent(inout) :: madelung_calc
@@ -144,14 +152,15 @@ module MadelungCalculator_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! STRMAT wrapper
-  subroutine calculateMadelungLatticeSum(madelung_calc, naez, atom_index, rbasis, volume0, smat)
+  !> Calculates Lattice sums needed for Madelung potential calculation.
+  !> Needs a properly constructed MadelungCalculator object.
+  !> STRMAT wrapper
+  subroutine calculateMadelungLatticeSum(madelung_calc, naez, atom_index, rbasis, smat)
     implicit none
     type (MadelungCalculator), intent(inout) :: madelung_calc
     integer, intent(in) :: naez
     integer, intent(in) :: atom_index
     double precision, dimension(3,NAEZ), intent(in) :: rbasis
-    double precision, intent(in) :: volume0
     double precision, dimension(madelung_calc%LMXSPD,naez), intent(out) :: SMAT   !SMAT(LMXSPD,NAEZ)
     !---------------------------------------------------------
 
@@ -159,13 +168,16 @@ module MadelungCalculator_mod
     call STRMAT(madelung_calc%ALAT,madelung_calc%LPOT,NAEZ,madelung_calc%mlattice%NGMAX, &
     madelung_calc%mlattice%NRMAX,madelung_calc%mlattice%NSG,madelung_calc%mlattice%NSR, &
     madelung_calc%mlattice%NSHLG,madelung_calc%mlattice%NSHLR, &
-    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS,SMAT,VOLUME0, &
+    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS,SMAT, &
+    madelung_calc%VOLUME0, &
     madelung_calc%LASSLD,madelung_calc%LMXSPD,naez,atom_index)
 
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! Wrapper for VMADELBLK
+  !> Add Madelung potential to VONS.
+  !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
+  !> Wrapper for VMADELBLK
   subroutine addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIN, &
                                       NAEZ, VONS, ZAT, R, IRCUT, IPAN, VMAD, &
                                       SMAT, rank, communicator, comm_size, irmd, ipand)

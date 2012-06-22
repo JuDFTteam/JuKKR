@@ -163,8 +163,8 @@ module main2_aux_mod
                            LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
                            MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
                            NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, R, &
-                           RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
-                           RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
+                           RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMT, RMTREF, &
+                           RR, RWS, SCFSTEPS, TESTC, THETAS, VREF, ZAT)
 
     implicit none
     integer :: NSYMAXD
@@ -232,7 +232,6 @@ module main2_aux_mod
     double precision, allocatable :: RBASIS(:,:)
     double precision, allocatable :: RCLS(:,:,:)
     double precision :: RCUTJIJ
-    double precision :: RECBV(3,3)
     integer, allocatable :: REFPOT(:)
     double precision :: RMAX
     double precision, allocatable :: RMT(:)
@@ -242,7 +241,7 @@ module main2_aux_mod
     integer :: SCFSTEPS
     character(len=8) :: TESTC(16)
     double precision, allocatable :: THETAS(:,:,:)
-    double precision :: VOLUME0
+
     double precision, allocatable :: VREF(:)
     double precision, allocatable :: ZAT(:)
 
@@ -253,6 +252,8 @@ module main2_aux_mod
     integer :: NAEZ_dummy
     integer :: LPOT
     double precision :: QBOUND
+    double precision :: RECBV_dummy(3,3)
+    double precision :: VOLUME0_dummy
 
     ! ======================================================================
     ! =             read in variables from unformatted files               =
@@ -266,7 +267,7 @@ module main2_aux_mod
     read (67) A,B,DRDI,R,THETAS,ZAT,IMT,IRC, &
     IRMIN,IRWS,RWS,RMT,ITITLE,LLMSP,NFU
     read (67) ALAT,GSH,ILM,IMAXSH,TESTC,OPTC
-    read (67) BRAVAIS,RBASIS,RECBV,VOLUME0,RMAX,GMAX
+    read (67) BRAVAIS,RBASIS,RECBV_dummy,VOLUME0_dummy,RMAX,GMAX
     read (67) IEND1,CLEB1C,ICLEB1C,LOFLM1C,JEND,IFUNM,LMSP,NSRA,ICST
     read (67) NCLS,NREF,RMTREF,VREF,RCLS, &
     ATOM,CLS,NACLS,REFPOT

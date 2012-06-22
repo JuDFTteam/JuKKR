@@ -1,5 +1,5 @@
 C*==lattix99.f    processed by SPAG 6.05Rc at 17:56 on 17 May 2004
-      SUBROUTINE LATTIX99(ALAT,BRAVAIS,RECBV,VOLUME0,RR,NR,NRD)
+      SUBROUTINE LATTIX99(ALAT,BRAVAIS,RECBV,VOLUME0)
 C **********************************************************************
 C *                                                                    *
 C * LATTIX99 generates the real space and reciprocal lattices.         *
@@ -14,7 +14,7 @@ C **********************************************************************
       IMPLICIT NONE
 C     ..
 C     .. Scalar arguments ..
-      INTEGER NR,NRD            ! number of real space vectors
+
       DOUBLE PRECISION ALAT,VOLUME0
 C     ..
 C     .. Array arguments ..
@@ -23,7 +23,7 @@ C  BRAVAIS(3,3): Real space bravais vectors. Read in normalised to ALAT
 C  RECBV(3,3)  : Reciprocal lattice vectors in 2*PI/ALAT
 C
       DOUBLE PRECISION BRAVAIS(3,3)
-      DOUBLE PRECISION RECBV(3,3),RR(3,0:NRD)
+      DOUBLE PRECISION RECBV(3,3)
 C     ..
 C     .. Local Scalars ..
       INTEGER I,J
@@ -125,11 +125,6 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       WRITE (6,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
-C --> now generate the real-space lattice vectors for the 
-C     cluster generation
-C
-      CALL RRGEN(BRAVAIS,RR,NR,NRD)
-      WRITE(6,*)
 C
 99001 FORMAT (9X,32(1H-),6X,32(1H-))
 99002 FORMAT (5X,A2,I1,':',3F10.6,8X,3F10.6)

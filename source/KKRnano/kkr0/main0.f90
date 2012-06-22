@@ -755,8 +755,13 @@
 !      CLOSE(56)
 
 ! ================================================ deal with the lattice
-    call LATTIX99(ALAT,BRAVAIS, &
-                  RECBV,VOLUME0,RR,NR,NRD)
+    call LATTIX99(ALAT,BRAVAIS,RECBV,VOLUME0, .true.)
+
+! --> now generate the real-space lattice vectors for the
+!     cluster generation
+
+    call RRGEN(BRAVAIS,RR,NR,NRD)
+    write(*,*)
 
     call SCALEVEC(RBASIS,ABASIS,BBASIS,CBASIS, &
                   NAEZ,BRAVAIS,LCARTESIAN)

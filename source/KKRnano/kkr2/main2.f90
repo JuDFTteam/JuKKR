@@ -50,7 +50,6 @@ program MAIN2
   double precision::ALAT
   double precision::FCM
   double precision::MIXING
-  double precision::VOLUME0
   double precision::RMAX
   double precision::GMAX
   double precision::FPI
@@ -99,7 +98,6 @@ program MAIN2
 
   ! static arrays
   double precision::BRAVAIS(3,3)
-  double precision::RECBV(3,3)
   double precision::VBC(2)
   integer::ISYMINDEX(NSYMAXD)
   double precision::ECORE(20,2)
@@ -179,8 +177,8 @@ program MAIN2
                            LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
                            MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
                            NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, R, &
-                           RBASIS, RCLS, RCUTJIJ, RECBV, REFPOT, RMAX, RMT, RMTREF, &
-                           RR, RWS, SCFSTEPS, TESTC, THETAS, VOLUME0, VREF, ZAT)
+                           RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMT, RMTREF, &
+                           RR, RWS, SCFSTEPS, TESTC, THETAS, VREF, ZAT)
 
   ! ---------------------------------------------------------- k_mesh
   call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)  !every process does this!
@@ -228,7 +226,7 @@ program MAIN2
     FM1S = 0.00
 
     call createMadelungCalculator(madelung_calc, lmaxd, ALAT, RMAX, GMAX, &
-                                  BRAVAIS, RECBV, NMAXD, ISHLD)
+                                  BRAVAIS, NMAXD, ISHLD)
 
 
 ! ######################################################################
@@ -797,7 +795,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
 
-            call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, volume0, smat)
+            call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
 
             call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
