@@ -228,6 +228,13 @@ program MAIN2
     call createMadelungCalculator(madelung_calc, lmaxd, ALAT, RMAX, GMAX, &
                                   BRAVAIS, NMAXD, ISHLD)
 
+!+++++++++++ atom - parallel  TODO: replace with better construct
+    do I1 = 1,NAEZ
+      if(my_SE_rank==MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+        call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
+      end if
+    end do
+!+++++++++++ end atom - parallel ++++++++++++++++++++++++++++++++
 
 ! ######################################################################
 ! ######################################################################
@@ -794,10 +801,6 @@ spinloop:     do ISPIN = 1,NSPIND
             irmd, irid, nfund, ngshd, ipand)
 
             call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
-
-            call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
-
-            call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
                  NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
