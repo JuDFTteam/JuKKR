@@ -17,8 +17,12 @@ program MAIN2
   use muffin_tin_zero_mod
   use EnergyMesh_mod
 
+  use MadelungCalculator_mod
+
   implicit none
   include 'mpif.h'
+
+  type (MadelungCalculator) :: madelung_calc
 
   !     .. Parameters ..
 
@@ -229,16 +233,9 @@ program MAIN2
     SM1S = 0.00
     FM1S = 0.00
 
-    call GAUNT2(WG,YRG,LMAXD)
+    call createMadelungCalculator(madelung_calc, lmaxd, ALAT, RMAX, GMAX, &
+                                  BRAVAIS, RECBV, NMAXD, ISHLD)
 
-    call MADELUNG3D(LPOT,YRG,WG,ALAT, &   ! TODO: encapsulate?
-    RMAX,GMAX,BRAVAIS,RECBV, &
-    LMXSPD,LASSLD,LPOT,LMPOTD, &
-    NMAXD,ISHLD, &
-    LMPOTD,CLEB,ICLEB,IEND, &
-    NCLEBD,LOFLM,DFAC, &
-    NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-    MYRANK)
 
 ! ######################################################################
 ! ######################################################################
@@ -306,7 +303,7 @@ program MAIN2
           if (LDAU) then
 
             EREFLDAU = EFERMI
-            EREFLDAU = 0.48       ! FIXME: hardcoded
+            !EREFLDAU = 0.48       ! FIXME: hardcoded
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
                           VISP,NSPIND,R(1,I1),DRDI(1,I1), &
@@ -806,28 +803,23 @@ spinloop:     do ISPIN = 1,NSPIND
 
             call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
 
-            call STRMAT(ALAT,LPOT,NAEZ,NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-            RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1) ! TODO: contains NAEZD sized automatic array - use allocate
-            ! output is only SMAT - local for each atom!
+            !call STRMAT(ALAT,LPOT,NAEZ,NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
+            !RBASIS,SMAT,VOLUME0,LASSLD,LMXSPD,naez,I1)
+            call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, volume0, smat)
+
             call OUTTIME(is_Masterrank,'STRMAT ......',TIME_I,ITER)
 
-            !call VMADELBLK_com(CMOM,CMINST,LPOT,NSPIND, &
-            !NAEZ,VONS,ZAT,R,IRCUT,IPAN, &
-            !VMAD, &
-            !LMPOTD,SMAT,CLEB,ICLEB,IEND, &
-            !LMXSPD,NCLEBD,LOFLM,DFAC,I1, &
-            !my_SE_rank, &
-            !my_SE_communicator,my_SE_comm_size, &
-            !irmd, ipand)
-
-            call VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIND, &
-            NAEZ,VONS,ZAT,R(:,I1),IRCUT(:,I1),IPAN(I1), &
-            VMAD, &
-            LMPOTD,SMAT,CLEB,ICLEB,IEND, &
-            LMXSPD,NCLEBD,LOFLM,DFAC, &
-            my_SE_rank, &
-            my_SE_communicator,my_SE_comm_size, &
-            irmd, ipand)
+!            call VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIND, &
+!            NAEZ,VONS,ZAT,R(:,I1),IRCUT(:,I1),IPAN(I1), &
+!            VMAD, &
+!            LMPOTD,SMAT,CLEB,ICLEB,IEND, &
+!            LMXSPD,NCLEBD,LOFLM,DFAC, &
+!            my_SE_rank, &
+!            my_SE_communicator,my_SE_comm_size, &
+!            irmd, ipand)
+            call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
+                 NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
+                 SMAT, my_SE_rank, my_SE_communicator, my_SE_comm_size, irmd, ipand)
 
             call OUTTIME(is_Masterrank,'VMADELBLK ......',TIME_I,ITER)
 
@@ -1103,7 +1095,9 @@ spinloop:     do ISPIN = 1,NSPIND
     if (is_Masterrank) close(2)    ! TIME
 
     if (KFORCE==1) close(54)
-! ======================================================================
+
+    call destroyMadelungCalculator(madelung_calc)
+
 ! ======================================================================
 
   endif ! ACTVGROUP
