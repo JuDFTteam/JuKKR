@@ -1,23 +1,18 @@
 c 13.10.95 ***************************************************************
-      SUBROUTINE MIXSTR_NEW(RMSAVQ,RMSAVM,LPOT,LMPOT,
-     +                  NSPIN,ITER,RFPI,FPI,
+      SUBROUTINE MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOT,
+     +                  NSPIN,
      +                  MIXING,FCM,IRC1,IRMIN1,R,DRDI,VONS,VISP,VINS,
-C                       new parameters after inc.p removal
-     &                  naez, irmd, irnsd)
+     &                  irmd, irnsd)
 c ************************************************************************
       IMPLICIT NONE
 
-      INTEGER naez
       INTEGER irmd
       INTEGER irnsd
 
-C     INTEGER LMPOTD,IRMIND
-C     PARAMETER (LMPOTD= (LPOTD+1)**2,
-C    +          IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
-      DOUBLE PRECISION FCM,FPI,MIXING,RFPI,RMSAVM,RMSAVQ
-      INTEGER ITER,LMPOT,LPOT,NSPIN
+      DOUBLE PRECISION FCM,MIXING,RMSAVM,RMSAVQ
+      INTEGER LMPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DRDI(IRMD),R(IRMD),
@@ -26,6 +21,7 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FAC,RMSERM,RMSERQ,VMN,VNM,VNP,VOLDM,VOLDP,VPN
+      DOUBLE PRECISION PI, FPI, RFPI
       INTEGER IH,IHP1,IRC1,IRMIN1,J,LM
 C     ..
 C     .. Intrinsic Functions ..
@@ -39,6 +35,12 @@ c
 c     first mixing scheme : straight mixing
 c---> determination of the root mean sqare error
 c
+      RMSAVQ = 0.0D0
+      RMSAVM = 0.0D0
+
+      PI = 4.0D0*ATAN(1.0D0)
+      FPI = 4.0D0*PI
+      RFPI = SQRT(FPI)
 
         IF (NSPIN.EQ.2) THEN
           IH = 1
@@ -78,7 +80,7 @@ C
         RMSAVQ = RMSAVQ + RMSERQ
         RMSAVM = RMSAVM + RMSERM
 
-        IF (LPOT.GT.0) THEN
+        IF (LMPOT.GT.1) THEN
 
           RMSERQ = 0.0D0
           RMSERM = 0.0D0

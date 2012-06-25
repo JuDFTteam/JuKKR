@@ -52,9 +52,7 @@ program MAIN2
   double precision::MIXING
   double precision::RMAX
   double precision::GMAX
-  double precision::FPI
   double precision::PI
-  double precision::RFPI
   double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
   double precision::EREFLDAU    ! LDA+U
@@ -65,7 +63,6 @@ program MAIN2
   real::TIME_EX
 
   integer::ICELL
-  integer::IR
   integer::NPNT1
   integer::NPNT2
   integer::NPNT3
@@ -145,8 +142,6 @@ program MAIN2
 
  !============================================================= CONSTANTS
   PI = 4.0D0*ATAN(1.0D0)
-  FPI = 4.0D0*PI
-  RFPI = SQRT(FPI)
 !=============================================================
 
   call read_dimension_parameters()
@@ -367,7 +362,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   MAPSPIN = 0
                   PRSPIN   = ISPIN
                 else
-                  MAPSPIN = MAPBLOCK(ISPIN,1,SMPID,1,0,SMPID-1)
+                  MAPSPIN = MAPBLOCK(ISPIN,1,SMPID,1,0,SMPID-1) ! same as ISPIN-1
                   PRSPIN   = 1
                 endif
 
@@ -928,9 +923,7 @@ spinloop:     do ISPIN = 1,NSPIND
             do ISPIN = 1,NSPIND
               IPOT = NSPIND* (I1-1) + ISPIN
 
-              do IR = 1,IRCUT(IPAN(I1),I1)
-                VONS(IR,1,ISPIN) = VONS(IR,1,ISPIN) + RFPI*VBC(ISPIN)
-              end do
+              call shiftPotential(VONS(:,:,ISPIN), IRCUT(IPAN(I1),I1), VBC(ISPIN))
 
               call CONVOL_NEW(IRCUT(1,I1),IRC(I1), &
                           IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
@@ -941,16 +934,19 @@ spinloop:     do ISPIN = 1,NSPIND
             end do
 
 ! -->   final construction of the potentials (straight mixing)
-            RMSAVQ = 0.0D0
-            RMSAVM = 0.0D0
+            !RMSAVQ = 0.0D0
+            !RMSAVM = 0.0D0
+            !call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOTD, &
+            !I1,NSPIND, &
+            !ITER,RFPI,FPI, &
+            !MIXING, &
+            !FCM,IRC,IRMIN,R,DRDI,VONS, &
+            !VISP,VINS, &
+            !naez, irmd, irnsd)
 
-            call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOTD, &
-            I1,NSPIND, &
-            ITER,RFPI,FPI, &
-            MIXING, &
-            FCM,IRC,IRMIN,R,DRDI,VONS, &
-            VISP,VINS, &
-            naez, irmd, irnsd)
+            call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
+                            IRC(I1),IRMIN(I1),R(:,I1),DRDI(:,I1),VONS,VISP,VINS, &
+                            irmd, irnsd)
 
             I1BRYD=I1
           end if

@@ -602,4 +602,29 @@ module main2_aux_mod
     end if
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Shift lm-decomposed potential be a constant sqrt(4 * pi) * VBC.
+  subroutine shiftPotential(VONS_ISPIN, index_rmax, VBC)
+    implicit none
+    double precision, dimension(:,:), intent(inout) :: VONS_ISPIN
+    integer, intent(in) :: index_rmax
+    double precision, intent(in) :: VBC
+    !----------------------------------
+
+    integer :: IR
+    double precision :: RFPI
+
+    !do IR = 1,IRCUT(IPAN(I1),I1)
+    !  VONS_ISPIN(IR,1,ISPIN) = VONS_ISPIN(IR,1,ISPIN) + RFPI*VBC(ISPIN)
+    !end do
+
+    RFPI = SQRT(16.0D0*ATAN(1.0D0))
+
+    do IR = 1, index_rmax
+      ! a constant potential shift affects only lm=1 component
+      VONS_ISPIN(IR,1) = VONS_ISPIN(IR,1) + RFPI*VBC
+    end do
+
+  end subroutine
+
 end module main2_aux_mod
