@@ -18,6 +18,7 @@ program MAIN2
   use EnergyMesh_mod
 
   use MadelungCalculator_mod
+  use lloyd0_new_mod
 
   implicit none
   include 'mpif.h'

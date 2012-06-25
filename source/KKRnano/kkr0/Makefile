@@ -8,7 +8,7 @@ PROGRAM = kkr0.exe
 
 # Path to put object files
 # and module files
-BUILDDIR = ~/build/kkr0
+BUILDDIR = $(HOME)/build/kkr0
 
 ifeq ($(PLATFORM),gfortran)
 FC = gfortran
