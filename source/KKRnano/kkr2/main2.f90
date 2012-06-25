@@ -585,20 +585,33 @@ spinloop:     do ISPIN = 1,NSPIND
               ! calculations is LLY_GRDT_ALL
               ! TODO: all THETAS passed, but only 1 needed, also ZAT
               ! here atom processes communicate with each other - LLOYD0_NEW already written
-              call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
-                          THETAS,ZAT,ICLEB1C, &
-                          IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
-                          NTCELL,ICST, &
-                          IELAST,IEND1,NAEZ,NSPIND,NSRA, &
-                          WEZRN,RNORM, &
-                          GMATN_ALL, &
-                          LLY_GRDT_ALL, &
-                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-                          DMATLDAU, &
-                          my_SE_rank, &
-                          my_SE_communicator,my_SE_comm_size, &
-                          lmaxd, irmd, irnsd, iemxd, &
-                          irid, nfund, ncelld, ipand, ncleb)
+!              call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
+!                          THETAS,ZAT,ICLEB1C, &
+!                          IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
+!                          NTCELL,ICST, &
+!                          IELAST,IEND1,NAEZ,NSPIND,NSRA, &
+!                          WEZRN,RNORM, &
+!                          GMATN_ALL, &
+!                          LLY_GRDT_ALL, &
+!                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
+!                          DMATLDAU, &
+!                          my_SE_rank, &
+!                          my_SE_communicator,my_SE_comm_size, &
+!                          lmaxd, irmd, irnsd, iemxd, &
+!                          irid, nfund, ncelld, ipand, ncleb)
+
+              ICELL = NTCELL(I1)
+              call LLOYD0_NEW(EZ,WEZ,CLEB1C,DRDI(:,I1),R(:,I1),IRMIN(I1), &
+                              VINS,VISP,THETAS(:,:,ICELL),ZAT(I1),ICLEB1C, &
+                              IFUNM(:,ICELL),IPAN(I1),IRCUT(:,I1),LMSP(:,ICELL), &
+                              JEND,LOFLM1C,ICST,IELAST,IEND1,NSPIND,NSRA, &
+                              WEZRN,RNORM, &
+                              GMATN_ALL, &
+                              LLY_GRDT_ALL, &
+                              LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
+                              my_SE_communicator, &
+                              lmaxd, irmd, irnsd, iemxd, &
+                              irid, nfund, ipand, ncleb)
 
 ! IME
               call OUTTIME(is_Masterrank,'Lloyd processed......',TIME_I,ITER)
