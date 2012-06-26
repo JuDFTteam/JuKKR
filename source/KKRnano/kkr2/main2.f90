@@ -249,11 +249,8 @@ program MAIN2
         call printDoubleLineSep(unit_number = 2)
       endif
 
-      do LM = 1,LMPOTD
-        CMOM(LM) = 0.0D0
-        CMINST(LM) = 0.0D0
-      end do
-
+      CMOM   = 0.0D0
+      CMINST = 0.0D0
       CHRGNT = 0.0D0
 
       ! needed for results.f - find better solution - unnecessary I/O
@@ -298,7 +295,7 @@ program MAIN2
           if (LDAU) then
 
             EREFLDAU = EFERMI
-            !EREFLDAU = 0.48       ! FIXME: hardcoded
+            !EREFLDAU = 0.48
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
                           VISP,NSPIND,R(1,I1),DRDI(1,I1), &
@@ -584,22 +581,6 @@ spinloop:     do ISPIN = 1,NSPIND
             if (LLY==1) then
               ! get WEZRN and RNORM, the important input from previous
               ! calculations is LLY_GRDT_ALL
-              ! TODO: all THETAS passed, but only 1 needed, also ZAT
-              ! here atom processes communicate with each other - LLOYD0_NEW already written
-!              call LLOYD0(EZ,WEZ,CLEB1C,DRDI,R,IRMIN,VINS,VISP, &
-!                          THETAS,ZAT,ICLEB1C, &
-!                          IFUNM,IPAN,IRCUT,LMSP,JEND,LOFLM1C, &
-!                          NTCELL,ICST, &
-!                          IELAST,IEND1,NAEZ,NSPIND,NSRA, &
-!                          WEZRN,RNORM, &
-!                          GMATN_ALL, &
-!                          LLY_GRDT_ALL, &
-!                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-!                          DMATLDAU, &
-!                          my_SE_rank, &
-!                          my_SE_communicator,my_SE_comm_size, &
-!                          lmaxd, irmd, irnsd, iemxd, &
-!                          irid, nfund, ncelld, ipand, ncleb)
 
               ICELL = NTCELL(I1)
               call LLOYD0_NEW(EZ,WEZ,CLEB1C,DRDI(:,I1),R(:,I1),IRMIN(I1), &
@@ -856,11 +837,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! =====================================================================
 
-            !call VXCDRV(EXC,KTE,KXC,LPOT,NSPIND,I1,RHO2NS, &
-            !VONS,R,DRDI,A, &
-            !IRWS,IRCUT,IPAN,ICELL,GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
-            !THETAS,LMSP(1,ICELL), &
-            !naez, irmd, irid, nfund, ngshd, ipand)
             call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
             VONS,R(:,I1),DRDI(:,I1),A(I1), &
             IRWS(I1),IRCUT(:,I1),IPAN(I1),GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
@@ -890,8 +866,6 @@ spinloop:     do ISPIN = 1,NSPIND
 ! Force calculation ends
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 ! =====================================================================
-            VAV0 = 0.0D0
-            VOL0 = 0.0D0
 
             call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
                             IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
@@ -948,15 +922,6 @@ spinloop:     do ISPIN = 1,NSPIND
             end do
 
 ! -->   final construction of the potentials (straight mixing)
-            !RMSAVQ = 0.0D0
-            !RMSAVM = 0.0D0
-            !call MIXSTR(RMSAVQ,RMSAVM,LPOT,LMPOTD, &
-            !I1,NSPIND, &
-            !ITER,RFPI,FPI, &
-            !MIXING, &
-            !FCM,IRC,IRMIN,R,DRDI,VONS, &
-            !VISP,VINS, &
-            !naez, irmd, irnsd)
 
             call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
                             IRC(I1),IRMIN(I1),R(:,I1),DRDI(:,I1),VONS,VISP,VINS, &
@@ -1051,12 +1016,6 @@ spinloop:     do ISPIN = 1,NSPIND
         if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
         call writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
-
-        if (MYACTVRANK /= 0) then   !DEBUG
-          write(*,*) "main2: Assertion MYACTVRANK==0 for MASTERRANK failed."
-          write(*,*) MYACTVRANK, my_SE_rank
-          STOP
-        end if
 
         call printDoubleLineSep()
 
