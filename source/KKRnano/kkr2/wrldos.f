@@ -13,20 +13,16 @@ C     .. Scalar Arguments ..
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   DEN(0:LMAXD1,IEMXD,NSPIN),
-     +                 EZ(IEMXD),WEZ(IEMXD),
-     +                 DENIE(3),
-     +                 PDEN(0:LMAXD1)
+     +                 EZ(IEMXD),WEZ(IEMXD)
       DOUBLE PRECISION DOSTOT(0:LMAXD1,2),
      +                 PDOSTOT(0:LMAXD1,2)
       INTEGER          ITITLE(20,NPOTD)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX   DOSCMPLX
-      DOUBLE PRECISION DOS,DOSSGN,EFCTOR,PI,
-     +                 DEREAL,DEIMAG,EREAL
+      DOUBLE PRECISION DOS,DOSSGN,EFCTOR,PI
       INTEGER          I1,IA,IE,IPOT,ISPIN,L,D1,D10,D100,D1000,OFF(3)
       CHARACTER*12     FNAME
-      LOGICAL          WPDOS
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,DIMAG
