@@ -325,6 +325,13 @@ c---> redefine new mt-radius in case of shape corrections
 c
             RMTNEW(IH) = SCALE(ICELL)*ALAT*XRN(1,ICELL)
             IMT1 = ANINT(LOG(RMTNEW(IH)/B(IH)+1.0D0)/A(IH)) + 1
+
+C     E.R. try to set correct muffin-tin index
+C     there are IRMD radial mesh points and MESHN(ICELL) points belong
+C     to the outer muffin-tin region where shape functions apply
+C     Therefore IMT1 must be:
+            IMT1 = IRMD - MESHN(ICELL)
+
 c
 c---> for proper core treatment imt must be odd
 c     shift potential by one mesh point if imt is even
@@ -347,6 +354,11 @@ c
             B1 = B(IH)
             R(1,IH) = 0.0D0
             DRDI(1,IH) = A1*B1
+
+C all the mesh points are first filled with an exponential mesh
+C then the outer meshpoints are overwritten by a equidist. mesh
+C in next code block E.R.
+
             DO 70 IR = 2,IRWS1
               EA = EXP(A1*REAL(IR-1))
               R(IR,IH) = B1* (EA-1.0D0)
@@ -369,6 +381,15 @@ c
      +                  R(1,IH),IO)
 c
             IRCUT(1,IH) = IMT(IH)
+CDEBUG E.R.
+            if ((IRMD - IMT1) /= MESHN(ICELL)) then
+              write(*,*) "ERROR in STARTB1"
+              write(*,*) "Assertion IRMD - IMT1 == MESHN(ICELL) failed."
+              write(*,*) "Atom, IRMD, IMT1, MESHN(ICELL)"
+              write(*,*) IH, IRMD, IMT1, MESHN(ICELL)
+              stop
+            end if
+CDEBUG
             ISUM = IMT(IH)
             DO 90 IPAN1 = 2,IPAN(IH)
               ISUM = ISUM + NM(IPAN1,ICELL)
@@ -377,6 +398,13 @@ c
             NR = ISUM
 c
             IRC(IH) = IRCUT(IPAN(IH),IH)
+
+CDEBUG E.R.
+            if (IRC(IH) > IRMD) then
+              write(*,*) "STARTB1: Assertion IRC(IH) <= IRMD failed."
+              stop
+            end if
+CDEBUG
 c
 c---> fill array irmin in case of full potential
 c

@@ -685,10 +685,6 @@
 !===================================================================
 !===================================================================
 
-
-!     IF(NAEZD.GT.100) IPE=0
-
-
     NSRA = 1
     if (KVREL >= 1) NSRA = 2
 
@@ -714,6 +710,32 @@
 
     close(IFILE)
     close(19)
+
+!------------------- Do some tests on startb1 output -------------------
+    ierror = 0
+    do I1 = 1, NAEZD
+      if ((IRMD - IRCUT(1, I1)) > IRID) then
+        write(*,*) "Error: Not enough radial points for shape-function available."
+        write(*,*) "Atom, points needed, points given ", I1, (IRMD - IRCUT(1, I1)), IRID
+        ierror = 1
+      end if
+    end do
+
+    do I1 = 1, NAEZD
+      do IE = 0, IPAN(I1) - 1
+        if (IE >= IPAND) then
+          write(*,*) "Array IPAN contains bad number of panels for atom ", IE
+          stop
+        end if
+        if ((IRCUT(IE+1,I1) -  IRCUT(IE,I1)) < 5) then
+          write(*,*) "Error: Not enough points in panel. At least 5 points needed for REGSOL"
+          write(*,*) "Atom, panel, points ", I1, IE, (IRCUT(IE+1,I1) -  IRCUT(IE,I1))
+          ierror = 1
+        end if
+      end do
+    end do
+    if (ierror /= 0) stop
+!-----------------------------------------------------------------------
 
 ! ----------------------------------------------------------------------
 ! update Fermi energy, adjust energy window according to running options
