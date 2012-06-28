@@ -11,14 +11,16 @@ c**********************************************************************
 
       IMPLICIT NONE
 
+      INCLUDE 'mpif.h'
+
 C     .. Scalar Arguments ..
-      REAL          TIME_I
+      DOUBLE PRECISION TIME_I
       INTEGER       ITER
       LOGICAL       OUTPUT
       CHARACTER*(*) NAME
 C     ..
 C     .. Local Scalars ..
-      REAL          TIME_F,REST,SECONDS
+      DOUBLE PRECISION TIME_F,REST,SECONDS
       INTEGER       ihours,iminutes
 C     ..
 C     .. Intrinsic Functions ..
@@ -28,7 +30,7 @@ C     only one processor proceeds ...
 C
       IF (OUTPUT) THEN
 C
-      CALL CPU_TIME(TIME_F)
+      TIME_F = MPI_WTIME()
 C
 C     calculate time in hours, minutes and seconds
 C

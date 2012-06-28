@@ -360,8 +360,8 @@ module main2_aux_mod
   subroutine writeIterationTimings(ITER, TIME_I, TIME_S)
     implicit none
     integer :: ITER
-    real :: TIME_I
-    real :: TIME_S
+    double precision :: TIME_I
+    double precision :: TIME_S
 
     call OUTTIME(.true. ,'end .................', &
     TIME_I,ITER)

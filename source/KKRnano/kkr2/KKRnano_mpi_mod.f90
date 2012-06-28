@@ -132,13 +132,22 @@ contains
 
     ! Here comes the initialisation of the variables that define the status of
     ! a process
-    my_SE_communicator = LCOMM(LMPIC)
-    my_SE_comm_size = LSIZE(LMPIC)
-    my_SE_rank = MYLRANK(LMPIC)
-    my_spin_rank = SRANK(SMPIB,SMPIC)
-    my_energy_rank = EMPIB
-    is_Masterrank = (MYLRANK(1) == 0)
-
+    if (LMPIC > 0) then
+      my_SE_communicator = LCOMM(LMPIC)
+      my_SE_comm_size = LSIZE(LMPIC)
+      my_SE_rank = MYLRANK(LMPIC)
+      my_spin_rank = SRANK(SMPIB,SMPIC)
+      my_energy_rank = EMPIB
+      is_Masterrank = (MYLRANK(1) == 0)
+    else
+      ! process inactive
+      my_SE_communicator = -1
+      my_SE_comm_size = -1
+      my_SE_rank = -1
+      my_spin_rank = -1
+      my_energy_rank = -1
+      is_Masterrank = .false.
+    end if
 
   end subroutine
 

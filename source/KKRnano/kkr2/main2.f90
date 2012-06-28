@@ -58,8 +58,8 @@ program MAIN2
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
   double precision::EREFLDAU    ! LDA+U
 
-  real::TIME_I
-  real::TIME_S
+  double precision::TIME_I
+  double precision::TIME_S
   real::TIME_E
   real::TIME_EX
 
@@ -208,7 +208,7 @@ program MAIN2
 
 ! ========= TIMING ======================================================
     if (is_Masterrank) then
-      call CPU_TIME(TIME_I)
+      TIME_I = MPI_WTIME()
       open (2,file='time-info',form='formatted')
     endif
 !========= TIMING END ======================================================
@@ -238,7 +238,7 @@ program MAIN2
 ! ######################################################################
 ! ######################################################################
 
-      call CPU_TIME(TIME_S)
+      TIME_S = MPI_WTIME()
 
       EKM    = 0
       NOITER = 0
@@ -295,7 +295,7 @@ program MAIN2
           if (LDAU) then
 
             EREFLDAU = EFERMI
-            !EREFLDAU = 0.48
+            EREFLDAU = 0.48    ! ???
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
                           VISP,NSPIND,R(1,I1),DRDI(1,I1), &
