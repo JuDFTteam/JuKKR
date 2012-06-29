@@ -1,5 +1,10 @@
       SUBROUTINE INTOUT(G,F,V,E,L,NNE,K2,DG,A,B,Z,NSRA)
 
+C For compatibility reasons
+      IMPLICIT NONE
+      SAVE
+C
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A,B,DG,E,Z
       INTEGER K2,L,NNE,NSRA

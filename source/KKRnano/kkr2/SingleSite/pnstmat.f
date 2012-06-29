@@ -8,6 +8,7 @@ C                        new input parameters after inc.p removal
      &                   lmaxd, irmd, irnsd, ipand, ncleb)
       IMPLICIT NONE
 C     .. Parameters ..
+      DOUBLE COMPLEX, PARAMETER :: CZERO = (0.0d0, 0.0d0)
 
       INTEGER lmaxd
       INTEGER irmd
@@ -88,6 +89,14 @@ C     .. External Subroutines ..
 
       INTEGER             IRMIND
       INTEGER             LMMAXD
+
+C     Initialisation of some local arrays
+      PZLM = CZERO
+      QZLM = CZERO
+      PZEKDR = CZERO
+      QZEKDR = CZERO
+      AR = CZERO
+C     End initialisation
 
       IRMIND=IRMD-IRNSD
       LMMAXD= (LMAXD+1)**2

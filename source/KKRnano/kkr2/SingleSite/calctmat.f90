@@ -24,7 +24,8 @@ ncleb, ipand, irmd, irnsd)
   !      PARAMETER          (LM2D= (2*LMAXD+1)**2)
 
   double precision    CVLIGHT
-  parameter          (CVLIGHT=274.0720442D0)
+  double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+
   !     ..
   !     .. Scalar Arguments ..
   double precision   ZAT
@@ -87,13 +88,29 @@ ncleb, ipand, irmd, irnsd)
   !     .. External Subroutines ..
   external CRADWF,PNSTMAT,WFMESH
 
-
   integer             LMMAXD
 
   LMMAXD= (LMAX + 1)**2
 
-
   PI = 4.D0*ATAN(1.D0)
+  CVLIGHT=274.0720442D0  ! must not be parameter?
+
+!------------------------------------------------------------------------------
+! Initialisation of local variables to be on the safe side
+  EK = CZERO
+  DET = CZERO
+  ALPHA = CZERO
+  FZ = CZERO
+  PNS = CZERO
+  PZ = CZERO
+  QZ = CZERO
+  SZ = CZERO
+  TMAT = CZERO
+  RS = 0.0d0
+  S = 0.0d0
+  LDAUCUT = 0.0d0
+  WMLDAUAV = 0.0d0
+! -----------------------------------------------------------------------------
 
   !LDAU
 
@@ -138,6 +155,7 @@ ncleb, ipand, irmd, irnsd)
       TMATN(LM1,LM2) = (0.0D0,0.0D0)
     end do
   end do
+
   ERYD = EZ
 
   call WFMESH(ERYD,EK,CVLIGHT,NSRA,ZAT,R,S,RS,IRCUT(IPAN), &

@@ -22,26 +22,11 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
   integer :: ipand
   integer :: nfund
 
-  !     .. Parameters ..
-  !     INTEGER             LMXSPD
-  !     PARAMETER          (LMXSPD= (2*LPOTD+1)**2) ! = (4*LMAXD+1)**2
-  !     INTEGER             LMMAXD
-  !     PARAMETER          (LMMAXD= (LMAXD+1)**2)
-  !     INTEGER             LMAXD1
-  !     PARAMETER          (LMAXD1= LMAXD+1)
-  !     INTEGER             MMAXD
-  !     PARAMETER          (MMAXD = 2*LMAXD+1 )
-  !     INTEGER             LMPOTD
-  !     PARAMETER          (LMPOTD= (LPOTD+1)**2) ! = (2*LMAXD+1)**2
-  !     INTEGER             IRMIND
-  !     PARAMETER          (IRMIND=IRMD-IRNSD)
-  !     INTEGER             LM2D
-  !     PARAMETER          (LM2D= (2*LMAXD+1)**2)
-
   double precision ::    CVLIGHT
   parameter          (CVLIGHT=274.0720442D0)
   double complex      CONE
   parameter          ( CONE=(1D0,0D0) )
+  double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   !     ..
   !     .. Scalar Arguments ..
   double precision ::   ZAT
@@ -142,7 +127,6 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
   double complex, dimension(:,:,:,:), allocatable :: PNS
   double complex, dimension(:,:,:,:), allocatable :: QNS
 
-  logical ::            TEST
   !     ..
   !     .. External Subroutines ..
   external DAXPY,DSCAL,CRADWF,PNSQNS,RHONS,WFMESH
@@ -178,8 +162,28 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
     write(*,*) "        Probably out of memory."
     stop
   end if
-  !-----------------------------------------------------------------------
 
+  !-----------------------------------------------------------------------
+  ! Initialise local variables to be on the safe side
+  EK = CZERO
+  PNS = CZERO
+  QNS = CZERO
+  ALPHA = CZERO
+  AR = CZERO
+  DR = CZERO
+  CR = CZERO
+  EKL = CZERO
+  FZ = CZERO
+  !GMATLL = CZERO initialised further down
+  QZ = CZERO
+  SZ = CZERO
+  TMAT = CZERO
+  PZ = CZERO
+  RS = 0.0d0
+  S = 0.0d0
+  LDAUCUT = 0.0d0
+  WMLDAUAV = 0.0d0
+  DENDUM = CZERO
 
   !-----------------------------------------------------------------------
   ! LDAU

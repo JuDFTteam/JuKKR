@@ -1,5 +1,10 @@
       SUBROUTINE INTIN(G,F,V,E,L,NNE,VALU,SLOP,K1,K2,KC,DG,A,B,Z,NSRA)
 
+C For compatibility reasons
+      IMPLICIT NONE
+      SAVE
+C
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A,B,DG,E,SLOP,VALU,Z
       INTEGER K1,K2,KC,L,NNE,NSRA

@@ -76,7 +76,7 @@ LDFLAGS += -lfftw3
 endif
 
 ifeq ($(TYPE),debug)
-FCFLAGS += -g -traceback -check all
+FCFLAGS += -g -traceback -check all -auto -ftrapuv -check uninit
 endif
 
 # ============================= JUGENE ========================================

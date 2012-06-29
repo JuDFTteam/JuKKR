@@ -1,5 +1,11 @@
       SUBROUTINE INTCOR(F1,F2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SUM,NRE,
      +                    VLNC,A,B,Z,RN,NR,TOL,IRM,IPR,NITMAX,NSRA)
+
+C For compatibility reasons
+      IMPLICIT NONE
+      SAVE
+C
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A,B,E,F1,F2,RN,SLOPE,SUM,TOL,VALUE,Z
       INTEGER IPR,IRM,L,NITMAX,NN,NR,NRE,NSRA

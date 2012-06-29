@@ -1,3 +1,14 @@
+C>    @param[out] EFAC
+C>    @param[in]  PZ
+C>    @param[in]  QZ
+C>    @param[in]  FZ
+C>    @param[in]  SZ
+C>    @param[in]  NSRA
+C>    @param[out] PZLM
+C>    @param[out] QZLM
+C>    @param[out] PZEKDR
+C>    @param[out] QZEKDR
+C>    @param[in]  EK
       SUBROUTINE WFTSCA(DRDI,EFAC,PZ,QZ,FZ,SZ,NSRA,PZLM,QZLM,PZEKDR,
      +                    QZEKDR,EK,LOFLM,IRMIND,IRMD,LMAXD,LMMAXD)
       IMPLICIT NONE

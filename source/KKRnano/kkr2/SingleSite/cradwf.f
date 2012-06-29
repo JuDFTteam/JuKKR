@@ -68,7 +68,12 @@ C     .. Intrinsic Functions ..
 
       LMAXP1=LMAXD+1
 
-C     ..
+C INITIALISATIONS
+      DROR = 0.0d0
+      HAMF = CZERO
+      MASS = CZERO
+C INITIALISATIONS
+
       IRC1 = IRCUT(IPAN)
       DO IR = 2,IRC1
         DROR(IR) = DRDI(IR)/R(IR)
