@@ -77,18 +77,25 @@ contains
 
     allocate(MYLRANK(LMPID*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    MYLRANK = 0
     allocate(LCOMM(LMPID*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    LCOMM = 0
     allocate(LGROUP(LMPID*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    LGROUP = 0
     allocate(LSIZE(LMPID*SMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    LSIZE = 0
     allocate(SRANK(SMPID,NAEZ*LMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    SRANK = 0
     allocate(SMYRANK(SMPID,NAEZ*LMPID*EMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    SMYRANK = 0
     allocate(EMYRANK(EMPID,NAEZ*LMPID*SMPID), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("KKRnano_mpi_mod")
+    EMYRANK = 0
   end subroutine
 
   !------------------------------------------------------------------------------

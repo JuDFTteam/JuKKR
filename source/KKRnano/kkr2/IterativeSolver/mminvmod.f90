@@ -105,7 +105,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   !------------------------------------------------------------------
   ! convergence parameters
 
-  double precision :: max_residual
+  double precision :: rhs_norm
   double precision :: target_upper_bound
   double precision :: max_upper_bound
   double precision, parameter :: TEST_FACTOR = 100d0
@@ -113,6 +113,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   !=======================================================================
   ! INITIALIZATION I
   !=======================================================================
+  rhs_norm = 0.0d0
 
   NDIM = NAEZD*LMMAXD
   NLEN = NAEZD*LMMAXD
@@ -405,8 +406,13 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
         call ZAXPBY(NLEN,VECS(1,LM2,1), &
         CONE,VECS(1,LM2,1),ETA(LM2),VECS(1,LM2,7))
         
+        rhs_norm = N2B(LM2)
+        if (rhs_norm <= epsilon(1.0d0)) then
+          rhs_norm = 1.0d0
+        end if
+
         max_upper_bound = max(max_upper_bound, &
-                          sqrt( (2*IT+1)*TAU(LM2)) / N2B(LM2))    
+                          sqrt( (2*IT+1)*TAU(LM2)) / rhs_norm)
     !--------------
       endif
     enddo
