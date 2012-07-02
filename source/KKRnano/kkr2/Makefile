@@ -76,7 +76,8 @@ LDFLAGS += -lfftw3
 endif
 
 ifeq ($(TYPE),debug)
-FCFLAGS += -g -traceback -check all -auto -ftrapuv -check uninit
+FCFLAGS += -g -traceback -check all -DDEBUG1
+#-auto -ftrapuv -check uninit
 endif
 
 # ============================= JUGENE ========================================
@@ -98,7 +99,7 @@ FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
 
 ifeq ($(TYPE),debug)
-  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF
+  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF -DDEBUG1
 #-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
   FCFLAGS += -O3 -qipa
@@ -126,7 +127,7 @@ LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -
 #-lfftw3
 
 ifeq ($(TYPE),debug)
-FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF
+FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF -DDEBUG1
 #-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
 FCFLAGS += -q64 -O3 -qstrict
@@ -148,10 +149,14 @@ VPATH = $(DIRS) $(BUILDDIR)
 
 SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
+SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
+SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 
 # notdir extracts only filename
 OBJS =  $(notdir ${SRCS:.f=.o})
 OBJS += $(notdir ${SRCS90:.f90=.o})
+OBJS += $(notdir ${SRCSFPP:.F=.o})
+OBJS += $(notdir ${SRCS90FPP:.F90=.o})
 
 .PHONY: all
 all:	$(PROGRAM)
@@ -187,7 +192,7 @@ test:
 	
 #Module dependencies
 
-main2.o: main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod.o \
+main2.o: arraytest_mod.o main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod.o \
          common_testc.o common_optc.o lloyds_formula_mod.o KKRSelfConsistency_mod.o \
          MadelungCalculator_mod.o lloyd0_new_mod.o
 main2_arrays_mod.o: error_messages_mod.o

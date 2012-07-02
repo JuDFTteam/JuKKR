@@ -490,6 +490,14 @@ CONTAINS
     allocate(EPROCO(IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
 
+    !initialise to be safe
+    VINS = 0.0d0
+    VISP = 0.0d0
+
+    ! use garbage values
+    GMATN = dcmplx(99999.0d0, 99999.0d0)
+    LLY_GRDT = dcmplx(99999.0d0, 99999.0d0)
+
   end subroutine
 
   !------------------------------------------------------------------------------

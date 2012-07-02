@@ -73,7 +73,7 @@ C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),ECORE(20,2),
      &                 R(IRMD,*),RMT(*),RMTNEW(*),
-     &                 RWS(*),THETAS(IRID,NFUND,*),
+     &                 RWS(*),THETAS(IRID,NFUND,NCELLD),
 C                      VINS(IRMIND,LMPOTD,2)
      &                 VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2),
      &                 VISP(IRMD,2),
@@ -86,7 +86,7 @@ C             IFUNM(LMXSPD,NAEZD)
      &        IRMIN(*),IRNS(*),IRWS(*),ITITLE(20,*),
      &        LCORE(20,*),LLMSP(NFUND,NAEZD),
      &        LMSP((2*LPOT+1)**2,NAEZD),
-     &        NCORE(*),NFU(*),NTCELL(*)
+     &        NCORE(*),NFU(NCELLD),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,B1,EA,EFNEW
@@ -138,6 +138,16 @@ c
 c---> set speed of light
 c
       CVLIGHT = 274.0720442D0
+
+C
+C intitialize potential arrays
+C
+      VINS = 0.0D0
+      VISP = 0.0D0
+      ECORE = 0.0D0
+
+C     more initialisations
+      THETAS = 0.0d0
 
 c-----------------------------------------------------------------------
 c
@@ -209,22 +219,10 @@ C
       DO IH = NBEG,NEND
         ZATINFO(IH) = ZAT(IH)
       ENDDO
-C
+
       DO 150 IH = NBEG,NEND
         DO 140 ISPIN = 1,NSPIN
           I = NSPIN* (IH-1) + ISPIN
-C
-C intitialize potential arrays
-C
-          DO IR = IRMIND,IRMD
-            DO LM = 1,LMPOTD
-              VINS(IR,LM,ISPIN) = 0.0D0
-            END DO
-          END DO
-          DO IR = 1,IRMD
-            VISP(IR,ISPIN) = 0.0D0
-          END DO
-C
 C
           IF (IFILE.NE.0) THEN
             IRCUT(0,IH) = 0

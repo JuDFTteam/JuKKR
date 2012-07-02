@@ -1,9 +1,12 @@
 ! KKRnano
 ! massive parallel KKR for nanoscaled systems
 
+#include "DebugHelpers/test_macros.h"
+
 program MAIN2
 
-  !use mpi
+  USE_ARRAYTEST_MOD
+
   use common_testc
   use common_optc
 
@@ -339,6 +342,9 @@ program MAIN2
                           TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
               end do
 
+              TESTARRAY(0, TREFLL)
+              TESTARRAY(0, DTREFLL)
+
               call GREF_com(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
                             CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
                             REFPOT, &
@@ -347,6 +353,9 @@ program MAIN2
                             my_SE_rank,my_SE_communicator,my_SE_comm_size, &
                             lmaxd, naclsd, ncleb, nrefd, nclsd, &
                             LLY)
+
+              TESTARRAY(0, GREFN)
+              TESTARRAY(0, DGREFN)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
@@ -490,6 +499,11 @@ spinloop:     do ISPIN = 1,NSPIND
 !     END do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
+          TESTARRAY(0, TMATN)
+          TESTARRAY(0, TR_ALPH)
+          TESTARRAY(0, DTDE)
+          TESTARRAY(0, GMATN)
+          TESTARRAY(0, LLY_GRDT)
 
 !=======================================================================
 !     "allreduce" information of 1 .. EMPID and 1 .. SMPID processors
@@ -572,6 +586,9 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
 !=======================================================================
 
+          TESTARRAY(0, GMATN_ALL)
+          TESTARRAY(0, LLY_G0TR)
+          TESTARRAY(0, LLY_GRDT_ALL)
 
 !----------------------------------------------------------------------
 ! BEGIN only processes with LMPIC = 1 are working
@@ -594,6 +611,9 @@ spinloop:     do ISPIN = 1,NSPIND
                               my_SE_communicator, &
                               lmaxd, irmd, irnsd, iemxd, &
                               irid, nfund, ipand, ncleb)
+
+              TESTARRAY(0, WEZRN)
+              TESTARRAY(0, RNORM)
 
 ! IME
               call OUTTIME(is_Masterrank,'Lloyd processed......',TIME_I,ITER)
@@ -944,6 +964,10 @@ spinloop:     do ISPIN = 1,NSPIND
           my_SE_communicator, &
           itdbryd, irmd, irnsd, nspind)
         endif
+
+        TESTARRAY(0, VINS)
+        TESTARRAY(0, VISP)
+        TESTARRAY(0, VONS)
 
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration
