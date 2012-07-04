@@ -1,3 +1,5 @@
+#include "DebugHelpers/test_macros.h"
+
 module lloyd0_new_mod
 
 contains
@@ -20,6 +22,9 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   !   new input parameters after inc.p removal
                   lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ipand, ncleb)
+
+  USE_ARRAYTEST_MOD
+
   implicit none
 
   integer :: lmax
@@ -122,6 +127,11 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   lmaxd1 = lmax + 1
   lmpotd = (2*LMAX+1)**2
 
+  if (ielast /= iemxd) then !assertion
+    write(*,*) "lloyd0_new: ielast /= iemxd"
+    stop
+  end if
+
   ! ----------- allocate work arrays ----------------------------------
   memory_fail = .false.
 
@@ -147,21 +157,16 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   end if
   ! -------------------------------------------------------------------
 
-  do IE=1,IELAST
-    RNORM(IE,1)=1.D0
-    RNORM(IE,2)=1.D0
-    DOS0(IE)       =CZERO
-    DOS1(IE)       =CZERO
-    do ISPIN = 1, NSPIN
-      DOS(IE,ISPIN)=CZERO
-    enddo
-  enddo
+  ! initialise
+  RNORM = 1.D0
+  DOS0 = CZERO
+  DOS1 = CZERO
+  DOS  = CZERO
+  DEN0 = CZERO
 
   !=================================================================
   !==  calculate DOS  ==============================================
   !=================================================================
-
-  call CINIT(IEMXD*(LMAXD+2)*NSPIND,DEN0)
 
   ! TODO: get rid of this "loop" somehow - we are already atom-parallel - DONE
 
@@ -192,6 +197,8 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
       end do
 
+      TESTARRAYLOCAL(DEN0)
+
       do IE = 1,IELAST
         call RHOVAL0(EZ(IE),WEZ(IE),DRDI,R, &
                      IPAN,IRCUT, &
@@ -200,10 +207,16 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                      lmaxd, irmd, irid, ipand, nfund)
       end do
 
+      TESTARRAYLOCAL(DOS0)
+      TESTARRAY(0, DOS1)
+      TESTARRAY(0, WEZ)
 
   ! communicate the DOS results
   call lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
   call lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
+
+  TESTARRAY(0, DOS0)
+  TESTARRAY(0, DOS1)
 
   ! ----------- deallocate work arrays ----------------------------------
   deallocate(DOS)
@@ -293,36 +306,52 @@ subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
   integer :: IERR
   double complex, dimension(:), allocatable :: WORK1
   double complex, dimension(:), allocatable :: WORK2
+  double complex, parameter :: CZERO = (0.0d0, 0.0d0)
 
   integer :: memory_stat
-  logical :: memory_fail
-
-  memory_fail = .false.
 
   allocate(WORK1(4*IEMXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(WORK2(4*IEMXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-
-  if (memory_fail .eqv. .true.) then
+  
+  if (memory_stat /= 0) then
     write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
     write(*,*) "        Probably out of memory."
     stop
   end if
 
+  allocate(WORK2(4*IEMXD), stat = memory_stat)
+
+  if (memory_stat /= 0) then
+    write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
+    write(*,*) "        Probably out of memory."
+    stop
+  end if
+
+  WORK1 = CZERO
+  WORK2 = CZERO
+
   !==  allreduce DOS  ==============================================
 
-  call ZCOPY(IEMXD,DOS0,1,WORK1,1)
-  call ZCOPY(IEMXD,DOS1,1,WORK1(IEMXD+1),1)
-  call ZCOPY(2*IEMXD,DOS,1,WORK1(2*IEMXD+1),1)
+  !call ZCOPY(IEMXD,DOS0,1,WORK1,1)
+  !call ZCOPY(IEMXD,DOS1,1,WORK1(IEMXD+1),1)
+  !call ZCOPY(2*IEMXD,DOS,1,WORK1(2*IEMXD+1),1)
+
+  WORK1(1:IEMXD) = DOS0
+  WORK1(IEMXD+1:2*IEMXD) = DOS1
+  WORK1(2*IEMXD+1:3*IEMXD) = DOS(:,1)
+  WORK1(3*IEMXD+1:4*IEMXD) = DOS(:,2)
 
   call MPI_ALLREDUCE(WORK1,WORK2,4*IEMXD, &
   MPI_DOUBLE_COMPLEX,MPI_SUM,communicator, &
   IERR)
 
-  call ZCOPY(IEMXD,WORK2,1,DOS0,1)
-  call ZCOPY(IEMXD,WORK2(IEMXD+1),1,DOS1,1)
-  call ZCOPY(2*IEMXD,WORK2(2*IEMXD+1),1,DOS,1)
+  DOS0 = WORK2(1:IEMXD)
+  DOS1 = WORK2(IEMXD+1:2*IEMXD)
+  DOS(:,1) = WORK2(2*IEMXD+1:3*IEMXD)
+  DOS(:,2) = WORK2(3*IEMXD+1:4*IEMXD)
+
+  !call ZCOPY(IEMXD,WORK2,1,DOS0,1)
+  !call ZCOPY(IEMXD,WORK2(IEMXD+1),1,DOS1,1)
+  !call ZCOPY(2*IEMXD,WORK2(2*IEMXD+1),1,DOS,1)
 
   deallocate(WORK1)
   deallocate(WORK2)

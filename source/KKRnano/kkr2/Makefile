@@ -99,7 +99,7 @@ FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
 
 ifeq ($(TYPE),debug)
-  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF -DDEBUG1
+  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF -WF,-DDEBUG1
 #-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
   FCFLAGS += -O3 -qipa
@@ -127,7 +127,7 @@ LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -
 #-lfftw3
 
 ifeq ($(TYPE),debug)
-FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF -DDEBUG1
+FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF -WF,-DDEBUG1
 #-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
 FCFLAGS += -q64 -O3 -qstrict
@@ -195,6 +195,7 @@ test:
 main2.o: arraytest_mod.o main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod.o \
          common_testc.o common_optc.o lloyds_formula_mod.o KKRSelfConsistency_mod.o \
          MadelungCalculator_mod.o lloyd0_new_mod.o
+lloyd0_new_mod.o: arraytest_mod.o
 main2_arrays_mod.o: error_messages_mod.o
 kkrmat01.o: lloyds_formula_mod.o
 lloyds_formula_mod.o: kkr_helpers_mod.o
@@ -204,5 +205,5 @@ opt.o: common_optc.o
 tbref.o: SingleSiteRef_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o
 
-
+arraytest_mod.o: test_macros.h
 

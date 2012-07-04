@@ -21,75 +21,83 @@ module arraytest_mod
 
   contains
 
-    subroutine dtest4d(msg, array)
+    subroutine dtest4d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double precision, dimension(:,:,:,:), intent(in) :: array
 
-      call doubleprectest(msg, array, size(array))
+      call doubleprectest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine dtest3d(msg, array)
+    subroutine dtest3d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double precision, dimension(:,:,:), intent(in) :: array
 
-      call doubleprectest(msg, array, size(array))
+      call doubleprectest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine dtest2d(msg, array)
+    subroutine dtest2d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double precision, dimension(:,:), intent(in) :: array
 
-      call doubleprectest(msg, array, size(array))
+      call doubleprectest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine dtest1d(msg, array)
+    subroutine dtest1d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double precision, dimension(:), intent(in) :: array
 
-      call doubleprectest(msg, array, size(array))
+      call doubleprectest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine ztest4d(msg, array)
+    subroutine ztest4d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double complex, dimension(:,:,:,:), intent(in) :: array
 
-      call doublecomplextest(msg, array, size(array))
+      call doublecomplextest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine ztest3d(msg, array)
+    subroutine ztest3d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double complex, dimension(:,:,:), intent(in) :: array
 
-      call doublecomplextest(msg, array, size(array))
+      call doublecomplextest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine ztest2d(msg, array)
+    subroutine ztest2d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double complex, dimension(:,:), intent(in) :: array
 
-      call doublecomplextest(msg, array, size(array))
+      call doublecomplextest(nr, msg, array, size(array))
 
     end subroutine
 
-    subroutine ztest1d(msg, array)
+    subroutine ztest1d(nr, msg, array)
       implicit none
+      integer, intent(in) :: nr
       character(len=*), intent(in) :: msg
       double complex, dimension(:), intent(in) :: array
 
-      call doublecomplextest(msg, array, size(array))
+      call doublecomplextest(nr, msg, array, size(array))
 
     end subroutine
 
@@ -97,15 +105,22 @@ module arraytest_mod
      implicit none
      include 'mpif.h'
 
+     integer, save :: rank = -1
      integer :: ierr
 
-     call MPI_COMM_RANK(MPI_COMM_WORLD,test_getmyrank,ierr)
+     if (rank == -1) then  ! call to MPI only if rank yet unknown
+       call MPI_COMM_RANK(MPI_COMM_WORLD,rank,ierr)
+     end if
+
+     test_getmyrank = rank
+
    end function
 
 !=================== Helper routines ==========================================
 
-   subroutine doubleprectest(msg, array, length)
+   subroutine doubleprectest(nr, msg, array, length)
      implicit none
+     integer, intent(in) :: nr
      character(len=*), intent(in) :: msg
      double precision, dimension(*), intent(in) :: array
      integer, intent(in) :: length
@@ -120,13 +135,14 @@ module arraytest_mod
      end do
 
      ! print norm and average
-     write(*,*) "DEBUG: ", msg, DNRM2(length, array, 1), &
+     write(*,*) "DEBUG: ", nr, msg, DNRM2(length, array, 1), &
                            asum / length        
 
    end subroutine
 
-   subroutine doublecomplextest(msg, array, length)
+   subroutine doublecomplextest(nr, msg, array, length)
      implicit none
+     integer, intent(in) :: nr
      character(len=*), intent(in) :: msg
      double complex, dimension(*), intent(in) :: array
      integer, intent(in) :: length
@@ -141,7 +157,7 @@ module arraytest_mod
      end do
   
      ! print norm and average
-     write(*,*) "DEBUG: ", msg, DZNRM2(length, array, 1), &
+     write(*,*) "DEBUG: ", nr, msg, DZNRM2(length, array, 1), &
                            asum / length        
 
    end subroutine
