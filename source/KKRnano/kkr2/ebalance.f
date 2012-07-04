@@ -56,8 +56,10 @@ C     *) 3 processes: 1st process calculates only last point
 C                     2nd process calculates first 2/3 of all points
 C                     3rd process calculates last 1/3 of points except
 C                     last
-C     *) MORE than 3 processes: USELESS! proc > 3 do nothing
-C        except for DOS
+C     *) MORE than 3 processes: 1st proc. last point
+C                               2nd proc. first 1/2 of all points
+C                               other procs.: rest
+
       IF (LSAME(INFO,'I')) THEN
 C
         IF (EMPID.EQ.1) THEN
@@ -70,7 +72,7 @@ C
           DO IER=1,(IERLAST-2)
             EPROC(IER)     = 2
           ENDDO
-        ELSE
+        ELSEIF (EMPID.EQ.3) THEN
           EPROC(IERLAST)   = 1
           IERI = FLOOR(REAL(IERLAST)/(REAL(3))*REAL(2))
           DO IER=1, IERI
@@ -78,6 +80,15 @@ C
           ENDDO
           DO IER=(IERI+1), (IERLAST-1)
             EPROC(IER) = 3
+          ENDDO
+        ELSE
+          EPROC(IERLAST)   = 1
+          IERI = IERLAST / 2
+          DO IER=1, IERI
+            EPROC(IER) = 2
+          ENDDO
+          DO IER=(IERI+1), (IERLAST-1)
+            EPROC(IER) = mod(IER, (EMPID-2)) + 3
           ENDDO
         ENDIF
 C
