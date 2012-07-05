@@ -7,3 +7,9 @@
 #define TESTARRAY(RANK,ARRAY)
 #define USE_ARRAYTEST_MOD
 #endif
+
+#ifndef NDEBUG
+#define ASSERT(CONDITION) if (.not. (CONDITION)) then; write(*,*) "Assertion ", #CONDITION, " failed: ",  __FILE__, __LINE__; endif
+#else
+#define ASSERT(CONDITION)
+#endif

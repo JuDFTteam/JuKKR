@@ -73,6 +73,36 @@ subroutine comm_redistributeD(my_world_rank, array, blocksize, old_owners, new_o
 
 end subroutine
 
+!--------------------------------------------------------------------------
+!> Redistributes array-parts of different sizes (given by array 'blocksizes'
+!> among groups of ranks.
+subroutine comm_redistributeVD(my_world_rank, array, blocksizes, old_owners, new_owners)
+  implicit none
+  include 'mpif.h'
+
+  integer, intent(in) :: my_world_rank
+  NUMBERD, intent(inout), dimension(*) :: array
+  integer, intent(in), dimension(:) :: blocksizes
+  integer, intent(in), dimension(:) :: old_owners
+  integer, intent(in), dimension(:) :: new_owners
+
+  integer :: rank_index
+  integer :: start
+  integer :: sender
+  integer :: receiver
+
+  start = 1
+  do rank_index = 1, size(old_owners)
+    sender = old_owners(rank_index)
+    receiver = new_owners(rank_index)
+
+    call send_arrayD(my_world_rank, array(start), blocksizes(rank_index), sender, receiver)
+    start = start + blocksizes(rank_index)
+
+  end do
+
+end subroutine
+
 !-------------------------------------------------------------------
 !> communicate 'array' starting from the first entry in 'ranks'
 !> to all ranks in 'ranks' in a round-robin-fashion
