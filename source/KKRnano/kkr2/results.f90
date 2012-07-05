@@ -58,6 +58,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   form='unformatted')
 
 
+  ! Moments output
   do I1 = 1,NAEZ
     if (NPOL.eq.0 .or. TEST('DOS     ')) then
       read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
@@ -68,6 +69,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   end do
 
 
+  ! Density of states output
   if (NPOL.eq.0 .or. TEST('DOS     ')) then 
     do I1 = 1,NAEZ
       read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
@@ -87,17 +89,17 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
     end if
     do ISPIN = 1,NSPIN
       if (ISPIN.ne.1) then
-        write (6,fmt=9011) CATOM(ISPIN)
+        write (6,fmt=9011) CATOM(ISPIN)                  ! spin moments
       else
-        write (6,fmt=9001) I1,CATOM(ISPIN)
+        write (6,fmt=9001) I1,CATOM(ISPIN)               ! atom charge
       end if
     end do
-    write (6,fmt=9041) ZAT(I1),QC
+    write (6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
     if (NSPIN.eq.2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
   end do
   write(6,'(79(1H+))')
-  write (6,fmt=9021) ITSCF,CHRGNT
-  if (NSPIN.eq.2) write (6,fmt=9031) TOTSMOM
+  write (6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
+  if (NSPIN.eq.2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
   write(6,'(79(1H+))')
 
 
@@ -121,29 +123,31 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   ! set KTE=1 in inputcard for output of energy contributions
   !=======================================================================
 
-  open (72,access='direct',recl=LRECRES2,file='results2', &
-  form='unformatted')
+!  open (72,access='direct',recl=LRECRES2,file='results2', &
+!  form='unformatted')
+!
+!  do I1 = 1,NAEZ
+!    read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
+!    EULDAU,EDCLDAU
+!  !        WRITE (6,FMT=99003) I1,(CATOM(1)-ZAT(I1)),VMAD  ! was already commented out
+!  end do
+!  !      WRITE(6,'(25X,30(1H-),/)')
+!  !      WRITE(6,'(79(1H=))')
+!
 
-  do I1 = 1,NAEZ
-    read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
-    EULDAU,EDCLDAU
-  !        WRITE (6,FMT=99003) I1,(CATOM(1)-ZAT(I1)),VMAD
-  end do
-  !      WRITE(6,'(25X,30(1H-),/)')
-  !      WRITE(6,'(79(1H=))')
-
+  ! only relevant if KPRE = 1
   if (KTE.eq.1) then
-    do I1 = 1,NAEZ
-      read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
-      EULDAU,EDCLDAU
-      call ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC, &
-      EULDAU,EDCLDAU,LDAU, &
-      KPRE,LMAX,LPOT, &
-      LCOREMAX,NSPIN,I1,NAEZ)
-    end do
+!    do I1 = 1,NAEZ
+!      read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
+!      EULDAU,EDCLDAU
+!      call ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC, &
+!      EULDAU,EDCLDAU,LDAU, &
+!      KPRE,LMAX,LPOT, &
+!      LCOREMAX,NSPIN,I1,NAEZ)
+!    end do
   end if
-
-  close(72)
+!
+!  close(72)
 
   !=======================================================================
 

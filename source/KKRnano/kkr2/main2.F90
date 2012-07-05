@@ -459,21 +459,21 @@ spinloop:     do ISPIN = 1,NSPIND
 
               if (XCCPL) then
 
-                call SREDGX( NSPIND, &
-                             MYRANK, &
-                             SMPIC,SMYRANK, &
-                             GMATXIJ, &
-                             GXIJ_ALL, &
-                             naez, lmaxd, lmpid, empid, smpid, nxijd)
-
-                JSCAL = WEZ(IE)/DBLE(NSPIND)
-
-                call XCCPLJIJ_START(I1,IE,JSCAL, &
-                               RXIJ,NXIJ,IXCP,RXCCLS, &
-                               GXIJ_ALL,DTIXIJ, &
-                               my_SE_communicator, &
-                               JXCIJINT,ERESJIJ, &
-                               naez, lmmaxd, nxijd, nspind)
+!                call SREDGX( NSPIND, &
+!                             MYRANK, &
+!                             SMPIC,SMYRANK, &
+!                             GMATXIJ, &
+!                             GXIJ_ALL, &
+!                             naez, lmaxd, lmpid, empid, smpid, nxijd)
+!
+!                JSCAL = WEZ(IE)/DBLE(NSPIND)
+!
+!                call XCCPLJIJ_START(I1,IE,JSCAL, &
+!                               RXIJ,NXIJ,IXCP,RXCCLS, &
+!                               GXIJ_ALL,DTIXIJ, &
+!                               my_SE_communicator, &
+!                               JXCIJINT,ERESJIJ, &
+!                               naez, lmmaxd, nxijd, nspind)
 
               end if
 
@@ -525,13 +525,13 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
           if (XCCPL) then
 
-            call XCCPLJIJ_OUT(I1, &  ! I1 needed for filenames
-                          RXIJ,NXIJ,IXCP,RXCCLS, &
-                          LMPIC, &
-                          MYRANK,EMPIC,EMYRANK, &
-                          JXCIJINT, &
-                          naez, nxijd, &
-                          lmpid, smpid, empid)
+!            call XCCPLJIJ_OUT(I1, &  ! I1 needed for filenames
+!                          RXIJ,NXIJ,IXCP,RXCCLS, &
+!                          LMPIC, &
+!                          MYRANK,EMPIC,EMYRANK, &
+!                          JXCIJINT, &
+!                          naez, nxijd, &
+!                          lmpid, smpid, empid)
           endif
 !=======================================================================
 !=======================================================================
@@ -762,7 +762,7 @@ spinloop:     do ISPIN = 1,NSPIND
         end if
 
         call openPotentialFile(LMPOTD, IRNSD, IRMD)
-        call openResults2File(LRECRES2)
+        !call openResults2File(LRECRES2)
 
 ! ----------------------------------------------------------------------
         DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
@@ -877,7 +877,7 @@ spinloop:     do ISPIN = 1,NSPIND
             end if
 
             ! unnecessary I/O? see results.f
-            call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+            !call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
 
 ! Force calculation ends
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -984,7 +984,7 @@ spinloop:     do ISPIN = 1,NSPIND
         end do
 ! -------- END Atom-parallel ------------------------------------------
 
-        call closeResults2File()
+        !call closeResults2File()
 
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
