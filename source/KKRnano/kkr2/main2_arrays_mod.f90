@@ -53,7 +53,6 @@ module main2_arrays_mod
 
   !----- Initial guess ---------------------------------------------------
   complex, dimension(:,:,:), allocatable :: PRSC
-  double precision, dimension(:,:), allocatable ::  CNVFAC
 
   !----- Lloyd -----------------------------------------------------------
   double complex, dimension(:,:), allocatable ::  LLY_G0TR
@@ -354,8 +353,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(CNVFAC(EKMD,NSPIND-SMPID+1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LLY_G0TR(NCLSD,IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LLY_GRDT(IEMXD,NSPIND), stat = memory_stat)
@@ -545,7 +542,6 @@ CONTAINS
     deallocate(GMATXIJ, stat = memory_stat)
     deallocate(GXIJ_ALL, stat = memory_stat)
     deallocate(PRSC, stat = memory_stat)
-    deallocate(CNVFAC, stat = memory_stat)
     deallocate(LLY_G0TR, stat = memory_stat)
     deallocate(LLY_GRDT, stat = memory_stat)
     deallocate(LLY_GRDT_ALL, stat = memory_stat)

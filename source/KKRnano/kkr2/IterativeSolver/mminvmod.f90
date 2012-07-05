@@ -2,7 +2,7 @@
 
 subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,SCITER,ITCOUNT, &
-                    GLLHBLCK,BCP,IGUESS,CNVFAC, &
+                    GLLHBLCK,BCP,IGUESS, &
                     TOL, &
                     naezd, lmmaxd, naclsd, xdim, ydim, zdim, &
                     natbld, nthrds)
@@ -62,7 +62,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   integer::PROBE
   integer::ITPROBE
   logical::EXITIT
-  logical::CNVCONST
   ! ..
 
   ! local arrays ..
@@ -137,13 +136,10 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
   TOLAV = 0.0
   QMRABS = .true.           ! QMRABS tolerance for residual norm is defined globally
-  CNVCONST = .true.         ! CNVFAC is constant for all sc-steps
 
   target_upper_bound = TOL * TEST_FACTOR
 
-  if (CNVCONST) then
-    CNVFAC  = 1000
-  endif
+  CNVFAC  = 1000
 
   do I=1,3
     HSTI(I) = 1             ! HSTI and HSTR store the history of QMR-convergency,

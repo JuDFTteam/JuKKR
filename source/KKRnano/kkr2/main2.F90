@@ -216,8 +216,6 @@ program MAIN2
     endif
 !========= TIMING END ======================================================
 
-    CNVFAC = 1000.0D0
-
 ! initialise the arrays for (gen. Anderson/Broyden) potential mixing
     UI2 = 0.00
     VI2 = 0.00
@@ -435,7 +433,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   NUMN0,INDN0,I1, &
                   PRSC(1,1,PRSPIN), &
                   EKM,NOITER, &
-                  QMRBOUND,IGUESS,BCP,CNVFAC(1,PRSPIN), &
+                  QMRBOUND,IGUESS,BCP, &
                   NXIJ,XCCPL,IXCP,ZKRXIJ, &
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
@@ -573,7 +571,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
                 call EPRDIST(IELAST,KMESH,NOFKS, &
                              PRSC(1,1,PRSPIN), &
-                             CNVFAC(1,PRSPIN), &
                              MYRANK,EMPIC,EMYRANK, &
                              EPROC,EPROCO, &
                              lmpid, smpid, empid, naez, lmaxd, nguessd, ekmd, iemxd)

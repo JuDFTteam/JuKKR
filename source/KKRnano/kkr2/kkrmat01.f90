@@ -7,7 +7,7 @@ ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
 GINP,DGINP, &
 NUMN0,INDN0,IAT, &
 PRSC,EKM,NOITER, &
-QMRBOUND,IGUESS,BCP,CNVFAC, &
+QMRBOUND,IGUESS,BCP, &
 DTDE_LOCAL, &
 GSXIJ, &
 NXIJ,XCCPL,IXCP,ZKRXIJ, &
@@ -97,7 +97,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double precision::VOLCUB(KPOIBZ)
   double precision::RR(3,0:NRD)
   double precision::ZKRXIJ(48,3,NXIJD)
-  double precision::CNVFAC(EKMD)
 
   integer:: NUMN0(NAEZ)
   integer:: INDN0(NAEZ,NACLSD)
@@ -513,7 +512,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     
       call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,ITER,iteration_counter, &
-                    GLLHBLCK,BCP,IGUESS,CNVFAC(EKM+k_point_index), &
+                    GLLHBLCK,BCP,IGUESS, &
                     QMRBOUND, &
                     naez, lmmaxd, naclsd, xdim, ydim, zdim, &
                     natbld, nthrds)

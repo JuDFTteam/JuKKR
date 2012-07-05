@@ -5,7 +5,7 @@
     TSST_LOCAL,DTDE_LOCAL, &
     NUMN0,INDN0,I2, &
     PRSC,EKM,NOITER, &
-    QMRBOUND,IGUESS,BCP,CNVFAC, &
+    QMRBOUND,IGUESS,BCP, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
     LLY_GRDT,TR_ALPH,GMATXIJ, &          ! < output
     communicator, comm_size, &           ! > input
@@ -98,7 +98,6 @@
     double precision::ZKRXIJ(48,3,NXIJD)
     double precision::BZKP(3,KPOIBZ)
     double precision::VOLCUB(KPOIBZ)
-    double precision::CNVFAC(EKMD)
     integer:: ATOM(NACLSD,*)
     integer:: CLS(*)
     integer:: EZOA(NACLSD,*)
@@ -232,7 +231,7 @@
     NUMN0,INDN0,I2, &
     PRSC, &
     EKM,NOITER, &
-    QMRBOUND,IGUESS,BCP,CNVFAC, &
+    QMRBOUND,IGUESS,BCP, &
     DTDE_LOCAL, &
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
