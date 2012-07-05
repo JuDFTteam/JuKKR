@@ -194,7 +194,9 @@ test:
 
 main2.o: arraytest_mod.o main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod.o \
          common_testc.o common_optc.o lloyds_formula_mod.o KKRSelfConsistency_mod.o \
-         MadelungCalculator_mod.o lloyd0_new_mod.o
+         MadelungCalculator_mod.o lloyd0_new_mod.o \
+         KKRnanoParallel_mod.o KKRnano_Comm_mod.o
+         
 lloyd0_new_mod.o: arraytest_mod.o
 main2_arrays_mod.o: error_messages_mod.o
 kkrmat01.o: lloyds_formula_mod.o

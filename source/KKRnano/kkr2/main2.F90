@@ -10,7 +10,8 @@ program MAIN2
   use common_testc
   use common_optc
 
-  use KKRnano_mpi_mod
+  use KKRnanoParallel_mod
+  use KKRnano_Comm_mod
 
   use main2_arrays_mod ! If you can't find one of the unbelievable amount of arrays, look here
   use lloyds_formula_mod
@@ -144,6 +145,8 @@ program MAIN2
   integer::   MAPBLOCK
   external     MAPBLOCK
 
+  type(KKRnanoParallel) :: my_mpi
+
  !============================================================= CONSTANTS
   PI = 4.0D0*ATAN(1.0D0)
 !=============================================================
@@ -152,6 +155,19 @@ program MAIN2
 
   ! consistency check of some dimension parameters
   call consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
+
+! -----------------------------------------------------------------------------
+  call createKKRnanoParallel(my_mpi, NAEZ, SMPID, EMPID)
+   write (*,*) "Worldrank", getMyWorldRank(my_mpi), &
+                            isMasterRank(my_mpi), &
+                            isActiveRank(my_mpi), &
+                            getMyAtomId(my_mpi), &
+                            getMySpinId(my_mpi), &
+                            getMyEnergyId(my_mpi), &
+                            getMySEId(my_mpi), &
+                            isInMasterGroup(my_mpi), &
+                            getMyAtomRank(my_mpi)
+!------------------------------------------------------------------------------
 
   ! from dimension parameters - calculate some derived parameters
   call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LM2D, LMAXD, &
@@ -197,20 +213,16 @@ program MAIN2
     stop
   end if
 
-! -----------------------------------------------------------------------------
-   call initialiseKKRnano_mpi_com(SMPID, EMPID, NAEZ, nthrds)
-!------------------------------------------------------------------------------
-
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
 ! ... and wait after SC-ITER loop
 !=====================================================================
 
   ! This if closes several hundreds of lines later!
-  if (LMPIC/=0) then   !     ACTVGROUP could also test EMPIC or MYACTVRANK (preferred)
+  if (isActiveRank(my_mpi)) then
 
 ! ========= TIMING ======================================================
-    if (is_Masterrank) then
+    if (isMasterRank(my_mpi)) then
       TIME_I = MPI_WTIME()
       open (2,file='time-info',form='formatted')
     endif
@@ -227,7 +239,7 @@ program MAIN2
 
 !+++++++++++ atom - parallel  TODO: replace with better construct
     do I1 = 1,NAEZ
-      if(my_SE_rank==MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+      if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
         call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
       end if
     end do
@@ -244,9 +256,9 @@ program MAIN2
       EKM    = 0
       NOITER = 0
 
-      if (is_Masterrank) then
+      if (isMasterRank(my_mpi)) then
         call printDoubleLineSep(unit_number = 2)
-        call OUTTIME(is_Masterrank,'started at ..........',TIME_I,ITER)
+        call OUTTIME(isMasterRank(my_mpi),'started at ..........',TIME_I,ITER)
         call printDoubleLineSep(unit_number = 2)
       endif
 
@@ -266,7 +278,7 @@ program MAIN2
 !N ====================================================================
 
       do I1 = 1,NAEZ
-        if(my_SE_rank==MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+        if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
 !=======================================================================
 ! xccpl
@@ -308,7 +320,7 @@ program MAIN2
 ! LDA+U
 
 ! TIME
-          call OUTTIME(is_Masterrank,'initialized .........',TIME_I,ITER)
+          call OUTTIME(isMasterRank(my_mpi),'initialized .........',TIME_I,ITER)
 ! TIME
 
 ! IE ====================================================================
@@ -325,14 +337,14 @@ program MAIN2
 
               call EBALANCE('I',ITER,SCFSTEPS, &
                             IELAST,NPNT1, &
-                            MYACTVRANK,ACTVCOMM, &
+                            getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
                             ETIME,EPROC,EPROCO, &
                             empid, iemxd)
 
             endif
 
 ! IE ====================================================================
-            if (my_energy_rank==EPROC(IE)) then
+            if (getMyEnergyId(my_mpi)==EPROC(IE)) then
 ! IE ====================================================================
 
               do RF = 1,NREF
@@ -348,7 +360,7 @@ program MAIN2
                             REFPOT, &
                             TREFLL,DTREFLL,GREFN,DGREFN, &
                             LLY_G0TR(:,IE), &
-                            my_SE_rank,my_SE_communicator,my_SE_comm_size, &
+                            getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
                             lmaxd, naclsd, ncleb, nrefd, nclsd, &
                             LLY)
 
@@ -364,14 +376,14 @@ spinloop:     do ISPIN = 1,NSPIND
 !         beginning of SMPID-parallel section
 !------------------------------------------------------------------------------
                 if (SMPID==1) then
-                  MAPSPIN = 0
+                  MAPSPIN = 1
                   PRSPIN   = ISPIN
                 else
-                  MAPSPIN = MAPBLOCK(ISPIN,1,SMPID,1,0,SMPID-1) ! same as ISPIN-1
+                  MAPSPIN = ISPIN
                   PRSPIN   = 1
                 endif
 
-                if(my_spin_rank==MAPSPIN) then
+                if(getMySpinId(my_mpi) == MAPSPIN) then
 
                   call CALCTMAT(LDAU,NLDAU,ICST, &
                                 NSRA,EZ(IE), &
@@ -415,7 +427,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
                   NMESH = KMESH(IE)
 
-                  if( my_SE_rank==0 ) then
+                  if( getMyAtomRank(my_mpi)==0 ) then
                     call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
                   end if
 
@@ -437,7 +449,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   NXIJ,XCCPL,IXCP,ZKRXIJ, &
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
-                  my_SE_communicator,my_SE_comm_size, &
+                  getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
                   iemxd, nthrds, &
                   lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
@@ -471,7 +483,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !                call XCCPLJIJ_START(I1,IE,JSCAL, &
 !                               RXIJ,NXIJ,IXCP,RXCCLS, &
 !                               GXIJ_ALL,DTIXIJ, &
-!                               my_SE_communicator, &
+!                               getMySEcommunicator(my_mpi), &
 !                               JXCIJINT,ERESJIJ, &
 !                               naez, lmmaxd, nxijd, nspind)
 
@@ -504,20 +516,15 @@ spinloop:     do ISPIN = 1,NSPIND
           TESTARRAY(0, LLY_GRDT)
 
 !=======================================================================
-!     "allreduce" information of 1 .. EMPID and 1 .. SMPID processors
+!     communicate information of 1 .. EMPID and 1 .. SMPID processors
 !=======================================================================
-          call SREDGM(NSPIND,IELAST, &
-                      MYRANK, &
-                      SMPIC,SMYRANK, &
-                      EMPIC,EMYRANK,EPROC, &
-                      GMATN,LLY_GRDT, &
-                      GMATN_ALL,LLY_GRDT_ALL, &
-                      naez, lmmaxd, lmpid, smpid, empid, iemxd)
+          !call SREDGM
+          call collectMultScatteringResults(my_mpi, GMATN, LLY_GRDT, EPROC)
 !=======================================================================
 !=======================================================================
 
 ! TIME
-          call OUTTIME(is_Masterrank,'G obtained ..........',TIME_I,ITER)
+          call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',TIME_I,ITER)
 ! TIME
 
 !=======================================================================
@@ -542,7 +549,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
           call EBALANCE('R',ITER,SCFSTEPS, &
                         IELAST,NPNT1, &
-                        MYACTVRANK,ACTVCOMM, &
+                        getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
                         ETIME,EPROC,EPROCO, &
                         empid, iemxd)
 !=======================================================================
@@ -558,22 +565,19 @@ spinloop:     do ISPIN = 1,NSPIND
             do ISPIN = 1,NSPIND
 
               if (SMPID==1) then
-                MAPSPIN = 0
+                MAPSPIN = 1
                 PRSPIN   = ISPIN
               else
-                MAPSPIN = MAPBLOCK(ISPIN,1,SMPID,1,0,SMPID-1)
+                MAPSPIN = ISPIN
                 PRSPIN   = 1
               endif
 
 !       true beginning of SMPID-parallel section
 
-              if(my_spin_rank == MAPSPIN) then
+              if(getMySpinId(my_mpi) == MAPSPIN) then
 
-                call EPRDIST(IELAST,KMESH,NOFKS, &
-                             PRSC(1,1,PRSPIN), &
-                             MYRANK,EMPIC,EMYRANK, &
-                             EPROC,EPROCO, &
-                             lmpid, smpid, empid, naez, lmaxd, nguessd, ekmd, iemxd)
+                !call EPRDIST
+                call redistributeInitialGuess(my_mpi, PRSC(:,:,PRSPIN), EPROC, EPROCO, KMESH, NofKs)
 
               endif
             enddo
@@ -582,14 +586,14 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
 !=======================================================================
 
-          TESTARRAY(0, GMATN_ALL)
+          TESTARRAY(0, GMATN)
           TESTARRAY(0, LLY_G0TR)
-          TESTARRAY(0, LLY_GRDT_ALL)
+          TESTARRAY(0, LLY_GRDT)
 
 !----------------------------------------------------------------------
 ! BEGIN only processes with LMPIC = 1 are working
 !----------------------------------------------------------------------
-          if (LMPIC==1) then
+          if (isInMasterGroup(my_mpi)) then
 
             if (LLY==1) then
               ! get WEZRN and RNORM, the important input from previous
@@ -601,10 +605,10 @@ spinloop:     do ISPIN = 1,NSPIND
                               IFUNM(:,ICELL),IPAN(I1),IRCUT(:,I1),LMSP(:,ICELL), &
                               JEND,LOFLM1C,ICST,IELAST,IEND1,NSPIND,NSRA, &
                               WEZRN,RNORM, &
-                              GMATN_ALL, &
-                              LLY_GRDT_ALL, &
+                              GMATN, &
+                              LLY_GRDT, &
                               LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
-                              my_SE_communicator, &
+                              getMySEcommunicator(my_mpi), &
                               lmaxd, irmd, irnsd, iemxd, &
                               irid, nfund, ipand, ncleb)
 
@@ -612,7 +616,7 @@ spinloop:     do ISPIN = 1,NSPIND
               TESTARRAY(0, RNORM)
 
 ! IME
-              call OUTTIME(is_Masterrank,'Lloyd processed......',TIME_I,ITER)
+              call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',TIME_I,ITER)
 ! IME
             else ! no Lloyd
 
@@ -651,7 +655,7 @@ spinloop:     do ISPIN = 1,NSPIND
                           RHO2NS,R2NEF, &
                           DEN(0,1,ISPIN),ESPV(0,ISPIN), &
                           CLEB1C,LOFLM1C,ICLEB1C,IEND1,JEND, &
-                          GMATN_ALL, &
+                          GMATN, &
                           LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
                           DMATLDAU, &
                           iemxd, &
@@ -724,7 +728,7 @@ spinloop:     do ISPIN = 1,NSPIND
       call closePotentialFile()
       call closeResults1File()
 
-      call OUTTIME(is_Masterrank,'density calculated ..',TIME_I,ITER)
+      call OUTTIME(isMasterRank(my_mpi),'density calculated ..',TIME_I,ITER)
 
 
 ! TODO: Only necessary for non-DOS calculation - otherwise proceed to RESULTS
@@ -732,16 +736,16 @@ spinloop:     do ISPIN = 1,NSPIND
 !----------------------------------------------------------------------
 ! BEGIN L-MPI: only processes with LMPIC = 1 are working
 !----------------------------------------------------------------------
-      if (LMPIC==1) then
+      if (isInMasterGroup(my_mpi)) then
 
 !****************************************************** MPI COLLECT DATA
 
         call MPI_ALLREDUCE(CHRGNT,WORK1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        my_SE_communicator,IERR)
+        getMySEcommunicator(my_mpi),IERR)
         call DCOPY(1,WORK1,1,CHRGNT,1)
 
         call MPI_ALLREDUCE(DENEF,WORK1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        my_SE_communicator,IERR)
+        getMySEcommunicator(my_mpi),IERR)
         call DCOPY(1,WORK1,1,DENEF,1)
 
 !****************************************************** MPI COLLECT DATA
@@ -757,7 +761,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
         if (ISHIFT < 2) E2 = E2 - E2SHIFT
 
-        if( my_SE_rank == 0 ) then
+        if( getMyAtomRank(my_mpi) == 0 ) then
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
@@ -771,7 +775,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
         do I1 = 1,NAEZ
-          if(my_SE_rank == MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+          if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
             ICELL = NTCELL(I1)
 
@@ -795,7 +799,7 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ipand, ngshd)
 
-            call OUTTIME(is_Masterrank,'RHOMOM ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',TIME_I,ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -806,13 +810,13 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
 
-            call OUTTIME(is_Masterrank,'VINTRAS ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',TIME_I,ITER)
 
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
                  NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
-                 SMAT, my_SE_rank, my_SE_communicator, my_SE_comm_size, irmd, ipand)
+                 SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), irmd, ipand)
 
-            call OUTTIME(is_Masterrank,'VMADELBLK ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',TIME_I,ITER)
 
 ! =====================================================================
 
@@ -848,7 +852,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             end if
 
-            call OUTTIME(is_Masterrank,'KTE ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'KTE ......',TIME_I,ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
@@ -859,7 +863,7 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
 
-            call OUTTIME(is_Masterrank,'VXCDRV ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',TIME_I,ITER)
 ! =====================================================================
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
@@ -870,8 +874,8 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ---------------------------------------------------------------------
               call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
               ALAT,DRDI,IMT,ZAT, &
-              my_SE_rank, &
-              my_SE_communicator, &
+              getMyAtomRank(my_mpi), &
+              getMySEcommunicator(my_mpi), &
               naez, irmd)
 ! ---------------------------------------------------------------------
             end if
@@ -888,7 +892,7 @@ spinloop:     do ISPIN = 1,NSPIND
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
 
-            call OUTTIME(is_Masterrank,'MTZERO ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',TIME_I,ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -899,13 +903,13 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
 
-        call OUTTIME(is_Masterrank,'calculated pot ......',TIME_I,ITER)
+        call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',TIME_I,ITER)
 
-        call allreduceMuffinTinShift_com(my_SE_communicator, VAV0, VBC, VOL0)
+        call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC, VOL0)
 
         call shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT) ! purpose? ISHIFT usually=0
 
-        if(is_Masterrank) then
+        if(isMasterRank(my_mpi)) then
           call printMuffinTinShift(VAV0, VBC, VOL0)
         end if
 
@@ -918,7 +922,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !+++++++++++++++++ BEGIN ATOM PARALLEL +++++++++++++++++++++++++++++++
         do I1 = 1,NAEZ
-          if(my_SE_rank== MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+          if(getMyAtomRank(my_mpi)== MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
             ICELL = NTCELL(I1)
 ! =====================================================================
@@ -956,8 +960,8 @@ spinloop:     do ISPIN = 1,NSPIND
           IRC,IRMIN,NSPIND,I1BRYD, &
           IMIX,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
-          my_SE_rank, &
-          my_SE_communicator, &
+          getMyAtomRank(my_mpi), &
+          getMySEcommunicator(my_mpi), &
           itdbryd, irmd, irnsd, nspind)
         endif
 
@@ -971,7 +975,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !--------- BEGIN Atom-parallel ----------------------------------------
         do I1 = 1,NAEZ
-          if(my_SE_rank == MAPBLOCK(I1,1,NAEZ,1,0,my_SE_comm_size-1)) then
+          if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
             call resetPotentials(IRC(I1), IRMD, IRMIN(I1), IRMIND, LMPOTD, &
                                  NSPIND, VINS, VISP, VONS) ! Note: only LMPIC=1 processes
@@ -999,14 +1003,14 @@ spinloop:     do ISPIN = 1,NSPIND
         KXC,LPOT,A,B,IRC, &
         VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
         ECORE,LCORE,NCORE,ZAT,ITITLE, &
-        my_SE_rank, &
-        my_SE_communicator,my_SE_comm_size, &
+        getMyAtomRank(my_mpi), &
+        getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
         irmd, irnsd)
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
 
-        call MPI_BARRIER(my_SE_communicator,IERR)
+        call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
 
 ! -----------------------------------------------------------------
         call closePotentialFile()  ! close 'vpotnew' this was originally misplaced
@@ -1018,7 +1022,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -----------------------------------------------------------------
 ! BEGIN: only MASTERRANK is working here
 ! -----------------------------------------------------------------
-      if(is_Masterrank) then
+      if(isMasterRank(my_mpi)) then
 
         ! DOS was written to file 'results1' and read out here just
         ! to be written in routine wrldos
@@ -1044,12 +1048,12 @@ spinloop:     do ISPIN = 1,NSPIND
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
 
-      call broadcastEnergyMesh_com(ACTVCOMM, 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
+      call broadcastEnergyMesh_com(getMyActiveCommunicator(my_mpi), 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
-      ACTVCOMM,IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
+      getMyActiveCommunicator(my_mpi),IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
-      if(is_Masterrank) then
+      if(isMasterRank(my_mpi)) then
 
         call printSolverIterationNumber(ITER, NOITER_ALL)
         call writeIterationTimings(ITER, TIME_I, TIME_S)
@@ -1057,7 +1061,7 @@ spinloop:     do ISPIN = 1,NSPIND
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory
-      if (isManualAbort_com(MYACTVRANK, ACTVCOMM) .eqv. .true.) exit
+      if (isManualAbort_com(getMyWorldRank(my_mpi), getMyActiveCommunicator(my_mpi)) .eqv. .true.) exit
 
 
 ! ######################################################################
@@ -1066,7 +1070,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ######################################################################
 ! ######################################################################
 
-    if (is_Masterrank) close(2)    ! TIME
+    if (isMasterRank(my_mpi)) close(2)    ! TIME
 
     if (KFORCE==1) close(54)
 
@@ -1080,9 +1084,9 @@ spinloop:     do ISPIN = 1,NSPIND
 !     processors not fitting in NAEZ*LMPID do nothing ...
 ! ... and wait here
 !=====================================================================
-! Free communicators and groups ..
+! Free KKRnano mpi resources
 
-  call finaliseKKRnano_mpi_com()
+  call destroyKKRnanoParallel(my_mpi)
 
 !-----------------------------------------------------------------------------
 ! Array DEallocations BEGIN

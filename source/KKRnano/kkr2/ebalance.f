@@ -101,6 +101,8 @@ C
           ENDDO
         ENDIF
         
+        EPROCO = EPROC
+
 C
 C     check whether information on energy-point load-balancing is 
 C     available
