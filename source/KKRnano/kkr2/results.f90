@@ -123,8 +123,8 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   ! set KTE=1 in inputcard for output of energy contributions
   !=======================================================================
 
-!  open (72,access='direct',recl=LRECRES2,file='results2', &
-!  form='unformatted')
+  open (72,access='direct',recl=LRECRES2,file='results2', &
+  form='unformatted')
 !
 !  do I1 = 1,NAEZ
 !    read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
@@ -137,17 +137,17 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
   ! only relevant if KPRE = 1
   if (KTE.eq.1) then
-!    do I1 = 1,NAEZ
-!      read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
-!      EULDAU,EDCLDAU
-!      call ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC, &
-!      EULDAU,EDCLDAU,LDAU, &
-!      KPRE,LMAX,LPOT, &
-!      LCOREMAX,NSPIN,I1,NAEZ)
-!    end do
+    do I1 = 1,NAEZ
+      read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
+      EULDAU,EDCLDAU
+      call ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC, &
+      EULDAU,EDCLDAU,LDAU, &
+      KPRE,LMAX,LPOT, &
+      LCOREMAX,NSPIN,I1,NAEZ)
+    end do
   end if
-!
-!  close(72)
+
+  close(72)
 
   !=======================================================================
 

@@ -1,3 +1,5 @@
+! TODO: remove arrays GMATN_ALL, LLY_GRDT_ALL
+
 ! KKRnano
 ! massive parallel KKR for nanoscaled systems
 
@@ -766,7 +768,7 @@ spinloop:     do ISPIN = 1,NSPIND
         end if
 
         call openPotentialFile(LMPOTD, IRNSD, IRMD)
-        !call openResults2File(LRECRES2)
+        call openResults2File(LRECRES2)
 
 ! ----------------------------------------------------------------------
         DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
@@ -881,7 +883,7 @@ spinloop:     do ISPIN = 1,NSPIND
             end if
 
             ! unnecessary I/O? see results.f
-            !call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+            call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
 
 ! Force calculation ends
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -988,7 +990,7 @@ spinloop:     do ISPIN = 1,NSPIND
         end do
 ! -------- END Atom-parallel ------------------------------------------
 
-        !call closeResults2File()
+        call closeResults2File()
 
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
