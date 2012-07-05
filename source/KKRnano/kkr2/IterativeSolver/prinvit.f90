@@ -1,5 +1,5 @@
     subroutine initialGuess_start(IAT,NUMN0,INDN0, &
-                       TMATLL,GLLH1,X0,PRSC,SPRS, &
+                       TMATLL,GLLH1,X0,PRSC, &
                        !GLLKE1, &
                        ! new parameters after inc.p removal
                        naez, lmmaxd, naclsd, nguessd, nthrds)
@@ -20,15 +20,6 @@
     integer, intent(in) :: nguessd
     integer, intent(in) :: nthrds
 
-    !integer::          LMMAXD
-    !parameter        (LMMAXD= (LMAXD+1)**2)
-    !integer::          ALM
-    !parameter        (ALM   = NAEZD*LMMAXD) ! NAEZ*(LMAX+1)**2
-    !integer::          NGTBD
-    !parameter        (NGTBD = NACLSD*LMMAXD) ! NACLSD*(LMAX+1)**2
-
-    real::            CUT
-    parameter        (CUT   = 1.0D-5)
     double complex :: CZERO
     parameter        (CZERO = ( 0.0D0,0.0D0 ))
     double complex :: CONE
@@ -45,7 +36,7 @@
     complex::         PRSC(NGUESSD*LMMAXD)
     integer::         NUMN0(NAEZ)
     integer::         INDN0(NAEZ,NACLSD)
-    integer::         SPRS(NGUESSD*LMMAXD+1)
+
     double complex :: X0(NAEZ*LMMAXD,LMMAXD)
 
     !     .. LOCAL SCALARS ..
@@ -54,7 +45,7 @@
     integer::LM2
     integer::site_lm_index
     integer::site_lm_index2
-    integer::sparse_index
+    integer::ind
     !     .. LOCAL ARRAYS ..
     logical        :: DONE(LMMAXD)
     double complex, allocatable, dimension(:,:) :: TMATP
@@ -81,30 +72,17 @@
           stop
         end if
 
-        call CINIT(ALM*LMMAXD,X0)
+        X0 = CZERO
 
-        do sparse_index = 1, NGUESSD*LMMAXD
+        do ind = 1, NGUESSD*LMMAXD
 
-            if (SPRS(sparse_index) == (NAEZD*LMMAXD*LMMAXD+9999)) &
-            goto 99
-
-            site_lm_index = INT((SPRS(sparse_index)-1)/LMMAXD) + 1
-            LM2 = MOD((SPRS(sparse_index)-1),LMMAXD) + 1
-
-            ! TODO: debug - remove
-            if (SPRS(sparse_index) < 1 .or. SPRS(sparse_index) > NAEZD*LMMAXD*LMMAXD) then
-              ! write(*,*) "illegal value for SPRS: index value", sparse_index, SPRS(sparse_index)
-              ! stop
-              ! FIXME WORKAROUND: leave zeros in X0 array by leaving the loop
-              exit
-            end if
+            site_lm_index = INT((ind-1)/LMMAXD) + 1
+            LM2 = MOD((ind-1),LMMAXD) + 1
 
             X0(site_lm_index,LM2) = &
-            DCMPLX(REAL(PRSC(sparse_index)),AIMAG(PRSC(sparse_index)))
+            DCMPLX(REAL(PRSC(ind)),AIMAG(PRSC(ind)))
 
         enddo
-
-        99 continue
     ! ..
     ! ================================================================
 
@@ -151,7 +129,7 @@
     end subroutine initialGuess_start
 
 ! =====================================================================================================================
-    subroutine initialGuess_finish(X0,PRSC,SPRS, GLLKE1, &
+    subroutine initialGuess_finish(X0,PRSC, GLLKE1, &
                        naez, lmmaxd, nguessd)
 
     implicit none
@@ -168,13 +146,6 @@
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: nguessd
 
-    !integer::          LMMAXD
-    !parameter        (LMMAXD= (LMAXD+1)**2)
-    !integer::          ALM
-    !parameter        (ALM   = NAEZD*LMMAXD) ! NAEZ*(LMAX+1)**2
-
-    real::            CUT
-    parameter        (CUT   = 1.0D-5)
     double complex :: CZERO
     parameter        (CZERO = ( 0.0D0,0.0D0 ))
     double complex :: CONE
@@ -185,16 +156,16 @@
 
     double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
     complex::         PRSC(NGUESSD*LMMAXD)
-    integer::         SPRS(NGUESSD*LMMAXD+1)
+
     double complex :: X0(NAEZ*LMMAXD,LMMAXD)
 
     !     .. LOCAL SCALARS ..
-    integer::site_index
+    integer::ind
     integer::LM1
     integer::LM2
     integer::site_lm_index
     integer::site_lm_index2
-    integer::sparse_index
+    integer::site_index
 
     integer::          ALM
     integer::          NAEZD
@@ -218,35 +189,24 @@
 
     ! ================================================================
     ! Fb) store new result as initial guess for the next self-consistency
-    !     iteration in sparse format ..
+    !     iteration in
 
-        sparse_index = 1
+        ind = 1
 
         do site_index=1,NAEZD
             do LM1=1,LMMAXD
                 site_lm_index=LMMAXD*(site_index-1)+LM1  ! use a combined site and lm-index
                 do LM2=1,LMMAXD
 
-                ! sparse >>
-                    if ((ABS(DREAL(GLLKE1(site_lm_index,LM2))) > CUT) .or. &
-                    (ABS(DIMAG(GLLKE1(site_lm_index,LM2))) > CUT)) then
-
-                        SPRS(sparse_index)=  LMMAXD*(site_lm_index-1) + LM2
-
                     !             Convert to single precision
-                        PRSC(sparse_index) = &
+                        PRSC(ind) = &
                         CMPLX(DREAL(GLLKE1(site_lm_index,LM2)),DIMAG(GLLKE1(site_lm_index,LM2)))
 
-                        sparse_index  =  sparse_index + 1
-
-                    endif
-                ! sparse <<
+                        ind =  ind + 1
 
                 enddo
             enddo
         enddo
-
-        SPRS(sparse_index) = NAEZD*LMMAXD*LMMAXD + 9999 !STOP signature
     ! ..
     ! ================================================================
 

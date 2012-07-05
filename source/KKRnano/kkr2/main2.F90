@@ -433,7 +433,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   NSYMAT,DSYMLL, &
                   TMATN(:,:,ISPIN),DTDE(:,:,ISPIN), &
                   NUMN0,INDN0,I1, &
-                  SPRS(1,1,PRSPIN),PRSC(1,1,PRSPIN), &
+                  PRSC(1,1,PRSPIN), &
                   EKM,NOITER, &
                   QMRBOUND,IGUESS,BCP,CNVFAC(1,PRSPIN), &
                   NXIJ,XCCPL,IXCP,ZKRXIJ, &
@@ -573,7 +573,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
                 call EPRDIST(IELAST,KMESH,NOFKS, &
                              PRSC(1,1,PRSPIN), &
-                             SPRS(1,1,PRSPIN), &
                              CNVFAC(1,PRSPIN), &
                              MYRANK,EMPIC,EMYRANK, &
                              EPROC,EPROCO, &

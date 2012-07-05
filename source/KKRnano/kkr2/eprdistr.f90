@@ -1,6 +1,6 @@
 ! TODO: This communication pattern could be wrong
     subroutine EPRDIST(IELAST,KMESH,NOFKS, &
-                       PRSC,SPRS,CNVFAC, &
+                       PRSC,CNVFAC, &
                        MYRANK,EMPIC,EMYRANK, &
                        EPROC,EPROCO, &
                        ! new input parameters after inc.p removal
@@ -39,8 +39,6 @@
     complex::          PRSC(NGUESSD*(LMAX+1)**2,EKMD)
     double precision:: CNVFAC(EKMD)
 
-   !integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
-    integer::          SPRS(NGUESSD*(LMAX+1)**2+1,EKMD+1)
     integer::          EPROC(IEMXD)
     integer::          EPROCO(IEMXD)
     integer::          KMESH(IEMXD)
@@ -97,23 +95,7 @@
                 MPI_COMPLEX, &
                 SEND,92,MPI_COMM_WORLD,STATUS,IERR)
             endif
-        
-        
-        !         second step: exchange SPRS (index array for initial guess)
-        
-            IDIM = (NGUESSD*LMMAXD+1)*NOFKS(KMESH(IE))
-        
-            if (MYRANK == SEND) then
-                call MPI_SEND(SPRS(1,JEKM+1),IDIM, &
-                MPI_COMPLEX, &
-                RECV,91,MPI_COMM_WORLD,IERR)
-            elseif (MYRANK == RECV) then
-                call MPI_RECV(SPRS(1,JEKM+1),IDIM, &
-                MPI_COMPLEX, &
-                SEND,91,MPI_COMM_WORLD,STATUS,IERR)
-            endif
-        
-        
+
         !         third step: exchange CNVFAC
         
 !            IDIM = NOFKS(KMESH(IE))

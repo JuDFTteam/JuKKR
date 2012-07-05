@@ -6,7 +6,7 @@ ITER, &
 ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
 GINP,DGINP, &
 NUMN0,INDN0,IAT, &
-SPRS,PRSC,EKM,NOITER, &
+PRSC,EKM,NOITER, &
 QMRBOUND,IGUESS,BCP,CNVFAC, &
 DTDE_LOCAL, &
 GSXIJ, &
@@ -92,7 +92,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double complex :: LLY_GRDT
 
   complex        :: PRSC(NGUESSD*lmmaxd,EKMD) ! array argument
-  integer        :: SPRS(NGUESSD*lmmaxd+1,EKMD+1)! array argument
 
   double precision::BZKP(3,KPOIBZ)
   double precision::VOLCUB(KPOIBZ)
@@ -139,12 +138,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double complex  ::G  (lmmaxd,lmmaxd) ! small
   double complex  ::TGH(lmmaxd) ! small
   double precision::N2B(lmmaxd) ! small
-
-  !    double complex::GLLKE1(ALM,LMMAXD) !large
-  !    double complex::DUMMY(ALM,LMMAXD)  !large
-  !    double complex::GLLH(LMMAXD,NGTBD,NAEZD) ! large!
-  !    double complex::GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD) ! large
-  !    double complex::X0(ALM,LMMAXD) ! large
 
   double complex, allocatable, dimension(:,:) ::GLLKE1
   double complex, allocatable, dimension(:,:) ::DUMMY
@@ -488,7 +481,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         if (ITER > 1) then
           call initialGuess_start( IAT, NUMN0, INDN0, &
                         TMATLL,GLLH,X0, &
-                        PRSC(1,EKM + k_point_index),SPRS(1,EKM + k_point_index), &
+                        PRSC(1,EKM + k_point_index), &
                         naez, lmmaxd, naclsd, nguessd, nthrds)
         endif
 
@@ -537,7 +530,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !                       0          ..
     
       if (IGUESS == 1) then
-        call initialGuess_finish(X0, PRSC(1,EKM+k_point_index),SPRS(1,EKM+k_point_index), &
+        call initialGuess_finish(X0, PRSC(1,EKM+k_point_index), &
                       GLLKE1, naez, lmmaxd, nguessd)
         
         do site_index=1,NAEZ

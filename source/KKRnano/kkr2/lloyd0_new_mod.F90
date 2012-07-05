@@ -198,7 +198,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
       end do
 
       !TESTARRAYLOCAL(DEN0)
-      TESTARRAYLOCAL(DEN0)
+      TESTARRAY(0, DEN0)
 
       do IE = 1,IELAST
         call RHOVAL0(EZ(IE),WEZ(IE),DRDI,R, &
@@ -209,7 +209,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
       end do
 
       !TESTARRAYLOCAL(DOS0)
-      TESTARRAY(DOS0)
+      TESTARRAY(0, DOS0)
       TESTARRAY(0, DOS1)
       TESTARRAY(0, WEZ)
 

@@ -4,7 +4,6 @@
     NSYMAT,DSYMLL, &
     TSST_LOCAL,DTDE_LOCAL, &
     NUMN0,INDN0,I2, &
-    SPRS, &
     PRSC,EKM,NOITER, &
     QMRBOUND,IGUESS,BCP,CNVFAC, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
@@ -84,7 +83,6 @@
 
     !----- Initial Guess arrays-----------------------------------------------
     complex::          PRSC(NGUESSD*LMMAXD,EKMD)
-    integer::          SPRS(NGUESSD*LMMAXD+1,EKMD+1)
     !-------------------------------------------------------------------------
 
     double complex :: DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
@@ -232,7 +230,7 @@
     ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
     GINP_LOCAL,DGINP, &
     NUMN0,INDN0,I2, &
-    SPRS,PRSC, &
+    PRSC, &
     EKM,NOITER, &
     QMRBOUND,IGUESS,BCP,CNVFAC, &
     DTDE_LOCAL, &
