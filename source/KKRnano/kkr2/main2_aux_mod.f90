@@ -627,4 +627,30 @@ module main2_aux_mod
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Communicate and sum up contributions for charge neutrality and
+  !> density of states at Fermi level.
+  subroutine sumNeutralityDOSFermi_com(CHRGNT, DENEF, communicator)
+    implicit none
+    include 'mpif.h'
+    double precision, intent(inout) :: CHRGNT
+    double precision, intent(inout) :: DENEF
+    integer, intent(in) :: communicator
+    !----------------------------------
+
+    double precision :: WORK1(2)
+    double precision :: WORK2(2)
+    integer :: ierr
+
+    WORK1(1) = CHRGNT
+    WORK1(2) = DENEF
+
+    call MPI_ALLREDUCE(WORK1,WORK2,2,MPI_DOUBLE_PRECISION,MPI_SUM, &
+    communicator,IERR)
+
+    CHRGNT = WORK2(1)
+    DENEF  = WORK2(2)
+
+  end subroutine
+
 end module main2_aux_mod

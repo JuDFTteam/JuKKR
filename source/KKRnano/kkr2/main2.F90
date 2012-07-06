@@ -105,7 +105,6 @@ program MAIN2
   double precision::VBC(2)
   integer::ISYMINDEX(NSYMAXD)
   double precision::ECORE(20,2)
-  double precision:: WORK1(2)
 
   !     .. Local Arrays ..
 
@@ -138,8 +137,6 @@ program MAIN2
   integer::NLDAU
   integer::NXIJ
 
-  integer::MAPSPIN
-
   integer::IE
   integer::IELAST
 
@@ -160,15 +157,7 @@ program MAIN2
 
 ! -----------------------------------------------------------------------------
   call createKKRnanoParallel(my_mpi, NAEZ, SMPID, EMPID)
-   write (*,*) "Worldrank", getMyWorldRank(my_mpi), &
-                            isMasterRank(my_mpi), &
-                            isActiveRank(my_mpi), &
-                            getMyAtomId(my_mpi), &
-                            getMySpinId(my_mpi), &
-                            getMyEnergyId(my_mpi), &
-                            getMySEId(my_mpi), &
-                            isInMasterGroup(my_mpi), &
-                            getMyAtomRank(my_mpi)
+  call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 
   ! from dimension parameters - calculate some derived parameters
@@ -274,7 +263,6 @@ program MAIN2
 
       call openPotentialFile(LMPOTD, IRNSD, IRMD)
 
-
 !N ====================================================================
 !     BEGIN do loop over atoms (NMPID-parallel)
 !N ====================================================================
@@ -354,8 +342,8 @@ program MAIN2
                           TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
               end do
 
-              TESTARRAY(0, TREFLL)
-              TESTARRAY(0, DTREFLL)
+              !TESTARRAY(0, TREFLL)
+              !TESTARRAY(0, DTREFLL)
 
               call GREF_com(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
                             CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
@@ -366,26 +354,23 @@ program MAIN2
                             lmaxd, naclsd, ncleb, nrefd, nclsd, &
                             LLY)
 
-              TESTARRAY(0, GREFN)
-              TESTARRAY(0, DGREFN)
+              !TESTARRAY(0, GREFN)
+              !TESTARRAY(0, DGREFN)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
 ! SPIN===================================================================
-
+!------------------------------------------------------------------------------
+!     beginning of SMPID-parallel section
+!------------------------------------------------------------------------------
 spinloop:     do ISPIN = 1,NSPIND
-!------------------------------------------------------------------------------
-!         beginning of SMPID-parallel section
-!------------------------------------------------------------------------------
-                if (SMPID==1) then
-                  MAPSPIN = 1
-                  PRSPIN   = ISPIN
-                else
-                  MAPSPIN = ISPIN
-                  PRSPIN   = 1
-                endif
+                if(isWorkingSpinRank(my_mpi, ispin)) then
 
-                if(getMySpinId(my_mpi) == MAPSPIN) then
+                  if (SMPID==1) then
+                    PRSPIN   = ISPIN
+                  else
+                    PRSPIN   = 1
+                  endif
 
                   call CALCTMAT(LDAU,NLDAU,ICST, &
                                 NSRA,EZ(IE), &
@@ -457,12 +442,10 @@ spinloop:     do ISPIN = 1,NSPIND
                   nxijd, nguessd, kpoibz, nrd, ekmd)
 
                 endif
+              end do spinloop                          ! ISPIN = 1,NSPIN
 !------------------------------------------------------------------------------
 !        End of SMPID-parallel section
 !------------------------------------------------------------------------------
-
-              end do spinloop                          ! ISPIN = 1,NSPIN
-
 ! SPIN ==================================================================
 !     END do loop over spins
 ! SPIN===================================================================
@@ -521,7 +504,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !     communicate information of 1 .. EMPID and 1 .. SMPID processors
 !=======================================================================
           !call SREDGM
-          call collectMultScatteringResults(my_mpi, GMATN, LLY_GRDT, EPROC)
+          call collectMultScatteringResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
 !=======================================================================
 !=======================================================================
 
@@ -565,21 +548,16 @@ spinloop:     do ISPIN = 1,NSPIND
           if ((IGUESS==1).and.(EMPID>1)) then
 
             do ISPIN = 1,NSPIND
+              if(isWorkingSpinRank(my_mpi, ispin)) then
 
-              if (SMPID==1) then
-                MAPSPIN = 1
-                PRSPIN   = ISPIN
-              else
-                MAPSPIN = ISPIN
-                PRSPIN   = 1
-              endif
-
-!       true beginning of SMPID-parallel section
-
-              if(getMySpinId(my_mpi) == MAPSPIN) then
+                if (SMPID==1) then
+                  PRSPIN   = ISPIN
+                else
+                  PRSPIN   = 1
+                endif
 
                 !call EPRDIST
-                call redistributeInitialGuess(my_mpi, PRSC(:,:,PRSPIN), EPROC, EPROCO, KMESH, NofKs)
+                call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), EPROC, EPROCO, KMESH, NofKs)
 
               endif
             enddo
@@ -736,23 +714,11 @@ spinloop:     do ISPIN = 1,NSPIND
 ! TODO: Only necessary for non-DOS calculation - otherwise proceed to RESULTS
 !       Drawback: RESULTS has to be modified - extract DOS part
 !----------------------------------------------------------------------
-! BEGIN L-MPI: only processes with LMPIC = 1 are working
+! BEGIN L-MPI: only processes in Master-Group are working
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
 
-!****************************************************** MPI COLLECT DATA
-
-        call MPI_ALLREDUCE(CHRGNT,WORK1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        getMySEcommunicator(my_mpi),IERR)
-        call DCOPY(1,WORK1,1,CHRGNT,1)
-
-        call MPI_ALLREDUCE(DENEF,WORK1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        getMySEcommunicator(my_mpi),IERR)
-        call DCOPY(1,WORK1,1,DENEF,1)
-
-!****************************************************** MPI COLLECT DATA
-
-! ----------------------------------------------------------------------
+        call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
 ! --> determine new Fermi level due to valence charge up to
 !     old Fermi level E2 and density of states DENEF
@@ -1019,7 +985,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -----------------------------------------------------------------
       endif
 ! -----------------------------------------------------------------
-! END: L-MPI: only processes with LMPIC = 1 are working here
+! END: only processes in Master-Group are working here
 
 ! -----------------------------------------------------------------
 ! BEGIN: only MASTERRANK is working here
@@ -1065,7 +1031,6 @@ spinloop:     do ISPIN = 1,NSPIND
 ! manual exit possible by creation of file 'STOP' in home directory
       if (isManualAbort_com(getMyWorldRank(my_mpi), getMyActiveCommunicator(my_mpi)) .eqv. .true.) exit
 
-
 ! ######################################################################
 ! ######################################################################
     enddo          ! SC ITERATION LOOP ITER=1, SCFSTEPS
@@ -1080,7 +1045,13 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! ======================================================================
 
-  endif ! ACTVGROUP
+  endif ! active Ranks
+
+!-----------------------------------------------------------------------------
+! Array DEallocations
+!-----------------------------------------------------------------------------
+  call deallocate_main2_arrays()
+!-----------------------------------------------------------------------------
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID do nothing ...
@@ -1089,13 +1060,5 @@ spinloop:     do ISPIN = 1,NSPIND
 ! Free KKRnano mpi resources
 
   call destroyKKRnanoParallel(my_mpi)
-
-!-----------------------------------------------------------------------------
-! Array DEallocations BEGIN
-!-----------------------------------------------------------------------------
-  call deallocate_main2_arrays()
-!-----------------------------------------------------------------------------
-! Array DEallocations END
-!-----------------------------------------------------------------------------
 
 end program MAIN2

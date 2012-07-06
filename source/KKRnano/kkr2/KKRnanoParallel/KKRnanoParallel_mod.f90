@@ -25,6 +25,7 @@ module KKRnanoParallel_mod
     integer :: num_comms_
     integer :: procs_per_comm_
 
+    integer :: num_ranks_      !< Total number of ranks in MPI_COMM_WORLD
     integer :: num_atom_ranks_
     integer :: num_spin_ranks_
     integer :: num_energy_ranks_
@@ -61,6 +62,7 @@ module KKRnanoParallel_mod
     call MPI_Init(ierr)
 
     call MPI_Comm_size(MPI_COMM_WORLD, num_ranks, ierr)
+    my_mpi%num_ranks_ = num_ranks
     call MPI_Comm_rank(MPI_COMM_WORLD, my_mpi%my_world_rank, ierr)
 
     ! Check if there are enough ranks.
@@ -230,6 +232,14 @@ module KKRnanoParallel_mod
   end function
   
   !--------------------------------------------------------------
+  !> Returns number ranks in MPI_COMM_WORLD.
+  integer function getNumWorldRanks(my_mpi)
+    implicit none
+    type (KKRnanoParallel), intent(in) :: my_mpi
+    getNumWorldRanks = my_mpi%num_ranks_
+  end function
+
+  !--------------------------------------------------------------
   !> Returns .true. if rank is the master rank.
   logical function isMasterRank(my_mpi)
     implicit none
@@ -272,6 +282,26 @@ module KKRnanoParallel_mod
     implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     isActiveRank = (my_mpi%active == 1)
+  end function
+
+  !--------------------------------------------------------------
+  !> Given the spin index, determine whether process has to
+  !> work or not.
+  logical function isWorkingSpinRank(my_mpi, ispin)
+    implicit none
+    type (KKRnanoParallel), intent(in) :: my_mpi
+    integer, intent(in) :: ispin
+
+    !-------
+    integer :: mapspin
+
+    if (my_mpi%num_spin_ranks_ == 1) then
+      mapspin = 1
+    else
+      mapspin = ispin
+    endif
+
+    isWorkingSpinRank = (my_mpi%my_spin_id == mapspin)
   end function
 
   ! START RANKS FROM 0 or FROM 1 ???

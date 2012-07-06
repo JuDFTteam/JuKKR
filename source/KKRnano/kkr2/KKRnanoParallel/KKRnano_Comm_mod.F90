@@ -6,10 +6,48 @@ module KKRnano_Comm_mod
   CONTAINS
 
   !----------------------------------------------------------------------------
+  !> Print informative message about KKRnano parallelisation.
+  subroutine printKKRnanoInfo(my_mpi, nthrds)
+    use KKRnanoParallel_mod
+    implicit none
+
+    type (KKRnanoParallel), intent(in) :: my_mpi
+    integer, intent(in) :: nthrds
+
+    !$ integer::omp_get_max_threads
+    integer :: natoms, nspin, nenergy
+
+    if (isMasterRank(my_mpi)) then
+
+      natoms = getNumAtomRanks(my_mpi)
+      nspin  = getNumSpinRanks(my_mpi)
+      nenergy = getNumEnergyRanks(my_mpi)
+
+      write(*,'(79("="))')
+      write(*,*) '  total no. of MPI ranks  = ', getNumWorldRanks(my_mpi)
+      !$omp parallel
+      !$omp single
+      !$  write(*,*) '  OMP max. threads        = ',omp_get_max_threads()
+      !$omp end single
+      !$omp end parallel
+      write(*,*) '  groups of processes created'
+      write(*,*) '  NMPI                    = ',natoms
+      write(*,*) '  SMPI                    = ',nspin
+      write(*,*) '  EMPI                    = ',nenergy
+      write(*,*) '  NTHRDS                  = ',NTHRDS
+      write(*,*) '  MPI-processes (active)  = ',natoms*nspin*nenergy
+      write(*,*) '  total no. of tasks      = ',natoms*nspin*nenergy*nthrds
+      write(*,'(79("="))')
+
+    end if
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Collect the results from the multiple scattering part at
   !> the corresponding atom process of the master group.
   !> Master Group: (Spin, Energy)-id = 1
-  subroutine collectMultScatteringResults(my_mpi, GMATN_ALL, LLY_GRDT_ALL, EPROC)
+  subroutine collectMultScatteringResults_com(my_mpi, GMATN_ALL, LLY_GRDT_ALL, EPROC)
     use KKRnanoParallel_mod
     use comm_patternsZ_mod
     implicit none
@@ -68,7 +106,7 @@ module KKRnano_Comm_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  subroutine redistributeInitialGuess(my_mpi, PRSC, EPROC, EPROCO, KMESH, NofKs)
+  subroutine redistributeInitialGuess_com(my_mpi, PRSC, EPROC, EPROCO, KMESH, NofKs)
     use KKRnanoParallel_mod
     use comm_patternsC_mod
     implicit none

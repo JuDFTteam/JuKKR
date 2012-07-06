@@ -46,7 +46,7 @@ module main2_arrays_mod
   double complex, dimension(:,:,:,:), allocatable ::  DGREFN
   double complex, dimension(:,:,:,:), allocatable ::  GREFN
   double complex, dimension(:,:,:,:), allocatable ::  GMATN
-  double complex, dimension(:,:,:,:), allocatable ::  GMATN_ALL
+
   double complex, dimension(:,:), allocatable ::  DTIXIJ
   double complex, dimension(:,:,:,:), allocatable ::  GMATXIJ
   double complex, dimension(:,:,:,:), allocatable ::  GXIJ_ALL
@@ -57,7 +57,6 @@ module main2_arrays_mod
   !----- Lloyd -----------------------------------------------------------
   double complex, dimension(:,:), allocatable ::  LLY_G0TR
   double complex, dimension(:,:), allocatable ::  LLY_GRDT
-  double complex, dimension(:,:), allocatable ::  LLY_GRDT_ALL
   double complex, dimension(:), allocatable ::  TR_ALPH
   double complex, dimension(:), allocatable ::  JXCIJINT
   ! ----------------------------------------------------------------------
@@ -343,8 +342,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(GMATN_ALL(LMMAXD,LMMAXD,IEMXD,NSPIND), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(DTIXIJ(LMMAXD,LMMAXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND), stat = memory_stat)
@@ -356,8 +353,6 @@ CONTAINS
     allocate(LLY_G0TR(NCLSD,IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LLY_GRDT(IEMXD,NSPIND), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LLY_GRDT_ALL(IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(TR_ALPH(NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -537,14 +532,12 @@ CONTAINS
     deallocate(DGREFN, stat = memory_stat)
     deallocate(GREFN, stat = memory_stat)
     deallocate(GMATN, stat = memory_stat)
-    deallocate(GMATN_ALL, stat = memory_stat)
     deallocate(DTIXIJ, stat = memory_stat)
     deallocate(GMATXIJ, stat = memory_stat)
     deallocate(GXIJ_ALL, stat = memory_stat)
     deallocate(PRSC, stat = memory_stat)
     deallocate(LLY_G0TR, stat = memory_stat)
     deallocate(LLY_GRDT, stat = memory_stat)
-    deallocate(LLY_GRDT_ALL, stat = memory_stat)
     deallocate(TR_ALPH, stat = memory_stat)
     deallocate(JXCIJINT, stat = memory_stat)
     deallocate(ECOU, stat = memory_stat)
