@@ -509,7 +509,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-!=======================================================================
           !call SREDGM
           call collectMultScatteringResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
 !=======================================================================
