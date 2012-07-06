@@ -209,5 +209,5 @@ SingleSiteRef_mod.o: kkr_helpers_mod.o
 
 arraytest_mod.o: test_macros.h
 
-KKRnano_Comm_mod.o: KKRnanoParallel_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o test_macros.h
+KKRnano_Comm_mod.o: KKRnanoParallel_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o comm_patternsD_mod.o test_macros.h
 

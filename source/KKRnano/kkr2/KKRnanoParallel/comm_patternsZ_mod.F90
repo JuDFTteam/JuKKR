@@ -104,19 +104,54 @@ subroutine comm_redistributeVZ(my_world_rank, array, blocksizes, old_owners, new
 end subroutine
 
 !-------------------------------------------------------------------
-!> communicate 'array' starting from the first entry in 'ranks'
-!> to all ranks in 'ranks' in a round-robin-fashion
-!> 1 --> 2 --> 3 --> 4
+!> communicate 'array' starting from 'owner' to all the ranks
+!> in 'ranks' in a round-robin-fashion
+!> owner --> 1 --> 2 --> 3 --> 4
 !> Also accepts single entry in ranks
+!> It is no problem if the owner is the first entry in 'ranks'
 !> Also accepts duplicate entries - but: unnecessary communication
-subroutine comm_bcastZ(my_world_rank, array, length, ranks)
+subroutine comm_bcastZ(my_world_rank, array, length, ranks, owner)
   implicit none
   include 'mpif.h'
 
   integer, intent(in) :: my_world_rank
   NUMBERZ, intent(inout), dimension(*) :: array
   integer, intent(in) :: length
-  integer, intent(inout), dimension(:) :: ranks
+  integer, intent(in), dimension(:) :: ranks
+  integer, intent(in) :: owner
+
+  integer :: rank_index
+  integer :: sender, receiver
+
+  sender = owner
+  receiver = ranks(1)
+
+  call send_arrayZ(my_world_rank, array, length, sender, receiver)
+
+  do rank_index = 1, size(ranks)-1
+    sender = ranks(rank_index)
+    receiver = ranks(rank_index+1)
+
+    call send_arrayZ(my_world_rank, array, length, sender, receiver)
+
+  end do
+
+end subroutine
+
+!-------------------------------------------------------------------
+!> communicate 'array' starting from the first entry in 'ranks'
+!> to all ranks in 'ranks' in a round-robin-fashion
+!> 1 --> 2 --> 3 --> 4
+!> Also accepts single entry in ranks
+!> Also accepts duplicate entries - but: unnecessary communication
+subroutine comm_bcast2Z(my_world_rank, array, length, ranks)
+  implicit none
+  include 'mpif.h'
+
+  integer, intent(in) :: my_world_rank
+  NUMBERZ, intent(inout), dimension(*) :: array
+  integer, intent(in) :: length
+  integer, intent(in), dimension(:) :: ranks
 
   integer :: rank_index
   integer :: sender, receiver

@@ -231,7 +231,15 @@ program MAIN2
 !+++++++++++ atom - parallel  TODO: replace with better construct
     do I1 = 1,NAEZ
       if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
+
         call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
+
+        if (isInMasterGroup(my_mpi)) then
+          call openPotentialFile(LMPOTD, IRNSD, IRMD)
+          call readPotential(I1, VISP, VINS, ECORE)
+          call closePotentialFile()
+        end if
+
       end if
     end do
 !+++++++++++ end atom - parallel ++++++++++++++++++++++++++++++++
@@ -261,8 +269,6 @@ program MAIN2
       ! actually only LMPIC==1 process needed to open these files!!!
       call openResults1File(IEMXD, LMAXD, NPOL)
 
-      call openPotentialFile(LMPOTD, IRNSD, IRMD)
-
 !N ====================================================================
 !     BEGIN do loop over atoms (NMPID-parallel)
 !N ====================================================================
@@ -291,8 +297,9 @@ program MAIN2
 
           endif
 
-          ! TODO: Find a better solution than exchanging potential by file I/O
-          call readPotential(I1, VISP, VINS, ECORE)
+          ! New: instead of reading potential every time, communicate it
+          !call readPotential(I1, VISP, VINS, ECORE)
+          call communicatePotential(my_mpi, VISP, VINS, ECORE)
 
 ! LDA+U
           if (LDAU) then
@@ -501,11 +508,10 @@ spinloop:     do ISPIN = 1,NSPIND
           TESTARRAY(0, LLY_GRDT)
 
 !=======================================================================
-!     communicate information of 1 .. EMPID and 1 .. SMPID processors
+!communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
 !=======================================================================
           !call SREDGM
           call collectMultScatteringResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
-!=======================================================================
 !=======================================================================
 
 ! TIME
@@ -525,8 +531,6 @@ spinloop:     do ISPIN = 1,NSPIND
 !                          naez, nxijd, &
 !                          lmpid, smpid, empid)
           endif
-!=======================================================================
-!=======================================================================
 
 !=======================================================================
 !     on the basis of new timings determine now new distribution of
@@ -536,10 +540,7 @@ spinloop:     do ISPIN = 1,NSPIND
                         IELAST,NPNT1, &
                         getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
                         ETIME,EPROC,EPROCO, &
-                        empid, iemxd)
-!=======================================================================
-!=======================================================================
-
+                        empid, iemxd)  ! should be communicated - dependence on floating point ops!!
 
 !=======================================================================
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
@@ -563,7 +564,6 @@ spinloop:     do ISPIN = 1,NSPIND
             enddo
 
           endif  ! IGUESS == 1 .and. EMPID > 1
-!=======================================================================
 !=======================================================================
 
           TESTARRAY(0, GMATN)
@@ -705,7 +705,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !     END do loop over atoms (NMPID-parallel)
 !N ====================================================================
 
-      call closePotentialFile()
+      !call closePotentialFile()
       call closeResults1File()
 
       call OUTTIME(isMasterRank(my_mpi),'density calculated ..',TIME_I,ITER)
@@ -733,7 +733,6 @@ spinloop:     do ISPIN = 1,NSPIND
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
-        call openPotentialFile(LMPOTD, IRNSD, IRMD)
         call openResults2File(LRECRES2)
 
 ! ----------------------------------------------------------------------
@@ -758,9 +757,8 @@ spinloop:     do ISPIN = 1,NSPIND
                 call DAXPY(IRC(I1),DF,R2NEF(1,LM,ISPIN),1, &
                 RHO2NS(1,LM,ISPIN),1)
               end do
-
-! ----------------------------------------------------------------------
             end do
+! ----------------------------------------------------------------------
 
             call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
@@ -882,9 +880,6 @@ spinloop:     do ISPIN = 1,NSPIND
         end if
 
 ! =====================================================================
-
-! ---------------------------------------------------------------------
-
 ! -->   shift potential to muffin tin zero and
 !       convolute potential with shape function for next iteration
 
@@ -949,7 +944,9 @@ spinloop:     do ISPIN = 1,NSPIND
                                  NSPIND, VINS, VISP, VONS) ! Note: only LMPIC=1 processes
 
 ! ----------------------------------------------------- output_potential
+            call openPotentialFile(LMPOTD, IRNSD, IRMD)
             call writePotential(I1, VISP, VINS, ECORE)
+            call closePotentialFile()
 ! ----------------------------------------------------- output_potential
 
           end if
@@ -980,12 +977,10 @@ spinloop:     do ISPIN = 1,NSPIND
 
         call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
 
-! -----------------------------------------------------------------
-        call closePotentialFile()  ! close 'vpotnew' this was originally misplaced
-! -----------------------------------------------------------------
       endif
 ! -----------------------------------------------------------------
-! END: only processes in Master-Group are working here
+! END: only processes in MASTERGROUP are working here
+!-----------------------------------------------------------------
 
 ! -----------------------------------------------------------------
 ! BEGIN: only MASTERRANK is working here

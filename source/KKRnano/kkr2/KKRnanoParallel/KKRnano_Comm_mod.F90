@@ -160,4 +160,45 @@ module KKRnano_Comm_mod
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Communicate Potential from Master-Group to all other (Spin,Energy)-Groups.
+  subroutine communicatePotential(my_mpi, VISP, VINS, ECORE)
+    use KKRnanoParallel_mod
+    use comm_patternsD_mod
+    implicit none
+
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    double precision, dimension(:,:,:), intent(inout) :: VINS        ! .. input potential
+    double precision, dimension(:,:), intent(inout) :: VISP
+    double precision, intent(inout) :: ECORE(20,2)
+
+    !----------
+    integer, dimension(:), allocatable :: ranks
+    integer :: my_world_rank
+    integer :: my_atom_id
+    integer :: owner
+    integer :: num_SE_ranks
+    integer :: ind
+
+    num_SE_ranks = getNumSERAnks(my_mpi)
+    my_world_rank = getMyWorldRank(my_mpi)
+    my_atom_id = getMyAtomId(my_mpi)
+
+    allocate(ranks(num_SE_ranks))
+
+    owner = mapToWorldRankSE(my_mpi, my_atom_id, 1)
+
+    do ind = 1, num_SE_ranks
+      ranks(ind) = mapToWorldRankSE(my_mpi, my_atom_id, ind)
+    end do
+
+    call comm_bcastD(my_world_rank, VINS, size(VINS), ranks, owner)
+    call comm_bcastD(my_world_rank, VISP, size(VISP), ranks, owner)
+    call comm_bcastD(my_world_rank, ECORE, size(ECORE), ranks, owner)
+
+    deallocate(ranks)
+
+  end subroutine
+
 end module KKRnano_Comm_mod
