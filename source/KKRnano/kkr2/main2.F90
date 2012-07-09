@@ -199,10 +199,10 @@ program MAIN2
 
   call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
 
-  if ((JIJ .eqv. .true.) .and. (SMPID /= 1)) then
-    write(*,*) "ERROR: Jij calculation is broken for spin-parallel calc. Set SMPID=1"
-    stop
-  end if
+!  if ((JIJ .eqv. .true.) .and. (SMPID /= 1)) then
+!    write(*,*) "ERROR: Jij calculation is broken for spin-parallel calc. Set SMPID=1"
+!    stop
+!  end if
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
