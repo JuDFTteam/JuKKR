@@ -58,7 +58,6 @@ module main2_arrays_mod
   double complex, dimension(:,:), allocatable ::  LLY_G0TR
   double complex, dimension(:,:), allocatable ::  LLY_GRDT
   double complex, dimension(:), allocatable ::  TR_ALPH
-  double complex, dimension(:), allocatable ::  JXCIJINT
   ! ----------------------------------------------------------------------
 
   ! ----------------------------------------------------------------------
@@ -67,13 +66,18 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: ESPV
   double precision, dimension(:), allocatable :: EXC
 
-  !----------- Radial Mesh, shape functions ------------------------------
+  !----------- Radial Mesh  ----------------------------------------------
   double precision, dimension(:), allocatable :: A
   double precision, dimension(:), allocatable :: B
   double precision, dimension(:,:), allocatable :: DRDI
   double precision, dimension(:,:), allocatable :: R
-  double precision, dimension(:,:,:), allocatable :: THETAS
   double precision, dimension(:), allocatable :: ZAT
+
+  ! ----------------- Shape functions ------------------------------------
+  double precision, dimension(:,:,:), allocatable :: THETAS
+
+  ! ----------------- Shape-Gaunts ---------------------------------------\
+  double precision, dimension(:), allocatable :: GSH
 
   ! ----------------------------------------------------------------------
   double precision, dimension(:,:), allocatable ::  RHOCAT
@@ -81,7 +85,7 @@ module main2_arrays_mod
   double precision, dimension(:,:,:), allocatable ::  RHO2NS
   double precision, dimension(:,:), allocatable ::  CHARGE
   !     ..
-  double precision, dimension(:), allocatable :: GSH
+
   double precision, dimension(:), allocatable :: CMINST    ! charge moment of interstitial
   double precision, dimension(:), allocatable :: CMOM      ! LM moment of total charge
   double precision, dimension(:), allocatable :: CATOM     ! total charge per atom
@@ -130,12 +134,14 @@ module main2_arrays_mod
   double precision, dimension(:,:,:), allocatable :: ZKRXIJ    ! set up in clsjij, used in kkrmat01
   integer, dimension(:), allocatable :: IXCP                   ! index to atom in elem/cell at site in cluster
   integer, dimension(:), allocatable :: NXCP                   ! index to bravais lattice at site in cluster
+  double complex, dimension(:), allocatable ::  JXCIJINT       ! integrated Jij
 
   integer, dimension(:,:), allocatable :: ATOM
   integer, dimension(:), allocatable :: CLS
   integer, dimension(:), allocatable :: NACLS
   integer, dimension(:), allocatable :: REFPOT
 
+  ! ---------------- Energie parallelisation ---------------------------------
   real, dimension(:), allocatable :: ETIME
   integer, dimension(:), allocatable :: EPROC
   integer, dimension(:), allocatable :: EPROCO

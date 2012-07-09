@@ -470,8 +470,10 @@ spinloop:     do ISPIN = 1,NSPIND
 !                             GMATXIJ, &
 !                             GXIJ_ALL, &
 !                             naez, lmaxd, lmpid, empid, smpid, nxijd)
-!
-!                JSCAL = WEZ(IE)/DBLE(NSPIND)
+
+                 call jijSpinCommunication_com(my_mpi, GMATXIJ, nspind)
+
+                 JSCAL = WEZ(IE)/DBLE(NSPIND)
 !
 !                call XCCPLJIJ_START(I1,IE,JSCAL, &
 !                               RXIJ,NXIJ,IXCP,RXCCLS, &
@@ -479,6 +481,10 @@ spinloop:     do ISPIN = 1,NSPIND
 !                               getMySEcommunicator(my_mpi), &
 !                               JXCIJINT,ERESJIJ, &
 !                               naez, lmmaxd, nxijd, nspind)
+
+                 call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
+                                                DTIXIJ, RXIJ, NXIJ, IXCP, &
+                                                RXCCLS, JXCIJINT)
 
               end if
 
@@ -511,7 +517,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
           !call SREDGM
-          call collectMultScatteringResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
+          call collectMSResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
 !=======================================================================
 
 ! TIME
@@ -523,6 +529,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
           if (XCCPL) then
 
+             call jijReduceIntResults_com(my_mpi, JXCIJINT)
 !            call XCCPLJIJ_OUT(I1, &  ! I1 needed for filenames
 !                          RXIJ,NXIJ,IXCP,RXCCLS, &
 !                          LMPIC, &
@@ -530,6 +537,10 @@ spinloop:     do ISPIN = 1,NSPIND
 !                          JXCIJINT, &
 !                          naez, nxijd, &
 !                          lmpid, smpid, empid)
+
+            if (isInMasterGroup(my_mpi)) then
+              call writeJiJs(I1,RXIJ,NXIJ,IXCP,RXCCLS,JXCIJINT, nxijd)
+            end if
           endif
 
 !=======================================================================

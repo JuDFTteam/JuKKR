@@ -373,13 +373,13 @@ lmpid, smpid, empid)
   endif   ! EMPID==1
 
 
-  if (LMPIC==1) then
+!  if (LMPIC==1) then
 
-    call writeJiJs(I1, &
-    RXIJ,NXIJ,IXCP,RXCCLS, &
-    JXCIJINT, nxijd)
+!    call writeJiJs(I1, &
+!    RXIJ,NXIJ,IXCP,RXCCLS, &
+!    JXCIJINT, nxijd)
 
-  endif ! LMPIC = 1
+!  endif ! LMPIC = 1
 
 end
 
