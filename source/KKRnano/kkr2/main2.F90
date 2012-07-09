@@ -293,6 +293,7 @@ program MAIN2
                         IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
                         nrd, nxijd)
 
+            JXCIJINT = CZERO
             GMATXIJ = CZERO
 
           endif

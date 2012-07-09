@@ -1,4 +1,3 @@
-!     TODO: use lmmaxd instead of lmax
 !     TODO: BUG - energy resolved Jijs - does not work as expected
 !     - there exists some confusion with writing to the Eij files
 
@@ -81,14 +80,14 @@ naez, lmmaxd, nxijd, nspind)
   !     .. Local arrays
   integer :: OFF(3)
 
-  double complex :: GMIJ(lmmaxd,lmmaxd)
-  double complex :: GMJI(lmmaxd,lmmaxd)
+  double complex :: GMIJ_down(lmmaxd,lmmaxd)
+  double complex :: GMJI_up(lmmaxd,lmmaxd)
   double complex :: W1(lmmaxd,lmmaxd)
   double complex :: W2(lmmaxd,lmmaxd)
   double complex :: W3(lmmaxd,lmmaxd)
 
   !     large local array
-  double complex, allocatable, dimension(:,:,:) :: DTNXIJ
+  double complex, allocatable, dimension(:,:,:) :: DTNXIJ_ALL
 
   !     .. MPI ..
   integer :: IERR
@@ -106,11 +105,6 @@ naez, lmmaxd, nxijd, nspind)
 
   memory_fail = .false.
 
-  !=======================================================================
-  ! energy parallelization requires splitting of this routine into
-  ! part 'R' = running over energy points and into part 'F' the
-  ! output part
-  !=======================================================================
   JSCAL = CONE/4D0
 
   ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
@@ -119,7 +113,7 @@ naez, lmmaxd, nxijd, nspind)
 
   !     Allocate array
 
-  allocate(DTNXIJ(LMMAXD,LMMAXD,NAEZ), stat = memory_stat)
+  allocate(DTNXIJ_ALL(LMMAXD,LMMAXD,NAEZ), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
   if (memory_fail .eqv. .true.) then
@@ -129,32 +123,31 @@ naez, lmmaxd, nxijd, nspind)
   end if
 
   if ( IER==1 ) then
-    do XIJ = 2, NXIJ
-      JXCIJINT(XIJ) = CZERO
-    enddo
+
+    JXCIJINT = CZERO
 
     if (ERESJIJ) then
-      D1 = mod(I1,10)
-      D10 = int( (mod(I1,100) + 0.5)/10 )
-      D100 = int( (mod(I1,1000) + 0.5)/100 )
-      D1000 = int( (mod(I1,10000) + 0.5)/1000 )
-
-      OFF(1) = iachar('1')-1
-      OFF(2) = iachar('1')-1
-      OFF(3) = iachar('1')-1
-
-      if ( D10>=10 ) OFF(1) = iachar('7')
-      if ( D100>=100 ) OFF(2) = iachar('7')
-      if ( D1000>=1000 ) OFF(3) = iachar('7')
-
-      FNAME='Eij.' &
-      //achar(D1000+OFF(3)) &
-      //achar(D100+OFF(2)) &
-      //achar(D10+OFF(1)) &
-      //achar(D1+iachar('1')-1) &
-      //'.dat'
-
-      open(75,file=FNAME,form='formatted')
+!      D1 = mod(I1,10)
+!      D10 = int( (mod(I1,100) + 0.5)/10 )
+!      D100 = int( (mod(I1,1000) + 0.5)/100 )
+!      D1000 = int( (mod(I1,10000) + 0.5)/1000 )
+!
+!      OFF(1) = iachar('1')-1
+!      OFF(2) = iachar('1')-1
+!      OFF(3) = iachar('1')-1
+!
+!      if ( D10>=10 ) OFF(1) = iachar('7')
+!      if ( D100>=100 ) OFF(2) = iachar('7')
+!      if ( D1000>=1000 ) OFF(3) = iachar('7')
+!
+!      FNAME='Eij.' &
+!      //achar(D1000+OFF(3)) &
+!      //achar(D100+OFF(2)) &
+!      //achar(D10+OFF(1)) &
+!      //achar(D1+iachar('1')-1) &
+!      //'.dat'
+!
+!      open(75,file=FNAME,form='formatted')
     endif
   endif
 
@@ -169,7 +162,7 @@ naez, lmmaxd, nxijd, nspind)
 
 
   call MPI_ALLGATHER(DTIXIJ,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-  DTNXIJ,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
+  DTNXIJ_ALL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
   communicator,IERR)
 
 
@@ -180,14 +173,14 @@ naez, lmmaxd, nxijd, nspind)
     do ISPIN = 1,2
       if ( ISPIN==1 ) then
         call ZCOPY(LMMAXD*LMMAXD,GMATXIJ(1,1,XIJ,ISPIN), &
-        1,GMIJ,1)
+        1,GMIJ_down,1)
       else
         do LM2 = 1,LMMAXD
           do LM1 = 1,LMMAXD
 
             ! -> use Gji = Gij^T
 
-            GMJI(LM1,LM2) = GMATXIJ(LM2,LM1,XIJ,ISPIN)
+            GMJI_up(LM1,LM2) = GMATXIJ(LM2,LM1,XIJ,ISPIN)
 
           enddo
         enddo
@@ -204,11 +197,11 @@ naez, lmmaxd, nxijd, nspind)
     ! -------------------------------------------------- loop over occupants
     ! --> Delta_j * Gjt,it
 
-    call CMATMUL(LMMAXD,LMMAXD,DTNXIJ(1,1,IXCP(XIJ)),GMJI,W2)
+    call CMATMUL(LMMAXD,LMMAXD,DTNXIJ_ALL(1,1,IXCP(XIJ)),GMJI_up,W2)
 
     ! --> Delta_i * Git,jt
 
-    call CMATMUL(LMMAXD,LMMAXD,DTIXIJ,GMIJ,W3)
+    call CMATMUL(LMMAXD,LMMAXD,DTIXIJ,GMIJ_down,W3)
 
     ! --> Delta_i * Git,jt * Delta_j * Gjt,it
 
@@ -222,9 +215,9 @@ naez, lmmaxd, nxijd, nspind)
     JOUT = -DIMAG(WGTE*CSUM*JSCAL)
 
     if (ERESJIJ) then
-      write(75,73002) &
-      IER,XIJ,RXIJ(XIJ),JOUT, &
-      RXCCLS(1,XIJ),RXCCLS(2,XIJ),RXCCLS(3,XIJ),IXCP(XIJ)
+    !  write(75,73002) &
+    !  IER,XIJ,RXIJ(XIJ),JOUT, &
+    !  RXCCLS(1,XIJ),RXCCLS(2,XIJ),RXCCLS(3,XIJ),IXCP(XIJ)
     endif
 
     JXCIJINT(XIJ) = JXCIJINT(XIJ) - WGTE*CSUM
@@ -235,9 +228,9 @@ naez, lmmaxd, nxijd, nspind)
   enddo             ! loop XIJ = 1, NXIJ
   ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-  deallocate(DTNXIJ)
+  deallocate(DTNXIJ_ALL)
 
-  if (ERESJIJ) close(75)
+  !if (ERESJIJ) close(75) ! WRONG: close only after last energy point!!!
 
 73002 format(I3,1X,I3,3X,F9.5,6X,D9.3,6X,3(1X,F7.4),I5)
 end

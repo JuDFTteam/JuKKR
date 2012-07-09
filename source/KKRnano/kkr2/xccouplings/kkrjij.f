@@ -1,3 +1,5 @@
+C     WARNING: Assumes one-to-one mapping of atom to rank in
+C              MPI_COMM_WORLD
       SUBROUTINE KKRJIJ(
      >                  BZKP,VOLCUB,KPT,
      >                  NSYMAT,NAEZ,I3,
