@@ -509,30 +509,23 @@ module main2_aux_mod
 
   !----------------------------------------------------------------------------
   !> Calculate \Delta T_up - T_down for exchange couplings calculation.
-  !> Call first for ISPIN=1 then for ISPIN=2 with same parameters.
-  subroutine calcDeltaTupTdown(DTIXIJ, ISPIN, LMMAXD, TMATN)
+  !> The result is stored in DTIXIJ(:,:,1)
+  subroutine calcDeltaTupTdown(DTIXIJ)
     implicit none
-    double complex, intent(inout) :: DTIXIJ(:,:)
-    integer :: ISPIN
+    double complex, intent(inout) :: DTIXIJ(:,:,:)
     integer :: LMMAXD
-    double complex, intent(in) :: TMATN(:,:,:)
 
     integer :: LM1
     integer :: LM2
 
-    if (ISPIN==1) then
+    lmmaxd = size(DTIXIJ,1)
+
+    do LM2 = 1,LMMAXD
       do LM1 = 1,LMMAXD
-        do LM2 = 1,LMMAXD
-          DTIXIJ(LM1,LM2) = TMATN(LM1,LM2,ISPIN)
-        enddo
+        DTIXIJ(LM1,LM2,1) = DTIXIJ(LM1,LM2,2) - DTIXIJ(LM1,LM2,1)
       enddo
-    else
-      do LM1 = 1,LMMAXD
-        do LM2 = 1,LMMAXD
-          DTIXIJ(LM1,LM2) = DTIXIJ(LM1,LM2)-TMATN(LM1,LM2,ISPIN)
-        enddo
-      enddo
-    endif
+    enddo
+
   end subroutine
 
   !----------------------------------------------------------------------------

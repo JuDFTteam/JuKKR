@@ -285,6 +285,26 @@ module KKRnanoParallel_mod
   end function
 
   !--------------------------------------------------------------
+  !> Given the spin index, determine which Spin-Id is responsible
+  !> for this spin index.
+  integer function getResponsibleSpinId(my_mpi, ispin)
+    implicit none
+    type (KKRnanoParallel), intent(in) :: my_mpi
+    integer, intent(in) :: ispin
+
+    !-------
+    integer :: mapspin
+
+    if (my_mpi%num_spin_ranks_ == 1) then
+      mapspin = 1
+    else
+      mapspin = ispin
+    endif
+
+    getResponsibleSpinId = mapspin
+  end function
+
+  !--------------------------------------------------------------
   !> Given the spin index, determine whether process has to
   !> work or not.
   logical function isWorkingSpinRank(my_mpi, ispin)

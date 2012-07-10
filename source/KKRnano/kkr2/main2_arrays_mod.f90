@@ -47,7 +47,7 @@ module main2_arrays_mod
   double complex, dimension(:,:,:,:), allocatable ::  GREFN
   double complex, dimension(:,:,:,:), allocatable ::  GMATN
 
-  double complex, dimension(:,:), allocatable ::  DTIXIJ
+  double complex, dimension(:,:,:), allocatable ::  DTIXIJ
   double complex, dimension(:,:,:,:), allocatable ::  GMATXIJ
   double complex, dimension(:,:,:,:), allocatable ::  GXIJ_ALL
 
@@ -348,7 +348,7 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(DTIXIJ(LMMAXD,LMMAXD), stat = memory_stat)
+    allocate(DTIXIJ(LMMAXD,LMMAXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -488,6 +488,7 @@ CONTAINS
     !initialise to be safe
     VINS = 0.0d0
     VISP = 0.0d0
+    DTIXIJ = dcmplx(0.0d0, 0.0d0)
 
     ! use garbage values
     GMATN = dcmplx(99999.0d0, 99999.0d0)

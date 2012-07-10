@@ -267,7 +267,7 @@ program MAIN2
 
       ! needed for results.f - find better solution - unnecessary I/O
       ! actually only LMPIC==1 process needed to open these files!!!
-      call openResults1File(IEMXD, LMAXD, NPOL)
+      if (KTE >= 0) call openResults1File(IEMXD, LMAXD, NPOL)
 
 !N ====================================================================
 !     BEGIN do loop over atoms (NMPID-parallel)
@@ -389,6 +389,8 @@ spinloop:     do ISPIN = 1,NSPIND
                                 LLDAU,WMLDAU(1,1,1,ISPIN), &
                                 ncleb, ipand, irmd, irnsd)
 
+                  DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
+
                   if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
 
                     call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
@@ -402,12 +404,6 @@ spinloop:     do ISPIN = 1,NSPIND
                                   LLDAU,WMLDAU(1,1,1,ISPIN), &
                                   ncleb, ipand, irmd, irnsd)
                   end if
-
-                  ! calculate DTIXIJ = T_down - T_up
-                  if (XCCPL) then
-                    call calcDeltaTupTdown(DTIXIJ, ISPIN, LMMAXD, TMATN)
-                  endif
-
 
                   RF = REFPOT(I1)
                   call substractReferenceTmatrix(TMATN(:,:,ISPIN), TREFLL(:,:,RF), LMMAXD)
@@ -423,7 +419,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   NMESH = KMESH(IE)
 
                   if( getMyAtomRank(my_mpi)==0 ) then
-                    call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
+                    if (KTE >= 0) call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
                   end if
 
 ! <<>> Multiple scattering part
@@ -464,27 +460,20 @@ spinloop:     do ISPIN = 1,NSPIND
 
               if (XCCPL) then
 
-!                call SREDGX( NSPIND, &
-!                             MYRANK, &
-!                             SMPIC,SMYRANK, &
-!                             GMATXIJ, &
-!                             GXIJ_ALL, &
-!                             naez, lmaxd, lmpid, empid, smpid, nxijd)
+                 call jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
 
-                 call jijSpinCommunication_com(my_mpi, GMATXIJ)
+                 ! calculate DTIXIJ = T_down - T_up
+                 call calcDeltaTupTdown(DTIXIJ)
+
+                 TESTARRAY(0, GMATXIJ)
 
                  JSCAL = WEZ(IE)/DBLE(NSPIND)
-!
-!                call XCCPLJIJ_START(I1,IE,JSCAL, &
-!                               RXIJ,NXIJ,IXCP,RXCCLS, &
-!                               GXIJ_ALL,DTIXIJ, &
-!                               getMySEcommunicator(my_mpi), &
-!                               JXCIJINT,ERESJIJ, &
-!                               naez, lmmaxd, nxijd, nspind)
 
                  call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
-                                                DTIXIJ, RXIJ, NXIJ, IXCP, &
+                                                DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
                                                 RXCCLS, JXCIJINT)
+
+                 TESTARRAY(0, DTIXIJ(:,:,1))
 
               end if
 
@@ -530,13 +519,6 @@ spinloop:     do ISPIN = 1,NSPIND
           if (XCCPL) then
 
              call jijReduceIntResults_com(my_mpi, JXCIJINT)
-!            call XCCPLJIJ_OUT(I1, &  ! I1 needed for filenames
-!                          RXIJ,NXIJ,IXCP,RXCCLS, &
-!                          LMPIC, &
-!                          MYRANK,EMPIC,EMYRANK, &
-!                          JXCIJINT, &
-!                          naez, nxijd, &
-!                          lmpid, smpid, empid)
 
             if (isInMasterGroup(my_mpi)) then
               call writeJiJs(I1,RXIJ,NXIJ,IXCP,RXCCLS,JXCIJINT, nxijd)
@@ -704,7 +686,7 @@ spinloop:     do ISPIN = 1,NSPIND
             ! write to 'results1' - only to be read in in results.f
             ! necessary for density of states calculation, otherwise
             ! only for informative reasons
-            call writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, QC)
+            if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, QC)
 
           endif
 !----------------------------------------------------------------------
@@ -744,7 +726,7 @@ spinloop:     do ISPIN = 1,NSPIND
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
-        call openResults2File(LRECRES2)
+        if (KTE >= 0) call openResults2File(LRECRES2)
 
 ! ----------------------------------------------------------------------
         DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
@@ -858,7 +840,7 @@ spinloop:     do ISPIN = 1,NSPIND
             end if
 
             ! unnecessary I/O? see results.f
-            call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+            if (KTE >= 0) call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
 
 ! Force calculation ends
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -964,7 +946,7 @@ spinloop:     do ISPIN = 1,NSPIND
         end do
 ! -------- END Atom-parallel ------------------------------------------
 
-        call closeResults2File()
+        if (KTE >= 0) call closeResults2File()
 
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============

@@ -54,54 +54,59 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   end if
 
 
-  open (71,access='direct',recl=LRECRES1,file='results1', &
-  form='unformatted')
+  if (KTE >= 0) then
+
+    open (71,access='direct',recl=LRECRES1,file='results1', &
+    form='unformatted')
 
 
-  ! Moments output
-  do I1 = 1,NAEZ
-    if (NPOL.eq.0 .or. TEST('DOS     ')) then
-      read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
-    else
-      read(71,rec=I1) QC,CATOM,CHARGE,ECORE
-    end if
-    call WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAX,LMAX+1)
-  end do
-
-
-  ! Density of states output
-  if (NPOL.eq.0 .or. TEST('DOS     ')) then 
+    ! Moments output
     do I1 = 1,NAEZ
-      read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
-      call WRLDOS(DEN,EZ,WEZ, &
-      LMAX+1,IEMXD,NPOTD,ITITLE,EFERMI,E1,E2,ALAT,TK, &
-      NSPIN,NAEZ,IELAST,I1,DOSTOT)
-    end do
-  end if
-
-
-  TOTSMOM = 0.0D0
-  do I1 = 1,NAEZ
-    if (NPOL.eq.0 .or. TEST('DOS     ')) then
-      read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
-    else
-      read(71,rec=I1) QC,CATOM,CHARGE,ECORE
-    end if
-    do ISPIN = 1,NSPIN
-      if (ISPIN.ne.1) then
-        write (6,fmt=9011) CATOM(ISPIN)                  ! spin moments
+      if (NPOL.eq.0 .or. TEST('DOS     ')) then
+        read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
-        write (6,fmt=9001) I1,CATOM(ISPIN)               ! atom charge
+        read(71,rec=I1) QC,CATOM,CHARGE,ECORE
       end if
+      call WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAX,LMAX+1)
     end do
-    write (6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
-    if (NSPIN.eq.2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
-  end do
-  write(6,'(79(1H+))')
-  write (6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
-  if (NSPIN.eq.2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
-  write(6,'(79(1H+))')
 
+
+    ! Density of states output
+    if (NPOL.eq.0 .or. TEST('DOS     ')) then
+      do I1 = 1,NAEZ
+        read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
+        call WRLDOS(DEN,EZ,WEZ, &
+        LMAX+1,IEMXD,NPOTD,ITITLE,EFERMI,E1,E2,ALAT,TK, &
+        NSPIN,NAEZ,IELAST,I1,DOSTOT)
+      end do
+    end if
+
+
+    TOTSMOM = 0.0D0
+    do I1 = 1,NAEZ
+      if (NPOL.eq.0 .or. TEST('DOS     ')) then
+        read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
+      else
+        read(71,rec=I1) QC,CATOM,CHARGE,ECORE
+      end if
+      do ISPIN = 1,NSPIN
+        if (ISPIN.ne.1) then
+          write (6,fmt=9011) CATOM(ISPIN)                  ! spin moments
+        else
+          write (6,fmt=9001) I1,CATOM(ISPIN)               ! atom charge
+        end if
+      end do
+      write (6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
+      if (NSPIN.eq.2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
+    end do
+    write(6,'(79(1H+))')
+    write (6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
+    if (NSPIN.eq.2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
+    write(6,'(79(1H+))')
+
+    close(71)
+
+  end if
 
 9001 format ('  Atom ',I4,' charge in wigner seitz cell =',f10.6)
 9011 format (7X,'spin moment in wigner seitz cell =',f10.6)
@@ -116,15 +121,13 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   !     &        '(spherically averaged) ')
   !99002 FORMAT (/,25X,' ATOM ','  Delta_Q  ','     VMAD',/,25X,30(1H-))
   !99003 FORMAT (25X,I4,2X,F10.6,1X,F12.6)
-  close(71)
 
   !=======================================================================
   ! output of information stored in 'results2'
   ! set KTE=1 in inputcard for output of energy contributions
   !=======================================================================
 
-  open (72,access='direct',recl=LRECRES2,file='results2', &
-  form='unformatted')
+
 !
 !  do I1 = 1,NAEZ
 !    read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
@@ -135,8 +138,11 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 !  !      WRITE(6,'(79(1H=))')
 !
 
-  ! only relevant if KPRE = 1
   if (KTE.eq.1) then
+
+    open (72,access='direct',recl=LRECRES2,file='results2', &
+    form='unformatted')
+
     do I1 = 1,NAEZ
       read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
       EULDAU,EDCLDAU
@@ -145,12 +151,9 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
       KPRE,LMAX,LPOT, &
       LCOREMAX,NSPIN,I1,NAEZ)
     end do
+
+    close(72)
+
   end if
-
-  close(72)
-
-  !=======================================================================
-
-  return
 
 end

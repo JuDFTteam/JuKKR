@@ -64,6 +64,8 @@ module KKRnano_Comm_mod
 
     integer :: ie
     integer :: spin_id
+    integer :: ispin
+    integer :: nspind
 
     integer :: my_atom_id
     integer :: my_world_rank
@@ -73,24 +75,28 @@ module KKRnano_Comm_mod
 
     lmmaxd = size(GMATN_ALL,1)
     iemxd = size(GMATN_ALL,3)
+    nspind = size(GMATN_ALL, 4)
 
     num_spin_ranks = getNumSpinRanks(my_mpi)
 
     ASSERT(lmmaxd == size(GMATN_ALL, 2))
     ASSERT(iemxd == size(LLY_GRDT_ALL, 1))
+    ASSERT(nspind == size(LLY_GRDT_ALL, 2))
     ASSERT(num_spin_ranks >= 1)
     ASSERT(num_spin_ranks <= 2)
+    ASSERT(nspind >= 1)
+    ASSERT(nspind <= 2)
 
     ! TODO: check allocate
-    allocate(owning_ranks(iemxd * num_spin_ranks))
+    allocate(owning_ranks(iemxd * nspind))
 
     my_atom_id = getMyAtomId(my_mpi)
 
-    do spin_id = 1, num_spin_ranks
+    do ispin = 1, nspind
+
+      spin_id = getResponsibleSpinId(my_mpi, ispin)
       do ie = 1, iemxd
-
-        owning_ranks( (spin_id-1)*iemxd + ie ) = mapToWorldRank(my_mpi, my_atom_id, spin_id, EPROC(ie))
-
+        owning_ranks( (ispin-1)*iemxd + ie ) = mapToWorldRank(my_mpi, my_atom_id, spin_id, EPROC(ie))
       end do
     end do
 
@@ -206,15 +212,16 @@ module KKRnano_Comm_mod
 ! ---------------------- Jij --------------------------------------------------
 
   !----------------------------------------------------------------------------
-  !> Communicates the off-diagonal Green's function elements to ranks with
-  !> Spin_id = 1.
-  subroutine jijSpinCommunication_com(my_mpi, GMATXIJ)
+  !> Communicates the off-diagonal Green's function elements and t-matrices
+  !> to ranks with Spin_id = 1.
+  subroutine jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
     use KKRnanoParallel_mod
     use comm_patternsZ_mod
     implicit none
 
     type (KKRnanoParallel), intent(in) :: my_mpi
     double complex, dimension(:,:,:,:), intent(inout) :: GMATXIJ
+    double complex, dimension(:,:,:), intent(inout) :: DTIXIJ
 
     integer :: blocksize
     integer :: my_world_rank
@@ -230,15 +237,6 @@ module KKRnano_Comm_mod
     my_energy_id = getMyEnergyId(my_mpi)
     num_spin_ranks = getNumSpinRanks(my_mpi)
 
-    if (num_spin_ranks == 1) then
-      ! "communicate" both spin-channels
-      ! Note: no communication necessary in this case
-      blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3) * 2
-    else
-      ! communicate only one spin channel
-      blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3)
-    end if
-
     ASSERT(size(GMATXIJ, 4) == 2)
     ASSERT(num_spin_ranks >= 1)
     ASSERT(num_spin_ranks <= 2)
@@ -249,7 +247,36 @@ module KKRnano_Comm_mod
 
     receiver = ranks(1)   ! S=1 processes receive
 
+    !--------------------------- GMATXIJ --------------------------------------
+    if (num_spin_ranks == 1) then
+      ! "communicate" both spin-channels
+      ! Note: no communication necessary in this case - comm_gatherZ detects this
+      blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3) * 2
+    else
+      ! communicate only one spin channel
+      blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3)
+    end if
+
     call comm_gatherZ(my_world_rank, GMATXIJ, blocksize, ranks(1:num_spin_ranks), receiver)
+
+    !--------------------------- DTIXIJ ---------------------------------------
+
+    if (num_spin_ranks == 1) then
+      ! "communicate" both spin-channels
+      ! Note: no communication necessary in this case - comm_gatherZ detects this
+      blocksize = size(DTIXIJ, 1) * size(DTIXIJ, 2) * 2
+    else
+      ! communicate only one spin channel
+      blocksize = size(DTIXIJ, 1) * size(DTIXIJ, 2)
+    end if
+
+    call comm_gatherZ(my_world_rank, DTIXIJ, blocksize, ranks(1:num_spin_ranks), receiver)
+
+    if (getMySpinId(my_mpi) /= 1) then
+      ! invalidate results for other ranks to be able to detect errors
+      GMATXIJ = dcmplx(1d9,1d9)
+      DTIXIJ  = dcmplx(1d9,1d9)
+    end if
 
   end subroutine
 
@@ -300,15 +327,22 @@ module KKRnano_Comm_mod
     ASSERT(size(JXCIJINT) == nxijd)
     ASSERT(NXIJ <= nxijd)
 
+    ! Only ranks with Spin-Id=1 work!!!
+
     if (getMySpinId(my_mpi) == 1) then
       call XCCPLJIJ_START(I1,IER,energy_weight,RXIJ,NXIJ,IXCP,RXCCLS,GMATXIJ,DTIXIJ, &
                           communicator, JXCIJINT,ERESJIJ, naez, lmmaxd, nxijd, nspind)
+    else
+    ! invalidate results for other ranks to be able to detect errors
+      JXCIJINT = dcmplx(1d9,1d9)
     end if
 
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Communicate and sum results from all energy processes
+  !> Communicate and sum results from all energy processes to ranks with
+  !> (S-Id, E-Id) = (1,1)
+  !> Only those ranks hold the correct result!!!
   subroutine jijReduceIntResults_com(my_mpi, JXCIJINT)
     use KKRnanoParallel_mod
     use comm_patternsZ_mod
@@ -319,7 +353,7 @@ module KKRnano_Comm_mod
 
     !-----------
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
-    double complex, dimension(:), allocatable :: recv
+    double complex, dimension(:), allocatable :: sendrecv
     double complex, dimension(:), allocatable :: summed
     integer :: length
 
@@ -343,23 +377,37 @@ module KKRnano_Comm_mod
     receiver = mapToWorldRank(my_mpi, my_atom_id, my_spin_id, 1)
     num_eranks = getNumEnergyRanks(my_mpi)
 
+    ! Only ranks with Spin-Id=1 work!!!
+
     if (my_spin_id == 1) then
-      allocate(recv(length))
+      allocate(sendrecv(length))
       allocate(summed(length))
 
-      recv = CZERO
+      ! JXCIJINT is the array to send
+      sendrecv = JXCIJINT
 
+      ! start with 2nd energy group, because 1st already knows its contribution
+      ! therefore initialise 'summed' with JXCIJINT (contribution of 1st group)
       summed = JXCIJINT
 
       do ind = 2, num_eranks
         sender = mapToWorldRank(my_mpi, my_atom_id, my_spin_id, ind)
-        call send_arrayZ(my_world_rank, recv, length, sender, receiver)
-        summed = summed + recv
+        call send_arrayZ(my_world_rank, sendrecv, length, sender, receiver)
+
+        if (my_world_rank == receiver) then  ! only sum when (S-id, E-id) = (1,1) !
+          summed = summed + sendrecv
+        end if
+
       end do
 
       JXCIJINT = summed
 
-      deallocate(recv)
+      if (my_energy_id /= 1) then
+        ! invalidate results for other ranks to be able to detect errors
+        JXCIJINT = dcmplx(1d9,1d9)
+      end if
+
+      deallocate(sendrecv)
       deallocate(summed)
     end if  ! my_spin_id == 1
 
