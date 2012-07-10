@@ -119,7 +119,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer::cluster_site_index
   integer::ILM
   integer::ISYM
-  integer::symmetry_index
   integer::site_lm_index
   integer::IL1B
   integer::cluster_site_lm_index
@@ -129,7 +128,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer::LM1
   integer::LM2
   integer::LM3
-  integer::XIJ
   integer::iteration_counter
   logical::XCCPL
 
@@ -213,17 +211,11 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   BZTR2 = CZERO
 
-  do 20 symmetry_index = 1,NSYMAXD
-    call CINIT(LMMAXD**2,GS(1,1,symmetry_index))
-    20 end do
+  GS = CZERO
 
-    if (XCCPL) then
-      do XIJ = 1, NXIJ
-        do ISYM = 1,NSYMAT
-          call CINIT(LMMAXD*LMMAXD,GSXIJ(1,1,ISYM,XIJ))
-        enddo             ! ISYM = 1,NSYMAT
-      enddo
-    endif
+  if (XCCPL) then
+    GSXIJ = CZERO
+  endif
 
 
     ! WARNING: Symmetry assumptions might have been used that are
@@ -608,7 +600,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
             !       exp-factor
             ! ================================================================
         
-            call KKRJIJ( BZKP,VOLCUB,k_point_index, &
+            call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
             NSYMAT,NAEZ,IAT, &
             NXIJ,IXCP,ZKRXIJ, &
             GLLKE1, &

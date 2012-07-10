@@ -59,11 +59,11 @@ module KKRnano_Comm_mod
     integer, dimension(:), intent(in) :: EPROC
 
     integer :: iemxd
-    integer :: nspind
+    integer :: num_spin_ranks
     integer :: lmmaxd
 
     integer :: ie
-    integer :: ispin
+    integer :: spin_id
 
     integer :: my_atom_id
     integer :: my_world_rank
@@ -73,21 +73,23 @@ module KKRnano_Comm_mod
 
     lmmaxd = size(GMATN_ALL,1)
     iemxd = size(GMATN_ALL,3)
-    nspind = size(GMATN_ALL,4)
+
+    num_spin_ranks = getNumSpinRanks(my_mpi)
 
     ASSERT(lmmaxd == size(GMATN_ALL, 2))
     ASSERT(iemxd == size(LLY_GRDT_ALL, 1))
-    ASSERT(nspind == size(LLY_GRDT_ALL, 2))
+    ASSERT(num_spin_ranks >= 1)
+    ASSERT(num_spin_ranks <= 2)
 
     ! TODO: check allocate
-    allocate(owning_ranks(iemxd * nspind))
+    allocate(owning_ranks(iemxd * num_spin_ranks))
 
     my_atom_id = getMyAtomId(my_mpi)
 
-    do ispin = 1, nspind
+    do spin_id = 1, num_spin_ranks
       do ie = 1, iemxd
 
-        owning_ranks( (ispin-1)*iemxd + ie ) = mapToWorldRank(my_mpi, my_atom_id, ispin, EPROC(ie))
+        owning_ranks( (spin_id-1)*iemxd + ie ) = mapToWorldRank(my_mpi, my_atom_id, spin_id, EPROC(ie))
 
       end do
     end do
@@ -206,38 +208,48 @@ module KKRnano_Comm_mod
   !----------------------------------------------------------------------------
   !> Communicates the off-diagonal Green's function elements to ranks with
   !> Spin_id = 1.
-  subroutine jijSpinCommunication_com(my_mpi, GMATXIJ, nspind)
+  subroutine jijSpinCommunication_com(my_mpi, GMATXIJ)
     use KKRnanoParallel_mod
     use comm_patternsZ_mod
     implicit none
 
     type (KKRnanoParallel), intent(in) :: my_mpi
     double complex, dimension(:,:,:,:), intent(inout) :: GMATXIJ
-    integer, intent(in) :: nspind
 
     integer :: blocksize
     integer :: my_world_rank
     integer :: my_atom_id
     integer :: my_energy_id
-    integer :: ranks(nspind)
+    integer :: ranks(2)
     integer :: receiver
-    integer :: ispin
+    integer :: spin_id
+    integer :: num_spin_ranks
 
     my_world_rank = getMyWorldRank(my_mpi)
     my_atom_id = getMyAtomId(my_mpi)
     my_energy_id = getMyEnergyId(my_mpi)
+    num_spin_ranks = getNumSpinRanks(my_mpi)
 
-    blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3)
+    if (num_spin_ranks == 1) then
+      ! "communicate" both spin-channels
+      ! Note: no communication necessary in this case
+      blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3) * 2
+    else
+      ! communicate only one spin channel
+      blocksize = size(GMATXIJ, 1) * size(GMATXIJ, 2) * size(GMATXIJ, 3)
+    end if
 
-    ASSERT(nspind == size(GMATXIJ, 4))
+    ASSERT(size(GMATXIJ, 4) == 2)
+    ASSERT(num_spin_ranks >= 1)
+    ASSERT(num_spin_ranks <= 2)
 
-    do ispin = 1, nspind
-      ranks(ispin) = mapToWorldRank(my_mpi, my_atom_id, ispin, my_energy_id)
+    do spin_id = 1, num_spin_ranks
+      ranks(spin_id) = mapToWorldRank(my_mpi, my_atom_id, spin_id, my_energy_id)
     end do
 
     receiver = ranks(1)   ! S=1 processes receive
 
-    call comm_gatherZ(my_world_rank, GMATXIJ, blocksize, ranks, receiver)
+    call comm_gatherZ(my_world_rank, GMATXIJ, blocksize, ranks(1:num_spin_ranks), receiver)
 
   end subroutine
 
@@ -349,7 +361,7 @@ module KKRnano_Comm_mod
 
       deallocate(recv)
       deallocate(summed)
-    end if
+    end if  ! my_spin_id == 1
 
   end subroutine
 

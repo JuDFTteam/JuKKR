@@ -199,10 +199,10 @@ program MAIN2
 
   call consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
 
-!  if ((JIJ .eqv. .true.) .and. (SMPID /= 1)) then
-!    write(*,*) "ERROR: Jij calculation is broken for spin-parallel calc. Set SMPID=1"
-!    stop
-!  end if
+  if ((JIJ .eqv. .true.) .and. (nspind /= 2)) then
+    write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
+    stop
+  end if
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
@@ -471,7 +471,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !                             GXIJ_ALL, &
 !                             naez, lmaxd, lmpid, empid, smpid, nxijd)
 
-                 call jijSpinCommunication_com(my_mpi, GMATXIJ, nspind)
+                 call jijSpinCommunication_com(my_mpi, GMATXIJ)
 
                  JSCAL = WEZ(IE)/DBLE(NSPIND)
 !

@@ -1,3 +1,4 @@
+#define COMMCHECK(IERR) if(IERR /= 0) then; write(*,*) "Communication failure: ", __FILE__, __LINE__; endif
 #define NUMBERC integer
 #define NUMBERMPIC MPI_INTEGER
 #define NUMBERZ double complex
@@ -190,11 +191,17 @@ subroutine send_arrayC(my_world_rank, array, length, sender, receiver)
     if (my_world_rank == sender) then
       call MPI_Send(array, length, NUMBERMPIC, receiver, &
                     tag, MPI_COMM_WORLD, ierr)
+
+      COMMCHECK(ierr)
+
     end if
 
     if (my_world_rank == receiver) then
       call MPI_Recv(array, length, NUMBERMPIC, sender, &
                     tag, MPI_COMM_WORLD, status, ierr)
+
+      COMMCHECK(ierr)
+
     end if
 
   end if

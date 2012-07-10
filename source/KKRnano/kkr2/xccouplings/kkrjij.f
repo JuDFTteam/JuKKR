@@ -1,7 +1,9 @@
 C     WARNING: Assumes one-to-one mapping of atom to rank in
 C              MPI_COMM_WORLD
+C     GSXIJ has to be set to (0,0) before k-loop!
+C     call this routine for every k-point
       SUBROUTINE KKRJIJ(
-     >                  BZKP,VOLCUB,KPT,
+     >                  kpoint,k_weight,
      >                  NSYMAT,NAEZ,I3,
      >                  NXIJ,IXCP,ZKRXIJ,
      >                  GLLKE1,
@@ -36,15 +38,14 @@ c     ..
 c     .. GLOBAL SCALAR ARGUMENTS ..
       INTEGER          NAEZ,          ! number of atoms per unit cell
      +                 NSYMAT,        ! number of active symmetries
-     +                 KPT,           ! k-point - run. index in kkrmat01
      +                 NXIJ           ! number of atoms in Jij-cluster
 c     ..
 
 c     .. ARRAY ARGUMENTS ..
       DOUBLE COMPLEX   GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
 
-      DOUBLE PRECISION BZKP(3,*),   ! TODO: better pass only 1 k-point
-     +                 VOLCUB(*),
+      DOUBLE PRECISION kpoint(3),   ! TODO: better pass only 1 k-point
+     +                 k_weight,
      +                 ZKRXIJ(48,3,NXIJD) ! position of atoms and sites
                                           ! connected by symmetry
       INTEGER          IXCP(NXIJD)      ! corresp. to Jij no. XIJ on the
@@ -56,7 +57,7 @@ C     .. LOCAL ARRAYS ..
 C     .. Fortran 90 automatic arrays
       DOUBLE COMPLEX   GSEND(lmmaxd, lmmaxd)
       DOUBLE COMPLEX   GRECV(lmmaxd, lmmaxd)
-      DOUBLE COMPLEX   GXIJ (lmmaxd, lmmaxd, NXIJD)
+      DOUBLE COMPLEX   GXIJ (lmmaxd, lmmaxd, NXIJD)  ! large?
       DOUBLE COMPLEX   EKRXIJ(48, NXIJD)
 
       INTEGER          IXCPS(NXIJD)       ! copydummy for IXCP used MPI
@@ -170,11 +171,11 @@ C ================================================================
 
             CARG = CZERO
             DO IV = 1,3
-              CARG =  CARG + ZKRXIJ(ISYM,IV,XIJ)*BZKP(IV,KPT)
+              CARG =  CARG + ZKRXIJ(ISYM,IV,XIJ)*kpoint(IV)
             ENDDO
 
             EKRXIJ(ISYM,XIJ) =
-     +      VOLCUB(KPT) * EXP(CARG*(CIONE*8.D0*ATAN(1.D0)))
+     +      k_weight * EXP(CARG*(CIONE*8.D0*ATAN(1.D0)))
 
           ENDDO
         ENDDO
