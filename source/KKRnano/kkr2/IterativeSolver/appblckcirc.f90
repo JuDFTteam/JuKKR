@@ -28,15 +28,15 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   XDIM*YDIM*ZDIM*NATBLD*LMMAXD)
 
   !     local arrays - large, stack based!!!
-  double complex, automatic :: TBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD)
-  double complex, automatic :: TXK(NATBLD*LMMAXD)
-  double complex, automatic :: TYK(NATBLD*LMMAXD)
+  double complex :: TBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD)
+  double complex :: TXK(NATBLD*LMMAXD)
+  double complex :: TYK(NATBLD*LMMAXD)
 
   !     local arrays - large, stack based!!!
-  double complex, automatic :: X(XDIM,YDIM,ZDIM)
-  double complex, automatic :: XK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
-  double complex, automatic :: Y(XDIM,YDIM,ZDIM)
-  double complex, automatic :: YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
+  double complex :: X(XDIM,YDIM,ZDIM)
+  double complex :: XK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
+  double complex :: Y(XDIM,YDIM,ZDIM)
+  double complex :: YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
 
   !ibm* align(32, XK, YK)
 

@@ -42,7 +42,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 
   !     .. Local Arrays .. Fortran 90 automatic array - stack based!
   !double complex :: SPRSX(NGTBD,LMMAXD)
-  double complex, automatic :: SPRSX(NACLSD*LMMAXD, LMMAXD) ! medium size
+  double complex :: SPRSX(NACLSD*LMMAXD, LMMAXD) ! medium size
 
   !IBM* ALIGN(32, SPRSX)
   ! ..
