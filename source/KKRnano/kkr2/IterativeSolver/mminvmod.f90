@@ -92,6 +92,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   double complex, allocatable, dimension(:,:)   :: B
   double complex, allocatable, dimension(:,:,:) :: VECS
   double complex, allocatable, dimension(:,:)   :: DUMMY
+  !IBM* ALIGN(32, VECS)
 
   ! external ..
   external           DZNRM2,ZDOTU,ZRANDN

@@ -40,9 +40,11 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   integer::           INDN0(NAEZ,NACLSD)
   logical::           DONE(LMMAXD)
 
-  !     .. Local Arrays .. Fortran 90 automatic array
+  !     .. Local Arrays .. Fortran 90 automatic array - stack based!
   !double complex :: SPRSX(NGTBD,LMMAXD)
   double complex :: SPRSX(NACLSD*LMMAXD, LMMAXD) ! medium size
+
+  !IBM* ALIGN(32, SPRSX)
   ! ..
   !     .. Local Scalars ..
   integer::I1
@@ -53,9 +55,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   integer::I2H
   integer::I3H
 
-  integer::MYTHRD
-!$  integer::       OMP_GET_THREAD_NUM
-
   integer::NGTBD
   integer::NDIM
 
@@ -65,13 +64,10 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
      
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !$ call OMP_SET_NUM_THREADS(NTHRDS)
-!$omp parallel private (I1,LM2,I2,I3H,I2H,IL1B,SPRSX,MYTHRD)
-   MYTHRD = 0
-!$ MYTHRD = OMP_GET_THREAD_NUM()
-  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  do I1=1,NAEZ
+!$omp parallel private (I1,LM2,I2,I3H,I2H,IL1B,SPRSX)
 
-    if (MOD(I1,NTHRDS) == MYTHRD) then
+  !$omp do
+  do I1=1,NAEZ
 
       do LM2=1,LMMAXD
         if ( .not. DONE(LM2)) then
@@ -80,8 +76,9 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
             I3H = (I3-1)*LMMAXD + 1
             I2H = (I2-1)*LMMAXD + 1
 
-            call ZCOPY(LMMAXD,X(I3H,LM2),1, &
-                       SPRSX(I2H,LM2),1)
+            !call ZCOPY(LMMAXD,X(I3H,LM2),1, &
+            !           SPRSX(I2H,LM2),1)
+            SPRSX(I2H:I2H+LMMAXD,LM2) = X(I3H:I3H+LMMAXD,LM2)
 
           enddo
         endif
@@ -94,9 +91,8 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
                  SPRSX,NGTBD, &
                  DELTA,AX(IL1B+1,1),NDIM)
 
-    endif
-
   enddo
+  !$omp end do
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !$omp end parallel
