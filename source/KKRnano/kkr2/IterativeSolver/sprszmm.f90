@@ -44,7 +44,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   !double complex :: SPRSX(NGTBD,LMMAXD)
   double complex :: SPRSX(NACLSD*LMMAXD, LMMAXD) ! medium size
 
-  !IBM* ALIGN(32, SPRSX)
+!IBM* ALIGN(32, SPRSX)
   ! ..
   !     .. Local Scalars ..
   integer::I1
@@ -62,7 +62,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   NDIM  = NAEZ*LMMAXD
 
      
-  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !$ call OMP_SET_NUM_THREADS(NTHRDS)
 !$omp parallel private (I1,LM2,I2,I3H,I2H,IL1B,SPRSX)
 

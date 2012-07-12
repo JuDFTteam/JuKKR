@@ -38,7 +38,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   double complex :: Y(XDIM,YDIM,ZDIM)
   double complex :: YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
 
-  !ibm* align(32, XK, YK)
+!IBM* ALIGN(32, XK, YK)
 
   ! ..
   ! local scalars ..

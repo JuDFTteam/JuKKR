@@ -86,15 +86,17 @@ endif
 ifeq ($(PLATFORM),JUGENE)
 
 ifeq ($(USETOOL),scalasca)
-  FC = scalasca -instrument -user #end of line
-  TYPE = debug
+FC = scalasca -instrument -user #end of line
+FC90 = scalasca -instrument -user #end of line
+TYPE = nodebug
 else
-  FC =
+FC =
+FC90 = 
 endif
 
 
 FC += mpixlf77_r
-FC90 = mpixlf90_r
+FC90 += mpixlf90_r
 FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/include
 #-qsmallstack=dynlenonheap
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
@@ -107,6 +109,10 @@ else
   FCFLAGS += -O3 -qipa
 endif
 
+ifeq ($(USETOOL),scalasca)
+FCFLAGS += -g
+endif
+
 endif
 
 # ============================= JUQUEEN========================================
@@ -114,14 +120,16 @@ ifeq ($(PLATFORM),JUQUEEN)
 
 ifeq ($(USETOOL),scalasca)
 FC = scalasca -instrument -user #end of line
-TYPE = debug
+FC90 = scalasca -instrument -user #end of line
+TYPE = nodebug
 else
 FC =
+FC90 = 
 endif
 
 
 FC += mpixlf77_r
-FC90 = mpixlf90_r
+FC90 += mpixlf90_r
 FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 #-qsmallstack=dynlenonheap
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
@@ -134,6 +142,10 @@ FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF -WF,-DDEBUG1
 else
 FCFLAGS += -q64 -O3 -qstrict
 # -qipa
+endif
+
+ifeq ($(USETOOL),scalasca)
+FCFLAGS += -g
 endif
 
 endif

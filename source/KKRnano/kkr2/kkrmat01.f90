@@ -141,8 +141,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double complex, allocatable, dimension(:,:,:) ::GLLH
   double complex, allocatable, dimension(:,:) ::GLLHBLCK
   double complex, allocatable, dimension(:,:) ::X0
-  !IBM* ALIGN(32, GLLH)
-  !IBM* ALIGN(32, GLLHBLCK)
+!IBM* ALIGN(32, GLLH)
+!IBM* ALIGN(32, GLLHBLCK)
 
   !  .. local arrays for Lloyd's formula
   double complex, allocatable, dimension(:,:) :: DGDE

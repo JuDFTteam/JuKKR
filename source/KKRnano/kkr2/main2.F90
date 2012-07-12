@@ -160,6 +160,15 @@ program MAIN2
   call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 
+! ========= TIMING =========================================================
+  TIME_S = MPI_WTIME()
+
+    if (isMasterRank(my_mpi)) then
+      TIME_I = MPI_WTIME()
+      open (2,file='time-info',form='formatted')
+    endif
+!========= TIMING END ======================================================
+
   ! from dimension parameters - calculate some derived parameters
   call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LM2D, LMAXD, &
                             LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
@@ -212,12 +221,7 @@ program MAIN2
   ! This if closes several hundreds of lines later!
   if (isActiveRank(my_mpi)) then
 
-! ========= TIMING ======================================================
-    if (isMasterRank(my_mpi)) then
-      TIME_I = MPI_WTIME()
-      open (2,file='time-info',form='formatted')
-    endif
-!========= TIMING END ======================================================
+    call OUTTIME(isMasterRank(my_mpi),'input files read.....',TIME_I, 0)
 
 ! initialise the arrays for (gen. Anderson/Broyden) potential mixing
     UI2 = 0.00
@@ -234,6 +238,8 @@ program MAIN2
 
         call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
 
+        call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',TIME_I, 0)
+
         if (isInMasterGroup(my_mpi)) then
           call openPotentialFile(LMPOTD, IRNSD, IRMD)
           call readPotential(I1, VISP, VINS, ECORE)
@@ -244,13 +250,12 @@ program MAIN2
     end do
 !+++++++++++ end atom - parallel ++++++++++++++++++++++++++++++++
 
+
 ! ######################################################################
 ! ######################################################################
     do ITER = 1, SCFSTEPS
 ! ######################################################################
 ! ######################################################################
-
-      TIME_S = MPI_WTIME()
 
       EKM    = 0
       NOITER = 0
@@ -518,7 +523,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
           if (XCCPL) then
 
-             call jijReduceIntResults_com(my_mpi, JXCIJINT)
+            call jijReduceIntResults_com(my_mpi, JXCIJINT)
 
             if (isInMasterGroup(my_mpi)) then
               call writeJiJs(I1,RXIJ,NXIJ,IXCP,RXCCLS,JXCIJINT, nxijd)
@@ -529,11 +534,11 @@ spinloop:     do ISPIN = 1,NSPIND
 !     on the basis of new timings determine now new distribution of
 !     work to 1 .. EMPID processors
 !=======================================================================
-          call EBALANCE('R',ITER,SCFSTEPS, &
-                        IELAST,NPNT1, &
-                        getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
-                        ETIME,EPROC,EPROCO, &
-                        empid, iemxd)  ! should be communicated - dependence on floating point ops!!
+          if (empid > 1) call EBALANCE('R',ITER,SCFSTEPS, &
+                         IELAST,NPNT1, &
+                         getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
+                         ETIME,EPROC,EPROCO, &
+                         empid, iemxd)  ! should be communicated - dependence on floating point ops!!
 
 !=======================================================================
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
