@@ -488,6 +488,9 @@ CONTAINS
     !initialise to be safe
     VINS = 0.0d0
     VISP = 0.0d0
+    VONS = 0.0d0
+    RHO2NS = 0.0d0
+    R2NEF = 0.0d0
     DTIXIJ = dcmplx(0.0d0, 0.0d0)
 
     ! use garbage values

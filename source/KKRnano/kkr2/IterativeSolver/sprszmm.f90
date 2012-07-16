@@ -78,7 +78,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 
             !call ZCOPY(LMMAXD,X(I3H,LM2),1, &
             !           SPRSX(I2H,LM2),1)
-            SPRSX(I2H:I2H+LMMAXD,LM2) = X(I3H:I3H+LMMAXD,LM2)
+            SPRSX(I2H:I2H+LMMAXD-1,LM2) = X(I3H:I3H+LMMAXD-1,LM2)
 
           enddo
         endif

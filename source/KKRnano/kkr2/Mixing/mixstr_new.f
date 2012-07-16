@@ -51,8 +51,8 @@ c
         END IF
 
 C       ok, that means that for
-C       NSPIN=1 (or not 2)  -> IH=1 and IHP1=2
-C       NSPIN=2             -> IH=1 and IHP1=1
+C       NSPIN=1 (or not 2)  -> IH=1 and IHP1=1
+C       NSPIN=2             -> IH=1 and IHP1=2
 C       IHP1 means IH plus 1
 C       :-P
 
