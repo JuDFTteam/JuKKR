@@ -177,6 +177,7 @@ module MadelungCalculator_mod
   !----------------------------------------------------------------------------
   !> Add Madelung potential to VONS.
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
+  !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
   subroutine addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIN, &
                                       NAEZ, VONS, ZAT, R, IRCUT, IPAN, VMAD, &
@@ -185,8 +186,8 @@ module MadelungCalculator_mod
     implicit none
 
     type (MadelungCalculator), intent(inout) :: madelung_calc
-    double precision, intent(in) :: CMOM(madelung_calc%LMPOTD)
-    double precision, intent(in) :: CMINST(madelung_calc%LMPOTD)
+    double precision, intent(inout) :: CMOM(madelung_calc%LMPOTD)
+    double precision, intent(inout) :: CMINST(madelung_calc%LMPOTD)
     integer, intent(in) :: nspin
     integer, intent(in) :: naez
     double precision, intent(inout) :: VONS(IRMD,madelung_calc%LMPOTD,2)

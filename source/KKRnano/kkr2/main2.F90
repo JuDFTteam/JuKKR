@@ -624,6 +624,7 @@ spinloop:     do ISPIN = 1,NSPIND
               LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
               ! contains a loop over energies, TODO: remove spin dependence
+              ! output: RHO2NS, R2NEF, DEN, ESPV
               call RHOVAL(LDORHOEF,ICST,IELAST, &
                           NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
                           DRDI(1,I1),R(1,I1),IRMIN(I1), &
@@ -639,6 +640,7 @@ spinloop:     do ISPIN = 1,NSPIND
                           iemxd, &
                           lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
 
+              ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
               call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
                            DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
                            A(I1),B(I1),ZAT(I1), &
@@ -679,7 +681,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ----------------------------------------------------------------------
 ! -->   determine total charge density expanded in spherical harmonics
 ! -------------------------------------------------------------- density
-
+            ! output: CATOM
             call RHOTOTB_NEW(NSPIND,RHO2NS,RHOCAT, &
                          DRDI(:,I1),IRCUT(:,I1), &
                          LPOT,NFU(ICELL),LLMSP(1,ICELL),THETAS(:,:,ICELL),IPAN(I1), &
@@ -761,7 +763,7 @@ spinloop:     do ISPIN = 1,NSPIND
               end do
             end do
 ! ----------------------------------------------------------------------
-
+            !output: CMOM, CMINST
             call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
@@ -772,7 +774,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
-
+            !output: VONS
             call VINTRAS_NEW(LPOT,NSPIND,RHO2NS,VONS, &
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
@@ -782,7 +784,7 @@ spinloop:     do ISPIN = 1,NSPIND
             TESTARRAYLOCAL(RHO2NS)
 
             call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',TIME_I,ITER)
-
+            ! output: VONS (changed), VMAD
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
                  NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
                  SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), irmd, ipand)
@@ -827,7 +829,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-
+            ! output: VONS (changed)
             call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
             VONS,R(:,I1),DRDI(:,I1),A(I1), &
             IRWS(I1),IRCUT(:,I1),IPAN(I1),GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
@@ -859,7 +861,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
 
             TESTARRAYLOCAL(VONS)
-
+            !output: VAV0, VOL0
             call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
                             IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
@@ -906,7 +908,7 @@ spinloop:     do ISPIN = 1,NSPIND
               IPOT = NSPIND* (I1-1) + ISPIN
 
               call shiftPotential(VONS(:,:,ISPIN), IRCUT(IPAN(I1),I1), VBC(ISPIN))
-
+              !output: VONS (changed)
               call CONVOL_NEW(IRCUT(1,I1),IRC(I1), &
                           IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
                           THETAS(:,:,ICELL),ZAT(I1), &

@@ -19,8 +19,10 @@ c-----------------------------------------------------------------------
       INTEGER irmd
       INTEGER irnsd
 
+      double precision, parameter :: QBOUND = 1d-10
+
 C     .. Scalar Arguments ..
-      DOUBLE PRECISION ALAT,QBOUND
+      DOUBLE PRECISION ALAT
       INTEGER IFILE,KXC,LPOT,NAEZ,NSPIN
 
       DOUBLE PRECISION A(*)
@@ -97,11 +99,11 @@ c
               SUM = SUM + RV*RV*DRDI(IR,I1)
    30       CONTINUE
 
-C           IF (SQRT(SUM).GT.QBOUND) THEN
+           IF (SQRT(SUM).GT.QBOUND) THEN
               LMNR = LMNR + 1
               WRITE (IFILE,FMT=9060) LM
               WRITE (IFILE,FMT=9070) (VINS(IR,LM,IS),IR=IRMIN,NR)
-C           END IF
+           END IF
 
    40     CONTINUE
 c
