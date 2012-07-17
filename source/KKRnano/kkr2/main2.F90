@@ -564,7 +564,7 @@ spinloop:     do ISPIN = 1,NSPIND
           endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
-          TESTARRAY(0, GMATN)
+          TESTARRAYLOCAL(GMATN)
           TESTARRAY(0, LLY_G0TR)
           TESTARRAY(0, LLY_GRDT)
 
@@ -736,6 +736,10 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ----------------------------------------------------------------------
         DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
 ! ----------------------------------------------------------------------
+
+        VAV0 = 0.0D0
+        VOL0 = 0.0D0
+
 ! =====================================================================
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
@@ -773,6 +777,9 @@ spinloop:     do ISPIN = 1,NSPIND
             R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ngshd, ipand)
+
+            TESTARRAYLOCAL(VONS)
+            TESTARRAYLOCAL(RHO2NS)
 
             call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',TIME_I,ITER)
 
@@ -851,10 +858,16 @@ spinloop:     do ISPIN = 1,NSPIND
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 ! =====================================================================
 
+            TESTARRAYLOCAL(VONS)
+
             call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
                             IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
+
+            TESTARRAYLOCAL(THETAS)
+            TESTARRAYLOCAL(DRDI)
+            TESTARRAYLOCAL(R)
 
             call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',TIME_I,ITER)
 
@@ -926,9 +939,9 @@ spinloop:     do ISPIN = 1,NSPIND
           itdbryd, irmd, irnsd, nspind)
         endif
 
-        TESTARRAY(0, VINS)
-        TESTARRAY(0, VISP)
-        TESTARRAY(0, VONS)
+        TESTARRAYLOCAL(VINS)
+        TESTARRAYLOCAL(VISP)
+        TESTARRAYLOCAL(VONS)
 
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration

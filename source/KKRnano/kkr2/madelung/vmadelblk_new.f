@@ -163,14 +163,14 @@ C
       DO LM1 = 1,LMPOT
          BVMAD(LM1) = 0.0D0
       END DO
-      IF(NAEZ.GT.1) THEN
+C     IF(NAEZ.GT.1) THEN
 C---> lm = 1 component disappears if there is only one host atom
       DO LM1 = 1,LMPOT
          L1 = LOFLM(LM1)
          BVMAD(LM1) = BVMAD(LM1) -
      &             2.0D0*FPI/DBLE(2*L1+1)*SMAT(LM1,I2)
       END DO
-      END IF
+C     END IF
 C
       DO LM = 1,LMPOT
          IF(I2.EQ.1) AC(LM) = 0.0D0

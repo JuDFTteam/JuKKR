@@ -4,6 +4,8 @@ C                 IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
 C                 THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
 C                 irmd, irid, nfund, ipand)
 
+C     initialise VAV0 and VOL0 to zero before calling!!!
+
 c ************************************************************************
       SUBROUTINE MTZERO_NEW(LMPOT,NSPIN,VONS,Z,R,DRDI,IMT1,IRCUT,
      +                IPAN1,LMSP,IFUNM,THETAS,IRWS,VAV0,VOL0,
@@ -56,9 +58,6 @@ C     .. Intrinsic Functions ..
 C     ..
       FPI = 16.0D0*ATAN(1.0D0)
       RFPI = SQRT(FPI)
-
-      VAV0 = 0.0D0
-      VOL0 = 0.0D0
 
         DO 10 IR = 1,IRMD
           V1(IR) = 0.0D0
