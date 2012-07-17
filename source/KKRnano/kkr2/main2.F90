@@ -704,7 +704,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !N ====================================================================
 
       !call closePotentialFile()
-      call closeResults1File()
+      if (KTE >= 0) call closeResults1File()
 
       call OUTTIME(isMasterRank(my_mpi),'density calculated ..',TIME_I,ITER)
 
