@@ -1,4 +1,4 @@
-#define COMMCHECK(IERR) if(IERR /= 0) then; write(*,*) "Communication failure: ", __FILE__, __LINE__; endif
+#define COMMCHECK(IERR) if((IERR) /= 0) then; write(*,*) "ERROR: Communication failure: ", __FILE__, __LINE__; STOP; endif
 #define NUMBERD integer
 #define NUMBERMPID MPI_INTEGER
 #define NUMBERZ double complex
@@ -10,10 +10,14 @@
 #define NUMBERI integer
 #define NUMBERMPII MPI_INTEGER
 
-
+!------------------------------------------------------------------------------
 !> Module that implements common communication patterns.
 !> Purpose: For use when collective communication is not possible
 !> Author: Elias Rabel, 2012
+!
+!> Change only comm_patterns_T Y P E_mod.F90, then run create_comm_patterns.sh
+!> This creates the files for the different datatypes needed.
+!
 module comm_patternsD_mod
 
   contains
@@ -77,6 +81,7 @@ end subroutine
 !--------------------------------------------------------------------------
 !> Redistributes array-parts of different sizes (given by array 'blocksizes'
 !> among groups of ranks.
+!> Note: each process needs a buffer that is large enough to hold ALL parts.
 subroutine comm_redistributeVD(my_world_rank, array, blocksizes, old_owners, new_owners)
   implicit none
   include 'mpif.h'

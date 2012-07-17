@@ -1,4 +1,20 @@
+!------------------------------------------------------------------------------
+!> This module contains the routines that communicate intermediate results
+!> between different processors.
+!> Author: Elias Rabel, 2012
+!------------------------------------------------------------------------------
+
 #include "../DebugHelpers/test_macros.h"
+
+! Some macros for checked allocation/deallocation
+! they need an integer variable named memory_stat declared in each routine
+! they are used.
+
+#define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
+#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
+#define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
+#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
+
 
 module KKRnano_Comm_mod
   implicit none
@@ -58,6 +74,9 @@ module KKRnano_Comm_mod
     double complex, dimension(:,:), intent(inout) ::  LLY_GRDT_ALL
     integer, dimension(:), intent(in) :: EPROC
 
+    !-------------------------
+    integer :: memory_stat
+
     integer :: iemxd
     integer :: num_spin_ranks
     integer :: lmmaxd
@@ -88,7 +107,7 @@ module KKRnano_Comm_mod
     ASSERT(nspind <= 2)
 
     ! TODO: check allocate
-    allocate(owning_ranks(iemxd * nspind))
+    ALLOCATECHECK(owning_ranks(iemxd * nspind))
 
     my_atom_id = getMyAtomId(my_mpi)
 
@@ -109,7 +128,7 @@ module KKRnano_Comm_mod
 
     ! TODO: check dimensions
 
-    deallocate(owning_ranks)
+    DEALLOCATECHECK(owning_ranks)
 
   end subroutine
 
@@ -128,6 +147,7 @@ module KKRnano_Comm_mod
     integer, dimension(:), intent(in) :: NofKs
 
     !--------
+    integer :: memory_stat
     integer, dimension(:), allocatable :: blocksizes
     integer, dimension(:), allocatable :: old_owners
     integer, dimension(:), allocatable :: new_owners
@@ -149,9 +169,9 @@ module KKRnano_Comm_mod
     ASSERT(num_energy_iemxd == size(EPROCO))
     ASSERT(num_energy_iemxd == size(KMESH))
 
-    allocate(blocksizes(num_energy_iemxd))
-    allocate(old_owners(num_energy_iemxd))
-    allocate(new_owners(num_energy_iemxd))
+    ALLOCATECHECK(blocksizes(num_energy_iemxd))
+    ALLOCATECHECK(old_owners(num_energy_iemxd))
+    ALLOCATECHECK(new_owners(num_energy_iemxd))
 
     do ie = 1, num_energy_iemxd
       old_owners(ie) = mapToWorldRank(my_mpi, my_atom_id, my_spin_id, EPROCO(ie))
@@ -162,9 +182,9 @@ module KKRnano_Comm_mod
 
     call comm_redistributeVC(my_world_rank, PRSC, blocksizes, old_owners, new_owners)
 
-    deallocate(blocksizes)
-    deallocate(old_owners)
-    deallocate(new_owners)
+    DEALLOCATECHECK(blocksizes)
+    DEALLOCATECHECK(old_owners)
+    DEALLOCATECHECK(new_owners)
 
   end subroutine
 
@@ -182,6 +202,7 @@ module KKRnano_Comm_mod
     double precision, intent(inout) :: ECORE(20,2)
 
     !----------
+    integer :: memory_stat
     integer, dimension(:), allocatable :: ranks
     integer :: my_world_rank
     integer :: my_atom_id
@@ -193,7 +214,7 @@ module KKRnano_Comm_mod
     my_world_rank = getMyWorldRank(my_mpi)
     my_atom_id = getMyAtomId(my_mpi)
 
-    allocate(ranks(num_SE_ranks))
+    ALLOCATECHECK(ranks(num_SE_ranks))
 
     owner = mapToWorldRankSE(my_mpi, my_atom_id, 1)
 
@@ -205,7 +226,7 @@ module KKRnano_Comm_mod
     call comm_bcastD(my_world_rank, VISP, size(VISP), ranks, owner)
     call comm_bcastD(my_world_rank, ECORE, size(ECORE), ranks, owner)
 
-    deallocate(ranks)
+    DEALLOCATECHECK(ranks)
 
   end subroutine
 
@@ -352,6 +373,7 @@ module KKRnano_Comm_mod
     double complex, dimension(:), intent(inout) :: JXCIJINT
 
     !-----------
+    integer :: memory_stat
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
     double complex, dimension(:), allocatable :: sendrecv
     double complex, dimension(:), allocatable :: summed
@@ -380,8 +402,8 @@ module KKRnano_Comm_mod
     ! Only ranks with Spin-Id=1 work!!!
 
     if (my_spin_id == 1) then
-      allocate(sendrecv(length))
-      allocate(summed(length))
+      ALLOCATECHECK(sendrecv(length))
+      ALLOCATECHECK(summed(length))
 
       ! JXCIJINT is the array to send
       sendrecv = JXCIJINT
@@ -407,8 +429,8 @@ module KKRnano_Comm_mod
         JXCIJINT = dcmplx(1d9,1d9)
       end if
 
-      deallocate(sendrecv)
-      deallocate(summed)
+      DEALLOCATECHECK(sendrecv)
+      DEALLOCATECHECK(summed)
     end if  ! my_spin_id == 1
 
   end subroutine
