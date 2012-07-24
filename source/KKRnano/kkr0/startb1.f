@@ -247,9 +247,10 @@ c     between electrostatic zero and muffin tin zero
 c
             READ (IFILE,FMT=9040) ZAT(IH),RWS(IH),EFNEW,VBC(ISPIN)
 c
-c---> if efermi .eq. 0 use value from in5
+c---> if efermi .eq. 0 use value from in5 removed E.R.
 c
-            IF (EFNEW.NE.0.0D0 .AND. I.EQ.1) EFERMI = EFNEW
+c            IF (EFNEW.NE.0.0D0 .AND. I.EQ.1) EFERMI = EFNEW
+            IF (I.EQ.1) EFERMI = EFNEW
 c
 c---> read : number of radial mesh points
 c     (in case of ws input-potential: last mesh point corresponds
@@ -325,10 +326,13 @@ c
             IMT1 = ANINT(LOG(RMTNEW(IH)/B(IH)+1.0D0)/A(IH)) + 1
 
 C     E.R. try to set correct muffin-tin index
-C     there are IRMD radial mesh points and MESHN(ICELL) points belong
+C     there are IRWS (not IRMD, IRWS <= IRMD)
+C     radial mesh points and MESHN(ICELL) points belong
 C     to the outer muffin-tin region where shape functions apply
 C     Therefore IMT1 must be:
-            IMT1 = IRMD - MESHN(ICELL)
+C           IMT1 = IRMD - MESHN(ICELL)
+            IMT1 = IRWS1 - MESHN(ICELL)
+C     TODO FIXME CHECK: therefore IRWS1 must be =IRMD ???
 
 c
 c---> for proper core treatment imt must be odd
@@ -379,6 +383,18 @@ c
      +                  R(1,IH),IO)
 c
             IRCUT(1,IH) = IMT(IH)
+
+CDEBUG E.R.
+            if (IRMD /= IRWS1) then
+              write(*,*) "ERROR in STARTB1"
+              write(*,*) "IRMD == IRWS1 failed."
+              write(*,*) "Atom, IRMD, IRWS1"
+              write(*,*) IH, IRMD, IRWS1
+              stop
+            end if
+CDEBUG
+
+
 CDEBUG E.R.
             if ((IRMD - IMT1) /= MESHN(ICELL)) then
               write(*,*) "ERROR in STARTB1"

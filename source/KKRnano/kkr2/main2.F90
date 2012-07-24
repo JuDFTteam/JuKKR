@@ -161,8 +161,6 @@ program MAIN2
 !------------------------------------------------------------------------------
 
 ! ========= TIMING =========================================================
-  TIME_S = MPI_WTIME()
-
     if (isMasterRank(my_mpi)) then
       TIME_I = MPI_WTIME()
       open (2,file='time-info',form='formatted')
@@ -256,6 +254,8 @@ program MAIN2
     do ITER = 1, SCFSTEPS
 ! ######################################################################
 ! ######################################################################
+
+      TIME_S = MPI_WTIME()
 
       EKM    = 0
       NOITER = 0
@@ -917,7 +917,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             end do
 
-! -->   final construction of the potentials (straight mixing)
+! -->   calculation of RMS and final construction of the potentials (straight mixing)
 
             call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
                             IRC(I1),IRMIN(I1),R(:,I1),DRDI(:,I1),VONS,VISP,VINS, &

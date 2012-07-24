@@ -79,7 +79,7 @@ ifeq ($(TYPE),debug)
 FCFLAGS += -debug -g -O0 -traceback -check all -DDEBUG1
 #-auto -ftrapuv -check uninit
 else
-FCFLAGS += -O2
+FCFLAGS += -O2 -g
 endif
 
 # ============================= JUGENE ========================================

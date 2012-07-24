@@ -57,6 +57,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   FAC = 1/FLOAT(XDIM*YDIM*ZDIM)
 
   ! all threads use the same fftw3-plans
+  ! - possible according to fftw3 documentation
   call DFFTW_PLAN_DFT_3D(FFTWPLAN_bwd,XDIM,YDIM,ZDIM,X,X, &
   FFTW_BACKWARD,FFTW_ESTIMATE)
   call DFFTW_PLAN_DFT_3D(FFTWPLAN_fwd,XDIM,YDIM,ZDIM,Y,Y, &
