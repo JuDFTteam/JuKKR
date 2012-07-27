@@ -64,7 +64,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
      
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !$ call OMP_SET_NUM_THREADS(NTHRDS)
-!$omp parallel private (I1,LM2,I2,I3H,I2H,IL1B,SPRSX)
+!$omp parallel private (I1,LM2,I2,I3,I3H,I2H,IL1B,SPRSX)
 
   !$omp do
   do I1=1,NAEZ

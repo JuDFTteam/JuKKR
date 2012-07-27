@@ -137,10 +137,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double precision::N2B(lmmaxd) ! small
 
   double complex, allocatable, dimension(:,:) ::GLLKE1
-  double complex, allocatable, dimension(:,:) ::DUMMY
   double complex, allocatable, dimension(:,:,:) ::GLLH
   double complex, allocatable, dimension(:,:) ::GLLHBLCK
-  double complex, allocatable, dimension(:,:) ::X0
+
 !IBM* ALIGN(32, GLLH)
 !IBM* ALIGN(32, GLLHBLCK)
 
@@ -181,13 +180,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   allocate(GLLKE1(site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
-  allocate(DUMMY (site_lm_size,LMMAXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
   allocate(GLLH(LMMAXD,NGTBD,NAEZ), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
   allocate(GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(X0(site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
   if (LLY == 1) then
@@ -399,8 +394,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
       if (LLY == 1) then
 
-       !calcDerivativeP(site_lm_size, lmmaxd, alat, &
-       !                       DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
         call calcDerivativeP(site_lm_size, lmmaxd, alat, &
                              DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
 
@@ -420,68 +413,27 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !===================================================================
 !===================================================================
 
-! solve linear matrix equation in 5 subsequent steps
+! solve linear matrix equation in subsequent steps
 
 !===================================================================
 
-! 1) find true residual tolerance by calculation of |b|
-!    meaning of true residual tolerance:
-!    the norm of |b| is used as convergence criterion
-!    note that if the initial guess optimisation is used, the matrix
-!    equation is solved using a modified b' - nevertheless the norm
-!    |b| of the original right hand side of the equation is used
-!    to test for convergence
-    
-      call CINIT(site_lm_size*LMMAXD,DUMMY)
-    
-      do LM1=1,LMMAXD
-        site_lm_index=LMMAXD*(IAT-1)+LM1
-        do LM2=1,LMMAXD
-          DUMMY(site_lm_index,LM2)=-TMATLL(LM1,LM2,IAT)
-        enddo
-      enddo
-
-      !     store the norms of the columns of b in an array
-
-      do LM2=1,LMMAXD
-        N2B(LM2) = DZNRM2(NAEZ*LMMAXD,DUMMY(1,LM2),1)
-      enddo
-    
-! ..
 !===================================================================
-
-!===================================================================
-! 2) if IGUESS is activated perform intitial step of
-!    intial guess - store original b in DUMMY and set up modified b'
+! 1) if IGUESS is activated perform intitial step of
+!    intial guess
     
       if (IGUESS == 1) then
         
-        call CINIT(site_lm_size*LMMAXD,X0)
-        call CINIT(site_lm_size*LMMAXD,DUMMY)
-        
-        do site_index=1,NAEZ
-          do LM1=1,LMMAXD
-            site_lm_index=LMMAXD*(site_index-1)+LM1
-            do LM2=1,LMMAXD
-              DUMMY(site_lm_index,LM2)=TMATLL(LM1,LM2,site_index)
-            enddo
-          enddo
-        enddo
-        
         if (ITER > 1) then
-          call initialGuess_start( IAT, NUMN0, INDN0, &
-                        TMATLL,GLLH,X0, &
-                        PRSC(1,EKM + k_point_index), &
-                        naez, lmmaxd, naclsd, nguessd, nthrds)
+          call initialGuess_start(GLLKE1, PRSC(1,EKM + k_point_index), &
+                        naez, lmmaxd, nguessd)
         endif
 
       endif ! IGUESS == 1
 
-! ..
 !===================================================================
 
 !===================================================================
-! 3) if BCP is activated determine preconditioning matrix
+! 2) if BCP is activated determine preconditioning matrix
 !    GLLHBLCK ..
     
       call CINIT(LMMAXD*NATBLD*LMMAXD*NATBLD*NBLCKD,GLLHBLCK)
@@ -491,15 +443,14 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
                        lmmaxd, nthrds, natbld, xdim, ydim, zdim, naclsd)
       endif
-! ..
 !===================================================================
 
 !===================================================================
-! 4) solve linear set of equations by iterative TFQMR scheme
+! 3) solve linear set of equations by iterative TFQMR scheme
 !    solve (\Delta t * G_ref - 1) X = - \Delta t
 !    the solution X is the scattering path operator
     
-      call CINIT(site_lm_size*LMMAXD,GLLKE1)
+      !call CINIT(site_lm_size*LMMAXD,GLLKE1)
     
       call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,ITER,iteration_counter, &
@@ -514,24 +465,12 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !===================================================================
 
 !===================================================================
-! 5) if IGUESS is activated perform final step of
-!    intial guess           ~
-!                  X = X  + X
-!                       0          ..
+! 4) if IGUESS is activated perform final step of
+!    intial guess
     
       if (IGUESS == 1) then
-        call initialGuess_finish(X0, PRSC(1,EKM+k_point_index), &
+        call initialGuess_finish(PRSC(1,EKM+k_point_index), &
                       GLLKE1, naez, lmmaxd, nguessd)
-        
-        do site_index=1,NAEZ
-          do LM1=1,LMMAXD
-            site_lm_index=LMMAXD*(site_index-1)+LM1
-            do LM2=1,LMMAXD
-              TMATLL(LM1,LM2,site_index)=DUMMY(site_lm_index,LM2)
-            enddo
-          enddo
-        enddo
-        
       endif
 ! ..
 !===================================================================
@@ -540,7 +479,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
 !===================================================================
 !===================================================================
-
 
 
 !#######################################################################
@@ -633,10 +571,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   ! ----------------------------------------------------------------
 
   deallocate(GLLKE1)
-  deallocate(DUMMY)
   deallocate(GLLH)
   deallocate(GLLHBLCK)
-  deallocate(X0)
 
   if (LLY == 1) then
     deallocate(DGDE)

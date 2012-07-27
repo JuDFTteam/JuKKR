@@ -156,7 +156,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   ! INITIALIZATION II
   !=======================================================================
 
-  call CINIT(NDIM*LMMAXD,B)
+  B = CZERO
 
   do LM1=1,LMMAXD
     IL1=LMMAXD*(IAT-1)+LM1
@@ -165,21 +165,10 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     enddo
   enddo
 
-  if (IGUESS == 1 .and. SCITER > 1) then
-    do I=1,NAEZD
-      do LM1=1,LMMAXD
-        IL1=LMMAXD*(I-1)+LM1
-        do LM2=1,LMMAXD
-          B(IL1,LM2)=-TMATLL(LM1,LM2,I)
-        enddo
-      enddo
-    enddo
-  endif
-
   do I = 1,NDIM
     do LM2=1,LMMAXD
       VECS(I,LM2,2) = - B(I,LM2)
-      VECS(I,LM2,1) = CZERO
+      !VECS(I,LM2,1) = CZERO
       do DIMVEC=3,9
         VECS(I,LM2,DIMVEC) = CZERO
       enddo
@@ -192,7 +181,8 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   do LM2=1,LMMAXD
   !--------------
     
-    ! N2B(LM2)   = DZNRM2(NDIM,B(1,LM2),1)           ! norm of right-hand-sight
+    N2B(LM2)   = DZNRM2(NDIM,VECS(1,LM2,2),1)           ! norm of right-hand-sight
+
     if (QMRABS) then
       TOLB(LM2)  = TOL
     else
@@ -205,22 +195,45 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     ITER(LM2) = 0
     PROBE     = 1
     
-    call ZAXPBY(NLEN,VECS(1,LM2,5), &
-                CONE,VECS(1,LM2,2),CZERO,VECS(1,LM2,5))
-    call ZAXPBY(NLEN,VECS(1,LM2,1), &
-                CZERO,VECS(1,LM2,1),CZERO,VECS(1,LM2,1))
-    
+    if (IGUESS == 0 .or. SCITER == 1) then   ! start with zero initial guess
+      VECS(:,LM2,5) = VECS(:,LM2,2)
+      VECS(:,LM2,1) = CZERO
+    endif
+
   !--------------
   enddo
   !--------------
+
+  if (IGUESS == 1 .and. SCITER > 1) then     ! start with initial guess passed as X2
+    ! VECS(:,:,9) = CZERO
+    VECS(:,:,1) = X2
+
+    do LM2 = 1,LMMAXD
+      call ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
+    enddo
+
+    if (BCP == 1) then
+      call APPBLCKCIRC(DUMMY,GLLHBLCK, &
+      naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
+    endif
+
+    call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+                  CONE,CZERO, &
+                  VECS(1,1,9), &
+                  naezd, lmmaxd, naclsd, nthrds)
+
+    ! r0 = b - Ax0 = v2 - v9
+    VECS(:,:,5) = VECS(:,:,2) - VECS(:,:,9)
+
+
+  end if
 
 
   !--------------
   do LM2=1,LMMAXD
   !--------------
     
-    ! R0(LM2) = DZNRM2(NLEN,VECS(1,LM2,5),1)
-    R0(LM2) = N2B(LM2)
+    R0(LM2) = DZNRM2(NLEN,VECS(1,LM2,5),1)
     
     ! Check whether the auxiliary vector must be supplied.
     
@@ -234,14 +247,9 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
     ETA(LM2)  = CZERO
     TAU(LM2)  = R0(LM2) * R0(LM2)
 
-    call ZAXPBY(NLEN,VECS(1,LM2,8), &
-                CZERO,VECS(1,LM2,8),CZERO,VECS(1,LM2,8))
-
-    call ZAXPBY(NLEN,VECS(1,LM2,4), &
-                CZERO,VECS(1,LM2,4),CZERO,VECS(1,LM2,4))
-
-    call ZAXPBY(NLEN,VECS(1,LM2,6), &
-                CZERO,VECS(1,LM2,6),CZERO,VECS(1,LM2,6))
+    VECS(:,LM2,8) = CZERO
+    VECS(:,LM2,4) = CZERO
+    VECS(:,LM2,6) = CZERO
     
   !--------------
   enddo
@@ -275,24 +283,14 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       endif
     enddo
     !--------------
-    
+
+    do LM2 = 1,LMMAXD
+      call ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
+    enddo
+
     if (BCP == 1) then
-        
-      do LM2 = 1,LMMAXD
-        call ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
-      !            WRITE(*,*) IT,LM2,DZNRM2(NDIM,DUMMY(1,LM2),1),
-      !     +                 BETA(LM2)
-      enddo
-        
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
       naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
-        
-    else
-        
-      do LM2 = 1,LMMAXD
-        call ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
-      enddo
-        
     endif
     
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
@@ -357,23 +355,15 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       if ( .not. DONE(LM2)) EXITIT = .false.
     enddo
     if (EXITIT) go to 67
+
     
-    
+    do LM2 = 1,LMMAXD
+      call ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
+    enddo
+
     if (BCP == 1) then
-        
-      do LM2 = 1,LMMAXD
-        call ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
-      enddo
-        
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
       naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
-        
-    else
-        
-      do LM2 = 1,LMMAXD
-        call ZCOPY(NDIM,VECS(1,LM2,6),1,DUMMY(1,LM2),1)
-      enddo
-        
     endif
     
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
@@ -546,7 +536,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
    ! <<<<<<<<<<
 
-   call CINIT(NDIM*LMMAXD,X2)
+   X2 = CZERO
 
    do LM2 = 1,LMMAXD
      call ZCOPY(NDIM,VECS(1,LM2,1),1,X2(1,LM2),1)
