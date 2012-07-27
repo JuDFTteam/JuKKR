@@ -137,9 +137,12 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   allocate(GTREF(NGD,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
+  allocate(DGTDE(LLY*(LMMAXD*NACLSD-1)+1,LMMAXD), stat = memory_stat)  !FIX: workaround, need to pass it to GREFSY
+  if (memory_stat /= 0) memory_fail = .true.
+
   if (LLY == 1) then
-    allocate(DGTDE(NGD,LMMAXD), stat = memory_stat)
-    if (memory_stat /= 0) memory_fail = .true.
+    !allocate(DGTDE(NGD,LMMAXD), stat = memory_stat) ! Wrong: need to allocate in any case because
+    !if (memory_stat /= 0) memory_fail = .true.      ! it has to be passed to GREFSY
 
     allocate(DGTDE0(NGD,NGD), stat = memory_stat)
     if (memory_stat /= 0) memory_fail = .true.
