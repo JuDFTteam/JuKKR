@@ -77,6 +77,7 @@
     integer::NSYMAT
     double complex :: LLY_GRDT
     double complex :: TR_ALPH
+    double complex :: BZTR2
     !     ..
     !     .. Array Arguments ..
     !     ..
@@ -224,7 +225,7 @@
 
     TAUVBZ = 1.D0/VOLBZ
 
-    call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,MSSQ, &
+    call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
     ITER, &
     ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
     GINP_LOCAL,DGINP, &
@@ -235,11 +236,23 @@
     DTDE_LOCAL, &
     GSXIJ, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
-    LLY_GRDT,TR_ALPH, &
+    BZTR2, &
     communicator, comm_size, &
     nthrds, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
+
+    ! TODO: move out
+    !=========== Lloyd's Formula =====================================
+
+    if(LLY == 1)  then
+      BZTR2 = BZTR2*NSYMAT/VOLBZ + TR_ALPH
+
+      call MPI_ALLREDUCE(BZTR2,LLY_GRDT,1,MPI_DOUBLE_COMPLEX,MPI_SUM, &
+                         communicator,IERR)
+
+    endif
+    !========== END Lloyd's Formula ==================================
 
 
 !-------------------------------------------------------- SYMMETRISE GLL

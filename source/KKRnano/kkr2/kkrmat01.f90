@@ -1,6 +1,6 @@
 ! WARNING: Symmetry assumptions might have been used that are
 ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
-subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,VOLBZ, &
+subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB, &
 TMATLL,MSSQ, &
 ITER, &
 ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
@@ -11,7 +11,7 @@ QMRBOUND,IGUESS,BCP, &
 DTDE_LOCAL, &
 GSXIJ, &
 NXIJ,XCCPL,IXCP,ZKRXIJ, &
-LLY_GRDT,TR_ALPH, &
+BZTR2, &
 communicator, comm_size, &
 !new input parameters after inc.p removal
 nthrds, &
@@ -19,6 +19,7 @@ lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
   use lloyds_formula_mod
+  use initialGuess_store_mod
 
   implicit none
   include 'mpif.h'
@@ -59,7 +60,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !     ..
   !     .. SCALAR ARGUMENTS ..
   double precision:: ALAT
-  double precision::VOLBZ
+
   integer::NAEZ
   integer::NOFKS
   integer::NSYMAT
@@ -88,9 +89,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double complex :: DTDE_LOCAL(lmmaxd,lmmaxd)
   double complex :: MSSQ(lmmaxd,lmmaxd)
 
-  double complex :: TR_ALPH
-  double complex :: LLY_GRDT
-
   complex        :: PRSC(NGUESSD*lmmaxd,EKMD) ! array argument
 
   double precision::BZKP(3,KPOIBZ)
@@ -107,7 +105,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
 
   !     .. LOCAL SCALARS ..
-  double complex::TRACE
   double complex::TRACEK
   double complex::BZTR2
   double complex::CFCTORINV
@@ -150,13 +147,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   !     ..
   !     .. EXTERNAL SUBROUTINES ..
-  external CINIT,DLKE0,OUTTIME,DZNRM2
+  external DLKE0,DZNRM2
   !     ..
   !     .. INTRINSIC FUNCTIONS ..
   intrinsic ATAN,EXP
-
-  !     .. N-MPI
-  integer:: IERR
 
   integer::        LMGF0D
   integer::        site_lm_size
@@ -239,96 +233,11 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       !     for the tb system, since the transl. invariance is not satisfied.
     
 
-      !================= Lloyd's Formula ====================================
 
-      if (LLY == 1) then
-        call CINIT(site_lm_size*NGTBD,GLLH)
-
-        do site_index = 1,NAEZ
-
-          ref_cluster_index = CLS(site_index)
-
-          call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                     BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
-                     nrd, naclsd)
-
-          call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
-                     ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
-                     naez, lmmaxd, naclsd)
-        end do
-
-        DGDE = CZERO
-        do site_index=1,NAEZ
-          do cluster_site_index=1,NUMN0(site_index)
-            do LM2=1,LMMAXD
-              cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-
-                if (INDN0(site_index,cluster_site_index) == IAT) then
-                  do LM1=1,LMMAXD
-                    site_lm_index=LMMAXD*(site_index-1)+LM1
-                    DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-                  end do
-                end if
-
-            enddo
-          enddo
-        enddo
-
-      endif
-
-
-      !============ END Lloyd's Formula =====================================
-    
-
-      !       Fourier transform of reference clusters' Green's function
-      !       (from real space to k-space GINP -> GLLH)
-
-      call CINIT(site_lm_size*NGTBD,GLLH)
-
-      do site_index = 1,NAEZ
-        ref_cluster_index = CLS(site_index)
-
-        call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                   BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
-                   nrd, naclsd)
-
-        call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
-                   ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
-                   GINP(1,1,1,ref_cluster_index), &
-                   naez, lmmaxd, naclsd)
-
-      end do
-
-      !=========== Lloyd's Formula ==========================================
-
-      if (LLY == 1) then
-
-        GLLKE_X = CZERO
-        do site_index=1,NAEZ
-          do cluster_site_index=1,NUMN0(site_index)
-            do LM2=1,LMMAXD
-              cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-
-              if (INDN0(site_index,cluster_site_index) == IAT) then
-                do LM1=1,LMMAXD
-                  site_lm_index=LMMAXD*(site_index-1)+LM1
-                  GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-                end do
-              endif
-
-            enddo
-          enddo
-        enddo
-
-      end if
-
-      !===========END Lloyd's Formula=========================================
-
-
-      ! The same calculation as some lines above is done all over again ???
+      ! The same calculation as with lloyds formula is done all over again ???
       ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-      call CINIT(site_lm_size*NGTBD,GLLH)
+      GLLH = CZERO
 
       do site_index = 1,NAEZ
         ref_cluster_index = CLS(site_index)
@@ -384,25 +293,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 ! ==> now GLLH holds (Delta_t * G_ref - 1)
 
 
-! ####################################################################
-! Start Lloyd's formula here
-! ####################################################################
-    
-      ! dP(E,k)   dG(E,k)                   dT(E)
-      ! ------- = ------- * T(E) + G(E,k) * -----
-      !   dE        dE                       dE
-
-      if (LLY == 1) then
-
-        call calcDerivativeP(site_lm_size, lmmaxd, alat, &
-                             DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
-
-      endif
-!#######################################################################
-! LLOYD
-!#######################################################################
-
-
 ! Now solve the linear matrix equation A*X = b (b is also a matrix),
 ! where A = (Delta_t*G_ref - 1) (inverse of scattering path operator)
 ! and b = (-1) * Delta_t
@@ -424,8 +314,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
       if (IGUESS == 1) then
         
         if (ITER > 1) then
-          call initialGuess_start(GLLKE1, PRSC(1,EKM + k_point_index), &
-                        naez, lmmaxd, nguessd)
+          call initialGuess_load(GLLKE1, PRSC(:,EKM + k_point_index))
         endif
 
       endif ! IGUESS == 1
@@ -436,7 +325,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 ! 2) if BCP is activated determine preconditioning matrix
 !    GLLHBLCK ..
     
-      call CINIT(LMMAXD*NATBLD*LMMAXD*NATBLD*NBLCKD,GLLHBLCK)
+      GLLHBLCK = CZERO
     
       if (BCP == 1) then
 
@@ -449,8 +338,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 ! 3) solve linear set of equations by iterative TFQMR scheme
 !    solve (\Delta t * G_ref - 1) X = - \Delta t
 !    the solution X is the scattering path operator
-    
-      !call CINIT(site_lm_size*LMMAXD,GLLKE1)
     
       call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,ITER,iteration_counter, &
@@ -469,8 +356,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !    intial guess
     
       if (IGUESS == 1) then
-        call initialGuess_finish(PRSC(1,EKM+k_point_index), &
-                      GLLKE1, naez, lmmaxd, nguessd)
+        call initialGuess_save(PRSC(:,EKM+k_point_index), GLLKE1)
       endif
 ! ..
 !===================================================================
@@ -480,11 +366,98 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !===================================================================
 !===================================================================
 
+      !================= Lloyd's Formula ====================================
+
+      if (LLY == 1) then
+        GLLH = CZERO
+
+        do site_index = 1,NAEZ
+
+          ref_cluster_index = CLS(site_index)
+
+          call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+                     BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
+                     nrd, naclsd)
+
+          call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
+                     ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
+                     naez, lmmaxd, naclsd)
+        end do
+
+        DGDE = CZERO
+        do site_index=1,NAEZ
+          do cluster_site_index=1,NUMN0(site_index)
+            do LM2=1,LMMAXD
+              cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+
+                if (INDN0(site_index,cluster_site_index) == IAT) then
+                  do LM1=1,LMMAXD
+                    site_lm_index=LMMAXD*(site_index-1)+LM1
+                    DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+                  end do
+                end if
+
+            enddo
+          enddo
+        enddo
+
+      !       Fourier transform of reference clusters' Green's function
+      !       (from real space to k-space GINP -> GLLH)
+
+      GLLH = CZERO
+
+      do site_index = 1,NAEZ
+        ref_cluster_index = CLS(site_index)
+
+        call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+                   BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
+                   nrd, naclsd)
+
+        call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
+                   ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+                   GINP(1,1,1,ref_cluster_index), &
+                   naez, lmmaxd, naclsd)
+
+      end do
+
+      !=========== Lloyd's Formula ==========================================
+
+        GLLKE_X = CZERO
+        do site_index=1,NAEZ
+          do cluster_site_index=1,NUMN0(site_index)
+            do LM2=1,LMMAXD
+              cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+
+              if (INDN0(site_index,cluster_site_index) == IAT) then
+                do LM1=1,LMMAXD
+                  site_lm_index=LMMAXD*(site_index-1)+LM1
+                  GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+                end do
+              endif
+
+            enddo
+          enddo
+        enddo
+
+! ####################################################################
+! Start Lloyd's formula here
+! ####################################################################
+
+      ! dP(E,k)   dG(E,k)                   dT(E)
+      ! ------- = ------- * T(E) + G(E,k) * -----
+      !   dE        dE                       dE
+
+        call calcDerivativeP(site_lm_size, lmmaxd, alat, &
+                             DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
+
+!#######################################################################
+! LLOYD
+!#######################################################################
 
 !#######################################################################
 ! LLOYD calculate Trace of matrix ...
 !#######################################################################
-      if (LLY == 1) then
+
       !===================================================================
       !                /  -1    dM  \
       ! calculate  Tr  | M   * ---- |
@@ -552,19 +525,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !=======================================================================
     300 end do ! KPT = 1,NOFKS
 !=======================================================================
-
-  !=========== Lloyd's Formula =====================================
-
-  if(LLY == 1)  then
-    BZTR2 = BZTR2*NSYMAT/VOLBZ + TR_ALPH
-    TRACE=CZERO
-
-    call MPI_ALLREDUCE(BZTR2,TRACE,1,MPI_DOUBLE_COMPLEX,MPI_SUM, &
-                       communicator,IERR)
-
-    LLY_GRDT = TRACE
-  endif
-  !========== END Lloyd's Formula ==================================
 
   ! ----------------------------------------------------------------
   ! Deallocate arrays
