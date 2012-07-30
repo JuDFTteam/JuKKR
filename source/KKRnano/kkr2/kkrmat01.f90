@@ -1,5 +1,6 @@
 ! WARNING: Symmetry assumptions might have been used that are
 ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
+
 subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB, &
 TMATLL,MSSQ, &
 ITER, &
@@ -19,7 +20,6 @@ lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
   use lloyds_formula_mod
-  use initialGuess_store_mod
 
   implicit none
   include 'mpif.h'
@@ -52,10 +52,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   !     .. parameters ..
   integer, parameter :: NSYMAXD = 48
-  double complex :: CONE
-  parameter      (CONE  = ( 1.0D0,0.0D0))
-  double complex :: CZERO
-  parameter      (CZERO=(0.0D0,0.0D0))
+  double complex, parameter :: CONE = ( 1.0D0,0.0D0)
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
 
   !     ..
   !     .. SCALAR ARGUMENTS ..
@@ -107,31 +105,21 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !     .. LOCAL SCALARS ..
   double complex::TRACEK
   double complex::BZTR2
-  double complex::CFCTORINV
-  double precision::TWO_PI
   double precision::QMRBOUND
   double precision::DZNRM2   ! external function for 2-norm
   integer::ref_cluster_index
   integer::site_index
   integer::cluster_site_index
-  integer::ILM
-  integer::ISYM
   integer::site_lm_index
-  integer::IL1B
+
   integer::cluster_site_lm_index
-  integer::IL2B
+
   integer::k_point_index
-  integer::LM
   integer::LM1
   integer::LM2
-  integer::LM3
-  integer::iteration_counter
-  logical::XCCPL
 
-  !     .. LOCAL ARRAYS ..
-  double complex  ::G  (lmmaxd,lmmaxd) ! small
-  double complex  ::TGH(lmmaxd) ! small
-  double precision::N2B(lmmaxd) ! small
+
+  logical::XCCPL
 
   double complex, allocatable, dimension(:,:) ::GLLKE1
   double complex, allocatable, dimension(:,:,:) ::GLLH
@@ -152,7 +140,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   !     .. INTRINSIC FUNCTIONS ..
   intrinsic ATAN,EXP
 
-  integer::        LMGF0D
   integer::        site_lm_size
   integer::        NGTBD
   integer::        NBLCKD
@@ -161,7 +148,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   logical :: memory_fail
 
   ! array dimensions
-  LMGF0D= lmmaxd
   site_lm_size = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
@@ -194,9 +180,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     stop
   end if
 
-  TWO_PI = 8.D0*ATAN(1.D0)    ! = 2*PI
-  CFCTORINV = (CONE*TWO_PI)/ALAT
-
   BZTR2 = CZERO
 
   GS = CZERO
@@ -214,159 +197,19 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
 !=======================================================================
     do 300 k_point_index = 1, NOFKS                       ! K-POINT-LOOP
-!=======================================================================
-    
-      ! ---> fourier transformation
-    
-      !     added by h.hoehler 3.7.2002
-    
-      !                                                     n   0          n
-      !     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
-      !                                   L  L'             L   L'
-    
-      !                                             n   0           n
-      !                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
-      !                                             L'  L
-    
-      !     this operation has to be done to satisfy e.g. the point symmetry!
-      !     application of fourier transformation is just an approximation
-      !     for the tb system, since the transl. invariance is not satisfied.
-    
 
+      ! Get the scattering path operator for k-point BZKP(:, k_point_index)
+      ! output: GLLKE1, NOITER
+      ! inout: PRSC
+      ! inout (temporary arrays): GLLH, GLLHBLCK
+      call kloopbody( GLLKE1, PRSC(:, EKM + k_point_index), NOITER, BZKP(:, k_point_index), TMATLL, GINP, ALAT, IGUESS, &
+                     BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                     NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
+                     IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, natbld, nrd, nclsd, xdim, ydim, zdim, nthrds)
 
-      ! The same calculation as with lloyds formula is done all over again ???
-      ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
-
-      GLLH = CZERO
-
-      do site_index = 1,NAEZ
-        ref_cluster_index = CLS(site_index)
-
-        call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                   BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
-                   nrd, naclsd)
-
-        call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
-                   ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
-                   GINP(1,1,1,ref_cluster_index), &
-                   naez, lmmaxd, naclsd)
-
-      end do
-
-      ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
-      !
-      !
-      ! NUMN0(site_index) is the number of atoms in the reference cluster
-      ! of atom/site 'site_index' (inequivalent atoms only!)
-      ! INDN0 stores the index of the atom in the basis corresponding to
-      ! the reference cluster atom (inequivalent atoms only!)
-      ! -------------------------------------------------------------------
-
-      do site_index=1,NAEZ
-        IL1B=LMMAXD*(site_index-1)
-        do cluster_site_index=1,NUMN0(site_index)
-          do LM2=1,LMMAXD
-            cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-            IL2B=LMMAXD*(INDN0(site_index,cluster_site_index)-1)+LM2
-            do LM1=1,LMMAXD
-              TGH(LM1) = CZERO
-              do LM3=1,LMMAXD
-                TGH(LM1)=TGH(LM1)+TMATLL(LM1,LM3,site_index)*GLLH(LM3,cluster_site_lm_index,site_index)
-              enddo
-            enddo
-
-            do LM1=1,LMMAXD
-              site_lm_index=IL1B+LM1
-              GLLH(LM1,cluster_site_lm_index,site_index) = TGH(LM1)
-
-              if (site_lm_index == IL2B) then
-                ! substract 1 only at the 'diagonal'
-                GLLH(LM1,cluster_site_lm_index,site_index) = GLLH(LM1,cluster_site_lm_index,site_index) - CONE
-              endif
-
-            enddo
-
-          enddo
-        enddo
-      enddo
-
-! ==> now GLLH holds (Delta_t * G_ref - 1)
-
-
-! Now solve the linear matrix equation A*X = b (b is also a matrix),
-! where A = (Delta_t*G_ref - 1) (inverse of scattering path operator)
-! and b = (-1) * Delta_t
-
-! If the initial guess optimisation is used, X and b are modified, but
-! the form of the matrix equation stays the same
-
-!===================================================================
-!===================================================================
-
-! solve linear matrix equation in subsequent steps
-
-!===================================================================
-
-!===================================================================
-! 1) if IGUESS is activated perform intitial step of
-!    intial guess
-    
-      if (IGUESS == 1) then
-        
-        if (ITER > 1) then
-          call initialGuess_load(GLLKE1, PRSC(:,EKM + k_point_index))
-        endif
-
-      endif ! IGUESS == 1
-
-!===================================================================
-
-!===================================================================
-! 2) if BCP is activated determine preconditioning matrix
-!    GLLHBLCK ..
-    
-      GLLHBLCK = CZERO
-    
-      if (BCP == 1) then
-
-        call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
-                       lmmaxd, nthrds, natbld, xdim, ydim, zdim, naclsd)
-      endif
-!===================================================================
-
-!===================================================================
-! 3) solve linear set of equations by iterative TFQMR scheme
-!    solve (\Delta t * G_ref - 1) X = - \Delta t
-!    the solution X is the scattering path operator
-    
-      call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
-                    IAT,ITER,iteration_counter, &
-                    GLLHBLCK,BCP,IGUESS, &
-                    QMRBOUND, &
-                    naez, lmmaxd, naclsd, xdim, ydim, zdim, &
-                    natbld, nthrds)
-    
-      NOITER = NOITER + iteration_counter
-    
-! ..
-!===================================================================
-
-!===================================================================
-! 4) if IGUESS is activated perform final step of
-!    intial guess
-    
-      if (IGUESS == 1) then
-        call initialGuess_save(PRSC(:,EKM+k_point_index), GLLKE1)
-      endif
-! ..
-!===================================================================
-
-! solved. Result in GLLKE1
-
-!===================================================================
-!===================================================================
-
-      !================= Lloyd's Formula ====================================
+!#######################################################################
+! LLOYD .
+!#######################################################################
 
       if (LLY == 1) then
         GLLH = CZERO
@@ -420,28 +263,23 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
       end do
 
-      !=========== Lloyd's Formula ==========================================
+      GLLKE_X = CZERO
+      do site_index=1,NAEZ
+        do cluster_site_index=1,NUMN0(site_index)
+          do LM2=1,LMMAXD
+            cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
 
-        GLLKE_X = CZERO
-        do site_index=1,NAEZ
-          do cluster_site_index=1,NUMN0(site_index)
-            do LM2=1,LMMAXD
-              cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+            if (INDN0(site_index,cluster_site_index) == IAT) then
+              do LM1=1,LMMAXD
+                site_lm_index=LMMAXD*(site_index-1)+LM1
+                GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+              end do
+            endif
 
-              if (INDN0(site_index,cluster_site_index) == IAT) then
-                do LM1=1,LMMAXD
-                  site_lm_index=LMMAXD*(site_index-1)+LM1
-                  GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-                end do
-              endif
-
-            enddo
           enddo
         enddo
+      enddo
 
-! ####################################################################
-! Start Lloyd's formula here
-! ####################################################################
 
       ! dP(E,k)   dG(E,k)                   dT(E)
       ! ------- = ------- * T(E) + G(E,k) * -----
@@ -449,14 +287,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
         call calcDerivativeP(site_lm_size, lmmaxd, alat, &
                              DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
-
-!#######################################################################
-! LLOYD
-!#######################################################################
-
-!#######################################################################
-! LLOYD calculate Trace of matrix ...
-!#######################################################################
 
       !===================================================================
       !                /  -1    dM  \
@@ -466,60 +296,33 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
         
         !call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
         call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, MSSQ, TRACEK, site_lm_size, lmmaxd)
-        
-        BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)  ! k-space integration
-        
+
       endif
-!#######################################################################
-! LLOYD .
-!#######################################################################
+
+      if (LLY == 1) BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)  ! k-space integration
+
+      ! ----------- Integrate Green's function over k-points -------
+      call greenKSummation(GLLKE1, GS, VOLCUB(k_point_index), IAT, NSYMAT, naez, lmmaxd)
+      ! ------------------------------------------------------------
     
-      !===================================================================
 
-      !   combined atom/lm index
-      ILM = LMMAXD*(IAT-1) + 1
-
-      !                                      nn
-      !         Copy the diagonal elements G_LL' of the Green's-function,
-      !         dependent on (k,E) into matrix G
-      !         (n = n' = IAT)
-
-      do LM = 1,LMMAXD
-        call ZCOPY(LMMAXD,GLLKE1(ILM,LM),1,G(1,LM),1)
-      end do
-
-        !         Perform the k-space integration for diagonal element of
-        !         Green's function of atom IAT
-
-        do ISYM = 1,NSYMAT
-          do LM1=1,LMMAXD
-            do LM2=1,LMMAXD
-              GS(LM1,LM2,ISYM) = GS(LM1,LM2,ISYM) + &
-              VOLCUB(k_point_index) * G(LM1,LM2)
-            end do
-          end do
-        end do        ! ISYM = 1,NSYMAT
-    
-    
-    
 ! ================================================================
-          if (XCCPL) then
+      if (XCCPL) then
 
-            ! ================================================================
-            !       XCCPL communicate off-diagonal elements and multiply with
-            !       exp-factor
-            ! ================================================================
-        
-            call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
-            NSYMAT,NAEZ,IAT, &
-            NXIJ,IXCP,ZKRXIJ, &
-            GLLKE1, &
-            GSXIJ, &
-            communicator, comm_size, &
-            lmmaxd, nxijd)
-        
-! ================================================================
-          endif
+         ! ================================================================
+         !       XCCPL communicate off-diagonal elements and multiply with
+         !       exp-factor
+         ! ================================================================
+
+        call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
+        NSYMAT,NAEZ,IAT, &
+        NXIJ,IXCP,ZKRXIJ, &
+        GLLKE1, &
+        GSXIJ, &
+        communicator, comm_size, &
+        lmmaxd, nxijd)
+
+      endif
 ! ================================================================
     
 !=======================================================================
@@ -541,3 +344,272 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   end if
 
 end subroutine KKRMAT01
+
+
+!------------------------------------------------------------------------------
+!> Calculate scattering path operator for 'kpoint'
+subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS, &
+                     BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                     NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
+                     IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim, nthrds)
+
+  use initialGuess_store_mod
+  implicit none
+
+  integer, intent(in) :: xdim
+  integer, intent(in) :: ydim
+  integer, intent(in) :: zdim
+  integer, intent(in) :: naclsd
+  integer :: NAEZ
+  integer, intent(in) :: nclsd
+  integer, intent(in) :: nguessd
+  double precision :: ALAT
+  integer :: ATOM(NACLSD,*)
+  integer :: BCP
+  double precision :: kpoint(3)
+  integer :: CLS(*)
+  doublecomplex :: EIKRM(NACLSD)
+  doublecomplex :: EIKRP(NACLSD)
+  integer :: EZOA(NACLSD,*)
+  doublecomplex :: GINP(lmmaxd,lmmaxd,NACLSD,NCLSD)
+  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
+  double complex :: GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*XDIM*YDIM*ZDIM)
+  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
+  integer :: IAT
+  integer :: IGUESS
+  integer :: INDN0(NAEZ,NACLSD)
+  integer :: ITER
+  integer, intent(in) :: lmmaxd
+  integer :: NACLS(*)
+  integer, intent(in) :: natbld
+  integer :: NOITER
+  integer, intent(in) :: nrd
+  integer, intent(in) :: nthrds
+  integer :: NUMN0(NAEZ)
+  complex :: PRSC_k (NGUESSD*lmmaxd)
+  double precision :: QMRBOUND
+  double precision :: RR(3,0:NRD)
+  doublecomplex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
+
+  !-------- local ---------
+  double complex, parameter :: CONE = ( 1.0D0,0.0D0)
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  !     .. LOCAL ARRAYS ..
+  double complex  ::TGH(lmmaxd) ! small
+  double precision::N2B(lmmaxd) ! small
+
+  integer :: iteration_counter
+  integer :: LM1
+  integer :: LM2
+  integer :: LM3
+  integer :: ref_cluster_index
+  integer :: site_index
+  integer :: site_lm_index
+  integer :: IL1B
+  integer :: IL2B
+  integer :: cluster_site_index
+  integer :: cluster_site_lm_index
+  !=======================================================================
+    
+  ! ---> fourier transformation
+    
+  !     added by h.hoehler 3.7.2002
+    
+  !                                                     n   0          n
+  !     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
+  !                                   L  L'             L   L'
+    
+  !                                             n   0           n
+  !                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
+  !                                             L'  L
+    
+  !     this operation has to be done to satisfy e.g. the point symmetry!
+  !     application of fourier transformation is just an approximation
+  !     for the tb system, since the transl. invariance is not satisfied.
+    
+
+
+  ! The same calculation as with lloyds formula is done all over again ???
+  ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
+
+  GLLH = CZERO
+
+  do site_index = 1,NAEZ
+    ref_cluster_index = CLS(site_index)
+
+    call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+               kpoint,ref_cluster_index,EIKRM,EIKRP, &
+               nrd, naclsd)
+
+    call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
+               ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+               GINP(1,1,1,ref_cluster_index), &
+               naez, lmmaxd, naclsd)
+
+  end do
+
+  ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
+  !
+  !
+  ! NUMN0(site_index) is the number of atoms in the reference cluster
+  ! of atom/site 'site_index' (inequivalent atoms only!)
+  ! INDN0 stores the index of the atom in the basis corresponding to
+  ! the reference cluster atom (inequivalent atoms only!)
+  ! -------------------------------------------------------------------
+
+  do site_index=1,NAEZ
+    IL1B=LMMAXD*(site_index-1)
+    do cluster_site_index=1,NUMN0(site_index)
+      do LM2=1,LMMAXD
+        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+        IL2B=LMMAXD*(INDN0(site_index,cluster_site_index)-1)+LM2
+        do LM1=1,LMMAXD
+          TGH(LM1) = CZERO
+          do LM3=1,LMMAXD
+            TGH(LM1)=TGH(LM1)+TMATLL(LM1,LM3,site_index)*GLLH(LM3,cluster_site_lm_index,site_index)
+          enddo
+        enddo
+
+        do LM1=1,LMMAXD
+          site_lm_index=IL1B+LM1
+          GLLH(LM1,cluster_site_lm_index,site_index) = TGH(LM1)
+
+          if (site_lm_index == IL2B) then
+            ! substract 1 only at the 'diagonal'
+            GLLH(LM1,cluster_site_lm_index,site_index) = GLLH(LM1,cluster_site_lm_index,site_index) - CONE
+          endif
+
+        enddo
+
+      enddo
+    enddo
+  enddo
+
+  ! ==> now GLLH holds (Delta_t * G_ref - 1)
+
+
+  ! Now solve the linear matrix equation A*X = b (b is also a matrix),
+  ! where A = (Delta_t*G_ref - 1) (inverse of scattering path operator)
+  ! and b = (-1) * Delta_t
+
+  ! If the initial guess optimisation is used, X and b are modified, but
+  ! the form of the matrix equation stays the same
+
+  !===================================================================
+  !===================================================================
+
+  ! solve linear matrix equation in subsequent steps
+
+  !===================================================================
+
+  !===================================================================
+  ! 1) if IGUESS is activated perform intitial step of
+  !    intial guess
+    
+  if (IGUESS == 1) then
+        
+    if (ITER > 1) then
+      call initialGuess_load(GLLKE1, PRSC_k)
+    endif
+
+  endif ! IGUESS == 1
+
+  !===================================================================
+
+  !===================================================================
+  ! 2) if BCP is activated determine preconditioning matrix
+  !    GLLHBLCK ..
+    
+  GLLHBLCK = CZERO
+    
+  if (BCP == 1) then
+
+    call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
+                   lmmaxd, nthrds, natbld, xdim, ydim, zdim, naclsd)
+  endif
+  !===================================================================
+
+  !===================================================================
+  ! 3) solve linear set of equations by iterative TFQMR scheme
+  !    solve (\Delta t * G_ref - 1) X = - \Delta t
+  !    the solution X is the scattering path operator
+    
+  call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
+                IAT,ITER,iteration_counter, &
+                GLLHBLCK,BCP,IGUESS, &
+                QMRBOUND, &
+                naez, lmmaxd, naclsd, xdim, ydim, zdim, &
+                natbld, nthrds)
+    
+  NOITER = NOITER + iteration_counter
+    
+  ! ..
+  !===================================================================
+
+  !===================================================================
+  ! 4) if IGUESS is activated perform final step of
+  !    intial guess
+    
+  if (IGUESS == 1) then
+    call initialGuess_save(PRSC_k, GLLKE1)
+  endif
+
+  !===================================================================
+  ! solved. Result in GLLKE1
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Summation of Green's function over k-points. Has to be called for every k-point
+!> TODO: it would be better to do the k-space-symmetry treatment separately ???
+!> This routine creates NSYMAT copies of the same solution
+!> Set GS to 0 before first call
+!> in: GLLKE1
+!> inout: GS (set to 0 before first call)
+subroutine greenKSummation(GLLKE1, GS, k_point_weight, IAT, NSYMAT, naez, lmmaxd)
+  implicit none
+  integer, parameter :: NSYMAXD = 48
+
+  integer, intent(in) :: naez
+  integer, intent(in) :: lmmaxd
+
+  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
+  double complex :: GS(lmmaxd,lmmaxd,NSYMAXD)
+  integer :: IAT
+
+  integer :: NSYMAT
+  double precision :: k_point_weight
+
+  ! -------- local ------------------
+  double complex :: G(lmmaxd,lmmaxd)
+  integer :: LM
+  integer :: LM1
+  integer :: LM2
+  integer :: ILM
+  integer :: ISYM
+
+  !   combined atom/lm index
+  ILM = LMMAXD*(IAT-1) + 1
+
+  !                                      nn
+  !         Copy the diagonal elements G_LL' of the Green's-function,
+  !         dependent on (k,E) into matrix G
+  !         (n = n' = IAT)
+
+  do LM = 1,LMMAXD
+    call ZCOPY(LMMAXD,GLLKE1(ILM,LM),1,G(1,LM),1)
+  end do
+
+    !         Perform the k-space integration for diagonal element of
+    !         Green's function of atom IAT
+
+    do ISYM = 1,NSYMAT
+      do LM1=1,LMMAXD
+        do LM2=1,LMMAXD
+          GS(LM1,LM2,ISYM) = GS(LM1,LM2,ISYM) + k_point_weight * G(LM1,LM2)
+        end do
+      end do
+    end do        ! ISYM = 1,NSYMAT
+end subroutine
+
