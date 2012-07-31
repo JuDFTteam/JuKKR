@@ -217,6 +217,7 @@ kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o
 lloyds_formula_mod.o: kkr_helpers_mod.o
 test.o: common_testc.o
 opt.o: common_optc.o
+kloopz1.o: kkrmat01.o
 
 tbref.o: SingleSiteRef_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o

@@ -1,3 +1,6 @@
+module kkrmat_mod
+CONTAINS
+
 ! WARNING: Symmetry assumptions might have been used that are
 ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
 
@@ -14,15 +17,16 @@ GSXIJ, &
 NXIJ,XCCPL,IXCP,ZKRXIJ, &
 BZTR2, &
 communicator, comm_size, &
-!new input parameters after inc.p removal
 nthrds, &
 lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
-  use lloyds_formula_mod
-
   implicit none
-  include 'mpif.h'
+
+  !     .. parameters ..
+  integer, parameter :: NSYMAXD = 48
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
   ! ************************************************************************
   !   performs k-space integration,
   !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -50,11 +54,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer, intent(in) :: nrd
   integer, intent(in) :: ekmd
 
-  !     .. parameters ..
-  integer, parameter :: NSYMAXD = 48
-  double complex, parameter :: CONE = ( 1.0D0,0.0D0)
-  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
-
   !     ..
   !     .. SCALAR ARGUMENTS ..
   double precision:: ALAT
@@ -69,8 +68,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer::EKM
   integer::NOITER
   integer::IAT
-  !     ..
-  !     .. ARRAY ARGUMENTS ..
 
   double complex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
 
@@ -80,8 +77,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double complex :: GSXIJ(lmmaxd,lmmaxd,NSYMAXD,NXIJD)
 
   integer        :: IXCP(NXIJD)
-  double complex :: EIKRP(NACLSD)
-  double complex :: EIKRM(NACLSD)
 
   ! .. Lloyd
   double complex :: DTDE_LOCAL(lmmaxd,lmmaxd)
@@ -101,25 +96,17 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer:: EZOA(NACLSD,*)
   integer:: NACLS(*)
 
-
-  !     .. LOCAL SCALARS ..
-  double complex::TRACEK
   double complex::BZTR2
   double precision::QMRBOUND
-  double precision::DZNRM2   ! external function for 2-norm
-  integer::ref_cluster_index
-  integer::site_index
-  integer::cluster_site_index
-  integer::site_lm_index
-
-  integer::cluster_site_lm_index
-
-  integer::k_point_index
-  integer::LM1
-  integer::LM2
-
 
   logical::XCCPL
+
+! ------- local ----------
+
+  double complex :: EIKRP(NACLSD)
+  double complex :: EIKRM(NACLSD)
+  integer::k_point_index
+  double complex::TRACEK
 
   double complex, allocatable, dimension(:,:) ::GLLKE1
   double complex, allocatable, dimension(:,:,:) ::GLLH
@@ -132,13 +119,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   double complex, allocatable, dimension(:,:) :: DGDE
   double complex, allocatable, dimension(:,:) :: GLLKE_X
   double complex, allocatable, dimension(:,:) :: DPDE_LOCAL
-
-  !     ..
-  !     .. EXTERNAL SUBROUTINES ..
-  external DLKE0,DZNRM2
-  !     ..
-  !     .. INTRINSIC FUNCTIONS ..
-  intrinsic ATAN,EXP
 
   integer::        site_lm_size
   integer::        NGTBD
@@ -180,154 +160,72 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     stop
   end if
 
-  BZTR2 = CZERO
 
+  ! WARNING: Symmetry assumptions might have been used that are
+  ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
+  ! ---> use sit
+  !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
+
+  BZTR2 = CZERO
   GS = CZERO
 
   if (XCCPL) then
     GSXIJ = CZERO
   endif
 
+!==============================================================================
+  do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
+!==============================================================================
 
-    ! WARNING: Symmetry assumptions might have been used that are
-    ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
-    ! ---> use sit
-    !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
+    ! Get the scattering path operator for k-point BZKP(:, k_point_index)
+    ! output: GLLKE1, NOITER
+    ! inout: PRSC
+    ! inout (temporary arrays): GLLH, GLLHBLCK
+    call kloopbody( GLLKE1, PRSC(:, EKM + k_point_index), NOITER, &
+                   BZKP(:, k_point_index), TMATLL, GINP, ALAT, IGUESS, &
+                   BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                   NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
+                   IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, &
+                   natbld, nrd, nclsd, xdim, ydim, zdim, nthrds)
 
-
-!=======================================================================
-    do 300 k_point_index = 1, NOFKS                       ! K-POINT-LOOP
-
-      ! Get the scattering path operator for k-point BZKP(:, k_point_index)
-      ! output: GLLKE1, NOITER
-      ! inout: PRSC
-      ! inout (temporary arrays): GLLH, GLLHBLCK
-      call kloopbody( GLLKE1, PRSC(:, EKM + k_point_index), NOITER, BZKP(:, k_point_index), TMATLL, GINP, ALAT, IGUESS, &
-                     BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
-                     NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
-                     IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, natbld, nrd, nclsd, xdim, ydim, zdim, nthrds)
-
-!#######################################################################
-! LLOYD .
-!#######################################################################
-
-      if (LLY == 1) then
-        GLLH = CZERO
-
-        do site_index = 1,NAEZ
-
-          ref_cluster_index = CLS(site_index)
-
-          call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                     BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
-                     nrd, naclsd)
-
-          call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
-                     ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
-                     naez, lmmaxd, naclsd)
-        end do
-
-        DGDE = CZERO
-        do site_index=1,NAEZ
-          do cluster_site_index=1,NUMN0(site_index)
-            do LM2=1,LMMAXD
-              cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-
-                if (INDN0(site_index,cluster_site_index) == IAT) then
-                  do LM1=1,LMMAXD
-                    site_lm_index=LMMAXD*(site_index-1)+LM1
-                    DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-                  end do
-                end if
-
-            enddo
-          enddo
-        enddo
-
-      !       Fourier transform of reference clusters' Green's function
-      !       (from real space to k-space GINP -> GLLH)
-
-      GLLH = CZERO
-
-      do site_index = 1,NAEZ
-        ref_cluster_index = CLS(site_index)
-
-        call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
-                   BZKP(1,k_point_index),ref_cluster_index,EIKRM,EIKRP, &
-                   nrd, naclsd)
-
-        call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
-                   ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
-                   GINP(1,1,1,ref_cluster_index), &
-                   naez, lmmaxd, naclsd)
-
-      end do
-
-      GLLKE_X = CZERO
-      do site_index=1,NAEZ
-        do cluster_site_index=1,NUMN0(site_index)
-          do LM2=1,LMMAXD
-            cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-
-            if (INDN0(site_index,cluster_site_index) == IAT) then
-              do LM1=1,LMMAXD
-                site_lm_index=LMMAXD*(site_index-1)+LM1
-                GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
-              end do
-            endif
-
-          enddo
-        enddo
-      enddo
+    ! ----------- Integrate Scattering Path operator over k-points ------------
+    call greenKSummation(GLLKE1, GS, VOLCUB(k_point_index), &
+                         IAT, NSYMAT, naez, lmmaxd)
+    ! -------------------------------------------------------------------------
 
 
-      ! dP(E,k)   dG(E,k)                   dT(E)
-      ! ------- = ------- * T(E) + G(E,k) * -----
-      !   dE        dE                       dE
+    if (LLY == 1) then
+      call lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, &
+                       BZKP(:,k_point_index), DTDE_LOCAL,ALAT, ATOM, &
+                       CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
+                       EIKRP, GLLH, DPDE_LOCAL, DGDE, GLLKE_X, &
+                       lmmaxd, naclsd, nclsd, nrd)
+    endif
 
-        call calcDerivativeP(site_lm_size, lmmaxd, alat, &
-                             DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
+    if (LLY == 1) then
+      BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
+    end if
 
-      !===================================================================
-      !                /  -1    dM  \
-      ! calculate  Tr  | M   * ---- |
-      !                \        dE  /
-      !===================================================================
-        
-        !call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
-        call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, MSSQ, TRACEK, site_lm_size, lmmaxd)
+    if (XCCPL) then
 
-      endif
+       ! ================================================================
+       !       XCCPL communicate off-diagonal elements and multiply with
+       !       exp-factor
+       ! ================================================================
 
-      if (LLY == 1) BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)  ! k-space integration
+      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
+      NSYMAT,NAEZ,IAT, &
+      NXIJ,IXCP,ZKRXIJ, &
+      GLLKE1, &
+      GSXIJ, &
+      communicator, comm_size, &
+      lmmaxd, nxijd)
 
-      ! ----------- Integrate Green's function over k-points -------
-      call greenKSummation(GLLKE1, GS, VOLCUB(k_point_index), IAT, NSYMAT, naez, lmmaxd)
-      ! ------------------------------------------------------------
-    
+    endif
 
-! ================================================================
-      if (XCCPL) then
-
-         ! ================================================================
-         !       XCCPL communicate off-diagonal elements and multiply with
-         !       exp-factor
-         ! ================================================================
-
-        call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
-        NSYMAT,NAEZ,IAT, &
-        NXIJ,IXCP,ZKRXIJ, &
-        GLLKE1, &
-        GSXIJ, &
-        communicator, comm_size, &
-        lmmaxd, nxijd)
-
-      endif
-! ================================================================
-    
-!=======================================================================
-    300 end do ! KPT = 1,NOFKS
-!=======================================================================
+!==============================================================================
+  end do ! KPT = 1,NOFKS
+!==============================================================================
 
   ! ----------------------------------------------------------------
   ! Deallocate arrays
@@ -458,6 +356,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! the reference cluster atom (inequivalent atoms only!)
   ! -------------------------------------------------------------------
 
+!!!$omp parallel do private(site_index, cluster_site_index, &
+!!!$                        cluster_site_lm_index, IL1B, IL2B, LM1, LM2, LM3, TGH)
   do site_index=1,NAEZ
     IL1B=LMMAXD*(site_index-1)
     do cluster_site_index=1,NUMN0(site_index)
@@ -485,6 +385,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
       enddo
     enddo
   enddo
+!!!$omp end parallel do
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)
 
@@ -613,3 +514,149 @@ subroutine greenKSummation(GLLKE1, GS, k_point_weight, IAT, NSYMAT, naez, lmmaxd
     end do        ! ISYM = 1,NSYMAT
 end subroutine
 
+
+!------------------------------------------------------------------------------
+!> Calculates contribution to the Lloyd's formula trace for k = 'kpoint'
+!> in: GLLKE1, MSSQ, kpoint, DGINP, GINP, TMATLL, DTDE_LOCAL
+!> out: TRACEK
+!> inout (temporary arrays): GLLH, DPDE_LOCAL, EIKRM, EIKRP, GLLKE_X, DGDE
+subroutine lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, kpoint, &
+                       DTDE_LOCAL, ALAT, ATOM, CLS, EZOA, IAT, INDN0, NACLS, &
+                       NAEZ, NUMN0, RR, EIKRM, EIKRP, GLLH, DPDE_LOCAL, DGDE, &
+                       GLLKE_X, lmmaxd, naclsd, nclsd, nrd)
+
+  use lloyds_formula_mod
+  implicit none
+
+  integer, intent(in) :: nclsd
+  double precision :: ALAT
+  integer :: ATOM(NACLSD,*)
+  double precision :: kpoint(3)
+  integer :: CLS(*)
+
+  double complex :: DGDE(NAEZ*LMMAXD, LMMAXD)
+  double complex :: DGINP(lmmaxd,lmmaxd,NACLSD,NCLSD)
+  double complex :: DPDE_LOCAL(NAEZ*LMMAXD, LMMAXD)
+
+  doublecomplex :: EIKRM(NACLSD)
+  doublecomplex :: EIKRP(NACLSD)
+  integer :: EZOA(NACLSD,*)
+  double complex :: GINP(lmmaxd,lmmaxd,NACLSD,NCLSD)
+  double complex :: GLLKE_X(NAEZ*LMMAXD, LMMAXD)
+  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
+  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
+  integer :: IAT
+  integer :: INDN0(NAEZ,NACLSD)
+  double complex :: DTDE_LOCAL(lmmaxd,lmmaxd)
+  integer, intent(in) :: lmmaxd
+  double complex :: MSSQ(lmmaxd,lmmaxd)
+  integer :: NACLS(*)
+  integer, intent(in) :: naclsd
+  integer :: NAEZ
+  integer, intent(in) :: nrd
+  integer :: NUMN0(NAEZ)
+  double precision :: RR(3,0:NRD)
+  double complex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
+  double complex :: TRACEK
+
+  !----- local ------
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  integer :: cluster_site_index
+  integer :: cluster_site_lm_index
+  integer :: ref_cluster_index
+  integer :: site_index
+  integer :: site_lm_index
+  integer :: site_lm_size
+  integer :: LM1
+  integer :: LM2
+
+  site_lm_size = NAEZ*lmmaxd
+
+  GLLH = CZERO
+
+  do site_index = 1,NAEZ
+
+    ref_cluster_index = CLS(site_index)
+
+    call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+               kpoint,ref_cluster_index,EIKRM,EIKRP, &
+               nrd, naclsd)
+
+    call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
+               ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0,DGINP(1,1,1,ref_cluster_index), &
+               naez, lmmaxd, naclsd)
+  end do
+
+  DGDE = CZERO
+  do site_index=1,NAEZ
+    do cluster_site_index=1,NUMN0(site_index)
+      do LM2=1,LMMAXD
+        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+
+          if (INDN0(site_index,cluster_site_index) == IAT) then
+            do LM1=1,LMMAXD
+              site_lm_index=LMMAXD*(site_index-1)+LM1
+              DGDE(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+            end do
+          end if
+
+      enddo
+    enddo
+  enddo
+
+  !       Fourier transform of reference clusters' Green's function
+  !       (from real space to k-space GINP -> GLLH)
+
+  GLLH = CZERO
+
+  do site_index = 1,NAEZ
+  ref_cluster_index = CLS(site_index)
+
+  call DLKE1(ALAT,NACLS,RR,EZOA(1,site_index), &
+             kpoint,ref_cluster_index,EIKRM,EIKRP, &
+             nrd, naclsd)
+
+  call DLKE0(site_index,GLLH,EIKRP,EIKRM, &
+             ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+             GINP(1,1,1,ref_cluster_index), &
+             naez, lmmaxd, naclsd)
+
+  end do
+
+  GLLKE_X = CZERO
+  do site_index=1,NAEZ
+    do cluster_site_index=1,NUMN0(site_index)
+      do LM2=1,LMMAXD
+        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
+
+        if (INDN0(site_index,cluster_site_index) == IAT) then
+          do LM1=1,LMMAXD
+            site_lm_index=LMMAXD*(site_index-1)+LM1
+            GLLKE_X(site_lm_index,LM2)= GLLH(LM1,cluster_site_lm_index,site_index)
+          end do
+        endif
+
+      enddo
+    enddo
+  enddo
+
+
+  ! dP(E,k)   dG(E,k)                   dT(E)
+  ! ------- = ------- * T(E) + G(E,k) * -----
+  !   dE        dE                       dE
+
+  call calcDerivativeP(site_lm_size, lmmaxd, alat, &
+                       DPDE_LOCAL, GLLKE_X, DGDE, DTDE_LOCAL, TMATLL(1,1,IAT))
+
+  !===================================================================
+  !                /  -1    dM  \
+  ! calculate  Tr  | M   * ---- |
+  !                \        dE  /
+  !===================================================================
+
+  call calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, MSSQ, TRACEK, site_lm_size, lmmaxd)
+
+end subroutine
+
+end module

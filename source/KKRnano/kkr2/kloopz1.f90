@@ -29,6 +29,7 @@
 ! DGINP ...      derivative of reference Green's function
 ! TSST_LOCAL ..  t-matrix
 
+    use kkrmat_mod
     implicit none
     include 'mpif.h'
 
