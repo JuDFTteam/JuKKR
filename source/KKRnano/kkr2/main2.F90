@@ -157,6 +157,7 @@ program MAIN2
 
 ! -----------------------------------------------------------------------------
   call createKKRnanoParallel(my_mpi, NAEZ, SMPID, EMPID)
+  call setKKRnanoNumThreads(nthrds)
   call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 

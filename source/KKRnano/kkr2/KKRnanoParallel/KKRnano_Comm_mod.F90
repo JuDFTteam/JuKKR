@@ -31,6 +31,7 @@ module KKRnano_Comm_mod
     integer, intent(in) :: nthrds
 
     !$ integer::omp_get_max_threads
+    !$ integer::omp_get_num_threads
     integer :: natoms, nspin, nenergy
 
     if (isMasterRank(my_mpi)) then
@@ -44,6 +45,7 @@ module KKRnano_Comm_mod
       !$omp parallel
       !$omp single
       !$  write(*,*) '  OMP max. threads        = ',omp_get_max_threads()
+      !$  write(*,*) '  OMP num. threads        = ',omp_get_num_threads()
       !$omp end single
       !$omp end parallel
       write(*,*) '  groups of processes created'
@@ -57,6 +59,14 @@ module KKRnano_Comm_mod
 
     end if
 
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Set the number of OpenMP threads to nthrds.
+  subroutine setKKRnanoNumThreads(nthrds)
+    implicit none
+    integer, intent(in) :: nthrds
+    !$ call OMP_SET_NUM_THREADS(NTHRDS)
   end subroutine
 
   !----------------------------------------------------------------------------
