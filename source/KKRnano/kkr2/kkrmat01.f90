@@ -17,7 +17,6 @@ GSXIJ, &
 NXIJ,XCCPL,IXCP,ZKRXIJ, &
 BZTR2, &
 communicator, comm_size, &
-nthrds, &
 lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -39,7 +38,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer, intent(in) :: communicator
   integer, intent(in) :: comm_size
 
-  integer, intent(in) :: nthrds
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
   integer, intent(in) :: nclsd   ! number of reference clusters
@@ -186,7 +184,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                    BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
                    NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
                    IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, &
-                   natbld, nrd, nclsd, xdim, ydim, zdim, nthrds)
+                   natbld, nrd, nclsd, xdim, ydim, zdim)
 
     ! ----------- Integrate Scattering Path operator over k-points ------------
     call greenKSummation(GLLKE1, GS, VOLCUB(k_point_index), &
@@ -249,7 +247,7 @@ end subroutine KKRMAT01
 subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS, &
                      BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
                      NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
-                     IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim, nthrds)
+                     IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim)
 
   use initialGuess_store_mod
   implicit none
@@ -282,7 +280,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   integer, intent(in) :: natbld
   integer :: NOITER
   integer, intent(in) :: nrd
-  integer, intent(in) :: nthrds
   integer :: NUMN0(NAEZ)
   complex :: PRSC_k (NGUESSD*lmmaxd)
   double precision :: QMRBOUND
@@ -427,7 +424,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   if (BCP == 1) then
 
     call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
-                   lmmaxd, nthrds, natbld, xdim, ydim, zdim, naclsd)
+                   lmmaxd, natbld, xdim, ydim, zdim, naclsd)
   endif
   !===================================================================
 
@@ -441,7 +438,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
                 GLLHBLCK,BCP,IGUESS, &
                 QMRBOUND, &
                 naez, lmmaxd, naclsd, xdim, ydim, zdim, &
-                natbld, nthrds)
+                natbld)
     
   NOITER = NOITER + iteration_counter
     

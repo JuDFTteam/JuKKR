@@ -11,7 +11,6 @@
     communicator, comm_size, &           ! > input
     ! new parameters after inc.p removal
     iemxd, &
-    nthrds, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -37,7 +36,6 @@
     integer, intent(in) :: comm_size
 
     integer, intent(in) :: iemxd
-    integer, intent(in) :: nthrds  ! number of OpenMP threads
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
     integer, intent(in) :: nclsd   ! number of reference clusters
@@ -239,7 +237,6 @@
     NXIJ,XCCPL,IXCP,ZKRXIJ, &
     BZTR2, &
     communicator, comm_size, &
-    nthrds, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 

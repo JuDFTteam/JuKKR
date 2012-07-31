@@ -447,7 +447,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
                   getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-                  iemxd, nthrds, &
+                  iemxd, &
                   lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
 

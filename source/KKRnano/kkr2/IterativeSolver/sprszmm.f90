@@ -1,7 +1,7 @@
 subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
                    AX, &                                       ! >
                    ! new input parameters after inc.p removal
-                   naez, lmmaxd, naclsd, nthrds)
+                   naez, lmmaxd, naclsd)
 
   ! This routine is called very often
   ! TODO: Optimise this routine if possible
@@ -11,7 +11,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   integer, intent(in) :: naez
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd
-  integer, intent(in) :: nthrds
 
   !     INTEGER           LMMAXD
   !     INTEGER           NDIM,NAEZ
@@ -63,7 +62,7 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 
      
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!$ call OMP_SET_NUM_THREADS(NTHRDS)
+
 !$omp parallel private (I1,LM2,I2,I3,I3H,I2H,IL1B,SPRSX)
 
   !$omp do

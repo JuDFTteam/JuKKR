@@ -27,12 +27,13 @@ module KKRnano_Comm_mod
     use KKRnanoParallel_mod
     implicit none
 
-    type (KKRnanoParallel), intent(in) :: my_mpi
-    integer, intent(in) :: nthrds
+    include 'omp_lib.h'
 
-    !$ integer::omp_get_max_threads
-    !$ integer::omp_get_num_threads
+    type (KKRnanoParallel), intent(in) :: my_mpi
+    integer, intent(in) :: nthrds ! requested number of threads
+
     integer :: natoms, nspin, nenergy
+    integer :: num_threads ! actual number of threads
 
     if (isMasterRank(my_mpi)) then
 
@@ -40,12 +41,15 @@ module KKRnano_Comm_mod
       nspin  = getNumSpinRanks(my_mpi)
       nenergy = getNumEnergyRanks(my_mpi)
 
+      num_threads = 1
+
       write(*,'(79("="))')
       write(*,*) '  total no. of MPI ranks  = ', getNumWorldRanks(my_mpi)
       !$omp parallel
       !$omp single
+      !$  num_threads = omp_get_num_threads()
       !$  write(*,*) '  OMP max. threads        = ',omp_get_max_threads()
-      !$  write(*,*) '  OMP num. threads        = ',omp_get_num_threads()
+      !$  write(*,*) '  OMP num. threads        = ',num_threads
       !$omp end single
       !$omp end parallel
       write(*,*) '  groups of processes created'
@@ -54,7 +58,7 @@ module KKRnano_Comm_mod
       write(*,*) '  EMPI                    = ',nenergy
       write(*,*) '  NTHRDS                  = ',NTHRDS
       write(*,*) '  MPI-processes (active)  = ',natoms*nspin*nenergy
-      write(*,*) '  total no. of tasks      = ',natoms*nspin*nenergy*nthrds
+      write(*,*) '  total no. of tasks      = ',natoms*nspin*nenergy*num_threads
       write(*,'(79("="))')
 
     end if
@@ -65,6 +69,7 @@ module KKRnano_Comm_mod
   !> Set the number of OpenMP threads to nthrds.
   subroutine setKKRnanoNumThreads(nthrds)
     implicit none
+    include 'omp_lib.h'
     integer, intent(in) :: nthrds
     !$ call OMP_SET_NUM_THREADS(NTHRDS)
   end subroutine

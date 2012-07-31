@@ -5,7 +5,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
                     GLLHBLCK,BCP,IGUESS, &
                     TOL, &
                     naezd, lmmaxd, naclsd, xdim, ydim, zdim, &
-                    natbld, nthrds)
+                    natbld)
 
 
   implicit none
@@ -17,7 +17,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   integer, intent(in) :: ydim
   integer, intent(in) :: zdim
   integer, intent(in) :: natbld
-  integer, intent(in) :: nthrds
 
   double complex :: GLLH1(LMMAXD,NACLSD*LMMAXD,NAEZD) ! in?
   double complex :: X2(NAEZD*LMMAXD,LMMAXD)           ! out
@@ -214,13 +213,13 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
     if (BCP == 1) then
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
-      naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
+      naezd,lmmaxd,natbld,xdim,ydim,zdim)
     endif
 
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, &
                   VECS(1,1,9), &
-                  naezd, lmmaxd, naclsd, nthrds)
+                  naezd, lmmaxd, naclsd)
 
     ! r0 = b - Ax0 = v2 - v9
     VECS(:,:,5) = VECS(:,:,2) - VECS(:,:,9)
@@ -290,13 +289,13 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
     if (BCP == 1) then
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
-      naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
+      naezd,lmmaxd,natbld,xdim,ydim,zdim)
     endif
     
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, &
                   VECS(1,1,9), &
-                  naezd, lmmaxd, naclsd, nthrds)
+                  naezd, lmmaxd, naclsd)
     
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,9) result
@@ -363,12 +362,12 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
 
     if (BCP == 1) then
       call APPBLCKCIRC(DUMMY,GLLHBLCK, &
-      naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
+      naezd,lmmaxd,natbld,xdim,ydim,zdim)
     endif
     
     call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, VECS(1,1,8), &
-                  naezd, lmmaxd, naclsd, nthrds)
+                  naezd, lmmaxd, naclsd)
     
     !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
     !     VECS(:,:,8) result
@@ -427,7 +426,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
           call ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
         enddo
             
-        call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
+        call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmmaxd,natbld,xdim,ydim,zdim)
             
       else
             
@@ -440,7 +439,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
       call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                     CONE,CZERO, &
                     VECS(1,1,9), &
-                    naezd, lmmaxd, naclsd, nthrds)
+                    naezd, lmmaxd, naclsd)
         
       !     VECS(:,:,1) input vector to be multiplied by A = GLLH1
       !     VECS(:,:,9) result
@@ -526,7 +525,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
        call ZCOPY(NDIM,VECS(1,LM2,1),1,DUMMY(1,LM2),1)
      enddo
     
-     call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmmaxd,nthrds,natbld,xdim,ydim,zdim)
+     call APPBLCKCIRC(DUMMY,GLLHBLCK,naezd,lmmaxd,natbld,xdim,ydim,zdim)
     
      do LM2 = 1,LMMAXD
        call ZCOPY(NDIM,DUMMY(1,LM2),1,VECS(1,LM2,1),1)

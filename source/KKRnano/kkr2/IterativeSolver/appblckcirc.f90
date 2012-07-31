@@ -1,5 +1,5 @@
 subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
-                       naez,lmmaxd,nthrds, &
+                       naez,lmmaxd, &
                        natbld, xdim, ydim, zdim)
 
   implicit none
@@ -8,8 +8,6 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
 
   integer naez
   integer lmmaxd
-  !     number of OpenMP threads
-  integer nthrds
   !     number of atoms per preconditioning block
   integer natbld
   !     number of preconditioning blocks in each direction
@@ -65,7 +63,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
 
 
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  !$   CALL OMP_SET_NUM_THREADS(NTHRDS)
+
   !$OMP PARALLEL PRIVATE(X,Y,TBLCK,TXK,TYK,XK,YK)
 
   !!!OMP  PARALLEL PRIVATE (LMATBL,IX,IY,IZ,X,MYTHRD)
