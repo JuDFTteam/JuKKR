@@ -186,7 +186,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                    IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, &
                    natbld, nrd, nclsd, xdim, ydim, zdim)
 
-    ! ----------- Integrate Scattering Path operator over k-points ------------
+    ! ----------- Integrate Scattering Path operator over k-points --> GS -----
+    ! Note: here k-integration only in irreducible wedge
     call greenKSummation(GLLKE1, GS, VOLCUB(k_point_index), &
                          IAT, NSYMAT, naez, lmmaxd)
     ! -------------------------------------------------------------------------

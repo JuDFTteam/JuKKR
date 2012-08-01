@@ -1,4 +1,8 @@
-!***********************************************************************
+! comment E.R.:
+! use the following strategy:
+! IGUESS = 0: always use 0 as starting solution
+! IGUESS = 1 and SCITER=1: use 0
+! IGUESS = 1 and SCITER /= 1: use X2 as initial guess
 
 subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
                     IAT,SCITER,ITCOUNT, &
