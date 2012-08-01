@@ -292,20 +292,12 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
 
   !     .. LOCAL ARRAYS ..
-  double complex  ::TGH(lmmaxd) ! small
   double precision::N2B(lmmaxd) ! small
 
   integer :: iteration_counter
-  integer :: LM1
-  integer :: LM2
-  integer :: LM3
   integer :: ref_cluster_index
   integer :: site_index
-  integer :: site_lm_index
-  integer :: IL1B
-  integer :: IL2B
-  integer :: cluster_site_index
-  integer :: cluster_site_lm_index
+
   !=======================================================================
     
   ! ---> fourier transformation
@@ -345,6 +337,98 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   end do
 
+  !----------------------------------------------------------------------------
+  call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
+  !----------------------------------------------------------------------------
+
+  ! ==> now GLLH holds (Delta_t * G_ref - 1)
+
+
+  ! Now solve the linear matrix equation A*X = b (b is also a matrix),
+  ! where A = (Delta_t*G_ref - 1) (inverse of scattering path operator)
+  ! and b = (-1) * Delta_t
+
+  ! If the initial guess optimisation is used, X and b are modified, but
+  ! the form of the matrix equation stays the same
+
+  !===================================================================
+  ! 1) if IGUESS is activated, get initial guess from last iteration
+    
+  if (IGUESS == 1) then
+        
+    if (ITER > 1) then
+      call initialGuess_load(GLLKE1, PRSC_k)
+    endif
+
+  endif ! IGUESS == 1
+
+  !===================================================================
+  ! 2) if BCP is activated determine preconditioning matrix
+  !    GLLHBLCK ..
+    
+  GLLHBLCK = CZERO
+    
+  if (BCP == 1) then
+
+    call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
+                   lmmaxd, natbld, xdim, ydim, zdim, naclsd)
+  endif
+
+  !===================================================================
+  ! 3) solve linear set of equations by iterative TFQMR scheme
+  !    solve (\Delta t * G_ref - 1) X = - \Delta t
+  !    the solution X is the scattering path operator
+    
+  call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
+                IAT,ITER,iteration_counter, &
+                GLLHBLCK,BCP,IGUESS, &
+                QMRBOUND, &
+                naez, lmmaxd, naclsd, xdim, ydim, zdim, &
+                natbld)
+    
+  NOITER = NOITER + iteration_counter
+
+  !===================================================================
+  ! 4) if IGUESS is activated save solution for next iteration
+    
+  if (IGUESS == 1) then
+    call initialGuess_save(PRSC_k, GLLKE1)
+  endif
+
+  !===================================================================
+  ! solved. Result in GLLKE1
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Generates matrix (\Delta T G_ref - 1).
+!> on input: GLLH contains G_ref, on output: GLLH contains coefficient matrix
+subroutine generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
+  implicit none
+
+  double complex, parameter :: CONE  = ( 1.0D0,0.0D0)
+  double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
+
+  integer, intent(in) :: lmmaxd
+  integer, intent(in) :: naclsd
+  integer :: NAEZ
+  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
+  integer :: INDN0(NAEZ,NACLSD)
+  integer :: NUMN0(NAEZ)
+  doublecomplex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
+
+  !---------- local --------------
+  double complex :: TGH(lmmaxd)
+  integer :: IL1B
+  integer :: IL2B
+  integer :: LM1
+  integer :: LM2
+  integer :: LM3
+  integer :: site_index
+  integer :: site_lm_index
+  integer :: cluster_site_index
+  integer :: cluster_site_lm_index
+
   ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
   !
   !
@@ -354,8 +438,9 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! the reference cluster atom (inequivalent atoms only!)
   ! -------------------------------------------------------------------
 
-!!!$omp parallel do private(site_index, cluster_site_index, &
-!!!$                        cluster_site_lm_index, IL1B, IL2B, LM1, LM2, LM3, TGH)
+  !$omp parallel do private(site_index, site_lm_index, cluster_site_index, &
+  !$                        cluster_site_lm_index, IL1B, IL2B, &
+  !$                        LM1, LM2, LM3, TGH)
   do site_index=1,NAEZ
     IL1B=LMMAXD*(site_index-1)
     do cluster_site_index=1,NUMN0(site_index)
@@ -383,81 +468,9 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
       enddo
     enddo
   enddo
-!!!$omp end parallel do
-
-  ! ==> now GLLH holds (Delta_t * G_ref - 1)
-
-
-  ! Now solve the linear matrix equation A*X = b (b is also a matrix),
-  ! where A = (Delta_t*G_ref - 1) (inverse of scattering path operator)
-  ! and b = (-1) * Delta_t
-
-  ! If the initial guess optimisation is used, X and b are modified, but
-  ! the form of the matrix equation stays the same
-
-  !===================================================================
-  !===================================================================
-
-  ! solve linear matrix equation in subsequent steps
-
-  !===================================================================
-
-  !===================================================================
-  ! 1) if IGUESS is activated perform intitial step of
-  !    intial guess
-    
-  if (IGUESS == 1) then
-        
-    if (ITER > 1) then
-      call initialGuess_load(GLLKE1, PRSC_k)
-    endif
-
-  endif ! IGUESS == 1
-
-  !===================================================================
-
-  !===================================================================
-  ! 2) if BCP is activated determine preconditioning matrix
-  !    GLLHBLCK ..
-    
-  GLLHBLCK = CZERO
-    
-  if (BCP == 1) then
-
-    call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
-                   lmmaxd, natbld, xdim, ydim, zdim, naclsd)
-  endif
-  !===================================================================
-
-  !===================================================================
-  ! 3) solve linear set of equations by iterative TFQMR scheme
-  !    solve (\Delta t * G_ref - 1) X = - \Delta t
-  !    the solution X is the scattering path operator
-    
-  call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
-                IAT,ITER,iteration_counter, &
-                GLLHBLCK,BCP,IGUESS, &
-                QMRBOUND, &
-                naez, lmmaxd, naclsd, xdim, ydim, zdim, &
-                natbld)
-    
-  NOITER = NOITER + iteration_counter
-    
-  ! ..
-  !===================================================================
-
-  !===================================================================
-  ! 4) if IGUESS is activated perform final step of
-  !    intial guess
-    
-  if (IGUESS == 1) then
-    call initialGuess_save(PRSC_k, GLLKE1)
-  endif
-
-  !===================================================================
-  ! solved. Result in GLLKE1
-
+  !$omp end parallel do
 end subroutine
+
 
 !------------------------------------------------------------------------------
 !> Summation of Green's function over k-points. Has to be called for every k-point
