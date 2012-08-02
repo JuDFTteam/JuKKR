@@ -517,8 +517,8 @@ subroutine greenKSummation(GLLKE1, GS, k_point_weight, IAT, NSYMAT, naez, lmmaxd
     !         Green's function of atom IAT
 
     do ISYM = 1,NSYMAT
-      do LM1=1,LMMAXD
-        do LM2=1,LMMAXD
+      do LM2=1,LMMAXD
+        do LM1=1,LMMAXD
           GS(LM1,LM2,ISYM) = GS(LM1,LM2,ISYM) + k_point_weight * G(LM1,LM2)
         end do
       end do

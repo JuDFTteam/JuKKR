@@ -812,12 +812,16 @@ spinloop:     do ISPIN = 1,NSPIND
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
             if (KTE==1) then
-              call ESPCB(ESPC,NSPIND,I1,ECORE,LCORE,LCOREMAX,NCORE) !TODO
+              ! calculate total energy and individual contributions if requested
+              IPOT = NSPIND* (I1-1) + 1
+              call ESPCB_NEW(ESPC,NSPIND,ECORE,LCORE(:,IPOT),LCOREMAX,NCORE(IPOT))
 
+              ! output: EPOTIN
               call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,VISP,R(:,I1),DRDI(:,I1), &
               IRMIN(I1),IRWS(I1),LPOT,VINS,IRCUT(:,I1),IPAN(I1),ZAT(I1), &
               irmd, irnsd, ipand)
 
+              ! output: ECOU - l resolved Coulomb energy
               call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
               VONS,ZAT(I1),R(:,I1), &
               DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
@@ -830,7 +834,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-            ! output: VONS (changed)
+            ! output: VONS (changed), EXC (exchange energy)
             call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
             VONS,R(:,I1),DRDI(:,I1),A(I1), &
             IRWS(I1),IRCUT(:,I1),IPAN(I1),GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
