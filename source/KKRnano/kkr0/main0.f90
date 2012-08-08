@@ -12,7 +12,6 @@
 !     VCONST,                  : potential shift
 !     BRAVAIS(3,3),            : bravais lattice vectors
 !     RECBV(3,3),              : reciprocal basis vectors
-!     CLEB(NCLEB,2),           : GAUNT coefficients (GAUNT)
 !     RMTREF(NREFD),           : muffin-tin radius of reference system
 !     RBASIS(3,NAEZD),         : position of atoms in the unit cell
 !                              : in units of bravais vectors
@@ -55,7 +54,6 @@
 !     CLS(NAEZD),              : cluster around atom
 !     NACLS(NCLSD),            : number of atoms in cluster
 !     EZOA(NACLSD,NAEZD),      : EZ of atom at site in cluster
-!     ICLEB(NCLEB,3),          : pointer array
 !     RMT(NAEZD)               : muffin-tin radius of true system
 !     RMTNEW(NAEZD)            : adapted muffin-tin radius
 !     RWS(NAEZD)               : Wigner Seitz radius
@@ -72,8 +70,6 @@
 !                              : of non-spherical potential
 !     LLMSP(NAEZD,NFUND)       : lm=(l,m) of 'nfund'th nonvanishing
 !                              : component of non-spherical pot.
-!     JEND(LMPOTD,             : pointer array for icleb()
-!     LOFLM(LM2D),             : l of lm=(l,m) (GAUNT)
 !     NTCELL(NAEZD),           : index for WS cell
 !     REFPOT(NAEZD)            : ref. pot. card  at position
 
@@ -119,7 +115,6 @@
 !     IRID
 !     BCPD
 !     NACLSD
-!     NCLEB
 !     IRMD
 !     IEMXD
 !     NGSHD
@@ -226,7 +221,6 @@
 
 !     .. shape functions ..
 !    double precision :: THETAS(IRID,NFUND,NCELLD)
-!    double precision :: GSH(NGSHD)
 !    integer :: IFUNM(LMXSPD,NAEZD)
 !    integer :: IPAN(NAEZD)
 !    integer :: LLMSP(NFUND,NAEZD)
@@ -234,17 +228,13 @@
 !    integer :: ILM(NGSHD,3)
 !    integer :: NFU(NAEZD)
 !    integer :: NTCELL(NAEZD)
-!    integer :: IMAXSH(0:LMPOTD)
     double precision, dimension(:,:,:), allocatable :: THETAS
-    double precision, dimension(:),     allocatable :: GSH
     integer, dimension(:,:), allocatable :: IFUNM
     integer, dimension(:),   allocatable :: IPAN
     integer, dimension(:,:), allocatable :: LLMSP
     integer, dimension(:,:), allocatable :: LMSP
-    integer, dimension(:,:), allocatable :: ILM
     integer, dimension(:),   allocatable :: NFU
     integer, dimension(:),   allocatable :: NTCELL
-    integer, dimension(:),   allocatable :: IMAXSH
 
 !     .. reference clusters
     double precision :: RCUTXY
@@ -314,26 +304,6 @@
     complex(kind=DP), dimension(:,:,:), allocatable :: DSYMLL
     integer, dimension(:), allocatable :: ISYMINDEX
 
-!     .. Spherical harmonics ..
-!    double precision :: WG(LASSLD) ! not passed to kkr2
-!    double precision :: YRG(LASSLD,0:LASSLD,0:LASSLD) ! not passed to kkr2
-    double precision, dimension(:),     allocatable :: WG ! not passed to kkr2
-    double precision, dimension(:,:,:), allocatable :: YRG ! not passed to kkr2
-
-!     .. Clebsch-Gordon coefficients
-    integer :: IEND
-
-!    double precision :: CLEB(NCLEB,2)
-!    integer :: ICLEB(NCLEB,3)
-!    integer :: JEND(LMPOTD,0:LMAXD,0:LMAXD)
-!    integer :: LOFLM(LM2D) ! gives l from LM index
-
-    double precision, dimension(:,:), allocatable :: CLEB
-    integer, dimension(:,:),          allocatable :: ICLEB
-    integer, dimension(:,:,:),        allocatable :: JEND
-    integer, dimension(:),            allocatable :: LOFLM ! gives l from LM index
-
-
 !     .. core states ..
 !    integer :: ITITLE(20,NPOTD)
 !    integer :: LCORE(20,NPOTD)
@@ -390,12 +360,11 @@
     double precision, dimension(:), allocatable :: RMTNEW
     integer, dimension(:), allocatable :: INIPOL
 
-    integer ::   LASSLD,LMMAXD,LMPOTD,LMXSPD,LM2D,NPOTD
+    integer ::   LMMAXD,LMPOTD,LMXSPD,NPOTD
 
 ! ------------- parameters derived from others or calculated
     integer ::   LPOTD
     integer ::   IEMXD
-    integer ::   NCLEB
     integer, parameter :: KREL = 0
 
 ! ------------- parameters from global.conf (former inc.p, inc.cls)
@@ -404,20 +373,16 @@
     integer :: NSPIND
     integer :: NAEZD
     integer :: IRNSD
-    integer :: TRC
     integer :: IRMD
     integer :: NREFD
     integer :: NRD
     integer :: IRID
     integer :: NFUND
     integer :: NCELLD
-    integer :: NGSHD
     integer :: NACLSD
     integer :: NCLSD
     integer :: IPAND
     integer :: NXIJD
-    integer :: NATRCD
-    integer :: NUTRCD
     integer :: KPOIBZ
     integer :: EKMD
     integer :: IGUESSD
@@ -438,6 +403,9 @@
     character(len=40) :: variable
     integer :: next_ptr
 
+    !-------- unused dummys
+    integer :: TRC
+
 ! ------------ end of declarations ---------------------------------
 
     type (ConfigReader) :: conf
@@ -454,8 +422,6 @@
     if (ierror /= 0) stop
     call getValueInteger(conf, "IRNSD", IRNSD, ierror)
     if (ierror /= 0) stop
-    call getValueInteger(conf, "TRC", TRC, ierror)
-    if (ierror /= 0) stop
     call getValueInteger(conf, "IRMD", IRMD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NREFD", NREFD, ierror)
@@ -468,8 +434,6 @@
     if (ierror /= 0) stop
     call getValueInteger(conf, "NCELLD", NCELLD, ierror)
     if (ierror /= 0) stop
-    call getValueInteger(conf, "NGSHD", NGSHD, ierror)
-    if (ierror /= 0) stop
     call getValueInteger(conf, "NACLSD", NACLSD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NCLSD", NCLSD, ierror)
@@ -477,10 +441,6 @@
     call getValueInteger(conf, "IPAND", IPAND, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NXIJD", NXIJD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NATRCD", NATRCD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NUTRCD", NUTRCD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "KPOIBZ", KPOIBZ, ierror)
     if (ierror /= 0) stop
@@ -527,8 +487,6 @@
     NPOTD= NSPIND*NAEZD
     LMPOTD= (LPOTD+1)**2
     LMXSPD= (2*LPOTD+1)**2
-    LASSLD=4*LMAXD
-    LM2D= (2*LMAXD+1)**2
 
     PI = 4.0D0*ATAN(1.0D0)
     EFERMI = 0.0d0
@@ -547,15 +505,12 @@
 
     !Shape functions
     allocate(THETAS(IRID,NFUND,NCELLD), stat=ierror)
-    allocate(GSH(NGSHD), stat=ierror)
     allocate(IFUNM(LMXSPD,NAEZD), stat=ierror)
     allocate(IPAN(NAEZD), stat=ierror)
     allocate(LLMSP(NFUND,NAEZD), stat=ierror)
     allocate(LMSP(LMXSPD,NAEZD), stat=ierror)
-    allocate(ILM(NGSHD,3), stat=ierror)
     allocate(NFU(NAEZD), stat=ierror)
     allocate(NTCELL(NAEZD), stat=ierror)
-    allocate(IMAXSH(0:LMPOTD), stat=ierror)
 
     ! Reference Cluster
     allocate(RCLS(3,NACLSD,NCLSD), stat=ierror)
@@ -585,10 +540,6 @@
     !         symmetry matrices
     allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD), stat=ierror)
     allocate(ISYMINDEX(NSYMAXD), stat=ierror)
-
-    ! spherical harmonics
-    allocate(WG(LASSLD), stat=ierror)
-    allocate(YRG(LASSLD,0:LASSLD,0:LASSLD), stat=ierror)
 
     !     .. core states ..
     allocate(ITITLE(20,NPOTD), stat=ierror)
@@ -630,7 +581,6 @@
       ! DOS-calculation
       IEMXD = NPNT2
     end if
-    NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN 2
@@ -644,18 +594,9 @@
     !   auxillary
     allocate(DEZ(IEMXD), stat=ierror)
 
-    ! Clebsch-Gordon coefficients
-    allocate(CLEB(NCLEB,2), stat=ierror)
-    allocate(ICLEB(NCLEB,3), stat=ierror)
-    allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat=ierror)
-    allocate(LOFLM(LM2D), stat=ierror)
-
-
 !-----------------------------------------------------------------------------
 ! Array allocations END 2
 !-----------------------------------------------------------------------------
-
-
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -753,30 +694,8 @@
       WEZ(IE) = -2.D0/PI*DEZ(IE)
     end do
 
-
-    call GAUNT2(WG,YRG,LMAX)
-    call GAUNT(LMAX,LPOT,WG,YRG,CLEB,LOFLM,ICLEB,IEND,JEND,NCLEB)
-!      OPEN(56,FILE='gaunt',FORM='formatted')
-!      WRITE(56,FMT='(I10)') IEND
-!      DO I = 1,IEND
-!      WRITE(56,FMT='(3I5,1P,D25.17)')
-!     +            ICLEB(I,1),ICLEB(I,2),ICLEB(I,3),CLEB(I,1)
-!      END DO
-!      CLOSE(56)
-
-! --> setup of GAUNT coefficients C(l,m;l',m';l'',m'') for all
-!     nonvanishing (l'',m'')-components of the shape functions THETAS
-
-    call SHAPE(LPOT,NAEZ,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,LMAX,NGSHD)
-!      OPEN(56,FILE='gaunt_shape',FORM='formatted')
-!      WRITE(56,FMT='(I10)') IMAXSH(LMPOTD)
-!      DO I = 1,IMAXSH(LMPOTD)
-!      WRITE(56,FMT='(3I5,1P,D25.17)')
-!     +            ILM(I,1),ILM(I,2),ILM(I,3),GSH(I)
-!      END DO
-!      CLOSE(56)
-
 ! ================================================ deal with the lattice
+    ! only for informative purposes
     call LATTIX99(ALAT,BRAVAIS,RECBV,VOLUME0, .true.)
 
 ! --> now generate the real-space lattice vectors for the
@@ -807,20 +726,7 @@
 
 ! xcpl test dimensions for Jij-calculation ..
     call CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ,NRD,NXIJD)
-    ! xcpl .
-
-    ! C2 ===================================================================
-    ! C2  generate cluster 2 in order to truncate GLLKE, GLLH, etc.
-    ! C2 ===================================================================
-
-    if (TRC == 1) then
-      call CLSGEN_TRC(NAEZ,RR,NR,RBASIS, &
-      RCUTTRC,ALAT, &
-      NRD, NATRCD, NUTRCD)
-    endif
-! C2 ===================================================================
-! C2 ===================================================================
-
+! xcpl .
 
 
 ! ======================================================================
@@ -935,15 +841,12 @@
 
     !Shape functions
     deallocate(THETAS, stat=ierror)
-    deallocate(GSH, stat=ierror)
     deallocate(IFUNM, stat=ierror)
     deallocate(IPAN, stat=ierror)
     deallocate(LLMSP, stat=ierror)
     deallocate(LMSP, stat=ierror)
-    deallocate(ILM, stat=ierror)
     deallocate(NFU, stat=ierror)
     deallocate(NTCELL, stat=ierror)
-    deallocate(IMAXSH, stat=ierror)
 
     ! Reference Cluster
     deallocate(RCLS, stat=ierror)
@@ -973,16 +876,6 @@
     ! Symmetry matrices
     deallocate(DSYMLL, stat=ierror)
     deallocate(ISYMINDEX, stat=ierror)
-
-    ! spherical harmonics
-    deallocate(WG, stat=ierror)
-    deallocate(YRG, stat=ierror)
-
-    ! Clebsch-Gordon coefficients
-    deallocate(CLEB, stat=ierror)
-    deallocate(ICLEB, stat=ierror)
-    deallocate(JEND, stat=ierror)
-    deallocate(LOFLM, stat=ierror)
 
     !     .. core states ..
     deallocate(ITITLE, stat=ierror)
