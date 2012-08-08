@@ -38,10 +38,8 @@ program MAIN2
 
   !     .. Parameters ..
 
-  integer::   NSYMAXD
-  parameter (NSYMAXD=48)
-  double complex:: CZERO
-  parameter      (CZERO=(0.0D0,0.0D0))
+  integer, parameter ::   NSYMAXD = 48
+  double complex, parameter :: CZERO = (0.0D0,0.0D0)
 
   !     ..
   !     .. Local Scalars ..
@@ -1068,11 +1066,9 @@ spinloop:     do ISPIN = 1,NSPIND
 
   endif ! active Ranks
 
-!-----------------------------------------------------------------------------
-! Array DEallocations
-!-----------------------------------------------------------------------------
+!------------------------------------------------------------------------------
   call deallocate_main2_arrays()
-!-----------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID do nothing ...

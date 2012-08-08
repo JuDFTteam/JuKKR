@@ -6,6 +6,15 @@
 !> It wraps the previously used routines gaunt and shape
 !> @author: Elias Rabel
 
+! Some macros for checked allocation/deallocation
+! they need an integer variable named memory_stat declared in each routine
+! they are used.
+
+#define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
+#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
+#define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
+#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
+
 module ShapeGauntCoefficients_mod
   implicit none
 
@@ -27,12 +36,13 @@ module ShapeGauntCoefficients_mod
     integer, intent(in) :: lmax
     !---------------------------
 
+    integer :: memory_stat
     integer :: LASSLD
     integer :: LPOT
     integer :: LMPOTD
     integer :: NGSHD
-    double precision, dimension(:),     allocatable :: WG
-    double precision, dimension(:,:,:), allocatable :: YRG
+    double precision, dimension(:),     allocatable :: WG  !local
+    double precision, dimension(:,:,:), allocatable :: YRG !local
 
     LPOT = 2*lmax
     LASSLD = 4*lmax
@@ -42,15 +52,16 @@ module ShapeGauntCoefficients_mod
     coeff%lmax = lmax
     coeff%lmpotd = LMPOTD
 
-    allocate(WG(LASSLD))
-    allocate(YRG(LASSLD,0:LASSLD,0:LASSLD))
+    ALLOCATECHECK(WG(LASSLD))
+    ALLOCATECHECK(YRG(LASSLD,0:LASSLD,0:LASSLD))
 
     call GAUNT2(WG,YRG,lmax)
-    call SHAPEG_count(LPOT,WG,YRG,LMAX, NGSHD)
+    call SHAPEG_count(LPOT,WG,YRG,LMAX, NGSHD) ! determine number of coefficients
 
-    allocate(coeff%GSH(NGSHD))
-    allocate(coeff%ILM(NGSHD,3))
-    allocate(coeff%IMAXSH(0:LMPOTD))
+    ALLOCATECHECK(coeff%GSH(NGSHD))
+    ALLOCATECHECK(coeff%ILM(NGSHD,3))
+    ALLOCATECHECK(coeff%IMAXSH(0:LMPOTD))
+
     coeff%GSH = 0.0d0
     coeff%ILM = -1
     coeff%IMAXSH = -1
@@ -59,8 +70,8 @@ module ShapeGauntCoefficients_mod
 
     coeff%NGSHD = NGSHD
 
-    deallocate(WG)
-    deallocate(YRG)
+    DEALLOCATECHECK(WG)
+    DEALLOCATECHECK(YRG)
 
   end subroutine
 
@@ -68,10 +79,11 @@ module ShapeGauntCoefficients_mod
   subroutine destroyShapeGauntCoefficients(coeff)
     implicit none
     type (ShapeGauntCoefficients), intent(inout) :: coeff
+    integer :: memory_stat
 
-    deallocate(coeff%GSH)
-    deallocate(coeff%ILM)
-    deallocate(coeff%IMAXSH)
+    DEALLOCATECHECK(coeff%GSH)
+    DEALLOCATECHECK(coeff%ILM)
+    DEALLOCATECHECK(coeff%IMAXSH)
   end subroutine
 
 end module ShapeGauntCoefficients_mod
