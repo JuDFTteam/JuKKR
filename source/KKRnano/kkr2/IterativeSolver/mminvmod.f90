@@ -3,8 +3,9 @@
 ! IGUESS = 0: always use 0 as starting solution
 ! IGUESS = 1 and SCITER=1: use 0
 ! IGUESS = 1 and SCITER /= 1: use X2 as initial guess
+! on output: solution in X2
 
-subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
+subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
                     IAT,SCITER,ITCOUNT, &
                     GLLHBLCK,BCP,IGUESS, &
                     TOL, &
@@ -27,7 +28,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)       ! in
   integer:: NUMN0(NAEZD)                              ! in
   integer:: INDN0(NAEZD,NACLSD)                       ! in
-  double precision::N2B(LMMAXD)                       ! in, calculated outside mminvmod (not optimal)
   integer::IAT                                        ! in
   integer::SCITER                                     ! in
   integer::ITCOUNT                                    ! out
@@ -70,6 +70,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0,N2B, &
   ! local arrays ..
 
   !     small, local arrays with dimension LMMAXD
+  double precision::N2B(LMMAXD)
   double complex :: RHO(LMMAXD)
   double complex :: ETA(LMMAXD)
   double complex :: BETA(LMMAXD)

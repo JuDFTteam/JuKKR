@@ -89,10 +89,10 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   integer:: NUMN0(NAEZ)
   integer:: INDN0(NAEZ,NACLSD)
-  integer:: ATOM(NACLSD,*)
-  integer:: CLS(*)
-  integer:: EZOA(NACLSD,*)
-  integer:: NACLS(*)
+  integer:: ATOM(:,:) ! dim naclsd, naez?
+  integer:: CLS(:)         ! dim *
+  integer:: EZOA(:,:) ! dim naclsd, naez?
+  integer:: NACLS(:)
 
   double complex::BZTR2
   double precision::QMRBOUND
@@ -261,23 +261,23 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   integer, intent(in) :: nclsd
   integer, intent(in) :: nguessd
   double precision :: ALAT
-  integer :: ATOM(NACLSD,*)
+  integer :: ATOM(:,:)         ! dim: naclsd, *
   integer :: BCP
   double precision :: kpoint(3)
-  integer :: CLS(*)
-  doublecomplex :: EIKRM(NACLSD)
-  doublecomplex :: EIKRP(NACLSD)
-  integer :: EZOA(NACLSD,*)
-  doublecomplex :: GINP(lmmaxd,lmmaxd,NACLSD,NCLSD)
-  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
-  double complex :: GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*XDIM*YDIM*ZDIM)
+  integer :: CLS(:)
+  double complex :: EIKRM(naclsd)   ! dim: naclsd
+  double complex :: EIKRP(naclsd)
+  integer :: EZOA(NACLSD,*) ! dim naclsd,*
+  doublecomplex :: GINP(lmmaxd,lmmaxd,NACLSD,NCLSD) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ) ! dim: lmmaxd, naclsd*lmmaxd, naez
+  double complex :: GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*XDIM*YDIM*ZDIM) ! dim: lmmaxd*natbld, lmmaxd*natbld*xdim*ydim*zdim
   double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
   integer :: IAT
   integer :: IGUESS
   integer :: INDN0(NAEZ,NACLSD)
   integer :: ITER
   integer, intent(in) :: lmmaxd
-  integer :: NACLS(*)
+  integer :: NACLS(:)
   integer, intent(in) :: natbld
   integer :: NOITER
   integer, intent(in) :: nrd
@@ -290,9 +290,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !-------- local ---------
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
-
-  !     .. LOCAL ARRAYS ..
-  double precision::N2B(lmmaxd) ! small
 
   integer :: iteration_counter
   integer :: ref_cluster_index
@@ -331,7 +328,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
                nrd, naclsd)
 
     call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
-               ref_cluster_index,NACLS,ATOM(1,site_index),NUMN0,INDN0, &
+               ref_cluster_index,NACLS,ATOM(:,site_index),NUMN0,INDN0, &
                GINP(1,1,1,ref_cluster_index), &
                naez, lmmaxd, naclsd)
 
@@ -379,7 +376,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !    solve (\Delta t * G_ref - 1) X = - \Delta t
   !    the solution X is the scattering path operator
     
-  call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0,N2B, &
+  call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0, &
                 IAT,ITER,iteration_counter, &
                 GLLHBLCK,BCP,IGUESS, &
                 QMRBOUND, &
