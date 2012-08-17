@@ -26,17 +26,20 @@ program MAIN2
   use MadelungCalculator_mod
   use lloyd0_new_mod
 
+  use GauntCoefficients_mod
+  use ShapeGauntCoefficients_mod
+
   implicit none
   include 'mpif.h'
 
   type (MadelungCalculator) :: madelung_calc
+  type (ShapeGauntCoefficients) :: shgaunts
+  type (GauntCoefficients) :: gaunts
 
   !     .. Parameters ..
 
-  integer::   NSYMAXD
-  parameter (NSYMAXD=48)
-  double complex:: CZERO
-  parameter      (CZERO=(0.0D0,0.0D0))
+  integer, parameter ::   NSYMAXD = 48
+  double complex, parameter :: CZERO = (0.0D0,0.0D0)
 
   !     ..
   !     .. Local Scalars ..
@@ -85,7 +88,6 @@ program MAIN2
   integer::KVMAD
   integer::KXC
   integer::KFORCE
-  integer::IEND1
   integer::IPOT
   integer::ISPIN
   integer::I1
@@ -157,6 +159,7 @@ program MAIN2
 
 ! -----------------------------------------------------------------------------
   call createKKRnanoParallel(my_mpi, NAEZ, SMPID, EMPID)
+  call setKKRnanoNumThreads(nthrds)
   call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 
@@ -168,9 +171,9 @@ program MAIN2
 !========= TIMING END ======================================================
 
   ! from dimension parameters - calculate some derived parameters
-  call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LM2D, LMAXD, &
+  call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LMAXD, &
                             LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
-                            LRECRES2, MMAXD, NAEZ, NCLEB, NGUESSD, NPOTD, NSPIND, NTIRD)
+                            LRECRES2, MMAXD, NAEZ, NGUESSD, NPOTD, NSPIND, NTIRD)
 
 
 !-----------------------------------------------------------------------------
@@ -182,12 +185,12 @@ program MAIN2
 !-----------------------------------------------------------------------------
 
   !every process does this!
-  call readKKR0Input      (NSYMAXD, A, ALAT, ATOM, B, BCP, BRAVAIS, CLEB1C, &
-                           CLS, DRDI, DSYMLL, EZOA, FCM, GMAX, GSH, ICLEB1C, ICST, &
-                           IEND1, IFUNM, IGUESS, ILM, IMAXSH, IMIX, IMT, INDN0, IPAN, &
+  call readKKR0Input      (NSYMAXD, A, ALAT, ATOM, B, BCP, BRAVAIS, &
+                           CLS, DRDI, DSYMLL, EZOA, FCM, GMAX, ICST, &
+                           IFUNM, IGUESS, IMIX, IMT, INDN0, IPAN, &
                            IRC, IRCUT, IRMIN, IRNS, IRWS, ISHIFT, ISYMINDEX, ITITLE, &
-                           JEND, JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
-                           LDAU, LLMSP, LMSP, LOFLM1C, MAXMESH, &
+                           JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
+                           LDAU, LLMSP, LMSP, MAXMESH, &
                            MIXING, NACLS, NCLS, NCORE, NFU, NR, NREF, &
                            NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, R, &
                            RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMT, RMTREF, &
@@ -248,6 +251,8 @@ program MAIN2
     end do
 !+++++++++++ end atom - parallel ++++++++++++++++++++++++++++++++
 
+    call createGauntCoefficients(gaunts, lmaxd)
+    call createShapeGauntCoefficients(shgaunts, lmaxd)
 
 ! ######################################################################
 ! ######################################################################
@@ -358,13 +363,13 @@ program MAIN2
               !TESTARRAY(0, TREFLL)
               !TESTARRAY(0, DTREFLL)
 
-              call GREF_com(EZ(IE),ALAT,IEND1,NCLS,NAEZ, &
-                            CLEB1C,RCLS,ATOM,CLS,ICLEB1C,LOFLM1C,NACLS, &
+              call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
+                            gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB,gaunts%LOFLM,NACLS, &
                             REFPOT, &
                             TREFLL,DTREFLL,GREFN,DGREFN, &
                             LLY_G0TR(:,IE), &
                             getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-                            lmaxd, naclsd, ncleb, nrefd, nclsd, &
+                            lmaxd, naclsd, gaunts%ncleb, nrefd, nclsd, &
                             LLY)
 
               !TESTARRAY(0, GREFN)
@@ -389,10 +394,10 @@ spinloop:     do ISPIN = 1,NSPIND
                                 NSRA,EZ(IE), &
                                 DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                 VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
-                                IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
+                                IRCUT(0,I1),gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                                 TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                 LLDAU,WMLDAU(1,1,1,ISPIN), &
-                                ncleb, ipand, irmd, irnsd)
+                                gaunts%ncleb, ipand, irmd, irnsd)
 
                   DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
@@ -404,10 +409,10 @@ spinloop:     do ISPIN = 1,NSPIND
                                   NSRA,EZ(IE),delta_E_z, &
                                   DRDI(1,I1),R(1,I1),VINS(IRMIND,1,ISPIN), &
                                   VISP(1,ISPIN),ZAT(I1),IPAN(I1), &
-                                  IRCUT(0,I1),CLEB1C,LOFLM1C,ICLEB1C,IEND1, &
+                                  IRCUT(0,I1),gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                                   DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                   LLDAU,WMLDAU(1,1,1,ISPIN), &
-                                  ncleb, ipand, irmd, irnsd)
+                                  gaunts%ncleb, ipand, irmd, irnsd)
                   end if
 
                   RF = REFPOT(I1)
@@ -446,7 +451,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
                   GMATXIJ(1,1,1,ISPIN), &
                   getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-                  iemxd, nthrds, &
+                  iemxd, &
                   lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -578,17 +583,17 @@ spinloop:     do ISPIN = 1,NSPIND
               ! calculations is LLY_GRDT_ALL
 
               ICELL = NTCELL(I1)
-              call LLOYD0_NEW(EZ,WEZ,CLEB1C,DRDI(:,I1),R(:,I1),IRMIN(I1), &
-                              VINS,VISP,THETAS(:,:,ICELL),ZAT(I1),ICLEB1C, &
+              call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,DRDI(:,I1),R(:,I1),IRMIN(I1), &
+                              VINS,VISP,THETAS(:,:,ICELL),ZAT(I1),gaunts%ICLEB, &
                               IFUNM(:,ICELL),IPAN(I1),IRCUT(:,I1),LMSP(:,ICELL), &
-                              JEND,LOFLM1C,ICST,IELAST,IEND1,NSPIND,NSRA, &
+                              gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
                               WEZRN,RNORM, &
                               GMATN, &
                               LLY_GRDT, &
                               LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
                               getMySEcommunicator(my_mpi), &
                               lmaxd, irmd, irnsd, iemxd, &
-                              irid, nfund, ipand, ncleb)
+                              irid, nfund, ipand, gaunts%ncleb)
 
               TESTARRAY(0, WEZRN)
               TESTARRAY(0, RNORM)
@@ -633,12 +638,12 @@ spinloop:     do ISPIN = 1,NSPIND
                           THETAS(1,1,ICELL),IFUNM(1,ICELL),LMSP(1,ICELL), &
                           RHO2NS,R2NEF, &
                           DEN(0,1,ISPIN),ESPV(0,ISPIN), &
-                          CLEB1C,LOFLM1C,ICLEB1C,IEND1,JEND, &
+                          gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND,gaunts%JEND, &
                           GMATN, &
                           LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
                           DMATLDAU, &
                           iemxd, &
-                          lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+                          lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
 
               ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
               call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
@@ -765,9 +770,9 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ----------------------------------------------------------------------
             !output: CMOM, CMINST
             call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
-            R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),shgaunts%ILM,IFUNM(1,ICELL),shgaunts%IMAXSH,shgaunts%GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
-            irmd, irid, nfund, ipand, ngshd)
+            irmd, irid, nfund, ipand, shgaunts%ngshd)
 
             call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',TIME_I,ITER)
 
@@ -776,9 +781,9 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
             !output: VONS
             call VINTRAS_NEW(LPOT,NSPIND,RHO2NS,VONS, &
-            R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
+            R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),shgaunts%ILM,IFUNM(1,ICELL),shgaunts%IMAXSH,shgaunts%GSH, &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
-            irmd, irid, nfund, ngshd, ipand)
+            irmd, irid, nfund, shgaunts%ngshd, ipand)
 
             TESTARRAYLOCAL(VONS)
             TESTARRAYLOCAL(RHO2NS)
@@ -811,17 +816,21 @@ spinloop:     do ISPIN = 1,NSPIND
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
             if (KTE==1) then
-              call ESPCB(ESPC,NSPIND,I1,ECORE,LCORE,LCOREMAX,NCORE) !TODO
+              ! calculate total energy and individual contributions if requested
+              IPOT = NSPIND* (I1-1) + 1
+              call ESPCB_NEW(ESPC,NSPIND,ECORE,LCORE(:,IPOT),LCOREMAX,NCORE(IPOT))
 
+              ! output: EPOTIN
               call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,VISP,R(:,I1),DRDI(:,I1), &
               IRMIN(I1),IRWS(I1),LPOT,VINS,IRCUT(:,I1),IPAN(I1),ZAT(I1), &
               irmd, irnsd, ipand)
 
+              ! output: ECOU - l resolved Coulomb energy
               call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
               VONS,ZAT(I1),R(:,I1), &
-              DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
-              ILM,GSH,THETAS(:,:,ICELL),LMSP(1,ICELL), &
-              irmd, irid, nfund, ipand, ngshd)
+              DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),shgaunts%IMAXSH,IFUNM(1,ICELL), &
+              shgaunts%ILM,shgaunts%GSH,THETAS(:,:,ICELL),LMSP(1,ICELL), &
+              irmd, irid, nfund, ipand, shgaunts%ngshd)
 
             end if
 
@@ -829,12 +838,12 @@ spinloop:     do ISPIN = 1,NSPIND
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-            ! output: VONS (changed)
+            ! output: VONS (changed), EXC (exchange energy)
             call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
             VONS,R(:,I1),DRDI(:,I1),A(I1), &
-            IRWS(I1),IRCUT(:,I1),IPAN(I1),GSH,ILM,IMAXSH,IFUNM(1,ICELL), &
+            IRWS(I1),IRCUT(:,I1),IPAN(I1),shgaunts%GSH,shgaunts%ILM,shgaunts%IMAXSH,IFUNM(1,ICELL), &
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
-            irmd, irid, nfund, ngshd, ipand)
+            irmd, irid, nfund, shgaunts%ngshd, ipand)
 
             call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',TIME_I,ITER)
 ! =====================================================================
@@ -910,10 +919,10 @@ spinloop:     do ISPIN = 1,NSPIND
               call shiftPotential(VONS(:,:,ISPIN), IRCUT(IPAN(I1),I1), VBC(ISPIN))
               !output: VONS (changed)
               call CONVOL_NEW(IRCUT(1,I1),IRC(I1), &
-                          IMAXSH(LMPOTD),ILM,IFUNM(1,ICELL),LMPOTD,GSH, &
+                          shgaunts%IMAXSH(shgaunts%LMPOTD),shgaunts%ILM,IFUNM(1,ICELL),LMPOTD,shgaunts%GSH, &
                           THETAS(:,:,ICELL),ZAT(I1), &
                           R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
-                          irid, nfund, irmd, ngshd)
+                          irid, nfund, irmd, shgaunts%ngshd)
 
             end do
 
@@ -1050,16 +1059,16 @@ spinloop:     do ISPIN = 1,NSPIND
     if (KFORCE==1) close(54)
 
     call destroyMadelungCalculator(madelung_calc)
+    call destroyGauntCoefficients(gaunts)
+    call destroyShapeGauntCoefficients(shgaunts)
 
 ! ======================================================================
 
   endif ! active Ranks
 
-!-----------------------------------------------------------------------------
-! Array DEallocations
-!-----------------------------------------------------------------------------
+!------------------------------------------------------------------------------
   call deallocate_main2_arrays()
-!-----------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID do nothing ...

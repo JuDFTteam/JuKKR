@@ -14,7 +14,6 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: RBASIS
 
   double precision, dimension(:,:), allocatable :: SMAT
-  double precision, dimension(:,:), allocatable :: CLEB1C
   double precision, dimension(:,:), allocatable :: RNORM
   double precision, dimension(:), allocatable :: RWS
   double precision, dimension(:), allocatable :: RMT
@@ -76,9 +75,6 @@ module main2_arrays_mod
   ! ----------------- Shape functions ------------------------------------
   double precision, dimension(:,:,:), allocatable :: THETAS
 
-  ! ----------------- Shape-Gaunts ---------------------------------------\
-  double precision, dimension(:), allocatable :: GSH
-
   ! ----------------------------------------------------------------------
   double precision, dimension(:,:), allocatable ::  RHOCAT
   double precision, dimension(:,:,:), allocatable ::  R2NEF
@@ -115,14 +111,9 @@ module main2_arrays_mod
   integer, dimension(:), allocatable :: NFU
   integer, dimension(:), allocatable :: NTCELL
 
-  integer, dimension(:,:), allocatable :: ILM
-  integer, dimension(:), allocatable :: IMAXSH
-  integer, dimension(:,:), allocatable :: ICLEB1C
-  integer, dimension(:), allocatable :: LOFLM1C
   integer, dimension(:,:), allocatable :: IFUNM
 
   integer, dimension(:,:), allocatable :: LMSP
-  integer, dimension(:,:,:), allocatable :: JEND
 
   double precision, dimension(:,:,:), allocatable :: RCLS
   double precision, dimension(:), allocatable :: RMTREF
@@ -156,10 +147,8 @@ module main2_arrays_mod
   integer :: IRID
   integer :: BCPD
   integer :: NACLSD
-  integer :: NCLEB
   integer :: IRMD
   integer :: IEMXD
-  integer :: NGSHD
   integer :: IGUESSD
   integer :: IPAND
   integer :: ISHLD
@@ -188,7 +177,6 @@ module main2_arrays_mod
   integer::   NPOTD
   integer::   LMAXD1
   integer::   MMAXD
-  integer::   LM2D
   integer::   LMXSPD
   integer::   LMPOTD
   integer::   IRMIND
@@ -218,9 +206,6 @@ CONTAINS
 
     implicit none
 
-    integer :: TRC ! not used anymore
-    integer :: NATRCD ! not used
-    integer :: NUTRCD ! not used
     integer :: FILEHANDLE = 67
 
     open (FILEHANDLE, FILE='inp0.unf', FORM='unformatted')
@@ -229,20 +214,16 @@ CONTAINS
     read(FILEHANDLE) NSPIND
     read(FILEHANDLE) NAEZ
     read(FILEHANDLE) IRNSD
-    read(FILEHANDLE) TRC
     read(FILEHANDLE) IRMD
     read(FILEHANDLE) NREFD
     read(FILEHANDLE) NRD
     read(FILEHANDLE) IRID
     read(FILEHANDLE) NFUND
     read(FILEHANDLE) NCELLD
-    read(FILEHANDLE) NGSHD
     read(FILEHANDLE) NACLSD
     read(FILEHANDLE) NCLSD
     read(FILEHANDLE) IPAND
     read(FILEHANDLE) NXIJD
-    read(FILEHANDLE) NATRCD
-    read(FILEHANDLE) NUTRCD
     read(FILEHANDLE) KPOIBZ
     read(FILEHANDLE) IGUESSD
     read(FILEHANDLE) BCPD
@@ -291,8 +272,6 @@ CONTAINS
     allocate(RBASIS(3,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(SMAT(LMXSPD,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(CLEB1C(NCLEB,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RNORM(IEMXD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -392,8 +371,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CHARGE(0:LMAXD1,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(GSH(NGSHD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CMINST(LMPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CMOM(LMPOTD), stat = memory_stat)
@@ -440,19 +417,9 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NTCELL(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ILM(NGSHD,3), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IMAXSH(0:LMPOTD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ICLEB1C(NCLEB,3), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LOFLM1C(LM2D), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(IFUNM(LMXSPD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LMSP(LMXSPD,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(JEND(LMPOTD,0:LMAXD,0:LMAXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RCLS(3,NACLSD,NCLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -514,7 +481,6 @@ CONTAINS
     deallocate(DMATLDAU, stat = memory_stat)
     deallocate(RBASIS, stat = memory_stat)
     deallocate(SMAT, stat = memory_stat)
-    deallocate(CLEB1C, stat = memory_stat)
     deallocate(RNORM, stat = memory_stat)
     deallocate(RWS, stat = memory_stat)
     deallocate(RMT, stat = memory_stat)
@@ -564,7 +530,6 @@ CONTAINS
     deallocate(R2NEF, stat = memory_stat)
     deallocate(RHO2NS, stat = memory_stat)
     deallocate(CHARGE, stat = memory_stat)
-    deallocate(GSH, stat = memory_stat)
     deallocate(CMINST, stat = memory_stat)
     deallocate(CMOM, stat = memory_stat)
     deallocate(CATOM, stat = memory_stat)
@@ -588,13 +553,8 @@ CONTAINS
     deallocate(NCORE, stat = memory_stat)
     deallocate(NFU, stat = memory_stat)
     deallocate(NTCELL, stat = memory_stat)
-    deallocate(ILM, stat = memory_stat)
-    deallocate(IMAXSH, stat = memory_stat)
-    deallocate(ICLEB1C, stat = memory_stat)
-    deallocate(LOFLM1C, stat = memory_stat)
     deallocate(IFUNM, stat = memory_stat)
     deallocate(LMSP, stat = memory_stat)
-    deallocate(JEND, stat = memory_stat)
     deallocate(RCLS, stat = memory_stat)
     deallocate(RMTREF, stat = memory_stat)
     deallocate(VREF, stat = memory_stat)

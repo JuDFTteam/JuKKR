@@ -9,20 +9,16 @@ LMAXD, &
 NSPIND, &
 NAEZD, &
 IRNSD, &
-TRC, &
 IRMD, &
 NREFD, &
 NRD, &
 IRID, &
 NFUND, &
 NCELLD, &
-NGSHD, &
 NACLSD, &
 NCLSD, &
 IPAND, &
 NXIJD, &
-NATRCD, &
-NUTRCD, &
 KPOIBZ, &
 IGUESSD, &
 BCPD, &
@@ -46,20 +42,16 @@ EKMD)
   integer, intent(in) :: NSPIND
   integer, intent(in) :: NAEZD
   integer, intent(in) :: IRNSD
-  integer, intent(in) :: TRC
   integer, intent(in) :: IRMD
   integer, intent(in) :: NREFD
   integer, intent(in) :: NRD
   integer, intent(in) :: IRID
   integer, intent(in) :: NFUND
   integer, intent(in) :: NCELLD
-  integer, intent(in) :: NGSHD
   integer, intent(in) :: NACLSD
   integer, intent(in) :: NCLSD
   integer, intent(in) :: IPAND
   integer, intent(in) :: NXIJD
-  integer, intent(in) :: NATRCD
-  integer, intent(in) :: NUTRCD
   integer, intent(in) :: KPOIBZ
   integer, intent(in) :: IGUESSD
   integer, intent(in) :: BCPD
@@ -85,20 +77,16 @@ EKMD)
   write(FILEHANDLE) NSPIND
   write(FILEHANDLE) NAEZD
   write(FILEHANDLE) IRNSD
-  write(FILEHANDLE) TRC
   write(FILEHANDLE) IRMD
   write(FILEHANDLE) NREFD
   write(FILEHANDLE) NRD
   write(FILEHANDLE) IRID
   write(FILEHANDLE) NFUND
   write(FILEHANDLE) NCELLD
-  write(FILEHANDLE) NGSHD
   write(FILEHANDLE) NACLSD
   write(FILEHANDLE) NCLSD
   write(FILEHANDLE) IPAND
   write(FILEHANDLE) NXIJD
-  write(FILEHANDLE) NATRCD
-  write(FILEHANDLE) NUTRCD
   write(FILEHANDLE) KPOIBZ
   write(FILEHANDLE) IGUESSD
   write(FILEHANDLE) BCPD

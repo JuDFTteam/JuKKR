@@ -88,6 +88,8 @@ c
       IF (LPOT.EQ.0) THEN
         IEND = 1
         ICLEB(1,1) = (LMAX+1)**2
+C       added E.R.
+        ICLEB(1,2) = 1
         ICLEB(1,3) = 1
       END IF
 c

@@ -3,7 +3,7 @@
      <                     GLLHBLCK,
      >                     NAEZ,NUMN0,INDN0,
 C                          new input after inc.p removal
-     &                     lmmaxd, nthrds, natbld, xdim, ydim, zdim,
+     &                     lmmaxd, natbld, xdim, ydim, zdim,
      &                     naclsd)
 C
       IMPLICIT NONE
@@ -26,8 +26,6 @@ C     number of atoms in the reference cluster
       integer naclsd
 C     number of atoms per preconditioning block
       integer natbld
-C     number of OpenMP threads
-      INTEGER nthrds
 
 C
       INTEGER          NBLCKD
@@ -80,11 +78,6 @@ C local scalars ..
      +                   LEDO,LEUP,LEBA,LEFO,RIDO,RIUP,RIBA,RIFO,
      +                   DOBA,DOFO,UPBA,UPFO,
      +                   INFO
-C ..
-C openMP ..
-      INTEGER        MYTHRD
-!$    INTEGER        OMP_GET_THREAD_NUM
-C ..
 C intrinsic functions ..
       INTRINSIC          ZEXP,ATAN
 C ..
@@ -266,13 +259,13 @@ C ..
 C
       NDIM = (NATBLD*LMMAXD)*(NATBLD*LMMAXD)
 C
-!$    CALL OMP_SET_NUM_THREADS(NTHRDS)
-!$OMP PARALLEL PRIVATE (IX,IY,IZ,TMPBLCK,MYTHRD,INFO,IPIV)
-      MYTHRD = 0
-!$    MYTHRD = OMP_GET_THREAD_NUM()
-C
+
+C     simplified OpenMP code: E. Rabel
+
+!$OMP PARALLEL PRIVATE (IX,IY,IZ,TMPBLCK,INFO,IPIV)
+
+!$OMP DO COLLAPSE(3)
       DO IX = 1, XDIM
-      IF (MOD(IX,MIN(XDIM,NTHRDS)).EQ.MYTHRD) THEN
         DO IY = 1, YDIM
           DO IZ = 1, ZDIM
 C .. scales a vector by a constant >> TMPBLCK = CZERO ..
@@ -371,8 +364,8 @@ C ..
 C
           ENDDO
         ENDDO
-      ENDIF
       ENDDO
+!$OMP END DO
 C
 !$OMP END PARALLEL
 C

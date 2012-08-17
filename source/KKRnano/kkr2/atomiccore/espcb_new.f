@@ -1,13 +1,23 @@
 C             TODO: MODIFY RHOCORE and
 C             COREL first that it gives output only
 C             for one atom
-C             new call for main2
-C             call ESPCB_NEW(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE)
+
+C             new code for main2:
+
+
+C     arrangement of data in LCORE, NCORE
+C     atom1,spin1|atom1,spin2|atom2,spin1|atom2,spin2| ...
+C     This will change
+
+C             IPOT = NSPIN * (I1-1)
+C             call ESPCB_NEW(ESPC,NSPIN,ECORE,LCORE(:,IPOT),LCOREMAX,NCORE(IPOT))
+
+C     Note: LCORE can have values only from 0 to 3
 
 C>    @param[out] ESPC core contribution to single particle energies
 C>                l and spin resolved
 c 13.10.95 ***************************************************************
-      SUBROUTINE ESPCB_NEW(ESPC,NSPIN,I1,ECORE,LCORE,LCOREMAX,NCORE)
+      SUBROUTINE ESPCB_NEW(ESPC,NSPIN,ECORE,LCORE,LCOREMAX,NCORE)
 c ************************************************************************
 c
 c     attention : energy zero ---> electro static zero
@@ -32,10 +42,11 @@ C     .. Scalar Arguments ..
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION ECORE(20,2),ESPC(0:3,NSPIN)
-      INTEGER LCORE(20,*),NCORE(*),LCOREMAX
+      INTEGER LCORE(20,2),NCORE(2)  ! changed dimensions!!!
+      INTEGER LCOREMAX
 C     ..
 C     .. Local Scalars ..
-      INTEGER I1,IPOT,ISPIN,L,N
+      INTEGER ISPIN,L,N
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC DBLE
@@ -45,11 +56,6 @@ c---> loop over reference atoms
 c
         LCOREMAX = 0
         DO 30 ISPIN = 1,NSPIN
-
-c
-c---> determine correct potential indices
-c
-          IPOT = NSPIN* (I1-1) + ISPIN
 c
 c---> initialize espc
 c
@@ -59,8 +65,8 @@ c
 c
 c---> loop over all core states
 c
-          DO 20 N = 1,NCORE(IPOT)
-            L = LCORE(N,IPOT)
+          DO 20 N = 1,NCORE(ISPIN)
+            L = LCORE(N,ISPIN)
             LCOREMAX = MAX(LCOREMAX,L)
             ESPC(L,ISPIN) = ESPC(L,ISPIN) +
      +                      ECORE(N,ISPIN)*DBLE(2*L+1)*DBLE(3-NSPIN)
