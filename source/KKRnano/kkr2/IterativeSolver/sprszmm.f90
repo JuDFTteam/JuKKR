@@ -70,7 +70,8 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 
       do LM2=1,LMMAXD
         if ( .not. DONE(LM2)) then
-          do I2=1,NUMN0(IAT)
+          !do I2=1,NUMN0(IAT)
+          do I2=1,NUMN0(I1) ! corrected: E.R., 2012
             I3=INDN0(I1,I2)
             I3H = (I3-1)*LMMAXD + 1
             I2H = (I2-1)*LMMAXD + 1
@@ -85,10 +86,14 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 
       IL1B=LMMAXD*(I1-1)
 
-      call ZGEMM('N','N',LMMAXD,LMMAXD,NUMN0(IAT)*LMMAXD, &
-                 OMEGA,GLLH(1,1,I1),LMMAXD, &
-                 SPRSX,NGTBD, &
-                 DELTA,AX(IL1B+1,1),NDIM)
+      !call ZGEMM('N','N',LMMAXD,LMMAXD,NUMN0(IAT)*LMMAXD, &
+      !           OMEGA,GLLH(1,1,I1),LMMAXD, &
+      !           SPRSX,NGTBD, &
+      !           DELTA,AX(IL1B+1,1),NDIM)
+      call ZGEMM('N','N',LMMAXD,LMMAXD,NUMN0(I1)*LMMAXD, &  ! corrected: E.R.
+           OMEGA,GLLH(1,1,I1),LMMAXD, &
+           SPRSX,NGTBD, &
+           DELTA,AX(IL1B+1,1),NDIM)
 
   enddo
   !$omp end do
