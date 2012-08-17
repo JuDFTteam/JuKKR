@@ -193,34 +193,34 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     ! -------------------------------------------------------------------------
 
 
-    if (LLY == 1) then
-      call lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, &
-                       BZKP(:,k_point_index), DTDE_LOCAL,ALAT, ATOM, &
-                       CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
-                       EIKRP, GLLH, DPDE_LOCAL, DGDE, GLLKE_X, &
-                       lmmaxd, naclsd, nclsd, nrd)
-    endif
-
-    if (LLY == 1) then
-      BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
-    end if
-
-    if (XCCPL) then
-
-       ! ================================================================
-       !       XCCPL communicate off-diagonal elements and multiply with
-       !       exp-factor
-       ! ================================================================
-
-      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
-      NSYMAT,NAEZ,IAT, &
-      NXIJ,IXCP,ZKRXIJ, &
-      GLLKE1, &
-      GSXIJ, &
-      communicator, comm_size, &
-      lmmaxd, nxijd)
-
-    endif
+!    if (LLY == 1) then
+!      call lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, &
+!                       BZKP(:,k_point_index), DTDE_LOCAL,ALAT, ATOM, &
+!                       CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
+!                       EIKRP, GLLH, DPDE_LOCAL, DGDE, GLLKE_X, &
+!                       lmmaxd, naclsd, nclsd, nrd)
+!    endif
+!
+!    if (LLY == 1) then
+!      BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
+!    end if
+!
+!    if (XCCPL) then
+!
+!       ! ================================================================
+!       !       XCCPL communicate off-diagonal elements and multiply with
+!       !       exp-factor
+!       ! ================================================================
+!
+!      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
+!      NSYMAT,NAEZ,IAT, &
+!      NXIJ,IXCP,ZKRXIJ, &
+!      GLLKE1, &
+!      GSXIJ, &
+!      communicator, comm_size, &
+!      lmmaxd, nxijd)
+!
+!    endif
 
 !==============================================================================
   end do ! KPT = 1,NOFKS
