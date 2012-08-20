@@ -1,15 +1,31 @@
+#ifndef NDEBUG
+#define ASSERT(CONDITION) if (.not. (CONDITION)) then; write(*,*) "Assertion ", #CONDITION, " failed: ",  __FILE__, __LINE__; endif
+#else
+#define ASSERT(CONDITION)
+#endif
+
+
 module fillKKRMatrix_mod
+
+!  !> Describes a square, variable block row (VBR) sparse matrix
+!  !> (double complex)
+!  type VBRSparseMatrixDescZ
+!    integer, dimension(:), intent(out) :: ia
+!    integer, dimension(:), intent(out) :: ja
+!    integer, dimension(:), intent(out) :: kvstr
+!  end type
 
 contains
 
   subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, & ! in
-                                   ia, ja, kvstr) ! out
+                                   ia, ja, ka, kvstr) ! out
     implicit none
     integer, dimension(:), intent(in) :: lmmaxd_array
     integer, dimension(:), intent(in) :: numn0
     integer, dimension(:,:), intent(in) :: indn0
     integer, dimension(:), intent(out) :: ia
     integer, dimension(:), intent(out) :: ja
+    integer, dimension(:), intent(out) :: ka
     integer, dimension(:), intent(out) :: kvstr
 
     !----- local
@@ -17,21 +33,23 @@ contains
     integer :: nrows
     integer :: ii
     integer :: irow, icol
+    integer :: start_address
 
 
     nrows = size(lmmaxd_array)
 
-    !ASSERT(size(numn0) == nrows)
-    !ASSERT(size(indn0, 1) == nrows)
-    !ASSERT(size(ia) == nrows + 1)
-    !ASSERT(size(kvstr == nrows + 1)
+    ASSERT(size(numn0) == nrows)
+    ASSERT(size(indn0, 1) == nrows)
+    ASSERT(size(ia) == nrows + 1)
+    ASSERT(size(kvstr) == nrows + 1)
 
     nnz_blocks = 0
     do ii = 1, nrows
       nnz_blocks = nnz_blocks + numn0(ii)
     end do
 
-    !ASSERT(nnz_blocks < size(ja))
+    ASSERT(nnz_blocks <= size(ja))
+    ASSERT(nnz_blocks + 1 <= size(ka))
 
     kvstr(1) = 1
     do ii = 2, nrows + 1
@@ -41,8 +59,8 @@ contains
     ii = 1
     do irow = 1, nrows
       do icol = 1, numn0(irow)  ! square matrix
-        !ASSERT(icol <= size(indn0, 2))
-        !ASSERT(ii <= nnz_blocks)
+        ASSERT(icol <= size(indn0, 2))
+        ASSERT(ii <= nnz_blocks)
         ja(ii) = indn0(irow, icol)
         ii = ii + 1
       end do
@@ -50,7 +68,148 @@ contains
     end do
     ia(nrows + 1) = ii
 
+    start_address = 1
+    ii = 1
+    do irow = 1, nrows
+      do icol = 1, numn0(irow)  ! square matrix
+      ka(ii) = start_address
+      start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(icol) - 1
+      ii = ii + 1
+      end do
+    end do
+    ka(ii) = start_address
+
   ! DONE!
   end subroutine
+
+  !---------------------------------------------------------------------
+  !> Given G_ref - build (1 - TG_ref) -> coefficent matrix
+  !> @param smat  on input:  sparse block matrix containing Gref
+  !>              on output: coefficient matrix (1 - TG_ref)
+  !> @param ia    for each row give index of first non-zero block in ja
+  !> @param ja    column index array of non-zero blocks
+  !> ASSUMING SQUARE BLOCKS!!! (FOR NOW)
+  subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, ia, kvstr)
+    implicit none
+    double complex, dimension(:), intent(inout) :: smat
+    double complex, dimension(lmmaxd,lmmaxd,num_atoms), intent(in) :: TMATLL
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: num_atoms
+
+    integer, dimension(:), intent(in) :: ia
+    integer, dimension(:), intent(in) :: kvstr
+    ! ------- local
+
+    double complex, dimension(lmmaxd) :: temp
+    integer :: row
+    integer :: col
+    integer :: start
+    integer :: lm1
+    integer :: lm2
+    integer :: lm3
+    integer :: lmmax1, lmmax2, lmmax3
+    integer :: istart_row,istop_row
+    integer :: istart_col,istop_col
+
+    double complex, parameter :: CZERO =(0.0D0,0.0D0)
+    double complex :: CONE = (1.0D0,0.0D0)
+
+    start = 1
+    do row = 1, num_atoms
+      istart_row = kvstr(row)
+      istop_row  = kvstr(row+1)-1
+      do col = ia(row), ia(row+1)-1
+        istart_col = kvstr(col)
+        istop_col  = kvstr(col+1)-1
+
+#ifndef NDEBUG
+        if (row < 1 .or. row > num_atoms) then
+          write (*,*) "buildKKRCoeffMatrix: invalid row", row
+          STOP
+        end if
+
+        if (col < 1 .or. col > num_atoms) then
+          write (*,*) "buildKKRCoeffMatrix: invalid col", col
+          STOP
+        end if
+#endif
+        ! Note: naive truncation - truncate T matrix to square matrix with
+        ! dimension lmmax1 * lmmax1
+        ! maybe it would be better to calculate T-matrix with all
+        ! smaller lmax
+
+        lmmax1 = istop_row - istart_row + 1
+        lmmax2 = istop_col - istart_col + 1
+        lmmax3 = lmmax1
+
+        ! something to think about:
+        ! should Gref also be truncated to square?
+
+        do lm2 = 1, lmmax2
+
+          temp = CZERO
+          do lm1 = 1, lmmax1
+            do lm3 = 1, lmmax3
+              temp(lm1) = temp(lm1) - TMATLL(lm1,lm3,row) * smat(start + (lm2 - 1) * lmmax3 + lm3)  ! -T*G
+            end do
+          end do
+
+          do lm1 = 1, lmmax1
+
+            if (row == col .and. lm1 == lm2) then
+              temp(lm1) = temp(lm1) + CONE  ! add 1 on the diagonal
+            end if
+
+            smat(start + (lm2 - 1) * lmmax1 + lm1) = temp(lm1)
+          end do
+
+        end do ! lm2
+
+        start = start + lmmax1*lmmax2 - 1
+      end do ! block columns
+    end do ! block rows
+
+  end subroutine
+
+  subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_index, kvstr)
+    implicit none
+
+    double complex, dimension(:,:), intent(inout) :: mat_B
+    double complex, dimension(lmmaxd,lmmaxd,*), intent(in) :: TMATLL
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: atom_index
+    integer, dimension(:), intent(in) :: kvstr
+
+    double complex, parameter :: CZERO =(0.0D0,0.0D0)
+    integer :: start
+    integer :: lm1, lm2
+    integer :: lmmax1, lmmax2
+
+    mat_B = CZERO
+    start = kvstr(atom_index) - 1
+
+    lmmax1 = kvstr(atom_index) - kvstr(atom_index+1)
+
+#ifndef NDEBUG
+        if (lmmax1 /= lmmaxd) then
+          write (*,*) "Central atom not treated with highest lmax", atom_index
+          STOP
+        end if
+#endif
+
+    lmmax2 = lmmaxd
+    ! or use naive truncation: lmmax1 = lmmax2 ???
+    ! Note: this is irrelevant, since the central atom
+    ! should always be treated with the highest lmax
+
+    do lm2 = 1, lmmax2
+      do lm1 = 1, lmmax1
+                    ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
+        mat_B( start + lm1, lm2 ) = - TMATLL(lm1, lm2, atom_index)
+      end do
+    end do
+
+  end subroutine
+
 
 end module
