@@ -31,7 +31,7 @@ contains
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_new(smat, kvstr, ia, ja, mat_X, mat_B, VECS, TOL, num_columns, NLEN, initial_zero)
+  subroutine MMINVMOD_new(smat, kvstr, ia, ja, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
     use vbrmv_mat_mod
     implicit none
 
@@ -46,12 +46,12 @@ contains
     double complex, dimension(NLEN,num_columns), intent(inout) :: mat_X
     double complex, dimension(NLEN,num_columns), intent(inout) :: mat_B  !in?
 
-    double complex, dimension(NLEN,num_columns,7), intent(inout) :: VECS
     double precision, intent(in) :: TOL
     INTEGER :: NLEN
 
 
     !----------------- local variables --------------------------------------------
+    double complex, dimension(:,:,:), allocatable :: VECS
 
     double complex :: CONE
     double complex :: CZERO
@@ -103,6 +103,8 @@ contains
     !=======================================================================
     ! INITIALIZATION
     !=======================================================================
+    allocate (VECS(NLEN,num_columns,7))
+
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
@@ -414,7 +416,9 @@ contains
         write(*,*) tfqmr_status
 #endif
 
- end subroutine MMINVMOD_new
+  deallocate(VECS)
+
+end subroutine MMINVMOD_new
 
  subroutine col_AXPY(factors, xvector, yvector)
    implicit none

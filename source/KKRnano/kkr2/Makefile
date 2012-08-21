@@ -229,3 +229,5 @@ KKRnano_Comm_mod.o: KKRnanoParallel_mod.o comm_patternsZ_mod.o comm_patternsC_mo
 
 appblckcirc_new.o: appblckcirc_workspace_mod.o
 
+kkrmat01_new.o: mminvmod_mod.o fillKKRMatrix_mod.o
+
