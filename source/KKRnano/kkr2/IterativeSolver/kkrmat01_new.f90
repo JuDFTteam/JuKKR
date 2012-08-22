@@ -305,12 +305,23 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   integer, dimension(:), allocatable :: kvstr
   integer, dimension(:), allocatable :: lmmaxd_array
 
+  double complex, dimension(:,:), allocatable :: full
+  integer :: num_cluster
+
+  double complex :: GLLH2(LMMAXD,LMMAXD*NACLSD, naez)  ! remove
+  integer :: ii, jj, kk, ind ! remove
+
+  num_cluster = maxval(numn0)
+
   allocate(mat_B(NAEZ*LMMAXD,LMMAXD))
   allocate(ia(naez + 1))
   allocate(kvstr(naez + 1))
-  allocate(ja(naez*naclsd))
-  allocate(ka(naez*naclsd + 1))
+  allocate(ja(naez*num_cluster))
+  allocate(ka(naez*num_cluster + 1))
   allocate(lmmaxd_array(naez))
+
+
+  allocate(full(naez*lmmaxd, naez*lmmaxd))
 
   !=======================================================================
     
@@ -339,7 +350,13 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, &
                                    ia, ja, ka, kvstr)
 
+!  write(*,*) "kvstr ", kvstr
+!  write(*,*) "ia    ", ia
+!  write(*,*) "ja    ", ja
+!  write(*,*) "ka    ", ka
+
   GLLH = CZERO
+  GLLH2 = CZERO ! remove
 
   do site_index = 1,NAEZ
     ref_cluster_index = CLS(site_index)
@@ -348,20 +365,51 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
                kpoint,ref_cluster_index,EIKRM,EIKRP, &
                nrd, naclsd)
 
-    !call DLKE0(site_index,GLLH,EIKRM,EIKRP, &
-    !           ref_cluster_index,NACLS,ATOM(:,site_index),NUMN0,INDN0, &
-    !           GINP(1,1,1,ref_cluster_index), &
-    !           naez, lmmaxd, naclsd)
+    call DLKE0(site_index,GLLH2,EIKRM,EIKRP, &
+               ref_cluster_index,NACLS,ATOM(:,site_index),NUMN0,INDN0, &
+               GINP(1,1,1,ref_cluster_index), &
+               naez, lmmaxd, naclsd)
+
     call dlke0_smat(site_index,GLLH, ia, ka, kvstr, EIKRM,EIKRP,NACLS(site_index), &
                  ATOM(:,site_index),NUMN0,INDN0,GINP(:,:,:,ref_cluster_index), &
                  naez, lmmaxd, naclsd)
 
   end do
 
+  ! there is something wrong with dlke0_smat
+  GLLH = CZERO
+  ind = 1
+  do kk = 1, naez
+    do jj = 1, num_cluster*lmmaxd
+      do ii = 1, lmmaxd
+        GLLH(ind) = GLLH2(ii,jj,kk)
+        ind = ind+1
+      end do
+    end do
+  end do
+
+!  ind = 1
+!  do kk = 1, naez
+!    do jj = 1, num_cluster*lmmaxd
+!      do ii = 1, lmmaxd
+!        if (abs(GLLH(ind) - GLLH2(ii,jj,kk)) > 1d-9) then
+!          write(*,*) IAT, kk, jj, ii, GLLH(ind)
+!          stop
+!        end if
+!        ind = ind+1
+!      end do
+!    end do
+!  end do
+
   !----------------------------------------------------------------------------
   !call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
-  call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, ia, kvstr)
+  call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, ia, ja, kvstr)
   !----------------------------------------------------------------------------
+!  if (IAT == 1) then
+!    write (*,*) "GLLH: ", GLLH
+!    flush(6)
+!    stop
+!  endif
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)
 
@@ -409,15 +457,27 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !              natbld)
     
   !NOITER = NOITER + iteration_counter
-  call buildRightHandSide(mat_B, TMATLL, lmmaxd, site_index, kvstr)
+  call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, kvstr)
 
-  if (IGUESS == 1 .and. ITER > 1) then
-    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
-                      QMRBOUND, lmmaxd, size(mat_B, 1), .false.)
-  else
-    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
-                      QMRBOUND, lmmaxd, size(mat_B, 1), .true.)
-  end if
+!  if (IGUESS == 1 .and. ITER > 1) then
+!    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
+!                      QMRBOUND, lmmaxd, size(mat_B, 1), .false.)
+!  else
+!    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
+!                      QMRBOUND, lmmaxd, size(mat_B, 1), .true.)
+!  end if
+
+  call convertToFullMatrix(GLLH, ia, ja, ka, kvstr, kvstr, full)
+
+!  if (IAT == 1) then
+!    write (*,*) "GLLH full: "
+!    write (*,*) full
+!    flush(6)
+!    stop
+!  endif
+
+  call solveFull(full, mat_B)
+  GLLKE1 = mat_B
 
   !===================================================================
   ! 4) if IGUESS is activated save solution for next iteration

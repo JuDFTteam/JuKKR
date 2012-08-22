@@ -6,8 +6,6 @@ contains
 ! argument list changed: removed IC, NACLS -> num_cluster_atoms (scalar)
 ! **********************************************************************
 !> @param smat        sparse block matrix, it has to be properly constructed
-!>                    and all non-zero blocks have to be marked
-!> @param rowstarts   number of first block in each row
 subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_atoms, &
                  ATOM,NUMN0,INDN0,GINP, &
                  naez, lmmaxd, naclsd)
@@ -32,7 +30,6 @@ subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_at
 
   !     ..
   integer J,LM1,LM2,M,N1,N2,IND1,IND2
-  integer :: start
   integer :: gllh_index
   integer :: lmmax1, lmmax2
   integer, parameter :: CZERO = (0.0d0, 0.0d0)
@@ -50,10 +47,10 @@ subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_at
            lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
            lmmax2 = kvstr(IND1 + 1) - kvstr(IND1)
 
-           do LM1 = 1,lmmax1
-              do LM2 = 1,lmmax2
+           do LM2 = 1,lmmax2
+              do LM1 = 1,lmmax1
               
-                 gllh_index = ka(ia(atom_index + N1 - 1)) - 1 + (LM2 - 1) * lmmaxd + LM1
+                 gllh_index = ka(ia(atom_index) + N1 - 1) - 1 + (LM2 - 1) * lmmax1 + LM1
                  !GLLH(LM1,AM+LM2,I) = GLLH(LM1,AM+LM2,I) &
                  !                  + EIKRM(M)*GINP(LM2,LM1,M)
 
@@ -66,7 +63,6 @@ subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_at
 
      J = ATOM(M)
 
-     start = ka(ia(J)) - 1
      do N2 = 1,NUMN0(J)
         IND2 = INDN0(J,N2)
         if(atom_index.eq.IND2) then
@@ -74,10 +70,10 @@ subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_at
            lmmax1 = kvstr(J + 1) - kvstr(J)
            lmmax2 = kvstr(IND2 + 1) - kvstr(IND2)
 
-           do LM1 = 1,lmmax1
-              do LM2 = 1,lmmax2
+           do LM2 = 1,lmmax2
+              do LM1 = 1,lmmax1
               
-                 gllh_index = ka(ia(J + N2 - 1)) - 1 + (LM2 - 1) * lmmaxd + LM1
+                 gllh_index = ka(ia(J) + N2 - 1) - 1 + (LM2 - 1) * lmmax1 + LM1
 
                  !gllh_index = (J - 1) * NACLSD*lmmaxd*naez + (AN + LM2 - 1) * naez + LM1
                  !GLLH(LM1,AN+LM2,J) = GLLH(LM1,AN+LM2,J) &

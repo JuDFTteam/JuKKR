@@ -37,7 +37,8 @@ c-----------------------------------------------------------------------
 c-----local variables
       integer i, j, ii, jj, k, istart, istop
       double complex  xjj(ncols)
-
+      integer icols
+      double complex xjjtemp
 c     does not seem right...
 c     should be:
 c     n = kvstr(nr+1)-1
@@ -64,6 +65,25 @@ c     can parallelise this loop-
             enddo
          enddo
       enddo
+
+!     !Alternative:
+!      do icols = 1, ncols
+!        k = 1
+!        do i = 1, nr
+!           istart = kvstr(i)
+!           istop  = kvstr(i+1)-1
+!           do j = ia(i), ia(i+1)-1
+!              do jj = kvstc(ja(j)), kvstc(ja(j)+1)-1
+!                 xjjtemp = x(jj,icols)
+!                 do ii = istart, istop
+!                    b(ii,icols) = b(ii,icols) + xjjtemp*a(k)
+!                    k = k + 1
+!                 enddo
+!              enddo
+!           enddo
+!        enddo
+!
+!      enddo
 c---------------------------------
       return
       end subroutine

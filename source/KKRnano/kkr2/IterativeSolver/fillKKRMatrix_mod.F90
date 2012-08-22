@@ -43,6 +43,11 @@ contains
     ASSERT(size(ia) == nrows + 1)
     ASSERT(size(kvstr) == nrows + 1)
 
+    ia = 0
+    kvstr = 0
+    ja = 0
+    ka = 0
+
     nnz_blocks = 0
     do ii = 1, nrows
       nnz_blocks = nnz_blocks + numn0(ii)
@@ -58,13 +63,13 @@ contains
 
     ii = 1
     do irow = 1, nrows
+      ia(irow) = ii
       do icol = 1, numn0(irow)  ! square matrix
         ASSERT(icol <= size(indn0, 2))
         ASSERT(ii <= nnz_blocks)
         ja(ii) = indn0(irow, icol)
         ii = ii + 1
       end do
-      ia(irow) = ii
     end do
     ia(nrows + 1) = ii
 
@@ -73,7 +78,7 @@ contains
     do irow = 1, nrows
       do icol = 1, numn0(irow)  ! square matrix
       ka(ii) = start_address
-      start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(icol) - 1
+      start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(icol)
       ii = ii + 1
       end do
     end do
@@ -89,7 +94,7 @@ contains
   !> @param ia    for each row give index of first non-zero block in ja
   !> @param ja    column index array of non-zero blocks
   !> ASSUMING SQUARE BLOCKS!!! (FOR NOW)
-  subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, ia, kvstr)
+  subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, ia, ja, kvstr)
     implicit none
     double complex, dimension(:), intent(inout) :: smat
     double complex, dimension(lmmaxd,lmmaxd,num_atoms), intent(in) :: TMATLL
@@ -97,12 +102,13 @@ contains
     integer, intent(in) :: num_atoms
 
     integer, dimension(:), intent(in) :: ia
+    integer, dimension(:), intent(in) :: ja
     integer, dimension(:), intent(in) :: kvstr
     ! ------- local
 
     double complex, dimension(lmmaxd) :: temp
-    integer :: row
-    integer :: col
+    integer :: block_row
+    integer :: block_col
     integer :: start
     integer :: lm1
     integer :: lm2
@@ -114,22 +120,22 @@ contains
     double complex, parameter :: CZERO =(0.0D0,0.0D0)
     double complex :: CONE = (1.0D0,0.0D0)
 
-    start = 1
-    do row = 1, num_atoms
-      istart_row = kvstr(row)
-      istop_row  = kvstr(row+1)-1
-      do col = ia(row), ia(row+1)-1
-        istart_col = kvstr(col)
-        istop_col  = kvstr(col+1)-1
+    start = 0
+    do block_row = 1, num_atoms
+      istart_row = kvstr(block_row)
+      istop_row  = kvstr(block_row+1)-1
+      do block_col = ja(ia(block_row)), ja(ia(block_row+1)-1)
+        istart_col = kvstr(block_col)
+        istop_col  = kvstr(block_col+1)-1
 
 #ifndef NDEBUG
-        if (row < 1 .or. row > num_atoms) then
-          write (*,*) "buildKKRCoeffMatrix: invalid row", row
+        if (block_row < 1 .or. block_row > num_atoms) then
+          write (*,*) "buildKKRCoeffMatrix: invalid block_row", block_row
           STOP
         end if
 
-        if (col < 1 .or. col > num_atoms) then
-          write (*,*) "buildKKRCoeffMatrix: invalid col", col
+        if (block_col < 1 .or. block_col > num_atoms) then
+          write (*,*) "buildKKRCoeffMatrix: invalid block_col", block_col
           STOP
         end if
 #endif
@@ -150,22 +156,23 @@ contains
           temp = CZERO
           do lm1 = 1, lmmax1
             do lm3 = 1, lmmax3
-              temp(lm1) = temp(lm1) - TMATLL(lm1,lm3,row) * smat(start + (lm2 - 1) * lmmax3 + lm3)  ! -T*G
+              temp(lm1) = temp(lm1) - TMATLL(lm1,lm3,block_row) * smat(start + (lm2 - 1) * lmmax3 + lm3)  ! -T*G
             end do
           end do
 
           do lm1 = 1, lmmax1
 
-            if (row == col .and. lm1 == lm2) then
+            if (block_row == block_col .and. lm1 == lm2) then
               temp(lm1) = temp(lm1) + CONE  ! add 1 on the diagonal
             end if
 
             smat(start + (lm2 - 1) * lmmax1 + lm1) = temp(lm1)
+            !smat(start + (lm2 - 1) * lmmax1 + lm1) = (block_row * 100.d0 + block_col) * CONE
           end do
 
         end do ! lm2
 
-        start = start + lmmax1*lmmax2 - 1
+        start = start + lmmax1*lmmax2
       end do ! block columns
     end do ! block rows
 
@@ -186,9 +193,8 @@ contains
     integer :: lmmax1, lmmax2
 
     mat_B = CZERO
-    start = kvstr(atom_index) - 1
 
-    lmmax1 = kvstr(atom_index) - kvstr(atom_index+1)
+    lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
 
 #ifndef NDEBUG
         if (lmmax1 /= lmmaxd) then
@@ -197,11 +203,13 @@ contains
         end if
 #endif
 
-    lmmax2 = lmmaxd
-    ! or use naive truncation: lmmax1 = lmmax2 ???
+    !lmmax2 = lmmaxd
+    lmmax2 = lmmax1
+    ! use naive truncation: lmmax1 = lmmax2
     ! Note: this is irrelevant, since the central atom
     ! should always be treated with the highest lmax
 
+    start = kvstr(atom_index) - 1
     do lm2 = 1, lmmax2
       do lm1 = 1, lmmax1
                     ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
@@ -211,5 +219,79 @@ contains
 
   end subroutine
 
+!==============================================================================
+! Routines for testing
+!==============================================================================
+
+  subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, full)
+    implicit none
+    double complex, dimension(:), intent(in) :: smat
+    integer, dimension(:), intent(in) :: ia
+    integer, dimension(:), intent(in) :: ja
+    integer, dimension(:), intent(in) :: ka
+    integer, dimension(:), intent(in) :: kvstr
+    integer, dimension(:), intent(in) :: kvstc
+    double complex, dimension(:,:), intent(out) :: full
+
+    !------------
+    integer :: iblockrow
+    integer :: iblockcol
+    integer :: irow
+    integer :: icol
+    integer :: nrows
+    integer :: ind
+    integer :: istartcol, istartrow, istopcol, istoprow
+
+    double complex, parameter :: CZERO =(0.0D0,0.0D0)
+
+    full = CZERO
+
+    nrows = size(ia) - 1
+
+    do iblockrow = 1, nrows
+      ind = ka(ia(iblockrow))
+      do iblockcol = ja(ia(iblockrow)), ja(ia(iblockrow + 1) - 1)
+
+        istartcol = kvstc(iblockcol)
+        istopcol  = kvstc(iblockcol + 1) - 1
+        istartrow = kvstr(iblockrow)
+        istoprow  = kvstr(iblockrow + 1) - 1
+
+        do icol = istartcol, istopcol
+          do irow = istartrow, istoprow
+            full(irow, icol) = smat(ind)
+            ind = ind + 1
+          end do
+        end do
+
+      end do
+    end do
+
+  end subroutine
+
+  subroutine solveFull(full, mat_B)
+    implicit none
+
+    double complex, dimension(:,:), intent(inout) :: full
+    double complex, dimension(:,:), intent(inout) :: mat_B
+
+    !------------
+    integer, dimension(:), allocatable :: ipvt
+    integer :: info
+    integer :: ndim
+    integer :: num_rhs
+
+    ndim = size(full, 1)
+
+    allocate(ipvt(ndim))
+
+    num_rhs = size(mat_B, 2)
+
+    CALL ZGETRF(ndim,ndim,full,ndim,IPVT,INFO)
+    CALL ZGETRS('N',ndim,num_rhs,full,ndim,IPVT,mat_B,ndim,INFO)
+
+    deallocate(ipvt)
+
+  end subroutine
 
 end module

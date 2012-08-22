@@ -1,13 +1,13 @@
 ! #define DIAGNOSTICMMINVMOD
 
-#define MATRIX_MULTIPLY(A, X, AX) call vbrmv_mat(NLEN, ia, ja, A, kvstr, kvstr, X, AX, num_columns)
+#define MATRIX_MULTIPLY(A, X, AX) call vbrmv_mat(nrows, ia, ja, A, kvstr, kvstr, X, AX, num_columns)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
 
 ! YVECTOR = FACTORS*XVECTOR + YVECTOR
 #define COLUMN_AXPY(FACTORS, XVECTOR, YVECTOR) call col_axpy(FACTORS, XVECTOR, YVECTOR)
-! YVECTOR = FACTORS*XVECTOR - YVECTOR
-#define COLUMN_AXMY(FACTORS, XVECTOR, YVECTOR) call col_axmy(FACTORS, XVECTOR, YVECTOR)
+! YVECTOR = -FACTORS*XVECTOR + YVECTOR
+#define COLUMN_MAXPY(FACTORS, XVECTOR, YVECTOR) call col_maxpy(FACTORS, XVECTOR, YVECTOR)
 
 ! YVECTOR =         XVECTOR + FACTORS*YVECTOR
 #define COLUMN_XPAY(FACTORS, XVECTOR, YVECTOR) call col_xpay(FACTORS, XVECTOR, YVECTOR)
@@ -48,6 +48,7 @@ contains
 
     double precision, intent(in) :: TOL
     INTEGER :: NLEN
+    integer :: nrows
 
 
     !----------------- local variables --------------------------------------------
@@ -105,6 +106,7 @@ contains
     !=======================================================================
     allocate (VECS(NLEN,num_columns,7))
 
+    nrows = size(ia) - 1
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
@@ -226,7 +228,7 @@ contains
       COLUMN_XPAY(ZTMP, VECS(:,:,SIX), VECS(:,:,SEVEN))
 
       ! v5 = v5 - alpha*v9
-      COLUMN_AXMY(ALPHA, VECS(:,:,NINE), VECS(:,:,FIVE))
+      COLUMN_MAXPY(ALPHA, VECS(:,:,NINE), VECS(:,:,FIVE))
 
       ! DTMP = norm(v5)
       COLUMNNORMS(DTMP, VECS(:,:,FIVE))
@@ -249,7 +251,7 @@ contains
       COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
 
       ! v6 = v6 - alpha*v4
-      COLUMN_AXMY(ALPHA, VECS(:,:,FOUR), VECS(:,:,SIX))
+      COLUMN_MAXPY(ALPHA, VECS(:,:,FOUR), VECS(:,:,SIX))
 
       ZTMP = VAR * COSI
 
@@ -273,7 +275,7 @@ contains
 
 
       ! v5 = v5 - alpha*v8
-      COLUMN_AXMY(ALPHA, VECS(:,:,EIGHT), VECS(:,:,FIVE))
+      COLUMN_MAXPY(ALPHA, VECS(:,:,EIGHT), VECS(:,:,FIVE))
 
       ! DTMP = norm(v5)
       COLUMNNORMS(DTMP, VECS(:,:,FIVE))
@@ -416,6 +418,12 @@ contains
         write(*,*) tfqmr_status
 #endif
 
+#ifndef NDEBUG
+  if (IT == NLIM) then
+    write(*,*) "* not converged."
+  end if
+#endif
+
   deallocate(VECS)
 
 end subroutine MMINVMOD_new
@@ -440,7 +448,7 @@ end subroutine MMINVMOD_new
    end do
  end subroutine
 
-  subroutine col_AXMY(factors, xvector, yvector)
+  subroutine col_MAXPY(factors, xvector, yvector)
    implicit none
    double complex, dimension(:), intent(in) :: factors
    double complex, dimension(:,:), intent(in) :: xvector
@@ -450,13 +458,13 @@ end subroutine MMINVMOD_new
    integer :: col
    integer :: ncol
    integer :: nlen
-   double complex, parameter :: CMONE = (-1.0d0, 0.0d0)
+   double complex, parameter :: CONE = (1.0d0, 0.0d0)
 
    ncol = size(factors)
    nlen = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector, factors(col), xvector, CMONE, yvector)
+     call zaxpby(nlen, yvector, -factors(col), xvector, CONE, yvector)
    end do
  end subroutine
 
@@ -500,22 +508,22 @@ end subroutine MMINVMOD_new
  end subroutine
 
   subroutine col_dots(dots, vectorsv, vectorsw)
-   implicit none
-   double complex, dimension(:), intent(out) :: dots
-   double complex, dimension(:,:), intent(in) :: vectorsv
-   double complex, dimension(:,:), intent(in) :: vectorsw
+    implicit none
+    double complex, dimension(:), intent(out) :: dots
+    double complex, dimension(:,:), intent(in) :: vectorsv
+    double complex, dimension(:,:), intent(in) :: vectorsw
 
-   !---------
-   integer :: col
-   integer :: ncol
-   integer :: nlen
-   double precision, external :: ZDOTU
+    !---------
+    integer :: col
+    integer :: ncol
+    integer :: nlen
+    double complex, external :: ZDOTU
 
-   ncol = size(dots)
-   nlen = size(vectorsv,1)
+    ncol = size(vectorsv,2)
+    nlen = size(vectorsv,1)
 
-   do col = 1, ncol
-     dots(col) = ZDOTU(nlen, vectorsv(:,col), 1, vectorsw(:,col), 1)
-   end do
+    do col = 1, ncol
+      dots(col) = ZDOTU(nlen, vectorsv(:,col), 1, vectorsw(:,col), 1)
+    end do
  end subroutine
  end module
