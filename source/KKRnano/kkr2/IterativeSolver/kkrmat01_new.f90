@@ -193,17 +193,17 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     ! -------------------------------------------------------------------------
 
 
-!    if (LLY == 1) then
-!      call lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, &
-!                       BZKP(:,k_point_index), DTDE_LOCAL,ALAT, ATOM, &
-!                       CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
-!                       EIKRP, GLLH, DPDE_LOCAL, DGDE, GLLKE_X, &
-!                       lmmaxd, naclsd, nclsd, nrd)
-!    endif
-!
-!    if (LLY == 1) then
-!      BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
-!    end if
+    if (LLY == 1) then
+      call lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, &
+                       BZKP(:,k_point_index), DTDE_LOCAL,ALAT, ATOM, &
+                       CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
+                       EIKRP, GLLH, DPDE_LOCAL, DGDE, GLLKE_X, &
+                       lmmaxd, naclsd, nclsd, nrd)
+    endif
+
+    if (LLY == 1) then
+      BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
+    end if
 !
 !    if (XCCPL) then
 !
@@ -308,8 +308,9 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   double complex, dimension(:,:), allocatable :: full
   integer :: num_cluster
 
+  integer ii, jj, kk, ind, flag ! remove
   double complex :: GLLH2(LMMAXD,LMMAXD*NACLSD, naez)  ! remove
-  integer :: ii, jj, kk, ind ! remove
+!------------------------------------------------------------------------------
 
   num_cluster = maxval(numn0)
 
@@ -347,6 +348,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
   lmmaxd_array = lmmaxd
+  lmmaxd_array = 1
+
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, &
                                    ia, ja, ka, kvstr)
 
@@ -357,6 +360,11 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   GLLH = CZERO
   GLLH2 = CZERO ! remove
+
+    flag = 1
+    if (IAT == 1) flag = 0
+99 continue
+    if (flag == 0) goto 99
 
   do site_index = 1,NAEZ
     ref_cluster_index = CLS(site_index)
@@ -376,40 +384,41 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   end do
 
-  ! there is something wrong with dlke0_smat
-  GLLH = CZERO
-  ind = 1
-  do kk = 1, naez
-    do jj = 1, num_cluster*lmmaxd
-      do ii = 1, lmmaxd
-        GLLH(ind) = GLLH2(ii,jj,kk)
-        ind = ind+1
-      end do
-    end do
-  end do
-
+!  ! there is something wrong with dlke0_smat
+!  GLLH = CZERO
 !  ind = 1
 !  do kk = 1, naez
 !    do jj = 1, num_cluster*lmmaxd
 !      do ii = 1, lmmaxd
-!        if (abs(GLLH(ind) - GLLH2(ii,jj,kk)) > 1d-9) then
-!          write(*,*) IAT, kk, jj, ii, GLLH(ind)
-!          stop
-!        end if
+!        GLLH(ind) = GLLH2(ii,jj,kk)
 !        ind = ind+1
 !      end do
 !    end do
 !  end do
 
+!if (IAT == 1) then
+!  ind = 1
+!  do kk = 1, naez
+!    do jj = 1, num_cluster*lmmaxd
+!      do ii = 1, lmmaxd
+!        if (abs(GLLH(ind) - GLLH2(ii,jj,kk)) > 1d-2) then
+!          write(*,*) "No match. ", ii, jj, kk, GLLH(ind), GLLH2(ii,jj,kk)
+!        endif
+!        ind = ind+1
+!      end do
+!    end do
+!  end do
+!  stop
+!end if
+
+    flag = 0
+100 continue
+    if (flag == 0) goto 100
+
   !----------------------------------------------------------------------------
   !call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
   call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, ia, ja, kvstr)
   !----------------------------------------------------------------------------
-!  if (IAT == 1) then
-!    write (*,*) "GLLH: ", GLLH
-!    flush(6)
-!    stop
-!  endif
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)
 
@@ -448,36 +457,24 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! 3) solve linear set of equations by iterative TFQMR scheme
   !    solve (\Delta t * G_ref - 1) X = - \Delta t
   !    the solution X is the scattering path operator
-    
-  !call MMINVMOD(GLLH,GLLKE1,TMATLL,NUMN0,INDN0, &
-  !              IAT,ITER,iteration_counter, &
-  !              GLLHBLCK,BCP,IGUESS, &
-  !              QMRBOUND, &
-  !              naez, lmmaxd, naclsd, xdim, ydim, zdim, &
-  !              natbld)
-    
-  !NOITER = NOITER + iteration_counter
+
   call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, kvstr)
 
-!  if (IGUESS == 1 .and. ITER > 1) then
-!    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
-!                      QMRBOUND, lmmaxd, size(mat_B, 1), .false.)
-!  else
-!    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
-!                      QMRBOUND, lmmaxd, size(mat_B, 1), .true.)
-!  end if
+  if (IGUESS == 1 .and. ITER > 1) then
+    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
+                      QMRBOUND, lmmaxd, size(mat_B, 1), .false.)
+  else
+    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
+                      QMRBOUND, lmmaxd, size(mat_B, 1), .true.)
+  end if
 
-  call convertToFullMatrix(GLLH, ia, ja, ka, kvstr, kvstr, full)
+  !NOITER = NOITER + iteration_counter
+  NOITER = NOITER + 1 ! TODO
 
-!  if (IAT == 1) then
-!    write (*,*) "GLLH full: "
-!    write (*,*) full
-!    flush(6)
-!    stop
-!  endif
-
-  call solveFull(full, mat_B)
-  GLLKE1 = mat_B
+!  call convertToFullMatrix(GLLH, ia, ja, ka, kvstr, kvstr, full)
+!
+!  call solveFull(full, mat_B)
+!  GLLKE1 = mat_B
 
   !===================================================================
   ! 4) if IGUESS is activated save solution for next iteration

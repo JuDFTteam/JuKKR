@@ -154,7 +154,7 @@ contains
     where (abs(N2B) < EPSILON_DP) N2B = 1.0d0  ! where N2B = 0 use absolute residual
 
     ! Supply auxiliary start vector r*
-    call ZRANDN (NLEN,VECS(:,:,THREE),1)
+    call ZRANDN (NLEN*num_columns,VECS(:,:,THREE),1)
 
     !     Initialize the variables.
 
@@ -357,7 +357,7 @@ contains
         do ind=1,num_columns
           if (RESN(ind) > TOL) then
             if (tfqmr_status(ind) == 0) then
-            ! if no breakdown has occured continue converging
+              ! if no breakdown has occured continue converging
               isDone = .false.
             end if
           else
@@ -377,32 +377,32 @@ contains
 
         if (isDone) exit ! exit iteration loop
 
-    ! <<<<<<<<<<<<
+      ! <<<<<<<<<<<<
       endif
     ! <<<<<<<<<<<<
 
     !============================================================================
     !============================================================================
     enddo
-  ! ITERATION
-  !============================================================================
-  !============================================================================
- 67 continue
-     !     Done.
+   ! ITERATION
+   !============================================================================
+   !============================================================================
+67 continue
+      !     Done.
 
-     ! >>>>>>>>>>>
+      ! >>>>>>>>>>>
 
-     ! in case of right-preconditioning
-     !              -1
-     !         x = M  * y
-     !              2
-     ! has to be performed ..
+      ! in case of right-preconditioning
+      !              -1
+      !         x = M  * y
+      !              2
+      ! has to be performed ..
 
-   ! ======== TODO: precond. ==========================
+    ! ======== TODO: precond. ==========================
 
-   ! ================================================================
-   ! solution is in mat_X
-   ! ================================================================
+    ! ================================================================
+    ! solution is in mat_X
+    ! ================================================================
 
 #ifdef DIAGNOSTICMMINVMOD
         write(*,*) "number of sparse matrix multipl.: ", sparse_mult_count
@@ -419,15 +419,16 @@ contains
 #endif
 
 #ifndef NDEBUG
-  if (IT == NLIM) then
-    write(*,*) "* not converged."
-  end if
+   if (IT == NLIM) then
+     write(*,*) "* not converged."
+   end if
 #endif
 
-  deallocate(VECS)
+   deallocate(VECS)
 
-end subroutine MMINVMOD_new
+ end subroutine MMINVMOD_new
 
+ !------------------------------------------------------------------------------
  subroutine col_AXPY(factors, xvector, yvector)
    implicit none
    double complex, dimension(:), intent(in) :: factors
@@ -444,11 +445,12 @@ end subroutine MMINVMOD_new
    nlen = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector, factors(col), xvector, CONE, yvector)
+     call zaxpby(nlen, yvector(:,col), factors(col), xvector(:,col), CONE, yvector(:,col))
    end do
  end subroutine
 
-  subroutine col_MAXPY(factors, xvector, yvector)
+ !------------------------------------------------------------------------------
+ subroutine col_MAXPY(factors, xvector, yvector)
    implicit none
    double complex, dimension(:), intent(in) :: factors
    double complex, dimension(:,:), intent(in) :: xvector
@@ -464,10 +466,11 @@ end subroutine MMINVMOD_new
    nlen = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector, -factors(col), xvector, CONE, yvector)
+     call zaxpby(nlen, yvector(:,col), -factors(col), xvector(:,col), CONE, yvector(:,col))
    end do
  end subroutine
 
+ !------------------------------------------------------------------------------
  subroutine col_XPAY(factors, xvector, yvector)
    implicit none
    double complex, dimension(:), intent(in) :: factors
@@ -484,11 +487,12 @@ end subroutine MMINVMOD_new
    nlen = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector, CONE, xvector, factors(col), yvector)
+     call zaxpby(nlen, yvector(:,col), CONE, xvector(:,col), factors(col), yvector(:,col))
    end do
  end subroutine
 
-  subroutine col_norms(norms, vectors)
+ !------------------------------------------------------------------------------
+ subroutine col_norms(norms, vectors)
    implicit none
    double precision, dimension(:), intent(out) :: norms
    double complex, dimension(:,:), intent(in) :: vectors
@@ -507,23 +511,25 @@ end subroutine MMINVMOD_new
    end do
  end subroutine
 
-  subroutine col_dots(dots, vectorsv, vectorsw)
-    implicit none
-    double complex, dimension(:), intent(out) :: dots
-    double complex, dimension(:,:), intent(in) :: vectorsv
-    double complex, dimension(:,:), intent(in) :: vectorsw
+ !------------------------------------------------------------------------------
+ subroutine col_dots(dots, vectorsv, vectorsw)
+   implicit none
+   double complex, dimension(:), intent(out) :: dots
+   double complex, dimension(:,:), intent(in) :: vectorsv
+   double complex, dimension(:,:), intent(in) :: vectorsw
 
-    !---------
-    integer :: col
-    integer :: ncol
-    integer :: nlen
-    double complex, external :: ZDOTU
+   !---------
+   integer :: col
+   integer :: ncol
+   integer :: nlen
+   double complex, external :: ZDOTU
 
-    ncol = size(vectorsv,2)
-    nlen = size(vectorsv,1)
+   ncol = size(vectorsv,2)
+   nlen = size(vectorsv,1)
 
-    do col = 1, ncol
-      dots(col) = ZDOTU(nlen, vectorsv(:,col), 1, vectorsw(:,col), 1)
-    end do
+   do col = 1, ncol
+     dots(col) = ZDOTU(nlen, vectorsv(:,col), 1, vectorsw(:,col), 1)
+   end do
  end subroutine
+
  end module

@@ -2,93 +2,120 @@
 module DLKE0_smat_mod
 
 contains
-! Modification of original DLKE0 using sparse matrix
-! argument list changed: removed IC, NACLS -> num_cluster_atoms (scalar)
-! **********************************************************************
-!> @param smat        sparse block matrix, it has to be properly constructed
-subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_atoms, &
-                 ATOM,NUMN0,INDN0,GINP, &
-                 naez, lmmaxd, naclsd)
-! **********************************************************************
-  implicit none
+  ! Modification of original DLKE0 using sparse matrix
+  ! argument list changed: removed IC, NACLS -> num_cluster_atoms (scalar)
+  ! Attention: set smat to zero BEFORE!! loop over atom_index
+  ! **********************************************************************
+  !> @param smat        sparse block matrix, it has to be properly constructed
+  subroutine DLKE0_smat(atom_index,smat, ia, ka, kvstr, EIKRM,EIKRP,num_cluster_atoms, &
+  ATOM,NUMN0,INDN0,GINP, &
+  naez, lmmaxd, naclsd)
+    ! **********************************************************************
+    implicit none
 
-  double complex, dimension(:), intent(inout) :: smat
-  integer, dimension(:), intent(in) :: ia
-  integer, dimension(:), intent(in) :: kvstr
-  integer, dimension(:), intent(in) :: ka
+    double complex, dimension(:), intent(inout) :: smat
+    integer, dimension(:), intent(in) :: ia
+    integer, dimension(:), intent(in) :: kvstr
+    integer, dimension(:), intent(in) :: ka
 
-  integer, intent(in) :: naez
-  integer, intent(in) :: lmmaxd
-  integer, intent(in) :: naclsd
+    integer, intent(in) :: naez
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: naclsd
 
-  integer, intent(in) :: atom_index
+    integer, intent(in) :: atom_index
 
-  double complex EIKRM(NACLSD),EIKRP(NACLSD)
-  integer, intent(in) :: num_cluster_atoms
-  integer ATOM(NACLSD),INDN0(NAEZ,naclsd),NUMN0(naez)
-  double complex, intent(in) :: GINP(lmmaxd, lmmaxd, NACLSD)
+    double complex EIKRM(NACLSD),EIKRP(NACLSD)
+    integer, intent(in) :: num_cluster_atoms
+    integer ATOM(NACLSD),INDN0(NAEZ,naclsd),NUMN0(naez)
+    double complex, intent(in) :: GINP(lmmaxd, lmmaxd, NACLSD)
 
-  !     ..
-  integer J,LM1,LM2,M,N1,N2,IND1,IND2
-  integer :: gllh_index
-  integer :: lmmax1, lmmax2
-  integer, parameter :: CZERO = (0.0d0, 0.0d0)
-  !     ..
-  ! ----------------------------------------------------------------------
+    !     ..
+    integer J,LM1,LM2,M,N1,N2,IND1,IND2
+    integer :: gllh_index
+    integer :: lmmax1, lmmax2
+    integer, parameter :: CZERO = (0.0d0, 0.0d0)
+    !     ..
+    ! ----------------------------------------------------------------------
 
-  smat = CZERO
-
-  do M = 1,num_cluster_atoms
+    do M = 1,num_cluster_atoms
      
-     do N1 = 1,NUMN0(atom_index)
+      do N1 = 1,NUMN0(atom_index)
         IND1 = INDN0(atom_index,N1)
+
         if(ATOM(M).eq.IND1) then
 
-           lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
-           lmmax2 = kvstr(IND1 + 1) - kvstr(IND1)
+          lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
+          lmmax2 = kvstr(IND1 + 1) - kvstr(IND1)
 
-           do LM2 = 1,lmmax2
-              do LM1 = 1,lmmax1
+          do LM2 = 1,lmmax2
+            do LM1 = 1,lmmax1
+
+              !DEBUG
+              if (ka(ia(atom_index) + N1) - ka(ia(atom_index) + N1 - 1) /= lmmax1*lmmax2) then
+                write(*,*) "DIM error."
+                stop
+              end if
               
-                 gllh_index = ka(ia(atom_index) + N1 - 1) - 1 + (LM2 - 1) * lmmax1 + LM1
-                 !GLLH(LM1,AM+LM2,I) = GLLH(LM1,AM+LM2,I) &
-                 !                  + EIKRM(M)*GINP(LM2,LM1,M)
+              gllh_index = ka(ia(atom_index) + N1 - 1) - 1 + (LM2 - 1) * lmmax1 + LM1
 
-                 smat(gllh_index) = smat(gllh_index) + EIKRM(M)*GINP(LM2,LM1,M)
-              enddo
-           enddo
+              !DEBUG
+              if (ka(ia(atom_index) + N1) < gllh_index) then
+                write(*,*) "DIM error."
+                stop
+              end if
+              !GLLH(LM1,AM+LM2,I) = GLLH(LM1,AM+LM2,I) &
+              !                  + EIKRM(M)*GINP(LM2,LM1,M)
+
+              smat(gllh_index) = smat(gllh_index) + EIKRM(M)*GINP(LM2,LM1,M)
+            enddo
+          enddo
 
         endif
-     enddo
 
-     J = ATOM(M)
+      enddo
 
-     do N2 = 1,NUMN0(J)
+      J = ATOM(M)
+
+      do N2 = 1,NUMN0(J)
         IND2 = INDN0(J,N2)
+
         if(atom_index.eq.IND2) then
 
-           lmmax1 = kvstr(J + 1) - kvstr(J)
-           lmmax2 = kvstr(IND2 + 1) - kvstr(IND2)
+          lmmax1 = kvstr(J + 1) - kvstr(J)
+          lmmax2 = kvstr(IND2 + 1) - kvstr(IND2)
 
-           do LM2 = 1,lmmax2
-              do LM1 = 1,lmmax1
+          do LM2 = 1,lmmax2
+            do LM1 = 1,lmmax1
               
-                 gllh_index = ka(ia(J) + N2 - 1) - 1 + (LM2 - 1) * lmmax1 + LM1
+              !DEBUG
+              if (ka(ia(J) + N2) - ka(ia(J) + N2 - 1) /= lmmax1*lmmax2) then
+                write(*,*) "DIM error."
+                stop
+              end if
 
-                 !gllh_index = (J - 1) * NACLSD*lmmaxd*naez + (AN + LM2 - 1) * naez + LM1
-                 !GLLH(LM1,AN+LM2,J) = GLLH(LM1,AN+LM2,J) &
-                 !                  + EIKRP(M)*GINP(LM1,LM2,M)
-                 !GLLH(gllh_index) = GLLH(gllh_index) &
-                 !     + EIKRP(M)*GINP(LM1,LM2,M)
+              gllh_index = ka(ia(J) + N2 - 1) - 1 + (LM2 - 1) * lmmax1 + LM1
+
+             !DEBUG
+              if (ka(ia(J) + N2) < gllh_index) then
+                write(*,*) "DIM error."
+                stop
+              end if
+
+              !gllh_index = (J - 1) * NACLSD*lmmaxd*naez + (AN + LM2 - 1) * naez + LM1
+              !GLLH(LM1,AN+LM2,J) = GLLH(LM1,AN+LM2,J) &
+              !                  + EIKRP(M)*GINP(LM1,LM2,M)
+              !GLLH(gllh_index) = GLLH(gllh_index) &
+              !     + EIKRP(M)*GINP(LM1,LM2,M)
                  
-                 smat(gllh_index) = smat(gllh_index) + EIKRP(M)*GINP(LM1,LM2,M)
-              enddo
-           enddo
+              smat(gllh_index) = smat(gllh_index) + EIKRP(M)*GINP(LM1,LM2,M)
+            enddo
+          enddo
 
         endif
-     enddo
-  enddo
 
-end subroutine DLKE0_smat
+      enddo
+    enddo
+
+  end subroutine DLKE0_smat
 
 end module

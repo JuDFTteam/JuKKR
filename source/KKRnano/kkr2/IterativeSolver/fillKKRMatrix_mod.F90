@@ -115,7 +115,7 @@ contains
     integer :: lm3
     integer :: lmmax1, lmmax2, lmmax3
     integer :: istart_row,istop_row
-    integer :: istart_col,istop_col
+    integer :: istart_col,istop_col, ind_ia
 
     double complex, parameter :: CZERO =(0.0D0,0.0D0)
     double complex :: CONE = (1.0D0,0.0D0)
@@ -123,10 +123,13 @@ contains
     start = 0
     do block_row = 1, num_atoms
       istart_row = kvstr(block_row)
-      istop_row  = kvstr(block_row+1)-1
-      do block_col = ja(ia(block_row)), ja(ia(block_row+1)-1)
+      istop_row  = kvstr(block_row+1)
+      do ind_ia = ia(block_row), ia(block_row+1)-1
+
+        block_col = ja(ind_ia)  !ja gives the block-column indices of non-zero blocks
+
         istart_col = kvstr(block_col)
-        istop_col  = kvstr(block_col+1)-1
+        istop_col  = kvstr(block_col+1)
 
 #ifndef NDEBUG
         if (block_row < 1 .or. block_row > num_atoms) then
@@ -144,12 +147,18 @@ contains
         ! maybe it would be better to calculate T-matrix with all
         ! smaller lmax
 
-        lmmax1 = istop_row - istart_row + 1
-        lmmax2 = istop_col - istart_col + 1
+        lmmax1 = istop_row - istart_row
+        lmmax2 = istop_col - istart_col
         lmmax3 = lmmax1
 
         ! something to think about:
         ! should Gref also be truncated to square?
+
+        !    T (square mat.)          lmmax2                   lmmax2
+        !  |----|                  |----------|             |----------|
+        ! -|    |  lmmax1     *    | G_ref    | lmmax3  =   |  -T*G    |  lmmax1
+        !  |----|                  |----------| (=lmmax1)   |----------|
+        !  lmmax3=lmmax1
 
         do lm2 = 1, lmmax2
 
@@ -172,7 +181,7 @@ contains
 
         end do ! lm2
 
-        start = start + lmmax1*lmmax2
+        start = start + lmmax2*lmmax1
       end do ! block columns
     end do ! block rows
 
