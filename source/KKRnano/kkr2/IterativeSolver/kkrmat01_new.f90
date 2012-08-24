@@ -305,11 +305,12 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   integer, dimension(:), allocatable :: kvstr
   integer, dimension(:), allocatable :: lmmaxd_array
 
-  double complex, dimension(:,:), allocatable :: full
   integer :: num_cluster
 
-  integer ii, jj, kk, ind, flag ! remove
-  double complex :: GLLH2(LMMAXD,LMMAXD*NACLSD, naez)  ! remove
+! -------- debug stuff --------------------------------------------------------
+  !double complex, dimension(:,:), allocatable :: full
+  !integer ii, jj, kk, ind, flag ! remove
+  !double complex :: GLLH2(LMMAXD,LMMAXD*NACLSD, naez)  ! remove
 !------------------------------------------------------------------------------
 
   num_cluster = maxval(numn0)
@@ -322,7 +323,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   allocate(lmmaxd_array(naez))
 
 
-  allocate(full(naez*lmmaxd, naez*lmmaxd))
+  !allocate(full(naez*lmmaxd, naez*lmmaxd)) ! remove
 
   !=======================================================================
     
@@ -348,7 +349,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
   lmmaxd_array = lmmaxd
-  lmmaxd_array = 1
 
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, &
                                    ia, ja, ka, kvstr)
@@ -359,12 +359,12 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !  write(*,*) "ka    ", ka
 
   GLLH = CZERO
-  GLLH2 = CZERO ! remove
+  !GLLH2 = CZERO ! remove
 
-    flag = 1
-    if (IAT == 1) flag = 0
-99 continue
-    if (flag == 0) goto 99
+!    flag = 1
+!    if (IAT == 1) flag = 0
+!99 continue
+!    if (flag == 0) goto 99
 
   do site_index = 1,NAEZ
     ref_cluster_index = CLS(site_index)
@@ -373,47 +373,16 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
                kpoint,ref_cluster_index,EIKRM,EIKRP, &
                nrd, naclsd)
 
-    call DLKE0(site_index,GLLH2,EIKRM,EIKRP, &
-               ref_cluster_index,NACLS,ATOM(:,site_index),NUMN0,INDN0, &
-               GINP(1,1,1,ref_cluster_index), &
-               naez, lmmaxd, naclsd)
+!    call DLKE0(site_index,GLLH2,EIKRM,EIKRP, &
+!               ref_cluster_index,NACLS,ATOM(:,site_index),NUMN0,INDN0, &
+!               GINP(1,1,1,ref_cluster_index), &
+!               naez, lmmaxd, naclsd)
 
-    call dlke0_smat(site_index,GLLH, ia, ka, kvstr, EIKRM,EIKRP,NACLS(site_index), &
-                 ATOM(:,site_index),NUMN0,INDN0,GINP(:,:,:,ref_cluster_index), &
-                 naez, lmmaxd, naclsd)
+    call DLKE0_smat(site_index,GLLH,ia,ka,kvstr,EIKRM,EIKRP,NACLS(ref_cluster_index), &
+                    ATOM(:,site_index),NUMN0,INDN0,GINP(:,:,:,ref_cluster_index), &
+                    naez, lmmaxd, naclsd)
 
   end do
-
-!  ! there is something wrong with dlke0_smat
-!  GLLH = CZERO
-!  ind = 1
-!  do kk = 1, naez
-!    do jj = 1, num_cluster*lmmaxd
-!      do ii = 1, lmmaxd
-!        GLLH(ind) = GLLH2(ii,jj,kk)
-!        ind = ind+1
-!      end do
-!    end do
-!  end do
-
-!if (IAT == 1) then
-!  ind = 1
-!  do kk = 1, naez
-!    do jj = 1, num_cluster*lmmaxd
-!      do ii = 1, lmmaxd
-!        if (abs(GLLH(ind) - GLLH2(ii,jj,kk)) > 1d-2) then
-!          write(*,*) "No match. ", ii, jj, kk, GLLH(ind), GLLH2(ii,jj,kk)
-!        endif
-!        ind = ind+1
-!      end do
-!    end do
-!  end do
-!  stop
-!end if
-
-    flag = 0
-100 continue
-    if (flag == 0) goto 100
 
   !----------------------------------------------------------------------------
   !call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
