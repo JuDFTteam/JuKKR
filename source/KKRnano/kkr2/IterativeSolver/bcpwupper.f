@@ -354,7 +354,11 @@ C .. initialize GLLHBLCK as identity-matrix
             ENDDO
 C ..
 C
-C ..
+C ..        solve A*X = 1
+C ..        GLLHBLCK = TMPBLCK**-1
+C           GLLHBLCK contains inverse blocks
+C           of first column of block-circulant
+C           preconditioning matrix  (commented: E.R.)
             CALL ZGESV(NATBLD*LMMAXD,NATBLD*LMMAXD,
      +                 TMPBLCK,NATBLD*LMMAXD,
      +                 IPIV,

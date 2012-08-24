@@ -218,7 +218,7 @@ kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o
 lloyds_formula_mod.o: kkr_helpers_mod.o
 test.o: common_testc.o
 opt.o: common_optc.o
-kloopz1.o: kkrmat01.o
+kloopz1.o: kkrmat01.o kkrmat01_new.o
 
 tbref.o: SingleSiteRef_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o
@@ -227,7 +227,7 @@ arraytest_mod.o: test_macros.h
 
 KKRnano_Comm_mod.o: KKRnanoParallel_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o comm_patternsD_mod.o test_macros.h
 
-appblckcirc_new.o: appblckcirc_workspace_mod.o
+mminvmod_mod.o: vbrmv_mat_mod.o
+kkrmat01_new.o: mminvmod_mod.o fillKKRMatrix_mod.o dlke0_smat_mod.o
 
-kkrmat01_new.o: mminvmod_mod.o fillKKRMatrix_mod.o
 

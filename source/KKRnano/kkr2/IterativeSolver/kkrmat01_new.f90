@@ -298,14 +298,18 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   integer :: ref_cluster_index
   integer :: site_index
 
-  double complex, dimension(:,:), allocatable :: mat_B
+
   integer, dimension(:), allocatable :: ia
   integer, dimension(:), allocatable :: ja
   integer, dimension(:), allocatable :: ka
   integer, dimension(:), allocatable :: kvstr
   integer, dimension(:), allocatable :: lmmaxd_array
 
+  double complex, dimension(:,:), allocatable :: mat_B
+  double complex, dimension(:,:), allocatable :: mat_X
+
   integer :: num_cluster
+  logical :: initial_zero
 
 ! -------- debug stuff --------------------------------------------------------
   !double complex, dimension(:,:), allocatable :: full
@@ -315,7 +319,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   num_cluster = maxval(numn0)
 
-  allocate(mat_B(NAEZ*LMMAXD,LMMAXD))
   allocate(ia(naez + 1))
   allocate(kvstr(naez + 1))
   allocate(ja(naez*num_cluster))
@@ -324,7 +327,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
 
   !allocate(full(naez*lmmaxd, naez*lmmaxd)) ! remove
-
+  !allocate(full(43, 43))
   !=======================================================================
     
   ! ---> fourier transformation
@@ -349,9 +352,14 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
   lmmaxd_array = lmmaxd
+  !lmmaxd_array = 9  ! test the l-cutoff
+  !lmmaxd_array(IAT) = lmmaxd
 
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, &
                                    ia, ja, ka, kvstr)
+
+  allocate(mat_B(kvstr(naez+1)-1,LMMAXD))
+  allocate(mat_X(kvstr(naez+1)-1,LMMAXD))
 
 !  write(*,*) "kvstr ", kvstr
 !  write(*,*) "ia    ", ia
@@ -429,13 +437,14 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, kvstr)
 
+  initial_zero = .true.
   if (IGUESS == 1 .and. ITER > 1) then
-    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
-                      QMRBOUND, lmmaxd, size(mat_B, 1), .false.)
-  else
-    call MMINVMOD_new(GLLH, kvstr, ia, ja, GLLKE1, mat_B, &
-                      QMRBOUND, lmmaxd, size(mat_B, 1), .true.)
+    initial_zero =  .false.
   end if
+
+  call MMINVMOD_new(GLLH, kvstr, ia, ja, mat_X, mat_B, &
+                    QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
+
 
   !NOITER = NOITER + iteration_counter
   NOITER = NOITER + 1 ! TODO
@@ -444,6 +453,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !
 !  call solveFull(full, mat_B)
 !  GLLKE1 = mat_B
+
+   call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, kvstr)
 
   !===================================================================
   ! 4) if IGUESS is activated save solution for next iteration

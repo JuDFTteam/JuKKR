@@ -17,6 +17,7 @@ module fillKKRMatrix_mod
 
 contains
 
+!------------------------------------------------------------------------------
   subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, & ! in
                                    ia, ja, ka, kvstr) ! out
     implicit none
@@ -187,6 +188,7 @@ contains
 
   end subroutine
 
+!------------------------------------------------------------------------------
   subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_index, kvstr)
     implicit none
 
@@ -302,5 +304,43 @@ contains
     deallocate(ipvt)
 
   end subroutine
+
+
+  !------------------------------------------------------------------------------
+  !> Convert solution with l-cutoff to format of solution without l-cutoff
+  !> @param GLLKE1 output: solution in old format
+  !> @param mat_X: solution with l-cutoff
+  subroutine toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, kvstr)
+    implicit none
+
+    double complex, dimension(:,:), intent(out) :: GLLKE1
+    double complex, dimension(:,:), intent(in) :: mat_X
+    integer, intent(in) :: lmmaxd
+    integer, dimension(:), intent(in) :: kvstr
+    !---------------------
+
+    integer :: num_atoms, atom_index
+    double complex, parameter :: CZERO =(0.0D0,0.0D0)
+    integer :: start
+    integer :: lm1
+    integer :: lmmax1
+
+    GLLKE1 = CZERO
+    num_atoms = size(kvstr) - 1
+
+
+    do atom_index = 1, num_atoms
+
+      start = kvstr(atom_index) - 1
+      lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
+
+      do lm1 = 1, lmmax1
+        GLLKE1((atom_index - 1)*lmmaxd + lm1, : ) = mat_X(start + lm1, :)
+      end do
+
+    end do
+
+  end subroutine
+
 
 end module

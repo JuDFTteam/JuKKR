@@ -28,7 +28,7 @@
 ! DGINP ...      derivative of reference Green's function
 ! TSST_LOCAL ..  t-matrix
 
-    use kkrmat_mod
+    use kkrmat_new_mod
     implicit none
     include 'mpif.h'
 
@@ -224,7 +224,7 @@
 
     TAUVBZ = 1.D0/VOLBZ
 
-    call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
+    call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
     ITER, &
     ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
     GINP_LOCAL,DGINP, &
