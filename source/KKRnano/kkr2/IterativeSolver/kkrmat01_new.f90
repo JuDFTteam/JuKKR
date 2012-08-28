@@ -92,7 +92,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer:: ATOM(:,:) ! dim naclsd, naez?
   integer:: CLS(:)         ! dim *
   integer:: EZOA(:,:) ! dim naclsd, naez?
-  integer:: NACLS(:)
+  integer:: NACLS(nclsd)
 
   double complex::BZTR2
   double precision::QMRBOUND
