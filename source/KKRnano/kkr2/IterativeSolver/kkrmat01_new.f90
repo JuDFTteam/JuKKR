@@ -254,6 +254,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   use fillKKRMatrix_mod
   use mminvmod_mod
   use dlke0_smat_mod
+  use TEST_lcutoff_mod !TODO: remove
   implicit none
 
   integer, intent(in) :: xdim
@@ -325,9 +326,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   allocate(ka(naez*num_cluster + 1))
   allocate(lmmaxd_array(naez))
 
-
-  !allocate(full(naez*lmmaxd, naez*lmmaxd)) ! remove
-  !allocate(full(43, 43))
   !=======================================================================
     
   ! ---> fourier transformation
@@ -351,9 +349,10 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-  lmmaxd_array = lmmaxd
+  !lmmaxd_array = lmmaxd
   !lmmaxd_array = 9  ! test the l-cutoff
   !lmmaxd_array(IAT) = lmmaxd
+  lmmaxd_array = lmarray
 
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, &
                                    ia, ja, ka, kvstr)

@@ -250,6 +250,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
                      NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
                      IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim)
 
+  use TEST_lcutoff_mod
   use initialGuess_store_mod
   implicit none
 
@@ -335,7 +336,15 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   end do
 
   !----------------------------------------------------------------------------
-  call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
+  if (cutoffmode == 0 .or. cutoffmode == 1) then
+    call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
+  else
+    call generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd, lmarray)
+  end if
+
+  if (cutoffmode == 2) then
+    call cropGLLH(GLLH, lmmaxd, naclsd, naez, lmarray, numn0, indn0)
+  end if
   !----------------------------------------------------------------------------
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)

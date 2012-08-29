@@ -29,6 +29,8 @@
 ! TSST_LOCAL ..  t-matrix
 
     use kkrmat_new_mod
+    use kkrmat_mod !TODO: remove
+    use TEST_lcutoff_mod !TODO: remove
     implicit none
     include 'mpif.h'
 
@@ -223,22 +225,40 @@
 !     The integration over k is also performed in kkrmat01
 
     TAUVBZ = 1.D0/VOLBZ
-
-    call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
-    ITER, &
-    ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
-    GINP_LOCAL,DGINP, &
-    NUMN0,INDN0,I2, &
-    PRSC, &
-    EKM,NOITER, &
-    QMRBOUND,IGUESS,BCP, &
-    DTDE_LOCAL, &
-    GSXIJ, &
-    NXIJ,XCCPL,IXCP,ZKRXIJ, &
-    BZTR2, &
-    communicator, comm_size, &
-    lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
-    nxijd, nguessd, kpoibz, nrd, ekmd)
+    ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, >2 T-matrix cutoff with new solver
+    if (cutoffmode > 2) then
+      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
+      ITER, &
+      ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
+      GINP_LOCAL,DGINP, &
+      NUMN0,INDN0,I2, &
+      PRSC, &
+      EKM,NOITER, &
+      QMRBOUND,IGUESS,BCP, &
+      DTDE_LOCAL, &
+      GSXIJ, &
+      NXIJ,XCCPL,IXCP,ZKRXIJ, &
+      BZTR2, &
+      communicator, comm_size, &
+      lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+      nxijd, nguessd, kpoibz, nrd, ekmd)
+    else
+      call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
+      ITER, &
+      ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
+      GINP_LOCAL,DGINP, &
+      NUMN0,INDN0,I2, &
+      PRSC, &
+      EKM,NOITER, &
+      QMRBOUND,IGUESS,BCP, &
+      DTDE_LOCAL, &
+      GSXIJ, &
+      NXIJ,XCCPL,IXCP,ZKRXIJ, &
+      BZTR2, &
+      communicator, comm_size, &
+      lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+      nxijd, nguessd, kpoibz, nrd, ekmd)
+    endif
 
     ! TODO: move out
     !=========== Lloyd's Formula =====================================

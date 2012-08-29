@@ -29,6 +29,8 @@ program MAIN2
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
 
+  use TEST_lcutoff_mod !TODO: remove
+
   implicit none
   include 'mpif.h'
 
@@ -246,6 +248,8 @@ program MAIN2
           call readPotential(I1, VISP, VINS, ECORE)
           call closePotentialFile()
         end if
+
+        call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
 
       end if
     end do
