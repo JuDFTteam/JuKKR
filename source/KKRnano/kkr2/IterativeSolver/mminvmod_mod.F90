@@ -1,4 +1,4 @@
-! #define DIAGNOSTICMMINVMOD
+#include "../DebugHelpers/logging_macros.h"
 
 #define MATRIX_MULTIPLY(A, X, AX) call vbrmv_mat(nrows, ia, ja, A, kvstr, kvstr, X, AX, num_columns)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
@@ -32,6 +32,7 @@ contains
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of elements of matrices mat_X, mat_B
   subroutine MMINVMOD_new(smat, kvstr, ia, ja, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
+    USE_LOGGING_MOD
     use vbrmv_mat_mod
     implicit none
 
@@ -54,10 +55,8 @@ contains
     !----------------- local variables --------------------------------------------
     double complex, dimension(:,:,:), allocatable :: VECS
 
-    double complex :: CONE
-    double complex :: CZERO
-    parameter         (CONE = (1.0D0,0.0D0),CZERO = (0.0D0,0.0D0))
-    ! ..
+    double complex, parameter :: CONE  = (1.0D0,0.0D0)
+    double complex, parameter :: CZERO = (0.0D0,0.0D0)
 
     integer::NLIM
 
@@ -85,8 +84,12 @@ contains
     double precision::residual_upper_bound(num_columns)
 
     ! 0 = not converged, negative = breakdown
-    ! positive = number of iteration where it has converged
+    ! 1 = converged
     integer :: tfqmr_status(num_columns)
+
+    ! stores iteration where calculation where calculation converged
+    ! 0 = never converged
+    integer :: converged_at(num_columns)
 
     logical::isDone
 
@@ -110,6 +113,7 @@ contains
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
+    converged_at = 0
 
     target_upper_bound = TOL * TEST_FACTOR
 
@@ -238,14 +242,21 @@ contains
       where (abs(TAU) > EPSILON_DP)
         VAR  = DTMP / TAU
         COSI  = 1.0D0 / ( 1.0D0 + VAR )
+        ZTMP = VAR * COSI
       elsewhere
-        ! early convergence
+        ! early convergence or breakdown(stagnation)
         COSI = CZERO
         VAR = CZERO
-        tfqmr_status = IT
+        ZTMP = CONE
+        tfqmr_status = -2
       end where
       TAU  = DTMP * COSI
       ETA  = ALPHA * COSI
+
+      ! do not modify brokedown components
+      where (tfqmr_status < 0)
+        ETA = CZERO
+      end where
 
       ! v1 = v1 + eta*v7
       COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
@@ -253,7 +264,7 @@ contains
       ! v6 = v6 - alpha*v4
       COLUMN_MAXPY(ALPHA, VECS(:,:,FOUR), VECS(:,:,SIX))
 
-      ZTMP = VAR * COSI
+      !ZTMP = VAR*COSI ! moved!
 
       ! v7 = ZTMP*v7 + v6
       COLUMN_XPAY(ZTMP, VECS(:,:,SIX), VECS(:,:,SEVEN))
@@ -285,13 +296,18 @@ contains
         VAR  = DTMP / TAU
         COSI  = 1.0D0 / ( 1.0D0 + VAR )
       elsewhere
-        ! early convergence
+        ! early convergence or breakdown
         VAR = CZERO
         COSI = CZERO
-        tfqmr_status = IT
+        tfqmr_status = -2
       end where
       TAU  = DTMP * COSI
       ETA  = ALPHA * COSI
+
+      ! do not modify brokedown components
+      where (tfqmr_status < 0)
+        ETA = CZERO
+      end where
 
       ! v1 = v1 + eta*v7
       COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
@@ -361,8 +377,9 @@ contains
               isDone = .false.
             end if
           else
-            if (tfqmr_status(ind) <= 0) then ! if not already early converged
-              tfqmr_status(ind) = IT ! component converged
+            if (tfqmr_status(ind) <= 0) then
+              tfqmr_status(ind) = 1
+              converged_at(ind) = IT ! component converged
             end if
           endif
         enddo
@@ -404,19 +421,27 @@ contains
     ! solution is in mat_X
     ! ================================================================
 
-#ifdef DIAGNOSTICMMINVMOD
-        write(*,*) "number of sparse matrix multipl.: ", sparse_mult_count
-        write(*,*) "number of residual probes:        ", res_probe_count
-        write(*,*) "number of iterations:             ", IT
+   WRITELOG(3,*) "number of sparse matrix multipl.: ", sparse_mult_count
+   WRITELOG(3,*) "number of residual probes:        ", res_probe_count
+   WRITELOG(3,*) "number of iterations:             ", IT
+   WRITELOG(3,*) "max. residual:             ", max_residual
 
-        do ind=1, num_columns
-          if (tfqmr_status(ind) < 0) then
-          write(*,*) "Breakdown of component ", ind
-          end if
-        end do
+   do ind=1, num_columns
+     if (converged_at(ind) == 0) then
+       select case (tfqmr_status(ind))
+         case (-1)
+           WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", ind
+         case (-2)
+           WRITELOG(3,*) "Component not converged (stagnated): ", ind
+         case default
+           WRITELOG(3,*) "Component not converged: ", ind
+       end select
+     end if
+   end do
 
-        write(*,*) tfqmr_status
-#endif
+   WRITELOG(3,*) tfqmr_status
+   WRITELOG(3,*) converged_at
+   WRITELOG(3,*) RESN
 
 #ifndef NDEBUG
    if (IT == NLIM) then

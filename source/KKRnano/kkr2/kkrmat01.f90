@@ -342,7 +342,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
     call generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd, lmarray)
   end if
 
-  if (cutoffmode == 2) then
+  if (cutoffmode == 1) then
     call cropGLLH(GLLH, lmmaxd, naclsd, naez, lmarray, numn0, indn0)
   end if
   !----------------------------------------------------------------------------

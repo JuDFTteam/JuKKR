@@ -27,13 +27,13 @@ module KKRnano_Comm_mod
     use KKRnanoParallel_mod
     implicit none
 
-    include 'omp_lib.h'
-
     type (KKRnanoParallel), intent(in) :: my_mpi
     integer, intent(in) :: nthrds ! requested number of threads
 
     integer :: natoms, nspin, nenergy
     integer :: num_threads ! actual number of threads
+    !$ integer, external :: omp_get_num_threads
+    !$ integer, external :: omp_get_max_threads
 
     if (isMasterRank(my_mpi)) then
 
@@ -69,7 +69,7 @@ module KKRnano_Comm_mod
   !> Set the number of OpenMP threads to nthrds.
   subroutine setKKRnanoNumThreads(nthrds)
     implicit none
-    include 'omp_lib.h'
+
     integer, intent(in) :: nthrds
     !$ call OMP_SET_NUM_THREADS(NTHRDS)
   end subroutine

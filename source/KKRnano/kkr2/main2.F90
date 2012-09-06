@@ -4,9 +4,11 @@
 ! massive parallel KKR for nanoscaled systems
 
 #include "DebugHelpers/test_macros.h"
+#include "DebugHelpers/logging_macros.h"
 
 program MAIN2
 
+  USE_LOGGING_MOD
   USE_ARRAYTEST_MOD
 
   use common_testc
@@ -165,6 +167,8 @@ program MAIN2
   call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 
+  OPENLOG(getMyWorldRank(my_mpi), 3)
+
 ! ========= TIMING =========================================================
     if (isMasterRank(my_mpi)) then
       TIME_I = MPI_WTIME()
@@ -290,6 +294,7 @@ program MAIN2
       do I1 = 1,NAEZ
         if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
+        WRITELOG(2, *) "Iteration Atom ", ITER, I1
 !=======================================================================
 ! xccpl
 
@@ -340,6 +345,8 @@ program MAIN2
 ! IE ====================================================================
 
           do IE = 1,IELAST
+
+            WRITELOG(2, *) "Working on energy point ", IE
 
             call CPU_TIME(TIME_E)
 
@@ -1069,6 +1076,8 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======================================================================
 
   endif ! active Ranks
+
+  CLOSELOG
 
 !------------------------------------------------------------------------------
   call deallocate_main2_arrays()
