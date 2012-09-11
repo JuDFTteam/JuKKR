@@ -446,7 +446,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
     initial_zero =  .false.
   end if
 
-  call MMINVMOD_new(GLLH, kvstr, ia, ja, mat_X, mat_B, &
+  call MMINVMOD_new(GLLH, kvstr, ia, ja, ka, mat_X, mat_B, &
                     QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
 
 

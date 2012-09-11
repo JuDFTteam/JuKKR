@@ -1,6 +1,6 @@
 #include "../DebugHelpers/logging_macros.h"
 
-#define MATRIX_MULTIPLY(A, X, AX) call vbrmv_mat(nrows, ia, ja, A, kvstr, kvstr, X, AX, num_columns)
+#define MATRIX_MULTIPLY(A, X, AX) call vbrmv_mat(nrows, ia, ja, ka, A, kvstr, kvstr, X, AX, num_columns)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
 
@@ -31,7 +31,7 @@ contains
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_new(smat, kvstr, ia, ja, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
+  subroutine MMINVMOD_new(smat, kvstr, ia, ja, ka, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
     USE_LOGGING_MOD
     use vbrmv_mat_mod
     implicit none
@@ -39,6 +39,7 @@ contains
     double complex, dimension(:), intent(inout) :: smat
     integer, dimension(:), intent(in) :: ia
     integer, dimension(:), intent(in) :: ja
+    integer, dimension(:), intent(in) :: ka
     integer, dimension(:), intent(in) :: kvstr
 
     integer, intent(in) :: num_columns
