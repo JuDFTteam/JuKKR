@@ -39,7 +39,7 @@ module Logging_mod
 
     write (str, '(I6.6)') rank
 
-    if (loglevel > 0 .and. log_created == .false.) then
+    if (loglevel > 0 .and. log_created .eqv. .false.) then
       open(LOGFILEHANDLE, file='log.' // str, form='formatted', &
            status='replace')
 
@@ -65,7 +65,7 @@ module Logging_mod
     implicit none
     integer, intent(in) :: level
     checkLog = .false.
-    if (logging_level >= level .and. log_created == .true.) then
+    if (logging_level >= level .and. log_created .eqv. .true.) then
       checkLog = .true.
     end if
   end function
