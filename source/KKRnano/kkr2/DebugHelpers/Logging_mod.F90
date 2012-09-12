@@ -52,7 +52,7 @@ module Logging_mod
   !> Closes the logfile
   subroutine closeLogfile()
     implicit none
-    if (log_created == .true.) then
+    if (log_created .eqv. .true.) then
       close(LOGFILEHANDLE)
       log_created = .false.
     end if
