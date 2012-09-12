@@ -315,7 +315,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   logical :: initial_zero
 
 ! -------- debug stuff --------------------------------------------------------
-  !double complex, dimension(:,:), allocatable :: full
+  double complex, dimension(:,:), allocatable :: full
   !integer ii, jj, kk, ind, flag ! remove
   !double complex :: GLLH2(LMMAXD,LMMAXD*NACLSD, naez)  ! remove
 !------------------------------------------------------------------------------
@@ -435,17 +435,22 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
     initial_zero =  .false.
   end if
 
-  call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
-                    QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
-
+  if (cutoffmode == 3) then
+    call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
+                      QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
+  end if
 
   !NOITER = NOITER + iteration_counter
   NOITER = NOITER + 1 ! TODO
 
-!  call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, sparse%kvstr, sparse%kvstr, full)
-!
-!  call solveFull(full, mat_B)
-!  mat_X = mat_B
+  ! solve full matrix equation
+  if (cutoffmode == 4) then
+    allocate(full(size(mat_B,1), size(mat_B,1)))
+    call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, sparse%kvstr, sparse%kvstr, full)
+    call solveFull(full, mat_B)
+    mat_X = mat_B
+    deallocate(full)
+  endif
 
    call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
 

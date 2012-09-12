@@ -225,7 +225,7 @@
 !     The integration over k is also performed in kkrmat01
 
     TAUVBZ = 1.D0/VOLBZ
-    ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, >2 T-matrix cutoff with new solver
+    ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2) then
       call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
       ITER, &
