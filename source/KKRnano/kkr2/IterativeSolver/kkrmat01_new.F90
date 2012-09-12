@@ -442,10 +442,10 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !NOITER = NOITER + iteration_counter
   NOITER = NOITER + 1 ! TODO
 
-!  call convertToFullMatrix(GLLH, ia, ja, ka, kvstr, kvstr, full)
+!  call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, sparse%kvstr, sparse%kvstr, full)
 !
 !  call solveFull(full, mat_B)
-!  GLLKE1 = mat_B
+!  mat_X = mat_B
 
    call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
 

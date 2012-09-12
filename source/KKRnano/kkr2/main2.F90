@@ -167,7 +167,7 @@ program MAIN2
   call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 
-  if (getMyWorldRank(my_mpi) < 64) then
+  if (getMyWorldRank(my_mpi) < 128) then ! max. 128 logfiles
     OPENLOG(getMyWorldRank(my_mpi), 3)
   else
     OPENLOG(getMyWorldRank(my_mpi), 0)
