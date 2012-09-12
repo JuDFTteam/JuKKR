@@ -167,7 +167,11 @@ program MAIN2
   call printKKRnanoInfo(my_mpi, nthrds)
 !------------------------------------------------------------------------------
 
-  OPENLOG(getMyWorldRank(my_mpi), 3)
+  if (getMyWorldRank(my_mpi) < 64) then
+    OPENLOG(getMyWorldRank(my_mpi), 3)
+  else
+    OPENLOG(getMyWorldRank(my_mpi), 0)
+  endif
 
 ! ========= TIMING =========================================================
     if (isMasterRank(my_mpi)) then

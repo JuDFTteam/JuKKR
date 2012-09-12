@@ -259,6 +259,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   use fillKKRMatrix_mod
   use mminvmod_mod
   use dlke0_smat_mod
+  use SparseMatrixDescription_mod
   use TEST_lcutoff_mod !TODO: remove
   implicit none
 
@@ -304,11 +305,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   integer :: ref_cluster_index
   integer :: site_index
 
-
-  integer, dimension(:), allocatable :: ia
-  integer, dimension(:), allocatable :: ja
-  integer, dimension(:), allocatable :: ka
-  integer, dimension(:), allocatable :: kvstr
+  type (SparseMatrixDescription) :: sparse
   integer, dimension(:), allocatable :: lmmaxd_array
 
   double complex, dimension(:,:), allocatable :: mat_B
@@ -325,10 +322,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   num_cluster = maxval(numn0)
 
-  allocate(ia(naez + 1))
-  allocate(kvstr(naez + 1))
-  allocate(ja(naez*num_cluster))
-  allocate(ka(naez*num_cluster + 1))
+  call createSparseMatrixDescription(sparse, naez, naez*num_cluster)
+
   allocate(lmmaxd_array(naez))
 
   !=======================================================================
@@ -359,16 +354,10 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !lmmaxd_array(IAT) = lmmaxd
   lmmaxd_array = lmarray
 
-  call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, &
-                                   ia, ja, ka, kvstr)
+  call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
 
-  allocate(mat_B(kvstr(naez+1)-1,LMMAXD))
-  allocate(mat_X(kvstr(naez+1)-1,LMMAXD))
-
-!  write(*,*) "kvstr ", kvstr
-!  write(*,*) "ia    ", ia
-!  write(*,*) "ja    ", ja
-!  write(*,*) "ka    ", ka
+  allocate(mat_B(sparse%kvstr(naez+1)-1,LMMAXD))
+  allocate(mat_X(sparse%kvstr(naez+1)-1,LMMAXD))
 
   GLLH = CZERO
   !GLLH2 = CZERO ! remove
@@ -390,7 +379,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !               GINP(1,1,1,ref_cluster_index), &
 !               naez, lmmaxd, naclsd)
 
-    call DLKE0_smat(site_index,GLLH,ia,ka,kvstr,EIKRM,EIKRP,NACLS(ref_cluster_index), &
+    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP,NACLS(ref_cluster_index), &
                     ATOM(:,site_index),NUMN0,INDN0,GINP(:,:,:,ref_cluster_index), &
                     naez, lmmaxd, naclsd)
 
@@ -398,7 +387,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   !----------------------------------------------------------------------------
   !call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
-  call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, ia, ja, kvstr)
+  call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, sparse)
   !----------------------------------------------------------------------------
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)
@@ -439,14 +428,14 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !    solve (\Delta t * G_ref - 1) X = - \Delta t
   !    the solution X is the scattering path operator
 
-  call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, kvstr)
+  call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, sparse%kvstr)
 
   initial_zero = .true.
   if (IGUESS == 1 .and. ITER > 1) then
     initial_zero =  .false.
   end if
 
-  call MMINVMOD_new(GLLH, kvstr, ia, ja, ka, mat_X, mat_B, &
+  call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
                     QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
 
 
@@ -458,7 +447,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !  call solveFull(full, mat_B)
 !  GLLKE1 = mat_B
 
-   call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, kvstr)
+   call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
 
   !===================================================================
   ! 4) if IGUESS is activated save solution for next iteration
@@ -469,6 +458,13 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   !===================================================================
   ! solved. Result in GLLKE1
+
+  call destroySparseMatrixDescription(sparse)
+
+  deallocate(lmmaxd_array)
+
+  deallocate(mat_B)
+  deallocate(mat_X)
 
 end subroutine
 

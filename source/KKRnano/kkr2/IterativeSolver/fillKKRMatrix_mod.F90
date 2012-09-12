@@ -7,27 +7,18 @@
 
 module fillKKRMatrix_mod
 
-!  !> Describes a square, variable block row (VBR) sparse matrix
-!  !> (double complex)
-!  type VBRSparseMatrixDescZ
-!    integer, dimension(:), intent(out) :: ia
-!    integer, dimension(:), intent(out) :: ja
-!    integer, dimension(:), intent(out) :: kvstr
-!  end type
-
 contains
 
 !------------------------------------------------------------------------------
   subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, & ! in
-                                   ia, ja, ka, kvstr) ! out
+                                   sparse) ! out
+
+    use SparseMatrixDescription_mod
     implicit none
     integer, dimension(:), intent(in) :: lmmaxd_array
     integer, dimension(:), intent(in) :: numn0
     integer, dimension(:,:), intent(in) :: indn0
-    integer, dimension(:), intent(out) :: ia
-    integer, dimension(:), intent(out) :: ja
-    integer, dimension(:), intent(out) :: ka
-    integer, dimension(:), intent(out) :: kvstr
+    type (SparseMatrixDescription), intent(inout) :: sparse
 
     !----- local
     integer :: nnz_blocks
@@ -36,54 +27,56 @@ contains
     integer :: irow, icol
     integer :: start_address
 
-
     nrows = size(lmmaxd_array)
 
     ASSERT(size(numn0) == nrows)
     ASSERT(size(indn0, 1) == nrows)
-    ASSERT(size(ia) == nrows + 1)
-    ASSERT(size(kvstr) == nrows + 1)
+    ASSERT(size(sparse%ia) == nrows + 1)
+    ASSERT(size(sparse%kvstr) == nrows + 1)
 
-    ia = 0
-    kvstr = 0
-    ja = 0
-    ka = 0
+    sparse%ia = 0
+    sparse%kvstr = 0
+    sparse%ja = 0
+    sparse%ka = 0
 
     nnz_blocks = 0
     do ii = 1, nrows
       nnz_blocks = nnz_blocks + numn0(ii)
     end do
 
-    ASSERT(nnz_blocks <= size(ja))
-    ASSERT(nnz_blocks + 1 <= size(ka))
+    ASSERT(nnz_blocks <= size(sparse%ja))
+    ASSERT(nnz_blocks + 1 <= size(sparse%ka))
 
-    kvstr(1) = 1
+    sparse%kvstr(1) = 1
     do ii = 2, nrows + 1
-      kvstr(ii) = kvstr(ii-1) + lmmaxd_array(ii - 1)
+      sparse%kvstr(ii) = sparse%kvstr(ii-1) + lmmaxd_array(ii - 1)
     end do
 
     ii = 1
     do irow = 1, nrows
-      ia(irow) = ii
+      sparse%ia(irow) = ii
       do icol = 1, numn0(irow)  ! square matrix
         ASSERT(icol <= size(indn0, 2))
         ASSERT(ii <= nnz_blocks)
-        ja(ii) = indn0(irow, icol)
+        sparse%ja(ii) = indn0(irow, icol)
         ii = ii + 1
       end do
     end do
-    ia(nrows + 1) = ii
+    sparse%ia(nrows + 1) = ii
 
     start_address = 1
     ii = 1
     do irow = 1, nrows
       do icol = 1, numn0(irow)  ! square matrix
-      ka(ii) = start_address
+      sparse%ka(ii) = start_address
       start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(icol)
       ii = ii + 1
       end do
     end do
-    ka(ii) = start_address
+    sparse%ka(ii) = start_address
+
+    sparse%max_blockdim = maxval(lmmaxd_array)
+    sparse%max_blocks_per_row = maxval(numn0)
 
   ! DONE!
   end subroutine
@@ -95,16 +88,15 @@ contains
   !> @param ia    for each row give index of first non-zero block in ja
   !> @param ja    column index array of non-zero blocks
   !> ASSUMING SQUARE BLOCKS!!! (FOR NOW)
-  subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, ia, ja, kvstr)
+  subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, sparse)
+    use SparseMatrixDescription_mod
     implicit none
     double complex, dimension(:), intent(inout) :: smat
     double complex, dimension(lmmaxd,lmmaxd,num_atoms), intent(in) :: TMATLL
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: num_atoms
 
-    integer, dimension(:), intent(in) :: ia
-    integer, dimension(:), intent(in) :: ja
-    integer, dimension(:), intent(in) :: kvstr
+    type (SparseMatrixDescription), intent(inout) :: sparse
     ! ------- local
 
     double complex, dimension(lmmaxd) :: temp
@@ -123,14 +115,14 @@ contains
 
     start = 0
     do block_row = 1, num_atoms
-      istart_row = kvstr(block_row)
-      istop_row  = kvstr(block_row+1)
-      do ind_ia = ia(block_row), ia(block_row+1)-1
+      istart_row = sparse%kvstr(block_row)
+      istop_row  = sparse%kvstr(block_row+1)
+      do ind_ia = sparse%ia(block_row), sparse%ia(block_row+1)-1
 
-        block_col = ja(ind_ia)  !ja gives the block-column indices of non-zero blocks
+        block_col = sparse%ja(ind_ia)  !ja gives the block-column indices of non-zero blocks
 
-        istart_col = kvstr(block_col)
-        istop_col  = kvstr(block_col+1)
+        istart_col = sparse%kvstr(block_col)
+        istop_col  = sparse%kvstr(block_col+1)
 
 #ifndef NDEBUG
         if (block_row < 1 .or. block_row > num_atoms) then

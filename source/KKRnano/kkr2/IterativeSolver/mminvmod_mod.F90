@@ -1,6 +1,6 @@
 #include "../DebugHelpers/logging_macros.h"
 
-#define MATRIX_MULTIPLY(A, X, AX) call vbrmv_mat(nrows, ia, ja, ka, A, kvstr, kvstr, X, AX, num_columns)
+#define MATRIX_MULTIPLY(A, X, AX) call multiply_vbr(A, X, AX, sparse)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
 
@@ -31,16 +31,14 @@ contains
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_new(smat, kvstr, ia, ja, ka, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
+  subroutine MMINVMOD_new(smat, sparse, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
     USE_LOGGING_MOD
+    use SparseMatrixDescription_mod
     use vbrmv_mat_mod
     implicit none
 
     double complex, dimension(:), intent(inout) :: smat
-    integer, dimension(:), intent(in) :: ia
-    integer, dimension(:), intent(in) :: ja
-    integer, dimension(:), intent(in) :: ka
-    integer, dimension(:), intent(in) :: kvstr
+    type (SparseMatrixDescription), intent(in) :: sparse
 
     integer, intent(in) :: num_columns
     logical, intent(in) :: initial_zero
@@ -50,8 +48,6 @@ contains
 
     double precision, intent(in) :: TOL
     INTEGER :: NLEN
-    integer :: nrows
-
 
     !----------------- local variables --------------------------------------------
     double complex, dimension(:,:,:), allocatable :: VECS
@@ -109,8 +105,6 @@ contains
     ! INITIALIZATION
     !=======================================================================
     allocate (VECS(NLEN,num_columns,7))
-
-    nrows = size(ia) - 1
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
@@ -443,12 +437,6 @@ contains
    WRITELOG(3,*) tfqmr_status
    WRITELOG(3,*) converged_at
    WRITELOG(3,*) RESN
-
-#ifndef NDEBUG
-   if (IT == NLIM) then
-     write(*,*) "* not converged."
-   end if
-#endif
 
    deallocate(VECS)
 
