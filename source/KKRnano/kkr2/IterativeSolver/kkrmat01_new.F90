@@ -1,6 +1,10 @@
 #include "../DebugHelpers/logging_macros.h"
 
 module kkrmat_new_mod
+
+double complex, allocatable, dimension(:, :), save :: full
+!IBM* ALIGN(32, full)
+
 CONTAINS
 
 ! WARNING: Symmetry assumptions might have been used that are
@@ -315,7 +319,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   logical :: initial_zero
 
 ! -------- debug stuff --------------------------------------------------------
-  double complex, dimension(:,:), allocatable :: full
+  !double complex, dimension(:,:), allocatable :: full
   !integer ii, jj, kk, ind, flag ! remove
   !double complex :: GLLH2(LMMAXD,LMMAXD*NACLSD, naez)  ! remove
 !------------------------------------------------------------------------------
@@ -445,11 +449,12 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   ! solve full matrix equation
   if (cutoffmode == 4) then
-    allocate(full(size(mat_B,1), size(mat_B,1)))
+    if (.not. allocated(full)) then
+      allocate(full(size(mat_B,1), size(mat_B,1)))
+    end if
     call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, sparse%kvstr, sparse%kvstr, full)
     call solveFull(full, mat_B)
     mat_X = mat_B
-    deallocate(full)
   endif
 
    call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
@@ -512,8 +517,8 @@ subroutine generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
   ! -------------------------------------------------------------------
 
   !$omp parallel do private(site_index, site_lm_index, cluster_site_index, &
-  !$                        cluster_site_lm_index, IL1B, IL2B, &
-  !$                        LM1, LM2, LM3, TGH)
+  !$omp                     cluster_site_lm_index, IL1B, IL2B, &
+  !$omp                     LM1, LM2, LM3, TGH)
   do site_index=1,NAEZ
     IL1B=LMMAXD*(site_index-1)
     do cluster_site_index=1,NUMN0(site_index)

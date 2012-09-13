@@ -83,9 +83,9 @@ GN,RM,QI0,SMAT,VOL,LASSLD,LMXSPD,NAEZD,I1)
 
   ! **********************************************************************
   !$omp parallel do private(I2,DQ1,DQ2,DQ3,STEST,LM,NSTART,IT, &
-  !$                        NRS,NGS,NRE,NGE,I,R1,R2,R3, &
-  !$                        YLM,R,ALPHA,G,RFAC,L,M, &
-  !$                        G1,G2,G3,GA,BETA,EXPBSQ,DQDOTG,BFAC,S)
+  !$omp                     NRS,NGS,NRE,NGE,I,R1,R2,R3, &
+  !$omp                     YLM,R,ALPHA,G,RFAC,L,M, &
+  !$omp                     G1,G2,G3,GA,BETA,EXPBSQ,DQDOTG,BFAC,S)
   DO I2 = 1,NAEZ
   !======================================================================
     DQ1 = (QI0(1,I1) - QI0(1,I2)) * ALAT

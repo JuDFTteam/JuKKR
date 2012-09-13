@@ -114,8 +114,8 @@ subroutine generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, 
   ! -------------------------------------------------------------------
 
   !$omp parallel do private(site_index, site_lm_index, cluster_site_index, &
-  !$                        cluster_site_lm_index, IL1B, IL2B, &
-  !$                        LM1, LM2, LM3, TGH)
+  !$omp                     cluster_site_lm_index, IL1B, IL2B, &
+  !$omp                     LM1, LM2, LM3, TGH)
   do site_index=1,NAEZ
     IL1B=LMMAXD*(site_index-1)
     do cluster_site_index=1,NUMN0(site_index)

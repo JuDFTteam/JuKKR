@@ -39,11 +39,13 @@ module Logging_mod
 
     write (str, '(I6.6)') rank
 
-    if (loglevel > 0 .and. log_created .eqv. .false.) then
+    logging_level = loglevel
+    log_created = .false.
+
+    if (loglevel > 0 .and. (log_created .eqv. .false.)) then
       open(LOGFILEHANDLE, file='log.' // str, form='formatted', &
            status='replace')
 
-      logging_level = loglevel
       log_created = .true.
     end if
   end subroutine
