@@ -31,6 +31,8 @@ program MAIN2
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
 
+  use TimerMpi_mod
+
   use TEST_lcutoff_mod !TODO: remove
 
   implicit none
@@ -71,8 +73,11 @@ program MAIN2
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
   double precision::EREFLDAU    ! LDA+U
 
-  double precision::TIME_I
-  double precision::TIME_S
+  type (TimerMpi) :: program_timer
+  type (TimerMpi) :: iteration_timer
+  type (TimerMpi) :: mult_scattering_timer
+  type (TimerMpi) :: single_site_timer
+
   real::TIME_E
   real::TIME_EX
 
@@ -174,8 +179,8 @@ program MAIN2
   endif
 
 ! ========= TIMING =========================================================
+    call resetTimer(program_timer)
     if (isMasterRank(my_mpi)) then
-      TIME_I = MPI_WTIME()
       open (2,file='time-info',form='formatted')
     endif
 !========= TIMING END ======================================================
@@ -232,7 +237,8 @@ program MAIN2
   ! This if closes several hundreds of lines later!
   if (isActiveRank(my_mpi)) then
 
-    call OUTTIME(isMasterRank(my_mpi),'input files read.....',TIME_I, 0)
+    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
+                                       getElapsedTime(program_timer), 0)
 
 ! initialise the arrays for (gen. Anderson/Broyden) potential mixing
     UI2 = 0.00
@@ -249,7 +255,7 @@ program MAIN2
 
         call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
 
-        call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',TIME_I, 0)
+        call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',getElapsedTime(program_timer), 0)
 
         if (isInMasterGroup(my_mpi)) then
           call openPotentialFile(LMPOTD, IRNSD, IRMD)
@@ -272,14 +278,16 @@ program MAIN2
 ! ######################################################################
 ! ######################################################################
 
-      TIME_S = MPI_WTIME()
+      call resetTimer(iteration_timer)
+      call resetTimer(mult_scattering_timer)
+      call stopTimer(mult_scattering_timer)
 
       EKM    = 0
       NOITER = 0
 
       if (isMasterRank(my_mpi)) then
         call printDoubleLineSep(unit_number = 2)
-        call OUTTIME(isMasterRank(my_mpi),'started at ..........',TIME_I,ITER)
+        call OUTTIME(isMasterRank(my_mpi),'started at ..........',getElapsedTime(program_timer),ITER)
         call printDoubleLineSep(unit_number = 2)
       endif
 
@@ -341,7 +349,8 @@ program MAIN2
 ! LDA+U
 
 ! TIME
-          call OUTTIME(isMasterRank(my_mpi),'initialized .........',TIME_I,ITER)
+          call OUTTIME(isMasterRank(my_mpi),'initialized .........',getElapsedTime(program_timer),ITER)
+          call resetTimer(single_site_timer)
 ! TIME
 
 ! IE ====================================================================
@@ -447,6 +456,9 @@ spinloop:     do ISPIN = 1,NSPIND
                     if (KTE >= 0) call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
                   end if
 
+                  call stopTimer(single_site_timer)
+                  call resumeTimer(mult_scattering_timer)
+
 ! <<>> Multiple scattering part
 
                   call KLOOPZ1( &
@@ -469,6 +481,9 @@ spinloop:     do ISPIN = 1,NSPIND
                   iemxd, &
                   lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
+
+                  call stopTimer(mult_scattering_timer)
+                  call resumeTimer(single_site_timer)
 
                 endif
               end do spinloop                          ! ISPIN = 1,NSPIN
@@ -522,6 +537,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !     END do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
+          call stopTimer(single_site_timer)
           TESTARRAY(0, TMATN)
           TESTARRAY(0, TR_ALPH)
           TESTARRAY(0, DTDE)
@@ -535,7 +551,9 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
 
 ! TIME
-          call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',TIME_I,ITER)
+          call OUTTIME(isMasterRank(my_mpi),'Single Site took.....',getElapsedTime(single_site_timer),ITER)
+          call OUTTIME(isMasterRank(my_mpi),'Mult. Scat. took.....',getElapsedTime(mult_scattering_timer),ITER)
+          call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',getElapsedTime(program_timer),ITER)
 ! TIME
 
 !=======================================================================
@@ -614,7 +632,7 @@ spinloop:     do ISPIN = 1,NSPIND
               TESTARRAY(0, RNORM)
 
 ! IME
-              call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',TIME_I,ITER)
+              call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
 ! IME
             else ! no Lloyd
 
@@ -728,7 +746,7 @@ spinloop:     do ISPIN = 1,NSPIND
       !call closePotentialFile()
       if (KTE >= 0) call closeResults1File()
 
-      call OUTTIME(isMasterRank(my_mpi),'density calculated ..',TIME_I,ITER)
+      call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
 
 ! TODO: Only necessary for non-DOS calculation - otherwise proceed to RESULTS
@@ -789,7 +807,7 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, ipand, shgaunts%ngshd)
 
-            call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -803,13 +821,13 @@ spinloop:     do ISPIN = 1,NSPIND
             TESTARRAYLOCAL(VONS)
             TESTARRAYLOCAL(RHO2NS)
 
-            call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
             ! output: VONS (changed), VMAD
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
                  NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
                  SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), irmd, ipand)
 
-            call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 
@@ -849,7 +867,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             end if
 
-            call OUTTIME(isMasterRank(my_mpi),'KTE ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
@@ -860,7 +878,7 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, shgaunts%ngshd, ipand)
 
-            call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
 ! =====================================================================
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
@@ -895,7 +913,7 @@ spinloop:     do ISPIN = 1,NSPIND
             TESTARRAYLOCAL(DRDI)
             TESTARRAYLOCAL(R)
 
-            call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',TIME_I,ITER)
+            call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -906,7 +924,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
 
-        call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',TIME_I,ITER)
+        call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
         call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC, VOL0)
 
@@ -1056,7 +1074,7 @@ spinloop:     do ISPIN = 1,NSPIND
       if(isMasterRank(my_mpi)) then
 
         call printSolverIterationNumber(ITER, NOITER_ALL)
-        call writeIterationTimings(ITER, TIME_I, TIME_S)
+        call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
 
       endif
 

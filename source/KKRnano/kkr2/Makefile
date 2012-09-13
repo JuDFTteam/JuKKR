@@ -137,10 +137,10 @@ LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -
 #-lfftw3
 
 ifeq ($(TYPE),debug)
-FCFLAGS += -q64 -O3 -qstrict -g -qnosave -qinitauto=7FF7FFFF -WF,-DDEBUG1
+FCFLAGS += -q64 -O3 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
 #-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 else
-FCFLAGS += -q64 -O3 -qstrict
+FCFLAGS += -q64 -O3 -qstrict -WF,-DNOLOGGING
 # -qipa
 endif
 
@@ -156,7 +156,8 @@ endif
 #DIRS = . dir1 dir2
 DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
-         xccouplings energy force harmonics lattice KKRnanoParallel
+         xccouplings energy force harmonics lattice KKRnanoParallel \
+         timing
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -213,7 +214,8 @@ main2.o: main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod
          common_testc.o common_optc.o lloyds_formula_mod.o KKRSelfConsistency_mod.o \
          MadelungCalculator_mod.o lloyd0_new_mod.o \
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
-         GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TEST_lcutoff_mod.o
+         GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \
+         TEST_lcutoff_mod.o
          
 main2_arrays_mod.o: error_messages_mod.o
 kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o TEST_lcutoff_mod.o

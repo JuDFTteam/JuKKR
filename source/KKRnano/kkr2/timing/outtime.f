@@ -11,8 +11,6 @@ c**********************************************************************
 
       IMPLICIT NONE
 
-      INCLUDE 'mpif.h'
-
 C     .. Scalar Arguments ..
       DOUBLE PRECISION TIME_I
       INTEGER       ITER
@@ -20,7 +18,7 @@ C     .. Scalar Arguments ..
       CHARACTER*(*) NAME
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION TIME_F,REST,SECONDS
+      DOUBLE PRECISION REST,SECONDS
       INTEGER       ihours,iminutes
 C     ..
 C     .. Intrinsic Functions ..
@@ -30,11 +28,9 @@ C     only one processor proceeds ...
 C
       IF (OUTPUT) THEN
 C
-      TIME_F = MPI_WTIME()
-C
 C     calculate time in hours, minutes and seconds
 C
-      REST = TIME_F - TIME_I
+      REST = TIME_I
 
       ihours = int(rest/3600.0)
       rest = rest - real(ihours)*3600
@@ -45,9 +41,9 @@ C
 c     output of the results
 
       WRITE (2,FMT=8000) 
-     + iter,name,(TIME_F-TIME_I),ihours,iminutes,seconds
+     + iter,name,TIME_I,ihours,iminutes,seconds
       WRITE (6,FMT=8000) 
-     + iter,name,(TIME_F-TIME_I),ihours,iminutes,seconds
+     + iter,name,TIME_I,ihours,iminutes,seconds
 C
       ENDIF
 C

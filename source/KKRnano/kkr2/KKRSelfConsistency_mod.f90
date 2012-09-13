@@ -60,8 +60,14 @@ module KKRSelfConsistency_mod
     double precision, intent(inout) :: VONS(IRMD,LMPOTD,2)
 
     !DEBUG
-    if (IRMIN1 > IRMIND) then
-      write(*,*) "resetPotentials: IRMIN1 > IRMIND"
+    if (IRMIN1 < IRMIND) then
+      write(*,*) "resetPotentials: IRMIN1 < IRMIND"
+      stop
+    end if
+
+    !DEBUG
+    if (IRC1 > IRMD) then
+      write(*,*) "resetPotentials: IRC1 > IRMD"
       stop
     end if
 

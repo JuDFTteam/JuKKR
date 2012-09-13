@@ -332,7 +332,8 @@ C     to the outer muffin-tin region where shape functions apply
 C     Therefore IMT1 must be:
 C           IMT1 = IRMD - MESHN(ICELL)
             IMT1 = IRWS1 - MESHN(ICELL)
-C     TODO FIXME CHECK: therefore IRWS1 must be =IRMD ???
+
+C     TODO FIXME CHECK: therefore IRWS1 must be =IRMD ??? No!
 
 c
 c---> for proper core treatment imt must be odd
@@ -385,9 +386,9 @@ c
             IRCUT(1,IH) = IMT(IH)
 
 CDEBUG E.R.
-            if (IRMD /= IRWS1) then
+            if (IRMD < IRWS1) then
               write(*,*) "ERROR in STARTB1"
-              write(*,*) "IRMD == IRWS1 failed."
+              write(*,*) "IRMD>=IRWS1 failed."
               write(*,*) "Atom, IRMD, IRWS1"
               write(*,*) IH, IRMD, IRWS1
               stop
@@ -396,13 +397,13 @@ CDEBUG
 
 
 CDEBUG E.R.
-            if ((IRMD - IMT1) /= MESHN(ICELL)) then
-              write(*,*) "ERROR in STARTB1"
-              write(*,*) "Assertion IRMD - IMT1 == MESHN(ICELL) failed."
-              write(*,*) "Atom, IRMD, IMT1, MESHN(ICELL)"
-              write(*,*) IH, IRMD, IMT1, MESHN(ICELL)
-              stop
-            end if
+C           if ((IRMD - IMT1) /= MESHN(ICELL)) then
+C             write(*,*) "ERROR in STARTB1"
+C             write(*,*) "Assertion IRMD - IMT1 == MESHN(ICELL) failed."
+C             write(*,*) "Atom, IRMD, IMT1, MESHN(ICELL)"
+C             write(*,*) IH, IRMD, IMT1, MESHN(ICELL)
+C             stop
+C           end if
 CDEBUG
             ISUM = IMT(IH)
             DO 90 IPAN1 = 2,IPAN(IH)
@@ -423,6 +424,14 @@ c
 c---> fill array irmin in case of full potential
 c
             IRMIN(IH) = NR - IRNS(IH)
+
+CDEBUG E.R.
+      if (IRMIN(IH) < (IRMD - IRNSD)) then
+        write(*,*) "STARTB1: Assertion IRMIN(IH)>=(IRMD - IRNSD) fail."
+        stop
+      end if
+CDEBUG
+
 c
 c--->  first iteration : shift all potentials (only for test purpose)
             DO 120 J = 1,NR
