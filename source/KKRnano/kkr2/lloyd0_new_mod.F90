@@ -23,7 +23,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ipand, ncleb)
 
-  USE_ARRAYTEST_MOD
+  !USE_ARRAYTEST_MOD
 
   implicit none
 
@@ -198,7 +198,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
       end do
 
       !TESTARRAYLOCAL(DEN0)
-      TESTARRAY(0, DEN0)
+      !TESTARRAY(0, DEN0)
 
       do IE = 1,IELAST
         call RHOVAL0(EZ(IE),WEZ(IE),DRDI,R, &
@@ -209,16 +209,16 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
       end do
 
       !TESTARRAYLOCAL(DOS0)
-      TESTARRAY(0, DOS0)
-      TESTARRAY(0, DOS1)
-      TESTARRAY(0, WEZ)
+      !TESTARRAY(0, DOS0)
+      !TESTARRAY(0, DOS1)
+      !TESTARRAY(0, WEZ)
 
   ! communicate the DOS results
   call lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
   call lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
 
-  TESTARRAY(0, DOS0)
-  TESTARRAY(0, DOS1)
+  !TESTARRAY(0, DOS0)
+  !TESTARRAY(0, DOS1)
 
   ! ----------- deallocate work arrays ----------------------------------
   deallocate(DOS)

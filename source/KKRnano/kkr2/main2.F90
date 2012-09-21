@@ -5,11 +5,12 @@
 
 #include "DebugHelpers/test_macros.h"
 #include "DebugHelpers/logging_macros.h"
+#include "DebugHelpers/test_array_log.h"
 
 program MAIN2
 
   USE_LOGGING_MOD
-  USE_ARRAYTEST_MOD
+  USE_ARRAYLOG_MOD
 
   use common_testc
   use common_optc
@@ -157,6 +158,8 @@ program MAIN2
 
   type(KKRnanoParallel) :: my_mpi
 
+  integer :: flag
+
  !============================================================= CONSTANTS
   PI = 4.0D0*ATAN(1.0D0)
 !=============================================================
@@ -272,6 +275,10 @@ program MAIN2
     call createGauntCoefficients(gaunts, lmaxd)
     call createShapeGauntCoefficients(shgaunts, lmaxd)
 
+   !flag = 0
+   !99 continue
+   !if (flag == 0) goto 99
+
 ! ######################################################################
 ! ######################################################################
     do ITER = 1, SCFSTEPS
@@ -384,8 +391,8 @@ program MAIN2
                           TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
               end do
 
-              !TESTARRAY(0, TREFLL)
-              !TESTARRAY(0, DTREFLL)
+              TESTARRAYLOG(4, TREFLL)
+              TESTARRAYLOG(4, DTREFLL)
 
               call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
                             gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB,gaunts%LOFLM,NACLS, &
@@ -396,8 +403,8 @@ program MAIN2
                             lmaxd, naclsd, gaunts%ncleb, nrefd, nclsd, &
                             LLY)
 
-              !TESTARRAY(0, GREFN)
-              !TESTARRAY(0, DGREFN)
+              TESTARRAYLOG(3, GREFN)
+              TESTARRAYLOG(3, DGREFN)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
@@ -505,7 +512,7 @@ spinloop:     do ISPIN = 1,NSPIND
                  ! calculate DTIXIJ = T_down - T_up
                  call calcDeltaTupTdown(DTIXIJ)
 
-                 TESTARRAY(0, GMATXIJ)
+                 !TESTARRAY(0, GMATXIJ)
 
                  JSCAL = WEZ(IE)/DBLE(NSPIND)
 
@@ -513,7 +520,7 @@ spinloop:     do ISPIN = 1,NSPIND
                                                 DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
                                                 RXCCLS, JXCIJINT)
 
-                 TESTARRAY(0, DTIXIJ(:,:,1))
+                 !TESTARRAY(0, DTIXIJ(:,:,1))
 
               end if
 
@@ -538,11 +545,11 @@ spinloop:     do ISPIN = 1,NSPIND
 ! IE ====================================================================
 
           call stopTimer(single_site_timer)
-          TESTARRAY(0, TMATN)
-          TESTARRAY(0, TR_ALPH)
-          TESTARRAY(0, DTDE)
-          TESTARRAY(0, GMATN)
-          TESTARRAY(0, LLY_GRDT)
+          TESTARRAYLOG(4, TMATN)
+          TESTARRAYLOG(4, TR_ALPH)
+          TESTARRAYLOG(4, DTDE)
+          TESTARRAYLOG(4, GMATN)
+          TESTARRAYLOG(4, LLY_GRDT)
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
@@ -602,9 +609,9 @@ spinloop:     do ISPIN = 1,NSPIND
           endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
-          TESTARRAYLOCAL(GMATN)
-          TESTARRAY(0, LLY_G0TR)
-          TESTARRAY(0, LLY_GRDT)
+          TESTARRAYLOG(3, GMATN)
+          TESTARRAYLOG(3, LLY_G0TR)
+          TESTARRAYLOG(3, LLY_GRDT)
 
 !----------------------------------------------------------------------
 ! BEGIN only processes with LMPIC = 1 are working
@@ -628,8 +635,8 @@ spinloop:     do ISPIN = 1,NSPIND
                               lmaxd, irmd, irnsd, iemxd, &
                               irid, nfund, ipand, gaunts%ncleb)
 
-              TESTARRAY(0, WEZRN)
-              TESTARRAY(0, RNORM)
+              TESTARRAYLOG(3, WEZRN)
+              TESTARRAYLOG(3, RNORM)
 
 ! IME
               call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
@@ -818,8 +825,8 @@ spinloop:     do ISPIN = 1,NSPIND
             THETAS(:,:,ICELL),LMSP(1,ICELL), &
             irmd, irid, nfund, shgaunts%ngshd, ipand)
 
-            TESTARRAYLOCAL(VONS)
-            TESTARRAYLOCAL(RHO2NS)
+            TESTARRAYLOG(3, VONS)
+            TESTARRAYLOG(3, RHO2NS)
 
             call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
             ! output: VONS (changed), VMAD
@@ -902,16 +909,16 @@ spinloop:     do ISPIN = 1,NSPIND
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 ! =====================================================================
 
-            TESTARRAYLOCAL(VONS)
+            !TESTARRAYLOCAL(VONS)
             !output: VAV0, VOL0
             call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
                             IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
 
-            TESTARRAYLOCAL(THETAS)
-            TESTARRAYLOCAL(DRDI)
-            TESTARRAYLOCAL(R)
+            !TESTARRAYLOCAL(THETAS)
+            !TESTARRAYLOCAL(DRDI)
+            !TESTARRAYLOCAL(R)
 
             call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
 
@@ -983,9 +990,9 @@ spinloop:     do ISPIN = 1,NSPIND
           itdbryd, irmd, irnsd, nspind)
         endif
 
-        TESTARRAYLOCAL(VINS)
-        TESTARRAYLOCAL(VISP)
-        TESTARRAYLOCAL(VONS)
+        TESTARRAYLOG(4, VINS)
+        TESTARRAYLOG(4, VISP)
+        TESTARRAYLOG(4, VONS)
 
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration
