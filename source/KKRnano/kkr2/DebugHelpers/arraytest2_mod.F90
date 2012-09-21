@@ -120,8 +120,8 @@ module arraytest2_mod
      end do
 
      ! print norm and average
-     write(doubleprectest,'(A7,I4,X,A16,X,E16.9,E16.9)') "DEBUG: ", nr, msg, DNRM2(length, array, 1), &
-                           asum / length
+     write(doubleprectest,'(A7,I4,X,A16,X,E16.9,X,E16.9)') "DEBUG: ", nr, &
+                              msg, DNRM2(length, array, 1), asum / length
      !write (doubleprectest,*) "Just a test"
 
    end function
@@ -143,8 +143,8 @@ module arraytest2_mod
      end do
   
      ! print norm and average
-     write(doublecomplextest,'(A7,I4,X,A16,X,E12.5,E12.5,X,E12.5)') "DEBUG: ", nr, msg, DZNRM2(length, array, 1), &
-                                asum / length
+     write(doublecomplextest,'(A7,I4,X,A16,X,E12.5,X,E12.5,X,E12.5)') &
+            "DEBUG: ", nr, msg, DZNRM2(length, array, 1), asum / length
 
      !write(doublecomplextest,*) "Just a test"
 

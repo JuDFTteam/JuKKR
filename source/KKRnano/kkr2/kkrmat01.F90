@@ -1,3 +1,6 @@
+#include "DebugHelpers/logging_macros.h"
+#include "DebugHelpers/test_array_log.h"
+
 module kkrmat_mod
 CONTAINS
 
@@ -250,6 +253,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
                      NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
                      IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim)
 
+  USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
   use TEST_lcutoff_mod
   use initialGuess_store_mod
   implicit none
@@ -319,6 +324,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
+  TESTARRAYLOG(3, GINP)
+
   GLLH = CZERO
 
   do site_index = 1,NAEZ
@@ -335,6 +342,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   end do
 
+  TESTARRAYLOG(3, GLLH)
+
   !----------------------------------------------------------------------------
   if (cutoffmode == 0 .or. cutoffmode == 1) then
     call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
@@ -345,6 +354,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   if (cutoffmode == 1) then
     call cropGLLH(GLLH, lmmaxd, naclsd, naez, lmarray, numn0, indn0)
   end if
+
+  TESTARRAYLOG(3, GLLH)
   !----------------------------------------------------------------------------
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)
@@ -403,6 +414,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   !===================================================================
   ! solved. Result in GLLKE1
+  TESTARRAYLOG(3, GLLKE1)
+  TESTARRAYLOG(3, TMATLL)
 
 end subroutine
 

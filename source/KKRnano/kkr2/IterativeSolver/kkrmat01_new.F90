@@ -1,4 +1,5 @@
 #include "../DebugHelpers/logging_macros.h"
+#include "../DebugHelpers/test_array_log.h"
 
 module kkrmat_new_mod
 
@@ -265,6 +266,9 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
   use TEST_lcutoff_mod !TODO: remove
+
+  USE_ARRAYLOG_MOD
+  USE_LOGGING_MOD
   implicit none
 
   integer, intent(in) :: xdim
@@ -371,6 +375,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !99 continue
 !    if (flag == 0) goto 99
 
+  TESTARRAYLOG(3, GINP)
+
   do site_index = 1,NAEZ
     ref_cluster_index = CLS(site_index)
 
@@ -389,10 +395,14 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   end do
 
+  TESTARRAYLOG(3, GLLH)
+
   !----------------------------------------------------------------------------
   !call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
   call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, sparse)
   !----------------------------------------------------------------------------
+
+  TESTARRAYLOG(3, GLLH)
 
   ! ==> now GLLH holds (Delta_t * G_ref - 1)
 
@@ -447,17 +457,22 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !NOITER = NOITER + iteration_counter
   NOITER = NOITER + 1 ! TODO
 
+  TESTARRAYLOG(3, mat_B)
+
   ! solve full matrix equation
   if (cutoffmode == 4) then
     if (.not. allocated(full)) then
       allocate(full(size(mat_B,1), size(mat_B,1)))
     end if
     call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, sparse%kvstr, sparse%kvstr, full)
+    TESTARRAYLOG(3, full)
     call solveFull(full, mat_B)
     mat_X = mat_B
   endif
 
-   call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
+  TESTARRAYLOG(3, mat_X)
+  call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
+
 
   !===================================================================
   ! 4) if IGUESS is activated save solution for next iteration
@@ -468,6 +483,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   !===================================================================
   ! solved. Result in GLLKE1
+
+  TESTARRAYLOG(3, GLLKE1)
 
   call destroySparseMatrixDescription(sparse)
 
