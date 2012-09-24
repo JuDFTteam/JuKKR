@@ -214,23 +214,23 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     if (LLY == 1) then
       BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
     end if
-!
-!    if (XCCPL) then
-!
-!       ! ================================================================
-!       !       XCCPL communicate off-diagonal elements and multiply with
-!       !       exp-factor
-!       ! ================================================================
-!
-!      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
-!      NSYMAT,NAEZ,IAT, &
-!      NXIJ,IXCP,ZKRXIJ, &
-!      GLLKE1, &
-!      GSXIJ, &
-!      communicator, comm_size, &
-!      lmmaxd, nxijd)
-!
-!    endif
+
+    if (XCCPL) then
+
+       ! ================================================================
+       !       XCCPL communicate off-diagonal elements and multiply with
+       !       exp-factor
+       ! ================================================================
+
+      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
+      NSYMAT,NAEZ,IAT, &
+      NXIJ,IXCP,ZKRXIJ, &
+      GLLKE1, &
+      GSXIJ, &
+      communicator, comm_size, &
+      lmmaxd, nxijd)
+
+    endif
 
 !==============================================================================
   end do ! KPT = 1,NOFKS
@@ -404,12 +404,12 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   TESTARRAYLOG(3, GLLH)
 
-  ! ==> now GLLH holds (Delta_t * G_ref - 1)
+  ! ==> now GLLH holds (1 - Delta_t * G_ref)
 
 
   ! Now solve the linear matrix equation A*X = b (b is also a matrix),
-  ! where A = (Delta_t*G_ref - 1) (inverse of scattering path operator)
-  ! and b = (-1) * Delta_t
+  ! where A = (1 - Delta_t*G_ref) (inverse of scattering path operator)
+  ! and b = Delta_t
 
   ! If the initial guess optimisation is used, X and b are modified, but
   ! the form of the matrix equation stays the same
@@ -439,7 +439,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   !===================================================================
   ! 3) solve linear set of equations by iterative TFQMR scheme
-  !    solve (\Delta t * G_ref - 1) X = - \Delta t
+  !    solve (1 - \Delta t * G_ref) X = \Delta t
   !    the solution X is the scattering path operator
 
   call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, sparse%kvstr)
@@ -494,78 +494,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   deallocate(mat_X)
 
 end subroutine
-
-!------------------------------------------------------------------------------
-!> Generates matrix (\Delta T G_ref - 1).
-!> on input: GLLH contains G_ref, on output: GLLH contains coefficient matrix
-subroutine generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
-  implicit none
-
-  double complex, parameter :: CONE  = ( 1.0D0,0.0D0)
-  double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
-
-  integer, intent(in) :: lmmaxd
-  integer, intent(in) :: naclsd
-  integer :: NAEZ
-  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
-  integer :: INDN0(NAEZ,NACLSD)
-  integer :: NUMN0(NAEZ)
-  doublecomplex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
-
-  !---------- local --------------
-  double complex :: TGH(lmmaxd)
-  integer :: IL1B
-  integer :: IL2B
-  integer :: LM1
-  integer :: LM2
-  integer :: LM3
-  integer :: site_index
-  integer :: site_lm_index
-  integer :: cluster_site_index
-  integer :: cluster_site_lm_index
-
-  ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
-  !
-  !
-  ! NUMN0(site_index) is the number of atoms in the reference cluster
-  ! of atom/site 'site_index' (inequivalent atoms only!)
-  ! INDN0 stores the index of the atom in the basis corresponding to
-  ! the reference cluster atom (inequivalent atoms only!)
-  ! -------------------------------------------------------------------
-
-  !$omp parallel do private(site_index, site_lm_index, cluster_site_index, &
-  !$omp                     cluster_site_lm_index, IL1B, IL2B, &
-  !$omp                     LM1, LM2, LM3, TGH)
-  do site_index=1,NAEZ
-    IL1B=LMMAXD*(site_index-1)
-    do cluster_site_index=1,NUMN0(site_index)
-      do LM2=1,LMMAXD
-        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-        IL2B=LMMAXD*(INDN0(site_index,cluster_site_index)-1)+LM2
-        do LM1=1,LMMAXD
-          TGH(LM1) = CZERO
-          do LM3=1,LMMAXD
-            TGH(LM1)=TGH(LM1)+TMATLL(LM1,LM3,site_index)*GLLH(LM3,cluster_site_lm_index,site_index)
-          enddo
-        enddo
-
-        do LM1=1,LMMAXD
-          site_lm_index=IL1B+LM1
-          GLLH(LM1,cluster_site_lm_index,site_index) = TGH(LM1)
-
-          if (site_lm_index == IL2B) then
-            ! substract 1 only at the 'diagonal'
-            GLLH(LM1,cluster_site_lm_index,site_index) = GLLH(LM1,cluster_site_lm_index,site_index) - CONE
-          endif
-
-        enddo
-
-      enddo
-    enddo
-  enddo
-  !$omp end parallel do
-end subroutine
-
 
 !------------------------------------------------------------------------------
 !> Summation of Green's function over k-points. Has to be called for every k-point

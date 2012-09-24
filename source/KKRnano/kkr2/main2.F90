@@ -366,8 +366,6 @@ program MAIN2
 
           do IE = 1,IELAST
 
-            WRITELOG(2, *) "Working on energy point ", IE
-
             call CPU_TIME(TIME_E)
 
             ETIME(IE) = 0.0D0
@@ -385,6 +383,8 @@ program MAIN2
 ! IE ====================================================================
             if (getMyEnergyId(my_mpi)==EPROC(IE)) then
 ! IE ====================================================================
+
+              WRITELOG(2, *) "Working on energy point ", IE
 
               do RF = 1,NREF
                 call TREF(EZ(IE),VREF(RF),LMAXD,RMTREF(RF), &

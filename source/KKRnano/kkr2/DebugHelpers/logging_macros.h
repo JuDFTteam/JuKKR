@@ -15,6 +15,16 @@
 !> WRITELOG(2, *) "Logging ...", xy
 !>          |  |
 !>   loglevel  Fortran format string
+!>
+!> If no logging is desired:
+!> *) When compiled with macro NOLOGGING defined, then logging code
+!> is not included in source.
+!> *) Or: when using OPENLOG, set loglevel to 0 - logging code is
+!> included - but output is deactivated and no logfile created.
+
+#ifndef LOGGING_MACROS_H_
+#define LOGGING_MACROS_H_
+
 
 #ifndef NOLOGGING
 #define USE_LOGGING_MOD use Logging_mod
@@ -32,5 +42,7 @@
 #define WRITELOG(LEVEL, FORMAT) if (.false.) write(*,*)
 
 #define CLOSELOG continue
+
+#endif
 
 #endif
