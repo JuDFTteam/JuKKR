@@ -243,6 +243,7 @@ contains
     integer :: icol
     integer :: nrows
     integer :: ind
+    integer :: ind_ia
     integer :: istartcol, istartrow, istopcol, istoprow
 
     double complex, parameter :: CZERO =(0.0D0,0.0D0)
@@ -253,7 +254,9 @@ contains
 
     do iblockrow = 1, nrows
       ind = ka(ia(iblockrow))
-      do iblockcol = ja(ia(iblockrow)), ja(ia(iblockrow + 1) - 1)
+      do ind_ia = ia(iblockrow), ia(iblockrow + 1) - 1
+
+        iblockcol = ja(ind_ia)
 
         istartcol = kvstc(iblockcol)
         istopcol  = kvstc(iblockcol + 1) - 1
