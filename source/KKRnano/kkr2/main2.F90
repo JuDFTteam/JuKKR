@@ -372,11 +372,7 @@ program MAIN2
 
             if (ITER==1.and.IE==1) then
 
-              call EBALANCE('I',ITER,SCFSTEPS, &
-                            IELAST,NPNT1, &
-                            getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
-                            ETIME,EPROC,EPROCO, &
-                            empid, iemxd)
+              call EBALANCE1(IELAST, EPROC, EPROCO, empid, iemxd)
 
             endif
 
@@ -579,11 +575,10 @@ spinloop:     do ISPIN = 1,NSPIND
 !     on the basis of new timings determine now new distribution of
 !     work to 1 .. EMPID processors
 !=======================================================================
-          if (empid > 1) call EBALANCE('R',ITER,SCFSTEPS, &
-                         IELAST,NPNT1, &
+          if (empid > 1) call EBALANCE2(IELAST,NPNT1, &
                          getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
                          ETIME,EPROC,EPROCO, &
-                         empid, iemxd)  ! should be communicated - dependence on floating point ops!!
+                         empid, iemxd) ! should be communicated - dependence on floating point ops!!
 
 !=======================================================================
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
