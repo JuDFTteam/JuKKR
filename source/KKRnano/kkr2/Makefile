@@ -235,7 +235,7 @@ kkrmat01_new.o: lloyds_formula_mod.o initialGuess_store_mod.o mminvmod_mod.o fil
                 dlke0_smat_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o
                 
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
-
+ebalance.o: KKRnanoParallel_mod.o
 
 #l-cutoff TEST
 TEST_lcutoff_mod.o: lcutoff_mod.o

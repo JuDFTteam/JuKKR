@@ -215,7 +215,7 @@ module KKRnanoParallel_mod
   end function
   
   !--------------------------------------------------------------
-  !> Returns number of spin ranks.
+  !> Returns number of energy ranks.
   integer function getNumEnergyRanks(my_mpi)
     implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
@@ -237,6 +237,14 @@ module KKRnanoParallel_mod
     implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getNumWorldRanks = my_mpi%num_ranks_
+  end function
+
+  !--------------------------------------------------------------
+  !> Returns rank number of MasterRank in MPI_COMM_WORLD.
+  integer function getMasterRank(my_mpi)
+    implicit none
+    type (KKRnanoParallel), intent(in) :: my_mpi
+    getMasterRank = 0
   end function
 
   !--------------------------------------------------------------

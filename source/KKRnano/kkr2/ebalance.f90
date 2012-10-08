@@ -1,3 +1,151 @@
+module EBalanceHandler_mod
+  implicit none
+
+  type EBalanceHandler
+    PRIVATE
+    integer, dimension(:), allocatable :: eproc
+    integer, dimension(:), allocatable :: eproc_old
+    double precision, dimension(:), allocatable :: etime
+    integer :: ierlast
+    integer :: num_eprocs_empid
+    real::TIME_E
+    real::TIME_EX
+  end type
+
+  CONTAINS
+
+  !----------------------------------------------------------------------------
+  !> Creates EBalanceHandler.
+  !> Call initEBalanceHandler before use
+  subroutine createEBalanceHandler(balance, num_epoints)
+    implicit none
+    type (EBalanceHandler), intent(inout) :: balance
+    integer, intent(in) :: num_epoints
+
+    allocate(balance%eproc(num_epoints))
+    allocate(balance%eproc_old(num_epoints))
+    allocate(balance%etime(num_epoints))
+
+    balance%eproc = 0
+    balance%eproc_old = 0
+    balance%etime = 0.0d0
+
+    balance%ierlast = num_epoints
+    balance%num_eprocs_empid = 0
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Initialises EBalanceHandler.
+  subroutine initEBalanceHandler(balance, my_mpi)
+    use KKRnanoParallel_mod
+    implicit none
+    type (EBalanceHandler), intent(inout) :: balance
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    balance%num_eprocs_empid = getNumEnergyRanks(my_mpi)
+
+    if (isMasterRank(my_mpi)) then
+      ! TODO: check and read ebalance file
+
+      call EBALANCE1(balance%ierlast, balance%eproc, balance%eproc_old, &
+                     balance%num_eprocs_empid, balance%ierlast)
+
+    end if
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Broadcast ebalance information to all ranks.
+  subroutine bcastEBalance_com(balance, my_mpi)
+    use KKRnanoParallel_mod
+    implicit none
+
+    include 'mpif.h'
+
+    type (EBalanceHandler), intent(inout) :: balance
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    !-----
+    integer :: ierr
+
+    ! save old ebalance information
+    balance%eproc_old = balance%eproc
+
+    call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
+    getMasterRank(my_mpi),getMyActiveCommunicator(my_mpi), ierr)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> (Re)Starts measurement for dynamical load balancing
+  subroutine startEBalanceTiming(balance, ie)
+    use KKRnanoParallel_mod
+
+    implicit none
+
+    type (EBalanceHandler), intent(inout) :: balance
+    integer, intent(in) :: ie
+
+    ! Start timing:
+    ! save initial time of calculation
+    call CPU_TIME(balance%time_e)
+    balance%etime(ie) = 0.0d0
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Finishes time measurement for energy-point ie
+  subroutine stopEBalanceTiming(balance, ie)
+    use KKRnanoParallel_mod
+    implicit none
+
+    type (EBalanceHandler), intent(inout) :: balance
+    integer, intent(in) :: ie
+
+    real :: time_finish
+
+    call CPU_TIME(time_finish)
+
+    balance%etime(ie) = time_finish - balance%time_e
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  ! Gathers all timings and redistributes energy processes.
+  subroutine updateEBalance_com(balance, my_mpi)
+    use KKRnanoParallel_mod
+    implicit none
+
+    type (EBalanceHandler), intent(inout) :: balance
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    ! TODO TODO TODO
+    ! CAST ETIME to real!!!
+    ! call EBALANCE2   GET NPNT1
+    !call EBALANCE2(balance%ierlast,NPNT1, MYACTVRANK,ACTVCOMM, &
+    !ETIME,EPROC,EPROCO, &
+    !empid, iemxd)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Destroys EBalanceHandler.
+  !> Call initEBalanceHandler before use
+  subroutine destroyEBalanceHandler(balance)
+    use KKRnanoParallel_mod
+    implicit none
+    type (EBalanceHandler), intent(inout) :: balance
+
+    deallocate(balance%eproc)
+    deallocate(balance%eproc_old)
+    deallocate(balance%etime)
+
+  end subroutine
+
+end module
+
+!------------------------------------------------------------------------------
 subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
   ! ======================================================================
   !                       build MPI_Groups
@@ -105,7 +253,7 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
   !=======================================================================
   ! >>> 1st guess
   !=======================================================================
-end
+end subroutine
 
 !==============================================================================
 
@@ -232,7 +380,7 @@ empid, iemxd)
 
 
     !     Quick fix: if NPNT1=0 then IERI=0 -> leads to read out of bounds
-    !     at line 212   E.R.
+    !     E.R.
     if (IERI .eq. 0) then
       IERI = 1
     end if
@@ -286,4 +434,4 @@ empid, iemxd)
 !
 !  endif
 
-end
+end subroutine
