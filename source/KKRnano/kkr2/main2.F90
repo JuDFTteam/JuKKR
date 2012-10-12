@@ -1,5 +1,3 @@
-! TODO: remove arrays GMATN_ALL, LLY_GRDT_ALL
-
 ! KKRnano
 ! massive parallel KKR for nanoscaled systems
 
@@ -267,6 +265,7 @@ program MAIN2
         end if
 
         call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
+        WRITELOG(3, *) "lm-array: ", lmarray
 
       end if
     end do

@@ -5,7 +5,7 @@ module EBalanceHandler_mod
     PRIVATE
     integer, dimension(:), allocatable :: eproc
     integer, dimension(:), allocatable :: eproc_old
-    double precision, dimension(:), allocatable :: etime
+    real, dimension(:), allocatable :: etime
     integer :: ierlast
     integer :: num_eprocs_empid
     real::TIME_E
@@ -123,9 +123,15 @@ module EBalanceHandler_mod
     ! TODO TODO TODO
     ! CAST ETIME to real!!!
     ! call EBALANCE2   GET NPNT1
-    !call EBALANCE2(balance%ierlast,NPNT1, MYACTVRANK,ACTVCOMM, &
-    !ETIME,EPROC,EPROCO, &
-    !empid, iemxd)
+
+    integer :: NPNT1
+
+    NPNT1 = 1
+
+    call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
+    getMyActiveCommunicator(my_mpi), &
+    balance%ETIME,balance%EPROC,balance%EPROC_old, &
+    balance%num_eprocs_empid, balance%ierlast)
 
   end subroutine
 
