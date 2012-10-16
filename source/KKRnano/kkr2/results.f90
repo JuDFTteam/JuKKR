@@ -146,6 +146,9 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
     do I1 = 1,NAEZ
       read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
       EULDAU,EDCLDAU
+
+      ! output unfortunaltely integrated into ETOTB1
+      ! ETOTB1 depends on 'SAVED' variables !!!
       call ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC, &
       EULDAU,EDCLDAU,LDAU, &
       KPRE,LMAX,LPOT, &

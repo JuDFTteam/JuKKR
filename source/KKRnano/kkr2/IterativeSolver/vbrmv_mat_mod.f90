@@ -58,8 +58,6 @@ contains
 
     integer icols
 
-
-    ! TODO: replace hardcoded stuff
 !IBM* ALIGN(32, buffer)
     double complex buffer(max_blockdim*max_blocks_per_row, max_blockdim)
 
