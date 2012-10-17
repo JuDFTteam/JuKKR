@@ -18,7 +18,7 @@ FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DNOLOGGING
+FCFLAGS += -gen-interfaces -warn interfaces
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =
@@ -79,7 +79,7 @@ ifeq ($(TYPE),debug)
 FCFLAGS += -debug -g -O0 -traceback -check all -DDEBUG1
 #-auto -ftrapuv -check uninit
 else
-FCFLAGS += -O2 -g
+FCFLAGS += -O2 -g -DNOLOGGING
 endif
 
 # ============================= JUGENE ========================================

@@ -507,15 +507,11 @@ spinloop:     do ISPIN = 1,NSPIND
                  ! calculate DTIXIJ = T_down - T_up
                  call calcDeltaTupTdown(DTIXIJ)
 
-                 !TESTARRAY(0, GMATXIJ)
-
                  JSCAL = WEZ(IE)/DBLE(NSPIND)
 
                  call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
                                                 DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
                                                 RXCCLS, JXCIJINT)
-
-                 !TESTARRAY(0, DTIXIJ(:,:,1))
 
               end if
 
@@ -548,7 +544,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-          !call SREDGM
           call collectMSResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
 !=======================================================================
 
@@ -823,6 +818,7 @@ spinloop:     do ISPIN = 1,NSPIND
             TESTARRAYLOG(3, RHO2NS)
 
             call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
+
             ! output: VONS (changed), VMAD
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
                  NAEZ, VONS, ZAT, R(:,I1), IRCUT(:,I1), IPAN(I1), VMAD, &
@@ -903,16 +899,11 @@ spinloop:     do ISPIN = 1,NSPIND
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 ! =====================================================================
 
-            !TESTARRAYLOCAL(VONS)
             !output: VAV0, VOL0
             call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),R(:,I1),DRDI(:,I1),IMT(I1),IRCUT(:,I1), &
                             IPAN(I1),LMSP(1,ICELL),IFUNM(1,ICELL), &
                             THETAS(:,:,ICELL),IRWS(I1),VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
-
-            !TESTARRAYLOCAL(THETAS)
-            !TESTARRAYLOCAL(DRDI)
-            !TESTARRAYLOCAL(R)
 
             call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
 
