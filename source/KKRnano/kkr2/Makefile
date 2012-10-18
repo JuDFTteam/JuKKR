@@ -215,7 +215,7 @@ main2.o: main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod
          MadelungCalculator_mod.o lloyd0_new_mod.o \
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
          GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \
-         TEST_lcutoff_mod.o
+         EBalanceHandler_mod.o TEST_lcutoff_mod.o 
          
 main2_arrays_mod.o: error_messages_mod.o
 kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o TEST_lcutoff_mod.o
@@ -235,7 +235,7 @@ kkrmat01_new.o: lloyds_formula_mod.o initialGuess_store_mod.o mminvmod_mod.o fil
                 dlke0_smat_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o
                 
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
-ebalance.o: KKRnanoParallel_mod.o
+EBalanceHandler_mod.o: KKRnanoParallel_mod.o
 
 #l-cutoff TEST
 TEST_lcutoff_mod.o: lcutoff_mod.o

@@ -132,11 +132,6 @@ module main2_arrays_mod
   integer, dimension(:), allocatable :: NACLS
   integer, dimension(:), allocatable :: REFPOT
 
-  ! ---------------- Energie parallelisation ---------------------------------
-  real, dimension(:), allocatable :: ETIME
-  integer, dimension(:), allocatable :: EPROC
-  integer, dimension(:), allocatable :: EPROCO
-
   !==============================================================================
   ! Dimension Parameters.
   !==============================================================================
@@ -445,12 +440,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(REFPOT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ETIME(IEMXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(EPROC(IEMXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(EPROCO(IEMXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
 
     !initialise to be safe
     VINS = 0.0d0
@@ -567,9 +556,6 @@ CONTAINS
     deallocate(CLS, stat = memory_stat)
     deallocate(NACLS, stat = memory_stat)
     deallocate(REFPOT, stat = memory_stat)
-    deallocate(ETIME, stat = memory_stat)
-    deallocate(EPROC, stat = memory_stat)
-    deallocate(EPROCO, stat = memory_stat)
 
   end subroutine
 

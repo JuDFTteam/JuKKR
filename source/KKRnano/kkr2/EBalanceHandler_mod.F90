@@ -2,14 +2,16 @@ module EBalanceHandler_mod
   implicit none
 
   type EBalanceHandler
-    PRIVATE
+
     integer, dimension(:), allocatable :: eproc
     integer, dimension(:), allocatable :: eproc_old
+
     real, dimension(:), allocatable :: etime
     integer :: ierlast
     integer :: num_eprocs_empid
     real::TIME_E
     real::TIME_EX
+    logical :: equal_distribution
   end type
 
   CONTAINS
@@ -32,6 +34,7 @@ module EBalanceHandler_mod
 
     balance%ierlast = num_epoints
     balance%num_eprocs_empid = 0
+    balance%equal_distribution = .false.
 
   end subroutine
 
@@ -45,13 +48,26 @@ module EBalanceHandler_mod
 
     balance%num_eprocs_empid = getNumEnergyRanks(my_mpi)
 
-    if (isMasterRank(my_mpi)) then
+    !if (isMasterRank(my_mpi)) then  !TODO TODO TODO
       ! TODO: check and read ebalance file
 
       call EBALANCE1(balance%ierlast, balance%eproc, balance%eproc_old, &
                      balance%num_eprocs_empid, balance%ierlast)
 
-    end if
+    !end if
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Sets option for equal work distribution.
+  !> Equal work distribution is used for DOS calculation.
+  !> Default is: no equal work distribution
+  subroutine setEqualDistribution(balance, flag)
+    implicit none
+    type (EBalanceHandler), intent(inout) :: balance
+    logical, intent(in) :: flag
+
+    balance%equal_distribution = flag
 
   end subroutine
 
@@ -120,18 +136,26 @@ module EBalanceHandler_mod
     type (EBalanceHandler), intent(inout) :: balance
     type (KKRnanoParallel), intent(in) :: my_mpi
 
-    ! TODO TODO TODO
-    ! CAST ETIME to real!!!
-    ! call EBALANCE2   GET NPNT1
-
     integer :: NPNT1
 
     NPNT1 = 1
+    if (balance%equal_distribution .eqv. .true.) then
+       NPNT1 = 0
+    end if
 
-    call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
-    getMyActiveCommunicator(my_mpi), &
-    balance%ETIME,balance%EPROC,balance%EPROC_old, &
-    balance%num_eprocs_empid, balance%ierlast)
+    ! TODO: extract allreduce -> reduce
+    ! TODO: let only master rank calculate
+    ! TODO: broadcast
+    if (balance%num_eprocs_empid > 1) then
+
+      call MPI_ALLREDUCE(balance%ETIME,MTIME,IEMXD,MPI_REAL,MPI_MAX, &
+      ACTVCOMM,IERR)
+
+      call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
+      getMyActiveCommunicator(my_mpi), &
+      balance%ETIME,balance%EPROC,balance%EPROC_old, &
+      balance%num_eprocs_empid, balance%ierlast)
+   end if
 
   end subroutine
 
@@ -152,7 +176,8 @@ module EBalanceHandler_mod
 end module
 
 !------------------------------------------------------------------------------
-subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
+!                                                optional: equal
+subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd, equal)
   ! ======================================================================
   !                       build MPI_Groups
   ! ======================================================================
@@ -177,7 +202,15 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
   integer        EPROC(IEMXD), EPROCO(IEMXD)
 
   integer        IER,IERI
-  logical        TEST
+  !logical        TEST
+  logical, optional :: equal
+  logical :: flag
+
+  if (present(equal)) then
+     flag = equal
+  else
+     flag = .false.
+  end if
 
   !=======================================================================
   ! 1st guess >>>
@@ -228,7 +261,11 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
   !     if DOS shall be calculated make use of special scheme allowing for
   !     broader Energy-parallelization
 
-  if (TEST('DOS     ')) then
+  ! Remark E.R.:
+  ! The amazing "special"-scheme just means equal work distribution
+
+  !if (TEST('DOS     ')) then
+  if (flag .eqv. .true.) then
     do IER=1,IERLAST
       EPROC(IER)     = MOD(IER,EMPID) + 1
     enddo
@@ -237,6 +274,7 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
   EPROCO = EPROC
 
 
+  if (flag .eqv. .false.) then
   !     check whether information on energy-point load-balancing is
   !     available
 
@@ -255,7 +293,8 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd)
   !         CLOSE(50)
 
   !       ENDIF
-
+     continue
+  end if
   !=======================================================================
   ! >>> 1st guess
   !=======================================================================
@@ -264,7 +303,7 @@ end subroutine
 !==============================================================================
 
 subroutine EBALANCE2(IERLAST,NPNT1, MYACTVRANK,ACTVCOMM, &
-ETIME,EPROC,EPROCO, &
+MTIME,EPROC,EPROCO, &
 empid, iemxd)
   ! ======================================================================
   !                       build MPI_Groups
@@ -286,7 +325,7 @@ empid, iemxd)
 
   integer        IERLAST,NPNT1
 
-  real           ETIME(IEMXD)
+  !real           ETIME(IEMXD)
   integer        EPROC(IEMXD), EPROCO(IEMXD), EPOINT(IEMXD,EMPID)
 
   !     .. local scalars ..
@@ -308,8 +347,8 @@ empid, iemxd)
 
   !     gather on all processors all timings
 
-  call MPI_ALLREDUCE(ETIME,MTIME,IEMXD,MPI_REAL,MPI_MAX, &
-  ACTVCOMM,IERR)
+  !call MPI_ALLREDUCE(ETIME,MTIME,IEMXD,MPI_REAL,MPI_MAX, &
+  !ACTVCOMM,IERR)
 
 
   !----------------------------------------------------------------------
@@ -423,20 +462,20 @@ empid, iemxd)
   !     INQUIRE(FILE='STOP',EXIST=STOPIT)
 !  if (ITER.eq.SCFSTEPS) then
 !
-!    if (MYACTVRANK.eq.0) then
-!
-!      open (50,file='ebalance',form='formatted')
-!      write(50, *) "# Energy load-balancing file"
-!      write(50, *) "# 1st line: number of E-points, number of E-processes."
-!      write(50, *) "# point --- process --- timing used"
-!      write(50, *) IERLAST,EMPID
-!
-!      do IER = 1,IERLAST
-!        write(50,*) IER, EPROC(IER), MTIME(IER)
-!      end do
-!
-!      close(50)
-!    endif
+    if (MYACTVRANK.eq.0) then
+
+      open (50,file='ebalance',form='formatted')
+      write(50, *) "# Energy load-balancing file"
+      write(50, *) "# 1st line: number of E-points, number of E-processes."
+      write(50, *) "# point --- process --- timing used"
+      write(50, *) IERLAST,EMPID
+
+      do IER = 1,IERLAST
+        write(50,*) IER, EPROC(IER), MTIME(IER)
+      end do
+
+      close(50)
+    endif
 !
 !  endif
 

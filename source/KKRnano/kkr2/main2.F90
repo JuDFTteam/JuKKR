@@ -31,6 +31,7 @@ program MAIN2
   use ShapeGauntCoefficients_mod
 
   use TimerMpi_mod
+  use EBalanceHandler_mod
 
   use TEST_lcutoff_mod !TODO: remove
 
@@ -77,8 +78,7 @@ program MAIN2
   type (TimerMpi) :: mult_scattering_timer
   type (TimerMpi) :: single_site_timer
 
-  real::TIME_E
-  real::TIME_EX
+  type (EBalanceHandler) :: ebalance_handler
 
   integer::ICELL
   integer::NPNT1
@@ -274,6 +274,10 @@ program MAIN2
     call createGauntCoefficients(gaunts, lmaxd)
     call createShapeGauntCoefficients(shgaunts, lmaxd)
 
+    call createEBalanceHandler(ebalance_handler, ielast)
+    call initEBalanceHandler(ebalance_handler, my_mpi)
+    call setEqualDistribution(ebalance_handler, (NPNT1 == 0))
+
    !flag = 0
    !99 continue
    !if (flag == 0) goto 99
@@ -365,18 +369,10 @@ program MAIN2
 
           do IE = 1,IELAST
 
-            call CPU_TIME(TIME_E)
-
-            ETIME(IE) = 0.0D0
-
-            if (ITER==1.and.IE==1) then
-
-              call EBALANCE1(IELAST, EPROC, EPROCO, empid, iemxd)
-
-            endif
+            call startEBalanceTiming(ebalance_handler, IE)
 
 ! IE ====================================================================
-            if (getMyEnergyId(my_mpi)==EPROC(IE)) then
+            if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
 ! IE ====================================================================
 
               WRITELOG(2, *) "Working on energy point ", IE
@@ -519,8 +515,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! End of Jij calculation
 ! =====================================================================
 
-              call CPU_TIME(TIME_EX)
-              ETIME(IE) = TIME_EX-TIME_E
+              call stopEBalanceTiming(ebalance_handler, ie)
 
 ! IE ====================================================================
             endif
@@ -544,7 +539,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-          call collectMSResults_com(my_mpi, GMATN, LLY_GRDT, EPROC)
+          call collectMSResults_com(my_mpi, GMATN, LLY_GRDT, ebalance_handler%EPROC)
 !=======================================================================
 
 ! TIME
@@ -569,10 +564,7 @@ spinloop:     do ISPIN = 1,NSPIND
 !     on the basis of new timings determine now new distribution of
 !     work to 1 .. EMPID processors
 !=======================================================================
-          if (empid > 1) call EBALANCE2(IELAST,NPNT1, &
-                         getMyWorldRank(my_mpi),getMyActiveCommunicator(my_mpi), &
-                         ETIME,EPROC,EPROCO, &
-                         empid, iemxd) ! should be communicated - dependence on floating point ops!!
+          call updateEBalance_com(ebalance_handler, my_mpi) ! should be communicated - dependence on floating point ops!!
 
 !=======================================================================
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
@@ -590,7 +582,8 @@ spinloop:     do ISPIN = 1,NSPIND
                 endif
 
                 !call EPRDIST
-                call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), EPROC, EPROCO, KMESH, NofKs)
+                call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), &
+                     ebalance_handler%EPROC, ebalance_handler%EPROC_old, KMESH, NofKs)
 
               endif
             enddo
@@ -1086,6 +1079,8 @@ spinloop:     do ISPIN = 1,NSPIND
     call destroyMadelungCalculator(madelung_calc)
     call destroyGauntCoefficients(gaunts)
     call destroyShapeGauntCoefficients(shgaunts)
+
+    call destroyEBalanceHandler(ebalance_handler)
 
 ! ======================================================================
 
