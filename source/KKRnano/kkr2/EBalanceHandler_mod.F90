@@ -72,28 +72,6 @@ module EBalanceHandler_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Broadcast ebalance information to all ranks.
-  subroutine bcastEBalance_com(balance, my_mpi)
-    use KKRnanoParallel_mod
-    implicit none
-
-    include 'mpif.h'
-
-    type (EBalanceHandler), intent(inout) :: balance
-    type (KKRnanoParallel), intent(in) :: my_mpi
-
-    !-----
-    integer :: ierr
-
-    ! save old ebalance information
-    balance%eproc_old = balance%eproc
-
-    call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
-    getMasterRank(my_mpi),getMyActiveCommunicator(my_mpi), ierr)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
   !> (Re)Starts measurement for dynamical load balancing
   subroutine startEBalanceTiming(balance, ie)
     use KKRnanoParallel_mod
@@ -133,10 +111,15 @@ module EBalanceHandler_mod
     use KKRnanoParallel_mod
     implicit none
 
+    include 'mpif.h'
+
     type (EBalanceHandler), intent(inout) :: balance
     type (KKRnanoParallel), intent(in) :: my_mpi
 
     integer :: NPNT1
+    integer :: ierr
+
+    real MTIME(balance%ierlast)
 
     NPNT1 = 1
     if (balance%equal_distribution .eqv. .true.) then
@@ -148,13 +131,19 @@ module EBalanceHandler_mod
     ! TODO: broadcast
     if (balance%num_eprocs_empid > 1) then
 
-      call MPI_ALLREDUCE(balance%ETIME,MTIME,IEMXD,MPI_REAL,MPI_MAX, &
-      ACTVCOMM,IERR)
+      call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, &
+      getMyActiveCommunicator(my_mpi),IERR)
 
-      call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
-      getMyActiveCommunicator(my_mpi), &
-      balance%ETIME,balance%EPROC,balance%EPROC_old, &
-      balance%num_eprocs_empid, balance%ierlast)
+      ! only Masterrank calculates new work distribution
+      if (getMyWorldRank(my_mpi) == 0) then
+        call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
+        getMyActiveCommunicator(my_mpi), &
+        MTIME,balance%EPROC,balance%EPROC_old, &
+        balance%num_eprocs_empid, balance%ierlast)
+      endif
+
+      call bcastEBalance_com(balance, my_mpi)
+
    end if
 
   end subroutine
@@ -173,7 +162,32 @@ module EBalanceHandler_mod
 
   end subroutine
 
-end module
+
+!==============================================================================
+! H E L P E R       R O U T I N E S
+!==============================================================================
+
+  !----------------------------------------------------------------------------
+  !> Broadcast ebalance information to all ranks.
+  subroutine bcastEBalance_com(balance, my_mpi)
+    use KKRnanoParallel_mod
+    implicit none
+
+    include 'mpif.h'
+
+    type (EBalanceHandler), intent(inout) :: balance
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    !-----
+    integer :: ierr
+
+    ! save old ebalance information
+    balance%eproc_old = balance%eproc
+
+    call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
+    0, getMyActiveCommunicator(my_mpi), ierr)
+
+  end subroutine
 
 !------------------------------------------------------------------------------
 !                                                optional: equal
@@ -318,7 +332,7 @@ empid, iemxd)
 
   implicit none
 
-  include 'mpif.h'
+  !include 'mpif.h'
 
   integer empid
   integer iemxd
@@ -480,3 +494,6 @@ empid, iemxd)
 !  endif
 
 end subroutine
+
+
+end module

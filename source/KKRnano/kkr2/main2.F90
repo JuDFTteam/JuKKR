@@ -562,9 +562,9 @@ spinloop:     do ISPIN = 1,NSPIND
 
 !=======================================================================
 !     on the basis of new timings determine now new distribution of
-!     work to 1 .. EMPID processors
+!     work to 1 .. EMPID processors - all processes SYNCED
 !=======================================================================
-          call updateEBalance_com(ebalance_handler, my_mpi) ! should be communicated - dependence on floating point ops!!
+          call updateEBalance_com(ebalance_handler, my_mpi)
 
 !=======================================================================
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
