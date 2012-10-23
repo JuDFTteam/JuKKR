@@ -297,7 +297,8 @@ program MAIN2
 
       if (isMasterRank(my_mpi)) then
         call printDoubleLineSep(unit_number = 2)
-        call OUTTIME(isMasterRank(my_mpi),'started at ..........',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'started at ..........', &
+                     getElapsedTime(program_timer),ITER)
         call printDoubleLineSep(unit_number = 2)
       endif
 
@@ -359,7 +360,8 @@ program MAIN2
 ! LDA+U
 
 ! TIME
-          call OUTTIME(isMasterRank(my_mpi),'initialized .........',getElapsedTime(program_timer),ITER)
+          call OUTTIME(isMasterRank(my_mpi),'initialized .........', &
+                       getElapsedTime(program_timer),ITER)
           call resetTimer(single_site_timer)
 ! TIME
 
@@ -386,11 +388,13 @@ program MAIN2
               TESTARRAYLOG(4, DTREFLL)
 
               call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
-                            gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB,gaunts%LOFLM,NACLS, &
+                            gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB, &
+                            gaunts%LOFLM,NACLS, &
                             REFPOT, &
                             TREFLL,DTREFLL,GREFN,DGREFN, &
                             LLY_G0TR(:,IE), &
-                            getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
+                            getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
+                            getNumAtomRanks(my_mpi), &
                             lmaxd, naclsd, gaunts%ncleb, nrefd, nclsd, &
                             LLY)
 

@@ -55,9 +55,8 @@
     !     .. Parameters ..
 
     integer, parameter :: NSYMAXD = 48
-    double complex :: CONE
-    double complex :: CZERO
-    parameter        (CONE  = ( 1.0D0,0.0D0), CZERO  = ( 0.0D0,0.0D0))
+    double complex, parameter :: CONE = ( 1.0D0,0.0D0)
+    double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
 
     !     ..
     !     .. Scalar Arguments ..

@@ -67,9 +67,10 @@ contains
     start_address = 1
     ii = 1
     do irow = 1, nrows
-      do icol = 1, numn0(irow)  ! square matrix
+      do icol = 1, numn0(irow)
       sparse%ka(ii) = start_address
-      start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(icol)
+      ASSERT( indn0(irow, icol) >= 1 .and. indn0(irow, icol) <= nrows )
+      start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(indn0(irow,icol))
       ii = ii + 1
       end do
     end do

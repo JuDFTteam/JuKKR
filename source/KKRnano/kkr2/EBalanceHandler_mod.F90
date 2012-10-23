@@ -1,3 +1,5 @@
+! TODO: allocate and comm-check
+
 module EBalanceHandler_mod
   implicit none
 
@@ -46,15 +48,47 @@ module EBalanceHandler_mod
     type (EBalanceHandler), intent(inout) :: balance
     type (KKRnanoParallel), intent(in) :: my_mpi
 
+    logical :: readit
+    integer :: file_points, file_procs
+    integer, parameter :: FILEHANDLE = 50
+
     balance%num_eprocs_empid = getNumEnergyRanks(my_mpi)
 
-    !if (isMasterRank(my_mpi)) then  !TODO TODO TODO
+    if (balance%num_eprocs_empid == 1) then
+      balance%eproc = 1
+      balance%eproc_old = 1
+      return
+    end if
+
+    if (getMyWorldRank(my_mpi) == 0) then
       ! TODO: check and read ebalance file
 
       call EBALANCE1(balance%ierlast, balance%eproc, balance%eproc_old, &
                      balance%num_eprocs_empid, balance%ierlast)
 
-    !end if
+      inquire(FILE='ebalance', EXIST=readit)
+
+      if (readit) then
+        open(FILEHANDLE, file='ebalance', form='formatted')
+        call readEBalanceHeader(filehandle, file_points, file_procs)
+
+        if (         balance%ierlast == file_points .and. &
+            balance%num_eprocs_empid == file_procs) then
+
+          call readEBalanceDistribution(filehandle, balance%eproc, file_points)
+
+        else
+          write(*,*) "WARNING: Bad ebalance file provided."
+        end if
+
+      end if
+
+    endif
+
+    ! bcast ebalance distribution
+    call bcastEBalance_com(balance, my_mpi)
+
+    balance%eproc_old = balance%eproc
 
   end subroutine
 
@@ -168,7 +202,7 @@ module EBalanceHandler_mod
 !==============================================================================
 
   !----------------------------------------------------------------------------
-  !> Broadcast ebalance information to all ranks.
+  !> Broadcast ebalance information from rank 0 to all ranks.
   subroutine bcastEBalance_com(balance, my_mpi)
     use KKRnanoParallel_mod
     implicit none
@@ -187,6 +221,40 @@ module EBalanceHandler_mod
     call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
     0, getMyActiveCommunicator(my_mpi), ierr)
 
+  end subroutine
+
+  !---------------------------------------------------------------------------
+  !> Reads header of opened ebalance file and returns number of points
+  !> and process-groups from file
+  subroutine readEBalanceHeader(filehandle, npoints, nprocs)
+    implicit none
+    integer, intent(in) :: filehandle
+    integer, intent(out) :: npoints
+    integer, intent(out) :: nprocs
+
+    !skip first 3 lines - those are comments
+    read(filehandle, *)
+    read(filehandle, *)
+    read(filehandle, *)
+    read(filehandle, *) npoints, nprocs
+  end subroutine
+
+  !---------------------------------------------------------------------------
+  !> Reads body of opened ebalance file and returns energy group distribution
+  !> note: no proper error handling
+  subroutine readEBalanceDistribution(filehandle, eproc, num_points)
+    implicit none
+    integer, intent(in) :: filehandle
+    integer, dimension(:), intent(inout) :: eproc
+    integer, intent(in) :: num_points
+
+    integer :: idummy, ie
+    real :: rdummy
+    !skip first 3 lines - those are comments
+
+    do ie = 1, num_points
+      read(filehandle, *) idummy, eproc(ie), rdummy
+    end do
   end subroutine
 
 !------------------------------------------------------------------------------
@@ -287,28 +355,6 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd, equal)
 
   EPROCO = EPROC
 
-
-  if (flag .eqv. .false.) then
-  !     check whether information on energy-point load-balancing is
-  !     available
-
-  !     INQUIRE(FILE='balance',EXIST=READIT)
-
-  !       IF ((ITER.EQ.1).AND.(READIT)) THEN
-
-  !         OPEN (50,FILE='balance',FORM='unformatted')
-
-  !         READ (50,IOSTAT=IOS) BLNCD,BLNCD1
-
-  !         IF (IOS.EQ.0.AND.BLNCD.EQ.IERLAST.AND.BLNCD1.EQ.EMPID) THEN
-  !           READ (50) EPROC
-  !         ENDIF
-
-  !         CLOSE(50)
-
-  !       ENDIF
-     continue
-  end if
   !=======================================================================
   ! >>> 1st guess
   !=======================================================================
