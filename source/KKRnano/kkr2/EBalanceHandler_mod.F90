@@ -1,4 +1,9 @@
-! TODO: allocate and comm-check
+#define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
+#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
+#define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
+#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
+
+#define COMMCHECK(IERR) if((IERR) /= 0) then; write(*,*) "ERROR: Communication failure: ", __FILE__, __LINE__; STOP; endif
 
 module EBalanceHandler_mod
   implicit none
@@ -26,9 +31,11 @@ module EBalanceHandler_mod
     type (EBalanceHandler), intent(inout) :: balance
     integer, intent(in) :: num_epoints
 
-    allocate(balance%eproc(num_epoints))
-    allocate(balance%eproc_old(num_epoints))
-    allocate(balance%etime(num_epoints))
+    integer :: memory_stat
+
+    ALLOCATECHECK(balance%eproc(num_epoints))
+    ALLOCATECHECK(balance%eproc_old(num_epoints))
+    ALLOCATECHECK(balance%etime(num_epoints))
 
     balance%eproc = 0
     balance%eproc_old = 0
@@ -168,6 +175,8 @@ module EBalanceHandler_mod
       call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, &
       getMyActiveCommunicator(my_mpi),IERR)
 
+      COMMCHECK(IERR)
+
       ! only Masterrank calculates new work distribution
       if (getMyWorldRank(my_mpi) == 0) then
         call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
@@ -190,9 +199,11 @@ module EBalanceHandler_mod
     implicit none
     type (EBalanceHandler), intent(inout) :: balance
 
-    deallocate(balance%eproc)
-    deallocate(balance%eproc_old)
-    deallocate(balance%etime)
+    integer :: memory_stat
+
+    DEALLOCATECHECK(balance%eproc)
+    DEALLOCATECHECK(balance%eproc_old)
+    DEALLOCATECHECK(balance%etime)
 
   end subroutine
 
@@ -220,6 +231,8 @@ module EBalanceHandler_mod
 
     call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
     0, getMyActiveCommunicator(my_mpi), ierr)
+
+    COMMCHECK(IERR)
 
   end subroutine
 

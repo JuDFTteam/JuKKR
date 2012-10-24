@@ -1,4 +1,4 @@
-!> @author: Elias Rabel, 2012
+!> @author Elias Rabel, 2012
 
 module TimerMpi_mod
   implicit none

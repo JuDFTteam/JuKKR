@@ -6,7 +6,6 @@ VISP,ZAT,IPAN, &
 IRCUT,CLEB,LOFLM,ICLEB,IEND, &
 DTDE,TR_ALPH,LMAX, &
 LLDAU,WMLDAU_ISPIN, &
-!                        new input parameters after inc.p replace
 ncleb, ipand, irmd, irnsd)
 
   implicit none

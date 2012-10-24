@@ -1,7 +1,23 @@
+c>    sets up values needed for gaunt.
+
+c>       m. weinert  january 1982
+c>
+c>    changed for calculating with real spherical harmonics
+c>                                          b.drittler  july 1987
+c>
+c>    W(N)        integration weights on 4*LMAX points in the intervall
+c>                (-1,0) (from routine GRULE)
+c>
+c>    YR(N,L,M)   spherical harmonics on 4*LMAX points to angular
+c>                momentum indices (l,m) scaled with a factor
+c>                of RF=(4*pi)**(1/3)
+c>
+c>    LMAX        l-cutoff, added after inc.p remove
 C***********************************************************************
       SUBROUTINE GAUNT2(W,YR,LMAX)
 C ************************************************************************
-c     sets up values needed for gaunt
+c     sets up values needed for gaunt.
+
 c        m. weinert  january 1982
 c
 c     changed for calculating with real spherical harmonics
@@ -11,7 +27,7 @@ c     W(N)        integration weights on 4*LMAX points in the intervall
 c                 (-1,0) (from routine GRULE)
 c
 c     YR(N,L,M)   spherical harmonics on 4*LMAX points to angular
-c                 momentum indices (l,m) scaled with a factor 
+c                 momentum indices (l,m) scaled with a factor
 c                 of RF=(4*pi)**(1/3)
 c
 c     LMAX        l-cutoff, added after inc.p remove

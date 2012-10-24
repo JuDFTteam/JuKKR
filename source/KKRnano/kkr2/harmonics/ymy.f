@@ -1,18 +1,18 @@
 c **********************************************************************
+c>   this subroutine calculates real spherical harmonics with the
+c>    normalization : <y|y> =1
+c>   returns also r = length of vector v
+c
+c>    generate the complex spherical harmonics for the vector v
+c>    using a stable upward recursion in l.  (see notes
+c>    by m. weinert.)
+c>                                 m.weinert  1982
+c
+c>    converted to real spherical harmonics .
+c>                                 b.drittler 1987
+c **********************************************************************
       SUBROUTINE YMY(V1,V2,V3,R,YLM,LMAX)
 c **********************************************************************
-c    this subroutine calculates real spherical harmonics with the
-c     normalization : <y|y> =1
-c    returns also r = length of vector v
-c
-c     generate the complex spherical harmonics for the vector v
-c     using a stable upward recursion in l.  (see notes
-c     by m. weinert.)
-c                                  m.weinert  1982
-c
-c     converted to real spherical harmonics .
-c                                  b.drittler 1987
-c-----------------------------------------------------------------------
 C     .. Parameters ..
       DOUBLE PRECISION SZERO
       PARAMETER (SZERO=1.0D-20)

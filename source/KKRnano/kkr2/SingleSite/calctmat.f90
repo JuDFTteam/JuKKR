@@ -4,8 +4,8 @@ DRDI,R,VINS,VISP,ZAT,IPAN, &
 IRCUT,CLEB,LOFLM,ICLEB,IEND, &
 TMATN,TR_ALPH,LMAX, &
 LLDAU,WMLDAU_ISPIN, &
-!                        new input parameters after inc.p removal
 ncleb, ipand, irmd, irnsd)
+
   implicit none
 
   !     .. Parameters ..

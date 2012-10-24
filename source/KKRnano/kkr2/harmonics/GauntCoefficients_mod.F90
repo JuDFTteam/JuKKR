@@ -1,9 +1,10 @@
 !------------------------------------------------------------------------------
-!> Module to calculate the Gaunt coefficients
+!> Module to calculate the Gaunt coefficients.
+
 !> Declares a data structure GauntCoefficients that contains
 !> Gaunt related data needed for a KKR calculation
 !> It wraps the previously used routines gaunt and gaunt2
-!> @author: Elias Rabel
+!> @author Elias Rabel and authors of gaunt and gaunt2
 
 ! Some macros for checked allocation/deallocation
 ! they need an integer variable named memory_stat declared in each routine
@@ -18,6 +19,8 @@ module GauntCoefficients_mod
   implicit none
 
   type GauntCoefficients
+    !> Contains the Gaunt coefficients
+    !> CLEB(:,1) and CLEB(:,2) contain Gaunts but with different prefactors
     double precision, dimension(:,:), allocatable :: CLEB
     integer, dimension(:,:), allocatable :: ICLEB
     integer, dimension(:,:,:), allocatable :: JEND

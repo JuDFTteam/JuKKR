@@ -1,13 +1,15 @@
-c ************************************************************************
+c-----------------------------------------------------------------------
+c>  - prepares shape corrections.
+c>    (the parameter n has to be chosen that l1+l2+l3 .le. 2*n)
+c>    using gaussian quadrature as given by
+c>    m. abramowitz and i.a. stegun, handbook of mathematical functions,
+c>    nbs applied mathematics series 55 (1968), pages 887 and 916
+c-----------------------------------------------------------------------
+c***********************************************************************
       SUBROUTINE SHAPEG(LPOT,GSH,ILM,IMAXSH,W,YR,
      &                 LMAX, NGSHD)
-c ************************************************************************
-c   - prepares shape corrections
-c     (the parameter n has to be chosen that l1+l2+l3 .le. 2*n)
-c     using gaussian quadrature as given by
-c     m. abramowitz and i.a. stegun, handbook of mathematical functions,
-c     nbs applied mathematics series 55 (1968), pages 887 and 916
-c-----------------------------------------------------------------------
+c***********************************************************************
+
 C     .. Parameters ..
 C      include 'inc.p'
       IMPLICIT NONE

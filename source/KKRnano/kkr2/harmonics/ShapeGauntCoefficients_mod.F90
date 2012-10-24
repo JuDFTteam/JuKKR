@@ -1,10 +1,11 @@
 !------------------------------------------------------------------------------
-!> Module to calculate the Gaunt coefficients for Shape functions
+!> Module to calculate the Gaunt coefficients for Shape functions.
+
 !> This separated datastructure was necessary since it seems that a different
 !> convention for the Gaunt coefficients was used in shape function related
 !> code.
 !> It wraps the previously used routines gaunt and shape
-!> @author: Elias Rabel
+!> @author Elias Rabel
 
 ! Some macros for checked allocation/deallocation
 ! they need an integer variable named memory_stat declared in each routine

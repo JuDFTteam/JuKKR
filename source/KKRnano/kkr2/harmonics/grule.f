@@ -1,3 +1,11 @@
+c>    determines the (n+1)/2 nonnegative points x(i) and
+c>    the corresponding weights w(i) of the n-point
+c>    gauss-legendre integration rule, normalized to the
+c>    interval [-1,1]. the x(i) appear in descending order.
+
+c>    this routine is from 'methods of numerical integration',
+c>    p.j. davis and p. rabinowitz, page 369.
+
 C **********************************************************************
       SUBROUTINE GRULE(N,X,W)
 c
