@@ -1,37 +1,38 @@
+C>    Solves (1 - g0 \Delta t) G_ref = g0 for G_ref (Full inversion).
+C
+C> @param  GTMAT     on input it has to contain (-1) * g0 * \Delta t
+C>                   dimension (LMMAXD*NACLSD) x (LMMAXD*NACLSD)
+C>                   on output: LU-factorisation of the input matrix
+C> @param  GMAT  input: g0 free-space Green's function for the central
+C>                      reference cluster atom: g0^{(1)N'}_{LL'}
+C>               on output it contains G_ref
+C> @param  IPVT         integer work array of dimension (LMMAXD*NACLSD)
+C> @param  NDIM         NDIM = #cluster atoms * maximal LM
+C>                      NDIM <= (LMMAXD*NACLSD)
+C>
+C>    \verbatim
+C>                 NDIM
+C>         +---------+----+
+C>         |         |    |
+C>         | contents|    |
+C>         |         |    |      (GTMAT)
+C>         |         |    |
+C>    NDIM +---------+    |
+C>         |    (uninit.) |
+C>         +--------------+ (LMMAXD*NACLSD)
+C
+C>    \endverbatim
+C
+C> @param   NACLSD    MAXIMAL number of cluster atoms
+C>    commented by E. Rabel, Nov 2011
+C>    @author: ???
+
 C ************************************************************************
       SUBROUTINE GREFSY(GTMAT,GMAT,IPVT,NDIM,DGTDE,
      +                  LLY_G0TR,
-C                       new input parameters after inc.p removal
      &                  NACLSD, LMMAXD, LLY)
 C ************************************************************************
       IMPLICIT NONE
-
-
-C     Solves (1 - g0 \Delta t) G_ref = g0 for G_ref. (Full inversion)
-C
-C     GTMAT ... on input it has to contain (-1) * g0 * \Delta t
-C               dimension (LMMAXD*NACLSD) x (LMMAXD*NACLSD)
-C               on output: LU-factorisation of the input matrix
-C     GMAT  ... input: g0 free-space Green's function for the central
-C                      reference cluster atom: g0^{(1)N'}_{LL'}
-C               on output it contains G_ref
-C     IPVT  ... integer work array of dimension (LMMAXD*NACLSD)
-C     NDIM  ... NDIM = #cluster atoms * maximal LM
-C               NDIM <= (LMMAXD*NACLSD)
-C
-C                  NDIM
-C          +---------+----+
-C          |         |    |
-C          | contents|    |
-C          |         |    |      (GTMAT)
-C          |         |    |
-C     NDIM +---------+    |
-C          |    (uninit.) |
-C          +--------------+ (LMMAXD*NACLSD)
-C
-C     NACLSD .. MAXIMAL number of cluster atoms
-C     commented by E. Rabel, Nov 2011
-
 C
 C---> SOLVE THE DYSON EQUATION TO GET REFERENCE GREEN FUNCTION
 C

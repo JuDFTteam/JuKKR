@@ -10,6 +10,7 @@ module fillKKRMatrix_mod
 contains
 
 !------------------------------------------------------------------------------
+!> Setup of the sparsity pattern of the KKR-Matrix.
   subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, & ! in
                                    sparse) ! out
 
@@ -69,7 +70,9 @@ contains
     do irow = 1, nrows
       do icol = 1, numn0(irow)
       sparse%ka(ii) = start_address
+
       ASSERT( indn0(irow, icol) >= 1 .and. indn0(irow, icol) <= nrows )
+
       start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(indn0(irow,icol))
       ii = ii + 1
       end do
@@ -83,12 +86,13 @@ contains
   end subroutine
 
   !---------------------------------------------------------------------
-  !> Given G_ref - build (1 - TG_ref) -> coefficent matrix
+  !> Given G_ref - build (1 - TG_ref) -> coefficent matrix.
+  !>
   !> @param smat  on input:  sparse block matrix containing Gref
   !>              on output: coefficient matrix (1 - TG_ref)
-  !> @param ia    for each row give index of first non-zero block in ja
-  !> @param ja    column index array of non-zero blocks
-  !> ASSUMING SQUARE BLOCKS!!! (FOR NOW)
+  !> @param sparse  sparse matrix description
+  !> ia    for each row give index of first non-zero block in ja
+  !> ja    column index array of non-zero blocks
   subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, sparse)
     use SparseMatrixDescription_mod
     implicit none
@@ -182,6 +186,7 @@ contains
   end subroutine
 
 !------------------------------------------------------------------------------
+!> Builds the right hand site for the linear KKR matrix equation.
   subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_index, kvstr)
     implicit none
 
@@ -227,6 +232,9 @@ contains
 ! Routines for testing
 !==============================================================================
 
+  !----------------------------------------------------------------------------
+  !> Given the sparse matrix data 'smat' and the sparsity information,
+  !> create the dense matrix representation of the matrix.
   subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, full)
     implicit none
     double complex, dimension(:), intent(in) :: smat
@@ -276,6 +284,9 @@ contains
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Solution of a system of linear equations with multiple right hand sides,
+  !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B)
     implicit none
 
@@ -303,7 +314,8 @@ contains
 
 
   !------------------------------------------------------------------------------
-  !> Convert solution with l-cutoff to format of solution without l-cutoff
+  !> Convert solution with l-cutoff to format of solution without l-cutoff.
+  !>
   !> @param GLLKE1 output: solution in old format
   !> @param mat_X: solution with l-cutoff
   subroutine toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, kvstr)
@@ -338,5 +350,100 @@ contains
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Write sparse matrix data (without description) to unformatted file
+  !> - useful for testing.
+  subroutine dumpSparseMatrixData(smat, filename)
+    implicit none
+    double complex, dimension(:), intent(in) :: smat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+
+    open(FILEHANDLE, file=filename, form='unformatted')
+    write(FILEHANDLE) smat
+    close(FILEHANDLE)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read sparse matrix data from unformatted file
+  !> - useful for testing.
+  subroutine readSparseMatrixData(smat, filename)
+    implicit none
+    double complex, dimension(:), intent(inout) :: smat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+
+    open(FILEHANDLE, file=filename, form='unformatted')
+    read(FILEHANDLE) smat
+    close(FILEHANDLE)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write dense matrix to unformatted file
+  !> - useful for testing.
+  subroutine dumpDenseMatrix(mat, filename)
+    implicit none
+    double complex, dimension(:,:), intent(in) :: mat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+
+    open(FILEHANDLE, file=filename, form='unformatted')
+    write(FILEHANDLE) mat
+    close(FILEHANDLE)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read dense matrix data from unformatted file
+  !> - useful for testing.
+  subroutine readDenseMatrix(mat, filename)
+    implicit none
+    double complex, dimension(:,:), intent(inout) :: mat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+
+    open(FILEHANDLE, file=filename, form='unformatted')
+    read(FILEHANDLE) mat
+    close(FILEHANDLE)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write GLLH to unformatted file
+  !> - useful for testing.
+  subroutine dumpGLLH(mat, filename)
+    implicit none
+    double complex, dimension(:,:,:), intent(in) :: mat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+
+    open(FILEHANDLE, file=filename, form='unformatted')
+    write(FILEHANDLE) mat
+    close(FILEHANDLE)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read GLLH from unformatted file
+  !> - useful for testing.
+  subroutine readGLLH(mat, filename)
+    implicit none
+    double complex, dimension(:,:,:), intent(inout) :: mat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+
+    open(FILEHANDLE, file=filename, form='unformatted')
+    read(FILEHANDLE) mat
+    close(FILEHANDLE)
+  end subroutine
 
 end module
