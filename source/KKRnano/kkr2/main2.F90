@@ -18,7 +18,6 @@ program MAIN2
 
   use main2_arrays_mod ! If you can't find one of the unbelievable amount of arrays, look here
   use lloyds_formula_mod
-  use KKRSelfConsistency_mod
 
   use main2_aux_mod
   use muffin_tin_zero_mod
@@ -828,14 +827,14 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
 
-            if (KFORCE==1 .and. ITER==SCFSTEPS) then
-! ---------------------------------------------------------------------
-              call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
-              R,DRDI,IMT,ZAT,irmd)  ! TODO: get rid of atom parameter I1
-              call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-              DRDI,IMT,naez,irmd)
-! ---------------------------------------------------------------------
-            end if
+!            if (KFORCE==1 .and. ITER==SCFSTEPS) then
+! !---------------------------------------------------------------------
+!              call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
+!              R,DRDI,IMT,ZAT,irmd)  ! TODO: get rid of atom parameter I1
+!              call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
+!              DRDI,IMT,naez,irmd)
+! !---------------------------------------------------------------------
+!            end if
 
 ! Force Calculation stops here look after VXCDRV
 
@@ -880,15 +879,15 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! Force calculation continues here
 
-            if (KFORCE==1.and.ITER==SCFSTEPS) then
+!            if (KFORCE==1.and.ITER==SCFSTEPS) then
 ! ---------------------------------------------------------------------
-              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-              ALAT,DRDI,IMT,ZAT, &
-              getMyAtomRank(my_mpi), &
-              getMySEcommunicator(my_mpi), &
-              naez, irmd)
+!              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
+!              ALAT,DRDI,IMT,ZAT, &
+!              getMyAtomRank(my_mpi), &
+!              getMySEcommunicator(my_mpi), &
+!              naez, irmd)
 ! ---------------------------------------------------------------------
-            end if
+!            end if
 
             ! unnecessary I/O? see results.f
             if (KTE >= 0) call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)

@@ -1,9 +1,10 @@
-! Implementation of a Dictionary
-! given a name 'variable', look up the corresponding 'value'
-! This is a slow implementation, using a dynamic array
-! (a faster implementation should i.e. use a hash table)
+  !----------------------------------------------------------------------------
+!> Implementation of a Dictionary
+!> given a name 'variable', look up the corresponding 'value'
+!> This is a slow implementation, using a dynamic array
+!> (a faster implementation should i.e. use a hash table)
 
-! Elias Rabel, September 2011
+!> @author Elias Rabel, September 2011
 
 module Config_Reader_Dictionary
   implicit none
@@ -64,9 +65,10 @@ contains
   end subroutine createDictionary
 
 
-  ! if an entry with the same name as in 'variable'
-  ! exists then ierror = CONFIG_READER_DICT_NOT_UNIQUE and the variable/value
-  ! pair is not inserted in the dictionary
+  !----------------------------------------------------------------------------
+  !> if an entry with the same name as in 'variable'
+  !> exists then ierror = CONFIG_READER_DICT_NOT_UNIQUE and the variable/value
+  !> pair is not inserted in the dictionary
   subroutine pushBackDictionary(this, variable, value, tag, ierror)
     type (Dictionary), intent(inout) :: this
     character(len=*), intent(in) :: variable
@@ -130,8 +132,9 @@ contains
   end subroutine
 
 
-  ! retrieves the value corresponding to 'variable' and sets the
-  ! tag to the given logical value (true/false)
+  !----------------------------------------------------------------------------
+  !> retrieves the value corresponding to 'variable' and sets the
+  !> tag to the given logical value (true/false)
   subroutine getDictionaryValue(this, variable, value, tag, ierror)
     type (Dictionary), intent(inout) :: this
     character(len=*), intent(in) :: variable
@@ -153,14 +156,16 @@ contains
     end do
   end subroutine
 
-  ! This routine can be used to find variables that have never been looked up.
-  ! Use this to get all variables name which are tagged (with logical
-  ! value given in 'tag')
-  ! next_ptr is an integer which points to the next value that should be
-  ! checked, set it to 1 if you want to start searching at the beginning
-  ! if next_ptr has an illegal value or no tagged variable was found
-  ! then ierror = CONFIG_READER_DICT_NOT_FOUND
-  ! variable then has the value it had on entry!
+  !----------------------------------------------------------------------------
+  !> This routine can be used to find variables that have never been looked up.
+  !>
+  !> Use this to get all variables name which are tagged (with logical
+  !> value given in 'tag')
+  !> next_ptr is an integer which points to the next value that should be
+  !> checked, set it to 1 if you want to start searching at the beginning
+  !> if next_ptr has an illegal value or no tagged variable was found
+  !> then ierror = CONFIG_READER_DICT_NOT_FOUND
+  !> variable then has the value it had on entry!
   subroutine getTaggedVariable(this, variable, tag, next_ptr, ierror)
     type (Dictionary), intent(in) :: this
     character(len=*), intent(inout) :: variable
@@ -188,8 +193,8 @@ contains
 
   end subroutine
 
-  ! output of dictionary content to stdout
-  ! useful for testing purposes
+  !> output of dictionary content to stdout
+  !> useful for testing purposes
   subroutine printDictionary(this)
     type (Dictionary), intent(in) :: this
 
@@ -202,8 +207,10 @@ contains
     end do
   end subroutine
 
-  ! Frees resources used by dictionary.
-  ! This routine has to be called after use of the dictionary
+  !----------------------------------------------------------------------------
+  !> Frees resources used by dictionary.
+  !>
+  !> This routine has to be called after use of the dictionary
   subroutine destroyDictionary(this)
     type (Dictionary), intent(inout) :: this
 

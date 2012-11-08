@@ -1,3 +1,5 @@
+!> @author Elias Rabel
+
 module Config_Reader
 
   use Config_Reader_Dictionary, only: Dictionary, CONFIG_READER_DICT_VAR_LENGTH, CONFIG_READER_DICT_VALUE_LENGTH
@@ -116,17 +118,19 @@ contains
   end subroutine parseFile
 
 !---------------------------------------------------------------------
+  !> parse a line with some simple syntax rules
+  !>
+  !> e.g. to assign value 5 to the variable VAR, write
+  !> VAR = 5
+  !> assigning string values
+  !> no special characters or spaces - no " " necessary
+  !> VAR = yes
+  !> for strings with special characters and spaces
+  !> VAR = "Hello world!"
+  !> the comment characters are allowed in strings
+  !> VAR = "#!"
   subroutine parseLine(this, line_buf, line_number, ierror)
-  ! parse a line with some simple syntax rules
-  ! e.g. to assign value 5 to the variable VAR, write
-  ! VAR = 5
-  ! assigning string values
-  ! no special characters or spaces - no " " necessary
-  ! VAR = yes
-  ! for strings with special characters and spaces
-  ! VAR = "Hello world!"
-  ! the comment characters are allowed in strings
-  ! VAR = "#!"
+
     use Config_Reader_Dictionary
     implicit none
     type (ConfigReader), intent(inout) :: this
@@ -424,8 +428,10 @@ contains
   end subroutine getValueString
 
 !---------------------------------------------------------------------
-! a default value can be passed as int_value, which does not change on exit
-! if the variable is not found
+!> Get value of 'variable' and interpret it as integer value.
+!>
+!> a default value can be passed as int_value, which does not change on exit
+!> if the variable is not found
   subroutine getValueInteger(this, variable, int_value, ierror)
     use Config_Reader_Dictionary
     implicit none
@@ -457,8 +463,10 @@ contains
   end subroutine getValueInteger
 
 !---------------------------------------------------------------------
-! a default value can be passed as double_value, which does not change on exit
-! if the variable is not found
+!> Get value of 'variable' and interpret it as double prec. value.
+!>
+!> a default value can be passed as double_value, which does not change on exit
+!> if the variable is not found
   subroutine getValueDouble(this, variable, double_value, ierror)
     use Config_Reader_Dictionary
     implicit none
@@ -490,6 +498,8 @@ contains
   end subroutine getValueDouble
 
 !---------------------------------------------------------------------
+!> Get value of 'variable' and interpret it as logical value.
+!>
 ! a default value can be passed as logical_value, which does not change on exit
 ! if the variable is not found
   subroutine getValueLogical(this, variable, logical_value, ierror)
@@ -523,13 +533,14 @@ contains
   end subroutine getValueLogical
 
 !---------------------------------------------------------------------
-! Reads a double precision vector of fixed length from config-File.
-! The dimension of the vector has to be passed as argument 'length'
-! The routine does not check if more then 'length' values are present
-! If the vector is too short, however, ierror contains an error-code
+!> Reads a double precision vector of fixed length from config-File.
+!>
+!> The dimension of the vector has to be passed as argument 'length'
+!> The routine does not check if more then 'length' values are present
+!> If the vector is too short, however, ierror contains an error-code
 !
-! A default value can be passed as vector, which does not change on exit
-! if the variable is not found
+!> A default value can be passed as vector, which does not change on exit
+!> if the variable is not found
   subroutine getValueDoubleVector(this, variable, vector, length, ierror)
     use Config_Reader_Dictionary
     implicit none
@@ -567,11 +578,12 @@ contains
   end subroutine getValueDoubleVector
 
 !---------------------------------------------------------------------
-! This subroutine is used to get variables, which have not been read (yet).
-! Initially an integer with value 1 has to be passed as next_ptr
-! next_ptr is an integer which has to be kept for the next call to this
-! subroutine, which gives the next unread variable
-! If no unread variable was found then ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
+!> This subroutine is used to get variables, which have not been read (yet).
+!>
+!> Initially an integer with value 1 has to be passed as next_ptr
+!> next_ptr is an integer which has to be kept for the next call to this
+!> subroutine, which gives the next unread variable
+!> If no unread variable was found then ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
   subroutine getUnreadVariable(this, variable, next_ptr, ierror)
     use Config_Reader_Dictionary
     implicit none

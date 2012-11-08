@@ -87,8 +87,8 @@ module main2_arrays_mod
   double precision, dimension(:), allocatable :: CATOM     ! total charge per atom
 
   !     .. FORCES
-  double precision, dimension(:,:), allocatable :: FLM
-  double precision, dimension(:,:), allocatable :: FLMC
+  !double precision, dimension(:,:), allocatable :: FLM
+  !double precision, dimension(:,:), allocatable :: FLMC
   !     .. MIXING
   double precision, dimension(:), allocatable :: SM1S
   double precision, dimension(:), allocatable :: FM1S
@@ -372,10 +372,10 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CATOM(NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(FLM(-1:1,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(FLMC(-1:1,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
+    !allocate(FLM(-1:1,NAEZ), stat = memory_stat)
+    !if(memory_stat /= 0) call fatalMemoryError("main2")
+    !allocate(FLMC(-1:1,NAEZ), stat = memory_stat)
+    !if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(SM1S(NTIRD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(FM1S(NTIRD), stat = memory_stat)
@@ -522,8 +522,8 @@ CONTAINS
     deallocate(CMINST, stat = memory_stat)
     deallocate(CMOM, stat = memory_stat)
     deallocate(CATOM, stat = memory_stat)
-    deallocate(FLM, stat = memory_stat)
-    deallocate(FLMC, stat = memory_stat)
+    !deallocate(FLM, stat = memory_stat)
+    !deallocate(FLMC, stat = memory_stat)
     deallocate(SM1S, stat = memory_stat)
     deallocate(FM1S, stat = memory_stat)
     deallocate(UI2, stat = memory_stat)
