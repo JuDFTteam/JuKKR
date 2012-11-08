@@ -157,6 +157,7 @@ program MAIN2
   type(KKRnanoParallel) :: my_mpi
 
   integer :: flag
+  logical, external :: testVFORM
 
  !============================================================= CONSTANTS
   PI = 4.0D0*ATAN(1.0D0)
@@ -959,6 +960,10 @@ spinloop:     do ISPIN = 1,NSPIND
         end do
 !+++++++++++++++++ END ATOM PARALLEL +++++++++++++++++++++++++++++++
 
+       ! output of RMS error
+       call RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIND,NAEZ, &
+                       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
+
        ! it is weird that straight mixing is called in any case before
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
@@ -993,31 +998,28 @@ spinloop:     do ISPIN = 1,NSPIND
             call closePotentialFile()
 ! ----------------------------------------------------- output_potential
 
+            IPOT = NSPIND*(I1-1) + 1
+
+! write formatted potential if file VFORM exists - contains bad inquire
+! - bad check deactivated when KTE<0
+            if (ITER == SCFSTEPS .and. KTE >= 0) then
+              if (testVFORM()) then
+                call writeFormattedPotential(E2,VBC,NSPIND, &
+                KXC,LPOT,A(I1),B(I1),IRC(I1), &
+                VINS,VISP,DRDI(:,I1),IRNS(I1),R(:,I1),RWS(I1),RMT(I1),ALAT, &
+                ECORE,LCORE(:,IPOT),NCORE(IPOT),ZAT(I1),ITITLE(:,IPOT), &
+                I1, irmd, irnsd)
+              endif
+            endif
+
           end if
         end do
 ! -------- END Atom-parallel ------------------------------------------
 
-        if (KTE >= 0) call closeResults2File()
-
-! =====================================================================
-! ============================= POTENTIAL MIXING OUTPUT ===============
-! =====================================================================
-! ====== write RMS convergency data - written by
-! MYRANK=0   (RMSOUT) =================================================
-! write formatted potential if file VFORM exists
-! Note: LMPIC is always 1 here!
-
-        call RMSOUT_com(RMSAVQ,RMSAVM,ITER,E2, &
-        SCFSTEPS,VBC,NSPIND,NAEZ, &
-        KXC,LPOT,A,B,IRC, &
-        VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
-        ECORE,LCORE,NCORE,ZAT,ITITLE, &
-        getMyAtomRank(my_mpi), &
-        getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-        irmd, irnsd)
-
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
+
+        if (KTE >= 0) call closeResults2File()
 
         call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
 

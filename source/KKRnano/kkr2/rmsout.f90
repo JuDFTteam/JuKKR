@@ -1,59 +1,25 @@
+
 !================================================================
-! Collects contributions to the rms errors from all sites and
-! prints rms errors. Sets new Fermi energy
-! Does formatted output of potential if file VFORM exists.
-
-! output of a) rms-error
-! and       b) (optional) potential in formatted format
-!              files are named VPOT.X, X = atom number
-!              >> output can be enable providing file VFORM
-
+!> Collects contributions to the rms errors from all sites and
+!> prints rms errors.
+!
+!> output of a) rms-error
+!
 ! called by main2
-! subroutine called: rites   
-
 !================================================================
 
-subroutine RMSOUT_com(RMSAVQ,RMSAVM,ITER,fermiEnergy, &
-SCFSTEPS,VBC,NSPIN,NAEZ, &
-KXC,LPOT,A,B,IRC, &
-VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
-ECORE,LCORE,NCORE,ZAT,ITITLE, &
-MYLRANK, &
-communicator,comm_size, &
-irmd, irnsd) ! new input parameters after inc.p removal
+subroutine RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIN,NAEZ, &
+MYLRANK, communicator)
 
   implicit none
 
-  integer irmd
-  integer irnsd
+  double precision RMSAVM,RMSAVQ
 
-  double precision RMSAVM,RMSAVQ, &
-  fermiEnergy,ALAT,VBC(2), &
-  A(NAEZ),B(NAEZ)
-
-  double precision VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2), &
-  VISP(IRMD,2), &
-  DRDI(IRMD,NAEZ), &
-  ECORE(20,2), &
-  ZAT(NAEZ), &
-  R(IRMD,NAEZ),RWS(NAEZ),RMT(NAEZ)
-
-  integer ITER,SCFSTEPS,NSPIN,NAEZ,KXC,LPOT
-
-  integer IRNS(NAEZ),IRC(NAEZ), &
-  LCORE(20,NSPIN*NAEZ), &
-  NCORE(NSPIN*NAEZ), &
-  ITITLE(20,NAEZ*NSPIN)
-
-
-  !     .. local scalars ..
-  logical          VFORM
+  integer ITER,NSPIN,NAEZ
   !     ..
   !     .. MPI variables ..
   !     .. L-MPI ..
-  integer      MYLRANK, &
-  communicator, &
-  comm_size
+  integer      MYLRANK, communicator
 
   double precision RMSQ, RMSM
 
@@ -67,22 +33,22 @@ irmd, irnsd) ! new input parameters after inc.p removal
   end if
   ! ============= MYRANK.EQ.0 ============================================
 
-  VFORM = .false.
-  if (ITER.eq.SCFSTEPS) then
-
-    inquire(file='VFORM',exist=VFORM)
-
-    if (VFORM) then
-
-      call writeFormattedPotential(fermiEnergy,VBC,NSPIN,NAEZ, &
-      KXC,LPOT,A,B,IRC, &
-      VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
-      ECORE,LCORE,NCORE,ZAT,ITITLE, &
-      MYLRANK, comm_size, &
-      irmd, irnsd)
-
-    end if
-  end if
+!  VFORM = .false.
+!  if (ITER.eq.SCFSTEPS) then
+!
+!    inquire(file='VFORM',exist=VFORM)
+!
+!    if (VFORM) then
+!
+!      call writeFormattedPotential(fermiEnergy,VBC,NSPIN, &
+!      KXC,LPOT,A,B,IRC, &
+!      VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
+!      ECORE,LCORE,NCORE,ZAT,ITITLE, &
+!      MYLRANK, &
+!      irmd, irnsd)
+!
+!    end if
+!  end if
 
 end
 
@@ -152,16 +118,34 @@ subroutine printRMSerror(ITER, NSPIN, RMSM, RMSQ)
 end subroutine
 
 
+!================================================================
+! Does formatted output of potential if file VFORM exists.
+! and       b) (optional) potential in formatted format
+!              files are named VPOT.X, X = atom number
+!              >> output can be enable providing file VFORM
+
+! called by main2
+! subroutine called: rites
+
+!------------------------------------------------------------------------------
+!> Tests if file 'VFORM' exists
+!> TODO: replace by better construct
+logical function testVFORM()
+  implicit none
+
+  testVFORM = .false.
+  inquire(file='VFORM',exist=testVFORM)
+
+end function
 
 !===========================================================================================
-!> Output formatted potential files for each atom
+!> Output formatted potential files for each atom.
 subroutine writeFormattedPotential(fermiEnergy, &
-VBC,NSPIN,NAEZ, &
+VBC,NSPIN, &
 KXC,LPOT,A,B,IRC, &
 VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &
 ECORE,LCORE,NCORE,ZAT,ITITLE, &
-rank, comm_size, &
-irmd, irnsd) !  new input parameters after inc.p removal
+rank, irmd, irnsd) !  new input parameters after inc.p removal
 
   implicit none
 
@@ -169,22 +153,21 @@ irmd, irnsd) !  new input parameters after inc.p removal
   integer irnsd
 
   double precision fermiEnergy
-  double precision ALAT,VBC(2), &
-  A(NAEZ),B(NAEZ)
+  double precision ALAT,VBC(2),A,B
 
   double precision VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2), &
   VISP(IRMD,2), &
-  DRDI(IRMD,NAEZ), &
+  DRDI(IRMD), &
   ECORE(20,2), &
-  ZAT(NAEZ), &
-  R(IRMD,NAEZ),RWS(NAEZ),RMT(NAEZ)
+  ZAT, &
+  R(IRMD),RWS,RMT
 
-  integer NSPIN,NAEZ,KXC,LPOT
+  integer NSPIN,KXC,LPOT
 
-  integer IRNS(NAEZ),IRC(NAEZ), &
-  LCORE(20,NSPIN*NAEZ), &
-  NCORE(NSPIN*NAEZ), &
-  ITITLE(20,NAEZ*NSPIN)
+  integer IRNS,IRC, &
+  LCORE(20,NSPIN), &
+  NCORE(NSPIN), &
+  ITITLE(20,NSPIN)
 
 
   !     .. local scalars ..
@@ -193,19 +176,14 @@ irmd, irnsd) !  new input parameters after inc.p removal
   !     ..
   !     .. MPI variables ..
   !     .. L-MPI ..
-  integer rank, comm_size
-  integer MAPBLOCK
-
-  external MAPBLOCK
+  integer rank
 
   ! ......................................................................
   ! formatted output                       A.Thiess 09/09
+  ! simplified: E.R.
   ! ......................................................................
 
-
-  do I1 = 1,NAEZ
-    if(rank .eq. &
-    MAPBLOCK(I1,1,NAEZ,1,0,comm_size-1)) then
+  I1 = rank + 1
 
       D1 = mod(I1,10)
       D10 = int( (mod(I1,100) + 0.5)/10 )
@@ -227,15 +205,12 @@ irmd, irnsd) !  new input parameters after inc.p removal
 
       open(11,file=FNAME,form='formatted')
 
-      call RITES(11,I1,NAEZ,NSPIN,ZAT,ALAT,RMT,RMT,RWS, &
+      call RITES(11,NSPIN,ZAT,ALAT,RMT,RMT,RWS, &
       ITITLE,R,DRDI,VISP,A,B,KXC,IRNS,LPOT,VINS, &
       IRC,fermiEnergy,VBC,ECORE,LCORE,NCORE, &
       irmd, irnsd)
 
       close (11)
-
-    endif
-  enddo
 ! ......................................................................
 ! ......................................................................
 

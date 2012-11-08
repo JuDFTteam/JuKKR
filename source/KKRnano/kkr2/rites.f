@@ -1,4 +1,4 @@
-      SUBROUTINE RITES(IFILE,I1,NAEZ,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,
+      SUBROUTINE RITES(IFILE,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,
      +                 ITITLE,R,DRDI,VISP,A,B,KXC,IRNS,
      +                 LPOT,VINS,IRC,EFERMI,VBC,ECORE,
      +                 LCORE,NCORE,
@@ -10,7 +10,7 @@ c      this subroutine stores in 'ifile' the necessary results
 c      (potentials e.t.c.) to start self-consistency iterations
 c
 c       if the sum of absolute values of an lm component of vins (non
-c       spher. potential) is less than the given rms error qbound this
+c       spher. potential) is less than qbound this
 c       component will not be stored .
 c
 c-----------------------------------------------------------------------
@@ -23,32 +23,32 @@ c-----------------------------------------------------------------------
 
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT
-      INTEGER IFILE,KXC,LPOT,NAEZ,NSPIN
+      INTEGER IFILE,KXC,LPOT,NSPIN
 
-      DOUBLE PRECISION A(*)
-      DOUBLE PRECISION B(*)
-      DOUBLE PRECISION DRDI(IRMD,*)
+      DOUBLE PRECISION A
+      DOUBLE PRECISION B
+      DOUBLE PRECISION DRDI(IRMD)
       DOUBLE PRECISION ECORE(20,2)
       DOUBLE PRECISION EFERMI
-      DOUBLE PRECISION R(IRMD,*)
-      DOUBLE PRECISION RMT(*)
-      DOUBLE PRECISION RMTNEW(*)
-      DOUBLE PRECISION RWS(*)
+      DOUBLE PRECISION R(IRMD)
+      DOUBLE PRECISION RMT
+      DOUBLE PRECISION RMTNEW
+      DOUBLE PRECISION RWS
       DOUBLE PRECISION VBC(2)
       DOUBLE PRECISION VINS(IRMD-IRNSD:IRMD,(LPOT+1)**2,2)
       DOUBLE PRECISION VISP(IRMD,2)
-      DOUBLE PRECISION Z(*)
-      INTEGER IRC(*)
-      INTEGER IRNS(*)
-      INTEGER ITITLE(20,NAEZ*NSPIN)
-      INTEGER LCORE(20,*)
-      INTEGER NCORE(*)
+      DOUBLE PRECISION Z
+      INTEGER IRC
+      INTEGER IRNS
+      INTEGER ITITLE(20,NSPIN)
+      INTEGER LCORE(20,NSPIN)
+      INTEGER NCORE(NSPIN)
 
       CHARACTER(LEN=24) TXC(4)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RV,SUM
-      INTEGER I1,I,ICORE,INEW,IP,IR,IRMIN,IS,ISAVE,LM,LMNR,
+      INTEGER I,ICORE,INEW,IR,IRMIN,IS,ISAVE,LM,LMNR,
      +        LMPOT,NR
 C     ..
 C     .. Intrinsic Functions ..
@@ -66,20 +66,19 @@ c
       LMPOT = (LPOT+1)* (LPOT+1)
 
       DO 50 IS = 1,NSPIN
-        IP = NSPIN* (I1-1) + IS
 
-        NR = IRC(I1)
+        NR = IRC
 
-        IRMIN = NR - IRNS(I1)
+        IRMIN = NR - IRNS
 c
-        WRITE (IFILE,FMT=9000) (ITITLE(I,IP),I=1,7),TXC(KXC+1)
-        WRITE (IFILE,FMT=9010) RMT(I1),ALAT,RMTNEW(I1)
-        WRITE (IFILE,FMT=9020) Z(I1),RWS(I1),EFERMI,VBC(IS)
-        WRITE (IFILE,FMT=9030) NR,A(I1),B(I1),NCORE(IP),INEW
+        WRITE (IFILE,FMT=9000) (ITITLE(I,IS),I=1,7),TXC(KXC+1)
+        WRITE (IFILE,FMT=9010) RMT,ALAT,RMTNEW
+        WRITE (IFILE,FMT=9020) Z,RWS,EFERMI,VBC(IS)
+        WRITE (IFILE,FMT=9030) NR,A,B,NCORE(IS),INEW
 C
-        IF (NCORE(IP).GE.1) THEN
-             WRITE (IFILE,FMT=9040) (LCORE(ICORE,IP),
-     +            ECORE(ICORE,IS),ICORE=1,NCORE(IP))
+        IF (NCORE(IS).GE.1) THEN
+             WRITE (IFILE,FMT=9040) (LCORE(ICORE,IS),
+     +            ECORE(ICORE,IS),ICORE=1,NCORE(IS))
         END IF
 c
 c
@@ -88,15 +87,15 @@ c       only from irns1 up to irws1 ;
 c       remember that the lm = 1 contribution is multiplied
 c       by a factor 1/sqrt(4 pi)
 c
-        WRITE (IFILE,FMT=9060) NR,IRNS(I1),LMPOT,ISAVE
+        WRITE (IFILE,FMT=9060) NR,IRNS,LMPOT,ISAVE
         WRITE (IFILE,FMT=9070) (VISP(IR,IS),IR=1,NR)
         IF (LPOT.GT.0) THEN
           LMNR = 1
           DO 40 LM = 2,LMPOT
             SUM = 0.0D0
             DO 30 IR = IRMIN,NR
-              RV = VINS(IR,LM,IS)*R(IR,I1)
-              SUM = SUM + RV*RV*DRDI(IR,I1)
+              RV = VINS(IR,LM,IS)*R(IR)
+              SUM = SUM + RV*RV*DRDI(IR)
    30       CONTINUE
 
            IF (SQRT(SUM).GT.QBOUND) THEN
