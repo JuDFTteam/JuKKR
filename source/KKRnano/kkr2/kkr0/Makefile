@@ -47,7 +47,7 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . config_reader
+DIRS = . config_reader ../lattice ../kkr0common
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
 

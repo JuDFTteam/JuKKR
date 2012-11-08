@@ -157,7 +157,7 @@ endif
 DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
-         timing
+         timing kkr0common
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
