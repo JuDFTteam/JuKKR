@@ -157,7 +157,7 @@ endif
 DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
-         timing kkr0common
+         timing kkr0common MixingNew
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -215,7 +215,7 @@ main2.o: main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod
          MadelungCalculator_mod.o lloyd0_new_mod.o \
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
          GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \
-         EBalanceHandler_mod.o TEST_lcutoff_mod.o 
+         EBalanceHandler_mod.o TEST_lcutoff_mod.o brydbm_new_com_mod.o
          
 main2_arrays_mod.o: error_messages_mod.o
 kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o TEST_lcutoff_mod.o

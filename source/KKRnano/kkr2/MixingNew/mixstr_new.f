@@ -108,12 +108,4 @@ C
 
         END IF
 
- 9000 FORMAT (5x,' rms-error for atom',i3,1x,':','v+ + v- = ',1p,d11.4,
-     +       2x,',',2x,'v+ - v- = ',1p,d11.4)
- 9010 FORMAT (5x,' rms-error non spherical contribution for atom ',i3,
-     +       1x,':','v+ + v- = ',1p,d11.4,02x,',',2x,'v+ - v- = ',1p,
-     +       d11.4)
- 9020 FORMAT (5x,' rms-error for atom',i3,1x,':','v+ + v- = ',1p,d11.4)
- 9030 FORMAT (5x,' rms-error non spherical contribution for atom ',i3,
-     +       1x,':','v+ + v- = ',1p,d11.4)
       END

@@ -31,6 +31,7 @@ program MAIN2
 
   use TimerMpi_mod
   use EBalanceHandler_mod
+  use BRYDBM_new_com_mod
 
   use TEST_lcutoff_mod !TODO: remove
 
@@ -98,7 +99,6 @@ program MAIN2
   integer::IPOT
   integer::ISPIN
   integer::I1
-  integer::I1BRYD
   integer::LM
   integer::NR
   integer::EKM
@@ -217,7 +217,7 @@ program MAIN2
 
   call readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ) !every process does this!
 
-  if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
+  !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
  ! ======================================================================
  ! =                     End read in variables                          =
@@ -671,6 +671,7 @@ spinloop:     do ISPIN = 1,NSPIND
                           iemxd, &
                           lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
 
+              ! TODO: wrap rhocore and rhoval with spin-loop
               ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
               call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
                            DRDI(1,I1),R(1,I1),VISP(1,ISPIN), &
@@ -954,7 +955,6 @@ spinloop:     do ISPIN = 1,NSPIND
                             IRC(I1),IRMIN(I1),R(:,I1),DRDI(:,I1),VONS,VISP,VINS, &
                             irmd, irnsd)
 
-            I1BRYD=I1
           end if
         end do
 !+++++++++++++++++ END ATOM PARALLEL +++++++++++++++++++++++++++++++
@@ -966,9 +966,9 @@ spinloop:     do ISPIN = 1,NSPIND
        ! it is weird that straight mixing is called in any case before
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
-          call BRYDBM_com(VISP,VONS,VINS, &
-          LMPOTD,R,DRDI,MIXING, &
-          IRC,IRMIN,NSPIND,I1BRYD, &
+          call BRYDBM_new_com(VISP,VONS,VINS, &
+          LMPOTD,R(:,I1),DRDI(:,I1),MIXING, &
+          IRC(I1),IRMIN(I1),NSPIND, &
           IMIX,ITER, &
           UI2,VI2,WIT,SM1S,FM1S, &
           getMyAtomRank(my_mpi), &
@@ -1079,7 +1079,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
     if (isMasterRank(my_mpi)) close(2)    ! TIME
 
-    if (KFORCE==1) close(54)
+    !if (KFORCE==1) close(54)
 
     call destroyMadelungCalculator(madelung_calc)
     call destroyGauntCoefficients(gaunts)
