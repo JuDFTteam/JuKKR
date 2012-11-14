@@ -9,6 +9,7 @@ module TEST_lcutoff_mod
   double precision cutoff_radius
   integer, dimension(:), allocatable :: lmarray
   integer :: cutoffmode
+  logical :: DEBUG_dump_matrix = .false.
 
   CONTAINS
 

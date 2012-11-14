@@ -1,3 +1,19 @@
+!------------------------------------------------------------------------------
+!> This module is used to set up the rank informations+communicators
+!> (world-rank, atom-rank, spin-rank, energy-rank) for KKRnano.
+!>
+!> It replaces the complicated setup in the original KKRnano.
+!> Note that also this code could be simplified using
+!> standard MPI routines (MPI_Cart_create etc.)
+!>
+!> For setup one creates an object of type 'KKRnanoParallel'
+!> using the 'createKKRnanoParallel' routine.
+!> This object is immutable to ensure that the rank information
+!> is constant during the program run.
+!> Use exclusively the getXY routines to retrieve rank information
+!>
+!> After use call 'destroyKKRnanoParallel'
+!>
 !> Author: Elias Rabel, 2012
 
 module KKRnanoParallel_mod
@@ -122,6 +138,12 @@ module KKRnanoParallel_mod
                                                my_mpi%my_energy_id)) then
       
       write(*,*) "Inconsistency in KKRnano process ids."
+      stop
+    end if
+
+    ! Assertion: check if atom-rank is correct
+    if (my_mpi%my_atom_rank /=  my_mpi%my_atom_id - 1) then
+      write(*,*) "Inconsistency in KKRnano atom rank."
       stop
     end if
 
@@ -376,7 +398,7 @@ end module
 ! Example of usage.
 
 !program xy
-!  use KKRnano_mpi_new_mod
+!  use KKRnanoParallel_mod
 !  implicit none
 !  type (KKRnanoParallel) :: my_mpi
 !

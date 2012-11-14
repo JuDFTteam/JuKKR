@@ -357,9 +357,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-  !lmmaxd_array = lmmaxd
-  !lmmaxd_array = 9  ! test the l-cutoff
-  !lmmaxd_array(IAT) = lmmaxd
   lmmaxd_array = lmarray
 
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
@@ -452,6 +449,17 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   if (cutoffmode == 3) then
     call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
                       QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
+
+    if (DEBUG_dump_matrix) then
+      call dumpSparseMatrixDescription(sparse, "matrix_desc.dat")
+      call dumpSparseMatrixData(GLLH, "matrix.unf")
+      call dumpSparseMatrixDataFormatted(GLLH, "matrix_form.dat")
+      call dumpDenseMatrix(mat_X, "solution.unf")
+      call dumpDenseMatrixFormatted(mat_X, "solution_form.dat")
+      call dumpDenseMatrix(mat_B, "rhs.unf")
+      call dumpDenseMatrixFormatted(mat_B, "rhs_form.dat")
+    end if
+
   end if
 
   !NOITER = NOITER + iteration_counter

@@ -446,4 +446,48 @@ contains
     close(FILEHANDLE)
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Write sparse matrix data (without description) to formatted file
+  !> - useful for testing.
+  subroutine dumpSparseMatrixDataFormatted(smat, filename)
+    implicit none
+    double complex, dimension(:), intent(in) :: smat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+    integer :: ii
+
+    open(FILEHANDLE, file=filename, form='formatted')
+
+    do ii = 1, size(smat)
+      write(FILEHANDLE, *) real(smat(ii)), imag(smat(ii))
+    end do
+
+    close(FILEHANDLE)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write dense matrix to formatted file
+  !> First line gives matrix dimension: rows cols
+  !> - useful for testing.
+  subroutine dumpDenseMatrixFormatted(mat, filename)
+    implicit none
+    double complex, dimension(:,:), intent(in) :: mat
+    character(len = *), intent(in) :: filename
+    !--------------
+
+    integer, parameter :: FILEHANDLE = 97
+    integer :: ii, jj
+
+    open(FILEHANDLE, file=filename, form='formatted')
+    write(FILEHANDLE, *) size(mat,1), size(mat,2)
+    do jj = 1, size(mat,2)
+      do ii = 1, size(mat,1)
+         write(FILEHANDLE, *) real(mat(ii,jj)), imag(mat(ii,jj))
+      end do
+    end do
+    close(FILEHANDLE)
+  end subroutine
+
 end module

@@ -463,6 +463,12 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! <<>> Multiple scattering part
 
+!                  if (I1 == 1 .and. IE == IELAST .and. ISPIN == 1) then
+!                     DEBUG_dump_matrix = .true.
+!                  else
+!                     DEBUG_dump_matrix = .false.
+!                  endif
+
                   call KLOOPZ1( &
                   GMATN(1,1,1,ISPIN), &
                   ALAT,IE,ITER,NAEZ, &

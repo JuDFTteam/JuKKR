@@ -27,7 +27,7 @@ module SparseMatrixDescription_mod
   CONTAINS
 
   !----------------------------------------------------------------------------
-  !> Creates SparseMatroxDescription object.
+  !> Creates SparseMatrixDescription object.
   !
   !> Creates data structure that contains sparsity information of a
   !> square VBR (variable block row) matrix.
@@ -49,7 +49,7 @@ module SparseMatrixDescription_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Destroys SparseMatroxDescription object.
+  !> Destroys SparseMatrixDescription object.
   subroutine destroySparseMatrixDescription(sparse)
     implicit none
     type (SparseMatrixDescription), intent(inout) :: sparse
