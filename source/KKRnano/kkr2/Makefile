@@ -82,39 +82,6 @@ else
 FCFLAGS += -O2 -g -DNOLOGGING
 endif
 
-# ============================= JUGENE ========================================
-ifeq ($(PLATFORM),JUGENE)
-
-ifeq ($(USETOOL),scalasca)
-FC = scalasca -instrument -user #end of line
-FC90 = scalasca -instrument -user #end of line
-TYPE = nodebug
-else
-FC =
-FC90 = 
-endif
-
-
-FC += mpixlf77_r
-FC90 += mpixlf90_r
-FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/include
-#-qsmallstack=dynlenonheap
-FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
-LDFLAGS = -L/bgsys/local/lib -lesslbg -I/bgsys/local/fftw3/include -L/bgsys/local/fftw3/lib -lfftw3
-
-ifeq ($(TYPE),debug)
-  FCFLAGS += -g -qnosave -qinitauto=7FF7FFFF -WF,-DDEBUG1
-#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
-else
-  FCFLAGS += -O3 -qipa
-endif
-
-ifeq ($(USETOOL),scalasca)
-FCFLAGS += -g
-endif
-
-endif
-
 # ============================= JUQUEEN========================================
 ifeq ($(PLATFORM),JUQUEEN)
 
@@ -157,7 +124,7 @@ endif
 DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
-         timing kkr0common MixingNew
+         timing kkr0common MixingNew datastructures
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -239,5 +206,9 @@ EBalanceHandler_mod.o: KKRnanoParallel_mod.o
 
 #l-cutoff TEST
 TEST_lcutoff_mod.o: lcutoff_mod.o
+
+BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
+CellData_mod.o: ShapefunData_mod.o
+
 
 

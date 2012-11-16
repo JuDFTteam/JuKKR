@@ -638,7 +638,7 @@
     E2IN = E2
 
     ! read starting potential and shapefunctions
-    call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD, &
+    call STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
                  1,NAEZ, &
                  RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST, &
                  IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN, &
@@ -648,6 +648,7 @@
 !                New after inc.p replace
                  IPAND, IRID, NFUND, IRMD, NCELLD, &
                  NAEZD, IRNSD)
+
 
     close(IFILE)
     close(19)

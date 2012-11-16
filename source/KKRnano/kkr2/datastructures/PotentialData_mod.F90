@@ -1,0 +1,65 @@
+! eliminates: VINS, VISP, VONS, lmpotd
+! TODO: pointer to radial mesh? unnecessary - just pass atom
+! ADD lmax???
+! parameters are more or less the same for all atoms - given in inputcard
+! write lpot, nspin, irmind, irmd for every atom??
+module PotentialData_mod
+  implicit none
+
+  type PotentialData
+    double precision, dimension(:,:,:), allocatable :: VINS        ! .. input potential
+    double precision, dimension(:,:), allocatable :: VISP
+    double precision, dimension(:,:,:), allocatable :: VONS        !     .. output potential
+    integer :: nspin
+    integer :: lpot
+    integer :: irmind
+    integer :: irmd
+    ! derived
+    integer :: lmpot
+
+    ! ECORE, NCORE, ITITLE, LCORE ??? - separate to Core-datastructure? TODO
+  end type
+
+  CONTAINS
+
+  !----------------------------------------------------------------------------
+  subroutine createPotentialData(potential, lpot, nspin, irmind, irmd)
+    implicit none
+    type (PotentialData), intent(inout) :: potential
+    integer, intent(in) :: lpot
+    integer, intent(in) :: nspin
+    integer, intent(in) :: irmind  !< number of mesh points
+    integer, intent(in) :: irmd  !< number of mesh points
+
+    ! ---- local ----------
+    integer :: lmpot
+
+    potential%nspin = nspin
+    potential%lpot = lpot
+    potential%irmind = irmind
+    potential%irmd = irmd
+
+    lmpot = (lpot + 1)**2
+    potential%lmpot = lmpot
+
+    ! Unfortunately, for compatibility reasons,
+    ! memory has to be allocated for both spin directions
+    ! independent of nspin
+    allocate(potential%VINS(IRMIND:IRMD,LMPOT,2))
+    allocate(potential%VISP(IRMD,2))
+    allocate(potential%VONS(IRMD,LMPOT,2))
+
+  end subroutine
+
+
+  !----------------------------------------------------------------------------
+  subroutine destroyPotentialData(potential)
+    implicit none
+    type (PotentialData), intent(inout) :: potential
+
+    deallocate(potential%VINS)
+    deallocate(potential%VISP)
+    deallocate(potential%VONS)
+  end subroutine
+
+end module PotentialData_mod

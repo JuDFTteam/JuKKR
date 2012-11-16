@@ -47,16 +47,20 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . config_reader ../lattice ../kkr0common
+DIRS = . config_reader ../lattice ../kkr0common ../datastructures
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
 
 SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
+SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
+SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 
 # notdir extracts only filename
 OBJS =  $(notdir ${SRCS:.f=.o})
 OBJS += $(notdir ${SRCS90:.f90=.o})
+OBJS += $(notdir ${SRCSFPP:.F=.o})
+OBJS += $(notdir ${SRCS90FPP:.F90=.o})
 
 .PHONY: all
 all:	$(PROGRAM)
@@ -68,6 +72,12 @@ $(PROGRAM): $(OBJS)
 	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
 	
 %.o: %.f90
+	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
+	
+%.o: %.F
+	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
+	
+%.o: %.F90
 	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
 .PHONY: clean
@@ -90,3 +100,8 @@ test:
 
 config_reader.o: config_reader_dictionary.o
 main0.o: config_reader.o
+
+BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
+CellData_mod.o: ShapefunData_mod.o
+
+startb1_wrapper.o: CellData_mod.o RadialMeshData_mod.o
