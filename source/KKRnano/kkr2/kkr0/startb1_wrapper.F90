@@ -1,10 +1,10 @@
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine STARTB1
-subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD,NBEG,NEND,RMTNEW,RMT, &
-                           ITITLE,HFIELD,IMT,IRC,VCONST,IRNS,LPOT,NSPIN,IRMIN, &
-                           NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
-                           EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B, IRWS,INIPOL, &
-                           IINFO,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
+                           ITITLE,HFIELD,VCONST,LPOT,NSPIN, &
+                           NTCELL, &
+                           EFERMI,VBC,LCORE,NCORE,ZAT, &
+                           IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   use RadialMeshData_mod
   use CellData_mod
@@ -34,30 +34,13 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD,NBEG,NEND,RMTNEW,RMT, &
   INTEGER :: NBEG
   INTEGER :: NEND
   INTEGER :: NSPIN
-  DOUBLE PRECISION, dimension(*) :: A
-  DOUBLE PRECISION, dimension(*) :: B
-  DOUBLE PRECISION, dimension(IRMD,*) :: DRDI
-  DOUBLE PRECISION, dimension(IRMD,*) :: R
-  DOUBLE PRECISION, dimension(*) :: RMT
-  DOUBLE PRECISION, dimension(*) :: RMTNEW
-  DOUBLE PRECISION, dimension(*) :: RWS
-  DOUBLE PRECISION, dimension(IRID,NFUND,NCELLD) :: THETAS
+
   DOUBLE PRECISION, dimension(*) :: ZAT
-  INTEGER, dimension((2*LPOT+1)**2,NAEZD) :: IFUNM
-  INTEGER, dimension(*) :: IMT
-  INTEGER, dimension(*) :: INIPOL
-  INTEGER, dimension(*) :: IPAN
-  INTEGER, dimension(*) :: IRC
-  INTEGER, dimension(0:IPAND,*) :: IRCUT
-  INTEGER, dimension(*) :: IRMIN
-  INTEGER, dimension(*) :: IRNS
-  INTEGER, dimension(*) :: IRWS
+
   INTEGER, dimension(20,*) :: ITITLE
   INTEGER, dimension(20,*) :: LCORE
-  INTEGER, dimension(NFUND,NAEZD) :: LLMSP
-  INTEGER, dimension((2*LPOT+1)**2,NAEZD) :: LMSP
   INTEGER, dimension(*) :: NCORE
-  INTEGER, dimension(NCELLD) :: NFU
+
   INTEGER, dimension(*) :: NTCELL
 
   ! --- locals ---
@@ -65,13 +48,62 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD,NBEG,NEND,RMTNEW,RMT, &
   type (RadialMeshData) :: meshdata
   integer :: ii
 
+  double precision, dimension(:,:,:), allocatable :: THETAS !DEL
+  integer, dimension(:,:), allocatable :: IFUNM
+  integer, dimension(:),   allocatable :: IPAN
+  integer, dimension(:,:), allocatable :: LLMSP
+  integer, dimension(:,:), allocatable :: LMSP
+  integer, dimension(:),   allocatable :: NFU
+
+  double precision, dimension(:),   allocatable  :: A
+  double precision, dimension(:),   allocatable  :: B
+  double precision, dimension(:,:), allocatable  :: DRDI
+  double precision, dimension(:,:), allocatable  :: R
+  integer, dimension(:),  allocatable  :: IMT
+  integer, dimension(:),  allocatable  :: IRC
+  integer, dimension(:,:),allocatable  :: IRCUT
+  integer, dimension(:),  allocatable  :: IRMIN
+  integer, dimension(:),  allocatable  :: IRNS
+  integer, dimension(:),  allocatable  :: IRWS
+  double precision, dimension(:),   allocatable :: RWS !DEL
+  double precision, dimension(:),   allocatable :: RMT !DEL
+
+
+  double precision, dimension(:), allocatable :: RMTNEW !DEL
+  integer, dimension(:), allocatable :: INIPOL !DEL
+
+  allocate(THETAS(IRID,NFUND,NCELLD)) !DEL
+  allocate(IFUNM((2*LPOT+1)**2,NAEZD))
+  allocate(IPAN(NAEZD))
+  allocate(LLMSP(NFUND,NAEZD))
+  allocate(LMSP((2*LPOT+1)**2,NAEZD))
+  allocate(NFU(NAEZD))
+
+  ! Radial mesh(es)
+  allocate(A(NAEZD)) !DEL
+  allocate(B(NAEZD)) !DEL
+  allocate(DRDI(IRMD,NAEZD)) !DEL
+  allocate(R(IRMD,NAEZD)) !DEL
+  allocate(IMT(NAEZD)) !DEL
+  allocate(IRC(NAEZD)) !DEL
+  allocate(IRCUT(0:IPAND,NAEZD)) !DEL
+  allocate(IRMIN(NAEZD)) !DEL
+  allocate(IRNS(NAEZD)) !DEL
+  allocate(IRWS(NAEZD)) !DEL
+  allocate(RWS(NAEZD)) !DEL
+  allocate(RMT(NAEZD))
+
+  allocate(RMTNEW(NAEZD))
+  allocate(INIPOL(NAEZD))
+
   call createCellData(cell, irmd, ipand, irid, (2*LPOT+1)**2, nfund)
   call createRadialMeshData(meshdata, irmd, ipand)
 
-  call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,NBEG,NEND,RMTNEW,RMT, &
+  call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
                ITITLE,HFIELD,IMT,IRC,VCONST,IRNS,LPOT,NSPIN,IRMIN, &
                NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
-               EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,INIPOL,IINFO,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+               EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS, &
+               INIPOL,1,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   call openCellDataDAFile(cell, 37 , "cells")
 

@@ -207,10 +207,10 @@
 !    double precision :: RWS(NAEZD)
 !    double precision :: ZAT(NAEZD)
     double precision, dimension(:,:), allocatable :: RBASIS
-    double precision, dimension(:),   allocatable :: RMT
+    double precision, dimension(:),   allocatable :: RMT !DEL
     double precision, dimension(:),   allocatable :: RMTREF
     double precision, dimension(:,:), allocatable :: RR
-    double precision, dimension(:),   allocatable :: RWS
+    double precision, dimension(:),   allocatable :: RWS !DEL
     double precision, dimension(:),   allocatable :: ZAT
 
 !     .. Lattice aux. ..
@@ -228,12 +228,12 @@
 !    integer :: ILM(NGSHD,3)
 !    integer :: NFU(NAEZD)
 !    integer :: NTCELL(NAEZD)
-    double precision, dimension(:,:,:), allocatable :: THETAS
-    integer, dimension(:,:), allocatable :: IFUNM
-    integer, dimension(:),   allocatable :: IPAN
-    integer, dimension(:,:), allocatable :: LLMSP
-    integer, dimension(:,:), allocatable :: LMSP
-    integer, dimension(:),   allocatable :: NFU
+    double precision, dimension(:,:,:), allocatable :: THETAS !DEL
+    integer, dimension(:,:), allocatable :: IFUNM !DEL
+    integer, dimension(:),   allocatable :: IPAN !DEL
+    integer, dimension(:,:), allocatable :: LLMSP !DEL
+    integer, dimension(:,:), allocatable :: LMSP !DEL
+    integer, dimension(:),   allocatable :: NFU !DEL
     integer, dimension(:),   allocatable :: NTCELL
 
 !     .. reference clusters
@@ -279,16 +279,16 @@
 !    integer :: IRMIN(NAEZD)
 !    integer :: IRNS(NAEZD)
 !    integer :: IRWS(NAEZD)
-    double precision, dimension(:),   allocatable  :: A
-    double precision, dimension(:),   allocatable  :: B
-    double precision, dimension(:,:), allocatable  :: DRDI
-    double precision, dimension(:,:), allocatable  :: R
-    integer, dimension(:),  allocatable  :: IMT
-    integer, dimension(:),  allocatable  :: IRC
-    integer, dimension(:,:),allocatable  :: IRCUT
-    integer, dimension(:),  allocatable  :: IRMIN
-    integer, dimension(:),  allocatable  :: IRNS
-    integer, dimension(:),  allocatable  :: IRWS
+    double precision, dimension(:),   allocatable  :: A !DEL
+    double precision, dimension(:),   allocatable  :: B !DEL
+    double precision, dimension(:,:), allocatable  :: DRDI !DEL
+    double precision, dimension(:,:), allocatable  :: R !DEL
+    integer, dimension(:),  allocatable  :: IMT !DEL
+    integer, dimension(:),  allocatable  :: IRC !DEL
+    integer, dimension(:,:),allocatable  :: IRCUT !DEL
+    integer, dimension(:),  allocatable  :: IRMIN !DEL
+    integer, dimension(:),  allocatable  :: IRNS !DEL
+    integer, dimension(:),  allocatable  :: IRWS !DEL
 
 !     .. Brillouin zone ..
 !     kpoints in each direction
@@ -357,7 +357,7 @@
 !    integer :: INIPOL(NAEZD)
 
     complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
-    double precision, dimension(:), allocatable :: RMTNEW
+    double precision, dimension(:), allocatable :: RMTNEW !DEL
     integer, dimension(:), allocatable :: INIPOL
 
     integer ::   LMMAXD,LMPOTD,LMXSPD,NPOTD
@@ -497,19 +497,19 @@
 
     ! Lattice
     allocate(RBASIS(3,NAEZD), stat=ierror)
-    allocate(RMT(NAEZD), stat=ierror)
+    allocate(RMT(NAEZD), stat=ierror) !DEL
     allocate(RMTREF(NREFD), stat=ierror)
     allocate(RR(3,0:NRD), stat=ierror)
-    allocate(RWS(NAEZD), stat=ierror)
+    allocate(RWS(NAEZD), stat=ierror) !DEL
     allocate(ZAT(NAEZD), stat=ierror)
 
     !Shape functions
-    allocate(THETAS(IRID,NFUND,NCELLD), stat=ierror)
-    allocate(IFUNM(LMXSPD,NAEZD), stat=ierror)
-    allocate(IPAN(NAEZD), stat=ierror)
-    allocate(LLMSP(NFUND,NAEZD), stat=ierror)
-    allocate(LMSP(LMXSPD,NAEZD), stat=ierror)
-    allocate(NFU(NAEZD), stat=ierror)
+    allocate(THETAS(IRID,NFUND,NCELLD), stat=ierror) !DEL
+    allocate(IFUNM(LMXSPD,NAEZD), stat=ierror) !DEL
+    allocate(IPAN(NAEZD), stat=ierror) !DEL
+    allocate(LLMSP(NFUND,NAEZD), stat=ierror) !DEL
+    allocate(LMSP(LMXSPD,NAEZD), stat=ierror) !DEL
+    allocate(NFU(NAEZD), stat=ierror) !DEL
     allocate(NTCELL(NAEZD), stat=ierror)
 
     ! Reference Cluster
@@ -526,16 +526,16 @@
     allocate(VREF(NAEZD), stat=ierror)
 
     ! Radial mesh(es)
-    allocate(A(NAEZD), stat=ierror)
-    allocate(B(NAEZD), stat=ierror)
-    allocate(DRDI(IRMD,NAEZD), stat=ierror)
-    allocate(R(IRMD,NAEZD), stat=ierror)
-    allocate(IMT(NAEZD), stat=ierror)
-    allocate(IRC(NAEZD), stat=ierror)
-    allocate(IRCUT(0:IPAND,NAEZD), stat=ierror)
-    allocate(IRMIN(NAEZD), stat=ierror)
-    allocate(IRNS(NAEZD), stat=ierror)
-    allocate(IRWS(NAEZD), stat=ierror)
+    allocate(A(NAEZD), stat=ierror) !DEL
+    allocate(B(NAEZD), stat=ierror) !DEL
+    allocate(DRDI(IRMD,NAEZD), stat=ierror) !DEL
+    allocate(R(IRMD,NAEZD), stat=ierror) !DEL
+    allocate(IMT(NAEZD), stat=ierror) !DEL
+    allocate(IRC(NAEZD), stat=ierror) !DEL
+    allocate(IRCUT(0:IPAND,NAEZD), stat=ierror) !DEL
+    allocate(IRMIN(NAEZD), stat=ierror) !DEL
+    allocate(IRNS(NAEZD), stat=ierror) !DEL
+    allocate(IRWS(NAEZD), stat=ierror) !DEL
 
     !         symmetry matrices
     allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD), stat=ierror)
@@ -547,8 +547,8 @@
     allocate(NCORE(NPOTD), stat=ierror)
 
     ! auxillary
-    allocate(RMTNEW(NAEZD), stat=ierror)
-    allocate(INIPOL(NAEZD), stat=ierror)
+    allocate(RMTNEW(NAEZD), stat=ierror) !DEL
+    allocate(INIPOL(NAEZD), stat=ierror) !DEL
 
 !-----------------------------------------------------------------------------
 ! Array allocations END 1
@@ -638,17 +638,31 @@
     E2IN = E2
 
     ! read starting potential and shapefunctions
-    call STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
+    call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD, &
                  1,NAEZ, &
                  RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST, &
                  IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN, &
                  THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN, &
                  VBC,RWS,LCORE,NCORE,DRDI, &
                  R,ZAT,A,B,IRWS,INIPOL,1, &
-!                New after inc.p replace
                  IPAND, IRID, NFUND, IRMD, NCELLD, &
                  NAEZD, IRNSD)
+    close(IFILE)
+    close(19)
 
+    open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
+    open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
+
+    E2IN = E2
+    ! read starting potential and shapefunctions
+    call STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
+                 ITITLE,HFIELD,VCONST, &
+                 LPOT,NSPIN,NTCELL, &
+                 E2IN, &
+                 VBC,LCORE,NCORE, &
+                 ZAT, &
+                 IPAND, IRID, NFUND, IRMD, NCELLD, &
+                 NAEZD, IRNSD)
 
     close(IFILE)
     close(19)

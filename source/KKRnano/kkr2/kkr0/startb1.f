@@ -6,7 +6,6 @@ c ************************************************************************
      &                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,
      &                   VBC,RWS,LCORE,NCORE,DRDI,
      &                   R,ZAT,A,B,IRWS,INIPOL,IINFO,
-c     new after inc.p replace
      &                   IPAND, IRID, NFUND, IRMD, NCELLD,
      &                   NAEZD, IRNSD)
 c ************************************************************************
@@ -108,11 +107,8 @@ C     .. External Subroutines ..
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ANINT,EXP,LOG,MAX,MOD,REAL,SQRT
-C     ..
-C     .. Save statement ..
-C      SAVE
+
       INTEGER ISHAPE
-      DATA ISHAPE / 0 /
 
 
       INTEGER LMPOTD
@@ -123,6 +119,8 @@ C      SAVE
 C     ..
 c-----------------------------------------------------------------------
 c
+      ISHAPE = 0
+
       IRMIND= IRMD-IRNSD
       LMPOTD= (LPOT+1)**2
       LMXSPD= (2*LPOT+1)**2
