@@ -88,6 +88,8 @@ module EBalanceHandler_mod
           write(*,*) "WARNING: Bad ebalance file provided."
         end if
 
+        close(FILEHANDLE)
+
       end if
 
     endif
@@ -147,7 +149,7 @@ module EBalanceHandler_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! Gathers all timings and redistributes energy processes.
+  !> Gathers all timings and redistributes energy processes.
   subroutine updateEBalance_com(balance, my_mpi)
     use KKRnanoParallel_mod
     implicit none
@@ -537,7 +539,7 @@ empid, iemxd)
 !
     if (MYACTVRANK.eq.0) then
 
-      open (50,file='ebalance',form='formatted')
+      open (50,file='ebalance',form='formatted', status='replace')
       write(50, *) "# Energy load-balancing file"
       write(50, *) "# 1st line: number of E-points, number of E-processes."
       write(50, *) "# point --- process --- timing used"

@@ -121,7 +121,7 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . DebugHelpers IterativeSolver Mixing XC quadrature madelung \
+DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
          timing kkr0common MixingNew datastructures
