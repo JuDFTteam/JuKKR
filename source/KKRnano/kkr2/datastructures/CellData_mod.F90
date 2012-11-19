@@ -14,12 +14,10 @@ module CellData_mod
   CONTAINS
 
   !----------------------------------------------------------------------------
-  subroutine createCellData(cell, irmd, ipand, irid, lmmax_shape, nfund)
+  subroutine createCellData(cell, irid, lmmax_shape, nfund)
     use ShapefunData_mod
     implicit none
     type (CellData), intent(inout) :: cell
-    integer, intent(in) :: irmd
-    integer, intent(in) :: ipand
     integer, intent(in) :: irid
     integer, intent(in) :: lmmax_shape
     integer, intent(in) :: nfund
@@ -56,6 +54,7 @@ module CellData_mod
                                 cell%shdata%LLMSP, &
                                 cell%shdata%IFUNM, &
                                 cell%shdata%LMSP, &
+                                cell%shdata%NFU, &
                                 MAGIC_NUMBER
 
   end subroutine
@@ -77,6 +76,7 @@ module CellData_mod
                                 cell%shdata%LLMSP, &
                                 cell%shdata%IFUNM, &
                                 cell%shdata%LMSP, &
+                                cell%shdata%NFU, &
                                 magic2
 
     if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) then
@@ -104,6 +104,7 @@ module CellData_mod
                                 cell%shdata%LLMSP, &
                                 cell%shdata%IFUNM, &
                                 cell%shdata%LMSP, &
+                                cell%shdata%NFU, &
                                 MAGIC_NUMBER
 
     write (*,*) reclen

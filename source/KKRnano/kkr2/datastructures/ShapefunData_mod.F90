@@ -6,13 +6,14 @@ module ShapefunData_mod
   type ShapefunData
     ! dimension params
     integer :: irid
-    integer :: nfund ! also replacing NFU ?
+    integer :: nfund
     integer :: lmmax_shape !< former name LMXSPD
 
     double precision, dimension(:,:), allocatable :: THETA
     integer, dimension(:), allocatable :: LLMSP
     integer, dimension(:), allocatable :: IFUNM
     integer, dimension(:), allocatable :: LMSP !< =0 if shape-function component is zero, otherwise =1
+    integer :: NFU
 
   end type
 
@@ -39,6 +40,7 @@ module ShapefunData_mod
     shdata%LLMSP = 0
     shdata%IFUNM = 0
     shdata%LMSP =  0
+    shdata%NFU = 0
 
     ! TODO: check lmmax_shape <= nfund
   end subroutine

@@ -25,14 +25,11 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   DOUBLE PRECISION, dimension(*) :: VBC
   DOUBLE PRECISION :: VCONST
   INTEGER :: IFILE
-  INTEGER :: IINFO
   INTEGER :: IPE
   INTEGER :: IPF
   INTEGER :: IPFE
   INTEGER :: KHFELD
   INTEGER :: LPOT
-  INTEGER :: NBEG
-  INTEGER :: NEND
   INTEGER :: NSPIN
 
   DOUBLE PRECISION, dimension(*) :: ZAT
@@ -48,6 +45,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   type (RadialMeshData) :: meshdata
   integer :: ii
 
+  ! the following arrays serve as local dummies
   double precision, dimension(:,:,:), allocatable :: THETAS !DEL
   integer, dimension(:,:), allocatable :: IFUNM
   integer, dimension(:),   allocatable :: IPAN
@@ -96,7 +94,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   allocate(RMTNEW(NAEZD))
   allocate(INIPOL(NAEZD))
 
-  call createCellData(cell, irmd, ipand, irid, (2*LPOT+1)**2, nfund)
+  call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
   call createRadialMeshData(meshdata, irmd, ipand)
 
   call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
@@ -104,6 +102,8 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
                NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
                EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS, &
                INIPOL,1,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+
+  call dochecks()
 
   call openCellDataDAFile(cell, 37 , "cells")
 
@@ -113,6 +113,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
     cell%shdata%LLMSP = LLMSP(:,ii)
     cell%shdata%IFUNM = IFUNM(:,ii)
     cell%shdata%LMSP = LMSP(:,ii)
+    cell%shdata%NFU = NFU(ii)
 
     !!! NFU !!!!!!!!!!!! ????????????????????????????????????????????????????????????
 
@@ -148,6 +149,42 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
 
   call destroyCellData(cell)
   call destroyRadialMeshData(meshdata)
+
+
+  CONTAINS
+
+  subroutine dochecks()
+    implicit none
+
+    integer :: ierror
+    integer :: I1, IE
+
+!------------------- Do some tests on startb1 output -------------------
+    ierror = 0
+    do I1 = 1, NAEZD
+      if ((IRMD - IRCUT(1, I1)) > IRID) then
+        write(*,*) "Error: Not enough radial points for shape-function available."
+        write(*,*) "Atom, points needed, points given ", I1, (IRMD - IRCUT(1, I1)), IRID
+        ierror = 1
+      end if
+    end do
+
+    do I1 = 1, NAEZD
+      do IE = 0, IPAN(I1) - 1
+        if (IE >= IPAND) then
+          write(*,*) "Array IPAN contains bad number of panels for atom ", IE
+          stop
+        end if
+        if ((IRCUT(IE+1,I1) -  IRCUT(IE,I1)) < 5) then
+          write(*,*) "Error: Not enough points in panel. At least 5 points needed for REGSOL"
+          write(*,*) "Atom, panel, points ", I1, IE, (IRCUT(IE+1,I1) -  IRCUT(IE,I1))
+          ierror = 1
+        end if
+      end do
+    end do
+    if (ierror /= 0) stop
+!-----------------------------------------------------------------------
+  end subroutine
 
 end subroutine
 

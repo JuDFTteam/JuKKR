@@ -157,7 +157,7 @@ c
         READ (19,FMT=9000) NCELL
         WRITE (6,FMT=*) '  ncell : ',NCELL,NCELLD
 c
-        IF(NCELL.GT.NCELLD) THEN
+        IF(NCELL.NE.NCELLD) THEN
           WRITE(6,*) 'Please, change the parameter ncelld (',NCELLD,
      +         ') in inc.p to',NCELL
           STOP 'STARTB - NCELLD'
