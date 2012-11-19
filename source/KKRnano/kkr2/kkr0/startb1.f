@@ -285,6 +285,41 @@ c      1/sqrt(4 pi)
 c
             READ (IFILE,FMT=9090) IRT1P,IRNS1P,LMPOTP,ISAVE
             IRMINP = IRT1P - IRNS1P
+
+c     do some checks to get the numerous problems with inconsistencies
+c     under control  e.r.
+
+c           crash if IRMINP < IRMIND
+c           crash if IRT1P > IRMD
+c           crash if LMPOTP inconsistent
+
+            if (irminp < irmind) then
+              write (*,*) "startb1 error: IRMINP < IRMIND"
+              write (*,*) "potential entry: ", IH
+              stop
+            endif
+
+            if (irt1p > irmd) then
+              write (*,*) "startb1 error: IRTP1 > IRMS"
+              write (*,*) "potential entry: ", IH
+              stop
+            endif
+
+            if (lmpotp /= (LPOT+1)**2) then
+              write(*,*) "startb1 error: lmpotp /= (LPOT+1)**2"
+              write (*,*) "potential entry: ", IH
+              stop
+            endif
+
+            if (irnsd < irns1p) then
+              write(*,*) "startb1 error: irnsd < irnsp1"
+              write (*,*) "potential entry: ", IH
+              stop
+            endif
+
+c           assign irns here
+            IRNS(IH) = IRNS1P
+
             IRMINM = MAX(IRMINP,IRMIND)
             READ (IFILE,FMT=9100) (VISP(IR,ISPIN),IR=1,NR)
             IF (LMPOTP.GT.1) THEN

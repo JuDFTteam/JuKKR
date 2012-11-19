@@ -87,9 +87,6 @@
 
     use Config_Reader
 
-!     the inc.p wrapper module is used to include the inc.p and inc.cls
-!     parameters - this works also for free form source files
-    !use inc_p_wrapper_module
     implicit none
 
 !   double precision KIND constant
@@ -105,35 +102,6 @@
     parameter (NSYMAXD=48)
 !     Maximal number of k-meshes used
     parameter (MAXMSHD=8)
-
-!     inc.p, inc.cls parameters
-
-!     NAEZD
-!     LPOTD
-!     LMAXD
-!     NREFD
-!     IRID
-!     BCPD
-!     NACLSD
-!     IRMD
-!     IEMXD
-!     NGSHD
-!     IGUESSD
-!     IPAND
-!     ISHLD
-!     IRNSD
-!     KPOIBZ
-!     KREL
-!     NFUND
-!     NATRCD
-!     NCLSD
-!     NMAXD
-!     NRD
-!     NSPIND
-!     NUTRCD
-!     NXIJD
-
-
 !     ..
 !     .. Local Scalars ..
 
@@ -146,7 +114,7 @@
     double precision :: VCONST
 
     integer :: ICST
-    integer :: IRM    !     eq IRMD ?
+    integer :: IRM    !     eq IRMD ?  totally USELESS
     integer :: ISHIFT
     integer :: KHFELD
     integer :: KPRE
@@ -183,9 +151,6 @@
     integer :: IELAST
     integer :: MAXMESH
 
-!    complex(kind=DP) :: EZ(IEMXD)
-!    complex(kind=DP) :: WEZ(IEMXD)
-!    integer :: KMESH(IEMXD)
     complex(kind=DP), dimension(:), allocatable :: EZ
     complex(kind=DP), dimension(:), allocatable :: WEZ
     integer, dimension(:), allocatable :: KMESH
@@ -200,17 +165,9 @@
     double precision :: BRAVAIS(3,3)
     double precision :: RECBV(3,3)
 
-!    double precision :: RBASIS(3,NAEZD)
-!    double precision :: RMT(NAEZD)
-!    double precision :: RMTREF(NREFD)
-!    double precision :: RR(3,0:NRD)
-!    double precision :: RWS(NAEZD)
-!    double precision :: ZAT(NAEZD)
     double precision, dimension(:,:), allocatable :: RBASIS
-    double precision, dimension(:),   allocatable :: RMT !DEL
     double precision, dimension(:),   allocatable :: RMTREF
     double precision, dimension(:,:), allocatable :: RR
-    double precision, dimension(:),   allocatable :: RWS !DEL
     double precision, dimension(:),   allocatable :: ZAT
 
 !     .. Lattice aux. ..
@@ -218,22 +175,6 @@
     double precision :: BBASIS
     double precision :: CBASIS
 
-
-!     .. shape functions ..
-!    double precision :: THETAS(IRID,NFUND,NCELLD)
-!    integer :: IFUNM(LMXSPD,NAEZD)
-!    integer :: IPAN(NAEZD)
-!    integer :: LLMSP(NFUND,NAEZD)
-!    integer :: LMSP(LMXSPD,NAEZD)
-!    integer :: ILM(NGSHD,3)
-!    integer :: NFU(NAEZD)
-!    integer :: NTCELL(NAEZD)
-    double precision, dimension(:,:,:), allocatable :: THETAS !DEL
-    integer, dimension(:,:), allocatable :: IFUNM !DEL
-    integer, dimension(:),   allocatable :: IPAN !DEL
-    integer, dimension(:,:), allocatable :: LLMSP !DEL
-    integer, dimension(:,:), allocatable :: LMSP !DEL
-    integer, dimension(:),   allocatable :: NFU !DEL
     integer, dimension(:),   allocatable :: NTCELL
 
 !     .. reference clusters
@@ -243,14 +184,6 @@
     integer :: NCLS
     integer :: NREF
 
-!    double precision :: RCLS(3,NACLSD,NCLSD)
-!    integer :: ATOM(NACLSD,NAEZD)
-!    integer :: CLS(NAEZD)
-!    integer :: EZOA(NACLSD,NAEZD)
-!    integer :: NACLS(NCLSD)
-!    integer :: NUMN0(NAEZD)
-!    integer :: INDN0(NAEZD,NACLSD)
-!    integer :: REFPOT(NAEZD)
     double precision, dimension(:,:,:), allocatable :: RCLS
 
     integer, dimension(:,:), allocatable :: ATOM
@@ -265,30 +198,7 @@
     integer, dimension(:),   allocatable :: REFPOT
 
 !     .. reference system ..
-!    double precision :: VREF(NAEZD)
     double precision, dimension(:), allocatable :: VREF
-
-!     .. radial mesh(es) ..
-!    double precision :: A(NAEZD)
-!    double precision :: B(NAEZD)
-!    double precision :: DRDI(IRMD,NAEZD)
-!    double precision :: R(IRMD,NAEZD)
-!    integer :: IMT(NAEZD)
-!    integer :: IRC(NAEZD)
-!    integer :: IRCUT(0:IPAND,NAEZD)
-!    integer :: IRMIN(NAEZD)
-!    integer :: IRNS(NAEZD)
-!    integer :: IRWS(NAEZD)
-    double precision, dimension(:),   allocatable  :: A !DEL
-    double precision, dimension(:),   allocatable  :: B !DEL
-    double precision, dimension(:,:), allocatable  :: DRDI !DEL
-    double precision, dimension(:,:), allocatable  :: R !DEL
-    integer, dimension(:),  allocatable  :: IMT !DEL
-    integer, dimension(:),  allocatable  :: IRC !DEL
-    integer, dimension(:,:),allocatable  :: IRCUT !DEL
-    integer, dimension(:),  allocatable  :: IRMIN !DEL
-    integer, dimension(:),  allocatable  :: IRNS !DEL
-    integer, dimension(:),  allocatable  :: IRWS !DEL
 
 !     .. Brillouin zone ..
 !     kpoints in each direction
@@ -299,15 +209,10 @@
     integer :: NSYMAT
 
 !         symmetry matrices
-!    complex(kind=DP) DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
-!    integer :: ISYMINDEX(NSYMAXD)
     complex(kind=DP), dimension(:,:,:), allocatable :: DSYMLL
     integer, dimension(:), allocatable :: ISYMINDEX
 
 !     .. core states ..
-!    integer :: ITITLE(20,NPOTD)
-!    integer :: LCORE(20,NPOTD)
-!    integer :: NCORE(NPOTD)
     integer, dimension(:,:), allocatable :: ITITLE
     integer, dimension(:,:), allocatable :: LCORE
     integer, dimension(:),   allocatable :: NCORE
@@ -351,14 +256,7 @@
     character(len=40) POTENTIAL_FILENAME
     character(len=40) SHAPEFUN_FILENAME
 
-
-!    complex(kind=DP) DEZ(IEMXD)
-!    double precision :: RMTNEW(NAEZD)
-!    integer :: INIPOL(NAEZD)
-
     complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
-    double precision, dimension(:), allocatable :: RMTNEW !DEL
-    integer, dimension(:), allocatable :: INIPOL
 
     integer ::   LMMAXD,LMPOTD,LMXSPD,NPOTD
 
@@ -497,19 +395,10 @@
 
     ! Lattice
     allocate(RBASIS(3,NAEZD), stat=ierror)
-    allocate(RMT(NAEZD), stat=ierror) !DEL
     allocate(RMTREF(NREFD), stat=ierror)
     allocate(RR(3,0:NRD), stat=ierror)
-    allocate(RWS(NAEZD), stat=ierror) !DEL
     allocate(ZAT(NAEZD), stat=ierror)
 
-    !Shape functions
-    allocate(THETAS(IRID,NFUND,NCELLD), stat=ierror) !DEL
-    allocate(IFUNM(LMXSPD,NAEZD), stat=ierror) !DEL
-    allocate(IPAN(NAEZD), stat=ierror) !DEL
-    allocate(LLMSP(NFUND,NAEZD), stat=ierror) !DEL
-    allocate(LMSP(LMXSPD,NAEZD), stat=ierror) !DEL
-    allocate(NFU(NAEZD), stat=ierror) !DEL
     allocate(NTCELL(NAEZD), stat=ierror)
 
     ! Reference Cluster
@@ -525,18 +414,6 @@
     ! Reference system
     allocate(VREF(NAEZD), stat=ierror)
 
-    ! Radial mesh(es)
-    allocate(A(NAEZD), stat=ierror) !DEL
-    allocate(B(NAEZD), stat=ierror) !DEL
-    allocate(DRDI(IRMD,NAEZD), stat=ierror) !DEL
-    allocate(R(IRMD,NAEZD), stat=ierror) !DEL
-    allocate(IMT(NAEZD), stat=ierror) !DEL
-    allocate(IRC(NAEZD), stat=ierror) !DEL
-    allocate(IRCUT(0:IPAND,NAEZD), stat=ierror) !DEL
-    allocate(IRMIN(NAEZD), stat=ierror) !DEL
-    allocate(IRNS(NAEZD), stat=ierror) !DEL
-    allocate(IRWS(NAEZD), stat=ierror) !DEL
-
     !         symmetry matrices
     allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD), stat=ierror)
     allocate(ISYMINDEX(NSYMAXD), stat=ierror)
@@ -546,10 +423,6 @@
     allocate(LCORE(20,NPOTD), stat=ierror)
     allocate(NCORE(NPOTD), stat=ierror)
 
-    ! auxillary
-    allocate(RMTNEW(NAEZD), stat=ierror) !DEL
-    allocate(INIPOL(NAEZD), stat=ierror) !DEL
-
 !-----------------------------------------------------------------------------
 ! Array allocations END 1
 !-----------------------------------------------------------------------------
@@ -557,13 +430,13 @@
     call RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS, &
                   E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3, &
                   SCFSTEPS,IMIX,MIXING,QBOUND,FCM, &
-                  ITDBRY,IRNS,NTCELL,NAEZ,IRM,ZAT, &
+                  ITDBRY,NTCELL,NAEZ,IRM,ZAT, &
                   NREF,ICST,IFILE,IPE,IPF,IPFE, &
                   KHFELD,KPRE,KTE, &
                   KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT, &
                   NSPIN,REFPOT, &
                   ISHIFT,INTERVX,INTERVY,INTERVZ, &
-                  HFIELD,VBC,VCONST,INIPOL, &
+                  HFIELD,VBC,VCONST, &
                   POTENTIAL_FILENAME,SHAPEFUN_FILENAME, &
                   RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC, &
                   LDAU, &
@@ -629,26 +502,7 @@
     NSRA = 1
     if (KVREL >= 1) NSRA = 2
 
-    call TESTDIM(NSPIN,NAEZ,LMAX,IRM,NREF,IRNS, &
-    LMAXD,IRMD,IRNSD,NREFD,NSPIND)
-
-    open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
-    open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
-
-    E2IN = E2
-
-    ! read starting potential and shapefunctions
-    call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD, &
-                 1,NAEZ, &
-                 RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST, &
-                 IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN, &
-                 THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN, &
-                 VBC,RWS,LCORE,NCORE,DRDI, &
-                 R,ZAT,A,B,IRWS,INIPOL,1, &
-                 IPAND, IRID, NFUND, IRMD, NCELLD, &
-                 NAEZD, IRNSD)
-    close(IFILE)
-    close(19)
+    call TESTDIM(NSPIN,NAEZ,LMAX,NREF,LMAXD,NREFD,NSPIND)
 
     open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
     open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
@@ -787,31 +641,6 @@
         IEMXD, &
         EKMD)
 
-    call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
-    BRAVAIS,RMAX,GMAX, &
-    EFERMI, &
-    SCFSTEPS,LCORE,NCORE, &
-    NSRA,NREF, &
-    NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,R,DRDI, &
-    REFPOT,RMTREF, VREF, &
-    ATOM,CLS,RCLS,NACLS, &
-    RBASIS,RR,EZOA, &
-    KMESH,MAXMESH,NSYMAT, &
-    DSYMLL, &
-    A,B,IFUNM, &
-    ITITLE,LMSP,NTCELL,THETAS, &
-    IMIX,MIXING,FCM,KPRE, &
-    KTE, KVMAD,KXC,ISHIFT, &
-    KFORCE,LLMSP,IMT, &
-    IRC,IRMIN,IRNS,IRWS,RWS,RMT,NFU, &
-    IEMXD,IRMD,LMPOTD,NPOTD,NAEZD, &
-    LMMAXD,IPAND,NREFD,LMAXD, &
-    NACLSD,NCLSD,NRD, &
-    NSYMAXD,IRID,NFUND, &
-    NCELLD,LMXSPD,NUMN0,INDN0, &
-    IGUESS,BCP,QMRBOUND, &
-    NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
-
     call WUNFILES_NEW(NPOL,NPNT1,NPNT2, &
     NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
     BRAVAIS,RMAX,GMAX, &
@@ -846,19 +675,10 @@
 
     ! Lattice
     deallocate(RBASIS, stat=ierror)
-    deallocate(RMT, stat=ierror)
     deallocate(RMTREF, stat=ierror)
     deallocate(RR, stat=ierror)
-    deallocate(RWS, stat=ierror)
     deallocate(ZAT, stat=ierror)
 
-    !Shape functions
-    deallocate(THETAS, stat=ierror)
-    deallocate(IFUNM, stat=ierror)
-    deallocate(IPAN, stat=ierror)
-    deallocate(LLMSP, stat=ierror)
-    deallocate(LMSP, stat=ierror)
-    deallocate(NFU, stat=ierror)
     deallocate(NTCELL, stat=ierror)
 
     ! Reference Cluster
@@ -874,18 +694,6 @@
     ! Reference system
     deallocate(VREF, stat=ierror)
 
-    ! Radial mesh(es)
-    deallocate(A, stat=ierror)
-    deallocate(B, stat=ierror)
-    deallocate(DRDI, stat=ierror)
-    deallocate(R, stat=ierror)
-    deallocate(IMT, stat=ierror)
-    deallocate(IRC, stat=ierror)
-    deallocate(IRCUT, stat=ierror)
-    deallocate(IRMIN, stat=ierror)
-    deallocate(IRNS, stat=ierror)
-    deallocate(IRWS, stat=ierror)
-
     ! Symmetry matrices
     deallocate(DSYMLL, stat=ierror)
     deallocate(ISYMINDEX, stat=ierror)
@@ -897,8 +705,6 @@
 
     !   auxillary
     deallocate(DEZ, stat=ierror)
-    deallocate(RMTNEW, stat=ierror)
-    deallocate(INIPOL, stat=ierror)
 
   end program
 

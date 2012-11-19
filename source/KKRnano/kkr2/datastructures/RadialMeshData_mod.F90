@@ -162,7 +162,7 @@ module RadialMeshData_mod
                                 meshdata%IRCUT, &
                                 MAGIC_NUMBER
 
-    write (*,*) reclen
+    !write (*,*) reclen
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 

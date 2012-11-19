@@ -1,7 +1,7 @@
       SUBROUTINE RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,
      &           CLS,NCLS,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
      +           NSTEPS,IMIX,MIXING,QBOUND,FCM,ITDBRY,
-     +           IRNS,NTCELL,NAEZ,IRM,Z,
+     +           NTCELL,NAEZ,IRM,Z,
      +           NREF,
      +           ICST,IFILE,IPE,IPF,IPFE,
      +           KHFELD,KPRE,KTE,
@@ -11,7 +11,7 @@
      +           ISHIFT,
      +           INTERVX,INTERVY,INTERVZ,
      +           HFIELD,
-     +           VBC,VCONST,INIPOL,
+     +           VBC,VCONST,
      +           I13,I19,
      +           RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC,
      +           LDAU,
@@ -35,8 +35,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC MIN
 C     ..
 C     .. Array Arguments ..
-      INTEGER IRNS(*),KFG(4),LMXC,NTCELL(*),CLS(*),REFPOT(*)
-      INTEGER INIPOL(*)
+      INTEGER IRNS_dummy,KFG(4),LMXC,NTCELL(*),CLS(*),REFPOT(*)
 
       DOUBLE PRECISION Z(*),MTFAC,VBC(*),RBASIS(3,*),RMTREF(*)
       DOUBLE PRECISION BRAVAIS(3,3)
@@ -144,7 +143,7 @@ C
      +                        REFPOT(I),
      +                        NTCELL(I),
      +                        MTFAC,
-     +                        IRNS(I),
+     +                        IRNS_dummy,
      +                        RMTREF(REFPOT(I))
       END DO
       CLOSE (77)
@@ -310,10 +309,10 @@ c     +    NSPIN.GT.NSPIND) CALL RCSTOP('18      ')
 
       WRITE (6,FMT=9130)
       WRITE (6,FMT=9140)
-      DO I = 1,NAEZ
-        WRITE (6,FMT=9150) I,IRNS(I),IRNSD
-        IF (IRNS(I).GT.IRNSD) CALL RCSTOP('19      ')
-      ENDDO
+c     DO I = 1,NAEZ
+c       WRITE (6,FMT=9150) I,IRNS(I),IRNSD
+c       IF (IRNS(I).GT.IRNSD) CALL RCSTOP('19      ')
+c     ENDDO
 
 
       IF (LMAX.NE.LMAXD) THEN
@@ -344,17 +343,6 @@ c
 c
       VBC(1) = VCONST
       VBC(2) = VBC(1)
-c
-      CALL IoInput('LINIPOL   ',UIO,IL,7,IER)
-                      READ (UNIT=UIO,FMT=*) linipol
-      IF (LINIPOL) THEN
-        CALL IoInput('XINIPOL   ',UIO,IL,7,IER)
-                      READ (UNIT=UIO,FMT=*) (inipol(I),I=1,NAEZ) 
-      ELSE
-        DO I=1,NAEZ
-          INIPOL(I) = 0
-        END DO
-      END IF
 
 c
 c

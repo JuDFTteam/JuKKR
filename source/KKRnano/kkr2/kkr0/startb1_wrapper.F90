@@ -107,7 +107,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
 
   call openCellDataDAFile(cell, 37 , "cells")
 
-  do ii = 1, ncelld  ! NCELL or NCELLD ???
+  do ii = 1, ncelld  ! NCELL or NCELLD ??? -forced equality
     cell%cell_index = ii
     cell%shdata%THETA(:,:) = THETAS(:,:,ii)
     cell%shdata%LLMSP = LLMSP(:,ii)

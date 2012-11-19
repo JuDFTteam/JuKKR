@@ -1,20 +1,14 @@
-       SUBROUTINE TESTDIM(nspin,naez,lmax,irm,
-     &                    nref,IRNS,
-     &                    LMAXD,IRMD,IRNSD,NREFD,NSPIND)
+       SUBROUTINE TESTDIM(nspin,naez,lmax,
+     &                    nref,
+     &                    LMAXD,NREFD,NSPIND)
        implicit none
-C       include 'inc.p'
-C       include 'inc.cls'
 
        INTEGER LMAXD
-       INTEGER IRMD
-       INTEGER IRNSD
        INTEGER NREFD
        INTEGER NSPIND
 
-       INTEGER nspin,naez,lmax,irm
+       INTEGER nspin,naez,lmax
        INTEGER nref,stop_mark
-       INTEGER IRNS(*)
-       INTEGER I,J
 c
 c ---> dimension tests
 c
@@ -33,28 +27,12 @@ c
         stop_mark=1
       endif
 c
-      if(irm.gt.irmd) then
-        write(6,*) 'Please, change the parameter irmd (',irmd,
-     +       ') in inc.p to',irm
-        stop_mark=1
-      endif
-c
       if(nref.ne.nrefd) then
         write(6,*) 'Please, change the parameter nrefd in',
      *   ' inc.p to',nref
         stop_mark=1
       endif
-c
-      J=1
-      DO I=1,NAEZ 
-        J=MAX(J,IRNS(I)) 
-      ENDDO
-c
-      if(j.gt.irnsd) then
-        write(6,*) 'Please, change the parameter irnsd in',
-     *   ' inc.p to',j
-        stop_mark=1
-      endif
+
 c
       if(nref.gt.NAEZ) then
         write(6,*) 'There are some inconsistencies in the input file./',
