@@ -12,7 +12,7 @@ module RefClusterData_mod
 
   type RefClusterData
     integer :: cluster_index
-    !> inedex of lattice vector of non-unique cluster atoms
+    !> index of lattice vector of non-unique cluster atoms
     integer, dimension(:), allocatable :: EZOA
     !> number of unique cluster atoms
     integer :: NUMN0

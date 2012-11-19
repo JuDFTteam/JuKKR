@@ -36,7 +36,7 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. Array Arguments ..
       INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
-     &        NTCELL(naezd),CLS(*),REFPOT(*)
+     &        NTCELL(naezd),CLS(*),REFPOT(naezd)
 
       DOUBLE PRECISION Z(*),MTFACdummy,VBC(*),RBASIS(3,*),RMTREF(*)
       DOUBLE PRECISION BRAVAIS(3,3)
@@ -58,6 +58,7 @@ C     .. Scalar Arguments ..
      +        NPNT1,NPNT2,NPNT3,NPOL,NSPIN,IGUESS,BCP
       INTEGER NSTEPS,NAEZ
       DOUBLE PRECISION ALAT,QMRBOUND
+      double precision temp
       INTEGER INTERVX,INTERVY,INTERVZ,NREF,NCLS
       LOGICAL LINIPOL,JIJ,LDAU
 
@@ -145,7 +146,17 @@ C
      +                        NTCELL(I),
      +                        MTFACdummy,
      +                        IRNS_dummy,
-     +                        RMTREF(REFPOT(I))
+     +                        temp
+
+c     E.R. check for possible out of bounds error
+      IF (REFPOT(I) < 1 .or. REFPOT(I) > naezd) then
+        WRITE(*,*) "Error in startb1."
+        WRITE(*,*) "check atominfo for atom ", I
+        STOP
+      ENDIF
+
+      RMTREF(REFPOT(I)) = temp
+
       END DO
       CLOSE (77)
  

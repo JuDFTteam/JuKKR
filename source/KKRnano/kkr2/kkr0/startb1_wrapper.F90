@@ -46,7 +46,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   integer :: ii
 
   ! the following arrays serve as local dummies
-  double precision, dimension(:,:,:), allocatable :: THETAS !DEL
+  double precision, dimension(:,:,:), allocatable :: THETAS
   integer, dimension(:,:), allocatable :: IFUNM
   integer, dimension(:),   allocatable :: IPAN
   integer, dimension(:,:), allocatable :: LLMSP
@@ -63,14 +63,14 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   integer, dimension(:),  allocatable  :: IRMIN
   integer, dimension(:),  allocatable  :: IRNS
   integer, dimension(:),  allocatable  :: IRWS
-  double precision, dimension(:),   allocatable :: RWS !DEL
-  double precision, dimension(:),   allocatable :: RMT !DEL
+  double precision, dimension(:),   allocatable :: RWS
+  double precision, dimension(:),   allocatable :: RMT
 
 
-  double precision, dimension(:), allocatable :: RMTNEW !DEL
-  integer, dimension(:), allocatable :: INIPOL !DEL
+  double precision, dimension(:), allocatable :: RMTNEW
+  integer, dimension(:), allocatable :: INIPOL
 
-  allocate(THETAS(IRID,NFUND,NCELLD)) !DEL
+  allocate(THETAS(IRID,NFUND,NCELLD))
   allocate(IFUNM((2*LPOT+1)**2,NAEZD))
   allocate(IPAN(NAEZD))
   allocate(LLMSP(NFUND,NAEZD))
@@ -78,17 +78,17 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   allocate(NFU(NAEZD))
 
   ! Radial mesh(es)
-  allocate(A(NAEZD)) !DEL
-  allocate(B(NAEZD)) !DEL
-  allocate(DRDI(IRMD,NAEZD)) !DEL
-  allocate(R(IRMD,NAEZD)) !DEL
-  allocate(IMT(NAEZD)) !DEL
-  allocate(IRC(NAEZD)) !DEL
-  allocate(IRCUT(0:IPAND,NAEZD)) !DEL
-  allocate(IRMIN(NAEZD)) !DEL
-  allocate(IRNS(NAEZD)) !DEL
-  allocate(IRWS(NAEZD)) !DEL
-  allocate(RWS(NAEZD)) !DEL
+  allocate(A(NAEZD))
+  allocate(B(NAEZD))
+  allocate(DRDI(IRMD,NAEZD))
+  allocate(R(IRMD,NAEZD))
+  allocate(IMT(NAEZD))
+  allocate(IRC(NAEZD))
+  allocate(IRCUT(0:IPAND,NAEZD))
+  allocate(IRMIN(NAEZD))
+  allocate(IRNS(NAEZD))
+  allocate(IRWS(NAEZD))
+  allocate(RWS(NAEZD))
   allocate(RMT(NAEZD))
 
   allocate(RMTNEW(NAEZD))
@@ -114,8 +114,6 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
     cell%shdata%IFUNM = IFUNM(:,ii)
     cell%shdata%LMSP = LMSP(:,ii)
     cell%shdata%NFU = NFU(ii)
-
-    !!! NFU !!!!!!!!!!!! ????????????????????????????????????????????????????????????
 
     call writeCellDataDA(cell, 37, ii)
 

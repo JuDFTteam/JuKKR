@@ -36,6 +36,8 @@ program MAIN2
   use EBalanceHandler_mod
   use BRYDBM_new_com_mod
 
+  use wrappers_mod
+
   use TEST_lcutoff_mod !TODO: remove
 
   implicit none
@@ -818,11 +820,8 @@ spinloop:     do ISPIN = 1,NSPIND
               end do
             end do
 ! ----------------------------------------------------------------------
-            !output: CMOM, CMINST
-            call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
-            mesh%R,mesh%DRDI,mesh%IRCUT,mesh%IPAN,shgaunts%ILM,cell%shdata%IFUNM,shgaunts%IMAXSH,shgaunts%GSH, &
-            cell%shdata%THETA,cell%shdata%LMSP, &
-            irmd, irid, nfund, ipand, shgaunts%ngshd)
+            !output: CMOM, CMINST  !WHY is only RHO2NS(:,:,1) (also vintras) passed???
+            call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
 
             call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
 
