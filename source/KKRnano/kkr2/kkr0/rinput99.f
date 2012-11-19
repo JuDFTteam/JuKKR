@@ -35,9 +35,10 @@ C     .. Intrinsic Functions ..
       INTRINSIC MIN
 C     ..
 C     .. Array Arguments ..
-      INTEGER IRNS_dummy,KFG(4),LMXC,NTCELL(*),CLS(*),REFPOT(*)
+      INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
+     &        NTCELL(naezd),CLS(*),REFPOT(*)
 
-      DOUBLE PRECISION Z(*),MTFAC,VBC(*),RBASIS(3,*),RMTREF(*)
+      DOUBLE PRECISION Z(*),MTFACdummy,VBC(*),RBASIS(3,*),RMTREF(*)
       DOUBLE PRECISION BRAVAIS(3,3)
 
       CHARACTER*24 TXC(4)
@@ -137,12 +138,12 @@ C
       DO I=1,NAEZ
 
                            READ (UNIT=77,FMT=*)    Z(I),
-     +                        LMXC,
-     +                       (KFG(J),J=1,4),
+     +                        LMXCdummy,
+     +                       (KFGdummy(J),J=1,4),
      +                        CLS(I),
      +                        REFPOT(I),
      +                        NTCELL(I),
-     +                        MTFAC,
+     +                        MTFACdummy,
      +                        IRNS_dummy,
      +                        RMTREF(REFPOT(I))
       END DO

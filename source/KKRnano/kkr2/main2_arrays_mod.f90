@@ -15,8 +15,6 @@ module main2_arrays_mod
 
   double precision, dimension(:,:), allocatable :: SMAT
   double precision, dimension(:,:), allocatable :: RNORM
-  double precision, dimension(:), allocatable :: RWS
-  double precision, dimension(:), allocatable :: RMT
   double precision, dimension(:,:,:), allocatable :: BZKP
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
@@ -65,15 +63,7 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: ESPV
   double precision, dimension(:), allocatable :: EXC
 
-  !----------- Radial Mesh  ----------------------------------------------
-  double precision, dimension(:), allocatable :: A
-  double precision, dimension(:), allocatable :: B
-  double precision, dimension(:,:), allocatable :: DRDI
-  double precision, dimension(:,:), allocatable :: R
   double precision, dimension(:), allocatable :: ZAT
-
-  ! ----------------- Shape functions ------------------------------------
-  double precision, dimension(:,:,:), allocatable :: THETAS
 
   ! ----------------------------------------------------------------------
   double precision, dimension(:,:), allocatable ::  RHOCAT
@@ -97,23 +87,10 @@ module main2_arrays_mod
   double precision, dimension(:), allocatable :: WIT
 
   ! ----------------------------------------------------------------------
-  integer, dimension(:), allocatable :: IMT
-  integer, dimension(:), allocatable :: IPAN
-  integer, dimension(:), allocatable :: IRC
-  integer, dimension(:), allocatable :: IRNS
-  integer, dimension(:,:), allocatable :: IRCUT
-  integer, dimension(:), allocatable :: IRMIN
-  integer, dimension(:), allocatable :: IRWS
   integer, dimension(:,:), allocatable :: ITITLE
   integer, dimension(:,:), allocatable :: LCORE
-  integer, dimension(:,:), allocatable :: LLMSP
   integer, dimension(:), allocatable :: NCORE
-  integer, dimension(:), allocatable :: NFU
   integer, dimension(:), allocatable :: NTCELL
-
-  integer, dimension(:,:), allocatable :: IFUNM
-
-  integer, dimension(:,:), allocatable :: LMSP
 
   double precision, dimension(:,:,:), allocatable :: RCLS
   double precision, dimension(:), allocatable :: RMTREF
@@ -270,10 +247,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RNORM(IEMXD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RWS(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RMT(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(BZKP(3,KPOIBZ,MAXMSHD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(VOLCUB(KPOIBZ,MAXMSHD), stat = memory_stat)
@@ -346,16 +319,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(EXC(0:LPOT), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(A(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(B(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(DRDI(IRMD,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(R(IRMD,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(THETAS(IRID,NFUND,NCELLD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ZAT(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RHOCAT(IRMD,2), stat = memory_stat)
@@ -386,35 +349,13 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(WIT(2:ITDBRYD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IMT(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IPAN(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRC(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRNS(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRCUT(0:IPAND,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRMIN(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IRWS(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ITITLE(20,NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LCORE(20,NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LLMSP(NFUND,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NCORE(NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NFU(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NTCELL(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IFUNM(LMXSPD,NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LMSP(LMXSPD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RCLS(3,NACLSD,NCLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -471,8 +412,6 @@ CONTAINS
     deallocate(RBASIS, stat = memory_stat)
     deallocate(SMAT, stat = memory_stat)
     deallocate(RNORM, stat = memory_stat)
-    deallocate(RWS, stat = memory_stat)
-    deallocate(RMT, stat = memory_stat)
     deallocate(BZKP, stat = memory_stat)
     deallocate(VOLCUB, stat = memory_stat)
     deallocate(VOLBZ, stat = memory_stat)
@@ -509,11 +448,6 @@ CONTAINS
     deallocate(ESPC, stat = memory_stat)
     deallocate(ESPV, stat = memory_stat)
     deallocate(EXC, stat = memory_stat)
-    deallocate(A, stat = memory_stat)
-    deallocate(B, stat = memory_stat)
-    deallocate(DRDI, stat = memory_stat)
-    deallocate(R, stat = memory_stat)
-    deallocate(THETAS, stat = memory_stat)
     deallocate(ZAT, stat = memory_stat)
     deallocate(RHOCAT, stat = memory_stat)
     deallocate(R2NEF, stat = memory_stat)
@@ -529,21 +463,10 @@ CONTAINS
     deallocate(UI2, stat = memory_stat)
     deallocate(VI2, stat = memory_stat)
     deallocate(WIT, stat = memory_stat)
-    deallocate(IMT, stat = memory_stat)
-    deallocate(IPAN, stat = memory_stat)
-    deallocate(IRC, stat = memory_stat)
-    deallocate(IRNS, stat = memory_stat)
-    deallocate(IRCUT, stat = memory_stat)
-    deallocate(IRMIN, stat = memory_stat)
-    deallocate(IRWS, stat = memory_stat)
     deallocate(ITITLE, stat = memory_stat)
     deallocate(LCORE, stat = memory_stat)
-    deallocate(LLMSP, stat = memory_stat)
     deallocate(NCORE, stat = memory_stat)
-    deallocate(NFU, stat = memory_stat)
     deallocate(NTCELL, stat = memory_stat)
-    deallocate(IFUNM, stat = memory_stat)
-    deallocate(LMSP, stat = memory_stat)
     deallocate(RCLS, stat = memory_stat)
     deallocate(RMTREF, stat = memory_stat)
     deallocate(VREF, stat = memory_stat)
