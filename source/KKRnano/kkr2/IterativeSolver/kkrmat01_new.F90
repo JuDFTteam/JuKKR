@@ -28,6 +28,7 @@ lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
   USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
   implicit none
 
   !     .. parameters ..
@@ -179,11 +180,13 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     GSXIJ = CZERO
   endif
 
+  TESTARRAYLOG(3, GINP)
+
 !==============================================================================
   do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
 !==============================================================================
 
-    WRITELOG(3, *) "k-point ", k_point_index
+    WRITELOG(4, *) "k-point ", k_point_index
 
     ! Get the scattering path operator for k-point BZKP(:, k_point_index)
     ! output: GLLKE1, NOITER
@@ -372,8 +375,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !99 continue
 !    if (flag == 0) goto 99
 
-  TESTARRAYLOG(3, GINP)
-
   do site_index = 1,NAEZ
     ref_cluster_index = CLS(site_index)
 
@@ -465,7 +466,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !NOITER = NOITER + iteration_counter
   NOITER = NOITER + 1 ! TODO
 
-  TESTARRAYLOG(3, mat_B)
+  TESTARRAYLOG(4, mat_B)
 
   ! solve full matrix equation
   if (cutoffmode == 4) then
@@ -478,7 +479,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
     mat_X = mat_B
   endif
 
-  TESTARRAYLOG(3, mat_X)
+  TESTARRAYLOG(4, mat_X)
   call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
 
 

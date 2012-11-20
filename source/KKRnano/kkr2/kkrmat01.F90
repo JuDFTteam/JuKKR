@@ -23,6 +23,8 @@ communicator, comm_size, &
 lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
 nxijd, nguessd, kpoibz, nrd, ekmd)
 
+  USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
   implicit none
 
   !     .. parameters ..
@@ -174,6 +176,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     GSXIJ = CZERO
   endif
 
+  TESTARRAYLOG(3, GINP)
+
 !==============================================================================
   do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
 !==============================================================================
@@ -182,6 +186,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
     ! output: GLLKE1, NOITER
     ! inout: PRSC
     ! inout (temporary arrays): GLLH, GLLHBLCK
+
     call kloopbody( GLLKE1, PRSC(:, EKM + k_point_index), NOITER, &
                    BZKP(:, k_point_index), TMATLL, GINP, ALAT, IGUESS, &
                    BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
@@ -323,8 +328,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
-
-  TESTARRAYLOG(3, GINP)
 
   GLLH = CZERO
 

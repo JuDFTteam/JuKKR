@@ -403,8 +403,8 @@ program MAIN2
                           TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
               end do
 
-              TESTARRAYLOG(4, TREFLL)
-              TESTARRAYLOG(4, DTREFLL)
+              TESTARRAYLOG(3, TREFLL)
+              TESTARRAYLOG(3, DTREFLL)
 
               call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
                             gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB, &
@@ -488,6 +488,8 @@ spinloop:     do ISPIN = 1,NSPIND
 !                     DEBUG_dump_matrix = .false.
 !                  endif
 
+                  TESTARRAYLOG(3, TMATN(:,:,ISPIN))
+
                   call KLOOPZ1( &
                   GMATN(1,1,1,ISPIN), &
                   ALAT,IE,ITER,NAEZ, &
@@ -508,6 +510,8 @@ spinloop:     do ISPIN = 1,NSPIND
                   iemxd, &
                   lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
                   nxijd, nguessd, kpoibz, nrd, ekmd)
+
+                  TESTARRAYLOG(3, GMATN(:,:,IE,ISPIN))
 
                   call stopTimer(mult_scattering_timer)
                   call resumeTimer(single_site_timer)
@@ -560,11 +564,6 @@ spinloop:     do ISPIN = 1,NSPIND
 ! IE ====================================================================
 
           call stopTimer(single_site_timer)
-          TESTARRAYLOG(4, TMATN)
-          TESTARRAYLOG(4, TR_ALPH)
-          TESTARRAYLOG(4, DTDE)
-          TESTARRAYLOG(4, GMATN)
-          TESTARRAYLOG(4, LLY_GRDT)
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
@@ -621,7 +620,6 @@ spinloop:     do ISPIN = 1,NSPIND
 !=======================================================================
 
           TESTARRAYLOG(3, GMATN)
-          TESTARRAYLOG(3, LLY_G0TR)
           TESTARRAYLOG(3, LLY_GRDT)
 
 !----------------------------------------------------------------------
@@ -998,9 +996,9 @@ spinloop:     do ISPIN = 1,NSPIND
           itdbryd, irmd, irnsd, nspind)
         endif
 
-        TESTARRAYLOG(4, VINS)
-        TESTARRAYLOG(4, VISP)
-        TESTARRAYLOG(4, VONS)
+        TESTARRAYLOG(3, VINS)
+        TESTARRAYLOG(3, VISP)
+        TESTARRAYLOG(3, VONS)
 
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration
