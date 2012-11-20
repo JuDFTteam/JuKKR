@@ -511,7 +511,7 @@
     ! read starting potential and shapefunctions
     call STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
                  ITITLE,HFIELD,VCONST, &
-                 LPOT,NSPIN,NTCELL, &
+                 LPOT,NSPIND,NTCELL, &
                  E2IN, &
                  VBC,LCORE,NCORE, &
                  ZAT, &

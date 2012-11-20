@@ -1,11 +1,10 @@
-! eliminates LCORE, NCORE, ITITLE, ECORE, LCOREMAX, QC, NPOTD
+! how to deal with spin???
 
 module AtomicCoreData_mod
 
   implicit none
 
   type AtomicCoreData
-    integer :: LCOREMAX
     integer :: LCORE_atom(20,2)       !< for historical reasons always 2 spin directions
     integer :: NCORE_atom(2)
     double precision :: ECORE(20,2)   !< first dim 20: max. 20 core states
@@ -13,24 +12,21 @@ module AtomicCoreData_mod
     double precision :: QC_corecharge !< total charge of core electrons ! remove??
     double precision, dimension(:,:), allocatable ::  RHOCAT !< radial charge density of core
     integer :: irmd
-    double precision :: Z_nuclear
+    !!!double precision :: Z_nuclear
 
   end type
 
   CONTAINS
 
   !----------------------------------------------------------------------------
-  subroutine createAtomicCoreData(core, Z_nuclear, irmd)
+  subroutine createAtomicCoreData(core, irmd)
     implicit none
     type (AtomicCoreData), intent(inout) :: core
-    double precision, intent(in) :: Z_nuclear
     integer, intent(in) :: irmd
 
     core%irmd = irmd
-    core%Z_nuclear = Z_nuclear
 
     ! initialise with garbage values
-    core%LCOREMAX = -1
     core%LCORE_atom = -1
     core%NCORE_atom = -1
     core%ECORE = 1d9

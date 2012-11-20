@@ -34,9 +34,9 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
 
   DOUBLE PRECISION, dimension(*) :: ZAT
 
-  INTEGER, dimension(20,*) :: ITITLE
-  INTEGER, dimension(20,*) :: LCORE
-  INTEGER, dimension(*) :: NCORE
+  INTEGER, dimension(20,naezd*nspin) :: ITITLE
+  INTEGER, dimension(20,naezd*nspin) :: LCORE
+  INTEGER, dimension(naezd*nspin) :: NCORE
 
   INTEGER, dimension(*) :: NTCELL
 
@@ -97,6 +97,10 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
   call createRadialMeshData(meshdata, irmd, ipand)
 
+  NCORE = 0
+  LCORE = 0
+  ITITLE = 0
+
   call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
                ITITLE,HFIELD,IMT,IRC,VCONST,IRNS,LPOT,NSPIN,IRMIN, &
                NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
@@ -104,6 +108,8 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
                INIPOL,1,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   call dochecks()
+
+  call writeAtomData()
 
   call openCellDataDAFile(cell, 37 , "cells")
 
@@ -151,6 +157,45 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
 
   CONTAINS
 
+    subroutine writeAtomData()
+      use BasisAtom_mod
+      implicit none
+
+      type (BasisAtom) :: atom
+      integer :: ii, ispin, ipot
+
+      call createBasisAtom(atom, 1, lpot, nspin, (irmd-irnsd), irmd)  ! create dummy basis atom
+
+      call openBasisAtomDAFile(atom, 37, 'atoms')
+
+      do ii = 1, naezd
+        atom%atom_index = ii
+        atom%cell_index = NTCELL(ii)
+        atom%cluster_index = -1 !TODO
+        atom%Z_nuclear = ZAT(ii)
+
+        atom%core%NCORE_atom = 0
+        atom%core%LCORE_atom = 0
+        atom%core%ITITLE = 0
+
+        do ispin = 1, nspin
+          ipot = NSPIN * (ii-1) + ispin
+          atom%core%NCORE_atom(ispin) = NCORE(ipot)
+          atom%core%LCORE_atom(:, ispin) = LCORE(:, ipot)
+          atom%core%ITITLE(:, ispin) = ITITLE(:, ipot)
+        enddo
+
+        call writeBasisAtomDA(atom, 37, ii)
+
+      enddo
+
+      call closeBasisAtomDAFile(37)
+
+      call destroyBasisAtom(atom)
+
+    end subroutine
+
+!------------------------------------------------------------------------------
   subroutine dochecks()
     implicit none
 

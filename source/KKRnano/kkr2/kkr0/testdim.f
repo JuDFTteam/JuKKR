@@ -15,7 +15,7 @@ c
       write(6,2050) 
 c
       stop_mark=0
-      if(nspin.gt.nspind) then
+      if(nspin.ne.nspind) then
         write(6,*) 'Please, change the parameter nspind in',
      *   ' inc.p to',nspin
         stop_mark=1

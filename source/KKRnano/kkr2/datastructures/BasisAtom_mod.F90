@@ -52,7 +52,7 @@ module BasisAtom_mod
 CONTAINS
 
   !----------------------------------------------------------------------------
-  subroutine createBasisAtom(atom, atom_index, Z_nuclear, lpot, nspin, irmind, irmd)
+  subroutine createBasisAtom(atom, atom_index, lpot, nspin, irmind, irmd)
     use PotentialData_mod
     use AtomicCoreData_mod
     implicit none
@@ -63,22 +63,22 @@ CONTAINS
     integer, intent(in) :: irmind
     integer, intent(in) :: irmd  !< number of mesh points
     integer, intent(in) :: atom_index
-    double precision, intent(in) :: Z_nuclear !< nuclear charge
 
     atom%atom_index = atom_index
     atom%cell_index = -1
     atom%cluster_index = -1
-    atom%Z_nuclear = Z_nuclear
+    atom%Z_nuclear = 1.d9
 
     call createPotentialData(atom%potential, lpot, nspin, irmind, irmd)
 
     ! does irmd have to be the same?
-    call createAtomicCoreData(atom%core, Z_nuclear, irmd)
+    call createAtomicCoreData(atom%core, irmd)
 
   end subroutine
 
   !----------------------------------------------------------------------------
   !> Associates a basis atom with its cell data.
+  !>
   !> This is done that way because different atoms can share the same
   !> cell data.
   subroutine associateBasisAtomCell(atom, cell_ptr)
@@ -94,6 +94,7 @@ CONTAINS
 
   !----------------------------------------------------------------------------
   !> Associates a basis atom with its reference cluster.
+  !>
   !> This is done that way because different atoms can share the same
   !> reference cluster data.
   subroutine associateBasisAtomRefCluster(atom, cluster_ptr)
@@ -123,7 +124,18 @@ CONTAINS
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Returns index of corresponding cell.
+  pure integer function getCellIndex(atom)
+     implicit none
+
+    type (BasisAtom), intent(in) :: atom
+
+    getCellIndex = atom%cell_index
+  end function
+
+  !----------------------------------------------------------------------------
   !> Write to unformatted direct-access (DA) file.
+  !>
   !> The format is compatible to the 'vpotnew' file
   !> A record number has to be specified - argument 'recnr'
   !> File has to be opened and closed by user. No checks
@@ -141,6 +153,7 @@ CONTAINS
 
   !----------------------------------------------------------------------------
   !> Opens unformatted direct-access (DA) file.
+  !>
   !> The format is compatible to the 'vpotnew' file
   subroutine openBasisAtomPotentialDAFile(atom, fileunit, filename)
     implicit none
@@ -160,6 +173,7 @@ CONTAINS
 
   !----------------------------------------------------------------------------
   !> Reads from unformatted direct-access (DA) file.
+  !>
   !> The format is compatible to the 'vpotnew' file
   !> A record number has to be specified - argument 'recnr'
   !> File has to be opened and closed by user. No checks
@@ -177,6 +191,7 @@ CONTAINS
 
   !----------------------------------------------------------------------------
   !> Closes unformatted direct-access (DA) potential-file.
+  !>
   !> The format is compatible to the 'vpotnew' file
   subroutine closeBasisAtomPotentialDAFile(fileunit)
     implicit none
@@ -187,7 +202,7 @@ CONTAINS
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Write basis atom data to direct access file 'fileunit' at record 'recnr'
+  !> Write basis atom data to direct access file 'fileunit' at record 'recnr'.
   subroutine writeBasisAtomDA(atom, fileunit, recnr)
 
     implicit none
@@ -204,12 +219,12 @@ CONTAINS
                                 atom%Z_nuclear, &
                                 atom%core%NCORE_atom, &
                                 atom%core%LCORE_atom, &
-                                atom%core%LCOREMAX, &
                                 atom%core%ITITLE, &
                                 MAGIC_NUMBER
   end subroutine
 
-  !> Read basis atom data from direct access file 'fileunit' at record 'recnr'
+  !----------------------------------------------------------------------------
+  !> Read basis atom data from direct access file 'fileunit' at record 'recnr'.
   subroutine readBasisAtomDA(atom, fileunit, recnr)
     implicit none
 
@@ -227,7 +242,6 @@ CONTAINS
                                 atom%Z_nuclear, &
                                 atom%core%NCORE_atom, &
                                 atom%core%LCORE_atom, &
-                                atom%core%LCOREMAX, &
                                 atom%core%ITITLE, &
                                 magic2
 
@@ -258,7 +272,6 @@ CONTAINS
                                 atom%Z_nuclear, &
                                 atom%core%NCORE_atom, &
                                 atom%core%LCORE_atom, &
-                                atom%core%LCOREMAX, &
                                 atom%core%ITITLE, &
                                 MAGIC_NUMBER
 
