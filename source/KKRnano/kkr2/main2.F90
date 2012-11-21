@@ -280,6 +280,8 @@ program MAIN2
     call readRadialMeshDataDA(mesh, 37, I1)
     call closeRadialMeshDataDAFile(37)
 
+    call associateBasisAtomMesh(atomdata, mesh)
+
     call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
     WRITELOG(3, *) "lm-array: ", lmarray
 
@@ -301,6 +303,7 @@ program MAIN2
     call setEqualDistribution(ebalance_handler, (NPNT1 == 0))
 
 !+++++++++++
+    ASSERT( ZAT(I1) == atomdata%Z_nuclear )
 
    !flag = 0
    !99 continue
@@ -376,7 +379,7 @@ program MAIN2
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
                           atomdata%potential%VISP,NSPIND,mesh%R,mesh%DRDI, &
-                          ZAT(I1),mesh%IPAN,mesh%IRCUT, &
+                          atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
                           PHILDAU,UMLDAU,WMLDAU, &
                           lmaxd, irmd, ipand)
 
@@ -441,7 +444,7 @@ spinloop:     do ISPIN = 1,NSPIND
                   call CALCTMAT(LDAU,NLDAU,ICST, &
                                 NSRA,EZ(IE), &
                                 mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-                                atomdata%potential%VISP(1,ISPIN),ZAT(I1),mesh%IPAN, &
+                                atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
                                 mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                                 TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                 LLDAU,WMLDAU(1,1,1,ISPIN), &
@@ -456,7 +459,7 @@ spinloop:     do ISPIN = 1,NSPIND
                     call CALCDTMAT(LDAU,NLDAU,ICST, &
                                   NSRA,EZ(IE),delta_E_z, &
                                   mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-                                  atomdata%potential%VISP(1,ISPIN),ZAT(I1),mesh%IPAN, &
+                                  atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
                                   mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                                   DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                   LLDAU,WMLDAU(1,1,1,ISPIN), &
@@ -636,7 +639,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
               ICELL = getCellIndex(atomdata)
               call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
-                              atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,ZAT(I1),gaunts%ICLEB, &
+                              atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
                               cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
                               gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
                               WEZRN,RNORM, &
@@ -686,7 +689,7 @@ spinloop:     do ISPIN = 1,NSPIND
                           NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
                           mesh%DRDI,mesh%R,mesh%IRMIN, &
                           atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
-                          ZAT(I1),mesh%IPAN,mesh%IRCUT, &
+                          atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
                           cell%shdata%THETA,cell%shdata%IFUNM,cell%shdata%LMSP, &
                           RHO2NS,R2NEF, &
                           DEN(0,1,ISPIN),ESPV(0,ISPIN), &
@@ -701,7 +704,7 @@ spinloop:     do ISPIN = 1,NSPIND
               ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
               call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
                            mesh%DRDI,mesh%R,atomdata%potential%VISP(1,ISPIN), &
-                           mesh%A,mesh%B,ZAT(I1), &
+                           mesh%A,mesh%B,atomdata%Z_nuclear, &
                            mesh%IRCUT,atomdata%core%RHOCAT,atomdata%core%QC_corecharge, &
                            atomdata%core%ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
                            irmd, ipand)
@@ -746,7 +749,7 @@ spinloop:     do ISPIN = 1,NSPIND
                          CATOM, &
                          irmd, irid, ipand, nfund)
 
-            CHRGNT = CHRGNT + CATOM(1) - ZAT(I1)
+            CHRGNT = CHRGNT + CATOM(1) - atomdata%Z_nuclear
 
             ! write to 'results1' - only to be read in in results.f
             ! necessary for density of states calculation, otherwise
@@ -872,12 +875,12 @@ spinloop:     do ISPIN = 1,NSPIND
 
               ! output: EPOTIN
               call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,atomdata%potential%VISP,mesh%R,mesh%DRDI, &
-              mesh%IRMIN,mesh%IRWS,LPOT,atomdata%potential%VINS,mesh%IRCUT,mesh%IPAN,ZAT(I1), &
+              mesh%IRMIN,mesh%IRWS,LPOT,atomdata%potential%VINS,mesh%IRCUT,mesh%IPAN,atomdata%Z_nuclear, &
               irmd, irnsd, ipand)
 
               ! output: ECOU - l resolved Coulomb energy
               call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
-              atomdata%potential%VONS,ZAT(I1),mesh%R, &
+              atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R, &
               mesh%DRDI,KVMAD,mesh%IRCUT,mesh%IPAN,shgaunts%IMAXSH,cell%shdata%IFUNM, &
               shgaunts%ILM,shgaunts%GSH,cell%shdata%THETA,cell%shdata%LMSP, &
               irmd, irid, nfund, ipand, shgaunts%ngshd)
@@ -920,7 +923,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
 
             !output: VAV0, VOL0
-            call MTZERO_NEW(LMPOTD,NSPIND,atomdata%potential%VONS,ZAT(I1),mesh%R,mesh%DRDI,mesh%IMT,mesh%IRCUT, &
+            call MTZERO_NEW(LMPOTD,NSPIND,atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R,mesh%DRDI,mesh%IMT,mesh%IRCUT, &
                             mesh%IPAN,cell%shdata%LMSP,cell%shdata%IFUNM, &
                             cell%shdata%THETA,mesh%IRWS,VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
@@ -965,7 +968,7 @@ spinloop:     do ISPIN = 1,NSPIND
               !output: VONS (changed)
               call CONVOL_NEW(mesh%IRCUT(1),mesh%IRC, &
                           shgaunts%IMAXSH(shgaunts%LMPOTD),shgaunts%ILM,cell%shdata%IFUNM,LMPOTD,shgaunts%GSH, &
-                          cell%shdata%THETA,ZAT(I1), &
+                          cell%shdata%THETA,atomdata%Z_nuclear, &
                           mesh%R,atomdata%potential%VONS(1,1,ISPIN),cell%shdata%LMSP, &
                           irid, nfund, irmd, shgaunts%ngshd)
 
@@ -1026,7 +1029,7 @@ spinloop:     do ISPIN = 1,NSPIND
                 call writeFormattedPotential(E2,VBC,NSPIND, &
                 KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
                 atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
-                atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),ZAT(I1),atomdata%core%ITITLE(:,1:NSPIND), &
+                atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
                 I1, irmd, irnsd)
               endif
             endif

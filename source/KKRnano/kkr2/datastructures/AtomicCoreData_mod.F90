@@ -9,9 +9,11 @@ module AtomicCoreData_mod
     integer :: NCORE(2)
     double precision :: ECORE(20,2)   !< first dim 20: max. 20 core states
     integer :: ITITLE(20,2)           !< potential title as old school integer string
+    integer :: irmd
+
+    ! data used for calculation - not written to disk
     double precision :: QC_corecharge !< total charge of core electrons
     double precision, dimension(:,:), allocatable ::  RHOCAT !< radial charge density of core
-    integer :: irmd
     !!!double precision :: Z_nuclear
 
   end type

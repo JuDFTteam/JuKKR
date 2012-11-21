@@ -101,7 +101,7 @@ test:
 config_reader.o: config_reader_dictionary.o
 main0.o: config_reader.o
 
-BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
+BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
 
 startb1_wrapper.o: CellData_mod.o RadialMeshData_mod.o BasisAtom_mod.o

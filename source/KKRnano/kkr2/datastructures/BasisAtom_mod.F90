@@ -1,3 +1,30 @@
+!> Module that contains most of the information and data of a basis atom/site.
+!> @author Elias Rabel
+!>
+!> Example of usage:
+!> \verbatim
+!>
+!>   call createBasisAtom(atomdata, I1, lpot, nspind, irmind, irmd)
+!>   call openBasisAtomDAFile(atomdata, 37, "atoms")
+!>   call readBasisAtomDA(atomdata, 37, I1)
+!>   call closeBasisAtomDAFile(37)
+!>
+!>   call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
+!>   call openCellDataDAFile(cell, 37 , "cells")
+!>   call readCellDataDA(cell, 37, getCellIndex(atomdata))
+!>   call closeCellDataDAFile(37)
+!>
+!>   call associateBasisAtomCell(atomdata, cell)
+!>
+!>   call createRadialMeshData(mesh, irmd, ipand)
+!>   call openRadialMeshDataDAFile(mesh, 37 , "meshes")
+!>   call readRadialMeshDataDA(mesh, 37, I1)
+!>   call closeRadialMeshDataDAFile(37)
+!>
+!>   call associateBasisAtomMesh(atomdata, mesh)
+!>
+!> \endverbatim
+
 ! move core to potential??
 
 ! cell_index, cluster_index --> probably unnecessary, only for additional safety?
@@ -26,6 +53,7 @@ module BasisAtom_mod
   use RefClusterData_mod
   use PotentialData_mod
   use AtomicCoreData_mod
+  use RadialMeshData_mod
   implicit none
 
   type BasisAtom
@@ -35,6 +63,7 @@ module BasisAtom_mod
     ! TODO: do the same with cluster
     integer :: cluster_index
     double precision :: Z_nuclear !todo
+    integer :: nspin
     !double precision :: Vref      !todo  ! or move to reference cluster? yes
     !double precision :: RMTref    ! move to ref cluster
     ! double precision, dimension(3) :: position !todo
@@ -46,6 +75,7 @@ module BasisAtom_mod
 
     type (CellData), pointer :: cell_ptr => null()
     type (RefClusterData), pointer :: cluster_ptr => null()
+    type (RadialMeshData), pointer :: mesh_ptr => null()
 
   end type
 
@@ -65,6 +95,7 @@ CONTAINS
     integer, intent(in) :: atom_index
 
     atom%atom_index = atom_index
+    atom%nspin = nspin
     atom%cell_index = -1
     atom%cluster_index = -1
     atom%Z_nuclear = 1.d9
@@ -81,17 +112,6 @@ CONTAINS
   !>
   !> This is done that way because different atoms can share the same
   !> cell data.
-!  subroutine associateBasisAtomCell(atom, cell_ptr)
-!    use CellData_mod
-!    implicit none
-!    type (BasisAtom), intent(inout) :: atom
-!    type (CellData), pointer :: cell_ptr
-!
-!    atom%cell_ptr => cell_ptr
-!    atom%cell_index = cell_ptr%cell_index
-!
-!  end subroutine
-
   subroutine associateBasisAtomCell(atom, cell)
     use CellData_mod
     implicit none
@@ -111,20 +131,38 @@ CONTAINS
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Associates a basis atom with its radial mesh.
+  !>
+  !> That way one does not have to keep track of which mesh belongs
+  !> to which atom - as soon the relation has been established.
+  subroutine associateBasisAtomMesh(atom, mesh)
+    use RadialMeshData_mod
+    implicit none
+    type (BasisAtom), intent(inout) :: atom
+    type (RadialMeshData), target, intent(in) :: mesh
+
+    type (RadialMeshData), pointer :: mesh_ptr
+
+    mesh_ptr => mesh
+    atom%mesh_ptr => mesh_ptr
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Associates a basis atom with its reference cluster.
   !>
   !> This is done that way because different atoms can share the same
   !> reference cluster data.
-  subroutine associateBasisAtomRefCluster(atom, cluster_ptr)
-    use RefClusterData_mod
-    implicit none
-    type (BasisAtom), intent(inout) :: atom
-    type (RefClusterData), pointer :: cluster_ptr
-
-    atom%cluster_ptr => cluster_ptr
-    atom%cluster_index = cluster_ptr%cluster_index  ! TODO
-
-  end subroutine
+!  subroutine associateBasisAtomRefCluster(atom, cluster_ptr)
+!    use RefClusterData_mod
+!    implicit none
+!    type (BasisAtom), intent(inout) :: atom
+!    type (RefClusterData), pointer :: cluster_ptr
+!
+!    atom%cluster_ptr => cluster_ptr
+!    atom%cluster_index = cluster_ptr%cluster_index  ! TODO
+!
+!  end subroutine
 
   !----------------------------------------------------------------------------
   subroutine destroyBasisAtom(atom)
@@ -234,6 +272,7 @@ CONTAINS
                                 atom%atom_index, &
                                 atom%cell_index, &
                                 atom%cluster_index, &
+                                atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
@@ -257,6 +296,7 @@ CONTAINS
                                 atom%atom_index, &
                                 atom%cell_index, &
                                 atom%cluster_index, &
+                                atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
@@ -287,6 +327,7 @@ CONTAINS
                                 atom%atom_index, &
                                 atom%cell_index, &
                                 atom%cluster_index, &
+                                atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
