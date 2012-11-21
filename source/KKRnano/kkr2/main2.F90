@@ -199,7 +199,7 @@ program MAIN2
   ! from dimension parameters - calculate some derived parameters
   call getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, LMAXD, &
                             LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
-                            LRECRES2, MMAXD, NAEZ, NGUESSD, NPOTD, NSPIND, NTIRD)
+                            LRECRES2, MMAXD, NAEZ, NGUESSD, NSPIND, NTIRD)
 
 
 !-----------------------------------------------------------------------------
@@ -214,10 +214,10 @@ program MAIN2
   call readKKR0InputNew(NSYMAXD, ALAT, ATOM, BCP, BRAVAIS, &
                         CLS, DSYMLL, EZOA, FCM, GMAX, ICST, &
                         IGUESS, IMIX, INDN0, &
-                        ISHIFT, ISYMINDEX, ITITLE, &
-                        JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
+                        ISHIFT, ISYMINDEX, &
+                        JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, &
                         LDAU, MAXMESH, &
-                        MIXING, NACLS, NCLS, NCORE, NR, NREF, &
+                        MIXING, NACLS, NCLS, NR, NREF, &
                         NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
                         RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMTREF, &
                         RR, SCFSTEPS, TESTC, VREF, ZAT)
@@ -705,7 +705,7 @@ spinloop:     do ISPIN = 1,NSPIND
                            mesh%DRDI,mesh%R,VISP(1,ISPIN), &
                            mesh%A,mesh%B,ZAT(I1), &
                            mesh%IRCUT,RHOCAT,QC, &
-                           ECORE(1,ISPIN),NCORE(IPOT),LCORE(1,IPOT), &
+                           ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
                            irmd, ipand)
 
             end do
@@ -870,8 +870,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             if (KTE==1) then
               ! calculate total energy and individual contributions if requested
-              IPOT = NSPIND* (I1-1) + 1
-              call ESPCB_NEW(ESPC,NSPIND,ECORE,LCORE(:,IPOT),LCOREMAX,NCORE(IPOT))
+              call ESPCB_NEW(ESPC,NSPIND,ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
 
               ! output: EPOTIN
               call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,VISP,mesh%R,mesh%DRDI, &
@@ -1022,8 +1021,6 @@ spinloop:     do ISPIN = 1,NSPIND
             call closePotentialFile()
 ! ----------------------------------------------------- output_potential
 
-            IPOT = NSPIND*(I1-1) + 1
-
 ! write formatted potential if file VFORM exists - contains bad inquire
 ! - bad check deactivated when KTE<0
             if (ITER == SCFSTEPS .and. KTE >= 0) then
@@ -1031,7 +1028,7 @@ spinloop:     do ISPIN = 1,NSPIND
                 call writeFormattedPotential(E2,VBC,NSPIND, &
                 KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
                 VINS,VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
-                ECORE,LCORE(:,IPOT),NCORE(IPOT),ZAT(I1),ITITLE(:,IPOT), &
+                ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),ZAT(I1),atomdata%core%ITITLE(:,1:NSPIND), &
                 I1, irmd, irnsd)
               endif
             endif
@@ -1062,7 +1059,7 @@ spinloop:     do ISPIN = 1,NSPIND
         ! also other stuff is read from results1
         call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,NPOL, &
         NSPIND,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
-        ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ,LDAU, &
+        ALAT,atomdata%core%ITITLE(:,1:NSPIND),CHRGNT,ZAT,EZ,WEZ,LDAU, &
         iemxd)
 
         ! only MASTERRANK updates, other ranks get it broadcasted later

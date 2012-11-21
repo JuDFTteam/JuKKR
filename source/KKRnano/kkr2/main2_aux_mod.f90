@@ -8,7 +8,7 @@ module main2_aux_mod
   subroutine getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, &
                                   LMAXD, LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
                                   LRECRES2, MMAXD, NAEZD, &
-                                  NGUESSD, NPOTD, NSPIND, NTIRD)
+                                  NGUESSD, NSPIND, NTIRD)
     implicit none
     integer :: IGUESSD
     integer :: IRMD
@@ -24,7 +24,6 @@ module main2_aux_mod
     integer :: MMAXD
     integer :: NAEZD
     integer :: NGUESSD
-    integer :: NPOTD
     integer :: NSPIND
     integer :: NTIRD
 
@@ -34,7 +33,7 @@ module main2_aux_mod
     ! derived dimension parameters
     LPOTD = 2*LMAXD
     LMMAXD= (LMAXD+1)**2
-    NPOTD=NSPIND*NAEZD
+
     LMAXD1=LMAXD+1
     MMAXD  = 2*LMAXD + 1
     LMXSPD= (2*LPOTD+1)**2
@@ -659,10 +658,10 @@ module main2_aux_mod
   subroutine readKKR0InputNew(NSYMAXD, ALAT, ATOM, BCP, BRAVAIS, &
                            CLS, DSYMLL, EZOA, FCM, GMAX, ICST, &
                            IGUESS, IMIX, INDN0, &
-                           ISHIFT, ISYMINDEX, ITITLE, &
-                           JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
+                           ISHIFT, ISYMINDEX, &
+                           JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, &
                            LDAU, MAXMESH, &
-                           MIXING, NACLS, NCLS, NCORE, NR, NREF, &
+                           MIXING, NACLS, NCLS, NR, NREF, &
                            NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
                            RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMTREF, &
                            RR, SCFSTEPS, TESTC, VREF, ZAT)
@@ -684,7 +683,6 @@ module main2_aux_mod
     integer, allocatable :: INDN0(:,:)
     integer :: ISHIFT
     integer :: ISYMINDEX(NSYMAXD)
-    integer, allocatable :: ITITLE(:,:)
     logical :: JIJ
     integer :: KFORCE
     integer, allocatable :: KMESH(:)
@@ -692,13 +690,11 @@ module main2_aux_mod
     integer :: KTE
     integer :: KVMAD
     integer :: KXC
-    integer, allocatable :: LCORE(:,:)
     logical :: LDAU
     integer :: MAXMESH
     double precision :: MIXING
     integer, allocatable :: NACLS(:)
     integer :: NCLS
-    integer, allocatable :: NCORE(:)
     integer :: NR
     integer :: NREF
     integer :: NSRA
@@ -732,8 +728,6 @@ module main2_aux_mod
     read (67) INDN0
     read (67) NSYMAT
     read (67) DSYMLL
-    read (67) LCORE
-    read (67) NCORE
     read (67) IMIX
     read (67) MIXING
     read (67) FCM
@@ -747,7 +741,6 @@ module main2_aux_mod
     read (67) BCP
     read (67) QMRBOUND
     read (67) ZAT
-    read (67) ITITLE
     read (67) ALAT
     read (67) TESTC
     read (67) OPTC

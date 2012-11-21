@@ -16,7 +16,7 @@ C     .. Array Arguments ..
      +                 EZ(IEMXD),WEZ(IEMXD)
       DOUBLE PRECISION DOSTOT(0:LMAXD1,2),
      +                 PDOSTOT(0:LMAXD1,2)
-      INTEGER          ITITLE(20,NPOTD)
+      INTEGER          ITITLE(20,NSPIN)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX   DOSCMPLX
@@ -89,7 +89,7 @@ C
             DOSSGN = 1.0D0
             IF (ISPIN.NE.NSPIN) DOSSGN = -1.0D0
 C
-            WRITE (48,FMT=9010) (ITITLE(IA,IPOT),IA=1,19)
+            WRITE (48,FMT=9010) (ITITLE(IA,ISPIN),IA=1,19)
             WRITE (48,FMT=9020) I1
             WRITE (48,FMT=9030) ISPIN,IELAST,E1,E2,EFERMI,EFCTOR
             WRITE (48,FMT=9040) EFERMI
@@ -128,7 +128,7 @@ C
             DOSSGN = 1.0D0
             IF (ISPIN.NE.NSPIN) DOSSGN = -1.0D0
 C
-            WRITE (49,FMT=9010) (ITITLE(IA,IPOT),IA=1,19)
+            WRITE (49,FMT=9010) (ITITLE(IA,ISPIN),IA=1,19)
             WRITE (49,FMT=9020) I1
             WRITE (49,FMT=9030) ISPIN,IELAST,E1,E2,EFERMI,EFCTOR
             WRITE (49,FMT=9040) EFERMI

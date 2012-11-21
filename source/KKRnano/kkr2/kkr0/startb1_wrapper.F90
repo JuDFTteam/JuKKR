@@ -174,14 +174,14 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
         atom%cluster_index = -1 !TODO
         atom%Z_nuclear = ZAT(ii)
 
-        atom%core%NCORE_atom = 0
-        atom%core%LCORE_atom = 0
+        atom%core%NCORE = 0
+        atom%core%LCORE = 0
         atom%core%ITITLE = 0
 
         do ispin = 1, nspin
           ipot = NSPIN * (ii-1) + ispin
-          atom%core%NCORE_atom(ispin) = NCORE(ipot)
-          atom%core%LCORE_atom(:, ispin) = LCORE(:, ipot)
+          atom%core%NCORE(ispin) = NCORE(ipot)
+          atom%core%LCORE(:, ispin) = LCORE(:, ipot)
           atom%core%ITITLE(:, ispin) = ITITLE(:, ipot)
         enddo
 

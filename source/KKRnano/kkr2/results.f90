@@ -38,7 +38,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   double precision VMAD
 
   !     INTEGER ITITLE(20,NPOTD)
-  integer ITITLE(20,NSPIN*NAEZ)
+  integer ITITLE(20,*)
   integer LCOREMAX
 
   integer NPOTD

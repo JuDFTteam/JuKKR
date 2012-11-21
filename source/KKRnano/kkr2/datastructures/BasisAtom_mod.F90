@@ -235,8 +235,8 @@ CONTAINS
                                 atom%cell_index, &
                                 atom%cluster_index, &
                                 atom%Z_nuclear, &
-                                atom%core%NCORE_atom, &
-                                atom%core%LCORE_atom, &
+                                atom%core%NCORE, &
+                                atom%core%LCORE, &
                                 atom%core%ITITLE, &
                                 MAGIC_NUMBER
   end subroutine
@@ -258,8 +258,8 @@ CONTAINS
                                 atom%cell_index, &
                                 atom%cluster_index, &
                                 atom%Z_nuclear, &
-                                atom%core%NCORE_atom, &
-                                atom%core%LCORE_atom, &
+                                atom%core%NCORE, &
+                                atom%core%LCORE, &
                                 atom%core%ITITLE, &
                                 magic2
 
@@ -288,8 +288,8 @@ CONTAINS
                                 atom%cell_index, &
                                 atom%cluster_index, &
                                 atom%Z_nuclear, &
-                                atom%core%NCORE_atom, &
-                                atom%core%LCORE_atom, &
+                                atom%core%NCORE, &
+                                atom%core%LCORE, &
                                 atom%core%ITITLE, &
                                 MAGIC_NUMBER
 

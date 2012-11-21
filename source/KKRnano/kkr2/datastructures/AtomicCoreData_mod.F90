@@ -5,8 +5,8 @@ module AtomicCoreData_mod
   implicit none
 
   type AtomicCoreData
-    integer :: LCORE_atom(20,2)       !< for historical reasons always 2 spin directions
-    integer :: NCORE_atom(2)
+    integer :: LCORE(20,2)       !< for historical reasons always 2 spin directions
+    integer :: NCORE(2)
     double precision :: ECORE(20,2)   !< first dim 20: max. 20 core states
     integer :: ITITLE(20,2)           !< potential title as old school integer string
     double precision :: QC_corecharge !< total charge of core electrons ! remove??
@@ -27,8 +27,8 @@ module AtomicCoreData_mod
     core%irmd = irmd
 
     ! initialise with garbage values
-    core%LCORE_atom = -1
-    core%NCORE_atom = -1
+    core%LCORE = -1
+    core%NCORE = -1
     core%ECORE = 1d9
     core%ITITLE = 0
     core%QC_corecharge = 0.0d0
