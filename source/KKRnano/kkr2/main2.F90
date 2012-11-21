@@ -31,6 +31,7 @@ program MAIN2
 
   use RadialMeshData_mod
   use CellData_mod
+  use BasisAtom_mod
 
   use TimerMpi_mod
   use EBalanceHandler_mod
@@ -163,8 +164,9 @@ program MAIN2
   integer :: flag
   logical, external :: testVFORM
 
-  type (RadialMeshData) :: mesh
-  type (CellData) :: cell
+  type (RadialMeshData), target :: mesh
+  type (CellData), target :: cell
+  type (BasisAtom), target :: atomdata
 
  !============================================================= CONSTANTS
   PI = 4.0D0*ATAN(1.0D0)
@@ -246,49 +248,52 @@ program MAIN2
   ! This if closes several hundreds of lines later!
   if (isActiveRank(my_mpi)) then
 
-    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
-                                       getElapsedTime(program_timer), 0)
-
 ! initialise the arrays for (gen. Anderson/Broyden) potential mixing
     UI2 = 0.00
     VI2 = 0.00
     SM1S = 0.00
     FM1S = 0.00
 
+
+!+++++++++++ pre self-consistency preparation
+
+    I1 = getMyAtomId(my_mpi)
+
+    call createBasisAtom(atomdata, I1, lpot, nspind, irmind, irmd)
+    call openBasisAtomDAFile(atomdata, 37, "atoms")
+    call readBasisAtomDA(atomdata, 37, I1)
+    call closeBasisAtomDAFile(37)
+
+    if (isInMasterGroup(my_mpi)) then
+      call openPotentialFile(LMPOTD, IRNSD, IRMD)
+      call readPotential(I1, VISP, VINS, ECORE)
+      call closePotentialFile()
+    end if
+
+    call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
+    call openCellDataDAFile(cell, 37 , "cells")
+    call readCellDataDA(cell, 37, getCellIndex(atomdata))
+    call closeCellDataDAFile(37)
+
+    call associateBasisAtomCell(atomdata, cell)
+
+    call createRadialMeshData(mesh, irmd, ipand)
+    call openRadialMeshDataDAFile(mesh, 37 , "meshes")
+    call readRadialMeshDataDA(mesh, 37, I1)
+    call closeRadialMeshDataDAFile(37)
+
+    call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
+    WRITELOG(3, *) "lm-array: ", lmarray
+
+    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
+                                       getElapsedTime(program_timer), 0)
+
     call createMadelungCalculator(madelung_calc, lmaxd, ALAT, RMAX, GMAX, &
                                   BRAVAIS, NMAXD, ISHLD)
 
-    call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
-    call createRadialMeshData(mesh, irmd, ipand)
+    call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
 
-!+++++++++++ atom - parallel  TODO: replace with better construct
-    do I1 = 1,NAEZ
-      if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
-
-        call calculateMadelungLatticeSum(madelung_calc, naez, I1, rbasis, smat)
-
-        call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',getElapsedTime(program_timer), 0)
-
-        if (isInMasterGroup(my_mpi)) then
-          call openPotentialFile(LMPOTD, IRNSD, IRMD)
-          call readPotential(I1, VISP, VINS, ECORE)
-          call closePotentialFile()
-        end if
-
-        call openCellDataDAFile(cell, 37 , "cells")
-        call readCellDataDA(cell, 37, NTCELL(I1))
-        call closeCellDataDAFile(37)
-
-        call openRadialMeshDataDAFile(mesh, 37 , "meshes")
-        call readRadialMeshDataDA(mesh, 37, I1)
-        call closeRadialMeshDataDAFile(37)
-
-        call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
-        WRITELOG(3, *) "lm-array: ", lmarray
-
-      end if
-    end do
-!+++++++++++ end atom - parallel ++++++++++++++++++++++++++++++++
+    call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',getElapsedTime(program_timer), 0)
 
     call createGauntCoefficients(gaunts, lmaxd)
     call createShapeGauntCoefficients(shgaunts, lmaxd)
@@ -296,6 +301,8 @@ program MAIN2
     call createEBalanceHandler(ebalance_handler, ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (NPNT1 == 0))
+
+!+++++++++++
 
    !flag = 0
    !99 continue
@@ -389,12 +396,10 @@ program MAIN2
 ! IE ====================================================================
 
           do IE = 1,IELAST
-
-            call startEBalanceTiming(ebalance_handler, IE)
-
 ! IE ====================================================================
             if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
 ! IE ====================================================================
+              call startEBalanceTiming(ebalance_handler, IE)
 
               WRITELOG(2, *) "Working on energy point ", IE
 
@@ -1107,6 +1112,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
     call destroyEBalanceHandler(ebalance_handler)
 
+    call destroyBasisAtom(atomdata)
     call destroyCellData(cell)
     call destroyRadialMeshData(mesh)
 

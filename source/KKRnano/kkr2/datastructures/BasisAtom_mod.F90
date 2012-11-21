@@ -81,14 +81,32 @@ CONTAINS
   !>
   !> This is done that way because different atoms can share the same
   !> cell data.
-  subroutine associateBasisAtomCell(atom, cell_ptr)
+!  subroutine associateBasisAtomCell(atom, cell_ptr)
+!    use CellData_mod
+!    implicit none
+!    type (BasisAtom), intent(inout) :: atom
+!    type (CellData), pointer :: cell_ptr
+!
+!    atom%cell_ptr => cell_ptr
+!    atom%cell_index = cell_ptr%cell_index
+!
+!  end subroutine
+
+  subroutine associateBasisAtomCell(atom, cell)
     use CellData_mod
     implicit none
     type (BasisAtom), intent(inout) :: atom
+    type (CellData), target, intent(in) :: cell
+
     type (CellData), pointer :: cell_ptr
 
+    cell_ptr => cell
     atom%cell_ptr => cell_ptr
-    atom%cell_index = cell_ptr%cell_index
+
+    if (atom%cell_index /= cell_ptr%cell_index) then
+      write(*,*) "ERROR: Mismatch in cell indices for atom ", atom%atom_index
+      stop
+    endif
 
   end subroutine
 

@@ -271,6 +271,13 @@ c
             END IF
 c
 c---> read the different core states : l and energy
+
+C           check: e.r.
+            if (ncore(I).GT.20) THEN
+              write(*,*) "Error: More than 20 core states."
+              STOP
+            endif
+
 c
             IF (NCORE(I).GE.1) THEN
                 DO ICORE=1,NCORE(I)
