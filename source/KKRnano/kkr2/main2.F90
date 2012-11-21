@@ -912,11 +912,8 @@ spinloop:     do ISPIN = 1,NSPIND
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 ! =====================================================================
 
-            !output: VAV0, VOL0
-            call MTZERO_NEW(LMPOTD,NSPIND,atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R,mesh%DRDI,mesh%IMT,mesh%IRCUT, &
-                            mesh%IPAN,cell%shdata%LMSP,cell%shdata%IFUNM, &
-                            cell%shdata%THETA,mesh%IRWS,VAV0,VOL0, &
-                            irmd, irid, nfund, ipand)
+            ! calculate new muffin-tin zero. output: VAV0, VOL0
+            call MTZERO_wrapper(VAV0, VOL0, atomdata)
 
             call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
 

@@ -8,6 +8,41 @@ module wrappers_mod
   CONTAINS
 
 !----------------------------------------------------------------------------
+!> initialise VAV0, VOL0 to 0.0d0 before calling!!!
+subroutine MTZERO_wrapper(VAV0, VOL0, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+
+  implicit none
+  type (BasisAtom), intent(inout) :: atomdata
+  double precision, intent(in)    :: VAV0, VOL0
+
+  !-------- locals
+  integer :: nspind
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(cell) )
+
+  !output: VAV0, VOL0
+  call MTZERO_NEW(atomdata%potential%LMPOT,NSPIND,atomdata%potential%VONS, &
+                  atomdata%Z_nuclear,mesh%R,mesh%DRDI,mesh%IMT,mesh%IRCUT, &
+                  mesh%IPAN,cell%shdata%LMSP,cell%shdata%IFUNM, &
+                  cell%shdata%THETA,mesh%IRWS,VAV0,VOL0, &
+                  mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand)
+
+
+end subroutine
+
+
+!----------------------------------------------------------------------------
 subroutine CONVOL_wrapper(VBC, shgaunts, atomdata)
   use BasisAtom_mod
   use RadialMeshData_mod
