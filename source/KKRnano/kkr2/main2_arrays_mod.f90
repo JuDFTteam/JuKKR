@@ -90,7 +90,7 @@ module main2_arrays_mod
   integer, dimension(:,:), allocatable :: ITITLE
   integer, dimension(:,:), allocatable :: LCORE
   integer, dimension(:), allocatable :: NCORE
-  integer, dimension(:), allocatable :: NTCELL
+  !integer, dimension(:), allocatable :: NTCELL !DEL
 
   double precision, dimension(:,:,:), allocatable :: RCLS
   double precision, dimension(:), allocatable :: RMTREF
@@ -355,8 +355,8 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(NCORE(NPOTD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NTCELL(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
+    !allocate(NTCELL(NAEZ), stat = memory_stat) !DEL
+    !if(memory_stat /= 0) call fatalMemoryError("main2") !DEL
     allocate(RCLS(3,NACLSD,NCLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RMTREF(NREFD), stat = memory_stat)
@@ -466,7 +466,7 @@ CONTAINS
     deallocate(ITITLE, stat = memory_stat)
     deallocate(LCORE, stat = memory_stat)
     deallocate(NCORE, stat = memory_stat)
-    deallocate(NTCELL, stat = memory_stat)
+    !deallocate(NTCELL, stat = memory_stat) !DEL
     deallocate(RCLS, stat = memory_stat)
     deallocate(RMTREF, stat = memory_stat)
     deallocate(VREF, stat = memory_stat)

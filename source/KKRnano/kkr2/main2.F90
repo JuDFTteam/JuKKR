@@ -218,7 +218,7 @@ program MAIN2
                         JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
                         LDAU, MAXMESH, &
                         MIXING, NACLS, NCLS, NCORE, NR, NREF, &
-                        NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, &
+                        NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
                         RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMTREF, &
                         RR, SCFSTEPS, TESTC, VREF, ZAT)
 
@@ -636,7 +636,7 @@ spinloop:     do ISPIN = 1,NSPIND
               ! get WEZRN and RNORM, the important input from previous
               ! calculations is LLY_GRDT_ALL
 
-              ICELL = NTCELL(I1)
+              ICELL = getCellIndex(atomdata)
               call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
                               VINS,VISP,cell%shdata%THETA,ZAT(I1),gaunts%ICLEB, &
                               cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
@@ -677,7 +677,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! SPIN ==================================================================
 
             do ISPIN = 1,NSPIND
-              ICELL = NTCELL(I1)
+              ICELL = getCellIndex(atomdata)
               IPOT = (I1-1) * NSPIND + ISPIN
 
               LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
@@ -808,7 +808,7 @@ spinloop:     do ISPIN = 1,NSPIND
         do I1 = 1,NAEZ
           if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
-            ICELL = NTCELL(I1)
+            ICELL = getCellIndex(atomdata)
 
             do ISPIN = 1,NSPIND
 
@@ -957,7 +957,7 @@ spinloop:     do ISPIN = 1,NSPIND
         do I1 = 1,NAEZ
           if(getMyAtomRank(my_mpi)== MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
-            ICELL = NTCELL(I1)
+            ICELL = getCellIndex(atomdata)
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
 ! =====================================================================

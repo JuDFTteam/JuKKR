@@ -663,7 +663,7 @@ module main2_aux_mod
                            JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, LCORE, &
                            LDAU, MAXMESH, &
                            MIXING, NACLS, NCLS, NCORE, NR, NREF, &
-                           NSRA, NSYMAT, NTCELL, NUMN0, OPTC, QMRBOUND, &
+                           NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
                            RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMTREF, &
                            RR, SCFSTEPS, TESTC, VREF, ZAT)
 
@@ -703,7 +703,7 @@ module main2_aux_mod
     integer :: NREF
     integer :: NSRA
     integer :: NSYMAT
-    integer, allocatable :: NTCELL(:)
+
     integer, allocatable :: NUMN0(:)
     character(len=8) :: OPTC(8)
     double precision :: QMRBOUND
@@ -734,7 +734,6 @@ module main2_aux_mod
     read (67) DSYMLL
     read (67) LCORE
     read (67) NCORE
-    read (67) NTCELL
     read (67) IMIX
     read (67) MIXING
     read (67) FCM
