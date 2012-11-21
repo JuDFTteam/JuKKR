@@ -139,7 +139,6 @@ program MAIN2
   double precision::EULDAU
   double precision::EDCLDAU
 
-  double precision::QC                ! core charge
   double precision::VMAD
 
   integer::LCOREMAX
@@ -704,7 +703,7 @@ spinloop:     do ISPIN = 1,NSPIND
               call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
                            mesh%DRDI,mesh%R,atomdata%potential%VISP(1,ISPIN), &
                            mesh%A,mesh%B,ZAT(I1), &
-                           mesh%IRCUT,RHOCAT,QC, &
+                           mesh%IRCUT,atomdata%core%RHOCAT,atomdata%core%QC_corecharge, &
                            ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
                            irmd, ipand)
 
@@ -742,7 +741,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -->   determine total charge density expanded in spherical harmonics
 ! -------------------------------------------------------------- density
             ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-            call RHOTOTB_NEW(NSPIND,RHO2NS,RHOCAT, &
+            call RHOTOTB_NEW(NSPIND,RHO2NS,atomdata%core%RHOCAT, &
                          mesh%DRDI,mesh%IRCUT, &
                          LPOT,cell%shdata%NFU,cell%shdata%LLMSP,cell%shdata%THETA,mesh%IPAN, &
                          CATOM, &
@@ -753,7 +752,7 @@ spinloop:     do ISPIN = 1,NSPIND
             ! write to 'results1' - only to be read in in results.f
             ! necessary for density of states calculation, otherwise
             ! only for informative reasons
-            if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, QC)
+            if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, atomdata%core%QC_corecharge)
 
           endif
 !----------------------------------------------------------------------

@@ -19,9 +19,6 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
   double precision, dimension(:,:), allocatable :: RR
-  !double precision, dimension(:,:,:), allocatable :: VINS        ! .. input potential !DEL
-  !double precision, dimension(:,:), allocatable :: VISP
-  !double precision, dimension(:,:,:), allocatable :: VONS        ! .. output potential
   double precision, dimension(:), allocatable :: ULDAU              ! LDA+U
   double precision, dimension(:), allocatable :: JLDAU              ! LDA+U
   double precision, dimension(:,:,:,:,:), allocatable :: UMLDAU     ! LDA+U
@@ -66,7 +63,6 @@ module main2_arrays_mod
   double precision, dimension(:), allocatable :: ZAT
 
   ! ----------------------------------------------------------------------
-  double precision, dimension(:,:), allocatable ::  RHOCAT
   double precision, dimension(:,:,:), allocatable ::  R2NEF
   double precision, dimension(:,:,:), allocatable ::  RHO2NS
   double precision, dimension(:,:), allocatable ::  CHARGE
@@ -153,7 +149,6 @@ module main2_arrays_mod
   integer :: NGUESSD
 
   !Parallelisation
-  integer, parameter :: LMPID = 1  ! L-parallelisation not supported anymore
   integer :: SMPID
   integer :: EMPID
   integer :: NTHRDS
@@ -162,11 +157,9 @@ module main2_arrays_mod
 CONTAINS
 
   !---------------------------------------------------------------------
-  ! Reads array dimension parameters (previously in inc.p and inc.cls)
-  ! from file inp0.unf
+  !> Reads array dimension parameters (previously in inc.p and inc.cls)
+  !> from file inp0.unf
   !---------------------------------------------------------------------
-  ! missing: TRC (not used in kkr2)
-  ! could be removed: KREL ?
   subroutine read_dimension_parameters()
 
     implicit none
@@ -248,12 +241,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RR(3,0:NRD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    !allocate(VINS(IRMIND:IRMD,LMPOTD,2), stat = memory_stat) !DEL
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
-    !allocate(VISP(IRMD,2), stat = memory_stat)
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
-    !allocate(VONS(IRMD,LMPOTD,2), stat = memory_stat)
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ULDAU(LMAXD1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(JLDAU(LMAXD1), stat = memory_stat)
@@ -313,8 +300,6 @@ CONTAINS
     allocate(EXC(0:LPOT), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ZAT(NAEZ), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RHOCAT(IRMD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(R2NEF(IRMD,LMPOTD,2), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -398,9 +383,6 @@ CONTAINS
     deallocate(VOLCUB, stat = memory_stat)
     deallocate(VOLBZ, stat = memory_stat)
     deallocate(RR, stat = memory_stat)
-    !deallocate(VINS, stat = memory_stat) !DEL
-    !deallocate(VISP, stat = memory_stat)
-    !deallocate(VONS, stat = memory_stat)
     deallocate(ULDAU, stat = memory_stat)
     deallocate(JLDAU, stat = memory_stat)
     deallocate(UMLDAU, stat = memory_stat)
@@ -431,7 +413,6 @@ CONTAINS
     deallocate(ESPV, stat = memory_stat)
     deallocate(EXC, stat = memory_stat)
     deallocate(ZAT, stat = memory_stat)
-    deallocate(RHOCAT, stat = memory_stat)
     deallocate(R2NEF, stat = memory_stat)
     deallocate(RHO2NS, stat = memory_stat)
     deallocate(CHARGE, stat = memory_stat)
