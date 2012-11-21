@@ -882,11 +882,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! =====================================================================
             ! output: VONS (changed), EXC (exchange energy)
-            call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
-            atomdata%potential%VONS,mesh%R,mesh%DRDI,mesh%A, &
-            mesh%IRWS,mesh%IRCUT,mesh%IPAN,shgaunts%GSH,shgaunts%ILM,shgaunts%IMAXSH,cell%shdata%IFUNM, &
-            cell%shdata%THETA,cell%shdata%LMSP, &
-            irmd, irid, nfund, shgaunts%ngshd, ipand)
+            call VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
 
             call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
 ! =====================================================================

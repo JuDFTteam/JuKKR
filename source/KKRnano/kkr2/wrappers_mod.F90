@@ -7,6 +7,43 @@ module wrappers_mod
 
   CONTAINS
 
+subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+  use ShapeGauntCoefficients_mod
+  implicit none
+  double precision, intent(inout) :: EXC(:)
+  integer, intent(in)             :: KXC
+  double precision, intent(inout) :: RHO2NS(:,:,:)  ! inout?
+  type (BasisAtom), intent(inout) :: atomdata
+  type (ShapeGauntCoefficients), intent(in) :: shgaunts
+
+  !-------- locals
+  integer :: nspind
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+  integer, parameter :: KTE = 1 ! always calculate exchange energy
+  integer :: LPOT
+
+  nspind = atomdata%nspin
+  LPOT   = atomdata%potential%lpot
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(cell) )
+  CHECKASSERT( size(EXC) == LPOT+1)
+
+  call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
+            atomdata%potential%VONS,mesh%R,mesh%DRDI,mesh%A, &
+            mesh%IRWS,mesh%IRCUT,mesh%IPAN,shgaunts%GSH,shgaunts%ILM,shgaunts%IMAXSH,cell%shdata%IFUNM, &
+            cell%shdata%THETA,cell%shdata%LMSP, &
+            mesh%irmd, cell%shdata%irid, cell%shdata%nfund, shgaunts%ngshd, mesh%ipand)
+
+end subroutine
+
 !----------------------------------------------------------------------------
 !> initialise VAV0, VOL0 to 0.0d0 before calling!!!
 subroutine MTZERO_wrapper(VAV0, VOL0, atomdata)
