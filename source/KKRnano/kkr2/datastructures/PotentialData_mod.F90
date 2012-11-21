@@ -48,6 +48,9 @@ module PotentialData_mod
     allocate(potential%VINS(IRMIND:IRMD,LMPOT,2))
     allocate(potential%VISP(IRMD,2))
     allocate(potential%VONS(IRMD,LMPOT,2))
+    potential%VINS = 0.0d0
+    potential%VISP = 0.0d0
+    potential%VONS = 0.0d0
 
   end subroutine
 

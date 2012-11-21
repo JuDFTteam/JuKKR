@@ -266,7 +266,7 @@ program MAIN2
 
     if (isInMasterGroup(my_mpi)) then
       call openPotentialFile(LMPOTD, IRNSD, IRMD)
-      call readPotential(I1, VISP, VINS, ECORE)
+      call readPotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, ECORE)
       call closePotentialFile()
     end if
 
@@ -368,7 +368,7 @@ program MAIN2
 
           ! New: instead of reading potential every time, communicate it
           !call readPotential(I1, VISP, VINS, ECORE)
-          call communicatePotential(my_mpi, VISP, VINS, ECORE)
+          call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, ECORE)
 
 ! LDA+U
           if (LDAU) then
@@ -377,7 +377,7 @@ program MAIN2
             EREFLDAU = 0.48    ! ???
 
             call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
-                          VISP,NSPIND,mesh%R,mesh%DRDI, &
+                          atomdata%potential%VISP,NSPIND,mesh%R,mesh%DRDI, &
                           ZAT(I1),mesh%IPAN,mesh%IRCUT, &
                           PHILDAU,UMLDAU,WMLDAU, &
                           lmaxd, irmd, ipand)
@@ -442,8 +442,8 @@ spinloop:     do ISPIN = 1,NSPIND
 
                   call CALCTMAT(LDAU,NLDAU,ICST, &
                                 NSRA,EZ(IE), &
-                                mesh%DRDI,mesh%R,VINS(IRMIND,1,ISPIN), &
-                                VISP(1,ISPIN),ZAT(I1),mesh%IPAN, &
+                                mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+                                atomdata%potential%VISP(1,ISPIN),ZAT(I1),mesh%IPAN, &
                                 mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                                 TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                 LLDAU,WMLDAU(1,1,1,ISPIN), &
@@ -457,8 +457,8 @@ spinloop:     do ISPIN = 1,NSPIND
 
                     call CALCDTMAT(LDAU,NLDAU,ICST, &
                                   NSRA,EZ(IE),delta_E_z, &
-                                  mesh%DRDI,mesh%R,VINS(IRMIND,1,ISPIN), &
-                                  VISP(1,ISPIN),ZAT(I1),mesh%IPAN, &
+                                  mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+                                  atomdata%potential%VISP(1,ISPIN),ZAT(I1),mesh%IPAN, &
                                   mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                                   DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
                                   LLDAU,WMLDAU(1,1,1,ISPIN), &
@@ -638,7 +638,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
               ICELL = getCellIndex(atomdata)
               call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
-                              VINS,VISP,cell%shdata%THETA,ZAT(I1),gaunts%ICLEB, &
+                              atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,ZAT(I1),gaunts%ICLEB, &
                               cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
                               gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
                               WEZRN,RNORM, &
@@ -687,7 +687,7 @@ spinloop:     do ISPIN = 1,NSPIND
               call RHOVAL(LDORHOEF,ICST,IELAST, &
                           NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
                           mesh%DRDI,mesh%R,mesh%IRMIN, &
-                          VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &
+                          atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
                           ZAT(I1),mesh%IPAN,mesh%IRCUT, &
                           cell%shdata%THETA,cell%shdata%IFUNM,cell%shdata%LMSP, &
                           RHO2NS,R2NEF, &
@@ -702,7 +702,7 @@ spinloop:     do ISPIN = 1,NSPIND
               ! TODO: wrap rhocore and rhoval with spin-loop
               ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
               call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
-                           mesh%DRDI,mesh%R,VISP(1,ISPIN), &
+                           mesh%DRDI,mesh%R,atomdata%potential%VISP(1,ISPIN), &
                            mesh%A,mesh%B,ZAT(I1), &
                            mesh%IRCUT,RHOCAT,QC, &
                            ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
@@ -832,19 +832,19 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
             !output: VONS
-            call VINTRAS_NEW(LPOT,NSPIND,RHO2NS,VONS, &
+            call VINTRAS_NEW(LPOT,NSPIND,RHO2NS,atomdata%potential%VONS, &
             mesh%R,mesh%DRDI,mesh%IRCUT,mesh%IPAN,shgaunts%ILM,cell%shdata%IFUNM,shgaunts%IMAXSH,shgaunts%GSH, &
             cell%shdata%THETA,cell%shdata%LMSP, &
             irmd, irid, nfund, shgaunts%ngshd, ipand)
 
-            TESTARRAYLOG(3, VONS)
+            TESTARRAYLOG(3, atomdata%potential%VONS)
             TESTARRAYLOG(3, RHO2NS)
 
             call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
 
             ! output: VONS (changed), VMAD
             call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
-                 NAEZ, VONS, ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
+                 NAEZ, atomdata%potential%VONS, ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
                  SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), irmd, ipand)
 
             call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
@@ -873,13 +873,13 @@ spinloop:     do ISPIN = 1,NSPIND
               call ESPCB_NEW(ESPC,NSPIND,ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
 
               ! output: EPOTIN
-              call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,VISP,mesh%R,mesh%DRDI, &
-              mesh%IRMIN,mesh%IRWS,LPOT,VINS,mesh%IRCUT,mesh%IPAN,ZAT(I1), &
+              call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,atomdata%potential%VISP,mesh%R,mesh%DRDI, &
+              mesh%IRMIN,mesh%IRWS,LPOT,atomdata%potential%VINS,mesh%IRCUT,mesh%IPAN,ZAT(I1), &
               irmd, irnsd, ipand)
 
               ! output: ECOU - l resolved Coulomb energy
               call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
-              VONS,ZAT(I1),mesh%R, &
+              atomdata%potential%VONS,ZAT(I1),mesh%R, &
               mesh%DRDI,KVMAD,mesh%IRCUT,mesh%IPAN,shgaunts%IMAXSH,cell%shdata%IFUNM, &
               shgaunts%ILM,shgaunts%GSH,cell%shdata%THETA,cell%shdata%LMSP, &
               irmd, irid, nfund, ipand, shgaunts%ngshd)
@@ -892,7 +892,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
             ! output: VONS (changed), EXC (exchange energy)
             call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
-            VONS,mesh%R,mesh%DRDI,mesh%A, &
+            atomdata%potential%VONS,mesh%R,mesh%DRDI,mesh%A, &
             mesh%IRWS,mesh%IRCUT,mesh%IPAN,shgaunts%GSH,shgaunts%ILM,shgaunts%IMAXSH,cell%shdata%IFUNM, &
             cell%shdata%THETA,cell%shdata%LMSP, &
             irmd, irid, nfund, shgaunts%ngshd, ipand)
@@ -922,7 +922,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
 
             !output: VAV0, VOL0
-            call MTZERO_NEW(LMPOTD,NSPIND,VONS,ZAT(I1),mesh%R,mesh%DRDI,mesh%IMT,mesh%IRCUT, &
+            call MTZERO_NEW(LMPOTD,NSPIND,atomdata%potential%VONS,ZAT(I1),mesh%R,mesh%DRDI,mesh%IMT,mesh%IRCUT, &
                             mesh%IPAN,cell%shdata%LMSP,cell%shdata%IFUNM, &
                             cell%shdata%THETA,mesh%IRWS,VAV0,VOL0, &
                             irmd, irid, nfund, ipand)
@@ -963,12 +963,12 @@ spinloop:     do ISPIN = 1,NSPIND
             do ISPIN = 1,NSPIND
               IPOT = NSPIND* (I1-1) + ISPIN
 
-              call shiftPotential(VONS(:,:,ISPIN), mesh%IRCUT(mesh%IPAN), VBC(ISPIN))
+              call shiftPotential(atomdata%potential%VONS(:,:,ISPIN), mesh%IRCUT(mesh%IPAN), VBC(ISPIN))
               !output: VONS (changed)
               call CONVOL_NEW(mesh%IRCUT(1),mesh%IRC, &
                           shgaunts%IMAXSH(shgaunts%LMPOTD),shgaunts%ILM,cell%shdata%IFUNM,LMPOTD,shgaunts%GSH, &
                           cell%shdata%THETA,ZAT(I1), &
-                          mesh%R,VONS(1,1,ISPIN),cell%shdata%LMSP, &
+                          mesh%R,atomdata%potential%VONS(1,1,ISPIN),cell%shdata%LMSP, &
                           irid, nfund, irmd, shgaunts%ngshd)
 
             end do
@@ -976,7 +976,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
 
             call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
-                            mesh%IRC,mesh%IRMIN,mesh%R,mesh%DRDI,VONS,VISP,VINS, &
+                            mesh%IRC,mesh%IRMIN,mesh%R,mesh%DRDI,atomdata%potential%VONS,atomdata%potential%VISP,atomdata%potential%VINS, &
                             irmd, irnsd)
 
           end if
@@ -990,7 +990,7 @@ spinloop:     do ISPIN = 1,NSPIND
        ! it is weird that straight mixing is called in any case before
 ! -->  potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
-          call BRYDBM_new_com(VISP,VONS,VINS, &
+          call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS,atomdata%potential%VINS, &
           LMPOTD,mesh%R,mesh%DRDI,MIXING, &
           mesh%IRC,mesh%IRMIN,NSPIND, &
           IMIX,ITER, &
@@ -1000,9 +1000,9 @@ spinloop:     do ISPIN = 1,NSPIND
           itdbryd, irmd, irnsd, nspind)
         endif
 
-        TESTARRAYLOG(3, VINS)
-        TESTARRAYLOG(3, VISP)
-        TESTARRAYLOG(3, VONS)
+        TESTARRAYLOG(3, atomdata%potential%VINS)
+        TESTARRAYLOG(3, atomdata%potential%VISP)
+        TESTARRAYLOG(3, atomdata%potential%VONS)
 
 !----------------------------------------------------------------------
 ! -->    reset to start new iteration
@@ -1013,11 +1013,11 @@ spinloop:     do ISPIN = 1,NSPIND
           if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
             call resetPotentials(mesh%IRC, IRMD, mesh%IRMIN, IRMIND, LMPOTD, &
-                                 NSPIND, VINS, VISP, VONS) ! Note: only LMPIC=1 processes
+                                 NSPIND, atomdata%potential%VINS, atomdata%potential%VISP, atomdata%potential%VONS) ! Note: only LMPIC=1 processes
 
 ! ----------------------------------------------------- output_potential
             call openPotentialFile(LMPOTD, IRNSD, IRMD)
-            call writePotential(I1, VISP, VINS, ECORE)
+            call writePotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, ECORE)
             call closePotentialFile()
 ! ----------------------------------------------------- output_potential
 
@@ -1027,7 +1027,7 @@ spinloop:     do ISPIN = 1,NSPIND
               if (testVFORM()) then
                 call writeFormattedPotential(E2,VBC,NSPIND, &
                 KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
-                VINS,VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
+                atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
                 ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),ZAT(I1),atomdata%core%ITITLE(:,1:NSPIND), &
                 I1, irmd, irnsd)
               endif

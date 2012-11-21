@@ -19,9 +19,9 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
   double precision, dimension(:,:), allocatable :: RR
-  double precision, dimension(:,:,:), allocatable :: VINS        ! .. input potential
-  double precision, dimension(:,:), allocatable :: VISP
-  double precision, dimension(:,:,:), allocatable :: VONS        !     .. output potential
+  !double precision, dimension(:,:,:), allocatable :: VINS        ! .. input potential !DEL
+  !double precision, dimension(:,:), allocatable :: VISP
+  !double precision, dimension(:,:,:), allocatable :: VONS        ! .. output potential
   double precision, dimension(:), allocatable :: ULDAU              ! LDA+U
   double precision, dimension(:), allocatable :: JLDAU              ! LDA+U
   double precision, dimension(:,:,:,:,:), allocatable :: UMLDAU     ! LDA+U
@@ -248,12 +248,12 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RR(3,0:NRD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(VINS(IRMIND:IRMD,LMPOTD,2), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(VISP(IRMD,2), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(VONS(IRMD,LMPOTD,2), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
+    !allocate(VINS(IRMIND:IRMD,LMPOTD,2), stat = memory_stat) !DEL
+    !if(memory_stat /= 0) call fatalMemoryError("main2")
+    !allocate(VISP(IRMD,2), stat = memory_stat)
+    !if(memory_stat /= 0) call fatalMemoryError("main2")
+    !allocate(VONS(IRMD,LMPOTD,2), stat = memory_stat)
+    !if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ULDAU(LMAXD1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(JLDAU(LMAXD1), stat = memory_stat)
@@ -368,9 +368,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
 
     !initialise to be safe
-    VINS = 0.0d0
-    VISP = 0.0d0
-    VONS = 0.0d0
     RHO2NS = 0.0d0
     R2NEF = 0.0d0
     DTIXIJ = dcmplx(0.0d0, 0.0d0)
@@ -401,9 +398,9 @@ CONTAINS
     deallocate(VOLCUB, stat = memory_stat)
     deallocate(VOLBZ, stat = memory_stat)
     deallocate(RR, stat = memory_stat)
-    deallocate(VINS, stat = memory_stat)
-    deallocate(VISP, stat = memory_stat)
-    deallocate(VONS, stat = memory_stat)
+    !deallocate(VINS, stat = memory_stat) !DEL
+    !deallocate(VISP, stat = memory_stat)
+    !deallocate(VONS, stat = memory_stat)
     deallocate(ULDAU, stat = memory_stat)
     deallocate(JLDAU, stat = memory_stat)
     deallocate(UMLDAU, stat = memory_stat)
