@@ -1,9 +1,9 @@
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine STARTB1
 subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
-                           ITITLE,HFIELD,VCONST,LPOT,NSPIN, &
+                           HFIELD,VCONST,LPOT,NSPIN, &
                            NTCELL, &
-                           EFERMI,VBC,LCORE,NCORE,ZAT, &
+                           EFERMI,VBC,ZAT, &
                            IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   use RadialMeshData_mod
@@ -34,10 +34,6 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
 
   DOUBLE PRECISION, dimension(*) :: ZAT
 
-  INTEGER, dimension(20,naezd*nspin) :: ITITLE
-  INTEGER, dimension(20,naezd*nspin) :: LCORE
-  INTEGER, dimension(naezd*nspin) :: NCORE
-
   INTEGER, dimension(*) :: NTCELL
 
   ! --- locals ---
@@ -46,6 +42,12 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   integer :: ii
 
   ! the following arrays serve as local dummies
+
+  !     .. core states ..
+  integer, dimension(:,:), allocatable :: ITITLE
+  integer, dimension(:,:), allocatable :: LCORE
+  integer, dimension(:),   allocatable :: NCORE
+
   double precision, dimension(:,:,:), allocatable :: THETAS
   integer, dimension(:,:), allocatable :: IFUNM
   integer, dimension(:),   allocatable :: IPAN
@@ -66,9 +68,12 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   double precision, dimension(:),   allocatable :: RWS
   double precision, dimension(:),   allocatable :: RMT
 
-
   double precision, dimension(:), allocatable :: RMTNEW
   integer, dimension(:), allocatable :: INIPOL
+
+  allocate(ITITLE(20,naezd*nspin))
+  allocate(LCORE(20,naezd*nspin))
+  allocate(NCORE(naezd*nspin))
 
   allocate(THETAS(IRID,NFUND,NCELLD))
   allocate(IFUNM((2*LPOT+1)**2,NAEZD))

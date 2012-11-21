@@ -86,12 +86,6 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: VI2
   double precision, dimension(:), allocatable :: WIT
 
-  ! ----------------------------------------------------------------------
-  !integer, dimension(:,:), allocatable :: ITITLE !DEL
-  !integer, dimension(:,:), allocatable :: LCORE !DEL
-  !integer, dimension(:), allocatable :: NCORE !DEL
-  !integer, dimension(:), allocatable :: NTCELL !DEL
-
   double precision, dimension(:,:,:), allocatable :: RCLS
   double precision, dimension(:), allocatable :: RMTREF
   double precision, dimension(:), allocatable :: VREF
@@ -348,14 +342,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(WIT(2:ITDBRYD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    !allocate(ITITLE(20,NPOTD), stat = memory_stat) !DEL
-    !if(memory_stat /= 0) call fatalMemoryError("main2") !DEL
-    !allocate(LCORE(20,NPOTD), stat = memory_stat) !DEL
-    !if(memory_stat /= 0) call fatalMemoryError("main2") !DEL
-    !allocate(NCORE(NPOTD), stat = memory_stat) !DEL
-    !if(memory_stat /= 0) call fatalMemoryError("main2") !DEL
-    !allocate(NTCELL(NAEZ), stat = memory_stat) !DEL
-    !if(memory_stat /= 0) call fatalMemoryError("main2") !DEL
     allocate(RCLS(3,NACLSD,NCLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RMTREF(NREFD), stat = memory_stat)
@@ -462,10 +448,6 @@ CONTAINS
     deallocate(UI2, stat = memory_stat)
     deallocate(VI2, stat = memory_stat)
     deallocate(WIT, stat = memory_stat)
-    !deallocate(ITITLE, stat = memory_stat) !DEL
-    !deallocate(LCORE, stat = memory_stat) !DEL
-    !deallocate(NCORE, stat = memory_stat) !DEL
-    !deallocate(NTCELL, stat = memory_stat) !DEL
     deallocate(RCLS, stat = memory_stat)
     deallocate(RMTREF, stat = memory_stat)
     deallocate(VREF, stat = memory_stat)

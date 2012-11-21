@@ -212,12 +212,6 @@
     complex(kind=DP), dimension(:,:,:), allocatable :: DSYMLL
     integer, dimension(:), allocatable :: ISYMINDEX
 
-!     .. core states ..
-    integer, dimension(:,:), allocatable :: ITITLE
-    integer, dimension(:,:), allocatable :: LCORE
-    integer, dimension(:),   allocatable :: NCORE
-
-
 !     .. Self-consistency parameters ..
     double precision :: FCM
     double precision :: MIXING
@@ -258,7 +252,7 @@
 
     complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
 
-    integer ::   LMMAXD,LMPOTD,LMXSPD,NPOTD
+    integer ::   LMMAXD,LMPOTD,LMXSPD
 
 ! ------------- parameters derived from others or calculated
     integer ::   LPOTD
@@ -382,7 +376,6 @@
 
     LPOTD = 2*LMAXD
     LMMAXD= (LMAXD+1)**2
-    NPOTD= NSPIND*NAEZD
     LMPOTD= (LPOTD+1)**2
     LMXSPD= (2*LPOTD+1)**2
 
@@ -417,11 +410,6 @@
     !         symmetry matrices
     allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD), stat=ierror)
     allocate(ISYMINDEX(NSYMAXD), stat=ierror)
-
-    !     .. core states ..
-    allocate(ITITLE(20,NPOTD), stat=ierror)
-    allocate(LCORE(20,NPOTD), stat=ierror)
-    allocate(NCORE(NPOTD), stat=ierror)
 
 !-----------------------------------------------------------------------------
 ! Array allocations END 1
@@ -510,10 +498,10 @@
     E2IN = E2
     ! read starting potential and shapefunctions
     call STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
-                 ITITLE,HFIELD,VCONST, &
+                 HFIELD,VCONST, &
                  LPOT,NSPIND,NTCELL, &
                  E2IN, &
-                 VBC,LCORE,NCORE, &
+                 VBC, &
                  ZAT, &
                  IPAND, IRID, NFUND, IRMD, NCELLD, &
                  NAEZD, IRNSD)
@@ -656,7 +644,7 @@
     IMIX,MIXING,FCM,KPRE, &
     KTE,KVMAD,KXC,ISHIFT, &
     KFORCE, &
-    IEMXD,NPOTD,NAEZD, &
+    IEMXD,NAEZD, &
     LMMAXD,NREFD, &
     NACLSD,NCLSD,NRD, &
     NSYMAXD, &
@@ -696,11 +684,6 @@
     ! Symmetry matrices
     deallocate(DSYMLL, stat=ierror)
     deallocate(ISYMINDEX, stat=ierror)
-
-    !     .. core states ..
-    deallocate(ITITLE, stat=ierror)
-    deallocate(LCORE, stat=ierror)
-    deallocate(NCORE, stat=ierror)
 
     !   auxillary
     deallocate(DEZ, stat=ierror)
