@@ -119,7 +119,6 @@ program MAIN2
   double precision::BRAVAIS(3,3)
   double precision::VBC(2)
   integer::ISYMINDEX(NSYMAXD)
-  double precision::ECORE(20,2)
 
   !     .. Local Arrays ..
 
@@ -265,7 +264,7 @@ program MAIN2
 
     if (isInMasterGroup(my_mpi)) then
       call openPotentialFile(LMPOTD, IRNSD, IRMD)
-      call readPotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, ECORE)
+      call readPotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
       call closePotentialFile()
     end if
 
@@ -367,7 +366,7 @@ program MAIN2
 
           ! New: instead of reading potential every time, communicate it
           !call readPotential(I1, VISP, VINS, ECORE)
-          call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, ECORE)
+          call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
 
 ! LDA+U
           if (LDAU) then
@@ -704,7 +703,7 @@ spinloop:     do ISPIN = 1,NSPIND
                            mesh%DRDI,mesh%R,atomdata%potential%VISP(1,ISPIN), &
                            mesh%A,mesh%B,ZAT(I1), &
                            mesh%IRCUT,atomdata%core%RHOCAT,atomdata%core%QC_corecharge, &
-                           ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
+                           atomdata%core%ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
                            irmd, ipand)
 
             end do
@@ -752,7 +751,7 @@ spinloop:     do ISPIN = 1,NSPIND
             ! write to 'results1' - only to be read in in results.f
             ! necessary for density of states calculation, otherwise
             ! only for informative reasons
-            if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, ECORE, I1, NPOL, atomdata%core%QC_corecharge)
+            if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
 
           endif
 !----------------------------------------------------------------------
@@ -869,7 +868,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
             if (KTE==1) then
               ! calculate total energy and individual contributions if requested
-              call ESPCB_NEW(ESPC,NSPIND,ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
+              call ESPCB_NEW(ESPC,NSPIND,atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
 
               ! output: EPOTIN
               call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,atomdata%potential%VISP,mesh%R,mesh%DRDI, &
@@ -1016,7 +1015,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! ----------------------------------------------------- output_potential
             call openPotentialFile(LMPOTD, IRNSD, IRMD)
-            call writePotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, ECORE)
+            call writePotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
             call closePotentialFile()
 ! ----------------------------------------------------- output_potential
 
@@ -1027,7 +1026,7 @@ spinloop:     do ISPIN = 1,NSPIND
                 call writeFormattedPotential(E2,VBC,NSPIND, &
                 KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
                 atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
-                ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),ZAT(I1),atomdata%core%ITITLE(:,1:NSPIND), &
+                atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),ZAT(I1),atomdata%core%ITITLE(:,1:NSPIND), &
                 I1, irmd, irnsd)
               endif
             endif
