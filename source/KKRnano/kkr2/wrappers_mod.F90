@@ -1,10 +1,51 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
 
+!------------------------------------------------------------------------------
 !> This module provides wrappers for routines with enormous argument lists.
 module wrappers_mod
   implicit none
 
   CONTAINS
+
+!----------------------------------------------------------------------------
+subroutine CONVOL_wrapper(VBC, shgaunts, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+  use ShapeGauntCoefficients_mod
+  implicit none
+  type (BasisAtom), intent(inout) :: atomdata
+  type (ShapeGauntCoefficients), intent(in) :: shgaunts
+  double precision, intent(in)    :: VBC(2)
+
+  !-------- locals
+  integer :: ispin, nspind
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(cell) )
+
+  do ispin = 1, nspind
+
+    call shiftPotential(atomdata%potential%VONS(:,:,ISPIN), mesh%IRCUT(mesh%IPAN), VBC(ISPIN))
+
+    !output: VONS (changed)
+    call CONVOL_NEW(mesh%IRCUT(1),mesh%IRC, &
+                    shgaunts%IMAXSH(shgaunts%LMPOTD),shgaunts%ILM,cell%shdata%IFUNM,shgaunts%LMPOTD,shgaunts%GSH, &
+                    cell%shdata%THETA,atomdata%Z_nuclear, &
+                    mesh%R,atomdata%potential%VONS(1,1,ISPIN),cell%shdata%LMSP, &
+                    cell%shdata%irid, cell%shdata%nfund, mesh%irmd, shgaunts%ngshd)
+
+  end do
+
+end subroutine
+
 
 !------------------------------------------------------------------------------
 !> Do core relaxation for all spin directions.
@@ -83,5 +124,34 @@ subroutine RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS, cell, mesh, shgaunts)
             mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
 
 end subroutine
+
+!==============================================================================
+! Some helper routines for the wrappers
+!==============================================================================
+
+  !----------------------------------------------------------------------------
+  !> Shift lm-decomposed potential be a constant sqrt(4 * pi) * VBC.
+  subroutine shiftPotential(VONS_ISPIN, index_rmax, VBC)
+    implicit none
+    double precision, dimension(:,:), intent(inout) :: VONS_ISPIN
+    integer, intent(in) :: index_rmax
+    double precision, intent(in) :: VBC
+    !----------------------------------
+
+    integer :: IR
+    double precision :: RFPI
+
+    !do IR = 1,IRCUT(IPAN(I1),I1)
+    !  VONS_ISPIN(IR,1,ISPIN) = VONS_ISPIN(IR,1,ISPIN) + RFPI*VBC(ISPIN)
+    !end do
+
+    RFPI = SQRT(16.0D0*ATAN(1.0D0))
+
+    do IR = 1, index_rmax
+      ! a constant potential shift affects only lm=1 component
+      VONS_ISPIN(IR,1) = VONS_ISPIN(IR,1) + RFPI*VBC
+    end do
+
+  end subroutine
 
 end module wrappers_mod

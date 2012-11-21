@@ -947,20 +947,9 @@ spinloop:     do ISPIN = 1,NSPIND
         do I1 = 1,NAEZ
           if(getMyAtomRank(my_mpi)== MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
-! =====================================================================
-! ============================= POTENTIAL MIXING OUTPUT ===============
-! =====================================================================
-            do ISPIN = 1,NSPIND
 
-              call shiftPotential(atomdata%potential%VONS(:,:,ISPIN), mesh%IRCUT(mesh%IPAN), VBC(ISPIN))
-              !output: VONS (changed)
-              call CONVOL_NEW(mesh%IRCUT(1),mesh%IRC, &
-                          shgaunts%IMAXSH(shgaunts%LMPOTD),shgaunts%ILM,cell%shdata%IFUNM,LMPOTD,shgaunts%GSH, &
-                          cell%shdata%THETA,atomdata%Z_nuclear, &
-                          mesh%R,atomdata%potential%VONS(1,1,ISPIN),cell%shdata%LMSP, &
-                          irid, nfund, irmd, shgaunts%ngshd)
-
-            end do
+! -->   shift potential by VBC and multiply with shape functions - output: VONS
+            call CONVOL_wrapper(VBC, shgaunts, atomdata)
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
 
