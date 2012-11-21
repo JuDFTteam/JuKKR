@@ -86,7 +86,6 @@ program MAIN2
 
   type (EBalanceHandler) :: ebalance_handler
 
-  integer::ICELL
   integer::NPNT1
   integer::NPNT2
   integer::NPNT3
@@ -102,7 +101,6 @@ program MAIN2
   integer::KVMAD
   integer::KXC
   integer::KFORCE
-  integer::IPOT
   integer::ISPIN
   integer::I1
   integer::LM
@@ -113,7 +111,6 @@ program MAIN2
   logical::LDORHOEF
   logical::LDAU
   logical::ERESJIJ
-
 
   ! static arrays
   double precision::BRAVAIS(3,3)
@@ -344,7 +341,13 @@ program MAIN2
       do I1 = 1,NAEZ
         if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
-        WRITELOG(2, *) "Iteration Atom ", ITER, I1
+          WRITELOG(2, *) "Iteration Atom ", ITER, I1
+
+          ! Core relaxation - only mastergroup needs results
+          if (isInMasterGroup(my_mpi)) then
+            call RHOCORE_wrapper(E1, NSRA, atomdata)
+          endif
+
 !=======================================================================
 ! xccpl
 
@@ -637,7 +640,6 @@ spinloop:     do ISPIN = 1,NSPIND
               ! get WEZRN and RNORM, the important input from previous
               ! calculations is LLY_GRDT_ALL
 
-              ICELL = getCellIndex(atomdata)
               call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
                               atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
                               cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
@@ -678,12 +680,11 @@ spinloop:     do ISPIN = 1,NSPIND
 ! SPIN ==================================================================
 
             do ISPIN = 1,NSPIND
-              ICELL = getCellIndex(atomdata)
-              IPOT = (I1-1) * NSPIND + ISPIN
 
               LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
               ! contains a loop over energies, TODO: remove spin dependence
+              ! could also be done at beginning of SCF step
               ! output: RHO2NS, R2NEF, DEN, ESPV
               call RHOVAL(LDORHOEF,ICST,IELAST, &
                           NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
@@ -699,15 +700,6 @@ spinloop:     do ISPIN = 1,NSPIND
                           DMATLDAU, &
                           iemxd, &
                           lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
-
-              ! TODO: wrap rhocore and rhoval with spin-loop
-              ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
-              call RHOCORE(E1,NSRA,ISPIN,NSPIND,I1, &  ! I1 is used only for debugging output
-                           mesh%DRDI,mesh%R,atomdata%potential%VISP(1,ISPIN), &
-                           mesh%A,mesh%B,atomdata%Z_nuclear, &
-                           mesh%IRCUT,atomdata%core%RHOCAT,atomdata%core%QC_corecharge, &
-                           atomdata%core%ECORE(1,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
-                           irmd, ipand)
 
             end do
 
@@ -808,8 +800,6 @@ spinloop:     do ISPIN = 1,NSPIND
 ! =====================================================================
         do I1 = 1,NAEZ
           if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
-
-            ICELL = getCellIndex(atomdata)
 
             do ISPIN = 1,NSPIND
 
@@ -957,12 +947,10 @@ spinloop:     do ISPIN = 1,NSPIND
         do I1 = 1,NAEZ
           if(getMyAtomRank(my_mpi)== MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
 
-            ICELL = getCellIndex(atomdata)
 ! =====================================================================
 ! ============================= POTENTIAL MIXING OUTPUT ===============
 ! =====================================================================
             do ISPIN = 1,NSPIND
-              IPOT = NSPIND* (I1-1) + ISPIN
 
               call shiftPotential(atomdata%potential%VONS(:,:,ISPIN), mesh%IRCUT(mesh%IPAN), VBC(ISPIN))
               !output: VONS (changed)

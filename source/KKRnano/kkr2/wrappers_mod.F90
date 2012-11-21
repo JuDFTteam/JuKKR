@@ -6,6 +6,45 @@ module wrappers_mod
 
   CONTAINS
 
+!------------------------------------------------------------------------------
+!> Do core relaxation for all spin directions.
+!>
+!> @param[in]      E1       bottom energy of valence energy contour
+!> @param[in]     NSRA      flag for scalar relativistic calculation
+!> @param[in,out] atomdata  basis atom - changed on output
+subroutine RHOCORE_wrapper(E1, NSRA, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  implicit none
+
+  double precision, intent(in)    :: E1
+  integer, intent(in)             :: NSRA
+  type (BasisAtom), intent(inout) :: atomdata
+
+  !-------- locals
+  integer :: ispin, nspind
+  type (RadialMeshData), pointer :: mesh_ptr
+
+  nspind = atomdata%nspin
+
+  mesh_ptr => atomdata%mesh_ptr
+
+  CHECKASSERT( associated(mesh_ptr) )
+
+  do ispin = 1, nspind
+
+    ! output: ECORE, NCORE, LCORE, RHOCAT?, QC
+    call RHOCORE(E1,NSRA,ISPIN,NSPIND,atomdata%atom_index, &  ! atom_index is used only for debugging output
+                 mesh_ptr%DRDI,mesh_ptr%R,atomdata%potential%VISP(:,ISPIN), &
+                 mesh_ptr%A,mesh_ptr%B,atomdata%Z_nuclear, &
+                 mesh_ptr%IRCUT,atomdata%core%RHOCAT,atomdata%core%QC_corecharge, &
+                 atomdata%core%ECORE(:,ISPIN),atomdata%core%NCORE(ispin),atomdata%core%LCORE(:,ispin), &
+                 mesh_ptr%irmd, mesh_ptr%ipand)
+
+  end do
+
+end subroutine
+
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine RHOMOM_NEW.
 subroutine RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS, cell, mesh, shgaunts)
