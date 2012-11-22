@@ -126,7 +126,8 @@ c
       LMXSPD= (2*LPOT+1)**2
 
 C     I/O Record length for potential file
-      LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
+c     LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
+      inquire (iolength = LRECPOT) VINS, VISP, ECORE
 
 c ---> output of radial mesh information
 c
@@ -211,7 +212,9 @@ c-----------------------------------------------------------------------
 c
       LMPOT = (LPOT+1)* (LPOT+1)
 C
-      OPEN (66,ACCESS='direct',RECL=LRECPOT*2,FILE='vpotnew',
+c     OPEN (66,ACCESS='direct',RECL=LRECPOT*2,FILE='vpotnew',
+c    +     FORM='unformatted')
+      OPEN (66,ACCESS='direct',RECL=LRECPOT,FILE='vpotnew',
      +     FORM='unformatted')
 C
       DO IH = NBEG,NEND

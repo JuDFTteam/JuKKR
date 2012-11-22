@@ -328,56 +328,6 @@ module main2_aux_mod
     close(71)
   end subroutine
 
-  !---------------------------------------------------------------------------
-  !> Open file 'vpotnew'
-  subroutine openPotentialFile(LMPOTD, IRNSD, IRMD)
-    implicit none
-    integer, intent(in) :: LMPOTD
-    integer, intent(in) :: IRNSD
-    integer, intent(in) :: IRMD
-
-    integer :: LRECPOT
-
-    LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
-
-    open (66,access='direct',recl=LRECPOT*2,file='vpotnew', &
-    form='unformatted')
-  end subroutine
-
-  !--------------------------------------------------------------------------
-  !> Read potential for atom I1 from 'vpotnew' file.
-  subroutine readPotential(I1, VISP, VINS, ECORE)
-    implicit none
-    double precision, intent(inout) :: ECORE(20,2)
-    integer, intent(in) :: I1
-    double precision, intent(inout) :: VINS(:,:,:)
-    double precision, intent(inout) :: VISP(:,:)
-
-    read(66,rec=I1) VINS,VISP,ECORE
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Closes file 'vpotnew'.
-  subroutine closePotentialFile()
-    implicit none
-
-    close(66)
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Write potential for atom I1 to 'vpotnew' file.
-  subroutine writePotential(I1, VISP, VINS, ECORE)
-    implicit none
-    double precision, intent(inout) :: ECORE(20,2)
-    integer, intent(in) :: I1
-    double precision, intent(inout) :: VINS(:,:,:)
-    double precision, intent(inout) :: VISP(:,:)
-
-    write(66,rec=I1) VINS,VISP,ECORE
-
-  end subroutine
-
   !----------------------------------------------------------------------------
   !> Calculate \Delta T_up - T_down for exchange couplings calculation.
   !> The result is stored in DTIXIJ(:,:,1)

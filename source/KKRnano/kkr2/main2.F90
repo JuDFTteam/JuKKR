@@ -109,7 +109,6 @@ program MAIN2
   logical::JIJ
   logical::LDORHOEF
   logical::LDAU
-  logical::ERESJIJ
 
   ! static arrays
   double precision::BRAVAIS(3,3)
@@ -250,7 +249,7 @@ program MAIN2
 
 !+++++++++++ pre self-consistency preparation
 
-    I1 = getMyAtomId(my_mpi)
+    I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
 
     call createBasisAtom(atomdata, I1, lpot, nspind, irmind, irmd)
     call openBasisAtomDAFile(atomdata, 37, "atoms")
@@ -258,9 +257,9 @@ program MAIN2
     call closeBasisAtomDAFile(37)
 
     if (isInMasterGroup(my_mpi)) then
-      call openPotentialFile(LMPOTD, IRNSD, IRMD)
-      call readPotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
-      call closePotentialFile()
+      call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
+      call readBasisAtomPotentialDA(atomdata, 37, I1)
+      call closeBasisAtomPotentialDAFile(37)
     end if
 
     call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
@@ -334,23 +333,15 @@ program MAIN2
 
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
-      ! Core relaxation - only mastergroup needs results
-      if (isInMasterGroup(my_mpi)) then
-        call RHOCORE_wrapper(E1, NSRA, atomdata)
-      endif
-
 !=======================================================================
 ! xccpl
 
       XCCPL = .false.
-      ERESJIJ = .false.
 
       ! calculate exchange couplings only at last self-consistency step and when Jij=true
       if ((ITER==SCFSTEPS).and.JIJ) XCCPL = .true.
 
       if (XCCPL) then
-
-        !inquire(file='ERESJIJ',exist=ERESJIJ)  ! deactivated, doesn't work anyway
 
         call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,NSYMAT,ISYMINDEX, &
                     IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
@@ -363,6 +354,11 @@ program MAIN2
 
       ! New: instead of reading potential every time, communicate it
       call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
+
+      ! Core relaxation - only mastergroup needs results
+      if (isInMasterGroup(my_mpi)) then
+        call RHOCORE_wrapper(E1, NSRA, atomdata)
+      endif
 
 ! LDA+U
       if (LDAU) then
@@ -425,7 +421,7 @@ program MAIN2
 !------------------------------------------------------------------------------
 !     beginning of SMPID-parallel section
 !------------------------------------------------------------------------------
-spinloop:     do ISPIN = 1,NSPIND
+spinloop: do ISPIN = 1,NSPIND
             if(isWorkingSpinRank(my_mpi, ispin)) then
 
               if (SMPID==1) then
@@ -529,18 +525,16 @@ spinloop:     do ISPIN = 1,NSPIND
 ! xccpl
 
           if (XCCPL) then
+            call jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
 
-             call jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
+            ! calculate DTIXIJ = T_down - T_up
+            call calcDeltaTupTdown(DTIXIJ)
 
-             ! calculate DTIXIJ = T_down - T_up
-             call calcDeltaTupTdown(DTIXIJ)
+            JSCAL = WEZ(IE)/DBLE(NSPIND)
 
-             JSCAL = WEZ(IE)/DBLE(NSPIND)
-
-             call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
+            call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
                                             DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
                                             RXCCLS, JXCIJINT)
-
           end if
 
 ! xccpl
@@ -674,7 +668,7 @@ spinloop:     do ISPIN = 1,NSPIND
           LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
           ! contains a loop over energies, TODO: remove spin dependence
-          ! could also be done at beginning of SCF step
+          ! could also be done at beginning of SCF step - NO only after Lloyd
           ! output: RHO2NS, R2NEF, DEN, ESPV
           call RHOVAL(LDORHOEF,ICST,IELAST, &
                       NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
@@ -926,9 +920,9 @@ spinloop:     do ISPIN = 1,NSPIND
                              NSPIND, atomdata%potential%VINS, atomdata%potential%VISP, atomdata%potential%VONS) ! Note: only LMPIC=1 processes
 
 ! ----------------------------------------------------- output_potential
-        call openPotentialFile(LMPOTD, IRNSD, IRMD)
-        call writePotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
-        call closePotentialFile()
+      call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
+      call writeBasisAtomPotentialDA(atomdata, 37, I1)
+      call closeBasisAtomPotentialDAFile(37)
 ! ----------------------------------------------------- output_potential
 
 ! write formatted potential if file VFORM exists - contains bad inquire
@@ -962,7 +956,7 @@ spinloop:     do ISPIN = 1,NSPIND
 
         ! DOS was written to file 'results1' and read out here just
         ! to be written in routine wrldos
-        ! also other stuff is read from results1
+        ! also other stuff is read from results1 (and results2)
         call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,NPOL, &
         NSPIND,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
         ALAT,atomdata%core%ITITLE(:,1:NSPIND),CHRGNT,ZAT,EZ,WEZ,LDAU, &
@@ -997,7 +991,8 @@ spinloop:     do ISPIN = 1,NSPIND
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory
-      if (isManualAbort_com(getMyWorldRank(my_mpi), getMyActiveCommunicator(my_mpi)) .eqv. .true.) exit
+      if (isManualAbort_com(getMyWorldRank(my_mpi), &
+          getMyActiveCommunicator(my_mpi)) .eqv. .true.) exit
 
 ! ######################################################################
 ! ######################################################################
