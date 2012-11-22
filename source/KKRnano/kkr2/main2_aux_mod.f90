@@ -583,7 +583,7 @@ module main2_aux_mod
   subroutine readKKR0InputNew(NSYMAXD, ALAT, ATOM, BCP, BRAVAIS, &
                            CLS, DSYMLL, EZOA, FCM, GMAX, ICST, &
                            IGUESS, IMIX, INDN0, &
-                           ISHIFT, ISYMINDEX, &
+                           ISYMINDEX, &
                            JIJ, KFORCE, KMESH, KPRE, KTE, KXC, &
                            LDAU, MAXMESH, &
                            MIXING, NACLS, NCLS, NR, NREF, &

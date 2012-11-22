@@ -115,7 +115,6 @@
 
     integer :: ICST
     integer :: IRM    !     eq IRMD ?  totally USELESS
-    integer :: ISHIFT
     integer :: KHFELD
     integer :: KPRE
     integer :: KTE
@@ -423,7 +422,7 @@
                   KHFELD,KPRE,KTE, &
                   KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT, &
                   NSPIN,REFPOT, &
-                  ISHIFT,INTERVX,INTERVY,INTERVZ, &
+                  INTERVX,INTERVY,INTERVZ, &
                   HFIELD,VBC,VCONST, &
                   POTENTIAL_FILENAME,SHAPEFUN_FILENAME, &
                   RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC, &
@@ -642,7 +641,7 @@
     KMESH,MAXMESH,NSYMAT, &
     DSYMLL, &
     IMIX,MIXING,FCM,KPRE, &
-    KTE,KVMAD,KXC,ISHIFT, &
+    KTE,KXC, &
     KFORCE, &
     IEMXD,NAEZD, &
     LMMAXD,NREFD, &

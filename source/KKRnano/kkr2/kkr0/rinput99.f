@@ -8,7 +8,6 @@
      +           KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT, 
      +           NSPIN,
      +           REFPOT,
-     +           ISHIFT,
      +           INTERVX,INTERVY,INTERVZ,
      +           HFIELD,
      +           VBC,VCONST,

@@ -95,7 +95,6 @@ program MAIN2
   integer::IMIX
   integer::NOITER
   integer::NOITER_ALL
-  integer::ISHIFT
   integer::KPRE
   integer::KTE
   integer::KXC
@@ -207,7 +206,7 @@ program MAIN2
   call readKKR0InputNew(NSYMAXD, ALAT, ATOM, BCP, BRAVAIS, &
                         CLS, DSYMLL, EZOA, FCM, GMAX, ICST, &
                         IGUESS, IMIX, INDN0, &
-                        ISHIFT, ISYMINDEX, &
+                        ISYMINDEX, &
                         JIJ, KFORCE, KMESH, KPRE, KTE, KXC, &
                         LDAU, MAXMESH, &
                         MIXING, NACLS, NCLS, NR, NREF, &
@@ -753,7 +752,7 @@ spinloop: do ISPIN = 1,NSPIND
         E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT) !FIXME: hardcoded maximal shift of 0.03
         EFOLD = E2
 
-        if (ISHIFT < 2) E2 = E2 - E2SHIFT
+        E2 = E2 - E2SHIFT
 
         if( getMyAtomRank(my_mpi) == 0 ) then
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
@@ -873,8 +872,6 @@ spinloop: do ISPIN = 1,NSPIND
 
         call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC, VOL0)
 
-        call shiftMuffinTinZero(ISHIFT, VBC, E2SHIFT) ! purpose? ISHIFT usually=0
-
         if(isMasterRank(my_mpi)) then
           call printMuffinTinShift(VAV0, VBC, VOL0)
         end if
@@ -920,9 +917,9 @@ spinloop: do ISPIN = 1,NSPIND
                              NSPIND, atomdata%potential%VINS, atomdata%potential%VISP, atomdata%potential%VONS) ! Note: only LMPIC=1 processes
 
 ! ----------------------------------------------------- output_potential
-      call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
-      call writeBasisAtomPotentialDA(atomdata, 37, I1)
-      call closeBasisAtomPotentialDAFile(37)
+        call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
+        call writeBasisAtomPotentialDA(atomdata, 37, I1)
+        call closeBasisAtomPotentialDAFile(37)
 ! ----------------------------------------------------- output_potential
 
 ! write formatted potential if file VFORM exists - contains bad inquire
