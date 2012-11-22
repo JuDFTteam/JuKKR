@@ -332,99 +332,92 @@ program MAIN2
       ! actually only LMPIC==1 process needed to open these files!!!
       if (KTE >= 0) call openResults1File(IEMXD, LMAXD, NPOL)
 
-!N ====================================================================
-!     BEGIN do loop over atoms (NMPID-parallel)
-!N ====================================================================
+      WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
-      do I1 = 1,NAEZ
-        if(getMyAtomRank(my_mpi)==MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
-
-          WRITELOG(2, *) "Iteration Atom ", ITER, I1
-
-          ! Core relaxation - only mastergroup needs results
-          if (isInMasterGroup(my_mpi)) then
-            call RHOCORE_wrapper(E1, NSRA, atomdata)
-          endif
+      ! Core relaxation - only mastergroup needs results
+      if (isInMasterGroup(my_mpi)) then
+        call RHOCORE_wrapper(E1, NSRA, atomdata)
+      endif
 
 !=======================================================================
 ! xccpl
 
-          XCCPL = .false.
-          ERESJIJ = .false.
+      XCCPL = .false.
+      ERESJIJ = .false.
 
-          ! calculate exchange couplings only at last self-consistency step and when Jij=true
-          if ((ITER==SCFSTEPS).and.JIJ) XCCPL = .true.
+      ! calculate exchange couplings only at last self-consistency step and when Jij=true
+      if ((ITER==SCFSTEPS).and.JIJ) XCCPL = .true.
 
-          if (XCCPL) then
+      if (XCCPL) then
 
-            !inquire(file='ERESJIJ',exist=ERESJIJ)  ! deactivated, doesn't work anyway
+        !inquire(file='ERESJIJ',exist=ERESJIJ)  ! deactivated, doesn't work anyway
 
-            call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,NSYMAT,ISYMINDEX, &
-                        IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
-                        nrd, nxijd)
+        call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,NSYMAT,ISYMINDEX, &
+                    IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
+                    nrd, nxijd)
 
-            JXCIJINT = CZERO
-            GMATXIJ = CZERO
+        JXCIJINT = CZERO
+        GMATXIJ = CZERO
 
-          endif
+      endif
 
-          ! New: instead of reading potential every time, communicate it
-          call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
+      ! New: instead of reading potential every time, communicate it
+      call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
 
 ! LDA+U
-          if (LDAU) then
+      if (LDAU) then
 
-            EREFLDAU = EFERMI
-            EREFLDAU = 0.48    ! ???
+        EREFLDAU = EFERMI
+        EREFLDAU = 0.48    ! ???
 
-            call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
-                          atomdata%potential%VISP,NSPIND,mesh%R,mesh%DRDI, &
-                          atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
-                          PHILDAU,UMLDAU,WMLDAU, &
-                          lmaxd, irmd, ipand)
+        call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
+                      atomdata%potential%VISP,NSPIND,mesh%R,mesh%DRDI, &
+                      atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
+                      PHILDAU,UMLDAU,WMLDAU, &
+                      lmaxd, irmd, ipand)
 
-          endif
+      endif
 ! LDA+U
 
 ! TIME
-          call OUTTIME(isMasterRank(my_mpi),'initialized .........', &
-                       getElapsedTime(program_timer),ITER)
-          call resetTimer(single_site_timer)
+      call OUTTIME(isMasterRank(my_mpi),'initialized .........', &
+                   getElapsedTime(program_timer),ITER)
+      call resetTimer(single_site_timer)
 ! TIME
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
-          do IE = 1,IELAST
+      do IE = 1,IELAST
 ! IE ====================================================================
-            if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
+        if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
 ! IE ====================================================================
-              call startEBalanceTiming(ebalance_handler, IE)
+          call startEBalanceTiming(ebalance_handler, IE)
 
-              WRITELOG(2, *) "Working on energy point ", IE
+          WRITELOG(2, *) "Working on energy point ", IE
 
-              do RF = 1,NREF
-                call TREF(EZ(IE),VREF(RF),LMAXD,RMTREF(RF), &
-                          TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
-              end do
+          do RF = 1,NREF
+            call TREF(EZ(IE),VREF(RF),LMAXD,RMTREF(RF), &
+                      TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
+          end do
 
-              TESTARRAYLOG(3, TREFLL)
-              TESTARRAYLOG(3, DTREFLL)
+          TESTARRAYLOG(3, TREFLL)
+          TESTARRAYLOG(3, DTREFLL)
 
-              call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
-                            gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB, &
-                            gaunts%LOFLM,NACLS, &
-                            REFPOT, &
-                            TREFLL,DTREFLL,GREFN,DGREFN, &
-                            LLY_G0TR(:,IE), &
-                            getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
-                            getNumAtomRanks(my_mpi), &
-                            lmaxd, naclsd, gaunts%ncleb, nrefd, nclsd, &
-                            LLY)
+          call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
+                        gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB, &
+                        gaunts%LOFLM,NACLS, &
+                        REFPOT, &
+                        TREFLL,DTREFLL,GREFN,DGREFN, &
+                        LLY_G0TR(:,IE), &
+                        getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
+                        getNumAtomRanks(my_mpi), &
+                        lmaxd, naclsd, gaunts%ncleb, nrefd, nclsd, &
+                        LLY)
 
-              TESTARRAYLOG(3, GREFN)
-              TESTARRAYLOG(3, DGREFN)
+          TESTARRAYLOG(3, GREFN)
+          TESTARRAYLOG(3, DGREFN)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
@@ -433,58 +426,58 @@ program MAIN2
 !     beginning of SMPID-parallel section
 !------------------------------------------------------------------------------
 spinloop:     do ISPIN = 1,NSPIND
-                if(isWorkingSpinRank(my_mpi, ispin)) then
+            if(isWorkingSpinRank(my_mpi, ispin)) then
 
-                  if (SMPID==1) then
-                    PRSPIN   = ISPIN
-                  else
-                    PRSPIN   = 1
-                  endif
+              if (SMPID==1) then
+                PRSPIN   = ISPIN
+              else
+                PRSPIN   = 1
+              endif
 
-                  call CALCTMAT(LDAU,NLDAU,ICST, &
-                                NSRA,EZ(IE), &
-                                mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-                                atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
-                                mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
-                                TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-                                LLDAU,WMLDAU(1,1,1,ISPIN), &
-                                gaunts%ncleb, ipand, irmd, irnsd)
+              call CALCTMAT(LDAU,NLDAU,ICST, &
+                            NSRA,EZ(IE), &
+                            mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+                            atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
+                            mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
+                            TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
+                            LLDAU,WMLDAU(1,1,1,ISPIN), &
+                            gaunts%ncleb, ipand, irmd, irnsd)
 
-                  DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
+              DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
-                  if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
+              if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
 
-                    call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
+                call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
 
-                    call CALCDTMAT(LDAU,NLDAU,ICST, &
-                                  NSRA,EZ(IE),delta_E_z, &
-                                  mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-                                  atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
-                                  mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
-                                  DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-                                  LLDAU,WMLDAU(1,1,1,ISPIN), &
-                                  gaunts%ncleb, ipand, irmd, irnsd)
-                  end if
+                call CALCDTMAT(LDAU,NLDAU,ICST, &
+                              NSRA,EZ(IE),delta_E_z, &
+                              mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+                              atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
+                              mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
+                              DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
+                              LLDAU,WMLDAU(1,1,1,ISPIN), &
+                              gaunts%ncleb, ipand, irmd, irnsd)
+              end if
 
-                  RF = REFPOT(I1)
-                  call substractReferenceTmatrix(TMATN(:,:,ISPIN), TREFLL(:,:,RF), LMMAXD)
-                  ! do the same for derivative of T-matrix
-                  call substractReferenceTmatrix(DTDE(:,:,ISPIN), DTREFLL(:,:,RF), LMMAXD)
+              RF = REFPOT(I1)
+              call substractReferenceTmatrix(TMATN(:,:,ISPIN), TREFLL(:,:,RF), LMMAXD)
+              ! do the same for derivative of T-matrix
+              call substractReferenceTmatrix(DTDE(:,:,ISPIN), DTREFLL(:,:,RF), LMMAXD)
 
-                  ! TMATN now contains Delta t = t - t_ref !!!
-                  ! DTDE now contains Delta dt !!!
+              ! TMATN now contains Delta t = t - t_ref !!!
+              ! DTDE now contains Delta dt !!!
 
-                  ! renormalize TR_ALPH
-                  TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(CLS(I1), IE)
+              ! renormalize TR_ALPH
+              TR_ALPH(ISPIN) = TR_ALPH(ISPIN) - LLY_G0TR(CLS(I1), IE)
 
-                  NMESH = KMESH(IE)
+              NMESH = KMESH(IE)
 
-                  if( getMyAtomRank(my_mpi)==0 ) then
-                    if (KTE >= 0) call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
-                  end if
+              if( getMyAtomRank(my_mpi)==0 ) then
+                if (KTE >= 0) call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
+              end if
 
-                  call stopTimer(single_site_timer)
-                  call resumeTimer(mult_scattering_timer)
+              call stopTimer(single_site_timer)
+              call resumeTimer(mult_scattering_timer)
 
 ! <<>> Multiple scattering part
 
@@ -494,36 +487,36 @@ spinloop:     do ISPIN = 1,NSPIND
 !                     DEBUG_dump_matrix = .false.
 !                  endif
 
-                  TESTARRAYLOG(3, TMATN(:,:,ISPIN))
+              TESTARRAYLOG(3, TMATN(:,:,ISPIN))
 
-                  call KLOOPZ1( &
-                  GMATN(1,1,1,ISPIN), &
-                  ALAT,IE,ITER,NAEZ, &
-                  NOFKS(NMESH),VOLBZ(NMESH), &
-                  BZKP(1,1,NMESH),VOLCUB(1,NMESH), &
-                  CLS,NACLS,RR, &
-                  EZOA,ATOM,GREFN,DGREFN, &
-                  NSYMAT,DSYMLL, &
-                  TMATN(:,:,ISPIN),DTDE(:,:,ISPIN), &
-                  NUMN0,INDN0,I1, &
-                  PRSC(1,1,PRSPIN), &
-                  EKM,NOITER, &
-                  QMRBOUND,IGUESS,BCP, &
-                  NXIJ,XCCPL,IXCP,ZKRXIJ, &
-                  LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
-                  GMATXIJ(1,1,1,ISPIN), &
-                  getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-                  iemxd, &
-                  lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
-                  nxijd, nguessd, kpoibz, nrd, ekmd)
+              call KLOOPZ1( &
+              GMATN(1,1,1,ISPIN), &
+              ALAT,IE,ITER,NAEZ, &
+              NOFKS(NMESH),VOLBZ(NMESH), &
+              BZKP(1,1,NMESH),VOLCUB(1,NMESH), &
+              CLS,NACLS,RR, &
+              EZOA,ATOM,GREFN,DGREFN, &
+              NSYMAT,DSYMLL, &
+              TMATN(:,:,ISPIN),DTDE(:,:,ISPIN), &
+              NUMN0,INDN0,I1, &
+              PRSC(1,1,PRSPIN), &
+              EKM,NOITER, &
+              QMRBOUND,IGUESS,BCP, &
+              NXIJ,XCCPL,IXCP,ZKRXIJ, &
+              LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
+              GMATXIJ(1,1,1,ISPIN), &
+              getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
+              iemxd, &
+              lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
+              nxijd, nguessd, kpoibz, nrd, ekmd)
 
-                  TESTARRAYLOG(3, GMATN(:,:,IE,ISPIN))
+              TESTARRAYLOG(3, GMATN(:,:,IE,ISPIN))
 
-                  call stopTimer(mult_scattering_timer)
-                  call resumeTimer(single_site_timer)
+              call stopTimer(mult_scattering_timer)
+              call resumeTimer(single_site_timer)
 
-                endif
-              end do spinloop                          ! ISPIN = 1,NSPIN
+            endif
+          end do spinloop                          ! ISPIN = 1,NSPIN
 !------------------------------------------------------------------------------
 !        End of SMPID-parallel section
 !------------------------------------------------------------------------------
@@ -535,219 +528,214 @@ spinloop:     do ISPIN = 1,NSPIND
 ! Calculate Jij for the in CLSJIJ predefined atom pairs i,j
 ! xccpl
 
-              if (XCCPL) then
+          if (XCCPL) then
 
-                 call jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
+             call jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
 
-                 ! calculate DTIXIJ = T_down - T_up
-                 call calcDeltaTupTdown(DTIXIJ)
+             ! calculate DTIXIJ = T_down - T_up
+             call calcDeltaTupTdown(DTIXIJ)
 
-                 JSCAL = WEZ(IE)/DBLE(NSPIND)
+             JSCAL = WEZ(IE)/DBLE(NSPIND)
 
-                 call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
-                                                DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
-                                                RXCCLS, JXCIJINT)
+             call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
+                                            DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
+                                            RXCCLS, JXCIJINT)
 
-              end if
+          end if
 
 ! xccpl
 ! End of Jij calculation
 ! =====================================================================
 
-              call stopEBalanceTiming(ebalance_handler, ie)
+          call stopEBalanceTiming(ebalance_handler, ie)
 
 ! IE ====================================================================
-            endif
+        endif
 ! IE ====================================================================
 
 ! for initial guess calculate sparse indices combining IE.KPT
-            EKM = EKM + NOFKS(KMESH(IE))
+        EKM = EKM + NOFKS(KMESH(IE))
 
-          end do                   ! IE = 1,IELAST
+      end do                   ! IE = 1,IELAST
 
 ! IE ====================================================================
 !     END do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
-          call stopTimer(single_site_timer)
+      call stopTimer(single_site_timer)
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-          call collectMSResults_com(my_mpi, GMATN, LLY_GRDT, ebalance_handler%EPROC)
+      call collectMSResults_com(my_mpi, GMATN, LLY_GRDT, ebalance_handler%EPROC)
 !=======================================================================
 
 ! TIME
-          call OUTTIME(isMasterRank(my_mpi),'Single Site took.....',getElapsedTime(single_site_timer),ITER)
-          call OUTTIME(isMasterRank(my_mpi),'Mult. Scat. took.....',getElapsedTime(mult_scattering_timer),ITER)
-          call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',getElapsedTime(program_timer),ITER)
+      call OUTTIME(isMasterRank(my_mpi),'Single Site took.....',getElapsedTime(single_site_timer),ITER)
+      call OUTTIME(isMasterRank(my_mpi),'Mult. Scat. took.....',getElapsedTime(mult_scattering_timer),ITER)
+      call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',getElapsedTime(program_timer),ITER)
 ! TIME
 
 !=======================================================================
 !     output of Jij's
 !=======================================================================
-          if (XCCPL) then
+      if (XCCPL) then
 
-            call jijReduceIntResults_com(my_mpi, JXCIJINT)
+        call jijReduceIntResults_com(my_mpi, JXCIJINT)
 
-            if (isInMasterGroup(my_mpi)) then
-              call writeJiJs(I1,RXIJ,NXIJ,IXCP,RXCCLS,JXCIJINT, nxijd)
-            end if
-          endif
+        if (isInMasterGroup(my_mpi)) then
+          call writeJiJs(I1,RXIJ,NXIJ,IXCP,RXCCLS,JXCIJINT, nxijd)
+        end if
+      endif
 
 !=======================================================================
 !     on the basis of new timings determine now new distribution of
 !     work to 1 .. EMPID processors - all processes SYNCED
 !=======================================================================
-          call updateEBalance_com(ebalance_handler, my_mpi)
+      call updateEBalance_com(ebalance_handler, my_mpi)
 
 !=======================================================================
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
 !     have to be adjusted to new distributions
 !=======================================================================
-          if ((IGUESS==1).and.(EMPID>1)) then
+      if ((IGUESS==1).and.(EMPID>1)) then
 
-            do ISPIN = 1,NSPIND
-              if(isWorkingSpinRank(my_mpi, ispin)) then
+        do ISPIN = 1,NSPIND
+          if(isWorkingSpinRank(my_mpi, ispin)) then
 
-                if (SMPID==1) then
-                  PRSPIN   = ISPIN
-                else
-                  PRSPIN   = 1
-                endif
+            if (SMPID==1) then
+              PRSPIN   = ISPIN
+            else
+              PRSPIN   = 1
+            endif
 
-                !call EPRDIST
-                call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), &
-                     ebalance_handler%EPROC, ebalance_handler%EPROC_old, KMESH, NofKs)
+            !call EPRDIST
+            call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), &
+                 ebalance_handler%EPROC, ebalance_handler%EPROC_old, KMESH, NofKs)
 
-              endif
-            enddo
+          endif
+        enddo
 
-          endif  ! IGUESS == 1 .and. EMPID > 1
+      endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
-          TESTARRAYLOG(3, GMATN)
-          TESTARRAYLOG(3, LLY_GRDT)
+      TESTARRAYLOG(3, GMATN)
+      TESTARRAYLOG(3, LLY_GRDT)
 
 !----------------------------------------------------------------------
 ! BEGIN only processes with LMPIC = 1 are working
 !----------------------------------------------------------------------
-          if (isInMasterGroup(my_mpi)) then
+      if (isInMasterGroup(my_mpi)) then
 
-            if (LLY==1) then
-              ! get WEZRN and RNORM, the important input from previous
-              ! calculations is LLY_GRDT_ALL
+        if (LLY==1) then
+          ! get WEZRN and RNORM, the important input from previous
+          ! calculations is LLY_GRDT_ALL
 
-              call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
-                              atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
-                              cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
-                              gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
-                              WEZRN,RNORM, &
-                              GMATN, &
-                              LLY_GRDT, &
-                              LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
-                              getMySEcommunicator(my_mpi), &
-                              lmaxd, irmd, irnsd, iemxd, &
-                              irid, nfund, ipand, gaunts%ncleb)
+          call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
+                          atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
+                          cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
+                          gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
+                          WEZRN,RNORM, &
+                          GMATN, &
+                          LLY_GRDT, &
+                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
+                          getMySEcommunicator(my_mpi), &
+                          lmaxd, irmd, irnsd, iemxd, &
+                          irid, nfund, ipand, gaunts%ncleb)
 
-              TESTARRAYLOG(3, WEZRN)
-              TESTARRAYLOG(3, RNORM)
+          TESTARRAYLOG(3, WEZRN)
+          TESTARRAYLOG(3, RNORM)
 
 ! IME
-              call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
+          call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
 ! IME
-            else ! no Lloyd
+        else ! no Lloyd
 
-              do IE=1,IELAST
-                WEZRN(IE,1) = WEZ(IE)
-                WEZRN(IE,2) = WEZ(IE)
-              enddo
-            endif
+          do IE=1,IELAST
+            WEZRN(IE,1) = WEZ(IE)
+            WEZRN(IE,2) = WEZ(IE)
+          enddo
+        endif
 
-            ! now WEZRN stores the weights for E-integration
+        ! now WEZRN stores the weights for E-integration
 
-            DEN = CZERO
-            DENEF = 0.0D0
+        DEN = CZERO
+        DENEF = 0.0D0
 
-            if (LDAU) then
-              DMATLDAU = CZERO
-            endif
+        if (LDAU) then
+          DMATLDAU = CZERO
+        endif
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
 ! SPIN ==================================================================
 
-            do ISPIN = 1,NSPIND
+        do ISPIN = 1,NSPIND
 
-              LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
+          LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
-              ! contains a loop over energies, TODO: remove spin dependence
-              ! could also be done at beginning of SCF step
-              ! output: RHO2NS, R2NEF, DEN, ESPV
-              call RHOVAL(LDORHOEF,ICST,IELAST, &
-                          NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
-                          mesh%DRDI,mesh%R,mesh%IRMIN, &
-                          atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
-                          atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
-                          cell%shdata%THETA,cell%shdata%IFUNM,cell%shdata%LMSP, &
-                          RHO2NS,R2NEF, &
-                          DEN(0,1,ISPIN),ESPV(0,ISPIN), &
-                          gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND,gaunts%JEND, &
-                          GMATN, &
-                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-                          DMATLDAU, &
-                          iemxd, &
-                          lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
+          ! contains a loop over energies, TODO: remove spin dependence
+          ! could also be done at beginning of SCF step
+          ! output: RHO2NS, R2NEF, DEN, ESPV
+          call RHOVAL(LDORHOEF,ICST,IELAST, &
+                      NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
+                      mesh%DRDI,mesh%R,mesh%IRMIN, &
+                      atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
+                      atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
+                      cell%shdata%THETA,cell%shdata%IFUNM,cell%shdata%LMSP, &
+                      RHO2NS,R2NEF, &
+                      DEN(0,1,ISPIN),ESPV(0,ISPIN), &
+                      gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND,gaunts%JEND, &
+                      GMATN, &
+                      LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
+                      DMATLDAU, &
+                      iemxd, &
+                      lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
 
-            end do
+        end do
 
 ! SPIN ==================================================================
 !      END do loop over spins
 ! SPIN ===================================================================
 
-            if (LLY == 1) then
-              call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIND,IEMXD)
-            end if
+        if (LLY == 1) then
+          call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIND,IEMXD)
+        end if
 
-            ! calculate DOS at Fermi level
-            DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIND)
+        ! calculate DOS at Fermi level
+        DENEF = calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIND)
 
-            ! ---> l/m_s/atom-resolved charges, output -> CHARGE
-            ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
-            ! CHARGE -> written to result file
-            call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, WEZ, IEMXD)
+        ! ---> l/m_s/atom-resolved charges, output -> CHARGE
+        ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
+        ! CHARGE -> written to result file
+        call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, WEZ, IEMXD)
 ! LDAU
-            EULDAU = 0.0D0
-            EDCLDAU = 0.0D0
+        EULDAU = 0.0D0
+        EDCLDAU = 0.0D0
 
-            if (LDAU.and.NLDAU>=1) then
-              call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
-                            ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
-                            lmaxd)
-            endif
+        if (LDAU.and.NLDAU>=1) then
+          call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
+                        ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
+                        lmaxd)
+        endif
 ! LDAU
 
 ! ----------------------------------------------------------------------
 ! -->   determine total charge expanded in spherical harmonics
 ! -------------------------------------------------------------- density
-            ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-            call RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
+        ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
+        call RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
 
-            CHRGNT = CHRGNT + CATOM(1) - atomdata%Z_nuclear
+        CHRGNT = CHRGNT + CATOM(1) - atomdata%Z_nuclear
 
-            ! write to 'results1' - only to be read in in results.f
-            ! necessary for density of states calculation, otherwise
-            ! only for informative reasons
-            if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
+        ! write to 'results1' - only to be read in in results.f
+        ! necessary for density of states calculation, otherwise
+        ! only for informative reasons
+        if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
 
-          endif
+      endif
 !----------------------------------------------------------------------
 ! END L-MPI: only processes with LMPIC = 1 are working
 !----------------------------------------------------------------------
-        end if
-      end do
-!N ====================================================================
-!     END do loop over atoms (NMPID-parallel)
-!N ====================================================================
 
       !call closePotentialFile()
       if (KTE >= 0) call closeResults1File()
@@ -786,47 +774,41 @@ spinloop:     do ISPIN = 1,NSPIND
         VAV0 = 0.0D0
         VOL0 = 0.0D0
 
-! =====================================================================
-! ======= I1 = 1,NAEZ ================================================
-! =====================================================================
-        do I1 = 1,NAEZ
-          if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
-
-            do ISPIN = 1,NSPIND
+        do ISPIN = 1,NSPIND
 
 ! -->     get correct density and valence band energies
 
-              ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
-              EFOLD*CHRGNT/DBLE(NSPIND*NAEZ)
+          ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
+          EFOLD*CHRGNT/DBLE(NSPIND*NAEZ)
 
-              do LM = 1,LMPOTD
-                call DAXPY(mesh%IRC,DF,R2NEF(1,LM,ISPIN),1, &
-                RHO2NS(1,LM,ISPIN),1)
-              end do
-            end do
+          do LM = 1,LMPOTD
+            call DAXPY(mesh%IRC,DF,R2NEF(1,LM,ISPIN),1, &
+            RHO2NS(1,LM,ISPIN),1)
+          end do
+        end do
 ! ----------------------------------------------------------------------
-            !output: CMOM, CMINST  !WHY is only RHO2NS(:,:,1) (also vintras) passed???
-            call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
+        !output: CMOM, CMINST  !WHY is only RHO2NS(:,:,1) (also vintras) passed???
+        call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
 
-            call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
-            !output: VONS
-            call VINTRAS_wrapper(RHO2NS(:,:,1), shgaunts, atomdata)
+        !output: VONS
+        call VINTRAS_wrapper(RHO2NS(:,:,1), shgaunts, atomdata)
 
-            TESTARRAYLOG(3, atomdata%potential%VONS)
-            TESTARRAYLOG(3, RHO2NS)
+        TESTARRAYLOG(3, atomdata%potential%VONS)
+        TESTARRAYLOG(3, RHO2NS)
 
-            call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
 
-            ! output: VONS (changed), VMAD
-            call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
-                 NAEZ, atomdata%potential%VONS, ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
-                 SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), irmd, ipand)
+        ! output: VONS (changed), VMAD
+        call addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIND, &
+             NAEZ, atomdata%potential%VONS, ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
+             SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), irmd, ipand)
 
-            call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 
@@ -847,24 +829,24 @@ spinloop:     do ISPIN = 1,NSPIND
 
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
-            if (KTE==1) then
-              ! calculate total energy and individual contributions if requested
-              ! core electron contribution
-              call ESPCB_wrapper(ESPC, LCOREMAX, atomdata)
-              ! output: EPOTIN
-              call EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
-              ! output: ECOU - l resolved Coulomb energy
-              call ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
-            end if
+        if (KTE==1) then
+          ! calculate total energy and individual contributions if requested
+          ! core electron contribution
+          call ESPCB_wrapper(ESPC, LCOREMAX, atomdata)
+          ! output: EPOTIN
+          call EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
+          ! output: ECOU - l resolved Coulomb energy
+          call ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
+        end if
 
-            call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-            ! output: VONS (changed), EXC (exchange energy) (l-resolved)
-            call VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
+        ! output: VONS (changed), EXC (exchange energy) (l-resolved)
+        call VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
 
-            call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
 ! =====================================================================
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
@@ -881,21 +863,16 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ---------------------------------------------------------------------
 !            end if
 
-            ! unnecessary I/O? see results.f
-            if (KTE >= 0) call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+        ! unnecessary I/O? see results.f
+        if (KTE >= 0) call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
 
-            ! calculate new muffin-tin zero. output: VAV0, VOL0
-            call MTZERO_wrapper(VAV0, VOL0, atomdata)
+        ! calculate new muffin-tin zero. output: VAV0, VOL0
+        call MTZERO_wrapper(VAV0, VOL0, atomdata)
 
-            call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
-! =====================================================================
-          end if
-        end do
-! =====================================================================
-! ======= I1 = 1,NAEZ ================================================
 ! =====================================================================
 
         call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
@@ -908,34 +885,24 @@ spinloop:     do ISPIN = 1,NSPIND
           call printMuffinTinShift(VAV0, VBC, VOL0)
         end if
 
-! =====================================================================
 ! -->   shift potential to muffin tin zero and
 !       convolute potential with shape function for next iteration
 
-!+++++++++++++++++ BEGIN ATOM PARALLEL +++++++++++++++++++++++++++++++
-        do I1 = 1,NAEZ
-          if(getMyAtomRank(my_mpi)== MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
-
-
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
-            call CONVOL_wrapper(VBC, shgaunts, atomdata)
+        call CONVOL_wrapper(VBC, shgaunts, atomdata)
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
 
-            call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
-                            mesh%IRC,mesh%IRMIN,mesh%R,mesh%DRDI,atomdata%potential%VONS,atomdata%potential%VISP,atomdata%potential%VINS, &
-                            irmd, irnsd)
+        call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
+                        mesh%IRC,mesh%IRMIN,mesh%R,mesh%DRDI,atomdata%potential%VONS,atomdata%potential%VISP,atomdata%potential%VINS, &
+                        irmd, irnsd)
 
-          end if
-        end do
-!+++++++++++++++++ END ATOM PARALLEL +++++++++++++++++++++++++++++++
-
-       ! output of RMS error
-       call RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIND,NAEZ, &
+        ! output of RMS error
+        call RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIND,NAEZ, &
                        getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
 
-       ! it is weird that straight mixing is called in any case before
-! -->  potential mixing procedures: Broyden or Andersen updating schemes
+        ! it is weird that straight mixing is called in any case before
+! -->   potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
           call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS,atomdata%potential%VINS, &
           LMPOTD,mesh%R,mesh%DRDI,MIXING, &
@@ -955,34 +922,26 @@ spinloop:     do ISPIN = 1,NSPIND
 ! -->    reset to start new iteration
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-!--------- BEGIN Atom-parallel ----------------------------------------
-        do I1 = 1,NAEZ
-          if(getMyAtomRank(my_mpi) == MAPBLOCK(I1,1,NAEZ,1,0,getNumAtomRanks(my_mpi)-1)) then
-
-            call resetPotentials(mesh%IRC, IRMD, mesh%IRMIN, IRMIND, LMPOTD, &
-                                 NSPIND, atomdata%potential%VINS, atomdata%potential%VISP, atomdata%potential%VONS) ! Note: only LMPIC=1 processes
+        call resetPotentials(mesh%IRC, IRMD, mesh%IRMIN, IRMIND, LMPOTD, &
+                             NSPIND, atomdata%potential%VINS, atomdata%potential%VISP, atomdata%potential%VONS) ! Note: only LMPIC=1 processes
 
 ! ----------------------------------------------------- output_potential
-            call openPotentialFile(LMPOTD, IRNSD, IRMD)
-            call writePotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
-            call closePotentialFile()
+        call openPotentialFile(LMPOTD, IRNSD, IRMD)
+        call writePotential(I1, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
+        call closePotentialFile()
 ! ----------------------------------------------------- output_potential
 
 ! write formatted potential if file VFORM exists - contains bad inquire
 ! - bad check deactivated when KTE<0
-            if (ITER == SCFSTEPS .and. KTE >= 0) then
-              if (testVFORM()) then
-                call writeFormattedPotential(E2,VBC,NSPIND, &
-                KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
-                atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
-                atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
-                I1, irmd, irnsd)
-              endif
-            endif
-
-          end if
-        end do
-! -------- END Atom-parallel ------------------------------------------
+        if (ITER == SCFSTEPS .and. KTE >= 0) then
+          if (testVFORM()) then
+            call writeFormattedPotential(E2,VBC,NSPIND, &
+            KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
+            atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
+            atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
+            I1, irmd, irnsd)
+          endif
+        endif
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
