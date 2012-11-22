@@ -98,7 +98,6 @@ program MAIN2
   integer::ISHIFT
   integer::KPRE
   integer::KTE
-  integer::KVMAD
   integer::KXC
   integer::KFORCE
   integer::ISPIN
@@ -210,7 +209,7 @@ program MAIN2
                         CLS, DSYMLL, EZOA, FCM, GMAX, ICST, &
                         IGUESS, IMIX, INDN0, &
                         ISHIFT, ISYMINDEX, &
-                        JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, &
+                        JIJ, KFORCE, KMESH, KPRE, KTE, KXC, &
                         LDAU, MAXMESH, &
                         MIXING, NACLS, NCLS, NR, NREF, &
                         NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
@@ -248,7 +247,6 @@ program MAIN2
     VI2 = 0.00
     SM1S = 0.00
     FM1S = 0.00
-
 
 !+++++++++++ pre self-consistency preparation
 
@@ -371,7 +369,6 @@ program MAIN2
           endif
 
           ! New: instead of reading potential every time, communicate it
-          !call readPotential(I1, VISP, VINS, ECORE)
           call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
 
 ! LDA+U
@@ -718,9 +715,7 @@ spinloop:     do ISPIN = 1,NSPIND
             ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
             ! CHARGE -> written to result file
             call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, WEZ, IEMXD)
-
 ! LDAU
-
             EULDAU = 0.0D0
             EDCLDAU = 0.0D0
 
@@ -861,27 +856,19 @@ spinloop:     do ISPIN = 1,NSPIND
 
             if (KTE==1) then
               ! calculate total energy and individual contributions if requested
-              call ESPCB_NEW(ESPC,NSPIND,atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
-
+              ! core electron contribution
+              call ESPCB_wrapper(ESPC, LCOREMAX, atomdata)
               ! output: EPOTIN
-              call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,atomdata%potential%VISP,mesh%R,mesh%DRDI, &
-              mesh%IRMIN,mesh%IRWS,LPOT,atomdata%potential%VINS,mesh%IRCUT,mesh%IPAN,atomdata%Z_nuclear, &
-              irmd, irnsd, ipand)
-
+              call EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
               ! output: ECOU - l resolved Coulomb energy
-              call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIND,RHO2NS, &
-              atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R, &
-              mesh%DRDI,KVMAD,mesh%IRCUT,mesh%IPAN,shgaunts%IMAXSH,cell%shdata%IFUNM, &
-              shgaunts%ILM,shgaunts%GSH,cell%shdata%THETA,cell%shdata%LMSP, &
-              irmd, irid, nfund, ipand, shgaunts%ngshd)
-
+              call ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
             end if
 
             call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
-            ! output: VONS (changed), EXC (exchange energy)
+            ! output: VONS (changed), EXC (exchange energy) (l-resolved)
             call VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
 
             call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
@@ -903,10 +890,6 @@ spinloop:     do ISPIN = 1,NSPIND
 
             ! unnecessary I/O? see results.f
             if (KTE >= 0) call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
-
-! Force calculation ends
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-! =====================================================================
 
             ! calculate new muffin-tin zero. output: VAV0, VOL0
             call MTZERO_wrapper(VAV0, VOL0, atomdata)

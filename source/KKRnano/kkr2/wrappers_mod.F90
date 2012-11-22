@@ -2,11 +2,104 @@
 
 !------------------------------------------------------------------------------
 !> This module provides wrappers for routines with enormous argument lists.
+!>
+!> Most of them are called in main2.
 module wrappers_mod
   implicit none
 
   CONTAINS
 
+!------------------------------------------------------------------------------
+subroutine ESPCB_wrapper(ESPC, LCOREMAX, atomdata)
+  use BasisAtom_mod
+  implicit none
+
+  double precision, intent(out) :: ESPC(:,:) !ESPC(0:3,NSPIN)
+  integer, intent(out) :: LCOREMAX
+  type (BasisAtom), intent(inout) :: atomdata
+
+  !-------- locals
+  integer :: nspind
+
+  nspind = atomdata%nspin
+
+  call ESPCB_NEW(ESPC,NSPIND,atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
+
+end subroutine
+
+!------------------------------------------------------------------------------
+subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  implicit none
+
+  double precision, intent(out)   :: EPOTIN
+  double precision, intent(inout) :: RHO2NS(:,:,:)
+  type (BasisAtom), intent(inout) :: atomdata
+
+  !-------- locals
+  integer :: nspind
+  integer :: irnsd
+  type (RadialMeshData), pointer :: mesh
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+
+  CHECKASSERT( associated(mesh) )
+
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
+
+  call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,atomdata%potential%VISP,mesh%R,mesh%DRDI, &
+                   mesh%IRMIN,mesh%IRWS,atomdata%potential%LPOT,atomdata%potential%VINS, &
+                   mesh%IRCUT,mesh%IPAN,atomdata%Z_nuclear, &
+                   mesh%irmd, irnsd, mesh%ipand)
+
+end subroutine
+
+!----------------------------------------------------------------------------
+subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+  use ShapeGauntCoefficients_mod
+  implicit none
+  double precision, intent(inout) :: CMOM(:)
+  double precision, intent(inout) :: ECOU(:)
+  double precision, intent(inout) :: RHO2NS(:,:,:)
+  type (BasisAtom), intent(inout) :: atomdata
+  type (ShapeGauntCoefficients), intent(in) :: shgaunts
+
+  !-------- locals
+  integer :: nspind
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+  integer :: KVMAD
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(cell) )
+
+  KVMAD = 0
+
+  ! output: ECOU - l resolved Coulomb energy
+  call ECOUB_NEW(CMOM,ECOU,atomdata%potential%LPOT,NSPIND,RHO2NS, &
+  atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R, &
+  mesh%DRDI,KVMAD,mesh%IRCUT,mesh%IPAN,shgaunts%IMAXSH,cell%shdata%IFUNM, &
+  shgaunts%ILM,shgaunts%GSH,cell%shdata%THETA,cell%shdata%LMSP, &
+  mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
+
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Add exchange-correlation potential and calculate exchange correlation energy.
 subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
   use BasisAtom_mod
   use RadialMeshData_mod

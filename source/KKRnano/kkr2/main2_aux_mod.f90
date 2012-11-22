@@ -634,7 +634,7 @@ module main2_aux_mod
                            CLS, DSYMLL, EZOA, FCM, GMAX, ICST, &
                            IGUESS, IMIX, INDN0, &
                            ISHIFT, ISYMINDEX, &
-                           JIJ, KFORCE, KMESH, KPRE, KTE, KVMAD, KXC, &
+                           JIJ, KFORCE, KMESH, KPRE, KTE, KXC, &
                            LDAU, MAXMESH, &
                            MIXING, NACLS, NCLS, NR, NREF, &
                            NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
@@ -663,7 +663,7 @@ module main2_aux_mod
     integer, allocatable :: KMESH(:)
     integer :: KPRE
     integer :: KTE
-    integer :: KVMAD
+    integer :: KVMADdummy
     integer :: KXC
     logical :: LDAU
     integer :: MAXMESH
@@ -708,7 +708,7 @@ module main2_aux_mod
     read (67) FCM
     read (67) KPRE
     read (67) KTE
-    read (67) KVMAD
+    read (67) KVMADdummy
     read (67) KXC
     read (67) ISHIFT
     read (67) KFORCE
