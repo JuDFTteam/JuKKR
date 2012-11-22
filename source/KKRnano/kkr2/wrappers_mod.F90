@@ -11,6 +11,41 @@ module wrappers_mod
   CONTAINS
 
 !----------------------------------------------------------------------------
+!> Adds intracell potential. in and output: atomdata (changed)
+subroutine VINTRAS_wrapper(RHO2NS, shgaunts, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+  use ShapeGauntCoefficients_mod
+
+  implicit none
+  double precision, intent(inout) :: RHO2NS(:,:) ! inout?
+  type (BasisAtom), intent(inout) :: atomdata
+  type (ShapeGauntCoefficients), intent(in) :: shgaunts
+
+  !-------- locals
+  integer :: nspind
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(cell) )
+
+  !output: VONS
+  call VINTRAS_NEW(atomdata%potential%LPOT,NSPIND,RHO2NS,atomdata%potential%VONS, &
+  mesh%R,mesh%DRDI,mesh%IRCUT,mesh%IPAN,shgaunts%ILM, &
+  cell%shdata%IFUNM,shgaunts%IMAXSH,shgaunts%GSH, &
+  cell%shdata%THETA,cell%shdata%LMSP, &
+  mesh%irmd, cell%shdata%irid, cell%shdata%nfund, shgaunts%ngshd, mesh%ipand)
+
+end subroutine
+
+!----------------------------------------------------------------------------
 !> Calculates total charge and spin of cell.
 !>
 !> Core charge density must have been already treated.

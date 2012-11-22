@@ -814,10 +814,7 @@ spinloop:     do ISPIN = 1,NSPIND
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
             !output: VONS
-            call VINTRAS_NEW(LPOT,NSPIND,RHO2NS,atomdata%potential%VONS, &
-            mesh%R,mesh%DRDI,mesh%IRCUT,mesh%IPAN,shgaunts%ILM,cell%shdata%IFUNM,shgaunts%IMAXSH,shgaunts%GSH, &
-            cell%shdata%THETA,cell%shdata%LMSP, &
-            irmd, irid, nfund, shgaunts%ngshd, ipand)
+            call VINTRAS_wrapper(RHO2NS(:,:,1), shgaunts, atomdata)
 
             TESTARRAYLOG(3, atomdata%potential%VONS)
             TESTARRAYLOG(3, RHO2NS)
