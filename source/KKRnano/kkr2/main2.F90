@@ -727,14 +727,10 @@ spinloop:     do ISPIN = 1,NSPIND
 ! LDAU
 
 ! ----------------------------------------------------------------------
-! -->   determine total charge density expanded in spherical harmonics
+! -->   determine total charge expanded in spherical harmonics
 ! -------------------------------------------------------------- density
             ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-            call RHOTOTB_NEW(NSPIND,RHO2NS,atomdata%core%RHOCAT, &
-                         mesh%DRDI,mesh%IRCUT, &
-                         LPOT,cell%shdata%NFU,cell%shdata%LLMSP,cell%shdata%THETA,mesh%IPAN, &
-                         CATOM, &
-                         irmd, irid, ipand, nfund)
+            call RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
 
             CHRGNT = CHRGNT + CATOM(1) - atomdata%Z_nuclear
 

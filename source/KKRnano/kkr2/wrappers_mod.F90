@@ -4,26 +4,67 @@
 !> This module provides wrappers for routines with enormous argument lists.
 !>
 !> Most of them are called in main2.
+!> @todo check intents
 module wrappers_mod
   implicit none
 
   CONTAINS
 
+!----------------------------------------------------------------------------
+!> Calculates total charge and spin of cell.
+!>
+!> Core charge density must have been already treated.
+subroutine RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+
+  implicit none
+  double precision, intent(inout) :: CATOM(:)
+  double precision, intent(inout) :: RHO2NS(:,:,:)
+  type (BasisAtom), intent(inout) :: atomdata
+
+  !-------- locals
+  integer :: nspind
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(cell) )
+  CHECKASSERT( size(CATOM) == nspind )
+
+  call RHOTOTB_NEW(NSPIND,RHO2NS,atomdata%core%RHOCAT, &
+                   mesh%DRDI,mesh%IRCUT, &
+                   atomdata%potential%LPOT,cell%shdata%NFU,cell%shdata%LLMSP,cell%shdata%THETA,mesh%IPAN, &
+                   CATOM, &
+                   mesh%irmd, cell%shdata%irid, mesh%ipand, cell%shdata%nfund)
+
+end subroutine
+
+
 !------------------------------------------------------------------------------
+!> Contribution of core electrons to total energy.
+!> @param[out] ESPC  1st component l-resolved energies s,p,d,f
 subroutine ESPCB_wrapper(ESPC, LCOREMAX, atomdata)
   use BasisAtom_mod
   implicit none
 
   double precision, intent(out) :: ESPC(:,:) !ESPC(0:3,NSPIN)
   integer, intent(out) :: LCOREMAX
-  type (BasisAtom), intent(inout) :: atomdata
+  type (BasisAtom), intent(in) :: atomdata
 
   !-------- locals
   integer :: nspind
 
   nspind = atomdata%nspin
 
-  call ESPCB_NEW(ESPC,NSPIND,atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
+  call ESPCB_NEW(ESPC,NSPIND,atomdata%core%ECORE, &
+       atomdata%core%LCORE(:,1:NSPIND),LCOREMAX,atomdata%core%NCORE(1:NSPIND))
 
 end subroutine
 
@@ -35,7 +76,7 @@ subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
 
   double precision, intent(out)   :: EPOTIN
   double precision, intent(inout) :: RHO2NS(:,:,:)
-  type (BasisAtom), intent(inout) :: atomdata
+  type (BasisAtom), intent(in) :: atomdata
 
   !-------- locals
   integer :: nspind
@@ -68,8 +109,8 @@ subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
   implicit none
   double precision, intent(inout) :: CMOM(:)
   double precision, intent(inout) :: ECOU(:)
-  double precision, intent(inout) :: RHO2NS(:,:,:)
-  type (BasisAtom), intent(inout) :: atomdata
+  double precision, intent(inout) :: RHO2NS(:,:,:) ! inout?
+  type (BasisAtom), intent(in) :: atomdata
   type (ShapeGauntCoefficients), intent(in) :: shgaunts
 
   !-------- locals
@@ -146,7 +187,7 @@ subroutine MTZERO_wrapper(VAV0, VOL0, atomdata)
 
   implicit none
   type (BasisAtom), intent(inout) :: atomdata
-  double precision, intent(in)    :: VAV0, VOL0
+  double precision, intent(inout)    :: VAV0, VOL0
 
   !-------- locals
   integer :: nspind
