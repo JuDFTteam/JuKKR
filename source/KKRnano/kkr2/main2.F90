@@ -55,15 +55,10 @@ program MAIN2
 
   !     ..
   !     .. Local Scalars ..
-
   double complex:: JSCAL        ! scaling factor for Jij calculation
   double complex:: Delta_E_z
 
   double precision::DENEF
-  double precision::E1
-  double precision::E2
-  double precision::TK
-  double precision::EFERMI
   double precision::CHRGNT
   double precision::RCUTJIJ
   double precision::ALAT
@@ -83,10 +78,6 @@ program MAIN2
 
   type (EBalanceHandler) :: ebalance_handler
 
-  integer::NPNT1
-  integer::NPNT2
-  integer::NPNT3
-  integer::NPOL
   integer::ITER
   integer::SCFSTEPS
   integer::IMIX
@@ -155,6 +146,7 @@ program MAIN2
   type (RadialMeshData), target :: mesh
   type (CellData), target :: cell
   type (BasisAtom), target :: atomdata
+  type (EnergyMesh) :: emesh
 
   call read_dimension_parameters()
 
@@ -206,10 +198,6 @@ program MAIN2
                         RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMTREF, &
                         RR, SCFSTEPS, TESTC, VREF, ZAT)
 
-  ! ---------------------------------------------------------- k_mesh
-  call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)  !every process does this!
-
-  call readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ) !every process does this!
 
   !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
@@ -270,6 +258,14 @@ program MAIN2
     call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
     WRITELOG(3, *) "lm-array: ", lmarray
 
+    call createEnergyMesh(emesh, iemxd)
+    ielast = iemxd
+
+    call readEnergyMesh(emesh)  !every process does this!
+
+    ! ---------------------------------------------------------- k_mesh
+    call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)  !every process does this!
+
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
                                        getElapsedTime(program_timer), 0)
 
@@ -285,10 +281,11 @@ program MAIN2
 
     call createEBalanceHandler(ebalance_handler, ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
-    call setEqualDistribution(ebalance_handler, (NPNT1 == 0))
+    call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
 !+++++++++++
     ASSERT( ZAT(I1) == atomdata%Z_nuclear )
+    ASSERT( ielast == iemxd )
 
    !flag = 0
    !99 continue
@@ -344,13 +341,13 @@ program MAIN2
 
       ! Core relaxation - only mastergroup needs results
       if (isInMasterGroup(my_mpi)) then
-        call RHOCORE_wrapper(E1, NSRA, atomdata)
+        call RHOCORE_wrapper(emesh%E1, NSRA, atomdata)
       endif
 
 ! LDA+U
       if (LDAU) then
 
-        EREFLDAU = EFERMI
+        EREFLDAU = emesh%EFERMI
         EREFLDAU = 0.48    ! ???
 
         call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
@@ -381,14 +378,14 @@ program MAIN2
           WRITELOG(2, *) "Working on energy point ", IE
 
           do RF = 1,NREF
-            call TREF(EZ(IE),VREF(RF),LMAXD,RMTREF(RF), &
+            call TREF(emesh%EZ(IE),VREF(RF),LMAXD,RMTREF(RF), &
                       TREFLL(1,1,RF),DTREFLL(1,1,RF), LLY)
           end do
 
           TESTARRAYLOG(3, TREFLL)
           TESTARRAYLOG(3, DTREFLL)
 
-          call GREF_com(EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
+          call GREF_com(emesh%EZ(IE),ALAT,gaunts%IEND,NCLS,NAEZ, &
                         gaunts%CLEB,RCLS,ATOM,CLS,gaunts%ICLEB, &
                         gaunts%LOFLM,NACLS, &
                         REFPOT, &
@@ -418,7 +415,7 @@ spinloop: do ISPIN = 1,NSPIND
               endif
 
               call CALCTMAT(LDAU,NLDAU,ICST, &
-                            NSRA,EZ(IE), &
+                            NSRA,emesh%EZ(IE), &
                             mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
                             atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
                             mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
@@ -430,10 +427,10 @@ spinloop: do ISPIN = 1,NSPIND
 
               if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
 
-                call calcdtmat_DeltaEz(delta_E_z, IE, NPNT1, NPNT2, NPNT3, TK)
+                call calcdtmat_DeltaEz(delta_E_z, IE, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, emesh%TK)
 
                 call CALCDTMAT(LDAU,NLDAU,ICST, &
-                              NSRA,EZ(IE),delta_E_z, &
+                              NSRA,emesh%EZ(IE),delta_E_z, &
                               mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
                               atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
                               mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
@@ -456,7 +453,7 @@ spinloop: do ISPIN = 1,NSPIND
               NMESH = KMESH(IE)
 
               if( getMyAtomRank(my_mpi)==0 ) then
-                if (KTE >= 0) call printEnergyPoint(EZ(IE), IE, ISPIN, NMESH)
+                if (KTE >= 0) call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH)
               end if
 
               call stopTimer(single_site_timer)
@@ -517,7 +514,7 @@ spinloop: do ISPIN = 1,NSPIND
             ! calculate DTIXIJ = T_down - T_up
             call calcDeltaTupTdown(DTIXIJ)
 
-            JSCAL = WEZ(IE)/DBLE(NSPIND)
+            JSCAL = emesh%WEZ(IE)/DBLE(NSPIND)
 
             call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
                                             DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
@@ -611,11 +608,11 @@ spinloop: do ISPIN = 1,NSPIND
           ! get WEZRN and RNORM, the important input from previous
           ! calculations is LLY_GRDT_ALL
 
-          call LLOYD0_NEW(EZ,WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
+          call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
                           atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
                           cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
                           gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
-                          WEZRN,RNORM, &
+                          emesh%WEZRN,RNORM, &
                           GMATN, &
                           LLY_GRDT, &
                           LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
@@ -623,7 +620,7 @@ spinloop: do ISPIN = 1,NSPIND
                           lmaxd, irmd, irnsd, iemxd, &
                           irid, nfund, ipand, gaunts%ncleb)
 
-          TESTARRAYLOG(3, WEZRN)
+          TESTARRAYLOG(3, emesh%WEZRN)
           TESTARRAYLOG(3, RNORM)
 
 ! IME
@@ -632,8 +629,8 @@ spinloop: do ISPIN = 1,NSPIND
         else ! no Lloyd
 
           do IE=1,IELAST
-            WEZRN(IE,1) = WEZ(IE)
-            WEZRN(IE,2) = WEZ(IE)
+            emesh%WEZRN(IE,1) = emesh%WEZ(IE)
+            emesh%WEZRN(IE,2) = emesh%WEZ(IE)
           enddo
         endif
 
@@ -652,13 +649,13 @@ spinloop: do ISPIN = 1,NSPIND
 
         do ISPIN = 1,NSPIND
 
-          LDORHOEF = NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
+          LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
           ! contains a loop over energies, TODO: remove spin dependence
-          ! could also be done at beginning of SCF step - NO only after Lloyd
+          ! has to be done after Lloyd
           ! output: RHO2NS, R2NEF, DEN, ESPV
           call RHOVAL(LDORHOEF,ICST,IELAST, &
-                      NSRA,ISPIN,NSPIND,EZ,WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
+                      NSRA,ISPIN,NSPIND,emesh%EZ,emesh%WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
                       mesh%DRDI,mesh%R,mesh%IRMIN, &
                       atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
@@ -696,7 +693,7 @@ spinloop: do ISPIN = 1,NSPIND
         ! ---> l/m_s/atom-resolved charges, output -> CHARGE
         ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
         ! CHARGE -> written to result file
-        call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, WEZ, IEMXD)
+        call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, emesh%WEZ, IEMXD)
 
         call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
@@ -704,15 +701,15 @@ spinloop: do ISPIN = 1,NSPIND
         ! necessary for density of states calculation, otherwise
         ! only for informative reasons
         if (KTE >= 0) then
-          call openResults1File(IEMXD, LMAXD, NPOL)
-          call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
+          call openResults1File(IEMXD, LMAXD, emesh%NPOL)
+          call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
           call closeResults1File()
         endif
 
         call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
         call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), naez, 0.03d0, CHRGNT, DENEF, R2NEF, &
-                                     ESPV, RHO2NS, E2)
+                                     ESPV, RHO2NS, emesh%E2)
 
         !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
         call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
@@ -872,7 +869,7 @@ spinloop: do ISPIN = 1,NSPIND
 ! - bad check deactivated when KTE<0
         if (ITER == SCFSTEPS .and. KTE >= 0) then
           if (testVFORM()) then
-            call writeFormattedPotential(E2, ALAT, VBC, KXC, atomdata)
+            call writeFormattedPotential(emesh%E2, ALAT, VBC, KXC, atomdata)
           endif
         endif
 
@@ -894,19 +891,19 @@ spinloop: do ISPIN = 1,NSPIND
         ! DOS was written to file 'results1' and read out here just
         ! to be written in routine wrldos
         ! also other stuff is read from results1 (and results2)
-        call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,NPOL, &
-        NSPIND,KPRE,KTE,LPOT,E1,E2,TK,EFERMI, &
-        ALAT,atomdata%core%ITITLE(:,1:NSPIND),CHRGNT,ZAT,EZ,WEZ,LDAU, &
+        call RESULTS(LRECRES2,IELAST,ITER,LMAXD,NAEZ,emesh%NPOL, &
+        NSPIND,KPRE,KTE,LPOT,emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
+        ALAT,atomdata%core%ITITLE(:,1:NSPIND),CHRGNT,ZAT,emesh%EZ,emesh%WEZ,LDAU, &
         iemxd)
 
         ! only MASTERRANK updates, other ranks get it broadcasted later
         ! (although other processes could update themselves)
-        call updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
+        call updateEnergyMesh(emesh)
 
         ! write file 'energy_mesh'
-        if (NPOL /= 0) EFERMI = E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
+        if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
-        call writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
+        call writeEnergyMesh(emesh)
 
         call printDoubleLineSep()
 
@@ -914,7 +911,7 @@ spinloop: do ISPIN = 1,NSPIND
 ! -----------------------------------------------------------------
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
-      call broadcastEnergyMesh_com(getMyActiveCommunicator(my_mpi), 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
+      call broadcastEnergyMesh_com(my_mpi, emesh)
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
       getMyActiveCommunicator(my_mpi),IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead

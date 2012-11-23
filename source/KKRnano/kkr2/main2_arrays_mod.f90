@@ -4,9 +4,6 @@ module main2_arrays_mod
   SAVE
 
   ! KKRnano-Arrays
-  double complex, dimension(:), allocatable ::  EZ
-  double complex, dimension(:), allocatable ::  WEZ
-  double complex, dimension(:,:), allocatable ::  WEZRN
   double complex, dimension(:,:,:), allocatable ::  DEN
   double complex, dimension(:,:,:), allocatable ::  DSYMLL
   double complex, dimension(:,:), allocatable ::  PHILDAU
@@ -213,12 +210,6 @@ CONTAINS
 
     integer :: memory_stat
 
-    allocate(EZ(IEMXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(WEZ(IEMXD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(WEZRN(IEMXD,2), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(DEN(0:LMAXD1,IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(DSYMLL(LMMAXD,LMMAXD,48), stat = memory_stat)
@@ -369,9 +360,6 @@ CONTAINS
 
     integer :: memory_stat
 
-    deallocate(EZ, stat = memory_stat)
-    deallocate(WEZ, stat = memory_stat)
-    deallocate(WEZRN, stat = memory_stat)
     deallocate(DEN, stat = memory_stat)
     deallocate(DSYMLL, stat = memory_stat)
     deallocate(PHILDAU, stat = memory_stat)

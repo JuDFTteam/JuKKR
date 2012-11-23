@@ -215,3 +215,5 @@ wrappers_mod.o: BasisAtom_mod.o ShapeGauntCoefficients_mod.o
 
 main2_aux_mod.o: BasisAtom_mod.o RadialMeshData_mod.o
 
+EnergyMesh_mod.o: EnergyMeshHelpers_mod.o KKRnanoParallel_mod.o
+

@@ -1,10 +1,10 @@
-module EnergyMesh_mod
+module EnergyMeshHelpers_mod
 
 contains
 
   !----------------------------------------------------------------------------
   !> read energy mesh data from file 'energy_mesh'
-  subroutine readEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
+  subroutine readEnergyMeshImpl(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
     implicit none
     double precision :: E1
     double precision :: E2
@@ -29,7 +29,7 @@ contains
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
-  subroutine writeEnergyMesh(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
+  subroutine writeEnergyMeshImpl(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
     implicit none
     double precision :: E1
     double precision :: E2
@@ -52,7 +52,7 @@ contains
 
 !------------------------------------------------------------------------------
 !> Update Energy mesh. Essentially a wrapper for EMESHT
-subroutine updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
+subroutine updateEnergyMeshImpl(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
     implicit none
     double complex :: WEZ(:)
     double precision :: E1
@@ -83,7 +83,7 @@ subroutine updateEnergyMesh(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
 
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from rank 'BCRANK' to all other ranks
-  subroutine broadcastEnergyMesh_com(ACTVCOMM, BCRANK, E1, E2, EZ, IEMXD, WEZ)
+  subroutine broadcastEnergyMeshImpl_com(ACTVCOMM, BCRANK, E1, E2, EZ, IEMXD, WEZ)
     implicit none
     integer, intent(in) :: ACTVCOMM
     integer, intent(in) :: BCRANK
