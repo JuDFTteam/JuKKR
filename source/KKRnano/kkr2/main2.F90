@@ -686,6 +686,14 @@ spinloop: do ISPIN = 1,NSPIND
 !      END do loop over spins
 ! SPIN ===================================================================
 
+! ----------------------------------------------------------------------
+! -->   determine total charge expanded in spherical harmonics
+! -------------------------------------------------------------- density
+        ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
+        call RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
+
+        CHRGNT = CHRGNT + CATOM(1) - atomdata%Z_nuclear
+
         if (LLY == 1) then
           call renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIND,IEMXD)
         end if
@@ -697,24 +705,8 @@ spinloop: do ISPIN = 1,NSPIND
         ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
         ! CHARGE -> written to result file
         call calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIND, WEZ, IEMXD)
-! LDAU
-        EULDAU = 0.0D0
-        EDCLDAU = 0.0D0
 
-        if (LDAU.and.NLDAU>=1) then
-          call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
-                        ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
-                        lmaxd)
-        endif
-! LDAU
-
-! ----------------------------------------------------------------------
-! -->   determine total charge expanded in spherical harmonics
-! -------------------------------------------------------------- density
-        ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-        call RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
-
-        CHRGNT = CHRGNT + CATOM(1) - atomdata%Z_nuclear
+        call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
         ! write to 'results1' - only to be read in in results.f
         ! necessary for density of states calculation, otherwise
@@ -726,8 +718,6 @@ spinloop: do ISPIN = 1,NSPIND
         endif
 
         call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
-
-        call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
 ! --> determine new Fermi level due to valence charge up to
 !     old Fermi level E2 and density of states DENEF
@@ -866,11 +856,19 @@ spinloop: do ISPIN = 1,NSPIND
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
         call CONVOL_wrapper(VBC, shgaunts, atomdata)
 
-! -->   calculation of RMS and final construction of the potentials (straight mixing)
+! LDAU
+        EULDAU = 0.0D0
+        EDCLDAU = 0.0D0
 
-        call MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOTD,NSPIND,MIXING,FCM, &
-                        mesh%IRC,mesh%IRMIN,mesh%R,mesh%DRDI,atomdata%potential%VONS,atomdata%potential%VISP,atomdata%potential%VINS, &
-                        irmd, irnsd)
+        if (LDAU.and.NLDAU>=1) then
+          call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
+                        ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
+                        lmaxd)
+        endif
+! LDAU
+
+! -->   calculation of RMS and final construction of the potentials (straight mixing)
+        call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, MIXING, FCM)
 
         ! output of RMS error
         call RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIND,NAEZ, &

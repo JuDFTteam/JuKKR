@@ -11,6 +11,38 @@ module wrappers_mod
   CONTAINS
 
 !------------------------------------------------------------------------------
+!> Wraps mixstr_new.
+subroutine MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, MIXING, FCM)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  implicit none
+
+  double precision, intent(inout) :: RMSAVQ, RMSAVM
+  double precision, intent(in)    :: MIXING, FCM
+  type (BasisAtom), intent(inout) :: atomdata
+
+  !-------- locals
+  integer :: nspind
+  integer :: irnsd
+  type (RadialMeshData), pointer :: mesh
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
+
+  call MIXSTR_NEW(RMSAVQ,RMSAVM,atomdata%potential%LMPOT,NSPIND,MIXING,FCM, &
+                  mesh%IRC,mesh%IRMIN,mesh%R,mesh%DRDI,atomdata%potential%VONS,atomdata%potential%VISP,atomdata%potential%VINS, &
+                  mesh%irmd, irnsd)
+
+end subroutine
+
+!------------------------------------------------------------------------------
 !> Wraps writeFormattedPotentialImpl from rmsout.f90
 subroutine writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
   use BasisAtom_mod
