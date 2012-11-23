@@ -326,11 +326,6 @@ program MAIN2
       CMINST = 0.0D0
       CHRGNT = 0.0D0
 
-      ! needed for results.f - find better solution - unnecessary I/O
-      if (isInMasterGroup(my_mpi)) then
-        if (KTE >= 0) call openResults1File(IEMXD, LMAXD, NPOL)
-      endif
-
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
 !=======================================================================
@@ -725,6 +720,7 @@ spinloop: do ISPIN = 1,NSPIND
         ! necessary for density of states calculation, otherwise
         ! only for informative reasons
         if (KTE >= 0) then
+          call openResults1File(IEMXD, LMAXD, NPOL)
           call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
           call closeResults1File()
         endif
@@ -763,7 +759,6 @@ spinloop: do ISPIN = 1,NSPIND
           end do
         end do
 ! ----------------------------------------------------------------------
-        if (KTE >= 0) call openResults2File(LRECRES2)
 
         !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
         call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
@@ -842,7 +837,11 @@ spinloop: do ISPIN = 1,NSPIND
 !            end if
 
         ! unnecessary I/O? see results.f
-        if (KTE >= 0) call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+        if (KTE >= 0) then
+          call openResults2File(LRECRES2)
+          call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+          call closeResults2File()
+        end if
 
         ! calculate new muffin-tin zero. output: VAV0, VOL0
         call MTZERO_wrapper(VAV0, VOL0, atomdata)
@@ -917,8 +916,6 @@ spinloop: do ISPIN = 1,NSPIND
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
-
-        if (KTE >= 0) call closeResults2File()
 
         call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
 
