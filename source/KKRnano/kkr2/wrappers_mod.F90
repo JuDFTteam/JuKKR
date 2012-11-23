@@ -10,6 +10,43 @@ module wrappers_mod
 
   CONTAINS
 
+!------------------------------------------------------------------------------
+!> Wraps writeFormattedPotentialImpl from rmsout.f90
+subroutine writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  implicit none
+
+  double precision, intent(in) :: Efermi
+  double precision, intent(in) :: VBC(2)
+  integer, intent(in) :: KXC
+  double precision, intent(in) :: ALAT
+  type (BasisAtom), intent(in) :: atomdata
+
+  !-------- locals
+  integer :: nspind
+  integer :: irnsd
+  type (RadialMeshData), pointer :: mesh
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
+
+  call writeFormattedPotentialImpl(Efermi,VBC,NSPIND, &
+            KXC,atomdata%potential%LPOT,mesh%A,mesh%B,mesh%IRC, &
+            atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
+            atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
+            atomdata%atom_index, mesh%irmd, irnsd)
+
+end subroutine
+
+
 !----------------------------------------------------------------------------
 !> Adds intracell potential. in and output: atomdata (changed)
 subroutine VINTRAS_wrapper(RHO2NS, shgaunts, atomdata)
@@ -33,8 +70,8 @@ subroutine VINTRAS_wrapper(RHO2NS, shgaunts, atomdata)
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
-  CHECKASSERT( associated(mesh) )
-  CHECKASSERT( associated(cell) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
 
   !output: VONS
   call VINTRAS_NEW(atomdata%potential%LPOT,NSPIND,RHO2NS,atomdata%potential%VONS, &
@@ -69,8 +106,8 @@ subroutine RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
-  CHECKASSERT( associated(mesh) )
-  CHECKASSERT( associated(cell) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
   CHECKASSERT( size(CATOM) == nspind )
 
   call RHOTOTB_NEW(NSPIND,RHO2NS,atomdata%core%RHOCAT, &
@@ -122,7 +159,7 @@ subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
 
   mesh => atomdata%mesh_ptr
 
-  CHECKASSERT( associated(mesh) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
 
   irnsd = atomdata%potential%irmd - atomdata%potential%irmind
 
@@ -159,8 +196,8 @@ subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
-  CHECKASSERT( associated(mesh) )
-  CHECKASSERT( associated(cell) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
 
   KVMAD = 0
 
@@ -201,8 +238,8 @@ subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
-  CHECKASSERT( associated(mesh) )
-  CHECKASSERT( associated(cell) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
   CHECKASSERT( size(EXC) == LPOT+1)
 
   call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
@@ -214,7 +251,6 @@ subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
 end subroutine
 
 !----------------------------------------------------------------------------
-!> initialise VAV0, VOL0 to 0.0d0 before calling!!!
 subroutine MTZERO_wrapper(VAV0, VOL0, atomdata)
   use BasisAtom_mod
   use RadialMeshData_mod
@@ -234,8 +270,11 @@ subroutine MTZERO_wrapper(VAV0, VOL0, atomdata)
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
-  CHECKASSERT( associated(mesh) )
-  CHECKASSERT( associated(cell) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
+
+  VAV0 = 0.0D0
+  VOL0 = 0.0D0
 
   !output: VAV0, VOL0
   call MTZERO_NEW(atomdata%potential%LMPOT,NSPIND,atomdata%potential%VONS, &
@@ -269,8 +308,8 @@ subroutine CONVOL_wrapper(VBC, shgaunts, atomdata)
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
-  CHECKASSERT( associated(mesh) )
-  CHECKASSERT( associated(cell) )
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
 
   do ispin = 1, nspind
 

@@ -140,7 +140,7 @@ end function
 
 !===========================================================================================
 !> Output formatted potential files for each atom.
-subroutine writeFormattedPotential(fermiEnergy, &
+subroutine writeFormattedPotentialImpl(fermiEnergy, &
 VBC,NSPIN, &
 KXC,LPOT,A,B,IRC, &
 VINS,VISP,DRDI,IRNS,R,RWS,RMT,ALAT, &

@@ -327,8 +327,9 @@ program MAIN2
       CHRGNT = 0.0D0
 
       ! needed for results.f - find better solution - unnecessary I/O
-      ! actually only LMPIC==1 process needed to open these files!!!
-      if (KTE >= 0) call openResults1File(IEMXD, LMAXD, NPOL)
+      if (isInMasterGroup(my_mpi)) then
+        if (KTE >= 0) call openResults1File(IEMXD, LMAXD, NPOL)
+      endif
 
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
@@ -723,25 +724,12 @@ spinloop: do ISPIN = 1,NSPIND
         ! write to 'results1' - only to be read in in results.f
         ! necessary for density of states calculation, otherwise
         ! only for informative reasons
-        if (KTE >= 0) call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
+        if (KTE >= 0) then
+          call writeResults1File(CATOM, CHARGE, DEN, atomdata%core%ECORE, I1, NPOL, atomdata%core%QC_corecharge)
+          call closeResults1File()
+        endif
 
-      endif
-!----------------------------------------------------------------------
-! END L-MPI: only processes with LMPIC = 1 are working
-!----------------------------------------------------------------------
-
-      !call closePotentialFile()
-      if (KTE >= 0) call closeResults1File()
-
-      call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
-
-
-! TODO: Only necessary for non-DOS calculation - otherwise proceed to RESULTS
-!       Drawback: RESULTS has to be modified - extract DOS part
-!----------------------------------------------------------------------
-! BEGIN L-MPI: only processes in Master-Group are working
-!----------------------------------------------------------------------
-      if (isInMasterGroup(my_mpi)) then
+        call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
         call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
@@ -758,14 +746,9 @@ spinloop: do ISPIN = 1,NSPIND
           call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
         end if
 
-        if (KTE >= 0) call openResults2File(LRECRES2)
-
 ! ----------------------------------------------------------------------
         DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
 ! ----------------------------------------------------------------------
-
-        VAV0 = 0.0D0
-        VOL0 = 0.0D0
 
         do ISPIN = 1,NSPIND
 
@@ -780,7 +763,9 @@ spinloop: do ISPIN = 1,NSPIND
           end do
         end do
 ! ----------------------------------------------------------------------
-        !output: CMOM, CMINST  !WHY is only RHO2NS(:,:,1) (also vintras) passed???
+        if (KTE >= 0) call openResults2File(LRECRES2)
+
+        !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
         call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
 
         call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
@@ -926,11 +911,7 @@ spinloop: do ISPIN = 1,NSPIND
 ! - bad check deactivated when KTE<0
         if (ITER == SCFSTEPS .and. KTE >= 0) then
           if (testVFORM()) then
-            call writeFormattedPotential(E2,VBC,NSPIND, &
-            KXC,LPOT,mesh%A,mesh%B,mesh%IRC, &
-            atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
-            atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
-            I1, irmd, irnsd)
+            call writeFormattedPotential(E2, ALAT, VBC, KXC, atomdata)
           endif
         endif
 
@@ -974,17 +955,14 @@ spinloop: do ISPIN = 1,NSPIND
 ! -----------------------------------------------------------------
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
-
       call broadcastEnergyMesh_com(getMyActiveCommunicator(my_mpi), 0, E1, E2, EZ, IEMXD, WEZ) ! BCRANK = 0
 
       call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
       getMyActiveCommunicator(my_mpi),IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
       if(isMasterRank(my_mpi)) then
-
         call printSolverIterationNumber(ITER, NOITER_ALL)
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
-
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory
