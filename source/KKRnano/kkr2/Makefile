@@ -183,7 +183,7 @@ main2.o: main2_arrays_mod.o main2_aux_mod.o muffin_tin_zero_mod.o EnergyMesh_mod
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
          GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \
          EBalanceHandler_mod.o TEST_lcutoff_mod.o brydbm_new_com_mod.o \
-         RadialMeshData_mod.o CellData_mod.o wrappers_mod.o BasisAtom_mod.o
+         RadialMeshData_mod.o CellData_mod.o wrappers_mod.o BasisAtom_mod.o LDAUData_mod.o
          
 main2_arrays_mod.o: error_messages_mod.o
 kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o TEST_lcutoff_mod.o

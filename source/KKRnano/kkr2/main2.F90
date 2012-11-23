@@ -33,6 +33,8 @@ program MAIN2
   use CellData_mod
   use BasisAtom_mod
 
+  use LDAUData_mod
+
   use TimerMpi_mod
   use EBalanceHandler_mod
   use BRYDBM_new_com_mod
@@ -69,7 +71,7 @@ program MAIN2
 
   double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
-  double precision::EREFLDAU    ! LDA+U
+  !!double precision::EREFLDAU    ! LDA+U
 
   type (TimerMpi) :: program_timer
   type (TimerMpi) :: iteration_timer
@@ -116,8 +118,8 @@ program MAIN2
   integer::PRSPIN
 
   double precision::EPOTIN
-  double precision::EULDAU
-  double precision::EDCLDAU
+  !!double precision::EULDAU
+  !!double precision::EDCLDAU
 
   double precision::VMAD
 
@@ -128,7 +130,7 @@ program MAIN2
   integer::NCLS
   integer::NREF
   integer::RF
-  integer::NLDAU
+  !!integer::NLDAU
   integer::NXIJ
 
   integer::IE
@@ -147,6 +149,7 @@ program MAIN2
   type (CellData), target :: cell
   type (BasisAtom), target :: atomdata
   type (EnergyMesh) :: emesh
+  type (LDAUData) :: ldau_data
 
   call read_dimension_parameters()
 
@@ -258,6 +261,8 @@ program MAIN2
     call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
     WRITELOG(3, *) "lm-array: ", lmarray
 
+    call createLDAUData(ldau_data, ldau, irmd, lmaxd, nspind)
+
     call createEnergyMesh(emesh, iemxd)
     ielast = iemxd
 
@@ -347,13 +352,13 @@ program MAIN2
 ! LDA+U
       if (LDAU) then
 
-        EREFLDAU = emesh%EFERMI
-        EREFLDAU = 0.48    ! ???
+        ldau_data%EREFLDAU = emesh%EFERMI
+        ldau_data%EREFLDAU = 0.48    ! ???
 
-        call LDAUINIT(I1,ITER,NSRA,NLDAU,LLDAU,ULDAU,JLDAU,EREFLDAU, &
+        call LDAUINIT(I1,ITER,NSRA,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
                       atomdata%potential%VISP,NSPIND,mesh%R,mesh%DRDI, &
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
-                      PHILDAU,UMLDAU,WMLDAU, &
+                      ldau_data%PHILDAU,ldau_data%UMLDAU,ldau_data%WMLDAU, &
                       lmaxd, irmd, ipand)
 
       endif
@@ -414,13 +419,13 @@ spinloop: do ISPIN = 1,NSPIND
                 PRSPIN   = 1
               endif
 
-              call CALCTMAT(LDAU,NLDAU,ICST, &
+              call CALCTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
                             NSRA,emesh%EZ(IE), &
                             mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
                             atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
                             mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                             TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-                            LLDAU,WMLDAU(1,1,1,ISPIN), &
+                            ldau_data%LLDAU,ldau_data%WMLDAU(1,1,1,ISPIN), &
                             gaunts%ncleb, ipand, irmd, irnsd)
 
               DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
@@ -429,13 +434,13 @@ spinloop: do ISPIN = 1,NSPIND
 
                 call calcdtmat_DeltaEz(delta_E_z, IE, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, emesh%TK)
 
-                call CALCDTMAT(LDAU,NLDAU,ICST, &
+                call CALCDTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
                               NSRA,emesh%EZ(IE),delta_E_z, &
                               mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
                               atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
                               mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
                               DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-                              LLDAU,WMLDAU(1,1,1,ISPIN), &
+                              ldau_data%LLDAU,ldau_data%WMLDAU(1,1,1,ISPIN), &
                               gaunts%ncleb, ipand, irmd, irnsd)
               end if
 
@@ -615,7 +620,7 @@ spinloop: do ISPIN = 1,NSPIND
                           emesh%WEZRN,RNORM, &
                           GMATN, &
                           LLY_GRDT, &
-                          LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU,DMATLDAU, &
+                          ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
                           getMySEcommunicator(my_mpi), &
                           lmaxd, irmd, irnsd, iemxd, &
                           irid, nfund, ipand, gaunts%ncleb)
@@ -640,7 +645,7 @@ spinloop: do ISPIN = 1,NSPIND
         DENEF = 0.0D0
 
         if (LDAU) then
-          DMATLDAU = CZERO
+          ldau_data%DMATLDAU = CZERO
         endif
 
 ! SPIN ==================================================================
@@ -664,8 +669,8 @@ spinloop: do ISPIN = 1,NSPIND
                       DEN(0,1,ISPIN),ESPV(0,ISPIN), &
                       gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND,gaunts%JEND, &
                       GMATN, &
-                      LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-                      DMATLDAU, &
+                      ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU, &
+                      ldau_data%DMATLDAU, &
                       iemxd, &
                       lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
 
@@ -790,7 +795,7 @@ spinloop: do ISPIN = 1,NSPIND
         ! unnecessary I/O? see results.f
         if (KTE >= 0) then
           call openResults2File(LRECRES2)
-          call writeResults2File(CATOM, ECOU, EDCLDAU, EPOTIN, ESPC, ESPV, EULDAU, EXC, I1, LCOREMAX, VMAD)
+          call writeResults2File(CATOM, ECOU, ldau_data%EDCLDAU, EPOTIN, ESPC, ESPV, ldau_data%EULDAU, EXC, I1, LCOREMAX, VMAD)
           call closeResults2File()
         end if
 
@@ -818,12 +823,12 @@ spinloop: do ISPIN = 1,NSPIND
         call CONVOL_wrapper(VBC, shgaunts, atomdata)
 
 ! LDAU
-        EULDAU = 0.0D0
-        EDCLDAU = 0.0D0
+        ldau_data%EULDAU = 0.0D0
+        ldau_data%EDCLDAU = 0.0D0
 
-        if (LDAU.and.NLDAU>=1) then
-          call LDAUWMAT(I1,NSPIND,ITER,MIXING,DMATLDAU,NLDAU,LLDAU, &
-                        ULDAU,JLDAU,UMLDAU,WMLDAU,EULDAU,EDCLDAU, &
+        if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
+          call LDAUWMAT(I1,NSPIND,ITER,MIXING,ldau_data%DMATLDAU,ldau_data%NLDAU,ldau_data%LLDAU, &
+                        ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%UMLDAU,ldau_data%WMLDAU,ldau_data%EULDAU,ldau_data%EDCLDAU, &
                         lmaxd)
         endif
 ! LDAU
@@ -944,6 +949,8 @@ spinloop: do ISPIN = 1,NSPIND
     call destroyBasisAtom(atomdata)
     call destroyCellData(cell)
     call destroyRadialMeshData(mesh)
+
+    call destroyLDAUData(ldau_data)
 
 ! ======================================================================
 
