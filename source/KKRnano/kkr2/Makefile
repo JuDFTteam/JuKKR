@@ -213,4 +213,5 @@ CellData_mod.o: ShapefunData_mod.o
 
 wrappers_mod.o: BasisAtom_mod.o ShapeGauntCoefficients_mod.o
 
+main2_aux_mod.o: BasisAtom_mod.o RadialMeshData_mod.o
 

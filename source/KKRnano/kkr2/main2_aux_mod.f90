@@ -693,4 +693,71 @@ module main2_aux_mod
     close (67)
   end subroutine
 
+  subroutine doFermiEnergyCorrection(atomdata, output, naez, max_shift, CHRGNT, DENEF, R2NEF, &
+                                     ESPV, RHO2NS, E2)
+    use BasisAtom_mod
+    use RadialMeshData_mod
+    implicit none
+
+    type (BasisAtom), intent(in) :: atomdata
+    logical, intent(in) :: output !< output to stdout - yes/no
+    integer, intent(in) :: naez
+    double precision, intent(in) :: max_shift !< maximally allowed Fermi-Energy shift (good: 0.03d0)
+    double precision, intent(in) :: CHRGNT
+    double precision, intent(in) :: DENEF
+    double precision, dimension(:,:,:), intent(in) ::  R2NEF
+
+    ! in,out - arguments
+    double precision, dimension(0:,:), intent(inout) :: ESPV
+    double precision, dimension(:,:,:), intent(inout) ::  RHO2NS
+    double precision, intent(inout) :: E2
+
+    !-------- locals
+    integer :: nspind
+    type (RadialMeshData), pointer :: mesh
+
+    double precision :: E2SHIFT
+    double precision :: EFold
+    double precision :: DF
+    double precision :: PI
+    integer :: ispin, lm, lmpotd
+
+    PI = 4.0D0*ATAN(1.0D0)
+
+    nspind = atomdata%nspin
+    lmpotd = atomdata%potential%lmpot
+
+    mesh => atomdata%mesh_ptr
+! --> determine new Fermi level due to valence charge up to
+!     old Fermi level E2 and density of states DENEF
+
+        E2SHIFT = CHRGNT/DENEF
+        E2SHIFT = DMIN1(DABS(E2SHIFT),max_shift)*DSIGN(1.0D0,E2SHIFT)
+        EFOLD = E2
+
+        E2 = E2 - E2SHIFT
+
+        if( output ) then
+          call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
+        end if
+
+! ----------------------------------------------------------------------
+        DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
+! ----------------------------------------------------------------------
+
+        do ISPIN = 1,NSPIND
+
+! -->     get correct density and valence band energies
+
+          ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
+          EFOLD*CHRGNT/DBLE(NSPIND*NAEZ)
+
+          do LM = 1,LMPOTD
+            call DAXPY(mesh%IRC,DF,R2NEF(1,LM,ISPIN),1, &
+            RHO2NS(1,LM,ISPIN),1)
+          end do
+        end do
+! ----------------------------------------------------------------------
+  end subroutine
+
 end module main2_aux_mod

@@ -64,17 +64,14 @@ program MAIN2
   double precision::E2
   double precision::TK
   double precision::EFERMI
-  double precision::EFOLD
   double precision::CHRGNT
-  double precision::E2SHIFT
   double precision::RCUTJIJ
-  double precision::DF
   double precision::ALAT
   double precision::FCM
   double precision::MIXING
   double precision::RMAX
   double precision::GMAX
-  double precision::PI
+
   double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
   double precision::EREFLDAU    ! LDA+U
@@ -101,7 +98,6 @@ program MAIN2
   integer::KFORCE
   integer::ISPIN
   integer::I1
-  integer::LM
   integer::NR
   integer::EKM
   logical::XCCPL
@@ -159,10 +155,6 @@ program MAIN2
   type (RadialMeshData), target :: mesh
   type (CellData), target :: cell
   type (BasisAtom), target :: atomdata
-
- !============================================================= CONSTANTS
-  PI = 4.0D0*ATAN(1.0D0)
-!=============================================================
 
   call read_dimension_parameters()
 
@@ -719,36 +711,8 @@ spinloop: do ISPIN = 1,NSPIND
 
         call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
-! --> determine new Fermi level due to valence charge up to
-!     old Fermi level E2 and density of states DENEF
-
-        E2SHIFT = CHRGNT/DENEF
-        E2SHIFT = DMIN1(DABS(E2SHIFT),0.03D0)*DSIGN(1.0D0,E2SHIFT) !FIXME: hardcoded maximal shift of 0.03
-        EFOLD = E2
-
-        E2 = E2 - E2SHIFT
-
-        if( getMyAtomRank(my_mpi) == 0 ) then
-          call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
-        end if
-
-! ----------------------------------------------------------------------
-        DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
-! ----------------------------------------------------------------------
-
-        do ISPIN = 1,NSPIND
-
-! -->     get correct density and valence band energies
-
-          ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
-          EFOLD*CHRGNT/DBLE(NSPIND*NAEZ)
-
-          do LM = 1,LMPOTD
-            call DAXPY(mesh%IRC,DF,R2NEF(1,LM,ISPIN),1, &
-            RHO2NS(1,LM,ISPIN),1)
-          end do
-        end do
-! ----------------------------------------------------------------------
+        call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), naez, 0.03d0, CHRGNT, DENEF, R2NEF, &
+                                     ESPV, RHO2NS, E2)
 
         !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
         call RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS(:,:,1), cell, mesh, shgaunts)
