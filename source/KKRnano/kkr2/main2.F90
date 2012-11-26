@@ -414,14 +414,7 @@ spinloop: do ISPIN = 1,NSPIND
                 PRSPIN   = 1
               endif
 
-              call CALCTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
-                            NSRA,emesh%EZ(IE), &
-                            mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-                            atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
-                            mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
-                            TMATN(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-                            ldau_data%LLDAU,ldau_data%WMLDAU(1,1,1,ISPIN), &
-                            gaunts%ncleb, ipand, irmd, irnsd)
+              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMATN, TR_ALPH, ldau_data)
 
               DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
@@ -429,14 +422,8 @@ spinloop: do ISPIN = 1,NSPIND
 
                 call calcdtmat_DeltaEz(delta_E_z, IE, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, emesh%TK)
 
-                call CALCDTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
-                              NSRA,emesh%EZ(IE),delta_E_z, &
-                              mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-                              atomdata%potential%VISP(1,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
-                              mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
-                              DTDE(1,1,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-                              ldau_data%LLDAU,ldau_data%WMLDAU(1,1,1,ISPIN), &
-                              gaunts%ncleb, ipand, irmd, irnsd)
+                ! WHY IS TR_ALPH OVERWRITTEN HERE???
+                call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, DTDE, TR_ALPH, ldau_data)
               end if
 
               RF = REFPOT(I1)

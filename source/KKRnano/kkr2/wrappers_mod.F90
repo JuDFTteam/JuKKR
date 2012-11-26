@@ -10,6 +10,77 @@ module wrappers_mod
 
   CONTAINS
 
+!----------------------------------------------------------------------------
+!> Calculate valence electron density.
+subroutine RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, RHO2NS, R2NEF, DEN, ESPV, GMATN, gaunts, emesh, ldau_data)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+  use GauntCoefficients_mod
+  use EnergyMesh_mod
+  use LDAUData_mod
+
+  implicit none
+  logical, intent(in) :: LdoRhoEF
+  integer, intent(in) :: ICST !< num. Born iterations
+  integer, intent(in) :: NSRA !< flag scalar relativistic
+  double precision, intent(inout) :: RHO2NS(:,:,:) ! inout?
+  double precision, intent(inout) :: R2NEF(:,:,:) ! inout?
+  double complex, intent(inout) :: DEN(0:,:,:)
+  double precision, intent(inout) :: ESPV(0:,:)
+  double complex, intent(inout) :: GMATN(:,:,:,:) !in or inout?
+  type (BasisAtom), intent(inout) :: atomdata !in or inout?
+  type (GauntCoefficients), intent(in) :: gaunts
+  type (EnergyMesh), intent(inout) :: emesh !inout or in?
+  type (LDAUData), intent(inout) :: ldau_data ! inout?
+
+  !-------- locals
+  integer :: ispin, nspind
+  integer :: irmind
+  integer :: irnsd
+  integer :: lmaxd
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
+
+  irmind = atomdata%potential%irmind
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  lmaxd = atomdata%potential%lpot / 2
+
+  CHECKASSERT (lmaxd*2 == atomdata%potential%lpot)
+
+  do ispin = 1, nspind
+
+  ! has to be done after Lloyd
+  ! output: RHO2NS, R2NEF, DEN, ESPV
+    call RHOVAL(LDORHOEF,ICST,emesh%IELAST, &
+                NSRA,ISPIN,NSPIND,emesh%EZ,emesh%WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
+                mesh%DRDI,mesh%R,mesh%IRMIN, &
+                atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
+                atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
+                cell%shdata%THETA,cell%shdata%IFUNM,cell%shdata%LMSP, &
+                RHO2NS,R2NEF, &
+                !DEN(0,1,ISPIN),ESPV(0,ISPIN), &
+                DEN(:,:,ISPIN),ESPV(:,ISPIN), &
+                gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND,gaunts%JEND, &
+                GMATN, &
+                ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU, &
+                ldau_data%DMATLDAU, &
+                emesh%IELAST, &
+                lmaxd, mesh%irmd, irnsd, cell%shdata%irid, mesh%ipand, cell%shdata%nfund, gaunts%ncleb)
+
+  end do
+
+end subroutine
+
 !------------------------------------------------------------------------------
 subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMATN, TR_ALPH, ldau_data)
   use BasisAtom_mod
@@ -34,6 +105,8 @@ subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMAT
   integer :: nspind
   integer :: irmind
   integer :: irnsd
+  integer :: lmaxd
+  integer :: lmmaxd
   type (RadialMeshData), pointer :: mesh
 
   nspind = atomdata%nspin
@@ -47,16 +120,85 @@ subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMAT
 
   CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
 
-! TODO: LMAXD
+  lmaxd = atomdata%potential%lpot / 2
+  lmmaxd = (lmaxd + 1)**2
 
-!  call CALCTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
-!                NSRA,emesh%EZ(IE), &
-!                mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
-!                atomdata%potential%VISP(:,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
-!                mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
-!                TMATN(:,:,ISPIN),TR_ALPH(ISPIN),LMAXD, &
-!                ldau_data%LLDAU,ldau_data%WMLDAU(:,:,:,ISPIN), &
-!                gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd)
+  CHECKASSERT (lmaxd*2 == atomdata%potential%lpot)
+  CHECKASSERT (size(TR_ALPH) == nspind)
+  CHECKASSERT (size(TMATN, 3) == nspind)
+  CHECKASSERT (size(TMATN, 1) == lmmaxd)
+  CHECKASSERT (size(TMATN, 2) == lmmaxd)
+
+  call CALCTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
+                NSRA,emesh%EZ(IE), &
+                mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+                atomdata%potential%VISP(:,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
+                mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
+                TMATN(:,:,ISPIN),TR_ALPH(ISPIN),LMAXD, &
+                ldau_data%LLDAU,ldau_data%WMLDAU(:,:,:,ISPIN), &
+                gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd)
+
+end subroutine
+
+!------------------------------------------------------------------------------
+subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, DTDE, TR_ALPH, ldau_data)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use EnergyMesh_mod
+  use LDAUData_mod
+  use GauntCoefficients_mod
+  implicit none
+
+  type (BasisAtom), intent(inout) :: atomdata  ! in?
+  type (GauntCoefficients), intent(in) :: gaunts
+  type (EnergyMesh), intent(in) :: emesh
+  integer :: ie
+  integer :: ispin
+  integer :: ICST
+  integer :: NSRA
+  double complex, dimension(:,:,:), intent(inout) :: DTDE
+  double complex, dimension(:), intent(inout) :: TR_ALPH
+  type (LDAUData) :: ldau_data
+
+  !-------- locals
+  double complex :: delta_E_z
+  integer :: nspind
+  integer :: irmind
+  integer :: irnsd
+  integer :: lmaxd
+  integer :: lmmaxd
+  type (RadialMeshData), pointer :: mesh
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+
+  irmind = atomdata%potential%irmind
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
+
+  lmaxd = atomdata%potential%lpot / 2
+  lmmaxd = (lmaxd + 1)**2
+
+  CHECKASSERT (lmaxd*2 == atomdata%potential%lpot)
+  CHECKASSERT (size(TR_ALPH) == nspind)
+  CHECKASSERT (size(DTDE, 3) == nspind)
+  CHECKASSERT (size(DTDE, 1) == lmmaxd)
+  CHECKASSERT (size(DTDE, 2) == lmmaxd)
+
+  call calcdtmat_DeltaEz(delta_E_z, IE, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, emesh%TK)
+
+  call CALCDTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
+                NSRA,emesh%EZ(IE), delta_E_z, &
+                mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+                atomdata%potential%VISP(:,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
+                mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
+                DTDE(:,:,ISPIN),TR_ALPH(ISPIN),LMAXD, &
+                ldau_data%LLDAU,ldau_data%WMLDAU(:,:,:,ISPIN), &
+                gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd)
 
 end subroutine
 
