@@ -71,7 +71,6 @@ program MAIN2
 
   double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
-  !!double precision::EREFLDAU    ! LDA+U
 
   type (TimerMpi) :: program_timer
   type (TimerMpi) :: iteration_timer
@@ -118,9 +117,6 @@ program MAIN2
   integer::PRSPIN
 
   double precision::EPOTIN
-  !!double precision::EULDAU
-  !!double precision::EDCLDAU
-
   double precision::VMAD
 
   integer::LCOREMAX
@@ -130,7 +126,6 @@ program MAIN2
   integer::NCLS
   integer::NREF
   integer::RF
-  !!integer::NLDAU
   integer::NXIJ
 
   integer::IE

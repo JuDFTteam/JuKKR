@@ -6,8 +6,6 @@ module main2_arrays_mod
   ! KKRnano-Arrays
   double complex, dimension(:,:,:), allocatable ::  DEN
   double complex, dimension(:,:,:), allocatable ::  DSYMLL
-  !!double complex, dimension(:,:), allocatable ::  PHILDAU
-  !!double complex, dimension(:,:,:,:), allocatable ::  DMATLDAU ! LDA+U
   double precision, dimension(:,:), allocatable :: RBASIS
 
   double precision, dimension(:,:), allocatable :: SMAT
@@ -16,10 +14,6 @@ module main2_arrays_mod
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
   double precision, dimension(:,:), allocatable :: RR
-  !!double precision, dimension(:), allocatable :: ULDAU              ! LDA+U
-  !!double precision, dimension(:), allocatable :: JLDAU              ! LDA+U
-  !!double precision, dimension(:,:,:,:,:), allocatable :: UMLDAU     ! LDA+U
-  !!double precision, dimension(:,:,:,:), allocatable :: WMLDAU
 
   integer, dimension(:), allocatable :: KMESH
   integer, dimension(:), allocatable :: NOFKS
@@ -214,10 +208,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(DSYMLL(LMMAXD,LMMAXD,48), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    !!allocate(PHILDAU(IRMD,LMAXD1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    !!allocate(DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RBASIS(3,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(SMAT(LMXSPD,NAEZ), stat = memory_stat)
@@ -231,14 +221,6 @@ CONTAINS
     allocate(VOLBZ(MAXMSHD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RR(3,0:NRD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    !!allocate(ULDAU(LMAXD1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    !!allocate(JLDAU(LMAXD1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    !!allocate(UMLDAU(MMAXD,MMAXD,MMAXD,MMAXD,LMAXD1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    !!allocate(WMLDAU(MMAXD,MMAXD,LMAXD1,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(KMESH(IEMXD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -362,8 +344,6 @@ CONTAINS
 
     deallocate(DEN, stat = memory_stat)
     deallocate(DSYMLL, stat = memory_stat)
-    !!deallocate(PHILDAU, stat = memory_stat)
-    !!deallocate(DMATLDAU, stat = memory_stat)
     deallocate(RBASIS, stat = memory_stat)
     deallocate(SMAT, stat = memory_stat)
     deallocate(RNORM, stat = memory_stat)
@@ -371,10 +351,6 @@ CONTAINS
     deallocate(VOLCUB, stat = memory_stat)
     deallocate(VOLBZ, stat = memory_stat)
     deallocate(RR, stat = memory_stat)
-    !!deallocate(ULDAU, stat = memory_stat)
-    !!deallocate(JLDAU, stat = memory_stat)
-    !!deallocate(UMLDAU, stat = memory_stat)
-    !!deallocate(WMLDAU, stat = memory_stat)
     deallocate(KMESH, stat = memory_stat)
     deallocate(NOFKS, stat = memory_stat)
     deallocate(EZOA, stat = memory_stat)

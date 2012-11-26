@@ -1,3 +1,5 @@
+! TODO: initialisation
+
 ! Some macros for checked allocation/deallocation
 ! they need an integer variable named memory_stat declared in each routine
 ! they are used.
@@ -50,6 +52,8 @@ module LDAUData_mod
     integer :: mmaxd
     integer :: lmaxd1
 
+    double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+
     integer :: memory_stat
 
     lmaxd1 = lmaxd + 1
@@ -73,6 +77,14 @@ module LDAUData_mod
     self%EULDAU = 0.0d0
     self%EDCLDAU = 0.0d0
     self%EREFLDAU = 0.0d0
+
+    self%phildau = CZERO
+    self%dmatldau = CZERO
+    self%uldau = 0.0d0
+    self%jldau = 0.0d0
+    self%umldau = 0.0d0
+    self%wmldau = 0.0d0
+    self%lldau = 0
 
   end subroutine
 

@@ -11,6 +11,56 @@ module wrappers_mod
   CONTAINS
 
 !------------------------------------------------------------------------------
+subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMATN, TR_ALPH, ldau_data)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use EnergyMesh_mod
+  use LDAUData_mod
+  use GauntCoefficients_mod
+  implicit none
+
+  type (BasisAtom), intent(inout) :: atomdata  ! in?
+  type (GauntCoefficients), intent(in) :: gaunts
+  type (EnergyMesh), intent(in) :: emesh
+  integer :: ie
+  integer :: ispin
+  integer :: ICST
+  integer :: NSRA
+  double complex, dimension(:,:,:), intent(inout) :: TMATN
+  double complex, dimension(:), intent(inout) :: TR_ALPH
+  type (LDAUData) :: ldau_data
+
+  !-------- locals
+  integer :: nspind
+  integer :: irmind
+  integer :: irnsd
+  type (RadialMeshData), pointer :: mesh
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+
+  irmind = atomdata%potential%irmind
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
+
+! TODO: LMAXD
+
+!  call CALCTMAT(ldau_data%LDAU,ldau_data%NLDAU,ICST, &
+!                NSRA,emesh%EZ(IE), &
+!                mesh%DRDI,mesh%R,atomdata%potential%VINS(IRMIND,1,ISPIN), &
+!                atomdata%potential%VISP(:,ISPIN),atomdata%Z_nuclear,mesh%IPAN, &
+!                mesh%IRCUT,gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND, &
+!                TMATN(:,:,ISPIN),TR_ALPH(ISPIN),LMAXD, &
+!                ldau_data%LLDAU,ldau_data%WMLDAU(:,:,:,ISPIN), &
+!                gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd)
+
+end subroutine
+
+!------------------------------------------------------------------------------
 !> Wraps mixstr_new.
 subroutine MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, MIXING, FCM)
   use BasisAtom_mod
@@ -442,7 +492,7 @@ end subroutine
 !==============================================================================
 
   !----------------------------------------------------------------------------
-  !> Shift lm-decomposed potential be a constant sqrt(4 * pi) * VBC.
+  !> Shift lm-decomposed potential by a constant sqrt(4 * pi) * VBC.
   subroutine shiftPotential(VONS_ISPIN, index_rmax, VBC)
     implicit none
     double precision, dimension(:,:), intent(inout) :: VONS_ISPIN

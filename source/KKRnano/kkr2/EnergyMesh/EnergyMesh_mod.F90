@@ -1,3 +1,5 @@
+! TODO: Initialisation
+
 ! Some macros for checked allocation/deallocation
 ! they need an integer variable named memory_stat declared in each routine
 ! they are used.
