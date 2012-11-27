@@ -32,10 +32,6 @@ module main2_arrays_mod
   double complex, dimension(:,:,:,:), allocatable ::  GREFN
   double complex, dimension(:,:,:,:), allocatable ::  GMATN
 
-  double complex, dimension(:,:,:), allocatable ::  DTIXIJ
-  double complex, dimension(:,:,:,:), allocatable ::  GMATXIJ
-  double complex, dimension(:,:,:,:), allocatable ::  GXIJ_ALL
-
   !----- Initial guess ---------------------------------------------------
   complex, dimension(:,:,:), allocatable :: PRSC
 
@@ -76,14 +72,6 @@ module main2_arrays_mod
   double precision, dimension(:,:,:), allocatable :: RCLS
   double precision, dimension(:), allocatable :: RMTREF
   double precision, dimension(:), allocatable :: VREF
-
-  ! ------------- Jij calculation ---------------------------------------------
-  double precision, dimension(:), allocatable :: RXIJ          ! interatomic distance Ri-Rj
-  double precision, dimension(:,:), allocatable :: RXCCLS      ! position relative of j rel. to i (sorted)
-  double precision, dimension(:,:,:), allocatable :: ZKRXIJ    ! set up in clsjij, used in kkrmat01
-  integer, dimension(:), allocatable :: IXCP                   ! index to atom in elem/cell at site in cluster
-  integer, dimension(:), allocatable :: NXCP                   ! index to bravais lattice at site in cluster
-  double complex, dimension(:), allocatable ::  JXCIJINT       ! integrated Jij
 
   integer, dimension(:,:), allocatable :: ATOM
   integer, dimension(:), allocatable :: CLS
@@ -248,12 +236,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(DTIXIJ(LMMAXD,LMMAXD,NSPIND), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(GMATXIJ(LMMAXD,LMMAXD,NXIJD,NSPIND), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(GXIJ_ALL(LMMAXD,LMMAXD,NXIJD,NSPIND), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(LLY_G0TR(NCLSD,IEMXD), stat = memory_stat)
@@ -261,8 +243,6 @@ CONTAINS
     allocate(LLY_GRDT(IEMXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(TR_ALPH(NSPIND), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(JXCIJINT(NXIJD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ECOU(0:LPOT), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
@@ -306,16 +286,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(VREF(NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RXIJ(NXIJD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(RXCCLS(3,NXIJD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(ZKRXIJ(48,3,NXIJD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(IXCP(NXIJD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(NXCP(NXIJD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(ATOM(NACLSD,NAEZ), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(CLS(NAEZ), stat = memory_stat)
@@ -328,7 +298,7 @@ CONTAINS
     !initialise to be safe
     RHO2NS = 0.0d0
     R2NEF = 0.0d0
-    DTIXIJ = dcmplx(0.0d0, 0.0d0)
+    !DTIXIJ = dcmplx(0.0d0, 0.0d0)
 
     ! use garbage values
     GMATN = dcmplx(99999.0d0, 99999.0d0)
@@ -364,14 +334,10 @@ CONTAINS
     deallocate(DGREFN, stat = memory_stat)
     deallocate(GREFN, stat = memory_stat)
     deallocate(GMATN, stat = memory_stat)
-    deallocate(DTIXIJ, stat = memory_stat)
-    deallocate(GMATXIJ, stat = memory_stat)
-    deallocate(GXIJ_ALL, stat = memory_stat)
     deallocate(PRSC, stat = memory_stat)
     deallocate(LLY_G0TR, stat = memory_stat)
     deallocate(LLY_GRDT, stat = memory_stat)
     deallocate(TR_ALPH, stat = memory_stat)
-    deallocate(JXCIJINT, stat = memory_stat)
     deallocate(ECOU, stat = memory_stat)
     deallocate(ESPC, stat = memory_stat)
     deallocate(ESPV, stat = memory_stat)
@@ -393,11 +359,6 @@ CONTAINS
     deallocate(RCLS, stat = memory_stat)
     deallocate(RMTREF, stat = memory_stat)
     deallocate(VREF, stat = memory_stat)
-    deallocate(RXIJ, stat = memory_stat)
-    deallocate(RXCCLS, stat = memory_stat)
-    deallocate(ZKRXIJ, stat = memory_stat)
-    deallocate(IXCP, stat = memory_stat)
-    deallocate(NXCP, stat = memory_stat)
     deallocate(ATOM, stat = memory_stat)
     deallocate(CLS, stat = memory_stat)
     deallocate(NACLS, stat = memory_stat)

@@ -29,6 +29,7 @@ module KKRnanoParallel_mod
     
     integer :: my_active_communicator
     integer :: active
+    integer :: active_rank
     
     integer :: my_world_rank
     integer :: my_atom_rank  ! Note ranks start from 0 !
@@ -131,6 +132,8 @@ module KKRnanoParallel_mod
     
     call MPI_Comm_split(MPI_COMM_WORLD, my_mpi%active, key, my_mpi%my_active_communicator, ierr)
     
+    call MPI_Comm_rank(my_mpi%my_active_communicator, my_mpi%active_rank, ierr)
+
     ! Assertion: check if ids are correct
     if (my_mpi%my_world_rank /= mapToWorldRank(my_mpi, &
                                                my_mpi%my_atom_id, &
@@ -146,6 +149,11 @@ module KKRnanoParallel_mod
       write(*,*) "Inconsistency in KKRnano atom rank."
       stop
     end if
+
+    if (my_mpi%active == 1 .and. my_mpi%active_rank /= my_mpi%my_world_rank) then
+      write(*,*) "ERROR: active rank not equal to world rank."
+      stop
+    endif
 
   end subroutine
 

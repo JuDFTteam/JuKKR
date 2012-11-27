@@ -179,6 +179,9 @@ module EBalanceHandler_mod
 
       COMMCHECK(IERR)
 
+      ! save old rank distribution
+      balance%eproc_old = balance%eproc
+
       ! only Masterrank calculates new work distribution
       if (getMyWorldRank(my_mpi) == 0) then
         call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
@@ -228,8 +231,8 @@ module EBalanceHandler_mod
     !-----
     integer :: ierr
 
-    ! save old ebalance information
-    balance%eproc_old = balance%eproc
+    ! save old ebalance information WRONG!!!! already done
+    ! balance%eproc_old = balance%eproc
 
     call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
     0, getMyActiveCommunicator(my_mpi), ierr)

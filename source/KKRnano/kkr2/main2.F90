@@ -33,6 +33,7 @@ program MAIN2
   use CellData_mod
   use BasisAtom_mod
 
+  use JijData_mod
   use LDAUData_mod
 
   use TimerMpi_mod
@@ -126,7 +127,7 @@ program MAIN2
   integer::NCLS
   integer::NREF
   integer::RF
-  integer::NXIJ
+  !integer::NXIJ  !DEL
 
   integer::IE
   integer::IELAST
@@ -145,6 +146,7 @@ program MAIN2
   type (BasisAtom), target :: atomdata
   type (EnergyMesh) :: emesh
   type (LDAUData) :: ldau_data
+  type (JijData) :: jij_data
 
   call read_dimension_parameters()
 
@@ -257,6 +259,7 @@ program MAIN2
     WRITELOG(3, *) "lm-array: ", lmarray
 
     call createLDAUData(ldau_data, ldau, irmd, lmaxd, nspind)
+    call createJijData(jij_data, jij, rcutjij, nxijd,lmmaxd,nspind)
 
     call createEnergyMesh(emesh, iemxd)
     ielast = iemxd
@@ -327,12 +330,12 @@ program MAIN2
 
       if (XCCPL) then
 
-        call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,RCUTJIJ,NSYMAT,ISYMINDEX, &
-                    IXCP,NXCP,NXIJ,RXIJ,RXCCLS,ZKRXIJ, &
-                    nrd, nxijd)
+        call CLSJIJ(I1,NAEZ,RR,NR,RBASIS,jij_data%RCUTJIJ,NSYMAT,ISYMINDEX, &
+                    jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ,jij_data%RXCCLS,jij_data%ZKRXIJ, &
+                    nrd, jij_data%nxijd)
 
-        JXCIJINT = CZERO
-        GMATXIJ = CZERO
+        jij_data%JXCIJINT = CZERO
+        jij_data%GMATXIJ = CZERO
 
       endif
 
@@ -416,7 +419,7 @@ spinloop: do ISPIN = 1,NSPIND
 
               call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMATN, TR_ALPH, ldau_data)
 
-              DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
+              jij_data%DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
               if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
 
@@ -469,13 +472,13 @@ spinloop: do ISPIN = 1,NSPIND
               PRSC(1,1,PRSPIN), &
               EKM,NOITER, &
               QMRBOUND,IGUESS,BCP, &
-              NXIJ,XCCPL,IXCP,ZKRXIJ, &
+              jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
               LLY_GRDT(IE,ISPIN),TR_ALPH(ISPIN), &
-              GMATXIJ(1,1,1,ISPIN), &
+              jij_data%GMATXIJ(1,1,1,ISPIN), &
               getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
               iemxd, &
               lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
-              nxijd, nguessd, kpoibz, nrd, ekmd)
+              jij_data%nxijd, nguessd, kpoibz, nrd, ekmd)
 
               TESTARRAYLOG(3, GMATN(:,:,IE,ISPIN))
 
@@ -496,16 +499,16 @@ spinloop: do ISPIN = 1,NSPIND
 ! xccpl
 
           if (XCCPL) then
-            call jijSpinCommunication_com(my_mpi, GMATXIJ, DTIXIJ)
+            call jijSpinCommunication_com(my_mpi, jij_data%GMATXIJ, jij_data%DTIXIJ)
 
             ! calculate DTIXIJ = T_down - T_up
-            call calcDeltaTupTdown(DTIXIJ)
+            call calcDeltaTupTdown(jij_data%DTIXIJ)
 
             JSCAL = emesh%WEZ(IE)/DBLE(NSPIND)
 
-            call jijLocalEnergyIntegration(my_mpi, JSCAL, GMATXIJ, &
-                                            DTIXIJ(:,:,1), RXIJ, NXIJ, IXCP, &
-                                            RXCCLS, JXCIJINT)
+            call jijLocalEnergyIntegration(my_mpi, JSCAL, jij_data%GMATXIJ, &
+                                            jij_data%DTIXIJ(:,:,1), jij_data%RXIJ, jij_data%NXIJ, jij_data%IXCP, &
+                                            jij_data%RXCCLS, jij_data%JXCIJINT)
           end if
 
 ! xccpl
@@ -545,10 +548,10 @@ spinloop: do ISPIN = 1,NSPIND
 !=======================================================================
       if (XCCPL) then
 
-        call jijReduceIntResults_com(my_mpi, JXCIJINT)
+        call jijReduceIntResults_com(my_mpi, jij_data%JXCIJINT)
 
         if (isInMasterGroup(my_mpi)) then
-          call writeJiJs(I1,RXIJ,NXIJ,IXCP,RXCCLS,JXCIJINT, nxijd)
+          call writeJiJs(I1,jij_data%RXIJ,jij_data%NXIJ,jij_data%IXCP,jij_data%RXCCLS,jij_data%JXCIJINT, jij_data%nxijd)
         end if
       endif
 
@@ -574,6 +577,8 @@ spinloop: do ISPIN = 1,NSPIND
             endif
 
             !call EPRDIST
+            WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
+            WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
             call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), &
                  ebalance_handler%EPROC, ebalance_handler%EPROC_old, KMESH, NofKs)
 
@@ -908,6 +913,7 @@ spinloop: do ISPIN = 1,NSPIND
     call destroyRadialMeshData(mesh)
 
     call destroyLDAUData(ldau_data)
+    call destroyJijData(jij_data)
 
 ! ======================================================================
 
