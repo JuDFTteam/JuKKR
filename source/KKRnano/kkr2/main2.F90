@@ -630,37 +630,12 @@ spinloop: do ISPIN = 1,NSPIND
           ldau_data%DMATLDAU = CZERO
         endif
 
-! SPIN ==================================================================
-!     BEGIN do loop over spins
-! SPIN ==================================================================
+        LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
-        do ISPIN = 1,NSPIND
-
-          LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
-
-          ! contains a loop over energies, TODO: remove spin dependence
-          ! has to be done after Lloyd
-          ! output: RHO2NS, R2NEF, DEN, ESPV
-          call RHOVAL(LDORHOEF,ICST,IELAST, &
-                      NSRA,ISPIN,NSPIND,emesh%EZ,emesh%WEZRN(1,ISPIN), &   ! unfortunately spin-dependent
-                      mesh%DRDI,mesh%R,mesh%IRMIN, &
-                      atomdata%potential%VINS(IRMIND,1,ISPIN),atomdata%potential%VISP(1,ISPIN), &
-                      atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
-                      cell%shdata%THETA,cell%shdata%IFUNM,cell%shdata%LMSP, &
-                      RHO2NS,R2NEF, &
-                      DEN(0,1,ISPIN),ESPV(0,ISPIN), &
-                      gaunts%CLEB,gaunts%LOFLM,gaunts%ICLEB,gaunts%IEND,gaunts%JEND, &
-                      GMATN, &
-                      ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU, &
-                      ldau_data%DMATLDAU, &
-                      iemxd, &
-                      lmaxd, irmd, irnsd, irid, ipand, nfund, gaunts%ncleb)
-
-        end do
-
-! SPIN ==================================================================
-!      END do loop over spins
-! SPIN ===================================================================
+        ! has to be done after Lloyd
+        ! output: RHO2NS, R2NEF, DEN, ESPV
+        call RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, RHO2NS, R2NEF, &
+                            DEN, ESPV, GMATN, gaunts, emesh, ldau_data)
 
 ! ----------------------------------------------------------------------
 ! -->   determine total charge expanded in spherical harmonics

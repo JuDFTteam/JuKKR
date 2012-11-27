@@ -26,8 +26,8 @@ subroutine RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, RHO2NS, R2NEF, DEN, ES
   integer, intent(in) :: NSRA !< flag scalar relativistic
   double precision, intent(inout) :: RHO2NS(:,:,:) ! inout?
   double precision, intent(inout) :: R2NEF(:,:,:) ! inout?
-  double complex, intent(inout) :: DEN(0:,:,:)
-  double precision, intent(inout) :: ESPV(0:,:)
+  double complex, intent(inout) :: DEN(:,:,:)
+  double precision, intent(inout) :: ESPV(:,:)
   double complex, intent(inout) :: GMATN(:,:,:,:) !in or inout?
   type (BasisAtom), intent(inout) :: atomdata !in or inout?
   type (GauntCoefficients), intent(in) :: gaunts
