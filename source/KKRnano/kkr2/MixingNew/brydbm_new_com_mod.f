@@ -7,17 +7,6 @@ C> Modified to remove all atom dependencies.
 
       CONTAINS
 
-c old call:
-c         call BRYDBM_new_com(VISP,VONS,VINS, &
-c         LMPOTD,R,DRDI,MIXING, &
-c         IRC,IRMIN,NSPIND,I1BRYD, &
-c         IMIX,ITER, &
-c         UI2,VI2,WIT,SM1S,FM1S, &
-c         getMyAtomRank(my_mpi), &
-c         getMySEcommunicator(my_mpi), &
-c         itdbryd, irmd, irnsd, nspind)
-
-
 c*********************************************************************
 c> Broyden mixing.
 c>

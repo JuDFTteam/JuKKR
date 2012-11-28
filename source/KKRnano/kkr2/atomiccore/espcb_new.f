@@ -1,17 +1,3 @@
-C             TODO: MODIFY RHOCORE and
-C             COREL first that it gives output only
-C             for one atom
-
-C             new code for main2:
-
-
-C     arrangement of data in LCORE, NCORE
-C     atom1,spin1|atom1,spin2|atom2,spin1|atom2,spin2| ...
-C     This will change
-
-C             IPOT = NSPIN * (I1-1)
-C             call ESPCB_NEW(ESPC,NSPIN,ECORE,LCORE(:,IPOT),LCOREMAX,NCORE(IPOT))
-
 C     Note: LCORE can have values only from 0 to 3
 
 C>    @param[out] ESPC core contribution to single particle energies
