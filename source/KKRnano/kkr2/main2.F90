@@ -38,6 +38,7 @@ program MAIN2
 
   use TimerMpi_mod
   use EBalanceHandler_mod
+  use BroydenData_mod
   use BRYDBM_new_com_mod
 
   use wrappers_mod
@@ -146,6 +147,7 @@ program MAIN2
   type (EnergyMesh) :: emesh
   type (LDAUData) :: ldau_data
   type (JijData) :: jij_data
+  type (BroydenData) :: broyden
 
   call read_dimension_parameters()
 
@@ -219,12 +221,6 @@ program MAIN2
   ! This if closes several hundreds of lines later!
   if (isActiveRank(my_mpi)) then
 
-! initialise the arrays for (gen. Anderson/Broyden) potential mixing
-    UI2 = 0.00
-    VI2 = 0.00
-    SM1S = 0.00
-    FM1S = 0.00
-
 !+++++++++++ pre self-consistency preparation
 
     I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
@@ -262,6 +258,7 @@ program MAIN2
 
     call createLDAUData(ldau_data, ldau, irmd, lmaxd, nspind)
     call createJijData(jij_data, jij, rcutjij, nxijd,lmmaxd,nspind)
+    call createBroydenData(broyden, ntird, itdbryd, imix, mixing)
 
     call createEnergyMesh(emesh, iemxd)
     ielast = iemxd
@@ -779,13 +776,13 @@ spinloop: do ISPIN = 1,NSPIND
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
         if (IMIX>=3) then
           call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS,atomdata%potential%VINS, &
-          LMPOTD,mesh%R,mesh%DRDI,MIXING, &
+          LMPOTD,mesh%R,mesh%DRDI,broyden%MIXING, &
           mesh%IRC,mesh%IRMIN,NSPIND, &
-          IMIX,ITER, &
-          UI2,VI2,WIT,SM1S,FM1S, &
+          broyden%IMIX,ITER, &
+          broyden%UI2,broyden%VI2,broyden%WIT,broyden%SM1S,broyden%FM1S, &
           getMyAtomRank(my_mpi), &
           getMySEcommunicator(my_mpi), &
-          itdbryd, irmd, irnsd, nspind)
+          broyden%itdbryd, irmd, irnsd, nspind)
         endif
 
         TESTARRAYLOG(3, atomdata%potential%VINS)
@@ -885,6 +882,7 @@ spinloop: do ISPIN = 1,NSPIND
     call destroyCellData(cell)
     call destroyRadialMeshData(mesh)
 
+    call destroyBroydenData(broyden)
     call destroyLDAUData(ldau_data)
     call destroyJijData(jij_data)
 

@@ -61,12 +61,6 @@ module main2_arrays_mod
   !     .. FORCES
   !double precision, dimension(:,:), allocatable :: FLM
   !double precision, dimension(:,:), allocatable :: FLMC
-  !     .. MIXING
-  double precision, dimension(:), allocatable :: SM1S
-  double precision, dimension(:), allocatable :: FM1S
-  double precision, dimension(:,:), allocatable :: UI2
-  double precision, dimension(:,:), allocatable :: VI2
-  double precision, dimension(:), allocatable :: WIT
 
   double precision, dimension(:,:,:), allocatable :: RCLS
   double precision, dimension(:), allocatable :: RMTREF
@@ -267,16 +261,6 @@ CONTAINS
     !if(memory_stat /= 0) call fatalMemoryError("main2")
     !allocate(FLMC(-1:1,NAEZ), stat = memory_stat)
     !if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(SM1S(NTIRD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(FM1S(NTIRD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(UI2(NTIRD,2:ITDBRYD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(VI2(NTIRD,2:ITDBRYD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(WIT(2:ITDBRYD), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RCLS(3,NACLSD,NCLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(RMTREF(NREFD), stat = memory_stat)
@@ -347,11 +331,6 @@ CONTAINS
     deallocate(CATOM, stat = memory_stat)
     !deallocate(FLM, stat = memory_stat)
     !deallocate(FLMC, stat = memory_stat)
-    deallocate(SM1S, stat = memory_stat)
-    deallocate(FM1S, stat = memory_stat)
-    deallocate(UI2, stat = memory_stat)
-    deallocate(VI2, stat = memory_stat)
-    deallocate(WIT, stat = memory_stat)
     deallocate(RCLS, stat = memory_stat)
     deallocate(RMTREF, stat = memory_stat)
     deallocate(VREF, stat = memory_stat)
