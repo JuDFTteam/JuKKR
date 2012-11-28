@@ -212,9 +212,10 @@ TEST_lcutoff_mod.o: lcutoff_mod.o
 BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
 
-wrappers_mod.o: BasisAtom_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o LDAUData_mod.o
+wrappers_mod.o: BasisAtom_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o LDAUData_mod.o EnergyMesh_mod.o
 
 main2_aux_mod.o: BasisAtom_mod.o RadialMeshData_mod.o
 
 EnergyMesh_mod.o: EnergyMeshHelpers_mod.o KKRnanoParallel_mod.o
-
+lloyd0_new_mod.o: BasisAtom_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o \
+                  LDAUData_mod.o EnergyMesh_mod.o KKRnanoParallel_mod.o

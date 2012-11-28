@@ -10,19 +10,18 @@ module main2_arrays_mod
 
   double precision, dimension(:,:), allocatable :: SMAT
   double precision, dimension(:,:), allocatable :: RNORM
+
   double precision, dimension(:,:,:), allocatable :: BZKP
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
-  double precision, dimension(:,:), allocatable :: RR
-
   integer, dimension(:), allocatable :: KMESH
   integer, dimension(:), allocatable :: NOFKS
+
+  double precision, dimension(:,:), allocatable :: RR
   integer, dimension(:,:), allocatable :: EZOA
 
   integer, dimension(:), allocatable :: NUMN0
   integer, dimension(:,:), allocatable :: INDN0
-
-  integer, dimension(:), allocatable :: LLDAU    ! LDA+U
 
   double complex, dimension(:,:,:), allocatable ::  TMATN
   double complex, dimension(:,:,:), allocatable ::  DTDE
@@ -220,8 +219,6 @@ CONTAINS
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(INDN0(NAEZ,NACLSD), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
-    allocate(LLDAU(LMAXD1), stat = memory_stat)
-    if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(TMATN(LMMAXD,LMMAXD,NSPIND), stat = memory_stat)
     if(memory_stat /= 0) call fatalMemoryError("main2")
     allocate(DTDE(LMMAXD,LMMAXD,NSPIND), stat = memory_stat)
@@ -326,7 +323,6 @@ CONTAINS
     deallocate(EZOA, stat = memory_stat)
     deallocate(NUMN0, stat = memory_stat)
     deallocate(INDN0, stat = memory_stat)
-    deallocate(LLDAU, stat = memory_stat)
     deallocate(TMATN, stat = memory_stat)
     deallocate(DTDE, stat = memory_stat)
     deallocate(TREFLL, stat = memory_stat)

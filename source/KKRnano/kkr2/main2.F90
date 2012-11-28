@@ -59,7 +59,6 @@ program MAIN2
   !     ..
   !     .. Local Scalars ..
   double complex:: JSCAL        ! scaling factor for Jij calculation
-  double complex:: Delta_E_z
 
   double precision::DENEF
   double precision::CHRGNT
@@ -230,6 +229,12 @@ program MAIN2
 
     I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
 
+    ! ---------------------------------------------------------- k_mesh
+    call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)  !every process does this!
+
+    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
+                                       getElapsedTime(program_timer), 0)
+
     call createBasisAtom(atomdata, I1, lpot, nspind, irmind, irmd)
     call openBasisAtomDAFile(atomdata, 37, "atoms")
     call readBasisAtomDA(atomdata, 37, I1)
@@ -255,9 +260,6 @@ program MAIN2
 
     call associateBasisAtomMesh(atomdata, mesh)
 
-    call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
-    WRITELOG(3, *) "lm-array: ", lmarray
-
     call createLDAUData(ldau_data, ldau, irmd, lmaxd, nspind)
     call createJijData(jij_data, jij, rcutjij, nxijd,lmmaxd,nspind)
 
@@ -265,12 +267,6 @@ program MAIN2
     ielast = iemxd
 
     call readEnergyMesh(emesh)  !every process does this!
-
-    ! ---------------------------------------------------------- k_mesh
-    call readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)  !every process does this!
-
-    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
-                                       getElapsedTime(program_timer), 0)
 
     call createMadelungCalculator(madelung_calc, lmaxd, ALAT, RMAX, GMAX, &
                                   BRAVAIS, NMAXD, ISHLD)
@@ -285,6 +281,9 @@ program MAIN2
     call createEBalanceHandler(ebalance_handler, ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
+
+    call initLcutoff(rbasis, bravais, lmmaxd, I1) !TODO: remove
+    WRITELOG(3, *) "lm-array: ", lmarray
 
 !+++++++++++
     ASSERT( ZAT(I1) == atomdata%Z_nuclear )
@@ -422,10 +421,6 @@ spinloop: do ISPIN = 1,NSPIND
               jij_data%DTIXIJ(:,:,ISPIN) = TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
               if(LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-
-                call calcdtmat_DeltaEz(delta_E_z, IE, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, emesh%TK)
-
-                ! WHY IS TR_ALPH OVERWRITTEN HERE???
                 call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, DTDE, TR_ALPH, ldau_data)
               end if
 
@@ -576,7 +571,6 @@ spinloop: do ISPIN = 1,NSPIND
               PRSPIN   = 1
             endif
 
-            !call EPRDIST
             WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
             WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
             call redistributeInitialGuess_com(my_mpi, PRSC(:,:,PRSPIN), &
@@ -596,34 +590,13 @@ spinloop: do ISPIN = 1,NSPIND
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
 
-        if (LLY==1) then
-          ! get WEZRN and RNORM, the important input from previous
-          ! calculations is LLY_GRDT_ALL
+        ! out: emesh, RNORM
+        call lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data)
 
-          call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
-                          atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
-                          cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
-                          gaunts%JEND,gaunts%LOFLM,ICST,IELAST,gaunts%IEND,NSPIND,NSRA, &
-                          emesh%WEZRN,RNORM, &
-                          GMATN, &
-                          LLY_GRDT, &
-                          ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
-                          getMySEcommunicator(my_mpi), &
-                          lmaxd, irmd, irnsd, iemxd, &
-                          irid, nfund, ipand, gaunts%ncleb)
-
+        if (LLY == 1) then
           TESTARRAYLOG(3, emesh%WEZRN)
           TESTARRAYLOG(3, RNORM)
-
-! IME
           call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
-! IME
-        else ! no Lloyd
-
-          do IE=1,IELAST
-            emesh%WEZRN(IE,1) = emesh%WEZ(IE)
-            emesh%WEZRN(IE,2) = emesh%WEZ(IE)
-          enddo
         endif
 
         ! now WEZRN stores the weights for E-integration

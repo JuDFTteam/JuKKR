@@ -4,9 +4,90 @@ module lloyd0_new_mod
 
 contains
 
+!----------------------------------------------------------------------------
+!> Lloyd's formula.
+!> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
+subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data)
+  use BasisAtom_mod
+  use RadialMeshData_mod
+  use CellData_mod
+  use GauntCoefficients_mod
+  use EnergyMesh_mod
+  use LDAUData_mod
+  use KKRnanoParallel_mod
+
+  implicit none
+  integer, intent(in) :: LLY  !< use Lloyd 0/1
+  integer, intent(in) :: ICST !< num. Born iterations
+  integer, intent(in) :: NSRA !< flag scalar relativistic
+  double complex, intent(in) :: LLY_GRDT(:,:) ! in
+
+  double complex, intent(inout) :: GMATN(:,:,:,:) !in or inout?
+  type (BasisAtom), intent(inout) :: atomdata !in or inout?
+  type (GauntCoefficients), intent(in) :: gaunts
+  type (EnergyMesh), intent(inout) :: emesh !inout or in?
+  type (LDAUData), intent(inout) :: ldau_data ! inout?
+  double precision, intent(inout) :: RNORM(:,:)  !out
+  type (KKRnanoParallel), intent(in) :: my_mpi
+
+  !-------- locals
+  integer :: nspind
+  integer :: irmind
+  integer :: irnsd
+  integer :: lmaxd
+  integer :: ielast
+  integer :: ie
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+
+  nspind = atomdata%nspin
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  CHECKASSERT( associated(atomdata%mesh_ptr) )
+  CHECKASSERT( associated(atomdata%cell_ptr) )
+
+  irmind = atomdata%potential%irmind
+  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
+
+  lmaxd = atomdata%potential%lpot / 2
+
+  CHECKASSERT (lmaxd*2 == atomdata%potential%lpot)
+
+  ielast = emesh%ielast
+
+  if (LLY==1) then
+    ! get WEZRN and RNORM, the important input from previous
+    ! calculations is LLY_GRDT_ALL
+
+    call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
+                    atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
+                    cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
+                    gaunts%JEND,gaunts%LOFLM,ICST,ielast,gaunts%IEND,NSPIND,NSRA, &
+                    emesh%WEZRN,RNORM, &
+                    GMATN, &
+                    LLY_GRDT, &
+                    ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
+                    getMySEcommunicator(my_mpi), &
+                    lmaxd, mesh%irmd, irnsd, ielast, &
+                    cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb)
+
+  else ! no Lloyd
+
+    do IE=1,IELAST
+      emesh%WEZRN(IE,1) = emesh%WEZ(IE)
+      emesh%WEZRN(IE,2) = emesh%WEZ(IE)
+    enddo
+  endif
+
+
+end subroutine
+
 !> This routine uses the previously calculated Lloyd's formula terms
 !> to calculate the correction to the DOS and renormalized weights for
 !> the energy integration.
+!>
 !> the routine uses communication
 !> TODO: split, simplify, extract communication
 subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
@@ -19,7 +100,6 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &                 ! >
                   DMATLDAU, &                                        ! <
                   communicator, &                         ! >
-                  !   new input parameters after inc.p removal
                   lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ipand, ncleb)
 
