@@ -588,6 +588,11 @@
       BCP = BCPD
     endif
 
+    if (BCPD == 1 .and. NATBLD*XDIM*YDIM*ZDIM /= NAEZD) then
+      write(*,*) "ERROR: When BCPD==1 then NATBLD*XDIM*YDIM*ZDIM has to be equal to NAEZD."
+      stop
+    endif
+
 !     Conversion of RMAX and GMAX to units of ALAT
     RMAX = RMAX*ALAT
     GMAX = GMAX/ALAT

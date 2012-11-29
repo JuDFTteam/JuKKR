@@ -53,8 +53,6 @@ program MAIN2
   type (GauntCoefficients) :: gaunts
 
   !     .. Parameters ..
-
-  integer, parameter ::   NSYMAXD = 48
   double complex, parameter :: CZERO = (0.0D0,0.0D0)
 
   !     ..
@@ -97,11 +95,6 @@ program MAIN2
   logical::JIJ
   logical::LDORHOEF
   logical::LDAU
-
-  ! static arrays
-  double precision::BRAVAIS(3,3)
-  double precision::VBC(2)
-  integer::ISYMINDEX(NSYMAXD)
 
   !     .. Local Arrays ..
 

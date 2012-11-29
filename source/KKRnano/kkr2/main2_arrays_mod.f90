@@ -3,25 +3,40 @@ module main2_arrays_mod
 
   SAVE
 
+  integer, parameter ::   NSYMAXD = 48
+
   ! KKRnano-Arrays
-  double complex, dimension(:,:,:), allocatable ::  DEN
+
+  !Lattice and reference cluster
   double complex, dimension(:,:,:), allocatable ::  DSYMLL
   double precision, dimension(:,:), allocatable :: RBASIS
+  double precision, dimension(:,:), allocatable :: RR
+  double precision::BRAVAIS(3,3)
+  integer::ISYMINDEX(NSYMAXD)
 
-  double precision, dimension(:,:), allocatable :: SMAT
-  double precision, dimension(:,:), allocatable :: RNORM
+  double precision, dimension(:,:,:), allocatable :: RCLS
+  double precision, dimension(:), allocatable :: RMTREF
+  double precision, dimension(:), allocatable :: VREF
 
+  integer, dimension(:,:), allocatable :: ATOM
+  integer, dimension(:), allocatable :: CLS
+  integer, dimension(:), allocatable :: NACLS
+  integer, dimension(:), allocatable :: REFPOT
+
+  integer, dimension(:,:), allocatable :: EZOA
+  integer, dimension(:), allocatable :: NUMN0
+  integer, dimension(:,:), allocatable :: INDN0
+
+  double precision, dimension(:), allocatable :: ZAT
+
+  ! K-meshes ------------------------------------------------------------------
   double precision, dimension(:,:,:), allocatable :: BZKP
   double precision, dimension(:,:), allocatable :: VOLCUB
   double precision, dimension(:), allocatable :: VOLBZ
   integer, dimension(:), allocatable :: KMESH
   integer, dimension(:), allocatable :: NOFKS
 
-  double precision, dimension(:,:), allocatable :: RR
-  integer, dimension(:,:), allocatable :: EZOA
-
-  integer, dimension(:), allocatable :: NUMN0
-  integer, dimension(:,:), allocatable :: INDN0
+  !-T-matrices, Green's functions -----------------------------------------
 
   double complex, dimension(:,:,:), allocatable ::  TMATN
   double complex, dimension(:,:,:), allocatable ::  DTDE
@@ -37,16 +52,20 @@ module main2_arrays_mod
   !----- Lloyd -----------------------------------------------------------
   double complex, dimension(:,:), allocatable ::  LLY_G0TR
   double complex, dimension(:,:), allocatable ::  LLY_GRDT
-  double complex, dimension(:), allocatable ::  TR_ALPH
+  double complex, dimension(:), allocatable ::  TR_ALPH    ! dAlpha/dE
+  double precision, dimension(:,:), allocatable :: RNORM
   ! ----------------------------------------------------------------------
 
-  ! ----------------------------------------------------------------------
+  !================= Results =============================================
+
+  double complex, dimension(:,:,:), allocatable ::  DEN
+  double precision, dimension(:,:), allocatable :: SMAT ! Madelung - move to madelung calc
+
+  ! Energies -------------------------------------------------------------
   double precision, dimension(:), allocatable :: ECOU
   double precision, dimension(:,:), allocatable :: ESPC
   double precision, dimension(:,:), allocatable :: ESPV
   double precision, dimension(:), allocatable :: EXC
-
-  double precision, dimension(:), allocatable :: ZAT
 
   ! ----------------------------------------------------------------------
   double precision, dimension(:,:,:), allocatable ::  R2NEF
@@ -58,18 +77,11 @@ module main2_arrays_mod
   double precision, dimension(:), allocatable :: CMOM      ! LM moment of total charge
   double precision, dimension(:), allocatable :: CATOM     ! total charge per atom
 
+  double precision :: VBC(2) ! muffin-tin zero
+
   !     .. FORCES
   !double precision, dimension(:,:), allocatable :: FLM
   !double precision, dimension(:,:), allocatable :: FLMC
-
-  double precision, dimension(:,:,:), allocatable :: RCLS
-  double precision, dimension(:), allocatable :: RMTREF
-  double precision, dimension(:), allocatable :: VREF
-
-  integer, dimension(:,:), allocatable :: ATOM
-  integer, dimension(:), allocatable :: CLS
-  integer, dimension(:), allocatable :: NACLS
-  integer, dimension(:), allocatable :: REFPOT
 
   !==============================================================================
   ! Dimension Parameters.
