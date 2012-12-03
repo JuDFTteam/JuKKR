@@ -3,51 +3,6 @@ module main2_aux_mod
 
   contains
 
-  ! from dimension parameters, calculate some derived parameters
-  !----------------------------------------------------------------------------
-  subroutine getDerivedParameters(IGUESSD, IRMD, IRMIND, IRNSD, &
-                                  LMAXD, LMAXD1, LMMAXD, LMPOTD, LMXSPD, &
-                                  LRECRES2, MMAXD, NAEZD, &
-                                  NGUESSD, NSPIND, NTIRD)
-    implicit none
-    integer :: IGUESSD
-    integer :: IRMD
-    integer :: IRMIND
-    integer :: IRNSD
-
-    integer :: LMAXD
-    integer :: LMAXD1
-    integer :: LMMAXD
-    integer :: LMPOTD
-    integer :: LMXSPD
-    integer :: LRECRES2
-    integer :: MMAXD
-    integer :: NAEZD
-    integer :: NGUESSD
-    integer :: NSPIND
-    integer :: NTIRD
-
-    !--------- local
-    integer :: LPOTD
-
-    ! derived dimension parameters
-    LPOTD = 2*LMAXD
-    LMMAXD= (LMAXD+1)**2
-
-    LMAXD1=LMAXD+1
-    MMAXD  = 2*LMAXD + 1
-    LMXSPD= (2*LPOTD+1)**2
-
-    LMPOTD= (LPOTD+1)**2
-    NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND
-    IRMIND=IRMD-IRNSD
-
-    NGUESSD = 1 + IGUESSD * ( NAEZD * (LMAXD+1)**2 - 1 )
-
-    ! Record lengths
-    LRECRES2=4+8*(NSPIND*(LMAXD+7)+2*LPOTD+4+2)
-  end subroutine
-
   !----------------------------------------------------------------------------
   subroutine consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
     implicit none

@@ -315,7 +315,7 @@ program MAIN2
 
         call CLSJIJ(I1,dims%NAEZ,arrays%RR,NR,arrays%RBASIS,jij_data%RCUTJIJ,NSYMAT,arrays%ISYMINDEX, &
                     jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ,jij_data%RXCCLS,jij_data%ZKRXIJ, &
-                    dims%nrd, jij_data%nxijd)
+                    arrays%nrd, jij_data%nxijd)
 
         jij_data%JXCIJINT = CZERO
         jij_data%GMATXIJ = CZERO
@@ -371,7 +371,7 @@ program MAIN2
           TESTARRAYLOG(3, arrays%TREFLL)
           TESTARRAYLOG(3, arrays%DTREFLL)
 
-          call GREF_com(emesh%EZ(IE),ALAT,gaunts%IEND,NCLS,dims%NAEZ, &
+          call GREF_com(emesh%EZ(IE),ALAT,gaunts%IEND,NCLS,arrays%NAEZ, &
                         gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
                         gaunts%LOFLM,arrays%NACLS, &
                         arrays%REFPOT, &
