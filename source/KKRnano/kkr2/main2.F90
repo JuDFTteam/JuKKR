@@ -45,6 +45,7 @@ program MAIN2
   use TEST_lcutoff_mod !TODO: remove
 
   use DimParams_mod
+  use InputParams_mod
   use Main2Arrays_mod
 
   implicit none
@@ -63,12 +64,6 @@ program MAIN2
 
   double precision::DENEF
   double precision::CHRGNT
-  double precision::RCUTJIJ
-  double precision::ALAT
-  double precision::FCM
-  double precision::MIXING
-  double precision::RMAX
-  double precision::GMAX
 
   double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
@@ -81,22 +76,13 @@ program MAIN2
   type (EBalanceHandler) :: ebalance_handler
 
   integer::ITER
-  integer::SCFSTEPS
-  integer::IMIX
   integer::NOITER
   integer::NOITER_ALL
-  integer::KPRE
-  integer::KTE
-  integer::KXC
-  integer::KFORCE
   integer::ISPIN
   integer::I1
-  integer::NR
   integer::EKM
   logical::XCCPL
-  logical::JIJ
   logical::LDORHOEF
-  logical::LDAU
 
   !     .. Local Arrays ..
 
@@ -104,12 +90,9 @@ program MAIN2
   double precision::VOL0
 
   integer::NMESH
-  integer::NSYMAT
-  integer::MAXMESH
 
-  double precision:: QMRBOUND
-  integer::IGUESS
-  integer::BCP
+  integer::IGUESS  ! TODO: remove
+  integer::BCP     ! TODO: remove
   integer::PRSPIN
 
   double precision::EPOTIN
@@ -117,14 +100,11 @@ program MAIN2
 
   integer::LCOREMAX
 
-  integer::ICST
-  integer::NSRA
-  integer::NCLS
-  integer::NREF
+  !integer::NCLS
+  !integer::NREF
   integer::RF
 
   integer::IE
-  integer::IELAST
 
   integer::   IERR
   integer::   MAPBLOCK
@@ -144,8 +124,9 @@ program MAIN2
   type (BroydenData), target    :: broyden
   type (Main2Arrays), target    :: arrays
   type (DimParams), target      :: dims
+  type (InputParams)            :: params
 
-  call createDimParams(dims)
+  call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
 ! -----------------------------------------------------------------------------
   call createKKRnanoParallel(my_mpi, dims%NAEZ, dims%SMPID, dims%EMPID)
@@ -175,16 +156,16 @@ program MAIN2
 !-----------------------------------------------------------------------------
 
   !every process does this!
-  call readKKR0InputNew(dims%NSYMAXD, ALAT, arrays%ATOM, BCP, arrays%BRAVAIS, &
-                        arrays%CLS, arrays%DSYMLL, arrays%EZOA, FCM, GMAX, ICST, &
-                        IGUESS, IMIX, arrays%INDN0, &
+  call readKKR0InputNew(dims%NSYMAXD, params%ALAT, arrays%ATOM, BCP, arrays%BRAVAIS, &
+                        arrays%CLS, arrays%DSYMLL, arrays%EZOA, params%FCM, params%GMAX, params%ICST, &
+                        IGUESS, params%IMIX, arrays%INDN0, &
                         arrays%ISYMINDEX, &
-                        JIJ, KFORCE, arrays%KMESH, KPRE, KTE, KXC, &
-                        LDAU, MAXMESH, &
-                        MIXING, arrays%NACLS, NCLS, NR, NREF, &
-                        NSRA, NSYMAT, arrays%NUMN0, OPTC, QMRBOUND, &
-                        arrays%RBASIS, arrays%RCLS, RCUTJIJ, arrays%REFPOT, RMAX, arrays%RMTREF, &
-                        arrays%RR, SCFSTEPS, TESTC, arrays%VREF, arrays%ZAT)
+                        params%JIJ, params%KFORCE, arrays%KMESH, params%KPRE, params%KTE, params%KXC, &
+                        params%LDAU, params%MAXMESH, &
+                        params%MIXING, arrays%NACLS, params%NCLS, params%NR, params%NREF, &
+                        params%NSRA, params%NSYMAT, arrays%NUMN0, OPTC, params%QMRBOUND, &
+                        arrays%RBASIS, arrays%RCLS, params%RCUTJIJ, arrays%REFPOT, params%RMAX, arrays%RMTREF, &
+                        arrays%RR, params%SCFSTEPS, TESTC, arrays%VREF, arrays%ZAT)
 
 
   !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
@@ -194,9 +175,9 @@ program MAIN2
  ! ======================================================================
 
   call consistencyCheck03(arrays%ATOM, arrays%CLS, arrays%EZOA, arrays%INDN0, &
-                          arrays%NACLS, arrays%NACLSD, arrays%NAEZ, arrays%NCLSD, NR, arrays%NUMN0)
+                          arrays%NACLS, arrays%NACLSD, arrays%NAEZ, arrays%NCLSD, params%NR, arrays%NUMN0)
 
-  if ((JIJ .eqv. .true.) .and. (arrays%nspind /= 2)) then
+  if ((params%JIJ .eqv. .true.) .and. (arrays%nspind /= 2)) then
     write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
     stop
   end if
@@ -214,7 +195,7 @@ program MAIN2
     I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
 
     ! ---------------------------------------------------------- k_mesh
-    call readKpointsFile(arrays%BZKP, MAXMESH, arrays%NOFKS, arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
+    call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
                                        getElapsedTime(program_timer), 0)
@@ -244,16 +225,16 @@ program MAIN2
 
     call associateBasisAtomMesh(atomdata, mesh)
 
-    call createLDAUData(ldau_data, ldau, dims%irmd, dims%lmaxd, dims%nspind)
-    call createJijData(jij_data, jij, rcutjij, dims%nxijd,dims%lmmaxd,dims%nspind)
-    call createBroydenData(broyden, dims%ntird, dims%itdbryd, imix, mixing)
+    call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, dims%nspind)
+    call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd,dims%lmmaxd,dims%nspind)
+    call createBroydenData(broyden, dims%ntird, dims%itdbryd, params%imix, params%mixing)
 
     call createEnergyMesh(emesh, dims%iemxd)
-    ielast = dims%iemxd
+    params%ielast = dims%iemxd
 
     call readEnergyMesh(emesh)  !every process does this!
 
-    call createMadelungCalculator(madelung_calc, dims%lmaxd, ALAT, RMAX, GMAX, &
+    call createMadelungCalculator(madelung_calc, dims%lmaxd, params%ALAT, params%RMAX, params%GMAX, &
                                   arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
 
     call calculateMadelungLatticeSum(madelung_calc, dims%naez, I1, arrays%rbasis, arrays%smat)
@@ -263,7 +244,7 @@ program MAIN2
     call createGauntCoefficients(gaunts, dims%lmaxd)
     call createShapeGauntCoefficients(shgaunts, dims%lmaxd)
 
-    call createEBalanceHandler(ebalance_handler, ielast)
+    call createEBalanceHandler(ebalance_handler, params%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
@@ -279,7 +260,7 @@ program MAIN2
 
 ! ######################################################################
 ! ######################################################################
-    do ITER = 1, SCFSTEPS
+    do ITER = 1, params%SCFSTEPS
 ! ######################################################################
 ! ######################################################################
 
@@ -309,11 +290,11 @@ program MAIN2
       XCCPL = .false.
 
       ! calculate exchange couplings only at last self-consistency step and when Jij=true
-      if ((ITER==SCFSTEPS).and.JIJ) XCCPL = .true.
+      if ((ITER==params%SCFSTEPS).and.params%JIJ) XCCPL = .true.
 
       if (XCCPL) then
 
-        call CLSJIJ(I1,dims%NAEZ,arrays%RR,NR,arrays%RBASIS,jij_data%RCUTJIJ,NSYMAT,arrays%ISYMINDEX, &
+        call CLSJIJ(I1,dims%NAEZ,arrays%RR,params%NR,arrays%RBASIS,jij_data%RCUTJIJ,params%NSYMAT,arrays%ISYMINDEX, &
                     jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ,jij_data%RXCCLS,jij_data%ZKRXIJ, &
                     arrays%nrd, jij_data%nxijd)
 
@@ -327,16 +308,16 @@ program MAIN2
 
       ! Core relaxation - only mastergroup needs results
       if (isInMasterGroup(my_mpi)) then
-        call RHOCORE_wrapper(emesh%E1, NSRA, atomdata)
+        call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
       endif
 
 ! LDA+U
-      if (LDAU) then
+      if (params%LDAU) then
 
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48    ! ???
 
-        call LDAUINIT(I1,ITER,NSRA,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
+        call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
                       atomdata%potential%VISP,ldau_data%NSPIND,mesh%R,mesh%DRDI, &
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
                       ldau_data%PHILDAU,ldau_data%UMLDAU,ldau_data%WMLDAU, &
@@ -355,7 +336,7 @@ program MAIN2
 !     BEGIN do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
-      do IE = 1,IELAST
+      do IE = 1, params%IELAST
 ! IE ====================================================================
         if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
 ! IE ====================================================================
@@ -363,7 +344,7 @@ program MAIN2
 
           WRITELOG(2, *) "Working on energy point ", IE
 
-          do RF = 1,NREF
+          do RF = 1,params%NREF
             call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
                       arrays%TREFLL(1,1,RF),arrays%DTREFLL(1,1,RF), dims%LLY)
           end do
@@ -371,7 +352,7 @@ program MAIN2
           TESTARRAYLOG(3, arrays%TREFLL)
           TESTARRAYLOG(3, arrays%DTREFLL)
 
-          call GREF_com(emesh%EZ(IE),ALAT,gaunts%IEND,NCLS,arrays%NAEZ, &
+          call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
                         gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
                         gaunts%LOFLM,arrays%NACLS, &
                         arrays%REFPOT, &
@@ -400,12 +381,12 @@ spinloop: do ISPIN = 1,dims%NSPIND
                 PRSPIN   = 1
               endif
 
-              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, arrays%TMATN, arrays%TR_ALPH, ldau_data)
+              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%TMATN, arrays%TR_ALPH, ldau_data)
 
               jij_data%DTIXIJ(:,:,ISPIN) = arrays%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
               if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-                call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, arrays%DTDE, arrays%TR_ALPH, ldau_data)
+                call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%DTDE, arrays%TR_ALPH, ldau_data)
               end if
 
               RF = arrays%REFPOT(I1)
@@ -422,7 +403,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
               NMESH = arrays%KMESH(IE)
 
               if( getMyAtomRank(my_mpi)==0 ) then
-                if (KTE >= 0) call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH)
+                if (params%KTE >= 0) call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH)
               end if
 
               call stopTimer(single_site_timer)
@@ -440,17 +421,17 @@ spinloop: do ISPIN = 1,dims%NSPIND
 
               call KLOOPZ1( &
               arrays%GMATN(1,1,1,ISPIN), &
-              ALAT,IE,ITER,arrays%NAEZ, &
+              params%ALAT,IE,ITER,arrays%NAEZ, &
               arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
               arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
               arrays%CLS,arrays%NACLS,arrays%RR, &
               arrays%EZOA,arrays%ATOM,arrays%GREFN,arrays%DGREFN, &
-              NSYMAT,arrays%DSYMLL, &
+              params%NSYMAT,arrays%DSYMLL, &
               arrays%TMATN(:,:,ISPIN),arrays%DTDE(:,:,ISPIN), &
               arrays%NUMN0,arrays%INDN0,I1, &
               arrays%PRSC(1,1,PRSPIN), &
               EKM,NOITER, &
-              QMRBOUND,IGUESS,BCP, &
+              params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
               jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
               arrays%LLY_GRDT(IE,ISPIN),arrays%TR_ALPH(ISPIN), &
               jij_data%GMATXIJ(1,1,1,ISPIN), &
@@ -575,7 +556,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
       if (isInMasterGroup(my_mpi)) then
 
         ! out: emesh, RNORM
-        call lloyd0_wrapper_com(atomdata, my_mpi, arrays%LLY_GRDT, emesh, arrays%RNORM, dims%LLY, ICST, NSRA, arrays%GMATN, gaunts, ldau_data)
+        call lloyd0_wrapper_com(atomdata, my_mpi, arrays%LLY_GRDT, emesh, arrays%RNORM, dims%LLY, params%ICST, params%NSRA, arrays%GMATN, gaunts, ldau_data)
 
         if (dims%LLY == 1) then
           TESTARRAYLOG(3, emesh%WEZRN)
@@ -588,7 +569,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
         arrays%DEN = CZERO
         DENEF = 0.0D0
 
-        if (LDAU) then
+        if (params%LDAU) then
           ldau_data%DMATLDAU = CZERO
         endif
 
@@ -596,7 +577,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
 
         ! has to be done after Lloyd
         ! output: RHO2NS, R2NEF, DEN, ESPV
-        call RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, arrays%RHO2NS, arrays%R2NEF, &
+        call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, arrays%RHO2NS, arrays%R2NEF, &
                             arrays%DEN, arrays%ESPV, arrays%GMATN, gaunts, emesh, ldau_data)
 
 ! ----------------------------------------------------------------------
@@ -608,23 +589,23 @@ spinloop: do ISPIN = 1,dims%NSPIND
         CHRGNT = CHRGNT + arrays%CATOM(1) - atomdata%Z_nuclear
 
         if (dims%LLY == 1) then
-          call renormalizeDOS(arrays%DEN,arrays%RNORM,arrays%LMAXD+1,IELAST,arrays%NSPIND,arrays%IEMXD)
+          call renormalizeDOS(arrays%DEN,arrays%RNORM,arrays%LMAXD+1,params%IELAST,arrays%NSPIND,arrays%IEMXD)
         end if
 
         ! calculate DOS at Fermi level
-        DENEF = calcDOSatFermi(arrays%DEN, IELAST, arrays%IEMXD, arrays%LMAXD+1, arrays%NSPIND)
+        DENEF = calcDOSatFermi(arrays%DEN, params%IELAST, arrays%IEMXD, arrays%LMAXD+1, arrays%NSPIND)
 
         ! ---> l/m_s/atom-resolved charges, output -> CHARGE
         ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
         ! CHARGE -> written to result file
-        call calcChargesLres(arrays%CHARGE, arrays%DEN, IELAST, arrays%LMAXD+1, arrays%NSPIND, emesh%WEZ, arrays%IEMXD)
+        call calcChargesLres(arrays%CHARGE, arrays%DEN, params%IELAST, arrays%LMAXD+1, arrays%NSPIND, emesh%WEZ, arrays%IEMXD)
 
         call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
         ! write to 'results1' - only to be read in in results.f
         ! necessary for density of states calculation, otherwise
         ! only for informative reasons
-        if (KTE >= 0) then
+        if (params%KTE >= 0) then
           call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
           call writeResults1File(arrays%CATOM, arrays%CHARGE, arrays%DEN, atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
           call closeResults1File()
@@ -677,7 +658,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
 
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
-        if (KTE==1) then
+        if (params%KTE==1) then
           ! calculate total energy and individual contributions if requested
           ! core electron contribution
           call ESPCB_wrapper(arrays%ESPC, LCOREMAX, atomdata)
@@ -692,7 +673,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
 
 ! =====================================================================
         ! output: VONS (changed), EXC (exchange energy) (l-resolved)
-        call VXCDRV_wrapper(arrays%EXC,KXC,arrays%RHO2NS, shgaunts, atomdata)
+        call VXCDRV_wrapper(arrays%EXC,params%KXC,arrays%RHO2NS, shgaunts, atomdata)
 
         call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
 ! =====================================================================
@@ -712,7 +693,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
 !            end if
 
         ! unnecessary I/O? see results.f
-        if (KTE >= 0) then
+        if (params%KTE >= 0) then
           call openResults2File(dims%LRECRES2)
           call writeResults2File(arrays%CATOM, arrays%ECOU, ldau_data%EDCLDAU, EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, arrays%EXC, I1, LCOREMAX, VMAD)
           call closeResults2File()
@@ -746,14 +727,14 @@ spinloop: do ISPIN = 1,dims%NSPIND
         ldau_data%EDCLDAU = 0.0D0
 
         if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
-          call LDAUWMAT(I1,ldau_data%NSPIND,ITER,MIXING,ldau_data%DMATLDAU,ldau_data%NLDAU,ldau_data%LLDAU, &
+          call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU,ldau_data%NLDAU,ldau_data%LLDAU, &
                         ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%UMLDAU,ldau_data%WMLDAU,ldau_data%EULDAU,ldau_data%EDCLDAU, &
                         ldau_data%lmaxd)
         endif
 ! LDAU
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
-        call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, MIXING, FCM)
+        call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, params%MIXING, params%FCM)
 
         ! output of RMS error
         call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
@@ -761,7 +742,7 @@ spinloop: do ISPIN = 1,dims%NSPIND
 
         ! it is weird that straight mixing is called in any case before
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
-        if (IMIX>=3) then
+        if (params%IMIX>=3) then
           call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS,atomdata%potential%VINS, &
           atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
           mesh%IRC,mesh%IRMIN,atomdata%potential%NSPIN, &
@@ -791,9 +772,9 @@ spinloop: do ISPIN = 1,dims%NSPIND
 
 ! write formatted potential if file VFORM exists - contains bad inquire
 ! - bad check deactivated when KTE<0
-        if (ITER == SCFSTEPS .and. KTE >= 0) then
+        if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
           if (testVFORM()) then
-            call writeFormattedPotential(emesh%E2, ALAT, arrays%VBC, KXC, atomdata)
+            call writeFormattedPotential(emesh%E2, params%ALAT, arrays%VBC, params%KXC, atomdata)
           endif
         endif
 
@@ -815,9 +796,9 @@ spinloop: do ISPIN = 1,dims%NSPIND
         ! DOS was written to file 'results1' and read out here just
         ! to be written in routine wrldos
         ! also other stuff is read from results1 (and results2)
-        call RESULTS(dims%LRECRES2,IELAST,ITER,arrays%LMAXD,arrays%NAEZ,emesh%NPOL, &
-        dims%NSPIND,KPRE,KTE,arrays%LPOT,emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
-        ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),CHRGNT,arrays%ZAT,emesh%EZ,emesh%WEZ,LDAU, &
+        call RESULTS(dims%LRECRES2,params%IELAST,ITER,arrays%LMAXD,arrays%NAEZ,emesh%NPOL, &
+        dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT,emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
+        params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),CHRGNT,arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
         arrays%iemxd)
 
         ! only MASTERRANK updates, other ranks get it broadcasted later
