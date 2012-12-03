@@ -14,6 +14,7 @@ module PotentialData_mod
     integer :: lpot
     integer :: irmind
     integer :: irmd
+    integer :: irnsd
     ! derived
     integer :: lmpot
 
@@ -38,6 +39,7 @@ module PotentialData_mod
     potential%lpot = lpot
     potential%irmind = irmind
     potential%irmd = irmd
+    potential%irnsd = irmd - irmind
 
     lmpot = (lpot + 1)**2
     potential%lmpot = lmpot
