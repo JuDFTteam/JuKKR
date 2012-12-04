@@ -60,7 +60,6 @@ program MAIN2
 
   !     ..
   !     .. Local Scalars ..
-  double complex:: JSCAL        ! scaling factor for Jij calculation
 
   double precision::DENEF
   double precision::CHRGNT
@@ -70,39 +69,28 @@ program MAIN2
 
   type (TimerMpi) :: program_timer
   type (TimerMpi) :: iteration_timer
-  type (TimerMpi) :: mult_scattering_timer
-  type (TimerMpi) :: single_site_timer
 
   type (EBalanceHandler) :: ebalance_handler
 
   integer::ITER
   integer::NOITER
   integer::NOITER_ALL
-  integer::ISPIN
   integer::I1
-  integer::EKM
   logical::XCCPL
   logical::LDORHOEF
+
+  integer :: BCP ! TODO: remove - is dummy
+  integer :: IGUESS ! TODO: remove - is dummy
 
   !     .. Local Arrays ..
 
   double precision::VAV0
   double precision::VOL0
 
-  integer::NMESH
-
-  integer::IGUESS  ! TODO: remove
-  integer::BCP     ! TODO: remove
-  integer::PRSPIN
-
   double precision::EPOTIN
   double precision::VMAD
 
   integer::LCOREMAX
-
-  integer::RF
-
-  integer::IE
 
   integer::   IERR
   integer::   MAPBLOCK
@@ -263,10 +251,7 @@ program MAIN2
 ! ######################################################################
 
       call resetTimer(iteration_timer)
-      call resetTimer(mult_scattering_timer)
-      call stopTimer(mult_scattering_timer)
 
-      EKM    = 0
       NOITER = 0
 
       if (isMasterRank(my_mpi)) then
