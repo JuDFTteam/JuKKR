@@ -94,20 +94,6 @@ module main2_aux_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Print info about Energy-Point currently treated.
-  !>
-  subroutine printEnergyPoint(EZ_point, IE, ISPIN, NMESH)
-    implicit none
-    double complex :: EZ_point
-    integer :: IE
-    integer :: ISPIN
-    integer :: NMESH
-    write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)')  &
-    ' ** IE = ',IE,' ENERGY =',EZ_point, &
-    ' KMESH = ', NMESH,' ISPIN = ',ISPIN
-  end subroutine
-
-  !----------------------------------------------------------------------------
   !> Print Fermi-Energy information to screen.
   subroutine printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
     implicit none
@@ -245,44 +231,7 @@ module main2_aux_mod
     close(71)
   end subroutine
 
-  !----------------------------------------------------------------------------
-  !> Calculate \Delta T_up - T_down for exchange couplings calculation.
-  !> The result is stored in DTIXIJ(:,:,1)
-  subroutine calcDeltaTupTdown(DTIXIJ)
-    implicit none
-    double complex, intent(inout) :: DTIXIJ(:,:,:)
-    integer :: LMMAXD
-
-    integer :: LM1
-    integer :: LM2
-
-    lmmaxd = size(DTIXIJ,1)
-
-    do LM2 = 1,LMMAXD
-      do LM1 = 1,LMMAXD
-        DTIXIJ(LM1,LM2,1) = DTIXIJ(LM1,LM2,2) - DTIXIJ(LM1,LM2,1)
-      enddo
-    enddo
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Substract diagonal reference T matrix of certain spin channel
-  !> from real system's T matrix
-  subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
-    implicit none
-    integer :: LM1
-    integer :: LMMAXD
-    double complex :: TMATN(:,:)
-    double complex :: TREFLL(:,:)
-
-    ! Note: TREFLL is diagonal! - spherical reference potential
-    do LM1 = 1,LMMAXD
-      TMATN(LM1,LM1) =  TMATN(LM1,LM1) - TREFLL(LM1,LM1)
-    end do
-
-  end subroutine
-
+  !---------------------------------------------------------------------------
   !> Check if file 'STOP' exists. If yes, tell all ranks
   !> in communicator to abort by returning .true.
   !> The idea is to let only one rank to inquire if

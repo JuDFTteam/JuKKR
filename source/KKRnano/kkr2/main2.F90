@@ -48,6 +48,8 @@ program MAIN2
   use InputParams_mod
   use Main2Arrays_mod
 
+  use ScatteringCalculation_mod, only: energyloop
+
   implicit none
   include 'mpif.h'
 

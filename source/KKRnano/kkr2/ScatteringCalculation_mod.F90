@@ -1,6 +1,15 @@
 #include "DebugHelpers/logging_macros.h"
 #include "DebugHelpers/test_array_log.h"
 
+module ScatteringCalculation_mod
+
+public  :: energyLoop
+private :: printEnergyPoint
+private :: calcDeltaTupTdown
+private :: substractReferenceTmatrix
+
+CONTAINS
+
 !> Output: ebalance_handler (changed, updated timings and process distribution)
 !>         arrays - KKRResults (todo)
 !>         jij_data results of jij-calculation
@@ -33,7 +42,6 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   use KKRnanoParallel_mod
   use EBalanceHandler_mod
 
-  use main2_aux_mod,    only: substractReferenceTmatrix, printEnergyPoint, calcDeltatuptdown
   use KKRnano_Comm_mod
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
@@ -296,3 +304,62 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   TESTARRAYLOG(3, arrays%LLY_GRDT)
 
 end subroutine
+
+! =============================================================================
+! Helper routines
+! =============================================================================
+
+!----------------------------------------------------------------------------
+!> Print info about Energy-Point currently treated.
+!>
+subroutine printEnergyPoint(EZ_point, IE, ISPIN, NMESH)
+  implicit none
+  double complex :: EZ_point
+  integer :: IE
+  integer :: ISPIN
+  integer :: NMESH
+  write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)')  &
+  ' ** IE = ',IE,' ENERGY =',EZ_point, &
+  ' KMESH = ', NMESH,' ISPIN = ',ISPIN
+end subroutine
+
+!----------------------------------------------------------------------------
+!> Calculate \Delta T_up - T_down for exchange couplings calculation.
+!> The result is stored in DTIXIJ(:,:,1)
+subroutine calcDeltaTupTdown(DTIXIJ)
+  implicit none
+  double complex, intent(inout) :: DTIXIJ(:,:,:)
+  integer :: LMMAXD
+
+  integer :: LM1
+  integer :: LM2
+
+  lmmaxd = size(DTIXIJ,1)
+
+  do LM2 = 1,LMMAXD
+    do LM1 = 1,LMMAXD
+      DTIXIJ(LM1,LM2,1) = DTIXIJ(LM1,LM2,2) - DTIXIJ(LM1,LM2,1)
+    enddo
+  enddo
+
+end subroutine
+
+!----------------------------------------------------------------------------
+!> Substract diagonal reference T matrix of certain spin channel
+!> from real system's T matrix
+subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
+  implicit none
+  integer :: LM1
+  integer :: LMMAXD
+  double complex :: TMATN(:,:)
+  double complex :: TREFLL(:,:)
+
+  ! Note: TREFLL is diagonal! - spherical reference potential
+  do LM1 = 1,LMMAXD
+    TMATN(LM1,LM1) =  TMATN(LM1,LM1) - TREFLL(LM1,LM1)
+  end do
+
+end subroutine
+
+
+end module
