@@ -106,17 +106,17 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
       do RF = 1,params%NREF
         call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
-                  arrays%TREFLL(1,1,RF),arrays%DTREFLL(1,1,RF), dims%LLY)
+                  kkr%TREFLL(1,1,RF),kkr%DTREFLL(1,1,RF), dims%LLY)
       end do
 
-      TESTARRAYLOG(3, arrays%TREFLL)
-      TESTARRAYLOG(3, arrays%DTREFLL)
+      TESTARRAYLOG(3, kkr%TREFLL)
+      TESTARRAYLOG(3, kkr%DTREFLL)
 
       call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
                     gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
                     gaunts%LOFLM,arrays%NACLS, &
                     arrays%REFPOT, &
-                    arrays%TREFLL,arrays%DTREFLL,arrays%GREFN,arrays%DGREFN, &
+                    kkr%TREFLL,kkr%DTREFLL,arrays%GREFN,arrays%DGREFN, &
                     arrays%LLY_G0TR(:,IE), &
                     getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
                     getNumAtomRanks(my_mpi), &
@@ -150,9 +150,9 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           end if
 
           RF = arrays%REFPOT(I1)
-          call substractReferenceTmatrix(arrays%TMATN(:,:,ISPIN), arrays%TREFLL(:,:,RF), arrays%LMMAXD)
+          call substractReferenceTmatrix(arrays%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,RF), kkr%LMMAXD)
           ! do the same for derivative of T-matrix
-          call substractReferenceTmatrix(arrays%DTDE(:,:,ISPIN), arrays%DTREFLL(:,:,RF), arrays%LMMAXD)
+          call substractReferenceTmatrix(arrays%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
 
           ! TMATN now contains Delta t = t - t_ref !!!
           ! DTDE now contains Delta dt !!!
