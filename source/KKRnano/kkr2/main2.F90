@@ -331,7 +331,7 @@ program MAIN2
 
         ! out: emesh, RNORM
         call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, arrays%RNORM, &
-                                dims%LLY, params%ICST, params%NSRA, arrays%GMATN, gaunts, ldau_data)
+                                dims%LLY, params%ICST, params%NSRA, kkr%GMATN, gaunts, ldau_data)
 
         if (dims%LLY == 1) then
           TESTARRAYLOG(3, emesh%WEZRN)
@@ -353,7 +353,7 @@ program MAIN2
         ! has to be done after Lloyd
         ! output: RHO2NS, R2NEF, DEN, ESPV
         call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, arrays%RHO2NS, arrays%R2NEF, &
-                            arrays%DEN, arrays%ESPV, arrays%GMATN, gaunts, emesh, ldau_data)
+                            arrays%DEN, arrays%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
 
 ! ----------------------------------------------------------------------
 ! -->   determine total charge expanded in spherical harmonics

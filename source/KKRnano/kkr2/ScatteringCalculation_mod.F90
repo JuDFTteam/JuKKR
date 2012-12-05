@@ -141,18 +141,18 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
             PRSPIN   = 1
           endif
 
-          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%TMATN, kkr%TR_ALPH, ldau_data)
+          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
 
-          jij_data%DTIXIJ(:,:,ISPIN) = arrays%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
+          jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
           if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%DTDE, kkr%TR_ALPH, ldau_data)
+            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
           end if
 
           RF = arrays%REFPOT(I1)
-          call substractReferenceTmatrix(arrays%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,RF), kkr%LMMAXD)
+          call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,RF), kkr%LMMAXD)
           ! do the same for derivative of T-matrix
-          call substractReferenceTmatrix(arrays%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
+          call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
 
           ! TMATN now contains Delta t = t - t_ref !!!
           ! DTDE now contains Delta dt !!!
@@ -177,17 +177,17 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 !                     DEBUG_dump_matrix = .false.
 !                  endif
 
-          TESTARRAYLOG(3, arrays%TMATN(:,:,ISPIN))
+          TESTARRAYLOG(3, kkr%TMATN(:,:,ISPIN))
 
           call KLOOPZ1( &
-          arrays%GMATN(1,1,1,ISPIN), &
+          kkr%GMATN(1,1,1,ISPIN), &
           params%ALAT,IE,ITER,arrays%NAEZ, &
           arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
           arrays%CLS,arrays%NACLS,arrays%RR, &
           arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
           params%NSYMAT,arrays%DSYMLL, &
-          arrays%TMATN(:,:,ISPIN),arrays%DTDE(:,:,ISPIN), &
+          kkr%TMATN(:,:,ISPIN),kkr%DTDE(:,:,ISPIN), &
           arrays%NUMN0,arrays%INDN0,I1, &
           arrays%PRSC(1,1,PRSPIN), &
           EKM,NOITER, &
@@ -200,7 +200,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           arrays%lmmaxd, arrays%naclsd, arrays%nclsd, dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
           jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
 
-          TESTARRAYLOG(3, arrays%GMATN(:,:,IE,ISPIN))
+          TESTARRAYLOG(3, kkr%GMATN(:,:,IE,ISPIN))
 
           call stopTimer(mult_scattering_timer)
           call resumeTimer(single_site_timer)
@@ -254,7 +254,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-  call collectMSResults_com(my_mpi, arrays%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
+  call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
 !=======================================================================
 
 ! TIME
@@ -307,7 +307,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
-  TESTARRAYLOG(3, arrays%GMATN)
+  TESTARRAYLOG(3, kkr%GMATN)
   TESTARRAYLOG(3, kkr%LLY_GRDT)
 
 end subroutine
