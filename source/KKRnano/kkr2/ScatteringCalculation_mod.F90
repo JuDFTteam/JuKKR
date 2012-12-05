@@ -74,7 +74,6 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   integer :: prspin
   integer :: nmesh
   integer :: ekm
-  integer :: noiter
   logical :: xccpl
   double complex :: JSCAL ! scaling factor for Jij calculation
   integer :: I1
@@ -190,7 +189,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           kkr%TMATN(:,:,ISPIN),kkr%DTDE(:,:,ISPIN), &
           arrays%NUMN0,arrays%INDN0,I1, &
           arrays%PRSC(1,1,PRSPIN), &
-          EKM,NOITER, &
+          EKM,kkr%NOITER, &
           params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
           jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
           kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &

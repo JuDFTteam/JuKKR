@@ -76,7 +76,6 @@ program MAIN2
   type (EBalanceHandler) :: ebalance_handler
 
   integer::ITER
-  integer::NOITER
   integer::NOITER_ALL
   integer::I1
   logical::XCCPL
@@ -257,8 +256,6 @@ program MAIN2
 ! ######################################################################
 
       call resetTimer(iteration_timer)
-
-      NOITER = 0
 
       if (isMasterRank(my_mpi)) then
         call printDoubleLineSep(unit_number = 2)
@@ -593,7 +590,7 @@ program MAIN2
 ! -----------------------------------------------------------------
       call broadcastEnergyMesh_com(my_mpi, emesh)
 
-      call MPI_ALLREDUCE(NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
+      call MPI_ALLREDUCE(kkr%NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
       getMyActiveCommunicator(my_mpi),IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
       if(isMasterRank(my_mpi)) then
