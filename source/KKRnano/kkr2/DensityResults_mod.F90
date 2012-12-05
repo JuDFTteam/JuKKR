@@ -10,6 +10,7 @@
 module DensityResults_mod
 
   !> Contains densities and integrated densities (charges)
+  !> for one specific atom.
   type DensityResults
     double precision  :: DENEF
     double precision  :: CHRGNT
@@ -75,7 +76,7 @@ module DensityResults_mod
     ALLOCATECHECK(self%CHARGE(0:lmaxd+1,2))
     ALLOCATECHECK(self%CMINST(lmpotd))
     ALLOCATECHECK(self%CMOM(lmpotd))
-    ALLOCATECHECK(self%CATOM(lmpotd))
+    ALLOCATECHECK(self%CATOM(nspind))
     ALLOCATECHECK(self%DEN(0:lmaxd+1,iemxd,nspind))
   end subroutine
 

@@ -41,10 +41,10 @@ module Main2Arrays_mod
     double precision , allocatable, dimension(:)  :: ZAT
     double precision , allocatable, dimension(:,:,:)  :: R2NEF
     double precision , allocatable, dimension(:,:,:)  :: RHO2NS
-    double precision , allocatable, dimension(:,:)  :: CHARGE
-    double precision , allocatable, dimension(:)  :: CMINST
-    double precision , allocatable, dimension(:)  :: CMOM
-    double precision , allocatable, dimension(:)  :: CATOM
+    !double precision , allocatable, dimension(:,:)  :: CHARGE
+    !double precision , allocatable, dimension(:)  :: CMINST
+    !double precision , allocatable, dimension(:)  :: CMOM
+    !double precision , allocatable, dimension(:)  :: CATOM
     double precision , allocatable, dimension(:,:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
     double precision , allocatable, dimension(:)  :: VREF
@@ -186,10 +186,10 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%ZAT(NAEZ))
     ALLOCATECHECK(self%R2NEF(IRMD,LMPOTD,2))
     ALLOCATECHECK(self%RHO2NS(IRMD,LMPOTD,2))
-    ALLOCATECHECK(self%CHARGE(0:LMAXD+1,2))
-    ALLOCATECHECK(self%CMINST(LMPOTD))
-    ALLOCATECHECK(self%CMOM(LMPOTD))
-    ALLOCATECHECK(self%CATOM(NSPIND))
+    !ALLOCATECHECK(self%CHARGE(0:LMAXD+1,2))
+    !ALLOCATECHECK(self%CMINST(LMPOTD))
+    !ALLOCATECHECK(self%CMOM(LMPOTD))
+    !ALLOCATECHECK(self%CATOM(NSPIND))
     ALLOCATECHECK(self%RCLS(3,NACLSD,NCLSD))
     ALLOCATECHECK(self%RMTREF(NREFD))
     ALLOCATECHECK(self%VREF(NAEZ))
@@ -235,10 +235,10 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%ZAT)
     DEALLOCATECHECK(self%R2NEF)
     DEALLOCATECHECK(self%RHO2NS)
-    DEALLOCATECHECK(self%CHARGE)
-    DEALLOCATECHECK(self%CMINST)
-    DEALLOCATECHECK(self%CMOM)
-    DEALLOCATECHECK(self%CATOM)
+    !DEALLOCATECHECK(self%CHARGE)
+    !DEALLOCATECHECK(self%CMINST)
+    !DEALLOCATECHECK(self%CMOM)
+    !DEALLOCATECHECK(self%CATOM)
     DEALLOCATECHECK(self%RCLS)
     DEALLOCATECHECK(self%RMTREF)
     DEALLOCATECHECK(self%VREF)

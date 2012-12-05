@@ -264,8 +264,8 @@ program MAIN2
         call printDoubleLineSep(unit_number = 2)
       endif
 
-      arrays%CMOM   = 0.0D0
-      arrays%CMINST = 0.0D0
+      densities%CMOM   = 0.0D0
+      densities%CMINST = 0.0D0
       densities%CHRGNT = 0.0D0
 
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
@@ -337,9 +337,9 @@ program MAIN2
 ! -->   determine total charge expanded in spherical harmonics
 ! -------------------------------------------------------------- density
         ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-        call RHOTOTB_wrapper(arrays%CATOM, arrays%RHO2NS, atomdata)
+        call RHOTOTB_wrapper(densities%CATOM, arrays%RHO2NS, atomdata)
 
-        densities%CHRGNT = densities%CHRGNT + arrays%CATOM(1) - atomdata%Z_nuclear
+        densities%CHRGNT = densities%CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
 
         if (dims%LLY == 1) then
           call renormalizeDOS(arrays%DEN,arrays%RNORM,arrays%LMAXD+1,params%IELAST,arrays%NSPIND,arrays%IEMXD)
@@ -351,7 +351,7 @@ program MAIN2
         ! ---> l/m_s/atom-resolved charges, output -> CHARGE
         ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
         ! CHARGE -> written to result file
-        call calcChargesLres(arrays%CHARGE, arrays%DEN, params%IELAST, arrays%LMAXD+1, arrays%NSPIND, emesh%WEZ, arrays%IEMXD)
+        call calcChargesLres(densities%CHARGE, arrays%DEN, params%IELAST, arrays%LMAXD+1, arrays%NSPIND, emesh%WEZ, arrays%IEMXD)
 
         call sumNeutralityDOSFermi_com(densities%CHRGNT, densities%DENEF, getMySEcommunicator(my_mpi))
 
@@ -360,7 +360,8 @@ program MAIN2
         ! only for informative reasons
         if (params%KTE >= 0) then
           call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
-          call writeResults1File(arrays%CATOM, arrays%CHARGE, arrays%DEN, atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
+          call writeResults1File(densities%CATOM, densities%CHARGE, arrays%DEN, &
+                                 atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
           call closeResults1File()
         endif
 
@@ -371,7 +372,7 @@ program MAIN2
                                      arrays%ESPV, arrays%RHO2NS, emesh%E2)
 
         !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-        call RHOMOM_NEW_wrapper(arrays%CMOM,arrays%CMINST,arrays%RHO2NS(:,:,1), cell, mesh, shgaunts)
+        call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,arrays%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
         call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
 
@@ -387,7 +388,7 @@ program MAIN2
         call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
 
         ! output: VONS (changed), VMAD
-        call addMadelungPotential_com(madelung_calc, arrays%CMOM, arrays%CMINST, arrays%NSPIND, &
+        call addMadelungPotential_com(madelung_calc, densities%CMOM, densities%CMINST, arrays%NSPIND, &
              arrays%NAEZ, atomdata%potential%VONS, arrays%ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
              arrays%SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
 
@@ -419,7 +420,7 @@ program MAIN2
           ! output: EPOTIN
           call EPOTINB_wrapper(EPOTIN,arrays%RHO2NS,atomdata)
           ! output: ECOU - l resolved Coulomb energy
-          call ECOUB_wrapper(arrays%CMOM, arrays%ECOU, arrays%RHO2NS, shgaunts, atomdata)
+          call ECOUB_wrapper(densities%CMOM, arrays%ECOU, arrays%RHO2NS, shgaunts, atomdata)
         end if
 
         call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
@@ -449,7 +450,9 @@ program MAIN2
         ! unnecessary I/O? see results.f
         if (params%KTE >= 0) then
           call openResults2File(dims%LRECRES2)
-          call writeResults2File(arrays%CATOM, arrays%ECOU, ldau_data%EDCLDAU, EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, arrays%EXC, I1, LCOREMAX, VMAD)
+          call writeResults2File(densities%CATOM, arrays%ECOU, ldau_data%EDCLDAU, &
+                                 EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, &
+                                 arrays%EXC, I1, LCOREMAX, VMAD)
           call closeResults2File()
         end if
 
