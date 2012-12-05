@@ -1,17 +1,11 @@
-!    call GAUNT2(WG,YRG,LMAXD)
-!
-!    call MADELUNG3D(LPOT,YRG,WG,ALAT, &   ! TODO: encapsulate?
-!    RMAX,GMAX,BRAVAIS,RECBV, &
-!    LMXSPD,LASSLD,LPOT,LMPOTD, &
-!    NMAXD,ISHLD, &
-!    LMPOTD,CLEB,ICLEB,IEND, &
-!    NCLEBD,LOFLM,DFAC, &
-!    NGMAX,NRMAX,NSG,NSR,NSHLG,NSHLR,GN,RM, &
-!    MYRANK)
-
-
 module MadelungCalculator_mod
   implicit none
+
+  public :: MadelungCalculator
+
+  private :: MadelungLatticeData
+  private :: MadelungHarmonics
+  private :: MadelungClebschData
 
   type MadelungLatticeData
     integer NGMAX

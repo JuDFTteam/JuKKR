@@ -10,6 +10,9 @@ private :: substractReferenceTmatrix
 
 CONTAINS
 
+!> Input:  *) ebalance_handler (properly initialised)
+!>         *) jij_data, ldau_data (properly initialised !!!)
+!>
 !> Output: ebalance_handler (changed, updated timings and process distribution)
 !>         arrays - KKRResults (todo)
 !>         jij_data results of jij-calculation
