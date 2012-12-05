@@ -48,6 +48,7 @@ program MAIN2
   use InputParams_mod
   use Main2Arrays_mod
   use KKRresults_mod
+  use DensityResults_mod
 
   use ScatteringCalculation_mod, only: energyloop
 
@@ -63,9 +64,6 @@ program MAIN2
 
   !     ..
   !     .. Local Scalars ..
-
-  double precision::DENEF
-  double precision::CHRGNT
 
   double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
   double precision::RMSAVQ      ! rms error charge density (contribution of single site)
@@ -113,6 +111,7 @@ program MAIN2
   type (DimParams), target      :: dims
   type (InputParams)            :: params
   type (KKRresults)             :: kkr
+  type (DensityResults)         :: densities
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
@@ -183,6 +182,7 @@ program MAIN2
     I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
 
     call createKKRresults(kkr, dims)
+    call createDensityResults(densities, dims)
 
     ! ---------------------------------------------------------- k_mesh
     call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
@@ -266,7 +266,7 @@ program MAIN2
 
       arrays%CMOM   = 0.0D0
       arrays%CMINST = 0.0D0
-             CHRGNT = 0.0D0
+      densities%CHRGNT = 0.0D0
 
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
@@ -320,7 +320,7 @@ program MAIN2
         ! now WEZRN stores the weights for E-integration
 
         arrays%DEN = CZERO
-        DENEF = 0.0D0
+        densities%DENEF = 0.0D0
 
         if (params%LDAU) then
           ldau_data%DMATLDAU = CZERO
@@ -339,21 +339,21 @@ program MAIN2
         ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
         call RHOTOTB_wrapper(arrays%CATOM, arrays%RHO2NS, atomdata)
 
-        CHRGNT = CHRGNT + arrays%CATOM(1) - atomdata%Z_nuclear
+        densities%CHRGNT = densities%CHRGNT + arrays%CATOM(1) - atomdata%Z_nuclear
 
         if (dims%LLY == 1) then
           call renormalizeDOS(arrays%DEN,arrays%RNORM,arrays%LMAXD+1,params%IELAST,arrays%NSPIND,arrays%IEMXD)
         end if
 
         ! calculate DOS at Fermi level
-        DENEF = calcDOSatFermi(arrays%DEN, params%IELAST, arrays%IEMXD, arrays%LMAXD+1, arrays%NSPIND)
+        densities%DENEF = calcDOSatFermi(arrays%DEN, params%IELAST, arrays%IEMXD, arrays%LMAXD+1, arrays%NSPIND)
 
         ! ---> l/m_s/atom-resolved charges, output -> CHARGE
         ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
         ! CHARGE -> written to result file
         call calcChargesLres(arrays%CHARGE, arrays%DEN, params%IELAST, arrays%LMAXD+1, arrays%NSPIND, emesh%WEZ, arrays%IEMXD)
 
-        call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
+        call sumNeutralityDOSFermi_com(densities%CHRGNT, densities%DENEF, getMySEcommunicator(my_mpi))
 
         ! write to 'results1' - only to be read in in results.f
         ! necessary for density of states calculation, otherwise
@@ -366,7 +366,8 @@ program MAIN2
 
         call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
-        call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, 0.03d0, CHRGNT, DENEF, arrays%R2NEF, &
+        call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
+                                     0.03d0, densities%CHRGNT, densities%DENEF, arrays%R2NEF, &
                                      arrays%ESPV, arrays%RHO2NS, emesh%E2)
 
         !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
@@ -551,7 +552,7 @@ program MAIN2
         ! also other stuff is read from results1 (and results2)
         call RESULTS(dims%LRECRES2,params%IELAST,ITER,arrays%LMAXD,arrays%NAEZ,emesh%NPOL, &
         dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT,emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
-        params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),CHRGNT,arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
+        params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),densities%CHRGNT,arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
         arrays%iemxd)
 
         ! only MASTERRANK updates, other ranks get it broadcasted later
@@ -606,6 +607,7 @@ program MAIN2
     call destroyBroydenData(broyden)
     call destroyLDAUData(ldau_data)
     call destroyJijData(jij_data)
+    call destroyDensityResults(densities)
     call destroyKKRresults(kkr)
 
 ! ======================================================================
