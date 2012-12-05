@@ -330,7 +330,7 @@ program MAIN2
       if (isInMasterGroup(my_mpi)) then
 
         ! out: emesh, RNORM
-        call lloyd0_wrapper_com(atomdata, my_mpi, arrays%LLY_GRDT, emesh, arrays%RNORM, &
+        call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, arrays%RNORM, &
                                 dims%LLY, params%ICST, params%NSRA, arrays%GMATN, gaunts, ldau_data)
 
         if (dims%LLY == 1) then

@@ -117,7 +117,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
                     gaunts%LOFLM,arrays%NACLS, &
                     arrays%REFPOT, &
                     kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
-                    arrays%LLY_G0TR(:,IE), &
+                    kkr%LLY_G0TR(:,IE), &
                     getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
                     getNumAtomRanks(my_mpi), &
                     arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
@@ -141,12 +141,12 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
             PRSPIN   = 1
           endif
 
-          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%TMATN, arrays%TR_ALPH, ldau_data)
+          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%TMATN, kkr%TR_ALPH, ldau_data)
 
           jij_data%DTIXIJ(:,:,ISPIN) = arrays%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
           if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%DTDE, arrays%TR_ALPH, ldau_data)
+            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, arrays%DTDE, kkr%TR_ALPH, ldau_data)
           end if
 
           RF = arrays%REFPOT(I1)
@@ -158,7 +158,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           ! DTDE now contains Delta dt !!!
 
           ! renormalize TR_ALPH
-          arrays%TR_ALPH(ISPIN) = arrays%TR_ALPH(ISPIN) - arrays%LLY_G0TR(arrays%CLS(I1), IE)
+          kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(arrays%CLS(I1), IE)
 
           NMESH = arrays%KMESH(IE)
 
@@ -193,7 +193,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           EKM,NOITER, &
           params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
           jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
-          arrays%LLY_GRDT(IE,ISPIN),arrays%TR_ALPH(ISPIN), &
+          kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
           jij_data%GMATXIJ(1,1,1,ISPIN), &
           getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
           arrays%iemxd, &
@@ -254,7 +254,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-  call collectMSResults_com(my_mpi, arrays%GMATN, arrays%LLY_GRDT, ebalance_handler%EPROC)
+  call collectMSResults_com(my_mpi, arrays%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
 !=======================================================================
 
 ! TIME
@@ -308,7 +308,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 !=======================================================================
 
   TESTARRAYLOG(3, arrays%GMATN)
-  TESTARRAYLOG(3, arrays%LLY_GRDT)
+  TESTARRAYLOG(3, kkr%LLY_GRDT)
 
 end subroutine
 
