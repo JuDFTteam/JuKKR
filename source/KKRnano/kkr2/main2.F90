@@ -78,7 +78,6 @@ program MAIN2
   integer::ITER
   integer::NOITER_ALL
   integer::I1
-  logical::XCCPL
   logical::LDORHOEF
 
   integer :: BCP ! TODO: remove - is dummy
@@ -186,7 +185,8 @@ program MAIN2
     call createKKRresults(kkr, dims)
 
     ! ---------------------------------------------------------- k_mesh
-    call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
+    call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
+                         arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
                                        getElapsedTime(program_timer), 0)
@@ -269,25 +269,6 @@ program MAIN2
              CHRGNT = 0.0D0
 
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
-
-!=======================================================================
-! xccpl
-
-      XCCPL = .false.
-
-      ! calculate exchange couplings only at last self-consistency step and when Jij=true
-      if ((ITER==params%SCFSTEPS).and.params%JIJ) XCCPL = .true.
-
-      if (XCCPL) then
-
-        call CLSJIJ(I1,dims%NAEZ,arrays%RR,params%NR,arrays%RBASIS,jij_data%RCUTJIJ,params%NSYMAT,arrays%ISYMINDEX, &
-                    jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ,jij_data%RXCCLS,jij_data%ZKRXIJ, &
-                    arrays%nrd, jij_data%nxijd)
-
-        jij_data%JXCIJINT = CZERO
-        jij_data%GMATXIJ = CZERO
-
-      endif
 
       ! New: instead of reading potential every time, communicate it
       call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)

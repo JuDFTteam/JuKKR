@@ -66,6 +66,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   type (GauntCoefficients), intent(in)  :: gaunts
 
   !---------- locals ----------------------------
+  double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
   type (TimerMpi) :: single_site_timer
   integer :: ie
@@ -78,8 +79,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   double complex :: JSCAL ! scaling factor for Jij calculation
   integer :: I1
 
-  ! TODO: FIXME to reenable jij-Calculation !!!!!!!!!!
-  xccpl = .false. ! TODO !!!!!
+  xccpl = .false.
 
   call resetTimer(mult_scattering_timer)
   call stopTimer(mult_scattering_timer)
@@ -91,6 +91,21 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   EKM = 0
   prspin = 1
   kkr%noiter = 0
+
+
+  ! calculate exchange couplings only at last self-consistency step and when Jij=true
+  if ((ITER==params%SCFSTEPS).and.params%JIJ) XCCPL = .true.
+
+  if (XCCPL) then
+
+    call CLSJIJ(I1,dims%NAEZ,arrays%RR,params%NR,arrays%RBASIS,jij_data%RCUTJIJ,params%NSYMAT,arrays%ISYMINDEX, &
+                jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ,jij_data%RXCCLS,jij_data%ZKRXIJ, &
+                arrays%nrd, jij_data%nxijd)
+
+    jij_data%JXCIJINT = CZERO
+    jij_data%GMATXIJ = CZERO
+
+  endif
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
