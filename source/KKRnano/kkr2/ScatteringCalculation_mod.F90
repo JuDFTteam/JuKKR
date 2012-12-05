@@ -116,15 +116,15 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
                     gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
                     gaunts%LOFLM,arrays%NACLS, &
                     arrays%REFPOT, &
-                    kkr%TREFLL,kkr%DTREFLL,arrays%GREFN,arrays%DGREFN, &
+                    kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                     arrays%LLY_G0TR(:,IE), &
                     getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
                     getNumAtomRanks(my_mpi), &
-                    arrays%lmaxd, arrays%naclsd, gaunts%ncleb, arrays%nrefd, arrays%nclsd, &
+                    arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
                     dims%LLY)
 
-      TESTARRAYLOG(3, arrays%GREFN)
-      TESTARRAYLOG(3, arrays%DGREFN)
+      TESTARRAYLOG(3, kkr%GREFN)
+      TESTARRAYLOG(3, kkr%DGREFN)
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
@@ -185,7 +185,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
           arrays%CLS,arrays%NACLS,arrays%RR, &
-          arrays%EZOA,arrays%ATOM,arrays%GREFN,arrays%DGREFN, &
+          arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
           params%NSYMAT,arrays%DSYMLL, &
           arrays%TMATN(:,:,ISPIN),arrays%DTDE(:,:,ISPIN), &
           arrays%NUMN0,arrays%INDN0,I1, &
@@ -269,7 +269,8 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
     call jijReduceIntResults_com(my_mpi, jij_data%JXCIJINT)
 
     if (isInMasterGroup(my_mpi)) then
-      call writeJiJs(I1,jij_data%RXIJ,jij_data%NXIJ,jij_data%IXCP,jij_data%RXCCLS,jij_data%JXCIJINT, jij_data%nxijd)
+      call writeJiJs(I1,jij_data%RXIJ,jij_data%NXIJ,jij_data%IXCP, &
+                     jij_data%RXCCLS,jij_data%JXCIJINT, jij_data%nxijd)
     end if
   endif
 
