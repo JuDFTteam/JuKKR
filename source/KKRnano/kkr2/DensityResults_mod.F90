@@ -78,6 +78,10 @@ module DensityResults_mod
     ALLOCATECHECK(self%CMOM(lmpotd))
     ALLOCATECHECK(self%CATOM(nspind))
     ALLOCATECHECK(self%DEN(0:lmaxd+1,iemxd,nspind))
+
+    !initialise to be safe
+    self%RHO2NS = 0.0d0
+    self%R2NEF = 0.0d0
   end subroutine
 
   !-----------------------------------------------------------------------------

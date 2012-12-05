@@ -319,7 +319,7 @@ program MAIN2
 
         ! now WEZRN stores the weights for E-integration
 
-        arrays%DEN = CZERO
+        densities%DEN = CZERO
         densities%DENEF = 0.0D0
 
         if (params%LDAU) then
@@ -330,28 +330,28 @@ program MAIN2
 
         ! has to be done after Lloyd
         ! output: RHO2NS, R2NEF, DEN, ESPV
-        call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, arrays%RHO2NS, arrays%R2NEF, &
-                            arrays%DEN, arrays%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
+        call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, densities%RHO2NS, densities%R2NEF, &
+                            densities%DEN, arrays%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
 
 ! ----------------------------------------------------------------------
 ! -->   determine total charge expanded in spherical harmonics
 ! -------------------------------------------------------------- density
         ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-        call RHOTOTB_wrapper(densities%CATOM, arrays%RHO2NS, atomdata)
+        call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
 
         densities%CHRGNT = densities%CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
 
         if (dims%LLY == 1) then
-          call renormalizeDOS(arrays%DEN,arrays%RNORM,arrays%LMAXD+1,params%IELAST,arrays%NSPIND,arrays%IEMXD)
+          call renormalizeDOS(densities%DEN,arrays%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
         end if
 
         ! calculate DOS at Fermi level
-        densities%DENEF = calcDOSatFermi(arrays%DEN, params%IELAST, arrays%IEMXD, arrays%LMAXD+1, arrays%NSPIND)
+        densities%DENEF = calcDOSatFermi(densities%DEN, params%IELAST, densities%IEMXD, densities%LMAXD+1, densities%NSPIND)
 
         ! ---> l/m_s/atom-resolved charges, output -> CHARGE
         ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
         ! CHARGE -> written to result file
-        call calcChargesLres(densities%CHARGE, arrays%DEN, params%IELAST, arrays%LMAXD+1, arrays%NSPIND, emesh%WEZ, arrays%IEMXD)
+        call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
 
         call sumNeutralityDOSFermi_com(densities%CHRGNT, densities%DENEF, getMySEcommunicator(my_mpi))
 
@@ -360,7 +360,7 @@ program MAIN2
         ! only for informative reasons
         if (params%KTE >= 0) then
           call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
-          call writeResults1File(densities%CATOM, densities%CHARGE, arrays%DEN, &
+          call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
                                  atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
           call closeResults1File()
         endif
@@ -368,11 +368,11 @@ program MAIN2
         call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
         call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
-                                     0.03d0, densities%CHRGNT, densities%DENEF, arrays%R2NEF, &
-                                     arrays%ESPV, arrays%RHO2NS, emesh%E2)
+                                     0.03d0, densities%CHRGNT, densities%DENEF, densities%R2NEF, &
+                                     arrays%ESPV, densities%RHO2NS, emesh%E2)
 
         !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-        call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,arrays%RHO2NS(:,:,1), cell, mesh, shgaunts)
+        call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
         call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
 
@@ -380,10 +380,10 @@ program MAIN2
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
         !output: VONS
-        call VINTRAS_wrapper(arrays%RHO2NS(:,:,1), shgaunts, atomdata)
+        call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
 
         TESTARRAYLOG(3, atomdata%potential%VONS)
-        TESTARRAYLOG(3, arrays%RHO2NS)
+        TESTARRAYLOG(3, densities%RHO2NS)
 
         call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
 
@@ -418,9 +418,9 @@ program MAIN2
           ! core electron contribution
           call ESPCB_wrapper(arrays%ESPC, LCOREMAX, atomdata)
           ! output: EPOTIN
-          call EPOTINB_wrapper(EPOTIN,arrays%RHO2NS,atomdata)
+          call EPOTINB_wrapper(EPOTIN,densities%RHO2NS,atomdata)
           ! output: ECOU - l resolved Coulomb energy
-          call ECOUB_wrapper(densities%CMOM, arrays%ECOU, arrays%RHO2NS, shgaunts, atomdata)
+          call ECOUB_wrapper(densities%CMOM, arrays%ECOU, densities%RHO2NS, shgaunts, atomdata)
         end if
 
         call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
@@ -428,7 +428,7 @@ program MAIN2
 
 ! =====================================================================
         ! output: VONS (changed), EXC (exchange energy) (l-resolved)
-        call VXCDRV_wrapper(arrays%EXC,params%KXC,arrays%RHO2NS, shgaunts, atomdata)
+        call VXCDRV_wrapper(arrays%EXC,params%KXC,densities%RHO2NS, shgaunts, atomdata)
 
         call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
 ! =====================================================================

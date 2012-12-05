@@ -19,7 +19,7 @@ module Main2Arrays_mod
     double precision , dimension(2)  :: VBC
     double precision , dimension(3,3)  :: bravais
     integer , dimension(48)  :: isymindex
-    double complex , allocatable, dimension(:,:,:)  :: DEN
+    !double complex , allocatable, dimension(:,:,:)  :: DEN
     double complex , allocatable, dimension(:,:,:)  :: DSYMLL
     double precision , allocatable, dimension(:,:)  :: RBASIS
     double precision , allocatable, dimension(:,:)  :: SMAT
@@ -39,8 +39,8 @@ module Main2Arrays_mod
     double precision , allocatable, dimension(:,:)  :: ESPV
     double precision , allocatable, dimension(:)  :: EXC
     double precision , allocatable, dimension(:)  :: ZAT
-    double precision , allocatable, dimension(:,:,:)  :: R2NEF
-    double precision , allocatable, dimension(:,:,:)  :: RHO2NS
+    !double precision , allocatable, dimension(:,:,:)  :: R2NEF
+    !double precision , allocatable, dimension(:,:,:)  :: RHO2NS
     !double precision , allocatable, dimension(:,:)  :: CHARGE
     !double precision , allocatable, dimension(:)  :: CMINST
     !double precision , allocatable, dimension(:)  :: CMOM
@@ -164,7 +164,7 @@ module Main2Arrays_mod
     self%IRMD = IRMD
     self%LMPOTD = LMPOTD
 
-    ALLOCATECHECK(self%DEN(0:LMAXD+1,IEMXD,NSPIND))
+    !ALLOCATECHECK(self%DEN(0:LMAXD+1,IEMXD,NSPIND))
     ALLOCATECHECK(self%DSYMLL(LMMAXD,LMMAXD,48))
     ALLOCATECHECK(self%RBASIS(3,NAEZ))
     ALLOCATECHECK(self%SMAT(LMXSPD,NAEZ))
@@ -184,8 +184,8 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%ESPV(0:LMAXD+1,NSPIND))
     ALLOCATECHECK(self%EXC(0:LPOT))
     ALLOCATECHECK(self%ZAT(NAEZ))
-    ALLOCATECHECK(self%R2NEF(IRMD,LMPOTD,2))
-    ALLOCATECHECK(self%RHO2NS(IRMD,LMPOTD,2))
+    !ALLOCATECHECK(self%R2NEF(IRMD,LMPOTD,2))
+    !ALLOCATECHECK(self%RHO2NS(IRMD,LMPOTD,2))
     !ALLOCATECHECK(self%CHARGE(0:LMAXD+1,2))
     !ALLOCATECHECK(self%CMINST(LMPOTD))
     !ALLOCATECHECK(self%CMOM(LMPOTD))
@@ -199,8 +199,8 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%REFPOT(NAEZ))
 
     !initialise to be safe
-    self%RHO2NS = 0.0d0
-    self%R2NEF = 0.0d0
+    !self%RHO2NS = 0.0d0
+    !self%R2NEF = 0.0d0
 
   end subroutine
 
@@ -213,7 +213,7 @@ module Main2Arrays_mod
 
     integer :: memory_stat
 
-    DEALLOCATECHECK(self%DEN)
+    !DEALLOCATECHECK(self%DEN)
     DEALLOCATECHECK(self%DSYMLL)
     DEALLOCATECHECK(self%RBASIS)
     DEALLOCATECHECK(self%SMAT)
@@ -233,8 +233,8 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%ESPV)
     DEALLOCATECHECK(self%EXC)
     DEALLOCATECHECK(self%ZAT)
-    DEALLOCATECHECK(self%R2NEF)
-    DEALLOCATECHECK(self%RHO2NS)
+    !DEALLOCATECHECK(self%R2NEF)
+    !DEALLOCATECHECK(self%RHO2NS)
     !DEALLOCATECHECK(self%CHARGE)
     !DEALLOCATECHECK(self%CMINST)
     !DEALLOCATECHECK(self%CMOM)
