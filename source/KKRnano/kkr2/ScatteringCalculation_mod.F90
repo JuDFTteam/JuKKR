@@ -23,7 +23,7 @@ CONTAINS
 !>         *) JIJ-Files (if requested)
 !>         *) matrix dump (if requested)
 subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
-                      ebalance_handler, my_mpi, arrays, jij_data, ldau_data)
+                      ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -36,6 +36,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
+  use KKRresults_mod
 
   use GauntCoefficients_mod
   use BasisAtom_mod
@@ -59,6 +60,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   type (LDAUData), intent(inout)        :: ldau_data
   type (JijData), intent(inout)         :: jij_data
   type (Main2Arrays), intent(inout)     :: arrays
+  type (KKRresults), intent(inout)      :: kkr  ! out only?
   type (DimParams), intent(in)          :: dims
   type (InputParams), intent(in)        :: params
   type (GauntCoefficients), intent(in)  :: gaunts
@@ -89,6 +91,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
   EKM = 0
   prspin = 1
+  kkr%noiter = 0
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)

@@ -47,6 +47,7 @@ program MAIN2
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
+  use KKRresults_mod
 
   use ScatteringCalculation_mod, only: energyloop
 
@@ -113,6 +114,7 @@ program MAIN2
   type (Main2Arrays), target    :: arrays
   type (DimParams), target      :: dims
   type (InputParams)            :: params
+  type (KKRresults)             :: kkr
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
@@ -181,6 +183,8 @@ program MAIN2
 !+++++++++++ pre self-consistency preparation
 
     I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
+
+    call createKKRresults(kkr, dims)
 
     ! ---------------------------------------------------------- k_mesh
     call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
@@ -316,7 +320,7 @@ program MAIN2
 
       ! Scattering calculations - that is what KKR is all about
       call energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
-                      ebalance_handler, my_mpi, arrays, jij_data, ldau_data)
+                      ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
 
       call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',getElapsedTime(program_timer),ITER)
 
@@ -624,6 +628,7 @@ program MAIN2
     call destroyBroydenData(broyden)
     call destroyLDAUData(ldau_data)
     call destroyJijData(jij_data)
+    call destroyKKRresults(kkr)
 
 ! ======================================================================
 
