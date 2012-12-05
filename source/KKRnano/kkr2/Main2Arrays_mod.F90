@@ -33,17 +33,7 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:,:)  :: EZOA
     integer , allocatable, dimension(:)  :: NUMN0
     integer , allocatable, dimension(:,:)  :: INDN0
-    double complex , allocatable, dimension(:,:,:)  :: TMATN
-    double complex , allocatable, dimension(:,:,:)  :: DTDE
-    double complex , allocatable, dimension(:,:,:)  :: TREFLL
-    double complex , allocatable, dimension(:,:,:)  :: DTREFLL
-    double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
-    double complex , allocatable, dimension(:,:,:,:)  :: GREFN
-    double complex , allocatable, dimension(:,:,:,:)  :: GMATN
     complex , allocatable, dimension(:,:,:)  :: PRSC
-    double complex , allocatable, dimension(:,:)  :: LLY_G0TR
-    double complex , allocatable, dimension(:,:)  :: LLY_GRDT
-    double complex , allocatable, dimension(:)  :: TR_ALPH
     double precision , allocatable, dimension(:)  :: ECOU
     double precision , allocatable, dimension(:,:)  :: ESPC
     double precision , allocatable, dimension(:,:)  :: ESPV
@@ -188,17 +178,7 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%EZOA(NACLSD,NAEZ))
     ALLOCATECHECK(self%NUMN0(NAEZ))
     ALLOCATECHECK(self%INDN0(NAEZ,NACLSD))
-    ALLOCATECHECK(self%TMATN(LMMAXD,LMMAXD,NSPIND))
-    ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
-    ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD,NREFD))
-    ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD,NREFD))
-    ALLOCATECHECK(self%DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
-    ALLOCATECHECK(self%GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
-    ALLOCATECHECK(self%GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND))
     ALLOCATECHECK(self%PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1))
-    ALLOCATECHECK(self%LLY_G0TR(NCLSD,IEMXD))
-    ALLOCATECHECK(self%LLY_GRDT(IEMXD,NSPIND))
-    ALLOCATECHECK(self%TR_ALPH(NSPIND))
     ALLOCATECHECK(self%ECOU(0:LPOT))
     ALLOCATECHECK(self%ESPC(0:3,NSPIND))
     ALLOCATECHECK(self%ESPV(0:LMAXD+1,NSPIND))
@@ -222,9 +202,6 @@ module Main2Arrays_mod
     self%RHO2NS = 0.0d0
     self%R2NEF = 0.0d0
 
-    ! use garbage values
-    self%GMATN = dcmplx(99999.0d0, 99999.0d0)
-    self%LLY_GRDT = dcmplx(99999.0d0, 99999.0d0)
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -250,17 +227,7 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%EZOA)
     DEALLOCATECHECK(self%NUMN0)
     DEALLOCATECHECK(self%INDN0)
-    DEALLOCATECHECK(self%TMATN)
-    DEALLOCATECHECK(self%DTDE)
-    DEALLOCATECHECK(self%TREFLL)
-    DEALLOCATECHECK(self%DTREFLL)
-    DEALLOCATECHECK(self%DGREFN)
-    DEALLOCATECHECK(self%GREFN)
-    DEALLOCATECHECK(self%GMATN)
     DEALLOCATECHECK(self%PRSC)
-    DEALLOCATECHECK(self%LLY_G0TR)
-    DEALLOCATECHECK(self%LLY_GRDT)
-    DEALLOCATECHECK(self%TR_ALPH)
     DEALLOCATECHECK(self%ECOU)
     DEALLOCATECHECK(self%ESPC)
     DEALLOCATECHECK(self%ESPV)
