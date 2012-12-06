@@ -76,7 +76,8 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   integer :: ierr
   integer :: lcoremax
   double precision :: EPOTIN, VAV0, VOL0
-  double precision :: RMSAVQ, RMSAVM
+  double precision :: RMSAVQ ! rms error magnetisation dens. (contribution of single site)
+  double precision :: RMSAVM ! rms error charge density (contribution of single site)
   logical, external :: testVFORM
 
   mesh => atomdata%mesh_ptr

@@ -3,12 +3,10 @@
 
 #include "DebugHelpers/test_macros.h"
 #include "DebugHelpers/logging_macros.h"
-#include "DebugHelpers/test_array_log.h"
 
 program MAIN2
 
   USE_LOGGING_MOD
-  USE_ARRAYLOG_MOD
 
   use common_testc
   use common_optc
@@ -16,14 +14,10 @@ program MAIN2
   use KKRnanoParallel_mod
   use KKRnano_Comm_mod
 
-  use lloyds_formula_mod
-
   use main2_aux_mod
-  use muffin_tin_zero_mod
   use EnergyMesh_mod
 
   use MadelungCalculator_mod
-  use lloyd0_new_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
@@ -38,9 +32,8 @@ program MAIN2
   use TimerMpi_mod
   use EBalanceHandler_mod
   use BroydenData_mod
-  use BRYDBM_new_com_mod
 
-  use wrappers_mod
+  use wrappers_mod, only: rhocore_wrapper
 
   use TEST_lcutoff_mod !TODO: remove
 
@@ -54,20 +47,12 @@ program MAIN2
   use ProcessKKRresults_mod
 
   implicit none
-  include 'mpif.h' !TODO !DEL
 
   type (MadelungCalculator) :: madelung_calc
   type (ShapeGauntCoefficients) :: shgaunts
   type (GauntCoefficients) :: gaunts
 
-  !     .. Parameters ..
-  double complex, parameter :: CZERO = (0.0D0,0.0D0)
-
-  !     ..
   !     .. Local Scalars ..
-
-  double precision::RMSAVM      ! rms error magnetisation dens. (contribution of single site)
-  double precision::RMSAVQ      ! rms error charge density (contribution of single site)
 
   type (TimerMpi) :: program_timer
   type (TimerMpi) :: iteration_timer
@@ -75,31 +60,14 @@ program MAIN2
   type (EBalanceHandler) :: ebalance_handler
 
   integer::ITER
-  integer::NOITER_ALL
   integer::I1
-  logical::LDORHOEF
 
   integer :: BCP ! TODO: remove - is dummy
   integer :: IGUESS ! TODO: remove - is dummy
 
-  !     .. Local Arrays ..
-
-  double precision::VAV0
-  double precision::VOL0
-
-  double precision::EPOTIN
-  double precision::VMAD
-
-  integer::LCOREMAX
-
-  integer::   IERR
-  integer::   MAPBLOCK !DEL
-  external     MAPBLOCK
-
   type(KKRnanoParallel) :: my_mpi
 
   integer :: flag
-  logical, external :: testVFORM
 
   type (RadialMeshData), target :: mesh
   type (CellData), target       :: cell
@@ -154,7 +122,6 @@ program MAIN2
                         params%NSRA, params%NSYMAT, arrays%NUMN0, OPTC, params%QMRBOUND, &
                         arrays%RBASIS, arrays%RCLS, params%RCUTJIJ, arrays%REFPOT, params%RMAX, arrays%RMTREF, &
                         arrays%RR, params%SCFSTEPS, TESTC, arrays%VREF, arrays%ZAT)
-
 
   !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
@@ -298,20 +265,24 @@ program MAIN2
                    getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
+      ! output: ebalance_handler, arrays, kkr (!), jij_data, ldau_data
       call energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
                       ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
 
       call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',getElapsedTime(program_timer),ITER)
 
 !----------------------------------------------------------------------
-! BEGIN only processes with LMPIC = 1 are working
+! BEGIN only processes in master-group are working
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
-        call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, arrays, gaunts, shgaunts, madelung_calc, program_timer, &
-                             densities, broyden, ldau_data)
+        ! output: atomdata, arrays, densities, broyden, ldau_data, emesh
+        call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, &
+                               params, arrays, gaunts, shgaunts, &
+                               madelung_calc, program_timer, &
+                               densities, broyden, ldau_data)
       endif
 !----------------------------------------------------------------------
-! END only processes with LMPIC = 1 are working
+! END only processes in master-group are working
 !----------------------------------------------------------------------
 
       call broadcastEnergyMesh_com(my_mpi, emesh)
