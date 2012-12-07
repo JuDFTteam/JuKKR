@@ -28,7 +28,7 @@ subroutine RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, RHO2NS, R2NEF, DEN, ES
   double precision, intent(inout) :: R2NEF(:,:,:) ! inout?
   double complex, intent(inout) :: DEN(:,:,:)
   double precision, intent(inout) :: ESPV(:,:)
-  double complex, intent(inout) :: GMATN(:,:,:,:) !in or inout?
+  double complex, intent(in) :: GMATN(:,:,:,:) !in
   type (BasisAtom), intent(inout) :: atomdata !in or inout?
   type (GauntCoefficients), intent(in) :: gaunts
   type (EnergyMesh), intent(inout) :: emesh !inout or in?

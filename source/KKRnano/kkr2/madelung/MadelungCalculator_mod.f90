@@ -179,7 +179,7 @@ module MadelungCalculator_mod
 
     implicit none
 
-    type (MadelungCalculator), intent(inout) :: madelung_calc
+    type (MadelungCalculator), intent(in) :: madelung_calc
     double precision, intent(inout) :: CMOM(madelung_calc%LMPOTD)
     double precision, intent(inout) :: CMINST(madelung_calc%LMPOTD)
     integer, intent(in) :: nspin

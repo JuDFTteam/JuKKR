@@ -12,8 +12,8 @@ module DensityResults_mod
   !> Contains densities and integrated densities (charges)
   !> for one specific atom.
   type DensityResults
-    double precision  :: DENEF
-    double precision  :: CHRGNT
+    !double precision  :: DENEF
+    double precision  :: total_charge_neutrality
     double precision , allocatable, dimension(:,:,:)  :: R2NEF
     double precision , allocatable, dimension(:,:,:)  :: RHO2NS
     double precision , allocatable, dimension(:,:)  :: CHARGE

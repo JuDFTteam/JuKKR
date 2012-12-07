@@ -232,10 +232,6 @@ program MAIN2
         call printDoubleLineSep(unit_number = 2)
       endif
 
-      densities%CMOM   = 0.0D0
-      densities%CMINST = 0.0D0
-      densities%CHRGNT = 0.0D0
-
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
       ! New: instead of reading potential every time, communicate it
@@ -275,7 +271,7 @@ program MAIN2
 ! BEGIN only processes in master-group are working
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
-        ! output: atomdata, arrays, densities, broyden, ldau_data, emesh
+        ! output: atomdata, arrays, densities, broyden, ldau_data, emesh (only correct for master)
         call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, &
                                params, arrays, gaunts, shgaunts, &
                                madelung_calc, program_timer, &
@@ -291,10 +287,10 @@ program MAIN2
       !getMyActiveCommunicator(my_mpi),IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
       ! TODO
-      !if(isMasterRank(my_mpi)) then
+      if(isMasterRank(my_mpi)) then
         !call printSolverIterationNumber(ITER, NOITER_ALL)
-        !call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
-      !endif
+        call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
+      endif
 
 ! manual exit possible by creation of file 'STOP' in home directory
       if (isManualAbort_com(getMyWorldRank(my_mpi), &

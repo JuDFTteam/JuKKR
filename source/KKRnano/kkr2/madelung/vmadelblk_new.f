@@ -100,6 +100,8 @@ C     .. Intrinsic Functions ..
       LMPOTD=(LPOT+1)**2
 C     ..................................................................
 C
+      AC = 0.0d0
+
       PI = 4.0D0*ATAN(1.0D0) 
       FPI = 4.0D0*PI
 C
@@ -189,7 +191,7 @@ C
       END DO
 C===== end loop over all atoms =========================================
 C
-C
+C     contributions are accumulated in AC !!!
 C
 C===== save information on each proc/atom in order to bcast ==============
       

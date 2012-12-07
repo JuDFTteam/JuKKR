@@ -7,6 +7,7 @@ module ProcessKKRresults_mod
 
   public :: processKKRresults
   private :: calculateDensities
+  private :: calculatePotentials
 
 CONTAINS
 
@@ -18,20 +19,15 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 
   use KKRnanoParallel_mod
 
-  use lloyds_formula_mod, only: renormalizeDOS
-
   use main2_aux_mod
-  use muffin_tin_zero_mod
   use EnergyMesh_mod
 
   use MadelungCalculator_mod
-  use lloyd0_new_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
 
   use RadialMeshData_mod
-  use CellData_mod
   use BasisAtom_mod
 
   use LDAUData_mod
@@ -69,31 +65,34 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   type (TimerMpi)               :: program_timer
 
   ! locals
-  double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
   type (RadialMeshData), pointer :: mesh
-  type (CellData), pointer       :: cell
   integer :: I1
-  double precision :: VMAD
   integer :: ierr
-  integer :: lcoremax
-  double precision :: EPOTIN, VAV0, VOL0
   double precision :: RMSAVQ ! rms error magnetisation dens. (contribution of single site)
   double precision :: RMSAVM ! rms error charge density (contribution of single site)
   logical, external :: testVFORM
 
   mesh => atomdata%mesh_ptr
-  cell => atomdata%cell_ptr
 
-  VMAD = 0.0d0
   I1 = atomdata%atom_index
 
+  ! kkr
+  !  |
+  !  v
   call calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, &
                           shgaunts, kkr, program_timer, &
                           ldau_data, arrays, emesh, densities)
-
+  ! |
+  ! v
+  ! densities, emesh
+  ! |
+  ! v
   call calculatePotentials(iter, my_mpi, dims, params, madelung_calc, shgaunts, &
                            program_timer, densities, arrays, &
                            ldau_data, atomdata)
+  ! |
+  ! v
+  ! atomdata, arrays
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
   call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, params%MIXING, params%FCM)
@@ -123,8 +122,10 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 ! -->    reset to start new iteration
 ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  call resetPotentials(mesh%IRC, mesh%IRMD, mesh%IRMIN, atomdata%potential%IRMIND, atomdata%potential%LMPOT, &
-                       atomdata%potential%NSPIN, atomdata%potential%VINS, atomdata%potential%VISP, atomdata%potential%VONS) ! Note: only LMPIC=1 processes
+  call resetPotentials(mesh%IRC, mesh%IRMD, mesh%IRMIN, &
+                       atomdata%potential%IRMIND, atomdata%potential%LMPOT, &
+                       atomdata%potential%NSPIN, atomdata%potential%VINS, &
+                       atomdata%potential%VISP, atomdata%potential%VONS)
 
 ! ----------------------------------------------------- output_potential
   call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
@@ -155,7 +156,8 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
     ! also other stuff is read from results1 (and results2)
     call RESULTS(dims%LRECRES2,params%IELAST,ITER,arrays%LMAXD,arrays%NAEZ,emesh%NPOL, &
     dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT,emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
-    params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),densities%CHRGNT,arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
+    params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),densities%total_charge_neutrality, &
+    arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
     arrays%iemxd)
 
     ! only MASTERRANK updates, other ranks get it broadcasted later
@@ -229,7 +231,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   type (Main2Arrays), intent(inout)          :: arrays
   type (DimParams), intent(in)               :: dims
   type (InputParams), intent(in)             :: params
-  type (KKRresults), intent(inout)           :: kkr  ! should be in only
+  type (KKRresults), intent(in)              :: kkr  ! should be in only
   type (DensityResults), intent(inout)       :: densities
   type (TimerMpi), intent(in)                :: program_timer
 
@@ -239,11 +241,16 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   type (CellData), pointer       :: cell
   logical :: LdoRhoEF
   integer :: I1
+  double precision :: denEf !< charge density at Fermi level
+  double precision :: chrgNt !< charge neutrality
 
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
 
   I1 = atomdata%atom_index
+
+  densities%CMOM   = 0.0D0
+  densities%CMINST = 0.0D0
 
   ! out: emesh, RNORM
   call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, arrays%RNORM, &
@@ -258,7 +265,8 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   ! now WEZRN stores the weights for E-integration
 
   densities%DEN = CZERO
-  densities%DENEF = 0.0D0
+  DENEF = 0.0D0
+  CHRGNT = 0.0D0
 
   if (params%LDAU) then
     ldau_data%DMATLDAU = CZERO
@@ -277,21 +285,22 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
   call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
 
-  densities%CHRGNT = densities%CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
+  CHRGNT = CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
 
   if (dims%LLY == 1) then
     call renormalizeDOS(densities%DEN,arrays%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
   end if
 
   ! calculate DOS at Fermi level
-  densities%DENEF = calcDOSatFermi(densities%DEN, params%IELAST, densities%IEMXD, densities%LMAXD+1, densities%NSPIND)
+  DENEF = DENEF + calcDOSatFermi(densities%DEN, params%IELAST, densities%IEMXD, densities%LMAXD+1, densities%NSPIND)
 
   ! ---> l/m_s/atom-resolved charges, output -> CHARGE
   ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
   ! CHARGE -> written to result file
   call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
 
-  call sumNeutralityDOSFermi_com(densities%CHRGNT, densities%DENEF, getMySEcommunicator(my_mpi))
+  call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
+  densities%total_charge_neutrality = CHRGNT
 
   ! write to 'results1' - only to be read in in results.f
   ! necessary for density of states calculation, otherwise
@@ -306,7 +315,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
 
   call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
-                               0.03d0, densities%CHRGNT, densities%DENEF, densities%R2NEF, &
+                               0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                arrays%ESPV, densities%RHO2NS, emesh%E2)
 
   !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
@@ -318,7 +327,13 @@ end subroutine
 
 
 !------------------------------------------------------------------------------
-subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, shgaunts, program_timer, densities, arrays, ldau_data, atomdata)
+!> Calculate potentials.
+!>
+!> Output: atomdata, ldau_data, arrays
+!> Files written: 'results2'
+subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, &
+                               shgaunts, program_timer, densities, &
+                               arrays, ldau_data, atomdata)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -349,7 +364,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, shgaun
 
   integer, intent(in)                        :: iter
   type (ShapeGauntCoefficients), intent(in)  :: shgaunts
-  type (MadelungCalculator), intent(inout)   :: madelung_calc  ! should be 'in' only
+  type (MadelungCalculator), intent(in)      :: madelung_calc
   type (KKRnanoParallel), intent(in)         :: my_mpi
   type (BasisAtom), intent(inout)            :: atomdata
   type (LDAUData), intent(inout)             :: ldau_data

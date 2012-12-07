@@ -22,7 +22,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
   integer, intent(in) :: NSRA !< flag scalar relativistic
   double complex, intent(in) :: LLY_GRDT(:,:) ! in
 
-  double complex, intent(inout) :: GMATN(:,:,:,:) !in or inout?
+  double complex, intent(in) :: GMATN(:,:,:,:) !in
   type (BasisAtom), intent(inout) :: atomdata !in or inout?
   type (GauntCoefficients), intent(in) :: gaunts
   type (EnergyMesh), intent(inout) :: emesh !inout or in?
