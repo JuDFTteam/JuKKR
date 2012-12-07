@@ -72,10 +72,8 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
   type (RadialMeshData), pointer :: mesh
   type (CellData), pointer       :: cell
-  logical :: LdoRhoEF
   integer :: I1
   double precision :: VMAD
-  integer :: noiter_all
   integer :: ierr
   integer :: lcoremax
   double precision :: EPOTIN, VAV0, VOL0
@@ -93,119 +91,9 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
                           shgaunts, kkr, program_timer, &
                           ldau_data, arrays, emesh, densities)
 
-! =====================================================================
-! ============================= ENERGY and FORCES =====================
-! =====================================================================
-  !output: VONS
-  call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
-
-  TESTARRAYLOG(3, atomdata%potential%VONS)
-  TESTARRAYLOG(3, densities%RHO2NS)
-
-  call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
-
-  ! output: VONS (changed), VMAD
-  call addMadelungPotential_com(madelung_calc, densities%CMOM, densities%CMINST, arrays%NSPIND, &
-       arrays%NAEZ, atomdata%potential%VONS, arrays%ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
-       arrays%SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
-
-  call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
-
-! =====================================================================
-
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
-
-!            if (KFORCE==1 .and. ITER==SCFSTEPS) then
-! !---------------------------------------------------------------------
-!              call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
-!              R,DRDI,IMT,ZAT,irmd)  ! TODO: get rid of atom parameter I1
-!              call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-!              DRDI,IMT,naez,irmd)
-! !---------------------------------------------------------------------
-!            end if
-
-! Force Calculation stops here look after VXCDRV
-
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
-
-  if (params%KTE==1) then
-    ! calculate total energy and individual contributions if requested
-    ! core electron contribution
-    call ESPCB_wrapper(arrays%ESPC, LCOREMAX, atomdata)
-    ! output: EPOTIN
-    call EPOTINB_wrapper(EPOTIN,densities%RHO2NS,atomdata)
-    ! output: ECOU - l resolved Coulomb energy
-    call ECOUB_wrapper(densities%CMOM, arrays%ECOU, densities%RHO2NS, shgaunts, atomdata)
-  end if
-
-  call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-
-! =====================================================================
-  ! output: VONS (changed), EXC (exchange energy) (l-resolved)
-  call VXCDRV_wrapper(arrays%EXC,params%KXC,densities%RHO2NS, shgaunts, atomdata)
-
-  call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
-! =====================================================================
-
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
-
-! Force calculation continues here
-
-!            if (KFORCE==1.and.ITER==SCFSTEPS) then
-! ---------------------------------------------------------------------
-!              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-!              ALAT,DRDI,IMT,ZAT, &
-!              getMyAtomRank(my_mpi), &
-!              getMySEcommunicator(my_mpi), &
-!              naez, irmd)
-! ---------------------------------------------------------------------
-!            end if
-
-  ! unnecessary I/O? see results.f
-  if (params%KTE >= 0) then
-    call openResults2File(dims%LRECRES2)
-    call writeResults2File(densities%CATOM, arrays%ECOU, ldau_data%EDCLDAU, &
-                           EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, &
-                           arrays%EXC, I1, LCOREMAX, VMAD)
-    call closeResults2File()
-  end if
-
-  ! calculate new muffin-tin zero. output: VAV0, VOL0
-  call MTZERO_wrapper(VAV0, VOL0, atomdata)
-
-  call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
-
-! =====================================================================
-! ============================= ENERGY and FORCES =====================
-! =====================================================================
-
-  call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
-
-  call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, arrays%VBC, VOL0)
-
-  if(isMasterRank(my_mpi)) then
-    call printMuffinTinShift(VAV0, arrays%VBC, VOL0)
-  end if
-
-! -->   shift potential to muffin tin zero and
-!       convolute potential with shape function for next iteration
-
-! -->   shift potential by VBC and multiply with shape functions - output: VONS
-  call CONVOL_wrapper(arrays%VBC, shgaunts, atomdata)
-
-! LDAU
-  ldau_data%EULDAU = 0.0D0
-  ldau_data%EDCLDAU = 0.0D0
-
-  if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
-    call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU,ldau_data%NLDAU,ldau_data%LLDAU, &
-                  ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%UMLDAU,ldau_data%WMLDAU,ldau_data%EULDAU,ldau_data%EDCLDAU, &
-                  ldau_data%lmaxd)
-  endif
-! LDAU
+  call calculatePotentials(iter, my_mpi, dims, params, madelung_calc, shgaunts, &
+                           program_timer, densities, arrays, &
+                           ldau_data, atomdata)
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
   call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, params%MIXING, params%FCM)
@@ -343,7 +231,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   type (InputParams), intent(in)             :: params
   type (KKRresults), intent(inout)           :: kkr  ! should be in only
   type (DensityResults), intent(inout)       :: densities
-  type (TimerMpi), intent(inout)             :: program_timer
+  type (TimerMpi), intent(in)                :: program_timer
 
   ! locals
   double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
@@ -425,6 +313,182 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
   call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
+
+end subroutine
+
+
+!------------------------------------------------------------------------------
+subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, shgaunts, program_timer, densities, arrays, ldau_data, atomdata)
+
+  USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
+
+  use KKRnanoParallel_mod
+
+  use main2_aux_mod
+
+  use MadelungCalculator_mod
+  use ShapeGauntCoefficients_mod
+  use muffin_tin_zero_mod
+
+  use RadialMeshData_mod
+  use BasisAtom_mod
+
+  use LDAUData_mod
+
+  use TimerMpi_mod
+
+  use wrappers_mod
+
+  use DimParams_mod
+  use InputParams_mod
+  use Main2Arrays_mod
+  use DensityResults_mod
+
+  implicit none
+
+  integer, intent(in)                        :: iter
+  type (ShapeGauntCoefficients), intent(in)  :: shgaunts
+  type (MadelungCalculator), intent(inout)   :: madelung_calc  ! should be 'in' only
+  type (KKRnanoParallel), intent(in)         :: my_mpi
+  type (BasisAtom), intent(inout)            :: atomdata
+  type (LDAUData), intent(inout)             :: ldau_data
+  type (Main2Arrays), intent(inout)          :: arrays
+  type (DimParams), intent(in)               :: dims
+  type (InputParams), intent(in)             :: params
+
+  type (DensityResults), intent(inout)       :: densities
+  type (TimerMpi), intent(in)                :: program_timer
+
+  ! locals
+  type (RadialMeshData), pointer :: mesh
+  integer :: I1
+  double precision :: VMAD
+  integer :: lcoremax
+  double precision :: EPOTIN, VAV0, VOL0
+
+  mesh => atomdata%mesh_ptr
+
+  I1 = atomdata%atom_index
+  VMAD = 0.0d0
+  EPOTIN = 0.0d0
+  VAV0 = 0.0d0
+  VOL0 = 0.0d0
+  lcoremax = 0
+
+! =====================================================================
+! ============================= ENERGY and FORCES =====================
+! =====================================================================
+  !output: VONS
+  call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
+
+  TESTARRAYLOG(3, atomdata%potential%VONS)
+  TESTARRAYLOG(3, densities%RHO2NS)
+
+  call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
+
+  ! output: VONS (changed), VMAD
+  call addMadelungPotential_com(madelung_calc, densities%CMOM, densities%CMINST, arrays%NSPIND, &
+       arrays%NAEZ, atomdata%potential%VONS, arrays%ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
+       arrays%SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
+
+  call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
+
+! =====================================================================
+
+! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
+
+!            if (KFORCE==1 .and. ITER==SCFSTEPS) then
+! !---------------------------------------------------------------------
+!              call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
+!              R,DRDI,IMT,ZAT,irmd)  ! TODO: get rid of atom parameter I1
+!              call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
+!              DRDI,IMT,naez,irmd)
+! !---------------------------------------------------------------------
+!            end if
+
+! Force Calculation stops here look after VXCDRV
+
+! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
+! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
+
+  if (params%KTE==1) then
+    ! calculate total energy and individual contributions if requested
+    ! core electron contribution
+    call ESPCB_wrapper(arrays%ESPC, LCOREMAX, atomdata)
+    ! output: EPOTIN
+    call EPOTINB_wrapper(EPOTIN,densities%RHO2NS,atomdata)
+    ! output: ECOU - l resolved Coulomb energy
+    call ECOUB_wrapper(densities%CMOM, arrays%ECOU, densities%RHO2NS, shgaunts, atomdata)
+  end if
+
+  call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
+! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+
+! =====================================================================
+  ! output: VONS (changed), EXC (exchange energy) (l-resolved)
+  call VXCDRV_wrapper(arrays%EXC,params%KXC,densities%RHO2NS, shgaunts, atomdata)
+
+  call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
+! =====================================================================
+
+! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
+
+! Force calculation continues here
+
+!            if (KFORCE==1.and.ITER==SCFSTEPS) then
+! ---------------------------------------------------------------------
+!              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
+!              ALAT,DRDI,IMT,ZAT, &
+!              getMyAtomRank(my_mpi), &
+!              getMySEcommunicator(my_mpi), &
+!              naez, irmd)
+! ---------------------------------------------------------------------
+!            end if
+
+  ! unnecessary I/O? see results.f
+  if (params%KTE >= 0) then
+    call openResults2File(dims%LRECRES2)
+    call writeResults2File(densities%CATOM, arrays%ECOU, ldau_data%EDCLDAU, &
+                           EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, &
+                           arrays%EXC, I1, LCOREMAX, VMAD)
+    call closeResults2File()
+  end if
+
+  ! calculate new muffin-tin zero. output: VAV0, VOL0
+  call MTZERO_wrapper(VAV0, VOL0, atomdata)
+
+  call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
+
+! =====================================================================
+! ============================= ENERGY and FORCES =====================
+! =====================================================================
+
+  call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
+
+  call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, arrays%VBC, VOL0)
+
+  if(isMasterRank(my_mpi)) then
+    call printMuffinTinShift(VAV0, arrays%VBC, VOL0)
+  end if
+
+! -->   shift potential to muffin tin zero and
+!       convolute potential with shape function for next iteration
+
+! -->   shift potential by VBC and multiply with shape functions - output: VONS
+  call CONVOL_wrapper(arrays%VBC, shgaunts, atomdata)
+
+! LDAU
+  ldau_data%EULDAU = 0.0D0
+  ldau_data%EDCLDAU = 0.0D0
+
+  if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
+    call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU,ldau_data%NLDAU,ldau_data%LLDAU, &
+                  ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%UMLDAU,ldau_data%WMLDAU,ldau_data%EULDAU,ldau_data%EDCLDAU, &
+                  ldau_data%lmaxd)
+  endif
+! LDAU
 
 end subroutine
 
