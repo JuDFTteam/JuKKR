@@ -5,6 +5,9 @@ module ProcessKKRresults_mod
 
   implicit none
 
+  public :: processKKRresults
+  private :: calculateDensities
+
 CONTAINS
 
 subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, arrays, gaunts, shgaunts, madelung_calc, program_timer, &
@@ -86,74 +89,9 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   VMAD = 0.0d0
   I1 = atomdata%atom_index
 
-  ! out: emesh, RNORM
-  call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, arrays%RNORM, &
-                          dims%LLY, params%ICST, params%NSRA, kkr%GMATN, gaunts, ldau_data)
-
-  if (dims%LLY == 1) then
-    TESTARRAYLOG(3, emesh%WEZRN)
-    TESTARRAYLOG(3, arrays%RNORM)
-    call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
-  endif
-
-  ! now WEZRN stores the weights for E-integration
-
-  densities%DEN = CZERO
-  densities%DENEF = 0.0D0
-
-  if (params%LDAU) then
-    ldau_data%DMATLDAU = CZERO
-  endif
-
-  LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
-
-  ! has to be done after Lloyd
-  ! output: RHO2NS, R2NEF, DEN, ESPV
-  call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, densities%RHO2NS, densities%R2NEF, &
-                      densities%DEN, arrays%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
-
-! ----------------------------------------------------------------------
-! -->   determine total charge expanded in spherical harmonics
-! -------------------------------------------------------------- density
-  ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-  call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
-
-  densities%CHRGNT = densities%CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
-
-  if (dims%LLY == 1) then
-    call renormalizeDOS(densities%DEN,arrays%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
-  end if
-
-  ! calculate DOS at Fermi level
-  densities%DENEF = calcDOSatFermi(densities%DEN, params%IELAST, densities%IEMXD, densities%LMAXD+1, densities%NSPIND)
-
-  ! ---> l/m_s/atom-resolved charges, output -> CHARGE
-  ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
-  ! CHARGE -> written to result file
-  call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
-
-  call sumNeutralityDOSFermi_com(densities%CHRGNT, densities%DENEF, getMySEcommunicator(my_mpi))
-
-  ! write to 'results1' - only to be read in in results.f
-  ! necessary for density of states calculation, otherwise
-  ! only for informative reasons
-  if (params%KTE >= 0) then
-    call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
-    call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
-                           atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
-    call closeResults1File()
-  endif
-
-  call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
-
-  call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
-                               0.03d0, densities%CHRGNT, densities%DENEF, densities%R2NEF, &
-                               arrays%ESPV, densities%RHO2NS, emesh%E2)
-
-  !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-  call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
-
-  call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
+  call calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, &
+                          shgaunts, kkr, program_timer, &
+                          ldau_data, arrays, emesh, densities)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -347,6 +285,146 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 ! -----------------------------------------------------------------
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
+
+end subroutine
+
+!==============================================================================
+
+!------------------------------------------------------------------------------
+!> Calculate densities.
+!>
+!> output: emesh (Fermi-energy updated, renormalized weights), densities, ldau_data?, arrays
+!> files written: 'results1'
+subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shgaunts, kkr, program_timer, &
+                              ldau_data, arrays, emesh, densities)
+
+  USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
+
+  use KKRnanoParallel_mod
+
+  use lloyds_formula_mod, only: renormalizeDOS
+
+  use main2_aux_mod
+  use EnergyMesh_mod
+
+  use lloyd0_new_mod
+
+  use GauntCoefficients_mod
+  use ShapeGauntCoefficients_mod
+
+  use RadialMeshData_mod
+  use CellData_mod
+  use BasisAtom_mod
+
+  use LDAUData_mod
+
+  use TimerMpi_mod
+
+  use wrappers_mod
+
+  use DimParams_mod
+  use InputParams_mod
+  use Main2Arrays_mod
+  use KKRresults_mod
+  use DensityResults_mod
+
+  implicit none
+
+  integer, intent(in)                        :: iter
+  type (ShapeGauntCoefficients), intent(in)  :: shgaunts
+  type (GauntCoefficients), intent(in)       :: gaunts
+  type (KKRnanoParallel), intent(in)         :: my_mpi
+  type (BasisAtom), intent(inout)            :: atomdata
+  type (EnergyMesh), intent(inout)           :: emesh
+  type (LDAUData), intent(inout)             :: ldau_data
+  type (Main2Arrays), intent(inout)          :: arrays
+  type (DimParams), intent(in)               :: dims
+  type (InputParams), intent(in)             :: params
+  type (KKRresults), intent(inout)           :: kkr  ! should be in only
+  type (DensityResults), intent(inout)       :: densities
+  type (TimerMpi), intent(inout)             :: program_timer
+
+  ! locals
+  double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
+  type (RadialMeshData), pointer :: mesh
+  type (CellData), pointer       :: cell
+  logical :: LdoRhoEF
+  integer :: I1
+
+  mesh => atomdata%mesh_ptr
+  cell => atomdata%cell_ptr
+
+  I1 = atomdata%atom_index
+
+  ! out: emesh, RNORM
+  call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, arrays%RNORM, &
+                          dims%LLY, params%ICST, params%NSRA, kkr%GMATN, gaunts, ldau_data)
+
+  if (dims%LLY == 1) then
+    TESTARRAYLOG(3, emesh%WEZRN)
+    TESTARRAYLOG(3, arrays%RNORM)
+    call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
+  endif
+
+  ! now WEZRN stores the weights for E-integration
+
+  densities%DEN = CZERO
+  densities%DENEF = 0.0D0
+
+  if (params%LDAU) then
+    ldau_data%DMATLDAU = CZERO
+  endif
+
+  LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
+
+  ! has to be done after Lloyd
+  ! output: RHO2NS, R2NEF, DEN, ESPV
+  call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, densities%RHO2NS, densities%R2NEF, &
+                      densities%DEN, arrays%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
+
+! ----------------------------------------------------------------------
+! -->   determine total charge expanded in spherical harmonics
+! -------------------------------------------------------------- density
+  ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
+  call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
+
+  densities%CHRGNT = densities%CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
+
+  if (dims%LLY == 1) then
+    call renormalizeDOS(densities%DEN,arrays%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
+  end if
+
+  ! calculate DOS at Fermi level
+  densities%DENEF = calcDOSatFermi(densities%DEN, params%IELAST, densities%IEMXD, densities%LMAXD+1, densities%NSPIND)
+
+  ! ---> l/m_s/atom-resolved charges, output -> CHARGE
+  ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
+  ! CHARGE -> written to result file
+  call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
+
+  call sumNeutralityDOSFermi_com(densities%CHRGNT, densities%DENEF, getMySEcommunicator(my_mpi))
+
+  ! write to 'results1' - only to be read in in results.f
+  ! necessary for density of states calculation, otherwise
+  ! only for informative reasons
+  if (params%KTE >= 0) then
+    call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
+    call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
+                           atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
+    call closeResults1File()
+  endif
+
+  call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
+
+  call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
+                               0.03d0, densities%CHRGNT, densities%DENEF, densities%R2NEF, &
+                               arrays%ESPV, densities%RHO2NS, emesh%E2)
+
+  !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
+  call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
+
+  call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
 
 end subroutine
 
