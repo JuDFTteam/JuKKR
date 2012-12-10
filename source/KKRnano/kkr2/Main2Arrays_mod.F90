@@ -16,7 +16,6 @@ module Main2Arrays_mod
   public :: Main2Arrays
 
   type Main2Arrays
-    double precision , dimension(2)  :: VBC ! move
     double precision , dimension(3,3)  :: bravais
     integer , dimension(48)  :: isymindex
     double complex , allocatable, dimension(:,:,:)  :: DSYMLL
@@ -32,10 +31,6 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:)  :: NUMN0
     integer , allocatable, dimension(:,:)  :: INDN0
     complex , allocatable, dimension(:,:,:)  :: PRSC ! move to KKRresults?
-    double precision , allocatable, dimension(:)  :: ECOU ! move
-    double precision , allocatable, dimension(:,:)  :: ESPC !move
-    double precision , allocatable, dimension(:,:)  :: ESPV !move
-    double precision , allocatable, dimension(:)  :: EXC !move
     double precision , allocatable, dimension(:)  :: ZAT
     double precision , allocatable, dimension(:,:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
@@ -169,10 +164,6 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%NUMN0(NAEZ))
     ALLOCATECHECK(self%INDN0(NAEZ,NACLSD))
     ALLOCATECHECK(self%PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1))
-    ALLOCATECHECK(self%ECOU(0:LPOT))
-    ALLOCATECHECK(self%ESPC(0:3,NSPIND))
-    ALLOCATECHECK(self%ESPV(0:LMAXD+1,NSPIND))
-    ALLOCATECHECK(self%EXC(0:LPOT))
     ALLOCATECHECK(self%ZAT(NAEZ))
     ALLOCATECHECK(self%RCLS(3,NACLSD,NCLSD))
     ALLOCATECHECK(self%RMTREF(NREFD))
@@ -206,10 +197,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%NUMN0)
     DEALLOCATECHECK(self%INDN0)
     DEALLOCATECHECK(self%PRSC)
-    DEALLOCATECHECK(self%ECOU)
-    DEALLOCATECHECK(self%ESPC)
-    DEALLOCATECHECK(self%ESPV)
-    DEALLOCATECHECK(self%EXC)
     DEALLOCATECHECK(self%ZAT)
     DEALLOCATECHECK(self%RCLS)
     DEALLOCATECHECK(self%RMTREF)

@@ -7,6 +7,7 @@
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
+!> Energy contributions of one atom.
 module EnergyResults_mod
 
   type EnergyResults

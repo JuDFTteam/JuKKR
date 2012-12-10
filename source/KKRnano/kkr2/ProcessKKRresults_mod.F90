@@ -43,6 +43,7 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   use Main2Arrays_mod
   use KKRresults_mod
   use DensityResults_mod
+  use EnergyResults_mod
 
   implicit none
 
@@ -71,28 +72,31 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   double precision :: RMSAVQ ! rms error magnetisation dens. (contribution of single site)
   double precision :: RMSAVM ! rms error charge density (contribution of single site)
   logical, external :: testVFORM
+  type (EnergyResults) :: energies
 
   mesh => atomdata%mesh_ptr
 
   I1 = atomdata%atom_index
+
+  call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 
   ! kkr
   !  |
   !  v
   call calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, &
                           shgaunts, kkr, program_timer, &
-                          ldau_data, arrays, emesh, densities)
+                          ldau_data, arrays, emesh, densities, energies)
   ! |
   ! v
-  ! densities, emesh
+  ! densities, emesh, energies (ESPV only)
   ! |
   ! v
   call calculatePotentials(iter, my_mpi, dims, params, madelung_sum, shgaunts, &
-                           program_timer, densities, arrays, &
+                           program_timer, densities, energies, arrays, &
                            ldau_data, atomdata)
   ! |
   ! v
-  ! atomdata, arrays
+  ! atomdata, energies
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
   call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, params%MIXING, params%FCM)
@@ -137,7 +141,7 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 ! - bad check deactivated when KTE<0
   if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
     if (testVFORM()) then
-      call writeFormattedPotential(emesh%E2, params%ALAT, arrays%VBC, params%KXC, atomdata)
+      call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, params%KXC, atomdata)
     endif
   endif
 
@@ -176,6 +180,9 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
 
+  ! energies have been already written/printed - dispose
+  call destroyEnergyResults(energies)
+
 end subroutine
 
 !==============================================================================
@@ -186,7 +193,7 @@ end subroutine
 !> output: emesh (Fermi-energy updated, renormalized weights), densities, ldau_data?, arrays
 !> files written: 'results1'
 subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shgaunts, kkr, program_timer, &
-                              ldau_data, arrays, emesh, densities)
+                              ldau_data, arrays, emesh, densities, energies)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -218,6 +225,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   use Main2Arrays_mod
   use KKRresults_mod
   use DensityResults_mod
+  use EnergyResults_mod
 
   implicit none
 
@@ -233,6 +241,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   type (InputParams), intent(in)             :: params
   type (KKRresults), intent(in)              :: kkr  ! should be in only
   type (DensityResults), intent(inout)       :: densities
+  type (EnergyResults), intent(inout)       :: energies
   type (TimerMpi), intent(in)                :: program_timer
 
   ! locals
@@ -277,7 +286,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   ! has to be done after Lloyd
   ! output: RHO2NS, R2NEF, DEN, ESPV
   call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, densities%RHO2NS, densities%R2NEF, &
-                      densities%DEN, arrays%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
+                      densities%DEN, energies%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
 
 ! ----------------------------------------------------------------------
 ! -->   determine total charge expanded in spherical harmonics
@@ -316,7 +325,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
 
   call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
                                0.03d0, CHRGNT, DENEF, densities%R2NEF, &
-                               arrays%ESPV, densities%RHO2NS, emesh%E2)
+                               energies%ESPV, densities%RHO2NS, emesh%E2)
 
   !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
   call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
@@ -332,7 +341,7 @@ end subroutine
 !> Output: atomdata, ldau_data, arrays
 !> Files written: 'results2'
 subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
-                               shgaunts, program_timer, densities, &
+                               shgaunts, program_timer, densities, energies, &
                                arrays, ldau_data, atomdata)
 
   USE_LOGGING_MOD
@@ -372,7 +381,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   type (Main2Arrays), intent(inout)          :: arrays
   type (DimParams), intent(in)               :: dims
   type (InputParams), intent(in)             :: params
-
+  type (EnergyResults), intent(inout)        :: energies
   type (DensityResults), intent(inout)       :: densities
   type (TimerMpi), intent(in)                :: program_timer
 
@@ -382,7 +391,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   double precision :: VMAD
   integer :: lcoremax
   double precision :: VAV0, VOL0
-  type (EnergyResults) :: energies
+
 
   mesh => atomdata%mesh_ptr
 
@@ -391,8 +400,6 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   VAV0 = 0.0d0
   VOL0 = 0.0d0
   lcoremax = 0
-
-  call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -434,11 +441,11 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   if (params%KTE==1) then
     ! calculate total energy and individual contributions if requested
     ! core electron contribution
-    call ESPCB_wrapper(arrays%ESPC, LCOREMAX, atomdata)
+    call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
     ! output: EPOTIN
     call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
     ! output: ECOU - l resolved Coulomb energy
-    call ECOUB_wrapper(densities%CMOM, arrays%ECOU, densities%RHO2NS, shgaunts, atomdata)
+    call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, shgaunts, atomdata)
   end if
 
   call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
@@ -446,7 +453,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
 
 ! =====================================================================
   ! output: VONS (changed), EXC (exchange energy) (l-resolved)
-  call VXCDRV_wrapper(arrays%EXC,params%KXC,densities%RHO2NS, shgaunts, atomdata)
+  call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, shgaunts, atomdata)
 
   call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
 ! =====================================================================
@@ -468,9 +475,9 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   ! unnecessary I/O? see results.f
   if (params%KTE >= 0) then
     call openResults2File(dims%LRECRES2)
-    call writeResults2File(densities%CATOM, arrays%ECOU, ldau_data%EDCLDAU, &
-                           energies%EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, &
-                           arrays%EXC, I1, LCOREMAX, VMAD)
+    call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
+                           energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
+                           energies%EXC, I1, LCOREMAX, VMAD)
     call closeResults2File()
   end if
 
@@ -485,17 +492,17 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
-  call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, arrays%VBC, VOL0)
+  call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, energies%VBC, VOL0)
 
   if(isMasterRank(my_mpi)) then
-    call printMuffinTinShift(VAV0, arrays%VBC, VOL0)
+    call printMuffinTinShift(VAV0, energies%VBC, VOL0)
   end if
 
 ! -->   shift potential to muffin tin zero and
 !       convolute potential with shape function for next iteration
 
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
-  call CONVOL_wrapper(arrays%VBC, shgaunts, atomdata)
+  call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
 
 ! LDAU
   ldau_data%EULDAU = 0.0D0
@@ -507,9 +514,6 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
                   ldau_data%lmaxd)
   endif
 ! LDAU
-
-  ! energies have been already written/printed - dispose
-  call destroyEnergyResults(energies)
 
 end subroutine
 
