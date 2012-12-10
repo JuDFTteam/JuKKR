@@ -1,3 +1,10 @@
+!> Instructions:
+!> Create Madelung calculator
+!> Create Madelung lattice sum(s) and configure with Madelung calculator
+!> use...
+!> destroy Madelung lattice sum(s)
+!> destroy Madelung calculator
+
 module MadelungCalculator_mod
   implicit none
 
@@ -7,6 +14,7 @@ module MadelungCalculator_mod
   private :: MadelungHarmonics
   private :: MadelungClebschData
 
+  !----------------------------------------------------------------------------
   type MadelungLatticeData
     integer NGMAX
     integer NRMAX
@@ -24,12 +32,14 @@ module MadelungCalculator_mod
     integer ISHLD
   end type
 
+  !----------------------------------------------------------------------------
   type MadelungHarmonics
     double precision, dimension(:), allocatable :: WG
     double precision, dimension(:,:,:), allocatable :: YRG
     integer :: LASSLD
   end type
 
+  !----------------------------------------------------------------------------
   type MadelungClebschData
     double precision, dimension(:), allocatable :: CLEB
     integer, dimension(:,:), allocatable :: ICLEB
@@ -38,6 +48,7 @@ module MadelungCalculator_mod
     integer :: NCLEBD
   end type
 
+  !----------------------------------------------------------------------------
   type MadelungCalculator
     private
 
@@ -53,6 +64,13 @@ module MadelungCalculator_mod
     type (MadelungLatticeData) :: mlattice
     type (MadelungClebschData) :: clebsch
 
+  end type
+
+  !----------------------------------------------------------------------------
+  type MadelungLatticeSum
+    double precision , allocatable, dimension(:,:)  :: SMAT
+    type (MadelungCalculator), pointer :: madelung_calc
+    integer :: num_atoms
   end type
 
   contains
@@ -146,63 +164,178 @@ module MadelungCalculator_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Creates data storage for a Madelung lattice sum.
+  !>
+  !> Has to be configured with a properly setup MadelungCalculator.
+  !> The MadelungCalculator can be reused for several MadelungLatticeSums
+  !> as long as the geometry and lmax does not change
+  subroutine createMadelungLatticeSum(madelung_sum, madelung_calc, num_atoms)
+    implicit none
+    type (MadelungLatticeSum), intent(inout) :: madelung_sum
+    type (MadelungCalculator), target, intent(in)    :: madelung_calc
+    integer, intent(in) :: num_atoms
+
+    !---- local
+    type (MadelungCalculator), pointer    :: mad_ptr
+
+    mad_ptr => madelung_calc
+    madelung_sum%madelung_calc => mad_ptr
+
+    madelung_sum%num_atoms = num_atoms
+
+    allocate(madelung_sum%SMAT(madelung_calc%LMXSPD, num_atoms))
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Destroys and frees storage of Madelung lattice sum.
+  subroutine destroyMadelungLatticeSum(madelung_sum)
+    implicit none
+    type (MadelungLatticeSum), intent(inout) :: madelung_sum
+
+    deallocate(madelung_sum%SMAT)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Calculates Lattice sums needed for Madelung potential calculation.
   !> Needs a properly constructed MadelungCalculator object.
   !> STRMAT wrapper
-  subroutine calculateMadelungLatticeSum(madelung_calc, naez, atom_index, rbasis, smat)
-    implicit none
-    type (MadelungCalculator), intent(inout) :: madelung_calc
-    integer, intent(in) :: naez
-    integer, intent(in) :: atom_index
-    double precision, dimension(3,NAEZ), intent(in) :: rbasis
-    double precision, dimension(madelung_calc%LMXSPD,naez), intent(out) :: SMAT   !SMAT(LMXSPD,NAEZ)
-    !---------------------------------------------------------
+!  subroutine calculateMadelungLatticeSum(madelung_calc, naez, atom_index, rbasis, smat)
+!    implicit none
+!    type (MadelungCalculator), intent(inout) :: madelung_calc
+!    integer, intent(in) :: naez
+!    integer, intent(in) :: atom_index
+!    double precision, dimension(3,NAEZ), intent(in) :: rbasis
+!    double precision, dimension(madelung_calc%LMXSPD,naez), intent(out) :: SMAT   !SMAT(LMXSPD,NAEZ)
+!    !---------------------------------------------------------
+!
+!
+!    call STRMAT(madelung_calc%ALAT,madelung_calc%LPOT,NAEZ,madelung_calc%mlattice%NGMAX, &
+!    madelung_calc%mlattice%NRMAX,madelung_calc%mlattice%NSG,madelung_calc%mlattice%NSR, &
+!    madelung_calc%mlattice%NSHLG,madelung_calc%mlattice%NSHLR, &
+!    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS,SMAT, &
+!    madelung_calc%VOLUME0, &
+!    madelung_calc%LASSLD,madelung_calc%LMXSPD,naez,atom_index)
+!
+!  end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Calculates Lattice sum for atom 'atom_index' for positions 'rbasis'
+  !>  needed for Madelung potential calculation.
+  !>
+  !> Needs a properly constructed MadelungLatticeSum object.
+  !> STRMAT wrapper
+  subroutine calculateMadelungLatticeSum(madelung_sum, atom_index, rbasis)
+    implicit none
+    type (MadelungLatticeSum), intent(inout) :: madelung_sum
+    integer, intent(in) :: atom_index
+    double precision, dimension(3, madelung_sum%num_atoms), intent(in) :: rbasis
+    !---------------------------------------------------------
+    type (MadelungCalculator), pointer :: madelung_calc
+    integer :: naez
+
+    madelung_calc => madelung_sum%madelung_calc
+    naez = madelung_sum%num_atoms
 
     call STRMAT(madelung_calc%ALAT,madelung_calc%LPOT,NAEZ,madelung_calc%mlattice%NGMAX, &
     madelung_calc%mlattice%NRMAX,madelung_calc%mlattice%NSG,madelung_calc%mlattice%NSR, &
     madelung_calc%mlattice%NSHLG,madelung_calc%mlattice%NSHLR, &
-    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS,SMAT, &
+    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS, madelung_sum%SMAT, &
     madelung_calc%VOLUME0, &
     madelung_calc%LASSLD,madelung_calc%LMXSPD,naez,atom_index)
 
   end subroutine
+
+
+!  !----------------------------------------------------------------------------
+!  !> Add Madelung potential to VONS.
+!  !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
+!  !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
+!  !> Wrapper for VMADELBLK
+!  subroutine addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIN, &
+!                                      NAEZ, VONS, ZAT, R, IRCUT, IPAN, VMAD, &
+!                                      SMAT, rank, communicator, comm_size, irmd, ipand)
+!
+!    implicit none
+!
+!    type (MadelungCalculator), intent(in) :: madelung_calc
+!    double precision, intent(inout) :: CMOM(madelung_calc%LMPOTD)
+!    double precision, intent(inout) :: CMINST(madelung_calc%LMPOTD)
+!    integer, intent(in) :: nspin
+!    integer, intent(in) :: naez
+!    double precision, intent(inout) :: VONS(IRMD,madelung_calc%LMPOTD,2)
+!
+!    double precision, intent(in) ::  R(IRMD)
+!    double precision, intent(in) ::  ZAT(naez)
+!    integer IRCUT(0:IPAND)
+!    integer IPAN
+!    double precision VMAD
+!    double precision, intent(in) ::  SMAT(madelung_calc%LMXSPD,naez)
+!
+!    integer, intent(in) :: rank
+!    integer, intent(in) :: communicator
+!    integer, intent(in) :: comm_size
+!    integer, intent(in) :: irmd
+!    integer, intent(in) :: ipand
+!
+!
+!    call VMADELBLK_new_com(CMOM,CMINST,madelung_calc%LPOT,NSPIN,NAEZ, &
+!    VONS,ZAT,R,IRCUT,IPAN,VMAD, &
+!    madelung_calc%LMPOTD, SMAT, &
+!    madelung_calc%clebsch%CLEB,madelung_calc%clebsch%ICLEB,madelung_calc%clebsch%IEND, &
+!    madelung_calc%LMXSPD,madelung_calc%clebsch%NCLEBD,madelung_calc%clebsch%LOFLM, &
+!    madelung_calc%DFAC, &
+!    rank, communicator, comm_size, irmd, ipand)
+!
+!  !      SUBROUTINE VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIN,NAEZ,
+!  !     &                     VONS,ZAT,R,
+!  !     &                     IRCUT,IPAN,VMAD,
+!  !     &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
+!  !     &                     LMXSPD,NCLEBD,LOFLM,DFAC,
+!  !     >                     MYLRANK,
+!  !     >                     communicator,comm_size,
+!  !     &                     irmd, ipand)
+!
+!  end subroutine
 
   !----------------------------------------------------------------------------
   !> Add Madelung potential to VONS.
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
-  subroutine addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIN, &
-                                      NAEZ, VONS, ZAT, R, IRCUT, IPAN, VMAD, &
-                                      SMAT, rank, communicator, comm_size, irmd, ipand)
+  subroutine addMadelungPotential_com(madelung_sum, CMOM, CMINST, NSPIN, &
+                                      VONS, ZAT, R, IRCUT, IPAN, VMAD, &
+                                      rank, communicator, comm_size, irmd, ipand)
 
     implicit none
 
-    type (MadelungCalculator), intent(in) :: madelung_calc
-    double precision, intent(inout) :: CMOM(madelung_calc%LMPOTD)
-    double precision, intent(inout) :: CMINST(madelung_calc%LMPOTD)
+    type (MadelungLatticeSum), intent(in) :: madelung_sum
+    double precision, intent(inout) :: CMOM(:)
+    double precision, intent(inout) :: CMINST(:)
+
     integer, intent(in) :: nspin
-    integer, intent(in) :: naez
-    double precision, intent(inout) :: VONS(IRMD,madelung_calc%LMPOTD,2)
+    double precision, intent(inout) :: VONS(:,:,:)
 
     double precision, intent(in) ::  R(IRMD)
-    double precision, intent(in) ::  ZAT(naez)
+    double precision, intent(in) ::  ZAT(:)
     integer IRCUT(0:IPAND)
     integer IPAN
     double precision VMAD
-    double precision, intent(in) ::  SMAT(madelung_calc%LMXSPD,naez)
 
     integer, intent(in) :: rank
     integer, intent(in) :: communicator
     integer, intent(in) :: comm_size
     integer, intent(in) :: irmd
     integer, intent(in) :: ipand
+    !------------------------------------
+    type (MadelungCalculator), pointer :: madelung_calc
 
+    madelung_calc => madelung_sum%madelung_calc
 
-    call VMADELBLK_new_com(CMOM,CMINST,madelung_calc%LPOT,NSPIN,NAEZ, &
+    call VMADELBLK_new_com(CMOM,CMINST,madelung_calc%LPOT,NSPIN,madelung_sum%num_atoms, &
     VONS,ZAT,R,IRCUT,IPAN,VMAD, &
-    madelung_calc%LMPOTD, SMAT, &
+    madelung_calc%LMPOTD, madelung_sum%SMAT, &
     madelung_calc%clebsch%CLEB,madelung_calc%clebsch%ICLEB,madelung_calc%clebsch%IEND, &
     madelung_calc%LMXSPD,madelung_calc%clebsch%NCLEBD,madelung_calc%clebsch%LOFLM, &
     madelung_calc%DFAC, &
@@ -237,9 +370,8 @@ module MadelungCalculator_mod
     harmonics%LASSLD = LASSLD
 
     allocate(harmonics%WG(LASSLD))
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
+
     allocate(harmonics%YRG(LASSLD,0:LASSLD,0:LASSLD))
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
 
     call GAUNT2(harmonics%WG,harmonics%YRG,LMAX)
 
@@ -266,13 +398,12 @@ module MadelungCalculator_mod
     mlattice%ISHLD = ISHLD
 
     allocate(mlattice%GN(3,NMAXD))
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
+
     allocate(mlattice%RM(3,NMAXD))
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
+
     allocate(mlattice%NSG(ISHLD))
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
+
     allocate(mlattice%NSR(ISHLD))
-    !if(memory_stat /= 0) call fatalMemoryError("main2")
 
   end subroutine
 

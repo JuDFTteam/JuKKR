@@ -16,13 +16,12 @@ module Main2Arrays_mod
   public :: Main2Arrays
 
   type Main2Arrays
-    double precision , dimension(2)  :: VBC
+    double precision , dimension(2)  :: VBC ! move
     double precision , dimension(3,3)  :: bravais
     integer , dimension(48)  :: isymindex
     double complex , allocatable, dimension(:,:,:)  :: DSYMLL
     double precision , allocatable, dimension(:,:)  :: RBASIS
-    double precision , allocatable, dimension(:,:)  :: SMAT
-    double precision , allocatable, dimension(:,:)  :: RNORM
+    double precision , allocatable, dimension(:,:)  :: RNORM ! move - temporarily to DensityResults
     double precision , allocatable, dimension(:,:,:)  :: BZKP
     double precision , allocatable, dimension(:,:)  :: VOLCUB
     double precision , allocatable, dimension(:)  :: VOLBZ
@@ -32,11 +31,11 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:,:)  :: EZOA
     integer , allocatable, dimension(:)  :: NUMN0
     integer , allocatable, dimension(:,:)  :: INDN0
-    complex , allocatable, dimension(:,:,:)  :: PRSC
-    double precision , allocatable, dimension(:)  :: ECOU
-    double precision , allocatable, dimension(:,:)  :: ESPC
-    double precision , allocatable, dimension(:,:)  :: ESPV
-    double precision , allocatable, dimension(:)  :: EXC
+    complex , allocatable, dimension(:,:,:)  :: PRSC ! move to KKRresults?
+    double precision , allocatable, dimension(:)  :: ECOU ! move
+    double precision , allocatable, dimension(:,:)  :: ESPC !move
+    double precision , allocatable, dimension(:,:)  :: ESPV !move
+    double precision , allocatable, dimension(:)  :: EXC !move
     double precision , allocatable, dimension(:)  :: ZAT
     double precision , allocatable, dimension(:,:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
@@ -159,7 +158,6 @@ module Main2Arrays_mod
 
     ALLOCATECHECK(self%DSYMLL(LMMAXD,LMMAXD,48))
     ALLOCATECHECK(self%RBASIS(3,NAEZ))
-    ALLOCATECHECK(self%SMAT(LMXSPD,NAEZ))
     ALLOCATECHECK(self%RNORM(IEMXD,2))
     ALLOCATECHECK(self%BZKP(3,KPOIBZ,MAXMSHD))
     ALLOCATECHECK(self%VOLCUB(KPOIBZ,MAXMSHD))
@@ -197,7 +195,6 @@ module Main2Arrays_mod
 
     DEALLOCATECHECK(self%DSYMLL)
     DEALLOCATECHECK(self%RBASIS)
-    DEALLOCATECHECK(self%SMAT)
     DEALLOCATECHECK(self%RNORM)
     DEALLOCATECHECK(self%BZKP)
     DEALLOCATECHECK(self%VOLCUB)

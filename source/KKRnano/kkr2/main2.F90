@@ -48,7 +48,8 @@ program MAIN2
 
   implicit none
 
-  type (MadelungCalculator) :: madelung_calc
+  type (MadelungCalculator), target :: madelung_calc
+  type (MadelungLatticeSum) :: madelung_sum
   type (ShapeGauntCoefficients) :: shgaunts
   type (GauntCoefficients) :: gaunts
 
@@ -196,7 +197,9 @@ program MAIN2
     call createMadelungCalculator(madelung_calc, dims%lmaxd, params%ALAT, params%RMAX, params%GMAX, &
                                   arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
 
-    call calculateMadelungLatticeSum(madelung_calc, dims%naez, I1, arrays%rbasis, arrays%smat)
+    call createMadelungLatticeSum(madelung_sum, madelung_calc, dims%naez)
+
+    call calculateMadelungLatticeSum(madelung_sum, I1, arrays%rbasis)
 
     call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',getElapsedTime(program_timer), 0)
 
@@ -261,7 +264,7 @@ program MAIN2
                    getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
-      ! output: ebalance_handler, arrays, kkr (!), jij_data, ldau_data
+      ! output: ebalance_handler, arrays (PRSC), kkr (!), jij_data, ldau_data
       call energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
                       ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
 
@@ -274,7 +277,7 @@ program MAIN2
         ! output: atomdata, arrays, densities, broyden, ldau_data, emesh (only correct for master)
         call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, &
                                params, arrays, gaunts, shgaunts, &
-                               madelung_calc, program_timer, &
+                               madelung_sum, program_timer, &
                                densities, broyden, ldau_data)
       endif
 !----------------------------------------------------------------------
@@ -306,6 +309,7 @@ program MAIN2
 
     !if (KFORCE==1) close(54)
 
+    call destroyMadelungLatticeSum(madelung_sum)
     call destroyMadelungCalculator(madelung_calc)
     call destroyGauntCoefficients(gaunts)
     call destroyShapeGauntCoefficients(shgaunts)

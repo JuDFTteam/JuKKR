@@ -11,7 +11,7 @@ module ProcessKKRresults_mod
 
 CONTAINS
 
-subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, arrays, gaunts, shgaunts, madelung_calc, program_timer, &
+subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, arrays, gaunts, shgaunts, madelung_sum, program_timer, &
                              densities, broyden, ldau_data)
 
   USE_LOGGING_MOD
@@ -22,7 +22,7 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   use main2_aux_mod
   use EnergyMesh_mod
 
-  use MadelungCalculator_mod
+  use MadelungCalculator_mod, only: MadelungLatticeSum
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
@@ -49,7 +49,7 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   include 'mpif.h'
 
   integer, intent(in)           :: iter
-  type (MadelungCalculator)     :: madelung_calc
+  type (MadelungLatticeSum)     :: madelung_sum
   type (ShapeGauntCoefficients) :: shgaunts
   type (GauntCoefficients)      :: gaunts
   type (KKRnanoParallel)        :: my_mpi
@@ -87,7 +87,7 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   ! densities, emesh
   ! |
   ! v
-  call calculatePotentials(iter, my_mpi, dims, params, madelung_calc, shgaunts, &
+  call calculatePotentials(iter, my_mpi, dims, params, madelung_sum, shgaunts, &
                            program_timer, densities, arrays, &
                            ldau_data, atomdata)
   ! |
@@ -331,7 +331,7 @@ end subroutine
 !>
 !> Output: atomdata, ldau_data, arrays
 !> Files written: 'results2'
-subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, &
+subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
                                shgaunts, program_timer, densities, &
                                arrays, ldau_data, atomdata)
 
@@ -364,7 +364,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, &
 
   integer, intent(in)                        :: iter
   type (ShapeGauntCoefficients), intent(in)  :: shgaunts
-  type (MadelungCalculator), intent(in)      :: madelung_calc
+  type (MadelungLatticeSum), intent(in)      :: madelung_sum
   type (KKRnanoParallel), intent(in)         :: my_mpi
   type (BasisAtom), intent(inout)            :: atomdata
   type (LDAUData), intent(inout)             :: ldau_data
@@ -403,9 +403,9 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_calc, &
   call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
 
   ! output: VONS (changed), VMAD
-  call addMadelungPotential_com(madelung_calc, densities%CMOM, densities%CMINST, arrays%NSPIND, &
-       arrays%NAEZ, atomdata%potential%VONS, arrays%ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
-       arrays%SMAT, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
+  call addMadelungPotential_com(madelung_sum, densities%CMOM, densities%CMINST, arrays%NSPIND, &
+       atomdata%potential%VONS, arrays%ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
+       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
 
   call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
 
