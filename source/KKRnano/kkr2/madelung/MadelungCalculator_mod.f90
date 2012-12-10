@@ -198,29 +198,6 @@ module MadelungCalculator_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Calculates Lattice sums needed for Madelung potential calculation.
-  !> Needs a properly constructed MadelungCalculator object.
-  !> STRMAT wrapper
-!  subroutine calculateMadelungLatticeSum(madelung_calc, naez, atom_index, rbasis, smat)
-!    implicit none
-!    type (MadelungCalculator), intent(inout) :: madelung_calc
-!    integer, intent(in) :: naez
-!    integer, intent(in) :: atom_index
-!    double precision, dimension(3,NAEZ), intent(in) :: rbasis
-!    double precision, dimension(madelung_calc%LMXSPD,naez), intent(out) :: SMAT   !SMAT(LMXSPD,NAEZ)
-!    !---------------------------------------------------------
-!
-!
-!    call STRMAT(madelung_calc%ALAT,madelung_calc%LPOT,NAEZ,madelung_calc%mlattice%NGMAX, &
-!    madelung_calc%mlattice%NRMAX,madelung_calc%mlattice%NSG,madelung_calc%mlattice%NSR, &
-!    madelung_calc%mlattice%NSHLG,madelung_calc%mlattice%NSHLR, &
-!    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS,SMAT, &
-!    madelung_calc%VOLUME0, &
-!    madelung_calc%LASSLD,madelung_calc%LMXSPD,naez,atom_index)
-!
-!  end subroutine
-
-  !----------------------------------------------------------------------------
   !> Calculates Lattice sum for atom 'atom_index' for positions 'rbasis'
   !>  needed for Madelung potential calculation.
   !>
@@ -246,58 +223,6 @@ module MadelungCalculator_mod
     madelung_calc%LASSLD,madelung_calc%LMXSPD,naez,atom_index)
 
   end subroutine
-
-
-!  !----------------------------------------------------------------------------
-!  !> Add Madelung potential to VONS.
-!  !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
-!  !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
-!  !> Wrapper for VMADELBLK
-!  subroutine addMadelungPotential_com(madelung_calc, CMOM, CMINST, NSPIN, &
-!                                      NAEZ, VONS, ZAT, R, IRCUT, IPAN, VMAD, &
-!                                      SMAT, rank, communicator, comm_size, irmd, ipand)
-!
-!    implicit none
-!
-!    type (MadelungCalculator), intent(in) :: madelung_calc
-!    double precision, intent(inout) :: CMOM(madelung_calc%LMPOTD)
-!    double precision, intent(inout) :: CMINST(madelung_calc%LMPOTD)
-!    integer, intent(in) :: nspin
-!    integer, intent(in) :: naez
-!    double precision, intent(inout) :: VONS(IRMD,madelung_calc%LMPOTD,2)
-!
-!    double precision, intent(in) ::  R(IRMD)
-!    double precision, intent(in) ::  ZAT(naez)
-!    integer IRCUT(0:IPAND)
-!    integer IPAN
-!    double precision VMAD
-!    double precision, intent(in) ::  SMAT(madelung_calc%LMXSPD,naez)
-!
-!    integer, intent(in) :: rank
-!    integer, intent(in) :: communicator
-!    integer, intent(in) :: comm_size
-!    integer, intent(in) :: irmd
-!    integer, intent(in) :: ipand
-!
-!
-!    call VMADELBLK_new_com(CMOM,CMINST,madelung_calc%LPOT,NSPIN,NAEZ, &
-!    VONS,ZAT,R,IRCUT,IPAN,VMAD, &
-!    madelung_calc%LMPOTD, SMAT, &
-!    madelung_calc%clebsch%CLEB,madelung_calc%clebsch%ICLEB,madelung_calc%clebsch%IEND, &
-!    madelung_calc%LMXSPD,madelung_calc%clebsch%NCLEBD,madelung_calc%clebsch%LOFLM, &
-!    madelung_calc%DFAC, &
-!    rank, communicator, comm_size, irmd, ipand)
-!
-!  !      SUBROUTINE VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIN,NAEZ,
-!  !     &                     VONS,ZAT,R,
-!  !     &                     IRCUT,IPAN,VMAD,
-!  !     &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
-!  !     &                     LMXSPD,NCLEBD,LOFLM,DFAC,
-!  !     >                     MYLRANK,
-!  !     >                     communicator,comm_size,
-!  !     &                     irmd, ipand)
-!
-!  end subroutine
 
   !----------------------------------------------------------------------------
   !> Add Madelung potential to VONS.

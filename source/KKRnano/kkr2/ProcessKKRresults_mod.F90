@@ -359,6 +359,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   use InputParams_mod
   use Main2Arrays_mod
   use DensityResults_mod
+  use EnergyResults_mod
 
   implicit none
 
@@ -380,16 +381,18 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   integer :: I1
   double precision :: VMAD
   integer :: lcoremax
-  double precision :: EPOTIN, VAV0, VOL0
+  double precision :: VAV0, VOL0
+  type (EnergyResults) :: energies
 
   mesh => atomdata%mesh_ptr
 
   I1 = atomdata%atom_index
   VMAD = 0.0d0
-  EPOTIN = 0.0d0
   VAV0 = 0.0d0
   VOL0 = 0.0d0
   lcoremax = 0
+
+  call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -433,7 +436,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
     ! core electron contribution
     call ESPCB_wrapper(arrays%ESPC, LCOREMAX, atomdata)
     ! output: EPOTIN
-    call EPOTINB_wrapper(EPOTIN,densities%RHO2NS,atomdata)
+    call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
     ! output: ECOU - l resolved Coulomb energy
     call ECOUB_wrapper(densities%CMOM, arrays%ECOU, densities%RHO2NS, shgaunts, atomdata)
   end if
@@ -466,7 +469,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   if (params%KTE >= 0) then
     call openResults2File(dims%LRECRES2)
     call writeResults2File(densities%CATOM, arrays%ECOU, ldau_data%EDCLDAU, &
-                           EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, &
+                           energies%EPOTIN, arrays%ESPC, arrays%ESPV, ldau_data%EULDAU, &
                            arrays%EXC, I1, LCOREMAX, VMAD)
     call closeResults2File()
   end if
@@ -504,6 +507,9 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
                   ldau_data%lmaxd)
   endif
 ! LDAU
+
+  ! energies have been already written/printed - dispose
+  call destroyEnergyResults(energies)
 
 end subroutine
 
