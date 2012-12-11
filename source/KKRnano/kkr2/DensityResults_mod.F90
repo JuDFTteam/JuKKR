@@ -22,6 +22,9 @@ module DensityResults_mod
     double precision , allocatable, dimension(:)  :: CATOM
     double complex , allocatable, dimension(:,:,:)  :: DEN
 
+    !> Renormalisation factors LLoyd - leave here?
+    double precision , allocatable, dimension(:,:)  :: RNORM
+
     integer :: irmd
     integer :: lmpotd
     integer :: lmaxd
@@ -78,6 +81,7 @@ module DensityResults_mod
     ALLOCATECHECK(self%CMOM(lmpotd))
     ALLOCATECHECK(self%CATOM(nspind))
     ALLOCATECHECK(self%DEN(0:lmaxd+1,iemxd,nspind))
+    ALLOCATECHECK(self%RNORM(IEMXD,2))
 
     !initialise to be safe
     self%RHO2NS = 0.0d0
@@ -100,6 +104,7 @@ module DensityResults_mod
     DEALLOCATECHECK(self%CMOM)
     DEALLOCATECHECK(self%CATOM)
     DEALLOCATECHECK(self%DEN)
+    DEALLOCATECHECK(self%RNORM)
   end subroutine
 
 end module

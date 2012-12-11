@@ -20,7 +20,6 @@ module Main2Arrays_mod
     integer , dimension(48)  :: isymindex
     double complex , allocatable, dimension(:,:,:)  :: DSYMLL
     double precision , allocatable, dimension(:,:)  :: RBASIS
-    double precision , allocatable, dimension(:,:)  :: RNORM ! move - temporarily to DensityResults
     double precision , allocatable, dimension(:,:,:)  :: BZKP
     double precision , allocatable, dimension(:,:)  :: VOLCUB
     double precision , allocatable, dimension(:)  :: VOLBZ
@@ -153,7 +152,6 @@ module Main2Arrays_mod
 
     ALLOCATECHECK(self%DSYMLL(LMMAXD,LMMAXD,48))
     ALLOCATECHECK(self%RBASIS(3,NAEZ))
-    ALLOCATECHECK(self%RNORM(IEMXD,2))
     ALLOCATECHECK(self%BZKP(3,KPOIBZ,MAXMSHD))
     ALLOCATECHECK(self%VOLCUB(KPOIBZ,MAXMSHD))
     ALLOCATECHECK(self%VOLBZ(MAXMSHD))
@@ -186,7 +184,6 @@ module Main2Arrays_mod
 
     DEALLOCATECHECK(self%DSYMLL)
     DEALLOCATECHECK(self%RBASIS)
-    DEALLOCATECHECK(self%RNORM)
     DEALLOCATECHECK(self%BZKP)
     DEALLOCATECHECK(self%VOLCUB)
     DEALLOCATECHECK(self%VOLBZ)

@@ -262,12 +262,12 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   densities%CMINST = 0.0D0
 
   ! out: emesh, RNORM
-  call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, arrays%RNORM, &
+  call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, densities%RNORM, &
                           dims%LLY, params%ICST, params%NSRA, kkr%GMATN, gaunts, ldau_data)
 
   if (dims%LLY == 1) then
     TESTARRAYLOG(3, emesh%WEZRN)
-    TESTARRAYLOG(3, arrays%RNORM)
+    TESTARRAYLOG(3, densities%RNORM)
     call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
   endif
 
@@ -297,7 +297,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   CHRGNT = CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
 
   if (dims%LLY == 1) then
-    call renormalizeDOS(densities%DEN,arrays%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
+    call renormalizeDOS(densities%DEN,densities%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
   end if
 
   ! calculate DOS at Fermi level
