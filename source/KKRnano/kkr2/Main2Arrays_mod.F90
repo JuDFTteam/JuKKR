@@ -29,7 +29,6 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:,:)  :: EZOA
     integer , allocatable, dimension(:)  :: NUMN0
     integer , allocatable, dimension(:,:)  :: INDN0
-    complex , allocatable, dimension(:,:,:)  :: PRSC ! move to KKRresults?
     double precision , allocatable, dimension(:)  :: ZAT
     double precision , allocatable, dimension(:,:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
@@ -161,7 +160,6 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%EZOA(NACLSD,NAEZ))
     ALLOCATECHECK(self%NUMN0(NAEZ))
     ALLOCATECHECK(self%INDN0(NAEZ,NACLSD))
-    ALLOCATECHECK(self%PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1))
     ALLOCATECHECK(self%ZAT(NAEZ))
     ALLOCATECHECK(self%RCLS(3,NACLSD,NCLSD))
     ALLOCATECHECK(self%RMTREF(NREFD))
@@ -193,7 +191,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%EZOA)
     DEALLOCATECHECK(self%NUMN0)
     DEALLOCATECHECK(self%INDN0)
-    DEALLOCATECHECK(self%PRSC)
     DEALLOCATECHECK(self%ZAT)
     DEALLOCATECHECK(self%RCLS)
     DEALLOCATECHECK(self%RMTREF)

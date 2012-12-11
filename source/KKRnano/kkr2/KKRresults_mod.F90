@@ -25,6 +25,7 @@ module KKRresults_mod
     double complex , allocatable, dimension(:,:)  :: LLY_G0TR
     double complex , allocatable, dimension(:,:)  :: LLY_GRDT
     double complex , allocatable, dimension(:)  :: TR_ALPH
+    complex , allocatable, dimension(:,:,:)  :: PRSC ! move to KKRresults?
     integer  :: NOITER
 
     integer :: LMMAXD
@@ -33,6 +34,9 @@ module KKRresults_mod
     integer :: NACLSD
     integer :: NCLSD
     integer :: IEMXD
+    integer :: ekmd
+    integer :: nguessd
+    integer :: smpid
   end type KKRresults
 
   CONTAINS
@@ -48,7 +52,8 @@ module KKRresults_mod
     type (DimParams),  intent(in)    :: dims
 
     call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, &
-                              dims%NREFD, dims%NACLSD, dims%NCLSD, dims%IEMXD)
+                              dims%NREFD, dims%NACLSD, dims%NCLSD, dims%IEMXD, &
+                              dims%nguessd, dims%ekmd, dims%smpid)
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -60,7 +65,7 @@ module KKRresults_mod
   !> @param[in]    NACLSD
   !> @param[in]    NCLSD
   !> @param[in]    IEMXD
-  subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NREFD,NACLSD,NCLSD,IEMXD)
+  subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NREFD,NACLSD,NCLSD,IEMXD, nguessd, ekmd, smpid)
     implicit none
     type (KKRresults), intent(inout) :: self
     integer, intent(in) ::  LMMAXD
@@ -69,6 +74,9 @@ module KKRresults_mod
     integer, intent(in) ::  NACLSD
     integer, intent(in) ::  NCLSD
     integer, intent(in) ::  IEMXD
+    integer, intent(in) ::  nguessd
+    integer, intent(in) ::  ekmd
+    integer, intent(in) ::  smpid
 
     integer :: memory_stat
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
@@ -79,6 +87,9 @@ module KKRresults_mod
     self%NACLSD = NACLSD
     self%NCLSD = NCLSD
     self%IEMXD = IEMXD
+    self%nguessd = nguessd
+    self%ekmd = ekmd
+    self%smpid = smpid
 
     ALLOCATECHECK(self%TMATN(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
@@ -90,6 +101,7 @@ module KKRresults_mod
     ALLOCATECHECK(self%LLY_G0TR(NCLSD,IEMXD))
     ALLOCATECHECK(self%LLY_GRDT(IEMXD,NSPIND))
     ALLOCATECHECK(self%TR_ALPH(NSPIND))
+    ALLOCATECHECK(self%PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1))
 
     self%noiter = 0
 
@@ -120,6 +132,7 @@ module KKRresults_mod
     DEALLOCATECHECK(self%LLY_G0TR)
     DEALLOCATECHECK(self%LLY_GRDT)
     DEALLOCATECHECK(self%TR_ALPH)
+    DEALLOCATECHECK(self%PRSC)
 
   end subroutine
 

@@ -59,7 +59,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   type (EnergyMesh), intent(in)         :: emesh
   type (LDAUData), intent(inout)        :: ldau_data
   type (JijData), intent(inout)         :: jij_data
-  type (Main2Arrays), intent(inout)     :: arrays
+  type (Main2Arrays), intent(in)        :: arrays
   type (KKRresults), intent(inout)      :: kkr  ! out only?
   type (DimParams), intent(in)          :: dims
   type (InputParams), intent(in)        :: params
@@ -203,7 +203,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           params%NSYMAT,arrays%DSYMLL, &
           kkr%TMATN(:,:,ISPIN),kkr%DTDE(:,:,ISPIN), &
           arrays%NUMN0,arrays%INDN0,I1, &
-          arrays%PRSC(1,1,PRSPIN), &
+          kkr%PRSC(1,1,PRSPIN), &
           EKM,kkr%NOITER, &
           params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
           jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
@@ -298,7 +298,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
 !     have to be adjusted to new distributions
 !=======================================================================
-  if ((dims%IGUESSD==1).and.(dims%EMPID>1)) then
+  if ((dims%IGUESSD==1) .and. (dims%EMPID>1)) then
 
     do ISPIN = 1,dims%NSPIND
       if(isWorkingSpinRank(my_mpi, ispin)) then
@@ -312,7 +312,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
         WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
-        call redistributeInitialGuess_com(my_mpi, arrays%PRSC(:,:,PRSPIN), &
+        call redistributeInitialGuess_com(my_mpi, kkr%PRSC(:,:,PRSPIN), &
              ebalance_handler%EPROC, ebalance_handler%EPROC_old, arrays%KMESH, arrays%NofKs)
 
       endif

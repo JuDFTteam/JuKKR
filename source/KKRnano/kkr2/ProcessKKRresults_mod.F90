@@ -58,7 +58,7 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   type (EnergyMesh)             :: emesh
   type (LDAUData)               :: ldau_data
   type (BroydenData)            :: broyden
-  type (Main2Arrays)            :: arrays
+  type (Main2Arrays), intent(in):: arrays
   type (DimParams)              :: dims
   type (InputParams)            :: params
   type (KKRresults)             :: kkr
@@ -236,7 +236,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   type (BasisAtom), intent(inout)            :: atomdata
   type (EnergyMesh), intent(inout)           :: emesh
   type (LDAUData), intent(inout)             :: ldau_data
-  type (Main2Arrays), intent(inout)          :: arrays
+  type (Main2Arrays), intent(in)             :: arrays
   type (DimParams), intent(in)               :: dims
   type (InputParams), intent(in)             :: params
   type (KKRresults), intent(in)              :: kkr  ! should be in only
@@ -378,7 +378,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   type (KKRnanoParallel), intent(in)         :: my_mpi
   type (BasisAtom), intent(inout)            :: atomdata
   type (LDAUData), intent(inout)             :: ldau_data
-  type (Main2Arrays), intent(inout)          :: arrays
+  type (Main2Arrays), intent(in)             :: arrays
   type (DimParams), intent(in)               :: dims
   type (InputParams), intent(in)             :: params
   type (EnergyResults), intent(inout)        :: energies
