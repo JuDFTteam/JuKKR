@@ -63,9 +63,6 @@ program MAIN2
   integer::ITER
   integer::I1
 
-  integer :: BCP ! TODO: remove - is dummy
-  integer :: IGUESS ! TODO: remove - is dummy
-
   type(KKRnanoParallel) :: my_mpi
 
   integer :: flag
@@ -113,9 +110,9 @@ program MAIN2
 !-----------------------------------------------------------------------------
 
   !every process does this!
-  call readKKR0InputNew(dims%NSYMAXD, params%ALAT, arrays%ATOM, BCP, arrays%BRAVAIS, &
+  call readKKR0InputNew(dims%NSYMAXD, params%ALAT, arrays%ATOM, arrays%BRAVAIS, &
                         arrays%CLS, arrays%DSYMLL, arrays%EZOA, params%FCM, params%GMAX, params%ICST, &
-                        IGUESS, params%IMIX, arrays%INDN0, &
+                        params%IMIX, arrays%INDN0, &
                         arrays%ISYMINDEX, &
                         params%JIJ, params%KFORCE, arrays%KMESH, params%KPRE, params%KTE, params%KXC, &
                         params%LDAU, params%MAXMESH, &
@@ -264,7 +261,7 @@ program MAIN2
                    getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
-      ! output: ebalance_handler, arrays (PRSC), kkr (!), jij_data, ldau_data
+      ! output: ebalance_handler, kkr (!), jij_data, ldau_data
       call energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
                       ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
 
@@ -274,7 +271,7 @@ program MAIN2
 ! BEGIN only processes in master-group are working
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
-        ! output: atomdata, arrays, densities, broyden, ldau_data, emesh (only correct for master)
+        ! output: atomdata, densities, broyden, ldau_data, emesh (only correct for master)
         call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, &
                                params, arrays, gaunts, shgaunts, &
                                madelung_sum, program_timer, &
