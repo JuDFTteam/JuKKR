@@ -145,8 +145,6 @@ program MAIN2
 
 !+++++++++++ pre self-consistency preparation
 
-    I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
-
     call createKKRresults(kkr, dims)
     call createDensityResults(densities, dims)
 
@@ -154,8 +152,7 @@ program MAIN2
     call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
 
-    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
-                                       getElapsedTime(program_timer), 0)
+    I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
 
     call createBasisAtom(atomdata, I1, dims%lpot, dims%nspind, dims%irmind, dims%irmd)
     call openBasisAtomDAFile(atomdata, 37, "atoms")
@@ -184,12 +181,16 @@ program MAIN2
 
     call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, dims%nspind)
     call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd,dims%lmmaxd,dims%nspind)
+
     call createBroydenData(broyden, dims%ntird, dims%itdbryd, params%imix, params%mixing)
 
     call createEnergyMesh(emesh, dims%iemxd)
     params%ielast = dims%iemxd
 
     call readEnergyMesh(emesh)  !every process does this!
+
+    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
+                                       getElapsedTime(program_timer), 0)
 
     call createMadelungCalculator(madelung_calc, dims%lmaxd, params%ALAT, params%RMAX, params%GMAX, &
                                   arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)

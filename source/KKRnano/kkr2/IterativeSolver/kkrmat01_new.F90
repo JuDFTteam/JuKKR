@@ -147,10 +147,16 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   allocate(GLLKE1(site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
-  allocate(GLLH(LMMAXD*NGTBD*NAEZ), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
+!  allocate(GLLH(LMMAXD*NGTBD*NAEZ), stat = memory_stat)
+!  if (memory_stat /= 0) memory_fail = .true.
+!  allocate(GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD), stat = memory_stat)
+!  if (memory_stat /= 0) memory_fail = .true.
+
+  ! TODO:  !!!! Implement memory saving Lloyd's formula approach !!!!
+  ! lloydTraceK affected
+  if (LLY == 1) then
+    allocate(GLLH(LMMAXD*NGTBD*NAEZ), stat = memory_stat)
+  endif
 
   if (LLY == 1) then
     allocate(DGDE      (site_lm_size,LMMAXD), stat = memory_stat)
@@ -244,8 +250,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   ! ----------------------------------------------------------------
 
   deallocate(GLLKE1)
-  deallocate(GLLH)
-  deallocate(GLLHBLCK)
+  if (allocated(GLLH)) deallocate(GLLH)
+  if (allocated(GLLHBLCK)) deallocate(GLLHBLCK)
 
   if (LLY == 1) then
     deallocate(DGDE)
@@ -290,8 +296,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   double complex :: EIKRP(naclsd)
   integer :: EZOA(NACLSD,*) ! dim naclsd,*
   doublecomplex :: GINP(lmmaxd,lmmaxd,NACLSD,NCLSD) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
-  double complex :: GLLH(LMMAXD*NACLSD*LMMAXD*NAEZ) ! dim: lmmaxd, naclsd*lmmaxd, naez
-  double complex :: GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*XDIM*YDIM*ZDIM) ! dim: lmmaxd*natbld, lmmaxd*natbld*xdim*ydim*zdim
+  double complex, allocatable :: GLLH(:)
+  double complex, allocatable :: GLLHBLCK(:,:) ! dim: lmmaxd*natbld, lmmaxd*natbld*xdim*ydim*zdim
   double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
   integer :: IAT
   integer :: IGUESS
@@ -367,8 +373,15 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   allocate(mat_B(sparse%kvstr(naez+1)-1,LMMAXD))
   allocate(mat_X(sparse%kvstr(naez+1)-1,LMMAXD))
 
+  if (.not. allocated(GLLH)) then
+    allocate(GLLH(getNNZ(sparse)))
+  endif
+
+  if (.not. allocated(GLLHBLCK) .and. BCP==1) then
+    allocate(GLLHBLCK(lmmaxd*natbld, lmmaxd*natbld*xdim*ydim*zdim))
+  endif
+
   GLLH = CZERO
-  !GLLH2 = CZERO ! remove
 
 !    flag = 1
 !    if (IAT == 1) flag = 0
@@ -427,10 +440,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   ! 2) if BCP is activated determine preconditioning matrix
   !    GLLHBLCK ..
     
-  GLLHBLCK = CZERO
-    
   if (BCP == 1) then
-
+    GLLHBLCK = CZERO
     call BCPWUPPER(GLLH,GLLHBLCK,NAEZ,NUMN0,INDN0, &
                    lmmaxd, natbld, xdim, ydim, zdim, naclsd)
   endif

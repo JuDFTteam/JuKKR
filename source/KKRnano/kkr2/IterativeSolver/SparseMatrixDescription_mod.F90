@@ -3,6 +3,10 @@ module SparseMatrixDescription_mod
 
   !> description of a (square) sparse matrix in VBR format
   !> VBR = variable block row.
+  !>
+  !> For a description of the VBR format see :
+  !> Y. Saad, SPARSKIT: a basic tool kit for sparse matrix computations - Version 2 (1994).
+  !>
   !
   !> The actual matrix data has to be stored separately
   !> in an 1D array.
@@ -42,11 +46,26 @@ module SparseMatrixDescription_mod
     allocate(sparse%ja(max_num_blocks))
     allocate(sparse%ka(max_num_blocks + 1))
 
+    sparse%ia = 0
+    sparse%kvstr = 0
+    sparse%ja = 0
+    sparse%ka = 0
+
     sparse%blk_nrows = blk_nrows
     sparse%max_blockdim = 0
     sparse%max_blocks_per_row = 0
 
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Returns number of non-zero elements (only if properly setup!).
+  integer function getNNZ(sparse)
+    implicit none
+    type (SparseMatrixDescription), intent(in) :: sparse
+
+    getNNZ = sparse%ka(sparse%ia(sparse%blk_nrows + 1)) - 1
+
+  end function
 
   !----------------------------------------------------------------------------
   !> Destroys SparseMatrixDescription object.

@@ -55,12 +55,12 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   integer, intent(in) :: iter
   type (KKRnanoParallel), intent(in)    :: my_mpi
   type (EBalanceHandler), intent(inout) :: ebalance_handler
-  type (BasisAtom), intent(inout )      :: atomdata  ! in only?
+  type (BasisAtom), intent(in)          :: atomdata
   type (EnergyMesh), intent(in)         :: emesh
   type (LDAUData), intent(inout)        :: ldau_data
   type (JijData), intent(inout)         :: jij_data
   type (Main2Arrays), intent(in)        :: arrays
-  type (KKRresults), intent(inout)      :: kkr  ! out only?
+  type (KKRresults), intent(inout)      :: kkr
   type (DimParams), intent(in)          :: dims
   type (InputParams), intent(in)        :: params
   type (GauntCoefficients), intent(in)  :: gaunts

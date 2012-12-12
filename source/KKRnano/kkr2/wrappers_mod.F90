@@ -90,7 +90,7 @@ subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMAT
   use GauntCoefficients_mod
   implicit none
 
-  type (BasisAtom), intent(inout) :: atomdata  ! in?
+  type (BasisAtom), intent(in) :: atomdata
   type (GauntCoefficients), intent(in) :: gaunts
   type (EnergyMesh), intent(in) :: emesh
   integer :: ie
@@ -149,7 +149,7 @@ subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, DTD
   use GauntCoefficients_mod
   implicit none
 
-  type (BasisAtom), intent(inout) :: atomdata  ! in?
+  type (BasisAtom), intent(in) :: atomdata
   type (GauntCoefficients), intent(in) :: gaunts
   type (EnergyMesh), intent(in) :: emesh
   integer :: ie
