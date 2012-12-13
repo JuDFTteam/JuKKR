@@ -153,7 +153,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 !  if (memory_stat /= 0) memory_fail = .true.
 
   ! TODO:  !!!! Implement memory saving Lloyd's formula approach !!!!
-  ! lloydTraceK affected
+  ! lloydTraceK affected, (arrays DGDE, DPDE_LOCAL - ignore for now)
   if (LLY == 1) then
     allocate(GLLH(LMMAXD*NGTBD*NAEZ), stat = memory_stat)
   endif

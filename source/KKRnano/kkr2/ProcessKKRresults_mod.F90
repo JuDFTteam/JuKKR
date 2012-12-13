@@ -137,6 +137,9 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   call closeBasisAtomPotentialDAFile(37)
 ! ----------------------------------------------------- output_potential
 
+  call OUTTIME(isMasterRank(my_mpi),'potential written .. ', &
+               getElapsedTime(program_timer), iter)
+
 ! write formatted potential if file VFORM exists - contains bad inquire
 ! - bad check deactivated when KTE<0
   if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
@@ -163,6 +166,8 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
     params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),densities%total_charge_neutrality, &
     arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
     arrays%iemxd)
+
+    call OUTTIME(isMasterRank(my_mpi),'results......',getElapsedTime(program_timer), iter)
 
     ! only MASTERRANK updates, other ranks get it broadcasted later
     ! (although other processes could update themselves)
@@ -490,8 +495,6 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-  call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
-
   call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, energies%VBC, VOL0)
 
   if(isMasterRank(my_mpi)) then
@@ -503,6 +506,8 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
 
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
   call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
+
+  call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
 ! LDAU
   ldau_data%EULDAU = 0.0D0
