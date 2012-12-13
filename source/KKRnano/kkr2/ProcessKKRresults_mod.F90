@@ -150,8 +150,13 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS
+  call OUTTIME(isMasterRank(my_mpi),'barrier begin.. ', &
+               getElapsedTime(program_timer), iter)
 
   call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
+
+  call OUTTIME(isMasterRank(my_mpi),'barrier end ... ', &
+               getElapsedTime(program_timer), iter)
 
 ! -----------------------------------------------------------------
 ! BEGIN: only MASTERRANK is working here
@@ -451,9 +456,10 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
     call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
     ! output: ECOU - l resolved Coulomb energy
     call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, shgaunts, atomdata)
+
+    call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
   end if
 
-  call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 ! =====================================================================
@@ -507,8 +513,6 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
   call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
 
-  call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
-
 ! LDAU
   ldau_data%EULDAU = 0.0D0
   ldau_data%EDCLDAU = 0.0D0
@@ -519,6 +523,8 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
                   ldau_data%lmaxd)
   endif
 ! LDAU
+
+  call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
 end subroutine
 
