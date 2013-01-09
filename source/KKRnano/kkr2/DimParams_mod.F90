@@ -48,6 +48,8 @@ module DimParams_mod
     integer  :: NTHRDS
     integer  :: MAXMSHD
 
+    integer :: atoms_per_proc
+
   end type DimParams
 
   CONTAINS
@@ -116,6 +118,9 @@ module DimParams_mod
 
     ! Record lengths
     self%LRECRES2=4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
+
+    ! Only 1 atom per MPI process supported (for now)
+    self%atoms_per_proc = 1
 
     call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
 

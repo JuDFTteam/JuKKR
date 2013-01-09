@@ -127,8 +127,9 @@ program MAIN2
  ! =                     End read in variables                          =
  ! ======================================================================
 
-  call consistencyCheck03(arrays%ATOM, arrays%CLS, arrays%EZOA, arrays%INDN0, &
-                          arrays%NACLS, arrays%NACLSD, arrays%NAEZ, arrays%NCLSD, params%NR, arrays%NUMN0)
+  call consistencyCheck03(arrays%ATOM, arrays%CLS, arrays%EZOA, &
+                          arrays%INDN0, arrays%NACLS, arrays%NACLSD, &
+                          arrays%NAEZ, arrays%NCLSD, params%NR, arrays%NUMN0)
 
   if ((params%JIJ .eqv. .true.) .and. (arrays%nspind /= 2)) then
     write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
@@ -236,7 +237,9 @@ program MAIN2
       WRITELOG(2, *) "Iteration Atom ", ITER, I1
 
       ! New: instead of reading potential every time, communicate it
-      call communicatePotential(my_mpi, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
+      ! between energy and spin processes of same atom
+      call communicatePotential(my_mpi, atomdata%potential%VISP, &
+                                atomdata%potential%VINS, atomdata%core%ECORE)
 
       ! Core relaxation - only mastergroup needs results
       if (isInMasterGroup(my_mpi)) then
@@ -249,7 +252,8 @@ program MAIN2
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48    ! ???
 
-        call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
+        call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU, &
+                      ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
                       atomdata%potential%VISP,ldau_data%NSPIND,mesh%R,mesh%DRDI, &
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
                       ldau_data%PHILDAU,ldau_data%UMLDAU,ldau_data%WMLDAU, &
@@ -266,7 +270,8 @@ program MAIN2
       call energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
                       ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
 
-      call OUTTIME(isMasterRank(my_mpi),'G obtained ..........',getElapsedTime(program_timer),ITER)
+      call OUTTIME(isMasterRank(my_mpi),'G obtained ..........', &
+                   getElapsedTime(program_timer),ITER)
 
 !----------------------------------------------------------------------
 ! BEGIN only processes in master-group are working
@@ -285,12 +290,14 @@ program MAIN2
       call broadcastEnergyMesh_com(my_mpi, emesh)
 
       !call MPI_ALLREDUCE(kkr%NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
-      !getMyActiveCommunicator(my_mpi),IERR) ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
+      !getMyActiveCommunicator(my_mpi),IERR)
+      ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
 
       ! TODO
       if(isMasterRank(my_mpi)) then
         !call printSolverIterationNumber(ITER, NOITER_ALL)
-        call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
+        call writeIterationTimings(ITER, getElapsedTime(program_timer), &
+                                         getElapsedTime(iteration_timer))
       endif
 
 ! manual exit possible by creation of file 'STOP' in home directory

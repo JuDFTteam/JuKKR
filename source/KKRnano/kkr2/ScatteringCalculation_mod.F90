@@ -92,7 +92,6 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   prspin = 1
   kkr%noiter = 0
 
-
   ! calculate exchange couplings only at last self-consistency step and when Jij=true
   if ((ITER==params%SCFSTEPS).and.params%JIJ) XCCPL = .true.
 
