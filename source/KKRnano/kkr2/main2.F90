@@ -319,8 +319,6 @@ program MAIN2
     call destroyGauntCoefficients(gaunts)
     call destroyShapeGauntCoefficients(shgaunts)
 
-    call destroyEBalanceHandler(ebalance_handler)
-
     call destroyBasisAtom(atomdata)
     call destroyCellData(cell)
     call destroyRadialMeshData(mesh)
@@ -330,6 +328,10 @@ program MAIN2
     call destroyJijData(jij_data)
     call destroyDensityResults(densities)
     call destroyKKRresults(kkr)
+
+    !--------------
+    call destroyEBalanceHandler(ebalance_handler)
+    call destroyEnergyMesh(emesh)
 
 ! ======================================================================
 

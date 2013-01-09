@@ -57,7 +57,7 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   ! TODO: atoms_per_procs * num_procs MUST BE = naez
   ! rank = 0,1,..., num_atom_ranks-1
-  subroutine createCalculationData(calc_data, dims, params, my_mpi)
+  subroutine createCalculationData(calc_data, dims, params, arrays, my_mpi)
     use KKRnanoParallel_mod
     use DimParams_mod
     use InputParams_mod
@@ -67,6 +67,7 @@ module CalculationData_mod
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)   :: dims
     type (InputParams), intent(in) :: params
+    type (Main2Arrays), intent(in) :: arrays
     type (KKRnanoParallel), intent(in) :: my_mpi
 
     integer :: atoms_per_proc
@@ -116,22 +117,17 @@ module CalculationData_mod
     end do
 
     ! Now construct all datastructures and calculate initial data
-    call constructEverything(calc_data, dims, params, my_mpi)
+    call constructEverything(calc_data, dims, params, arrays, my_mpi)
 
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Calculate Madelung Lattice sums for all local atoms. Call only once!
-  subroutine prepareMadelung(calc_data, dims, params, arrays)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use InputParams_mod
+  !> Calculate Madelung Lattice sums for all local atoms.
+  subroutine prepareMadelung(calc_data, arrays)
     use Main2Arrays_mod
     implicit none
 
     type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (InputParams), intent(in):: params
     type (Main2Arrays), intent(in):: arrays
 
     ! ----- locals ------
@@ -139,14 +135,9 @@ module CalculationData_mod
     integer :: ilocal
     type (MadelungLatticeSum), pointer :: madelung_sum
 
-    call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
-                                  params%ALAT, params%RMAX, params%GMAX, &
-                                  arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
-
     do ilocal = 1, calc_data%num_local_atoms
       I1 = calc_data%atom_ids(ilocal)
       madelung_sum => calc_data%madelung_sum_array(ilocal)
-      call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
       call calculateMadelungLatticeSum(madelung_sum, I1, arrays%rbasis)
     end do
 
@@ -159,7 +150,53 @@ module CalculationData_mod
 
     type (CalculationData), intent(inout) :: calc_data
 
+    ! ---- locals ----
+    integer :: ilocal
+    integer :: I1
+    type (KKRresults), pointer :: kkr
+    type (DensityResults), pointer :: densities
+    type (BasisAtom), pointer :: atomdata
+    type (CellData), pointer :: cell
+    type (RadialMeshData), pointer :: mesh
+    type (LDAUData), pointer :: ldau_data
+    type (JijData), pointer :: jij_data
+    type (BroydenData), pointer :: broyden
+    type (MadelungLatticeSum), pointer :: madelung_sum
 
+    ! loop over all LOCAL atoms
+    !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+    !--------------------------------------------------------------------------
+
+      I1 = calc_data%atom_ids(ilocal)
+
+      kkr       => calc_data%kkr_array(ilocal)
+      densities => calc_data%densities_array(ilocal)
+      atomdata  => calc_data%atomdata_array(ilocal)
+      cell      => calc_data%cell_array(ilocal)
+      mesh      => calc_data%mesh_array(ilocal)
+      ldau_data => calc_data%ldau_data_array(ilocal)
+      jij_data  => calc_data%jij_data_array(ilocal)
+      broyden   => calc_data%broyden_array(ilocal)
+      madelung_sum   => calc_data%madelung_sum_array(ilocal)
+
+      call destroyMadelungLatticeSum(madelung_sum)
+
+      call destroyBasisAtom(atomdata)
+      call destroyCellData(cell)
+      call destroyRadialMeshData(mesh)
+
+      call destroyBroydenData(broyden)
+      call destroyLDAUData(ldau_data)
+      call destroyJijData(jij_data)
+      call destroyDensityResults(densities)
+      call destroyKKRresults(kkr)
+
+    end do
+
+    call destroyMadelungCalculator(calc_data%madelung_calc)
+    call destroyGauntCoefficients(calc_data%gaunts)
+    call destroyShapeGauntCoefficients(calc_data%shgaunts)
 
     deallocate(calc_data%mesh_array)
     deallocate(calc_data%cell_array)
@@ -322,15 +359,17 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
-  subroutine constructEverything(calc_data, dims, params, my_mpi)
+  subroutine constructEverything(calc_data, dims, params, arrays, my_mpi)
     use KKRnanoParallel_mod
     use DimParams_mod
     use InputParams_mod
+    use Main2Arrays_mod
     implicit none
 
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
     type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
     type (KKRnanoParallel), intent(in) :: my_mpi
 
     ! ----- locals ------
@@ -344,6 +383,7 @@ module CalculationData_mod
     type (LDAUData), pointer :: ldau_data
     type (JijData), pointer :: jij_data
     type (BroydenData), pointer :: broyden
+    type (MadelungLatticeSum), pointer :: madelung_sum
 
     if (isInMasterGroup(my_mpi)) call openBasisAtomDAFile(atomdata, 37, "atoms")
     call openCellDataDAFile(cell, 38 , "cells")
@@ -364,6 +404,7 @@ module CalculationData_mod
       ldau_data => calc_data%ldau_data_array(ilocal)
       jij_data  => calc_data%jij_data_array(ilocal)
       broyden   => calc_data%broyden_array(ilocal)
+      madelung_sum   => calc_data%madelung_sum_array(ilocal)
 
       call createKKRresults(kkr, dims)
       call createDensityResults(densities, dims)
@@ -395,6 +436,12 @@ module CalculationData_mod
 
       call createBroydenData(broyden, dims%ntird, dims%itdbryd, &
                              params%imix, params%mixing)
+
+      call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
+                                  params%ALAT, params%RMAX, params%GMAX, &
+                                  arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
+
+      call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 
     !--------------------------------------------------------------------------
     end do
