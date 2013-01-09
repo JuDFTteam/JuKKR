@@ -115,8 +115,8 @@ program MAIN2
 
   !every process does this!
   call readKKR0InputNew(dims%NSYMAXD, params%ALAT, arrays%ATOM, arrays%BRAVAIS, &
-                        arrays%CLS, arrays%DSYMLL, arrays%EZOA, params%FCM, params%GMAX, params%ICST, &
-                        params%IMIX, arrays%INDN0, &
+                        arrays%CLS, arrays%DSYMLL, arrays%EZOA, params%FCM, &
+                        params%GMAX, params%ICST, params%IMIX, arrays%INDN0, &
                         arrays%ISYMINDEX, &
                         params%JIJ, params%KFORCE, arrays%KMESH, params%KPRE, params%KTE, params%KXC, &
                         params%LDAU, params%MAXMESH, &
@@ -150,7 +150,9 @@ program MAIN2
 
 !+++++++++++ pre self-consistency preparation
 
+    !--------------------------------------------------------------------------
     call createCalculationData(calc_data, dims, params, arrays, my_mpi)
+    !--------------------------------------------------------------------------
 
     ! ---------------------------------------------------------- k_mesh
     call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
@@ -167,7 +169,8 @@ program MAIN2
 
     call prepareMadelung(calc_data, arrays)
 
-    call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',getElapsedTime(program_timer), 0)
+    call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...', &
+                 getElapsedTime(program_timer), 0)
 
     call createEBalanceHandler(ebalance_handler, params%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
