@@ -1,6 +1,7 @@
 #include "DebugHelpers/logging_macros.h"
 #include "DebugHelpers/test_array_log.h"
 
+!> @author Modularisation: Elias Rabel
 module ScatteringCalculation_mod
 
 public  :: energyLoop
@@ -14,7 +15,7 @@ CONTAINS
 !>         *) jij_data, ldau_data (properly initialised !!!)
 !>
 !> Output: ebalance_handler (changed, updated timings and process distribution)
-!>         arrays - KKRResults (todo)
+!>         KKRResults
 !>         jij_data results of jij-calculation
 !>         ldau_data LDA+U results
 !>
@@ -97,8 +98,10 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
   if (XCCPL) then
 
-    call CLSJIJ(I1,dims%NAEZ,arrays%RR,params%NR,arrays%RBASIS,jij_data%RCUTJIJ,params%NSYMAT,arrays%ISYMINDEX, &
-                jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ,jij_data%RXCCLS,jij_data%ZKRXIJ, &
+    call CLSJIJ(I1,dims%NAEZ,arrays%RR,params%NR,arrays%RBASIS, &
+                jij_data%RCUTJIJ,params%NSYMAT,arrays%ISYMINDEX, &
+                jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ, &
+                jij_data%RXCCLS,jij_data%ZKRXIJ, &
                 arrays%nrd, jij_data%nxijd)
 
     jij_data%JXCIJINT = CZERO
@@ -154,12 +157,14 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
             PRSPIN   = 1
           endif
 
-          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
+          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
+                          params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
 
           jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
           if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
+            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
+                          params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
           end if
 
           RF = arrays%REFPOT(I1)
@@ -210,7 +215,8 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
           jij_data%GMATXIJ(1,1,1,ISPIN), &
           getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
           arrays%iemxd, &
-          arrays%lmmaxd, arrays%naclsd, arrays%nclsd, dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
+          arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
+          dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
           jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
 
           TESTARRAYLOG(3, kkr%GMATN(:,:,IE,ISPIN))
@@ -240,7 +246,8 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
         JSCAL = emesh%WEZ(IE)/DBLE(jij_data%NSPIND)
 
         call jijLocalEnergyIntegration(my_mpi, JSCAL, jij_data%GMATXIJ, &
-                                        jij_data%DTIXIJ(:,:,1), jij_data%RXIJ, jij_data%NXIJ, jij_data%IXCP, &
+                                        jij_data%DTIXIJ(:,:,1), jij_data%RXIJ,&
+                                        jij_data%NXIJ, jij_data%IXCP, &
                                         jij_data%RXCCLS, jij_data%JXCIJINT)
       end if
 
@@ -271,8 +278,10 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 !=======================================================================
 
 ! TIME
-  call OUTTIME(isMasterRank(my_mpi),'Single Site took.....',getElapsedTime(single_site_timer),ITER)
-  call OUTTIME(isMasterRank(my_mpi),'Mult. Scat. took.....',getElapsedTime(mult_scattering_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'Single Site took.....', &
+               getElapsedTime(single_site_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'Mult. Scat. took.....', &
+               getElapsedTime(mult_scattering_timer),ITER)
 
 !=======================================================================
 !     output of Jij's
@@ -366,7 +375,7 @@ end subroutine
 
 !----------------------------------------------------------------------------
 !> Substract diagonal reference T matrix of certain spin channel
-!> from real system's T matrix
+!> from real system's T matrix.
 subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
   implicit none
   integer :: LM1

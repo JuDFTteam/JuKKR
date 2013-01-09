@@ -209,7 +209,7 @@ program MAIN2
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
-    call initLcutoff(arrays%rbasis, arrays%bravais, arrays%lmmaxd, I1) !TODO: remove
+    call initLcutoff(arrays%rbasis, arrays%bravais, arrays%lmmaxd, I1)
     WRITELOG(3, *) "lm-array: ", lmarray
 
 !+++++++++++
