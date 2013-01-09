@@ -23,7 +23,6 @@ program MAIN2
   use ShapeGauntCoefficients_mod
 
   use RadialMeshData_mod
-  use CellData_mod
   use BasisAtom_mod
 
   use JijData_mod
@@ -52,10 +51,10 @@ program MAIN2
 
   type (CalculationData) :: calc_data
 
-  type (MadelungCalculator), target :: madelung_calc
-  type (MadelungLatticeSum) :: madelung_sum
-  type (ShapeGauntCoefficients) :: shgaunts
-  type (GauntCoefficients) :: gaunts
+  type (MadelungCalculator), pointer :: madelung_calc
+  type (MadelungLatticeSum), pointer :: madelung_sum
+  type (ShapeGauntCoefficients), pointer :: shgaunts
+  type (GauntCoefficients), pointer :: gaunts
 
   !     .. Local Scalars ..
 
@@ -71,18 +70,19 @@ program MAIN2
 
   integer :: flag
 
-  type (RadialMeshData), target :: mesh
-  type (CellData), target       :: cell
-  type (BasisAtom), target      :: atomdata
   type (EnergyMesh), target     :: emesh
-  type (LDAUData), target       :: ldau_data
-  type (JijData), target        :: jij_data
-  type (BroydenData), target    :: broyden
   type (Main2Arrays), target    :: arrays
   type (DimParams), target      :: dims
   type (InputParams)            :: params
-  type (KKRresults)             :: kkr
-  type (DensityResults)         :: densities
+
+  type (RadialMeshData), pointer :: mesh
+  type (BasisAtom), pointer      :: atomdata
+  type (LDAUData), pointer       :: ldau_data
+  type (JijData), pointer        :: jij_data
+  type (BroydenData), pointer    :: broyden
+  type (KKRresults), pointer     :: kkr
+  type (DensityResults), pointer :: densities
+  !----------------------------------------------------------------------------
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
@@ -151,46 +151,12 @@ program MAIN2
 !+++++++++++ pre self-consistency preparation
 
     call createCalculationData(calc_data, dims, params, arrays, my_mpi)
-    call prepareMadelung(calc_data, arrays)
-
-    call createKKRresults(kkr, dims)
-    call createDensityResults(densities, dims)
 
     ! ---------------------------------------------------------- k_mesh
     call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
 
     I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
-
-    call createBasisAtom(atomdata, I1, dims%lpot, dims%nspind, dims%irmind, dims%irmd)
-    call openBasisAtomDAFile(atomdata, 37, "atoms")
-    call readBasisAtomDA(atomdata, 37, I1)
-    call closeBasisAtomDAFile(37)
-
-    if (isInMasterGroup(my_mpi)) then
-      call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
-      call readBasisAtomPotentialDA(atomdata, 37, I1)
-      call closeBasisAtomPotentialDAFile(37)
-    end if
-
-    call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
-    call openCellDataDAFile(cell, 37 , "cells")
-    call readCellDataDA(cell, 37, getCellIndex(atomdata))
-    call closeCellDataDAFile(37)
-
-    call associateBasisAtomCell(atomdata, cell)
-
-    call createRadialMeshData(mesh, dims%irmd, dims%ipand)
-    call openRadialMeshDataDAFile(mesh, 37 , "meshes")
-    call readRadialMeshDataDA(mesh, 37, I1)
-    call closeRadialMeshDataDAFile(37)
-
-    call associateBasisAtomMesh(atomdata, mesh)
-
-    call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, dims%nspind)
-    call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd,dims%lmmaxd,dims%nspind)
-
-    call createBroydenData(broyden, dims%ntird, dims%itdbryd, params%imix, params%mixing)
 
     call createEnergyMesh(emesh, dims%iemxd) !!!!
     params%ielast = dims%iemxd !!!!
@@ -199,17 +165,9 @@ program MAIN2
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
                                        getElapsedTime(program_timer), 0)
 
-    call createMadelungCalculator(madelung_calc, dims%lmaxd, params%ALAT, params%RMAX, params%GMAX, &
-                                  arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
-
-    call createMadelungLatticeSum(madelung_sum, madelung_calc, dims%naez)
-
-    call calculateMadelungLatticeSum(madelung_sum, I1, arrays%rbasis)
+    call prepareMadelung(calc_data, arrays)
 
     call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...',getElapsedTime(program_timer), 0)
-
-    call createGauntCoefficients(gaunts, dims%lmaxd)
-    call createShapeGauntCoefficients(shgaunts, dims%lmaxd)
 
     call createEBalanceHandler(ebalance_handler, params%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
@@ -217,6 +175,20 @@ program MAIN2
 
     call initLcutoff(arrays%rbasis, arrays%bravais, arrays%lmmaxd, I1)
     WRITELOG(3, *) "lm-array: ", lmarray
+
+    madelung_calc => getMadelungCalculator(calc_data)
+    shgaunts      => getShapeGaunts(calc_data)
+    gaunts        => getGaunts(calc_data)
+
+    ! For now only 1 atom per process is supported (1 local atom)
+    atomdata      => getAtomData(calc_data, 1)
+    madelung_sum  => getMadelungSum(calc_data, 1)
+    ldau_data     => getLDAUData(calc_data, 1)
+    jij_data      => getJijData(calc_data, 1)
+    broyden       => getBroyden(calc_data, 1)
+    kkr           => getKKR(calc_data, 1)
+    densities     => getDensities(calc_data, 1)
+    mesh          => atomdata%mesh_ptr
 
 !+++++++++++
     ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
@@ -320,22 +292,6 @@ program MAIN2
 
     !if (KFORCE==1) close(54)
 
-    call destroyMadelungLatticeSum(madelung_sum)
-    call destroyMadelungCalculator(madelung_calc)
-    call destroyGauntCoefficients(gaunts)
-    call destroyShapeGauntCoefficients(shgaunts)
-
-    call destroyBasisAtom(atomdata)
-    call destroyCellData(cell)
-    call destroyRadialMeshData(mesh)
-
-    call destroyBroydenData(broyden)
-    call destroyLDAUData(ldau_data)
-    call destroyJijData(jij_data)
-    call destroyDensityResults(densities)
-    call destroyKKRresults(kkr)
-
-    !--------------
     call destroyEBalanceHandler(ebalance_handler)
     call destroyEnergyMesh(emesh)
 
