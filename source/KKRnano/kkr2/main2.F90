@@ -46,7 +46,11 @@ program MAIN2
   use ScatteringCalculation_mod, only: energyloop
   use ProcessKKRresults_mod
 
+  use CalculationData_mod
+
   implicit none
+
+  type (CalculationData) :: calc_data
 
   type (MadelungCalculator), target :: madelung_calc
   type (MadelungLatticeSum) :: madelung_sum
@@ -146,6 +150,9 @@ program MAIN2
 
 !+++++++++++ pre self-consistency preparation
 
+    call createCalculationData(calc_data, dims, params, arrays, my_mpi)
+    call prepareMadelung(calc_data, arrays)
+
     call createKKRresults(kkr, dims)
     call createDensityResults(densities, dims)
 
@@ -185,10 +192,9 @@ program MAIN2
 
     call createBroydenData(broyden, dims%ntird, dims%itdbryd, params%imix, params%mixing)
 
-    call createEnergyMesh(emesh, dims%iemxd)
-    params%ielast = dims%iemxd
-
-    call readEnergyMesh(emesh)  !every process does this!
+    call createEnergyMesh(emesh, dims%iemxd) !!!!
+    params%ielast = dims%iemxd !!!!
+    call readEnergyMesh(emesh)  !every process does this!  !!!!
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
                                        getElapsedTime(program_timer), 0)
@@ -332,6 +338,8 @@ program MAIN2
     !--------------
     call destroyEBalanceHandler(ebalance_handler)
     call destroyEnergyMesh(emesh)
+
+    call destroyCalculationData(calc_data)
 
 ! ======================================================================
 

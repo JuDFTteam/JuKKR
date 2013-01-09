@@ -385,9 +385,6 @@ module CalculationData_mod
     type (BroydenData), pointer :: broyden
     type (MadelungLatticeSum), pointer :: madelung_sum
 
-    if (isInMasterGroup(my_mpi)) call openBasisAtomDAFile(atomdata, 37, "atoms")
-    call openCellDataDAFile(cell, 38 , "cells")
-    call openRadialMeshDataDAFile(mesh, 39 , "meshes")
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -411,21 +408,30 @@ module CalculationData_mod
 
       call createBasisAtom(atomdata, I1, dims%lpot, &
                            dims%nspind, dims%irmind, dims%irmd)
+
+      call openBasisAtomDAFile(atomdata, 37, "atoms")
       call readBasisAtomDA(atomdata, 37, I1)
+      call closeBasisAtomPotentialDAFile(37)
 
       ASSERT( atomdata%atom_index == I1 )
 
       if (isInMasterGroup(my_mpi)) then
+        call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
         call readBasisAtomPotentialDA(atomdata, 37, I1)
+        call closeBasisAtomPotentialDAFile(37)
       end if
 
       call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
-      call readCellDataDA(cell, 38, getCellIndex(atomdata))
+      call openCellDataDAFile(cell, 37 , "cells")
+      call readCellDataDA(cell, 37, getCellIndex(atomdata))
+      call closeCellDataDAFile(37)
 
       call associateBasisAtomCell(atomdata, cell)
 
       call createRadialMeshData(mesh, dims%irmd, dims%ipand)
-      call readRadialMeshDataDA(mesh, 39, I1)
+      call openRadialMeshDataDAFile(mesh, 37 , "meshes")
+      call readRadialMeshDataDA(mesh, 37, I1)
+      call closeRadialMeshDataDAFile(37)
 
       call associateBasisAtomMesh(atomdata, mesh)
 
@@ -446,10 +452,6 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
     end do
     !--------------------------------------------------------------------------
-
-    if (isInMasterGroup(my_mpi)) call closeBasisAtomPotentialDAFile(37)
-    call closeCellDataDAFile(38)
-    call closeRadialMeshDataDAFile(39)
 
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
