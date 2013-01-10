@@ -22,7 +22,7 @@ Concerning datastructures:
    
 *) Routines that operate on a datastructure should be bundled together in the same module.
 
-*) Datastructures that require memory allocation posess a routine
+*) Datastructures that require memory allocation possess a routine
    named 'create<Name of Datastructure>'
    In this case also a routine named 'destroy<Name of Datastructure>'
    has to exists which must be called after usage of the structure to free resources (e.g. memory)

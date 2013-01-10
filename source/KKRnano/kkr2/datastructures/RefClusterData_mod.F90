@@ -1,3 +1,5 @@
+! NOT USED (YET)
+
 ! TODO: problem:
 !       the Fourier-transform needs all the ref. cluster data see kloopz1
 ! For building the coefficient matrix NUMN0 and INDN0 (off all atoms in LIZ)
