@@ -54,4 +54,5 @@ Concerning datastructures:
    
 Different kinds of datastructures:
 
-*) 
+*) plain 'structs'
+*) Opaque objects
