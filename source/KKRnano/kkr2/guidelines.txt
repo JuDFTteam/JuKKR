@@ -10,7 +10,7 @@ Understanding the code:
 *) Good starting points are: main2.F90, CalculationData_mod.F90, datastructures/*.*, kkr0/main0.f90,
                              KKRnanoParallel/KKRnanoParallel_mod.f90,
                              ScatteringCalculation_mod.F90, ProcessKKRresults_mod.F90
-                             kloopz1.f90, kkrmat01.f90 IterativeSolver/kkrmat01_new.F90
+                             kloopz1.f90, IterativeSolver/kkrmat01_new.F90
 
 Concerning datastructures:
 
@@ -48,7 +48,9 @@ Concerning datastructures:
 
 *) Members of datastructures retain the names of their "historical" counterparts. Sorry.
 
-*) Only what belongs conceptually together should be member of the same datastructure.    
+*) Only what belongs conceptually together should be member of the same datastructure.
+
+*) Access members via get<Name of member> or set<Name of member> routines, if possible.    
    
 Different kinds of datastructures:
 
