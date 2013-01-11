@@ -95,9 +95,8 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! kkr
   !  |
   !  v
-  call calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, &
-                          shgaunts, kkr, program_timer, &
-                          ldau_data, arrays, emesh, densities, energies)
+  call calculateDensities(iter, calc_data, my_mpi, dims, params, &
+                          program_timer, arrays, emesh)
   ! |
   ! v
   ! densities, emesh, energies (ESPV only)
@@ -211,8 +210,8 @@ end subroutine
 !>
 !> output: emesh (Fermi-energy updated, renormalized weights), densities, ldau_data?, arrays
 !> files written: 'results1'
-subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shgaunts, kkr, program_timer, &
-                              ldau_data, arrays, emesh, densities, energies)
+subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
+                              program_timer, arrays, emesh)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -226,6 +225,7 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
 
   use lloyd0_new_mod
 
+  use CalculationData_mod
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
 
@@ -249,21 +249,23 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   implicit none
 
   integer, intent(in)                        :: iter
-  type (ShapeGauntCoefficients), intent(in)  :: shgaunts
-  type (GauntCoefficients), intent(in)       :: gaunts
+  type (CalculationData), intent(inout)      :: calc_data
   type (KKRnanoParallel), intent(in)         :: my_mpi
-  type (BasisAtom), intent(inout)            :: atomdata
   type (EnergyMesh), intent(inout)           :: emesh
-  type (LDAUData), intent(inout)             :: ldau_data
   type (Main2Arrays), intent(in)             :: arrays
   type (DimParams), intent(in)               :: dims
   type (InputParams), intent(in)             :: params
-  type (KKRresults), intent(in)              :: kkr  ! should be in only
-  type (DensityResults), intent(inout)       :: densities
-  type (EnergyResults), intent(inout)       :: energies
   type (TimerMpi), intent(in)                :: program_timer
 
   ! locals
+  type (ShapeGauntCoefficients), pointer     :: shgaunts  ! const ref.
+  type (GauntCoefficients), pointer          :: gaunts    ! const ref
+  type (BasisAtom), pointer                  :: atomdata  ! not const
+  type (LDAUData), pointer                   :: ldau_data ! not const
+  type (KKRresults), pointer                 :: kkr       ! const ref
+  type (DensityResults), pointer             :: densities ! not const
+  type (EnergyResults), pointer              :: energies  ! not const
+
   double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
   type (RadialMeshData), pointer :: mesh
   type (CellData), pointer       :: cell
@@ -271,6 +273,14 @@ subroutine calculateDensities(iter, my_mpi, atomdata, dims, params, gaunts, shga
   integer :: I1
   double precision :: denEf !< charge density at Fermi level
   double precision :: chrgNt !< charge neutrality
+
+  shgaunts     => getShapeGaunts(calc_data)
+  gaunts       => getGaunts(calc_data)
+  atomdata     => getAtomData(calc_data, 1)
+  ldau_data    => getLDAUData(calc_data, 1)
+  kkr          => getKKR(calc_data, 1)
+  densities    => getDensities(calc_data, 1)
+  energies     => getEnergies(calc_data, 1)
 
   mesh => atomdata%mesh_ptr
   cell => atomdata%cell_ptr
