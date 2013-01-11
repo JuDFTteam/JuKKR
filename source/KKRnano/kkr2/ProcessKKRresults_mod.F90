@@ -22,17 +22,10 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   use main2_aux_mod
   use EnergyMesh_mod
 
-  use MadelungCalculator_mod, only: MadelungLatticeSum
-
   use CalculationData_mod
-
-  use GauntCoefficients_mod
-  use ShapeGauntCoefficients_mod
 
   use RadialMeshData_mod
   use BasisAtom_mod
-
-  use LDAUData_mod
 
   use TimerMpi_mod
   use BroydenData_mod
@@ -43,7 +36,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
-  use KKRresults_mod
   use DensityResults_mod
   use EnergyResults_mod
 
@@ -61,13 +53,8 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   type (TimerMpi), intent(in)                          :: program_timer
 
   ! locals
-  type (MadelungLatticeSum), pointer                   :: madelung_sum
-  type (ShapeGauntCoefficients), pointer               :: shgaunts
-  type (GauntCoefficients), pointer                    :: gaunts
   type (BasisAtom) , pointer                           :: atomdata
-  type (LDAUData)  , pointer                           :: ldau_data
   type (BroydenData), pointer                          :: broyden
-  type (KKRresults) , pointer                          :: kkr
   type (DensityResults), pointer                       :: densities
   type (EnergyResults), pointer                        :: energies
 
@@ -78,13 +65,8 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   double precision :: RMSAVM ! rms error charge density (contribution of single site)
   logical, external :: testVFORM
 
-  madelung_sum => getMadelungSum(calc_data, 1)
-  shgaunts     => getShapeGaunts(calc_data)
-  gaunts       => getGaunts(calc_data)
   atomdata     => getAtomData(calc_data, 1)
-  ldau_data    => getLDAUData(calc_data, 1)
   broyden      => getBroyden(calc_data, 1)
-  kkr          => getKKR(calc_data, 1)
   densities    => getDensities(calc_data, 1)
   energies     => getEnergies(calc_data, 1)
 
@@ -102,9 +84,8 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! densities, emesh, energies (ESPV only)
   ! |
   ! v
-  call calculatePotentials(iter, my_mpi, dims, params, madelung_sum, shgaunts, &
-                           program_timer, densities, energies, arrays, &
-                           ldau_data, atomdata)
+  call calculatePotentials(iter, calc_data, my_mpi, dims, params, &
+                           program_timer, arrays)
   ! |
   ! v
   ! atomdata, energies
@@ -119,14 +100,16 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! it is weird that straight mixing is called in any case before
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
   if (params%IMIX>=3) then
-    call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS,atomdata%potential%VINS, &
+    call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS, &
+    atomdata%potential%VINS, &
     atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
     mesh%IRC,mesh%IRMIN,atomdata%potential%NSPIN, &
     broyden%IMIX,ITER, &
     broyden%UI2,broyden%VI2,broyden%WIT,broyden%SM1S,broyden%FM1S, &
     getMyAtomRank(my_mpi), &
     getMySEcommunicator(my_mpi), &
-    broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, atomdata%potential%nspin)
+    broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, &
+    atomdata%potential%nspin)
   endif
 
   TESTARRAYLOG(3, atomdata%potential%VINS)
@@ -152,7 +135,8 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
 ! - bad check deactivated when KTE<0
   if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
     if (testVFORM()) then
-      call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, params%KXC, atomdata)
+      call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, &
+                                   params%KXC, atomdata)
     endif
   endif
 
@@ -265,10 +249,10 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   type (KKRresults), pointer                 :: kkr       ! const ref
   type (DensityResults), pointer             :: densities ! not const
   type (EnergyResults), pointer              :: energies  ! not const
+  type (RadialMeshData), pointer             :: mesh
+  type (CellData), pointer                   :: cell
 
   double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
-  type (RadialMeshData), pointer :: mesh
-  type (CellData), pointer       :: cell
   logical :: LdoRhoEF
   integer :: I1
   double precision :: denEf !< charge density at Fermi level
@@ -282,8 +266,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   densities    => getDensities(calc_data, 1)
   energies     => getEnergies(calc_data, 1)
 
-  mesh => atomdata%mesh_ptr
-  cell => atomdata%cell_ptr
+  mesh         => atomdata%mesh_ptr
+  cell         => atomdata%cell_ptr
 
   I1 = atomdata%atom_index
 
@@ -291,13 +275,16 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   densities%CMINST = 0.0D0
 
   ! out: emesh, RNORM
-  call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, emesh, densities%RNORM, &
-                          dims%LLY, params%ICST, params%NSRA, kkr%GMATN, gaunts, ldau_data)
+  call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
+                          emesh, densities%RNORM, &
+                          dims%LLY, params%ICST, params%NSRA, &
+                          kkr%GMATN, gaunts, ldau_data)
 
   if (dims%LLY == 1) then
     TESTARRAYLOG(3, emesh%WEZRN)
     TESTARRAYLOG(3, densities%RNORM)
-    call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......',getElapsedTime(program_timer),ITER)
+    call OUTTIME(isMasterRank(my_mpi),'Lloyd processed......', &
+                 getElapsedTime(program_timer),ITER)
   endif
 
   ! now WEZRN stores the weights for E-integration
@@ -314,8 +301,10 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   ! has to be done after Lloyd
   ! output: RHO2NS, R2NEF, DEN, ESPV
-  call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, densities%RHO2NS, densities%R2NEF, &
-                      densities%DEN, energies%ESPV, kkr%GMATN, gaunts, emesh, ldau_data)
+  call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
+                      densities%RHO2NS, densities%R2NEF, &
+                      densities%DEN, energies%ESPV, kkr%GMATN, &
+                      gaunts, emesh, ldau_data)
 
 ! ----------------------------------------------------------------------
 ! -->   determine total charge expanded in spherical harmonics
@@ -326,16 +315,22 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   CHRGNT = CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
 
   if (dims%LLY == 1) then
-    call renormalizeDOS(densities%DEN,densities%RNORM,densities%LMAXD+1,densities%IEMXD,arrays%NSPIND,densities%IEMXD)
+    call renormalizeDOS(densities%DEN,densities%RNORM, &
+                        densities%LMAXD+1,densities%IEMXD, &
+                        arrays%NSPIND,densities%IEMXD)
   end if
 
   ! calculate DOS at Fermi level
-  DENEF = DENEF + calcDOSatFermi(densities%DEN, params%IELAST, densities%IEMXD, densities%LMAXD+1, densities%NSPIND)
+  DENEF = DENEF + calcDOSatFermi(densities%DEN, params%IELAST, &
+                                 densities%IEMXD, densities%LMAXD+1, &
+                                 densities%NSPIND)
 
   ! ---> l/m_s/atom-resolved charges, output -> CHARGE
   ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
   ! CHARGE -> written to result file
-  call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
+  call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, &
+                       densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
+                       densities%IEMXD)
 
   call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
   densities%total_charge_neutrality = CHRGNT
@@ -346,20 +341,24 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   if (params%KTE >= 0) then
     call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
     call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
-                           atomdata%core%ECORE, I1, emesh%NPOL, atomdata%core%QC_corecharge)
+                           atomdata%core%ECORE, I1, emesh%NPOL, &
+                           atomdata%core%QC_corecharge)
     call closeResults1File()
   endif
 
-  call OUTTIME(isMasterRank(my_mpi),'density calculated ..',getElapsedTime(program_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'density calculated ..', &
+               getElapsedTime(program_timer),ITER)
 
   call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
                                0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                energies%ESPV, densities%RHO2NS, emesh%E2)
 
   !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-  call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST,densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
+  call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
+                          densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
-  call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......',getElapsedTime(program_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......', &
+               getElapsedTime(program_timer),ITER)
 
 end subroutine
 
@@ -367,11 +366,11 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Calculate potentials.
 !>
-!> Output: atomdata, ldau_data, arrays
+!> Output: atomdata, ldau_data
 !> Files written: 'results2'
-subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
-                               shgaunts, program_timer, densities, energies, &
-                               arrays, ldau_data, atomdata)
+subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
+                               program_timer, &
+                               arrays)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -380,6 +379,7 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
 
   use main2_aux_mod
 
+  use CalculationData_mod
   use MadelungCalculator_mod
   use ShapeGauntCoefficients_mod
   use muffin_tin_zero_mod
@@ -402,27 +402,34 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   implicit none
 
   integer, intent(in)                        :: iter
-  type (ShapeGauntCoefficients), intent(in)  :: shgaunts
-  type (MadelungLatticeSum), intent(in)      :: madelung_sum
+  type (CalculationData), intent(inout)      :: calc_data
   type (KKRnanoParallel), intent(in)         :: my_mpi
-  type (BasisAtom), intent(inout)            :: atomdata
-  type (LDAUData), intent(inout)             :: ldau_data
   type (Main2Arrays), intent(in)             :: arrays
   type (DimParams), intent(in)               :: dims
   type (InputParams), intent(in)             :: params
-  type (EnergyResults), intent(inout)        :: energies
-  type (DensityResults), intent(inout)       :: densities
   type (TimerMpi), intent(in)                :: program_timer
 
   ! locals
-  type (RadialMeshData), pointer :: mesh
+  type (ShapeGauntCoefficients), pointer     :: shgaunts     ! const ref
+  type (MadelungLatticeSum), pointer         :: madelung_sum ! const ref
+  type (BasisAtom), pointer                  :: atomdata     ! not const
+  type (LDAUData), pointer                   :: ldau_data    ! not const
+  type (EnergyResults), pointer              :: energies     ! not const
+  type (DensityResults), pointer             :: densities    ! not const
+  type (RadialMeshData), pointer             :: mesh
+
   integer :: I1
   double precision :: VMAD
   integer :: lcoremax
   double precision :: VAV0, VOL0
 
-
-  mesh => atomdata%mesh_ptr
+  shgaunts     => getShapeGaunts(calc_data)
+  madelung_sum => getMadelungSum(calc_data, 1)
+  atomdata     => getAtomData(calc_data, 1)
+  ldau_data    => getLDAUData(calc_data, 1)
+  densities    => getDensities(calc_data, 1)
+  energies     => getEnergies(calc_data, 1)
+  mesh         => atomdata%mesh_ptr
 
   I1 = atomdata%atom_index
   VMAD = 0.0d0
@@ -439,14 +446,19 @@ subroutine calculatePotentials(iter, my_mpi, dims, params, madelung_sum, &
   TESTARRAYLOG(3, atomdata%potential%VONS)
   TESTARRAYLOG(3, densities%RHO2NS)
 
-  call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',getElapsedTime(program_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',&
+               getElapsedTime(program_timer),ITER)
 
   ! output: VONS (changed), VMAD
-  call addMadelungPotential_com(madelung_sum, densities%CMOM, densities%CMINST, arrays%NSPIND, &
-       atomdata%potential%VONS, arrays%ZAT, mesh%R, mesh%IRCUT, mesh%IPAN, VMAD, &
-       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
+  call addMadelungPotential_com(madelung_sum, densities%CMOM, &
+       densities%CMINST, arrays%NSPIND, &
+       atomdata%potential%VONS, arrays%ZAT, mesh%R, &
+       mesh%IRCUT, mesh%IPAN, VMAD, &
+       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), &
+       getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
 
-  call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......',getElapsedTime(program_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......', &
+               getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 
