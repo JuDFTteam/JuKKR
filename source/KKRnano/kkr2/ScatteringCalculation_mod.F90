@@ -23,8 +23,8 @@ CONTAINS
 !>         *) Logfiles (if requested)
 !>         *) JIJ-Files (if requested)
 !>         *) matrix dump (if requested)
-subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
-                      ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
+subroutine energyLoop(iter, calc_data, emesh, params, dims, &
+                      ebalance_handler, my_mpi, arrays)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -37,8 +37,9 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
-  use KKRresults_mod
 
+  use CalculationData_mod
+  use KKRresults_mod
   use GauntCoefficients_mod
   use BasisAtom_mod
   use JijData_mod
@@ -54,19 +55,22 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   implicit none
 
   integer, intent(in) :: iter
+  type (CalculationData), intent(inout) :: calc_data
   type (KKRnanoParallel), intent(in)    :: my_mpi
   type (EBalanceHandler), intent(inout) :: ebalance_handler
-  type (BasisAtom), intent(in)          :: atomdata
   type (EnergyMesh), intent(in)         :: emesh
-  type (LDAUData), intent(inout)        :: ldau_data
-  type (JijData), intent(inout)         :: jij_data
   type (Main2Arrays), intent(in)        :: arrays
-  type (KKRresults), intent(inout)      :: kkr
   type (DimParams), intent(in)          :: dims
   type (InputParams), intent(in)        :: params
-  type (GauntCoefficients), intent(in)  :: gaunts
 
   !---------- locals ----------------------------
+
+  type (BasisAtom), pointer             :: atomdata  ! referenced data does not change
+  type (KKRresults), pointer            :: kkr       ! changes
+  type (GauntCoefficients), pointer     :: gaunts    ! never changes
+  type (LDAUData), pointer              :: ldau_data ! changes
+  type (JijData), pointer               :: jij_data  ! changes
+
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
   type (TimerMpi) :: single_site_timer
@@ -79,6 +83,12 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
   logical :: xccpl
   double complex :: JSCAL ! scaling factor for Jij calculation
   integer :: I1
+
+  gaunts    => getGaunts(calc_data)
+  atomdata  => getAtomData(calc_data, 1)
+  kkr       => getKKR(calc_data, 1)
+  ldau_data => getLDAUData(calc_data, 1)
+  jij_data  => getJijData(calc_data, 1)
 
   xccpl = .false.
 

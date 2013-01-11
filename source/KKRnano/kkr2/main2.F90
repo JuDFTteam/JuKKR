@@ -247,9 +247,10 @@ program MAIN2
                    getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
-      ! output: ebalance_handler, kkr (!), jij_data, ldau_data
-      call energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
-                      ebalance_handler, my_mpi, arrays, kkr, jij_data, ldau_data)
+      ! output: contained as references in calc_data
+      ! ebalance_handler, kkr (!), jij_data, ldau_data
+      call energyLoop(iter, calc_data, emesh, params, dims, &
+                      ebalance_handler, my_mpi, arrays)
 
       call OUTTIME(isMasterRank(my_mpi),'G obtained ..........', &
                    getElapsedTime(program_timer),ITER)
@@ -258,7 +259,9 @@ program MAIN2
 ! BEGIN only processes in master-group are working
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
-        ! output: atomdata, densities, broyden, ldau_data, emesh (only correct for master)
+        ! output: contained as references in calc_data
+        ! atomdata, densities, broyden, ldau_data, emesh
+        ! (only correct for master)
         call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, &
                                params, arrays, gaunts, shgaunts, &
                                madelung_sum, program_timer, &
