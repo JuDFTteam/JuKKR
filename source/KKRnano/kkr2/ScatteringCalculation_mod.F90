@@ -83,12 +83,26 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   logical :: xccpl
   double complex :: JSCAL ! scaling factor for Jij calculation
   integer :: I1
+  integer :: ilocal
+  integer :: num_local_atoms
 
   gaunts    => getGaunts(calc_data)
   atomdata  => getAtomData(calc_data, 1)
   kkr       => getKKR(calc_data, 1)
   ldau_data => getLDAUData(calc_data, 1)
   jij_data  => getJijData(calc_data, 1)
+
+  num_local_atoms = getNumLocalAtoms(calc_data)
+
+  if (params%jij .and. num_local_atoms > 1) then
+    if (isMasterRank(my_mpi)) write(*,*) "Jij and num_local_atoms > 1 not supported."
+    STOP
+  endif
+
+  if (params%ldau .and. num_local_atoms > 1) then
+    if (isMasterRank(my_mpi)) write(*,*) "LDA+U and num_local_atoms > 1 not supported."
+    STOP
+  endif
 
   xccpl = .false.
 
@@ -130,26 +144,38 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
       WRITELOG(2, *) "Working on energy point ", IE
 
-      do RF = 1,params%NREF
-        call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
-                  kkr%TREFLL(1,1,RF),kkr%DTREFLL(1,1,RF), dims%LLY)
-      end do
+!------------------------------------------------------------------------------
+      !!!$omp parallel do private(ilocal, kkr, RF)
+      do ilocal = 1, num_local_atoms  ! not so smart, redundant calculations
+        kkr => getKKR(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
-      TESTARRAYLOG(3, kkr%TREFLL)
-      TESTARRAYLOG(3, kkr%DTREFLL)
+        do RF = 1,params%NREF
+          call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
+                    kkr%TREFLL(1,1,RF),kkr%DTREFLL(1,1,RF), dims%LLY)
+        end do
 
-      call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
-                    gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
-                    gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
-                    kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
-                    kkr%LLY_G0TR(:,IE), &
-                    getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
-                    getNumAtomRanks(my_mpi), &
-                    arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
-                    dims%LLY)
+        TESTARRAYLOG(3, kkr%TREFLL)
+        TESTARRAYLOG(3, kkr%DTREFLL)
 
-      TESTARRAYLOG(3, kkr%GREFN)
-      TESTARRAYLOG(3, kkr%DGREFN)
+
+        call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
+                      gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
+                      gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
+                      kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
+                      kkr%LLY_G0TR(:,IE), &
+                      getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
+                      getNumAtomRanks(my_mpi), &
+                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
+                      dims%LLY)
+
+        TESTARRAYLOG(3, kkr%GREFN)
+        TESTARRAYLOG(3, kkr%DGREFN)
+
+!------------------------------------------------------------------------------
+      end do  ! ilocal
+      !!!$omp end parallel do
+!------------------------------------------------------------------------------
 
 ! SPIN ==================================================================
 !     BEGIN do loop over spins
@@ -166,26 +192,40 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             PRSPIN   = 1
           endif
 
-          call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                          params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
+!------------------------------------------------------------------------------
+          !!!$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1, RF)
+          do ilocal = 1, num_local_atoms
+            kkr => getKKR(calc_data, ilocal)
+            atomdata => getAtomData(calc_data, ilocal)
+            ldau_data => getLDAUData(calc_data, ilocal)
+            jij_data  => getJijData(calc_data, ilocal)
+            I1 = getAtomIndexOfLocal(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
-          jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
+            call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
+                            params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
 
-          if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
-            call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                          params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
-          end if
+            jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
-          RF = arrays%REFPOT(I1)
-          call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,RF), kkr%LMMAXD)
-          ! do the same for derivative of T-matrix
-          call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
+            if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
+              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
+                            params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
+            end if
 
-          ! TMATN now contains Delta t = t - t_ref !!!
-          ! DTDE now contains Delta dt !!!
+            RF = arrays%REFPOT(I1)
+            call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,RF), kkr%LMMAXD)
+            ! do the same for derivative of T-matrix
+            call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
 
-          ! renormalize TR_ALPH
-          kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(arrays%CLS(I1), IE)
+            ! TMATN now contains Delta t = t - t_ref !!!
+            ! DTDE now contains Delta dt !!!
+
+            ! renormalize TR_ALPH
+            kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(arrays%CLS(I1), IE)
+!------------------------------------------------------------------------------
+          end do ! ilocal
+          !!!$omp end parallel do
+!------------------------------------------------------------------------------
 
           NMESH = arrays%KMESH(IE)
 
@@ -204,31 +244,44 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !                     DEBUG_dump_matrix = .false.
 !                  endif
 
-          TESTARRAYLOG(3, kkr%TMATN(:,:,ISPIN))
+!------------------------------------------------------------------------------
+          do ilocal = 1, num_local_atoms  ! no OpenMP
+            kkr => getKKR(calc_data, ilocal)
+            jij_data => getJijData(calc_data, ilocal)
+            I1 = getAtomIndexOfLocal(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
-          call KLOOPZ1( &
-          kkr%GMATN(1,1,1,ISPIN), &
-          params%ALAT,IE,ITER,arrays%NAEZ, &
-          arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-          arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
-          arrays%CLS,arrays%NACLS,arrays%RR, &
-          arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
-          params%NSYMAT,arrays%DSYMLL, &
-          kkr%TMATN(:,:,ISPIN),kkr%DTDE(:,:,ISPIN), &
-          arrays%NUMN0,arrays%INDN0,I1, &
-          kkr%PRSC(1,1,PRSPIN), &
-          EKM,kkr%NOITER, &
-          params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
-          jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
-          kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
-          jij_data%GMATXIJ(1,1,1,ISPIN), &
-          getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-          arrays%iemxd, &
-          arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
-          dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
-          jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
+            TESTARRAYLOG(3, kkr%TMATN(:,:,ISPIN))
 
-          TESTARRAYLOG(3, kkr%GMATN(:,:,IE,ISPIN))
+            ! problem here for num_local_atoms>1: communication of T-matrices
+            ! also: reference Green's functions
+            call KLOOPZ1( &
+            kkr%GMATN(1,1,1,ISPIN), &
+            params%ALAT,IE,ITER,arrays%NAEZ, &
+            arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+            arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
+            arrays%CLS,arrays%NACLS,arrays%RR, &
+            arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
+            params%NSYMAT,arrays%DSYMLL, &
+            kkr%TMATN(:,:,ISPIN),kkr%DTDE(:,:,ISPIN), &
+            arrays%NUMN0,arrays%INDN0,I1, &
+            kkr%PRSC(1,1,PRSPIN), &
+            EKM,kkr%NOITER, &
+            params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
+            jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
+            kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
+            jij_data%GMATXIJ(1,1,1,ISPIN), &
+            getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
+            arrays%iemxd, &
+            arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
+            dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
+            jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
+
+            TESTARRAYLOG(3, kkr%GMATN(:,:,IE,ISPIN))
+
+!------------------------------------------------------------------------------
+          end do ! ilocal
+!------------------------------------------------------------------------------
 
           call stopTimer(mult_scattering_timer)
           call resumeTimer(single_site_timer)
@@ -283,8 +336,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-  call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, &
-                            ebalance_handler%EPROC)
+  do ilocal = 1, num_local_atoms
+    kkr => getKKR(calc_data, ilocal)
+    call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, &
+                              ebalance_handler%EPROC)
+  end do
 !=======================================================================
 
 ! TIME
@@ -330,9 +386,13 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
+      do ilocal = 1, num_local_atoms
+        ! Note: MPI overhead does not increase because number of procs goes down
+        kkr => getKKR(calc_data, ilocal)
         call redistributeInitialGuess_com(my_mpi, kkr%PRSC(:,:,PRSPIN), &
              ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
              arrays%KMESH, arrays%NofKs)
+      end do
 
       endif
     enddo
@@ -340,8 +400,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
-  TESTARRAYLOG(3, kkr%GMATN)
-  TESTARRAYLOG(3, kkr%LLY_GRDT)
+  !TESTARRAYLOG(3, kkr%GMATN)
+  !TESTARRAYLOG(3, kkr%LLY_GRDT)
 
 end subroutine
 

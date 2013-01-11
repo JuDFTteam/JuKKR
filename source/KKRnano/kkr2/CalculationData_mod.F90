@@ -226,6 +226,14 @@ module CalculationData_mod
   end function
 
   !----------------------------------------------------------------------------
+  integer function getAtomIndexOfLocal(calc_data, ilocal)
+    type (CalculationData), intent(in) :: calc_data
+    integer, intent(in) :: ilocal
+
+    getAtomIndexOfLocal = calc_data%atom_ids(ilocal)
+  end function
+
+  !----------------------------------------------------------------------------
   !> Returns reference to atomdata for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getAtomData(calc_data, local_atom_index)
