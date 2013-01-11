@@ -11,8 +11,8 @@ module ProcessKKRresults_mod
 
 CONTAINS
 
-subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, arrays, gaunts, shgaunts, madelung_sum, program_timer, &
-                             densities, broyden, ldau_data)
+subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, &
+                             program_timer)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -23,6 +23,8 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   use EnergyMesh_mod
 
   use MadelungCalculator_mod, only: MadelungLatticeSum
+
+  use CalculationData_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
@@ -49,23 +51,25 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
 
   include 'mpif.h'
 
-  integer, intent(in)           :: iter
-  type (MadelungLatticeSum)     :: madelung_sum
-  type (ShapeGauntCoefficients) :: shgaunts
-  type (GauntCoefficients)      :: gaunts
-  type (KKRnanoParallel)        :: my_mpi
-  type (BasisAtom)              :: atomdata
-  type (EnergyMesh)             :: emesh
-  type (LDAUData)               :: ldau_data
-  type (BroydenData)            :: broyden
-  type (Main2Arrays), intent(in):: arrays
-  type (DimParams)              :: dims
-  type (InputParams)            :: params
-  type (KKRresults)             :: kkr
-  type (DensityResults)         :: densities
-  type (TimerMpi)               :: program_timer
+  integer, intent(in)                                  :: iter
+  type (CalculationData), intent(inout)                :: calc_data
+  type (KKRnanoParallel), intent(in)                   :: my_mpi
+  type (EnergyMesh), intent(inout)                     :: emesh
+  type (Main2Arrays), intent(in)                       :: arrays
+  type (DimParams)  , intent(in)                       :: dims
+  type (InputParams), intent(in)                       :: params
+  type (TimerMpi), intent(in)                          :: program_timer
 
   ! locals
+  type (MadelungLatticeSum), pointer                   :: madelung_sum
+  type (ShapeGauntCoefficients), pointer               :: shgaunts
+  type (GauntCoefficients), pointer                    :: gaunts
+  type (BasisAtom) , pointer                           :: atomdata
+  type (LDAUData)  , pointer                           :: ldau_data
+  type (BroydenData), pointer                          :: broyden
+  type (KKRresults) , pointer                          :: kkr
+  type (DensityResults), pointer                       :: densities
+
   type (RadialMeshData), pointer :: mesh
   integer :: I1
   integer :: ierr
@@ -73,6 +77,15 @@ subroutine processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, params, a
   double precision :: RMSAVM ! rms error charge density (contribution of single site)
   logical, external :: testVFORM
   type (EnergyResults) :: energies
+
+  madelung_sum => getMadelungSum(calc_data, 1)
+  shgaunts     => getShapeGaunts(calc_data)
+  gaunts       => getGaunts(calc_data)
+  atomdata     => getAtomData(calc_data, 1)
+  ldau_data    => getLDAUData(calc_data, 1)
+  broyden      => getBroyden(calc_data, 1)
+  kkr          => getKKR(calc_data, 1)
+  densities    => getDensities(calc_data, 1)
 
   mesh => atomdata%mesh_ptr
 

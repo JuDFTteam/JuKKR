@@ -17,20 +17,13 @@ program MAIN2
   use main2_aux_mod
   use EnergyMesh_mod
 
-  use MadelungCalculator_mod
-
-  use GauntCoefficients_mod
-  use ShapeGauntCoefficients_mod
-
   use RadialMeshData_mod
   use BasisAtom_mod
 
-  use JijData_mod
   use LDAUData_mod
 
   use TimerMpi_mod
   use EBalanceHandler_mod
-  use BroydenData_mod
 
   use wrappers_mod, only: rhocore_wrapper
 
@@ -39,8 +32,6 @@ program MAIN2
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
-  use KKRresults_mod
-  use DensityResults_mod
 
   use ScatteringCalculation_mod, only: energyloop
   use ProcessKKRresults_mod
@@ -51,16 +42,10 @@ program MAIN2
 
   type (CalculationData) :: calc_data
 
-  type (MadelungCalculator), pointer :: madelung_calc
-  type (MadelungLatticeSum), pointer :: madelung_sum
-  type (ShapeGauntCoefficients), pointer :: shgaunts
-  type (GauntCoefficients), pointer :: gaunts
-
   !     .. Local Scalars ..
 
   type (TimerMpi) :: program_timer
   type (TimerMpi) :: iteration_timer
-
   type (EBalanceHandler) :: ebalance_handler
 
   integer::ITER
@@ -78,10 +63,6 @@ program MAIN2
   type (RadialMeshData), pointer :: mesh
   type (BasisAtom), pointer      :: atomdata
   type (LDAUData), pointer       :: ldau_data
-  type (JijData), pointer        :: jij_data
-  type (BroydenData), pointer    :: broyden
-  type (KKRresults), pointer     :: kkr
-  type (DensityResults), pointer :: densities
   !----------------------------------------------------------------------------
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
@@ -179,18 +160,9 @@ program MAIN2
     call initLcutoff(arrays%rbasis, arrays%bravais, arrays%lmmaxd, I1)
     WRITELOG(3, *) "lm-array: ", lmarray
 
-    madelung_calc => getMadelungCalculator(calc_data)
-    shgaunts      => getShapeGaunts(calc_data)
-    gaunts        => getGaunts(calc_data)
-
     ! For now only 1 atom per process is supported (1 local atom)
     atomdata      => getAtomData(calc_data, 1)
-    madelung_sum  => getMadelungSum(calc_data, 1)
     ldau_data     => getLDAUData(calc_data, 1)
-    jij_data      => getJijData(calc_data, 1)
-    broyden       => getBroyden(calc_data, 1)
-    kkr           => getKKR(calc_data, 1)
-    densities     => getDensities(calc_data, 1)
     mesh          => atomdata%mesh_ptr
 
 !+++++++++++
@@ -247,7 +219,7 @@ program MAIN2
                    getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
-      ! output: contained as references in calc_data
+      ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
       call energyLoop(iter, calc_data, emesh, params, dims, &
                       ebalance_handler, my_mpi, arrays)
@@ -259,13 +231,12 @@ program MAIN2
 ! BEGIN only processes in master-group are working
 !----------------------------------------------------------------------
       if (isInMasterGroup(my_mpi)) then
-        ! output: contained as references in calc_data
-        ! atomdata, densities, broyden, ldau_data, emesh
-        ! (only correct for master)
-        call processKKRresults(iter, kkr, my_mpi, atomdata, emesh, dims, &
-                               params, arrays, gaunts, shgaunts, &
-                               madelung_sum, program_timer, &
-                               densities, broyden, ldau_data)
+        ! output: (some contained as references in calc_data)
+        ! atomdata, densities, broyden, ldau_data,
+        ! emesh (only correct for master)
+        call processKKRresults(iter, calc_data, my_mpi, emesh, dims, &
+                               params, arrays, program_timer)
+
       endif
 !----------------------------------------------------------------------
 ! END only processes in master-group are working
