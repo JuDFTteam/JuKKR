@@ -269,12 +269,11 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   ldau_data    => getLDAUData(calc_data, 1)
   kkr          => getKKR(calc_data, 1)
   densities    => getDensities(calc_data, 1)
-  energies     => getEnergies(calc_data, 1)
+  energies     => null()
+  mesh         => null()
+  cell         => null()
 
-  mesh         => atomdata%mesh_ptr
-  cell         => atomdata%cell_ptr
-
-  I1 = atomdata%atom_index
+  I1 = 0
 
   if (dims%LLY /= 0 .and. num_local_atoms > 1) then
     if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
@@ -299,10 +298,6 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   DENEF = 0.0D0
   CHRGNT = 0.0D0
 
-  if (params%LDAU) then
-    ldau_data%DMATLDAU = CZERO
-  endif
-
   LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
 !------------------------------------------------------------------------------
@@ -314,6 +309,10 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     kkr       => getKKR(calc_data, ilocal)
     ldau_data => getLDAUData(calc_data, ilocal)
 !------------------------------------------------------------------------------
+
+    if (params%LDAU) then
+      ldau_data%DMATLDAU = CZERO
+    endif
 
     ! has to be done after Lloyd
     ! output: RHO2NS, R2NEF, DEN, ESPV
@@ -367,6 +366,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
       atomdata  => getAtomData(calc_data, ilocal)
       densities => getDensities(calc_data, ilocal)
       I1 = getAtomIndexOfLocal(calc_data, ilocal)
+
       call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
                              atomdata%core%ECORE, I1, emesh%NPOL, &
                              atomdata%core%QC_corecharge)
@@ -405,7 +405,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 !------------------------------------------------------------------------------
 
   emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
-                        ! was calculated
+                        ! was calculated !!!
 
   call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......', &
                getElapsedTime(program_timer),ITER)
@@ -472,33 +472,49 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   double precision :: VMAD
   integer :: lcoremax
   double precision :: VAV0, VOL0
+  double precision :: VAV0_local, VOL0_local
+  double precision :: VBC_new(2)
+  integer :: ilocal
+  integer :: num_local_atoms
+
+  num_local_atoms = getNumLocalAtoms(calc_data)
 
   shgaunts     => getShapeGaunts(calc_data)
   madelung_sum => getMadelungSum(calc_data, 1)
   atomdata     => getAtomData(calc_data, 1)
   ldau_data    => getLDAUData(calc_data, 1)
-  densities    => getDensities(calc_data, 1)
+  densities    => null()
   energies     => getEnergies(calc_data, 1)
   mesh         => atomdata%mesh_ptr
 
-  I1 = atomdata%atom_index
-  VMAD = 0.0d0
-  VAV0 = 0.0d0
-  VOL0 = 0.0d0
-  lcoremax = 0
+  I1 = 0
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
-  !output: VONS
-  call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
 
-  TESTARRAYLOG(3, atomdata%potential%VONS)
-  TESTARRAYLOG(3, densities%RHO2NS)
+!------------------------------------------------------------------------------
+  !!!$omp parallel do private(ilocal, atomdata, densities)
+  do ilocal = 1, num_local_atoms
+    atomdata     => getAtomData(calc_data, ilocal)
+    densities    => getDensities(calc_data, ilocal)
+!------------------------------------------------------------------------------
+
+    !output: VONS
+    call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
+
+    ! note: irregular output with OpenMP
+    TESTARRAYLOG(3, atomdata%potential%VONS)
+    TESTARRAYLOG(3, densities%RHO2NS)
+
+!------------------------------------------------------------------------------
+  end do ! ilocal
+!------------------------------------------------------------------------------
 
   call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',&
                getElapsedTime(program_timer),ITER)
 
+  ! TODO: This does NOT work with num_local_atoms>1
   ! output: VONS (changed), VMAD
   call addMadelungPotential_com(madelung_sum, densities%CMOM, &
        densities%CMINST, arrays%NSPIND, &
@@ -529,70 +545,118 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
-  if (params%KTE==1) then
-    ! calculate total energy and individual contributions if requested
-    ! core electron contribution
-    call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
-    ! output: EPOTIN
-    call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
-    ! output: ECOU - l resolved Coulomb energy
-    call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, shgaunts, atomdata)
 
-    call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
-  end if
+  VAV0 = 0.0d0
+  VOL0 = 0.0d0
 
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+  if (params%KTE >= 0) call openResults2File(dims%LRECRES2)
 
-! =====================================================================
-  ! output: VONS (changed), EXC (exchange energy) (l-resolved)
-  call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, shgaunts, atomdata)
+!------------------------------------------------------------------------------
+  !!!$omp parallel do reduction(+: VAV0, VOL0) &
+  !!!$omp private(ilocal, atomdata, densities, energies, ldau_data, I1, VMAD, lcoremax, VAV0_local, VOL0_local)
+  do ilocal = 1, num_local_atoms
+    atomdata     => getAtomData(calc_data, ilocal)
+    densities    => getDensities(calc_data, ilocal)
+    energies     => getEnergies(calc_data, ilocal)
+    ldau_data    => getLDAUData(calc_data, ilocal)
+    I1 = getAtomIndexOfLocal(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
-  call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
-! =====================================================================
+    VMAD = 0.0d0
+    lcoremax = 0
+    if (params%KTE==1) then
+      ! calculate total energy and individual contributions if requested
+      ! core electron contribution
+      call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
+      ! output: EPOTIN
+      call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
+      ! output: ECOU - l resolved Coulomb energy
+      call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, shgaunts, atomdata)
 
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
+      !call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
+    end if
 
-! Force calculation continues here
+  ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
-!            if (KFORCE==1.and.ITER==SCFSTEPS) then
-! ---------------------------------------------------------------------
-!              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-!              ALAT,DRDI,IMT,ZAT, &
-!              getMyAtomRank(my_mpi), &
-!              getMySEcommunicator(my_mpi), &
-!              naez, irmd)
-! ---------------------------------------------------------------------
-!            end if
+  ! =====================================================================
 
-  ! unnecessary I/O? see results.f
-  if (params%KTE >= 0) then
-    call openResults2File(dims%LRECRES2)
-    call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
-                           energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
-                           energies%EXC, I1, LCOREMAX, VMAD)
-    call closeResults2File()
-  end if
+    ! TODO: OpenMP critical !!! VXCDRV is most likely not threadsafe!
+    ! output: VONS (changed), EXC (exchange energy) (l-resolved)
 
-  ! calculate new muffin-tin zero. output: VAV0, VOL0
-  call MTZERO_wrapper(VAV0, VOL0, atomdata)
+    !!!$omp critical
+    call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, shgaunts, atomdata)
+    !!!$omp end critical
 
-  call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
+    !call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
+  ! =====================================================================
+
+  ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
+
+  ! Force calculation continues here
+
+  !            if (KFORCE==1.and.ITER==SCFSTEPS) then
+  ! ---------------------------------------------------------------------
+  !              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
+  !              ALAT,DRDI,IMT,ZAT, &
+  !              getMyAtomRank(my_mpi), &
+  !              getMySEcommunicator(my_mpi), &
+  !              naez, irmd)
+  ! ---------------------------------------------------------------------
+  !            end if
+
+    ! unnecessary I/O? see results.f
+    if (params%KTE >= 0) then
+      ! OpenMP critical ???
+      call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
+                             energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
+                             energies%EXC, I1, LCOREMAX, VMAD)
+    end if
+
+    ! calculate new muffin-tin zero. output: VAV0, VOL0
+    VAV0_local = 0.0d0
+    VOL0_local = 0.0d0
+    call MTZERO_wrapper(VAV0_local, VOL0_local, atomdata)
+    VAV0 = VAV0 + VAV0_local
+    VOL0 = VOL0 + VOL0_local
+
+!------------------------------------------------------------------------------
+  end do ! ilocal
+  !!!$omp end parallel do
+!------------------------------------------------------------------------------
+
+  if (params%KTE >= 0) call closeResults2File()
+
+  !call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'before CONVOL.....',getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-  call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, energies%VBC, VOL0)
+  call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC_new, VOL0)
 
   if(isMasterRank(my_mpi)) then
-    call printMuffinTinShift(VAV0, energies%VBC, VOL0)
+    call printMuffinTinShift(VAV0, VBC_new, VOL0)
   end if
+
+!------------------------------------------------------------------------------
+  !!!$omp parallel do private(ilocal, atomdata, energies)
+  do ilocal = 1, num_local_atoms
+    atomdata     => getAtomData(calc_data, ilocal)
+    energies    => getEnergies(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
 ! -->   shift potential to muffin tin zero and
 !       convolute potential with shape function for next iteration
 
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
-  call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
+    energies%VBC = VBC_new
+    call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
+
+!------------------------------------------------------------------------------
+  end do
+  !!!$omp end parallel do
+!------------------------------------------------------------------------------
 
 ! LDAU
   ldau_data%EULDAU = 0.0D0
