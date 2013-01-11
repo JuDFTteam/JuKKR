@@ -69,6 +69,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   type (BroydenData), pointer                          :: broyden
   type (KKRresults) , pointer                          :: kkr
   type (DensityResults), pointer                       :: densities
+  type (EnergyResults), pointer                        :: energies
 
   type (RadialMeshData), pointer :: mesh
   integer :: I1
@@ -76,7 +77,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   double precision :: RMSAVQ ! rms error magnetisation dens. (contribution of single site)
   double precision :: RMSAVM ! rms error charge density (contribution of single site)
   logical, external :: testVFORM
-  type (EnergyResults) :: energies
 
   madelung_sum => getMadelungSum(calc_data, 1)
   shgaunts     => getShapeGaunts(calc_data)
@@ -86,12 +86,11 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   broyden      => getBroyden(calc_data, 1)
   kkr          => getKKR(calc_data, 1)
   densities    => getDensities(calc_data, 1)
+  energies     => getEnergies(calc_data, 1)
 
   mesh => atomdata%mesh_ptr
 
   I1 = atomdata%atom_index
-
-  call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 
   ! kkr
   !  |
@@ -202,9 +201,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
 ! -----------------------------------------------------------------
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
-
-  ! energies have been already written/printed - dispose
-  call destroyEnergyResults(energies)
 
 end subroutine
 
