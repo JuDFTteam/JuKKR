@@ -183,7 +183,7 @@ rank, irmd, irnsd) !  new input parameters after inc.p removal
   ! simplified: E.R.
   ! ......................................................................
 
-  I1 = rank + 1
+  I1 = rank
 
       D1 = mod(I1,10)
       D10 = int( (mod(I1,100) + 0.5)/10 )
