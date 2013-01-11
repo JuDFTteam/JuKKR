@@ -61,9 +61,17 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   type (RadialMeshData), pointer :: mesh
   integer :: I1
   integer :: ierr
-  double precision :: RMSAVQ ! rms error magnetisation dens. (contribution of single site)
-  double precision :: RMSAVM ! rms error charge density (contribution of single site)
+  double precision :: RMSAVQ ! rms error charge dens. (contribution of all local sites)
+  double precision :: RMSAVM ! rms error mag. density (contribution of all local sites)
+  double precision :: RMSAVQ_single
+  double precision :: RMSAVM_single
+  integer :: ilocal
+  integer :: num_local_atoms
+  logical :: doVFORM
+
   logical, external :: testVFORM
+
+  num_local_atoms = getNumLocalAtoms(calc_data)
 
   atomdata     => getAtomData(calc_data, 1)
   broyden      => getBroyden(calc_data, 1)
@@ -91,7 +99,19 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! atomdata, energies
 
 ! -->   calculation of RMS and final construction of the potentials (straight mixing)
-  call MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, params%MIXING, params%FCM)
+  RMSAVQ = 0.0d0
+  RMSAVM = 0.0d0
+
+  !!!$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
+  do ilocal = 1, num_local_atoms
+    atomdata => getAtomData(calc_data, ilocal)
+
+    call MIXSTR_wrapper(atomdata, RMSAVQ_single, RMSAVM_single, params%MIXING, params%FCM)
+
+    RMSAVQ = RMSAVQ + RMSAVQ_single
+    RMSAVM = RMSAVM + RMSAVM_single
+  end do
+  !!!$omp end do
 
   ! output of RMS error
   call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
@@ -100,6 +120,12 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! it is weird that straight mixing is called in any case before
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
   if (params%IMIX>=3) then
+
+    if (num_local_atoms > 1) then
+      if (isMasterRank(my_mpi)) write(*,*) "Broyden mixing and num_local_atoms > 1 not supported."
+      STOP
+    end if
+
     call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS, &
     atomdata%potential%VINS, &
     atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
@@ -112,33 +138,45 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     atomdata%potential%nspin)
   endif
 
-  TESTARRAYLOG(3, atomdata%potential%VINS)
-  TESTARRAYLOG(3, atomdata%potential%VISP)
-  TESTARRAYLOG(3, atomdata%potential%VONS)
-
-!----------------------------------------------------------------------
-! -->    reset to start new iteration
-! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  call resetPotentials(mesh%IRC, mesh%IRMD, mesh%IRMIN, &
-                       atomdata%potential%IRMIND, atomdata%potential%LMPOT, &
-                       atomdata%potential%NSPIN, atomdata%potential%VINS, &
-                       atomdata%potential%VISP, atomdata%potential%VONS)
-
-! ----------------------------------------------------- output_potential
   call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
-  call writeBasisAtomPotentialDA(atomdata, 37, I1)
-  call closeBasisAtomPotentialDAFile(37)
-! ----------------------------------------------------- output_potential
+  doVFORM = .false.
+  if (ITER == params%SCFSTEPS .and. params%KTE >= 0) doVFORM = testVFORM()
 
-! write formatted potential if file VFORM exists - contains bad inquire
-! - bad check deactivated when KTE<0
-  if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
-    if (testVFORM()) then
-      call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, &
-                                   params%KXC, atomdata)
+  do ilocal = 1, num_local_atoms ! no OpenMP
+    atomdata => getAtomData(calc_data, ilocal)
+    energies => getEnergies(calc_data, ilocal)
+    mesh => atomdata%mesh_ptr
+    I1 = getAtomIndexOfLocal(calc_data, ilocal)
+
+    TESTARRAYLOG(3, atomdata%potential%VINS)
+    TESTARRAYLOG(3, atomdata%potential%VISP)
+    TESTARRAYLOG(3, atomdata%potential%VONS)
+
+  !----------------------------------------------------------------------
+  ! -->    reset to start new iteration
+  ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    call resetPotentials(mesh%IRC, mesh%IRMD, mesh%IRMIN, &
+                         atomdata%potential%IRMIND, atomdata%potential%LMPOT, &
+                         atomdata%potential%NSPIN, atomdata%potential%VINS, &
+                         atomdata%potential%VISP, atomdata%potential%VONS)
+
+  ! ----------------------------------------------------- output_potential
+    call writeBasisAtomPotentialDA(atomdata, 37, I1)
+  ! ----------------------------------------------------- output_potential
+
+  ! write formatted potential if file VFORM exists - contains bad inquire
+  ! - bad check deactivated when KTE<0
+    if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
+      if (doVFORM) then
+        call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, &
+                                     params%KXC, atomdata)
+      endif
     endif
-  endif
+
+  end do ! ilocal
+
+  call closeBasisAtomPotentialDAFile(37)
 
   call OUTTIME(isMasterRank(my_mpi),'potential written .. ', &
                getElapsedTime(program_timer), iter)
