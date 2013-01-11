@@ -257,6 +257,11 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   integer :: I1
   double precision :: denEf !< charge density at Fermi level
   double precision :: chrgNt !< charge neutrality
+  double precision :: new_fermi
+  integer :: ilocal
+  integer :: num_local_atoms
+
+  num_local_atoms = getNumLocalAtoms(calc_data)
 
   shgaunts     => getShapeGaunts(calc_data)
   gaunts       => getGaunts(calc_data)
@@ -271,8 +276,10 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   I1 = atomdata%atom_index
 
-  densities%CMOM   = 0.0D0
-  densities%CMINST = 0.0D0
+  if (dims%LLY /= 0 .and. num_local_atoms > 1) then
+    if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
+    STOP
+  endif
 
   ! out: emesh, RNORM
   call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
@@ -289,7 +296,6 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   ! now WEZRN stores the weights for E-integration
 
-  densities%DEN = CZERO
   DENEF = 0.0D0
   CHRGNT = 0.0D0
 
@@ -299,63 +305,107 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
-  ! has to be done after Lloyd
-  ! output: RHO2NS, R2NEF, DEN, ESPV
-  call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
-                      densities%RHO2NS, densities%R2NEF, &
-                      densities%DEN, energies%ESPV, kkr%GMATN, &
-                      gaunts, emesh, ldau_data)
+!------------------------------------------------------------------------------
+  !!!$omp parallel do reduction(+: chrgnt, denef) private(ilocal, atomdata, densities, energies, kkr, ldau_data)
+  do ilocal = 1, num_local_atoms
+    atomdata  => getAtomData(calc_data, ilocal)
+    densities => getDensities(calc_data, ilocal)
+    energies  => getEnergies(calc_data, ilocal)
+    kkr       => getKKR(calc_data, ilocal)
+    ldau_data => getLDAUData(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
-! ----------------------------------------------------------------------
-! -->   determine total charge expanded in spherical harmonics
-! -------------------------------------------------------------- density
-  ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
-  call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
+    ! has to be done after Lloyd
+    ! output: RHO2NS, R2NEF, DEN, ESPV
+    densities%DEN = CZERO
+    call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
+                        densities%RHO2NS, densities%R2NEF, &
+                        densities%DEN, energies%ESPV, kkr%GMATN, &
+                        gaunts, emesh, ldau_data)
 
-  CHRGNT = CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
+  ! ----------------------------------------------------------------------
+  ! -->   determine total charge expanded in spherical harmonics
+  ! -------------------------------------------------------------- density
+    ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
+    call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
 
-  if (dims%LLY == 1) then
-    call renormalizeDOS(densities%DEN,densities%RNORM, &
-                        densities%LMAXD+1,densities%IEMXD, &
-                        arrays%NSPIND,densities%IEMXD)
-  end if
+    CHRGNT = CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
 
-  ! calculate DOS at Fermi level
-  DENEF = DENEF + calcDOSatFermi(densities%DEN, params%IELAST, &
-                                 densities%IEMXD, densities%LMAXD+1, &
-                                 densities%NSPIND)
+    if (dims%LLY == 1) then
+      call renormalizeDOS(densities%DEN,densities%RNORM, &
+                          densities%LMAXD+1,densities%IEMXD, &
+                          arrays%NSPIND,densities%IEMXD)
+    end if
 
-  ! ---> l/m_s/atom-resolved charges, output -> CHARGE
-  ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
-  ! CHARGE -> written to result file
-  call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, &
-                       densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
-                       densities%IEMXD)
+    ! calculate DOS at Fermi level
+    DENEF = DENEF + calcDOSatFermi(densities%DEN, params%IELAST, &
+                                   densities%IEMXD, densities%LMAXD+1, &
+                                   densities%NSPIND)
+
+    ! ---> l/m_s/atom-resolved charges, output -> CHARGE
+    ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
+    ! CHARGE -> written to result file
+    call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, &
+                         densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
+                         densities%IEMXD)
+
+!------------------------------------------------------------------------------
+  end do ! ilocal
+  !!!$omp end parallel do
+!------------------------------------------------------------------------------
+
 
   call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
-  densities%total_charge_neutrality = CHRGNT
 
   ! write to 'results1' - only to be read in in results.f
   ! necessary for density of states calculation, otherwise
   ! only for informative reasons
   if (params%KTE >= 0) then
     call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
-    call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
-                           atomdata%core%ECORE, I1, emesh%NPOL, &
-                           atomdata%core%QC_corecharge)
+
+    do ilocal = 1, num_local_atoms
+      atomdata  => getAtomData(calc_data, ilocal)
+      densities => getDensities(calc_data, ilocal)
+      I1 = getAtomIndexOfLocal(calc_data, ilocal)
+      call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
+                             atomdata%core%ECORE, I1, emesh%NPOL, &
+                             atomdata%core%QC_corecharge)
+    end do
+
     call closeResults1File()
   endif
 
   call OUTTIME(isMasterRank(my_mpi),'density calculated ..', &
                getElapsedTime(program_timer),ITER)
 
-  call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
-                               0.03d0, CHRGNT, DENEF, densities%R2NEF, &
-                               energies%ESPV, densities%RHO2NS, emesh%E2)
+!------------------------------------------------------------------------------
+  !!!$omp parallel do private(ilocal, atomdata, densities, mesh, cell, new_fermi)
+  do ilocal = 1, num_local_atoms
+    atomdata  => getAtomData(calc_data, ilocal)
+    densities => getDensities(calc_data, ilocal)
+    mesh         => atomdata%mesh_ptr
+    cell         => atomdata%cell_ptr
+!------------------------------------------------------------------------------
+    densities%total_charge_neutrality = CHRGNT
 
-  !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-  call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
-                          densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
+    new_fermi = emesh%E2
+    call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
+                                 0.03d0, CHRGNT, DENEF, densities%R2NEF, &
+                                 energies%ESPV, densities%RHO2NS, new_fermi)
+
+    !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
+    densities%CMOM   = 0.0D0
+    densities%CMINST = 0.0D0
+    call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
+                            densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
+
+!------------------------------------------------------------------------------
+  end do ! ilocal
+  !!!$omp end parallel do
+!------------------------------------------------------------------------------
+
+  emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
+                        ! was calculated
 
   call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......', &
                getElapsedTime(program_timer),ITER)

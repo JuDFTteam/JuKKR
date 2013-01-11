@@ -88,7 +88,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   gaunts    => getGaunts(calc_data)
   atomdata  => getAtomData(calc_data, 1)
-  kkr       => getKKR(calc_data, 1)
+  I1 = atomdata%atom_index
+  kkr       => null()
   ldau_data => getLDAUData(calc_data, 1)
   jij_data  => getJijData(calc_data, 1)
 
@@ -111,11 +112,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   call resetTimer(single_site_timer)
 
-  I1 = atomdata%atom_index
-
   EKM = 0
   prspin = 1
-  kkr%noiter = 0
 
   ! calculate exchange couplings only at last self-consistency step and when Jij=true
   if ((ITER==params%SCFSTEPS).and.params%JIJ) XCCPL = .true.
@@ -149,6 +147,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
       do ilocal = 1, num_local_atoms  ! not so smart, redundant calculations
         kkr => getKKR(calc_data, ilocal)
 !------------------------------------------------------------------------------
+        kkr%noiter = 0
 
         do RF = 1,params%NREF
           call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
@@ -387,8 +386,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
       do ilocal = 1, num_local_atoms
-        ! Note: MPI overhead does not increase because number of procs goes down
         kkr => getKKR(calc_data, ilocal)
+        ! Note: MPI overhead does not increase because number of procs goes down
         call redistributeInitialGuess_com(my_mpi, kkr%PRSC(:,:,PRSPIN), &
              ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
              arrays%KMESH, arrays%NofKs)
