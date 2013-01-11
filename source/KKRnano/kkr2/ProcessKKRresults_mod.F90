@@ -150,9 +150,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   call closeBasisAtomPotentialDAFile(37)
 ! ----------------------------------------------------- output_potential
 
-  call OUTTIME(isMasterRank(my_mpi),'potential written .. ', &
-               getElapsedTime(program_timer), iter)
-
 ! write formatted potential if file VFORM exists - contains bad inquire
 ! - bad check deactivated when KTE<0
   if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
@@ -160,6 +157,9 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
       call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, params%KXC, atomdata)
     endif
   endif
+
+  call OUTTIME(isMasterRank(my_mpi),'potential written .. ', &
+               getElapsedTime(program_timer), iter)
 
 ! Wait here in order to guarantee regular and non-errorneous output
 ! in RESULTS

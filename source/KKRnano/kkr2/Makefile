@@ -249,4 +249,5 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
          EBalanceHandler_mod.o TEST_lcutoff_mod.o \
          RadialMeshData_mod.o CellData_mod.o wrappers_mod.o BasisAtom_mod.o LDAUData_mod.o \
          JijData_mod.o BroydenData_mod.o Main2Arrays_mod.o DimParams_mod.o InputParams_mod.o \
-         ScatteringCalculation_mod.o KKRresults_mod.o DensityResults_mod.o ProcessKKRresults_mod.o
+         ScatteringCalculation_mod.o KKRresults_mod.o DensityResults_mod.o ProcessKKRresults_mod.o \
+         EnergyResults_mod.o

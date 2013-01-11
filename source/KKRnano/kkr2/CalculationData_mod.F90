@@ -15,6 +15,7 @@ module CalculationData_mod
   use JijData_mod
   use LDAUData_mod
   use BroydenData_mod
+  use EnergyResults_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
@@ -38,6 +39,7 @@ module CalculationData_mod
     type (BasisAtom), pointer          :: atomdata_array(:)     => null()
     type (KKRresults), pointer         :: kkr_array(:)          => null()
     type (DensityResults), pointer     :: densities_array(:)    => null()
+    type (EnergyResults), pointer      :: energies_array(:)     => null()
     type (MadelungLatticeSum), pointer :: madelung_sum_array(:) => null()
 
     type (LDAUData), pointer           :: ldau_data_array(:)    => null()
@@ -87,6 +89,7 @@ module CalculationData_mod
     allocate(calc_data%atomdata_array(num_local_atoms))
     allocate(calc_data%kkr_array(num_local_atoms))
     allocate(calc_data%densities_array(num_local_atoms))
+    allocate(calc_data%energies_array(num_local_atoms))
     allocate(calc_data%madelung_sum_array(num_local_atoms))
 
     allocate(calc_data%ldau_data_array(num_local_atoms))
@@ -155,6 +158,7 @@ module CalculationData_mod
     integer :: I1
     type (KKRresults), pointer :: kkr
     type (DensityResults), pointer :: densities
+    type (EnergyResults), pointer :: energies
     type (BasisAtom), pointer :: atomdata
     type (CellData), pointer :: cell
     type (RadialMeshData), pointer :: mesh
@@ -179,6 +183,7 @@ module CalculationData_mod
       jij_data  => calc_data%jij_data_array(ilocal)
       broyden   => calc_data%broyden_array(ilocal)
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
+      energies  => calc_data%energies_array(ilocal)
 
       call destroyMadelungLatticeSum(madelung_sum)
 
@@ -191,6 +196,7 @@ module CalculationData_mod
       call destroyJijData(jij_data)
       call destroyDensityResults(densities)
       call destroyKKRresults(kkr)
+      call destroyEnergyResults(energies)
 
     end do
 
@@ -203,6 +209,7 @@ module CalculationData_mod
     deallocate(calc_data%atomdata_array)
     deallocate(calc_data%kkr_array)
     deallocate(calc_data%densities_array)
+    deallocate(calc_data%energies_array)
     deallocate(calc_data%madelung_sum_array)
 
     deallocate(calc_data%ldau_data_array)
@@ -281,6 +288,19 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getDensities => calc_data%densities_array(local_atom_index)
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Returns reference to energy results for atom with LOCAL atom index
+  !> 'local_atom_index'.
+  function getEnergies(calc_data, local_atom_index)
+    implicit none
+    type (EnergyResults), pointer :: getEnergies ! return value
+
+    type (CalculationData), intent(in) :: calc_data
+    integer, intent(in) :: local_atom_index
+
+    getEnergies => calc_data%energies_array(local_atom_index)
   end function
 
   !----------------------------------------------------------------------------
@@ -377,6 +397,7 @@ module CalculationData_mod
     integer :: ilocal
     type (KKRresults), pointer :: kkr
     type (DensityResults), pointer :: densities
+    type (EnergyResults), pointer :: energies
     type (BasisAtom), pointer :: atomdata
     type (CellData), pointer :: cell
     type (RadialMeshData), pointer :: mesh
@@ -402,9 +423,11 @@ module CalculationData_mod
       jij_data  => calc_data%jij_data_array(ilocal)
       broyden   => calc_data%broyden_array(ilocal)
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
+      energies  => calc_data%energies_array(ilocal)
 
       call createKKRresults(kkr, dims)
       call createDensityResults(densities, dims)
+      call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 
       call createBasisAtom(atomdata, I1, dims%lpot, &
                            dims%nspind, dims%irmind, dims%irmd)
