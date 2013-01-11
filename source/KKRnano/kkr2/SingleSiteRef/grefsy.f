@@ -24,8 +24,8 @@ C
 C>    \endverbatim
 C
 C> @param   NACLSD    MAXIMAL number of cluster atoms
-C>    commented by E. Rabel, Nov 2011
-C>    @author: ???
+C>
+C>    @author: ???, commented by E. Rabel, Nov 2011
 
 C ************************************************************************
       SUBROUTINE GREFSY(GTMAT,GMAT,IPVT,NDIM,DGTDE,
@@ -47,13 +47,8 @@ C     Lloyd's formula switch 0 (inactive)/ 1 (active)
       DOUBLE COMPLEX CZERO
       PARAMETER (CZERO= (0.D0,0.D0))
 
-C     ..
-C     ..
 C     .. EXTERNAL SUBROUTINES ..
       EXTERNAL ZGETRF,ZGETRS
-C     ..
-C     .. SAVE STATEMENT ..
-      SAVE
 C     ..
 C     .. SCALAR ARGUMENTS ..
       INTEGER NDIM
@@ -61,18 +56,10 @@ C     .. SCALAR ARGUMENTS ..
 C     ..
 C     .. ARRAY ARGUMENTS ..
 
-C     DOUBLE COMPLEX GMAT(NGD,LMGF0D),GTMAT(NGD,NGD),
-C    +               DGTDE(LLYNGD,LMGF0D)
-C     NGD = LMMAXD*NACLSD
-C     LLYNGD=LLY*(NGD-1)+1
-C     LLYNGD=LLY*(NACLSD*((LMAX+1)**2)-1)+1
-
       DOUBLE COMPLEX GMAT (LMMAXD*NACLSD,LMMAXD)
       DOUBLE COMPLEX GTMAT(LMMAXD*NACLSD,LMMAXD*NACLSD)
       DOUBLE COMPLEX DGTDE(LLY*(LMMAXD*NACLSD-1)+1,LMMAXD)
 
-C     ..
-C
 C     .. LOCAL ARRAYS ..
       INTEGER IPVT(LMMAXD*NACLSD)
 
