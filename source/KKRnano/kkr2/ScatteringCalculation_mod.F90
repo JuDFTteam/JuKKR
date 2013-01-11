@@ -130,8 +130,7 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
       call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
                     gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
-                    gaunts%LOFLM,arrays%NACLS, &
-                    arrays%REFPOT, &
+                    gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
                     kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                     kkr%LLY_G0TR(:,IE), &
                     getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
@@ -274,7 +273,8 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
 
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-  call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
+  call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, &
+                            ebalance_handler%EPROC)
 !=======================================================================
 
 ! TIME
@@ -321,7 +321,8 @@ subroutine energyLoop(iter, atomdata, emesh, params, dims, gaunts, &
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
         call redistributeInitialGuess_com(my_mpi, kkr%PRSC(:,:,PRSPIN), &
-             ebalance_handler%EPROC, ebalance_handler%EPROC_old, arrays%KMESH, arrays%NofKs)
+             ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
+             arrays%KMESH, arrays%NofKs)
 
       endif
     enddo

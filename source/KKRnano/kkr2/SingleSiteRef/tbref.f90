@@ -245,11 +245,14 @@ INCLUDE 'mpif.h'
     ! note that the parallelization of this routine is only active if there
     ! are more than four non-identical reference clusteres
 
+    ! TODO: Always parallel?
+
     if (MYLRANK .eq. &
     MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1).or.NCLS.lt.5) then
 
       I1 = 1
       IC = 0
+      ! find atom index corresponding to cluster index
       do while (IC.eq.0 .and. I1.le.NAEZ)
         if (CLS(I1).eq.ICLS) IC = I1
         I1 = I1 + 1
@@ -272,7 +275,7 @@ INCLUDE 'mpif.h'
         enddo
       enddo
 
-    endif
+    endif   ! if (MYLRANK .eq. ...
 
   !=====================================================================
   end do

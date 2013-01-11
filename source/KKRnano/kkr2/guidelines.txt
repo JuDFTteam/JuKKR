@@ -27,7 +27,7 @@ Concerning datastructures:
    In this case also a routine named 'destroy<Name of Datastructure>'
    has to exists which must be called after usage of the structure to free resources (e.g. memory)
    
-*) The create* routines usually aquire only the needed storage. Sometimes an additional initialisation
+*) The create* routines usually acquire only the needed storage. Sometimes an additional initialisation
    routine has to be called after creation. Those are named 'init<Name of Datastructure>'.
    Actual calculations usually take place in routines named 'calculate<Name of Datastructure>'.
    Sometimes code that could be found in init* or calculate* routines is already bundled in the
