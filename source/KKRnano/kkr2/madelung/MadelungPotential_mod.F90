@@ -9,8 +9,8 @@ CONTAINS
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
-  subroutine addMadelungPotential_com(calc_data, ZAT, rank, atoms_per_proc, &
-                                      communicator, comm_size)
+  subroutine addMadelungPotentialnew_com(calc_data, ZAT, rank, atoms_per_proc, &
+                                      communicator)
 
     use CalculationData_mod
     use MadelungCalculator_mod
@@ -23,7 +23,6 @@ CONTAINS
     integer, intent(in) :: rank
     integer, intent(in) :: atoms_per_proc
     integer, intent(in) :: communicator
-    integer, intent(in) :: comm_size
     !------------------------------------
 
     type (MadelungCalculator), pointer :: madelung_calc
@@ -38,7 +37,7 @@ CONTAINS
          madelung_calc%LMXSPD,madelung_calc%clebsch%NCLEBD,madelung_calc%clebsch%LOFLM, &
          madelung_calc%DFAC, &
          rank, atoms_per_proc, &
-         communicator,comm_size)
+         communicator)
 
   !      SUBROUTINE VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIN,NAEZ,
   !     &                     VONS,ZAT,R,
@@ -56,7 +55,7 @@ CONTAINS
   LMPOT,CLEB,ICLEB,IEND, &
   LMXSPD,NCLEBD,LOFLM,DFAC, &
   MYLRANK, atoms_per_proc, &
-  communicator,comm_size)
+  communicator)
     ! **********************************************************************
     !
     !     calculate the madelung potentials and add these to the poten-
@@ -123,7 +122,7 @@ CONTAINS
     !----- MPI ---------------------------------------------------------------
     integer IERR
     !     .. L-MPI
-    integer MYLRANK, communicator, comm_size
+    integer MYLRANK, communicator
     integer, intent(in) :: atoms_per_proc
 
     integer :: num_local_atoms
@@ -218,7 +217,7 @@ CONTAINS
     double precision, intent(in)    :: AC(:)
     integer, intent(in) :: LPOT
     double precision, intent(in) :: R(:)
-    integer, intent(in) :: IRCUT(:)
+    integer, intent(in) :: IRCUT(0:)
     integer, intent(in) :: IPAN
     integer, intent(in) :: NSPIN
 
@@ -277,7 +276,7 @@ CONTAINS
 
     double precision, intent(in) :: CLEB(:)
     integer, intent(in) :: IEND
-    double precision, intent(in) :: DFAC(:,:)
+    double precision, intent(in) :: DFAC(0:,0:)
     integer, intent(in) :: ICLEB(:,:)
     integer, intent(in) :: LOFLM(:)
 

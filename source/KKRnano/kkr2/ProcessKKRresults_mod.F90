@@ -474,11 +474,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   use main2_aux_mod
 
   use CalculationData_mod
-  use MadelungCalculator_mod
+  use MadelungPotential_mod
   use ShapeGauntCoefficients_mod
   use muffin_tin_zero_mod
 
-  use RadialMeshData_mod
   use BasisAtom_mod
 
   use LDAUData_mod
@@ -505,12 +504,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   ! locals
   type (ShapeGauntCoefficients), pointer     :: shgaunts     ! const ref
-  type (MadelungLatticeSum), pointer         :: madelung_sum ! const ref
   type (BasisAtom), pointer                  :: atomdata     ! not const
   type (LDAUData), pointer                   :: ldau_data    ! not const
   type (EnergyResults), pointer              :: energies     ! not const
   type (DensityResults), pointer             :: densities    ! not const
-  type (RadialMeshData), pointer             :: mesh
 
   integer :: I1
   double precision :: VMAD
@@ -524,12 +521,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   num_local_atoms = getNumLocalAtoms(calc_data)
 
   shgaunts     => getShapeGaunts(calc_data)
-  madelung_sum => getMadelungSum(calc_data, 1)
   atomdata     => getAtomData(calc_data, 1)
   ldau_data    => getLDAUData(calc_data, 1)
   densities    => null()
   energies     => getEnergies(calc_data, 1)
-  mesh         => atomdata%mesh_ptr
 
   I1 = 0
 
@@ -558,14 +553,18 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',&
                getElapsedTime(program_timer),ITER)
 
-  ! TODO: This does NOT work with num_local_atoms>1
   ! output: VONS (changed), VMAD
-  call addMadelungPotential_com(madelung_sum, densities%CMOM, &
-       densities%CMINST, arrays%NSPIND, &
-       atomdata%potential%VONS, arrays%ZAT, mesh%R, &
-       mesh%IRCUT, mesh%IPAN, VMAD, &
-       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), &
-       getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
+!  call addMadelungPotential_com(madelung_sum, densities%CMOM, &
+!       densities%CMINST, arrays%NSPIND, &
+!       atomdata%potential%VONS, arrays%ZAT, mesh%R, &
+!       mesh%IRCUT, mesh%IPAN, VMAD, &
+!       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), &
+!       getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
+
+  ! operation on all atoms! O(N**2)
+  call addMadelungPotentialnew_com(calc_data, arrays%ZAT, getMyAtomRank(my_mpi), &
+                                dims%atoms_per_proc, &
+                                getMySEcommunicator(my_mpi))
 
   call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......', &
                getElapsedTime(program_timer),ITER)
