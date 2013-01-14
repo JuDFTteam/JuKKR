@@ -102,6 +102,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   RMSAVQ = 0.0d0
   RMSAVM = 0.0d0
 
+  ! straight/simple mixing
   !!!$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
   do ilocal = 1, num_local_atoms
     atomdata => getAtomData(calc_data, ilocal)
@@ -138,7 +139,11 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     atomdata%potential%nspin)
   endif
 
+  ! use any atomdata to open file - they are of the same size
   call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
+
+  ! write formatted potential if file VFORM exists - contains bad inquire
+  ! - bad check deactivated when KTE<0
   doVFORM = .false.
   if (ITER == params%SCFSTEPS .and. params%KTE >= 0) doVFORM = testVFORM()
 
@@ -165,8 +170,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     call writeBasisAtomPotentialDA(atomdata, 37, I1)
   ! ----------------------------------------------------- output_potential
 
-  ! write formatted potential if file VFORM exists - contains bad inquire
-  ! - bad check deactivated when KTE<0
     if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
       if (doVFORM) then
         call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, &
@@ -199,9 +202,12 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     ! DOS was written to file 'results1' and read out here just
     ! to be written in routine wrldos
     ! also other stuff is read from results1 (and results2)
-    call RESULTS(dims%LRECRES2,params%IELAST,ITER,arrays%LMAXD,arrays%NAEZ,emesh%NPOL, &
-    dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT,emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
-    params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND),densities%total_charge_neutrality, &
+    call RESULTS(dims%LRECRES2,params%IELAST,ITER,arrays%LMAXD, &
+    arrays%NAEZ,emesh%NPOL, &
+    dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT, &
+    emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
+    params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND), &
+    densities%total_charge_neutrality, &
     arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
     arrays%iemxd)
 
@@ -665,7 +671,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   if (params%KTE >= 0) call closeResults2File()
 
   !call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
-  call OUTTIME(isMasterRank(my_mpi),'before CONVOL.....',getElapsedTime(program_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi),'before CONVOL.....', &
+               getElapsedTime(program_timer),ITER)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -701,8 +708,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   ldau_data%EDCLDAU = 0.0D0
 
   if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
-    call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU,ldau_data%NLDAU,ldau_data%LLDAU, &
-                  ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%UMLDAU,ldau_data%WMLDAU,ldau_data%EULDAU,ldau_data%EDCLDAU, &
+    call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU, &
+                  ldau_data%NLDAU,ldau_data%LLDAU, &
+                  ldau_data%ULDAU,ldau_data%JLDAU, &
+                  ldau_data%UMLDAU,ldau_data%WMLDAU, &
+                  ldau_data%EULDAU,ldau_data%EDCLDAU, &
                   ldau_data%lmaxd)
   endif
 ! LDAU

@@ -11,12 +11,15 @@
 module EnergyResults_mod
 
   type EnergyResults
-    double precision , dimension(2)  :: VBC
-    double precision , allocatable, dimension(:)  :: ECOU
-    double precision , allocatable, dimension(:,:)  :: ESPC
-    double precision , allocatable, dimension(:,:)  :: ESPV
-    double precision , allocatable, dimension(:)  :: EXC
+    double precision , dimension(2)  :: VBC !< new muffin-tin zero
+    double precision , allocatable, dimension(:)  :: ECOU   !< Coulomb energies
+    double precision , allocatable, dimension(:,:)  :: ESPC !< core energies
+    double precision , allocatable, dimension(:,:)  :: ESPV !< E valence bands
+    double precision , allocatable, dimension(:)  :: EXC !< XC-energy
     double precision  :: EPOTIN
+    double precision  :: VMAD !< Madelung potential
+    !> for electron-lattice interactions
+    double precision , allocatable, dimension(:) :: AC_madelung
 
     integer :: lpot
     integer :: nspind
@@ -43,11 +46,13 @@ module EnergyResults_mod
     self%lmaxd = lmaxd
     self%EPOTIN = 0.0d0
     self%VBC = 0.0d0
+    self%VMAD = 0.0d0
 
     ALLOCATECHECK(self%ECOU(0:self%lpot))
     ALLOCATECHECK(self%ESPC(0:3,nspind))
     ALLOCATECHECK(self%ESPV(0:lmaxd+1,nspind))
     ALLOCATECHECK(self%EXC(0:self%lpot))
+    ALLOCATECHECK(self%AC_madelung( (self%lpot+1)**2 ))
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -63,6 +68,7 @@ module EnergyResults_mod
     DEALLOCATECHECK(self%ESPC)
     DEALLOCATECHECK(self%ESPV)
     DEALLOCATECHECK(self%EXC)
+    DEALLOCATECHECK(self%AC_madelung)
   end subroutine
 
 end module

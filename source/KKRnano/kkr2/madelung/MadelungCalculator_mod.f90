@@ -50,7 +50,7 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   type MadelungCalculator
-    private
+    !private
 
     double precision ALAT
     integer LMXSPD
@@ -276,8 +276,6 @@ module MadelungCalculator_mod
   !     &                     irmd, ipand)
 
   end subroutine
-
-
 
 !============= Helper routines =============================================
 
