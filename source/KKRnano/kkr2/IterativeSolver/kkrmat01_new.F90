@@ -400,8 +400,9 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 !               GINP(1,1,1,ref_cluster_index), &
 !               naez, lmmaxd, naclsd)
 
-    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP,NACLS(ref_cluster_index), &
-                    ATOM(:,site_index),NUMN0,INDN0,GINP(:,:,:,ref_cluster_index), &
+    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
+                    NACLS(ref_cluster_index), ATOM(:,site_index),NUMN0,INDN0, &
+                    GINP(:,:,:,ref_cluster_index), &
                     naez, lmmaxd, naclsd)
 
   end do

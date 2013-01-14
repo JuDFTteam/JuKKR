@@ -1,6 +1,10 @@
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
+
+!> Adds the Madelung Potential to all atoms.
 module MadelungPotential_mod
 
   private :: sumAC
+  private :: addPot
 
 CONTAINS
 
@@ -150,6 +154,9 @@ CONTAINS
 
     do I2 = 1,NAEZ
 
+      ! use omp single for MPI part?
+      ! if MPI comm. dominates over calculation, OpenMP won't do much
+
       root = (I2 - 1) / atoms_per_proc
       ilocal2 = mod( (I2 - 1), atoms_per_proc ) + 1
 
@@ -157,7 +164,8 @@ CONTAINS
 
       if (MYLRANK == root) then
 
-        ! TODO: check indices
+        CHECKASSERT(I2 == getAtomIndexOfLocal(calc_data, ilocal2))
+
         densities => getDensities(calc_data, ilocal2)
 
         do ILM = 1, LMPOT

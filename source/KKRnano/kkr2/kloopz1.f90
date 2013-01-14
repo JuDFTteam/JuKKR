@@ -1,8 +1,8 @@
-    subroutine KLOOPZ1(GMATN,ALAT,IE,ITER, &
+    subroutine KLOOPZ1_new(GMATN,ALAT,IE,ITER, &
     NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS, &
     NACLS,RR,EZOA,ATOM,GINP_LOCAL,DGINP, &
     NSYMAT,DSYMLL, &
-    TSST_LOCAL,DTDE_LOCAL, &
+    TMATLL,DTDE_LOCAL, &
     NUMN0,INDN0,I2, &
     PRSC,EKM,NOITER, &
     QMRBOUND,IGUESS,BCP, &
@@ -92,7 +92,7 @@
     double complex :: DGINP(LMMAXD,LMMAXD, NACLSD, NCLSD)
     double complex :: GINP_LOCAL(LMMAXD, LMMAXD, NACLSD, NCLSD)
     double complex :: GMATXIJ   (LMMAXD, LMMAXD, NXIJD)
-    double complex :: TSST_LOCAL(LMMAXD, LMMAXD)
+    double complex, intent(inout), dimension(lmmaxd,lmmaxd,naez) :: TMATLL
     double complex :: DTDE_LOCAL(LMMAXD, LMMAXD)
 
     double precision::RR(3,0:NRD)
@@ -136,9 +136,6 @@
 
     integer::         IPVT(LMMAXD)                 ! work array for LAPACK
 
-    !double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD) ! large
-    double complex, allocatable, dimension(:,:,:) :: TMATLL
-
     !-----------------------------------------------------------------------
 
     logical::XCCPL
@@ -157,9 +154,6 @@
     memory_stat = 0
     memory_fail = .false.
 
-    allocate(TMATLL(LMMAXD,LMMAXD,NAEZ))
-    if (memory_stat /= 0) memory_fail = .true.
-
     allocate(GSXIJ(LMMAXD, LMMAXD, NSYMAXD, NXIJD))
     if (memory_stat /= 0) memory_fail = .true.
 
@@ -175,13 +169,14 @@
 ! --> convert inverted delta_t-matrices to p.u.
 !     Also a symmetrisation of the matrix is performed
 
-    do LM2 = 1,LMMAXD
-        do LM1 = 1,LM2
-            TSST_LOCAL(LM1,LM2) = 0.5D0/RFCTOR * &
-            ( TSST_LOCAL(LM1,LM2) + TSST_LOCAL(LM2,LM1) )
-            TSST_LOCAL(LM2,LM1) = TSST_LOCAL(LM1,LM2)
-        end do
-    end do
+!    do LM2 = 1,LMMAXD
+!        do LM1 = 1,LM2
+!            TSST_LOCAL(LM1,LM2) = 0.5D0/RFCTOR * &
+!            ( TSST_LOCAL(LM1,LM2) + TSST_LOCAL(LM2,LM1) )
+!            TSST_LOCAL(LM2,LM1) = TSST_LOCAL(LM1,LM2)
+!        end do
+!    end do
+
 
 
 !     Local Delta_T-matrices of all atoms are communicated to all
@@ -191,9 +186,9 @@
 !     Optimisation possibility for real space truncation:
 !     communicate matrices only in truncation cluster
 
-    call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-    TMATLL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-    communicator,IERR)
+    !call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
+    !TMATLL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
+    !communicator,IERR)
 
 ! ---------------------------------------------------------------------
 
@@ -367,7 +362,6 @@
 ! Deallocate Arrays
 ! -------------------------------------------------------------------
 
-    deallocate(TMATLL)
     deallocate(GSXIJ)
 
-    end subroutine KLOOPZ1
+  end subroutine KLOOPZ1_new

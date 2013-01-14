@@ -85,6 +85,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   integer :: I1
   integer :: ilocal
   integer :: num_local_atoms
+  integer :: lmmaxd
+  double complex, allocatable, dimension(:,:,:) :: TMATLL !< all t-matrices
+
+  lmmaxd = (dims%lmaxd + 1) ** 2
+
+  allocate(TMATLL(lmmaxd, lmmaxd, dims%naez))
 
   gaunts    => getGaunts(calc_data)
   atomdata  => getAtomData(calc_data, 1)
@@ -221,6 +227,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
             ! renormalize TR_ALPH
             kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(arrays%CLS(I1), IE)
+
+            call rescaleTmatrix(kkr%TMATN(:,:,ISPIN), kkr%lmmaxd, params%alat)
 !------------------------------------------------------------------------------
           end do ! ilocal
           !!!$omp end parallel do
@@ -243,6 +251,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !                     DEBUG_dump_matrix = .false.
 !                  endif
 
+          call gatherTmatrices_com(calc_data, TMATLL, ispin, &
+                                   getMySEcommunicator(my_mpi))
+
 !------------------------------------------------------------------------------
           do ilocal = 1, num_local_atoms  ! no OpenMP
             kkr => getKKR(calc_data, ilocal)
@@ -254,7 +265,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
             ! problem here for num_local_atoms>1: communication of T-matrices
             ! also: reference Green's functions
-            call KLOOPZ1( &
+            call KLOOPZ1_new( &
             kkr%GMATN(1,1,1,ISPIN), &
             params%ALAT,IE,ITER,arrays%NAEZ, &
             arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
@@ -262,7 +273,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             arrays%CLS,arrays%NACLS,arrays%RR, &
             arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
             params%NSYMAT,arrays%DSYMLL, &
-            kkr%TMATN(:,:,ISPIN),kkr%DTDE(:,:,ISPIN), &
+            TMATLL,kkr%DTDE(:,:,ISPIN), &
             arrays%NUMN0,arrays%INDN0,I1, &
             kkr%PRSC(1,1,PRSPIN), &
             EKM,kkr%NOITER, &
@@ -399,6 +410,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
+  deallocate(TMATLL)
   !TESTARRAYLOG(3, kkr%GMATN)
   !TESTARRAYLOG(3, kkr%LLY_GRDT)
 
@@ -460,5 +472,77 @@ subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
 
 end subroutine
 
+!------------------------------------------------------------------------------
+!> Rescale and symmetrise T-matrix.
+subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
+  implicit none
+
+  double complex, intent(inout), dimension(lmmaxd, lmmaxd) :: tsst_local
+  integer, intent(in) :: lmmaxd
+  double precision, intent(in) :: alat
+
+  integer :: lm1, lm2
+  double precision :: RFCTOR
+
+  !     RFCTOR=A/(2*PI) conversion factor to p.u.
+    RFCTOR = ALAT/(8.D0*ATAN(1.0D0))           ! = ALAT/(2*PI)
+
+! --> convert inverted delta_t-matrices to p.u.
+!     Also a symmetrisation of the matrix is performed
+
+    do LM2 = 1,LMMAXD
+        do LM1 = 1,LM2
+            TSST_LOCAL(LM1,LM2) = 0.5D0/RFCTOR * &
+            ( TSST_LOCAL(LM1,LM2) + TSST_LOCAL(LM2,LM1) )
+            TSST_LOCAL(LM2,LM1) = TSST_LOCAL(LM1,LM2)
+        end do
+    end do
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Gather all t-matrices for 'ispin'-channel.
+subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
+  use CalculationData_mod
+  use KKRresults_mod
+  implicit none
+  include 'mpif.h'
+
+  type (CalculationData), intent(in) :: calc_data
+  double complex, dimension(:,:,:), intent(inout) :: TMATLL
+  integer, intent(in) :: ispin
+  integer, intent(in) :: communicator
+
+  type (KKRresults), pointer :: kkr
+  integer :: ilocal
+  integer :: num_local_atoms
+  integer :: ierr
+  integer :: lmmaxd
+  double complex, allocatable, dimension(:,:,:) :: TSST_LOCAL
+
+  num_local_atoms = getNumLocalAtoms(calc_data)
+  lmmaxd = size(TMATLL, 1)
+
+  allocate(TSST_LOCAL(lmmaxd, lmmaxd, num_local_atoms))
+
+  do ilocal = 1, num_local_atoms
+    kkr => getKKR(calc_data, ilocal)
+    TSST_LOCAL(:,:,ilocal) = kkr%TMATN(:,:,ispin)
+  end do
+
+!     Local Delta_T-matrices of all atoms are communicated to all
+!     processes working on (k, E)
+!     and stored in TMATLL (dimension(LMMAXD,LMMAXD, NAEZD))
+
+!     Optimisation possibility for real space truncation:
+!     communicate matrices only in truncation cluster
+
+  ! assume that each process treats 'num_local_atoms' adjacent atoms
+  call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD*num_local_atoms, &
+  MPI_DOUBLE_COMPLEX,TMATLL,LMMAXD*LMMAXD*num_local_atoms,MPI_DOUBLE_COMPLEX, &
+  communicator,IERR)
+
+  deallocate(TSST_LOCAL)
+
+end subroutine
 
 end module
