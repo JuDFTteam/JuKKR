@@ -126,6 +126,10 @@ program MAIN2
 ! ... and wait after SC-ITER loop
 !=====================================================================
 
+!  flag = 0
+!99 continue
+!  if (flag == 0) goto 99
+
   ! This if closes several hundreds of lines later!
   if (isActiveRank(my_mpi)) then
 
@@ -167,10 +171,6 @@ program MAIN2
 
 !+++++++++++
     ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
-
-   !flag = 0
-   !99 continue
-   !if (flag == 0) goto 99
 
 ! ######################################################################
 ! ######################################################################

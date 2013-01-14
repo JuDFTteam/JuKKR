@@ -414,6 +414,9 @@ module CalculationData_mod
     type (BroydenData), pointer :: broyden
     type (MadelungLatticeSum), pointer :: madelung_sum
 
+    call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
+                                  params%ALAT, params%RMAX, params%GMAX, &
+                                  arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -473,10 +476,6 @@ module CalculationData_mod
 
       call createBroydenData(broyden, dims%ntird, dims%itdbryd, &
                              params%imix, params%mixing)
-
-      call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
-                                  params%ALAT, params%RMAX, params%GMAX, &
-                                  arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
 
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 
