@@ -48,8 +48,10 @@ program MAIN2
   type (TimerMpi) :: iteration_timer
   type (EBalanceHandler) :: ebalance_handler
 
-  integer::ITER
-  integer::I1
+  integer :: ITER
+  integer :: I1
+  integer :: ilocal
+  integer :: num_local_atoms
 
   type(KKRnanoParallel) :: my_mpi
 
@@ -137,6 +139,7 @@ program MAIN2
 
     !--------------------------------------------------------------------------
     call createCalculationData(calc_data, dims, params, arrays, my_mpi)
+    num_local_atoms = getNumLocalAtoms(calc_data)
     !--------------------------------------------------------------------------
 
     ! ---------------------------------------------------------- k_mesh
@@ -165,6 +168,7 @@ program MAIN2
     WRITELOG(3, *) "lm-array: ", lmarray
 
     ! For now only 1 atom per process is supported (1 local atom)
+    ! TODO !!!
     atomdata      => getAtomData(calc_data, 1)
     ldau_data     => getLDAUData(calc_data, 1)
     mesh          => atomdata%mesh_ptr
@@ -187,21 +191,31 @@ program MAIN2
         call printDoubleLineSep(unit_number = 2)
       endif
 
-      WRITELOG(2, *) "Iteration Atom ", ITER, I1
+      WRITELOG(2, *) "Iteration atom-rank ", ITER, getMyAtomRank(my_mpi)
+
+      ! TODO: MISSING ilocal loop !!!
 
       ! New: instead of reading potential every time, communicate it
       ! between energy and spin processes of same atom
-      call communicatePotential(my_mpi, atomdata%potential%VISP, &
-                                atomdata%potential%VINS, atomdata%core%ECORE)
+      do ilocal = 1, num_local_atoms
+        atomdata => getAtomdata(calc_data, ilocal)
+        call communicatePotential(my_mpi, atomdata%potential%VISP, &
+                                  atomdata%potential%VINS, atomdata%core%ECORE)
+      end do
 
       ! Core relaxation - only mastergroup needs results
       if (isInMasterGroup(my_mpi)) then
-        call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
+        !$omp parallel do private(ilocal, atomdata)
+        do ilocal = 1, num_local_atoms
+          atomdata => getAtomdata(calc_data, ilocal)
+          call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
+        end do
+        !$omp end parallel do
       endif
 
-! LDA+U
+! LDA+U ! TODO: doesn't work for num_local_atoms > 1
       if (params%LDAU) then
-
+        CHECKASSERT(num_local_atoms == 1)
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48    ! ???
 
