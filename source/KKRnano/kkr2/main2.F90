@@ -70,7 +70,7 @@ program MAIN2
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
 ! -----------------------------------------------------------------------------
-  call createKKRnanoParallel(my_mpi, dims%NAEZ, dims%SMPID, dims%EMPID)
+  call createKKRnanoParallel(my_mpi, dims%NAEZ/4, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
   call printKKRnanoInfo(my_mpi, dims%nthrds)
 !------------------------------------------------------------------------------
@@ -205,12 +205,13 @@ program MAIN2
 
       ! Core relaxation - only mastergroup needs results
       if (isInMasterGroup(my_mpi)) then
-        !$omp parallel do private(ilocal, atomdata)
+        ! Not threadsafe: intcor, intin, intout have a save statement
+        !!!$omp parallel do private(ilocal, atomdata)
         do ilocal = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ilocal)
           call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
         end do
-        !$omp end parallel do
+        !!!$omp end parallel do
       endif
 
 ! LDA+U ! TODO: doesn't work for num_local_atoms > 1

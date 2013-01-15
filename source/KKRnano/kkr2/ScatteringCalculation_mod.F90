@@ -149,7 +149,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
       WRITELOG(2, *) "Working on energy point ", IE
 
 !------------------------------------------------------------------------------
-      !!!$omp parallel do private(ilocal, kkr, RF)
+      !$omp parallel do private(ilocal, kkr, RF)
       do ilocal = 1, num_local_atoms  ! not so smart, redundant calculations
         kkr => getKKR(calc_data, ilocal)
 !------------------------------------------------------------------------------
@@ -160,8 +160,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                     kkr%TREFLL(1,1,RF),kkr%DTREFLL(1,1,RF), dims%LLY)
         end do
 
-        TESTARRAYLOG(3, kkr%TREFLL)
-        TESTARRAYLOG(3, kkr%DTREFLL)
+        !TESTARRAYLOG(3, kkr%TREFLL)
+        !TESTARRAYLOG(3, kkr%DTREFLL)
 
 
         call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
@@ -174,12 +174,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                       arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
                       dims%LLY)
 
-        TESTARRAYLOG(3, kkr%GREFN)
-        TESTARRAYLOG(3, kkr%DGREFN)
+        !TESTARRAYLOG(3, kkr%GREFN)
+        !TESTARRAYLOG(3, kkr%DGREFN)
 
 !------------------------------------------------------------------------------
       end do  ! ilocal
-      !!!$omp end parallel do
+      !$omp end parallel do
 !------------------------------------------------------------------------------
 
 ! SPIN ==================================================================
@@ -198,7 +198,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           endif
 
 !------------------------------------------------------------------------------
-          !!!$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1, RF)
+          !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1, RF)
           do ilocal = 1, num_local_atoms
             kkr => getKKR(calc_data, ilocal)
             atomdata => getAtomData(calc_data, ilocal)
@@ -218,9 +218,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             end if
 
             RF = arrays%REFPOT(I1)
-            call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,RF), kkr%LMMAXD)
+            call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), &
+                                           kkr%TREFLL(:,:,RF), kkr%LMMAXD)
             ! do the same for derivative of T-matrix
-            call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
+            call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), &
+                                           kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
 
             ! TMATN now contains Delta t = t - t_ref !!!
             ! DTDE now contains Delta dt !!!
@@ -229,9 +231,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(arrays%CLS(I1), IE)
 
             call rescaleTmatrix(kkr%TMATN(:,:,ISPIN), kkr%lmmaxd, params%alat)
+
 !------------------------------------------------------------------------------
           end do ! ilocal
-          !!!$omp end parallel do
+          !$omp end parallel do
 !------------------------------------------------------------------------------
 
           NMESH = arrays%KMESH(IE)
