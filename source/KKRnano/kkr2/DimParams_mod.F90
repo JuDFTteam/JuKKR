@@ -120,7 +120,7 @@ module DimParams_mod
     self%LRECRES2=4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
 
     ! Only 1 atom per MPI process supported (for now)
-    self%atoms_per_proc = 4
+    self%atoms_per_proc = 1
 
     call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
 

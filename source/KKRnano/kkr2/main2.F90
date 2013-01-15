@@ -70,7 +70,7 @@ program MAIN2
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
 ! -----------------------------------------------------------------------------
-  call createKKRnanoParallel(my_mpi, dims%NAEZ/4, dims%SMPID, dims%EMPID)
+  call createKKRnanoParallel(my_mpi, dims%NAEZ, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
   call printKKRnanoInfo(my_mpi, dims%nthrds)
 !------------------------------------------------------------------------------

@@ -103,7 +103,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   RMSAVM = 0.0d0
 
   ! straight/simple mixing
-  !!!$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
+  !$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
   do ilocal = 1, num_local_atoms
     atomdata => getAtomData(calc_data, ilocal)
 
@@ -112,7 +112,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     RMSAVQ = RMSAVQ + RMSAVQ_single
     RMSAVM = RMSAVM + RMSAVM_single
   end do
-  !!!$omp end do
+  !$omp end parallel do
 
   ! output of RMS error
   call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
