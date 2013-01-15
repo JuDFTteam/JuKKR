@@ -345,7 +345,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
 !------------------------------------------------------------------------------
-  !!!$omp parallel do reduction(+: chrgnt, denef) private(ilocal, atomdata, densities, energies, kkr, ldau_data)
+  !$omp parallel do reduction(+: chrgnt, denef) private(ilocal, atomdata, densities, energies, kkr, ldau_data)
   do ilocal = 1, num_local_atoms
     atomdata  => getAtomData(calc_data, ilocal)
     densities => getDensities(calc_data, ilocal)
@@ -361,6 +361,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     ! has to be done after Lloyd
     ! output: RHO2NS, R2NEF, DEN, ESPV
     densities%DEN = CZERO
+
     call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                         densities%RHO2NS, densities%R2NEF, &
                         densities%DEN, energies%ESPV, kkr%GMATN, &
@@ -394,7 +395,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
 !------------------------------------------------------------------------------
   end do ! ilocal
-  !!!$omp end parallel do
+  !$omp end parallel do
 !------------------------------------------------------------------------------
 
 
@@ -423,10 +424,12 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                getElapsedTime(program_timer),ITER)
 
 !------------------------------------------------------------------------------
-  !!!$omp parallel do private(ilocal, atomdata, densities, mesh, cell, new_fermi)
+  ! OMP makes problems here
+  !!!$omp parallel do private(ilocal, atomdata, densities, energies, mesh, cell, new_fermi)
   do ilocal = 1, num_local_atoms
     atomdata  => getAtomData(calc_data, ilocal)
     densities => getDensities(calc_data, ilocal)
+    energies  => getEnergies(calc_data, ilocal)
     mesh         => atomdata%mesh_ptr
     cell         => atomdata%cell_ptr
 !------------------------------------------------------------------------------
@@ -510,7 +513,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   type (DensityResults), pointer             :: densities    ! not const
 
   integer :: I1
-  double precision :: VMAD
   integer :: lcoremax
   double precision :: VAV0, VOL0
   double precision :: VAV0_local, VOL0_local
@@ -534,6 +536,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
 !------------------------------------------------------------------------------
   !!!$omp parallel do private(ilocal, atomdata, densities)
+  ! OpenMP problems?
   do ilocal = 1, num_local_atoms
     atomdata     => getAtomData(calc_data, ilocal)
     densities    => getDensities(calc_data, ilocal)
@@ -543,24 +546,18 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
 
     ! note: irregular output with OpenMP
-    TESTARRAYLOG(3, atomdata%potential%VONS)
-    TESTARRAYLOG(3, densities%RHO2NS)
+    !TESTARRAYLOG(3, atomdata%potential%VONS)
+    !TESTARRAYLOG(3, densities%RHO2NS)
 
 !------------------------------------------------------------------------------
   end do ! ilocal
+  !!!$omp end parallel do
 !------------------------------------------------------------------------------
 
   call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',&
                getElapsedTime(program_timer),ITER)
 
   ! output: VONS (changed), VMAD
-!  call addMadelungPotential_com(madelung_sum, densities%CMOM, &
-!       densities%CMINST, arrays%NSPIND, &
-!       atomdata%potential%VONS, arrays%ZAT, mesh%R, &
-!       mesh%IRCUT, mesh%IPAN, VMAD, &
-!       getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi), &
-!       getNumAtomRanks(my_mpi), mesh%irmd, mesh%ipand)
-
   ! operation on all atoms! O(N**2)
   call addMadelungPotentialnew_com(calc_data, arrays%ZAT, getMyAtomRank(my_mpi), &
                                 dims%atoms_per_proc, &
@@ -596,7 +593,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
 !------------------------------------------------------------------------------
   !!!$omp parallel do reduction(+: VAV0, VOL0) &
-  !!!$omp private(ilocal, atomdata, densities, energies, ldau_data, I1, VMAD, lcoremax, VAV0_local, VOL0_local)
+  !!!$omp private(ilocal, atomdata, densities, energies, ldau_data, I1, &
+  !!!$omp         lcoremax, VAV0_local, VOL0_local)
   do ilocal = 1, num_local_atoms
     atomdata     => getAtomData(calc_data, ilocal)
     densities    => getDensities(calc_data, ilocal)
@@ -605,7 +603,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     I1 = getAtomIndexOfLocal(calc_data, ilocal)
 !------------------------------------------------------------------------------
 
-    VMAD = 0.0d0
     lcoremax = 0
     if (params%KTE==1) then
       ! calculate total energy and individual contributions if requested
@@ -650,9 +647,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     ! unnecessary I/O? see results.f
     if (params%KTE >= 0) then
       ! OpenMP critical ???
+      !!!$omp critical
       call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
                              energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
-                             energies%EXC, I1, LCOREMAX, VMAD)
+                             energies%EXC, I1, LCOREMAX, energies%VMAD)
+      !!!$omp end critical
     end if
 
     ! calculate new muffin-tin zero. output: VAV0, VOL0
@@ -684,7 +683,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   end if
 
 !------------------------------------------------------------------------------
-  !!!$omp parallel do private(ilocal, atomdata, energies)
+  !$omp parallel do private(ilocal, atomdata, energies)
   do ilocal = 1, num_local_atoms
     atomdata     => getAtomData(calc_data, ilocal)
     energies    => getEnergies(calc_data, ilocal)
@@ -699,7 +698,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
 !------------------------------------------------------------------------------
   end do
-  !!!$omp end parallel do
+  !$omp end parallel do
 !------------------------------------------------------------------------------
 
 ! LDAU

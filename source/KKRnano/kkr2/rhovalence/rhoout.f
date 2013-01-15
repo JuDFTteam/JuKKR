@@ -83,7 +83,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DIMAG,SQRT
 C     ..
 C     .. Save statement ..
-      SAVE
+C     SAVE
 C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
