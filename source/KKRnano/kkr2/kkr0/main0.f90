@@ -291,6 +291,8 @@
     integer :: NATBLD
     integer :: ITDBRYD
 
+    integer :: num_atom_procs
+
     character(len=40) :: variable
     integer :: next_ptr
 
@@ -362,6 +364,12 @@
     if (ierror /= 0) stop
     call getValueInteger(conf, "ITDBRYD", ITDBRYD, ierror)
     if (ierror /= 0) stop
+
+    call getValueInteger(conf, "num_atom_procs", num_atom_procs, ierror)
+    if (ierror /= 0) then
+      write(*,*) "WARNING: num_atom_procs not specified, using default value 1."
+      num_atom_procs = 1
+    end if
 
     write(*,*) "The following variables have not been read:"
     next_ptr = 1
@@ -631,7 +639,8 @@
         NATBLD, &
         ITDBRYD, &
         IEMXD, &
-        EKMD)
+        EKMD, &
+        num_atom_procs)
 
     call WUNFILES_NEW(NPOL,NPNT1,NPNT2, &
     NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &

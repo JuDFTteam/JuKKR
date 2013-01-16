@@ -36,8 +36,8 @@ module DensityResults_mod
 
   !-----------------------------------------------------------------------------
   !> Constructs a DensityResults object.
-  !> @param[inout] self    The DensityResults object to construct.
-  !> @param[in]    dims
+  !> @param[in,out] self    The DensityResults object to construct.
+  !> @param[in]     dims
   subroutine createDensityResults(self, dims)
     use DimParams_mod
     implicit none
@@ -51,12 +51,12 @@ module DensityResults_mod
 
   !-----------------------------------------------------------------------------
   !> Constructs a DensityResults object.
-  !> @param[inout] self    The DensityResults object to construct.
-  !> @param[in]    irmd
-  !> @param[in]    lmpotd
-  !> @param[in]    lmaxd
-  !> @param[in]    iemxd
-  !> @param[in]    nspind
+  !> @param[in,out] self    The DensityResults object to construct.
+  !> @param[in]     irmd
+  !> @param[in]     lmpotd
+  !> @param[in]     lmaxd
+  !> @param[in]     iemxd
+  !> @param[in]     nspind
   subroutine createDensityResultsImpl(self, irmd,lmpotd,lmaxd,iemxd,nspind)
     implicit none
     type (DensityResults), intent(inout) :: self
@@ -90,7 +90,7 @@ module DensityResults_mod
 
   !-----------------------------------------------------------------------------
   !> Destroys a DensityResults object.
-  !> @param[inout] self    The DensityResults object to destroy.
+  !> @param[in,out] self    The DensityResults object to destroy.
   subroutine destroyDensityResults(self)
     implicit none
     type (DensityResults), intent(inout) :: self

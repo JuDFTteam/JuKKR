@@ -48,6 +48,7 @@ module DimParams_mod
     integer  :: NTHRDS
     integer  :: MAXMSHD
 
+    integer :: num_atom_procs !< atom-parallelisation number of MPI-procs
     integer :: atoms_per_proc
 
   end type DimParams
@@ -56,7 +57,7 @@ module DimParams_mod
 
   !-----------------------------------------------------------------------------
   !> Constructs a DimParams object from inp0.unf file
-  !> @param[inout] self    The DimParams object to construct.
+  !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParams(self)
     implicit none
     type (DimParams), intent(inout) :: self
@@ -95,6 +96,7 @@ module DimParams_mod
     read(FILEHANDLE) self%ITDBRYD
     read(FILEHANDLE) self%IEMXD
     read(FILEHANDLE) self%EKMD
+    read(FILEHANDLE) self%num_atom_procs
 
     close(FILEHANDLE)
 
@@ -119,8 +121,8 @@ module DimParams_mod
     ! Record lengths
     self%LRECRES2=4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
 
-    ! Only 1 atom per MPI process supported (for now)
-    self%atoms_per_proc = 1
+    ! Calculate atoms per process
+    self%atoms_per_proc = self%naez / self%num_atom_procs
 
     call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
 
@@ -128,7 +130,7 @@ module DimParams_mod
 
   !-----------------------------------------------------------------------------
   !> Destroys a DimParams object.
-  !> @param[inout] self    The DimParams object to destroy.
+  !> @param[in,out] self    The DimParams object to destroy.
   subroutine destroyDimParams(self)
     implicit none
     type (DimParams), intent(inout) :: self

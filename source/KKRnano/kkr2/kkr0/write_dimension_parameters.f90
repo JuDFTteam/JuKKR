@@ -34,7 +34,8 @@ ZDIM, &
 NATBLD, &
 ITDBRYD, &
 IEMXD, &
-EKMD)
+EKMD, &
+num_atom_procs)
 
   implicit none
 
@@ -68,6 +69,7 @@ EKMD)
   integer, intent(in) :: ITDBRYD
   integer, intent(in) :: IEMXD
   integer, intent(in) :: EKMD
+  integer, intent(in) :: num_atom_procs
 
   integer, parameter :: FILEHANDLE = 67
 
@@ -103,6 +105,7 @@ EKMD)
   write(FILEHANDLE) ITDBRYD
   write(FILEHANDLE) IEMXD
   write(FILEHANDLE) EKMD
+  write(FILEHANDLE) num_atom_procs
 
   close(FILEHANDLE)
 

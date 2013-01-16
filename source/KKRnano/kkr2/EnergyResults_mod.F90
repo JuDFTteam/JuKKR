@@ -30,9 +30,9 @@ module EnergyResults_mod
 
   !-----------------------------------------------------------------------------
   !> Constructs a EnergyResults object.
-  !> @param[inout] self    The EnergyResults object to construct.
-  !> @param[in]    nspind
-  !> @param[in]    lmaxd
+  !> @param[in,out] self    The EnergyResults object to construct.
+  !> @param[in]     nspind
+  !> @param[in]     lmaxd
   subroutine createEnergyResults(self, nspind,lmaxd)
     implicit none
     type (EnergyResults), intent(inout) :: self
@@ -57,7 +57,7 @@ module EnergyResults_mod
 
   !-----------------------------------------------------------------------------
   !> Destroys a EnergyResults object.
-  !> @param[inout] self    The EnergyResults object to destroy.
+  !> @param[in,out] self    The EnergyResults object to destroy.
   subroutine destroyEnergyResults(self)
     implicit none
     type (EnergyResults), intent(inout) :: self
