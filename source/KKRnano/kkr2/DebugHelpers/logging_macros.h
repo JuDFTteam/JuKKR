@@ -21,6 +21,8 @@
 !> is not included in source.
 !> *) Or: when using OPENLOG, set loglevel to 0 - logging code is
 !> included - but output is deactivated and no logfile created.
+!>
+!> NOTE: Logging does not work in OpenMP parallel section
 
 #ifndef LOGGING_MACROS_H_
 #define LOGGING_MACROS_H_

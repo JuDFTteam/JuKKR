@@ -193,8 +193,6 @@ program MAIN2
 
       WRITELOG(2, *) "Iteration atom-rank ", ITER, getMyAtomRank(my_mpi)
 
-      ! TODO: MISSING ilocal loop !!!
-
       ! New: instead of reading potential every time, communicate it
       ! between energy and spin processes of same atom
       do ilocal = 1, num_local_atoms

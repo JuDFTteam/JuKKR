@@ -187,44 +187,55 @@ contains
 
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
-  subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_index, kvstr)
+  subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_indices, kvstr)
     implicit none
 
     double complex, dimension(:,:), intent(inout) :: mat_B
     double complex, dimension(lmmaxd,lmmaxd,*), intent(in) :: TMATLL
     integer, intent(in) :: lmmaxd
-    integer, intent(in) :: atom_index
+    integer, dimension(:), intent(in) :: atom_indices
     integer, dimension(:), intent(in) :: kvstr
 
     double complex, parameter :: CZERO =(0.0D0,0.0D0)
     integer :: start
+    integer :: ii
+    integer :: num_atoms
     integer :: lm1, lm2
     integer :: lmmax1, lmmax2
+    integer :: atom_index
 
     mat_B = CZERO
 
-    lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
+    num_atoms = size(atom_indices)
+
+    do ii = 1, num_atoms
+
+      atom_index = atom_indices(ii)
+
+      lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
 
 #ifndef NDEBUG
-        if (lmmax1 /= lmmaxd) then
-          write (*,*) "Central atom not treated with highest lmax", atom_index
-          STOP
-        end if
+          if (lmmax1 /= lmmaxd) then
+            write (*,*) "Central atom not treated with highest lmax", atom_index
+            STOP
+          end if
 #endif
 
-    !lmmax2 = lmmaxd
-    lmmax2 = lmmax1
-    ! use naive truncation: lmmax1 = lmmax2
-    ! Note: this is irrelevant, since the central atom
-    ! should always be treated with the highest lmax
+      !lmmax2 = lmmaxd
+      lmmax2 = lmmax1
+      ! use naive truncation: lmmax1 = lmmax2
+      ! Note: this is irrelevant, since the central atom
+      ! should always be treated with the highest lmax
 
-    start = kvstr(atom_index) - 1
-    do lm2 = 1, lmmax2
-      do lm1 = 1, lmmax1
-                    ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-        mat_B( start + lm1, lm2 ) = - TMATLL(lm1, lm2, atom_index)
+      start = kvstr(atom_index) - 1
+      do lm2 = 1, lmmax2
+        do lm1 = 1, lmmax1
+                      ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
+          mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
+        end do
       end do
-    end do
+
+    end do ! ii
 
   end subroutine
 
@@ -335,7 +346,6 @@ contains
 
     GLLKE1 = CZERO
     num_atoms = size(kvstr) - 1
-
 
     do atom_index = 1, num_atoms
 

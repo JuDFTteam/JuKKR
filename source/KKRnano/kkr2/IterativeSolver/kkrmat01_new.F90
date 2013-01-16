@@ -1,5 +1,6 @@
 #include "../DebugHelpers/logging_macros.h"
 #include "../DebugHelpers/test_array_log.h"
+#include "../DebugHelpers/test_macros.h"
 
 module kkrmat_new_mod
 
@@ -134,7 +135,11 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer :: memory_stat
   logical :: memory_fail
 
+  integer :: atom_indices(1)
+
   ! array dimensions
+  atom_indices(1) = IAT
+
   site_lm_size = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
@@ -147,10 +152,6 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
   allocate(GLLKE1(site_lm_size,LMMAXD), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
-!  allocate(GLLH(LMMAXD*NGTBD*NAEZ), stat = memory_stat)
-!  if (memory_stat /= 0) memory_fail = .true.
-!  allocate(GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD), stat = memory_stat)
-!  if (memory_stat /= 0) memory_fail = .true.
 
   ! TODO:  !!!! Implement memory saving Lloyd's formula approach !!!!
   ! lloydTraceK affected, (arrays DGDE, DPDE_LOCAL - ignore for now)
@@ -202,7 +203,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                    BZKP(:, k_point_index), TMATLL, GINP, ALAT, IGUESS, &
                    BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
                    NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
-                   IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, &
+                   atom_indices, ITER, QMRBOUND, NACLS, lmmaxd, nguessd, naclsd, &
                    natbld, nrd, nclsd, xdim, ydim, zdim)
 
     ! ----------- Integrate Scattering Path operator over k-points --> GS -----
@@ -218,9 +219,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                        CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
                        EIKRP, GLLH, DPDE_LOCAL, DGDE, GLLKE_X, &
                        lmmaxd, naclsd, nclsd, nrd)
-    endif
 
-    if (LLY == 1) then
       BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index) ! k-space integration
     end if
 
@@ -264,10 +263,12 @@ end subroutine KKRMAT01_new
 
 !------------------------------------------------------------------------------
 !> Calculate scattering path operator for 'kpoint'
-subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS, &
-                     BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
-                     NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
-                     IAT, ITER, QMRBOUND, NACLS, lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim)
+subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, &
+                      TMATLL, GINP, ALAT, IGUESS, &
+                      BCP, NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                      NUMN0, EIKRM, EIKRP, GLLH, GLLHBLCK, &
+                      atom_indices, ITER, QMRBOUND, NACLS, &
+                      lmmaxd, nguessd,naclsd, natbld, nrd, nclsd, xdim, ydim, zdim)
 
   use initialGuess_store_mod
   use fillKKRMatrix_mod
@@ -280,6 +281,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   USE_LOGGING_MOD
   implicit none
 
+  integer, intent(in), dimension(:) :: atom_indices !< indices of local atoms
   integer, intent(in) :: xdim
   integer, intent(in) :: ydim
   integer, intent(in) :: zdim
@@ -299,7 +301,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   double complex, allocatable :: GLLH(:)
   double complex, allocatable :: GLLHBLCK(:,:) ! dim: lmmaxd*natbld, lmmaxd*natbld*xdim*ydim*zdim
   double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
-  integer :: IAT
+
   integer :: IGUESS
   integer :: INDN0(NAEZ,NACLSD)
   integer :: ITER
@@ -370,8 +372,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
 
-  allocate(mat_B(sparse%kvstr(naez+1)-1,LMMAXD))
-  allocate(mat_X(sparse%kvstr(naez+1)-1,LMMAXD))
+  allocate(mat_B(sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
+  allocate(mat_X(sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
 
   if (.not. allocated(GLLH)) then
     allocate(GLLH(getNNZ(sparse)))
@@ -410,7 +412,6 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   TESTARRAYLOG(3, GLLH)
 
   !----------------------------------------------------------------------------
-  !call generateCoeffMatrix(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd)
   call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, sparse)
   !----------------------------------------------------------------------------
 
@@ -452,7 +453,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
   !    solve (1 - \Delta t * G_ref) X = \Delta t
   !    the solution X is the scattering path operator
 
-  call buildRightHandSide(mat_B, TMATLL, lmmaxd, IAT, sparse%kvstr)
+  call buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_indices, sparse%kvstr)
 
   initial_zero = .true.
   if (IGUESS == 1 .and. ITER > 1) then
@@ -461,7 +462,7 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
 
   if (cutoffmode == 3) then
     call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
-                      QMRBOUND, lmmaxd, size(mat_B, 1), initial_zero)
+                      QMRBOUND, size(mat_B, 2), size(mat_B, 1), initial_zero)
 
     if (DEBUG_dump_matrix) then
       call dumpSparseMatrixDescription(sparse, "matrix_desc.dat")
@@ -485,7 +486,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, TMATLL, GINP, ALAT, IGUESS
     if (.not. allocated(full)) then
       allocate(full(size(mat_B,1), size(mat_B,1)))
     end if
-    call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, sparse%kvstr, sparse%kvstr, full)
+    call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, &
+                                   sparse%kvstr, sparse%kvstr, full)
     TESTARRAYLOG(3, full)
     call solveFull(full, mat_B)
     mat_X = mat_B
