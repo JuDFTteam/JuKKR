@@ -1,16 +1,19 @@
-    subroutine KLOOPZ1_new(GMATN,ALAT,IE,ITER, &
+module kloopz1_mod
+
+CONTAINS
+
+    subroutine KLOOPZ1_new(GMATN,ALAT,ITER, &
     NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS, &
     NACLS,RR,EZOA,ATOM,GINP_LOCAL,DGINP, &
     NSYMAT,DSYMLL, &
     TMATLL,DTDE_LOCAL, &
-    NUMN0,INDN0,I2, &
+    NUMN0,INDN0,atom_indices, &
     PRSC,EKM,NOITER, &
     QMRBOUND,IGUESS,BCP, &
     NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
     LLY_GRDT,TR_ALPH,GMATXIJ, &          ! < output
     communicator, comm_size, &           ! > input
     ! new parameters after inc.p removal
-    iemxd, &
     lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
     nxijd, nguessd, kpoibz, nrd, ekmd)
 
@@ -37,7 +40,6 @@
     integer, intent(in) :: communicator
     integer, intent(in) :: comm_size
 
-    integer, intent(in) :: iemxd
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
     integer, intent(in) :: nclsd   ! number of reference clusters
@@ -64,10 +66,8 @@
     double precision:: ALAT
     double precision::VOLBZ
     double precision::QMRBOUND
-    integer::IE
     integer::ITER
     integer::NOFKS
-    integer::I2
     integer::NXIJ
     integer::NAEZ
     integer::IGUESS
@@ -88,7 +88,8 @@
 
     double complex :: DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
 
-    double complex :: GMATN(LMMAXD,LMMAXD,IEMXD)
+    double complex :: GMATN(:,:,:)
+
     double complex :: DGINP(LMMAXD,LMMAXD, NACLSD, NCLSD)
     double complex :: GINP_LOCAL(LMMAXD, LMMAXD, NACLSD, NCLSD)
     double complex :: GMATXIJ   (LMMAXD, LMMAXD, NXIJD)
@@ -123,13 +124,13 @@
     !     ..
 
     double complex :: GLL  (LMMAXD, LMMAXD)
-    double complex :: GS   (LMMAXD, LMMAXD, NSYMAXD)
+    double complex, allocatable :: GS(:,:,:,:)
 
     !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
     double complex, allocatable, dimension(:,:,:,:) :: GSXIJ
 
     !     effective (site-dependent) Delta_t^(-1) matrix
-    double complex ::      MSSQ (LMMAXD, LMMAXD)
+    double complex, allocatable ::  MSSQ (:, :, :)
     double complex :: work_array(LMMAXD, LMMAXD)    ! work array for LAPACK ZGETRI
     double complex ::       TPG (LMMAXD, LMMAXD)
     double complex ::        XC (LMMAXD, LMMAXD)      ! to store temporary matrix-matrix mult. result
@@ -137,6 +138,10 @@
     integer::         IPVT(LMMAXD)                 ! work array for LAPACK
 
     !-----------------------------------------------------------------------
+
+    integer, intent(in) :: atom_indices(:)
+    integer :: num_local_atoms
+    integer :: ilocal
 
     logical::XCCPL
 
@@ -148,11 +153,19 @@
     integer :: memory_stat
     logical :: memory_fail
 
+    num_local_atoms = size(atom_indices)
+
 ! -------------------------------------------------------------------
 ! Allocate Arrays
 ! -------------------------------------------------------------------
     memory_stat = 0
     memory_fail = .false.
+
+    allocate(GS(LMMAXD, LMMAXD, NSYMAXD, num_local_atoms))
+    if (memory_stat /= 0) memory_fail = .true.
+
+    allocate(MSSQ(LMMAXD, LMMAXD, num_local_atoms))
+    if (memory_stat /= 0) memory_fail = .true.
 
     allocate(GSXIJ(LMMAXD, LMMAXD, NSYMAXD, NXIJD))
     if (memory_stat /= 0) memory_fail = .true.
@@ -193,23 +206,25 @@
 ! ---------------------------------------------------------------------
 
 
+    do ilocal = 1, num_local_atoms
 
-    do LM2 = 1,LMMAXD
-        do LM1 = 1,LMMAXD
-            MSSQ(LM1,LM2) =  TMATLL(LM1,LM2,I2)
-        end do
-    end do
-
-
-! ---> inversion
+      do LM2 = 1,LMMAXD
+          do LM1 = 1,LMMAXD
+              MSSQ(LM1,LM2,ilocal) =  TMATLL(LM1,LM2, atom_indices(ilocal))
+          end do
+      end do
 
 
-!     The (local) Delta_t matrix is inverted and stored in MSSQ
+  ! ---> inversion
 
-    call ZGETRF(LMMAXD,LMMAXD,MSSQ,LMMAXD,IPVT,INFO)
-    call ZGETRI(LMMAXD,MSSQ,LMMAXD,IPVT,work_array, &
-    LMMAXD*LMMAXD,INFO)
 
+  !     The (local) Delta_t matrix is inverted and stored in MSSQ
+
+      call ZGETRF(LMMAXD,LMMAXD,MSSQ(:,:,ilocal),LMMAXD,IPVT,INFO)
+      call ZGETRI(LMMAXD,MSSQ(:,:,ilocal),LMMAXD,IPVT,work_array, &
+      LMMAXD*LMMAXD,INFO)
+
+    end do !ilocal
 
 !=======================================================================
 
@@ -221,11 +236,11 @@
     TAUVBZ = 1.D0/VOLBZ
     ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2) then
-      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
+      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ(:,:,1), &
       ITER, &
       ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
       GINP_LOCAL,DGINP, &
-      NUMN0,INDN0,I2, &
+      NUMN0,INDN0, atom_indices, &
       PRSC, &
       EKM,NOITER, &
       QMRBOUND,IGUESS,BCP, &
@@ -237,11 +252,11 @@
       lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
       nxijd, nguessd, kpoibz, nrd, ekmd)
     else
-      call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ, &
+      call KKRMAT01(BZKP,NOFKS,GS(:,:,:,1),VOLCUB,TMATLL,MSSQ(:,:,1), &
       ITER, &
       ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
       GINP_LOCAL,DGINP, &
-      NUMN0,INDN0,I2, &
+      NUMN0,INDN0,atom_indices(1), &
       PRSC, &
       EKM,NOITER, &
       QMRBOUND,IGUESS,BCP, &
@@ -279,77 +294,88 @@
 !     - the result is stored in GLL
 !      Note: the symmetry operations apply on the (LL')-space
 
-    do symmetry_index = 1,NSYMAT
-    
-    ! --->    GLL = sum(i=1,iumax)(tauvbz * DLL(i) * GS * DLL(i)^H)
-    
-        if ( symmetry_index == 1 ) then
-        
-        ! --->    ull(1) is equal to unity matrix
-        
-            call ZCOPY(LMMAXD*LMMAXD,GS(1,1,1),1,GLL,1)
-            call ZSCAL(LMMAXD*LMMAXD,TAUVBZ,GLL,1)
-        
-        else
-        
-        ! --->      tpg = tauvbz * DLL * GS
-        
-            call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,TAUVBZ, &
-            DSYMLL(1,1,symmetry_index),LMMAXD,GS(1,1,symmetry_index),LMMAXD, &
-            CZERO,TPG,LMMAXD)
-        
-        ! --->    GLL = GLL + TPG * DLL(i)^H
-        !                           C  ! dsymll might be complex in REL case
-        
-            call ZGEMM('N','C',LMMAXD,LMMAXD,LMMAXD,CONE,TPG,LMMAXD, &
-            DSYMLL(1,1,symmetry_index),LMMAXD,CONE,GLL,LMMAXD)
-        end if
-    
-    end do
-!-------------------------------------------------------- IU = 1,NSYMAT
+!------------------------------------------------------------------------------
+    do ilocal = 1, num_local_atoms
+!------------------------------------------------------------------------------
 
+        do symmetry_index = 1,NSYMAT
 
+        ! --->    GLL = sum(i=1,iumax)(tauvbz * DLL(i) * GS * DLL(i)^H)
 
-! --->  XC = Delta_t^(-1) * GLL
+            if ( symmetry_index == 1 ) then
 
-    call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,CONE,MSSQ, &
-    LMMAXD,GLL,LMMAXD,CZERO,XC,LMMAXD)
+            ! --->    ull(1) is equal to unity matrix
 
-!       GLL is overwritten with the following expression:
-!       (for the in configuration space diagonal structural Green's
-!       function of the REAL system - already integrated over k)
+                call ZCOPY(LMMAXD*LMMAXD,GS(1,1,1,ilocal),1,GLL,1)
+                call ZSCAL(LMMAXD*LMMAXD,TAUVBZ,GLL,1)
 
-! --->  GLL = - Delta_t^(-1) - Delta_t^(-1) * GLL * Delta_t^(-1)
+            else
 
-!       copy overwrite GLL with content of MSSQ
-    call ZCOPY(LMMAXD**2,MSSQ,1,GLL,1)
+            ! --->      tpg = tauvbz * DLL * GS
 
+                call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,TAUVBZ, &
+                DSYMLL(1,1,symmetry_index),LMMAXD,GS(1,1,symmetry_index,ilocal),LMMAXD, &
+                CZERO,TPG,LMMAXD)
 
-!       GLL = (-1) * XC                     *    MSSQ     + (-1) * GLL
-!                    |                            |                 |
-!            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
+            ! --->    GLL = GLL + TPG * DLL(i)^H
+            !                           C  ! dsymll might be complex in REL case
 
-    call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,-CONE,XC,LMMAXD, &
-    MSSQ,LMMAXD,-CONE,GLL,LMMAXD)
+                call ZGEMM('N','C',LMMAXD,LMMAXD,LMMAXD,CONE,TPG,LMMAXD, &
+                DSYMLL(1,1,symmetry_index),LMMAXD,CONE,GLL,LMMAXD)
+            end if
 
-
-! --->  GMATN = GMATLL = GLL/RFCTOR...............rescaled and copied into output array
-
-    do LM1 = 1,LMMAXD
-        do LM2 = 1,LMMAXD
-            GMATN(LM2,LM1,IE) = GLL(LM2,LM1)/RFCTOR
         end do
-    end do
+    !-------------------------------------------------------- IU = 1,NSYMAT
+
+
+    ! --->  XC = Delta_t^(-1) * GLL
+
+        call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,CONE,MSSQ(:,:,ilocal), &
+        LMMAXD,GLL,LMMAXD,CZERO,XC,LMMAXD)
+
+    !       GLL is overwritten with the following expression:
+    !       (for the in configuration space diagonal structural Green's
+    !       function of the REAL system - already integrated over k)
+
+    ! --->  GLL = - Delta_t^(-1) - Delta_t^(-1) * GLL * Delta_t^(-1)
+
+    !       copy overwrite GLL with content of MSSQ
+        call ZCOPY(LMMAXD**2,MSSQ(:,:,ilocal),1,GLL,1)
+
+
+    !       GLL = (-1) * XC                     *    MSSQ     + (-1) * GLL
+    !                    |                            |                 |
+    !            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
+
+        call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,-CONE,XC,LMMAXD, &
+        MSSQ(:,:,ilocal),LMMAXD,-CONE,GLL,LMMAXD)
+
+
+    ! --->  GMATN = GMATLL = GLL/RFCTOR...............rescaled and copied into output array
+
+        do LM1 = 1,LMMAXD
+            do LM2 = 1,LMMAXD
+                GMATN(LM2,LM1,ilocal) = GLL(LM2,LM1)/RFCTOR
+            end do
+        end do
+
+!------------------------------------------------------------------------------
+    end do ! ilocal
+!------------------------------------------------------------------------------
 
 !================================
     if (XCCPL) then
 !================================
-
+    ! todo: loop over local atoms
+    if (size(atom_indices) /= 1) then
+      write(*,*) "XCCPL and num_local_atoms>1 not possible."
+      STOP
+    endif
         call SYMJIJ( &
         ALAT,TAUVBZ, &
         NSYMAT,DSYMLL, &
         NXIJ,IXCP, &
-        TMATLL,MSSQ, &
+        TMATLL,MSSQ(:,:,1), &
         GSXIJ, &
         GMATXIJ, &
         naez, lmmaxd, nxijd)
@@ -363,5 +389,9 @@
 ! -------------------------------------------------------------------
 
     deallocate(GSXIJ)
+    deallocate(GS)
+    deallocate(MSSQ)
 
   end subroutine KLOOPZ1_new
+
+end module

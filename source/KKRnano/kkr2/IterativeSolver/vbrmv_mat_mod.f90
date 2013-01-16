@@ -59,7 +59,7 @@ contains
     integer icols
 
 !IBM* ALIGN(32, buffer)
-    double complex buffer(max_blockdim*max_blocks_per_row, max_blockdim)
+    double complex buffer(max_blockdim*max_blocks_per_row, size(x,2))
 
     integer nrowbuf, rowbuf, sum_nrowbuf
     integer startrow, leaddim_b, num_rows, leaddim_buffer

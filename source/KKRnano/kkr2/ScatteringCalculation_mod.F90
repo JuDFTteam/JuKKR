@@ -1,5 +1,6 @@
 #include "DebugHelpers/logging_macros.h"
 #include "DebugHelpers/test_array_log.h"
+#include "DebugHelpers/test_macros.h"
 
 !> @author Modularisation: Elias Rabel
 module ScatteringCalculation_mod
@@ -49,6 +50,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   use EBalanceHandler_mod
 
   use KKRnano_Comm_mod
+  use kloopz1_mod
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
 
@@ -83,10 +85,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   logical :: xccpl
   double complex :: JSCAL ! scaling factor for Jij calculation
   integer :: I1
+  integer, allocatable :: atom_indices(:)
   integer :: ilocal
   integer :: num_local_atoms
   integer :: lmmaxd
   double complex, allocatable, dimension(:,:,:) :: TMATLL !< all t-matrices
+  double complex, allocatable, dimension(:,:,:) :: GmatN_buffer !< GmatN for all local atoms
 
   lmmaxd = (dims%lmaxd + 1) ** 2
 
@@ -100,6 +104,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   jij_data  => getJijData(calc_data, 1)
 
   num_local_atoms = getNumLocalAtoms(calc_data)
+
+  allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
+  allocate(atom_indices(num_local_atoms))
 
   if (params%jij .and. num_local_atoms > 1) then
     if (isMasterRank(my_mpi)) write(*,*) "Jij and num_local_atoms > 1 not supported."
@@ -257,27 +264,33 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           call gatherTmatrices_com(calc_data, TMATLL, ispin, &
                                    getMySEcommunicator(my_mpi))
 
+          TESTARRAYLOG(3, TMATLL)
+
 !------------------------------------------------------------------------------
-          do ilocal = 1, num_local_atoms  ! no OpenMP
-            kkr => getKKR(calc_data, ilocal)
-            jij_data => getJijData(calc_data, ilocal)
-            I1 = getAtomIndexOfLocal(calc_data, ilocal)
+          !do ilocal = 1, num_local_atoms  ! no OpenMP
+            kkr => getKKR(calc_data, 1)
+            jij_data => getJijData(calc_data, 1)
+            !I1 = getAtomIndexOfLocal(calc_data, 1)
 !------------------------------------------------------------------------------
 
-            TESTARRAYLOG(3, kkr%TMATN(:,:,ISPIN))
+            do ilocal = 1, num_local_atoms
+              atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
+            end do
 
-            ! problem here for num_local_atoms>1: communication of T-matrices
-            ! also: reference Green's functions
-            call KLOOPZ1_new( &
-            kkr%GMATN(1,1,1,ISPIN), &
-            params%ALAT,IE,ITER,arrays%NAEZ, &
+            CHECKASSERT(.not. (dims%iguessd == 1 .and. num_local_atoms>1))
+
+            ! problem: reference Green's functions
+            ! here: known by all atoms - therefore pick any atom
+            ! TODO: reorganise kloopz
+            call KLOOPZ1_new( GmatN_buffer, &
+            params%ALAT,ITER,arrays%NAEZ, &
             arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
             arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
             arrays%CLS,arrays%NACLS,arrays%RR, &
             arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
             params%NSYMAT,arrays%DSYMLL, &
             TMATLL,kkr%DTDE(:,:,ISPIN), &
-            arrays%NUMN0,arrays%INDN0,I1, &
+            arrays%NUMN0,arrays%INDN0,atom_indices, &
             kkr%PRSC(1,1,PRSPIN), &
             EKM,kkr%NOITER, &
             params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
@@ -285,16 +298,21 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
             jij_data%GMATXIJ(1,1,1,ISPIN), &
             getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-            arrays%iemxd, &
             arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
             dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
             jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
 
-            TESTARRAYLOG(3, kkr%GMATN(:,:,IE,ISPIN))
+            !TESTARRAYLOG(3, GMATN(...))
 
 !------------------------------------------------------------------------------
-          end do ! ilocal
+          !end do ! ilocal
 !------------------------------------------------------------------------------
+
+          ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer
+          do ilocal = 1, num_local_atoms
+            kkr => getKKR(calc_data, ilocal)
+            kkr%GMATN(:,:,ie,ispin) = GmatN_buffer(:,:,ilocal)
+          end do
 
           call stopTimer(mult_scattering_timer)
           call resumeTimer(single_site_timer)
@@ -413,9 +431,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   endif  ! IGUESS == 1 .and. EMPID > 1
 !=======================================================================
 
+  deallocate(atom_indices)
+  deallocate(GmatN_buffer)
   deallocate(TMATLL)
-  !TESTARRAYLOG(3, kkr%GMATN)
-  !TESTARRAYLOG(3, kkr%LLY_GRDT)
 
 end subroutine
 

@@ -17,7 +17,7 @@ TMATLL,MSSQ, &
 ITER, &
 ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
 GINP,DGINP, &
-NUMN0,INDN0,IAT, &
+NUMN0,INDN0,atom_indices, &
 PRSC,EKM,NOITER, &
 QMRBOUND,IGUESS,BCP, &
 DTDE_LOCAL, &
@@ -49,18 +49,19 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer, intent(in) :: comm_size
 
   integer, intent(in) :: lmmaxd
-  integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
-  integer, intent(in) :: nclsd   ! number of reference clusters
+  integer, intent(in) :: naclsd  !< max. number of atoms in reference cluster
+  integer, intent(in) :: nclsd   !< number of reference clusters
   integer, intent(in) :: xdim
   integer, intent(in) :: ydim
   integer, intent(in) :: zdim
-  integer, intent(in) :: natbld  ! number of atoms in preconditioning blocks
+  integer, intent(in) :: natbld  !< number of atoms in preconditioning blocks
   integer, intent(in) :: LLY
-  integer, intent(in) :: nxijd   ! max. number of atoms in cluster for exchange coupling-calculation
+  integer, intent(in) :: nxijd   !< max. number of atoms in cluster for exchange coupling-calculation
   integer, intent(in) :: nguessd
   integer, intent(in) :: kpoibz
   integer, intent(in) :: nrd
   integer, intent(in) :: ekmd
+  integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
 
   !     ..
   !     .. SCALAR ARGUMENTS ..
@@ -75,20 +76,21 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer::NXIJ
   integer::EKM
   integer::NOITER
-  integer::IAT
 
   double complex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
 
   double complex :: DGINP(lmmaxd,lmmaxd,NACLSD,NCLSD)
   double complex :: GINP (lmmaxd,lmmaxd,NACLSD,NCLSD)
-  double complex :: GS   (lmmaxd,lmmaxd,NSYMAXD)
+  !double complex :: GS   (lmmaxd,lmmaxd,NSYMAXD,num_local_atoms)
+  double complex :: GS   (:,:,:,:)
   double complex :: GSXIJ(lmmaxd,lmmaxd,NSYMAXD,NXIJD)
 
   integer        :: IXCP(NXIJD)
 
   ! .. Lloyd
   double complex :: DTDE_LOCAL(lmmaxd,lmmaxd)
-  double complex :: MSSQ(lmmaxd,lmmaxd)
+  !double complex :: MSSQ(lmmaxd,lmmaxd)
+  double complex :: MSSQ(:,:)
 
   complex        :: PRSC(NGUESSD*lmmaxd,EKMD) ! array argument
 
@@ -135,14 +137,16 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   integer :: memory_stat
   logical :: memory_fail
 
-  integer :: atom_indices(1)
+  integer :: iat
+  integer :: num_local_atoms
 
   ! array dimensions
-  atom_indices(1) = IAT
 
   site_lm_size = NAEZ*LMMAXD
   NGTBD = NACLSD*LMMAXD
   NBLCKD = XDIM*YDIM*ZDIM
+
+  num_local_atoms = size(atom_indices)
 
   !-----------------------------------------------------------------------
   ! Allocate arrays
@@ -150,7 +154,7 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
   memory_stat = 0
   memory_fail = .false.
 
-  allocate(GLLKE1(site_lm_size,LMMAXD), stat = memory_stat)
+  allocate(GLLKE1(site_lm_size,LMMAXD*num_local_atoms), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
   ! TODO:  !!!! Implement memory saving Lloyd's formula approach !!!!
@@ -208,12 +212,16 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
 
     ! ----------- Integrate Scattering Path operator over k-points --> GS -----
     ! Note: here k-integration only in irreducible wedge
-    call greenKSummation(GLLKE1, GS, VOLCUB(k_point_index), &
-                         IAT, NSYMAT, naez, lmmaxd)
+    call greenKSummation(GLLKE1, &
+                         GS, VOLCUB(k_point_index), &
+                         atom_indices, NSYMAT, naez, lmmaxd)
     ! -------------------------------------------------------------------------
 
 
     if (LLY == 1) then
+      CHECKASSERT(size(atom_indices) == 1)
+      iat = atom_indices(1)
+      ! loop over local atoms would be needed here
       call lloydTraceK( TRACEK, TMATLL, MSSQ, GLLKE1, GINP, DGINP, &
                        BZKP(:,k_point_index), DTDE_LOCAL,ALAT, ATOM, &
                        CLS, EZOA, IAT, INDN0, NACLS, NAEZ, NUMN0, RR, EIKRM, &
@@ -229,7 +237,8 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
        !       XCCPL communicate off-diagonal elements and multiply with
        !       exp-factor
        ! ================================================================
-
+      CHECKASSERT(size(atom_indices) == 1)
+      iat = atom_indices(1)
       call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
       NSYMAT,NAEZ,IAT, &
       NXIJ,IXCP,ZKRXIJ, &
@@ -525,16 +534,16 @@ end subroutine
 !> Set GS to 0 before first call
 !> in: GLLKE1
 !> inout: GS (set to 0 before first call)
-subroutine greenKSummation(GLLKE1, GS, k_point_weight, IAT, NSYMAT, naez, lmmaxd)
+subroutine greenKSummation(GLLKE1, GS, k_point_weight, atom_indices, NSYMAT, naez, lmmaxd)
   implicit none
   integer, parameter :: NSYMAXD = 48
 
   integer, intent(in) :: naez
   integer, intent(in) :: lmmaxd
+  integer, intent(in) :: atom_indices(:)
 
-  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
-  double complex :: GS(lmmaxd,lmmaxd,NSYMAXD)
-  integer :: IAT
+  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD*size(atom_indices))
+  double complex :: GS(lmmaxd,lmmaxd,NSYMAXD,size(atom_indices))
 
   integer :: NSYMAT
   double precision :: k_point_weight
@@ -546,29 +555,37 @@ subroutine greenKSummation(GLLKE1, GS, k_point_weight, IAT, NSYMAT, naez, lmmaxd
   integer :: LM2
   integer :: ILM
   integer :: ISYM
+  integer :: IAT
+  integer :: ii !< local atom index
 
-  !   combined atom/lm index
-  ILM = LMMAXD*(IAT-1) + 1
+  do ii = 1, size(atom_indices)
 
-  !                                      nn
-  !         Copy the diagonal elements G_LL' of the Green's-function,
-  !         dependent on (k,E) into matrix G
-  !         (n = n' = IAT)
+    iat = atom_indices(ii)
 
-  do LM = 1,LMMAXD
-    call ZCOPY(LMMAXD,GLLKE1(ILM,LM),1,G(1,LM),1)
-  end do
+    !   combined atom/lm index
+    ILM = LMMAXD*(IAT-1) + 1
 
-    !         Perform the k-space integration for diagonal element of
-    !         Green's function of atom IAT
+    !                                      nn
+    !         Copy the diagonal elements G_LL' of the Green's-function,
+    !         dependent on (k,E) into matrix G
+    !         (n = n' = IAT)
 
-    do ISYM = 1,NSYMAT
-      do LM2=1,LMMAXD
-        do LM1=1,LMMAXD
-          GS(LM1,LM2,ISYM) = GS(LM1,LM2,ISYM) + k_point_weight * G(LM1,LM2)
+    do LM = 1,LMMAXD
+      call ZCOPY(LMMAXD,GLLKE1(ILM,(ii - 1) * lmmaxd + LM),1,G(1,LM),1)
+    end do
+
+      !         Perform the k-space integration for diagonal element of
+      !         Green's function of atom IAT
+
+      do ISYM = 1,NSYMAT
+        do LM2=1,LMMAXD
+          do LM1=1,LMMAXD
+            GS(LM1,LM2,ISYM, ii) = GS(LM1,LM2,ISYM, ii) + k_point_weight * G(LM1,LM2)
+          end do
         end do
-      end do
-    end do        ! ISYM = 1,NSYMAT
+      end do        ! ISYM = 1,NSYMAT
+
+    end do !ii
 end subroutine
 
 
