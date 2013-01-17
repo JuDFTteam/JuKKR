@@ -301,6 +301,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   integer :: I1
   double precision :: denEf !< charge density at Fermi level
   double precision :: chrgNt !< charge neutrality
+  double precision :: denEf_local
+  double precision :: chrgNt_local
   double precision :: new_fermi
   integer :: ilocal
   integer :: num_local_atoms
@@ -345,7 +347,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
 !------------------------------------------------------------------------------
-  !$omp parallel do reduction(+: chrgnt, denef) private(ilocal, atomdata, densities, energies, kkr, ldau_data)
+  !$omp parallel do reduction(+: chrgnt, denef) private(ilocal, atomdata, &
+  !$omp densities, energies, kkr, ldau_data, denef_local, chrgnt_local)
   do ilocal = 1, num_local_atoms
     atomdata  => getAtomData(calc_data, ilocal)
     densities => getDensities(calc_data, ilocal)
@@ -373,7 +376,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
     call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
 
-    CHRGNT = CHRGNT + densities%CATOM(1) - atomdata%Z_nuclear
+    CHRGNT_local = densities%CATOM(1) - atomdata%Z_nuclear
 
     if (dims%LLY == 1) then
       call renormalizeDOS(densities%DEN,densities%RNORM, &
@@ -382,7 +385,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     end if
 
     ! calculate DOS at Fermi level
-    DENEF = DENEF + calcDOSatFermi(densities%DEN, params%IELAST, &
+    DENEF_local = calcDOSatFermi(densities%DEN, params%IELAST, &
                                    densities%IEMXD, densities%LMAXD+1, &
                                    densities%NSPIND)
 
@@ -392,6 +395,9 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, &
                          densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
                          densities%IEMXD)
+
+    DENEF = DENEF + DENEF_local
+    CHRGNT = CHRGNT + CHRGNT_local
 
 !------------------------------------------------------------------------------
   end do ! ilocal

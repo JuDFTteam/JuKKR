@@ -1,5 +1,5 @@
-#include "DebugHelpers/logging_macros.h"
-#include "DebugHelpers/test_array_log.h"
+#include "../DebugHelpers/logging_macros.h"
+#include "../DebugHelpers/test_array_log.h"
 
 module kkrmat_mod
 CONTAINS
