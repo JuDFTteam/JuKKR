@@ -217,6 +217,9 @@ nxijd, nguessd, kpoibz, nrd, ekmd)
                          atom_indices, NSYMAT, naez, lmmaxd)
     ! -------------------------------------------------------------------------
 
+    do iat = 1, size(atom_indices)
+      TESTARRAYLOG(3, GS(:,:,:,iat))
+    end do
 
     if (LLY == 1) then
       CHECKASSERT(size(atom_indices) == 1)
@@ -309,7 +312,8 @@ subroutine kloopbody( GLLKE1, PRSC_k, NOITER, kpoint, &
   doublecomplex :: GINP(lmmaxd,lmmaxd,NACLSD,NCLSD) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
   double complex, allocatable :: GLLH(:)
   double complex, allocatable :: GLLHBLCK(:,:) ! dim: lmmaxd*natbld, lmmaxd*natbld*xdim*ydim*zdim
-  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD)
+
+  double complex :: GLLKE1(:,:)
 
   integer :: IGUESS
   integer :: INDN0(NAEZ,NACLSD)

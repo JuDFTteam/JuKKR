@@ -179,33 +179,6 @@ CONTAINS
 !     RFCTOR=A/(2*PI) conversion factor to p.u.
     RFCTOR = ALAT/(8.D0*ATAN(1.0D0))           ! = ALAT/(2*PI)
 
-! --> convert inverted delta_t-matrices to p.u.
-!     Also a symmetrisation of the matrix is performed
-
-!    do LM2 = 1,LMMAXD
-!        do LM1 = 1,LM2
-!            TSST_LOCAL(LM1,LM2) = 0.5D0/RFCTOR * &
-!            ( TSST_LOCAL(LM1,LM2) + TSST_LOCAL(LM2,LM1) )
-!            TSST_LOCAL(LM2,LM1) = TSST_LOCAL(LM1,LM2)
-!        end do
-!    end do
-
-
-
-!     Local Delta_T-matrices of all atoms are communicated to all
-!     processes working on (k, E)
-!     and stored in TMATLL (dimension(LMMAXD,LMMAXD, NAEZD))
-
-!     Optimisation possibility for real space truncation:
-!     communicate matrices only in truncation cluster
-
-    !call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-    !TMATLL,LMMAXD*LMMAXD,MPI_DOUBLE_COMPLEX, &
-    !communicator,IERR)
-
-! ---------------------------------------------------------------------
-
-
     do ilocal = 1, num_local_atoms
 
       do LM2 = 1,LMMAXD
@@ -214,9 +187,7 @@ CONTAINS
           end do
       end do
 
-
   ! ---> inversion
-
 
   !     The (local) Delta_t matrix is inverted and stored in MSSQ
 
@@ -227,9 +198,6 @@ CONTAINS
     end do !ilocal
 
 !=======================================================================
-
-
-
 !     Note: the actual k-loop is in kkrmat01 (it is not parallelized)
 !     The integration over k is also performed in kkrmat01
 
