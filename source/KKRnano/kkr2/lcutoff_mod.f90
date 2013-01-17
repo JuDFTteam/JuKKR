@@ -58,4 +58,31 @@ module lcutoff_mod
     end do
 
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Modifies the array 'cutoffarray' on positions that correspond to sites that
+  !> are further away from 'center' than 'dist_cut'. The value 'lm_low' is written
+  !> at the modified positions.
+  subroutine getCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
+    implicit none
+    integer, dimension(:), intent(inout) :: cutoffarray
+    double precision, dimension(:,:), intent(in) :: rbasis
+    double precision, dimension(3), intent(in) :: center
+    double precision, dimension(3,3), intent(in) :: bravais
+    double precision, intent(in) :: dist_cut
+    integer, intent(in) :: lm_low
+    !-----------------------------
+
+    integer :: ii
+    double precision :: dist
+
+    do ii = 1, size(rbasis, 2)
+      dist = distance_pbc(rbasis(:,ii), center, bravais)
+      if (dist > dist_cut) then
+        cutoffarray(ii) = lm_low
+      end if
+    end do
+
+  end subroutine
+
 end module lcutoff_mod

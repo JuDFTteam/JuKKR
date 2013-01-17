@@ -262,7 +262,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !                  endif
 
           call gatherTmatrices_com(calc_data, TMATLL, ispin, &
-                                   getMySEcommunicator(my_mpi))
+                                   getMySEcommunicator(my_mpi)) ! O(N**2)
 
           TESTARRAYLOG(3, TMATLL)
 
@@ -274,7 +274,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !------------------------------------------------------------------------------
 
             do ilocal = 1, num_local_atoms
-              atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
+              atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal) ! Todo: modify for truncation
             end do
 
             CHECKASSERT(.not. (dims%iguessd == 1 .and. num_local_atoms>1))
@@ -290,7 +290,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
             params%NSYMAT,arrays%DSYMLL, &
             TMATLL,kkr%DTDE(:,:,ISPIN), &
-            arrays%NUMN0,arrays%INDN0,atom_indices, &
+            arrays%NUMN0,arrays%INDN0, &
+            atom_indices, &
             kkr%PRSC(1,1,PRSPIN), &
             EKM,kkr%NOITER, &
             params%QMRBOUND,dims%IGUESSD,dims%BCPD, &

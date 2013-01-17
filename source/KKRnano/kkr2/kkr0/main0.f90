@@ -367,8 +367,8 @@
 
     call getValueInteger(conf, "num_atom_procs", num_atom_procs, ierror)
     if (ierror /= 0) then
-      write(*,*) "WARNING: num_atom_procs not specified, using default value 1."
-      num_atom_procs = 1
+      write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
+      num_atom_procs = naezd
     end if
 
     write(*,*) "The following variables have not been read:"
