@@ -220,6 +220,10 @@ CONTAINS
       lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
       nxijd, nguessd, kpoibz, nrd, ekmd)
     else
+      if (size(atom_indices) /= 1) then
+        write(*,*) "cutoffmode<3 and num_local_atoms>1 not possible."
+        STOP
+      endif
       call KKRMAT01(BZKP,NOFKS,GS(:,:,:,1),VOLCUB,TMATLL,MSSQ(:,:,1), &
       ITER, &
       ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &

@@ -145,9 +145,11 @@ module KKRnanoParallel_mod
     end if
 
     ! Assertion: check if atom-rank is correct
-    if (my_mpi%my_atom_rank /=  my_mpi%my_atom_id - 1) then
-      write(*,*) "Inconsistency in KKRnano atom rank."
-      stop
+    if (my_mpi%active == 1) then
+      if (my_mpi%my_atom_rank /=  my_mpi%my_atom_id - 1) then
+        write(*,*) "Inconsistency in KKRnano atom rank."
+        stop
+      end if
     end if
 
     if (my_mpi%active == 1 .and. my_mpi%active_rank /= my_mpi%my_world_rank) then
