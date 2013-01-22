@@ -93,7 +93,7 @@ CONTAINS
     double complex :: DGINP(LMMAXD,LMMAXD, NACLSD, NCLSD)
     double complex :: GINP_LOCAL(LMMAXD, LMMAXD, NACLSD, NCLSD)
     double complex :: GMATXIJ   (LMMAXD, LMMAXD, NXIJD)
-    double complex, intent(inout), dimension(lmmaxd,lmmaxd,naez) :: TMATLL
+    double complex, intent(inout), dimension(lmmaxd,lmmaxd,*) :: TMATLL
     double complex :: DTDE_LOCAL(LMMAXD, LMMAXD)
 
     double precision::RR(3,0:NRD)

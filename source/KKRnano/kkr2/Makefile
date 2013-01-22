@@ -255,3 +255,4 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
 
 MadelungPotential_mod.o: CalculationData_mod.o
 kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o
+TruncationZone_mod.o: Main2Arrays_mod.o
