@@ -1,17 +1,81 @@
 ! JUST FOR TESTING purposes
 ! replace by proper implementation
 module TEST_lcutoff_mod
+  use TruncationZone_mod
   implicit none
 
   SAVE
 
   integer lm_low
   double precision cutoff_radius
+  integer lm_low2
+  double precision cutoff_radius2
   integer, dimension(:), allocatable :: lmarray
   integer :: cutoffmode
   logical :: DEBUG_dump_matrix = .false.
 
+  type (TruncationZone) :: trunc_zone
+
   CONTAINS
+
+  subroutine initLcutoffNew(calc_data, arrays)
+    use CalculationData_mod
+    use Main2Arrays_mod
+    use lcutoff_mod
+    implicit none
+    type (CalculationData), intent(in) :: calc_data
+    type (Main2Arrays), intent(in) :: arrays
+
+    integer :: lmmaxd
+    integer :: atomindex, ilocal, ii
+    integer :: num_local_atoms
+    integer, dimension(:), allocatable :: lmarray_temp
+
+    lmmaxd = arrays%lmmaxd
+
+    allocate(lmarray(size(arrays%rbasis,2))) ! never deallocated - who cares
+
+    allocate(lmarray_temp(size(arrays%rbasis,2)))
+
+    open(91, file='lcutoff', form='formatted')
+      read(91,*) cutoff_radius
+      read(91,*) lm_low
+      read(91,*) cutoff_radius2
+      read(91,*) lm_low2
+      read(91,*) cutoffmode
+    close(91)
+
+    lmarray      = lmmaxd
+    num_local_atoms = getNumLocalAtoms(calc_data)
+
+    do ilocal = 1, num_local_atoms
+      atomindex = getAtomIndexOfLocal(calc_data, ilocal)
+
+      lmarray_temp = lmmaxd
+
+      ! inner truncation zone
+      call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), &
+                           arrays%bravais, cutoff_radius, lm_low, .false.)
+
+      ! outer truncation zone
+      call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), &
+                           arrays%bravais, cutoff_radius2, lm_low2, .false.)
+
+      if (ilocal == 1) then
+        lmarray = lmarray_temp
+      else
+        do ii = 1, size(lmarray)
+          lmarray(ii) = max(lmarray(ii), lmarray_temp(ii)) ! merge truncation zones
+        end do
+      end if
+    end do
+
+    deallocate(lmarray_temp)
+
+    ! TODO: a bit confusing, is never deallocated
+    call createTruncationZone(trunc_zone, lmarray, arrays)
+
+  end subroutine
 
   subroutine initLcutoff(rbasis, bravais, lmmaxd, atomindex)
     use lcutoff_mod
@@ -21,7 +85,7 @@ module TEST_lcutoff_mod
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: atomindex
 
-    allocate(lmarray(size(rbasis,2)))
+    allocate(lmarray(size(rbasis,2))) ! never deallocated - who cares
 
     open(91, file='lcutoff', form='formatted')
       read(91,*) cutoff_radius
@@ -29,6 +93,7 @@ module TEST_lcutoff_mod
       read(91,*) cutoffmode
     close(91)
 
+    lmarray = lmmaxd
     call getLMarray(lmarray, rbasis, rbasis(:,atomindex), bravais, cutoff_radius, lmmaxd, lm_low)
 
   end subroutine

@@ -63,7 +63,10 @@ module lcutoff_mod
   !> Modifies the array 'cutoffarray' on positions that correspond to sites that
   !> are further away from 'center' than 'dist_cut'. The value 'lm_low' is written
   !> at the modified positions.
-  subroutine getCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
+  !>
+  !> If merging = .true.: change the lm value only when it is larger than the
+  !> original value -> this merges the truncation zones
+  subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low, merging)
     implicit none
     integer, dimension(:), intent(inout) :: cutoffarray
     double precision, dimension(:,:), intent(in) :: rbasis
@@ -71,15 +74,26 @@ module lcutoff_mod
     double precision, dimension(3,3), intent(in) :: bravais
     double precision, intent(in) :: dist_cut
     integer, intent(in) :: lm_low
+    logical, intent(in), optional :: merging
     !-----------------------------
 
     integer :: ii
     double precision :: dist
+    logical :: do_merge
+
+    do_merge = .false.
+    if (present(merging)) then
+      do_merge = merging
+    end if
 
     do ii = 1, size(rbasis, 2)
       dist = distance_pbc(rbasis(:,ii), center, bravais)
       if (dist > dist_cut) then
-        cutoffarray(ii) = lm_low
+        if (.not. do_merge) then
+          cutoffarray(ii) = lm_low
+        else
+          cutoffarray(ii) = max(cutoffarray(ii), lm_low)
+        end if
       end if
     end do
 

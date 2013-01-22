@@ -1,0 +1,404 @@
+! cleaned version of kkrmat
+
+#include "../DebugHelpers/logging_macros.h"
+#include "../DebugHelpers/test_array_log.h"
+#include "../DebugHelpers/test_macros.h"
+
+module kkrmat_new_mod2
+
+double complex, allocatable, dimension(:, :), save :: full
+!IBM* ALIGN(32, full)
+
+CONTAINS
+
+! WARNING: Symmetry assumptions might have been used that are
+! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
+
+subroutine KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB, &
+TMATLL, &
+ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
+GINP, &
+NUMN0,INDN0,atom_indices, &
+QMRBOUND, &
+lmmaxd, naclsd, nrd)
+
+  USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
+  implicit none
+
+  !     .. parameters ..
+  integer, parameter :: NSYMAXD = 48
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  ! ************************************************************************
+  !   performs k-space integration,
+  !   determines scattering path operator (g(k,e)-t**-1)**-1 and
+  !   Greens function of the real system -> GS(*,*,*,*),
+
+  !   NEW VERSION 10.99
+  !   up -> left , down -> right, for decimation
+  ! ------------------------------------------------------------------------
+
+  integer, intent(in) :: lmmaxd
+  integer, intent(in) :: naclsd  !< max. number of atoms in reference cluster
+  integer, intent(in) :: nrd
+  integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
+
+  !     .. SCALAR ARGUMENTS ..
+  double precision:: ALAT
+
+  integer::NAEZ
+  integer::NOFKS
+  integer::NSYMAT
+
+  double complex :: TMATLL(lmmaxd,lmmaxd,naez)
+
+  doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+  !double complex :: GS   (lmmaxd,lmmaxd,NSYMAXD,num_local_atoms)
+  double complex ::  GS(:,:,:,:)
+
+  double precision::BZKP(:,:)
+  double precision::VOLCUB(:)
+  double precision::RR(:,0:)
+
+  integer:: NUMN0(:)
+  integer:: INDN0(:,:)
+  integer:: ATOM(:,:) ! dim naclsd, naez?
+  integer:: CLS(:)         ! dim *
+  integer:: EZOA(:,:) ! dim naclsd, naez?
+  integer:: NACLS(:)
+
+  double precision::QMRBOUND
+
+! ------- local ----------
+
+  double complex :: EIKRP(naclsd)
+  double complex :: EIKRM(naclsd)
+  integer::k_point_index
+
+  double complex, allocatable, dimension(:,:) ::GLLKE1
+  double complex, allocatable, dimension(:) ::GLLH
+
+!IBM* ALIGN(32, GLLH)
+
+  integer::        site_lm_size
+
+  integer :: memory_stat
+  logical :: memory_fail
+
+  integer :: iat
+  integer :: num_local_atoms
+
+  ! array dimensions
+
+  site_lm_size = NAEZ*LMMAXD
+
+  num_local_atoms = size(atom_indices)
+
+  !-----------------------------------------------------------------------
+  ! Allocate arrays
+  !-----------------------------------------------------------------------
+  memory_stat = 0
+  memory_fail = .false.
+
+  allocate(GLLKE1(site_lm_size,LMMAXD*num_local_atoms), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+
+  if (memory_fail .eqv. .true.) then
+    write(*,*) "KKRMAT01: FATAL Error, failure to allocate memory."
+    write(*,*) "       Probably out of memory."
+    stop
+  end if
+
+
+  ! WARNING: Symmetry assumptions might have been used that are
+  ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
+  ! ---> use sit
+  !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
+
+  GS = CZERO
+
+  TESTARRAYLOG(3, GINP)
+
+!==============================================================================
+  do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
+!==============================================================================
+
+    WRITELOG(4, *) "k-point ", k_point_index
+
+    ! Get the scattering path operator for k-point BZKP(:, k_point_index)
+    ! output: GLLKE1, NOITER
+    ! inout: PRSC
+    ! inout (temporary arrays): GLLH, GLLHBLCK
+    call kloopbody( GLLKE1, BZKP(:, k_point_index), TMATLL, GINP, ALAT, &
+                   NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                   NUMN0, EIKRM, EIKRP, GLLH, &
+                   atom_indices, QMRBOUND, NACLS, lmmaxd, naclsd, &
+                   nrd)
+
+    ! ----------- Integrate Scattering Path operator over k-points --> GS -----
+    ! Note: here k-integration only in irreducible wedge
+    call greenKSummation(GLLKE1, &
+                         GS, VOLCUB(k_point_index), &
+                         atom_indices, NSYMAT, naez, lmmaxd)
+    ! -------------------------------------------------------------------------
+
+    do iat = 1, size(atom_indices)
+      TESTARRAYLOG(3, GS(:,:,:,iat))
+    end do
+
+!==============================================================================
+  end do ! KPT = 1,NOFKS
+!==============================================================================
+
+  ! ----------------------------------------------------------------
+  ! Deallocate arrays
+  ! ----------------------------------------------------------------
+
+  deallocate(GLLKE1)
+  if (allocated(GLLH)) deallocate(GLLH)
+
+end subroutine KKRMAT01_new
+
+!------------------------------------------------------------------------------
+!> Calculate scattering path operator for 'kpoint'
+subroutine kloopbody( GLLKE1, kpoint, &
+                      TMATLL, GINP, ALAT, &
+                      NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                      NUMN0, EIKRM, EIKRP, GLLH, &
+                      atom_indices, QMRBOUND, NACLS, &
+                      lmmaxd, naclsd, nrd)
+
+  use initialGuess_store_mod
+  use fillKKRMatrix_mod
+  use mminvmod_mod
+  use dlke0_smat_mod
+  use SparseMatrixDescription_mod
+  use TEST_lcutoff_mod !TODO: remove
+
+  USE_ARRAYLOG_MOD
+  USE_LOGGING_MOD
+  implicit none
+
+  integer, intent(in), dimension(:) :: atom_indices !< indices of local atoms
+  integer, intent(in) :: naclsd
+  integer :: NAEZ
+  double precision :: ALAT
+  integer :: ATOM(:,:)         ! dim: naclsd, *
+  double precision :: kpoint(3)
+  integer :: CLS(:)
+  double complex :: EIKRM(:)   ! dim: naclsd
+  double complex :: EIKRP(:)
+  integer :: EZOA(:,:) ! dim naclsd,*
+  doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+  double complex, allocatable :: GLLH(:)
+
+  double complex :: GLLKE1(:,:)
+
+  integer :: INDN0(:,:)
+  integer, intent(in) :: lmmaxd
+  integer :: NACLS(:)
+  integer, intent(in) :: nrd
+  integer :: NUMN0(:)
+  double precision :: QMRBOUND
+  double precision :: RR(:,0:)
+  doublecomplex :: TMATLL(:,:,:)
+
+  !-------- local ---------
+  double complex, parameter :: CONE = ( 1.0D0,0.0D0)
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  integer :: ref_cluster_index
+  integer :: site_index
+
+  type (SparseMatrixDescription) :: sparse
+  integer, dimension(:), allocatable :: lmmaxd_array
+
+  double complex, dimension(:,:), allocatable :: mat_B
+  double complex, dimension(:,:), allocatable :: mat_X
+
+  integer :: num_cluster
+  logical :: initial_zero
+
+  num_cluster = maxval(numn0)
+
+  call createSparseMatrixDescription(sparse, naez, naez*num_cluster)
+
+  allocate(lmmaxd_array(naez))
+
+  !=======================================================================
+  ! ---> fourier transformation
+  !
+  !     added by h.hoehler 3.7.2002
+  !                                                     n   0          n
+  !     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
+  !                                   L  L'             L   L'
+  !
+  !                                             n   0           n
+  !                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
+  !                                             L'  L
+  !
+  !     this operation has to be done to satisfy e.g. the point symmetry!
+  !     application of fourier transformation is just an approximation
+  !     for the tb system, since the transl. invariance is not satisfied.
+  !
+  ! The same calculation as with lloyds formula is done all over again ???
+  ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
+
+  lmmaxd_array = lmarray
+
+  call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
+
+  allocate(mat_B(sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
+  allocate(mat_X(sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
+
+  if (.not. allocated(GLLH)) then
+    allocate(GLLH(getNNZ(sparse)))
+  endif
+
+  GLLH = CZERO
+
+  do site_index = 1,NAEZ
+    ref_cluster_index = CLS(site_index)
+
+    call DLKE1(ALAT,NACLS,RR,EZOA(:,site_index), &
+               kpoint,ref_cluster_index,EIKRM,EIKRP, &
+               nrd, naclsd)
+
+    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
+                    NACLS(ref_cluster_index), ATOM(:,site_index),NUMN0,INDN0, &
+                    GINP(:,:,:,ref_cluster_index), &
+                    naez, lmmaxd, naclsd)
+  end do
+
+  TESTARRAYLOG(3, GLLH)
+
+  !----------------------------------------------------------------------------
+  call buildKKRCoeffMatrix(GLLH, TMATLL, lmmaxd, naez, sparse)
+  !----------------------------------------------------------------------------
+
+  TESTARRAYLOG(3, GLLH)
+
+  ! ==> now GLLH holds (1 - Delta_t * G_ref)
+
+  ! Now solve the linear matrix equation A*X = b (b is also a matrix),
+  ! where A = (1 - Delta_t*G_ref) (inverse of scattering path operator)
+  ! and b = Delta_t
+
+  !===================================================================
+  ! 3) solve linear set of equations by iterative TFQMR scheme
+  !    solve (1 - \Delta t * G_ref) X = \Delta t
+  !    the solution X is the scattering path operator
+
+  call buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_indices, sparse%kvstr)
+
+  initial_zero = .true.
+
+  if (cutoffmode == 3) then
+    call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
+                      QMRBOUND, size(mat_B, 2), size(mat_B, 1), initial_zero)
+
+    if (DEBUG_dump_matrix) then
+      call dumpSparseMatrixDescription(sparse, "matrix_desc.dat")
+      call dumpSparseMatrixData(GLLH, "matrix.unf")
+      call dumpSparseMatrixDataFormatted(GLLH, "matrix_form.dat")
+      call dumpDenseMatrix(mat_X, "solution.unf")
+      call dumpDenseMatrixFormatted(mat_X, "solution_form.dat")
+      call dumpDenseMatrix(mat_B, "rhs.unf")
+      call dumpDenseMatrixFormatted(mat_B, "rhs_form.dat")
+    end if
+
+  end if
+
+  TESTARRAYLOG(4, mat_B)
+
+  ! solve full matrix equation
+  if (cutoffmode == 4) then
+    if (.not. allocated(full)) then
+      allocate(full(size(mat_B,1), size(mat_B,1)))
+    end if
+    call convertToFullMatrix(GLLH, sparse%ia, sparse%ja, sparse%ka, &
+                                   sparse%kvstr, sparse%kvstr, full)
+    TESTARRAYLOG(3, full)
+    call solveFull(full, mat_B)
+    mat_X = mat_B
+  endif
+
+  TESTARRAYLOG(4, mat_X)
+  call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
+
+  ! solved. Result in GLLKE1
+
+  TESTARRAYLOG(3, GLLKE1)
+
+  call destroySparseMatrixDescription(sparse)
+
+  deallocate(lmmaxd_array)
+
+  deallocate(mat_B)
+  deallocate(mat_X)
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Summation of Green's function over k-points. Has to be called for every k-point
+!> TODO: it would be better to do the k-space-symmetry treatment separately ???
+!> This routine creates NSYMAT copies of the same solution
+!> Set GS to 0 before first call
+!> in: GLLKE1
+!> inout: GS (set to 0 before first call)
+subroutine greenKSummation(GLLKE1, GS, k_point_weight, atom_indices, NSYMAT, naez, lmmaxd)
+  implicit none
+  integer, parameter :: NSYMAXD = 48
+
+  integer, intent(in) :: naez
+  integer, intent(in) :: lmmaxd
+  integer, intent(in) :: atom_indices(:)
+
+  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD*size(atom_indices))
+  double complex :: GS(lmmaxd,lmmaxd,NSYMAXD,size(atom_indices))
+
+  integer :: NSYMAT
+  double precision :: k_point_weight
+
+  ! -------- local ------------------
+  double complex :: G(lmmaxd,lmmaxd)
+  integer :: LM
+  integer :: LM1
+  integer :: LM2
+  integer :: ILM
+  integer :: ISYM
+  integer :: IAT
+  integer :: ii !< local atom index
+
+  do ii = 1, size(atom_indices)
+
+    iat = atom_indices(ii)
+
+    !   combined atom/lm index
+    ILM = LMMAXD*(IAT-1) + 1
+
+    !                                      nn
+    !         Copy the diagonal elements G_LL' of the Green's-function,
+    !         dependent on (k,E) into matrix G
+    !         (n = n' = IAT)
+
+    do LM = 1,LMMAXD
+      call ZCOPY(LMMAXD,GLLKE1(ILM,(ii - 1) * lmmaxd + LM),1,G(1,LM),1)
+    end do
+
+      !         Perform the k-space integration for diagonal element of
+      !         Green's function of atom IAT
+
+      do ISYM = 1,NSYMAT
+        do LM2=1,LMMAXD
+          do LM1=1,LMMAXD
+            GS(LM1,LM2,ISYM, ii) = GS(LM1,LM2,ISYM, ii) + k_point_weight * G(LM1,LM2)
+          end do
+        end do
+      end do        ! ISYM = 1,NSYMAT
+
+    end do !ii
+end subroutine
+
+end module

@@ -303,6 +303,27 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
             jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
 
+!            call KLOOPZ1_new( GmatN_buffer, &
+!            params%ALAT,ITER,trunc_zone%NAEZ_trc, &
+!            arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+!            arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
+!            trunc_zone%CLS_trc,arrays%NACLS,arrays%RR, &
+!            trunc_zone%EZOA_trc,trunc_zone%ATOM_trc,kkr%GREFN,kkr%DGREFN, &
+!            params%NSYMAT,arrays%DSYMLL, &
+!            TMATLL_trc,kkr%DTDE(:,:,ISPIN), &
+!            trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc, &
+!            TODO:translatEatom_indices, &
+!            kkr%PRSC(1,1,PRSPIN), &
+!            EKM,kkr%NOITER, &
+!            params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
+!            jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
+!            kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
+!            jij_data%GMATXIJ(1,1,1,ISPIN), &
+!            getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
+!            arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
+!            dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
+!            jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
+
             !TESTARRAYLOG(3, GMATN(...))
 
 !------------------------------------------------------------------------------
