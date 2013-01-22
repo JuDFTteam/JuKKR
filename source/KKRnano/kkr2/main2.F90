@@ -146,8 +146,6 @@ program MAIN2
     call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
 
-    I1 = getMyAtomId(my_mpi) !assign atom number for the rest of the program
-
     call createEnergyMesh(emesh, dims%iemxd) !!!!
     params%ielast = dims%iemxd !!!!
     call readEnergyMesh(emesh)  !every process does this!  !!!!
@@ -164,17 +162,10 @@ program MAIN2
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
+    ! TODO: merge truncation clusters of all local atoms
+    I1 = getAtomIndexOfLocal(calc_data, 1)
     call initLcutoff(arrays%rbasis, arrays%bravais, arrays%lmmaxd, I1)
     WRITELOG(3, *) "lm-array: ", lmarray
-
-    ! For now only 1 atom per process is supported (1 local atom)
-    ! TODO !!!
-    atomdata      => getAtomData(calc_data, 1)
-    ldau_data     => getLDAUData(calc_data, 1)
-    mesh          => atomdata%mesh_ptr
-
-!+++++++++++
-    ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
 
 ! ######################################################################
 ! ######################################################################
@@ -214,7 +205,14 @@ program MAIN2
 
 ! LDA+U ! TODO: doesn't work for num_local_atoms > 1
       if (params%LDAU) then
+        ! For now only 1 atom per process is supported (1 local atom)
         CHECKASSERT(num_local_atoms == 1)
+
+        atomdata      => getAtomData(calc_data, 1)
+        ldau_data     => getLDAUData(calc_data, 1)
+        mesh          => atomdata%mesh_ptr
+        I1 = getAtomIndexOfLocal(calc_data, 1)
+
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48    ! ???
 
@@ -257,13 +255,7 @@ program MAIN2
 
       call broadcastEnergyMesh_com(my_mpi, emesh)
 
-      !call MPI_ALLREDUCE(kkr%NOITER,NOITER_ALL,1,MPI_INTEGER,MPI_SUM, &
-      !getMyActiveCommunicator(my_mpi),IERR)
-      ! TODO: allreduce not necessary, only master rank needs NOITER_ALL, use reduce instead
-
-      ! TODO
       if(isMasterRank(my_mpi)) then
-        !call printSolverIterationNumber(ITER, NOITER_ALL)
         call writeIterationTimings(ITER, getElapsedTime(program_timer), &
                                          getElapsedTime(iteration_timer))
       endif

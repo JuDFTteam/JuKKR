@@ -479,6 +479,8 @@ module CalculationData_mod
 
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 
+      ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
+
     !--------------------------------------------------------------------------
     end do
     !--------------------------------------------------------------------------
