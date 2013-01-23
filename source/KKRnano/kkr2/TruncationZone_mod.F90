@@ -44,9 +44,11 @@ module TruncationZone_mod
     integer :: ii, jj
     integer :: ind
     integer :: naez_trc
+    integer :: naclsd
     integer :: memory_stat
 
     num_atoms = size(mask)
+    naclsd = arrays%naclsd
 
     ALLOCATECHECK(self%index_map(num_atoms))
 
@@ -139,8 +141,8 @@ module TruncationZone_mod
     old_ind = -1
     do ii = 1, num
       ind = self%index_map(ii)
-      CHECKASSERT( ind > old_ind .and. ind <= ii )
-      if (ind /= ii) then
+      if (ind > 0 .and. ind /= ii) then
+        CHECKASSERT( ind > old_ind .and. ind <= ii )
         mat_array(:,:,ind) = mat_array(:,:, ii)
       end if
       old_ind = ind
@@ -158,7 +160,7 @@ module TruncationZone_mod
     integer :: ii, ind
 
     ind = 0
-    do ii = 1, size(array)
+    do ii = 1, size(mask)
       if (mask(ii) > 0) then
         ind = ind + 1
         new_array(ind) = array(ii)
@@ -176,7 +178,7 @@ module TruncationZone_mod
     integer :: ii, ind
 
     ind = 0
-    do ii = 1, size(array)
+    do ii = 1, size(mask)
       if (mask(ii) > 0) then
         ind = ind + 1
         new_array(ind, :) = array(ii, :)
@@ -194,7 +196,7 @@ module TruncationZone_mod
     integer :: ii, ind
 
     ind = 0
-    do ii = 1, size(array)
+    do ii = 1, size(mask)
       if (mask(ii) > 0) then
         ind = ind + 1
         new_array(:, ind) = array(:, ii)

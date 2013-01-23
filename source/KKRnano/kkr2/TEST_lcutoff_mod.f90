@@ -1,7 +1,6 @@
 ! JUST FOR TESTING purposes
 ! replace by proper implementation
 module TEST_lcutoff_mod
-  use TruncationZone_mod
   implicit none
 
   SAVE
@@ -13,39 +12,55 @@ module TEST_lcutoff_mod
   integer, dimension(:), allocatable :: lmarray
   integer :: cutoffmode
   logical :: DEBUG_dump_matrix = .false.
-
-  type (TruncationZone) :: trunc_zone
+  integer :: num_untruncated
+  integer :: num_truncated
+  integer :: num_truncated2
+  logical :: real_space_cutoff
 
   CONTAINS
 
+  !----------------------------------------------------------------------------
   subroutine initLcutoffNew(calc_data, arrays)
     use CalculationData_mod
     use Main2Arrays_mod
     use lcutoff_mod
+    use TruncationZone_mod
     implicit none
-    type (CalculationData), intent(in) :: calc_data
+    type (CalculationData), intent(inout) :: calc_data
     type (Main2Arrays), intent(in) :: arrays
 
     integer :: lmmaxd
-    integer :: atomindex, ilocal, ii
+    integer :: atomindex, ilocal, ii, ind
     integer :: num_local_atoms
     integer, dimension(:), allocatable :: lmarray_temp
+    integer, dimension(:), allocatable :: lmarray_full
+    type (TruncationZone), pointer :: trunc_zone
 
     lmmaxd = arrays%lmmaxd
 
-    allocate(lmarray(size(arrays%rbasis,2))) ! never deallocated - who cares
+    allocate(lmarray_full(size(arrays%rbasis,2)))
 
     allocate(lmarray_temp(size(arrays%rbasis,2)))
 
+    real_space_cutoff = .false.
     open(91, file='lcutoff', form='formatted')
       read(91,*) cutoff_radius
       read(91,*) lm_low
-      read(91,*) cutoff_radius2
-      read(91,*) lm_low2
       read(91,*) cutoffmode
+
+      lm_low2 = -1
+      cutoff_radius2 = 0.0d0
+      if (cutoffmode > 4) then
+        cutoffmode = cutoffmode - 2
+        ! cutoff-mode 5: iterative solver with 2 cutoffs,
+        !             6: direct solver with 2 cutoffs
+        read(91,*) cutoff_radius2
+        read(91,*) lm_low2
+        real_space_cutoff = .true.
+      endif
     close(91)
 
-    lmarray      = lmmaxd
+    lmarray_full      = lmmaxd
     num_local_atoms = getNumLocalAtoms(calc_data)
 
     do ilocal = 1, num_local_atoms
@@ -58,46 +73,81 @@ module TEST_lcutoff_mod
                            arrays%bravais, cutoff_radius, lm_low, .false.)
 
       ! outer truncation zone
-      call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), &
-                           arrays%bravais, cutoff_radius2, lm_low2, .false.)
+      if (real_space_cutoff) then
+        call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), &
+                             arrays%bravais, cutoff_radius2, lm_low2, .false.)
+      endif
 
       if (ilocal == 1) then
-        lmarray = lmarray_temp
+        lmarray_full = lmarray_temp
       else
-        do ii = 1, size(lmarray)
-          lmarray(ii) = max(lmarray(ii), lmarray_temp(ii)) ! merge truncation zones
+        do ii = 1, size(lmarray_full)
+          lmarray_full(ii) = max(lmarray_full(ii), lmarray_temp(ii)) ! merge truncation zones
         end do
       end if
     end do
 
-    deallocate(lmarray_temp)
-
     ! TODO: a bit confusing, is never deallocated
-    call createTruncationZone(trunc_zone, lmarray, arrays)
+    trunc_zone => getTruncationZone(calc_data)
+    call createTruncationZone(trunc_zone, lmarray_full, arrays)
 
+    num_untruncated = 0
+    num_truncated = 0
+    num_truncated2 = 0
+    do ii = 1, size(lmarray_full)
+      if (lmarray_full(ii) == lmmaxd) then
+        num_untruncated = num_untruncated + 1
+      else if (lmarray_full(ii) == lm_low) then
+        num_truncated = num_truncated + 1
+      else if (lmarray_full(ii) == lm_low2) then
+        num_truncated2 = num_truncated2 + 1
+      end if
+    end do
+
+    ind = 0
+    do ii = 1, size(lmarray_full)
+      if (lmarray_full(ii) > 0) then
+        ind = ind + 1
+      end if
+    end do
+
+    allocate(lmarray(ind)) ! never deallocated - who cares
+
+    ind = 0
+    do ii = 1, size(lmarray_full)
+      if (lmarray_full(ii) > 0) then
+        ind = ind + 1
+        lmarray(ind) = lmarray_full(ii)
+      end if
+    end do
+
+    deallocate(lmarray_temp)
+    deallocate(lmarray_full)
   end subroutine
 
-  subroutine initLcutoff(rbasis, bravais, lmmaxd, atomindex)
-    use lcutoff_mod
-    implicit none
-    double precision, dimension(:,:), intent(in) :: rbasis
-    double precision, dimension(3,3), intent(in) :: bravais
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: atomindex
+  !----------------------------------------------------------------------------
+!  subroutine initLcutoff(rbasis, bravais, lmmaxd, atomindex)
+!    use lcutoff_mod
+!    implicit none
+!    double precision, dimension(:,:), intent(in) :: rbasis
+!    double precision, dimension(3,3), intent(in) :: bravais
+!    integer, intent(in) :: lmmaxd
+!    integer, intent(in) :: atomindex
+!
+!    allocate(lmarray(size(rbasis,2))) ! never deallocated - who cares
+!
+!    open(91, file='lcutoff', form='formatted')
+!      read(91,*) cutoff_radius
+!      read(91,*) lm_low
+!      read(91,*) cutoffmode
+!    close(91)
+!
+!    lmarray = lmmaxd
+!    call getLMarray(lmarray, rbasis, rbasis(:,atomindex), bravais, cutoff_radius, lmmaxd, lm_low)
+!
+!  end subroutine
 
-    allocate(lmarray(size(rbasis,2))) ! never deallocated - who cares
-
-    open(91, file='lcutoff', form='formatted')
-      read(91,*) cutoff_radius
-      read(91,*) lm_low
-      read(91,*) cutoffmode
-    close(91)
-
-    lmarray = lmmaxd
-    call getLMarray(lmarray, rbasis, rbasis(:,atomindex), bravais, cutoff_radius, lmmaxd, lm_low)
-
-  end subroutine
-
+  !----------------------------------------------------------------------------
   subroutine cropGLLH(GLLH, lmmaxd, naclsd, naezd, lmarray, numn0, indn0)
     implicit none
     double complex GLLH(LMMAXD,NACLSD*LMMAXD,NAEZD)

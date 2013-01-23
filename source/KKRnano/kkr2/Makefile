@@ -224,7 +224,7 @@ fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o
 
 #l-cutoff TEST
-TEST_lcutoff_mod.o: lcutoff_mod.o
+TEST_lcutoff_mod.o: lcutoff_mod.o CalculationData_mod.o Main2Arrays_mod.o
 
 BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
@@ -247,11 +247,11 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
          MadelungCalculator_mod.o  \
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
          GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \
-         EBalanceHandler_mod.o TEST_lcutoff_mod.o \
+         EBalanceHandler_mod.o \
          RadialMeshData_mod.o CellData_mod.o wrappers_mod.o BasisAtom_mod.o LDAUData_mod.o \
          JijData_mod.o BroydenData_mod.o Main2Arrays_mod.o DimParams_mod.o InputParams_mod.o \
          KKRresults_mod.o DensityResults_mod.o \
-         EnergyResults_mod.o
+         EnergyResults_mod.o TruncationZone_mod.o
 
 MadelungPotential_mod.o: CalculationData_mod.o
 kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o

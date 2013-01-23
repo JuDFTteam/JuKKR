@@ -51,6 +51,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   use KKRnano_Comm_mod
   use kloopz1_mod
+  use TruncationZone_mod
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
 
@@ -72,6 +73,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (GauntCoefficients), pointer     :: gaunts    ! never changes
   type (LDAUData), pointer              :: ldau_data ! changes
   type (JijData), pointer               :: jij_data  ! changes
+  type (TruncationZone), pointer        :: trunc_zone ! never changes
 
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
@@ -96,6 +98,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   allocate(TMATLL(lmmaxd, lmmaxd, dims%naez))
 
+  trunc_zone => getTruncationZone(calc_data)
   gaunts    => getGaunts(calc_data)
   atomdata  => getAtomData(calc_data, 1)
   I1 = atomdata%atom_index
@@ -264,6 +267,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           call gatherTmatrices_com(calc_data, TMATLL, ispin, &
                                    getMySEcommunicator(my_mpi)) ! O(N**2)
 
+          call reorderMatrices(trunc_zone, TMATLL)
+
           TESTARRAYLOG(3, TMATLL)
 
 !------------------------------------------------------------------------------
@@ -274,7 +279,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !------------------------------------------------------------------------------
 
             do ilocal = 1, num_local_atoms
-              atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal) ! Todo: modify for truncation
+              atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
+              atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
+              CHECKASSERT(atom_indices(ilocal) > 0)
             end do
 
             CHECKASSERT(.not. (dims%iguessd == 1 .and. num_local_atoms>1))
@@ -282,37 +289,16 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             ! problem: reference Green's functions
             ! here: known by all atoms - therefore pick any atom
             ! TODO: reorganise kloopz
-            call KLOOPZ1_new( GmatN_buffer, &
-            params%ALAT,ITER,arrays%NAEZ, &
-            arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-            arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
-            arrays%CLS,arrays%NACLS,arrays%RR, &
-            arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
-            params%NSYMAT,arrays%DSYMLL, &
-            TMATLL,kkr%DTDE(:,:,ISPIN), &
-            arrays%NUMN0,arrays%INDN0, &
-            atom_indices, &
-            kkr%PRSC(1,1,PRSPIN), &
-            EKM,kkr%NOITER, &
-            params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
-            jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
-            kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
-            jij_data%GMATXIJ(1,1,1,ISPIN), &
-            getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-            arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
-            dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
-            jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
-
 !            call KLOOPZ1_new( GmatN_buffer, &
-!            params%ALAT,ITER,trunc_zone%NAEZ_trc, &
+!            params%ALAT,ITER,arrays%NAEZ, &
 !            arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
 !            arrays%BZKP(1,1,NMESH),arrays%VOLCUB(1,NMESH), &
-!            trunc_zone%CLS_trc,arrays%NACLS,arrays%RR, &
-!            trunc_zone%EZOA_trc,trunc_zone%ATOM_trc,kkr%GREFN,kkr%DGREFN, &
+!            arrays%CLS,arrays%NACLS,arrays%RR, &
+!            arrays%EZOA,arrays%ATOM,kkr%GREFN,kkr%DGREFN, &
 !            params%NSYMAT,arrays%DSYMLL, &
-!            TMATLL_trc,kkr%DTDE(:,:,ISPIN), &
-!            trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc, &
-!            TODO:translatEatom_indices, &
+!            TMATLL,kkr%DTDE(:,:,ISPIN), &
+!            arrays%NUMN0,arrays%INDN0, &
+!            atom_indices, &
 !            kkr%PRSC(1,1,PRSPIN), &
 !            EKM,kkr%NOITER, &
 !            params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
@@ -323,6 +309,27 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !            arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
 !            dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
 !            jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
+
+            call KLOOPZ1_new( GmatN_buffer, &
+            params%ALAT,ITER,trunc_zone%NAEZ_trc, &
+            arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+            arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), &
+            trunc_zone%CLS_trc,arrays%NACLS,arrays%RR, &
+            trunc_zone%EZOA_trc,trunc_zone%ATOM_trc,kkr%GREFN,kkr%DGREFN, &
+            params%NSYMAT,arrays%DSYMLL, &
+            TMATLL,kkr%DTDE(:,:,ISPIN), &
+            trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc, &
+            atom_indices, &
+            kkr%PRSC(:,:,PRSPIN), &
+            EKM,kkr%NOITER, &
+            params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
+            jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
+            kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
+            jij_data%GMATXIJ(:,:,:,ISPIN), &
+            getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
+            arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
+            dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
+            jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
 
             !TESTARRAYLOG(3, GMATN(...))
 

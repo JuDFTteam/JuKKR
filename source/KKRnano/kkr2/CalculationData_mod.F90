@@ -19,6 +19,7 @@ module CalculationData_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
+  use TruncationZone_mod
 
   implicit none
 
@@ -50,6 +51,7 @@ module CalculationData_mod
     type (MadelungCalculator), pointer     :: madelung_calc     => null()
     type (ShapeGauntCoefficients), pointer :: shgaunts          => null()
     type (GauntCoefficients), pointer      :: gaunts            => null()
+    type (TruncationZone), pointer         :: trunc_zone        => null()
     !type (EnergyMesh), pointer :: emesh                         => null()
 
   end type
@@ -97,10 +99,11 @@ module CalculationData_mod
     allocate(calc_data%broyden_array(num_local_atoms))
     allocate(calc_data%atom_ids(num_local_atoms))
 
-    ! These datastructures are the same for all atoms
+    ! These datastructures are the same for all (local) atoms
     allocate(calc_data%madelung_calc)
     allocate(calc_data%gaunts)
     allocate(calc_data%shgaunts)
+    allocate(calc_data%trunc_zone)
 
     atom_rank = getMyAtomRank(my_mpi)
 
@@ -211,6 +214,7 @@ module CalculationData_mod
     deallocate(calc_data%densities_array)
     deallocate(calc_data%energies_array)
     deallocate(calc_data%madelung_sum_array)
+    deallocate(calc_data%trunc_zone)
 
     deallocate(calc_data%ldau_data_array)
     deallocate(calc_data%jij_data_array)
@@ -383,6 +387,15 @@ module CalculationData_mod
     getMadelungCalculator => calc_data%madelung_calc
   end function
 
+  !----------------------------------------------------------------------------
+  !> Returns reference to truncation zone.
+  function getTruncationZone(calc_data)
+    implicit none
+    type (TruncationZone), pointer :: getTruncationZone ! return value
+    type (CalculationData), intent(in) :: calc_data
+
+    getTruncationZone => calc_data%trunc_zone
+  end function
 ! ==================== Helper routines ========================================
 
   !----------------------------------------------------------------------------

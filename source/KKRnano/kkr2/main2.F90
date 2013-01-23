@@ -162,10 +162,17 @@ program MAIN2
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
-    ! TODO: merge truncation clusters of all local atoms
-    I1 = getAtomIndexOfLocal(calc_data, 1)
-    call initLcutoff(arrays%rbasis, arrays%bravais, arrays%lmmaxd, I1)
+    call initLcutoffNew(calc_data, arrays)
+    if (isMasterRank(my_mpi)) then
+      write(*,*) "On node 0: "
+      write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
+      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
+      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
+    end if
+    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
+
     WRITELOG(3, *) "lm-array: ", lmarray
+    WRITELOG(3, *) num_untruncated, num_truncated, num_truncated2
 
 ! ######################################################################
 ! ######################################################################
