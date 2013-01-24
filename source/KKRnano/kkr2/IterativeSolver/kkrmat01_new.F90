@@ -589,7 +589,7 @@ subroutine greenKSummation(GLLKE1, GS, k_point_weight, atom_indices, NSYMAT, nae
         end do
       end do        ! ISYM = 1,NSYMAT
 
-    end do !ii
+  end do !ii
 end subroutine
 
 

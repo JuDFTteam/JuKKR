@@ -1,5 +1,6 @@
 !     @PROCESS HOT=noarraypad:level=1:simd:vector
-!     Taken from SPARSKIT
+!     See:
+!     Y. Saad, SPARSKIT: a basic tool kit for sparse matrix computations - Version 2 (1994)
 !     modified for double complex and for
 !     multiplying several vectors at once
 
@@ -24,6 +25,7 @@ contains
   end subroutine
 
 
+!     Heavily modified routine from SPARSKIT
 !-----------------------------------------------------------------------
   subroutine vbrmv_mat(blk_nrows, ia, ja, ka, a, kvstr, kvstc, x, b, &
                        max_blockdim, max_blocks_per_row)

@@ -347,7 +347,8 @@ end subroutine
 !> Set GS to 0 before first call
 !> in: GLLKE1
 !> inout: GS (set to 0 before first call)
-subroutine greenKSummation(GLLKE1, GS, k_point_weight, atom_indices, NSYMAT, naez, lmmaxd)
+subroutine greenKSummation(GLLKE1, GS, k_point_weight, &
+                           atom_indices, NSYMAT, naez, lmmaxd)
   implicit none
   integer, parameter :: NSYMAXD = 48
 
