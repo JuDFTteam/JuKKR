@@ -1,7 +1,59 @@
 module initialGuess_store_mod
 
+type InitialGuess
+  complex, pointer, dimension(:,:,:) :: PRSC => null()
+  integer :: ekmd
+  integer :: nspin
+  integer :: ekm
+  integer :: ispin
+end type
+
 CONTAINS
 
+!subroutine createInitialGuess(self, ekmd, nspin)
+!  implicit none
+!  type (InitialGuess), intent(inout) :: self
+!  self%ekmd = ekmd
+!  self%nspin = nspin
+!  self%ekm = 1
+!  self%ispin = 1
+!end subroutine
+!
+!subroutine storeInitialGuess(self)
+!  implicit none
+!  type (InitialGuess), intent(inout) :: self
+!
+!end subroutine
+!
+!subroutine loadInitialGuess(self)
+!  implicit none
+!  type (InitialGuess), intent(in) :: self
+!
+!end subroutine
+!
+!subroutine destroyInitialGuess(self)
+!  implicit none
+!  type (InitialGuess), intent(inout) :: self
+!
+!end subroutine
+!
+!subroutine setEkmIndex(self, ekm)
+!  implicit none
+!  type (InitialGuess), intent(inout) :: self
+!
+!  self%ekm = ekm
+!
+!end subroutine
+!
+!subroutine setIspinIndex(self, ispin)
+!  implicit none
+!  type (InitialGuess), intent(inout) :: self
+!
+!  self%ispin = ispin
+!
+!end subroutine
+
+!------------------------------------------------------------------------------
 subroutine initialGuess_load(X0,PRSC)
 
   implicit none

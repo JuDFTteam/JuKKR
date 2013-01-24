@@ -204,21 +204,15 @@ CONTAINS
     TAUVBZ = 1.D0/VOLBZ
     ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2) then
-      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL,MSSQ(:,:,1), &
-      ITER, &
-      ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
-      GINP_LOCAL,DGINP, &
-      NUMN0,INDN0, atom_indices, &
-      PRSC, &
-      EKM,NOITER, &
-      QMRBOUND,IGUESS,BCP, &
-      DTDE_LOCAL, &
-      GSXIJ, &
-      NXIJ,XCCPL,IXCP,ZKRXIJ, &
-      BZTR2, &
-      communicator, comm_size, &
-      lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
-      nxijd, nguessd, kpoibz, nrd, ekmd)
+
+      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB, &
+                        TMATLL, &
+                        ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
+                        GINP_LOCAL, &
+                        NUMN0,INDN0,atom_indices, &
+                        QMRBOUND, &
+                        lmmaxd, naclsd, nrd)
+
     else
       if (size(atom_indices) /= 1) then
         write(*,*) "cutoffmode<3 and num_local_atoms>1 not possible."
