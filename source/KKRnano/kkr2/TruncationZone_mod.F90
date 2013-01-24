@@ -43,6 +43,7 @@ module TruncationZone_mod
     integer :: num_atoms
     integer :: ii, jj
     integer :: ind
+    integer :: ind_cls
     integer :: naez_trc
     integer :: naclsd
     integer :: memory_stat
@@ -69,22 +70,42 @@ module TruncationZone_mod
 
     ALLOCATECHECK(self%cls_trc(naez_trc))
     self%cls_trc = -1
-    call filter1d(mask, arrays%cls, self%cls_trc)
+    !call filter1d(mask, arrays%cls, self%cls_trc)
 
     !!!ALLOCATECHECK(self%indn0_trc(naez_trc, maxval(self%numn0_trc)))
     ! overdimensioned for compatibility reasons
     ALLOCATECHECK(self%indn0_trc(naez_trc, arrays%naclsd))
     self%indn0_trc = -1
-    call filter2d1(mask, arrays%indn0, self%indn0_trc)
+    !call filter2d1(mask, arrays%indn0, self%indn0_trc)
+
+    ind = 0
+    do ii = 1, num_atoms
+      if (mask(ii) > 0) then
+        ind = ind + 1
+        ind_cls = 0
+        do jj = 1, arrays%numn0(ii)
+          if (self%index_map(arrays%indn0(ii, jj)) > 0) then
+            ind_cls = ind_cls + 1
+            self%indn0_trc(ind, ind_cls) = arrays%indn0(ii, jj)
+          end if
+        end do
+        self%numn0_trc(ind) = ind_cls
+      end if
+    end do
 
     ! translate atom indices
-    do jj = 1, size(self%indn0_trc, 2)
-      do ii = 1, naez_trc
+    do ii = 1, naez_trc
+      do jj = 1, self%numn0_trc(ii)
         if (self%indn0_trc(ii, jj) > 0) then
           self%indn0_trc(ii, jj) = self%index_map(self%indn0_trc(ii, jj))
+          CHECKASSERT(self%indn0_trc(ii, jj) > 0)
         end if
       end do
     end do
+
+    !write (*,*) "indn0     :", arrays%indn0
+    !write (*,*) "indn0_trc :", self%indn0_trc
+    !write (*,*) "lm        :", mask
 
     ALLOCATECHECK(self%atom_trc(arrays%naclsd, naez_trc))
     self%atom_trc = -1

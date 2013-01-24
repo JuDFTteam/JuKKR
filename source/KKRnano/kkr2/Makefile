@@ -100,7 +100,8 @@ FC90 += mpixlf90_r
 #FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
-LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
+#LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
+LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 #-lfftw3
 
 ifeq ($(TYPE),debug)
