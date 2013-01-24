@@ -53,6 +53,9 @@ CONTAINS
 !
 !end subroutine
 
+
+!------------------------------------------------------------------------------
+! For compatibility with old solver:
 !------------------------------------------------------------------------------
 subroutine initialGuess_load(X0,PRSC)
 

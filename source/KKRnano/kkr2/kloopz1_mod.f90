@@ -2,20 +2,15 @@ module kloopz1_mod
 
 CONTAINS
 
-    subroutine KLOOPZ1_new(GMATN,ALAT,ITER, &
+    subroutine KLOOPZ1_new(GMATN,ALAT, &
     NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS, &
-    NACLS,RR,EZOA,ATOM,GINP_LOCAL,DGINP, &
+    NACLS,RR,EZOA,ATOM,GINP_LOCAL, &
     NSYMAT,DSYMLL, &
-    TMATLL,DTDE_LOCAL, &
+    TMATLL, &
     NUMN0,INDN0,atom_indices, &
-    PRSC,EKM,NOITER, &
-    QMRBOUND,IGUESS,BCP, &
-    NXIJ,XCCPL,IXCP,ZKRXIJ, &            ! > input
-    LLY_GRDT,TR_ALPH,GMATXIJ, &          ! < output
-    communicator, comm_size, &           ! > input
-    ! new parameters after inc.p removal
-    lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
-    nxijd, nguessd, kpoibz, nrd, ekmd)
+    QMRBOUND, &
+    lmmaxd, naclsd,  &
+    nrd)
 
 ! **********************************************************************
 
@@ -32,74 +27,39 @@ CONTAINS
 ! TSST_LOCAL ..  t-matrix
 
     use kkrmat_new_mod
-    use kkrmat_mod !TODO: remove
     use TEST_lcutoff_mod !TODO: remove
     implicit none
     include 'mpif.h'
 
-    integer, intent(in) :: communicator
-    integer, intent(in) :: comm_size
-
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
-    integer, intent(in) :: nclsd   ! number of reference clusters
-    integer, intent(in) :: xdim
-    integer, intent(in) :: ydim
-    integer, intent(in) :: zdim
-    integer, intent(in) :: natbld  ! number of atoms in preconditioning blocks
-    integer, intent(in) :: LLY
-    integer, intent(in) :: nxijd   ! max. number of atoms in cluster for exchange coupling-calculation
-    integer, intent(in) :: nguessd
-    integer, intent(in) :: kpoibz
     integer, intent(in) :: nrd
-    integer, intent(in) :: ekmd
-
     !     .. Parameters ..
 
     integer, parameter :: NSYMAXD = 48
     double complex, parameter :: CONE = ( 1.0D0,0.0D0)
     double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
-
     !     ..
     !     .. Scalar Arguments ..
     !     ..
     double precision:: ALAT
     double precision::VOLBZ
     double precision::QMRBOUND
-    integer::ITER
     integer::NOFKS
-    integer::NXIJ
     integer::NAEZ
-    integer::IGUESS
-    integer::BCP
-    integer::EKM
-    integer::NOITER
     integer::NSYMAT
-    double complex :: LLY_GRDT
-    double complex :: TR_ALPH
-    double complex :: BZTR2
-    !     ..
     !     .. Array Arguments ..
-    !     ..
-
-    !----- Initial Guess arrays-----------------------------------------------
-    complex::          PRSC(NGUESSD*LMMAXD,EKMD)
-    !-------------------------------------------------------------------------
 
     double complex :: DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
 
     double complex :: GMATN(:,:,:)
 
-    double complex :: DGINP(LMMAXD,LMMAXD, NACLSD, NCLSD)
-    double complex :: GINP_LOCAL(LMMAXD, LMMAXD, NACLSD, NCLSD)
-    double complex :: GMATXIJ   (LMMAXD, LMMAXD, NXIJD)
-    double complex, intent(inout), dimension(lmmaxd,lmmaxd,*) :: TMATLL
-    double complex :: DTDE_LOCAL(LMMAXD, LMMAXD)
+    double complex :: GINP_LOCAL(:, :, :, :)
+    double complex, intent(inout), dimension(lmmaxd,lmmaxd,naez) :: TMATLL
 
     double precision::RR(3,0:NRD)
-    double precision::ZKRXIJ(48,3,NXIJD)
-    double precision::BZKP(3,KPOIBZ)
-    double precision::VOLCUB(KPOIBZ)
+    double precision::BZKP(:,:)
+    double precision::VOLCUB(:) ! dim kpoibz
     integer:: ATOM(NACLSD,naez)
     integer:: CLS(naez)
     integer:: EZOA(NACLSD,naez)
@@ -107,8 +67,6 @@ CONTAINS
     !     ..
     integer::NUMN0(NAEZ)
     integer::INDN0(NAEZ,NACLSD)
-    integer::IXCP(NXIJD)
-    !     ..
     !     .. Local Scalars ..
     !     ..
     double complex :: TAUVBZ
@@ -117,7 +75,6 @@ CONTAINS
     integer::LM2
 
     integer::INFO    ! for LAPACK calls
-    integer::IERR
     integer::symmetry_index
     !     ..
     !     .. Local Arrays ..
@@ -125,9 +82,6 @@ CONTAINS
 
     double complex :: GLL  (LMMAXD, LMMAXD)
     double complex, allocatable :: GS(:,:,:,:)
-
-    !double complex :: GSXIJ(LMMAXD,LMMAXD,NSYMAXD,NXIJD)
-    double complex, allocatable, dimension(:,:,:,:) :: GSXIJ
 
     !     effective (site-dependent) Delta_t^(-1) matrix
     double complex, allocatable ::  MSSQ (:, :, :)
@@ -143,13 +97,6 @@ CONTAINS
     integer :: num_local_atoms
     integer :: ilocal
 
-    logical::XCCPL
-
-    external ZCOPY,ZAXPY,ZGETRF,ZGETRS,ZGETRI,ZGEMM,ZSCAL
-!     ..
-!     .. Intrinsic Functions ..
-    intrinsic ATAN
-!     ..
     integer :: memory_stat
     logical :: memory_fail
 
@@ -165,9 +112,6 @@ CONTAINS
     if (memory_stat /= 0) memory_fail = .true.
 
     allocate(MSSQ(LMMAXD, LMMAXD, num_local_atoms))
-    if (memory_stat /= 0) memory_fail = .true.
-
-    allocate(GSXIJ(LMMAXD, LMMAXD, NSYMAXD, NXIJD))
     if (memory_stat /= 0) memory_fail = .true.
 
     if (memory_fail .eqv. .true.) then
@@ -204,50 +148,16 @@ CONTAINS
     TAUVBZ = 1.D0/VOLBZ
     ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2) then
-
-      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB, &
-                        TMATLL, &
-                        ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
-                        GINP_LOCAL, &
-                        NUMN0,INDN0,atom_indices, &
-                        QMRBOUND, &
-                        lmmaxd, naclsd, nrd)
-
-    else
-      if (size(atom_indices) /= 1) then
-        write(*,*) "cutoffmode<3 and num_local_atoms>1 not possible."
-        STOP
-      endif
-      call KKRMAT01(BZKP,NOFKS,GS(:,:,:,1),VOLCUB,TMATLL,MSSQ(:,:,1), &
-      ITER, &
+      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL, &
       ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
-      GINP_LOCAL,DGINP, &
-      NUMN0,INDN0,atom_indices(1), &
-      PRSC, &
-      EKM,NOITER, &
-      QMRBOUND,IGUESS,BCP, &
-      DTDE_LOCAL, &
-      GSXIJ, &
-      NXIJ,XCCPL,IXCP,ZKRXIJ, &
-      BZTR2, &
-      communicator, comm_size, &
-      lmmaxd, naclsd, nclsd, xdim, ydim, zdim, natbld, LLY, &
-      nxijd, nguessd, kpoibz, nrd, ekmd)
+      GINP_LOCAL, &
+      NUMN0,INDN0, atom_indices, &
+      QMRBOUND, &
+      lmmaxd, naclsd, nrd)
+    else
+      write(*,*) "cutoffmode<3 not supported."
+      STOP
     endif
-
-    ! TODO: move out
-    !=========== Lloyd's Formula =====================================
-
-    if(LLY == 1)  then
-      BZTR2 = BZTR2*NSYMAT/VOLBZ + TR_ALPH
-
-      call MPI_ALLREDUCE(BZTR2,LLY_GRDT,1,MPI_DOUBLE_COMPLEX,MPI_SUM, &
-                         communicator,IERR)
-
-    endif
-    !========== END Lloyd's Formula ==================================
-
-
 !-------------------------------------------------------- SYMMETRISE GLL
 
 
@@ -329,32 +239,10 @@ CONTAINS
     end do ! ilocal
 !------------------------------------------------------------------------------
 
-!================================
-    if (XCCPL) then
-!================================
-    ! todo: loop over local atoms
-    if (size(atom_indices) /= 1) then
-      write(*,*) "XCCPL and num_local_atoms>1 not possible."
-      STOP
-    endif
-        call SYMJIJ( &
-        ALAT,TAUVBZ, &
-        NSYMAT,DSYMLL, &
-        NXIJ,IXCP, &
-        TMATLL,MSSQ(:,:,1), &
-        GSXIJ, &
-        GMATXIJ, &
-        naez, lmmaxd, nxijd)
-
-!================================
-    endif
-!================================
-
 ! -------------------------------------------------------------------
 ! Deallocate Arrays
 ! -------------------------------------------------------------------
 
-    deallocate(GSXIJ)
     deallocate(GS)
     deallocate(MSSQ)
 
