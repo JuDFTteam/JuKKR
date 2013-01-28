@@ -62,8 +62,6 @@ module TEST_lcutoff_mod
       endif
     close(91)
 
-    CHECKASSERT( .not. ((cutoffmode < 5) .and. (lm_low == 0 .or. lm_low2 == 0)))
-
     lmarray_full      = lmmaxd
     num_local_atoms = getNumLocalAtoms(calc_data)
 

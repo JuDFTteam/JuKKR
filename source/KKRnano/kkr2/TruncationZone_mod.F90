@@ -90,6 +90,8 @@ module TruncationZone_mod
           end if
         end do
         self%numn0_trc(ind) = ind_cls
+        ! reference clusters must be contained in truncation zone
+        CHECKASSERT( self%numn0_trc(ind) == arrays%numn0(ii) )
       end if
     end do
 
@@ -225,7 +227,9 @@ module TruncationZone_mod
     integer :: ii
     do ii = 1, size(array)
       if (array(ii) > 0) then
+        CHECKASSERT(array(ii) > 0)
         array(ii) = index_map(array(ii))
+        CHECKASSERT(array(ii) > 0)
       end if
     end do
   end subroutine
