@@ -1,3 +1,5 @@
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
+
 ! JUST FOR TESTING purposes
 ! replace by proper implementation
 module TEST_lcutoff_mod
@@ -60,6 +62,8 @@ module TEST_lcutoff_mod
       endif
     close(91)
 
+    CHECKASSERT( .not. ((cutoffmode < 5) .and. (lm_low == 0 .or. lm_low2 == 0)))
+
     lmarray_full      = lmmaxd
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -118,6 +122,7 @@ module TEST_lcutoff_mod
       if (lmarray_full(ii) > 0) then
         ind = ind + 1
         lmarray(ind) = lmarray_full(ii)
+        CHECKASSERT(trunc_zone%index_map(ii) == ind) !TODO
       end if
     end do
 

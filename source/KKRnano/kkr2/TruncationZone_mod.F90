@@ -43,7 +43,7 @@ module TruncationZone_mod
     integer :: num_atoms
     integer :: ii, jj
     integer :: ind
-    integer :: ind_cls
+    integer :: ind_cls, mapped_index
     integer :: naez_trc
     integer :: naclsd
     integer :: memory_stat
@@ -59,7 +59,7 @@ module TruncationZone_mod
         ind = ind + 1
         self%index_map(ii) = ind
       else
-        self%index_map(ii) = -1 ! atom not in cluster
+        self%index_map(ii) = -1 ! atom not in trunc. cluster
       end if
     end do
     naez_trc = ind
@@ -70,13 +70,12 @@ module TruncationZone_mod
 
     ALLOCATECHECK(self%cls_trc(naez_trc))
     self%cls_trc = -1
-    !call filter1d(mask, arrays%cls, self%cls_trc)
+    call filter1d(mask, arrays%cls, self%cls_trc)
 
     !!!ALLOCATECHECK(self%indn0_trc(naez_trc, maxval(self%numn0_trc)))
     ! overdimensioned for compatibility reasons
     ALLOCATECHECK(self%indn0_trc(naez_trc, arrays%naclsd))
     self%indn0_trc = -1
-    !call filter2d1(mask, arrays%indn0, self%indn0_trc)
 
     ind = 0
     do ii = 1, num_atoms
@@ -84,23 +83,14 @@ module TruncationZone_mod
         ind = ind + 1
         ind_cls = 0
         do jj = 1, arrays%numn0(ii)
-          if (self%index_map(arrays%indn0(ii, jj)) > 0) then
+          mapped_index = self%index_map(arrays%indn0(ii, jj))
+          if (mapped_index > 0) then
             ind_cls = ind_cls + 1
-            self%indn0_trc(ind, ind_cls) = arrays%indn0(ii, jj)
+            self%indn0_trc(ind, ind_cls) = mapped_index
           end if
         end do
         self%numn0_trc(ind) = ind_cls
       end if
-    end do
-
-    ! translate atom indices
-    do ii = 1, naez_trc
-      do jj = 1, self%numn0_trc(ii)
-        if (self%indn0_trc(ii, jj) > 0) then
-          self%indn0_trc(ii, jj) = self%index_map(self%indn0_trc(ii, jj))
-          CHECKASSERT(self%indn0_trc(ii, jj) > 0)
-        end if
-      end do
     end do
 
     !write (*,*) "indn0     :", arrays%indn0

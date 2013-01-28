@@ -3,7 +3,7 @@ module kloopz1_mod
 
 CONTAINS
 
-!subroutine kloopz1_old_wrapper(my_mpi, dims, arrays calc_data, &
+!subroutine kloopz1_old_wrapper(my_mpi, dims, params, arrays, calc_data, &
 !                               GMATN, ITER, EKM, atom_index)
 !  implicit none
 !  double complex :: GMATN(:,:,:)

@@ -258,15 +258,19 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
 ! <<>> Multiple scattering part
 
-!                  if (I1 == 1 .and. IE == IELAST .and. ISPIN == 1) then
-!                     DEBUG_dump_matrix = .true.
-!                  else
-!                     DEBUG_dump_matrix = .false.
-!                  endif
+!                 if (atom_indices(1) == 1 .and. IE == params%IELAST .and. ISPIN == 1) then
+!                    DEBUG_dump_matrix = .true.
+!                 else
+!                    DEBUG_dump_matrix = .false.
+!                 endif
 
+          ! gather all t-matrices on all processors - O(N**2)
           call gatherTmatrices_com(calc_data, TMATLL, ispin, &
-                                   getMySEcommunicator(my_mpi)) ! O(N**2)
+                                   getMySEcommunicator(my_mpi))
 
+          ! reorder T-matrix array: shift T-matrices of atoms
+          ! in real space truncation zone to front
+          ! t-matrices outside trunc.-zone are trashed
           call reorderMatrices(trunc_zone, TMATLL)
 
           TESTARRAYLOG(3, TMATLL)
@@ -284,39 +288,17 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           kkr => getKKR(calc_data, 1)
           jij_data => getJijData(calc_data, 1)
 
-          ! TODO: reorganise kloopz
-!          call KLOOPZ1_new( GmatN_buffer, &
-!          params%ALAT,ITER,trunc_zone%NAEZ_trc, &
-!          arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-!          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), &
-!          trunc_zone%CLS_trc,arrays%NACLS,arrays%RR, &
-!          trunc_zone%EZOA_trc,trunc_zone%ATOM_trc,kkr%GREFN,kkr%DGREFN, &
-!          params%NSYMAT,arrays%DSYMLL, &
-!          TMATLL,kkr%DTDE(:,:,ISPIN), &
-!          trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc, &
-!          atom_indices, &
-!          kkr%PRSC(:,:,PRSPIN), &
-!          EKM,kkr%NOITER, &
-!          params%QMRBOUND,dims%IGUESSD,dims%BCPD, &
-!          jij_data%NXIJ,XCCPL,jij_data%IXCP,jij_data%ZKRXIJ, &
-!          kkr%LLY_GRDT(IE,ISPIN),kkr%TR_ALPH(ISPIN), &
-!          jij_data%GMATXIJ(:,:,:,ISPIN), &
-!          getMySEcommunicator(my_mpi),getNumAtomRanks(my_mpi), &
-!          arrays%lmmaxd, arrays%naclsd, arrays%nclsd, &
-!          dims%xdim, dims%ydim, dims%zdim, dims%natbld, dims%LLY, &
-!          jij_data%nxijd, arrays%nguessd, arrays%kpoibz, arrays%nrd, arrays%ekmd)
-
-           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
-           trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), trunc_zone%CLS_trc, &
-           arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
-           kkr%GREFN, &
-           params%NSYMAT,arrays%DSYMLL, &
-           TMATLL, &
-           trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
-           params%QMRBOUND, &
-           arrays%lmmaxd, arrays%naclsd,  &
-           arrays%nrd)
+          call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
+          trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), trunc_zone%CLS_trc, &
+          arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
+          kkr%GREFN, &
+          params%NSYMAT,arrays%DSYMLL, &
+          TMATLL, &
+          trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
+          params%QMRBOUND, &
+          arrays%lmmaxd, arrays%naclsd,  &
+          arrays%nrd)
 
 !------------------------------------------------------------------------------
 
