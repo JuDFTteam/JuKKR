@@ -132,7 +132,7 @@ program MAIN2
 !99 continue
 !  if (flag == 0) goto 99
 
-  ! This if closes several hundreds of lines later!
+  ! This if closes much later!
   if (isActiveRank(my_mpi)) then
 
 !+++++++++++ pre self-consistency preparation

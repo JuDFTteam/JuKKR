@@ -66,7 +66,6 @@ module TruncationZone_mod
 
     ALLOCATECHECK(self%numn0_trc(naez_trc))
     self%numn0_trc = -1
-    call filter1d(mask, arrays%numn0, self%numn0_trc)
 
     ALLOCATECHECK(self%cls_trc(naez_trc))
     self%cls_trc = -1
@@ -90,8 +89,6 @@ module TruncationZone_mod
           end if
         end do
         self%numn0_trc(ind) = ind_cls
-        ! reference clusters must be contained in truncation zone
-        CHECKASSERT( self%numn0_trc(ind) == arrays%numn0(ii) )
       end if
     end do
 
@@ -100,7 +97,7 @@ module TruncationZone_mod
     !write (*,*) "lm        :", mask
 
     ALLOCATECHECK(self%atom_trc(arrays%naclsd, naez_trc))
-    self%atom_trc = -1
+    self%atom_trc = 0
     call filter2d2(mask, arrays%atom, self%atom_trc)
 
     ! atom_trc contains atom indices therefore translate
@@ -224,13 +221,13 @@ module TruncationZone_mod
     integer, dimension(:), intent(in) :: index_map
     integer, dimension(:), intent(inout) :: array
 
-    integer :: ii
+    integer :: ii, mapped_index
+
     do ii = 1, size(array)
-      if (array(ii) > 0) then
-        CHECKASSERT(array(ii) > 0)
-        array(ii) = index_map(array(ii))
-        CHECKASSERT(array(ii) > 0)
-      end if
+        if (array(ii) > 0) then
+          mapped_index = index_map(array(ii))
+          array(ii) = mapped_index
+        end if
     end do
   end subroutine
 

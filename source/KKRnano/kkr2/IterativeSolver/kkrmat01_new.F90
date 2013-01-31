@@ -174,7 +174,7 @@ subroutine kloopbody( GLLKE1, kpoint, &
   use mminvmod_mod
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
-  use TEST_lcutoff_mod !TODO: remove
+  use TEST_lcutoff_mod, only: lmarray, cutoffmode, DEBUG_dump_matrix !TODO: remove
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -212,19 +212,16 @@ subroutine kloopbody( GLLKE1, kpoint, &
   integer :: site_index
 
   type (SparseMatrixDescription) :: sparse
-  integer, dimension(:), allocatable :: lmmaxd_array
 
   double complex, dimension(:,:), allocatable :: mat_B
   double complex, dimension(:,:), allocatable :: mat_X
 
-  integer :: num_cluster
+  integer :: sum_cluster
   logical :: initial_zero
 
-  num_cluster = maxval(numn0)
+  sum_cluster = sum(numn0)
 
-  call createSparseMatrixDescription(sparse, naez, naez*num_cluster)
-
-  allocate(lmmaxd_array(naez))
+  call createSparseMatrixDescription(sparse, naez, sum_cluster)
 
   !=======================================================================
   ! ---> fourier transformation
@@ -245,9 +242,7 @@ subroutine kloopbody( GLLKE1, kpoint, &
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-  lmmaxd_array = lmarray
-
-  call getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
+  call getKKRMatrixStructure(lmarray, numn0, indn0, sparse)
 
   allocate(mat_B(sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
   allocate(mat_X(sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
@@ -332,8 +327,6 @@ subroutine kloopbody( GLLKE1, kpoint, &
   TESTARRAYLOG(3, GLLKE1)
 
   call destroySparseMatrixDescription(sparse)
-
-  deallocate(lmmaxd_array)
 
   deallocate(mat_B)
   deallocate(mat_X)

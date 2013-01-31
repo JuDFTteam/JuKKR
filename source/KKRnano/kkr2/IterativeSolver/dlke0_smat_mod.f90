@@ -34,7 +34,7 @@ contains
 
       do N1 = 1,NUMN0(site_index)
         IND1 = INDN0(site_index,N1)
-        if(ATOM(M).eq.IND1) then
+        if(ATOM(M).eq.IND1 .and. ATOM(M) > 0) then
 
           lmmax1 = kvstr(site_index + 1) - kvstr(site_index)
           lmmax2 = kvstr(IND1 + 1) - kvstr(IND1)
@@ -53,6 +53,7 @@ contains
       enddo
 
       J = ATOM(M)
+      if (J < 1) cycle
 
       do N2 = 1,NUMN0(J)
         IND2 = INDN0(J,N2)

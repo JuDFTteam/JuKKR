@@ -1,4 +1,4 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 ! JUST FOR TESTING purposes
 ! replace by proper implementation
@@ -84,7 +84,8 @@ module TEST_lcutoff_mod
         lmarray_full = lmarray_temp
       else
         do ii = 1, size(lmarray_full)
-          lmarray_full(ii) = max(lmarray_full(ii), lmarray_temp(ii)) ! merge truncation zones
+          ! merge truncation zones of local atoms
+          lmarray_full(ii) = max(lmarray_full(ii), lmarray_temp(ii))
         end do
       end if
     end do
