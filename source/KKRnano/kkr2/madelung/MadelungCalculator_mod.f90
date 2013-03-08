@@ -18,14 +18,10 @@ module MadelungCalculator_mod
   type MadelungLatticeData
     integer NGMAX
     integer NRMAX
-    !INTEGER NSG(ISHLD)
-    !integer NSR(ISHLD)
     integer, allocatable, dimension(:) :: NSG
     integer, allocatable, dimension(:) :: NSR
     integer NSHLG
     integer NSHLR
-    !double precision GN(3,NMAXD)
-    !double precision RM(3,NMAXD)
     double precision, allocatable, dimension(:,:) :: GN
     double precision, allocatable, dimension(:,:) :: RM
     integer NMAXD

@@ -145,7 +145,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! write formatted potential if file VFORM exists - contains bad inquire
   ! - bad check deactivated when KTE<0
   doVFORM = .false.
-  if (ITER == params%SCFSTEPS .and. params%KTE >= 0) doVFORM = testVFORM()
+  !if (ITER == params%SCFSTEPS .and. params%KTE >= 0) doVFORM = testVFORM()
 
   do ilocal = 1, num_local_atoms ! no OpenMP
     atomdata => getAtomData(calc_data, ilocal)
