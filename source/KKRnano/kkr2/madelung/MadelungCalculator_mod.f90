@@ -224,59 +224,6 @@ module MadelungCalculator_mod
 
   end subroutine
 
-  !----------------------------------------------------------------------------
-  !> Add Madelung potential to VONS.
-  !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
-  !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
-  !> Wrapper for VMADELBLK
-  subroutine addMadelungPotential_com(madelung_sum, CMOM, CMINST, NSPIN, &
-                                      VONS, ZAT, R, IRCUT, IPAN, VMAD, &
-                                      rank, communicator, comm_size, irmd, ipand)
-
-    implicit none
-
-    type (MadelungLatticeSum), intent(in) :: madelung_sum
-    double precision, intent(inout) :: CMOM(:)
-    double precision, intent(inout) :: CMINST(:)
-
-    integer, intent(in) :: nspin
-    double precision, intent(inout) :: VONS(:,:,:)
-
-    double precision, intent(in) ::  R(IRMD)
-    double precision, intent(in) ::  ZAT(:)
-    integer IRCUT(0:IPAND)
-    integer IPAN
-    double precision VMAD
-
-    integer, intent(in) :: rank
-    integer, intent(in) :: communicator
-    integer, intent(in) :: comm_size
-    integer, intent(in) :: irmd
-    integer, intent(in) :: ipand
-    !------------------------------------
-    type (MadelungCalculator), pointer :: madelung_calc
-
-    madelung_calc => madelung_sum%madelung_calc
-
-    call VMADELBLK_new_com(CMOM,CMINST,madelung_calc%LPOT,NSPIN,madelung_sum%num_atoms, &
-    VONS,ZAT,R,IRCUT,IPAN,VMAD, &
-    madelung_calc%LMPOTD, madelung_sum%SMAT, &
-    madelung_calc%clebsch%CLEB,madelung_calc%clebsch%ICLEB,madelung_calc%clebsch%IEND, &
-    madelung_calc%LMXSPD,madelung_calc%clebsch%NCLEBD,madelung_calc%clebsch%LOFLM, &
-    madelung_calc%DFAC, &
-    rank, communicator, comm_size, irmd, ipand)
-
-  !      SUBROUTINE VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIN,NAEZ,
-  !     &                     VONS,ZAT,R,
-  !     &                     IRCUT,IPAN,VMAD,
-  !     &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
-  !     &                     LMXSPD,NCLEBD,LOFLM,DFAC,
-  !     >                     MYLRANK,
-  !     >                     communicator,comm_size,
-  !     &                     irmd, ipand)
-
-  end subroutine
-
 !============= Helper routines =============================================
 
   !----------------------------------------------------------------------------

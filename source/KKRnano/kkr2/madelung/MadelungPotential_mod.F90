@@ -1,4 +1,4 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !> Adds the Madelung Potential to all atoms.
 module MadelungPotential_mod
@@ -43,51 +43,44 @@ CONTAINS
          rank, atoms_per_proc, &
          communicator)
 
-  !      SUBROUTINE VMADELBLK_new_com(CMOM,CMINST,LPOT,NSPIN,NAEZ,
-  !     &                     VONS,ZAT,R,
-  !     &                     IRCUT,IPAN,VMAD,
-  !     &                     LMPOT,SMAT,CLEB,ICLEB,IEND,
-  !     &                     LMXSPD,NCLEBD,LOFLM,DFAC,
-  !     >                     MYLRANK,
-  !     >                     communicator,comm_size,
-  !     &                     irmd, ipand)
-
   end subroutine
 
+  ! **********************************************************************
+  !
+  !>    calculate the madelung potentials and add these to the poten-
+  !>    tial v  (in the spin-polarized case for each spin-direction
+  !>    this is the same).
+  !
+  !>    it uses the structure dependent matrices AVMAD and BVMAD which
+  !>    are calculated once in the subroutine MADELUNG3D
+  !>    ( may 2004)
+  !>    the charge-moments are calculated in the subroutine vintras,
+  !>    therefore vintras has to be called first.
+  !>    the madelung-potential is expanded into spherical harmonics.
+  !>    the lm-term of the potential v of the atom i is given by
+  !>
+  !>     v(r,lm,i) =  (-r)**l * {avmad(i,i2,lm,l'm')*cmom(i2,l'm')
+  !>                                              +bvmad(i,i2,lm)*z(i2)}
+  !>
+  !>    summed over i2 (all atoms) and l'm'
+  !>    (see notes by b.drittler)
+  !>
+  !>                              b.drittler   nov. 1989
+  !>
+  !>    adopted for the case of more atoms on the same site, summation is
+  !>    done over the occupants of that site, the charge is weighted with
+  !>    the appropriate concentration of the occupant  v.popescu feb. 2002
+  !>
+  !>    impurity-program adopted feb. 2004 (according to n.papanikalou)
+  !>
+  ! **********************************************************************
   subroutine VMADELBLK_new2_com(calc_data,LPOT,NAEZ, &
   ZAT, &
   LMPOT,CLEB,ICLEB,IEND, &
   LMXSPD,NCLEBD,LOFLM,DFAC, &
   MYLRANK, atoms_per_proc, &
   communicator)
-    ! **********************************************************************
-    !
-    !     calculate the madelung potentials and add these to the poten-
-    !     tial v  (in the spin-polarized case for each spin-direction
-    !     this is the same)
-    !     it uses the structure dependent matrices AVMAD and BVMAD which
-    !     are calculated once in the subroutine MADELUNG3D
-    !     ( may 2004)
-    !     the charge-moments are calculated in the subroutine vintras,
-    !     therefore vintras has to be called first.
-    !     the madelung-potential is expanded into spherical harmonics.
-    !     the lm-term of the potential v of the atom i is given by
-    !
-    !      v(r,lm,i) =  (-r)**l * {avmad(i,i2,lm,l'm')*cmom(i2,l'm')
-    !                                               +bvmad(i,i2,lm)*z(i2)}
-    !
-    !     summed over i2 (all atoms) and l'm'
-    !     (see notes by b.drittler)
-    !
-    !                               b.drittler   nov. 1989
-    !
-    !     adopted for the case of more atoms on the same site, summation is
-    !     done over the occupants of that site, the charge is weighted with
-    !     the appropriate concentration of the occupant  v.popescu feb. 2002
-    !
-    !     impurity-program adopted feb. 2004 (according to n.papanikalou)
-    !
-    ! **********************************************************************
+
     use CalculationData_mod
     use MadelungCalculator_mod
     use EnergyResults_mod
