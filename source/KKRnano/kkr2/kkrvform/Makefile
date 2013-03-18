@@ -1,10 +1,11 @@
-# Makefile for kkr0
+# Makefile for kkrvform
+# Tool to create formatted potential files from vpotnew energy_mesh atoms meshes + inp0.unf
 
 # default values
 PLATFORM = ifort
 TYPE = debug
 
-PROGRAM = kkr0.exe
+PROGRAM = kkrvform.exe
 
 # Path to put object files
 # and module files
@@ -16,7 +17,7 @@ FC90 = gfortran
 FCFLAGS = -g -M $(BUILDDIR)
 FC90FLAGS = -Wall -std=f95 -fimplicit-none
 FCFLAGS += -I $(BUILDDIR)
-LDFLAGS = -llapack_gfortran -lblas_gfortran
+LDFLAGS = #-llapack_gfortran -lblas_gfortran
 endif
 
 ifeq ($(PLATFORM),ifort)
@@ -26,15 +27,7 @@ FC90 = ifort
 FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR)
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
-LDFLAGS =-L/ -llapack_ifort -lblas_ifort
-endif
-
-ifeq ($(PLATFORM),JUGENE)
-FC = xlf_r
-FC90 = xlf_r
-FCLAGS = -O2 -qmoddir=$(BUILDDIR) -I $(BUILDDIR)
-FC90FLAGS =
-LDFLAGS = -lessl
+LDFLAGS = #-L/ -llapack_ifort -lblas_ifort
 endif
 
 ifeq ($(PLATFORM),JUQUEEN)
@@ -42,19 +35,22 @@ FC = xlf_r
 FC90 = xlf_r
 FCFLAGS = -q64 -O2 -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 FC90FLAGS =
-LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -lesslbg
+LDFLAGS = #-L/opt/ibmmath/essl/5.1/lib64 -lesslbg
 endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . ../config_reader ../lattice ../kkr0common ../datastructures
+DIRS = . ../datastructures
 #also add BUILDDIR to VPATH to look if object files have changed
-VPATH = $(DIRS) $(BUILDDIR)
+VPATH = $(DIRS) $(BUILDDIR) ../
 
 SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
 SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
 SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
+
+# Additional source files needed
+SRCS90FPP += ../DimParams_mod.F90
 
 # notdir extracts only filename
 OBJS =  $(notdir ${SRCS:.f=.o})
@@ -91,6 +87,8 @@ clean:
 test:
 	@echo $(SRCS)
 	@echo $(SRCS90)
+	@echo $(SRCSFPP)
+	@echo $(SRCS90FPP)	
 	@echo $(OBJS)
 	@echo $(VPATH)
 	@echo $(PLATFORM)
@@ -98,10 +96,7 @@ test:
 	
 #Module dependencies
 
-config_reader.o: config_reader_dictionary.o
-main0.o: config_reader.o
-
-BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
+#kkrvform.o: config_reader.o
+kkrvform.o: BasisAtom_mod.o DimParams_mod.o RadialMeshData_mod.o
+BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o RefClusterData_mod.o
 CellData_mod.o: ShapefunData_mod.o
-
-startb1_wrapper.o: CellData_mod.o RadialMeshData_mod.o BasisAtom_mod.o

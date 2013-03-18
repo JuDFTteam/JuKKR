@@ -458,7 +458,7 @@ module CalculationData_mod
 
       call openBasisAtomDAFile(atomdata, 37, "atoms")
       call readBasisAtomDA(atomdata, 37, I1)
-      call closeBasisAtomPotentialDAFile(37)
+      call closeBasisAtomDAFile(37)
 
       ASSERT( atomdata%atom_index == I1 )
 
