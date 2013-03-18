@@ -504,7 +504,7 @@
 
     E2IN = E2
     ! read starting potential and shapefunctions
-    call STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
+    call STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
                  HFIELD,VCONST, &
                  LPOT,NSPIND,NTCELL, &
                  E2IN, &

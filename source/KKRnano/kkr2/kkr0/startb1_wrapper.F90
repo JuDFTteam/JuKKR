@@ -1,6 +1,6 @@
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine STARTB1
-subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
+subroutine STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
                            HFIELD,VCONST,LPOT,NSPIN, &
                            NTCELL, &
                            EFERMI,VBC,ZAT, &
@@ -13,6 +13,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   ! Parameters
 
   ! Arguments
+  double precision, intent(in) :: alat
   INTEGER, INTENT(IN) :: IPAND
   INTEGER, INTENT(IN) :: IRID
   INTEGER, INTENT(IN) :: NFUND
@@ -106,7 +107,7 @@ subroutine STARTB1_wrapper(IFILE,IPF,IPFE,IPE,KHFELD, &
   LCORE = 0
   ITITLE = 0
 
-  call STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
+  call STARTB1(alat, IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
                ITITLE,HFIELD,IMT,IRC,VCONST,IRNS,LPOT,NSPIN,IRMIN, &
                NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
                EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS, &

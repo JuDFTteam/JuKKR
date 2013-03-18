@@ -1,5 +1,5 @@
 c ************************************************************************
-      SUBROUTINE STARTB1(IFILE,IPF,IPFE,IPE,KHFELD,
+      SUBROUTINE STARTB1(alat,IFILE,IPF,IPFE,IPE,KHFELD,
      &                   NBEG,NEND,
      &                   RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
      &                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
@@ -88,7 +88,7 @@ C             IFUNM(LMXSPD,NAEZD)
      &        NCORE(*),NFU(NCELLD),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION A1,B1,EA,EFNEW
+      DOUBLE PRECISION A1,B1,EA,EFNEW,ALAT_loc
       INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRI,
      &        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
      &        J,
@@ -240,7 +240,12 @@ c
 c---  >read muffin-tin radius , lattice constant and new muffin radius
 c      (new mt radius is adapted to the given radial mesh)
 c
-            READ (IFILE,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
+            READ (IFILE,FMT=9030) RMT(IH),ALAT_loc,RMTNEW(IH)
+
+            if (abs(alat_loc - alat) > 1d-6) then
+      write(*,*) "ERROR: ALAT from input not the same as in pot. file"
+              stop
+            endif
 c
 c---> read nuclear charge , lmax of the core states ,
 c     wigner seitz radius , fermi energy and energy difference
