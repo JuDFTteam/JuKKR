@@ -1,6 +1,5 @@
 !> Converts unformatted potential file to the JM formatted potential file format
-!> NOTE: The lattice parameter, xc-potential names and VBC entry are just dummy values!!!
-!> ALAT is needed THOUGH!!!!
+!> NOTE: VBC entries are just dummy values!!! RMT, RMTNEW also?
 
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
@@ -22,6 +21,7 @@ program kkrvform
   integer :: kxc = 2
 
   efermi = getFermiEnergy()
+  call getStuffFromInputCard(alat, kxc)
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
@@ -125,3 +125,20 @@ end subroutine
 
     getFermiEnergy = EFERMI
   end function
+
+!---------------------------------------------------------------------------
+  subroutine getStuffFromInputcard(alat, kxc)
+    implicit none
+
+    double precision, intent(out) :: alat
+    integer, intent(out) :: kxc
+
+    character(len=80) :: uio
+    integer :: ier
+
+    CALL IoInput('KEXCOR    ',UIO,1,7,IER)
+    READ (UNIT=UIO,FMT=*) kxc
+    CALL IoInput('ALATBASIS ',UIO,1,7,IER)
+    READ (UNIT=UIO,FMT=*) ALAT
+
+  end subroutine

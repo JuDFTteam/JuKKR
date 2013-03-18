@@ -234,43 +234,6 @@ subroutine MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, MIXING, FCM)
 
 end subroutine
 
-!------------------------------------------------------------------------------
-!> Wraps writeFormattedPotentialImpl from rmsout.f90
-subroutine writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  implicit none
-
-  double precision, intent(in) :: Efermi
-  double precision, intent(in) :: VBC(2)
-  integer, intent(in) :: KXC
-  double precision, intent(in) :: ALAT
-  type (BasisAtom), intent(in) :: atomdata
-
-  !-------- locals
-  integer :: nspind
-  integer :: irnsd
-  type (RadialMeshData), pointer :: mesh
-
-  nspind = atomdata%nspin
-
-  mesh => atomdata%mesh_ptr
-
-  CHECKASSERT( associated(atomdata%mesh_ptr) )
-
-  irnsd = atomdata%potential%irmd - atomdata%potential%irmind
-
-  CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
-
-  call writeFormattedPotentialImpl(Efermi,VBC,NSPIND, &
-            KXC,atomdata%potential%LPOT,mesh%A,mesh%B,mesh%IRC, &
-            atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
-            atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
-            atomdata%atom_index, mesh%irmd, irnsd)
-
-end subroutine
-
-
 !----------------------------------------------------------------------------
 !> Adds intracell potential. in and output: atomdata (changed)
 subroutine VINTRAS_wrapper(RHO2NS, shgaunts, atomdata)

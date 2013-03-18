@@ -1,5 +1,5 @@
 # Makefile for kkrvform
-# Tool to create formatted potential files from vpotnew energy_mesh atoms meshes + inp0.unf
+# Tool to create formatted potential files from vpotnew energy_mesh atoms meshes + inp0.unf + inputcard
 
 # default values
 PLATFORM = ifort
@@ -42,7 +42,7 @@ endif
 #DIRS = . dir1 dir2
 DIRS = . ../datastructures
 #also add BUILDDIR to VPATH to look if object files have changed
-VPATH = $(DIRS) $(BUILDDIR) ../
+VPATH = $(DIRS) $(BUILDDIR) ../ ../kkr0
 
 SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
@@ -50,6 +50,7 @@ SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
 SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 
 # Additional source files needed
+SRCS += ../kkr0/ioinput.f ../kkr0/verify77.f
 SRCS90FPP += ../DimParams_mod.F90
 
 # notdir extracts only filename

@@ -67,9 +67,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   double precision :: RMSAVM_single
   integer :: ilocal
   integer :: num_local_atoms
-  logical :: doVFORM
-
-  logical, external :: testVFORM
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -142,11 +139,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! use any atomdata to open file - they are of the same size
   call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
 
-  ! write formatted potential if file VFORM exists - contains bad inquire
-  ! - bad check deactivated when KTE<0
-  doVFORM = .false.
-  !if (ITER == params%SCFSTEPS .and. params%KTE >= 0) doVFORM = testVFORM()
-
   do ilocal = 1, num_local_atoms ! no OpenMP
     atomdata => getAtomData(calc_data, ilocal)
     energies => getEnergies(calc_data, ilocal)
@@ -169,13 +161,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   ! ----------------------------------------------------- output_potential
     call writeBasisAtomPotentialDA(atomdata, 37, I1)
   ! ----------------------------------------------------- output_potential
-
-    if (ITER == params%SCFSTEPS .and. params%KTE >= 0) then
-      if (doVFORM) then
-        call writeFormattedPotential(emesh%E2, params%ALAT, energies%VBC, &
-                                     params%KXC, atomdata)
-      endif
-    endif
 
   end do ! ilocal
 
