@@ -111,7 +111,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   end do
   !$omp end parallel do
 
-  ! output of RMS error
+  ! summation and output of RMS error
   call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
                  getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
 
@@ -427,6 +427,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     densities%total_charge_neutrality = CHRGNT
 
     new_fermi = emesh%E2
+
+    ! allow only a maximal Fermi Energy shift of 0.03 Ry
     call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
                                  0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                  energies%ESPV, densities%RHO2NS, new_fermi)
@@ -536,10 +538,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     !output: VONS
     call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
 
-    ! note: irregular output with OpenMP
-    !TESTARRAYLOG(3, atomdata%potential%VONS)
-    !TESTARRAYLOG(3, densities%RHO2NS)
-
 !------------------------------------------------------------------------------
   end do ! ilocal
   !!!$omp end parallel do
@@ -599,26 +597,27 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       ! calculate total energy and individual contributions if requested
       ! core electron contribution
       call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
+
       ! output: EPOTIN
       call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
-      ! output: ECOU - l resolved Coulomb energy
-      call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, shgaunts, atomdata)
 
-      !call OUTTIME(isMasterRank(my_mpi),'KTE ......',getElapsedTime(program_timer),ITER)
+      ! output: ECOU - l resolved Coulomb energy
+      call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
+                         shgaunts, atomdata)
+
     end if
 
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
   ! =====================================================================
-
     ! TODO: OpenMP critical !!! VXCDRV is most likely not threadsafe!
     ! output: VONS (changed), EXC (exchange energy) (l-resolved)
 
     !!!$omp critical
-    call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, shgaunts, atomdata)
+    call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, &
+                        shgaunts, atomdata)
     !!!$omp end critical
 
-    !call OUTTIME(isMasterRank(my_mpi),'VXCDRV ......',getElapsedTime(program_timer),ITER)
   ! =====================================================================
 
   ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES

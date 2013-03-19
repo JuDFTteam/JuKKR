@@ -7,7 +7,7 @@ C                        irmd, irid, ipand, nfund)
 
 
 C>    @param[out] CATOM  CATOM(1) charge, CATOM(2) magn. moment
-C>    @param[inout] RHO2NS is modified on output! - core charge added
+C>    @param[in,out] RHO2NS is modified on output! - core charge added
       SUBROUTINE RHOTOTB_NEW(NSPIN,RHO2NS,RHOC,
      +                   DRDI,
      +                   IRCUT,LPOT,NFU,LLMSP,THETAS,IPAN,
@@ -72,10 +72,7 @@ C     .. External Subroutines ..
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
-C     ..
-C     .. Save statement ..
-C     necessary???
-      SAVE
+
 C     ..
       RFPI = SQRT(16.0D0*ATAN(1.0D0))
       LMPOT = (LPOT+1)**2

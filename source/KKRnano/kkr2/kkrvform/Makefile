@@ -17,7 +17,7 @@ FC90 = gfortran
 FCFLAGS = -g -M $(BUILDDIR)
 FC90FLAGS = -Wall -std=f95 -fimplicit-none
 FCFLAGS += -I $(BUILDDIR)
-LDFLAGS = #-llapack_gfortran -lblas_gfortran
+LDFLAGS = 
 endif
 
 ifeq ($(PLATFORM),ifort)
@@ -27,7 +27,7 @@ FC90 = ifort
 FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR)
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
-LDFLAGS = #-L/ -llapack_ifort -lblas_ifort
+LDFLAGS = 
 endif
 
 ifeq ($(PLATFORM),JUQUEEN)
@@ -35,7 +35,7 @@ FC = xlf_r
 FC90 = xlf_r
 FCFLAGS = -q64 -O2 -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 FC90FLAGS =
-LDFLAGS = #-L/opt/ibmmath/essl/5.1/lib64 -lesslbg
+LDFLAGS = 
 endif
 
 # Paths to look for files

@@ -52,7 +52,9 @@ program kkrvform
 
   end do
 
-
+  call destroyDimParams(dims)
+  call destroyBasisAtom(atomdata)
+  call destroyRadialMeshData(mesh)
 
 end program kkrvform
 
