@@ -1,9 +1,3 @@
-C             call CONVOL_NEW(IRCUT(1,I1),IRC(I1), &
-C                         IMAXSH(LMPOT),ILM,IFUNM(1,ICELL),LMPOT,GSH, &
-C                         THETAS(:,:,ICELL),ZAT(I1), &
-C                         R(1,I1),VONS(1,1,ISPIN),LMSP(1,ICELL), &
-C                         irid, nfund, irmd, ngshd)
-
 C>    Convolute the potential with the shapefunctions.
 C>    Operates on one spin channel and one site.
 C>    @param GSH shape-Gaunt-coefficients

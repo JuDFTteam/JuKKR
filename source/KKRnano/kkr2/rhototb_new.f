@@ -1,18 +1,9 @@
-C           new call in main2.f
-C           call RHOTOTB_NEW(NSPIN,RHO2NS,RHOCAT, &
-C                        DRDI(:,I1),IRCUT(:,I1), &
-C                        LPOT,NFU(ICELL),LLMSP(1,ICELL),THETAS(:,:,ICELL),IPAN(I1), &
-C                        CATOM, &
-C                        irmd, irid, ipand, nfund)
-
-
 C>    @param[out] CATOM  CATOM(1) charge, CATOM(2) magn. moment
 C>    @param[in,out] RHO2NS is modified on output! - core charge added
       SUBROUTINE RHOTOTB_NEW(NSPIN,RHO2NS,RHOC,
      +                   DRDI,
      +                   IRCUT,LPOT,NFU,LLMSP,THETAS,IPAN,
      +                   CATOM,
-C                        new input parameters after inc.p removal
      &                   irmd, irid, ipand, nfund)
       implicit none
 c ************************************************************************

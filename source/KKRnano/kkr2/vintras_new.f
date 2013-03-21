@@ -1,14 +1,7 @@
-C     new call for main2
-C           call VINTRAS_NEW(LPOT,NSPIN,RHO2NS,VONS, &
-C           R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-C           THETAS(:,:,ICELL),LMSP(1,ICELL), &
-C           irmd, irid, nfund, ngshd, ipand)
-
 c 13.10.95 ***************************************************************
       SUBROUTINE VINTRAS_NEW(LPOT,NSPIN,RHO2NS,VONS,R,
      +                   DRDI,IRCUT,IPAN,ILM,IFUNM,
      +                   IMAXSH,GSH,THETAS,LMSP,
-C                        new input parameters after inc.p removal
      &                   irmd, irid, nfund, ngshd, ipand)
 c ************************************************************************
 c     calculate the electron-intracell-potentials and the charge-

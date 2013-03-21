@@ -1,8 +1,3 @@
-C           call RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS, &
-C           R(:,I1),DRDI(:,I1),IRCUT(:,I1),IPAN(I1),ILM,IFUNM(1,ICELL),IMAXSH,GSH, &
-C           THETAS(:,:,ICELL),LMSP(1,ICELL), &
-C           irmd, irid, nfund, ipand, ngshd)
-
 c 13.10.95 ***************************************************************
       SUBROUTINE RHOMOM_NEW(CMOM,CMINST,LPOT,RHO2NS,R,
      +                  DRDI,IRCUT,IPAN,ILM,IFUNM,

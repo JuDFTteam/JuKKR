@@ -1,4 +1,4 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !------------------------------------------------------------------------------
 !> This module provides wrappers for routines with enormous argument lists.
