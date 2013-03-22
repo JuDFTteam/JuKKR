@@ -1,3 +1,4 @@
+!> multiple scattering k-loop and symmetrisation
 module kloopz1_mod
 
 CONTAINS

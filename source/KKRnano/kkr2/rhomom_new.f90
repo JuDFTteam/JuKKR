@@ -1,3 +1,5 @@
+! rho2ns = r^2 n_L(r)
+
 ! 13.10.95 ***************************************************************
 subroutine rhomom_new(cmom,cminst,lpot,rho2ns,r, &
 drdi,ircut,ipan,ilm,ifunm, &
