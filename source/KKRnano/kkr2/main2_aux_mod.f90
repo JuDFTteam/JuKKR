@@ -190,12 +190,11 @@ module main2_aux_mod
     integer :: IEMXD
     integer :: LMAXD
     integer :: NPOL
-    logical :: TEST
 
     integer :: LRECRES1
 
     LRECRES1 = 8*43 + 16*(LMAXD+2)
-    if (NPOL==0 .or. TEST('DOS     ')) then
+    if (NPOL==0) then
       LRECRES1 = LRECRES1 + 32*(LMAXD+2)*IEMXD
     end if
 
@@ -215,9 +214,7 @@ module main2_aux_mod
     integer :: NPOL
     double precision :: QC
 
-    logical :: TEST
-
-    if (NPOL==0 .or. TEST('DOS     ')) then
+    if (NPOL==0) then
       write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
     else
       write(71,rec=I1) QC,CATOM,CHARGE,ECORE
@@ -453,9 +450,9 @@ module main2_aux_mod
                            JIJ, KFORCE, KMESH, KPRE, KTE, KXC, &
                            LDAU, MAXMESH, &
                            MIXING, NACLS, NCLS, NR, NREF, &
-                           NSRA, NSYMAT, NUMN0, OPTC, QMRBOUND, &
+                           NSRA, NSYMAT, NUMN0, QMRBOUND, &
                            RBASIS, RCLS, RCUTJIJ, REFPOT, RMAX, RMTREF, &
-                           RR, SCFSTEPS, TESTC, VREF, ZAT)
+                           RR, SCFSTEPS, VREF, ZAT)
 
     implicit none
     integer :: NSYMAXD
@@ -492,7 +489,7 @@ module main2_aux_mod
     integer :: NSYMAT
 
     integer, allocatable :: NUMN0(:)
-    character(len=8) :: OPTC(8)
+
     double precision :: QMRBOUND
     double precision, allocatable :: RBASIS(:,:)
     double precision, allocatable :: RCLS(:,:,:)
@@ -502,11 +499,13 @@ module main2_aux_mod
     double precision, allocatable :: RMTREF(:)
     double precision, allocatable :: RR(:,:)
     integer :: SCFSTEPS
-    character(len=8) :: TESTC(16)
 
     double precision, allocatable :: VREF(:)
     double precision, allocatable :: ZAT(:)
 
+    !dummies
+    character(len=8) :: OPTC(8)
+    character(len=8) :: TESTC(16)
     ! ======================================================================
     ! =             read in variables from unformatted files               =
     ! ======================================================================

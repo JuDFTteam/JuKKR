@@ -179,7 +179,6 @@ globals: arraytest2_mod.o Logging_mod.o
 #Module dependencies
 
 main2.o: main2_aux_mod.o  EnergyMesh_mod.o \
-         common_testc.o common_optc.o  \
          MadelungCalculator_mod.o  \
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
          GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \
@@ -244,7 +243,6 @@ DensityResults_mod.o: DimParams_mod.o
 
 # TODO
 CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
-         common_testc.o common_optc.o  \
          MadelungCalculator_mod.o  \
          KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
          GauntCoefficients_mod.o ShapeGauntCoefficients_mod.o TimerMpi_mod.o \

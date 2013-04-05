@@ -48,8 +48,8 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
   LRECRES1 = 8*43 + 16*(LMAX+2)
 
-
-  if (NPOL.eq.0 .or. TEST('DOS     ')) then
+  ! DOS calc.
+  if (NPOL.eq.0) then
     LRECRES1 = LRECRES1 + 32*(LMAX+2)*IEMXD
   end if
 
@@ -62,7 +62,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
     ! Moments output
     do I1 = 1,NAEZ
-      if (NPOL.eq.0 .or. TEST('DOS     ')) then
+      if (NPOL.eq.0) then
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE
@@ -72,7 +72,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
 
     ! Density of states output
-    if (NPOL.eq.0 .or. TEST('DOS     ')) then
+    if (NPOL.eq.0) then
       do I1 = 1,NAEZ
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
         call WRLDOS(DEN,EZ,WEZ, &
@@ -84,7 +84,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
     TOTSMOM = 0.0D0
     do I1 = 1,NAEZ
-      if (NPOL.eq.0 .or. TEST('DOS     ')) then
+      if (NPOL.eq.0) then
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE

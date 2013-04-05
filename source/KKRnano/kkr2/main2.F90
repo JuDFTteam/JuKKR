@@ -8,9 +8,6 @@ program MAIN2
 
   USE_LOGGING_MOD
 
-  use common_testc
-  use common_optc
-
   use KKRnanoParallel_mod
   use KKRnano_Comm_mod
 
@@ -104,9 +101,9 @@ program MAIN2
                         params%JIJ, params%KFORCE, arrays%KMESH, params%KPRE, params%KTE, params%KXC, &
                         params%LDAU, params%MAXMESH, &
                         params%MIXING, arrays%NACLS, params%NCLS, params%NR, params%NREF, &
-                        params%NSRA, params%NSYMAT, arrays%NUMN0, OPTC, params%QMRBOUND, &
+                        params%NSRA, params%NSYMAT, arrays%NUMN0, params%QMRBOUND, &
                         arrays%RBASIS, arrays%RCLS, params%RCUTJIJ, arrays%REFPOT, params%RMAX, arrays%RMTREF, &
-                        arrays%RR, params%SCFSTEPS, TESTC, arrays%VREF, arrays%ZAT)
+                        arrays%RR, params%SCFSTEPS, arrays%VREF, arrays%ZAT)
 
   !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 

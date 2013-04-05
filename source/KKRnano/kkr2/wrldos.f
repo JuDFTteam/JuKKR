@@ -33,7 +33,7 @@ C     .. External Functions ..
 C     ..
       PI = 4.0D0*ATAN(1.0D0)
       EFCTOR = 1.0D0
-      IF (TEST('EV      ')) EFCTOR = 13.6058D0
+C     IF (TEST('EV      ')) EFCTOR = 13.6058D0
 C
 C
 C

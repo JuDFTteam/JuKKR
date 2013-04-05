@@ -305,7 +305,7 @@ C ------------------------------------------------------------- NPOL < 0
                STOP '     < EMESHT >'
             END IF
             EZ(NPNT) = XI(I)*DE + DE + EBOT - 2*NPOL*DCMPLX(0.0D0,ETK)
-            IF (OPT('GF-EF   ')) EZ(NPNT) = EMU + NPOL*DCMPLX(0.0D0,ETK)
+C           IF (OPT('GF-EF   ')) EZ(NPNT) = EMU + NPOL*DCMPLX(0.0D0,ETK)
             DF(NPNT) = WI(I)*DE
  70      CONTINUE
          IF (NPNT3.GT.0) CALL GAULEG(XI,WI,NPNT3)
