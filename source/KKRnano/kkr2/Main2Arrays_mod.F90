@@ -38,6 +38,12 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:)  :: NACLS
     integer , allocatable, dimension(:)  :: REFPOT
 
+    integer  :: NCLS
+    integer  :: NREF
+    integer  :: NSYMAT
+    integer  :: MAXMESH
+    integer  :: NR
+
     integer :: lmaxd
     integer :: iemxd
     integer :: nspind
@@ -126,6 +132,12 @@ module Main2Arrays_mod
     integer, intent(in) ::  LMPOTD
 
     integer :: memory_stat
+
+    self%NCLS = 0
+    self%NREF = 0
+    self%NSYMAT = 0
+    self%MAXMESH = 0
+    self%NR = 0
 
     self%lmaxd = lmaxd
     self%iemxd = iemxd

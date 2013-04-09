@@ -99,9 +99,9 @@ program MAIN2
                         params%GMAX, params%ICST, params%IMIX, arrays%INDN0, &
                         arrays%ISYMINDEX, &
                         params%JIJ, params%KFORCE, arrays%KMESH, params%KPRE, params%KTE, params%KXC, &
-                        params%LDAU, params%MAXMESH, &
-                        params%MIXING, arrays%NACLS, params%NCLS, params%NR, params%NREF, &
-                        params%NSRA, params%NSYMAT, arrays%NUMN0, params%QMRBOUND, &
+                        params%LDAU, arrays%MAXMESH, &
+                        params%MIXING, arrays%NACLS, arrays%NCLS, arrays%NR, arrays%NREF, &
+                        params%NSRA, arrays%NSYMAT, arrays%NUMN0, params%QMRBOUND, &
                         arrays%RBASIS, arrays%RCLS, params%RCUTJIJ, arrays%REFPOT, params%RMAX, arrays%RMTREF, &
                         arrays%RR, params%SCFSTEPS, arrays%VREF, arrays%ZAT)
 
@@ -113,7 +113,7 @@ program MAIN2
 
   call consistencyCheck03(arrays%ATOM, arrays%CLS, arrays%EZOA, &
                           arrays%INDN0, arrays%NACLS, arrays%NACLSD, &
-                          arrays%NAEZ, arrays%NCLSD, params%NR, arrays%NUMN0)
+                          arrays%NAEZ, arrays%NCLSD, arrays%NR, arrays%NUMN0)
 
   if ((params%JIJ .eqv. .true.) .and. (arrays%nspind /= 2)) then
     write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
@@ -140,11 +140,11 @@ program MAIN2
     !--------------------------------------------------------------------------
 
     ! ---------------------------------------------------------- k_mesh
-    call readKpointsFile(arrays%BZKP, params%MAXMESH, arrays%NOFKS, &
+    call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
 
     call createEnergyMesh(emesh, dims%iemxd) !!!!
-    params%ielast = dims%iemxd !!!!
+
     call readEnergyMesh(emesh)  !every process does this!  !!!!
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
@@ -155,7 +155,7 @@ program MAIN2
     call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...', &
                  getElapsedTime(program_timer), 0)
 
-    call createEBalanceHandler(ebalance_handler, params%ielast)
+    call createEBalanceHandler(ebalance_handler, emesh%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
@@ -257,12 +257,21 @@ program MAIN2
 ! END only processes in master-group are working
 !----------------------------------------------------------------------
 
-      call broadcastEnergyMesh_com(my_mpi, emesh)
-
       if(isMasterRank(my_mpi)) then
+        ! only MASTERRANK updates, other ranks get it broadcasted later
+        ! (although other processes could update themselves)
+
+        call updateEnergyMesh(emesh)
+        ! write file 'energy_mesh'
+        if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
+
+        call writeEnergyMesh(emesh)
+        call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), &
                                          getElapsedTime(iteration_timer))
       endif
+
+      call broadcastEnergyMesh_com(my_mpi, emesh)
 
 ! manual exit possible by creation of file 'STOP' in home directory
       if (isManualAbort_com(getMyWorldRank(my_mpi), &

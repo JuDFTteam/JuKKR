@@ -187,7 +187,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     ! DOS was written to file 'results1' and read out here just
     ! to be written in routine wrldos
     ! also other stuff is read from results1 (and results2)
-    call RESULTS(dims%LRECRES2,params%IELAST,ITER,arrays%LMAXD, &
+    call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,arrays%LMAXD, &
     arrays%NAEZ,emesh%NPOL, &
     dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT, &
     emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
@@ -197,17 +197,6 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     arrays%iemxd)
 
     call OUTTIME(isMasterRank(my_mpi),'results......',getElapsedTime(program_timer), iter)
-
-    ! only MASTERRANK updates, other ranks get it broadcasted later
-    ! (although other processes could update themselves)
-    call updateEnergyMesh(emesh)
-
-    ! write file 'energy_mesh'
-    if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
-
-    call writeEnergyMesh(emesh)
-
-    call printDoubleLineSep()
 
   endif
 ! -----------------------------------------------------------------
@@ -370,14 +359,14 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     end if
 
     ! calculate DOS at Fermi level
-    DENEF_local = calcDOSatFermi(densities%DEN, params%IELAST, &
+    DENEF_local = calcDOSatFermi(densities%DEN, densities%IEMXD, &
                                    densities%IEMXD, densities%LMAXD+1, &
                                    densities%NSPIND)
 
     ! ---> l/m_s/atom-resolved charges, output -> CHARGE
     ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
     ! CHARGE -> written to result file
-    call calcChargesLres(densities%CHARGE, densities%DEN, params%IELAST, &
+    call calcChargesLres(densities%CHARGE, densities%DEN, emesh%ielast, &
                          densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
                          densities%IEMXD)
 

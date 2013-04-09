@@ -136,8 +136,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   if (XCCPL) then
 
-    call CLSJIJ(I1,dims%NAEZ,arrays%RR,params%NR,arrays%RBASIS, &
-                jij_data%RCUTJIJ,params%NSYMAT,arrays%ISYMINDEX, &
+    call CLSJIJ(I1,dims%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS, &
+                jij_data%RCUTJIJ,arrays%NSYMAT,arrays%ISYMINDEX, &
                 jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ, &
                 jij_data%RXCCLS,jij_data%ZKRXIJ, &
                 arrays%nrd, jij_data%nxijd)
@@ -150,7 +150,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
 ! IE ====================================================================
-  do IE = 1, params%IELAST
+  do IE = 1, emesh%ielast
 ! IE ====================================================================
     if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
 ! IE ====================================================================
@@ -165,7 +165,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !------------------------------------------------------------------------------
         kkr%noiter = 0
 
-        do RF = 1,params%NREF
+        do RF = 1,arrays%NREF
           call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
                     kkr%TREFLL(1,1,RF),kkr%DTREFLL(1,1,RF), dims%LLY)
         end do
@@ -174,7 +174,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         !TESTARRAYLOG(3, kkr%DTREFLL)
 
 
-        call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,params%NCLS,arrays%NAEZ, &
+        call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,arrays%NCLS,arrays%NAEZ, &
                       gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
                       gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
@@ -293,7 +293,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), trunc_zone%CLS_trc, &
           arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
           kkr%GREFN, &
-          params%NSYMAT,arrays%DSYMLL, &
+          arrays%NSYMAT,arrays%DSYMLL, &
           TMATLL, &
           trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
           params%QMRBOUND, &

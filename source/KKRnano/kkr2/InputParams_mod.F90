@@ -1,5 +1,4 @@
 !> Module that defines a datastructure that contains input parameters.
-!> TODO: add OPTC TESTC ??
 
 module InputParams_mod
 
@@ -21,13 +20,6 @@ module InputParams_mod
     double precision  :: QMRBOUND
     integer  :: ICST
     integer  :: NSRA
-    ! TODO: get rid of the following parameters - not really input params
-    integer  :: NCLS
-    integer  :: NREF
-    integer  :: IELAST
-    integer  :: NSYMAT
-    integer  :: MAXMESH
-    integer  :: NR
 
   end type InputParams
 
@@ -200,66 +192,6 @@ integer  function getNSRA(self)
   type(InputParams), intent(in) :: self
 
   getNsra = self%NSRA
-end function
-
-!-------------------------------------------------------------------------------
-!> Returns NCLS.
-!> @param[in] self InputParams object
-integer  function getNCLS(self)
-  implicit none
-  type(InputParams), intent(in) :: self
-
-  getNcls = self%NCLS
-end function
-
-!-------------------------------------------------------------------------------
-!> Returns NREF.
-!> @param[in] self InputParams object
-integer  function getNREF(self)
-  implicit none
-  type(InputParams), intent(in) :: self
-
-  getNref = self%NREF
-end function
-
-!-------------------------------------------------------------------------------
-!> Returns IELAST.
-!> @param[in] self InputParams object
-integer  function getIELAST(self)
-  implicit none
-  type(InputParams), intent(in) :: self
-
-  getIelast = self%IELAST
-end function
-
-!-------------------------------------------------------------------------------
-!> Returns NSYMAT.
-!> @param[in] self InputParams object
-integer  function getNSYMAT(self)
-  implicit none
-  type(InputParams), intent(in) :: self
-
-  getNsymat = self%NSYMAT
-end function
-
-!-------------------------------------------------------------------------------
-!> Returns MAXMESH.
-!> @param[in] self InputParams object
-integer  function getMAXMESH(self)
-  implicit none
-  type(InputParams), intent(in) :: self
-
-  getMaxmesh = self%MAXMESH
-end function
-
-!-------------------------------------------------------------------------------
-!> Returns NR.
-!> @param[in] self InputParams object
-integer  function getNR(self)
-  implicit none
-  type(InputParams), intent(in) :: self
-
-  getNr = self%NR
 end function
 
 end module
