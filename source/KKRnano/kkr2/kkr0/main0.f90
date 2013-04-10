@@ -231,7 +231,6 @@
     double precision :: PI
     double precision :: EREF
     double precision :: HFIELD
-    double precision :: E2IN
 
     integer :: I1
     integer :: IPE
@@ -502,12 +501,11 @@
     open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
     open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
 
-    E2IN = E2
     ! read starting potential and shapefunctions
     call STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
                  HFIELD,VCONST, &
                  LPOT,NSPIND,NTCELL, &
-                 E2IN, &
+                 EFERMI, &
                  VBC, &
                  ZAT, &
                  IPAND, IRID, NFUND, IRMD, NCELLD, &
@@ -519,14 +517,12 @@
 ! ----------------------------------------------------------------------
 ! update Fermi energy, adjust energy window according to running options
 
-    EFERMI = E2IN
-!     a test if E2IN is different from E2 after call to STARTB1,
-!     before it was =E2
-    if ( DABS(E2IN-E2) > 1D-10 .and. NPOL /= 0 ) E2 = E2IN
+    ! for non-DOS calculation upper energy bound corresponds to Fermi energy
+    if ( NPOL /= 0 ) E2 = EFERMI
 
 ! --> set up energy contour
 
-    call EMESHT(EZ,DEZ,IELAST,E1,E2,E2IN,TK, &
+    call EMESHT(EZ,DEZ,IELAST,E1,E2,EFERMI,TK, &
     NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*DEZ(IE)
@@ -689,9 +685,9 @@
     deallocate(NACLS, stat=ierror)
     deallocate(NUMN0, stat=ierror)
     deallocate(INDN0, stat=ierror)
-    deallocate(REFPOT, stat=ierror)
 
     ! Reference system
+    deallocate(REFPOT, stat=ierror)
     deallocate(VREF, stat=ierror)
 
     ! Symmetry matrices
