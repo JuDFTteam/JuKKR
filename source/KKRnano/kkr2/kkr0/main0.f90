@@ -87,6 +87,7 @@
 
     use Config_Reader
     use InputParamsNew_mod
+    use Dimensions_mod
 
     implicit none
 
@@ -97,94 +98,95 @@
 
     integer :: NSYMAXD
     integer :: MAXMSHD
-
-!     Maximal number of Brillouin zone symmetries, 48 is largest
-!     possible number
+!
+!   Maximal number of Brillouin zone symmetries, 48 is largest
+!   possible number
     parameter (NSYMAXD=48)
-!     Maximal number of k-meshes used
+!   Maximal number of k-meshes used
     parameter (MAXMSHD=8)
-!     ..
-!     .. Local Scalars ..
-
-    double precision :: RMAX
-    double precision :: GMAX
-    double precision :: RCUTJIJ
-    double precision :: RCUTTRC
-
-!     .. KKR calculation options ..
-    double precision :: VCONST
-
-    integer :: ICST
-    integer :: IRM    !     eq IRMD ?  totally USELESS
-    integer :: KHFELD
-    integer :: KPRE
-    integer :: KTE
-    integer :: KVMAD
-    integer :: KVREL
-    integer :: KXC
-    integer :: LMAX
-    integer :: NSPIN
-    integer :: KFORCE
-
-    logical :: JIJ
-    logical :: LDAU
-
-!     .. KKR calculation options options derived from others ..
-    integer :: LMPOT
-    integer :: LPOT
-    integer :: NSRA
-
-!     ..
-!     .. Local Arrays ..
-    double precision :: VBC(2)
-
-!     .. Energy Mesh ..
-    double precision :: E1
-    double precision :: E2
+     !..
+     !.. Local Scalars ..
+!
+!    double precision :: RMAX
+!    double precision :: GMAX
+!    double precision :: RCUTJIJ
+!    double precision :: RCUTTRC
+!
+!!    .. KKR calculation options ..
+!    double precision :: VCONST
+!
+!    integer :: ICST
+!    integer :: IRM    !     eq IRMD ?  totally USELESS
+!    integer :: KHFELD
+!    integer :: KPRE
+!    integer :: KTE
+!    integer :: KVMAD
+!    integer :: KVREL
+!    integer :: KXC
+!    integer :: LMAX
+!    integer :: NSPIN
+!    integer :: KFORCE
+!
+!    logical :: JIJ
+!    logical :: LDAU
+!
+!!     .. KKR calculation options options derived from others ..
+!    integer :: LMPOT
+!    integer :: LPOT
+!    integer :: NSRA
+!
+!!     ..
+!!     .. Local Arrays ..
+!    double precision :: VBC(2)
+!
+!!     .. Energy Mesh ..
+!    double precision :: E1
+!    double precision :: E2
     double precision :: EFERMI
-    double precision :: TK
-
-    integer :: NPNT1
-    integer :: NPNT2
-    integer :: NPNT3
-    integer :: NPOL
-    integer :: IELAST
-    integer :: MAXMESH
-
-    complex(kind=DP), dimension(:), allocatable :: EZ
-    complex(kind=DP), dimension(:), allocatable :: WEZ
-    integer, dimension(:), allocatable :: KMESH
-
-!     .. Lattice ..
-    integer :: NAEZ
-    integer :: NR
-
-    double precision :: ALAT
-    double precision :: VOLUME0
-
-    double precision :: BRAVAIS(3,3)
-    double precision :: RECBV(3,3)
-
+!    double precision :: TK
+!
+!    integer :: NPNT1
+!    integer :: NPNT2
+!    integer :: NPNT3
+!    integer :: NPOL
+!    integer :: IELAST
+!    integer :: MAXMESH
+!
+!    complex(kind=DP), dimension(:), allocatable :: EZ
+!    complex(kind=DP), dimension(:), allocatable :: WEZ
+!    integer, dimension(:), allocatable :: KMESH
+!
+!!     .. Lattice ..
+!    integer :: NAEZ
+!    integer :: NR
+!
+!    double precision :: ALAT
+!    double precision :: VOLUME0
+!
+!    double precision :: BRAVAIS(3,3)
+!    double precision :: RECBV(3,3)
+!
     double precision, dimension(:,:), allocatable :: RBASIS
     double precision, dimension(:),   allocatable :: RMTREF
     double precision, dimension(:,:), allocatable :: RR
     double precision, dimension(:),   allocatable :: ZAT
 
-!     .. Lattice aux. ..
-    double precision :: ABASIS
-    double precision :: BBASIS
-    double precision :: CBASIS
+!!     .. Lattice aux. ..
+!    double precision :: ABASIS
+!    double precision :: BBASIS
+!    double precision :: CBASIS
+!
 
-    integer, dimension(:),   allocatable :: NTCELL
-
-!     .. reference clusters
-    double precision :: RCUTXY
-    double precision :: RCUTZ
-
+!
+!!     .. reference clusters
+!    double precision :: RCUTXY
+!    double precision :: RCUTZ
+!
     integer :: NCLS
     integer :: NREF
-
+!
     double precision, dimension(:,:,:), allocatable :: RCLS
+    integer, dimension(:),   allocatable :: NTCELL
 
     integer, dimension(:,:), allocatable :: ATOM
     integer, dimension(:),   allocatable :: CLS
@@ -196,202 +198,145 @@
 !     around central atom i
     integer, dimension(:,:), allocatable :: INDN0
     integer, dimension(:),   allocatable :: REFPOT
-
-!     .. reference system ..
+!
+!!     .. reference system ..
     double precision, dimension(:), allocatable :: VREF
-
-!     .. Brillouin zone ..
-!     kpoints in each direction
-    integer :: INTERVX
-    integer :: INTERVY
-    integer :: INTERVZ
-!     number of symmetries = number of symmetry matrices
-    integer :: NSYMAT
-
-!         symmetry matrices
+!
+!!     .. Brillouin zone ..
+!!     kpoints in each direction
+!    integer :: INTERVX
+!    integer :: INTERVY
+!    integer :: INTERVZ
+!!     number of symmetries = number of symmetry matrices
+!    integer :: NSYMAT
+!
+!!         symmetry matrices
     complex(kind=DP), dimension(:,:,:), allocatable :: DSYMLL
     integer, dimension(:), allocatable :: ISYMINDEX
-
-!     .. Self-consistency parameters ..
-    double precision :: FCM
-    double precision :: MIXING
-    double precision :: QBOUND
-
-    integer :: SCFSTEPS
-    integer :: IMIX
-!     has no effect, use ITDBRYD in inc.p instead
-    integer :: ITDBRY
-
-!     .. Iterative solver options ..
-    double precision :: QMRBOUND
-
-    integer :: IGUESS
-    integer :: BCP
-
-!     .. auxillary variables, not passed to kkr2
+!
+!!     .. Self-consistency parameters ..
+!    double precision :: FCM
+!    double precision :: MIXING
+!    double precision :: QBOUND
+!
+!    integer :: SCFSTEPS
+!    integer :: IMIX
+!!     has no effect, use ITDBRYD in inc.p instead
+!    integer :: ITDBRY
+!
+!!     .. Iterative solver options ..
+!    double precision :: QMRBOUND
+!
+!    integer :: IGUESS
+!    integer :: BCP
+!
+!!     .. auxillary variables, not passed to kkr2
     double precision :: PI
-    double precision :: EREF
-    double precision :: HFIELD
-
-    integer :: I1
-    integer :: IPE
-    integer :: IPF
-    integer :: IPFE
-    integer :: IFILE
-    integer :: IE
-
+!    double precision :: EREF
+!    double precision :: HFIELD
+!
+!    integer :: I1
+!    integer :: IPE
+!    integer :: IPF
+!    integer :: IPFE
+!    integer :: IFILE
+!    integer :: IE
+!
     ! error code for allocations
     integer :: ierror
-
-    logical :: EVREF
-    logical :: LCARTESIAN
-
-    character(len=40) POTENTIAL_FILENAME
-    character(len=40) SHAPEFUN_FILENAME
-
-    complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
-
+!
+!    logical :: EVREF
+!    logical :: LCARTESIAN
+!
+!    character(len=40) POTENTIAL_FILENAME
+!    character(len=40) SHAPEFUN_FILENAME
+!
+!    complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
+!
     integer ::   LMMAXD,LMPOTD,LMXSPD
-
-! ------------- parameters derived from others or calculated
+!
+!! ------------- parameters derived from others or calculated
     integer ::   LPOTD
-    integer ::   IEMXD
-    integer, parameter :: KREL = 0
-
-! ------------- parameters from global.conf (former inc.p, inc.cls)
-
+!    integer ::   IEMXD
+!    integer, parameter :: KREL = 0
+!
+!! ------------- parameters from global.conf (former inc.p, inc.cls)
+!
     integer :: LMAXD
     integer :: NSPIND
     integer :: NAEZD
-    integer :: IRNSD
-    integer :: IRMD
+!    integer :: IRNSD
+!    integer :: IRMD
     integer :: NREFD
     integer :: NRD
-    integer :: IRID
-    integer :: NFUND
-    integer :: NCELLD
+!    integer :: IRID
+!    integer :: NFUND
+!    integer :: NCELLD
     integer :: NACLSD
     integer :: NCLSD
-    integer :: IPAND
-    integer :: NXIJD
-    integer :: KPOIBZ
-    integer :: EKMD
-    integer :: IGUESSD
-    integer :: BCPD
-    integer :: NMAXD
-    integer :: ISHLD
-    integer :: LLY
+!    integer :: IPAND
+!    integer :: NXIJD
+!    integer :: KPOIBZ
+!    integer :: EKMD
+!    integer :: IGUESSD
+!    integer :: BCPD
+!    integer :: NMAXD
+!    integer :: ISHLD
+!    integer :: LLY
+!
+!    integer :: SMPID
+!    integer :: EMPID
+!    integer :: NTHRDS
+!    integer :: XDIM
+!    integer :: YDIM
+!    integer :: ZDIM
+!    integer :: NATBLD
+!    integer :: ITDBRYD
+!
+!    integer :: num_atom_procs
 
-    integer :: SMPID
-    integer :: EMPID
-    integer :: NTHRDS
-    integer :: XDIM
-    integer :: YDIM
-    integer :: ZDIM
-    integer :: NATBLD
-    integer :: ITDBRYD
-
-    integer :: num_atom_procs
-
-    character(len=40) :: variable
-    integer :: next_ptr
-
-    type (InputParamsNew) :: input
+!    character(len=40) :: variable
+!    integer :: next_ptr
 
     !-------- unused dummys
-    integer :: TRC
+!    integer :: TRC
+
+    type (InputParamsNew) :: input
+    type (Dimensions)     :: dims
 
 ! ------------ end of declarations ---------------------------------
 
     type (ConfigReader) :: conf
 
-    call createConfigReader(conf)
-    call parseFile(conf, 'global.conf', ierror)
+    ierror = getDimensionsValues("global.conf", dims)
     if (ierror /= 0) stop
 
-    call getValueInteger(conf, "LMAXD", LMAXD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NSPIND", NSPIND, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NAEZD", NAEZD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IRNSD", IRNSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IRMD", IRMD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NREFD", NREFD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NRD", NRD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IRID", IRID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NFUND", NFUND, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NCELLD", NCELLD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NACLSD", NACLSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NCLSD", NCLSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IPAND", IPAND, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NXIJD", NXIJD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "KPOIBZ", KPOIBZ, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IGUESSD", IGUESSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "BCPD", BCPD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NMAXD", NMAXD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "ISHLD", ISHLD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "LLY", LLY, ierror)
-    if (ierror /= 0) stop
+    LMAXD = dims%LMAXD
+    NAEZD = dims%NAEZD
+    NSPIND = dims%NSPIND
+    NREFD = dims%NREFD
+    NRD = dims%NRD
+    NCLSD = dims%NCLSD
+    NACLSD = dims%NACLSD
 
-    call getValueInteger(conf, "SMPID", SMPID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "EMPID", EMPID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NTHRDS", NTHRDS, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "XDIM", XDIM, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "YDIM", YDIM, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "ZDIM", ZDIM, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NATBLD", NATBLD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "ITDBRYD", ITDBRYD, ierror)
-    if (ierror /= 0) stop
+    write(*,*) LMAXD, NAEZD, NSPIND
 
-    call getValueInteger(conf, "num_atom_procs", num_atom_procs, ierror)
-    if (ierror /= 0) then
-      write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
-      num_atom_procs = naezd
-    end if
-
-    write(*,*) "The following variables have not been read:"
-    next_ptr = 1
-    do
-      call getUnreadVariable(conf, variable, next_ptr, ierror)
-      if (ierror /= 0) exit
-      write (*,*) variable
-    end do
-
-    call destroyConfigReader(conf)
+!    write(*,*) "The following variables have not been read:"
+!    next_ptr = 1
+!    do
+!      call getUnreadVariable(conf, variable, next_ptr, ierror)
+!      if (ierror /= 0) exit
+!      write (*,*) variable
+!    end do
 
     ierror = getInputParamsNewValues("input.conf", input)
     if (ierror /= 0) stop
 
+    ! TODO: Check if all needed
     LPOTD = 2*LMAXD
     LMMAXD= (LMAXD+1)**2
     LMPOTD= (LPOTD+1)**2
     LMXSPD= (2*LPOTD+1)**2
-    LPOT = LPOTD
-    LMPOT = LMPOTD
 
     PI = 4.0D0*ATAN(1.0D0)
     EFERMI = 0.0d0
@@ -429,45 +374,48 @@
 ! Array allocations END 1
 !-----------------------------------------------------------------------------
 
-    call RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS, &
-                  E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3, &
-                  SCFSTEPS,IMIX,MIXING,QBOUND,FCM, &
-                  ITDBRY,NTCELL,NAEZ,IRM,ZAT, &
-                  NREF,ICST,IFILE,IPE,IPF,IPFE, &
-                  KHFELD,KPRE,KTE, &
-                  KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT, &
-                  NSPIN,REFPOT, &
-                  INTERVX,INTERVY,INTERVZ, &
-                  HFIELD,VBC,VCONST, &
-                  POTENTIAL_FILENAME,SHAPEFUN_FILENAME, &
-                  RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC, &
-                  LDAU, &
-                  RMTREF,KFORCE, &
-                  IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX, &
-                  LMAXD, IRNSD, TRC, LPOTD, NSPIND, &
-                  IRMD, NAEZD)
+     call RINPUTNEW99(RBASIS,CLS,NCLS,NTCELL,NAEZD,ZAT, &
+                      NREF,REFPOT,RMTREF)
+
+!    call RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS, &
+!                  E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3, &
+!                  SCFSTEPS,IMIX,MIXING,QBOUND,FCM, &
+!                  ITDBRY,NTCELL,NAEZ,IRM,ZAT, &
+!                  NREF,ICST,IFILE,IPE,IPF,IPFE, &
+!                  KHFELD,KPRE,KTE, &
+!                  KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT, &
+!                  NSPIN,REFPOT, &
+!                  INTERVX,INTERVY,INTERVZ, &
+!                  HFIELD,VBC,VCONST, &
+!                  POTENTIAL_FILENAME,SHAPEFUN_FILENAME, &
+!                  RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC, &
+!                  LDAU, &
+!                  RMTREF,KFORCE, &
+!                  IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX, &
+!                  LMAXD, IRNSD, TRC, LPOTD, NSPIND, &
+!                  IRMD, NAEZD)
 
 ! unnecessary parameters, read in for compatibility: IRM, KHFELD, ...
 
 ! --------------- calculated parameters --------------------------------------
-    if (NPOL /= 0) then
-      IEMXD = NPOL + NPNT1 + NPNT2 + NPNT3
-    else
-      ! DOS-calculation
-      IEMXD = NPNT2
-    end if
+!    if (NPOL /= 0) then
+!      IEMXD = NPOL + NPNT1 + NPNT2 + NPNT3
+!    else
+!      ! DOS-calculation
+!      IEMXD = NPNT2
+!    end if
 
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN 2
 !-----------------------------------------------------------------------------
 
-    ! Energy mesh
-    allocate(EZ(IEMXD), stat=ierror)
-    allocate(WEZ(IEMXD), stat=ierror)
-    allocate(KMESH(IEMXD), stat=ierror)
-
-    !   auxillary
-    allocate(DEZ(IEMXD), stat=ierror)
+!    ! Energy mesh
+!    allocate(EZ(IEMXD), stat=ierror)
+!    allocate(WEZ(IEMXD), stat=ierror)
+!    allocate(KMESH(IEMXD), stat=ierror)
+!
+!    !   auxillary
+!    allocate(DEZ(IEMXD), stat=ierror)
 
 !-----------------------------------------------------------------------------
 ! Array allocations END 2
@@ -475,112 +423,112 @@
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
-    if (LDAU) then
-      call ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
-    end if
+!    if (LDAU) then
+!      call ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
+!    end if
 
 !===================================================================
 ! next short section used to search for file 'VREF'
 ! if present - DP-value given in that file will be used as EREF
 !===================================================================
-    inquire(file='VREF',exist=EVREF)
-    if (EVREF) then
-      open(87,file='VREF',form='formatted')
-      read(87,*) EREF
-      close(87)
-    endif
+!    inquire(file='VREF',exist=EVREF)
+!    if (EVREF) then
+!      open(87,file='VREF',form='formatted')
+!      read(87,*) EREF
+!      close(87)
+!    endif
 
     !     The default value for the repulsive reference potential is 8
     !     This value is used if file VREF does not exist
     !     (VREF should contain only one double precision value used as EREF)
     !     in future: move as parameter to inputfile
-    do I1 = 1,NAEZD
-      VREF(I1) = 8.D0
-      if (EVREF) VREF(I1) = EREF
-    end do
+!    do I1 = 1,NAEZD
+!      VREF(I1) = 8.D0
+!      if (EVREF) VREF(I1) = EREF
+!    end do
 !===================================================================
 !===================================================================
 
-    NSRA = 1
-    if (KVREL >= 1) NSRA = 2
-
-    call TESTDIM(NSPIN,NAEZ,LMAX,NREF,LMAXD,NREFD,NSPIND)
-
-    open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
-    open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
-
-    ! read starting potential and shapefunctions
-    call STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
-                 HFIELD,VCONST, &
-                 LPOT,NSPIND,NTCELL, &
-                 EFERMI, &
-                 VBC, &
-                 ZAT, &
-                 IPAND, IRID, NFUND, IRMD, NCELLD, &
-                 NAEZD, IRNSD)
-
-    close(IFILE)
-    close(19)
+!    NSRA = 1
+!    if (KVREL >= 1) NSRA = 2
+!
+!    call TESTDIM(NSPIN,NAEZ,LMAX,NREF,LMAXD,NREFD,NSPIND)
+!
+!    open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
+!    open (IFILE,file=POTENTIAL_FILENAME,status='old',form='formatted')
+!
+!    ! read starting potential and shapefunctions
+!    call STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
+!                 HFIELD,VCONST, &
+!                 LPOT,NSPIND,NTCELL, &
+!                 EFERMI, &
+!                 VBC, &
+!                 ZAT, &
+!                 IPAND, IRID, NFUND, IRMD, NCELLD, &
+!                 NAEZD, IRNSD)
+!
+!    close(IFILE)
+!    close(19)
 
 ! ----------------------------------------------------------------------
 ! update Fermi energy, adjust energy window according to running options
 
     ! for non-DOS calculation upper energy bound corresponds to Fermi energy
-    if ( NPOL /= 0 ) E2 = EFERMI
+!    if ( NPOL /= 0 ) E2 = EFERMI
 
 ! --> set up energy contour
 
-    call EMESHT(EZ,DEZ,IELAST,E1,E2,EFERMI,TK, &
-    NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
-    do IE = 1,IELAST
-      WEZ(IE) = -2.D0/PI*DEZ(IE)
-    end do
+!    call EMESHT(EZ,DEZ,IELAST,E1,E2,EFERMI,TK, &
+!    NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
+!    do IE = 1,IELAST
+!      WEZ(IE) = -2.D0/PI*DEZ(IE)
+!    end do
 
 ! ================================================ deal with the lattice
     ! only for informative purposes
-    call LATTIX99(ALAT,BRAVAIS,RECBV,VOLUME0, .true.)
+!    call LATTIX99(ALAT,BRAVAIS,RECBV,VOLUME0, .true.)
 
 ! --> now generate the real-space lattice vectors for the
 !     cluster generation
 
-    call RRGEN(BRAVAIS,RR,NR,NRD)
-    write(*,*)
+!    call RRGEN(BRAVAIS,RR,NR,NRD)
+!    write(*,*)
 
-    call SCALEVEC(RBASIS,ABASIS,BBASIS,CBASIS, &
-                  NAEZ,BRAVAIS,LCARTESIAN)
+!    call SCALEVEC(RBASIS,ABASIS,BBASIS,CBASIS, &
+!                  NAEZ,BRAVAIS,LCARTESIAN)
 ! ======================================================================
 
 ! ======================================================================
 
 !   initialise arrays for clsgen99 to garbage values
-    EZOA = -1
-    ATOM = -1
-    NACLS = -1
-    CLS = -1
-    NUMN0 = -1
-    INDN0 = -1
-
-    call CLSGEN99(NAEZ,RR,NR,RBASIS,CLS,NACLS,REFPOT,ATOM, &
-                  EZOA, &
-                  RCLS,RCUTZ,RCUTXY, &
-                  NUMN0,INDN0, &
-                  NRD, NCLSD, NACLSD)
+!    EZOA = -1
+!    ATOM = -1
+!    NACLS = -1
+!    CLS = -1
+!    NUMN0 = -1
+!    INDN0 = -1
+!
+!    call CLSGEN99(NAEZ,RR,NR,RBASIS,CLS,NACLS,REFPOT,ATOM, &
+!                  EZOA, &
+!                  RCLS,RCUTZ,RCUTXY, &
+!                  NUMN0,INDN0, &
+!                  NRD, NCLSD, NACLSD)
 
 ! xcpl test dimensions for Jij-calculation ..
-    call CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ,NRD,NXIJD)
+!    call CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ,NRD,NXIJD)
 ! xcpl .
 
 
 ! ======================================================================
 !     setting up kpoints
 ! ======================================================================
-    call BZKINT0(NAEZ, &
-                 RBASIS,BRAVAIS,RECBV, &
-                 NSYMAT,ISYMINDEX, &
-                 DSYMLL, &
-                 INTERVX,INTERVY,INTERVZ, &
-                 IELAST,EZ,KMESH,MAXMESH,MAXMSHD, &
-                 LMAX, IEMXD, KREL, KPOIBZ, EKMD)
+!    call BZKINT0(NAEZ, &
+!                 RBASIS,BRAVAIS,RECBV, &
+!                 NSYMAT,ISYMINDEX, &
+!                 DSYMLL, &
+!                 INTERVX,INTERVY,INTERVZ, &
+!                 IELAST,EZ,KMESH,MAXMESH,MAXMSHD, &
+!                 LMAX, IEMXD, KREL, KPOIBZ, EKMD)
     ! after return from bzkint0, EKMD contains the right value
 
 ! ======================================================================
@@ -600,112 +548,113 @@
 !      BCP = BCPD
 !    endif
 
-    if (BCPD == 1 .and. NATBLD*XDIM*YDIM*ZDIM /= NAEZD) then
-      write(*,*) "ERROR: When BCPD==1 then NATBLD*XDIM*YDIM*ZDIM has to be equal to NAEZD."
-      stop
-    endif
+!    if (BCPD == 1 .and. NATBLD*XDIM*YDIM*ZDIM /= NAEZD) then
+!      write(*,*) "ERROR: When BCPD==1 then NATBLD*XDIM*YDIM*ZDIM has to be equal to NAEZD."
+!      stop
+!    endif
 
 !     Conversion of RMAX and GMAX to units of ALAT
-    RMAX = RMAX*ALAT
-    GMAX = GMAX/ALAT
+!    RMAX = RMAX*ALAT
+!    GMAX = GMAX/ALAT
 
-    call TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX, &
-                    NMAXD, ISHLD)
+!    call TESTDIMLAT(ALAT,BRAVAIS,RECBV,RMAX,GMAX, &
+!                    NMAXD, ISHLD)
 
 
-    call write_dimension_parameters( &
-        LMAXD, &
-        NSPIND, &
-        NAEZD, &
-        IRNSD, &
-        IRMD, &
-        NREFD, &
-        NRD, &
-        IRID, &
-        NFUND, &
-        NCELLD, &
-        NACLSD, &
-        NCLSD, &
-        IPAND, &
-        NXIJD, &
-        KPOIBZ, &
-        IGUESSD, &
-        BCPD, &
-        NMAXD, &
-        ISHLD, &
-        LLY, &
-        SMPID, &
-        EMPID, &
-        NTHRDS, &
-        XDIM, &
-        YDIM, &
-        ZDIM, &
-        NATBLD, &
-        ITDBRYD, &
-        IEMXD, &
-        EKMD, &
-        num_atom_procs)
-
-    call WUNFILES_NEW(NPOL,NPNT1,NPNT2, &
-    NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
-    BRAVAIS,RMAX,GMAX, &
-    EFERMI, &
-    SCFSTEPS, &
-    NSRA,NREF, &
-    NCLS,ICST,ALAT,ZAT, &
-    REFPOT,RMTREF,VREF, &
-    ATOM,CLS,RCLS,NACLS, &
-    RBASIS,RR,EZOA, &
-    KMESH,MAXMESH,NSYMAT, &
-    DSYMLL, &
-    IMIX,MIXING,FCM,KPRE, &
-    KTE,KXC, &
-    KFORCE, &
-    IEMXD,NAEZD, &
-    LMMAXD,NREFD, &
-    NACLSD,NCLSD,NRD, &
-    NSYMAXD, &
-    NUMN0,INDN0, &
-    IGUESS,BCP,QMRBOUND, &
-    NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
+!    call write_dimension_parameters( &
+!        LMAXD, &
+!        NSPIND, &
+!        NAEZD, &
+!        IRNSD, &
+!        IRMD, &
+!        NREFD, &
+!        NRD, &
+!        IRID, &
+!        NFUND, &
+!        NCELLD, &
+!        NACLSD, &
+!        NCLSD, &
+!        IPAND, &
+!        NXIJD, &
+!        KPOIBZ, &
+!        IGUESSD, &
+!        BCPD, &
+!        NMAXD, &
+!        ISHLD, &
+!        LLY, &
+!        SMPID, &
+!        EMPID, &
+!        NTHRDS, &
+!        XDIM, &
+!        YDIM, &
+!        ZDIM, &
+!        NATBLD, &
+!        ITDBRYD, &
+!        IEMXD, &
+!        EKMD, &
+!        num_atom_procs)
+!
+!    call WUNFILES_NEW(NPOL,NPNT1,NPNT2, &
+!    NPNT3,IELAST,TK,E1,E2,EZ,WEZ, &
+!    BRAVAIS,RMAX,GMAX, &
+!    EFERMI, &
+!    SCFSTEPS, &
+!    NSRA,NREF, &
+!    NCLS,ICST,ALAT,ZAT, &
+!    REFPOT,RMTREF,VREF, &
+!    ATOM,CLS,RCLS,NACLS, &
+!    RBASIS,RR,EZOA, &
+!    KMESH,MAXMESH,NSYMAT, &
+!    DSYMLL, &
+!    IMIX,MIXING,FCM,KPRE, &
+!    KTE,KXC, &
+!    KFORCE, &
+!    IEMXD,NAEZD, &
+!    LMMAXD,NREFD, &
+!    NACLSD,NCLSD,NRD, &
+!    NSYMAXD, &
+!    NUMN0,INDN0, &
+!    IGUESS,BCP,QMRBOUND, &
+!    NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
 
     ierror = writeInputParamsNewToFile('input.unf', input)
+    ierror = writeDimensionsToFile('global.unf', dims)
 ! ======================================================================
 
 ! deallocations
 
-    ! Energy mesh
-    deallocate(EZ, stat=ierror)
-    deallocate(WEZ, stat=ierror)
-    deallocate(KMESH, stat=ierror)
+!    ! Energy mesh
+!    deallocate(EZ, stat=ierror)
+!    deallocate(WEZ, stat=ierror)
+!    deallocate(KMESH, stat=ierror)
 
-    ! Lattice
-    deallocate(RBASIS, stat=ierror)
-    deallocate(RMTREF, stat=ierror)
-    deallocate(RR, stat=ierror)
-    deallocate(ZAT, stat=ierror)
-
-    deallocate(NTCELL, stat=ierror)
-
-    ! Reference Cluster
-    deallocate(RCLS, stat=ierror)
-    deallocate(ATOM, stat=ierror)
-    deallocate(CLS, stat=ierror)
-    deallocate(EZOA, stat=ierror)
-    deallocate(NACLS, stat=ierror)
-    deallocate(NUMN0, stat=ierror)
-    deallocate(INDN0, stat=ierror)
-
-    ! Reference system
-    deallocate(REFPOT, stat=ierror)
-    deallocate(VREF, stat=ierror)
-
-    ! Symmetry matrices
-    deallocate(DSYMLL, stat=ierror)
-    deallocate(ISYMINDEX, stat=ierror)
-
-    !   auxillary
-    deallocate(DEZ, stat=ierror)
+!    ! Lattice
+!    deallocate(RBASIS, stat=ierror)
+!    deallocate(RMTREF, stat=ierror)
+!    deallocate(RR, stat=ierror)
+!    deallocate(ZAT, stat=ierror)
+!
+!    deallocate(NTCELL, stat=ierror)
+!
+!    ! Reference Cluster
+!    deallocate(RCLS, stat=ierror)
+!    deallocate(ATOM, stat=ierror)
+!    deallocate(CLS, stat=ierror)
+!    deallocate(EZOA, stat=ierror)
+!    deallocate(NACLS, stat=ierror)
+!    deallocate(NUMN0, stat=ierror)
+!    deallocate(INDN0, stat=ierror)
+!
+!    ! Reference system
+!    deallocate(REFPOT, stat=ierror)
+!    deallocate(VREF, stat=ierror)
+!
+!    ! Symmetry matrices
+!    deallocate(DSYMLL, stat=ierror)
+!    deallocate(ISYMINDEX, stat=ierror)
+!
+!    !   auxillary
+!    deallocate(DEZ, stat=ierror)
 
   end program
 

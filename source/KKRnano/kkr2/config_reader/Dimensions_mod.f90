@@ -25,7 +25,6 @@ type Dimensions
   integer :: IPAND
   integer :: NXIJD
   integer :: KPOIBZ
-  integer :: EKMD
   integer :: IGUESSD
   integer :: BCPD
   integer :: NMAXD
@@ -152,12 +151,6 @@ integer function getDimensionsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
-  call getValueInteger(conf, "EKMD", confvalues%EKMD, ierror)
-  if (ierror /= 0) then
-    write(*,*) "Bad/no value given for EKMD."
-    call destroyConfigReader(conf)
-    return
-  end if
   call getValueInteger(conf, "IGUESSD", confvalues%IGUESSD, ierror)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for IGUESSD."
@@ -270,7 +263,6 @@ integer function readDimensionsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%IPAND
   read(FILEHANDLE) confvalues%NXIJD
   read(FILEHANDLE) confvalues%KPOIBZ
-  read(FILEHANDLE) confvalues%EKMD
   read(FILEHANDLE) confvalues%IGUESSD
   read(FILEHANDLE) confvalues%BCPD
   read(FILEHANDLE) confvalues%NMAXD
@@ -313,7 +305,6 @@ integer function writeDimensionsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%IPAND
   write(FILEHANDLE) confvalues%NXIJD
   write(FILEHANDLE) confvalues%KPOIBZ
-  write(FILEHANDLE) confvalues%EKMD
   write(FILEHANDLE) confvalues%IGUESSD
   write(FILEHANDLE) confvalues%BCPD
   write(FILEHANDLE) confvalues%NMAXD
