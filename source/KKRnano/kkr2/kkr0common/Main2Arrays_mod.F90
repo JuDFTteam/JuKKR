@@ -18,21 +18,21 @@ module Main2Arrays_mod
   type Main2Arrays
     double precision , dimension(3,3)  :: bravais
     integer , dimension(48)  :: isymindex
-    double complex , allocatable, dimension(:,:,:)  :: DSYMLL
-    double precision , allocatable, dimension(:,:)  :: RBASIS
-    double precision , allocatable, dimension(:,:,:)  :: BZKP
-    double precision , allocatable, dimension(:,:)  :: VOLCUB
-    double precision , allocatable, dimension(:)  :: VOLBZ
-    double precision , allocatable, dimension(:,:)  :: RR
-    integer , allocatable, dimension(:)  :: KMESH
-    integer , allocatable, dimension(:)  :: NOFKS
+    double complex , allocatable, dimension(:,:,:)  :: DSYMLL  !< tau symmetry matrices
+    double precision , allocatable, dimension(:,:)  :: RBASIS  !< basis atom positions
+    double precision , allocatable, dimension(:,:,:)  :: BZKP  !< kpoints for each mesh
+    double precision , allocatable, dimension(:,:)  :: VOLCUB  !< kpoint weights
+    double precision , allocatable, dimension(:)  :: VOLBZ     !< BZ volume?
+    double precision , allocatable, dimension(:,:)  :: RR      !< lattice vectors
+    integer , allocatable, dimension(:)  :: KMESH !< mapping E-point to k-mesh
+    integer , allocatable, dimension(:)  :: NOFKS !< number of k points for each mesh
     integer , allocatable, dimension(:,:)  :: EZOA
     integer , allocatable, dimension(:)  :: NUMN0
     integer , allocatable, dimension(:,:)  :: INDN0
-    double precision , allocatable, dimension(:)  :: ZAT
+    double precision , allocatable, dimension(:)  :: ZAT  !< atomic numbers
     double precision , allocatable, dimension(:,:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
-    double precision , allocatable, dimension(:)  :: VREF
+    double precision , allocatable, dimension(:)  :: VREF !< repulsive screening pot. strength
     integer , allocatable, dimension(:,:)  :: ATOM
     integer , allocatable, dimension(:)  :: CLS
     integer , allocatable, dimension(:)  :: NACLS
@@ -57,7 +57,7 @@ module Main2Arrays_mod
     integer :: NREFD
     integer :: NCLSD
     integer :: nguessd
-    integer :: ekmd
+    integer :: ekmd   !< not used, invalid
     integer :: smpid
     integer :: lpot
     integer :: IRMD

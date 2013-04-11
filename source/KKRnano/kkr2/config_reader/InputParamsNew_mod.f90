@@ -36,6 +36,11 @@ type InputParamsNew
   integer :: kte
   integer :: imix
   integer :: bzdivide (3)
+  logical :: cartesian
+  integer :: npol
+  integer :: npnt1
+  integer :: npnt2
+  integer :: npnt3
 end type InputParamsNew
 
 CONTAINS
@@ -214,6 +219,36 @@ integer function getInputParamsNewValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueLogical(conf, "cartesian", confvalues%cartesian, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for cartesian."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "npol", confvalues%npol, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for npol."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "npnt1", confvalues%npnt1, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for npnt1."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "npnt2", confvalues%npnt2, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for npnt2."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "npnt3", confvalues%npnt3, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for npnt3."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -253,6 +288,11 @@ integer function readInputParamsNewFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%kte
   read(FILEHANDLE) confvalues%imix
   read(FILEHANDLE) confvalues%bzdivide
+  read(FILEHANDLE) confvalues%cartesian
+  read(FILEHANDLE) confvalues%npol
+  read(FILEHANDLE) confvalues%npnt1
+  read(FILEHANDLE) confvalues%npnt2
+  read(FILEHANDLE) confvalues%npnt3
   close(FILEHANDLE)
 end function
 
@@ -292,6 +332,11 @@ integer function writeInputParamsNewToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%kte
   write(FILEHANDLE) confvalues%imix
   write(FILEHANDLE) confvalues%bzdivide
+  write(FILEHANDLE) confvalues%cartesian
+  write(FILEHANDLE) confvalues%npol
+  write(FILEHANDLE) confvalues%npnt1
+  write(FILEHANDLE) confvalues%npnt2
+  write(FILEHANDLE) confvalues%npnt3
   close(FILEHANDLE)
 end function
 
