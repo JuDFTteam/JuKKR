@@ -141,7 +141,9 @@
 
     integer :: EKMD
 
-    type (InputParamsNew) :: input
+    integer :: BCP, IGUESS !TODO: remove, not used
+
+    type (InputParamsNew) :: params
     type (DimParams)      :: dims
     type (Main2Arrays)    :: arrays
 
@@ -149,14 +151,14 @@
 
     call createDimParamsFromConf(dims)
 
-    ierror = getInputParamsNewValues("input.conf", input)
+    ierror = getInputParamsNewValues("input.conf", params)
     if (ierror /= 0) stop
 
-    if (input%NPOL /= 0) then
-      IEMXD = input%NPOL + input%NPNT1 + input%NPNT2 + input%NPNT3
+    if (params%NPOL /= 0) then
+      IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3
     else
       ! DOS-calculation
-      IEMXD = input%NPNT2
+      IEMXD = params%NPNT2
     end if
 
     dims%IEMXD = IEMXD
@@ -200,7 +202,7 @@
     VBC = 0.0d0
 
     ! read starting potential and shapefunctions
-    call STARTB1_wrapper(input%alat, 13,6,9,0,0, &
+    call STARTB1_wrapper(params%alat, 13,6,9,0,0, &
                  HFIELD,VCONST, &
                  dims%LPOT,dims%NSPIND,NTCELL, &
                  EFERMI, VBC, arrays%ZAT, &
@@ -223,25 +225,25 @@
     allocate(DEZ(IEMXD), stat=ierror)
 
 ! for non-DOS calculation upper energy bound corresponds to Fermi energy
-! BAD: input%Emax is changed
-    if ( input%NPOL /= 0 ) input%Emax = EFERMI
+! BAD: params%Emax is changed
+    if ( params%NPOL /= 0 ) params%Emax = EFERMI
 
 ! --> set up energy contour
     PI = 4.0D0*ATAN(1.0D0)
 
-    call EMESHT(EZ,DEZ,IELAST,input%Emin,input%Emax,EFERMI,input%tempr, &
-    input%NPOL,input%NPNT1,input%NPNT2,input%NPNT3,IEMXD)
+    call EMESHT(EZ,DEZ,IELAST,params%Emin,params%Emax,EFERMI,params%tempr, &
+    params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*DEZ(IE)
     end do
 
 ! ================================================ deal with the lattice
     ! only for informative purposes
-    arrays%BRAVAIS(:,1) = input%bravais_a
-    arrays%BRAVAIS(:,2) = input%bravais_b
-    arrays%BRAVAIS(:,3) = input%bravais_c
+    arrays%BRAVAIS(:,1) = params%bravais_a
+    arrays%BRAVAIS(:,2) = params%bravais_b
+    arrays%BRAVAIS(:,3) = params%bravais_c
 
-    call LATTIX99(input%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
+    call LATTIX99(params%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
 
 ! --> now generate the real-space lattice vectors for the
 !     cluster generation
@@ -249,9 +251,9 @@
     call RRGEN(arrays%BRAVAIS,arrays%RR,arrays%NR,arrays%NRD)
     write(*,*)
 
-    call SCALEVEC(arrays%RBASIS,input%basisscale(1), &
-                  input%basisscale(2),input%basisscale(3), &
-                  arrays%NAEZ,arrays%BRAVAIS,input%CARTESIAN)
+    call SCALEVEC(arrays%RBASIS,params%basisscale(1), &
+                  params%basisscale(2),params%basisscale(3), &
+                  arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
 ! ======================================================================
 
 !   initialise arrays for clsgen99 to garbage values
@@ -264,7 +266,7 @@
 
     call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS,arrays%CLS,arrays%NACLS,arrays%REFPOT,arrays%ATOM, &
                   arrays%EZOA, &
-                  arrays%RCLS,input%rclust,input%rclust, &
+                  arrays%RCLS,params%rclust,params%rclust, &
                   arrays%NUMN0,arrays%INDN0, &
                   arrays%NRD, arrays%NCLSD, arrays%NACLSD)
 
@@ -280,7 +282,7 @@
                  arrays%RBASIS,arrays%BRAVAIS,RECBV, &
                  arrays%NSYMAT,arrays%ISYMINDEX, &
                  arrays%DSYMLL, &
-                 input%bzdivide(1),input%bzdivide(2),input%bzdivide(3), &
+                 params%bzdivide(1),params%bzdivide(2),params%bzdivide(3), &
                  IELAST,EZ,arrays%KMESH,arrays%MAXMESH,MAXMSHD, &
                  arrays%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD)
     ! after return from bzkint0, EKMD contains the right value
@@ -296,37 +298,38 @@
 !    endif
 
 !     Conversion of RMAX and GMAX to units of ALAT
-    input%RMAX = input%RMAX*input%ALAT
-    input%GMAX = input%GMAX/input%ALAT
+    params%RMAX = params%RMAX*params%ALAT
+    params%GMAX = params%GMAX/params%ALAT
 
-    call TESTDIMLAT(input%ALAT,arrays%BRAVAIS,RECBV,input%RMAX,input%GMAX, &
+    call TESTDIMLAT(params%ALAT,arrays%BRAVAIS,RECBV,params%RMAX,params%GMAX, &
                     dims%NMAXD, dims%ISHLD)
 
     call writeDimParams(dims)
-    ierror = writeInputParamsNewToFile('input.unf', input)
 
-    call WUNFILES_NEW(input%NPOL,input%NPNT1,input%NPNT2, &
-    input%NPNT3,IELAST,input%tempr,input%Emin,input%Emax,EZ,WEZ, &
-    arrays%BRAVAIS,input%RMAX,input%GMAX, &
+    ierror = writeInputParamsNewToFile('input.unf', params)
+
+    call WUNFILES_NEW(params%NPOL,params%NPNT1,params%NPNT2, &
+    params%NPNT3,IELAST,params%tempr,params%Emin,params%Emax,EZ,WEZ, &
+    arrays%BRAVAIS,params%RMAX,params%GMAX, &
     EFERMI, &
-    input%SCFSTEPS, &
-    input%NSRA,arrays%NREF, &
-    arrays%NCLS,input%ICST,input%ALAT,arrays%ZAT, &
+    params%SCFSTEPS, &
+    params%NSRA,arrays%NREF, &
+    arrays%NCLS,params%ICST,params%ALAT,arrays%ZAT, &
     arrays%REFPOT,arrays%RMTREF,arrays%VREF, &
     arrays%ATOM,arrays%CLS,arrays%RCLS,arrays%NACLS, &
     arrays%RBASIS,arrays%RR,arrays%EZOA, &
     arrays%KMESH,arrays%MAXMESH,arrays%NSYMAT, &
     arrays%DSYMLL, &
-    input%IMIX,input%MIXING,input%FCM,input%KPRE, &
-    input%KTE,input%KXC, &
-    input%KFORCE, &
+    params%IMIX,params%MIXING,params%FCM,params%KPRE, &
+    params%KTE,params%KXC, &
+    params%KFORCE, &
     dims%IEMXD,dims%NAEZ, &
     dims%LMMAXD,dims%NREFD, &
     dims%NACLSD,dims%NCLSD,dims%NRD, &
     dims%NSYMAXD, &
     arrays%NUMN0,arrays%INDN0, &
-    IGUESS,BCP,input%QMRBOUND, &
-    arrays%NR,input%RCUTJIJ,input%JIJ,input%LDAU,arrays%ISYMINDEX)
+    IGUESS,BCP,params%QMRBOUND, &
+    arrays%NR,params%RCUTJIJ,params%JIJ,params%LDAU,arrays%ISYMINDEX)
 
 ! ======================================================================
 
