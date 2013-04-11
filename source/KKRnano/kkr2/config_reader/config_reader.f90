@@ -571,11 +571,56 @@ contains
         write(*,*) vector_read
         vector = vector_read
         write(*,*) ios
-        ierror = CONFIG_READER_ERR_NOT_LOGICAL
+        ierror = CONFIG_READER_ERR_NOT_DOUBLE
       end if
     end if
 
   end subroutine getValueDoubleVector
+
+!---------------------------------------------------------------------
+!> Reads an integer vector of fixed length from config-File.
+!>
+!> The dimension of the vector has to be passed as argument 'length'
+!> The routine does not check if more then 'length' values are present
+!> If the vector is too short, however, ierror contains an error-code
+!
+!> A default value can be passed as vector, which does not change on exit
+!> if the variable is not found
+  subroutine getValueIntVector(this, variable, vector, length, ierror)
+    use Config_Reader_Dictionary
+    implicit none
+
+    type (ConfigReader), intent(inout) :: this
+    character(len = *), intent(in) :: variable
+    integer, dimension(length), intent(inout) :: vector
+    integer, intent(in) :: length
+    integer, intent(out) :: ierror
+
+    character(len = MAX_LINE_LENGTH) :: value_string
+    integer, dimension(length) :: vector_read
+    integer :: ios
+    integer :: ii
+
+    ierror = 0
+    ios = 0
+
+    call getValueString(this, variable, value_string, ierror)
+
+    if (ierror == 0) then
+      read(unit=value_string, fmt=*, iostat=ios) (vector_read(ii), ii = 1, length)
+      ! test if read was successful
+      if (ios == 0) then
+        vector = vector_read
+      else
+        write(*,*) value_string
+        write(*,*) vector_read
+        vector = vector_read
+        write(*,*) ios
+        ierror = CONFIG_READER_ERR_NOT_INTEGER
+      end if
+    end if
+
+  end subroutine getValueIntVector
 
 !---------------------------------------------------------------------
 !> This subroutine is used to get variables, which have not been read (yet).

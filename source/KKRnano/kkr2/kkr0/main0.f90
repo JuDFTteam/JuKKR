@@ -86,6 +86,7 @@
 ! ----------------------------------------------------------------------
 
     use Config_Reader
+    use InputParamsNew_mod
 
     implicit none
 
@@ -295,6 +296,8 @@
     character(len=40) :: variable
     integer :: next_ptr
 
+    type (InputParamsNew) :: input
+
     !-------- unused dummys
     integer :: TRC
 
@@ -380,10 +383,15 @@
 
     call destroyConfigReader(conf)
 
+    ierror = getInputParamsNewValues("input.conf", input)
+    if (ierror /= 0) stop
+
     LPOTD = 2*LMAXD
     LMMAXD= (LMAXD+1)**2
     LMPOTD= (LPOTD+1)**2
     LMXSPD= (2*LPOTD+1)**2
+    LPOT = LPOTD
+    LMPOT = LMPOTD
 
     PI = 4.0D0*ATAN(1.0D0)
     EFERMI = 0.0d0
@@ -583,14 +591,14 @@
 ! =        write out information for the other program parts           =
 ! ======================================================================
 
-    if (IGUESS .ne. IGUESSD) then
-      write(*,*) 'WARNING: IGUESS from inputcard ignored. Using IGUESSD = ', IGUESSD
-      IGUESS = IGUESSD
-    endif
-    if (BCP .ne. BCPD) then
-      write(*,*) 'WARNING: BCP from inputcard ignored. Using BCPD = ', BCPD
-      BCP = BCPD
-    endif
+!    if (IGUESS .ne. IGUESSD) then
+!      write(*,*) 'WARNING: IGUESS from inputcard ignored. Using IGUESSD = ', IGUESSD
+!      IGUESS = IGUESSD
+!    endif
+!    if (BCP .ne. BCPD) then
+!      write(*,*) 'WARNING: BCP from inputcard ignored. Using BCPD = ', BCPD
+!      BCP = BCPD
+!    endif
 
     if (BCPD == 1 .and. NATBLD*XDIM*YDIM*ZDIM /= NAEZD) then
       write(*,*) "ERROR: When BCPD==1 then NATBLD*XDIM*YDIM*ZDIM has to be equal to NAEZD."
@@ -660,6 +668,8 @@
     NUMN0,INDN0, &
     IGUESS,BCP,QMRBOUND, &
     NR,RCUTJIJ,JIJ,LDAU,ISYMINDEX)
+
+    ierror = writeInputParamsNewToFile('input.unf', input)
 ! ======================================================================
 
 ! deallocations
