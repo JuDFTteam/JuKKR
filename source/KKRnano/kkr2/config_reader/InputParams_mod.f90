@@ -3,13 +3,13 @@
 ! Automatically generated source file. Do not edit by hand.
 ! To add/remove/modify input parameters:
 ! Edit InputParamsNew.txt and run 
-! 'inputgenerator.py InputParamsNew InputParamsNew.txt > source.f90'
+! 'inputgenerator.py InputParams InputParamsNew.txt > source.f90'
 ! to generate source code.
 !------------------------------------------------------------------------------
 
 
-module InputParamsNew_mod
-type InputParamsNew
+module InputParams_mod
+type InputParams
   integer :: icst
   integer :: kpre
   double precision :: bravais_b (3)
@@ -41,17 +41,17 @@ type InputParamsNew
   integer :: npnt1
   integer :: npnt2
   integer :: npnt3
-end type InputParamsNew
+end type InputParams
 
 CONTAINS
 !-------------------------------------------------------------------------------
-integer function getInputParamsNewValues(filename, confvalues) result(ierror)
+integer function getInputParamsValues(filename, confvalues) result(ierror)
   use Config_Reader
   implicit none
 
   character(len=*) :: filename
   type (ConfigReader) :: conf
-  type (InputParamsNew), intent(inout) :: confvalues
+  type (InputParams), intent(inout) :: confvalues
 
   ierror = 0
   call createConfigReader(conf)
@@ -253,10 +253,10 @@ integer function getInputParamsNewValues(filename, confvalues) result(ierror)
 end function
 
 !-------------------------------------------------------------------------------
-integer function readInputParamsNewFromFile(filename, confvalues) result(ierror)
+integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   implicit none
   character(len=*), intent(in) :: filename
-  type (InputParamsNew), intent(inout) :: confvalues
+  type (InputParams), intent(inout) :: confvalues
 
   integer, parameter :: FILEHANDLE = 67
 
@@ -297,10 +297,10 @@ integer function readInputParamsNewFromFile(filename, confvalues) result(ierror)
 end function
 
 !-------------------------------------------------------------------------------
-integer function writeInputParamsNewToFile(filename, confvalues) result(ierror)
+integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   implicit none
   character(len=*), intent(in) :: filename
-  type (InputParamsNew), intent(inout) :: confvalues
+  type (InputParams), intent(inout) :: confvalues
 
   integer, parameter :: FILEHANDLE = 67
 

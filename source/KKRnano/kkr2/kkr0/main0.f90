@@ -86,7 +86,7 @@
 ! ----------------------------------------------------------------------
 
     use Config_Reader
-    use InputParamsNew_mod
+    use InputParams_mod
     use DimParams_mod
     use Main2Arrays_mod
 
@@ -143,7 +143,7 @@
 
     integer :: BCP, IGUESS !TODO: remove, not used
 
-    type (InputParamsNew) :: params
+    type (InputParams)    :: params
     type (DimParams)      :: dims
     type (Main2Arrays)    :: arrays
 
@@ -151,7 +151,7 @@
 
     call createDimParamsFromConf(dims)
 
-    ierror = getInputParamsNewValues("input.conf", params)
+    ierror = getInputParamsValues("input.conf", params)
     if (ierror /= 0) stop
 
     if (params%NPOL /= 0) then
@@ -306,7 +306,7 @@
 
     call writeDimParams(dims)
 
-    ierror = writeInputParamsNewToFile('input.unf', params)
+    ierror = writeInputParamsToFile('input.unf', params)
 
     call WUNFILES_NEW(params%NPOL,params%NPNT1,params%NPNT2, &
     params%NPNT3,IELAST,params%tempr,params%Emin,params%Emax,EZ,WEZ, &

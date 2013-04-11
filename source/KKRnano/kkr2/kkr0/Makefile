@@ -99,7 +99,7 @@ test:
 #Module dependencies
 
 config_reader.o: config_reader_dictionary.o
-main0.o: config_reader.o InputParamsNew_mod.o Main2Arrays_mod.o DimParams_mod.o
+main0.o: config_reader.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
 DimParams_mod.o: config_reader.o
 
