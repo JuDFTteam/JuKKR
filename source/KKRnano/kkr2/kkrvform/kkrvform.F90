@@ -138,9 +138,13 @@ end subroutine
     character(len=80) :: uio
     integer :: ier
 
-    CALL IoInput('KEXCOR    ',UIO,1,7,IER)
-    READ (UNIT=UIO,FMT=*) kxc
-    CALL IoInput('ALATBASIS ',UIO,1,7,IER)
-    READ (UNIT=UIO,FMT=*) ALAT
+    !CALL IoInput('KEXCOR    ',UIO,1,7,IER)
+    !READ (UNIT=UIO,FMT=*) kxc
+    !CALL IoInput('ALATBASIS ',UIO,1,7,IER)
+    !READ (UNIT=UIO,FMT=*) ALAT
+
+    write(*,*) "WARNING: COULD NOT GET ALAT and KXC - TODO"
+    alat = 0
+    kxc = 2
 
   end subroutine

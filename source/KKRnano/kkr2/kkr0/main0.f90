@@ -105,198 +105,45 @@
     parameter (NSYMAXD=48)
 !     Maximal number of k-meshes used
     parameter (MAXMSHD=8)
-!!     ..
-!!     .. Local Scalars ..
-!
-!    double precision :: RMAX
-!    double precision :: GMAX
-!    double precision :: RCUTJIJ
-!    double precision :: RCUTTRC
-!
-!!     .. KKR calculation options ..
+
     double precision :: VCONST
-!
-!    integer :: ICST
-!    integer :: IRM    !     eq IRMD ?  totally USELESS
-!    integer :: KHFELD
-!    integer :: KPRE
-!    integer :: KTE
-!    integer :: KVMAD
-!    integer :: KVREL
-!    integer :: KXC
-!    integer :: LMAX
-!    integer :: NSPIN
-!    integer :: KFORCE
-!
-!    logical :: JIJ
-!    logical :: LDAU
-!
-!!     .. KKR calculation options options derived from others ..
-!    integer :: LMPOT
-!    integer :: LPOT
-!    integer :: NSRA
-!
-!!     ..
-!!     .. Local Arrays ..
     double precision :: VBC(2)
 !
-!!     .. Energy Mesh ..
-!    double precision :: E1
+!     .. Energy Mesh ..
     double precision :: E2
     double precision :: EFERMI
-!    double precision :: TK
-!
-!    integer :: NPNT1
-!    integer :: NPNT2
-!    integer :: NPNT3
-!    integer :: NPOL
+
     integer :: IELAST
-!    integer :: MAXMESH
-!
+
     complex(kind=DP), dimension(:), allocatable :: EZ
     complex(kind=DP), dimension(:), allocatable :: WEZ
     integer, dimension(:), allocatable :: KMESH
-!
-!!     .. Lattice ..
-!    integer :: NAEZ
-!    integer :: NR
-!
-!    double precision :: ALAT
+
     double precision :: VOLUME0
-!
-!    double precision :: BRAVAIS(3,3)
     double precision :: RECBV(3,3)
-!
-!    double precision, dimension(:,:), allocatable :: RBASIS
-!    double precision, dimension(:),   allocatable :: RMTREF
-!    double precision, dimension(:,:), allocatable :: RR
-!    double precision, dimension(:),   allocatable :: ZAT
-!
-!!     .. Lattice aux. ..
-!    double precision :: ABASIS
-!    double precision :: BBASIS
-!    double precision :: CBASIS
-!
+
     integer, dimension(:),   allocatable :: NTCELL
-!
-!!     .. reference clusters
-!    double precision :: RCUTXY
-!    double precision :: RCUTZ
-!
-!    integer :: NCLS
-!    integer :: NREF
-!
-!    double precision, dimension(:,:,:), allocatable :: RCLS
-!
-!    integer, dimension(:,:), allocatable :: ATOM
-!    integer, dimension(:),   allocatable :: CLS
-!    integer, dimension(:,:), allocatable :: EZOA
-!    integer, dimension(:),   allocatable :: NACLS
-!!     NUMN0(i) gives number of ref. cluster atoms around atom i
-!    integer, dimension(:),   allocatable :: NUMN0
-!!     INDN0(i,j) gives the atom index (from basis) of cluster atom j
-!!     around central atom i
-!    integer, dimension(:,:), allocatable :: INDN0
-!    integer, dimension(:),   allocatable :: REFPOT
-!
-!!     .. reference system ..
-!    double precision, dimension(:), allocatable :: VREF
-!
-!!     .. Brillouin zone ..
-!!     kpoints in each direction
-!    integer :: INTERVX
-!    integer :: INTERVY
-!    integer :: INTERVZ
-!!     number of symmetries = number of symmetry matrices
-!    integer :: NSYMAT
-!
-!!         symmetry matrices
-!    complex(kind=DP), dimension(:,:,:), allocatable :: DSYMLL
-!    integer, dimension(:), allocatable :: ISYMINDEX
-!
-!!     .. Self-consistency parameters ..
-!    double precision :: FCM
-!    double precision :: MIXING
-!    double precision :: QBOUND
-!
-!    integer :: SCFSTEPS
-!    integer :: IMIX
-!!     has no effect, use ITDBRYD in inc.p instead
-!    integer :: ITDBRY
-!
-!!     .. Iterative solver options ..
-!    double precision :: QMRBOUND
-!
-    integer :: IGUESS
-    integer :: BCP
-!
-!!     .. auxillary variables, not passed to kkr2
+
+!     .. auxillary variables, not passed to kkr2
     double precision :: PI
-!    double precision :: EREF
     double precision :: HFIELD
-!
-!    integer :: I1
+
     integer :: IE
-!
-    ! error code for allocations
+
     integer :: ierror
-!
-!    logical :: EVREF
-!    logical :: LCARTESIAN
-!
+
     character(len=40) POTENTIAL_FILENAME
     character(len=40) SHAPEFUN_FILENAME
-!
     complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
-!
-!    integer ::   LMMAXD,LMPOTD,LMXSPD
 
-! ------------- parameters derived from others or calculated
-!    integer ::   LPOTD
     integer ::   IEMXD
-     integer, parameter :: KREL = 0
+    integer, parameter :: KREL = 0
 
-! ------------- parameters from global.conf (former inc.p, inc.cls)
-
-!    integer :: LMAXD
-!    integer :: NSPIND
-!    integer :: NAEZD
-!    integer :: IRNSD
-!    integer :: IRMD
-!    integer :: NREFD
-!    integer :: NRD
-!    integer :: IRID
-!    integer :: NFUND
-!    integer :: NCELLD
-!    integer :: NACLSD
-!    integer :: NCLSD
-!    integer :: IPAND
-!    integer :: NXIJD
-!    integer :: KPOIBZ
     integer :: EKMD
-!    integer :: IGUESSD
-!    integer :: BCPD
-!    integer :: NMAXD
-!    integer :: ISHLD
-!    integer :: LLY
-!
-!    integer :: SMPID
-!    integer :: EMPID
-!    integer :: NTHRDS
-!    integer :: XDIM
-!    integer :: YDIM
-!    integer :: ZDIM
-!    integer :: NATBLD
-!    integer :: ITDBRYD
-!
-!    integer :: num_atom_procs
 
     type (InputParamsNew) :: input
     type (DimParams)      :: dims
     type (Main2Arrays)    :: arrays
-
-    !-------- unused dummys
-    !integer :: TRC
 
 ! ------------ end of declarations ---------------------------------
 
@@ -317,70 +164,17 @@
     ! important: determine IEMXD before creating arrays
     call createMain2Arrays(arrays, dims)
 
-!    LPOTD = 2*LMAXD
-!    LMMAXD= (LMAXD+1)**2
-!    LMPOTD= (LPOTD+1)**2
-!    LMXSPD= (2*LPOTD+1)**2
-!    LPOT = LPOTD
-!    LMPOT = LMPOTD
-!
-
 !-----------------------------------------------------------------------------
-! Array allocations BEGIN 1
+! Array allocations BEGIN
 !-----------------------------------------------------------------------------
-!
-!    ! Lattice
-!    allocate(RBASIS(3,NAEZD), stat=ierror)
-!    allocate(RMTREF(NREFD), stat=ierror)
-!    allocate(RR(3,0:NRD), stat=ierror)
-!    allocate(ZAT(NAEZD), stat=ierror)
-!
     allocate(NTCELL(dims%NAEZ), stat=ierror)
-!
-!    ! Reference Cluster
-!    allocate(RCLS(3,NACLSD,NCLSD), stat=ierror)
-!    allocate(ATOM(NACLSD,NAEZD), stat=ierror)
-!    allocate(CLS(NAEZD), stat=ierror)
-!    allocate(EZOA(NACLSD,NAEZD), stat=ierror)
-!    allocate(NACLS(NCLSD), stat=ierror)
-!    allocate(NUMN0(NAEZD), stat=ierror)
-!    allocate(INDN0(NAEZD,NACLSD), stat=ierror)
-!    allocate(REFPOT(NAEZD), stat=ierror)
-!
-!    ! Reference system
-!    allocate(VREF(NAEZD), stat=ierror)
-!
-!    !         symmetry matrices
-!    allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD), stat=ierror)
-!    allocate(ISYMINDEX(NSYMAXD), stat=ierror)
-
 !-----------------------------------------------------------------------------
-! Array allocations END 1
+! Array allocations END
 !-----------------------------------------------------------------------------
-
-!    call RINPUT99(BRAVAIS,ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS, &
-!                  E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3, &
-!                  SCFSTEPS,IMIX,MIXING,QBOUND,FCM, &
-!                  ITDBRY,NTCELL,NAEZ,IRM,ZAT, &
-!                  NREF,ICST,IFILE,IPE,IPF,IPFE, &
-!                  KHFELD,KPRE,KTE, &
-!                  KVMAD,KVREL,KXC,LMAX,LMPOT,LPOT, &
-!                  NSPIN,REFPOT, &
-!                  INTERVX,INTERVY,INTERVZ, &
-!                  HFIELD,VBC,VCONST, &
-!                  POTENTIAL_FILENAME,SHAPEFUN_FILENAME, &
-!                  RCUTZ,RCUTXY,RCUTJIJ,JIJ,RCUTTRC, &
-!                  LDAU, &
-!                  RMTREF,KFORCE, &
-!                  IGUESS,BCP,QMRBOUND,LCARTESIAN,RMAX,GMAX, &
-!                  LMAXD, IRNSD, TRC, LPOTD, NSPIND, &
-!                  IRMD, NAEZD)
 
      call RINPUTNEW99(arrays%RBASIS,arrays%CLS,arrays%NCLS, NTCELL,&
                       arrays%NAEZ,arrays%ZAT,arrays%NREF, &
                       arrays%REFPOT,arrays%RMTREF)
-
-! unnecessary parameters, read in for compatibility: IRM, KHFELD, ...
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -388,34 +182,12 @@
 !      call ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
 !    end if
 
-!===================================================================
-! next short section used to search for file 'VREF'
-! if present - DP-value given in that file will be used as EREF
-!===================================================================
-!    inquire(file='VREF',exist=EVREF)
-!    if (EVREF) then
-!      open(87,file='VREF',form='formatted')
-!      read(87,*) EREF
-!      close(87)
-!    endif
-
-    !     The default value for the repulsive reference potential is 8
-    !     This value is used if file VREF does not exist
-    !     (VREF should contain only one double precision value used as EREF)
-    !     in future: move as parameter to inputfile
-!    do I1 = 1,NAEZD
-!      VREF(I1) = 8.D0
-!      if (EVREF) VREF(I1) = EREF
-!    end do
+!    Repulsive reference potential
+!    in future: move as parameter to inputfile
 
      arrays%VREF = 8.D0
-!===================================================================
-!===================================================================
 
-!    NSRA = 1
-!    if (KVREL >= 1) NSRA = 2
-
-!    call TESTDIM(NSPIN,NAEZ,LMAX,NREF,LMAXD,NREFD,NSPIND)
+!===================================================================
 
     SHAPEFUN_FILENAME = 'shapefun'
     POTENTIAL_FILENAME = 'potential'
@@ -482,8 +254,6 @@
                   arrays%NAEZ,arrays%BRAVAIS,input%CARTESIAN)
 ! ======================================================================
 
-! ======================================================================
-
 !   initialise arrays for clsgen99 to garbage values
      arrays%EZOA = -1
      arrays%ATOM = -1
@@ -517,14 +287,6 @@
 
     dims%EKMD = EKMD
 
-! ======================================================================
-! ======================================================================
-
-
-! ======================================================================
-! =        write out information for the other program parts           =
-! ======================================================================
-
     IGUESS = dims%IGUESSD
     BCP = dims%BCPD
 
@@ -539,44 +301,10 @@
 
     call TESTDIMLAT(input%ALAT,arrays%BRAVAIS,RECBV,input%RMAX,input%GMAX, &
                     dims%NMAXD, dims%ISHLD)
-!
 
     call writeDimParams(dims)
     ierror = writeInputParamsNewToFile('input.unf', input)
 
-!    call write_dimension_parameters( &
-!        LMAXD, &
-!        NSPIND, &
-!        NAEZD, &
-!        IRNSD, &
-!        IRMD, &
-!        NREFD, &
-!        NRD, &
-!        IRID, &
-!        NFUND, &
-!        NCELLD, &
-!        NACLSD, &
-!        NCLSD, &
-!        IPAND, &
-!        NXIJD, &
-!        KPOIBZ, &
-!        IGUESSD, &
-!        BCPD, &
-!        NMAXD, &
-!        ISHLD, &
-!        LLY, &
-!        SMPID, &
-!        EMPID, &
-!        NTHRDS, &
-!        XDIM, &
-!        YDIM, &
-!        ZDIM, &
-!        NATBLD, &
-!        ITDBRYD, &
-!        IEMXD, &
-!        EKMD, &
-!        num_atom_procs)
-!
     call WUNFILES_NEW(input%NPOL,input%NPNT1,input%NPNT2, &
     input%NPNT3,IELAST,input%tempr,input%Emin,input%Emax,EZ,WEZ, &
     arrays%BRAVAIS,input%RMAX,input%GMAX, &
@@ -607,35 +335,8 @@
     ! Energy mesh
     deallocate(EZ, stat=ierror)
     deallocate(WEZ, stat=ierror)
-!    deallocate(KMESH, stat=ierror)
-!
-!    ! Lattice
-!    deallocate(RBASIS, stat=ierror)
-!    deallocate(RMTREF, stat=ierror)
-!    deallocate(RR, stat=ierror)
-!    deallocate(ZAT, stat=ierror)
-!
-    deallocate(NTCELL, stat=ierror)
-!
-!    ! Reference Cluster
-!    deallocate(RCLS, stat=ierror)
-!    deallocate(ATOM, stat=ierror)
-!    deallocate(CLS, stat=ierror)
-!    deallocate(EZOA, stat=ierror)
-!    deallocate(NACLS, stat=ierror)
-!    deallocate(NUMN0, stat=ierror)
-!    deallocate(INDN0, stat=ierror)
-!
-!    ! Reference system
-!    deallocate(REFPOT, stat=ierror)
-!    deallocate(VREF, stat=ierror)
-!
-!    ! Symmetry matrices
-!    deallocate(DSYMLL, stat=ierror)
-!    deallocate(ISYMINDEX, stat=ierror)
-!
+
     !   auxillary
     deallocate(DEZ, stat=ierror)
-
+    deallocate(NTCELL, stat=ierror)
   end program
-
