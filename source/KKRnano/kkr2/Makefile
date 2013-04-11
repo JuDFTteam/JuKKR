@@ -125,7 +125,7 @@ endif
 DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
-         timing kkr0common MixingNew datastructures
+         timing kkr0common MixingNew datastructures config_reader
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -255,3 +255,5 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
 MadelungPotential_mod.o: CalculationData_mod.o
 kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
+config_reader.o: config_reader_dictionary.o
+DimParams_mod.o: config_reader.o
