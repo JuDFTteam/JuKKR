@@ -105,6 +105,8 @@ program MAIN2
                         arrays%RBASIS, arrays%RCLS, params%RCUTJIJ, arrays%REFPOT, params%RMAX, arrays%RMTREF, &
                         arrays%RR, params%SCFSTEPS, arrays%VREF, arrays%ZAT)
 
+  flag = readInputParamsFromFile('input.unf', params)
+
   !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
 
  ! ======================================================================
@@ -262,9 +264,9 @@ program MAIN2
         ! (although other processes could update themselves)
 
         call updateEnergyMesh(emesh)
+
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
-
         call writeEnergyMesh(emesh)
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), &
