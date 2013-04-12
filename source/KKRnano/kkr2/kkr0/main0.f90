@@ -305,33 +305,8 @@
                     dims%NMAXD, dims%ISHLD)
 
     call writeDimParams(dims)
-
     ierror = writeInputParamsToFile('input.unf', params)
-
     call writeMain2Arrays(arrays, 'arrays.unf')
-
-    call WUNFILES_NEW(params%NPOL,params%NPNT1,params%NPNT2, &
-    params%NPNT3,IELAST,params%tempr,params%Emin,params%Emax,EZ,WEZ, &
-    arrays%BRAVAIS,params%RMAX,params%GMAX, &
-    EFERMI, &
-    params%SCFSTEPS, &
-    params%NSRA,arrays%NREF, &
-    arrays%NCLS,params%ICST,params%ALAT,arrays%ZAT, &
-    arrays%REFPOT,arrays%RMTREF,arrays%VREF, &
-    arrays%ATOM,arrays%CLS,arrays%RCLS,arrays%NACLS, &
-    arrays%RBASIS,arrays%RR,arrays%EZOA, &
-    arrays%KMESH,arrays%MAXMESH,arrays%NSYMAT, &
-    arrays%DSYMLL, &
-    params%IMIX,params%MIXING,params%FCM,params%KPRE, &
-    params%KTE,params%KXC, &
-    params%KFORCE, &
-    dims%IEMXD,dims%NAEZ, &
-    dims%LMMAXD,dims%NREFD, &
-    dims%NACLSD,dims%NCLSD,dims%NRD, &
-    dims%NSYMAXD, &
-    arrays%NUMN0,arrays%INDN0, &
-    IGUESS,BCP,params%QMRBOUND, &
-    arrays%NR,params%RCUTJIJ,params%JIJ,params%LDAU,arrays%ISYMINDEX)
 
 ! ======================================================================
 

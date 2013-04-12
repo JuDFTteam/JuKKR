@@ -89,23 +89,11 @@ program MAIN2
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
   call createMain2Arrays(arrays, dims)
+  call readMain2Arrays(arrays, 'arrays.unf') !every process does this!
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
-  !every process does this!
-!  call readKKR0InputNew(dims%NSYMAXD, params%ALAT, arrays%ATOM, arrays%BRAVAIS, &
-!                        arrays%CLS, arrays%DSYMLL, arrays%EZOA, params%FCM, &
-!                        params%GMAX, params%ICST, params%IMIX, arrays%INDN0, &
-!                        arrays%ISYMINDEX, &
-!                        params%JIJ, params%KFORCE, arrays%KMESH, params%KPRE, params%KTE, params%KXC, &
-!                        params%LDAU, arrays%MAXMESH, &
-!                        params%MIXING, arrays%NACLS, arrays%NCLS, arrays%NR, arrays%NREF, &
-!                        params%NSRA, arrays%NSYMAT, arrays%NUMN0, params%QMRBOUND, &
-!                        arrays%RBASIS, arrays%RCLS, params%RCUTJIJ, arrays%REFPOT, params%RMAX, arrays%RMTREF, &
-!                        arrays%RR, params%SCFSTEPS, arrays%VREF, arrays%ZAT)
-
-  call readMain2Arrays(arrays, 'arrays.unf')
   flag = readInputParamsFromFile('input.unf', params)
 
   !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!

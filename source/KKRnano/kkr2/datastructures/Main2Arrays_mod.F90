@@ -1,4 +1,5 @@
 !> Datastructure that contains various arrays that could not factored out (yet).
+!>
 !> Note: Scales as O(N**2) in space and time.
 
 
