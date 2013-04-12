@@ -291,10 +291,7 @@ program MAIN2
 
     call destroyEBalanceHandler(ebalance_handler)
     call destroyEnergyMesh(emesh)
-
     call destroyCalculationData(calc_data)
-
-! ======================================================================
 
   endif ! active Ranks
 
