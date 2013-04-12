@@ -1,3 +1,7 @@
+!> Datastructure that contains various arrays that could not factored out (yet).
+!> Note: Scales as O(N**2) in space and time.
+
+
 ! Some macros for checked allocation/deallocation
 ! they need an integer variable named memory_stat declared in each routine
 ! they are used.
@@ -56,9 +60,9 @@ module Main2Arrays_mod
     integer :: NACLSD
     integer :: NREFD
     integer :: NCLSD
-    integer :: nguessd
+    integer :: nguessd !< not used?
     integer :: ekmd   !< not used, invalid
-    integer :: smpid
+    integer :: smpid  !< not used
     integer :: lpot
     integer :: IRMD
     integer :: LMPOTD
@@ -68,7 +72,7 @@ module Main2Arrays_mod
 
   !-----------------------------------------------------------------------------
   !> Constructs a Main2Arrays object.
-  !> @param[inout] self    The Main2Arrays object to construct.
+  !> @param[in,out] self    The Main2Arrays object to construct.
   !> @param[in]    dims    Dimension parameters
   subroutine createMain2Arrays(self, dims)
     use DimParams_mod
@@ -87,7 +91,7 @@ module Main2Arrays_mod
 
   !-----------------------------------------------------------------------------
   !> Constructs a Main2Arrays object. (implementation, don't call directly!)
-  !> @param[inout] self    The Main2Arrays object to construct.
+  !> @param[in,out] self    The Main2Arrays object to construct.
   !> @param[in]    lmaxd
   !> @param[in]    iemxd
   !> @param[in]    nspind
@@ -185,7 +189,7 @@ module Main2Arrays_mod
 
   !-----------------------------------------------------------------------------
   !> Destroys a Main2Arrays object.
-  !> @param[inout] self    The Main2Arrays object to destroy.
+  !> @param[in,out] self    The Main2Arrays object to destroy.
   subroutine destroyMain2Arrays(self)
     implicit none
     type (Main2Arrays), intent(inout) :: self
@@ -211,6 +215,88 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%CLS)
     DEALLOCATECHECK(self%NACLS)
     DEALLOCATECHECK(self%REFPOT)
+  end subroutine
+
+  !-----------------------------------------------------------------------------
+  !> Writes Main2Arrays data to file.
+  !> @param[in] self    The Main2Arrays object to write.
+  subroutine writeMain2Arrays(self, filename)
+    implicit none
+    type (Main2Arrays), intent(in) :: self
+    character(len=*), intent(in) :: filename
+
+    integer, parameter :: FILEHANDLE = 67
+
+    open (FILEHANDLE, file=filename, form='unformatted')
+    write (FILEHANDLE) self%BRAVAIS, &
+                       self%ISYMINDEX, &
+                       self%DSYMLL, &
+                       self%RBASIS, &
+                       self%BZKP, &
+                       self%VOLCUB, &
+                       self%VOLBZ, &
+                       self%RR, &
+                       self%KMESH, &
+                       self%NOFKS, &
+                       self%EZOA, &
+                       self%NUMN0, &
+                       self%INDN0, &
+                       self%ZAT, &
+                       self%RCLS, &
+                       self%RMTREF, &
+                       self%VREF, &
+                       self%ATOM, &
+                       self%CLS, &
+                       self%NACLS, &
+                       self%REFPOT, &
+                       self%NCLS, &  ! write some scalars too
+                       self%NREF, &
+                       self%NSYMAT, &
+                       self%MAXMESH, &
+                       self%NR
+    close (FILEHANDLE)
+
+  end subroutine
+
+  !-----------------------------------------------------------------------------
+  !> Reads Main2Arrays data from file.
+  !> @param[in,out] self    The Main2Arrays object to read.
+  subroutine readMain2Arrays(self, filename)
+    implicit none
+    type (Main2Arrays), intent(inout) :: self
+    character(len=*), intent(in) :: filename
+
+    integer, parameter :: FILEHANDLE = 67
+
+    open (FILEHANDLE, file=filename, form='unformatted')
+    read  (FILEHANDLE) self%BRAVAIS, &
+                       self%ISYMINDEX, &
+                       self%DSYMLL, &
+                       self%RBASIS, &
+                       self%BZKP, &
+                       self%VOLCUB, &
+                       self%VOLBZ, &
+                       self%RR, &
+                       self%KMESH, &
+                       self%NOFKS, &
+                       self%EZOA, &
+                       self%NUMN0, &
+                       self%INDN0, &
+                       self%ZAT, &
+                       self%RCLS, &
+                       self%RMTREF, &
+                       self%VREF, &
+                       self%ATOM, &
+                       self%CLS, &
+                       self%NACLS, &
+                       self%REFPOT, &
+                       self%NCLS, &  ! write some scalars too
+                       self%NREF, &
+                       self%NSYMAT, &
+                       self%MAXMESH, &
+                       self%NR
+    close (FILEHANDLE)
+
   end subroutine
 
 end module

@@ -308,6 +308,8 @@
 
     ierror = writeInputParamsToFile('input.unf', params)
 
+    call writeMain2Arrays(arrays, 'arrays.unf')
+
     call WUNFILES_NEW(params%NPOL,params%NPNT1,params%NPNT2, &
     params%NPNT3,IELAST,params%tempr,params%Emin,params%Emax,EZ,WEZ, &
     arrays%BRAVAIS,params%RMAX,params%GMAX, &
