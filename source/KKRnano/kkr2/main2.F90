@@ -130,10 +130,6 @@ program MAIN2
     num_local_atoms = getNumLocalAtoms(calc_data)
     !--------------------------------------------------------------------------
 
-    ! ---------------------------------------------------------- k_mesh
-    call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
-                         arrays%VOLBZ, arrays%VOLCUB)  !every process does this!
-
     call createEnergyMesh(emesh, dims%iemxd) !!!!
 
     call readEnergyMesh(emesh)  !every process does this!  !!!!

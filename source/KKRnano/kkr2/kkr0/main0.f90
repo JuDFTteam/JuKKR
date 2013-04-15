@@ -283,9 +283,12 @@
                  params%bzdivide(1),params%bzdivide(2),params%bzdivide(3), &
                  IELAST,EZ,arrays%KMESH,arrays%MAXMESH,MAXMSHD, &
                  arrays%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD)
-    ! after return from bzkint0, EKMD contains the right value
 
+    ! after return from bzkint0, EKMD contains the right value
     dims%EKMD = EKMD
+
+    call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
+                         arrays%VOLBZ, arrays%VOLCUB)
 
     IGUESS = dims%IGUESSD
     BCP = dims%BCPD
@@ -324,4 +327,33 @@
     !   auxillary
     deallocate(DEZ, stat=ierror)
     deallocate(NTCELL, stat=ierror)
-  end program
+end program
+
+!----------------------------------------------------------------------------
+! Read k-mesh file
+subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
+  implicit none
+  double precision :: BZKP(:,:,:)
+  integer :: MAXMESH
+  integer :: NOFKS(:)
+  double precision :: VOLBZ(:)
+  double precision :: VOLCUB(:,:)
+
+  ! -----------------------------
+  integer :: I
+  integer :: ID
+  integer :: L
+
+  open (52,file='kpoints',form='formatted')
+  rewind (52)
+
+  do L = 1,MAXMESH
+    read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
+    read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
+    do I=2,NOFKS(L)
+      read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
+    end do
+  end do
+
+  close (52)
+end subroutine

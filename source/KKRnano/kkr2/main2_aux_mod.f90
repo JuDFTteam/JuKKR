@@ -65,35 +65,6 @@ module main2_aux_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! Read k-mesh file
-  subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
-    implicit none
-    double precision :: BZKP(:,:,:)
-    integer :: MAXMESH
-    integer :: NOFKS(:)
-    double precision :: VOLBZ(:)
-    double precision :: VOLCUB(:,:)
-
-    ! -----------------------------
-    integer :: I
-    integer :: ID
-    integer :: L
-
-    open (52,file='kpoints',form='formatted')
-    rewind (52)
-
-    do L = 1,MAXMESH
-      read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-      read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
-      do I=2,NOFKS(L)
-        read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-      end do
-    end do
-
-    close (52)
-  end subroutine
-
-  !----------------------------------------------------------------------------
   !> Print Fermi-Energy information to screen.
   subroutine printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
     implicit none
