@@ -110,14 +110,12 @@
     double precision :: VBC(2)
 !
 !     .. Energy Mesh ..
-    double precision :: E2
     double precision :: EFERMI
 
     integer :: IELAST
 
     complex(kind=DP), dimension(:), allocatable :: EZ
     complex(kind=DP), dimension(:), allocatable :: WEZ
-    integer, dimension(:), allocatable :: KMESH
 
     double precision :: VOLUME0
     double precision :: RECBV(3,3)
@@ -307,6 +305,13 @@
     call writeDimParams(dims)
     ierror = writeInputParamsToFile('input.unf', params)
     call writeMain2Arrays(arrays, 'arrays.unf')
+
+    open (67,FILE='energy_mesh',FORM='unformatted')
+    write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
+    write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
+    write (67) EFERMI
+    close (67)
+
 
 ! ======================================================================
 

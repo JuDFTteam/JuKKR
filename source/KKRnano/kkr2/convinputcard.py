@@ -4,6 +4,96 @@
 
 import re
 
+KEYS = (
+"""
+#new key name | old key name | num. values to read | offset
+alat      ALATBASIS 1 0
+bravais_a BRAVAIS 3 1
+bravais_b BRAVAIS 3 2
+bravais_c BRAVAIS 3 3
+scfsteps  NSTEPS  1 1
+imix      IMIX    1 1
+tempr     TEMPR   1 1
+fcm       FCM     1 1
+gmax      GMAX    1 0
+rmax      RMAX    1 0
+icst      ICST    1 0
+strmix    STRMIX  1 1
+kte       KTE     1 0
+kforce    KFORCE  1 0
+kpre      KPRE    1 0
+kxc       KEXCOR  1 0
+qmrbound  QMRBOUND 1 1
+ldau      LLDAU   1 0
+kvrel     KVREL   1 0
+rclust    RCLUSTZ 1 0
+basisscale BASISCALE 3 0
+emin      EMIN    1 1
+emax      EMAX    1 1
+jij       LJIJ    1 0
+brymix    BRYMIX  1 1
+rcutjij   RCUTJIJ 1 0
+cartesian CARTESIAN 1 0
+bzdivide  BZDIVIDE  3 0
+npol      NPOL    1 1
+npnt1     NPT1    1 1
+npnt2     NPT2    1 1
+npnt3     NPT3    1 1
+""")
+
+template = (
+"""
+# LATTICE
+alat       = $alat
+basisscale = $basisscale
+
+#BRAVAIS
+bravais_a = $bravais_a
+bravais_b = $bravais_b
+bravais_c = $bravais_c
+
+cartesian = $cartesian
+
+# number of k-points in each direction
+bzdivide = $bzdivide
+
+rclust   = $rclust  # reference cluster radius
+
+# Energy contour
+emin  = $emin
+emax  = $emax
+npnt1 = $npnt1
+npnt2 = $npnt2
+npnt3 = $npnt3
+npol  = $npol           # Number of Matsubara poles, npol=0 triggers DOS calculation
+tempr = $tempr
+
+# Self-consistency options
+scfsteps = $scfsteps
+imix     = $imix
+mixing   = $mixing
+fcm      = $fcm
+
+# Parameters for Ewald sums
+rmax = $rmax
+gmax = $gmax
+
+# Exchange correlation potential
+kxc = $kxc
+
+# Solver options
+qmrbound = $qmrbound
+
+icst    = $icst      # num. Born iterations for non-spherical potential
+kpre    = $kpre
+kforce  = $kforce
+jij     = $jij
+ldau    = $ldau
+rcutjij = $rcutjij
+nsra    = $nsra      # 1=non-scalar-relativistic 2=scalar-relativistic
+kte     = $kte
+""")
+
 f = open('inputcard', 'r')
 lines = f.readlines()
 f.close()
@@ -51,19 +141,17 @@ def getNums(key, lines, num=1, offset=0):
     return result[:num]
            
            
-def getKeyDict(keyfilename, lines):
+def getKeyDict(keyfile, lines):
     result = {}
-    keyfile = open(keyfilename, 'r')
     for k in keyfile:
         if not k or k.find('#') == 0:
             continue
         splitted = k.split()
         result[splitted[0]] = '  '.join(getNums(key=splitted[1], lines=lines, 
                                       num=int(splitted[2]), offset=int(splitted[3])))
-    keyfile.close()
     return result
     
-keydict = getKeyDict('keys.dat', lines)
+keydict = getKeyDict(KEYS.split('\n'), lines)
 
 def apply_kkrnano_rules(keydict):
     newdict = keydict.copy()
@@ -92,9 +180,6 @@ def substTemplate(template, keydict, fixed=False):
         template = re.sub(reg, subst, template)
     return template
 
-f = open("input.template", "r")
-template = f.read()
-f.close()
 template = substTemplate(template, keydict, False)
 
 f = open("input.conf", "w")
