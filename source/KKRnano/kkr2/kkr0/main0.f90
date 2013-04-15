@@ -307,8 +307,10 @@
 
     call writeDimParams(dims)
     ierror = writeInputParamsToFile('input.unf', params)
+
     call writeMain2Arrays(arrays, 'arrays.unf')
 
+    ! write energy mesh
     open (67,FILE='energy_mesh',FORM='unformatted')
     write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
@@ -327,33 +329,39 @@
     !   auxillary
     deallocate(DEZ, stat=ierror)
     deallocate(NTCELL, stat=ierror)
+
+! -------------- Helper routine -----------------------------------------------
+
+    CONTAINS
+
+      !------------------------------------------------------------------------
+      ! Read k-mesh file
+      subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
+        implicit none
+        double precision :: BZKP(:,:,:)
+        integer :: MAXMESH
+        integer :: NOFKS(:)
+        double precision :: VOLBZ(:)
+        double precision :: VOLCUB(:,:)
+
+        ! -----------------------------
+        integer :: I
+        integer :: ID
+        integer :: L
+
+        open (52,file='kpoints',form='formatted')
+        rewind (52)
+
+        do L = 1,MAXMESH
+          read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
+          read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
+          do I=2,NOFKS(L)
+            read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
+          end do
+        end do
+
+        close (52)
+      end subroutine
+
 end program
 
-!----------------------------------------------------------------------------
-! Read k-mesh file
-subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
-  implicit none
-  double precision :: BZKP(:,:,:)
-  integer :: MAXMESH
-  integer :: NOFKS(:)
-  double precision :: VOLBZ(:)
-  double precision :: VOLCUB(:,:)
-
-  ! -----------------------------
-  integer :: I
-  integer :: ID
-  integer :: L
-
-  open (52,file='kpoints',form='formatted')
-  rewind (52)
-
-  do L = 1,MAXMESH
-    read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-    read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
-    do I=2,NOFKS(L)
-      read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-    end do
-  end do
-
-  close (52)
-end subroutine
