@@ -79,6 +79,13 @@ irmd, irid, nfund, ngshd, ipand)
   !     .. Intrinsic Functions ..
   intrinsic atan,real
   !     ..
+
+  v1 = 0.0d0
+  v2 = 0.0d0
+  vint1 = 0.0d0
+  vint2 = 0.0d0
+  ircutm = 0
+
   pi = 4.d0*atan(1.d0)
   !
   irs1 = ircut(1)
