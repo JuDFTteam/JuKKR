@@ -87,6 +87,8 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
   irc1 = ircut(ipan)
   !
 
+  ! calculate V_LL' potential
+  ! V_{LL'} = \sum_{L''} C_{L L' L''} V_{L''}
   call vllns(vnspll,vins,cleb,icleb,iend, &
   lmaxd, irmd, irnsd, ncleb)
 

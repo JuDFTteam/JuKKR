@@ -583,6 +583,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
     lcoremax = 0
     if (params%KTE==1) then
+      ! These energies have to be calculated BEFORE the XC-potential is added!
       ! calculate total energy and individual contributions if requested
       ! core electron contribution
       call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)

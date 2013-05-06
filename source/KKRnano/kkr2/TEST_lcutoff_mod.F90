@@ -130,28 +130,6 @@ module TEST_lcutoff_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-!  subroutine initLcutoff(rbasis, bravais, lmmaxd, atomindex)
-!    use lcutoff_mod
-!    implicit none
-!    double precision, dimension(:,:), intent(in) :: rbasis
-!    double precision, dimension(3,3), intent(in) :: bravais
-!    integer, intent(in) :: lmmaxd
-!    integer, intent(in) :: atomindex
-!
-!    allocate(lmarray(size(rbasis,2))) ! never deallocated - who cares
-!
-!    open(91, file='lcutoff', form='formatted')
-!      read(91,*) cutoff_radius
-!      read(91,*) lm_low
-!      read(91,*) cutoffmode
-!    close(91)
-!
-!    lmarray = lmmaxd
-!    call getLMarray(lmarray, rbasis, rbasis(:,atomindex), bravais, cutoff_radius, lmmaxd, lm_low)
-!
-!  end subroutine
-
-  !----------------------------------------------------------------------------
   subroutine cropGLLH(GLLH, lmmaxd, naclsd, naezd, lmarray, numn0, indn0)
     implicit none
     double complex GLLH(LMMAXD,NACLSD*LMMAXD,NAEZD)
