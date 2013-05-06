@@ -1,0 +1,206 @@
+#define COMMCHECK(X) if ( (X) /= 0 ) then; write(*,*) "Comm failure", X, __LINE__; STOP; endif
+#define CHECK(X) if ( .not. (X) ) then; write(*,*) "FAIL: ", __LINE__; STOP; endif
+
+#define NUMBERTYPE double complex
+#define NUMBERTYPEMPI MPI_DOUBLE_COMPLEX
+!!#define NUMBERTYPE integer
+!!#define NUMBERTYPEMPI MPI_INTEGER
+
+module one_sided_commZ_mod
+
+  type ChunkIndex
+    integer :: owner
+    integer :: local_ind
+  end type
+
+contains
+
+!------------------------------------------------------------------------------
+!> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
+!> @param num Total number of atoms/matrices
+!> @param nranks total number of ranks
+integer function getOwner(ind, num, nranks)
+  implicit none
+  integer, intent(in) :: ind, num, nranks
+
+  integer :: atoms_per_proc  
+
+  atoms_per_proc = num / nranks  
+  getOwner = (ind - 1) / atoms_per_proc
+  ! 0 ... nranks-1  
+end function
+
+
+!------------------------------------------------------------------------------
+!> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
+!> @param num Total number of atoms/matrices
+integer function getLocalInd(ind, num, nranks)
+  implicit none
+  integer, intent(in) :: ind, num, nranks
+
+  integer :: atoms_per_proc  
+
+  atoms_per_proc = num / nranks
+  getLocalInd = mod((ind - 1), atoms_per_proc) + 1
+
+  ! 1 ... atoms_per_proc
+  
+end function
+
+subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
+  implicit none
+
+  include 'mpif.h' 
+
+  integer, intent(inout) :: win 
+  NUMBERTYPE, dimension(*), intent(inout) :: buffer
+  integer, intent(in) :: bsize
+  integer, intent(in) :: communicator
+  integer, intent(in) :: chunk_size 
+
+  integer :: ierr
+
+  integer(kind=MPI_ADDRESS_KIND) :: typesize, lowerbound
+  integer :: disp_unit
+
+  call MPI_Type_get_extent(NUMBERTYPEMPI, lowerbound, typesize, ierr)
+  COMMCHECK(ierr)
+
+  disp_unit = typesize * chunk_size ! has to be plain integer!!
+
+  ! Measure in units of chunks here disp_unit = CHUNKSIZE
+  call MPI_Win_create(buffer, typesize*bsize, &
+                      disp_unit, MPI_INFO_NULL, &
+                      communicator, win, ierr)
+  COMMCHECK(ierr)
+  
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Copy chunks of size 'chunk_size' located at 
+!> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
+!> On output dest_buffer contains chunks in 
+!> the order as specified in 'chunk_inds' 
+subroutine copyChunksZ(dest_buffer, win, chunk_inds, chunk_size)
+  implicit none
+  include 'mpif.h'
+  NUMBERTYPE, dimension(*), intent(out) :: dest_buffer
+  integer, intent(inout) :: win
+  type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
+  integer, intent(in) :: chunk_size
+
+  integer :: owner_rank
+  integer :: local_ind
+  integer :: ii
+  integer :: ierr
+
+  integer(kind=MPI_ADDRESS_KIND) :: disp
+
+  disp = 0
+
+  call MPI_Win_fence(0, win, ierr)
+  
+  do ii = 1, size(chunk_inds)
+    owner_rank = chunk_inds(ii)%owner
+    local_ind  = chunk_inds(ii)%local_ind
+        
+    disp = local_ind - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
+    
+    call MPI_Get(dest_buffer( (ii - 1) * chunk_size + 1 ), chunk_size, &
+                 NUMBERTYPEMPI, owner_rank, &
+                 disp, chunk_size, NUMBERTYPEMPI, win, ierr)
+    
+  end do
+  
+  ! ensure that Get has completed and dest_buffer is valid
+  call MPI_Win_fence(0, win, ierr) 
+
+end subroutine
+
+subroutine hideBufferZ(win)
+  implicit none
+  include 'mpif.h'
+
+  integer, intent(inout) :: win
+
+  integer :: ierr
+
+  call MPI_Win_free(win, ierr)
+  COMMCHECK(ierr)
+
+end subroutine
+end module one_sided_commZ_mod
+
+#ifdef TEST_ONE_SIDED_COMM_Z__
+! a test program - not compiled due to conditional compilation
+program test
+  use tmatex
+  implicit none
+
+  include 'mpif.h'
+
+  integer :: myrank
+  integer :: num_ranks
+  integer :: nchunks_total
+  integer :: partner_rank
+
+  integer, parameter :: CHUNKSIZE = 6
+  integer, parameter :: CHUNKSPERPROC = 3
+  integer, parameter :: NUMREQUESTED = 7
+
+  NUMBERTYPE :: buffer(CHUNKSIZE,CHUNKSPERPROC)
+  NUMBERTYPE :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
+  integer :: chunks_req(NUMREQUESTED)
+  type (ChunkIndex), dimension(NUMREQUESTED) :: chunk_inds
+  integer :: win
+  integer :: ierr
+  integer :: ii 
+  integer :: local_ind
+
+  call MPI_Init(ierr)
+  COMMCHECK(ierr)
+
+  call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierr)
+  COMMCHECK(ierr)
+  call MPI_Comm_size(MPI_COMM_WORLD, num_ranks, ierr)
+  COMMCHECK(ierr)
+
+  !buffer = dcmplx( dble(myrank+1), dble(myrank+1) )
+  do ii = 1, CHUNKSPERPROC
+    buffer(:,ii) = (myrank * CHUNKSPERPROC + ii - 1) ! encode rank and local index in 1 number
+  end do
+  !write(*,*) buffer
+
+  call MPI_Comm_size(MPI_COMM_WORLD, num_ranks, ierr)
+  COMMCHECK(ierr)
+
+  nchunks_total = CHUNKSPERPROC * num_ranks ! every rank owns CHUNKSPERPROC chunks
+
+  do ii = 1, NUMREQUESTED
+    chunks_req(ii) = mod((myrank + 1) * CHUNKSPERPROC + ii - 1, CHUNKSPERPROC*num_ranks) + 1
+    chunk_inds(ii)%owner      = getOwner(chunks_req(ii), nchunks_total, num_ranks)
+    chunk_inds(ii)%local_ind  = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
+  end do
+
+  call exposeBufferZ(win, buffer, size(buffer), CHUNKSIZE, MPI_COMM_WORLD)
+  call copyChunksZ(dest_buffer, win, chunk_inds, CHUNKSIZE)
+  call hideBufferZ(win)  
+ 
+  !write(*,*) "Rank ", myrank, " wants ", chunks_req 
+  !write(*,*) "Rank ", myrank, dest_buffer
+  
+  ! check if right buffer was received
+  do ii = 1, NUMREQUESTED
+    partner_rank = getOwner(chunks_req(ii), nchunks_total, num_ranks)
+    local_ind = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
+    CHECK( sum( abs( dest_buffer(:, ii) - (partner_rank * CHUNKSPERPROC + local_ind - 1) ) ) < 1e-10 )
+  end do  
+
+  write(*,*) "Rank ", myrank, " has finished." ! correct if EVERY rank prints this message
+
+  call MPI_Finalize(ierr)
+  COMMCHECK(ierr)
+  
+  !write(*,*) "OK: TEST successful"
+end program
+#endif

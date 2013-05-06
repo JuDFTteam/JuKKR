@@ -20,9 +20,12 @@ module TruncationZone_mod
   private :: translate
 
   type TruncationZone
-    integer :: naez_trc
+    integer :: naez_trc !< number of atoms in truncation zone
     integer :: naclsd
+    !> map atom index to truncation zone atom index (-1 = not in trunc. zone)
     integer, dimension(:), allocatable :: index_map
+    !> map truncation zone atom index to atom index ("inverse" of index_map)
+    integer, dimension(:), allocatable :: trunc2atom_index
     integer, dimension(:), allocatable :: numn0_trc
     integer, dimension(:,:), allocatable :: indn0_trc
     integer, dimension(:,:), allocatable :: atom_trc
@@ -63,6 +66,16 @@ module TruncationZone_mod
       end if
     end do
     naez_trc = ind
+
+    ! setup "inverse" of index_map
+    ALLOCATECHECK(self%trunc2atom_index(naez_trc))
+    ind = 0
+    do ii = 1, num_atoms
+      if (self%index_map(ii) > 0) then
+        ind = ind + 1
+        self%trunc2atom_index(ind) = ii
+      end if
+    end do
 
     ALLOCATECHECK(self%numn0_trc(naez_trc))
     self%numn0_trc = -1
@@ -129,34 +142,7 @@ module TruncationZone_mod
     DEALLOCATECHECK(self%indn0_trc)
     DEALLOCATECHECK(self%atom_trc)
     DEALLOCATECHECK(self%ezoa_trc)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> In-place reordering of a matrix array.
-  !> Works only if index_map is monotonously increasing.
-  !> Used to reorder T-matrix array
-  subroutine reorderMatrices(self, mat_array)
-    implicit none
-    type (TruncationZone), intent(in) :: self
-    double complex, dimension(:,:,:), intent(inout) :: mat_array
-
-    !---------
-    integer :: num, ii
-    integer :: old_ind, ind
-
-    num = size(self%index_map)
-    CHECKASSERT(size(mat_array, 3) == num)
-
-    old_ind = -1
-    do ii = 1, num
-      ind = self%index_map(ii)
-      if (ind > 0 .and. ind /= ii) then
-        CHECKASSERT( ind > old_ind .and. ind <= ii )
-        mat_array(:,:,ind) = mat_array(:,:, ii)
-      end if
-      old_ind = ind
-    end do
+    DEALLOCATECHECK(self%trunc2atom_index)
 
   end subroutine
 

@@ -96,8 +96,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   lmmaxd = (dims%lmaxd + 1) ** 2
 
-  allocate(TMATLL(lmmaxd, lmmaxd, dims%naez))
-
   trunc_zone => getTruncationZone(calc_data)
   gaunts    => getGaunts(calc_data)
   atomdata  => getAtomData(calc_data, 1)
@@ -107,6 +105,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   jij_data  => getJijData(calc_data, 1)
 
   num_local_atoms = getNumLocalAtoms(calc_data)
+
+  ! allocate buffer for t-matrices
+  allocate(TMATLL(lmmaxd, lmmaxd, trunc_zone%naez_trc))
 
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
   allocate(atom_indices(num_local_atoms))
@@ -264,14 +265,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !                    DEBUG_dump_matrix = .false.
 !                 endif
 
-          ! gather all t-matrices on all processors - O(N**2)
+          ! gather t-matrices from own truncation zone
           call gatherTmatrices_com(calc_data, TMATLL, ispin, &
                                    getMySEcommunicator(my_mpi))
-
-          ! reorder T-matrix array: shift T-matrices of atoms
-          ! in real space truncation zone to front
-          ! t-matrices outside trunc.-zone are trashed
-          call reorderMatrices(trunc_zone, TMATLL)
 
           TESTARRAYLOG(3, TMATLL)
 
@@ -516,10 +512,14 @@ subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
 end subroutine
 
 !------------------------------------------------------------------------------
-!> Gather all t-matrices for 'ispin'-channel.
+!> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
+!>
+!> Uses MPI-RMA
 subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   use CalculationData_mod
   use KKRresults_mod
+  use TruncationZone_mod
+  use one_sided_commZ_mod
   implicit none
   include 'mpif.h'
 
@@ -529,34 +529,56 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   integer, intent(in) :: communicator
 
   type (KKRresults), pointer :: kkr
+  type (TruncationZone), pointer :: trunc_zone
+
+  type (ChunkIndex), dimension(:), allocatable :: chunk_inds
+
+  integer :: ii
   integer :: ilocal
   integer :: num_local_atoms
   integer :: ierr
   integer :: lmmaxd
+  integer :: naez_trc ! number of atoms in trunc. zone
+  integer :: naez
+  integer :: nranks
+  integer :: atom_requested
+  integer :: win
+  integer :: chunk_size
   double complex, allocatable, dimension(:,:,:) :: TSST_LOCAL
 
   num_local_atoms = getNumLocalAtoms(calc_data)
+  trunc_zone => getTruncationZone(calc_data)
   lmmaxd = size(TMATLL, 1)
 
+  call MPI_Comm_size(communicator, nranks, ierr)
+
   allocate(TSST_LOCAL(lmmaxd, lmmaxd, num_local_atoms))
+
+  chunk_size = size(TSST_LOCAL, 1) * size(TSST_LOCAL, 2)
 
   do ilocal = 1, num_local_atoms
     kkr => getKKR(calc_data, ilocal)
     TSST_LOCAL(:,:,ilocal) = kkr%TMATN(:,:,ispin)
   end do
 
-!     Local Delta_T-matrices of all atoms are communicated to all
-!     processes working on (k, E)
-!     and stored in TMATLL (dimension(LMMAXD,LMMAXD, NAEZD))
+  naez_trc = trunc_zone%naez_trc
 
-!     Optimisation possibility for real space truncation:
-!     communicate matrices only in truncation cluster
+  naez = num_local_atoms * nranks
+  CHECKASSERT( naez == size(trunc_zone%index_map) )
 
-  ! assume that each process treats 'num_local_atoms' adjacent atoms
-  call MPI_ALLGATHER(TSST_LOCAL,LMMAXD*LMMAXD*num_local_atoms, &
-  MPI_DOUBLE_COMPLEX,TMATLL,LMMAXD*LMMAXD*num_local_atoms,MPI_DOUBLE_COMPLEX, &
-  communicator,IERR)
+  allocate(chunk_inds(naez_trc))
 
+  do ii = 1, naez_trc
+    atom_requested = trunc_zone%trunc2atom_index(ii)
+    chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
+    chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
+  end do
+
+  call exposeBufferZ(win, TSST_LOCAL, size(TSST_LOCAL), chunk_size, communicator)
+  call copyChunksZ(TMATLL, win, chunk_inds, chunk_size)
+  call hideBufferZ(win)
+
+  deallocate(chunk_inds)
   deallocate(TSST_LOCAL)
 
 end subroutine
