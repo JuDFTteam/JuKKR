@@ -334,6 +334,51 @@ subroutine kloopbody( GLLKE1, kpoint, &
 end subroutine
 
 !------------------------------------------------------------------------------
+!>
+subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
+  implicit none
+
+  double complex, intent(out) :: G_diag (:,:,:) ! dim lmmaxd*lmmaxd*num_local_atoms
+  double complex, intent(in) :: mat_X (:,:)
+  integer, intent(in) :: atom_indices(:)
+  integer, intent(in) :: kvstr(:)
+
+  double complex, parameter :: CZERO =(0.0D0,0.0D0)
+  integer :: atom_index
+  integer :: lm1
+  integer :: lmmax1
+  integer :: start
+  integer :: ii !< local atom index
+
+  !                                      nn
+  !         Copy the diagonal elements G_LL' of the Green's-function,
+  !         dependent on (k,E) into matrix G_diag
+  !         (n = n' = atom_index)
+
+  ASSERT(size(atom_indices) == size(G_diag, 3))
+
+  G_diag = CZERO
+
+  do ii = 1, size(atom_indices)
+
+    atom_index = atom_indices(ii)
+
+    start = kvstr(atom_index) - 1
+    lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
+
+    ASSERT(lmmax1 == size(G_diag, 1))
+    ASSERT(lmmax1 == size(G_diag, 2))
+
+    do lm1 = 1, lmmax1
+       G_diag(lm1, :, ii) = mat_X(start + lm1, ((ii - 1) * lmmax1 + 1) : (ii * lmmax1))
+    end do
+
+  end do
+
+end subroutine
+
+
+!------------------------------------------------------------------------------
 !> Summation of Green's function over k-points. Has to be called for every k-point
 !> TODO: it would be better to do the k-space-symmetry treatment separately ???
 !> This routine creates NSYMAT copies of the same solution
