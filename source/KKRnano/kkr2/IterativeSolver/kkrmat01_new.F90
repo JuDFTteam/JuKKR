@@ -76,7 +76,7 @@ lmmaxd, naclsd, nrd)
   double complex :: EIKRM(naclsd)
   integer::k_point_index
 
-  double complex, allocatable, dimension(:,:) ::GLLKE1
+  double complex, allocatable, dimension(:,:,:) ::G_diag
   double complex, allocatable, dimension(:) ::GLLH
 
 !IBM* ALIGN(32, GLLH)
@@ -101,7 +101,7 @@ lmmaxd, naclsd, nrd)
   memory_stat = 0
   memory_fail = .false.
 
-  allocate(GLLKE1(site_lm_size,LMMAXD*num_local_atoms), stat = memory_stat)
+  allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms), stat = memory_stat)
   if (memory_stat /= 0) memory_fail = .true.
 
   if (memory_fail .eqv. .true.) then
@@ -130,7 +130,7 @@ lmmaxd, naclsd, nrd)
     ! output: GLLKE1, NOITER
     ! inout: PRSC
     ! inout (temporary arrays): GLLH, GLLHBLCK
-    call kloopbody( GLLKE1, BZKP(:, k_point_index), TMATLL, GINP, ALAT, &
+    call kloopbody( G_diag, BZKP(:, k_point_index), TMATLL, GINP, ALAT, &
                    NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
                    NUMN0, EIKRM, EIKRP, GLLH, &
                    atom_indices, QMRBOUND, NACLS, lmmaxd, naclsd, &
@@ -138,9 +138,9 @@ lmmaxd, naclsd, nrd)
 
     ! ----------- Integrate Scattering Path operator over k-points --> GS -----
     ! Note: here k-integration only in irreducible wedge
-    call greenKSummation(GLLKE1, &
+    call greenKSummation(G_diag, &
                          GS, VOLCUB(k_point_index), &
-                         atom_indices, NSYMAT, naez, lmmaxd)
+                         atom_indices, NSYMAT, lmmaxd)
     ! -------------------------------------------------------------------------
 
     do iat = 1, size(atom_indices)
@@ -155,14 +155,14 @@ lmmaxd, naclsd, nrd)
   ! Deallocate arrays
   ! ----------------------------------------------------------------
 
-  deallocate(GLLKE1)
+  deallocate(G_diag)
   if (allocated(GLLH)) deallocate(GLLH)
 
 end subroutine KKRMAT01_new
 
 !------------------------------------------------------------------------------
 !> Calculate scattering path operator for 'kpoint'
-subroutine kloopbody( GLLKE1, kpoint, &
+subroutine kloopbody( G_diag, kpoint, &
                       TMATLL, GINP, ALAT, &
                       NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
                       NUMN0, EIKRM, EIKRP, GLLH, &
@@ -193,7 +193,7 @@ subroutine kloopbody( GLLKE1, kpoint, &
   doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
   double complex, allocatable :: GLLH(:)
 
-  double complex :: GLLKE1(:,:)
+  double complex :: G_diag(:,:,:)
 
   integer :: INDN0(:,:)
   integer, intent(in) :: lmmaxd
@@ -320,11 +320,13 @@ subroutine kloopbody( GLLKE1, kpoint, &
   endif
 
   TESTARRAYLOG(4, mat_X)
-  call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
+  !call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
 
-  ! solved. Result in GLLKE1
+  call getGreenDiag(G_diag, mat_X, atom_indices, sparse%kvstr)
 
-  TESTARRAYLOG(3, GLLKE1)
+  ! solved. Result in G_diag
+
+  !TESTARRAYLOG(3, GLLKE1)
 
   call destroySparseMatrixDescription(sparse)
 
@@ -385,27 +387,24 @@ end subroutine
 !> Set GS to 0 before first call
 !> in: GLLKE1
 !> inout: GS (set to 0 before first call)
-subroutine greenKSummation(GLLKE1, GS, k_point_weight, &
-                           atom_indices, NSYMAT, naez, lmmaxd)
+subroutine greenKSummation(G_diag, GS, k_point_weight, &
+                           atom_indices, NSYMAT, lmmaxd)
   implicit none
   integer, parameter :: NSYMAXD = 48
 
-  integer, intent(in) :: naez
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: atom_indices(:)
 
-  double complex :: GLLKE1(NAEZ*LMMAXD,LMMAXD*size(atom_indices))
+  double complex :: G_diag(lmmaxd,lmmaxd,size(atom_indices))
   double complex :: GS(lmmaxd,lmmaxd,NSYMAXD,size(atom_indices))
 
   integer :: NSYMAT
   double precision :: k_point_weight
 
   ! -------- local ------------------
-  double complex :: G(lmmaxd,lmmaxd)
-  integer :: LM
+
   integer :: LM1
   integer :: LM2
-  integer :: ILM
   integer :: ISYM
   integer :: IAT
   integer :: ii !< local atom index
@@ -414,25 +413,13 @@ subroutine greenKSummation(GLLKE1, GS, k_point_weight, &
 
     iat = atom_indices(ii)
 
-    !   combined atom/lm index
-    ILM = LMMAXD*(IAT-1) + 1
-
-    !                                      nn
-    !         Copy the diagonal elements G_LL' of the Green's-function,
-    !         dependent on (k,E) into matrix G
-    !         (n = n' = IAT)
-
-    do LM = 1,LMMAXD
-      call ZCOPY(LMMAXD,GLLKE1(ILM,(ii - 1) * lmmaxd + LM),1,G(1,LM),1)
-    end do
-
       !         Perform the k-space integration for diagonal element of
       !         Green's function of atom IAT
 
       do ISYM = 1,NSYMAT
         do LM2=1,LMMAXD
           do LM1=1,LMMAXD
-            GS(LM1,LM2,ISYM, ii) = GS(LM1,LM2,ISYM, ii) + k_point_weight * G(LM1,LM2)
+            GS(LM1,LM2,ISYM, ii) = GS(LM1,LM2,ISYM, ii) + k_point_weight * G_diag(LM1,LM2,ii)
           end do
         end do
       end do        ! ISYM = 1,NSYMAT
