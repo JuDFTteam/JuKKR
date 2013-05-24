@@ -155,12 +155,11 @@ end
 
 
 !------------------------------------------------------------------------------
-subroutine GREF_com(E,ALATC,IEND,NCLS,NAEZ, &
+subroutine GREF(E,ALATC,IEND,NCLS,NAEZ, &
 CLEB,RCLS,ATOM,CLS,ICLEB,LOFLM,NACLS, &
 REFPOT, &
 TREFLL,DTREFLL,GREFN,DGREFN, &
 LLY_G0TR, &
-MYLRANK, communicator, comm_size, &
 lmaxd, naclsd, ncleb, nrefd, nclsd, &
 LLY)
 
@@ -168,7 +167,6 @@ LLY)
   implicit none
 
   !     .. Parameters ..
-INCLUDE 'mpif.h'
 
   integer  lmaxd
   integer  naclsd
@@ -191,20 +189,10 @@ INCLUDE 'mpif.h'
   integer          REFPOT(NAEZ)
   double complex   LLY_G0TR(NCLSD)
 
-  !     DOUBLE COMPLEX   TREFLL(LMGF0D,LMGF0D,NREFD),
-  !    +                 DTREFLL(LMGF0D,LMGF0D,NREFD),
-  !    +                 DGREFN(LMGF0D,LMGF0D,NACLSD,NCLSD),
-  !    +                 GREFN(LMGF0D,LMGF0D,NACLSD,NCLSD)
-
   double complex   TREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD), &
   DTREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
   double complex   DGREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD), &
   GREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD)
-
-  !     .. L-MPI
-  integer  MYLRANK, &
-  communicator, &
-  comm_size
 
   !     ..
   !     .. Local Scalars ..
@@ -215,19 +203,8 @@ INCLUDE 'mpif.h'
   !     Local arrays
   !     Fortran 90 automatic arrays - medium size
 
-  !     DOUBLE COMPLEX   DGINP(NACLSD*LMGF0D,LMGF0D),
-  !    +                 GINP(NACLSD*LMGF0D,LMGF0D),
-  !    +                 GBCAST(LMMAXD,LMMAXD,NACLSD)
-
   double complex   DGINP(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
   double complex   GINP(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
-  double complex   GBCAST((LMAXD+1)**2,(LMAXD+1)**2,NACLSD)
-  !     ..
-
-  integer          IERR,MAPBLOCK
-
-
-  external         MPI_BCAST
 
   integer          LMGF0D
   integer          LMMAXD
@@ -239,16 +216,7 @@ INCLUDE 'mpif.h'
 
   !=====================================================================
   do ICLS = 1,NCLS
-    !=====================================================================
-
-    ! NCLS can by no means be larger than NAEZ there distribute as follows
-    ! note that the parallelization of this routine is only active if there
-    ! are more than four non-identical reference clusteres
-
-    ! TODO: Always parallel?
-
-    if (MYLRANK .eq. &
-    MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1).or.NCLS.lt.5) then
+  !=====================================================================
 
       I1 = 1
       IC = 0
@@ -275,80 +243,8 @@ INCLUDE 'mpif.h'
         enddo
       enddo
 
-    endif   ! if (MYLRANK .eq. ...
-
   !=====================================================================
   end do
   !=====================================================================
 
-  ! ok, now MPI_BCAST the results to all processors
-  if (NCLS.gt.4) then
-
-    !=====================================================================
-    do ICLS=1, NCLS
-      !=====================================================================
-      ! 1st broadcast reference structure constants
-
-      do IG=1, NACLSD
-        do LM2=1, LMMAXD
-          do LM1=1, LMMAXD
-            GBCAST(LM1,LM2,IG) = GREFN(LM1,LM2,IG,ICLS)
-          enddo
-        enddo
-      enddo
-
-      call MPI_BCAST(GBCAST,LMMAXD*LMMAXD*NACLSD, &
-      MPI_DOUBLE_COMPLEX, &
-      MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1), &
-      communicator,IERR)
-
-      call MPI_BARRIER(communicator,IERR)
-
-      do IG=1, NACLSD
-        do LM2=1, LMMAXD
-          do LM1=1, LMMAXD
-            GREFN(LM1,LM2,IG,ICLS) = GBCAST(LM1,LM2,IG)
-          enddo
-        enddo
-      enddo
-
-
-      ! 2nd and if Lloyd's formula is going to be applied broadcast
-      ! derivative of reference structure constants
-      ! FIXME: Code duplication: same as above but with GREFN -> DGREFN
-      !        -check! -extract to separate routine
-
-      if (LLY.eq.1) then
-
-        do IG=1, NACLSD
-          do LM2=1, LMMAXD
-            do LM1=1, LMMAXD
-              GBCAST(LM1,LM2,IG) = DGREFN(LM1,LM2,IG,ICLS)
-            enddo
-          enddo
-        enddo
-
-        call MPI_BCAST(GBCAST,LMMAXD*LMMAXD*NACLSD, &
-        MPI_DOUBLE_COMPLEX, &
-        MAPBLOCK(ICLS,1,NAEZ,1,0,comm_size-1), &
-        communicator,IERR)
-
-        call MPI_BARRIER(communicator,IERR)
-
-        do IG=1, NACLSD
-          do LM2=1, LMMAXD
-            do LM1=1, LMMAXD
-              DGREFN(LM1,LM2,IG,ICLS) = GBCAST(LM1,LM2,IG)
-            enddo
-          enddo
-        enddo
-
-      endif
-
-    !=====================================================================
-    enddo
-  !=====================================================================
-
-  endif
-
-end
+end subroutine

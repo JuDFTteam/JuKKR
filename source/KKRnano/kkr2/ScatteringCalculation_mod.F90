@@ -175,13 +175,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         !TESTARRAYLOG(3, kkr%DTREFLL)
 
 
-        call GREF_com(emesh%EZ(IE),params%ALAT,gaunts%IEND,arrays%NCLS,arrays%NAEZ, &
+        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND,arrays%NCLS,arrays%NAEZ, &
                       gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
                       gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                       kkr%LLY_G0TR(:,IE), &
-                      getMyAtomRank(my_mpi),getMySEcommunicator(my_mpi),&
-                      getNumAtomRanks(my_mpi), &
                       arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
                       dims%LLY)
 
