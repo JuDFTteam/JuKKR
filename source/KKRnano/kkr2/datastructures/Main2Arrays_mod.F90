@@ -37,10 +37,11 @@ module Main2Arrays_mod
     double precision , allocatable, dimension(:)  :: ZAT  !< atomic numbers
     double precision , allocatable, dimension(:,:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
-    double precision , allocatable, dimension(:)  :: VREF !< repulsive screening pot. strength
     integer , allocatable, dimension(:,:)  :: ATOM
     integer , allocatable, dimension(:)  :: CLS
     integer , allocatable, dimension(:)  :: NACLS
+
+    double precision :: VREF !< repulsive screening pot. strength
 
     integer  :: NCLS
     integer  :: NSYMAT
@@ -138,6 +139,11 @@ module Main2Arrays_mod
     self%MAXMESH = 0
     self%NR = 0
 
+
+!    Repulsive reference potential
+!    in future: move as parameter to inputfile
+    self%VREF = 8.0d0
+
     self%lmaxd = lmaxd
     self%iemxd = iemxd
     self%nspind = nspind
@@ -173,7 +179,6 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%ZAT(NAEZ))
     ALLOCATECHECK(self%RCLS(3,NACLSD,NCLSD))
     ALLOCATECHECK(self%RMTREF(NAEZ))
-    ALLOCATECHECK(self%VREF(NAEZ))
     ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
     ALLOCATECHECK(self%CLS(NAEZ))
     ALLOCATECHECK(self%NACLS(NCLSD))
@@ -203,7 +208,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%ZAT)
     DEALLOCATECHECK(self%RCLS)
     DEALLOCATECHECK(self%RMTREF)
-    DEALLOCATECHECK(self%VREF)
     DEALLOCATECHECK(self%ATOM)
     DEALLOCATECHECK(self%CLS)
     DEALLOCATECHECK(self%NACLS)

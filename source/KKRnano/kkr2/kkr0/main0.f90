@@ -181,11 +181,6 @@
 !      call ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
 !    end if
 
-!    Repulsive reference potential
-!    in future: move as parameter to inputfile
-
-     arrays%VREF = 8.D0
-
 !===================================================================
 
     SHAPEFUN_FILENAME = 'shapefun'

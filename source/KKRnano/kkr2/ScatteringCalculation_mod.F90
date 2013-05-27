@@ -168,7 +168,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
         ! do RF = 1,arrays%NREF  RF = 1 take reference potential and MT-ref radius
         ! from atom nr. 1
-        call TREF(emesh%EZ(IE),arrays%VREF(1),arrays%LMAXD,arrays%RMTREF(1), &
+        call TREF(emesh%EZ(IE),arrays%VREF,arrays%LMAXD,arrays%RMTREF(1), &
                   kkr%TREFLL,kkr%DTREFLL, dims%LLY)  ! TODO
 
         !TESTARRAYLOG(3, kkr%TREFLL)
