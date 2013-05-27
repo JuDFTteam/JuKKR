@@ -177,7 +177,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND,arrays%NCLS,arrays%NAEZ, &
                       gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
-                      gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
+                      gaunts%LOFLM,arrays%NACLS, &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                       kkr%LLY_G0TR(:,IE), &
                       arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nclsd, &

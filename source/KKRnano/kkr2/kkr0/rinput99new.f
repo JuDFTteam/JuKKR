@@ -1,14 +1,13 @@
       SUBROUTINE RINPUTNEW99(RBASIS,
      &           CLS,NCLS,
      +           NTCELL,NAEZ,Z,
-     +           REFPOT,
      +           RMTREF)
 
       IMPLICIT NONE
 
 C     .. Array Arguments ..
       INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
-     &        NTCELL(naez),CLS(*),REFPOT(naez)
+     &        NTCELL(naez),CLS(*), refpot
 
       DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),RMTREF(*)
 
@@ -25,26 +24,25 @@ c------------ array set up and definition of input parameter -----------
       WRITE (6,2004) 'Jun 2010'
 
       OPEN(77,FILE='atominfo',FORM='formatted')
+
       DO I=1,NAEZ
 
                            READ (UNIT=77,FMT=*)    Z(I),
      +                        LMXCdummy,
      +                       (KFGdummy(J),J=1,4),
      +                        CLS(I),
-     +                        REFPOT(I),
+     +                        REFPOT,
      +                        NTCELL(I),
      +                        MTFACdummy,
      +                        IRNS_dummy,
      +                        temp
 
-c     E.R. check for possible out of bounds error
-      IF (REFPOT(I) < 1 .or. REFPOT(I) > naez) then
-        WRITE(*,*) "Error in startb1."
-        WRITE(*,*) "check atominfo for atom ", I
-        STOP
+      IF (REFPOT /= 1) then
+      WRITE(*,*) "ERROR: Only 1 reference cluster allowed."
+      STOP
       ENDIF
 
-      RMTREF(REFPOT(I)) = temp
+      RMTREF(1) = temp
 
       END DO
       CLOSE (77)
@@ -64,17 +62,13 @@ c
       DO I=1,NAEZ 
         NCLS = MAX(NCLS,CLS(I)) 
       ENDDO
-      DO I=1,NAEZ
-        NREF = MAX(NREF,REFPOT(I)) 
-      ENDDO
+
+      NREF = 1
+
 c
       WRITE(6,2016) NCLS,NREF
       WRITE(6,2110)
       WRITE(6,2103)
-
-      IF (NREF /= 1) THEN
-      WRITE(*,*) "Only 1 reference cluster allowed."
-      END IF
 
 C *********************************************Input-End ********
 C

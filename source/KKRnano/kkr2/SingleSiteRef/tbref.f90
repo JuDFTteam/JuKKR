@@ -157,7 +157,6 @@ end
 !------------------------------------------------------------------------------
 subroutine GREF(E,ALATC,IEND,NCLS,NAEZ, &
 CLEB,RCLS,ATOM,CLS,ICLEB,LOFLM,NACLS, &
-REFPOT, &
 TREFLL,DTREFLL,GREFN,DGREFN, &
 LLY_G0TR, &
 lmaxd, naclsd, ncleb, nclsd, &
@@ -185,7 +184,6 @@ LLY)
 
   integer          LOFLM((2*LMAXD+1)**2)
   integer          NACLS(NCLSD)
-  integer          REFPOT(NAEZ)
   double complex   LLY_G0TR(NCLSD)
 
   double complex   TREFLL((LMAXD+1)**2,(LMAXD+1)**2), &
@@ -227,7 +225,7 @@ LLY)
       if (IC.eq.0) stop 'Error in CLS(*) array in tbref'
 
       call GLL95(E,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
-      ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS), &
+      ATOM(1,IC),RCLS(1,1,ICLS),NACLS(ICLS), &
       ALATC,GINP,DGINP, &
       LLY_G0TR(ICLS), &
       lmaxd, naclsd, ncleb, LLY )

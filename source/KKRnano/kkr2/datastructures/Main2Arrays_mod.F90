@@ -41,7 +41,6 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:,:)  :: ATOM
     integer , allocatable, dimension(:)  :: CLS
     integer , allocatable, dimension(:)  :: NACLS
-    integer , allocatable, dimension(:)  :: REFPOT
 
     integer  :: NCLS
     integer  :: NSYMAT
@@ -178,7 +177,6 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
     ALLOCATECHECK(self%CLS(NAEZ))
     ALLOCATECHECK(self%NACLS(NCLSD))
-    ALLOCATECHECK(self%REFPOT(NAEZ))
 
   end subroutine
 
@@ -209,7 +207,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%ATOM)
     DEALLOCATECHECK(self%CLS)
     DEALLOCATECHECK(self%NACLS)
-    DEALLOCATECHECK(self%REFPOT)
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -243,7 +240,6 @@ module Main2Arrays_mod
                        self%ATOM, &
                        self%CLS, &
                        self%NACLS, &
-                       self%REFPOT, &
                        self%NCLS, &  ! write some scalars too
                        self%NSYMAT, &
                        self%MAXMESH, &
@@ -283,7 +279,6 @@ module Main2Arrays_mod
                        self%ATOM, &
                        self%CLS, &
                        self%NACLS, &
-                       self%REFPOT, &
                        self%NCLS, &  ! write some scalars too
                        self%NSYMAT, &
                        self%MAXMESH, &

@@ -11,7 +11,6 @@ CONTAINS
 !> @param TREFLL reference T-matrix
 !> @param DTREFLL derivative of reference T-matrix
 !> @param ATOM ???
-!> @param REFPOT array of reference potentials
 !> @param RATOM real space positions of atoms in ref. cluster
 !> @param NATOM number of atoms in reference cluster
 !> @param ALAT length of unit vector in Bohr
@@ -23,7 +22,7 @@ CONTAINS
 !> @param ncleb number of Gaunt coefficients in CLEB
 !> @param LLY do Lloyd's formula calculations 1=yes/0=no
 subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
-                 REFPOT,RATOM,NATOM,ALAT,GREF0,DGDEOUT, &
+                 RATOM,NATOM,ALAT,GREF0,DGDEOUT, &
                  LLY_G0TR, &
 !                new input parameters after inc.p removal
                  lmaxd, naclsd, ncleb, LLY)
@@ -85,7 +84,6 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
   double precision :: RATOM(3,*)  ! first dim: 3
   integer :: ATOM(*)
-  integer :: REFPOT(:)
   !     ..
   !     .. Local Scalars ..
   integer :: N1

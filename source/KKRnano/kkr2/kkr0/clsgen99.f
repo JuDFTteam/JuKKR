@@ -1,7 +1,7 @@
 c ************************************************************************
       SUBROUTINE CLSGEN99(NAEZ,RR,NR,RBASIS,
      &                   CLS,
-     &                   NACLS,REFPOT,ATOM,EZOA, 
+     &                   NACLS,ATOM,EZOA,
      &                   RCLS,RCUT,RCUTXY,
      &                   NUMN0,INDN0,
 C                        new after inc.p removal
@@ -40,7 +40,6 @@ c
 c
       INTEGER NUMN0(NAEZ),INDN0(NAEZ,NACLSD),
      +     CLS(*),                  ! sort of cluster around atom
-     +     REFPOT(*),              
      +     NACLS(*),                ! number of atoms in cluster
      +     ATOM(NACLSD,*),          ! index to atom in elem/cell at site in cluster
      +     EZOA(NACLSD,*)           ! index to bravais lattice  at site in cluster
@@ -168,8 +167,10 @@ c
             
            N1 = NACLS(ICU)
 c return true if found before
-           IF( CLUSTCOMP(RCLS,REFPOT,ATOM,IATCLS(ICU),N1,RCLS1,
-     &          NUMBER,JATOM,NACLSD)) CLS(JATOM) = ICU
+c          IF( CLUSTCOMP(RCLS,REFPOT,ATOM,IATCLS(ICU),N1,RCLS1,
+c    &          NUMBER,JATOM,NACLSD)) CLS(JATOM) = ICU
+           CLS(JATOM) = ICU
+
          END DO
          IF (CLS(JATOM).EQ.0) THEN
             IF (ICLUSTER.GT.NCLSD) THEN

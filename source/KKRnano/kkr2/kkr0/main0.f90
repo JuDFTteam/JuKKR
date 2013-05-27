@@ -71,7 +71,6 @@
 !     LLMSP(NAEZD,NFUND)       : lm=(l,m) of 'nfund'th nonvanishing
 !                              : component of non-spherical pot.
 !     NTCELL(NAEZD),           : index for WS cell
-!     REFPOT(NAEZD)            : ref. pot. card  at position
 
 !     A(NAEZD),B(NAEZD)        : contants for exponential r mesh
 !     R(IRMD,NAEZD)            : radial mesh ( in units a Bohr)
@@ -174,7 +173,7 @@
 
      call RINPUTNEW99(arrays%RBASIS,arrays%CLS,arrays%NCLS, NTCELL,&
                       arrays%NAEZ,arrays%ZAT, &
-                      arrays%REFPOT,arrays%RMTREF)
+                      arrays%RMTREF)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -262,7 +261,7 @@
      arrays%NUMN0 = -1
      arrays%INDN0 = -1
 
-    call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS,arrays%CLS,arrays%NACLS,arrays%REFPOT,arrays%ATOM, &
+    call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS,arrays%CLS,arrays%NACLS,arrays%ATOM, &
                   arrays%EZOA, &
                   arrays%RCLS,params%rclust,params%rclust, &
                   arrays%NUMN0,arrays%INDN0, &

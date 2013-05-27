@@ -41,11 +41,6 @@
 ! ==========================================
 ! reference cluster: own file: ref_clusters - or move creation to kkr2
 
-
-! eliminates: ZAT, VREF, REFPOT?
-! TODO: establish BasisAtomGroup???
-! references to t-matrix and G_ref ???
-
 ! build in checks for compatibility of shapes with potential etc...
 
 module BasisAtom_mod
