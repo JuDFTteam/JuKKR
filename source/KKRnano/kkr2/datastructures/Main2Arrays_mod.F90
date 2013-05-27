@@ -44,7 +44,6 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:)  :: REFPOT
 
     integer  :: NCLS
-    integer  :: NREF
     integer  :: NSYMAT
     integer  :: MAXMESH
     integer  :: NR
@@ -136,7 +135,6 @@ module Main2Arrays_mod
     integer :: memory_stat
 
     self%NCLS = 0
-    self%NREF = 0
     self%NSYMAT = 0
     self%MAXMESH = 0
     self%NR = 0
@@ -247,7 +245,6 @@ module Main2Arrays_mod
                        self%NACLS, &
                        self%REFPOT, &
                        self%NCLS, &  ! write some scalars too
-                       self%NREF, &
                        self%NSYMAT, &
                        self%MAXMESH, &
                        self%NR
@@ -288,7 +285,6 @@ module Main2Arrays_mod
                        self%NACLS, &
                        self%REFPOT, &
                        self%NCLS, &  ! write some scalars too
-                       self%NREF, &
                        self%NSYMAT, &
                        self%MAXMESH, &
                        self%NR

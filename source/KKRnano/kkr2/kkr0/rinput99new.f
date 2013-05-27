@@ -1,7 +1,6 @@
       SUBROUTINE RINPUTNEW99(RBASIS,
      &           CLS,NCLS,
      +           NTCELL,NAEZ,Z,
-     +           NREF,
      +           REFPOT,
      +           RMTREF)
 
@@ -72,6 +71,10 @@ c
       WRITE(6,2016) NCLS,NREF
       WRITE(6,2110)
       WRITE(6,2103)
+
+      IF (NREF /= 1) THEN
+      WRITE(*,*) "Only 1 reference cluster allowed."
+      END IF
 
 C *********************************************Input-End ********
 C

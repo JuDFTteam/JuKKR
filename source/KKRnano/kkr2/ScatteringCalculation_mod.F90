@@ -226,7 +226,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                             params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
             end if
 
-            !RF = arrays%REFPOT(I1)
             call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), &
                                            kkr%TREFLL, kkr%LMMAXD)
             ! do the same for derivative of T-matrix

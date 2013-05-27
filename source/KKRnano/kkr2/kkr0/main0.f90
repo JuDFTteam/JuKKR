@@ -173,7 +173,7 @@
 !-----------------------------------------------------------------------------
 
      call RINPUTNEW99(arrays%RBASIS,arrays%CLS,arrays%NCLS, NTCELL,&
-                      arrays%NAEZ,arrays%ZAT,arrays%NREF, &
+                      arrays%NAEZ,arrays%ZAT, &
                       arrays%REFPOT,arrays%RMTREF)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
