@@ -17,8 +17,8 @@ module KKRresults_mod
   type KKRresults
     double complex , allocatable, dimension(:,:,:)  :: TMATN
     double complex , allocatable, dimension(:,:,:)  :: DTDE
-    double complex , allocatable, dimension(:,:,:)  :: TREFLL
-    double complex , allocatable, dimension(:,:,:)  :: DTREFLL
+    double complex , allocatable, dimension(:,:)  :: TREFLL
+    double complex , allocatable, dimension(:,:)  :: DTREFLL
     double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GMATN
@@ -30,7 +30,6 @@ module KKRresults_mod
 
     integer :: LMMAXD
     integer :: NSPIND
-    integer :: NREFD
     integer :: NACLSD
     integer :: NCLSD
     integer :: IEMXD
@@ -52,7 +51,7 @@ module KKRresults_mod
     type (DimParams),  intent(in)    :: dims
 
     call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, &
-                              dims%NREFD, dims%NACLSD, dims%NCLSD, dims%IEMXD, &
+                              dims%NACLSD, dims%NCLSD, dims%IEMXD, &
                               dims%nguessd, dims%ekmd, dims%smpid)
   end subroutine
 
@@ -61,16 +60,14 @@ module KKRresults_mod
   !> @param[inout] self    The KKRresults object to construct.
   !> @param[in]    LMMAXD
   !> @param[in]    NSPIND
-  !> @param[in]    NREFD
   !> @param[in]    NACLSD
   !> @param[in]    NCLSD
   !> @param[in]    IEMXD
-  subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NREFD,NACLSD,NCLSD,IEMXD, nguessd, ekmd, smpid)
+  subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NACLSD,NCLSD,IEMXD, nguessd, ekmd, smpid)
     implicit none
     type (KKRresults), intent(inout) :: self
     integer, intent(in) ::  LMMAXD
     integer, intent(in) ::  NSPIND
-    integer, intent(in) ::  NREFD
     integer, intent(in) ::  NACLSD
     integer, intent(in) ::  NCLSD
     integer, intent(in) ::  IEMXD
@@ -83,7 +80,6 @@ module KKRresults_mod
 
     self%LMMAXD = LMMAXD
     self%NSPIND = NSPIND
-    self%NREFD = NREFD
     self%NACLSD = NACLSD
     self%NCLSD = NCLSD
     self%IEMXD = IEMXD
@@ -93,8 +89,8 @@ module KKRresults_mod
 
     ALLOCATECHECK(self%TMATN(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
-    ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD,NREFD))
-    ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD,NREFD))
+    ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD))
+    ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD))
     ALLOCATECHECK(self%DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
     ALLOCATECHECK(self%GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
     ALLOCATECHECK(self%GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND))

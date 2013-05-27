@@ -59,7 +59,6 @@ module Main2Arrays_mod
     integer :: MAXMSHD
     integer :: nrd
     integer :: NACLSD
-    integer :: NREFD
     integer :: NCLSD
     integer :: nguessd !< not used?
     integer :: ekmd   !< not used, invalid
@@ -83,7 +82,7 @@ module Main2Arrays_mod
 
     call createMain2ArraysImpl(self, dims%lmaxd,dims%iemxd,dims%nspind, &
     dims%LMMAXD,dims%NAEZ,dims%LMXSPD,dims%KPOIBZ,dims%MAXMSHD,dims%nrd, &
-    dims%NACLSD,dims%NREFD,dims%NCLSD,dims%nguessd,dims%ekmd, &
+    dims%NACLSD,dims%NCLSD,dims%nguessd,dims%ekmd, &
     dims%smpid,dims%lpot,dims%IRMD,dims%LMPOTD)
 
   end subroutine
@@ -105,7 +104,6 @@ module Main2Arrays_mod
   !> @param[in]    nrd
   !> @param[in]    NACLSD
   !> @param[in]    NSPIND
-  !> @param[in]    NREFD
   !> @param[in]    NCLSD
   !> @param[in]    nguessd
   !> @param[in]    lmmaxd
@@ -114,7 +112,7 @@ module Main2Arrays_mod
   !> @param[in]    lpot
   !> @param[in]    IRMD
   !> @param[in]    LMPOTD
-  subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,NREFD,NCLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
+  subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,NCLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
     implicit none
     type (Main2Arrays), intent(inout) :: self
     integer, intent(in) ::  lmaxd
@@ -127,7 +125,6 @@ module Main2Arrays_mod
     integer, intent(in) ::  MAXMSHD
     integer, intent(in) ::  nrd
     integer, intent(in) ::  NACLSD
-    integer, intent(in) ::  NREFD
     integer, intent(in) ::  NCLSD
     integer, intent(in) ::  nguessd
     integer, intent(in) ::  ekmd
@@ -156,7 +153,6 @@ module Main2Arrays_mod
     self%nrd = nrd
     self%NACLSD = NACLSD
     self%NSPIND = NSPIND
-    self%NREFD = NREFD
     self%NCLSD = NCLSD
     self%nguessd = nguessd
     self%lmmaxd = lmmaxd
@@ -179,7 +175,7 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%INDN0(NAEZ,NACLSD))
     ALLOCATECHECK(self%ZAT(NAEZ))
     ALLOCATECHECK(self%RCLS(3,NACLSD,NCLSD))
-    ALLOCATECHECK(self%RMTREF(NREFD))
+    ALLOCATECHECK(self%RMTREF(NAEZ))
     ALLOCATECHECK(self%VREF(NAEZ))
     ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
     ALLOCATECHECK(self%CLS(NAEZ))

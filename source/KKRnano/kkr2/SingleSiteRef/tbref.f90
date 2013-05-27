@@ -160,7 +160,7 @@ CLEB,RCLS,ATOM,CLS,ICLEB,LOFLM,NACLS, &
 REFPOT, &
 TREFLL,DTREFLL,GREFN,DGREFN, &
 LLY_G0TR, &
-lmaxd, naclsd, ncleb, nrefd, nclsd, &
+lmaxd, naclsd, ncleb, nclsd, &
 LLY)
 
   use SingleSiteRef_mod
@@ -171,7 +171,6 @@ LLY)
   integer  lmaxd
   integer  naclsd
   integer  ncleb
-  integer  nrefd
   integer  nclsd
   integer  LLY
 
@@ -189,8 +188,8 @@ LLY)
   integer          REFPOT(NAEZ)
   double complex   LLY_G0TR(NCLSD)
 
-  double complex   TREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD), &
-  DTREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
+  double complex   TREFLL((LMAXD+1)**2,(LMAXD+1)**2), &
+  DTREFLL((LMAXD+1)**2,(LMAXD+1)**2)
   double complex   DGREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD), &
   GREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD)
 
@@ -231,7 +230,7 @@ LLY)
       ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS), &
       ALATC,GINP,DGINP, &
       LLY_G0TR(ICLS), &
-      lmaxd, naclsd, ncleb, nrefd, LLY )
+      lmaxd, naclsd, ncleb, LLY )
 
       do IG=1,NACLSD
         do LM2=1,LMGF0D

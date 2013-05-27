@@ -161,15 +161,15 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
 !------------------------------------------------------------------------------
       !$omp parallel do private(ilocal, kkr, RF)
-      do ilocal = 1, num_local_atoms  ! not so smart, redundant calculations
+      do ilocal = 1, num_local_atoms
         kkr => getKKR(calc_data, ilocal)
 !------------------------------------------------------------------------------
         kkr%noiter = 0
 
-        do RF = 1,arrays%NREF
-          call TREF(emesh%EZ(IE),arrays%VREF(RF),arrays%LMAXD,arrays%RMTREF(RF), &
-                    kkr%TREFLL(1,1,RF),kkr%DTREFLL(1,1,RF), dims%LLY)
-        end do
+        ! do RF = 1,arrays%NREF  RF = 1 take reference potential and MT-ref radius
+        ! from atom nr. 1
+        call TREF(emesh%EZ(IE),arrays%VREF(1),arrays%LMAXD,arrays%RMTREF(1), &
+                  kkr%TREFLL,kkr%DTREFLL, dims%LLY)  ! TODO
 
         !TESTARRAYLOG(3, kkr%TREFLL)
         !TESTARRAYLOG(3, kkr%DTREFLL)
@@ -180,7 +180,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                       gaunts%LOFLM,arrays%NACLS, arrays%REFPOT, &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                       kkr%LLY_G0TR(:,IE), &
-                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nrefd, kkr%nclsd, &
+                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nclsd, &
                       dims%LLY)
 
         !TESTARRAYLOG(3, kkr%GREFN)
@@ -226,12 +226,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                             params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
             end if
 
-            RF = arrays%REFPOT(I1)
+            !RF = arrays%REFPOT(I1)
             call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), &
-                                           kkr%TREFLL(:,:,RF), kkr%LMMAXD)
+                                           kkr%TREFLL, kkr%LMMAXD)
             ! do the same for derivative of T-matrix
             call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), &
-                                           kkr%DTREFLL(:,:,RF), kkr%LMMAXD)
+                                           kkr%DTREFLL, kkr%LMMAXD)
 
             ! TMATN now contains Delta t = t - t_ref !!!
             ! DTDE now contains Delta dt !!!

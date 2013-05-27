@@ -10,7 +10,6 @@ module DimParams_mod
     integer  :: NSYMAXD
     integer  :: NAEZ
     integer  :: LMAXD
-    integer  :: NREFD
     integer  :: IRID
     integer  :: BCPD
     integer  :: NACLSD
@@ -73,7 +72,6 @@ module DimParams_mod
     read(FILEHANDLE) self%NAEZ
     read(FILEHANDLE) self%IRNSD
     read(FILEHANDLE) self%IRMD
-    read(FILEHANDLE) self%NREFD
     read(FILEHANDLE) self%NRD
     read(FILEHANDLE) self%IRID
     read(FILEHANDLE) self%NFUND
@@ -137,8 +135,6 @@ module DimParams_mod
     call getValueInteger(conf, "IRNSD", self%IRNSD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "IRMD", self%IRMD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NREFD", self%NREFD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NRD", self%NRD, ierror)
     if (ierror /= 0) stop
@@ -223,7 +219,6 @@ module DimParams_mod
     write(FILEHANDLE) self%NAEZ
     write(FILEHANDLE) self%IRNSD
     write(FILEHANDLE) self%IRMD
-    write(FILEHANDLE) self%NREFD
     write(FILEHANDLE) self%NRD
     write(FILEHANDLE) self%IRID
     write(FILEHANDLE) self%NFUND

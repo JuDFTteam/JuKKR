@@ -21,13 +21,12 @@ CONTAINS
 !> @param lmaxd angular momentum cutoff (it would be better to rewrite routine to pass lmmaxd)
 !> @param naclsd dimension array: maximal number of atoms in reference clusters
 !> @param ncleb number of Gaunt coefficients in CLEB
-!> @param nrefd number of different reference systems
 !> @param LLY do Lloyd's formula calculations 1=yes/0=no
 subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
                  REFPOT,RATOM,NATOM,ALAT,GREF0,DGDEOUT, &
                  LLY_G0TR, &
 !                new input parameters after inc.p removal
-                 lmaxd, naclsd, ncleb, nrefd, LLY)
+                 lmaxd, naclsd, ncleb, LLY)
 
 ! **********************************************************************
 !
@@ -41,7 +40,6 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   integer, intent(in) :: lmaxd
   integer, intent(in) :: naclsd
   integer, intent(in) :: ncleb
-  integer, intent(in) :: nrefd
   integer, intent(in) :: LLY
 
   !
@@ -68,11 +66,11 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
   !     DOUBLE COMPLEX GREF0(NGD,LMGF0D)
   double complex :: GREF0(NACLSD*(LMAXD+1)**2,(LMAXD+1)**2)
 
-  !     DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D,NREFD)
-  double complex :: TREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
+  !     DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D)
+  double complex :: TREFLL((LMAXD+1)**2,(LMAXD+1)**2)
 
-  !     DOUBLE COMPLEX DTREFLL(LMGF0D,LMGF0D,NREFD)
-  double complex :: DTREFLL((LMAXD+1)**2,(LMAXD+1)**2,NREFD)
+  !     DOUBLE COMPLEX DTREFLL(LMGF0D,LMGF0D)
+  double complex :: DTREFLL((LMAXD+1)**2,(LMAXD+1)**2)
 
 
   !                    DGDEOUT(LLYNGD,LMGF0D)
@@ -179,14 +177,14 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
        ! -dG_0/dE * \Delta t_ref    -- stored in GTREF
        call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE,DGDE(1,site_lm_index2),NGD, &
-                  TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMMAXD, &
+                  TREFLL,LMMAXD, &
                   CZERO,GTREF,NGD)
 
        !   - G_0 * d(\Delta t_ref)/dE + GTREF  -- stored again in GTREF
        ! = -dG_0/dE * \Delta t_ref - G_0 * d(\Delta t_ref)/dE
 
        call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE,GREF(1,site_lm_index2),NGD, &
-                  DTREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMMAXD, &
+                  DTREFLL,LMMAXD, &
                   CONE,GTREF,NGD)
 
        ! copy GTREF to DGTDE0 - GTREF is reused
@@ -199,7 +197,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL,ATOM, &
 
      ! -G_ref * \Delta t_ref  -- stored in GTREF
      call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE,GREF(1,site_lm_index2),NGD, &
-     TREFLL(1,1,REFPOT(ABS(ATOM(N2)))),LMMAXD, &
+     TREFLL,LMMAXD, &
      CZERO,GTREF,NGD)
 
      call ZCOPY(NGD*LMMAXD,GTREF,1,GREF(1,site_lm_index2),1)
