@@ -2,6 +2,12 @@ Elias Rabel, 2012
 
 Some Guidelines:
 
+Calculating more than 1 atom per MPI process and using > 1 threads:
+The stack size for OpenMP threads has to be increased by using this command:
+
+export OMP_STACKSIZE=20M
+
+
 Understanding the code:
 
 *) When design choices are unclear, cross-check with the original version of the code 

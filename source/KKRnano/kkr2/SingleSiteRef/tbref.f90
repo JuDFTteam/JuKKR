@@ -155,11 +155,11 @@ end
 
 
 !------------------------------------------------------------------------------
-subroutine GREF(E,ALATC,IEND,NCLS,NAEZ, &
-CLEB,RCLS,ATOM,CLS,ICLEB,LOFLM,NACLS, &
+subroutine GREF(E,ALATC,IEND, &
+CLEB,RCLS,ICLEB,LOFLM,NACLS, &
 TREFLL,DTREFLL,GREFN,DGREFN, &
 LLY_G0TR, &
-lmaxd, naclsd, ncleb, nclsd, &
+lmaxd, naclsd, ncleb, &
 LLY)
 
   use SingleSiteRef_mod
@@ -170,31 +170,30 @@ LLY)
   integer  lmaxd
   integer  naclsd
   integer  ncleb
-  integer  nclsd
   integer  LLY
 
   !     ..
   !     .. Scalar Arguments ..
   double precision ALATC
-  integer          IEND,NCLS,NAEZ
+  integer          IEND
   !     ..
   !     .. Array Arguments ..
-  double precision CLEB(NCLEB,2),RCLS(3,NACLSD,NCLSD)
-  integer          ATOM(NACLSD,NAEZ),CLS(NAEZ),ICLEB(NCLEB,3)
+  double precision CLEB(NCLEB,2),RCLS(3,NACLSD)
+  integer          ICLEB(NCLEB,3)
 
   integer          LOFLM((2*LMAXD+1)**2)
-  integer          NACLS(NCLSD)
-  double complex   LLY_G0TR(NCLSD)
+  integer          NACLS
+  double complex   LLY_G0TR
 
-  double complex   TREFLL((LMAXD+1)**2,(LMAXD+1)**2), &
-  DTREFLL((LMAXD+1)**2,(LMAXD+1)**2)
-  double complex   DGREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD), &
-  GREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD,NCLSD)
+  double complex   TREFLL((LMAXD+1)**2,(LMAXD+1)**2, naclsd), &
+                  DTREFLL((LMAXD+1)**2,(LMAXD+1)**2, naclsd)
 
-  !     ..
+  double complex   DGREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD), &
+                    GREFN((LMAXD+1)**2,(LMAXD+1)**2,NACLSD)
+
   !     .. Local Scalars ..
   double complex   E
-  integer          I1,IC,ICLS,IG,IG1,LM1,LM2
+  integer          IG,IG1,LM1,LM2
   !     ..
 
   !     Local arrays
@@ -211,37 +210,18 @@ LLY)
 
   ! attention in this subroutine I3 labels the fixed atom - I1 is a variable !
 
-  !=====================================================================
-  do ICLS = 1,NCLS
-  !=====================================================================
+  call GLL95(E,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
+  RCLS,NACLS,ALATC,GINP,DGINP, &
+  LLY_G0TR, lmaxd, naclsd, ncleb, LLY )
 
-      I1 = 1
-      IC = 0
-      ! find atom index corresponding to cluster index
-      do while (IC.eq.0 .and. I1.le.NAEZ)
-        if (CLS(I1).eq.ICLS) IC = I1
-        I1 = I1 + 1
-      end do
-      if (IC.eq.0) stop 'Error in CLS(*) array in tbref'
-
-      call GLL95(E,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
-      ATOM(1,IC),RCLS(1,1,ICLS),NACLS(ICLS), &
-      ALATC,GINP,DGINP, &
-      LLY_G0TR(ICLS), &
-      lmaxd, naclsd, ncleb, LLY )
-
-      do IG=1,NACLSD
-        do LM2=1,LMGF0D
-          IG1 = (IG-1)*LMGF0D + LM2
-          do LM1=1,LMGF0D
-            GREFN(LM2,LM1,IG,ICLS)=GINP(IG1,LM1)
-            DGREFN(LM2,LM1,IG,ICLS)=DGINP(IG1,LM1)
-          enddo
-        enddo
+  do IG=1,NACLSD
+    do LM2=1,LMGF0D
+      IG1 = (IG-1)*LMGF0D + LM2
+      do LM1=1,LMGF0D
+        GREFN(LM2,LM1,IG)=GINP(IG1,LM1)
+        DGREFN(LM2,LM1,IG)=DGINP(IG1,LM1)
       enddo
-
-  !=====================================================================
-  end do
-  !=====================================================================
+    enddo
+  enddo
 
 end subroutine

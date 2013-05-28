@@ -168,23 +168,35 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
         ! do RF = 1,arrays%NREF  RF = 1 take reference potential and MT-ref radius
         ! from atom nr. 1
-        call TREF(emesh%EZ(IE),arrays%VREF,arrays%LMAXD,arrays%RMTREF(1), &
-                  kkr%TREFLL,kkr%DTREFLL, dims%LLY)  ! TODO
+        RF = 1
+        call TREF(emesh%EZ(IE),arrays%VREF,arrays%LMAXD,arrays%RMTREF(RF), &
+                  kkr%TREFLL(:,:,1), kkr%DTREFLL(:,:,1), dims%LLY) ! TODO: use local t-matrix buffer
 
-        !TESTARRAYLOG(3, kkr%TREFLL)
-        !TESTARRAYLOG(3, kkr%DTREFLL)
+        ! TODO: here one would need to exchange the Tref matrices within each cluster
+        ! - similar to calculation of real system
+        ! Note: ref. system has to be recalculated at each iteration
+        ! since energy mesh changes
+        ! - missing: buffer for TREFLL matrices
+        ! Note: TREFLL is diagonal - however full matrix is stored
+        ! Note: Gref is calculated in real space - usually only a few shells
+        ! use gatherTmatrices ?
 
+        ! here: assume identical clusters
+        do rf = 2, size(kkr%TREFLL,3)  ! TODO: replace with communication
+          kkr%TREFLL (:,:,rf) = kkr%TREFLL(:,:,1)
+          kkr%DTREFLL(:,:,rf) = kkr%DTREFLL(:,:,1)
+        end do
 
-        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND,arrays%NCLS,arrays%NAEZ, &
-                      gaunts%CLEB,arrays%RCLS,arrays%ATOM,arrays%CLS,gaunts%ICLEB, &
-                      gaunts%LOFLM,arrays%NACLS, &
+        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
+                      gaunts%CLEB,arrays%RCLS(:,:,1),gaunts%ICLEB, &
+                      gaunts%LOFLM,arrays%NACLS(1), &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
-                      kkr%LLY_G0TR(:,IE), &
-                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, kkr%nclsd, &
+                      kkr%LLY_G0TR(1,IE), &
+                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, &
                       dims%LLY)
 
-        !TESTARRAYLOG(3, kkr%GREFN)
-        !TESTARRAYLOG(3, kkr%DGREFN)
+        ! here: assume identical clusters -> identical cluster green's functions
+        ! TODO: exchange cluster green's functions
 
 !------------------------------------------------------------------------------
       end do  ! ilocal
@@ -226,11 +238,13 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                             params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
             end if
 
+            ! t_ref-matrix of central cluster atom has index 1
             call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), &
-                                           kkr%TREFLL, kkr%LMMAXD)
+                                           kkr%TREFLL(:,:,1), kkr%LMMAXD)
+
             ! do the same for derivative of T-matrix
             call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), &
-                                           kkr%DTREFLL, kkr%LMMAXD)
+                                           kkr%DTREFLL(:,:,1), kkr%LMMAXD)
 
             ! TMATN now contains Delta t = t - t_ref !!!
             ! DTDE now contains Delta dt !!!

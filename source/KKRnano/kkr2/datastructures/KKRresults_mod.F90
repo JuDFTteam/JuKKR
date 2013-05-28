@@ -17,8 +17,8 @@ module KKRresults_mod
   type KKRresults
     double complex , allocatable, dimension(:,:,:)  :: TMATN
     double complex , allocatable, dimension(:,:,:)  :: DTDE
-    double complex , allocatable, dimension(:,:)  :: TREFLL
-    double complex , allocatable, dimension(:,:)  :: DTREFLL
+    double complex , allocatable, dimension(:,:,:)  :: TREFLL
+    double complex , allocatable, dimension(:,:,:)  :: DTREFLL
     double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GMATN
@@ -89,8 +89,8 @@ module KKRresults_mod
 
     ALLOCATECHECK(self%TMATN(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
-    ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD))
-    ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD))
+    ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD,naclsd))
+    ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD,naclsd))
     ALLOCATECHECK(self%DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
     ALLOCATECHECK(self%GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
     ALLOCATECHECK(self%GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND))
