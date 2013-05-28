@@ -1,13 +1,10 @@
-      SUBROUTINE RINPUTNEW99(RBASIS,
-     &           CLS,NCLS,
-     +           NTCELL,NAEZ,Z,
-     +           RMTREF)
+      SUBROUTINE RINPUTNEW99(RBASIS,NTCELL,NAEZ,Z,RMTREF)
 
       IMPLICIT NONE
 
 C     .. Array Arguments ..
       INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
-     &        NTCELL(naez),CLS(*), refpot
+     &        NTCELL(naez),CLS, refpot
 
       DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),RMTREF(*)
 
@@ -21,7 +18,7 @@ C     .. Local Scalars ..
 
 c------------ array set up and definition of input parameter -----------
 
-      WRITE (6,2004) 'Jun 2010'
+      WRITE (6,2004) 'Jun 2013'
 
       OPEN(77,FILE='atominfo',FORM='formatted')
 
@@ -30,14 +27,14 @@ c------------ array set up and definition of input parameter -----------
                            READ (UNIT=77,FMT=*)    Z(I),
      +                        LMXCdummy,
      +                       (KFGdummy(J),J=1,4),
-     +                        CLS(I),
+     +                        CLS,
      +                        REFPOT,
      +                        NTCELL(I),
      +                        MTFACdummy,
      +                        IRNS_dummy,
      +                        temp
 
-      IF (REFPOT /= 1) then
+      IF (REFPOT /= 1 .or. cls /= 1) then
       WRITE(*,*) "ERROR: Only 1 reference cluster allowed."
       STOP
       ENDIF
@@ -60,7 +57,7 @@ c----------------------------------------------------------------------
       NREF = 0
 c
       DO I=1,NAEZ 
-        NCLS = MAX(NCLS,CLS(I)) 
+        NCLS = MAX(NCLS,CLS)
       ENDDO
 
       NREF = 1

@@ -80,9 +80,11 @@ module TruncationZone_mod
     ALLOCATECHECK(self%numn0_trc(naez_trc))
     self%numn0_trc = -1
 
-    ALLOCATECHECK(self%cls_trc(naez_trc))
+    ! cls_trc not used anymore - replace with dummy
+    !ALLOCATECHECK(self%cls_trc(naez_trc))
+    ALLOCATECHECK(self%cls_trc(1))
     self%cls_trc = -1
-    call filter1d(mask, arrays%cls, self%cls_trc)
+    !call filter1d(mask, arrays%cls, self%cls_trc)
 
     !!!ALLOCATECHECK(self%indn0_trc(naez_trc, maxval(self%numn0_trc)))
     ! overdimensioned for compatibility reasons

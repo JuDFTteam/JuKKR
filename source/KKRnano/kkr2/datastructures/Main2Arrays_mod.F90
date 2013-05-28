@@ -176,7 +176,7 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%RCLS(3,NACLSD))
     ALLOCATECHECK(self%RMTREF(NAEZ))
     ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
-    ALLOCATECHECK(self%CLS(NAEZ))
+    ALLOCATECHECK(self%CLS(1))
     ALLOCATECHECK(self%NACLS(1))
 
   end subroutine
@@ -238,7 +238,6 @@ module Main2Arrays_mod
                        self%RMTREF, &
                        self%VREF, &
                        self%ATOM, &
-                       self%CLS, &
                        self%NACLS, &
                        self%NCLS, &  ! write some scalars too
                        self%NSYMAT, &
@@ -277,7 +276,6 @@ module Main2Arrays_mod
                        self%RMTREF, &
                        self%VREF, &
                        self%ATOM, &
-                       self%CLS, &
                        self%NACLS, &
                        self%NCLS, &  ! write some scalars too
                        self%NSYMAT, &

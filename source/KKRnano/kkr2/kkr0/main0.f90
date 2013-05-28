@@ -120,6 +120,7 @@
     double precision :: RECBV(3,3)
 
     integer, dimension(:),   allocatable :: NTCELL
+    integer, dimension(:),   allocatable :: CLS
 
 !     .. auxillary variables, not passed to kkr2
     double precision :: PI
@@ -168,12 +169,13 @@
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
-    allocate(NTCELL(dims%NAEZ), stat=ierror)
+    allocate(NTCELL(dims%NAEZ))
+    allocate(CLS(dims%NAEZ))
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
-     call RINPUTNEW99(arrays%RBASIS,arrays%CLS,arrays%NCLS, NTCELL,&
+     call RINPUTNEW99(arrays%RBASIS, NTCELL, &
                       arrays%NAEZ,arrays%ZAT, &
                       arrays%RMTREF)
 
@@ -258,7 +260,7 @@
      arrays%NUMN0 = -1
      arrays%INDN0 = -1
 
-    call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS,arrays%CLS,arrays%NACLS,arrays%ATOM, &
+    call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS, CLS, arrays%NACLS,arrays%ATOM, &
                   arrays%EZOA, &
                   arrays%RCLS,params%rclust,params%rclust, &
                   arrays%NUMN0,arrays%INDN0, &
@@ -325,6 +327,7 @@
     !   auxillary
     deallocate(DEZ, stat=ierror)
     deallocate(NTCELL, stat=ierror)
+    deallocate(CLS)
 
 ! -------------- Helper routine -----------------------------------------------
 

@@ -253,8 +253,21 @@ subroutine kloopbody( G_diag, kpoint, &
 
   GLLH = CZERO
 
+!  do site_index = 1,NAEZ
+!    ref_cluster_index = CLS(site_index)
+!
+!    call DLKE1(ALAT,NACLS(ref_cluster_index),RR,EZOA(:,site_index), &
+!               kpoint,EIKRM,EIKRP, &
+!               nrd, naclsd)
+!
+!    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
+!                    NACLS(ref_cluster_index), ATOM(:,site_index),NUMN0,INDN0, &
+!                    GINP(:,:,:,ref_cluster_index), &
+!                    naez, lmmaxd, naclsd)
+!  end do
+
   do site_index = 1,NAEZ
-    ref_cluster_index = CLS(site_index)
+    ref_cluster_index = 1  ! enforce identical ref. clusters
 
     call DLKE1(ALAT,NACLS(ref_cluster_index),RR,EZOA(:,site_index), &
                kpoint,EIKRM,EIKRP, &
