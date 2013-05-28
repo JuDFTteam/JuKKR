@@ -1,6 +1,18 @@
+C     >> Input parameters
+C>    @param     ALAT    lattice constant a
+C>    @param     NACLS   number of atoms in cluster
+C>    @param     RR      array of real space vectors
+C>    @param     EZOA
+C>    @param     BZKP
+C>    @param     nrd     There are nrd+1 real space vectors in RR
+C>    @param     naclsd. maximal number of atoms in cluster
+
+C     << Output parameters
+C>    @param     EIKRM   Fourier exponential factor with minus sign
+C>    @param     EIKRP   Fourier exponential factor with plus sign
+
       SUBROUTINE DLKE1(ALAT,NACLS,RR,EZOA,
-     &                 BZKP,IC,EIKRM,EIKRP,
-C                      new input parameters after inc.p removal
+     &                 BZKP,EIKRM,EIKRP,
      &                 nrd, naclsd)
       IMPLICIT NONE
 c ----------------------------------------------------------------------
@@ -8,21 +20,6 @@ c
 c     Fourier transformation of the cluster Greens function
 c     Prepares the calculation (calculates Fourier factors) for dlke0
 c ----------------------------------------------------------------------
-
-
-C     >> Input parameters
-C     ALAT .. lattice constant a
-C     NACLS . array that contains number of atoms in each cluster
-C     RR .... array of real space vectors
-C     EZOA ..
-C     BZKP ..
-C     IC .... reference cluster index
-C     nrd ... There are nrd+1 real space vectors in RR
-C     naclsd. maximal number of atoms in cluster
-
-C     << Output parameters
-C     EIKRM . Fourier exponential factor with minus sign
-C     EIKRP . Fourier exponential factor with plus sign
 
       INTEGER nrd
       INTEGER naclsd
@@ -32,10 +29,9 @@ C     EIKRP . Fourier exponential factor with plus sign
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALAT
-      INTEGER IC
 C     ..
 C     .. Array Arguments ..
-      INTEGER EZOA(*),NACLS(*)
+      INTEGER EZOA(*),NACLS
       DOUBLE COMPLEX EIKRP(NACLSD),EIKRM(NACLSD)
       DOUBLE PRECISION BZKP(*),RR(3,0:NRD)
 C     ..
@@ -60,7 +56,7 @@ C
       TPI = 8.0D0*ATAN(1.0D0)         
       CONVPU = ALAT/TPI
 
-      DO 90 M = 1,NACLS(IC)
+      DO 90 M = 1,NACLS
 
 c
 c     
