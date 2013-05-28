@@ -256,9 +256,9 @@
      arrays%EZOA = -1
      arrays%ATOM = -1
      arrays%NACLS = -1
-     arrays%CLS = -1
      arrays%NUMN0 = -1
      arrays%INDN0 = -1
+     CLS = -1
 
     call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS, CLS, arrays%NACLS,arrays%ATOM, &
                   arrays%EZOA, &

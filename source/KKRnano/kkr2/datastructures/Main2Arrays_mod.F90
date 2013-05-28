@@ -38,12 +38,10 @@ module Main2Arrays_mod
     double precision , allocatable, dimension(:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
     integer , allocatable, dimension(:,:)  :: ATOM
-    integer , allocatable, dimension(:)  :: CLS
     integer , allocatable, dimension(:)  :: NACLS
 
     double precision :: VREF !< repulsive screening pot. strength
 
-    integer  :: NCLS
     integer  :: NSYMAT
     integer  :: MAXMESH
     integer  :: NR
@@ -131,7 +129,6 @@ module Main2Arrays_mod
 
     integer :: memory_stat
 
-    self%NCLS = 0
     self%NSYMAT = 0
     self%MAXMESH = 0
     self%NR = 0
@@ -176,7 +173,6 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%RCLS(3,NACLSD))
     ALLOCATECHECK(self%RMTREF(NAEZ))
     ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
-    ALLOCATECHECK(self%CLS(1))
     ALLOCATECHECK(self%NACLS(1))
 
   end subroutine
@@ -205,7 +201,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%RCLS)
     DEALLOCATECHECK(self%RMTREF)
     DEALLOCATECHECK(self%ATOM)
-    DEALLOCATECHECK(self%CLS)
     DEALLOCATECHECK(self%NACLS)
   end subroutine
 
@@ -239,8 +234,7 @@ module Main2Arrays_mod
                        self%VREF, &
                        self%ATOM, &
                        self%NACLS, &
-                       self%NCLS, &  ! write some scalars too
-                       self%NSYMAT, &
+                       self%NSYMAT, &  ! write some scalars too
                        self%MAXMESH, &
                        self%NR
     close (FILEHANDLE)
@@ -277,8 +271,7 @@ module Main2Arrays_mod
                        self%VREF, &
                        self%ATOM, &
                        self%NACLS, &
-                       self%NCLS, &  ! write some scalars too
-                       self%NSYMAT, &
+                       self%NSYMAT, & ! write some scalars too
                        self%MAXMESH, &
                        self%NR
     close (FILEHANDLE)

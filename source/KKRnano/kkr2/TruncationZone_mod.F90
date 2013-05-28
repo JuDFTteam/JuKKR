@@ -30,7 +30,6 @@ module TruncationZone_mod
     integer, dimension(:,:), allocatable :: indn0_trc
     integer, dimension(:,:), allocatable :: atom_trc
     integer, dimension(:,:), allocatable :: ezoa_trc
-    integer, dimension(:), allocatable :: cls_trc
   end type
 
   CONTAINS
@@ -79,12 +78,6 @@ module TruncationZone_mod
 
     ALLOCATECHECK(self%numn0_trc(naez_trc))
     self%numn0_trc = -1
-
-    ! cls_trc not used anymore - replace with dummy
-    !ALLOCATECHECK(self%cls_trc(naez_trc))
-    ALLOCATECHECK(self%cls_trc(1))
-    self%cls_trc = -1
-    !call filter1d(mask, arrays%cls, self%cls_trc)
 
     !!!ALLOCATECHECK(self%indn0_trc(naez_trc, maxval(self%numn0_trc)))
     ! overdimensioned for compatibility reasons
@@ -140,7 +133,6 @@ module TruncationZone_mod
 
     DEALLOCATECHECK(self%index_map)
     DEALLOCATECHECK(self%numn0_trc)
-    DEALLOCATECHECK(self%cls_trc)
     DEALLOCATECHECK(self%indn0_trc)
     DEALLOCATECHECK(self%atom_trc)
     DEALLOCATECHECK(self%ezoa_trc)

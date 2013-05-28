@@ -94,6 +94,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   double complex, allocatable, dimension(:,:,:) :: TMATLL !< all t-matrices
   double complex, allocatable, dimension(:,:,:) :: GmatN_buffer !< GmatN for all local atoms
 
+  integer :: cls_trc_dummy(1) = (/ -1 /)
+
   lmmaxd = (dims%lmaxd + 1) ** 2
 
   trunc_zone => getTruncationZone(calc_data)
@@ -297,7 +299,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), trunc_zone%CLS_trc, &
+          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
           arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
           kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
           TMATLL, trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
