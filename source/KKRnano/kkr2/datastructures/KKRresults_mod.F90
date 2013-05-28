@@ -22,7 +22,7 @@ module KKRresults_mod
     double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GMATN
-    double complex , allocatable, dimension(:,:)  :: LLY_G0TR
+    double complex , allocatable, dimension(:)  :: LLY_G0TR
     double complex , allocatable, dimension(:,:)  :: LLY_GRDT
     double complex , allocatable, dimension(:)  :: TR_ALPH
     complex , allocatable, dimension(:,:,:)  :: PRSC ! move to KKRresults?
@@ -31,7 +31,6 @@ module KKRresults_mod
     integer :: LMMAXD
     integer :: NSPIND
     integer :: NACLSD
-    integer :: NCLSD
     integer :: IEMXD
     integer :: ekmd
     integer :: nguessd
@@ -51,7 +50,7 @@ module KKRresults_mod
     type (DimParams),  intent(in)    :: dims
 
     call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, &
-                              dims%NACLSD, dims%NCLSD, dims%IEMXD, &
+                              dims%NACLSD, dims%IEMXD, &
                               dims%nguessd, dims%ekmd, dims%smpid)
   end subroutine
 
@@ -61,15 +60,13 @@ module KKRresults_mod
   !> @param[in]    LMMAXD
   !> @param[in]    NSPIND
   !> @param[in]    NACLSD
-  !> @param[in]    NCLSD
   !> @param[in]    IEMXD
-  subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NACLSD,NCLSD,IEMXD, nguessd, ekmd, smpid)
+  subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NACLSD,IEMXD, nguessd, ekmd, smpid)
     implicit none
     type (KKRresults), intent(inout) :: self
     integer, intent(in) ::  LMMAXD
     integer, intent(in) ::  NSPIND
     integer, intent(in) ::  NACLSD
-    integer, intent(in) ::  NCLSD
     integer, intent(in) ::  IEMXD
     integer, intent(in) ::  nguessd
     integer, intent(in) ::  ekmd
@@ -81,7 +78,6 @@ module KKRresults_mod
     self%LMMAXD = LMMAXD
     self%NSPIND = NSPIND
     self%NACLSD = NACLSD
-    self%NCLSD = NCLSD
     self%IEMXD = IEMXD
     self%nguessd = nguessd
     self%ekmd = ekmd
@@ -91,10 +87,10 @@ module KKRresults_mod
     ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD,naclsd))
     ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD,naclsd))
-    ALLOCATECHECK(self%DGREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
-    ALLOCATECHECK(self%GREFN(LMMAXD,LMMAXD,NACLSD,NCLSD))
+    ALLOCATECHECK(self%DGREFN(LMMAXD,LMMAXD,NACLSD,1))
+    ALLOCATECHECK(self%GREFN(LMMAXD,LMMAXD,NACLSD,1))
     ALLOCATECHECK(self%GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND))
-    ALLOCATECHECK(self%LLY_G0TR(NCLSD,IEMXD))
+    ALLOCATECHECK(self%LLY_G0TR(IEMXD))
     ALLOCATECHECK(self%LLY_GRDT(IEMXD,NSPIND))
     ALLOCATECHECK(self%TR_ALPH(NSPIND))
     ALLOCATECHECK(self%PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1))

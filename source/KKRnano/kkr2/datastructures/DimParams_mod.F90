@@ -21,7 +21,6 @@ module DimParams_mod
     integer  :: IRNSD
     integer  :: KPOIBZ
     integer  :: NFUND
-    integer  :: NCLSD
     integer  :: NMAXD
     integer  :: NRD
     integer  :: NSPIND
@@ -77,7 +76,6 @@ module DimParams_mod
     read(FILEHANDLE) self%NFUND
     read(FILEHANDLE) self%NCELLD
     read(FILEHANDLE) self%NACLSD
-    read(FILEHANDLE) self%NCLSD
     read(FILEHANDLE) self%IPAND
     read(FILEHANDLE) self%NXIJD
     read(FILEHANDLE) self%KPOIBZ
@@ -145,8 +143,6 @@ module DimParams_mod
     call getValueInteger(conf, "NCELLD", self%NCELLD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NACLSD", self%NACLSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NCLSD", self%NCLSD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "IPAND", self%IPAND, ierror)
     if (ierror /= 0) stop
@@ -224,7 +220,6 @@ module DimParams_mod
     write(FILEHANDLE) self%NFUND
     write(FILEHANDLE) self%NCELLD
     write(FILEHANDLE) self%NACLSD
-    write(FILEHANDLE) self%NCLSD
     write(FILEHANDLE) self%IPAND
     write(FILEHANDLE) self%NXIJD
     write(FILEHANDLE) self%KPOIBZ

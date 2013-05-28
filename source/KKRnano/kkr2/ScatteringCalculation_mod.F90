@@ -188,10 +188,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         end do
 
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
-                      gaunts%CLEB,arrays%RCLS(:,:,1),gaunts%ICLEB, &
+                      gaunts%CLEB,arrays%RCLS(:,:),gaunts%ICLEB, &
                       gaunts%LOFLM,arrays%NACLS(1), &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
-                      kkr%LLY_G0TR(1,IE), &
+                      kkr%LLY_G0TR(IE), &
                       arrays%lmaxd, arrays%naclsd, gaunts%ncleb, &
                       dims%LLY)
 
@@ -250,7 +250,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             ! DTDE now contains Delta dt !!!
 
             ! renormalize TR_ALPH
-            kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(arrays%CLS(I1), IE)
+            kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(IE)
 
             call rescaleTmatrix(kkr%TMATN(:,:,ISPIN), kkr%lmmaxd, params%alat)
 
@@ -299,13 +299,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), trunc_zone%CLS_trc, &
           arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
-          kkr%GREFN, &
-          arrays%NSYMAT,arrays%DSYMLL, &
-          TMATLL, &
-          trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
-          params%QMRBOUND, &
-          arrays%lmmaxd, arrays%naclsd,  &
-          arrays%nrd)
+          kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
+          TMATLL, trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
+          params%QMRBOUND, arrays%lmmaxd, arrays%naclsd,  arrays%nrd)
 
 !------------------------------------------------------------------------------
 

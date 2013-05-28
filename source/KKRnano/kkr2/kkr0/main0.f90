@@ -144,6 +144,8 @@
     type (DimParams)      :: dims
     type (Main2Arrays)    :: arrays
 
+    integer, parameter :: NCLSD = 1
+
 ! ------------ end of declarations ---------------------------------
 
     call createDimParamsFromConf(dims)
@@ -260,7 +262,7 @@
                   arrays%EZOA, &
                   arrays%RCLS,params%rclust,params%rclust, &
                   arrays%NUMN0,arrays%INDN0, &
-                  arrays%NRD, arrays%NCLSD, arrays%NACLSD)
+                  arrays%NRD, NCLSD, arrays%NACLSD)
 
 ! xcpl test dimensions for Jij-calculation ..
 !    call CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ,NRD,NXIJD)

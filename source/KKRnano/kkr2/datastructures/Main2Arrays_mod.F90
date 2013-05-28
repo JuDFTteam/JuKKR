@@ -35,7 +35,7 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:)  :: NUMN0
     integer , allocatable, dimension(:,:)  :: INDN0
     double precision , allocatable, dimension(:)  :: ZAT  !< atomic numbers
-    double precision , allocatable, dimension(:,:,:)  :: RCLS
+    double precision , allocatable, dimension(:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
     integer , allocatable, dimension(:,:)  :: ATOM
     integer , allocatable, dimension(:)  :: CLS
@@ -58,7 +58,6 @@ module Main2Arrays_mod
     integer :: MAXMSHD
     integer :: nrd
     integer :: NACLSD
-    integer :: NCLSD
     integer :: nguessd !< not used?
     integer :: ekmd   !< not used, invalid
     integer :: smpid  !< not used
@@ -81,7 +80,7 @@ module Main2Arrays_mod
 
     call createMain2ArraysImpl(self, dims%lmaxd,dims%iemxd,dims%nspind, &
     dims%LMMAXD,dims%NAEZ,dims%LMXSPD,dims%KPOIBZ,dims%MAXMSHD,dims%nrd, &
-    dims%NACLSD,dims%NCLSD,dims%nguessd,dims%ekmd, &
+    dims%NACLSD,dims%nguessd,dims%ekmd, &
     dims%smpid,dims%lpot,dims%IRMD,dims%LMPOTD)
 
   end subroutine
@@ -103,7 +102,6 @@ module Main2Arrays_mod
   !> @param[in]    nrd
   !> @param[in]    NACLSD
   !> @param[in]    NSPIND
-  !> @param[in]    NCLSD
   !> @param[in]    nguessd
   !> @param[in]    lmmaxd
   !> @param[in]    ekmd
@@ -111,7 +109,7 @@ module Main2Arrays_mod
   !> @param[in]    lpot
   !> @param[in]    IRMD
   !> @param[in]    LMPOTD
-  subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,NCLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
+  subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
     implicit none
     type (Main2Arrays), intent(inout) :: self
     integer, intent(in) ::  lmaxd
@@ -124,7 +122,6 @@ module Main2Arrays_mod
     integer, intent(in) ::  MAXMSHD
     integer, intent(in) ::  nrd
     integer, intent(in) ::  NACLSD
-    integer, intent(in) ::  NCLSD
     integer, intent(in) ::  nguessd
     integer, intent(in) ::  ekmd
     integer, intent(in) ::  smpid
@@ -156,7 +153,6 @@ module Main2Arrays_mod
     self%nrd = nrd
     self%NACLSD = NACLSD
     self%NSPIND = NSPIND
-    self%NCLSD = NCLSD
     self%nguessd = nguessd
     self%lmmaxd = lmmaxd
     self%ekmd = ekmd
@@ -177,11 +173,11 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%NUMN0(NAEZ))
     ALLOCATECHECK(self%INDN0(NAEZ,NACLSD))
     ALLOCATECHECK(self%ZAT(NAEZ))
-    ALLOCATECHECK(self%RCLS(3,NACLSD,NCLSD))
+    ALLOCATECHECK(self%RCLS(3,NACLSD))
     ALLOCATECHECK(self%RMTREF(NAEZ))
     ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
     ALLOCATECHECK(self%CLS(NAEZ))
-    ALLOCATECHECK(self%NACLS(NCLSD))
+    ALLOCATECHECK(self%NACLS(1))
 
   end subroutine
 

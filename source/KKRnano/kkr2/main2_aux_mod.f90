@@ -4,67 +4,6 @@ module main2_aux_mod
   contains
 
   !----------------------------------------------------------------------------
-  subroutine consistencyCheck03(ATOM, CLS, EZOA, INDN0, NACLS, NACLSD, NAEZ, NCLSD, NR, NUMN0)
-    implicit none
-    integer :: ATOM(:,:)
-    integer :: CLS(:)
-    integer :: EZOA(:,:)
-    integer :: INDN0(:,:)
-    integer :: NACLS(:)
-    integer :: NACLSD
-    integer :: NAEZ
-    integer :: NCLSD
-    integer :: NR
-    integer :: NUMN0(:)
-
-    integer :: I1
-    integer :: IE
-
-    do I1 = 1, NAEZ
-      if (CLS(I1) < 1 .or. CLS(I1) > NCLSD) then
-        write (*,*) "main2: CLS defect, site ", I1, " value ", CLS(I1)
-        stop
-      end if
-    end do
-
-    do I1 = 1, NCLSD
-      if (NACLS(I1) < 1 .or. NACLS(I1) > NACLSD) then
-        write (*,*) "main2: NACLS defect, cluster ", I1, " value ", NACLS(I1)
-        stop
-      end if
-    end do
-
-    do I1 = 1, NAEZ
-      do IE = 1, NACLS(CLS(I1))
-        if (ATOM(IE, I1) < 1 .or. ATOM(IE, I1) > NAEZ) then
-          write (*,*) "main2: ATOM defect value ", IE, I1, ATOM(IE, I1)
-          stop
-        end if
-
-        ! EZOA - index array to point to lattice vector (0 is allowed value)
-        if (EZOA(IE, I1) < 0 .or. EZOA(IE, I1) > NR) then
-          write (*,*) "main2: EZOA defect value ", IE, I1, EZOA(IE, I1)
-          stop
-        end if
-      end do
-    end do
-
-    do I1 = 1, NAEZ
-      if (NUMN0(I1) < 1 .or. NUMN0(I1) > NAEZ) then
-        write (*,*) "main2: NUMN0 inconsistent site ", I1, " value ", NUMN0(I1)
-        stop
-      end if
-
-      do IE = 1, NUMN0(I1)
-        if (INDN0(I1, IE) < 1 .or. INDN0(I1, IE) > NAEZ) then
-          write (*,*) "main2: INDN0 inconsistent site ", I1, " value ", INDN0(I1, IE)
-          stop
-        end if
-      end do
-    end do
-  end subroutine
-
-  !----------------------------------------------------------------------------
   !> Print Fermi-Energy information to screen.
   subroutine printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
     implicit none

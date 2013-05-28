@@ -102,10 +102,6 @@ program MAIN2
  ! =                     End read in variables                          =
  ! ======================================================================
 
-  call consistencyCheck03(arrays%ATOM, arrays%CLS, arrays%EZOA, &
-                          arrays%INDN0, arrays%NACLS, arrays%NACLSD, &
-                          arrays%NAEZ, arrays%NCLSD, arrays%NR, arrays%NUMN0)
-
   if ((params%JIJ .eqv. .true.) .and. (arrays%nspind /= 2)) then
     write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
     stop

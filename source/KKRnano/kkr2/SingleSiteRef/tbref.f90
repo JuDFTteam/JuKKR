@@ -155,12 +155,8 @@ end
 
 
 !------------------------------------------------------------------------------
-subroutine GREF(E,ALATC,IEND, &
-CLEB,RCLS,ICLEB,LOFLM,NACLS, &
-TREFLL,DTREFLL,GREFN,DGREFN, &
-LLY_G0TR, &
-lmaxd, naclsd, ncleb, &
-LLY)
+subroutine GREF(E,ALATC,IEND, CLEB,RCLS,ICLEB,LOFLM,NACLS, &
+             TREFLL,DTREFLL,GREFN,DGREFN, LLY_G0TR, lmaxd, naclsd, ncleb, LLY)
 
   use SingleSiteRef_mod
   implicit none
