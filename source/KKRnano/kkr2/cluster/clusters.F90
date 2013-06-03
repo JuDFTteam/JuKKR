@@ -1,3 +1,13 @@
+!> Definition
+!> RefCluster: a cluster of atoms with a distance smaller than rcut to a
+!>             central atom
+!>             periodic boundary conditions are taken into account:
+!>             mirror images of atoms can be included in the cluster
+!>
+!> LatticeVectors: linear combinations of Bravais vectors with integer
+!>                 coefficients
+
+
 module ClusterHelpers_mod
 
 public
@@ -8,10 +18,11 @@ type LatticeVectors
 end type
 
 type RefCluster
-  type (LatticeVectors), pointer :: rr_vectors
+  !> reference to LatticeVectors datastructure
+  type (LatticeVectors), pointer :: lattice_vectors
   double precision, allocatable :: rcls(:,:)
   integer, allocatable :: atom(:)
-  integer, allocatable :: ezoa(:) ! points into rr_vectors%rr
+  integer, allocatable :: ezoa(:) ! points into lattice_vectors%rr
   integer, allocatable :: indn0(:)
   integer :: numn0
   integer nacls
@@ -20,57 +31,106 @@ end type
 !public createRefCluster
 
 private vmul, veq, vadd, scalpr, xsort
-!private rrgen, rrgencount, clsgen99, clsgen99count
+private rrgen, rrgencount, clsgen99, clsgen99count
 
 CONTAINS
 
-!!------------------------------------------------------------------------------
-!subroutine createRefCluster(self, bravais, rbasis, rcut, center_ind)
-!  implicit none
-!  type RefCluster, intent(inout) :: self
-!  double precision, intent(in) :: bravais(3,3)
-!  double precision, intent(in) :: rbasis(:,:)
-!  double precision, intent(in) :: rcut
-!  integer, intent(in) :: center_ind
+!------------------------------------------------------------------------------
+!> Creates a table of lattice vectors.
+!>
+!> Before any reference clusters can be created, a table of
+!> lattice vectors has to be created.
+!> Several different reference clusters can (and should) share
+!> the same lattice vectors.
+subroutine createLatticeVectors(lattice_vectors, bravais)
+  implicit none
+  type (LatticeVectors), intent(inout) :: lattice_vectors
+  double precision, intent(in) :: bravais(3,3)
+
+  integer nrd
+
+  call rrgencount(bravais, nrd)
+  !write(*,*) "Num. real space vectors: ", nrd
+  allocate( lattice_vectors%rr(3,0:nrd) )
+  lattice_vectors%nrd = nrd
+  call rrgen (bravais, lattice_vectors%rr, lattice_vectors%nrd)
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Destroys table of lattice vectors.
+!>
+subroutine destroyLatticeVectors(lattice_vectors)
+  implicit none
+  type (LatticeVectors), intent(inout) :: lattice_vectors
+
+  deallocate( lattice_vectors%rr )
+  lattice_vectors%nrd = 0
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Creates reference cluster.
+!>
+!> Usage example:
+!> type (LatticeVectors), target :: lattice_vectors
+!> type (RefCluster) :: ref_cluster
+!> ! ...
+!> call createLatticeVectors(lattice_vectors, bravais)
+!> call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcut, center_ind)
+!> ! ... some code
+!> call destroyRefCluster(ref_cluster)
+!> call destroyLatticeVectors(lattice_vectors)
 !
-!  integer nrd
-!  double precision, allocatable :: rr(:,:)
-!  double precision :: dist
-!  !double precision, allocatable :: rcls(:,:)
-!  integer, allocatable :: atom(:)
-!  integer, allocatable :: ezoa(:)
-!  !integer, allocatable :: indn0(:)
-!  !integer :: numn0
-!
-!  integer nacls
-!  integer ii
-!
-!  call rrgencount(bravais, nrd)
-!  !write(*,*) "Num. real space vectors: ", nrd
-!  allocate( rr(3,0:nrd) )
-!  call rrgen (bravais,rr,nrd)
-!  call clsgen99count(center_ind, size(rbasis,2) ,rr,rbasis,rcut, &
-!                         nrd, nacls)
-!
-!
-!  allocate ( atom(nacls), ezoa(nacls), indn0(nacls) )
-!  allocate ( rcls(3, nacls) )
-!
-!  call clsgen99(center_ind, size(rbasis,2),rr,rbasis, &
-!                atom,ezoa, &
-!                rcls,rcut, &
-!                numn0,indn0, &
-!                nrd, nacls)
-!
-!  !write(*,*)  "Number of atoms in cluster:            ", nacls
-!  !write(*,*)  "Number of inequivalent cluster atoms: :", numn0
-!
-!  deallocate (rr)
-!  deallocate (rcls)
-!  deallocate (atom, ezoa, indn0 )
-!
-!  self%nacls = nacls
-!end subroutine
+subroutine createRefCluster(self, lattice_vectors, rbasis, rcut, center_ind)
+  implicit none
+  type(RefCluster), intent(inout) :: self
+
+  type(LatticeVectors), target, intent(in) :: lattice_vectors
+  double precision, intent(in) :: rbasis(:,:)
+  double precision, intent(in) :: rcut
+  integer, intent(in) :: center_ind
+
+
+  integer nacls
+  integer num_atoms
+
+  num_atoms = size(rbasis,2)
+
+  self%lattice_vectors => lattice_vectors
+
+  call clsgen99count(center_ind, num_atoms ,lattice_vectors%rr,rbasis,rcut, &
+                     lattice_vectors%nrd, nacls)
+
+
+  allocate ( self%atom(nacls), self%ezoa(nacls), self%indn0(nacls) )
+  allocate ( self%rcls(3, nacls) )
+
+  call clsgen99(center_ind, num_atoms , lattice_vectors%rr , rbasis, &
+                self%atom,self%ezoa, &
+                self%rcls,rcut, &
+                self%numn0,self%indn0, &
+                lattice_vectors%nrd, nacls)
+
+  !write(*,*)  "Number of atoms in cluster:            ", nacls
+  !write(*,*)  "Number of inequivalent cluster atoms: :", numn0
+
+  self%nacls = nacls
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Destroys reference cluster.
+subroutine destroyRefCluster(self)
+  implicit none
+  type(RefCluster), intent(inout) :: self
+
+  deallocate ( self%atom, self%ezoa, self%indn0)
+  deallocate ( self%rcls )
+  self%nacls = 0
+end subroutine
+
+! ************************************************************************
+! HELPER ROUTINES
+! ************************************************************************
 
 ! ************************************************************************
 Subroutine SCALPR(x,y,z)
@@ -632,20 +692,14 @@ program test_clusters
 
   double precision bravais(3,3)
   double precision rbasis(3,4)
-  integer nrd
-  double precision, allocatable :: rr(:,:)
-  double precision :: dist
-  double precision, allocatable :: rcls(:,:)
-  integer, allocatable :: atom(:)
-  integer, allocatable :: ezoa(:)
-  integer, allocatable :: indn0(:)
-  integer :: numn0
 
-  integer nacls
+  type (RefCluster) :: ref_cluster
+  type (LatticeVectors), target :: lattice_vectors
+
   integer ii
-
   double precision :: rcut = 1.5
   integer :: center_ind = 4
+  double precision :: dist
 
   bravais = reshape( (/ 1.0, 0.0, 0.0, &
                         0.0, 1.0, 0.0, &
@@ -656,43 +710,29 @@ program test_clusters
                        0.5, 0.0, 0.5, &
                        0.0, 0.5, 0.5  /), (/ 3, 4 /) )
 
-  call rrgencount(bravais, nrd)
-  write(*,*) "Num. real space vectors: ", nrd
-  allocate( rr(3,0:nrd) )
-  call rrgen (bravais,rr,nrd)
-  call clsgen99count(center_ind, size(rbasis,2) ,rr,rbasis,rcut, &
-                         nrd, nacls)
+  call createLatticeVectors(lattice_vectors, bravais)
+  call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcut, center_ind)
 
+  write(*,*)  "Number of lattice vectors:             ", ref_cluster%lattice_vectors%nrd
+  write(*,*)  "Number of atoms in cluster:            ", ref_cluster%nacls
+  write(*,*)  "Number of inequivalent cluster atoms: :", ref_cluster%numn0
 
-  allocate ( atom(nacls), ezoa(nacls), indn0(nacls) )
-  allocate ( rcls(3, nacls) )
-
-  call clsgen99(center_ind, size(rbasis,2),rr,rbasis, &
-                atom,ezoa, &
-                rcls,rcut, &
-                numn0,indn0, &
-                nrd, nacls)
-
-  write(*,*)  "Number of atoms in cluster:            ", nacls
-  write(*,*)  "Number of inequivalent cluster atoms: :", numn0
-
-  do ii = 1, nacls
-    dist = sqrt(rcls(1,ii)**2 + rcls(2,ii)**2 + rcls(3,ii)**2 )
+  do ii = 1, ref_cluster%nacls
+    dist = sqrt(ref_cluster%rcls(1,ii)**2 + ref_cluster%rcls(2,ii)**2 + ref_cluster%rcls(3,ii)**2 )
     write(*,"(79('-'))")
     write(*, 92000) "Cluster atom", ii
-    write(*, 91000) "Basis atom / dist. ", atom(ii), dist
-    write(*, 90000) "Lattice vector", rr(:, ezoa(ii))
-    write(*, 90000) "Position in basis", rbasis(:, atom(ii))
-    write(*, 90000) "Position from center", rcls(:, ii)
+    write(*, 91000) "Basis atom / dist. ", ref_cluster%atom(ii), dist
+    write(*, 90000) "Lattice vector", ref_cluster%lattice_vectors%rr(:, ref_cluster%ezoa(ii))
+    write(*, 90000) "Position in basis", rbasis(:, ref_cluster%atom(ii))
+    write(*, 90000) "Position from center", ref_cluster%rcls(:, ii)
     if (dist > rcut) then
       write(*,*) "ERROR in cluster generation."
       STOP
     end if
   end do
 
-  deallocate (rr)
-  deallocate (rcls)
-  deallocate (atom, ezoa, indn0 )
+  call destroyLatticeVectors(lattice_vectors)
+  call destroyRefCluster(ref_cluster)
 
 90000 format (A20, X, 3(F13.6, X))
 91000 format (A20, X, I7, X, F13.6)
