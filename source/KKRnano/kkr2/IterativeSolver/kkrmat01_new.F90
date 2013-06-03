@@ -219,6 +219,8 @@ subroutine kloopbody( G_diag, kpoint, &
   integer :: sum_cluster
   logical :: initial_zero
 
+  integer :: lm1, lm2
+
   sum_cluster = sum(numn0)
 
   call createSparseMatrixDescription(sparse, naez, sum_cluster)
@@ -278,6 +280,17 @@ subroutine kloopbody( G_diag, kpoint, &
                     GINP(:,:,:,ref_cluster_index), &
                     naez, lmmaxd, naclsd)
   end do
+
+!  do site_index = 1, naclsd ! this was just a test
+!  do lm2 = 1, lmmaxd
+!    do lm1 = 1, lm2
+!      if (abs(GINP(lm1, lm2, site_index, 1) - GINP(lm2, lm1, site_index, 1)) > 1e-4) then
+!        write(*,*) lm1, lm2, site_index, abs(GINP(lm1, lm2, site_index, 1) - GINP(lm2, lm1, site_index, 1))
+!        !STOP
+!      end if
+!    end do
+!  end do
+!  end do
 
   TESTARRAYLOG(3, GLLH)
 

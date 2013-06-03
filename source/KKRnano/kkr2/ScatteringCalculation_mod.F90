@@ -189,6 +189,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           kkr%DTREFLL(:,:,rf) = kkr%DTREFLL(:,:,1)
         end do
 
+        ! Note for future: for communication use
+        ! the cluster index to atom index mapping given by array ATOM
+
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
                       gaunts%CLEB,arrays%RCLS(:,:),gaunts%ICLEB, &
                       gaunts%LOFLM,arrays%NACLS(1), &
@@ -578,6 +581,7 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   allocate(chunk_inds(naez_trc))
 
   do ii = 1, naez_trc
+    ! get 'real' atom index, not truncation zone atom index!
     atom_requested = trunc_zone%trunc2atom_index(ii)
     chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
     chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
