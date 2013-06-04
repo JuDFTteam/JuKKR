@@ -531,7 +531,7 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   use CalculationData_mod
   use KKRresults_mod
   use TruncationZone_mod
-  use TruncationZoneZ_com_mod, only: exchangeZ_com
+  use one_sided_commZ_mod, only: copyFromZ_com
   implicit none
 
   type (CalculationData), intent(in) :: calc_data
@@ -562,7 +562,7 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
     TSST_LOCAL(:,:,ilocal) = kkr%TMATN(:,:,ispin)
   end do
 
-  call exchangeZ_com(TMATLL, TSST_LOCAL, trunc_zone, &
+  call copyFromZ_com(TMATLL, TSST_LOCAL, trunc_zone%trunc2atom_index, &
                      chunk_size, num_local_atoms, communicator)
 
   deallocate(TSST_LOCAL)

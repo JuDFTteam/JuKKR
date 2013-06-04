@@ -203,7 +203,7 @@ ScatteringCalculation_mod.o: EnergyMesh_mod.o KKRnanoParallel_mod.o KKRnano_Comm
                              wrappers_mod.o BasisAtom_mod.o LDAUData_mod.o \
                              JijData_mod.o Main2Arrays_mod.o DimParams_mod.o InputParams_mod.o \
                              KKRresults_mod.o CalculationData_mod.o kloopz1_mod.o \
-                             TruncationZoneZ_com_mod.o
+                             one_sided_commZ_mod.o
          
 kkrmat01.o: lloyds_formula_mod.o initialGuess_store_mod.o TEST_lcutoff_mod.o
 lloyds_formula_mod.o: kkr_helpers_mod.o
