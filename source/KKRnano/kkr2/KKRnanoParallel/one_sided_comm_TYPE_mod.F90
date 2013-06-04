@@ -1,3 +1,35 @@
+!------------------------------------------------------------------------------
+!> Module for one-sided MPI communication
+!>
+!> @author Elias Rabel
+!>
+!> Only for equally sized chunks of data which have basic numeric datatypes.
+!>
+!> Data layout:
+!>
+!> \verbatim
+!>
+!> A distributed array is created (very similar to Co-array Fortran),
+!> which consists of equally sized chunks.
+!>
+!> Each rank then copies a slice of this array into its local memory.
+!>
+!> Note: this corresponds to the "partitioned global address space" (PGAS)
+!>       programming model - however in our case only READ access is allowed.
+!>
+!> Each chunk has an "owner"-index (MPI-rank starting at 0)
+!> and a local index (starting at 1 !)
+!>
+!> ChunkIndex = (rank, local index)
+!>
+!>  ___________|_____ _____|
+!> |     |     |     |     |
+!> |(0,1)|(0,2)|(1,1)|(1,2)| usw...
+!> |_____|_____|_____|_____|
+!>    rank 0   |  rank 1   |
+!>
+!> \endverbatim
+
 #define COMMCHECK(X) if ( (X) /= 0 ) then; write(*,*) "Comm failure", X, __LINE__; STOP; endif
 #define CHECK(X) if ( .not. (X) ) then; write(*,*) "FAIL: ", __LINE__; STOP; endif
 
@@ -20,6 +52,59 @@ module one_sided_comm_TYPE_mod
   end type
 
 contains
+
+!------------------------------------------------------------------------------
+!> Routine for exchanging data within certain atoms only.
+!>
+!> Convinience function
+!>
+!> size of local buffer  :  chunk_size*num_local_atoms
+!> size of receive buffer:  chunk_size*size(atom_indices)
+!> Uses MPI-RMA
+subroutine copyFrom_TYPE_com(receive_buf, local_buf, atom_indices, chunk_size, num_local_atoms, communicator)
+  implicit none
+
+  include 'mpif.h'
+
+  NUMBER_TYPE, dimension(*), intent(inout) :: receive_buf     ! receive
+  NUMBER_TYPE, dimension(*), intent(inout) :: local_buf ! send
+  integer, intent(in) :: communicator
+  integer, dimension(:), intent(in) :: atom_indices
+
+  integer, intent(in) :: chunk_size
+  integer, intent(in) :: num_local_atoms
+
+  type (ChunkIndex), dimension(:), allocatable :: chunk_inds
+  integer :: ii
+  integer :: ierr
+  integer :: naez_trc ! size(atomindices)
+  integer :: naez
+  integer :: nranks
+  integer :: atom_requested
+  integer :: win
+
+  naez_trc = size(atom_indices)
+
+  call MPI_Comm_size(communicator, nranks, ierr)
+
+  naez = num_local_atoms * nranks
+
+  allocate(chunk_inds(naez_trc))
+
+  do ii = 1, naez_trc
+    ! get 'real' atom index
+    atom_requested = atom_indices(ii)
+    chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
+    chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
+  end do
+
+  call exposeBuffer_TYPE(win, local_buf, chunk_size*num_local_atoms, chunk_size, communicator)
+  call copyChunks_TYPE(receive_buf, win, chunk_inds, chunk_size)
+  call hideBuffer_TYPE(win)
+
+  deallocate(chunk_inds)
+
+end subroutine
 
 !------------------------------------------------------------------------------
 !> Returns number of rank that owns atom/matrix/chunk with index 'ind'.

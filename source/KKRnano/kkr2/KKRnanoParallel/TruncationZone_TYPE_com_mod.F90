@@ -1,6 +1,31 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+!------------------------------------------------------------------------------
+!> Module for communication within truncation zone.
+!>
+!> @author Elias Rabel
+!>
+!> Only for equally sized chunks of data which have basic numeric datatypes.
+!>
+!> Data layout:
+!>
+!> \verbatim
+!>
+!> A distributed array is created (very similar to Co-array Fortran),
+!> which consists of equally sized chunks.
+!>
+!> Each chunk has an "owner"-index (MPI-rank starting at 0)
+!> and a local index (starting at 1 !)
+!>
+!> ChunkIndex = (owner/rank, local index)
+!>
+!>  ___________|_____ _____|
+!> |     |     |     |     |
+!> |(0,1)|(0,2)|(1,1)|(1,2)| usw...
+!> |_____|_____|_____|_____|
+!>    rank 0   |  rank 1   |
+!>
+!> \endverbatim
 
-! TODO: make generic
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 ! the following macro is redefined later
 #define NUMBER_TYPE integer
@@ -10,10 +35,6 @@
 #define NUMBERD double precision
 #define NUMBERI integer
 
-!------------------------------------------------------------------------------
-!> Module for communication within truncation zone
-!>
-!> @author Elias Rabel
 module TruncationZone_TYPE_com_mod
 
   implicit none
@@ -26,7 +47,6 @@ module TruncationZone_TYPE_com_mod
 !> size of receive buffer:  chunk_size*naez_trc
 !> Uses MPI-RMA
 subroutine exchange_TYPE_com(receive_buf, local_buf, trunc_zone, chunk_size, num_local_atoms, communicator)
-  use CalculationData_mod
   use TruncationZone_mod
   use one_sided_comm_TYPE_mod
   implicit none
@@ -54,7 +74,7 @@ subroutine exchange_TYPE_com(receive_buf, local_buf, trunc_zone, chunk_size, num
   call MPI_Comm_size(communicator, nranks, ierr)
 
   naez = num_local_atoms * nranks
-  CHECKASSERT( naez == size(trunc_zone%index_map) ) !TODO: remove
+  CHECKASSERT( naez == size(trunc_zone%index_map) )
 
   allocate(chunk_inds(naez_trc))
 
@@ -66,6 +86,7 @@ subroutine exchange_TYPE_com(receive_buf, local_buf, trunc_zone, chunk_size, num
   end do
 
   !call exposeBufferZ(win, local_buf, size(local_buf), chunk_size, communicator)
+  ! TODO: factor out -> useful itself ... use an array of requested atoms
   call exposeBuffer_TYPE(win, local_buf, chunk_size*num_local_atoms, chunk_size, communicator)
   call copyChunks_TYPE(receive_buf, win, chunk_inds, chunk_size)
   call hideBuffer_TYPE(win)

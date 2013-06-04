@@ -1,6 +1,31 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+!------------------------------------------------------------------------------
+!> Module for communication within truncation zone.
+!>
+!> @author Elias Rabel
+!>
+!> Only for equally sized chunks of data which have basic numeric datatypes.
+!>
+!> Data layout:
+!>
+!> \verbatim
+!>
+!> A distributed array is created (very similar to Co-array Fortran),
+!> which consists of equally sized chunks.
+!>
+!> Each chunk has an "owner"-index (MPI-rank starting at 0)
+!> and a local index (starting at 1 !)
+!>
+!> ChunkIndex = (rank, local index)
+!>
+!>  ___________|_____ _____|
+!> |     |     |     |     |
+!> |(0,1)|(0,2)|(1,1)|(1,2)| usw...
+!> |_____|_____|_____|_____|
+!>    rank 0   |  rank 1   |
+!>
+!> \endverbatim
 
-! TODO: make generic
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 ! the following macro is redefined later
 #define NUMBERI integer
@@ -10,10 +35,6 @@
 #define NUMBERD double precision
 #define NUMBERI integer
 
-!------------------------------------------------------------------------------
-!> Module for communication within truncation zone
-!>
-!> @author Elias Rabel
 module TruncationZoneI_com_mod
 
   implicit none
