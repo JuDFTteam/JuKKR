@@ -531,9 +531,8 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   use CalculationData_mod
   use KKRresults_mod
   use TruncationZone_mod
-  use one_sided_commZ_mod
+  use TruncationZoneZ_com_mod, only: exchangeZ_com
   implicit none
-  include 'mpif.h'
 
   type (CalculationData), intent(in) :: calc_data
   double complex, dimension(:,:,:), intent(inout) :: TMATLL
@@ -543,26 +542,16 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   type (KKRresults), pointer :: kkr
   type (TruncationZone), pointer :: trunc_zone
 
-  type (ChunkIndex), dimension(:), allocatable :: chunk_inds
-
-  integer :: ii
   integer :: ilocal
   integer :: num_local_atoms
-  integer :: ierr
   integer :: lmmaxd
-  integer :: naez_trc ! number of atoms in trunc. zone
-  integer :: naez
-  integer :: nranks
-  integer :: atom_requested
-  integer :: win
+
   integer :: chunk_size
   double complex, allocatable, dimension(:,:,:) :: TSST_LOCAL
 
   num_local_atoms = getNumLocalAtoms(calc_data)
   trunc_zone => getTruncationZone(calc_data)
   lmmaxd = size(TMATLL, 1)
-
-  call MPI_Comm_size(communicator, nranks, ierr)
 
   allocate(TSST_LOCAL(lmmaxd, lmmaxd, num_local_atoms))
 
@@ -573,25 +562,9 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
     TSST_LOCAL(:,:,ilocal) = kkr%TMATN(:,:,ispin)
   end do
 
-  naez_trc = trunc_zone%naez_trc
+  call exchangeZ_com(TMATLL, TSST_LOCAL, trunc_zone, &
+                     chunk_size, num_local_atoms, communicator)
 
-  naez = num_local_atoms * nranks
-  CHECKASSERT( naez == size(trunc_zone%index_map) )
-
-  allocate(chunk_inds(naez_trc))
-
-  do ii = 1, naez_trc
-    ! get 'real' atom index, not truncation zone atom index!
-    atom_requested = trunc_zone%trunc2atom_index(ii)
-    chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
-    chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
-  end do
-
-  call exposeBufferZ(win, TSST_LOCAL, size(TSST_LOCAL), chunk_size, communicator)
-  call copyChunksZ(TMATLL, win, chunk_inds, chunk_size)
-  call hideBufferZ(win)
-
-  deallocate(chunk_inds)
   deallocate(TSST_LOCAL)
 
 end subroutine
