@@ -1,4 +1,4 @@
-!> Definition
+!> Definitions
 !> RefCluster: a cluster of atoms with a distance smaller than rcut to a
 !>             central atom
 !>             periodic boundary conditions are taken into account:
@@ -6,6 +6,9 @@
 !>
 !> LatticeVectors: linear combinations of Bravais vectors with integer
 !>                 coefficients
+!>
+!> Note: if N (=number of atoms) reference clusters are created,
+!>       then this algorithm scales as O(N**2)
 
 
 module ClusterHelpers_mod
@@ -20,12 +23,12 @@ end type
 type RefCluster
   !> reference to LatticeVectors datastructure
   type (LatticeVectors), pointer :: lattice_vectors
-  double precision, allocatable :: rcls(:,:)
-  integer, allocatable :: atom(:)
-  integer, allocatable :: ezoa(:) ! points into lattice_vectors%rr
-  integer, allocatable :: indn0(:)
-  integer :: numn0
-  integer nacls
+  double precision, allocatable :: rcls(:,:) !< positions relative to center
+  integer, allocatable :: atom(:)  !< basis atom indices of cluster atoms
+  integer, allocatable :: ezoa(:)  !< points into lattice_vectors%rr
+  integer, allocatable :: indn0(:) !< indices of inequivalent cluster atoms
+  integer :: numn0 !< number of inequivalent cluster atoms
+  integer nacls !< number of cluster atoms
 end type
 
 !public createRefCluster

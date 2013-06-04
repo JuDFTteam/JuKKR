@@ -1,8 +1,8 @@
 #define COMMCHECK(X) if ( (X) /= 0 ) then; write(*,*) "Comm failure", X, __LINE__; STOP; endif
 #define CHECK(X) if ( .not. (X) ) then; write(*,*) "FAIL: ", __LINE__; STOP; endif
 
-#define NUMBERZ integer
-#define NUMBERMPIZ MPI_INTEGER
+#define NUMBERI integer
+#define NUMBERMPII MPI_INTEGER
 #define NUMBERZ double complex
 #define NUMBERMPIZ MPI_DOUBLE_COMPLEX
 #define NUMBERC complex
@@ -12,7 +12,7 @@
 #define NUMBERI integer
 #define NUMBERMPII MPI_INTEGER
 
-module one_sided_commZ_mod
+module one_sided_commI_mod
 
   type ChunkIndex
     integer :: owner
@@ -53,13 +53,13 @@ integer function getLocalInd(ind, num, nranks)
   
 end function
 
-subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
+subroutine exposeBufferI(win, buffer, bsize, chunk_size, communicator)
   implicit none
 
   include 'mpif.h' 
 
   integer, intent(inout) :: win 
-  NUMBERZ, dimension(*), intent(inout) :: buffer
+  NUMBERI, dimension(*), intent(inout) :: buffer
   integer, intent(in) :: bsize
   integer, intent(in) :: communicator
   integer, intent(in) :: chunk_size 
@@ -69,7 +69,7 @@ subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
   integer(kind=MPI_ADDRESS_KIND) :: typesize, lowerbound
   integer :: disp_unit
 
-  call MPI_Type_get_extent(NUMBERMPIZ, lowerbound, typesize, ierr)
+  call MPI_Type_get_extent(NUMBERMPII, lowerbound, typesize, ierr)
   COMMCHECK(ierr)
 
   disp_unit = typesize * chunk_size ! has to be plain integer!!
@@ -87,10 +87,10 @@ end subroutine
 !> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
 !> On output dest_buffer contains chunks in 
 !> the order as specified in 'chunk_inds' 
-subroutine copyChunksZ(dest_buffer, win, chunk_inds, chunk_size)
+subroutine copyChunksI(dest_buffer, win, chunk_inds, chunk_size)
   implicit none
   include 'mpif.h'
-  NUMBERZ, dimension(*), intent(out) :: dest_buffer
+  NUMBERI, dimension(*), intent(out) :: dest_buffer
   integer, intent(inout) :: win
   type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
   integer, intent(in) :: chunk_size
@@ -113,8 +113,8 @@ subroutine copyChunksZ(dest_buffer, win, chunk_inds, chunk_size)
     disp = local_ind - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
     
     call MPI_Get(dest_buffer( (ii - 1) * chunk_size + 1 ), chunk_size, &
-                 NUMBERMPIZ, owner_rank, &
-                 disp, chunk_size, NUMBERMPIZ, win, ierr)
+                 NUMBERMPII, owner_rank, &
+                 disp, chunk_size, NUMBERMPII, win, ierr)
     
   end do
   
@@ -123,7 +123,7 @@ subroutine copyChunksZ(dest_buffer, win, chunk_inds, chunk_size)
 
 end subroutine
 
-subroutine hideBufferZ(win)
+subroutine hideBufferI(win)
   implicit none
   include 'mpif.h'
 
@@ -135,12 +135,12 @@ subroutine hideBufferZ(win)
   COMMCHECK(ierr)
 
 end subroutine
-end module one_sided_commZ_mod
+end module one_sided_commI_mod
 
-#ifdef TEST_ONE_SIDED_COMM_Z__
+#ifdef TEST_ONE_SIDED_COMM_I__
 ! a test program - not compiled due to conditional compilation
 program test
-  use one_sided_commZ_mod
+  use one_sided_commI_mod
   implicit none
 
   include 'mpif.h'
@@ -154,8 +154,8 @@ program test
   integer, parameter :: CHUNKSPERPROC = 3
   integer, parameter :: NUMREQUESTED = 7
 
-  NUMBERZ :: buffer(CHUNKSIZE,CHUNKSPERPROC)
-  NUMBERZ :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
+  NUMBERI :: buffer(CHUNKSIZE,CHUNKSPERPROC)
+  NUMBERI :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
   integer :: chunks_req(NUMREQUESTED)
   type (ChunkIndex), dimension(NUMREQUESTED) :: chunk_inds
   integer :: win
@@ -188,9 +188,9 @@ program test
     chunk_inds(ii)%local_ind  = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
   end do
 
-  call exposeBufferZ(win, buffer, size(buffer), CHUNKSIZE, MPI_COMM_WORLD)
-  call copyChunksZ(dest_buffer, win, chunk_inds, CHUNKSIZE)
-  call hideBufferZ(win)
+  call exposeBufferI(win, buffer, size(buffer), CHUNKSIZE, MPI_COMM_WORLD)
+  call copyChunksI(dest_buffer, win, chunk_inds, CHUNKSIZE)
+  call hideBufferI(win)
  
   !write(*,*) "Rank ", myrank, " wants ", chunks_req 
   !write(*,*) "Rank ", myrank, dest_buffer
