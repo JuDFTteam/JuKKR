@@ -431,6 +431,12 @@ module CalculationData_mod
                                   params%ALAT, params%RMAX, params%GMAX, &
                                   arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
 
+    ! TODO: create lattice vectors
+    ! TODO: loop over local atoms (OpenMP parallel) and create ref-clusters
+    !       determine parameter naclsd
+    !       communicate sparsity structure
+    !       setup truncation zone here ???
+
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms

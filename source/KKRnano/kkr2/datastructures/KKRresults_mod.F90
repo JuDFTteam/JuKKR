@@ -83,6 +83,11 @@ module KKRresults_mod
     self%ekmd = ekmd
     self%smpid = smpid
 
+    if (.not. naclsd > 0) then
+      write(*,*) "ERROR: Number of atoms in cluster <= 0", __FILE__, __LINE__
+      STOP
+    end if
+
     ALLOCATECHECK(self%TMATN(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD,naclsd))

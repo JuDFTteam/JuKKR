@@ -64,6 +64,8 @@ module DimParams_mod
 
     integer, parameter :: FILEHANDLE = 67
 
+    self%naclsd = 0
+
     open (FILEHANDLE, FILE='inp0.unf', FORM='unformatted')
 
     read(FILEHANDLE) self%LMAXD
