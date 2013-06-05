@@ -14,6 +14,7 @@ module ClusterInfo_mod
 
   type ClusterInfo
     integer :: naclsd !< maximal number of cluster atoms
+    integer :: naez_trc
     integer, dimension(:), allocatable :: nacls_trc
     integer, dimension(:), allocatable :: numn0_trc
     integer, dimension(:,:), allocatable :: indn0_trc
@@ -70,6 +71,7 @@ module ClusterInfo_mod
     self%naclsd = naclsd
 
     naez_trc = trunc_zone%naez_trc
+    self%naez_trc = naez_trc
 
     ALLOCATECHECK(self%nacls_trc(naez_trc))
     self%nacls_trc = 0

@@ -32,10 +32,15 @@ module TruncationZone_mod
     integer, dimension(:,:), allocatable :: ezoa_trc
   end type
 
+  interface createTruncationZone
+    module procedure createTruncationZoneOld
+    module procedure createTruncationZoneNew
+  end interface
+
   CONTAINS
 
   !----------------------------------------------------------------------------
-  subroutine createTruncationZone(self, mask, arrays)
+  subroutine createTruncationZoneOld(self, mask, arrays)
     implicit none
     type (TruncationZone), intent(inout) :: self
     integer, dimension(:), intent(in) :: mask
@@ -126,19 +131,16 @@ module TruncationZone_mod
 
   !----------------------------------------------------------------------------
   ! TODO: FIXME
-  subroutine createTruncationZoneNew(self, mask, naclsd)
+  subroutine createTruncationZoneNew(self, mask)
     implicit none
 
     type (TruncationZone), intent(inout) :: self
     integer, dimension(:), intent(in) :: mask
-    integer, intent(in) :: naclsd
 
     !-----
     integer :: num_atoms
-    integer :: ii, jj
+    integer :: ii
     integer :: ind
-    integer :: ierr
-    integer :: ind_cls, mapped_index
     integer :: naez_trc
 
     integer :: memory_stat
@@ -168,61 +170,7 @@ module TruncationZone_mod
       end if
     end do
 
-    ALLOCATECHECK(self%numn0_trc(naez_trc))
-    self%numn0_trc = -1
-    ALLOCATECHECK(self%indn0_trc(naez_trc, naclsd))
-    self%indn0_trc = -1
-    ALLOCATECHECK(self%atom_trc(naclsd, naez_trc))
-    self%atom_trc = 0
-    ALLOCATECHECK(self%ezoa_trc(naclsd, naez_trc))
-    self%ezoa_trc = -1
-
-    ! OK until here
-
-    ! How to remap indn0 and atom indices???
-
-!    ! determine maximal number of cluster atoms
-!    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
-
-
-    !!!ALLOCATECHECK(self%indn0_trc(naez_trc, maxval(self%numn0_trc)))
-    ! overdimensioned for compatibility reasons
-
-
-!    ind = 0
-!    do ii = 1, num_atoms
-!      if (mask(ii) > 0) then
-!        ind = ind + 1
-!        ind_cls = 0
-!        do jj = 1, arrays%numn0(ii)
-!          mapped_index = self%index_map(arrays%indn0(ii, jj))
-!          if (mapped_index > 0) then
-!            ind_cls = ind_cls + 1
-!            self%indn0_trc(ind, ind_cls) = mapped_index
-!          end if
-!        end do
-!        self%numn0_trc(ind) = ind_cls
-!      end if
-!    end do
-!
-!    !write (*,*) "indn0     :", arrays%indn0
-!    !write (*,*) "indn0_trc :", self%indn0_trc
-!    !write (*,*) "lm        :", mask
-!
-!
-!    call filter2d2(mask, arrays%atom, self%atom_trc)
-!
-!    ! atom_trc contains atom indices therefore translate
-!    ! to new atom indices
-!    do ii = 1, naez_trc
-!      call translate(self%index_map, self%atom_trc(:,ii))
-!    end do
-!
-!    ! ezoa_trc contains indices of lattice vectors
-!    ! -> no translation necessary
-!    call filter2d2(mask, arrays%ezoa, self%ezoa_trc)
-!
-!    self%naez_trc = naez_trc
+    self%naez_trc = naez_trc
 
   end subroutine
 
