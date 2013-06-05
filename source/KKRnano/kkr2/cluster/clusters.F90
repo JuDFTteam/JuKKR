@@ -28,7 +28,9 @@ type RefCluster
   integer, allocatable :: ezoa(:)  !< points into lattice_vectors%rr
   integer, allocatable :: indn0(:) !< indices of inequivalent cluster atoms
   integer :: numn0 !< number of inequivalent cluster atoms
-  integer nacls !< number of cluster atoms
+  integer :: nacls !< number of cluster atoms
+
+  integer :: atom_index !< basis atom index of central cluster atom
 end type
 
 !public createRefCluster
@@ -100,6 +102,7 @@ subroutine createRefCluster(self, lattice_vectors, rbasis, rcut, center_ind)
   num_atoms = size(rbasis,2)
 
   self%lattice_vectors => lattice_vectors
+  self%atom_index = center_ind
 
   call clsgen99count(center_ind, num_atoms ,lattice_vectors%rr,rbasis,rcut, &
                      lattice_vectors%nrd, nacls)

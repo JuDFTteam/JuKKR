@@ -17,7 +17,7 @@ module TruncationZone_mod
   private :: filter1d
   private :: filter2d1
   private :: filter2d2
-  private :: translate
+  public :: translate
 
   type TruncationZone
     integer :: naez_trc !< number of atoms in truncation zone
@@ -125,6 +125,108 @@ module TruncationZone_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  ! TODO: FIXME
+  subroutine createTruncationZoneNew(self, mask, naclsd)
+    implicit none
+
+    type (TruncationZone), intent(inout) :: self
+    integer, dimension(:), intent(in) :: mask
+    integer, intent(in) :: naclsd
+
+    !-----
+    integer :: num_atoms
+    integer :: ii, jj
+    integer :: ind
+    integer :: ierr
+    integer :: ind_cls, mapped_index
+    integer :: naez_trc
+
+    integer :: memory_stat
+
+    num_atoms = size(mask)
+
+    ALLOCATECHECK(self%index_map(num_atoms))
+
+    ind = 0
+    do ii = 1, num_atoms
+      if (mask(ii) > 0) then
+        ind = ind + 1
+        self%index_map(ii) = ind
+      else
+        self%index_map(ii) = -1 ! atom not in trunc. cluster
+      end if
+    end do
+    naez_trc = ind
+
+    ! setup "inverse" of index_map
+    ALLOCATECHECK(self%trunc2atom_index(naez_trc))
+    ind = 0
+    do ii = 1, num_atoms
+      if (self%index_map(ii) > 0) then
+        ind = ind + 1
+        self%trunc2atom_index(ind) = ii
+      end if
+    end do
+
+    ALLOCATECHECK(self%numn0_trc(naez_trc))
+    self%numn0_trc = -1
+    ALLOCATECHECK(self%indn0_trc(naez_trc, naclsd))
+    self%indn0_trc = -1
+    ALLOCATECHECK(self%atom_trc(naclsd, naez_trc))
+    self%atom_trc = 0
+    ALLOCATECHECK(self%ezoa_trc(naclsd, naez_trc))
+    self%ezoa_trc = -1
+
+    ! OK until here
+
+    ! How to remap indn0 and atom indices???
+
+!    ! determine maximal number of cluster atoms
+!    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+
+
+    !!!ALLOCATECHECK(self%indn0_trc(naez_trc, maxval(self%numn0_trc)))
+    ! overdimensioned for compatibility reasons
+
+
+!    ind = 0
+!    do ii = 1, num_atoms
+!      if (mask(ii) > 0) then
+!        ind = ind + 1
+!        ind_cls = 0
+!        do jj = 1, arrays%numn0(ii)
+!          mapped_index = self%index_map(arrays%indn0(ii, jj))
+!          if (mapped_index > 0) then
+!            ind_cls = ind_cls + 1
+!            self%indn0_trc(ind, ind_cls) = mapped_index
+!          end if
+!        end do
+!        self%numn0_trc(ind) = ind_cls
+!      end if
+!    end do
+!
+!    !write (*,*) "indn0     :", arrays%indn0
+!    !write (*,*) "indn0_trc :", self%indn0_trc
+!    !write (*,*) "lm        :", mask
+!
+!
+!    call filter2d2(mask, arrays%atom, self%atom_trc)
+!
+!    ! atom_trc contains atom indices therefore translate
+!    ! to new atom indices
+!    do ii = 1, naez_trc
+!      call translate(self%index_map, self%atom_trc(:,ii))
+!    end do
+!
+!    ! ezoa_trc contains indices of lattice vectors
+!    ! -> no translation necessary
+!    call filter2d2(mask, arrays%ezoa, self%ezoa_trc)
+!
+!    self%naez_trc = naez_trc
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
   subroutine destroyTruncationZone(self)
     implicit none
     type (TruncationZone), intent(inout) :: self
@@ -139,6 +241,23 @@ module TruncationZone_mod
     DEALLOCATECHECK(self%trunc2atom_index)
 
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Translate atom index 'ind' to new atom index and return value
+  elemental integer function translateInd(self, ind)
+    implicit none
+
+    type (TruncationZone), intent(in) :: self
+    integer, intent(in) :: ind
+
+    integer :: mapped_index
+
+    if (ind > 0) then
+      mapped_index = self%index_map(ind)
+      translateInd = mapped_index
+    end if
+
+  end function
 
   !----------------------------------------------------------------------------
   subroutine filter1d(mask, array, new_array)
