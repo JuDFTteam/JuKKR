@@ -52,6 +52,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   use KKRnano_Comm_mod
   use kloopz1_mod
   use TruncationZone_mod
+  use ClusterInfo_mod
+  use RefCluster_mod
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
 
@@ -73,7 +75,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (GauntCoefficients), pointer     :: gaunts    ! never changes
   type (LDAUData), pointer              :: ldau_data ! changes
   type (JijData), pointer               :: jij_data  ! changes
-  type (TruncationZone), pointer        :: trunc_zone ! never changes
+  type (TruncationZone), pointer        :: trunc_zone  ! never changes
+  type (ClusterInfo), pointer           :: clusters    ! never changes
+  type (RefCluster), pointer            :: ref_cluster ! never changes
+  type (LatticeVectors), pointer        :: lattice_vectors ! never changes
 
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
@@ -105,6 +110,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   kkr       => null()
   ldau_data => getLDAUData(calc_data, 1)
   jij_data  => getJijData(calc_data, 1)
+  clusters  => getClusterInfo(calc_data)
+  lattice_vectors  => getLatticeVectors(calc_data)
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -162,9 +169,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
       WRITELOG(2, *) "Working on energy point ", IE
 
 !------------------------------------------------------------------------------
-      !$omp parallel do private(ilocal, kkr, RF)
+      !$omp parallel do private(ilocal, kkr, ref_cluster, RF)
       do ilocal = 1, num_local_atoms
         kkr => getKKR(calc_data, ilocal)
+        ref_cluster => getRefCluster(calc_data, ilocal)
 !------------------------------------------------------------------------------
         kkr%noiter = 0
 
@@ -191,6 +199,15 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
         ! Note for future: for communication use
         ! the cluster index to atom index mapping given by array ATOM
+
+! THERE IS A MISTAKE SOMEWHERE:
+!        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
+!                      gaunts%CLEB,ref_cluster%RCLS,gaunts%ICLEB, &
+!                      gaunts%LOFLM,ref_cluster%NACLS, &
+!                      kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
+!                      kkr%LLY_G0TR(IE), &
+!                      arrays%lmaxd, kkr%naclsd, gaunts%ncleb, &
+!                      dims%LLY)
 
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
                       gaunts%CLEB,arrays%RCLS(:,:),gaunts%ICLEB, &
@@ -299,6 +316,15 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           ! here: known by all atoms - therefore pick any atom (nr.1)
           kkr => getKKR(calc_data, 1)
           jij_data => getJijData(calc_data, 1)
+
+!          TODO: not working yet
+!          call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
+!          clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+!          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
+!          clusters%NACLS_trc,lattice_vectors%RR,clusters%EZOA_trc,clusters%ATOM_trc, &
+!          kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
+!          TMATLL, clusters%NUMN0_trc, clusters%INDN0_trc, atom_indices, &
+!          params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd)
 
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
