@@ -9,6 +9,8 @@
 
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
+! TODO: add reference to LatticeVectors and remove reference from RefClusters ???
+
 module ClusterInfo_mod
   implicit none
 
@@ -115,6 +117,7 @@ module ClusterInfo_mod
       self%numn0_trc(ii) = recv_buf(3, ii)
       CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
 
+      ! indn0 and atom have to be transformed to 'truncation-zone-indices'
       self%indn0_trc(ii,:) = translateInd(trunc_zone, &
                              recv_buf(4:(naclsd + 4), ii))
 
@@ -126,8 +129,6 @@ module ClusterInfo_mod
       ! check if end of buffer is correct
       CHECKASSERT( recv_buf((3*naclsd + 5), ii) == MAGIC )
     end do
-
-    ! TODO: translate indices !!!!!!!!!!!!!!!!
 
     DEALLOCATECHECK(recv_buf)
     DEALLOCATECHECK(buffer)

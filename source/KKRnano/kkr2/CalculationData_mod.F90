@@ -265,6 +265,19 @@ module CalculationData_mod
   end function
 
   !----------------------------------------------------------------------------
+  !> Returns reference to 'reference cluster for atom with LOCAL atom index
+  !> 'local_atom_index'.
+  function getRefCluster(calc_data, local_atom_index)
+    implicit none
+    type (RefCluster), pointer :: getRefCluster ! return value
+
+    type (CalculationData), intent(in) :: calc_data
+    integer, intent(in) :: local_atom_index
+
+    getRefCluster => calc_data%ref_cluster_array(local_atom_index)
+  end function
+
+  !----------------------------------------------------------------------------
   !> Returns reference to kkr(results) for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getKKR(calc_data, local_atom_index)
@@ -289,19 +302,6 @@ module CalculationData_mod
 
     getMadelungSum => calc_data%madelung_sum_array(local_atom_index)
   end function
-
-  !----------------------------------------------------------------------------
-  !> Returns reference to mesh for atom with LOCAL atom index
-  !> 'local_atom_index'.
-!  function getMesh(calc_data, local_atom_index)
-!    implicit none
-!    type (RadialMeshData), pointer :: getMesh ! return value
-!
-!    type (CalculationData), intent(in) :: calc_data
-!    integer, intent(in) :: local_atom_index
-!
-!    getMesh => calc_data%mesh_array(local_atom_index)
-!  end function
 
   !----------------------------------------------------------------------------
   !> Returns reference to density results for atom with LOCAL atom index
@@ -409,6 +409,28 @@ module CalculationData_mod
     type (CalculationData), intent(in) :: calc_data
 
     getTruncationZone => calc_data%trunc_zone
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Returns reference to cluster info (sparsity info).
+  function getClusterInfo(calc_data)
+    implicit none
+    type (ClusterInfo), pointer :: getClusterInfo ! return value
+
+    type (CalculationData), intent(in) :: calc_data
+
+    getClusterInfo => calc_data%clusters
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Returns reference to lattice vector table.
+  function getLatticeVectors(calc_data)
+    implicit none
+    type (LatticeVectors), pointer :: getLatticeVectors ! return value
+
+    type (CalculationData), intent(in) :: calc_data
+
+    getLatticeVectors => calc_data%lattice_vectors
   end function
 ! ==================== Helper routines ========================================
 
@@ -550,20 +572,5 @@ module CalculationData_mod
     call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
 
   end subroutine
-
-  !------------------------------------------------------------------------
-!  subroutine setupTruncationZone(calc_data, arrays, my_mpi)
-!    use TEST_lcutoff_mod
-!    use KKRnanoParallel_mod
-!    use Main2Arrays_mod
-!    implicit none
-!
-!    type (CalculationData), intent(inout) :: calc_data
-!    type (Main2Arrays), intent(in):: arrays
-!    type (KKRnanoParallel), intent(in) :: my_mpi
-!    ! FIXME: bad hack - using calc_data although it is not setup properly
-!    ! yet - but what we need is already there
-!
-!  end subroutine
 
 end module CalculationData_mod
