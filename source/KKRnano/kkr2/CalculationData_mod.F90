@@ -17,6 +17,7 @@ module CalculationData_mod
   use BroydenData_mod
   use EnergyResults_mod
   use RefCluster_mod
+  use ClusterInfo_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
@@ -49,12 +50,13 @@ module CalculationData_mod
     type (JijData), pointer            :: jij_data_array(:)     => null()
     type (BroydenData), pointer        :: broyden_array(:)      => null()
 
-    ! global data - same for each atom
+    ! global data - same for each local atom
     type (LatticeVectors), pointer         :: lattice_vectors   => null()
     type (MadelungCalculator), pointer     :: madelung_calc     => null()
     type (ShapeGauntCoefficients), pointer :: shgaunts          => null()
     type (GauntCoefficients), pointer      :: gaunts            => null()
     type (TruncationZone), pointer         :: trunc_zone        => null()
+    type (ClusterInfo), pointer            :: clusters          => null()
     !type (EnergyMesh), pointer :: emesh                         => null()
 
   end type
@@ -109,6 +111,7 @@ module CalculationData_mod
     allocate(calc_data%gaunts)
     allocate(calc_data%shgaunts)
     allocate(calc_data%trunc_zone)
+    allocate(calc_data%clusters)
 
     atom_rank = getMyAtomRank(my_mpi)
 
@@ -225,6 +228,7 @@ module CalculationData_mod
     deallocate(calc_data%energies_array)
     deallocate(calc_data%madelung_sum_array)
     deallocate(calc_data%trunc_zone)
+    deallocate(calc_data%clusters)
 
     deallocate(calc_data%ldau_data_array)
     deallocate(calc_data%jij_data_array)
@@ -459,6 +463,9 @@ module CalculationData_mod
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
     end if
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
+
+    call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
+                          calc_data%trunc_zone, getMySEcommunicator(my_mpi))
 
     call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
                                   params%ALAT, params%RMAX, params%GMAX, &

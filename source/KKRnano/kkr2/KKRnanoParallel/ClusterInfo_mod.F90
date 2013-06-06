@@ -47,7 +47,7 @@ module ClusterInfo_mod
 
     integer :: ii
     integer :: ierr
-    integer :: nacls_loc
+    integer :: nacls_loc, nacls
     integer :: naclsd
     integer :: naez_trc
     integer :: num_local_atoms
@@ -87,15 +87,19 @@ module ClusterInfo_mod
 
     blocksize = 3*naclsd + 5
     ALLOCATECHECK(buffer(blocksize, num_local_atoms) )
+    buffer = 0
     ALLOCATECHECK(recv_buf(blocksize, naez_trc) )
 
     do ii = 1, num_local_atoms
+      nacls = ref_cluster_array(ii)%nacls
+      CHECKASSERT(nacls <= naclsd)
       buffer(1, ii) = ref_cluster_array(ii)%atom_index
       buffer(2, ii) = ref_cluster_array(ii)%nacls
       buffer(3, ii) = ref_cluster_array(ii)%numn0
-      buffer(4:, ii) = ref_cluster_array(ii)%indn0
-      buffer((naclsd + 5) : , ii) = ref_cluster_array(ii)%atom
-      buffer((2*naclsd + 5) : , ii) = ref_cluster_array(ii)%ezoa
+      !write(*,*) buffer(4             :(3 + nacls)          , ii), nacls
+      buffer(4             :(3 + nacls)          , ii) = ref_cluster_array(ii)%indn0
+      buffer((naclsd + 5)  :(naclsd + 4 + nacls) , ii) = ref_cluster_array(ii)%atom
+      buffer((2*naclsd + 5):(2*naclsd+4 + nacls) , ii) = ref_cluster_array(ii)%ezoa
       buffer((3*naclsd + 5), ii) = MAGIC
     end do
 

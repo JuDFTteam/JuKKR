@@ -200,6 +200,8 @@ module TruncationZone_mod
 
     integer :: mapped_index
 
+    translateInd = -1
+
     if (ind > 0) then
       mapped_index = self%index_map(ind)
       translateInd = mapped_index
