@@ -33,7 +33,7 @@ module ClusterInfo_mod
   !>
   !> @param ref_cluster_array    all the local ref. clusters
   subroutine createClusterInfo_com(self, ref_cluster_array, trunc_zone, communicator)
-    use ClusterHelpers_mod
+    use RefCluster_mod
     use TruncationZone_mod,  only: TruncationZone, translateInd
     use one_sided_commI_mod, only: copyFromI_com
     implicit none
@@ -67,7 +67,8 @@ module ClusterInfo_mod
     end do
 
     ! determine maximal number of cluster atoms
-    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, &
+                       MPI_MAX, communicator, ierr)
     self%naclsd = naclsd
 
     naez_trc = trunc_zone%naez_trc
@@ -93,8 +94,8 @@ module ClusterInfo_mod
       buffer(2, ii) = ref_cluster_array(ii)%nacls
       buffer(3, ii) = ref_cluster_array(ii)%numn0
       buffer(4:, ii) = ref_cluster_array(ii)%indn0
-      buffer((naclsd + 5):, ii) = ref_cluster_array(ii)%atom
-      buffer((2*naclsd + 5):, ii) = ref_cluster_array(ii)%ezoa
+      buffer((naclsd + 5) : , ii) = ref_cluster_array(ii)%atom
+      buffer((2*naclsd + 5) : , ii) = ref_cluster_array(ii)%ezoa
       buffer((3*naclsd + 5), ii) = MAGIC
     end do
 
@@ -110,9 +111,13 @@ module ClusterInfo_mod
       self%numn0_trc(ii) = recv_buf(3, ii)
       CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
 
-      self%indn0_trc(ii,:) = translateInd(trunc_zone, recv_buf(4:(naclsd + 4), ii))
-      self%atom_trc(:,ii)  = translateInd(trunc_zone, recv_buf((naclsd   + 5):(2*naclsd + 4), ii))
-      self%ezoa_trc(:,ii)  = recv_buf((2*naclsd + 5):(3*naclsd + 4), ii)
+      self%indn0_trc(ii,:) = translateInd(trunc_zone, &
+                             recv_buf(4:(naclsd + 4), ii))
+
+      self%atom_trc(:,ii)  = translateInd(trunc_zone, &
+                             recv_buf((naclsd   + 5) : (2*naclsd + 4), ii))
+
+      self%ezoa_trc(:,ii)  = recv_buf((2*naclsd + 5) : (3*naclsd + 4), ii)
 
       ! check if end of buffer is correct
       CHECKASSERT( recv_buf((3*naclsd + 5), ii) == MAGIC )

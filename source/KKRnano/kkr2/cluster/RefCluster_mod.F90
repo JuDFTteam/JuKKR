@@ -11,7 +11,7 @@
 !>       then this algorithm scales as O(N**2)
 
 
-module ClusterHelpers_mod
+module RefCluster_mod
 
 public
 

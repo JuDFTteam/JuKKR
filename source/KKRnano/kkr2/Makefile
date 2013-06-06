@@ -254,7 +254,7 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
          KKRresults_mod.o DensityResults_mod.o \
          EnergyResults_mod.o TruncationZone_mod.o
          
-ClusterInfo_mod.o: clusters.o TruncationZone_mod.o one_sided_commI_mod.o
+ClusterInfo_mod.o: RefCluster_mod.o TruncationZone_mod.o one_sided_commI_mod.o
 
 MadelungPotential_mod.o: CalculationData_mod.o
 kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o
