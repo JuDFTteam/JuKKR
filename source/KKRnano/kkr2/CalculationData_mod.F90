@@ -16,6 +16,7 @@ module CalculationData_mod
   use LDAUData_mod
   use BroydenData_mod
   use EnergyResults_mod
+  use RefCluster_mod
 
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
@@ -38,6 +39,7 @@ module CalculationData_mod
     type (RadialMeshData), pointer     :: mesh_array(:)         => null()
     type (CellData), pointer           :: cell_array(:)         => null()
     type (BasisAtom), pointer          :: atomdata_array(:)     => null()
+    type (RefCluster), pointer         :: ref_cluster_array(:)  => null()
     type (KKRresults), pointer         :: kkr_array(:)          => null()
     type (DensityResults), pointer     :: densities_array(:)    => null()
     type (EnergyResults), pointer      :: energies_array(:)     => null()
@@ -48,6 +50,7 @@ module CalculationData_mod
     type (BroydenData), pointer        :: broyden_array(:)      => null()
 
     ! global data - same for each atom
+    type (LatticeVectors), pointer         :: lattice_vectors   => null()
     type (MadelungCalculator), pointer     :: madelung_calc     => null()
     type (ShapeGauntCoefficients), pointer :: shgaunts          => null()
     type (GauntCoefficients), pointer      :: gaunts            => null()
@@ -89,6 +92,7 @@ module CalculationData_mod
     allocate(calc_data%mesh_array(num_local_atoms))
     allocate(calc_data%cell_array(num_local_atoms))
     allocate(calc_data%atomdata_array(num_local_atoms))
+    allocate(calc_data%ref_cluster_array(num_local_atoms))
     allocate(calc_data%kkr_array(num_local_atoms))
     allocate(calc_data%densities_array(num_local_atoms))
     allocate(calc_data%energies_array(num_local_atoms))
@@ -100,6 +104,7 @@ module CalculationData_mod
     allocate(calc_data%atom_ids(num_local_atoms))
 
     ! These datastructures are the same for all (local) atoms
+    allocate(calc_data%lattice_vectors)
     allocate(calc_data%madelung_calc)
     allocate(calc_data%gaunts)
     allocate(calc_data%shgaunts)
@@ -188,6 +193,8 @@ module CalculationData_mod
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
       energies  => calc_data%energies_array(ilocal)
 
+      call destroyRefCluster(calc_data%ref_cluster_array(ilocal))
+
       call destroyMadelungLatticeSum(madelung_sum)
 
       call destroyBasisAtom(atomdata)
@@ -203,6 +210,8 @@ module CalculationData_mod
 
     end do
 
+    call destroyLatticeVectors(calc_data%lattice_vectors)
+
     call destroyMadelungCalculator(calc_data%madelung_calc)
     call destroyGauntCoefficients(calc_data%gaunts)
     call destroyShapeGauntCoefficients(calc_data%shgaunts)
@@ -210,6 +219,7 @@ module CalculationData_mod
     deallocate(calc_data%mesh_array)
     deallocate(calc_data%cell_array)
     deallocate(calc_data%atomdata_array)
+    deallocate(calc_data%ref_cluster_array)
     deallocate(calc_data%kkr_array)
     deallocate(calc_data%densities_array)
     deallocate(calc_data%energies_array)
@@ -426,6 +436,18 @@ module CalculationData_mod
     type (JijData), pointer :: jij_data
     type (BroydenData), pointer :: broyden
     type (MadelungLatticeSum), pointer :: madelung_sum
+
+    call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
+
+    ! create cluster for each local atom
+    !$omp parallel do private(ilocal)
+    do ilocal = 1, calc_data%num_local_atoms
+      call createRefCluster(calc_data%ref_cluster_array(ilocal), &
+                            calc_data%lattice_vectors, arrays%rbasis, &
+                            params%rclust, calc_data%atom_ids(ilocal))
+      !write(*,*) "Atoms in ref. cluster: ", calc_data%ref_cluster_array(ilocal)%nacls
+    end do
+    !$omp end parallel do
 
     call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
                                   params%ALAT, params%RMAX, params%GMAX, &
