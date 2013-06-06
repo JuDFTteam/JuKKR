@@ -24,8 +24,6 @@ program MAIN2
 
   use wrappers_mod, only: rhocore_wrapper
 
-  use TEST_lcutoff_mod !TODO: remove
-
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
@@ -141,18 +139,6 @@ program MAIN2
     call createEBalanceHandler(ebalance_handler, emesh%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
-
-    call initLcutoffNew(calc_data, arrays)
-    if (isMasterRank(my_mpi)) then
-      write(*,*) "On node 0: "
-      write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
-      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
-      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-    end if
-    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
-
-    WRITELOG(3, *) "lm-array: ", lmarray
-    WRITELOG(3, *) num_untruncated, num_truncated, num_truncated2
 
 ! ######################################################################
 ! ######################################################################

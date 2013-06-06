@@ -415,6 +415,7 @@ module CalculationData_mod
     use DimParams_mod
     use InputParams_mod
     use Main2Arrays_mod
+    use TEST_lcutoff_mod
     implicit none
 
     type (CalculationData), intent(inout) :: calc_data
@@ -448,6 +449,16 @@ module CalculationData_mod
       !write(*,*) "Atoms in ref. cluster: ", calc_data%ref_cluster_array(ilocal)%nacls
     end do
     !$omp end parallel do
+
+    ! setup the truncation zone
+    call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
+    if (isMasterRank(my_mpi)) then
+      write(*,*) "On node 0: "
+      write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
+      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
+      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
+    end if
+    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
 
     call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
                                   params%ALAT, params%RMAX, params%GMAX, &
@@ -532,5 +543,20 @@ module CalculationData_mod
     call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
 
   end subroutine
+
+  !------------------------------------------------------------------------
+!  subroutine setupTruncationZone(calc_data, arrays, my_mpi)
+!    use TEST_lcutoff_mod
+!    use KKRnanoParallel_mod
+!    use Main2Arrays_mod
+!    implicit none
+!
+!    type (CalculationData), intent(inout) :: calc_data
+!    type (Main2Arrays), intent(in):: arrays
+!    type (KKRnanoParallel), intent(in) :: my_mpi
+!    ! FIXME: bad hack - using calc_data although it is not setup properly
+!    ! yet - but what we need is already there
+!
+!  end subroutine
 
 end module CalculationData_mod

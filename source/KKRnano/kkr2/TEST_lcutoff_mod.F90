@@ -22,21 +22,22 @@ module TEST_lcutoff_mod
   CONTAINS
 
   !----------------------------------------------------------------------------
-  subroutine initLcutoffNew(calc_data, arrays)
-    use CalculationData_mod
+  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays)
+
     use Main2Arrays_mod
     use lcutoff_mod
     use TruncationZone_mod
     implicit none
-    type (CalculationData), intent(inout) :: calc_data
+
+    type (TruncationZone), intent(inout) :: trunc_zone
     type (Main2Arrays), intent(in) :: arrays
+    integer, dimension(:), intent(in) :: atom_ids
 
     integer :: lmmaxd
     integer :: atomindex, ilocal, ii, ind
     integer :: num_local_atoms
     integer, dimension(:), allocatable :: lmarray_temp
     integer, dimension(:), allocatable :: lmarray_full
-    type (TruncationZone), pointer :: trunc_zone
 
     lmmaxd = arrays%lmmaxd
 
@@ -63,10 +64,10 @@ module TEST_lcutoff_mod
     close(91)
 
     lmarray_full      = lmmaxd
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = size(atom_ids)
 
     do ilocal = 1, num_local_atoms
-      atomindex = getAtomIndexOfLocal(calc_data, ilocal)
+      atomindex = atom_ids(ilocal)
 
       lmarray_temp = lmmaxd
 
@@ -91,7 +92,6 @@ module TEST_lcutoff_mod
     end do
 
     ! TODO: a bit confusing, is never deallocated
-    trunc_zone => getTruncationZone(calc_data)
     call createTruncationZone(trunc_zone, lmarray_full, arrays)
 
     num_untruncated = 0
