@@ -45,7 +45,6 @@
 
 module BasisAtom_mod
   use CellData_mod
-  use RefClusterData_mod
   use PotentialData_mod
   use AtomicCoreData_mod
   use RadialMeshData_mod
@@ -69,7 +68,6 @@ module BasisAtom_mod
     type (AtomicCoreData) :: core
 
     type (CellData), pointer :: cell_ptr => null()
-    type (RefClusterData), pointer :: cluster_ptr => null()
     type (RadialMeshData), pointer :: mesh_ptr => null()
 
   end type
@@ -144,22 +142,6 @@ CONTAINS
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Associates a basis atom with its reference cluster.
-  !>
-  !> This is done that way because different atoms can share the same
-  !> reference cluster data.
-!  subroutine associateBasisAtomRefCluster(atom, cluster_ptr)
-!    use RefClusterData_mod
-!    implicit none
-!    type (BasisAtom), intent(inout) :: atom
-!    type (RefClusterData), pointer :: cluster_ptr
-!
-!    atom%cluster_ptr => cluster_ptr
-!    atom%cluster_index = cluster_ptr%cluster_index  ! TODO
-!
-!  end subroutine
-
-  !----------------------------------------------------------------------------
   subroutine destroyBasisAtom(atom)
     use PotentialData_mod
     use AtomicCoreData_mod
@@ -168,7 +150,6 @@ CONTAINS
     type (BasisAtom), intent(inout) :: atom
 
     nullify(atom%cell_ptr)
-    nullify(atom%cluster_ptr)
 
     call destroyPotentialData(atom%potential)
     call destroyAtomicCoreData(atom%core)

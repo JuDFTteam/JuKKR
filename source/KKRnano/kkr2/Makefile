@@ -228,7 +228,7 @@ EBalanceHandler_mod.o: KKRnanoParallel_mod.o
 #l-cutoff TEST
 TEST_lcutoff_mod.o: lcutoff_mod.o TruncationZone_mod.o Main2Arrays_mod.o
 
-BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
+BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
 
 wrappers_mod.o: BasisAtom_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o LDAUData_mod.o EnergyMesh_mod.o
