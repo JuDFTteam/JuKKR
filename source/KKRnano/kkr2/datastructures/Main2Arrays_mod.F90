@@ -28,17 +28,10 @@ module Main2Arrays_mod
     double precision , allocatable, dimension(:,:,:)  :: BZKP  !< kpoints for each mesh
     double precision , allocatable, dimension(:,:)  :: VOLCUB  !< kpoint weights
     double precision , allocatable, dimension(:)  :: VOLBZ     !< BZ volume?
-    double precision , allocatable, dimension(:,:)  :: RR      !< lattice vectors
     integer , allocatable, dimension(:)  :: KMESH !< mapping E-point to k-mesh
     integer , allocatable, dimension(:)  :: NOFKS !< number of k points for each mesh
-    integer , allocatable, dimension(:,:)  :: EZOA
-    integer , allocatable, dimension(:)  :: NUMN0
-    integer , allocatable, dimension(:,:)  :: INDN0
     double precision , allocatable, dimension(:)  :: ZAT  !< atomic numbers
-    double precision , allocatable, dimension(:,:)  :: RCLS
     double precision , allocatable, dimension(:)  :: RMTREF
-    integer , allocatable, dimension(:,:)  :: ATOM
-    integer , allocatable, dimension(:)  :: NACLS
 
     double precision :: VREF !< repulsive screening pot. strength
 
@@ -163,17 +156,10 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%BZKP(3,KPOIBZ,MAXMSHD))
     ALLOCATECHECK(self%VOLCUB(KPOIBZ,MAXMSHD))
     ALLOCATECHECK(self%VOLBZ(MAXMSHD))
-    ALLOCATECHECK(self%RR(3,0:NRD))
     ALLOCATECHECK(self%KMESH(IEMXD))
     ALLOCATECHECK(self%NOFKS(MAXMSHD))
-    ALLOCATECHECK(self%EZOA(NACLSD,NAEZ))
-    ALLOCATECHECK(self%NUMN0(NAEZ))
-    ALLOCATECHECK(self%INDN0(NAEZ,NACLSD))
     ALLOCATECHECK(self%ZAT(NAEZ))
-    ALLOCATECHECK(self%RCLS(3,NACLSD))
     ALLOCATECHECK(self%RMTREF(NAEZ))
-    ALLOCATECHECK(self%ATOM(NACLSD,NAEZ))
-    ALLOCATECHECK(self%NACLS(1))
 
   end subroutine
 
@@ -191,17 +177,11 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%BZKP)
     DEALLOCATECHECK(self%VOLCUB)
     DEALLOCATECHECK(self%VOLBZ)
-    DEALLOCATECHECK(self%RR)
     DEALLOCATECHECK(self%KMESH)
     DEALLOCATECHECK(self%NOFKS)
-    DEALLOCATECHECK(self%EZOA)
-    DEALLOCATECHECK(self%NUMN0)
-    DEALLOCATECHECK(self%INDN0)
     DEALLOCATECHECK(self%ZAT)
-    DEALLOCATECHECK(self%RCLS)
     DEALLOCATECHECK(self%RMTREF)
-    DEALLOCATECHECK(self%ATOM)
-    DEALLOCATECHECK(self%NACLS)
+
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -222,18 +202,11 @@ module Main2Arrays_mod
                        self%BZKP, &
                        self%VOLCUB, &
                        self%VOLBZ, &
-                       self%RR, &
                        self%KMESH, &
                        self%NOFKS, &
-                       self%EZOA, &
-                       self%NUMN0, &
-                       self%INDN0, &
                        self%ZAT, &
-                       self%RCLS, &
                        self%RMTREF, &
                        self%VREF, &
-                       self%ATOM, &
-                       self%NACLS, &
                        self%NSYMAT, &  ! write some scalars too
                        self%MAXMESH, &
                        self%NR
@@ -259,18 +232,11 @@ module Main2Arrays_mod
                        self%BZKP, &
                        self%VOLCUB, &
                        self%VOLBZ, &
-                       self%RR, &
                        self%KMESH, &
                        self%NOFKS, &
-                       self%EZOA, &
-                       self%NUMN0, &
-                       self%INDN0, &
                        self%ZAT, &
-                       self%RCLS, &
                        self%RMTREF, &
                        self%VREF, &
-                       self%ATOM, &
-                       self%NACLS, &
                        self%NSYMAT, & ! write some scalars too
                        self%MAXMESH, &
                        self%NR

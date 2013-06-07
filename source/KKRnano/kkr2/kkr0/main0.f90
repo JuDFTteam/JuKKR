@@ -241,35 +241,11 @@
 
     call LATTIX99(params%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
 
-! --> now generate the real-space lattice vectors for the
-!     cluster generation
-!
-    call RRGEN(arrays%BRAVAIS,arrays%RR,arrays%NR,arrays%NRD)
-    write(*,*)
 
     call SCALEVEC(arrays%RBASIS,params%basisscale(1), &
                   params%basisscale(2),params%basisscale(3), &
                   arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
 ! ======================================================================
-
-!   initialise arrays for clsgen99 to garbage values
-     arrays%EZOA = -1
-     arrays%ATOM = -1
-     arrays%NACLS = -1
-     arrays%NUMN0 = -1
-     arrays%INDN0 = -1
-     CLS = -1
-
-    call CLSGEN99(arrays%NAEZ,arrays%RR,arrays%NR,arrays%RBASIS, CLS, arrays%NACLS,arrays%ATOM, &
-                  arrays%EZOA, &
-                  arrays%RCLS,params%rclust,params%rclust, &
-                  arrays%NUMN0,arrays%INDN0, &
-                  arrays%NRD, NCLSD, arrays%NACLSD)
-
-! xcpl test dimensions for Jij-calculation ..
-!    call CLSJIJ0(NAEZ,RR,NR,RBASIS,RCUTJIJ,JIJ,NRD,NXIJD)
-! xcpl .
-
 
 ! ======================================================================
 !     setting up kpoints
