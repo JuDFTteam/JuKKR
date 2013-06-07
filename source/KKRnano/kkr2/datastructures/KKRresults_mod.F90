@@ -43,14 +43,16 @@ module KKRresults_mod
   !> Constructs a KKRresults object.
   !> @param[inout] self    The KKRresults object to construct.
   !> @param[in]    dims
-  subroutine createKKRresults(self, dims)
+  !> @param[in]    naclsd  maximal number of cluster atoms
+  subroutine createKKRresults(self, dims, naclsd)
     use DimParams_mod
     implicit none
     type (KKRresults), intent(inout) :: self
     type (DimParams),  intent(in)    :: dims
+    integer, intent(in)              :: naclsd
 
     call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, &
-                              dims%NACLSD, dims%IEMXD, &
+                              NACLSD, dims%IEMXD, &
                               dims%nguessd, dims%ekmd, dims%smpid)
   end subroutine
 

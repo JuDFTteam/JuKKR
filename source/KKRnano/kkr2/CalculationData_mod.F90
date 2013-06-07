@@ -478,7 +478,20 @@ module CalculationData_mod
 
     ! setup the truncation zone
     call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
+
+
+    call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
+                          calc_data%trunc_zone, getMySEcommunicator(my_mpi))
+
+    !dims%naclsd = calc_data%clusters%naclsd  ! UGLY
+
     if (isMasterRank(my_mpi)) then
+      write(*,*) "Number of lattice vectors created     : ", &
+                  calc_data%lattice_vectors%nrd
+
+      write(*,*) "Max. number of reference cluster atoms: ", &
+                  calc_data%clusters%naclsd
+
       write(*,*) "On node 0: "
       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
@@ -486,19 +499,9 @@ module CalculationData_mod
     end if
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
 
-    call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
-                          calc_data%trunc_zone, getMySEcommunicator(my_mpi))
-
     call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
                                   params%ALAT, params%RMAX, params%GMAX, &
                                   arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
-
-    !       setup truncation zone here ??? - change TruncationZone code
-    ! TODO: create lattice vectors
-    ! TODO: loop over local atoms (OpenMP parallel) and create ref-clusters
-    !       determine parameter naclsd
-    !       communicate sparsity structure
-
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -518,7 +521,7 @@ module CalculationData_mod
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
       energies  => calc_data%energies_array(ilocal)
 
-      call createKKRresults(kkr, dims)
+      call createKKRresults(kkr, dims, calc_data%clusters%naclsd)
       call createDensityResults(densities, dims)
       call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 

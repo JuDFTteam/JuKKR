@@ -70,8 +70,8 @@ module Main2Arrays_mod
     type (DimParams), intent(in) :: dims
 
     call createMain2ArraysImpl(self, dims%lmaxd,dims%iemxd,dims%nspind, &
-    dims%LMMAXD,dims%NAEZ,dims%LMXSPD,dims%KPOIBZ,dims%MAXMSHD,dims%nrd, &
-    dims%NACLSD,dims%nguessd,dims%ekmd, &
+    dims%LMMAXD,dims%NAEZ,dims%LMXSPD,dims%KPOIBZ,dims%MAXMSHD,0 , &
+    0,dims%nguessd,dims%ekmd, &
     dims%smpid,dims%lpot,dims%IRMD,dims%LMPOTD)
 
   end subroutine

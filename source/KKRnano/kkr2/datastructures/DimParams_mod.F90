@@ -12,7 +12,6 @@ module DimParams_mod
     integer  :: LMAXD
     integer  :: IRID
     integer  :: BCPD
-    integer  :: NACLSD
     integer  :: IRMD
     integer  :: IEMXD
     integer  :: IGUESSD
@@ -22,7 +21,6 @@ module DimParams_mod
     integer  :: KPOIBZ
     integer  :: NFUND
     integer  :: NMAXD
-    integer  :: NRD
     integer  :: NSPIND
     integer  :: NXIJD
     integer  :: LLY
@@ -64,8 +62,6 @@ module DimParams_mod
 
     integer, parameter :: FILEHANDLE = 67
 
-    self%naclsd = 0
-
     open (FILEHANDLE, FILE='inp0.unf', FORM='unformatted')
 
     read(FILEHANDLE) self%LMAXD
@@ -73,11 +69,9 @@ module DimParams_mod
     read(FILEHANDLE) self%NAEZ
     read(FILEHANDLE) self%IRNSD
     read(FILEHANDLE) self%IRMD
-    read(FILEHANDLE) self%NRD
     read(FILEHANDLE) self%IRID
     read(FILEHANDLE) self%NFUND
     read(FILEHANDLE) self%NCELLD
-    read(FILEHANDLE) self%NACLSD
     read(FILEHANDLE) self%IPAND
     read(FILEHANDLE) self%NXIJD
     read(FILEHANDLE) self%KPOIBZ
@@ -136,15 +130,11 @@ module DimParams_mod
     if (ierror /= 0) stop
     call getValueInteger(conf, "IRMD", self%IRMD, ierror)
     if (ierror /= 0) stop
-    call getValueInteger(conf, "NRD", self%NRD, ierror)
-    if (ierror /= 0) stop
     call getValueInteger(conf, "IRID", self%IRID, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NFUND", self%NFUND, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NCELLD", self%NCELLD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NACLSD", self%NACLSD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "IPAND", self%IPAND, ierror)
     if (ierror /= 0) stop
@@ -217,11 +207,9 @@ module DimParams_mod
     write(FILEHANDLE) self%NAEZ
     write(FILEHANDLE) self%IRNSD
     write(FILEHANDLE) self%IRMD
-    write(FILEHANDLE) self%NRD
     write(FILEHANDLE) self%IRID
     write(FILEHANDLE) self%NFUND
     write(FILEHANDLE) self%NCELLD
-    write(FILEHANDLE) self%NACLSD
     write(FILEHANDLE) self%IPAND
     write(FILEHANDLE) self%NXIJD
     write(FILEHANDLE) self%KPOIBZ

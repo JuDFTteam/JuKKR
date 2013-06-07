@@ -283,6 +283,8 @@
     write (67) EFERMI
     close (67)
 
+    write(*,*)
+    write(*,*) "WARNING: Assumes identical reference clusters!"
 
 ! ======================================================================
 
