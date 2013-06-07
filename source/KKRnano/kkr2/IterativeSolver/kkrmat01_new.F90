@@ -268,6 +268,10 @@ subroutine kloopbody( G_diag, kpoint, &
 !                    naez, lmmaxd, naclsd)
 !  end do
 
+  ! TODO: expose own buffer before the loop (best before k-point loop),
+  !       communicate 'row' at each Iteration
+  !       close buffer
+  ! OR communicate all beforehand?
   do site_index = 1,NAEZ
     ref_cluster_index = 1  ! enforce identical ref. clusters
 

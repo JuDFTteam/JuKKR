@@ -483,8 +483,6 @@ module CalculationData_mod
     call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
                           calc_data%trunc_zone, getMySEcommunicator(my_mpi))
 
-    !dims%naclsd = calc_data%clusters%naclsd  ! UGLY
-
     if (isMasterRank(my_mpi)) then
       write(*,*) "Number of lattice vectors created     : ", &
                   calc_data%lattice_vectors%nrd
