@@ -252,7 +252,8 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
          RadialMeshData_mod.o CellData_mod.o wrappers_mod.o BasisAtom_mod.o LDAUData_mod.o \
          JijData_mod.o BroydenData_mod.o Main2Arrays_mod.o DimParams_mod.o InputParams_mod.o \
          KKRresults_mod.o DensityResults_mod.o \
-         EnergyResults_mod.o TruncationZone_mod.o RefCluster_mod.o TEST_lcutoff_mod.o
+         EnergyResults_mod.o TruncationZone_mod.o RefCluster_mod.o TEST_lcutoff_mod.o \
+         ClusterInfo_mod.o
          
 ClusterInfo_mod.o: RefCluster_mod.o TruncationZone_mod.o one_sided_commI_mod.o
 

@@ -201,21 +201,24 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         ! the cluster index to atom index mapping given by array ATOM
 
 ! THERE IS A MISTAKE SOMEWHERE:
-!        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
-!                      gaunts%CLEB,ref_cluster%RCLS,gaunts%ICLEB, &
-!                      gaunts%LOFLM,ref_cluster%NACLS, &
-!                      kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
-!                      kkr%LLY_G0TR(IE), &
-!                      arrays%lmaxd, kkr%naclsd, gaunts%ncleb, &
-!                      dims%LLY)
-
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
-                      gaunts%CLEB,arrays%RCLS(:,:),gaunts%ICLEB, &
-                      gaunts%LOFLM,arrays%NACLS(1), &
+                      gaunts%CLEB,ref_cluster%RCLS(:,:),gaunts%ICLEB, &
+                      gaunts%LOFLM,ref_cluster%NACLS, &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                       kkr%LLY_G0TR(IE), &
-                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, &
+                      arrays%lmaxd, kkr%naclsd, gaunts%ncleb, &
                       dims%LLY)
+
+        ASSERT( all( arrays%RCLS == ref_cluster%RCLS ) )
+        ASSERT(ref_cluster%nacls == arrays%NACLS(1))
+        !write(*,*) arrays%NACLS(1), clusters%nacls_trc
+!        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
+!                      gaunts%CLEB,arrays%RCLS(:,:),gaunts%ICLEB, &
+!                      gaunts%LOFLM,arrays%NACLS(1), &
+!                      kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
+!                      kkr%LLY_G0TR(IE), &
+!                      arrays%lmaxd, arrays%naclsd, gaunts%ncleb, &
+!                      dims%LLY)
 
         ! here: assume identical clusters -> identical cluster green's functions
         ! TODO: exchange cluster green's functions
@@ -312,27 +315,34 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             CHECKASSERT(atom_indices(ilocal) > 0)
           end do
 
-          ! problem: reference Green's functions
+          ! problem: reference Green's functions !TODO
           ! here: known by all atoms - therefore pick any atom (nr.1)
           kkr => getKKR(calc_data, 1)
           jij_data => getJijData(calc_data, 1)
 
 !          TODO: not working yet
-!          call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
-!          clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-!          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
-!          clusters%NACLS_trc,lattice_vectors%RR,clusters%EZOA_trc,clusters%ATOM_trc, &
-!          kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
-!          TMATLL, clusters%NUMN0_trc, clusters%INDN0_trc, atom_indices, &
-!          params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd)
-
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
-          trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+          clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
-          arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
+          clusters%NACLS_trc,lattice_vectors%RR,clusters%EZOA_trc,clusters%ATOM_trc, &
           kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
-          TMATLL, trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
-          params%QMRBOUND, arrays%lmmaxd, arrays%naclsd,  arrays%nrd)
+          TMATLL, clusters%NUMN0_trc, clusters%INDN0_trc, atom_indices, &
+          params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd)
+
+          ASSERT(all(trunc_zone%EZOA_trc == clusters%EZOA_trc))
+          ASSERT(all(trunc_zone%ATOM_trc == clusters%atom_trc))
+          ASSERT(all(trunc_zone%indn0_trc == clusters%indn0_trc))
+          ASSERT(all(trunc_zone%numn0_trc == clusters%numn0_trc))
+          !ASSERT(all(clusters%nacls))
+          ASSERT(trunc_zone%naez_trc == clusters%naez_trc)
+
+!          call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
+!          trunc_zone%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+!          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
+!          arrays%NACLS,arrays%RR,trunc_zone%EZOA_trc,trunc_zone%ATOM_trc, &
+!          kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
+!          TMATLL, trunc_zone%NUMN0_trc,trunc_zone%INDN0_trc,atom_indices, &
+!          params%QMRBOUND, arrays%lmmaxd, arrays%naclsd,  arrays%nrd)
 
 !------------------------------------------------------------------------------
 

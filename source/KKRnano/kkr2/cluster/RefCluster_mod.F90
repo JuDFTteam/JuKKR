@@ -359,6 +359,10 @@ subroutine clsgen99(center_ind, naez,rr,rbasis, &
   !
   external xsort,clustcomp
   intrinsic min,sqrt
+
+  ! for sorting
+  double precision rsort(nacls), rg(3,nacls)
+  integer ia, ib, pos, iatom(nacls),iezoa(nacls),isort(nacls)
   !
   data     epsshl   / 1.0d-4 /
 
@@ -405,6 +409,39 @@ subroutine clsgen99(center_ind, naez,rr,rbasis, &
         end do              ! N loop in bravais
 
      end do                 ! NA loop in NAEZ
+
+     !     sort the atoms of the cluster in increasing order. First by distance
+     !     Then by z then by y
+     !
+     do ia=1,number
+        rsort(ia) = sqrt(rcls(1,ia)**2+ &
+             rcls(2,ia)**2+ &
+             rcls(3,ia)**2)
+        rsort(ia) = 100000000.d0*rsort(ia)+ &
+             100000.d0*rcls(3,ia)+ &
+             100.d0*rcls(2,ia)+ &
+             0.1d0*rcls(1,ia)
+     end do
+     !
+     call xsort(rsort,isort,number,pos)
+     !     Rearange exchange ia with ib
+     ! MAP temporarily to another array
+     do ia=1,number
+        do i=1,3
+           rg(i,ia)    = rcls(i,ia)
+        end do
+        iatom(ia) = atom(ia)
+        iezoa(ia) = ezoa(ia)
+     end do
+     ! Now use correct order
+     do ia =1,number
+        ib = isort(ia)
+        do i=1,3
+           rcls(i,ia) = rg(i,ib)
+        end do
+        atom(ia) = iatom(ib)
+        ezoa(ia) = iezoa(ib)
+     end do
 
  ! do jatom = 1,naez
 
