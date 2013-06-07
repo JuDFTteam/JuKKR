@@ -103,7 +103,7 @@ main0.o: config_reader.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
 DimParams_mod.o: config_reader.o
 
-BasisAtom_mod.o: CellData_mod.o RefClusterData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
+BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
 
 startb1_wrapper.o: CellData_mod.o RadialMeshData_mod.o BasisAtom_mod.o
