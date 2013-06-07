@@ -120,7 +120,6 @@
     double precision :: RECBV(3,3)
 
     integer, dimension(:),   allocatable :: NTCELL
-    integer, dimension(:),   allocatable :: CLS
 
 !     .. auxillary variables, not passed to kkr2
     double precision :: PI
@@ -139,13 +138,9 @@
 
     integer :: EKMD
 
-    integer :: BCP, IGUESS !TODO: remove, not used
-
     type (InputParams)    :: params
     type (DimParams)      :: dims
     type (Main2Arrays)    :: arrays
-
-    integer, parameter :: NCLSD = 1
 
 ! ------------ end of declarations ---------------------------------
 
@@ -170,7 +165,6 @@
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
     allocate(NTCELL(dims%NAEZ))
-    allocate(CLS(dims%NAEZ))
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
@@ -234,22 +228,23 @@
     end do
 
 ! ================================================ deal with the lattice
-    ! only for informative purposes
+
     arrays%BRAVAIS(:,1) = params%bravais_a
     arrays%BRAVAIS(:,2) = params%bravais_b
     arrays%BRAVAIS(:,3) = params%bravais_c
 
+    ! only for informative purposes - prints info about lattice
     call LATTIX99(params%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
 
 
     call SCALEVEC(arrays%RBASIS,params%basisscale(1), &
                   params%basisscale(2),params%basisscale(3), &
                   arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
-! ======================================================================
 
 ! ======================================================================
 !     setting up kpoints
 ! ======================================================================
+
     call BZKINT0(arrays%NAEZ, &
                  arrays%RBASIS,arrays%BRAVAIS,RECBV, &
                  arrays%NSYMAT,arrays%ISYMINDEX, &
@@ -263,9 +258,6 @@
 
     call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)
-
-    IGUESS = dims%IGUESSD
-    BCP = dims%BCPD
 
 !    if (BCPD == 1 .and. NATBLD*XDIM*YDIM*ZDIM /= NAEZD) then
 !      write(*,*) "ERROR: When BCPD==1 then NATBLD*XDIM*YDIM*ZDIM has to be equal to NAEZD."
@@ -303,7 +295,6 @@
     !   auxillary
     deallocate(DEZ, stat=ierror)
     deallocate(NTCELL, stat=ierror)
-    deallocate(CLS)
 
 ! -------------- Helper routine -----------------------------------------------
 
