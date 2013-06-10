@@ -28,6 +28,12 @@
 !> |_____|_____|_____|_____|
 !>    rank 0   |  rank 1   |
 !>
+!> |atm 1|atm 2|atm 3|atm 4| ...
+!>
+!> To access the chunks by a continuous index (called 'atom index')
+!> one can use the routines getOwner and getLocalInd
+!> to convert to a 'ChunkIndex'
+!>
 !> \endverbatim
 
 #define COMMCHECK(X) if ( (X) /= 0 ) then; write(*,*) "Comm failure", X, __LINE__; STOP; endif
@@ -108,7 +114,7 @@ end subroutine
 
 !------------------------------------------------------------------------------
 !> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
-!> @param num Total number of atoms/matrices
+!> @param num Total number of chunks/atoms/matrices
 !> @param nranks total number of ranks
 integer function getOwner(ind, num, nranks)
   implicit none
@@ -121,10 +127,9 @@ integer function getOwner(ind, num, nranks)
   ! 0 ... nranks-1  
 end function
 
-
 !------------------------------------------------------------------------------
 !> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
-!> @param num Total number of atoms/matrices
+!> @param num Total number of chunks/atoms/matrices
 integer function getLocalInd(ind, num, nranks)
   implicit none
   integer, intent(in) :: ind, num, nranks
@@ -136,6 +141,21 @@ integer function getLocalInd(ind, num, nranks)
 
   ! 1 ... atoms_per_proc
   
+end function
+
+!------------------------------------------------------------------------------
+!> Returns chunk index of atom/matrix/chunk with index 'ind'.
+!> @param ind    "atom"-index
+!> @param num    Total number of chunks/atoms/matrices
+!> @param nranks number of ranks
+function getChunkIndex(ind, num, nranks)
+  implicit none
+  type (ChunkIndex) :: getChunkIndex
+  integer, intent(in) :: ind, num, nranks
+
+  getChunkIndex%owner = getOwner(ind, num, nranks)
+  getChunkIndex%local_ind = getLocalInd(ind, num, nranks)
+
 end function
 
 subroutine exposeBuffer_TYPE(win, buffer, bsize, chunk_size, communicator)
