@@ -200,7 +200,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         ! Note for future: for communication use
         ! the cluster index to atom index mapping given by array ATOM
 
-! THERE IS A MISTAKE SOMEWHERE:
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
                       gaunts%CLEB,ref_cluster%RCLS(:,:),gaunts%ICLEB, &
                       gaunts%LOFLM,ref_cluster%NACLS, &

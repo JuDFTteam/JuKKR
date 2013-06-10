@@ -356,9 +356,6 @@ subroutine clsgen99(center_ind, naez,rr,rbasis, &
   !
   double precision r2,epsshl, tmp(3)
   double precision rcut2,rcutxy2,rxy2 
-  !
-  external xsort,clustcomp
-  intrinsic min,sqrt
 
   ! for sorting
   double precision rsort(nacls), rg(3,nacls)
@@ -730,7 +727,7 @@ end module
 
 #ifdef TEST_CLUSTERS__
 program test_clusters
-  use ClusterHelpers_mod
+  use RefCluster_mod
   implicit none
 
   double precision bravais(3,3)
