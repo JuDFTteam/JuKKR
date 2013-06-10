@@ -58,8 +58,8 @@ module BasisAtom_mod
     integer :: cluster_index
     double precision :: Z_nuclear !todo
     integer :: nspin
-    !double precision :: Vref      !todo  ! or move to reference cluster? yes
-    !double precision :: RMTref    ! move to ref cluster
+    !double precision :: Vref
+    double precision :: RMTref !< muffin-tin radius reference system
     ! double precision, dimension(3) :: position !todo
     ! position, etc...
     ! lmax ???
@@ -92,6 +92,7 @@ CONTAINS
     atom%cell_index = -1
     atom%cluster_index = -1
     atom%Z_nuclear = 1.d9
+    atom%RMTref = 1.d9
 
     call createPotentialData(atom%potential, lpot, nspin, irmind, irmd)
 
@@ -250,6 +251,7 @@ CONTAINS
                                 atom%cluster_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
+                                atom%RMTref, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
@@ -274,6 +276,7 @@ CONTAINS
                                 atom%cluster_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
+                                atom%RMTref, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
@@ -305,6 +308,7 @@ CONTAINS
                                 atom%cluster_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
+                                atom%RMTref, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &

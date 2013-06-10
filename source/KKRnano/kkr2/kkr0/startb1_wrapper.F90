@@ -1,9 +1,8 @@
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine STARTB1
-subroutine STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
-                           HFIELD,VCONST,LPOT,NSPIN, &
+subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
                            NTCELL, &
-                           EFERMI,VBC,ZAT, &
+                           EFERMI,ZAT, RMTref, &
                            IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   use RadialMeshData_mod
@@ -22,20 +21,20 @@ subroutine STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
   INTEGER, INTENT(IN) :: NAEZD
   INTEGER, INTENT(IN) :: IRNSD
   DOUBLE PRECISION :: EFERMI
-  DOUBLE PRECISION :: HFIELD
-  DOUBLE PRECISION, dimension(*) :: VBC
-  DOUBLE PRECISION :: VCONST
-  INTEGER :: IFILE
-  INTEGER :: IPE
-  INTEGER :: IPF
-  INTEGER :: IPFE
-  INTEGER :: KHFELD
   INTEGER :: LPOT
   INTEGER :: NSPIN
-
   DOUBLE PRECISION, dimension(*) :: ZAT
-
+  double precision, dimension(naezd), intent(in) :: RMTref
   INTEGER, dimension(*) :: NTCELL
+
+  DOUBLE PRECISION, parameter :: HFIELD = 0.0d0
+  DOUBLE PRECISION, dimension(2), parameter :: VBC = (/ 0.0d0, 0.0d0 /)
+  DOUBLE PRECISION, parameter :: VCONST = 0.0d0
+  INTEGER, parameter :: IFILE = 13
+  INTEGER, parameter :: IPE = 0
+  INTEGER, parameter :: IPF = 6
+  INTEGER, parameter :: IPFE = 9
+  INTEGER, parameter :: KHFELD = 0
 
   ! --- locals ---
   type (CellData) :: cell
@@ -107,11 +106,17 @@ subroutine STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
   LCORE = 0
   ITITLE = 0
 
+  open (19,file='shapefun',status='old',form='formatted')
+  open (13,file='potential',status='old',form='formatted')
+
   call STARTB1(alat, IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
                ITITLE,HFIELD,IMT,IRC,VCONST,IRNS,LPOT,NSPIN,IRMIN, &
                NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
                EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS, &
                INIPOL,1,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+
+  close(13)
+  close(19)
 
   call dochecks()
 
@@ -179,6 +184,7 @@ subroutine STARTB1_wrapper(alat, IFILE,IPF,IPFE,IPE,KHFELD, &
         atom%cell_index = NTCELL(ii)
         atom%cluster_index = -1 !TODO
         atom%Z_nuclear = ZAT(ii)
+        atom%RMTref = RMTref(ii)
 
         atom%core%NCORE = 0
         atom%core%LCORE = 0

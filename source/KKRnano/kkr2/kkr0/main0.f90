@@ -105,9 +105,6 @@
 !     Maximal number of k-meshes used
     parameter (MAXMSHD=8)
 
-    double precision :: VCONST
-    double precision :: VBC(2)
-!
 !     .. Energy Mesh ..
     double precision :: EFERMI
 
@@ -120,17 +117,15 @@
     double precision :: RECBV(3,3)
 
     integer, dimension(:),   allocatable :: NTCELL
+    double precision, dimension(:), allocatable :: RMTref
 
 !     .. auxillary variables, not passed to kkr2
     double precision :: PI
-    double precision :: HFIELD
 
     integer :: IE
 
     integer :: ierror
 
-    character(len=40) POTENTIAL_FILENAME
-    character(len=40) SHAPEFUN_FILENAME
     complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
 
     integer ::   IEMXD
@@ -165,13 +160,14 @@
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
     allocate(NTCELL(dims%NAEZ))
+    allocate(RMTref(dims%naez))
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
      call RINPUTNEW99(arrays%RBASIS, NTCELL, &
                       arrays%NAEZ,arrays%ZAT, &
-                      arrays%RMTREF)
+                      arrays%RMTref)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -181,26 +177,12 @@
 
 !===================================================================
 
-    SHAPEFUN_FILENAME = 'shapefun'
-    POTENTIAL_FILENAME = 'potential'
-
-    open (19,file=SHAPEFUN_FILENAME,status='old',form='formatted')
-    open (13,file=POTENTIAL_FILENAME,status='old',form='formatted')
-
-    HFIELD = 0.0d0
-    VCONST = 0.0d0
-    VBC = 0.0d0
-
     ! read starting potential and shapefunctions
-    call STARTB1_wrapper(params%alat, 13,6,9,0,0, &
-                 HFIELD,VCONST, &
+    call STARTB1_wrapper(params%alat, &
                  dims%LPOT,dims%NSPIND,NTCELL, &
-                 EFERMI, VBC, arrays%ZAT, &
+                 EFERMI, arrays%ZAT, arrays%RMTref, &
                  dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
                  dims%NAEZ, dims%IRNSD)
-
-    close(13)
-    close(19)
 
 ! ----------------------------------------------------------------------
 ! update Fermi energy, adjust energy window according to running options
@@ -297,6 +279,7 @@
     !   auxillary
     deallocate(DEZ, stat=ierror)
     deallocate(NTCELL, stat=ierror)
+    deallocate(RMTref, stat=ierror)
 
 ! -------------- Helper routine -----------------------------------------------
 
