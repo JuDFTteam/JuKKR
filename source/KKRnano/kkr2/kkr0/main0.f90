@@ -167,7 +167,7 @@
 
      call RINPUTNEW99(arrays%RBASIS, NTCELL, &
                       arrays%NAEZ,arrays%ZAT, &
-                      arrays%RMTref)
+                      RMTref)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -180,7 +180,7 @@
     ! read starting potential and shapefunctions
     call STARTB1_wrapper(params%alat, &
                  dims%LPOT,dims%NSPIND,NTCELL, &
-                 EFERMI, arrays%ZAT, arrays%RMTref, &
+                 EFERMI, arrays%ZAT, RMTref, &
                  dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
                  dims%NAEZ, dims%IRNSD)
 

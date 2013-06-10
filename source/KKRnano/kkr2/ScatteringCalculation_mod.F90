@@ -169,17 +169,17 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
       WRITELOG(2, *) "Working on energy point ", IE
 
 !------------------------------------------------------------------------------
-      !$omp parallel do private(ilocal, kkr, ref_cluster, RF)
+      !$omp parallel do private(ilocal, kkr, ref_cluster, atomdata, RF)
       do ilocal = 1, num_local_atoms
         kkr => getKKR(calc_data, ilocal)
         ref_cluster => getRefCluster(calc_data, ilocal)
+        atomdata  => getAtomData(calc_data, ilocal)
 !------------------------------------------------------------------------------
         kkr%noiter = 0
 
-        ! do RF = 1,arrays%NREF  RF = 1 take reference potential and MT-ref radius
-        ! from atom nr. 1
+        ! do RF = 1,arrays%NREF  RF = 1 take reference potential from atom 1
         RF = 1
-        call TREF(emesh%EZ(IE),arrays%VREF,arrays%LMAXD,arrays%RMTREF(RF), &
+        call TREF(emesh%EZ(IE),arrays%VREF,arrays%LMAXD,atomdata%RMTREF, &
                   kkr%TREFLL(:,:,1), kkr%DTREFLL(:,:,1), dims%LLY) ! TODO: use local t-matrix buffer
 
         ! TODO: here one would need to exchange the Tref matrices within each cluster

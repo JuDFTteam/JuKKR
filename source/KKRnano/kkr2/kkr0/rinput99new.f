@@ -39,7 +39,15 @@ c------------ array set up and definition of input parameter -----------
       STOP
       ENDIF
 
-      RMTREF(1) = temp
+      if (I > 1) then
+        if ( abs(temp - RMTREF(I-1)) > 1.d-8 ) then
+      WRITE(*,*) "ERROR: RMTref must be equal for all atoms."
+      WRITE(*,*) "TODO: Allow different reference clusters."
+      STOP
+        end if
+      end if
+
+      RMTREF(I) = temp
 
       END DO
       CLOSE (77)

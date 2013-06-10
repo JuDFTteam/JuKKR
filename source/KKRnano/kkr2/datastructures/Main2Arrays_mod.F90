@@ -31,7 +31,6 @@ module Main2Arrays_mod
     integer , allocatable, dimension(:)  :: KMESH !< mapping E-point to k-mesh
     integer , allocatable, dimension(:)  :: NOFKS !< number of k points for each mesh
     double precision , allocatable, dimension(:)  :: ZAT  !< atomic numbers
-    double precision , allocatable, dimension(:)  :: RMTREF
 
     double precision :: VREF !< repulsive screening pot. strength
 
@@ -159,7 +158,6 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%KMESH(IEMXD))
     ALLOCATECHECK(self%NOFKS(MAXMSHD))
     ALLOCATECHECK(self%ZAT(NAEZ))
-    ALLOCATECHECK(self%RMTREF(NAEZ))
 
   end subroutine
 
@@ -180,7 +178,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%KMESH)
     DEALLOCATECHECK(self%NOFKS)
     DEALLOCATECHECK(self%ZAT)
-    DEALLOCATECHECK(self%RMTREF)
 
   end subroutine
 
@@ -205,7 +202,6 @@ module Main2Arrays_mod
                        self%KMESH, &
                        self%NOFKS, &
                        self%ZAT, &
-                       self%RMTREF, &
                        self%VREF, &
                        self%NSYMAT, &  ! write some scalars too
                        self%MAXMESH, &
@@ -235,7 +231,6 @@ module Main2Arrays_mod
                        self%KMESH, &
                        self%NOFKS, &
                        self%ZAT, &
-                       self%RMTREF, &
                        self%VREF, &
                        self%NSYMAT, & ! write some scalars too
                        self%MAXMESH, &
