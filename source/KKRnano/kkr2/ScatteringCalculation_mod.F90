@@ -333,7 +333,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           clusters%NACLS_trc,lattice_vectors%RR,clusters%EZOA_trc,clusters%ATOM_trc, &
           kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
           TMATLL, clusters%NUMN0_trc, clusters%INDN0_trc, atom_indices, &
-          params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd)
+          params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd, &
+          trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi))
 
 !------------------------------------------------------------------------------
 

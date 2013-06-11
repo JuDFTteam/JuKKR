@@ -16,11 +16,11 @@ CONTAINS
 
 subroutine KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB, &
 TMATLL, &
-ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
+ALAT,NSYMAT,NAEZ,NACLS,RR,EZOA,ATOM, &
 GINP, &
 NUMN0,INDN0,atom_indices, &
 QMRBOUND, &
-lmmaxd, naclsd, nrd)
+lmmaxd, naclsd, trunc2atom_index, communicator)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -41,8 +41,9 @@ lmmaxd, naclsd, nrd)
 
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd  !< max. number of atoms in reference cluster
-  integer, intent(in) :: nrd
   integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
+  integer, intent(in) :: trunc2atom_index(:)
+  integer, intent(in) :: communicator
 
   !     .. SCALAR ARGUMENTS ..
   double precision:: ALAT
@@ -64,7 +65,6 @@ lmmaxd, naclsd, nrd)
   integer:: NUMN0(:)
   integer:: INDN0(:,:)
   integer:: ATOM(:,:) ! dim naclsd, naez?
-  integer:: CLS(:)         ! dim *
   integer:: EZOA(:,:) ! dim naclsd, naez?
   integer:: NACLS(:)
 
@@ -131,10 +131,10 @@ lmmaxd, naclsd, nrd)
     ! inout: PRSC
     ! inout (temporary arrays): GLLH, GLLHBLCK
     call kloopbody( G_diag, BZKP(:, k_point_index), TMATLL, GINP, ALAT, &
-                   NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                   NAEZ, ATOM, EZOA, RR, INDN0, &
                    NUMN0, EIKRM, EIKRP, GLLH, &
-                   atom_indices, QMRBOUND, NACLS, lmmaxd, naclsd, &
-                   nrd)
+                   atom_indices, QMRBOUND, NACLS, lmmaxd, trunc2atom_index, &
+                   communicator)
 
     ! ----------- Integrate Scattering Path operator over k-points --> GS -----
     ! Note: here k-integration only in irreducible wedge
@@ -164,10 +164,10 @@ end subroutine KKRMAT01_new
 !> Calculate scattering path operator for 'kpoint'
 subroutine kloopbody( G_diag, kpoint, &
                       TMATLL, GINP, ALAT, &
-                      NAEZ, ATOM, EZOA, RR, CLS, INDN0, &
+                      NAEZ, ATOM, EZOA, RR, INDN0, &
                       NUMN0, EIKRM, EIKRP, GLLH, &
                       atom_indices, QMRBOUND, NACLS, &
-                      lmmaxd, naclsd, nrd)
+                      lmmaxd, trunc2atom_index, communicator)
 
   !use initialGuess_store_mod
   use fillKKRMatrix_mod
@@ -181,12 +181,12 @@ subroutine kloopbody( G_diag, kpoint, &
   implicit none
 
   integer, intent(in), dimension(:) :: atom_indices !< indices of local atoms
-  integer, intent(in) :: naclsd
+  integer, intent(in), dimension(:) :: trunc2atom_index
+  integer, intent(in) :: communicator
   integer :: NAEZ
   double precision :: ALAT
   integer :: ATOM(:,:)         ! dim: naclsd, *
   double precision :: kpoint(3)
-  integer :: CLS(:)
   double complex :: EIKRM(:)   ! dim: naclsd
   double complex :: EIKRP(:)
   integer :: EZOA(:,:) ! dim naclsd,*
@@ -198,7 +198,6 @@ subroutine kloopbody( G_diag, kpoint, &
   integer :: INDN0(:,:)
   integer, intent(in) :: lmmaxd
   integer :: NACLS(:)
-  integer, intent(in) :: nrd
   integer :: NUMN0(:)
   double precision :: QMRBOUND
   double precision :: RR(:,0:)
@@ -207,9 +206,6 @@ subroutine kloopbody( G_diag, kpoint, &
   !-------- local ---------
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
-
-  integer :: ref_cluster_index
-  integer :: site_index
 
   type (SparseMatrixDescription) :: sparse
 
@@ -254,7 +250,8 @@ subroutine kloopbody( G_diag, kpoint, &
   endif
 
   call referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
-                            indn0, rr, ezoa, GINP(:,:,:,1), EIKRM, EIKRP)
+                            indn0, rr, ezoa, GINP(:,:,:,1), EIKRM, EIKRP, &
+                            trunc2atom_index, communicator)
 
 !  do site_index = 1, naclsd ! this was just a test
 !  do lm2 = 1, lmmaxd
@@ -357,9 +354,11 @@ end subroutine
 ! The same calculation as with lloyds formula is done all over again ???
 ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
-                                indn0, rr, ezoa, GINP, EIKRM, EIKRP)
+                                indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
+                                trunc2atom_index, communicator)
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
+  use one_sided_commZ_mod, only: copyFromZ_com
   implicit none
 
   double complex, intent(inout) :: GLLH(:)
@@ -373,11 +372,15 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
   double precision, intent(in) :: rr(:,:)
   integer, intent(in) :: ezoa(:,:)
-  double complex, intent(in) :: GINP(:,:,:)
+  double complex, intent(inout) :: GINP(:,:,:)
 
   ! work arrays
   double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
   double complex, intent(inout) :: EIKRP(:)
+
+  !> mapping trunc. index -> atom index
+  integer, intent(in) :: trunc2atom_index(:)
+  integer, intent(in) :: communicator
 
   ! local
   integer site_index
@@ -385,6 +388,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   integer nrd
   integer naclsd
   integer lmmaxd
+  integer atom_requested(1)
   double complex, allocatable :: Gref_buffer(:,:,:)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
 
@@ -397,6 +401,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   ASSERT(lmmaxd == size(GINP,2))
   ASSERT(naclsd == size(eikrm))
   ASSERT(naclsd == size(eikrp))
+  ASSERT(naez == size(trunc2atom_index))
 
   allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
 
@@ -408,11 +413,15 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
                nrd, naclsd)
 
     ! get GINP(:,:,:)[trunc2atom_index(site_index)]
-    Gref_buffer(:,:,:) = GINP(:,:,:) ! TODO!!!!
+
+    atom_requested(1) = trunc2atom_index(site_index)
+    call copyFromZ_com(Gref_buffer, GINP, atom_requested, &
+                       lmmaxd*lmmaxd*naclsd, 1, communicator)
+    !!!Gref_buffer(:,:,:) = GINP(:,:,:) ! use this if all Grefs are the same
 
     call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
                     NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, &
-                    Gref_buffer(:,:,:), &  !TODO
+                    Gref_buffer(:,:,:), &
                     naez, lmmaxd, naclsd)
   end do
 

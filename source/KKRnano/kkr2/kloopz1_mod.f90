@@ -11,7 +11,7 @@ CONTAINS
     NUMN0,INDN0,atom_indices, &
     QMRBOUND, &
     lmmaxd, naclsd,  &
-    nrd)
+    nrd, trunc2atom_index, communicator)
 
 ! **********************************************************************
 
@@ -30,11 +30,13 @@ CONTAINS
     use kkrmat_new_mod
     use TEST_lcutoff_mod !TODO: remove
     implicit none
-    include 'mpif.h'
 
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
     integer, intent(in) :: nrd
+    !> mapping trunc. index -> atom index
+    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: communicator
     !     .. Parameters ..
 
     integer, parameter :: NSYMAXD = 48
@@ -152,11 +154,11 @@ CONTAINS
     ! 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2) then
       call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL, &
-      ALAT,NSYMAT,NAEZ,CLS,NACLS,RR,EZOA,ATOM, &
+      ALAT,NSYMAT,NAEZ,NACLS,RR,EZOA,ATOM, &
       GINP_LOCAL, &
       NUMN0,INDN0, atom_indices, &
       QMRBOUND, &
-      lmmaxd, naclsd, nrd)
+      lmmaxd, naclsd, trunc2atom_index, communicator)
     else
       write(*,*) "cutoffmode<3 not supported."
       STOP
