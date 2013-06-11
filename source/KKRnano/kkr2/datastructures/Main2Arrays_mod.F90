@@ -36,24 +36,12 @@ module Main2Arrays_mod
 
     integer  :: NSYMAT
     integer  :: MAXMESH
-    integer  :: NR
-
-    integer :: lmaxd
     integer :: iemxd
-    integer :: nspind
     integer :: LMMAXD
     integer :: NAEZ
-    integer :: LMXSPD
     integer :: KPOIBZ
     integer :: MAXMSHD
-    integer :: nrd
-    integer :: NACLSD
-    integer :: nguessd !< not used?
-    integer :: ekmd   !< not used, invalid
-    integer :: smpid  !< not used
-    integer :: lpot
-    integer :: IRMD
-    integer :: LMPOTD
+
   end type Main2Arrays
 
   CONTAINS
@@ -123,32 +111,18 @@ module Main2Arrays_mod
 
     self%NSYMAT = 0
     self%MAXMESH = 0
-    self%NR = 0
-
 
 !    Repulsive reference potential
 !    in future: move as parameter to inputfile
     self%VREF = 8.0d0
 
-    self%lmaxd = lmaxd
     self%iemxd = iemxd
-    self%nspind = nspind
     self%LMMAXD = LMMAXD
     self%NAEZ = NAEZ
-    self%LMXSPD = LMXSPD
     self%IEMXD = IEMXD
     self%KPOIBZ = KPOIBZ
     self%MAXMSHD = MAXMSHD
-    self%nrd = nrd
-    self%NACLSD = NACLSD
-    self%NSPIND = NSPIND
-    self%nguessd = nguessd
     self%lmmaxd = lmmaxd
-    self%ekmd = ekmd
-    self%smpid = smpid
-    self%lpot = lpot
-    self%IRMD = IRMD
-    self%LMPOTD = LMPOTD
 
     ALLOCATECHECK(self%DSYMLL(LMMAXD,LMMAXD,48))
     ALLOCATECHECK(self%RBASIS(3,NAEZ))
@@ -204,8 +178,7 @@ module Main2Arrays_mod
                        self%ZAT, &
                        self%VREF, &
                        self%NSYMAT, &  ! write some scalars too
-                       self%MAXMESH, &
-                       self%NR
+                       self%MAXMESH
     close (FILEHANDLE)
 
   end subroutine
@@ -233,8 +206,7 @@ module Main2Arrays_mod
                        self%ZAT, &
                        self%VREF, &
                        self%NSYMAT, & ! write some scalars too
-                       self%MAXMESH, &
-                       self%NR
+                       self%MAXMESH
     close (FILEHANDLE)
 
   end subroutine

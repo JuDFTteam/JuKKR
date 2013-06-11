@@ -187,11 +187,11 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     ! DOS was written to file 'results1' and read out here just
     ! to be written in routine wrldos
     ! also other stuff is read from results1 (and results2)
-    call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,arrays%LMAXD, &
+    call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,dims%LMAXD, &
     arrays%NAEZ,emesh%NPOL, &
-    dims%NSPIND,params%KPRE,params%KTE,arrays%LPOT, &
+    dims%NSPIND,params%KPRE,params%KTE,atomdata%potential%LPOT, &
     emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
-    params%ALAT,atomdata%core%ITITLE(:,1:arrays%NSPIND), &
+    params%ALAT,atomdata%core%ITITLE(:,1:dims%NSPIND), &
     densities%total_charge_neutrality, &
     arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
     arrays%iemxd)
@@ -355,7 +355,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     if (dims%LLY == 1) then
       call renormalizeDOS(densities%DEN,densities%RNORM, &
                           densities%LMAXD+1,densities%IEMXD, &
-                          arrays%NSPIND,densities%IEMXD)
+                          densities%NSPIND,densities%IEMXD)
     end if
 
     ! calculate DOS at Fermi level
@@ -385,7 +385,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   ! necessary for density of states calculation, otherwise
   ! only for informative reasons
   if (params%KTE >= 0) then
-    call openResults1File(arrays%IEMXD, arrays%LMAXD, emesh%NPOL)
+    call openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
 
     do ilocal = 1, num_local_atoms
       atomdata  => getAtomData(calc_data, ilocal)

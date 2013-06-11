@@ -100,7 +100,7 @@ program MAIN2
  ! =                     End read in variables                          =
  ! ======================================================================
 
-  if ((params%JIJ .eqv. .true.) .and. (arrays%nspind /= 2)) then
+  if ((params%JIJ .eqv. .true.) .and. (dims%nspind /= 2)) then
     write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
     stop
   end if

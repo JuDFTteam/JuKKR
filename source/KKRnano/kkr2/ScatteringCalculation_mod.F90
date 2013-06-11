@@ -150,7 +150,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                 jij_data%RCUTJIJ,arrays%NSYMAT,arrays%ISYMINDEX, &
                 jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ, &
                 jij_data%RXCCLS,jij_data%ZKRXIJ, &
-                arrays%nrd, jij_data%nxijd)
+                lattice_vectors%nrd, jij_data%nxijd)
 
     jij_data%JXCIJINT = CZERO
     jij_data%GMATXIJ = CZERO
@@ -179,7 +179,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
         ! do RF = 1,arrays%NREF  RF = 1 take reference potential from atom 1
         RF = 1
-        call TREF(emesh%EZ(IE),arrays%VREF,arrays%LMAXD,atomdata%RMTREF, &
+        call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%RMTREF, &
                   kkr%TREFLL(:,:,1), kkr%DTREFLL(:,:,1), dims%LLY) ! TODO: use local t-matrix buffer
 
         ! TODO: here one would need to exchange the Tref matrices within each cluster
@@ -205,7 +205,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                       gaunts%LOFLM,ref_cluster%NACLS, &
                       kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
                       kkr%LLY_G0TR(IE), &
-                      arrays%lmaxd, kkr%naclsd, gaunts%ncleb, &
+                      dims%lmaxd, kkr%naclsd, gaunts%ncleb, &
                       dims%LLY)
 
         ! here: assume identical clusters -> identical cluster green's functions
