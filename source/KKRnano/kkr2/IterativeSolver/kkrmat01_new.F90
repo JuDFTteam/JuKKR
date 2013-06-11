@@ -253,37 +253,8 @@ subroutine kloopbody( G_diag, kpoint, &
     allocate(GLLH(getNNZ(sparse)))
   endif
 
-  GLLH = CZERO
-
-!  do site_index = 1,NAEZ
-!    ref_cluster_index = CLS(site_index)
-!
-!    call DLKE1(ALAT,NACLS(ref_cluster_index),RR,EZOA(:,site_index), &
-!               kpoint,EIKRM,EIKRP, &
-!               nrd, naclsd)
-!
-!    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
-!                    NACLS(ref_cluster_index), ATOM(:,site_index),NUMN0,INDN0, &
-!                    GINP(:,:,:,ref_cluster_index), &
-!                    naez, lmmaxd, naclsd)
-!  end do
-
-  ! TODO: expose own buffer before the loop (best before k-point loop),
-  !       communicate 'row' at each Iteration
-  !       close buffer
-  ! OR communicate all beforehand?
-  do site_index = 1,NAEZ
-    ref_cluster_index = 1  ! enforce identical ref. clusters
-
-    call DLKE1(ALAT,NACLS(ref_cluster_index),RR,EZOA(:,site_index), &
-               kpoint,EIKRM,EIKRP, &
-               nrd, naclsd)
-
-    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
-                    NACLS(ref_cluster_index), ATOM(:,site_index),NUMN0,INDN0, &
-                    GINP(:,:,:,ref_cluster_index), &
-                    naez, lmmaxd, naclsd)
-  end do
+  call referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
+                            indn0, rr, ezoa, GINP(:,:,:,1), EIKRM, EIKRP)
 
 !  do site_index = 1, naclsd ! this was just a test
 !  do lm2 = 1, lmmaxd
@@ -362,6 +333,88 @@ subroutine kloopbody( G_diag, kpoint, &
 
   deallocate(mat_B)
   deallocate(mat_X)
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> See H. Hoehler
+!=======================================================================
+! ---> fourier transformation
+!
+!     added by h.hoehler 3.7.2002
+!                                                     n   0          n
+!     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
+!                                   L  L'             L   L'
+!
+!                                             n   0           n
+!                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
+!                                             L'  L
+!
+!     this operation has to be done to satisfy e.g. the point symmetry!
+!     application of fourier transformation is just an approximation
+!     for the tb system, since the transl. invariance is not satisfied.
+!
+! The same calculation as with lloyds formula is done all over again ???
+! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
+subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
+                                indn0, rr, ezoa, GINP, EIKRM, EIKRP)
+  use dlke0_smat_mod
+  use SparseMatrixDescription_mod
+  implicit none
+
+  double complex, intent(inout) :: GLLH(:)
+  type(SparseMatrixDescription), intent(in) :: sparse
+  double precision, intent(in) :: kpoint(3)
+  double precision, intent(in) :: alat
+  integer, intent(in) :: nacls(:)
+  integer, intent(in) :: atom(:,:)
+  integer, intent(in) :: numn0(:)
+  integer, intent(in) :: indn0(:,:)
+
+  double precision, intent(in) :: rr(:,:)
+  integer, intent(in) :: ezoa(:,:)
+  double complex, intent(in) :: GINP(:,:,:)
+
+  ! work arrays
+  double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
+  double complex, intent(inout) :: EIKRP(:)
+
+  ! local
+  integer site_index
+  integer naez
+  integer nrd
+  integer naclsd
+  integer lmmaxd
+  double complex, allocatable :: Gref_buffer(:,:,:)
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  naez = size(nacls)
+  nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
+  lmmaxd = size(GINP,1)
+  naclsd = size(GINP, 3)
+
+  ! checks
+  ASSERT(lmmaxd == size(GINP,2))
+  ASSERT(naclsd == size(eikrm))
+  ASSERT(naclsd == size(eikrp))
+
+  allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
+
+  GLLH = CZERO
+  do site_index = 1,NAEZ
+
+    call DLKE1(ALAT,NACLS(site_index),RR,EZOA(:,site_index), &
+               kpoint,EIKRM,EIKRP, &
+               nrd, naclsd)
+
+    ! get GINP(:,:,:)[trunc2atom_index(site_index)]
+    Gref_buffer(:,:,:) = GINP(:,:,:) ! TODO!!!!
+
+    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
+                    NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, &
+                    Gref_buffer(:,:,:), &  !TODO
+                    naez, lmmaxd, naclsd)
+  end do
 
 end subroutine
 
