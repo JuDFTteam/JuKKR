@@ -421,7 +421,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
     call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
                     NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, &
-                    Gref_buffer(:,:,:), &
+                    Gref_buffer, &
                     naez, lmmaxd, naclsd)
   end do
 

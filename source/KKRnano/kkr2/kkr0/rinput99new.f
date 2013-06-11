@@ -1,3 +1,4 @@
+C>    Reads atominfo and rbasis files.
       SUBROUTINE RINPUTNEW99(RBASIS,NTCELL,NAEZ,Z,RMTREF)
 
       IMPLICIT NONE
@@ -34,19 +35,6 @@ c------------ array set up and definition of input parameter -----------
      +                        IRNS_dummy,
      +                        temp
 
-      IF (REFPOT /= 1 .or. cls /= 1) then
-      WRITE(*,*) "ERROR: Only 1 reference cluster allowed."
-      STOP
-      ENDIF
-
-      if (I > 1) then
-        if ( abs(temp - RMTREF(I-1)) > 1.d-8 ) then
-      WRITE(*,*) "ERROR: RMTref must be equal for all atoms."
-      WRITE(*,*) "TODO: Allow different reference clusters."
-      STOP
-        end if
-      end if
-
       RMTREF(I) = temp
 
       END DO
@@ -59,19 +47,7 @@ c
              READ (UNIT=77,FMT=*) (RBASIS(J,I), J=1,3)
       ENDDO                         
       CLOSE (77)
-c
-c----------------------------------------------------------------------
-      NCLS = 0
-      NREF = 0
-c
-      DO I=1,NAEZ 
-        NCLS = MAX(NCLS,CLS)
-      ENDDO
 
-      NREF = 1
-
-c
-      WRITE(6,2016) NCLS,NREF
       WRITE(6,2110)
       WRITE(6,2103)
 

@@ -233,7 +233,7 @@
                  arrays%DSYMLL, &
                  params%bzdivide(1),params%bzdivide(2),params%bzdivide(3), &
                  IELAST,EZ,arrays%KMESH,arrays%MAXMESH,MAXMSHD, &
-                 arrays%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD)
+                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD)
 
     ! after return from bzkint0, EKMD contains the right value
     dims%EKMD = EKMD
@@ -264,9 +264,6 @@
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
     write (67) EFERMI
     close (67)
-
-    write(*,*)
-    write(*,*) "WARNING: Assumes identical reference clusters!"
 
 ! ======================================================================
 
