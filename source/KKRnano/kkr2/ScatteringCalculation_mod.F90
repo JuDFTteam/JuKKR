@@ -84,7 +84,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (TimerMpi) :: mult_scattering_timer
   type (TimerMpi) :: single_site_timer
   integer :: ie
-  integer :: rf
   integer :: ispin
   integer :: prspin
   integer :: nmesh
@@ -96,6 +95,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   integer :: ilocal
   integer :: num_local_atoms
   integer :: lmmaxd
+
+  double complex, allocatable, dimension(:,:,:) :: Tref_local  !< local tref-matrices
+  double complex, allocatable, dimension(:,:,:) :: DTref_local !< local deriv. tref-matrices
   double complex, allocatable, dimension(:,:,:) :: TMATLL !< all t-matrices
   double complex, allocatable, dimension(:,:,:) :: GmatN_buffer !< GmatN for all local atoms
 
@@ -117,6 +119,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   ! allocate buffer for t-matrices
   allocate(TMATLL(lmmaxd, lmmaxd, trunc_zone%naez_trc))
+  ! allocate buffers for reference t-matrices
+  allocate( Tref_local(lmmaxd, lmmaxd, num_local_atoms))
+  allocate(DTref_local(lmmaxd, lmmaxd, num_local_atoms))
 
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
   allocate(atom_indices(num_local_atoms))
@@ -168,34 +173,46 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
       WRITELOG(2, *) "Working on energy point ", IE
 
+      Tref_local = CZERO
+      DTref_local = CZERO
 !------------------------------------------------------------------------------
-      !$omp parallel do private(ilocal, kkr, ref_cluster, atomdata, RF)
+      !$omp parallel do private(ilocal, kkr, atomdata)
+      do ilocal = 1, num_local_atoms
+        kkr => getKKR(calc_data, ilocal)
+        atomdata  => getAtomData(calc_data, ilocal)
+!------------------------------------------------------------------------------
+
+        call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%RMTREF, &
+                  Tref_local(:,:,ilocal), DTref_local(:,:,ilocal), dims%LLY)
+
+!------------------------------------------------------------------------------
+      end do  ! ilocal
+      !$omp end parallel do
+!------------------------------------------------------------------------------
+
+      ! Note: ref. system has to be recalculated at each iteration
+      ! since energy mesh changes
+      ! Note: TREFLL is diagonal - however full matrix is stored
+      ! Note: Gref is calculated in real space - usually only a few shells
+
+      ! Exchange the reference t-matrices within reference clusters
+
       do ilocal = 1, num_local_atoms
         kkr => getKKR(calc_data, ilocal)
         ref_cluster => getRefCluster(calc_data, ilocal)
-        atomdata  => getAtomData(calc_data, ilocal)
+
+        call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, ref_cluster, &
+                                     getMySEcommunicator(my_mpi))
+        call gatherTrefMatrices_com(DTref_local, kkr%DTrefLL, ref_cluster, &
+                                     getMySEcommunicator(my_mpi))
+      end do
+
 !------------------------------------------------------------------------------
-        kkr%noiter = 0
-
-        ! do RF = 1,arrays%NREF  RF = 1 take reference potential from atom 1
-        RF = 1
-        call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%RMTREF, &
-                  kkr%TREFLL(:,:,1), kkr%DTREFLL(:,:,1), dims%LLY) ! TODO: use local t-matrix buffer
-
-        ! TODO: here one would need to exchange the Tref matrices within each cluster
-        ! - similar to calculation of real system
-        ! Note: ref. system has to be recalculated at each iteration
-        ! since energy mesh changes
-        ! - missing: buffer for TREFLL matrices
-        ! Note: TREFLL is diagonal - however full matrix is stored
-        ! Note: Gref is calculated in real space - usually only a few shells
-        ! use gatherTmatrices ?
-
-        ! here: assume identical clusters
-        do rf = 2, size(kkr%TREFLL,3)  ! TODO: replace with communication
-          kkr%TREFLL (:,:,rf) = kkr%TREFLL(:,:,1)
-          kkr%DTREFLL(:,:,rf) = kkr%DTREFLL(:,:,1)
-        end do
+      !$omp parallel do private(ilocal, kkr, ref_cluster)
+      do ilocal = 1, num_local_atoms
+        kkr => getKKR(calc_data, ilocal)
+        ref_cluster => getRefCluster(calc_data, ilocal)
+!------------------------------------------------------------------------------
 
         ! Note for future: for communication use
         ! the cluster index to atom index mapping given by array ATOM
@@ -232,7 +249,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           endif
 
 !------------------------------------------------------------------------------
-          !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1, RF)
+          !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1)
           do ilocal = 1, num_local_atoms
             kkr => getKKR(calc_data, ilocal)
             atomdata => getAtomData(calc_data, ilocal)
@@ -308,7 +325,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           kkr => getKKR(calc_data, 1)
           jij_data => getJijData(calc_data, 1)
 
-!          TODO: not working yet
+          kkr%noiter = 0
+
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
@@ -441,11 +459,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
     enddo
 
   endif  ! IGUESS == 1 .and. EMPID > 1
-!=======================================================================
-
-  deallocate(atom_indices)
-  deallocate(GmatN_buffer)
-  deallocate(TMATLL)
 
 end subroutine
 
@@ -530,6 +543,39 @@ subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
             TSST_LOCAL(LM2,LM1) = TSST_LOCAL(LM1,LM2)
         end do
     end do
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Gather all tref-matrices of reference cluster.
+!> @param Tref_local   all locally calculated tref-matrices
+!> @param TrefLL       on exit all tref-matrices in ref_cluster
+subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, &
+                                  communicator)
+  use RefCluster_mod
+  use one_sided_commZ_mod, only: copyFromZ_com
+  implicit none
+
+  double complex, intent(inout) :: Tref_local(:,:,:)
+  double complex, intent(inout) :: TrefLL(:,:,:)
+  type (RefCluster), intent(in) :: ref_cluster
+  integer, intent(in) :: communicator
+
+  !-------------------
+  integer chunk_size
+  integer num_local_atoms
+
+  chunk_size = size(Tref_local, 1) * size(Tref_local, 2)
+  num_local_atoms = size(Tref_local, 3)
+
+  ASSERT (size(Tref_local, 1) == size(TrefLL, 1))
+  ASSERT (size(Tref_local, 2) == size(TrefLL, 2))
+  ASSERT (size(TrefLL, 3) >= ref_cluster%nacls)
+
+  TrefLL = (0.0d0, 0.0d0)
+
+  call copyFromZ_com(TrefLL, Tref_local, ref_cluster%atom, &
+                     chunk_size, num_local_atoms, communicator)
+
 end subroutine
 
 !------------------------------------------------------------------------------
