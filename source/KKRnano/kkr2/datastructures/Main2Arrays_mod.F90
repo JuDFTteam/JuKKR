@@ -1,4 +1,8 @@
-!> Datastructure that contains various arrays that could not factored out (yet).
+!> Datastructure that contains various arrays that
+!> could not be factored out (yet).
+!>
+!> Includes k-mesh, basis atom positions, atomic numbers, symmetry matrices,
+!> reference potential strength, Bravais vectors
 !>
 !> Note: Scales as O(N**2) in space and time.
 
