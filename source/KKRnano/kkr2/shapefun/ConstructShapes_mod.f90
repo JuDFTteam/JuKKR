@@ -148,11 +148,13 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_mi
 
   shdata%theta = thetas_s(1:meshn, 1:nfun)
   shdata%nfu = nfun
-
+  shdata%ifunm = 0
   shdata%lmsp = 0
+
   do ii = 1, nfun
     shdata%llmsp(ii) = lmifun_s(ii)
     shdata%lmsp(lmifun_s(ii)) = 1
+    shdata%ifunm(lmifun_s(ii)) = ii
   end do
 
   allocate(inter_mesh%xrn(meshn))
@@ -300,16 +302,16 @@ end do
 !
 ! Now store on disk
 !
-WRITE(15,FMT=9000) NPAN,MESHN
-WRITE(15,FMT=9000) (nm(ipan1),ipan1=1,npan)
-WRITE(15,FMT=9010) (xrn(ir),drn(ir),ir=1,meshn)
-WRITE(15,FMT=9000) nfu
-DO IFUN = 1,NFU
-  WRITE(15,FMT=9000) lmifun(ifun)
-!         Write (6,FMT=*)     lmifun(ifun)
-  WRITE(15,FMT=9010) (thetas(ir,ifun),ir=1,meshn)
-ENDDO
-RETURN 
+!WRITE(15,FMT=9000) NPAN,MESHN
+!WRITE(15,FMT=9000) (nm(ipan1),ipan1=1,npan)
+!WRITE(15,FMT=9010) (xrn(ir),drn(ir),ir=1,meshn)
+!WRITE(15,FMT=9000) nfu
+!DO IFUN = 1,NFU
+!  WRITE(15,FMT=9000) lmifun(ifun)
+!!         Write (6,FMT=*)     lmifun(ifun)
+!  WRITE(15,FMT=9010) (thetas(ir,ifun),ir=1,meshn)
+!ENDDO
+!RETURN
 9000 FORMAT (16i5)
 9010 FORMAT (4d20.12)
 End subroutine

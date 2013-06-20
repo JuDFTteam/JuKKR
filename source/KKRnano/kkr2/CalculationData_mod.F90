@@ -539,9 +539,7 @@ module CalculationData_mod
       end if
 
       call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
-      call openCellDataDAFile(cell, 37 , "cells")
-      call readCellDataDA(cell, 37, getCellIndex(atomdata))
-      call closeCellDataDAFile(37)
+      cell%cell_index = atomdata%cell_index
 
       call associateBasisAtomCell(atomdata, cell)
 
@@ -551,9 +549,6 @@ module CalculationData_mod
       call closeRadialMeshDataDAFile(37)
 
       call associateBasisAtomMesh(atomdata, mesh)
-
-      ! test on-the-fly shapefunction generation
-      call testshapes(calc_data, dims, params, arrays, my_mpi)
 
       call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, &
                           dims%nspind)
@@ -571,6 +566,9 @@ module CalculationData_mod
     end do
     !--------------------------------------------------------------------------
 
+    ! on-the-fly shapefunction generation
+    call generateShapes(calc_data, dims, params, arrays)
+
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
     call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
@@ -578,7 +576,7 @@ module CalculationData_mod
   end subroutine
 
 !------------------------------------------------------------------------------
-  subroutine testshapes(calc_data, dims, params, arrays, my_mpi)
+  subroutine generateShapes(calc_data, dims, params, arrays)
     use KKRnanoParallel_mod
     use DimParams_mod
     use InputParams_mod
@@ -591,7 +589,6 @@ module CalculationData_mod
     type (DimParams), intent(in)  :: dims
     type (InputParams), intent(in):: params
     type (Main2Arrays), intent(in):: arrays
-    type (KKRnanoParallel), intent(in) :: my_mpi
 
     !-----------------
     integer :: I1, ilocal, nfun, ii, irmd, irid
@@ -611,16 +608,18 @@ module CalculationData_mod
                      params%rclust, 4*dims%lmaxd, dims%irid-10, 10, new_MT_radius)
 
 
-      ! now test it
+      ! first test it
       nfun = calc_data%cell_array(ilocal)%shdata%nfu
       irmd = dims%irmd
       irid = dims%irid
+      CHECKASSERT(irid == shdata%irid)
+      CHECKASSERT(dims%nfund == shdata%nfund)
 
-      write(*,*) "Diff theta: ", sum(abs(shdata%theta - calc_data%cell_array(ilocal)%shdata%theta(:,1:nfun)))
       write(*,*) "Diff xrn:   ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
       write(*,*) "Diff drn:   ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
-      write(*,*) "Diff LLMSP: ", sum(abs(shdata%llmsp - calc_data%cell_array(ilocal)%shdata%llmsp(1:nfun)))
-      write(*,*) "Diff LMSP: ", sum(abs(shdata%lmsp - calc_data%cell_array(ilocal)%shdata%lmsp))
+
+      ! then use it
+      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
