@@ -168,6 +168,9 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   inter_mesh%drn = drn(1:meshn)
   inter_mesh%nm  = nm(1:npan)
   inter_mesh%npan = npan
+
+  !TODO: check that nm is always >= 5
+
 end subroutine
 
 !------------------------------------------------------------------------------

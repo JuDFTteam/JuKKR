@@ -30,3 +30,7 @@ i npol
 i npnt1
 i npnt2
 i npnt3
+# new parameters for shapefunctions
+d rclust_voronoi
+i nmin_panel
+i num_MT_points

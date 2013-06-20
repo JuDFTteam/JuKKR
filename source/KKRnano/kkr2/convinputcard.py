@@ -92,6 +92,21 @@ ldau    = $ldau
 rcutjij = $rcutjij
 nsra    = $nsra      # 1=non-scalar-relativistic 2=scalar-relativistic
 kte     = $kte
+
+#------------------------------------------------------------------------------
+# Shape-function options
+#------------------------------------------------------------------------------
+
+rclust_voronoi = $rclust_voronoi  # radius of cluster used for Voronoi
+nmin_panel     = $nmin_panel      # minimum number of points per panel
+
+# number of points for 'muffin-tinization'
+# create shape-function for num_MT_points in MT region
+# used to restrict core wavefunction to MT region
+# choose 0 for touching MT spheres
+# suggested value = 10
+
+num_MT_points  = $num_MT_points
 """)
 
 f = open('inputcard', 'r')
@@ -154,16 +169,23 @@ def getKeyDict(keyfile, lines):
 keydict = getKeyDict(KEYS.split('\n'), lines)
 
 def apply_kkrnano_rules(keydict):
+    """Apply KKRnano specific transformation of input parameters
+       Provide default values for new parameters not present in old
+       'inputcard'"""
     newdict = keydict.copy()
     if int(keydict['imix']) > 3:
         mixing = keydict['brymix']
     else:
         mixing = keydict['strmix']
     newdict['mixing'] = mixing
-    #del newdict['strmix']
-    #del newdict['brymix']
     newdict['nsra'] = str(int(keydict['kvrel']) + 1)
-    #del newdict['kvrel']
+    # provide default values for new shape-function parameters
+    # to behave as in Voronoi-program
+    
+    # Voronoi cluster 1.6 times larger than ref. cluster
+    newdict['rclust_voronoi'] = str(float(newdict['rclust'].lower().replace('d','e')) * 1.6)
+    newdict['nmin_panel'] = '3'
+    newdict['num_MT_points'] = '10'
     return newdict
 
 keydict = apply_kkrnano_rules(keydict)

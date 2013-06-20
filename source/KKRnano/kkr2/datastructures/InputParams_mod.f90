@@ -41,6 +41,9 @@ type InputParams
   integer :: npnt1
   integer :: npnt2
   integer :: npnt3
+  double precision :: rclust_voronoi
+  integer :: nmin_panel
+  integer :: num_MT_points
 end type InputParams
 
 CONTAINS
@@ -249,6 +252,24 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueDouble(conf, "rclust_voronoi", confvalues%rclust_voronoi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for rclust_voronoi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "nmin_panel", confvalues%nmin_panel, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for nmin_panel."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "num_MT_points", confvalues%num_MT_points, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for num_MT_points."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -293,6 +314,9 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%npnt1
   read(FILEHANDLE) confvalues%npnt2
   read(FILEHANDLE) confvalues%npnt3
+  read(FILEHANDLE) confvalues%rclust_voronoi
+  read(FILEHANDLE) confvalues%nmin_panel
+  read(FILEHANDLE) confvalues%num_MT_points
   close(FILEHANDLE)
 end function
 
@@ -337,6 +361,9 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%npnt1
   write(FILEHANDLE) confvalues%npnt2
   write(FILEHANDLE) confvalues%npnt3
+  write(FILEHANDLE) confvalues%rclust_voronoi
+  write(FILEHANDLE) confvalues%nmin_panel
+  write(FILEHANDLE) confvalues%num_MT_points
   close(FILEHANDLE)
 end function
 

@@ -595,6 +595,7 @@ module CalculationData_mod
     type (InterstitialMesh) :: inter_mesh
     type (ShapefunData) :: shdata
     double precision :: new_MT_radius
+    integer :: num_MT_points
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -603,9 +604,12 @@ module CalculationData_mod
       I1 = calc_data%atom_ids(ilocal)
 
       new_MT_radius = calc_data%atomdata_array(ilocal)%RMTref / params%alat
+      num_MT_points = params%num_MT_points
 
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
-                     params%rclust, 4*dims%lmaxd, dims%irid-10, 3, 10, new_MT_radius)
+                     params%rclust_voronoi, 4*dims%lmaxd, &
+                     dims%irid-num_MT_points, &
+                     params%nmin_panel, num_MT_points, new_MT_radius)
 
 
       ! first test it
