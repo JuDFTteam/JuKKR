@@ -605,7 +605,7 @@ module CalculationData_mod
       new_MT_radius = calc_data%atomdata_array(ilocal)%RMTref / params%alat
 
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
-                     params%rclust, 4*dims%lmaxd, dims%irid-10, 10, new_MT_radius)
+                     params%rclust, 4*dims%lmaxd, dims%irid-10, 3, 10, new_MT_radius)
 
 
       ! first test it

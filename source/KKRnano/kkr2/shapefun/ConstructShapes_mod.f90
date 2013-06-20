@@ -10,7 +10,8 @@ end type
 CONTAINS
 
 subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
-                     rcluster, lmax_shape, npoints_min, num_MT_points, new_MT_radius)
+                     rcluster, lmax_shape, npoints_min, nmin_panel, &
+                     num_MT_points, new_MT_radius)
   use RefCluster_mod
   use ShapefunData_mod
   implicit none
@@ -24,6 +25,7 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   double precision, intent(in) :: rcluster
   integer, intent(in) :: lmax_shape
   integer, intent(in) :: npoints_min
+  integer, intent(in) :: nmin_panel
   integer, intent(in) :: num_MT_points
   double precision, intent(in) :: new_MT_radius
 
@@ -44,7 +46,7 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   end if
 
   call constructFromCluster(shdata, inter_mesh, ref_cluster%rcls(:,2:), lmax_shape, &
-                            npoints_min, num_MT_points, new_MT_radius)
+                            npoints_min, nmin_panel, num_MT_points, new_MT_radius)
 
   call destroyLatticeVectors(lattice_vectors)
   call destroyRefCluster(ref_cluster)
@@ -56,7 +58,9 @@ end subroutine
 !>        shape-function mesh -> non-touching MT-spheres
 !>        = 0 to not use this feature
 ! TODO: return 'NM' -> panel info!!!
-subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_min, num_MT_points, new_MT_radius)
+subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
+                                npoints_min, nmin, &
+                                num_MT_points, new_MT_radius)
   use ShapefunData_mod
   implicit none
 
@@ -66,6 +70,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_mi
   double precision, intent(in) :: rvec(:, :)
   integer, intent(in) :: lmax_shape
   integer, intent(in) :: npoints_min
+  integer, intent(in) :: nmin !< minimum number of points in panel
   integer, intent(in) :: num_MT_points
   double precision, intent(in) :: new_MT_radius
 
@@ -75,8 +80,6 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_mi
   double precision, parameter :: TOLVDIST = 1.d-10
   double precision, parameter :: TOLVAREA = 1.d-10
   double precision, parameter :: DLT = 0.05d0 ! step-size angular integration
-  !integer, parameter :: NMIN = 5 ! minimum of 5 points/panel required for integrator
-  integer, parameter :: NMIN = 3 ! minimum of 5 points/panel required for integrator
 
   double precision :: rmt, rout, volume
   integer :: ibmaxd
