@@ -129,7 +129,7 @@ logical :: output
 ! Input:
 INTEGER NPLANE                ! Number of planes.
 INTEGER NVERTMAX              ! Max. number of vertices per plane.
-REAL*8           A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the pl      !anes, 
+REAL*8           A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes, 
 !                                     ! dimensioned >= NPLANE.
 ! Output:
 INTEGER NVERT(*)  ! Number of vertices found for each face
@@ -141,13 +141,13 @@ REAL*8  XVERT(NVERTMAX,*),YVERT(NVERTMAX,*),ZVERT(NVERTMAX,*)
 INTEGER IPLANE1,IPLANE2,IPLANE3,IPLANE,KPLANE ! Plane indices
 INTEGER IVERT                    ! Vertex index
 REAL*8           XCUT,YCUT,ZCUT ! Cut point of three planes.
-REAL*8           DET,DETX,DETY,DETZ ! Determinants of 3x3 system f      !or 
+REAL*8           DET,DETX,DETY,DETZ ! Determinants of 3x3 system for 
 !                               ! XCUT,YCUT,ZCUT.
-REAL*8           DISTANCE   ! A distance criterium of two points i      !n space
+REAL*8           DISTANCE   ! A distance criterium of two points in space
 ! The following are for sorting the vertices of each face:
 REAL*8           V1(3),V2(3),V3(3)   ! Auxiliary vectors...
-REAL*8           SINFIV1V2,COSFIV1V2 ! ...and their inner and oute      !r products
-REAL*8           FI(NVERTMAX)        ! ...and also their relative       !angles.
+REAL*8           SINFIV1V2,COSFIV1V2 ! ...and their inner and outer products
+REAL*8           FI(NVERTMAX)        ! ...and also their relative angles.
 
 !LOGICAL HALFSPACE    ! Function used, see function itself.
 LOGICAL LACCEPT      ! Determining whether a cut point is inside
@@ -326,12 +326,12 @@ logical :: output
 INTEGER NVERTMAX,NFACED
 INTEGER NPLANE                 ! Number of planes
 ! Input and output:
-INTEGER NFACE                  ! Number of faces (usually much les      !s than nplane)
+INTEGER NFACE                  ! Number of faces (usually much less than nplane)
 INTEGER NVERT(NFACED)          ! Number of vertices for each face
 REAL*8  XVERT(NVERTMAX,NFACED),YVERT(NVERTMAX,NFACED) &
        ,ZVERT(NVERTMAX,NFACED)
-REAL*8 TOLVDIST,TOLAREA  ! Max. tolerance for distance of two vert      !ices and area of face.
-REAL*8 A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes, to b      !e reordered at end
+REAL*8 TOLVDIST,TOLAREA  ! Max. tolerance for distance of two vertices and area of face.
+REAL*8 A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes, to be reordered at end
 ! Inside
 REAL*8 VDIST             ! Distance between consecutive vertices
 
@@ -350,18 +350,18 @@ REAL*8 X4,Y4,Z4,DET,DETSUM
 ! First analyze vertices.
 ! Reject doubles (also vertices which fall almost on the previous vertex).
 DO 100 IPLANE = 1,NPLANE
-   IF (NVERT(IPLANE).EQ.0) GOTO 100  ! no need checking this one,       !proceed to next!
+   IF (NVERT(IPLANE).EQ.0) GOTO 100  ! no need checking this one, proceed to next!
 
    LACCTOT = .TRUE.
 ! First vertices 1st with 2nd, 2nd with 3rd, etc...
-   LACCEPTVERT(1) = .TRUE.                 ! First vertex is alway      !s accepted.
+   LACCEPTVERT(1) = .TRUE.                 ! First vertex is always accepted.
    IVERT = 1
-   LTHISISTHELAST = .FALSE.   ! This flag will go up at the last a      !cceptable vertex.
+   LTHISISTHELAST = .FALSE.   ! This flag will go up at the last acceptable vertex.
 
 ! Double loop: First loop is over all vertices; 
 ! but if during the loop vertices are found that have to be rejected, they are jumped over.
    DO WHILE (IVERT.LT.NVERT(IPLANE).AND..NOT.LTHISISTHELAST)
-      LFOUNDNEXT = .FALSE.    ! This flag will become true when th      !e next acceptable vertex is found.
+      LFOUNDNEXT = .FALSE.    ! This flag will become true when the next acceptable vertex is found.
       IVERT2 = IVERT + 1
 ! Second loop is over subsequent vertices (i.e., vertices ivert2 > ivert).
 ! Look for the first acceptable-as-next vertex, but do not go beyond last vertex.
@@ -373,18 +373,18 @@ DO 100 IPLANE = 1,NPLANE
          VDIST = DSQRT(DX*DX + DY*DY + DZ*DZ)
 
          IF (VDIST.GE.TOLVDIST) THEN
-            LACCEPTVERT(IVERT2) = .TRUE.   ! Vertex is to be accep      !ted
-            INEXT = IVERT2                 ! Set this as the next       !vertex
-            LFOUNDNEXT = .TRUE.            ! and we have a winner,      ! exit loop.
+            LACCEPTVERT(IVERT2) = .TRUE.   ! Vertex is to be accepted
+            INEXT = IVERT2                 ! Set this as the next vertex
+            LFOUNDNEXT = .TRUE.            ! and we have a winner, exit loop.
          ELSE
-            LACCEPTVERT(IVERT2) = .FALSE.  ! Remember that vertex       !is to be rejected later
-            LACCTOT = .FALSE.              ! Remember that at leas      !t one vertex has to be rejected.
-            IVERT2 = IVERT2 + 1            ! Now compare to the ne      !xt vertex
+            LACCEPTVERT(IVERT2) = .FALSE.  ! Remember that vertex is to be rejected later
+            LACCTOT = .FALSE.              ! Remember that at least one vertex has to be rejected.
+            IVERT2 = IVERT2 + 1            ! Now compare to the next vertex
         ENDIF  
       ENDDO
 
-      IF (.NOT.LFOUNDNEXT) LTHISISTHELAST = .TRUE. ! If there is n      !o next acceptable vertex,
-                                                        ! then thi      !s was the last one. Jump out.
+      IF (.NOT.LFOUNDNEXT) LTHISISTHELAST = .TRUE. ! If there is no next acceptable vertex,
+                                                        ! then this was the last one. Jump out.
       IVERT = INEXT
       
    ENDDO
@@ -397,10 +397,10 @@ DO 100 IPLANE = 1,NPLANE
    DZ = ZVERT(IVERT2,IPLANE) -  ZVERT(IVERT,IPLANE)
    VDIST = DSQRT(DX*DX + DY*DY + DZ*DZ)
    IF (VDIST.GE.TOLVDIST) THEN
-      LACCEPTVERT(IVERT2) = .TRUE.        ! Vertex is to be accept      !ed
+      LACCEPTVERT(IVERT2) = .TRUE.        ! Vertex is to be accepted
    ELSE
-      LACCEPTVERT(IVERT2) = .FALSE.       ! Remember that vertex i      !s to be rejected later
-      LACCTOT = .FALSE.                   ! Remember that at least      ! one vertex has to be rejected.
+      LACCEPTVERT(IVERT2) = .FALSE.       ! Remember that vertex is to be rejected later
+      LACCTOT = .FALSE.                   ! Remember that at least one vertex has to be rejected.
    ENDIF
 
 
@@ -409,9 +409,9 @@ DO 100 IPLANE = 1,NPLANE
       IVERTNEWCOUNT = 0
       DO IVERT = 1,NVERT(IPLANE)
          IF (LACCEPTVERT(IVERT)) THEN
-            IVERTNEWCOUNT = IVERTNEWCOUNT + 1    ! One more vertex      ! to accept 
-            IF (IVERTNEWCOUNT.NE.IVERT) THEN     ! Otherwise the c      !orrect value is already at the correct place
-               XVERT(IVERTNEWCOUNT,IPLANE) = XVERT(IVERT,IPLANE) !      ! Re-index vertex
+            IVERTNEWCOUNT = IVERTNEWCOUNT + 1    ! One more vertex to accept 
+            IF (IVERTNEWCOUNT.NE.IVERT) THEN     ! Otherwise the correct value is already at the correct place
+               XVERT(IVERTNEWCOUNT,IPLANE) = XVERT(IVERT,IPLANE) ! Re-index vertex
                YVERT(IVERTNEWCOUNT,IPLANE) = YVERT(IVERT,IPLANE)
                ZVERT(IVERTNEWCOUNT,IPLANE) = ZVERT(IVERT,IPLANE)
             ENDIF
@@ -448,12 +448,12 @@ DO 200 IPLANE = 1,NPLANE
       IF (FACEAREA(IPLANE).GE.TOLAREA) THEN
          LACCEPTFACE(IPLANE) = .TRUE.
       ELSE
-         LACCEPTFACE(IPLANE) = .FALSE.  ! Reject facees with small      ! area
+         LACCEPTFACE(IPLANE) = .FALSE.  ! Reject facees with small area
          IF (output) WRITE(*,8010) TOLAREA 
       ENDIF
       
    ELSE
-      LACCEPTFACE(IPLANE) = .FALSE.  ! Reject planes with less tha      !n 3 vertices
+      LACCEPTFACE(IPLANE) = .FALSE.  ! Reject planes with less than 3 vertices
       IF (output) WRITE(*,8020) IPLANE,NVERT(IPLANE)
    ENDIF
 
@@ -466,17 +466,17 @@ IFACENEWCOUNT = 0
 DO IPLANE = 1,NPLANE
    IF (LACCEPTFACE(IPLANE)) THEN
       IFACENEWCOUNT = IFACENEWCOUNT + 1  ! One more face to accept
-      IF (IFACENEWCOUNT.NE.IPLANE) THEN   ! Otherwise the correct       !value is already at the correct place
-         NVERT(IFACENEWCOUNT) = NVERT(IPLANE) ! Re-index face vert      !ex number
+      IF (IFACENEWCOUNT.NE.IPLANE) THEN   ! Otherwise the correct value is already at the correct place
+         NVERT(IFACENEWCOUNT) = NVERT(IPLANE) ! Re-index face vertex number
          DO IVERT = 1,NVERT(IPLANE)
-            XVERT(IVERT,IFACENEWCOUNT) = XVERT(IVERT,IPLANE) ! Re-      !index face vertices
-            YVERT(IVERT,IFACENEWCOUNT) = YVERT(IVERT,IPLANE) ! Re-      !index face vertices
-            ZVERT(IVERT,IFACENEWCOUNT) = ZVERT(IVERT,IPLANE) ! Re-      !index face vertices
+            XVERT(IVERT,IFACENEWCOUNT) = XVERT(IVERT,IPLANE) ! Re-index face vertices
+            YVERT(IVERT,IFACENEWCOUNT) = YVERT(IVERT,IPLANE) ! Re-index face vertices
+            ZVERT(IVERT,IFACENEWCOUNT) = ZVERT(IVERT,IPLANE) ! Re-index face vertices
          ENDDO
-         A3(IFACENEWCOUNT) = A3(IPLANE) ! Re-index face equation p      !arameters
-         B3(IFACENEWCOUNT) = B3(IPLANE) ! Re-index face equation p      !arameters
-         C3(IFACENEWCOUNT) = C3(IPLANE) ! Re-index face equation p      !arameters
-         D3(IFACENEWCOUNT) = D3(IPLANE) ! Re-index face equation p      !arameters
+         A3(IFACENEWCOUNT) = A3(IPLANE) ! Re-index face equation parameters
+         B3(IFACENEWCOUNT) = B3(IPLANE) ! Re-index face equation parameters
+         C3(IFACENEWCOUNT) = C3(IPLANE) ! Re-index face equation parameters
+         D3(IFACENEWCOUNT) = D3(IPLANE) ! Re-index face equation parameters
       ENDIF
    ENDIF
 ENDDO
