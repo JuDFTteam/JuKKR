@@ -1,0 +1,7 @@
+f2py -c voronoi08.pyf  voronoi08.f distplane.o normalplane.o polyhedron08.o normalplane0.o vertex3d.o crospr.o analyzevert3d.o sortvertices.o halfspace.o
+
+
+/usr/bin/gfortran -Wall -ffixed-form -fno-second-underscore -fPIC -O3 -funroll-loops
+
+f2py -c voronoi08.pyf voronoi08.f voronoi08helpers.o
+f2py -c shapewrapper.pyf shapewrapper.f90 libshapefunctions.a

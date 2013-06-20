@@ -126,7 +126,7 @@ DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
          timing kkr0common MixingNew datastructures config_reader \
-         cluster
+         cluster shapefun
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -263,3 +263,18 @@ kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
 config_reader.o: config_reader_dictionary.o
 DimParams_mod.o: config_reader.o
+
+#Module dependencies shape-functions
+ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o
+voronoi08.o: voronoi08_mod.o
+shapewrapper.o: ShapeFunctions_mod.o
+
+angles_common.o: shape_constants_mod.o
+tetrahedra_common.o: shape_constants_mod.o
+ShapeFunctions_mod.o: shape_constants_mod.o ShapeCriticalPoints_mod.o ShapeStandardMesh_mod.o ShapeIntegration_mod.o
+ShapeCriticalPoints_mod.o: shape_constants_mod.o angles_common.o tetrahedra_common.o ShapeGeometryHelpers_mod.o
+ShapeGeometryHelpers_mod.o: shape_constants_mod.o
+ShapeIntegrationHelpers_mod.o: shape_constants_mod.o
+ShapeIntegration_mod.o: shape_constants_mod.o angles_common.o tetrahedra_common.o ShapeIntegrationHelpers_mod.o
+ShapeStandardMesh_mod.o: shape_constants_mod.o
+

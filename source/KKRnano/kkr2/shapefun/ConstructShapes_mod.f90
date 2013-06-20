@@ -1,0 +1,306 @@
+module ConstructShapes_mod
+
+type InterstitialMesh
+  double precision, allocatable, dimension(:) :: xrn
+  double precision, allocatable, dimension(:) :: drn
+  integer :: npan
+  integer, allocatable, dimension(:) :: nm
+end type
+
+CONTAINS
+
+subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
+                     rcluster, lmax_shape, npoints_min, num_MT_points, new_MT_radius)
+  use RefCluster_mod
+  use ShapefunData_mod
+  implicit none
+
+  type (ShapefunData), intent(inout) :: shdata
+  type (InterstitialMesh), intent(inout) :: inter_mesh
+
+  double precision, intent(in) :: rbasis(:,:)
+  double precision, intent(in) :: bravais(3,3)
+  integer, intent(in)          :: center_ind
+  double precision, intent(in) :: rcluster
+  integer, intent(in) :: lmax_shape
+  integer, intent(in) :: npoints_min
+  integer, intent(in) :: num_MT_points
+  double precision, intent(in) :: new_MT_radius
+
+  !----------
+  type (LatticeVectors) :: lattice_vectors
+  type (RefCluster) :: ref_cluster
+
+  call createLatticeVectors(lattice_vectors, bravais)
+  call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcluster, center_ind)
+
+  ! the cluster positions are in ref_cluster%rcls
+  ! they are sorted by distance from center
+  ! the voronoi routine expects array without position (0,0,0) -> pass rcls(:,2:)
+
+  if (sum(abs(ref_cluster%rcls(:,1))) > 1.d-8) then
+    write(*,*) "Expected origin in ref_cluster%rcls(:,1)"
+    STOP
+  end if
+
+  call constructFromCluster(shdata, inter_mesh, ref_cluster%rcls(:,2:), lmax_shape, &
+                            npoints_min, num_MT_points, new_MT_radius)
+
+  call destroyLatticeVectors(lattice_vectors)
+  call destroyRefCluster(ref_cluster)
+
+end subroutine
+
+
+!> @param num_MT_mesh add 'num_MT_mesh' radial points of MT-region to
+!>        shape-function mesh -> non-touching MT-spheres
+!>        = 0 to not use this feature
+! TODO: return 'NM' -> panel info!!!
+subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_min, num_MT_points, new_MT_radius)
+  use ShapefunData_mod
+  implicit none
+
+  type (ShapefunData), intent(inout) :: shdata
+  type (InterstitialMesh), intent(inout) :: inter_mesh
+
+  double precision, intent(in) :: rvec(:, :)
+  integer, intent(in) :: lmax_shape
+  integer, intent(in) :: npoints_min
+  integer, intent(in) :: num_MT_points
+  double precision, intent(in) :: new_MT_radius
+
+  integer, parameter :: NVERTMAX = 30  ! hoping for at most 30 vertices for each face
+  logical, parameter :: OUTPUT = .true.
+  
+  double precision, parameter :: TOLVDIST = 1.d-10
+  double precision, parameter :: TOLVAREA = 1.d-10
+  double precision, parameter :: DLT = 0.05d0 ! step-size angular integration
+  integer, parameter :: NMIN = 5 ! minimum of 5 points/panel required for integrator
+
+  double precision :: rmt, rout, volume
+  integer :: ibmaxd
+  integer :: npand
+  integer :: nface
+  integer :: meshnd
+  integer :: meshn
+  integer :: nfaced
+  integer :: nfun
+  double precision, allocatable, dimension(:) :: aface, bface, cface, dface
+  double precision, allocatable, dimension(:) :: weight
+  integer, allocatable, dimension(:) :: nm
+  integer, allocatable, dimension(:) :: nvertices
+  double precision, allocatable, dimension(:) :: xrn, drn
+  double precision, allocatable, dimension(:, :, :) :: vertices 
+  double precision, allocatable, dimension(:, :) :: thetas_s
+  integer :: npan
+  integer, allocatable, dimension(:) :: lmifun_s
+  integer :: ii
+
+  double precision, parameter :: weight0 = 1.0d0
+
+  nfaced = size(rvec,2)
+
+  ibmaxd = (lmax_shape + 1)**2
+  allocate(lmifun_s(ibmaxd))
+  lmifun_s = 0
+  
+  allocate( aface(nfaced) )
+  allocate( bface(nfaced) )
+  allocate( cface(nfaced) )
+  allocate( dface(nfaced) )
+  allocate( weight(nfaced) )
+  ! support only unweighted voronoi diagrams for now
+  weight = weight0
+  allocate( nvertices(nfaced) )
+  allocate( vertices(NVERTMAX, nfaced, 3) )
+  nvertices = 0
+
+
+  call voronoi08( &
+       nfaced,rvec,NVERTMAX,nfaced,weight0,weight,TOLVDIST,TOLVAREA, &
+       rmt,rout,volume,nface,aface,bface,cface,dface,nvertices, &
+       vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
+       OUTPUT)
+
+  npand = sum(nvertices) + nface + 1  ! +1 for possible muffin-tinisation
+  meshnd = max(npoints_min, npand * NMIN) + num_MT_points
+
+  allocate(nm(npand))
+  allocate(thetas_s(meshnd, ibmaxd))
+  allocate(xrn(meshnd))
+  allocate(drn(meshnd))
+
+  call shapewrapper(npoints_min,aface,bface,cface,dface, &
+                    NMIN, &
+                    nvertices,vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
+                    nface,lmax_shape, DLT, &
+                    npan, nm, xrn, drn, meshn, & 
+                    thetas_s, lmifun_s, nfun, & 
+                    ibmaxd,meshnd, npand,nfaced, NVERTMAX)
+
+  ! muffin-tinization
+  if (num_MT_points > 0) then 
+    call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s,new_MT_radius)
+  end if
+
+  call createShapefunData(shdata, meshn, ibmaxd, nfun)
+
+  shdata%theta = thetas_s(1:meshn, 1:nfun)
+  shdata%nfu = nfun
+
+  shdata%lmsp = 0
+  do ii = 1, nfun
+    shdata%llmsp(ii) = lmifun_s(ii)
+    shdata%lmsp(lmifun_s(ii)) = 1
+  end do
+
+  allocate(inter_mesh%xrn(meshn))
+  allocate(inter_mesh%drn(meshn))
+  allocate(inter_mesh%nm(npan))
+
+  inter_mesh%xrn = xrn(1:meshn)
+  inter_mesh%drn = drn(1:meshn)
+  inter_mesh%nm  = nm(1:npan)
+  inter_mesh%npan = npan
+end subroutine
+
+
+!******************************************************************************
+SUBROUTINE MTMESH(NRAD,NPAN,MESHN,NM,XRN,DRN, &
+                  NFU,THETAS,LMIFUN,MTRADIUS)
+!
+IMPLICIT NONE
+!
+!
+!
+! Program  mtmesh.f adds one extra pannel inside the
+! muffin-tin sphere to allow lattice relaxations.
+! stores the mt-nized shapes in unit 15 as shapefun
+!     .. Parameters ..
+!     nrad : number of points added inside the MT radius
+Integer ibmaxd, irid, npand
+INTEGER NRAD
+!      Parameter (nrad=20)
+!     ..
+!     .. Local Scalars ..
+REAL*8           dist,dn1,mtradius,pi,scale
+Integer ifun,ipan1,ir,lm,meshn,nfu,npan,number
+integer ip,i
+!     ..
+!     .. Arrays ..
+!REAL*8           drn(IRID),thetas(IRID,ibmaxd),xrn(IRID)
+!Integer nm(npand),lmIFUN(ibmaxd)
+
+REAL*8           drn(:),thetas(:,:),xrn(:)
+Integer nm(:),lmIFUN(:)
+
+!     ..
+!     .. Local Arrays ..      
+!REAL*8           drn1(IRID),thetas1(IRID,ibmaxd),xrn1(IRID)
+!Integer nm1(npand)
+
+REAL*8  drn1(meshn+nrad),thetas1(meshn+nrad,size(thetas,2)),xrn1(meshn+nrad)
+Integer nm1(npan+1)
+integer meshn1,npan1
+!     ..
+!     .. Intrinsic Functions ..
+INTRINSIC ABS,DATAN,DSQRT,SQRT
+!     ..
+
+ibmaxd = size(thetas, 2)
+irid   = size(thetas, 1)
+npand  = size(nm)
+
+PI = 4.D0*DATAN(1.D0)
+
+NPAN1 = NPAN + 1
+MESHN1 = MESHN + NRAD
+NM1(1) = NRAD
+
+DO IP=2,NPAN1
+   NM1(IP) = NM(IP-1)
+END DO
+
+IF (NPAN1.GT.NPAND) THEN
+  WRITE (6,FMT=*) ' NPAN , NPAND ',NPAN1,NPAND
+  STOP
+END IF
+
+IF (MESHN1.GT.IRID) THEN
+  WRITE (6,FMT=*) ' MESHN , IRID ',MESHN1,IRID
+  STOP
+END IF
+
+DIST = XRN(1) - MTRADIUS
+
+If (dist.lt.1.0d-5) Then
+   Write (6,FMT=*) 'Error from MTMESH '
+   write (6,*) &
+ 'Your MT-radious is biger that the minimum shape radious ' 
+   write(6,*) 'Your MT-Radious .....',mtradius
+   write(6,*) 'Shape Radious .......',xrn(1)    
+  Stop
+End if
+     
+dn1 = dist/ (nrad-1)
+xrn1(nrad) = xrn(1)
+drn1(nrad) = dn1
+Do ir = 1,nrad-1
+  xrn1(ir) = mtradius + dn1* (ir-1)
+  drn1(ir) = dn1
+End do
+do i=1,meshn1-nrad
+   xrn1(i+nrad) = xrn(i)
+   drn1(i+nrad) = drn(i) 
+end do
+
+Do ir = 1,nrad
+  thetas1(ir,1) = dsqrt(4.d0*pi)
+  Do ifun = 2,ibmaxd
+    thetas1(ir,ifun) = 0.0d0
+  End do
+End do
+
+Do 10 ifun = 1,nfu
+  do ir=1,meshn1-nrad
+   thetas1(nrad+ir,ifun) = thetas(ir,ifun)
+  end do
+10 Continue
+!
+!  Now map back and return. 
+!
+npan = npan1
+meshn = meshn1
+
+do ip=1,npan
+   nm(ip) = nm1(ip)
+end do  
+do ir=1,meshn
+   xrn(ir) = xrn1(ir)
+   drn(ir) = drn1(ir)
+end do
+
+Do ifun = 1,nfu
+  do ir=1,meshn
+   thetas(ir,ifun) = thetas1(ir,ifun)
+  end do
+end do
+!
+! Now store on disk
+!
+WRITE(15,FMT=9000) NPAN,MESHN
+WRITE(15,FMT=9000) (nm(ipan1),ipan1=1,npan)
+WRITE(15,FMT=9010) (xrn(ir),drn(ir),ir=1,meshn)
+WRITE(15,FMT=9000) nfu
+DO IFUN = 1,NFU
+  WRITE(15,FMT=9000) lmifun(ifun)
+!         Write (6,FMT=*)     lmifun(ifun)
+  WRITE(15,FMT=9010) (thetas(ir,ifun),ir=1,meshn)
+ENDDO
+RETURN 
+9000 FORMAT (16i5)
+9010 FORMAT (4d20.12)
+End subroutine
+
+
+end module

@@ -1,0 +1,39 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module shapewrapper ! in 
+    interface  ! in :shapewrapper
+        subroutine shapewrapper(npoi,aface,bface,cface,dface,nmin,nvertices,xvert,yvert,zvert,nface,lmax,dlt,npan,nm,xrn,drn,meshn,thetas_s,lmifun_s,nfun,ibmaxd,meshnd,npand,nfaced,nvertd) ! in :shapewrapper:shapewrapper.f90
+            use shapefunctions_mod, only: shapef
+            integer intent(in) :: npoi
+            real(kind=8) dimension(nfaced) :: aface
+            real(kind=8) dimension(nfaced),depend(nfaced) :: bface
+            real(kind=8) dimension(nfaced),depend(nfaced) :: cface
+            real(kind=8) dimension(nfaced),depend(nfaced) :: dface
+            integer intent(in) :: nmin
+            integer dimension(nfaced),depend(nfaced) :: nvertices
+            real(kind=8) dimension(nvertd,nfaced),depend(nfaced) :: xvert
+            real(kind=8) dimension(nvertd,nfaced),depend(nvertd,nfaced) :: yvert
+            real(kind=8) dimension(nvertd,nfaced),depend(nvertd,nfaced) :: zvert
+            integer intent(in) :: nface
+            integer intent(in) :: lmax
+            real(kind=8) intent(in) :: dlt
+            integer intent(out) :: npan
+            integer dimension(npand),intent(out),depend(npand) :: nm
+            real(kind=8) dimension(meshnd),intent(out),depend(meshnd) :: xrn
+            real(kind=8) dimension(meshnd),intent(out),depend(meshnd) :: drn
+            integer intent(out) :: meshn
+            real(kind=8) dimension(meshnd,ibmaxd),intent(out),depend(meshnd,ibmaxd) :: thetas_s
+            integer dimension(ibmaxd),intent(out),depend(ibmaxd) :: lmifun_s
+            integer intent(out) :: nfun
+            integer intent(in) :: ibmaxd
+            integer intent(in) :: meshnd
+            integer intent(in) :: npand
+            integer, optional,check(len(aface)>=nfaced),depend(aface) :: nfaced=len(aface)
+            integer, optional,check(shape(xvert,0)==nvertd),depend(xvert) :: nvertd=shape(xvert,0)
+        end subroutine shapewrapper
+    end interface 
+end python module shapewrapper
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

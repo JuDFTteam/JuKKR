@@ -1,0 +1,40 @@
+!------------------------------------------------------------------------------
+!> Hardcoded constants for shape function calculation
+module shape_constants_mod
+  implicit none
+
+  integer, parameter :: DP = kind(1.0d0) !< double precision kind parameter
+
+  !> Parameter to control diagnostic output, set to 0 for no output
+  !! 1 for output as in old program, 2 for additional output about tetrahedra
+
+#ifdef DEBUGSHAPEFUNCTIONS
+  integer, parameter :: VERBOSITY = 2
+#else
+  integer, parameter :: VERBOSITY = 0
+#endif
+
+  !> Parameter to enable/disable geometry checks (routine POLCHK)
+
+  logical, parameter :: CHECK_GEOMETRY = .true.
+
+  real(kind=DP), parameter :: PI = 3.1415926535897932_DP
+
+  !integer, parameter :: NVERTD = 250 !< maximal number of cell vertices
+  !integer, parameter :: NFACED = 200 !< maximal number of cell faces
+  !integer, parameter :: NVTOTD = NFACED*NVERTD !< maximal number of all tetrahedra vertices
+  !integer, parameter :: NVRTD  = 500 !< this constant is used in polchk
+
+  ! TODO: remove
+  !> highest quantum number for shape functions (from inc.geometry) why 25? - limits KKR calculation to l_max=6
+  integer, parameter :: LMAXD1 = 25
+
+  integer, parameter :: ICD = 1729                      !< ???
+  integer, parameter :: ICED =((LMAXD1+1)*(LMAXD1+2))/2 !< ???
+  integer, parameter :: ISUMD = 100000                  !< ???
+
+  !> maximal number of Gauss-Legendre integration points, used in PINTG
+  integer, parameter :: NDIM = 1000
+end module
+
+

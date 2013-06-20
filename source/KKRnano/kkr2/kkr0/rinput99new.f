@@ -53,6 +53,8 @@ c
 
 C *********************************************Input-End ********
 C
+C     No cleanup of Format statements due to nostalgic reasons.
+C
  2004 FORMAT( /80(1H=)/
      & '|',78X,'|'/
      & '|',1X,'KKRnano ',69X,'|'/
