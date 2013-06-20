@@ -594,7 +594,7 @@ module CalculationData_mod
     type (KKRnanoParallel), intent(in) :: my_mpi
 
     !-----------------
-    integer :: I1, ilocal
+    integer :: I1, ilocal, nfun, ii, irmd, irid
     type (InterstitialMesh) :: inter_mesh
     type (ShapefunData) :: shdata
     double precision :: new_MT_radius
@@ -609,6 +609,17 @@ module CalculationData_mod
 
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
                      params%rclust, 4*dims%lmaxd, dims%irid-10, 10, new_MT_radius)
+
+
+      ! now test it
+      nfun = shdata%nfu
+      irmd = dims%irmd
+      irid = dims%irid
+
+      write(*,*) "Diff theta: ", sum(abs(shdata%theta - calc_data%cell_array(ilocal)%shdata%theta(:,1:nfun)))
+
+      write(*,*) "Diff xrn: ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
+      write(*,*) "Diff drn: ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)

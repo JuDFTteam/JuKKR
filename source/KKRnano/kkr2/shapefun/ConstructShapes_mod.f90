@@ -75,7 +75,8 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_mi
   double precision, parameter :: TOLVDIST = 1.d-10
   double precision, parameter :: TOLVAREA = 1.d-10
   double precision, parameter :: DLT = 0.05d0 ! step-size angular integration
-  integer, parameter :: NMIN = 5 ! minimum of 5 points/panel required for integrator
+  !integer, parameter :: NMIN = 5 ! minimum of 5 points/panel required for integrator
+  integer, parameter :: NMIN = 3 ! minimum of 5 points/panel required for integrator
 
   double precision :: rmt, rout, volume
   integer :: ibmaxd
