@@ -612,14 +612,15 @@ module CalculationData_mod
 
 
       ! now test it
-      nfun = shdata%nfu
+      nfun = calc_data%cell_array(ilocal)%shdata%nfu
       irmd = dims%irmd
       irid = dims%irid
 
       write(*,*) "Diff theta: ", sum(abs(shdata%theta - calc_data%cell_array(ilocal)%shdata%theta(:,1:nfun)))
-
-      write(*,*) "Diff xrn: ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
-      write(*,*) "Diff drn: ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
+      write(*,*) "Diff xrn:   ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
+      write(*,*) "Diff drn:   ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
+      write(*,*) "Diff LLMSP: ", sum(abs(shdata%llmsp - calc_data%cell_array(ilocal)%shdata%llmsp(1:nfun)))
+      write(*,*) "Diff LMSP: ", sum(abs(shdata%lmsp - calc_data%cell_array(ilocal)%shdata%lmsp))
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
