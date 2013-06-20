@@ -23,10 +23,10 @@ logical :: output
 INTEGER NPLANE                ! Initial number of planes.
 INTEGER NVERTMAX              ! Max. number of vertices per plane.
 INTEGER NFACED                ! Max. number of faces.
-REAL*8  TOLVDIST              ! Max. tolerance for distance of two      ! vertices
-REAL*8  TOLAREA               ! Max. tolerance for area of polygon      ! face
+REAL*8  TOLVDIST              ! Max. tolerance for distance of two vertices
+REAL*8  TOLAREA               ! Max. tolerance for area of polygon face
 ! Input and Output
-REAL*8            A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the p      !lanes, 
+REAL*8            A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes,
 !                                     ! dimensioned >= NPLANE.
 ! Output:
 INTEGER NVERT(*)  ! Number of vertices found for each face
@@ -218,7 +218,7 @@ IF (LACCEPT) THEN
                + DABS(YVERT(IVERT,IPLANE1)-YCUT) &
                + DABS(ZVERT(IVERT,IPLANE1)-ZCUT)
 !           IF (DISTANCE.LT.1.D-40 ) write(6,*) 'vertices plane reject'
-      IF (DISTANCE.LT.1.D-10 ) LACCEPT = .FALSE.     ! accuracy pr      !oblem
+      IF (DISTANCE.LT.1.D-10 ) LACCEPT = .FALSE.     ! accuracy problem
    ENDDO
 ENDIF
 ! Now we're ready to add the point to the vertex list.

@@ -552,6 +552,9 @@ module CalculationData_mod
 
       call associateBasisAtomMesh(atomdata, mesh)
 
+      ! test on-the-fly shapefunction generation
+      call testshapes(calc_data, dims, params, arrays, my_mpi)
+
       call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, &
                           dims%nspind)
       call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, &
@@ -571,6 +574,46 @@ module CalculationData_mod
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
     call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
+
+  end subroutine
+
+!------------------------------------------------------------------------------
+  subroutine testshapes(calc_data, dims, params, arrays, my_mpi)
+    use KKRnanoParallel_mod
+    use DimParams_mod
+    use InputParams_mod
+    use Main2Arrays_mod
+    use ConstructShapes_mod
+    use ShapefunData_mod
+    implicit none
+
+    type (CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+    type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    !-----------------
+    integer :: I1, ilocal
+    type (InterstitialMesh) :: inter_mesh
+    type (ShapefunData) :: shdata
+    double precision :: new_MT_radius
+
+    ! loop over all LOCAL atoms
+    !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+    !--------------------------------------------------------------------------
+      I1 = calc_data%atom_ids(ilocal)
+
+      new_MT_radius = calc_data%atomdata_array(ilocal)%RMTref / params%alat
+
+      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
+                     params%rclust, 4*dims%lmaxd, dims%irid-10, 10, new_MT_radius)
+
+      call destroyShapefunData(shdata)
+      call destroyInterstitialMesh(inter_mesh)
+
+    end do
 
   end subroutine
 

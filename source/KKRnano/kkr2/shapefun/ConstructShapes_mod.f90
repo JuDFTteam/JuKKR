@@ -70,7 +70,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_mi
   double precision, intent(in) :: new_MT_radius
 
   integer, parameter :: NVERTMAX = 30  ! hoping for at most 30 vertices for each face
-  logical, parameter :: OUTPUT = .true.
+  logical, parameter :: OUTPUT = .false.
   
   double precision, parameter :: TOLVDIST = 1.d-10
   double precision, parameter :: TOLVAREA = 1.d-10
@@ -164,6 +164,17 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, npoints_mi
   inter_mesh%npan = npan
 end subroutine
 
+!------------------------------------------------------------------------------
+subroutine destroyInterstitialMesh(inter_mesh)
+  implicit none
+  type(InterstitialMesh), intent(inout) :: inter_mesh
+
+  deallocate(inter_mesh%xrn)
+  deallocate(inter_mesh%drn)
+  deallocate(inter_mesh%nm)
+  inter_mesh%npan = 0
+
+end subroutine
 
 !******************************************************************************
 SUBROUTINE MTMESH(NRAD,NPAN,MESHN,NM,XRN,DRN, &
