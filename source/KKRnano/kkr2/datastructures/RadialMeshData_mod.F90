@@ -3,6 +3,9 @@
 module RadialMeshData_mod
   implicit none
 
+  private :: initMuffinTinMesh
+  private :: initInterstitialMesh
+
   type RadialMeshData
 
     ! dimensioning parameters
@@ -57,7 +60,11 @@ module RadialMeshData_mod
     meshdata%IRWS = 0
     meshdata%IRMIN = 0
 
+    meshdata%RWS = 0.0d0
+    meshdata%RMT = 0.0d0
+
   end subroutine
+
 
   !----------------------------------------------------------------------------
   subroutine destroyRadialMeshData(meshdata)
@@ -69,6 +76,95 @@ module RadialMeshData_mod
     deallocate(meshdata%IRCUT)
 
   end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
+    implicit none
+    type (RadialMeshData), intent(inout) :: meshdata
+    double precision, intent(in) :: alat
+    double precision, intent(in) :: xrn(:)
+    double precision, intent(in) :: drn(:)
+    integer, intent(in) :: nm(:)
+    integer, intent(in) :: imt
+    integer, intent(in) :: irns
+
+    call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
+    ! note radius_mt = xrn(1) * alat
+    call initMuffinTinMesh(meshdata, imt, xrn(1)*alat)
+
+  end subroutine
+
+  !---------------------------------------------------------------------------
+  ! note radius_mt = xrn(1) * alat
+  subroutine initMuffinTinMesh(meshdata, imt, radius_mt)
+    implicit none
+    type (RadialMeshData), intent(inout) :: meshdata
+    integer, intent(in) :: imt
+    double precision, intent(in) :: radius_mt
+
+    double precision, parameter :: A = 0.025d0
+    integer :: ii
+
+    meshdata%A = A
+    meshdata%B = radius_mt / (exp(A * (imt - 1)) - 1.d0)
+
+    do ii = 1, imt
+      meshdata%r(ii)    = meshdata%B * (exp(A * (ii - 1)) - 1.d0)
+      meshdata%drdi(ii) = A * meshdata%B * exp(A * (ii - 1))
+    end do
+
+    meshdata%RMT = meshdata%r(imt)
+
+  end subroutine
+
+  !---------------------------------------------------------------------------
+  ! note radius_mt = xrn(1) * alat
+  ! TODO: xrn, drn !!!
+  subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
+    implicit none
+    type (RadialMeshData), intent(inout) :: meshdata
+    double precision, intent(in) :: alat
+    double precision, intent(in) :: xrn(:)
+    double precision, intent(in) :: drn(:)
+    integer, intent(in) :: nm(:)
+    integer, intent(in) :: imt
+    integer, intent(in) :: irns
+
+    integer :: isum, ii
+    integer :: ipan
+
+    ipan = size(nm) + 1 ! +1 for muffin-tin region 1..imt
+    meshdata%ipan = ipan
+    meshdata%imt = imt
+
+    ! ircut(0) has to be 0 - inconsistent but required for integration routines
+    meshdata%ircut(0) = 0
+    meshdata%ircut(1) = imt
+
+    isum = imt
+    do ii = 2,ipan
+      isum = isum + nm(ii - 1)
+      meshdata%ircut(ii) = isum
+    end do
+    meshdata%irc = meshdata%ircut(ipan)
+
+    meshdata%irws = isum
+    if (isum > meshdata%irmd) then
+      write(*,*) "Error creating mesh, irmd too small"
+      STOP
+    endif
+
+    do ii = 1, meshdata%irws - imt
+      meshdata%r(ii + imt) = xrn(ii) * alat
+      meshdata%drdi(ii + imt) = drn(ii) * alat
+    end do
+
+    meshdata%irmin = meshdata%irws - irns
+    meshdata%irns = irns
+    meshdata%rws  = meshdata%r(meshdata%irws)
+
+  end subroutine
+
 
   !----------------------------------------------------------------------------
   !> Write mesh data to direct access file 'fileunit' at record 'recnr'

@@ -155,6 +155,8 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
     meshdata%IRNS = IRNS(ii)
     meshdata%IRWS = IRWS(ii)
     meshdata%IRMIN = IRMIN(ii)
+    meshdata%RWS = RWS(ii)
+    meshdata%RMT = RMT(ii)
 
     call writeRadialMeshDataDA(meshdata, 37, ii)
 

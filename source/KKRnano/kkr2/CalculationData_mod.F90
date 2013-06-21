@@ -567,7 +567,7 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
 
     ! on-the-fly shapefunction generation
-    call generateShapes(calc_data, dims, params, arrays)
+    call generateShapesTEST(calc_data, dims, params, arrays)
 
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
@@ -608,7 +608,7 @@ module CalculationData_mod
 
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
                      params%rclust_voronoi, 4*dims%lmaxd, &
-                     dims%irid-num_MT_points, &
+                     dims%irid - num_MT_points, &
                      params%nmin_panel, num_MT_points, new_MT_radius)
 
 
@@ -624,6 +624,83 @@ module CalculationData_mod
 
       ! then use it
       calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
+
+      call destroyShapefunData(shdata)
+      call destroyInterstitialMesh(inter_mesh)
+
+    end do
+
+  end subroutine
+
+!------------------------------------------------------------------------------
+  subroutine generateShapesTEST(calc_data, dims, params, arrays)
+    use KKRnanoParallel_mod
+    use DimParams_mod
+    use InputParams_mod
+    use Main2Arrays_mod
+    use ConstructShapes_mod
+    use ShapefunData_mod
+    implicit none
+
+    type (CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+    type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
+
+    !-----------------
+    integer :: I1, ilocal, nfun, ii, irmd, irid
+    type (InterstitialMesh) :: inter_mesh
+    type (ShapefunData) :: shdata
+    double precision :: new_MT_radius
+    integer :: num_MT_points
+    type (RadialMeshData) :: mesh
+
+    ! loop over all LOCAL atoms
+    !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+    !--------------------------------------------------------------------------
+      I1 = calc_data%atom_ids(ilocal)
+
+      new_MT_radius = calc_data%atomdata_array(ilocal)%RMTref / params%alat
+      num_MT_points = params%num_MT_points
+
+      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
+                     params%rclust_voronoi, 4*dims%lmaxd, &
+                     dims%irid - num_MT_points, &
+                     params%nmin_panel, num_MT_points, new_MT_radius)
+
+
+      ! first test it
+      nfun = calc_data%cell_array(ilocal)%shdata%nfu
+      irmd = dims%irmd
+      irid = dims%irid
+      CHECKASSERT(irid == shdata%irid)
+      CHECKASSERT(dims%nfund == shdata%nfund)
+
+      write(*,*) "Diff xrn:   ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
+      write(*,*) "Diff drn:   ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
+
+      ! then use it
+      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
+
+      call createRadialMeshData(mesh, irmd, dims%ipand)
+
+      call initRadialMesh(mesh, params%alat, inter_mesh%xrn, inter_mesh%drn, inter_mesh%nm, irmd - irid, dims%irnsd)
+      write(*,*) "Diff r      :   ", sum(abs(mesh%r - calc_data%mesh_array(ilocal)%r))
+      write(*,*) "Diff drdi   :   ", sum(abs(mesh%drdi - calc_data%mesh_array(ilocal)%drdi))
+      write(*,*) "Diff ircut  :   ", sum(abs(mesh%ircut - calc_data%mesh_array(ilocal)%ircut))
+      write(*,*) "Diff ircut  :   ", sum(abs(mesh%ircut - calc_data%mesh_array(ilocal)%ircut))
+      write(*,*) "Diff rws    :   ", abs(mesh%rws - calc_data%mesh_array(ilocal)%rws)
+      write(*,*) mesh%rws, calc_data%mesh_array(ilocal)%rws
+      write(*,*) "Diff rmt    :   ", abs(mesh%rmt - calc_data%mesh_array(ilocal)%rmt)
+      write(*,*) "Diff ipan   :   ", abs(mesh%ipan - calc_data%mesh_array(ilocal)%ipan)
+      write(*,*) "Diff irc    :   ", abs(mesh%irc - calc_data%mesh_array(ilocal)%irc)
+      write(*,*) "Diff imt    :   ", abs(mesh%imt - calc_data%mesh_array(ilocal)%imt)
+      write(*,*) "Diff irns   :   ", abs(mesh%irns - calc_data%mesh_array(ilocal)%irns)
+      write(*,*) "Diff irws   :   ", abs(mesh%irws - calc_data%mesh_array(ilocal)%irws)
+      write(*,*) "Diff irmin  :   ", abs(mesh%irmin - calc_data%mesh_array(ilocal)%irmin)
+
+      call destroyRadialMeshData(mesh)
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
