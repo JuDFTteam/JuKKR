@@ -29,6 +29,8 @@ module CalculationData_mod
   public :: createCalculationData
   public :: destroyCalculationData
   private :: constructEverything
+  private :: generateAtomsAndMeshes
+  private :: generateShapes
 
   type CalculationData
     PRIVATE
@@ -510,9 +512,6 @@ module CalculationData_mod
 
       kkr       => calc_data%kkr_array(ilocal)
       densities => calc_data%densities_array(ilocal)
-      atomdata  => calc_data%atomdata_array(ilocal)
-      cell      => calc_data%cell_array(ilocal)
-      mesh      => calc_data%mesh_array(ilocal)
       ldau_data => calc_data%ldau_data_array(ilocal)
       jij_data  => calc_data%jij_data_array(ilocal)
       broyden   => calc_data%broyden_array(ilocal)
@@ -522,34 +521,6 @@ module CalculationData_mod
       call createKKRresults(kkr, dims, calc_data%clusters%naclsd)
       call createDensityResults(densities, dims)
       call createEnergyResults(energies, dims%nspind, dims%lmaxd)
-
-      call createBasisAtom(atomdata, I1, dims%lpot, &
-                           dims%nspind, dims%irmind, dims%irmd)
-
-      call openBasisAtomDAFile(atomdata, 37, "atoms")
-      call readBasisAtomDA(atomdata, 37, I1)
-      call closeBasisAtomDAFile(37)
-
-      ASSERT( atomdata%atom_index == I1 )
-
-      if (isInMasterGroup(my_mpi)) then
-        call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
-        call readBasisAtomPotentialDA(atomdata, 37, I1)
-        call closeBasisAtomPotentialDAFile(37)
-      end if
-
-      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
-      cell%cell_index = atomdata%cell_index
-
-      call associateBasisAtomCell(atomdata, cell)
-
-      call createRadialMeshData(mesh, dims%irmd, dims%ipand)
-      call openRadialMeshDataDAFile(mesh, 37 , "meshes")
-      call readRadialMeshDataDA(mesh, 37, I1)
-      call closeRadialMeshDataDAFile(37)
-
-      call associateBasisAtomMesh(atomdata, mesh)
-      CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
 
       call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, &
                           dims%nspind)
@@ -561,11 +532,14 @@ module CalculationData_mod
 
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 
-      ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
+      !ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
 
     !--------------------------------------------------------------------------
     end do
     !--------------------------------------------------------------------------
+
+    ! a very crucial routine
+    call generateAtomsAndMeshes(calc_data, dims)
 
     ! on-the-fly shapefunction generation
     call generateShapesTEST(calc_data, dims, params, arrays)
@@ -573,6 +547,88 @@ module CalculationData_mod
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
     call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
+
+  end subroutine
+
+!------------------------------------------------------------------------------
+  subroutine generateAtomsAndMeshes(calc_data, dims)
+    use DimParams_mod
+    use InterpolateBasisAtom_mod
+    implicit none
+    type (CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+
+    integer ilocal, I1
+    type (BasisAtom), pointer :: atomdata
+    type (CellData), pointer :: cell
+    type (RadialMeshData), pointer :: mesh
+    type (BasisAtom), pointer :: old_atom
+    type (RadialMeshData), pointer :: old_mesh
+
+    type (BasisAtom), pointer :: old_atom_array(:)
+    type (RadialMeshData), pointer :: old_mesh_array(:)
+
+    allocate(old_atom_array(calc_data%num_local_atoms))
+    allocate(old_mesh_array(calc_data%num_local_atoms))
+
+    ! loop over all LOCAL atoms
+    !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+    !--------------------------------------------------------------------------
+
+      I1 = calc_data%atom_ids(ilocal)
+
+      atomdata  => calc_data%atomdata_array(ilocal)
+      cell      => calc_data%cell_array(ilocal)
+      mesh      => calc_data%mesh_array(ilocal)
+
+      ! We want to allow the actual radial mesh to be different from the one
+      ! given by the input
+      ! Therefore read 'potential' and 'meshes' data into temporary data-
+      ! structures
+      ! Then interpolate potential to the new mesh
+      old_atom  => old_atom_array(ilocal)
+      old_mesh  => old_mesh_array(ilocal)
+
+      call createBasisAtom(old_atom, I1, dims%lpot, &
+                           dims%nspind, dims%irmind, dims%irmd)
+
+      call openBasisAtomDAFile(old_atom, 37, "atoms")
+      call readBasisAtomDA(old_atom, 37, I1)
+      call closeBasisAtomDAFile(37)
+
+      !if (isInMasterGroup(my_mpi)) then
+        call openBasisAtomPotentialDAFile(old_atom, 37, "vpotnew")
+        call readBasisAtomPotentialDA(old_atom, 37, I1)
+        call closeBasisAtomPotentialDAFile(37)
+      !end if
+
+      call createRadialMeshData(old_mesh, dims%irmd, dims%ipand)
+      call openRadialMeshDataDAFile(old_mesh, 37 , "meshes")
+      call readRadialMeshDataDA(old_mesh, 37, I1)
+      call closeRadialMeshDataDAFile(37)
+
+      call associateBasisAtomMesh(old_atom, old_mesh)
+
+      ! TEST new mesh = old_mesh
+      mesh = old_mesh
+      call interpolateBasisAtom(atomdata, old_atom, mesh)
+
+      write(*,*) "Diff Vins: ", sum(abs(atomdata%potential%VINS - old_atom%potential%VINS))
+      write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP))
+
+      !-------
+      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
+      cell%cell_index = atomdata%cell_index
+
+      call associateBasisAtomCell(atomdata, cell)
+
+      CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
+      CHECKASSERT( atomdata%atom_index == I1 )
+    end do
+
+    deallocate(old_atom_array)
+    deallocate(old_mesh_array)
 
   end subroutine
 

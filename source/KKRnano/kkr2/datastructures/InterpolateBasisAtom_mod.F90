@@ -53,9 +53,9 @@ module InterpolateBasisAtom_mod
     irws_new = new_mesh%irws
 
     ! TODO: scale?
-    ! interpolate non-spherical potential
-    do lm = 1, old_atom%potential%lmpot
-      do ii = 1, nspin
+    ! interpolate non-spherical potential - use only non-spherical part of mesh
+    do ii = 1, nspin
+      do lm = 1, old_atom%potential%lmpot
         call interpolate(old_mesh%r(irmin_old:irws_old), &
                          old_atom%potential%VINS(irmin_old:irws_old,lm,ii), &
                          new_mesh%r(irmin_new:irws_new), &
