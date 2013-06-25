@@ -549,6 +549,7 @@ module CalculationData_mod
       call closeRadialMeshDataDAFile(37)
 
       call associateBasisAtomMesh(atomdata, mesh)
+      CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
 
       call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, &
                           dims%nspind)
