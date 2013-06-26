@@ -30,7 +30,7 @@ module CalculationData_mod
   public :: destroyCalculationData
   private :: constructEverything
   private :: generateAtomsShapesMeshes
-  private :: generateShapes
+  private :: generateShapesTEST
 
   type CalculationData
     PRIVATE
@@ -552,6 +552,8 @@ module CalculationData_mod
   end subroutine
 
 !------------------------------------------------------------------------------
+!> Generates basis atom information, radial mesh, shape-function and
+!> interpolates starting potential if necessary
   subroutine generateAtomsShapesMeshes(calc_data, dims, params, arrays)
     use DimParams_mod
     use InterpolateBasisAtom_mod
@@ -575,6 +577,7 @@ module CalculationData_mod
     type (BasisAtom), pointer :: old_atom_array(:)
     type (RadialMeshData), pointer :: old_mesh_array(:)
     double precision, allocatable :: new_MT_radii(:)
+    double precision, parameter :: TOLVDIST = 1.d-10
 
     allocate(old_atom_array(calc_data%num_local_atoms))
     allocate(old_mesh_array(calc_data%num_local_atoms))
@@ -628,7 +631,8 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
 
     ! generate shapes and meshes
-    call generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii)
+    call generateShapesTEST(calc_data, dims, params, arrays, &
+                            new_MT_radii, params%MT_scale)
 
     ! interpolate to new mesh
 
@@ -644,16 +648,17 @@ module CalculationData_mod
 
       !-------
       ! TODO: check if mesh has changed!
-      ! criterion: change in number of points
-      ! OR sum(abs(mesh%r - old_mesh%r)) > 1.d-8
+      ! criterion: change in number of points OR
+      !            sum(abs(mesh%r - old_mesh%r)) > 1.d-8
 
       ! Geometry might have changed - interpolate to new mesh
       call interpolateBasisAtom(atomdata, old_atom, mesh)
 
-      write(*,*) "Diff Vins: ", sum(abs(atomdata%potential%VINS - old_atom%potential%VINS))
-      write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP)), maxloc(abs(atomdata%potential%VISP - old_atom%potential%VISP))
-      write(*,*) "Diff R:    ", sum(abs(mesh%r - old_mesh%r)), maxloc(abs(mesh%r - old_mesh%r))
-      write(*,*) "Diff drdi: ", sum(abs(mesh%drdi - old_mesh%drdi))
+      !write(*,*) "Diff Vins: ", sum(abs(atomdata%potential%VINS - old_atom%potential%VINS))
+      !write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP)), &
+      !                          maxloc(abs(atomdata%potential%VISP - old_atom%potential%VISP))
+      !write(*,*) "Diff R:    ", sum(abs(mesh%r - old_mesh%r)), maxloc(abs(mesh%r - old_mesh%r))
+      !write(*,*) "Diff drdi: ", sum(abs(mesh%drdi - old_mesh%drdi))
 
       cell%cell_index = atomdata%cell_index
       call associateBasisAtomCell(atomdata, cell)
@@ -669,65 +674,8 @@ module CalculationData_mod
   end subroutine
 
 !------------------------------------------------------------------------------
-  subroutine generateShapes(calc_data, dims, params, arrays)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use InputParams_mod
-    use Main2Arrays_mod
-    use ConstructShapes_mod
-    use ShapefunData_mod
-    implicit none
-
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (InputParams), intent(in):: params
-    type (Main2Arrays), intent(in):: arrays
-
-    !-----------------
-    integer :: I1, ilocal, nfun, ii, irmd, irid
-    type (InterstitialMesh) :: inter_mesh
-    type (ShapefunData) :: shdata
-    double precision :: new_MT_radius
-    integer :: num_MT_points
-
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
-    do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
-      I1 = calc_data%atom_ids(ilocal)
-
-      new_MT_radius = calc_data%atomdata_array(ilocal)%RMTref / params%alat
-      num_MT_points = params%num_MT_points
-
-      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
-                     params%rclust_voronoi, 4*dims%lmaxd, &
-                     dims%irid - num_MT_points, &
-                     params%nmin_panel, num_MT_points, new_MT_radius)
-
-
-      ! first test it
-      nfun = calc_data%cell_array(ilocal)%shdata%nfu
-      irmd = dims%irmd
-      irid = dims%irid
-      CHECKASSERT(irid == size(inter_mesh%xrn)) ! change in number of points not supported yet.
-      CHECKASSERT(irid == shdata%irid)
-      CHECKASSERT(dims%nfund == shdata%nfund)
-
-      write(*,*) "Diff xrn:   ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
-      write(*,*) "Diff drn:   ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
-
-      ! then use it
-      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
-
-      call destroyShapefunData(shdata)
-      call destroyInterstitialMesh(inter_mesh)
-
-    end do
-
-  end subroutine
-
-!------------------------------------------------------------------------------
-  subroutine generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii)
+  subroutine generateShapesTEST(calc_data, dims, params, arrays, &
+                                new_MT_radii, MT_scale)
     use KKRnanoParallel_mod
     use DimParams_mod
     use InputParams_mod
@@ -741,7 +689,9 @@ module CalculationData_mod
     type (InputParams), intent(in):: params
     type (Main2Arrays), intent(in):: arrays
     double precision, intent(in) :: new_MT_radii(:)
+    double precision, intent(in) :: MT_scale
     !-----------------
+
     integer :: I1, ilocal, nfun, ii, irmd, irid
     type (InterstitialMesh) :: inter_mesh
     type (ShapefunData) :: shdata
@@ -762,7 +712,7 @@ module CalculationData_mod
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
                      params%rclust_voronoi, 4*dims%lmaxd, &
                      dims%irid - num_MT_points, &
-                     params%nmin_panel, num_MT_points, new_MT_radius)
+                     params%nmin_panel, num_MT_points, new_MT_radius, MT_scale)
 
 
       ! use it

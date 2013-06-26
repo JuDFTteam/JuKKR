@@ -44,6 +44,7 @@ type InputParams
   double precision :: rclust_voronoi
   integer :: nmin_panel
   integer :: num_MT_points
+  double precision :: MT_scale
 end type InputParams
 
 CONTAINS
@@ -270,6 +271,12 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueDouble(conf, "MT_scale", confvalues%MT_scale, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for MT_scale."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -317,6 +324,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%rclust_voronoi
   read(FILEHANDLE) confvalues%nmin_panel
   read(FILEHANDLE) confvalues%num_MT_points
+  read(FILEHANDLE) confvalues%MT_scale
   close(FILEHANDLE)
 end function
 
@@ -364,6 +372,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%rclust_voronoi
   write(FILEHANDLE) confvalues%nmin_panel
   write(FILEHANDLE) confvalues%num_MT_points
+  write(FILEHANDLE) confvalues%MT_scale
   close(FILEHANDLE)
 end function
 

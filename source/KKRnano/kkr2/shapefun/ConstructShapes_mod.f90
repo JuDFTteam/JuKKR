@@ -9,9 +9,10 @@ end type
 
 CONTAINS
 
+!> MT_scale > 0.0 overrides new_MT_radius!!!
 subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
                      rcluster, lmax_shape, npoints_min, nmin_panel, &
-                     num_MT_points, new_MT_radius)
+                     num_MT_points, new_MT_radius, MT_scale)
   use RefCluster_mod
   use ShapefunData_mod
   implicit none
@@ -28,6 +29,7 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   integer, intent(in) :: nmin_panel
   integer, intent(in) :: num_MT_points
   double precision, intent(in) :: new_MT_radius
+  double precision, intent(in) :: MT_scale
 
   !----------
   type (LatticeVectors) :: lattice_vectors
@@ -46,7 +48,8 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   end if
 
   call constructFromCluster(shdata, inter_mesh, ref_cluster%rcls(:,2:), lmax_shape, &
-                            npoints_min, nmin_panel, num_MT_points, new_MT_radius)
+                            npoints_min, nmin_panel, &
+                            num_MT_points, new_MT_radius, MT_scale)
 
   call destroyLatticeVectors(lattice_vectors)
   call destroyRefCluster(ref_cluster)
@@ -60,7 +63,7 @@ end subroutine
 ! TODO: return 'NM' -> panel info!!!
 subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
                                 npoints_min, nmin, &
-                                num_MT_points, new_MT_radius)
+                                num_MT_points, new_MT_radius, MT_scale)
   use ShapefunData_mod
   implicit none
 
@@ -73,6 +76,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   integer, intent(in) :: nmin !< minimum number of points in panel
   integer, intent(in) :: num_MT_points
   double precision, intent(in) :: new_MT_radius
+  double precision, intent(in) :: MT_scale
 
   integer, parameter :: NVERTMAX = 30  ! hoping for at most 30 vertices for each face
   logical, parameter :: OUTPUT = .false.
@@ -101,6 +105,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   integer :: ii
 
   double precision, parameter :: weight0 = 1.0d0
+  double precision :: radius
 
   nfaced = size(rvec,2)
 
@@ -143,8 +148,13 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
                     ibmaxd,meshnd, npand,nfaced, NVERTMAX)
 
   ! muffin-tinization
-  if (num_MT_points > 0) then 
-    call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s,new_MT_radius)
+  radius = new_MT_radius
+  if (MT_scale > TOLVDIST) then    ! MT_scale > 0.0 overrides new_MT_radius
+    radius = min(rmt * MT_scale, rmt)
+  end if
+
+  if (num_MT_points > 0) then
+    call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s, radius)
   end if
 
   call createShapefunData(shdata, meshn, ibmaxd, nfun)

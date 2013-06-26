@@ -34,3 +34,4 @@ i npnt3
 d rclust_voronoi
 i nmin_panel
 i num_MT_points
+d MT_scale

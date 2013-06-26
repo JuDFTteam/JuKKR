@@ -107,6 +107,13 @@ nmin_panel     = $nmin_panel      # minimum number of points per panel
 # suggested value = 10
 
 num_MT_points  = $num_MT_points
+
+# determines how to set new MT-radius, choose 0.0 to get new MT radius from
+# atominfo file, otherwise choose 0.0 < MT_scale < 1.0 as factor to scale
+# maximal MT radius to new MT radius
+
+MT_scale       = $MT_scale
+ 
 """)
 
 f = open('inputcard', 'r')
@@ -186,6 +193,7 @@ def apply_kkrnano_rules(keydict):
     newdict['rclust_voronoi'] = str(float(newdict['rclust'].lower().replace('d','e')) * 1.6)
     newdict['nmin_panel'] = '3'
     newdict['num_MT_points'] = '10'
+    newdict['MT_scale'] = '0.0'
     return newdict
 
 keydict = apply_kkrnano_rules(keydict)
