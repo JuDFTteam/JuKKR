@@ -458,9 +458,6 @@ module CalculationData_mod
     type (KKRresults), pointer :: kkr
     type (DensityResults), pointer :: densities
     type (EnergyResults), pointer :: energies
-    type (BasisAtom), pointer :: atomdata
-    type (CellData), pointer :: cell
-    type (RadialMeshData), pointer :: mesh
     type (LDAUData), pointer :: ldau_data
     type (JijData), pointer :: jij_data
     type (BroydenData), pointer :: broyden
@@ -540,10 +537,6 @@ module CalculationData_mod
 
     ! a very crucial routine
     call generateAtomsShapesMeshes(calc_data, dims, params, arrays)
-
-    if (isMasterRank(my_mpi)) then
-      write(*,*) calc_data%mesh_array(1)%r
-    endif
 
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
@@ -660,6 +653,9 @@ module CalculationData_mod
       !write(*,*) "Diff R:    ", sum(abs(mesh%r - old_mesh%r)), maxloc(abs(mesh%r - old_mesh%r))
       !write(*,*) "Diff drdi: ", sum(abs(mesh%drdi - old_mesh%drdi))
 
+      ! set new MT radius
+      atomdata%RMTref = mesh%rmt
+
       cell%cell_index = atomdata%cell_index
       call associateBasisAtomCell(atomdata, cell)
 
@@ -722,7 +718,6 @@ module CalculationData_mod
       irid = dims%irid
       CHECKASSERT(irid == size(inter_mesh%xrn)) ! change in number of points not supported yet.
 
-      write(*,*) inter_mesh%xrn
       CHECKASSERT(inter_mesh%xrn(1) /= 0.0d0)
 
       call createRadialMeshData(mesh, irmd, dims%ipand)

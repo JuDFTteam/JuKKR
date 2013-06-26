@@ -113,6 +113,8 @@ module RadialMeshData_mod
       meshdata%drdi(ii) = A * meshdata%B * exp(A * (ii - 1))
     end do
 
+    meshdata%rmt = radius_MT
+
   end subroutine
 
   !---------------------------------------------------------------------------
