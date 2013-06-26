@@ -3,7 +3,7 @@
 module RadialMeshData_mod
   implicit none
 
-  private :: initMuffinTinMesh
+  !private :: initMuffinTinMesh
   private :: initInterstitialMesh
 
   type RadialMeshData
@@ -95,7 +95,7 @@ module RadialMeshData_mod
   end subroutine
 
   !---------------------------------------------------------------------------
-  ! note radius_mt = xrn(1) * alat
+  ! note radius_mt = xrn(1) * alat - in units of Bohr
   subroutine initMuffinTinMesh(meshdata, imt, radius_mt)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
@@ -113,13 +113,10 @@ module RadialMeshData_mod
       meshdata%drdi(ii) = A * meshdata%B * exp(A * (ii - 1))
     end do
 
-    meshdata%RMT = meshdata%r(imt)
-
   end subroutine
 
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat
-  ! TODO: xrn, drn !!!
   subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
@@ -137,7 +134,7 @@ module RadialMeshData_mod
     meshdata%ipan = ipan
     meshdata%imt = imt
 
-    ! ircut(0) has to be 0 - inconsistent but required for integration routines
+    ! ircut(0) has to be 0, integrations start at ircut(i)+1
     meshdata%ircut(0) = 0
     meshdata%ircut(1) = imt
 

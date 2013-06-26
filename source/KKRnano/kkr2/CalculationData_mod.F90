@@ -29,7 +29,7 @@ module CalculationData_mod
   public :: createCalculationData
   public :: destroyCalculationData
   private :: constructEverything
-  private :: generateAtomsAndMeshes
+  private :: generateAtomsShapesMeshes
   private :: generateShapes
 
   type CalculationData
@@ -539,10 +539,11 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
 
     ! a very crucial routine
-    call generateAtomsAndMeshes(calc_data, dims)
+    call generateAtomsShapesMeshes(calc_data, dims, params, arrays)
 
-    ! on-the-fly shapefunction generation
-    call generateShapesTEST(calc_data, dims, params, arrays)
+    if (isMasterRank(my_mpi)) then
+      write(*,*) calc_data%mesh_array(1)%r
+    endif
 
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
@@ -551,12 +552,18 @@ module CalculationData_mod
   end subroutine
 
 !------------------------------------------------------------------------------
-  subroutine generateAtomsAndMeshes(calc_data, dims)
+  subroutine generateAtomsShapesMeshes(calc_data, dims, params, arrays)
     use DimParams_mod
     use InterpolateBasisAtom_mod
+    use RadialMeshData_mod
+    use InputParams_mod
+    use Main2Arrays_mod
+
     implicit none
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
+    type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
 
     integer ilocal, I1
     type (BasisAtom), pointer :: atomdata
@@ -567,9 +574,17 @@ module CalculationData_mod
 
     type (BasisAtom), pointer :: old_atom_array(:)
     type (RadialMeshData), pointer :: old_mesh_array(:)
+    double precision, allocatable :: new_MT_radii(:)
 
     allocate(old_atom_array(calc_data%num_local_atoms))
     allocate(old_mesh_array(calc_data%num_local_atoms))
+    allocate(new_MT_radii(calc_data%num_local_atoms))
+
+    ! generate storage for cell information + shape-functions
+    do ilocal = 1, calc_data%num_local_atoms
+      cell => calc_data%cell_array(ilocal)
+      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
+    end do
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -577,10 +592,6 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
 
       I1 = calc_data%atom_ids(ilocal)
-
-      atomdata  => calc_data%atomdata_array(ilocal)
-      cell      => calc_data%cell_array(ilocal)
-      mesh      => calc_data%mesh_array(ilocal)
 
       ! We want to allow the actual radial mesh to be different from the one
       ! given by the input
@@ -590,6 +601,7 @@ module CalculationData_mod
       old_atom  => old_atom_array(ilocal)
       old_mesh  => old_mesh_array(ilocal)
 
+      ! load the input data
       call createBasisAtom(old_atom, I1, dims%lpot, &
                            dims%nspind, dims%irmind, dims%irmd)
 
@@ -610,23 +622,47 @@ module CalculationData_mod
 
       call associateBasisAtomMesh(old_atom, old_mesh)
 
-      ! TEST new mesh = old_mesh
-      mesh = old_mesh
+      new_MT_radii(ilocal) = old_atom%RMTref / params%alat
+    !--------------------------------------------------------------------------
+    end do
+    !--------------------------------------------------------------------------
+
+    ! generate shapes and meshes
+    call generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii)
+
+    ! interpolate to new mesh
+
+    !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+    !--------------------------------------------------------------------------
+      I1 = calc_data%atom_ids(ilocal)
+      atomdata  => calc_data%atomdata_array(ilocal)
+      cell      => calc_data%cell_array(ilocal)
+      mesh      => calc_data%mesh_array(ilocal)
+      old_atom  => old_atom_array(ilocal)
+      old_mesh  => old_mesh_array(ilocal)
+
+      !-------
+      ! TODO: check if mesh has changed!
+      ! criterion: change in number of points
+      ! OR sum(abs(mesh%r - old_mesh%r)) > 1.d-8
+
+      ! Geometry might have changed - interpolate to new mesh
       call interpolateBasisAtom(atomdata, old_atom, mesh)
 
       write(*,*) "Diff Vins: ", sum(abs(atomdata%potential%VINS - old_atom%potential%VINS))
-      write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP))
+      write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP)), maxloc(abs(atomdata%potential%VISP - old_atom%potential%VISP))
+      write(*,*) "Diff R:    ", sum(abs(mesh%r - old_mesh%r)), maxloc(abs(mesh%r - old_mesh%r))
+      write(*,*) "Diff drdi: ", sum(abs(mesh%drdi - old_mesh%drdi))
 
-      !-------
-      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
       cell%cell_index = atomdata%cell_index
-
       call associateBasisAtomCell(atomdata, cell)
 
       CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
       CHECKASSERT( atomdata%atom_index == I1 )
     end do
 
+    deallocate(new_MT_radii)
     deallocate(old_atom_array)
     deallocate(old_mesh_array)
 
@@ -673,6 +709,7 @@ module CalculationData_mod
       nfun = calc_data%cell_array(ilocal)%shdata%nfu
       irmd = dims%irmd
       irid = dims%irid
+      CHECKASSERT(irid == size(inter_mesh%xrn)) ! change in number of points not supported yet.
       CHECKASSERT(irid == shdata%irid)
       CHECKASSERT(dims%nfund == shdata%nfund)
 
@@ -690,7 +727,7 @@ module CalculationData_mod
   end subroutine
 
 !------------------------------------------------------------------------------
-  subroutine generateShapesTEST(calc_data, dims, params, arrays)
+  subroutine generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii)
     use KKRnanoParallel_mod
     use DimParams_mod
     use InputParams_mod
@@ -703,22 +740,23 @@ module CalculationData_mod
     type (DimParams), intent(in)  :: dims
     type (InputParams), intent(in):: params
     type (Main2Arrays), intent(in):: arrays
-
+    double precision, intent(in) :: new_MT_radii(:)
     !-----------------
     integer :: I1, ilocal, nfun, ii, irmd, irid
     type (InterstitialMesh) :: inter_mesh
     type (ShapefunData) :: shdata
     double precision :: new_MT_radius
     integer :: num_MT_points
-    type (RadialMeshData) :: mesh
+    type (RadialMeshData), pointer :: mesh
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms
     !--------------------------------------------------------------------------
       I1 = calc_data%atom_ids(ilocal)
+      mesh => calc_data%mesh_array(ilocal)
 
-      new_MT_radius = calc_data%atomdata_array(ilocal)%RMTref / params%alat
+      new_MT_radius = new_MT_radii(ilocal)
       num_MT_points = params%num_MT_points
 
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
@@ -727,37 +765,20 @@ module CalculationData_mod
                      params%nmin_panel, num_MT_points, new_MT_radius)
 
 
-      ! first test it
-      nfun = calc_data%cell_array(ilocal)%shdata%nfu
+      ! use it
+      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
+
       irmd = dims%irmd
       irid = dims%irid
-      CHECKASSERT(irid == shdata%irid)
-      CHECKASSERT(dims%nfund == shdata%nfund)
+      CHECKASSERT(irid == size(inter_mesh%xrn)) ! change in number of points not supported yet.
 
-      write(*,*) "Diff xrn:   ", sum(abs(inter_mesh%xrn * params%alat - calc_data%mesh_array(ilocal)%r(irmd-irid+1:irmd)))
-      write(*,*) "Diff drn:   ", sum(abs(inter_mesh%drn * params%alat - calc_data%mesh_array(ilocal)%drdi(irmd-irid+1:irmd)))
-
-      ! then use it
-      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
+      write(*,*) inter_mesh%xrn
+      CHECKASSERT(inter_mesh%xrn(1) /= 0.0d0)
 
       call createRadialMeshData(mesh, irmd, dims%ipand)
 
-      call initRadialMesh(mesh, params%alat, inter_mesh%xrn, inter_mesh%drn, inter_mesh%nm, irmd - irid, dims%irnsd)
-      write(*,*) "Diff r      :   ", sum(abs(mesh%r - calc_data%mesh_array(ilocal)%r))
-      write(*,*) "Diff drdi   :   ", sum(abs(mesh%drdi - calc_data%mesh_array(ilocal)%drdi))
-      write(*,*) "Diff ircut  :   ", sum(abs(mesh%ircut - calc_data%mesh_array(ilocal)%ircut))
-      write(*,*) "Diff ircut  :   ", sum(abs(mesh%ircut - calc_data%mesh_array(ilocal)%ircut))
-      write(*,*) "Diff rws    :   ", abs(mesh%rws - calc_data%mesh_array(ilocal)%rws)
-      write(*,*) mesh%rws, calc_data%mesh_array(ilocal)%rws
-      write(*,*) "Diff rmt    :   ", abs(mesh%rmt - calc_data%mesh_array(ilocal)%rmt)
-      write(*,*) "Diff ipan   :   ", abs(mesh%ipan - calc_data%mesh_array(ilocal)%ipan)
-      write(*,*) "Diff irc    :   ", abs(mesh%irc - calc_data%mesh_array(ilocal)%irc)
-      write(*,*) "Diff imt    :   ", abs(mesh%imt - calc_data%mesh_array(ilocal)%imt)
-      write(*,*) "Diff irns   :   ", abs(mesh%irns - calc_data%mesh_array(ilocal)%irns)
-      write(*,*) "Diff irws   :   ", abs(mesh%irws - calc_data%mesh_array(ilocal)%irws)
-      write(*,*) "Diff irmin  :   ", abs(mesh%irmin - calc_data%mesh_array(ilocal)%irmin)
-
-      call destroyRadialMeshData(mesh)
+      call initRadialMesh(mesh, params%alat, inter_mesh%xrn, &
+                          inter_mesh%drn, inter_mesh%nm, irmd - irid, dims%irnsd)
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)

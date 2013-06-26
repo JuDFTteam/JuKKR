@@ -87,7 +87,7 @@ module InterpolateBasisAtom_mod
     double precision :: yderiv
     integer :: num
     integer :: counter, ii
-    double precision, parameter :: TOL = 1.d-14
+    double precision, parameter :: TOL = 1.d-10
 
     num = size(xval)
     allocate(xarray(num))
