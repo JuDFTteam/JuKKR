@@ -149,7 +149,7 @@ module RadialMeshData_mod
 
     meshdata%irws = isum
     if (isum > meshdata%irmd) then
-      write(*,*) "Error creating mesh, irmd too small"
+      write(*,*) "Error creating mesh, irmd too small", isum, meshdata%irmd
       STOP
     endif
 

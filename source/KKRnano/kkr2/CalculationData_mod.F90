@@ -688,7 +688,8 @@ module CalculationData_mod
     double precision, intent(in) :: MT_scale
     !-----------------
 
-    integer :: I1, ilocal, nfun, ii, irmd, irid
+    integer :: I1, ilocal, nfun, ii
+    integer :: irmd, irid, ipand, irnsd
     type (InterstitialMesh) :: inter_mesh
     type (ShapefunData) :: shdata
     double precision :: new_MT_radius
@@ -714,16 +715,18 @@ module CalculationData_mod
       ! use it
       calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
 
-      irmd = dims%irmd
-      irid = dims%irid
-      CHECKASSERT(irid == size(inter_mesh%xrn)) ! change in number of points not supported yet.
+      irmd = dims%irmd - dims%irid + size(inter_mesh%xrn)
+      irid = size(inter_mesh%xrn)
+      ipand = size(inter_mesh%nm) + 1
+      irnsd = irmd - (dims%irmd - dims%irnsd)
 
-      CHECKASSERT(inter_mesh%xrn(1) /= 0.0d0)
+      ASSERT(inter_mesh%xrn(1) /= 0.0d0)
+      !write(*,*) irmd, irid, ipand, irnsd
 
-      call createRadialMeshData(mesh, irmd, dims%ipand)
+      call createRadialMeshData(mesh, irmd, ipand)
 
       call initRadialMesh(mesh, params%alat, inter_mesh%xrn, &
-                          inter_mesh%drn, inter_mesh%nm, irmd - irid, dims%irnsd)
+                          inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
