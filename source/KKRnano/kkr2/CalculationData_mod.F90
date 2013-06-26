@@ -462,6 +462,8 @@ module CalculationData_mod
     type (JijData), pointer :: jij_data
     type (BroydenData), pointer :: broyden
     type (MadelungLatticeSum), pointer :: madelung_sum
+    type (RadialMeshData), pointer :: mesh
+
 
     call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
 
@@ -500,6 +502,9 @@ module CalculationData_mod
                                   params%ALAT, params%RMAX, params%GMAX, &
                                   arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
 
+    ! a very crucial routine
+    call generateAtomsShapesMeshes(calc_data, dims, params, arrays)
+
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms
@@ -514,12 +519,13 @@ module CalculationData_mod
       broyden   => calc_data%broyden_array(ilocal)
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
       energies  => calc_data%energies_array(ilocal)
+      mesh => calc_data%mesh_array(ilocal)
 
       call createKKRresults(kkr, dims, calc_data%clusters%naclsd)
-      call createDensityResults(densities, dims)
+      call createDensityResults(densities, dims, mesh%irmd)
       call createEnergyResults(energies, dims%nspind, dims%lmaxd)
 
-      call createLDAUData(ldau_data, params%ldau, dims%irmd, dims%lmaxd, &
+      call createLDAUData(ldau_data, params%ldau, mesh%irmd, dims%lmaxd, &
                           dims%nspind)
       call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, &
                          dims%lmmaxd,dims%nspind)
@@ -534,9 +540,6 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
     end do
     !--------------------------------------------------------------------------
-
-    ! a very crucial routine
-    call generateAtomsShapesMeshes(calc_data, dims, params, arrays)
 
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)

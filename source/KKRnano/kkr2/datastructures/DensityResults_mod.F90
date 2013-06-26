@@ -38,13 +38,14 @@ module DensityResults_mod
   !> Constructs a DensityResults object.
   !> @param[in,out] self    The DensityResults object to construct.
   !> @param[in]     dims
-  subroutine createDensityResults(self, dims)
+  subroutine createDensityResults(self, dims, num_radial_irmd)
     use DimParams_mod
     implicit none
     type (DensityResults), intent(inout) :: self
     type (DimParams), intent(in) :: dims
+    integer, intent(in) :: num_radial_irmd
 
-    call createDensityResultsImpl(self, dims%irmd, dims%lmpotd, dims%lmaxd, &
+    call createDensityResultsImpl(self, num_radial_irmd, dims%lmpotd, dims%lmaxd, &
                                   dims%iemxd, dims%nspind)
 
   end subroutine
