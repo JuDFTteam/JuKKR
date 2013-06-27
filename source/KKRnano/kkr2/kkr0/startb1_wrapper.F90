@@ -37,7 +37,6 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   INTEGER, parameter :: KHFELD = 0
 
   ! --- locals ---
-  type (CellData) :: cell
   type (RadialMeshData) :: meshdata
   integer :: ii
 
@@ -99,7 +98,6 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   allocate(RMTNEW(NAEZD))
   allocate(INIPOL(NAEZD))
 
-  call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
   call createRadialMeshData(meshdata, irmd, ipand)
 
   NCORE = 0
@@ -121,22 +119,6 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   call dochecks()
 
   call writeAtomData()
-
-  call openCellDataDAFile(cell, 37 , "cells")
-
-  do ii = 1, ncelld  ! NCELL or NCELLD ??? -forced equality
-    cell%cell_index = ii
-    cell%shdata%THETA(:,:) = THETAS(:,:,ii)
-    cell%shdata%LLMSP = LLMSP(:,ii)
-    cell%shdata%IFUNM = IFUNM(:,ii)
-    cell%shdata%LMSP = LMSP(:,ii)
-    cell%shdata%NFU = NFU(ii)
-
-    call writeCellDataDA(cell, 37, ii)
-
-  end do
-
-  call closeCellDataDAFile(37)
 
   call openRadialMeshDataDAFile(meshdata, 37 , "meshes")
 
@@ -164,7 +146,6 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
 
   call closeRadialMeshDataDAFile(37)
 
-  call destroyCellData(cell)
   call destroyRadialMeshData(meshdata)
 
 
