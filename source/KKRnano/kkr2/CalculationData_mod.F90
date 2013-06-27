@@ -530,8 +530,9 @@ module CalculationData_mod
       call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, &
                          dims%lmmaxd,dims%nspind)
 
-      call createBroydenData(broyden, dims%ntird, dims%itdbryd, &
-                             params%imix, params%mixing)
+      call createBroydenData(broyden, &
+      (mesh%IRMD+(mesh%IRNS+1)*(dims%LMPOTD-1))*dims%NSPIND, &  ! former NTIRD
+      dims%itdbryd, params%imix, params%mixing)
 
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 

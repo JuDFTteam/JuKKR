@@ -38,7 +38,6 @@ module DimParams_mod
     integer  :: LMPOTD
     integer  :: IRMIND
     integer  :: LRECRES2
-    integer  :: NTIRD
     integer  :: LPOT
     integer  :: NGUESSD
     integer  :: SMPID
@@ -271,9 +270,8 @@ module DimParams_mod
     self%LMXSPD= (2*self%LPOT+1)**2
 
     self%LMPOTD= (self%LPOT+1)**2
-    self%NTIRD=(self%IRMD+(self%IRNSD+1)*(self%LMPOTD-1))*self%NSPIND
+    !self%NTIRD=(self%IRMD+(self%IRNSD+1)*(self%LMPOTD-1))*self%NSPIND
     self%IRMIND=self%IRMD-self%IRNSD
-
     self%NGUESSD = 1 + self%IGUESSD * ( self%NAEZ * (self%LMAXD+1)**2 - 1 )
 
     ! Record lengths
