@@ -614,10 +614,7 @@ module CalculationData_mod
         call closeBasisAtomPotentialDAFile(37)
       !end if
 
-      call createRadialMeshData(old_mesh, dims%irmd, dims%ipand)
-      call openRadialMeshDataDAFile(old_mesh, 37 , "meshes")
-      call readRadialMeshDataDA(old_mesh, 37, I1)
-      call closeRadialMeshDataDAFile(37)
+      call createRadialMeshDataFromFile(old_mesh, "meshes", I1)
 
       call associateBasisAtomMesh(old_atom, old_mesh)
 

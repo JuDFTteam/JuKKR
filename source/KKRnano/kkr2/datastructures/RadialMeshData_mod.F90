@@ -166,6 +166,34 @@ module RadialMeshData_mod
 
 
   !----------------------------------------------------------------------------
+  !> Read and create radial mesh data from files <filename> and <filename>.idx
+  !>
+  !> The index file with extension .idx is necessary because different
+  !> atoms can have a different number of radial mesh points
+  subroutine createRadialMeshDataFromFile(meshdata, filename, recnr)
+    implicit none
+    type (RadialMeshData), intent(inout) :: meshdata
+    character(len=*), intent(in) :: filename
+    integer, intent(in) :: recnr
+
+    integer :: FILEUNIT = 37
+    integer :: irmd, ipand, max_reclen
+
+    ! index file has extension .idx
+    call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, &
+                                       filename // ".idx")
+    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, &
+                                       irmd, ipand, max_reclen)
+    call closeRadialMeshDataIndexDAFile(FILEUNIT)
+
+    call createRadialMeshData(meshdata, irmd, ipand)
+
+    call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
+    call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
+    call closeRadialMeshDataDAFile(FILEUNIT)
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Write mesh data to direct access file 'fileunit' at record 'recnr'
   subroutine writeRadialMeshDataDA(meshdata, fileunit, recnr)
 
@@ -176,7 +204,7 @@ module RadialMeshData_mod
 
     integer, parameter :: MAGIC_NUMBER = -889271554
 
-    write (fileunit, rec=recnr) MAGIC_NUMBER, &
+    write (fileunit, rec=recnr) MAGIC_NUMBER + recnr, &
                                 meshdata%A, &
                                 meshdata%B, &
                                 meshdata%RWS, &
@@ -190,7 +218,7 @@ module RadialMeshData_mod
                                 meshdata%R, &
                                 meshdata%DRDI, &
                                 meshdata%IRCUT, &
-                                MAGIC_NUMBER
+                                MAGIC_NUMBER + recnr
 
   end subroutine
 
@@ -205,6 +233,9 @@ module RadialMeshData_mod
 
     integer, parameter :: MAGIC_NUMBER = -889271554
     integer :: magic, magic2
+    integer :: checkmagic
+
+    checkmagic = MAGIC_NUMBER + recnr
 
     read  (fileunit, rec=recnr) magic, &
                                 meshdata%A, &
@@ -222,23 +253,24 @@ module RadialMeshData_mod
                                 meshdata%IRCUT, &
                                 magic2
 
-    if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) then
-      write (*,*) "ERROR: Invalid cell data read. ", __FILE__, __LINE__
+    if (magic /= checkmagic .or. magic2 /= checkmagic) then
+      write (*,*) "ERROR: Invalid mesh data read. ", __FILE__, __LINE__
       STOP
     end if
 
   end subroutine
 
-  !----------------------------------------------------------------------------
-  !> Opens RadialMeshData direct access file.
-  subroutine openRadialMeshDataDAFile(meshdata, fileunit, filename)
+  !---------------------------------------------------------------------------
+  !> Return MINIMUM record length needed to store mesh of this atom
+  !>
+  !> Note: for a file containing meshes of several atoms, the maximum
+  !> of all their record lengths has to be determined
+  integer function getMinReclenMesh(meshdata) result(reclen)
     implicit none
 
     type (RadialMeshData), intent(in) :: meshdata
-    integer, intent(in) :: fileunit
-    character(len=*), intent(in) :: filename
     !------
-    integer :: reclen
+
     integer, parameter :: MAGIC_NUMBER = -889271554
 
     inquire (iolength = reclen) MAGIC_NUMBER, &
@@ -257,7 +289,25 @@ module RadialMeshData_mod
                                 meshdata%IRCUT, &
                                 MAGIC_NUMBER
 
-    !write (*,*) reclen
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Opens RadialMeshData direct access file.
+  subroutine openRadialMeshDataDAFile(meshdata, fileunit, filename, max_reclen)
+    implicit none
+
+    type (RadialMeshData), intent(in) :: meshdata
+    integer, intent(in) :: fileunit
+    character(len=*), intent(in) :: filename
+    integer, intent(in), optional :: max_reclen
+    !------
+    integer :: reclen
+
+    if (present(max_reclen)) then
+      reclen = max_reclen
+    else
+      reclen = getMinReclenMesh(meshdata)
+    end if
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 
@@ -266,6 +316,93 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Closes RadialMeshData direct access file.
   subroutine closeRadialMeshDataDAFile(fileunit)
+    implicit none
+    integer, intent(in) :: fileunit
+
+    close(fileunit)
+
+  end subroutine
+
+!===========  Index file ======================================================
+
+  !----------------------------------------------------------------------------
+  !> Write mesh dimension data to direct access file 'fileunit' at record 'recnr'
+  subroutine writeRadialMeshDataIndexDA(meshdata, fileunit, recnr, max_reclen)
+
+    implicit none
+    type (RadialMeshData), intent(in) :: meshdata
+    integer, intent(in) :: fileunit
+    integer, intent(in) :: recnr
+    integer, intent(in) :: max_reclen
+
+    integer, parameter :: MAGIC_NUMBER = -889271554
+
+    write (fileunit, rec=recnr) meshdata%irmd, &
+                                meshdata%ipand, &
+                                max_reclen, &
+                                MAGIC_NUMBER + recnr
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read mesh dimension data from direct access file 'fileunit' at record 'recnr'
+  !>
+  !> Returns dimensions irmd and ipand
+  subroutine readRadialMeshDataIndexDA(meshdata, fileunit, recnr, &
+                                       irmd, ipand, max_reclen)
+    implicit none
+
+    type (RadialMeshData), intent(inout) :: meshdata
+    integer, intent(in) :: fileunit
+    integer, intent(in) :: recnr
+    integer, intent(out) :: irmd
+    integer, intent(out) :: ipand
+    integer, intent(out) :: max_reclen
+
+    integer, parameter :: MAGIC_NUMBER = -889271554
+    integer :: magic
+    integer :: checkmagic
+
+    checkmagic = MAGIC_NUMBER + recnr
+
+    read  (fileunit, rec=recnr) irmd, &
+                                ipand, &
+                                max_reclen, &
+                                magic
+
+    if (magic /= checkmagic) then
+      write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
+      STOP
+    end if
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Opens RadialMeshData index file.
+  subroutine openRadialMeshDataIndexDAFile(meshdata, fileunit, filename)
+    implicit none
+
+    type (RadialMeshData), intent(in) :: meshdata
+    integer, intent(in) :: fileunit
+    character(len=*), intent(in) :: filename
+    !------
+    integer :: reclen
+    integer :: max_reclen
+    integer, parameter :: MAGIC_NUMBER = -889271554
+
+    max_reclen = 0
+    inquire (iolength = reclen) meshdata%irmd, &
+                                meshdata%ipand, &
+                                max_reclen, &
+                                MAGIC_NUMBER
+
+    open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Closes RadialMeshData index file.
+  subroutine closeRadialMeshDataIndexDAFile(fileunit)
     implicit none
     integer, intent(in) :: fileunit
 

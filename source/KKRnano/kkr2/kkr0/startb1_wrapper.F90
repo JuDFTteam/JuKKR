@@ -35,6 +35,7 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   INTEGER, parameter :: IPF = 6
   INTEGER, parameter :: IPFE = 9
   INTEGER, parameter :: KHFELD = 0
+  integer :: max_reclen
 
   ! --- locals ---
   type (RadialMeshData) :: meshdata
@@ -121,6 +122,9 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   call writeAtomData()
 
   call openRadialMeshDataDAFile(meshdata, 37 , "meshes")
+  call openRadialMeshDataIndexDAFile(meshdata, 38, "meshes.idx")
+
+  inquire(unit=37, recl = max_reclen)
 
   do ii = 1, naezd
 
@@ -141,9 +145,12 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
     meshdata%RMT = RMT(ii)
 
     call writeRadialMeshDataDA(meshdata, 37, ii)
+    call writeRadialMeshDataIndexDA(meshdata, 38, ii, max_reclen)
 
   end do
 
+
+  call closeRadialMeshDataIndexDAFile(38)
   call closeRadialMeshDataDAFile(37)
 
   call destroyRadialMeshData(meshdata)

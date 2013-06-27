@@ -188,21 +188,40 @@ CONTAINS
   !> Opens unformatted direct-access (DA) file.
   !>
   !> The format is compatible to the 'vpotnew' file
-  subroutine openBasisAtomPotentialDAFile(atom, fileunit, filename)
+  !> WARNING: If number of mesh points is different for each atom, specify
+  !> the (otherwise optional) parameter max_reclen !!!
+  subroutine openBasisAtomPotentialDAFile(atom, fileunit, filename, max_reclen)
     implicit none
     type (BasisAtom), intent(inout) :: atom
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
+    integer, intent(in), optional :: max_reclen
 
     integer :: reclen
 
-    inquire (iolength = reclen)   atom%potential%VINS, &
-                                  atom%potential%VISP, &
-                                  atom%core%ECORE
+    if (present(max_reclen)) then
+      reclen = max_reclen
+    else
+      reclen = getMinReclenBasisAtomPotential(atom)
+    end if
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 
   end subroutine
+
+  !---------------------------------------------------------------------------
+  !> Return MINIMUM record length needed to store potential of this atom
+  !>
+  !> Note: for a file containing potentials of several atoms, the maximum
+  !> of all their record lengths has to be determined
+  integer function getMinReclenBasisAtomPotential(atom) result(reclen)
+    implicit none
+    type (BasisAtom), intent(in) :: atom
+
+    inquire (iolength = reclen)   atom%potential%VINS, &
+                                  atom%potential%VISP, &
+                                  atom%core%ECORE
+  end function
 
   !----------------------------------------------------------------------------
   !> Reads from unformatted direct-access (DA) file.
@@ -328,123 +347,5 @@ CONTAINS
 
   end subroutine
 
-  !----------------------------------------------------------------------------
-  !> Write to unformatted direct-access (DA) file.
-  !> Pad the arrays with zeros up to 'max_mesh_points' to ensure constant
-  !> record lengths.
-  !>
-  !> The format is compatible to the 'vpotnew' file
-  !> A record number has to be specified - argument 'recnr'
-  !> No checks
-  subroutine writeBasisAtomPotentialPadDA(atom, filename, recnr, &
-                                          max_mesh_points)
-    implicit none
-    type (BasisAtom), intent(in) :: atom
-    character(len=*), intent(in) :: filename
-    integer, intent(in) :: recnr
-    integer, intent(in) :: max_mesh_points
-
-    integer, parameter :: FILEUNIT = 37
-    integer :: reclen
-    double precision, allocatable :: vins_temp(:,:,:)
-    double precision, allocatable :: visp_temp(:,:)
-
-    allocate(vins_temp(max_mesh_points, size(atom%potential%VINS, 2), &
-                                        size(atom%potential%VINS, 3)))
-
-    allocate(visp_temp(max_mesh_points, size(atom%potential%VISP, 2)))
-
-    vins_temp = 0.0d0
-    visp_temp = 0.0d0
-    vins_temp(1:size(atom%potential%VINS, 1), :, :) = atom%potential%VINS
-    visp_temp(1:size(atom%potential%VISP, 1), :) = atom%potential%VISP
-
-    inquire (iolength = reclen)   vins_temp, &
-                                  visp_temp, &
-                                  atom%core%ECORE
-
-    open(FILEUNIT, access='direct', file=filename, recl=reclen, &
-         form='unformatted')
-
-    write (FILEUNIT, rec=recnr) vins_temp, &
-                                visp_temp, &
-                                atom%core%ECORE
-
-    close(FILEUNIT)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Read from unformatted direct-access (DA) file.
-  !> The arrays are padded with zeros up to 'max_mesh_points'
-  !> to ensure constant record lengths.
-  !>
-  !> The format is compatible to the 'vpotnew' file
-  !> A record number has to be specified - argument 'recnr'
-  !> No checks
-  subroutine readBasisAtomPotentialPadDA(atom, filename, recnr, &
-                                         max_mesh_points)
-    implicit none
-    type (BasisAtom), intent(inout) :: atom
-    character(len=*), intent(in) :: filename
-    integer, intent(in) :: recnr
-    integer, intent(in) :: max_mesh_points
-
-    integer, parameter :: FILEUNIT = 37
-    integer :: reclen
-    double precision, allocatable :: vins_temp(:,:,:)
-    double precision, allocatable :: visp_temp(:,:)
-
-    allocate(vins_temp(max_mesh_points, size(atom%potential%VINS, 2), &
-                                        size(atom%potential%VINS, 3)))
-
-    allocate(visp_temp(max_mesh_points, size(atom%potential%VISP, 2)))
-
-
-    inquire (iolength = reclen)   vins_temp, &
-                                  visp_temp, &
-                                  atom%core%ECORE
-
-    open(FILEUNIT, access='direct', file=filename, recl=reclen, &
-         form='unformatted')
-
-    write (FILEUNIT, rec=recnr) vins_temp, &
-                                visp_temp, &
-                                atom%core%ECORE
-
-    close(FILEUNIT)
-
-    atom%potential%VINS = vins_temp(1:size(atom%potential%VINS, 1), :, :)
-    atom%potential%VISP = visp_temp(1:size(atom%potential%VISP, 1), :)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  subroutine writeMaxMeshPoints(filename, max_mesh_points)
-    implicit none
-    character(len=*), intent(in) :: filename
-    integer, intent(in) :: max_mesh_points
-
-    integer, parameter :: FILEUNIT = 37
-
-    open(FILEUNIT, file=filename, form='unformatted')
-    write (FILEUNIT) max_mesh_points
-    close(FILEUNIT)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  subroutine readMaxMeshPoints(filename, max_mesh_points)
-    implicit none
-    character(len=*), intent(in) :: filename
-    integer, intent(out) :: max_mesh_points
-
-    integer, parameter :: FILEUNIT = 37
-
-    open(FILEUNIT, file=filename, form='unformatted')
-    read (FILEUNIT) max_mesh_points
-    close(FILEUNIT)
-
-  end subroutine
 
 end module BasisAtom_mod
