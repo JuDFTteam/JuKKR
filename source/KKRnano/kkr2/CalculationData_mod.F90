@@ -602,18 +602,7 @@ module CalculationData_mod
       old_mesh  => old_mesh_array(ilocal)
 
       ! load the input data
-      call createBasisAtom(old_atom, I1, dims%lpot, &
-                           dims%nspind, dims%irmind, dims%irmd)
-
-      call openBasisAtomDAFile(old_atom, 37, "atoms")
-      call readBasisAtomDA(old_atom, 37, I1)
-      call closeBasisAtomDAFile(37)
-
-      !if (isInMasterGroup(my_mpi)) then
-        call openBasisAtomPotentialDAFile(old_atom, 37, "vpotnew")
-        call readBasisAtomPotentialDA(old_atom, 37, I1)
-        call closeBasisAtomPotentialDAFile(37)
-      !end if
+      call createBasisAtomFromFile(old_atom, "atoms", "vpotnew", I1)
 
       call createRadialMeshDataFromFile(old_mesh, "meshes", I1)
 

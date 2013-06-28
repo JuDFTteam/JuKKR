@@ -169,6 +169,42 @@ CONTAINS
 !=========================== I / O ============================================
 
   !----------------------------------------------------------------------------
+  !> creates basis atom AND potential from record 'recnr' from files
+  !> <filename>, <filenamepot>, <filenamepot>.idx
+  !> Note: One has to still deal with the mesh!
+
+  !> recnr = atom_index
+  subroutine createBasisAtomFromFile(atom, filename, filenamepot, recnr)
+    implicit none
+    type (BasisAtom), intent(inout) :: atom
+    character(len=*), intent(in) :: filename
+    character(len=*), intent(in) :: filenamepot
+    integer, intent(in) :: recnr
+    integer :: irmd, lpot, nspin, irmind
+    integer :: max_reclen
+
+    integer, parameter :: FILEUNIT = 42
+
+    ! index file has extension .idx
+    call openBasisAtomPotentialIndexDAFile(atom, FILEUNIT, &
+                                       filenamepot // ".idx")
+    call readBasisAtomPotentialIndexDA(atom, FILEUNIT, recnr, &
+                              lpot, nspin, irmind, irmd, max_reclen)
+    call closeBasisAtomPotentialDAFile(FILEUNIT)
+
+    call createBasisAtom(atom, recnr, lpot, nspin, irmind, irmd)
+
+    call openBasisAtomDAFile(atom, FILEUNIT, filename)
+    call readBasisAtomDA(atom, FILEUNIT, recnr)
+    call closeBasisAtomDAFile(FILEUNIT)
+
+    call openBasisAtomPotentialDAFile(atom, FILEUNIT, filenamepot)
+    call readBasisAtomPotentialDA(atom, FILEUNIT, recnr)
+    call closeBasisAtomPotentialDAFile(FILEUNIT)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Write basis atom data to direct access file 'fileunit' at record 'recnr'.
   subroutine writeBasisAtomDA(atom, fileunit, recnr)
 
