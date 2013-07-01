@@ -198,7 +198,7 @@ CONTAINS
     call readBasisAtomDA(atom, FILEUNIT, recnr)
     call closeBasisAtomDAFile(FILEUNIT)
 
-    call openBasisAtomPotentialDAFile(atom, FILEUNIT, filenamepot)
+    call openBasisAtomPotentialDAFile(atom, FILEUNIT, filenamepot, max_reclen)
     call readBasisAtomPotentialDA(atom, FILEUNIT, recnr)
     call closeBasisAtomPotentialDAFile(FILEUNIT)
 

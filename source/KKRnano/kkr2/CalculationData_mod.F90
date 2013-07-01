@@ -32,6 +32,7 @@ module CalculationData_mod
   private :: generateAtomsShapesMeshes
   private :: generateShapesTEST
   private :: recordLengths_com
+  private :: writePotentialIndexFile
 
   type CalculationData
     PRIVATE
@@ -529,7 +530,10 @@ module CalculationData_mod
 
     call recordLengths_com(calc_data, my_mpi)
 
-    call writePotentialIndexFile(calc_data)
+    if (isInMasterGroup(my_mpi)) then
+      call writePotentialIndexFile(calc_data)
+      call writeNewMeshFiles(calc_data)
+    end if
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -818,6 +822,39 @@ module CalculationData_mod
     end do
 
     call closeBasisAtomPotentialIndexDAFile(37)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write new mesh files.
+  !>
+  !> The mesh can deviate from the input mesh if atoms are not in an ideal
+  !> position. Therefore new mesh files have to be written.
+  subroutine writeNewMeshFiles(calc_data)
+    use BasisAtom_mod
+    implicit none
+    type (CalculationData), intent(in) :: calc_data
+
+    type (RadialMeshData), pointer :: mesh
+    integer :: ilocal
+    integer :: I1, max_reclen
+
+    max_reclen = getMaxReclenMeshes(calc_data)
+
+    mesh      => calc_data%mesh_array(1)
+    call openRadialMeshDataIndexDAFile(mesh, 37, 'meshes.idx')
+    call openRadialMeshDataDAFile(mesh, 38, 'meshes', max_reclen)
+
+    do ilocal = 1, calc_data%num_local_atoms
+      mesh      => calc_data%mesh_array(ilocal)
+      I1 = calc_data%atom_ids(ilocal)
+      call writeRadialMeshDataIndexDA(mesh, 37, I1, max_reclen)
+      call writeRadialMeshDataDA(mesh, 38, I1)
+    end do
+
+    call closeRadialMeshDataDAFile(38)
+    call closeRadialMeshDataIndexDAFile(37)
+
+
   end subroutine
 
 end module CalculationData_mod
