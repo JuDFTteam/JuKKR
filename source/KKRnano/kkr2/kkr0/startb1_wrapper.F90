@@ -121,8 +121,8 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
 
   call writeAtomData()
 
-  call openRadialMeshDataDAFile(meshdata, 37 , "meshes")
-  call openRadialMeshDataIndexDAFile(meshdata, 38, "meshes.idx")
+  call openRadialMeshDataDAFile(meshdata, 37 , "meshes.0")
+  call openRadialMeshDataIndexDAFile(meshdata, 38, "meshes.0.idx")
 
   inquire(unit=37, recl = max_reclen)
 
@@ -169,7 +169,7 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
       call createBasisAtom(atom, 1, lpot, nspin, (irmd-irnsd), irmd)  ! create dummy basis atom
 
       call openBasisAtomDAFile(atom, 37, 'atoms')
-      call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.idx')
+      call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx')
 
       inquire (iolength = max_reclen) atom%potential%VINS, &
                                       atom%potential%VISP, &

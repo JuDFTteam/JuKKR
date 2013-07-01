@@ -602,9 +602,9 @@ module CalculationData_mod
       old_mesh  => old_mesh_array(ilocal)
 
       ! load the input data
-      call createBasisAtomFromFile(old_atom, "atoms", "vpotnew", I1)
+      call createBasisAtomFromFile(old_atom, "atoms", "vpotnew.0", I1)
 
-      call createRadialMeshDataFromFile(old_mesh, "meshes", I1)
+      call createRadialMeshDataFromFile(old_mesh, "meshes.0", I1)
 
       call associateBasisAtomMesh(old_atom, old_mesh)
 
@@ -666,7 +666,8 @@ module CalculationData_mod
     use DimParams_mod
     use InputParams_mod
     use Main2Arrays_mod
-    use ConstructShapes_mod
+    use ConstructShapes_mod, only: construct, InterstitialMesh, &
+                                   destroyInterstitialMesh
     use ShapefunData_mod
     implicit none
 

@@ -214,7 +214,7 @@ c
 C
 c     OPEN (66,ACCESS='direct',RECL=LRECPOT*2,FILE='vpotnew',
 c    +     FORM='unformatted')
-      OPEN (66,ACCESS='direct',RECL=LRECPOT,FILE='vpotnew',
+      OPEN (66,ACCESS='direct',RECL=LRECPOT,FILE='vpotnew.0',
      +     FORM='unformatted')
 C
       DO IH = NBEG,NEND
