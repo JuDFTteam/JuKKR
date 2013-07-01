@@ -136,8 +136,9 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     atomdata%potential%nspin)
   endif
 
-  ! use any atomdata to open file - they are of the same size
-  call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
+  ! use any atomdata to open file - use reclen stored in calc_data
+  call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", &
+                                    getMaxReclenPotential(calc_data))
 
   do ilocal = 1, num_local_atoms ! no OpenMP
     atomdata => getAtomData(calc_data, ilocal)

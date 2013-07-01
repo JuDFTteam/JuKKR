@@ -31,12 +31,15 @@ module CalculationData_mod
   private :: constructEverything
   private :: generateAtomsShapesMeshes
   private :: generateShapesTEST
+  private :: recordLengths_com
 
   type CalculationData
     PRIVATE
     !integer :: atoms_per_proc
     integer :: num_local_atoms  ! <= atoms_per_proc
     integer, allocatable :: atom_ids(:)
+    integer :: max_reclen_meshes
+    integer :: max_reclen_potential
 
     ! atom local data - different for each atom
     type (RadialMeshData), pointer     :: mesh_array(:)         => null()
@@ -434,6 +437,25 @@ module CalculationData_mod
 
     getLatticeVectors => calc_data%lattice_vectors
   end function
+
+  !----------------------------------------------------------------------------
+  !> Returns record length needed for 'meshes' file.
+  integer function getMaxReclenMeshes(calc_data)
+    implicit none
+    type (CalculationData), intent(in) :: calc_data
+
+    getMaxReclenMeshes = calc_data%max_reclen_meshes
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Returns record length needed for 'meshes' file.
+  integer function getMaxReclenPotential(calc_data)
+    implicit none
+    type (CalculationData), intent(in) :: calc_data
+
+    getMaxReclenPotential = calc_data%max_reclen_potential
+  end function
+
 ! ==================== Helper routines ========================================
 
   !----------------------------------------------------------------------------
@@ -504,6 +526,10 @@ module CalculationData_mod
 
     ! a very crucial routine
     call generateAtomsShapesMeshes(calc_data, dims, params, arrays)
+
+    call recordLengths_com(calc_data, my_mpi)
+
+    call writePotentialIndexFile(calc_data)
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -724,6 +750,74 @@ module CalculationData_mod
 
     end do
 
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Communicate and set record lengths.
+  subroutine recordLengths_com(calc_data, my_mpi)
+    use KKRnanoParallel_mod
+    use RadialMeshData_mod
+    use BasisAtom_mod
+    implicit none
+    include 'mpif.h'
+
+    type (CalculationData), intent(inout) :: calc_data
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    integer :: ierr
+    integer :: ilocal
+    integer :: sendbuf(2)
+    integer :: recvbuf(2)
+    type (RadialMeshData), pointer :: mesh
+    type (BasisAtom), pointer :: atomdata
+
+    sendbuf = -1
+    recvbuf = -1
+    do ilocal = 1, calc_data%num_local_atoms
+      atomdata  => calc_data%atomdata_array(ilocal)
+      mesh      => calc_data%mesh_array(ilocal)
+
+      sendbuf(1) = max(sendbuf(1), getMinReclenBasisAtomPotential(atomdata))
+      sendbuf(2) = max(sendbuf(2), getMinReclenMesh(mesh))
+    end do
+
+    call MPI_Allreduce(sendbuf, recvbuf, 2, MPI_INTEGER, &
+                       MPI_MAX, getMySECommunicator(my_mpi), ierr)
+
+    if (getMyAtomRank(my_mpi) == 0) then
+      write(*,*) "Record length 'vpotnew' file: ", recvbuf(1)
+      write(*,*) "Record length 'meshes'  file: ", recvbuf(2)
+    end if
+
+    calc_data%max_reclen_potential = recvbuf(1)
+    calc_data%max_reclen_meshes = recvbuf(2)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write potential index file.
+  subroutine writePotentialIndexFile(calc_data)
+    use BasisAtom_mod
+    implicit none
+
+    type (CalculationData), intent(in) :: calc_data
+
+    type (BasisAtom), pointer :: atomdata
+    integer :: ilocal
+    integer :: I1, max_reclen
+
+    max_reclen = getMaxReclenPotential(calc_data)
+
+    atomdata  => calc_data%atomdata_array(1)
+    call openBasisAtomPotentialIndexDAFile(atomdata, 37, 'vpotnew.idx')
+
+    do ilocal = 1, calc_data%num_local_atoms
+      atomdata  => calc_data%atomdata_array(ilocal)
+      I1 = calc_data%atom_ids(ilocal)
+      call writeBasisAtomPotentialIndexDA(atomdata, 37, I1, max_reclen)
+    end do
+
+    call closeBasisAtomPotentialIndexDAFile(37)
   end subroutine
 
 end module CalculationData_mod
