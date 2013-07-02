@@ -1,4 +1,20 @@
+OpenMP threads:
+the program needs a large amount of stack space, otherwise segfaults:
+
+Use this environment variable:
+export OMP_STACKSIZE=20M
+
+
 Interpolation of potential to new mesh and on-the-fly shape-function generation
+
+*) kkr0 can create only meshes and potentials with an equal number of mesh points
+*) A shapefun file has to be provided to specify the initial interstitial mesh
+   (Use the mapping of atom to shape in 'atominfo' - NTCELL)
+*) the shape-functions in 'shapefun' are not used! (but have to be specified
+   to avoid I/O errors in kkr0)
+*) The interstitial mesh in shapefun changes if the muffin-tin radius changes
+   (due to 'muffin-tinization', where points of the MT-region are added to the
+   interstitial mesh)
 
 Possible problems:
 
@@ -8,4 +24,7 @@ Possible problems:
 *) Number of mesh points depends on an algorithm using floating point numbers:
    However, processes working on the same atom must arrive at the same results.
    Otherwise there will be problems with spin/energy-parallelisation
-  
+
+*) Interpolation to a larger muffin-tin radius problematic,
+   since spline polynomial at boundary does not go to constant value when r > rmax
+   
