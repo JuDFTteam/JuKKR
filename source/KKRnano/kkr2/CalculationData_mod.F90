@@ -660,7 +660,7 @@ module CalculationData_mod
       old_mesh  => old_mesh_array(ilocal)
 
       !-------
-      ! TODO: check if mesh has changed!
+      ! Check if mesh has changed!
       ! criterion: change in number of points OR
       !            sum(abs(mesh%r - old_mesh%r)) > 1.d-8
 
@@ -681,6 +681,9 @@ module CalculationData_mod
 
       CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
       CHECKASSERT( atomdata%atom_index == I1 )
+
+      call destroyBasisAtom(old_atom)
+      call destroyRadialMeshData(old_mesh)
     end do
 
     deallocate(new_MT_radii)

@@ -1,0 +1,11 @@
+Interpolation of potential to new mesh and on-the-fly shape-function generation
+
+Possible problems:
+
+*) Small deviations observed when restarting a calculation (6. digit after .):
+   Might be due to (non-optional) mesh interpolation
+   
+*) Number of mesh points depends on an algorithm using floating point numbers:
+   However, processes working on the same atom must arrive at the same results.
+   Otherwise there will be problems with spin/energy-parallelisation
+  
