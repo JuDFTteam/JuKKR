@@ -243,8 +243,7 @@ c
             READ (IFILE,FMT=9030) RMT(IH),ALAT_loc,RMTNEW(IH)
 
             if (abs(alat_loc - alat) > 1d-6) then
-      write(*,*) "ERROR: ALAT from input not the same as in pot. file"
-              stop
+      write(*,*) "WARNING: ALAT from input not the same as in pot. file"
             endif
 c
 c---> read nuclear charge , lmax of the core states ,
