@@ -40,9 +40,9 @@ endif
 
 # Paths to look for files
 #DIRS = . dir1 dir2
-DIRS = . ../datastructures
+DIRS = . ../config_reader
 #also add BUILDDIR to VPATH to look if object files have changed
-VPATH = $(DIRS) $(BUILDDIR) ../ ../kkr0
+VPATH = $(DIRS) $(BUILDDIR) ../ ../kkr0 ../datastructures
 
 SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
@@ -50,8 +50,7 @@ SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
 SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 
 # Additional source files needed
-SRCS += ../kkr0/ioinput.f ../kkr0/verify77.f
-SRCS90FPP += ../DimParams_mod.F90
+SRCS90FPP += ../datastructures/BasisAtom_mod.F90 ../datastructures/DimParams_mod.F90 ../datastructures/RadialMeshData_mod.F90 ../datastructures/CellData_mod.F90 ../datastructures/PotentialData_mod.F90 ../datastructures/AtomicCoreData_mod.F90 ../datastructures/ShapefunData_mod.F90 
 
 # notdir extracts only filename
 OBJS =  $(notdir ${SRCS:.f=.o})
@@ -97,7 +96,9 @@ test:
 	
 #Module dependencies
 
-#kkrvform.o: config_reader.o
 kkrvform.o: BasisAtom_mod.o DimParams_mod.o RadialMeshData_mod.o
-BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o RefClusterData_mod.o
+BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
+DimParams_mod.o: config_reader.o
+config_reader.o: config_reader_dictionary.o
+
