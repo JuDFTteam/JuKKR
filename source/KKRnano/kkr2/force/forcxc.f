@@ -1,5 +1,5 @@
-      SUBROUTINE FORCXC_com(FLM,FLMC,LPOT,NSPIN,RHOC,V,R,ALAT,
-     +                  DRDI,IRWS,ZAT, irmd)
+      SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,RHOC,V,R,ALAT,
+     +                  DRDI,IRWS, irmd)
 C
       IMPLICIT NONE
 c-----------------------------------------------------------------------
@@ -24,7 +24,7 @@ C     &       RHOC(IRMD,*),ZAT(NAEZD),
 C     &       V(IRMD,LMPOTD,2)
 
       DOUBLE PRECISION DRDI(IRMD),FLM(-1:1),FLMC(-1:1),R(IRMD),
-     &       RHOC(IRMD,*),ZAT,
+     &       RHOC(IRMD,*),
      &       V(IRMD,(LPOT+1)**2,2)
 
       INTEGER IRWS

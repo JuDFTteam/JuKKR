@@ -94,8 +94,6 @@ program MAIN2
 
   flag = readInputParamsFromFile('input.unf', params)
 
-  !if (KFORCE==1) open (54,file='force',form='formatted')   ! every process opens file 'force' !!!
-
  ! ======================================================================
  ! =                     End read in variables                          =
  ! ======================================================================
@@ -253,8 +251,6 @@ program MAIN2
 ! ######################################################################
 
     if (isMasterRank(my_mpi)) close(2)    ! TIME
-
-    !if (KFORCE==1) close(54)
 
     call destroyEBalanceHandler(ebalance_handler)
     call destroyEnergyMesh(emesh)
