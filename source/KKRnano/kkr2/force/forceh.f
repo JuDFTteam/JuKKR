@@ -1,4 +1,4 @@
-      SUBROUTINE FORCEH(CMOM,FLMH,LPOT,IATYP,RHO2NS,V,R,DRDI,
+      SUBROUTINE FORCEH(CMOM,FLMH,LPOT,RHO2NS,V,R,DRDI,
      &                  IRWS,Z,
 C                       new input parameter after inc.p replace
      &                  irmd)
@@ -24,14 +24,14 @@ C     DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),FLMH(-1:1,*),
 C    +       R(IRMD,*),
 C    +       RHO2NS(IRMD,LMPOTD),V(IRMD,LMPOTD,2),Z(*)
 
-      DOUBLE PRECISION CMOM((LPOT+1)**2),DRDI(IRMD,*),FLMH(-1:1,*),
-     &       R(IRMD,*),
-     &       RHO2NS(IRMD,(LPOT+1)**2), V(IRMD,(LPOT+1)**2,2), Z(*)
-      INTEGER IRWS(*)
+      DOUBLE PRECISION CMOM((LPOT+1)**2),DRDI(IRMD),FLMH(-1:1),
+     &       R(IRMD),
+     &       RHO2NS(IRMD,(LPOT+1)**2), V(IRMD,(LPOT+1)**2,2), Z
+      INTEGER IRWS
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION PI,RWS,VINT1
-      INTEGER I,IATYP,IPOT,IRWS1,LM,M
+      INTEGER I,IPOT,IRWS1,LM,M
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION FLM(-1:1,2),V1(IRMD)
@@ -56,8 +56,8 @@ c
 c
 c---> reading the right Wigner-S. radius
 c
-         IRWS1 = IRWS(IATYP)
-         RWS = R(IRWS1,IATYP)
+         IRWS1 = IRWS
+         RWS = R(IRWS1)
 c
 c---> determine the right potential numbers
 c
@@ -68,12 +68,12 @@ c
 c
             V1(1) = 0.0D0
             DO 30 I = 2,IRWS1
-               V1(I) = RHO2NS(I,LM)* (R(I,IATYP)** (-2.0D0))
+               V1(I) = RHO2NS(I,LM)* (R(I)** (-2.0D0))
    30       CONTINUE
 c
 c---> integrate with simpson subroutine
 c
-            CALL SIMP3(V1,VINT1,1,IRWS1,DRDI(1,IATYP))
+            CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
 c
             FLM(M,1) = 2.0D0*VINT1
 c
@@ -84,7 +84,7 @@ c
 c
 c---> total Hellman-Feynman force
 c
-            FLMH(M,IATYP) = (FLM(M,1)+FLM(M,2))*Z(IATYP)
+            FLMH(M) = (FLM(M,1)+FLM(M,2))*Z
    20    CONTINUE
 c
 c

@@ -1,6 +1,5 @@
-      SUBROUTINE FORCE(FLM,FLMC,LPOT,NSPIN,IATYP,RHOC,V,R,DRDI,IRWS,
-C                      new input parameters after inc.p removal
-     &                 naez,irmd)
+      SUBROUTINE FORCE(FLM,FLMC,LPOT,NSPIN,RHOC,V,R,DRDI,IRWS,
+     &                 irmd)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     calculates the force on nucleus m
@@ -15,7 +14,6 @@ C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
 
-      INTEGER naez
       INTEGER irmd
 
       INTEGER LPOT,NSPIN
@@ -24,17 +22,17 @@ C     .. Array Arguments ..
 C     DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
 C    +       RHOC(IRMD,*),V(IRMD,LMPOTD,2)
 
-      DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
+      DOUBLE PRECISION DRDI(IRMD),FLM(-1:1),FLMC(-1:1),R(IRMD),
      +       RHOC(IRMD,*),V(IRMD,(LPOT+1)**2,2)
 
-      INTEGER IRWS(*)
+      INTEGER IRWS
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION DV,FAC,PI,RWS,VINT1
-      INTEGER I,IATYP,IPOT,IRWS1,ISPIN,LM,M
+      INTEGER I,IPOT,IRWS1,ISPIN,LM,M
 C     ..
 C     .. Local Arrays ..
-      DOUBLE PRECISION FLMH(-1:1,NAEZ),V1(IRMD)
+      DOUBLE PRECISION FLMH(-1:1),V1(IRMD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL SIMP3
@@ -54,8 +52,8 @@ C     ..
  
       END IF
 c
-         IRWS1 = IRWS(IATYP)
-         RWS = R(IRWS1,IATYP)
+         IRWS1 = IRWS
+         RWS = R(IRWS1)
 c
 c
  
@@ -78,44 +76,44 @@ c---> determine the derivative of the potential using a 5-point formular
 c
                DV = (-3.0D0*V(1,LM,IPOT)-10.0D0*V(2,LM,IPOT)+
      +            18.0D0*V(3,LM,IPOT)-6.0D0*V(4,LM,IPOT)+V(5,LM,IPOT))/
-     +              (12.0D0*DRDI(2,IATYP))
+     +              (12.0D0*DRDI(2))
 c
-               V1(2) = RHOC(2,IPOT)* (2.0D0*V(2,LM,IPOT)/R(2,IATYP)+DV)/
+               V1(2) = RHOC(2,IPOT)* (2.0D0*V(2,LM,IPOT)/R(2)+DV)/
      +                 (4.0D0*PI) + V1(2)
 c
                DO 50 I = 3,IRWS1 - 2
 c
                   DV = (V(I-2,LM,IPOT)-V(I+2,LM,IPOT)+
      +                 8.0D0* (V(I+1,LM,IPOT)-V(I-1,LM,IPOT)))/
-     +                 (12.0D0*DRDI(I,IATYP))
+     +                 (12.0D0*DRDI(I))
 c
-                  V1(I) = RHOC(I,IPOT)* (2.0D0*V(I,LM,IPOT)/R(I,IATYP)+
+                  V1(I) = RHOC(I,IPOT)* (2.0D0*V(I,LM,IPOT)/R(I)+
      +                    DV)/ (4.0D0*PI) + V1(I)
    50          CONTINUE
 c
                DV = (-V(IRWS1-4,LM,IPOT)+6.0D0*V(IRWS1-3,LM,IPOT)-
      +              18.0D0*V(IRWS1-2,LM,IPOT)+10.0D0*V(IRWS1-1,LM,IPOT)+
-     +             3.0D0*V(IRWS1,LM,IPOT))/ (12.0D0*DRDI(IRWS1-1,IATYP))
+     +             3.0D0*V(IRWS1,LM,IPOT))/ (12.0D0*DRDI(IRWS1-1))
                V1(IRWS1-1) = RHOC(IRWS1-1,IPOT)*
-     +                       (2.0D0*V(IRWS1-1,LM,IPOT)/R(IRWS1-1,IATYP)+
+     +                       (2.0D0*V(IRWS1-1,LM,IPOT)/R(IRWS1-1)+
      +                       DV)/ (4.0D0*PI) + V1(IRWS1-1)
 c
                DV = (3.0D0*V(IRWS1-4,LM,IPOT)-16.0D0*V(IRWS1-3,LM,IPOT)+
      +              36.0D0*V(IRWS1-2,LM,IPOT)-48.0D0*V(IRWS1-1,LM,IPOT)+
-     +              25.0D0*V(IRWS1,LM,IPOT))/ (12.0D0*DRDI(IRWS1,IATYP))
+     +              25.0D0*V(IRWS1,LM,IPOT))/ (12.0D0*DRDI(IRWS1))
 c
                V1(IRWS1) = RHOC(IRWS1,IPOT)*
-     +                     (2.0D0*V(IRWS1,LM,IPOT)/R(IRWS1,IATYP)+DV)/
+     +                     (2.0D0*V(IRWS1,LM,IPOT)/R(IRWS1)+DV)/
      +                     (4.0D0*PI) + V1(IRWS1)
    40       CONTINUE
 c
 c---> integrate with simpson subroutine
 c
-            CALL SIMP3(V1,VINT1,1,IRWS1,DRDI(1,IATYP))
+            CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
 c
-            FLMH(M,IATYP) = FAC*FLM(M,IATYP)
-            FLMC(M,IATYP) = -FAC*VINT1
-            FLM(M,IATYP) = FLMH(M,IATYP) + FLMC(M,IATYP)
+            FLMH(M) = FAC*FLM(M)
+            FLMC(M) = -FAC*VINT1
+            FLM(M) = FLMH(M) + FLMC(M)
 c
  
    20    CONTINUE
