@@ -25,36 +25,24 @@ program kkrvform
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
 
-  call createBasisAtom(atomdata, iatom, dims%lpot, &
-                       dims%nspind, dims%irmind, dims%irmd)
-  call createRadialMeshData(mesh, dims%irmd, dims%ipand)
-
   do iatom = 1, dims%naez
 
     write(*,*) "Writing potential ", iatom
 
-    call openBasisAtomDAFile(atomdata, 37, "atoms")
-    call readBasisAtomDA(atomdata, 37, iatom)
-    call closeBasisAtomDAFile(37)
+    call createBasisAtomFromFile(atomdata, "atoms", "vpotnew", iatom)
     CHECKASSERT( atomdata%atom_index == iatom )
 
-    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew")
-    call readBasisAtomPotentialDA(atomdata, 37, iatom)
-    call closeBasisAtomPotentialDAFile(37)
-
-    call openRadialMeshDataDAFile(mesh, 37 , "meshes")
-    call readRadialMeshDataDA(mesh, 37, iatom)
-    call closeRadialMeshDataDAFile(37)
+    call createRadialMeshDataFromFile(mesh, "meshes", iatom)
 
     call associateBasisAtomMesh(atomdata, mesh)
 
     call writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
 
+    call destroyBasisAtom(atomdata)
+    call destroyRadialMeshData(mesh)
   end do
 
   call destroyDimParams(dims)
-  call destroyBasisAtom(atomdata)
-  call destroyRadialMeshData(mesh)
 
 end program kkrvform
 
