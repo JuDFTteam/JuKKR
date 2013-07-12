@@ -22,6 +22,8 @@ module DensityResults_mod
     double precision , allocatable, dimension(:)  :: CATOM
     double complex , allocatable, dimension(:,:,:)  :: DEN
 
+    double precision :: force_flm(-1:1)
+
     !> Renormalisation factors LLoyd - leave here?
     double precision , allocatable, dimension(:,:)  :: RNORM
 
@@ -87,6 +89,7 @@ module DensityResults_mod
     !initialise to be safe
     self%RHO2NS = 0.0d0
     self%R2NEF = 0.0d0
+    self%force_flm = 9999.9d0
   end subroutine
 
   !-----------------------------------------------------------------------------

@@ -1,7 +1,5 @@
       SUBROUTINE FORCEH(CMOM,FLMH,LPOT,RHO2NS,V,R,DRDI,
-     &                  IRWS,Z,
-C                       new input parameter after inc.p replace
-     &                  irmd)
+     &                  IRWS,Z,irmd)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     calculates the force on nucleus m with hellmann - feynman theorem

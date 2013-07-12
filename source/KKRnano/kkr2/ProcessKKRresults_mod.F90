@@ -477,6 +477,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   use Main2Arrays_mod
   use DensityResults_mod
   use EnergyResults_mod
+  use RadialMeshData_mod
 
   implicit none
 
@@ -494,6 +495,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   type (LDAUData), pointer                   :: ldau_data    ! not const
   type (EnergyResults), pointer              :: energies     ! not const
   type (DensityResults), pointer             :: densities    ! not const
+  type (RadialMeshData), pointer             :: mesh
 
   integer :: I1
   integer :: lcoremax
@@ -502,6 +504,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   double precision :: VBC_new(2)
   integer :: ilocal
   integer :: num_local_atoms
+  logical :: calc_force
+  double precision :: force_flmc(-1:1)
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -516,6 +520,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
+
+  calc_force = (params%KFORCE == 1 .and. iter == params%SCFsteps)
 
 !------------------------------------------------------------------------------
   !!!$omp parallel do private(ilocal, atomdata, densities)
@@ -545,25 +551,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......', &
                getElapsedTime(program_timer),ITER)
 
-! =====================================================================
-
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
-
-!            if (KFORCE==1 .and. ITER==SCFSTEPS) then
-! !---------------------------------------------------------------------
-!              call FORCEH(CMOM,FLM,LPOT,I1,RHO2NS,VONS, &
-!              R,DRDI,IMT,ZAT,irmd)  ! TODO: get rid of atom parameter I1
-!              call FORCE(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-!              DRDI,IMT,naez,irmd)
-! !---------------------------------------------------------------------
-!            end if
-
-! Force Calculation stops here look after VXCDRV
-
-! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
-
 
   VAV0 = 0.0d0
   VOL0 = 0.0d0
@@ -573,14 +560,40 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 !------------------------------------------------------------------------------
   !!!$omp parallel do reduction(+: VAV0, VOL0) &
   !!!$omp private(ilocal, atomdata, densities, energies, ldau_data, I1, &
-  !!!$omp         lcoremax, VAV0_local, VOL0_local)
+  !!!$omp         lcoremax, VAV0_local, VOL0_local, mesh, force_flmc)
   do ilocal = 1, num_local_atoms
     atomdata     => getAtomData(calc_data, ilocal)
     densities    => getDensities(calc_data, ilocal)
     energies     => getEnergies(calc_data, ilocal)
     ldau_data    => getLDAUData(calc_data, ilocal)
+    mesh => atomdata%mesh_ptr
     I1 = getAtomIndexOfLocal(calc_data, ilocal)
 !------------------------------------------------------------------------------
+
+! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
+
+    if (calc_force) then
+
+    !(CMOM,FLMH,LPOT,RHO2NS,V,R,DRDI,IRWS,Z,irmd)
+
+      call FORCEH(densities%CMOM,densities%force_FLM,atomdata%potential%LPOT, &
+                  densities%RHO2NS,atomdata%potential%VONS, &
+                  mesh%R,mesh%DRDI,mesh%IMT,atomdata%Z_nuclear,mesh%irmd)
+
+      force_FLMC = 0.0d0 ! temporary needed later in forcxc
+
+      call FORCE(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
+                 atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
+                 atomdata%potential%VONS, mesh%R, mesh%DRDI, &
+                 mesh%IMT, mesh%irmd)
+
+    end if
+
+! Force Calculation stops here look after VXCDRV
+
+! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
+! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
     lcoremax = 0
     if (params%KTE==1) then
@@ -611,19 +624,14 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   ! =====================================================================
 
-  ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
-
   ! Force calculation continues here
 
-  !            if (KFORCE==1.and.ITER==SCFSTEPS) then
-  ! ---------------------------------------------------------------------
-  !              call FORCXC_com(FLM,FLMC,LPOT,NSPIND,I1,RHOCAT,VONS,R, &
-  !              ALAT,DRDI,IMT,ZAT, &
-  !              getMyAtomRank(my_mpi), &
-  !              getMySEcommunicator(my_mpi), &
-  !              naez, irmd)
-  ! ---------------------------------------------------------------------
-  !            end if
+    if (calc_force) then
+      call FORCXC(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
+                  atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
+                  atomdata%potential%VONS, mesh%R, &
+                  mesh%DRDI, mesh%IMT, mesh%irmd)
+    end if
 
     ! unnecessary I/O? see results.f
     if (params%KTE >= 0) then

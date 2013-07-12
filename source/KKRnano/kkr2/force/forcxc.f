@@ -1,4 +1,4 @@
-      SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,RHOC,V,R,ALAT,
+      SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,RHOC,V,R,
      +                  DRDI,IRWS, irmd)
 C
       IMPLICIT NONE
@@ -15,7 +15,6 @@ C      INTEGER LMPOTD
 C      PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..
-      DOUBLE PRECISION ALAT
       INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
@@ -30,7 +29,7 @@ C     &       V(IRMD,LMPOTD,2)
       INTEGER IRWS
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION DV,FAC,PI,RWS,TRP,VINT1,VOL
+      DOUBLE PRECISION DV,FAC,PI,RWS,TRP,VINT1
       INTEGER I,IPOT,IREP,IRWS1,ISPIN,LM,M
 C     ..
 C     .. Local Arrays ..
@@ -63,7 +62,6 @@ c
 c
          IRWS1 = IRWS
          RWS = R(IRWS1)
-         VOL = 0.25*ALAT**3
  
          DO 20 M = -1,1
             LM = 2 + M + 1
