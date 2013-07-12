@@ -631,6 +631,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                   atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                   atomdata%potential%VONS, mesh%R, &
                   mesh%DRDI, mesh%IMT, mesh%irmd)
+      !write(*,*) densities%force_FLM
     end if
 
     ! unnecessary I/O? see results.f
@@ -706,6 +707,46 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
+  ! write forces if requested
+  if (calc_force) then
+    call openForceFile()
+
+    do ilocal = 1, num_local_atoms
+      densities    => getDensities(calc_data, ilocal)
+      I1 = getAtomIndexOfLocal(calc_data, ilocal)
+      call writeForces(densities%force_flm, I1)
+    end do
+
+    call closeForceFile()
+  end if
+
 end subroutine
+
+!------------------------------------------------------------------------------
+subroutine openForceFile()
+  implicit none
+  integer :: reclen
+  double precision :: dummy(-1:1)
+
+  inquire (iolength = reclen) dummy ! get reclen for 3 doubles
+  open(91, access='direct', file='forces', recl=reclen, form='unformatted')
+end subroutine
+
+!------------------------------------------------------------------------------
+subroutine writeForces(forces_flm, recnr)
+  implicit none
+  double precision, intent(in) :: forces_flm(-1:1)
+  integer, intent(in) :: recnr
+
+  write(91, rec=recnr) forces_flm
+
+end subroutine
+
+!------------------------------------------------------------------------------
+subroutine closeForceFile()
+  implicit none
+  close(91)
+end subroutine
+
 
 end module ProcessKKRresults_mod
