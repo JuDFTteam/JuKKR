@@ -35,8 +35,8 @@ C     ..
 C     .. Local Arrays ..
 c     DOUBLE PRECISION F(3,NAEZ),
 c    +                 FALL(3,NAEZ)
-      DOUBLE PRECISION FLMH(-1:1),
-     +                 FLMXC(-1:1),V1(IRMD)
+C     DOUBLE PRECISION FLMH(-1:1)
+      DOUBLE PRECISION FLMXC(-1:1),V1(IRMD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL SIMP3
@@ -112,7 +112,7 @@ c---> integrate with simpson subroutine
 c
             CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
 c
-            FLMH(M) = FLM(M) - FLMC(M)
+C           FLMH(M) = FLM(M) - FLMC(M)
             FLMXC(M) = -FAC*VINT1 - FLMC(M)
             FLM(M) = FLM(M) + FLMXC(M)
 c
