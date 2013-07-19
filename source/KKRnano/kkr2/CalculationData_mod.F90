@@ -659,21 +659,8 @@ module CalculationData_mod
       old_atom  => old_atom_array(ilocal)
       old_mesh  => old_mesh_array(ilocal)
 
-      !-------
-      ! Check if mesh has changed!
-      ! criterion: change in number of points OR
-      !            sum(abs(mesh%r - old_mesh%r)) > 1.d-8
-
       ! Geometry might have changed - interpolate to new mesh
       call interpolateBasisAtom(atomdata, old_atom, mesh)
-      !atomdata = old_atom ! debug
-      !call associateBasisAtomMesh(atomdata, mesh) ! debug
-
-      !write(*,*) "Diff Vins: ", sum(abs(atomdata%potential%VINS - old_atom%potential%VINS))
-      !write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP)), &
-      !                          maxloc(abs(atomdata%potential%VISP - old_atom%potential%VISP))
-      !write(*,*) "Diff R:    ", sum(abs(mesh%r - old_mesh%r)), maxloc(abs(mesh%r - old_mesh%r))
-      !write(*,*) "Diff drdi: ", sum(abs(mesh%drdi - old_mesh%drdi))
 
       ! set new MT radius
       atomdata%RMTref = mesh%rmt
@@ -802,11 +789,11 @@ module CalculationData_mod
     calc_data%max_reclen_meshes = recvbuf(2)
 
     ! debug
-    atomdata  => calc_data%atomdata_array(1)
-    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew.i", &
-                                    getMaxReclenPotential(calc_data))
-    call writeBasisAtomPotentialDA(atomdata, 37, calc_data%atom_ids(1))
-    call closeBasisAtomPotentialDAFile(37)
+!    atomdata  => calc_data%atomdata_array(1)
+!    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew.i", &
+!                                    getMaxReclenPotential(calc_data))
+!    call writeBasisAtomPotentialDA(atomdata, 37, calc_data%atom_ids(1))
+!    call closeBasisAtomPotentialDAFile(37)
     ! end debug
 
   end subroutine

@@ -24,7 +24,7 @@ module InterpolateBasisAtom_mod
     integer :: ii, lm
     type (RadialMeshData), pointer :: old_mesh
     logical :: do_interpolation
-    double precision, parameter :: TOL = 1.d-10
+    double precision, parameter :: TOL = 1.d-8
 
     do_interpolation = .true.
 
@@ -57,10 +57,16 @@ module InterpolateBasisAtom_mod
     irws_new = new_mesh%irws
 
     ! check if interpolation is really necessary
+    ! Check if mesh has changed!
+    ! criterion: change in number of points OR
+    !            sum(abs(mesh%r - old_mesh%r)) > 1.d-8
+
+    do_interpolation = .true.
     if (size(old_mesh%r) == size(new_mesh%r)) then
       if (sum(abs(old_mesh%r - new_mesh%r)) < TOL) then
         ! mesh has not changed - don't interpolate
-        ! this avoids numerical inaccuracies
+        ! this avoids numerical inaccuracies - arising from
+        ! spline interpolation routine
         do_interpolation = .false.
       end if
     end if
