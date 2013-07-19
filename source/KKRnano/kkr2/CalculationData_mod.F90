@@ -666,6 +666,8 @@ module CalculationData_mod
 
       ! Geometry might have changed - interpolate to new mesh
       call interpolateBasisAtom(atomdata, old_atom, mesh)
+      !atomdata = old_atom ! debug
+      !call associateBasisAtomMesh(atomdata, mesh) ! debug
 
       !write(*,*) "Diff Vins: ", sum(abs(atomdata%potential%VINS - old_atom%potential%VINS))
       !write(*,*) "Diff Visp: ", sum(abs(atomdata%potential%VISP - old_atom%potential%VISP)), &
@@ -798,6 +800,14 @@ module CalculationData_mod
 
     calc_data%max_reclen_potential = recvbuf(1)
     calc_data%max_reclen_meshes = recvbuf(2)
+
+    ! debug
+    atomdata  => calc_data%atomdata_array(1)
+    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew.i", &
+                                    getMaxReclenPotential(calc_data))
+    call writeBasisAtomPotentialDA(atomdata, 37, calc_data%atom_ids(1))
+    call closeBasisAtomPotentialDAFile(37)
+    ! end debug
 
   end subroutine
 

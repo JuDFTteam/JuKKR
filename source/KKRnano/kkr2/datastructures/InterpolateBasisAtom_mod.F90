@@ -23,6 +23,10 @@ module InterpolateBasisAtom_mod
     integer :: irws_old, irws_new
     integer :: ii, lm
     type (RadialMeshData), pointer :: old_mesh
+    logical :: do_interpolation
+    double precision, parameter :: TOL = 1.d-10
+
+    do_interpolation = .true.
 
     nspin = old_atom%nspin
     lpot = old_atom%potential%lpot
@@ -52,27 +56,44 @@ module InterpolateBasisAtom_mod
     irws_old = old_mesh%irws
     irws_new = new_mesh%irws
 
-    ! TODO: scale?
-    ! interpolate non-spherical potential - use only non-spherical part of mesh
-    do ii = 1, nspin
-      do lm = 1, old_atom%potential%lmpot
-        call interpolate(old_mesh%r(irmin_old:irws_old), &
-                         old_atom%potential%VINS(irmin_old:irws_old,lm,ii), &
-                         new_mesh%r(irmin_new:irws_new), &
-                         new_atom%potential%VINS(irmin_new:irws_new,lm,ii))
-      end do
-    end do
+    ! check if interpolation is really necessary
+    if (size(old_mesh%r) == size(new_mesh%r)) then
+      if (sum(abs(old_mesh%r - new_mesh%r)) < TOL) then
+        ! mesh has not changed - don't interpolate
+        ! this avoids numerical inaccuracies
+        do_interpolation = .false.
+      end if
+    end if
 
-    ! interpolate spherical potential
-    do ii = 1, nspin
-      call interpolate(old_mesh%r, old_atom%potential%VISP(:,ii), &
-                       new_mesh%r, new_atom%potential%VISP(:,ii))
-    end do
+    if (do_interpolation .eqv. .true.) then
+      ! TODO: scale?
+      ! interpolate non-spherical potential - use only non-spherical part of mesh
+      do ii = 1, nspin
+        do lm = 1, old_atom%potential%lmpot
+          call interpolate(old_mesh%r(irmin_old:irws_old), &
+                           old_atom%potential%VINS(irmin_old:irws_old,lm,ii), &
+                           new_mesh%r(irmin_new:irws_new), &
+                           new_atom%potential%VINS(irmin_new:irws_new,lm,ii))
+        end do
+      end do
+
+      ! interpolate spherical potential
+      do ii = 1, nspin
+        call interpolate(old_mesh%r, old_atom%potential%VISP(:,ii), &
+                         new_mesh%r, new_atom%potential%VISP(:,ii))
+      end do
+
+    else
+      ! no interpolation - just copy
+      new_atom%potential = old_atom%potential
+
+    end if
   end subroutine
 
 
   !----------------------------------------------------------------------------
   !> Interpolate function values with cubic splines
+  !> @param[out] ynew  interpolated function values
   subroutine interpolate(xval, yval, xnew, ynew)
     implicit none
     double precision, intent(in) :: xval(:)
