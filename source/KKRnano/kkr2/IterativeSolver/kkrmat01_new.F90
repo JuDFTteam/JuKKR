@@ -250,7 +250,7 @@ subroutine kloopbody( G_diag, kpoint, &
   endif
 
   call referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
-                            indn0, rr, ezoa, GINP(:,:,:,1), EIKRM, EIKRP, &
+                            indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
                             trunc2atom_index, communicator)
 
 !  do site_index = 1, naclsd ! this was just a test
@@ -372,7 +372,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
   double precision, intent(in) :: rr(:,:)
   integer, intent(in) :: ezoa(:,:)
-  double complex, intent(inout) :: GINP(:,:,:)
+  double complex, intent(inout) :: GINP(:,:,:,:)
 
   ! work arrays
   double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
@@ -388,6 +388,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   integer nrd
   integer naclsd
   integer lmmaxd
+  integer num_local_atoms
   integer atom_requested(1)
   double complex, allocatable :: Gref_buffer(:,:,:)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
@@ -396,6 +397,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
   lmmaxd = size(GINP,1)
   naclsd = size(GINP, 3)
+  num_local_atoms = size(GINP, 4)
 
   ! checks
   ASSERT(lmmaxd == size(GINP,2))
@@ -416,7 +418,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
     atom_requested(1) = trunc2atom_index(site_index)
     call copyFromZ_com(Gref_buffer, GINP, atom_requested, &
-                       lmmaxd*lmmaxd*naclsd, 1, communicator)
+                       lmmaxd*lmmaxd*naclsd, num_local_atoms, communicator)
     !!!Gref_buffer(:,:,:) = GINP(:,:,:) ! use this if all Grefs are the same
 
     call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &

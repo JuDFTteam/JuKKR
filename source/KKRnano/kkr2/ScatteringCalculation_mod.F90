@@ -100,6 +100,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   double complex, allocatable, dimension(:,:,:) :: DTref_local !< local deriv. tref-matrices
   double complex, allocatable, dimension(:,:,:) :: TMATLL !< all t-matrices
   double complex, allocatable, dimension(:,:,:) :: GmatN_buffer !< GmatN for all local atoms
+  double complex, allocatable, dimension(:,:,:,:) :: GrefN_buffer !< GrefN for all local atoms
 
   integer :: cls_trc_dummy(1) = (/ -1 /)
 
@@ -122,8 +123,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   ! allocate buffers for reference t-matrices
   allocate( Tref_local(lmmaxd, lmmaxd, num_local_atoms))
   allocate(DTref_local(lmmaxd, lmmaxd, num_local_atoms))
-
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
+  allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd, num_local_atoms))
+
   allocate(atom_indices(num_local_atoms))
 
   if (params%jij .and. num_local_atoms > 1) then
@@ -220,8 +222,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
                       gaunts%CLEB,ref_cluster%RCLS(:,:),gaunts%ICLEB, &
                       gaunts%LOFLM,ref_cluster%NACLS, &
-                      kkr%TREFLL,kkr%DTREFLL,kkr%GREFN,kkr%DGREFN, &
-                      kkr%LLY_G0TR(IE), &
+                      kkr%TREFLL,kkr%DTREFLL, GrefN_buffer(:,:,:,ilocal), &
+                      kkr%DGREFN, kkr%LLY_G0TR(IE), &
                       dims%lmaxd, kkr%naclsd, gaunts%ncleb, &
                       dims%LLY)
 
@@ -327,12 +329,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
           kkr%noiter = 0
 
-          CHECKASSERT(num_local_atoms == 1)  ! TODO: !!!
+          !CHECKASSERT(num_local_atoms == 1)  ! TODO: !!!
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
           clusters%NACLS_trc,lattice_vectors%RR,clusters%EZOA_trc,clusters%ATOM_trc, &
-          kkr%GREFN, arrays%NSYMAT,arrays%DSYMLL, &
+          GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
           TMATLL, clusters%NUMN0_trc, clusters%INDN0_trc, atom_indices, &
           params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi))
