@@ -327,6 +327,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
           kkr%noiter = 0
 
+          CHECKASSERT(num_local_atoms == 1)  ! TODO: !!!
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &

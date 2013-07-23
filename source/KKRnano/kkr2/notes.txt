@@ -15,16 +15,21 @@ Interpolation of potential to new mesh and on-the-fly shape-function generation
 *) The interstitial mesh in shapefun changes if the muffin-tin radius changes
    (due to 'muffin-tinization', where points of the MT-region are added to the
    interstitial mesh)
+*) When MT_scale = 0.0, the muffin-tin radii specified in atominfo will be
+   used
 
 Possible problems:
 
-*) Small deviations observed when restarting a calculation (6. digit after .):
-   Reason unknown - Might be due to (non-optional) mesh interpolation
-   
 *) Number of mesh points depends on an algorithm using floating point numbers:
    However, processes working on the same atom must arrive at the same results.
    Otherwise there will be problems with spin/energy-parallelisation
 
 *) Interpolation to a larger muffin-tin radius problematic,
    since spline polynomial at boundary is unbounded, it blows up when r > rmax
-   
+
+Fixed:
+
+*) Small deviations observed when restarting a calculation (6. digit after .):
+   Deviations were much larger when a converged potential was used
+   Reason: mesh interpolation
+   Fixed: check if mesh has changed - do not interpolate if mesh stays the same
