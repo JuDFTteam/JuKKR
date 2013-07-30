@@ -139,23 +139,35 @@ module ClusterInfo_mod
       ! check if buffer from right atom was received
       CHECKASSERT( recv_buf(1, ii) == trunc_zone%trunc2atom_index(ii) )
 
-      self%nacls_trc(ii) = recv_buf(2, ii)
-      CHECKASSERT( self%nacls_trc(ii) <= naclsd .and. self%nacls_trc(ii) > 0 )
-      self%numn0_trc(ii) = recv_buf(3, ii)
-      CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
-
       ! indn0 and atom have to be transformed to 'truncation-zone-indices'
+      counter = 0
       do jj = 1, naclsd
         ind = translateInd(trunc_zone, &
                                recv_buf(3 + jj, ii))
-        self%indn0_trc(ii,jj) = ind
+
+        ! ind = -1 means that atom is outside of truncation zone
+        if (ind > 0) then
+          counter = counter + 1
+          self%indn0_trc(ii, counter) = ind
+        end if
       end do
 
+      self%numn0_trc(ii) = counter
+
+      counter = 0
       do jj = 1, naclsd
         ind = translateInd(trunc_zone, &
                                 recv_buf(naclsd + 3 + jj, ii))
-        self%atom_trc(jj,ii) = ind
+        if (ind > 0) then
+          counter = counter + 1
+          self%atom_trc(counter, ii) = ind
+        end if
       end do
+
+      self%nacls_trc(ii) = counter
+
+      CHECKASSERT( self%nacls_trc(ii) <= naclsd .and. self%nacls_trc(ii) > 0 )
+      CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
 
       self%ezoa_trc(:,ii)  = recv_buf((2*naclsd + 4) : (3*naclsd + 3), ii)
 
