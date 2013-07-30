@@ -1,9 +1,12 @@
-OpenMP threads:
+Stack size:
+
 the program needs a large amount of stack space, otherwise segfaults:
 
-Use this environment variable:
+Use this environment variable, when using OpenMP-threads:
 export OMP_STACKSIZE=20M
 
+Without OpenMP threads, one might have to set:
+ulimit -s 20000
 
 Interpolation of potential to new mesh and on-the-fly shape-function generation
 
