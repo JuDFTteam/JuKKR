@@ -24,6 +24,9 @@ module ClusterInfo_mod
     integer, dimension(:,:), allocatable :: ezoa_trc
   end type
 
+  public :: createClusterInfo_com
+  private :: constructIndices
+
   CONTAINS
 
   !----------------------------------------------------------------------------
@@ -108,6 +111,28 @@ module ClusterInfo_mod
     call copyFromI_com(recv_buf, buffer, trunc_zone%trunc2atom_index, &
                        blocksize, num_local_atoms, communicator)
 
+    call constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
+
+    DEALLOCATECHECK(recv_buf)
+    DEALLOCATECHECK(buffer)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  ! Helper routine
+  subroutine constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
+    use TruncationZone_mod,  only: TruncationZone, translateInd
+    implicit none
+
+    type (ClusterInfo), intent(inout) :: self
+    type (TruncationZone), intent(in) :: trunc_zone
+    integer, intent(in) :: naez_trc
+    integer, intent(in), dimension(:,:) :: recv_buf
+    integer, intent(in) :: naclsd
+
+    integer :: ii
+    integer, parameter :: MAGIC = 385306
+
     do ii = 1, naez_trc
       ! check if buffer from right atom was received
       CHECKASSERT( recv_buf(1, ii) == trunc_zone%trunc2atom_index(ii) )
@@ -129,11 +154,6 @@ module ClusterInfo_mod
       ! check if end of buffer is correct
       CHECKASSERT( recv_buf((3*naclsd + 5), ii) == MAGIC )
     end do
-
-    DEALLOCATECHECK(recv_buf)
-    DEALLOCATECHECK(buffer)
-
   end subroutine
-
 
 end module ClusterInfo_mod
