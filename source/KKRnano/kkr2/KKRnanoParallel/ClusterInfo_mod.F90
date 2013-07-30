@@ -90,9 +90,9 @@ module ClusterInfo_mod
     ALLOCATECHECK(self%ezoa_trc(naclsd, naez_trc))
     self%ezoa_trc = -1
 
-    blocksize = 3*naclsd + 5
+    blocksize = 3*naclsd + 4
     ALLOCATECHECK(buffer(blocksize, num_local_atoms) )
-    buffer = 0
+    buffer = -1
     ALLOCATECHECK(recv_buf(blocksize, naez_trc) )
 
     do ii = 1, num_local_atoms
@@ -101,11 +101,11 @@ module ClusterInfo_mod
       buffer(1, ii) = ref_cluster_array(ii)%atom_index
       buffer(2, ii) = ref_cluster_array(ii)%nacls
       buffer(3, ii) = ref_cluster_array(ii)%numn0
-      !write(*,*) buffer(4             :(3 + nacls)          , ii), nacls
+
       buffer(4             :(3 + nacls)          , ii) = ref_cluster_array(ii)%indn0
-      buffer((naclsd + 5)  :(naclsd + 4 + nacls) , ii) = ref_cluster_array(ii)%atom
-      buffer((2*naclsd + 5):(2*naclsd+4 + nacls) , ii) = ref_cluster_array(ii)%ezoa
-      buffer((3*naclsd + 5), ii) = MAGIC
+      buffer((naclsd + 4)  :(naclsd + 3 + nacls) , ii) = ref_cluster_array(ii)%atom
+      buffer((2*naclsd + 4):(2*naclsd+3 + nacls) , ii) = ref_cluster_array(ii)%ezoa
+      buffer((3*naclsd + 4), ii) = MAGIC
     end do
 
     call copyFromI_com(recv_buf, buffer, trunc_zone%trunc2atom_index, &
@@ -130,7 +130,9 @@ module ClusterInfo_mod
     integer, intent(in), dimension(:,:) :: recv_buf
     integer, intent(in) :: naclsd
 
-    integer :: ii
+    integer :: ii, jj
+    integer :: counter
+    integer :: ind
     integer, parameter :: MAGIC = 385306
 
     do ii = 1, naez_trc
@@ -143,16 +145,22 @@ module ClusterInfo_mod
       CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
 
       ! indn0 and atom have to be transformed to 'truncation-zone-indices'
-      self%indn0_trc(ii,:) = translateInd(trunc_zone, &
-                             recv_buf(4:(naclsd + 4), ii))
+      do jj = 1, naclsd
+        ind = translateInd(trunc_zone, &
+                               recv_buf(3 + jj, ii))
+        self%indn0_trc(ii,jj) = ind
+      end do
 
-      self%atom_trc(:,ii)  = translateInd(trunc_zone, &
-                             recv_buf((naclsd   + 5) : (2*naclsd + 4), ii))
+      do jj = 1, naclsd
+        ind = translateInd(trunc_zone, &
+                                recv_buf(naclsd + 3 + jj, ii))
+        self%atom_trc(jj,ii) = ind
+      end do
 
-      self%ezoa_trc(:,ii)  = recv_buf((2*naclsd + 5) : (3*naclsd + 4), ii)
+      self%ezoa_trc(:,ii)  = recv_buf((2*naclsd + 4) : (3*naclsd + 3), ii)
 
       ! check if end of buffer is correct
-      CHECKASSERT( recv_buf((3*naclsd + 5), ii) == MAGIC )
+      CHECKASSERT( recv_buf((3*naclsd + 4), ii) == MAGIC )
     end do
   end subroutine
 
