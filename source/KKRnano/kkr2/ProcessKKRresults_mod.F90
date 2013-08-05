@@ -188,6 +188,10 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     ! DOS was written to file 'results1' and read out here just
     ! to be written in routine wrldos
     ! also other stuff is read from results1 (and results2)
+
+    ! TODO: note: title written to DOS files is not correct
+    ! - taken from 1st atom only
+    ! TODO: Fermi energy written to DOS files is not correct
     call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,dims%LMAXD, &
     arrays%NAEZ,emesh%NPOL, &
     dims%NSPIND,params%KPRE,params%KTE,atomdata%potential%LPOT, &

@@ -36,3 +36,9 @@ Fixed:
    Deviations were much larger when a converged potential was used
    Reason: mesh interpolation
    Fixed: check if mesh has changed - do not interpolate if mesh stays the same
+
+   
+Some Bugs:
+
+*) Fermi energy in formatted DOS output is not the correct Fermi energy
+*) Title in DOS files is not correct
