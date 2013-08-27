@@ -9,6 +9,13 @@ end type
 
 CONTAINS
 
+!------------------------------------------------------------------------------
+!> Construct shape functions and interstitial mesh.
+!>
+!> Creates ShapefunData datastructure -> user has to deal with deallocation!
+!> Creates InterstitialMesh datastructure -> user has to deal with deallocation!
+!> (use destroyInterstitialMesh)
+!>
 !> MT_scale > 0.0 overrides new_MT_radius!!!
 subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
                      rcluster, lmax_shape, npoints_min, nmin_panel, &
@@ -17,9 +24,11 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   use ShapefunData_mod
   implicit none
 
+  ! Output (shape-functions and interstitial mesh):
   type (ShapefunData), intent(inout) :: shdata
   type (InterstitialMesh), intent(inout) :: inter_mesh
 
+  ! Input:
   double precision, intent(in) :: rbasis(:,:)
   double precision, intent(in) :: bravais(3,3)
   integer, intent(in)          :: center_ind

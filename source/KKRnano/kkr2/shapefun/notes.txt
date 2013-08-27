@@ -1,5 +1,11 @@
-f2py -c voronoi08.pyf  voronoi08.f distplane.o normalplane.o polyhedron08.o normalplane0.o vertex3d.o crospr.o analyzevert3d.o sortvertices.o halfspace.o
+Main module to construct shapes:
+Use ConstructShapes_mod::construct
+-> ignore the rest of this huge code
 
+
+Notes on running some tests, using Python wrappers:
+
+f2py -c voronoi08.pyf  voronoi08.f distplane.o normalplane.o polyhedron08.o normalplane0.o vertex3d.o crospr.o analyzevert3d.o sortvertices.o halfspace.o
 
 /usr/bin/gfortran -Wall -ffixed-form -fno-second-underscore -fPIC -O3 -funroll-loops
 
