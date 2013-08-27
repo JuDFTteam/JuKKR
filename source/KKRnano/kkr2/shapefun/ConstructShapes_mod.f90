@@ -66,6 +66,7 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
 end subroutine
 
 
+!------------------------------------------------------------------------------
 !> @param num_MT_mesh add 'num_MT_mesh' radial points of MT-region to
 !>        shape-function mesh -> non-touching MT-spheres
 !>        = 0 to not use this feature
@@ -90,7 +91,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   integer, parameter :: NVERTMAX = 30  ! hoping for at most 30 vertices for each face
   logical, parameter :: OUTPUT = .false.
   
-  double precision, parameter :: TOLVDIST = 1.d-10
+  double precision, parameter :: TOLVDIST = 1.d-12
   double precision, parameter :: TOLVAREA = 1.d-10
   double precision, parameter :: DLT = 0.05d0 ! step-size angular integration
 

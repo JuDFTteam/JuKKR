@@ -604,7 +604,6 @@ module CalculationData_mod
     type (BasisAtom), pointer :: old_atom_array(:)
     type (RadialMeshData), pointer :: old_mesh_array(:)
     double precision, allocatable :: new_MT_radii(:)
-    double precision, parameter :: TOLVDIST = 1.d-10
 
     allocate(old_atom_array(calc_data%num_local_atoms))
     allocate(old_mesh_array(calc_data%num_local_atoms))

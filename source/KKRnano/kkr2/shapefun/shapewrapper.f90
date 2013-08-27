@@ -15,7 +15,7 @@ IBMAXD,MESHND, NPAND,NFACED, NVERTD)
 
 
   integer,intent(in) :: NPOI
-  real(kind=DP), parameter :: TOLVDIST = 1.d-10
+  real(kind=DP), parameter :: TOLVDIST = 1.d-12
   real(kind=DP), parameter :: TOLEULER = 1.d-10
   integer, intent(in) :: NMIN
   integer, intent(in) :: NFACE
