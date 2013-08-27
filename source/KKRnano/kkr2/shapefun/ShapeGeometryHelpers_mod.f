@@ -188,12 +188,13 @@ C>    R0 TO THE LINE JOINING R1   AND  R2. THE LOGICAL VARIABLE INSIDE
 C>    GIVES THE ADDITIONAL INFORMATION WHETHER THE FOOT OF THE PERPEN-
 C>    DICULAR LIES WITHIN THE SEGMENT OR NOT.
 C-----------------------------------------------------------------------
-      SUBROUTINE PERP(R0,R1,R2,RD,INSIDE)
+      SUBROUTINE PERP(R0,R1,R2,RD,TOLVDIST,INSIDE)
       implicit none
 C
 C     .. ARRAY ARGUMENTS ..
 C
       REAL*8 R0(3),R1(3),R2(3),RD(3)
+      REAL*8 TOLVDIST
 C
 C     .. LOGICAL ARGUMENTS ..
 C
@@ -213,7 +214,7 @@ C---------------------------------------------------------------------
       DZ=R2(3)-R1(3)
       S=R0(1)*DX+R0(2)*DY+R0(3)*DZ
       D=DX*DX+DY*DY+DZ*DZ
-      IF(SQRT(D).LT.1.E-6) GO TO 100
+      IF(SQRT(D).LT. TOLVDIST) GO TO 100
       DA=S*DX+DY*(R1(1)*R2(2)-R1(2)*R2(1))+DZ*(R1(1)*R2(3)-R1(3)*R2(1))
       DB=S*DY+DZ*(R1(2)*R2(3)-R1(3)*R2(2))+DX*(R1(2)*R2(1)-R1(1)*R2(2))
       DC=S*DZ+DX*(R1(3)*R2(1)-R1(1)*R2(3))+DY*(R1(3)*R2(2)-R1(2)*R2(3))
@@ -225,7 +226,7 @@ C---------------------------------------------------------------------
 
       CO=D-DMAX1(D1,D2)
       INSIDE=.FALSE.
-      IF ( CO.GT.1.E-6)  INSIDE=.TRUE.
+      IF ( CO.GT. TOLVDIST)  INSIDE=.TRUE.
       RETURN
   100 WRITE(6,200) (R1(I),I=1,3),(R2(I),I=1,3)
       STOP

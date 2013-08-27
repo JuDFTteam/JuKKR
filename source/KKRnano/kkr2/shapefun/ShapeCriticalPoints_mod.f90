@@ -382,7 +382,7 @@ subroutine CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT, &
     !     D I S T A N C E S   O F   E D G E S   F R O M   C E N T E R
     !.......................................................................
 
-    call PERP(ORIGIN,VZ(1,IVERT),VZ(1,IVERTP),RDV,INSIDE)
+    call PERP(ORIGIN,VZ(1,IVERT),VZ(1,IVERTP),RDV,TOLVDIST,INSIDE)
 
     RDD=SQRT(RDV(1)*RDV(1)+RDV(2)*RDV(2)+RDV(3)*RDV(3)) ! footpoint of line origin-to-edge
 
