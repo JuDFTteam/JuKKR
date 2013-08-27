@@ -440,7 +440,7 @@ DO 200 IPLANE = 1,NPLANE
          Y3 = YVERT(IVERT+1,IPLANE)
          Z3 = ZVERT(IVERT+1,IPLANE)
          TRIANGLEAREA = 0.5d0 * DABS( &
-              (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )
+              (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )  ! formula incorrect? E.R.
          FACEAREA(IPLANE) = FACEAREA(IPLANE)+ TRIANGLEAREA
       ENDDO
 

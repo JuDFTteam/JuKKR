@@ -152,7 +152,7 @@ subroutine criticalShapePoints(AFACE,BFACE,CFACE,DFACE, &
       end if
     end do
 
-    call CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,CRT,NPAND)
+    call CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT,NPAND)
 
     if (VERBOSITY > 0) then
       write(6,105) IFACE,NTT(IFACE)
@@ -208,9 +208,10 @@ end subroutine
 !>    @param[in,out] IPAN  panel counter, pass 0 for 1st call
 !>    @param[in,out] IVTOT tetrahedron index: has to be 0 for 1st call
 !>    @param[in]     TOLEULER tolerance for Euler angles
+!>    @param[in]     TOLVDIST tolerance for distances
 !>    @param[in,out] CRT   array of critical points, CRT(NPAND)
 !>    @param[in]     NPAND maximal number of panels allowed
-subroutine CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,CRT, &
+subroutine CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT, &
                 NPAND) ! NPAND from inc.geometry
   !-----------------------------------------------------------------------
   !     THIS ROUTINE CALCULATES THE CRITICAL POINTS 'CRT' OF THE SHAPE
@@ -238,7 +239,7 @@ subroutine CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,CRT, &
   integer::NVERT
   integer::IPAN
   integer::IVTOT
-  real(kind=DP):: TOLEULER
+  real(kind=DP):: TOLEULER, TOLVDIST
 
   !     .. ARRAY ARGUMENTS ..
 
