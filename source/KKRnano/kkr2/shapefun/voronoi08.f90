@@ -31,7 +31,7 @@ subroutine voronoi08( &
   ! vector r(i), is assigned a weight w(i). Then a point r in space
   ! belongs to the cell i if, for all j, 
   ! |r-r(i)|**2 - w(i) < |r-r(j)|**2 - w(j).    (1)
-  ! The points for which the unequality becomes an equality is the 
+  ! The points for which the inequality becomes an equality is the 
   ! bisector, and it can be easily shown that it is a plane perpendicular
   ! to the vector r(j)-r(i).
   ! One can parametrize the segment connecting r(i) and r(j) using a
@@ -61,18 +61,19 @@ subroutine voronoi08( &
   !
   !
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
-  use voronoi08_mod
-  implicit none
 
-  logical output
+  use voronoi08_mod ! import helper routines
+  implicit none
 
   ! Input:
   integer  nvec,nvertmax,nfaced
   real*8   rvec(3,nfaced)
-  real*8   weight0,weight(nfaced)
+  real*8   weight0,weight(nfaced)  ! Weight of central atom, 
   !                          !   and of all others (dimensioned as RVEC). 
-  real*8  tolvdist
-  real*8  tolarea
+  real*8  tolvdist              ! Max. tolerance for distance of two vertices
+  real*8  tolarea               ! Max. tolerance for area of polygon face
+  logical output  ! test output
+
   ! Output:
   integer nface
   integer nvert(nfaced)
@@ -87,7 +88,14 @@ subroutine voronoi08( &
   real*8           x1,y1,z1,x2,y2,z2,x3,y3,z3,tetrvol,rsq,tau
   real*8           facearea(nfaced),trianglearea   
   real*8           temp
-  !real*8           distplane
+
+  integer isort(nfaced),pos,inew    ! Index for sorting
+  real*8 rsort(nfaced)              ! Aux. function for sorting
+  real*8 atmp(nfaced),btmp(nfaced),ctmp(nfaced),dtmp(nfaced) ! For sorting
+  real*8 xvtmp(nvertmax,nfaced),yvtmp(nvertmax,nfaced)       ! For sorting
+  real*8 zvtmp(nvertmax,nfaced)                              ! For sorting
+  integer nvtmp(nfaced)                                      ! For sorting
+  integer npanel
 
   !---------------------------------------------------------------
   ! Check that the origin is not included in RVEC.
@@ -142,16 +150,21 @@ subroutine voronoi08( &
         z3 = zvert(ivert+1,iface)
         tetrvol = x1*(y2*z3-y3*z2)+x2*(y3*z1-y1*z3)+x3*(y1*z2-y2*z1)
         volume = volume + dabs(tetrvol)
-        trianglearea = 0.5d0 * dabs( &
-             (x2-x1)*(x3-x1)+(y2-y1)*(y3-y1)+(z2-z1)*(z3-z1) )
+        trianglearea = 0.5d0 * dsqrt( &
+             ( x1*y2 + x2*y3 + x3*y1 - y2*x3 - y3*x1 - y1*x2)**2 &
+             + ( y1*z2 + y2*z3 + y3*z1 - z2*y3 - z3*y1 - z1*y2)**2 &
+             + ( z1*x2 + z2*x3 + z3*x1 - x2*z3 - x3*z1 - x1*z2)**2 )
+        ! wrong           TRIANGLEAREA = 0.5d0 * DABS(
+        !     &           (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )
         facearea(iface) = facearea(iface)+ trianglearea
      enddo
   enddo
   volume = volume/6.d0
 
+  write(6,*) ' Polyhedron properties '
+  write(6,*) ' Number of faces : ',nface
+
   if (output) then
-     write(6,*) ' Polyhedron properties '
-     write(6,*) ' Number of faces : ',nface
      do iface=1,nface
         write(6,201) iface,nvert(iface),facearea(iface)
 201     format(' Face ',i4,'   has ',i4,' vertices ','; Area= ',e12.4)   ! 
@@ -161,8 +174,9 @@ subroutine voronoi08( &
         enddo
         write(*,9010) a3(iface),b3(iface),c3(iface),d3(iface)
      end do
-     write(6,*) 'The Volume is : ',volume
-  end if
+  endif
+
+  write(6,*) 'The Volume is : ',volume
 
 9000 format(i5,4e16.8)
 9010 format(' Face coefficients:',4e16.8)
@@ -184,9 +198,42 @@ subroutine voronoi08( &
      enddo
   enddo
   rout = dsqrt(rout)
-  if (output) write(*,9020) rmt,rout
-9020 format('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8)
+  write(*,9020) rmt,rout,rmt*100/rout
+9020 format('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8, &
+       '; RATIO=',f12.2,' %')
   !---------------------------------------------------------------
+  ! Sort faces:
+  do iface = 1,nface
+     rsort(iface) = &
+          distplane(a3(iface),b3(iface),c3(iface),d3(iface))
+     rsort(iface) = 100000000.d0  * rsort(iface) + &
+          100000.d0  * c3(iface)    + &
+          100.d0  * b3(iface)    + &
+          0.1d0 * a3(iface)
+  enddo
+  call dsort(rsort,isort,nface,pos)
+  !     Rearrange using a temporary array
+  atmp(:) = a3(:)
+  btmp(:) = b3(:)
+  ctmp(:) = c3(:)
+  dtmp(:) = d3(:)
+  xvtmp(:,:) = xvert(:,:)
+  yvtmp(:,:) = yvert(:,:)
+  zvtmp(:,:) = zvert(:,:)
+  nvtmp(1:nface) = nvert(1:nface)
+  do iface = 1,nface
+     inew = isort(iface)
+     a3(inew) = atmp(iface)
+     b3(inew) = btmp(iface)
+     c3(inew) = ctmp(iface)
+     d3(inew) = dtmp(iface)
+     xvert(:,inew) = xvtmp(:,iface)
+     yvert(:,inew) = yvtmp(:,iface)
+     zvert(:,inew) = zvtmp(:,iface)
+     nvert(inew) = nvtmp(iface)
+  enddo
+  !---------------------------------------------------------------
+
 
   return
 end subroutine voronoi08
