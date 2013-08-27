@@ -47,7 +47,7 @@ IF (output) then
 END IF
 
 CALL VERTEX3D( &
-               NPLANE,A3,B3,C3,D3,NVERTMAX, &
+               NPLANE,A3,B3,C3,D3,NVERTMAX, TOLVDIST, &
                NFACE,NVERT,XVERT,YVERT,ZVERT,output)
 IF (output) WRITE(*,*) 'VERTEX3D found',NFACE, &
             ' faces with >3 vertices.'
@@ -105,14 +105,9 @@ end do
 END SUBROUTINE
 
 
-
-
-
-
-
 !***********************************************************************
 SUBROUTINE VERTEX3D( &
-                    NPLANE,A3,B3,C3,D3,NVERTMAX, &
+                    NPLANE,A3,B3,C3,D3,NVERTMAX,TOLVDIST, &
                     NFACE,NVERT,XVERT,YVERT,ZVERT, output)
 ! Given a set of planes, defined by A3*x+B3*y+C3*z=D3 and defining
 ! a convex part of space (the minimal one containing the origin, 
@@ -123,20 +118,20 @@ SUBROUTINE VERTEX3D( &
 !
 ! Uses logical function HALFSPACE
 implicit none
-
-logical :: output
-
 ! Input:
 INTEGER NPLANE                ! Number of planes.
 INTEGER NVERTMAX              ! Max. number of vertices per plane.
 REAL*8           A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes, 
 !                                     ! dimensioned >= NPLANE.
+REAL*8 TOLVDIST               ! Min. distance between vertices
 ! Output:
 INTEGER NVERT(*)  ! Number of vertices found for each face
 INTEGER NFACE     ! Number of faces found (with nvert>0).
 REAL*8  XVERT(NVERTMAX,*),YVERT(NVERTMAX,*),ZVERT(NVERTMAX,*)
 !                            ! Cartesian coords. of vertices for each plane
 !                            ! (2nd index is for planes).
+LOGICAL output
+
 ! Inside:
 INTEGER IPLANE1,IPLANE2,IPLANE3,IPLANE,KPLANE ! Plane indices
 INTEGER IVERT                    ! Vertex index
@@ -148,16 +143,16 @@ REAL*8           DISTANCE   ! A distance criterium of two points in space
 REAL*8           V1(3),V2(3),V3(3)   ! Auxiliary vectors...
 REAL*8           SINFIV1V2,COSFIV1V2 ! ...and their inner and outer products
 REAL*8           FI(NVERTMAX)        ! ...and also their relative angles.
+REAL*8           UV(3),VL,SN         ! Unit vector, length, sign of sin(fi)
 
-!LOGICAL HALFSPACE    ! Function used, see function itself.
 LOGICAL LACCEPT      ! Determining whether a cut point is inside
 !                          !                            the polyhedron.
 !---------------------------------------------------------------
 ! Check & initialize
-
-IF (NPLANE.LT.4 .and. output) &
-WRITE(*,*) 'VERT3D: NPLANE was only',NPLANE
-
+IF (NPLANE.LT.4) THEN
+  WRITE(*,*) 'VERT3D: Error:NPLANE was only',NPLANE
+  STOP
+ENDIF
 DO IPLANE = 1,NPLANE
    NVERT(IPLANE) = 0
 ENDDO
@@ -214,11 +209,14 @@ IF (LACCEPT) THEN
 ! when 4 or more planes pass through the same point (e.g. for the vertices
 ! of the fcc WS-cell). So...
    DO IVERT = 1,NVERT(IPLANE1)
-      DISTANCE = DABS(XVERT(IVERT,IPLANE1)-XCUT) &
-               + DABS(YVERT(IVERT,IPLANE1)-YCUT) &
-               + DABS(ZVERT(IVERT,IPLANE1)-ZCUT)
-!           IF (DISTANCE.LT.1.D-40 ) write(6,*) 'vertices plane reject'
-      IF (DISTANCE.LT.1.D-10 ) LACCEPT = .FALSE.     ! accuracy problem
+      DISTANCE = (XVERT(IVERT,IPLANE1)-XCUT)**2 &
+               + (YVERT(IVERT,IPLANE1)-YCUT)**2 &
+               + (ZVERT(IVERT,IPLANE1)-ZCUT)**2
+      DISTANCE = DSQRT(DISTANCE)
+      IF (DISTANCE.LT.TOLVDIST ) THEN
+         LACCEPT = .FALSE. ! vertex is too close to a previous one.
+         EXIT              ! Jump loop, no need to continue.
+      ENDIF
    ENDDO
 ENDIF
 ! Now we're ready to add the point to the vertex list.
@@ -241,15 +239,15 @@ ENDIF ! (DABS(DET).GT.1.D-12)
 !===============================================================
 ! Each plane should finally have either at least 3 vertices, if it is a
 ! face of the polyhedron, or none at all. Check this:
+if (output) then
 DO IPLANE = 1,NPLANE
 IF (NVERT(IPLANE).EQ.1.OR.NVERT(IPLANE).EQ.2) THEN
-IF (output) THEN
-WRITE(*,*) 'VERTEX3D: There might be a problem with the vertices.'
+WRITE(*,*) 'VERTEX3D: Error:There is a problem with the vertices.'
 WRITE(*,*) 'For plane',IPLANE, &
   ' ,only ',NVERT(IPLANE),' vertices were found.'
 ENDIF
-ENDIF
 ENDDO
+endif
 
 !===============================================================
 ! For each face of the polyhedron, sort the vertices in a consecutive order
@@ -260,6 +258,12 @@ DO IPLANE = 1,NPLANE
 IF (NVERT(IPLANE).GE.3) THEN
    NFACE = NFACE + 1      ! Count the faces
    FI(1) = -4.D0          ! Just a number smaller than -pi.
+! Unit vector in the direction of first vertex:
+   VL = DSQRT( XVERT(1,IPLANE)**2 + &
+               YVERT(1,IPLANE)**2 + ZVERT(1,IPLANE)**2 )
+   UV(1) = XVERT(1,IPLANE) / VL
+   UV(2) = YVERT(1,IPLANE) / VL
+   UV(3) = ZVERT(1,IPLANE) / VL
 
 ! Define the vector connecting the first vertex to the (now-) second:
    V1(1) = XVERT(2,IPLANE) - XVERT(1,IPLANE)
@@ -276,12 +280,17 @@ IF (NVERT(IPLANE).GE.3) THEN
       COSFIV1V2 = V1(1)*V2(1) + V1(2)*V2(2) + V1(3)*V2(3)
       CALL CROSPR(V1,V2,V3) ! Cross product = |v1|*|v2|*sinfi
       SINFIV1V2 = DSQRT(V3(1)*V3(1) + V3(2)*V3(2) + V3(3)*V3(3))
+! Sign of sinfi is defined with respect to unit vector uv (see above)
+      SN = UV(1)*V3(1) + UV(2)*V3(2) + UV(3)*V3(3)
+      IF (SN.LT.0) SINFIV1V2 = -SINFIV1V2
 
       IF (SINFIV1V2.EQ.0.D0.AND.COSFIV1V2.EQ.0.D0) THEN
 ! Point falls exactly on 1st vertex...
          FI(IVERT) = -4.D0
-         WRITE(*,*) 'VERTEX3D: Found two identical vertex points' 
+         WRITE(*,*) &
+         'VERTEX3D: Error: Found two identical vertex points'
 ! ...while it shouldn't ! (this was checked earlier)
+         STOP
       ELSE
          FI(IVERT) = DATAN2(SINFIV1V2,COSFIV1V2)
       ENDIF
@@ -292,23 +301,15 @@ IF (NVERT(IPLANE).GE.3) THEN
    CALL SORTVERTICES(NVERT(IPLANE),FI,XVERT(1,IPLANE), &
                    YVERT(1,IPLANE),ZVERT(1,IPLANE))
 
+
+
 ENDIF                     ! (NVERT(IPLANE).GE.3)
 ENDDO                     ! IPLANE = 1,NPLANE
 
 RETURN
 END SUBROUTINE
 
-
-
-
-
-
-
-
-
-
-
-
+!------------------------------------------------------------------------------
 SUBROUTINE ANALYZEVERT3D( &
                           NVERTMAX,NFACED,TOLVDIST,TOLAREA,NPLANE, &
                           NFACE,NVERT,XVERT,YVERT,ZVERT, &

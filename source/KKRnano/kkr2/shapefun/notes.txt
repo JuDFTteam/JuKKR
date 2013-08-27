@@ -2,6 +2,11 @@ Main module to construct shapes:
 Use ConstructShapes_mod::construct
 -> ignore the rest of this huge code
 
+For integration into the classic Voronoi-program you would need:
+ShapeFunctions_mod::SHAPEF
+VORONOI08
+ConstructShapes_mod::MTMESH
+
 
 Notes on running some tests, using Python wrappers:
 
