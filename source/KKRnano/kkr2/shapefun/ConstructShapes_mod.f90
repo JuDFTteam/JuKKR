@@ -1,10 +1,10 @@
 module ConstructShapes_mod
 
 type InterstitialMesh
-  double precision, allocatable, dimension(:) :: xrn
-  double precision, allocatable, dimension(:) :: drn
-  integer :: npan
-  integer, allocatable, dimension(:) :: nm
+  double precision, allocatable, dimension(:) :: xrn !< radial mesh points r(i)
+  double precision, allocatable, dimension(:) :: drn !< integration weights dr/di (i)
+  integer :: npan !< number of panels
+  integer, allocatable, dimension(:) :: nm !< positions of panels
 end type
 
 CONTAINS

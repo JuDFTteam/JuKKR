@@ -171,7 +171,7 @@ C
        WRITE(6,*) '    SERIOUS WARNING FROM SHAPE      '
        WRITE(6,*) '   >>  STOP ILLEGAL POLYHEDRON      '
        WRITE(6,*) 'NVRT=',NVRT,' ; NFACE=',NFACE,' ; NEDGE=',NEDGE
-       STOP
+C      STOP
 c changed 6.10.2000
 c       IF((NVRT+NFACE).NE.(NEDGE+2)) STOP 'ILLEGAL POLYHEDRON'
       END IF

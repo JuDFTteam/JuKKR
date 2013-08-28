@@ -708,6 +708,8 @@ module CalculationData_mod
     integer :: num_MT_points
     type (RadialMeshData), pointer :: mesh
 
+    !integer flag
+
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms
@@ -717,6 +719,15 @@ module CalculationData_mod
 
       new_MT_radius = new_MT_radii(ilocal)
       num_MT_points = params%num_MT_points
+
+!      flag = 0  ! DEBUG
+!  99  continue
+!      if (flag == 0 .and. I1 /= 1) then
+!        call sleep(1)
+!        goto 99
+!      end if
+!
+!      write(*,*) "ATOM ACTIVE ", I1
 
       call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
                      params%rclust_voronoi, 4*dims%lmaxd, &
