@@ -1,3 +1,6 @@
+!> Module for interstitial mesh generation given critical points
+!> (= panel positions).
+
 module ShapeStandardMesh_mod
   implicit none
 

@@ -1,3 +1,5 @@
+!> Module to determine radial mesh panel positions.
+
 module ShapeCriticalPoints_mod
   implicit none
 

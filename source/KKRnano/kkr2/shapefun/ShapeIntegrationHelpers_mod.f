@@ -1,3 +1,5 @@
+C>    Auxillary module needed for shape function calculation.
+
       module ShapeIntegrationHelpers_mod
       implicit none
 

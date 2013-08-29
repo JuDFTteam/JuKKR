@@ -6,14 +6,6 @@ module tetrahedra_common
 
   save
 
-  !integer, dimension(NVTOTD) :: ISIGNU  !< ??? sign for rotation sense ???
-  !integer, dimension(NFACED) :: NTT     !< number of tetrahedra for polygon
-  !real(kind=DP), dimension(NVTOTD)  ::RD       !< distances pyramid footpoint to edge
-  !real(kind=DP), dimension(NFACED)  ::R0       !< foot points of perpendicular of polygons
-  !real(kind=DP), dimension(NVTOTD)  ::FA       !< tetrahedron angle, phi-angle corresponding to 1st vertex  FA < FD < FB
-  !real(kind=DP), dimension(NVTOTD)  ::FB       !< tetrahedron angle, phi-angle corresponding to 2nd vertex
-  !real(kind=DP), dimension(NVTOTD)  ::FD       !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
-
   integer, dimension(:), allocatable :: ISIGNU  !< ??? sign for rotation sense ???
   integer, dimension(:), allocatable :: NTT     !< number of tetrahedra for polygon
   real(kind=DP), dimension(:), allocatable  ::RD       !< distances pyramid footpoint to edge

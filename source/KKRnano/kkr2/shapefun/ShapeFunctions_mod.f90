@@ -1,3 +1,5 @@
+!> Module to calculate shape-functions + mesh given Voronoi-cell data.
+
 module ShapeFunctions_mod
   implicit none
   contains

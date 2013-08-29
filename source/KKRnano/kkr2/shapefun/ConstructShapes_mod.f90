@@ -1,5 +1,15 @@
+!------------------------------------------------------------------------------
+!> Module that provides a simple interface for doing shape-function construction
+!> from positions only.
+!>
+!> This effectively hides the Voronoi construction.
+!> Reuses code from RefCluster_mod.f90
+!>
+!> @author Elias Rabel
+!>
 module ConstructShapes_mod
 
+!> A datastructure containing the corresponding interstitial mesh.
 type InterstitialMesh
   double precision, allocatable, dimension(:) :: xrn !< radial mesh points r(i)
   double precision, allocatable, dimension(:) :: drn !< integration weights dr/di (i)

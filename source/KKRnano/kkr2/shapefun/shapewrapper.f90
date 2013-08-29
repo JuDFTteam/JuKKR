@@ -1,4 +1,7 @@
 !------------------------------------------------------------------------------
+!> Wrapper for shape-function generation from Voronoi data using sensible
+!> defaults for some parameters.
+
 SUBROUTINE shapewrapper(NPOI,AFACE,BFACE,CFACE,DFACE, &
 NMIN, &
 NVERTICES,XVERT,YVERT,ZVERT,NFACE,LMAX, DLT, &
