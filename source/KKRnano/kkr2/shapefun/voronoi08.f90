@@ -161,8 +161,10 @@ subroutine voronoi08( &
   enddo
   volume = volume/6.d0
 
-  write(6,*) ' Polyhedron properties '
-  write(6,*) ' Number of faces : ',nface
+  if (output) then
+    write(6,*) ' Polyhedron properties '
+    write(6,*) ' Number of faces : ',nface
+  end if
 
   if (output) then
      do iface=1,nface
@@ -174,9 +176,9 @@ subroutine voronoi08( &
         enddo
         write(*,9010) a3(iface),b3(iface),c3(iface),d3(iface)
      end do
-  endif
 
-  write(6,*) 'The Volume is : ',volume
+    write(6,*) 'The Volume is : ',volume
+  endif
 
 9000 format(i5,4e16.8)
 9010 format(' Face coefficients:',4e16.8)
@@ -198,7 +200,9 @@ subroutine voronoi08( &
      enddo
   enddo
   rout = dsqrt(rout)
-  write(*,9020) rmt,rout,rmt*100/rout
+
+  if (output) write(*,9020) rmt,rout,rmt*100/rout
+
 9020 format('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8, &
        '; RATIO=',f12.2,' %')
   !---------------------------------------------------------------
@@ -234,8 +238,6 @@ subroutine voronoi08( &
   enddo
   !---------------------------------------------------------------
 
-
-  return
 end subroutine voronoi08
 
 
