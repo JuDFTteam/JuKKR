@@ -184,7 +184,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         atomdata  => getAtomData(calc_data, ilocal)
 !------------------------------------------------------------------------------
 
-        call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%radius_muffin_tin, &
+        call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%RMTref, &
                   Tref_local(:,:,ilocal), DTref_local(:,:,ilocal), dims%LLY)
 
 !------------------------------------------------------------------------------

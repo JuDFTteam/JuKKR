@@ -664,6 +664,10 @@ module CalculationData_mod
       ! set new MT radius
       atomdata%radius_muffin_tin = mesh%rmt
 
+      ! set radius of repulsive reference potential
+      !atomdata%RMTref = cell%shdata%max_muffin_tin * params%alat
+      atomdata%RMTref = atomdata%radius_muffin_tin ! old behaviour
+
       cell%cell_index = atomdata%cell_index
       call associateBasisAtomCell(atomdata, cell)
 
@@ -703,7 +707,7 @@ module CalculationData_mod
     integer :: I1, ilocal, nfun, ii
     integer :: irmd, irid, ipand, irnsd
     type (InterstitialMesh) :: inter_mesh
-    type (ShapefunData) :: shdata
+    type (ShapefunData) :: shdata ! temporary shape-fun data
     double precision :: new_MT_radius
     integer :: num_MT_points
     type (RadialMeshData), pointer :: mesh

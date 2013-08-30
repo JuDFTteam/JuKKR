@@ -166,9 +166,6 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
                     thetas_s, lmifun_s, nfun, & 
                     ibmaxd,meshnd, npand,nfaced, NVERTMAX)
 
-  ! set maximum possible muffin-tin radius (ALAT units)
-  shdata%max_muffin_tin = rmt
-
   ! muffin-tinization
   radius = new_MT_radius
   if (MT_scale > TOLVDIST) then    ! MT_scale > 0.0 overrides new_MT_radius
@@ -179,12 +176,16 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
     call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s, radius)
   end if
 
+  ! Construct shape-fun datastructure
   call createShapefunData(shdata, meshn, ibmaxd, nfun)
 
   shdata%theta = thetas_s(1:meshn, 1:nfun)
   shdata%nfu = nfun
   shdata%ifunm = 0
   shdata%lmsp = 0
+
+  ! set maximum possible muffin-tin radius (ALAT units)
+  shdata%max_muffin_tin = rmt
 
   do ii = 1, nfun
     shdata%llmsp(ii) = lmifun_s(ii)
