@@ -2,7 +2,7 @@
 !> A wrapper for the subroutine STARTB1
 subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
                            NTCELL, &
-                           EFERMI,ZAT, RMTref, &
+                           EFERMI,ZAT, radius_muffin_tin, &
                            IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   use RadialMeshData_mod
@@ -24,7 +24,7 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   INTEGER :: LPOT
   INTEGER :: NSPIN
   DOUBLE PRECISION, dimension(*) :: ZAT
-  double precision, dimension(naezd), intent(in) :: RMTref
+  double precision, dimension(naezd), intent(in) :: radius_muffin_tin
   INTEGER, dimension(*) :: NTCELL
 
   DOUBLE PRECISION, parameter :: HFIELD = 0.0d0
@@ -178,9 +178,8 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
       do ii = 1, naezd
         atom%atom_index = ii
         atom%cell_index = NTCELL(ii)
-        atom%cluster_index = -1 !TODO
         atom%Z_nuclear = ZAT(ii)
-        atom%RMTref = RMTref(ii)
+        atom%radius_muffin_tin = radius_muffin_tin(ii)
 
         atom%core%NCORE = 0
         atom%core%LCORE = 0

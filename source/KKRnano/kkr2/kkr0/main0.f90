@@ -117,7 +117,7 @@
     double precision :: RECBV(3,3)
 
     integer, dimension(:),   allocatable :: NTCELL
-    double precision, dimension(:), allocatable :: RMTref
+    double precision, dimension(:), allocatable :: radius_muffin_tin
 
 !     .. auxillary variables, not passed to kkr2
     double precision :: PI
@@ -160,14 +160,14 @@
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
     allocate(NTCELL(dims%NAEZ))
-    allocate(RMTref(dims%naez))
+    allocate(radius_muffin_tin(dims%naez))
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
      call RINPUTNEW99(arrays%RBASIS, NTCELL, &
                       arrays%NAEZ,arrays%ZAT, &
-                      RMTref)
+                      radius_muffin_tin)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -180,7 +180,7 @@
     ! read starting potential and shapefunctions
     call STARTB1_wrapper(params%alat, &
                  dims%LPOT,dims%NSPIND,NTCELL, &
-                 EFERMI, arrays%ZAT, RMTref, &
+                 EFERMI, arrays%ZAT, radius_muffin_tin, &
                  dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
                  dims%NAEZ, dims%IRNSD)
 
@@ -276,7 +276,7 @@
     !   auxillary
     deallocate(DEZ, stat=ierror)
     deallocate(NTCELL, stat=ierror)
-    deallocate(RMTref, stat=ierror)
+    deallocate(radius_muffin_tin, stat=ierror)
 
 ! -------------- Helper routine -----------------------------------------------
 

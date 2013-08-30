@@ -1,5 +1,5 @@
 C>    Reads atominfo and rbasis files.
-      SUBROUTINE RINPUTNEW99(RBASIS,NTCELL,NAEZ,Z,RMTREF)
+      SUBROUTINE RINPUTNEW99(RBASIS,NTCELL,NAEZ,Z,radius_muffin_tin)
 
       IMPLICIT NONE
 
@@ -7,7 +7,7 @@ C     .. Array Arguments ..
       INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
      &        NTCELL(naez),CLS, refpot
 
-      DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),RMTREF(*)
+      DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),radius_muffin_tin(*)
 
       INTEGER NAEZ
       double precision temp
@@ -35,7 +35,7 @@ c------------ array set up and definition of input parameter -----------
      +                        IRNS_dummy,
      +                        temp
 
-      RMTREF(I) = temp
+      radius_muffin_tin(I) = temp
 
       END DO
       CLOSE (77)
