@@ -1,3 +1,7 @@
+!> Module to interpolate potential of a basis atom to different mesh
+!> using cubic spline interpolation.
+!> @author Elias Rabel
+!
 module InterpolateBasisAtom_mod
   use BasisAtom_mod
   use RadialMeshData_mod
@@ -35,11 +39,10 @@ module InterpolateBasisAtom_mod
     call createBasisAtom(new_atom, old_atom%atom_index, lpot, nspin, &
                          new_mesh%irmin, new_mesh%irmd)
 
-
     new_atom%atom_index = old_atom%atom_index
     new_atom%cell_index = old_atom%cell_index
     new_atom%Z_nuclear = old_atom%Z_nuclear
-    new_atom%RMTref = old_atom%RMTref
+    new_atom%radius_muffin_tin = old_atom%radius_muffin_tin
     new_atom%core%LCORE = old_atom%core%LCORE
     new_atom%core%NCORE = old_atom%core%NCORE
     new_atom%core%ECORE = old_atom%core%ECORE

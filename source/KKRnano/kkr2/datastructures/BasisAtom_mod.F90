@@ -57,7 +57,8 @@ module BasisAtom_mod
     double precision :: Z_nuclear
     integer :: nspin
 
-    double precision :: RMTref !< muffin-tin radius reference system
+    !double precision :: RMTref !< muffin-tin radius reference system
+    double precision :: radius_muffin_tin
 
     type (PotentialData) :: potential
     type (AtomicCoreData) :: core
@@ -86,7 +87,8 @@ CONTAINS
     atom%nspin = nspin
     atom%cell_index = -1
     atom%Z_nuclear = 1.d9
-    atom%RMTref = 1.d9
+    !atom%RMTref = 1.d9
+    atom%radius_muffin_tin = 1.d9
 
     call createPotentialData(atom%potential, lpot, nspin, irmind, irmd)
 
@@ -214,7 +216,7 @@ CONTAINS
                                 atom%cell_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
-                                atom%RMTref, &
+                                atom%radius_muffin_tin, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
@@ -238,7 +240,7 @@ CONTAINS
                                 atom%cell_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
-                                atom%RMTref, &
+                                atom%radius_muffin_tin, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
@@ -269,7 +271,7 @@ CONTAINS
                                 atom%cell_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
-                                atom%RMTref, &
+                                atom%radius_muffin_tin, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &

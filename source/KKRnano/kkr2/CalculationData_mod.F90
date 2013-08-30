@@ -637,7 +637,7 @@ module CalculationData_mod
 
       call associateBasisAtomMesh(old_atom, old_mesh)
 
-      new_MT_radii(ilocal) = old_atom%RMTref / params%alat
+      new_MT_radii(ilocal) = old_atom%radius_muffin_tin / params%alat
     !--------------------------------------------------------------------------
     end do
     !--------------------------------------------------------------------------
@@ -662,7 +662,7 @@ module CalculationData_mod
       call interpolateBasisAtom(atomdata, old_atom, mesh)
 
       ! set new MT radius
-      atomdata%RMTref = mesh%rmt
+      atomdata%radius_muffin_tin = mesh%rmt
 
       cell%cell_index = atomdata%cell_index
       call associateBasisAtomCell(atomdata, cell)
