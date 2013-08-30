@@ -52,17 +52,12 @@ module BasisAtom_mod
 
   type BasisAtom
 
-    integer :: atom_index !todo (position in atominfo/rbasis file)
+    integer :: atom_index !< position in atominfo/rbasis file
     integer :: cell_index
-    ! TODO: do the same with cluster
-    integer :: cluster_index
-    double precision :: Z_nuclear !todo
+    double precision :: Z_nuclear
     integer :: nspin
-    !double precision :: Vref
+
     double precision :: RMTref !< muffin-tin radius reference system
-    ! double precision, dimension(3) :: position !todo
-    ! position, etc...
-    ! lmax ???
 
     type (PotentialData) :: potential
     type (AtomicCoreData) :: core
@@ -90,7 +85,6 @@ CONTAINS
     atom%atom_index = atom_index
     atom%nspin = nspin
     atom%cell_index = -1
-    atom%cluster_index = -1
     atom%Z_nuclear = 1.d9
     atom%RMTref = 1.d9
 
@@ -218,7 +212,6 @@ CONTAINS
     write (fileunit, rec=recnr) MAGIC_NUMBER, &
                                 atom%atom_index, &
                                 atom%cell_index, &
-                                atom%cluster_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%RMTref, &
@@ -243,7 +236,6 @@ CONTAINS
     read  (fileunit, rec=recnr) magic, &
                                 atom%atom_index, &
                                 atom%cell_index, &
-                                atom%cluster_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%RMTref, &
@@ -275,7 +267,6 @@ CONTAINS
     inquire (iolength = reclen) MAGIC_NUMBER, &
                                 atom%atom_index, &
                                 atom%cell_index, &
-                                atom%cluster_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%RMTref, &

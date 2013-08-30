@@ -38,7 +38,6 @@ module InterpolateBasisAtom_mod
 
     new_atom%atom_index = old_atom%atom_index
     new_atom%cell_index = old_atom%cell_index
-    new_atom%cluster_index = old_atom%cluster_index
     new_atom%Z_nuclear = old_atom%Z_nuclear
     new_atom%RMTref = old_atom%RMTref
     new_atom%core%LCORE = old_atom%core%LCORE
