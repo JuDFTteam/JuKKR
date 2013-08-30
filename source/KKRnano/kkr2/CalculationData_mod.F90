@@ -665,8 +665,12 @@ module CalculationData_mod
       atomdata%radius_muffin_tin = mesh%rmt
 
       ! set radius of repulsive reference potential
-      !atomdata%RMTref = cell%shdata%max_muffin_tin * params%alat
-      atomdata%RMTref = atomdata%radius_muffin_tin ! old behaviour
+      if (params%RMT_ref_scale > 0.0d0) then
+        atomdata%RMTref = cell%shdata%max_muffin_tin * params%alat * &
+                          params%RMT_ref_scale
+      else
+        atomdata%RMTref = atomdata%radius_muffin_tin ! old behaviour=Mt-radius
+      endif
 
       cell%cell_index = atomdata%cell_index
       call associateBasisAtomCell(atomdata, cell)

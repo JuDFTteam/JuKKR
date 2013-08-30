@@ -45,6 +45,7 @@ type InputParams
   integer :: nmin_panel
   integer :: num_MT_points
   double precision :: MT_scale
+  double precision :: RMT_ref_scale
 end type InputParams
 
 CONTAINS
@@ -277,6 +278,12 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueDouble(conf, "RMT_ref_scale", confvalues%RMT_ref_scale, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for RMT_ref_scale."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -325,6 +332,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%nmin_panel
   read(FILEHANDLE) confvalues%num_MT_points
   read(FILEHANDLE) confvalues%MT_scale
+  read(FILEHANDLE) confvalues%RMT_ref_scale
   close(FILEHANDLE)
 end function
 
@@ -373,6 +381,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%nmin_panel
   write(FILEHANDLE) confvalues%num_MT_points
   write(FILEHANDLE) confvalues%MT_scale
+  write(FILEHANDLE) confvalues%RMT_ref_scale
   close(FILEHANDLE)
 end function
 

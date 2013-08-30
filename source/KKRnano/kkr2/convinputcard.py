@@ -113,7 +113,15 @@ num_MT_points  = $num_MT_points
 # maximal MT radius to new MT radius
 
 MT_scale       = $MT_scale
- 
+
+# Reference potential
+# Radius of repulsive reference potential
+# RMT_ref_scale <= 0.0: use same radius as for muffin-tin sphere
+# otherwise use RMT_ref_scale * (max. possible muffin tin radius)
+# Recommended: RMT_ref_scale = 0.98
+
+RMT_ref_scale = $RMT_ref_scale
+
 """)
 
 f = open('inputcard', 'r')
@@ -194,6 +202,7 @@ def apply_kkrnano_rules(keydict):
     newdict['nmin_panel'] = '3'
     newdict['num_MT_points'] = '10'
     newdict['MT_scale'] = '0.0'
+    newdict['RMT_ref_scale'] = '0.0'
     return newdict
 
 keydict = apply_kkrnano_rules(keydict)
@@ -215,8 +224,4 @@ template = substTemplate(template, keydict, False)
 f = open("input.conf", "w")
 f.write(template)
 f.close()
-    
-#f = open("inputcard.template", "r")
-#template = f.read()
-#f.close()
-#print substTemplate(template, keydict, True)
+
