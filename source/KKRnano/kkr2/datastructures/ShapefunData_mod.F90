@@ -15,6 +15,8 @@ module ShapefunData_mod
     integer, dimension(:), allocatable :: LMSP !< =0 if shape-function component is zero, otherwise =1
     integer :: NFU
 
+    double precision :: max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
+
   end type
 
   CONTAINS
@@ -41,6 +43,7 @@ module ShapefunData_mod
     shdata%IFUNM = 0
     shdata%LMSP =  0
     shdata%NFU = 0
+    shdata%max_muffin_tin = 0.0d0
 
     ! TODO: check lmmax_shape <= nfund
   end subroutine

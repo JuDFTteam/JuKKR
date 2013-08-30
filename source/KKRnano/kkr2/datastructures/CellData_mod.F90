@@ -55,6 +55,7 @@ module CellData_mod
                                 cell%shdata%IFUNM, &
                                 cell%shdata%LMSP, &
                                 cell%shdata%NFU, &
+                                cell%shdata%max_muffin_tin, &
                                 MAGIC_NUMBER
 
   end subroutine
@@ -77,6 +78,7 @@ module CellData_mod
                                 cell%shdata%IFUNM, &
                                 cell%shdata%LMSP, &
                                 cell%shdata%NFU, &
+                                cell%shdata%max_muffin_tin, &
                                 magic2
 
     if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) then
@@ -105,6 +107,7 @@ module CellData_mod
                                 cell%shdata%IFUNM, &
                                 cell%shdata%LMSP, &
                                 cell%shdata%NFU, &
+                                cell%shdata%max_muffin_tin, &
                                 MAGIC_NUMBER
 
     !write (*,*) reclen

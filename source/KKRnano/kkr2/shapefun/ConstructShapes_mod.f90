@@ -144,7 +144,6 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   allocate( vertices(NVERTMAX, nfaced, 3) )
   nvertices = 0
 
-
   call voronoi08( &
        nfaced,rvec,NVERTMAX,nfaced,weight0,weight,TOLVDIST,TOLVAREA, &
        rmt,rout,volume,nface,aface,bface,cface,dface,nvertices, &
@@ -166,6 +165,9 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
                     npan, nm, xrn, drn, meshn, & 
                     thetas_s, lmifun_s, nfun, & 
                     ibmaxd,meshnd, npand,nfaced, NVERTMAX)
+
+  ! set maximum possible muffin-tin radius (ALAT units)
+  shdata%max_muffin_tin = rmt
 
   ! muffin-tinization
   radius = new_MT_radius
