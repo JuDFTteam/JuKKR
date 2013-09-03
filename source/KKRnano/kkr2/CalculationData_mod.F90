@@ -659,7 +659,7 @@ module CalculationData_mod
       old_mesh  => old_mesh_array(ilocal)
 
       ! Geometry might have changed - interpolate to new mesh
-      call interpolateBasisAtom(atomdata, old_atom, mesh)
+      call interpolateBasisAtom(atomdata, old_atom, mesh, dims%lpot)
 
       ! set new MT radius
       atomdata%radius_muffin_tin = mesh%rmt

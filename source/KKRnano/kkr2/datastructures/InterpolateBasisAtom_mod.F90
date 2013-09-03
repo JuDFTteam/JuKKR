@@ -12,17 +12,21 @@ module InterpolateBasisAtom_mod
 
   CONTAINS
 
+  !----------------------------------------------------------------------------
+  ! Interpolate 'old_atom' to 'new_mesh' and return result in 'new_atom' using
+  ! lpot = lpot_new (can be different from that in old_atom).
   ! new mesh must be persistent
   ! new_atom gets allocated
   ! old_atom unmodified
-  subroutine interpolateBasisAtom(new_atom, old_atom, new_mesh)
+  subroutine interpolateBasisAtom(new_atom, old_atom, new_mesh, lpot_new)
     implicit none
     type(BasisAtom), intent(inout) :: new_atom
     type(BasisAtom), intent(in) :: old_atom
     type(RadialMeshData), intent(in) :: new_mesh
+    integer, intent(in) :: lpot_new
 
     integer :: nspin
-    integer :: lpot
+    integer :: lmpot_min
     integer :: irmin_old, irmin_new
     integer :: irws_old, irws_new
     integer :: ii, lm
@@ -33,11 +37,12 @@ module InterpolateBasisAtom_mod
     do_interpolation = .true.
 
     nspin = old_atom%nspin
-    lpot = old_atom%potential%lpot
     old_mesh => old_atom%mesh_ptr
 
-    call createBasisAtom(new_atom, old_atom%atom_index, lpot, nspin, &
+    call createBasisAtom(new_atom, old_atom%atom_index, lpot_new, nspin, &
                          new_mesh%irmin, new_mesh%irmd)
+
+    lmpot_min = min(old_atom%potential%lmpot, new_atom%potential%lmpot)
 
     new_atom%atom_index = old_atom%atom_index
     new_atom%cell_index = old_atom%cell_index
@@ -64,7 +69,8 @@ module InterpolateBasisAtom_mod
     !            sum(abs(mesh%r - old_mesh%r)) > 1.d-8
 
     do_interpolation = .true.
-    if (size(old_mesh%r) == size(new_mesh%r)) then
+    if (size(old_mesh%r) == size(new_mesh%r) .and. &
+        old_atom%potential%lmpot == new_atom%potential%lmpot) then
       if (sum(abs(old_mesh%r - new_mesh%r)) < TOL) then
         ! mesh has not changed - don't interpolate
         ! this avoids numerical inaccuracies - arising from
@@ -74,10 +80,14 @@ module InterpolateBasisAtom_mod
     end if
 
     if (do_interpolation .eqv. .true.) then
+
+      new_atom%potential%VINS = 0.0d0
+      new_atom%potential%VISP = 0.0d0
+
       ! TODO: scale?
       ! interpolate non-spherical potential - use only non-spherical part of mesh
       do ii = 1, nspin
-        do lm = 1, old_atom%potential%lmpot
+        do lm = 1, lmpot_min
           call interpolate(old_mesh%r(irmin_old:irws_old), &
                            old_atom%potential%VINS(irmin_old:irws_old,lm,ii), &
                            new_mesh%r(irmin_new:irws_new), &
