@@ -37,7 +37,9 @@ C==========================================================================
       integer MAXK1,MAXK2,MAXK3,NSYMAXD
       PARAMETER (MAXK1=350,MAXK2=350,MAXK3=350,NSYMAXD=48)
 C i/o
-      integer nkp,nkxyz(3),ibk(0:MAXK1,0:MAXK2,0:MAXK3),kpoibz,nsymat
+C     integer nkp,nkxyz(3),ibk(0:MAXK1,0:MAXK2,0:MAXK3),kpoibz,nsymat
+      integer nkp,nkxyz(3),kpoibz,nsymat
+      integer, allocatable :: ibk(:,:,:)
       INTEGER ISYMINDEX(*),nkxyz1(3)
       double precision kp(3,*),wtkp(*),volbz,CF(3)
       double precision recbv(3,3),bravais(3,3),RSYMAT(64,3,3)
@@ -76,7 +78,8 @@ C
       END IF
       DO I=1,3
           NKXYZ1(I) = NKXYZ(I)
-      END DO 
+      END DO
+
 c-------------------
 c
 c Create small unit cell for the integration in the reciprocal space (gq),
@@ -166,6 +169,9 @@ C
 C========================================================================
 
       NK=NKXYZ1(1)*NKXYZ1(2)*NKXYZ1(3)
+
+C Fix: allocate memory for ibk array on heap to avoid stack overflow ER
+      ALLOCATE(IBK(0:NKXYZ1(1),0:NKXYZ1(2),0:NKXYZ1(3)))
 
       DO I=0,NKXYZ1(1)
           DO J=0,NKXYZ1(2)
