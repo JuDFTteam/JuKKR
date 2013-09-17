@@ -27,7 +27,7 @@ def main():
     force_file = forces_reader(f)
     
     for force in force_file:
-        fout.write("{} {} {}\n".format(*force))
+        fout.write("{0} {1} {2}\n".format(*force))
     
     f.close()
     fout.close()
