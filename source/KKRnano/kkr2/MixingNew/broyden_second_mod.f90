@@ -43,10 +43,10 @@ contains
     !> \endverbatim
     !*********************************************************************
 
-  subroutine calc_metric(g, lmpot,r,drdi,irc,irmin,nspin,imap)
+  subroutine calc_metric(g_metric, lmpot,r,drdi,irc,irmin,nspin,imap)
     implicit none
 
-    double precision, intent(out) :: g(imap)
+    double precision, intent(out) :: g_metric(imap)
     integer :: lmpot, imap, irc, irmin, nspin
     double precision :: r(:), drdi(:)
 
@@ -60,7 +60,7 @@ contains
       volinv = 3.0d0/(r(irc)**3)
       do ir = 1,irc
         ij = ij + 1
-        g(ij) = volinv*r(ir)*r(ir)*drdi(ir)
+        g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
       end do
       !
       if (lmpot.gt.1) then
@@ -68,7 +68,7 @@ contains
         do lm = 2,lmpot
           do ir = irmin,irc
             ij = ij + 1
-            g(ij) = volinv*r(ir)*r(ir)*drdi(ir)
+            g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
           end do
         end do
       end if
@@ -81,11 +81,13 @@ contains
  ! MORE WORK ARRAYS used than needed????
  ! arrays destroyed on output, result in sm
  ! sm = input: for it>1: V_in from previous iteration, new V_in on output
- ! sm1 = V_in
+ ! fm = input: for it>1: simple mixed pot. from previous iteration,
+ !      output: changed on output - output needed for next iteration
+ ! sm1 = on first iteration: V_in, then work array (V_in) from previous iteration
+ ! fm1 = on first iteration: simple mixed potential, then work array
  ! input: fm1 = (1-alpha)*V_in + alpha * V_out output: garbage
- ! sm1s, fm1s: work arrays, contain sm1 and fm1 from previous iteration
- ! g ... diagonal of metric matrix
- subroutine broyden_second(sm, alpha, sm1, fm1, ui2,vi2,sm1s,fm1s, g, &
+ ! g_metric ... diagonal of metric matrix
+ subroutine broyden_second(sm, fm, alpha, sm1, fm1, ui2,vi2, g_metric, &
  communicator, itdbryd, imap, mit)
 
    implicit none
@@ -119,14 +121,11 @@ contains
    !     PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
    double precision fm  (imap)
    double precision fm1 (imap)
-   double precision g   (imap)
+   double precision g_metric(imap)
    double precision sm  (imap)
    double precision sm1 (imap)
-   double precision sm1s(imap)
-   double precision fm1s(imap)
    double precision work(imap)
    double precision vi3 (imap)
-
 
    double precision ui3(imap)
 
@@ -158,11 +157,6 @@ contains
 
    if (mit.gt.1) then
 
-     do ij = 1,imap
-       sm1(ij)=sm1s(ij)
-       fm1(ij)=fm1s(ij)
-     enddo
-
      ! fm = 1/alpha * (V_out[V_in] - V_in)
      do ij = 1,imap
        fm(ij) = rmixiv* (fm(ij)-sm(ij))
@@ -179,7 +173,6 @@ contains
      ! sm1 = \Delta V_in
      ! fm1 = \Delta V_out
 
-     !
      !----> loop to generate u[m] = u(ij,mit)
      !
      ! See Srivastava (16).
@@ -188,12 +181,10 @@ contains
        ui3(ij) = alpha*fm1(ij) + sm1(ij)
      end do
 
-
      do it = 2,mit - 1
        do ij = 1,imap
          work(ij)=vi2(ij,it)
        enddo
-
        am_local(it) = ddot(imap,fm1,1,work,1)
      enddo
 
@@ -216,7 +207,7 @@ contains
 
      ! vi3 = G . \Delta V_out
      do ij = 1,imap
-       vi3(ij) = g(ij)*fm1(ij)
+       vi3(ij) = g_metric(ij)*fm1(ij)
      end do
 
      !----> calculate #vm# and normalize v[m]
@@ -235,27 +226,26 @@ contains
 
      !============ END MIXING, NOW OUTPUT =====================================
 
-     !
-     !----> write u3(ij) and v3(ij) on disk
-     !
+     !----> store u3(ij) and v3(ij) for following iterations
      do ij = 1,imap
        ui2(ij,mit)=ui3(ij)
        vi2(ij,mit)=vi3(ij)
      enddo
 
-     !
      !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
-     !
      do ij = 1,imap
        fm1(ij) = fm(ij)
        sm1(ij) = sm(ij)
      end do
-     !
+
      !----> calculate cmm
      !
 
      ! See coefficients c_mi in Srivastava - why only c_mm???
-     ! cmm = v^T(i) . G . F(m)
+     ! c_mi should change from iteration to iteration???
+     ! is only 1 term of sum used???
+     ! Is there a relation between cmm and am(i) ???
+     ! cmm = v^T(i) . G . F(m)   i=m ???
      ! cmm = 1/alpha * (V_out[V_in] - V_in] . (\Delta V_out / ||\Delta V_out||)
      cmm_local = ddot(imap,fm,1,vi3,1)
 
@@ -271,13 +261,6 @@ contains
    !=====  For MIT GT 1 activ  ==============================================
 
    !      MIT = MIT + 1
-
-   do ij = 1,imap
-     sm1s(ij)=sm1(ij)
-     fm1s(ij)=fm1(ij)
-   enddo
-
-   return
 
  end subroutine
 
