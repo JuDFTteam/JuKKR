@@ -55,27 +55,25 @@ contains
     double precision volinv
 
     ij = 0
-    do 60 isp = 1,nspin
+    do isp = 1,nspin
 
       volinv = 3.0d0/(r(irc)**3)
-      do 20 ir = 1,irc
+      do ir = 1,irc
         ij = ij + 1
         g(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-20    continue
+      end do
       !
       if (lmpot.gt.1) then
 
-        do 40 lm = 2,lmpot
-          do 30 ir = irmin,irc
+        do lm = 2,lmpot
+          do ir = irmin,irc
             ij = ij + 1
             g(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-30        continue
-40      continue
+          end do
+        end do
       end if
 
-50  continue
-
-60 continue
+   end do
  end subroutine
 
  !*********************************************************************
@@ -151,9 +149,9 @@ contains
 
    ! from simple mixed V_out -> reconstruct unmixed V_out ! OMG!
    ! 1st iteration ... fm1 = V_out - V_in
-   do 10 ij = 1,imap
+   do ij = 1,imap
      fm1(ij) = rmixiv* (fm1(ij)-sm1(ij))
-10 continue
+   end do
     !
 
    !=====  For MIT GT 1 activ  ==============================================
@@ -166,17 +164,17 @@ contains
      enddo
 
      ! fm = 1/alpha * (V_out[V_in] - V_in)
-     do 70 ij = 1,imap
+     do ij = 1,imap
        fm(ij) = rmixiv* (fm(ij)-sm(ij))
-70   continue
+     end do
      !
      !----> calculate  sm = rho(m) - rho(m-1)
      !----> calculate dfm = f[m] - f[m-1]
      !
-     do 80 ij = 1,imap
+     do ij = 1,imap
        sm1(ij) = sm(ij) - sm1(ij)
        fm1(ij) = fm(ij) - fm1(ij)
-80   continue
+     end do
 
      ! sm1 = \Delta V_in
      ! fm1 = \Delta V_out
@@ -186,9 +184,9 @@ contains
      !
      ! See Srivastava (16).
      ! = alpha*\Delta V_out + \Delta V_in
-     do 90 ij = 1,imap
+     do ij = 1,imap
        ui3(ij) = alpha*fm1(ij) + sm1(ij)
-90   continue
+     end do
 
 
      do it = 2,mit - 1
@@ -217,9 +215,9 @@ contains
      !----> calculate v[m] ; convoluted with the metric g
 
      ! vi3 = G . \Delta V_out
-     do 150 ij = 1,imap
+     do ij = 1,imap
        vi3(ij) = g(ij)*fm1(ij)
-150  continue
+     end do
 
      !----> calculate #vm# and normalize v[m]
 
@@ -248,10 +246,10 @@ contains
      !
      !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
      !
-     do 180 ij = 1,imap
+     do ij = 1,imap
        fm1(ij) = fm(ij)
        sm1(ij) = sm(ij)
-180  continue
+     end do
      !
      !----> calculate cmm
      !
