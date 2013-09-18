@@ -80,10 +80,13 @@ contains
 
  !*********************************************************************
  ! PARAMETERS STILL UNCLEAR!!!
+ ! MORE WORK ARRAYS used than needed????
  ! arrays destroyed on output, result in sm
- ! sm = V_in on input, new V_in on output???
+ ! sm = input: for it>1: V_in from previous iteration, new V_in on output
  ! sm1 = V_in
- ! fm1 = V_in + alpha * V_out
+ ! input: fm1 = (1-alpha)*V_in + alpha * V_out output: garbage
+ ! sm1s, fm1s: work arrays, contain sm1 and fm1 from previous iteration
+ ! g ... diagonal of metric matrix
  subroutine broyden_second(sm, alpha, sm1, fm1, ui2,vi2,sm1s,fm1s, g, &
  communicator, itdbryd, imap, mit)
 
@@ -137,7 +140,7 @@ contains
 
    integer communicator
    !
-   external mpi_allreduce
+   external MPI_Allreduce
 
    rmixiv = one/alpha
    !
@@ -147,6 +150,7 @@ contains
    !                   metric  g := r*r*drdi
 
    ! from simple mixed V_out -> reconstruct unmixed V_out ! OMG!
+   ! 1st iteration ... fm1 = V_out - V_in
    do 10 ij = 1,imap
      fm1(ij) = rmixiv* (fm1(ij)-sm1(ij))
 10 continue
@@ -180,6 +184,7 @@ contains
      !
      !----> loop to generate u[m] = u(ij,mit)
      !
+     ! See Srivastava (16).
      ! = alpha*\Delta V_out + \Delta V_in
      do 90 ij = 1,imap
        ui3(ij) = alpha*fm1(ij) + sm1(ij)
@@ -194,8 +199,8 @@ contains
        am_local(it) = ddot(imap,fm1,1,work,1)
      enddo
 
-     call mpi_allreduce(am_local,am,(itdbryd-1), &
-     mpi_double_precision,mpi_sum,communicator,ierr)
+     call MPI_Allreduce(am_local,am,(itdbryd-1), &
+     MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
      ! active only from 3rd iteration on
      ! ui3 = \sum_i^j -am_i (alpha*\Delta V_out + \Delta V_in)_i
@@ -221,12 +226,13 @@ contains
      ! = (\Delta V_out)^T . G . (\Delta V_out) ! using diagonal metric matrix G
      ddot_local = ddot(imap,vi3,1,fm1,1)
 
-     call mpi_allreduce(ddot_local,ddot_global,1, &
-     mpi_double_precision,mpi_sum,communicator,ierr)
+     call MPI_Allreduce(ddot_local,ddot_global,1, &
+     MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
      vmnorm = ddot_global
 
      ! normalize (\Delta V_out)
+     ! v^T(i) in Srivastava paper, equ. (16)
      call dscal(imap,one/vmnorm,vi3,1)
 
      !============ END MIXING, NOW OUTPUT =====================================
@@ -250,11 +256,13 @@ contains
      !----> calculate cmm
      !
 
+     ! See coefficients c_mi in Srivastava - why only c_mm???
+     ! cmm = v^T(i) . G . F(m)
      ! cmm = 1/alpha * (V_out[V_in] - V_in] . (\Delta V_out / ||\Delta V_out||)
      cmm_local = ddot(imap,fm,1,vi3,1)
 
-     call mpi_allreduce(cmm_local,cmm_global,1, &
-     mpi_double_precision,mpi_sum,communicator,ierr)
+     call MPI_Allreduce(cmm_local,cmm_global,1, &
+     MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
      !----> update rho(m+1)
      !
