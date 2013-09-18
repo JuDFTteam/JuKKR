@@ -78,65 +78,56 @@ contains
 
  !*********************************************************************
  ! PARAMETERS STILL UNCLEAR!!!
- ! MORE WORK ARRAYS used than needed????
  ! arrays destroyed on output, result in sm
- ! sm = input: for it>1: V_in from previous iteration, new V_in on output
- ! fm = input: for it>1: simple mixed pot. from previous iteration,
+ ! sm = input: V_in from current iteration, new V_in on output
+ ! fm = input: simple mixed pot. from current iteration
  !      output: changed on output - output needed for next iteration
- ! sm1 = on first iteration: V_in, then work array (V_in) from previous iteration
- ! fm1 = on first iteration: simple mixed potential, then work array
- ! input: fm1 = (1-alpha)*V_in + alpha * V_out output: garbage
+ ! sm1 = it>1: work array
+ ! fm1 = it>1: work array
  ! g_metric ... diagonal of metric matrix
- subroutine broyden_second(sm, fm, alpha, sm1, fm1, ui2,vi2, g_metric, &
- communicator, itdbryd, imap, mit)
+subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
+                          communicator, itdbryd, imap, mit)
 
-   implicit none
+  implicit none
 
-   include 'mpif.h'
+  include 'mpif.h'
 
-   !     array dimension for broyden mixing history
-   integer itdbryd
+  ! Parameters
+  double precision, parameter :: ONE =1.0d0
 
-   double precision, parameter :: ONE = 1.0d0
+  ! Arguments
+  double precision, intent(inout), dimension(imap) :: sm
+  double precision, intent(inout), dimension(imap) :: fm
+  double precision, intent(inout), dimension(imap) :: sm1
+  double precision, intent(inout), dimension(imap) :: fm1
+  double precision, intent(inout), dimension(imap, 2:itdbryd) :: ui2
+  double precision, intent(inout), dimension(imap, 2:itdbryd) :: vi2
 
-   !     ..
-   !     .. Local Scalars ..
-   double precision rmixiv,vmnorm, &
-   ddot_local, &
-   ddot_global,cmm_local,cmm_global
-   integer ij,imap,it,mit
+  double precision, intent(in) :: alpha
+  double precision, intent(in), dimension(imap) :: g_metric
+  integer, intent(in) :: communicator
+  integer, intent(in) :: itdbryd
+  integer, intent(in) :: imap
+  integer, intent(in) :: mit
 
-   integer ierr
-   !     ..
-   !     .. External Functions ..
-   double precision ddot
-   external ddot
-   !     ..
-   !     .. Local Arrays ..
-   !     .. these arrays are automatic (dynamically allocated)
-   !        Fortran arrays
-   double precision am(2:itdbryd), am_local(2:itdbryd)
+  ! Local variables of broyden_second
+  double precision :: rmixiv
+  double precision :: vmnorm
+  double precision :: ddot_local
+  double precision :: ddot_global
+  double precision :: cmm_local
+  double precision :: cmm_global
+  integer :: ij
+  integer :: it
+  integer :: ierr
+  double precision, dimension(2:itdbryd) :: am
+  double precision, dimension(2:itdbryd) :: am_local
+  double precision, dimension(imap) :: work
+  double precision, dimension(imap) :: vi3
+  double precision, dimension(imap) :: ui3
 
-   !     the following arrays have dimension NTIRD
-   !     PARAMETER (NTIRD=(IRMD+(IRNSD+1)*(LMPOTD-1))*NSPIND)
-   double precision fm  (imap)
-   double precision fm1 (imap)
-   double precision g_metric(imap)
-   double precision sm  (imap)
-   double precision sm1 (imap)
-   double precision work(imap)
-   double precision vi3 (imap)
-
-   double precision ui3(imap)
-
-   double precision ui2(imap, 2:itdbryd)
-   double precision vi2(imap, 2:itdbryd)
-
-   !     .. Scalar Arguments ..
-   double precision alpha
-
-   integer communicator
-   !
+   !    .. External Functions ..
+   double precision, external :: ddot
    external MPI_Allreduce
 
    rmixiv = one/alpha
@@ -147,21 +138,15 @@ contains
    !                   metric  g := r*r*drdi
 
    ! from simple mixed V_out -> reconstruct unmixed V_out ! OMG!
-   ! 1st iteration ... fm1 = V_out - V_in
+   ! fm = 1/alpha * (V_out[V_in] - V_in)
    do ij = 1,imap
-     fm1(ij) = rmixiv* (fm1(ij)-sm1(ij))
+     fm(ij) = rmixiv* (fm(ij)-sm(ij))
    end do
-    !
 
    !=====  For MIT GT 1 activ  ==============================================
 
    if (mit.gt.1) then
 
-     ! fm = 1/alpha * (V_out[V_in] - V_in)
-     do ij = 1,imap
-       fm(ij) = rmixiv* (fm(ij)-sm(ij))
-     end do
-     !
      !----> calculate  sm = rho(m) - rho(m-1)
      !----> calculate dfm = f[m] - f[m-1]
      !
@@ -232,12 +217,6 @@ contains
        vi2(ij,mit)=vi3(ij)
      enddo
 
-     !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
-     do ij = 1,imap
-       fm1(ij) = fm(ij)
-       sm1(ij) = sm(ij)
-     end do
-
      !----> calculate cmm
      !
 
@@ -261,6 +240,11 @@ contains
    !=====  For MIT GT 1 activ  ==============================================
 
    !      MIT = MIT + 1
+   !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
+   do ij = 1,imap
+     fm1(ij) = fm(ij)
+     sm1(ij) = sm(ij)
+   end do
 
  end subroutine
 
