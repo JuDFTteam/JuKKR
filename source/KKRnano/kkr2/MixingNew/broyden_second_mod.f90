@@ -5,7 +5,7 @@ module broyden_second_mod
 contains
 
     !*********************************************************************
-    !> Broyden mixing.
+    !> Broyden mixing. Second method only
     !>
     !> \verbatim
     !>    imix :
@@ -79,12 +79,14 @@ contains
  !*********************************************************************
  ! PARAMETERS STILL UNCLEAR!!!
  ! arrays destroyed on output, result in sm
- ! sm = input: V_in from current iteration, new V_in on output
+ ! sm = input: V_in from current iteration, new V_in on output (=RESULT)
  ! fm = input: simple mixed pot. from current iteration
- !      output: changed on output - output needed for next iteration
- ! sm1 = it>1: work array
- ! fm1 = it>1: work array
+ !      output: changed on output
+ ! sm1 = work array
+ ! fm1 = work array
+ ! ui2, vi2 ... work arrays
  ! g_metric ... diagonal of metric matrix
+ ! imap ... length of arrays
 subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
                           communicator, itdbryd, imap, mit)
 
@@ -217,6 +219,12 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
        vi2(ij,mit)=vi3(ij)
      enddo
 
+     !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
+     do ij = 1,imap
+       fm1(ij) = fm(ij)
+       sm1(ij) = sm(ij)
+     end do
+
      !----> calculate cmm
      !
 
@@ -236,16 +244,20 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      ! V_in_new = (1 - cmm) * (alpha*\Delta V_out + \Delta V_in) + V_in
      call daxpy(imap,one-cmm_global,ui3,1,sm,1)
 
+   else if (mit == 1) then !1st iteration
+
+     !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
+     do ij = 1,imap
+       fm1(ij) = fm(ij)
+       sm1(ij) = sm(ij)
+     end do
+
+   else
+     write(*,*) "Iteration index has to be >= 1."
+     STOP
    end if
-   !=====  For MIT GT 1 activ  ==============================================
 
    !      MIT = MIT + 1
-   !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
-   do ij = 1,imap
-     fm1(ij) = fm(ij)
-     sm1(ij) = sm(ij)
-   end do
-
  end subroutine
 
 end module
