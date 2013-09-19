@@ -80,6 +80,11 @@ C
           NKXYZ1(I) = NKXYZ(I)
       END DO
 
+C Fix: allocate memory for ibk array on heap to avoid stack overflow ER
+      if(.not. allocated(ibk)) then
+        allocate(IBK(0:NKXYZ1(1),0:NKXYZ1(2),0:NKXYZ1(3)))
+      end if
+
 c-------------------
 c
 c Create small unit cell for the integration in the reciprocal space (gq),
@@ -169,9 +174,6 @@ C
 C========================================================================
 
       NK=NKXYZ1(1)*NKXYZ1(2)*NKXYZ1(3)
-
-C Fix: allocate memory for ibk array on heap to avoid stack overflow ER
-      ALLOCATE(IBK(0:NKXYZ1(1),0:NKXYZ1(2),0:NKXYZ1(3)))
 
       DO I=0,NKXYZ1(1)
           DO J=0,NKXYZ1(2)
