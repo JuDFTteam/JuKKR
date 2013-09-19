@@ -88,7 +88,7 @@ contains
  ! g_metric ... diagonal of metric matrix
  ! imap ... length of arrays
 subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
-                          communicator, itdbryd, imap, mit)
+                          communicator, itdbryd, imap, iter)
 
   implicit none
 
@@ -110,7 +110,7 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
   integer, intent(in) :: communicator
   integer, intent(in) :: itdbryd
   integer, intent(in) :: imap
-  integer, intent(in) :: mit
+  integer, intent(in) :: iter
 
   ! Local variables of broyden_second
   double precision :: rmixiv
@@ -120,6 +120,7 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
   double precision :: cmm_local
   double precision :: cmm_global
   integer :: ij
+  integer :: mit
   integer :: it
   integer :: ierr
   double precision, dimension(2:itdbryd) :: am
@@ -127,11 +128,15 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
   double precision, dimension(imap) :: work
   double precision, dimension(imap) :: vi3
   double precision, dimension(imap) :: ui3
+  double precision :: EPS
 
    !    .. External Functions ..
    double precision, external :: ddot
    external MPI_Allreduce
 
+   EPS = epsilon(1.0d0)
+
+   mit = mod(iter-1, itdbryd) + 1
    rmixiv = one/alpha
    !
    !---->  the following block is activated only one iteration before
@@ -139,8 +144,12 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
    !---->  set up of : sm1 = rho(1) ; fm1=fm[1]=f(rho(1)) - rho(1) ;
    !                   metric  g := r*r*drdi
 
-   ! from simple mixed V_out -> reconstruct unmixed V_out ! OMG!
+   ! from simple mixed V_out -> reconstruct unmixed V_out ! OMG! WTF!
    ! fm = 1/alpha * (V_out[V_in] - V_in)
+   if (mit == 1) then
+     work = fm
+   end if
+
    do ij = 1,imap
      fm(ij) = rmixiv* (fm(ij)-sm(ij))
    end do
@@ -209,7 +218,11 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
 
      ! normalize (\Delta V_out)
      ! v^T(i) in Srivastava paper, equ. (16)
-     call dscal(imap,one/vmnorm,vi3,1)
+     if (vmnorm > EPS) then ! vmnorm must not be zero
+       call dscal(imap,one/vmnorm,vi3,1)
+     else
+       vi3 = 0.0d0
+     end if
 
      !============ END MIXING, NOW OUTPUT =====================================
 
@@ -251,6 +264,7 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
        fm1(ij) = fm(ij)
        sm1(ij) = sm(ij)
      end do
+     sm = work
 
    else
      write(*,*) "Iteration index has to be >= 1."
@@ -261,3 +275,57 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
  end subroutine
 
 end module
+
+#ifdef TEST_BROYDEN_SECOND_MOD__
+! A test for the Broyden routine. Run with 1 MPI-process.
+program test_broyden_second_mod
+  use broyden_second_mod
+  implicit none
+
+  include "mpif.h"
+
+  integer, parameter :: NUM_IT = 30
+  integer, parameter :: DIM_HIST = 20
+  double precision :: alpha
+  double precision :: g_metric(2)
+  double precision :: x(2)
+  integer :: ii, ierr
+  double precision, dimension(2) :: fm
+  double precision, dimension(2) :: sm1
+  double precision, dimension(2) :: fm1
+  double precision, dimension(2, 2:DIM_HIST) :: ui2
+  double precision, dimension(2, 2:DIM_HIST) :: vi2
+
+  x = (/ 10.0d0, -1.8d0 /)
+  g_metric = (/1.0d0, 1.0d0/)
+
+  alpha = 0.01d0
+
+  call MPI_Init(ierr)
+
+  do ii = 1, NUM_IT
+
+    call himmelblau(x, fm)
+    ! simple mix first
+    fm = (1. - alpha) * x + alpha * fm
+
+    call broyden_second(x, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
+                        MPI_COMM_WORLD, DIM_HIST, 2, ii)
+
+    write(*,*) ii, x
+  end do
+
+  call MPI_Finalize(ierr)
+
+  contains
+    subroutine himmelblau(x, f)
+      ! test to find fixed point of f which is (3,2)
+      implicit none
+      double precision, intent(in) :: x(2)
+      double precision, intent(out) :: f(2)
+
+      f(1) = 2*x(1)**3 + 2*x(1)*x(2) + x(2)**2 - 21*x(1) - 7 + 3
+      f(2) =   x(1)**2 + 2*x(1)*x(2) + 2*x(2)**3-13*x(2) - 11 + 2
+    end subroutine
+end program
+#endif
