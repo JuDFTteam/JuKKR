@@ -278,4 +278,4 @@ ShapeIntegrationHelpers_mod.o: shape_constants_mod.o
 ShapeIntegration_mod.o: shape_constants_mod.o angles_common.o tetrahedra_common.o ShapeIntegrationHelpers_mod.o
 ShapeStandardMesh_mod.o: shape_constants_mod.o
 
-broyden_kkr_mod.o: CalculationData_mod.o
+broyden_kkr_mod.o: CalculationData_mod.o broyden_second_mod.o

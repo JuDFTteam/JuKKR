@@ -38,6 +38,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   use Main2Arrays_mod
   use DensityResults_mod
   use EnergyResults_mod
+  use broyden_kkr_mod
 
   implicit none
 
@@ -117,7 +118,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
 
   ! it is weird that straight mixing is called in any case before
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
-  if (params%IMIX>=3) then
+  if (params%IMIX>=3 .and. params%IMIX<6) then
 
     if (num_local_atoms > 1) then
       if (isMasterRank(my_mpi)) write(*,*) "Broyden mixing and num_local_atoms > 1 not supported."
@@ -134,7 +135,11 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
     getMySEcommunicator(my_mpi), &
     broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, &
     atomdata%potential%nspin)
-  endif
+
+  else if (params%imix == 6) then
+    ! use Broyden mixing that supports num_local_atoms > 1
+    call mix_broyden2_com(calc_data, iter, getMySEcommunicator(my_mpi))
+  end if
 
   ! use any atomdata to open file - use reclen stored in calc_data
   call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", &
