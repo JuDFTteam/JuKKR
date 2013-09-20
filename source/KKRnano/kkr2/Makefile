@@ -254,7 +254,7 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
          JijData_mod.o BroydenData_mod.o Main2Arrays_mod.o DimParams_mod.o InputParams_mod.o \
          KKRresults_mod.o DensityResults_mod.o \
          EnergyResults_mod.o TruncationZone_mod.o RefCluster_mod.o TEST_lcutoff_mod.o \
-         ClusterInfo_mod.o InterpolateBasisAtom_mod.o
+         ClusterInfo_mod.o InterpolateBasisAtom_mod.o ConstructShapes_mod.o
          
 ClusterInfo_mod.o: RefCluster_mod.o TruncationZone_mod.o one_sided_commI_mod.o
 
@@ -278,3 +278,4 @@ ShapeIntegrationHelpers_mod.o: shape_constants_mod.o
 ShapeIntegration_mod.o: shape_constants_mod.o angles_common.o tetrahedra_common.o ShapeIntegrationHelpers_mod.o
 ShapeStandardMesh_mod.o: shape_constants_mod.o
 
+broyden_kkr_mod.o: CalculationData_mod.o

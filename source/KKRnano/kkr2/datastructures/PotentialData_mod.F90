@@ -1,3 +1,7 @@
+!> Note: VONS is wastefully dimensioned... it is allocated for total number of
+!> mesh points, but only non-spherical part is non-zero
+!> also there is always space for 2 spin-directions.
+
 ! eliminates: VINS, VISP, VONS, lmpotd
 ! TODO: pointer to radial mesh? unnecessary - just pass atom
 ! ADD lmax???
@@ -66,5 +70,15 @@ module PotentialData_mod
     deallocate(potential%VISP)
     deallocate(potential%VONS)
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Return the actual number of potential values.
+  integer function getNumPotentialValues(potential)
+    implicit none
+    type (PotentialData), intent(in) :: potential
+    getNumPotentialValues = (potential%irmd+(potential%irnsd+1) * &
+                            (potential%lmpot-1)) &
+                            * potential%nspin
+  end function
 
 end module PotentialData_mod

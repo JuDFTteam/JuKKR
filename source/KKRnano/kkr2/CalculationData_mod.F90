@@ -54,7 +54,6 @@ module CalculationData_mod
 
     type (LDAUData), pointer           :: ldau_data_array(:)    => null()
     type (JijData), pointer            :: jij_data_array(:)     => null()
-    type (BroydenData), pointer        :: broyden_array(:)      => null()
 
     ! global data - same for each local atom
     type (LatticeVectors), pointer         :: lattice_vectors   => null()
@@ -63,6 +62,7 @@ module CalculationData_mod
     type (GauntCoefficients), pointer      :: gaunts            => null()
     type (TruncationZone), pointer         :: trunc_zone        => null()
     type (ClusterInfo), pointer            :: clusters          => null()
+    type (BroydenData), pointer            :: broyden           => null()
     !type (EnergyMesh), pointer :: emesh                         => null()
 
   end type
@@ -105,10 +105,9 @@ module CalculationData_mod
     allocate(calc_data%densities_array(num_local_atoms))
     allocate(calc_data%energies_array(num_local_atoms))
     allocate(calc_data%madelung_sum_array(num_local_atoms))
-
     allocate(calc_data%ldau_data_array(num_local_atoms))
     allocate(calc_data%jij_data_array(num_local_atoms))
-    allocate(calc_data%broyden_array(num_local_atoms))
+
     allocate(calc_data%atom_ids(num_local_atoms))
 
     ! These datastructures are the same for all (local) atoms
@@ -118,6 +117,7 @@ module CalculationData_mod
     allocate(calc_data%shgaunts)
     allocate(calc_data%trunc_zone)
     allocate(calc_data%clusters)
+    allocate(calc_data%broyden)
 
     atom_rank = getMyAtomRank(my_mpi)
 
@@ -181,7 +181,6 @@ module CalculationData_mod
     type (RadialMeshData), pointer :: mesh
     type (LDAUData), pointer :: ldau_data
     type (JijData), pointer :: jij_data
-    type (BroydenData), pointer :: broyden
     type (MadelungLatticeSum), pointer :: madelung_sum
 
     ! loop over all LOCAL atoms
@@ -198,7 +197,6 @@ module CalculationData_mod
       mesh      => calc_data%mesh_array(ilocal)
       ldau_data => calc_data%ldau_data_array(ilocal)
       jij_data  => calc_data%jij_data_array(ilocal)
-      broyden   => calc_data%broyden_array(ilocal)
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
       energies  => calc_data%energies_array(ilocal)
 
@@ -210,7 +208,6 @@ module CalculationData_mod
       call destroyCellData(cell)
       call destroyRadialMeshData(mesh)
 
-      call destroyBroydenData(broyden)
       call destroyLDAUData(ldau_data)
       call destroyJijData(jij_data)
       call destroyDensityResults(densities)
@@ -220,10 +217,10 @@ module CalculationData_mod
     end do
 
     call destroyLatticeVectors(calc_data%lattice_vectors)
-
     call destroyMadelungCalculator(calc_data%madelung_calc)
     call destroyGauntCoefficients(calc_data%gaunts)
     call destroyShapeGauntCoefficients(calc_data%shgaunts)
+    call destroyBroydenData(calc_data%broyden)
 
     deallocate(calc_data%mesh_array)
     deallocate(calc_data%cell_array)
@@ -238,7 +235,7 @@ module CalculationData_mod
 
     deallocate(calc_data%ldau_data_array)
     deallocate(calc_data%jij_data_array)
-    deallocate(calc_data%broyden_array)
+    deallocate(calc_data%broyden)
     deallocate(calc_data%atom_ids)
   end subroutine
 
@@ -369,9 +366,9 @@ module CalculationData_mod
     type (BroydenData), pointer :: getBroyden ! return value
 
     type (CalculationData), intent(in) :: calc_data
-    integer, intent(in) :: local_atom_index
+    integer, intent(in), optional :: local_atom_index
 
-    getBroyden => calc_data%broyden_array(local_atom_index)
+    getBroyden => calc_data%broyden
   end function
 
   !----------------------------------------------------------------------------
@@ -483,10 +480,8 @@ module CalculationData_mod
     type (EnergyResults), pointer :: energies
     type (LDAUData), pointer :: ldau_data
     type (JijData), pointer :: jij_data
-    type (BroydenData), pointer :: broyden
     type (MadelungLatticeSum), pointer :: madelung_sum
     type (RadialMeshData), pointer :: mesh
-
 
     call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
 
@@ -546,7 +541,6 @@ module CalculationData_mod
       densities => calc_data%densities_array(ilocal)
       ldau_data => calc_data%ldau_data_array(ilocal)
       jij_data  => calc_data%jij_data_array(ilocal)
-      broyden   => calc_data%broyden_array(ilocal)
       madelung_sum   => calc_data%madelung_sum_array(ilocal)
       energies  => calc_data%energies_array(ilocal)
       mesh => calc_data%mesh_array(ilocal)
@@ -560,10 +554,6 @@ module CalculationData_mod
       call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, &
                          dims%lmmaxd,dims%nspind)
 
-      call createBroydenData(broyden, &
-      (mesh%IRMD+(mesh%IRNS+1)*(dims%LMPOTD-1))*dims%NSPIND, &  ! former NTIRD
-      dims%itdbryd, params%imix, params%mixing)
-
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 
       !ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
@@ -575,6 +565,9 @@ module CalculationData_mod
     ! calculate Gaunt coefficients
     call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
     call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
+    call createBroydenData(calc_data%broyden, &
+         getBroydenDim(calc_data), &  ! former NTIRD
+         dims%itdbryd, params%imix, params%mixing)
 
   end subroutine
 
@@ -872,7 +865,25 @@ module CalculationData_mod
     call closeRadialMeshDataDAFile(38)
     call closeRadialMeshDataIndexDAFile(37)
 
-
   end subroutine
+
+!============ Helper routines for Broyden mixing ==============================
+
+  !----------------------------------------------------------------------------
+  !> Returns the number of potential values of ALL LOCAL atoms.
+  !> This is needed for dimensioning the Broyden mixing work arrays.
+  integer function getBroydenDim(calc_data)
+    implicit none
+    type (CalculationData), intent(in) :: calc_data
+
+    integer :: ilocal
+    type (BasisAtom), pointer :: atomdata
+
+    getBroydenDim = 0
+    do ilocal = 1, calc_data%num_local_atoms
+      atomdata  => calc_data%atomdata_array(ilocal)
+      getBroydenDim = getBroydenDim + getNumPotentialValues(atomdata%potential)
+    end do
+  end function
 
 end module CalculationData_mod

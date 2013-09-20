@@ -43,39 +43,6 @@ contains
     !> \endverbatim
     !*********************************************************************
 
-  subroutine calc_metric(g_metric, lmpot,r,drdi,irc,irmin,nspin,imap)
-    implicit none
-
-    double precision, intent(out) :: g_metric(imap)
-    integer :: lmpot, imap, irc, irmin, nspin
-    double precision :: r(:), drdi(:)
-
-    integer ij, ir, lm
-    integer isp
-    double precision volinv
-
-    ij = 0
-    do isp = 1,nspin
-
-      volinv = 3.0d0/(r(irc)**3)
-      do ir = 1,irc
-        ij = ij + 1
-        g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-      end do
-      !
-      if (lmpot.gt.1) then
-
-        do lm = 2,lmpot
-          do ir = irmin,irc
-            ij = ij + 1
-            g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-          end do
-        end do
-      end if
-
-   end do
- end subroutine
-
  !*********************************************************************
  ! PARAMETERS STILL UNCLEAR!!!
  ! arrays destroyed on output, result in sm
@@ -277,6 +244,8 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
 end module
 
 #ifdef TEST_BROYDEN_SECOND_MOD__
+!> Test-case for Broyden's second method
+!> @author Elias Rabel
 ! A test for the Broyden routine. Run with 1 MPI-process.
 program test_broyden_second_mod
   use broyden_second_mod

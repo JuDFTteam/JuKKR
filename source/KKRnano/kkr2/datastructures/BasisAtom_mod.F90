@@ -43,6 +43,8 @@
 
 ! build in checks for compatibility of shapes with potential etc...
 
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+
 module BasisAtom_mod
   use CellData_mod
   use PotentialData_mod
@@ -135,6 +137,11 @@ CONTAINS
 
     mesh_ptr => mesh
     atom%mesh_ptr => mesh_ptr
+
+    ! check if mesh fits potential dimensions
+    CHECKASSERT(mesh%irmd == atom%potential%irmd)
+    CHECKASSERT(mesh%irmin == atom%potential%irmind)
+    CHECKASSERT(mesh%irns == atom%potential%irnsd)
 
   end subroutine
 
