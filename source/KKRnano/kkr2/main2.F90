@@ -238,9 +238,6 @@ program MAIN2
         call writeIterationTimings(ITER, getElapsedTime(program_timer), &
                                          getElapsedTime(iteration_timer))
 
-        if (flag == 0) then
-          flag = stopfile_flag() ! manual exit possible by creation of file 'STOP' in home directory
-        end if
       endif
 
       if (is_abort_by_rank0(flag, getMyActiveCommunicator(my_mpi))) exit

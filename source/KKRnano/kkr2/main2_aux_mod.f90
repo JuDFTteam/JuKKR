@@ -138,46 +138,10 @@ module main2_aux_mod
     close(71)
   end subroutine
 
-  !---------------------------------------------------------------------------
-  !> Check if file 'STOP' exists. If yes, tell all ranks
-  !> in communicator to abort by returning .true.
-  !> The idea is to let only one rank to inquire if
-  !> 'STOP' exists.
-  logical function isManualAbort_com(rank, communicator)
-    implicit none
-
-    integer, intent(in) :: rank
-    integer, intent(in) :: communicator
-
-    integer :: ierr
-    integer :: stop_integer
-    integer :: master_rank
-    logical :: STOPIT
-
-    include 'mpif.h'
-
-    isManualAbort_com = .false.
-    stop_integer = 0
-    master_rank = 0
-
-    if (rank == master_rank) then
-      inquire(file='STOP',exist=STOPIT)
-      if (STOPIT) stop_integer = 1
-    end if
-
-    call MPI_BCAST(stop_integer,1,MPI_INTEGER, &
-    master_rank,communicator,ierr)
-
-    if (stop_integer == 1) then
-      isManualAbort_com = .true.
-    end if
-
-  end function
-
   !-------------------------------------------------------------------------
   !> Checks for abort flag on rank 0.
   !>
-  !> If rank 0 passes flag=1 this function returns .true. on all ranks,
+  !> If rank 0 passes flag>=1 this function returns .true. on all ranks,
   !> otherwise .false.
   !> The value of flag passed by ranks other than rank 0 is ignored.
   logical function is_abort_by_rank0(flag, communicator)
@@ -196,7 +160,7 @@ module main2_aux_mod
 
     call MPI_BCAST(stop_integer,1,MPI_INTEGER, master_rank,communicator,ierr)
 
-    is_abort_by_rank0 = (stop_integer == 1)
+    is_abort_by_rank0 = (stop_integer >= 1)
 
   end function
 

@@ -11,7 +11,8 @@ module ProcessKKRresults_mod
 
 CONTAINS
 
-!> Returns 1 when target rms error has been reached
+!> Returns 1 when target rms error has been reached,
+!> master rank adds 2 if STOP-file present.
 integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, &
                                    program_timer)
 
@@ -216,10 +217,28 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 
     call OUTTIME(isMasterRank(my_mpi),'results......',getElapsedTime(program_timer), iter)
 
+    ! manual exit possible by creation of file 'STOP' in home directory
+    processKKRresults = processKKRresults + 2*stopfile_flag()
+
   endif
 ! -----------------------------------------------------------------
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
+
+  ! write forces if requested
+  if (params%kforce == 1 .and. &
+     (processKKRresults > 0 .or. iter == params%scfsteps)) then
+
+    call openForceFile()
+
+    do ilocal = 1, num_local_atoms
+      densities    => getDensities(calc_data, ilocal)
+      I1 = getAtomIndexOfLocal(calc_data, ilocal)
+      call writeForces(densities%force_flm, I1)
+    end do
+
+    call closeForceFile()
+  end if
 
 end function
 
@@ -538,7 +557,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-  calc_force = (params%KFORCE == 1 .and. iter == params%SCFsteps)
+  !calc_force = (params%KFORCE == 1 .and. iter == params%SCFsteps)
+  calc_force = (params%KFORCE == 1) ! calculate force at each iteration
 
 !------------------------------------------------------------------------------
   !!!$omp parallel do private(ilocal, atomdata, densities)
@@ -590,8 +610,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES
 
     if (calc_force) then
-
-    !(CMOM,FLMH,LPOT,RHO2NS,V,R,DRDI,IRWS,Z,irmd)
 
       call FORCEH(densities%CMOM,densities%force_FLM,atomdata%potential%LPOT, &
                   densities%RHO2NS,atomdata%potential%VONS, &
@@ -723,19 +741,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! LDAU
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
-
-  ! write forces if requested
-  if (calc_force) then
-    call openForceFile()
-
-    do ilocal = 1, num_local_atoms
-      densities    => getDensities(calc_data, ilocal)
-      I1 = getAtomIndexOfLocal(calc_data, ilocal)
-      call writeForces(densities%force_flm, I1)
-    end do
-
-    call closeForceFile()
-  end if
 
 end subroutine
 
