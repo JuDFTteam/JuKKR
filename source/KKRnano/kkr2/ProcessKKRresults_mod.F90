@@ -11,8 +11,9 @@ module ProcessKKRresults_mod
 
 CONTAINS
 
-subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, &
-                             program_timer)
+!> Returns 1 when target rms error has been reached
+integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, &
+                                   program_timer)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -69,6 +70,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
   integer :: ilocal
   integer :: num_local_atoms
 
+  processKKRresults = 0
   num_local_atoms = getNumLocalAtoms(calc_data)
 
   atomdata     => getAtomData(calc_data, 1)
@@ -213,7 +215,7 @@ subroutine processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, array
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
 
-end subroutine
+end function
 
 !==============================================================================
 

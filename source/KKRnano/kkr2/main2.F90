@@ -212,12 +212,13 @@ program MAIN2
 !----------------------------------------------------------------------
 ! BEGIN only processes in master-group are working
 !----------------------------------------------------------------------
+      flag = 0
       if (isInMasterGroup(my_mpi)) then
         ! output: (some contained as references in calc_data)
         ! atomdata, densities, broyden, ldau_data,
         ! emesh (only correct for master)
-        call processKKRresults(iter, calc_data, my_mpi, emesh, dims, &
-                               params, arrays, program_timer)
+        flag = processKKRresults(iter, calc_data, my_mpi, emesh, dims, &
+                                 params, arrays, program_timer)
 
       endif
 !----------------------------------------------------------------------
@@ -236,13 +237,15 @@ program MAIN2
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), &
                                          getElapsedTime(iteration_timer))
+
+        if (flag == 0) then
+          flag = stopfile_flag() ! manual exit possible by creation of file 'STOP' in home directory
+        end if
       endif
 
-      call broadcastEnergyMesh_com(my_mpi, emesh)
+      if (is_abort_by_rank0(flag, getMyActiveCommunicator(my_mpi))) exit
 
-! manual exit possible by creation of file 'STOP' in home directory
-      if (isManualAbort_com(getMyWorldRank(my_mpi), &
-          getMyActiveCommunicator(my_mpi)) .eqv. .true.) exit
+      call broadcastEnergyMesh_com(my_mpi, emesh)
 
 ! ######################################################################
 ! ######################################################################
