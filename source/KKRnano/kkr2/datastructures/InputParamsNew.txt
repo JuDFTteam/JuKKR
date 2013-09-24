@@ -36,3 +36,5 @@ i nmin_panel
 i num_MT_points
 d MT_scale
 d RMT_ref_scale
+### other
+d target_rms

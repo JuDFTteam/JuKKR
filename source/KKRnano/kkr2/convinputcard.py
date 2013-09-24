@@ -74,6 +74,8 @@ imix     = $imix
 mixing   = $mixing
 fcm      = $fcm
 
+target_rms = $target_rms   # abort when target_rms error has been reached
+
 # Parameters for Ewald sums
 rmax = $rmax
 gmax = $gmax
@@ -203,6 +205,7 @@ def apply_kkrnano_rules(keydict):
     newdict['num_MT_points'] = '10'
     newdict['MT_scale'] = '0.0'
     newdict['RMT_ref_scale'] = '0.0'
+    newdict['target_rms'] = '0.0'
     return newdict
 
 keydict = apply_kkrnano_rules(keydict)

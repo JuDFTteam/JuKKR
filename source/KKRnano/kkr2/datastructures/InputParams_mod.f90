@@ -46,6 +46,7 @@ type InputParams
   integer :: num_MT_points
   double precision :: MT_scale
   double precision :: RMT_ref_scale
+  double precision :: target_rms
 end type InputParams
 
 CONTAINS
@@ -284,6 +285,12 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueDouble(conf, "target_rms", confvalues%target_rms, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for target_rms."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -333,6 +340,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%num_MT_points
   read(FILEHANDLE) confvalues%MT_scale
   read(FILEHANDLE) confvalues%RMT_ref_scale
+  read(FILEHANDLE) confvalues%target_rms
   close(FILEHANDLE)
 end function
 
@@ -382,6 +390,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%num_MT_points
   write(FILEHANDLE) confvalues%MT_scale
   write(FILEHANDLE) confvalues%RMT_ref_scale
+  write(FILEHANDLE) confvalues%target_rms
   close(FILEHANDLE)
 end function
 

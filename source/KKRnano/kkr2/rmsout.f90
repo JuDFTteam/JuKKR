@@ -8,12 +8,14 @@
 ! called by main2
 !================================================================
 
+!> RMSAVQ, RMSAVM: on input: local rms erros, on output: global rms
+!> errors.
 subroutine RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIN,NAEZ, &
 MYLRANK, communicator)
 
   implicit none
 
-  double precision RMSAVM,RMSAVQ
+  double precision, intent(inout) :: RMSAVM,RMSAVQ
 
   integer ITER,NSPIN,NAEZ
   !     ..
@@ -32,6 +34,8 @@ MYLRANK, communicator)
 
   end if
   ! ============= MYRANK.EQ.0 ============================================
+  RMSAVQ = RMSQ
+  RMSAVM = RMSM
 
 end
 

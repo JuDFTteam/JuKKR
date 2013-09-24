@@ -118,6 +118,12 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
                  getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
 
+  ! check if target rms error has been reached and set abort flag
+  if (rmsavq <= params%target_rms) then
+    processKKRresults = 1
+    if (isMasterRank(my_mpi)) write(*,*) "TARGET RMS ERROR REACHED..."
+  end if
+
   ! it is weird that straight mixing is called in any case before
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
   if (params%IMIX>=3 .and. params%IMIX<6) then
