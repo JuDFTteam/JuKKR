@@ -29,6 +29,16 @@ FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =-L/ -llapack_ifort -lblas_ifort
 endif
 
+ifeq ($(PLATFORM),rwth)
+FC = ifort
+FC90 = ifort
+# -module <path> specifies where to put .mod files
+FCFLAGS = -openmp -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR)
+FC90FLAGS =
+FCFLAGS += -I $(BUILDDIR)
+LDFLAGS = -O2 -L/opt/intel/Compiler/12.1/3.293/rwthlnk/mkl/lib/intel64 -L/opt/intel/Compiler/12.1/3.293/rwthlnk/mkl/lib/ia32 -lrwthmkl -lpthread
+endif
+
 ifeq ($(PLATFORM),JUGENE)
 FC = xlf_r
 FC90 = xlf_r

@@ -3,7 +3,7 @@ module EnergyMeshHelpers_mod
 contains
 
   !----------------------------------------------------------------------------
-  !> read energy mesh data from file 'energy_mesh'
+  !> read energy mesh data from file 'energy_mesh.0'
   subroutine readEnergyMeshImpl(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, TK, WEZ)
     implicit none
     double precision :: E1
@@ -18,7 +18,7 @@ contains
     double precision :: TK
     double complex :: WEZ(:)
 
-    open (67,file='energy_mesh',form='unformatted')
+    open (67,file='energy_mesh.0',form='unformatted')
     read (67) IELAST,EZ,WEZ,E1,E2
     read (67) NPOL,TK,NPNT1,NPNT2,NPNT3
 

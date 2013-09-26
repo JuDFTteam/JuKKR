@@ -1,3 +1,9 @@
+! TODO: if energy_mesh.0 is not generated, check if settings in
+! input.conf match those in energy_mesh.0
+! PROBLEM: Fermi-Energy specified in 'potential' file - E-mesh depends on
+! E-Fermi -> k-mesh depends on E-mesh => k-mesh depends on EFERMI
+! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT
+! ON THE ACTUAL ONE!!!!!! - BUG?
   program MAIN0
 
 ! Explanation of most variables follows below
@@ -132,6 +138,7 @@
     integer, parameter :: KREL = 0
 
     integer :: EKMD
+    logical :: startpot_exists
 
     type (InputParams)    :: params
     type (DimParams)      :: dims
@@ -178,11 +185,23 @@
 !===================================================================
 
     ! read starting potential and shapefunctions
-    call STARTB1_wrapper(params%alat, &
-                 dims%LPOT,dims%NSPIND,NTCELL, &
-                 EFERMI, arrays%ZAT, radius_muffin_tin, &
-                 dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
-                 dims%NAEZ, dims%IRNSD)
+    startpot_exists = .false.
+    inquire(file = 'potential', exist = startpot_exists)
+    ! if energy_mesh.0 file is missing, also regenerate start files
+    if (startpot_exists) then
+      call STARTB1_wrapper(params%alat, &
+                   dims%LPOT,dims%NSPIND,NTCELL, &
+                   EFERMI, arrays%ZAT, radius_muffin_tin, &
+                   dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
+                   dims%NAEZ, dims%IRNSD)
+    else
+      write(*,*) &
+      "WARNING: file 'potential' not found... skipping start potential generation."
+      write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
+      open(67, file='EFERMI', form='formatted')
+      read(67, *) EFERMI
+      close(67)
+    endif
 
 ! ----------------------------------------------------------------------
 ! update Fermi energy, adjust energy window according to running options
@@ -258,8 +277,8 @@
 
     call writeMain2Arrays(arrays, 'arrays.unf')
 
-    ! write energy mesh
-    open (67,FILE='energy_mesh',FORM='unformatted')
+    ! write start energy mesh
+    open (67,FILE='energy_mesh.0',FORM='unformatted')
     write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
     write (67) EFERMI

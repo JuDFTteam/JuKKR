@@ -30,6 +30,17 @@ LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 LDFLAGS += -lfftw3
 endif
 
+ifeq ($(PLATFORM),rwth)
+FC = mpif77 -warn
+FC90 = mpif90 -warn
+# -module <path> specifies where to put .mod files
+FCFLAGS = -openmp -module $(BUILDDIR)
+FCFLAGS += -gen-interfaces -warn interfaces
+FC90FLAGS =
+FCFLAGS += -I$(BUILDDIR) -I/usr/local/fftw/3.2.1/include
+LDFLAGS = -O2 -L/opt/intel/Compiler/12.1/3.293/rwthlnk/mkl/lib/intel64 -L/opt/intel/Compiler/12.1/3.293/rwthlnk/mkl/lib/ia32 -lrwthmkl -lpthread
+endif
+
 # ========= MAC ============ no openmp
 ifeq ($(PLATFORM),MAC)
 FC = mpif77 -warn
