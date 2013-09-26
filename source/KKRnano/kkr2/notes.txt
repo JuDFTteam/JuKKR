@@ -1,6 +1,7 @@
 Stack size:
 
 the program needs a large amount of stack space, otherwise segfaults:
+(space needed depends mainly on lmax and number of mesh points...)
 
 Use this environment variable, when using OpenMP-threads:
 export OMP_STACKSIZE=20M
@@ -43,3 +44,9 @@ Some Bugs:
 
 *) Fermi energy in formatted DOS output is not the correct Fermi energy
 *) Title in DOS files is not correct
+
+*) k-mesh depends on Fermi-Energy from 'potential' file, which is not the
+   actual one
+
+*) if one uses a saved energy-mesh or kpoints and makes changes
+   affecting the energy-mesh in input.conf then this asks for trouble
