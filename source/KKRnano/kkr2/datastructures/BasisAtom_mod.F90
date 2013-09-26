@@ -70,6 +70,8 @@ module BasisAtom_mod
 
   end type
 
+  private :: resetPotentialsImpl
+
 CONTAINS
 
   !----------------------------------------------------------------------------
@@ -484,5 +486,88 @@ CONTAINS
     close(fileunit)
 
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Copy output potential to input potential for new iteration.
+  subroutine resetPotentials(atom)
+    implicit none
+    type (BasisAtom), intent(inout) :: atom
+
+    type (RadialMeshData), pointer :: mesh
+
+    mesh => atom%mesh_ptr
+    call resetPotentialsImpl(mesh%IRC, mesh%IRMD, mesh%IRMIN, &
+                         atom%potential%IRMIND, atom%potential%LMPOT, &
+                         atom%potential%NSPIN, atom%potential%VINS, &
+                         atom%potential%VISP, atom%potential%VONS)
+
+  end subroutine
+
+!================ Private helper functions ====================================
+
+  !----------------------------------------------------------------------------
+  !> Copy output potential to input potential for new iteration.
+  subroutine resetPotentialsImpl(IRC1, IRMD, IRMIN1, IRMIND, LMPOTD, NSPIN, VINS, VISP, VONS)
+    implicit none
+
+    integer :: IRC1
+    integer :: IRMIN1
+    integer :: ISPIN
+    integer :: J
+    integer :: LM
+
+    integer :: IRMD
+
+    integer :: IRMIND
+    integer :: LMPOTD
+    integer :: NSPIN
+
+    double precision, intent(out) :: VINS(IRMIND:IRMD,LMPOTD,2)
+    double precision, intent(out) :: VISP(IRMD,2)
+    double precision, intent(inout) :: VONS(IRMD,LMPOTD,2)
+
+    !DEBUG
+    if (IRMIN1 < IRMIND) then
+      write(*,*) "resetPotentials: IRMIN1 < IRMIND"
+      stop
+    end if
+
+    !DEBUG
+    if (IRC1 > IRMD) then
+      write(*,*) "resetPotentials: IRC1 > IRMD"
+      stop
+    end if
+
+    !initialise VINS
+    do ISPIN = 1,2
+      do LM = 1, LMPOTD
+        do J = IRMIND, IRMD
+          VINS(J,LM,ISPIN) = 0.0D0
+        enddo
+      enddo
+    enddo
+
+    !initialise VISP
+    do ISPIN = 1,2
+      do J = 1, IRMD
+        VISP(J,ISPIN) = 0.0D0
+      enddo
+    enddo
+
+    ! copy output potential to input potential for new iteration
+    do ISPIN = 1,NSPIN
+
+      call DCOPY(IRC1,VONS(1,1,ISPIN),1,VISP(1,ISPIN),1)
+
+      if (LMPOTD>1) then
+
+        do LM = 2,LMPOTD
+          do J = IRMIN1,IRC1
+            VINS(J,LM,ISPIN) = VONS(J,LM,ISPIN)
+          end do
+        end do
+      end if
+    enddo
+  end subroutine resetPotentialsImpl
 
 end module BasisAtom_mod
