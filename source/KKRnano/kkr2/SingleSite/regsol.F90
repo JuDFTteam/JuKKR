@@ -97,6 +97,8 @@ ldau,nldau,lldau,wmldauav,ldaucut)
   !     .. Intrinsic Functions ..
   intrinsic cmplx,dble
   !     ..
+  CHECKASSERT(irmd > 6)
+
   if (nsra.eq.2) then
     !
     !---> in case of sra  srafac = 1/c - otherwise srafac = 0
@@ -227,13 +229,13 @@ ldau,nldau,lldau,wmldauav,ldaucut)
            k = k + 1
 80       continue
 
-       else
+       else ! panels 2, 3, ...
          !
          !---> runge kutta step to restart algorithm
          !
          irs = ircut(ip-1) + 1
          ire = ircut(ip)
-         CHECKASSERT((ire - irs) >= 3) ! minimum of 5 points per panel!
+         CHECKASSERT((ire - irs) >= 4) ! minimum of 5 points per panel!
          irsp1 = irs + 1
          pip0 = pz(irs,L)
          fip0 = fz(irs,L)
@@ -302,7 +304,8 @@ ldau,nldau,lldau,wmldauav,ldaucut)
            k = k + 1
 90       continue
        end if
-       !
+
+       ! if >5 points in panel, calculate those points with 5-point formula
        do 100 ir = irs + 5,ire
          drsp1 = dror(ir)*sp1
          drsm1 = dror(ir)*sm1
@@ -351,12 +354,12 @@ ldau,nldau,lldau,wmldauav,ldaucut)
          fz(ire+1,L) = fip0
        end if
 
-110  continue
+110  continue ! end loop over panels
 
      !
      !---> logarithmic derivate of real wavefunction ( r**s *pz / r)
      !
      dlogdp(L) = (dpdi(0)/ (pip0*dror(irc))+sm1)/r(irc)
-120 continue
+120 continue ! end loop over L
 
 end
