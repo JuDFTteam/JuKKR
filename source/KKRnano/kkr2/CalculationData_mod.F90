@@ -456,6 +456,120 @@ module CalculationData_mod
 
 ! ==================== Helper routines ========================================
 
+  subroutine constructClusters(calc_data, params, arrays)
+    use InputParams_mod
+    use Main2Arrays_mod
+    implicit none
+
+    type (CalculationData), intent(inout) :: calc_data
+    type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
+
+    ! ----- locals ------
+    integer :: ilocal
+
+    call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
+
+    ! create cluster for each local atom
+    !$omp parallel do private(ilocal)
+    do ilocal = 1, calc_data%num_local_atoms
+      call createRefCluster(calc_data%ref_cluster_array(ilocal), &
+                            calc_data%lattice_vectors, arrays%rbasis, &
+                            params%rclust, calc_data%atom_ids(ilocal))
+    end do
+    !$omp end parallel do
+
+  end subroutine
+
+  subroutine constructTruncationZones(calc_data, dims, arrays, my_mpi)
+    use KKRnanoParallel_mod
+    use DimParams_mod
+    use Main2Arrays_mod
+    use TEST_lcutoff_mod
+    implicit none
+
+    type (CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+    type (Main2Arrays), intent(in):: arrays
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    ! setup the truncation zone
+    call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
+
+
+    call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
+                          calc_data%trunc_zone, getMySEcommunicator(my_mpi))
+
+    if (isMasterRank(my_mpi)) then
+      write(*,*) "Number of lattice vectors created     : ", &
+                  calc_data%lattice_vectors%nrd
+
+      write(*,*) "Max. number of reference cluster atoms: ", &
+                  calc_data%clusters%naclsd
+
+      write(*,*) "On node 0: "
+      write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
+      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
+      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
+    end if
+    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
+  end subroutine
+
+  subroutine constructStorage(calc_data, dims, params, arrays, my_mpi)
+    use KKRnanoParallel_mod
+    use DimParams_mod
+    use InputParams_mod
+    use Main2Arrays_mod
+    implicit none
+
+    type (CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+    type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
+    type (KKRnanoParallel), intent(in) :: my_mpi
+
+    ! ----- locals ------
+    integer :: I1
+    integer :: ilocal
+    type (KKRresults), pointer :: kkr
+    type (DensityResults), pointer :: densities
+    type (EnergyResults), pointer :: energies
+    type (LDAUData), pointer :: ldau_data
+    type (JijData), pointer :: jij_data
+    type (MadelungLatticeSum), pointer :: madelung_sum
+    type (RadialMeshData), pointer :: mesh
+
+    ! loop over all LOCAL atoms
+    !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+    !--------------------------------------------------------------------------
+
+      I1 = calc_data%atom_ids(ilocal)
+
+      kkr       => calc_data%kkr_array(ilocal)
+      densities => calc_data%densities_array(ilocal)
+      ldau_data => calc_data%ldau_data_array(ilocal)
+      jij_data  => calc_data%jij_data_array(ilocal)
+      madelung_sum   => calc_data%madelung_sum_array(ilocal)
+      energies  => calc_data%energies_array(ilocal)
+      mesh => calc_data%mesh_array(ilocal)
+
+      call createKKRresults(kkr, dims, calc_data%clusters%naclsd)
+      call createDensityResults(densities, dims, mesh%irmd)
+      call createEnergyResults(energies, dims%nspind, dims%lmaxd)
+
+      call createLDAUData(ldau_data, params%ldau, mesh%irmd, dims%lmaxd, &
+                          dims%nspind)
+      call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, &
+                         dims%lmmaxd,dims%nspind)
+
+      call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
+
+    !--------------------------------------------------------------------------
+    end do
+    !--------------------------------------------------------------------------
+  end subroutine
+
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
   subroutine constructEverything(calc_data, dims, params, arrays, my_mpi)
