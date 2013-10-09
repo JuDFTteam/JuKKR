@@ -966,18 +966,25 @@ module CalculationData_mod
     max_reclen = getMaxReclenMeshes(calc_data)
 
     mesh      => calc_data%mesh_array(1)
+#ifndef TASKLOCAL_FILES
+    ! don't write index when using task-local files
     call openRadialMeshDataIndexDAFile(mesh, 37, 'meshes.idx')
+#endif
     call openRadialMeshDataDAFile(mesh, 38, 'meshes', max_reclen)
 
     do ilocal = 1, calc_data%num_local_atoms
       mesh      => calc_data%mesh_array(ilocal)
       I1 = calc_data%atom_ids(ilocal)
+#ifndef TASKLOCAL_FILES
       call writeRadialMeshDataIndexDA(mesh, 37, I1, max_reclen)
+#endif
       call writeRadialMeshDataDA(mesh, 38, I1)
     end do
 
     call closeRadialMeshDataDAFile(38)
+#ifndef TASKLOCAL_FILES
     call closeRadialMeshDataIndexDAFile(37)
+#endif
 
   end subroutine
 
