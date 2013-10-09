@@ -1,3 +1,11 @@
+#ifdef TASKLOCAL_FILES
+#define FILEWRITE(X,Y) write(X)
+#define FILEREAD(X,Y) read(X)
+#else
+#define FILEWRITE(X,Y) write(X,Y)
+#define FILEREAD(X,Y) read(X,Y)
+#endif
+
 !> This module defines a datatype that contains data related to the radial mesh
 !> @author Elias Rabel
 module RadialMeshData_mod
@@ -180,6 +188,7 @@ module RadialMeshData_mod
     integer :: irmd, ipand, max_reclen
 
     ! index file has extension .idx
+#ifndef TASKLOCAL_FILES
     call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, &
                                        filename // ".idx")
     call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, &
@@ -191,6 +200,16 @@ module RadialMeshData_mod
     call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
     call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
     call closeRadialMeshDataDAFile(FILEUNIT)
+#else
+    call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
+    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
+
+    call createRadialMeshData(meshdata, irmd, ipand)
+
+    call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
+    call closeRadialMeshDataDAFile(FILEUNIT)
+#endif
+
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -204,7 +223,15 @@ module RadialMeshData_mod
 
     integer, parameter :: MAGIC_NUMBER = -889271554
 
-    write (fileunit, rec=recnr) MAGIC_NUMBER + recnr, &
+#ifdef TASKLOCAL_FILES
+    character(len=7) :: num
+    write(num, '(I07)') recnr
+    open(fileunit, file="mesh." // num, form='unformatted')
+
+    call writeRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, 0)
+#endif
+
+    FILEWRITE (fileunit, rec=recnr) MAGIC_NUMBER + recnr, &
                                 meshdata%A, &
                                 meshdata%B, &
                                 meshdata%RWS, &
@@ -219,6 +246,10 @@ module RadialMeshData_mod
                                 meshdata%DRDI, &
                                 meshdata%IRCUT, &
                                 MAGIC_NUMBER + recnr
+
+#ifdef TASKLOCAL_FILES
+    close(fileunit)
+#endif
 
   end subroutine
 
@@ -235,9 +266,19 @@ module RadialMeshData_mod
     integer :: magic, magic2
     integer :: checkmagic
 
+#ifdef TASKLOCAL_FILES
+    character(len=7) :: num
+    integer :: ipand, irmd, max_reclen    
+
+    write(num, '(I07)') recnr
+    open(fileunit, file="mesh." // num, form='unformatted')
+
+    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
+#endif
+
     checkmagic = MAGIC_NUMBER + recnr
 
-    read  (fileunit, rec=recnr) magic, &
+    FILEREAD (fileunit, rec=recnr) magic, &
                                 meshdata%A, &
                                 meshdata%B, &
                                 meshdata%RWS, &
@@ -252,6 +293,9 @@ module RadialMeshData_mod
                                 meshdata%DRDI, &
                                 meshdata%IRCUT, &
                                 magic2
+#ifdef TASKLOCAL_FILES
+    close(fileunit)
+#endif
 
     if (magic /= checkmagic .or. magic2 /= checkmagic) then
       write (*,*) "ERROR: Invalid mesh data read. ", __FILE__, __LINE__
@@ -303,6 +347,7 @@ module RadialMeshData_mod
     !------
     integer :: reclen
 
+#ifndef TASKLOCAL_FILES
     if (present(max_reclen)) then
       reclen = max_reclen
     else
@@ -310,6 +355,7 @@ module RadialMeshData_mod
     end if
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+#endif
 
   end subroutine
 
@@ -318,9 +364,9 @@ module RadialMeshData_mod
   subroutine closeRadialMeshDataDAFile(fileunit)
     implicit none
     integer, intent(in) :: fileunit
-
+#ifndef TASKLOCAL_FILES
     close(fileunit)
-
+#endif
   end subroutine
 
 !===========  Index file ======================================================
@@ -336,12 +382,12 @@ module RadialMeshData_mod
     integer, intent(in) :: max_reclen
 
     integer, parameter :: MAGIC_NUMBER = -889271554
-
+#ifndef TASKLOCAL_FILES
     write (fileunit, rec=recnr) meshdata%irmd, &
                                 meshdata%ipand, &
                                 max_reclen, &
                                 MAGIC_NUMBER + recnr
-
+#endif
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -363,12 +409,25 @@ module RadialMeshData_mod
     integer :: magic
     integer :: checkmagic
 
+#ifdef TASKLOCAL_FILES
+    character(len=7) :: num
+    write(num, '(I07)') recnr
+    open(fileunit, file="mesh." // num, form='unformatted')
+
+    call writeRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, max_reclen)
+
+#endif
+
     checkmagic = MAGIC_NUMBER + recnr
 
-    read  (fileunit, rec=recnr) irmd, &
+    FILEREAD  (fileunit, rec=recnr) irmd, &
                                 ipand, &
                                 max_reclen, &
                                 magic
+
+#ifdef TASKLOCAL_FILES
+    close(fileunit)
+#endif
 
     if (magic /= checkmagic) then
       write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
@@ -396,7 +455,9 @@ module RadialMeshData_mod
                                 max_reclen, &
                                 MAGIC_NUMBER
 
+#ifndef TASKLOCAL_FILES
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+#endif
 
   end subroutine
 
@@ -406,7 +467,9 @@ module RadialMeshData_mod
     implicit none
     integer, intent(in) :: fileunit
 
+#ifndef TASKLOCAL_FILES
     close(fileunit)
+#endif
 
   end subroutine
 
