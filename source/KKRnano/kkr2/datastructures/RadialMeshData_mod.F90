@@ -225,7 +225,7 @@ module RadialMeshData_mod
 
 #ifdef TASKLOCAL_FILES
     character(len=7) :: num
-    write(num, '(I07)') recnr
+    write(num, '(I7.7)') recnr
     open(fileunit, file="mesh." // num, form='unformatted')
 
     call writeRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, 0)
@@ -273,7 +273,8 @@ module RadialMeshData_mod
     write(num, '(I7.7)') recnr
     open(fileunit, file="mesh." // num, form='unformatted')
 
-    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
+    ! read header at beginning of file
+    call readRadialMeshDataHeader(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
 #endif
 
     checkmagic = MAGIC_NUMBER + recnr
@@ -411,25 +412,17 @@ module RadialMeshData_mod
 
 #ifdef TASKLOCAL_FILES
     character(len=7) :: num
+
     write(num, '(I7.7)') recnr
     open(fileunit, file="mesh." // num, form='unformatted')
 #endif
 
-    checkmagic = MAGIC_NUMBER + recnr
-
-    FILEREAD  (fileunit, rec=recnr) irmd, &
-                                ipand, &
-                                max_reclen, &
-                                magic
+    call readRadialMeshDataHeader(meshdata, fileunit, recnr, &
+                                       irmd, ipand, max_reclen)
 
 #ifdef TASKLOCAL_FILES
     close(fileunit)
 #endif
-
-    if (magic /= checkmagic) then
-      write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
-      STOP
-    end if
 
   end subroutine
 
@@ -463,6 +456,36 @@ module RadialMeshData_mod
     integer, intent(in) :: fileunit
 
     close(fileunit)
+
+  end subroutine
+
+!================= private helper functions ===================================
+  subroutine readRadialMeshDataHeader(meshdata, fileunit, recnr, &
+                                       irmd, ipand, max_reclen)
+    implicit none
+
+    type (RadialMeshData), intent(inout) :: meshdata
+    integer, intent(in) :: fileunit
+    integer, intent(in) :: recnr
+    integer, intent(out) :: irmd
+    integer, intent(out) :: ipand
+    integer, intent(out) :: max_reclen
+
+    integer, parameter :: MAGIC_NUMBER = -889271554
+    integer :: magic
+    integer :: checkmagic
+
+    checkmagic = MAGIC_NUMBER + recnr
+
+    FILEREAD  (fileunit, rec=recnr) irmd, &
+                                ipand, &
+                                max_reclen, &
+                                magic
+
+    if (magic /= checkmagic) then
+      write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
+      STOP
+    end if
 
   end subroutine
 

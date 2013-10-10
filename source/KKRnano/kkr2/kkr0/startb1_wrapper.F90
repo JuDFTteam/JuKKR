@@ -122,7 +122,9 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   call writeAtomData()
 
   call openRadialMeshDataDAFile(meshdata, 37 , "meshes.0")
+#ifndef TASKLOCAL_FILES
   call openRadialMeshDataIndexDAFile(meshdata, 38, "meshes.0.idx")
+#endif
 
   inquire(unit=37, recl = max_reclen)
 
@@ -145,12 +147,15 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
     meshdata%RMT = RMT(ii)
 
     call writeRadialMeshDataDA(meshdata, 37, ii)
+#ifndef TASKLOCAL_FILES
     call writeRadialMeshDataIndexDA(meshdata, 38, ii, max_reclen)
+#endif
 
   end do
 
-
+#ifndef TASKLOCAL_FILES
   call closeRadialMeshDataIndexDAFile(38)
+#endif
   call closeRadialMeshDataDAFile(37)
 
   call destroyRadialMeshData(meshdata)
