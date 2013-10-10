@@ -37,7 +37,7 @@ FC90 = mpif90 -warn
 FCFLAGS = -openmp -module $(BUILDDIR)
 FCFLAGS += -gen-interfaces -warn interfaces
 FC90FLAGS =
-FCFLAGS += -I$(BUILDDIR) -I/usr/local/fftw/3.2.1/include
+FCFLAGS += -I$(BUILDDIR) -I/usr/local/fftw/3.2.1/include -DTASKLOCAL_FILES
 LDFLAGS = -O2 -L/opt/intel/Compiler/12.1/3.293/rwthlnk/mkl/lib/intel64 -L/opt/intel/Compiler/12.1/3.293/rwthlnk/mkl/lib/ia32 -lrwthmkl -lpthread
 endif
 
