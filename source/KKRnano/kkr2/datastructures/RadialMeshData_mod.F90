@@ -172,6 +172,9 @@ module RadialMeshData_mod
 
   end subroutine
 
+!==============================================================================
+!=                                    I/O                                     =
+!==============================================================================
 
   !----------------------------------------------------------------------------
   !> Read and create radial mesh data from files <filename> and <filename>.idx
@@ -188,9 +191,9 @@ module RadialMeshData_mod
     integer :: irmd, ipand, max_reclen
 
     ! index file has extension .idx
-#ifndef TASKLOCAL_FILES
+
     call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, &
-                                       filename // ".idx")
+                                       filename // ".idx") !ignored for task-local files
     call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, &
                                        irmd, ipand, max_reclen)
     call closeRadialMeshDataIndexDAFile(FILEUNIT)
@@ -200,15 +203,6 @@ module RadialMeshData_mod
     call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
     call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
     call closeRadialMeshDataDAFile(FILEUNIT)
-#else
-    call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
-    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
-
-    call createRadialMeshData(meshdata, irmd, ipand)
-
-    call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
-    call closeRadialMeshDataDAFile(FILEUNIT)
-#endif
 
   end subroutine
 
