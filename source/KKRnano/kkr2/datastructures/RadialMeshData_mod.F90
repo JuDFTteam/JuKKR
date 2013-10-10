@@ -400,10 +400,6 @@ module RadialMeshData_mod
     integer, intent(out) :: ipand
     integer, intent(out) :: max_reclen
 
-    integer, parameter :: MAGIC_NUMBER = -889271554
-    integer :: magic
-    integer :: checkmagic
-
 #ifdef TASKLOCAL_FILES
     character(len=7) :: num
 
@@ -433,6 +429,7 @@ module RadialMeshData_mod
     integer :: max_reclen
     integer, parameter :: MAGIC_NUMBER = -889271554
 
+#ifndef TASKLOCAL_FILES
     max_reclen = 0
     inquire (iolength = reclen) meshdata%irmd, &
                                 meshdata%ipand, &
@@ -440,6 +437,7 @@ module RadialMeshData_mod
                                 MAGIC_NUMBER
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+#endif
 
   end subroutine
 
@@ -449,7 +447,9 @@ module RadialMeshData_mod
     implicit none
     integer, intent(in) :: fileunit
 
+#ifndef TASKLOCAL_FILES
     close(fileunit)
+#endif
 
   end subroutine
 

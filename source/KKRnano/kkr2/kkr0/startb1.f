@@ -48,7 +48,8 @@ c     modified for bandstructure code
 c
 c                                 b.drittler nov. 1989
 c-----------------------------------------------------------------------
-C     .. Parameters ..
+
+      use BasisAtom_mod
       IMPLICIT NONE
 
 C      include 'inc.p'
@@ -115,6 +116,8 @@ C     .. Intrinsic Functions ..
       INTEGER IRMIND
       INTEGER LMXSPD
       INTEGER LRECPOT
+
+      type (BasisAtom) :: atom
 
 C     ..
 c-----------------------------------------------------------------------
@@ -212,16 +215,17 @@ c-----------------------------------------------------------------------
 c
       LMPOT = (LPOT+1)* (LPOT+1)
 C
-c     OPEN (66,ACCESS='direct',RECL=LRECPOT*2,FILE='vpotnew',
-c    +     FORM='unformatted')
-      OPEN (66,ACCESS='direct',RECL=LRECPOT,FILE='vpotnew.0',
-     +     FORM='unformatted')
-C
       DO IH = NBEG,NEND
         ZATINFO(IH) = ZAT(IH)
       ENDDO
 
-      DO 150 IH = NBEG,NEND
+      DO 150 IH = NBEG,NEND ! atom loop
+
+      call createBasisAtom(atom, IH, lpot, nspin, irmind, irmd)
+
+      if (IH == NBEG) call openBasisAtomPotentialDAFile(atom, 66,
+     &                     'vpotnew.0', LRECPOT)
+
         DO 140 ISPIN = 1,NSPIN
           I = NSPIN* (IH-1) + ISPIN
 C
@@ -505,10 +509,19 @@ c
 C
 C write to unformatted file 'vpotnew'
 C
-        WRITE(66,REC=IH) VINS,VISP,ECORE
+c        WRITE(66,REC=IH) VINS,VISP,ECORE
+
+      atom%potential%VINS = VINS
+      atom%potential%VISP = VISP
+      atom%core%ECORE = ECORE
+      call writeBasisAtomPotentialDA(atom, 66, IH)
+
+      call destroyBasisAtom(atom)
 C
-  150 CONTINUE                      ! IH = NBEG,NEND
-C
+  150 CONTINUE                      ! IH = NBEG,NEND  atom loop end
+
+      call closeBasisAtomPotentialDAFile(66)
+
       DO IH = NBEG,NEND
         IF (ZATINFO(IH).NE.ZAT(IH)) THEN
           WRITE(6,'(79(1H=),/,15X,A,I5,A)') 'trouble on atom ',IH,' ...'

@@ -43,6 +43,14 @@
 
 ! build in checks for compatibility of shapes with potential etc...
 
+#ifdef TASKLOCAL_FILES
+#define FILEWRITE(X,Y) write(X)
+#define FILEREAD(X,Y) read(X)
+#else
+#define FILEWRITE(X,Y) write(X,Y)
+#define FILEREAD(X,Y) read(X,Y)
+#endif
+
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module BasisAtom_mod
@@ -316,9 +324,21 @@ CONTAINS
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
 
-    write (fileunit, rec=recnr) atom%potential%VINS, &
+#ifdef TASKLOCAL_FILES
+    character(len=7) :: num
+    write(num, '(I7.7)') recnr
+    open(fileunit, file="pot." // num, form='unformatted')
+
+    call writeBasisAtomPotentialIndexDA(atom, FILEUNIT, recnr, 0)
+#endif
+
+    FILEWRITE (fileunit, rec=recnr) atom%potential%VINS, &
                                 atom%potential%VISP, &
                                 atom%core%ECORE
+
+#ifdef TASKLOCAL_FILES
+    close(fileunit)
+#endif
 
   end subroutine
 
@@ -337,6 +357,7 @@ CONTAINS
 
     integer :: reclen
 
+#ifndef TASKLOCAL_FILES
     if (present(max_reclen)) then
       reclen = max_reclen
     else
@@ -344,6 +365,7 @@ CONTAINS
     end if
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+#endif
 
   end subroutine
 
@@ -373,9 +395,26 @@ CONTAINS
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
 
-    read (fileunit, rec=recnr) atom%potential%VINS, &
+#ifdef TASKLOCAL_FILES
+    character(len=7) :: num
+    integer :: lpot, nspin, irmind, irmd, max_reclen
+
+    write(num, '(I7.7)') recnr
+    open(fileunit, file="pot." // num, form='unformatted')
+
+    !  skip header at beginning of file
+    call readBasisAtomPotentialHeader(atom, fileunit, recnr, &
+                                           lpot, nspin, irmind, irmd, &
+                                           max_reclen)
+#endif
+
+    FILEREAD (fileunit, rec=recnr) atom%potential%VINS, &
                                 atom%potential%VISP, &
                                 atom%core%ECORE
+
+#ifdef TASKLOCAL_FILES
+    close(fileunit)
+#endif
 
   end subroutine
 
@@ -387,7 +426,9 @@ CONTAINS
     implicit none
     integer, intent(in) :: fileunit
 
+#ifndef TASKLOCAL_FILES
     close(fileunit)
+#endif
 
   end subroutine
 
@@ -405,7 +446,7 @@ CONTAINS
 
     integer, parameter :: MAGIC_NUMBER = 385306
 
-    write (fileunit, rec=recnr) atom%potential%lpot, &
+    FILEWRITE (fileunit, rec=recnr) atom%potential%lpot, &
                                 atom%potential%nspin, &
                                 atom%potential%irmind, &
                                 atom%potential%irmd, &
@@ -432,23 +473,20 @@ CONTAINS
     integer, intent(out) :: irmd
     integer, intent(out) :: max_reclen
 
-    integer, parameter :: MAGIC_NUMBER = 385306
-    integer :: magic
-    integer :: checkmagic
+#ifdef TASKLOCAL_FILES
+    character(len=7) :: num
 
-    checkmagic = MAGIC_NUMBER + recnr
+    write(num, '(I7.7)') recnr
+    open(fileunit, file="pot." // num, form='unformatted')
+#endif
 
-    read  (fileunit, rec=recnr) lpot, &
-                                nspin, &
-                                irmind, &
-                                irmd, &
-                                max_reclen, &
-                                magic
+    call readBasisAtomPotentialHeader(atom, fileunit, recnr, &
+                                           lpot, nspin, irmind, irmd, &
+                                           max_reclen)
 
-    if (magic /= checkmagic) then
-      write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
-      STOP
-    end if
+#ifdef TASKLOCAL_FILES
+    close(fileunit)
+#endif
 
   end subroutine
 
@@ -465,6 +503,7 @@ CONTAINS
     integer :: max_reclen
     integer, parameter :: MAGIC_NUMBER = 385306
 
+#ifndef TASKLOCAL_FILES
     max_reclen = 0
     inquire (iolength = reclen) atom%potential%lpot, &
                                 atom%potential%nspin, &
@@ -474,6 +513,7 @@ CONTAINS
                                 MAGIC_NUMBER
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+#endif
 
   end subroutine
 
@@ -483,7 +523,9 @@ CONTAINS
     implicit none
     integer, intent(in) :: fileunit
 
+#ifndef TASKLOCAL_FILES
     close(fileunit)
+#endif
 
   end subroutine
 
@@ -504,6 +546,40 @@ CONTAINS
   end subroutine
 
 !================ Private helper functions ====================================
+
+  subroutine readBasisAtomPotentialHeader(atom, fileunit, recnr, &
+                                           lpot, nspin, irmind, irmd, &
+                                           max_reclen)
+    implicit none
+
+    type (BasisAtom), intent(inout) :: atom
+    integer, intent(in) :: fileunit
+    integer, intent(in) :: recnr
+    integer, intent(out) :: lpot
+    integer, intent(out) :: nspin
+    integer, intent(out) :: irmind
+    integer, intent(out) :: irmd
+    integer, intent(out) :: max_reclen
+
+    integer, parameter :: MAGIC_NUMBER = 385306
+    integer :: magic
+    integer :: checkmagic
+
+    checkmagic = MAGIC_NUMBER + recnr
+
+    FILEREAD  (fileunit, rec=recnr) lpot, &
+                                nspin, &
+                                irmind, &
+                                irmd, &
+                                max_reclen, &
+                                magic
+
+    if (magic /= checkmagic) then
+      write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
+      STOP
+    end if
+
+  end subroutine
 
   !----------------------------------------------------------------------------
   !> Copy output potential to input potential for new iteration.

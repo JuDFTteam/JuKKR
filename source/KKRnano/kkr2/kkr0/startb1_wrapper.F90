@@ -174,7 +174,9 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
       call createBasisAtom(atom, 1, lpot, nspin, (irmd-irnsd), irmd)  ! create dummy basis atom
 
       call openBasisAtomDAFile(atom, 37, 'atoms')
+#ifndef TASKLOCAL_FILES
       call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx')
+#endif
 
       inquire (iolength = max_reclen) atom%potential%VINS, &
                                       atom%potential%VISP, &
@@ -198,11 +200,14 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
         enddo
 
         call writeBasisAtomDA(atom, 37, ii)
+#ifndef TASKLOCAL_FILES
         call writeBasisAtomPotentialIndexDA(atom, 38, ii, max_reclen)
+#endif
 
       enddo
-
+#ifndef TASKLOCAL_FILES
       call closeBasisAtomPotentialIndexDAFile(38)
+#endif
       call closeBasisAtomDAFile(37)
 
       call destroyBasisAtom(atom)

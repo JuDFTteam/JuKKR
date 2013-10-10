@@ -640,7 +640,9 @@ module CalculationData_mod
     call recordLengths_com(calc_data, my_mpi)
 
     if (isInMasterGroup(my_mpi)) then
+#ifndef TASKLOCAL_FILES
       call writePotentialIndexFile(calc_data)
+#endif
       call writeNewMeshFiles(calc_data)
     end if
 

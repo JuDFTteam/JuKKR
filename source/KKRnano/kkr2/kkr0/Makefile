@@ -117,3 +117,4 @@ BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialM
 CellData_mod.o: ShapefunData_mod.o
 
 startb1_wrapper.o: CellData_mod.o RadialMeshData_mod.o BasisAtom_mod.o
+startb1.o: BasisAtom_mod.o
