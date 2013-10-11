@@ -225,18 +225,78 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   if (params%kforce == 1 .and. &
      (processKKRresults > 0 .or. iter == params%scfsteps)) then
 
-    call openForceFile()
-
-    do ilocal = 1, num_local_atoms
-      densities    => getDensities(calc_data, ilocal)
-      I1 = getAtomIndexOfLocal(calc_data, ilocal)
-      call writeForces(densities%force_flm, I1)
-    end do
-
-    call closeForceFile()
+    call output_forces(calc_data, 0, getMyAtomRank(my_mpi), &
+                                     getMySEcommunicator(my_mpi))
   end if
 
 end function
+
+!------------------------------------------------------------------------------
+!> Write forces to file 'forces'.
+!>
+!> Gather all forces at rank 'master', only this rank writes the file.
+!> Since the amount of data for forces is low this is a reasonable approach.
+subroutine output_forces(calc_data, master, rank, comm)
+  use CalculationData_mod
+  use DensityResults_mod
+  implicit none
+  include 'mpif.h'
+  type(CalculationData), intent(in) :: calc_data
+  integer, intent(in) :: master
+  integer, intent(in) :: rank
+  integer, intent(in) :: comm
+
+  integer :: ilocal, I1, num_local_atoms
+  type(DensityResults), pointer :: densities
+  double precision, allocatable :: force_buffer(:,:)
+  double precision, allocatable :: local_buffer(:,:)
+  integer :: nranks
+  integer :: ierr
+  integer, parameter :: NUM = 3
+
+!  call openForceFile()
+!
+!  do ilocal = 1, num_local_atoms
+!    densities    => getDensities(calc_data, ilocal)
+!    I1 = getAtomIndexOfLocal(calc_data, ilocal)
+!    call writeForces(densities%force_flm, I1)
+!  end do
+!
+!  call closeForceFile()
+
+  num_local_atoms = getNumLocalAtoms(calc_data) ! must be the same for all ranks
+
+  if (rank == master) then
+    call MPI_Comm_size(MPI_COMM_WORLD, nranks, ierr)
+    allocate(force_buffer(NUM, num_local_atoms * nranks))
+  else
+    allocate(force_buffer(1, 1))
+  end if
+
+  allocate(local_buffer(NUM, num_local_atoms))
+
+  do ilocal = 1, num_local_atoms
+    densities    => getDensities(calc_data, ilocal)
+    !I1 = getAtomIndexOfLocal(calc_data, ilocal)
+    local_buffer(:, ilocal) = densities%force_flm(-1:1)
+  end do
+
+  call MPI_Gather(local_buffer, NUM*num_local_atoms, MPI_DOUBLE_PRECISION, &
+                  force_buffer, NUM*num_local_atoms, MPI_DOUBLE_PRECISION, &
+                  master, comm, ierr)
+
+  if (rank == master) then
+    call openForceFile()
+    do I1 = 1, num_local_atoms * nranks
+      call writeForces(force_buffer(:,I1), I1)
+    end do
+    call closeForceFile()
+  end if
+
+  deallocate(force_buffer)
+  deallocate(local_buffer)
+
+end subroutine
 
 !==============================================================================
 
