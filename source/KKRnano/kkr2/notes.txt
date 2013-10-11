@@ -27,9 +27,11 @@ Possible problems:
 *) Number of mesh points depends on an algorithm using floating point numbers:
    However, processes working on the same atom must arrive at the same results.
    Otherwise there will be problems with spin/energy-parallelisation
+   Workaround: If problems occur: calculate without spin/energy-parallelisation
 
 *) Interpolation to a larger muffin-tin radius problematic,
    since spline polynomial at boundary is unbounded, it blows up when r > rmax
+   Workaround: do several calculations, moving atoms in small steps only
 
 *) Small deviations observed when restarting a calculation (6. digit after .):
    Deviations were much larger when a converged potential was used
@@ -39,6 +41,35 @@ Possible problems:
 
 *) Convergence problems with lmax=5
    TODO: check if only for irregular lattice positions
+   
+*) I/O with several processes writing to the same file can lead to problems
+   (e.g. on RWTH cluster with Lustre filesystem)
+   Solution: use task-local files
+
+Task-local files:
+
+*) Compile with preprocessor-macro TASKLOCAL_FILES defined to get
+   a version that uses task-local files for meshes and potentials instead of
+   Fortran direct access files 
+
+Checkpointing:
+*) Files needed to restart a calculation:
+   energy_mesh, vpotnew, vpotnew.idx, meshes, meshes.idx
+   
+*) To restart calculation:
+   -) run kkr0 *first*
+   -) then rename them to:
+      energy_mesh.0, vpotnew.0, vpotnew.0.idx, meshes.0, meshes.0.idx
+      
+kkr0:
+*) kkr0 can generate a start potential from a formatted potential file named
+   'potential' and a shape-function file 'shapefun'
+   
+*) This only works for potentials which use the same radial mesh for all atoms
+
+*) Start potential generation can be skipped by removing/renaming file 'potential'
+   and providing an approximate Fermi-energy in file 'EFERMI' (used for k-mesh
+   generation heuristics)
 
 Some Bugs:
 

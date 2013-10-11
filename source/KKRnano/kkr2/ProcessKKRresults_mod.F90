@@ -277,7 +277,7 @@ subroutine output_forces(calc_data, master, rank, comm)
 
   do ilocal = 1, num_local_atoms
     densities    => getDensities(calc_data, ilocal)
-    !I1 = getAtomIndexOfLocal(calc_data, ilocal)
+
     local_buffer(:, ilocal) = densities%force_flm(-1:1)
   end do
 
