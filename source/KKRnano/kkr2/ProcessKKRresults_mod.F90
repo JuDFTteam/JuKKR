@@ -267,7 +267,7 @@ subroutine output_forces(calc_data, master, rank, comm)
   num_local_atoms = getNumLocalAtoms(calc_data) ! must be the same for all ranks
 
   if (rank == master) then
-    call MPI_Comm_size(MPI_COMM_WORLD, nranks, ierr)
+    call MPI_Comm_size(comm, nranks, ierr)
     allocate(force_buffer(NUM, num_local_atoms * nranks))
   else
     allocate(force_buffer(1, 1))
