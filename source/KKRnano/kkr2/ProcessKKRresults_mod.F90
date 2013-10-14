@@ -804,7 +804,8 @@ subroutine openForceFile()
   double precision :: dummy(-1:1)
 
   inquire (iolength = reclen) dummy ! get reclen for 3 doubles
-  open(91, access='direct', file='forces', recl=reclen, form='unformatted')
+  open(91, access='direct', file='forces', recl=reclen, form='unformatted', &
+           status='replace')
 end subroutine
 
 !------------------------------------------------------------------------------
