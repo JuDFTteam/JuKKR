@@ -127,9 +127,8 @@ lmmaxd, naclsd, trunc2atom_index, communicator)
     WRITELOG(4, *) "k-point ", k_point_index
 
     ! Get the scattering path operator for k-point BZKP(:, k_point_index)
-    ! output: GLLKE1, NOITER
-    ! inout: PRSC
-    ! inout (temporary arrays): GLLH, GLLHBLCK
+    ! output: G_diag
+    ! inout (temporary arrays): GLLH
     call kloopbody( G_diag, BZKP(:, k_point_index), TMATLL, GINP, ALAT, &
                    NAEZ, ATOM, EZOA, RR, INDN0, &
                    NUMN0, EIKRM, EIKRP, GLLH, &
@@ -169,7 +168,6 @@ subroutine kloopbody( G_diag, kpoint, &
                       atom_indices, QMRBOUND, NACLS, &
                       lmmaxd, trunc2atom_index, communicator)
 
-  !use initialGuess_store_mod
   use fillKKRMatrix_mod
   use mminvmod_mod
   use dlke0_smat_mod
@@ -253,17 +251,6 @@ subroutine kloopbody( G_diag, kpoint, &
                             indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
                             trunc2atom_index, communicator)
 
-!  do site_index = 1, naclsd ! this was just a test
-!  do lm2 = 1, lmmaxd
-!    do lm1 = 1, lm2
-!      if (abs(GINP(lm1, lm2, site_index, 1) - GINP(lm2, lm1, site_index, 1)) > 1e-4) then
-!        write(*,*) lm1, lm2, site_index, abs(GINP(lm1, lm2, site_index, 1) - GINP(lm2, lm1, site_index, 1))
-!        !STOP
-!      end if
-!    end do
-!  end do
-!  end do
-
   TESTARRAYLOG(3, GLLH)
 
   !----------------------------------------------------------------------------
@@ -318,7 +305,6 @@ subroutine kloopbody( G_diag, kpoint, &
   endif
 
   TESTARRAYLOG(4, mat_X)
-  !call toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, sparse%kvstr)
 
   call getGreenDiag(G_diag, mat_X, atom_indices, sparse%kvstr)
 
