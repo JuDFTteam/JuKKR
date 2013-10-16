@@ -11,7 +11,8 @@ CONTAINS
     NUMN0,INDN0,atom_indices, &
     QMRBOUND, &
     lmmaxd, naclsd,  &
-    nrd, trunc2atom_index, communicator)
+    nrd, trunc2atom_index, communicator, &
+    iguess_data)
 
 ! **********************************************************************
 
@@ -28,7 +29,8 @@ CONTAINS
 ! TSST_LOCAL ..  t-matrix
 
     use kkrmat_new_mod
-    use TEST_lcutoff_mod !TODO: remove
+    use TEST_lcutoff_mod
+    use InitialGuess_mod
     implicit none
 
     integer, intent(in) :: lmmaxd
@@ -37,6 +39,7 @@ CONTAINS
     !> mapping trunc. index -> atom index
     integer, intent(in) :: trunc2atom_index(:)
     integer, intent(in) :: communicator
+    type(InitialGuess), intent(inout) :: iguess_data
     !     .. Parameters ..
 
     integer, parameter :: NSYMAXD = 48
@@ -158,7 +161,7 @@ CONTAINS
       GINP_LOCAL, &
       NUMN0,INDN0, atom_indices, &
       QMRBOUND, &
-      lmmaxd, naclsd, trunc2atom_index, communicator)
+      lmmaxd, naclsd, trunc2atom_index, communicator, iguess_data)
     else
       write(*,*) "cutoffmode<3 not supported."
       STOP

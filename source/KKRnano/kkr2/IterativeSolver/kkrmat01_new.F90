@@ -20,10 +20,11 @@ ALAT,NSYMAT,NAEZ,NACLS,RR,EZOA,ATOM, &
 GINP, &
 NUMN0,INDN0,atom_indices, &
 QMRBOUND, &
-lmmaxd, naclsd, trunc2atom_index, communicator)
+lmmaxd, naclsd, trunc2atom_index, communicator, iguess_data)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
+  use InitialGuess_mod
   implicit none
 
   !     .. parameters ..
@@ -44,8 +45,8 @@ lmmaxd, naclsd, trunc2atom_index, communicator)
   integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
   integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) :: communicator
+  type (InitialGuess), intent(inout) :: iguess_data
 
-  !     .. SCALAR ARGUMENTS ..
   double precision:: ALAT
 
   integer::NAEZ
@@ -64,8 +65,8 @@ lmmaxd, naclsd, trunc2atom_index, communicator)
 
   integer:: NUMN0(:)
   integer:: INDN0(:,:)
-  integer:: ATOM(:,:) ! dim naclsd, naez?
-  integer:: EZOA(:,:) ! dim naclsd, naez?
+  integer:: ATOM(:,:)
+  integer:: EZOA(:,:)
   integer:: NACLS(:)
 
   double precision::QMRBOUND
@@ -126,6 +127,8 @@ lmmaxd, naclsd, trunc2atom_index, communicator)
 
     WRITELOG(4, *) "k-point ", k_point_index
 
+    ! select right slot for storing initial guess
+    call iguess_set_k_ind(iguess_data, k_point_index)
     ! Get the scattering path operator for k-point BZKP(:, k_point_index)
     ! output: G_diag
     ! inout (temporary arrays): GLLH
@@ -133,7 +136,7 @@ lmmaxd, naclsd, trunc2atom_index, communicator)
                    NAEZ, ATOM, EZOA, RR, INDN0, &
                    NUMN0, EIKRM, EIKRP, GLLH, &
                    atom_indices, QMRBOUND, NACLS, lmmaxd, trunc2atom_index, &
-                   communicator)
+                   communicator, iguess_data)
 
     ! ----------- Integrate Scattering Path operator over k-points --> GS -----
     ! Note: here k-integration only in irreducible wedge
@@ -166,12 +169,13 @@ subroutine kloopbody( G_diag, kpoint, &
                       NAEZ, ATOM, EZOA, RR, INDN0, &
                       NUMN0, EIKRM, EIKRP, GLLH, &
                       atom_indices, QMRBOUND, NACLS, &
-                      lmmaxd, trunc2atom_index, communicator)
+                      lmmaxd, trunc2atom_index, communicator, iguess_data)
 
   use fillKKRMatrix_mod
   use mminvmod_mod
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
+  use InitialGuess_mod
   use TEST_lcutoff_mod, only: lmarray, cutoffmode, DEBUG_dump_matrix !TODO: remove
 
   USE_ARRAYLOG_MOD
@@ -181,6 +185,8 @@ subroutine kloopbody( G_diag, kpoint, &
   integer, intent(in), dimension(:) :: atom_indices !< indices of local atoms
   integer, intent(in), dimension(:) :: trunc2atom_index
   integer, intent(in) :: communicator
+  type(InitialGuess), intent(inout) :: iguess_data
+
   integer :: NAEZ
   double precision :: ALAT
   integer :: ATOM(:,:)         ! dim: naclsd, *
@@ -273,6 +279,10 @@ subroutine kloopbody( G_diag, kpoint, &
   call buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_indices, sparse%kvstr)
 
   initial_zero = .true.
+  if (iguess_data%iguess == 1) then
+    initial_zero = .false.
+    call iguess_load(iguess_data, mat_X)
+  end if
 
   if (cutoffmode == 3) then
     call MMINVMOD_new(GLLH, sparse, mat_X, mat_B, &
@@ -289,6 +299,8 @@ subroutine kloopbody( G_diag, kpoint, &
     end if
 
   end if
+
+  call iguess_save(iguess_data, mat_X)
 
   TESTARRAYLOG(4, mat_B)
 

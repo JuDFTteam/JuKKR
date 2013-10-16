@@ -221,7 +221,7 @@ kkrmat01.o: lloyds_formula_mod.o TEST_lcutoff_mod.o
 lloyds_formula_mod.o: kkr_helpers_mod.o
 test.o: common_testc.o
 opt.o: common_optc.o
-kloopz1.o: kkrmat01.o kkrmat01_new.o TEST_lcutoff_mod.o
+kloopz1.o: kkrmat01.o kkrmat01_new.o TEST_lcutoff_mod.o InitialGuess_mod.o
 
 tbref.o: SingleSiteRef_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o
@@ -232,7 +232,7 @@ mminvmod_mod.o: vbrmv_mat_mod.o SparseMatrixDescription_mod.o
 vbrmv_mat_mod.o: SparseMatrixDescription_mod.o
 kkrmat01_new.o: lloyds_formula_mod.o mminvmod_mod.o fillKKRMatrix_mod.o \
                 dlke0_smat_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o \
-                one_sided_commZ_mod.o
+                one_sided_commZ_mod.o InitialGuess_mod.o
                 
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o

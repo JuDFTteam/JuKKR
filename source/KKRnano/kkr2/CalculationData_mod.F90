@@ -482,7 +482,6 @@ module CalculationData_mod
     use InputParams_mod
     use Main2Arrays_mod
     use TEST_lcutoff_mod
-    use InitialGuess_mod
     implicit none
 
     type (CalculationData), intent(inout) :: calc_data
@@ -591,13 +590,43 @@ module CalculationData_mod
          dims%itdbryd, params%imix, params%mixing)
 
     ! setup storage for iguess
+    call setup_iguess(calc_data, dims, arrays)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Initialise iguess datastructure.
+  subroutine setup_iguess(calc_data, dims, arrays)
+    use DimParams_mod
+    use Main2Arrays_mod
+    use InitialGuess_mod
+    implicit none
+    type(CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+    type (Main2Arrays), intent(in):: arrays
+
+    integer, allocatable :: num_k_points(:)
+    integer :: ii
+    integer :: blocksize
+
+    ! TODO: This is overdimensioned when l-cutoff is used!!!
+    ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
+    blocksize = calc_data%trunc_zone%naez_trc * calc_data%num_local_atoms &
+                * dims%lmmaxd**2
+
+    allocate(num_k_points(dims%iemxd))
+    do ii = 1, dims%iemxd
+      num_k_points(ii) = arrays%nofks(arrays%kmesh(ii))
+    end do
+
+    ! setup storage for iguess
     if (dims%smpid == 1 .and. dims%nspind == 2) then
       ! no spin parallelisation choosen, processes must store both spin-directions
-      call iguess_init(calc_data%iguess_data, arrays%nofks, 2, &
-                       calc_data%trunc_zone%naez_trc, dims%iguessd)
+      call iguess_init(calc_data%iguess_data, num_k_points, 2, &
+                       blocksize, dims%iguessd)
     else
-      call iguess_init(calc_data%iguess_data, arrays%nofks, 1, &
-                       calc_data%trunc_zone%naez_trc, dims%iguessd)
+      call iguess_init(calc_data%iguess_data, num_k_points, 1, &
+                       blocksize, dims%iguessd)
     endif
 
   end subroutine
