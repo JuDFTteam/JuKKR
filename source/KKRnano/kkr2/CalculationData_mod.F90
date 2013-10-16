@@ -22,6 +22,7 @@ module CalculationData_mod
   use GauntCoefficients_mod
   use ShapeGauntCoefficients_mod
   use TruncationZone_mod
+  use InitialGuess_mod
 
   implicit none
 
@@ -64,6 +65,9 @@ module CalculationData_mod
     type (ClusterInfo), pointer            :: clusters          => null()
     type (BroydenData), pointer            :: broyden           => null()
     !type (EnergyMesh), pointer :: emesh                         => null()
+
+    ! storage for initial guess
+    type (InitialGuess), pointer           :: iguess_data       => null()
 
   end type
 
@@ -118,6 +122,7 @@ module CalculationData_mod
     allocate(calc_data%trunc_zone)
     allocate(calc_data%clusters)
     allocate(calc_data%broyden)
+    allocate(calc_data%iguess_data)
 
     atom_rank = getMyAtomRank(my_mpi)
 
@@ -221,6 +226,7 @@ module CalculationData_mod
     call destroyGauntCoefficients(calc_data%gaunts)
     call destroyShapeGauntCoefficients(calc_data%shgaunts)
     call destroyBroydenData(calc_data%broyden)
+    call iguess_destroy(calc_data%iguess_data)
 
     deallocate(calc_data%mesh_array)
     deallocate(calc_data%cell_array)
@@ -232,6 +238,7 @@ module CalculationData_mod
     deallocate(calc_data%madelung_sum_array)
     deallocate(calc_data%trunc_zone)
     deallocate(calc_data%clusters)
+    deallocate(calc_data%iguess_data)
 
     deallocate(calc_data%ldau_data_array)
     deallocate(calc_data%jij_data_array)
@@ -437,6 +444,17 @@ module CalculationData_mod
   end function
 
   !----------------------------------------------------------------------------
+  !> Returns reference to initial guess data.
+  function getInitialGuessData(calc_data)
+    implicit none
+    type (InitialGuess), pointer :: getInitialGuessData
+
+    type (CalculationData), intent(in) :: calc_data
+
+    getInitialGuessData => calc_data%iguess_data
+  end function
+
+  !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
   integer function getMaxReclenMeshes(calc_data)
     implicit none
@@ -464,6 +482,7 @@ module CalculationData_mod
     use InputParams_mod
     use Main2Arrays_mod
     use TEST_lcutoff_mod
+    use InitialGuess_mod
     implicit none
 
     type (CalculationData), intent(inout) :: calc_data
@@ -570,6 +589,10 @@ module CalculationData_mod
     call createBroydenData(calc_data%broyden, &
          getBroydenDim(calc_data), &  ! former NTIRD
          dims%itdbryd, params%imix, params%mixing)
+
+    ! setup storage for iguess
+    call iguess_init(calc_data%iguess_data, arrays%nofks, dims%nspind, &
+                     calc_data%trunc_zone%naez_trc, dims%iguessd)
 
   end subroutine
 
