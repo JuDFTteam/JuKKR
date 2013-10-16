@@ -449,13 +449,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
-      do ilocal = 1, num_local_atoms
-        kkr => getKKR(calc_data, ilocal)
-        ! Note: MPI overhead does not increase because number of procs goes down
-        call redistributeInitialGuess_com(my_mpi, kkr%PRSC(:,:,PRSPIN), &
+        call redistributeInitialGuess_com(my_mpi, iguess_data%PRSC(:,:,PRSPIN), &
              ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
              arrays%KMESH, arrays%NofKs)
-      end do
 
       endif
     enddo

@@ -20,12 +20,10 @@ module KKRresults_mod
     double complex , allocatable, dimension(:,:,:)  :: TREFLL
     double complex , allocatable, dimension(:,:,:)  :: DTREFLL
     double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
-    !double complex , allocatable, dimension(:,:,:,:)  :: GREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GMATN
     double complex , allocatable, dimension(:)  :: LLY_G0TR
     double complex , allocatable, dimension(:,:)  :: LLY_GRDT
     double complex , allocatable, dimension(:)  :: TR_ALPH
-    complex , allocatable, dimension(:,:,:)  :: PRSC ! move to KKRresults?
     integer  :: NOITER
 
     integer :: LMMAXD
@@ -95,12 +93,10 @@ module KKRresults_mod
     ALLOCATECHECK(self%TREFLL(LMMAXD,LMMAXD,naclsd))
     ALLOCATECHECK(self%DTREFLL(LMMAXD,LMMAXD,naclsd))
     ALLOCATECHECK(self%DGREFN(LMMAXD,LMMAXD,NACLSD,1))
-    !ALLOCATECHECK(self%GREFN(LMMAXD,LMMAXD,NACLSD,1))
     ALLOCATECHECK(self%GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND))
     ALLOCATECHECK(self%LLY_G0TR(IEMXD))
     ALLOCATECHECK(self%LLY_GRDT(IEMXD,NSPIND))
     ALLOCATECHECK(self%TR_ALPH(NSPIND))
-    ALLOCATECHECK(self%PRSC(NGUESSD*LMMAXD,EKMD,NSPIND-SMPID+1))
 
     self%noiter = 0
 
@@ -126,12 +122,10 @@ module KKRresults_mod
     DEALLOCATECHECK(self%TREFLL)
     DEALLOCATECHECK(self%DTREFLL)
     DEALLOCATECHECK(self%DGREFN)
-    !DEALLOCATECHECK(self%GREFN)
     DEALLOCATECHECK(self%GMATN)
     DEALLOCATECHECK(self%LLY_G0TR)
     DEALLOCATECHECK(self%LLY_GRDT)
     DEALLOCATECHECK(self%TR_ALPH)
-    DEALLOCATECHECK(self%PRSC)
 
   end subroutine
 

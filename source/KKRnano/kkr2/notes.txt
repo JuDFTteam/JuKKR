@@ -81,3 +81,5 @@ Some Bugs:
 
 *) if one uses a saved energy-mesh or kpoints and makes changes
    affecting the energy-mesh in input.conf then this asks for trouble
+   
+*) iguess cannot be combined with l-cutoff (RS-cutoff is OK)
