@@ -54,6 +54,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   use TruncationZone_mod
   use ClusterInfo_mod
   use RefCluster_mod
+  use InitialGuess_mod
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
 
@@ -79,6 +80,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (ClusterInfo), pointer           :: clusters    ! never changes
   type (RefCluster), pointer            :: ref_cluster ! never changes
   type (LatticeVectors), pointer        :: lattice_vectors ! never changes
+  type (InitialGuess), pointer          :: iguess_data ! changes
 
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
@@ -115,6 +117,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   jij_data  => getJijData(calc_data, 1)
   clusters  => getClusterInfo(calc_data)
   lattice_vectors  => getLatticeVectors(calc_data)
+  iguess_data => getInitialGuessData(calc_data)
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -322,14 +325,13 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             CHECKASSERT(atom_indices(ilocal) > 0)
           end do
 
-          ! problem: reference Green's functions !TODO
-          ! here: known by all atoms - therefore pick any atom (nr.1)
-          kkr => getKKR(calc_data, 1)
+          ! pick any atom (nr.1)
+          kkr => getKKR(calc_data, 1)  ! TODO: check
           jij_data => getJijData(calc_data, 1)
 
-          kkr%noiter = 0
+          call iguess_set_energy_ind(iguess_data, ie)
+          call iguess_set_spin_ind(iguess_data, PRSPIN)
 
-          !CHECKASSERT(num_local_atoms == 1)  ! TODO: !!!
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &

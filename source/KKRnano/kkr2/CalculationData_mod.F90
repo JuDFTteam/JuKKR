@@ -591,8 +591,14 @@ module CalculationData_mod
          dims%itdbryd, params%imix, params%mixing)
 
     ! setup storage for iguess
-    call iguess_init(calc_data%iguess_data, arrays%nofks, dims%nspind, &
-                     calc_data%trunc_zone%naez_trc, dims%iguessd)
+    if (dims%smpid == 1 .and. dims%nspind == 2) then
+      ! no spin parallelisation choosen, processes must store both spin-directions
+      call iguess_init(calc_data%iguess_data, arrays%nofks, 2, &
+                       calc_data%trunc_zone%naez_trc, dims%iguessd)
+    else
+      call iguess_init(calc_data%iguess_data, arrays%nofks, 1, &
+                       calc_data%trunc_zone%naez_trc, dims%iguessd)
+    endif
 
   end subroutine
 

@@ -5,7 +5,7 @@
 module InitialGuess_mod
 
 type InitialGuess
-  PRIVATE
+  !PRIVATE
   complex, allocatable, dimension(:,:,:) :: PRSC
   integer, allocatable :: ek_indices(:)
   integer :: ekm
