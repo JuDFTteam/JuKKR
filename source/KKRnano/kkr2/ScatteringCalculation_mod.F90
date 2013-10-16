@@ -89,7 +89,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   integer :: ispin
   integer :: prspin
   integer :: nmesh
-  integer :: ekm
   logical :: xccpl
   double complex :: JSCAL ! scaling factor for Jij calculation
   integer :: I1
@@ -148,7 +147,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   call resetTimer(single_site_timer)
 
-  EKM = 0
   prspin = 1
 
   ! calculate exchange couplings only at last self-consistency step and when Jij=true
@@ -390,9 +388,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 ! IE ====================================================================
     endif
 ! IE ====================================================================
-
-! for initial guess calculate sparse indices combining IE.KPT
-    EKM = EKM + arrays%NOFKS(arrays%KMESH(IE))
 
   end do                   ! IE = 1,IELAST
 
