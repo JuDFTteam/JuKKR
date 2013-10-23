@@ -356,9 +356,10 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
                                 trunc2atom_index, communicator)
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
-  use one_sided_commZ_mod, only: copyFromZ_com
+  use one_sided_commZ_mod
   implicit none
 
+  include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)
   type(SparseMatrixDescription), intent(in) :: sparse
   double precision, intent(in) :: kpoint(3)
@@ -387,9 +388,13 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   integer naclsd
   integer lmmaxd
   integer num_local_atoms
-  integer atom_requested(1)
+  integer atom_requested
   double complex, allocatable :: Gref_buffer(:,:,:)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+  type (ChunkIndex) :: chunk_inds(1)
+  integer :: win
+  integer :: nranks
+  integer :: ierr
 
   naez = size(nacls)
   nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
@@ -405,6 +410,11 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
   allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
 
+  call MPI_Comm_size(communicator, nranks, ierr)
+
+  call exposeBufferZ(win, GINP, lmmaxd*lmmaxd*naclsd*num_local_atoms, &
+                     lmmaxd*lmmaxd*naclsd, communicator)
+
   GLLH = CZERO
   do site_index = 1,NAEZ
 
@@ -414,9 +424,11 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
     ! get GINP(:,:,:)[trunc2atom_index(site_index)]
 
-    atom_requested(1) = trunc2atom_index(site_index)
-    call copyFromZ_com(Gref_buffer, GINP, atom_requested, &
-                       lmmaxd*lmmaxd*naclsd, num_local_atoms, communicator)
+    atom_requested = trunc2atom_index(site_index)
+    chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
+    chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
+
+    call copyChunksZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
     !!!Gref_buffer(:,:,:) = GINP(:,:,:) ! use this if all Grefs are the same
 
     call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
@@ -424,6 +436,8 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
                     Gref_buffer, &
                     naez, lmmaxd, naclsd)
   end do
+
+  call hideBufferZ(win)
 
 end subroutine
 
