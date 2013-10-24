@@ -408,10 +408,13 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   ASSERT(naclsd == size(eikrp))
   ASSERT(naez == size(trunc2atom_index))
 
+  ! Note: some MPI implementations might need
+  ! the use of MPI_Alloc_mem
   allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
 
   call MPI_Comm_size(communicator, nranks, ierr)
 
+  ! share GINP with all other processes in 'communicator'
   call exposeBufferZ(win, GINP, lmmaxd*lmmaxd*naclsd*num_local_atoms, &
                      lmmaxd*lmmaxd*naclsd, communicator)
 
@@ -431,7 +434,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
     call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
     CHECKASSERT(ierr == 0)
     call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
-    !!!Gref_buffer(:,:,:) = GINP(:,:,:) ! use this if all Grefs are the same
+    !!!Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
     call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
     CHECKASSERT(ierr == 0)
 
@@ -446,7 +449,8 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 end subroutine
 
 !------------------------------------------------------------------------------
-!>
+!> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
+!> dependent on (k,E) into matrix G_diag
 subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
   implicit none
 
