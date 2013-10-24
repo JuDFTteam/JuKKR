@@ -194,6 +194,28 @@ end subroutine
 !> the order as specified in 'chunk_inds' 
 subroutine copyChunks_TYPE(dest_buffer, win, chunk_inds, chunk_size)
   implicit none
+
+  NUMBER_TYPE, dimension(*), intent(out) :: dest_buffer
+  integer, intent(inout) :: win
+  type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
+  integer, intent(in) :: chunk_size
+
+  call fence_TYPE(win)
+  call copyChunksNoSync_TYPE(dest_buffer, win, chunk_inds, chunk_size)
+  ! ensure that Get has completed and dest_buffer is valid
+  call fence_TYPE(win)
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Copy chunks of size 'chunk_size' located at
+!> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
+!> On output dest_buffer contains chunks in
+!> the order as specified in 'chunk_inds' - NO FENCE CALLS
+!>
+!> NOTE: MUST do fence calls before and after one or many calls to this routine.
+subroutine copyChunksNoSync_TYPE(dest_buffer, win, chunk_inds, chunk_size)
+  implicit none
   include 'mpif.h'
   NUMBER_TYPE, dimension(*), intent(out) :: dest_buffer
   integer, intent(inout) :: win
@@ -209,25 +231,35 @@ subroutine copyChunks_TYPE(dest_buffer, win, chunk_inds, chunk_size)
 
   disp = 0
 
-  call MPI_Win_fence(0, win, ierr)
-  
   do ii = 1, size(chunk_inds)
     owner_rank = chunk_inds(ii)%owner
     local_ind  = chunk_inds(ii)%local_ind
-        
+
     disp = local_ind - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
-    
+
     call MPI_Get(dest_buffer( (ii - 1) * chunk_size + 1 ), chunk_size, &
                  NUMBERMPI_TYPE, owner_rank, &
                  disp, chunk_size, NUMBERMPI_TYPE, win, ierr)
-    
+
   end do
-  
-  ! ensure that Get has completed and dest_buffer is valid
-  call MPI_Win_fence(0, win, ierr) 
 
 end subroutine
 
+!------------------------------------------------------------------------------
+!> Wrapper for fence call.
+subroutine fence_TYPE(win)
+  implicit none
+  include 'mpif.h'
+  integer, intent(inout) :: win
+
+  integer :: ierr
+  call MPI_Win_fence(0, win, ierr)
+
+  COMMCHECK(ierr)
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Hide buffer after completing one-sided communication.
 subroutine hideBuffer_TYPE(win)
   implicit none
   include 'mpif.h'
