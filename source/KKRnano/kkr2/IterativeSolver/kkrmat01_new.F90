@@ -428,8 +428,12 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
     chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
     chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
 
-    call copyChunksZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
+    call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
+    CHECKASSERT(ierr == 0)
+    call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
     !!!Gref_buffer(:,:,:) = GINP(:,:,:) ! use this if all Grefs are the same
+    call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
+    CHECKASSERT(ierr == 0)
 
     call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
                     NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, &
