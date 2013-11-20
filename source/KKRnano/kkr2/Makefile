@@ -27,7 +27,7 @@ LDFLAGS =
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
 #LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
-LDFLAGS += -lfftw3
+#LDFLAGS += -lfftw3
 endif
 
 ifeq ($(PLATFORM),rwth)
