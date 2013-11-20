@@ -144,6 +144,7 @@ module CalculationData_mod
     ! Now construct all datastructures and calculate initial data
     call constructEverything(calc_data, dims, params, arrays, my_mpi)
 
+    call print_debug_info(calc_data)
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -859,14 +860,6 @@ module CalculationData_mod
     calc_data%max_reclen_potential = recvbuf(1)
     calc_data%max_reclen_meshes = recvbuf(2)
 
-    ! debug
-!    atomdata  => calc_data%atomdata_array(1)
-!    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew.i", &
-!                                    getMaxReclenPotential(calc_data))
-!    call writeBasisAtomPotentialDA(atomdata, 37, calc_data%atom_ids(1))
-!    call closeBasisAtomPotentialDAFile(37)
-    ! end debug
-
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -952,6 +945,31 @@ module CalculationData_mod
       getBroydenDim = getBroydenDim + getNumPotentialValues(atomdata%potential)
     end do
   end function
+
+  !----------------------------------------------------------------------------
+  ! Print some debugging info
+  subroutine print_debug_info(calc_data)
+    implicit none
+    type (CalculationData), intent(in) :: calc_data
+
+    integer :: ilocal
+    type (RadialMeshData), pointer :: mesh
+    type (BasisAtom), pointer :: atomdata
+    type (CellData), pointer :: cell
+    character(len=:), allocatable :: str
+
+    do ilocal = 1, calc_data%num_local_atoms
+      mesh  => calc_data%mesh_array(ilocal)
+      atomdata => calc_data%atomdata_array(ilocal)
+      cell      => calc_data%cell_array(ilocal)
+      call repr_RadialMeshData(mesh, str)
+      write(*, '(A)') str
+      call repr_PotentialData(atomdata%potential, str)
+      write(*, '(A)') str
+      call repr_ShapefunData(cell%shdata, str)
+      write(*, '(A)') str
+    end do
+  end subroutine
 
 !==============================================================================
 !=             WORK in PROGRESS - not used yet                                =
