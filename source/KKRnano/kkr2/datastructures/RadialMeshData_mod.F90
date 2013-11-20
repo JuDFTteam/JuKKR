@@ -453,6 +453,64 @@ module RadialMeshData_mod
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Returns a string representation of RadialMeshData.
+  subroutine repr_RadialMeshData(meshdata, str)
+    implicit none
+    class (RadialMeshData), intent(in) :: meshdata
+    character(len=:), allocatable, intent(inout) :: str
+
+    character :: nl
+    character(80) :: buffer
+    integer :: ind
+
+    nl = new_line(' ')
+
+    str = ''
+    write(buffer, *) "irmd  = ", meshdata%irmd   !< number of mesh points
+    str = str // trim(buffer) // nl
+    write(buffer, *) "ipand = ", meshdata%ipand  !< dimension variable panels for historical reasons
+    str = str // trim(buffer) // nl
+    write(buffer, *) "A     = ", meshdata%A    !< logarithmic mesh parameter A
+    str = str // trim(buffer) // nl
+    write(buffer, *) "B     = ", meshdata%B    !< logarithmic mesh parameter A
+    str = str // trim(buffer) // nl
+    write(buffer, *) "RWS   = ", meshdata%RWS  !< maximal radius
+    str = str // trim(buffer) // nl
+    write(buffer, *) "RMT   = ", meshdata%RMT !< muffin-tin radius
+    str = str // trim(buffer) // nl
+    write(buffer, *) "IPAN  = ", meshdata%IPAN   !< number of mesh panels
+    str = str // trim(buffer) // nl
+    write(buffer, *) "IRC   = ", meshdata%IRC
+    str = str // trim(buffer) // nl
+    write(buffer, *) "IMT   = ", meshdata%IMT    !< end of muffin-tin region
+    str = str // trim(buffer) // nl
+    write(buffer, *) "IRNS  = ", meshdata%IRNS
+    str = str // trim(buffer) // nl
+    write(buffer, *) "IRWS  = ", meshdata%IRWS  !< index of max. radius
+    str = str // trim(buffer) // nl
+    write(buffer, *) "IRMIN = ", meshdata%IRMIN
+    str = str // trim(buffer) // nl // nl
+    write(buffer, *) "nr.    R                          DRDI"
+    str = str // trim(buffer) // nl
+    write(buffer, '(79("="))')
+    str = str // trim(buffer) // nl
+
+    do ind = 1, size(meshdata%R)
+      write(buffer, '(I5, 2X, E23.16,2X,E23.16)') ind, meshdata%R(ind), meshdata%DRDI(ind)
+      str = str // trim(buffer) // nl
+    end do
+    str = str // nl
+
+    write(buffer, *) "IRCUT = "
+    str = str // trim(buffer) // nl
+
+    do ind = 0, size(meshdata%IRCUT) - 1
+      write(buffer, *) meshdata%IRCUT(ind)
+      str = str // trim(buffer) // nl
+    end do
+  end subroutine
+
 !================= private helper functions ===================================
   subroutine readRadialMeshDataHeader(meshdata, fileunit, recnr, &
                                        irmd, ipand, max_reclen)
