@@ -146,10 +146,18 @@ module InterpolateBasisAtom_mod
       end if
     end do
 
-    call spline(num, xarray, yarray, counter, 1.d35, 1.d35, y2ndder)
+    ! note: 1st derivative at upper boundary forced to 0.0d0                                                  
+    call spline(num, xarray, yarray, counter, 1.d35, 0.0d0, y2ndder)
 
     do ii = 1, size(ynew)
-      call splint(xarray, yarray, y2ndder, counter, xnew(ii), ynew(ii), yderiv)
+
+      if (xnew(ii) <= xarray(counter)) then
+        call splint(xarray, yarray, y2ndder, counter, xnew(ii), ynew(ii), yderiv)
+      else
+        ! use constant value for x > x_max_old
+        ynew(ii) = yarray(counter)
+      endif
+
     end do
 
   end subroutine
