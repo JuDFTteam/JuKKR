@@ -144,7 +144,7 @@ module CalculationData_mod
     ! Now construct all datastructures and calculate initial data
     call constructEverything(calc_data, dims, params, arrays, my_mpi)
 
-    call print_debug_info(calc_data)
+    !call print_debug_info(calc_data)
   end subroutine
 
   !----------------------------------------------------------------------------
