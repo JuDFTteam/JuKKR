@@ -153,6 +153,11 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   npand = sum(nvertices) + nface + 1  ! +1 for possible muffin-tinisation
   meshnd = max(npoints_min, npand * NMIN) + num_MT_points
 
+  ! increase meshnd, since in some cases the above empirical formula was
+  ! not enough
+  meshnd = meshnd + npoints_min
+
+  ! these arrays are overdimensioned - but used only in this routine
   allocate(nm(npand))
   allocate(thetas_s(meshnd, ibmaxd))
   allocate(xrn(meshnd))

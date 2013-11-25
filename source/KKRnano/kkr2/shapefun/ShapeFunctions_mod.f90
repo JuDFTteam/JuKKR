@@ -210,6 +210,7 @@ IBMAXD,MESHND, NPAND) ! new input parameters after inc.geometry was removed
   NPAND)
 
   ! increase number of mesh points if necessary but use at least 'npoi' points
+  ! (otherwise MESH0 complains)
   npoints_new = max(npoi, npan*nmin)
 
   call MESH(CRT,NPAN,NM,XRN,DRN,MESHN,npoints_new, 0,NMIN,MESHND,NPAND,VERBOSITY)
