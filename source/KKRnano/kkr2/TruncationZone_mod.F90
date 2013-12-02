@@ -26,10 +26,6 @@ module TruncationZone_mod
     integer, dimension(:), allocatable :: index_map
     !> map truncation zone atom index to atom index ("inverse" of index_map)
     integer, dimension(:), allocatable :: trunc2atom_index
-    integer, dimension(:), allocatable :: numn0_trc
-    integer, dimension(:,:), allocatable :: indn0_trc
-    integer, dimension(:,:), allocatable :: atom_trc
-    integer, dimension(:,:), allocatable :: ezoa_trc
   end type
 
   interface createTruncationZone
@@ -102,10 +98,6 @@ module TruncationZone_mod
     integer :: memory_stat
 
     DEALLOCATECHECK(self%index_map)
-    DEALLOCATECHECK(self%numn0_trc)
-    DEALLOCATECHECK(self%indn0_trc)
-    DEALLOCATECHECK(self%atom_trc)
-    DEALLOCATECHECK(self%ezoa_trc)
     DEALLOCATECHECK(self%trunc2atom_index)
 
   end subroutine
