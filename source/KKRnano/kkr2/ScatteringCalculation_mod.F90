@@ -33,7 +33,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   use TimerMpi_mod
   use EBalanceHandler_mod
 
-  use TEST_lcutoff_mod !TODO: remove
+  use TEST_lcutoff_mod, only: DEBUG_dump_matrix
 
   use DimParams_mod
   use InputParams_mod
@@ -103,8 +103,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   double complex, allocatable, dimension(:,:,:) :: GmatN_buffer !< GmatN for all local atoms
   double complex, allocatable, dimension(:,:,:,:) :: GrefN_buffer !< GrefN for all local atoms
 
-  integer :: cls_trc_dummy(1) = (/ -1 /)
-
   lmmaxd = (dims%lmaxd + 1) ** 2
 
   trunc_zone => getTruncationZone(calc_data)
@@ -126,7 +124,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   allocate( Tref_local(lmmaxd, lmmaxd, num_local_atoms))
   allocate(DTref_local(lmmaxd, lmmaxd, num_local_atoms))
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
-  allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd, num_local_atoms))
+  allocate(GrefN_buffer(lmmaxd,lmmaxd, clusters%naclsd, num_local_atoms))
 
   allocate(atom_indices(num_local_atoms))
 
@@ -199,7 +197,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
       ! Note: Gref is calculated in real space - usually only a few shells
 
       ! Exchange the reference t-matrices within reference clusters
-
       do ilocal = 1, num_local_atoms
         kkr => getKKR(calc_data, ilocal)
         ref_cluster => getRefCluster(calc_data, ilocal)
@@ -217,9 +214,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
         ref_cluster => getRefCluster(calc_data, ilocal)
 !------------------------------------------------------------------------------
 
-        ! Note for future: for communication use
-        ! the cluster index to atom index mapping given by array ATOM
-
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
                       gaunts%CLEB,ref_cluster%RCLS(:,:),gaunts%ICLEB, &
                       gaunts%LOFLM,ref_cluster%NACLS, &
@@ -227,9 +221,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
                       kkr%DGREFN, kkr%LLY_G0TR(IE), &
                       dims%lmaxd, kkr%naclsd, gaunts%ncleb, &
                       dims%LLY)
-
-        ! here: assume identical clusters -> identical cluster green's functions
-        ! TODO: exchange cluster green's functions
 
 !------------------------------------------------------------------------------
       end do  ! ilocal
@@ -315,8 +306,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
           TESTARRAYLOG(3, TMATLL)
 
-!------------------------------------------------------------------------------
-
           do ilocal = 1, num_local_atoms
             atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
             atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
@@ -330,16 +319,16 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           call iguess_set_energy_ind(iguess_data, ie)
           call iguess_set_spin_ind(iguess_data, PRSPIN)
 
+!------------------------------------------------------------------------------
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
-          clusters%NAEZ_trc,arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), CLS_trc_dummy, &
-          clusters%NACLS_trc,lattice_vectors%RR,clusters%EZOA_trc,clusters%ATOM_trc, &
+          arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
+          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), &
+          lattice_vectors%RR, &
           GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
-          TMATLL, clusters%NUMN0_trc, clusters%INDN0_trc, atom_indices, &
-          params%QMRBOUND, arrays%lmmaxd, clusters%naclsd,  lattice_vectors%nrd, &
+          TMATLL, atom_indices, &
+          params%QMRBOUND, arrays%lmmaxd,  lattice_vectors%nrd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
-          iguess_data)
-
+          iguess_data, clusters)
 !------------------------------------------------------------------------------
 
           ! copy results from buffer: G_LL'^NN (E, spin) =

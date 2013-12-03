@@ -4,15 +4,13 @@ module kloopz1_mod
 CONTAINS
 
     subroutine KLOOPZ1_new(GMATN,ALAT, &
-    NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS, &
-    NACLS,RR,EZOA,ATOM,GINP_LOCAL, &
+    NOFKS, VOLBZ, BZKP, VOLCUB, &
+    RR, GINP_LOCAL, &
     NSYMAT,DSYMLL, &
-    TMATLL, &
-    NUMN0,INDN0,atom_indices, &
-    QMRBOUND, &
-    lmmaxd, naclsd,  &
+    TMATLL, atom_indices, &
+    QMRBOUND, lmmaxd,  &
     nrd, trunc2atom_index, communicator, &
-    iguess_data)
+    iguess_data, cluster_info)
 
 ! **********************************************************************
 
@@ -31,15 +29,16 @@ CONTAINS
     use kkrmat_new_mod
     use TEST_lcutoff_mod
     use InitialGuess_mod
+    use ClusterInfo_mod
     implicit none
 
     integer, intent(in) :: lmmaxd
-    integer, intent(in) :: naclsd  ! max. number of atoms in reference cluster
     integer, intent(in) :: nrd
     !> mapping trunc. index -> atom index
     integer, intent(in) :: trunc2atom_index(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
+    type(ClusterInfo), target :: cluster_info
     !     .. Parameters ..
 
     integer, parameter :: NSYMAXD = 48
@@ -52,7 +51,6 @@ CONTAINS
     double precision::VOLBZ
     double precision::QMRBOUND
     integer::NOFKS
-    integer::NAEZ
     integer::NSYMAT
     !     .. Array Arguments ..
 
@@ -61,18 +59,12 @@ CONTAINS
     double complex :: GMATN(:,:,:)
 
     double complex :: GINP_LOCAL(:, :, :, :)
-    double complex, intent(inout), dimension(lmmaxd,lmmaxd,naez) :: TMATLL
+    double complex, intent(inout), dimension(:,:,:) :: TMATLL
 
     double precision::RR(3,0:NRD)
     double precision::BZKP(:,:)
     double precision::VOLCUB(:) ! dim kpoibz
-    integer:: ATOM(NACLSD,naez)
-    integer:: CLS(naez)
-    integer:: EZOA(NACLSD,naez)
-    integer:: NACLS(naez)
-    !     ..
-    integer::NUMN0(NAEZ)
-    integer::INDN0(NAEZ,NACLSD)
+
     !     .. Local Scalars ..
     !     ..
     double complex :: TAUVBZ
@@ -85,7 +77,6 @@ CONTAINS
     !     ..
     !     .. Local Arrays ..
     !     ..
-
     double complex :: GLL  (LMMAXD, LMMAXD)
     double complex, allocatable :: GS(:,:,:,:)
 
@@ -157,11 +148,9 @@ CONTAINS
     ! 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2) then
       call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL, &
-      ALAT,NSYMAT,NAEZ,NACLS,RR,EZOA,ATOM, &
-      GINP_LOCAL, &
-      NUMN0,INDN0, atom_indices, &
-      QMRBOUND, &
-      lmmaxd, naclsd, trunc2atom_index, communicator, iguess_data)
+      ALAT, NSYMAT, RR, GINP_LOCAL, atom_indices, &
+      QMRBOUND, lmmaxd, trunc2atom_index, communicator, &
+      iguess_data, cluster_info)
     else
       write(*,*) "cutoffmode<3 not supported."
       STOP
