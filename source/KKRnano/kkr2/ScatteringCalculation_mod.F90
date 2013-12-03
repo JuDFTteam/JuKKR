@@ -153,6 +153,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   if (XCCPL) then
 
+    ! Trigger jij-calculation
+    jij_data%do_jij_calculation = .true.
+
     call CLSJIJ(I1,dims%NAEZ,lattice_vectors%RR,lattice_vectors%nrd,arrays%RBASIS, &
                 jij_data%RCUTJIJ,arrays%NSYMAT,arrays%ISYMINDEX, &
                 jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ, &

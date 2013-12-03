@@ -18,7 +18,7 @@ module JijData_mod
   !integer, dimension(:), allocatable :: NXCP                   ! index to bravais lattice at site in cluster
   !double complex, dimension(:), allocatable ::  JXCIJINT       ! integrated Jij
 
-    logical :: jij
+    logical :: do_jij_calculation
     double precision :: rcutJij
     integer :: nxij
     double precision , allocatable, dimension(:)  :: rxij
@@ -44,10 +44,10 @@ module JijData_mod
   !> @param[in]    nxijd
   !> @param[in]    lmmaxd
   !> @param[in]    nspind
-  subroutine createJijData(self, jij, rcutjij, nxijd,lmmaxd,nspind)
+  subroutine createJijData(self, do_jij_calculation, rcutjij, nxijd,lmmaxd,nspind)
     implicit none
     type (JijData), intent(inout) :: self
-    logical, intent(in) ::  jij
+    logical, intent(in) ::  do_jij_calculation
     double precision, intent(in) :: rcutjij
     integer, intent(in) ::  nxijd
     integer, intent(in) ::  lmmaxd
@@ -57,7 +57,7 @@ module JijData_mod
 
     integer :: memory_stat
 
-    self%jij = jij
+    self%do_jij_calculation = do_jij_calculation
     self%rcutjij = rcutjij
     self%nxijd = nxijd
     self%lmmaxd = lmmaxd

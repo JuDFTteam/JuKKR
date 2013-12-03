@@ -572,7 +572,7 @@ module CalculationData_mod
 
       call createLDAUData(ldau_data, params%ldau, mesh%irmd, dims%lmaxd, &
                           dims%nspind)
-      call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, &
+      call createJijData(jij_data, .false., params%rcutjij, dims%nxijd, &
                          dims%lmmaxd,dims%nspind)
 
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
