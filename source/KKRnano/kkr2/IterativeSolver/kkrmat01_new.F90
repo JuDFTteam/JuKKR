@@ -7,6 +7,7 @@
 module kkrmat_new_mod
 
 use SparseMatrixDescription_mod
+use ClusterInfo_mod
 
 double complex, allocatable, dimension(:, :), save :: full
 !IBM* ALIGN(32, full)
@@ -20,7 +21,10 @@ type MultScatData
   double complex, allocatable :: EIKRM(:)
   double complex, allocatable, dimension(:) :: GLLH
 
+  integer, allocatable :: atom_indices(:)
   integer :: lmmaxd
+  integer :: naez
+  type (ClusterInfo), pointer :: cluster_info
 
 end type
 
@@ -28,13 +32,12 @@ CONTAINS
 
 !------------------------------------------------------------------------------
 ! Use ClusterInfo_mod ??????
-subroutine createMultScatData(ms, numn0, indn0, lmmaxd, atom_indices)
+subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
   use TEST_lcutoff_mod, only: lmarray
   use fillKKRMatrix_mod, only: getKKRMatrixStructure
   implicit none
   type (MultScatData), intent(inout) :: ms
-  integer, intent(in) :: numn0(:)
-  integer, intent(in) :: indn0(:,:)
+  type (ClusterInfo), target  :: cluster_info
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: atom_indices(:)
 
@@ -42,14 +45,20 @@ subroutine createMultScatData(ms, numn0, indn0, lmmaxd, atom_indices)
   integer :: naez
   integer :: naclsd
 
-  sum_cluster = sum(numn0)
-  naez = size(indn0, 1)
-  naclsd = size(indn0, 2)
+  ms%cluster_info => cluster_info
+
+  sum_cluster = sum(cluster_info%numn0_trc)
+  naez = size(cluster_info%indn0_trc, 1)
+  naclsd = size(cluster_info%indn0_trc, 2)
   ms%lmmaxd = lmmaxd
+  ms%naez = naez
+
+  allocate(ms%atom_indices, source=atom_indices)
 
   call createSparseMatrixDescription(ms%sparse, naez, sum_cluster)
 
-  call getKKRMatrixStructure(lmarray, numn0, indn0, ms%sparse)
+  call getKKRMatrixStructure(lmarray, cluster_info%numn0_trc, &
+                             cluster_info%indn0_trc, ms%sparse)
 
   allocate(ms%mat_B(ms%sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
   allocate(ms%mat_X(ms%sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
@@ -592,12 +601,16 @@ subroutine greenKSummation(G_diag, GS, k_point_weight, &
 end subroutine
 
 !------------------------------------------------------------------------------
-!> Calculate scattering path operator for 'kpoint'
+!> Calculate scattering path operator for 'kpoint'.
+!>
+!> Input are the *realspace* \Delta T and the realspace G_ref (GINP).
+!> Solution is stored in ms%mat_X.
+!> Scattering path operator is calculated for atoms given in
+!> ms%atom_indices(:)
 subroutine kloopbody_new(ms, kpoint, &
-                      TMATLL, GINP, ALAT, &
-                      NAEZ, ATOM, EZOA, RR, INDN0, &
-                      NUMN0, atom_indices, QMRBOUND, NACLS, &
-                      trunc2atom_index, communicator, iguess_data)
+                         TMATLL, GINP, ALAT, &
+                         RR, QMRBOUND, &
+                         trunc2atom_index, communicator, iguess_data)
 
   use fillKKRMatrix_mod
   use mminvmod_mod
@@ -612,21 +625,14 @@ subroutine kloopbody_new(ms, kpoint, &
 
   type (MultScatData), intent(inout) :: ms
 
-  integer, intent(in), dimension(:) :: atom_indices !< indices of local atoms
   integer, intent(in), dimension(:) :: trunc2atom_index
   integer, intent(in) :: communicator
   type(InitialGuess), intent(inout) :: iguess_data
 
-  integer :: NAEZ
   double precision :: ALAT
-  integer :: ATOM(:,:)         ! dim: naclsd, *
   double precision :: kpoint(3)
-  integer :: EZOA(:,:) ! dim naclsd,*
   doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
 
-  integer :: INDN0(:,:)
-  integer :: NACLS(:)
-  integer :: NUMN0(:)
   double precision :: QMRBOUND
   double precision :: RR(:,0:)
   doublecomplex :: TMATLL(:,:,:)
@@ -635,11 +641,15 @@ subroutine kloopbody_new(ms, kpoint, &
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
 
+  integer :: NAEZ
   logical :: initial_zero
+  type (ClusterInfo), pointer :: cluster_info
 
   integer :: lmmaxd
 
   lmmaxd = ms%lmmaxd
+  naez = ms%naez
+  cluster_info => ms%cluster_info
 
   !=======================================================================
   ! ---> fourier transformation
@@ -660,8 +670,10 @@ subroutine kloopbody_new(ms, kpoint, &
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-  call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, nacls, atom, numn0, &
-                            indn0, rr, ezoa, GINP, ms%EIKRM, ms%EIKRP, &
+  call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, &
+                            cluster_info%nacls_trc, cluster_info%atom_trc, &
+                            cluster_info%numn0_trc, cluster_info%indn0_trc, &
+                            rr, cluster_info%ezoa_trc, GINP, ms%EIKRM, ms%EIKRP, &
                             trunc2atom_index, communicator)
 
   TESTARRAYLOG(3, ms%GLLH)
@@ -683,7 +695,7 @@ subroutine kloopbody_new(ms, kpoint, &
   !    solve (1 - \Delta t * G_ref) X = \Delta t
   !    the solution X is the scattering path operator
 
-  call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, atom_indices, ms%sparse%kvstr)
+  call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
 
   initial_zero = .true.
   if (iguess_data%iguess == 1) then
@@ -724,11 +736,145 @@ subroutine kloopbody_new(ms, kpoint, &
   endif
 
   TESTARRAYLOG(4, ms%mat_X)
-
-  !call getGreenDiag(G_diag, mat_X, atom_indices, sparse%kvstr)
   ! RESULT: mat_X
 
 end subroutine
 
+!------------------------------------------------------------------------------
+! Result in GS
+subroutine KKRMAT01_new_new(BZKP,NOFKS,GS,VOLCUB, &
+TMATLL, ALAT,NSYMAT,RR, &
+GINP, atom_indices, QMRBOUND, &
+lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
+
+  USE_LOGGING_MOD
+  USE_ARRAYLOG_MOD
+  use InitialGuess_mod
+  implicit none
+
+  !     .. parameters ..
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  ! ************************************************************************
+  !   performs k-space integration,
+  !   determines scattering path operator (g(k,e)-t**-1)**-1 and
+  !   Greens function of the real system -> GS(*,*,*,*),
+  ! ------------------------------------------------------------------------
+
+  integer, intent(in) :: lmmaxd
+  integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
+  integer, intent(in) :: trunc2atom_index(:)
+  integer, intent(in) :: communicator
+  type (InitialGuess), intent(inout) :: iguess_data
+  type (ClusterInfo), target :: cluster_info ! in
+
+  double precision:: ALAT
+
+  integer::NOFKS
+  integer::NSYMAT
+
+  !double complex :: TMATLL(lmmaxd,lmmaxd,naez)
+  double complex :: TMATLL(:,:,:)
+
+  doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+  !double complex :: GS   (lmmaxd,lmmaxd,NSYMAXD,num_local_atoms)
+  double complex ::  GS(:,:,:,:)
+
+  double precision::BZKP(:,:)
+  double precision::VOLCUB(:)
+  double precision::RR(:,0:)
+
+  double precision::QMRBOUND
+
+! ------- local ----------
+
+  type (MultScatData) :: ms
+  integer::k_point_index
+
+  double complex, allocatable, dimension(:,:,:) ::G_diag
+
+  integer::        site_lm_size
+
+  integer :: memory_stat
+  logical :: memory_fail
+
+  integer :: iat
+  integer :: num_local_atoms
+  integer :: naclsd
+  integer :: naez
+
+  ! array dimensions
+
+  naez = cluster_info%naez_trc
+  naclsd = cluster_info%naclsd
+
+  site_lm_size = NAEZ*LMMAXD
+
+  num_local_atoms = size(atom_indices)
+
+  !-----------------------------------------------------------------------
+  ! Allocate arrays
+  !-----------------------------------------------------------------------
+  memory_stat = 0
+  memory_fail = .false.
+
+  allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms), stat = memory_stat)
+  if (memory_stat /= 0) memory_fail = .true.
+
+  if (memory_fail .eqv. .true.) then
+    write(*,*) "KKRMAT01: FATAL Error, failure to allocate memory."
+    write(*,*) "       Probably out of memory."
+    stop
+  end if
+
+  ! WARNING: Symmetry assumptions might have been used that are
+  ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
+  ! ---> use sit
+  !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
+
+  GS = CZERO
+
+  TESTARRAYLOG(3, GINP)
+
+  call createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
+
+!==============================================================================
+  do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
+!==============================================================================
+
+    WRITELOG(4, *) "k-point ", k_point_index
+
+    ! select right slot for storing initial guess
+    call iguess_set_k_ind(iguess_data, k_point_index)
+
+    ! Get the scattering path operator for k-point BZKP(:, k_point_index)
+    ! output: ms%mat_X
+
+    call kloopbody_new(ms, BZKP(:, k_point_index), &
+                       TMATLL, GINP, ALAT, &
+                       RR, QMRBOUND, &
+                       trunc2atom_index, communicator, iguess_data)
+
+    call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
+
+    ! ----------- Integrate Scattering Path operator over k-points --> GS -----
+    ! Note: here k-integration only in irreducible wedge
+    call greenKSummation(G_diag, &
+                         GS, VOLCUB(k_point_index), &
+                         atom_indices, NSYMAT, lmmaxd)
+    ! -------------------------------------------------------------------------
+
+    do iat = 1, size(atom_indices)
+      TESTARRAYLOG(3, GS(:,:,:,iat))
+    end do
+
+!==============================================================================
+  end do ! KPT = 1,NOFKS
+!==============================================================================
+
+  ! Cleanup
+  deallocate(G_diag)
+
+end subroutine KKRMAT01_new_new
 
 end module
