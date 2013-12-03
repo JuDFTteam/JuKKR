@@ -215,13 +215,13 @@ ScatteringCalculation_mod.o: EnergyMesh_mod.o KKRnanoParallel_mod.o KKRnano_Comm
                              wrappers_mod.o BasisAtom_mod.o LDAUData_mod.o \
                              JijData_mod.o Main2Arrays_mod.o DimParams_mod.o InputParams_mod.o \
                              KKRresults_mod.o CalculationData_mod.o kloopz1_mod.o \
-                             one_sided_commZ_mod.o InitialGuess_mod.o
+                             one_sided_commZ_mod.o InitialGuess_mod.o jij_calc_mod.o
          
-kkrmat01.o: lloyds_formula_mod.o TEST_lcutoff_mod.o
+kkrmat01.o: lloyds_formula_mod.o TEST_lcutoff_mod.o jij_calc_mod.o
 lloyds_formula_mod.o: kkr_helpers_mod.o
 test.o: common_testc.o
 opt.o: common_optc.o
-kloopz1.o: kkrmat01.o kkrmat01_new.o TEST_lcutoff_mod.o InitialGuess_mod.o
+kloopz1.o: kkrmat01.o kkrmat01_new.o TEST_lcutoff_mod.o InitialGuess_mod.o jij_calc_mod.o
 
 tbref.o: SingleSiteRef_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o
@@ -232,7 +232,7 @@ mminvmod_mod.o: vbrmv_mat_mod.o SparseMatrixDescription_mod.o
 vbrmv_mat_mod.o: SparseMatrixDescription_mod.o
 kkrmat01_new.o: lloyds_formula_mod.o mminvmod_mod.o fillKKRMatrix_mod.o \
                 dlke0_smat_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o \
-                one_sided_commZ_mod.o InitialGuess_mod.o
+                one_sided_commZ_mod.o InitialGuess_mod.o ClusterInfo_mod.o
                 
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o
@@ -271,7 +271,7 @@ CalculationData_mod.o: main2_aux_mod.o  EnergyMesh_mod.o \
 ClusterInfo_mod.o: RefCluster_mod.o TruncationZone_mod.o one_sided_commI_mod.o
 
 MadelungPotential_mod.o: CalculationData_mod.o
-kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o
+kloopz1_mod.o: kkrmat01_new.o kkrmat01.o TEST_lcutoff_mod.o ClusterInfo_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
 config_reader.o: config_reader_dictionary.o
 DimParams_mod.o: config_reader.o
@@ -291,3 +291,5 @@ ShapeIntegration_mod.o: shape_constants_mod.o angles_common.o tetrahedra_common.
 ShapeStandardMesh_mod.o: shape_constants_mod.o
 
 broyden_kkr_mod.o: CalculationData_mod.o broyden_second_mod.o
+
+jij_calc_mod.o: JijData_mod.o

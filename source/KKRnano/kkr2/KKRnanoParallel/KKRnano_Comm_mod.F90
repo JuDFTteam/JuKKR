@@ -324,6 +324,7 @@ module KKRnano_Comm_mod
   !> Wrapper for XCCPLJIJ_START
   subroutine jijLocalEnergyIntegration(my_mpi, energy_weight, GMATXIJ, DTIXIJ, RXIJ, NXIJ, IXCP, RXCCLS, JXCIJINT)
     use KKRnanoParallel_mod
+    use jij_calc_mod, only: XCCPLJIJ_START
     implicit none
 
     type (KKRnanoParallel), intent(in) :: my_mpi

@@ -57,6 +57,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   use InitialGuess_mod
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
+  use jij_calc_mod,     only: clsjij, writejijs, global_jij_data
 
   implicit none
 
@@ -160,6 +161,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
     jij_data%JXCIJINT = CZERO
     jij_data%GMATXIJ = CZERO
+
+    global_jij_data => jij_data
 
   endif
 
