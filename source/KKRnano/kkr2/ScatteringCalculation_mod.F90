@@ -321,6 +321,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           call iguess_set_energy_ind(iguess_data, ie)
           call iguess_set_spin_ind(iguess_data, PRSPIN)
 
+          jij_data%active_spin = ispin
+
 !------------------------------------------------------------------------------
           call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
           arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &

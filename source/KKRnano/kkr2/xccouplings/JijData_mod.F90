@@ -31,11 +31,13 @@ module JijData_mod
     double complex , allocatable, dimension(:)  :: jxcijint
     double complex , allocatable, dimension(:,:,:)  :: dtixij
     double complex , allocatable, dimension(:,:,:,:)  :: gmatxij
-    double complex , allocatable, dimension(:,:,:,:)  :: gxij_all
 
     integer :: nxijd
     integer :: lmmaxd
     integer :: nspind
+
+    integer :: active_spin ! spin-direction that is currently calculated
+
   end type JijData
 
   CONTAINS
@@ -74,7 +76,6 @@ module JijData_mod
     ALLOCATECHECK(self%jxcijint(nxijd))
     ALLOCATECHECK(self%dtixij(lmmaxd,lmmaxd,nspind))
     ALLOCATECHECK(self%gmatxij(lmmaxd,lmmaxd,nxijd,nspind))
-    ALLOCATECHECK(self%gxij_all(lmmaxd,lmmaxd,nxijd,nspind))
     ALLOCATECHECK(self%GSXIJ(lmmaxd,lmmaxd,NSYMAXD,NXIJD))
 
     self%rxij = 0.0d0
@@ -85,8 +86,8 @@ module JijData_mod
     self%jxcijint = CZERO
     self%dtixij = CZERO
     self%gmatxij = CZERO
-    self%gxij_all = CZERO
     self%nxij = 0
+    self%active_spin = 1
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -106,7 +107,6 @@ module JijData_mod
     DEALLOCATECHECK(self%jxcijint)
     DEALLOCATECHECK(self%dtixij)
     DEALLOCATECHECK(self%gmatxij)
-    DEALLOCATECHECK(self%gxij_all)
     DEALLOCATECHECK(self%GSXIJ)
   end subroutine
 end module

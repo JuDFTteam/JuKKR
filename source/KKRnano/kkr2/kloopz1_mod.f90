@@ -30,6 +30,9 @@ CONTAINS
     use TEST_lcutoff_mod
     use InitialGuess_mod
     use ClusterInfo_mod
+
+    use jij_calc_mod, only: global_jij_data, symjij
+
     implicit none
 
     integer, intent(in) :: lmmaxd
@@ -74,6 +77,8 @@ CONTAINS
 
     integer::INFO    ! for LAPACK calls
     integer::symmetry_index
+
+    integer :: ispin
     !     ..
     !     .. Local Arrays ..
     !     ..
@@ -235,6 +240,20 @@ CONTAINS
 !------------------------------------------------------------------------------
     end do ! ilocal
 !------------------------------------------------------------------------------
+
+    if (global_jij_data%do_jij_calculation) then
+
+      ispin = global_jij_data%active_spin
+
+      call SYMJIJ( &
+      ALAT,TAUVBZ, &
+      NSYMAT,DSYMLL, &
+      global_jij_data%NXIJ,global_jij_data%IXCP, &
+      TMATLL,MSSQ, &
+      global_jij_data%GSXIJ, &
+      global_jij_data%GMATXIJ(:,:,:,ispin), &  ! Result
+      cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
+    end if
 
 ! -------------------------------------------------------------------
 ! Deallocate Arrays

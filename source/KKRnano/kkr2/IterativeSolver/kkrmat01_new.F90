@@ -521,6 +521,10 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
 
   call createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 
+  if (global_jij_data%do_jij_calculation) then
+    global_jij_data%GSXIJ = CZERO
+  end if
+
 !==============================================================================
   do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
 !==============================================================================
