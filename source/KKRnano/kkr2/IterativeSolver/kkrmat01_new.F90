@@ -6,10 +6,60 @@
 
 module kkrmat_new_mod
 
+use SparseMatrixDescription_mod
+
 double complex, allocatable, dimension(:, :), save :: full
 !IBM* ALIGN(32, full)
 
+type MultScatData
+  type (SparseMatrixDescription) :: sparse
+
+  double complex, dimension(:,:), allocatable :: mat_B
+  double complex, dimension(:,:), allocatable :: mat_X
+  double complex, allocatable :: EIKRP(:)
+  double complex, allocatable :: EIKRM(:)
+  double complex, allocatable, dimension(:) :: GLLH
+
+  integer :: lmmaxd
+
+end type
+
 CONTAINS
+
+!------------------------------------------------------------------------------
+! Use ClusterInfo_mod ??????
+subroutine createMultScatData(ms, numn0, indn0, lmmaxd, atom_indices)
+  use TEST_lcutoff_mod, only: lmarray
+  use fillKKRMatrix_mod, only: getKKRMatrixStructure
+  implicit none
+  type (MultScatData), intent(inout) :: ms
+  integer, intent(in) :: numn0(:)
+  integer, intent(in) :: indn0(:,:)
+  integer, intent(in) :: lmmaxd
+  integer, intent(in) :: atom_indices(:)
+
+  integer :: sum_cluster
+  integer :: naez
+  integer :: naclsd
+
+  sum_cluster = sum(numn0)
+  naez = size(indn0, 1)
+  naclsd = size(indn0, 2)
+  ms%lmmaxd = lmmaxd
+
+  call createSparseMatrixDescription(ms%sparse, naez, sum_cluster)
+
+  call getKKRMatrixStructure(lmarray, numn0, indn0, ms%sparse)
+
+  allocate(ms%mat_B(ms%sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
+  allocate(ms%mat_X(ms%sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
+
+  ! allocate memory for sparse matrix
+  allocate(ms%GLLH(getNNZ(ms%sparse)))
+
+  allocate(ms%eikrm(naclsd))
+  allocate(ms%eikrp(naclsd))
+end subroutine
 
 ! WARNING: Symmetry assumptions might have been used that are
 ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
@@ -540,5 +590,145 @@ subroutine greenKSummation(G_diag, GS, k_point_weight, &
 
     end do !ii
 end subroutine
+
+!------------------------------------------------------------------------------
+!> Calculate scattering path operator for 'kpoint'
+subroutine kloopbody_new(ms, kpoint, &
+                      TMATLL, GINP, ALAT, &
+                      NAEZ, ATOM, EZOA, RR, INDN0, &
+                      NUMN0, atom_indices, QMRBOUND, NACLS, &
+                      trunc2atom_index, communicator, iguess_data)
+
+  use fillKKRMatrix_mod
+  use mminvmod_mod
+  use dlke0_smat_mod
+  use SparseMatrixDescription_mod
+  use InitialGuess_mod
+  use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
+
+  USE_ARRAYLOG_MOD
+  USE_LOGGING_MOD
+  implicit none
+
+  type (MultScatData), intent(inout) :: ms
+
+  integer, intent(in), dimension(:) :: atom_indices !< indices of local atoms
+  integer, intent(in), dimension(:) :: trunc2atom_index
+  integer, intent(in) :: communicator
+  type(InitialGuess), intent(inout) :: iguess_data
+
+  integer :: NAEZ
+  double precision :: ALAT
+  integer :: ATOM(:,:)         ! dim: naclsd, *
+  double precision :: kpoint(3)
+  integer :: EZOA(:,:) ! dim naclsd,*
+  doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+
+  integer :: INDN0(:,:)
+  integer :: NACLS(:)
+  integer :: NUMN0(:)
+  double precision :: QMRBOUND
+  double precision :: RR(:,0:)
+  doublecomplex :: TMATLL(:,:,:)
+
+  !-------- local ---------
+  double complex, parameter :: CONE = ( 1.0D0,0.0D0)
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+
+  logical :: initial_zero
+
+  integer :: lmmaxd
+
+  lmmaxd = ms%lmmaxd
+
+  !=======================================================================
+  ! ---> fourier transformation
+  !
+  !     added by h.hoehler 3.7.2002
+  !                                                     n   0          n
+  !     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
+  !                                   L  L'             L   L'
+  !
+  !                                             n   0           n
+  !                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
+  !                                             L'  L
+  !
+  !     this operation has to be done to satisfy e.g. the point symmetry!
+  !     application of fourier transformation is just an approximation
+  !     for the tb system, since the transl. invariance is not satisfied.
+  !
+  ! The same calculation as with lloyds formula is done all over again ???
+  ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
+
+  call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, nacls, atom, numn0, &
+                            indn0, rr, ezoa, GINP, ms%EIKRM, ms%EIKRP, &
+                            trunc2atom_index, communicator)
+
+  TESTARRAYLOG(3, ms%GLLH)
+
+  !----------------------------------------------------------------------------
+  call buildKKRCoeffMatrix(ms%GLLH, TMATLL, ms%lmmaxd, naez, ms%sparse)
+  !----------------------------------------------------------------------------
+
+  TESTARRAYLOG(3, ms%GLLH)
+
+  ! ==> now GLLH holds (1 - Delta_t * G_ref)
+
+  ! Now solve the linear matrix equation A*X = b (b is also a matrix),
+  ! where A = (1 - Delta_t*G_ref) (inverse of scattering path operator)
+  ! and b = Delta_t
+
+  !===================================================================
+  ! 3) solve linear set of equations by iterative TFQMR scheme
+  !    solve (1 - \Delta t * G_ref) X = \Delta t
+  !    the solution X is the scattering path operator
+
+  call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, atom_indices, ms%sparse%kvstr)
+
+  initial_zero = .true.
+  if (iguess_data%iguess == 1) then
+    initial_zero = .false.
+    call iguess_load(iguess_data, ms%mat_X)
+  end if
+
+  if (cutoffmode == 3) then
+    call MMINVMOD_new(ms%GLLH, ms%sparse, ms%mat_X, ms%mat_B, &
+                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero)
+
+    if (DEBUG_dump_matrix) then
+      call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
+      call dumpSparseMatrixData(ms%GLLH, "matrix.unf")
+      call dumpSparseMatrixDataFormatted(ms%GLLH, "matrix_form.dat")
+      call dumpDenseMatrix(ms%mat_X, "solution.unf")
+      call dumpDenseMatrixFormatted(ms%mat_X, "solution_form.dat")
+      call dumpDenseMatrix(ms%mat_B, "rhs.unf")
+      call dumpDenseMatrixFormatted(ms%mat_B, "rhs_form.dat")
+    end if
+
+  end if
+
+  call iguess_save(iguess_data, ms%mat_X)
+
+  TESTARRAYLOG(4, ms%mat_B)
+
+  ! solve full matrix equation
+  if (cutoffmode == 4) then
+    if (.not. allocated(full)) then
+      allocate(full(size(ms%mat_B,1), size(ms%mat_B,1)))
+    end if
+    call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
+                                   ms%sparse%kvstr, ms%sparse%kvstr, full)
+    TESTARRAYLOG(3, full)
+    call solveFull(full, ms%mat_B)
+    ms%mat_X = ms%mat_B
+  endif
+
+  TESTARRAYLOG(4, ms%mat_X)
+
+  !call getGreenDiag(G_diag, mat_X, atom_indices, sparse%kvstr)
+  ! RESULT: mat_X
+
+end subroutine
+
 
 end module
