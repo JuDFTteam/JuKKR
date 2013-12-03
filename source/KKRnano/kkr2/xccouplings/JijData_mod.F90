@@ -82,7 +82,6 @@ module JijData_mod
     self%dtixij = CZERO
     self%gmatxij = CZERO
     self%gxij_all = CZERO
-    self%rcutJij = 0.0d0
     self%nxij = 0
   end subroutine
 
