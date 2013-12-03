@@ -119,6 +119,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
+  global_jij_data => getJijData(calc_data, 1)
+
   ! allocate buffer for t-matrices
   allocate(TMATLL(lmmaxd, lmmaxd, trunc_zone%naez_trc))
   ! allocate buffers for reference t-matrices
@@ -164,8 +166,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
     jij_data%JXCIJINT = CZERO
     jij_data%GMATXIJ = CZERO
-
-    global_jij_data => jij_data
 
   endif
 

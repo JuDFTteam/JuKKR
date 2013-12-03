@@ -1,3 +1,5 @@
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+
 !> Collection of the Jij calculation routines - have fun.
 module jij_calc_mod
 
@@ -181,8 +183,7 @@ subroutine kkrjij( &
      nxij,ixcp,zkrxij, &
      gllke1, &
      gsxij, &
-     communicator, comm_size, &
-     !                       new input parameters after inc.p removal
+     communicator, &
      lmmaxd, nxijd)
 
   implicit none
@@ -224,7 +225,8 @@ subroutine kkrjij( &
   integer          ixcp(nxijd)      ! corresp. to Jij no. XIJ on the
                                     ! real space lattice
 
-  double complex   gllke1(naez * lmmaxd, lmmaxd)
+  !double complex   gllke1(naez * lmmaxd, lmmaxd)
+  double complex   gllke1(:, :)
 
   !     .. LOCAL ARRAYS ..
   !     .. Fortran 90 automatic arrays
@@ -248,6 +250,12 @@ subroutine kkrjij( &
 
   !     .. N-MPI
   integer          mapblock,ierr
+
+  call MPI_Comm_Size(communicator, comm_size, ierr)
+
+  CHECKASSERT(naez == comm_size)
+  CHECKASSERT(size(GLLKE1, 1) == naez * lmmaxd)
+  CHECKASSERT(size(GLLKE1, 2) == lmmaxd)
 
   ! ------------------------------------------------------------------------
 

@@ -18,6 +18,8 @@ module JijData_mod
   !integer, dimension(:), allocatable :: NXCP                   ! index to bravais lattice at site in cluster
   !double complex, dimension(:), allocatable ::  JXCIJINT       ! integrated Jij
 
+    double complex , allocatable, dimension(:,:,:,:) :: GSXIJ
+
     logical :: do_jij_calculation
     double precision :: rcutJij
     integer :: nxij
@@ -54,6 +56,7 @@ module JijData_mod
     integer, intent(in) ::  nspind
 
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+    integer, parameter :: NSYMAXD = 48
 
     integer :: memory_stat
 
@@ -65,13 +68,14 @@ module JijData_mod
 
     ALLOCATECHECK(self%rxij(nxijd))
     ALLOCATECHECK(self%rxccls(3,nxijd))
-    ALLOCATECHECK(self%zkrxij(48,3,nxijd))
+    ALLOCATECHECK(self%zkrxij(NSYMAXD,3,nxijd))
     ALLOCATECHECK(self%ixcp(nxijd))
     ALLOCATECHECK(self%nxcp(nxijd))
     ALLOCATECHECK(self%jxcijint(nxijd))
     ALLOCATECHECK(self%dtixij(lmmaxd,lmmaxd,nspind))
     ALLOCATECHECK(self%gmatxij(lmmaxd,lmmaxd,nxijd,nspind))
     ALLOCATECHECK(self%gxij_all(lmmaxd,lmmaxd,nxijd,nspind))
+    ALLOCATECHECK(self%GSXIJ(lmmaxd,lmmaxd,NSYMAXD,NXIJD))
 
     self%rxij = 0.0d0
     self%rxccls = 0.0d0
@@ -103,5 +107,6 @@ module JijData_mod
     DEALLOCATECHECK(self%dtixij)
     DEALLOCATECHECK(self%gmatxij)
     DEALLOCATECHECK(self%gxij_all)
+    DEALLOCATECHECK(self%GSXIJ)
   end subroutine
 end module

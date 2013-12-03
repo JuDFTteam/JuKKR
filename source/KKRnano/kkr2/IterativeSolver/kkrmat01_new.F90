@@ -432,6 +432,7 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
   use InitialGuess_mod
+  use jij_calc_mod, only: global_jij_data, kkrjij
   implicit none
 
   !     .. parameters ..
@@ -547,6 +548,17 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
                          GS, VOLCUB(k_point_index), &
                          atom_indices, NSYMAT, lmmaxd)
     ! -------------------------------------------------------------------------
+
+    if (global_jij_data%do_jij_calculation) then
+      !communicate off-diagonal elements and multiply with exp-factor
+      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
+      NSYMAT,NAEZ,atom_indices(1), &
+      global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
+      ms%mat_X, &
+      global_jij_data%GSXIJ, &
+      communicator, &
+      lmmaxd, global_jij_data%nxijd)
+    end if
 
     do iat = 1, size(atom_indices)
       TESTARRAYLOG(3, GS(:,:,:,iat))
