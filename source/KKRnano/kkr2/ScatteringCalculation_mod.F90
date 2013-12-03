@@ -312,10 +312,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
             CHECKASSERT(atom_indices(ilocal) > 0)
           end do
 
-          ! pick any atom (nr.1)
-          kkr => getKKR(calc_data, 1)  ! TODO: check
-          jij_data => getJijData(calc_data, 1)
-
           call iguess_set_energy_ind(iguess_data, ie)
           call iguess_set_spin_ind(iguess_data, PRSPIN)
 
