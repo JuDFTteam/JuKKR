@@ -257,6 +257,7 @@
     ! after return from bzkint0, EKMD contains the right value
     dims%EKMD = EKMD
 
+    ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
     call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)
 
@@ -315,8 +316,19 @@
         integer :: I
         integer :: ID
         integer :: L
+        logical :: new_kpoints
 
-        open (52,file='kpoints',form='formatted')
+        new_kpoints = .false.
+        inquire(file='new.kpoints',exist=new_kpoints)
+
+        if (.not. new_kpoints) then
+          open (52,file='kpoints',form='formatted')
+        else
+          ! if file new.kpoints exists - use those kpoints
+          write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
+          open (52,file='new.kpoints',form='formatted')
+        end if
+
         rewind (52)
 
         do L = 1,MAXMESH
