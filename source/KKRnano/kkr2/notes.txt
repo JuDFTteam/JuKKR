@@ -70,16 +70,35 @@ kkr0:
 *) Start potential generation can be skipped by removing/renaming file 'potential'
    and providing an approximate Fermi-energy in file 'EFERMI' (used for k-mesh
    generation heuristics)
+   One also has to provide also the file 'atoms', since it is not generated
+   by kkr0 if 'potential' is missing!!!
+
+K-points:
+Procedure for using a different k-mesh than automatically generated:
+Let's assume that we want to use the same number of k-points at each
+E-point
+
+*) run kkr0.exe
+*) look in the output how many k-meshes are needed
+*) create a file 'new.kpoints' containing EXACTLY the same number of k-meshes
+   (format as file 'kpoints')
+   => replicate the k-mesh N times
+*) run kkr0.exe
+*) proceed as usual
+
+Specifying the initial Fermi-Energy:
+*) in first entry in file 'potential'
+*) if file potential is not present it is taken from file 'EFERMI'
 
 Some Bugs:
 
 *) Fermi energy in formatted DOS output is not the correct Fermi energy
 *) Title in DOS files is not correct
 
-*) k-mesh depends on Fermi-Energy from 'potential' file, which is not the
+*) k-mesh depends on Fermi-Energy from 'potential' or 'EFERMI' file, which is not the
    actual one
 
-*) if one uses a saved energy-mesh or kpoints and makes changes
+*) if one uses a saved energy-mesh and makes changes
    affecting the energy-mesh in input.conf then this asks for trouble
    
 *) iguess cannot be combined with l-cutoff (RS-cutoff is OK)
