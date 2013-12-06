@@ -221,14 +221,6 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
 
-  ! write forces if requested
-  if (params%kforce == 1 .and. &
-     (processKKRresults > 0 .or. iter == params%scfsteps)) then
-
-    call output_forces(calc_data, 0, getMyAtomRank(my_mpi), &
-                                     getMySEcommunicator(my_mpi))
-  end if
-
 end function
 
 !------------------------------------------------------------------------------

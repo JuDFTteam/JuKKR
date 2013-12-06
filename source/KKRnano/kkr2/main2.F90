@@ -250,6 +250,13 @@ program MAIN2
 ! ######################################################################
 ! ######################################################################
 
+    ! write forces if requested, master-group only
+    if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) then
+
+      call output_forces(calc_data, 0, getMyAtomRank(my_mpi), &
+                                       getMySEcommunicator(my_mpi))
+    end if
+
     if (isMasterRank(my_mpi)) close(2)    ! TIME
 
     call destroyEBalanceHandler(ebalance_handler)
