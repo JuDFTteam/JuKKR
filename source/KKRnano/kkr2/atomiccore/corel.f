@@ -120,6 +120,12 @@ c
    50       CONTINUE
    60     CONTINUE
         END IF
+
+C     Calculate the first valence state with (n_max+1, l) to verify
+C     that it lies above the bottom of the energy contour
+C     (treating it as an atomic state)
+C     start energy: E(n_max, l) / 10.
+
         IF (NMAX.NE.0) THEN
             IN = NMAX+1
             NN = IN - LP1
