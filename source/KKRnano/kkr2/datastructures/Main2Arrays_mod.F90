@@ -92,6 +92,8 @@ module Main2Arrays_mod
   !> @param[in]    IRMD
   !> @param[in]    LMPOTD
   subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
+    use, intrinsic :: ieee_features
+    use, intrinsic :: ieee_arithmetic
     implicit none
     type (Main2Arrays), intent(inout) :: self
     integer, intent(in) ::  lmaxd
@@ -112,6 +114,7 @@ module Main2Arrays_mod
     integer, intent(in) ::  LMPOTD
 
     integer :: memory_stat
+    double precision :: nan
 
     self%NSYMAT = 0
     self%MAXMESH = 0
@@ -136,6 +139,16 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%KMESH(IEMXD))
     ALLOCATECHECK(self%NOFKS(MAXMSHD))
     ALLOCATECHECK(self%ZAT(NAEZ))
+
+    nan = ieee_value(nan, IEEE_SIGNALING_NAN)
+    self%DSYMLL = nan
+    self%rbasis = nan
+    self%bzkp = nan
+    self%volcub = nan
+    self%volbz = nan
+    self%kmesh = -99
+    self%nofks = -99
+    self%zat = nan
 
   end subroutine
 
