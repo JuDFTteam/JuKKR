@@ -100,6 +100,8 @@ module RadialMeshData_mod
     ! note radius_mt = xrn(1) * alat
     call initMuffinTinMesh(meshdata, imt, xrn(1)*alat)
 
+    call test_mesh_consistency(meshdata)
+
   end subroutine
 
   !---------------------------------------------------------------------------
@@ -296,6 +298,8 @@ module RadialMeshData_mod
       write (*,*) "ERROR: Invalid mesh data read. ", __FILE__, __LINE__
       STOP
     end if
+
+    call test_mesh_consistency(meshdata)
 
   end subroutine
 
@@ -538,6 +542,71 @@ module RadialMeshData_mod
       write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
       STOP
     end if
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine test_mesh_consistency(meshdata)
+    implicit none
+    class (RadialMeshData), intent(in) :: meshdata
+
+    double precision :: rmt_test
+    double precision, parameter :: TOLERANCE = 1.d-8
+    logical :: error_flag
+
+    error_flag = .false.
+
+    rmt_test = meshdata%B * (exp(meshdata%A * (meshdata%IMT - 1)) - 1.0d0)
+
+    if (abs(rmt_test - meshdata%rmt) > TOLERANCE) then
+      write(*,*) "ERROR: Mesh parameters A, B, IMT inconsistent with Rmt."
+      write(*,*)  rmt_test, meshdata%rmt
+      error_flag = .true.
+    end if
+
+    if (abs(meshdata%r(meshdata%IMT) - meshdata%rmt) > TOLERANCE) then
+      write(*,*) "ERROR: radial value at meshdata%imt not consistent with Rmt."
+      write(*,*) meshdata%r(meshdata%IMT), meshdata%rmt
+      error_flag = .true.
+    end if
+
+    if (meshdata%irc /= meshdata%irmd) then
+      write(*,*) "ERROR: meshdata%irc not equal to meshdata%irmd."
+      write(*,*) meshdata%irc, meshdata%irmd
+      error_flag = .true.
+    end if
+
+    if (meshdata%irws /= meshdata%irmd) then
+      write(*,*) "ERROR: meshdata%irws not equal to meshdata%irmd."
+      write(*,*) meshdata%irws, meshdata%irmd
+      error_flag = .true.
+    end if
+
+    if (abs(meshdata%r(meshdata%IRWS) - meshdata%rws) > TOLERANCE) then
+      write(*,*) "ERROR: radial value at meshdata%irws not consistent with Rws."
+      write(*,*) meshdata%r(meshdata%IRWS), meshdata%rws
+      error_flag = .true.
+    end if
+
+    if (meshdata%ircut(0) /= 0) then
+      write(*,*) "ERROR: meshdata%ircut(0) is not 0."
+      write(*,*) meshdata%ircut(0)
+      error_flag = .true.
+    end if
+
+    if (meshdata%ircut(1) /= meshdata%imt) then
+      write(*,*) "ERROR: meshdata%ircut(1) is not equal to meshdata%imt."
+      write(*,*) meshdata%ircut(1), meshdata%imt
+      error_flag = .true.
+    end if
+
+    if (meshdata%ircut(meshdata%ipan) /= meshdata%irmd) then
+      write(*,*) "ERROR: meshdata%ircut(meshdata%ipan) is not equal to meshdata%irmd."
+      write(*,*) meshdata%ircut(meshdata%ipan), meshdata%irmd
+      error_flag = .true.
+    end if
+
+    if (error_flag) STOP
 
   end subroutine
 
