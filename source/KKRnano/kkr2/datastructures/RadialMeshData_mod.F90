@@ -459,6 +459,13 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Returns a string representation of RadialMeshData.
+  !>
+  !> Example usage:
+  !>
+  !>    character(len=:), allocatable :: str ! needs variable length string
+  !>
+  !>    call repr_RadialMeshData(old_mesh, str)
+  !>    write(*,'(A)') str  ! format (A) necessary to avoid messy output
   subroutine repr_RadialMeshData(meshdata, str)
     implicit none
     class (RadialMeshData), intent(in) :: meshdata
@@ -546,6 +553,7 @@ module RadialMeshData_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Test consistency of mesh parameters.
   subroutine test_mesh_consistency(meshdata)
     implicit none
     class (RadialMeshData), intent(in) :: meshdata
