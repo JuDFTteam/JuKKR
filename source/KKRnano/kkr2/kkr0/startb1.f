@@ -376,6 +376,15 @@ c
             RMTNEW(IH) = SCALE(ICELL)*ALAT*XRN(1,ICELL)
             IMT1 = ANINT(LOG(RMTNEW(IH)/B(IH)+1.0D0)/A(IH)) + 1
 
+C     Redefinition not smart - check and force equality of rmtnew
+C     and rmt E.R.
+      if (abs(rmtnew(ih) - rmt(ih)) > 1.e-8) then
+        write(*,*) "ERROR: Muffin-tin radius in potential file"
+        write(*,*) " is not compatible with mesh in shapefun file."
+        write(*,*) "Atom ", ih
+        STOP
+      end if
+
 C     E.R. try to set correct muffin-tin index
 C     there are IRWS (not IRMD, IRWS <= IRMD)
 C     radial mesh points and MESHN(ICELL) points belong
