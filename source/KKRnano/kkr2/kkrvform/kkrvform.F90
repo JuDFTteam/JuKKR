@@ -20,6 +20,8 @@ program kkrvform
   double precision :: vbc(2) = 0.0d0
   integer :: kxc = 2
 
+  character(len=:), allocatable :: str
+
   efermi = getFermiEnergy()
   call getStuffFromInputCard(alat, kxc)
 
@@ -35,6 +37,11 @@ program kkrvform
     call createRadialMeshDataFromFile(mesh, "meshes", iatom)
 
     call associateBasisAtomMesh(atomdata, mesh)
+
+    call repr_RadialMeshData(mesh, str)
+    write(*, '(A)') str
+    call repr_PotentialData(atomdata%potential, str)
+    write(*, '(A)') str
 
     call writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
 

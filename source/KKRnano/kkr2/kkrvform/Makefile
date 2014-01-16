@@ -17,17 +17,17 @@ FC90 = gfortran
 FCFLAGS = -g -M $(BUILDDIR)
 FC90FLAGS = -Wall -std=f95 -fimplicit-none
 FCFLAGS += -I $(BUILDDIR)
-LDFLAGS = 
+LDFLAGS = -lblas
 endif
 
 ifeq ($(PLATFORM),ifort)
 FC = ifort
 FC90 = ifort
 # -module <path> specifies where to put .mod files
-FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR)
+FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR) -DTASKLOCAL_FILES
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
-LDFLAGS = 
+LDFLAGS = -lblas
 endif
 
 ifeq ($(PLATFORM),JUQUEEN)
@@ -35,7 +35,7 @@ FC = xlf_r
 FC90 = xlf_r
 FCFLAGS = -q64 -O2 -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 FC90FLAGS =
-LDFLAGS = 
+LDFLAGS = -lblas
 endif
 
 # Paths to look for files
