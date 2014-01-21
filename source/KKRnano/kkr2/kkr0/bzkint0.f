@@ -76,13 +76,13 @@ C
 C
 C --> test: full BZ integration
 C
-c     IF ( TEST('fullBZ  ') ) THEN
+      IF ( TEST('fullBZ  ') ) THEN
          NSYMAT = 1
          LIRR = .FALSE.
          WRITE(6,'(8X,2A,/)') 
      &        'Test option < fullBZ > : overriding NSYMAT,',
      &        ' generate full BZ k-mesh'
-c     END IF
+      END IF
 C
 C --> generate BZ k-mesh
 C
