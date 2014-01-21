@@ -20,6 +20,31 @@ end type
 CONTAINS
 
 !------------------------------------------------------------------------------
+!> Reads Voronoi weights from file 'voro_weights'
+!> this is kind of a hack and does not scale well.
+subroutine read_voro_weights(weights, ATOM, num_atoms)
+  implicit none
+  double precision, intent(inout) :: weights(:)
+  integer, intent(in) :: ATOM(:)
+  integer, intent(in) :: num_atoms
+
+  integer :: ii
+  double precision, allocatable :: weight_table(:)
+
+  allocate(weight_table(num_atoms))
+
+  open(32, file='voro_weights', form='formatted')
+    do ii = 1, num_atoms
+      read(32, *) weight_table(ii)
+    end do
+  close(32)
+
+  do ii = 1, size(ATOM)
+    weights(ii) = weight_table(ATOM(ii))
+  end do
+end subroutine
+
+!------------------------------------------------------------------------------
 !> Construct shape functions and interstitial mesh.
 !>
 !> Creates ShapefunData datastructure -> user has to deal with deallocation!
@@ -58,8 +83,11 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   call createLatticeVectors(lattice_vectors, bravais)
   call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcluster, center_ind)
 
-  allocate(weights(0:size(ref_cluster%rcls, 2) - 1))
+  allocate(weights(size(ref_cluster%rcls, 2)))
   weights = 1.0d0
+
+  ! HACK: Read voronoi weights from file - this does not scale well!
+  call read_voro_weights(weights, ref_cluster%atom, size(rbasis, 2))
 
   ! the cluster positions are in ref_cluster%rcls
   ! they are sorted by distance from center
@@ -97,7 +125,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   type (InterstitialMesh), intent(inout) :: inter_mesh
 
   double precision, intent(in) :: rvec(:, :)
-  double precision, intent(in) :: weights(0:)
+  double precision, intent(in) :: weights(:)
   integer, intent(in) :: lmax_shape
   integer, intent(in) :: npoints_min
   integer, intent(in) :: nmin !< minimum number of points in panel
@@ -121,7 +149,6 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   integer :: nfaced
   integer :: nfun
   double precision, allocatable, dimension(:) :: aface, bface, cface, dface
-  double precision, allocatable, dimension(:) :: weight
   integer, allocatable, dimension(:) :: nm
   integer, allocatable, dimension(:) :: nvertices
   double precision, allocatable, dimension(:) :: xrn, drn
@@ -149,7 +176,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   nvertices = 0
 
   call voronoi08( &
-       nfaced,rvec,NVERTMAX,nfaced,weights(0),weights,TOLVDIST,TOLVAREA, &
+       nfaced,rvec,NVERTMAX,nfaced,weights(1),weights(2:),TOLVDIST,TOLVAREA, &
        rmt,rout,volume,nface,aface,bface,cface,dface,nvertices, &
        vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
        OUTPUT)
