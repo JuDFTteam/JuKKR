@@ -53,9 +53,13 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   !----------
   type (LatticeVectors) :: lattice_vectors
   type (RefCluster) :: ref_cluster
+  double precision, allocatable :: weights(:)
 
   call createLatticeVectors(lattice_vectors, bravais)
   call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcluster, center_ind)
+
+  allocate(weights(0:size(ref_cluster%rcls, 2) - 1))
+  weights = 1.0d0
 
   ! the cluster positions are in ref_cluster%rcls
   ! they are sorted by distance from center
@@ -66,8 +70,8 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
     STOP
   end if
 
-  call constructFromCluster(shdata, inter_mesh, ref_cluster%rcls(:,2:), lmax_shape, &
-                            npoints_min, nmin_panel, &
+  call constructFromCluster(shdata, inter_mesh, ref_cluster%rcls(:,2:), weights, &
+                            lmax_shape, npoints_min, nmin_panel, &
                             num_MT_points, new_MT_radius, MT_scale)
 
   call destroyLatticeVectors(lattice_vectors)
@@ -81,8 +85,10 @@ end subroutine
 !>        shape-function mesh -> non-touching MT-spheres
 !>        = 0 to not use this feature
 ! TODO: return 'NM' -> panel info!!!
-subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
-                                npoints_min, nmin, &
+!
+!> @param weights weights for weighted Voronoi diagram (power diagram)
+subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
+                                lmax_shape, npoints_min, nmin, &
                                 num_MT_points, new_MT_radius, MT_scale)
   use ShapefunData_mod
   implicit none
@@ -91,6 +97,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   type (InterstitialMesh), intent(inout) :: inter_mesh
 
   double precision, intent(in) :: rvec(:, :)
+  double precision, intent(in) :: weights(0:)
   integer, intent(in) :: lmax_shape
   integer, intent(in) :: npoints_min
   integer, intent(in) :: nmin !< minimum number of points in panel
@@ -124,7 +131,6 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   integer, allocatable, dimension(:) :: lmifun_s
   integer :: ii
 
-  double precision, parameter :: weight0 = 1.0d0
   double precision :: radius
 
   nfaced = size(rvec,2)
@@ -137,15 +143,13 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, lmax_shape, &
   allocate( bface(nfaced) )
   allocate( cface(nfaced) )
   allocate( dface(nfaced) )
-  allocate( weight(nfaced) )
-  ! support only unweighted voronoi diagrams for now
-  weight = weight0
+
   allocate( nvertices(nfaced) )
   allocate( vertices(NVERTMAX, nfaced, 3) )
   nvertices = 0
 
   call voronoi08( &
-       nfaced,rvec,NVERTMAX,nfaced,weight0,weight,TOLVDIST,TOLVAREA, &
+       nfaced,rvec,NVERTMAX,nfaced,weights(0),weights,TOLVDIST,TOLVAREA, &
        rmt,rout,volume,nface,aface,bface,cface,dface,nvertices, &
        vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
        OUTPUT)
