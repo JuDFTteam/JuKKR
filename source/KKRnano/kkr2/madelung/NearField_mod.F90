@@ -105,14 +105,16 @@ module NearField_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  subroutine calc_near_field(v_near, radius, dist_vec, pot)
+  !> TODO: this is a general routine for shifting sph. harm. expansions
+  subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)
     implicit none
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
     type(IntracellPot), intent(in) :: pot
+    integer, intent(in) :: lmax_prime
 
-    integer :: lmmaxd, lmax
+    integer :: lmmaxd, lmax, lmmaxd_prime
     integer, parameter :: NUM_LEBEDEV = 434
     double precision :: v_leb(3)
     double precision :: vec(3)
@@ -132,11 +134,12 @@ module NearField_mod
 
     lmmaxd = size(v_near)
     lmax = int(sqrt(dble(lmmaxd) + 0.1) - 1)
+    lmmaxd_prime = (lmax_prime+1)**2
 
     CHECKASSERT( (lmax + 1)**2 == lmmaxd )
 
-    allocate(sph_harm_leb(lmmaxd))
-    allocate(v_intra_leb(lmmaxd))
+    allocate(sph_harm_leb(lmmaxd_prime))
+    allocate(v_intra_leb(lmmaxd_prime))
     allocate(sph_harm(NUM_LEBEDEV, lmmaxd))
     allocate(integrand(NUM_LEBEDEV, lmmaxd))
     allocate(temp(lmmaxd))
@@ -145,7 +148,7 @@ module NearField_mod
 
       call LEBEDEV(ij, v_leb(1), v_leb(2), v_leb(3), weight_leb(ij))
 
-      call ymy(v_leb(1), v_leb(2), v_leb(3), dummy, sph_harm_leb, lmax)
+      call ymy(v_leb(1), v_leb(2), v_leb(3), dummy, sph_harm_leb, lmax_prime)
 
       vec = radius * v_leb + dist_vec
       call ymy(vec(1), vec(2), vec(3), norm_vec, temp, lmax)
@@ -208,10 +211,10 @@ end module NearField_mod
 !program test_it
 !  use NearField_mod
 !  implicit none
-!  double precision v_near(4)
+!  double precision v_near(9)
 !  type (IntracellPot) :: pot
 !  double precision :: d(3) = (/0.00d0, 0.00d0, 0.05d0 /)
 !  call test_lebedev()
-!  call calc_near_field(v_near, 1.0d0, d , pot)
+!  call calc_near_field(v_near, 1.0d0, d , pot, 2)
 !  write(*,*) v_near
 !end program
