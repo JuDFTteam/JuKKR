@@ -88,9 +88,13 @@ endif
 
 ifeq ($(TYPE),debug)
 FCFLAGS += -debug -g -O0 -traceback -check all -DDEBUG1
-#-auto -ftrapuv -check uninit
 else
 FCFLAGS += -O2 -g -DNOLOGGING
+endif
+
+ifeq ($(TYPE),profile)
+#FCFLAGS += -p -static-intel -static
+FCFLAGS += -prof-gen=srcpos -static-intel -static
 endif
 
 # ============================= JUQUEEN========================================
