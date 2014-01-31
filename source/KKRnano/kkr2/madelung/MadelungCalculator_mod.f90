@@ -9,10 +9,10 @@ module MadelungCalculator_mod
   implicit none
 
   public :: MadelungCalculator
+  public :: MadelungClebschData
 
   private :: MadelungLatticeData
   private :: MadelungHarmonics
-  private :: MadelungClebschData
 
   !----------------------------------------------------------------------------
   type MadelungLatticeData
