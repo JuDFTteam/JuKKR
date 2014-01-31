@@ -1,6 +1,7 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module NearField_mod
+  use MadelungCalculator_mod
   implicit none
 
   type IntracellPot
@@ -11,60 +12,60 @@ module NearField_mod
 
   !----------------------------------------------------------------------------
   !> V_(lm)(r) = ac_wrong(lm) * (-r)**l
-!  subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, dfac, &
-!                                           charge_mom_total, gaunt)
-!    implicit none
-!    double precision, intent(inout) :: ac_wrong(:)
-!    double precision, intent(in)    :: dist_vec(3)
-!    double precision, intent(in)    :: dfac(:,:)
-!    double precision, intent(in)    :: charge_mom_total(:)
-!    type (MadelungClebschData), intent(in) :: gaunt
-!
-!    integer :: lmx, L, m, ii, lmmaxd, L1, L2, lm1, lm2, lm3
-!    double precision :: r, rfac
-!    double precision :: pi
-!    double precision, allocatable :: ylm(:)
-!    double precision, allocatable :: smat(:)
-!    double precision, allocatable :: avmad(:,:)
-!
-!    pi = 4.0d0*atan(1.0d0)
-!
-!    lmx = size(dfac, 1)
-!    lmmaxd = (lmx + 1) ** 2
-!    allocate(ylm(lmx))
-!    allocate(smat(lmx))
-!    allocate(avmad(lmmaxd, lmmaxd))
-!
-!    call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx)
-!
-!    do L = 0,lmx
-!       rfac = (1. / (r**(L+1))) / sqrt(pi)
-!       do m = -L,L
-!          lm1 = L*(L+1) + m + 1
-!          smat(lm1) = ylm(lm1)*rfac
-!       end do
-!    end do
-!
-!    avmad = 0.0d0
-!
-!    do ii = 1,gaunt%IEND
-!      LM1 = gaunt%ICLEB(ii,1)
-!      LM2 = gaunt%ICLEB(ii,2)
-!      LM3 = gaunt%ICLEB(ii,3)
-!      L1 = gaunt%LOFLM(LM1)
-!      L2 = gaunt%LOFLM(LM2)
-!
-!      ! --> this loop has to be calculated only for l1+l2=l3
-!      ! that means it contains only 1 term !!!!
-!      ! L1, L2 are given ===> L3 = L1+L2
-!
-!      AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
-!                       2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)
-!    end do
-!
-!    ac_wrong = matmul(avmad, charge_mom_total)
-!
-!  end subroutine
+  subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, dfac, &
+                                           charge_mom_total, gaunt)
+    implicit none
+    double precision, intent(inout) :: ac_wrong(:)
+    double precision, intent(in)    :: dist_vec(3)
+    double precision, intent(in)    :: dfac(:,:)
+    double precision, intent(in)    :: charge_mom_total(:)
+    type (MadelungClebschData), intent(in) :: gaunt
+
+    integer :: lmx, L, m, ii, lmmaxd, L1, L2, lm1, lm2, lm3
+    double precision :: r, rfac
+    double precision :: pi
+    double precision, allocatable :: ylm(:)
+    double precision, allocatable :: smat(:)
+    double precision, allocatable :: avmad(:,:)
+
+    pi = 4.0d0*atan(1.0d0)
+
+    lmx = size(dfac, 1)
+    lmmaxd = (lmx + 1) ** 2
+    allocate(ylm(lmx))
+    allocate(smat(lmx))
+    allocate(avmad(lmmaxd, lmmaxd))
+
+    call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx)
+
+    do L = 0,lmx
+       rfac = (1. / (r**(L+1))) / sqrt(pi)
+       do m = -L,L
+          lm1 = L*(L+1) + m + 1
+          smat(lm1) = ylm(lm1)*rfac
+       end do
+    end do
+
+    avmad = 0.0d0
+
+    do ii = 1,gaunt%IEND
+      LM1 = gaunt%ICLEB(ii,1)
+      LM2 = gaunt%ICLEB(ii,2)
+      LM3 = gaunt%ICLEB(ii,3)
+      L1 = gaunt%LOFLM(LM1)
+      L2 = gaunt%LOFLM(LM2)
+
+      ! --> this loop has to be calculated only for l1+l2=l3
+      ! that means it contains only 1 term !!!!
+      ! L1, L2 are given ===> L3 = L1+L2
+
+      AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
+                       2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)
+    end do
+
+    ac_wrong = matmul(avmad, charge_mom_total)
+
+  end subroutine
 
 !  !----------------------------------------------------------------------------
 !  subroutine test_calc_wrong_contribution_coeff(madelung_calc, dist_vec, cmom, cmom_inst)
@@ -213,7 +214,7 @@ end module NearField_mod
 !  implicit none
 !  double precision v_near(9)
 !  type (IntracellPot) :: pot
-!  double precision :: d(3) = (/0.00d0, 0.00d0, 0.05d0 /)
+!  double precision :: d(3) = (/0.00d0, 0.00d0, -0.05d0 /)
 !  call test_lebedev()
 !  call calc_near_field(v_near, 1.0d0, d , pot, 2)
 !  write(*,*) v_near
