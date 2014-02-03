@@ -12,12 +12,12 @@ module NearField_mod
 
   !----------------------------------------------------------------------------
   !> V_(lm)(r) = ac_wrong(lm) * (-r)**l
-  subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, dfac, &
+  subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, &
                                            charge_mom_total, gaunt)
     implicit none
     double precision, intent(inout) :: ac_wrong(:)
     double precision, intent(in)    :: dist_vec(3)
-    double precision, intent(in)    :: dfac(:,:)
+
     double precision, intent(in)    :: charge_mom_total(:)
     type (MadelungClebschData), intent(in) :: gaunt
 
@@ -27,19 +27,25 @@ module NearField_mod
     double precision, allocatable :: ylm(:)
     double precision, allocatable :: smat(:)
     double precision, allocatable :: avmad(:,:)
+    double precision, allocatable :: dfac(:,:)
 
     pi = 4.0d0*atan(1.0d0)
 
-    lmx = size(dfac, 1)
-    lmmaxd = (lmx + 1) ** 2
-    allocate(ylm(lmx))
-    allocate(smat(lmx))
+    lmmaxd = size(ac_wrong)
+    lmx = int(sqrt(dble(lmmaxd) + 0.1) - 1)
+
+    allocate(ylm(lmmaxd))
+    allocate(smat(lmmaxd))
     allocate(avmad(lmmaxd, lmmaxd))
+    allocate(dfac(0:lmx, 0:lmx))
+
+    ! calculate complicated prefactor
+    call calc_dfac(dfac, lmx)
 
     call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx)
 
     do L = 0,lmx
-       rfac = (1. / (r**(L+1))) / sqrt(pi)
+       rfac = (1. / (r**(L+1))) / sqrt(pi) ! TODO: IS THIS FACTOR necessary - yes: see gamfc 
        do m = -L,L
           lm1 = L*(L+1) + m + 1
           smat(lm1) = ylm(lm1)*rfac
@@ -56,14 +62,18 @@ module NearField_mod
       L2 = gaunt%LOFLM(LM2)
 
       ! --> this loop has to be calculated only for l1+l2=l3
-      ! that means it contains only 1 term !!!!
       ! L1, L2 are given ===> L3 = L1+L2
 
-      AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
-                       2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)
+      if (lm1 <= lmmaxd .and. lm2 <= lmmaxd .and. lm3 <= lmmaxd) then
+          AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
+                           2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)  ! where does factor 2 come from?
+      end if
     end do
 
     ac_wrong = matmul(avmad, charge_mom_total)
+
+    !TODO: correction for apparently missing prefactors
+    ac_wrong = ac_wrong / 2.0d0
 
   end subroutine
 
@@ -93,16 +103,31 @@ module NearField_mod
   !----------------------------------------------------------------------------
   !> TODO: interpolation/calculation of v_intra
   subroutine get_intracell(v_intra, radius, pot)
+    ! Test potential: assume multipoles Q_L = 1.0d0
     implicit none
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
     type(IntracellPot), intent(in) :: pot
 
-    integer :: ii
+    integer :: lm, L, M
 
-    do ii = 1, size(v_intra)
-      v_intra(ii) = radius * ii
+    lm = 1
+    L = 0
+    M = 0
+    do while (.true.)
+       v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1))
+    lm = lm + 1
+    M = M + 1
+    if (M > L) then
+      L = L + 1
+      M = -L
+    end if
+    if (lm > size(v_intra)) exit
     end do
+
+    v_intra = 0.0d0
+    v_intra(1) = 2.0 / (radius)
+
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -212,10 +237,26 @@ end module NearField_mod
 !program test_it
 !  use NearField_mod
 !  implicit none
-!  double precision v_near(9)
+!  integer, parameter :: LMAX = 4
+!  integer, parameter :: LMMAXD = (LMAX+1)**2
+!  double precision v_near(LMMAXD)
 !  type (IntracellPot) :: pot
-!  double precision :: d(3) = (/0.00d0, 0.00d0, -0.05d0 /)
-!  call test_lebedev()
-!  call calc_near_field(v_near, 1.0d0, d , pot, 2)
+!
+!  double precision :: d(3) = (/1.0d10, 0.00d0, -0.00d0 /)
+!  double precision :: ac_wrong(LMMAXD)
+!  double precision :: cmom(LMMAXD)
+!  type (MadelungClebschData) :: clebsch
+!
+!  !call test_lebedev()
+!  call calc_near_field(v_near, 1.0d0, d , pot, LMAX)
 !  write(*,*) v_near
+!
+!  ! konfus
+!  call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
+!  call initMadelungClebschData(clebsch, LMAX)
+!
+!  cmom = 0.0d0
+!  cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!  call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
+!  write(*,*) ac_wrong
 !end program

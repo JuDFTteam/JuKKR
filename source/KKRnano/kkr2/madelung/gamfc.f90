@@ -14,6 +14,9 @@ implicit none
 !                                sum ( 2**i * x**(2i-1) / (2i-1)!! )
 !                              1..i..l
 !
+!
+! Note: gamfc( alpha -> 0, ... ) => glh = sqrt(pi) for all l  E.R.
+!
 !-----------------------------------------------------------------------
 !     .. scalar arguments ..
 double precision alpha,r

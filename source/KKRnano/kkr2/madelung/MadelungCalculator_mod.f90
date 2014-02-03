@@ -220,6 +220,63 @@ module MadelungCalculator_mod
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !
+  ! --> calculate:                             (2*(l+l')-1)!!
+  !                 dfac(l,l') = 4pi**2 *  ----------------------
+  !                                        (2*l+1)!! * (2*l'+1)!!
+  subroutine calc_dfac(dfac, lpot)
+    implicit none
+    double precision, intent(inout) :: dfac(0:lpot, 0:lpot)
+    integer, intent(in) :: lpot
+
+    double precision :: pi, fpi
+    integer :: L1, L2
+    pi = 4.0d0*atan(1.0d0)
+    fpi = 4.0d0*pi
+
+    dfac(0,0) = fpi*fpi
+    do l1 = 1,lpot
+       dfac(l1,0) = dfac(l1-1,0)*dble(2*l1-1)/dble(2*l1+1)
+       dfac(0,l1) = dfac(l1,0)
+       do l2 = 1,l1
+          dfac(l1,l2) = dfac(l1,l2-1)*dble(2*(l1+l2)-1)/dble(2*l2+1)
+          dfac(l2,l1) = dfac(l1,l2)
+       end do
+    end do
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine initMadelungClebschData(clebsch, lmax)
+    implicit none
+    type (MadelungClebschData), intent(inout) :: clebsch
+    integer, intent(in) :: lmax
+
+    integer lpot, lassld, lmxspd, lmpotd, nclebd, L, M, I
+    type (MadelungHarmonics) :: harmonics
+
+    LPOT = 2*lmax
+    LASSLD = 4*lmax
+    LMXSPD = (2*LPOT+1)**2
+    LMPOTD = (LPOT+1)**2
+    nclebd = lmxspd*lmpotd
+
+    i = 1
+    do l = 0,2*lpot
+       do m = -l,l
+          clebsch%loflm(i) = l
+          i = i + 1
+       end do
+    end do
+
+    call createMadelungHarmonics(harmonics, lmax)
+
+    call madelgaunt(lpot,harmonics%yrg,harmonics%wg,clebsch%cleb,clebsch%icleb,clebsch%iend,lassld,nclebd)
+    clebsch%nclebd = nclebd
+
+    call destroyMadelungHarmonics(harmonics)
+  end subroutine
+
 !============= Helper routines =============================================
 
   !----------------------------------------------------------------------------
