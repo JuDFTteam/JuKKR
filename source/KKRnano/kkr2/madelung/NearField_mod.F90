@@ -29,22 +29,29 @@ module NearField_mod
     double precision, allocatable :: avmad(:,:)
     double precision, allocatable :: dfac(:,:)
 
+    integer :: lmx_prime, lmmaxd_prime
+
     pi = 4.0d0*atan(1.0d0)
 
     lmmaxd = size(ac_wrong)
     lmx = int(sqrt(dble(lmmaxd) + 0.1) - 1)
 
-    allocate(ylm(lmmaxd))
-    allocate(smat(lmmaxd))
+    ! the inner summation should run up to 2*lmx
+    ! this follows from Gaunt properties
+    lmx_prime = 2*lmx
+    lmmaxd_prime = (2*lmx + 1)**2
+
+    allocate(ylm(lmmaxd_prime))
+    allocate(smat(lmmaxd_prime))
     allocate(avmad(lmmaxd, lmmaxd))
     allocate(dfac(0:lmx, 0:lmx))
 
     ! calculate complicated prefactor
     call calc_dfac(dfac, lmx)
 
-    call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx)
+    call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx_prime)
 
-    do L = 0,lmx
+    do L = 0,lmx_prime
        rfac = (1. / (r**(L+1))) !/ sqrt(pi) ! TODO: IS THIS FACTOR necessary - no only when using gamfc: see gamfc 
        do m = -L,L
           lm1 = L*(L+1) + m + 1
@@ -61,19 +68,15 @@ module NearField_mod
       L1 = gaunt%LOFLM(LM1)
       L2 = gaunt%LOFLM(LM2)
 
-      ! --> this loop has to be calculated only for l1+l2=l3
-      ! L1, L2 are given ===> L3 = L1+L2
+      ! --> Gaunt property: l1+l2=l3
 
-      if (lm1 <= lmmaxd .and. lm2 <= lmmaxd .and. lm3 <= lmmaxd) then
+      if (lm1 <= lmmaxd .and. lm2 <= lmmaxd .and. lm3 <= lmmaxd_prime) then
           AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
                            2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)  ! factor 2 comes from the use of Rydberg units
       end if
     end do
 
     ac_wrong = matmul(avmad, charge_mom_total)
-
-    !TODO: correction for apparently missing prefactors
-    !ac_wrong = ac_wrong / 2.0d0
 
   end subroutine
 
@@ -115,7 +118,7 @@ module NearField_mod
     L = 0
     M = 0
     do while (.true.)
-       v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1))
+       v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
     lm = lm + 1
     M = M + 1
     if (M > L) then
@@ -125,8 +128,9 @@ module NearField_mod
     if (lm > size(v_intra)) exit
     end do
 
+    L = 1
     v_intra = 0.0d0
-    v_intra(1) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius)
+    v_intra(3) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
 
   end subroutine
 
@@ -259,16 +263,19 @@ end module NearField_mod
 ! program test_it
 !   use NearField_mod
 !   implicit none
-!   integer, parameter :: LMAX = 4
+!   integer, parameter :: LMAX = 2
 !   integer, parameter :: LMMAXD = (LMAX+1)**2
 !   double precision v_near(LMMAXD)
 !   type (IntracellPot) :: pot
 ! 
-!   double precision :: d(3) = (/20.d0, 0.d0, 0.d0 /)
+!   double precision :: d(3) = (/0.0d0, 0.d0, 2.3000d0 /)
+!   double precision :: vec(3)
 !   double precision :: ac_wrong(LMMAXD)
 !   double precision :: v_mad_wrong(LMMAXD)
 !   double precision :: cmom(LMMAXD)
-!   double precision :: radius =  5.0d0
+! 
+!   double precision :: radius =  0.100000d0
+! 
 !   type (MadelungClebschData) :: clebsch
 !   integer :: L, M, ii
 ! 
@@ -281,18 +288,23 @@ end module NearField_mod
 !   call initMadelungClebschData(clebsch, LMAX)
 ! 
 !   cmom = 0.0d0
-!   cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!   !cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!   cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+! 
 !   call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
-!   !write(*,*) ac_wrong
+! 
 !   ii = 1
 !   do L = 0, LMAX
 !     do M = -L, L
 !       v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
-!       write(*,*) L, M, v_near(ii) / v_mad_wrong(ii) 
+!       write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
 !       ii = ii + 1
 !     end do
 !   end do
 ! 
-!   write(*,*) eval_expansion(v_near, (/0.0d0, 5.0d0, 0.0d0 /))
-!   write(*,*) eval_expansion(v_mad_wrong, (/0.0d0, 5.0d0, 0.0d0 /))
+!   vec = 0.0d0
+!   vec(3) = -radius
+!   
+!   write(*,*) eval_expansion(v_near, vec)
+!   write(*,*) eval_expansion(v_mad_wrong, vec)
 ! end program
