@@ -145,9 +145,9 @@ module NearField_mod
     double precision :: v_leb(3)
     double precision :: vec(3)
     double precision :: weight_leb(NUM_LEBEDEV)
-    double precision, allocatable :: sph_harm_leb(:)
-    double precision, allocatable :: sph_harm(:, :)
-    double precision, allocatable :: v_intra_leb(:)
+    double precision, allocatable :: sph_harm_leb(:,:)
+    double precision, allocatable :: sph_harm(:)
+    double precision, allocatable :: v_intra(:)
     double precision, allocatable :: integrand(:,:)
     double precision, allocatable :: temp(:)
     double precision :: norm_vec
@@ -164,9 +164,9 @@ module NearField_mod
 
     CHECKASSERT( (lmax + 1)**2 == lmmaxd )
 
-    allocate(sph_harm_leb(lmmaxd_prime))
-    allocate(v_intra_leb(lmmaxd_prime))
-    allocate(sph_harm(NUM_LEBEDEV, lmmaxd))
+    allocate(sph_harm(lmmaxd_prime))
+    allocate(v_intra(lmmaxd_prime))
+    allocate(sph_harm_leb(NUM_LEBEDEV, lmmaxd))
     allocate(integrand(NUM_LEBEDEV, lmmaxd))
     allocate(temp(lmmaxd))
 
@@ -174,18 +174,18 @@ module NearField_mod
 
       call LEBEDEV(ij, v_leb(1), v_leb(2), v_leb(3), weight_leb(ij))
 
-      call ymy(v_leb(1), v_leb(2), v_leb(3), dummy, sph_harm_leb, lmax_prime)
-
-      vec = radius * v_leb + dist_vec
-      call ymy(vec(1), vec(2), vec(3), norm_vec, temp, lmax)
+      call ymy(v_leb(1), v_leb(2), v_leb(3), dummy, temp, lmax)
       do lm = 1, lmmaxd
-        sph_harm(ij, lm) = temp(lm)
+        sph_harm_leb(ij, lm) = temp(lm)
       end do
 
-      call get_intracell(v_intra_leb, norm_vec, pot)
+      vec = radius * v_leb + dist_vec
+      call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_prime)
+
+      call get_intracell(v_intra, norm_vec, pot)
 
       ! perform summation over L'
-      integrand(ij,1) = dot_product(sph_harm_leb, v_intra_leb)
+      integrand(ij,1) = dot_product(sph_harm, v_intra)
     end do
 
     integrand(:,1) = integrand(:,1) * weight_leb * FOUR_PI
@@ -194,7 +194,7 @@ module NearField_mod
       integrand(:,lm) = integrand(:,1)
     end do
 
-    integrand = integrand * sph_harm
+    integrand = integrand * sph_harm_leb
 
     v_near = sum(integrand, 1)
 
@@ -232,6 +232,8 @@ module NearField_mod
     write(*,*) integrand
   end subroutine
 
+  !----------------------------------------------------------------------------
+  ! evaluate spherical harmonic expansion at angles given by 'vec'.
   double precision function eval_expansion(coeffs, vec)
     implicit none
     double precision :: coeffs(:)
@@ -291,6 +293,6 @@ end module NearField_mod
 !     end do
 !   end do
 ! 
-!   write(*,*) eval_expansion(v_near, (/5.0d0, 0.0d0, 0.0d0 /))
+!   write(*,*) eval_expansion(v_near, (/0.0d0, 5.0d0, 0.0d0 /))
 !   write(*,*) eval_expansion(v_mad_wrong, (/0.0d0, 5.0d0, 0.0d0 /))
 ! end program
