@@ -8,6 +8,13 @@ module NearField_mod
     integer :: dummy
   end type
 
+  abstract interface
+    subroutine potential_func(v, radius)
+    double precision, intent(out) :: v(:)
+    double precision, intent(in) :: radius
+    end subroutine
+  end interface
+
   contains
 
   !----------------------------------------------------------------------------
@@ -105,12 +112,11 @@ module NearField_mod
 
   !----------------------------------------------------------------------------
   !> TODO: interpolation/calculation of v_intra
-  subroutine get_intracell(v_intra, radius, pot)
+  subroutine get_intracell(v_intra, radius)
     ! Test potential: assume multipoles Q_L = 1.0d0
     implicit none
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
-    type(IntracellPot), intent(in) :: pot
 
     integer :: lm, L, M
 
@@ -128,9 +134,9 @@ module NearField_mod
     if (lm > size(v_intra)) exit
     end do
 
-    L = 1
-    v_intra = 0.0d0
-    v_intra(3) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
+    !L = 1
+    !v_intra = 0.0d0
+    !v_intra(3) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
 
   end subroutine
 
@@ -141,7 +147,7 @@ module NearField_mod
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
-    type(IntracellPot), intent(in) :: pot
+    procedure(potential_func), intent(in), pointer :: pot
     integer, intent(in) :: lmax_prime
 
     integer :: lmmaxd, lmax, lmmaxd_prime
@@ -186,7 +192,8 @@ module NearField_mod
       vec = radius * v_leb + dist_vec
       call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_prime)
 
-      call get_intracell(v_intra, norm_vec, pot)
+      ! get intracell potential at radius 'norm_vec'
+      call pot(v_intra, norm_vec)
 
       ! perform summation over L'
       integrand(ij,1) = dot_product(sph_harm, v_intra)
@@ -268,7 +275,7 @@ end module NearField_mod
 !   double precision v_near(LMMAXD)
 !   type (IntracellPot) :: pot
 ! 
-!   double precision :: d(3) = (/0.0d0, 0.d0, 2.3000d0 /)
+!   double precision :: d(3) = (/0.0d0, 0.0d0, 2.3000d0 /)
 !   double precision :: vec(3)
 !   double precision :: ac_wrong(LMMAXD)
 !   double precision :: v_mad_wrong(LMMAXD)
@@ -280,16 +287,16 @@ end module NearField_mod
 !   integer :: L, M, ii
 ! 
 !   !call test_lebedev()
-!   call calc_near_field(v_near, radius, d , pot, LMAX)
+!   call calc_near_field(v_near, radius, d , get_intracell, LMAX)
 !   write(*,*) v_near
 ! 
 !   ! konfus
 !   call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
 !   call initMadelungClebschData(clebsch, LMAX)
 ! 
-!   cmom = 0.0d0
-!   !cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-!   cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!   !cmom = 0.0d0
+!   cmom = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!   !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
 ! 
 !   call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
 ! 
