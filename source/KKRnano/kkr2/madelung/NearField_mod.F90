@@ -45,7 +45,7 @@ module NearField_mod
     call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx)
 
     do L = 0,lmx
-       rfac = (1. / (r**(L+1))) / sqrt(pi) ! TODO: IS THIS FACTOR necessary - yes: see gamfc 
+       rfac = (1. / (r**(L+1))) !/ sqrt(pi) ! TODO: IS THIS FACTOR necessary - no only when using gamfc: see gamfc 
        do m = -L,L
           lm1 = L*(L+1) + m + 1
           smat(lm1) = ylm(lm1)*rfac
@@ -66,14 +66,14 @@ module NearField_mod
 
       if (lm1 <= lmmaxd .and. lm2 <= lmmaxd .and. lm3 <= lmmaxd) then
           AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
-                           2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)  ! where does factor 2 come from?
+                           2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)  ! factor 2 comes from the use of Rydberg units
       end if
     end do
 
     ac_wrong = matmul(avmad, charge_mom_total)
 
     !TODO: correction for apparently missing prefactors
-    ac_wrong = ac_wrong / 2.0d0
+    !ac_wrong = ac_wrong / 2.0d0
 
   end subroutine
 
@@ -126,7 +126,7 @@ module NearField_mod
     end do
 
     v_intra = 0.0d0
-    v_intra(1) = 2.0 / (radius)
+    v_intra(1) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius)
 
   end subroutine
 
@@ -232,31 +232,65 @@ module NearField_mod
     write(*,*) integrand
   end subroutine
 
+  double precision function eval_expansion(coeffs, vec)
+    implicit none
+    double precision :: coeffs(:)
+    double precision :: vec(3)
+
+    integer lmmaxd
+    integer lmax
+    double precision, allocatable :: ylm(:)
+    double precision :: vnorm
+
+    lmmaxd = size(coeffs)
+    lmax = int(sqrt(dble(lmmaxd) + 0.1) - 1)
+
+    allocate(ylm(lmmaxd))
+    call YMY(vec(1), vec(2), vec(3), vnorm, ylm, LMAX)
+
+    eval_expansion = dot_product(coeffs, ylm)
+  end function
+
+
 end module NearField_mod
 
-!program test_it
-!  use NearField_mod
-!  implicit none
-!  integer, parameter :: LMAX = 4
-!  integer, parameter :: LMMAXD = (LMAX+1)**2
-!  double precision v_near(LMMAXD)
-!  type (IntracellPot) :: pot
-!
-!  double precision :: d(3) = (/1.0d10, 0.00d0, -0.00d0 /)
-!  double precision :: ac_wrong(LMMAXD)
-!  double precision :: cmom(LMMAXD)
-!  type (MadelungClebschData) :: clebsch
-!
-!  !call test_lebedev()
-!  call calc_near_field(v_near, 1.0d0, d , pot, LMAX)
-!  write(*,*) v_near
-!
-!  ! konfus
-!  call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
-!  call initMadelungClebschData(clebsch, LMAX)
-!
-!  cmom = 0.0d0
-!  cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-!  call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
-!  write(*,*) ac_wrong
-!end program
+! program test_it
+!   use NearField_mod
+!   implicit none
+!   integer, parameter :: LMAX = 4
+!   integer, parameter :: LMMAXD = (LMAX+1)**2
+!   double precision v_near(LMMAXD)
+!   type (IntracellPot) :: pot
+! 
+!   double precision :: d(3) = (/20.d0, 0.d0, 0.d0 /)
+!   double precision :: ac_wrong(LMMAXD)
+!   double precision :: v_mad_wrong(LMMAXD)
+!   double precision :: cmom(LMMAXD)
+!   double precision :: radius =  5.0d0
+!   type (MadelungClebschData) :: clebsch
+!   integer :: L, M, ii
+! 
+!   !call test_lebedev()
+!   call calc_near_field(v_near, radius, d , pot, LMAX)
+!   write(*,*) v_near
+! 
+!   ! konfus
+!   call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
+!   call initMadelungClebschData(clebsch, LMAX)
+! 
+!   cmom = 0.0d0
+!   cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!   call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
+!   !write(*,*) ac_wrong
+!   ii = 1
+!   do L = 0, LMAX
+!     do M = -L, L
+!       v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
+!       write(*,*) L, M, v_near(ii) / v_mad_wrong(ii) 
+!       ii = ii + 1
+!     end do
+!   end do
+! 
+!   write(*,*) eval_expansion(v_near, (/5.0d0, 0.0d0, 0.0d0 /))
+!   write(*,*) eval_expansion(v_mad_wrong, (/0.0d0, 5.0d0, 0.0d0 /))
+! end program

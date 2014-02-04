@@ -222,9 +222,9 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   !
-  ! --> calculate:                             (2*(l+l')-1)!!
-  !                 dfac(l,l') = 4pi**2 *  ----------------------
-  !                                        (2*l+1)!! * (2*l'+1)!!
+  ! --> calculate:                               (2*(l+l')-1)!!
+  !                 dfac(l,l') = (4pi)**2 *  ----------------------
+  !                                          (2*l+1)!! * (2*l'+1)!!
   subroutine calc_dfac(dfac, lpot)
     implicit none
     double precision, intent(inout) :: dfac(0:lpot, 0:lpot)
