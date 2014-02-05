@@ -10,7 +10,7 @@ module NearField_mod
   !>
   !> This allows to pass arbitrary (intra-cell) potentials
   !> Classes that inherit from/extend this type have to override 'get_pot' using a subroutine
-  !> with the exact same interface as specified by 'potential_func'
+  !> with an interface as specified by 'potential_func'
   type, abstract :: Potential
     contains
     procedure (potential_func), deferred :: get_pot
@@ -26,10 +26,17 @@ module NearField_mod
     end subroutine
   end interface
 
-  type, extends(Potential) :: TestPotential
+  !> Some test potentials - educational and testing purposes
+  type, extends(Potential) :: TestPotentialConstMulti
     contains
     procedure :: get_pot => get_const_multipole
   end type
+  
+  !> Potential of a monopole (= point charge)
+  type, extends(Potential) :: TestPotentialMonopole
+    contains
+    procedure :: get_pot => get_const_monopole
+  end type  
 
   contains
 
@@ -127,38 +134,7 @@ module NearField_mod
 !  end subroutine
 
   !----------------------------------------------------------------------------
-  !> TODO: interpolation/calculation of v_intra
-  subroutine get_const_multipole(self, v_intra, radius)
-    ! Test potential: assume multipoles Q_L = 1.0d0
-    implicit none
-    class (TestPotential) :: self
-    double precision, intent(out) :: v_intra(:)
-    double precision, intent(in) :: radius
-
-    integer :: lm, L, M
-
-    lm = 1
-    L = 0
-    M = 0
-    do while (.true.)
-       v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
-    lm = lm + 1
-    M = M + 1
-    if (M > L) then
-      L = L + 1
-      M = -L
-    end if
-    if (lm > size(v_intra)) exit
-    end do
-
-    !L = 1
-    !v_intra = 0.0d0
-    !v_intra(3) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> TODO: this is a general routine for shifting sph. harm. expansions
+  !> this is a general routine for shifting sph. harm. expansions
   subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)
     implicit none
     double precision, intent(out) :: v_near(:)  !indices (lm)
@@ -281,54 +257,99 @@ module NearField_mod
     eval_expansion = dot_product(coeffs, ylm)
   end function
 
+!------------------------------------------------------------------------------
+! Some test potentials follow
+!------------------------------------------------------------------------------
+
+  !----------------------------------------------------------------------------
+  !> A test potential: constant multipole moments
+  subroutine get_const_multipole(self, v_intra, radius)
+    ! Test potential: assume multipoles Q_L = 1.0d0
+    implicit none
+    class (TestPotentialConstMulti) :: self
+    double precision, intent(out) :: v_intra(:)
+    double precision, intent(in) :: radius
+
+    integer :: lm, L, M
+
+    lm = 1
+    L = 0
+    M = 0
+    do while (.true.)
+       v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
+    lm = lm + 1
+    M = M + 1
+    if (M > L) then
+      L = L + 1
+      M = -L
+    end if
+    if (lm > size(v_intra)) exit
+    end do
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> A test potential: potential of a (unit) monopole
+  subroutine get_const_monopole(self, v_intra, radius)
+    implicit none
+    class (TestPotentialMonopole) :: self
+    double precision, intent(out) :: v_intra(:)
+    double precision, intent(in) :: radius
+
+    integer :: lm, L, M
+
+    v_intra = 0.0d0
+    v_intra(1) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / radius
+
+  end subroutine
 
 end module NearField_mod
 
-!  program test_it
-!    use NearField_mod
-!    implicit none
-!    integer, parameter :: LMAX = 4
-!    integer, parameter :: LMMAXD = (LMAX+1)**2
-!    double precision v_near(LMMAXD)
-!    type(TestPotential) :: pot
-!  
-!    double precision :: d(3) = (/0.0d0, 0.0d0, 2.3000d0 /)
-!    double precision :: vec(3)
-!    double precision :: ac_wrong(LMMAXD)
-!    double precision :: v_mad_wrong(LMMAXD)
-!    double precision :: cmom(LMMAXD)
-!  
-!    double precision :: radius =  0.100000d0
-!  
-!    type (MadelungClebschData) :: clebsch
-!    integer :: L, M, ii
-!  
-!    !call test_lebedev()
-!    call calc_near_field(v_near, radius, d , pot, LMAX)
-!    write(*,*) v_near
-!  
-!    ! konfus
-!    call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
-!    call initMadelungClebschData(clebsch, LMAX)
-!  
-!    !cmom = 0.0d0
-!    cmom = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-!    !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-!  
-!    call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
-!  
-!    ii = 1
-!    do L = 0, LMAX
-!      do M = -L, L
-!        v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
-!        write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
-!        ii = ii + 1
-!      end do
-!    end do
-!  
-!    vec = 0.0d0
-!    vec(3) = -radius
-!    
-!    write(*,*) eval_expansion(v_near, vec)
-!    write(*,*) eval_expansion(v_mad_wrong, vec)
-!  end program
+ program test_it
+   use NearField_mod
+   implicit none
+   integer, parameter :: LMAX = 4
+   integer, parameter :: LMMAXD = (LMAX+1)**2
+   double precision v_near(LMMAXD)
+   type(TestPotentialMonopole) :: pot
+ 
+   double precision :: d(3) = (/0.0d0, 0.0d0, 2.3000d0 /)
+   double precision :: vec(3)
+   double precision :: ac_wrong(LMMAXD)
+   double precision :: v_mad_wrong(LMMAXD)
+   double precision :: cmom(LMMAXD)
+ 
+   double precision :: radius =  0.100000d0
+ 
+   type (MadelungClebschData) :: clebsch
+   integer :: L, M, ii
+ 
+   !call test_lebedev()
+   call calc_near_field(v_near, radius, d , pot, LMAX)
+   write(*,*) v_near
+ 
+   ! konfus
+   call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
+   call initMadelungClebschData(clebsch, LMAX)
+ 
+   cmom = 0.0d0
+   cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+   !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+ 
+   call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
+ 
+   ii = 1
+   do L = 0, LMAX
+     do M = -L, L
+       v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
+       write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
+       ii = ii + 1
+     end do
+   end do
+ 
+   vec = 0.0d0
+   vec(3) = -radius
+   
+   write(*,*) eval_expansion(v_near, vec)
+   write(*,*) eval_expansion(v_mad_wrong, vec)
+ end program
