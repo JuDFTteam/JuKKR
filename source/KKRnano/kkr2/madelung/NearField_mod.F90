@@ -1,19 +1,35 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
+!> @author Elias Rabel
+
 module NearField_mod
   use MadelungCalculator_mod
   implicit none
 
-  type IntracellPot
-    integer :: dummy
+  !> Objects of types derived from 'Potential' have to be passed to 'calc_near_field'.
+  !>
+  !> This allows to pass arbitrary (intra-cell) potentials
+  !> Classes that inherit from/extend this type have to override 'get_pot' using a subroutine
+  !> with the exact same interface as specified by 'potential_func'
+  type, abstract :: Potential
+    contains
+    procedure (potential_func), deferred :: get_pot
   end type
 
+  !> The methods 'get_pot' of any type derived from 'Potential' have to conform to this interface
   abstract interface
-    subroutine potential_func(v, radius)
-    double precision, intent(out) :: v(:)
+    subroutine potential_func(self, v_intra, radius)
+    import Potential
+    class (Potential), intent(inout) :: self
+    double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
     end subroutine
   end interface
+
+  type, extends(Potential) :: TestPotential
+    contains
+    procedure :: get_pot => get_const_multipole
+  end type
 
   contains
 
@@ -112,9 +128,10 @@ module NearField_mod
 
   !----------------------------------------------------------------------------
   !> TODO: interpolation/calculation of v_intra
-  subroutine get_intracell(v_intra, radius)
+  subroutine get_const_multipole(self, v_intra, radius)
     ! Test potential: assume multipoles Q_L = 1.0d0
     implicit none
+    class (TestPotential) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
@@ -147,7 +164,7 @@ module NearField_mod
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
-    procedure(potential_func), intent(in), pointer :: pot
+    class(Potential), intent(inout) :: pot
     integer, intent(in) :: lmax_prime
 
     integer :: lmmaxd, lmax, lmmaxd_prime
@@ -193,7 +210,7 @@ module NearField_mod
       call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_prime)
 
       ! get intracell potential at radius 'norm_vec'
-      call pot(v_intra, norm_vec)
+      call pot%get_pot(v_intra, norm_vec)
 
       ! perform summation over L'
       integrand(ij,1) = dot_product(sph_harm, v_intra)
@@ -267,51 +284,51 @@ module NearField_mod
 
 end module NearField_mod
 
-! program test_it
-!   use NearField_mod
-!   implicit none
-!   integer, parameter :: LMAX = 2
-!   integer, parameter :: LMMAXD = (LMAX+1)**2
-!   double precision v_near(LMMAXD)
-!   type (IntracellPot) :: pot
-! 
-!   double precision :: d(3) = (/0.0d0, 0.0d0, 2.3000d0 /)
-!   double precision :: vec(3)
-!   double precision :: ac_wrong(LMMAXD)
-!   double precision :: v_mad_wrong(LMMAXD)
-!   double precision :: cmom(LMMAXD)
-! 
-!   double precision :: radius =  0.100000d0
-! 
-!   type (MadelungClebschData) :: clebsch
-!   integer :: L, M, ii
-! 
-!   !call test_lebedev()
-!   call calc_near_field(v_near, radius, d , get_intracell, LMAX)
-!   write(*,*) v_near
-! 
-!   ! konfus
-!   call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
-!   call initMadelungClebschData(clebsch, LMAX)
-! 
-!   !cmom = 0.0d0
-!   cmom = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-!   !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-! 
-!   call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
-! 
-!   ii = 1
-!   do L = 0, LMAX
-!     do M = -L, L
-!       v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
-!       write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
-!       ii = ii + 1
-!     end do
-!   end do
-! 
-!   vec = 0.0d0
-!   vec(3) = -radius
-!   
-!   write(*,*) eval_expansion(v_near, vec)
-!   write(*,*) eval_expansion(v_mad_wrong, vec)
-! end program
+!  program test_it
+!    use NearField_mod
+!    implicit none
+!    integer, parameter :: LMAX = 4
+!    integer, parameter :: LMMAXD = (LMAX+1)**2
+!    double precision v_near(LMMAXD)
+!    type(TestPotential) :: pot
+!  
+!    double precision :: d(3) = (/0.0d0, 0.0d0, 2.3000d0 /)
+!    double precision :: vec(3)
+!    double precision :: ac_wrong(LMMAXD)
+!    double precision :: v_mad_wrong(LMMAXD)
+!    double precision :: cmom(LMMAXD)
+!  
+!    double precision :: radius =  0.100000d0
+!  
+!    type (MadelungClebschData) :: clebsch
+!    integer :: L, M, ii
+!  
+!    !call test_lebedev()
+!    call calc_near_field(v_near, radius, d , pot, LMAX)
+!    write(*,*) v_near
+!  
+!    ! konfus
+!    call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
+!    call initMadelungClebschData(clebsch, LMAX)
+!  
+!    !cmom = 0.0d0
+!    cmom = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!    !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!  
+!    call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
+!  
+!    ii = 1
+!    do L = 0, LMAX
+!      do M = -L, L
+!        v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
+!        write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
+!        ii = ii + 1
+!      end do
+!    end do
+!  
+!    vec = 0.0d0
+!    vec(3) = -radius
+!    
+!    write(*,*) eval_expansion(v_near, vec)
+!    write(*,*) eval_expansion(v_mad_wrong, vec)
+!  end program
