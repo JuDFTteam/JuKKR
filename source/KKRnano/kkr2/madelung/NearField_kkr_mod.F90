@@ -1,9 +1,9 @@
 module NearField_kkr_mod
   use NearField_mod, only: Potential
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
-  
-  integer, parameter, private :: PI = 3.1415926535897932d0
-  
+
+  double precision, parameter, private :: PI = 3.1415926535897932d0
+
   type, extends(Potential) :: IntracellPotential
 
     double precision, allocatable :: charge_moments(:)
@@ -20,8 +20,9 @@ module NearField_kkr_mod
     contains
     
     procedure create => createIntracellPot
+    procedure init => initIntracellPotential
     procedure destroy => destroyIntracellPotential
-    procedure get_pot => get_intracell
+    procedure get_pot => get_intracell 
   end type
   
   contains
@@ -47,7 +48,7 @@ module NearField_kkr_mod
       do lm = 1, lmpotd
 
         ! calculate potential from charge moments
-        v_intra(lm) = 8 * PI / (2*dble(L) + 1) * self%charge_moments(lm) / (radius**(L+1))
+        v_intra(lm) = 8.0d0 * PI / (2*L + 1) * self%charge_moments(lm) / (radius**(L+1))
 
         M = M + 1
         if (M > L) then
@@ -120,7 +121,6 @@ module NearField_kkr_mod
     integer :: L, M
     integer :: counter
     double precision :: derivative
-    double precision :: pi
     double precision, parameter :: TOL = 1.d-10
     
     lmpotd = size(self%v_intra_values, 2)

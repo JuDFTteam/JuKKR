@@ -276,14 +276,14 @@ module NearField_mod
     L = 0
     M = 0
     do while (.true.)
-       v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
-    lm = lm + 1
-    M = M + 1
-    if (M > L) then
-      L = L + 1
-      M = -L
-    end if
-    if (lm > size(v_intra)) exit
+      v_intra(lm) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / (radius**(L+1)) / (2*L + 1)
+      lm = lm + 1
+      M = M + 1
+      if (M > L) then
+        L = L + 1
+        M = -L
+      end if
+      if (lm > size(v_intra)) exit
     end do
 
   end subroutine
@@ -305,51 +305,90 @@ module NearField_mod
 
 end module NearField_mod
 
- program test_it
-   use NearField_mod
-   implicit none
-   integer, parameter :: LMAX = 4
-   integer, parameter :: LMMAXD = (LMAX+1)**2
-   double precision v_near(LMMAXD)
-   type(TestPotentialMonopole) :: pot
- 
-   double precision :: d(3) = (/0.0d0, 0.0d0, 2.3000d0 /)
-   double precision :: vec(3)
-   double precision :: ac_wrong(LMMAXD)
-   double precision :: v_mad_wrong(LMMAXD)
-   double precision :: cmom(LMMAXD)
- 
-   double precision :: radius =  0.100000d0
- 
-   type (MadelungClebschData) :: clebsch
-   integer :: L, M, ii
- 
-   !call test_lebedev()
-   call calc_near_field(v_near, radius, d , pot, LMAX)
-   write(*,*) v_near
- 
-   ! konfus
-   call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
-   call initMadelungClebschData(clebsch, LMAX)
- 
-   cmom = 0.0d0
-   cmom(1) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
-   !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
- 
-   call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
- 
-   ii = 1
-   do L = 0, LMAX
-     do M = -L, L
-       v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
-       write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
-       ii = ii + 1
-     end do
-   end do
- 
-   vec = 0.0d0
-   vec(3) = -radius
-   
-   write(*,*) eval_expansion(v_near, vec)
-   write(*,*) eval_expansion(v_mad_wrong, vec)
- end program
+!  program test_it
+!    use NearField_mod
+!    use NearField_kkr_mod
+!    implicit none
+!    integer, parameter :: LMAX = 4
+!    integer, parameter :: LMMAXD = (LMAX+1)**2
+!    integer, parameter :: NPOINTS = 100
+!    double precision v_near(LMMAXD)
+!    
+!    type(TestPotentialConstMulti) :: pot
+!    type(IntracellPotential) :: intra_pot
+!  
+!    double precision :: d(3) = (/0.0d0, 0.0d0, 2.0000d0 /)
+!    double precision :: vec(3)
+!    double precision :: ac_wrong(LMMAXD)
+!    double precision :: v_mad_wrong(LMMAXD)
+!    double precision :: cmom(LMMAXD)
+!  
+!    double precision :: radius =  1.400000d0
+!    double precision :: r_temp
+!  
+!    type (MadelungClebschData) :: clebsch
+!    integer :: L, M, ii
+!  
+!    !call test_lebedev()
+!    call calc_near_field(v_near, radius, d , pot, LMAX)
+!    write(*,*) v_near
+!  
+!    ! konfus
+!    call createMadelungClebschData(clebsch, (4*LMAX+1)**2, (2*LMAX+1)**2)
+!    call initMadelungClebschData(clebsch, LMAX)
+!  
+!    !cmom = 0.0d0
+!    cmom = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!    !cmom(3) = 1.0d0 / sqrt(16.0d0 * atan(1.0d0)) 
+!  
+!    call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
+!  
+!    ii = 1
+!    do L = 0, LMAX
+!      do M = -L, L
+!        v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
+!        write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
+!        ii = ii + 1
+!      end do
+!    end do
+!  
+!    vec = 0.0d0
+!    vec(3) = -radius
+!    
+!    write(*,*) eval_expansion(v_near, vec)
+!    write(*,*) eval_expansion(v_mad_wrong, vec)
+!    
+!    !-------- another test ---------------------------------------------
+!    write(*,*) "=========================================================="
+!    
+!    call intra_pot%create(LMMAXD, NPOINTS)
+!    
+!    intra_pot%charge_moments = cmom
+!    
+!    do ii = 1, NPOINTS
+!      intra_pot%radial_points(ii) = (ii) * 1.0d0 / (NPOINTS)
+!      call pot%get_pot(v_near, intra_pot%radial_points(ii))
+!      intra_pot%v_intra_values(ii, :) = v_near
+!    end do
+!    
+!    call intra_pot%init()
+! 
+!    call calc_near_field(v_near, radius, d , intra_pot, LMAX)
+!    write(*,*) v_near
+!    write(*,*) eval_expansion(v_near, vec)
+! 
+! !    do ii = 1, NPOINTS
+! !      call pot%get_pot(v_near, intra_pot%radial_points(ii))
+! !      write(*,*) v_near(1)
+! !      call intra_pot%get_pot(v_near, intra_pot%radial_points(ii))
+! !      write(*,*) v_near(1)
+! !    end do
+!    
+!    !do ii = 1, NPOINTS * 4
+!    !  r_temp = (ii) * 2.0d0 / (NPOINTS*4) + 1.0d0
+!    !  call intra_pot%get_pot(v_near, r_temp)
+!    !  write(*,*) r_temp, v_near(7), v_near(15)
+!    !end do
+!    !call calc_near_field(v_near, radius, d , intra_pot, LMAX)
+!    !write(*,*) v_near
+!  end program
