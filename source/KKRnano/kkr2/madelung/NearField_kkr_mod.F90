@@ -1,9 +1,22 @@
+!> Interpolation of intracell potential
+!>
+!> @author Elias Rabel
 module NearField_kkr_mod
   use NearField_mod, only: Potential
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
 
   double precision, parameter, private :: PI = 3.1415926535897932d0
 
+  !----------------------------------------------------------------------------
+  !> Usage:
+  !> type(IntracellPotential) :: pot
+  !> call pot%create(lmpot, irmd)
+  !> pot%charge_moments = ... ! set charge moments
+  !> pot%radial_points = ...
+  !> pot%v_intra_values = ...
+  !> call pot%init()
+  !> ...  ! now use it
+  !> call pot%destroy()
   type, extends(Potential) :: IntracellPotential
 
     double precision, allocatable :: charge_moments(:)
