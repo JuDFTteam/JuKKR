@@ -110,29 +110,6 @@ module NearField_mod
 
   end subroutine
 
-!  !----------------------------------------------------------------------------
-!  subroutine test_calc_wrong_contribution_coeff(madelung_calc, dist_vec, cmom, cmom_inst)
-!    implicit none
-!    type (MadelungCalculator) :: madelung_calc
-!    double precision :: dist_vec(3)
-!    double precision :: cmom(:)
-!    double precision :: cmom_inst(:)
-!
-!    integer :: lmmaxd
-!    double precision :: ac_wrong(:)
-!    double precision :: cmom_total(:)
-!
-!    lmmaxd = size(cmom)
-!    allocate(ac_wrong(lmmaxd))
-!    allocate(cmom_total(lmmaxd))
-!
-!    cmom_total = cmom + cmom_inst
-!    call calc_wrong_contribution_coeff(ac_wrong, dist_vec, madelung_calc%dfac, &
-!                                          cmom_total, madelung_calc%clebsch)
-!
-!    write(*,*) ac_wrong
-!  end subroutine
-
   !----------------------------------------------------------------------------
   !> this is a general routine for shifting sph. harm. expansions
   subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)

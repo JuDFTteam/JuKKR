@@ -23,12 +23,16 @@ module NearField_com_mod
   
   type NearFieldCorrection
     double precision, allocatable :: delta_potential(:, :)
+
+    contains
+    procedure :: create => createNearFieldCorrection
+    procedure :: destroy => destroyNearFieldCorrection
   end type
   
   CONTAINS
   
   !----------------------------------------------------------------------------
-  subroutine kakaka(nf_correction, local_cells, gaunt, communicator)
+  subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
     implicit none
     type (NearFieldCorrection), intent(inout) :: nf_correction(:)
     type (LocalCellInfo), intent(in) :: local_cells(:)
@@ -162,19 +166,19 @@ module NearField_com_mod
 
   end subroutine
 
-    !----------------------------------------------------------------------------
-  subroutine createLocalCellInfo(self, irmd, lmpotd, num_near_cells)
+  !----------------------------------------------------------------------------
+  subroutine createLocalCellInfo(self, irmd, lmpotd)
     implicit none
     class (LocalCellInfo), intent(inout) :: self
     integer, intent(in) :: irmd
     integer, intent(in) :: lmpotd
-    integer, intent(in) :: num_near_cells
+    !integer, intent(in) :: num_near_cells
 
     allocate(self%charge_moments(lmpotd))
     allocate(self%v_intra(irmd, lmpotd))
-    allocate(self%radial_points(lmpotd))
-    allocate(self%near_cell_indices(num_near_cells))
-    allocate(self%near_cell_dist_vec(3,num_near_cells))
+    allocate(self%radial_points(irmd))
+    !allocate(self%near_cell_indices(num_near_cells))
+    !allocate(self%near_cell_dist_vec(3,num_near_cells))
 
   end subroutine
 
@@ -186,8 +190,27 @@ module NearField_com_mod
     deallocate(self%charge_moments)
     deallocate(self%v_intra)
     deallocate(self%radial_points)
-    deallocate(self%near_cell_indices)
-    deallocate(self%near_cell_dist_vec)
 
+    if (allocated(self%near_cell_indices)) deallocate(self%near_cell_indices)
+    if (allocated(self%near_cell_dist_vec)) deallocate(self%near_cell_dist_vec)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine createNearFieldCorrection(self, irmd, lmpotd)
+    implicit none
+    class (NearFieldCorrection), intent(inout) :: self
+    integer, intent(in) :: irmd
+    integer, intent(in) :: lmpotd
+
+    allocate(self%delta_potential(irmd, lmpotd))
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine destroyNearFieldCorrection(self)
+    implicit none
+    class (NearFieldCorrection), intent(inout) :: self
+
+    deallocate(self%delta_potential)
   end subroutine
 end module

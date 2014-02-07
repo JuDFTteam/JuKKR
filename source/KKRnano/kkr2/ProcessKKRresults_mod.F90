@@ -550,6 +550,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   use EnergyResults_mod
   use RadialMeshData_mod
 
+  use NearField_calc_mod
+
   implicit none
 
   integer, intent(in)                        :: iter
@@ -604,6 +606,9 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
     !output: VONS
     call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
+
+    write(*,*) "TODO: make near field calc. optional"
+    call add_near_field_corr(calc_data, arrays, params%alat, my_mpi)
 
 !------------------------------------------------------------------------------
   end do ! ilocal
