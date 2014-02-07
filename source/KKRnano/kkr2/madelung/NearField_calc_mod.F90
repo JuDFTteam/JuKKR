@@ -62,8 +62,6 @@ module NearField_calc_mod
 
     end do
 
-
-
     call calc_nf_correction(nf_correction, local_cell, madelung_calc%clebsch, &
                             getMySEcommunicator(my_mpi))
 

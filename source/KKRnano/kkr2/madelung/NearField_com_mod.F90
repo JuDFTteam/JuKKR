@@ -93,7 +93,7 @@ module NearField_com_mod
                        (max_npoints+1)*(lmpotd+1)*num_local_atoms, &
                        (max_npoints+1)*(lmpotd+1), communicator)
 
-    call fenceD(win)
+    call fenceD(win) ! begin MPI RMA access epoch
     
     do ilocal = 1, num_local_atoms
       nf_correction(ilocal)%delta_potential = 0.0d0
