@@ -223,6 +223,9 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   ! set maximum possible muffin-tin radius (ALAT units)
   shdata%max_muffin_tin = rmt
 
+  ! store number of faces of Voronoi cell
+  shdata%num_faces = nface
+
   do ii = 1, nfun
     shdata%llmsp(ii) = lmifun_s(ii)
     shdata%lmsp(lmifun_s(ii)) = 1

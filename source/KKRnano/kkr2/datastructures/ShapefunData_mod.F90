@@ -16,6 +16,7 @@ module ShapefunData_mod
     integer :: NFU
 
     double precision :: max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
+    integer :: num_faces !< number of faces of voronoi-cell
 
   end type
 
@@ -44,6 +45,7 @@ module ShapefunData_mod
     shdata%LMSP =  0
     shdata%NFU = 0
     shdata%max_muffin_tin = 0.0d0
+    shdata%num_faces = 0
 
     ! TODO: check lmmax_shape <= nfund
   end subroutine
@@ -82,6 +84,8 @@ module ShapefunData_mod
     write(buffer, *) "lmmax_shape    = ", shdata%lmmax_shape
     str = str // trim(buffer) // nl
     write(buffer, *) "max_muffin_tin = ", shdata%max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
+    str = str // trim(buffer) // nl
+    write(buffer, *) "num_faces = ", shdata%num_faces
     str = str // trim(buffer) // nl
 
     write(buffer, *) "LLMSP = "
