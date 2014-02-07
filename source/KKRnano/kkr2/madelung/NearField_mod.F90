@@ -141,7 +141,7 @@ module NearField_mod
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
     class(Potential), intent(inout) :: pot
-    integer, intent(in) :: lmax_prime
+    integer, intent(in), optional :: lmax_prime
 
     integer :: lmmaxd, lmax, lmmaxd_prime
     integer, parameter :: NUM_LEBEDEV = 434
@@ -158,12 +158,19 @@ module NearField_mod
     double precision :: FOUR_PI ! prefactor for Lebedev: 4*pi
 
     integer :: ij, lm
+    integer :: lmax_p
+
 
     FOUR_PI = 16.0d0 * atan(1.0d0)
 
     lmmaxd = size(v_near)
     lmax = int(sqrt(dble(lmmaxd) + 0.1) - 1)
-    lmmaxd_prime = (lmax_prime+1)**2
+    
+    if (.not. present(lmax_prime)) then
+      lmax_p = lmax
+    end if
+    
+    lmmaxd_prime = (lmax_p+1)**2
 
     CHECKASSERT( (lmax + 1)**2 == lmmaxd )
 
@@ -183,7 +190,7 @@ module NearField_mod
       end do
 
       vec = radius * v_leb + dist_vec
-      call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_prime)
+      call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_p)
 
       ! get intracell potential at radius 'norm_vec'
       call pot%get_pot(v_intra, norm_vec)

@@ -1,0 +1,193 @@
+#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+
+module NearField_com_mod
+  use NearField_mod
+  use NearField_kkr_mod
+  use one_sided_commD_mod
+  use MadelungCalculator_mod, only: MadelungClebschData
+  use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
+  
+  type LocalCellInfo
+    double precision, allocatable :: charge_moments(:)
+    double precision, allocatable :: v_intra(:, :)
+    double precision, allocatable :: radial_points(:)
+    integer, allocatable :: near_cell_indices(:)
+    !> vectors pointing from near cell center to local cell
+    double precision, allocatable :: near_cell_dist_vec(:,:)
+
+    contains
+    procedure :: create => createLocalCellInfo
+    procedure :: destroy => destroyLocalCellInfo
+
+  end type
+  
+  type NearFieldCorrection
+    double precision, allocatable :: delta_potential(:, :)
+  end type
+  
+  CONTAINS
+  
+  !----------------------------------------------------------------------------
+  subroutine kakaka(nf_correction, local_cells, gaunt, communicator)
+    implicit none
+    type (NearFieldCorrection), intent(inout) :: nf_correction(:)
+    type (LocalCellInfo), intent(in) :: local_cells(:)
+    type (MadelungClebschData), intent(in) :: gaunt
+    integer, intent(in) :: communicator
+    
+    include 'mpif.h'
+    
+    type (IntracellPotential) :: intra_pot
+    type (ChunkIndex) :: chunk(1)
+    integer :: npoints, lmpotd
+    integer :: num_local_atoms
+    integer :: max_npoints
+    integer :: ierr, ii
+    integer :: irmd
+    integer :: nranks
+    integer :: ilocal, icell
+    double precision, allocatable :: send_buffer(:,:,:)
+    double precision, allocatable :: recv_buffer(:,:)
+    double precision :: nan
+    
+    integer :: win
+    
+    nan = ieee_value(nan, IEEE_SIGNALING_NAN)
+    
+    num_local_atoms = size(local_cells)
+    
+    lmpotd = size(local_cells(1)%v_intra, 2)
+    
+    npoints = 0
+    do ii = 1, num_local_atoms
+      npoints = max(npoints, size(local_cells(ii)%radial_points))
+    end do
+
+    call MPI_Comm_size(communicator, nranks, ierr)
+    call MPI_Allreduce(npoints, max_npoints, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+
+    allocate(send_buffer(max_npoints+1, lmpotd+1, num_local_atoms))
+    allocate(recv_buffer(max_npoints+1, lmpotd+1))
+    
+#ifndef NDEBUG
+    send_buffer = nan
+    recv_buffer = nan
+#endif
+    
+    do ii = 1, num_local_atoms
+      irmd = size(local_cells(ii)%radial_points)
+      send_buffer(1:irmd, 1:lmpotd, ii) = local_cells(ii)%v_intra
+      send_buffer(max_npoints+1, 1:lmpotd, ii) = local_cells(ii)%charge_moments
+      send_buffer(1:irmd, lmpotd+1, ii) = local_cells(ii)%radial_points
+      
+      ! we also have to store the actual number of mesh points for each local atom
+      ! small hack: convert integer number to double to simplify communication
+      send_buffer(max_npoints+1, lmpotd+1, ii) = dble(irmd) 
+    end do
+    
+    call exposeBufferD(win, send_buffer, &
+                       (max_npoints+1)*(lmpotd+1)*num_local_atoms, &
+                       (max_npoints+1)*(lmpotd+1), communicator)
+
+    call fenceD(win)
+    
+    do ilocal = 1, num_local_atoms
+      nf_correction(ilocal)%delta_potential = 0.0d0
+      do icell = 1, size(local_cells(ilocal)%near_cell_indices)
+      
+        chunk(1) = getChunkIndex(local_cells(ilocal)%near_cell_indices(icell), &
+                                 nranks*num_local_atoms, nranks)
+        
+        call copyChunksNoSyncD(recv_buffer, win, chunk, (max_npoints+1)*(lmpotd+1))
+        
+        irmd = int(recv_buffer(max_npoints+1, lmpotd+1) + 0.1d0)  ! convert back to integer
+
+        call intra_pot%create(lmpotd, irmd)
+        intra_pot%v_intra_values = recv_buffer(1:irmd, 1:lmpotd)
+        intra_pot%charge_moments = recv_buffer(max_npoints+1, 1:lmpotd)
+        intra_pot%radial_points = recv_buffer(1:irmd, lmpotd+1)
+        
+        call intra_pot%init() ! setup intra-cell pot. interpolation
+
+        call  add_potential_correction(nf_correction(ilocal)%delta_potential, intra_pot, &
+                                       local_cells(ilocal)%radial_points, &
+                                       local_cells(ilocal)%near_cell_dist_vec(:,icell), gaunt)
+        
+        call intra_pot%destroy()
+      end do
+    end do
+
+    call fenceD(win) ! end of RMA communication epoch
+
+    call hideBufferD(win)
+  end subroutine
+  
+  !> Set delta_potential to 0.0d0 before first call!
+  subroutine add_potential_correction(delta_potential, intra_pot, radial_points, dist_vec, gaunt)
+    implicit none
+    double precision, intent(inout) :: delta_potential(:,:)
+    type(IntracellPotential), intent(inout) :: intra_pot
+    double precision, intent(in) :: radial_points(:)
+    double precision, intent(in) :: dist_vec(3)
+    type(MadelungClebschData), intent(in) :: gaunt
+    
+    double precision, allocatable :: coeffs(:)
+    integer :: ii, lm, L, M
+    
+    allocate(coeffs(size(delta_potential, 2)))
+    
+    call calc_wrong_contribution_coeff(coeffs, dist_vec, intra_pot%charge_moments, gaunt)
+    
+    ! TODO: calc will fail for r=0!
+    
+    ! substract wrong potential
+    L = 0
+    M = 0
+    do lm = 1, size(coeffs)
+      do ii = 1, size(radial_points)
+        delta_potential(ii, lm) = delta_potential(ii, lm) - coeffs(lm) * (-radial_points(ii))**L
+      end do
+      M = M + 1
+      if (M > L) then
+        L = L+1
+        M = -L
+      end if
+    end do
+    
+    ! add correct contribution
+    do ii = 1, size(radial_points)
+      call calc_near_field(coeffs, radial_points(ii), dist_vec, intra_pot)
+      delta_potential(ii, :) = delta_potential(ii, :) + coeffs
+    end do
+
+  end subroutine
+
+    !----------------------------------------------------------------------------
+  subroutine createLocalCellInfo(self, irmd, lmpotd, num_near_cells)
+    implicit none
+    class (LocalCellInfo), intent(inout) :: self
+    integer, intent(in) :: irmd
+    integer, intent(in) :: lmpotd
+    integer, intent(in) :: num_near_cells
+
+    allocate(self%charge_moments(lmpotd))
+    allocate(self%v_intra(irmd, lmpotd))
+    allocate(self%radial_points(lmpotd))
+    allocate(self%near_cell_indices(num_near_cells))
+    allocate(self%near_cell_dist_vec(3,num_near_cells))
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine destroyLocalCellInfo(self)
+    implicit none
+    class (LocalCellInfo), intent(inout) :: self
+
+    deallocate(self%charge_moments)
+    deallocate(self%v_intra)
+    deallocate(self%radial_points)
+    deallocate(self%near_cell_indices)
+    deallocate(self%near_cell_dist_vec)
+
+  end subroutine
+end module

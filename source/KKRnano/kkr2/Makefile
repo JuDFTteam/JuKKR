@@ -295,3 +295,5 @@ ShapeStandardMesh_mod.o: shape_constants_mod.o
 broyden_kkr_mod.o: CalculationData_mod.o broyden_second_mod.o
 
 jij_calc_mod.o: JijData_mod.o
+
+NearField_com_mod.o: NearField_mod.o NearField_kkr_mod.o one_sided_commD_mod.o

@@ -246,16 +246,6 @@ subroutine output_forces(calc_data, master, rank, comm)
   integer :: ierr
   integer, parameter :: NUM = 3
 
-!  call openForceFile()
-!
-!  do ilocal = 1, num_local_atoms
-!    densities    => getDensities(calc_data, ilocal)
-!    I1 = getAtomIndexOfLocal(calc_data, ilocal)
-!    call writeForces(densities%force_flm, I1)
-!  end do
-!
-!  call closeForceFile()
-
   num_local_atoms = getNumLocalAtoms(calc_data) ! must be the same for all ranks
 
   if (rank == master) then
@@ -602,7 +592,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! ============================= ENERGY and FORCES =====================
 ! =====================================================================
 
-  !calc_force = (params%KFORCE == 1 .and. iter == params%SCFsteps)
   calc_force = (params%KFORCE == 1) ! calculate force at each iteration
 
 !------------------------------------------------------------------------------
@@ -632,7 +621,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......', &
                getElapsedTime(program_timer),ITER)
-
 
   VAV0 = 0.0d0
   VOL0 = 0.0d0
