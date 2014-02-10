@@ -607,9 +607,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     !output: VONS
     call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
 
-    write(*,*) "TODO: make near field calc. optional"
-    call add_near_field_corr(calc_data, arrays, params%alat, my_mpi)
-
 !------------------------------------------------------------------------------
   end do ! ilocal
   !!!$omp end parallel do
@@ -617,6 +614,14 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'VINTRAS ......',&
                getElapsedTime(program_timer),ITER)
+
+  ! perform near field correction for ALL local atoms
+  if (params%near_field > 0) then
+    call add_near_field_corr(calc_data, arrays, params%alat, my_mpi)
+
+    call OUTTIME(isMasterRank(my_mpi),'near field....',&
+                 getElapsedTime(program_timer),ITER)
+  end if
 
   ! output: VONS (changed), VMAD
   ! operation on all atoms! O(N**2)
