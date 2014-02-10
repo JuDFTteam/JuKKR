@@ -1,6 +1,10 @@
+#include "DebugHelpers/logging_macros.h"
+
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module NearField_com_mod
+  USE_LOGGING_MOD
+
   use NearField_mod
   use NearField_kkr_mod
   use one_sided_commD_mod
@@ -119,6 +123,21 @@ module NearField_com_mod
         
         call intra_pot%destroy()
       end do
+
+      WRITELOG(2,*) "Near field corrections for local atom ", ilocal
+      WRITELOG(2,*) "Near field - delta potential (point/norm):"
+      do ii = 1, size(nf_correction(ilocal)%delta_potential, 1)
+        WRITELOG(2,*) ii, local_cells(ilocal)%radial_points(ii), &
+                      sqrt(dot_product(nf_correction(ilocal)%delta_potential(ii,:), &
+                                       nf_correction(ilocal)%delta_potential(ii,:)))
+      end do
+
+      WRITELOG(2,*) "Near field - delta potential (LM/norm):"
+      do ii = 1, size(nf_correction(ilocal)%delta_potential, 2)
+        WRITELOG(2,*) ii, sqrt(dot_product(nf_correction(ilocal)%delta_potential(:,ii), &
+                               nf_correction(ilocal)%delta_potential(:,ii)))
+      end do
+
     end do
 
     call fenceD(win) ! end of RMA communication epoch

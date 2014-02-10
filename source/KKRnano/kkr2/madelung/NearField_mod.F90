@@ -167,7 +167,14 @@ module NearField_mod
       end do
 
       vec = radius * v_leb + dist_vec
-      call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_p)
+
+      if (vec(1)**2 + vec(2)**2 + vec(3)**2 > 0.0d0) then  ! can be zero
+        call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_p)
+      else
+        norm_vec = 0.0d0
+        sph_harm = 0.0d0
+        sph_harm(1) = 1.d0 / sqrt(FOUR_PI)
+      end if
 
       ! get intracell potential at radius 'norm_vec'
       call pot%get_pot(v_intra, norm_vec)
