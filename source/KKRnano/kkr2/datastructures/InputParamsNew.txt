@@ -38,3 +38,5 @@ d MT_scale
 d RMT_ref_scale
 ### other
 d target_rms
+### near field corrections (default = 0)
+i near_field 0

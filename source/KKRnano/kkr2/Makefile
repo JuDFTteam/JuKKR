@@ -211,7 +211,7 @@ ProcessKKRresults_mod.o: KKRnanoParallel_mod.o lloyds_formula_mod.o main2_aux_mo
             TimerMpi_mod.o BroydenData_mod.o brydbm_new_com_mod.o \
             wrappers_mod.o DimParams_mod.o InputParams_mod.o Main2Arrays_mod.o \
             KKRresults_mod.o DensityResults_mod.o EnergyResults_mod.o \
-            MadelungPotential_mod.o
+            MadelungPotential_mod.o NearField_calc_mod.o
          
 ScatteringCalculation_mod.o: EnergyMesh_mod.o KKRnanoParallel_mod.o KKRnano_Comm_mod.o \
                              GauntCoefficients_mod.o TimerMpi_mod.o \

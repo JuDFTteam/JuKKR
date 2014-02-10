@@ -96,15 +96,26 @@ for line in deffile:
     splitted_line = line.split()
 
     gettername = getterNamesdict[splitted_line[0]]
+    default_value = None
 
     if (splitted_line[0] in vectors):
       print '  call ' + gettername + \
             '(conf, "' + splitted_line[1] + '", confvalues%' + splitted_line[1] + \
-            ', ' + splitted_line[2] + ', ierror)'      
+            ', ' + splitted_line[2] + ', ierror)'
+      if len(splitted_line) > 3:
+          default_value = splitted_line[3]    
     else:
       print '  call ' + gettername + \
             '(conf, "' + splitted_line[1] + '", confvalues%' + splitted_line[1] + \
             ', ierror)'
+      if len(splitted_line) > 2:
+          default_value = splitted_line[2]             
+
+    if default_value is not None:
+        print '  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then'
+        print '    confvalues%' + splitted_line[1] + ' = ' + default_value
+        print '    ierror = 0'
+        print '  end if'
 
     print '  if (ierror /= 0) then'
     print '    write(*,*) "Bad/no value given for ' + splitted_line[1] + '."'
