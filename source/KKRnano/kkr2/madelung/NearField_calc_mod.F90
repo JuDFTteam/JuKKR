@@ -1,8 +1,13 @@
+!> This module implements the near field corrections for KKRnano.
+
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 ! TODO: There are a lot of optimisation possibilities in this near field calculation:
 ! *) Do not look for near cells at each iteration - especially since it is O(N**2)
 ! *) Do not calculate near field correction in non-critical region
+! *) Do not recalculate spherical harmonics at Lebedev-points each time
+! *) Rotate distance vector between cells parallel to z-axis, use Wigner matrices
+!    to rotate back
 
 module NearField_calc_mod
   use NearField_com_mod
@@ -85,6 +90,8 @@ module NearField_calc_mod
   !> Returns allocated near_inds, dist_vecs
   !> Caution with units!!!
   !> Criterion for near cells: distance < 2*(Radius bounding sphere)
+  !> NOTE: This is only approximately valid - but should be enough for
+  !> realistic lattice structures
   subroutine find_near_cells(near_inds, dist_vecs, rbasis, bravais, &
                              center_ind, radius_bounding)
     implicit none
