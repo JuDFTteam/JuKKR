@@ -170,10 +170,13 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
     chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
     chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
 
+    ! request lock because buffer will be reused for DLKE0_smat call
     call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
     CHECKASSERT(ierr == 0)
+
     call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
     !!!Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
+
     call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
     CHECKASSERT(ierr == 0)
 
