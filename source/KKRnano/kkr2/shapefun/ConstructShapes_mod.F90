@@ -86,8 +86,10 @@ subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
   allocate(weights(size(ref_cluster%rcls, 2)))
   weights = 1.0d0
 
+#ifdef USE_VOROWEIGHTS
   ! HACK: Read voronoi weights from file - this does not scale well!
   call read_voro_weights(weights, ref_cluster%atom, size(rbasis, 2))
+#endif
 
   ! the cluster positions are in ref_cluster%rcls
   ! they are sorted by distance from center
