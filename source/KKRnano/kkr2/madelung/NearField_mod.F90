@@ -257,7 +257,7 @@ module NearField_mod
   subroutine get_const_multipole(self, v_intra, radius)
     ! Test potential: assume multipoles Q_L = 1.0d0
     implicit none
-    class (TestPotentialConstMulti) :: self
+    class (TestPotentialConstMulti), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
@@ -283,7 +283,7 @@ module NearField_mod
   !> A test potential: potential of a (unit) monopole
   subroutine get_const_monopole(self, v_intra, radius)
     implicit none
-    class (TestPotentialMonopole) :: self
+    class (TestPotentialMonopole), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
