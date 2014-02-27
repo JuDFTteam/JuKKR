@@ -1,4 +1,4 @@
-#include "DebugHelpers/logging_macros.h"
+#include "../DebugHelpers/logging_macros.h"
 
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 

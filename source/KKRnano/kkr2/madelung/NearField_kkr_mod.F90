@@ -32,10 +32,10 @@ module NearField_kkr_mod
     
     contains
     
-    procedure create => createIntracellPot
-    procedure init => initIntracellPotential
-    procedure destroy => destroyIntracellPotential
-    procedure get_pot => get_intracell 
+    procedure :: create => createIntracellPot
+    procedure :: init => initIntracellPotential
+    procedure :: destroy => destroyIntracellPotential
+    procedure :: get_pot => get_intracell
   end type
   
   contains
