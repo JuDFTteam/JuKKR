@@ -50,7 +50,7 @@ endif
 ifeq ($(PLATFORM),JUQUEEN)
 FC = xlf_r
 FC90 = xlf_r
-FCFLAGS = -q64 -O2 -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
+FCFLAGS = -q64 -O2 -qxlf2003=polymorphic -qmoddir=$(BUILDDIR) -I$(BUILDDIR)
 FC90FLAGS =
 LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -lesslbg
 endif
