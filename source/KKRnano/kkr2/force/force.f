@@ -58,7 +58,7 @@ c
 c
  
          DO 20 M = -1,1
-            LM = 2 + M + 1
+            LM = 2 + M + 1  ! only LM = 2,3,4 needed (l = 1, m =-1,0,1)
 c
 c---> initialize v1
 c

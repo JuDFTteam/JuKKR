@@ -2,11 +2,6 @@
 !> mesh points, but only non-spherical part is non-zero
 !> also there is always space for 2 spin-directions.
 
-! eliminates: VINS, VISP, VONS, lmpotd
-! TODO: pointer to radial mesh? unnecessary - just pass atom
-! ADD lmax???
-! parameters are more or less the same for all atoms - given in inputcard
-! write lpot, nspin, irmind, irmd for every atom??
 module PotentialData_mod
   implicit none
 
@@ -22,7 +17,6 @@ module PotentialData_mod
     ! derived
     integer :: lmpot
 
-    ! ECORE, NCORE, ITITLE, LCORE ??? - separate to Core-datastructure? TODO
   end type
 
   CONTAINS
@@ -33,7 +27,7 @@ module PotentialData_mod
     type (PotentialData), intent(inout) :: potential
     integer, intent(in) :: lpot
     integer, intent(in) :: nspin
-    integer, intent(in) :: irmind  !< number of mesh points
+    integer, intent(in) :: irmind  !< start of non-spherical region
     integer, intent(in) :: irmd  !< number of mesh points
 
     ! ---- local ----------
