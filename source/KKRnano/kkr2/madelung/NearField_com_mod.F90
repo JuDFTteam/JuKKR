@@ -92,13 +92,11 @@ module NearField_com_mod
       ! small hack: convert integer number to double to simplify communication
       send_buffer(max_npoints+1, lmpotd+1, ii) = dble(irmd) 
     end do
-    
+
     call exposeBufferD(win, send_buffer, &
                        (max_npoints+1)*(lmpotd+1)*num_local_atoms, &
                        (max_npoints+1)*(lmpotd+1), communicator)
 
-    call fenceD(win) ! begin MPI RMA access epoch
-    
     do ilocal = 1, num_local_atoms
       nf_correction(ilocal)%delta_potential = 0.0d0
       do icell = 1, size(local_cells(ilocal)%near_cell_indices)
@@ -106,15 +104,23 @@ module NearField_com_mod
         chunk(1) = getChunkIndex(local_cells(ilocal)%near_cell_indices(icell), &
                                  nranks*num_local_atoms, nranks)
         
+        call MPI_Win_Lock(MPI_LOCK_SHARED, chunk(1)%owner, 0, win, ierr)
+        CHECKASSERT(ierr == 0)
+
         call copyChunksNoSyncD(recv_buffer, win, chunk, (max_npoints+1)*(lmpotd+1))
         
+        call MPI_Win_Unlock(chunk(1)%owner, win, ierr)
+        CHECKASSERT(ierr == 0)
+
         irmd = int(recv_buffer(max_npoints+1, lmpotd+1) + 0.1d0)  ! convert back to integer
+
+        WRITELOG(2,*) "cell, irmd(icell) ", local_cells(ilocal)%near_cell_indices(icell), irmd
 
         call intra_pot%create(lmpotd, irmd)
         intra_pot%v_intra_values = recv_buffer(1:irmd, 1:lmpotd)
         intra_pot%charge_moments = recv_buffer(max_npoints+1, 1:lmpotd)
         intra_pot%radial_points = recv_buffer(1:irmd, lmpotd+1)
-        
+
         call intra_pot%init() ! setup intra-cell pot. interpolation
 
         call  add_potential_correction(nf_correction(ilocal)%delta_potential, intra_pot, &
@@ -139,8 +145,6 @@ module NearField_com_mod
       end do
 
     end do
-
-    call fenceD(win) ! end of RMA communication epoch
 
     call hideBufferD(win)
   end subroutine

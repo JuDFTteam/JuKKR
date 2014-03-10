@@ -102,3 +102,7 @@ Some Bugs:
    affecting the energy-mesh in input.conf then this asks for trouble
    
 *) iguess cannot be combined with l-cutoff (RS-cutoff is OK)
+
+ALREADY FIXED bugs:
+
+*) Near field correction do not work with more than 1 MPI rank.
