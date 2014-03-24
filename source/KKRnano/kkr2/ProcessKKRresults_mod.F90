@@ -502,6 +502,9 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
                             densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
+    WRITELOG(2,*) "Charge moments:"
+    WRITELOG(2,*) densities%CMOM + densities%CMINST
+
 !------------------------------------------------------------------------------
   end do ! ilocal
   !!!$omp end parallel do
@@ -512,6 +515,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......', &
                getElapsedTime(program_timer),ITER)
+
 
 end subroutine
 
