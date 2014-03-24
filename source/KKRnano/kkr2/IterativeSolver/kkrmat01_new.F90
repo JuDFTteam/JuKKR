@@ -71,6 +71,23 @@ subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 end subroutine
 
 !------------------------------------------------------------------------------
+!> Destroys workspace for multiple scattering calculation.
+subroutine destroyMultScatData(ms)
+  implicit none
+  type (MultScatData), intent(inout) :: ms
+
+  deallocate(ms%eikrp)
+  deallocate(ms%eikrm)
+  deallocate(ms%GLLH)
+  deallocate(ms%mat_X)
+  deallocate(ms%mat_B)
+
+  call destroySparseMatrixDescription(ms%sparse)
+
+  deallocate(ms%atom_indices)
+end subroutine
+
+!------------------------------------------------------------------------------
 !> See H. Hoehler
 !=======================================================================
 ! ---> fourier transformation
@@ -576,6 +593,8 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
 
   ! Cleanup
   deallocate(G_diag)
+
+  call destroyMultScatData(ms)
 
 end subroutine KKRMAT01_new
 
