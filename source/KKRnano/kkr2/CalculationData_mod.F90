@@ -750,7 +750,7 @@ module CalculationData_mod
     use InputParams_mod
     use Main2Arrays_mod
     use ConstructShapes_mod, only: construct, InterstitialMesh, &
-                                   destroyInterstitialMesh
+                                   destroyInterstitialMesh, write_shapefun_file
     use ShapefunData_mod
     implicit none
 
@@ -812,6 +812,11 @@ module CalculationData_mod
 
       call initRadialMesh(mesh, params%alat, inter_mesh%xrn, &
                           inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
+
+      ! optional output of shape functions
+      if (params%write_shapes == 1) then
+        call write_shapefun_file(shdata, inter_mesh, I1)
+      end if
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)

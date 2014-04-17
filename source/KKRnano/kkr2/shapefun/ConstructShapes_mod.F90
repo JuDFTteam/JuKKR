@@ -379,22 +379,49 @@ Do ifun = 1,nfu
    thetas(ir,ifun) = thetas1(ir,ifun)
   end do
 end do
-!
-! Now store on disk
-!
-!WRITE(15,FMT=9000) NPAN,MESHN
-!WRITE(15,FMT=9000) (nm(ipan1),ipan1=1,npan)
-!WRITE(15,FMT=9010) (xrn(ir),drn(ir),ir=1,meshn)
-!WRITE(15,FMT=9000) nfu
-!DO IFUN = 1,NFU
-!  WRITE(15,FMT=9000) lmifun(ifun)
-!!         Write (6,FMT=*)     lmifun(ifun)
-!  WRITE(15,FMT=9010) (thetas(ir,ifun),ir=1,meshn)
-!ENDDO
-!RETURN
-9000 FORMAT (16i5)
-9010 FORMAT (4d20.12)
+
 End subroutine
 
+!------------------------------------------------------------------------------
+!> Write shape function, interstitial mesh + panels in a format compatible
+!> to what the Juelich KKR programs expect.
+!>
+!> The name of the file written is shape.<shape_index>
+subroutine write_shapefun_file(shdata, inter_mesh, shape_index)
+  use ShapefunData_mod
+  implicit none
+  type (ShapefunData), intent(in) :: shdata
+  type (InterstitialMesh), intent(in) :: inter_mesh
+  integer, intent(in) :: shape_index
+
+  integer :: NPAN
+  integer :: MESHN
+  integer :: NFU
+
+  integer :: ipan1
+  integer :: ir
+  integer :: ifun
+  character(len=7) :: num
+
+  write(num, '(I7.7)') shape_index
+
+  NPAN = inter_mesh%npan
+  MESHN = size(inter_mesh%xrn)
+  NFU = shdata%nfu
+
+  open(15, file='shape.' // num, form='formatted')
+  WRITE(15,FMT=9000) NPAN,MESHN
+  WRITE(15,FMT=9000) (inter_mesh%nm(ipan1),ipan1=1,npan)
+  WRITE(15,FMT=9010) (inter_mesh%xrn(ir),inter_mesh%drn(ir),ir=1,meshn)
+  WRITE(15,FMT=9000) nfu
+  DO IFUN = 1,NFU
+    WRITE(15,FMT=9000) shdata%llmsp(ifun)
+    WRITE(15,FMT=9010) (shdata%theta(ir,ifun),ir=1,meshn)
+  ENDDO
+  close(15)
+  9000 FORMAT (16i5)
+  9010 FORMAT (4d20.12)
+
+end subroutine
 
 end module

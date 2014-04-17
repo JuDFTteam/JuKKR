@@ -40,3 +40,5 @@ d RMT_ref_scale
 d target_rms
 ### near field corrections (default = 0)
 i near_field 0
+### write shape functions (0=no, 1=yes) (default = 0)
+i write_shapes 0

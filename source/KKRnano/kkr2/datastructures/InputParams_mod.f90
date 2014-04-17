@@ -48,6 +48,7 @@ type InputParams
   double precision :: RMT_ref_scale
   double precision :: target_rms
   integer :: near_field
+  integer :: write_shapes
 end type InputParams
 
 CONTAINS
@@ -302,6 +303,16 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueInteger(conf, "write_shapes", confvalues%write_shapes, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%write_shapes = 0
+    ierror = 0
+  end if
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for write_shapes."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -353,6 +364,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%RMT_ref_scale
   read(FILEHANDLE) confvalues%target_rms
   read(FILEHANDLE) confvalues%near_field
+  read(FILEHANDLE) confvalues%write_shapes
   close(FILEHANDLE)
 end function
 
@@ -404,6 +416,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%RMT_ref_scale
   write(FILEHANDLE) confvalues%target_rms
   write(FILEHANDLE) confvalues%near_field
+  write(FILEHANDLE) confvalues%write_shapes
   close(FILEHANDLE)
 end function
 
