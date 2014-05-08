@@ -12,23 +12,22 @@ PROGRAM = kkr2.exe
 # and module files
 BUILDDIR = $(HOME)/build/kkr2
 
+EXTRA_FLAGS =
 
 ifeq ($(PLATFORM),ifort_IFF)
 FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES
+FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =
 # set run paths to look for shared libraries (-Wl means pass to linker)
-#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/em64t'  #The paths have changed
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
-#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
-#LDFLAGS += -lfftw3
 endif
+
 
 ifeq ($(PLATFORM),rwth)
 FC = mpif77 -warn
@@ -163,17 +162,21 @@ all:	$(PROGRAM)
 $(PROGRAM): globals $(OBJS)
 	$(FC90) $(FCFLAGS) $(FC90FLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
+ifeq ($(PLATFORM),ifort_IFF)
+broyden_second_mod.o: EXTRA_FLAGS = -heap-arrays
+endif
+
 %.o: %.f
-	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
 	
 %.o: %.f90
-	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 	
 %.o: %.F
-	$(FC) $(FCFLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
 	
 %.o: %.F90
-	$(FC90) $(FCFLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC90) $(FCFLAGS) $(FC90FLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
 
 .PHONY: clean
 clean:
