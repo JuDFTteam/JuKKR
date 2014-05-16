@@ -178,9 +178,9 @@
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
-!    if (LDAU) then
-!      call ldauinfo_read(LMAXD, NSPIND, ZAT, NAEZD)
-!    end if
+    if (params%LDAU) then
+      call ldauinfo_read(dims%LMAXD, dims%NSPIND, arrays%ZAT, dims%NAEZ)
+    end if
 
 !===================================================================
 
