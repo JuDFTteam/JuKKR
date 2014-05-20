@@ -604,7 +604,7 @@ CONTAINS
 
     !DEBUG
     if (IRMIN1 < IRMIND) then
-      write(*,*) "resetPotentials: IRMIN1 < IRMIND"
+      write(*,*) "resetPotentials: IRMIN1 < IRMIND", IRMIN1, IRMIND
       stop
     end if
 

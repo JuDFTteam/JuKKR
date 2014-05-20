@@ -71,7 +71,8 @@ module InterpolateBasisAtom_mod
     do_interpolation = .true.
     if (size(old_mesh%r) == size(new_mesh%r) .and. &
         old_atom%potential%lmpot == new_atom%potential%lmpot) then
-      if (sum(abs(old_mesh%r - new_mesh%r)) < TOL) then
+      if (sum(abs(old_mesh%r - new_mesh%r)) < TOL .and. &
+          irmin_old == irmin_new .and. irws_old == irws_new) then
         ! mesh has not changed - don't interpolate
         ! this avoids numerical inaccuracies - arising from
         ! spline interpolation routine
@@ -94,6 +95,11 @@ module InterpolateBasisAtom_mod
                            new_atom%potential%VINS(irmin_new:irws_new,lm,ii))
         end do
       end do
+
+      ! be careful when mesh partition has changed
+      if (irmin_new < irmin_old) then
+        new_atom%potential%VINS(irmin_new:irmin_old,:,:) = 0.0d0
+      end if
 
       ! interpolate spherical potential
       do ii = 1, nspin
