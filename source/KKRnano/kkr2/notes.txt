@@ -1,6 +1,8 @@
+========================
 Stack size:
+========================
 
-the program needs a large amount of stack space, otherwise segfaults:
+The program needs a large amount of stack space, otherwise segfaults:
 (space needed depends mainly on lmax and number of mesh points...)
 
 Use this environment variable, when using OpenMP-threads:
@@ -9,7 +11,22 @@ export OMP_STACKSIZE=20M
 Without OpenMP threads, one might have to set:
 ulimit -s 20000
 
+=======================
+Stack vs. heap arrays:
+=======================
+
+"vbmrv_mat_mod.f90" is explicitely coded to need stack allocated arrays
+(default for Fortran automatic arrays
+ for C programmers: variable length arrays (C99), allocated with "alloca")
+Also in this case this is only important when using OpenMP.
+use: "export OMP_STACKSIZE=20M"
+
+The other files should work with heap allocated Fortran automatic arrays
+(-heap-arrays option in ifort), but this has not been tested.
+
+=======================
 Interpolation of potential to new mesh and on-the-fly shape-function generation
+=======================
 
 *) kkr0 can create only meshes and potentials with an equal number of mesh points
 *) A shapefun file has to be provided to specify the initial interstitial mesh
@@ -22,7 +39,14 @@ Interpolation of potential to new mesh and on-the-fly shape-function generation
 *) When MT_scale = 0.0, the muffin-tin radii specified in atominfo will be
    used
 
+=======================
 Possible problems:
+=======================
+
+*) Core electron configuration is specified in file 'potential' (not atominfo!)
+   kkr0 reads it and writes it into (binary) file 'atoms'
+   When using binary potential files from a previous calculation, make sure
+   the core configuration matches.
 
 *) Number of mesh points depends on an algorithm using floating point numbers:
    However, processes working on the same atom must arrive at the same results.
@@ -32,6 +56,7 @@ Possible problems:
 *) Interpolation to a larger muffin-tin radius problematic,
    since spline polynomial at boundary is unbounded, it blows up when r > rmax
    Workaround: do several calculations, moving atoms in small steps only
+   SHOULD BE SOLVED NOW
 
 *) Small deviations observed when restarting a calculation (6. digit after .):
    Deviations were much larger when a converged potential was used
@@ -45,14 +70,23 @@ Possible problems:
 *) I/O with several processes writing to the same file can lead to problems
    (e.g. on RWTH cluster with Lustre filesystem)
    Solution: use task-local files
+   
+   This should not be a problem with the GPFS file system (as on JUQUEEN), since
+   it is advertised as having "byte-range"-locking. This matches also with our
+   experience.
 
+========================
 Task-local files:
+========================
 
 *) Compile with preprocessor-macro TASKLOCAL_FILES defined to get
    a version that uses task-local files for meshes and potentials instead of
    Fortran direct access files 
 
+========================
 Checkpointing:
+========================
+
 *) Files needed to restart a calculation:
    energy_mesh, vpotnew, vpotnew.idx, meshes, meshes.idx
    
@@ -73,7 +107,10 @@ kkr0:
    One also has to provide also the file 'atoms', since it is not generated
    by kkr0 if 'potential' is missing!!!
 
+========================
 K-points:
+========================
+
 Procedure for using a different k-mesh than automatically generated:
 Let's assume that we want to use the same number of k-points at each
 E-point
@@ -86,11 +123,16 @@ E-point
 *) run kkr0.exe
 *) proceed as usual
 
+========================
 Specifying the initial Fermi-Energy:
+========================
+
 *) in first entry in file 'potential'
 *) if file potential is not present it is taken from file 'EFERMI'
 
+========================
 Some Bugs:
+========================
 
 *) Fermi energy in formatted DOS output is not the correct Fermi energy
 *) Title in DOS files is not correct
