@@ -765,7 +765,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 !       convolute potential with shape function for next iteration
 
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
-    energies%VBC = VBC_new
+!       add also an optional muffin-tin-zero shift 'mt_zero_shift'
+    energies%VBC = VBC_new + params%mt_zero_shift
     call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
 
 !------------------------------------------------------------------------------

@@ -42,3 +42,5 @@ d target_rms
 i near_field 0
 ### write shape functions (0=no, 1=yes) (default = 0)
 i write_shapes 0
+### shift of muffin-tin zero (default = 0.0)
+d mt_zero_shift 0.0
