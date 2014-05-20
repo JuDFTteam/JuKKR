@@ -163,7 +163,10 @@ $(PROGRAM): globals $(OBJS)
 	$(FC90) $(FCFLAGS) $(FC90FLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
 ifeq ($(PLATFORM),ifort_IFF)
+# this files use large automatic arrays
 broyden_second_mod.o: EXTRA_FLAGS = -heap-arrays
+pnstmat.o: EXTRA_FLAGS = -heap-arrays
+pnsqns.o: EXTRA_FLAGS = -heap-arrays
 endif
 
 %.o: %.f

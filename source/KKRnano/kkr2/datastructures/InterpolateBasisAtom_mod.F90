@@ -98,7 +98,7 @@ module InterpolateBasisAtom_mod
 
       ! be careful when mesh partition has changed
       if (irmin_new < irmin_old) then
-        new_atom%potential%VINS(irmin_new:irmin_old,:,:) = 0.0d0
+        new_atom%potential%VINS(irmin_new:min(irmin_old, irws_new),:,:) = 0.0d0
       end if
 
       ! interpolate spherical potential
