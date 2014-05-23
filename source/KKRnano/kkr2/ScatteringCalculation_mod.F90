@@ -221,7 +221,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !------------------------------------------------------------------------------
 
         call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
-                      gaunts%CLEB,ref_cluster%RCLS(:,:),gaunts%ICLEB, &
+                      gaunts%CLEB,ref_cluster%RCLS,gaunts%ICLEB, &
                       gaunts%LOFLM,ref_cluster%NACLS, &
                       kkr%TREFLL,kkr%DTREFLL, GrefN_buffer(:,:,:,ilocal), &
                       kkr%DGREFN, kkr%LLY_G0TR(IE), &
