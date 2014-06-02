@@ -167,7 +167,7 @@ EXTRA_FLAGS = -heap-arrays
 # this file needs stack allocated automatic arrays
 vbrmv_mat_mod.o: EXTRA_FLAGS =
 # TODO: unclear why this module does not work with -heap-arrays
-#ScatteringCalculation_mod.o: EXTRA_FLAGS =
+ScatteringCalculation_mod.o: EXTRA_FLAGS =
 endif
 
 %.o: %.f
