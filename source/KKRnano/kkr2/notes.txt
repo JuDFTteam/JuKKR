@@ -24,6 +24,12 @@ use: "export OMP_STACKSIZE=20M"
 The other files should work with heap allocated Fortran automatic arrays
 (-heap-arrays option in ifort), but this has not been tested.
 
+ScatteringCalculation_mod.F90 also requires stack allocated arrays when using
+OpenMP. The reason for this is unknown.
+
+TODO: a safe strategy would be to not use the 'heap-arrays' option for
+code that uses OpenMP.
+
 =======================
 Interpolation of potential to new mesh and on-the-fly shape-function generation
 =======================
