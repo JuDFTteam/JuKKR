@@ -248,8 +248,6 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   !==  calculate DOS  ==============================================
   !=================================================================
 
-  ! TODO: get rid of this "loop" somehow - we are already atom-parallel - DONE
-
       do ISPIN = 1,NSPIN
 
         call RHOVAL(.false.,ICST,IELAST,NSRA, &
@@ -277,9 +275,6 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
       end do
 
-      !TESTARRAYLOCAL(DEN0)
-      !TESTARRAY(0, DEN0)
-
       do IE = 1,IELAST
         call RHOVAL0(EZ(IE),WEZ(IE),DRDI,R, &
                      IPAN,IRCUT, &
@@ -288,17 +283,9 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                      lmaxd, irmd, irid, ipand, nfund)
       end do
 
-      !TESTARRAYLOCAL(DOS0)
-      !TESTARRAY(0, DOS0)
-      !TESTARRAY(0, DOS1)
-      !TESTARRAY(0, WEZ)
-
   ! communicate the DOS results
   call lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
   call lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
-
-  !TESTARRAY(0, DOS0)
-  !TESTARRAY(0, DOS1)
 
   ! ----------- deallocate work arrays ----------------------------------
   deallocate(DOS)

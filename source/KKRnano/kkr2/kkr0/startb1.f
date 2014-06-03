@@ -454,17 +454,6 @@ CDEBUG E.R.
               stop
             end if
 CDEBUG
-
-
-CDEBUG E.R.
-C           if ((IRMD - IMT1) /= MESHN(ICELL)) then
-C             write(*,*) "ERROR in STARTB1"
-C             write(*,*) "Assertion IRMD - IMT1 == MESHN(ICELL) failed."
-C             write(*,*) "Atom, IRMD, IMT1, MESHN(ICELL)"
-C             write(*,*) IH, IRMD, IMT1, MESHN(ICELL)
-C             stop
-C           end if
-CDEBUG
             ISUM = IMT(IH)
             DO 90 IPAN1 = 2,IPAN(IH)
               ISUM = ISUM + NM(IPAN1,ICELL)
