@@ -1,9 +1,8 @@
-! how to deal with spin???
-
 module AtomicCoreData_mod
 
   implicit none
 
+  !> Structure that contains information about core states
   type AtomicCoreData
     integer :: LCORE(20,2)       !< for historical reasons always 2 spin directions
     integer :: NCORE(2)
@@ -14,7 +13,6 @@ module AtomicCoreData_mod
     ! data used for calculation - not written to disk
     double precision :: QC_corecharge !< total charge of core electrons
     double precision, dimension(:,:), allocatable ::  RHOCAT !< radial charge density of core
-    !!!double precision :: Z_nuclear
 
   end type
 

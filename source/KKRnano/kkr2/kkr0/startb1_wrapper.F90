@@ -1,5 +1,6 @@
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine STARTB1
+!> Returns: EFERMI (from first entry in potential file)
 subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
                            NTCELL, &
                            EFERMI,ZAT, radius_muffin_tin, &
@@ -119,7 +120,8 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
 
   call dochecks()
 
-  call writeAtomData()
+  call writeAtomData(naezd, lpot, nspin, irmd, irnsd, ntcell, &
+                     radius_muffin_tin, ZAT, ITITLE, NCORE, LCORE)
 
   call openRadialMeshDataDAFile(meshdata, 37 , "meshes.0")
 #ifndef TASKLOCAL_FILES
@@ -162,58 +164,6 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
 
 
   CONTAINS
-
-    subroutine writeAtomData()
-      use BasisAtom_mod
-      implicit none
-
-      type (BasisAtom) :: atom
-      integer :: ii, ispin, ipot
-      integer :: max_reclen
-
-      call createBasisAtom(atom, 1, lpot, nspin, (irmd-irnsd), irmd)  ! create dummy basis atom
-
-      call openBasisAtomDAFile(atom, 37, 'atoms')
-#ifndef TASKLOCAL_FILES
-      call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx')
-#endif
-
-      inquire (iolength = max_reclen) atom%potential%VINS, &
-                                      atom%potential%VISP, &
-                                      atom%core%ECORE
-
-      do ii = 1, naezd
-        atom%atom_index = ii
-        atom%cell_index = NTCELL(ii)
-        atom%Z_nuclear = ZAT(ii)
-        atom%radius_muffin_tin = radius_muffin_tin(ii)
-
-        atom%core%NCORE = 0
-        atom%core%LCORE = 0
-        atom%core%ITITLE = 0
-
-        do ispin = 1, nspin
-          ipot = NSPIN * (ii-1) + ispin
-          atom%core%NCORE(ispin) = NCORE(ipot)
-          atom%core%LCORE(:, ispin) = LCORE(:, ipot)
-          atom%core%ITITLE(:, ispin) = ITITLE(:, ipot)
-        enddo
-
-        call writeBasisAtomDA(atom, 37, ii)
-#ifndef TASKLOCAL_FILES
-        call writeBasisAtomPotentialIndexDA(atom, 38, ii, max_reclen)
-#endif
-
-      enddo
-#ifndef TASKLOCAL_FILES
-      call closeBasisAtomPotentialIndexDAFile(38)
-#endif
-      call closeBasisAtomDAFile(37)
-
-      call destroyBasisAtom(atom)
-
-    end subroutine
-
 !------------------------------------------------------------------------------
   subroutine dochecks()
     implicit none
@@ -247,6 +197,73 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
     if (ierror /= 0) stop
 !-----------------------------------------------------------------------
   end subroutine
+
+end subroutine
+
+!------------------------------------------------------------------------------
+!> Writes the file 'atoms' with some basic information about each atom
+!> like nuclear charge, muffin-tin-radius, nspin, core config...
+subroutine writeAtomData(naezd, lpot, nspin, irmd, irnsd, ntcell, &
+                         radius_muffin_tin, ZAT, ITITLE, NCORE, LCORE)
+  use BasisAtom_mod
+  implicit none
+
+  integer, intent(in) :: naezd
+  integer, intent(in) :: lpot
+  integer, intent(in) :: nspin
+  integer, intent(in) :: irmd
+  integer, intent(in) :: irnsd
+  integer, intent(in) :: ntcell(naezd)
+  double precision, intent(in) :: radius_muffin_tin(naezd)
+  double precision, intent(in) :: ZAT(naezd)
+  integer, intent(in) :: ITITLE(20, naezd*nspin)
+  integer, intent(in) :: NCORE(naezd*nspin)
+  integer, intent(in) :: LCORE(20, naezd*nspin)
+
+  type (BasisAtom) :: atom
+  integer :: ii, ispin, ipot
+  integer :: max_reclen
+
+  call createBasisAtom(atom, 1, lpot, nspin, (irmd-irnsd), irmd)  ! create dummy basis atom
+
+  call openBasisAtomDAFile(atom, 37, 'atoms')
+#ifndef TASKLOCAL_FILES
+  call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx')
+#endif
+
+  inquire (iolength = max_reclen) atom%potential%VINS, &
+                                  atom%potential%VISP, &
+                                  atom%core%ECORE
+
+  do ii = 1, naezd
+    atom%atom_index = ii
+    atom%cell_index = NTCELL(ii)
+    atom%Z_nuclear = ZAT(ii)
+    atom%radius_muffin_tin = radius_muffin_tin(ii)
+
+    atom%core%NCORE = 0
+    atom%core%LCORE = 0
+    atom%core%ITITLE = 0
+
+    do ispin = 1, nspin
+      ipot = NSPIN * (ii-1) + ispin
+      atom%core%NCORE(ispin) = NCORE(ipot)
+      atom%core%LCORE(:, ispin) = LCORE(:, ipot)
+      atom%core%ITITLE(:, ispin) = ITITLE(:, ipot)
+    enddo
+
+    call writeBasisAtomDA(atom, 37, ii)
+#ifndef TASKLOCAL_FILES
+    call writeBasisAtomPotentialIndexDA(atom, 38, ii, max_reclen)
+#endif
+
+  enddo
+#ifndef TASKLOCAL_FILES
+  call closeBasisAtomPotentialIndexDAFile(38)
+#endif
+  call closeBasisAtomDAFile(37)
+
+  call destroyBasisAtom(atom)
 
 end subroutine
 

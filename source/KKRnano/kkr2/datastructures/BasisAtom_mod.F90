@@ -68,7 +68,7 @@ module BasisAtom_mod
     integer :: nspin
 
     double precision :: RMTref !< radius of repulsive reference potential
-    double precision :: radius_muffin_tin
+    double precision :: radius_muffin_tin !< user-specified muffin-tin radius
 
     type (PotentialData) :: potential
     type (AtomicCoreData) :: core

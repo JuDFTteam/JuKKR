@@ -195,6 +195,7 @@
                    dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
                    dims%NAEZ, dims%IRNSD)
     else
+      ! no formatted potential provided
       write(*,*) &
       "WARNING: file 'potential' not found... skipping start potential generation."
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
