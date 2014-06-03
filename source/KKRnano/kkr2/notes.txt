@@ -95,6 +95,7 @@ Checkpointing:
 
 *) Files needed to restart a calculation:
    energy_mesh, vpotnew, vpotnew.idx, meshes, meshes.idx
+   LDA+U: wldau.unf
    
 *) To restart calculation:
    -) run kkr0 *first*
@@ -133,8 +134,27 @@ E-point
 Specifying the initial Fermi-Energy:
 ========================
 
+The initial Fermi energy is used by kkr0 to decide how much k-points
+are calculated for each energy points. The full k-mesh is used for points
+close to the Fermi level
+
+The initial Fermi level can be specified:
 *) in first entry in file 'potential'
 *) if file potential is not present it is taken from file 'EFERMI'
+
+========================
+Weighted Voronoi diagrams
+========================
+
+Specify weights in file 'voro_weights'.
+Each line contains a real number specifying the weight of the corresponding
+atom.
+When regular Voronoi diagrams (Wigner-Seitz cells) are required, set every
+weight to 1.0
+
+Compilation with preprocessor macro USE_VOROWEIGHTS defined. This is required
+because the reading of the Voronoi weights is done in an inefficient way
+(every process reads complete file 'voro_weights')
 
 ========================
 Some Bugs:
