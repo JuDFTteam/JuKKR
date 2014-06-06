@@ -262,11 +262,6 @@
     call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)
 
-!    if (BCPD == 1 .and. NATBLD*XDIM*YDIM*ZDIM /= NAEZD) then
-!      write(*,*) "ERROR: When BCPD==1 then NATBLD*XDIM*YDIM*ZDIM has to be equal to NAEZD."
-!      stop
-!    endif
-
 !     Conversion of RMAX and GMAX to units of ALAT
     params%RMAX = params%RMAX*params%ALAT
     params%GMAX = params%GMAX/params%ALAT

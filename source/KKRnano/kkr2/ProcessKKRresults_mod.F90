@@ -29,17 +29,12 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   use BasisAtom_mod
 
   use TimerMpi_mod
-  use BroydenData_mod
-  use BRYDBM_new_com_mod
-
-  use wrappers_mod
 
   use DimParams_mod
   use InputParams_mod
   use Main2Arrays_mod
   use DensityResults_mod
   use EnergyResults_mod
-  use broyden_kkr_mod
 
   implicit none
 
@@ -56,31 +51,20 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 
   ! locals
   type (BasisAtom) , pointer                           :: atomdata
-  type (BroydenData), pointer                          :: broyden
   type (DensityResults), pointer                       :: densities
   type (EnergyResults), pointer                        :: energies
 
   type (RadialMeshData), pointer :: mesh
   integer :: I1
   integer :: ierr
-  double precision :: RMSAVQ ! rms error charge dens. (contribution of all local sites)
-  double precision :: RMSAVM ! rms error mag. density (contribution of all local sites)
-  double precision :: RMSAVQ_single
-  double precision :: RMSAVM_single
   integer :: ilocal
   integer :: num_local_atoms
 
   processKKRresults = 0
   num_local_atoms = getNumLocalAtoms(calc_data)
 
-  atomdata     => getAtomData(calc_data, 1)
-  broyden      => getBroyden(calc_data, 1)
   densities    => getDensities(calc_data, 1)
   energies     => getEnergies(calc_data, 1)
-
-  mesh => atomdata%mesh_ptr
-
-  I1 = atomdata%atom_index
 
   ! kkr
   !  |
@@ -97,59 +81,19 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   ! |
   ! v
   ! atomdata, energies
+  !
+  ! |
+  ! v
 
-! -->   calculation of RMS and final construction of the potentials (straight mixing)
-  RMSAVQ = 0.0d0
-  RMSAVM = 0.0d0
+  processKKRresults = mix_potential(calc_data, iter, params, dims, my_mpi)
 
-  ! straight/simple mixing
-  !$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
-  do ilocal = 1, num_local_atoms
-    atomdata => getAtomData(calc_data, ilocal)
+  ! |
+  ! v
+  ! modified: atomdata
 
-    call MIXSTR_wrapper(atomdata, RMSAVQ_single, RMSAVM_single, params%MIXING, params%FCM)
-
-    RMSAVQ = RMSAVQ + RMSAVQ_single
-    RMSAVM = RMSAVM + RMSAVM_single
-  end do
-  !$omp end parallel do
-
-  ! summation and output of RMS error
-  call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
-                 getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
-
-  ! check if target rms error has been reached and set abort flag
-  if (rmsavq <= params%target_rms) then
-    processKKRresults = 1
-    if (isMasterRank(my_mpi)) write(*,*) "TARGET RMS ERROR REACHED..."
-  end if
-
-  ! it is weird that straight mixing is called in any case before
-! -->   potential mixing procedures: Broyden or Andersen updating schemes
-  if (params%IMIX>=3 .and. params%IMIX<6) then
-
-    if (num_local_atoms > 1) then
-      if (isMasterRank(my_mpi)) write(*,*) "Broyden mixing and num_local_atoms > 1 not supported."
-      STOP
-    end if
-
-    call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS, &
-    atomdata%potential%VINS, &
-    atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
-    mesh%IRC,mesh%IRMIN,atomdata%potential%NSPIN, &
-    broyden%IMIX,ITER, &
-    broyden%UI2,broyden%VI2,broyden%WIT,broyden%SM1S,broyden%FM1S, &
-    getMyAtomRank(my_mpi), &
-    getMySEcommunicator(my_mpi), &
-    broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, &
-    atomdata%potential%nspin)
-
-  else if (params%imix == 6) then
-    ! use Broyden mixing that supports num_local_atoms > 1
-    call mix_broyden2_com(calc_data, iter, getMySEcommunicator(my_mpi))
-  end if
 
   ! use any atomdata to open file - use reclen stored in calc_data
+  atomdata => getAtomData(calc_data, 1)
   call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", &
                                     getMaxReclenPotential(calc_data))
 
@@ -220,6 +164,108 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 ! -----------------------------------------------------------------
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
+
+end function
+
+
+!------------------------------------------------------------------------------
+!> Performs potential mixing.
+!>
+!> Returns 1 when params%target_rms is reached, otherwise 0
+integer function mix_potential(calc_data, iter, params, dims, my_mpi)
+
+  use KKRnanoParallel_mod
+  use CalculationData_mod
+  use RadialMeshData_mod
+  use BasisAtom_mod
+  use BroydenData_mod
+  use BRYDBM_new_com_mod
+  use wrappers_mod
+  use DimParams_mod
+  use InputParams_mod
+  use broyden_kkr_mod
+
+  implicit none
+
+  integer, intent(in)                                  :: iter
+  type (CalculationData), intent(inout)                :: calc_data
+  type (KKRnanoParallel), intent(in)                   :: my_mpi
+  type (DimParams)  , intent(in)                       :: dims
+  type (InputParams), intent(in)                       :: params
+
+  type (BasisAtom) , pointer                           :: atomdata
+  type (BroydenData), pointer                          :: broyden
+
+  type (RadialMeshData), pointer :: mesh
+  double precision :: RMSAVQ ! rms error charge dens. (contribution of all local sites)
+  double precision :: RMSAVM ! rms error mag. density (contribution of all local sites)
+  double precision :: RMSAVQ_single
+  double precision :: RMSAVM_single
+  integer :: ilocal
+  integer :: num_local_atoms
+
+  mix_potential = 0
+
+  num_local_atoms = getNumLocalAtoms(calc_data)
+
+  ! -->   calculation of RMS and final construction of the potentials (straight mixing)
+  RMSAVQ = 0.0d0
+  RMSAVM = 0.0d0
+
+  ! straight/simple mixing
+  !$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
+  do ilocal = 1, num_local_atoms
+    atomdata => getAtomData(calc_data, ilocal)
+
+    call MIXSTR_wrapper(atomdata, RMSAVQ_single, RMSAVM_single, params%MIXING, params%FCM)
+
+    RMSAVQ = RMSAVQ + RMSAVQ_single
+    RMSAVM = RMSAVM + RMSAVM_single
+  end do
+  !$omp end parallel do
+
+  ! summation and output of RMS error
+  call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
+                 getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
+
+  ! check if target rms error has been reached and set abort flag
+  if (rmsavq <= params%target_rms) then
+    mix_potential = 1
+    if (isMasterRank(my_mpi)) write(*,*) "TARGET RMS ERROR REACHED..."
+  end if
+
+  ! straight mixing is called in any case before
+  ! Broyden mixing - it is undone in Broyden routines
+
+! -->   potential mixing procedures: Broyden or Andersen updating schemes
+  if (params%IMIX>=3 .and. params%IMIX<6) then
+
+    if (num_local_atoms > 1) then
+      if (isMasterRank(my_mpi)) write(*,*) "Broyden mixing and num_local_atoms > 1 not supported."
+      STOP
+    end if
+
+    ! Take data from 1st local atom, since only one local atom is supported
+    atomdata     => getAtomData(calc_data, 1)
+    broyden      => getBroyden(calc_data, 1)
+    mesh => atomdata%mesh_ptr
+
+    call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS, &
+    atomdata%potential%VINS, &
+    atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
+    mesh%IRC,mesh%IRMIN,atomdata%potential%NSPIN, &
+    broyden%IMIX,ITER, &
+    broyden%UI2,broyden%VI2,broyden%WIT,broyden%SM1S,broyden%FM1S, &
+    getMyAtomRank(my_mpi), &
+    getMySEcommunicator(my_mpi), &
+    broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, &
+    atomdata%potential%nspin)
+
+  ! this method supports num_local_atoms > 1
+  else if (params%imix == 6) then
+    ! use Broyden mixing that supports num_local_atoms > 1
+    call mix_broyden2_com(calc_data, iter, getMySEcommunicator(my_mpi))
+  end if
 
 end function
 
@@ -662,12 +708,16 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                   densities%RHO2NS,atomdata%potential%VONS, &
                   mesh%R,mesh%DRDI,mesh%IMT,atomdata%Z_nuclear,mesh%irmd)
 
+      write(*,*) "Hellman: ", I1, densities%force_FLM(1), densities%force_FLM(-1), densities%force_FLM(0)
+
       force_FLMC = 0.0d0 ! temporary needed later in forcxc
 
       call FORCE(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
                  atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                  atomdata%potential%VONS, mesh%R, mesh%DRDI, &
                  mesh%IMT, mesh%irmd)
+
+      write(*,*) "no XC  : ", I1, densities%force_FLM(1), densities%force_FLM(-1), densities%force_FLM(0)
 
     end if
 
