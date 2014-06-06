@@ -1,4 +1,21 @@
 ========================
+Building KKRnano
+========================
+
+*) 2 programs to build: kkr2.exe, kkr0.exe
+
+*) Relevant makefiles: kkr2/Makefile kkr2/kkr0/Makefile
+
+*) Create build directories (these paths are hardcoded in the makefiles)
+   $HOME/build/kkr0
+   $HOME/build/kkr2
+   
+*) building:
+   make PLATFORM=<insert platform> TYPE=<debug or nodebug>
+   
+   where PLATFORM can be JUQUEEN, if PLATFORM is left out it builds with ifort
+   
+========================
 Stack size:
 ========================
 

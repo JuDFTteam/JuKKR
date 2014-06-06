@@ -85,6 +85,7 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   ! |
   ! v
 
+  ! mix_potential returns 1 when target_rms reached, otherwise 0
   processKKRresults = mix_potential(calc_data, iter, params, dims, my_mpi)
 
   ! |
@@ -144,7 +145,7 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
     ! also other stuff is read from results1 (and results2)
 
     ! TODO: note: title written to DOS files is not correct
-    ! - taken from 1st atom only
+    ! - taken from 1st local atom only
     ! TODO: Fermi energy written to DOS files is not correct
     call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,dims%LMAXD, &
     arrays%NAEZ,emesh%NPOL, &
@@ -708,16 +709,12 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                   densities%RHO2NS,atomdata%potential%VONS, &
                   mesh%R,mesh%DRDI,mesh%IMT,atomdata%Z_nuclear,mesh%irmd)
 
-      write(*,*) "Hellman: ", I1, densities%force_FLM(1), densities%force_FLM(-1), densities%force_FLM(0)
-
       force_FLMC = 0.0d0 ! temporary needed later in forcxc
 
       call FORCE(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
                  atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                  atomdata%potential%VONS, mesh%R, mesh%DRDI, &
                  mesh%IMT, mesh%irmd)
-
-      write(*,*) "no XC  : ", I1, densities%force_FLM(1), densities%force_FLM(-1), densities%force_FLM(0)
 
     end if
 
@@ -763,7 +760,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                   atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                   atomdata%potential%VONS, mesh%R, &
                   mesh%DRDI, mesh%IMT, mesh%irmd)
-      !write(*,*) densities%force_FLM
     end if
 
     ! unnecessary I/O? see results.f
