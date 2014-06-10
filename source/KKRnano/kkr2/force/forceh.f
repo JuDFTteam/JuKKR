@@ -1,4 +1,4 @@
-      SUBROUTINE FORCEH(CMOM,FLMH,LPOT,RHO2NS,V,R,DRDI,
+      SUBROUTINE FORCEH(FLMH,LPOT,RHO2NS,V,R,DRDI,
      &                  IRWS,Z,irmd)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
@@ -11,18 +11,10 @@ C     .. Parameters ..
 
       INTEGER irmd
 
-C     INTEGER LMPOTD
-C     PARAMETER (LMPOTD= (LPOTD+1)**2)
-C     ..
 C     .. Scalar Arguments ..
       INTEGER LPOT
-C     ..
-C     .. Array Arguments ..
-C     DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),FLMH(-1:1,*),
-C    +       R(IRMD,*),
-C    +       RHO2NS(IRMD,LMPOTD),V(IRMD,LMPOTD,2),Z(*)
 
-      DOUBLE PRECISION CMOM((LPOT+1)**2),DRDI(IRMD),FLMH(-1:1),
+      DOUBLE PRECISION DRDI(IRMD),FLMH(-1:1),
      &       R(IRMD),
      &       RHO2NS(IRMD,(LPOT+1)**2), V(IRMD,(LPOT+1)**2,2), Z
       INTEGER IRWS
@@ -66,7 +58,7 @@ c
 c
             V1(1) = 0.0D0
             DO 30 I = 2,IRWS1
-               V1(I) = RHO2NS(I,LM)* (R(I)** (-2.0D0))
+               V1(I) = RHO2NS(I,LM)* (R(I)** (-2.0D0) - R(I) / RWS**3)
    30       CONTINUE
 c
 c---> integrate with simpson subroutine
@@ -77,8 +69,7 @@ c
 c
 c---> use coulomb potential to determine extra atomic contribution
 c
-            FLM(M,2) = V(IRWS1,LM,IPOT)* (3.0D0/ (4.0D0*PI*RWS)) -
-     +                 2.0D0*CMOM(LM)/ (RWS**3)
+            FLM(M,2) = V(IRWS1,LM,IPOT)* (3.0D0/ (4.0D0*PI*RWS))
 c
 c---> total Hellman-Feynman force
 c

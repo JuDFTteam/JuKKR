@@ -631,6 +631,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   integer :: num_local_atoms
   logical :: calc_force
   double precision :: force_flmc(-1:1)
+  integer :: ii
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -706,9 +707,12 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
     if (calc_force) then
 
-      call FORCEH(densities%CMOM,densities%force_FLM,atomdata%potential%LPOT, &
-                  densities%RHO2NS,atomdata%potential%VONS, &
-                  mesh%R,mesh%DRDI,mesh%IMT,atomdata%Z_nuclear,mesh%irmd)
+        do ii = 2, mesh%imt
+          call FORCEH(densities%force_FLM,atomdata%potential%LPOT, &
+                      densities%RHO2NS,atomdata%potential%VONS, &
+                      mesh%R,mesh%DRDI,ii,atomdata%Z_nuclear,mesh%irmd)
+        write(*,*) ii, mesh%R(ii), densities%force_FLM(1)
+        end do
 
       force_FLMC = 0.0d0 ! temporary needed later in forcxc
 
