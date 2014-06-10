@@ -11,6 +11,7 @@ module ProcessKKRresults_mod
 
 CONTAINS
 
+!------------------------------------------------------------------------------
 !> Returns 1 when target rms error has been reached,
 !> master rank adds 2 if STOP-file present.
 integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, &
@@ -73,14 +74,14 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
                           program_timer, arrays, emesh)
   ! |
   ! v
-  ! densities, emesh, energies (ESPV only)
+  ! modified: densities, emesh, energies (ESPV only)
   ! |
   ! v
   call calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                            program_timer, arrays)
   ! |
   ! v
-  ! atomdata, energies
+  ! modified: atomdata, energies
   !
   ! |
   ! v

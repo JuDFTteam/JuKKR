@@ -2,8 +2,6 @@
 
 #include "DebugHelpers/test_macros.h"
 
-! Add emesh, ... ????
-
 module CalculationData_mod
 
   use MadelungCalculator_mod
@@ -37,7 +35,7 @@ module CalculationData_mod
 
   type CalculationData
     PRIVATE
-    !integer :: atoms_per_proc
+
     integer :: num_local_atoms  ! <= atoms_per_proc
     integer, allocatable :: atom_ids(:)
     integer :: max_reclen_meshes
@@ -64,7 +62,6 @@ module CalculationData_mod
     type (TruncationZone), pointer         :: trunc_zone        => null()
     type (ClusterInfo), pointer            :: clusters          => null()
     type (BroydenData), pointer            :: broyden           => null()
-    !type (EnergyMesh), pointer :: emesh                         => null()
 
     ! storage for initial guess
     type (InitialGuess), pointer           :: iguess_data       => null()
@@ -1022,7 +1019,8 @@ module CalculationData_mod
     ! setup the truncation zone
     call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
 
-
+    ! get information about all the reference clusters of
+    ! atoms in truncation zone
     call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
                           calc_data%trunc_zone, getMySEcommunicator(my_mpi))
 
