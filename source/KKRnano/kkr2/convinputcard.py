@@ -179,8 +179,14 @@ def getKeyDict(keyfile, lines):
         if not k or k.find('#') == 0:
             continue
         splitted = k.split()
-        result[splitted[0]] = '  '.join(getNums(key=splitted[1], lines=lines, 
-                                      num=int(splitted[2]), offset=int(splitted[3])))
+        
+        try:
+            key_values = getNums(key=splitted[1], lines=lines, 
+                                 num=int(splitted[2]), offset=int(splitted[3]))
+        except InputCardKeyError:
+            key_values = ["???"]
+        
+        result[splitted[0]] = '  '.join(key_values)
     return result
     
 keydict = getKeyDict(KEYS.split('\n'), lines)
@@ -224,7 +230,8 @@ def substTemplate(template, keydict, fixed=False):
 
 template = substTemplate(template, keydict, False)
 
-f = open("input.conf", "w")
-f.write(template)
-f.close()
+if __name__ == "__main__":
+    f = open("input.conf", "w")
+    f.write(template)
+    f.close()
 
