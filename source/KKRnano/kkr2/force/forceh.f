@@ -1,3 +1,7 @@
+C     Calculates the Hellman-Feynman force.
+C
+C     ATTENTION: a factor sqrt(4*pi/3) is missing here, this is
+C     corrected in routine 'FORCE'
       SUBROUTINE FORCEH(FLMH,LPOT,RHO2NS,V,R,DRDI,
      &                  IRWS,Z,irmd)
       IMPLICIT NONE
