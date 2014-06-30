@@ -1,4 +1,12 @@
-!> Interpolation of intracell potential
+!> Near-field electrostatics: Interpolation of intracell potential.
+!>
+!> Routines to calculate intracell potential values for radii
+!> not specified in the radial mesh.
+!>
+!> When radius is outside of Voronoi cell then use multipole moments
+!> to calculate potential value (exactly).
+!> When radius is inside Voronoi cell, use cubic splines to interpolate
+!> from values on radial mesh.
 !>
 !> @author Elias Rabel
 module NearField_kkr_mod
@@ -157,7 +165,6 @@ module NearField_kkr_mod
           
     self%counter_spline = counter
     
-    ! TODO: remove duplicate x-values
     L = 0
     M = 0
     do ii = 1, lmpotd

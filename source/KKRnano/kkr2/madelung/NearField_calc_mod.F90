@@ -1,4 +1,6 @@
 !> This module implements the near field corrections for KKRnano.
+!>
+!> @author Elias Rabel
 
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 

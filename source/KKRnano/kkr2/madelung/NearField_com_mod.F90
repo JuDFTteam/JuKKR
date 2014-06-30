@@ -1,3 +1,8 @@
+!> Calculation of near-field electrostatic corrections:
+!> MPI communication routines.
+!>
+!> @author Elias Rabel
+
 #include "../DebugHelpers/logging_macros.h"
 
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif

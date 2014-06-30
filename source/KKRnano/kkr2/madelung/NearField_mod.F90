@@ -82,7 +82,7 @@ module NearField_mod
     call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx_prime)
 
     do L = 0,lmx_prime
-       rfac = (1. / (r**(L+1))) !/ sqrt(pi) ! TODO: IS THIS FACTOR necessary - no only when using gamfc: see gamfc 
+       rfac = (1. / (r**(L+1)))
        do m = -L,L
           lm1 = L*(L+1) + m + 1
           smat(lm1) = ylm(lm1)*rfac
@@ -98,7 +98,7 @@ module NearField_mod
       L1 = gaunt%LOFLM(LM1)
       L2 = gaunt%LOFLM(LM2)
 
-      ! --> Gaunt property: l1+l2=l3
+      ! --> Gaunt property: l1+l2<=l3
 
       if (lm1 <= lmmaxd .and. lm2 <= lmmaxd .and. lm3 <= lmmaxd_prime) then
           AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &

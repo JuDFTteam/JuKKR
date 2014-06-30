@@ -16,6 +16,34 @@
 !>
 !> Author: Elias Rabel, 2012
 
+! Example of usage.
+
+!program xy
+!  use KKRnanoParallel_mod
+!  implicit none
+!  type (KKRnanoParallel) :: my_mpi
+!
+!  call createKKRnanoParallel(my_mpi, 2, 2, 3)
+!
+!  write (*,*) "Worldrank", getMyWorldRank(my_mpi), &
+!                           isMasterRank(my_mpi), &
+!                           isActiveRank(my_mpi), &
+!                           getMyAtomId(my_mpi), &
+!                           getMySpinId(my_mpi), &
+!                           getMyEnergyId(my_mpi), &
+!                           getMySEId(my_mpi), &
+!                           isInMasterGroup(my_mpi)
+!
+!  if (isMasterRank(my_mpi)) then
+!    write(*,*) "Num Ranks: ", getNumAtomRanks(my_mpi), &
+!                              getNumSpinRanks(my_mpi), &
+!                              getNumEnergyRanks(my_mpi), &
+!                              getNumSERanks(my_mpi)
+!  end if
+!
+!  call destroyKKRnanoParallel(my_mpi);
+!end program
+
 module KKRnanoParallel_mod
 
   !> Opaque object. Use getter routines to access member variables
@@ -405,30 +433,3 @@ module KKRnanoParallel_mod
 
 end module
 
-! Example of usage.
-
-!program xy
-!  use KKRnanoParallel_mod
-!  implicit none
-!  type (KKRnanoParallel) :: my_mpi
-!
-!  call createKKRnanoParallel(my_mpi, 2, 2, 3)
-!
-!  write (*,*) "Worldrank", getMyWorldRank(my_mpi), &
-!                           isMasterRank(my_mpi), &
-!                           isActiveRank(my_mpi), &
-!                           getMyAtomId(my_mpi), &
-!                           getMySpinId(my_mpi), &
-!                           getMyEnergyId(my_mpi), &
-!                           getMySEId(my_mpi), &
-!                           isInMasterGroup(my_mpi)
-!
-!  if (isMasterRank(my_mpi)) then
-!    write(*,*) "Num Ranks: ", getNumAtomRanks(my_mpi), &
-!                              getNumSpinRanks(my_mpi), &
-!                              getNumEnergyRanks(my_mpi), &
-!                              getNumSERanks(my_mpi)
-!  end if
-!
-!  call destroyKKRnanoParallel(my_mpi);
-!end program

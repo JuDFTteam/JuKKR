@@ -1,3 +1,13 @@
+!------------------------------------------------------------------------------
+!> Module for collecting information about all reference clusters of atoms
+!> in truncation zone.
+!>
+!> The information collected determines the sparsity structure of the
+!> coefficient matrix used in solving the multiple scattering problem.
+!>
+!> @author Elias Rabel
+
+
 ! Some macros for checked allocation/deallocation
 ! they need an integer variable named memory_stat declared in each routine
 ! they are used.
@@ -8,8 +18,6 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
-
-! TODO: add reference to LatticeVectors and remove reference from RefClusters ???
 
 module ClusterInfo_mod
   implicit none
@@ -74,6 +82,7 @@ module ClusterInfo_mod
     ! determine maximal number of cluster atoms
     call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, &
                        MPI_MAX, communicator, ierr)
+
     self%naclsd = naclsd
 
     naez_trc = trunc_zone%naez_trc
@@ -119,7 +128,7 @@ module ClusterInfo_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! Helper routine
+  !> Helper routine.
   subroutine constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
     use TruncationZone_mod,  only: TruncationZone, translateInd
     implicit none
