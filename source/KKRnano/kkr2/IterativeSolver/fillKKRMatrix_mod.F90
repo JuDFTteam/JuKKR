@@ -1,9 +1,12 @@
+!> Build coefficient matrix for solution of Dyson equation.
+!>
+!> @author Elias Rabel
+
 #ifndef NDEBUG
 #define ASSERT(CONDITION) if (.not. (CONDITION)) then; write(*,*) "Assertion ", #CONDITION, " failed: ",  __FILE__, __LINE__; endif
 #else
 #define ASSERT(CONDITION)
 #endif
-
 
 module fillKKRMatrix_mod
 

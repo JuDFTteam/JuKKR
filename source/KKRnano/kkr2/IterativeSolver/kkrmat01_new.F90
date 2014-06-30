@@ -1,4 +1,8 @@
-! cleaned version of kkrmat
+!> Multiple Scattering problem: Solving the Dyson equation for all k-points,
+!> using *real-space* G_ref and the t-matrices
+!>
+!> Output: Brillouin-zone integrated diagonal elements of structural Green's
+!> function
 
 #include "../DebugHelpers/logging_macros.h"
 #include "../DebugHelpers/test_array_log.h"
@@ -302,7 +306,7 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Calculate scattering path operator for 'kpoint'.
 !>
-!> Input are the *realspace* \Delta T and the realspace G_ref (GINP).
+!> Input are the \Delta T and the realspace G_ref (GINP).
 !> Solution is stored in ms%mat_X.
 !> Scattering path operator is calculated for atoms given in
 !> ms%atom_indices(:)
@@ -418,11 +422,13 @@ subroutine kloopbody(ms, kpoint, &
 
   end if
 
+  ! store the initial guess in previously selected slot
+  ! (selected with 'iguess_set_k_ind')
   call iguess_save(iguess_data, ms%mat_X)
 
   TESTARRAYLOG(4, ms%mat_B)
 
-  ! solve full matrix equation
+  ! ALTERNATIVE: direct solution with LAPACK
   if (cutoffmode == 4) then
     if (.not. allocated(full)) then
       allocate(full(size(ms%mat_B,1), size(ms%mat_B,1)))

@@ -1,3 +1,5 @@
+!> TFQMR solver
+
 #include "../DebugHelpers/logging_macros.h"
 
 #define MATRIX_MULTIPLY(A, X, AX) call multiply_vbr(A, X, AX, sparse)

@@ -1,8 +1,12 @@
+!> Multiplication of VBR-matrix (variable block row sparse matrix) with dense
+!> matrix.
+
 !     @PROCESS HOT=noarraypad:level=1:simd:vector
 !     See:
 !     Y. Saad, SPARSKIT: a basic tool kit for sparse matrix computations - Version 2 (1994)
 !     modified for double complex and for
 !     multiplying several vectors at once
+!     => matrix-matrix multiplication instead of matrix-vector multiplication
 
 
 module vbrmv_mat_mod
