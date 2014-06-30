@@ -8,19 +8,9 @@ c     with core correction (coulomb contribution)
  
 c-----------------------------------------------------------------------
 
-
-C      INTEGER LMPOTD
-C      PARAMETER (LMPOTD= (LPOTD+1)**2)
-C     ..
-C     .. Scalar Arguments ..
-
       INTEGER irmd
 
       INTEGER LPOT,NSPIN
-C     ..
-C     .. Array Arguments ..
-C     DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
-C    +       RHOC(IRMD,*),V(IRMD,LMPOTD,2)
 
       DOUBLE PRECISION DRDI(IRMD),FLM(-1:1),FLMC(-1:1),R(IRMD),
      +       RHOC(IRMD,*),V(IRMD,(LPOT+1)**2,2)
@@ -54,9 +44,7 @@ C     ..
 c
          IRWS1 = IRWS
          RWS = R(IRWS1)
-c
-c
- 
+
          DO 20 M = -1,1
             LM = 2 + M + 1  ! only LM = 2,3,4 needed (l = 1, m =-1,0,1)
 c

@@ -12,13 +12,13 @@ module DensityResults_mod
   !> Contains densities and integrated densities (charges)
   !> for one specific atom.
   type DensityResults
-    !double precision  :: DENEF
+
     double precision  :: total_charge_neutrality
     double precision , allocatable, dimension(:,:,:)  :: R2NEF
     double precision , allocatable, dimension(:,:,:)  :: RHO2NS
     double precision , allocatable, dimension(:,:)  :: CHARGE
-    double precision , allocatable, dimension(:)  :: CMINST
-    double precision , allocatable, dimension(:)  :: CMOM
+    double precision , allocatable, dimension(:)  :: CMINST ! charge moments in interstitial
+    double precision , allocatable, dimension(:)  :: CMOM   ! charge moments in muffin-tin sphere
     double precision , allocatable, dimension(:)  :: CATOM
     double complex , allocatable, dimension(:,:,:)  :: DEN
 
