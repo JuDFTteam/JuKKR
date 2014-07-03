@@ -526,8 +526,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                getElapsedTime(program_timer),ITER)
 
 !------------------------------------------------------------------------------
-  ! OMP makes problems here
-  !!!$omp parallel do private(ilocal, atomdata, densities, energies, mesh, cell, new_fermi)
+  ! OMP had problems here
+  !!!$omp parallel do private(ilocal, atomdata, densities, energies, mesh, cell) lastprivate(new_fermi)
   do ilocal = 1, num_local_atoms
     atomdata  => getAtomData(calc_data, ilocal)
     densities => getDensities(calc_data, ilocal)
@@ -763,14 +763,12 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                   mesh%DRDI, mesh%IMT, mesh%irmd)
     end if
 
-    ! unnecessary I/O? see results.f
+    ! writes some results (mostly energies) to direct access file 'results2',
+    ! those are read in again in routine 'RESULTS'
     if (params%KTE >= 0) then
-      ! OpenMP critical ???
-      !!!$omp critical
       call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
                              energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
                              energies%EXC, I1, LCOREMAX, energies%VMAD)
-      !!!$omp end critical
     end if
 
     ! calculate new muffin-tin zero. output: VAV0, VOL0
@@ -787,7 +785,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   if (params%KTE >= 0) call closeResults2File()
 
-  !call OUTTIME(isMasterRank(my_mpi),'MTZERO ......',getElapsedTime(program_timer),ITER)
   call OUTTIME(isMasterRank(my_mpi),'before CONVOL.....', &
                getElapsedTime(program_timer),ITER)
 
