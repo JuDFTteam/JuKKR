@@ -18,7 +18,6 @@ module EnergyResults_mod
     double precision , allocatable, dimension(:)  :: EXC !< XC-energy
     double precision  :: EPOTIN
     double precision  :: VMAD !< Madelung potential
-    !> for electron-lattice interactions
     double precision , allocatable, dimension(:) :: AC_madelung
 
     integer :: lpot

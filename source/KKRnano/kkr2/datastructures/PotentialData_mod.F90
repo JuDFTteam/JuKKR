@@ -1,6 +1,4 @@
-!> Note: VONS is wastefully dimensioned... it is allocated for total number of
-!> mesh points, but only non-spherical part is non-zero
-!> also there is always space for 2 spin-directions.
+!> Structure that stores the input and output potential for one cell.
 
 module PotentialData_mod
   implicit none
