@@ -1,5 +1,7 @@
-! TODO: allow creation of separate files 'meshes' and 'shapes' ???
-! TODO: how to initialise cell_index?
+!------------------------------------------------------------------------------
+!> Data structure that contains cell specific data.
+!>
+!> Not very useful anymore, kept only for historical reasons.
 
 module CellData_mod
   use ShapefunData_mod
@@ -34,95 +36,6 @@ module CellData_mod
     type (CellData), intent(inout) :: cell
 
     call destroyShapefunData(cell%shdata)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Write cell data to direct access file 'fileunit' at record 'recnr'
-  subroutine writeCellDataDA(cell, fileunit, recnr)
-
-    implicit none
-    type (CellData), intent(in) :: cell
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
-
-    integer, parameter :: MAGIC_NUMBER = -889271554
-
-    write (fileunit, rec=recnr) MAGIC_NUMBER, &
-                                cell%cell_index, &
-                                cell%shdata%THETA, &
-                                cell%shdata%LLMSP, &
-                                cell%shdata%IFUNM, &
-                                cell%shdata%LMSP, &
-                                cell%shdata%NFU, &
-                                cell%shdata%max_muffin_tin, &
-                                MAGIC_NUMBER
-
-  end subroutine
-
-  !> Read cell data from direct access file 'fileunit' at record 'recnr'
-  subroutine readCellDataDA(cell, fileunit, recnr)
-    implicit none
-
-    type (CellData), intent(inout) :: cell
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
-
-    integer, parameter :: MAGIC_NUMBER = -889271554
-    integer :: magic, magic2
-
-    read  (fileunit, rec=recnr) magic, &
-                                cell%cell_index, &
-                                cell%shdata%THETA, &
-                                cell%shdata%LLMSP, &
-                                cell%shdata%IFUNM, &
-                                cell%shdata%LMSP, &
-                                cell%shdata%NFU, &
-                                cell%shdata%max_muffin_tin, &
-                                magic2
-
-    if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) then
-      write (*,*) "ERROR: Invalid cell data read. ", __FILE__, __LINE__
-      STOP
-    end if
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Opens CellData direct access file.
-  subroutine openCellDataDAFile(cell, fileunit, filename)
-    implicit none
-
-    type (CellData), intent(in) :: cell
-    integer, intent(in) :: fileunit
-    character(len=*), intent(in) :: filename
-    !------
-    integer :: reclen
-    integer, parameter :: MAGIC_NUMBER = -889271554
-
-    inquire (iolength = reclen) MAGIC_NUMBER, &
-                                cell%cell_index, &
-                                cell%shdata%THETA, &
-                                cell%shdata%LLMSP, &
-                                cell%shdata%IFUNM, &
-                                cell%shdata%LMSP, &
-                                cell%shdata%NFU, &
-                                cell%shdata%max_muffin_tin, &
-                                MAGIC_NUMBER
-
-    !write (*,*) reclen
-
-    open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Closes CellData direct access file.
-  subroutine closeCellDataDAFile(fileunit)
-    implicit none
-    integer, intent(in) :: fileunit
-
-    close(fileunit)
 
   end subroutine
 
