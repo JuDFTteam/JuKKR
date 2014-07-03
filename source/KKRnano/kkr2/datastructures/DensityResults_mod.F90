@@ -13,14 +13,14 @@ module DensityResults_mod
   !> for one specific atom.
   type DensityResults
 
-    double precision  :: total_charge_neutrality
-    double precision , allocatable, dimension(:,:,:)  :: R2NEF
-    double precision , allocatable, dimension(:,:,:)  :: RHO2NS
-    double precision , allocatable, dimension(:,:)  :: CHARGE
-    double precision , allocatable, dimension(:)  :: CMINST ! charge moments in interstitial
-    double precision , allocatable, dimension(:)  :: CMOM   ! charge moments in muffin-tin sphere
-    double precision , allocatable, dimension(:)  :: CATOM
-    double complex , allocatable, dimension(:,:,:)  :: DEN
+    double precision  :: total_charge_neutrality                !< excess charge in system
+    double precision , allocatable, dimension(:,:,:)  :: R2NEF  !< density of states at Fermi energy
+    double precision , allocatable, dimension(:,:,:)  :: RHO2NS !< l-expanded density times radius**2
+    double precision , allocatable, dimension(:,:)  :: CHARGE   !< CHARGE(:,1) l-resolved charge, CHARGE(:,2) l-resolved mag. moment
+    double precision , allocatable, dimension(:)  :: CMINST     !< charge moments in interstitial
+    double precision , allocatable, dimension(:)  :: CMOM       !< charge moments in muffin-tin sphere
+    double precision , allocatable, dimension(:)  :: CATOM      !< CATOM(1) = total charge in cell, CATOM(2) = total mag. moment in cell
+    double complex , allocatable, dimension(:,:,:)  :: DEN      !< complex density of states
 
     double precision :: force_flm(-1:1)
 

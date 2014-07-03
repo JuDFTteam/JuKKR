@@ -11,13 +11,13 @@
 module EnergyResults_mod
 
   type EnergyResults
-    double precision , dimension(2)  :: VBC !< new muffin-tin zero
+    double precision , dimension(2)  :: VBC !< new muffin-tin zero ???
     double precision , allocatable, dimension(:)  :: ECOU   !< Coulomb energies
     double precision , allocatable, dimension(:,:)  :: ESPC !< core energies
     double precision , allocatable, dimension(:,:)  :: ESPV !< E valence bands
     double precision , allocatable, dimension(:)  :: EXC !< XC-energy
-    double precision  :: EPOTIN
-    double precision  :: VMAD !< Madelung potential
+    double precision  :: EPOTIN !< kinetic energy minus sum of single particle energies
+    double precision  :: VMAD !< Madelung potential - not used anymore?
     double precision , allocatable, dimension(:) :: AC_madelung
 
     integer :: lpot

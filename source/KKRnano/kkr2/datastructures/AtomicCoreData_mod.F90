@@ -5,7 +5,7 @@ module AtomicCoreData_mod
   !> Structure that contains information about core states
   type AtomicCoreData
     integer :: LCORE(20,2)       !< for historical reasons always 2 spin directions
-    integer :: NCORE(2)
+    integer :: NCORE(2)          !< number of core states
     double precision :: ECORE(20,2)   !< first dim 20: max. 20 core states
     integer :: ITITLE(20,2)           !< potential title as old school integer string
     integer :: irmd
