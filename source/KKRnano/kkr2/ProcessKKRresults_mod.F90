@@ -174,6 +174,14 @@ end function
 !> Performs potential mixing.
 !>
 !> Returns 1 when params%target_rms is reached, otherwise 0
+!>
+!> Selection of algorithm according to value of params%imix
+!> imix = 0     straight mixing
+!> imix = 1, 2  not used - defaults to straight mixing
+!> imix = 3     Broyden's 1st method
+!> imix = 4     Broyden's 2nd method
+!> imix = 5     generalised Anderson
+!> imix = 6     Broyden's 2nd method with support for num_local_atoms > 1
 integer function mix_potential(calc_data, iter, params, dims, my_mpi)
 
   use KKRnanoParallel_mod
@@ -333,7 +341,7 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Calculate densities.
 !>
-!> output: emesh (Fermi-energy updated, renormalized weights), densities, ldau_data?, arrays
+!> output: emesh (Fermi-energy updated, renormalized weights), densities, ldau_data?
 !> files written: 'results1'
 subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                               program_timer, arrays, emesh)
@@ -466,10 +474,19 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                         densities%DEN, energies%ESPV, kkr%GMATN, &
                         gaunts, emesh, ldau_data)
 
+    write(*,*) "L = 2"
+    write(*,*) densities%RHO2NS(:, 2, 1)
+    write(*,*) "L = 3"
+    write(*,*) densities%RHO2NS(:, 3, 1)
+    write(*,*) "L = 4"
+    write(*,*) densities%RHO2NS(:, 4, 1)
+
+
   ! ----------------------------------------------------------------------
   ! -->   determine total charge expanded in spherical harmonics
   ! -------------------------------------------------------------- density
     ! output: CATOM, CATOM(1) = n_up + n_down, CATOM(2) = n_up - n_down
+    !         core charge density added to densities%RHO2NS
     call RHOTOTB_wrapper(densities%CATOM, densities%RHO2NS, atomdata)
 
     CHRGNT_local = densities%CATOM(1) - atomdata%Z_nuclear
@@ -545,6 +562,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                                  energies%ESPV, densities%RHO2NS, new_fermi)
 
     !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
+
+    ! calculate multipole moments
     densities%CMOM   = 0.0D0
     densities%CMINST = 0.0D0
     call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
@@ -631,6 +650,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   integer :: num_local_atoms
   logical :: calc_force
   double precision :: force_flmc(-1:1)
+    character(len=:), allocatable :: str
+
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -639,6 +660,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   ldau_data    => getLDAUData(calc_data, 1)
   densities    => null()
   energies     => getEnergies(calc_data, 1)
+
 
   I1 = 0
 
@@ -817,6 +839,15 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   end do
   !$omp end parallel do
 !------------------------------------------------------------------------------
+
+!CDEBUG
+  atomdata     => getAtomData(calc_data, 1)
+  mesh => atomdata%mesh_ptr
+  call repr_PotentialData(atomdata%potential, str)
+  write(*, '(A)') str
+  call repr_RadialMeshData(mesh, str)
+  write(*, '(A)') str
+!CDEBUG
 
 ! LDAU
   ldau_data%EULDAU = 0.0D0
