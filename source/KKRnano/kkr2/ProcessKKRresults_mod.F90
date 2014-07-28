@@ -474,14 +474,6 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                         densities%DEN, energies%ESPV, kkr%GMATN, &
                         gaunts, emesh, ldau_data)
 
-    write(*,*) "L = 2"
-    write(*,*) densities%RHO2NS(:, 2, 1)
-    write(*,*) "L = 3"
-    write(*,*) densities%RHO2NS(:, 3, 1)
-    write(*,*) "L = 4"
-    write(*,*) densities%RHO2NS(:, 4, 1)
-
-
   ! ----------------------------------------------------------------------
   ! -->   determine total charge expanded in spherical harmonics
   ! -------------------------------------------------------------- density
@@ -568,9 +560,6 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     densities%CMINST = 0.0D0
     call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
                             densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
-
-    WRITELOG(2,*) "Charge moments:"
-    WRITELOG(2,*) densities%CMOM + densities%CMINST
 
 !------------------------------------------------------------------------------
   end do ! ilocal
@@ -839,15 +828,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   end do
   !$omp end parallel do
 !------------------------------------------------------------------------------
-
-!CDEBUG
-  atomdata     => getAtomData(calc_data, 1)
-  mesh => atomdata%mesh_ptr
-  call repr_PotentialData(atomdata%potential, str)
-  write(*, '(A)') str
-  call repr_RadialMeshData(mesh, str)
-  write(*, '(A)') str
-!CDEBUG
 
 ! LDAU
   ldau_data%EULDAU = 0.0D0
