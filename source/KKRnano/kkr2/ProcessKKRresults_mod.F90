@@ -639,8 +639,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   integer :: num_local_atoms
   logical :: calc_force
   double precision :: force_flmc(-1:1)
-    character(len=:), allocatable :: str
-
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -649,7 +647,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   ldau_data    => getLDAUData(calc_data, 1)
   densities    => null()
   energies     => getEnergies(calc_data, 1)
-
 
   I1 = 0
 
