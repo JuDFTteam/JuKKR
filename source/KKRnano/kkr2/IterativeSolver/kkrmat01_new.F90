@@ -373,7 +373,9 @@ subroutine kloopbody(ms, kpoint, &
   ! The same calculation as with lloyds formula is done all over again ???
   ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
 
-  call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, &
+  !TODO: use an alternative referenceFourier to work around a bug on BGQ
+  !call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, &
+   call referenceFourier_com_fenced(ms%GLLH, ms%sparse, kpoint, alat, &
                             cluster_info%nacls_trc, cluster_info%atom_trc, &
                             cluster_info%numn0_trc, cluster_info%indn0_trc, &
                             rr, cluster_info%ezoa_trc, GINP, ms%EIKRM, ms%EIKRP, &
@@ -603,5 +605,119 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
   call destroyMultScatData(ms)
 
 end subroutine KKRMAT01_new
+
+!------------------------------------------------------------------------------
+!> Alternative implementation of 'referenceFourier_com' to prevent a bug that occured on
+!> BGQ regarding MPI RMA locks.
+!>
+!> Uses fence calls instead of locks.
+!> Might not perform and scale as well as referenceFourier_com
+subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
+                                indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
+                                trunc2atom_index, communicator)
+  use dlke0_smat_mod
+  use SparseMatrixDescription_mod
+  use one_sided_commZ_mod
+  implicit none
+
+  include 'mpif.h'
+  double complex, intent(inout) :: GLLH(:)
+  type(SparseMatrixDescription), intent(in) :: sparse
+  double precision, intent(in) :: kpoint(3)
+  double precision, intent(in) :: alat
+  integer, intent(in) :: nacls(:)
+  integer, intent(in) :: atom(:,:)
+  integer, intent(in) :: numn0(:)
+  integer, intent(in) :: indn0(:,:)
+
+  double precision, intent(in) :: rr(:,:)
+  integer, intent(in) :: ezoa(:,:)
+  double complex, intent(inout) :: GINP(:,:,:,:)
+
+  ! work arrays
+  double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
+  double complex, intent(inout) :: EIKRP(:)
+
+  !> mapping trunc. index -> atom index
+  integer, intent(in) :: trunc2atom_index(:)
+  integer, intent(in) :: communicator
+
+  ! local
+  integer site_index
+  integer naez
+  integer nrd
+  integer naclsd
+  integer lmmaxd
+  integer num_local_atoms
+  integer atom_requested
+  double complex, allocatable :: Gref_buffer(:,:,:)
+  double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
+  type (ChunkIndex) :: chunk_inds(1)
+  integer :: win
+  integer :: nranks
+  integer :: ierr
+  integer :: naez_max
+
+  naez = size(nacls)
+  nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
+  lmmaxd = size(GINP,1)
+  naclsd = size(GINP, 3)
+  num_local_atoms = size(GINP, 4)
+
+  ! checks
+  ASSERT(lmmaxd == size(GINP,2))
+  ASSERT(naclsd == size(eikrm))
+  ASSERT(naclsd == size(eikrp))
+  ASSERT(naez == size(trunc2atom_index))
+
+  ! Note: some MPI implementations might need
+  ! the use of MPI_Alloc_mem
+  allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
+
+  call MPI_Comm_size(communicator, nranks, ierr)
+
+  ! get maximum number of atoms of all truncation zones
+  call MPI_Allreduce(naez, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+
+  ! share GINP with all other processes in 'communicator'
+  call exposeBufferZ(win, GINP, lmmaxd*lmmaxd*naclsd*num_local_atoms, &
+                     lmmaxd*lmmaxd*naclsd, communicator)
+
+  GLLH = CZERO
+
+  ! loop up to naez_max to ensure that each rank does the same amount of fence calls
+  do site_index = 1, naez_max
+
+    call fenceZ(win)
+
+    if (site_index <= naez) then
+      call DLKE1(ALAT,NACLS(site_index),RR,EZOA(:,site_index), &
+                 kpoint,EIKRM,EIKRP, &
+                 nrd, naclsd)
+
+      ! get GINP(:,:,:)[trunc2atom_index(site_index)]
+
+      atom_requested = trunc2atom_index(site_index)
+      chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
+      chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
+
+      call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
+      !!!Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
+    end if
+
+    call fenceZ(win) ! ensures that data has arrived in Gref_buffer
+
+    if (site_index <= naez) then
+      call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
+                      NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, &
+                      Gref_buffer, &
+                      naez, lmmaxd, naclsd)
+    end if
+  end do
+
+  call hideBufferZ(win)
+
+end subroutine
+
 
 end module
