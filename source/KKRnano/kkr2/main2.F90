@@ -103,6 +103,11 @@ program MAIN2
     stop
   end if
 
+  if (dims%LLY /= 0) then
+    write(*,*) "ERROR: Lloyds formula not supported in this version. Set LLY=0"
+    stop
+  end if
+
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
 ! ... and wait after SC-ITER loop
