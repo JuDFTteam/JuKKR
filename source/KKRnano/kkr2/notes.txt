@@ -1,4 +1,12 @@
 ========================
+News
+========================
+
+Due to a bug that occured on BGQ, this version uses fence calls instead of locks in the Fourier transform of the
+reference Green's function (kkrmat01_new.F90). This does not scale well with
+the number of atoms in the truncation zone.
+
+========================
 Building KKRnano
 ========================
 
