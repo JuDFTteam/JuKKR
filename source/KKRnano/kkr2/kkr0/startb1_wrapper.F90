@@ -28,14 +28,8 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   double precision, dimension(naezd), intent(in) :: radius_muffin_tin
   INTEGER, dimension(*) :: NTCELL
 
-  DOUBLE PRECISION, parameter :: HFIELD = 0.0d0
-  DOUBLE PRECISION, dimension(2), parameter :: VBC = (/ 0.0d0, 0.0d0 /)
-  DOUBLE PRECISION, parameter :: VCONST = 0.0d0
   INTEGER, parameter :: IFILE = 13
-  INTEGER, parameter :: IPE = 0
-  INTEGER, parameter :: IPF = 6
-  INTEGER, parameter :: IPFE = 9
-  INTEGER, parameter :: KHFELD = 0
+
   integer :: max_reclen
 
   ! --- locals ---
@@ -109,11 +103,11 @@ subroutine STARTB1_wrapper(alat, LPOT,NSPIN, &
   open (19,file='shapefun',status='old',form='formatted')
   open (13,file='potential',status='old',form='formatted')
 
-  call STARTB1(alat, IFILE,IPF,IPFE,IPE,KHFELD,1,naezd,RMTNEW,RMT, &
-               ITITLE,HFIELD,IMT,IRC,VCONST,IRNS,LPOT,NSPIN,IRMIN, &
+  call STARTB1(alat, IFILE,1,naezd,RMTNEW,RMT, &
+               ITITLE,IMT,IRC,IRNS,LPOT,NSPIN,IRMIN, &
                NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP, &
-               EFERMI,VBC,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS, &
-               INIPOL,1,IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+               EFERMI,RWS,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS, &
+               IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
 
   close(13)
   close(19)

@@ -1,11 +1,11 @@
 c ************************************************************************
-      SUBROUTINE STARTB1(alat,IFILE,IPF,IPFE,IPE,KHFELD,
+      SUBROUTINE STARTB1(alat,IFILE,
      &                   NBEG,NEND,
-     &                   RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,
+     &                   RMTNEW,RMT,ITITLE,IMT,IRC,
      &                   IRNS,LPOT,NSPIN,IRMIN,NTCELL,IRCUT,IPAN,
      &                   THETAS,IFUNM,NFU,LLMSP,LMSP,EFERMI,
-     &                   VBC,RWS,LCORE,NCORE,DRDI,
-     &                   R,ZAT,A,B,IRWS,INIPOL,IINFO,
+     &                   RWS,LCORE,NCORE,DRDI,
+     &                   R,ZAT,A,B,IRWS,
      &                   IPAND, IRID, NFUND, IRMD, NCELLD,
      &                   NAEZD, IRNSD)
 c ************************************************************************
@@ -64,9 +64,8 @@ C      from inc.p
 
 C     ..
 C     .. Scalar Arguments ..
-      DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,HFIELD,VBC(*),VCONST
-      INTEGER IFILE,IINFO,IPE,IPF,IPFE,
-     &        KHFELD,
+      DOUBLE PRECISION ALAT,EFERMI
+      INTEGER IFILE,
      &        LPOT,
      &        NBEG,NEND,NSPIN
 C     ..
@@ -81,7 +80,7 @@ C                      VINS(IRMIND,LMPOTD,2)
 
 C             IFUNM(LMXSPD,NAEZD)
       INTEGER IFUNM((2*LPOT+1)**2,NAEZD),
-     &        IMT(*),INIPOL(*),IPAN(*),
+     &        IMT(*),IPAN(*),
      &        IRC(*),IRCUT(0:IPAND,*),
      &        IRMIN(*),IRNS(*),IRWS(*),ITITLE(20,*),
      &        LCORE(20,*),LLMSP(NFUND,NAEZD),
@@ -89,28 +88,20 @@ C             IFUNM(LMXSPD,NAEZD)
      &        NCORE(*),NFU(NCELLD),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION A1,B1,EA,EFNEW,ALAT_loc
-      INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRI,
+      DOUBLE PRECISION A1,B1,EA,EFNEW,ALAT_loc, dummy, RWS_dummy
+      INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,dummy_int,IPAN1,IR,IRI,
      &        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
-     &        J,
      &        LM,LM1,LMPOT,LMPOTP,
      &        N,NCELL,NFUN,NR
-      LOGICAL TEST
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION DRN(IRID,NCELLD),SCALE(NCELLD),U(IRMD),
      &                 XRN(IRID,NCELLD)
 
       INTEGER MESHN(NCELLD),NM(IPAND,NCELLD),NPAN(NCELLD)
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL CALRMT,RINIT,TEST
-C     ..
+
 C     .. Intrinsic Functions ..
       INTRINSIC ANINT,EXP,LOG,MAX,MOD,REAL,SQRT
-
-      INTEGER ISHAPE
-
 
       INTEGER LMPOTD
       INTEGER IRMIND
@@ -119,10 +110,7 @@ C     .. Intrinsic Functions ..
 
       type (BasisAtom) :: atom
 
-C     ..
 c-----------------------------------------------------------------------
-c
-      ISHAPE = 0
 
       IRMIND= IRMD-IRNSD
       LMPOTD= (LPOT+1)**2
@@ -132,16 +120,6 @@ C     I/O Record length for potential file
 c     LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
       inquire (iolength = LRECPOT) VINS, VISP, ECORE
 
-c ---> output of radial mesh information
-c
-      IO = 0
-      IF (IINFO.NE.0 .AND. TEST('RMESH   ')) IO = 1
-c
-c---> set speed of light
-c
-      CVLIGHT = 274.0720442D0
-
-C
 C intitialize potential arrays
 C
       VINS = 0.0D0
@@ -154,10 +132,8 @@ C     more initialisations
 c-----------------------------------------------------------------------
 c
 c---> read radial mesh information of the shape functions and
-c     shape functions THETAS in the first iteration - if needed
-c
-      IF (ISHAPE.EQ.0) THEN
-        ISHAPE = 1
+c     shape functions THETAS
+
         READ (19,FMT=9000) NCELL
         WRITE (6,FMT=*) '  ncell : ',NCELL,NCELLD
 c
@@ -210,14 +186,9 @@ c
    20     CONTINUE
 
    30   CONTINUE
-      END IF 
 c-----------------------------------------------------------------------
 c
       LMPOT = (LPOT+1)* (LPOT+1)
-C
-      DO IH = NBEG,NEND
-        ZATINFO(IH) = ZAT(IH)
-      ENDDO
 
       DO 150 IH = NBEG,NEND ! atom loop
 
@@ -228,8 +199,7 @@ C
 
         DO 140 ISPIN = 1,NSPIN
           I = NSPIN* (IH-1) + ISPIN
-C
-          IF (IFILE.NE.0) THEN
+
             IRCUT(0,IH) = 0
             ICELL = NTCELL(IH)
             IPAN(IH) = 1 + NPAN(ICELL)
@@ -237,28 +207,27 @@ c
 c---> read title of potential card
 c
             READ (IFILE,FMT=9020) (ITITLE(IA,I),IA=1,20)
-            IF (IINFO.NE.0.AND.I.LE.8) THEN 
+            IF (I.LE.8) THEN
                 WRITE (6,FMT=9080) (ITITLE(IA,I),IA=1,20)
             END IF
 c
 c---  >read muffin-tin radius , lattice constant and new muffin radius
-c      (new mt radius is adapted to the given radial mesh)
+c      (not used)
 c
-            READ (IFILE,FMT=9030) RMT(IH),ALAT_loc,RMTNEW(IH)
+            READ (IFILE,FMT=9030) RMT(IH),ALAT_loc,dummy
 
             if (abs(alat_loc - alat) > 1d-6) then
       write(*,*) "WARNING: ALAT from input not the same as in pot. file"
             endif
 c
-c---> read nuclear charge , lmax of the core states ,
-c     wigner seitz radius , fermi energy and energy difference
-c     between electrostatic zero and muffin tin zero
+c---> read nuclear charge
+c     wigner seitz radius (not used), fermi energy and energy difference
+c     between electrostatic zero and muffin tin zero (not used)
 c
-            READ (IFILE,FMT=9040) ZAT(IH),RWS(IH),EFNEW,VBC(ISPIN)
+            READ (IFILE,FMT=9040) ZATINFO(IH),RWS_dummy,EFNEW,dummy
 c
-c---> if efermi .eq. 0 use value from in5 removed E.R.
-c
-c            IF (EFNEW.NE.0.0D0 .AND. I.EQ.1) EFERMI = EFNEW
+c---> use Fermi energy entry of 1st atom for k-mesh generation
+
             IF (I.EQ.1) EFERMI = EFNEW
 c
 c---> read : number of radial mesh points
@@ -271,7 +240,8 @@ c     mesh  needed for shape functions, the constants a and b
 c     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 c     the no. of different core states and some other stuff
 c
-            READ (IFILE,FMT=9050) IRWS(IH),A(IH),B(IH),NCORE(I),INEW
+            READ (IFILE,FMT=9050) IRWS(IH),A(IH),B(IH),NCORE(I),
+     &                            dummy_int
 c
             NR = IRWS(IH)
 
@@ -289,7 +259,6 @@ C           check: e.r.
               STOP
             endif
 
-c
             IF (NCORE(I).GE.1) THEN
                 DO ICORE=1,NCORE(I)
                     READ (IFILE,FMT=9070) LCORE(ICORE,I),
@@ -356,13 +325,12 @@ c           assign irns here
                     READ (IFILE,FMT=9100) (U(IR),IR=IRMINP,NR)
 
                     IF (LM1.LE.LMPOT) THEN
-                    DO 40 IR = IRMINM,NR
-                        VINS(IR,LM1,ISPIN) = U(IR)
+                      DO 40 IR = IRMINM,NR
+                          VINS(IR,LM1,ISPIN) = U(IR)
    40                 CONTINUE
                     END IF
 
                   END IF
-
                 END IF
 
    50         CONTINUE
@@ -376,13 +344,15 @@ c
             RMTNEW(IH) = SCALE(ICELL)*ALAT*XRN(1,ICELL)
             IMT1 = ANINT(LOG(RMTNEW(IH)/B(IH)+1.0D0)/A(IH)) + 1
 
-C     Redefinition not smart - check and force equality of rmtnew
+C     Redefinition not smart - check equality of rmtnew
 C     and rmt E.R.
       if (abs(rmtnew(ih) - rmt(ih)) > 1.e-8) then
-        write(*,*) "ERROR: Muffin-tin radius in potential file"
-        write(*,*) " is not compatible with mesh in shapefun file."
+        write(*,*) "WARNING: Muffin-tin radius in potential file"
+        write(*,*) "is not compatible with mesh in shapefun file."
+        write(*,*) "using MT radius from shapefun file."
         write(*,*) "Atom ", ih
-        STOP
+
+        rmt(ih) = rmtnew(ih)
       end if
 
 C     E.R. try to set correct muffin-tin index
@@ -438,11 +408,7 @@ c
    80       CONTINUE
 
             RWS(IH) = R(IRWS1,IH)
-c
-            CALL CALRMT(IPF,IPFE,IPE,IMT(IH),ZAT(IH),RMT(IH),RWS(IH),
-     +                  RMTNEW(IH),ALAT,DRDI(1,IH),A(IH),B(IH),IRWS1,
-     +                  R(1,IH),IO)
-c
+
             IRCUT(1,IH) = IMT(IH)
 
 CDEBUG E.R.
@@ -481,33 +447,9 @@ CDEBUG E.R.
       end if
 CDEBUG
 
-c
-c--->  first iteration : shift all potentials (only for test purpose)
-            DO 120 J = 1,NR
-              VISP(J,ISPIN) = VISP(J,ISPIN) + VCONST
-  120       CONTINUE
-
-          END IF                    ! (IFILE.NE.0)
-
-c
-          IF (KHFELD.EQ.1 ) THEN
-c          IF (KHFELD.EQ.1 .AND. NSPIN.EQ.2) THEN
-c
-c--->       maybe apply a magnetic field
-c
-            write(6,*) 'atom',ih,'spin',ispin,'shifted by',
-     +           -REAL(2*ISPIN-3)*HFIELD*INIPOL(IH)
-            DO 130 J = 1,IRCUT(IPAN(IH),IH)
-              VISP(J,ISPIN) = VISP(J,ISPIN) - 
-     +                        REAL(2*ISPIN-3)*HFIELD*INIPOL(IH)
-  130       CONTINUE
-          END IF
-
   140   CONTINUE                    ! ISPIN = 1,NSPIN
 C
 C write to unformatted file 'vpotnew'
-C
-c        WRITE(66,REC=IH) VINS,VISP,ECORE
 
       atom%potential%VINS = VINS
       atom%potential%VISP = VISP
@@ -526,8 +468,6 @@ C
           STOP ' ERROR: inconsistency of Z in atominfo & potential'
         ENDIF
       ENDDO
-C
-      CLOSE(66)
 
       RETURN
 
