@@ -120,12 +120,6 @@ C     I/O Record length for potential file
 c     LRECPOT=8*(LMPOTD*(IRNSD+1)+IRMD+20)
       inquire (iolength = LRECPOT) VINS, VISP, ECORE
 
-C intitialize potential arrays
-C
-      VINS = 0.0D0
-      VISP = 0.0D0
-      ECORE = 0.0D0
-
 C     more initialisations
       THETAS = 0.0d0
 
@@ -179,9 +173,11 @@ c
 
           DO 20 IFUN = 1,NFUN
             READ (19,FMT=9000) LM
-            LLMSP(IFUN,ICELL) = LM
-            LMSP(LM,ICELL) = 1
-            IFUNM(LM,ICELL) = IFUN
+            IF (LM <= LMXSPD .and. LM > 0) THEN
+              LLMSP(IFUN,ICELL) = LM
+              LMSP(LM,ICELL) = 1
+              IFUNM(LM,ICELL) = IFUN
+            END IF
             READ (19,FMT=9010) (THETAS(N,IFUN,ICELL),N=1,MESHN(ICELL))
    20     CONTINUE
 
@@ -191,6 +187,12 @@ c
       LMPOT = (LPOT+1)* (LPOT+1)
 
       DO 150 IH = NBEG,NEND ! atom loop
+
+C intitialize potential arrays
+C
+      VINS = 0.0D0
+      VISP = 0.0D0
+      ECORE = 0.0D0
 
       call createBasisAtom(atom, IH, lpot, nspin, irmind, irmd)
 
@@ -278,7 +280,6 @@ c     under control  e.r.
 
 c           crash if IRMINP < IRMIND
 c           crash if IRT1P > IRMD
-c           crash if LMPOTP inconsistent
 
             if (irminp < irmind) then
               write (*,*) "startb1 error: IRMINP < IRMIND"
@@ -288,12 +289,6 @@ c           crash if LMPOTP inconsistent
 
             if (irt1p > irmd) then
               write (*,*) "startb1 error: IRTP1 > IRMS"
-              write (*,*) "potential entry: ", IH
-              stop
-            endif
-
-            if (lmpotp /= (LPOT+1)**2) then
-              write(*,*) "startb1 error: lmpotp /= (LPOT+1)**2"
               write (*,*) "potential entry: ", IH
               stop
             endif
@@ -311,7 +306,7 @@ c           assign irns here
             READ (IFILE,FMT=9100) (VISP(IR,ISPIN),IR=1,NR)
             IF (LMPOTP.GT.1) THEN
               LM1 = 2
-              DO 50 LM = 2,LMPOTP
+              DO 50 LM = 2, LMPOTP
                 IF (LM1.NE.1) THEN
                   IF (ISAVE.EQ.1) THEN
                     READ (IFILE,FMT=9090) LM1
