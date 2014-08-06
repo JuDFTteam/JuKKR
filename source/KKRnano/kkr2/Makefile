@@ -164,8 +164,9 @@ $(PROGRAM): globals $(OBJS)
 
 ifeq ($(PLATFORM),ifort_IFF)
 EXTRA_FLAGS = -heap-arrays
-# this file needs stack allocated automatic arrays
+# these files need stack allocated automatic arrays
 vbrmv_mat_mod.o: EXTRA_FLAGS =
+sprszmm.o: EXTRA_FLAGS =
 # TODO: unclear why this module does not work with -heap-arrays
 ScatteringCalculation_mod.o: EXTRA_FLAGS =
 endif
