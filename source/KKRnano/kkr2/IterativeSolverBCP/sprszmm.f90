@@ -1,6 +1,5 @@
 subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
                    AX, &                                       ! >
-                   ! new input parameters after inc.p removal
                    naez, lmmaxd, naclsd)
 
   ! This routine is called very often
@@ -12,12 +11,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd
 
-  !     INTEGER           LMMAXD
-  !     INTEGER           NDIM,NAEZ
-  !     PARAMETER        (NAEZ=NAEZD,NDIM=NAEZD*LMMAXD)
-  !     INTEGER           NGTBD
-  !     PARAMETER        (NGTBD = NACLSD*LMMAXD)
-
   double complex:: CONE
   double complex:: CZERO
   parameter        (CONE=(1.0D0,0.0D0), CZERO=(0.0D0,0.0D0))
@@ -28,9 +21,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   double complex, intent(in) ::DELTA  ! scalar in Matrix-Matrix-Mult.
 
   !     ... Arrays ..
-!  double complex::   X(NDIM,LMMAXD)
-!  double complex::  AX(NDIM,LMMAXD)
-!  double complex::GLLH(LMMAXD,NGTBD,NAEZD)
 
   double complex::   X(NAEZ*LMMAXD,LMMAXD)
   double complex::  AX(NAEZ*LMMAXD,LMMAXD)
@@ -75,8 +65,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
             I3H = (I3-1)*LMMAXD + 1
             I2H = (I2-1)*LMMAXD + 1
 
-            !call ZCOPY(LMMAXD,X(I3H,LM2),1, &
-            !           SPRSX(I2H,LM2),1)
             SPRSX(I2H:I2H+LMMAXD-1,LM2) = X(I3H:I3H+LMMAXD-1,LM2)
 
           enddo
@@ -85,10 +73,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
 
       IL1B=LMMAXD*(I1-1)
 
-      !call ZGEMM('N','N',LMMAXD,LMMAXD,NUMN0(IAT)*LMMAXD, &
-      !           OMEGA,GLLH(1,1,I1),LMMAXD, &
-      !           SPRSX,NGTBD, &
-      !           DELTA,AX(IL1B+1,1),NDIM)
       call ZGEMM('N','N',LMMAXD,LMMAXD,NUMN0(I1)*LMMAXD, &  ! corrected: E.R.
            OMEGA,GLLH(1,1,I1),LMMAXD, &
            SPRSX,NGTBD, &
