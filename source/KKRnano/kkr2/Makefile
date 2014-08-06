@@ -140,7 +140,7 @@ DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
          timing kkr0common MixingNew datastructures config_reader \
-         cluster shapefun
+         cluster shapefun IterativeSolverBCP
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
