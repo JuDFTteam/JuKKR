@@ -18,9 +18,6 @@ C     .. Scalar Arguments ..
       INTEGER LPOT,NSPIN
 C     ..
 C     .. Array Arguments ..
-C      DOUBLE PRECISION DRDI(IRMD,*),FLM(-1:1,*),FLMC(-1:1,*),R(IRMD,*),
-C     &       RHOC(IRMD,*),ZAT(NAEZD),
-C     &       V(IRMD,LMPOTD,2)
 
       DOUBLE PRECISION DRDI(IRMD),FLM(-1:1),FLMC(-1:1),R(IRMD),
      &       RHOC(IRMD,*),
@@ -29,14 +26,13 @@ C     &       V(IRMD,LMPOTD,2)
       INTEGER IRWS
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION DV,FAC,PI,RWS,TRP,VINT1
+      DOUBLE PRECISION DV,FAC,PI,RWS,VINT1
       INTEGER I,IPOT,IREP,IRWS1,ISPIN,LM,M
 C     ..
 C     .. Local Arrays ..
-c     DOUBLE PRECISION F(3,NAEZ),
-c    +                 FALL(3,NAEZ)
-C     DOUBLE PRECISION FLMH(-1:1)
+
       DOUBLE PRECISION FLMXC(-1:1),V1(IRMD)
+      DOUBLE PRECISION TAIL_COR(-1:1)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL SIMP3
@@ -49,17 +45,15 @@ C     .. Intrinsic Functions ..
 C     ..
       PI  = 4.D0*ATAN(1.D0)
       FAC = DSQRT((4.0D0*PI)/3.0D0)
-      TRP = 0.0D0
+
       IF (LPOT.LT.1) THEN
          WRITE (6,FMT=9000)
          STOP
  
       END IF
-c
-C      WRITE (54,FMT=9100)
-c
-      IREP = 1
-c
+
+         TAIL_COR = 0.0d0
+
          IRWS1 = IRWS
          RWS = R(IRWS1)
  
@@ -106,57 +100,30 @@ c
                V1(IRWS1) = RHOC(IRWS1,IPOT)*
      +                     (2.0D0*V(IRWS1,LM,IPOT)/R(IRWS1)+DV)/
      +                     (4.0D0*PI) + V1(IRWS1)
+
+CDEBUG      Tail correction
+            TAIL_COR(M) = TAIL_COR(M) +
+     &                    FAC * RHOC(IRWS1, IPOT) / (4.0d0*PI) *
+     &                    V(IRWS1, LM, IPOT)
+CDEBUG
+
    40       CONTINUE
 c
 c---> integrate with simpson subroutine
 c
             CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
-c
-C           FLMH(M) = FLM(M) - FLMC(M)
+
             FLMXC(M) = -FAC*VINT1 - FLMC(M)
             FLM(M) = FLM(M) + FLMXC(M)
-c
- 
+
    20    CONTINUE
+
+CDEBUG Tail correction
+C      FLM = FLM + TAIL_COR
+CDEBUG
 
 C     Result: total force in FLM
 
-
-C ============= TODO: output =========================================
-
-c
-C         WRITE (54,FMT=9600) FLMH(1,IATYP),FLMC(1,IATYP),FLMXC(1,IATYP),
-C     +     FLM(1,IATYP)
-C         WRITE (54,FMT=9601) FLMH(-1,IATYP),FLMC(-1,IATYP),
-C     +     FLMXC(-1,IATYP),FLM(-1,IATYP)
-C         WRITE (54,FMT=9602) FLMH(0,IATYP),FLMC(0,IATYP),FLMXC(0,IATYP),
-C     +     FLM(0,IATYP)
-c
-c       DO I=1,NAEZD
-c         F(1,I) = 0.0D0
-c         F(2,I) = 0.0D0
-c         F(3,I) = 0.0D0
-c         FALL(1,I) = 0.0D0
-c         FALL(2,I) = 0.0D0
-c         FALL(3,I) = 0.0D0
-c       ENDDO
-
-c       F(1,IATYP) = FLM(1,IATYP)
-c       F(2,IATYP) = FLM(-1,IATYP)
-c       F(3,IATYP) = FLM(0,IATYP)
-
-C reduce array F to processor with rank 0 to write in correct order to file 'force'
-
-c       CALL MPI_ALLREDUCE(F,FALL,3*NAEZD,MPI_DOUBLE_PRECISION,
-c    +                     MPI_SUM,communicator,IERR)
-
-c       IF(MYLRANK.EQ.0) THEN
-c         DO I=1,NAEZD
-c           WRITE(54,8999) 'force on atom',I,' Z=',ZAT(I),' :',
-c    +                     FALL(1,I),FALL(2,I),FALL(3,I)
-c         ENDDO
-c       ENDIF
-c
  8999 FORMAT(A,1X,I5,A,F5.0,A,3(F8.4))
 
  9000 FORMAT (13x,'error stop in subroutine force :',
