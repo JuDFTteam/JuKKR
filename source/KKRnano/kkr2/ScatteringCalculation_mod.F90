@@ -58,6 +58,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
   use jij_calc_mod,     only: clsjij, writejijs, global_jij_data
+  use SolverOptions_mod ! options for BCP preconditioner
 
   implicit none
 
@@ -82,6 +83,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (RefCluster), pointer            :: ref_cluster ! never changes
   type (LatticeVectors), pointer        :: lattice_vectors ! never changes
   type (InitialGuess), pointer          :: iguess_data ! changes
+
+  type (SolverOptions) :: solver_opts
 
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
@@ -168,6 +171,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
     jij_data%GMATXIJ = CZERO
 
   endif
+
+  ! set the solver options for bcp preconditioner
+  solver_opts%xdim = dims%xdim
+  solver_opts%ydim = dims%ydim
+  solver_opts%zdim = dims%zdim
+  solver_opts%natbld = dims%natbld
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
@@ -332,7 +341,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           TMATLL, atom_indices, &
           params%QMRBOUND, arrays%lmmaxd,  lattice_vectors%nrd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
-          iguess_data, clusters)
+          iguess_data, clusters, solver_opts)
 !------------------------------------------------------------------------------
 
           ! copy results from buffer: G_LL'^NN (E, spin) =

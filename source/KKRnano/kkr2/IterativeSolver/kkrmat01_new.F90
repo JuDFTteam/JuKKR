@@ -313,7 +313,8 @@ end subroutine
 subroutine kloopbody(ms, kpoint, &
                      TMATLL, GINP, ALAT, &
                      RR, QMRBOUND, &
-                     trunc2atom_index, communicator, iguess_data)
+                     trunc2atom_index, communicator, iguess_data, &
+                     solver_opts)
 
   use fillKKRMatrix_mod
   use mminvmod_mod
@@ -321,6 +322,7 @@ subroutine kloopbody(ms, kpoint, &
   use SparseMatrixDescription_mod
   use InitialGuess_mod
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
+  use SolverOptions_mod
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -331,6 +333,7 @@ subroutine kloopbody(ms, kpoint, &
   integer, intent(in), dimension(:) :: trunc2atom_index
   integer, intent(in) :: communicator
   type(InitialGuess), intent(inout) :: iguess_data
+  type(SolverOptions), intent(in) :: solver_opts
 
   double precision :: ALAT
   double precision :: kpoint(3)
@@ -422,6 +425,9 @@ subroutine kloopbody(ms, kpoint, &
       call dumpDenseMatrixFormatted(ms%mat_B, "rhs_form.dat")
     end if
 
+  elseif (cutoffmode == 0) then
+    ! solver with BCP support
+    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts)
   end if
 
   ! store the initial guess in previously selected slot
@@ -454,12 +460,14 @@ end subroutine
 subroutine KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB, &
 TMATLL, ALAT,NSYMAT,RR, &
 GINP, atom_indices, QMRBOUND, &
-lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
+lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info, &
+solver_opts)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
   use InitialGuess_mod
   use jij_calc_mod, only: global_jij_data, kkrjij
+  use SolverOptions_mod
   implicit none
 
   !     .. parameters ..
@@ -476,7 +484,8 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
   integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) :: communicator
   type (InitialGuess), intent(inout) :: iguess_data
-  type (ClusterInfo), target :: cluster_info ! in
+  type (ClusterInfo), target         :: cluster_info ! in
+  type (SolverOptions), intent(in)   :: solver_opts
 
   double precision:: ALAT
 
@@ -567,7 +576,8 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
     call kloopbody(ms, BZKP(:, k_point_index), &
                    TMATLL, GINP, ALAT, &
                    RR, QMRBOUND, &
-                   trunc2atom_index, communicator, iguess_data)
+                   trunc2atom_index, communicator, iguess_data, &
+                   solver_opts)
 
     call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
 
@@ -605,6 +615,64 @@ lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info)
   call destroyMultScatData(ms)
 
 end subroutine KKRMAT01_new
+
+!------------------------------------------------------------------------------
+!> Wrapper for the original solver (A. Thiess) with BCP preconditioner. (cutoffmode=0)
+subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts)
+
+  use SolverOptions_mod
+  use ClusterInfo_mod
+  implicit none
+
+  double complex GLLH(*)
+  double complex mat_X(:,:)
+  double complex mat_B(:,:)
+  double precision, intent(in) :: qmrbound
+  type (ClusterInfo), intent(in)  :: cluster_info
+  type (SolverOptions), intent(in) :: solver_opts
+
+  integer naezd
+  integer lmmaxd
+  integer :: itcount !dummy
+  double complex, allocatable :: GLLHBLCK(:,:)
+
+  naezd = size(cluster_info%indn0_trc, 1)
+  lmmaxd = size(mat_X, 2)
+  itcount = 0
+
+  CHECKASSERT(naezd*lmmaxd == size(mat_X, 1))
+  CHECKASSERT(naezd*lmmaxd == size(mat_B, 1))
+
+  allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
+
+  GLLHBLCK = dcmplx(0.0d0, 0.0d0)
+
+  if (solver_opts%BCP == 1) then
+    CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * &
+                         solver_opts%YDIM*solver_opts%ZDIM)
+
+    allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
+
+    call BCPWUPPER(GLLH,GLLHBLCK,NAEZD,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
+                   lmmaxd, solver_opts%natbld, solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
+                   cluster_info%naclsd)
+
+  endif
+
+  call MMINVMOD(GLLH, mat_X, mat_B,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
+                2, ITCOUNT, &
+                GLLHBLCK, solver_opts%bcp, 1, &
+                qmrbound, &
+                naezd, lmmaxd, cluster_info%naclsd, &
+                solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
+                solver_opts%natbld)
+
+  !if (any(mat_X /= mat_X)) then
+  ! write(*,*) "NaN!!!"
+  ! STOP
+  !endif
+
+end subroutine
 
 !------------------------------------------------------------------------------
 !> Alternative implementation of 'referenceFourier_com' to prevent a bug that occured on

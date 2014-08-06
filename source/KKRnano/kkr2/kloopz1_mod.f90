@@ -1,6 +1,8 @@
 !> multiple scattering k-loop and symmetrisation
 module kloopz1_mod
 
+use SolverOptions_mod
+
 CONTAINS
 
     subroutine KLOOPZ1_new(GMATN,ALAT, &
@@ -10,7 +12,7 @@ CONTAINS
     TMATLL, atom_indices, &
     QMRBOUND, lmmaxd,  &
     nrd, trunc2atom_index, communicator, &
-    iguess_data, cluster_info)
+    iguess_data, cluster_info, solver_opts)
 
 ! **********************************************************************
 
@@ -42,6 +44,8 @@ CONTAINS
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
     type(ClusterInfo), target :: cluster_info
+    type(SolverOptions), intent(in) :: solver_opts
+
     !     .. Parameters ..
 
     integer, parameter :: NSYMAXD = 48
@@ -149,15 +153,17 @@ CONTAINS
 
     TAUVBZ = 1.D0/VOLBZ
     ! cutoffmode:
-    ! 0 no cutoff, 1 T-matrix cutoff, 2 full matrix cutoff, &
-    ! 3 T-matrix cutoff with new solver, 4 T-matrix cutoff with direct solver
-    if (cutoffmode > 2) then
+    ! 0 no cutoff
+    ! 1 T-matrix cutoff, 2 full matrix cutoff (not supported anymore)
+    ! 3 T-matrix cutoff with new solver
+    ! 4 T-matrix cutoff with direct solver
+    if (cutoffmode > 2 .or. cutoffmode == 0) then
       call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL, &
       ALAT, NSYMAT, RR, GINP_LOCAL, atom_indices, &
       QMRBOUND, lmmaxd, trunc2atom_index, communicator, &
-      iguess_data, cluster_info)
+      iguess_data, cluster_info, solver_opts)
     else
-      write(*,*) "cutoffmode<3 not supported."
+      write(*,*) "0 < cutoffmode < 3 not supported."
       STOP
     endif
 !-------------------------------------------------------- SYMMETRISE GLL

@@ -1,5 +1,5 @@
-subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
-                   AX, &                                       ! >
+subroutine SPRSZMM(GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
+                   AX, &                                   ! >
                    naez, lmmaxd, naclsd)
 
   ! This routine is called very often
@@ -16,7 +16,6 @@ subroutine SPRSZMM(IAT,GLLH,NUMN0,INDN0,X,DONE,OMEGA,DELTA, &  ! <
   parameter        (CONE=(1.0D0,0.0D0), CZERO=(0.0D0,0.0D0))
   !     ..
   !     ... Scalars ..
-  integer, intent(in) ::       IAT
   double complex, intent(in) ::OMEGA  ! scalar in Matrix-Matrix-Mult.
   double complex, intent(in) ::DELTA  ! scalar in Matrix-Matrix-Mult.
 

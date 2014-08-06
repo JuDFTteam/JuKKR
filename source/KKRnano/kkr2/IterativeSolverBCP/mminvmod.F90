@@ -5,8 +5,10 @@
 ! IGUESS = 1 and SCITER /= 1: use X2 as initial guess
 ! on output: solution in X2
 
-subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
-                    IAT,SCITER,ITCOUNT, &
+#define TESTNAN(X) if (any(X /= X)) then; write(*,*) #X, __LINE__; STOP; endif
+
+subroutine MMINVMOD(GLLH1,X2, B ,NUMN0,INDN0, &
+                    SCITER,ITCOUNT, &
                     GLLHBLCK,BCP,IGUESS, &
                     TOL, &
                     naezd, lmmaxd, naclsd, xdim, ydim, zdim, &
@@ -24,11 +26,10 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
   integer, intent(in) :: natbld
 
   double complex :: GLLH1(LMMAXD,NACLSD*LMMAXD,NAEZD) ! in?
-  double complex :: X2(NAEZD*LMMAXD,LMMAXD)           ! out
-  double complex :: TMATLL(LMMAXD,LMMAXD,NAEZD)       ! in
+  double complex :: X2(NAEZD*LMMAXD,LMMAXD)           ! inout
+  double complex :: B(NAEZD*LMMAXD,LMMAXD)            ! in, right-hand side
   integer:: NUMN0(NAEZD)                              ! in
   integer:: INDN0(NAEZD,NACLSD)                       ! in
-  integer::IAT                                        ! in
   integer::SCITER                                     ! in
   integer::ITCOUNT                                    ! out
   double complex :: GLLHBLCK(NATBLD*LMMAXD, NATBLD*XDIM*YDIM*ZDIM*LMMAXD) ! inout, work-array
@@ -41,7 +42,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
 
   INTEGER :: NLEN
   INTEGER :: NDIM
-  !     PARAMETER         (NLEN=NAEZD*LMMAXD)
 
   double complex :: CONE
   double complex :: CZERO
@@ -57,8 +57,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
   double precision::TOLAV
   integer::NLIM
   integer::LM2
-  integer::LM1
-  integer::IL1
   integer::I
   integer::DIMVEC
   integer::IT
@@ -90,10 +88,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
   integer::HSTI(3)
 
   ! some large local arrays
-  !     DOUBLE COMPLEX     B(NDIM,LMMAXD)
-  !     DOUBLE COMPLEX     VECS(NDIM,LMMAXD,9)
-  !     DOUBLE COMPLEX     DUMMY(LMMAXD*NAEZD,LMMAXD)
-  double complex, allocatable, dimension(:,:)   :: B
   double complex, allocatable, dimension(:,:,:) :: VECS
   double complex, allocatable, dimension(:,:)   :: DUMMY
 !IBM* ALIGN(32, VECS)
@@ -102,9 +96,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
   external           DZNRM2,ZDOTU,ZRANDN
   double complex :: ZDOTU
   double precision::   DZNRM2
-
-  integer :: memory_stat
-  logical :: memory_fail
 
   !------------------------------------------------------------------
   ! convergence parameters
@@ -123,21 +114,8 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
   NLEN = NAEZD*LMMAXD
 
   !     Allocate arrays
-  memory_stat = 0
-  memory_fail = .false.
-
-  allocate(B(NDIM,LMMAXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(VECS(NDIM,LMMAXD,9), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(DUMMY(LMMAXD*NAEZD,LMMAXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-
-  if (memory_fail .eqv. .true.) then
-    write(*,*) "MMINVMOD: FATAL Error, failure to allocate memory."
-    write(*,*) "       Probably out of memory."
-    stop
-  end if
+  allocate(VECS(NDIM,LMMAXD,9))
+  allocate(DUMMY(LMMAXD*NAEZD,LMMAXD))
 
   TOLAV = 0.0
   QMRABS = .true.           ! QMRABS tolerance for residual norm is defined globally
@@ -159,15 +137,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
   !=======================================================================
   ! INITIALIZATION II
   !=======================================================================
-
-  B = CZERO
-
-  do LM1=1,LMMAXD
-    IL1=LMMAXD*(IAT-1)+LM1
-    do LM2=1,LMMAXD
-      B(IL1,LM2)=-TMATLL(LM1,LM2,IAT)
-    enddo
-  enddo
 
   do I = 1,NDIM
     do LM2=1,LMMAXD
@@ -221,7 +190,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
       naezd,lmmaxd,natbld,xdim,ydim,zdim)
     endif
 
-    call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+    call SPRSZMM( GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, &
                   VECS(1,1,9), &
                   naezd, lmmaxd, naclsd)
@@ -229,9 +198,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
     ! r0 = b - Ax0 = v2 - v9
     VECS(:,:,5) = VECS(:,:,2) - VECS(:,:,9)
 
-
   end if
-
 
   !--------------
   do LM2=1,LMMAXD
@@ -297,7 +264,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
       naezd,lmmaxd,natbld,xdim,ydim,zdim)
     endif
     
-    call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+    call SPRSZMM( GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, &
                   VECS(1,1,9), &
                   naezd, lmmaxd, naclsd)
@@ -338,6 +305,17 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
     enddo
     !--------------
     
+  TESTNAN(N2B)
+  TESTNAN(RHO)
+  TESTNAN(ETA)
+  TESTNAN(BETA)
+  TESTNAN(ALPHA)
+  TESTNAN(R0)
+  TESTNAN(RESN)
+  TESTNAN(VAR)
+  TESTNAN(TAU)
+  TESTNAN(COS)
+  TESTNAN(TOLB)
 
     do LM2=1,LMMAXD
       if ( .not. DONE(LM2)) then
@@ -370,7 +348,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
       naezd,lmmaxd,natbld,xdim,ydim,zdim)
     endif
     
-    call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+    call SPRSZMM( GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                   CONE,CZERO, VECS(1,1,8), &
                   naezd, lmmaxd, naclsd)
     
@@ -441,7 +419,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
             
       endif
         
-      call SPRSZMM( IAT,GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
+      call SPRSZMM( GLLH1,NUMN0,INDN0,DUMMY(1,1),DONE, &
                     CONE,CZERO, &
                     VECS(1,1,9), &
                     naezd, lmmaxd, naclsd)
@@ -474,7 +452,7 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
         endif
       enddo
       !--------------
-        
+
       HSTR(MOD(ITPROBE,10)+1) = RESNAV
         
       ! check if QMR stagnated .. if yes leave cycle ..
@@ -486,12 +464,12 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
           if ( .not. DONE(LM2)) then
             DONE(LM2) = .true.
             ITER(LM2) = 2*IT
-            write(6,*) 'stgn.atm. ',IAT,LM2,' w. ',RESN(LM2),TOLB(LM2)
+            write(6,*) 'stgn.atm. ',0 ,LM2,' w. ',RESN(LM2),TOLB(LM2)
           endif
         enddo
       endif
       ! ..
-        
+
       ! PROBE  = MAX(1,INT( LOG( RESNAV/(TOLAV*CNVFAC) ) ) )
         
       EXITIT = .true.
@@ -503,10 +481,9 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
     ! <<<<<<<<<<<<
     endif
   ! <<<<<<<<<<<<
-    
-    
-  !============================================================================
-  !============================================================================
+
+!============================================================================
+!============================================================================
   enddo
 
 ! ITERATION
@@ -514,6 +491,8 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
 !============================================================================
 
 67 continue
+
+   write(*,*) RESN
    !     Done.
 
    ! >>>>>>>>>>>
@@ -558,7 +537,6 @@ subroutine MMINVMOD(GLLH1,X2,TMATLL,NUMN0,INDN0, &
      CNVFAC = CNVFAC * 10.0**(MIN(ITPROBE,8)-5)
    endif
 
-   deallocate(B)
    deallocate(VECS)
    deallocate(DUMMY)
 
