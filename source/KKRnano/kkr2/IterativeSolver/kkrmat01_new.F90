@@ -648,10 +648,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, T
   CHECKASSERT(naezd*lmmaxd == size(mat_X, 1))
   CHECKASSERT(naezd*lmmaxd == size(mat_B, 1))
 
-  allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
   allocate(temp(naezd*lmmaxd, lmmaxd))
-
-  GLLHBLCK = dcmplx(0.0d0, 0.0d0)
 
   if (solver_opts%BCP == 1) then
     CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * &
@@ -666,25 +663,9 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, T
   endif
 
   call MMINVMOD_bcp(GLLH, sparse, mat_X, mat_B, qmrbound, lmmaxd, naezd*lmmaxd, .false., &
-                          solver_opts%bcp, GLLHBLCK, cluster_info%numn0_trc, cluster_info%indn0_trc, temp,solver_opts%natbld,solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)
-
-  !call MMINVMOD(GLLH, mat_X, mat_B,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
-  !              2, ITCOUNT, &
-  !              GLLHBLCK, solver_opts%bcp, 1, &
-  !              qmrbound, &
-  !              naezd, lmmaxd, cluster_info%naclsd, &
-  !              solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
-  !              solver_opts%natbld)
-!call MMINVMOD(GLLH,mat_X,TMATLL,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
-!                    1,2,ITCOUNT, &
-!                    GLLHBLCK,solver_opts%BCP, 0, &
-!                    qmrbound, &
-!                    naezd, lmmaxd, cluster_info%naclsd, solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
-!                    solver_opts%natbld)
-  !if (any(mat_X /= mat_X)) then
-  ! write(*,*) "NaN!!!"
-  ! STOP
-  !endif
+                          solver_opts%bcp, GLLHBLCK, cluster_info%numn0_trc, &
+                          cluster_info%indn0_trc, temp, solver_opts%natbld, &
+                          solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)
 
 end subroutine
 
