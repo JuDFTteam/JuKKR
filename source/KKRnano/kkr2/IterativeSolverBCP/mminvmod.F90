@@ -304,18 +304,6 @@ subroutine MMINVMOD(GLLH1,X2, B ,NUMN0,INDN0, &
       endif
     enddo
     !--------------
-    
-  TESTNAN(N2B)
-  TESTNAN(RHO)
-  TESTNAN(ETA)
-  TESTNAN(BETA)
-  TESTNAN(ALPHA)
-  TESTNAN(R0)
-  TESTNAN(RESN)
-  TESTNAN(VAR)
-  TESTNAN(TAU)
-  TESTNAN(COS)
-  TESTNAN(TOLB)
 
     do LM2=1,LMMAXD
       if ( .not. DONE(LM2)) then
@@ -493,6 +481,7 @@ subroutine MMINVMOD(GLLH1,X2, B ,NUMN0,INDN0, &
 67 continue
 
    write(*,*) RESN
+   write (*,*) "Converged: ", IT
    !     Done.
 
    ! >>>>>>>>>>>

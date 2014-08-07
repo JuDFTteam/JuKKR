@@ -427,7 +427,7 @@ subroutine kloopbody(ms, kpoint, &
 
   elseif (cutoffmode == 0) then
     ! solver with BCP support
-    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts)
+    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts, TMATLL, ms%sparse)
   end if
 
   ! store the initial guess in previously selected slot
@@ -618,23 +618,28 @@ end subroutine KKRMAT01_new
 
 !------------------------------------------------------------------------------
 !> Wrapper for the original solver (A. Thiess) with BCP preconditioner. (cutoffmode=0)
-subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts)
+subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, TMATLL, sparse)
 
   use SolverOptions_mod
   use ClusterInfo_mod
+  use SparseMatrixDescription_mod
+  use mminvmod_bcp_mod
   implicit none
 
-  double complex GLLH(*)
+  double complex GLLH(:)
   double complex mat_X(:,:)
   double complex mat_B(:,:)
   double precision, intent(in) :: qmrbound
   type (ClusterInfo), intent(in)  :: cluster_info
   type (SolverOptions), intent(in) :: solver_opts
+  double complex TMATLL(:,:,:) !TODO: remove
+  type(SparseMatrixDescription) :: sparse
 
   integer naezd
   integer lmmaxd
   integer :: itcount !dummy
   double complex, allocatable :: GLLHBLCK(:,:)
+  double complex, allocatable :: temp(:,:)
 
   naezd = size(cluster_info%indn0_trc, 1)
   lmmaxd = size(mat_X, 2)
@@ -644,6 +649,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts)
   CHECKASSERT(naezd*lmmaxd == size(mat_B, 1))
 
   allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
+  allocate(temp(naezd*lmmaxd, lmmaxd))
 
   GLLHBLCK = dcmplx(0.0d0, 0.0d0)
 
@@ -659,14 +665,22 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts)
 
   endif
 
-  call MMINVMOD(GLLH, mat_X, mat_B,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
-                2, ITCOUNT, &
-                GLLHBLCK, solver_opts%bcp, 1, &
-                qmrbound, &
-                naezd, lmmaxd, cluster_info%naclsd, &
-                solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
-                solver_opts%natbld)
+  call MMINVMOD_bcp(GLLH, sparse, mat_X, mat_B, qmrbound, lmmaxd, naezd*lmmaxd, .false., &
+                          solver_opts%bcp, GLLHBLCK, cluster_info%numn0_trc, cluster_info%indn0_trc, temp,solver_opts%natbld,solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)
 
+  !call MMINVMOD(GLLH, mat_X, mat_B,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
+  !              2, ITCOUNT, &
+  !              GLLHBLCK, solver_opts%bcp, 1, &
+  !              qmrbound, &
+  !              naezd, lmmaxd, cluster_info%naclsd, &
+  !              solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
+  !              solver_opts%natbld)
+!call MMINVMOD(GLLH,mat_X,TMATLL,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
+!                    1,2,ITCOUNT, &
+!                    GLLHBLCK,solver_opts%BCP, 0, &
+!                    qmrbound, &
+!                    naezd, lmmaxd, cluster_info%naclsd, solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
+!                    solver_opts%natbld)
   !if (any(mat_X /= mat_X)) then
   ! write(*,*) "NaN!!!"
   ! STOP
