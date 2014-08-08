@@ -427,7 +427,7 @@ subroutine kloopbody(ms, kpoint, &
 
   elseif (cutoffmode == 0) then
     ! solver with BCP support
-    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts, TMATLL, ms%sparse)
+    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts, ms%sparse)
   end if
 
   ! store the initial guess in previously selected slot
@@ -617,8 +617,8 @@ solver_opts)
 end subroutine KKRMAT01_new
 
 !------------------------------------------------------------------------------
-!> Wrapper for the original solver (A. Thiess) with BCP preconditioner. (cutoffmode=0)
-subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, TMATLL, sparse)
+!> Wrapper for solver with BCP preconditioner. (cutoffmode=0)
+subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, sparse)
 
   use SolverOptions_mod
   use ClusterInfo_mod
@@ -632,7 +632,6 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, T
   double precision, intent(in) :: qmrbound
   type (ClusterInfo), intent(in)  :: cluster_info
   type (SolverOptions), intent(in) :: solver_opts
-  double complex TMATLL(:,:,:) !TODO: remove
   type(SparseMatrixDescription) :: sparse
 
   integer naezd
@@ -656,6 +655,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, T
 
     allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
 
+    ! setup preconditioning matrix
     call BCPWUPPER(GLLH,GLLHBLCK,NAEZD,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
                    lmmaxd, solver_opts%natbld, solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
                    cluster_info%naclsd)
