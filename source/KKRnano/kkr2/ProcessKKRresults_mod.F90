@@ -535,7 +535,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                getElapsedTime(program_timer),ITER)
 
 !------------------------------------------------------------------------------
-  ! OMP had problems here
+  ! OMP had problems here, should be corrected now but not tested - therefore commented out
   !!!$omp parallel do private(ilocal, atomdata, densities, energies, mesh, cell) lastprivate(new_fermi)
   do ilocal = 1, num_local_atoms
     atomdata  => getAtomData(calc_data, ilocal)
@@ -572,6 +572,18 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   call OUTTIME(isMasterRank(my_mpi),'RHOMOM ......', &
                getElapsedTime(program_timer),ITER)
 
+#ifndef NOLOGGING
+  ! log some results
+  do ilocal = 1, num_local_atoms
+    densities => getDensities(calc_data, ilocal)
+    kkr => getKKR(calc_data, ilocal)
+
+    TESTARRAYLOG(3, kkr%GMATN)
+    TESTARRAYLOG(3, densities%CMOM)
+    TESTARRAYLOG(3, densities%CMINST)
+    TESTARRAYLOG(3, densities%RHO2NS)
+  enddo
+#endif
 
 end subroutine
 
