@@ -427,17 +427,17 @@ subroutine kloopbody(ms, kpoint, &
       call dumpDenseMatrix(ms%mat_B, "rhs.unf")
       call dumpDenseMatrixFormatted(ms%mat_B, "rhs_form.dat")
     end if
+  endif
 
-  elseif (cutoffmode == 0) then
-    ! solver with BCP support
-    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts, ms%sparse)
+  if (cutoffmode == 0) then
+    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts, ms%sparse, initial_zero)
   end if
 
   ! store the initial guess in previously selected slot
   ! (selected with 'iguess_set_k_ind')
   call iguess_save(iguess_data, ms%mat_X)
 
-  TESTARRAYLOG(4, ms%mat_B)
+  TESTARRAYLOG(3, ms%mat_B)
 
   ! ALTERNATIVE: direct solution with LAPACK
   if (cutoffmode == 4) then
@@ -451,7 +451,7 @@ subroutine kloopbody(ms, kpoint, &
     ms%mat_X = ms%mat_B
   endif
 
-  TESTARRAYLOG(4, ms%mat_X)
+  TESTARRAYLOG(3, ms%mat_X)
   ! RESULT: mat_X
 
 end subroutine
@@ -632,12 +632,18 @@ end subroutine KKRMAT01_new
 
 !------------------------------------------------------------------------------
 !> Wrapper for solver with BCP preconditioner. (cutoffmode=0)
-subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, sparse)
+subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, sparse, initial_zero)
+
+  USE_ARRAYLOG_MOD
+  USE_LOGGING_MOD
 
   use SolverOptions_mod
   use ClusterInfo_mod
   use SparseMatrixDescription_mod
   use mminvmod_bcp_mod
+  use mminvmod_mod
+
+  use SolverStats_mod
   implicit none
 
   double complex GLLH(:)
@@ -647,20 +653,28 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
   type (ClusterInfo), intent(in)  :: cluster_info
   type (SolverOptions), intent(in) :: solver_opts
   type(SparseMatrixDescription) :: sparse
+  logical :: initial_zero
+
+  type(SolverStats) :: stats
 
   integer naezd
   integer lmmaxd
+  integer nlen
+  integer num_columns
   double complex, allocatable :: GLLHBLCK(:,:)
   double complex, allocatable :: temp(:,:)
 
   naezd = cluster_info%naez_trc
   lmmaxd = size(mat_X, 2)
+  num_columns = size(mat_X, 2)
 
-  CHECKASSERT(naezd*lmmaxd == size(mat_X, 1))
-  CHECKASSERT(naezd*lmmaxd == size(mat_B, 1))
-  CHECKASSERT(size(GLLH) == naezd*lmmaxd*cluster_info%naclsd)
+  nlen = naezd*lmmaxd
 
-  allocate(temp(naezd*lmmaxd, lmmaxd))
+  CHECKASSERT(nlen == size(mat_X, 1))
+  CHECKASSERT(nlen == size(mat_B, 1))
+  CHECKASSERT(num_columns == size(mat_B, 2))
+
+  allocate(temp(nlen, num_columns))
 
   if (solver_opts%BCP == 1) then
     CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * &
@@ -675,7 +689,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
 
   endif
 
-  call MMINVMOD_bcp(GLLH, sparse, mat_X, mat_B, qmrbound, lmmaxd, naezd*lmmaxd, .false., &
+  call MMINVMOD_bcp(GLLH, sparse, mat_X, mat_B, qmrbound, num_columns, nlen, initial_zero, &
                           solver_opts%bcp, GLLHBLCK, cluster_info%numn0_trc, &
                           cluster_info%indn0_trc, temp, solver_opts%natbld, &
                           solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)

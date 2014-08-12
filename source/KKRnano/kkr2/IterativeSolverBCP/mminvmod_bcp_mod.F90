@@ -1,4 +1,5 @@
 !> TFQMR solver
+!> TODO: avoid code duplication with non-BCP solver
 
 #include "../DebugHelpers/logging_macros.h"
 
