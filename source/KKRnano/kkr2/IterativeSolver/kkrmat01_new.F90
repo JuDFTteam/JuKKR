@@ -314,7 +314,7 @@ subroutine kloopbody(ms, kpoint, &
                      TMATLL, GINP, ALAT, &
                      RR, QMRBOUND, &
                      trunc2atom_index, communicator, iguess_data, &
-                     solver_opts)
+                     solver_opts, stats)
 
   use fillKKRMatrix_mod
   use mminvmod_mod
@@ -323,6 +323,7 @@ subroutine kloopbody(ms, kpoint, &
   use InitialGuess_mod
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
   use SolverOptions_mod
+  use SolverStats_mod
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -334,6 +335,7 @@ subroutine kloopbody(ms, kpoint, &
   integer, intent(in) :: communicator
   type(InitialGuess), intent(inout) :: iguess_data
   type(SolverOptions), intent(in) :: solver_opts
+  type (SolverStats), intent(inout) :: stats
 
   double precision :: ALAT
   double precision :: kpoint(3)
@@ -350,6 +352,7 @@ subroutine kloopbody(ms, kpoint, &
   integer :: NAEZ
   logical :: initial_zero
   type (ClusterInfo), pointer :: cluster_info
+
 
   integer :: lmmaxd
 
@@ -413,7 +416,7 @@ subroutine kloopbody(ms, kpoint, &
 
   if (cutoffmode == 3) then
     call MMINVMOD_new(ms%GLLH, ms%sparse, ms%mat_X, ms%mat_B, &
-                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero)
+                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats)
 
     if (DEBUG_dump_matrix) then
       call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
@@ -468,6 +471,7 @@ solver_opts)
   use InitialGuess_mod
   use jij_calc_mod, only: global_jij_data, kkrjij
   use SolverOptions_mod
+  use SolverStats_mod
   implicit none
 
   !     .. parameters ..
@@ -522,6 +526,8 @@ solver_opts)
   integer :: naclsd
   integer :: naez
 
+  type (SolverStats) :: stats, total_stats
+
   ! array dimensions
 
   naez = cluster_info%naez_trc
@@ -561,6 +567,8 @@ solver_opts)
     global_jij_data%GSXIJ = CZERO
   end if
 
+  call reset_stats(total_stats)
+
 !==============================================================================
   do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
 !==============================================================================
@@ -577,7 +585,9 @@ solver_opts)
                    TMATLL, GINP, ALAT, &
                    RR, QMRBOUND, &
                    trunc2atom_index, communicator, iguess_data, &
-                   solver_opts)
+                   solver_opts, stats)
+
+    call sum_stats(stats, total_stats)
 
     call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
 
@@ -614,6 +624,10 @@ solver_opts)
 
   call destroyMultScatData(ms)
 
+  WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
+  WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
+  WRITELOG(3, *) "Sum of iterations for this E-point:   ", total_stats%sum_iterations
+
 end subroutine KKRMAT01_new
 
 !------------------------------------------------------------------------------
@@ -636,16 +650,15 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
 
   integer naezd
   integer lmmaxd
-  integer :: itcount !dummy
   double complex, allocatable :: GLLHBLCK(:,:)
   double complex, allocatable :: temp(:,:)
 
-  naezd = size(cluster_info%indn0_trc, 1)
+  naezd = cluster_info%naez_trc
   lmmaxd = size(mat_X, 2)
-  itcount = 0
 
   CHECKASSERT(naezd*lmmaxd == size(mat_X, 1))
   CHECKASSERT(naezd*lmmaxd == size(mat_B, 1))
+  CHECKASSERT(size(GLLH) == naezd*lmmaxd*cluster_info%naclsd)
 
   allocate(temp(naezd*lmmaxd, lmmaxd))
 

@@ -32,11 +32,12 @@ contains
   ! v2 = mat_B
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
-  !> @param NLEN           number of elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_new(smat, sparse, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero)
+  !> @param NLEN           number of row elements of matrices mat_X, mat_B
+  subroutine MMINVMOD_new(smat, sparse, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats)
     USE_LOGGING_MOD
     use SparseMatrixDescription_mod
     use vbrmv_mat_mod
+    use SolverStats_mod
     implicit none
 
     double complex, dimension(:), intent(inout) :: smat
@@ -50,6 +51,7 @@ contains
 
     double precision, intent(in) :: TOL
     INTEGER :: NLEN
+    type (SolverStats), intent(inout) :: stats
 
     !----------------- local variables --------------------------------------------
     double complex, dimension(:,:,:), allocatable :: VECS
@@ -422,6 +424,9 @@ contains
    WRITELOG(3,*) "number of residual probes:        ", res_probe_count
    WRITELOG(3,*) "number of iterations:             ", IT
    WRITELOG(3,*) "max. residual:             ", max_residual
+
+   stats%iterations = IT
+   stats%max_residual = max_residual
 
    do ind=1, num_columns
      if (converged_at(ind) == 0) then
