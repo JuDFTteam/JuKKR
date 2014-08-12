@@ -71,7 +71,9 @@ module KKRnano_Comm_mod
     implicit none
 
     integer, intent(in) :: nthrds
-    !$ call OMP_SET_NUM_THREADS(NTHRDS)
+    if (nthrds > 0) then
+      !$ call OMP_SET_NUM_THREADS(NTHRDS)
+    endif
   end subroutine
 
   !----------------------------------------------------------------------------
