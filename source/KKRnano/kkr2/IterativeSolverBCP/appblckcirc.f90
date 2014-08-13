@@ -1,6 +1,6 @@
 subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
                        naez,lmmaxd, &
-                       natbld, xdim, ydim, zdim)
+                       natbld, xdim, ydim, zdim, num_columns)
 
   implicit none
 
@@ -14,6 +14,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   integer xdim
   integer ydim
   integer zdim
+  integer num_columns
 
 
   double complex CONE
@@ -21,7 +22,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   double complex CZERO
   parameter      (CZERO = ( 0.0D0,0.0D0))
 
-  double complex VECS(NAEZ*LMMAXD,LMMAXD)
+  double complex VECS(NAEZ*LMMAXD,num_columns)
   double complex GLLHBLCK(NATBLD*LMMAXD, &
   XDIM*YDIM*ZDIM*NATBLD*LMMAXD)
 
@@ -65,13 +66,8 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   !$OMP PARALLEL PRIVATE(X,Y,TBLCK,TXK,TYK,XK,YK)
-
-  !!!OMP  PARALLEL PRIVATE (LMATBL,IX,IY,IZ,X,MYTHRD)
-    !!!OMP  PARALLEL PRIVATE (LMATBL,IX,IY,IZ,Y,MYTHRD)
-        !!!OMP  PARALLEL PRIVATE (IX,IY,IZ,TBLCK,TXK,TYK,MYTHRD)
-
   !$omp do
-  do LM1=1,LMMAXD  ! maybe it would be better just to parallelise this loop?
+  do LM1=1,num_columns
 
     !=======================================================================
 
