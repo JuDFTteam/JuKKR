@@ -3,7 +3,7 @@
 
 #include "../DebugHelpers/logging_macros.h"
 
-#define APPLY_PRECOND(X) call APPBLCKCIRC(X,GLLHBLCK,NLEN/num_columns,num_columns,natbld,xdim,ydim,zdim,num_columns)
+#define APPLY_PRECOND(X) call APPBLCKCIRC(X,GLLHBLCK,block_dim,num_columns,natbld,xdim,ydim,zdim,num_columns)
 #define MATRIX_MULTIPLY(A, X, AX) call multiply_vbr(A, X, AX, sparse)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
@@ -36,7 +36,7 @@ contains
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of elements of matrices mat_X, mat_B
   subroutine MMINVMOD_bcp(smat, sparse, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, &
-                          bcp, GLLHBLCK, numn0, indn0, temp,natbld,xdim,ydim,zdim)
+                          bcp, block_dim, GLLHBLCK, numn0, indn0, temp,natbld,xdim,ydim,zdim)
     USE_LOGGING_MOD
     use SparseMatrixDescription_mod
     use vbrmv_mat_mod
@@ -60,6 +60,7 @@ contains
     double complex, intent(inout) :: temp(:,:)
     integer, intent(in) :: numn0(:)
     integer, intent(in) :: indn0(:,:)
+    integer, intent(in) :: block_dim
     double complex, intent(inout) :: GLLHBLCK(:,:)
 
     !----------------- local variables --------------------------------------------

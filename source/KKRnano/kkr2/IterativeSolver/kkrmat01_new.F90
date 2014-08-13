@@ -665,7 +665,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
   double complex, allocatable :: temp(:,:)
 
   naezd = cluster_info%naez_trc
-  lmmaxd = size(mat_X, 2)
+  lmmaxd = sparse%kvstr(2) - sparse%kvstr(1)
   num_columns = size(mat_X, 2)
 
   nlen = naezd*lmmaxd
@@ -690,7 +690,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
   endif
 
   call MMINVMOD_bcp(GLLH, sparse, mat_X, mat_B, qmrbound, num_columns, nlen, initial_zero, &
-                          solver_opts%bcp, GLLHBLCK, cluster_info%numn0_trc, &
+                          solver_opts%bcp, lmmaxd, GLLHBLCK, cluster_info%numn0_trc, &
                           cluster_info%indn0_trc, temp, solver_opts%natbld, &
                           solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)
 
