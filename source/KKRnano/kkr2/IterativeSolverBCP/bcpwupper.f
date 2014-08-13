@@ -4,7 +4,7 @@
      >                     NAEZ,NUMN0,INDN0,
 C                          new input after inc.p removal
      &                     lmmaxd, natbld, xdim, ydim, zdim,
-     &                     naclsd)
+     &                     blocks_per_row)
 C
       IMPLICIT NONE
 C ------------------------------------------------------------------------
@@ -22,8 +22,8 @@ C     number of preconditioning blocks in each direction
 
       integer lmmaxd
 
-C     number of atoms in the reference cluster
-      integer naclsd
+C     number of non-zero blocks per row
+      integer blocks_per_row
 C     number of atoms per preconditioning block
       integer natbld
 
@@ -38,8 +38,8 @@ C     INTEGER   ALM
 C     PARAMETER (ALM = NAEZD*LMMAXD)
 
 C     INTEGER   NGTBD
-C      PARAMETER (NGTBD = NACLSD*LMMAXD)
-C                       = NACLSD*(LMAX+1)**2
+C      PARAMETER (NGTBD = blocks_per_row*LMMAXD)
+C                       = blocks_per_row*(LMAX+1)**2
 
       INTEGER   NINTACTD
       PARAMETER (NINTACTD = 19)     ! Ecken des "Interaktions-wuerfels"
@@ -50,11 +50,11 @@ C
 C      DOUBLE COMPLEX     GLLH(LMMAXD,NGTBD,NAEZD),
 C     +                   GLLHBLCK(LMMAXD*NATBLD,LMMAXD*NATBLD*NBLCKD)
 
-      DOUBLE COMPLEX     GLLH(lmmaxd,NACLSD*lmmaxd,NAEZ),
+      DOUBLE COMPLEX     GLLH(lmmaxd,blocks_per_row*lmmaxd,NAEZ),
      &                   GLLHBLCK(NATBLD*lmmaxd,
      &                            NATBLD*XDIM*YDIM*ZDIM*lmmaxd)
 
-      INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)
+      INTEGER            INDN0(NAEZ,blocks_per_row),NUMN0(NAEZ)
 C ..
 C ..
 C local arrays ..
@@ -143,25 +143,25 @@ C
 C
             CALL GENBLAV(GLLH,BLAV(1,1,1),CEN,CEN,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,2),CEN,LEF,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,3),CEN,RIG,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,4),CEN,DOW,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,5),CEN,UPP,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,6),CEN,BAC,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,7),CEN,FOW,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
 C
 C
             LEDO = MOD(IX2,XDIM) + 1 +
@@ -203,40 +203,40 @@ C
 C  
             CALL GENBLAV(GLLH,BLAV(1,1,8),CEN,LEDO,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,9),CEN,LEUP,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,10),CEN,LEBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,11),CEN,LEFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,12),CEN,RIDO,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,13),CEN,RIUP,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,14),CEN,RIBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,15),CEN,RIFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,16),CEN,DOBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,17),CEN,DOFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,18),CEN,UPBA,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
             CALL GENBLAV(GLLH,BLAV(1,1,19),CEN,UPFO,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
 C
 C
           ENDDO
@@ -387,22 +387,22 @@ C
 C
       SUBROUTINE GENBLAV(GLLH,BLAV,I,J,
      &                   INDN0,NUMN0,
-     &                   naez, lmmaxd, natbld, naclsd )
+     &                   naez, lmmaxd, natbld, blocks_per_row )
 C
       IMPLICIT NONE
 
       INTEGER naez
       INTEGER lmmaxd
       INTEGER natbld
-      INTEGER naclsd
+      INTEGER blocks_per_row
 C
 C
       INTEGER            I,J,I1,I2,LM1,LM2,IL1,IL2,IL2B,
      +                   ISRH
 
-      INTEGER            INDN0(NAEZ,NACLSD),NUMN0(NAEZ)
+      INTEGER            INDN0(NAEZ,*),NUMN0(NAEZ)
 
-      DOUBLE COMPLEX     GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ),
+      DOUBLE COMPLEX     GLLH(LMMAXD,blocks_per_row*LMMAXD,NAEZ),
      +                   BLAV(NATBLD*LMMAXD,NATBLD*LMMAXD)
 
       DO I1 = 1, NATBLD

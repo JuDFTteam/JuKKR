@@ -173,6 +173,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   endif
 
   ! set the solver options for bcp preconditioner
+  solver_opts%bcp = dims%bcpd
   solver_opts%xdim = dims%xdim
   solver_opts%ydim = dims%ydim
   solver_opts%zdim = dims%zdim

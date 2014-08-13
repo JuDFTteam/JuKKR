@@ -3,7 +3,7 @@
 
 #include "../DebugHelpers/logging_macros.h"
 
-#define APPLY_PRECOND(X) call APPBLCKCIRC(X,GLLHBLCK,block_dim,num_columns,natbld,xdim,ydim,zdim,num_columns)
+#define APPLY_PRECOND(X) call APPBLCKCIRC(X,GLLHBLCK,nlen/block_dim,block_dim,natbld,xdim,ydim,zdim,num_columns)
 #define MATRIX_MULTIPLY(A, X, AX) call multiply_vbr(A, X, AX, sparse)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)

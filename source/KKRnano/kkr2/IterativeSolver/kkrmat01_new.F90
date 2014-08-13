@@ -661,6 +661,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
   integer lmmaxd
   integer nlen
   integer num_columns
+  integer blocks_per_row
   double complex, allocatable :: GLLHBLCK(:,:)
   double complex, allocatable :: temp(:,:)
 
@@ -682,10 +683,17 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
 
     allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
 
+    blocks_per_row = cluster_info%numn0_trc(1)
+
+    ! SEVERE restriction of preconditioner code:
+    ! The number of non-zero blocks must be the same in each row
+    ! this is not the case for all crystal structures (e.g. perovskite)
+    CHECKASSERT(all(cluster_info%numn0_trc == blocks_per_row ))
+
     ! setup preconditioning matrix
     call BCPWUPPER(GLLH,GLLHBLCK,NAEZD,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
                    lmmaxd, solver_opts%natbld, solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
-                   cluster_info%naclsd)
+                   blocks_per_row)
 
   endif
 

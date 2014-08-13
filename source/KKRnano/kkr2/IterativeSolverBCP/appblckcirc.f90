@@ -47,10 +47,6 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   integer(8)     FFTWPLAN_bwd
   integer        num
 
-  !=======================================================================
-  ! outer loop over all columns LM1=1, LMMAXD       begin
-  !=======================================================================
-
   num = lmmaxd*natbld
 
   FAC = 1/FLOAT(XDIM*YDIM*ZDIM)
@@ -159,7 +155,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
           enddo
         enddo
 
-    enddo
+    enddo ! LM1
 
   !-----------------------------------------------------------------------
   ! perform Fourier-transform forward               end
@@ -167,11 +163,6 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
 
   enddo
   !$omp end do
-
-!=======================================================================
-! outer loop over all columns LM1=1, LMMAXD       end
-!=======================================================================
-
   !$OMP END PARALLEL
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
