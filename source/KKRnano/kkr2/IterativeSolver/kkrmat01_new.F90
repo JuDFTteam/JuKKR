@@ -13,8 +13,9 @@ module kkrmat_new_mod
 use SparseMatrixDescription_mod
 use ClusterInfo_mod
 
+implicit none
+
 double complex, allocatable, dimension(:, :), save :: full
-!IBM* ALIGN(32, full)
 
 type MultScatData
   type (SparseMatrixDescription) :: sparse
@@ -518,9 +519,6 @@ solver_opts)
 
   integer::        site_lm_size
 
-  integer :: memory_stat
-  logical :: memory_fail
-
   integer :: iat
   integer :: num_local_atoms
   integer :: naclsd
@@ -540,17 +538,8 @@ solver_opts)
   !-----------------------------------------------------------------------
   ! Allocate arrays
   !-----------------------------------------------------------------------
-  memory_stat = 0
-  memory_fail = .false.
 
-  allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-
-  if (memory_fail .eqv. .true.) then
-    write(*,*) "KKRMAT01: FATAL Error, failure to allocate memory."
-    write(*,*) "       Probably out of memory."
-    stop
-  end if
+  allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms))
 
   ! WARNING: Symmetry assumptions might have been used that are
   ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
@@ -816,6 +805,5 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
   call hideBufferZ(win)
 
 end subroutine
-
 
 end module
