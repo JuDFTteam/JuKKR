@@ -695,6 +695,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                  getElapsedTime(program_timer),ITER)
   end if
 
+#ifndef DEBUG_NO_ELECTROSTATICS
   ! output: VONS (changed), VMAD
   ! operation on all atoms! O(N**2)
   call addMadelungPotentialnew_com(calc_data, arrays%ZAT, getMyAtomRank(my_mpi), &
@@ -703,6 +704,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......', &
                getElapsedTime(program_timer),ITER)
+#endif
 
   VAV0 = 0.0d0
   VOL0 = 0.0d0
