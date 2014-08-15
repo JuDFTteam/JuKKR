@@ -667,8 +667,7 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
   allocate(temp(nlen, num_columns))
 
   if (solver_opts%BCP == 1) then
-    CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * &
-                         solver_opts%YDIM*solver_opts%ZDIM)
+    CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * solver_opts%YDIM*solver_opts%ZDIM)
 
     allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
 
