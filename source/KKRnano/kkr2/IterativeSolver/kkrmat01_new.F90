@@ -170,7 +170,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   ASSERT(naez == size(trunc2atom_index))
 
   ! Note: some MPI implementations might need
-  ! the use of MPI_Alloc_mem
+  ! the use of MPI_Alloc_mem (for GINP)
   allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
 
   call MPI_Comm_size(communicator, nranks, ierr)
@@ -192,14 +192,17 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
     chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
     chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
 
+#ifndef IDENTICAL_REF
     call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
     CHECKASSERT(ierr == 0)
 
     call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
-    !!!Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
 
     call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
     CHECKASSERT(ierr == 0)
+#else
+    Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
+#endif
 
     call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
                     NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, &
@@ -382,7 +385,17 @@ subroutine kloopbody(ms, kpoint, &
 
   !TODO: use an alternative referenceFourier to work around a bug on BGQ
   !call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, &
-   call referenceFourier_com_fenced(ms%GLLH, ms%sparse, kpoint, alat, &
+
+! if the following macro is defined, don't use MPI RMA locks
+! not using locks does not scale well
+
+#ifdef NO_LOCKS_MPI
+#define REF_FOURIER referenceFourier_com_fenced
+#else
+#define REF_FOURIER referenceFourier_com
+#endif
+
+  call REF_FOURIER (ms%GLLH, ms%sparse, kpoint, alat, &
                             cluster_info%nacls_trc, cluster_info%atom_trc, &
                             cluster_info%numn0_trc, cluster_info%indn0_trc, &
                             rr, cluster_info%ezoa_trc, GINP, ms%EIKRM, ms%EIKRP, &

@@ -68,6 +68,19 @@ program MAIN2
   call createKKRnanoParallel(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
   call printKKRnanoInfo(my_mpi, dims%nthrds)
+
+  if (isMasterRank(my_mpi)) then
+#ifdef NO_LOCKS_MPI
+    write(*,*) "NO_LOCKS_MPI defined: Not using MPI RMA locks. Does not scale well."
+#endif
+#ifdef IDENTICAL_REF
+    write(*,*) "IDENTICAL_REF defined: assuming identical reference clusters."
+#endif
+#ifdef DEBUG_NO_ELECTROSTATICS
+    write(*,*) "DEBUG_NO_ELECTROSTATICS: no electrostatics - results are wrong."
+#endif
+  endif
+
 !------------------------------------------------------------------------------
 
   if (getMyWorldRank(my_mpi) < 128) then ! max. 128 logfiles
@@ -112,10 +125,6 @@ program MAIN2
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
 ! ... and wait after SC-ITER loop
 !=====================================================================
-
-!  flag = 0
-!99 continue
-!  if (flag == 0) goto 99
 
   ! This if closes much later!
   if (isActiveRank(my_mpi)) then
