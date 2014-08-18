@@ -15,6 +15,8 @@
 
 module mminvmod_oop_mod
 
+implicit none
+
 contains
 
   ! :-)
@@ -109,7 +111,7 @@ contains
     ! INITIALIZATION
     !=======================================================================
     allocate (VECS(NLEN,num_columns,7))
-    allocate (temp(size(mat_X, 1), size(mat_X, 2)))
+    if (use_precond) allocate (temp(size(mat_X, 1), size(mat_X, 2)))
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
@@ -137,12 +139,9 @@ contains
       !==============================================================================
       ! V9 = A*V1
       !==============================================================================
-      if (use_precond) then
-        call precond%apply(mat_X, temp)
-      else
-        temp = mat_X
-      endif
-      call op%apply(temp, VECS(:,:,NINE))
+
+      call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), temp, use_precond)
+
       sparse_mult_count = sparse_mult_count + 1
 
       !r0 = b - Ax0 = v2 - v9
@@ -208,12 +207,9 @@ contains
       !====================================================================
       ! V9 = A*V6
       !====================================================================
-      if (use_precond) then
-        call precond%apply(VECS(:,:,SIX), temp)
-      else
-        temp = VECS(:,:,SIX)
-      endif
-      call op%apply(temp, VECS(:,:,NINE))
+
+      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,NINE), temp, use_precond)
+
       sparse_mult_count = sparse_mult_count + 1
 
       !     VECS(:,:,6) input vector to be multiplied by A = smat
@@ -285,12 +281,9 @@ contains
       !=========================================
       ! V8 = A*V6
       !=========================================
-      if (use_precond) then
-        call precond%apply(VECS(:,:,SIX), temp)
-      else
-        temp = VECS(:,:,SIX)
-      endif
-      call op%apply(temp, VECS(:,:,EIGHT))
+
+      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,EIGHT), temp, use_precond)
+
       sparse_mult_count = sparse_mult_count + 1
 
       !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
@@ -365,12 +358,9 @@ contains
         !=========================================
         ! V9 = A*V1
         !=========================================
-        if (use_precond) then
-          call precond%apply(mat_X, temp)
-        else
-          temp = mat_X
-        endif
-        call op%apply(temp, VECS(:,:,NINE))
+
+        call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), temp, use_precond)
+
         sparse_mult_count = sparse_mult_count + 1
 
         !     VECS(:,:,1) input vector to be multiplied by A = GLLH1
@@ -465,8 +455,32 @@ contains
    WRITELOG(3,*) converged_at
    WRITELOG(3,*) RESN
 
-   deallocate(temp)
+   if (allocated(temp)) deallocate(temp)
    deallocate(VECS)
+
+ end subroutine
+
+ !------------------------------------------------------------------------------
+ !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
+ !> into 'mat_out'.
+ !>
+ !> mat_out = A P mat_in
+ !> preconditioner is used only when use_precond=.true.
+ subroutine apply_precond_and_matrix(op, precond, mat, mat_out, temp, use_precond)
+   use OperatorT_mod
+   class(OperatorT) :: op
+   class(OperatorT) :: precond
+   double complex, intent(in) :: mat(:,:)
+   double complex, intent(out) :: mat_out(:,:)
+   double complex, intent(inout) :: temp(:,:)
+   logical, intent(in) :: use_precond
+
+   if (use_precond) then
+      call precond%apply(mat, temp)
+      call op%apply(temp, mat_out)
+   else
+      call op%apply(mat, mat_out)
+   endif
 
  end subroutine
 
