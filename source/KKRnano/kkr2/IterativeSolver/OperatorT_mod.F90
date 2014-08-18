@@ -1,7 +1,7 @@
-module Operator_mod
+module OperatorT_mod
   implicit none
 
-  type, abstract :: Operator
+  type, abstract :: OperatorT
     contains
     procedure(apply), deferred :: apply
   end type
@@ -10,8 +10,8 @@ module Operator_mod
     !----------------------------------------------------------------------------
     !> Applies Operator on mat_X and returns result in mat_AX
     subroutine apply(self, mat_X, mat_AX)
-      import Operator
-      class(Operator) :: self
+      import OperatorT
+      class(OperatorT) :: self
       double complex, intent(in)  :: mat_X
       double complex, intent(out) :: mat_AX
     end subroutine
