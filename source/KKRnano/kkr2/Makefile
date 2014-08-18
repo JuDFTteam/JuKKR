@@ -312,5 +312,4 @@ NearField_calc_mod.o: NearField_com_mod.o CalculationData_mod.o
 NearField_com_mod.o: NearField_mod.o NearField_kkr_mod.o one_sided_commD_mod.o
 
 DerOperator_mod.o: Operator_mod.o
-MyPrecond_mod.o: Precond_mod.o
-Solver_mod.o: Precond_mod.o Operator_mod.o
+Solver_mod.o: Operator_mod.o

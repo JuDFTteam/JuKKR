@@ -1,11 +1,10 @@
 module Solver_mod
   use Operator_mod
-  use Precond_mod
   implicit none
 
   type Solver
     class(Operator), pointer :: op => null()
-    class(Precond), pointer :: prec => null()
+    class(Operator), pointer :: prec => null()
     contains
       procedure :: init => init_solver
       procedure :: init_precond => init_precond_solver
@@ -22,14 +21,14 @@ module Solver_mod
 
   subroutine init_precond_solver(self, prec)
     class(Solver) :: self
-    class(Precond), target :: prec
+    class(Operator), target :: prec
     self%prec => prec
   end subroutine
 
   subroutine solve_with_solver(self)
     class(Solver) :: self
-    call self%op%apply
-    if (associated(self%prec)) call self%prec%apply
+    !call self%op%apply
+    !if (associated(self%prec)) call self%prec%apply
   end subroutine
 end module
 
