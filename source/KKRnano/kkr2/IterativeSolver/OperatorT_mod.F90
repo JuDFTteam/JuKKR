@@ -12,8 +12,8 @@ module OperatorT_mod
     subroutine apply(self, mat_X, mat_AX)
       import OperatorT
       class(OperatorT) :: self
-      double complex, intent(in)  :: mat_X
-      double complex, intent(out) :: mat_AX
+      double complex, intent(in)  :: mat_X(:,:)
+      double complex, intent(out) :: mat_AX(:,:)
     end subroutine
   end interface
 
