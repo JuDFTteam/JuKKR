@@ -212,6 +212,8 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
   call hideBufferZ(win)
 
+  deallocate(Gref_buffer)
+
 end subroutine
 
 !------------------------------------------------------------------------------
@@ -703,6 +705,9 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
                           cluster_info%indn0_trc, temp, solver_opts%natbld, &
                           solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)
 
+  if (allocated(GLLHBLCK)) deallocate(GLLHBLCK)
+  deallocate(temp)
+
 end subroutine
 
 !------------------------------------------------------------------------------
@@ -815,6 +820,8 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
   end do
 
   call hideBufferZ(win)
+
+  deallocate(Gref_buffer)
 
 end subroutine
 
