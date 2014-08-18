@@ -26,6 +26,9 @@ module KKROperator_mod
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 
+    double complex, parameter :: CZERO = (0.0D0,0.0D0)
+    mat_AX = CZERO
+
     ! perform sparse VBR matrix * dense matrix
     call multiply_vbr(self%ms%GLLH, mat_X, mat_AX, self%ms%sparse)
   end subroutine

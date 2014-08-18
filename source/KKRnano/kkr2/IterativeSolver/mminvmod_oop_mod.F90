@@ -87,7 +87,7 @@ contains
     ! 1 = converged
     integer :: tfqmr_status(num_columns)
 
-    ! stores iteration where calculation where calculation converged
+    ! stores iteration where calculation converged
     ! 0 = never converged
     integer :: converged_at(num_columns)
 
@@ -135,7 +135,6 @@ contains
       !==============================================================================
       ! V9 = A*V1
       !==============================================================================
-      VECS(:,:,NINE) = CZERO
       call op%apply(mat_X, VECS(:,:,NINE))
       sparse_mult_count = sparse_mult_count + 1
 
@@ -202,7 +201,6 @@ contains
       !====================================================================
       ! V9 = A*V6
       !====================================================================
-      VECS(:,:,NINE) = CZERO
       call op%apply(VECS(:,:,SIX), VECS(:,:,NINE))
       sparse_mult_count = sparse_mult_count + 1
 
@@ -275,7 +273,6 @@ contains
       !=========================================
       ! V8 = A*V6
       !=========================================
-      VECS(:,:,EIGHT) = CZERO
       call op%apply(VECS(:,:,SIX), VECS(:,:,EIGHT))
       sparse_mult_count = sparse_mult_count + 1
 
@@ -351,7 +348,6 @@ contains
         !=========================================
         ! V9 = A*V1
         !=========================================
-        VECS(:,:,NINE) = CZERO
         call op%apply(mat_X, VECS(:,:,NINE))
         sparse_mult_count = sparse_mult_count + 1
 

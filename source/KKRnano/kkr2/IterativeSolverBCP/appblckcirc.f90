@@ -1,3 +1,4 @@
+!> Apply block circulant preconditioner on VECS_in and put result into VECS_out
 subroutine APPBLCKCIRC(VECS_in, VECS_out, GLLHBLCK, &
                        naez,lmmaxd, &
                        natbld, xdim, ydim, zdim, num_columns)
