@@ -7,6 +7,7 @@ module KKROperator_mod
 
   implicit none
 
+  !> Represents the operator/matrix (1 - \Delta T G_ref).
   type, extends(OperatorT) :: KKROperator
     private
     type(MultScatData), pointer :: ms => null()
@@ -17,7 +18,7 @@ module KKROperator_mod
   contains
 
   !----------------------------------------------------------------------------
-  !> Applies Operator on mat_X and returns result in mat_AX
+  !> Applies Operator on mat_X and returns result in mat_AX.
   subroutine apply_KKROperator(self, mat_X, mat_AX)
     use vbrmv_mat_mod, only: multiply_vbr
     class(KKROperator) :: self
@@ -29,6 +30,8 @@ module KKROperator_mod
   end subroutine
 
   !---------------------------------------------------------------------------
+  !> To set up the KKROperator, one has to properly set up the ms workspace
+  !> make it known to KKROperator
   subroutine associate_ms_workspace(self, ms)
     class(KKROperator) :: self
     type(MultScatData), target :: ms
@@ -38,7 +41,7 @@ module KKROperator_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  ! Return a reference to the multiple scattering workspace.
+  !> Return a reference to the multiple scattering workspace.
   function get_ms_workspace(self) result(ms)
     class(KKROperator) :: self
     type(MultScatData), pointer :: ms
