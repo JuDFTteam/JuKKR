@@ -32,7 +32,7 @@ contains
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats)
+  subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond)
     USE_LOGGING_MOD
     use SparseMatrixDescription_mod
     use vbrmv_mat_mod
@@ -51,9 +51,12 @@ contains
     double precision, intent(in) :: TOL
     INTEGER :: NLEN
     type (SolverStats), intent(inout) :: stats
+    class (OperatorT) :: precond
+    logical, intent(in) :: use_precond
 
     !----------------- local variables --------------------------------------------
     double complex, dimension(:,:,:), allocatable :: VECS
+    double complex, dimension(:,:), allocatable :: temp
 
     double complex, parameter :: CONE  = (1.0D0,0.0D0)
     double complex, parameter :: CZERO = (0.0D0,0.0D0)
@@ -108,6 +111,7 @@ contains
     ! INITIALIZATION
     !=======================================================================
     allocate (VECS(NLEN,num_columns,7))
+    allocate (temp(size(mat_X, 1), size(mat_X, 2)))
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
@@ -135,7 +139,12 @@ contains
       !==============================================================================
       ! V9 = A*V1
       !==============================================================================
-      call op%apply(mat_X, VECS(:,:,NINE))
+      if (use_precond) then
+        call precond%apply(mat_X, temp)
+      else
+        temp = mat_X
+      endif
+      call op%apply(temp, VECS(:,:,NINE))
       sparse_mult_count = sparse_mult_count + 1
 
       !r0 = b - Ax0 = v2 - v9
@@ -201,7 +210,12 @@ contains
       !====================================================================
       ! V9 = A*V6
       !====================================================================
-      call op%apply(VECS(:,:,SIX), VECS(:,:,NINE))
+      if (use_precond) then
+        call precond%apply(VECS(:,:,SIX), temp)
+      else
+        temp = VECS(:,:,SIX)
+      endif
+      call op%apply(temp, VECS(:,:,NINE))
       sparse_mult_count = sparse_mult_count + 1
 
       !     VECS(:,:,6) input vector to be multiplied by A = smat
@@ -273,7 +287,12 @@ contains
       !=========================================
       ! V8 = A*V6
       !=========================================
-      call op%apply(VECS(:,:,SIX), VECS(:,:,EIGHT))
+      if (use_precond) then
+        call precond%apply(VECS(:,:,SIX), temp)
+      else
+        temp = VECS(:,:,SIX)
+      endif
+      call op%apply(temp, VECS(:,:,EIGHT))
       sparse_mult_count = sparse_mult_count + 1
 
       !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
@@ -348,7 +367,12 @@ contains
         !=========================================
         ! V9 = A*V1
         !=========================================
-        call op%apply(mat_X, VECS(:,:,NINE))
+        if (use_precond) then
+          call precond%apply(mat_X, temp)
+        else
+          temp = mat_X
+        endif
+        call op%apply(temp, VECS(:,:,NINE))
         sparse_mult_count = sparse_mult_count + 1
 
         !     VECS(:,:,1) input vector to be multiplied by A = GLLH1
@@ -409,7 +433,10 @@ contains
       !              2
       ! has to be performed ..
 
-    ! ======== TODO: precond. ==========================
+   if (use_precond) then
+     call precond%apply(mat_X, temp)
+     mat_X = temp
+   endif
 
     ! ================================================================
     ! solution is in mat_X
@@ -440,6 +467,7 @@ contains
    WRITELOG(3,*) converged_at
    WRITELOG(3,*) RESN
 
+   deallocate(temp)
    deallocate(VECS)
 
  end subroutine

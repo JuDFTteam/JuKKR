@@ -259,6 +259,7 @@ subroutine kloopbody(ms, kpoint, &
   use SolverOptions_mod
   use SolverStats_mod
   use KKROperator_mod
+  use BCPOperator_mod
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -282,6 +283,7 @@ subroutine kloopbody(ms, kpoint, &
 
   !-------- local ---------
   type(KKROperator), target :: kkr_op
+  type(BCPOperator), target :: precond
 
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
@@ -365,7 +367,7 @@ subroutine kloopbody(ms, kpoint, &
 
   if (cutoffmode == 3) then
     call MMINVMOD_oop(kkr_op, ms%mat_X, ms%mat_B, &
-                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats)
+                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats, precond, .false.)
 
     if (DEBUG_dump_matrix) then
       call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
