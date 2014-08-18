@@ -251,13 +251,14 @@ subroutine kloopbody(ms, kpoint, &
                      solver_opts, stats)
 
   use fillKKRMatrix_mod
-  use mminvmod_mod
+  use mminvmod_oop_mod
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
   use InitialGuess_mod
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
   use SolverOptions_mod
   use SolverStats_mod
+  use KKROperator_mod
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -280,6 +281,8 @@ subroutine kloopbody(ms, kpoint, &
   doublecomplex :: TMATLL(:,:,:)
 
   !-------- local ---------
+  type(KKROperator), target :: kkr_op
+
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
 
@@ -352,6 +355,8 @@ subroutine kloopbody(ms, kpoint, &
 
   call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
 
+  call kkr_op%associate_ms_workspace(ms)
+
   initial_zero = .true.
   if (iguess_data%iguess == 1) then
     initial_zero = .false.
@@ -359,7 +364,7 @@ subroutine kloopbody(ms, kpoint, &
   end if
 
   if (cutoffmode == 3) then
-    call MMINVMOD_new(ms%GLLH, ms%sparse, ms%mat_X, ms%mat_B, &
+    call MMINVMOD_oop(kkr_op, ms%mat_X, ms%mat_B, &
                       QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats)
 
     if (DEBUG_dump_matrix) then
@@ -573,7 +578,6 @@ subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, s
   use ClusterInfo_mod
   use SparseMatrixDescription_mod
   use mminvmod_bcp_mod
-  use mminvmod_mod
 
   use SolverStats_mod
   implicit none

@@ -246,7 +246,7 @@ vbrmv_mat_mod.o: SparseMatrixDescription_mod.o
 kkrmat01_new.o: lloyds_formula_mod.o mminvmod_mod.o fillKKRMatrix_mod.o \
                 dlke0_smat_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o \
                 one_sided_commZ_mod.o InitialGuess_mod.o ClusterInfo_mod.o jij_calc_mod.o \
-                SolverOptions_mod.o mminvmod_bcp_mod.o SolverStats_mod.o MultScatData_mod.o
+                SolverOptions_mod.o mminvmod_bcp_mod.o SolverStats_mod.o MultScatData_mod.o KKROperator_mod.o
                 
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o

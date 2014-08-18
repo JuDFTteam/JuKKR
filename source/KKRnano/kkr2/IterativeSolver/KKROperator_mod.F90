@@ -13,6 +13,7 @@ module KKROperator_mod
     type(MultScatData), pointer :: ms => null()
     contains
     procedure :: apply  => apply_KKROperator
+    procedure :: associate_ms_workspace
   end type
 
   contains
