@@ -35,7 +35,12 @@ module KKROperator_mod
 
   !---------------------------------------------------------------------------
   !> To set up the KKROperator, one has to properly set up the ms workspace
-  !> make it known to KKROperator
+  !> make it known to KKROperator.
+  !>
+  !> Rationale: The setup of the KKR matrix is very complicated.
+  !> Therefore it is done separately and the data is stored in
+  !> the ms workspace. A reference to this workspace is passed by calling
+  !> this routine.
   subroutine associate_ms_workspace(self, ms)
     class(KKROperator) :: self
     type(MultScatData), target :: ms

@@ -31,6 +31,7 @@ contains
   !***********************************************************************
   ! v1 = mat_X
   ! v2 = mat_B
+  !> @param op             coefficient matrix/operator
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
