@@ -3,7 +3,7 @@
 
 #include "../DebugHelpers/logging_macros.h"
 
-#define APPLY_PRECOND(X) call APPBLCKCIRC(X,GLLHBLCK,nlen/block_dim,block_dim,natbld,xdim,ydim,zdim,num_columns)
+#define APPLY_PRECOND(IN, OUT) call APPBLCKCIRC(IN,OUT,GLLHBLCK,nlen/block_dim,block_dim,natbld,xdim,ydim,zdim,num_columns)
 #define MATRIX_MULTIPLY(A, X, AX) call multiply_vbr(A, X, AX, sparse)
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
@@ -147,8 +147,7 @@ contains
       ! V9 = A*V1
       !==============================================================================
       VECS(:,:,NINE) = CZERO
-      temp = mat_X
-      if (bcp == 1) APPLY_PRECOND(temp)
+      if (bcp == 1) APPLY_PRECOND(mat_X, temp)
       MATRIX_MULTIPLY(smat, temp, VECS(:,:,NINE))
       sparse_mult_count = sparse_mult_count + 1
 
@@ -216,8 +215,7 @@ contains
       ! V9 = A*V6
       !====================================================================
       VECS(:,:,NINE) = CZERO
-      temp = VECS(:,:,SIX)
-      if (bcp == 1) APPLY_PRECOND(temp)
+      if (bcp == 1) APPLY_PRECOND(VECS(:,:,SIX), temp)
       MATRIX_MULTIPLY(smat, temp, VECS(:,:,NINE))
       sparse_mult_count = sparse_mult_count + 1
 
@@ -291,8 +289,7 @@ contains
       ! V8 = A*V6
       !=========================================
       VECS(:,:,EIGHT) = CZERO
-      temp = VECS(:,:,SIX)
-      if (bcp == 1) APPLY_PRECOND(temp)
+      if (bcp == 1) APPLY_PRECOND(VECS(:,:,SIX), temp)
       MATRIX_MULTIPLY(smat, temp, VECS(:,:,EIGHT))
       sparse_mult_count = sparse_mult_count + 1
 
@@ -369,8 +366,7 @@ contains
         ! V9 = A*V1
         !=========================================
         VECS(:,:,NINE) = CZERO
-        temp = mat_X
-        if (bcp == 1) APPLY_PRECOND(temp)
+        if (bcp == 1) APPLY_PRECOND(mat_X, temp)
         MATRIX_MULTIPLY(smat, temp, VECS(:,:,NINE))
         sparse_mult_count = sparse_mult_count + 1
 
@@ -432,7 +428,10 @@ contains
       !              2
       ! has to be performed ..
 
-    if (bcp == 1) APPLY_PRECOND(mat_X)
+    if (bcp == 1) then
+      APPLY_PRECOND(mat_X, temp)
+      mat_X = temp
+    endif
 
     ! ================================================================
     ! solution is in mat_X

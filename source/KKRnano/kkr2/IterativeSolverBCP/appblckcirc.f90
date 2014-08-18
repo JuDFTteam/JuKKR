@@ -1,4 +1,4 @@
-subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
+subroutine APPBLCKCIRC(VECS_in, VECS_out, GLLHBLCK, &
                        naez,lmmaxd, &
                        natbld, xdim, ydim, zdim, num_columns)
 
@@ -22,7 +22,8 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
   double complex CZERO
   parameter      (CZERO = ( 0.0D0,0.0D0))
 
-  double complex VECS(NAEZ*LMMAXD,num_columns)
+  double complex VECS_in(NAEZ*LMMAXD,num_columns)
+  double complex VECS_out(NAEZ*LMMAXD,num_columns)
   double complex GLLHBLCK(NATBLD*LMMAXD, &
   XDIM*YDIM*ZDIM*NATBLD*LMMAXD)
 
@@ -77,7 +78,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
           do IY =1,YDIM
             do IX =1,XDIM
 
-              X(IX,IY,IZ) = VECS(((IX-1)+(IY-1)*XDIM+ &
+              X(IX,IY,IZ) = VECS_in(((IX-1)+(IY-1)*XDIM+ &
               (IZ-1)*XDIM*YDIM)*num+LMATBL,LM1)
 
             enddo
@@ -148,7 +149,7 @@ subroutine APPBLCKCIRC(VECS,GLLHBLCK, &
           do IY =1,YDIM
             do IX =1,XDIM
 
-              VECS(((IX-1)+(IY-1)*XDIM+ &
+              VECS_out(((IX-1)+(IY-1)*XDIM+ &
               (IZ-1)*XDIM*YDIM)*num+LMATBL,LM1) = Y(IX,IY,IZ)
 
             enddo
