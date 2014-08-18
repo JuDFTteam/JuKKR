@@ -294,6 +294,7 @@ subroutine kloopbody(ms, kpoint, &
 
 
   integer :: lmmaxd
+  logical :: use_precond
 
   lmmaxd = ms%lmmaxd
   naez = ms%naez
@@ -365,9 +366,16 @@ subroutine kloopbody(ms, kpoint, &
     call iguess_load(iguess_data, ms%mat_X)
   end if
 
-  if (cutoffmode == 3) then
+  use_precond = (solver_opts%bcp == 1)
+
+  if (use_precond) then
+    call precond%create(solver_opts, cluster_info, lmmaxd)
+    call precond%calc(ms%GLLH)
+  end if
+
+  if (cutoffmode == 3 .or. cutoffmode == 0) then
     call MMINVMOD_oop(kkr_op, ms%mat_X, ms%mat_B, &
-                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats, precond, .false.)
+                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats, precond, use_precond)
 
     if (DEBUG_dump_matrix) then
       call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
@@ -380,8 +388,8 @@ subroutine kloopbody(ms, kpoint, &
     end if
   endif
 
-  if (cutoffmode == 0) then
-    call bcp_solver(ms%GLLH, ms%mat_X, ms%mat_B, qmrbound, cluster_info, solver_opts, ms%sparse, initial_zero)
+  if (use_precond) then
+    call precond%destroy()
   end if
 
   ! store the initial guess in previously selected slot
@@ -568,81 +576,6 @@ solver_opts)
   WRITELOG(3, *) "Sum of iterations for this E-point:   ", total_stats%sum_iterations
 
 end subroutine KKRMAT01_new
-
-!------------------------------------------------------------------------------
-!> Wrapper for solver with BCP preconditioner. (cutoffmode=0)
-subroutine bcp_solver(GLLH, mat_X, mat_B, qmrbound, cluster_info, solver_opts, sparse, initial_zero)
-
-  USE_ARRAYLOG_MOD
-  USE_LOGGING_MOD
-
-  use SolverOptions_mod
-  use ClusterInfo_mod
-  use SparseMatrixDescription_mod
-  use mminvmod_bcp_mod
-
-  use SolverStats_mod
-  implicit none
-
-  double complex GLLH(:)
-  double complex mat_X(:,:)
-  double complex mat_B(:,:)
-  double precision, intent(in) :: qmrbound
-  type (ClusterInfo), intent(in)  :: cluster_info
-  type (SolverOptions), intent(in) :: solver_opts
-  type(SparseMatrixDescription) :: sparse
-  logical :: initial_zero
-
-  type(SolverStats) :: stats
-
-  integer naezd
-  integer lmmaxd
-  integer nlen
-  integer num_columns
-  integer blocks_per_row
-  double complex, allocatable :: GLLHBLCK(:,:)
-  double complex, allocatable :: temp(:,:)
-
-  naezd = cluster_info%naez_trc
-  lmmaxd = sparse%kvstr(2) - sparse%kvstr(1)
-  num_columns = size(mat_X, 2)
-
-  nlen = naezd*lmmaxd
-
-  CHECKASSERT(nlen == size(mat_X, 1))
-  CHECKASSERT(nlen == size(mat_B, 1))
-  CHECKASSERT(num_columns == size(mat_B, 2))
-
-  allocate(temp(nlen, num_columns))
-
-  if (solver_opts%BCP == 1) then
-    CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * solver_opts%YDIM*solver_opts%ZDIM)
-
-    allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
-
-    blocks_per_row = cluster_info%numn0_trc(1)
-
-    ! SEVERE restriction of preconditioner code:
-    ! The number of non-zero blocks must be the same in each row
-    ! this is not the case for all crystal structures (e.g. perovskite)
-    CHECKASSERT(all(cluster_info%numn0_trc == blocks_per_row ))
-
-    ! setup preconditioning matrix
-    call BCPWUPPER(GLLH,GLLHBLCK,NAEZD,cluster_info%NUMN0_trc,cluster_info%INDN0_trc, &
-                   lmmaxd, solver_opts%natbld, solver_opts%xdim, solver_opts%ydim, solver_opts%zdim, &
-                   blocks_per_row)
-
-  endif
-
-  call MMINVMOD_bcp(GLLH, sparse, mat_X, mat_B, qmrbound, num_columns, nlen, initial_zero, &
-                          solver_opts%bcp, lmmaxd, GLLHBLCK, cluster_info%numn0_trc, &
-                          cluster_info%indn0_trc, temp, solver_opts%natbld, &
-                          solver_opts%xdim,solver_opts%ydim, solver_opts%zdim)
-
-  if (allocated(GLLHBLCK)) deallocate(GLLHBLCK)
-  deallocate(temp)
-
-end subroutine
 
 !------------------------------------------------------------------------------
 !> Alternative implementation of 'referenceFourier_com' to prevent a bug that occured on

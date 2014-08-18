@@ -34,8 +34,6 @@ contains
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
   subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond)
     USE_LOGGING_MOD
-    use SparseMatrixDescription_mod
-    use vbrmv_mat_mod
     use SolverStats_mod
     use OperatorT_mod
     implicit none

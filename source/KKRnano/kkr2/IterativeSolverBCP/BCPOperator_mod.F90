@@ -1,5 +1,12 @@
 #include "../DebugHelpers/test_macros.h"
 
+!> Define the block-circulant preconditioning matrix
+
+! SEVERE restriction of preconditioner code:
+! The number of non-zero blocks must be the same in each row
+! this is not the case for all crystal structures (e.g. perovskite)
+! or amorphous structures
+
 module BCPOperator_mod
   use OperatorT_mod
   use SolverOptions_mod
@@ -32,37 +39,20 @@ module BCPOperator_mod
     integer, intent(in) :: lmmaxd
 
     integer naezd
-    integer nlen
-    integer num_columns
     integer blocks_per_row
-    double complex, allocatable :: GLLHBLCK(:,:)
 
     naezd = cluster_info%naez_trc
-    !lmmaxd = sparse%kvstr(2) - sparse%kvstr(1)
-    ! TODO: num_columns = size(mat_X, 2)
 
-    nlen = naezd*lmmaxd
+    CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * solver_opts%YDIM*solver_opts%ZDIM)
 
-    ! TODO
-    !CHECKASSERT(nlen == size(mat_X, 1))
-    !CHECKASSERT(nlen == size(mat_B, 1))
-    !CHECKASSERT(num_columns == size(mat_B, 2))
+    allocate(self%GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
 
-    !allocate(temp(nlen, num_columns))
+    blocks_per_row = cluster_info%numn0_trc(1)
 
-    if (solver_opts%BCP == 1) then
-      CHECKASSERT(naezd == solver_opts%NATBLD*solver_opts%XDIM * solver_opts%YDIM*solver_opts%ZDIM)
-
-      allocate(GLLHBLCK(solver_opts%NATBLD*LMMAXD, naezd*LMMAXD))
-
-      blocks_per_row = cluster_info%numn0_trc(1)
-
-      ! SEVERE restriction of preconditioner code:
-      ! The number of non-zero blocks must be the same in each row
-      ! this is not the case for all crystal structures (e.g. perovskite)
-      CHECKASSERT(all(cluster_info%numn0_trc == blocks_per_row ))
-
-    endif
+    ! SEVERE restriction of preconditioner code:
+    ! The number of non-zero blocks must be the same in each row
+    ! this is not the case for all crystal structures (e.g. perovskite)
+    CHECKASSERT(all(cluster_info%numn0_trc == blocks_per_row ))
 
     self%solver_opts = solver_opts
     self%cluster_info => cluster_info
