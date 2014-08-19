@@ -251,7 +251,7 @@ subroutine kloopbody(ms, kpoint, &
                      solver_opts, stats)
 
   use fillKKRMatrix_mod
-  use mminvmod_oop_mod
+  use TFQMRSolver_mod
   use dlke0_smat_mod
   use SparseMatrixDescription_mod
   use InitialGuess_mod
@@ -292,6 +292,7 @@ subroutine kloopbody(ms, kpoint, &
   logical :: initial_zero
   type (ClusterInfo), pointer :: cluster_info
 
+  type (TFQMRSolver) :: solv
 
   integer :: lmmaxd
   logical :: use_precond
@@ -360,6 +361,8 @@ subroutine kloopbody(ms, kpoint, &
 
   call kkr_op%associate_ms_workspace(ms)
 
+  call solv%init(kkr_op)
+
   initial_zero = .true.
   if (iguess_data%iguess == 1) then
     initial_zero = .false.
@@ -371,11 +374,12 @@ subroutine kloopbody(ms, kpoint, &
   if (use_precond) then
     call precond%create(solver_opts, cluster_info, lmmaxd)
     call precond%calc(ms%GLLH)
+    call solv%init_precond(precond)
   end if
 
   if (cutoffmode == 3 .or. cutoffmode == 0) then
-    call MMINVMOD_oop(kkr_op, ms%mat_X, ms%mat_B, &
-                      QMRBOUND, size(ms%mat_B, 2), size(ms%mat_B, 1), initial_zero, stats, precond, use_precond)
+
+    call solv%solve(ms%mat_X, ms%mat_B)
 
     if (DEBUG_dump_matrix) then
       call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
@@ -412,6 +416,8 @@ subroutine kloopbody(ms, kpoint, &
 
   TESTARRAYLOG(3, ms%mat_X)
   ! RESULT: mat_X
+
+  call solv%destroy()
 
 end subroutine
 
