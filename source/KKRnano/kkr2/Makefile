@@ -247,7 +247,7 @@ kkrmat01_new.o: lloyds_formula_mod.o mminvmod_oop_mod.o fillKKRMatrix_mod.o \
                 dlke0_smat_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o \
                 one_sided_commZ_mod.o InitialGuess_mod.o ClusterInfo_mod.o jij_calc_mod.o \
                 SolverOptions_mod.o SolverStats_mod.o MultScatData_mod.o KKROperator_mod.o \
-                BCPOperator_mod.o
+                BCPOperator_mod.o TFQMRSolver_mod.o
                 
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o
@@ -315,3 +315,4 @@ NearField_com_mod.o: NearField_mod.o NearField_kkr_mod.o one_sided_commD_mod.o
 KKROperator_mod.o: OperatorT_mod.o MultScatData_mod.o vbrmv_mat_mod.o
 Solver_mod.o: OperatorT_mod.o
 BCPOperator_mod.o: OperatorT_mod.o ClusterInfo_mod.o
+TFQMRSolver_mod.o: Solver_mod.o

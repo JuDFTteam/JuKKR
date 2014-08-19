@@ -65,6 +65,11 @@ module TFQMRSolver_mod
       endif
     endif
 
+    if (.not. associated(self%op)) then
+      write(*,*) "TFQMRSolver error: No matrix/operator set."
+      STOP
+    endif
+
     ! TODO: initial zero, qMRbound
     call mminvmod_oop(self%op, mat_X, mat_B, 1d-6, num_columns, NLEN, &
                       .true., self%stats, self%precond, self%use_precond)

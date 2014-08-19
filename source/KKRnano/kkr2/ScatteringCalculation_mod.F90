@@ -181,6 +181,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   ! setup the solver for bcp preconditioner
   call setup_solver(solv, precond, dims, clusters, lmmaxd)
+  solver_opts%bcp = dims%bcpd
+  solver_opts%xdim = dims%xdim
+  solver_opts%ydim = dims%ydim
+  solver_opts%zdim = dims%zdim
+  solver_opts%natbld = dims%natbld
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)

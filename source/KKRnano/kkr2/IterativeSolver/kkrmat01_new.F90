@@ -244,7 +244,7 @@ end subroutine
 !> Solution is stored in ms%mat_X.
 !> Scattering path operator is calculated for atoms given in
 !> ms%atom_indices(:)
-subroutine kloopbody(ms, kpoint, &
+subroutine kloopbody(solv, kkr_op, precond, kpoint, &
                      TMATLL, GINP, ALAT, &
                      RR, QMRBOUND, &
                      trunc2atom_index, communicator, iguess_data, &
@@ -265,7 +265,9 @@ subroutine kloopbody(ms, kpoint, &
   USE_LOGGING_MOD
   implicit none
 
-  type (MultScatData), intent(inout) :: ms
+  class(TFQMRSolver) :: solv
+  class(KKROperator) :: kkr_op
+  class(BCPOperator) :: precond
 
   integer, intent(in), dimension(:) :: trunc2atom_index
   integer, intent(in) :: communicator
@@ -282,8 +284,7 @@ subroutine kloopbody(ms, kpoint, &
   doublecomplex :: TMATLL(:,:,:)
 
   !-------- local ---------
-  type(KKROperator), target :: kkr_op
-  type(BCPOperator), target :: precond
+  type (MultScatData), pointer :: ms
 
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
@@ -292,10 +293,10 @@ subroutine kloopbody(ms, kpoint, &
   logical :: initial_zero
   type (ClusterInfo), pointer :: cluster_info
 
-  type (TFQMRSolver) :: solv
-
   integer :: lmmaxd
   logical :: use_precond
+
+  ms => kkr_op%get_ms_workspace()
 
   lmmaxd = ms%lmmaxd
   naez = ms%naez
@@ -359,8 +360,6 @@ subroutine kloopbody(ms, kpoint, &
 
   call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
 
-  call kkr_op%associate_ms_workspace(ms)
-
   call solv%init(kkr_op)
 
   initial_zero = .true.
@@ -372,7 +371,7 @@ subroutine kloopbody(ms, kpoint, &
   use_precond = (solver_opts%bcp == 1)
 
   if (use_precond) then
-    call precond%create(solver_opts, cluster_info, lmmaxd)
+    !call precond%create(solver_opts, cluster_info, lmmaxd)
     call precond%calc(ms%GLLH)
     call solv%init_precond(precond)
   end if
@@ -391,10 +390,6 @@ subroutine kloopbody(ms, kpoint, &
       call dumpDenseMatrixFormatted(ms%mat_B, "rhs_form.dat")
     end if
   endif
-
-  if (use_precond) then
-    call precond%destroy()
-  end if
 
   ! store the initial guess in previously selected slot
   ! (selected with 'iguess_set_k_ind')
@@ -417,8 +412,6 @@ subroutine kloopbody(ms, kpoint, &
   TESTARRAYLOG(3, ms%mat_X)
   ! RESULT: mat_X
 
-  call solv%destroy()
-
 end subroutine
 
 !------------------------------------------------------------------------------
@@ -437,6 +430,9 @@ solver_opts)
   use jij_calc_mod, only: global_jij_data, kkrjij
   use SolverOptions_mod
   use SolverStats_mod
+  use TFQMRSolver_mod
+  use BCPOperator_mod
+  use KKROperator_mod
   implicit none
 
   !     .. parameters ..
@@ -476,12 +472,17 @@ solver_opts)
 
 ! ------- local ----------
 
-  type (MultScatData) :: ms
+  type (MultScatData), pointer :: ms
+
+  type (TFQMRSolver) :: solv
+  type (KKROperator) :: kkr_op
+  type (BCPOperator) :: precond
+
   integer::k_point_index
 
   double complex, allocatable, dimension(:,:,:) ::G_diag
 
-  integer::        site_lm_size
+  integer::  site_lm_size
 
   integer :: iat
   integer :: num_local_atoms
@@ -514,6 +515,13 @@ solver_opts)
 
   TESTARRAYLOG(3, GINP)
 
+  call kkr_op%create()
+  ms => kkr_op%get_ms_workspace()
+
+  if (solver_opts%bcp == 1) then
+    call precond%create(solver_opts, cluster_info, lmmaxd)
+  endif
+
   call createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 
   if (global_jij_data%do_jij_calculation) then
@@ -534,7 +542,7 @@ solver_opts)
     ! Get the scattering path operator for k-point BZKP(:, k_point_index)
     ! output: ms%mat_X
 
-    call kloopbody(ms, BZKP(:, k_point_index), &
+    call kloopbody(solv, kkr_op, precond, BZKP(:, k_point_index), &
                    TMATLL, GINP, ALAT, &
                    RR, QMRBOUND, &
                    trunc2atom_index, communicator, iguess_data, &
@@ -576,6 +584,9 @@ solver_opts)
   deallocate(G_diag)
 
   call destroyMultScatData(ms)
+  call kkr_op%destroy()
+  call solv%destroy()
+  call precond%destroy()
 
   WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
   WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
