@@ -14,12 +14,16 @@ module TFQMRSolver_mod
 
     type(SolverStats) :: stats
     logical :: use_precond = .false.
+    logical :: initial_zero = .true.
+    double precision :: qmrbound = 1d-6
 
     contains
       procedure :: init => init_solver
       procedure :: init_precond => init_precond_solver
       procedure :: solve => solve_with_solver
       procedure :: destroy => destroy_solver
+      procedure :: set_qmrbound
+      procedure :: set_initial_zero
   end type
 
   contains
@@ -87,5 +91,18 @@ module TFQMRSolver_mod
     nullify(self%precond)
   end subroutine
 
+  !----------------------------------------------------------------------------
+  subroutine set_qmrbound(self, qmrbound)
+    class(TFQMRSolver) :: self
+    double precision, intent(in) :: qmrbound
+    self%qmrbound = qmrbound
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine set_initial_zero(self, initial_zero)
+    class(TFQMRSolver) :: self
+    logical, intent(in) :: initial_zero
+    self%initial_zero = initial_zero
+  end subroutine
 end module
 

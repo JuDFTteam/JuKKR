@@ -71,6 +71,8 @@ module BCPOperator_mod
     integer naezd
     integer blocks_per_row
 
+    if (self%solver_opts%bcp /= 1) return ! no preconditioning selected
+
     naezd = self%cluster_info%naez_trc
     blocks_per_row = self%cluster_info%numn0_trc(1)
 

@@ -63,7 +63,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator
-  use SolverOptions_mod ! TODO: remove
+  use KKROperator_mod, only: KKROperator
 
   implicit none
 
@@ -90,8 +90,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (InitialGuess), pointer          :: iguess_data ! changes
 
   type (TFQMRSolver), target :: solv
+  type (KKROperator), target :: kkr_op
   type (BCPOperator), target :: precond
-  type (SolverOptions) :: solver_opts ! TODO: remove
 
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
@@ -179,13 +179,17 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   endif
 
-  ! setup the solver for bcp preconditioner
-  call setup_solver(solv, precond, dims, clusters, lmmaxd)
-  solver_opts%bcp = dims%bcpd
-  solver_opts%xdim = dims%xdim
-  solver_opts%ydim = dims%ydim
-  solver_opts%zdim = dims%zdim
-  solver_opts%natbld = dims%natbld
+  ! get the indices of atoms that shall be treated at once by the process
+  ! = truncation zone indices of local atoms
+  do ilocal = 1, num_local_atoms
+    atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
+    atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
+    CHECKASSERT(atom_indices(ilocal) > 0)
+  end do
+
+  ! setup the solver + bcp preconditioner, allocates a lot of memory
+  ! it is good to do these allocations outside of energy loop
+  call setup_solver(solv, kkr_op, precond, dims, clusters, lmmaxd, params%qmrbound, atom_indices)
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
@@ -318,23 +322,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
 ! <<>> Multiple scattering part
 
-!                 if (atom_indices(1) == 1 .and. IE == params%IELAST .and. ISPIN == 1) then
-!                    DEBUG_dump_matrix = .true.
-!                 else
-!                    DEBUG_dump_matrix = .false.
-!                 endif
-
           ! gather t-matrices from own truncation zone
           call gatherTmatrices_com(calc_data, TMATLL, ispin, &
                                    getMySEcommunicator(my_mpi))
 
           TESTARRAYLOG(3, TMATLL)
-
-          do ilocal = 1, num_local_atoms
-            atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
-            atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
-            CHECKASSERT(atom_indices(ilocal) > 0)
-          end do
 
           call iguess_set_energy_ind(iguess_data, ie)
           call iguess_set_spin_ind(iguess_data, PRSPIN)
@@ -342,15 +334,14 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           jij_data%active_spin = ispin
 
 !------------------------------------------------------------------------------
-          call KLOOPZ1_new(GmatN_buffer, params%ALAT, &
+          call KLOOPZ1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
           arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), &
           lattice_vectors%RR, &
           GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
-          TMATLL, atom_indices, &
-          params%QMRBOUND, arrays%lmmaxd,  lattice_vectors%nrd, &
+          TMATLL, arrays%lmmaxd, lattice_vectors%nrd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
-          iguess_data, clusters, solver_opts)
+          iguess_data)
 !------------------------------------------------------------------------------
 
           ! copy results from buffer: G_LL'^NN (E, spin) =
@@ -405,6 +396,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 ! IE ====================================================================
 !     END do loop over energies (EMPID-parallel)
 ! IE ====================================================================
+
+  call cleanup_solver(solv, kkr_op, precond)
 
   call stopTimer(single_site_timer)
 
@@ -469,8 +462,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   endif  ! IGUESS == 1 .and. EMPID > 1
 
-  call precond%destroy()
-
 end subroutine
 
 ! =============================================================================
@@ -478,23 +469,30 @@ end subroutine
 ! =============================================================================
 
 !------------------------------------------------------------------------------
-!> Don't forget to clean up preconditioner
+!> Don't forget to clean up!!!
 !> Sets up TFQMR and preconditioner - matrix not setup yet!
 !> preconditioner not calculated yet
 !> Matrix setup happens later in kkrmat
-subroutine setup_solver(solv, precond, dims, cluster_info, lmmaxd)
+subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
   use TFQMRSolver_mod
+  use KKROperator_mod
   use BCPOperator_mod
   use DimParams_mod
   use ClusterInfo_mod
   use SolverOptions_mod
+  use MultScatData_mod
+
   type(TFQMRSolver), intent(inout) :: solv
+  type(KKROperator), intent(inout) :: kkr_op
   type(BCPOperator), intent(inout) :: precond
   type(DimParams), intent(in) :: dims
   type(ClusterInfo), intent(in) :: cluster_info
   integer, intent(in) :: lmmaxd
+  double precision, intent(in) :: qmrbound
+  integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
 
   type(SolverOptions) :: solver_opts
+  type(MultScatData), pointer :: ms
 
   ! set the solver options for bcp preconditioner
   solver_opts%bcp = dims%bcpd
@@ -503,13 +501,45 @@ subroutine setup_solver(solv, precond, dims, cluster_info, lmmaxd)
   solver_opts%zdim = dims%zdim
   solver_opts%natbld = dims%natbld
 
+  call kkr_op%create()
+  ms => kkr_op%get_ms_workspace()
+
+  ! register sparse matrix and preconditioner at solver
+  call solv%init(kkr_op)
+
   if (solver_opts%bcp == 1) then
     call precond%create(solver_opts, cluster_info, lmmaxd)
     call solv%init_precond(precond)
   endif
 
+  call solv%set_qmrbound(qmrbound)
+
+  call createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
+
 end subroutine
 
+!------------------------------------------------------------------------------
+subroutine cleanup_solver(solv, kkr_op, precond)
+  use TFQMRSolver_mod
+  use KKROperator_mod
+  use BCPOperator_mod
+  use MultScatData_mod
+
+  type(TFQMRSolver), intent(inout) :: solv
+  type(KKROperator), intent(inout) :: kkr_op
+  type(BCPOperator), intent(inout) :: precond
+
+  type(MultScatData), pointer :: ms
+
+  ms => kkr_op%get_ms_workspace()
+
+  call solv%destroy()
+  call precond%destroy()
+
+  call destroyMultScatData(ms)
+  call kkr_op%destroy()
+
+end subroutine
 
 !----------------------------------------------------------------------------
 !> Print info about Energy-Point currently treated.

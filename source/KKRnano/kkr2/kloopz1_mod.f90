@@ -5,14 +5,13 @@ use SolverOptions_mod
 
 CONTAINS
 
-    subroutine KLOOPZ1_new(GMATN,ALAT, &
+    subroutine KLOOPZ1_new(GMATN, solv, kkr_op, precond, ALAT, &
     NOFKS, VOLBZ, BZKP, VOLCUB, &
     RR, GINP_LOCAL, &
     NSYMAT,DSYMLL, &
-    TMATLL, atom_indices, &
-    QMRBOUND, lmmaxd,  &
+    TMATLL, lmmaxd,  &
     nrd, trunc2atom_index, communicator, &
-    iguess_data, cluster_info, solver_opts)
+    iguess_data)
 
 ! **********************************************************************
 
@@ -32,10 +31,18 @@ CONTAINS
     use TEST_lcutoff_mod
     use InitialGuess_mod
     use ClusterInfo_mod
+    use TFQMRSolver_mod
+    use BCPOperator_mod
+    use KKROperator_mod
+    use MultScatData_mod
 
     use jij_calc_mod, only: global_jij_data, symjij
 
     implicit none
+
+    class (TFQMRSolver) :: solv
+    class (KKROperator) :: kkr_op
+    class (BCPOperator) :: precond
 
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: nrd
@@ -43,8 +50,6 @@ CONTAINS
     integer, intent(in) :: trunc2atom_index(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
-    type(ClusterInfo), target :: cluster_info
-    type(SolverOptions), intent(in) :: solver_opts
 
     !     .. Parameters ..
 
@@ -99,14 +104,19 @@ CONTAINS
 
     !-----------------------------------------------------------------------
 
-    integer, intent(in) :: atom_indices(:)
     integer :: num_local_atoms
     integer :: ilocal
 
     integer :: memory_stat
     logical :: memory_fail
 
-    num_local_atoms = size(atom_indices)
+    type(MultScatData), pointer :: ms
+    type(ClusterInfo), pointer :: cluster_info
+
+    ms => kkr_op%get_ms_workspace()
+    cluster_info => ms%cluster_info
+
+    num_local_atoms = size(ms%atom_indices)
 
 ! -------------------------------------------------------------------
 ! Allocate Arrays
@@ -133,7 +143,7 @@ CONTAINS
 
       do LM2 = 1,LMMAXD
           do LM1 = 1,LMMAXD
-              MSSQ(LM1,LM2,ilocal) =  TMATLL(LM1,LM2, atom_indices(ilocal))
+              MSSQ(LM1,LM2,ilocal) =  TMATLL(LM1,LM2, ms%atom_indices(ilocal))
           end do
       end do
 
@@ -158,10 +168,10 @@ CONTAINS
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2 .or. cutoffmode == 0) then
-      call KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB,TMATLL, &
-      ALAT, NSYMAT, RR, GINP_LOCAL, atom_indices, &
-      QMRBOUND, lmmaxd, trunc2atom_index, communicator, &
-      iguess_data, cluster_info, solver_opts)
+      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,TMATLL, &
+      ALAT, NSYMAT, RR, GINP_LOCAL, &
+      lmmaxd, trunc2atom_index, communicator, &
+      iguess_data)
     else
       write(*,*) "0 < cutoffmode < 3 not supported."
       STOP

@@ -246,9 +246,8 @@ end subroutine
 !> ms%atom_indices(:)
 subroutine kloopbody(solv, kkr_op, precond, kpoint, &
                      TMATLL, GINP, ALAT, &
-                     RR, QMRBOUND, &
-                     trunc2atom_index, communicator, iguess_data, &
-                     solver_opts, stats)
+                     RR, &
+                     trunc2atom_index, communicator, iguess_data)
 
   use fillKKRMatrix_mod
   use TFQMRSolver_mod
@@ -272,14 +271,11 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
   integer, intent(in), dimension(:) :: trunc2atom_index
   integer, intent(in) :: communicator
   type(InitialGuess), intent(inout) :: iguess_data
-  type(SolverOptions), intent(in) :: solver_opts
-  type (SolverStats), intent(inout) :: stats
 
   double precision :: ALAT
   double precision :: kpoint(3)
   doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
 
-  double precision :: QMRBOUND
   double precision :: RR(:,0:)
   doublecomplex :: TMATLL(:,:,:)
 
@@ -294,7 +290,6 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
   type (ClusterInfo), pointer :: cluster_info
 
   integer :: lmmaxd
-  logical :: use_precond
 
   ms => kkr_op%get_ms_workspace()
 
@@ -360,21 +355,15 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
 
   call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
 
-  call solv%init(kkr_op)
-
   initial_zero = .true.
   if (iguess_data%iguess == 1) then
     initial_zero = .false.
     call iguess_load(iguess_data, ms%mat_X)
   end if
 
-  use_precond = (solver_opts%bcp == 1)
+  call solv%set_initial_zero(initial_zero)
 
-  if (use_precond) then
-    !call precond%create(solver_opts, cluster_info, lmmaxd)
-    call precond%calc(ms%GLLH)
-    call solv%init_precond(precond)
-  end if
+  call precond%calc(ms%GLLH)  ! calculate preconditioner from sparse matrix data
 
   if (cutoffmode == 3 .or. cutoffmode == 0) then
 
@@ -418,11 +407,9 @@ end subroutine
 !> Solves multiple scattering problem for every k-point.
 !>
 !> Returns diagonal k-integrated part of Green's function in GS.
-subroutine KKRMAT01_new(BZKP,NOFKS,GS,VOLCUB, &
+subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, &
 TMATLL, ALAT,NSYMAT,RR, &
-GINP, atom_indices, QMRBOUND, &
-lmmaxd, trunc2atom_index, communicator, iguess_data, cluster_info, &
-solver_opts)
+GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -444,13 +431,14 @@ solver_opts)
   !   Greens function of the real system -> GS(*,*,*,*),
   ! ------------------------------------------------------------------------
 
+  class (TFQMRSolver) :: solv
+  class (KKROperator) :: kkr_op
+  class (BCPOperator) :: precond
+
   integer, intent(in) :: lmmaxd
-  integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
   integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) :: communicator
   type (InitialGuess), intent(inout) :: iguess_data
-  type (ClusterInfo), target         :: cluster_info ! in
-  type (SolverOptions), intent(in)   :: solver_opts
 
   double precision:: ALAT
 
@@ -473,10 +461,7 @@ solver_opts)
 ! ------- local ----------
 
   type (MultScatData), pointer :: ms
-
-  type (TFQMRSolver) :: solv
-  type (KKROperator) :: kkr_op
-  type (BCPOperator) :: precond
+  type (ClusterInfo), pointer :: cluster_info
 
   integer::k_point_index
 
@@ -493,12 +478,15 @@ solver_opts)
 
   ! array dimensions
 
+  ms => get_ms_workspace(kkr_op)
+  cluster_info => ms%cluster_info
+
   naez = cluster_info%naez_trc
   naclsd = cluster_info%naclsd
 
   site_lm_size = NAEZ*LMMAXD
 
-  num_local_atoms = size(atom_indices)
+  num_local_atoms = size(ms%atom_indices)
 
   !-----------------------------------------------------------------------
   ! Allocate arrays
@@ -514,15 +502,6 @@ solver_opts)
   GS = CZERO
 
   TESTARRAYLOG(3, GINP)
-
-  call kkr_op%create()
-  ms => kkr_op%get_ms_workspace()
-
-  if (solver_opts%bcp == 1) then
-    call precond%create(solver_opts, cluster_info, lmmaxd)
-  endif
-
-  call createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 
   if (global_jij_data%do_jij_calculation) then
     global_jij_data%GSXIJ = CZERO
@@ -544,9 +523,7 @@ solver_opts)
 
     call kloopbody(solv, kkr_op, precond, BZKP(:, k_point_index), &
                    TMATLL, GINP, ALAT, &
-                   RR, QMRBOUND, &
-                   trunc2atom_index, communicator, iguess_data, &
-                   solver_opts, stats)
+                   RR, trunc2atom_index, communicator, iguess_data)
 
     call sum_stats(stats, total_stats)
 
@@ -558,13 +535,13 @@ solver_opts)
     ! Note: here k-integration only in irreducible wedge
     call greenKSummation(G_diag, &
                          GS, VOLCUB(k_point_index), &
-                         atom_indices, NSYMAT, lmmaxd)
+                         ms%atom_indices, NSYMAT, lmmaxd)
     ! -------------------------------------------------------------------------
 
     if (global_jij_data%do_jij_calculation) then
       !communicate off-diagonal elements and multiply with exp-factor
       call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), &
-      NSYMAT,NAEZ,atom_indices(1), &
+      NSYMAT,NAEZ,ms%atom_indices(1), &
       global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
       ms%mat_X, &
       global_jij_data%GSXIJ, &
@@ -572,7 +549,7 @@ solver_opts)
       lmmaxd, global_jij_data%nxijd)
     end if
 
-    do iat = 1, size(atom_indices)
+    do iat = 1, size(ms%atom_indices)
       TESTARRAYLOG(3, GS(:,:,:,iat))
     end do
 
@@ -582,11 +559,6 @@ solver_opts)
 
   ! Cleanup
   deallocate(G_diag)
-
-  call destroyMultScatData(ms)
-  call kkr_op%destroy()
-  call solv%destroy()
-  call precond%destroy()
 
   WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
   WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
