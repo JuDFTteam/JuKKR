@@ -1,16 +1,25 @@
 module TFQMRSolver_mod
   use Solver_mod
   use OperatorT_mod
+  use SolverStats_mod
   implicit none
 
   type TFQMRSolver
-    private
+    PRIVATE
     class(OperatorT), pointer :: op => null()
-    class(OperatorT), pointer :: prec => null()
+    class(OperatorT), pointer :: precond => null()
+
+    double complex, allocatable :: vecs(:,:,:)
+    double complex, allocatable :: temp(:,:)
+
+    type(SolverStats) :: stats
+    logical :: use_precond = .false.
+
     contains
       procedure :: init => init_solver
       procedure :: init_precond => init_precond_solver
       procedure :: solve => solve_with_solver
+      procedure :: destroy => destroy_solver
   end type
 
   contains
@@ -21,18 +30,57 @@ module TFQMRSolver_mod
     self%op => op
   end subroutine
 
-  subroutine init_precond_solver(self, prec)
+  subroutine init_precond_solver(self, precond)
     class(TFQMRSolver) :: self
-    class(OperatorT), target :: prec
-    self%prec => prec
+    class(OperatorT), target :: precond
+    self%precond => precond
+    self%use_precond = .true.
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Solves problem for right hand side mat_B, solution in mat_X.
+  !>
+  !> The workspace is allocated on demand and stays allocated.
+  !> Deallocate with call TFQMRSolver%destroy
   subroutine solve_with_solver(self, mat_X, mat_B)
+    use mminvmod_oop_mod
     class(TFQMRSolver) :: self
     double complex, intent(inout) :: mat_X(:,:)
-    double complex, intent(in)    :: mat_B(:,:)
-    !call self%op%apply
-    !if (associated(self%prec)) call self%prec%apply
+    double complex, intent(inout)    :: mat_B(:,:)
+
+    integer nlen
+    integer num_columns
+
+    nlen = size(mat_B, 1)
+    num_columns = size(mat_B, 2)
+
+    if (.not. allocated(self%vecs)) then
+      allocate(self%vecs(nlen, num_columns, 7))
+      allocate(self%temp(nlen, num_columns))
+    else
+      if (size(self%vecs, 1) /= nlen .or. size(self%vecs, 2) /= num_columns) then
+        ! when problem size has changed, one should destroy the solver and create a new one
+        write(*,*) "TFQMRSolver error: Problem size has changed. Cannot reuse solver."
+        STOP
+      endif
+    endif
+
+    ! TODO: initial zero, qMRbound
+    call mminvmod_oop(self%op, mat_X, mat_B, 1d-6, num_columns, NLEN, &
+                      .true., self%stats, self%precond, self%use_precond)
+
   end subroutine
+
+  !----------------------------------------------------------------------------
+  subroutine destroy_solver(self)
+    class(TFQMRSolver) :: self
+
+    if (allocated(self%vecs)) deallocate(self%vecs)
+    if (allocated(self%temp)) deallocate(self%temp)
+
+    nullify(self%op)
+    nullify(self%precond)
+  end subroutine
+
 end module
 

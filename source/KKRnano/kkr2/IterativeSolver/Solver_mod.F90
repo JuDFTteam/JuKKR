@@ -12,7 +12,7 @@ module Solver_mod
       import Solver
       class(Solver) :: self
       double complex, intent(inout) :: mat_X(:,:)
-      double complex, intent(in)    :: mat_B(:,:)
+      double complex, intent(inout) :: mat_B(:,:)
     end subroutine
   end interface
 
