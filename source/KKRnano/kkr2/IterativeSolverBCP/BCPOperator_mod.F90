@@ -111,7 +111,7 @@ module BCPOperator_mod
   subroutine destroy_BCPOperator(self)
     class(BCPOperator) :: self
 
-    deallocate(self%GLLHBLCK)
+    if (allocated(self%GLLHBLCK)) deallocate(self%GLLHBLCK)
     nullify(self%cluster_info)
   end subroutine
 

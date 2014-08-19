@@ -5,6 +5,8 @@
 !> @author Modularisation: Elias Rabel
 module ScatteringCalculation_mod
 
+implicit none
+
 public  :: energyLoop
 private :: printEnergyPoint
 private :: calcDeltaTupTdown
@@ -58,7 +60,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
   use jij_calc_mod,     only: clsjij, writejijs, global_jij_data
-  use SolverOptions_mod ! options for BCP preconditioner
+
+  use TFQMRSolver_mod, only: TFQMRSolver
+  use BCPOperator_mod, only: BCPOperator
+  use SolverOptions_mod ! TODO: remove
 
   implicit none
 
@@ -84,7 +89,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   type (LatticeVectors), pointer        :: lattice_vectors ! never changes
   type (InitialGuess), pointer          :: iguess_data ! changes
 
-  type (SolverOptions) :: solver_opts
+  type (TFQMRSolver), target :: solv
+  type (BCPOperator), target :: precond
+  type (SolverOptions) :: solver_opts ! TODO: remove
 
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
   type (TimerMpi) :: mult_scattering_timer
@@ -172,12 +179,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   endif
 
-  ! set the solver options for bcp preconditioner
-  solver_opts%bcp = dims%bcpd
-  solver_opts%xdim = dims%xdim
-  solver_opts%ydim = dims%ydim
-  solver_opts%zdim = dims%zdim
-  solver_opts%natbld = dims%natbld
+  ! setup the solver for bcp preconditioner
+  call setup_solver(solv, precond, dims, clusters, lmmaxd)
 
 ! IE ====================================================================
 !     BEGIN do loop over energies (EMPID-parallel)
@@ -461,11 +464,47 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
   endif  ! IGUESS == 1 .and. EMPID > 1
 
+  call precond%destroy()
+
 end subroutine
 
 ! =============================================================================
 ! Helper routines
 ! =============================================================================
+
+!------------------------------------------------------------------------------
+!> Don't forget to clean up preconditioner
+!> Sets up TFQMR and preconditioner - matrix not setup yet!
+!> preconditioner not calculated yet
+!> Matrix setup happens later in kkrmat
+subroutine setup_solver(solv, precond, dims, cluster_info, lmmaxd)
+  use TFQMRSolver_mod
+  use BCPOperator_mod
+  use DimParams_mod
+  use ClusterInfo_mod
+  use SolverOptions_mod
+  type(TFQMRSolver), intent(inout) :: solv
+  type(BCPOperator), intent(inout) :: precond
+  type(DimParams), intent(in) :: dims
+  type(ClusterInfo), intent(in) :: cluster_info
+  integer, intent(in) :: lmmaxd
+
+  type(SolverOptions) :: solver_opts
+
+  ! set the solver options for bcp preconditioner
+  solver_opts%bcp = dims%bcpd
+  solver_opts%xdim = dims%xdim
+  solver_opts%ydim = dims%ydim
+  solver_opts%zdim = dims%zdim
+  solver_opts%natbld = dims%natbld
+
+  if (solver_opts%bcp == 1) then
+    call precond%create(solver_opts, cluster_info, lmmaxd)
+    call solv%init_precond(precond)
+  endif
+
+end subroutine
+
 
 !----------------------------------------------------------------------------
 !> Print info about Energy-Point currently treated.
