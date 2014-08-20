@@ -74,7 +74,7 @@ module TFQMRSolver_mod
       STOP
     endif
 
-    call mminvmod_oop(self%op, mat_X, mat_B, 1d-6, num_columns, NLEN, &
+    call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, num_columns, NLEN, &
                       .true., self%stats, self%precond, self%use_precond, &
                       self%vecs, self%temp)
 
