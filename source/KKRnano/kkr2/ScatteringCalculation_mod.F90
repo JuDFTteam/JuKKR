@@ -397,8 +397,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !     END do loop over energies (EMPID-parallel)
 ! IE ====================================================================
 
-  call cleanup_solver(solv, kkr_op, precond)
-
   call stopTimer(single_site_timer)
 
 !=======================================================================
@@ -461,6 +459,15 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
     enddo
 
   endif  ! IGUESS == 1 .and. EMPID > 1
+
+  call cleanup_solver(solv, kkr_op, precond)
+
+  deallocate(TMATLL)
+  deallocate(atom_indices)
+  deallocate(GrefN_buffer)
+  deallocate(GmatN_buffer)
+  deallocate(DTref_local)
+  deallocate(Tref_local)
 
 end subroutine
 
