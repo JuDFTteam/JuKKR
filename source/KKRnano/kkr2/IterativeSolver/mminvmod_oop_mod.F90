@@ -35,7 +35,7 @@ contains
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond)
+  subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond, VECS, temp)
     USE_LOGGING_MOD
     use SolverStats_mod
     use OperatorT_mod
@@ -55,9 +55,11 @@ contains
     class (OperatorT) :: precond
     logical, intent(in) :: use_precond
 
+    ! workspace
+    double complex, dimension(:,:,:), intent(inout) :: VECS
+    double complex, dimension(:,:), intent(inout) :: temp
+
     !----------------- local variables --------------------------------------------
-    double complex, dimension(:,:,:), allocatable :: VECS
-    double complex, dimension(:,:), allocatable :: temp
 
     double complex, parameter :: CONE  = (1.0D0,0.0D0)
     double complex, parameter :: CZERO = (0.0D0,0.0D0)
@@ -111,8 +113,6 @@ contains
     !=======================================================================
     ! INITIALIZATION
     !=======================================================================
-    allocate (VECS(NLEN,num_columns,7))
-    if (use_precond) allocate (temp(size(mat_X, 1), size(mat_X, 2)))
 
     EPSILON_DP = epsilon(0.0d0)
     tfqmr_status = 0
@@ -455,9 +455,6 @@ contains
    WRITELOG(3,*) tfqmr_status
    WRITELOG(3,*) converged_at
    WRITELOG(3,*) RESN
-
-   if (allocated(temp)) deallocate(temp)
-   deallocate(VECS)
 
  end subroutine
 
