@@ -31,9 +31,11 @@ module broyden_kkr_mod
 
     length = getBroydenDim(calc_data)
     broyden => getBroyden(calc_data)
+
     allocate(sm_input(length))
     allocate(fm_output(length))
     allocate(g_metric_all(length))
+
     nan = ieee_value(nan, IEEE_SIGNALING_NAN)
     ! debug
     sm_input = nan
@@ -56,6 +58,10 @@ module broyden_kkr_mod
       write(*,*) "NaN detected!"
       STOP
     end if
+
+    deallocate(g_metric_all)
+    deallocate(fm_output)
+    deallocate(sm_input)
 
   end subroutine
 
