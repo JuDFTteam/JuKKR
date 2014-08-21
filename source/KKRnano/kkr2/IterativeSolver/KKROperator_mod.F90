@@ -1,3 +1,13 @@
+!> Module to apply KKR coefficient matrix.
+!>
+!> The setup of the KKR coefficient matrix is rather complicated.
+!> Therefore the needed data is stored in a 'MultScatData' struct.
+!>
+!> *) One has to get a reference (pointer) to the MultScatData workspace by
+!>    using 'get_ms_workspace' and set up the workspace properly (routine kkrmat01)
+!> *) Then one can apply the KKR coefficient matrix on any dense matrix using
+!>    'apply'
+
 module KKROperator_mod
   use OperatorT_mod
 

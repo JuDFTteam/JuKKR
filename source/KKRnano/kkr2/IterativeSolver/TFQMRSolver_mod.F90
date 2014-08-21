@@ -1,3 +1,14 @@
+!> TFQMR solver.
+!>
+!> *) Set coefficent matrix with 'init'.
+!> *) Set preconditioner with 'init_precond'
+!> *) Use 'set_qmrbound' and
+!> 'set_initial_zero' (true: start with zero vector, false: start with vector passed to solve)
+!> *) use 'solve' to solve for right hand side mat_B (memory is allocated at first use)
+!> *) call 'destroy' after last use
+!>
+!> @author Elias Rabel
+
 module TFQMRSolver_mod
   use Solver_mod
   use OperatorT_mod

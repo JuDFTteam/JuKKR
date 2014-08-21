@@ -1,3 +1,9 @@
+!> Simple operator class.
+!> An operator can be applied (method 'apply') to a matrix mat_X and yields
+!> another matrix mat_AX
+!>
+!> @author Elias Rabel
+
 module OperatorT_mod
   implicit none
 

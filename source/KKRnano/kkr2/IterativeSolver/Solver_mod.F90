@@ -1,3 +1,9 @@
+!> A simple linear equation solver class.
+!>
+!> Extend from this class to implement a solver.
+!>
+!> @author Elias Rabel
+
 module Solver_mod
   implicit none
 
