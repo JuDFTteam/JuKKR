@@ -24,6 +24,7 @@ module TFQMRSolver_mod
     double complex, allocatable :: temp(:,:)
 
     type(SolverStats) :: stats
+    type(SolverStats) :: total_stats
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
     double precision :: qmrbound = 1d-6
@@ -35,6 +36,9 @@ module TFQMRSolver_mod
       procedure :: destroy => destroy_solver
       procedure :: set_qmrbound
       procedure :: set_initial_zero
+      procedure :: get_stats
+      procedure :: get_total_stats
+      procedure :: reset_total_stats
   end type
 
   contains
@@ -89,6 +93,8 @@ module TFQMRSolver_mod
                       .true., self%stats, self%precond, self%use_precond, &
                       self%vecs, self%temp)
 
+    call sum_stats(self%stats, self%total_stats)
+
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -114,6 +120,32 @@ module TFQMRSolver_mod
     class(TFQMRSolver) :: self
     logical, intent(in) :: initial_zero
     self%initial_zero = initial_zero
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Get statistics of last solver run.
+  function get_stats(self)
+    class(TFQMRSolver) :: self
+    type(SolverStats) :: get_stats
+
+    get_stats = self%stats
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Get accumulated statistics of all solver runs.
+  function get_total_stats(self)
+    class(TFQMRSolver) :: self
+    type(SolverStats) :: get_total_stats
+
+    get_total_stats = self%total_stats
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Reset accumulated statistics.
+  subroutine reset_total_stats(self)
+    class(TFQMRSolver) :: self
+
+    call reset_stats(self%total_stats)
   end subroutine
 end module
 

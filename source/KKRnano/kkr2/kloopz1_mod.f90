@@ -61,7 +61,6 @@ CONTAINS
     !     ..
     double precision:: ALAT
     double precision::VOLBZ
-    double precision::QMRBOUND
     integer::NOFKS
     integer::NSYMAT
     !     .. Array Arguments ..

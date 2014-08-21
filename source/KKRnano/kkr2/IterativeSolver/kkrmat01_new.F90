@@ -456,9 +456,7 @@ GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
   double precision::VOLCUB(:)
   double precision::RR(:,0:)
 
-  double precision::QMRBOUND
-
-! ------- local ----------
+  ! ------- local ----------
 
   type (MultScatData), pointer :: ms
   type (ClusterInfo), pointer :: cluster_info
@@ -474,7 +472,7 @@ GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
   integer :: naclsd
   integer :: naez
 
-  type (SolverStats) :: stats, total_stats
+  type (SolverStats) :: total_stats
 
   ! array dimensions
 
@@ -525,8 +523,6 @@ GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
                    TMATLL, GINP, ALAT, &
                    RR, trunc2atom_index, communicator, iguess_data)
 
-    call sum_stats(stats, total_stats)
-
     call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
 
     ! TODO: use mat_X to calculate Jij
@@ -560,9 +556,13 @@ GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
   ! Cleanup
   deallocate(G_diag)
 
+  total_stats = solv%get_total_stats()
+
   WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
   WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
   WRITELOG(3, *) "Sum of iterations for this E-point:   ", total_stats%sum_iterations
+
+  call solv%reset_total_stats()
 
 end subroutine KKRMAT01_new
 
