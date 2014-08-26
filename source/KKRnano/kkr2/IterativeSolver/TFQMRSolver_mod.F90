@@ -15,7 +15,7 @@ module TFQMRSolver_mod
   use SolverStats_mod
   implicit none
 
-  type TFQMRSolver
+  type, extends(Solver) :: TFQMRSolver
     PRIVATE
     class(OperatorT), pointer :: op => null()
     class(OperatorT), pointer :: precond => null()
