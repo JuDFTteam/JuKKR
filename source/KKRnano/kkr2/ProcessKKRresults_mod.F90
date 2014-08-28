@@ -136,18 +136,31 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   call OUTTIME(isMasterRank(my_mpi),'barrier end ... ', &
                getElapsedTime(program_timer), iter)
 
+  ! output of local density of states (task-local files)
+  if (params%NPOL == 0) then
+    do ilocal = 1, num_local_atoms
+      densities => getDensities(calc_data, ilocal)
+      atomdata => getAtomData(calc_data, ilocal)
+      I1 = getAtomIndexOfLocal(calc_data, ilocal)
+
+      ! TODO: Fermi energy written to DOS files is just a dummy value (99.99)
+      call write_LDOS(densities%DEN,emesh%EZ,densities%lmaxd+1,emesh%IELAST,atomdata%core%ITITLE(:,1:dims%NSPIND), 99.99d0, &
+                      emesh%E1, emesh%E2, params%ALAT, emesh%TK, dims%NSPIND, I1)
+    enddo
+  endif
+
 ! -----------------------------------------------------------------
 ! BEGIN: only MASTERRANK is working here
 ! -----------------------------------------------------------------
   if(isMasterRank(my_mpi)) then
 
     ! DOS was written to file 'results1' and read out here just
-    ! to be written in routine wrldos
+    ! to be written in routine wrldos (new: file complex.dos only)
     ! also other stuff is read from results1 (and results2)
 
-    ! TODO: note: title written to DOS files is not correct
+    ! TODO: note: title written to complex.dos is not correct
     ! - taken from 1st local atom only
-    ! TODO: Fermi energy written to DOS files is not correct
+    ! TODO: Fermi energy written to complex.dos is not correct
     call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,dims%LMAXD, &
     arrays%NAEZ,emesh%NPOL, &
     dims%NSPIND,params%KPRE,params%KTE,atomdata%potential%LPOT, &
