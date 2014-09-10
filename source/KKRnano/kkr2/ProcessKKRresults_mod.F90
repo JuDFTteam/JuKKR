@@ -517,11 +517,26 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     DENEF = DENEF + DENEF_local
     CHRGNT = CHRGNT + CHRGNT_local
 
+
+
 !------------------------------------------------------------------------------
   end do ! ilocal
   !$omp end parallel do
 !------------------------------------------------------------------------------
 
+!=============== DEBUG: Morgan charge distribution test =======================
+    if (params%DEBUG_morgan_electrostatics == 1) then
+      do ilocal = 1, num_local_atoms
+        densities => getDensities(calc_data, ilocal)
+        atomdata  => getAtomData(calc_data, ilocal)
+        mesh         => atomdata%mesh_ptr
+
+        if (isMasterRank(my_mpi)) call print_morgan_message()
+        call overwrite_densities_morgan_fcc(densities%RHO2NS, mesh%R, 2*dims%LMAXD)
+
+      enddo
+    endif
+!==============================================================================
 
   call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
@@ -718,6 +733,13 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   call OUTTIME(isMasterRank(my_mpi),'VMADELBLK ......', &
                getElapsedTime(program_timer),ITER)
 #endif
+
+!=============== DEBUG: Morgan charge distribution test =======================
+    if (params%DEBUG_morgan_electrostatics == 1 .and. isMasterRank(my_mpi)) then
+      atomdata  => getAtomData(calc_data, 1)
+      call write_morgan_potential_exp(atomdata%potential)
+    endif
+!==============================================================================
 
   VAV0 = 0.0d0
   VOL0 = 0.0d0
@@ -1181,6 +1203,61 @@ end subroutine
     ' E FERMI ',F12.6,' Delta E_F = ',f12.6)
 9030 format ('                new', &
     ' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)
+  end subroutine
+
+!=============== DEBUG: Morgan charge distribution test =======================
+
+  !----------------------------------------------------------------------------
+  !> Stores Morgan test charge distribution into rho2ns_density.
+  subroutine overwrite_densities_morgan_fcc(rho2ns_density, mesh_points, lpot)
+    use debug_morgan_mod, only: calc_morgan_rho_expansion, reciprocal_fcc
+
+    double precision, intent(inout) :: rho2ns_density(:,:,:)
+    double precision, intent(in) :: mesh_points(:)
+    integer, intent(in) :: lpot
+
+    double precision :: reciprocals(3,8)
+
+    integer :: ii
+
+    call reciprocal_fcc(reciprocals)
+
+    do ii = 1, size(mesh_points)
+      call calc_morgan_rho_expansion(rho2ns_density(ii, :, 1), reciprocals, mesh_points(ii), lpot)
+    enddo
+
+    if (size(rho2ns_density, 3) > 1) rho2ns_density(:, :, 2:) = 0.0d0
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Print warning message.
+  subroutine print_morgan_message()
+    write(*,*) "==============================================================="
+    write(*,*) "= DEBUG: MORGAN charge distribution test activated.           ="
+    write(*,*) "= option: DEBUG_morgan_electrostatics = 1                     ="
+    write(*,*) "= Results of calculation are wrong.                           ="
+    write(*,*) "==============================================================="
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write results of potential calculation to a file
+  subroutine write_morgan_potential_exp(potential)
+    use PotentialData_mod
+    use debug_morgan_mod
+    type (PotentialData), intent(in) :: potential
+
+    integer, parameter :: UNIT = 99
+    character(len=:), allocatable :: str
+
+    !double precision :: dir(3) = (/ 0.5d0, 1.0d0, 0.0d0 /)  ! Gamma-W direction in fcc lattice
+
+    call repr_PotentialData(potential, str)
+
+    open(UNIT, form='formatted', file='morgan_potential_exp.txt')
+      write(UNIT, '(A)') str
+    close(UNIT)
+
   end subroutine
 
 end module ProcessKKRresults_mod
