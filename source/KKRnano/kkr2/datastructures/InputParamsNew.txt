@@ -44,3 +44,5 @@ i near_field 0
 i write_shapes 0
 ### shift of muffin-tin zero (default = 0.0)
 d mt_zero_shift 0.0
+### DEBUG: replace calculated charge densities with Morgan test charge density
+i DEBUG_morgan_electrostatics 0

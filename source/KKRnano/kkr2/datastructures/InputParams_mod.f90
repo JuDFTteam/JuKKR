@@ -50,6 +50,7 @@ type InputParams
   integer :: near_field
   integer :: write_shapes
   double precision :: mt_zero_shift
+  integer :: DEBUG_morgan_electrostatics
 end type InputParams
 
 CONTAINS
@@ -324,6 +325,16 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueInteger(conf, "DEBUG_morgan_electrostatics", confvalues%DEBUG_morgan_electrostatics, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%DEBUG_morgan_electrostatics = 0
+    ierror = 0
+  end if
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for DEBUG_morgan_electrostatics."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -377,6 +388,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%near_field
   read(FILEHANDLE) confvalues%write_shapes
   read(FILEHANDLE) confvalues%mt_zero_shift
+  read(FILEHANDLE) confvalues%DEBUG_morgan_electrostatics
   close(FILEHANDLE)
 end function
 
@@ -430,6 +442,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%near_field
   write(FILEHANDLE) confvalues%write_shapes
   write(FILEHANDLE) confvalues%mt_zero_shift
+  write(FILEHANDLE) confvalues%DEBUG_morgan_electrostatics
   close(FILEHANDLE)
 end function
 
