@@ -145,16 +145,15 @@ irmd, irid, nfund, ngshd, ipand)
        !
        !---> now integrate v1 and v2
        !
-       call soutk(v1,vint1,ipan,ircutm)
-       call sinwk(v2,vint2,ipan,ircutm)
+       call soutk(v1,vint1,ipan,ircutm)  ! integrals from 0 to r    (r varies)
+       call sinwk(v2,vint2,ipan,ircutm)  ! integrals from r to r_BS (r varies)
        !
        !---> gather all parts
-       !
+
+       ! deal with r=0
        if (lm.eq.1) then
          vons(1,lm,ipot) = fac*vint2(1)
-
        else
-
          vons(1,lm,ipot) = 0.0d0
        end if
 
@@ -162,16 +161,17 @@ irmd, irid, nfund, ngshd, ipand)
          rl = r(i)**l
          vons(i,lm,ipot) = fac* (vint1(i)/r(i)/rl+vint2(i)*rl)
 70     continue
-       !
+
+       ! intra-cell potential is the same for the other spin direction
        if (nspin.eq.2) then
          do 80 i = 1,irc1
            vons(i,lm,ipot-1) = vons(i,lm,ipot)
 80       continue
        end if
 
-90   continue
+90   continue ! loop over M
 
-100 continue
+100 continue  ! loop over L
 
     return
 

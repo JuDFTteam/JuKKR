@@ -262,7 +262,7 @@
     call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
                          arrays%VOLBZ, arrays%VOLCUB)
 
-!     Conversion of RMAX and GMAX to units of ALAT
+!     Conversion of RMAX and GMAX to atomic units
     params%RMAX = params%RMAX*params%ALAT
     params%GMAX = params%GMAX/params%ALAT
 
