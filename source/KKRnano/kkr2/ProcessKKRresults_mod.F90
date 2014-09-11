@@ -517,26 +517,10 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     DENEF = DENEF + DENEF_local
     CHRGNT = CHRGNT + CHRGNT_local
 
-
-
 !------------------------------------------------------------------------------
   end do ! ilocal
   !$omp end parallel do
 !------------------------------------------------------------------------------
-
-!=============== DEBUG: Morgan charge distribution test =======================
-    if (params%DEBUG_morgan_electrostatics == 1) then
-      do ilocal = 1, num_local_atoms
-        densities => getDensities(calc_data, ilocal)
-        atomdata  => getAtomData(calc_data, ilocal)
-        mesh         => atomdata%mesh_ptr
-
-        if (isMasterRank(my_mpi)) call print_morgan_message()
-        call overwrite_densities_morgan_fcc(densities%RHO2NS, mesh%R, 2*dims%LMAXD)
-
-      enddo
-    endif
-!==============================================================================
 
   call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
 
@@ -571,7 +555,15 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     energies  => getEnergies(calc_data, ilocal)
     mesh         => atomdata%mesh_ptr
     cell         => atomdata%cell_ptr
-!------------------------------------------------------------------------------
+
+!=============== DEBUG: Morgan charge distribution test =======================
+    if (params%DEBUG_morgan_electrostatics == 1) then
+      if (isMasterRank(my_mpi)) call print_morgan_message()
+      call overwrite_densities_morgan_fcc(densities%RHO2NS, mesh%R, 2*dims%LMAXD)
+      CHRGNT = 0.0d0  ! don't do the Fermi energy correction
+    endif
+!==============================================================================
+
     densities%total_charge_neutrality = CHRGNT
 
     new_fermi = emesh%E2
@@ -581,9 +573,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                                  0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                  energies%ESPV, densities%RHO2NS, new_fermi)
 
-    !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-
     ! calculate multipole moments
+    !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
     densities%CMOM   = 0.0D0
     densities%CMINST = 0.0D0
     call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
@@ -737,7 +728,9 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 !=============== DEBUG: Morgan charge distribution test =======================
     if (params%DEBUG_morgan_electrostatics == 1 .and. isMasterRank(my_mpi)) then
       atomdata  => getAtomData(calc_data, 1)
+      mesh => atomdata%mesh_ptr
       call write_morgan_potential_exp(atomdata%potential)
+      call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R)
     endif
 !==============================================================================
 
@@ -1099,6 +1092,8 @@ end subroutine
 
   !----------------------------------------------------------------------------
   !> correct Fermi-energy (charge neutrality).
+  !>
+  !> Modifies charge density, Fermi energy and valence band energy!
   subroutine doFermiEnergyCorrection(atomdata, output, naez, max_shift, CHRGNT, DENEF, R2NEF, &
                                      ESPV, RHO2NS, E2)
     use BasisAtom_mod
@@ -1226,6 +1221,11 @@ end subroutine
       call calc_morgan_rho_expansion(rho2ns_density(ii, :, 1), reciprocals, mesh_points(ii), lpot)
     enddo
 
+    ! multiply with r**2 (mesh_points = r)
+    do ii = 1, size(rho2ns_density, 2)
+      rho2ns_density(:, ii, 1) = rho2ns_density(:, ii, 1) * mesh_points * mesh_points
+    enddo
+
     if (size(rho2ns_density, 3) > 1) rho2ns_density(:, :, 2:) = 0.0d0
 
   end subroutine
@@ -1260,4 +1260,34 @@ end subroutine
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Write results of potential in 100 direction to a file.
+  subroutine write_morgan_potential_dir(vons, mesh_points)
+    use debug_morgan_mod
+    double precision, intent(in) :: vons(:,:)
+    double precision, intent(in) :: mesh_points(:)
+
+    integer, parameter :: UNIT = 99
+
+    double precision :: dir(3) = (/ 0.5d0, 0.0d0, 0.0d0 /)
+    double precision :: vec(3), norm_dir(3), val
+    integer :: ii
+
+    norm_dir = dir / norm2(dir)
+
+    open(UNIT, form='formatted', file='morgan_potential_100.txt')\
+
+    ! TODO: remove
+    !vons(:,1) = 0.0d0
+
+    do ii = 1, size(mesh_points)
+      vec = norm_dir * mesh_points(ii)
+      if (norm2(vec) == 0.0d0) vec(1) = 1e-6
+      val = eval_expansion(vons(ii,:), vec)
+      write(UNIT, *) mesh_points(ii), val
+    enddo
+
+    close(UNIT)
+
+  end subroutine
 end module ProcessKKRresults_mod
