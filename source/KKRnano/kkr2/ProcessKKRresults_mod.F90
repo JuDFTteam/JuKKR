@@ -1235,7 +1235,7 @@ end subroutine
   subroutine print_morgan_message()
     write(*,*) "==============================================================="
     write(*,*) "= DEBUG: MORGAN charge distribution test activated.           ="
-    write(*,*) "= option: DEBUG_morgan_electrostatics = 1                     ="
+    write(*,*) "= Set option DEBUG_morgan_electrostatics = 10 to deactivate   ="
     write(*,*) "= Results of calculation are wrong.                           ="
     write(*,*) "==============================================================="
   end subroutine
@@ -1249,8 +1249,6 @@ end subroutine
 
     integer, parameter :: UNIT = 99
     character(len=:), allocatable :: str
-
-    !double precision :: dir(3) = (/ 0.5d0, 1.0d0, 0.0d0 /)  ! Gamma-W direction in fcc lattice
 
     call repr_PotentialData(potential, str)
 
@@ -1272,13 +1270,11 @@ end subroutine
     double precision :: dir(3) = (/ 0.5d0, 0.0d0, 0.0d0 /)
     double precision :: vec(3), norm_dir(3), val
     integer :: ii
+    double precision :: reciprocals(3,8)
 
     norm_dir = dir / norm2(dir)
 
-    open(UNIT, form='formatted', file='morgan_potential_100.txt')\
-
-    ! TODO: remove
-    !vons(:,1) = 0.0d0
+    open(UNIT, form='formatted', file='morgan_potential_100.txt')
 
     do ii = 1, size(mesh_points)
       vec = norm_dir * mesh_points(ii)
@@ -1289,5 +1285,66 @@ end subroutine
 
     close(UNIT)
 
+    ! also write the analytical solution
+    call reciprocal_fcc(reciprocals)
+
+    open(UNIT, form='formatted', file='morgan_potential_100_analytical.txt')
+
+    do ii = 1, size(mesh_points)
+      vec = norm_dir * mesh_points(ii)
+      val = eval_morgan_potential(reciprocals, vec)
+      write(UNIT, *) mesh_points(ii), val
+    enddo
+
+    close(UNIT)
+
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Stores generalised Morgan test charge distribution into rho2ns_density.
+  !>
+  !> One needs to use a simple cubic Bravais lattice with unit size.
+  !> One can specify basis atoms.
+  subroutine overwrite_densities_gen_morgan_cubic(rho2ns_density, mesh_points, lpot, rbasis, center)
+    use debug_morgan_mod
+
+    double precision, intent(inout) :: rho2ns_density(:,:,:)
+    double precision, intent(in) :: mesh_points(:)
+    integer, intent(in) :: lpot
+    double precision, intent(in) :: rbasis(:,:)
+    double precision, intent(in) :: center(3)
+
+    double precision :: reciprocals(3,6)
+    double complex, allocatable :: prefactors(:)
+
+    integer :: ii
+    double complex, parameter :: CONE = (1.0d0, 0.0d0)
+    double complex, allocatable :: coeffs(:)
+
+    allocate(coeffs(size(rho2ns_density, 2)))
+    allocate(prefactors(size(rbasis, 2)))
+
+    prefactors = CONE
+
+    call reciprocal_cubic(reciprocals)
+
+    do ii = 1, size(mesh_points)
+      call calc_gen_morgan_rho_expansion(coeffs, reciprocals, prefactors, rbasis, center, mesh_points(ii), lpot)
+
+      ! since we are using real spherical harmonics, one can just take the real part of the expansion coeffs
+      rho2ns_density(ii, :, 1) = real(coeffs)
+    enddo
+
+    ! multiply with r**2 (mesh_points = r)
+    do ii = 1, size(rho2ns_density, 2)
+      rho2ns_density(:, ii, 1) = rho2ns_density(:, ii, 1) * mesh_points * mesh_points
+    enddo
+
+    if (size(rho2ns_density, 3) > 1) rho2ns_density(:, :, 2:) = 0.0d0
+
+    deallocate(prefactors)
+    deallocate(coeffs)
+
+  end subroutine
+
 end module ProcessKKRresults_mod
