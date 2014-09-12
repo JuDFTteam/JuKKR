@@ -180,10 +180,24 @@ module debug_morgan_mod
 
     do g_ind = 1, size(reciprocal, 2)
       do ii = 1, size(rbasis, 2)
-        val = val + exp(IMAGINARY * dot_product(reciprocal(:,g_ind), (vec + center - rbasis(:,ii))))
+        val = val + prefactors(ii) * exp(IMAGINARY * dot_product(reciprocal(:,g_ind), (vec + center - rbasis(:,ii))))
       enddo
     enddo
 
+  end function
+
+  !------------------------------------------------------------------------------
+  !> Evaluate generalised Morgan potential at 'vec'.
+  function eval_gen_morgan_potential(reciprocal, vec, prefactors, rbasis, center) result(val)
+    double precision, intent(in) :: reciprocal(:,:) !< reciprocal lattice vectors of first shell
+    double precision, intent(in) :: vec(3) !< position to evaluate potential
+    double complex  , intent(in) :: prefactors(:)
+    double precision, intent(in) :: rbasis(:,:)
+    double precision, intent(in) :: center(3)
+
+    double complex val
+
+    val = 8 * PI / norm2(reciprocal(:,1))**2 * eval_gen_morgan_rho(reciprocal, vec, prefactors, rbasis, center)
   end function
 
   !----------------------------------------------------------------------------
@@ -263,13 +277,15 @@ module debug_morgan_mod
 
     integer :: ii
     double complex, allocatable :: temp_coeffs(:)
+    double complex :: factor
 
     coeffs = dcmplx(0.0d0, 0.0d0)
     allocate(temp_coeffs, source = coeffs)
 
     do ii = 1, size(reciprocal, 2)
       call calc_exponential_expansion(temp_coeffs, reciprocal(:,ii), radius, lmax)
-      coeffs = coeffs + temp_coeffs * structure_factor(reciprocal(:,ii), prefactors, rbasis, center)
+      factor = structure_factor(reciprocal(:,ii), prefactors, rbasis, center)
+      coeffs = coeffs + temp_coeffs * factor
     end do
 
     deallocate(temp_coeffs)
