@@ -195,6 +195,14 @@ c
 
    80   CONTINUE                    ! L = 0,LPOT
 
+C Terms calculated so far:
+C     a) 1/2 * \int_0^{r_{MT}} \rho_L V_L r^2 dr +
+C     b) 1/2 * \sum_{L'L''} \int_{r_{MT}}^{r_{BS}} C_{LL'L''} \tilde{\rho}_L V_{L'} \Theta_{L''} r^2 dr
+C
+C     a) muffin-tin b) interstitial
+C     in interstitial use: \tilde{\rho} = \rho - \delta_{L,(0,0)} \sqrt{4 \pi} Z * r
+
+
 c
 c--->   calculate the madelung potential
 c
@@ -204,6 +212,10 @@ c
 c--->   add to ecou
 c
         ECOU(0) = ECOU(0) - Z*VMAD/2.0D0
+
+C     Madelung term added: (why is it incomplete?)
+C     \delta_{L,(0,0)} (-Z)/2 * \[ V_{(0,0)}(R)/sqrt{4 \pi} - \sqrt{4 \pi} * 2 * q_{0,0}(R) / R \]
+
 c
 c--->   option to calculate full generalized madelung potential
 c                                    rc
