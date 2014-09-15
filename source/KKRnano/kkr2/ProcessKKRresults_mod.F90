@@ -794,14 +794,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
                          shgaunts, atomdata)
 
-      ! add missing energy terms to ECOU although they contain part of kin. energy too
+      ! add missing energy term to ECOU - it is a constant and could be left out
+      ! but it is muffin-tin radius dependent and should reduce differences in energies
+      ! of calculations with different muffin-tin
       if (params%energy_formula == 1) then
-        allocate(energy_missing, source=energies%ECOU)
-
-        call energy_missing_wrapper(energy_missing, densities%RHO2NS, atomdata)
-        energies%ECOU = energies%ECOU + energy_missing
-
-        deallocate(energy_missing)
+        energies%ECOU(0) = energies%ECOU(0) - atomdata%Z_nuclear**2 / mesh%R(mesh%IMT)
       endif
 
     end if

@@ -398,36 +398,6 @@ subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
 
 end subroutine
 
-!----------------------------------------------------------------------------
-subroutine energy_missing_wrapper(e_miss, RHO2NS, atomdata)
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  use CellData_mod
-  implicit none
-
-  double precision, intent(out) :: e_miss(:)
-  double precision, intent(in) :: RHO2NS(:,:,:)
-  type (BasisAtom), intent(in) :: atomdata
-
-  !-------- locals
-  type (RadialMeshData), pointer :: mesh
-  type (CellData), pointer       :: cell
-
-  mesh => atomdata%mesh_ptr
-  cell => atomdata%cell_ptr
-
-  CHECKASSERT( associated(atomdata%mesh_ptr) )
-  CHECKASSERT( associated(atomdata%cell_ptr) )
-
-
-  ! output: e_miss: L-resolved energy corrections
-  call energy_missing(e_miss,atomdata%potential%LPOT,RHO2NS,atomdata%Z_nuclear,mesh%R,mesh%DRDI, &
-                      mesh%IRCUT,mesh%IPAN,cell%shdata%IFUNM, &
-                      cell%shdata%THETA,cell%shdata%LMSP, &
-                      mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand)
-
-end subroutine
-
 !------------------------------------------------------------------------------
 !> Add exchange-correlation potential and calculate exchange correlation energy.
 subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
