@@ -672,6 +672,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   integer :: num_local_atoms
   logical :: calc_force
   double precision :: force_flmc(-1:1)
+  double precision, allocatable :: energy_missing(:) ! some missing energy terms
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -792,6 +793,16 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       ! output: ECOU - l resolved Coulomb energy
       call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
                          shgaunts, atomdata)
+
+      ! add missing energy terms to ECOU although they contain part of kin. energy too
+      if (params%energy_formula == 1) then
+        allocate(energy_missing, source=energies%ECOU)
+
+        call energy_missing_wrapper(energy_missing, densities%RHO2NS, atomdata)
+        energies%ECOU = energies%ECOU + energy_missing
+
+        deallocate(energy_missing)
+      endif
 
     end if
 

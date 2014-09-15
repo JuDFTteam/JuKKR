@@ -51,6 +51,7 @@ type InputParams
   integer :: write_shapes
   double precision :: mt_zero_shift
   integer :: DEBUG_morgan_electrostatics
+  integer :: energy_formula
 end type InputParams
 
 CONTAINS
@@ -335,6 +336,16 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueInteger(conf, "energy_formula", confvalues%energy_formula, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%energy_formula = 0
+    ierror = 0
+  end if
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for energy_formula."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 end function
 
@@ -389,6 +400,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%write_shapes
   read(FILEHANDLE) confvalues%mt_zero_shift
   read(FILEHANDLE) confvalues%DEBUG_morgan_electrostatics
+  read(FILEHANDLE) confvalues%energy_formula
   close(FILEHANDLE)
 end function
 
@@ -443,6 +455,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%write_shapes
   write(FILEHANDLE) confvalues%mt_zero_shift
   write(FILEHANDLE) confvalues%DEBUG_morgan_electrostatics
+  write(FILEHANDLE) confvalues%energy_formula
   close(FILEHANDLE)
 end function
 
