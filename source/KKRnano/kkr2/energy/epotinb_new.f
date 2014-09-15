@@ -153,6 +153,8 @@ c
 c--->   add non spher. contribution in case of non spher. input potential
 c
         IRMIN1 = IRMIN
+
+C STRANGE, TODO: CHECK E.R.
         IF (IRMIN1.LE.IRS1) THEN
 
           IRCUTM(0) = IRMIN1 - 1
