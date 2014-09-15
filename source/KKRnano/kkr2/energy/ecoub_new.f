@@ -1,11 +1,3 @@
-C             New call for main2:
-C             call ECOUB_NEW(CMOM,ECOU,LPOT,NSPIN,RHO2NS, &
-C             VONS,ZAT(I1),R(:,I1), &
-C             DRDI(:,I1),KVMAD,IRCUT(:,I1),IPAN(I1),IMAXSH,IFUNM(1,ICELL), &
-C             ILM,GSH,THETAS(:,:,ICELL),LMSP(1,ICELL), &
-C             irmd, irid, nfund, ipand, ngshd)
-
-
 c 13.10.95 ***************************************************************
       SUBROUTINE ECOUB_NEW(CMOM,ECOU,LPOT,NSPIN,RHO2NS,VONS,Z,R,DRDI,
      +                 KVMAD,IRCUT,IPAN,IMAXSH,IFUNM,ILM,
@@ -72,16 +64,6 @@ C     ..
 
 C     .. Scalar Arguments ..
       INTEGER KVMAD,LPOT,NSPIN
-C     ..
-C     .. Array Arguments ..
-C     DOUBLE PRECISION CMOM(LMPOTD),DRDI(IRMD,*),ECOU(0:LPOTD),
-C    +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
-C    +                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,2),Z(*)
-C     INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
-C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
-
-C     LPOTD = LPOT
-C     LMPOTD = (LPOT+1)**2
 
       DOUBLE PRECISION CMOM((LPOT + 1)**2),DRDI(IRMD),
      &                 ECOU(0:LPOT),
