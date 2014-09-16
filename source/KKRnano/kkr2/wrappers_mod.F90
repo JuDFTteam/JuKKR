@@ -341,6 +341,7 @@ subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
   integer :: nspind
   integer :: irnsd
   type (RadialMeshData), pointer :: mesh
+  double precision :: Z_nuclear
 
   nspind = atomdata%nspin
 
@@ -352,9 +353,11 @@ subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
 
   CHECKASSERT( atomdata%potential%irmd == mesh%irmd )
 
+  Z_nuclear = 0.0d0 ! TODO
+
   call EPOTINB_NEW(EPOTIN,NSPIND,RHO2NS,atomdata%potential%VISP,mesh%R,mesh%DRDI, &
                    mesh%IRMIN,mesh%IRWS,atomdata%potential%LPOT,atomdata%potential%VINS, &
-                   mesh%IRCUT,mesh%IPAN,atomdata%Z_nuclear, &
+                   mesh%IRCUT,mesh%IPAN,Z_nuclear, &
                    mesh%irmd, irnsd, mesh%ipand)
 
 end subroutine
@@ -377,6 +380,7 @@ subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
   type (RadialMeshData), pointer :: mesh
   type (CellData), pointer       :: cell
   integer :: KVMAD
+  double precision :: Z_nuclear
 
   nspind = atomdata%nspin
 
@@ -390,11 +394,10 @@ subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
 
   ! output: ECOU - l resolved Coulomb energy
   call ECOUB_NEW(CMOM,ECOU,atomdata%potential%LPOT,NSPIND,RHO2NS, &
-  atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R, &
+  atomdata%potential%VONS, Z_nuclear,mesh%R, &
   mesh%DRDI,KVMAD,mesh%IRCUT,mesh%IPAN,shgaunts%IMAXSH,cell%shdata%IFUNM, &
   shgaunts%ILM,shgaunts%GSH,cell%shdata%THETA,cell%shdata%LMSP, &
   mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
-
 
 end subroutine
 

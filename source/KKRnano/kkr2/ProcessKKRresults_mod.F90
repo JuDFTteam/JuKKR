@@ -797,11 +797,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       ! add missing energy term to ECOU(0) - it is a constant and could be left out
       ! but it is muffin-tin radius dependent and should reduce differences in energies
       ! of calculations with different muffin-tin
-      ! also correct EPOTIN with non-spherical electron-nucleus contribution
-      if (params%energy_formula == 1) then
+      ! also add the electron-nucleus contribution to EPOTIN (although it does not belong there)
+      !if (params%energy_formula == 1) then
         call energy_missing_wrapper(energies%EPOTIN, energies%ECOU(0), &
                                     densities%RHO2NS, atomdata)
-      endif
+      !endif
 
     end if
 

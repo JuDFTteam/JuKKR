@@ -3,11 +3,8 @@ C>
 C>     @author E. Rabel
 C>
 C>    The corrections are:
-C>    epotin_correction = \sum_{L=2} (Z * \int_{r_{MT}}^{r_{BS}} rho_L \Theta_L r dr
+C>    epotin_correction = \sum_{L} 2*Z * \int_{r_{MT}}^{r_{BS}} rho_L \Theta_L r dr
 C>    ecoub_L0_correction = -\delta_{L,(0,0)} Z**2 / R)
-C>
-C>    Note: The sum in epotin_correction does not include the spherical part, since
-C>    it was already included in the epotin routine
 
       SUBROUTINE energy_missing(epotin_correction, ecoub_L0_correction,
      &                          LPOT,RHO2NS,Z,R,DRDI,
@@ -59,9 +56,9 @@ c
 
       epotin_correction = 0.0d0
 
-C term \sum_{ell=1} \sum_M Z * \int_{r_{MT}}^{r_{BS}} rho_L \Theta_L r dr
+C term \sum_{L} 2*Z * \int_{r_{MT}}^{r_{BS}} rho_L \Theta_L r dr
 
-      DO 80 L = 1,LPOT
+      DO 80 L = 0,LPOT
 
           ER = 0.0d0
 
@@ -74,7 +71,7 @@ C term \sum_{ell=1} \sum_M Z * \int_{r_{MT}}^{r_{BS}} rho_L \Theta_L r dr
                   DO 40 IR = IRS1 + 1,IRC1
                     IRH = IR - IRS1
                     RHOSP = RHO2NS(IR,LM,1)
-                    ER(IR) = ER(IR) + 
+                    ER(IR) = ER(IR) +
      &                       2.0d0 * Z * RHOSP*THETAS(IRH,IFUN) / R(IR)
    40             CONTINUE
               END IF   
@@ -94,6 +91,7 @@ C     Additional term -\delta_{L,(0,0)} Z**2 / R  where R is the
 C     reference radius chosen to calculate the gen. Madelung potential
 C     Here it is equal to the muffin-tin radius!!!
 
-        ecoub_L0_correction = - Z**2 / R(IRS1)
+C        ecoub_L0_correction = - Z**2 / R(IRS1)
+      ecoub_L0_correction = 0.0d0
 
       END SUBROUTINE
