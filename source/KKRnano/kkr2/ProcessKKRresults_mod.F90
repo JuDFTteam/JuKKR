@@ -87,6 +87,9 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   ! v
 
   ! mix_potential returns 1 when target_rms reached, otherwise 0
+
+  ! ATTENTION: the spherical part of the potential is divided by sqrt(4*pi) here
+  ! this is definitely not the optimal place to do this
   processKKRresults = mix_potential(calc_data, iter, params, dims, my_mpi)
 
   ! |
@@ -240,6 +243,8 @@ integer function mix_potential(calc_data, iter, params, dims, my_mpi)
   do ilocal = 1, num_local_atoms
     atomdata => getAtomData(calc_data, ilocal)
 
+    ! ATTENTION: the spherical part of the potential is divided by sqrt(4*pi) here - this is needed for the
+    ! single site solver in the next iteration
     call MIXSTR_wrapper(atomdata, RMSAVQ_single, RMSAVM_single, params%MIXING, params%FCM)
 
     RMSAVQ = RMSAVQ + RMSAVQ_single

@@ -1,3 +1,6 @@
+C ATTENTION: the spherical part of the potential
+C            is divided by sqrt(4*pi) here
+
 c 13.10.95 ***************************************************************
       SUBROUTINE MIXSTR_NEW(RMSAVQ,RMSAVM,LMPOT,
      +                  NSPIN,
