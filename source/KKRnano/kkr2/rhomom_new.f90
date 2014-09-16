@@ -41,7 +41,7 @@ irmd, irid, nfund, ipand, ngshd)
   integer lmsp(*)
   !     ..
   !     .. Local Scalars ..
-  double precision fac,pi,rl
+  double precision rl
   integer i,iend,ifun,irc1,irs1,istart,j,l,lm,lm2, &
   lm3,m
   !     ..
@@ -58,13 +58,11 @@ irmd, irid, nfund, ipand, ngshd)
   v1 = 0.0d0
   vint1 = 0.0d0
 
-  pi = 4.d0*atan(1.d0)
-  !
   irs1 = ircut(1)
   irc1 = ircut(ipan)
 
   do 100 l = 0,lpot
-    fac = 8.0d0*pi/real(2*l+1)
+
     do 90 m = -l,l
       lm = l*l + l + m + 1
       !
