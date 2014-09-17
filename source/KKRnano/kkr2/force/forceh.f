@@ -26,6 +26,7 @@ C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION PI,RWS,VINT1
       INTEGER I,IPOT,IRWS1,LM,M
+      integer ind
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION FLM(-1:1,2),V1(IRMD)
@@ -46,15 +47,15 @@ C     ..
          STOP
  
       END IF
-c
-c
-c---> reading the right Wigner-S. radius
-c
-         IRWS1 = IRWS
-         RWS = R(IRWS1)
-c
-c---> determine the right potential numbers
-c
+
+      IRWS1 = IRWS
+      RWS = R(IRWS1)
+
+      do ind = 1, IRWS
+
+         RWS = R(ind)
+         IRWS1 = ind
+
          IPOT = 1
  
          DO 20 M = -1,1
@@ -79,6 +80,11 @@ c---> total Hellman-Feynman force
 c
             FLMH(M) = (FLM(M,1)+FLM(M,2))*Z
    20    CONTINUE
+
+
+      write(*, '(2(e23.17, X))') R(ind),
+     &     FLMH(1) * sqrt(16.0d0 * atan(1.0d0)/3.0d0)
+      enddo
 c
 c
  9000 FORMAT (13x,'error stop in subroutine force :',
