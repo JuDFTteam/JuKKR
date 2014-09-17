@@ -1,18 +1,25 @@
 !> Structure that stores the input and output potential for one cell.
+!> @author Elias Rabel
 
 module PotentialData_mod
   implicit none
 
   type PotentialData
-    double precision, dimension(:,:,:), allocatable :: VINS        ! .. input potential
+    double precision, dimension(:,:,:), allocatable :: VINS        !< input potential - nonspherical parts only
+
+    !> spherically averaged input potential
+    !> ATTENTION: this differs by a factor of 1/sqrt(4pi) from the L=(0,0) component
+    !> of the L-expansion
+    !> Note: the L=(0,0) (index 1) component of the output potential VONS does not
+    !> contain this factor!
     double precision, dimension(:,:), allocatable :: VISP
-    double precision, dimension(:,:,:), allocatable :: VONS        !     .. output potential
+
+    double precision, dimension(:,:,:), allocatable :: VONS        !< output potential - contains all L-components
     integer :: nspin
     integer :: lpot
     integer :: irmind
     integer :: irmd
     integer :: irnsd
-    ! derived
     integer :: lmpot
 
   end type
