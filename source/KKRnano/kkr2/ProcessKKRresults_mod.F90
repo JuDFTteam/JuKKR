@@ -677,7 +677,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   integer :: num_local_atoms
   logical :: calc_force
   double precision :: force_flmc(-1:1)
-  double precision, allocatable :: energy_missing(:) ! some missing energy terms
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -799,13 +798,12 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
                          shgaunts, atomdata)
 
-      ! add missing energy term to ECOU(0) - it is a constant and could be left out
+      ! TODO: add missing energy term to ECOU(0) - it is a constant and could be left out
       ! but it is muffin-tin radius dependent and should reduce differences in energies
       ! of calculations with different muffin-tin
-      ! also add the electron-nucleus contribution to EPOTIN (although it does not belong there)
+
       !if (params%energy_formula == 1) then
-        call energy_missing_wrapper(energies%EPOTIN, energies%ECOU(0), &
-                                    densities%RHO2NS, atomdata)
+      ! ecou(0) = ecou(0) - Z**2 / R  !TODO
       !endif
 
     end if
