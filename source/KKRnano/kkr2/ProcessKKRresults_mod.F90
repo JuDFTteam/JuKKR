@@ -1,5 +1,6 @@
 #include "DebugHelpers/logging_macros.h"
 #include "DebugHelpers/test_array_log.h"
+#include "DebugHelpers/test_macros.h"
 
 module ProcessKKRresults_mod
 
@@ -877,6 +878,9 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS
 !       add also an optional muffin-tin-zero shift 'mt_zero_shift'
+
+!       Note: also the effect of the nuclear potential on the interstitial region
+!       is added in 'convol'
     energies%VBC = VBC_new + params%mt_zero_shift
     call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
 
@@ -1339,6 +1343,8 @@ end subroutine
   !>
   !> One needs to use a simple cubic Bravais lattice with unit size.
   !> One can specify basis atoms.
+  !> prefactors are chosen as: c_1 = 1, c_2 = 2, c_3 = 2, c_4 = -1
+  !> all other prefactors are c_i = 1
   subroutine overwrite_densities_gen_morgan_cubic(rho2ns_density, mesh_points, lpot, rbasis, center)
     use debug_morgan_mod
 
@@ -1358,8 +1364,11 @@ end subroutine
     allocate(coeffs(size(rho2ns_density, 2)))
     allocate(prefactors(size(rbasis, 2)))
 
+    prefactors = CONE
+
     ! use arbitrary prefactors: c_1 = 1, c_2 = 2, c_3 = 2, c_4 = -1
     ! (if all prefactors would be the same, rho=0 for fcc basis)
+    CHECKASSERT(size(prefactors) >= 4)
     prefactors(1) = CONE
     prefactors(2) = 2*CONE
     prefactors(3) = 2*CONE

@@ -195,7 +195,10 @@ c--->   add to ecou
 c
         ECOU(0) = ECOU(0) - Z*VMAD/2.0D0
 
-C     Madelung term added: (why is it incomplete?)
+C     Madelung term added: (why is it incomplete? left out term gives
+C     only a (large) constant contribution, but it depends on the
+C     muffin-tin radii! - contributes to a systematic error on comparing
+C     calculations with different muffin-tin radii)
 C     \delta_{L,(0,0)} (-Z)/2 * \[ V_{(0,0)}(R)/sqrt{4 \pi} - \sqrt{4 \pi} * 2 * q_{0,0}(R) / R \]
 
 c
@@ -203,7 +206,7 @@ c--->   option to calculate full generalized madelung potential
 c                                    rc
 c       vm(rn) = vmad +2*sqrt(4*pi)* s  dr*r*rho(lm=1,r)
 c                                    0
-        IF (KVMAD.EQ.1) THEN
+        IF (KVMAD.EQ.1) THEN ! not needed for energy - this term cancels
           ER(1) = 0.0D0
 
           DO 90 I = 2,IRS1
@@ -212,13 +215,8 @@ c                                    0
 
           CALL SIMP3(ER,VM,1,IRS1,DRDI)
           VM = 2.0D0*RFPI*VM + VMAD
-c
-c         atom nr. iatyp is the iatyp-th atom on the potential cards
-c         e. g., in binary alloys iatyp=1 and iatyp=2 refer to host
-c
-C         WRITE (6,FMT=9010) IATYP,VMAD
-C         WRITE (6,FMT=9000) IATYP,VM
-        END IF                      ! (KVMAD.EQ.1)
+
+        END IF
 
       RETURN
 
