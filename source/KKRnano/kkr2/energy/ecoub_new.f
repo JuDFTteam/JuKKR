@@ -81,6 +81,7 @@ C     TODO: dimension IFUNM?
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RFPI,RHOSP,SIGN,VM,VMAD
+      double precision :: charge_in_sphere
       INTEGER I,IFUN,IPAN1,IPOT,IR,IRC1,IRH,IRS1,ISPIN,J,L,
      +        LM,LM2,M
 C     ..
@@ -206,22 +207,45 @@ c--->   option to calculate full generalized madelung potential
 c                                    rc
 c       vm(rn) = vmad +2*sqrt(4*pi)* s  dr*r*rho(lm=1,r)
 c                                    0
+
+        KVMAD = 1
         IF (KVMAD.EQ.1) THEN ! not needed for energy - this term cancels
-          ER(1) = 0.0D0
 
-          DO 90 I = 2,IRS1
-            ER(I) = RHO2NS(I,1,1)/R(I)
-   90     CONTINUE
+          write(*,*) "reference radius vs. generalised Madelung"
+          do J = 2, IRCUT(1)
+            IRS1 = J
 
-          CALL SIMP3(ER,VM,1,IRS1,DRDI)
-          VM = 2.0D0*RFPI*VM + VMAD
+            ER = 0.0D0
+
+            DO 90 I = 2,IRS1
+              ER(I) = RHO2NS(I,1,1)/R(I)
+   90       CONTINUE
+
+            VM = 0.0d0
+            CALL SIMP3(ER,VM,1,IRS1,DRDI)
+
+            ER = 0.0d0
+            ER(1:IRS1) = RHO2NS(1:IRS1,1,1) * RFPI
+            charge_in_sphere = 0.0d0
+            CALL SIMP3(ER,charge_in_sphere,1,IRS1,DRDI)
+
+C            VMAD = VONS(IRS1,1,1)/RFPI +
+C     +             2.0D0 * (Z - charge_in_sphere)/R(IRS1)
+            VMAD = VONS(IRS1,1,1)/RFPI -
+     &             2.0D0 * charge_in_sphere/R(IRS1)
+
+            VM = 2.0D0*RFPI*VM + VMAD
+            write(*, '(3(e23.17, X))') R(IRS1), VMAD, VM
+          enddo
+
+          write(*,*) "-------------------"
 
         END IF
 
       RETURN
 
  9000 FORMAT (10x,'full generalized madelung pot. for atom',1x,i3,1x,
-     +       ': ',1p,d14.6)
+     +       ': ',1p,e23.17)
  9010 FORMAT (10x,'     generalized madelung pot. for atom',1x,i3,1x,
-     +       ': ',1p,d14.6)
+     +       ': ',1p,e23.17)
       END

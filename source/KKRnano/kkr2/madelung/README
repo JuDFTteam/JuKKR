@@ -1,3 +1,5 @@
 Dependencies:
 
 files in ../lattice ../harmonics
+splines.f90
+lebedev.f
