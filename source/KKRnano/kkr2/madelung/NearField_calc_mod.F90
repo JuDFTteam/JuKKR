@@ -6,7 +6,6 @@
 
 ! TODO: There are a lot of optimisation possibilities in this near field calculation:
 ! *) Do not look for near cells at each iteration - especially since it is O(N**2)
-! *) Do not calculate near field correction in non-critical region
 ! *) Do not recalculate spherical harmonics at Lebedev-points each time
 ! *) Rotate distance vector between cells parallel to z-axis, use Wigner matrices
 !    to rotate back
