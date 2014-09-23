@@ -46,5 +46,3 @@ i write_shapes 0
 d mt_zero_shift 0.0
 ### DEBUG: replace calculated charge densities with Morgan test charge density
 i DEBUG_morgan_electrostatics 0
-# method of energy calculation: 0 classic formula, 1=corrected energy formula
-i energy_formula 0

@@ -799,14 +799,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
                          shgaunts, atomdata)
 
-      ! TODO: add missing energy term to ECOU(0) - it is a constant and could be left out
-      ! but it is muffin-tin radius dependent and should reduce differences in energies
-      ! of calculations with different muffin-tin
-
-      !if (params%energy_formula == 1) then
-      ! ecou(0) = ecou(0) - Z**2 / R  !TODO
-      !endif
-
     end if
 
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
