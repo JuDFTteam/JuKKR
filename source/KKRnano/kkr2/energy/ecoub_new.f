@@ -81,7 +81,6 @@ C     TODO: dimension IFUNM?
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RFPI,RHOSP,SIGN,VM,VMAD
-      double precision :: charge_in_sphere
       INTEGER I,IFUN,IPAN1,IPOT,IR,IRC1,IRH,IRS1,ISPIN,J,L,
      +        LM,LM2,M
 C     ..
@@ -189,6 +188,10 @@ C     in interstitial use: \tilde{\rho} = \rho - \delta_{L,(0,0)} \sqrt{4 \pi} Z
 c
 c--->   calculate the madelung potential
 c
+C   The Z/R term drops out of the Madelung formula, since the
+C   spherical part of the potential does not contain the Coulomb
+C   singularity of the nucleus
+
         VMAD = VONS(IRS1,1,IPOT)/RFPI -
      +         RFPI*2.0D0*CMOM(1)/R(IRS1)
 c
@@ -196,56 +199,27 @@ c--->   add to ecou
 c
         ECOU(0) = ECOU(0) - Z*VMAD/2.0D0
 
-C     Madelung term added: (why is it incomplete? left out term gives
-C     only a (large) constant contribution, but it depends on the
-C     muffin-tin radii! - contributes to a systematic error on comparing
-C     calculations with different muffin-tin radii)
-C     \delta_{L,(0,0)} (-Z)/2 * \[ V_{(0,0)}(R)/sqrt{4 \pi} - \sqrt{4 \pi} * 2 * q_{0,0}(R) / R \]
-
-c
+c       Not needed for calculation:
 c--->   option to calculate full generalized madelung potential
 c                                    rc
 c       vm(rn) = vmad +2*sqrt(4*pi)* s  dr*r*rho(lm=1,r)
 c                                    0
-
-        KVMAD = 1
         IF (KVMAD.EQ.1) THEN ! not needed for energy - this term cancels
+          ER(1) = 0.0D0
 
-          write(*,*) "reference radius vs. generalised Madelung"
-          do J = 2, IRCUT(1)
-            IRS1 = J
+          DO 90 I = 2,IRS1
+            ER(I) = RHO2NS(I,1,1)/R(I)
+   90     CONTINUE
 
-            ER = 0.0D0
-
-            DO 90 I = 2,IRS1
-              ER(I) = RHO2NS(I,1,1)/R(I)
-   90       CONTINUE
-
-            VM = 0.0d0
-            CALL SIMP3(ER,VM,1,IRS1,DRDI)
-
-            ER = 0.0d0
-            ER(1:IRS1) = RHO2NS(1:IRS1,1,1) * RFPI
-            charge_in_sphere = 0.0d0
-            CALL SIMP3(ER,charge_in_sphere,1,IRS1,DRDI)
-
-C            VMAD = VONS(IRS1,1,1)/RFPI +
-C     +             2.0D0 * (Z - charge_in_sphere)/R(IRS1)
-            VMAD = VONS(IRS1,1,1)/RFPI -
-     &             2.0D0 * charge_in_sphere/R(IRS1)
-
-            VM = 2.0D0*RFPI*VM + VMAD
-            write(*, '(3(e23.17, X))') R(IRS1), VMAD, VM
-          enddo
-
-          write(*,*) "-------------------"
+          CALL SIMP3(ER,VM,1,IRS1,DRDI)
+          VM = 2.0D0*RFPI*VM + VMAD
 
         END IF
 
       RETURN
 
  9000 FORMAT (10x,'full generalized madelung pot. for atom',1x,i3,1x,
-     +       ': ',1p,e23.17)
+     +       ': ',1p,d14.6)
  9010 FORMAT (10x,'     generalized madelung pot. for atom',1x,i3,1x,
-     +       ': ',1p,e23.17)
+     +       ': ',1p,d14.6)
       END
