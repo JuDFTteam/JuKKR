@@ -20,6 +20,7 @@ module NearField_com_mod
     double precision, allocatable :: charge_moments(:)
     double precision, allocatable :: v_intra(:, :)
     double precision, allocatable :: radial_points(:)
+    integer :: muffin_tin_index !< apply correction only starting at 'muffin_tin_index'
     integer, allocatable :: near_cell_indices(:)
     !> vectors pointing from near cell center to local cell
     double precision, allocatable :: near_cell_dist_vec(:,:)
@@ -130,7 +131,8 @@ module NearField_com_mod
 
         call  add_potential_correction(nf_correction(ilocal)%delta_potential, intra_pot, &
                                        local_cells(ilocal)%radial_points, &
-                                       local_cells(ilocal)%near_cell_dist_vec(:,icell), gaunt)
+                                       local_cells(ilocal)%near_cell_dist_vec(:,icell), gaunt, &
+                                       local_cells(ilocal)%muffin_tin_index)
         
         call intra_pot%destroy()
       end do
@@ -155,13 +157,16 @@ module NearField_com_mod
   end subroutine
   
   !> Set delta_potential to 0.0d0 before first call!
-  subroutine add_potential_correction(delta_potential, intra_pot, radial_points, dist_vec, gaunt)
+  !>
+  !> Apply correction from 'muffin_tin_index' + 1 to size(radial_points)
+  subroutine add_potential_correction(delta_potential, intra_pot, radial_points, dist_vec, gaunt, muffin_tin_index)
     implicit none
     double precision, intent(inout) :: delta_potential(:,:)
     type(IntracellPotential), intent(inout) :: intra_pot
     double precision, intent(in) :: radial_points(:)
     double precision, intent(in) :: dist_vec(3)
     type(MadelungClebschData), intent(in) :: gaunt
+    integer, intent(in) :: muffin_tin_index
     
     double precision, allocatable :: coeffs(:)
     integer :: ii, lm, L, M
@@ -170,13 +175,11 @@ module NearField_com_mod
     
     call calc_wrong_contribution_coeff(coeffs, dist_vec, intra_pot%charge_moments, gaunt)
     
-    ! TODO: calc will fail for r=0!
-    
     ! substract wrong potential
     L = 0
     M = 0
     do lm = 1, size(coeffs)
-      do ii = 1, size(radial_points)
+      do ii = muffin_tin_index+1, size(radial_points)
         delta_potential(ii, lm) = delta_potential(ii, lm) - coeffs(lm) * (-radial_points(ii))**L
       end do
       M = M + 1
@@ -187,7 +190,7 @@ module NearField_com_mod
     end do
     
     ! add correct contribution
-    do ii = 1, size(radial_points)
+    do ii = muffin_tin_index+1, size(radial_points)
       call calc_near_field(coeffs, radial_points(ii), dist_vec, intra_pot)
       delta_potential(ii, :) = delta_potential(ii, :) + coeffs
     end do
@@ -195,18 +198,17 @@ module NearField_com_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  subroutine createLocalCellInfo(self, irmd, lmpotd)
+  subroutine createLocalCellInfo(self, irmd, lmpotd, muffin_tin_index)
     implicit none
     class (LocalCellInfo), intent(inout) :: self
     integer, intent(in) :: irmd
     integer, intent(in) :: lmpotd
-    !integer, intent(in) :: num_near_cells
+    integer, intent(in) :: muffin_tin_index
 
     allocate(self%charge_moments(lmpotd))
     allocate(self%v_intra(irmd, lmpotd))
     allocate(self%radial_points(irmd))
-    !allocate(self%near_cell_indices(num_near_cells))
-    !allocate(self%near_cell_dist_vec(3,num_near_cells))
+    self%muffin_tin_index = muffin_tin_index
 
   end subroutine
 

@@ -53,7 +53,7 @@ module NearField_calc_mod
 
       call nf_correction(ilocal)%create(mesh%irmd, atomdata%potential%lmpot)
 
-      call local_cell(ilocal)%create(mesh%irmd, atomdata%potential%lmpot)
+      call local_cell(ilocal)%create(mesh%irmd, atomdata%potential%lmpot, mesh%imt)
 
       local_cell(ilocal)%charge_moments = densities%cmom + densities%cminst
       local_cell(ilocal)%v_intra = atomdata%potential%vons(:,:,1)
@@ -94,6 +94,7 @@ module NearField_calc_mod
   !> Criterion for near cells: distance < 2*(Radius bounding sphere)
   !> NOTE: This is only approximately valid - but should be enough for
   !> realistic lattice structures
+  !> Note: O(N**2) scaling!
   subroutine find_near_cells(near_inds, dist_vecs, rbasis, bravais, &
                              center_ind, radius_bounding)
     implicit none
