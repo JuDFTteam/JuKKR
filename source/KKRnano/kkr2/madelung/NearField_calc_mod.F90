@@ -52,7 +52,9 @@ module NearField_calc_mod
 
       call nf_correction(ilocal)%create(mesh%irmd, atomdata%potential%lmpot)
 
-      call local_cell(ilocal)%create(mesh%irmd, atomdata%potential%lmpot, mesh%imt)
+      ! setup information on local cells
+      ! calculate near-field corrections for each radial point
+      call local_cell(ilocal)%create(mesh%irmd, atomdata%potential%lmpot, 1)
 
       local_cell(ilocal)%charge_moments = densities%cmom + densities%cminst
       local_cell(ilocal)%v_intra = atomdata%potential%vons(:,:,1)
