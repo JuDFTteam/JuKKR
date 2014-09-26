@@ -430,6 +430,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   integer :: ilocal
   integer :: num_local_atoms
 
+  double complex, allocatable :: prefactors(:)  ! for Morgan charge test only
+
   num_local_atoms = getNumLocalAtoms(calc_data)
 
   shgaunts     => getShapeGaunts(calc_data)
@@ -566,8 +568,11 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 !=============== DEBUG: Morgan charge distribution test =======================
     if (params%DEBUG_morgan_electrostatics == 1) then
       if (isMasterRank(my_mpi)) call print_morgan_message()
-      !call overwrite_densities_morgan_fcc(densities%RHO2NS, mesh%R, 2*dims%LMAXD)
-      call overwrite_densities_gen_morgan_cubic(densities%RHO2NS, mesh%R, 2*dims%LMAXD, arrays%rbasis, arrays%rbasis(:,I1))
+      allocate(prefactors(size(arrays%rbasis,2)))
+      call read_morgan_prefactors(prefactors)
+      call overwrite_densities_gen_morgan(densities%RHO2NS, mesh%R, 2*dims%LMAXD, arrays%rbasis, arrays%rbasis(:,I1), &
+                                          arrays%bravais, prefactors)
+      deallocate(prefactors)
       CHRGNT = 0.0d0  ! don't do the Fermi energy correction
     endif
 !==============================================================================
@@ -679,6 +684,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   logical :: calc_force
   double precision :: force_flmc(-1:1)
 
+  double complex, allocatable :: prefactors(:) ! for Morgan charge test only
+
   num_local_atoms = getNumLocalAtoms(calc_data)
 
   shgaunts     => getShapeGaunts(calc_data)
@@ -738,9 +745,12 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       atomdata  => getAtomData(calc_data, 1)
       mesh => atomdata%mesh_ptr
       I1 = getAtomIndexOfLocal(calc_data, 1)
-      call write_morgan_potential_exp(atomdata%potential)
-      call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R)
-      call write_gen_morgan_potential_dir_analytical(mesh%R, arrays%rbasis, arrays%rbasis(:,I1))
+      allocate(prefactors(size(arrays%rbasis, 2)))
+      call read_morgan_prefactors(prefactors)
+      call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R, (/ 0.5d0, 0.0d0, 0.0d0 /))
+      call write_gen_morgan_potential_dir_analytical(mesh%R, arrays%rbasis, arrays%rbasis(:,I1), &
+                                                     arrays%bravais, prefactors, (/ 0.5d0, 0.0d0, 0.0d0 /))
+      deallocate(prefactors)
     endif
 !==============================================================================
 
@@ -1216,34 +1226,6 @@ end subroutine
 !=============== DEBUG: Morgan charge distribution test =======================
 
   !----------------------------------------------------------------------------
-  !> Stores Morgan test charge distribution into rho2ns_density.
-  subroutine overwrite_densities_morgan_fcc(rho2ns_density, mesh_points, lpot)
-    use debug_morgan_mod, only: calc_morgan_rho_expansion, reciprocal_fcc
-
-    double precision, intent(inout) :: rho2ns_density(:,:,:)
-    double precision, intent(in) :: mesh_points(:)
-    integer, intent(in) :: lpot
-
-    double precision :: reciprocals(3,8)
-
-    integer :: ii
-
-    call reciprocal_fcc(reciprocals)
-
-    do ii = 1, size(mesh_points)
-      call calc_morgan_rho_expansion(rho2ns_density(ii, :, 1), reciprocals, mesh_points(ii), lpot)
-    enddo
-
-    ! multiply with r**2 (mesh_points = r)
-    do ii = 1, size(rho2ns_density, 2)
-      rho2ns_density(:, ii, 1) = rho2ns_density(:, ii, 1) * mesh_points * mesh_points
-    enddo
-
-    if (size(rho2ns_density, 3) > 1) rho2ns_density(:, :, 2:) = 0.0d0
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
   !> Print warning message.
   subroutine print_morgan_message()
     write(*,*) "==============================================================="
@@ -1254,39 +1236,21 @@ end subroutine
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Write results of potential calculation to a file
-  subroutine write_morgan_potential_exp(potential)
-    use PotentialData_mod
-    use debug_morgan_mod
-    type (PotentialData), intent(in) :: potential
-
-    integer, parameter :: UNIT = 99
-    character(len=:), allocatable :: str
-
-    call repr_PotentialData(potential, str)
-
-    open(UNIT, form='formatted', file='morgan_potential_exp.txt')
-      write(UNIT, '(A)') str
-    close(UNIT)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  !> Write results of potential in 100 direction to a file.
-  subroutine write_morgan_potential_dir(vons, mesh_points)
+  !> Write results of potential in direction 'dir' to a file.
+  subroutine write_morgan_potential_dir(vons, mesh_points, dir)
     use debug_morgan_mod
     double precision, intent(in) :: vons(:,:)
     double precision, intent(in) :: mesh_points(:)
-
+    double precision, intent(in) :: dir(3)
     integer, parameter :: UNIT = 99
 
-    double precision :: dir(3) = (/ 0.5d0, 0.0d0, 0.0d0 /)
+    !
     double precision :: vec(3), norm_dir(3), val
     integer :: ii
 
     norm_dir = dir / norm2(dir)
 
-    open(UNIT, form='formatted', file='morgan_potential_100.txt')
+    open(UNIT, form='formatted', file='morgan_potential_dir.txt')
 
     do ii = 1, size(mesh_points)
       vec = norm_dir * mesh_points(ii)
@@ -1300,44 +1264,11 @@ end subroutine
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Write analytical values of potential in 100 direction to a file.
-  subroutine write_morgan_potential_dir_analytical(vons, mesh_points)
-    use debug_morgan_mod
-    double precision, intent(in) :: vons(:,:)
-    double precision, intent(in) :: mesh_points(:)
-
-    integer, parameter :: UNIT = 99
-
-    double precision :: dir(3) = (/ 0.5d0, 0.0d0, 0.0d0 /)
-    double precision :: vec(3), norm_dir(3), val
-    integer :: ii
-    double precision :: reciprocals(3,8)
-
-    norm_dir = dir / norm2(dir)
-
-    ! also write the analytical solution
-    call reciprocal_fcc(reciprocals)
-
-    open(UNIT, form='formatted', file='morgan_potential_100_analytical.txt')
-
-    do ii = 1, size(mesh_points)
-      vec = norm_dir * mesh_points(ii)
-      val = eval_morgan_potential(reciprocals, vec)
-      write(UNIT, *) mesh_points(ii), val
-    enddo
-
-    close(UNIT)
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
   !> Stores generalised Morgan test charge distribution into rho2ns_density.
   !>
   !> One needs to use a simple cubic Bravais lattice with unit size.
   !> One can specify basis atoms.
-  !> prefactors are chosen as: c_1 = 1, c_2 = 2, c_3 = 2, c_4 = -1
-  !> all other prefactors are c_i = 1
-  subroutine overwrite_densities_gen_morgan_cubic(rho2ns_density, mesh_points, lpot, rbasis, center)
+  subroutine overwrite_densities_gen_morgan(rho2ns_density, mesh_points, lpot, rbasis, center, bravais, prefactors)
     use debug_morgan_mod
 
     double precision, intent(inout) :: rho2ns_density(:,:,:)
@@ -1345,28 +1276,19 @@ end subroutine
     integer, intent(in) :: lpot
     double precision, intent(in) :: rbasis(:,:)
     double precision, intent(in) :: center(3)
+    double precision, intent(in) :: bravais(3,3)
+    double complex, intent(in)   :: prefactors(:)
 
-    double precision :: reciprocals(3,6)
-    double complex, allocatable :: prefactors(:)
+    double precision, allocatable :: reciprocals(:,:)
+    double precision :: rec_basis(3,3)
 
     integer :: ii
-    double complex, parameter :: CONE = (1.0d0, 0.0d0)
     double complex, allocatable :: coeffs(:)
 
     allocate(coeffs(size(rho2ns_density, 2)))
-    allocate(prefactors(size(rbasis, 2)))
 
-    prefactors = CONE
-
-    ! use arbitrary prefactors: c_1 = 1, c_2 = 2, c_3 = 2, c_4 = -1
-    ! (if all prefactors would be the same, rho=0 for fcc basis)
-    CHECKASSERT(size(prefactors) >= 4)
-    prefactors(1) = CONE
-    prefactors(2) = 2*CONE
-    prefactors(3) = 2*CONE
-    prefactors(4) = -CONE
-
-    call reciprocal_cubic(reciprocals)
+    call calc_reciprocal_basis(rec_basis, bravais)
+    call calc_reciprocal_first_shell(reciprocals, rec_basis) ! reciprocals gets allocated here
 
     do ii = 1, size(mesh_points)
       call calc_gen_morgan_rho_expansion(coeffs, reciprocals, prefactors, rbasis, center, mesh_points(ii), lpot)
@@ -1382,40 +1304,64 @@ end subroutine
 
     if (size(rho2ns_density, 3) > 1) rho2ns_density(:, :, 2:) = 0.0d0
 
-    deallocate(prefactors)
+    deallocate(reciprocals)
     deallocate(coeffs)
 
   end subroutine
 
   !----------------------------------------------------------------------------
-  !> Write analytical values of generalised morgan potential in 100 direction to a file.
-  subroutine write_gen_morgan_potential_dir_analytical(mesh_points, rbasis, center)
+  !> Read file 'morgan_prefactors.dat'.
+  !>
+  !> If the file does not exist, prefactors are set to 1.0
+  !> for each basis atom there is a line with 1 complex prefactor
+  subroutine read_morgan_prefactors(prefactors)
+    double complex, intent(out) :: prefactors(:)
+
+    double precision :: re, im
+    integer :: ii
+    logical :: flag
+
+    flag = .true.
+    inquire(file = 'morgan_prefactors.dat', exist = flag)
+
+    if (.not. flag) then
+      prefactors = dcmplx(1.0d0, 0.0d0)
+      return
+    endif
+
+    open(99, form='formatted', file='morgan_prefactors.dat')
+      do ii = 1, size(prefactors)
+        read(99, *) re, im
+        prefactors(ii) = dcmplx(re, im)
+      enddo
+    close(99)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Write analytical values of generalised morgan potential in direction 'dir' to a file.
+  subroutine write_gen_morgan_potential_dir_analytical(mesh_points, rbasis, center, bravais, prefactors, dir)
     use debug_morgan_mod
     double precision, intent(in) :: mesh_points(:)
     double precision, intent(in) :: rbasis(:,:)
     double precision, intent(in) :: center(3)
+    double precision, intent(in) :: bravais(3, 3)
+    double complex, intent(in) ::   prefactors(:)
+    double precision, intent(in) :: dir(3)
 
     integer, parameter :: UNIT = 99
 
-    double precision :: dir(3) = (/ 0.5d0, 0.0d0, 0.0d0 /)
     double precision :: vec(3), norm_dir(3), val
     integer :: ii
-    double precision :: reciprocals(3,6)
+    double precision, allocatable :: reciprocals(:, :)
+    double precision :: rec_basis(3, 3)
 
-    double complex prefactors(4)
-    double complex, parameter :: CONE = (1.0d0, 0.0d0)
-
-    prefactors(1) = CONE
-    prefactors(2) = 2*CONE
-    prefactors(3) = 2*CONE
-    prefactors(4) = -CONE
+    call calc_reciprocal_basis(rec_basis, bravais)
+    call calc_reciprocal_first_shell(reciprocals, rec_basis) ! reciprocals gets allocated here
 
     norm_dir = dir / norm2(dir)
 
     ! also write the analytical solution
-    call reciprocal_cubic(reciprocals)
-
-    open(UNIT, form='formatted', file='gen_morgan_potential_100_analytical.txt')
+    open(UNIT, form='formatted', file='gen_morgan_potential_dir_analytical.txt')
 
     do ii = 1, size(mesh_points)
       vec = norm_dir * mesh_points(ii)
