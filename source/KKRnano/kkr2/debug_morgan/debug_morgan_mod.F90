@@ -305,5 +305,74 @@ module debug_morgan_mod
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Calculates cross product.
+  function cross_product(vec_a, vec_b)
+    double precision :: cross_product(3)
+    double precision, intent(in) :: vec_a(3)
+    double precision, intent(in) :: vec_b(3)
+
+    cross_product(1) = vec_a(2) * vec_b(3) - vec_a(3) * vec_b(2)
+    cross_product(2) = vec_a(3) * vec_b(1) - vec_a(1) * vec_b(3)
+    cross_product(3) = vec_a(1) * vec_b(2) - vec_a(2) * vec_b(1)
+  end function
+
+  !----------------------------------------------------------------------------
+  !> Calculate basis vectors of reciprocal lattice and volume of unit cell.
+  subroutine calc_reciprocal_basis(rec_basis, volume, bravais)
+    double precision, intent(out) :: rec_basis(3,3)
+    double precision, intent(out) :: volume
+    double precision, intent(in)  :: bravais(3,3)
+
+    volume = dot_product(bravais(:,1), cross_product(bravais(:,2), bravais(:,3)))
+
+    rec_basis(:,1) = 2*PI/volume * cross_product(bravais(:,2), bravais(:,3))
+    rec_basis(:,2) = 2*PI/volume * cross_product(bravais(:,3), bravais(:,1))
+    rec_basis(:,3) = 2*PI/volume * cross_product(bravais(:,1), bravais(:,2))
+
+  end subroutine
+
+  !---------------------------------------------------------------------------
+  !> Get first shell of reciprocal lattice vectors.
+  subroutine calc_reciprocal_first_shell(reciprocals, rec_basis)
+    double precision, allocatable, intent(out) :: reciprocals(:,:)
+    double precision, intent(in) :: rec_basis(3,3)
+
+    integer :: na, nb, nc
+    double precision :: length, norm, vec(3)
+    double precision, parameter :: TOL = 1.d-12
+    integer counter
+
+    length = norm2(rec_basis(:,1)) ! all vectors in 1st shell have this length
+
+    ! determine first shell rec. vectors - in an inefficient brute force way
+    ! count vectors in first shell
+    counter = 0
+    do na = -1, 1
+      do nb = -1, 1
+        do nc = -1, 1
+          norm = norm2(na * rec_basis(:,1) + nb * rec_basis(:,2) + nc * rec_basis(:,3))
+          if (abs(norm - length) < TOL) counter = counter + 1
+        enddo
+      enddo
+    enddo
+
+    allocate(reciprocals(3,counter))
+
+    counter = 0
+    do na = -1, 1
+      do nb = -1, 1
+        do nc = -1, 1
+          vec = na * rec_basis(:,1) + nb * rec_basis(:,2) + nc * rec_basis(:,3)
+          norm = norm2(vec)
+          if (abs(norm - length) < TOL) then
+            counter = counter + 1
+            reciprocals(:,counter) = vec
+          endif
+        enddo
+      enddo
+    enddo
+  end subroutine
+
 end module
 
