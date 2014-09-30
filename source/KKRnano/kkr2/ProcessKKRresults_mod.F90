@@ -685,6 +685,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   double precision :: force_flmc(-1:1)
 
   double complex, allocatable :: prefactors(:) ! for Morgan charge test only
+  double precision :: direction(3)             ! for Morgan charge test only
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -747,9 +748,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
       I1 = getAtomIndexOfLocal(calc_data, 1)
       allocate(prefactors(size(arrays%rbasis, 2)))
       call read_morgan_prefactors(prefactors)
-      call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R, (/ 0.5d0, 0.0d0, 0.0d0 /))
+      direction = read_direction()
+      call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R, direction)
       call write_gen_morgan_potential_dir_analytical(mesh%R, arrays%rbasis, arrays%rbasis(:,I1), &
-                                                     arrays%bravais, prefactors, (/ 0.5d0, 0.0d0, 0.0d0 /))
+                                                     arrays%bravais, prefactors, direction)
       deallocate(prefactors)
     endif
 !==============================================================================
@@ -1336,6 +1338,18 @@ end subroutine
       enddo
     close(99)
   end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read file a direction vector from file 'directions.dat'.
+  !>
+  !> If the file does not exist, prefactors are set to 1.0
+  function read_direction()
+    double precision :: read_direction(3)
+    integer :: ii
+    open(99, form='formatted', file='directions.dat')
+      read(99, *) (read_direction(ii), ii = 1, 3)
+    close(99)
+  end function
 
   !----------------------------------------------------------------------------
   !> Write analytical values of generalised morgan potential in direction 'dir' to a file.
