@@ -206,7 +206,9 @@ module debug_morgan_mod
     double precision, parameter :: TOL = 1.d-12
     integer counter
 
-    length = norm2(rec_basis(:,1)) ! all vectors in 1st shell have this length
+    length = min(norm2(rec_basis(:,1)), &
+                 norm2(rec_basis(:,2)), &
+                 norm2(rec_basis(:,3)))    ! all vectors in 1st shell have this length
 
     ! determine first shell rec. vectors - in an inefficient brute force way
     ! count vectors in first shell
