@@ -685,7 +685,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   logical :: calc_force
   double precision :: force_flmc(-1:1)
 
-  double precision :: new_total_energy
+  double precision :: new_total_energy, energy_temp
+  double precision, allocatable :: vons_temp(:,:,:)
 
   double complex, allocatable :: prefactors(:) ! for Morgan charge test only
   double precision :: direction(3)             ! for Morgan charge test only
@@ -699,6 +700,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   energies     => getEnergies(calc_data, 1)
 
   I1 = 0
+
+  new_total_energy = 0.0d0
+
+  allocate(vons_temp, source = atomdata%potential%vons)
 
 ! =====================================================================
 ! ============================= ENERGY and FORCES =====================
@@ -814,39 +819,49 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
                        shgaunts, atomdata)
 
-    new_total_energy = 0.0d0
     ! coulomb energy and part of double counting
-    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
-                                          atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+    energy_temp = - energy_electrostatic_wrapper(atomdata%potential%vons, &
+                                                 atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+
+    new_total_energy = new_total_energy + energy_temp
+    write(*,*) "Coulomb :", energy_temp
 
     ! madelung energy
-    new_total_energy = new_total_energy - madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
-                       mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
+    energy_temp = madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
+                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
 
-    write(*,*) energies%EPOTIN, sum(energies%ECOU), new_total_energy
+    write(*,*) "Madelung :", energy_temp
+    new_total_energy = new_total_energy + energy_temp
+
+    ! core energies
+    new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
+
+    ! single particle energies (band)
+    write(*,*) sum(sum(energies%ESPV, 2))
+    new_total_energy = new_total_energy + sum(sum(energies%ESPV, 2))
+
 
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
   ! =====================================================================
     ! TODO: OpenMP critical !!! VXCDRV is most likely not threadsafe!
-    ! output: VONS (changed), EXC (exchange energy) (l-resolved)
+    ! output: vons_temp, EXC (exchange energy) (l-resolved)
 
-    !!!$omp critical
-    call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, &
+    vons_temp = 0.0d0
+    call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, &
                         shgaunts, atomdata)
-    !!!$omp end critical
 
-    new_total_energy = 0.0d0
-    ! coulomb energy and part of double counting
-    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
-                                          atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+    atomdata%potential%vons = atomdata%potential%vons + vons_temp
 
-    ! madelung energy
-    !new_total_energy = new_total_energy - madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
-    !                   mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
+    ! part of double counting energy that stems from V_XC
+    energy_temp = - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
+                                          0.0d0, densities%RHO2NS, shgaunts, atomdata)
 
-    write(*,*) energies%EPOTIN, new_total_energy
+    write(*,*) "E_VXC = ", energy_temp
+    new_total_energy = new_total_energy + energy_temp
 
+    ! XC energy
+    new_total_energy = new_total_energy + sum(energies%EXC)
 
   ! =====================================================================
 
@@ -932,6 +947,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! LDAU
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
+
+  write (*,*) "New total energy (experimental): ", new_total_energy
+
+  deallocate(vons_temp)
 
 end subroutine
 

@@ -229,9 +229,7 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
     end do
   end do
 
-  do L = 0,LMAXD1
-    ESPV(L,1) = 0.0D0
-  end do
+  ESPV = 0.0D0
 
   do IE = 1,IELAST
 

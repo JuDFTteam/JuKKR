@@ -41,13 +41,13 @@ c
 c---> loop over reference atoms
 c
         LCOREMAX = 0
-        DO 30 ISPIN = 1,NSPIN
+
 c
 c---> initialize espc
 c
-          DO 10 L = 0,3
-            ESPC(L,ISPIN) = 0.0D0
-   10     CONTINUE
+        ESPC = 0.0D0
+
+        DO 30 ISPIN = 1,NSPIN
 c
 c---> loop over all core states
 c

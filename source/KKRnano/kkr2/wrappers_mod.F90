@@ -399,17 +399,18 @@ subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
 end subroutine
 
 !------------------------------------------------------------------------------
-!> Add exchange-correlation potential and calculate exchange correlation energy.
-subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
+!> Add exchange-correlation to 'vons_potential' and calculate exchange correlation energy.
+subroutine VXCDRV_wrapper(vons_potential, EXC, KXC, RHO2NS, shgaunts, atomdata)
   use BasisAtom_mod
   use RadialMeshData_mod
   use CellData_mod
   use ShapeGauntCoefficients_mod
   implicit none
+  double precision, intent(inout) :: vons_potential(:,:,:)
   double precision, intent(inout) :: EXC(:)
   integer, intent(in)             :: KXC
-  double precision, intent(inout) :: RHO2NS(:,:,:)  ! inout?
-  type (BasisAtom), intent(inout) :: atomdata
+  double precision, intent(in) :: RHO2NS(:,:,:)
+  type (BasisAtom), intent(in) :: atomdata
   type (ShapeGauntCoefficients), intent(in) :: shgaunts
 
   !-------- locals
@@ -428,9 +429,10 @@ subroutine VXCDRV_wrapper(EXC,KXC,RHO2NS, shgaunts, atomdata)
   CHECKASSERT( associated(atomdata%mesh_ptr) )
   CHECKASSERT( associated(atomdata%cell_ptr) )
   CHECKASSERT( size(EXC) == LPOT+1)
+  CHECKASSERT( size(vons_potential, 2) == (lpot + 1)**2 )
 
   call VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIND,RHO2NS, &
-            atomdata%potential%VONS,mesh%R,mesh%DRDI,mesh%A, &
+            vons_potential,mesh%R,mesh%DRDI,mesh%A, &
             mesh%IRWS,mesh%IRCUT,mesh%IPAN,shgaunts%GSH,shgaunts%ILM,shgaunts%IMAXSH,cell%shdata%IFUNM, &
             cell%shdata%THETA,cell%shdata%LMSP, &
             mesh%irmd, cell%shdata%irid, cell%shdata%nfund, shgaunts%ngshd, mesh%ipand)
