@@ -655,6 +655,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   use RadialMeshData_mod
 
   use NearField_calc_mod
+  use total_energy_mod
 
   implicit none
 
@@ -683,6 +684,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   integer :: num_local_atoms
   logical :: calc_force
   double precision :: force_flmc(-1:1)
+
+  double precision :: new_total_energy
 
   double complex, allocatable :: prefactors(:) ! for Morgan charge test only
   double precision :: direction(3)             ! for Morgan charge test only
@@ -798,20 +801,29 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
     lcoremax = 0
-    if (params%KTE==1) then
-      ! These energies have to be calculated BEFORE the XC-potential is added!
-      ! calculate total energy and individual contributions if requested
-      ! core electron contribution
-      call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
 
-      ! output: EPOTIN
-      call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
+    ! These energies have to be calculated BEFORE the XC-potential is added!
+    ! calculate total energy and individual contributions if requested
+    ! core electron contribution
+    call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
 
-      ! output: ECOU - l resolved Coulomb energy
-      call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
-                         shgaunts, atomdata)
+    ! output: EPOTIN
+    call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
 
-    end if
+    ! output: ECOU - l resolved Coulomb energy
+    call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
+                       shgaunts, atomdata)
+
+    new_total_energy = 0.0d0
+    ! coulomb energy and part of double counting
+    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
+                                          atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+
+    ! madelung energy
+    new_total_energy = new_total_energy - madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
+                       mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
+
+    write(*,*) energies%EPOTIN, sum(energies%ECOU), new_total_energy
 
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
@@ -823,6 +835,18 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call VXCDRV_wrapper(energies%EXC, params%KXC, densities%RHO2NS, &
                         shgaunts, atomdata)
     !!!$omp end critical
+
+    new_total_energy = 0.0d0
+    ! coulomb energy and part of double counting
+    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
+                                          atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+
+    ! madelung energy
+    !new_total_energy = new_total_energy - madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
+    !                   mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
+
+    write(*,*) energies%EPOTIN, new_total_energy
+
 
   ! =====================================================================
 
