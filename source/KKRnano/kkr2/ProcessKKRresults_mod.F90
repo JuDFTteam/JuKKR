@@ -820,24 +820,17 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                        shgaunts, atomdata)
 
     ! coulomb energy and part of double counting
-    energy_temp = - energy_electrostatic_wrapper(atomdata%potential%vons, &
+    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
                                                  atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
 
-    new_total_energy = new_total_energy + energy_temp
-    write(*,*) "Coulomb :", energy_temp
-
     ! madelung energy
-    energy_temp = madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
+    new_total_energy = new_total_energy + madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
                                   mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
-
-    write(*,*) "Madelung :", energy_temp
-    new_total_energy = new_total_energy + energy_temp
 
     ! core energies
     new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
 
     ! single particle energies (band)
-    write(*,*) sum(sum(energies%ESPV, 2))
     new_total_energy = new_total_energy + sum(sum(energies%ESPV, 2))
 
 
@@ -854,12 +847,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     atomdata%potential%vons = atomdata%potential%vons + vons_temp
 
     ! part of double counting energy that stems from V_XC
-    energy_temp = - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
+    new_total_energy = new_total_energy - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
                                           0.0d0, densities%RHO2NS, shgaunts, atomdata)
-
-    write(*,*) "E_VXC = ", energy_temp
-    new_total_energy = new_total_energy + energy_temp
-
     ! XC energy
     new_total_energy = new_total_energy + sum(energies%EXC)
 
@@ -948,7 +937,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
-  write (*,*) "New total energy (experimental): ", new_total_energy
+  write (*,*) "New total energy (experimental, no MT shift, no LDAU): ", new_total_energy
 
   deallocate(vons_temp)
 
