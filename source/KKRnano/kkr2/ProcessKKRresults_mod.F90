@@ -707,10 +707,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   allocate(vons_temp, source = atomdata%potential%vons)
 
-! =====================================================================
-! ============================= ENERGY and FORCES =====================
-! =====================================================================
-
   calc_force = (params%KFORCE == 1) ! calculate force at each iteration
 
 !------------------------------------------------------------------------------
@@ -805,58 +801,19 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
-
-    ! These energies have to be calculated BEFORE the XC-potential is added!
-    ! calculate total energy and individual contributions if requested
-    ! core electron contribution
-    call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
-
-    ! output: EPOTIN
-    call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
-
-    ! output: ECOU - l resolved Coulomb energy
-    call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
-                       shgaunts, atomdata)
-
-    ! coulomb energy and part of double counting
-    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
-                                                 atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
-
-    ! madelung energy
-    new_total_energy = new_total_energy + madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
-                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX))
-
-    ! correction to madelung energy when reference radius is not muffin-tin radius
-    new_total_energy = new_total_energy + madelung_ref_radius_correction(densities%rho2ns(:,1,1), &
-                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), mesh%imt)
-
-    ! core energies
-    new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
-
-    ! single particle energies (band)
-    new_total_energy = new_total_energy + sum(sum(energies%ESPV, 2))
-
-
-  ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-
   ! =====================================================================
     ! TODO: OpenMP critical !!! VXCDRV is most likely not threadsafe!
     ! output: vons_temp, EXC (exchange energy) (l-resolved)
 
-    vons_temp = 0.0d0
+    vons_temp = 0.0d0 ! V_XC stored in temporary, must not add before energy calc.
     call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, &
                         shgaunts, atomdata)
 
+! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    call calculatePotentials_energies()
+! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+
     atomdata%potential%vons = atomdata%potential%vons + vons_temp
-
-    ! part of double counting energy that stems from V_XC
-    new_total_energy = new_total_energy - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
-                                          0.0d0, densities%RHO2NS, shgaunts, atomdata)
-    ! XC energy
-    new_total_energy = new_total_energy + sum(energies%EXC)
-
-  ! =====================================================================
 
   ! Force calculation continues here
 
@@ -891,10 +848,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'before CONVOL.....', &
                getElapsedTime(program_timer),ITER)
-
-! =====================================================================
-! ============================= ENERGY and FORCES =====================
-! =====================================================================
 
   call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC_new, VOL0)
 
@@ -944,6 +897,48 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   write (*,*) "New total energy (experimental, no MT shift, no LDAU): ", new_total_energy
 
   deallocate(vons_temp)
+
+  CONTAINS
+
+  !----------------------------------------------------------------------------
+  !> Inner subroutine: energy calculation.
+  subroutine calculatePotentials_energies()
+    ! These energies have to be calculated BEFORE the XC-potential is added!
+    ! calculate total energy and individual contributions if requested
+    ! core electron contribution
+    call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
+
+    ! output: EPOTIN
+    call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
+
+    ! output: ECOU - l resolved Coulomb energy
+    call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
+                       shgaunts, atomdata)
+
+    ! coulomb energy and part of double counting
+    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
+                                                 atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+
+    ! madelung energy
+    new_total_energy = new_total_energy + madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
+                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX))
+
+    ! correction to madelung energy when reference radius is not muffin-tin radius
+    new_total_energy = new_total_energy + madelung_ref_radius_correction(densities%rho2ns(:,1,1), &
+                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), mesh%imt)
+
+    ! core energies
+    new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
+
+    ! single particle energies (band)
+    new_total_energy = new_total_energy + sum(sum(energies%ESPV, 2))
+
+    ! part of double counting energy that stems from V_XC
+    new_total_energy = new_total_energy - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
+                                          0.0d0, densities%RHO2NS, shgaunts, atomdata)
+    ! XC energy
+    new_total_energy = new_total_energy + sum(energies%EXC)
+  end subroutine
 
 end subroutine
 
