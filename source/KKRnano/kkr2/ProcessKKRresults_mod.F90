@@ -905,7 +905,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     energies    => getEnergies(calc_data, ilocal)
 !------------------------------------------------------------------------------
 
-! -->   shift potential to muffin tin zero and
+! -->   shift potential to muffin tin zero (average of interstitial potentials) and
 !       convolute potential with shape function for next iteration
 
 ! -->   shift potential by VBC and multiply with shape functions - output: VONS

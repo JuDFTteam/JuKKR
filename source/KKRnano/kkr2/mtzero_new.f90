@@ -8,7 +8,7 @@ irmd, irid, nfund, ipand)
   implicit none
   ! ************************************************************************
   !
-  !     determine muffin tin zero and shift potential to muffin tin zero
+  !     determine muffin tin zero - average of potential in interstitial
   !
   !     for spin polarized calculations muffin tin zero is related to
   !         the average of the 2 spins
