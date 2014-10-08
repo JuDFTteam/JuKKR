@@ -232,12 +232,49 @@ end function
 !------------------------------------------------------------------------------
 !> Calculates generalised Madelung energy except a contribution that cancels with
 !> electrostatic and double-counting terms
-!
+!>
+!> Since the nucleus is point shaped, only the l=0 components of the potential and
+!> density are required.
+!>
+!> An electrostatic Dirichlet problem is solved by specifying the potential on a
+!> surface of a sphere with a radius determined by 'ind_reference' <= ind_muffin_tin
 function madelung_energy(vons_spherical, rho2ns_spherical, &
-                         r, drdi, irmd, Z_nuclear, ind_reference, ind_muffin_tin) result(e_madelung)
+                         r, drdi, irmd, Z_nuclear, ind_reference) result(e_madelung)
 
     double precision :: e_madelung
     double precision, intent(in)  :: vons_spherical(irmd)
+    double precision, intent(in)  :: rho2ns_spherical(irmd)
+    double precision, intent(in)  :: r(irmd)
+    double precision, intent(in)  :: drdi(irmd)
+    integer, intent(in) :: irmd
+    double precision, intent(in)  :: Z_nuclear
+    integer, intent(in) :: ind_reference
+
+    double precision :: ER(irmd)
+    double precision :: rfpi
+    double precision :: VMAD, charge_in_sphere
+
+    rfpi = sqrt(16.0d0 * atan(1.0d0))
+
+    ER = 0.0d0
+    ER(1:ind_reference) = RHO2NS_spherical(1:ind_reference) * RFPI
+
+    charge_in_sphere = 0.0d0
+    CALL SIMP3(ER,charge_in_sphere,1,ind_reference,DRDI)
+
+    VMAD = VONS_spherical(ind_reference)/RFPI - 2.0D0 * charge_in_sphere/R(ind_reference)
+
+    e_madelung = -Z_nuclear/2.0d0 * VMAD
+
+end function
+
+!------------------------------------------------------------------------------
+!> Correction of the madelung energy that occurs when the reference radius is not equal to
+!> the muffin-tin radius and this term does not cancel anymore.
+function madelung_ref_radius_correction(rho2ns_spherical, &
+                         r, drdi, irmd, Z_nuclear, ind_reference, ind_muffin_tin) result(e_correction)
+
+    double precision :: e_correction
     double precision, intent(in)  :: rho2ns_spherical(irmd)
     double precision, intent(in)  :: r(irmd)
     double precision, intent(in)  :: drdi(irmd)
@@ -248,13 +285,12 @@ function madelung_energy(vons_spherical, rho2ns_spherical, &
 
     double precision :: ER(irmd)
     double precision :: rfpi
-    double precision :: VM, VMAD, charge_in_sphere
+    double precision :: VM
     integer :: ii
 
     rfpi = sqrt(16.0d0 * atan(1.0d0))
 
     ER = 0.0D0
-
     VM = 0.0d0
 
     if (ind_reference /= ind_muffin_tin) then
@@ -265,17 +301,9 @@ function madelung_energy(vons_spherical, rho2ns_spherical, &
       CALL SIMP3(ER,VM,ind_reference,ind_muffin_tin,DRDI)
     endif
 
-    ER = 0.0d0
-    ER(1:ind_reference) = RHO2NS_spherical(1:ind_reference) * RFPI
+    VM = -2.0D0*RFPI*VM
 
-    charge_in_sphere = 0.0d0
-    CALL SIMP3(ER,charge_in_sphere,1,ind_reference,DRDI)
-
-    VMAD = VONS_spherical(ind_reference)/RFPI - 2.0D0 * charge_in_sphere/R(ind_reference)
-
-    VM = 2.0D0*RFPI*VM + VMAD
-
-    e_madelung = -Z_nuclear/2.0d0 * VM
+    e_correction = -Z_nuclear/2.0d0 * VM
 
 end function
 

@@ -10,6 +10,8 @@ module ProcessKKRresults_mod
   private :: calculateDensities
   private :: calculatePotentials
 
+  integer, private, parameter :: MAX_MADELUNG_RADIUS_INDEX = 100
+
 CONTAINS
 
 !------------------------------------------------------------------------------
@@ -788,7 +790,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
       call FORCEH(densities%force_FLM,atomdata%potential%LPOT, &
                   densities%RHO2NS,atomdata%potential%VONS, &
-                  mesh%R,mesh%DRDI,mesh%IMT,atomdata%Z_nuclear,mesh%irmd)
+                  mesh%R,mesh%DRDI, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), atomdata%Z_nuclear,mesh%irmd)
 
       force_FLMC = 0.0d0 ! temporary needed later in forcxc
 
@@ -804,8 +806,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
-
-    lcoremax = 0
 
     ! These energies have to be calculated BEFORE the XC-potential is added!
     ! calculate total energy and individual contributions if requested
@@ -825,7 +825,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
     ! madelung energy
     new_total_energy = new_total_energy + madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
-                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, mesh%imt, mesh%imt)
+                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX))
+
+    ! correction to madelung energy when reference radius is not muffin-tin radius
+    new_total_energy = new_total_energy + madelung_ref_radius_correction(densities%rho2ns(:,1,1), &
+                                  mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), mesh%imt)
 
     ! core energies
     new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
