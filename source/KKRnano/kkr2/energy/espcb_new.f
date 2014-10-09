@@ -1,5 +1,6 @@
-C     Note: LCORE can have values only from 0 to 3
-
+C>    Sums up core state energies taking into account degeneracies.
+C>
+C>     Note: LCORE can have values only from 0 to 3
 C>    @param[out] ESPC core contribution to single particle energies
 C>                l and spin resolved
 c 13.10.95 ***************************************************************
