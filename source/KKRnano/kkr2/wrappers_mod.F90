@@ -359,45 +359,6 @@ subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
 
 end subroutine
 
-!----------------------------------------------------------------------------
-subroutine ECOUB_wrapper(CMOM, ECOU, RHO2NS, shgaunts, atomdata)
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  use CellData_mod
-  use ShapeGauntCoefficients_mod
-  implicit none
-  double precision, intent(inout) :: CMOM(:)
-  double precision, intent(inout) :: ECOU(:)
-  double precision, intent(inout) :: RHO2NS(:,:,:) ! inout?
-  type (BasisAtom), intent(in) :: atomdata
-  type (ShapeGauntCoefficients), intent(in) :: shgaunts
-
-  !-------- locals
-  integer :: nspind
-  type (RadialMeshData), pointer :: mesh
-  type (CellData), pointer       :: cell
-  integer :: KVMAD
-
-  nspind = atomdata%nspin
-
-  mesh => atomdata%mesh_ptr
-  cell => atomdata%cell_ptr
-
-  CHECKASSERT( associated(atomdata%mesh_ptr) )
-  CHECKASSERT( associated(atomdata%cell_ptr) )
-
-  KVMAD = 0
-
-  ! output: ECOU - l resolved Coulomb energy
-  call ECOUB_NEW(CMOM,ECOU,atomdata%potential%LPOT,NSPIND,RHO2NS, &
-  atomdata%potential%VONS,atomdata%Z_nuclear,mesh%R, &
-  mesh%DRDI,KVMAD,mesh%IRCUT,mesh%IPAN,shgaunts%IMAXSH,cell%shdata%IFUNM, &
-  shgaunts%ILM,shgaunts%GSH,cell%shdata%THETA,cell%shdata%LMSP, &
-  mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
-
-
-end subroutine
-
 !------------------------------------------------------------------------------
 !> Add exchange-correlation to 'vons_potential' and calculate exchange correlation energy.
 subroutine VXCDRV_wrapper(vons_potential, EXC, KXC, RHO2NS, shgaunts, atomdata)

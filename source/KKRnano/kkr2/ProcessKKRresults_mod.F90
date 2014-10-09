@@ -10,7 +10,7 @@ module ProcessKKRresults_mod
   private :: calculateDensities
   private :: calculatePotentials
 
-  integer, private, parameter :: MAX_MADELUNG_RADIUS_INDEX = 100
+  integer, private, parameter :: MAX_MADELUNG_RADIUS_INDEX = 101
 
 CONTAINS
 
@@ -905,6 +905,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   subroutine calculatePotentials_energies()
     ! These energies have to be calculated BEFORE the XC-potential is added!
     ! calculate total energy and individual contributions if requested
+
     ! core electron contribution
     call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
 
@@ -912,20 +913,22 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
 
     ! output: ECOU - l resolved Coulomb energy
-    call ECOUB_wrapper(densities%CMOM, energies%ECOU, densities%RHO2NS, &
-                       shgaunts, atomdata)
+    call energy_electrostatic_L_resolved_wrapper(energies%ECOU, atomdata%potential%vons, atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
 
     ! coulomb energy and part of double counting
-    new_total_energy = new_total_energy - energy_electrostatic_wrapper(atomdata%potential%vons, &
-                                                 atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+    new_total_energy = new_total_energy - sum(energies%ECOU)
 
     ! madelung energy
-    new_total_energy = new_total_energy + madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
+    energy_temp = madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
                                   mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX))
 
     ! correction to madelung energy when reference radius is not muffin-tin radius
-    new_total_energy = new_total_energy + madelung_ref_radius_correction(densities%rho2ns(:,1,1), &
+    energy_temp = energy_temp + madelung_ref_radius_correction(densities%rho2ns(:,1,1), &
                                   mesh%r, mesh%drdi, mesh%irmd, atomdata%Z_nuclear, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), mesh%imt)
+
+    energies%ECOU(0) = energies%ECOU(0) + energy_temp
+
+    new_total_energy = new_total_energy + energy_temp
 
     ! core energies
     new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
@@ -938,6 +941,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
                                           0.0d0, densities%RHO2NS, shgaunts, atomdata)
     ! XC energy
     new_total_energy = new_total_energy + sum(energies%EXC)
+
+    ! missing contributions to new_total_energy: muffin-tin shift energy, LDA+U energy
   end subroutine
 
 end subroutine
