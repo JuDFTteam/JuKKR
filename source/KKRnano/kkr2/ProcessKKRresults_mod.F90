@@ -492,6 +492,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     ! output: RHO2NS, R2NEF, DEN, ESPV
     densities%DEN = CZERO
 
+    ! calculate valence charge density and band energies
     call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                         densities%RHO2NS, densities%R2NEF, &
                         densities%DEN, energies%ESPV, kkr%GMATN, &
@@ -856,10 +857,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   end if
 
 !------------------------------------------------------------------------------
-  !$omp parallel do private(ilocal, atomdata, energies)
+  !$omp parallel do private(ilocal, atomdata, energies, densities)
   do ilocal = 1, num_local_atoms
     atomdata     => getAtomData(calc_data, ilocal)
-    energies    => getEnergies(calc_data, ilocal)
+    energies     => getEnergies(calc_data, ilocal)
+    densities    => getDensities(calc_data, ilocal)
 !------------------------------------------------------------------------------
 
 ! -->   shift potential to muffin tin zero (average of interstitial potentials) and
@@ -872,6 +874,9 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 !       is added in 'convol'
     energies%VBC = VBC_new + params%mt_zero_shift
     call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
+
+    ! MT-shift energy for Weinert energy only
+    new_total_energy = new_total_energy - energies%VBC(1) * densities%CATOM(1)
 
 !------------------------------------------------------------------------------
   end do
@@ -894,7 +899,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
-  write (*,*) "New total energy (experimental, no MT shift, no LDAU): ", new_total_energy
+  write (*,*) "Weinert total energy (less stable, no LDAU): ", new_total_energy
 
   deallocate(vons_temp)
 
@@ -905,6 +910,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   subroutine calculatePotentials_energies()
     ! These energies have to be calculated BEFORE the XC-potential is added!
     ! calculate total energy and individual contributions if requested
+
+    ! new_total_energy stores the result of the method described in:
+    ! Weinert, PRB 26, 4571 (1982)., which needs self-consistency to be accurate
+    ! it does not use the input potential (EPOTIN) for the calculation
 
     ! core electron contribution
     call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
