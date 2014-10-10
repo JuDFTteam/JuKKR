@@ -688,7 +688,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   logical :: calc_force
   double precision :: force_flmc(-1:1)
 
-  double precision :: new_total_energy, energy_temp
+  double precision :: new_total_energy(2), energy_temp
   double precision, allocatable :: vons_temp(:,:,:)
 
   double complex, allocatable :: prefactors(:) ! for Morgan charge test only
@@ -876,7 +876,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
 
     ! MT-shift energy for Weinert energy only
-    new_total_energy = new_total_energy - energies%VBC(1) * densities%CATOM(1)
+    new_total_energy(2) = new_total_energy(2) - energies%VBC(1) * densities%CATOM(1)
 
 !------------------------------------------------------------------------------
   end do
@@ -899,7 +899,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
-  write (*,*) "Weinert total energy (less stable, no LDAU): ", new_total_energy
+  write (*,*) "Weinert total energy (less stable, no LDAU): ", new_total_energy(2)
+  write (*,*) "Harris total energy (no LDAU):               ", new_total_energy(1)
 
   deallocate(vons_temp)
 
@@ -911,7 +912,9 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     ! These energies have to be calculated BEFORE the XC-potential is added!
     ! calculate total energy and individual contributions if requested
 
-    ! new_total_energy stores the result of the method described in:
+    ! new_total_energy(1) stores result of total energy calculation using Harris functional
+    !
+    ! new_total_energy(2) stores the result of the method described in:
     ! Weinert, PRB 26, 4571 (1982)., which needs self-consistency to be accurate
     ! it does not use the input potential (EPOTIN) for the calculation
 
@@ -925,7 +928,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call energy_electrostatic_L_resolved_wrapper(energies%ECOU, atomdata%potential%vons, atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
 
     ! coulomb energy and part of double counting
-    new_total_energy = new_total_energy - sum(energies%ECOU)
+    new_total_energy(1) = new_total_energy(1) + sum(energies%ECOU) + energies%EPOTIN  ! Harris
+    new_total_energy(2) = new_total_energy(2) - sum(energies%ECOU)                    ! Weinert
 
     ! madelung energy
     energy_temp = madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
@@ -945,9 +949,9 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     ! single particle energies (band)
     new_total_energy = new_total_energy + sum(sum(energies%ESPV, 2))
 
-    ! part of double counting energy that stems from V_XC
-    new_total_energy = new_total_energy - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
-                                          0.0d0, densities%RHO2NS, shgaunts, atomdata)
+    ! part of double counting energy that stems from V_XC (Weinert only)
+    new_total_energy(2) = new_total_energy(2) - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
+                                                        0.0d0, densities%RHO2NS, shgaunts, atomdata)
     ! XC energy
     new_total_energy = new_total_energy + sum(energies%EXC)
 

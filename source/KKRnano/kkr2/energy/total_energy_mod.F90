@@ -4,7 +4,7 @@
 !> Module with routines for alternative calculation of the
 !> total energy.
 !
-! -(E_coulomb + E_Z_interstitial) + E_madelung - 2*E_VXC + E_single_particle + E_core + E_XC + E_LDAU...
+! Weinert: -(E_coulomb + E_Z_interstitial) + E_madelung - 2*E_VXC + E_single_particle + E_core + E_XC + E_LDAU...
 !
 ! E_VXC = 1/2 \int V_XC \rho
 module total_energy_mod
