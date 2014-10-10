@@ -695,7 +695,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   logical :: calc_force
   double precision :: force_flmc(-1:1)
 
-  double precision :: new_total_energy(2), energy_temp
+  double precision :: new_total_energy(2)
   double precision, allocatable :: vons_temp(:,:,:)
 
   double complex, allocatable :: prefactors(:) ! for Morgan charge test only
@@ -911,6 +911,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     ! Weinert, PRB 26, 4571 (1982)., which needs self-consistency to be accurate
     ! it does not use the input potential (EPOTIN) for the calculation
 
+    double precision :: energy_temp
+
     ! core electron contribution
     call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
 
@@ -948,7 +950,10 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     ! XC energy
     new_total_energy = new_total_energy + sum(energies%EXC)
 
-    ! missing contributions to new_total_energy: muffin-tin shift energy, LDA+U energy
+    ! LDA+U contribution
+    new_total_energy = new_total_energy + ldau_data%EULDAU - ldau_data%EDCLDAU
+
+    ! missing contributions to new_total_energy(2), Weinert only: muffin-tin shift energy
   end subroutine
 
 end subroutine
