@@ -83,6 +83,9 @@ C     DOUBLE PRECISION   DENMAT(MMAXD,MMAXD,NSPIND)
       MMAXD  = 2*LMAXD + 1
       NSPIND = NSPIN
 
+      DMATLDAU = CZERO
+      EULDAU = 0.0D0
+      EDCLDAU = 0.0D0
 
       WRITE (6,'(/,79(1H#),/,16X,A,/,79(1H#))') 
      &     'LDA+U: Calculating interaction potential VLDAU'

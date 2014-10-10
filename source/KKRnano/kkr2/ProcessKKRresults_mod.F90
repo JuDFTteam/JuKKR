@@ -484,10 +484,6 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     ldau_data => getLDAUData(calc_data, ilocal)
 !------------------------------------------------------------------------------
 
-    if (params%LDAU) then
-      ldau_data%DMATLDAU = CZERO
-    endif
-
     ! has to be done after Lloyd
     ! output: RHO2NS, R2NEF, DEN, ESPV
     densities%DEN = CZERO
@@ -497,6 +493,17 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
                         densities%RHO2NS, densities%R2NEF, &
                         densities%DEN, energies%ESPV, kkr%GMATN, &
                         gaunts, emesh, ldau_data)
+
+    ! LDAU
+    if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
+        call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU, &
+                      ldau_data%NLDAU,ldau_data%LLDAU, &
+                      ldau_data%ULDAU,ldau_data%JLDAU, &
+                      ldau_data%UMLDAU,ldau_data%WMLDAU, &
+                      ldau_data%EULDAU,ldau_data%EDCLDAU, &
+                      ldau_data%lmaxd)
+    endif
+    ! LDAU
 
   ! ----------------------------------------------------------------------
   ! -->   determine total charge expanded in spherical harmonics
@@ -882,20 +889,6 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   end do
   !$omp end parallel do
 !------------------------------------------------------------------------------
-
-! LDAU
-  ldau_data%EULDAU = 0.0D0
-  ldau_data%EDCLDAU = 0.0D0
-
-  if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
-    call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU, &
-                  ldau_data%NLDAU,ldau_data%LLDAU, &
-                  ldau_data%ULDAU,ldau_data%JLDAU, &
-                  ldau_data%UMLDAU,ldau_data%WMLDAU, &
-                  ldau_data%EULDAU,ldau_data%EDCLDAU, &
-                  ldau_data%lmaxd)
-  endif
-! LDAU
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
@@ -1317,7 +1310,6 @@ end subroutine
   !----------------------------------------------------------------------------
   !> Stores generalised Morgan test charge distribution into rho2ns_density.
   !>
-  !> One needs to use a simple cubic Bravais lattice with unit size.
   !> One can specify basis atoms.
   subroutine overwrite_densities_gen_morgan(rho2ns_density, mesh_points, lpot, rbasis, center, bravais, prefactors)
     use debug_morgan_mod
