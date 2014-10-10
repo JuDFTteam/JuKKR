@@ -695,7 +695,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   logical :: calc_force
   double precision :: force_flmc(-1:1)
 
-  double precision :: new_total_energy(2)
+  double precision :: new_total_energy(2), new_total_energy_all(2)
   double precision, allocatable :: vons_temp(:,:,:)
 
   double complex, allocatable :: prefactors(:) ! for Morgan charge test only
@@ -892,8 +892,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
   call OUTTIME(isMasterRank(my_mpi),'calculated pot ......',getElapsedTime(program_timer),ITER)
 
-  write (*,*) "Weinert total energy (less stable, no LDAU): ", new_total_energy(2)
-  write (*,*) "Harris total energy (no LDAU):               ", new_total_energy(1)
+  call sum_total_energy_com(new_total_energy_all, new_total_energy, getMasterRank(my_mpi), getMySECommunicator(my_mpi))
+
+  if(isMasterRank(my_mpi)) then
+    call printTotalEnergies(new_total_energy_all)
+  end if
 
   deallocate(vons_temp)
 
@@ -1270,6 +1273,43 @@ end subroutine
     ' E FERMI ',F12.6,' Delta E_F = ',f12.6)
 9030 format ('                new', &
     ' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Sums up the total energies of all processes - returns result in 'total' on master, 0.0d0 on
+  !> other ranks.
+  subroutine sum_total_energy_com(total, total_energies, master, communicator)
+    include 'mpif.h'
+    double precision, intent(out) ::total(2)
+    double precision, intent(in) :: total_energies(2)
+    integer, intent(in) :: master
+    integer, intent(in) :: communicator
+
+    double precision :: send(2)
+    integer :: length
+
+    length = 2
+    send = total_energies
+
+    total = 0.0d0
+    call MPI_Reduce(send, total, length, MPI_DOUBLE_PRECISION, MPI_SUM, master, communicator)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Print total energy to screen (both methods: Harris and Weinert).
+  subroutine printTotalEnergies(total_energies)
+    implicit none
+    double precision, intent(in) :: total_energies(2)
+
+    write(*, 99014) total_energies(1), total_energies(1)*13.6058D0
+    write(*, 99015) total_energies(2), total_energies(2)*13.6058D0
+
+    99014 FORMAT (/,3X,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f21.8,/15x, &
+             '                 eV  : ',F21.8,/,3x,70('+'))
+
+    99015 FORMAT (/,3X,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x, &
+             '                 eV  : ',F21.8,/,3x,70('+'))
   end subroutine
 
 !=============== DEBUG: Morgan charge distribution test =======================
