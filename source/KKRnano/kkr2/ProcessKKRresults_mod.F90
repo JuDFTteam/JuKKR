@@ -883,7 +883,14 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
 
     ! MT-shift energy for Weinert energy only
-    new_total_energy(2) = new_total_energy(2) - energies%VBC(1) * densities%CATOM(1)
+    energies%e_shift = - energies%VBC(1) * densities%CATOM(1)
+    energies%e_total(2) = energies%e_total(2) + energies%e_shift
+
+    ! sum up over all atoms
+    new_total_energy = new_total_energy + energies%e_total
+
+    !write(*,*) energies%e_total
+    !write(*,*) energies%e_vxc, energies%e_shift, energies%e_madelung
 
 !------------------------------------------------------------------------------
   end do
@@ -908,13 +915,15 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     ! These energies have to be calculated BEFORE the XC-potential is added!
     ! calculate total energy and individual contributions if requested
 
-    ! new_total_energy(1) stores result of total energy calculation using Harris functional
+    ! energies%e_total(1) stores result of total energy calculation using Harris functional
     !
-    ! new_total_energy(2) stores the result of the method described in:
+    ! energies%e_total(2) stores the result of the method described in:
     ! Weinert, PRB 26, 4571 (1982)., which needs self-consistency to be accurate
     ! it does not use the input potential (EPOTIN) for the calculation
 
     double precision :: energy_temp
+
+    energies%e_total = 0.0d0
 
     ! core electron contribution
     call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
@@ -926,8 +935,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
     call energy_electrostatic_L_resolved_wrapper(energies%ECOU, atomdata%potential%vons, atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
 
     ! coulomb energy and part of double counting
-    new_total_energy(1) = new_total_energy(1) + sum(energies%ECOU) + energies%EPOTIN  ! Harris
-    new_total_energy(2) = new_total_energy(2) - sum(energies%ECOU)                    ! Weinert
+    energies%e_total(1) = energies%e_total(1) + sum(energies%ECOU) + energies%EPOTIN  ! Harris
+    energies%e_total(2) = energies%e_total(2) - sum(energies%ECOU)                    ! Weinert
 
     ! madelung energy
     energy_temp = madelung_energy(atomdata%potential%vons(:,1,1), densities%rho2ns(:,1,1), &
@@ -939,24 +948,29 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
 
     energies%ECOU(0) = energies%ECOU(0) + energy_temp
 
-    new_total_energy = new_total_energy + energy_temp
+    energies%e_total = energies%e_total + energy_temp
+
+    energies%e_madelung = energy_temp
 
     ! core energies
-    new_total_energy = new_total_energy + sum(sum(energies%ESPC, 2))
+    energies%e_total = energies%e_total + sum(sum(energies%ESPC, 2))
 
     ! single particle energies (band)
-    new_total_energy = new_total_energy + sum(sum(energies%ESPV, 2))
+    energies%e_total = energies%e_total + sum(sum(energies%ESPV, 2))
 
     ! part of double counting energy that stems from V_XC (Weinert only)
-    new_total_energy(2) = new_total_energy(2) - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
-                                                        0.0d0, densities%RHO2NS, shgaunts, atomdata)
+    energies%e_vxc = - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
+                               0.0d0, densities%RHO2NS, shgaunts, atomdata)
+
+    energies%e_total(2) = energies%e_total(2) + energies%e_vxc
+
     ! XC energy
-    new_total_energy = new_total_energy + sum(energies%EXC)
+    energies%e_total = energies%e_total + sum(energies%EXC)
 
     ! LDA+U contribution
-    new_total_energy = new_total_energy + ldau_data%EULDAU - ldau_data%EDCLDAU
+    energies%e_total = energies%e_total + ldau_data%EULDAU - ldau_data%EDCLDAU
 
-    ! missing contributions to new_total_energy(2), Weinert only: muffin-tin shift energy
+    ! missing contributions to energies%e_total(2), Weinert only: muffin-tin shift energy
   end subroutine
 
 end subroutine

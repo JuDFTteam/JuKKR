@@ -77,6 +77,11 @@ Possible problems:
    When using binary potential files from a previous calculation, make sure
    the core configuration matches.
 
+*) Output of "Weinert total energy": probably wrong for spin-polarised
+   calculations.
+   For all calculations: Weinert energy and Harris energy agree only when self-consistency
+   is achieved.
+
 *) Number of mesh points depends on an algorithm using floating point numbers:
    However, processes working on the same atom must arrive at the same results.
    Otherwise there will be problems with spin/energy-parallelisation
