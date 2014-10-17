@@ -864,7 +864,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, &
   end if
 
 !------------------------------------------------------------------------------
-  !$omp parallel do private(ilocal, atomdata, energies, densities)
+  !$omp parallel do private(ilocal, atomdata, energies, densities) reduction(+:new_total_energy)
   do ilocal = 1, num_local_atoms
     atomdata     => getAtomData(calc_data, ilocal)
     energies     => getEnergies(calc_data, ilocal)

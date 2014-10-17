@@ -631,6 +631,7 @@ CONTAINS
     enddo
 
     ! copy output potential to input potential for new iteration
+    ! NOTE: nonspherical part for indices < IRMIN1 is thrown away!
     do ISPIN = 1,NSPIN
 
       call DCOPY(IRC1,VONS(1,1,ISPIN),1,VISP(1,ISPIN),1)
