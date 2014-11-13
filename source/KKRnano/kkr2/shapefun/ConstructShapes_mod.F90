@@ -424,4 +424,39 @@ subroutine write_shapefun_file(shdata, inter_mesh, shape_index)
 
 end subroutine
 
+!------------------------------------------------------------------------------
+!> Replace actual shape function with shape function of the atom sphere.
+!>
+!> Only the LM=1 component is nonzero
+!> Atomic sphere has same volume as Voronoi cell
+subroutine replace_with_PseudoASA(shdata, inter_mesh, volume)
+  use ShapefunData_mod
+  implicit none
+
+  type (ShapefunData), intent(inout) :: shdata
+  type (InterstitialMesh), intent(in) :: inter_mesh
+  double precision, intent(in) :: volume
+
+  double precision :: radius
+  double precision, parameter :: PI = 3.1415926535897932d0
+  integer :: ii
+
+  shdata%lmsp = 0
+  shdata%lmsp(1) = 1
+  shdata%nfu = 1
+
+  radius = (3*volume/4 / PI)**(1.d0/3.d0)
+
+  do ii = 1, size(inter_mesh%xrn)
+    if (inter_mesh%xrn(ii) <= radius) then
+      shdata%theta(ii, 1) = sqrt(4*PI)
+    else
+      shdata%theta(ii, 1) = 0.0d0
+    endif
+  enddo
+
+  shdata%theta(:, 2:) = 0.0d0
+
+end subroutine
+
 end module
