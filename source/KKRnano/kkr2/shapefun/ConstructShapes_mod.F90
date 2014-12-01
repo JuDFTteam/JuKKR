@@ -245,6 +245,10 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
 
   !TODO: check that nm is always >= 5
 
+  !DEBUG
+  ! uncommenting the next line would replace shape function with atomic sphere shape function
+  !call replace_with_PseudoASA(shdata, inter_mesh, volume)
+
 end subroutine
 
 !------------------------------------------------------------------------------
