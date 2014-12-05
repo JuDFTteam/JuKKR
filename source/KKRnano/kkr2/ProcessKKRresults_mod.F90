@@ -1300,13 +1300,14 @@ end subroutine
     integer, intent(in) :: communicator
 
     double precision :: send(2)
+    integer :: ierr
     integer :: length
 
     length = 2
     send = total_energies
 
     total = 0.0d0
-    call MPI_Reduce(send, total, length, MPI_DOUBLE_PRECISION, MPI_SUM, master, communicator)
+    call MPI_Reduce(send, total, length, MPI_DOUBLE_PRECISION, MPI_SUM, master, communicator, ierr)
 
   end subroutine
 
