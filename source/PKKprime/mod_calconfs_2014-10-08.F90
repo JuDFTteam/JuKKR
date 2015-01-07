@@ -1,0 +1,1155 @@
+module mod_calconfs
+
+  use mod_ioformat, only: MODE_INT, MODE_VIS
+  implicit none
+
+  private
+  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis
+
+  integer, parameter :: SPCZMAX=1, SPCXY0=2, ROT_NO=0, ROT_FULLBZ=1, ROT_SPEC=2
+
+  type :: cfg_TYPE
+
+    integer :: N1 = 8
+    integer :: lspin=-1
+    integer :: lfvel=-1
+    integer :: nsqa=-1
+    integer :: mode=-1
+    integer :: rotatemode=-1
+    double precision :: dk_fv = -1d0
+    logical :: saveeigv=.false.
+
+    integer :: N2 = 3
+    integer,          allocatable :: ispincomb(:)
+    double precision, allocatable :: nvect(:,:)
+
+  end type cfg_TYPE
+
+  logical, save :: cfg_read=.false.
+
+  type(cfg_type), save :: cfg
+
+
+
+
+contains
+
+
+
+  subroutine calc_on_fsurf_inputcard(inc,lattice,cluster,tgmatrx,nkpts,kpoints)
+
+    use type_inc,       only: inc_type
+    use type_data,      only: lattice_type, cluster_type, tgmatrx_type
+    use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints, expand_visarrays, expand_areas
+    use mod_read,       only: read_kpointsfile_vis, read_kpointsfile_int
+    use mod_parutils,   only: distribute_linear_on_tasks
+    use mod_mympi,      only: myrank, nranks, master
+    use mod_ioformat,   only: filemode_vis, filemode_int, filemode_rot, filename_vtkonfs, ext_vtkxml, fmt_fn_sub_ext
+    use mod_iohelp,     only: getBZvolume
+    use mod_vtkxml,     only: write_pointdata_rot
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    type(tgmatrx_type), intent(in) :: tgmatrx
+
+    integer,                       intent(inout) :: nkpts
+    double precision, allocatable, intent(inout) :: kpoints(:,:)
+
+    integer                       :: nkpts1, nkpts_all1, nkpts_all
+    integer,          allocatable :: kpt2irr1(:), irr2kpt1(:), kpt2irr(:), irr2kpt(:)
+    double precision, allocatable :: kpoints1(:,:)
+
+
+    type(symmetries_type) :: symmetries
+    double precision, allocatable :: fermivel(:,:), spinval(:,:,:), spinmix(:)
+    double precision, allocatable :: areas1(:), areas(:)
+
+    integer :: nsym, ii, ierr, ikp, isqa
+    double precision :: integ, dos, vabs, BZVol
+    integer, allocatable :: isym(:)
+    character(len=256) :: filename
+
+
+    integer                       :: nscalar, nvector, iscalar, ivector
+    double precision, allocatable :: scalardata(:,:), &
+                                   & vectordata(:,:,:)
+    character(len=256) :: filemode
+    character(len=256), allocatable :: scalarstring(:), vectorstring(:)
+
+    call set_symmetries(inc, lattice, symmetries)
+    BZVol = getBZvolume(lattice%recbv)
+
+    if(.not.cfg_read) then
+      call read_cfg()
+    end if
+
+    if(cfg%lspin/=1 .and. cfg%lfvel/=1) return
+
+    !read in the (irreducible) k-points and apply symmetry operations to expand to full BZ
+    select case (cfg%mode)
+
+    case (MODE_VIS)
+      filemode = filemode_vis
+      if(cfg%rotatemode==ROT_FULLBZ)then
+        call read_kpointsfile_vis(nkpts_all1, nkpts1, kpoints1, nsym, isym, kpt2irr1, irr2kpt1)
+        call rotate_kpoints(symmetries%rotmat, nkpts1, kpoints1, nsym, isym, nkpts, kpoints)
+        call expand_visarrays(nsym, nkpts_all1, nkpts1, kpt2irr1, irr2kpt1, kpt2irr, irr2kpt)
+        nkpts_all = nsym*nkpts_all1
+        deallocate(kpt2irr1, irr2kpt1,kpoints1)
+      elseif(cfg%rotatemode==ROT_NO)then
+        call read_kpointsfile_vis(nkpts_all, nkpts, kpoints, nsym, isym, kpt2irr, irr2kpt)
+      else
+        stop 'cfg%rotatemode not known!'
+      end if
+
+    case (MODE_INT)
+      filemode = filemode_int
+      if(cfg%rotatemode==ROT_FULLBZ)then
+        call read_kpointsfile_int(nkpts1, kpoints1, areas1, nsym, isym)
+        call rotate_kpoints(symmetries%rotmat, nkpts1, kpoints1, nsym, isym, nkpts, kpoints)
+        call expand_areas(nsym,nkpts1,areas1,areas)
+        deallocate(areas1,kpoints1)
+      elseif(cfg%rotatemode==ROT_NO)then
+        call read_kpointsfile_int(nkpts, kpoints, areas, nsym, isym)
+      else
+        stop 'cfg%rotatemode not known!'
+      end if
+
+    case default; stop 'case not known in select case (cfg%mode)'
+    end select
+
+    if(cfg%rotatemode==ROT_FULLBZ)then
+      !redefine symmetries (set to unit transformation only)
+      nsym = 1
+      deallocate(isym)
+      allocate(isym(nsym))
+      isym = (/ 1 /)
+    end if
+
+    !calculate the properties
+    nvector=0
+    nscalar=0
+
+    if(cfg%lspin==1 .and. cfg%lfvel==1) then
+      nscalar=nscalar+cfg%nsqa
+      nvector=nvector+1
+      allocate(spinval(inc%ndegen,cfg%nsqa,nkpts), fermivel(3,nkpts), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating spinval'
+      call calc_on_fsurf(inc,lattice,cluster,tgmatrx,nkpts,kpoints,fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv)
+!     write(*,*) 'after calc_on_fsurf, myrank=', myrank
+    elseif(cfg%lspin==1) then
+      nscalar=nscalar+cfg%nsqa
+      allocate(spinval(inc%ndegen,cfg%nsqa,nkpts), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating spinval'
+      call calc_on_fsurf(inc,lattice,cluster,tgmatrx,nkpts,kpoints,spinvalue=spinval,save_eigv=cfg%saveeigv)
+    elseif(cfg%lfvel==1) then
+      nvector=nvector+1
+      allocate(fermivel(3,nkpts), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating fermivel'
+      call calc_on_fsurf(inc,lattice,cluster,tgmatrx,nkpts,kpoints,fermivelocity=fermivel)
+    else
+      stop 'nothing to be done'
+    end if
+
+    allocate( scalarstring(nscalar), vectorstring(nvector), STAT=ierr )
+    if(ierr/=0) stop 'Problem allocating scalarstring etc.'
+
+
+    !save the calculated properties to a file
+    if(cfg%lfvel==1 .and. myrank==master) call save_fermivelocity(trim(filemode), nkpts, fermivel, nsym, isym)
+    if(cfg%lfvel==1 .and. myrank==master .and. cfg%mode==MODE_INT) call calculate_and_save_weights(nkpts,nsym,isym,areas,fermivel)
+    if(cfg%lspin==1 .and. myrank==master) call save_spinvalue(trim(filemode), nkpts, cfg%nsqa, inc%ndegen, cfg%ispincomb, cfg%nvect, spinval, nsym, isym)
+
+
+
+    !calculate averages
+    if(myrank==master .and. cfg%lfvel==1 .and. cfg%lspin==1) then
+
+      allocate(spinmix(cfg%nsqa), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating spinmix'
+
+      if(cfg%mode==MODE_INT) call calculate_spinmixing_int(nsym,inc%ndegen,cfg%nsqa,nkpts,areas,fermivel,spinval,spinmix,dos,.true.,BZVol)
+      if(cfg%mode==MODE_VIS) call calculate_spinmixing_vis(nsym,inc%ndegen,cfg%nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,.true.,BZVol)
+
+    elseif(myrank==master .and. cfg%lfvel==1 .and. cfg%lspin==0) then
+
+      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,nkpts,areas,fermivel,dos,.true.,BZVol)
+      if(cfg%mode==MODE_VIS) call calculate_dos_vis(nsym,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,dos,.true.,BZVol)
+
+    end if
+
+
+    !output 3Dvisualization data
+    if(myrank==master .and. cfg%mode==MODE_VIS .and. inc%nBZdim==3) then
+
+      if(nvector>0) then
+        allocate(vectordata(3,nkpts,nvector), STAT=ierr)
+        if(ierr/=0) stop 'Problem allocating vectordata'
+      end if
+
+      if(nscalar>0) then
+        allocate(scalardata(nkpts,nscalar), STAT=ierr)
+        if(ierr/=0) stop 'Problem allocating scalardata'
+      end if
+
+      iscalar=0
+      ivector=0
+
+      if(cfg%lfvel==1) then
+        ivector = ivector+1
+        vectordata(:,:,ivector) = fermivel
+        vectorstring(ivector) = 'fvelocity'
+      end if!cfg%lfvel
+
+      if(cfg%lspin==1 .and. inc%ndegen==2) then
+        do isqa=1,cfg%nsqa
+          iscalar = iscalar+1
+          scalardata(:,iscalar) = (1d0-spinval(1,isqa,:))/2
+          write(scalarstring(iscalar),'(A,I0)') 'Eyaf_',isqa
+        end do
+      elseif(cfg%lspin==1 .and. inc%ndegen==1) then
+        do isqa=1,cfg%nsqa
+          iscalar = iscalar+1
+          scalardata(:,iscalar) = spinval(1,isqa,:)/2
+          write(scalarstring(iscalar),'(A,I0)') 'Spin_',isqa
+        end do
+      end if!cfg%lspin
+
+
+      write(filename,fmt_fn_sub_ext) filename_vtkonfs, filemode_rot, ext_vtkxml
+      call write_pointdata_rot( trim(filename),nkpts,kpoints,   &
+                              & nscalar,scalardata,scalarstring,&
+                              & nvector,vectordata,vectorstring,&
+                              & nsym,symmetries%rotmat,isym,    &
+                              & nkpts_all, kpt2irr              )
+
+    end if!myrank==master .and. cfg%mode==MODE_VIS
+
+  end subroutine calc_on_fsurf_inputcard
+
+
+
+
+
+  subroutine calc_on_fsurf(inc,lattice,cluster,tgmatrx,nkpts,kpoints,fermivelocity,spinvalue,save_eigv)
+
+    use type_inc,       only: inc_type
+    use type_data,      only: lattice_type, cluster_type, tgmatrx_type
+    use mod_symmetries, only: symmetries_type
+    use mod_parutils,   only: distribute_linear_on_tasks
+    use mod_mympi,      only: myrank, nranks, master
+    use mod_kkrmat,     only: compute_kkr_eigenvectors2
+    use mod_mathtools,  only: findminindex, bubblesort
+    use mod_ioformat,   only: filename_eigvect, filemode_int, filemode_vis
+#ifdef CPP_MPI
+    use mod_iohelp,     only: open_mpifile_setview, close_mpifile
+    use mpi
+#endif
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    type(tgmatrx_type), intent(in) :: tgmatrx
+
+    integer,          intent(in) :: nkpts
+    double precision, intent(in) :: kpoints(3,nkpts)
+    double precision, intent(out), optional :: fermivelocity(3,nkpts),&
+                                             & spinvalue(inc%ndegen,cfg%nsqa,nkpts)
+    logical,          intent(in), optional  :: save_eigv
+!   double complex,   intent(out), optional :: eigenvectors(inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa,nkpts)
+
+    double precision, allocatable :: fermivel_tmp(:,:),&
+                                   & spinval_tmp(:,:,:)
+
+    integer :: nkpt, ioff, ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+    double precision :: kpoint(3)
+
+    integer        :: lm_fs, lm_fs2
+    double complex :: eigwEF(inc%almso),&
+                    & LVeigEF(inc%almso,inc%almso),&
+                    & RVeigEF(inc%almso,inc%almso),&
+                    & rveig(inc%almso,inc%ndegen)
+
+    integer          :: printstep, ikp, ierr, i3dim(3), itmp, irecv(0:nranks-1), idispl(0:nranks-1)
+    integer          :: indsort(inc%almso)
+    double precision :: deigsort(inc%almso)
+    character(len=256) :: filename
+
+    logical :: l_save_eigv
+#ifdef CPP_MPI
+    integer :: fh_eigv, irveigel, dimens(4)
+    double complex, allocatable :: rveigrot(:,:,:,:)
+    integer :: mpistatus(MPI_STATUS_SIZE)
+#endif
+
+    if(.not.cfg_read)then
+      stop 'cfg not read when entering calc_on_fsurf'
+    end if
+
+    !Parallelize
+    call distribute_linear_on_tasks(nranks,myrank,master,nkpts,ntot_pT,ioff_pT,.true.)
+    nkpt = ntot_pT(myrank)
+    ioff = ioff_pT(myrank)
+
+    !flag whether eigenvalues shall be saved to file
+    l_save_eigv = .false.
+#ifdef CPP_MPI
+    if(present(save_eigv))then
+      if(save_eigv) l_save_eigv = .true.
+    else 
+      l_save_eigv = cfg%saveeigv
+    end if
+#endif
+
+    !allocate task-local arrays
+    if(present(fermivelocity))then
+      allocate( fermivel_tmp(3,nkpt), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
+      fermivelocity = 0d0
+      fermivel_tmp  = 0d0
+    end if
+    if(present(spinvalue))then
+      allocate( spinval_tmp(inc%ndegen,cfg%nsqa,nkpt), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
+      spinvalue   = 0d0
+      spinval_tmp = 0d0
+    end if
+
+#ifdef CPP_MPI
+    !open the mpi-io file to store the eigenvector
+    if(l_save_eigv)then
+      allocate( rveigrot(inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa), STAT=ierr ) 
+      if(ierr/=0) stop 'Problem allocating rveigrot'
+      dimens = (/ inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa /)
+      irveigel = product(dimens)
+      if(cfg%mode==MODE_INT) write(filename,'(A,A)') filename_eigvect, filemode_int
+      if(cfg%mode==MODE_VIS) write(filename,'(A,A)') filename_eigvect, filemode_vis
+      call open_mpifile_setview( trim(filename), 'write', 4, dimens, ntot_pT, MPI_DOUBLE_COMPLEX, &
+                               & myrank, nranks, MPI_COMM_WORLD, fh_eigv                          )
+    end if!l_save_eigv
+#endif
+
+
+    !******************************************!
+    !*************** B E G I N ****************!
+    !******************************************!
+    !*** (parallelized) loop over FS points ***!
+    !******************************************!
+    printstep = nkpt/50
+    if(printstep==0) printstep=1
+    !print header of statusbar
+    if(myrank==master) write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+    if(myrank==master) write(*,FMT=190) !beginning of statusbar
+    do ikp=1,nkpt
+      !update statusbar
+      if(mod(ikp,printstep)==0 .and. myrank==master) write(*,FMT=200)
+
+      kpoint = kpoints(:,ikp+ioff)
+
+      !===============================================================!
+      !=== find the eigenvector and eigenvalue at the fermi energy ===!
+      !===============================================================!
+      call compute_kkr_eigenvectors2( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),&
+                                    & tgmatrx%tmat(:,:,1), kpoint,                 &
+                                    & eigwEF, LVeigEF, RVeigEF                     )
+      deigsort = abs(eigwEF)
+      call findminindex(inc%almso, deigsort, lm_fs)
+
+
+
+      !====================================!
+      !=== Calculate the fermi-velocity ===!
+      !====================================!
+      if(present(fermivelocity))then
+
+        call calc_fermivel( inc,lattice,cluster,tgmatrx,kpoint,   &
+                          & eigwEF(lm_fs), LVeigEF(:,lm_fs),      &
+                          & RVeigEF(:,lm_fs), fermivel_tmp(:,ikp) )
+
+      end if!present(fermivelocity)
+
+
+
+      !============================================!
+      !=== Calculate the spin-expectation value ===!
+      !============================================!
+      if(present(spinvalue))then
+
+        !copy the band
+        rveig(:,1) = RVeigEF(:,lm_fs)
+
+        !find degenerate band for degnerate cases
+        if(inc%ndegen==2)then
+          deigsort = abs(eigwEF-eigwEF(lm_fs))
+          call bubblesort(inc%almso, deigsort, indsort)
+          lm_fs2 = indsort(2)
+          rveig(:,2) = RVeigEF(:,lm_fs2)
+        end if
+
+       !TESTWRITE
+       open(656,file='eigvect',form='formatted')
+       write(656,'(A)') 'UP'
+       write(656,'(2ES25.16)') rveig(:,2)
+       write(656,'(A)') 'DOWN'
+       write(656,'(2ES25.16)') rveig(:,1)
+       close(656)
+
+#ifdef CPP_MPI
+        if(l_save_eigv)then
+          call calc_spinvalue_state( inc, tgmatrx, rveig, &
+                                   & spinval_tmp(:,:,ikp),&
+                                   & eigvect_rot=rveigrot )
+
+          call MPI_File_write( fh_eigv, rveigrot, irveigel,        &
+                             & MPI_DOUBLE_COMPLEX, mpistatus, ierr )
+
+        else!l_save_eigv
+#endif
+          call calc_spinvalue_state( inc, tgmatrx, rveig, &
+                                   & spinval_tmp(:,:,ikp) )
+#ifdef CPP_MPI
+        end if!l_save_eigv
+#endif
+      end if!present(spinvalue)
+
+    end do!ikp
+    if(myrank==master) write(*,*) ''
+!   write(*,*) 'after loop, myrank=', myrank
+    !******************************************!
+    !*** (parallelized) loop over FS points ***!
+    !******************************************!
+    !***************** E N D ******************!
+    !******************************************!
+
+
+    !close the eigenvector-file
+#ifdef CPP_MPI
+    if(l_save_eigv) call close_mpifile(fh_eigv)
+#endif
+
+
+    !gather the fermi-velocity from the processes
+    if(present(fermivelocity))then
+#ifdef CPP_MPI
+      irecv  = 3*ntot_pT
+      idispl = 3*ioff_pT
+      call MPI_Allgatherv( fermivel_tmp, 3*nkpt, MPI_DOUBLE_PRECISION, &
+                         & fermivelocity, irecv, idispl,               &
+                         & MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr  )
+      if(ierr/=MPI_SUCCESS) stop 'Problem in allgatherv fermivelocity'
+#else
+      fermivelocity = fermivel_tmp
+#endif
+!     write(*,*) 'end of fermivel, myrank=', myrank
+    end if!present(fermivelocity)
+
+
+    !gather the spinvalue from the processes
+    if(present(spinvalue))then
+#ifdef CPP_MPI
+      itmp   = inc%ndegen*cfg%nsqa
+      irecv  = itmp*ntot_pT
+      idispl = itmp*ioff_pT
+      call MPI_Allgatherv( spinval_tmp, itmp*nkpt, MPI_DOUBLE_PRECISION, &
+                         & spinvalue, irecv, idispl,                     &
+                         & MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr    )
+      if(ierr/=MPI_SUCCESS) stop 'Problem in allgatherv spinvalue'
+#else
+      spinvalue= spinval_tmp
+#endif
+!     write(*,*) 'end of spinvalue, myrank=', myrank
+    end if!present(spinvalue)
+
+190 FORMAT('                 |'$)
+200 FORMAT('|'$)
+  end subroutine calc_on_fsurf
+
+
+
+
+  subroutine calc_spinvalue_state(inc,tgmatrx,rveig_in,spin_value,eigvect_rot)
+
+    use type_inc,       only: inc_type
+    use type_data,      only: tgmatrx_type
+    use mod_eigvects,   only: rewrite_eigv_atom, orthgonalize_wavefunc, normalize_wavefunc, calc_proj_wavefunc, calc_norm_wavefunc
+    use mod_spintools,  only: spin_expectationvalue, spin_crossterm, Spinrot_AlphaBeta, rotate_wavefunction
+    use mod_mympi, only: myrank
+    implicit none
+
+    type(inc_type),     intent(in)  :: inc
+    type(tgmatrx_type), intent(in)  :: tgmatrx
+    double complex,     intent(in)  :: rveig_in(inc%almso,inc%ndegen)
+    double precision,   intent(out) :: spin_value(inc%ndegen,cfg%nsqa)
+    double complex,     intent(out), optional :: eigvect_rot(inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa)
+
+    double complex :: rveig_atom_unrot(inc%lmmaxso,inc%natypd,inc%ndegen), &
+                    & rveig_atom_rot(inc%lmmaxso,inc%natypd,inc%ndegen)
+    double complex :: Spin_ini(3,2), Scross(3), Spin_final(3,inc%ndegen)
+    double precision :: alpha, beta, Spin_estimated
+    integer :: isqa, ient
+
+
+    call rewrite_eigv_atom(inc,inc%ndegen,rveig_in,rveig_atom_unrot)
+
+    select case (inc%ndegen)
+    case( 1 ); !do nothing
+    case( 2 ); call orthgonalize_wavefunc(inc, tgmatrx%rhod(:,:,:,1), rveig_atom_unrot)
+    case default; stop 'inc%ndegen /= (1,2) not implemented'
+    end select
+    call normalize_wavefunc(inc, inc%ndegen, tgmatrx%rhod(:,:,:,1), rveig_atom_unrot)
+
+
+    if(inc%ndegen==1)then
+
+      spin_value = 0d0
+      call spin_expectationvalue(inc, inc%ndegen, tgmatrx%rhod, rveig_atom_unrot, Spin_final)
+
+      do isqa=1,cfg%nsqa
+        spin_value(1,isqa) = sum(cfg%nvect(:,isqa)*dble(Spin_final(:,1)))
+
+        !save the eigenvector into the array
+        if(present(eigvect_rot)) then
+          eigvect_rot(:,:,:,isqa) = rveig_atom_unrot
+        end if!present(eigvect_rot)
+
+      end do!isqa
+
+    elseif(inc%ndegen==2)then
+
+      call spin_expectationvalue(inc, inc%ndegen, tgmatrx%rhod, rveig_atom_unrot, Spin_ini)
+      call spin_crossterm(inc, tgmatrx%rhod, rveig_atom_unrot, Scross)
+
+      do isqa=1,cfg%nsqa
+
+        ! find parameter alpha and beta to perform the linear combination
+        call Spinrot_AlphaBeta( cfg%ispincomb(isqa), cfg%nvect(:,isqa), Spin_ini, &
+                              & Scross, alpha, beta, Spin_estimated               )
+
+        ! perform the linear combination of the degenerate wavefunctions
+        call rotate_wavefunction(inc%lmmaxso, inc%natypd, alpha, beta, rveig_atom_unrot, rveig_atom_rot)
+
+        ! calculate the true spin-expectation value
+        call spin_expectationvalue(inc, inc%ndegen, tgmatrx%rhod, rveig_atom_rot, Spin_final)
+
+        ! project onto direction n
+        do ient=1,2
+          spin_value(ient,isqa) = sum(cfg%nvect(:,isqa)*dble(Spin_final(:,ient)))
+        end do!ient
+
+        !save the eigenvector into the array
+        if(present(eigvect_rot)) then
+          eigvect_rot(:,:,:,isqa) = rveig_atom_rot
+        end if!present(eigvect_rot)
+
+      end do!isqa
+
+    end if!inc%ndegen==2
+
+
+
+
+  end subroutine calc_spinvalue_state
+
+
+
+
+
+  subroutine calc_fermivel(inc,lattice,cluster,tgmatrx,kpoint,eigw_in,LVin,RVin,fermi_velocity)
+
+    use type_inc,       only: inc_type
+    use type_data,      only: lattice_type, cluster_type, tgmatrx_type
+    use mod_mympi,      only: myrank, nranks, master
+    use mod_kkrmat,     only: compute_kkr_eigenvectors2
+    use mod_eigvects,   only: compare_eigv
+    use mod_mathtools,  only: bubblesort
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    type(tgmatrx_type), intent(in) :: tgmatrx
+
+    double precision, intent(in) :: kpoint(3)
+    double complex,   intent(in) :: eigw_in, LVin(inc%almso), RVin(inc%almso)
+    
+    double precision, intent(out) :: fermi_velocity(3)
+
+    double precision :: Delta_k(3), kpoint_dk(3), fac_fv
+    double complex   :: eigwPT(inc%almso), LVeigPT(inc%almso,inc%almso), RVeigPT(inc%almso,inc%almso)
+
+    double complex   :: Delta_lambda_kxyz(3,2), Delta_lambda_E(2)
+
+    integer :: ikxyz, ipm, LMout
+!   integer          :: sortind(inc%almso)
+!   double precision :: dtmp(inc%almso)
+
+!   integer, parameter :: dimenk=3
+
+    !==================================================!
+    !+++         FERMI-VELOCITY-CALULATION          +++!
+    !==================================================!
+    !  a) perturb the eigenvalue w.r.t. the k-point    !
+    !  b) perturb the eigenvalue w.r.t. the energy     !
+    !  c) determine the fermi-velocity by              !
+    !                     \nabla_k lambda              !
+    !        v_F = --------------------------------    !
+    !                (\delta lambda) / (\delta E)      !
+    !==================================================!
+
+
+    !++++++++++++++++!
+    !+++ BEGIN a) +++!
+    !++++++++++++++++!
+    do ikxyz=1,inc%nBZdim!dimenk
+      do ipm=1,2
+        !determine the perturbed k-point
+        Delta_k = 0d0
+        Delta_k(ikxyz) = dble(3-2*ipm)*cfg%dk_fv ! = +-Delta_k_pert depending on ipm=i_plus_minus
+        kpoint_dk = kpoint + Delta_k
+
+        !calculate the eigenvalue at the perturbed k-point
+        call compute_kkr_eigenvectors2( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),&
+                                      & tgmatrx%tmat(:,:,1), kpoint_dk,              &
+                                      & eigwPT, LVeigPT, RVeigPT                     )
+
+        call compare_eigv(inc, LVin, RVeigPT, LMout)
+
+!       write(*,'(2X,"pert k= (",2ES18.9,"), lmo= ",I0)') eigwPT(LMout), LMout
+
+        Delta_lambda_kxyz(ikxyz,ipm) = eigwPT(LMout) - eigw_in
+
+      end do!ipm
+    end do!ikxyz
+
+
+
+    !++++++++++++++++!
+    !+++ BEGIN b) +++!
+    !++++++++++++++++!
+    do ipm=1,2
+
+      !calculate the eigenvalue at the perturbed k-point
+      call compute_kkr_eigenvectors2( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1+ipm),&
+                                    & tgmatrx%tmat(:,:,1+ipm), kpoint,                 &
+                                    & eigwPT, LVeigPT, RVeigPT                         )
+
+!     dtmp = abs(eigwPT)
+!     call bubblesort(inc%almso, dtmp, sortind)
+!     write(*,'(4X,"sorted abs(eigw)=", 6ES18.9)') abs(eigwPT(sortind(1:6)))
+
+      call compare_eigv(inc, LVin, RVeigPT, LMout)
+
+!     write(*,'(2X,"pert e= (",2ES18.9,"), lmo= ",I0)') eigwPT(LMout), LMout
+
+      Delta_lambda_E(ipm) = eigwPT(LMout) - eigw_in
+      
+    end do!ipm
+ 
+
+    !++++++++++++++++!
+    !+++ BEGIN c) +++!
+    !++++++++++++++++!
+    fac_fv = dble(tgmatrx%energies(2) - tgmatrx%energies(1))/cfg%dk_fv
+    fermi_velocity(:) = -dble( (Delta_lambda_kxyz(:,1) - Delta_lambda_kxyz(:,2))/(Delta_lambda_E(1)-Delta_lambda_E(2)))*fac_fv
+
+  end subroutine calc_fermivel
+
+
+
+
+
+  subroutine read_cfg(force_spinread)
+
+    use mod_ioinput, only: IoInput
+    use mod_mympi,   only: myrank, nranks, master
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    logical, intent(in), optional :: force_spinread
+
+    integer :: nspincomb, angrep, idir, inum, ierr
+    double precision :: dtmpin(3), theta, phi
+    character(len=80) :: uio
+    double precision, allocatable :: vectintmp(:,:)
+    logical :: force_spin
+
+    if(myrank==master) then
+      force_spin = .false.
+      if(present(force_spinread)) force_spin=force_spinread
+
+      call IoInput('LFVEL     ',uio,1,7,ierr)
+      read(unit=uio,fmt=*) cfg%lfvel
+      if(cfg%lfvel==1)then
+        call IoInput('DKFVEL    ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) cfg%dk_fv
+      end if!lfvel==1
+
+
+      call IoInput('LSPIN     ',uio,1,7,ierr)
+      read(unit=uio,fmt=*) cfg%lspin
+      if(cfg%lspin==1 .or. force_spin)then
+
+        call IoInput('LSAVEEIGV ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) inum
+        if(inum==1)then
+           cfg%saveeigv=.true.
+        else
+           cfg%saveeigv=.false.
+        end if
+
+        call IoInput('NSQA      ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) cfg%nsqa
+        allocate(vectintmp(3,cfg%nsqa), STAT=ierr)
+        if(ierr/=0) stop 'Problem allocating vectintmp'
+
+        call IoInput('SPINCOMB  ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) nspincomb
+
+        call IoInput('ANGREP    ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) angrep
+
+        !read in vectors
+        do idir=1,cfg%nsqa
+          if(angrep==0) then
+            call IoInput('ANISOVECS ',uio,1+idir,7,ierr)
+            read (unit=uio,fmt=*) inum, dtmpin(1:2)
+          elseif(angrep==1) then
+            call IoInput('ANISOVECS ',uio,1+idir,7,ierr)
+            read (unit=uio,fmt=*) inum, dtmpin(1:3)
+          end if
+          call convert_nvect(angrep,dtmpin,vectintmp(:,idir))
+        end do!idir
+
+        !combine the spin-sqa-data
+        if( nspincomb==0 )then
+          !case that both conditions shall be treated
+
+          allocate(cfg%ispincomb(2*cfg%nsqa), cfg%nvect(3,2*cfg%nsqa), STAT=ierr)
+          if(ierr/=0) stop 'Problem allocating cfg%ispincomb etc. on master'
+
+          do idir=1,cfg%nsqa
+            cfg%nvect(:,2*idir-1) = vectintmp(:,idir)
+            cfg%nvect(:,2*idir  ) = vectintmp(:,idir)
+            cfg%ispincomb(2*idir-1) = 1
+            cfg%ispincomb(2*idir  ) = 2
+          end do!idir
+
+          cfg%nsqa = 2*cfg%nsqa
+
+        else!nspincomb
+          !case that only one condition shall be treated
+
+          allocate(cfg%ispincomb(cfg%nsqa), cfg%nvect(3,cfg%nsqa), STAT=ierr)
+          if(ierr/=0) stop 'Problem allocating cfg%ispincomb etc. on master'
+
+          cfg%nvect = vectintmp
+          cfg%ispincomb = nspincomb
+
+        end if!nspincomb
+
+      end if!lspin==1
+
+      if(cfg%lfvel==1 .or. cfg%lspin==1)then
+        call IoInput('ONFSMODE  ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) cfg%mode
+        call IoInput('ROTMODE   ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) cfg%rotatemode
+      end if
+
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    call myBcast_cfg(cfg)
+#endif
+
+    cfg_read = .true.
+
+  end subroutine read_cfg
+
+
+
+
+
+  subroutine convert_nvect(angrep,dtmpin,nvect)
+    use mod_mathtools, only: machpi
+    implicit none
+    integer, intent(in) :: angrep
+    double precision, intent(in) :: dtmpin(3)
+    double precision, intent(out) :: nvect(3)
+
+    double precision :: theta, phi, pi, norm
+
+    pi = machpi()
+
+    if(angrep==0) then
+      theta = dtmpin(1)
+      phi   = dtmpin(2)
+      nvect(1) = dsin(theta*pi)*dcos(phi*pi)
+      nvect(2) = dsin(theta*pi)*dsin(phi*pi)
+      nvect(3) = dcos(theta*pi)
+    elseif(angrep==1) then
+      norm = sqrt(sum(dtmpin**2))
+      nvect = dtmpin/norm
+    end if
+    
+  end subroutine convert_nvect
+
+
+
+
+
+#ifdef CPP_MPI
+  subroutine myBcast_cfg(cfg)
+
+    use mpi
+    use mod_mympi,   only: myrank, nranks, master
+    implicit none
+
+    type(cfg_type), intent(inout)  :: cfg
+
+    integer :: blocklen1(cfg%N1), etype1(cfg%N1), myMPItype1
+    integer :: blocklen2(cfg%N2), etype2(cfg%N2), myMPItype2
+    integer :: ierr
+    integer(kind=MPI_ADDRESS_KIND) :: disp1(cfg%N1), disp2(cfg%N2), base
+
+    call MPI_Get_address(cfg%N1,         disp1(1), ierr)
+    call MPI_Get_address(cfg%lspin,      disp1(2), ierr)
+    call MPI_Get_address(cfg%lfvel,      disp1(3), ierr)
+    call MPI_Get_address(cfg%nsqa,       disp1(4), ierr)
+    call MPI_Get_address(cfg%mode,       disp1(5), ierr)
+    call MPI_Get_address(cfg%rotatemode, disp1(6), ierr)
+    call MPI_Get_address(cfg%dk_fv,      disp1(7), ierr)
+    call MPI_Get_address(cfg%saveeigv,   disp1(8), ierr)
+
+    base  = disp1(1)
+    disp1 = disp1 - base
+
+    blocklen1(1:8)=1
+
+    etype1(1:6) = MPI_INTEGER
+    etype1(7)   = MPI_DOUBLE_PRECISION
+    etype1(8)   = MPI_LOGICAL
+
+    call MPI_Type_create_struct(cfg%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_cfg_1'
+
+    call MPI_Type_commit(myMPItype1, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_cfg_1'
+
+    call MPI_Bcast(cfg%N1, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting cfg_1'
+
+    call MPI_Type_free(myMPItype1, ierr)
+
+    if(cfg%lspin==1)then
+
+      if(myrank/=master) then
+        allocate( cfg%ispincomb(cfg%nsqa), cfg%nvect(3,cfg%nsqa), STAT=ierr )
+        if(ierr/=0) stop 'Problem allocating cfg_arrays on slaves'
+      end if
+
+      call MPI_Get_address(cfg%N2,        disp2(1), ierr)
+      call MPI_Get_address(cfg%ispincomb, disp2(2), ierr)
+      call MPI_Get_address(cfg%nvect,     disp2(3), ierr)
+
+      base  = disp2(1)
+      disp2 = disp2 - base
+
+      blocklen2(1)=1
+      blocklen2(2)=size(cfg%ispincomb)
+      blocklen2(3)=size(cfg%nvect)
+
+      etype2(1:2) = MPI_INTEGER
+      etype2(3)   = MPI_DOUBLE_PRECISION
+
+      call MPI_Type_create_struct(cfg%N2, blocklen2, disp2, etype2, myMPItype2, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_cfg_2'
+
+      call MPI_Type_commit(myMPItype2, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_cfg_2'
+
+      call MPI_Bcast(cfg%N2, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error brodcasting cfg_2'
+
+      call MPI_Type_free(myMPItype2, ierr)
+
+    end if!cfg%lspin==1
+
+  end subroutine myBcast_cfg
+#endif
+
+
+
+
+
+  subroutine save_fermivelocity(filemode, nkpts, fermivel, nsym, isym)
+
+    use mod_ioformat,   only: fmt_fn_sub_ext, ext_formatted, filename_fvel
+    implicit none
+
+    character(len=*), intent(in) :: filemode
+    integer,          intent(in) :: nkpts, nsym, isym(nsym)
+    double precision, intent(in) :: fermivel(3,nkpts)
+
+    integer :: ii
+    character(len=256) :: filename
+
+    write(filename,fmt_fn_sub_ext) filename_fvel, filemode, ext_formatted
+    open(unit=326528, file=trim(filename), form='formatted', action='write')
+    write(326528,'(2I8)') nkpts, nsym
+    write(326528,'(12I8)') isym
+    write(326528,'(3ES25.16)') fermivel
+    close(326528)
+
+  end subroutine save_fermivelocity
+
+
+
+
+
+  subroutine save_spinvalue(filemode, nkpts, nsqa, ndegen, ispincomb, nvect, spinval, nsym, isym)
+
+    use mod_ioformat,   only: fmt_fn_sub_ext, ext_formatted, filename_spin
+    implicit none
+
+    character(len=*), intent(in) :: filemode
+    integer,          intent(in) :: nkpts, nsqa, ndegen, nsym, isym(nsym), ispincomb(nsqa)
+    double precision, intent(in) :: nvect(3,nsqa), spinval(ndegen,nsqa,nkpts)
+
+
+    integer :: ii
+    character(len=256) :: filename
+
+    write(filename,fmt_fn_sub_ext) filename_spin, filemode, ext_formatted
+    open(unit=326529, file=trim(filename), form='formatted', action='write')
+    write(326529,'(2I8)') nkpts, nsym, nsqa, ndegen
+    write(326529,'(12I8)') isym
+    write(326529,'(10I8)') ispincomb
+    write(326529,'(3ES25.16)') nvect
+    write(326529,'(ES25.16)') spinval
+    close(326529)
+
+  end subroutine save_spinvalue
+
+
+
+
+
+  subroutine calculate_spinmixing_int(nsym, ndeg,nsqa,nkpts,areas,fermivel,spinval,spinmix,dos,printout,BZVol)
+    use mpi
+    use mod_mympi, only: myrank, master
+    implicit none
+
+    integer,          intent(in)  :: nsym,ndeg, nsqa, nkpts
+    double precision, intent(in)  :: areas(nkpts), fermivel(3,nkpts), spinval(ndeg,nsqa,nkpts)
+    double precision, intent(out) :: spinmix(nsqa), dos
+    logical,          intent(in)  :: printout
+    double precision, intent(in), optional :: BZVol
+
+    integer :: isqa, ikp
+    double precision :: integ(nsqa), vabs
+
+    integ  = 0d0
+    dos  = 0d0
+    do ikp=1,nkpts
+      vabs = sqrt(sum(fermivel(:,ikp)**2))
+      dos  = dos +areas(ikp)/vabs
+      integ(:) = integ(:)+areas(ikp)*(1d0-abs(spinval(1,:,ikp)))/(2*vabs)
+    end do!ikp
+
+    spinmix = integ/dos
+
+    if(printout .and. myrank==master)then
+      write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos, " [unnormalized]"
+      if(present(BZVol)) write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos/BZVol, " [normalized]"
+      do isqa=1,nsqa
+        write(*,'(A,I4,3(A,ES25.16))') "Elliott-Yafet parameter: isqa= ", isqa,", b^2= ", nsym*integ(isqa)," [unnormalized], ", spinmix(isqa), " [normalized by DOS]"
+      end do!isqa
+    end if!printout
+
+  end subroutine calculate_spinmixing_int
+
+
+
+
+
+  subroutine calculate_dos_int(nsym, nkpts,areas,fermivel,dos,printout,BZVol)
+    use mpi
+    use mod_mympi, only: myrank, master
+    implicit none
+
+    integer,          intent(in)  :: nsym,nkpts
+    double precision, intent(in)  :: areas(nkpts), fermivel(3,nkpts)
+    double precision, intent(out) :: dos
+    logical,          intent(in)  :: printout
+    double precision, intent(in), optional :: BZVol
+
+    integer :: ikp
+    double precision :: vabs
+
+    dos  = 0d0
+    do ikp=1,nkpts
+      vabs = sqrt(sum(fermivel(:,ikp)**2))
+      dos  = dos +areas(ikp)/vabs
+    end do!ikp
+
+    if(printout .and. myrank==master)then
+      write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos, " [unnormalized]"
+      if(present(BZVol)) write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos/BZVol, " [normalized]"
+    end if!printout
+
+  end subroutine calculate_dos_int
+
+
+
+
+
+  subroutine calculate_spinmixing_vis(nsym, ndeg,nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,printout,BZVol)
+    use mpi
+    use mod_mympi, only: myrank, master
+    use mod_mathtools, only: crossprod, simple_integration
+    implicit none
+
+    integer,          intent(in)  :: nsym,ndeg, nsqa, nkpts, nkpts_all, kpt2irr(nkpts_all)
+    double precision, intent(in)  :: kpoints(3,nkpts), fermivel(3,nkpts), spinval(ndeg,nsqa,nkpts)
+    double precision, intent(out) :: spinmix(nsqa), dos
+    logical,          intent(in)  :: printout
+    double precision, intent(in), optional :: BZVol
+
+    integer :: isqa, itri, pointspick(3)
+    double precision :: integ(nsqa), vabs, kpoints_triangle(3,3), fermi_velocity_triangle(3,3), eyaf_triangle(3), k21(3), k31(3), kcross(3), area, d_integ, d_dos
+
+    integ  = 0d0
+    dos  = 0d0
+    do itri=1,nkpts_all/3
+
+      pointspick(1) = kpt2irr((itri-1)*3+1)
+      pointspick(2) = kpt2irr((itri-1)*3+2)
+      pointspick(3) = kpt2irr((itri-1)*3+3)
+
+      !rewrite corner point data
+      kpoints_triangle(:,:)        = kpoints(:,pointspick(:))
+      fermi_velocity_triangle(:,:) = fermivel(:,pointspick(:))
+
+      !compute area
+      k21 = kpoints_triangle(:,2) - kpoints_triangle(:,1)
+      k31 = kpoints_triangle(:,3) - kpoints_triangle(:,1)
+      call crossprod(k21, k31, kcross)
+      area = 0.5d0*sqrt(sum(kcross**2))
+
+      do isqa=1,nsqa
+        eyaf_triangle(:) = (1d0-abs(spinval(1,isqa,pointspick(:))))/2
+        call simple_integration(area, fermi_velocity_triangle, eyaf_triangle, d_integ, d_dos)
+        integ(isqa) = integ(isqa)+d_integ
+      end do!isqa
+
+      dos = dos+d_dos
+    end do!ikp
+
+    spinmix = integ/dos
+
+    if(printout .and. myrank==master)then
+      write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos, " [unnormalized]"
+      if(present(BZVol)) write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos/BZVol, " [normalized]"
+      do isqa=1,nsqa
+        write(*,'(A,I4,3(A,ES25.16))') "Elliott-Yafet parameter: isqa= ", isqa,", b^2= ", nsym*integ(isqa)," [unnormalized], ", spinmix(isqa), " [normalized by DOS]"
+      end do!isqa
+    end if!printout
+
+  end subroutine calculate_spinmixing_vis
+
+
+
+
+  subroutine calculate_dos_vis(nsym,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,dos,printout,BZVol)
+    use mod_mympi, only: myrank, master
+    use mod_mathtools, only: crossprod, simple_integration
+    use mpi
+    implicit none
+
+    integer,          intent(in)  :: nsym, nkpts, nkpts_all, kpt2irr(nkpts_all)
+    double precision, intent(in)  :: kpoints(3,nkpts), fermivel(3,nkpts)
+    double precision, intent(out) :: dos
+    logical,          intent(in)  :: printout
+    double precision, intent(in), optional :: BZVol
+
+    integer :: itri, pointspick(3)
+    double precision :: integ, vabs, kpoints_triangle(3,3), fermi_velocity_triangle(3,3), dtmp3(3), k21(3), k31(3), kcross(3), area, dtmp, d_dos
+
+    dtmp3 = 0d0
+    dos  = 0d0
+
+    do itri=1,nkpts_all/3
+
+      pointspick(1) = kpt2irr((itri-1)*3+1)
+      pointspick(2) = kpt2irr((itri-1)*3+2)
+      pointspick(3) = kpt2irr((itri-1)*3+3)
+
+      !rewrite corner point data
+      kpoints_triangle(:,:)        = kpoints(:,pointspick(:))
+      fermi_velocity_triangle(:,:) = fermivel(:,pointspick(:))
+
+      !compute area
+      k21 = kpoints_triangle(:,2) - kpoints_triangle(:,1)
+      k31 = kpoints_triangle(:,3) - kpoints_triangle(:,1)
+      call crossprod(k21, k31, kcross)
+      area = 0.5d0*sqrt(sum(kcross**2))
+
+      call simple_integration(area, fermi_velocity_triangle, dtmp3, dtmp, d_dos)
+      dos = dos+d_dos
+
+    end do!ikp
+
+    if(printout .and. myrank==master)then
+      write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos, " [unnormalized]"
+      if(present(BZVol)) write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos/BZVol, " [normalized]"
+    end if!printout
+
+  end subroutine calculate_dos_vis
+
+
+
+  integer function get_nsqa()
+    implicit none
+    if(.not.cfg_read .or. cfg%nsqa==-1 ) then
+      call read_cfg(force_spinread=.true.)
+    end if
+    get_nsqa =cfg%nsqa
+  end function
+
+
+
+  subroutine calculate_and_save_weights(nkpts,nsym,isym,areas,fermivel)
+    use mod_ioformat, only: fmt_fn_ext, filename_weights, ext_formatted
+    implicit none
+    integer, intent(in) :: nkpts, nsym, isym(nsym)
+    double precision, intent(in) :: areas(nkpts), fermivel(3,nkpts)
+
+    integer :: ikp
+    double precision :: weights(nkpts)
+    character(len=256) :: filename
+    integer, parameter :: iounit=13516
+
+    do ikp=1,nkpts
+      weights(ikp) = areas(ikp)/sqrt(sum(fermivel(:,ikp)**2))
+    end do
+
+    write(filename,fmt_fn_ext) filename_weights, ext_formatted
+    open(unit=iounit,file=trim(filename),form='formatted',action='write')
+    write(iounit,'(2I8)') nkpts, nsym
+    write(iounit,'(12I8)') isym
+    write(iounit,'(10ES25.16)') weights
+    close(iounit)
+
+  end subroutine calculate_and_save_weights
+
+
+end module mod_calconfs
