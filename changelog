@@ -1,0 +1,7 @@
+2014-11-19: corrected the little helper program 'band.x' to calculate bandstuctures. (Preparation step in zulapi-code: set the runoption BAND-STR).
+2014-11-19: the output of the atom resolved torque for bulk systems is now implemented (but not tested though).
+2014-11-10: implemented the atom resolved torque (set LTORQATOM=1 in the input file). The output for bulk systems is not yet implemented though.
+2014-10-24: implemented writeout of Pkk' for option SCATTFIX and LLIFETIME.
+2014-10-24: for option SCATTFIX, changed the implementation such that the INCOMMING k-vector is fixed (before it was outgoing k-vector).
+2014-10-22: to solve memory-issues with very large slab calculations, the paramter 'NROOTMAX' can be set in the inputcard. If NROOTMAX= 0 assumes the maximal possible value.
+2014-10-22: included checks whether actually TBKKR_torq orr TBKKR_rhod-files are present when they shall be used.
