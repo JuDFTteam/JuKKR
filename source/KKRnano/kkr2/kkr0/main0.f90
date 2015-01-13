@@ -189,6 +189,13 @@
     inquire(file = 'potential', exist = startpot_exists)
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
+
+      call STARTB1_wrapper_new(params%alat, &
+                   dims%LPOT,dims%NSPIND,NTCELL, &
+                   EFERMI, arrays%ZAT, radius_muffin_tin, &
+                   dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
+                   dims%NAEZ, dims%IRNSD)
+
       call STARTB1_wrapper(params%alat, &
                    dims%LPOT,dims%NSPIND,NTCELL, &
                    EFERMI, arrays%ZAT, radius_muffin_tin, &
