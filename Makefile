@@ -51,7 +51,7 @@ SPMX  = calculate_spinmixing.x
 VISD  = visdata.x
 VINT  = vis2int.x
 TEST  = test.x
-TTLO = test_line_order.x
+#TTLO = test_line_order.x
 
 
 #######################################
@@ -93,7 +93,7 @@ AMATobj =	type_inc.o mod_mympi.o mod_ioformat.o mod_ioinput.o mod_mathtools.o mo
 
 TESTobj =	test.o
 
-TTLOobj =       test_line_order.o
+#TTLOobj =       test_line_order.o
 
 #######################################
 ###         COMPILING               ###
@@ -136,8 +136,8 @@ $(VINT):     $(PKKRobj) vis2int.o
 $(TEST):     $(PKKRobj) $(TESTobj)
 	$(FC) $^ -o $@ $(LDFLAGS)
 
-$(TTLO):     $(PKKRobj) test_line_order.o
-	$(FC) $^ -o $@ $(LDFLAGS)
+#$(TTLO):     $(PKKRobj) test_line_order.o
+#	$(FC) $^ -o $@ $(LDFLAGS)
 
 ##########################################################################
 ###                     COMMON DECLARATIONS                            ###
@@ -151,7 +151,7 @@ clear:
 clean:
 	rm -f *.o *.mod *~ *.x 
 
-all: $(PKKR) $(BAND) $(REFI) $(MERG) $(AMAT) $(SPMX) $(VISD) $(VINT) $(TTLO)
+all: $(PKKR) $(BAND) $(REFI) $(MERG) $(AMAT) $(SPMX) $(VISD) $(VINT)
 
 install: clear all
 
