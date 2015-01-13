@@ -171,6 +171,8 @@ appblckcirc.o: EXTRA_FLAGS =
 bcpwupper.o: EXTRA_FLAGS =
 # TODO: unclear why this module does not work with -heap-arrays
 ScatteringCalculation_mod.o: EXTRA_FLAGS =
+# disable pointer runtime check only for the following file:
+TFQMRSolver_mod.o: EXTRA_FLAGS = -check nopointer
 endif
 
 %.o: %.f
