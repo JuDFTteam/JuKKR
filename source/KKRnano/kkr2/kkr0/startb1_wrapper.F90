@@ -246,7 +246,7 @@ subroutine writeAtomData(naezd, lpot, nspin, irmd, irnsd, ntcell, &
       atom%core%ITITLE(:, ispin) = ITITLE(:, ipot)
     enddo
 
-    call writeBasisAtomDA(atom, 37, ii)
+    !call writeBasisAtomDA(atom, 37, ii) ! now done in new code
 #ifndef TASKLOCAL_FILES
     call writeBasisAtomPotentialIndexDA(atom, 38, ii, max_reclen)
 #endif
