@@ -34,6 +34,13 @@ module read_formatted_mod
      double precision, allocatable :: VINS(:,:)
   end type
 
+  type PotentialEntry
+    type (PotentialHeader) :: header
+    type (CoreStatesBlock) :: csblock
+    type (SphericalBlock)  :: sblock
+    type (NonSphericalBlocks)  :: nsblocks
+  end type
+
   CONTAINS
 
   !----------------------------------------------------------------------------
@@ -91,6 +98,9 @@ module read_formatted_mod
        write(*,*) "Error: More than 20 core states."
        STOP
     endif
+
+    block%LCORE = -1
+    block%ECORE = 9999.0d0
 
     IF (block%NCORE.GE.1) THEN
        DO ICORE=1,block%NCORE
@@ -181,4 +191,35 @@ module read_formatted_mod
 
   end subroutine
 
+  !----------------------------------------------------------------------------
+  !> Deallocate array for VINS data.
+  subroutine destroy_NonSphericalBlocks(blocks)
+    type (NonSphericalBlocks), intent(inout) :: blocks
+    deallocate (blocks%VINS)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Create a PotentialEntry by reading from file 'unit'.
+  subroutine create_read_PotentialEntry(potential_entry, unit)
+    type (PotentialEntry), intent(out) :: potential_entry
+    integer, intent(in) :: unit
+
+    call read_PotentialHeader(potential_entry%header, unit)
+    call read_CoreStateBlock(potential_entry%csblock, unit)
+    call create_read_SphericalBlock(potential_entry%sblock, unit)
+    call create_read_NonSphericalBlocks(potential_entry%nsblocks, potential_entry%sblock, unit)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Destroy a PotentialEntry.
+  subroutine destroy_PotentialEntry(potential_entry)
+    type (PotentialEntry), intent(inout) :: potential_entry
+
+    call destroy_SphericalBlock(potential_entry%sblock)
+    call destroy_NonSphericalBlocks(potential_entry%nsblocks)
+  end subroutine
+
 end module read_formatted_mod
+
+
