@@ -6,7 +6,7 @@ module mod_symmetries
   implicit none
 
   private
-  public :: symmetries_type, set_symmetries, pointgrp, get_IBZwedge_faces, points_in_wedge, singlepoint_in_wedge, rotate_kpoints, expand_visarrays, expand_areas, expand_spinvalues, unfold_visarrays, get_2DIBZwedge_lines
+  public :: symmetries_type, set_symmetries, pointgrp, get_IBZwedge_faces, points_in_wedge, singlepoint_in_wedge, rotate_kpoints, expand_visarrays, expand_areas, expand_spinvalues, expand_torqvalues, unfold_visarrays, get_2DIBZwedge_lines
 
     type :: symmetries_TYPE
 
@@ -119,6 +119,27 @@ contains
     end do!isy
 
   end subroutine expand_spinvalues
+
+
+
+
+  subroutine expand_torqvalues(nsym,ndegen,nkpts_in,torqval_in,torqval_out)
+    implicit none
+    integer, intent(in) :: nsym, ndegen, nkpts_in
+    double precision, intent(in) :: torqval_in(3,ndegen,nkpts_in)
+    double precision, allocatable, intent(out) :: torqval_out(:,:,:)
+    integer :: ierr, isy, ub, lb
+
+    allocate(torqval_out(3,ndegen,nsym*nkpts_in), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating torqval_out'
+
+    do isy=1,nsym
+      lb = (isy-1)*nkpts_in+1
+      ub = isy*nkpts_in
+      torqval_out(:,:,lb:ub) = torqval_in
+    end do!isy
+
+  end subroutine expand_torqvalues
 
 
 
