@@ -22,11 +22,23 @@ module read_formatted_mod
      double precision :: ECORE (20)
   end type
 
+  type SphericalBlock
+     integer :: IRT1P
+     integer :: IRNS
+     integer :: LMPOT
+     integer :: ISAVE
+     double precision, allocatable :: VISP(:)
+  end type
+
+  type NonSphericalBlocks
+     double precision, allocatable :: VINS(:,:)
+  end type
+
   CONTAINS
 
   !----------------------------------------------------------------------------
   !> Read header of potential entry.
-  subroutine read_potential_header(header, unit)
+  subroutine read_PotentialHeader(header, unit)
     type (PotentialHeader), intent(out) :: header
     integer, intent(in) :: unit
 
@@ -62,14 +74,15 @@ module read_formatted_mod
       9050 FORMAT (i3,/,2d15.8)
   end subroutine
 
-  !> Read header of potential entry.
+  !----------------------------------------------------------------------------
+  !> Read core state block.
   subroutine read_CoreStateBlock(block, unit)
     type (CoreStatesBlock), intent(out) :: block
     integer, intent(in) :: unit
 
     integer :: ICORE
 
-    READ (IFILE,FMT=9055) block%NCORE, block%inew
+    READ (unit,FMT=9055) block%NCORE, block%inew
 
 ! read the different core states : l and energy
 
@@ -87,6 +100,84 @@ module read_formatted_mod
 
     9055 FORMAT (2i2)
     9070 FORMAT (i5,1p,d20.11)
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read SphericalBlock, do not forget to run destroy_SphericalBlock.
+  subroutine create_read_SphericalBlock(block, unit)
+    type (SphericalBlock), intent(out) :: block
+    integer, intent(in) :: unit
+
+    integer IR, NR
+
+    READ (unit,FMT=9090) block%IRT1P,block%IRNS,block%LMPOT,block%ISAVE
+
+    NR = block%IRT1P
+    allocate(block%VISP(NR))
+
+    READ (unit,FMT=9100) (block%VISP(IR), IR=1,NR)
+
+9090 FORMAT (10i5)
+9100 FORMAT (1p,4d20.13)
+
+  end subroutine
+
+    !----------------------------------------------------------------------------
+  !> Deallocate array for VISP data
+  subroutine destroy_SphericalBlock(block)
+    type (SphericalBlock), intent(inout) :: block
+    deallocate (block%VISP)
+  end subroutine
+
+  !----------------------------------------------------------------------------
+  !> Read NonSphericalBlocks, do not forget to run destroy_NonSphericalBlocks.
+  subroutine create_read_NonSphericalBlocks(blocks, spherical_block, unit)
+    type (NonSphericalBlocks), intent(out) :: blocks
+    type (SphericalBlock), intent(in) :: spherical_block
+    integer, intent(in) :: unit
+
+    integer LMPOT, ISAVE, IRMIN, IRMD
+    integer LM, LM1, IR
+
+    LMPOT = spherical_block%LMPOT
+    ISAVE = spherical_block%ISAVE
+    IRMD = spherical_block%IRT1P
+    IRMIN = spherical_block%IRT1P - spherical_block%IRNS
+
+    allocate(blocks%VINS(IRMIN:IRMD, LMPOT))
+    blocks%VINS = 0.0d0
+
+    IF (LMPOT.GT.1) THEN
+      LM1 = 2
+      DO 50 LM = 2, LMPOT
+        IF (LM1.NE.1) THEN
+
+          IF (ISAVE.EQ.1) THEN
+            READ (unit,FMT=9090) LM1
+          ELSE
+            LM1 = LM
+          END IF
+
+          IF (LM1.GT.1) THEN
+
+            if (LM1 < 1 .or. LM1 > LMPOT) then
+              write(*,*) "ERROR: potential file is not correctly formatted."
+              write(*,*) "Error when trying to read entry: ", LM1
+              STOP
+            endif
+
+            READ (unit,FMT=9100) (blocks%VINS(IR, LM1),IR=IRMIN,IRMD)
+          END IF
+
+        END IF
+
+50    CONTINUE
+
+    END IF
+
+9090 FORMAT (10i5)
+9100 FORMAT (1p,4d20.13)
 
   end subroutine
 
