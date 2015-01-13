@@ -222,4 +222,33 @@ module read_formatted_mod
 
 end module read_formatted_mod
 
+#ifdef TEST_READ_FORMATTED_MOD
+program test_read_formatted
+  use read_formatted_mod
+  implicit none
+
+  type(PotentialEntry) :: entry
+  integer, parameter :: UNIT = 42
+  integer :: LM
+
+  open(UNIT, form='formatted', file='potential')
+    call create_read_PotentialEntry(entry, UNIT)
+
+    write(*,fmt=9080) entry%header%ITITLE
+    write(*,*) entry%sblock%VISP
+    write(*,*) "---------------------------------------------------------------"
+    write(*,*) "Number of non-spherical components: ", entry%sblock%LMPOT
+
+    do LM = 1, entry%sblock%LMPOT
+    write(*,*) "---------------------------------------------------------------"
+    write(*,*) "LM = ", LM
+    write(*,*) "---------------------------------------------------------------"
+    write(*,*) entry%nsblocks%VINS(:,LM)
+    enddo
+
+    call destroy_PotentialEntry(entry)
+  close(UNIT)
+9080 FORMAT (' <#',20a4)
+end program
+#endif
 
