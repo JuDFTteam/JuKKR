@@ -1146,7 +1146,7 @@ contains
     end do!ikxyz
 
 
-    write(6001,'(6ES25.16)') Delta_lambda_kxyz(:,1)-Delta_lambda_kxyz(:,2)/(2*cfg%dk_fv)
+!   write(6001,'(6ES25.16)') Delta_lambda_kxyz(:,1)-Delta_lambda_kxyz(:,2)/(2*cfg%dk_fv)
 
     !++++++++++++++++!
     !+++ BEGIN b) +++!
@@ -1176,7 +1176,7 @@ contains
     !++++++++++++++++!
     fac_fv = dble(tgmatrx%energies(2) - tgmatrx%energies(1))/cfg%dk_fv
     fermi_velocity(:) = -dble( (Delta_lambda_kxyz(:,1) - Delta_lambda_kxyz(:,2))/(Delta_lambda_E(1)-Delta_lambda_E(2)))*fac_fv
-    write(7001,'(6ES25.16)') -(Delta_lambda_kxyz(:,1) - Delta_lambda_kxyz(:,2))/(Delta_lambda_E(1)-Delta_lambda_E(2))*fac_fv
+!   write(7001,'(6ES25.16)') -(Delta_lambda_kxyz(:,1) - Delta_lambda_kxyz(:,2))/(Delta_lambda_E(1)-Delta_lambda_E(2))*fac_fv
 
   end subroutine calc_fermivel
 
