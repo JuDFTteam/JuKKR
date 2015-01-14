@@ -95,23 +95,26 @@ module read_formatted_shapefun_mod
       integer, intent(in) :: unit
 
       integer :: ICELL
+      double precision :: dummy
 
       READ (unit,FMT=9000) sfile%NCELL
+
+      READ (unit, FMT=9010) (dummy, ICELL=1,sfile%NCELL)
+
       allocate (sfile%mesh(sfile%NCELL))
       allocate (sfile%shapes(sfile%NCELL))
-
 
       DO ICELL = 1, sfile%NCELL
         CALL create_read_intermesh(sfile%mesh(ICELL), unit)
         CALL create_read_shapefunction(sfile%shapes(ICELL), sfile%mesh(ICELL), unit)
       ENDDO
 
-
       9000 FORMAT (16i5)
+      9010 FORMAT (4d20.12)
     end subroutine
 
     subroutine destroy_shapefunfile (sfile)
-      type(ShapefunFile), intent (out) :: sfile
+      type(ShapefunFile), intent (inout) :: sfile
 
       integer :: ICELL
 
@@ -126,3 +129,33 @@ module read_formatted_shapefun_mod
     end subroutine
 
 end module read_formatted_shapefun_mod
+
+#ifdef TEST_READ_FORMATTED_SHAPEFUN_MOD
+program test_read_formatted
+  use read_formatted_shapefun_mod
+  implicit none
+
+  type(ShapefunFile) :: sfile
+  integer, parameter :: UNIT = 42
+  integer :: IFUN, ICELL
+
+  open(UNIT, form='formatted', file='shapefun')
+    call create_read_ShapefunFile(sfile, UNIT)
+
+    do ICELL = 1, sfile%NCELL
+
+      write(*,*) "NM :", sfile%mesh(ICELL)%NM
+
+      do IFUN = 1, sfile%shapes(ICELL)%NFU
+        write(*,*) "LM = ", sfile%shapes(ICELL)%LLMSP(IFUN)
+        write(*,*) "-----------------------------------------------"
+        write(*,*) sfile%shapes(ICELL)%THETAS(:, IFUN)
+      enddo
+
+    enddo
+
+    call destroy_Shapefunfile(sfile)
+  close(UNIT)
+
+end program
+#endif
