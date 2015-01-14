@@ -9,6 +9,8 @@ subroutine STARTB1_wrapper_new(alat, LPOT,NSPIN, &
                            NTCELL, &
                            EFERMI,ZAT, radius_muffin_tin, &
                            IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+
+  use read_formatted_shapefun_mod
   implicit none
 
   ! Arguments
@@ -27,13 +29,21 @@ subroutine STARTB1_wrapper_new(alat, LPOT,NSPIN, &
   double precision, dimension(naezd), intent(in) :: radius_muffin_tin
   INTEGER, dimension(*) :: NTCELL
 
-  integer :: max_reclen
+  integer :: max_reclen, max_reclen_mesh
+  type (ShapefunFile) :: sfile
 
-  ! write atoms file and get maximum record length for potential file
+  ! read the complete shapefun file to -> sfile
+  open (91, file='shapefun', status='old', form='formatted')
+  call create_read_shapefunfile(sfile, 91)
+  close (91)
+
+  ! write atoms file and get maximum record lengths for vpotnew file and meshes file
   call write_atoms_file(alat, NSPIN, &
                             NTCELL, &
                             ZAT, radius_muffin_tin, &
-                            NAEZD, max_reclen)
+                            NAEZD, sfile, EFERMI, max_reclen, max_reclen_mesh)
+
+  call destroy_shapefunfile(sfile)
 
 end subroutine
 
@@ -43,9 +53,11 @@ end subroutine
 subroutine write_atoms_file(alat, NSPIN, &
                             NTCELL, &
                             ZAT, radius_muffin_tin, &
-                            NAEZD, max_reclen)
+                            NAEZD, sfile, EFERMI, max_reclen, max_reclen_mesh)
   use read_formatted_mod
+  use read_formatted_shapefun_mod
   use BasisAtom_mod
+  use RadialMeshData_mod
   implicit none
 
   ! Arguments
@@ -55,7 +67,10 @@ subroutine write_atoms_file(alat, NSPIN, &
   double precision, dimension(naezd), intent(in) :: radius_muffin_tin
   integer, intent(in) :: NAEZD
   INTEGER, dimension(*) :: NTCELL
+  type (Shapefunfile), intent(in) :: sfile
+  double precision :: EFERMI
   integer, intent(out) :: max_reclen
+  integer, intent(out) :: max_reclen_mesh
 
   integer :: iatom
   integer :: ispin
@@ -64,9 +79,12 @@ subroutine write_atoms_file(alat, NSPIN, &
 
   type (PotentialEntry) :: entry(2)
   type (BasisAtom) :: atom
+  type (RadialMeshData) :: mesh
   integer, parameter :: UNIT = 13
+  integer :: cell_index
 
   max_reclen = 0
+  max_reclen_mesh = 0
   reclen = 0
 
   call openBasisAtomDAFile(atom, 37, 'atoms')
@@ -76,6 +94,11 @@ subroutine write_atoms_file(alat, NSPIN, &
 
       do ispin = 1, nspin
         call create_read_PotentialEntry(entry(ispin), UNIT)
+
+        ! take approximate Fermi energy from 1st potential entry
+        if (iatom == 1 .and. ispin == 1) then
+          EFERMI = entry(ispin)%header%EFERMI
+        endif
 
         ! do some consistency checks
         if (abs(ZAT(iatom) - entry(ispin)%header%Z_nuclear) > 1.d-8) then
@@ -123,6 +146,15 @@ subroutine write_atoms_file(alat, NSPIN, &
       enddo
 
       call writeBasisAtomDA(atom, 37, iatom)
+
+      ! determine maximal record length for meshes.0 file
+      ! this is a bit of a hack
+      cell_index = NTCELL(iatom)
+      CHECKASSERT (cell_index <= sfile%NCELL .and. cell_index > 0)
+      call createRadialMeshData(mesh, entry(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan)
+      max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
+      ! cleanup
+      call destroyRadialMeshData(mesh)
 
       call destroyBasisAtom(atom)
 
