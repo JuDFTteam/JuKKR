@@ -196,12 +196,6 @@
                    dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
                    dims%NAEZ, dims%IRNSD)
 
-      !call STARTB1_wrapper(params%alat, &
-      !             dims%LPOT,dims%NSPIND,NTCELL, &
-      !             EFERMI, arrays%ZAT, radius_muffin_tin, &
-      !             dims%IPAND, dims%IRID, dims%NFUND, dims%IRMD, dims%NCELLD, &
-      !             dims%NAEZ, dims%IRNSD)
-
     else
       ! no formatted potential provided
       write(*,*) &

@@ -116,5 +116,5 @@ DimParams_mod.o: config_reader.o
 BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
 
-startb1_wrapper.o: CellData_mod.o RadialMeshData_mod.o BasisAtom_mod.o
-startb1.o: BasisAtom_mod.o
+startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
+
