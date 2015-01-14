@@ -5,25 +5,18 @@
 !> Returns: EFERMI (from first entry in potential file)
 
 ! determine the record length
-subroutine STARTB1_wrapper_new(alat, LPOT,NSPIN, &
+subroutine STARTB1_wrapper_new(alat,NSPIN, &
                            NTCELL, &
                            EFERMI,ZAT, radius_muffin_tin, &
-                           IPAND,IRID,NFUND,IRMD,NCELLD,NAEZD,IRNSD)
+                           NAEZD)
 
   use read_formatted_shapefun_mod
   implicit none
 
   ! Arguments
   double precision, intent(in) :: alat
-  INTEGER, INTENT(IN) :: IPAND
-  INTEGER, INTENT(IN) :: IRID
-  INTEGER, INTENT(IN) :: NFUND
-  INTEGER, INTENT(IN) :: IRMD
-  INTEGER, INTENT(IN) :: NCELLD
   INTEGER, INTENT(IN) :: NAEZD
-  INTEGER, INTENT(IN) :: IRNSD
   DOUBLE PRECISION :: EFERMI
-  INTEGER :: LPOT
   INTEGER :: NSPIN
   DOUBLE PRECISION, dimension(*) :: ZAT
   double precision, dimension(naezd), intent(in) :: radius_muffin_tin
@@ -205,7 +198,6 @@ subroutine write_binary_potential(alat, NSPIN, &
 
   integer :: iatom
   integer :: ispin
-  integer :: lpot_atom
 
   type (PotentialEntry) :: entry(2)
   type (BasisAtom) :: atom
@@ -252,7 +244,7 @@ subroutine write_binary_potential(alat, NSPIN, &
         call openRadialMeshDataIndexDAFile(meshdata, 93, "meshes.0.idx")
 #endif
         call openBasisAtomPotentialDAFile(atom, 39, 'vpotnew.0', max_reclen)
-        call openRadialMeshDataDAFile(meshdata, 94 , "meshes.0")
+        call openRadialMeshDataDAFile(meshdata, 94 , "meshes.0", max_reclen_mesh)
       endif
 
 #ifndef TASKLOCAL_FILES
