@@ -24,7 +24,6 @@ module DimParams_mod
     integer  :: NXIJD
     integer  :: LLY
     integer  :: EKMD
-    integer  :: NCELLD
     integer  :: XDIM
     integer  :: YDIM
     integer  :: ZDIM
@@ -68,7 +67,6 @@ module DimParams_mod
     read(FILEHANDLE) self%IRNSD
     read(FILEHANDLE) self%IRMD
     read(FILEHANDLE) self%IRID
-    read(FILEHANDLE) self%NCELLD
     read(FILEHANDLE) self%IPAND
     read(FILEHANDLE) self%NXIJD
     read(FILEHANDLE) self%KPOIBZ
@@ -128,8 +126,6 @@ module DimParams_mod
     call getValueInteger(conf, "IRMD", self%IRMD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "IRID", self%IRID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NCELLD", self%NCELLD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "IPAND", self%IPAND, ierror)
     if (ierror /= 0) stop
@@ -203,7 +199,6 @@ module DimParams_mod
     write(FILEHANDLE) self%IRNSD
     write(FILEHANDLE) self%IRMD
     write(FILEHANDLE) self%IRID
-    write(FILEHANDLE) self%NCELLD
     write(FILEHANDLE) self%IPAND
     write(FILEHANDLE) self%NXIJD
     write(FILEHANDLE) self%KPOIBZ
