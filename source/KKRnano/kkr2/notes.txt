@@ -53,7 +53,6 @@ code that uses OpenMP.
 Interpolation of potential to new mesh and on-the-fly shape-function generation
 =======================
 
-*) kkr0 can create only meshes and potentials with an equal number of mesh points
 *) A shapefun file has to be provided to specify the initial interstitial mesh
    (Use the mapping of atom to shape in 'atominfo' - NTCELL)
 *) the shape-functions in 'shapefun' are not used! (but have to be specified
@@ -134,8 +133,6 @@ Checkpointing:
 kkr0:
 *) kkr0 can generate a start potential from a formatted potential file named
    'potential' and a shape-function file 'shapefun'
-   
-*) This only works for potentials which use the same radial mesh for all atoms
 
 *) Start potential generation can be skipped by removing/renaming file 'potential'
    and providing an approximate Fermi-energy in file 'EFERMI' (used for k-mesh
@@ -205,3 +202,4 @@ Some Bugs:
 ALREADY FIXED bugs:
 
 *) Near field correction do not work with more than 1 MPI rank.
+*) kkr0 can create only meshes and potentials with an equal number of mesh points
