@@ -663,7 +663,7 @@ module CalculationData_mod
     ! generate storage for cell information + shape-functions
     do ilocal = 1, calc_data%num_local_atoms
       cell => calc_data%cell_array(ilocal)
-      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, dims%nfund)
+      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
     end do
 
     ! loop over all LOCAL atoms

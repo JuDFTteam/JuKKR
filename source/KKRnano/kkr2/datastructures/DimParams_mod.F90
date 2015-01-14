@@ -19,7 +19,6 @@ module DimParams_mod
     integer  :: ISHLD
     integer  :: IRNSD
     integer  :: KPOIBZ
-    integer  :: NFUND
     integer  :: NMAXD
     integer  :: NSPIND
     integer  :: NXIJD
@@ -69,7 +68,6 @@ module DimParams_mod
     read(FILEHANDLE) self%IRNSD
     read(FILEHANDLE) self%IRMD
     read(FILEHANDLE) self%IRID
-    read(FILEHANDLE) self%NFUND
     read(FILEHANDLE) self%NCELLD
     read(FILEHANDLE) self%IPAND
     read(FILEHANDLE) self%NXIJD
@@ -130,8 +128,6 @@ module DimParams_mod
     call getValueInteger(conf, "IRMD", self%IRMD, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "IRID", self%IRID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NFUND", self%NFUND, ierror)
     if (ierror /= 0) stop
     call getValueInteger(conf, "NCELLD", self%NCELLD, ierror)
     if (ierror /= 0) stop
@@ -207,7 +203,6 @@ module DimParams_mod
     write(FILEHANDLE) self%IRNSD
     write(FILEHANDLE) self%IRMD
     write(FILEHANDLE) self%IRID
-    write(FILEHANDLE) self%NFUND
     write(FILEHANDLE) self%NCELLD
     write(FILEHANDLE) self%IPAND
     write(FILEHANDLE) self%NXIJD
