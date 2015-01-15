@@ -150,7 +150,7 @@ subroutine write_atoms_file(alat, NSPIN, &
       ! this is a bit of a hack
       cell_index = NTCELL(iatom)
       CHECKASSERT (cell_index <= sfile%NCELL .and. cell_index > 0)
-      call createRadialMeshData(mesh, entry(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan)
+      call createRadialMeshData(mesh, entry(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan + 1)
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
       ! cleanup
       call destroyRadialMeshData(mesh)
