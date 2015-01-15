@@ -15,6 +15,15 @@ module debug_morgan_mod
   double precision, parameter, private :: PI = 4.0d0 * atan(1.0d0)
   
   contains
+
+  ! On BlueGene/Q norm2 does not exist as an intrinsic - use BLAS
+#ifdef __bgq__
+  double precision function norm2(vec)
+    double precision, intent(in) :: vec(:)
+    double precision, external :: dnrm2
+    norm2 = dnrm2 (size(vec), vec, 1)
+  end function
+#endif
     
   !----------------------------------------------------------------------------
   !> evaluate spherical harmonic expansion at angles given by 'vec'.
