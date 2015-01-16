@@ -362,7 +362,7 @@ contains
 
     elseif(myrank==master .and. cfg%lfvel==1 .and. cfg%lspin==0) then
 
-      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,nkpts,areas,fermivel)
+      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,nkpts,areas,fermivel,inc%nBZdim)
       if(cfg%mode==MODE_VIS) call calculate_dos_vis(nsym,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,dos,.true.,BZVol)
 
     end if
@@ -2185,14 +2185,14 @@ contains
 
 
 
-  subroutine calculate_dos_int(nsym,isym,rotmat,alat,BZVol,nkpts,areas,fermivel)
+  subroutine calculate_dos_int(nsym,isym,rotmat,alat,BZVol,nkpts,areas,fermivel,BZdim)
     use mpi
     use mod_mympi,      only: myrank, master
     use mod_mathtools,  only: machpi
     use mod_symmetries, only: rotate_kpoints, expand_areas
     implicit none
 
-    integer,          intent(in)  :: nsym,nkpts, isym(nsym)
+    integer,          intent(in)  :: nsym,nkpts, isym(nsym), BZdim
     double precision, intent(in)  :: rotmat(64,3,3), alat, BZVol, areas(nkpts), fermivel(3,nkpts)
 
     integer :: ikp, i1, i2, nkpts_r
@@ -2238,15 +2238,37 @@ contains
       end do!i1
     end do!ikp
 
-    conductivity = conductivity/(alat*tpi**2)
+    if(BZdim==3)then    
+      conductivity = conductivity/(alat*tpi**2)
 
-    if(myrank==master)then
-      write(*,'(A)') "Conductivity / relaxation time  [in constant relaxation time approximation]:"
-      write(*,'(A)') "  in Rydberg:"
-      write(*,'(3ES25.16)') conductivity*2 !factor 2 because e^2 = 2 in Rydberg units
-      write(*,'(A)') "  in siemens/(meter * femtosecond):"
-      write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*RyToinvfs
-    end if!myrank==master
+      if(myrank==master)then
+        write(*,'(A)') "Conductivity / relaxation time  [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in Rydberg:"
+        write(*,'(3ES25.16)') conductivity*2 !factor 2 because e^2 = 2 in Rydberg units
+        write(*,'(A)') "  in siemens/(meter * femtosecond):"
+        write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*RyToinvfs
+        write(*,'(A)') "  in siemens/meter for room temperature (hbar/(2*tau) = 25 meV) :"
+        write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*13.60569253/(2*25*0.001)
+      end if!myrank==master
+
+    elseif (BZdim==2)then
+      conductivity = conductivity/(tpi**3)
+
+      if(myrank==master)then
+        write(*,'(A)') "2D MODE : Conductivity values give a current per unit of length (not per unit of area)"
+        write(*,'(A)') "          These values have to be divided by the thickness of the film in BR to obtain"
+        write(*,'(A)') "          the average current density in the film in siemens/meter."
+        write(*,'(A)') "Conductivity / relaxation time  [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in Rydberg meter:"
+        write(*,'(3ES25.16)') conductivity*2 !factor 2 because e^2 = 2 in Rydberg units
+        write(*,'(A)') "  in siemens/(femtosecond):"
+        write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*RyToinvfs
+        write(*,'(A)') "  in siemens for room temperature (hbar/(2*tau) = 25 meV) :"
+        write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*13.60569253/(2*25*0.001)
+      end if!myrank==master
+    else
+      stop 'BZdim is neiter 2 nor 3 !'
+    endif
 
   end subroutine calculate_dos_int
 
