@@ -571,6 +571,17 @@ contains
       close(1325)
     end if!myrank==master
 
+    if(myrank==master) then
+      open(unit=1326,file='lifetime.int.txt',form='formatted',action='write')
+      write(1326,'(3I8)') nkpts, nsym, inc%ndegen
+      write(1326,'(12I8)') isym
+      do ikp=1,nkpts
+        write(1326,'(10ES25.16)') tau(:,1,ikp), tau2(:,1,ikp), meanfreepath(:,:,1,ikp)
+      end do!ikp
+      close(1326)
+    end if!myrank==master
+
+
 #ifdef CPP_TIMING
     call timing_stop('Converging the meanfreepath[total]')
 #endif
