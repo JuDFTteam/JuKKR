@@ -362,15 +362,22 @@ contains
 
     elseif(myrank==master .and. cfg%lfvel==1 .and. cfg%lspin==0) then
 
-      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,nkpts,areas,fermivel,inc%nBZdim)
+      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,nkpts,areas,fermivel)
       if(cfg%mode==MODE_VIS) call calculate_dos_vis(nsym,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,dos,.true.,BZVol)
 
     end if
 
     if(myrank==master .and. cfg%lfvel==1 .and. cfg%ltorq==1) then
       if(cfg%mode==MODE_INT) call calculate_torkance_CRTA_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,areas,fermivel,torqval)
-      if(cfg%mode==MODE_VIS .and. cfg%simpson==.false.) call calculate_torkance_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
-      if(cfg%mode==MODE_VIS .and. cfg%simpson==.true.) call calculate_torkance_CRTA_vis_simpson2D(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
+!BZcomment: order changed to avoid simpson=T and 3D-case
+      if(cfg%mode==MODE_VIS)then
+        if(cfg%simpson .and. inc%nBZdim==2)then
+          call calculate_torkance_CRTA_vis_simpson2D(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
+        else!cfg%simpson==.true.
+          if(cfg%simpson) write(*,*) 'Simpson rule is not implemented for inc%nBZdim =/= 2. Taking standard (=linear) integration.'
+          call calculate_torkance_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
+        end if!cfg%simpson==.true.
+      end if!cfg%mode==MODE_VIS
     end if
 
     !output 3D visualization data
@@ -1820,7 +1827,6 @@ contains
     torkance = integ/BZVol*alat/2/machpi()
 
     if(myrank==master)then
-      if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
       write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
       write(*,'(A)') "In units of e*abohr Rydberg:"
       write(*,'(3(ES25.16))') torkance
@@ -1872,7 +1878,6 @@ contains
     damping = integ/BZVol
 
     if(myrank==master)then
-      if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
       write(*,'(A)') "Gilbert damping in constant relaxation time approximation:"
       write(*,'(A)') "In units of  Rydberg:"
       write(*,'(3(ES25.16))') damping
@@ -2053,7 +2058,7 @@ contains
     integer                           :: i1, i2, i3, i_ord, i_band, ierr, i_ord_new
 
     ! This subroutine order k-pts according to the band to which they belong
-    ! Output  : kpt2irr contains the ordered k-pts
+    ! Output  : kpt2irr_ord contains the ordered k-pts
     !           band_indices contains the band indices
     !           nkpts_band(nbands) contain the nb of kpts in each band
     ! Comment : At the moment works only if no band makes a loop in the IBZ
