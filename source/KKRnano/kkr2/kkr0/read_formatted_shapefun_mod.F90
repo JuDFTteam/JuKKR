@@ -1,6 +1,15 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+
+!> Module to read shape function file.
+!>
+!> @author Elias Rabel, Marcel Bornemann
+!> 2015
 module read_formatted_shapefun_mod
     implicit none
+
+    ! use the following 2 routines to read a shape function file.
+    public :: create_read_ShapefunFile
+    public :: destroy_ShapefunFile
 
     type Intermesh
       integer :: NPAN

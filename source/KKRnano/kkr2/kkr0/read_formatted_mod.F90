@@ -1,5 +1,14 @@
+!> Module to read formatted potential.
+!>
+!> @author Elias Rabel, Marcel Bornemann
+!> 2015
+
 module read_formatted_mod
   implicit none
+
+  ! use the following 2 routines to read one potential entry from a file.
+  public :: create_read_PotentialEntry
+  public :: destroy_PotentialEntry
 
   type PotentialHeader
     integer :: ITITLE(20)
