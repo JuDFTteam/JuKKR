@@ -86,8 +86,8 @@ contains
     use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints, expand_areas, expand_spinvalues
     use mod_read,       only: read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue
     use mod_parutils,   only: distribute_linear_on_tasks
-    use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume
-    use mod_ioformat,   only: filemode_int, filename_eigvect, fmt_fn_ext, ext_vtkxml
+    use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume, file_present
+    use mod_ioformat,   only: filemode_int, filename_eigvect, filename_scattmat, fmt_fn_ext, ext_vtkxml, ext_mpiio
     use mod_mympi,      only: myrank, nranks, master
     use mod_mathtools,  only: machpi
 #ifdef CPP_TIMING
@@ -133,6 +133,10 @@ contains
     integer :: nkpts1, nkpts2
     double precision, allocatable :: areas1(:), weights1(:), kpoints1(:,:), fermivel1(:,:), temparr(:,:)
 
+    !file-io
+    logical :: compute_scattmat=.true.
+    character(len=256) :: filename
+
     integer :: ierr, ikp, ii3
 
     !parameter
@@ -149,6 +153,14 @@ contains
     call timing_init(myrank)
     call timing_start('Read in of data')
 #endif
+
+    !======================================!
+    != determine whether to calculate the =!
+    !=   scattering matrix or read it in  =!
+    if(sca%savepkk==2)then
+      write(filename,fmt_fn_ext) filename_scattmat, ext_mpiio
+      if(file_present(filename)) compute_scattmat=.false.
+    end if
 
     !=============================!
     != Read in the k-point files =!
@@ -245,40 +257,62 @@ contains
     ioff2 = dataarr_lb(myrank_grid,2)
 !   write(*,'(5(A,I0))') 'myrank_grid=', myrank_grid, ', ioff1=',  ioff1, ', ioff2=', ioff2, ', myrank_row=', myrank_row, ', myrank_col=', myrank_col
 
+    !***************************************************************************************
+    if(compute_scattmat)then!*** Switches for calculation or read in of scattering matrix **
+    !***************************************************************************************
 
-    !=============================!
-    != Read the eigenvector file =!
+      !=============================!
+      != Read the eigenvector file =!
 #ifdef CPP_TIMING
-    call timing_start('Read in of eigenvectors')
+      call timing_start('Read in of eigenvectors')
+#endif
+      call read_eigv_part(inc, nsqa, ioff1, nkpt1, myMPI_comm_row, myrank_col, myMPI_comm_col, rveig_dim1)
+      call read_eigv_part(inc, nsqa, ioff2, nkpt2, myMPI_comm_col, myrank_row, myMPI_comm_row, rveig_dim2)
+#ifdef CPP_TIMING
+      call timing_stop('Read in of eigenvectors')
 #endif
 
-    call read_eigv_part(inc, nsqa, ioff1, nkpt1, myMPI_comm_row, myrank_col, myMPI_comm_col, rveig_dim1)
-    call read_eigv_part(inc, nsqa, ioff2, nkpt2, myMPI_comm_col, myrank_row, myMPI_comm_row, rveig_dim2)
-
+      !===================================!
+      != calculate the scattering matrix =!
 #ifdef CPP_TIMING
-    call timing_stop('Read in of eigenvectors')
-    call timing_start('Calculation of Pkksub')
+      call timing_start('Calculation of Pkksub')
+#endif
+      call calculate_Pkksub( inc, lattice, impcls, nsqa, myrank, master, nkpt1, nkpt2, ioff1,     &
+                           & ioff2, nkpts, rveig_dim1, rveig_dim2, kpoints, weights, Amat, Pkksub )
+#ifdef CPP_TIMING
+      call timing_stop('Calculation of Pkksub')
 #endif
 
-    call calculate_Pkksub( inc, lattice, impcls, nsqa, myrank, master, nkpt1, nkpt2, ioff1,     &
-                         & ioff2, nkpts, rveig_dim1, rveig_dim2, kpoints, weights, Amat, Pkksub )
+      !==============================!
+      != save the scattering matrix =!
+      if(sca%savepkk>0) then
+#ifdef CPP_TIMING
+        call timing_start('Writing of Pkksub to disk')
+#endif
+        call Pkkmpifile_write(myMPI_comm_grid, nkpts, nkpt1, nkpt2, ioff1, ioff2, inc%ndegen, nsqa, Pkksub)
+#ifdef CPP_TIMING
+        call timing_stop('Writing of Pkksub to disk')
+#endif
+        if(sca%savepkk==1)then
+          call MPI_Finalize(ierr)
+          stop 'Saved scattering matrix to file. Stopping.'
+        end if!sca%savepkk==1
+      end if!sca%savepkk>0
+
+    !************************************************************************************
+    else!compute_scattmat!*** Switches for calculation or read in of scattering matrix **
+    !************************************************************************************
+
+      !read the scattering matrix from file
+      if(myrank==master) write(*,*) 'reading scatteringmatrix from file...'
+      call Pkkmpifile_read(myMPI_comm_grid, nkpts, nkpt1, nkpt2, ioff1, ioff2, inc%ndegen, nsqa, Pkksub)
+
+    !**************************************************************************************
+    end if!compute_scattmat!*** Switches for calculation or read in of scattering matrix **
+    !**************************************************************************************
 
 #ifdef CPP_TIMING
-!   call timing_stop('Calculation of Pkksub')
-#endif
-
-!   if(sca%savepkk==1) then
-#ifdef CPP_TIMING
-!     call timing_start('Writing of Pkksub to disk')
-#endif
-!     call Pkkmpifile_write(myMPI_comm_grid, nkpts, nkpt1, nkpt2, ioff1, ioff2, inc%ndegen, nsqa, Pkksub)
-#ifdef CPP_TIMING
-!     call timing_stop('Writing of Pkksub to disk')
-#endif
-!   end if!sca%savepkk==1
-
-#ifdef CPP_TIMING
-!   call timing_start('Calculating the lifetime')
+    call timing_start('Calculating the lifetime')
 #endif
 
     call calculate_lifetime_minmem( myrank_grid, myMPI_comm_grid, inc%ndegen, nsqa, nkpts, nkpt1,   &
@@ -287,8 +321,6 @@ contains
     call timing_stop('Calculating the lifetime')
     call timing_start('Converging the meanfreepath[total]')
 #endif
-
-
 
 !   call meanfreepath_RTA(nkpts, nsqa, inc%ndegen, fermivel, tau, tau_avg, meanfreepath )
     call converge_meanfreepath( myrank_grid, myMPI_comm_grid, nkpts, nkpt1, nkpt2, &
@@ -3008,7 +3040,7 @@ contains
       call MPI_File_close( filehandle, ierr )
       if(ierr/=MPI_SUCCESS) stop 'MPI_File_close'
 
-    end if!myrank==submaster
+    end if!subrank==submaster
 
     !Brodcast to other processes in subcomm
     call MPI_Bcast(rveig, ihelp*nkpt, MPI_DOUBLE_COMPLEX, submaster, subcomm, ierr)
@@ -3019,9 +3051,9 @@ contains
 
 
 
-
   subroutine Pkkmpifile_setview(rwmode, my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, filehandle)
     use mod_ioformat, only: filename_scattmat, ext_mpiio, fmt_fn_ext
+    use mod_mympi, only: myrank
     use mpi
     implicit none
 
@@ -3039,7 +3071,6 @@ contains
     my_mpi_datatype = MPI_DOUBLE_PRECISION
     datasize=8_mo
 
-    !read in outgoing eigenvectors
     write(filename,fmt_fn_ext) filename_scattmat, ext_mpiio
     select case (rwmode)
     case ('read')
@@ -3063,12 +3094,70 @@ contains
     call MPI_Type_commit(myMPI_iotype,ierr)
     if(ierr/=MPI_SUCCESS) stop 'error: MPI_Type_commit in Pkkmpifile_setview'
 
-    disp = (ioff1+ioff2*nkpts*nsqa)*(ndegen*datasize)!byte
+    disp = (ioff1+ioff2*ndegen*nkpts*nsqa)*(ndegen*datasize)!byte
+
     call MPI_File_set_view( filehandle, disp, my_mpi_datatype,             &
                           & myMPI_iotype, 'native', MPI_INFO_NULL, ierr )
     if(ierr/=MPI_SUCCESS) stop 'error: MPI_File_set_view in Pkkmpifile_setview'
 
   end subroutine Pkkmpifile_setview
+
+
+
+
+  subroutine Pkkmpifile_setview_old(rwmode, my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, filehandle)
+    use mod_ioformat, only: filename_scattmat, ext_mpiio, fmt_fn_ext
+    use mod_mympi, only: myrank
+    use mpi
+    implicit none
+
+    character(len=*), intent(in) :: rwmode
+    integer, intent(in) :: my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa
+    integer, intent(out) :: filehandle
+
+    integer :: myMPI_iotype, my_mpi_datatype
+    integer(kind=MPI_OFFSET_KIND) :: disp=0, datasize=0
+    integer, parameter :: mo = kind(disp)
+
+    integer :: ierr, ihelp0, ihelp1, ihelp2
+    character(len=256) :: filename
+
+    my_mpi_datatype = MPI_DOUBLE_PRECISION
+    datasize=8_mo
+
+    write(filename,fmt_fn_ext) filename_scattmat, ext_mpiio
+    select case (rwmode)
+    case ('read')
+      call MPI_File_open( my_mpi_comm, trim(filename), MPI_MODE_RDONLY, &
+                        & MPI_INFO_NULL, filehandle, ierr            )
+      if(ierr/=MPI_SUCCESS) stop 'error: Pkkmpifile_setview readmode'
+    case ('write')
+      call MPI_File_open( my_mpi_comm, trim(filename), MPI_MODE_CREATE+MPI_MODE_WRONLY, &
+                        & MPI_INFO_NULL, filehandle, ierr                            )
+      if(ierr/=MPI_SUCCESS) stop 'error: Pkkmpifile_setview writemode'
+    case default; stop 'dont know how to open the mpi-file. only mode = read/write'
+    end select
+
+    !prepare the file view (see only the part of this task)
+    ihelp0 = nkpts*ndegen
+    ihelp1 = nkpt1*ndegen
+    ihelp2 = nkpt2*ndegen*nsqa
+    call MPI_Type_Vector( ihelp2, ihelp1, ihelp0, my_mpi_datatype, myMPI_iotype, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error: MPI_Type in Pkkmpifile_setview'
+
+    call MPI_Type_commit(myMPI_iotype,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error: MPI_Type_commit in Pkkmpifile_setview'
+
+    write(1000+myrank,*) 'fac=      ', (ioff1+ioff2*nkpts*nsqa)*ndegen
+    write(1000+myrank,*) 'datasize= ', datasize
+    disp = (ioff1+ioff2*nkpts*nsqa)*(ndegen*datasize)!byte
+    write(1000+myrank,*) 'disp=     ', disp
+
+    call MPI_File_set_view( filehandle, disp, my_mpi_datatype,             &
+                          & myMPI_iotype, 'native', MPI_INFO_NULL, ierr )
+    if(ierr/=MPI_SUCCESS) stop 'error: MPI_File_set_view in Pkkmpifile_setview'
+
+  end subroutine Pkkmpifile_setview_old
 
 
   subroutine Pkkmpifile_write(my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, Pkksub)
@@ -3088,6 +3177,30 @@ contains
     call MPI_File_close(filehandle, ierr)
 
   end subroutine Pkkmpifile_write
+
+
+  subroutine Pkkmpifile_read(my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, Pkksub)
+    use mpi
+    implicit none
+
+    integer,                        intent(in) :: my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa
+    double precision, allocatable, intent(out) :: Pkksub(:,:,:,:,:)
+
+    integer :: ierr, filehandle, ihelp, mpistatus(MPI_STATUS_SIZE)
+
+    allocate( Pkksub(ndegen,nkpt1,ndegen,nsqa,nkpt2),&
+            & STAT=ierr )
+    if(ierr/=0) stop 'Problem allocating Pkksub in Pkkmpifile_read'
+    Pkksub = 0d0
+
+    call Pkkmpifile_setview('read', my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, filehandle)
+    ihelp = (ndegen**2)*nkpt1*nkpt2*nsqa
+    call MPI_File_read_all(filehandle, Pkksub, ihelp, MPI_DOUBLE_PRECISION, mpistatus, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error reading in Pkkmpifile_read'
+
+    call MPI_File_close(filehandle, ierr)
+
+  end subroutine Pkkmpifile_read
 
 
   subroutine project_fermivel_newaxis(nkpts,fermivel)
