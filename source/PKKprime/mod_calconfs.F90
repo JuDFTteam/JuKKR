@@ -362,7 +362,7 @@ contains
 
     elseif(myrank==master .and. cfg%lfvel==1 .and. cfg%lspin==0) then
 
-      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,nkpts,areas,fermivel)
+      if(cfg%mode==MODE_INT) call calculate_dos_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,nkpts,areas,fermivel,inc%nBZdim)
       if(cfg%mode==MODE_VIS) call calculate_dos_vis(nsym,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,dos,.true.,BZVol)
 
     end if
