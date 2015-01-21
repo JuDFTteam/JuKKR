@@ -1972,15 +1972,15 @@ contains
       if(MOD(nkpts_band(iband), 4).ne.0) fourmultiple=.true.
       if(MOD(nkpts_band(iband), 4) == 0) fourmultiple=.false.
       !find how many parts of 3 or 2 kpts are in the band
-      if(fourmultiple==.true. ) nparts=nkpts_band(iband)/4
-      if(fourmultiple==.false.) nparts=(nkpts_band(iband)+2)/4
+      if(fourmultiple) nparts=nkpts_band(iband)/4
+      if(.not.fourmultiple) nparts=(nkpts_band(iband)+2)/4
 
       do ipart=1,nparts
         if(iband>1)offset=sum(nkpts_band(1:iband-1))
         if(iband==1)offset=0
         pointspick(1) = kpt2irr_r_ord(offset+(ipart-1)*4+1)
         pointspick(2) = kpt2irr_r_ord(offset+(ipart-1)*4+2)
-        if(fourmultiple==.false. .and. ipart==nparts) then 
+        if(.not.fourmultiple .and. ipart==nparts) then 
           !if no more kpt to save, save the same twice (but won't be used)
           pointspick(3) = kpt2irr_r_ord(offset+(ipart-1)*4+2)
         else
@@ -2001,7 +2001,7 @@ contains
            integrand(:) = torq_corners(i1,ideg,:)*fermi_velocity_corners(i2,:)
            integrand_damping(:) = torq_corners(i1,ideg,:)*torq_corners(i2,ideg,:)
          
-           if (fourmultiple==.false. .and. ipart==nparts) then
+           if (.not.fourmultiple .and. ipart==nparts) then
              call simple_integration_general(2, d(1), fermi_velocity_corners(:,1:2), integrand(1:2), dinteg, d_dos)
              call simple_integration_general(2, d(1), fermi_velocity_corners(:,1:2), integrand_damping(1:2), dinteg_damping, d_dos)
            else
@@ -2088,7 +2088,7 @@ contains
       end if!i_ord>1
 
       !save all kpts from the band
-      if(beginning_of_band==.true.)then
+      if(beginning_of_band)then
         call traceback_band(i_ord,i_band,i1,kpt2irr,nkpts_all,kpt2irr_ord,band_indices,i_ord_new)
         i_ord=i_ord_new
         i_band=i_band+1
@@ -2142,7 +2142,7 @@ contains
       end if!kpt2irr(j)==kpt2irr(i_sameline) .and. j.ne.i_sameline
     end do!j=1,nkpts_all
 
-    if(end_of_band==.false.)then
+    if(.not.end_of_band)then
       call traceback_band(i_ord+2, i_band, j, kpt2irr, nkpts_all, kpt2irr_ord, band_indices, i_ord_new) 
     else
       i_ord_new=i_ord+2
