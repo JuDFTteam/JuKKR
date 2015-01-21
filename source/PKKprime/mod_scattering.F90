@@ -69,22 +69,20 @@ contains
       call read_sca()
     end if
 
-    if(sca%lscatfixk==1 .or. sca%llifetime==1 .or. sca%lconductivity==1 .or. sca%ltorkance==1) call read_scattmat(inc, impcls, Amat)
-
+    if(sca%lscatfixk==1 .or. sca%llifetime==1 .or. sca%lconductivity==1) call read_scattmat(inc, impcls, Amat)
     if(sca%lscatfixk==1) call calc_scattering_fixk(inc, lattice, cluster, tgmatrx, impcls(1), Amat(:,:,1) )
     if(sca%llifetime==1) call calc_lifetime(inc, lattice, impcls(1), Amat(:,:,1) )
-    if(sca%lconductivity==1) call calc_conductivity(inc, lattice, impcls, Amat)
-    if(sca%ltorkance==1) call calc_conductivity_torkance(inc, lattice, impcls, Amat)
+    if(sca%lconductivity==1) call calc_conductivity_torkance(inc, lattice, impcls, Amat)
 
   end subroutine calc_scattering_inputcard
 
 
 
-  subroutine calc_conductivity(inc, lattice, impcls, Amat)
+  subroutine calc_conductivity_torkance(inc, lattice, impcls, Amat)
     use type_inc,       only: inc_type
     use type_data,      only: lattice_type
-    use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints, expand_areas, expand_spinvalues
-    use mod_read,       only: read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue
+    use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints, expand_areas, expand_spinvalues, expand_torqvalues
+    use mod_read,       only: read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue
     use mod_parutils,   only: distribute_linear_on_tasks
     use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume, file_present
     use mod_ioformat,   only: filemode_int, filename_eigvect, filename_scattmat, fmt_fn_ext, ext_vtkxml, ext_mpiio
@@ -116,6 +114,9 @@ contains
     integer :: nsqa, ndegen1
     integer, allocatable :: ispincomb(:)
     double precision, allocatable :: nvect(:,:), spinval(:,:,:), spinval1(:,:,:)
+
+    !torque values locals
+    double precision, allocatable :: torqval(:,:,:), torqval1(:,:,:)
 
     !subarray locals
     integer :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col, myrank_grid, myrank_row, myrank_col
@@ -207,6 +208,16 @@ contains
     if(ndegen1/=inc%ndegen) stop 'inconsistency in ndegen'
     call expand_spinvalues(nsym,ndegen1,nsqa,nkpts1,spinval1,spinval)
     deallocate(isym, spinval1)
+
+    !=============================!
+    != Read in the torque values =!
+    if(sca%ltorkance==1) then
+      call read_torqvalue(filemode_int, nkpts1, ndegen1, torqval1, nsym, isym)
+      if(nkpts1*nsym/=nkpts) stop 'inconsistency in number of k-points'
+      if(ndegen1/=inc%ndegen) stop 'inconsistency in ndegen'
+      call expand_torqvalues(nsym,ndegen1,nkpts1,torqval1,torqval)
+      deallocate(isym, torqval1)
+    endif
 
     !=====================================!
     !======== redefine symmetries ========!
@@ -323,266 +334,7 @@ contains
 #endif
 
 !   call meanfreepath_RTA(nkpts, nsqa, inc%ndegen, fermivel, tau, tau_avg, meanfreepath )
-    call converge_meanfreepath( myrank_grid, myMPI_comm_grid, nkpts, nkpt1, nkpt2, &
-                              & ioff1, ioff2, nsqa, inc%ndegen, BZVol, weights,    &
-                              & fermivel, tau, tau_avg, Pkksub, meanfreepath       )
-
-    if(myrank==master .and. inc%ndegen==1) then
-      open(unit=1325,file='output_lifetime',form='formatted',action='write')
-      write(1325,'(A,I0)') '#nkpts= ', nkpts
-      write(1325,'(A,ES25.16)') '# conversion factor Rydberg to inv.femtoseconds: ', RyToinvfs
-      write(1325,'(A,6ES25.16)') '# averaged tau:', tau_avg(1,1)
-      write(1325,'(A)') '# k[xyz], v[xyz], tau, tau2, lamba[xyz]' 
-!     write(1325,'(A)') '# kx, ky, kz, vx, vy, vz, weight, tau[a.u.]' 
-!     write(1325,'(A)') '# kx, ky, kz, vx, vy, vz, weight, tau[fs]' 
-      do ikp=1,nkpts
-        write(1325,'(14ES18.9)') kpoints(:,ikp), fermivel(:,ikp), tau(1,1,ikp), tau2(1,1,ikp), meanfreepath(:,:,1,ikp)
-!       write(1325,'(8ES18.9)') kpoints(:,ikp), fermivel(:,ikp), weights(ikp), tau(1,1,ikp)
-!       write(1325,'(8ES18.9)') kpoints(:,ikp), fermivel(:,ikp), weights(ikp), tau(1,1,ikp)/RyToinvfs
-      end do!ikp
-      close(1325)
-    end if!myrank==master
-
-#ifdef CPP_TIMING
-    call timing_stop('Converging the meanfreepath[total]')
-#endif
-
-!   if(myrank==master) then
-!     open(unit=1325,file='meanfreepath',form='formatted',action='write')
-!     write(1325,'(3ES18.9)') meanfreepath
-!     close(1325)
-!   end if!myrank==master
-    call calc_condtensor( nkpts, nsqa, inc%ndegen, fermivel, spinval,         &
-                        & meanfreepath, weights, lattice%alat, chcond, spcond )
-
-
-  end subroutine calc_conductivity
-
-
-
-
-  subroutine calc_conductivity_torkance(inc, lattice, impcls, Amat)
-    use type_inc,       only: inc_type
-    use type_data,      only: lattice_type
-    use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints, expand_areas, expand_spinvalues, expand_torqvalues
-    use mod_read,       only: read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue
-    use mod_parutils,   only: distribute_linear_on_tasks
-    use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume
-    use mod_ioformat,   only: filemode_int, filename_eigvect, fmt_fn_ext, ext_vtkxml
-    use mod_mympi,      only: myrank, nranks, master
-    use mod_mathtools,  only: machpi
-#ifdef CPP_TIMING
-    use mod_timing,     only: timing_init, timing_start, timing_stop
-#endif
-    use mpi
-    implicit none
-
-    type(inc_type),     intent(in) :: inc
-    type(lattice_type), intent(in) :: lattice
-    type(impcls_type),  intent(in) :: impcls(sca%naverage)
-    double complex,     intent(in) :: Amat(impcls(1)%clmso,impcls(1)%clmso,sca%naverage)
-
-    double precision :: pi, BZVol
-
-    !symmetry arrays
-    integer :: nsym
-    integer, allocatable :: isym(:)
-    type(symmetries_type) :: symmetries
-
-    !local k-point arrays
-    integer :: nkpts
-    double precision, allocatable :: kpoints(:,:), areas(:), weights(:), fermivel(:,:)
-
-    !spinvalue locals
-    integer :: nsqa, ndegen1
-    integer, allocatable :: ispincomb(:)
-    double precision, allocatable :: nvect(:,:), spinval(:,:,:), spinval1(:,:,:)
-
-    !torque values locals
-    double precision, allocatable :: torqval(:,:,:), torqval1(:,:,:)
-
-    !subarray locals
-    integer :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col, myrank_grid, myrank_row, myrank_col
-    integer :: nkpt1, nkpt2, ioff1, ioff2, subarr_dim(2)
-    integer :: dataarr_lb(0:nranks-1,2),  &
-             & dataarr_ub(0:nranks-1,2),  &
-             & dataarr_nkpt(0:nranks-1,2)
-    double complex, allocatable :: rveig_dim1(:,:,:,:,:), rveig_dim2(:,:,:,:,:)
-    double precision, allocatable :: Pkksub(:,:,:,:,:)
-
-    !result locals
-    double precision, allocatable :: tau(:,:,:), tau2(:,:,:), tau_avg(:,:), meanfreepath(:,:,:,:), chcond(:,:,:), spcond(:,:,:), torkance(:,:,:)
-
-    !temp k-point arrays
-    integer :: nkpts1, nkpts2
-    double precision, allocatable :: areas1(:), weights1(:), kpoints1(:,:), fermivel1(:,:), temparr(:,:)
-
-    integer :: ierr, ikp, ii3
-
-    !parameter
-    double precision, parameter :: RyToinvfs = 20.67068667282055d0
-
-    if(.not.sca_read) then
-      call read_sca()
-    end if
-    call set_symmetries(inc, lattice, symmetries)
-    pi = machpi()
-    BZVol = getBZvolume(lattice%recbv)
-
-#ifdef CPP_TIMING
-    call timing_init(myrank)
-    call timing_start('Read in of data')
-#endif
-
-    !=============================!
-    != Read in the k-point files =!
-    call read_kpointsfile_int(nkpts1, kpoints1, areas1, nsym, isym)
-    call rotate_kpoints(symmetries%rotmat, nkpts1, kpoints1, nsym, isym, nkpts, kpoints)
-    call expand_areas(nsym,nkpts1,areas1,areas)
-    deallocate(isym, areas1, kpoints1)
-
-    !===================================!
-    != Read in the integration weights =!
-    call read_weights(nkpts1, weights1, nsym, isym)
-    call expand_areas(nsym,nkpts1,weights1,weights)
-    deallocate(isym, weights1)
-
-    !==============================!
-    != Read in the fermi velocity =!
-    call read_fermivelocity(filemode_int, nkpts1, fermivel1, nsym, isym)
-    call rotate_kpoints(symmetries%rotmat, nkpts1, fermivel1, nsym, isym, nkpts2, fermivel)
-!   call project_fermivel_newaxis(nkpts,fermivel)
-    if(nkpts2/=nkpts) stop 'inconsistency in number of k-points'
-    deallocate(isym, fermivel1)
-    if(myrank==master) then
-      write(*,'(A,3ES25.16)') 'kpoints-sum:  ', sum(kpoints,  dim=2)
-      write(*,'(A,3ES25.16)') 'fermivel-sum: ', sum(fermivel, dim=2)
-
-      !compute weighted sums
-      allocate(temparr(3,nkpts), STAT=ierr)
-      if(ierr/=0) stop 'Problem allocating temparr'
-      do ii3=1,3
-        temparr(ii3,:) = kpoints(ii3,:)*weights(:)
-      end do!ii3
-      write(*,'(A,3ES25.16)') 'weighted kpoints-sum:  ', sum(temparr,  dim=2)
-      do ii3=1,3
-        temparr(ii3,:) = fermivel(ii3,:)*weights(:)
-      end do!ii3
-      write(*,'(A,3ES25.16)') 'weighted fermivel-sum: ', sum(temparr,  dim=2)
-
-    end if
-
-    !=============================!
-    != Read in the spinvalue     =!
-    call read_spinvalue(filemode_int, nkpts1, nsqa, ndegen1, ispincomb, nvect, spinval1, nsym, isym)
-    if(nkpts1*nsym/=nkpts) stop 'inconsistency in number of k-points'
-    if(ndegen1/=inc%ndegen) stop 'inconsistency in ndegen'
-    call expand_spinvalues(nsym,ndegen1,nsqa,nkpts1,spinval1,spinval)
-    deallocate(isym, spinval1)
-
-    !=============================!
-    != Read in the torque values =!
-    call read_torqvalue(filemode_int, nkpts1, ndegen1, torqval1, nsym, isym)
-    if(nkpts1*nsym/=nkpts) stop 'inconsistency in number of k-points'
-    if(ndegen1/=inc%ndegen) stop 'inconsistency in ndegen'
-    call expand_torqvalues(nsym,ndegen1,nkpts1,torqval1,torqval)
-    deallocate(isym, torqval1)
-
-
-    !=====================================!
-    !======== redefine symmetries ========!
-    != (set to unit transformation only) =!
-    nsym = 1
-    allocate(isym(nsym))
-    isym = (/ 1 /)
-
-#ifdef CPP_TIMING
-    call timing_stop('Read in of data')
-#endif
-
-    !============================================!
-    !=== Create a subarray communication grid ===!
-    != The big Pkk' array is subdivided into MxN submatrices.
-    !=  Here, M is the number of rows and N the number of columns.
-    !=   For example, M=2 and N=3 yields the following arrangement of processes.
-    !=
-    !=     <----------k_1 ------------>
-    !=  <  (  id=0  |  id=2  |  id=4  )
-    !=  |  (        |        |        )
-    !=  |  (        |        |        )
-    != k_2 (--------|--------|--------)
-    !=  |  (  id=1  |  id=3  |  id=5  )
-    !=  |  (        |        |        )
-    !=  >  (        |        |        )
-    !=
-    !=  Then, the communicatior comm_row forms the two subgroups (0, 2 and 4) and (1, 3 and 5).
-    !=  Therefore, the k2 axis is split in two parts, the eigenvectors are read in on
-    !=    process 0 (master of group #1)
-    !=    process 1 (master of group #2)
-    !=  and then brodcastet to the other members of the group.
-
-    ! determine size of subarray
-    if(all(sca%subarr_inp>0))then
-      subarr_dim = sca%subarr_inp
-    else
-      subarr_dim(1) = max( 1, int( sqrt( nranks + .01 ) ) )
-      subarr_dim(2) = max( 1, nranks / subarr_dim(1) )
-    end if
-    if(myrank==master) write(*,*) 'subarr_dim=', subarr_dim
-    ! create a cartesian communicator for dim(1) x dim(2) processes
-    call create_subarr_comm( subarr_dim, myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col, myrank_grid, myrank_row, myrank_col )
-    call create_subarr( subarr_dim, nkpts, dataarr_lb, dataarr_ub, dataarr_nkpt)
-    nkpt1 = dataarr_nkpt(myrank_grid,1)
-    nkpt2 = dataarr_nkpt(myrank_grid,2)
-    ioff1 = dataarr_lb(myrank_grid,1)
-    ioff2 = dataarr_lb(myrank_grid,2)
-!   write(*,'(5(A,I0))') 'myrank_grid=', myrank_grid, ', ioff1=',  ioff1, ', ioff2=', ioff2, ', myrank_row=', myrank_row, ', myrank_col=', myrank_col
-
-
-    !=============================!
-    != Read the eigenvector file =!
-#ifdef CPP_TIMING
-    call timing_start('Read in of eigenvectors')
-#endif
-
-    call read_eigv_part(inc, nsqa, ioff1, nkpt1, myMPI_comm_row, myrank_col, myMPI_comm_col, rveig_dim1)
-    call read_eigv_part(inc, nsqa, ioff2, nkpt2, myMPI_comm_col, myrank_row, myMPI_comm_row, rveig_dim2)
-
-#ifdef CPP_TIMING
-    call timing_stop('Read in of eigenvectors')
-    call timing_start('Calculation of Pkksub')
-#endif
-    
-    call calculate_Pkksub( inc, lattice, impcls, nsqa, myrank, master, nkpt1, nkpt2, ioff1,     &
-                         & ioff2, nkpts, rveig_dim1, rveig_dim2, kpoints, weights, Amat, Pkksub )
-
-#ifdef CPP_TIMING
-!   call timing_stop('Calculation of Pkksub')
-#endif
-
-!   if(sca%savepkk==1) then
-#ifdef CPP_TIMING
-!     call timing_start('Writing of Pkksub to disk')
-#endif
-!     call Pkkmpifile_write(myMPI_comm_grid, nkpts, nkpt1, nkpt2, ioff1, ioff2, inc%ndegen, nsqa, Pkksub)
-#ifdef CPP_TIMING
-!     call timing_stop('Writing of Pkksub to disk')
-#endif
-!   end if!sca%savepkk==1
-
-#ifdef CPP_TIMING
-!   call timing_start('Calculating the lifetime')
-#endif
-
-    call calculate_lifetime_minmem( myrank_grid, myMPI_comm_grid, inc%ndegen, nsqa, nkpts, nkpt1,   &
-                                  & nkpt2, ioff1, ioff2, BZVol, weights, Pkksub, tau, tau2, tau_avg )
-#ifdef CPP_TIMING
-    call timing_stop('Calculating the lifetime')
-    call timing_start('Converging the meanfreepath[total]')
-#endif
-
-
-!   call meanfreepath_RTA(nkpts, nsqa, inc%ndegen, fermivel, tau, tau_avg, meanfreepath )
+    write(5000+myrank,*) 'check for NaNs in Pkksub:', sum(Pkksub)
     call converge_meanfreepath( myrank_grid, myMPI_comm_grid, nkpts, nkpt1, nkpt2, &
                               & ioff1, ioff2, nsqa, inc%ndegen, BZVol, weights,    &
                               & fermivel, tau, tau_avg, Pkksub, meanfreepath       )
@@ -626,8 +378,8 @@ contains
     call calc_condtensor( nkpts, nsqa, inc%ndegen, fermivel, spinval,         &
                         & meanfreepath, weights, lattice%alat, chcond, spcond )
 
-    call calc_torktensor( nkpts, nsqa, inc%ndegen, fermivel, torqval,   &
-                            & meanfreepath, weights, lattice%alat, BZVol, torkance)
+    if(sca%ltorkance==1) call calc_torktensor( nkpts, nsqa, inc%ndegen, fermivel, torqval,   &
+                        & meanfreepath, weights, lattice%alat, BZVol, torkance)
 
 
   end subroutine calc_conductivity_torkance
@@ -2176,16 +1928,15 @@ contains
       call IoInput('LCONDUCTI ',uio,1,7,ierr)
       read(unit=uio,fmt=*) sca%lconductivity
 
-      call IoInput('LTORKANCE ',uio,1,7,ierr)
-      read(unit=uio,fmt=*) sca%ltorkance
-
-      if(sca%lconductivity==1.or.sca%ltorkance==1) then
+      if(sca%lconductivity==1) then
         call IoInput('SAVEPKK   ',uio,1,7,ierr)
         read(unit=uio,fmt=*) sca%savepkk
         call IoInput('PROCMAP   ',uio,1,7,ierr)
         read(unit=uio,fmt=*) sca%subarr_inp
         call IoInput('NAVERAGE  ',uio,1,7,ierr)
         read(unit=uio,fmt=*) sca%naverage
+        call IoInput('LTORKANCE ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) sca%ltorkance
       end if!sca%llifetime==1
 
 !     if(sca%lconductivity==1) then
@@ -3062,7 +2813,7 @@ contains
     integer, intent(out) :: filehandle
 
     integer :: myMPI_iotype, my_mpi_datatype
-    integer(kind=MPI_OFFSET_KIND) :: disp=0, datasize=0
+    integer(kind=MPI_OFFSET_KIND) :: disp=0, datasize=0, nkpts_big=0
     integer, parameter :: mo = kind(disp)
 
     integer :: ierr, ihelp0, ihelp1, ihelp2
@@ -3094,7 +2845,8 @@ contains
     call MPI_Type_commit(myMPI_iotype,ierr)
     if(ierr/=MPI_SUCCESS) stop 'error: MPI_Type_commit in Pkkmpifile_setview'
 
-    disp = (ioff1+ioff2*ndegen*nkpts*nsqa)*(ndegen*datasize)!byte
+    nkpts_big = nkpts*1_mo
+    disp = (ioff1+ioff2*ndegen*nkpts_big*nsqa)*(ndegen*datasize)!byte
 
     call MPI_File_set_view( filehandle, disp, my_mpi_datatype,             &
                           & myMPI_iotype, 'native', MPI_INFO_NULL, ierr )
@@ -3103,61 +2855,6 @@ contains
   end subroutine Pkkmpifile_setview
 
 
-
-
-  subroutine Pkkmpifile_setview_old(rwmode, my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, filehandle)
-    use mod_ioformat, only: filename_scattmat, ext_mpiio, fmt_fn_ext
-    use mod_mympi, only: myrank
-    use mpi
-    implicit none
-
-    character(len=*), intent(in) :: rwmode
-    integer, intent(in) :: my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa
-    integer, intent(out) :: filehandle
-
-    integer :: myMPI_iotype, my_mpi_datatype
-    integer(kind=MPI_OFFSET_KIND) :: disp=0, datasize=0
-    integer, parameter :: mo = kind(disp)
-
-    integer :: ierr, ihelp0, ihelp1, ihelp2
-    character(len=256) :: filename
-
-    my_mpi_datatype = MPI_DOUBLE_PRECISION
-    datasize=8_mo
-
-    write(filename,fmt_fn_ext) filename_scattmat, ext_mpiio
-    select case (rwmode)
-    case ('read')
-      call MPI_File_open( my_mpi_comm, trim(filename), MPI_MODE_RDONLY, &
-                        & MPI_INFO_NULL, filehandle, ierr            )
-      if(ierr/=MPI_SUCCESS) stop 'error: Pkkmpifile_setview readmode'
-    case ('write')
-      call MPI_File_open( my_mpi_comm, trim(filename), MPI_MODE_CREATE+MPI_MODE_WRONLY, &
-                        & MPI_INFO_NULL, filehandle, ierr                            )
-      if(ierr/=MPI_SUCCESS) stop 'error: Pkkmpifile_setview writemode'
-    case default; stop 'dont know how to open the mpi-file. only mode = read/write'
-    end select
-
-    !prepare the file view (see only the part of this task)
-    ihelp0 = nkpts*ndegen
-    ihelp1 = nkpt1*ndegen
-    ihelp2 = nkpt2*ndegen*nsqa
-    call MPI_Type_Vector( ihelp2, ihelp1, ihelp0, my_mpi_datatype, myMPI_iotype, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error: MPI_Type in Pkkmpifile_setview'
-
-    call MPI_Type_commit(myMPI_iotype,ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error: MPI_Type_commit in Pkkmpifile_setview'
-
-    write(1000+myrank,*) 'fac=      ', (ioff1+ioff2*nkpts*nsqa)*ndegen
-    write(1000+myrank,*) 'datasize= ', datasize
-    disp = (ioff1+ioff2*nkpts*nsqa)*(ndegen*datasize)!byte
-    write(1000+myrank,*) 'disp=     ', disp
-
-    call MPI_File_set_view( filehandle, disp, my_mpi_datatype,             &
-                          & myMPI_iotype, 'native', MPI_INFO_NULL, ierr )
-    if(ierr/=MPI_SUCCESS) stop 'error: MPI_File_set_view in Pkkmpifile_setview'
-
-  end subroutine Pkkmpifile_setview_old
 
 
   subroutine Pkkmpifile_write(my_mpi_comm, nkpts, nkpt1, nkpt2, ioff1, ioff2, ndegen, nsqa, Pkksub)

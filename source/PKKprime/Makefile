@@ -1,7 +1,7 @@
 #========================================================
 # JUQUEEN: 
 #FC = mpixlf90_r
-#FFLAGS = -O2 -w -qarch=qp -qtune=qp -qsmp=omp -qnosave
+#FFLAGS = -O2 -w -qarch=qp -qtune=qp -qsmp=omp -qnosave -traceback
 #LDFLAGS = -L$(LAPACK_LIB) -L/bgsys/local/lib -lesslbg -llapack -lesslbg -qsmp=omp
 #CPPFLAGS = -WF,-DCPP_MPI
 #========================================================
@@ -19,7 +19,7 @@
 # IFF cluster
 FC = mpiifort
 #FFLAGS = -r8 -O3
-FFLAGS = -r8 -O3 -check all -traceback
+FFLAGS = -r8 -O3 -traceback
 ###FFLAGS += -openmp
 CPPFLAGS =  -D CPP_MPI
 ###CPPFLAGS += -D CPP_DEBUG
