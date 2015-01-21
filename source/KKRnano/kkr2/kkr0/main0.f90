@@ -239,8 +239,7 @@
     call LATTIX99(params%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
 
 
-    call SCALEVEC(arrays%RBASIS,params%basisscale(1), &
-                  params%basisscale(2),params%basisscale(3), &
+    call SCALEVEC(arrays%RBASIS, &
                   arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
 
 ! ======================================================================

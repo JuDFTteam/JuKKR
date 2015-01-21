@@ -1,4 +1,4 @@
-      SUBROUTINE SCALEVEC(RBASIS,ABASIS,BBASIS,CBASIS,
+      SUBROUTINE SCALEVEC(RBASIS,
      &                    NAEZ,BRAVAIS, LCARTESIAN)
       IMPLICIT NONE
 C      INCLUDE 'inc.p'
@@ -7,7 +7,6 @@ C PARAMETER definitions
 C
 C Dummy arguments
 C
-      DOUBLE PRECISION ABASIS,BBASIS,CBASIS
       INTEGER NAEZ
       DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,*)
       LOGICAL LCARTESIAN
@@ -26,21 +25,11 @@ C
 C -->   normalization of basis vectors
 C
       DO I = 1,NAEZ
-         RBASIS1(1,I) = RBASIS(1,I)*ABASIS
-         RBASIS1(2,I) = RBASIS(2,I)*BBASIS
-         RBASIS1(3,I) = RBASIS(3,I)*CBASIS
+         RBASIS1(1,I) = RBASIS(1,I)
+         RBASIS1(2,I) = RBASIS(2,I)
+         RBASIS1(3,I) = RBASIS(3,I)
       END DO
 C
-      IF ( ABASIS.NE.1D0 .OR. BBASIS.NE.1D0 .OR. CBASIS.NE.1D0 ) THEN
-         WRITE (6,'(5X,A,2(/,34X,F12.8,A))') 
-     &        'Scaling site coordinates with:',
-     &        ABASIS,'  x',BBASIS,'  y'
-         WRITE (6,'(34X,F12.8,A)') CBASIS,'  z'
-         WRITE (6,'(5X,44(1H-))')
-      ELSE
-         WRITE (6,'(5X,A)') 
-     &        'Site coordinates will not be scaled'
-      END IF
 C
 C ---> normalization of atomic positions in the unit cell
 C

@@ -31,7 +31,6 @@ type InputParams
   logical :: jij
   logical :: ldau
   double precision :: rcutjij
-  double precision :: basisscale (3)
   double precision :: emax
   integer :: kte
   integer :: imix
@@ -199,12 +198,6 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
-  call getValueDoubleVector(conf, "basisscale", confvalues%basisscale, 3, ierror)
-  if (ierror /= 0) then
-    write(*,*) "Bad/no value given for basisscale."
-    call destroyConfigReader(conf)
-    return
-  end if
   call getValueDouble(conf, "emax", confvalues%emax, ierror)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for emax."
@@ -369,7 +362,6 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%jij
   read(FILEHANDLE) confvalues%ldau
   read(FILEHANDLE) confvalues%rcutjij
-  read(FILEHANDLE) confvalues%basisscale
   read(FILEHANDLE) confvalues%emax
   read(FILEHANDLE) confvalues%kte
   read(FILEHANDLE) confvalues%imix
@@ -423,7 +415,6 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%jij
   write(FILEHANDLE) confvalues%ldau
   write(FILEHANDLE) confvalues%rcutjij
-  write(FILEHANDLE) confvalues%basisscale
   write(FILEHANDLE) confvalues%emax
   write(FILEHANDLE) confvalues%kte
   write(FILEHANDLE) confvalues%imix

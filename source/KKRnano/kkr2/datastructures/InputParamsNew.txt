@@ -20,7 +20,7 @@ dv bravais_a 3
 l jij
 l ldau
 d rcutjij
-dv basisscale 3
+#dv basisscale 3
 d emax
 i kte
 i imix
