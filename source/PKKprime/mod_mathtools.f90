@@ -3,11 +3,12 @@ module mod_mathtools
   implicit none
 
   private
-  public :: crossprod, bubblesort, bubblesort_int, findminindex, machpi, mach_tpiimag, simple_integration, simple_integration_general, simpson2D_integration
+  public :: crossprod, bubblesort, bubblesort_int, findminindex, simple_integration, simple_integration_general, simpson2D_integration
+  !obsolete functions: machpi, mach_tpiimag
 
-  double precision, save :: pi
-  double complex,   save :: tpiimag
-  logical, save :: piinit=.true., tpiimag_init=.true.
+  double precision, parameter, public :: pi=4d0*atan(1d0), tpi=8d0*atan(1d0)
+  double complex,   parameter, public :: tpiimag=(0d0, tpi)
+! logical, save :: piinit=.true., tpiimag_init=.true.
 
 contains
 
@@ -120,33 +121,40 @@ contains
   end subroutine crossprod
 
 
-  double precision function machpi()
-    implicit none
+!===========================================================!
+!===========================================================!
+! the functions 'machpi' and 'mach_tpiimag' have been made  !
+! obsolete through defining 'pi' and 'tpiimag' as parameter !
+!===========================================================!
+!===========================================================!
+ 
+! double precision function machpi()
+!   implicit none
 
-    if(piinit) then
-      pi=4d0*atan(1d0)
-      piinit=.false.
-    end if
+!   if(piinit) then
+!     pi=4d0*atan(1d0)
+!     piinit=.false.
+!   end if
 
-    machpi = pi
+!   machpi = pi
 
-  end function machpi
+! end function machpi
 
 
-  double complex function mach_tpiimag()
-    implicit none
-    double precision :: pitmp
-    double complex, parameter :: CI=(0d0,1d0)
+! double complex function mach_tpiimag()
+!   implicit none
+!   double precision :: pitmp
+!   double complex, parameter :: CI=(0d0,1d0)
 
-    if(tpiimag_init) then
-      pitmp = machpi()
-      tpiimag=2d0*pitmp*CI
-      tpiimag_init=.false.
-    end if
+!   if(tpiimag_init) then
+!     pitmp = machpi()
+!     tpiimag=2d0*pitmp*CI
+!     tpiimag_init=.false.
+!   end if
 
-    mach_tpiimag = tpiimag
+!   mach_tpiimag = tpiimag
 
-  end function mach_tpiimag
+! end function mach_tpiimag
 
   subroutine simple_integration_general(nBZdim, area, fermi_velocity, function_value, integratedvalue, densityofstates)
   implicit none

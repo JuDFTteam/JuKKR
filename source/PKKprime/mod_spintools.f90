@@ -138,7 +138,7 @@ contains
 
   subroutine Spinrot_AlphaBeta(lincombtype, nvec, Spin_ini, Scross, alpha, beta, Spin_estimated, uio)
 
-    use mod_mathtools, only: machpi
+    use mod_mathtools, only: pi
     implicit none
 
     ! Arguments
@@ -152,10 +152,6 @@ contains
     integer          :: icomb, combtake
     double precision :: beta_tmp(4), alphacal_tmp(4), alpha_tmp(4), gvec1(3), gvec2(3), maxv, absv
     double complex   :: Spin_unrot_n, S_12_n, S_unrot_g1, S_unrot_g2, S_12_g1, S_12_g2, xi_help, Spin_rot_test(4)
-
-    double precision :: pi
-
-    pi=machpi()
 
     alpha= 0d0
     beta = 0d0
@@ -260,7 +256,7 @@ contains
 
   subroutine Spinrot_AlphaBeta_Rashba(Spin_ini_selected, Scross_selected, alpha, beta)
     
-    use mod_mathtools, only: machpi
+    use mod_mathtools, only: pi
     implicit none
 
     ! Arguments
@@ -271,12 +267,10 @@ contains
     integer          :: nalpha, nbeta, niter, ialpha, ibeta, iiter, k_candidate, ixyz, k_take, i_kcand, ierr
     double precision :: alpha_tmp, beta_tmp, para_a1, para_b1, para_c1, para_a2, para_b2, para_c2, para_d2, para_e2, para_f2, delta, re_eibS12, im_eibS12, alpha_bounds(2), alpha0, sinalpha, cosalpha, d_alpha, ds_dalpha0, maxspin, maxspin_k, sumS(2), s_ab, s_ab2
     double precision, allocatable :: alpha_get(:), beta_get(:),ds_dalpha(:)
-    double precision :: pi
     !Parameter
     double complex, parameter :: CONE=(1d0, 0d0), CZERO=(0d0, 0d0), CI=(0d0, 1d0)
 
 
-    pi=machpi()
 
     ! hard coded parameters for loops to find alpha and beta
     nalpha = 1000

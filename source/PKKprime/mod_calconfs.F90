@@ -1349,15 +1349,13 @@ contains
 
 
   subroutine convert_nvect(angrep,dtmpin,nvect)
-    use mod_mathtools, only: machpi
+    use mod_mathtools, only: pi
     implicit none
     integer, intent(in) :: angrep
     double precision, intent(in) :: dtmpin(3)
     double precision, intent(out) :: nvect(3)
 
-    double precision :: theta, phi, pi, norm
-
-    pi = machpi()
+    double precision :: theta, phi, norm
 
     if(angrep==0) then
       theta = dtmpin(1)
@@ -1622,7 +1620,7 @@ contains
   subroutine calculate_torkance_CRTA_int(nsym,isym,rotmat,alat,BZVol,ndeg,nkpts,areas,fermivel,torqval)
     use mpi
     use mod_mympi,      only: myrank, master
-    use mod_mathtools,  only: machpi
+    use mod_mathtools,  only: tpi
     use mod_symmetries, only: rotate_kpoints, expand_areas
     implicit none
 
@@ -1681,7 +1679,7 @@ contains
       end do!ideg
     end do!ikp
 
-    torkance = integ/BZVol*alat/2/machpi()
+    torkance = integ/BZVol*alat/tpi
 
     if(myrank==master)then
       if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
@@ -1729,7 +1727,7 @@ contains
   subroutine calculate_torkance_CRTA_vis(nBZdim,nsym,isym,rotmat,alat,BZVol,ndeg,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
     use mpi
     use mod_mympi,      only: myrank, master
-    use mod_mathtools,  only: machpi, crossprod
+    use mod_mathtools,  only: tpi, crossprod
     use mod_symmetries, only: rotate_kpoints, expand_visarrays
     use mod_mathtools,  only: simple_integration_general
     implicit none
@@ -1824,7 +1822,7 @@ contains
       dos = dos+d_dos
     end do!ikp
 
-    torkance = integ/BZVol*alat/2/machpi()
+    torkance = integ/BZVol*alat/tpi
 
     if(myrank==master)then
       write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
@@ -1892,7 +1890,7 @@ contains
   subroutine calculate_torkance_CRTA_vis_simpson2D(nsym,isym,rotmat,alat,BZVol,ndeg,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
     use mpi
     use mod_mympi,      only: myrank, master
-    use mod_mathtools,  only: machpi, crossprod
+    use mod_mathtools,  only: tpi, crossprod
     use mod_symmetries, only: rotate_kpoints, expand_visarrays
     use mod_mathtools,  only: simple_integration_general, simpson2D_integration
     implicit none
@@ -2020,7 +2018,7 @@ contains
 
     deallocate(kpt2irr_r_ord,band_indices_r)
 
-    torkance = integ/BZVol*alat/2/machpi()
+    torkance = integ/BZVol*alat/tpi
 
     if(myrank==master)then
       if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
@@ -2193,7 +2191,7 @@ contains
   subroutine calculate_dos_int(nsym,isym,rotmat,alat,BZVol,nkpts,areas,fermivel,BZdim)
     use mpi
     use mod_mympi,      only: myrank, master
-    use mod_mathtools,  only: machpi
+    use mod_mathtools,  only: tpi
     use mod_symmetries, only: rotate_kpoints, expand_areas
     implicit none
 
@@ -2201,13 +2199,11 @@ contains
     double precision, intent(in)  :: rotmat(64,3,3), alat, BZVol, areas(nkpts), fermivel(3,nkpts)
 
     integer :: ikp, i1, i2, nkpts_r
-    double precision :: dos, vabs, conductivity(3,3), dtmp, tpi
+    double precision :: dos, vabs, conductivity(3,3), dtmp
 
     double precision, allocatable :: fermivel_r(:,:), areas_r(:)
 
     double precision, parameter :: e2byhbar = 2.434134807664281d-4, abohr = 0.52917721092d-10, RyToinvfs = 20.67068667282055d0
-
-    tpi=2d0*machpi()
 
     dos  = 0d0
     do ikp=1,nkpts

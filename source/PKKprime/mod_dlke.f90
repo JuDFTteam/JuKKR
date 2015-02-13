@@ -75,7 +75,7 @@ module mod_dlke
       SUBROUTINE DLKE1(GLLKE,inc,alat,nacls,rr,ezoa,atom,bzkp,ginp,rcls)
 
       use type_inc
-      use mod_mathtools, only: machpi
+      use mod_mathtools, only: tpi
       implicit none
 ! ************************************************************************
 !
@@ -101,7 +101,7 @@ module mod_dlke
       DOUBLE COMPLEX, INTENT(OUT):: GLLKE(inc%alm,inc%lmmax)
 
 !     .. Local Scalars ..
-      DOUBLE PRECISION CONVPU,TPI
+      DOUBLE PRECISION CONVPU
       INTEGER AM,IM,LM2,M
       DOUBLE COMPLEX  EIKR,TT
 
@@ -121,8 +121,7 @@ module mod_dlke
 
       GLLKE=CZERO
 
-      TPI = 2d0*machpi()        !=2*PI
-      CONVPU = ALAT/TPI
+      CONVPU = ALAT/tpi   !=alat / (2*pi)
 
       DO M = 1,NACLS
 
@@ -226,7 +225,7 @@ module mod_dlke
       SUBROUTINE DLKE1DK(GLLKE,inc,alat,nacls,rr,ezoa,atom,bzkp,ginp,rcls,ixyz)
 
       use type_inc
-      use mod_mathtools, only: machpi
+      use mod_mathtools, only: tpi
       implicit none
 ! ************************************************************************
 !
@@ -253,7 +252,7 @@ module mod_dlke
       DOUBLE COMPLEX, INTENT(OUT):: GLLKE(inc%alm,inc%lmmax)
 
 !     .. Local Scalars ..
-      DOUBLE PRECISION CONVPU,TPI
+      DOUBLE PRECISION CONVPU
       INTEGER AM,IM,LM2,M
       DOUBLE COMPLEX  TT
 
@@ -273,8 +272,7 @@ module mod_dlke
 
       GLLKE=CZERO
 
-      TPI = 2d0*machpi()        !=2*PI
-      CONVPU = ALAT/TPI
+      CONVPU = ALAT/tpi   !=alat / (2*pi)
 
       DO M = 1,NACLS
 
