@@ -87,7 +87,7 @@ contains
     use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume, file_present
     use mod_ioformat,   only: filemode_int, filename_eigvect, filename_scattmat, fmt_fn_ext, ext_vtkxml, ext_mpiio
     use mod_mympi,      only: myrank, nranks, master
-    use mod_mathtools,  only: machpi
+    use mod_mathtools,  only: pi
 #ifdef CPP_TIMING
     use mod_timing,     only: timing_init, timing_start, timing_stop
 #endif
@@ -99,7 +99,7 @@ contains
     type(impcls_type),  intent(in) :: impcls(sca%naverage)
     double complex,     intent(in) :: Amat(impcls(1)%clmso,impcls(1)%clmso,sca%naverage)
 
-    double precision :: pi, BZVol
+    double precision :: BZVol
 
     !symmetry arrays
     integer :: nsym
@@ -147,7 +147,6 @@ contains
       call read_sca()
     end if
     call set_symmetries(inc, lattice, symmetries)
-    pi = machpi()
     BZVol = getBZvolume(lattice%recbv)
 
 #ifdef CPP_TIMING
@@ -334,7 +333,7 @@ contains
 #endif
 
 !   call meanfreepath_RTA(nkpts, nsqa, inc%ndegen, fermivel, tau, tau_avg, meanfreepath )
-    write(5000+myrank,*) 'check for NaNs in Pkksub:', sum(Pkksub)
+!   write(5000+myrank,*) 'check for NaNs in Pkksub:', sum(Pkksub)
     call converge_meanfreepath( myrank_grid, myMPI_comm_grid, nkpts, nkpt1, nkpt2, &
                               & ioff1, ioff2, nsqa, inc%ndegen, BZVol, weights,    &
                               & fermivel, tau, tau_avg, Pkksub, meanfreepath       )
@@ -389,7 +388,7 @@ contains
 
   subroutine calc_condtensor( nkpts, nsqa, ndegen, fermivel, spinvalue,   &
                             & meanfreepath, weights, alat, chcond, spcond )
-    use mod_mathtools, only: machpi
+    use mod_mathtools, only: tpi
     use mod_mympi, only: myrank, master
     use mpi
     implicit none
@@ -401,13 +400,12 @@ contains
     double precision, allocatable, intent(out) ::  chcond(:,:,:), spcond(:,:,:)
 
     integer :: ihelp, ierr, ixyz1, ixyz2, ikp, isqa, ispin
-    double precision :: chcond_tmp(3,3,nsqa), spcond_tmp(3,3,nsqa), dtmp, tpi, fac
+    double precision :: chcond_tmp(3,3,nsqa), spcond_tmp(3,3,nsqa), dtmp, fac
     character(len=256) :: testfile1, testfile2, unitstr
 
     logical, parameter :: SIunits=.true.    
     double precision, parameter :: e2byhbar = 2.434134807664281d-4, abohr = 0.52917721092d-10
 
-    tpi = 2d0*machpi()
 
     !the equation for the [charge- and spin-] conductivity reads:
     !  \sigma = e^2/hbar * 1/(2pi)**3 * \int{ dS/|v_F| v_F * \lambda }
@@ -519,7 +517,7 @@ contains
 
   subroutine calc_torktensor( nkpts, nsqa, ndegen, fermivel, torqval,   &
                             & meanfreepath, weights, alat, BZVol, torkance)
-    use mod_mathtools, only: machpi
+    use mod_mathtools, only: tpi
     use mod_mympi, only: myrank, master
     use mpi
     implicit none
@@ -531,13 +529,11 @@ contains
     double precision, allocatable, intent(out) ::  torkance(:,:,:)
 
     integer :: ihelp, ierr, ixyz1, ixyz2, ikp, isqa, ispin
-    double precision :: torkance_tmp(3,3,nsqa), dtmp, tpi, fac
+    double precision :: torkance_tmp(3,3,nsqa), dtmp, fac
     character(len=256) :: testfile1, testfile2, unitstr
 
     logical, parameter :: SIunits=.false.    
     double precision, parameter :: e = 1.602176565d-19, abohr = 0.52917721092d-10
-
-    tpi = 2d0*machpi()
 
     ! the equation for the torkance reads:
     !  \torkance = e/hbar * 1/(BZVol) * \int{ dS/|v_F| torq * \lambda }
@@ -985,7 +981,7 @@ contains
 
     use type_inc,      only: inc_type
     use type_data,     only: lattice_type
-    use mod_mathtools, only: machpi
+    use mod_mathtools, only: pi, tpi
     use mod_iohelp,    only: getBZvolume
     use mpi
     implicit none
@@ -1007,7 +1003,7 @@ contains
                                    & optical_right_thread(:,:,:)
 
     integer          :: clmso, ierr, ikp1, ikp2, ispin1, ispin2, isqa, printstep, ihelp, iaverage
-    double precision :: Tkk_abs, fac, pi, righttmp, BZvol
+    double precision :: Tkk_abs, fac, righttmp, BZvol
     double complex   :: Tkk_tmp, &
                       & rvcls1(impcls(1)%clmso),&
                       & rvcls2(impcls(1)%clmso),&
@@ -1018,7 +1014,6 @@ contains
     ! parameter
     double complex, parameter :: CZERO=(0d0, 0d0), CONE=(1d0,0d0), CI=(0d0,1d0)
 
-    pi      = machpi()
     fac     = 2d0*pi*0.01d0/sca%naverage !concentration = 1 atom percent
     clmso   = impcls(1)%clmso
     BZVol   = getBZvolume(lattice%recbv)
@@ -1180,7 +1175,7 @@ contains
     use mod_ioformat,   only: filemode_vis, filemode_int, filename_eigvect, fmt_fn_ext, filename_lifetime, ext_vtkxml
     use mod_vtkxml,     only: write_pointdata_rot
     use mod_mympi,      only: myrank, nranks, master
-    use mod_mathtools,  only: machpi
+    use mod_mathtools,  only: pi
     use mpi
     implicit none
 
@@ -1219,7 +1214,7 @@ contains
 
     !temp k-point arrays
     integer :: nkpts1, nkpts2, nkpts_all1
-    double precision :: pi, fac, BZVol
+    double precision :: fac, BZVol
     double complex :: Ctmp(impcls%clmso), Tkk_tmp
     integer,          allocatable :: kpt2irr1(:), irr2kpt1(:)
     double precision, allocatable :: areas1(:), weights1(:), kpoints1(:,:), fermivel1(:,:)
@@ -1245,7 +1240,6 @@ contains
     end if
     call set_symmetries(inc, lattice, symmetries)
     nsqa = get_nsqa()
-    pi = machpi()
     BZVol = getBZvolume(lattice%recbv)
 
     !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2438,7 +2432,7 @@ contains
 
     use type_inc,      only: inc_type
     use type_data,     only: lattice_type
-    use mod_mathtools, only: mach_tpiimag
+    use mod_mathtools, only: tpiimag
     implicit none
 
     type(inc_type),     intent(in)  :: inc
@@ -2459,7 +2453,7 @@ contains
         do icls=1,impcls%nCluster
           !calculate bloch factor
           Rshift = impcls%RCluster(:,icls) - lattice%rbasis(:,impcls%ihosttype(icls))
-          expfac = exp( mach_tpiimag()*dot_product(kpoint,Rshift) )
+          expfac = exp( tpiimag*dot_product(kpoint,Rshift) )
 
           !copy array
           lb = (icls-1)*inc%lmmaxso+1
@@ -2479,7 +2473,7 @@ contains
 
     use type_inc,      only: inc_type
     use type_data,     only: lattice_type
-    use mod_mathtools, only: mach_tpiimag
+    use mod_mathtools, only: tpiimag
     implicit none
 
     type(inc_type),     intent(in)  :: inc
@@ -2497,7 +2491,7 @@ contains
     do icls=1,impcls%nCluster
       !calculate bloch factor
       Rshift = impcls%RCluster(:,icls) - lattice%rbasis(:,impcls%ihosttype(icls))
-      expfac = exp( mach_tpiimag()*dot_product(kpoint,Rshift) )
+      expfac = exp( tpiimag*dot_product(kpoint,Rshift) )
 
       !copy array
       lb = (icls-1)*inc%lmmaxso+1
