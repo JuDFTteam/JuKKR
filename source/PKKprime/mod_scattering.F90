@@ -375,7 +375,7 @@ contains
 !     close(1325)
 !   end if!myrank==master
     call calc_condtensor( nkpts, nsqa, inc%ndegen, fermivel, spinval,         &
-                        & meanfreepath, weights, lattice%alat, chcond, spcond )
+                        & meanfreepath, weights, lattice%alat, inc%nBZdim, chcond, spcond )
 
     if(sca%ltorkance==1) call calc_torktensor( nkpts, nsqa, inc%ndegen, fermivel, torqval,   &
                         & meanfreepath, weights, lattice%alat, BZVol, torkance)
@@ -387,13 +387,13 @@ contains
 
 
   subroutine calc_condtensor( nkpts, nsqa, ndegen, fermivel, spinvalue,   &
-                            & meanfreepath, weights, alat, chcond, spcond )
+                            & meanfreepath, weights, alat, nBZdim, chcond, spcond )
     use mod_mathtools, only: tpi
     use mod_mympi, only: myrank, master
     use mpi
     implicit none
 
-    integer,          intent(in) :: nkpts, nsqa, ndegen
+    integer,          intent(in) :: nkpts, nsqa, ndegen, nBZdim
     double precision, intent(in) :: fermivel(3,nkpts), spinvalue(ndegen,nsqa,nkpts), meanfreepath(3,ndegen,nsqa,nkpts), weights(nkpts), alat
 
 
@@ -488,12 +488,16 @@ contains
 
     if(myrank==master)then
       write(*,'("Charge conductivity / 1 at.% in ",A,":")') trim(unitstr)
+      if(nBZdim==2) write(*,'("Attention: these values have to be divided by the thickness &
+               &of the film in units of the lattice constant to get proper units")')
       do isqa=1,nsqa
         write(*,'(2X,"isqa= ",I0)') isqa
         write(*,'(4X,"(",3ES18.9,")")') chcond(:,:,isqa)
       end do!isqa
 
       write(*,'("Spin conductivity / 1 at.% in ",A,":")') trim(unitstr)
+      if(nBZdim==2) write(*,'("Attention: these values have to be divided by the thickness &
+               &of the film in units of the lattice constant to get proper units")')
       do isqa=1,nsqa
         write(*,'(2X,"isqa= ",I0)') isqa
         write(*,'(4X,"(",3ES18.9,")")') spcond(:,:,isqa)
@@ -1002,12 +1006,12 @@ contains
                                    & optical_right_all(:,:,:),&
                                    & optical_right_thread(:,:,:)
 
-    integer          :: clmso, ierr, ikp1, ikp2, ispin1, ispin2, isqa, printstep, ihelp, iaverage
-    double precision :: Tkk_abs, fac, righttmp, BZvol
-    double complex   :: Tkk_tmp, &
-                      & rvcls1(impcls(1)%clmso),&
-                      & rvcls2(impcls(1)%clmso),&
-                      & Ctmp(impcls(1)%clmso)
+    integer          :: clmso, ierr, ikp1, ikp2, ispin1, ispin2, isqa, ihelp, iaverage
+    double precision :: Tkk_abs(nkpt1,nkpt2), fac, righttmp, BZvol
+    double complex   :: Tkk_tmp(nkpt1,nkpt2), &
+                      & rvcls1(impcls(1)%clmso,nkpt1),&
+                      & rvcls2(impcls(1)%clmso,nkpt2),&
+                      & Ctmp(nkpt2,impcls(1)%clmso)
     character(len=256) :: filename
     logical, parameter :: l_optical=.true.
 
@@ -1050,55 +1054,49 @@ contains
         optical_right_all = 0d0
       end if!l_optical
 
-      printstep = nkpt2/50
-      if(printstep==0) printstep=1
-      if(myrank==master) write(*,'("Start calculating the Pkk'' submatrix:")')
-      if(myrank==master) write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
-      if(myrank==master) write(*,FMT=190) !beginning of statusbar
+      if(myrank==master) write(*,'("Start calculating the Pkk'' submatrix")')
+!      if(myrank==master) write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+!      if(myrank==master) write(*,FMT=190) !beginning of statusbar
 
       !calculate Pkk'
-!$omp parallel private(ikp1, ispin1, rvcls1, Tkk_tmp, Tkk_abs, optical_right_thread)
+      do isqa=1,nsqa
+        do ispin2=1,inc%ndegen
+
+          call extend_coeffvector2cluster_allkpt( inc, lattice, impcls(iaverage), nkpt2, kpoints(:,ioff2+1:ioff2+nkpt2), rveig2(:,:,ispin2,isqa,:), rvcls2)
+
+          ! Ctmp = conjg(c_k') * Amat
+          call ZGEMM( 'C','N', nkpt2, clmso, clmso, CONE, rvcls2, clmso, Amat(:,:,iaverage), clmso, CZERO, Ctmp, nkpt2)
+
+          do ispin1=1,inc%ndegen
+
+            call extend_coeffvector2cluster_allkpt( inc, lattice, impcls(iaverage), nkpt1, kpoints(:,ioff1+1:ioff1+nkpt1), rveig1(:,:,ispin1,isqa,:), rvcls1 )
+
+            ! Tkk' = conjg(c_k') * Amat * c_k
+            call ZGEMM( 'T','T', nkpt1, nkpt2, clmso, CONE, rvcls1, clmso, Ctmp, nkpt2, CZERO, Tkk_tmp, nkpt1)
+
+            ! Pkk' = |Tkk'|^2
+            Tkk_abs(:,:) = dble(Tkk_tmp(:,:))**2 + aimag(Tkk_tmp(:,:))**2
+            Pkksub(ispin1,:,ispin2,isqa,:) = Pkksub(ispin1,:,ispin2,isqa,:) + Tkk_abs(:,:)*fac
+          end do!ispin1
+        end do!ispin2
+      end do!isqa
+
+      if(myrank==master) write(*,'("Checking optical theorem")')
       if(l_optical) optical_right_thread = 0d0
+!$omp parallel private(ikp1, ispin1, optical_right_thread)
       do ikp2=1,nkpt2
-!$omp barrier
-!$omp master
-        if(mod(ikp2,printstep)==0 .and. myrank==master) write(*,FMT=200)
-!$omp end master
-!$omp barrier
         do isqa=1,nsqa
           do ispin2=1,inc%ndegen
-
-!$omp barrier
-!$omp master
-            call extend_coeffvector2cluster( inc, lattice, impcls(iaverage), kpoints(:,ioff2+ikp2), rveig2(:,:,ispin2,isqa,ikp2), rvcls2 )
-
-            ! Ctmp = conjg(c_k') * Amat
-            call ZGEMM( 'C','N', 1, clmso, clmso, CONE, rvcls2, clmso, Amat(:,:,iaverage), clmso, CZERO, Ctmp, 1)
-!$omp end master
-!$omp barrier
-
 !$omp do collapse (2)
             do ikp1=1,nkpt1
               do ispin1=1,inc%ndegen
-
-                call extend_coeffvector2cluster( inc, lattice, impcls(iaverage), kpoints(:,ioff1+ikp1), rveig1(:,:,ispin1,isqa,ikp1), rvcls1 )
-
-                ! Tkk' = conjg(c_k') * Amat * c_k
-                call ZGEMM( 'N','N', 1, 1, clmso, CONE, Ctmp, 1, rvcls1, clmso, CZERO, Tkk_tmp, 1)
-
-                ! Pkk' = |Tkk'|^2
-                Tkk_abs = dble(Tkk_tmp)**2 + aimag(Tkk_tmp)**2
-
                 if(l_optical)then
-                  if((ikp1+ioff1)==(ikp2+ioff2) .and. ispin1==ispin2) optical_left(ispin2,isqa,ikp2+ioff2) =  dimag(Tkk_tmp)
-                  optical_right_thread(ispin2,isqa,ikp2+ioff2) = optical_right_thread(ispin2,isqa,ikp2+ioff2) + weights(ikp1+ioff1)*Tkk_abs
+                  if((ikp1+ioff1)==(ikp2+ioff2) .and. ispin1==ispin2) optical_left(ispin2,isqa,ikp2+ioff2) =  dimag(Tkk_tmp(ikp1,ikp2))
+                  optical_right_thread(ispin2,isqa,ikp2+ioff2) = optical_right_thread(ispin2,isqa,ikp2+ioff2) + weights(ikp1+ioff1)*Tkk_abs(ikp1,ikp2)
                 end if!l_optical
-
-                Pkksub(ispin1,ikp1,ispin2,isqa,ikp2) = Pkksub(ispin1,ikp1,ispin2,isqa,ikp2) + Tkk_abs*fac
-
               end do!ispin1
             end do!ikp1
-!$omp end do
+!$omp end do 
           end do!ispin2
         end do!isqa
       end do!ikp2
@@ -1156,8 +1154,6 @@ contains
 
     end do!iaverage
 
-190 FORMAT('                 |'$)
-200 FORMAT('|'$)
   end subroutine calculate_Pkksub
 
 
@@ -2465,6 +2461,44 @@ contains
 
   end subroutine extend_coeffvector2cluster_allsqa
 
+
+
+
+
+  subroutine extend_coeffvector2cluster_allkpt(inc,lattice,impcls,nkpts,kpoints,rveig_in,rveig_big)
+
+    use type_inc,      only: inc_type
+    use type_data,     only: lattice_type
+    use mod_mathtools, only: tpiimag
+    implicit none
+
+    type(inc_type),     intent(in)  :: inc
+    type(lattice_type), intent(in)  :: lattice
+    type(impcls_type),  intent(in)  :: impcls
+    integer,            intent(in)  :: nkpts
+    double precision,   intent(in)  :: kpoints(3,nkpts)
+    double complex,     intent(in)  :: rveig_in(inc%lmmaxso,inc%natypd,nkpts)
+    double complex,     intent(out) :: rveig_big(impcls%clmso,nkpts)
+
+    integer :: icls, lb, ub, k
+    double precision :: Rshift(3)
+    double complex   :: expfac
+
+    ! extent coefficient vector to size of impurity cluster
+    do icls=1,impcls%nCluster
+      !calculate bloch factor
+      Rshift = impcls%RCluster(:,icls) - lattice%rbasis(:,impcls%ihosttype(icls))
+      do k=1,nkpts
+        expfac = exp( tpiimag*dot_product(reshape(kpoints(1:3,k),[3]),Rshift) )
+
+        !copy array
+        lb = (icls-1)*inc%lmmaxso+1
+        ub =     icls*inc%lmmaxso
+        rveig_big(lb:ub,k) = expfac*rveig_in(:,impcls%ihosttype(icls),k)
+      end do!k
+    end do!icls
+
+  end subroutine extend_coeffvector2cluster_allkpt
 
 
 
