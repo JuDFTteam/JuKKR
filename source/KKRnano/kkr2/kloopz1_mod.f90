@@ -240,9 +240,11 @@ CONTAINS
     !                    |                            |                 |
     !            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
 
-        call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,-CONE,XC,LMMAXD, &
-        MSSQ(:,:,ilocal),LMMAXD,-CONE,GLL,LMMAXD)
 
+!       call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,-CONE,XC,LMMAXD, &
+!       MSSQ(:,:,ilocal),LMMAXD,-CONE,GLL,LMMAXD)
+
+        GLL = - XC - GLL
 
     ! --->  GMATN = GMATLL = GLL/RFCTOR...............rescaled and copied into output array
 

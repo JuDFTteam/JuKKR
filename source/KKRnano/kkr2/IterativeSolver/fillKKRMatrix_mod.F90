@@ -200,6 +200,7 @@ contains
     integer, dimension(:), intent(in) :: kvstr
 
     double complex, parameter :: CZERO =(0.0D0,0.0D0)
+    double complex, parameter :: CONE =(1.0D0,0.0D0)
     integer :: start
     integer :: ii
     integer :: num_atoms
@@ -234,7 +235,8 @@ contains
       do lm2 = 1, lmmax2
         do lm1 = 1, lmmax1
                       ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-          mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
+!         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
+        if(lm1==lm2)  mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - CONE
         end do
       end do
 
