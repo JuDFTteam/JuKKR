@@ -1,0 +1,20 @@
+PRE=ALLSRC_tbkkr
+
+
+#### date=`date "+%d%m%y_%Hh%M"`
+date=`date "+%d%m."20"%y_%Hh%M"`
+
+RT=${PRE}_${date}.tar
+ 
+tar -cvf${RT} SRC*/* makef* inc.* *_imp spr* compile packtb *run  MANUAL/* CHANGESLOG/* 
+ 
+gzip    ${RT}
+
+mv  ${RT}* ../ARCHIV
+
+ls -ltr ../ARCHIV/${PRE}*             
+
+echo " "
+echo    "               ****************************************"
+echo    "                     procedure    PACK       "
+echo    "               ****************************************"

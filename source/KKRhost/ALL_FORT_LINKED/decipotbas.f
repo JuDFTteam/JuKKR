@@ -1,0 +1,1 @@
+../SRC_COM/decipotbas.f

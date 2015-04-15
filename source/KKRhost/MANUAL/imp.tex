@@ -1,0 +1,163 @@
+\documentstyle[11pt]{article}
+
+
+\textwidth = 16cm
+\textheight= 24cm
+
+\hoffset=-0.8cm
+\voffset=-2.0cm
+
+\begin{document}
+
+\section{Producing Green's function for impurity calculation}
+
+For impurity calculation you first have to make a file that 
+contains information about the positions of atoms which form
+the "impurity" cluster. This "impurity" cluster then 
+is embedded into the host, and the impurity program recalculates
+self-consistently the potential, charge density, etc.  
+for the atoms which are inside the impurity cluster, 
+assuming the boundary condition with the host. The simplest way 
+to make such a file is the following. First make one iteration 
+of the 'tb-kkr' program starting from the self-consistent potential for your 
+system and use the test-option {\tt clusters} in the 'inputcard'.
+You will see the text-format file "clusters" which contains the information 
+about tight-binding clusters for all atoms in the inputcard. 
+Then you should choose the site, which will be the center site of the impurity 
+cluster, cut out the information concerning other atoms, and make the 
+"impurity" file (let's call it "scoef") in the format, presented below: 
+\bigskip
+
+{\small\tt
+  \begin{tabular}{rrrrrr}
+    19\phantom{.XXXXXXX} & {}            &       {}     &    {} &  {}  &   {}  
+      \\
+    0.00000000  &   0.00000000  &   0.00000000 &    3  & 29.0 &   0.000000  \\ 
+    0.20412415  &  -0.35355339  &  -0.57735027 &    2  & 29.0 &   0.707107  \\ 
+   -0.40824829  &   0.00000000  &  -0.57735027 &    2  & 29.0 &   0.707107  \\
+    0.20412415  &   0.35355339  &  -0.57735027 &    2  & 29.0 &   0.707107  \\
+    0.00000000  &  -0.70710678  &   0.00000000 &    3  & 29.0 &   0.707107  \\
+   -0.61237244  &  -0.35355339  &   0.00000000 &    3  & 29.0 &   0.707107  \\
+    0.61237244  &  -0.35355339  &   0.00000000 &    3  & 29.0 &   0.707107  \\
+   -0.61237244  &   0.35355339  &   0.00000000 &    3  & 29.0 &   0.707107  \\
+    0.61237244  &   0.35355339  &   0.00000000 &    3  & 29.0 &   0.707107  \\
+    0.00000000  &   0.70710678  &   0.00000000 &    3  & 29.0 &   0.707107  \\
+   -0.20412415  &  -0.35355339  &   0.57735027 &    4  &  0.0 &   0.707107  \\
+    0.40824829  &  -0.00000000  &   0.57735027 &    4  &  0.0 &   0.707107  \\
+   -0.20412415  &   0.35355339  &   0.57735027 &    4  &  0.0 &   0.707107  \\
+   -0.40824829  &  -0.70710678  &  -0.57735027 &    2  & 29.0 &   1.000000  \\
+    0.81649658  &   0.00000000  &  -0.57735027 &    2  & 29.0 &   1.000000  \\
+   -0.40824829  &   0.70710678  &  -0.57735027 &    2  & 29.0 &   1.000000  \\
+    0.40824829  &  -0.70710678  &   0.57735027 &    4  &  0.0 &   1.000000  \\
+   -0.81649658  &  -0.00000000  &   0.57735027 &    4  &  0.0 &   1.000000  \\
+    0.40824829  &   0.70710678  &   0.57735027 &    4  &  0.0 &   1.000000  \\
+ \end{tabular}
+}
+\bigskip
+
+The example, presented here, has been obtained
+from calculation for Cu (111)-surface  using decimation technique with 12 
+layers slab: 3Cu/6Vac/3Cu. We are going to put one impurity atom on the Cu 
+left-surface-layer, which has id-number 3 in the inputcard.  The number in the 
+first row of the "scoef" file is the total number of atoms in the cluster, the 
+first three columns are the $(z,y,z)$ coordinates, the id-numbers of the atoms 
+(according to the inputcard)
+are in the 4-th column, the atomic charges are in the 5-th column, 
+the distances are in the last column. 
+
+  Then set in the inputcard the correct name (say, "scoef") of the file I25, 
+which you just have created, set IGREEN=1, ICC=1 and make one iteration of the 
+'tb-kkr' program. You will obtain three files: "impurity.coefs", 
+"intercell\underline{{ }}ref" and "green" (this last file is in the binary 
+format, it has a huge size and contains the information
+about the structural Green's function $G_{LL'}^{nn'}$ for all sites
+$n$ and $n'$ of our cluster). Make the new directory for "impurity" 
+calculation in you working directory and copy these 3 files to the new 
+directory. 
+
+\section{Impurity program}
+
+To start impurity program, you should first prepare the initial potential.
+The information for making such a potential you can find in 
+the "impurity.coefs" file, and the utility program 'potutil.f' helps you to do 
+that. This small FORTRAN file is usually situated in {\tt /util} subdirectory 
+of the directory where your kkr-package is. You should compile this 'potutil.f'
+file using simply {\tt g77} compiler, and should run the executable file
+in your working directory. Copy the self-consistent potential of your 
+referring system into the  working directory. After running the utility 
+program, you should refer to the "impurity.coefs" file for the correct input 
+information, which will be asked by the utility program. In our example of 
+inpurity on the Cu (111)-surface, the "impurity.coefs" contains the following 
+information:
+\bigskip
+
+{\small\tt
+\hspace{0.5cm} Position of Impurity \hspace{1.9cm} Host Imp Shell \ Dist
+\quad  Host id in Bulk
+
+\noindent
+\begin{tabular}{rrrrrrrr}
+  0.00000000  &  0.00000000  & 0.00000000   & 2  & 1 &   1 & 0.000000  &  3 \\
+  0.20412415  & -0.35355339  &-0.57735027   & 1  & 2 &   2 & 0.707107  &  2 \\
+ -0.40824829  &  0.00000000  &-0.57735027   & 1  & 3 &   3 & 0.707107  &  2 \\
+  0.20412415  &  0.35355339  &-0.57735027   & 1  & 4 &   4 & 0.707107  &  2 \\ 
+  0.00000000  & -0.70710678  & 0.00000000   & 2  & 5 &   5 & 0.707107  &  3 \\
+ -0.61237244  & -0.35355339  & 0.00000000   & 2  & 6 &   6 & 0.707107  &  3 \\
+  0.61237244  & -0.35355339  & 0.00000000   & 2  & 7 &   7 & 0.707107  &  3 \\
+ -0.61237244  &  0.35355339  & 0.00000000   & 2  & 8 &   8 & 0.707107  &  3 \\
+  0.61237244  &  0.35355339  & 0.00000000   & 2  & 9 &   9 & 0.707107  &  3 \\
+  0.00000000  &  0.70710678  & 0.00000000   & 2  & 10 & 10 & 0.707107  &  3 \\
+ -0.20412415  & -0.35355339  & 0.57735027   & 3  & 11 & 11 & 0.707107  &  4 \\
+  0.40824829  & -0.00000000  & 0.57735027   & 3  & 12 & 12 & 0.707107  &  4 \\
+ -0.20412415  &  0.35355339  & 0.57735027   & 3  & 13 & 13 & 0.707107  &  4 \\
+ -0.40824829  & -0.70710678  &-0.57735027   & 1  & 14 & 14 & 1.000000  &  2 \\
+  0.81649658  &  0.00000000  &-0.57735027   & 1  & 15 & 15 & 1.000000  &  2 \\
+ -0.40824829  &  0.70710678  &-0.57735027   & 1  & 16 & 16 & 1.000000  &  2 \\
+  0.40824829  & -0.70710678  & 0.57735027   & 3  & 17 & 17 & 1.000000  &  4 \\
+ -0.81649658  & -0.00000000  & 0.57735027   & 3  & 18 & 18 & 1.000000  &  4 \\
+  0.40824829  &  0.70710678  & 0.57735027   & 3  & 19 & 19 & 1.000000  &  4 \\
+\end{tabular}
+
+304 \qquad  354
+
+1
+
+\noindent
+Host order, no of host sites: \qquad 3
+
+2 \qquad  3 \qquad  4
+}
+\bigskip
+
+You see, that 3 host sites with id-numbers 2,\ 3 and 4 should be used
+to produce the potential of the host, therefore the total number
+of sites for the output potential is $19+3 = 22$ for this example.
+You can then choose the number of spins (1 or 2) for your potential.
+Then you input the order of atoms for the output potential 
+in the following way: first must be the host sites in the order like 
+they are given in the "impurity.coefs" file, e.g., 2,\ 3 and 4 for our 
+example; then you input one by one the "host id-numbers in the bulk" (last 
+column in the "impurity.coefs" file), e.g, 3,\ 2,\  2,\ 2,\ 3, \dots.  
+(see the table above). The output file with initial potential has the name
+"composed.potent". Then you can cut out from the "composed.potent" file
+the potentials for some atoms belonging to the impurity cluster
+and replace them by potentials of your impurities, which you can 
+obtain either from 'voronoi' program (jellium potentials) or from
+bulk calculation for impurity atoms.
+
+ In your kkr-package directory you have the subdirectory usually called
+{\tt /impurity} with impurity program. You should recompile (runnig {\tt make} 
+file) the impurity program before a calculation of the new system, 
+pointing out an attention to the parameters in "parameters.file".
+The parameters you must care of before compilation are: {\tt NTREFD} -- 
+the number host sites (=3 for our example), {\tt NATOMD} -- the number
+of sites in the impurity cluster (=19 for our example), {\tt NSPIND} -- number 
+of spins (1 or 2), {\tt IEMXD} must be larger, than the total number
+{\tt NPT1 + NPT1 + NPT3 + NPOL} of points on the energy contour in the complex 
+energy plane, {\tt NSEC} is the dimension of the structural Green's functon 
+matrix (=304 for our example, the value of this patameter can be found in 
+the "impurity.coefs" file), {\tt LMAXD} is $l_{\rm max}$ cutoff, and other 
+parameters you usually do not have to change. The executable file name 
+of the impurity program is usually "kkrimp.exe".
+
+\end{document}
