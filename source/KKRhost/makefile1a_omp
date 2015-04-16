@@ -1,8 +1,5 @@
-SHELL = /bin/sh
 
-include ./makeflags
-
-SRAOBJS = \
+SRAOBJS1a = \
        $(OBJ)/beshan.o   $(OBJ)/cinit.o    $(OBJ)/csum.o     \
        $(OBJ)/gfree.o    $(OBJ)/regns.o    $(OBJ)/regsol.o   \
        $(OBJ)/gll95.o    $(OBJ)/grefsy.o   $(OBJ)/ioben.o    \
@@ -15,9 +12,9 @@ SRAOBJS = \
        $(OBJ)/simpk.o    $(OBJ)/soutk.o    $(OBJ)/ssum.o
        
 
-SRANONMPI=$(OBJ)/tbref.o
+SRANONMPI1a=$(OBJ)/tbref.o
 
-COMOBJS = $(OBJ)/main1a.o     $(OBJ)/calctmat.o  $(OBJ)/calctref.o \
+COMOBJS1a = $(OBJ)/main1a.o     $(OBJ)/calctmat.o  $(OBJ)/calctref.o \
           $(OBJ)/getscratch.o $(OBJ)/lngstring.o $(OBJ)/initldau.o \
           $(OBJ)/phicalc.o    $(OBJ)/tmat_newsolver.o \
           $(OBJ)/vllmat.o     $(OBJ)/cheb.o $(OBJ)/interpolate_poten.o \
@@ -27,15 +24,15 @@ COMOBJS = $(OBJ)/main1a.o     $(OBJ)/calctmat.o  $(OBJ)/calctref.o \
           $(OBJ)/rllsllsourceterms.o $(OBJ)/calcsph.o $(OBJ)/rllsll.o \
           $(OBJ)/chebint.o \
 
-MPIOBJ = $(OBJ)/mpimain1a.o $(OBJ)/mpicalctmat.o $(OBJ)/mpitbref.o \
+MPIOBJ1a = $(OBJ)/mpimain1a.o $(OBJ)/mpicalctmat.o $(OBJ)/mpitbref.o \
          $(OBJ)/calctref.o  $(OBJ)/getscratch.o  $(OBJ)/lngstring.o \
          $(OBJ)/initldau.o  $(OBJ)/phicalc.o
 
                  
 
-DRVOBJS = $(OBJ)/drvreltmat.o  
+DRVOBJS1a = $(OBJ)/drvreltmat.o  
 
-RELOBJS = \
+RELOBJS1a = \
         $(OBJ)/ssite.o    $(OBJ)/rinvgj.o    $(OBJ)/dirac_bs.o   \
         $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o  $(OBJ)/dirbsrad.o   \
         $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o  $(OBJ)/cjlz.o       \
@@ -46,47 +43,14 @@ RELOBJS = \
         $(OBJ)/cint4pts.o $(OBJ)/calccgc.o   $(OBJ)/ikmlin.o     \
         $(OBJ)/ylag.o     $(OBJ)/cmatstr.o
 
-PROGOBJS = $(COMOBJS) $(SRAOBJS) $(SRANONMPI) $(DRVOBJS) $(RELOBJS) 
+PROGOBJS1a = $(COMOBJS1a) $(SRAOBJS1a) $(SRANONMPI1a) $(DRVOBJS1a) $(RELOBJS1a) 
 
-MPIOBJS = $(MPIOBJ) $(SRAOBJS) $(DRVOBJS) $(RELOBJS) 
-
-setmpi:
-	@if test ! -d MPI;\
-	then mkdir MPI; fi
-	rm -f $(OBJ)/mpi*.o
-	cp -p inc.p   ./MPI/inc.p
-
-mkdirobj:
-	@if test ! -d $(OBJ); \
-	then mkdir $(OBJ); fi
-
-clean:
-	@find . -name "*.o" -exec rm -f {} \;
-copyinc:
-	cp -p inc.p   $(SRA)/inc.p
-	cp -p inc.p   $(COM)/inc.p
-	cp -p sprkkr_rmesh.dim   $(REL)/sprkkr_rmesh.dim
-
-kkr : mkdirobj copyinc $(PROGOBJS)
-	$(LD) -o $(BIN)/kkr1a.exe $(PROGOBJS) $(libs) 
-
-kkrmpi : mkdirobj setmpi copyinc $(MPIOBJS)
-	$(LDMPI) -o $(BIN)/kkr1a_mpi.exe $(MPIOBJS) $(libs) 
 
 ###################################################################
 # rules expressing dependencies on Fortran files
 
 
 ##################### sources in SRA directory ##########
-
-$(OBJ)/beshan.o   : $(SRA)/beshan.f                 ; \
-	              $(FC) $(FFLAGS) $(SRA)/beshan.f -c -o $@
-
-$(OBJ)/cinit.o    : $(SRA)/cinit.f                  ; \
-	              $(FC) $(FFLAGS) $(SRA)/cinit.f  -c -o $@
-
-$(OBJ)/rinit.o    : $(SRA)/rinit.f                  ; \
-	              $(FC) $(FFLAGS) $(SRA)/rinit.f  -c -o $@
 
 $(OBJ)/csum.o     : $(SRA)/csum.f                   ; \
 	              $(FC) $(FFLAGS) $(SRA)/csum.f -c -o $@
@@ -106,15 +70,6 @@ $(OBJ)/ioben.o    : $(SRA)/ioben.f                  ; \
 $(OBJ)/mapblock.o : $(SRA)/mapblock.f               ; \
 	              $(FC) $(FFLAGS) $(SRA)/mapblock.f -c -o $@
 
-$(OBJ)/rcstop.o   : $(SRA)/rcstop.f                 ; \
-	              $(FC) $(FFLAGS) $(SRA)/rcstop.f  -c -o $@
-
-$(OBJ)/test.o     : $(SRA)/test.f                   ; \
-	              $(FC) $(FFLAGS) $(SRA)/test.f -c -o $@
-
-$(OBJ)/ymy.o      : $(SRA)/ymy.f                 ; \
-	             $(FC) $(FFLAGS) $(SRA)/ymy.f -c -o $@
-
 $(OBJ)/cradwf.o   : $(SRA)/cradwf.f $(INCP)         ; \
 	            $(FC) $(FFLAGS) $(SRA)/cradwf.f -c -o $@
 
@@ -133,9 +88,6 @@ $(OBJ)/irwsol.o   : $(SRA)/irwsol.f                  ; \
 $(OBJ)/regns.o    : $(SRA)/regns.f                    ; \
 	            $(FC) $(FFLAGS) $(SRA)/regns.f -c -o $@
 
-$(OBJ)/regsol.o   : $(SRA)/regsol.f                   ; \
-	            $(FC) $(FFLAGS) $(SRA)/regsol.f -c -o $@
-
 $(OBJ)/tbref.o    : $(SRA)/tbref.f $(INCP)   ; \
 	              $(FC) $(FFLAGS) $(SRA)/tbref.f -c -o $@
 
@@ -145,9 +97,6 @@ $(OBJ)/wfint.o    : $(SRA)/wfint.f                    ; \
 $(OBJ)/wfint0.o   : $(SRA)/wfint0.f                   ; \
 	            $(FC) $(FFLAGS) $(SRA)/wfint0.f -c -o $@
 
-$(OBJ)/wfmesh.o   : $(SRA)/wfmesh.f                   ; \
-	            $(FC) $(FFLAGS) $(SRA)/wfmesh.f -c -o $@
-
 $(OBJ)/wftsca.o   : $(SRA)/wftsca.f                   ; \
 	            $(FC) $(FFLAGS) $(SRA)/wftsca.f -c -o $@
 
@@ -156,12 +105,6 @@ $(OBJ)/pnstmat.o  : $(SRA)/pnstmat.f $(INCP)          ; \
 
 $(OBJ)/vllns.o    : $(SRA)/vllns.f  $(INCP)           ; \
 	            $(FC) $(FFLAGS) $(SRA)/vllns.f -c -o $@
-
-$(OBJ)/opt.o         : $(SRA)/opt.f                 ; \
-                        $(FC) $(FFLAGS) $(SRA)/opt.f -c -o $@
-
-$(OBJ)/ioinput.o     : $(SRA)/ioinput.f                 ; \
-                        $(FC) $(FFLAGS) $(SRA)/ioinput.f -c -o $@
 
 $(OBJ)/simpk.o     : $(SRA)/simpk.f                 ; \
                         $(FC) $(FFLAGS) $(SRA)/simpk.f -c -o $@
@@ -182,15 +125,6 @@ $(OBJ)/main1a.o   : $(COM)/main1a.f  $(INCP) ; \
 $(OBJ)/calctmat.o  : $(COM)/calctmat.f $(INCP)        ; \
 	            $(FC) $(FFLAGS) $(COM)/calctmat.f -c -o $@
 
-$(OBJ)/calctref.o   : $(COM)/calctref.f                 ; \
-                    $(FC) $(FFLAGS)   $(COM)/calctref.f -c -o $@
-
-$(OBJ)/getscratch.o  : $(COM)/getscratch.f     ; \
-	               $(FC) $(FFLAGS) $(COM)/getscratch.f -c -o $@
-
-$(OBJ)/lngstring.o  : $(COM)/lngstring.f     ; \
-	               $(FC) $(FFLAGS) $(COM)/lngstring.f -c -o $@
-
 $(OBJ)/initldau.o  : $(COM)/initldau.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/initldau.f -c -o $@
 
@@ -205,15 +139,6 @@ $(OBJ)/cheb.o  : $(COM)/cheb.f90 $(INCP)        ; \
 
 $(OBJ)/interpolate_poten.o  : $(COM)/interpolate_poten.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/interpolate_poten.f -c -o $@
-
-$(OBJ)/interpolspline.o  : $(COM)/interpolspline.f $(INCP)        ; \
-                    $(FC) $(FFLAGS) $(COM)/interpolspline.f -c -o $@
-
-$(OBJ)/spline_real.o  : $(COM)/spline_real.f $(INCP)        ; \
-                    $(FC) $(FFLAGS) $(COM)/spline_real.f -c -o $@
-
-$(OBJ)/splint_real.o  : $(COM)/splint_real.f $(INCP)        ; \
-                    $(FC) $(FFLAGS) $(COM)/splint_real.f -c -o $@
 
 $(OBJ)/vllmat.o  : $(COM)/vllmat.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/vllmat.f -c -o $@
@@ -247,108 +172,5 @@ $(OBJ)/rllsll.o  : $(COM)/rllsll.f90 $(INCP)        ; \
 
 $(OBJ)/chebint.o  : $(COM)/chebint.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/chebint.f -c -o $@
-############################################################
-
-##################### sources in DRV directory ##########
-
-$(OBJ)/drvreltmat.o  : $(DRV)/drvreltmat.f      ; \
-	             $(FC) $(FFLAGS) $(DRV)/drvreltmat.f -c -o $@
-
-############################################################
-
-##################### sources in REL directory ##########
-
-$(OBJ)/ssite.o       : $(REL)/ssite.f                   ; \
-	             $(FC) $(FFLAGS) $(REL)/ssite.f -c -o $@
-
-$(OBJ)/rinvgj.o      : $(REL)/rinvgj.f                  ; \
-	             $(FC) $(FFLAGS) $(REL)/rinvgj.f -c -o $@
-
-$(OBJ)/dirac_bs.o    : $(REL)/dirac_bs.f  $(INCR)       ; \
-	             $(FC) $(FFLAGS) $(REL)/dirac_bs.f -c -o $@
-
-$(OBJ)/dirbslag.o    : $(REL)/dirbslag.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/dirbslag.f -c -o $@
-
-$(OBJ)/dirbsrze.o    : $(REL)/dirbsrze.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/dirbsrze.f -c -o $@
-
-$(OBJ)/dirbsrad.o    : $(REL)/dirbsrad.f  $(INCR)       ; \
-	             $(FC) $(FFLAGS) $(REL)/dirbsrad.f -c -o $@
-
-$(OBJ)/dirbsmid.o    : $(REL)/dirbsmid.f  $(INCR)       ; \
-	             $(FC) $(FFLAGS) $(REL)/dirbsmid.f -c -o $@
-
-$(OBJ)/dirbsstp.o    : $(REL)/dirbsstp.f  $(INCR)       ; \
-	             $(FC) $(FFLAGS) $(REL)/dirbsstp.f -c -o $@
-
-$(OBJ)/cjlz.o        : $(REL)/cjlz.f                    ; \
-	             $(FC) $(FFLAGS) $(REL)/cjlz.f -c -o $@
-
-$(OBJ)/cnlz.o        : $(REL)/cnlz.f                    ; \
-	             $(FC) $(FFLAGS) $(REL)/cnlz.f -c -o $@
-
-$(OBJ)/cdjlzdz.o     : $(REL)/cdjlzdz.f                 ; \
-	             $(FC) $(FFLAGS) $(REL)/cdjlzdz.f -c -o $@
-
-$(OBJ)/cdnlzdz.o     : $(REL)/cdnlzdz.f                 ; \
-	             $(FC) $(FFLAGS) $(REL)/cdnlzdz.f -c -o $@
-
-$(OBJ)/ikapmue.o     : $(REL)/ikapmue.f                 ; \
-	             $(FC) $(FFLAGS) $(REL)/ikapmue.f -c -o $@
-
-$(OBJ)/rnuctab.o     : $(REL)/rnuctab.f                 ; \
-	             $(FC) $(FFLAGS) $(REL)/rnuctab.f -c -o $@
-
-$(OBJ)/dirac_bi.o    : $(REL)/dirac_bi.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/dirac_bi.f -c -o $@
-
-$(OBJ)/dirac_op.o    : $(REL)/dirac_op.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/dirac_op.f -c -o $@
-
-$(OBJ)/dirac_soc.o   : $(REL)/dirac_soc.f               ; \
-	             $(FC) $(FFLAGS) $(REL)/dirac_soc.f -c -o $@
-
-$(OBJ)/dirac_soc2.o  : $(REL)/dirac_soc2.f              ; \
-	             $(FC) $(FFLAGS) $(REL)/dirac_soc2.f -c -o $@
-
-$(OBJ)/cintabr.o     : $(REL)/cintabr.f                 ; \
-	             $(FC) $(FFLAGS) $(REL)/cintabr.f -c -o $@
-
-$(OBJ)/sumupint.o    : $(REL)/sumupint.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/sumupint.f -c -o $@
-
-$(OBJ)/cinthff.o     : $(REL)/cinthff.f                 ; \
-	             $(FC) $(FFLAGS) $(REL)/cinthff.f -c -o $@
-
-$(OBJ)/cint4pts.o    : $(REL)/cint4pts.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/cint4pts.f -c -o $@
-
-$(OBJ)/calccgc.o     : $(REL)/calccgc.f               ; \
-                     $(FC) $(FFLAGS) $(REL)/calccgc.f -c -o $@
-
-$(OBJ)/ikmlin.o      : $(REL)/ikmlin.f               ; \
-                     $(FC) $(FFLAGS) $(REL)/ikmlin.f -c -o $@
-
-$(OBJ)/ylag.o        : $(REL)/ylag.f               ; \
-                     $(FC) $(FFLAGS) $(REL)/ylag.f -c -o $@
-
-$(OBJ)/cmatstr.o     : $(REL)/cmatstr.f                ; \
-	             $(FC) $(FFLAGS) $(REL)/cmatstr.f -c -o $@
-
-############################################################
-#  MPI OBJECTS MPI MPI OBJECTS 
-#
-$(OBJ)/mpimain1a.o   : $(COM)/main1a.f $(INCP) 
-	cat $(COM)/main1a.f | sed 's/CMPI /     /' > ./MPI/mpimain1a.f
-	$(FC) $(FFLAGS) ./MPI/mpimain1a.f -c -o $@	
-
-$(OBJ)/mpicalctmat.o  : $(COM)/calctmat.f $(INCP)
-	cat $(COM)/calctmat.f | sed 's/CMPI /     /' > ./MPI/mpicalctmat.f
-	$(FC) $(FFLAGS) ./MPI/mpicalctmat.f -c -o $@
-
-$(OBJ)/mpitbref.o    : $(SRA)/tbref.f $(INCP)  
-	cat $(SRA)/tbref.f | sed 's/CMPI /     /' > ./MPI/mpitbref.f
-	$(FC) $(FFLAGS) ./MPI/mpitbref.f -c -o $@
 
 ############################################################

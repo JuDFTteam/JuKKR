@@ -1,8 +1,6 @@
-SHELL = /bin/sh
 
-include ./makeflags
 
-SRAOBJS = $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o \
+SRAOBJS0 = $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o \
           $(OBJ)/cmomsread.o  $(OBJ)/crospr.o     $(OBJ)/cross.o \
           $(OBJ)/crtstar.o    $(OBJ)/ddet33.o     $(OBJ)/ddot1.o \
           $(OBJ)/dscal1.o     $(OBJ)/dsort.o      $(OBJ)/dswap1.o \
@@ -24,7 +22,7 @@ SRAOBJS = $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o \
           $(OBJ)/fplaneg.o    $(OBJ)/fplaner.o    $(OBJ)/shape.o \
           $(OBJ)/wfmesh.o     $(OBJ)/regsol.o     $(OBJ)/beshan.o 
 
-COMOBJS = $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
+COMOBJS0 = $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
           $(OBJ)/rinput13.o    $(OBJ)/symtaumat.o   $(OBJ)/taustruc.o \
           $(OBJ)/bzkint0.o     $(OBJ)/findgroup.o   $(OBJ)/calcrotmat.o \
           $(OBJ)/errortrap.o   $(OBJ)/bzkmesh.o     $(OBJ)/bzirr3d.o  \
@@ -41,9 +39,9 @@ COMOBJS = $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
           
 
 
-DRVOBJS = $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o
+DRVOBJS0 = $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o
 
-RELOBJS = $(OBJ)/calccgc.o    $(OBJ)/ikmlin.o     $(OBJ)/strsmat.o \
+RELOBJS0 = $(OBJ)/calccgc.o    $(OBJ)/ikmlin.o     $(OBJ)/strsmat.o \
           $(OBJ)/bastrmat.o   $(OBJ)/ikapmue.o    $(OBJ)/cmatstr.o \
           $(OBJ)/checkrmat.o  $(OBJ)/rinvgj.o     $(OBJ)/ssite.o   \
           $(OBJ)/cintabr.o    $(OBJ)/sumupint.o   $(OBJ)/dirac_bs.o   \
@@ -55,22 +53,10 @@ RELOBJS = $(OBJ)/calccgc.o    $(OBJ)/ikmlin.o     $(OBJ)/strsmat.o \
           $(OBJ)/dirac_op.o   $(OBJ)/dirac_soc.o  $(OBJ)/dirac_soc2.o \
           $(OBJ)/changerep.o
 
-VIROBJS = $(OBJ)/writehoststructure.o
+VIROBJS0 = $(OBJ)/writehoststructure.o
 
-PROGOBJS = $(COMOBJS) $(SRAOBJS) $(DRVOBJS) $(RELOBJS) $(VIROBJS)
-                  
-mkdirobj:
-	@if test ! -d $(OBJ); \
-	then mkdir $(OBJ); fi
-
-clean:
-	@find . -name "*.o" -exec rm -f {} \;
-copyinc:
-	cp -p inc.p   $(SRA)/inc.p
-	cp -p inc.p   $(COM)/inc.p
-
-kkr : mkdirobj copyinc $(PROGOBJS)
-	$(LD) -o $(BIN)/kkr0.exe $(PROGOBJS) $(libs) 
+PROGOBJS0 = $(COMOBJS0) $(SRAOBJS0) $(DRVOBJS0) $(RELOBJS0) $(VIROBJS0)
+ 
 
 ###################################################################
 # rules expressing dependencies on Fortran files

@@ -1,8 +1,5 @@
-SHELL = /bin/sh
 
-include ./makeflags
-
-SRAOBJS = \
+SRAOBJS2 = \
           $(OBJ)/brydbm.o      $(OBJ)/brysh1.o     $(OBJ)/brysh2.o \
           $(OBJ)/brysh3.o      $(OBJ)/convol.o     $(OBJ)/dclock.o \
           $(OBJ)/ecoub.o       $(OBJ)/epotinb.o    $(OBJ)/espcb.o  \
@@ -17,7 +14,7 @@ SRAOBJS = \
           
 
 
-VXCOBJS = $(OBJ)/corlsd.o      $(OBJ)/cpw91.o      $(OBJ)/cylm02.o \
+VXCOBJS2 = $(OBJ)/corlsd.o      $(OBJ)/cpw91.o      $(OBJ)/cylm02.o \
           $(OBJ)/exch91.o      $(OBJ)/gcor91.o     $(OBJ)/gradr.o \
           $(OBJ)/gradrl.o      $(OBJ)/gxcpt.o      $(OBJ)/mkxcpe.o \
           $(OBJ)/spher.o       $(OBJ)/sphere_gga.o $(OBJ)/sphere_nogga.o \
@@ -27,31 +24,18 @@ VXCOBJS = $(OBJ)/corlsd.o      $(OBJ)/cpw91.o      $(OBJ)/cylm02.o \
 
 
 
-COMOBJS = $(OBJ)/main2.o       $(OBJ)/epathtb.o \
+COMOBJS2 = $(OBJ)/main2.o       $(OBJ)/epathtb.o \
           $(OBJ)/vmadelblk.o   $(OBJ)/vinterface.o $(OBJ)/etotb1.o \
           $(OBJ)/rhototb.o     $(OBJ)/calcrotmat.o $(OBJ)/errortrap.o
 
-DRVOBJS = $(OBJ)/relpotcvt.o
+DRVOBJS2 = $(OBJ)/relpotcvt.o
 
-RELOBJS = $(OBJ)/mdirnewang.o  $(OBJ)/scfiterang.o
+RELOBJS2 = $(OBJ)/mdirnewang.o  $(OBJ)/scfiterang.o
 
-VIROBJS = $(OBJ)/writekkrflex.o 
+VIROBJS2 = $(OBJ)/writekkrflex.o 
 
-PROGOBJS = $(COMOBJS) $(SRAOBJS) $(VXCOBJS) $(RELOBJS) $(DRVOBJS) $(VIROBJS)
+PROGOBJS2 = $(COMOBJS2) $(SRAOBJS2) $(VXCOBJS2) $(RELOBJS2) $(DRVOBJS2) $(VIROBJS2)
                   
-mkdirobj:
-	@if test ! -d $(OBJ); \
-	then mkdir $(OBJ); fi
-
-clean:
-	@find . -name "*.o" -exec rm -f {} \;
-copyinc:
-	cp -p inc.p   $(SRA)/inc.p
-	cp -p inc.p   $(COM)/inc.p
-	cp -p inc.p   $(VXC)/inc.p
-
-kkr : mkdirobj copyinc $(PROGOBJS)
-	$(LD) -o $(BIN)/kkr2.exe $(PROGOBJS) $(libs) 
 
 ###################################################################
 # rules expressing dependencies on Fortran include files
@@ -73,20 +57,11 @@ $(OBJ)/brysh3.o       : $(SRA)/brysh3.f  $(INCP)              ; \
 $(OBJ)/convol.o       : $(SRA)/convol.f  $(INCP)              ; \
                          $(FC) $(FFLAGS) $(SRA)/convol.f -c -o $@
 
-$(OBJ)/dclock.o       : $(SRA)/dclock.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/dclock.f -c -o $@
-
 $(OBJ)/ecoub.o        : $(SRA)/ecoub.f   $(INCP)              ; \
                          $(FC) $(FFLAGS) $(SRA)/ecoub.f -c -o $@
 
-$(OBJ)/emesht.o       : $(SRA)/emesht.f                ; \
-                         $(FC) $(FFLAGS) $(SRA)/emesht.f -c -o $@
-
 $(OBJ)/epotinb.o      : $(SRA)/epotinb.f $(INCP)              ; \
                          $(FC) $(FFLAGS) $(SRA)/epotinb.f -c -o $@
-
-$(OBJ)/erfcex.o       : $(SRA)/erfcex.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/erfcex.f -c -o $@
 
 $(OBJ)/espcb.o        : $(SRA)/espcb.f   $(INCP)              ; \
                          $(FC) $(FFLAGS) $(SRA)/espcb.f -c -o $@
@@ -100,23 +75,11 @@ $(OBJ)/forceh.o       : $(SRA)/forceh.f  $(INCP)              ; \
 $(OBJ)/forcxc.o       : $(SRA)/forcxc.f  $(INCP)              ; \
                          $(FC) $(FFLAGS) $(SRA)/forcxc.f -c -o $@
 
-$(OBJ)/gaufd.o        : $(SRA)/gaufd.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/gaufd.f -c -o $@
-
-$(OBJ)/gauleg.o       : $(SRA)/gauleg.f  $(INCP)              ; \
-                         $(FC) $(FFLAGS) $(SRA)/gauleg.f -c -o $@
-
 $(OBJ)/mixstr.o       : $(SRA)/mixstr.f  $(INCP)             ; \
                          $(FC) $(FFLAGS) $(SRA)/mixstr.f -c -o $@
 
 $(OBJ)/mtzero.o       : $(SRA)/mtzero.f  $(INCP)             ; \
                          $(FC) $(FFLAGS) $(SRA)/mtzero.f -c -o $@
-
-$(OBJ)/opt.o          : $(SRA)/opt.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/opt.f -c -o $@
-
-$(OBJ)/rcstop.o       : $(SRA)/rcstop.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/rcstop.f -c -o $@
 
 $(OBJ)/reg2.o         : $(SRA)/reg2.f                       ; \
                          $(FC) $(FFLAGS) $(SRA)/reg2.f -c -o $@
@@ -124,35 +87,14 @@ $(OBJ)/reg2.o         : $(SRA)/reg2.f                       ; \
 $(OBJ)/rhosymm.o      : $(SRA)/rhosymm.f $(INCP)              ; \
                          $(FC) $(FFLAGS) $(SRA)/rhosymm.f -c -o $@
 
-$(OBJ)/rinit.o        : $(SRA)/rinit.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/rinit.f -c -o $@
-
 $(OBJ)/rites.o        : $(SRA)/rites.f   $(INCP)             ; \
                          $(FC) $(FFLAGS) $(SRA)/rites.f -c -o $@
-
-$(OBJ)/simp3.o        : $(SRA)/simp3.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/simp3.f -c -o $@
-
-$(OBJ)/simpk.o        : $(SRA)/simpk.f   $(INCP)             ; \
-                         $(FC) $(FFLAGS) $(SRA)/simpk.f -c -o $@
 
 $(OBJ)/sinwk.o        : $(SRA)/sinwk.f   $(INCP)             ; \
                          $(FC) $(FFLAGS) $(SRA)/sinwk.f -c -o $@
 
-$(OBJ)/soutk.o        : $(SRA)/soutk.f   $(INCP)             ; \
-                         $(FC) $(FFLAGS) $(SRA)/soutk.f -c -o $@
-
-$(OBJ)/ssum.o         : $(SRA)/ssum.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/ssum.f -c -o $@
-
-$(OBJ)/test.o         : $(SRA)/test.f                       ; \
-                         $(FC) $(FFLAGS) $(SRA)/test.f -c -o $@
-
 $(OBJ)/vintras.o      : $(SRA)/vintras.f $(INCP)            ; \
                          $(FC) $(FFLAGS) $(SRA)/vintras.f -c -o $@
-
-$(OBJ)/ymy.o          : $(SRA)/ymy.f                          ; \
-                         $(FC) $(FFLAGS) $(SRA)/ymy.f -c -o $@
 
 ############################################################
 
@@ -160,9 +102,6 @@ $(OBJ)/ymy.o          : $(SRA)/ymy.f                          ; \
 
 $(OBJ)/main2.o        : $(COM)/main2.f   $(INCP)  ; \
                          $(FC) $(FFLAGS) $(COM)/main2.f -c -o $@
-
-$(OBJ)/epathtb.o      : $(COM)/epathtb.f               ; \
-                         $(FC) $(FFLAGS) $(COM)/epathtb.f -c -o $@
 
 $(OBJ)/vmadelblk.o    : $(COM)/vmadelblk.f $(INCP)          ; \
                          $(FC) $(FFLAGS) $(COM)/vmadelblk.f -c -o $@
@@ -175,17 +114,6 @@ $(OBJ)/etotb1.o       : $(COM)/etotb1.f  $(INCP)              ; \
 
 $(OBJ)/rhototb.o      : $(COM)/rhototb.f $(INCP)              ; \
                          $(FC) $(FFLAGS) $(COM)/rhototb.f -c -o $@
-
-############################################################
-
-#################### sources in COM directory stemming ########
-#################### from Munich SPR-KKR program       ########
-
-$(OBJ)/calcrotmat.o  : $(COM)/calcrotmat.f               ; \
-                     $(FC) $(FFLAGS) $(COM)/calcrotmat.f -c -o $@
-
-$(OBJ)/errortrap.o   : $(COM)/errortrap.f                ; \
-                     $(FC) $(FFLAGS) $(COM)/errortrap.f -c -o $@
 
 ############################################################
 
@@ -247,14 +175,6 @@ $(OBJ)/vxcspo.o       : $(VXC)/vxcspo.f                      ; \
 
 $(OBJ)/lebedev.o  : $(VXC)/lebedev.f                         ; \
                         $(FC) $(FFLAGS) $(VXC)/lebedev.f -c -o $@
-
-############################################################
-
-##################### sources in DRV directory ##########
-
-$(OBJ)/relpotcvt.o    : $(DRV)/relpotcvt.f            ; \
-                     $(FC) $(FFLAGS) $(DRV)/relpotcvt.f -c -o $@
-
 ############################################################
 
 ##################### sources in REL directory ##########
