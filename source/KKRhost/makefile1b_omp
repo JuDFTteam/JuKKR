@@ -1,5 +1,5 @@
 
-SRAOBJS1b = $(OBJ)/bofm.o          $(OBJ)/btom.o      $(OBJ)/cinit.o \
+#SRAOBJS1b = $(OBJ)/bofm.o          $(OBJ)/btom.o      $(OBJ)/cinit.o \
           $(OBJ)/beshan.o        $(OBJ)/dlke0.o     $(OBJ)/dlke1.o \
           $(OBJ)/inversion.o     $(OBJ)/invslab.o                  \
           $(OBJ)/invsupercell.o  $(OBJ)/ioinput.o   $(OBJ)/ioben.o    \
@@ -7,9 +7,14 @@ SRAOBJS1b = $(OBJ)/bofm.o          $(OBJ)/btom.o      $(OBJ)/cinit.o \
           $(OBJ)/surfgf.o        $(OBJ)/test.o      $(OBJ)/ymy.o \
           $(OBJ)/grefsy.o \
 
-SRANONMPI1b = $(OBJ)/dclock.o
+SRAOBJS1b = \
+$(OBJ)/bofm.o         $(OBJ)/btom.o         $(OBJ)/dclock.o       \
+$(OBJ)/dlke0.o        $(OBJ)/dlke1.o        $(OBJ)/inversion.o    \
+$(OBJ)/invslab.o      $(OBJ)/invsupercell.o $(OBJ)/surfgf.o       
 
-COMOBJS1b = \
+#SRANONMPI1b = $(OBJ)/dclock.o
+
+#COMOBJS1b = \
           $(OBJ)/kloopz1.o      $(OBJ)/decimate.o \
           $(OBJ)/projtau.o      $(OBJ)/cpamillsx.o   $(OBJ)/rotate.o \
           $(OBJ)/getdmat.o      $(OBJ)/mssinit.o     $(OBJ)/rotgll.o \
@@ -18,13 +23,22 @@ COMOBJS1b = \
           $(OBJ)/rotatespinframe.o \
 	  $(OBJ)/symetrmat.o    $(OBJ)/getscratch.o  $(OBJ)/lngstring.o 
 
-COMNONMPI1b = $(OBJ)/main1b.o     $(OBJ)/kkrmat01.o     
+COMOBJS1b = \
+          $(OBJ)/main1b.o   \
+          $(OBJ)/kloopz1.o  $(OBJ)/mssinit.o  $(OBJ)/kkrmat01.o \
+          $(OBJ)/decimate.o $(OBJ)/rotgll.o   $(OBJ)/tbxccpljij.o \
+          $(OBJ)/cmatmul.o    $(OBJ)/initabjij.o  $(OBJ)/setfactl.o   \
+          $(OBJ)/gijdmat.o    $(OBJ)/symetrmat.o  $(OBJ)/projtau.o    \
+          $(OBJ)/cpamillsx.o  $(OBJ)/rotate.o     $(OBJ)/getdmat.o    
 
-MPIOBJ1b = $(OBJ)/mpimain1b.o $(OBJ)/mpikkrmat01.o $(OBJ)/mpidclock.o
+############################################################
+#COMNONMPI1b = $(OBJ)/main1b.o     $(OBJ)/kkrmat01.o     
 
-RELOBJS1b = $(OBJ)/changerep.o     $(OBJ)/cmatstr.o
+#MPIOBJ1b = $(OBJ)/mpimain1b.o $(OBJ)/mpikkrmat01.o $(OBJ)/mpidclock.o
 
-PROGOBJS1b = $(COMOBJS1b) $(COMNONMPI1b) $(SRAOBJS1b) $(SRANONMPI1b) $(RELOBJS1b)
+#RELOBJS1b = $(OBJ)/changerep.o     $(OBJ)/cmatstr.o
+
+PROGOBJS1b = $(COMOBJS1b)  $(SRAOBJS1b)  #$(COMNONMPI1b) $(SRAOBJS1b) $(SRANONMPI1b) $(RELOBJS1b)
 
 ###################################################################
 # rules expressing dependencies on Fortran files

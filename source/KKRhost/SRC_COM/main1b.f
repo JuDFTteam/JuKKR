@@ -1,5 +1,14 @@
-      PROGRAM MAIN1B
-      IMPLICIT NONE
+      MODULE MOD_MAIN1B
+      
+            
+      !use modulename, only rountine1
+      
+      implicit none
+      
+      contains
+      
+      subroutine main1b()
+      
 CMPI  INCLUDE 'mpif.h'
       INCLUDE 'inc.p'
 C
@@ -845,7 +854,9 @@ CT3E +  TIME4,' seconds'
 CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
 CT3E +  TIME1+TIME2+TIME3+TIME4,' seconds'
 CMPI  CALL MPI_FINALIZE(IERR)
-      STOP
+      !STOP
+      WRITE (6,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
+
  2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
      &     79(1H=),/)
 99019 FORMAT (/,1X,79('*'),/,
@@ -856,4 +867,6 @@ CMPI  CALL MPI_FINALIZE(IERR)
      &         '  CPA-cycle ',/,1X,79('*'),/)
 
 
-      END
+      END SUBROUTINE !main1b
+      
+      END MODULE

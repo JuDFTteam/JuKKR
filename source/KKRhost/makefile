@@ -41,9 +41,12 @@ INCR = ./sprkkr_rmesh.dim
 
 
 
-FILENAME0 = kkr0.exe
+FILENAME0 = kkr.x  #kkr0.exe
 include makefile0
 OBJECTS0 = $(PROGOBJS0)
+
+$(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
+                        $(FC) $(FFLAGS) $(COM)/main_all.F90 -c -o $@
 
 FILENAME1a = kkr1a.exe
 include makefile1a_omp
@@ -113,6 +116,11 @@ copyinc:
 	cp -p inc.p   $(VXC)/inc.p; \
 	cp -p sprkkr_rmesh.dim   $(REL)/sprkkr_rmesh.dim
 
+#serialall: mkdirobj copyinc $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS1c) $(OBJ)/main_all.o
+#	$(FC)     -o $(FILENAME0) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS1c) $(OBJ)/main_all.o $(LLIBS)
+serialall: mkdirobj copyinc $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	$(FC)     -o $(FILENAME0) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+
 serial0:   mkdirobj copyinc $(OBJECTS0)
 	$(FC)     -o $(FILENAME0) $(OBJECTS0)  $(LLIBS)
 openmp0:   mkdirobj copyinc $(OBJECTS0)
@@ -178,12 +186,12 @@ clear:
 
 install: clean serial
 
-#%.o: $(SOURCEDIR)/%.f90
-#	$(FC) -c $(FFLAGS)  $<
-#%.o: $(SOURCEDIR)/%.f
-#	$(FC) -c $(FFLAGS)  $<
-#%.o: $(SOURCEDIR)/%.F90
-#	$(FC) -c $(FFLAGS) $(CPP)  $<
-#%.o: $(SOURCEDIR)/%.F
-#	$(FC) -c $(FFLAGS) $(CPP)  $<
+%.o: $(SOURCEDIR)/%.f90
+	$(FC) -c $(FFLAGS)  $<
+%.o: $(SOURCEDIR)/%.f
+	$(FC) -c $(FFLAGS)  $<
+%.o: $(SOURCEDIR)/%.F90
+	$(FC) -c $(FFLAGS) $(CPP)  $<
+%.o: $(SOURCEDIR)/%.F
+	$(FC) -c $(FFLAGS) $(CPP)  $<
 

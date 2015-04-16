@@ -1,4 +1,12 @@
-      PROGRAM MAIN0 
+      module MOD_MAIN0 
+      
+      !use modulename, only rountine1
+      
+      implicit none
+      
+      contains
+          
+      subroutine main0()
 C
 C *********************************************************************
 C * For KREL = 1 (relativistic mode)                                  *
@@ -956,4 +964,8 @@ C
  9070 FORMAT (5X,'INFO:  Output of cluster Green function at E Fermi')
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
 
-      END
+      END SUBROUTINE !MAIN0
+      
+      
+      END MODULE !MOD_MAIN0
+      

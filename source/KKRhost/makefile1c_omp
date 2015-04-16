@@ -1,5 +1,5 @@
 
-SRAOBJS1c = $(OBJ)/cinit.o     $(OBJ)/csum.o      $(OBJ)/ioben.o \
+#SRAOBJS1c = $(OBJ)/cinit.o     $(OBJ)/csum.o      $(OBJ)/ioben.o \
           $(OBJ)/test.o      $(OBJ)/beshan.o    $(OBJ)/corel.o \
           $(OBJ)/cradwf.o    $(OBJ)/csimpk.o    $(OBJ)/csinwd.o \
           $(OBJ)/csout.o     $(OBJ)/hankel.o    $(OBJ)/intcor.o \
@@ -12,7 +12,14 @@ SRAOBJS1c = $(OBJ)/cinit.o     $(OBJ)/csum.o      $(OBJ)/ioben.o \
           $(OBJ)/rinit.o     $(OBJ)/mapblock.o  $(OBJ)/opt.o    \
           $(OBJ)/ioinput.o   $(OBJ)/renorm_lly.o
 
-COMOBJS1c = $(OBJ)/wrldos.o     $(OBJ)/wrmoms.o     $(OBJ)/rhocore.o \
+SRAOBJS1c =  \
+$(OBJ)/corel.o      $(OBJ)/csimpk.o     $(OBJ)/intcor.o     \
+$(OBJ)/intin.o      $(OBJ)/intout.o     $(OBJ)/irwns.o      \
+$(OBJ)/pnsqns.o     $(OBJ)/rhoin.o      $(OBJ)/rholm.o      \
+$(OBJ)/rhons.o      $(OBJ)/rhoout.o     $(OBJ)/renorm_lly.o \
+$(OBJ)/simp3.o      
+
+#COMOBJS1c = $(OBJ)/wrldos.o     $(OBJ)/wrmoms.o     $(OBJ)/rhocore.o \
           $(OBJ)/errortrap.o  $(OBJ)/calcrotmat.o $(OBJ)/wrmomssoc.o \
 	  $(OBJ)/getscratch.o $(OBJ)/lngstring.o  $(OBJ)/densitymat.o \
           $(OBJ)/wrldaupot.o  $(OBJ)/overlap.o    $(OBJ)/wmatldau.o \
@@ -26,11 +33,20 @@ COMOBJS1c = $(OBJ)/wrldos.o     $(OBJ)/wrmoms.o     $(OBJ)/rhocore.o \
           $(OBJ)/cheb2oldgrid.o $(OBJ)/orbitalmoment.o \
           $(OBJ)/rclm.o       $(OBJ)/mixldau.o
 
-COMNONMPI1c = $(OBJ)/main1c.o     $(OBJ)/rhoval.o
+COMOBJS1c =   \
+$(OBJ)/main1c.o         $(OBJ)/rhoval.o         $(OBJ)/rhoval0.o        \
+$(OBJ)/rhocore.o        $(OBJ)/wrldos.o         $(OBJ)/wrmoms.o         \
+$(OBJ)/wrmomssoc.o      $(OBJ)/densitymat.o     $(OBJ)/wrldaupot.o      \
+$(OBJ)/overlap.o        $(OBJ)/wmatldau.o       $(OBJ)/mixldau.o        \
+$(OBJ)/rclm.o           $(OBJ)/rhovalnew.o      $(OBJ)/rhooutnew.o      \
+$(OBJ)/intcheb_cell.o   $(OBJ)/cheb2oldgrid.o   $(OBJ)/orbitalmoment.o  
+
+
+#COMNONMPI1c = $(OBJ)/main1c.o     $(OBJ)/rhoval.o
 
 DRVOBJS1c =   $(OBJ)/drvcore.o    $(OBJ)/drvrho.o
 
-RELOBJS1c = \
+#RELOBJS1c = \
         $(OBJ)/ssite.o    $(OBJ)/rinvgj.o    $(OBJ)/dirac_bs.o   \
         $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o  $(OBJ)/dirbsrad.o   \
         $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o  $(OBJ)/cjlz.o       \
@@ -45,7 +61,18 @@ RELOBJS1c = \
 	$(OBJ)/rint4pts.o $(OBJ)/calcmvec.o  $(OBJ)/amemagvec.o  \
         $(OBJ)/rmatstr.o  $(OBJ)/cmatstr.o   $(OBJ)/mvecglobal.o
 
-PROGOBJS1c = $(COMNONMPI1c) $(COMOBJS1c) $(SRAOBJS1c) $(DRVOBJS1c) $(RELOBJS1c)
+
+
+RELOBJS1c = \
+        $(OBJ)/scfchrdns.o   $(OBJ)/calcgf.o      $(OBJ)/rintsimp.o    \
+        $(OBJ)/core.o        $(OBJ)/coredir.o     $(OBJ)/hffcore.o     \
+        $(OBJ)/corehff.o     $(OBJ)/coreerr.o     $(OBJ)/rint4pts.o    \
+        $(OBJ)/calcmvec.o    $(OBJ)/amemagvec.o   $(OBJ)/rmatstr.o     \
+        $(OBJ)/mvecglobal.o  
+
+
+#PROGOBJS1c = $(COMNONMPI1c) $(COMOBJS1c) $(SRAOBJS1c) $(DRVOBJS1c) $(RELOBJS1c)
+PROGOBJS1c = $(COMOBJS1c) $(SRAOBJS1c) $(DRVOBJS1c) $(RELOBJS1c)
 
 ###################################################################
 # rules expressing dependencies on Fortran files

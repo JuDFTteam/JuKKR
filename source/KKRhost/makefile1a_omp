@@ -1,5 +1,5 @@
 
-SRAOBJS1a = \
+#SRAOBJS1a = \
        $(OBJ)/beshan.o   $(OBJ)/cinit.o    $(OBJ)/csum.o     \
        $(OBJ)/gfree.o    $(OBJ)/regns.o    $(OBJ)/regsol.o   \
        $(OBJ)/gll95.o    $(OBJ)/grefsy.o   $(OBJ)/ioben.o    \
@@ -10,11 +10,18 @@ SRAOBJS1a = \
        $(OBJ)/wfmesh.o   $(OBJ)/wftsca.o   $(OBJ)/rinit.o    \
        $(OBJ)/pnstmat.o  $(OBJ)/vllns.o    $(OBJ)/opt.o      \
        $(OBJ)/simpk.o    $(OBJ)/soutk.o    $(OBJ)/ssum.o
-       
 
-SRANONMPI1a=$(OBJ)/tbref.o
+SRAOBJS1a = \
+       $(OBJ)/csum.o     $(OBJ)/gfree.o    $(OBJ)/gll95.o    \
+       $(OBJ)/grefsy.o   $(OBJ)/ioben.o    $(OBJ)/mapblock.o \
+       $(OBJ)/cradwf.o   $(OBJ)/csinwd.o   $(OBJ)/csout.o    \
+       $(OBJ)/hankel.o   $(OBJ)/irwsol.o   $(OBJ)/regns.o    \
+       $(OBJ)/tbref.o    $(OBJ)/wfint.o    $(OBJ)/wfint0.o   \
+       $(OBJ)/wftsca.o   $(OBJ)/pnstmat.o  $(OBJ)/vllns.o    \
+       $(OBJ)/simpk.o    $(OBJ)/soutk.o    $(OBJ)/ssum.o     
+                  
 
-COMOBJS1a = $(OBJ)/main1a.o     $(OBJ)/calctmat.o  $(OBJ)/calctref.o \
+#COMOBJS1a = $(OBJ)/main1a.o     $(OBJ)/calctmat.o  $(OBJ)/calctref.o \
           $(OBJ)/getscratch.o $(OBJ)/lngstring.o $(OBJ)/initldau.o \
           $(OBJ)/phicalc.o    $(OBJ)/tmat_newsolver.o \
           $(OBJ)/vllmat.o     $(OBJ)/cheb.o $(OBJ)/interpolate_poten.o \
@@ -24,15 +31,17 @@ COMOBJS1a = $(OBJ)/main1a.o     $(OBJ)/calctmat.o  $(OBJ)/calctref.o \
           $(OBJ)/rllsllsourceterms.o $(OBJ)/calcsph.o $(OBJ)/rllsll.o \
           $(OBJ)/chebint.o \
 
-MPIOBJ1a = $(OBJ)/mpimain1a.o $(OBJ)/mpicalctmat.o $(OBJ)/mpitbref.o \
-         $(OBJ)/calctref.o  $(OBJ)/getscratch.o  $(OBJ)/lngstring.o \
-         $(OBJ)/initldau.o  $(OBJ)/phicalc.o
+COMOBJS1a = \
+        $(OBJ)/main1a.o             $(OBJ)/calctmat.o        $(OBJ)/initldau.o \
+        $(OBJ)/phicalc.o            $(OBJ)/tmat_newsolver.o  $(OBJ)/cheb.o  \
+        $(OBJ)/interpolate_poten.o  $(OBJ)/vllmat.o          $(OBJ)/rotatespinframe.o  \
+        $(OBJ)/spinorbit_ham.o      $(OBJ)/spin_orbit.o      $(OBJ)/spin_orbit_compl.o  \
+        $(OBJ)/vllmatsra.o          $(OBJ)/beshank.o         $(OBJ)/rllsllsourceterms.o  \
+        $(OBJ)/calcsph.o            $(OBJ)/rllsll.o          $(OBJ)/chebint.o 
 
-                 
+#DRVOBJS1a = $(OBJ)/drvreltmat.o  
 
-DRVOBJS1a = $(OBJ)/drvreltmat.o  
-
-RELOBJS1a = \
+#RELOBJS1a = \
         $(OBJ)/ssite.o    $(OBJ)/rinvgj.o    $(OBJ)/dirac_bs.o   \
         $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o  $(OBJ)/dirbsrad.o   \
         $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o  $(OBJ)/cjlz.o       \
@@ -43,7 +52,7 @@ RELOBJS1a = \
         $(OBJ)/cint4pts.o $(OBJ)/calccgc.o   $(OBJ)/ikmlin.o     \
         $(OBJ)/ylag.o     $(OBJ)/cmatstr.o
 
-PROGOBJS1a = $(COMOBJS1a) $(SRAOBJS1a) $(SRANONMPI1a) $(DRVOBJS1a) $(RELOBJS1a) 
+PROGOBJS1a = $(COMOBJS1a) $(SRAOBJS1a) #$(SRANONMPI1a) $(DRVOBJS1a) $(RELOBJS1a) 
 
 
 ###################################################################

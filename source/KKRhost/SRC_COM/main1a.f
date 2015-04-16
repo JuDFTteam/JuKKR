@@ -1,5 +1,14 @@
-      PROGRAM MAIN1A
-      IMPLICIT NONE
+      module MOD_MAIN1A
+      
+      
+      !use modulename, only rountine1
+      
+      implicit none
+      
+      contains
+      
+      
+      subroutine main1a()
 CMPI  include 'mpif.h'
       INCLUDE 'inc.p'
 C
@@ -311,5 +320,8 @@ CMPI  END IF
 C
 
 CMPI  CALL MPI_FINALIZE(IERR)
-      STOP
-      END
+      !STOP
+
+      END SUBROUTINE !main1a
+      
+      END MODULE

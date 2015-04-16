@@ -1,5 +1,15 @@
-      PROGRAM MAIN2
-      IMPLICIT NONE
+      MODULE MOD_MAIN2
+      
+            
+      !use modulename, only rountine1
+      
+      implicit none
+      
+      contains
+      
+      subroutine main2()
+      
+      
 C     .. Parameters ..
       INCLUDE 'inc.p'
 C
@@ -1053,7 +1063,7 @@ C ======================================================================
  9160 FORMAT(20X,'mixing factor used : ',1P,D12.2)
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
-      END
+      END SUBROUTINE !main2
 
 
 c********************************************************************
@@ -1143,5 +1153,7 @@ c Inside
 
 
 
-      END
+      END SUBROUTINE !potenshift
+      
+      END MODULE
 

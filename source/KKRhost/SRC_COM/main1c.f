@@ -1,6 +1,15 @@
-      PROGRAM MAIN1C
-!      USE MOD_RENORM_LLY
-      IMPLICIT NONE
+      MODULE MOD_MAIN1C
+
+      
+      !use modulename, only rountine1
+      
+      implicit none
+      
+      contains
+      
+      subroutine main1c()
+
+
 CMPI  include 'mpif.h'
       INCLUDE 'inc.p'
 C
@@ -856,5 +865,10 @@ CT3E +  TIME4,' seconds'
 CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
 CT3E +  TIME1+TIME2+TIME3+TIME4,' seconds'
 CMPI  CALL MPI_FINALIZE(IERR)
-      STOP
-      END
+      !STOP
+
+      WRITE (6,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
+      
+      END SUBROUTINE !MAIN1c
+      
+      END MODULE
