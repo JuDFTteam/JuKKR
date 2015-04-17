@@ -22,12 +22,12 @@ SRAOBJS0 = $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o \
           $(OBJ)/fplaneg.o    $(OBJ)/fplaner.o    $(OBJ)/shape.o \
           $(OBJ)/wfmesh.o     $(OBJ)/regsol.o     $(OBJ)/beshan.o 
 
-COMOBJS0 = $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
+COMOBJS0 =$(OBJ)/wunfiles.o    $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
           $(OBJ)/rinput13.o    $(OBJ)/symtaumat.o   $(OBJ)/taustruc.o \
           $(OBJ)/bzkint0.o     $(OBJ)/findgroup.o   $(OBJ)/calcrotmat.o \
           $(OBJ)/errortrap.o   $(OBJ)/bzkmesh.o     $(OBJ)/bzirr3d.o  \
           $(OBJ)/madelung3d.o  $(OBJ)/madelung2d.o  $(OBJ)/madelout.o \
-          $(OBJ)/idreals.o     $(OBJ)/wunfiles.o    $(OBJ)/deciopt.o  \
+          $(OBJ)/idreals.o     $(OBJ)/deciopt.o  \
           $(OBJ)/impcheck.o    $(OBJ)/impcoefs.o    $(OBJ)/setgijtab.o \
           $(OBJ)/gijxcpl.o     $(OBJ)/gijcond.o     $(OBJ)/calctref.o \
           $(OBJ)/getclusnxyz.o $(OBJ)/decitset.o    $(OBJ)/decitmat.o \

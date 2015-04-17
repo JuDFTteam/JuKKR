@@ -1,12 +1,12 @@
       module MOD_MAIN0 
       
-      !use modulename, only rountine1
+      use mod_wunfiles
       
       implicit none
       
       contains
           
-      subroutine main0()
+      subroutine main0()      
 C
 C *********************************************************************
 C * For KREL = 1 (relativistic mode)                                  *
@@ -206,6 +206,9 @@ C  ZREL(NATYPD)                         : atomic number (cast integer)
 C 
 C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================
+
+      use mod_types
+
       IMPLICIT NONE
       INCLUDE 'inc.p'
 C     .. Parameters ..
@@ -420,6 +423,10 @@ C     .. Common blocks ..
       COMMON /TESTC/TESTC
 C     ..
 Consistency check
+
+      write(*,*) 'in main0: ', type0%i_iteration
+
+
 
       WRITE(*,*) 'This is the KKR code version 2015_01_22.'
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )

@@ -175,7 +175,8 @@ C
       CLOSE (67)
 C ------------------------------------------------------ input_potential
 C
-      OPEN (67,FILE='input_potential',FORM='unformatted')
+!       OPEN (67,FILE='input_potential',FORM='unformatted')
+      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
       READ (67) VINS,VISP
       IF (KREL.EQ.1) THEN
          READ (67) RMREL,DRDIREL,R2DRDIREL

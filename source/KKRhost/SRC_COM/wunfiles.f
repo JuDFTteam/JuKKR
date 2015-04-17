@@ -1,3 +1,10 @@
+      module mod_wunfiles
+        
+      implicit none
+      
+      contains
+
+
       SUBROUTINE WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ,
      &                    EFERMI,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,
      &                    IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,
@@ -45,6 +52,9 @@ C *  during an SCF cycle                                               *
 C *  v.popescu, munich 2004                                            *
 C *                                                                    *
 C **********************************************************************
+
+      use mod_types
+
       IMPLICIT NONE
 C     ..
 C     .. Scalar arguments
@@ -162,7 +172,8 @@ C ------------------------------------------------------ input_potential
 C                                          some data in this file change
 C
       E1 = 0D0
-      OPEN (67,FILE='input_potential',FORM='unformatted')
+!       OPEN (67,FILE='input_potential',FORM='unformatted')
+      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
       WRITE (67) VINS,VISP,ECORE,VBC
       IF (KREL.EQ.1) THEN
          WRITE (67) RMREL,DRDIREL,R2DRDIREL
@@ -171,6 +182,9 @@ C
       END IF
       WRITE (67) ITSCF,SCFSTEPS,E1,E1,CMOMHOST
       CLOSE (67)
+      
+      type0%i_iteration = ITSCF
+      type0%N_iteration = SCFSTEPS
 
 C ------------------------------------------------------------- itermdir
 C                                               data in this file change
@@ -302,4 +316,6 @@ C
       WRITE(67) ALAT,KAOEZ,IQAT,NOQ,CONC,GSH,ILM,IMAXSH,TESTC,OPTC,LLY
       CLOSE(67)
 C ======================================================================
-      END
+      END subroutine
+      
+      end module

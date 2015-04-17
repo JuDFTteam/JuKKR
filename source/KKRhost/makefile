@@ -45,6 +45,9 @@ FILENAME0 = kkr.x  #kkr0.exe
 include makefile0
 OBJECTS0 = $(PROGOBJS0)
 
+mod_types.o  : $(COM)/mod_types.f90                 ; \
+                        $(FC) $(FFLAGS) $(COM)/mod_types.f90 -c -o $@
+
 $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
                         $(FC) $(FFLAGS) $(COM)/main_all.F90 -c -o $@
 
@@ -96,7 +99,7 @@ gfort:    CPP = -D GFORT
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -c -r8
+FFLAGS       =  -O2 -c -r8  -traceback
 # Change to if flag is matched:
 debug:    FFLAGS = -CB -check all -traceback -g
 mpidebug: FFLAGS = -CB -check all -traceback -g
@@ -118,8 +121,8 @@ copyinc:
 
 #serialall: mkdirobj copyinc $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS1c) $(OBJ)/main_all.o
 #	$(FC)     -o $(FILENAME0) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS1c) $(OBJ)/main_all.o $(LLIBS)
-serialall: mkdirobj copyinc $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	$(FC)     -o $(FILENAME0) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+serialall: mkdirobj copyinc mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	$(FC)     -o $(FILENAME0) mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 serial0:   mkdirobj copyinc $(OBJECTS0)
 	$(FC)     -o $(FILENAME0) $(OBJECTS0)  $(LLIBS)

@@ -100,6 +100,8 @@ c
             VM2ZA(J) = VM2Z(J,IP)
    10     CONTINUE
 C
+          OPEN(IFILE, FILE='out_potential', FORM='formatted')
+
           WRITE (IFILE,FMT=9000) (ITITLE(I,IP),I=1,7),TXC(KXC+1)
           WRITE (IFILE,FMT=9010) RMT1,ALAT,RMTNW1
           WRITE (IFILE,FMT=9020) Z1,RMAX,EFERMI,VBC(IS)
@@ -188,6 +190,7 @@ c
    60 CONTINUE
 
 
+      close(IFILE)
 
  9000 FORMAT (7a4,6x,'  exc:',a24,3x,a10)
  9010 FORMAT (3f12.8)

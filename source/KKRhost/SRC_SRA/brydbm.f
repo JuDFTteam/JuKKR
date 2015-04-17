@@ -30,6 +30,9 @@ c
 c     modified for non spherical potential
 c                  b. drittler , aug. 1988
 c*********************************************************************
+
+      use mod_types
+
 C     .. Parameters ..
       INCLUDE 'inc.p'
       INTEGER LMPOTD
@@ -80,8 +83,10 @@ C     ..
 C     .. Data statements ..
       DATA MIT/1/,ZERO,ONE/0.0D0,1.0D0/
 C     ..
-      READ(28,FMT='(I5)') MIT
-      REWIND 28
+!       READ(28,FMT='(I5)') MIT
+!       REWIND 28
+      MIT = type0%mit_bry
+      
       IF (ITDEPT.GT.ITDTHD .OR. ITDTHD.GT.200) CALL RCSTOP('ITDBRY  ')
 
       IF (IMIX.LE.2 .OR. IMIX.GT.5) CALL RCSTOP('IMIXD   ')
@@ -307,7 +312,9 @@ c
 c
       END IF
       MIT = MIT + 1
-      WRITE(28,FMT='(I5)') MIT
+      !WRITE(28,FMT='(I5)') MIT
+      type0%mit_bry = MIT
+      
       REWIND IOBROY + 2
       WRITE (IOBROY+2) (SM1(IJ),IJ=1,IMAP), (FM1(IJ),IJ=1,IMAP)
 

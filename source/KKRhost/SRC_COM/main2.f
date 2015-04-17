@@ -9,6 +9,9 @@
       
       subroutine main2()
       
+      use mod_types
+      
+      implicit none
       
 C     .. Parameters ..
       INCLUDE 'inc.p'
@@ -268,7 +271,14 @@ C
       CLOSE (67)
 C ------------------------------------------------------ input_potential
 C
-      OPEN (67,FILE='input_potential',FORM='unformatted')
+      IF(type0%i_iteration.eq.0) then
+!       OPEN (67,FILE='input_potential',FORM='unformatted')
+      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
+      else 
+!       OPEN (67,FILE='output_potential',FORM='unformatted')
+      OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
+      end if
+      
       READ (67) VINS,VISP,ECORE,VBC
       IF (KREL.EQ.1) THEN
          READ (67) RMREL,DRDIREL,R2DRDIREL
@@ -311,6 +321,7 @@ C **************************  ITERATION BEGIN  *************************
 C **********************************************************************
 C
       ITSCF = ITSCF + 1         ! initialised to 0 in main0
+      type0%i_iteration = ITSCF
 C      
       WRITE(6,'(/,79(1H*))')
       WRITE(6,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
@@ -870,20 +881,21 @@ C ======================================================================
 C
       WRITE(6,FMT=9160) MIX
       WRITE(6,'(79(1H=),/)')
-      OPEN(28,FILE='not.converged',FORM='formatted',
-     &        STATUS='old',IOSTAT=I1)
-      IF ( I1.NE.0 ) THEN 
-         I1 = 1 
-         OPEN(28,FILE='not.converged',FORM='formatted',STATUS='new')
-         WRITE(28,'(I5,/)') I1
-         WRITE(6,'(6X,"WARNING : ",A,/)') 
-     &        'Could not find file ''not.converged''. Initialised now'
-         REWIND(28)
-      END IF
+!       OPEN(28,FILE='not.converged',FORM='formatted',
+!      &        STATUS='old',IOSTAT=I1)
+!       IF ( I1.NE.0 ) THEN 
+!          I1 = 1 
+!          OPEN(28,FILE='not.converged',FORM='formatted',STATUS='new')
+!          WRITE(28,'(I5,/)') I1
+!          WRITE(6,'(6X,"WARNING : ",A,/)') 
+!      &        'Could not find file ''not.converged''. Initialised now'
+!          REWIND(28)
+!       END IF
 C
 C ======================================================================
       IF (MAX(RMSAVQ,RMSAVM).LT.QBOUND) THEN
-         CLOSE(28,STATUS='delete')
+!          CLOSE(28,STATUS='delete')
+         type0%i_iteration = type0%N_iteration
       ELSE
 C ----------------------------------------------------------------------
 C
@@ -926,7 +938,7 @@ C
             END IF
          END DO
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-         CLOSE(28)
+!          CLOSE(28)
       END IF
 C ======================================================================
 C
@@ -968,11 +980,12 @@ C
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC CONVERGENCY TESTS
 C
       IF ( OPT('SEARCHEF') .AND. (DABS(E2SHIFT).LT.1D-8)) THEN
-         OPEN(28,FILE='not.converged',FORM='formatted')
-         CLOSE(28,STATUS='delete')
-         WRITE(6,'(12X,A)')
-     &        '++++++ SEARCHEF option: E_F CONVERGED +++++'
-         WRITE(6,'(79(1H*))')
+!          OPEN(28,FILE='not.converged',FORM='formatted')
+!          CLOSE(28,STATUS='delete')
+!          WRITE(6,'(12X,A)')
+!      &        '++++++ SEARCHEF option: E_F CONVERGED +++++'
+!          WRITE(6,'(79(1H*))')
+         type0%i_iteration = type0%N_iteration
          ICONT = 0
          GOTO 260
       END IF
@@ -992,8 +1005,9 @@ C ----------------------------------------------------------------------
          END IF
 C ----------------------------------------------------------------------
          IF (ITSCF.GE.SCFSTEPS) THEN
-            OPEN(28,FILE='not.converged',FORM='formatted')
-            CLOSE(28,STATUS='delete')
+!             OPEN(28,FILE='not.converged',FORM='formatted')
+!             CLOSE(28,STATUS='delete')
+         type0%i_iteration = type0%N_iteration
             WRITE(6,'(12X,A)')
      &           '++++++ NUMBER OF SCF STEPS EXHAUSTED ++++++'
             WRITE(6,'(79(1H*))')
@@ -1044,7 +1058,8 @@ C
       CLOSE (67)
 C ----------------------------------------------------- output_potential
 C
-      OPEN (67,FILE='output_potential',FORM='unformatted')
+!       OPEN (67,FILE='output_potential',FORM='unformatted')
+      OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
       WRITE (67) VINS,VISP,ECORE,VBC
       IF (KREL.EQ.1) THEN
          WRITE (67) RMREL,DRDIREL,R2DRDIREL
@@ -1054,7 +1069,7 @@ C
       WRITE (67) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
       CLOSE (67)
 C ======================================================================
-      STOP
+      !STOP
  9020 FORMAT ('                old',
      &     ' E Fermi ',F14.10,' Delta E_F = ',E16.8)
  9030 FORMAT ('                new',
