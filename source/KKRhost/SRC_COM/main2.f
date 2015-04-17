@@ -9,7 +9,7 @@
       
       subroutine main2()
       
-      use mod_types
+      use mod_types, only: type0
       
       implicit none
       
@@ -264,7 +264,11 @@ C ......................................................................
       CLOSE (67)
 C ---------------------------------------------------------- energy_mesh
 C
-      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+      IF (type0%i_iteration.eq.0) then
+        OPEN (67,FILE='energy_mesh',FORM='unformatted')
+      else
+        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
+      end if
       READ (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSOLD
       READ (67) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
      &          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
@@ -565,6 +569,7 @@ C hence the CMOMS are calculated site-dependent. In the same format
 C are read in by <MAIN0> -- < CMOMSREAD >     v.popescu 01/02/2002
 C 
       IF (OPT('deci-out').AND.(ITSCF.EQ.1)) THEN
+         open(37, file='decifile', form='formatted', position='append')
          WRITE(37,1080) NAEZ,LMPOT
          DO IH=1,NAEZ
             WRITE(37,*) IH

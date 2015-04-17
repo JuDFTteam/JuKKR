@@ -9,6 +9,7 @@
       
       subroutine main1c()
 
+      use mod_types, only: type0
 
 CMPI  include 'mpif.h'
       INCLUDE 'inc.p'
@@ -243,7 +244,11 @@ C ......................................................................
       CLOSE (67)
 C ---------------------------------------------------------- energy_mesh
 C
-      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+      IF (type0%i_iteration.eq.0) then
+        OPEN (67,FILE='energy_mesh',FORM='unformatted')
+      else
+        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
+      end if
       READ (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE
       READ (67) NPOL,TK
       IF ( NPOL.EQ.0 ) READ(67) EFERMI

@@ -9,6 +9,8 @@
       
       subroutine main1b()
       
+      use mod_types, only: type0
+      
 CMPI  INCLUDE 'mpif.h'
       INCLUDE 'inc.p'
 C
@@ -249,7 +251,11 @@ C
       CLOSE (52)
 C ---------------------------------------------------------- energy_mesh
 C
-      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+      IF (type0%i_iteration.eq.0) then
+        OPEN (67,FILE='energy_mesh',FORM='unformatted')
+      else
+        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
+      end if
       READ (67) IELAST,EZ,WEZ
       CLOSE (67)
       IF (TEST('gmatasci')) 
@@ -268,7 +274,7 @@ C =                     End read in variables                          =
 C ======================================================================
 C
 C     If qdos option is used set IQDOSRUN so that in a first run the 
-C     (t(E)-t_ref(E))^-1 matrix (fort.37) and the gref matrix can be 
+C     (t(E)-t_ref(E))^-1 matrix (tmat.qdos) and the gref matrix can be 
 C     written out for one k point, in a second run these matrices are 
 C     read in to continue the calculation with the k points specified by 
 C     the user in the qvec.dat file
@@ -285,8 +291,15 @@ C     Reset GMATLL for calculation in second run
             GMATLL(1:LMMAXD,1:LMMAXD,I1) = CZERO        ! qdos ruess
          ENDDO                                          ! qdos ruess
       ENDIF                                             ! qdos ruess
-      OPEN(37)                                          ! qdos ruess
-C                                                       ! qdos ruess
+      
+      if ((opt('qdos    ')) .and. (opt('deci-out'))) then
+         stop 'ERROR: qdos and deci-out cannot be used simultaniously'
+      elseif (opt('qdos    ')) then
+         OPEN(37, File='tmat.qdos', form='formatted')      ! qdos ruess
+      elseif (opt('deci-out')) then
+         open(37, file='decifile', form='formatted', position='append') ! ruess: needed in case of deci-out option to prepare decifile
+      end if
+         
 C
 CT3E  CALL SYSTEM_CLOCK(MEND)
 CT3E  TIME1 = (MEND-MSTART)
@@ -394,7 +407,7 @@ C calling list or the contents of kloopz1.
          VOLCUB(1,1) = VOLBZ(1)                         ! qdos ruess
          NSYMAT = 1
       ELSEIF (OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) THEN ! qdos ruess
-C Call the k loop just once with one k point to write out the fort.37 file
+C Call the k loop just once with one k point to write out the tmat.qdos file
          ALLOCATE(QVEC(3,NQDOS))                        ! qdos ruess
          QVEC(1:3,1) = 0.D0                             ! qdos ruess
          KMESH(1:IELAST) = 1                            ! qdos ruess
