@@ -204,6 +204,7 @@ contains
                                & nvec, dscal, nkpts_vis, nkpts_int,           &
                                & kpoints_vis, kpoints_int, areas_int, vis2int )
 
+    write(1368,*) nkpts_vis
     call find_kpoints_irredset( bounds, nkpts_vis, kpoints_vis, nkpts_irr, kpt2irr, irr2kpt)
 
     !save the visualization k-points to a file

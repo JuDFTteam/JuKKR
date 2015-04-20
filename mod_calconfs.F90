@@ -1683,13 +1683,18 @@ contains
 
     if(myrank==master)then
       if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
-      write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
-      write(*,'(A)') "In units of e*abohr Rydberg:"
+      write(*,'(A)')
+      write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
+      write(*,'(A)') "  in units of e*abohr Rydberg:"
       write(*,'(3(ES25.16))') torkance
-      write(*,'(A)') "In units of e*abohr / fs:"
+      write(*,'(A)')   
+      write(*,'(A)') "  in units of e*abohr / fs:     "
       write(*,'(3(ES25.16))') torkance*RyToinvfs
-      write(*,'(A)') "In units of e*abohr for room temperature (hbar/(2*tau) = 25 meV) :"
+      write(*,'(A)')
+      write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
+      write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
       write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
+      write(*,'(A)')
     end if!myrank==master
 
 
@@ -2253,19 +2258,25 @@ contains
       end if!myrank==master
 
     elseif (BZdim==2)then
-      conductivity = conductivity/(tpi**3)
+      conductivity = conductivity*e2byhbar/(tpi**2)/alat/abohr
 
       if(myrank==master)then
-        write(*,'(A)') "2D MODE : Conductivity values give a current per unit of length (not per unit of area)"
-        write(*,'(A)') "          These values have to be divided by the thickness of the film in BR to obtain"
-        write(*,'(A)') "          the average current density in the film in siemens/meter."
-        write(*,'(A)') "Conductivity / relaxation time  [in constant relaxation time approximation]:"
-        write(*,'(A)') "  in Rydberg meter:"
-        write(*,'(3ES25.16)') conductivity*2 !factor 2 because e^2 = 2 in Rydberg units
-        write(*,'(A)') "  in siemens/(femtosecond):"
-        write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*RyToinvfs
-        write(*,'(A)') "  in siemens for room temperature (hbar/(2*tau) = 25 meV) :"
-        write(*,'(3ES25.16)') conductivity*e2byhbar/abohr*13.60569253/(2*25*0.001)
+        write(*,'(A)')
+        write(*,'(A)') "2D MODE : The following values have to be divided by the thickness of the film"
+        write(*,'(A)') "          in unit of the lattice constant (ALAT) to obtain the conductivity"
+        write(*,'(A)') "          in the corresponding units."
+        write(*,'(A)')
+        write(*,'(A)') "Conductivity / relaxation time [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in (siemens/m)*Rydberg:"
+        write(*,'(3ES25.16)') conductivity
+        write(*,'(A)')
+        write(*,'(A)') "  in (siemens/m)/(femtosecond):"
+        write(*,'(3ES25.16)') conductivity*RyToinvfs
+        write(*,'(A)')
+        write(*,'(A)') "Conductivity at room temperature [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in (siemens/m) using hbar/(2*tau) = 25 meV :"
+        write(*,'(3ES25.16)') conductivity*13.60569253/(2*25*0.001)
+        write(*,'(A)')
       end if!myrank==master
     else
       stop 'BZdim is neiter 2 nor 3 !'
