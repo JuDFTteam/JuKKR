@@ -447,6 +447,7 @@ contains
           do ispin=1,ndegen
             do ixyz2=1,3
               chcond_tmp(ixyz2,ixyz1,isqa) = chcond_tmp(ixyz2,ixyz1,isqa) + dtmp*meanfreepath(ixyz2,ispin,isqa,ikp)
+!  TEST       chcond_tmp(ixyz2,ixyz1,isqa) = chcond_tmp(ixyz2,ixyz1,isqa) + dtmp*(1/(2*25*0.001/13.60569253))*fermivel(ixyz2,ikp)
             end do!ixyz2
           end do!ispin
         end do!isqa
@@ -464,6 +465,7 @@ contains
             do ispin=1,ndegen
               do ixyz2=1,3
                 spcond_tmp(ixyz2,ixyz1,isqa) = spcond_tmp(ixyz2,ixyz1,isqa) + dtmp*meanfreepath(ixyz2,ispin,isqa,ikp)*spinvalue(ispin,isqa,ikp)
+!  TEST         spcond_tmp(ixyz2,ixyz1,isqa) = spcond_tmp(ixyz2,ixyz1,isqa) + dtmp*(1/(2*25*0.001/13.60569253))*fermivel(ixyz2,ikp)*spinvalue(ispin,isqa,ikp)
                end do!ixyz2
             end do!ispin
           end do!isqa
@@ -568,6 +570,7 @@ contains
             dtmp = torqval(ixyz1,ispin,ikp)*weights(ikp)
             do ixyz2=1,3
               torkance_tmp(ixyz2,ixyz1,isqa) = torkance_tmp(ixyz2,ixyz1,isqa) + dtmp*meanfreepath(ixyz2,ispin,isqa,ikp)
+!  TEST       torkance_tmp(ixyz2,ixyz1,isqa) = torkance_tmp(ixyz2,ixyz1,isqa) + dtmp*(1/(2*25*0.001/13.60569253))*fermivel(ixyz2,ikp)
             end do!ixyz2
           end do!ispin
         end do!isqa

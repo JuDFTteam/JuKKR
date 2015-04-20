@@ -15,7 +15,7 @@ program mergerefined
 
   implicit none
 
-  integer :: nCub3(3)
+  integer :: nBZdim, nCub3(3)
   double precision :: bounds(3,2), areatot
 
   integer :: nkpts_refined, nkpts_irr_refined, nsym_refined, &
@@ -52,6 +52,13 @@ program mergerefined
   !initializations
   call pointgrp(rotmat,rotname)
   areatot = 0d0
+
+
+  write(*,*) '****************************************************'
+  write(*,*) '* What is the dimensionality of your BZ            *'
+  write(*,*) '* - - - - - - - - - - - - - - - - - - - - - - - - -*'
+  write(*,*) '* possible choices implemented: 2 or 3             *'
+  read(*,*) nBZdim
 
   !read in the cubes header
   write(filename,fmt_fn_ext) filename_cubesinfo, ext_formatted
@@ -94,13 +101,13 @@ program mergerefined
   end do!ikp
 
   !compute the cube-ids for each triangle
-  call find_cubeids_vis(nkpts_orig,    kpoints_orig,    bounds, nCub3, cubeids_orig,    areas_orig   )
-  call find_cubeids_vis(nkpts_refined, kpoints_refined, bounds, nCub3, cubeids_refined, areas_refined)
+  call find_cubeids_vis(nBZdim, nkpts_orig,    kpoints_orig,    bounds, nCub3, cubeids_orig,    areas_orig   )
+  call find_cubeids_vis(nBZdim, nkpts_refined, kpoints_refined, bounds, nCub3, cubeids_refined, areas_refined)
 
   !go through the old set and delete triangles that are in the new set
 ! allocate(cubeids_orig_save(nkpts_orig/3))
 ! cubeids_orig_save = cubeids_orig
-  do itri=1,nkpts_orig/3
+  do itri=1,nkpts_orig/nBZdim
     if(any(cubeids_refined==cubeids_orig(itri))) cubeids_orig(itri) = -1
   end do!itri
 
@@ -115,11 +122,11 @@ program mergerefined
 ! end if!myrank==master
 
   !allocate the new arrays
-  nkpts_orig_filtered = 3*count(cubeids_orig/=-1)
+  nkpts_orig_filtered = nBZdim*count(cubeids_orig/=-1)
   nkpts_new = nkpts_orig_filtered + nkpts_refined
   if(myrank==master) write(*,'("#original= ", I0, " #additional= ",I0, " #deleted= ",I0, " #new= ",I0)') &
-                     &          nkpts_orig/3,   nkpts_refined/3, count(cubeids_orig==-1),   nkpts_new/3
-  allocate(kpoints_new(3,nkpts_new), cubeids_new(nkpts_new/3), STAT=ierr)
+                     &          nkpts_orig/nBZdim,   nkpts_refined/nBZdim, count(cubeids_orig==-1),   nkpts_new/nBZdim
+  allocate(kpoints_new(3,nkpts_new), cubeids_new(nkpts_new/nBZdim), STAT=ierr)
   if(ierr/=0) stop 'Problem allocating kpoints_new etc.'
 
   !merge the two arrays
@@ -251,22 +258,22 @@ contains
     areatot = 0d0
 
     ipointer = 0
-    do itri=1,nkpts_orig/3
+    do itri=1,nkpts_orig/nBZdim
       if(cubeids_orig(itri)==-1) cycle
       ipointer = ipointer+1
-      istart1 = (ipointer-1)*3+1
-      istop1  = ipointer*3
-      istart2 = (itri-1)*3+1
-      istop2  = itri*3
+      istart1 = (ipointer-1)*nBZdim+1
+      istop1  = ipointer*nBZdim
+      istart2 = (itri-1)*nBZdim+1
+      istop2  = itri*nBZdim
       kpoints_new(:,istart1:istop1) = kpoints_orig(:,istart2:istop2)
       cubeids_new(ipointer) = cubeids_orig(itri)
       areatot = areatot + areas_orig(itri)
     end do!itri
 
-    if(ipointer/=nkpts_orig_filtered/3) stop 'inconsistency in number of triangles when filtering old array, vis'
+    if(ipointer/=nkpts_orig_filtered/nBZdim) stop 'inconsistency in number of triangles when filtering old array, vis'
 
-    kpoints_new(:,3*ipointer+1:nkpts_new) = kpoints_refined
-    cubeids_new(ipointer+1:nkpts_new/3)   = cubeids_refined
+    kpoints_new(:,nBZdim*ipointer+1:nkpts_new) = kpoints_refined
+    cubeids_new(ipointer+1:nkpts_new/nBZdim)   = cubeids_refined
     areatot = areatot + sum(areas_refined)
 
   end subroutine merge_arrays_vis
@@ -290,31 +297,37 @@ contains
   end subroutine find_cubeids_int
 
 
-  subroutine find_cubeids_vis(nkpts_in, kpoints_in, bounds, nCub3, cubeids, areas)
+  subroutine find_cubeids_vis(nBZdim, nkpts_in, kpoints_in, bounds, nCub3, cubeids, areas)
     implicit none
-    integer,                       intent(in)  :: nkpts_in, nCub3(3)
+    integer,                       intent(in)  :: nBZdim, nkpts_in, nCub3(3)
     double precision,              intent(in)  :: kpoints_in(3,nkpts_in), bounds(3,2)
     integer,          allocatable, intent(out) :: cubeids(:)
     double precision, allocatable, intent(out) :: areas(:)
 
     integer :: ierr, itri, ik1, ik2, ikp, ii3(3)
-    double precision :: ktriangle(3,3), kmedium(3)
+    double precision :: ktriangle(3,nBZdim), kmedium(3)
 
-    allocate(cubeids(nkpts_in/3), areas(nkpts_in/3), STAT=ierr)
+    allocate(cubeids(nkpts_in/nBZdim), areas(nkpts_in/nBZdim), STAT=ierr)
     if(ierr/=0) stop 'Problem allocating cubeids in vis'
 
-    do itri=1,nkpts_in/3
-      ik1=(itri-1)*3+1
-      ik2=itri*3
+    do itri=1,nkpts_in/nBZdim
+      ik1=(itri-1)*nBZdim+1
+      ik2=itri*nBZdim
       ktriangle = kpoints_in(:,ik1:ik2)
 
-      areas(itri) = area_triangle(ktriangle)
+      if(nBZdim==3)then
+        areas(itri) = area_triangle(ktriangle)
+      elseif(nBZdim==2)then
+        areas(itri) = sqrt( sum((ktriangle(:,2)-ktriangle(:,1))**2) )
+      else
+        stop 'nBZdim shall be 2 or 3'
+      endif
 
       kmedium = 0
-      do ikp=1,3
+      do ikp=1,nBZdim
         kmedium = kmedium + ktriangle(:,ikp)
       end do!ikp
-      kmedium = kmedium/3
+      kmedium = kmedium/nBZdim
 
       call kpoint_to_indices(nCub3,bounds,kmedium,ii3,cubeids(itri))
 
