@@ -256,7 +256,11 @@ C
 C ------------------------------------------------------ input_potential
 C
 !       OPEN (67,FILE='input_potential',FORM='unformatted')
-      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
+      IF (type0%i_iteration.eq.0) then
+        OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
+      else
+        OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
+      end if
       READ (67) VINS,VISP,ECORE
       IF (KREL.EQ.1) THEN
          READ (67) RMREL,DRDIREL,R2DRDIREL
@@ -279,6 +283,10 @@ C
          READ (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
          CLOSE(67)
       END IF
+      
+      ESPV(:,:) = 0.d0
+      RHO2N1(:,:,:) = 0.d0
+      RHO2N2(:,:,:) = 0.d0
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -425,6 +433,7 @@ C ----------------------------------------------------------------- SPIN
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),
      &           DENMATC(1,1,IPOT),
      &           LLY,NATYP)              ! LLY Lloyd
+     
          END DO
 C ----------------------------------------------------------------- SPIN
 C
@@ -492,7 +501,10 @@ C
 C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
-      CLOSE (69)
+      CLOSE (69) !gmat file
+      CLOSE (30) !close lmdos file
+      CLOSE (31) !close qdos file
+      CLOSE (96) !close gflle file
 
       ELSE ! new spin-orbit solver
 
@@ -523,6 +535,15 @@ c interpolate potential
        ICELL = NTCELL(I1)
        IPOT = (I1-1) * NSPIN + 1
        
+       write(77777,*) 'line1',LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
+     &  'line2',ZAT(I1),SOCSCALE(I1),CLEB(:,:),ICLEB,IEND,
+     &  'line3',IFUNM1(:,ICELL),LMSP1(:,ICELL),
+     &  'line4',NCHEB,NPAN_TOT(I1),NPAN_LOG(I1),
+     &  'line5',NPAN_EQ(I1),RMESH(:,I1),IRWS(I1),RPAN_INTERVALL(:,I1),
+     &  'line6',IPAN_INTERVALL(:,I1),RNEW(:,I1),VINSNEW,
+     &  'line7',THETASNEW(:,:,ICELL),THETA(I1),PHI(I1),I1,IPOT,
+     &  'line8',DEN1(:,:,:),ESPV1(:,:),RHO2M1,RHO2M2,MUORB(:,:,I1)
+       
         CALL RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
      &           ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,
      &           IFUNM1(1,ICELL),LMSP1(1,ICELL),
@@ -531,6 +552,16 @@ c interpolate potential
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1))
+     
+       
+       write(88888,*) 'line1',LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
+     &  'line2',ZAT(I1),SOCSCALE(I1),CLEB(:,:),ICLEB,IEND,
+     &  'line3',IFUNM1(:,ICELL),LMSP1(:,ICELL),
+     &  'line4',NCHEB,NPAN_TOT(I1),NPAN_LOG(I1),
+     &  'line5',NPAN_EQ(I1),RMESH(:,I1),IRWS(I1),RPAN_INTERVALL(:,I1),
+     &  'line6',IPAN_INTERVALL(:,I1),RNEW(:,I1),VINSNEW,
+     &  'line7',THETASNEW(:,:,ICELL),THETA(I1),PHI(I1),I1,IPOT,
+     &  'line8',DEN1(:,:,:),ESPV1(:,:),RHO2M1,RHO2M2,MUORB(:,:,I1)
 
         DO L = 0,LMAXD1
          ESPV(L,IPOT)=ESPV1(L,1)
@@ -592,7 +623,11 @@ c rewrite new theta and phi to nonco_angle.dat
        CLOSE(13)
       ENDIF
       
-      ENDIF
+      CLOSE (30) !close lmdos file
+      CLOSE (31) !close qdos file
+      CLOSE (91) !close gflle file
+      
+      ENDIF !NEWSOSOL
 
 
 ! In case of Lloyds formula renormalize valence charge                   ! LLY Lloyd
@@ -754,6 +789,9 @@ C
 C
 C LDA+U
 C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+       write(999999,*) KREL+KORBIT,NATYP,NSPINPOT,TEXTS,TEXTL,TEXTNS,
+     &             CHARGE,MUORB,LMAXD,LMAXD1
 
        CALL WRMOMS(KREL+KORBIT,NATYP,NSPINPOT,TEXTS,TEXTL,TEXTNS,CHARGE,
      &             MUORB,LMAXD,LMAXD1)

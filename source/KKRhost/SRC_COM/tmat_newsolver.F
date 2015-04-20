@@ -49,14 +49,18 @@
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
+
 !$omp parallel shared(nth,ith) 
 !$omp single 
       nth = 1
       ith = 0
+#ifdef CPP_OMP
       nth = omp_get_num_threads()
+#endif
+      write(*,*) 'nth =',nth
 !$omp end single
 !$omp end parallel
-      ! write(*,*) 'nth =',nth
+
 
        IRMDNEW= NPAN_TOT*(NCHEB+1)
        ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN))
@@ -106,13 +110,16 @@ c energy loop
        DO IE=1,IELAST
          ! get current thread
          if (nth>=1) then
-            ith = omp_get_thread_num()
+#ifdef CPP_OMP
+             ith = omp_get_thread_num()
+#endif
          else
             ith = 0
          endif
         ERYD = EZ(IE)
 !$omp critical
         WRITE(6,*) 'energy:',IE,'',ERYD
+        WRITE(6,*) 'ith:',ith,'of',nth
         !write(*,*) 'nested omp?',omp_get_nested()
 !$omp end critical
 

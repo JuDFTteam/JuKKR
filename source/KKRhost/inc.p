@@ -75,12 +75,12 @@ C =====================================================================
 C ---------------------------------------------------------------------
 C     general settings
       PARAMETER ( KREL = 0 )
-      PARAMETER ( KORBIT = 0 ) 
+      PARAMETER ( KORBIT = 1 ) 
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
       PARAMETER ( LMAXD = 2 )
-      PARAMETER ( IEMXD = 501 )
+      PARAMETER ( IEMXD = 101 )
       PARAMETER ( IRMD = 900, IRNSD = 890 )
       PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
       PARAMETER ( NMAXD = 2000000, ISHLD= 200000 )

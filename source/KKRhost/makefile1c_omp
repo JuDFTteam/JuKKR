@@ -159,8 +159,8 @@ $(OBJ)/mixldau.o    : $(COM)/mixldau.f $(INCP)        ;\
 $(OBJ)/rclm.o       : $(COM)/rclm.f  $(INCP)        ;\
                      $(FC) $(FFLAGS) $(COM)/rclm.f  -c -o $@
 
-$(OBJ)/rhovalnew.o       : $(COM)/rhovalnew.f  $(INCP)        ;\
-                    $(FC) $(FFLAGS) $(OPENMPFLAGS) $(COM)/rhovalnew.f  -c -o $@
+$(OBJ)/rhovalnew.o       : $(COM)/rhovalnew.F  $(INCP)        ;\
+                    $(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) $(COM)/rhovalnew.F  -c -o $@
 
 $(OBJ)/rhooutnew.o  : $(COM)/rhooutnew.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/rhooutnew.f -c -o $@

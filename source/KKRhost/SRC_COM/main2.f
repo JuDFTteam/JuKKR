@@ -501,6 +501,9 @@ C
 
 
 C
+      CMINST(:,:) = 0.d0
+      CMOM(:,:) =0.d0
+      VONS(:,:,:) = 0.d0
       CALL VINTRAS(CMOM,CMINST,LPOT,NSPIN,1,NATYP,RHO2NS,VONS,
      +     R,DRDI,IRWS,IRCUT,IPAN,KSHAPE,NTCELL,ILM,IFUNM,IMAXSH,GSH,
      +     THETAS,LMSP)
@@ -511,6 +514,7 @@ C
           write(786785,*) '# atom/spin index ',i1
           write(786785,'(50000E)') vons(:,:,i1)
         end do !iatom
+        close(786785)
       end if !
 
 
@@ -554,6 +558,7 @@ C =====================================================================
               write(54633163,*) '# atom ',i1
               write(54633163,'(50000E)') vons(:,:,i1)
           end do !iatom
+          close(54633163)
         end if ! config_testflag('write_gmatonsite')
 
 
@@ -670,6 +675,7 @@ C =====================================================================
               write(57633263,*) '# atom ',i1
               write(57633263,'(50000E)') vons(:,:,i1)
           end do !iatom
+          close(57633263)
         end if ! config_testflag('write_gmatonsite')
 
 
@@ -752,6 +758,7 @@ C
               write(12633269,*) '# atom ',i1
               write(12633269,'(50000E)') vons(:,:,i1)
           end do !iatom
+          close(12633269)
         end if ! config_testflag('write_gmatonsite')
 
 
@@ -768,8 +775,7 @@ C
      &                 IMAXSH(LMPOT),ILM,IFUNM,LMPOT,GSH,
      &                 THETAS,ZAT(I1),RFPI,
      &                 R(:,I1),VONS(:,:,IPOT),LMSP
-
-
+                  close(12642269)
                end if           ! config_testflag('write_gmatonsite')
 
 
@@ -789,6 +795,7 @@ C
               write(57633269,*) '# atom ',i1
               write(57633269,'(50000E)') vons(:,:,i1)
           end do !iatom
+          close(57633269)
         end if ! config_testflag('write_gmatonsite')
 
 
@@ -856,6 +863,7 @@ C ..................
               write(54633563,*) '# atom ',i1
               write(54633563,'(50000E)') vons(:,:,i1)
           end do !iatom
+          close(54633563)
         end if ! config_testflag('write_gmatonsite')
 
 

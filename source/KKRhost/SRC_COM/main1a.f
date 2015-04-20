@@ -183,7 +183,11 @@ C
 C ------------------------------------------------------ input_potential
 C
 !       OPEN (67,FILE='input_potential',FORM='unformatted')
-      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
+      IF (type0%i_iteration.eq.0) then
+        OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
+      else
+        OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
+      end if
       READ (67) VINS,VISP
       IF (KREL.EQ.1) THEN
          READ (67) RMREL,DRDIREL,R2DRDIREL

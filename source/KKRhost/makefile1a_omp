@@ -140,8 +140,11 @@ $(OBJ)/initldau.o  : $(COM)/initldau.f $(INCP)        ; \
 $(OBJ)/phicalc.o  : $(COM)/phicalc.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/phicalc.f -c -o $@
 
-$(OBJ)/tmat_newsolver.o  : $(COM)/tmat_newsolver.f $(INCP)        ; \
-                    $(FC) $(FFLAGS) $(OPENMPFLAGS) $(COM)/tmat_newsolver.f -c -o $@
+$(OBJ)/tmat_newsolver.o  : $(COM)/tmat_newsolver.F $(INCP)        ; \
+                    $(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) $(COM)/tmat_newsolver.F -c -o $@
+
+%.o: $(SOURCEDIR)/%.F
+	$(FC) -c $(FFLAGS) $(CPP)  $<
 
 $(OBJ)/cheb.o  : $(COM)/cheb.f90 $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/cheb.f90 -c -o $@
