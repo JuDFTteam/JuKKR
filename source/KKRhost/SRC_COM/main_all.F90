@@ -10,10 +10,12 @@ program kkrcode
   implicit none
   
     
-
+  ! KKR program, first do main0, where everything is read in and initialized.
   call main0()
   
-  ! scf iterations
+  call init_tgmat(t_inc,t_tgmat)
+  
+  ! Then start scf iterations and do all steps of the KKR formalism until convergence
   do while ( (type0%i_iteration.lt.type0%N_iteration) .and. (type0%N_iteration.ne.-1) )
   
     call main1a()

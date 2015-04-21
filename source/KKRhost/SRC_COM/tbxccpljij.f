@@ -12,6 +12,7 @@ C   *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
 C   *                                                                  *
 C   ********************************************************************
 C
+      use mod_types, only: t_tgmat
       IMPLICIT NONE
 C     ..
 C     .. Parameters
@@ -211,7 +212,11 @@ C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
          DO IT = 1,NATYP
 c            write(*,*) 'test brahim 3'
             IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(IT-1)
-            READ (IFTMAT,REC=IREC) W1
+            if (t_tgmat%tmat_to_file) then
+               READ (IFTMAT,REC=IREC) W1
+            else
+               W1(:,:) = t_tgmat%tmat(:,:,irec)
+            end if
             DO J1 = 1,LMMAXD
                CALL ZCOPY(LMMAXD,W1(1,J1),1,TSST(1,J1,IT,ISPIN),1)
             END DO

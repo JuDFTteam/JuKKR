@@ -29,6 +29,7 @@ C *  convergence of the Born series. See also subroutines              *
 C *  regsol, pnstmat and pnsqns                                        *
 C *                                                                    *
 C **********************************************************************
+      use mod_types, only: t_tgmat
       IMPLICIT NONE
 C
 C     .. Parameters ..
@@ -339,7 +340,11 @@ C-----------------------------------------------------------------------
 C Read in Green function
             IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (ISPIN-1) + ! qdos (without qdos, IQ=NQDOS=1)
      &                                NQDOS * IELAST * NSPIN * (I1-1) ! qdos 
-            READ(69,REC=IREC) GMAT0
+            if (t_tgmat%gmat_to_file) then
+               READ(69,REC=IREC) GMAT0
+            else
+               GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
+            end if
             IF (TEST('GMAT=0  ')) THEN
                WRITE(*,*) 'TEST GMAT=0, setting GMAT to zero'
                GMAT0 = (0.D0,0.D0) 

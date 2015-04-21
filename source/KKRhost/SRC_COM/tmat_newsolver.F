@@ -4,6 +4,7 @@
      +                        RNEW,VINSNEW,THETA,PHI,I1,IPOT,
      &                        LLY,DELTAE)
        use omp_lib        ! necessary for omp functions
+       use mod_types, only: t_tgmat
        IMPLICIT NONE
        include 'inc.p'
        INTEGER NSPIN,NSRA,LMAX,IEND,IPOT,IELAST,NPAN_TOT,NCHEB
@@ -119,7 +120,7 @@ c energy loop
         ERYD = EZ(IE)
 !$omp critical
         WRITE(6,*) 'energy:',IE,'',ERYD
-        WRITE(6,*) 'ith:',ith,'of',nth
+!         WRITE(6,*) 'ith:',ith,'of',nth
         !write(*,*) 'nested omp?',omp_get_nested()
 !$omp end critical
 
@@ -197,8 +198,13 @@ c add spherical contribution of tmatrix
 ! serial write out after parallel calculation of tmat
        DO IE=1,IELAST 
          IREC = IE + IELAST*(I1-1)
-         WRITE(69,REC=IREC) TMAT_out(:,:,ie)
-c         write(696969,*) TMAT_out(:,:,ie)
+!          WRITE(69,REC=IREC) TMAT_out(:,:,ie)
+!          write(696969,*) TMAT_out(:,:,ie)
+         if (t_tgmat%tmat_to_file) then
+            WRITE(69,REC=IREC) TMAT_out(:,:,ie)
+         else
+            t_tgmat%tmat(:,:,irec) = TMAT_out(:,:,ie)
+         end if
        ENDDO
 
        DEALLOCATE(VINS)

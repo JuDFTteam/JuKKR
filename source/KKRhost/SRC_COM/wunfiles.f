@@ -144,10 +144,11 @@ C     .. Arrays in common
 C     ..
 C     .. Local scalars
       INTEGER I1,I2
+      integer ic, naclsmax, nqdos  !variables for t_inc filling
 C     ..
 C     .. External Functions ..
-      LOGICAL OPT
-      EXTERNAL OPT
+      LOGICAL OPT,TEST
+      EXTERNAL OPT,TEST
 C -------------------------------------------------------------- SCRATCH
 C Looking for SCRATCH system variable to store files: gmat, tmat 
 C and gref on the local file system (this is necessary if you want
@@ -183,6 +184,7 @@ C
       WRITE (67) ITSCF,SCFSTEPS,E1,E1,CMOMHOST
       CLOSE (67)
       
+      ! put information about scf steps into type0
       type0%i_iteration = ITSCF
       type0%N_iteration = SCFSTEPS
 
@@ -315,6 +317,40 @@ C
      &          IRMIN,IRWS,ITITLE,LLMSP,NFU,HOSTIMP
       WRITE(67) ALAT,KAOEZ,IQAT,NOQ,CONC,GSH,ILM,IMAXSH,TESTC,OPTC,LLY
       CLOSE(67)
+      
+C --------------------------------------------------------------- fill t_inc type 
+C                                  meant for simpler passing of basic parameter to other routines
+
+      ! find maximal cluster information (taken from main1b)
+      NACLSMAX = 1
+      DO IC = 1,NCLS
+         IF (NACLS(IC).GT.NACLSMAX) NACLSMAX = NACLS(IC)
+      ENDDO
+      
+      ! find NQDOS (taken from main1b)
+      IF (OPT('qdos    ')) THEN
+         OPEN(67,FILE='qvec.dat')
+         READ(67,*) NQDOS
+         CLOSE(67)
+      ELSE
+         NQDOS = 1
+      END IF
+   
+      !fill t_inc
+      t_inc%LMMAXD = LMMAXD
+      t_inc%NSPIN  = NSPIN
+      t_inc%IELAST = IELAST
+      t_inc%NQDOS  = NQDOS
+      t_inc%NATYP  = NATYP
+      t_inc%LMGF0D = (LMAXD+1)**2  ! see main1b
+      t_inc%NCLSD  = NCLS
+      t_inc%NACLSD = NACLSMAX
+      
+      !set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
+      if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.
+      if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
+      if(TEST('greffile')) t_tgmat%gref_to_file = .true.
+      
 C ======================================================================
       END subroutine
       

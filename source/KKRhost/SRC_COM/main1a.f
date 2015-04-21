@@ -10,7 +10,7 @@
       
       subroutine main1a()
       
-      use mod_types, only: type0
+      use mod_types, only: type0, t_tgmat
      
 CMPI  include 'mpif.h'
       INCLUDE 'inc.p'
@@ -236,7 +236,10 @@ c ITSCF is initialised to 0 in main0
       IF ( TEST('lrefsysf').OR.OPT('lrefsysf') ) LREFSYS = .FALSE.
 C
         
-      CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+      if (t_tgmat%tmat_to_file) then
+         CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+      end if
+      
       IF (LLY.NE.0) THEN
          CALL OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY
          CALL OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY

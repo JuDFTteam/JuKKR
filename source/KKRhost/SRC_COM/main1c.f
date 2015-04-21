@@ -9,7 +9,7 @@
       
       subroutine main1c()
 
-      use mod_types, only: type0
+      use mod_types, only: type0,t_tgmat
 
 CMPI  include 'mpif.h'
       INCLUDE 'inc.p'
@@ -323,7 +323,8 @@ C LDA+U
       IF ( IDOLDAU.EQ.1 ) CALL CINIT(MMAXD*MMAXD*NPOTD,DENMATC(1,1,1))
 C LDA+U 
 C
-      CALL OPENDAFILE(69,'gmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+      if (t_tgmat%gmat_to_file) CALL OPENDAFILE(69,'gmat',
+     +                               4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
 
 !    write parameters file that contains passed parameters for further treatment of gflle
       IF (OPT('lmlm-dos')) THEN                                          ! lmlm-dos
@@ -535,15 +536,6 @@ c interpolate potential
        ICELL = NTCELL(I1)
        IPOT = (I1-1) * NSPIN + 1
        
-       write(77777,*) 'line1',LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
-     &  'line2',ZAT(I1),SOCSCALE(I1),CLEB(:,:),ICLEB,IEND,
-     &  'line3',IFUNM1(:,ICELL),LMSP1(:,ICELL),
-     &  'line4',NCHEB,NPAN_TOT(I1),NPAN_LOG(I1),
-     &  'line5',NPAN_EQ(I1),RMESH(:,I1),IRWS(I1),RPAN_INTERVALL(:,I1),
-     &  'line6',IPAN_INTERVALL(:,I1),RNEW(:,I1),VINSNEW,
-     &  'line7',THETASNEW(:,:,ICELL),THETA(I1),PHI(I1),I1,IPOT,
-     &  'line8',DEN1(:,:,:),ESPV1(:,:),RHO2M1,RHO2M2,MUORB(:,:,I1)
-       
         CALL RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
      &           ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,
      &           IFUNM1(1,ICELL),LMSP1(1,ICELL),
@@ -553,15 +545,6 @@ c interpolate potential
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1))
      
-       
-       write(88888,*) 'line1',LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
-     &  'line2',ZAT(I1),SOCSCALE(I1),CLEB(:,:),ICLEB,IEND,
-     &  'line3',IFUNM1(:,ICELL),LMSP1(:,ICELL),
-     &  'line4',NCHEB,NPAN_TOT(I1),NPAN_LOG(I1),
-     &  'line5',NPAN_EQ(I1),RMESH(:,I1),IRWS(I1),RPAN_INTERVALL(:,I1),
-     &  'line6',IPAN_INTERVALL(:,I1),RNEW(:,I1),VINSNEW,
-     &  'line7',THETASNEW(:,:,ICELL),THETA(I1),PHI(I1),I1,IPOT,
-     &  'line8',DEN1(:,:,:),ESPV1(:,:),RHO2M1,RHO2M2,MUORB(:,:,I1)
 
         DO L = 0,LMAXD1
          ESPV(L,IPOT)=ESPV1(L,1)
@@ -789,9 +772,6 @@ C
 C
 C LDA+U
 C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-       write(999999,*) KREL+KORBIT,NATYP,NSPINPOT,TEXTS,TEXTL,TEXTNS,
-     &             CHARGE,MUORB,LMAXD,LMAXD1
 
        CALL WRMOMS(KREL+KORBIT,NATYP,NSPINPOT,TEXTS,TEXTL,TEXTNS,CHARGE,
      &             MUORB,LMAXD,LMAXD1)

@@ -9,7 +9,7 @@
       
       subroutine main1b()
       
-      use mod_types, only: type0
+      use mod_types, only: type0, t_tgmat
       
 CMPI  INCLUDE 'mpif.h'
       INCLUDE 'inc.p'
@@ -335,9 +335,15 @@ C
      &     ALLOCATE( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
 
 
-      CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
-      CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
-      CALL OPENDAFILE(70,'gmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+      if (t_tgmat%gref_to_file) then
+         CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+      end if
+      if (t_tgmat%tmat_to_file) then
+         CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+      end if
+      if (t_tgmat%gmat_to_file) then
+         CALL OPENDAFILE(70,'gmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+      end if
       IF (LLY.NE.0) THEN                                               ! LLY Lloyd
          CALL OPENDAFILE(681,'dgrefde',7,LRECGRF1,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: derivative of Gref
          OPEN(682,FILE='lly_g0tr_ie.ascii',FORM='FORMATTED')           ! LLY Lloyd: trace eq.5.27 PhD Thiess
@@ -432,7 +438,12 @@ C
          DO 360 IE = 1,IELAST
 CMPI        IF( MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1) ) THEN
 C
-            READ (68,REC=IE) GINP
+
+            if (t_tgmat%gref_to_file) then
+               READ (68,REC=IE) GINP
+            else
+               ginp(:,:,:) = t_tgmat%gref(:,:,:,ie)
+            end if
             IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
 
             ERYD = EZ(IE)
@@ -476,7 +487,11 @@ C **********************************************************************
             DO I1 = 1,NATYP
 
                IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) 
-               READ (69,REC=IREC) TMAT
+               if (t_tgmat%tmat_to_file) then
+                  READ (69,REC=IREC) TMAT
+               else
+                  tmat(:,:) = t_tgmat%tmat(:,:,irec)
+               end if
                TSST(1:LMMAXD,1:LMMAXD,I1)=TMAT(1:LMMAXD,1:LMMAXD)
 
                IF (LLY.NE.0) THEN                                         ! LLY
@@ -556,7 +571,11 @@ C           Skip this part if first part of the qdos is running
 C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- before introducing qdos
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
-                WRITE (70,REC=IREC) GMAT0
+               if (t_tgmat%gmat_to_file) then
+                  WRITE (70,REC=IREC) GMAT0
+               else
+                  t_tgmat%gmat(:,:,irec) = gmat0
+               end if
               ENDDO
               IF (TEST('gmatasci')) THEN
                  WRITE(*,*) 'Writing out gmat.ascii'
@@ -663,7 +682,11 @@ C
 
        
 c read in Green function of reference system
-       READ (68,REC=IE) GINP
+       if (t_tgmat%tmat_to_file) then
+          READ (68,REC=IE) GINP
+       else
+          ginp(:,:,:) = t_tgmat%gref(:,:,:,ie)
+       end if
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
             WRITE (6,'(A,I3,A,2(1X,F10.6),A,I3)') 
@@ -698,7 +721,11 @@ c read in theta and phi for noncolinear
 
 c read in t-matrix from file
         IREC = IE + IELAST*(I1-1)
-        READ (69,REC=IREC) TMAT
+        if (t_tgmat%tmat_to_file) then
+           READ (69,REC=IREC) TMAT
+        else
+           tmat(:,:) = t_tgmat%tmat(:,:,irec)
+        end if
       
 
 c rotate t-matrix from local to global frame
@@ -753,7 +780,12 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   GMAT0(1:LMMAXD,1:LMMAXD) =GMATLL(1:LMMAXD,1:LMMAXD,I1)
                   !IREC = IE + IELAST*(I1-1)     ! <-- before introducing qdos
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
-                  WRITE (70,REC=IREC) GMAT0
+                  if (t_tgmat%gmat_to_file) then
+                     WRITE (70,REC=IREC) GMAT0
+!                      write(707070,*) gmat0
+                  else
+                     t_tgmat%gmat(:,:,irec) = gmat0
+                  end if
                ENDDO
                IF (TEST('gmatasci')) THEN
                  WRITE(*,*) 'Writing out gmat.ascii'

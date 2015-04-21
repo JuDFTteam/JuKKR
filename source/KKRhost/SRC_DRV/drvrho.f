@@ -14,6 +14,7 @@ C   * to calculate the charge and spin density in the REL mode         *
 C   * v.popescu, munich, may 2004                                      *
 C   *                                                                  *
 C   ********************************************************************
+      use mod_types, only: t_tgmat
       IMPLICIT NONE
 C
 C PARAMETER definitions
@@ -298,7 +299,11 @@ C                                                                    ! qdos rues
 C Read in Green function; remember that for the rel. case, nspin = 1 ! qdos ruess 
 c (without qdos, IPOINT=NQDOS=1)                                     ! qdos ruess 
       IREC = IPOINT + NQDOS * (IECURR-1) +  NQDOS * IELAST * (I1-1)  ! qdos ruess 
-      READ(69,REC=IREC) GMAT0                                        ! qdos ruess 
+      if (t_tgmat%gmat_to_file) then
+         READ(69,REC=IREC) GMAT0                                        ! qdos ruess 
+      else
+         GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
+      end if
       GMATLL(:,:,IECURR) = GMAT0(:,:)                                ! qdos ruess 
 C                                                                    ! qdos ruess 
 C

@@ -1,6 +1,9 @@
       subroutine writekkrflex(natomimp,nspin,ielast,lmpot,lmmaxd, alat,
      +                  natyp,kshape,VBC,ATOMIMP,HOSTIMP,NOQ,ZAT,KAOEZ,
      +                  CONC,CMOM,CMINST,VINTERS)
+     
+      use mod_types, only: t_tgmat
+     
       implicit none
       include 'inc.p'
       INTEGER LMPOTD
@@ -35,8 +38,10 @@ C     .. External Functions ..
       IF ( OPT('KKRFLEX ') ) THEN
         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
         write(6699,*) '#',NATOMIMP,NSPIN,IELAST,LMMAXD,KORBIT
-        OPEN (69,ACCESS='direct',RECL=WLENGTH*4*LMMAXD*LMMAXD,
+        if (t_tgmat%tmat_to_file) then
+           OPEN (69,ACCESS='direct',RECL=WLENGTH*4*LMMAXD*LMMAXD,
      &             FILE='tmat',  FORM='unformatted')
+        end if
 
         DO IATOM = 1,NATOMIMP
           I1=ATOMIMP(IATOM)
@@ -48,7 +53,11 @@ C     .. External Functions ..
 !                  write(*,*) irec
 !                 READ (69,REC=IREC) TMAT
 !                 IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (IATOM-1) 
-                  READ (69,REC=IREC) TMAT0
+                  if (t_tgmat%tmat_to_file) then
+                     READ (69,REC=IREC) TMAT0
+                  else
+                     tmat0(:,:) = t_tgmat%tmat(:,:,irec)
+                  end if
               ELSE
                  TMAT0=(0.0D0,0.0D0)
               END IF 

@@ -1,0 +1,209 @@
+./bzkmesh.f:      OPEN (52,FILE='kpoints',FORM='formatted')
+
+./decipothead.f:         OPEN (36+IHOST,FILE=FILEHOST,STATUS='OLD',IOSTAT=IOS)
+./decipothead.f:            WRITE (6,'(/,5X,2A)') 'ERROR: Can not open host file ',
+
+./getscratch.f:      SUBROUTINE OPENDAFILE(IUNIT,BASENAME,LBASENAME,LREC,TMPDIR,
+./getscratch.f:C * This routine is ment to open DA file BASENAME with prefix TMPDIR   *
+./getscratch.f:          OPEN (IUNIT,ACCESS='direct',RECL=LREC2,
+./getscratch.f:          OPEN (IUNIT,ACCESS='direct',RECL=LREC2,
+
+./impcheck.f:      OPEN(58,FILE='rimp.dat')
+
+./impcoefs.f:!         OPEN (58,FILE='kkrflex_impurity.coefs',FORM='FORMATTED')
+./impcoefs.f:      OPEN (58,FILE='impurity.coefs',FORM='FORMATTED')
+
+./madelout.f:      OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
+./madelout.f:      OPEN (78,FILE='avmad.dat',FORM='formatted')
+./madelout.f:      OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
+./madelout.f:      OPEN (78,FILE='avmad.dat',FORM='formatted')
+./madelout.f:      OPEN (79,FILE='bvmad.dat',FORM='formatted')
+./madelout.f:      OPEN (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted',
+
+./madelung2d.f:      OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
+
+./madelung3d.f:      OPEN (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted',
+
+./main0.f:      IF ( INS.GT.0 )    OPEN (19,FILE=I19,STATUS='old',
+./main0.f:      IF ( IFILE.EQ.13 ) OPEN (IFILE,FILE=I13,STATUS='old',
+./main0.f:      IF ( ICC.GT.0 )    OPEN (25,FILE=I25,STATUS='unknown',
+./main0.f:      OPEN(99,FILE='madelinfo.txt')
+./main0.f:        OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
+./main0.f:         OPEN(58,FILE='shells.dat')
+./main0.f:         OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf
+
+./main1a.f:      OPEN (67,FILE='input1a.unformatted',FORM='unformatted')
+./main1a.f:      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+./main1a.f:      OPEN (67,FILE='input_potential',FORM='unformatted')
+./main1a.f:         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+./main1a.f:      CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+./main1a.f:         CALL OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY
+./main1a.f:         CALL OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY
+./main1a.f:          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
+./main1a.f:         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+
+./main1b.f:CMPI  IF ( MYRANK.NE.0 ) OPEN (6,STATUS='scratch',FORM='formatted')
+./main1b.f:      OPEN (67,FILE='input1b.unformatted',FORM='unformatted')
+./main1b.f:      OPEN (52,FILE='kpoints',FORM='formatted')
+./main1b.f:      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+./main1b.f:     &           OPEN(298347,FILE='gmat.ascii',FORM='formatted')
+./main1b.f:         OPEN(67,FILE='itermdir.unformatted',FORM='unformatted')
+./main1b.f:      OPEN(37)                                          ! qdos ruess
+./main1b.f:      CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+./main1b.f:      CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+./main1b.f:      CALL OPENDAFILE(70,'gmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+./main1b.f:         CALL OPENDAFILE(681,'dgrefde',7,LRECGRF1,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: derivative of Gref
+./main1b.f:         OPEN(682,FILE='lly_g0tr_ie.ascii',FORM='FORMATTED')           ! LLY Lloyd: trace eq.5.27 PhD Thiess
+./main1b.f:         CALL OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: derivative of t-matrix
+./main1b.f:         CALL OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: Tr[alpha^{-1} dalpha/dE]
+./main1b.f:     +     OPEN (71,ACCESS='direct',RECL=2*LRECTMT,
+./main1b.f:            OPEN (8888,FILE='kkrflex_green.dat')
+./main1b.f:              OPEN (888,ACCESS='direct',
+./main1b.f:          OPEN (88,ACCESS='direct',RECL=LRECGREEN,
+./main1b.f:         OPEN(67,FILE='qvec.dat')                       ! qdos ruess
+./main1b.f:       IF (LREAD) OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
+./main1b.f:         OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')             ! LLY Lloyd
+./main1b.f:         OPEN (702,FILE='cdosref_lly.dat',FORM='FORMATTED')              ! LLY Lloyd
+./main1b.f:!       open(23,FILE='energies.dat',STATUS='unknown',FORM='formatted')
+
+./main1c.f:CMPI  IF(MYRANK.NE.0) OPEN (6,STATUS='scratch',FORM='formatted')
+./main1c.f:      OPEN (67,FILE='input1c.unformatted',FORM='unformatted')
+./main1c.f:      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+./main1c.f:      OPEN (67,FILE='input_potential',FORM='unformatted')
+./main1c.f:         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
+./main1c.f:         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+./main1c.f:      CALL OPENDAFILE(69,'gmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+./main1c.f:        OPEN(67,FORM='formatted',FILE='parameters.gflle')                ! lmlm-dos
+./main1c.f:         OPEN(701,FILE='freedos.dat',FORM='FORMATTED')                     ! LLY Lloyd
+./main1c.f:         OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
+./main1c.f:         OPEN (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')                 ! LLY Lloyd
+./main1c.f:        open(unit=324234,file='out_rhoval')
+./main1c.f:         OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
+./main1c.f:       OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
+./main1c.f:       OPEN(UNIT=12,file='nonco_angle_out.dat',form='formatted')
+./main1c.f:       OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
+./main1c.f:       OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
+./main1c.f:       OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
+./main1c.f:         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+./main1c.f:      OPEN (67,FILE='density',FORM='unformatted')
+./main1c.f:         OPEN (67,FILE='densitydn.ascii',FORM='formatted')
+./main1c.f:         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
+
+./main2.f:      OPEN (67,FILE='input2.unformatted',FORM='unformatted')
+./main2.f:      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+./main2.f:      OPEN (67,FILE='input_potential',FORM='unformatted')
+./main2.f:      OPEN (67,FILE='density',FORM='unformatted')
+./main2.f:      OPEN (IOBROY,FORM='unformatted',STATUS='unknown')
+./main2.f:          open(unit=324234,file='out_rhotot')
+./main2.f:         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
+./main2.f:         OPEN(67,FILE='itermdir.unformatted',FORM='unformatted')
+./main2.f:        open(unit=786785,file='test_vintraspot')
+./main2.f:          open(unit=54633163,file='test_vpotout_inter')
+./main2.f:          open(unit=57633263,file='test_vpotout_xc')
+./main2.f:c        OPEN (67,FILE='vmtzero_init',FORM='formatted')               ! fxf
+./main2.f:         OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf
+./main2.f:          open(unit=12633269,file='test_vpotout_shift')
+./main2.f:                  open(unit=12642269,file='test_convol')
+./main2.f:          open(unit=57633269,file='test_vpotout_conv')
+./main2.f:       OPEN (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted'
+./main2.f:          open(unit=54633563,file='test_vpotout')
+./main2.f:      OPEN(28,FILE='not.converged',FORM='formatted',
+./main2.f:         OPEN(28,FILE='not.converged',FORM='formatted',STATUS='new')
+./main2.f:         OPEN(28,FILE='not.converged',FORM='formatted')
+./main2.f:            OPEN(28,FILE='not.converged',FORM='formatted')
+./main2.f:      OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
+./main2.f:      OPEN (67,FILE='output_potential',FORM='unformatted')
+
+./mssinit.f:!            open(23234,file='test1')
+./mssinit.f:!            open(23234,file='test1')
+./mssinit.f:!            open(23234,file='test2')
+
+./outpothost.f:      OPEN (37,FILE='decimate.pot',STATUS='unknown')
+
+./outtmathost.f:      OPEN (37,FILE='decifile',STATUS='unknown')
+
+./readldaupot.f:      OPEN (67,FILE='ldaupot',FORM='FORMATTED',STATUS='OLD',IOSTAT=IOS)
+
+./rhoval.f:      OPEN(31,   ! lm-dos
+./rhoval.f:      OPEN(30,   ! lm-dos
+./rhoval.f:         OPEN(67,FILE='qvec.dat')                       ! qdos
+./rhoval.f:              open(96,ACCESS='direct',RECL=LRECGFLLE,FILE="gflle",        ! lmlm-dos
+./rhoval.f:!             OPEN(33,                                                      ! qdos
+
+./rhovalnew.f:         OPEN(67,FILE='qvec.dat',STATUS='old',IOSTAT=IERR,ERR=3000)     ! qdos ruess
+./rhovalnew.f:         OPEN(91,ACCESS='direct',RECL=LRECGFLLE,FILE='gflle',           ! lmlm-dos ruess
+./rhovalnew.f:           OPEN(29,                                                     ! lm-dos
+./rhovalnew.f:           OPEN(30,                                                     ! lm-dos
+./rhovalnew.f:            OPEN(31,                                                    ! qdos ruess
+./rhovalnew.f:            OPEN(32,                                                    ! qdos ruess
+./rhovalnew.f:!           OPEN(90,                                                       ! lmlm-dos
+
+./tbxccpljij.f:c          open(22,STATUS='unknown',FILE='integrand1.dat',
+./tbxccpljij.f:c           open(44,STATUS='unknown',FILE='integrand2.dat',
+./tbxccpljij.f:c         open(22,STATUS='unknown',FILE='integrand.dat',
+./tbxccpljij.f:                     OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
+./tbxccpljij.f:                   OPEN (499,FILE=JFNAM2,STATUS='OLD',POSITION='APPEND')
+./tbxccpljij.f:c        open(22,STATUS='unknown',FILE='integrand1.dat',
+./tbxccpljij.f:         OPEN (49,FILE=JFNAM)
+./tbxccpljij.f:c         open(22,FILE=JFNAME)
+
+./tmat_newsolver.f:! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
+
+./vinterface.f:      OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
+./vinterface.f:      OPEN (91,FILE='intercell_ref',STATUS='unknown',FORM='formatted')
+
+./vmadelblk.f:      OPEN (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted',
+./vmadelblk.f:      OPEN (91,FILE='intercell_ref',STATUS='unknown',FORM='formatted')
+./vmadelblk.f:!         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
+./vmadelblk.f:!         OPEN (69,ACCESS='direct',RECL=16*LMMAXD*LMMAXD,
+./vmadelblk.f:!         OPEN (91,FILE='kkrflex_intercell_ref',STATUS='unknown')
+./vmadelblk.f:!         OPEN (91,FILE='kkrflex_intercell_cmoms',STATUS='unknown')
+
+./wrldaupot.f:      OPEN (67,FILE='ldaupot_new',FORM='FORMATTED')
+
+./wrldos.f:        OPEN (48,FILE=DOSFL,FORM='formatted')
+./wrldos.f:      OPEN (49,FILE='complex.dos',FORM='formatted')
+./wrldos.f:      OPEN (49,FILE='total_cmplx.dos',FORM='formatted')
+
+./wunfiles.f:      OPEN (67,FILE='energy_mesh',FORM='unformatted')
+./wunfiles.f:      OPEN (67,FILE='input_potential',FORM='unformatted')
+./wunfiles.f:         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
+./wunfiles.f:         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+./wunfiles.f:      OPEN (67,FILE='input1a.unformatted',FORM='unformatted')
+./wunfiles.f:      OPEN (67,FILE='input1a.formatted')
+./wunfiles.f:      OPEN (67,FILE='input1b.unformatted',FORM='unformatted')
+./wunfiles.f:      OPEN (67,FILE='input1b.formatted')
+./wunfiles.f:      OPEN (67,FILE='input1c.unformatted',FORM='unformatted')
+./wunfiles.f:      OPEN (67,FILE='input1c.formatted')
+./wunfiles.f:      OPEN (67,FILE='input2.unformatted',FORM='unformatted')
+
+./drvrho.f:         OPEN (NFILCBWF,STATUS='SCRATCH',FORM='UNFORMATTED',
+
+./clsgen99.f:         OPEN(8,FILE='clusters',STATUS='UNKNOWN')
+
+./decimaread.f:               OPEN (36+IHOST,FILE=FILEHOST,STATUS='OLD',IOSTAT=IOS)
+./decimaread.f:                  WRITE (6,'(/,5X,2A)') 'ERROR: Can not open host file '
+
+./ioinput.f:      OPEN(UNIT=ifile,status='OLD',FILE='inputcard',iostat=ios,
+
+./tbref.f:      CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+./tbref.f:         CALL OPENDAFILE(681,'dgrefde',7,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+./tbref.f:         OPEN(682,FILE='lly_g0tr_ie.ascii',FORM='FORMATTED')
+
+./writekkrflex.f:        OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
+./writekkrflex.f:        OPEN (69,ACCESS='direct',RECL=WLENGTH*4*LMMAXD*LMMAXD,
+./writekkrflex.f:        OPEN (91,FILE='kkrflex_intercell_ref',STATUS='unknown')
+./writekkrflex.f:        OPEN (91,FILE='kkrflex_intercell_cmoms',STATUS='unknown')
+
+./orbitalmoment.f90:!  open(unit=423492157,file='out_Lx')
+./orbitalmoment.f90:!  open(unit=423492158,file='out_Ly')
+./orbitalmoment.f90:!  open(unit=423492159,file='out_Lz')
+
+./writehoststructure.f90:open(unit=3463453,file='kkrflex_hoststructure.dat')
+
+./clsgen_tb.f:      OPEN(8,FILE='clusters',status='unknown')
+./clsgen_tb.f:      OPEN(8,FILE='clusters',STATUS='UNKNOWN')
+
+./addvirtual14.f90:      open(unit=32452345,file=I25,iostat=ierr)
+
+./rinput13.f90:      OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values

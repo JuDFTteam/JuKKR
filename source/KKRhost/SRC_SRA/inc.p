@@ -75,7 +75,7 @@ C =====================================================================
 C ---------------------------------------------------------------------
 C     general settings
       PARAMETER ( KREL = 0 )
-      PARAMETER ( KORBIT = 1 ) 
+      PARAMETER ( KORBIT = 0 ) 
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )

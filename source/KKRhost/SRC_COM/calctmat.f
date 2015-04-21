@@ -26,6 +26,7 @@ C *  convergence of the Born series. See also subroutines             *
 C *  regsol, pnstmat and pnsqns                                       *
 C *                                                                   *
 C *********************************************************************
+      use mod_types, only: t_tgmat
       IMPLICIT NONE
 C
 C     .. Parameters ..
@@ -275,7 +276,11 @@ C
 
          TMAT0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD,IE)
          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
-         WRITE(69,REC=IREC) TMAT0
+         if (t_tgmat%tmat_to_file) then
+            WRITE(69,REC=IREC) TMAT0
+         else
+            t_tgmat%tmat(:,:,irec) = tmat0
+         end if
          IF (LLY.NE.0) THEN                                          ! LLY
             TMAT0(1:LMMAXD,1:LMMAXD) = DTMATLL(1:LMMAXD,1:LMMAXD,IE) ! LLY
             WRITE(691,REC=IREC) TMAT0                                ! LLY

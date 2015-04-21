@@ -5,6 +5,7 @@
      +                      RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,
      +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB)
        use omp_lib
+       use mod_types, only: t_tgmat
        IMPLICIT NONE
        include 'inc.p'
        INTEGER NSPIN,NSRA,LMAX,IEND,IPOT,IELAST,NPAN_TOT,NCHEB,
@@ -221,6 +222,7 @@ c energy loop
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+!$omp& shared(t_tgmat)
        DO IE=1,IELAST
          if (nth>=1) then
 #ifdef CPP_OMP
@@ -384,7 +386,11 @@ c notice that exchange the order of left and right hankel/bessel functions
 c read in gf
         IREC = IQ + NQDOS * (IE-1) +  NQDOS * IELAST * (I1-1)     ! qdos
         !$omp critical
-        READ(69,REC=IREC) GMAT0
+        if (t_tgmat%gmat_to_file) then
+         READ(69,REC=IREC) GMAT0 
+        else
+         GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
+        end if
         !$omp end critical
 
 c rotate gmat from global frame to local frame

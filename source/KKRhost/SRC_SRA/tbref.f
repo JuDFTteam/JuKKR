@@ -2,6 +2,9 @@
      +                 CLEB,RCLS,ATOM,CLS,ICLEB,LOFLM,NACLS,
      +                 REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,ILTMP,
      &                 NAEZ,LLY) ! LLY Lloyd
+     
+      use mod_types, only: t_tgmat
+      
       IMPLICIT NONE
 C     .. Parameters ..
       INCLUDE 'inc.p'
@@ -77,7 +80,10 @@ C     ..
       ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
 
 
-      CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+!       CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+      if (t_tgmat%gref_to_file) then
+         CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+      end if
       IF (LLY.NE.0) THEN
          CALL OPENDAFILE(681,'dgrefde',7,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
          OPEN(682,FILE='lly_g0tr_ie.ascii',FORM='FORMATTED')
@@ -130,7 +136,12 @@ C
             ENDDO                                              ! LLY Lloyd
          ENDIF                                                 ! LLY Lloyd
 C ----------------------------------------------------------------------
-         WRITE (68,REC=IE) GINP                 ! Gref
+         if (t_tgmat%gref_to_file) then
+            WRITE (68,REC=IE) GINP                 ! Gref
+!             write(686868,*) ginp
+         else
+            t_tgmat%gref(:,:,:,ie) = GINP(:,:,:)
+         end if
          IF (LLY.NE.0) WRITE (681,REC=IE) DGINP ! dGref/dE     ! LLY Lloyd
          IF (LLY.NE.0) WRITE (682,FMT='(2E24.16)') LLY_G0TR_IE ! LLY Lloyd
 C
@@ -139,7 +150,10 @@ C
 CMPI      END IF
       END DO
 C ======================================================================
-      CLOSE (68)
+      if (t_tgmat%gref_to_file) then
+         CLOSE (68)
+      end if
+
       IF (LLY.NE.0) CLOSE (681)
       DEALLOCATE (GINP,DGINP)
 
