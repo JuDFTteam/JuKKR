@@ -1,0 +1,1 @@
+ifc LSpinSolver.f90 -llapack_ifort -lblas

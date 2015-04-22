@@ -1,0 +1,3 @@
+program complexj
+implicit none
+! Extrapolate the integrand of the Heisenberg exchange coupling to the real axis

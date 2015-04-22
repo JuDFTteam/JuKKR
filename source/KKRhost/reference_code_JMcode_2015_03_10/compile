@@ -1,0 +1,240 @@
+#!/bin/bash
+#
+# this script can be called from the working directory to compile
+# using the current include-files ALL tbkkr executables.
+# please make sure the PATH to "bash" is OK.
+# 
+# For openmp compilation: ./compile . all omp
+#
+# here the default path to your sources
+####SRCPATH=${HOME}/kkr/TBKKR/TBKKRNEW
+SRCPATH=${HOME}/TBKKR/TBKKR
+LOGFIL="compile.log"
+######################################################################
+############    DEFINITION OF FUNCTIONS           ####################
+######################################################################
+usage() { echo "usage: compile [source_dir X mpi/open mp] ";
+          echo "    source_dir   - the directory where TB-KKR sources are"
+          echo "                 default "$SRCPATH
+          echo "    X  - which executable, default all"
+          echo "    mpi - for all with mpi enabled, default nompi"
+          echo "open mp - for all with omp enabled, default noomp"
+}
+
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+defo() { echo "========================================================="
+         sources=$SRCPATH
+         echo " DEFAULT values will be used for:"
+         echo " source directory : " $sources 
+         echo " executables      : all"
+         echo " mpi and omp mode : disabled"
+         echo "=========================================================="
+}
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+clean() { echo "cleaning working directory"
+echo "rm -f fort*"
+rm -f fort*
+echo "rm -f *exe"
+rm -f *.exe
+echo "rm -f *unformatted"
+rm -f *unformatted
+echo "rm -f tmat gref kpoints new_energy_mesh output_potential bzkint0
+energy_mesh "
+rm -f tmat gref kpoints new_energy_mesh output_potential bzkint0 \
+energy_mesh complex.dos  density clusters gmat  input_potential 
+echo "rm -f *~ #*"
+rm -f *~ \#*
+echo "rm -fr SOURCES"
+rm -fr SOURCES
+exit
+}
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+######################################################################
+
+if [  $1 = "clean"  ]; then
+clean
+fi
+
+if [ $# -eq "0" ]
+then 
+usage;defo
+else
+sources=$1
+fi
+
+flag=$3
+
+if [ "$flag" = "mpi" ]
+then
+    flag="mpi"
+elif [ "$flag" = "omp" ]
+then
+    flag="omp"
+else
+    flag=""
+fi
+
+exec=$2
+
+if [ "$exec" = "" ]
+then
+srcs="0 1a 1b 1c 2"
+srcA="0 2"
+srcB="1a 1b 1c"
+elif [ "$exec" = "all" ]
+then
+srcs="0 1a 1b 1c 2"
+srcA="0 2"
+srcB="1a 1b 1c"
+elif [ "$exec" = "0" ]
+then
+srcs="0"
+srcA="0"
+srcB=""
+elif [ "$exec" = "1a" ]
+then
+srcs="1a"
+srcA=""
+srcB="1a"
+elif [ "$exec" = "1b" ]
+then
+srcs="1b"
+srcA=""
+srcB="1b"
+elif [ "$exec" = "1c" ]
+then
+srcs="1c"
+srcA=""
+srcB="1c"
+elif [ "$exec" = "2" ]
+then
+srcs="2"
+srcA="2"
+srcB=""
+elif [ "$exec" = "imp" ]
+then
+srcs="imp"
+srcA=""
+srcB="imp"
+fi
+
+nfail=0
+if [ -d $sources ] 
+then 
+     res=0
+     if [ -d SOURCES ] ; then res=1; fi
+     if [ $res -eq 0 ]; then mkdir SOURCES ; fi
+     cp -p inc.* SOURCES/
+     cp -p $sources/sprkkr* SOURCES/
+     cp -p -r $sources/SRC* SOURCES/
+     cp -p $sources/makef* SOURCES/
+     cd SOURCES
+     echo
+     echo " ======================================================= "
+     echo " Working directory: "`pwd`
+     echo
+     echo " ======================================================= "
+     echo " Following target(s) will be created:"
+     echo " ======================================================= "
+     echo
+     for src in $srcs
+       do
+         if [ "$flag" = "omp" ] ; then
+           src=$src"_omp"
+         fi
+         echo "     kkr"$src
+       done
+     echo
+     echo " ======================================================= "
+     for src in $srcA
+       do
+         if [ -f makefile$src ]; then
+           make -f makefile$src kkr
+	   if [  $? != 0  ]; then
+              nfail=`expr $nfail + 1`
+              sfail=$sfail"kkr"$src":compile/build:error   "
+           fi
+         else
+           nfail=`expr $nfail + 1`
+           sfail=$sfail"kkr"$src":missing:makefile"$src"   "
+         fi
+       done
+     for src in $srcB
+       do
+         if [ "$flag" = "omp" ] ; then
+           src=$src"_omp"
+         fi
+         if [ -f makefile$src ]; then
+           if [ "$flag" = "mpi" ] ; then
+             make -f makefile$src kkr$flag
+           else
+             make -f makefile$src kkr
+           fi
+	   if [  $? != 0  ]; then
+              nfail=`expr $nfail + 1`
+              sfail=$sfail"kkr"$src":compile/build:error   "
+           fi
+         else
+           nfail=`expr $nfail + 1`
+           sfail=$sfail"kkr"$src":missing:makefile"$src"   "
+         fi
+       done
+     echo
+     echo " ======================================================= "
+     if [ $nfail -eq 0 ]
+     then
+           echo ' Compilation successfully completed '
+           echo
+     else
+           echo " Compilation failed for "$nfail " target(s):"
+           echo
+           for cur in $sfail ; do
+               aa=`echo $cur | awk -F":" ' {print $1}' `
+               aa=$aa":    "`echo $cur | awk -F":" \
+                             ' {print $2} {print $3}' `
+           echo "                  -  "$aa
+           done
+     fi
+     echo " ======================================================= "
+     mv -f kkr* ../
+     cd ..
+################################################# create compilation
+################################################# log
+     echo >> $LOGFIL
+     echo `date` >> $LOGFIL
+     echo "TB-KKR compile script called; options used:" >> $LOGFIL
+     echo "-------------------------------------------" >> $LOGFIL
+     echo "         source directory : "$sources >> $LOGFIL
+     echo "         executables      : "$srcs >> $LOGFIL
+     if [ "$flag" = "mpi" ] ; then
+     echo "         mpi-mode         : enabled" >> $LOGFIL
+     elif [ "$flag" = "omp" ] ; then
+     echo "     open mp-mode         : enabled" >> $LOGFIL
+     else
+     echo " omp and mpi-mode         : disabled" >> $LOGFIL
+     fi
+     echo >> $LOGFIL
+     if [ $nfail -eq 0 ] ; then
+        echo "Compilation completed successfully for all targets" \
+          >> $LOGFIL
+     else
+       echo "Compilation failed for "$nfail " target(s):" >> $LOGFIL
+       echo >> $LOGFIL
+       for cur in $sfail ; do
+           aa=`echo $cur | awk -F":" ' {print $1}' `
+           aa=$aa":    "`echo $cur | awk -F":" \
+                        ' {print $2} {print $3}' `
+           echo "                  -  "$aa >> $LOGFIL
+       done
+     fi
+     echo >> $LOGFIL
+     echo "******************************************************" \
+            >> $LOGFIL
+#####################################################################
+
+     echo " compile READY -- log-file "$LOGFIL" created/appended"
+     echo
+else echo "    ERROR: no such directory: "$sources; exit 0
+fi
+

@@ -1,0 +1,478 @@
+deciopt.f:               CALL IOINPUT('DECIFILES       ',UIO,IL,7,IERROR)
+deciopt.f:               CALL IOINPUT('DECIPOTS        ',UIO,IL,7,IERROR)
+deciopt.f:               CALL IOINPUT('DECIPOTS        ',UIO,IL+1,7,IERROR)
+gijxcpl.f:               CALL IOINPUT('JIJRAD          ',UIO,0,7,IQ)
+gijxcpl.f:               CALL IOINPUT('JIJRADXY        ',UIO,0,7,IQ)
+gijxcpl.f:               CALL IOINPUT('JIJSITEI        ',UIO,0,7,NN)
+gijxcpl.f:               CALL IOINPUT('JIJSITEJ        ',UIO,0,7,NN)
+mixldau.f:               CALL IOINPUT('MIXLDAU         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('RUNOPT          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('TESTOPT         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('ALATBASIS       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('INTERFACE       ',UIO,1,7,IER)
+rinput13.f90:            CALL IOINPUT('BRAVAIS         ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('NAEZ            ',UIO,1,7,IER)
+rinput13.f90:            CALL IOINPUT('CARTESIAN       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<RBASIS>        ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('RBASIS          ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('BASISCALE       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NRIGHTHO        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NLEFTHOS        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<NLBASIS>       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NLBASIS         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<NRBASIS>       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NRBASIS         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('LEFTBASIS       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<RBLEFT>        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('RIGHBASIS       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<RBRIGHT>       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<RBLEFT>        ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<KAOEZL>        ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<RMTREFL>       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<RBRIGHT>       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<KAOEZR>        ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<RMTREFR>       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('LEFTBASIS       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('RIGHBASIS       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('ZPERIODL        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('ZPERIODR        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NATYP           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NSPIN           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<ZATOM>         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<ZATOM>         ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<SITE>          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<CPA-CONC>      ',UIO,1,7,IER2)
+rinput13.f90:            CALL IoInput('<SITE>          ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('<CPA-CONC>      ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('KVREL           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPAN_LOG        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPAN_EQ         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NCHEB           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('R_LOG           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<SOCSCL>        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<FPRADIUS>      ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('INS             ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('KSHAPE          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<SHAPE>         ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('KEXCOR          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('LAMBDA_XC       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NAT_LDAU        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('LDAU_PARA       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('KREADLDAU       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('HFIELD          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('VCONST          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('IVSHIFT         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('LINIPOL         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('XINIPOL         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('IGREENFUN       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('ICC             ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('LMAX            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('BZDIVIDE        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPOL            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('EMIN            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('EMAX            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('TEMPR           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPT1            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPT2            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPT3            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('EBOTSEMI        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('EMUSEMI         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('TKSEMI          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('NPOLSEMI        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('N1SEMI          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('N2SEMI          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('N3SEMI          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('FSEMICORE       ',UIO,1,7,IER)
+rinput13.f90:            CALL IOINPUT('CPAINFO         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('RCLUSTZ         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('RCLUSTXY        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<RMTREF>        ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('ICST            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<LLOYD>         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<DELTAE>        ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('ATOMINFOC       ',UIO,I+1,7,IER)
+rinput13.f90:            CALL IoInput('ATOMINFO        ',UIO,I+1,7,IER)
+rinput13.f90:            CALL IoInput('NSTEPS          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('IMIX            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('STRMIX          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('ITDBRY          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('FCM             ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('QBOUND          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('BRYMIX          ',UIO,1,7,IER)
+rinput13.f90:            CALL IOINPUT('RMAX            ',UIO,1,7,IER)
+rinput13.f90:            CALL IOINPUT('GMAX            ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('FILES           ',UIO,IL,7,IER)
+rinput13.f90:            CALL IoInput('<IFILE>         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('ISHIFT          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('<TOLRDIF>       ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('KVMAD           ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('KFORCE          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('LRHOSYM         ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('IXIPOL          ',UIO,1,7,IER)
+rinput13.f90:            CALL IoInput('RBASISANG       ',UIO,I,7,IER)
+rinput13.f90:            CALL IoInput('SOLVER          ',UIO,0,7,IER)
+rinput13.f90:            CALL IOInput('SOSCALE         ',UIO,0,7,IER)
+rinput13.f90:            CALL IOInput('SOCLIST         ',UIO,0,7,IER)
+rinput13.f90:            CALL IOInput('CTLSCALE        ',UIO,0,7,IER)
+writehoststructure.f90:  CALL IoInput('ATOMINFO        ',UIO,iatom+1,7,IER)
+----------------------------------------------------------------
+RUNOPT
+
+bzkint0.f:      IF ( TEST('fullBZ  ').OR.OPT('NEWSOSOL') ) THEN
+decimate.f:        IF ( .NOT.OPT('ONEBULK ') ) THEN
+deciopt.f:      SUBROUTINE DECIOPT(ALAT,INS,KREL,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
+deciopt.f:         IF (OPT('NEWSOSOL')) NSPINSO = 1 ! ruess: only combined l-s index for newsolver
+dlke0.f:        IF (OPT('COMPLEX ')) THEN
+dlke0.f:      IF (OPT('symG(k) ')) THEN
+dlke0.f:          IF (OPT('COMPLEX ')) THEN
+dlke1.f:      IF (OPT('COMPLEX ')) II = 6
+dlke1.f:        IF (OPT('ONEBULK ')) THEN     ! added 1.02.2000
+dlke1.f:        IF (OPT('COMPLEX ')) THEN
+drvrho.f:            LOPT(IT) = -1       ! this should change for Brooks' OP
+emesht.f:            IF (OPT('GF-EF   ')) EZ(NPNT) = EMU + NPOL*DCMPLX(0.0D0,ETK)
+etotb1.f:      INTEGER LCOREMAX(*),NSHELL(*),LOPT(*)
+etotb1.f:         IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
+etotb1.f:               IF ( IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
+etotb1.f:            IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
+gfmask.f:      IF ( OPT('full inv') )  INVMOD = 0
+gfmask.f:            IF ( .NOT.OPT('CONDUCT ') ) THEN 
+gfshells.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+gfshells.f:      END IF !( .not. OPT('VIRATOMS') ) THEN
+gfshells.f:          IF ( OPT('VIRATOMS') ) THEN
+gfshells.f:       IF ( ICC.GT.0 .or. OPT('KKRFLEX ')) 
+initldau.f:      INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
+initldau.f:         IF ( LOPT(I1)+1.EQ.0 ) STOP ' this atom should be LDA+U'
+initldau.f:         CALL PHICALC(I1,LOPT(I1),VISP,IPAN,IRCUT,R,DRDI,Z,
+initldau.f:         LFMAX = 2*LOPT(I1)
+initldau.f:         RLOP = DBLE(LOPT(I1))
+initldau.f:         LL = LOPT(I1)
+initldau.f:         LL = LOPT(I1)
+kkrmat01.f:      IF ( OPT('VIRATOMS') ) THEN
+kkrmat01.f:      END IF !( OPT('VIRATOMS') ) THEN
+kkrmat01.f:            IF (.NOT.OPT('NEWSOSOL')) THEN
+kkrmat01.f:            ELSE                ! (.NOT.OPT('NEWSOSOL')) 
+kkrmat01.f:            ENDIF               ! (.NOT.OPT('NEWSOSOL'))
+kkrmat01.f:         IF ( .not. OPT('VIRATOMS') ) THEN
+kkrmat01.f:         ELSE                   !  .not. OPT('VIRATOMS') 
+kkrmat01.f:         END IF                 !  .not. OPT('VIRATOMS') 
+kloopz1.f:      IF ( (OPT('qdos    ').AND.(IQDOSRUN.EQ.1)) ) ICALL = 1     !qdos ruess
+kloopz1.f:         IF ( .not. OPT('VIRATOMS') ) THEN
+kloopz1.f:         END IF   !( .not. OPT('VIRATOMS') ) 
+kloopz1.f:        IF (.NOT.OPT('NEWSOSOL') ) THEN
+kloopz1.f:      IF (.NOT.OPT('NEWSOSOL')) THEN
+kloopz1.f:      IF (OPT('readcpa ').OR.(OPT('qdos    ').AND.                              !qdos ruess
+kloopz1.f:         IF (OPT('readcpa ').OR.(OPT('qdos    ')
+kloopz1.f:            IF (.NOT.OPT('NEWSOSOL')) THEN
+kloopz1.f:         END IF                 !  (OPT('readcpa ').OR.OPT('qdos    ')) 
+kloopz1.f:      IF ( OPT('deci-out').OR.(IQDOSRUN.EQ.0) ) THEN  ! qdos ruess
+kloopz1.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+kloopz1.f:      END IF !( .not. OPT('VIRATOMS') ) THEN
+madelung2d.f:      IF ( OPT('DECIMATE') ) THEN
+main0.f:      INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
+main0.f:      IF ( OPT('VIRATOMS') ) THEN
+main0.f:      IF (OPT('zeropot ').OR.TEST('zeropot ')) THEN
+main0.f:      IF ( OPT('GF-EF   ') .OR. OPT('DOS-EF  ') ) THEN
+main0.f:         IF ( OPT('GF-EF   ') ) THEN
+main0.f:      IF (OPT('GENPOT  ')) THEN
+main0.f:      IF ( OPT('SEMICORE') ) IDOSEMICORE = 1
+main0.f:      IF ( OPT('KKRFLEX ') ) THEN
+main0.f:      IF (OPT('NEWSOSOL')) THEN
+main0.f:      IF ( OPT('deci-pot') ) 
+main0.f:      IF ( OPT('deci-out') ) 
+main0.f:      IF ( OPT('DECIMATE') ) 
+main0.f:     &  CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
+main0.f:      IF (OPT('ITERMDIR')) THEN
+main0.f:      IF (OPT('LDA+U   ')) 
+main0.f:       IF (OPT('NEWSOSOL')) THEN
+main0.f:      IF (OPT('qdos    ')) THEN
+main1a.f:      INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
+main1a.f:      IF (  OPT('DECIMATE').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
+main1a.f:      IF (  OPT('rigid-ef').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
+main1a.f:      IF (  OPT('no-neutr').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
+main1a.f:      IF ( TEST('lrefsysf').OR.OPT('lrefsysf') ) LREFSYS = .FALSE.
+main1a.f:      IF (.NOT.OPT('NEWSOSOL')) THEN
+main1a.f:     +                 IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1),
+main1b.f:      IF ( OPT('DECIMATE') ) THEN
+main1b.f:      IF (OPT('ITERMDIR')) THEN
+main1b.f:      IF ( OPT('qdos    ') ) THEN                       ! qdos ruess
+main1b.f:          IF ( ( OPT('GPLAIN  ') ) ) THEN
+main1b.f:          IF ( ( OPT('KKRFLEX ') ) ) THEN
+main1b.f:          IF ( ( OPT('KKRFLEX ') ) ) THEN
+main1b.f:            IF ( ( OPT('GPLAIN  ') ) ) THEN
+main1b.f:          IF ( (.not. OPT('KKRFLEX ') ) ) THEN
+main1b.f:      IF (OPT('qdos    ').AND.(IQDOSRUN.EQ.1)) THEN     ! qdos ruess
+main1b.f:      ELSEIF (OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) THEN ! qdos ruess
+main1b.f:      IF (.NOT.OPT('NEWSOSOL')) THEN
+main1b.f:            IF (OPT('readcpa ').OR.
+main1b.f:     &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+main1b.f:            IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
+main1b.f:            IF ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) ) THEN
+main1b.f:            IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
+main1b.f:                    IF ( ( OPT('GPLAIN  ') ) ) THEN
+main1b.f:            ENDIF    ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
+main1b.f:            IF (OPT('readcpa ').OR.
+main1b.f:     &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+main1b.f:            IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
+main1b.f:            IF ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) ) THEN
+main1b.f:               IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
+main1b.f:            ENDIF               ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
+main1b.f:      IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
+main1c.f:      INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
+main1c.f:      IF ( OPT('ITERMDIR') ) THEN
+main1c.f:      ITERMVDIR = OPT('ITERMDIR') 
+main1c.f:      LDORHOEF = (IHOST.EQ.1) .AND. (.NOT.OPT('DECIMATE')) 
+main1c.f:      IF (OPT('lmlm-dos')) THEN                                          ! lmlm-dos
+main1c.f:        IF (OPT('qdos    ')) THEN                                        ! lmlm-dos qdos
+main1c.f:      ENDIF  ! OPT('lmlm-dos')                                           ! lmlm-dos
+main1c.f:      IF (.NOT.OPT('NEWSOSOL')) THEN
+main2.f:      INTEGER IDOLDAU,LOPT(NATYPD)
+main2.f:      IF ( OPT('SEMICORE') ) IDOSEMICORE = 1
+main2.f:      IF (TEST('no-neutr').OR.OPT('no-neutr')) THEN
+main2.f:      IF (TEST('slow-neu').OR.OPT('slow-neu')) THEN
+main2.f:         IF (.NOT.(OPT('DECIMATE'))) THEN 
+main2.f:      IF ((KREL.EQ.1).AND.(OPT('ITERMDIR'))) THEN
+main2.f:         IF (.NOT.(OPT('DECIMATE'))) THEN
+main2.f:      IF (OPT('KKRFLEX ')) THEN
+main2.f:      IF (OPT('deci-out').AND.(ITSCF.EQ.1)) THEN
+main2.f:      IF (OPT('rigid-ef').OR.OPT('DECIMATE')) EFNEW = EFOLD
+main2.f:      IF ((KTE.EQ.1 .AND. ICC.EQ.0) .or. OPT('KKRFLEX ')) 
+main2.f:      IF ( OPT('SEARCHEF') .AND. (DABS(E2SHIFT).LT.1D-8)) THEN
+mixldau.f:      INTEGER LOPT(NATYPD)
+mixldau.f:         IF (LOPT(IAT).GE.0) THEN
+mixldau.f:            MMAX = 2*LOPT(IAT) + 1
+mixldau.f:         IF (LOPT(IAT).GE.0) THEN
+mssinit.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+mssinit.f:      END IF !( OPT('VIRATOMS') ) THEN
+mssinit.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+mssinit.f:      END IF !( .not. OPT('VIRATOMS') ) THEN
+mtzero.f:      IF (.NOT.(OPT('DECIMATE'))) THEN ! added 10.11.99 to fix vbc
+opt.f:      LOGICAL FUNCTION OPT(STRING)                                    
+readldaupot.f:         IF ( LOPTLDAU(I2).NE.LOPT(I2) ) THEN
+rhons.f:        IF (OPT('lmlm-dos').OR.(OPT('qdos    '))) THEN       ! lmlm-dos
+rhons.f:      IF (.NOT.OPT('qdos    ')) THEN
+rhooutnew.f:       IF (OPT('lmlm-dos')) THEN                                                          ! lmlm-dos
+rhooutnew.f:       ENDIF  ! OPT('lmlm-dos')
+rhoval.f:      IF (OPT('qdos    ')) THEN
+rhoval.f:      IF (OPT('qdos    ')) THEN                         ! qdos
+rhoval.f:            IF (OPT('qdos    ')) THEN
+rhoval.f:            IF (OPT('lmlm-dos')) THEN                                     ! lmlm-dos
+rhovalnew.f:      IF (OPT('qdos    ')) THEN                                         ! qdos ruess
+rhovalnew.f:      END IF  ! OPT('qdos    ')                                         ! qdos ruess
+rhovalnew.f:      IF ((OPT('lmlm-dos')).AND.(I1.EQ.1)) THEN                         ! lmlm-dos ruess
+rhovalnew.f:       IF (OPT('qdos    ')) THEN                                        ! qdos ruess
+rhovalnew.f:       ENDIF      ! OPT('qdos    ')                                     ! qdos ruess
+rhovalnew.f:       IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
+rinput99.f:      INTEGER LOPT(NATYPD),KREADLDAU
+rinput99.f:      IF ( OPT('SEMICORE') ) THEN
+rinput99.f:      IF (OPT('NEWSOSOL')) THEN
+rinput99.f:      IF ( OPT('rigid-ef') .OR. OPT('DECIMATE') ) THEN
+rinput99.f:      IF ( OPT('GF-EF   ') ) THEN
+rinput99.f:      IF (OPT('DOS-EF  ')) THEN
+rinput99.f:      IF (OPT('SEARCHEF')) THEN
+rinput99.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+rinput99.f:      IF ( OPT('VIRATOMS') ) THEN
+rinput99.f:      IF (OPT('DECIMATE')) THEN
+rinput99.f:      IF ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) THEN
+rinput99.f:      IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
+rinput99.f:      IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
+rinput99.f:      IF ( (OPT('LDA+U   ')).AND.(INS.EQ.0) ) THEN
+rinput99.f:         IF (OPT('SOC     ')) THEN
+rinput99.f:         IF (OPT('CSCALE  ')) THEN
+rinput99.f:         LOPT(I) = -1           !  not perform lda+u (default)
+rinput99.f:      IF (OPT('LDA+U   ')) THEN
+rinput99.f:      IF ( OPT('VIRATOMS') ) THEN
+rotgll.f:         IF ( ( OPT('KKRFLEX ') ) ) THEN
+rotgll.f:           IF ( ( OPT('GPLAIN  ') ) ) THEN
+rotgll.f:         IF ( .not. OPT('KKRFLEX ') ) THEN
+setgijtab.f:      IF ( OPT('CONDUCT ') ) CALL GIJCOND(IDO,NAEZ,RBASIS,IQAT,NATOMIMP,
+setgijtab.f:      IF ( OPT('XCPL    ') ) CALL GIJXCPL(IDO,NAEZ,RBASIS,BRAVAIS,
+startldau.f:      INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
+startldau.f:         IF ( LOPT(IT)+1.NE.0 ) THEN
+startldau.f:            LL = LOPT(I1)
+startldau.f:            LL = LOPT(I1)
+testdim.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+testdim.f:        if(natyp.ne.natypd .and. .not.opt('no test ')) then
+testdim.f:        if(natyp+1.ne.natypd .and. .not.opt('no test ')) then
+testdim.f:      END IF! ( .not. OPT('VIRATOMS') ) THEN
+testdim.f:      IF ( .not. OPT('VIRATOMS') ) THEN
+testdim.f:      IF(.NOT.OPT('NEWSOSOL').AND.KORBIT.EQ.1) then
+testdim.f:      IF(OPT('NEWSOSOL').AND.KORBIT.EQ.0) then
+testdim.f:      IF (OPT('WIRE    ') .AND. 
+testdim.f:     +     .NOT. (OPT('full inv') .or. OPT('SPARSE  ') )) THEN
+testdim.f:      IF (OPT('COMPLEX ') .and.
+testdim.f:     +     .not.( OPT('EigenV  ') .or. 
+testdim.f:     +            OPT('wfct    ') .or. 
+testdim.f:     +            OPT('iso surf')     )   ) THEN
+testdim.f:      IF (.NOT.OPT('full inv').AND. .NOT.OPT('SPARSE  ')) THEN
+vinterface.f:      IF ( OPT('DECIMATE') ) THEN
+vinterface.f:         IF ( OPT('DECIMATE') ) THEN
+vinterface.f:         END IF                 ! (OPT(DECIMATE)
+vinterface.f:         IF ( ICC.GT.0  .or. OPT('KKRFLEX ')) THEN
+vinterface.f:      IF ( ICC.EQ.0 .and. OPT('KKRFLEX ')==.false.) RETURN
+vmadelblk.f:               IF (ICC.NE.0 .or. OPT('KKRFLEX ')) THEN
+vmadelblk.f:      IF (ICC.EQ.0 .and. OPT('KKRFLEX ')==.false.) RETURN
+wmatldau_bak.f:      INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
+wmatldau_bak.f:         IF ( LOPT(I1).GE.0 ) THEN
+wmatldau_bak.f:            MMAX = 2*LOPT(I1) + 1
+wmatldau_bak.f:            WRITE (6,99001) I1,LOPT(I1)
+wmatldau_bak.f:               CALL RCLM(1,LOPT(I1),LMAXD,DENMATC(1,1,IPOT))
+wmatldau_bak.f:               CALL RCLM(2,LOPT(I1),LMAXD,VLDAU(1,1,IS))
+wmatldau.f:      INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
+wmatldau.f:         IF ( LOPT(I1).GE.0 ) THEN
+wmatldau.f:            MMAX = 2*LOPT(I1) + 1
+wmatldau.f:            WRITE (6,99001) I1,LOPT(I1)
+wmatldau.f:               CALL RCLM(1,LOPT(I1),LMAXD,DENMATC(1,1,IPOT))
+wmatldau.f:               CALL RCLM(2,LOPT(I1),LMAXD,VLDAU(1,1,IS))
+writekkrflex.f:      writE(*,*) OPT('KKRFLEX ')
+writekkrflex.f:      IF ( OPT('KKRFLEX ') ) THEN
+wrldaupot.f:      INTEGER LOPT(NATYPD)
+wrldaupot.f:      WRITE(67,99004) (LOPT(IT),IT=1,NATYP)
+wrldaupot.f:         IF ( LOPT(IT)+1.NE.0 ) WRITE(67,99006) 
+wrldaupot.f:         IF ( LOPT(IT)+1.NE.0 ) THEN
+wunfiles.f:      INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
+wunfiles.f:      IF (OPT('ITERMDIR')) THEN
+wunfiles.f:      IF ( OPT('DECIMATE') ) WRITE(67) LEFTTINVLL,RIGHTTINVLL,VACFLAG
+rinput13.f90:      INTEGER LOPT(NATYPD),KREADLDAU
+rinput13.f90:      IF (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) THEN 
+rinput13.f90:         CALL ADDOPT('full inv')
+rinput13.f90:      IF (OPT('NEWSOSOL')) THEN ! Spin-orbit
+rinput13.f90:      LOPT(1:NATYP) = -1        !  not perform lda+u (default)
+rinput13.f90:      IF (OPT('LDA+U   ')) THEN
+rinput13.f90:               READ (UNIT=UIO,FMT=*) I1,LOPT(I1),UEFF(I1),JEFF(I1),EREFLDAU(I1)
+rinput13.f90:      IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
+rinput13.f90:      IF (OPT('KKRFLEX ')) IGF = 1
+rinput13.f90:      IF (OPT('KKRFLEX ')) ICC = 1
+rinput13.f90:      IF ( OPT('SEMICORE') ) THEN
+rinput13.f90:      IF (OPT('LLOYD   ').OR.OPT('Lloyd   ').OR.OPT('lloyd   ')) LLY = 1
+rinput13.f90:      IF (OPT('XCPL    ')) THEN
+rinput13.f90:      IF (OPT('KKRFLEX ')) THEN
+rinput13.f90:      IF (  OPT('rigid-ef').OR. OPT('DECIMATE') ) THEN
+rinput13.f90:      IF ( TEST('no-neutr').OR.OPT('no-neutr') )   THEN
+rinput13.f90:      IF ( OPT('GF-EF   ') ) THEN
+rinput13.f90:      IF (OPT('DOS-EF  ')) THEN
+rinput13.f90:      IF (OPT('SEARCHEF')) THEN
+rinput13.f90:      IF ( .not. OPT('VIRATOMS') ) THEN
+rinput13.f90:      IF (OPT('DECIMATE')) THEN
+rinput13.f90:      IF ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) THEN
+rinput13.f90:      IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
+rinput13.f90:         IF (OPT('SOC     ')) THEN
+rinput13.f90:         IF (OPT('CSCALE  ')) THEN
+----------------------------------------------------------------
+TESTOPT 
+
+bzkint0.f:      IF (TEST('TAUSTRUC')) IPRINT = 2
+bzkint0.f:      IF ( TEST('fullBZ  ').OR.OPT('NEWSOSOL') ) THEN
+bzkmesh.f:      IF ( TEST('fix mesh') ) THEN
+bzkmesh.f:      IF ( TEST('fix4mesh') ) THEN
+bzkmesh.f:        IF (TEST('k-net   ')) THEN
+calctmat.f:         IF ( TEST('tmat    ') ) THEN
+clsgen99.f:      IF (TEST('clusters')) THEN
+clsgen99.f:          IF (TEST('clusters')) THEN
+crtstar.f:      IF (TEST('ND      ')) 
+decitset.f:                  IF ( TEST('tmat    ') ) THEN
+dlke1.f:      IF (TEST('BZKP    ')) write(6,FMT='(6f12.6)') (bzkp(i),i=1,ii)
+etotb1.f:         IF ( .NOT.(TEST('NoMadel ')) ) THEN
+ewald2d.f:     &               STEST(LMXSPD),STESTNEW(LMXSPD)
+ewald2d.f:         STEST(LM) = 0D0
+ewald2d.f:         STEST(1) = STEST(1) - 2D0*LAMDA/SQRT(PI) - 2D0*SQRT(PI)
+ewald2d.f:            STEST(1) = STEST(1) + 2D0*LAMDA/SQRT(PI)
+ewald2d.f:         STEST(1) = STEST(1) - DABS(DQ3)*FPI/2D0/VOL
+ewald2d.f:         STEST(3) = STEST(3) - DABS(DQ3)/DQ3*SQRT(3D0*FPI)/2D0/VOL ! -d/dz
+ewald2d.f:                  STEST(LM) = STEST(LM) + GR(L)
+ewald2d.f:               STEST(LM) = STEST(LM) + GI(L)*SIMAG
+ewald2d.f:               STEST(LM) = STEST(LM) + (-1)**I*2D0/SQRT(PI)*PREF0(L)
+ewald2d.f:            STESTNEW(LM) = STEST(LM)
+ewald2d.f:            STEST(LM) = STESTNEW(LM)
+ewald2d.f:               STEST(LM) = STEST(LM) + YLMPREF(L)*GAL(L)*SIGNRZL(L)
+ewald2d.f:                  STEST(LM) = STEST(LM) + PREF2(M)*APREFPP*FACTEXP
+ewald2d.f:                  STEST(LM) = STEST(LM) + PREF2(M)*APREFMM*FACTEXP
+ewald2d.f:                  S0(LM) = STEST(LM)
+ewald2d.f:            STEST0 = ABS(S0(LM)-STEST(LM))
+ewald2d.f:         IF ( ABS(DIMAG(STEST(LM))).GT.BOUND ) THEN
+ewald2d.f:         SUM2D(LM) = DBLE(STEST(LM))
+ewald2d.f:         STEST(LM) = 0.0D0
+gfmask.f:      IF ( TEST('ICHECK  ') ) THEN 
+gll95.f:      IF (TEST('flow    ')) WRITE (6,FMT=*) '>>> GLL95'
+gll95.f:      IF (TEST('flow    ')) WRITE (6,FMT=*) 'GFREE o.k.'
+gll95.f:         IF (TEST('REFPOT  ')) WRITE (6,FMT=*) N2,REFPOT(ABS(ATOM(N2)))
+gll95.f:      IF (TEST('WAIT    ')) WRITE (6,FMT=*) 'Input I'
+gll95.f:      IF (TEST('WAIT    ')) READ (5,FMT=*) I
+gll95.f:      IF (TEST('flow    ')) WRITE (6,FMT=*) 'GREFSY o.k.'
+kkrmat01.f:      IF ( TEST('flow     ') )
+kkrmat01.f:      IF ( TEST('flow    ') ) WRITE(6,*) '<<< KKRMAT1'
+kloopz1.f:      IF ( TEST('flow    ') ) WRITE (6,*) 
+kloopz1.f:      IF ( TEST('Gmat    ') ) WRITE (6,'(/,4X,70(1H-),/,4X,A,I4)')
+kloopz1.f:       IF ( .not. TEST('testgmat') ) THEN
+kloopz1.f:       END IF !( .not. TEST('testgmat') ) THEN
+kloopz1.f:        IF ( ( NS.LE.NSMAX ).AND.( TEST('Gmat    ') ) ) THEN
+kloopz1.f:      IF ( TEST('Gmat    ') ) WRITE (6,'(/,4X,70(1H-))')
+kloopz1.f:      IF ( TEST('flow    ') ) WRITE (6,*) '<<< KLOOPZ1'
+main0.f:      IF ( TEST('Vspher  ') ) THEN
+main0.f:      IF (OPT('zeropot ').OR.TEST('zeropot ')) THEN
+main1a.f:      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
+main1a.f:      IF ( TEST('no-neutr').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
+main1a.f:      IF ( TEST('lrefsysf').OR.OPT('lrefsysf') ) LREFSYS = .FALSE.
+main1b.f:      IF (TEST('gmatasci')) 
+main1b.f:              IF (TEST('gmatasci')) THEN
+main1b.f:               IF (TEST('GMAT=0  ')) THEN                                 ! LLY Lloyd
+main1b.f:               IF (TEST('gmatasci')) THEN
+main1c.f:      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
+main1c.f:        IF ( TEST('RHOVALW ') ) THEN !Bauer
+main1c.f:      IF (.NOT.TEST('FIXMOM  ')) THEN
+main1c.f:      IF (.NOT.TEST('FIXMOM  ')) THEN
+main1c.f:      IF (NPOL.EQ.0 .OR.TEST('DOS     ')) CALL WRLDOS(DEN,EZ,WEZ,
+main1c.f:      IF (TEST('den-asci')) THEN
+main2.f:      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
+main2.f:      IF(TEST('flow    ')) write(6,*) '>>> RHOTOTB'
+main2.f:      IF(TEST('flow    ')) write(6,*) '<<< RHOTOTB'
+main2.f:      IF ( TEST('RHOVALTW') ) THEN !Bauer
+main2.f:      IF (TEST('no-neutr').OR.OPT('no-neutr')) THEN
+main2.f:      IF (TEST('slow-neu').OR.OPT('slow-neu')) THEN
+main2.f:      if ( TEST('vintrasp') ) then !Bauer
+main2.f:        IF ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOTD,1:NPOTD) = 0.D0
+main2.f:        if ( TEST('vpotout ') ) then !bauer
+main2.f:        IF ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOTD,1:NPOTD) = 0.D0
+main2.f:        if ( TEST('vpotout ') ) then !bauer
+main2.f:        if ( TEST('vpotout ') ) then !bauer
+main2.f:               if ( TEST('vpotout ') ) then !bauer
+main2.f:        if ( TEST('vpotout ') ) then !bauer
+main2.f:      if (test('potcubic')) then
+main2.f:       IF(TEST('potsymm ')) THEN
+main2.f:        if ( TEST('vpotout ') ) then !bauer
+main2.f:      IF (TEST('alt mix ')) MIX = MIXING/DBLE(1+MOD(ITSCF,2))
+main2.f:      IF (TEST('spec mix')) 
+mssinit.f:        IF (.not.TEST('testgmat')) THEN
+mssinit.f:      END IF !( TEST('testgmat') ) THEN
+mssinit.f:        IF ( TEST('tmat    ') ) THEN
+mssinit.f:        IF (.not.TEST('testgmat')) THEN
+mssinit.f:       END IF !( .not. TEST('testgmat') ) THEN
+rhoval.f:            IF (TEST('GMAT=0  ')) THEN
+rhovalnew.f:       IF (.NOT.TEST('FIXMOM  ')) THEN
+rinput99.f:      IF (TEST('atptshft')) THEN
+rotgll.f:      IF ( TEST('Gmatij  ') ) THEN
+slaydirect.f:         IF (.NOT.TEST('electro ')) RETURN
+slaydirect.f:         IF (TEST('electro '))THEN
+spinorbit_ham.f:       IF (TEST('NOSOC   ').OR.Z.LT.1D-6) THEN
+startb1.f:      IF (IINFO.NE.0 .AND. TEST('RMESH   ')) IO = 1
+startb1.f:            IF (TEST('atptshft').AND.(IH.EQ.IVSHIFT)) THEN
+startb1.f:            ELSEIF(.NOT.TEST('atptshft')) THEN
+strmat.f:      DOUBLE COMPLEX STEST(LMXSPD)
+strmat.f:            STEST(1) = -SQRT(FPI)/VOL/(4D0*LAMDA*LAMDA)
+strmat.f:               STEST(LM) = 0.0D0
+strmat.f:               STEST(1) = STEST(1) - LAMDA/PI
+strmat.f:                        STEST(LM) = STEST(LM) + YLM(LM)*RFAC
+strmat.f:                        STEST(LM) = STEST(LM) + YLM(LM)*BFAC
+strmat.f:                     IF ( ABS(DIMAG(STEST(LM))).GT.BOUND ) THEN
+strmat.f:                     SMAT(LM,I1,I2) = DBLE(STEST(LM))
+strmat.f:                     STEST(LM) = 0.0D0
+strmat.f:                     S = DBLE(STEST(LM))
+tbref.f:            IF (TEST('flow    ')) WRITE (6,FMT=*) 'tll(ref),  i1 = ',I1
+tbref.f:         IF (TEST('flow    ')) WRITE (6,FMT=*) 't-mat(Ref) o.k.', IE
+tbref.f:            IF (TEST('flow    ')) WRITE (6,FMT=*) 'CLUSTER ',ICLS,
+tbref.f:         IF (TEST('flow    ')) WRITE (6,FMT=*) 'G(n,lm,n,lm) (Ref) o.k.'
+testdim.f:      IF (TEST('CONT    ')) THEN
+test.f:      LOGICAL FUNCTION TEST(STRING)                                    
+vinterface.f:      IF(TEST('flow    ')) WRITE (6,*) '>>>>>> Vinterface'
+wrldos.f:      IF (TEST('EV      ')) EFCTOR = 13.6058D0
+rinput13.f90:      IF (TEST('atptshft')) THEN
+rinput13.f90:      IF ( TEST('no-neutr').OR.OPT('no-neutr') )   THEN

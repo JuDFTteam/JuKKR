@@ -1,0 +1,45 @@
+\contentsline {section}{\numberline {1}Description and General Features}{4}
+\contentsline {section}{\numberline {2}Basic Theory}{4}
+\contentsline {section}{\numberline {3}Technical details}{6}
+\contentsline {subsection}{\numberline {3.1}General considerations and philosophy}{6}
+\contentsline {subsection}{\numberline {3.2}Input files}{6}
+\contentsline {section}{\numberline {4}Step by step Cu bulk, ASA, self-consistency, dos and band structure}{7}
+\contentsline {section}{\numberline {5}VORONOI: starting potential and shape functions}{8}
+\contentsline {subsection}{\numberline {5.1}Preparing potentials in ASA}{8}
+\contentsline {subsection}{\numberline {5.2}Full potential interpolation and shape functions}{8}
+\contentsline {subsection}{\numberline {5.3}Interpolating impurity potentials}{10}
+\contentsline {section}{\numberline {6}Choice of the 4Ryshift radius}{10}
+\contentsline {section}{\numberline {7}2D-Slabs}{11}
+\contentsline {section}{\numberline {8}Semiinfinite hosts - Decimation method}{11}
+\contentsline {section}{\numberline {9}DOS and Q-DOS}{13}
+\contentsline {subsection}{\numberline {9.1}Density of states }{13}
+\contentsline {subsection}{\numberline {9.2}Density of states for 2D systems in the BZ, QDOS (spectral function) plots}{13}
+\contentsline {section}{\numberline {10}Band structure}{14}
+\contentsline {section}{\numberline {11}Impurity calculation}{15}
+\contentsline {subsection}{\numberline {11.1}Producing Green's function for impurity calculation}{15}
+\contentsline {subsection}{\numberline {11.2}Impurity program}{16}
+\contentsline {section}{\numberline {12}Details of the Calculations}{18}
+\contentsline {subsection}{\numberline {12.1}Parameters for the SKKR program}{18}
+\contentsline {subsection}{\numberline {12.2}Current calculation}{19}
+\contentsline {section}{\numberline {13}Examples}{19}
+\contentsline {subsection}{\numberline {13.1}Fe Bulk}{19}
+\contentsline {subsection}{\numberline {13.2}FCC Bulk Lattice}{22}
+\contentsline {subsection}{\numberline {13.3}FCC bulk in 001 surface geometry}{22}
+\contentsline {subsection}{\numberline {13.4}FCC 001 surface with 8 atom slab}{22}
+\contentsline {subsection}{\numberline {13.5}SUPERCELL}{23}
+\contentsline {subsection}{\numberline {13.6}Fe/ZnSe/Fe interface with 2 different Fe atoms in plane using decimation}{23}
+\contentsline {section}{\numberline {14}TEST options}{25}
+\contentsline {section}{\numberline {15}Inputcard}{25}
+\contentsline {section}{\numberline {16}Compiling the programs}{30}
+\contentsline {subsection}{\numberline {16.1}The VORONOI program}{30}
+\contentsline {subsection}{\numberline {16.2}The TB-KKR program}{31}
+\contentsline {subsection}{\numberline {16.3}Impurity program}{31}
+\contentsline {section}{\numberline {17}New features of the TB-KKR program}{31}
+\contentsline {subsection}{\numberline {17.1}Compiling and running the programs in the relativistic mode}{31}
+\contentsline {subsection}{\numberline {17.2}New RUNNING and TEST options, new parameters }{32}
+\contentsline {subsubsection}{\numberline {17.2.1}Running options}{32}
+\contentsline {subsubsection}{\numberline {17.2.2}Test options}{32}
+\contentsline {subsubsection}{\numberline {17.2.3}Parameters}{32}
+\contentsline {subsection}{\numberline {17.3}Manipulating the spin-orbit coupling}{33}
+\contentsline {subsection}{\numberline {17.4}Performing CPA calculations}{34}
+\contentsline {subsection}{\numberline {17.5}Calculations with rotated magnetisation direction}{35}

@@ -1,0 +1,5 @@
+This routiens are from "KM".
+Program can read SPR-KKR and LMTO-AP potential and transform 
+to TB-KKR form:
+
+potfit input.pot output.pot

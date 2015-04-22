@@ -1,0 +1,18 @@
+FILES   GREENFILE = ../../../prepare_l3/green_scf
+        POTFILE  = Mn_1_Ag111_FP.pot2_new_new
+        COEFILE  = impurity.coefs      
+        SHAPEFILE= shapefun            
+
+ATOMS NTCELL={1} IRNS={208}
+
+SCF NITER=200 SCFALG=broyden2
+    SCFMIX=0.01
+    SCFTOL = 1E-7
+    VXC=VWN 
+
+#STRUC NATREF=7      NATPER=87
+
+CONTROL IPRINT=1  NSPIN=2 IBORN=3 FULLPOT 
+    
+#TASK PLOTCHARGE
+    

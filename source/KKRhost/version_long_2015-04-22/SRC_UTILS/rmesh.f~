@@ -1,0 +1,5 @@
+      program rmesh
+c Gives the exponential mesh used in the KKR program.
+c Formula:
+c r(i) = b * (exp(a*(i-1))-1)
+      implicit none

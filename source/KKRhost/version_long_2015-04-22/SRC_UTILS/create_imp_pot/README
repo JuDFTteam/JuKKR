@@ -1,0 +1,18 @@
+
+This program is useful for IMPURITY programm. 
+
+It reads impurity.coefs file created by tb-kkr and corresponding 
+tb-kkr potential and creating Starting potential for impurity programm
+(composed.potent).
+
+New feature was added: Possibility to replace some atoms in your new 
+composed.potent from arbitrary potential file. Command line looks like:
+create_imp_pot ./HOST.POT -map ARBITRARY.POT 
+Program will ask you then which potential from composed.potent should be replace by which potential from ARBITRARY.POT. 
+! Important to note is, that host atoms from composed.potent are not numbered, so numbering is starting from 1 for first atom of your impurity cluster
+
+! PLEASE BE ALSO CAREFULL THAT YOU TITLE LINE OF POTENTIAL
+! INCLUDES string "exc:" on position "37 -- 40"
+
+Jan
+

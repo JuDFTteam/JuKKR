@@ -1,0 +1,1 @@
+../SRC_SRA/generalpot.f
