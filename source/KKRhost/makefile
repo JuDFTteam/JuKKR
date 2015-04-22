@@ -12,6 +12,7 @@
 # make clean     -    removes all *.o files
 # make openmp    -    uses openmp
 #
+default: serial
 ####################################################
 # specify the compiler which is going to be used   #
 ####################################################
@@ -39,8 +40,10 @@ INCP = ./inc.p
 INCR = ./sprkkr_rmesh.dim
 
 
-mod_types.o  : $(COM)/mod_types.f90                 ; \
-                        $(FC) $(FFLAGS) $(COM)/mod_types.f90 -c -o $@
+mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_mympi.F90 -c -o $@
+mod_types.o  : $(COM)/mod_types.F90                 ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_types.F90 -c -o $@
 
 FILENAME0 = kkr.x  #kkr0.exe
 include makefile0
@@ -63,14 +66,13 @@ include makefile2
 OBJECTS2 = $(PROGOBJS2)
 
 $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
-                        $(FC) $(FFLAGS) $(COM)/main_all.F90 -c -o $@
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/main_all.F90 -c -o $@
 
 ####################################################
 # Libraries                                        #
 ####################################################
 
 # standart libs
-#LLIBS  = -L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 # openmp libs
@@ -104,20 +106,6 @@ openmp: OPENMPFLAGS = -openmp
 
 SOURCEDIR = .
 
-
-serial:   mkdirobj copyinc mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-debug:    mkdirobj copyinc mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-openmp:   mkdirobj copyinc mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpi:      mkdirobj copyinc mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-mpidebug: mkdirobj copyinc mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-
-
-
 mkdirobj:
 	@if test ! -d $(OBJ); \
 	then mkdir $(OBJ); fi
@@ -132,8 +120,18 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/
 
-install: clean serial
+serial:   mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+debug:    mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+openmp:   mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
+mpi:      mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+mpidebug: mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
+install: clean serial
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<

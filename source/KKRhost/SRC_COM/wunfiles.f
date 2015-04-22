@@ -149,14 +149,6 @@ C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
       EXTERNAL OPT,TEST
-C -------------------------------------------------------------- SCRATCH
-C Looking for SCRATCH system variable to store files: gmat, tmat 
-C and gref on the local file system (this is necessary if you want
-C MPI to run properly when paralellising over energies)
-C
-c call to SCRATCHDIR commented out 15.09.2006 by fivos in iff820c.. cluster with gfortran
-c     CALL SCRATCHDIR(TMPDIR,ITMPDIR,ILTMP)
-C
 C ---------------------------------------------------------- energy_mesh
 C                                    some data in this file might change
 C
