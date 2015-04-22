@@ -1,7 +1,7 @@
        SUBROUTINE CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,Z,C,E,LMPOTD,
      +                  LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                  JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR,TMAT,
-     +                  USE_SRATRICK)
+     +                  ALPHA,USE_SRATRICK)
        IMPLICIT NONE
 c construct wavefunctions for spherical potentials
        INTEGER NSRA,IRMDNEW,NRMAXD,NSPIN,LMAX,LMPOTD,LMMAXSO
@@ -28,7 +28,9 @@ c local
      +                                HLK2TEMP(:,:),JLK2TEMP(:,:),
      +                                HLKNEW(:,:),JLKNEW(:,:)
        DOUBLE COMPLEX, ALLOCATABLE :: TMATTEMP(:,:)
+       DOUBLE COMPLEX, ALLOCATABLE :: ALPHATEMP(:,:) ! LLY
        DOUBLE COMPLEX TMAT(2*(LMAX+1))
+       DOUBLE COMPLEX ALPHA(2*(LMAX+1)) ! LLY
        LMSIZE=1
        IF (NSRA.EQ.2) THEN
         LMSIZE2=2
@@ -45,6 +47,7 @@ c local
        ALLOCATE (JLK2TEMP(NVEC,IRMDNEW))
        ALLOCATE (JLK_INDEXTEMP(LMSIZE2))
        ALLOCATE (TMATTEMP(LMSIZE,LMSIZE))
+       ALLOCATE (ALPHATEMP(LMSIZE,LMSIZE)) ! LLY
        ALLOCATE (HLKNEW(NVEC*NSPIN*(LMAX+1),IRMDNEW))
        ALLOCATE (JLKNEW(NVEC*NSPIN*(LMAX+1),IRMDNEW))
 
@@ -90,7 +93,8 @@ c the free-potential wavefunctions and potentials corresponding to l-value
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VLL,RLLTEMP,SLLTEMP,TMATTEMP,
      +           NCHEB,NPAN_TOT,LMSIZE,LMSIZE2,NVEC,IRMDNEW,NRMAXD,NVEC,
      +               JLK_INDEXTEMP,HLKTEMP,JLKTEMP,HLK2TEMP,JLK2TEMP,
-     +               GMATPREFACTOR,'1','1','0',USE_SRATRICK)
+     +               GMATPREFACTOR,'1','1','0',USE_SRATRICK,
+     +               ALPHATEMP) ! LLY
          
          DO IR=1,IRMDNEW
           HLKNEW(LSPIN+LVAL+1,IR)=SLLTEMP(1,1,IR)/RNEW(IR)
@@ -103,6 +107,7 @@ c the free-potential wavefunctions and potentials corresponding to l-value
           ENDDO
          ENDIF
          TMAT(LSPIN+LVAL+1)=TMATTEMP(1,1)          
+         ALPHA(LSPIN+LVAL+1)=ALPHATEMP(1,1)      ! LLY
         ENDDO ! LMAX
        ENDDO ! NSPIN
        
@@ -151,6 +156,7 @@ c the free-potential wavefunctions and potentials corresponding to l-value
        DEALLOCATE (JLK2TEMP)
        DEALLOCATE (JLK_INDEXTEMP)
        DEALLOCATE (TMATTEMP)
+       DEALLOCATE (ALPHATEMP) ! LLY
        DEALLOCATE (HLKNEW)
        DEALLOCATE (JLKNEW)
        DEALLOCATE (VLL0)

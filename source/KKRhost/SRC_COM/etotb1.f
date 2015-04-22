@@ -195,8 +195,8 @@ C
 99012 FORMAT (/,3X,'Total contribution of atom',i3,' =',f15.8)
 99013 FORMAT (5X,'                              sum of band energies :',
      &        1X,F15.10,/,3X,70('-'))
-99014 FORMAT (/,3X,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f17.8,/15x,
-     &        '                 eV  : ',F17.8,/,3x,70('+'))
+99014 FORMAT (/,3X,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f25.8,/15x,
+     &        '                 eV  : ',F25.8,/,3x,70('+'))
 99015 FORMAT (5X,'eff. pot. contribution     : ',f15.8)
 99016 FORMAT (5X,'total double counting contribution                 :',
      &        1X,f15.8)

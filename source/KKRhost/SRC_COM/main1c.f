@@ -99,9 +99,10 @@ CMPI +         MPI_FINALIZE,MPI_INIT,ZCOPY,DCOPY
 CT3E  INTEGER ICLKTCK,ICLOCKS,MEND,MSTART
 CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
       DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
-      DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2)
+      DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2),WEZNORM(IEMXD)
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
-      DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND)                      ! LLY Lloyd
+      DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
+     +               CDOS2(NATYPD)                                            ! LLY Lloyd
       REAL*8 EREAD,CHARGE_LLY(NSPIND)                                         ! LLY Lloyd
       REAL*8 RENORM_AT(2,NATYPD)  ! 1: charge renormalization per atom        ! LLY Lloyd
                                   ! 2: spin moment renormalization per atom   ! LLY Lloyd
@@ -284,6 +285,7 @@ C
          CLOSE(67)
       END IF
       
+      ! initialization needed due to merging to one executable
       ESPV(:,:) = 0.d0
       RHO2N1(:,:,:) = 0.d0
       RHO2N2(:,:,:) = 0.d0
@@ -344,28 +346,42 @@ C
                                                                            ! LLY Lloyd
 ! Calculate free-space contribution to dos                                 ! LLY Lloyd
          CDOS0(1:IEMXD) = CZERO                                            ! LLY Lloyd
+         CDOS1(1:IEMXD) = CZERO                                             ! LLY Lloyd
+         CDOS2(1:NAEZ) = CZERO                                             ! LLY Lloyd
          DO I1 = 1,NAEZ                                                    ! LLY Lloyd
             CDOSAT0(1:IEMXD) = CZERO                                       ! LLY Lloyd
+            CDOSAT1(1:IEMXD) = CZERO                                       ! LLY Lloyd
             ICELL = NTCELL(I1)                                             ! LLY Lloyd
             DO IE = 1,IELAST                                               ! LLY Lloyd
                CALL RHOVAL0(                                               ! LLY Lloyd
      &           EZ(IE),WEZ(IE),                                           ! LLY Lloyd
      &           DRDI(1,I1),RMESH(1,I1),                                   ! LLY Lloyd
-     &           IPAN(I1),IRCUT(0,I1),                                     ! LLY Lloyd
+     &           IPAN(I1),IRCUT(0,I1),IRWS(I1),                            ! LLY Lloyd
      &           THETAS(1,1,ICELL),LMAX,                                   ! LLY Lloyd
-     &           CDOSAT0(IE),CDOSAT1(IE))                                  ! LLY Lloyd
+     &           CDOSAT0(IE),CDOSAT1(IE))  
+
+c calculate contribution from free space
+
+                 CDOS2(I1) = CDOS2(I1) + CDOSAT1(IE)*WEZ(IE)                ! LLY Lloyd
             ENDDO                                                          ! LLY Lloyd
             CDOS0(1:IEMXD) = CDOS0(1:IEMXD) + CDOSAT0(1:IEMXD)             ! LLY Lloyd
+            CDOS1(1:IEMXD) = CDOS1(1:IEMXD) + CDOSAT1(1:IEMXD)             ! LLY Lloyd
          ENDDO                                                             ! LLY Lloyd
          CDOS0(:) = -CDOS0(:) / PI                                         ! LLY Lloyd
+         CDOS1(:) = -CDOS1(:) / PI                                         ! LLY Lloyd
                                                                            ! LLY Lloyd
          OPEN(701,FILE='freedos.dat',FORM='FORMATTED')                     ! LLY Lloyd
          DO IE = 1,IELAST                                                  ! LLY Lloyd
-            WRITE(701,FMT='(10E16.8)') EZ(IE),CDOS0(IE)                    ! LLY Lloyd
+            WRITE(701,FMT='(10E16.8)') EZ(IE),CDOS0(IE),CDOS1(IE)          ! LLY Lloyd
          ENDDO                                                             ! LLY Lloyd
          CLOSE(701)                                                        ! LLY Lloyd
-                                                                           ! LLY Lloyd
+         OPEN(701,FILE='singledos.dat',FORM='FORMATTED')                   ! LLY Lloyd
+         DO I1 = 1,NATYP                                                   ! LLY Lloyd
+            WRITE(701,FMT='(I5,10E16.8)') I1,CDOS2(I1)                     ! LLY Lloyd
+         ENDDO                                                             ! LLY Lloyd
+         CLOSE(701)                                                        ! LLY Lloyd
          CDOS_LLY(1:IEMXD,1:NSPIND) = CZERO                                ! LLY Lloyd
+         IF (.NOT.OPT('NEWSOSOL')) THEN
          OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
          DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
             DO IE = 1,IELAST                                               ! LLY Lloyd
@@ -399,8 +415,30 @@ C
          CLOSE(701)                                                        ! LLY Lloyd
          WRITE(*,*) 'Valence charge from Lloyds formula:',                 ! LLY Lloyd
      &        (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                            ! LLY Lloyd
-         ENDIF                                                             ! LLY Lloyd
-                                                                           ! LLY Lloyd
+         ELSE 
+
+         OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')           ! LLY
+          DO IE = 1,IELAST                                             ! LLY
+           READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,1)             ! LLY
+          ENDDO                                                        ! LLY
+         CLOSE(701)                                                    ! LLY
+c Add free-space contribution cdos0                                    ! LLY
+          CDOS_LLY(1:IEMXD,1) = CDOS_LLY(1:IEMXD,1)+2D0*CDOS0(1:IEMXD) ! LLY 
+          CSUM=CZERO
+          DO IE = 1,IELAST                                             ! LLY
+           CSUM = CSUM + CDOS_LLY(IE,1) * WEZ(IE)                      ! LLY
+          ENDDO                                                        ! LLY
+           CHARGE_LLY(1) = -DIMAG(CSUM) * PI                           ! LLY
+         OPEN (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')             ! LLY 
+           DO IE=1,IELAST                                              ! LLY
+               WRITE(701,FMT='(10E16.8)') EZ(IE),CDOS_LLY(IE,1)    ! LLY 
+            ENDDO                                                      ! LLY 
+         CLOSE(701)                                                    ! LLY 
+         WRITE(*,*) 'Valence charge from Lloyds formula:',
+     &        (CHARGE_LLY(1))                                          ! LLY 
+         ENDIF
+
+         ENDIF                                                         ! LLY
 ! -------------------------------------------------------------------------! LLY Lloyd
 
 
@@ -434,7 +472,6 @@ C ----------------------------------------------------------------- SPIN
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),
      &           DENMATC(1,1,IPOT),
      &           LLY,NATYP)              ! LLY Lloyd
-     
          END DO
 C ----------------------------------------------------------------- SPIN
 C
@@ -544,7 +581,6 @@ c interpolate potential
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1))
-     
 
         DO L = 0,LMAXD1
          ESPV(L,IPOT)=ESPV1(L,1)
@@ -605,7 +641,7 @@ c rewrite new theta and phi to nonco_angle.dat
        CLOSE(11,status='delete')
        CLOSE(13)
       ENDIF
-      
+
       CLOSE (30) !close lmdos file
       CLOSE (31) !close qdos file
       CLOSE (91) !close gflle file
@@ -618,9 +654,9 @@ c rewrite new theta and phi to nonco_angle.dat
          LMAXP1 = LMAX                                                   ! LLY Lloyd
          IF (INS.NE.0) LMAXP1 = LMAX + 1                                 ! LLY Lloyd
          CALL RENORM_LLY(
-     >     CDOS_LLY,IELAST,NSPIN,NATYP,DEN,LMAXP1,CONC,
-     >     1,IELAST,WEZ,IRCUT,IPAN,
-     X     RHO2NS)
+     &     CDOS_LLY,IELAST,NSPIN,NATYP,DEN,LMAXP1,CONC,
+     &     1,IELAST,WEZ,IRCUT,IPAN,EZ,ZAT,
+     &     RHO2NS,CDOS1,CDOS2,R2NEF,DENEF,DENEFAT,ESPV)
 
 
       ENDIF                                                              ! LLY Lloyd

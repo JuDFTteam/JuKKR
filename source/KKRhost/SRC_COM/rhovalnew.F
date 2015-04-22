@@ -53,6 +53,7 @@
        DOUBLE COMPLEX, ALLOCATABLE :: RLL(:,:,:,:),SLL(:,:,:,:),
      +   RLLLEFT(:,:,:,:),SLLLEFT(:,:,:,:)
        DOUBLE COMPLEX, ALLOCATABLE :: TMATSPH(:,:)
+       DOUBLE COMPLEX ALPHASPH(2*(LMAX+1)),ALPHALL(LMMAXSO,LMMAXSO) ! LLY
        DOUBLE COMPLEX, ALLOCATABLE :: CDEN(:,:,:,:),
      +   CDENLM(:,:,:,:),CDENNS(:,:,:),RHO2NSC(:,:,:),R2NEFC(:,:,:),
      +   RHO2NSNEW(:,:,:),R2NEFNEW(:,:,:),R2ORBC(:,:,:,:),
@@ -82,12 +83,12 @@
        ! OMP - number of threads, thread id
        integer nth,ith
 ! determine if omp is used
-!$omp parallel shared(nth,ith) 
-!$omp single 
-      ith = 0
-      nth = 1
+!$omp parallel shared(nth,ith)
+!$omp single
+       ith = 0
+       nth = 1
 #ifdef CPP_OMP
-      nth = omp_get_num_threads()
+       nth = omp_get_num_threads()
 #endif
 !$omp end single
 !$omp end parallel
@@ -154,7 +155,7 @@ c initial allocate
        R2NEFNEW=CZERO
        DEN=CZERO
        ESPV=0d0
-       RHO2INT(:)=CZERO
+       RHO2INT=CZERO
        DENORBMOM=0d0
        DENORBMOMSP=0d0
        DENORBMOMLM=0d0
@@ -223,6 +224,7 @@ c energy loop
 !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 !$omp& shared(t_tgmat)
+!$omp& private(alphasph,alphall)
        DO IE=1,IELAST
          if (nth>=1) then
 #ifdef CPP_OMP
@@ -294,7 +296,7 @@ c using spherical potential as reference
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),
      +                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),
-     +                USE_SRATRICK)
+     +                ALPHASPH,USE_SRATRICK)
         ENDIF
 
 cc calculate the tmat and wavefunctions
@@ -308,7 +310,7 @@ cc right solutions
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +          IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),
-     +              GMATPREFACTOR,'1','1','0',USE_SRATRICK)
+     +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
         IF (NSRA.EQ.2) THEN
          RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -358,7 +360,7 @@ c notice that exchange the order of left and right hankel/bessel functions
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
-     +                TMATSPH(:,ith),USE_SRATRICK)
+     +                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
         ENDIF
 
 cc calculate the tmat and wavefunctions
@@ -373,7 +375,7 @@ c notice that exchange the order of left and right hankel/bessel functions
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +              HLK(:,:,ith),JLK(:,:,ith),
-     +              GMATPREFACTOR,'1','1','0',USE_SRATRICK)
+     +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
         IF (NSRA.EQ.2) THEN
          RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -402,21 +404,6 @@ c rotate gmat from global frame to local frame
          ENDDO
         ENDDO
 c calculate density 
-
-! !$omp critical
-!        open(555555,file="rhoout_input_ith"//char(48+ith)//'.ie'
-!      +//char(48+ie))
-!        write(555555,*) 'line1',NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(:,:,IE)
-!      +     ,'line2',EK,LMPOTD,DF,NPAN_TOT,NCHEB,ICLEB,IEND,
-!      +      'line3',IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-!      +      'line4',RLL(:,:,:,ith),SLL(:,:,:,ith),
-!      +      'line5',RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
-!      +      'line6',CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
-!      +      'line7',CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
-!      +      'line8',GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL
-!        close(555555)
-! !$omp end critical
-
        CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                LMPOTD,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
      +                IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,

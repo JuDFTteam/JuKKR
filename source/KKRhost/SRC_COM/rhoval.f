@@ -297,8 +297,10 @@ C        Read BZ path for qdos calculation:
       ALLOCATE(GFLLE(LMMAXD,LMMAXD,IELAST,NQDOS))
       ALLOCATE(DUM_GFLLE(LMMAXD,LMMAXD))
 
+      WRITE(*,*) 'atom',I1
       DO IE = 1,IELAST
-         WRITE(*,*) 'RHOVAL (I1,IE)=',I1,IE
+c         WRITE(*,*) 'RHOVAL (I1,IE)=',I1,IE
+         WRITE(*,*) 'energy',IE,EZ(IE)
 CMPI     IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
 C
 !          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
@@ -512,5 +514,4 @@ C Test qdos/gflle
 !         ENDDO ! IE
 !        ENDDO ! IQ
 !       ENDIF ! qdos
-
       END

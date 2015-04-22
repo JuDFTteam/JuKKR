@@ -401,7 +401,6 @@ c
                   IRNS(IH) = IRNS1P
                   IRMIN(IH) = NR - IRNS(IH)
                ENDIF   
-               WRITE(*,*)'STARTB1:ATOM,IRMIN,IRNS',IH,IRMIN(IH),IRNS(IH)
             ENDIF
 c
 c---> generate arrays for the calculation of the wave functions

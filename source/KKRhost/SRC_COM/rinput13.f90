@@ -1865,14 +1865,14 @@
 
 !Check for XCPL consistency 
 
-      MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NSPIN.GT.1 )
+      MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NPOL.NE.0 ).AND.( NSPIN.GT.1 )
       IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
          WRITE (6,*)
          WRITE (6,*)&
      &        ' WARNING: XCPL running option requires collinear ',&
-     &        'magnetic systems '
+     &        'magnetic systems, complex'
          WRITE (6,*)&
-     &        '          in a NON/SCALAR',&
+     &        '          energy contour (NPOL<>0) in a NON/SCALAR',&
      &        ' relativistic mode (KREL=0)'
          WRITE (6,*) ' Running option XCPL will be ignored'
          WRITE (6,*)

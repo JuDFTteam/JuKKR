@@ -1,19 +1,39 @@
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/calcsph.f and version_long_2015-04-22/ALL_FORT_LINKED/calcsph.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/calctmat.f and version_long_2015-04-22/ALL_FORT_LINKED/calctmat.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/cheb2oldgrid.f90 and version_long_2015-04-22/ALL_FORT_LINKED/cheb2oldgrid.f90 differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/etotb1.f and version_long_2015-04-22/ALL_FORT_LINKED/etotb1.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/kkrmat01.f and version_long_2015-04-22/ALL_FORT_LINKED/kkrmat01.f differ
-Only in version_long_2015-04-22/ALL_FORT_LINKED/: kkrmat01save.f
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/main0.f and version_long_2015-04-22/ALL_FORT_LINKED/main0.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/main1b.f and version_long_2015-04-22/ALL_FORT_LINKED/main1b.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/main1c.f and version_long_2015-04-22/ALL_FORT_LINKED/main1c.f differ
-Only in version_long_2015-04-22/ALL_FORT_LINKED/: renorm_lly_080415.f
-Only in version_long_2015-04-22/ALL_FORT_LINKED/: renorm_lly_250215.f
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/renorm_lly.f and version_long_2015-04-22/ALL_FORT_LINKED/renorm_lly.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/rhoval0.f and version_long_2015-04-22/ALL_FORT_LINKED/rhoval0.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/rhoval.f and version_long_2015-04-22/ALL_FORT_LINKED/rhoval.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/rhovalnew.f and version_long_2015-04-22/ALL_FORT_LINKED/rhovalnew.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/rinput13.f90 and version_long_2015-04-22/ALL_FORT_LINKED/rinput13.f90 differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/rllsll.f90 and version_long_2015-04-22/ALL_FORT_LINKED/rllsll.f90 differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/startb1.f and version_long_2015-04-22/ALL_FORT_LINKED/startb1.f differ
+
 Files reference_code_JMcode_2015_03_10/ALL_FORT_LINKED/tmat_newsolver.f and version_long_2015-04-22/ALL_FORT_LINKED/tmat_newsolver.f differ
+
+
+Only in version_long_2015-04-22/ALL_FORT_LINKED/: kkrmat01save.f
+
+Only in version_long_2015-04-22/ALL_FORT_LINKED/: renorm_lly_080415.f
+
+Only in version_long_2015-04-22/ALL_FORT_LINKED/: renorm_lly_250215.f
+

@@ -1,4 +1,4 @@
-      SUBROUTINE RHOVAL0(EZ,WEZ,DRDI,RMESH,IPAN,IRCUT,
+      SUBROUTINE RHOVAL0(EZ,WEZ,DRDI,RMESH,IPAN,IRCUT,IRWS,
      &                  THETAS,LMAX,DOS0,DOS1)
 C
       IMPLICIT NONE
@@ -19,7 +19,7 @@ C     .. Parameters ..
       PARAMETER ( CONE=(1.D0,0.D0),CZERO=(0.D0,0.D0),CI=(0.D0,1.D0) )
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER IPAN,LMAX
+      INTEGER IPAN,LMAX,IRWS
       DOUBLE COMPLEX EZ,WEZ,DOS0,DOS1
 C     ..
 C     .. Array Arguments ..
@@ -47,7 +47,7 @@ C
          CIEK=(0.0D0,1.0D0)*EK
 C
 C=======================================================================
-      DO IR = 2,IRMD
+      DO IR = 2,IRWS
         CALL BESHAN(HANKWS,BESSJW,BESSYW,RMESH(IR)*EK,LMAXD1)
         DO L = 0,LMAXD
           PZ(IR,L) = BESSJW(L)*RMESH(IR)
@@ -59,13 +59,13 @@ C=======================================================================
           CDEN0(1,L1) = (0.0D0,0.0D0)
           CDEN1(1,L1) = (0.0D0,0.0D0)
       END DO
-      DO IR = 2,IRMD
+      DO IR = 2,IRWS
          CDEN0(IR,0) = EK*PZ(IR,0)*QZ(IR,0)
          CDEN1(IR,0) = EK*PZ(IR,0)**2*(0.D0,-1.D0)
          CDEN1(IR,LMAXD1) = CIEK*RMESH(IR)**2
       END DO  
       DO L1 = 1,LMAXD
-        DO IR = 2,IRMD
+        DO IR = 2,IRWS
           CDEN0(IR,L1) = EK*PZ(IR,L1)*QZ(IR,L1)*(L1+L1+1)
           CDEN1(IR,L1) = EK*PZ(IR,L1)**2*(0.D0,-1.D0)*(L1+L1+1)
         END DO  
@@ -73,7 +73,7 @@ C=======================================================================
 c
       DO L1 = 0,LMAXD1 !LMAXD1
         IF (IPAN.GT.1) THEN
-          DO IR = IMT1 + 1,IRMD
+          DO IR = IMT1 + 1,IRWS
             CDEN0(IR,L1) = CDEN0(IR,L1)*THETAS(IR-IMT1,1)*C0LL
             CDEN1(IR,L1) = CDEN1(IR,L1)*THETAS(IR-IMT1,1)*C0LL
           END DO

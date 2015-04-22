@@ -1,7 +1,8 @@
       SUBROUTINE RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
                         NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
                         NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
-                        CMODERLL,CMODESLL,CMODETEST,USE_SRATRICK1 )
+                        CMODERLL,CMODESLL,CMODETEST,USE_SRATRICK1,      &
+                        ALPHA) ! LLY
 ! ************************************************************************
 ! radial wave functions by the integral equation method of
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -117,6 +118,7 @@ IMPLICIT NONE
       LOGICAL TEST
       INTEGER :: IERROR,USE_SRATRICK,USE_SRATRICK1
       INTEGER,PARAMETER  :: DIRECTSOLV=1
+      DOUBLE COMPLEX ALPHA(LMSIZE,LMSIZE) ! LLY
 
 
 !     .. External Subroutines ..
@@ -682,6 +684,11 @@ IMPLICIT NONE
       CALL ZGETRI(LMSIZE,ALLP(1,1,NPAN),LMSIZE,IPIV,WORK,LMSIZE*LMSIZE,INFO)   !invert alpha -> transformation matrix RLL=alpha^-1*RLL
       CALL ZGEMM('N','N',LMSIZE,LMSIZE,LMSIZE,CONE/GMATPREFACTOR,BLLP(1,1,NPAN), &      ! calc t-matrix TLL = BLL*alpha^-1 
                   LMSIZE,ALLP(1,1,NPAN),LMSIZE,CZERO,TLLP,LMSIZE)
+      DO LM1=1,LMSIZE                          ! LLY
+       DO LM2=1,LMSIZE                         ! LLY
+        ALPHA(LM1,LM2)=ALLP(LM1,LM2,NPAN)      ! LLY
+       ENDDO                                   ! LLY
+      ENDDO                                    ! LLY
 
       DO NM = 1,NRMAX
       CALL ZGEMM('N','N',LMSIZE2,LMSIZE,LMSIZE,CONE,ULL(1,1,NM), &

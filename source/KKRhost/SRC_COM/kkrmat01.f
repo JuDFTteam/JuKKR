@@ -393,10 +393,11 @@
             !     --> Perform the inversion of matrix M
             !     the output is the scattering path operator TAU stored in GLLKE
             !     Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
- 
-
+            IF (LLY.NE.0) THEN ! If LLY, full inversion is needed
+            CALL INVERSION(GLLKE,0,ICHECK) ! LLY
+            ELSE
             CALL INVERSION(GLLKE,INVMOD,ICHECK)
-
+            ENDIF
             ! ----------------------------------------------------------
             ! LLY Lloyd ----------------------------------------------------------
             IF (LLY.NE.0) THEN 
@@ -443,6 +444,23 @@
                      DGLLKE(IL1:IL2,JL1:JL2) = GAUX2(1:LMMAXD,1:LMMAXD)
                   ENDDO
                ENDDO
+
+c full matrix multiple
+c            ALLOCATE(GLLKE0(ALM,ALM))
+c            GLLKE0=CZERO
+c            DO I1=1,NAEZ
+c               DO LM1 = 1,LMMAXD
+c                  DO LM2 = 1,LMMAXD
+c                     IL1 = LMMAXD*(I1-1)+LM1
+c                     IL2 = LMMAXD*(I1-1)+LM2
+c                     GLLKE0(IL1,IL2)= T_AUX(LM1,LM2,I1)
+c                  ENDDO
+c               ENDDO
+c            ENDDO
+c            CALL ZGEMM('N','N',ALM,ALM,ALM,CONE,GREFLLKE,
+c     &                 ALM,GLLKE0,ALM,CONE,DGLLKE,ALM)
+c            DEALLOCATE(GLLKE0)
+
                ! Now array DGLLKE contains 
                ! ( dGref/dE + Gref * (dt/dE - dtref/dE) Deltat^-1 )
                ! Build trace of tau * DGLLKE, -tau is conained in GLLKE.
@@ -453,7 +471,7 @@
                   ENDDO
                ENDDO
                LLY_GRTR_K = TRACE
-              
+
             ENDIF ! (LLY.NE.0)
             ! LLY Lloyd ----------------------------------------------------------
             ! ----------------------------------------------------------
@@ -508,7 +526,7 @@
          ! ======================================================================
          IF (LLY.NE.0) LLY_GRTR =                                   ! LLY Lloyd Integration
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
-
+         
 
 
 !OMPI END IF

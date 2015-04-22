@@ -80,24 +80,32 @@ do while (in<=npan_tot)
 
   do ir=intsub(1,in),intsub(2,in)
     ir2=ir+1-intsub(1,in)
-    !    The following was numerically inaccurate, changed to halfsum & halfdiffinv. Phivos 22.07.2014
-    !    rmeshnorm(ir2)=(  2.d0*rmesh(ir)-( rpan_intervall(in) + rpan_intervall(in-1) )  ) &
-    !                                / ( rpan_intervall(in) - rpan_intervall(in-1) )
-    !    The following was accurate but recalculating sum and difference too many times.
-    !    rmeshnorm(ir2)=(  rmesh(ir)- rpan_intervall(in) + rmesh(ir) - rpan_intervall(in-1)   ) &
-    !                                / ( rpan_intervall(in) - rpan_intervall(in-1) )
-    rshift = rmesh(ir) - halfsum
-    rmeshnorm(ir2) = rshift * halfdiffinv
-    ! Value should not be outside interval [-1,+1]:
-    if (abs(rmeshnorm(ir2))>1.0D0) then
-       if (abs(rmeshnorm(ir2))-1.0D0<tol) then                                                ! change Long 2
-          rmeshnorm(ir2)=sign(1.0D0,rmeshnorm(ir2)) ! set to +/- 1
-       else
-          write(*,*) 'cheb2oldgrid: argument of chebyshev plynomial exceeds interval [-1,+1]:',rmeshnorm(ir2)
-          stop 'cheb2oldgrid'
-       end if
+    rmeshnorm(ir2)=(2*rmesh(ir)-(rpan_intervall(in)+rpan_intervall(in-1))) &
+                                    /(rpan_intervall(in)-rpan_intervall(in-1))
+    if (abs(rmeshnorm(ir2))>1.0D0 .and. abs(rmeshnorm(ir2))-1.0D0<10e-14) then
+      rmeshnorm(ir2)=sign(1.0D0,rmeshnorm(ir2))
     end if
-  end do
+   enddo
+!  do ir=intsub(1,in),intsub(2,in)
+!    ir2=ir+1-intsub(1,in)
+!    !    The following was numerically inaccurate, changed to halfsum & halfdiffinv. Phivos 22.07.2014
+!    !    rmeshnorm(ir2)=(  2.d0*rmesh(ir)-( rpan_intervall(in) + rpan_intervall(in-1) )  ) &
+!    !                                / ( rpan_intervall(in) - rpan_intervall(in-1) )
+!    !    The following was accurate but recalculating sum and difference too many times.
+!    !    rmeshnorm(ir2)=(  rmesh(ir)- rpan_intervall(in) + rmesh(ir) - rpan_intervall(in-1)   ) &
+!    !                                / ( rpan_intervall(in) - rpan_intervall(in-1) )
+!    rshift = rmesh(ir) - halfsum
+!    rmeshnorm(ir2) = rshift * halfdiffinv
+!    ! Value should not be outside interval [-1,+1]:
+!    if (abs(rmeshnorm(ir2))>1.0D0) then
+!       if (abs(rmeshnorm(ir2))-1.0D0<tol) then                                                ! change Long 2
+!          rmeshnorm(ir2)=sign(1.0D0,rmeshnorm(ir2)) ! set to +/- 1
+!       else
+!          write(*,*) 'cheb2oldgrid: argument of chebyshev plynomial exceeds interval [-1,+1]:',rmeshnorm(ir2)
+!          stop 'cheb2oldgrid'
+!       end if
+!    end if
+!  end do
 
 
   allocate(CCmatrix(intsub(2,in)-intsub(1,in)+1,0:ncheb))

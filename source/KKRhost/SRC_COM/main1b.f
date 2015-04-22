@@ -112,6 +112,7 @@ C     .. GINP   = cluster GF (ref. syst.)
      &               TRALPHAREF(IEMXD),                                ! LLY Lloyd  
      &               CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD)         ! LLY Lloyd
 C     .. effective (site-dependent) Delta_t^(-1) matrix ..
+      DOUBLE COMPLEX WN2(LMGF0D,LMGF0D)                  ! LLY
       DOUBLE COMPLEX MSST(LMMAXD,LMMAXD,NATYPD)
       DOUBLE COMPLEX LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      &               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
@@ -141,6 +142,7 @@ C     ..
       INTEGER KMESH(IEMXD),NOFKS(MAXMSHD)
       DOUBLE PRECISION BZKP(3,KPOIBZ,MAXMSHD)
       DOUBLE PRECISION VOLCUB(KPOIBZ,MAXMSHD),VOLBZ(MAXMSHD)
+      DOUBLE COMPLEX TR1(IEMXD,NATYPD)
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 C     ..
@@ -438,7 +440,6 @@ C
          DO 360 IE = 1,IELAST
 CMPI        IF( MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1) ) THEN
 C
-
             if (t_tgmat%gref_to_file) then
                READ (68,REC=IE) GINP
             else
@@ -463,7 +464,7 @@ C
             ELSE
                DO I1 = 1,NREF
                   CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
-     &                          WN1,DTREFLL(1,1,I1),               ! LLY Lloyd
+     &                          WN1,WN2,               ! LLY Lloyd
      &                          ALPHAREF(0,I1),DALPHAREF(0,I1),    ! LLY Lloyd
      &                          LMAXD+1,LMGF0D)
 C------------------------------------------------------------
@@ -513,8 +514,8 @@ C **********************************************************************
 
             END DO
             
-            IF (LLY.NE.0.AND.ISPIN.EQ.1)                                  ! LLY
-     &                            READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
+            IF (LLY.NE.0.AND.ISPIN.EQ.1)                            ! LLY
+     &                      READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
 C ------------------------------------------------------------------------
 C
 C --> setting up of Delta_t moved to < KLOOPZ1 >
@@ -696,15 +697,18 @@ c read in Green function of reference system
 c construct t matrix for reference system (now is always double matrix)
        DO I1 = 1,NREF
         CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
-     +                WN1,DTREFLL(1,1,I1),                    ! LLY Lloyd
-     &                ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY Lloyd
+     +                WN1,WN2,                                ! LLY
+     &                ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
      &                LMAXD+1,LMGF0D)
         DO I=1,LM1
          TREFLL(I,I,I1) = WN1(I,I)
          TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
+         DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
+         DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
         ENDDO
        ENDDO ! I1
-        
+       TRALPHA(IE,NSPINDD)=CZERO
+       TRALPHAREF(IE)=CZERO
 c read in t matrix
 
        LREAD = .FALSE.
@@ -736,8 +740,27 @@ c rotate t-matrix from local to global frame
            TSST(LM1,LM2,I1)=TMAT(LM1,LM2)
           ENDDO
          ENDDO
+
+       IF (LLY.NE.0) THEN
+        READ(691,REC=IREC) TMAT ! LLY
+        CALL ROTATEMATRIX(TMAT,THETA,PHI,LMGF0D,0) ! LLY
+         DO LM1=1,LMMAXD
+          DO LM2=1,LMMAXD
+           DTMATLL(LM1,LM2,I1)=TMAT(LM1,LM2) ! LLY
+          ENDDO
+         ENDDO
+         READ(692,REC=IREC) TRALPHA1
+         TRALPHA(IE,NSPINDD)=TRALPHA(IE,NSPINDD)+TRALPHA1 ! LLY
+         TRALPHA1=CZERO
+          DO L1=0,LMAX
+           TRALPHA1=TRALPHA1+(2*L1+1)*
+     &              DALPHAREF(L1,REFPOT(I1))/ALPHAREF(L1,REFPOT(I1)) ! LLY
+          ENDDO
+          TRALPHAREF(IE)=TRALPHAREF(IE)+TRALPHA1 ! LLY
+       ENDIF ! LLY
        ENDDO ! I1
        CLOSE(10)
+       IF (LLY.NE.0) READ(682,FMT='(2E24.16)') LLY_G0TR(IE) ! LLY
 
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
@@ -817,6 +840,18 @@ c       STOP
             ENDIF               ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  220     CONTINUE               ! IQ = 1,NQ                                         ! qdos ruess
 
+            IF (LLY.NE.0) THEN                                      ! LLY 
+
+               CDOS_LLY(IE,1) =   TRALPHA(IE,1)                     ! LLY
+     &                - LLY_GRTR(IE,1) / VOLBZ(1) + 2d0*LLY_G0TR(IE)    ! LLY 
+
+               CDOS_LLY(IE,1) = CDOS_LLY(IE,1) / PI                 ! LLY 
+
+               CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)      ! LLY 
+
+
+            ENDIF                                                   ! LLY 
+
  460  CONTINUE                  ! IE=1,IELAST
       
       ENDIF
@@ -833,19 +868,26 @@ C
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
          OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')             ! LLY Lloyd
          OPEN (702,FILE='cdosref_lly.dat',FORM='FORMATTED')              ! LLY Lloyd
-         DO IE = 1,IELAST                                                ! LLY Lloyd
-           WRITE(702,FMT='(10E25.16)') DREAL(EZ(IE)),CDOSREF_LLY(IE),    ! LLY Lloyd
+         DO IE = 1,IELAST                                                ! LLY
+           WRITE(702,FMT='(10E25.16)') DREAL(EZ(IE)),CDOSREF_LLY(IE),    ! LLY
      &                TRALPHAREF(IE),LLY_G0TR(IE)
-         ENDDO                                                           ! LLY Lloyd
-         DO ISPIN = 1,NSPIN                                              ! LLY Lloyd
-         DO IE = 1,IELAST                                                ! LLY Lloyd
-            WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,ISPIN) ! LLY Lloyd
-     &      ,TRALPHA(IE,ISPIN),LLY_G0TR(IE),LLY_GRTR(IE,ISPIN)           ! LLY Lloyd
-         ENDDO                                                           ! LLY Lloyd
-         ENDDO                                                           ! LLY Lloyd
-         CLOSE(701)                                                      ! LLY Lloyd
-         CLOSE(702)                                                      ! LLY Lloyd
-      ENDIF                                                              ! LLY Lloyd
+         ENDDO                                                           ! LLY
+         IF (.NOT.OPT('NEWSOSOL')) THEN
+          DO ISPIN = 1,NSPIN                                             ! LLY
+           DO IE = 1,IELAST                                              ! LLY
+            WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,ISPIN)
+     &      ,TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                        ! LLY
+           ENDDO                                                         ! LLY
+          ENDDO                                                          ! LLY
+         ELSE                         
+          DO IE = 1,IELAST                                               ! LLY
+           WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,1)     
+     &      ,TRALPHA(IE,1),LLY_GRTR(IE,1)                                ! LLY
+          ENDDO                                                          ! LLY
+         ENDIF ! .NOT.OPT('NEWSOSOL')                                    ! LLY
+         CLOSE(701)                                                      ! LLY
+         CLOSE(702)                                                      ! LLY
+      ENDIF                                                              ! LLY
 C
 CMPI  IF( MYRANK.EQ.0 ) THEN
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -875,6 +917,10 @@ C     Finished first qdos run. Now re-run the whole kkr1b program to
 C     calculate the GF for every energy (defined in inputcard) and 
 C     kpoint (defined in qvec.dat)
       IQDOSRUN=IQDOSRUN+1                          ! qdos ruess
+      CLOSE(681)
+      CLOSE(682)
+      CLOSE(691)
+      CLOSE(692)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
 C ----------------------------------------------------------------------C
 CT3E  CALL SYSTEM_CLOCK(MEND)

@@ -139,8 +139,9 @@ C
 C ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+      WRITE(6,*) 'atom: ',I1
       DO IE = 1,IELAST
-         WRITE(*,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
+!          WRITE(*,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
 CMPI     IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
 
 
@@ -163,9 +164,8 @@ CMPI     IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
             TMAT0(1:LMMAXD,1:LMMAXD) = CZERO
             ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
 
-
             ERYD = EZ(IE) + SIGNDE * DELTAE / 2.D0 ! LLY
-
+            WRITE(6,*) 'energy:',IE,'',ERYD
 C
 C=======================================================================
 C non/scalar-relativistic OR relativistic
@@ -234,7 +234,6 @@ C
      &           DTMATLL(1:LMMAXD,1:LMMAXD,IE) / DELTAE
             DALPHALL(1:LMMAXD,1:LMMAXD) = 
      &           DALPHALL(1:LMMAXD,1:LMMAXD) / DELTAE
-
             ! LLY Calculate Trace [alpha^-1 * d alpha/dE] for Lloyd's formula
             ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
             AUX(1:LMMAXD,1:LMMAXD) = CZERO
