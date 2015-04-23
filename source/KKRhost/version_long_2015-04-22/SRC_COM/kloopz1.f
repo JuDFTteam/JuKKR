@@ -306,6 +306,22 @@ C     copy read-in cpa t-matrix but only after fort.37 was created in first run 
          MSSQ(:,:,:) = TQDOS(:,:,:) ! lmmaxd,lmmaxd,naezd                       !qdos ruess
       ENDIF
 C
+!$omp critical
+!       write(45454545,*) 'line1',BZKP,
+!     & 'line1.1',NOFKS,
+!     & 'line1.2',GS,
+!     & 'line1.3',VOLCUB,
+!     &  'line2',MSSQ,NSHELL(0),NSDIA,
+!     &              'line3',ALAT,NSYMAT,NAEZ,
+!     & 'line4',NACLSMAX,RR,
+!     & 'line6',LEFTTINVLL(1,1,1,ISPIN),
+!     &              'line7',RIGHTTINVLL(1,1,1,ISPIN),VACFLAG,
+!     &              'line8',NLBASIS,NRBASIS,FACTL,
+!     & 'line9',ICHECK,INVMOD,IDECI,
+!     &              'line10',SRREL,IRREL,NRREL,
+!     &          'line11',DTREFLL,DTMATLL,
+!     & 'line12',LLY_GRTR,TRACET,CFCTOR,LLY
+!$omp critical
       CALL KKRMAT01(BZKP,NOFKS,GS,VOLCUB,MSSQ,RROT,NSHELL(0),NSDIA,
      &              ALAT,NSYMAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,
      &              NSH1,NSH2,GINP,RBASIS,RCLS,LEFTTINVLL(1,1,1,ISPIN),
@@ -313,6 +329,20 @@ C
      &              NLBASIS,NRBASIS,FACTL,ICHECK,INVMOD,IDECI,
      &              SRREL,IRREL,NRREL,
      &          DTREFLL,DTMATLL,DGINP,REFPOT,LLY_GRTR,TRACET,CFCTOR,LLY) ! LLY
+!$omp critical
+!       write(54545454,*) 'line1',BZKP,NOFKS,GS,VOLCUB,
+!     &  'line2',MSSQ,NSHELL(0),NSDIA,
+!     &              'line3',ALAT,NSYMAT,NAEZ,
+!     & 'line4',NACLSMAX,RR,
+!     & 'line6',LEFTTINVLL(1,1,1,ISPIN),
+!     &              'line7',RIGHTTINVLL(1,1,1,ISPIN),VACFLAG,
+!     &              'line8',NLBASIS,NRBASIS,FACTL,
+!     & 'line9',ICHECK,INVMOD,IDECI,
+!     &              'line10',SRREL,IRREL,NRREL,
+!     &          'line11',DTREFLL,DTMATLL,
+!     & 'line12',LLY_GRTR,TRACET,CFCTOR,LLY
+!$omp critical
+        !STOP
 C
       NSMAX = NSHELL(0) 
 

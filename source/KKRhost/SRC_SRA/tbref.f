@@ -155,6 +155,7 @@ C ======================================================================
       end if
 
       IF (LLY.NE.0) CLOSE (681)
+      IF (LLY.NE.0) CLOSE (682)
       DEALLOCATE (GINP,DGINP)
 
       END

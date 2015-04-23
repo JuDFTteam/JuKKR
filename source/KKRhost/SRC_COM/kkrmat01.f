@@ -158,14 +158,21 @@
 !-----------------------------------------------------------------------
       ALLOCATE(GLLKE(ALM,ALM),STAT=IU)
       IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE'
+      GLLKE(:,:) = CZERO
       IF (LLY.NE.0) ALLOCATE(DGLLKE(ALM,ALM),STAT=IU) ! LLY Lloyd
       IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKE'
+      DGLLKE(:,:) = CZERO
       IF (LLY.NE.0) ALLOCATE(GREFLLKE(ALM,ALM),STAT=IU) ! LLY Lloyd
       IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GREFLLKE'
+      GREFLLKE(:,:) = CZERO
 
       IF ( OPT('VIRATOMS') ) THEN
          ALLOCATE (GLLKE0V(ALM,ALM),GLLKE0V2(ALM,ALM),
      +        GLLKETV(ALM,LMMAXD),GLLKETV_new(LMMAXD,ALM))
+         GLLKE0V = CZERO
+         GLLKE0V2 = CZERO
+         GLLKETV = CZERO
+         GLLKETV_new = CZERO
       END IF !( OPT('VIRATOMS') ) THEN
 
 
@@ -309,8 +316,10 @@
             !-----------------------------------------------------------------------
             ALLOCATE(GLLKE0(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE0'
+            GLLKE0 = CZERO
             ALLOCATE(GLLKE0M(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE0M'
+            GLLKE0M = CZERO
             !-----------------------------------------------------------------------
             CALL DLKE0(GLLKE0,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -471,6 +480,7 @@ c            DEALLOCATE(GLLKE0)
                   ENDDO
                ENDDO
                LLY_GRTR_K = TRACE
+               !STOP
 
             ENDIF ! (LLY.NE.0)
             ! LLY Lloyd ----------------------------------------------------------

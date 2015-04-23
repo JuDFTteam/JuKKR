@@ -225,6 +225,7 @@ C
 CF90-------------------------------------------------------------
          ALLOCATE (DMSSQ(LMMAXD,LMMAXD,NAEZD),STAT=LM1)
          IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate DMSSQ'
+         DMSSQ(:,:,:) = (0.d0,0.d0)
 CF90-------------------------------------------------------------
          CALL CINIT(LMMAXD*LMMAXD*NAEZD,DMSSQ)
       END IF
@@ -290,6 +291,7 @@ C
 CF90-------------------------------------------------------------
       ALLOCATE (TAUDELQ(LMMAXD,LMMAXD,NSHELL(0)),STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate TAUDELQ'
+      TAUDELQ(:,:,:) = (0.d0,0.d0)
 CF90-------------------------------------------------------------
 C
  100  CONTINUE
@@ -298,6 +300,7 @@ C
 CF90-------------------------------------------------------------
       ALLOCATE (GS(LMMAXD,LMMAXD,NSYMAXD,NSHELL(0)),STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate GS'
+      GS(:,:,:,:) = (0.d0,0.d0)
 CF90-------------------------------------------------------------
 C
 C     copy read-in cpa t-matrix but only after fort.37 was created in first run !qdos ruess
@@ -306,6 +309,7 @@ C     copy read-in cpa t-matrix but only after fort.37 was created in first run 
          MSSQ(:,:,:) = TQDOS(:,:,:) ! lmmaxd,lmmaxd,naezd                       !qdos ruess
       ENDIF
 C
+
       CALL KKRMAT01(BZKP,NOFKS,GS,VOLCUB,MSSQ,RROT,NSHELL(0),NSDIA,
      &              ALAT,NSYMAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,
      &              NSH1,NSH2,GINP,RBASIS,RCLS,LEFTTINVLL(1,1,1,ISPIN),
@@ -315,8 +319,6 @@ C
      &          DTREFLL,DTMATLL,DGINP,REFPOT,LLY_GRTR,TRACET,CFCTOR,LLY) ! LLY
 C
       NSMAX = NSHELL(0) 
-
-
         
 C
 C=========================================================== NS=1,NSMAX
@@ -441,6 +443,7 @@ C
 CF90-------------------------------------------------------------
       ALLOCATE (TAUDELT(LMMAXD,LMMAXD,NSHELL(0)),STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate TAUDELT'
+      TAUDELT(:,:,:) = (0.d0,0.d0)
 CF90-------------------------------------------------------------
       IF ( NCPA.GT.0) THEN
          NSMAX = NATYP

@@ -644,7 +644,9 @@ C
        
 c read in Green function of reference system
        READ (68,REC=IE) GINP
+            !write(989898,*) shape(DGINP),DGINP
        IF (LLY.NE.0) READ(681,REC=IE) DGINP  ! LLY
+            !write(979797,*) shape(DGINP),DGINP
    
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
@@ -736,6 +738,9 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
             DO 220 IQ = 1,NQDOS                               ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 
+       !write(99999,*)
+!   !  & 'line1',DGINP(:,:,:),'line2',CLS(:),
+!   !  & 'line3',ATOM(:,:),'line4',EZOA(:,:) 
             CALL KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,
      &              NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),
      &           VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,RR,RBASIS,EZOA,ATOM,

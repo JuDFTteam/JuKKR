@@ -38693,3 +38693,201 @@ TB-KKR compile script called; options used:
 Compilation completed successfully for all targets
 
 ******************************************************
+
+Wed Apr 22 14:06:15 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+ omp and mpi-mode         : disabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 14:22:47 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+ omp and mpi-mode         : disabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 14:27:25 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 14:42:56 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 16:35:08 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 16:36:43 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 16:48:33 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 17:11:30 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Wed Apr 22 17:28:53 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 09:57:24 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 10:12:02 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 10:27:59 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 10:38:20 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 10:49:06 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 11:08:40 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 11:18:45 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 11:38:23 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************
+
+Thu Apr 23 12:01:25 CEST 2015
+TB-KKR compile script called; options used:
+-------------------------------------------
+         source directory : .
+         executables      : 0 1a 1b 1c 2
+     open mp-mode         : enabled
+
+Compilation completed successfully for all targets
+
+******************************************************

@@ -231,6 +231,7 @@
                IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKEM'
                DGLLKEN(:,:) = CZERO
                !--------------------------------------------------------------------
+               !write(77777,*) 'line1',DGLLKEN,'line2',RR
                CALL DLKE0(DGLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                    EZOA,ATOM,BZKPK,RCLS,DGINP)
                !--------------------------------------------------------------------
@@ -238,11 +239,14 @@
                IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKEM'
                DGLLKEM(:,:) = CZERO
                !--------------------------------------------------------------------
+               !write(88888,*) 'line1',DGLLKEM,'line2',ALAT,NAEZ,
+!     &   NACLSMAX,'line3',RRM,'line4',BZKPK
                CALL DLKE0(DGLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,
      &                    EZOA,ATOM,BZKPK,RCLS,DGINP)
             ENDIF
             ! LLY Lloyd
             !--------------------------------------------------------------------
+               !write(66666,*) 'line1',DGLLKEN,'line2',DGLLKEM
             IF (.NOT.OPT('NEWSOSOL')) THEN
 
                DO I2=1,ALM
@@ -412,6 +416,8 @@
                ! LLY  Quantity dtref/dE is in array DTREFLL
 
                ! First set up (dt/dE - dtref/dE) Deltat^-1, store in array t_aux
+!               write(33333,*) CFCTOR,'line1',DTREFLL,'line2',DTMATLL,
+!     &   'line3',TINVLL
                DO I1 = 1,NAEZ
                   ! GAUX1 = dt/dE-dtref/dE
                   GAUX1(1:LMMAXD,1:LMMAXD) = (1.D0/CFCTOR) *
@@ -423,6 +429,9 @@
      &                    GAUX1,LMMAXD,GAUX2,LMMAXD,CZERO,GAUX3,LMMAXD)
                   T_AUX(1:LMMAXD,1:LMMAXD,I1) = GAUX3(1:LMMAXD,1:LMMAXD)
                ENDDO
+!               write(22222,*) T_AUX 
+!               write(44444,*) GREFLLKE
+!               write(55555,*) DGLLKE
 
                ! Now perform dGref/dE + Gref * t_aux 
                ! (Gref is ALM*ALM ; t_aux site-diagonal LMMAXD*LMMAXD)
@@ -444,6 +453,7 @@
                      DGLLKE(IL1:IL2,JL1:JL2) = GAUX2(1:LMMAXD,1:LMMAXD)
                   ENDDO
                ENDDO
+               !write(11111,*) DGLLKE
 
 c full matrix multiple
 c            ALLOCATE(GLLKE0(ALM,ALM))
@@ -468,9 +478,12 @@ c            DEALLOCATE(GLLKE0)
                DO IL1 = 1,ALM
                   DO IL2 = 1,ALM
                      TRACE = TRACE + GLLKE(IL1,IL2) * DGLLKE(IL2,IL1)
+                     !IF (LLY.NE.0) write(*,*) 
+     &               !  TRACE,IL1,IL2,GLLKE(IL1,IL2),DGLLKE(IL2,IL1)
                   ENDDO
                ENDDO
                LLY_GRTR_K = TRACE
+               !STOP
 
             ENDIF ! (LLY.NE.0)
             ! LLY Lloyd ----------------------------------------------------------

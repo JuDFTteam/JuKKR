@@ -688,6 +688,7 @@ c read in Green function of reference system
        else
           ginp(:,:,:) = t_tgmat%gref(:,:,:,ie)
        end if
+       IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
             WRITE (6,'(A,I3,A,2(1X,F10.6),A,I3)') 

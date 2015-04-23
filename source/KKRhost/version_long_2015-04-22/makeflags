@@ -3,7 +3,7 @@
  LD = $(FC)
 #FFLAGS = -r8 -CB -check all -traceback -g -heap-arrays -mcmodel=large
 #FFLAGS = -O2 -c -r8 -heap-arrays -mcmodel=large  # for laaarge memory requiremenrs, use -heap-arrays -mcmodel=large
-FFLAGS = -O2 -c -r8 -check all 
+FFLAGS = -O2 -c -r8 #-check all 
 OPENMPFLAGS = -openmp
 #libs=-L/usr/local/nag/lib -lnag -llapack_ifort -lblas_ifort
 

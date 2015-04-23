@@ -80,7 +80,7 @@ C     general settings
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
       PARAMETER ( LMAXD = 3 )
-      PARAMETER ( IEMXD = 450 )
+      PARAMETER ( IEMXD = 101 )
 c      PARAMETER ( IRMD = 900, IRNSD = 890 )
       PARAMETER ( IRMD = 484, IRNSD = 208 )
       PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
@@ -88,14 +88,14 @@ c      PARAMETER ( IRMD = 900, IRNSD = 890 )
       PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 36 )
+      PARAMETER ( NAEZD = 4  )
       PARAMETER ( NATYPD = NAEZD )
 c     PARAMETER ( NSHELD = NATYPD + 155)
       PARAMETER ( NSHELD = NATYPD + 200)
       PARAMETER ( NATOMIMPD = 50)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD =  6 )
-      PARAMETER ( NEMBD = 20 )
+      PARAMETER ( NPRINCD =  1 )
+      PARAMETER ( NEMBD = 4 )
 C ---------------------------------------------------------------------
 C     non-spherical potential 
       PARAMETER ( NCELLD = NAEZD, IPAND = 20 )

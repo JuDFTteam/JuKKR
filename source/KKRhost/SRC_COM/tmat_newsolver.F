@@ -279,6 +279,10 @@ c         STOP
          else
             t_tgmat%tmat(:,:,irec) = TMAT_out(:,:,ie)
          end if
+         IF (LLY.NE.0) THEN
+          WRITE(691,REC=IREC) DTMAT_OUT(:,:,IE)    ! LLY      
+          WRITE(692,REC=IREC) TRAL_OUT(IE)     ! LLY     
+         ENDIF
        ENDDO
 
        DEALLOCATE(VINS)
