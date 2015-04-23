@@ -1,1 +1,0 @@
-../SRC_COM/symetrmat.f

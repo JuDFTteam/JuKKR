@@ -1,1 +1,0 @@
-../SRC_SRA/ewald2d.f

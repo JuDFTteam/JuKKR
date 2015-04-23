@@ -1,1 +1,0 @@
-../SRC_REL/checkrmat.f

@@ -1,1 +1,0 @@
-../SRC_COM/wrldaupot.f

@@ -1,1 +1,0 @@
-../SRC_SRA/ddot1.f

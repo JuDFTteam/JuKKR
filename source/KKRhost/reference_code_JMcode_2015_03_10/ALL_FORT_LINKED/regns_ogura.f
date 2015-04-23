@@ -1,1 +1,0 @@
-../SRC_SRA/regns_ogura.f
