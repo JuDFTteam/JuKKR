@@ -176,9 +176,9 @@ C
       WRITE (67) ITSCF,SCFSTEPS,E1,E1,CMOMHOST
       CLOSE (67)
       
-      ! put information about scf steps into type0
-      type0%i_iteration = ITSCF
-      type0%N_iteration = SCFSTEPS
+      ! put information about scf steps into t_inc
+      t_inc%i_iteration = ITSCF
+      t_inc%N_iteration = SCFSTEPS
 
 C ------------------------------------------------------------- itermdir
 C                                               data in this file change
@@ -337,6 +337,7 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%LMGF0D = (LMAXD+1)**2  ! see main1b
       t_inc%NCLSD  = NCLS
       t_inc%NACLSD = NACLSMAX
+      IF(OPT('NEWSOSOL')) t_inc%NEWSOSOL = .true.
       
       !set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
       if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.

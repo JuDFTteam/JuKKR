@@ -4,8 +4,27 @@
      +                      RPAN_INTERVALL,IPAN_INTERVALL,
      +                      RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,
      +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB)
+#ifdef CPP_OMP
        use omp_lib
-       use mod_types, only: t_tgmat
+#endif
+       
+#ifdef CPP_MPI
+      use mpi
+#endif
+      
+      use mod_types, only: t_tgmat, t_inc
+#ifdef CPP_MPI
+     &                     ,gather_tmat, gather_gref,
+     &                      t_mpi_c_grid, save_t_mpi_c_grid,
+     &                      get_ntot_pT_ioff_pT_2D 
+#endif
+      use mod_mympi, only: myrank, nranks, master
+#ifdef CPP_MPI
+     &                     ,find_dims_2d,
+     &                     distribute_linear_on_tasks,
+     &                     create_subarr_comm,
+     &                     mympi_main1c_comm_newsosol
+#endif
        IMPLICIT NONE
        include 'inc.p'
        INTEGER NSPIN,NSRA,LMAX,IEND,IPOT,IELAST,NPAN_TOT,NCHEB,
@@ -82,6 +101,10 @@
        INTEGER LRECGFLLE,IERR                           ! lmlm-dos
        ! OMP - number of threads, thread id
        integer nth,ith
+#ifdef CPP_MPI
+      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+#endif
 ! determine if omp is used
 !$omp parallel shared(nth,ith)
 !$omp single
@@ -89,10 +112,11 @@
        nth = 1
 #ifdef CPP_OMP
        nth = omp_get_num_threads()
+       write(*,*) 'nth =',nth
 #endif
 !$omp end single
 !$omp end parallel
-       write(*,*) 'nth =',nth
+
 
        PI=4d0*DATAN(1d0)
        IRMDNEW= NPAN_TOT*(NCHEB+1)
@@ -121,6 +145,7 @@ c initial allocate
         ALLOCATE(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ENDIF
 
+
        ALLOCATE(HLK(4*(LMAX+1),IRMDNEW,0:nth-1))
        ALLOCATE(JLK(4*(LMAX+1),IRMDNEW,0:nth-1))
        ALLOCATE(HLK2(4*(LMAX+1),IRMDNEW,0:nth-1))
@@ -142,7 +167,7 @@ c initial allocate
        ALLOCATE(R2ORBC(IRMDNEW,LMPOTD,4,0:nth-1))
        ALLOCATE(CDENTEMP(IRMDNEW,0:nth-1))
        ALLOCATE(GFLLE_PART(LMMAXSO,LMMAXSO,0:nth-1))
-       ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,1))
+       ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,1))
        ALLOCATE(DEN(0:LMAXD1,IEMXD,2,1),DENLM(LMMAXD,IEMXD,2,1))
        RHO2NSC=CZERO
        RHO2NSC_loop=CZERO
@@ -192,7 +217,7 @@ C        Read BZ path for qdos calculation:                             ! qdos r
          CLOSE(67)                                                      ! qdos ruess
 C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos ruess
          DEALLOCATE(GFLLE,DEN,DENLM)                                    ! qdos ruess
-         ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS))                  ! qdos ruess
+         ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS))                  ! qdos ruess
          ALLOCATE(DEN(0:LMAXD1,IEMXD,2,NQDOS),
      +            DENLM(LMMAXD,IEMXD,2,NQDOS))
 3000  IF (IERR.NE.0) STOP 'ERROR READING ''qvec.dat'''                  ! qdos ruess
@@ -206,7 +231,14 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
       ENDIF                                                             ! lmlm-dos ruess
 
 c energy loop
-       WRITE(6,*) 'atom: ',I1
+       if(myrank==master) WRITE(6,*) 'atom: ',I1
+#ifdef CPP_MPI
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+         ie_end = t_mpi_c_grid%ntot2
+
+       DO ie_num=1,ie_end
+         IE = ie_start+ie_num
+#else
 ! omp: start parallel region here
 !$omp parallel do default(none)
 !$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
@@ -226,6 +258,8 @@ c energy loop
 !$omp& shared(t_tgmat)
 !$omp& private(alphasph,alphall)
        DO IE=1,IELAST
+#endif
+       
          if (nth>=1) then
 #ifdef CPP_OMP
             ith = omp_get_thread_num()
@@ -515,8 +549,10 @@ c get orbital moment
           ENDIF
          ENDDO
         ENDDO ! IORB
+        
        ENDDO ! IE loop 
 !$omp end parallel do
+
 ! omp: move sum from rhooutnew here after parallel calculation
       DO IR=1,IRMDNEW
         DO LM1=1,LMPOTD
@@ -532,6 +568,17 @@ c get orbital moment
       DO ith=0,nth-1
          R2NEFC(:,:,:) = R2NEFC(:,:,:) + R2NEFC_loop(:,:,:,ith)
       ENDDO
+      
+#ifdef CPP_MPI
+      call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
+     &                                LMMAXD,LMMAXSO,IEMXD,NQDOS,
+     &                            den,denlm,gflle,rho2nsc,r2nefc,
+     &                            rho2int,espv,muorb,denorbmom,
+     &                            denorbmomsp,denorbmomlm,denorbmomns)
+      
+      !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
+      if(myrank==master) then
+#endif
 
 ! omp: moved write-out of dos files out of parallel energy loop
 c Write out qdos and lm-dos:                                            ! lm-dos
@@ -624,6 +671,8 @@ c write
 c write gflle to file                                                    ! lmlm-dos
        WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
+       
+       if(myrank==master) write(516974,*) 'l1',RHO2NSC,'l2',R2NEFC
 
        ALLOCATE(RHOTEMP(IRMDNEW,LMPOTD))
        ALLOCATE(RHONEWTEMP(IRWS,LMPOTD))
@@ -698,7 +747,8 @@ c calculate new THETA and PHI for non-colinear
         ENDIF
 c          THETANEW=ACOS(MOMENT(3)/TOTMOMENT)
 c          PHINEW=DATAN2(MOMENT(2),MOMENT(1))
-        WRITE(6,*) 'moment',MOMENT(1),MOMENT(2),MOMENT(3)
+!         WRITE(6,*) 'moment',MOMENT(1),MOMENT(2),MOMENT(3)
+        WRITE(6,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
 c        WRITE(6,*) 'total moment',TOTMOMENT,TOTXYMOMENT
         WRITE(6,*) THETANEW,PHINEW
         WRITE(11,*) THETANEW,PHINEW
@@ -724,12 +774,22 @@ C
        CALL DAXPY(IDIM,1.0D0,R2NEF(1,1,2),1,R2NEF(1,1,1),1)
 
        DO LM1=0,LMAXD1
-       DO IE=1,IEMXD
-       DO JSPIN=1,NSPIN
-       DEN_out(LM1,IE,JSPIN) =  DEN(LM1,IE,JSPIN,1)
+         DO IE=1,IEMXD
+           DO JSPIN=1,NSPIN
+             DEN_out(LM1,IE,JSPIN) =  DEN(LM1,IE,JSPIN,1)
+           ENDDO
+         ENDDO
        ENDDO
-       ENDDO
-       ENDDO
+       
+#ifdef CPP_MPI
+      endif !(myrank==master)
+      
+      ! communicate den_out to all processors
+      IDIM = (LMAXD+2)*IEMXD*2
+      call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
+     &               MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
+#endif
 
        DEALLOCATE(VINS)
        DEALLOCATE(VNSPLL0)
@@ -755,6 +815,7 @@ C
        DEALLOCATE(CDENTEMP)
        DEALLOCATE(GFLLE_PART)
        DEALLOCATE(GFLLE)
-       DEALLOCATE(DEN,DENLM)
+       DEALLOCATE(DEN)
+       DEALLOCATE(DENLM)
        END 
 

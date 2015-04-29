@@ -3,8 +3,16 @@
      +                        RPAN_INTERVALL,IPAN_INTERVALL,
      +                        RNEW,VINSNEW,THETA,PHI,I1,IPOT,
      &                        LLY,DELTAE)
+#ifdef CPP_OMP
        use omp_lib        ! necessary for omp functions
-       use mod_types, only: t_tgmat
+#endif
+#ifdef CPP_MPI
+       use mpi
+#endif
+       use mod_mympi, only: myrank, nranks, master,
+     &                      distribute_linear_on_tasks
+       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
+
        IMPLICIT NONE
        include 'inc.p'
        INTEGER NSPIN,NSRA,LMAX,IEND,IPOT,IELAST,NPAN_TOT,NCHEB
@@ -29,8 +37,10 @@
      +                   RPAN_INTERVALL(0:NTOTD),
      +                   VINSNEW(NRMAXD,LMPOTD,NSPOTD)
        INTEGER           IPAN_INTERVALL(0:NTOTD)
-       DOUBLE COMPLEX  
-     +   TMATLL(LMMAXSO,LMMAXSO,ielast) 
+!        DOUBLE COMPLEX  
+!      +   TMATLL(LMMAXSO,LMMAXSO,ielast) 
+       DOUBLE COMPLEX  TMATLL(LMMAXSO,LMMAXSO) 
+
    
        INTEGER I1,IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW
        DOUBLE PRECISION THETA,PHI
@@ -41,14 +51,14 @@
        DOUBLE COMPLEX, ALLOCATABLE :: HLK(:,:,:),JLK(:,:,:),
      +                                HLK2(:,:,:),JLK2(:,:,:)
        DOUBLE COMPLEX, ALLOCATABLE :: RLL(:,:,:,:),SLL(:,:,:,:)
-       DOUBLE COMPLEX, ALLOCATABLE :: TMATSPH(:,:), TMAT_OUT(:,:,:)   !tmat_out necessary for parallel ie loop
+       DOUBLE COMPLEX, ALLOCATABLE :: TMATSPH(:,:)!, TMAT_OUT(:,:,:)   !tmat_out necessary for parallel ie loop
        DOUBLE COMPLEX DTMATLL(LMMAXSO,LMMAXSO),TMAT0(LMMAXSO,LMMAXSO) ! LLY
        DOUBLE COMPLEX ALPHALL(LMMAXSO,LMMAXSO), ! LLY
      +                DALPHALL(LMMAXSO,LMMAXSO), ! LLY
      +                ALPHA0(LMMAXSO,LMMAXSO), ! LLY
      +                AUX(LMMAXSO,LMMAXSO)         ! LLY
-       DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:,:),DTMAT_OUT(:,:,:), ! LLY
-     +                                TRAL_OUT(:) ! LLY
+       DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:,:)!,DTMAT_OUT(:,:,:), ! LLY
+!      +                                TRAL_OUT(:) ! LLY
          
        INTEGER JLK_INDEX(2*LMMAXSO)
       ! LLoyd:
@@ -56,6 +66,10 @@
       DOUBLE COMPLEX DELTAE,TRALPHA,IPIV(LMMAXSO)            ! LLY
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
+#ifdef CPP_MPI
+      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+#endif
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
 !$omp parallel shared(nth,ith) 
 !$omp single 
@@ -99,17 +113,39 @@ c initial allocate
        ALLOCATE(TMATSPH(2*(LMAX+1),0:nth-1))
        ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
-       ALLOCATE(TMAT_OUT(LMMAXSO,LMMAXSO,IELAST))
+!        ALLOCATE(TMAT_OUT(LMMAXSO,LMMAXSO,IELAST))
        ALLOCATE(ALPHASPH(2*(LMAX+1),0:nth-1)) ! LLY
-       ALLOCATE(DTMAT_OUT(LMMAXSO,LMMAXSO,IELAST)) ! LLY
-       ALLOCATE(TRAL_OUT(IELAST)) ! LLY
+!        ALLOCATE(DTMAT_OUT(LMMAXSO,LMMAXSO,IELAST)) ! LLY
+!        ALLOCATE(TRAL_OUT(IELAST)) ! LLY
           
 c energy loop
-       WRITE(6,*) 'atom: ',I1,' NSRA:',NSRA
+       if(myrank==master) WRITE(6,*) 'atom: ',I1,' NSRA:',NSRA
 
+#ifdef CPP_MPI
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_col,
+     &                                 t_mpi_c_grid%myrank_col,master,
+     &                                 IELAST,ntot_pT,ioff_pT,.true.)
+        ie_start = ioff_pT(t_mpi_c_grid%myrank_col)
+        ie_end   = ntot_pT(t_mpi_c_grid%myrank_col)
+
+        t_mpi_c_grid%ntot2  = ie_end  !t_mpi_c_grid%nranks_col
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .and. 
+     &            allocated(t_mpi_c_grid%ioff_pT2))) 
+     &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_col-1),
+     &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_col-1))
+        t_mpi_c_grid%ntot_pT2 = ntot_pT !(t_mpi_c_grid%myrank_col)
+        t_mpi_c_grid%ioff_pT2 = ioff_pT !(t_mpi_c_grid%myrank_col)
+        ! now initialize arrays for tmat, gmat, and gref
+        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+
+!        DO IE=ie_start,ie_end
+       DO ie_num=1,ie_end
+       
+         IE = ie_start+ie_num
+#else
 !$omp parallel do default(none) 
 !$omp& private(eryd,ie,i1,ir,irec,nvec,lm1,lm2,gmatprefactor) 
-!$omp& private(jlk_index,tmatll,ith) 
+!$omp& private(jlk_index,tmatll,ith,irec, ie_num) 
 !$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
 !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth) 
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
@@ -120,6 +156,7 @@ c energy loop
 !$omp& private(alpha0,alphall,tmat0,aux,dtmatll,dalphall) 
 !$omp& private(ideriv,ipiv) 
        DO IE=1,IELAST
+#endif
          ! get current thread
          if (nth>=1) then
 #ifdef CPP_OMP
@@ -219,7 +256,8 @@ c add spherical contribution of tmatrix
          ENDIF
           DO LM1=1,LMMAXSO
            DO LM2=1,LMMAXSO
-            TMATLL(LM1,LM2,IE)=TMATLL(LM1,LM2,IE)+TMAT0(LM1,LM2)
+!             TMATLL(LM1,LM2,IE)=TMATLL(LM1,LM2,IE)+TMAT0(LM1,LM2)
+            TMATLL(LM1,LM2)=TMATLL(LM1,LM2)+TMAT0(LM1,LM2)
            ENDDO
           ENDDO          
           DO LM1=1,LMMAXSO
@@ -241,7 +279,7 @@ c         STOP
 ! average values of t-matrix and alpha at e+de and e-de
         DO LM1=1,LMMAXSO        
          DO LM2=1,LMMAXSO        
-          TMATLL(LM1,LM2,IE)=TMATLL(LM1,LM2,IE)/DFLOAT(1+IDERIV) ! LLY
+          TMATLL(LM1,LM2)=TMATLL(LM1,LM2)/DFLOAT(1+IDERIV) ! LLY
           ALPHALL(LM1,LM2)=ALPHALL(LM1,LM2)/DFLOAT(1+IDERIV) ! LLY
          IF (LLY.NE.0) THEN
 ! Contruct derivative of t-matrix and alpha
@@ -262,28 +300,29 @@ c         STOP
         DO LM1=1,LMMAXSO 
          TRALPHA=TRALPHA+AUX(LM1,LM1) ! LLY
         ENDDO
-         DTMAT_OUT(:,:,IE)= DTMATLL(:,:) ! LLY
-         TRAL_OUT(IE)=TRALPHA            ! LLY
         ENDIF ! LLY
-         TMAT_OUT(:,:,IE) = TMATLL(:,:,IE)
+         
+         ! writeout
+!$omp end critial
+
+
+         if (t_tgmat%tmat_to_file) then
+            IREC = IE + IELAST*(I1-1)
+            WRITE(69,REC=IREC) TMATLL(:,:)
+!             write(696969,*) TMATLL(:,:)
+         else
+            irec = ie_num + ie_end * (i1-1)
+            t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
+         end if
+         IF (LLY.NE.0) THEN
+          WRITE(691,REC=IREC) DTMATLL    ! LLY      
+          WRITE(692,REC=IREC) TRALPHA     ! LLY     
+         ENDIF
+!$omp end critial         
+         
        ENDDO ! IE loop 
 !$omp end parallel do
 
-! serial write out after parallel calculation of tmat
-       DO IE=1,IELAST 
-         IREC = IE + IELAST*(I1-1)
-!          WRITE(69,REC=IREC) TMAT_out(:,:,ie)
-!          write(696969,*) TMAT_out(:,:,ie)
-         if (t_tgmat%tmat_to_file) then
-            WRITE(69,REC=IREC) TMAT_out(:,:,ie)
-         else
-            t_tgmat%tmat(:,:,irec) = TMAT_out(:,:,ie)
-         end if
-         IF (LLY.NE.0) THEN
-          WRITE(691,REC=IREC) DTMAT_OUT(:,:,IE)    ! LLY      
-          WRITE(692,REC=IREC) TRAL_OUT(IE)     ! LLY     
-         ENDIF
-       ENDDO
 
        DEALLOCATE(VINS)
        DEALLOCATE(VNSPLL0)
@@ -296,6 +335,6 @@ c         STOP
        DEALLOCATE(TMATSPH)
        DEALLOCATE(RLL)
        DEALLOCATE(SLL)
-       DEALLOCATE(ALPHASPH,DTMAT_OUT,TRAL_OUT) ! LLY
+       DEALLOCATE(ALPHASPH)!,DTMAT_OUT,TRAL_OUT) ! LLY
        END 
 

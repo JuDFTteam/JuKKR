@@ -85,7 +85,7 @@ C     .. Data statements ..
 C     ..
 !       READ(28,FMT='(I5)') MIT
 !       REWIND 28
-      MIT = type0%mit_bry
+      MIT = t_inc%mit_bry
       
       IF (ITDEPT.GT.ITDTHD .OR. ITDTHD.GT.200) CALL RCSTOP('ITDBRY  ')
 
@@ -313,7 +313,7 @@ c
       END IF
       MIT = MIT + 1
       !WRITE(28,FMT='(I5)') MIT
-      type0%mit_bry = MIT
+      t_inc%mit_bry = MIT
       
       REWIND IOBROY + 2
       WRITE (IOBROY+2) (SM1(IJ),IJ=1,IMAP), (FM1(IJ),IJ=1,IMAP)

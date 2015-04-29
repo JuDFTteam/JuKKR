@@ -97,8 +97,8 @@ $(OBJ)/irwsol.o   : $(SRA)/irwsol.f                  ; \
 $(OBJ)/regns.o    : $(SRA)/regns.f                    ; \
 	            $(FC) $(FFLAGS) $(SRA)/regns.f -c -o $@
 
-$(OBJ)/tbref.o    : $(SRA)/tbref.f $(INCP)   ; \
-	              $(FC) $(FFLAGS) $(SRA)/tbref.f -c -o $@
+$(OBJ)/tbref.o    : $(SRA)/tbref.F $(INCP)   ; \
+	              $(FC) $(FFLAGS) $(CPP) $(SRA)/tbref.F -c -o $@
 
 $(OBJ)/wfint.o    : $(SRA)/wfint.f                    ; \
 	            $(FC) $(FFLAGS) $(SRA)/wfint.f -c -o $@
@@ -128,11 +128,11 @@ $(OBJ)/ssum.o         : $(SRA)/ssum.f                       ; \
 
 ##################### sources in COMMON directory ##########
 
-$(OBJ)/main1a.o   : $(COM)/main1a.f  $(INCP) ; \
-	            $(FC) $(FFLAGS) $(COM)/main1a.f -c -o $@
+$(OBJ)/main1a.o   : $(COM)/main1a.F  $(INCP) ; \
+	            $(FC) $(FFLAGS) $(CPP)  $(COM)/main1a.F -c -o $@
 
-$(OBJ)/calctmat.o  : $(COM)/calctmat.f $(INCP)        ; \
-	            $(FC) $(FFLAGS) $(COM)/calctmat.f -c -o $@
+$(OBJ)/calctmat.o  : $(COM)/calctmat.F $(INCP)        ; \
+	            $(FC) $(FFLAGS) $(CPP) $(COM)/calctmat.F -c -o $@
 
 $(OBJ)/initldau.o  : $(COM)/initldau.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/initldau.f -c -o $@

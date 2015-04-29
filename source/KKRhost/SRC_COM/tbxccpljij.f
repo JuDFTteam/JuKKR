@@ -12,7 +12,7 @@ C   *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
 C   *                                                                  *
 C   ********************************************************************
 C
-      use mod_types, only: t_tgmat
+      use mod_types, only: t_tgmat, t_mpi_c_grid
       IMPLICIT NONE
 C     ..
 C     .. Parameters
@@ -71,7 +71,7 @@ CF90CF90-------------------------------------------------------------
      &               TSST(LMMAXD,LMMAXD,NATYP,2),W1(LMMAXD,LMMAXD),
      &               W2(LMMAXD,LMMAXD),W3(LMMAXD,LMMAXD)
       DOUBLE PRECISION RSH(NSHELD),PI
-      INTEGER JTAUX(NATYP)
+      INTEGER JTAUX(NATYP), ie_end
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC MAX,SQRT
@@ -213,8 +213,10 @@ C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
 c            write(*,*) 'test brahim 3'
             IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(IT-1)
             if (t_tgmat%tmat_to_file) then
-               READ (IFTMAT,REC=IREC) W1
+               READ (IFTMAT,REC=IREC) W1               
             else
+               ie_end = t_mpi_c_grid%ntot2
+               IREC = IE + ie_end*(ISPIN-1) + ie_end*2*(IT-1)
                W1(:,:) = t_tgmat%tmat(:,:,irec)
             end if
             DO J1 = 1,LMMAXD
@@ -422,12 +424,12 @@ C                           because WGTE ~ -1/pi
 
                   
                END DO
-            END DO
+            END DO   !loop over occupants
 C ----------------------------------------------------------------------
-         END DO
+         END DO   !L1 = 1,NIJCALC(NS)
             
 C ======================================================================
-        END DO
+        END DO  !loop over shells
 C **********************************************************************
 c       write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))
 c       write(44,*)DIMAG(XINTEGD(2,2,1)),DIMAG(XINTEGD(2,3,1))
@@ -521,7 +523,7 @@ C
             END IF
          END DO
          WRITE (6,99004) STRBAR(1:LSTR)
-      END DO
+      END DO !I1 = 1,NTCALC
       WRITE (6,*)
 C ----------------------------------------------------------------------
 C --> prepare output files 
@@ -576,10 +578,10 @@ c             end do
 c            end do
             IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (49,*) '&'
             IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (22,*) '&'
-         END DO
+         END DO !l1=1,natyp
          CLOSE (49)
 c         Close(22)
-      END DO
+      END DO !i1=1,ntcalc
       WRITE (6,99011) 
 C ----------------------------------------------------------------------
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO

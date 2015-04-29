@@ -119,11 +119,11 @@ $(OBJ)/simp3.o      : $(SRA)/simp3.f                  ; \
 
 ##################### sources in COMMON directory ##########
 
-$(OBJ)/main1c.o   : $(COM)/main1c.f  $(INCP) ; \
-	            $(FC) $(FFLAGS) $(COM)/main1c.f -c -o $@
+$(OBJ)/main1c.o   : $(COM)/main1c.F  $(INCP) ; \
+	            $(FC) $(FFLAGS) $(CPP) $(COM)/main1c.F -c -o $@
 
-$(OBJ)/rhoval.o  : $(COM)/rhoval.f $(INCP)        ; \
-	            $(FC) $(FFLAGS) $(COM)/rhoval.f -c -o $@
+$(OBJ)/rhoval.o  : $(COM)/rhoval.F $(INCP)        ; \
+	            $(FC) $(FFLAGS) $(CPP) $(COM)/rhoval.F -c -o $@
 
 $(OBJ)/rhoval0.o  : $(COM)/rhoval0.f $(INCP)        ; \
 	            $(FC) $(FFLAGS) $(COM)/rhoval0.f -c -o $@

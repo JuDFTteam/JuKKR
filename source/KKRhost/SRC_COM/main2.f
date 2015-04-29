@@ -9,7 +9,7 @@
       
       subroutine main2()
       
-      use mod_types, only: type0
+      use mod_types, only: t_inc
       
       implicit none
       
@@ -264,7 +264,7 @@ C ......................................................................
       CLOSE (67)
 C ---------------------------------------------------------- energy_mesh
 C
-      IF (type0%i_iteration.eq.0) then
+      IF (t_inc%i_iteration.eq.0) then
         OPEN (67,FILE='energy_mesh',FORM='unformatted')
       else
         OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
@@ -275,7 +275,7 @@ C
       CLOSE (67)
 C ------------------------------------------------------ input_potential
 C
-      IF(type0%i_iteration.eq.0) then
+      IF(t_inc%i_iteration.eq.0) then
 !       OPEN (67,FILE='input_potential',FORM='unformatted')
       OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
       else 
@@ -303,6 +303,38 @@ C
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
+      open(5555,file='test_density')
+      write(5555,*) RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,
+     &          IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
+      IF (KREL.EQ.1) write(5555,*) RHOORB,ECOREREL,NKCORE,KAPCORE
+      close(5555)
+      
+      open(5555,file='test_input_potential')
+      write(5555,*) VINS,VISP,ECORE,VBC
+      IF (KREL.EQ.1) THEN
+         write (5555,*) RMREL,DRDIREL,R2DRDIREL
+         write (5555,*) ZREL,JWSREL,IRSHIFT
+      END IF
+      write(5555,*) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
+      close(5555)
+      
+      OPEN (5555,FILE='test_input2',FORM='formatted')
+      write(5555,*) NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,
+     & NTCELL,LMAX,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,LINTERFACE
+      write(5555,*) ATOMIMP,NATOMIMP
+      write(5555,*) IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,
+     & KVMAD,KXC,LAMBDA_XC,TXC,ICC,ISHIFT,IXIPOL,LRHOSYM,KFORCE
+      write(5555,*) A,B,DRDI,R,THETAS,ZAT,IFUNM,LMSP,RMT,RMTNEW,RWS,
+     & IMT,IRC,IRMIN,IRWS,ITITLE,LLMSP,NFU,HOSTIMP
+      write(5555,*) ALAT,KAOEZ,IQAT,NOQ,CONC,GSH,ILM,IMAXSH,TESTC,
+     & OPTC,LLY
+      CLOSE (5555)
+      
+      open(5555,file='test_emesh')
+      write(5555,*) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSOLD
+      write(5555,*) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
+     &          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
+      close(5555)
 C
 C============================================================= CONSTANTS
       PI = 4.0D0*ATAN(1.0D0)
@@ -325,7 +357,7 @@ C **************************  ITERATION BEGIN  *************************
 C **********************************************************************
 C
       ITSCF = ITSCF + 1         ! initialised to 0 in main0
-      type0%i_iteration = ITSCF
+      t_inc%i_iteration = ITSCF
 C      
       WRITE(6,'(/,79(1H*))')
       WRITE(6,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
@@ -624,9 +656,22 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 C
       IF (KTE.EQ.1) THEN
-         write(789789798,*) espc
+         write(789789798,*) 'espc',espc,'ecore',ecore,'lcore',lcore,
+     &                         'lcoremax',lcoremax,'ncore',ncore,
+     &                       'nspin',nspin,'natyp',natyp
+     
+!          if(t_inc%i_iteration.eq.1) then
+!             allocate(t_inc%lcoremax(NATYP))
+!             t_inc%lcoremax = lcoremax
+!          endif
+            
 
          CALL ESPCB(ESPC,NSPIN,NATYP,ECORE,LCORE,LCOREMAX,NCORE)    ! single-particle core energy
+         
+!          lcoremax = t_inc%lcoremax
+         
+         write(789789798,*) 'espc2',espc,'ecore2',ecore
+
 C
          CALL EPOTINB(EPOTIN,NSPIN,NATYP,RHO2NS,VISP,R,DRDI,        ! "energy of the input potential"
      &                INS,IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT)      ! Int V(r) rho(r) d^3r
@@ -909,7 +954,7 @@ C
 C ======================================================================
       IF (MAX(RMSAVQ,RMSAVM).LT.QBOUND) THEN
 !          CLOSE(28,STATUS='delete')
-         type0%i_iteration = type0%N_iteration
+         t_inc%i_iteration = t_inc%N_iteration
       ELSE
 C ----------------------------------------------------------------------
 C
@@ -999,7 +1044,7 @@ C
 !          WRITE(6,'(12X,A)')
 !      &        '++++++ SEARCHEF option: E_F CONVERGED +++++'
 !          WRITE(6,'(79(1H*))')
-         type0%i_iteration = type0%N_iteration
+         t_inc%i_iteration = t_inc%N_iteration
          ICONT = 0
          GOTO 260
       END IF
@@ -1021,7 +1066,7 @@ C ----------------------------------------------------------------------
          IF (ITSCF.GE.SCFSTEPS) THEN
 !             OPEN(28,FILE='not.converged',FORM='formatted')
 !             CLOSE(28,STATUS='delete')
-         type0%i_iteration = type0%N_iteration
+         t_inc%i_iteration = t_inc%N_iteration
             WRITE(6,'(12X,A)')
      &           '++++++ NUMBER OF SCF STEPS EXHAUSTED ++++++'
             WRITE(6,'(79(1H*))')

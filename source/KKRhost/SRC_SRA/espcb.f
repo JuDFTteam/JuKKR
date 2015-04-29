@@ -72,6 +72,7 @@ c
           DO 20 N = 1,NCORE(IPOT)
             L = LCORE(N,IPOT)
             LCOREMAX(I1) = MAX(LCOREMAX(I1),L)
+!             write(*,*) 'in espcb:',N,L,IPOT,I1
             ESPC(L,IPOT) = ESPC(L,IPOT) +
      +                      ECORE(N,IPOT)*DBLE(2*L+1)*DBLE(3-NSPIN)
    20     CONTINUE

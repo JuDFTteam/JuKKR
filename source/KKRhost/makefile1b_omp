@@ -75,8 +75,8 @@ $(OBJ)/surfgf.o       : $(SRA)/surfgf.f $(INCP)           ; \
 
 ##################### sources in COMMON directory ##########
 
-$(OBJ)/main1b.o   : $(COM)/main1b.f  $(INCP) ; \
-	            $(FC) $(FFLAGS) $(COM)/main1b.f -c -o $@
+$(OBJ)/main1b.o   : $(COM)/main1b.F  $(INCP) ; \
+	            $(FC) $(FFLAGS) $(CPP) $(COM)/main1b.F -c -o $@
 
 $(OBJ)/kloopz1.o  : $(COM)/kloopz1.f  $(INCP)  ; \
                     $(FC) $(FFLAGS)  $(COM)/kloopz1.f -c -o $@

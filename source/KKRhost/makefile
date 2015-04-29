@@ -126,8 +126,10 @@ debug:    mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OB
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 openmp:   mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
+#mpi:      mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+#	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 mpi:      mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
 mpidebug: mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
