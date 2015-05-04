@@ -13,7 +13,7 @@
       use mpi
 #endif
       
-      use mod_types, only: t_tgmat, t_inc
+      use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -121,7 +121,7 @@ CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
       DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2),WEZNORM(IEMXD)
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
       DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
-     +               CDOS2(NATYPD)                                            ! LLY Lloyd
+     +               CDOS2(NATYPD),cdos_dum(IEMXD,NSPIND)                     ! LLY Lloyd
       REAL*8 EREAD,CHARGE_LLY(NSPIND)                                         ! LLY Lloyd
       REAL*8 RENORM_AT(2,NATYPD)  ! 1: charge renormalization per atom        ! LLY Lloyd
                                   ! 2: spin moment renormalization per atom   ! LLY Lloyd
@@ -191,7 +191,9 @@ C     .. qdos and lmlm-dos ..
       INTEGER IREC,LM1,LM2
 #ifdef CPP_MPI
       integer :: i1_start, i1_end
+      integer :: ie_start, ie_end, ihelp
 #endif
+      integer :: ie_num
 C     ..
 C     .. Arrays in Common ..
       CHARACTER*8 OPTC(32),TESTC(32)
@@ -392,6 +394,7 @@ c calculate contribution from free space
          CDOS0(:) = -CDOS0(:) / PI                                         ! LLY Lloyd
          CDOS1(:) = -CDOS1(:) / PI                                         ! LLY Lloyd
                                                                            ! LLY Lloyd
+         if(myrank==master) then
          OPEN(701,FILE='freedos.dat',FORM='FORMATTED')                     ! LLY Lloyd
          DO IE = 1,IELAST                                                  ! LLY Lloyd
             WRITE(701,FMT='(10E16.8)') EZ(IE),CDOS0(IE),CDOS1(IE)          ! LLY Lloyd
@@ -402,15 +405,40 @@ c calculate contribution from free space
             WRITE(701,FMT='(I5,10E16.8)') I1,CDOS2(I1)                     ! LLY Lloyd
          ENDDO                                                             ! LLY Lloyd
          CLOSE(701)                                                        ! LLY Lloyd
+         end if ! myrank==master
          CDOS_LLY(1:IEMXD,1:NSPIND) = CZERO                                ! LLY Lloyd
          IF (.NOT.OPT('NEWSOSOL')) THEN
-         OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
-         DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-            DO IE = 1,IELAST                                               ! LLY Lloyd
-               READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
-            ENDDO                                                          ! LLY Lloyd
-         ENDDO                                                             ! LLY Lloyd
-         CLOSE(701)                                                        ! LLY Lloyd
+         if(t_lloyd%cdos_diff_lly_to_file) then
+            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
+            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+               DO IE = 1,IELAST                                               ! LLY Lloyd
+                  READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
+               ENDDO                                                          ! LLY Lloyd
+            ENDDO                                                             ! LLY Lloyd
+            CLOSE(701)                                                        ! LLY Lloyd
+         else   !(t_lloyd%cdos_diff_lly_to_file)
+            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+!                DO IE = 1,IELAST                                               ! LLY Lloyd
+               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+               ie_end = t_mpi_c_grid%ntot2
+               DO ie_num=1,ie_end
+                  IE = ie_start+ie_num
+                  CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
+               ENDDO                                                          ! LLY Lloyd
+            ENDDO                                                             ! LLY Lloyd
+#ifdef CPP_MPI            
+            ! MPI gather cdos_lly on all processors
+            ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
+            WRITE(*,*) 'sending cdos_lly',myrank,ihelp,shape(cdos_lly),
+     &       shape(cdos_dum)
+            CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
+     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+         write(*,*) 'done with cdos_lly sending',myrank
+!             CALL MPI_ALLREDUCE(cdos_lly,cdos_dum,ihelp,
+!      &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+!             CALL DCOPY(ihelp,cdos_dum,1,cdos_lly,1)
+#endif
+         end if   !(t_lloyd%cdos_diff_lly_to_file)
                                                                            ! LLY Lloyd
          ! Add free-space contribution cdos0                               ! LLY Lloyd
          DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
@@ -428,6 +456,7 @@ c calculate contribution from free space
          ENDDO                                                             ! LLY Lloyd
                                                                            ! LLY Lloyd
                                                                            ! LLY Lloyd
+         if(myrank==master) then
          OPEN (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')                 ! LLY Lloyd
          DO ISPIN=1,NSPIN                                                  ! LLY Lloyd
             DO IE=1,IELAST                                                 ! LLY Lloyd
@@ -437,30 +466,52 @@ c calculate contribution from free space
          CLOSE(701)                                                        ! LLY Lloyd
          WRITE(*,*) 'Valence charge from Lloyds formula:',                 ! LLY Lloyd
      &        (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                            ! LLY Lloyd
-         ELSE 
-
-         OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')           ! LLY
-          DO IE = 1,IELAST                                             ! LLY
-           READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,1)             ! LLY
-          ENDDO                                                        ! LLY
-         CLOSE(701)                                                    ! LLY
-c Add free-space contribution cdos0                                    ! LLY
-          CDOS_LLY(1:IEMXD,1) = CDOS_LLY(1:IEMXD,1)+2D0*CDOS0(1:IEMXD) ! LLY 
-          CSUM=CZERO
-          DO IE = 1,IELAST                                             ! LLY
-           CSUM = CSUM + CDOS_LLY(IE,1) * WEZ(IE)                      ! LLY
-          ENDDO                                                        ! LLY
-           CHARGE_LLY(1) = -DIMAG(CSUM) * PI                           ! LLY
-         OPEN (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')             ! LLY 
-           DO IE=1,IELAST                                              ! LLY
-               WRITE(701,FMT='(10E16.8)') EZ(IE),CDOS_LLY(IE,1)    ! LLY 
-            ENDDO                                                      ! LLY 
-         CLOSE(701)                                                    ! LLY 
-         WRITE(*,*) 'Valence charge from Lloyds formula:',
+         end if ! myrank==master
+         
+         ELSE !NEWSOSOL
+         
+          if(t_lloyd%cdos_diff_lly_to_file) then
+            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')            ! LLY
+            DO IE = 1,IELAST                                               ! LLY
+               READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,1)             ! LLY
+            ENDDO                                                          ! LLY
+            CLOSE(701)                                                     ! LLY
+          else  !(t_lloyd%cdos_diff_lly_to_file)
+!             DO IE = 1,IELAST
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+            ie_end = t_mpi_c_grid%ntot2
+            DO ie_num=1,ie_end
+               IE = ie_start+ie_num
+               CDOS_LLY(IE,1) = t_lloyd%cdos(ie_num,1)
+            ENDDO
+#ifdef CPP_MPI            
+            ! MPI gather cdos_lly on all processors
+            ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
+            CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
+     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+#endif
+          end if  !(t_lloyd%cdos_diff_lly_to_file)
+          
+c Add free-space contribution cdos0                                     ! LLY
+          CDOS_LLY(1:IEMXD,1) = CDOS_LLY(1:IEMXD,1)+2D0*CDOS0(1:IEMXD)  ! LLY 
+          CSUM=CZERO                                                    ! LLY
+          DO IE = 1,IELAST                                              ! LLY
+           CSUM = CSUM + CDOS_LLY(IE,1) * WEZ(IE)                       ! LLY
+          ENDDO                                                         ! LLY
+          CHARGE_LLY(1) = -DIMAG(CSUM) * PI                             ! LLY
+          if(myrank==master) then
+          OPEN (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')             ! LLY 
+          DO IE=1,IELAST                                                ! LLY
+             WRITE(701,FMT='(10E16.8)') EZ(IE),CDOS_LLY(IE,1)           ! LLY 
+          ENDDO                                                         ! LLY 
+          CLOSE(701)                                                    ! LLY 
+          WRITE(*,*) 'Valence charge from Lloyds formula:',
      &        (CHARGE_LLY(1))                                          ! LLY 
-         ENDIF
+          end if ! myrank==master
+          
+         ENDIF ! NEWSOSOL
 
-         ENDIF                                                         ! LLY
+         ENDIF !LLY<>0                                                     ! LLY
 ! -------------------------------------------------------------------------! LLY Lloyd
 
 
@@ -472,7 +523,6 @@ C ================================================================ NATYP
       i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_row)+1
       i1_end = t_mpi_c_grid%ntot1
 
-      write(*,*) 'start i1 loop in main1c',myrank,i1_start,i1_end
       DO i1 = i1_start,i1_end
 #else
       DO I1 = 1,NATYP
@@ -840,15 +890,6 @@ C
      &           IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
       IF (KREL.EQ.1) WRITE(67) RHOORB,ECOREREL,NKCORE,KAPCORE
       CLOSE (67)
-      
-      OPEN (671,FILE='density.form',FORM='formatted')
-      WRITE (671,*) 'r2ns',RHO2NS,'r2nef',R2NEF,'rhoc',RHOC,'denef',
-     & DENEF,'denefat',DENEFAT,'espv',ESPV,'ecore',ECORE,
-     & 'idolau',IDOLDAU,'lopt',LOPT,'eu',EU,'edc',EDC,
-     & 'chrgsemicore',CHRGSEMICORE
-      IF (KREL.EQ.1) WRITE(671) 'rhoorb',RHOORB,'ecorerel',ECOREREL,
-     &  'nkcore',NKCORE,'kapcore',KAPCORE
-      close(671)
       
       IF (TEST('den-asci')) THEN
          OPEN (67,FILE='densitydn.ascii',FORM='formatted')

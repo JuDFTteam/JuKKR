@@ -44,6 +44,8 @@ mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_mympi.F90 -c -o $@
 mod_types.o  : $(COM)/mod_types.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_types.F90 -c -o $@
+mod_timing.o  : $(COM)/mod_timing.F90                 ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_timing.F90 -c -o $@
 
 FILENAME0 = kkr.x  #kkr0.exe
 include makefile0
@@ -120,18 +122,18 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/
 
-serial:   mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-debug:    mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-openmp:   mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-#mpi:      mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-#	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-mpi:      mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpidebug: mkdirobj copyinc mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+serial:   mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+debug:    mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+openmp:   mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
+#mpi:      mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+#	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+mpi:      mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
+mpidebug: mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 install: clean serial
 

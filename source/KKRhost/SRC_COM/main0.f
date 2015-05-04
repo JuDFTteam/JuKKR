@@ -423,7 +423,7 @@ C     .. Common blocks ..
       COMMON /TESTC/TESTC
 C     ..
 Consistency check
-      WRITE(*,*) 'This is the KKR code version 2015_04_22.'
+      WRITE(*,*) 'This is the KKR code version 2015_04_29.'
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 

@@ -38,7 +38,6 @@ implicit none
       integer :: N_iteration = -1
       integer :: mit_bry = 1
       logical :: NEWSOSOL = .false.
-      integer, allocatable :: lcoremax(:)
          
    end type type_inc
    
@@ -65,18 +64,31 @@ implicit none
    end type type_mpi_cartesian_grid_info
 
 
-!    type :: type_lloyd
-! 
-!       integer ::
-!    
-! 
-!    end type type_lloyd
+   type :: type_lloyd
+
+       ! logical switches to control if matrices are stored in memory or written to files
+      logical :: dtmat_to_file = .false.          ! unit 691
+      logical :: tralpha_to_file = .false.        ! unit 692
+      logical :: cdos_diff_lly_to_file = .false.  ! unit 701
+      logical :: dgref_to_file = .false.          ! unit 681
+      logical :: g0tr_to_file = .false.           ! unit 682
+      
+      integer :: N1 = 6 ! 5 logicals and 5 arrays this type, for mpi bcast
+      
+      ! allocatable arrays
+      double complex, allocatable :: dtmat(:,:,:)      ! DOUBLE COMPLEX TMAT0(LMMAXD,LMMAXD), IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+      double complex, allocatable :: tralpha(:)        ! DOUBLE COMPLEX TRALPHA, IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+      double complex, allocatable :: cdos(:,:)         ! DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND), irec=IE, aalready in dim 1 of cdos!
+      double complex, allocatable :: dgref(:,:,:,:)    ! DOUBLE COMPLEX; ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) ), IREC=IE 
+      double complex, allocatable :: g0tr(:)           ! DOUBLE COMPLEX LLY_G0TR_IE, irec=ie
+
+   end type type_lloyd
 
 
    type (type_inc), save :: t_inc
    type (type_tgmatices), save :: t_tgmat
    type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
-!    type (type_lloyd), save :: t_lloyd
+   type (type_lloyd), save :: t_lloyd
 
 
 contains
@@ -93,7 +105,7 @@ contains
       
       integer :: ierr, nspin
       
-      logical :: test= .true.
+      logical :: test= .false.
       
       nspin = t_inc%NSPIN
       if(t_inc%NEWSOSOL) nspin = 1
@@ -292,119 +304,152 @@ contains
 #endif
 
 
+#ifdef CPP_MPI
+   subroutine bcast_t_lly_1(t_inc,t_lloyd)
 
-! #ifdef CPP_MPI
-!    subroutine bcast_t_inc_tgmat(t_inc,t_tgmat)
-!     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
-! 
-!     use mpi
-!     use mod_mympi,   only: myrank, nranks, master
-!     implicit none
-! 
-!     type(type_inc), intent(inout) :: t_inc
-!     type(type_tgmatices), intent(inout) :: t_tgmat
-! 
-!     integer :: blocklen1(t_inc%Nparams), etype1(t_inc%Nparams), myMPItype1 ! for parameter from t_inc
-!     integer :: blocklen2(t_tgmat%Nelements), etype2(t_tgmat%Nelements), myMPItype2 ! for logicals in t_tgmat
-!     integer :: blocklen3(t_tgmat%Nelements), etype3(t_tgmat%Nelements), myMPItype3 ! for allocatable arrays in t_tgmat
-!     integer :: ierr
-!     integer(kind=MPI_ADDRESS_KIND) :: disp1(t_inc%Nparams), disp2(t_tgmat%Nelements), disp3(t_tgmat%Nelements), base
-! 
-!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!     !broadcast parameters from t_inc
-!     call MPI_Get_address(t_inc%Nparams,       disp1(1), ierr)
-!     call MPI_Get_address(t_inc%LMMAXD,        disp1(2), ierr)
-!     call MPI_Get_address(t_inc%NSPIN ,        disp1(3), ierr)
-!     call MPI_Get_address(t_inc%IELAST,        disp1(4), ierr)
-!     call MPI_Get_address(t_inc%NQDOS ,        disp1(5), ierr)
-!     call MPI_Get_address(t_inc%NATYP ,        disp1(6), ierr)
-!     call MPI_Get_address(t_inc%LMGF0D,        disp1(7), ierr)
-!     call MPI_Get_address(t_inc%NCLSD ,        disp1(8), ierr)
-!     call MPI_Get_address(t_inc%NACLSD,        disp1(9), ierr)
-!     call MPI_Get_address(t_inc%i_iteration,  disp1(10), ierr)
-!     call MPI_Get_address(t_inc%N_iteration,  disp1(11), ierr)
-!     call MPI_Get_address(t_inc%mit_bry,      disp1(12), ierr)
-!     base  = disp1(1)
-!     disp1 = disp1 - base
-! 
-!     blocklen1(1:12)=1
-! 
-!     etype1(1:12) = MPI_INTEGER
-! 
-!     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_impcls_1'
-! 
-!     call MPI_Type_commit(myMPItype1, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_impcls_1'
-! 
-!     call MPI_Bcast(t_inc%Nparams, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'error brodcasting impcls_1'
-! 
-!     call MPI_Type_free(myMPItype1, ierr)
-!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! 
-!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!     !brodcast allocatable arrays from t_tgmat
-!     !first broadcast logocal switches
-!     call MPI_Get_address(t_tgmat%Nelements,      disp2(1), ierr)
-!     call MPI_Get_address(t_tgmat%tmat_to_file,   disp2(2), ierr)
-!     call MPI_Get_address(t_tgmat%gmat_to_file,   disp2(3), ierr)
-!     call MPI_Get_address(t_tgmat%gref_to_file,   disp2(4), ierr)
-!     
-!     base  = disp2(1)
-!     disp2 = disp2 - base
-! 
-!     blocklen2(1:4)=1
-! 
-!     etype2(1) = MPI_INTEGER
-!     etype2(2:4) = MPI_LOGICAL
-! 
-!     call MPI_Type_create_struct(t_tgmat%Nelements, blocklen2, disp2, etype2, myMPItype2, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
-! 
-!     call MPI_Type_commit(myMPItype2, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
-!     
-!     call MPI_Bcast(t_tgmat%Nelements, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
-! 
-!     call MPI_Type_free(myMPItype2, ierr)
-! 
-! !     !then broadcast arrays
-! !     if(myrank/=master) call init_tgmat(t_inc,t_tgmat)
-! ! 
-! !     call MPI_Get_address(t_tgmat%Nelements,      disp3(1), ierr)
-! !     call MPI_Get_address(t_tgmat%tmat,           disp3(2), ierr)
-! !     call MPI_Get_address(t_tgmat%gmat,           disp3(3), ierr)
-! !     call MPI_Get_address(t_tgmat%gref,           disp3(4), ierr)
-! ! 
-! !     base  = disp3(1)
-! !     disp3 = disp3 - base
-! ! 
-! !     blocklen3(1)=1
-! !     blocklen3(2)=size(t_tgmat%tmat)
-! !     blocklen3(3)=size(t_tgmat%gmat)
-! !     blocklen3(4)=size(t_tgmat%gref)
-! ! 
-! !     etype3(1) = MPI_INTEGER
-! !     etype3(2) = MPI_DOUBLE_COMPLEX
-! !     etype3(3) = MPI_DOUBLE_COMPLEX
-! !     etype3(4) = MPI_DOUBLE_COMPLEX
-! ! 
-! !     call MPI_Type_create_struct(t_tgmat%Nelements, blocklen3, disp3, etype3, myMPItype3, ierr)
-! !     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_arrays'
-! ! 
-! !     call MPI_Type_commit(myMPItype3, ierr)
-! !     if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_arrays'
-! ! 
-! !     call MPI_Bcast(t_tgmat%Nelements, 1, myMPItype3, master, MPI_COMM_WORLD, ierr)
-! !     if(ierr/=MPI_SUCCESS) stop 'error brodcasting tgmat_arrays'
-! ! 
-! !     call MPI_Type_free(myMPItype3, ierr)
-! !     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! 
-!    end subroutine bcast_t_inc_tgmat
-! #endif
+    use mpi
+    use mod_mympi,   only: myrank, nranks, master
+    implicit none
+
+    type(type_inc), intent(in) :: t_inc
+    type(type_lloyd), intent(inout) :: t_lloyd
+
+    integer :: blocklen1(t_lloyd%N1), etype1(t_lloyd%N1), myMPItype1 ! for parameter from t_lloyd
+    integer :: ierr
+    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_lloyd%N1), base
+
+    call MPI_Get_address(t_lloyd%N1,                     disp1(1), ierr)
+    call MPI_Get_address(t_lloyd%dtmat_to_file,          disp1(2), ierr)
+    call MPI_Get_address(t_lloyd%tralpha_to_file,        disp1(3), ierr)
+    call MPI_Get_address(t_lloyd%cdos_diff_lly_to_file,  disp1(4), ierr)
+    call MPI_Get_address(t_lloyd%dgref_to_file,          disp1(5), ierr)
+    call MPI_Get_address(t_lloyd%g0tr_to_file,           disp1(6), ierr)
+    
+    base  = disp1(1)
+    disp1 = disp1 - base
+
+    blocklen1(1:6)=1
+
+    etype1(1) = MPI_INTEGER
+    etype1(2:6) = MPI_LOGICAL
+
+    call MPI_Type_create_struct(t_lloyd%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
+
+    call MPI_Type_commit(myMPItype1, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
+    
+    call MPI_Bcast(t_lloyd%N1, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
+
+    call MPI_Type_free(myMPItype1, ierr)
+
+   end subroutine bcast_t_lly_1
+#endif
+
+
+   subroutine init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+   
+      use mod_mympi, only: myrank, master, nranks
+   
+      implicit none
+   
+      type(type_inc), intent(in) :: t_inc
+      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
+      type(type_lloyd), intent(inout) :: t_lloyd
+      
+      integer :: ierr, nspin
+      
+      nspin = t_inc%NSPIN
+      if(t_inc%NEWSOSOL) nspin = 1 ! t_inc%NSPIN !1
+    
+    
+      if (.not. allocated(t_lloyd%dtmat)) then
+         if (.not. t_lloyd%dtmat_to_file) then
+            if(nranks.eq.1) then
+               !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
+               allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+            else
+               !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+               allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
+            end if
+         else
+            allocate(t_lloyd%dtmat(1,1,1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
+         end if
+         t_lloyd%dtmat(:,:,:) = (0.d0, 0.d0)
+      endif
+      
+      if (.not. allocated(t_lloyd%tralpha)) then
+         if (.not. t_lloyd%tralpha_to_file) then
+            if(nranks.eq.1) then
+               allocate(t_lloyd%tralpha(t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
+            else
+               allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha for mpi'
+            end if
+         else
+            allocate(t_lloyd%tralpha(1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%tralpha'
+         end if
+         t_lloyd%tralpha(:) = (0.d0, 0.d0)
+      endif
+      
+      if (.not. allocated(t_lloyd%cdos)) then
+         if (.not. t_lloyd%cdos_diff_lly_to_file) then
+            if(nranks.eq.1) then
+               allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
+            else
+               allocate(t_lloyd%cdos(t_mpi_c_grid%ntot2,t_inc%NSPIN), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
+            end if
+         else
+            allocate(t_lloyd%cdos(1,1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%cdos'
+         end if
+         t_lloyd%cdos(:,:) = (0.d0, 0.d0)
+      endif
+
+      if (.not. allocated(t_lloyd%dgref)) then
+         if (.not. t_lloyd%dgref_to_file) then
+            if(nranks.eq.1) then
+               allocate(t_lloyd%dgref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
+            else
+               allocate(t_lloyd%dgref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%dgref for mpi'
+            end if
+         else
+            allocate(t_lloyd%dgref(1,1,1,1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%dgref'
+         end if
+         t_lloyd%dgref(:,:,:,:) = (0.d0, 0.d0)
+      endif
+      
+      if (.not. allocated(t_lloyd%g0tr)) then
+         if (.not. t_lloyd%g0tr_to_file) then
+            if(nranks.eq.1) then
+               allocate(t_lloyd%g0tr(t_inc%IELAST), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
+            else
+               allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr for mpi'
+            end if
+         else
+            allocate(t_lloyd%g0tr(1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%g0tr'
+         end if
+         t_lloyd%g0tr(:) = (0.d0, 0.d0)
+      endif
+      
+
+   end subroutine init_tlloyd
+
+
 
 
 #ifdef CPP_MPI
@@ -537,7 +582,7 @@ contains
 !     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: ierr
         
-    logical :: test= .true.
+    logical :: test= .false.
     
     if(test) then
        write(*,*) 'gather_gref:',myrank,t_inc%NACLSD,t_inc%LMGF0D,t_inc%NCLSD,mytot,ntot_pT,ioff_pT,shape(t_tgmat%gref)

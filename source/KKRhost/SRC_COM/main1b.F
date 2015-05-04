@@ -13,7 +13,7 @@
       use mpi
 #endif
       
-      use mod_types, only: t_tgmat, t_inc
+      use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -363,10 +363,18 @@ C
          CALL OPENDAFILE(70,'gmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
       end if
       IF (LLY.NE.0) THEN                                               ! LLY Lloyd
+         if (t_lloyd%dgref_to_file) then
          CALL OPENDAFILE(681,'dgrefde',7,LRECGRF1,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: derivative of Gref
+         end if
+         if (t_lloyd%g0tr_to_file) then
          OPEN(682,FILE='lly_g0tr_ie.ascii',FORM='FORMATTED')           ! LLY Lloyd: trace eq.5.27 PhD Thiess
+         end if
+         if (t_lloyd%dtmat_to_file) then
          CALL OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: derivative of t-matrix
+         end if
+         if (t_lloyd%tralpha_to_file) then
          CALL OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY Lloyd: Tr[alpha^{-1} dalpha/dE]
+         end if
       ENDIF                                                            ! LLY Lloyd
 
 C
@@ -469,7 +477,11 @@ C
             else
                ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
             end if
-            IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
+            if(t_lloyd%dgref_to_file) then
+               IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
+            else
+               DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
+            endif
 
             ERYD = EZ(IE)
             NMESH = KMESH(IE)
@@ -521,9 +533,19 @@ C **********************************************************************
                TSST(1:LMMAXD,1:LMMAXD,I1)=TMAT(1:LMMAXD,1:LMMAXD)
 
                IF (LLY.NE.0) THEN                                         ! LLY
-                  READ (691,REC=IREC) TMAT                                ! LLY dt/dE
+                  if(t_lloyd%dtmat_to_file) then
+                     READ (691,REC=IREC) TMAT                                ! LLY dt/dE
+                  else
+                     irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
+                     TMAT(:,:) = t_lloyd%dtmat(:,:,irec)
+                  end if
                   DTMATLL(1:LMMAXD,1:LMMAXD,I1) =TMAT(1:LMMAXD,1:LMMAXD)  ! LLY
-                  READ (692,REC=IREC) TRALPHA1                            ! LLY
+                  if(t_lloyd%dtmat_to_file) then
+                     READ (692,REC=IREC) TRALPHA1                            ! LLY
+                  else
+                     irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
+                     TRALPHA1 = t_lloyd%tralpha(irec)
+                  end if
                   TRALPHA(IE,ISPIN) = TRALPHA(IE,ISPIN) + TRALPHA1        ! LLY Tr[ alpha^{-1} dalpha/dE]
 
                   IF (ISPIN.EQ.1) THEN  ! Ref. system is spin-independent ! LLY
@@ -539,8 +561,13 @@ C **********************************************************************
 
             END DO  !i1 = 1,natyp
             
-            IF (LLY.NE.0.AND.ISPIN.EQ.1)                            ! LLY
+            if(t_lloyd%g0tr_to_file) then
+               IF (LLY.NE.0.AND.ISPIN.EQ.1)                         ! LLY
      &                      READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
+            else
+               IF (LLY.NE.0.AND.ISPIN.EQ.1)                         ! LLY
+     &                     LLY_G0TR(IE) = t_lloyd%g0tr(ie_num)
+            end if
 C ------------------------------------------------------------------------
 C
 C --> setting up of Delta_t moved to < KLOOPZ1 >
@@ -597,11 +624,14 @@ C           Skip this part if first part of the qdos is running
 C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- before introducing qdos
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
-               if (t_tgmat%gmat_to_file) then
-                  WRITE (70,REC=IREC) GMAT0
-               else
-                  t_tgmat%gmat(:,:,irec) = gmat0
-               end if
+                if (t_tgmat%gmat_to_file) then
+                   WRITE (70,REC=IREC) GMAT0
+                else
+                   IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
+     &                    t_mpi_c_grid%ntot2 * (ISPIN-1) + 
+     &                    NQDOS * t_mpi_c_grid%ntot2 * NSPIN * (I1-1)
+                   t_tgmat%gmat(:,:,irec) = gmat0
+                end if
               ENDDO
               IF (TEST('gmatasci')) THEN
                  WRITE(*,*) 'Writing out gmat.ascii'
@@ -662,6 +692,9 @@ C
      &                 + TRALPHAREF(IE)        ! LLY Lloyd
      &                 - LLY_GRTR(IE,ISPIN) / VOLBZ(1) +  LLY_G0TR(IE)    ! LLY Lloyd
                ENDIF                                                      ! LLY Lloyd
+               
+          write(*,*) myrank,ie,TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN),
+     &                VOLBZ(1),LLY_G0TR(IE),lly,TRALPHAREF(IE)
 
                IF (ISPIN.EQ.1)                                            ! LLY Lloyd
      &              CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)       ! LLY Lloyd
@@ -705,8 +738,8 @@ C
       ELSE ! NEW SOC SOLVER 
 
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
-         ie_end = t_mpi_c_grid%ntot2
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+      ie_end = t_mpi_c_grid%ntot2
 
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
@@ -717,12 +750,16 @@ C
 
        
 c read in Green function of reference system
-       if (t_tgmat%tmat_to_file) then
+       if (t_tgmat%gref_to_file) then
           READ (68,REC=IE) GINP
        else
-          ginp(:,:,:) = t_tgmat%gref(:,:,:,ie)
+          ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
        end if
-       IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
+       if(t_lloyd%dgref_to_file) then
+          IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
+       else
+          DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
+       endif
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
             WRITE (6,'(A,I3,A,2(1X,F10.6),A,I3)') 
@@ -763,6 +800,7 @@ c read in t-matrix from file
         if (t_tgmat%tmat_to_file) then
            READ (69,REC=IREC) TMAT
         else
+           irec = ie_num + ie_end * (i1-1)
            tmat(:,:) = t_tgmat%tmat(:,:,irec)
         end if
       
@@ -777,14 +815,27 @@ c rotate t-matrix from local to global frame
          ENDDO
 
        IF (LLY.NE.0) THEN
-        READ(691,REC=IREC) TMAT ! LLY
+        IREC = IE + IELAST*(I1-1)
+        if(t_lloyd%dtmat_to_file) then
+           READ(691,REC=IREC) TMAT ! LLY
+        else
+           irec = ie_num + ie_end * (i1-1)
+           TMAT(:,:) = t_lloyd%dtmat(:,:,irec)
+        end if
         CALL ROTATEMATRIX(TMAT,THETA,PHI,LMGF0D,0) ! LLY
          DO LM1=1,LMMAXD
           DO LM2=1,LMMAXD
            DTMATLL(LM1,LM2,I1)=TMAT(LM1,LM2) ! LLY
           ENDDO
          ENDDO
-         READ(692,REC=IREC) TRALPHA1
+        IREC = IE + IELAST*(I1-1)
+        if(t_lloyd%dtmat_to_file) then
+           READ(692,REC=IREC) TRALPHA1
+        else
+           irec = ie_num + ie_end * (i1-1)
+           TRALPHA1 = t_lloyd%tralpha(irec)
+        end if
+         
          TRALPHA(IE,NSPINDD)=TRALPHA(IE,NSPINDD)+TRALPHA1 ! LLY
          TRALPHA1=CZERO
           DO L1=0,LMAX
@@ -795,7 +846,11 @@ c rotate t-matrix from local to global frame
        ENDIF ! LLY
        ENDDO ! I1
        CLOSE(10)
-       IF (LLY.NE.0) READ(682,FMT='(2E24.16)') LLY_G0TR(IE) ! LLY
+       if(t_lloyd%g0tr_to_file) then
+          IF (LLY.NE.0) READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
+       else
+          IF (LLY.NE.0) LLY_G0TR(IE) = t_lloyd%g0tr(ie_num)
+       end if
 
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
@@ -842,6 +897,8 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                      WRITE (70,REC=IREC) GMAT0
 !                      write(707070,*) gmat0
                   else
+                     IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
+     &                    t_mpi_c_grid%ntot2 * (I1-1)
                      t_tgmat%gmat(:,:,irec) = gmat0
                   end if
                ENDDO
@@ -901,27 +958,55 @@ C
       IF ( IGF.NE.0 ) CLOSE (88)
 
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
-         OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')             ! LLY Lloyd
-         OPEN (702,FILE='cdosref_lly.dat',FORM='FORMATTED')              ! LLY Lloyd
-         DO IE = 1,IELAST                                                ! LLY
-           WRITE(702,FMT='(10E25.16)') DREAL(EZ(IE)),CDOSREF_LLY(IE),    ! LLY
-     &                TRALPHAREF(IE),LLY_G0TR(IE)
-         ENDDO                                                           ! LLY
+         if(t_lloyd%cdos_diff_lly_to_file) then
+            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+         end if
+!          OPEN (702,FILE='cdosref_lly.dat',FORM='FORMATTED')              ! LLY Lloyd
+!          DO IE = 1,IELAST                                                ! LLY
+!            WRITE(702,FMT='(10E25.16)') DREAL(EZ(IE)),CDOSREF_LLY(IE),    ! LLY
+!      &                TRALPHAREF(IE),LLY_G0TR(IE)
+!          ENDDO                                                           ! LLY
          IF (.NOT.OPT('NEWSOSOL')) THEN
           DO ISPIN = 1,NSPIN                                             ! LLY
+#ifdef CPP_MPI
+           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+           ie_end = t_mpi_c_grid%ntot2
+           DO ie_num=1,ie_end
+            IE = ie_start+ie_num
+#else
            DO IE = 1,IELAST                                              ! LLY
-            WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,ISPIN)
-     &      ,TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                        ! LLY
+            ie_num = ie
+#endif
+            if(t_lloyd%cdos_diff_lly_to_file) then
+               WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),
+     &          CDOS_LLY(IE,ISPIN),
+     &          TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                     ! LLY
+            else
+               t_lloyd%cdos(ie_num,ISPIN) = CDOS_LLY(IE,ISPIN)
+            end if
            ENDDO                                                         ! LLY
           ENDDO                                                          ! LLY
          ELSE                         
-          DO IE = 1,IELAST                                               ! LLY
-           WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,1)     
-     &      ,TRALPHA(IE,1),LLY_GRTR(IE,1)                                ! LLY
+#ifdef CPP_MPI
+           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+           ie_end = t_mpi_c_grid%ntot2
+           DO ie_num=1,ie_end
+            IE = ie_start+ie_num
+#else
+           DO IE = 1,IELAST                                              ! LLY
+            ie_num = ie
+#endif
+            if(t_lloyd%cdos_diff_lly_to_file) then
+              WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,1),     
+     &                                    TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
+            else
+               t_lloyd%cdos(ie_num,1) = CDOS_LLY(IE,1)
+            end if
+           
           ENDDO                                                          ! LLY
          ENDIF ! .NOT.OPT('NEWSOSOL')                                    ! LLY
-         CLOSE(701)                                                      ! LLY
-         CLOSE(702)                                                      ! LLY
+         if(t_lloyd%cdos_diff_lly_to_file) CLOSE(701)                    ! LLY
+!          CLOSE(702)                                                      ! LLY
       ENDIF                                                              ! LLY
 C
 CMPI  IF( MYRANK.EQ.0 ) THEN
@@ -952,10 +1037,10 @@ C     Finished first qdos run. Now re-run the whole kkr1b program to
 C     calculate the GF for every energy (defined in inputcard) and 
 C     kpoint (defined in qvec.dat)
       IQDOSRUN=IQDOSRUN+1                          ! qdos ruess
-      CLOSE(681)
-      CLOSE(682)
-      CLOSE(691)
-      CLOSE(692)
+      if(t_lloyd%dgref_to_file)   CLOSE(681)
+      if(t_lloyd%g0tr_to_file)    CLOSE(682)
+      if(t_lloyd%dtmat_to_file)   CLOSE(691)
+      if(t_lloyd%tralpha_to_file) CLOSE(692)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
 C ----------------------------------------------------------------------C
 CT3E  CALL SYSTEM_CLOCK(MEND)

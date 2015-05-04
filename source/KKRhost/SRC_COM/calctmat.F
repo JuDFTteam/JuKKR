@@ -31,7 +31,8 @@ C *********************************************************************
 #endif
       use mod_mympi, only: myrank, nranks, master,
      &                      distribute_linear_on_tasks
-      use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
+      use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
+     &                     t_lloyd,init_tlloyd 
       IMPLICIT NONE
 C
 C     .. Parameters ..
@@ -102,9 +103,10 @@ C     .. Local Arrays ..
       INTEGER IPIV(LMMAXD) ! LLY
       CHARACTER*9 TXTS(2)
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ie_start, ie_end, mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      integer :: ie_num
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
@@ -167,12 +169,14 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
        t_mpi_c_grid%ioff_pT2 = ioff_pT !(t_mpi_c_grid%myrank_col)
        ! now initialize arrays for tmat, gmat, and gref
        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 
        DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
 #else
       DO IE = 1,IELAST
+         ie_num = IE
 #endif
          WRITE(*,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
 
@@ -329,8 +333,20 @@ C
          IF (LLY.NE.0) THEN                                          ! LLY
             TMAT0(1:LMMAXD,1:LMMAXD) = DTMATLL(1:LMMAXD,1:LMMAXD) ! LLY
 !             TMAT0(1:LMMAXD,1:LMMAXD) = DTMATLL(1:LMMAXD,1:LMMAXD,IE) ! LLY
-            WRITE(691,REC=IREC) TMAT0                                ! LLY
-            WRITE(692,REC=IREC) TRALPHA                              ! LLY
+            if(t_lloyd%dtmat_to_file) then
+               IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
+               WRITE(691,REC=IREC) TMAT0                                ! LLY
+            else
+               irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
+               t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)
+            end if
+            if(t_lloyd%tralpha_to_file) then
+               IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
+               WRITE(692,REC=IREC) TRALPHA                              ! LLY
+            else
+               irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
+               t_lloyd%tralpha(irec) = TRALPHA
+            end if
          ENDIF                                                       ! LLY
 C ----------------------------------------------------------------------
          IF ( TEST('tmat    ') ) THEN

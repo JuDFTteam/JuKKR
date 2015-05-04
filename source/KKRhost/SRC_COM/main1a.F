@@ -14,7 +14,7 @@
       use mpi
 #endif
       
-      use mod_types, only: t_tgmat, t_inc
+      use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -268,17 +268,24 @@ C
       end if
       
       IF (LLY.NE.0) THEN
+        if(t_lloyd%dtmat_to_file) then
          CALL OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY
+        end if
+        if(t_lloyd%tralpha_to_file) then
          CALL OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY
+        end if
       ENDIF
 C
       IF (.NOT.OPT('NEWSOSOL')) THEN
       
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
-     &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.true.)
-        i1_start = ioff_pT(myrank_row)+1
-        i1_end   = ioff_pT(myrank_row)+ntot_pT(myrank_row)
+     &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.false.)
+!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
+!      &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.true.)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_row)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_row)+
+     &             ntot_pT(t_mpi_c_grid%myrank_row)
         t_mpi_c_grid%ntot1  = ntot1 
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
@@ -297,6 +304,27 @@ C
 !          ISPIN = MOD(IPOT+1,NSPIN) + 1
 !          I1 = (IPOT-ISPIN)/NSPIN + 1
 C
+!          write(456456,*) 'line1',ICST,INS,IELAST,
+!      +         'line2',NSRA,ISPIN,NSPIN,I1,EZ,
+!      +                 'line3',DRDI(1,I1),RMESH(1,I1),
+!      +                 'line4',VINS(IRMIND,1,KNOSPH*IPOT+(1-KNOSPH)),
+!      +                 'line5',VISP(1,IPOT),ZAT(I1),IRMIN(I1),IPAN(I1),   ! Added IRMIN 1.7.2014
+!      +              'line6',IRCUT(0,I1),CLEB,LOFLM,ICLEB,IEND,SOLVER,
+!      +                 'line7',SOCSCL(1,KREL*I1+(1-KREL)),
+!      +                 'line8',CSCL(1,KREL*I1+(1-KREL)),
+!      +                 'line9',VTREL(1,I1),BTREL(1,I1),
+!      +              'line10',RMREL(1,I1),DRDIREL(1,I1),R2DRDIREL(1,I1),
+!      +                 'line11',ZREL(I1),JWSREL(I1),
+!      +                 'line12',IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1),
+!      &                 'line13',LLY,DELTAE
+!              write(456456,*) 
+!      +            'line6.1',IRCUT(0,I1),
+!      +            'line6.2',CLEB,
+!      +            'line6.3',LOFLM,
+!      +            'line6.4',ICLEB,
+!      +            'line6.5',IEND,
+!      +            'line6.6',SOLVER
+
          CALL CALCTMAT(ICST,INS,IELAST,
      +                 NSRA,ISPIN,NSPIN,I1,EZ,
      +                 DRDI(1,I1),RMESH(1,I1),
@@ -337,7 +365,9 @@ c interpolate potential
 #ifdef CPP_MPI
 
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
-     &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.true.)
+     &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.false.)
+!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
+!      &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.true.)
         i1_start = ioff_pT(myrank_row)+1
         i1_end   = ioff_pT(myrank_row)+ntot_pT(myrank_row)
         t_mpi_c_grid%ntot1  = ntot1 
@@ -376,22 +406,15 @@ C
 C
       CLOSE (69)
       IF (LLY.NE.0) THEN 
-         CLOSE(691)
-         CLOSE(692)
+         if(t_lloyd%dtmat_to_file) CLOSE(691)
+         if(t_lloyd%tralpha_to_file) CLOSE(692)
       ENDIF
 
 
 #ifdef CPP_MPI
-      if (.not.t_tgmat%tmat_to_file) then
+      if(.not.t_tgmat%tmat_to_file .and. t_mpi_c_grid%dims(1)>0) then
          mytot = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_col)     
          call get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
-         
-         write(*,*) 'ntot_all',myrank,ntot_all,ioff_all,
-     &              t_mpi_c_grid%myMPI_comm_row==MPI_COMM_WORLD,
-     & t_mpi_c_grid%ntot_pT1,t_mpi_c_grid%ioff_pT1,
-     & t_mpi_c_grid%ntot_pT2,t_mpi_c_grid%ioff_pT2,
-     & t_mpi_c_grid%myrank_row, t_mpi_c_grid%myrank_col
-     
 !          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
 !      &                    mytot,MPI_COMM_WORLD)
 !      
@@ -414,13 +437,8 @@ CT3E  CALL SYSTEM_CLOCK(MSTART)
      &                            NAEZ,LLY) ! LLY Lloyd
 
 #ifdef CPP_MPI
-        if (.not.t_tgmat%gref_to_file) then
-         call get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
-         write(*,*) 'ntot_all',myrank,ntot_all,ioff_all,
-     &              t_mpi_c_grid%myMPI_comm_row==MPI_COMM_WORLD,
-     & t_mpi_c_grid%ntot_pT1,t_mpi_c_grid%ioff_pT1,
-     & t_mpi_c_grid%ntot_pT2,t_mpi_c_grid%ioff_pT2,
-     & t_mpi_c_grid%myrank_row, t_mpi_c_grid%myrank_col
+        if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>0) then
+          call get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
      
          call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,
      &                    t_mpi_c_grid%ntot_pT2,t_mpi_c_grid%ioff_pT2,

@@ -53,7 +53,7 @@ C *  v.popescu, munich 2004                                            *
 C *                                                                    *
 C **********************************************************************
 
-      use mod_types
+      use mod_types, only: t_inc, t_tgmat, t_lloyd
 
       IMPLICIT NONE
 C     ..
@@ -343,6 +343,19 @@ C                                  meant for simpler passing of basic parameter 
       if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.
       if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
       if(TEST('greffile')) t_tgmat%gref_to_file = .true.
+      
+      !set logical switches in t_lloyd which control if files are written to files or stored in memory
+      if(TEST('tmatfile').or.TEST('llyfiles')) 
+     &                    t_lloyd%dtmat_to_file = .true.
+      if(TEST('wrtdtmat').or.TEST('llyfiles'))
+     &                    t_lloyd%tralpha_to_file = .true.
+      if(TEST('wrtcdos ').or.TEST('llyfiles')) 
+     &                    t_lloyd%cdos_diff_lly_to_file = .true.
+      if(TEST('wrtdgref').or.TEST('llyfiles')) 
+     &                    t_lloyd%dgref_to_file = .true.
+      if(TEST('wrtgotr ').or.TEST('llyfiles')) 
+     &                    t_lloyd%g0tr_to_file = .true.
+
       
 C ======================================================================
       END subroutine

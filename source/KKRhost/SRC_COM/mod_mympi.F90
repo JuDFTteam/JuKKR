@@ -85,12 +85,14 @@ contains
        dims(1) = 0
        dims(2) = nranks
     else
+       ! rest not implemented!!!
+       stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
        dims(1) = ntot1
        dims(2) = nranks/ntot1
        if(mod(float(nranks)/float(ntot1),1.).ne.0) stop 'ERROR in find_dims_2d'
     end if
     
-    write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
+!     write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
     
   end subroutine find_dims_2d
 #endif
@@ -147,7 +149,7 @@ contains
 
     end if
     
-          write(*,*) 'in create_subarr_comm',myrank,nranks,subarr_dim,myrank_row,myrank_col,nranks_row,nranks_col
+!           write(*,*) 'in create_subarr_comm',myrank,nranks,subarr_dim,myrank_row,myrank_col,nranks_row,nranks_col
 
 
   end subroutine create_subarr_comm
@@ -261,63 +263,63 @@ contains
      IDIM = IRMDNEW*LMPOTD*4
      CALL MPI_ALLREDUCE(r2nefc,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,r2nefc,1)
-     if (myrank==master) write(*,*) 'mpireduce done for r2nefc'
+!      if (myrank==master) write(*,*) 'mpireduce done for r2nefc'
      
      IDIM = IRMDNEW*LMPOTD*4
      CALL MPI_ALLREDUCE(RHO2NSC,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,RHO2NSC,1)
-     if (myrank==master) write(*,*) 'mpireduce done for rho2nsc'
+!      if (myrank==master) write(*,*) 'mpireduce done for rho2nsc'
      
      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
      CALL MPI_ALLREDUCE(DEN,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,DEN,1)
-     if (myrank==master) write(*,*) 'mpireduce done for den'
+!      if (myrank==master) write(*,*) 'mpireduce done for den'
      
      IDIM = LMMAXD*IEMXD*2*NQDOS
      CALL MPI_ALLREDUCE(DENLM,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENLM,1)
-     if (myrank==master) write(*,*) 'mpireduce done for denlm'
+!      if (myrank==master) write(*,*) 'mpireduce done for denlm'
      
      IDIM = 4
      CALL MPI_ALLREDUCE(RHO2INT,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,RHO2INT,1)
-     if (myrank==master) write(*,*) 'mpireduce done for rho2int'
+!      if (myrank==master) write(*,*) 'mpireduce done for rho2int'
      
      IDIM = LMMAXSO*LMMAXSO*IEMXD*NQDOS
      CALL MPI_ALLREDUCE(GFLLE,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,GFLLE,1)
-     if (myrank==master) write(*,*) 'mpireduce done for gflle'
+!      if (myrank==master) write(*,*) 'mpireduce done for gflle'
      
      !double precision arrays
      IDIM = (LMAXD1+1)*2
      CALL MPI_ALLREDUCE(ESPV,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,ESPV,1)
-     if (myrank==master) write(*,*) 'mpireduce done for espv'
+!      if (myrank==master) write(*,*) 'mpireduce done for espv'
      
      IDIM = (LMAXD1+2)*3
      CALL MPI_ALLREDUCE(MUORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,MUORB,1)
-     if (myrank==master) write(*,*) 'mpireduce done for muorb'
+!      if (myrank==master) write(*,*) 'mpireduce done for muorb'
      
      IDIM = 3
      CALL MPI_ALLREDUCE(DENORBMOM,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOM,1)     
-     if (myrank==master) write(*,*) 'mpireduce done for denorbmom'
+!      if (myrank==master) write(*,*) 'mpireduce done for denorbmom'
      
      IDIM = 2*4
      CALL MPI_ALLREDUCE(DENORBMOMSP,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOMSP,1)  
-     if (myrank==master) write(*,*) 'mpireduce done for denorbmomsp'
+!      if (myrank==master) write(*,*) 'mpireduce done for denorbmomsp'
      
      IDIM = 3
      CALL MPI_ALLREDUCE(DENORBMOMNS,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOMNS,1)     
-     if (myrank==master) write(*,*) 'mpireduce done for denorbmomns'
+!      if (myrank==master) write(*,*) 'mpireduce done for denorbmomns'
      
      IDIM = (LMAXD+1)*3
      CALL MPI_ALLREDUCE(DENORBMOMLM,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOMLM,1)
-     if (myrank==master) write(*,*) 'mpireduce done for denorbmomlm'
+!      if (myrank==master) write(*,*) 'mpireduce done for denorbmomlm'
      
      deallocate(work)
         

@@ -423,9 +423,11 @@ c read in gf
         IREC = IQ + NQDOS * (IE-1) +  NQDOS * IELAST * (I1-1)     ! qdos
         !$omp critical
         if (t_tgmat%gmat_to_file) then
-         READ(69,REC=IREC) GMAT0 
+           READ(69,REC=IREC) GMAT0 
         else
-         GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
+           IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
+     &            t_mpi_c_grid%ntot2 * (I1-1)
+           GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
         end if
         !$omp end critical
 

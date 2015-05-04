@@ -311,7 +311,7 @@ C        Read BZ path for qdos calculation:
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
       ie_end = t_mpi_c_grid%ntot2
-      write(*,*) myrank,ie_start,ie_end
+!       write(*,*) myrank,ie_start,ie_end
 
       DO ie_num=1,ie_end
        
@@ -364,6 +364,9 @@ C Read in Green function
             if (t_tgmat%gmat_to_file) then
                READ(69,REC=IREC) GMAT0
             else
+               IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
+     &                t_mpi_c_grid%ntot2 * (ISPIN-1) + 
+     &                NQDOS * t_mpi_c_grid%ntot2 * NSPIN * (I1-1)
                GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
             end if
             IF (TEST('GMAT=0  ')) THEN

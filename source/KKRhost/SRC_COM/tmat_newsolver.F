@@ -11,7 +11,8 @@
 #endif
        use mod_mympi, only: myrank, nranks, master,
      &                      distribute_linear_on_tasks
-       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
+      use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
+     &                     t_lloyd,init_tlloyd 
 
        IMPLICIT NONE
        include 'inc.p'
@@ -137,6 +138,8 @@ c energy loop
         t_mpi_c_grid%ioff_pT2 = ioff_pT !(t_mpi_c_grid%myrank_col)
         ! now initialize arrays for tmat, gmat, and gref
         call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+
 
 !        DO IE=ie_start,ie_end
        DO ie_num=1,ie_end
@@ -309,14 +312,25 @@ c         STOP
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             write(696969,*) TMATLL(:,:)
          else
             irec = ie_num + ie_end * (i1-1)
             t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
          end if
          IF (LLY.NE.0) THEN
-          WRITE(691,REC=IREC) DTMATLL    ! LLY      
-          WRITE(692,REC=IREC) TRALPHA     ! LLY     
+           if(t_lloyd%dtmat_to_file) then
+             IREC = IE + IELAST*(I1-1)
+             WRITE(691,REC=IREC) DTMATLL(:,:)    ! LLY      
+           else
+             irec = ie_num + ie_end*(i1-1)
+             t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)
+           end if
+           if(t_lloyd%tralpha_to_file) then
+             IREC = IE + IELAST*(I1-1)
+             WRITE(692,REC=IREC) TRALPHA                              ! LLY
+           else
+             irec = ie_num + ie_end*(i1-1)
+             t_lloyd%tralpha(irec) = TRALPHA
+           end if
          ENDIF
 !$omp end critial         
          

@@ -79,7 +79,7 @@ C     general settings
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
-      PARAMETER ( LMAXD = 2 )
+      PARAMETER ( LMAXD = 3 )
       PARAMETER ( IEMXD = 101 )
       PARAMETER ( IRMD = 900, IRNSD = 890 )
       PARAMETER ( NRD = 20000, KPOIBZ = 32000 )

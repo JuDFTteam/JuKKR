@@ -10,6 +10,7 @@
       subroutine main2()
       
       use mod_types, only: t_inc
+!       use mod_timing, only: t_time
       
       implicit none
       
@@ -656,22 +657,7 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 C
       IF (KTE.EQ.1) THEN
-         write(789789798,*) 'espc',espc,'ecore',ecore,'lcore',lcore,
-     &                         'lcoremax',lcoremax,'ncore',ncore,
-     &                       'nspin',nspin,'natyp',natyp
-     
-!          if(t_inc%i_iteration.eq.1) then
-!             allocate(t_inc%lcoremax(NATYP))
-!             t_inc%lcoremax = lcoremax
-!          endif
-            
-
          CALL ESPCB(ESPC,NSPIN,NATYP,ECORE,LCORE,LCOREMAX,NCORE)    ! single-particle core energy
-         
-!          lcoremax = t_inc%lcoremax
-         
-         write(789789798,*) 'espc2',espc,'ecore2',ecore
-
 C
          CALL EPOTINB(EPOTIN,NSPIN,NATYP,RHO2NS,VISP,R,DRDI,        ! "energy of the input potential"
      &                INS,IRMIN,IRWS,LPOT,VINS,IRCUT,IPAN,ZAT)      ! Int V(r) rho(r) d^3r
@@ -1033,8 +1019,8 @@ C
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
-      ETIME0 = DCLOCK()
-      WRITE (6,FMT=9100) ETIME0 - STIME0
+!       ETIME0 = DCLOCK()
+!       WRITE (6,FMT=9100) ETIME0 - STIME0
 C
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC CONVERGENCY TESTS
 C

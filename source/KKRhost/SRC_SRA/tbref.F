@@ -4,7 +4,7 @@
      &                 NAEZ,LLY) ! LLY Lloyd
      
       use mod_mympi, only: myrank, nranks, master
-      use mod_types, only: t_tgmat
+      use mod_types, only: t_tgmat, t_lloyd
 #ifdef CPP_MPI
      &                    ,t_mpi_c_grid
       use mpi
@@ -95,8 +95,12 @@ C     ..
          CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
       end if
       IF (LLY.NE.0) THEN
+        if(t_lloyd%dgref_to_file) then
          CALL OPENDAFILE(681,'dgrefde',7,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
+        end if
+        if(t_lloyd%g0tr_to_file) then
          OPEN(682,FILE='lly_g0tr_ie.ascii',FORM='FORMATTED')
+        end if
       ENDIF
 
 C
@@ -160,20 +164,27 @@ C ----------------------------------------------------------------------
          else
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
          end if
-         IF (LLY.NE.0) WRITE (681,REC=IE) DGINP ! dGref/dE     ! LLY Lloyd
-         IF (LLY.NE.0) WRITE (682,FMT='(2E24.16)') LLY_G0TR_IE ! LLY Lloyd
+         if(t_lloyd%dgref_to_file) then
+            IF (LLY.NE.0) WRITE (681,REC=IE) DGINP ! dGref/dE     ! LLY Lloyd
+         else
+            t_lloyd%dgref(:,:,:,ie_num) = DGINP(:,:,:)
+         endif
+         if(t_lloyd%g0tr_to_file) then
+            IF (LLY.NE.0) WRITE (682,FMT='(2E24.16)') LLY_G0TR_IE ! LLY Lloyd
+         else
+            t_lloyd%g0tr(ie_num) = LLY_G0TR_IE
+         end if
 C
          IF (TEST('flow    ')) WRITE (6,FMT=*) 'G(n,lm,n,lm) (Ref) o.k.'
 
-CMPI      END IF
       END DO
 C ======================================================================
       if (t_tgmat%gref_to_file) then
          CLOSE (68)
       end if
 
-      IF (LLY.NE.0) CLOSE (681)
-      IF (LLY.NE.0) CLOSE (682)
+      IF (LLY.NE.0 .and. t_lloyd%dgref_to_file) CLOSE (681)
+      IF (LLY.NE.0 .and. t_lloyd%g0tr_to_file) CLOSE (682)
       DEALLOCATE (GINP,DGINP)
 
       END
