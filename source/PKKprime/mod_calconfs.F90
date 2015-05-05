@@ -4,7 +4,7 @@ module mod_calconfs
   implicit none
 
   private
-  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, order_lines
+  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, order_lines, calculate_dos_int
 
   integer, parameter :: SPCZMAX=1, SPCXY0=2, ROT_NO=0, ROT_FULLBZ=1, ROT_SPEC=2
 
