@@ -141,7 +141,7 @@ contains
     double precision :: cross(3)
 
     call crossprod(recbv(:,1), recbv(:,2), cross)
-    getBZvolume = sum(cross*recbv(:,3))
+    getBZvolume = abs(sum(cross*recbv(:,3)))
 
   end function getBZvolume
 
