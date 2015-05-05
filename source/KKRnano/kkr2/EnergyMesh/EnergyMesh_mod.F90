@@ -12,6 +12,8 @@
 module EnergyMesh_mod
 
   type EnergyMesh
+
+    ! valence contour parameters
     double precision  :: E1
     double precision  :: E2
     double precision  :: EFERMI
@@ -23,8 +25,19 @@ module EnergyMesh_mod
     double precision  :: TK
     double complex , allocatable, dimension(:)  :: WEZ
     double complex , allocatable, dimension(:,:)  :: WEZRN
-
     integer :: ielast
+
+    ! semicore contour parameters
+    double precision :: EBOTSEMI
+    double precision :: EMUSEMI
+    double precision :: FSEMICORE
+    integer :: IESEMICORE
+    integer :: N1SEMI
+    integer :: N2SEMI
+    integer :: N3SEMI
+    integer :: NPOLSEMI
+    double precision :: TKSEMI
+
   end type EnergyMesh
 
   CONTAINS
@@ -73,6 +86,7 @@ module EnergyMesh_mod
                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
                             emesh%NPOL, emesh%TK, emesh%WEZ)
 
+
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -118,5 +132,67 @@ subroutine updateEnergyMesh(emesh)
 
   end subroutine
 
+
+  !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  ! THE FOLLOWING FUNCTIONS ARE USED ONLY IF "use_semicore=1"!!!
+
+
+  ! VALENCE AND SEMICORE CONTOUR!
+  !----------------------------------------------------------------------------
+  !> read energy mesh data from file 'energy_mesh'
+  subroutine readEnergyMeshSemi(emesh)
+    use EnergyMeshHelpers_mod
+    implicit none
+
+    integer :: I
+
+    type (EnergyMesh), intent(inout) :: emesh
+
+    call readEnergyMeshImplSemi(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
+                            emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
+                            emesh%NPOL, emesh%TK, emesh%WEZ, emesh%EBOTSEMI, emesh%EMUSEMI, &
+                            emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
+                            emesh%N3SEMI, emesh%NPOLSEMI, emesh%TKSEMI)
+
+  do I = 1, emesh%IELAST
+  end do
+
+  end subroutine
+
+  ! VALENCE AND SEMICORE CONTOUR!
+  !----------------------------------------------------------------------------
+  !> write energy mesh data to file 'energy_mesh'
+  subroutine writeEnergyMeshSemi(emesh)
+    use EnergyMeshHelpers_mod
+    implicit none
+
+    type (EnergyMesh), intent(in) :: emesh
+
+    call writeEnergyMeshImplSemi(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
+                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
+                             emesh%NPOL, emesh%TK, emesh%WEZ, emesh%EBOTSEMI, emesh%EMUSEMI, &
+                             emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
+                             emesh%N3SEMI, emesh%NPOLSEMI, emesh%TKSEMI)
+
+  end subroutine
+
+  ! VALENCE AND SEMICORE CONTOUR!
+  !----------------------------------------------------------------------------
+  !> Update Energy mesh. Essentially a wrapper for EPATHTB
+  subroutine updateEnergyMeshSemi(emesh)
+    use EnergyMeshHelpers_mod
+    implicit none
+
+    type (EnergyMesh), intent(inout) :: emesh
+
+    call updateEnergyMeshImplSemi(emesh%EZ,emesh%WEZ,emesh%IELAST, &
+                              emesh%E1,emesh%E2,emesh%TK,emesh%NPOL, &
+                              emesh%NPNT1,emesh%NPNT2,emesh%NPNT3,emesh%EBOTSEMI, &
+                              emesh%EMUSEMI,emesh%IESEMICORE,emesh%FSEMICORE,emesh%N1SEMI, &
+                              emesh%N2SEMI,emesh%N3SEMI,emesh%NPOLSEMI,emesh%TKSEMI)
+
+
+  end subroutine
 
 end module

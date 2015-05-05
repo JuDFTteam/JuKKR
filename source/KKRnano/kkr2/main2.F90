@@ -138,7 +138,12 @@ program MAIN2
 
     call createEnergyMesh(emesh, dims%iemxd) !!!!
 
+    ! TO DO: Getting rid of the many if-clauses used for semicore contour!
+    if(params%use_semicore==1) then
+    call readEnergyMeshSemi(emesh) !every process does this!  !!!!
+    else
     call readEnergyMesh(emesh)  !every process does this!  !!!!
+    end if
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
                                        getElapsedTime(program_timer), 0)
@@ -185,7 +190,11 @@ program MAIN2
         !!!$omp parallel do private(ilocal, atomdata)
         do ilocal = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ilocal)
+          if (params%use_semicore==1) then
+          call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
+          else
           call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
+          end if
         end do
         !!!$omp end parallel do
       endif
@@ -245,11 +254,22 @@ program MAIN2
         ! only MASTERRANK updates, other ranks get it broadcasted later
         ! (although other processes could update themselves)
 
+        if(params%use_semicore==1) then
+        call updateEnergyMeshSemi(emesh)
+        else
         call updateEnergyMesh(emesh)
+        end if
 
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
-        call writeEnergyMesh(emesh)
+
+        if(params%use_semicore==1) then
+          call writeEnergyMeshSemi(emesh)
+        else
+          call writeEnergyMesh(emesh)
+        end if
+
+
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), &
                                          getElapsedTime(iteration_timer))

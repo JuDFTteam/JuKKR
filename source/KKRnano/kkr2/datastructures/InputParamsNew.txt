@@ -20,7 +20,6 @@ dv bravais_a 3
 l jij
 l ldau
 d rcutjij
-#dv basisscale 3
 d emax
 i kte
 i imix
@@ -36,6 +35,16 @@ i nmin_panel
 i num_MT_points
 d MT_scale
 d RMT_ref_scale
+### semicore contour
+i use_semicore
+d ebotsemi
+d emusemi
+i n1semi
+i n2semi
+i n3semi
+i npolsemi
+d tksemi
+d fsemicore
 ### other
 d target_rms
 ### near field corrections (default = 0)

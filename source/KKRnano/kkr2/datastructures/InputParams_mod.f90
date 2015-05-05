@@ -45,6 +45,15 @@ type InputParams
   integer :: num_MT_points
   double precision :: MT_scale
   double precision :: RMT_ref_scale
+  integer :: use_semicore
+  double precision :: ebotsemi
+  double precision :: emusemi
+  integer :: n1semi
+  integer :: n2semi
+  integer :: n3semi
+  integer :: npolsemi
+  double precision :: tksemi
+  double precision :: fsemicore
   double precision :: target_rms
   integer :: near_field
   integer :: write_shapes
@@ -282,6 +291,60 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueInteger(conf, "use_semicore", confvalues%use_semicore, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for use_semicore."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueDouble(conf, "ebotsemi", confvalues%ebotsemi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for ebotsemi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueDouble(conf, "emusemi", confvalues%emusemi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for emusemi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "n1semi", confvalues%n1semi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for n1semi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "n2semi", confvalues%n2semi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for n2semi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "n3semi", confvalues%n3semi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for n3semi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueInteger(conf, "npolsemi", confvalues%npolsemi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for npolsemi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueDouble(conf, "tksemi", confvalues%tksemi, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for tksemi."
+    call destroyConfigReader(conf)
+    return
+  end if
+  call getValueDouble(conf, "fsemicore", confvalues%fsemicore, ierror)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for fsemicore."
+    call destroyConfigReader(conf)
+    return
+  end if
   call getValueDouble(conf, "target_rms", confvalues%target_rms, ierror)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for target_rms."
@@ -376,6 +439,15 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%num_MT_points
   read(FILEHANDLE) confvalues%MT_scale
   read(FILEHANDLE) confvalues%RMT_ref_scale
+  read(FILEHANDLE) confvalues%use_semicore
+  read(FILEHANDLE) confvalues%ebotsemi
+  read(FILEHANDLE) confvalues%emusemi
+  read(FILEHANDLE) confvalues%n1semi
+  read(FILEHANDLE) confvalues%n2semi
+  read(FILEHANDLE) confvalues%n3semi
+  read(FILEHANDLE) confvalues%npolsemi
+  read(FILEHANDLE) confvalues%tksemi
+  read(FILEHANDLE) confvalues%fsemicore
   read(FILEHANDLE) confvalues%target_rms
   read(FILEHANDLE) confvalues%near_field
   read(FILEHANDLE) confvalues%write_shapes
@@ -429,6 +501,15 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%num_MT_points
   write(FILEHANDLE) confvalues%MT_scale
   write(FILEHANDLE) confvalues%RMT_ref_scale
+  write(FILEHANDLE) confvalues%use_semicore
+  write(FILEHANDLE) confvalues%ebotsemi
+  write(FILEHANDLE) confvalues%emusemi
+  write(FILEHANDLE) confvalues%n1semi
+  write(FILEHANDLE) confvalues%n2semi
+  write(FILEHANDLE) confvalues%n3semi
+  write(FILEHANDLE) confvalues%npolsemi
+  write(FILEHANDLE) confvalues%tksemi
+  write(FILEHANDLE) confvalues%fsemicore
   write(FILEHANDLE) confvalues%target_rms
   write(FILEHANDLE) confvalues%near_field
   write(FILEHANDLE) confvalues%write_shapes

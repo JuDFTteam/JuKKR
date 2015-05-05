@@ -73,8 +73,10 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   ! kkr
   !  |
   !  v
+
   call calculateDensities(iter, calc_data, my_mpi, dims, params, &
                           program_timer, arrays, emesh)
+
   ! |
   ! v
   ! modified: densities, emesh, energies (ESPV only)
@@ -429,6 +431,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   double precision :: denEf_local
   double precision :: chrgNt_local
   double precision :: new_fermi
+  double precision :: CHRGSEMICORE !< total semicore charge over all atoms
   integer :: ilocal
   integer :: num_local_atoms
 
@@ -447,6 +450,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   cell         => null()
 
   I1 = 0
+  CHRGSEMICORE=0.0d0 !< Initialize semicore charge to zero
 
   if (dims%LLY /= 0 .and. num_local_atoms > 1) then
     if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
@@ -528,12 +532,27 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     ! ---> l/m_s/atom-resolved charges, output -> CHARGE
     ! Use WEZ or WEZRN ? - renormalisation already in DEN! (see renormalizeDOS)
     ! CHARGE -> written to result file
+
+    ! Semicore contour included
+    if(params%use_semicore==1) then
+
+    call calcChargesLresSemi(densities%CHARGE, densities%CHRGSEMICORE_per_atom, densities%DEN, emesh%ielast, &
+                         emesh%IESEMICORE, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
+                         densities%IEMXD)
+
+    else
+    ! Only valence contour
     call calcChargesLres(densities%CHARGE, densities%DEN, emesh%ielast, &
                          densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
                          densities%IEMXD)
 
+    end if
+
     DENEF = DENEF + DENEF_local
     CHRGNT = CHRGNT + CHRGNT_local
+
+    ! Add semicore charge for current atom
+    CHRGSEMICORE = CHRGSEMICORE+densities%CHRGSEMICORE_per_atom
 
 !------------------------------------------------------------------------------
   end do ! ilocal
@@ -600,6 +619,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
     densities%CMOM   = 0.0D0
     densities%CMINST = 0.0D0
+
     call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
                             densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
@@ -607,6 +627,11 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   end do ! ilocal
   !!!$omp end parallel do
 !------------------------------------------------------------------------------
+
+  if(params%use_semicore==1) then
+  ! --> Recalculate the semicore contour factor FSEMICORE
+  call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE)
+  end if
 
   emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
                         ! was calculated !!!
@@ -1178,6 +1203,74 @@ end subroutine
       end do
     end do
   end subroutine calcChargesLres
+
+   !----------------------------------------------------------------------------
+  !> Calculates the l-resolved charges including the semicore charge.
+  !> This is done by energy integration in the complex plane over the imaginary
+  !> part of the diagonal of the structural Green's function (DEN)
+  !> TO DO: Combine calcChargesLres and calcChargesLresSemi once semicore feature is stable!
+
+  subroutine calcChargesLresSemi(CHARGE, CHRGSEMICORE, DEN, IELAST, IESEMICORE, LMAXD1, NSPIN, WEZ, IEMXD)
+    implicit none
+
+    double precision, intent(out) :: CHARGE(0:LMAXD1,2)
+    double precision, intent(out) :: CHRGSEMICORE
+    double complex, intent(in) :: DEN(0:LMAXD1,IEMXD,NSPIN)
+    doublecomplex, intent(in) :: WEZ(IEMXD)
+
+    integer, intent(in) :: IEMXD
+    integer, intent(in) :: NSPIN
+    integer, intent(in) :: LMAXD1
+    integer, intent(in) :: IELAST
+    integer, intent(in) :: IESEMICORE
+
+    integer :: ISPIN
+    integer :: L
+    integer :: IE
+
+    ! ---> l/m_s/atom-resolved charges
+
+    CHRGSEMICORE=0.0d0
+
+    do ISPIN = 1,NSPIN
+      do L = 0,LMAXD1
+        CHARGE(L,ISPIN) = 0.0D0
+        do IE = 1,IELAST
+          CHARGE(L,ISPIN) = CHARGE(L,ISPIN) + &
+          DIMAG(WEZ(IE)*DEN(L,IE,ISPIN))/ &
+          DBLE(NSPIN)
+          if (IE.EQ.IESEMICORE) THEN
+          CHRGSEMICORE = CHRGSEMICORE + CHARGE(L,ISPIN)
+          end if
+        end do
+
+      end do
+    end do
+  end subroutine calcChargesLresSemi
+
+  !----------------------------------------------------------------------------
+  !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
+
+  subroutine calcFactorSemi(CHRGSEMICORE, FSEMICORE)
+
+   double precision, intent(inout)  :: CHRGSEMICORE ! semicore charge
+   double precision, intent(inout) :: FSEMICORE    ! semicore factor to be updated
+
+   integer :: I1                                ! auxiliary parameter, number of semicore bands
+
+
+   IF ( CHRGSEMICORE.LT.1D-10 ) CHRGSEMICORE = 1D-10
+
+    I1 = NINT(CHRGSEMICORE)
+
+    FSEMICORE = DBLE(I1)/CHRGSEMICORE * FSEMICORE
+
+         WRITE(6,'(6X,"< SEMICORE > : ",/, &
+               21X,"charge found in semicore :",F10.6,/, &
+               21X,"new normalisation factor :",F20.16,/)')  &
+               CHRGSEMICORE,FSEMICORE
+
+  end subroutine calcFactorSemi
 
   !----------------------------------------------------------------------------
   !> correct Fermi-energy (charge neutrality).

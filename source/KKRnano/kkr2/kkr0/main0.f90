@@ -115,6 +115,7 @@
     double precision :: EFERMI
 
     integer :: IELAST
+    integer :: iesemicore
 
     complex(kind=DP), dimension(:), allocatable :: EZ
     complex(kind=DP), dimension(:), allocatable :: WEZ
@@ -151,12 +152,32 @@
     ierror = getInputParamsValues("input.conf", params)
     if (ierror /= 0) stop
 
+    ! Calculate number of energy points
+
+    ! semicore contour is used
+    if (params%use_semicore == 1) then
+
+     write(*,*) "WARNING: Using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing"
+
+     if (params%NPOL /= 0) then
+      IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3 + params%n1semi + params%n2semi + params%n3semi
+    else
+      ! DOS-calculation
+      IEMXD = params%NPNT2 + params%n2semi
+    end if
+
+    ! semicore contour is not used
+    else
+
     if (params%NPOL /= 0) then
       IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3
     else
       ! DOS-calculation
       IEMXD = params%NPNT2
     end if
+
+    end if
+
 
     dims%IEMXD = IEMXD
 
@@ -223,11 +244,23 @@
 ! --> set up energy contour
     PI = 4.0D0*ATAN(1.0D0)
 
+! --> set up semicore energy contour if use_semicore == 1
+    if (params%use_semicore == 1) then
+! EPATHTB calls EMESHT both for the semicore contour and the valence contour
+    call EPATHTB(EZ,DEZ,EFERMI,IELAST,iesemicore,params%use_semicore, &
+                 params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
+                 params%ebotsemi,params%emusemi,params%tksemi,params%npolsemi,params%n1semi,params%n2semi,params%n3semi, &
+                 IEMXD)
+    else
+! Call EMESTH for valence contour only (can be included in EPATHTB when semicore contour feature is stable)
     call EMESHT(EZ,DEZ,IELAST,params%Emin,params%Emax,EFERMI,params%tempr, &
     params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
+    endif
+
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*DEZ(IE)
     end do
+
 
 ! ================================================ deal with the lattice
 
@@ -274,11 +307,28 @@
     call writeMain2Arrays(arrays, 'arrays.unf')
 
     ! write start energy mesh
+    if (params%use_semicore == 1) then
+
     open (67,FILE='energy_mesh.0',FORM='unformatted')
     write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
     write (67) EFERMI
+    write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
+    write (67) params%EMUSEMI,params%TKSEMI,params%NPOLSEMI
+    write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
+
     close (67)
+
+    else
+
+    open (67,FILE='energy_mesh.0',FORM='unformatted')
+    write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
+    write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
+    write (67) EFERMI
+
+    close (67)
+
+    end if
 
 ! ======================================================================
 
