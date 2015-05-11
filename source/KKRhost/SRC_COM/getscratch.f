@@ -32,19 +32,16 @@ C * running directory will be used.                                    *
 C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
-      INTEGER IUNIT,LBASENAME,LREC,ITMPDIR,ILTMP,LREC2
+      INTEGER IUNIT,LBASENAME,LREC,ITMPDIR,ILTMP
       CHARACTER*80 BASENAME(80),TMPDIR
-
-! 4 words = 16 bytes / complex number (in ifort 4; in gfort 16)
-      LREC2 = LREC ! /4
 
 
       IF (ITMPDIR.EQ.1) THEN
-          OPEN (IUNIT,ACCESS='direct',RECL=LREC2,
+          OPEN (IUNIT,ACCESS='direct',RECL=LREC,
      &         FILE=TMPDIR(1:ILTMP)//BASENAME(1:LBASENAME),
      &         FORM='unformatted')
       ELSE
-          OPEN (IUNIT,ACCESS='direct',RECL=LREC2,
+          OPEN (IUNIT,ACCESS='direct',RECL=LREC,
      &          FILE=BASENAME(1:LBASENAME),FORM='unformatted')
       END IF
       RETURN

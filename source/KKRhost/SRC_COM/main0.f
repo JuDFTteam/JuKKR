@@ -423,7 +423,7 @@ C     .. Common blocks ..
       COMMON /TESTC/TESTC
 C     ..
 Consistency check
-      WRITE(*,*) 'This is the KKR code version 2015_04_29.'
+      WRITE(*,*) 'This is the KKR code version 2015_05_05.'
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 
@@ -463,6 +463,7 @@ C
      &              IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,
      &              TOLRDIF,LLY,DELTAE,
      &              LCARTESIAN,BRAVAIS,RMAX,GMAX)
+        write(*,*) 'nrbasis, rinput', nrbasis
 c
 C ================================================ deal with the lattice
 
@@ -474,6 +475,7 @@ C ================================================ deal with the lattice
      +              NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      +              TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ,NOQ,
      &              NAEZD,NATYPD,NEMBD)
+        write(*,*) 'nrbasis, scalevec', nrbasis
       ! After SCALEVEC all basis positions are in cartesian coords.
 
       NVIRT = 0
@@ -493,6 +495,7 @@ C ================================================ deal with the lattice
      &               TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &               REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,
      &               NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
+        write(*,*) 'nrbasis, clsgen_tb', nrbasis
 
 ! Now the clusters, reference potentials and muffin-tin radii have been set.
 C ......................................................................
@@ -731,7 +734,10 @@ C ======================================================================
 C
       IF ( OPT('KKRFLEX ') ) THEN
 
-      CALL WRITEHOSTSTRUCTURE(BRAVAIS,NRBASIS,RBASIS,NAEZD,NEMBD)
+      write(*,*) 'call wrthosttstruc',bravais,nrbasis,rbasis,naezd,nembd
+!       stop
+      CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZD,NEMBD)
+!       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NRBASIS,RBASIS,NAEZD,NEMBD)
 
         OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
         NVATOM=0
@@ -761,7 +767,7 @@ C ======================================================================
 C
 C
 ! fivos write out nshell and nsh1,nsh2 into standard output and in file shells.dat
-      IF (ICC.NE.0) THEN
+      IF (ICC.NE.0 .and. .not.OPT('KKRFLEX ')) THEN
          OPEN(58,FILE='shells.dat')
          write(*,*) 'Writing out shells (also in shells.dat):' ! fivos
          write(*,*) 'itype,jtype,iat,jat,r(iat),r(jat)' ! fivos
@@ -773,6 +779,7 @@ C
             write(58,*) i1,NSHELL(i1), 
      &                 'No. of shell, No. of atoms in shell' ! fivos
             do lm = 1,NSHELL(i1) ! fivos
+               write(*,*) 'ish(i1,lm)',ish(i1,lm)
                write(*,8614) NSH1(i1),NSH2(i1) ! fivos
      &              ,ISH(i1,lm),JSH(i1,lm) ! fivos
      &              ,(RCLSIMP(i,ISH(i1,lm)),i=1,3) ! fivos

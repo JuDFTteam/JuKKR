@@ -337,12 +337,16 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%LMGF0D = (LMAXD+1)**2  ! see main1b
       t_inc%NCLSD  = NCLS
       t_inc%NACLSD = NACLSMAX
+      t_inc%NSHELL0 = NSHELL(0)
       IF(OPT('NEWSOSOL')) t_inc%NEWSOSOL = .true.
       
       !set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
       if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.
       if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
       if(TEST('greffile')) t_tgmat%gref_to_file = .true.
+      !some special run options:
+      if(OPT('KKRFLEX '))  t_tgmat%tmat_to_file = .true.  ! for KKRFLEX option tmat must be written to file 
+      if(OPT('qdos    '))  t_tgmat%gmat_to_file = .true.  ! for qdos write gmat to file since it scales with NQDOS and can become huge
       
       !set logical switches in t_lloyd which control if files are written to files or stored in memory
       if(TEST('tmatfile').or.TEST('llyfiles')) 

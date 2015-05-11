@@ -160,11 +160,11 @@
       IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE'
       GLLKE(:,:) = CZERO
       IF (LLY.NE.0) ALLOCATE(DGLLKE(ALM,ALM),STAT=IU) ! LLY Lloyd
-      IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKE'
-      DGLLKE(:,:) = CZERO
+      IF ( IU.NE.0) STOP '      <kkrmat01 > allocate DGLLKE'
+      IF (LLY.NE.0) DGLLKE(:,:) = CZERO
       IF (LLY.NE.0) ALLOCATE(GREFLLKE(ALM,ALM),STAT=IU) ! LLY Lloyd
-      IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GREFLLKE'
-      GREFLLKE(:,:) = CZERO
+      IF ( IU.NE.0) STOP '      <kkrmat01 > allocate GREFLLKE'
+      IF (LLY.NE.0) GREFLLKE(:,:) = CZERO
 
       IF ( OPT('VIRATOMS') ) THEN
          ALLOCATE (GLLKE0V(ALM,ALM),GLLKE0V2(ALM,ALM),

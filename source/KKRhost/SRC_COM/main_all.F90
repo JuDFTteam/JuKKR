@@ -67,6 +67,8 @@ program kkrcode
   ! save grid info in type
   call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col, myrank_grid, myrank_row, myrank_col, nranks_row, nranks_col)
   call timing_stop('MPI 1')
+  
+!     STOP
 #endif
   
   

@@ -164,16 +164,18 @@ C ----------------------------------------------------------------------
          else
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
          end if
-         if(t_lloyd%dgref_to_file) then
-            IF (LLY.NE.0) WRITE (681,REC=IE) DGINP ! dGref/dE     ! LLY Lloyd
-         else
-            t_lloyd%dgref(:,:,:,ie_num) = DGINP(:,:,:)
-         endif
-         if(t_lloyd%g0tr_to_file) then
-            IF (LLY.NE.0) WRITE (682,FMT='(2E24.16)') LLY_G0TR_IE ! LLY Lloyd
-         else
-            t_lloyd%g0tr(ie_num) = LLY_G0TR_IE
-         end if
+         IF (LLY.NE.0) THEN                                ! LLY Lloyd
+            if(t_lloyd%dgref_to_file) then                 ! LLY Lloyd
+               WRITE (681,REC=IE) DGINP ! dGref/dE         ! LLY Lloyd
+            else                                           ! LLY Lloyd
+               t_lloyd%dgref(:,:,:,ie_num) = DGINP(:,:,:)  ! LLY Lloyd
+            endif                                          ! LLY Lloyd
+            if(t_lloyd%g0tr_to_file) then                  ! LLY Lloyd
+               WRITE (682,FMT='(2E24.16)') LLY_G0TR_IE     ! LLY Lloyd
+            else                                           ! LLY Lloyd
+               t_lloyd%g0tr(ie_num) = LLY_G0TR_IE          ! LLY Lloyd
+            end if                                         ! LLY Lloyd
+         END IF ! LLY.NE.0                                 ! LLY Lloyd
 C
          IF (TEST('flow    ')) WRITE (6,FMT=*) 'G(n,lm,n,lm) (Ref) o.k.'
 

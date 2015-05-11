@@ -304,38 +304,6 @@ C
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
-      open(5555,file='test_density')
-      write(5555,*) RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,
-     &          IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
-      IF (KREL.EQ.1) write(5555,*) RHOORB,ECOREREL,NKCORE,KAPCORE
-      close(5555)
-      
-      open(5555,file='test_input_potential')
-      write(5555,*) VINS,VISP,ECORE,VBC
-      IF (KREL.EQ.1) THEN
-         write (5555,*) RMREL,DRDIREL,R2DRDIREL
-         write (5555,*) ZREL,JWSREL,IRSHIFT
-      END IF
-      write(5555,*) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
-      close(5555)
-      
-      OPEN (5555,FILE='test_input2',FORM='formatted')
-      write(5555,*) NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,
-     & NTCELL,LMAX,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,LINTERFACE
-      write(5555,*) ATOMIMP,NATOMIMP
-      write(5555,*) IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,
-     & KVMAD,KXC,LAMBDA_XC,TXC,ICC,ISHIFT,IXIPOL,LRHOSYM,KFORCE
-      write(5555,*) A,B,DRDI,R,THETAS,ZAT,IFUNM,LMSP,RMT,RMTNEW,RWS,
-     & IMT,IRC,IRMIN,IRWS,ITITLE,LLMSP,NFU,HOSTIMP
-      write(5555,*) ALAT,KAOEZ,IQAT,NOQ,CONC,GSH,ILM,IMAXSH,TESTC,
-     & OPTC,LLY
-      CLOSE (5555)
-      
-      open(5555,file='test_emesh')
-      write(5555,*) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSOLD
-      write(5555,*) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
-     &          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
-      close(5555)
 C
 C============================================================= CONSTANTS
       PI = 4.0D0*ATAN(1.0D0)

@@ -47,6 +47,8 @@ C     .. Parameters ..
       PARAMETER (LMMAXD= (KREL+KORBIT+1) * (LMAXD+1)**2)
       INTEGER LMAXD1
       PARAMETER (LMAXD1=LMAXD+1)
+      INTEGER LMMAXD1
+      PARAMETER (LMMAXD1=LMMAXD+1)
       INTEGER MMAXD
       PARAMETER (MMAXD=2*LMAXD+1)
       INTEGER LM2D
@@ -117,7 +119,10 @@ CMPI  EXTERNAL MPI_ALLREDUCE,MPI_COMM_RANK,MPI_COMM_SIZE,
 CMPI +         MPI_FINALIZE,MPI_INIT,ZCOPY,DCOPY
 CT3E  INTEGER ICLKTCK,ICLOCKS,MEND,MSTART
 CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
-      DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
+!       DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
+!       DOUBLE COMPLEX DENLM(0:LMMAXD1,IEMXD,NPOTD)
+      DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
+      DOUBLE COMPLEX, allocatable :: den(:,:,:,:), denlm(:,:,:,:) ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS),DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
       DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2),WEZNORM(IEMXD)
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
       DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
@@ -188,6 +193,8 @@ C     .. itermdir variables
 C     .. qdos and lmlm-dos ..
       CHARACTER*8 QDOSOPT
       DOUBLE COMPLEX DF(IEMXD),GFLLE(LMMAXSO,LMMAXSO,IEMXD,100)
+      DOUBLE COMPLEX DENTOT ! qdos
+      DOUBLE PRECISION, allocatable :: QVEC(:,:)
       INTEGER IREC,LM1,LM2
 #ifdef CPP_MPI
       integer :: i1_start, i1_end
@@ -328,9 +335,23 @@ CT3E  CALL SYSTEM_CLOCK(MSTART)
 C
 C ======================================================================
 C
+      NQDOS=1
+      IF (OPT('qdos    ')) THEN                         ! qdos
+C        Read BZ path for qdos calculation:
+         OPEN(67,FILE='qvec.dat')                       ! qdos
+         READ(67,*) NQDOS                               ! qdos
+         ALLOCATE(QVEC(3,NQDOS))                        ! qdos
+         DO IQ = 1,NQDOS                                ! qdos
+            READ(67,*) (QVEC(I1,IQ),I1=1,3)             ! qdos
+         ENDDO                                          ! qdos
+         CLOSE(67)                                      ! qdos
+      END IF
+      
+      allocate( DEN(0:LMAXD1,IEMXD,NQDOS,NPOTD),
+     &          DENLM(LMMAXD,IEMXD,NQDOS,NPOTD))
 
-
-      CALL CINIT(IEMXD*(LMAXD+2)*NPOTD,DEN)
+      CALL CINIT(IEMXD*(LMAXD+2)*NPOTD*NQDOS,DEN)
+      CALL CINIT(IEMXD*(LMMAXD)*NPOTD*NQDOS,DENLM)
       DENEF = 0.0D0
       CALL RINIT(NATYPD,DENEFAT)
 C
@@ -429,14 +450,8 @@ c calculate contribution from free space
 #ifdef CPP_MPI            
             ! MPI gather cdos_lly on all processors
             ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            WRITE(*,*) 'sending cdos_lly',myrank,ihelp,shape(cdos_lly),
-     &       shape(cdos_dum)
             CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
      &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
-         write(*,*) 'done with cdos_lly sending',myrank
-!             CALL MPI_ALLREDUCE(cdos_lly,cdos_dum,ihelp,
-!      &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
-!             CALL DCOPY(ihelp,cdos_dum,1,cdos_lly,1)
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)
                                                                            ! LLY Lloyd
@@ -541,7 +556,7 @@ C ----------------------------------------------------------------- SPIN
      &           ZAT(I1),IPAN(I1),IRCUT(0,I1),IRMIN(I1),
      &           THETAS(1,1,ICELL),IFUNM1(1,ICELL),LMSP1(1,ICELL),
      &           RHO2N1(1,1,IPOT1),RHO2N2(1,1,IPOT1),
-     &           RHOORB(1,I1),DEN(0,1,IPOT),
+     &           RHOORB(1,I1),DEN(0,1,1,IPOT),DENLM(1,1,1,IPOT),
      &           MUORB(0,1,I1),ESPV(0,IPOT1),
      &           CLEB,LOFLM,ICLEB,IEND,JEND,SOLVER,
      &           SOCSCL(1,KREL*I1+(1-KREL)),
@@ -552,7 +567,7 @@ C ----------------------------------------------------------------- SPIN
      &           LMOMVEC,QMTET(IQ),QMPHI(IQ),MVEVIL1,MVEVIL2,NMVECMAX,
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),
      &           DENMATC(1,1,IPOT),
-     &           LLY,NATYP)              ! LLY Lloyd
+     &           LLY,NATYP,NQDOS)              ! LLY Lloyd
          END DO
 C ----------------------------------------------------------------- SPIN
 C
@@ -568,9 +583,9 @@ C
 C     
         DO L = 0,LMAXD1
            DENEF = DENEF - 2.0D0 * CONC(I1) * 
-     +           DIMAG(DEN(L,IELAST,IPOT1))/PI/DBLE(NSPINPOT)
+     +           DIMAG(DEN(L,IELAST,1,IPOT1))/PI/DBLE(NSPINPOT)
            DENEFAT(I1) = DENEFAT(I1) - 2.0D0 * 
-     &           DIMAG(DEN(L,IELAST,IPOT1))/PI/DBLE(NSPINPOT)
+     &           DIMAG(DEN(L,IELAST,1,IPOT1))/PI/DBLE(NSPINPOT)
         END DO
 C     
         IF (NSPINPOT.EQ.2) THEN
@@ -583,9 +598,9 @@ C
 C     
            DO L = 0,LMAXD1
               DENEF = DENEF - 2.0D0 * CONC(I1) * 
-     +              DIMAG(DEN(L,IELAST,IPOT1+1))/PI/DBLE(NSPINPOT)
+     +              DIMAG(DEN(L,IELAST,1,IPOT1+1))/PI/DBLE(NSPINPOT)
               DENEFAT(I1) = DENEFAT(I1) - 2.0D0 * 
-     &              DIMAG(DEN(L,IELAST,IPOT1+1))/PI/DBLE(NSPINPOT) 
+     &              DIMAG(DEN(L,IELAST,1,IPOT1+1))/PI/DBLE(NSPINPOT) 
            END DO
         END IF
 
@@ -628,10 +643,64 @@ C ================================================================ NATYP
       
 #ifdef CPP_MPI
       !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
-      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,NPOTD,
-     &             IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,NMVECMAX,
-     &                         rho2ns,r2nef,espv,den,denmatc,denef,
-     &                   denefat,rhoorb,muorb,mvevi,mvevil,mvevief)
+      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
+     &         NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,NMVECMAX,
+     &                     NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
+     &                denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief)
+     
+
+      !move writeout of lmdo and qdos file here
+      if(myrank==master) then
+       DO I1=1,NATYP
+      IF (OPT('qdos    ')) THEN
+      
+       DO ISPIN = 1,NSPIN
+          IPOT = (I1-1) * NSPINPOT + ISPIN
+       
+      OPEN(30,   ! lm-dos
+     +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +char(48+ISPIN)//".dat")   ! lm-dos
+      WRITE (30,*) ' '   ! lm-dos
+      WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
+ 8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
+      OPEN(31,   ! lm-dos
+     +FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +char(48+ISPIN)//".dat")   ! lm-dos
+         DO IE=1,IELAST
+            DO IQ=1,NQDOS
+            DENTOT = DCMPLX(0.D0,0.D0)
+            DO L = 0,LMAXD1
+               DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)
+            ENDDO
+            WRITE(30,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
+     &  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! lmdos
+            WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
+     &  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! lmdos
+            END DO ! IQ=1,NQDOS
+         END DO ! IE=1,IELAST
+         END DO !ISPIN=1,NSPIN
+         close(31)
+ 9000  FORMAT(5F10.6,40E16.8)
+ 
+      ELSE
+             DO ISPIN = 1,NSPIN
+          IPOT = (I1-1) * NSPINPOT + ISPIN
+       
+      OPEN(30,   ! lm-dos
+     +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +char(48+ISPIN)//".dat")   ! lm-dos
+      WRITE (30,*) ' '   ! lm-dos
+      WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
+         DO IE=1,IELAST
+            WRITE(30,9001) DREAL(EZ(IE)),
+     &                   (-DIMAG(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)
+         END DO
+         END DO
+ 9001    FORMAT(30E12.4)
+      ENDIF  ! not qdos option
+         close(30)
+       END DO
+      end if ! myrank==master
 #endif
 
       ELSE ! new spin-orbit solver
@@ -676,8 +745,8 @@ c interpolate potential
          ESPV(L,IPOT)=ESPV1(L,1)
          ESPV(L,IPOT+NSPIN-1)=ESPV1(L,NSPIN)
          DO IE=1,IELAST
-          DEN(L,IE,IPOT)=DEN1(L,IE,1)
-          DEN(L,IE,IPOT+NSPIN-1)=DEN1(L,IE,NSPIN)
+          DEN(L,IE,1,IPOT)=DEN1(L,IE,1)
+          DEN(L,IE,1,IPOT+NSPIN-1)=DEN1(L,IE,NSPIN)
          ENDDO
         ENDDO
         DO ISPIN=1,NSPIN
@@ -691,15 +760,15 @@ c interpolate potential
 
         DO L = 0,LMAXD1
            DENEF = DENEF - 2.0D0 * CONC(I1) * 
-     +           DIMAG(DEN(L,IELAST,IPOT))/PI/DBLE(NSPIN)
+     +           DIMAG(DEN(L,IELAST,1,IPOT))/PI/DBLE(NSPIN)
            DENEFAT(I1) = DENEFAT(I1) - 2.0D0 * 
-     &           DIMAG(DEN(L,IELAST,IPOT))/PI/DBLE(NSPIN)
+     &           DIMAG(DEN(L,IELAST,1,IPOT))/PI/DBLE(NSPIN)
         END DO
         DO L = 0,LMAXD1
            DENEF = DENEF - 2.0D0 * CONC(I1) * 
-     +            DIMAG(DEN(L,IELAST,IPOT+1))/PI/DBLE(NSPIN)
+     +            DIMAG(DEN(L,IELAST,1,IPOT+1))/PI/DBLE(NSPIN)
            DENEFAT(I1) = DENEFAT(I1) - 2.0D0 * 
-     &            DIMAG(DEN(L,IELAST,IPOT+1))/PI/DBLE(NSPIN) 
+     &            DIMAG(DEN(L,IELAST,1,IPOT+1))/PI/DBLE(NSPIN) 
         END DO
        DO ISPIN=1,NSPIN
         DO L=0,LMAXD1
@@ -771,7 +840,7 @@ C
 C
                 DO IE = 1,IELAST
                    CHARGE(L,I1,ISPIN) = CHARGE(L,I1,ISPIN) +
-     +                  DIMAG(WEZ(IE)*DEN(L,IE,IPOT))/
+     +                  DIMAG(WEZ(IE)*DEN(L,IE,1,IPOT))/
      +                  DBLE(NSPINPOT)
                    IF ( IE.EQ.IESEMICORE ) CHRGSEMICORE = 
      +                  CHRGSEMICORE + CONC(I1)*CHARGE(L,I1,ISPIN)
@@ -947,6 +1016,8 @@ CMPI  CALL MPI_FINALIZE(IERR)
 #ifdef CPP_MPI
       end if !myrank==master
 #endif
+      
+      deallocate(den,denlm)
       
       END SUBROUTINE !MAIN1c
       

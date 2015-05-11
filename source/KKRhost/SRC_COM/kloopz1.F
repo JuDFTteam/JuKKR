@@ -14,6 +14,8 @@ c 13.10.95 *************************************************************
      &                   TQDOS,IQDOSRUN,  !qdos ruess
      &                   DTREFLL,DTMATLL,DGINP,LLY_GRTR,TRACET,LLY)! LLY Lloyd
 c **********************************************************************
+      use mod_types, only: t_inc
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
 C     .. Parameters ..
       include 'inc.p'
@@ -85,7 +87,7 @@ C     .. Array Arguments ..
       LOGICAL VACFLAG(2),SYMUNITARY(*)
 C     ..
 C     .. Local Scalars ..
-      INTEGER IH,LM1,LM2,NS,NSDIA,ICALL
+      INTEGER IH,LM1,LM2,NS,NSDIA,ICALL,IREC
       INTEGER IQ,JQ,IT,I,J,IQTAU,ICPASTART,ITCPA,IU,NSMAX
       DOUBLE PRECISION CPAERRL,CPAERR,CPACORR,CPACHNG
       DOUBLE COMPLEX EZ,CNSYMAT,TAUVBZ
@@ -110,6 +112,9 @@ CF90-------------------------------------------------------------
       DOUBLE COMPLEX DMSSQ(:,:,:)
       ALLOCATABLE GS,TAUDELQ,TAUDELT,DMSSQ
 CF90-------------------------------------------------------------
+#ifdef CPP_MPI
+      INTEGER :: irec0
+#endif
 C
 CF90CF90-------------------------------------------------------------
 CF90      DOUBLE COMPLEX GS(:,:,:,:),TAUDELQ(:,:,:),TAUDELT(:,:,:)
@@ -416,15 +421,36 @@ C
 C  In first qdos run write out t matrix which is read in for the calculation for every k point
       IF ( OPT('deci-out').OR.(IQDOSRUN.EQ.0) ) THEN  ! qdos ruess
          DO IH = 1,NAEZ
+#ifdef CPP_MPI
+            irec0 = LMMAXD**2*(ih-1)+LMMAXD**2*naez*(ie-1)+
+     &              LMMAXD**2*t_inc%IELAST*naez*(ispin-1)
+#else
             WRITE (37,99005) IE,ERYD,IH
+#endif
             DO LM1 = 1,LMMAXD
                DO LM2 = 1,LMMAXD
                   IF ( LM1.EQ.LM2 ) THEN
+#ifdef CPP_MPI
+                     irec = irec0 + LM2 + LMMAXD*(LM1-1)
+                     WRITE(37,rec=irec) MSSQ(LM1,LM2,IH)*CFCTORINV
+#else
                      WRITE(37,99006) LM1,LM2,MSSQ(LM1,LM2,IH)*CFCTORINV
+#endif
                   ELSE
+#ifdef CPP_MPI
+                     irec = irec0 + LM2 + LMMAXD*(LM1-1)
+                     IF ( CDABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH))
+     &                    .GT.TOLMSSQ ) THEN 
+                         WRITE(37,rec=irec) 
+     &                    MSSQ(LM1,LM2,IH)*CFCTORINV
+                     ELSE
+                         WRITE(37,rec=irec) (0.d0, 0.d0) 
+                     END IF
+#else
                      IF ( CDABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH))
      &                    .GT.TOLMSSQ ) WRITE(37,99006) 
      &                    LM1,LM2,MSSQ(LM1,LM2,IH)*CFCTORINV
+#endif
                   END IF
                END DO
             END DO
@@ -571,10 +597,12 @@ C     knowledge of the representative pairs (shells) using the
 C     real space symmetries (added 23.2.2000)
 C
 
-      IF ( ICC.GT.0 )
-     &                CALL ROTGLL(GMATLL,NATOMIMP,IJTABSYM,IJTABSH,
-     &                            DSYMLL,SYMUNITARY,IGF,RC,CREL,RREL,
-     &                            KREL,LMMAXD)
+      IF ( ICC.GT.0 ) then
+          IREC = 1+IE+t_inc%IELAST*(ISPIN-1) ! added for mpi run
+          CALL ROTGLL(GMATLL,NATOMIMP,IJTABSYM,IJTABSH,
+     &                DSYMLL,SYMUNITARY,IGF,RC,CREL,RREL,
+     &                KREL,LMMAXD,IREC)
+      END IF
 
 
 !       IF ( OPT('VIRATOMS') ) THEN

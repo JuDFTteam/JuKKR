@@ -25,7 +25,7 @@ implicit none
 
    type :: type_inc
    
-      integer :: Nparams = 13   ! number of parameters in type_inc
+      integer :: Nparams = 14   ! number of parameters in type_inc
       integer :: LMMAXD  = -1
       integer :: NSPIN   = -1
       integer :: IELAST  = -1
@@ -37,6 +37,7 @@ implicit none
       integer :: i_iteration = -1 
       integer :: N_iteration = -1
       integer :: mit_bry = 1
+      integer :: NSHELL0 = -1
       logical :: NEWSOSOL = .false.
          
    end type type_inc
@@ -131,7 +132,7 @@ contains
          if (.not. t_tgmat%gmat_to_file) then
  
                !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
-               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
             
          else
@@ -161,11 +162,11 @@ contains
          if (.not. t_tgmat%tmat_to_file) then
             if(nranks.eq.1) then
                !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
-               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP), STAT=ierr)
+               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
             else
                !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*t_inc%NSPIN*t_inc%NATYP), STAT=ierr)
+               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
             end if
          else
@@ -180,11 +181,11 @@ contains
          if (.not. t_tgmat%gmat_to_file) then
             if(nranks.eq.1) then
                !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
-               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP), STAT=ierr)
+               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
             else
                !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IEMAX_local*NSPIN*NATYP
-               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*t_inc%NSPIN*t_inc%NATYP), STAT=ierr)
+               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%gmat for mpi'
             end if
             
@@ -252,14 +253,15 @@ contains
     call MPI_Get_address(t_inc%i_iteration,  disp1(10), ierr)
     call MPI_Get_address(t_inc%N_iteration,  disp1(11), ierr)
     call MPI_Get_address(t_inc%mit_bry,      disp1(12), ierr)
-    call MPI_Get_address(t_inc%NEWSOSOL,     disp1(13), ierr)
+    call MPI_Get_address(t_inc%NSHELL0,      disp1(13), ierr)
+    call MPI_Get_address(t_inc%NEWSOSOL,     disp1(14), ierr)
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:13)=1
+    blocklen1(1:14)=1
 
-    etype1(1:12) = MPI_INTEGER
-    etype1(13) = MPI_LOGICAL
+    etype1(1:13) = MPI_INTEGER
+    etype1(14) = MPI_LOGICAL
 
     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_impcls_1'

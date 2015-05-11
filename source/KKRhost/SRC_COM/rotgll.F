@@ -1,6 +1,6 @@
       SUBROUTINE ROTGLL(GMATLL,NATOMIMP,IJTABSYM,IJTABSH,
      +                  DSYMLL,SYMUNITARY,IGF,RC,CREL,RREL,
-     +                  KREL,LMMAXD)
+     +                  KREL,LMMAXD,IREC)
 C **********************************************************************
 C *                                                                    *
 C *   it calculates all the elements of the Green Function of          *
@@ -21,6 +21,8 @@ C *   where   D R  = R     and  D R  = R                               *
 C *              m    m            m    m                              *
 C *                                                                    *
 C **********************************************************************
+      use mod_mympi, only: myrank, master
+      
       IMPLICIT NONE
 C     ..
 C     .. Parameter definitions
@@ -28,7 +30,7 @@ C     .. Parameter definitions
       PARAMETER (CZERO= (0.0D0,0.0D0),CONE= (1.D0,0.D0))
 C     ..
 C     .. Scalar arguments
-      INTEGER NGCLUSD,NGCLUS,LMMAXD
+      INTEGER NGCLUSD,NGCLUS,LMMAXD,IREC
       INTEGER IGF,KREL,NATOMIMP
 C     ..
 C     .. Array arguments
@@ -86,12 +88,12 @@ CF90--------------------------------------------------------------------
 C **********************************************************************
       IF ( ICALL.EQ.1) THEN
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-         WRITE (6,'(79(1H=))')
-         WRITE (6,'(6X,2A)') 
+         if(myrank==master) WRITE (6,'(79(1H=))')
+         if(myrank==master) WRITE (6,'(6X,2A)') 
      &     'ROTGLL : Expand GF for all pairs by rotation',
      &     ' and write out (all E-points)'      
-         WRITE (6,'(79(1H=))')
-         WRITE (6,*)
+         if(myrank==master) WRITE (6,'(79(1H=))')
+         if(myrank==master) WRITE (6,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       END IF
 C***********************************************************************
@@ -186,7 +188,12 @@ C
 
 
          IF ( ( OPT('KKRFLEX ') ) ) THEN
-           WRITE(888,REC=ICALL) GCLUST
+#ifdef CPP_MPI
+           IREC = IREC
+#else
+           IREC = ICALL
+#endif
+           WRITE(888,REC=IREC) GCLUST
            IF ( ( OPT('GPLAIN  ') ) ) THEN
              WRITE(8888,'(50000E)') GCLUST
            END IF

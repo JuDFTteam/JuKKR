@@ -2,13 +2,13 @@ C*==rhoval.f    processed by SPAG 6.05Rc at 11:22 on 10 May 2004
       SUBROUTINE RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,
      &                  ISPIN,NSPIN,NSPINPOT,
      &                  I1,EZ,WEZ,DRDI,R,VINS,VISP,ZAT,IPAN,IRCUT,IRMIN,
-     &                  THETAS,IFUNM,LMSP,RHO2NS,R2NEF,RHOORB,DEN,MUORB,
-     &                  ESPV,CLEB,LOFLM,ICLEB,IEND,JEND,SOLVER,SOCTL,
-     &                  CTL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,
-     &                  JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,
+     &                  THETAS,IFUNM,LMSP,RHO2NS,R2NEF,RHOORB,DEN,DENLM,
+     &                  MUORB,ESPV,CLEB,LOFLM,ICLEB,IEND,JEND,SOLVER,
+     &                  SOCTL,CTL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,
+     &                  ZREL,JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,
      &                  MVEVIL,MVEVILEF,NMVECMAX,
      &                  IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATC,
-     &                  LLY,NATYP)          ! LLY Lloyd
+     &                  LLY,NATYP,NQDOS)          ! LLY Lloyd
 C
 C **********************************************************************
 C * For KREL = 1 (relativistic mode)                                   *
@@ -64,7 +64,7 @@ C     .. Scalar Arguments ..
       INTEGER I1,ICST,IELAST,IEND,INS,IPAN,ISPIN,NSPIN,NSPINPOT,NSRA
       INTEGER JWSREL,ZREL,IRSHIFT,IDOLDAU,LOPT,NATYP
       INTEGER LLY,IRMAX1,IELAST1,NSPIN1,NATYP1 ! LLY Lloyd
-      INTEGER IHOST,NMVECMAX,IRMIN
+      INTEGER IHOST,NMVECMAX,IRMIN,NQDOS
       LOGICAL LDORHOEF
 C
 C     IHOST = 1   < -- this routine is called by the HOST tbkkr-program
@@ -72,9 +72,9 @@ C     IHOST <> 1  < --                 called by the IMPURITY program
 C
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD*(1+KREL)),EZ(IEMXD),
+      DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD*(1+KREL),NQDOS),EZ(IEMXD),
      +               WEZ(IEMXD),DENMATC(MMAXD,MMAXD),
-     +               DENLM(LMMAXD,IEMXD*(1+KREL)),
+     +               DENLM(LMMAXD,IEMXD*(1+KREL),NQDOS),
      &               DUM_DENLM(LMMAXD)
 C     .. first 2 indices in dmuorb are the spin-resolved contributions,
 C     .. the 3rd one should be the sum of them 
@@ -117,7 +117,7 @@ C     .. Local Scalars ..
       DOUBLE COMPLEX DENTOT ! qdos
       INTEGER IDIM,IE,IR,L,LM1,LM2,LMHI,LMLO,IREC,ISPINPOT,
      &        LASTEZ,M1,MMAX
-      INTEGER IQ,NQDOS ! qdos number of qdos points
+      INTEGER IQ!,NQDOS ! qdos number of qdos points
       INTEGER IX       ! qdos
       INTEGER LRECGFLLE,LMSHIFT1(4),LMSHIFT2(4),JSPIN,L1 ! lmlm-dos
 
@@ -270,6 +270,7 @@ C
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
+#ifndef CPP_MPI
       IF (OPT('qdos    ')) THEN
       OPEN(31,   ! lm-dos
      +FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
@@ -281,6 +282,7 @@ C
       WRITE (30,*) ' '   ! lm-dos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
  8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
+#endif
 
 c set LMSHIFT value which is need to construct dentmp
        LMSHIFT1(1)=0
@@ -377,35 +379,37 @@ C-----------------------------------------------------------------------
 C spherical/non-spherical input potential
 C
             IF ( INS.EQ.0 ) THEN
-               CALL RHOLM(DEN(0,IE),DF,GMAT0,NSRA,
+               CALL RHOLM(DEN(0,IE,IQ),DF,GMAT0,NSRA,
      +              RHO2NS(1,1,ISPIN),DRDI,IPAN,IRCUT,PZ,FZ,QZ,SZ,  
-     +              CLEB(1,1),ICLEB,IEND,JEND,EKL,DENLM(1,IE),EK)
+     +              CLEB(1,1),ICLEB,IEND,JEND,EKL,DENLM(1,IE,IQ),EK)
             ELSE
-               CALL RHONS(DEN(0,IE),DF,DRDI,GMAT0,EK,
+               CALL RHONS(DEN(0,IE,IQ),DF,DRDI,GMAT0,EK,
      +             RHO2NS(1,1,ISPIN),IPAN,IRCUT,IRMIN,THETAS,IFUNM,LMSP,  ! Added IRMIN 1.7.2014
      +              NSRA,QNS,PNS,AR,CR,PZ,FZ,QZ,SZ,CLEB(1,1),ICLEB,
-     +              JEND,IEND,EKL,DENLM(1,IE),GFLLE(:,:,IE,IQ))
+     +              JEND,IEND,EKL,DENLM(1,IE,IQ),GFLLE(:,:,IE,IQ))
             END IF
 
 
+#ifndef CPP_MPI
 c Write out qdos:
             IF (OPT('qdos    ')) THEN
                DENTOT = DCMPLX(0.D0,0.D0)
                DO L = 0,LMAXD1
-                  DENTOT = DENTOT + DEN(L,IE)
+                  DENTOT = DENTOT + DEN(L,IE,IQ)
                ENDDO
                WRITE(30,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
-     &         -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE))/PI,L=1,LMMAXD)      ! lmdos
+     &         -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)      ! lmdos
  9000          FORMAT(5F10.6,40E16.8)
                WRITE(31,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
-     &         -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE))/PI,L=1,LMMAXD)      ! lmdos
+     &         -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)      ! lmdos
             ENDIF
+#endif
 
  200        END DO                                                   ! qdos
 C
 C-----------------------------------------------------------------------
             DO L = 0,LMAXD1
-               ESPV(L,ISPIN) = ESPV(L,ISPIN) + DIMAG(ERYD*DEN(L,IE)*DF)
+               ESPV(L,ISPIN) = ESPV(L,ISPIN)+DIMAG(ERYD*DEN(L,IE,1)*DF)
             END DO
 C
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -440,8 +444,8 @@ C=======================================================================
      &                  I1,QVEC,NQDOS)            ! qdos
 C
             DO L = 0,LMAXD1
-               ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE)*DF)
-               ESPV(L,2) = ESPV(L,2) + DIMAG(ERYD*DEN(L,IE+IEMXD)*DF)
+               ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE,IQ)*DF)
+               ESPV(L,2) = ESPV(L,2) + DIMAG(ERYD*DEN(L,IE+IEMXD,IQ)*DF)
             END DO
 C
             DO IR = 1,3

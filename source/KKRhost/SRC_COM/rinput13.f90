@@ -149,7 +149,8 @@
       COMMON /OPTC/OPTC
 !     ..
 !     .. Data statements ..
-      DATA VERSION /'Feb 2005'/
+      DATA VERSION /'May 2015'/
+!       DATA VERSION /'Feb 2005'/
       DATA TSPIN/'non-','    ','    '/
       DATA TSHAPE/' exact cell treatment (shape correction)  '/
       DATA TVREL/&
@@ -2040,7 +2041,7 @@
      &             'Electronic Structure Code',10X,'*'/&
      &     '*',27X,'for Bulk and Interfaces',27X,'*'/&
      &     '*',77X,'*'/&
-     &     '*',4X,'Juelich-Munich 2001 - 2014',25X,&
+     &     '*',4X,'Juelich-Munich 2001 - 2015',25X,&
      &     'Version : ',A8,4X,'*'/&
      &     '*',77X,'*'/79(1H*))
  2010 FORMAT(' NSPIN '/I4)

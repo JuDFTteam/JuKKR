@@ -157,11 +157,13 @@ c     IF (NSRA.EQ.2) EK = SQRT(E+E*E/ (CVLIGHT*CVLIGHT))    ! lm-dos
 c     CVLIGHT=274.0720442D0                                 ! lm-dos 
 c Therefore the following is a good approximation           ! lm-dos
 c for energies of a few Ryd:                                ! lm-dos
+#ifndef CPP_MPI
       IF (.NOT.OPT('qdos    ')) THEN
       ENERG = EK**2                                         ! lm-dos
       WRITE(30,9000) DREAL(ENERG),(-DIMAG(DENLM(LM))/PI,LM=1,LMMAXD)
  9000 FORMAT(30E12.4)
       ENDIF  ! not qdos option
+#endif
 
 
       IF (IPAN.GT.1) THEN

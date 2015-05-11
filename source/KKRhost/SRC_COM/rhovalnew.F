@@ -168,7 +168,7 @@ c initial allocate
        ALLOCATE(CDENTEMP(IRMDNEW,0:nth-1))
        ALLOCATE(GFLLE_PART(LMMAXSO,LMMAXSO,0:nth-1))
        ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,1))
-       ALLOCATE(DEN(0:LMAXD1,IEMXD,2,1),DENLM(LMMAXD,IEMXD,2,1))
+       ALLOCATE(DEN(0:LMAXD1,IEMXD,1,2),DENLM(LMMAXD,IEMXD,1,2))
        RHO2NSC=CZERO
        RHO2NSC_loop=CZERO
        R2NEFC=CZERO
@@ -179,6 +179,7 @@ c initial allocate
        RHO2NSNEW=CZERO
        R2NEFNEW=CZERO
        DEN=CZERO
+       DENLM=CZERO
        ESPV=0d0
        RHO2INT=CZERO
        DENORBMOM=0d0
@@ -218,8 +219,8 @@ C        Read BZ path for qdos calculation:                             ! qdos r
 C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos ruess
          DEALLOCATE(GFLLE,DEN,DENLM)                                    ! qdos ruess
          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS))                  ! qdos ruess
-         ALLOCATE(DEN(0:LMAXD1,IEMXD,2,NQDOS),
-     +            DENLM(LMMAXD,IEMXD,2,NQDOS))
+         ALLOCATE(DEN(0:LMAXD1,IEMXD,NQDOS,2),
+     +            DENLM(LMMAXD,IEMXD,NQDOS,2))
 3000  IF (IERR.NE.0) STOP 'ERROR READING ''qvec.dat'''                  ! qdos ruess
       END IF  ! OPT('qdos    ')                                         ! qdos ruess
 
@@ -230,6 +231,9 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
  3001 IF (IERR.NE.0) STOP 'ERROR CREATING ''gflle'''                    ! lmlm-dos ruess
       ENDIF                                                             ! lmlm-dos ruess
 
+        ! initialize to zero
+        DEN=CZERO
+        DENLM=CZERO
 c energy loop
        if(myrank==master) WRITE(6,*) 'atom: ',I1
 #ifdef CPP_MPI
@@ -418,7 +422,6 @@ c notice that exchange the order of left and right hankel/bessel functions
         ENDIF
 
         DO 200 IQ = 1,NQDOS                                       ! qdos
-        DEN(:,ie,:,IQ)=CZERO
 c read in gf
         IREC = IQ + NQDOS * (IE-1) +  NQDOS * IELAST * (I1-1)     ! qdos
         !$omp critical
@@ -462,7 +465,7 @@ c calculate density
          RHO2(JSPIN)=DENTEMP
          RHO2INT(JSPIN)=RHO2INT(JSPIN)+RHO2(JSPIN)*DF
          IF (JSPIN.LE.2) THEN
-          DEN(LM1,IE,JSPIN,IQ)=RHO2(JSPIN)
+          DEN(LM1,IE,IQ,JSPIN)=RHO2(JSPIN)
          ENDIF
         ENDDO
                  
@@ -475,7 +478,7 @@ c calculate density
           ENDDO
           CALL INTCHEB_CELL(CDENTEMP(:,ith),DENTEMP,
      +            RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)
-          DENLM(LM1,IE,JSPIN,IQ)=DENTEMP
+          DENLM(LM1,IE,IQ,JSPIN)=DENTEMP
          ENDDO
           CDENTEMP(:,ith)=CZERO
           DENTEMP=CZERO
@@ -484,8 +487,8 @@ c calculate density
           ENDDO
           CALL INTCHEB_CELL(CDENTEMP(:,ith),DENTEMP,
      +           RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)
-          DEN(LMAXD1,IE,JSPIN,IQ)=DENTEMP
-          RHO2INT(JSPIN)=RHO2INT(JSPIN)+DEN(LMAXD1,IE,JSPIN,IQ)*DF
+          DEN(LMAXD1,IE,IQ,JSPIN)=DENTEMP
+          RHO2INT(JSPIN)=RHO2INT(JSPIN)+DEN(LMAXD1,IE,IQ,JSPIN)*DF
          ENDIF
         ENDDO ! JSPIN
 
@@ -493,7 +496,7 @@ c calculate density
          IF (JSPIN.LE.2) THEN
           DO LM1=0,LMAXD1
            ESPV(LM1,JSPIN)=ESPV(LM1,JSPIN)+
-     +                       DIMAG( ERYD * DEN(LM1,IE,JSPIN,IQ) * DF )
+     +                       DIMAG( ERYD * DEN(LM1,IE,IQ,JSPIN) * DF )
           ENDDO
          ENDIF 
         ENDDO
@@ -621,24 +624,24 @@ c Write out qdos and lm-dos:                                            ! lm-dos
             DO JSPIN =1,2                                               ! qdos ruess
               DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                         ! qdos ruess
               DO L1 = 0,LMAXD1                                          ! qdos ruess
-                DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,JSPIN,IQ)     ! qdos ruess
+                DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)     ! qdos ruess
               ENDDO                                                     ! qdos ruess
             ENDDO                                                       ! qdos ruess
 c    write qdos.nn.s.dat                                                ! qdos ruess
 c    and lmdos.nn.s.dat                                                 ! qdos ruess
             WRITE(29,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
-     &               (-DIMAG(DENLM(L1,IE,1,IQ))/PI,L1=1,LMMAXD)         ! qdos ruess
+     &               (-DIMAG(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)         ! qdos ruess
             WRITE(30,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
-     &               (-DIMAG(DENLM(L1,IE,2,IQ))/PI,L1=1,LMMAXD)         ! qdos ruess
+     &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)         ! qdos ruess
             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
-     &     -DIMAG(DENTOT(1))/PI,(-DIMAG(DEN(L1,IE,1,IQ))/PI,L1=0,LMAXD1)! qdos ruess
+     &     -DIMAG(DENTOT(1))/PI,(-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)! qdos ruess
             WRITE(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
-     &     -DIMAG(DENTOT(2))/PI,(-DIMAG(DEN(L1,IE,2,IQ))/PI,L1=0,LMAXD1)! qdos ruess
+     &     -DIMAG(DENTOT(2))/PI,(-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)! qdos ruess
        ELSE                                                             ! lm-dos
             WRITE(29,9001) EZ(IE),                                      ! lm-dos
-     &               (-DIMAG(DENLM(L1,IE,1,IQ))/PI,L1=1,LMMAXD)         ! lm-dos
+     &               (-DIMAG(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)         ! lm-dos
             WRITE(30,9001) EZ(IE),                                      ! lm-dos
-     &               (-DIMAG(DENLM(L1,IE,2,IQ))/PI,L1=1,LMMAXD)         ! lm-dos
+     &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)         ! lm-dos
  9001       FORMAT(30E12.4)                                             ! lm-dos
        ENDIF      ! OPT('qdos    ')                                     ! qdos ruess
  9000      FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
@@ -674,8 +677,6 @@ c write gflle to file                                                    ! lmlm-
        WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
        
-       if(myrank==master) write(516974,*) 'l1',RHO2NSC,'l2',R2NEFC
-
        ALLOCATE(RHOTEMP(IRMDNEW,LMPOTD))
        ALLOCATE(RHONEWTEMP(IRWS,LMPOTD))
        DO JSPIN=1,4
@@ -778,7 +779,7 @@ C
        DO LM1=0,LMAXD1
          DO IE=1,IEMXD
            DO JSPIN=1,NSPIN
-             DEN_out(LM1,IE,JSPIN) =  DEN(LM1,IE,JSPIN,1)
+             DEN_out(LM1,IE,JSPIN) =  DEN(LM1,IE,1,JSPIN)
            ENDDO
          ENDDO
        ENDDO

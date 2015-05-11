@@ -11,7 +11,7 @@ integer              :: NEMBD
 !local
 integer              :: iatom
 real(kind=8)         :: wght
-CHARACTER*80         :: UIO
+CHARACTER*256        :: UIO
 integer              :: ier
 integer              :: itemp1(12),it
 

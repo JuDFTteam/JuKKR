@@ -1,27 +1,9 @@
 
-#SRAOBJS1b = $(OBJ)/bofm.o          $(OBJ)/btom.o      $(OBJ)/cinit.o \
-          $(OBJ)/beshan.o        $(OBJ)/dlke0.o     $(OBJ)/dlke1.o \
-          $(OBJ)/inversion.o     $(OBJ)/invslab.o                  \
-          $(OBJ)/invsupercell.o  $(OBJ)/ioinput.o   $(OBJ)/ioben.o    \
-          $(OBJ)/mapblock.o      $(OBJ)/opt.o       $(OBJ)/rcstop.o  \
-          $(OBJ)/surfgf.o        $(OBJ)/test.o      $(OBJ)/ymy.o \
-          $(OBJ)/grefsy.o \
 
 SRAOBJS1b = \
 $(OBJ)/bofm.o         $(OBJ)/btom.o         $(OBJ)/dclock.o       \
 $(OBJ)/dlke0.o        $(OBJ)/dlke1.o        $(OBJ)/inversion.o    \
 $(OBJ)/invslab.o      $(OBJ)/invsupercell.o $(OBJ)/surfgf.o       
-
-#SRANONMPI1b = $(OBJ)/dclock.o
-
-#COMOBJS1b = \
-          $(OBJ)/kloopz1.o      $(OBJ)/decimate.o \
-          $(OBJ)/projtau.o      $(OBJ)/cpamillsx.o   $(OBJ)/rotate.o \
-          $(OBJ)/getdmat.o      $(OBJ)/mssinit.o     $(OBJ)/rotgll.o \
-          $(OBJ)/tbxccpljij.o   $(OBJ)/calctref.o    $(OBJ)/cmatmul.o \
-          $(OBJ)/initabjij.o    $(OBJ)/setfactl.o    $(OBJ)/gijdmat.o \
-          $(OBJ)/rotatespinframe.o \
-	  $(OBJ)/symetrmat.o    $(OBJ)/getscratch.o  $(OBJ)/lngstring.o 
 
 COMOBJS1b = \
           $(OBJ)/main1b.o   \
@@ -78,8 +60,8 @@ $(OBJ)/surfgf.o       : $(SRA)/surfgf.f $(INCP)           ; \
 $(OBJ)/main1b.o   : $(COM)/main1b.F  $(INCP) ; \
 	            $(FC) $(FFLAGS) $(CPP) $(COM)/main1b.F -c -o $@
 
-$(OBJ)/kloopz1.o  : $(COM)/kloopz1.f  $(INCP)  ; \
-                    $(FC) $(FFLAGS)  $(COM)/kloopz1.f -c -o $@
+$(OBJ)/kloopz1.o  : $(COM)/kloopz1.F  $(INCP)  ; \
+                    $(FC) $(FFLAGS) $(CPP) $(COM)/kloopz1.F -c -o $@
 
 $(OBJ)/mssinit.o  : $(COM)/mssinit.f                  ; \
                     $(FC) $(FFLAGS)  $(COM)/mssinit.f -c -o $@
@@ -90,8 +72,8 @@ $(OBJ)/kkrmat01.o : $(COM)/kkrmat01.f $(INCP)  ; \
 $(OBJ)/decimate.o     : $(COM)/decimate.f $(INCP)  ; \
                        $(FC) $(FFLAGS)  $(COM)/decimate.f -c -o $@
 
-$(OBJ)/rotgll.o       : $(COM)/rotgll.f                    ; \
-                       $(FC) $(FFLAGS)  $(COM)/rotgll.f -c -o $@
+$(OBJ)/rotgll.o       : $(COM)/rotgll.F                    ; \
+                       $(FC) $(FFLAGS) $(CPP) $(COM)/rotgll.F -c -o $@
 
 $(OBJ)/tbxccpljij.o : $(COM)/tbxccpljij.f               ; \
                     $(FC) $(FFLAGS)   $(COM)/tbxccpljij.f -c -o $@

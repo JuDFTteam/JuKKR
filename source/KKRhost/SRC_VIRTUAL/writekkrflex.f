@@ -56,7 +56,9 @@ C     .. External Functions ..
                   if (t_tgmat%tmat_to_file) then
                      READ (69,REC=IREC) TMAT0
                   else
-                     tmat0(:,:) = t_tgmat%tmat(:,:,irec)
+                       stop 'WRONG tmat_to_file for KKRFLEX writeout!!'
+                       !not correctly read in with this option, to fix this communication is needed
+!                      tmat0(:,:) = t_tgmat%tmat(:,:,irec)
                   end if
               ELSE
                  TMAT0=(0.0D0,0.0D0)

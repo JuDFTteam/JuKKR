@@ -1,34 +1,19 @@
-#!/bin/ksh
-#!/usr/bin/bash
 #######################################################################
 #                job script for an SCF run of TB-KKR program          #
 #        MAKE SURE ABOUT THE CORRECT PATH OF THE ABOVE SHELLS         #
 #######################################################################
-# verbosity set 
-verb="0"
-if [ "$1" = "-v" ] 
-then
-verb="1"
-fi
-########################################################################
 ### set below the following variables
 ###
 ### here     = the current (starting) directory 
 ### local    = a (tmp) directory where the execution will take place 
 ### src      = path to the sources
 ### bindir   = path to the binaries to be used
-### mpibin   = mpi execution program and its settings, if appropriate
 home=$HOME
 here=`pwd`
-TMPDIR=/SCRATCH/fmavrop/$HOST/Gr_Co/'CALC_'$$
-mkdir -p $TMPDIR
-export TMPDIR
-ln -s $TMPDIR
-####local=$here
-local=$TMPDIR
-src=$home/TBKKR
-bindir=$here/BIN
-###mpibin=lammpi
+TMPDIR=$here 
+local=$here
+src=$here
+bindir=$here
 ########################################################################
 ### set the INPUT and POTENTIAL file names. 
 ### MAKE SURE the name of the POTENTIAL file is the SAME as in the INPUT
@@ -45,24 +30,8 @@ potential=potential
 fi
 pref="SYSTEM"
 ########################################################################
-### Running options follow
-### nonspher  = YES/NO for a non-spherical or an ASA calculation
-### deciout   = YES/NO if you want to create decimation output
-###             Remember that this should be done AFTER your SCF cycle 
-###             has converged, and it will work only in a ONE ITERATION 
-###             mode => set NSTEPS = 1 in the input file
-### usedec    = YES/NO if your system makes use of decimation technique
-### itermdir  = YES/NO if your calculation is in ITERMDIR mode
-nonspher="NO"
-deciout="NO"
-usedec="NO"
-itermdir="NO"
-###
 ### Some extra settings for the running options
 ### shapefun = the file with the shape functions if nonspher="YES"
-### decifile = the decimation file with the output from deciout="YES"
-### fdecleft
-### fdecright = the decimation files for left/right host if usedec="YES"
 ### 
 shapefun=`grep " I19" $input  |awk '{print $1}'`
 if [[ ! $shapefun ]] ; then
@@ -72,17 +41,11 @@ fi
 if test -f $shapefun ; then
 nonspher="YES"
 fi
-decifile=febcc_deci
-fdecleft=febcc_deci1
-fdecright=febcc_deci2
 ########################################################################
 ####                        < END OF SETTINGS >                     ####
 ########################################################################
 echo
 echo  " #####################  TB-KKR SCF RUN  #####################"
-if [ $verb -eq "1" ] ; then
-echo  "                       - VERBOSE mode - "
-fi
 echo
 echo  "   starting directory     : "$here
 echo  "   prefix                 : "$pref
@@ -92,19 +55,6 @@ echo  "   input-file             : "$input
 echo  "   non-spherical          : "$nonspher
 if [ "$nonspher" = "YES" ] ; then
 echo  "   shapefun               : "$shapefun
-fi
-echo
-echo  "   make use of DECIMATION : "$usedec
-if [ "$usedec" = "YES" ] 
-then
-echo  "            left-host deci-file : "$fdecleft
-echo  "           right-host deci-file : "$fdecright
-fi
-echo
-echo  "   create DECIMATION file : "$deciout
-if [ "$deciout" = "YES" ] 
-then
-echo  "           decimation output to : "$decifile
 fi
 echo
 echo  " ############################################################"
@@ -138,17 +88,14 @@ cp $here/$potential $local/$work_name/$potential
 if test -f $here/gref ; then
    cp $here/gref $local/$work_name/gref
 fi
+if test -f $here/qvec.dat ; then
+   cp $here/qvec.dat $local/$work_name/qvec.dat
+fi
 if test -f $here/scoef ; then
    cp $here/scoef $local/$work_name/scoef
 fi
-if [ "$nonspher" = "YES" ] ; then
-ln -fs $here/$shapefun $local/$work_name/$shapefun
-fi
-if [ "$usedec" = "YES" ] ; then
-    ln -fs $here/$fdecleft \
-                  $local/$work_name/$fdecleft
-    ln -fs $here/$fdecright \
-                  $local/$work_name/$fdecright
+if test -f $here/$shapefun ; then
+   ln -fs $here/$shapefun $local/$work_name/$shapefun
 fi
 #=======================================================================
 ####                      < END PREPARE THE FILES >                 ####
@@ -162,147 +109,41 @@ echo  " ############################################################"
 echo
 #=======================================================================
 cd $local/$work_name
-cat > not.converged << 'EOF'
-   1
-EOF
 #=======================================================================
-if [ $verb -eq "1" ] ; then
-echo "  starting kkr0.exe"
-date
-fi
-$bindir/kkr0.exe > output.0
-### cat output.0 >> output_SCF.$pref
-if [  $? -ne 0  ]
-then
-     rm -f core.*
-     echo " SCF-CYCLE ERROR, IT WILL BE STOPPED in kkr0.exe"
-     exit 0
-fi
-#=======================================================================
-iter="0"
   echo 
   echo "  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 #=======================================================================
-while [ -f not.converged ];
-do
-iter=`expr ${iter} + 1`
 #-------------------------------------------------- iteration step begin
-  echo "   ITERATION "${iter}"   STARTed at: "
+  echo "   CALCULATION  STARTed at: "
   echo "   "`date` 
   echo "  -----------------------------------------------------------"
   echo 
-if [ $verb -eq "1" ] ; then
-echo "  starting kkr1a.exe"
-date
-fi
-$bindir/kkr1a.exe > output.1a
-###$mpibin $bindir/kkr1a_mpi.exe > output.1a
+$bindir/kkr.x > out
 if [  $? -ne 0  ] ; then
      rm -f core
-     echo " SCF-CYCLE ERROR in kkr1a , IT WILL BE STOPPED "
+     echo " SCF-CYCLE ERROR in kkr.x , IT WILL BE STOPPED "
      exit 1
-fi
-if [ $verb -eq "1" ] ; then
-echo "  starting kkr1b.exe"
-date
-fi
-$bindir/kkr1b.exe > output.1b
-###$mpibin $bindir/kkr1b_mpi.exe > output.1b
-### cat output.1b >> output_SCF.$pref
-if [  $? -ne 0  ] ; then 
-     rm -f core
-     echo " SCF-CYCLE ERROR in kkr1b , IT WILL BE STOPPED "
-     exit 1
-fi
-###
-### treat deci out case
-###
-if [ "$deciout" = "YES" ] ; then
-    cat fort.37 >> decifile
-fi
-#
-if [ $verb -eq "1" ] ; then
-echo "  starting kkr1c.exe"
-date
-fi
-$bindir/kkr1c.exe > output.1c
-###$mpibin $bindir/kkr1c_mpi.exe > output.1c
-### cat output.1c >> output_SCF.$pref
-if [ $? -ne 0 ] ; then 
-     rm -f core
-     echo " SCF-CYCLE ERROR in kkr1c , IT WILL BE STOPPED "
-     exit 1
-fi
-if [ $verb -eq "1" ] ; then
-echo "  starting kkr2.exe"
-date
-fi
-$bindir/kkr2.exe > output.2
-### cat output.2 >> output_SCF.$pref
-if [ $? -ne 0 ] ; then 
-     rm -f core
-     echo " SCF-CYCLE ERROR in kkr2 , IT WILL BE STOPPED "
-     exit 1
-fi
-###
-### treat deci out case
-###
-if [ "$deciout" = "YES" ] ; then
-    cat fort.37 >> decifile
 fi
 #----------------------------------------------- iteration step finished
 ########################################################################
-#   extract info about current iteration either using tbcatfile.py
-#   or different grep's.
-################################################
-###  here the use of python script:
-# for str in "neutra" "average rms" "TOTAL ENERGY" "sum of band" "E FERMI" "CLOSING"
-# do $src/tbcatfile.py --input=output.2 --iter=${i} --grep="${str}"
-# done
+#   extract info about current iteration either using
+#   different grep's.
 ################################################
 ###  here the use of grep
-if [ "$itermdir" = "YES" ] 
-then
-    echo
-    grep "vectorial magnetic" output.1c
-    grep "frame of" output.1c
-    echo "                             m_spin             "\
-         "              m_orb"
-    echo "   ATOM/SITE         x         y         z      "\
-         "      x         y         z"
-    echo 
-    grep "sum" output.1c
-    echo "   ================================================"\
-         "==========================="
-    grep -i "angles" output.2
-    echo
-else
-    grep -i tot output.1c
-fi
-grep 'TOTAL mag. moment in unit cell'  output.2
-grep norm output.2
-grep FERMI output.2
-grep neutra output.2
-grep "average rms" output.2
-grep -i "total energy" output.2
-grep 'VMT ZERO' output.2
+grep -i tot out
+grep 'TOTAL mag. moment in unit cell'  out
+grep norm out
+grep FERMI out
+grep neutra out
+grep "average rms" out
+grep -i "total energy" out
+grep 'VMT ZERO' out
 #   ready with info extraction
 ########################################################################
 echo "  -----------------------------------------------------------"
 echo "                        FINISHed at: "
 echo "   " `date` 
 echo "  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-########################################################################
-### update energy mesh and potential, go to next iteration
-cp fort.11 $potential
-
-if [ $verb -eq "1" ] ; then
-cp fort.11 $potential.${iter}
-fi
-#
-cp new_energy_mesh energy_mesh
-cp output_potential input_potential
-done
 ########################################################################
 echo
 echo  " ############################################################"
@@ -314,17 +155,12 @@ echo
 ####        CLEAN UP AND COPY THE DATA TO THE $here DIRECTORY       ####
 ########################################################################
 #
-rm -f *.unformatted
-rm -f *energy_mesh
-rm -f output_potential input_potential
-rm -f density 
+#rm -f *.unformatted
+#rm -f *energy_mesh
+#rm -f output_potential input_potential
+#rm -f density 
 #rm -f fort.* 
-rm -f tmat gmat 
-#
-if [ "$usedec" = "YES" ] ; then
-    rm -f $fdecleft $fdecright
-fi
-#
+#rm -f tmat gmat 
 mkdir $here/$work_name
 res=$?
 if test $res -eq 0 ; then
@@ -335,23 +171,8 @@ if test $res -eq 0 ; then
    cp $local/$work_name/*Jij* $here/$work_name/.
    cp $local/$work_name/excdiff $here/$work_name/.
    cp $local/$work_name/$shapefun $here/$work_name/.
-###   cp $local/$work_name/kpoints $here/$work_name/.
-   if [ "$deciout" = "YES" ] ; then
-      cp $local/$work_name/decifile $here/$work_name/$decifile
-   fi
    echo
    echo "       OUTPUT COPIED IN "
    echo "  "$here/$work_name
    echo
    cd $local
-else
-   if [ "$deciout" = "YES" ] ; then
-     mv decifile $decifile
-   fi
-   echo
-   echo "       OUTPUT STORED IN "
-   echo "  "$local/$work_name
-   echo
-fi
-echo
-echo  " ############################################################"

@@ -105,9 +105,13 @@ contains
     integer, intent(in) :: subarr_dim(2)
     integer, intent(out) :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col,myrank_grid, myrank_row, myrank_col, nranks_row, nranks_col
 
-    integer :: ierr
+    integer :: ierr, testdims(2)
     logical :: logic2(2)
     logical, parameter :: periodic(2) = .false., reorder(2) = .false.
+    
+!     CALL MPI_Dims_create(nranks,2,testdims,ierr)
+!     write(*,*) myrank,nranks,testdims
+    
 
  
     if (subarr_dim(2).le.1) then
@@ -156,18 +160,18 @@ contains
 #endif
 
 #ifdef CPP_MPI
-  subroutine mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,  &
-                             & LMOMVEC,NMVECMAX,rho2ns,r2nef,espv,den,denmatc,denef,denefat,  &
+  subroutine mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,  &
+                             & LMOMVEC,NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,denef,denefat,  &
                              & rhoorb,muorb,mvevi,mvevil,mvevief)
 
     use mpi
     implicit none
-    integer, intent(in) :: irmd,lmpotd,natypd,lmaxd,iemxd,mmaxd,idoldau,natyp,krel,nmvecmax,npotd,lmaxd1
+    integer, intent(in) :: irmd,lmpotd,natypd,lmaxd,lmmaxd,iemxd,mmaxd,idoldau,natyp,krel,nmvecmax,npotd,lmaxd1,nqdos
     logical, intent(in) :: lmomvec
     double precision, intent(inout) :: RHO2NS(IRMD,LMPOTD,NATYPD,2), R2NEF(IRMD,LMPOTD,NATYPD,2),    &
                                      & ESPV(0:LMAXD1,NPOTD), DENEF, DENEFAT(NATYPD), RHOORB(IRMD*KREL + (1-KREL),NATYPD),   &
                                      & MUORB(0:LMAXD1+1,3,NATYPD) 
-    double complex, intent(inout)   :: DEN(0:LMAXD1,IEMXD,NPOTD), DENMATC(MMAXD,MMAXD,NPOTD), MVEVI(NATYPD,3,NMVECMAX),   &
+    double complex, intent(inout)   :: DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS), DENLM(LMMAXD,IEMXD,NPOTD,NQDOS), DENMATC(MMAXD,MMAXD,NPOTD), MVEVI(NATYPD,3,NMVECMAX),   &
                                      & MVEVIL(0:LMAXD,NATYPD,3,NMVECMAX), MVEVIEF(NATYPD,3,NMVECMAX)
     
     integer :: idim, ierr
@@ -190,9 +194,13 @@ contains
         CALL MPI_ALLREDUCE(ESPV,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
         CALL DCOPY(IDIM,WORK,1,ESPV,1)
 
-        IDIM = IEMXD*(LMAXD+2)*NPOTD
+        IDIM = IEMXD*(LMAXD+2)*NPOTD*NQDOS
         CALL MPI_ALLREDUCE(DEN,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
         CALL ZCOPY(IDIM,WORK,1,DEN,1)
+        
+        IDIM = IEMXD*(LMMAXD)*NPOTD*NQDOS
+        CALL MPI_ALLREDUCE(DENLM,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL ZCOPY(IDIM,WORK,1,DENLM,1)
 
         IF (IDOLDAU.EQ.1) THEN 
            IDIM = MMAXD*MMAXD*NPOTD
@@ -250,7 +258,7 @@ contains
      use mpi
      implicit none
      integer, intent(in) :: IRMDNEW, LMPOTD, LMAXD, LMAXD1, LMMAXD, LMMAXSO, IEMXD, NQDOS
-     double complex, intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IEMXD,2,NQDOS), DENLM(LMMAXD,IEMXD,2,NQDOS), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS)
+     double complex, intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IEMXD,NQDOS,2), DENLM(LMMAXD,IEMXD,NQDOS,2), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS)
      double precision, intent(inout) :: ESPV(0:LMAXD1,2), MUORB(0:LMAXD1+1,3), DENORBMOM(3), DENORBMOMSP(2,4), DENORBMOMLM(0:LMAXD,3), DENORBMOMNS(3)
      
      integer :: ierr, idim

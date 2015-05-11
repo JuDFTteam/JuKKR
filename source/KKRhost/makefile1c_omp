@@ -105,8 +105,8 @@ $(OBJ)/rhoin.o      : $(SRA)/rhoin.f  $(INCP)          ; \
 $(OBJ)/rholm.o      : $(SRA)/rholm.f  $(INCP)          ; \
                       $(FC) $(FFLAGS) $(SRA)/rholm.f -c -o $@
 
-$(OBJ)/rhons.o      : $(SRA)/rhons.f  $(INCP)          ; \
-                      $(FC) $(FFLAGS) $(SRA)/rhons.f -c -o $@
+$(OBJ)/rhons.o      : $(SRA)/rhons.F  $(INCP)          ; \
+                      $(FC) $(FFLAGS) $(CPP) $(SRA)/rhons.F -c -o $@
 
 $(OBJ)/rhoout.o     : $(SRA)/rhoout.f $(INCP)         ; \
                       $(FC) $(FFLAGS) $(SRA)/rhoout.f -c -o $@

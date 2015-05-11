@@ -160,7 +160,7 @@ C     ..
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ie_start, ie_end, mytot, ie_num, ierr
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
 C     ..
@@ -315,7 +315,12 @@ C     Reset GMATLL for calculation in second run
       if ((opt('qdos    ')) .and. (opt('deci-out'))) then
          stop 'ERROR: qdos and deci-out cannot be used simultaniously'
       elseif (opt('qdos    ')) then
+#ifdef CPP_MPI
+         OPEN (37,ACCESS='direct', RECL=WLENGTH*4,
+     &         FILE='tmat.qdos',FORM='unformatted')
+#else
          OPEN(37, File='tmat.qdos', form='formatted')      ! qdos ruess
+#endif
       elseif (opt('deci-out')) then
          open(37, file='decifile', form='formatted', position='append') ! ruess: needed in case of deci-out option to prepare decifile
       end if
@@ -464,6 +469,7 @@ C
 #ifdef CPP_MPI
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
          ie_end = t_mpi_c_grid%ntot2
+         write(*,*) 'start e-loop',myrank,ie_start, ie_end
 
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
@@ -480,7 +486,7 @@ C
             if(t_lloyd%dgref_to_file) then
                IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
             else
-               DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
+               IF (LLY.NE.0) DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
             endif
 
             ERYD = EZ(IE)
@@ -523,8 +529,8 @@ C **********************************************************************
             TRALPHAREF(IE) = CZERO                                       ! LLY
             DO I1 = 1,NATYP
 
-               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) 
                if (t_tgmat%tmat_to_file) then
+                  IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1)
                   READ (69,REC=IREC) TMAT
                else
                   irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1) 
@@ -534,6 +540,7 @@ C **********************************************************************
 
                IF (LLY.NE.0) THEN                                         ! LLY
                   if(t_lloyd%dtmat_to_file) then
+                     IREC =IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1)
                      READ (691,REC=IREC) TMAT                                ! LLY dt/dE
                   else
                      irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
@@ -541,6 +548,7 @@ C **********************************************************************
                   end if
                   DTMATLL(1:LMMAXD,1:LMMAXD,I1) =TMAT(1:LMMAXD,1:LMMAXD)  ! LLY
                   if(t_lloyd%dtmat_to_file) then
+                     IREC=IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1)
                      READ (692,REC=IREC) TRALPHA1                            ! LLY
                   else
                      irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
@@ -576,6 +584,22 @@ C
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
+#ifdef CPP_MPI
+                  do lm1=1,lmmaxd
+                  do lm2=1,lmmaxd
+                  irec = LM2+(LM1-1)*LMMAXD+LMMAXD**2*(isite-1)+
+     &                   LMMAXD**2*naez*(ie-1)+
+     &                   LMMAXD**2*ielast*naez*(ispin-1)
+                  read(37,rec=irec) tread
+                  write(*,'(A,7I5,2F15.8)') 'irec_read',myrank,irec,
+     &             lm1,lm2,isite,ie,ispin, tread
+                  IF ( (LM1+LM2).NE.0 ) THEN                  ! qdos ruess
+                     TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
+                  END IF                                      ! qdos ruess
+                  end do
+                  end do
+
+#else
                   READ(37,*) TEXT                             ! qdos ruess
                   READ(37,*) TEXT                             ! qdos ruess
  9921             CONTINUE                                    ! qdos ruess
@@ -585,6 +609,7 @@ C
                      TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
                      IF ( (LM1+LM2).LT.2*LMMAXD ) GOTO 9921   ! qdos ruess
                   END IF                                      ! qdos ruess
+#endif
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
@@ -624,6 +649,8 @@ C           Skip this part if first part of the qdos is running
 C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- before introducing qdos
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
+                if(myrank==master) write(*,*) 'test_gmat',irec,iq,ie,
+     &                     ispin,i1,gmat0(2,5)
                 if (t_tgmat%gmat_to_file) then
                    WRITE (70,REC=IREC) GMAT0
                 else
@@ -648,21 +675,25 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
 
             IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
                 I1=ATOMIMP(1)
-                    irec = ielast*(ispin-1)+ ie+1
-                      ILM=0
-                      GIMP=(0.e0,0.e0) !complex*8
-                      DO LM2=1,LMMAXD
-                          DO LM1=1,LMMAXD
-                            ILM=ILM+1
-                            GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                          ENDDO
-                      ENDDO
-                    WRITE(888,REC=irec) GIMP
-                    IF ( ( OPT('GPLAIN  ') ) ) THEN
-                      WRITE(8888,'(50000E)') GIMP
-                    END IF
-!                   END DO
-!                 END DO
+! #ifdef CPP_MPI
+                irec = ielast*(ispin-1)+ ie+1
+! #else
+!                 irec = t_mpi_c_grid%ntot2*(ispin-1)+ ie_num+1
+! #endif
+                ILM=0
+                GIMP=(0.e0,0.e0) !complex*8
+                DO LM2=1,LMMAXD
+                    DO LM1=1,LMMAXD
+                      ILM=ILM+1
+                      GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                    ENDDO
+                ENDDO
+                irec = ielast*(ispin-1)+ ie+1
+                write(*,*) 'write gimp',myrank,ie_num,ie,ispin,irec
+                WRITE(888,REC=irec) GIMP
+                IF ( ( OPT('GPLAIN  ') ) ) THEN
+                  WRITE(8888,'(50000E)') GIMP
+                END IF
             END IF
 
             IF ( LCPAIJ ) THEN
@@ -673,7 +704,12 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
                         W1(LM1,LM2)    = MSST(LM1,LM2,I1)
                      END DO
                   END DO
+! #ifdef CPP_MPI
                   IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1)
+! #else
+!                   irec = ie_num + t_mpi_c_grid%ntot2*(ispin-1) + 
+!      &                   t_mpi_c_grid%ntot2*nspin*(i1-1)
+! #endif
                   WRITE (71,REC=IREC) GMAT0,W1
                END DO
               END IF  ! ( LCPAIJ )
@@ -693,8 +729,8 @@ C
      &                 - LLY_GRTR(IE,ISPIN) / VOLBZ(1) +  LLY_G0TR(IE)    ! LLY Lloyd
                ENDIF                                                      ! LLY Lloyd
                
-          write(*,*) myrank,ie,TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN),
-     &                VOLBZ(1),LLY_G0TR(IE),lly,TRALPHAREF(IE)
+!           write(*,*) myrank,ie,TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN),
+!      &                VOLBZ(1),LLY_G0TR(IE),lly,TRALPHAREF(IE)
 
                IF (ISPIN.EQ.1)                                            ! LLY Lloyd
      &              CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)       ! LLY Lloyd
@@ -758,7 +794,7 @@ c read in Green function of reference system
        if(t_lloyd%dgref_to_file) then
           IF (LLY.NE.0) READ (681,REC=IE) DGINP   ! LLY Lloyd
        else
-          DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
+          IF (LLY.NE.0) DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
        endif
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
@@ -855,8 +891,22 @@ c rotate t-matrix from local to global frame
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+!               if(myrank==master) then
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
+#ifdef CPP_MPI
+                  do lm1=1,lmmaxd
+                  do lm2=1,lmmaxd
+                  irec = LM2+(LM1-1)*LMMAXD+LMMAXD**2*(isite-1)+
+     &                   LMMAXD**2*naez*(ie-1)
+                  read(37,rec=irec) tread
+                  IF ( (LM1+LM2).NE.0 ) THEN                  ! qdos ruess
+                     TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
+                  END IF                                      ! qdos ruess
+                  end do
+                  end do
+
+#else
                   READ(37,*) TEXT                             ! qdos ruess
                   READ(37,*) TEXT                             ! qdos ruess
  9920             CONTINUE                                    ! qdos ruess
@@ -866,6 +916,7 @@ c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDO
                      TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
                      IF ( (LM1+LM2).LT.2*LMMAXD ) GOTO 9920   ! qdos ruess
                   END IF                                      ! qdos ruess
+#endif
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
