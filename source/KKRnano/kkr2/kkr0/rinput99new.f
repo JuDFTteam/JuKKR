@@ -1,16 +1,17 @@
 C>    Reads atominfo and rbasis files.
-      SUBROUTINE RINPUTNEW99(RBASIS,NTCELL,NAEZ,Z,radius_muffin_tin)
+      SUBROUTINE RINPUTNEW99(RBASIS,NAEZ)
 
       IMPLICIT NONE
 
 C     .. Array Arguments ..
-      INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
-     &        NTCELL(naez),CLS, refpot
+!      INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
+!     &        NTCELL(naez),CLS, refpot
 
-      DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),radius_muffin_tin(*)
+!      DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),radius_muffin_tin(*)
+      DOUBLE PRECISION RBASIS(3,*)
 
       INTEGER NAEZ
-      double precision temp
+!      double precision temp
       INTEGER NREF,NCLS
                                  ! atom types located at a given site
 C-----------------------------------------------------------------------
@@ -21,24 +22,27 @@ c------------ array set up and definition of input parameter -----------
 
       WRITE (6,2004) 'Jun 2013'
 
-      OPEN(77,FILE='atominfo',FORM='formatted')
+!      The file 'atominfo' is no longer needed in KKRnano (Z and RMT are read from 'potential'
+!      and NTCELL is read from 'shapefun')
 
-      DO I=1,NAEZ
-
-                           READ (UNIT=77,FMT=*)    Z(I),
-     +                        LMXCdummy,
-     +                       (KFGdummy(J),J=1,4),
-     +                        CLS,
-     +                        REFPOT,
-     +                        NTCELL(I),
-     +                        MTFACdummy,
-     +                        IRNS_dummy,
-     +                        temp
-
-      radius_muffin_tin(I) = temp
-
-      END DO
-      CLOSE (77)
+!      OPEN(77,FILE='atominfo',FORM='formatted')
+!
+!      DO I=1,NAEZ
+!
+!                           READ (UNIT=77,FMT=*)    Z(I),
+!     +                        LMXCdummy,
+!     +                       (KFGdummy(J),J=1,4),
+!     +                        CLS,
+!     +                        REFPOT,
+!     +                        NTCELL(I),
+!     +                        MTFACdummy,
+!     +                        IRNS_dummy,
+!     +                        temp
+!
+!      radius_muffin_tin(I) = temp
+!
+!      END DO
+!      CLOSE (77)
 
 c----------------------------------------------------------------------
 c

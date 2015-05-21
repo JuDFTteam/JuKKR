@@ -163,7 +163,7 @@ module DimParams_mod
       self%num_atom_procs = self%naez
     end if
 
-    write(*,*) "The following variables have not been read:"
+    write(*,*) "The following variables have not been read from global.conf:"
     next_ptr = 1
     do
       call getUnreadVariable(conf, variable, next_ptr, ierror)

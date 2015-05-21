@@ -80,6 +80,7 @@ print '  type (ConfigReader) :: conf'
 print '  type (' + configname + '), intent(inout) :: confvalues'
 print
 print """  ierror = 0
+  write(*,*) "Reading information from input.conf..."
   call createConfigReader(conf)
   call parseFile(conf, filename, ierror)
   if (ierror /= 0) then
@@ -114,6 +115,8 @@ for line in deffile:
     if default_value is not None:
         print '  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then'
         print '    confvalues%' + splitted_line[1] + ' = ' + default_value
+        print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + \
+                   '. Set to ' + splitted_line[1] + ' = ' + default_value + '"' 
         print '    ierror = 0'
         print '  end if'
 
@@ -126,6 +129,7 @@ for line in deffile:
 deffile.close()
 
 print '  call destroyConfigReader(conf)'
+print 'write(*,*) "Finished reading information from input.conf"'
 print 'end function'
 print
 

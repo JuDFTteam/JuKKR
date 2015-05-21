@@ -99,12 +99,27 @@ subroutine write_atoms_file(alat, NSPIN, &
           EFERMI = entry(ispin)%header%EFERMI
         endif
 
-        ! do some consistency checks
-        if (abs(ZAT(iatom) - entry(ispin)%header%Z_nuclear) > 1.d-8) then
-          write(*,*) "ERROR: Mismatch of nuclear charge between atominfo and potential file for entry: ", iatom
-          write(*,*) ZAT(iatom), entry(ispin)%header%Z_nuclear
-          STOP
-        endif
+!        The nuclear charge Z is now solely determined by the 'potential' file, 'atominfo' is no longer needed
+
+         ZAT(iatom)=entry(ispin)%header%Z_nuclear
+
+!        The parameter NTCELL is now automatically set to the index of the atom (1st atom -> 1st entry in shapefun file,
+!        2nd atom -> 2nd entry in shapefun file), 'atominfo' is no longer needed
+
+         NTCELL(iatom)=iatom
+
+!        The muffin-tin radius (formerly RMT in atominfo) is set to the value of RMT in the 'potential' file,
+!        'atominfo' is no longer needed
+
+         radius_muffin_tin(iatom)=entry(ispin)%header%RMT
+
+!        ! do some consistency checks
+!        if (abs(ZAT(iatom) - entry(ispin)%header%Z_nuclear) > 1.d-8) then
+!          write(*,*) "ERROR: Mismatch of nuclear charge between atominfo and potential file for entry: ", iatom
+!          write(*,*) ZAT(iatom), entry(ispin)%header%Z_nuclear
+!          STOP
+!        endif
+
 
         if (abs(alat - entry(ispin)%header%alat) > 1.d-8) then
           write(*,*) "WARNING: alat in potential file is not the same as in input.conf."

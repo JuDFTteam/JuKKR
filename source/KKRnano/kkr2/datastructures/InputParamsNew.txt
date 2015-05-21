@@ -1,52 +1,52 @@
-i icst
-i kpre
+i icst 4
+i kpre 0
 dv  bravais_b 3
 dv bravais_c 3
 d gmax
-d qmrbound
+d qmrbound 1.0D-6
 #i kvrel use nsra instead
 i nsra
-i kxc
+i kxc 2
 d rmax
-d tempr
+d tempr 800.0
 d alat
-d rclust
+d rclust 1.5
 d mixing
-d fcm
+d fcm 20.0
 i scfsteps
-i kforce
+i kforce 1
 d emin
 dv bravais_a 3
-l jij
-l ldau
-d rcutjij
+l jij .FALSE.
+l ldau .FALSE.
+d rcutjij 2.30
 d emax
 i kte
 i imix
 iv bzdivide 3
-l cartesian
+l cartesian .TRUE.
 i npol
 i npnt1
 i npnt2
 i npnt3
 # new parameters for shapefunctions
 d rclust_voronoi
-i nmin_panel
-i num_MT_points
-d MT_scale
-d RMT_ref_scale
+i nmin_panel 7
+i num_MT_points 10
+d MT_scale 0.98
+d RMT_ref_scale 0.995
 ### semicore contour
-i use_semicore
-d ebotsemi
-d emusemi
-i n1semi
-i n2semi
-i n3semi
-i npolsemi
-d tksemi
-d fsemicore
+i use_semicore 0
+d ebotsemi 0.0
+d emusemi 0.0
+i n1semi 0
+i n2semi 0
+i n3semi 0
+i npolsemi 0
+d tksemi 800.0
+d fsemicore 1.0
 ### other
-d target_rms
+d target_rms 1.0D-8
 ### near field corrections (default = 0)
 i near_field 0
 ### write shape functions (0=no, 1=yes) (default = 0)

@@ -72,6 +72,7 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
   type (InputParams), intent(inout) :: confvalues
 
   ierror = 0
+  write(*,*) "Reading information from input.conf..."
   call createConfigReader(conf)
   call parseFile(conf, filename, ierror)
   if (ierror /= 0) then
@@ -82,12 +83,22 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
 
 
   call getValueInteger(conf, "icst", confvalues%icst, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%icst = 4
+    write(*,*) "WARNING: Bad/no value given for icst. Set to icst = 4"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for icst."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "kpre", confvalues%kpre, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%kpre = 0
+    write(*,*) "WARNING: Bad/no value given for kpre. Set to kpre = 0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for kpre."
     call destroyConfigReader(conf)
@@ -112,6 +123,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueDouble(conf, "qmrbound", confvalues%qmrbound, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%qmrbound = 1.0D-6
+    write(*,*) "WARNING: Bad/no value given for qmrbound. Set to qmrbound = 1.0D-6"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for qmrbound."
     call destroyConfigReader(conf)
@@ -124,6 +140,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueInteger(conf, "kxc", confvalues%kxc, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%kxc = 2
+    write(*,*) "WARNING: Bad/no value given for kxc. Set to kxc = 2"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for kxc."
     call destroyConfigReader(conf)
@@ -136,6 +157,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueDouble(conf, "tempr", confvalues%tempr, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%tempr = 800.0
+    write(*,*) "WARNING: Bad/no value given for tempr. Set to tempr = 800.0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for tempr."
     call destroyConfigReader(conf)
@@ -148,6 +174,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueDouble(conf, "rclust", confvalues%rclust, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%rclust = 1.5
+    write(*,*) "WARNING: Bad/no value given for rclust. Set to rclust = 1.5"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for rclust."
     call destroyConfigReader(conf)
@@ -160,6 +191,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueDouble(conf, "fcm", confvalues%fcm, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%fcm = 20.0
+    write(*,*) "WARNING: Bad/no value given for fcm. Set to fcm = 20.0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for fcm."
     call destroyConfigReader(conf)
@@ -172,6 +208,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueInteger(conf, "kforce", confvalues%kforce, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%kforce = 1
+    write(*,*) "WARNING: Bad/no value given for kforce. Set to kforce = 1"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for kforce."
     call destroyConfigReader(conf)
@@ -190,18 +231,33 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueLogical(conf, "jij", confvalues%jij, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%jij = .FALSE.
+    write(*,*) "WARNING: Bad/no value given for jij. Set to jij = .FALSE."
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for jij."
     call destroyConfigReader(conf)
     return
   end if
   call getValueLogical(conf, "ldau", confvalues%ldau, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%ldau = .FALSE.
+    write(*,*) "WARNING: Bad/no value given for ldau. Set to ldau = .FALSE."
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for ldau."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "rcutjij", confvalues%rcutjij, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%rcutjij = 2.30
+    write(*,*) "WARNING: Bad/no value given for rcutjij. Set to rcutjij = 2.30"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for rcutjij."
     call destroyConfigReader(conf)
@@ -232,6 +288,11 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueLogical(conf, "cartesian", confvalues%cartesian, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%cartesian = .TRUE.
+    write(*,*) "WARNING: Bad/no value given for cartesian. Set to cartesian = .TRUE."
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for cartesian."
     call destroyConfigReader(conf)
@@ -268,84 +329,154 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call getValueInteger(conf, "nmin_panel", confvalues%nmin_panel, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%nmin_panel = 7
+    write(*,*) "WARNING: Bad/no value given for nmin_panel. Set to nmin_panel = 7"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for nmin_panel."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "num_MT_points", confvalues%num_MT_points, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%num_MT_points = 10
+    write(*,*) "WARNING: Bad/no value given for num_MT_points. Set to num_MT_points = 10"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for num_MT_points."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "MT_scale", confvalues%MT_scale, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%MT_scale = 0.98
+    write(*,*) "WARNING: Bad/no value given for MT_scale. Set to MT_scale = 0.98"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for MT_scale."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "RMT_ref_scale", confvalues%RMT_ref_scale, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%RMT_ref_scale = 0.995
+    write(*,*) "WARNING: Bad/no value given for RMT_ref_scale. Set to RMT_ref_scale = 0.995"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for RMT_ref_scale."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "use_semicore", confvalues%use_semicore, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%use_semicore = 0
+    write(*,*) "WARNING: Bad/no value given for use_semicore. Set to use_semicore = 0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for use_semicore."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "ebotsemi", confvalues%ebotsemi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%ebotsemi = 0.0
+    write(*,*) "WARNING: Bad/no value given for ebotsemi. Set to ebotsemi = 0.0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for ebotsemi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "emusemi", confvalues%emusemi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%emusemi = 0.0
+    write(*,*) "WARNING: Bad/no value given for emusemi. Set to emusemi = 0.0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for emusemi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "n1semi", confvalues%n1semi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%n1semi = 0
+    write(*,*) "WARNING: Bad/no value given for n1semi. Set to n1semi = 0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for n1semi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "n2semi", confvalues%n2semi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%n2semi = 0
+    write(*,*) "WARNING: Bad/no value given for n2semi. Set to n2semi = 0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for n2semi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "n3semi", confvalues%n3semi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%n3semi = 0
+    write(*,*) "WARNING: Bad/no value given for n3semi. Set to n3semi = 0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for n3semi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueInteger(conf, "npolsemi", confvalues%npolsemi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%npolsemi = 0
+    write(*,*) "WARNING: Bad/no value given for npolsemi. Set to npolsemi = 0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for npolsemi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "tksemi", confvalues%tksemi, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%tksemi = 800.0
+    write(*,*) "WARNING: Bad/no value given for tksemi. Set to tksemi = 800.0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for tksemi."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "fsemicore", confvalues%fsemicore, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%fsemicore = 1.0
+    write(*,*) "WARNING: Bad/no value given for fsemicore. Set to fsemicore = 1.0"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for fsemicore."
     call destroyConfigReader(conf)
     return
   end if
   call getValueDouble(conf, "target_rms", confvalues%target_rms, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%target_rms = 1.0D-8
+    write(*,*) "WARNING: Bad/no value given for target_rms. Set to target_rms = 1.0D-8"
+    ierror = 0
+  end if
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for target_rms."
     call destroyConfigReader(conf)
@@ -354,6 +485,7 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
   call getValueInteger(conf, "near_field", confvalues%near_field, ierror)
   if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
     confvalues%near_field = 0
+    write(*,*) "WARNING: Bad/no value given for near_field. Set to near_field = 0"
     ierror = 0
   end if
   if (ierror /= 0) then
@@ -364,6 +496,7 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
   call getValueInteger(conf, "write_shapes", confvalues%write_shapes, ierror)
   if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
     confvalues%write_shapes = 0
+    write(*,*) "WARNING: Bad/no value given for write_shapes. Set to write_shapes = 0"
     ierror = 0
   end if
   if (ierror /= 0) then
@@ -374,6 +507,7 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
   call getValueDouble(conf, "mt_zero_shift", confvalues%mt_zero_shift, ierror)
   if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
     confvalues%mt_zero_shift = 0.0
+    write(*,*) "WARNING: Bad/no value given for mt_zero_shift. Set to mt_zero_shift = 0.0"
     ierror = 0
   end if
   if (ierror /= 0) then
@@ -384,6 +518,7 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
   call getValueInteger(conf, "DEBUG_morgan_electrostatics", confvalues%DEBUG_morgan_electrostatics, ierror)
   if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
     confvalues%DEBUG_morgan_electrostatics = 0
+    write(*,*) "WARNING: Bad/no value given for DEBUG_morgan_electrostatics. Set to DEBUG_morgan_electrostatics = 0"
     ierror = 0
   end if
   if (ierror /= 0) then
@@ -392,6 +527,7 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     return
   end if
   call destroyConfigReader(conf)
+write(*,*) "Finished reading information from input.conf"
 end function
 
 !-------------------------------------------------------------------------------
