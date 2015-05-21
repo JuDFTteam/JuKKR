@@ -210,6 +210,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
     radius = min(rmt * MT_scale, rmt)
   end if
 
+
   if (num_MT_points > 0) then
     call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s, radius)
   end if

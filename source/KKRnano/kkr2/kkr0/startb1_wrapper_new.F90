@@ -19,7 +19,7 @@ subroutine STARTB1_wrapper_new(alat,NSPIN, &
   DOUBLE PRECISION :: EFERMI
   INTEGER :: NSPIN
   DOUBLE PRECISION, dimension(*) :: ZAT
-  double precision, dimension(naezd), intent(in) :: radius_muffin_tin
+  double precision, dimension(naezd), intent(inout) :: radius_muffin_tin
   INTEGER, dimension(*) :: NTCELL
 
   integer :: max_reclen, max_reclen_mesh
@@ -62,7 +62,7 @@ subroutine write_atoms_file(alat, NSPIN, &
   double precision, intent(in) :: alat
   INTEGER :: NSPIN
   DOUBLE PRECISION, dimension(*) :: ZAT
-  double precision, dimension(naezd), intent(in) :: radius_muffin_tin
+  double precision, dimension(naezd), intent(inout) :: radius_muffin_tin
   integer, intent(in) :: NAEZD
   INTEGER, dimension(*) :: NTCELL
   type (Shapefunfile), intent(in) :: sfile
