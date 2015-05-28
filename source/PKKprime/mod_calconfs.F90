@@ -4,7 +4,7 @@ module mod_calconfs
   implicit none
 
   private
-  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, order_lines, calculate_dos_int
+  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, calculate_torkance_CRTA_vis, order_lines, calculate_dos_int
 
   integer, parameter :: SPCZMAX=1, SPCXY0=2, ROT_NO=0, ROT_FULLBZ=1, ROT_SPEC=2
 
@@ -358,7 +358,7 @@ contains
       if(ierr/=0) stop 'Problem allocating spinmix'
 
       if(cfg%mode==MODE_INT) call calculate_spinmixing_int(nsym,inc%ndegen,cfg%nsqa,nkpts,areas,fermivel,spinval,spinmix,dos,.true.,BZVol)
-      if(cfg%mode==MODE_VIS) call calculate_spinmixing_vis(nsym,inc%ndegen,cfg%nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,.true.,BZVol)
+      if(cfg%mode==MODE_VIS) call calculate_spinmixing_vis(nsym,inc%ndegen,cfg%nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,.true.,BZVol,inc%nBZdim)
 
     elseif(myrank==master .and. cfg%lfvel==1 .and. cfg%lspin==0) then
 
@@ -1131,6 +1131,7 @@ contains
     !++++++++++++++++!
     !+++ BEGIN a) +++!
     !++++++++++++++++!
+    Delta_lambda_kxyz = (0d0,0d0)
     do ikxyz=1,inc%nBZdim!dimenk
       do ipm=1,2
         !determine the perturbed k-point
@@ -1830,12 +1831,20 @@ contains
     torkance = integ/BZVol*alat/tpi
 
     if(myrank==master)then
-      write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
-      write(*,'(A)') "In units of e*abohr Rydberg:"
+      if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
+      write(*,'(A)')
+      write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
+!      write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
+!      write(*,'(A)') "In units of e*abohr Rydberg:"
+      write(*,'(A)') "  in units of e*abohr Rydberg:"
       write(*,'(3(ES25.16))') torkance
+      write(*,'(A)')
       write(*,'(A)') "In units of e*abohr / fs:"
       write(*,'(3(ES25.16))') torkance*RyToinvfs
-      write(*,'(A)') "In units of e*abohr for room temperature (hbar/(2*tau) = 25 meV) :"
+      write(*,'(A)')
+!      write(*,'(A)') "In units of e*abohr for room temperature (hbar/(2*tau) = 25 meV) :"
+      write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
+      write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
       write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
     end if!myrank==master
 
@@ -2027,12 +2036,20 @@ contains
 
     if(myrank==master)then
       if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
-      write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
-      write(*,'(A)') "In units of e*abohr Rydberg:"
+!      write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
+!      write(*,'(A)') "In units of e*abohr Rydberg:"
+      write(*,'(A)')
+      write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
+      write(*,'(A)') "  in units of e*abohr Rydberg:"
       write(*,'(3(ES25.16))') torkance
-      write(*,'(A)') "In units of e*abohr / fs:"
+      write(*,'(A)')
+      write(*,'(A)') "  in units of e*abohr / fs:     "
+!      write(*,'(A)') "In units of e*abohr / fs:"
       write(*,'(3(ES25.16))') torkance*RyToinvfs
-      write(*,'(A)') "In units of e*abohr for room temperature (hbar/(2*tau) = 25 meV) :"
+!      write(*,'(A)') "In units of e*abohr for room temperature (hbar/(2*tau) = 25 meV) :"
+      write(*,'(A)')
+      write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
+      write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
       write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
     end if!myrank==master
 
@@ -2288,42 +2305,48 @@ contains
 
 
 
-  subroutine calculate_spinmixing_vis(nsym, ndeg,nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,printout,BZVol)
+  subroutine calculate_spinmixing_vis(nsym, ndeg,nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,printout,BZVol,nBZdim)
     use mpi
     use mod_mympi, only: myrank, master
-    use mod_mathtools, only: crossprod, simple_integration
+    use mod_mathtools, only: crossprod, simple_integration_general
     implicit none
 
-    integer,          intent(in)  :: nsym,ndeg, nsqa, nkpts, nkpts_all, kpt2irr(nkpts_all)
+    integer,          intent(in)  :: nsym,ndeg, nsqa, nkpts, nkpts_all, kpt2irr(nkpts_all), nBZdim
     double precision, intent(in)  :: kpoints(3,nkpts), fermivel(3,nkpts), spinval(ndeg,nsqa,nkpts)
     double precision, intent(out) :: spinmix(nsqa), dos
     logical,          intent(in)  :: printout
-    double precision, intent(in), optional :: BZVol
+    double precision, intent(in)  :: BZVol
 
-    integer :: isqa, itri, pointspick(3)
-    double precision :: integ(nsqa), vabs, kpoints_triangle(3,3), fermi_velocity_triangle(3,3), eyaf_triangle(3), k21(3), k31(3), kcross(3), area, d_integ, d_dos
+    integer :: isqa, iii, itri, pointspick(nBZdim)
+    double precision :: integ(nsqa), vabs, kpoints_triangle(3,nBZdim), fermi_velocity_triangle(3,nBZdim), eyaf_triangle(nBZdim), k21(3), k31(3), kcross(3), area, d_integ, d_dos
 
     integ  = 0d0
     dos  = 0d0
-    do itri=1,nkpts_all/3
+    do itri=1,nkpts_all/nBZdim
 
-      pointspick(1) = kpt2irr((itri-1)*3+1)
-      pointspick(2) = kpt2irr((itri-1)*3+2)
-      pointspick(3) = kpt2irr((itri-1)*3+3)
+      do iii=1,nBZdim
+        pointspick(iii) = kpt2irr((itri-1)*nBZdim+iii)
+      end do!iii
 
       !rewrite corner point data
       kpoints_triangle(:,:)        = kpoints(:,pointspick(:))
       fermi_velocity_triangle(:,:) = fermivel(:,pointspick(:))
 
       !compute area
-      k21 = kpoints_triangle(:,2) - kpoints_triangle(:,1)
-      k31 = kpoints_triangle(:,3) - kpoints_triangle(:,1)
-      call crossprod(k21, k31, kcross)
-      area = 0.5d0*sqrt(sum(kcross**2))
+      if(nBZdim==3)then
+        k21 = kpoints_triangle(:,2) - kpoints_triangle(:,1)
+        k31 = kpoints_triangle(:,3) - kpoints_triangle(:,1)
+        call crossprod(k21, k31, kcross)
+        area = 0.5d0*sqrt(sum(kcross**2))
+      else if(nBZdim==2)then
+        area = sqrt(sum((kpoints_triangle(:,2) - kpoints_triangle(:,1))**2))
+      else
+        stop 'nBZdim must be 2 or 3 in calculate_spinmixing_vis'
+      end if
 
       do isqa=1,nsqa
         eyaf_triangle(:) = (1d0-abs(spinval(1,isqa,pointspick(:))))/2
-        call simple_integration(area, fermi_velocity_triangle, eyaf_triangle, d_integ, d_dos)
+        call simple_integration_general(nBZdim, area, fermi_velocity_triangle, eyaf_triangle, d_integ, d_dos)
         integ(isqa) = integ(isqa)+d_integ
       end do!isqa
 
@@ -2334,7 +2357,7 @@ contains
 
     if(printout .and. myrank==master)then
       write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos, " [unnormalized]"
-      if(present(BZVol)) write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos/BZVol, " [normalized]"
+      write(*,'(A,ES25.16,A)') "DOS(E_F)=", nsym*dos/BZVol, " [normalized]"
       do isqa=1,nsqa
         write(*,'(A,I4,3(A,ES25.16))') "Elliott-Yafet parameter: isqa= ", isqa,", b^2= ", nsym*integ(isqa)," [unnormalized], ", spinmix(isqa), " [normalized by DOS]"
       end do!isqa

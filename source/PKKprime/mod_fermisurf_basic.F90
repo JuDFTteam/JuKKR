@@ -827,6 +827,7 @@ contains
     logical :: ltmp
     character(len=256)  :: filename
     integer, parameter  :: iounit=15668
+    integer :: i,j
 
     if(myrank==master)then
 
@@ -844,6 +845,13 @@ contains
       read(iounit,'(10I8)') imarked
       close(iounit)
     end if!myrank==master
+
+    ! check if twice the same cube in cubesfile
+    do i=1,nmarked
+      do j=1,nmarked
+        if(imarked(i)==imarked(j).and.i/=j) stop 'Twice the same cube in cubesfile'
+      end do
+    end do
 
 #ifdef CPP_MPI
     call MPI_Bcast(nCub3, 3, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)

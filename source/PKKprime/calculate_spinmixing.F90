@@ -7,7 +7,7 @@ program calcspinmix
   use mod_ioformat,   only: filemode_int, filemode_vis, fmt_fn_sub_ext, ext_formatted, filename_spin, filename_fvel, filename_torq
   use mod_iohelp,     only: getBZvolume
   use mod_read,       only: read_inc, read_TBkkrdata, read_kpointsfile_vis, read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue
-  use mod_calconfs,   only: calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, calculate_dos_int
+  use mod_calconfs,   only: calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, calculate_torkance_CRTA_vis, calculate_dos_int
 
 #ifdef CPP_MPI
     use mpi
@@ -163,7 +163,7 @@ program calcspinmix
         if(ierr/=0) stop 'Problem allocating spinmix'
 
         if(iter==1) call calculate_spinmixing_int(nsym,inc%ndegen,nsqa,nkpts,areas,fermivel,spinval,spinmix,dos,.true.,BZVol)
-        if(iter==2) call calculate_spinmixing_vis(nsym,inc%ndegen,nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,.true.,BZVol)
+        if(iter==2) call calculate_spinmixing_vis(nsym,inc%ndegen,nsqa,nkpts,nkpts_all,kpt2irr,kpoints,fermivel,spinval,spinmix,dos,.true.,BZVol,inc%nBZdim)
         deallocate(spinmix)
 
       end if!l_spinfile .and. l_fvelfile
@@ -175,6 +175,7 @@ program calcspinmix
 
       if(l_torqfile .and. l_fvelfile) then
         if(iter==1)  call calculate_torkance_CRTA_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,areas,fermivel,torqval)
+        if(iter==2)  call calculate_torkance_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
       end if!l_torqfile.and.l_fvelfile
 
       if(l_fvelfile) then
