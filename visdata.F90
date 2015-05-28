@@ -7,7 +7,7 @@ program visdata
   use mod_ioformat,   only: filemode_int, filemode_vis, fmt_fn_sub_ext, ext_formatted, filename_spin, filename_fvel
   use mod_iohelp,     only: getBZvolume
   use mod_read,       only: read_inc, read_TBkkrdata, read_kpointsfile_vis, read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue
-  use mod_calconfs,   only: calculate_spinmixing_int, calculate_spinmixing_vis
+! use mod_calconfs,   only: calculate_spinmixing_int, calculate_spinmixing_vis
   use mod_vtkxml,     only: write_pointdata_rot
 
 #ifdef CPP_MPI
