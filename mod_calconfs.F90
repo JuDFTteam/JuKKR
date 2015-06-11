@@ -1649,7 +1649,7 @@ contains
       arrtmp1 = reshape(torqval, (/3, itmp/))
 
       !now apply the symmetries
-      call rotate_kpoints(rotmat, nkpts, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+      call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
       if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
 
       !transform back to old shape
@@ -1768,7 +1768,7 @@ contains
       arrtmp1 = reshape(torqval, (/3, itmp/))
 
       !now apply the symmetries
-      call rotate_kpoints(rotmat, nkpts, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+      call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
       if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
 
       !transform back to old shape
@@ -1950,7 +1950,7 @@ contains
       arrtmp1 = reshape(torqval, (/3, itmp/))
 
       !now apply the symmetries
-      call rotate_kpoints(rotmat, nkpts, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+      call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
       if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
 
       !transform back to old shape

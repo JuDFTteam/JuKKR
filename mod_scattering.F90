@@ -1085,8 +1085,8 @@ contains
       end do!isqa
 
       if(myrank==master) write(*,'("Checking optical theorem")')
-      if(l_optical) optical_right_thread = 0d0
 !$omp parallel private(ikp1, ispin1, optical_right_thread)
+      if(l_optical) optical_right_thread = 0d0
       do ikp2=1,nkpt2
         do isqa=1,nsqa
           do ispin2=1,inc%ndegen
