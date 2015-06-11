@@ -138,7 +138,7 @@ program calcspinmix
         deallocate(torqval)
 
         !now apply the symmetries
-        call rotate_kpoints(symmetries%rotmat, nkpts1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
+        call rotate_kpoints(symmetries%rotmat, nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
         if(nkpts1*ndegen1*nsym /= nkpts2) stop 'nkpts1*ndegen1*nsym /= nkpts2'
 
         !transform back to old shape
