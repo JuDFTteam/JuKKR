@@ -631,6 +631,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   if(params%use_semicore==1) then
   ! --> Recalculate the semicore contour factor FSEMICORE
   call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE)
+!  emesh%FSEMICORE=1.0
+!  write(*,*) 'WARNING: FSEMICORE IS NOT UPDATED'
   end if
 
   emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction

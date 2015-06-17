@@ -35,8 +35,6 @@ module EnergyMesh_mod
     integer :: N1SEMI
     integer :: N2SEMI
     integer :: N3SEMI
-    integer :: NPOLSEMI
-    double precision :: TKSEMI
 
   end type EnergyMesh
 
@@ -153,7 +151,7 @@ subroutine updateEnergyMesh(emesh)
                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
                             emesh%NPOL, emesh%TK, emesh%WEZ, emesh%EBOTSEMI, emesh%EMUSEMI, &
                             emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
-                            emesh%N3SEMI, emesh%NPOLSEMI, emesh%TKSEMI)
+                            emesh%N3SEMI)
 
   do I = 1, emesh%IELAST
   end do
@@ -173,7 +171,7 @@ subroutine updateEnergyMesh(emesh)
                              emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
                              emesh%NPOL, emesh%TK, emesh%WEZ, emesh%EBOTSEMI, emesh%EMUSEMI, &
                              emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
-                             emesh%N3SEMI, emesh%NPOLSEMI, emesh%TKSEMI)
+                             emesh%N3SEMI)
 
   end subroutine
 
@@ -190,7 +188,7 @@ subroutine updateEnergyMesh(emesh)
                               emesh%E1,emesh%E2,emesh%TK,emesh%NPOL, &
                               emesh%NPNT1,emesh%NPNT2,emesh%NPNT3,emesh%EBOTSEMI, &
                               emesh%EMUSEMI,emesh%IESEMICORE,emesh%FSEMICORE,emesh%N1SEMI, &
-                              emesh%N2SEMI,emesh%N3SEMI,emesh%NPOLSEMI,emesh%TKSEMI)
+                              emesh%N2SEMI,emesh%N3SEMI)
 
 
   end subroutine

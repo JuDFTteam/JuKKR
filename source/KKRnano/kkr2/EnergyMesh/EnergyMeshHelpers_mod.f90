@@ -127,7 +127,7 @@ contains
   !> read energy mesh data from file 'energy_mesh.0'
   subroutine readEnergyMeshImplSemi(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, &
                                     TK, WEZ, EBOTSEMI, EMUSEMI, FSEMICORE, IESEMICORE, N1SEMI, N2SEMI, &
-                                    N3SEMI, NPOLSEMI, TKSEMI)
+                                    N3SEMI)
     implicit none
 
     ! valence contour parameters
@@ -151,8 +151,6 @@ contains
     integer :: N1SEMI
     integer :: N2SEMI
     integer :: N3SEMI
-    integer :: NPOLSEMI
-    double precision :: TKSEMI
 
 
     open (67,file='energy_mesh.0',form='unformatted')
@@ -160,7 +158,7 @@ contains
     read (67) NPOL,TK,NPNT1,NPNT2,NPNT3
     read (67) EFERMI
     read (67) IESEMICORE,FSEMICORE,EBOTSEMI
-    read (67) EMUSEMI,TKSEMI,NPOLSEMI
+    read (67) EMUSEMI
     read (67) N1SEMI,N2SEMI,N3SEMI
 
     close (67)
@@ -171,7 +169,7 @@ contains
   !> write energy mesh data to file 'energy_mesh'
   subroutine writeEnergyMeshImplSemi(E1, E2, EFERMI, EZ, IELAST, NPNT1, NPNT2, NPNT3, NPOL, &
                                     TK, WEZ, EBOTSEMI, EMUSEMI, FSEMICORE, IESEMICORE, N1SEMI, N2SEMI, &
-                                    N3SEMI, NPOLSEMI, TKSEMI)
+                                    N3SEMI)
     implicit none
 
     ! valence contour parameters
@@ -195,15 +193,13 @@ contains
     integer :: N1SEMI
     integer :: N2SEMI
     integer :: N3SEMI
-    integer :: NPOLSEMI
-    double precision :: TKSEMI
 
     open (67,file='energy_mesh',form='unformatted')
     write (67) IELAST,EZ,WEZ,E1,E2
     write (67) NPOL,TK,NPNT1,NPNT2,NPNT3
     write (67) EFERMI
     write (67) IESEMICORE,FSEMICORE,EBOTSEMI
-    write (67) EMUSEMI,TKSEMI,NPOLSEMI
+    write (67) EMUSEMI
     write (67) N1SEMI,N2SEMI,N3SEMI
 
     close (67)
@@ -213,7 +209,7 @@ contains
   !------------------------------------------------------------------------------
   !> Update Energy mesh. Essentially a wrapper for EMESHT
   subroutine updateEnergyMeshImplSemi(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3, &
-                                      EBOTSEMI,EMUSEMI,IESEMICORE,FSEMICORE,N1SEMI,N2SEMI,N3SEMI,NPOLSEMI,TKSEMI)
+                                      EBOTSEMI,EMUSEMI,IESEMICORE,FSEMICORE,N1SEMI,N2SEMI,N3SEMI)
     implicit none
 
     ! valence contour parameters
@@ -239,8 +235,7 @@ contains
     integer :: N1SEMI
     integer :: N2SEMI
     integer :: N3SEMI
-    integer :: NPOLSEMI
-    double precision :: TKSEMI
+
 
     integer :: I
 
@@ -251,9 +246,10 @@ contains
 
     call EPATHTB(EZ,WEZ,E2,IELAST,iesemicore,1, &
                  E1,E2,TK,npol,npnt1,npnt2,npnt3, &
-                 ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi, &
+                 ebotsemi,emusemi,tk,npol,n1semi,n2semi,n3semi, &
                  IEMXD)
 
+    write(*,*) 'FSEMICORE=' , FSEMICORE
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*WEZ(IE)
       IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE

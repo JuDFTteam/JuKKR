@@ -42,8 +42,6 @@ d emusemi 0.0
 i n1semi 0
 i n2semi 0
 i n3semi 0
-i npolsemi 0
-d tksemi 800.0
 d fsemicore 1.0
 ### other
 d target_rms 1.0D-8

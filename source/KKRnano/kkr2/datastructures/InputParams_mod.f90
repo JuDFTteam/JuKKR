@@ -51,8 +51,6 @@ type InputParams
   integer :: n1semi
   integer :: n2semi
   integer :: n3semi
-  integer :: npolsemi
-  double precision :: tksemi
   double precision :: fsemicore
   double precision :: target_rms
   integer :: near_field
@@ -438,28 +436,6 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
-  call getValueInteger(conf, "npolsemi", confvalues%npolsemi, ierror)
-  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
-    confvalues%npolsemi = 0
-    write(*,*) "WARNING: Bad/no value given for npolsemi. Set to npolsemi = 0"
-    ierror = 0
-  end if
-  if (ierror /= 0) then
-    write(*,*) "Bad/no value given for npolsemi."
-    call destroyConfigReader(conf)
-    return
-  end if
-  call getValueDouble(conf, "tksemi", confvalues%tksemi, ierror)
-  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
-    confvalues%tksemi = 800.0
-    write(*,*) "WARNING: Bad/no value given for tksemi. Set to tksemi = 800.0"
-    ierror = 0
-  end if
-  if (ierror /= 0) then
-    write(*,*) "Bad/no value given for tksemi."
-    call destroyConfigReader(conf)
-    return
-  end if
   call getValueDouble(conf, "fsemicore", confvalues%fsemicore, ierror)
   if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
     confvalues%fsemicore = 1.0
@@ -581,8 +557,6 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%n1semi
   read(FILEHANDLE) confvalues%n2semi
   read(FILEHANDLE) confvalues%n3semi
-  read(FILEHANDLE) confvalues%npolsemi
-  read(FILEHANDLE) confvalues%tksemi
   read(FILEHANDLE) confvalues%fsemicore
   read(FILEHANDLE) confvalues%target_rms
   read(FILEHANDLE) confvalues%near_field
@@ -643,8 +617,6 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%n1semi
   write(FILEHANDLE) confvalues%n2semi
   write(FILEHANDLE) confvalues%n3semi
-  write(FILEHANDLE) confvalues%npolsemi
-  write(FILEHANDLE) confvalues%tksemi
   write(FILEHANDLE) confvalues%fsemicore
   write(FILEHANDLE) confvalues%target_rms
   write(FILEHANDLE) confvalues%near_field

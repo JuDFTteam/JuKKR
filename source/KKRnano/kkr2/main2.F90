@@ -117,7 +117,7 @@ program MAIN2
   end if
 
   if (dims%LLY /= 0) then
-    write(*,*) "ERROR: Lloyds formula not supported in this version. Set LLY=0"
+    write(*,*) "WARNING: Lloyds formula not supported in this version. Set LLY=0"
     stop
   end if
 

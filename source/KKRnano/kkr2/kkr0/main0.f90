@@ -247,7 +247,7 @@
 ! EPATHTB calls EMESHT both for the semicore contour and the valence contour
     call EPATHTB(EZ,DEZ,EFERMI,IELAST,iesemicore,params%use_semicore, &
                  params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
-                 params%ebotsemi,params%emusemi,params%tksemi,params%npolsemi,params%n1semi,params%n2semi,params%n3semi, &
+                 params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
                  IEMXD)
     else
 ! Call EMESTH for valence contour only (can be included in EPATHTB when semicore contour feature is stable)
@@ -257,6 +257,7 @@
 
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*DEZ(IE)
+      IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*params%FSEMICORE
     end do
 
 
@@ -312,7 +313,7 @@
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
     write (67) EFERMI
     write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
-    write (67) params%EMUSEMI,params%TKSEMI,params%NPOLSEMI
+    write (67) params%EMUSEMI
     write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
 
     close (67)

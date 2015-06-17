@@ -333,6 +333,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
           jij_data%active_spin = ispin
 
+!          WRITE(*,'(14i5)') getMyWorldRank(my_mpi),getMyAtomRank(my_mpi),getMyAtomId(my_mpi),getMySpinId(my_mpi),
+!            getMyEnergyId(my_mpi),getMySEId(my_mpi),getNumAtomRanks(my_mpi),getNumSpinRanks(my_mpi),getNumEnergyRanks(my_mpi),
+!            getNumSERanks(my_mpi),getNumWorldRanks(my_mpi),getMasterRank(my_mpi),isMasterRank(my_mpi),isInMasterGroup(my_mpi)
+
 !------------------------------------------------------------------------------
           call KLOOPZ1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
           arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
