@@ -548,6 +548,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
     end if
 
+
     DENEF = DENEF + DENEF_local
     CHRGNT = CHRGNT + CHRGNT_local
 
@@ -629,10 +630,12 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 !------------------------------------------------------------------------------
 
   if(params%use_semicore==1) then
+  ! --> Sum up semicore charges from different MPI ranks
+    call sumChargeSemi_com(CHRGSEMICORE, getMySEcommunicator(my_mpi))
   ! --> Recalculate the semicore contour factor FSEMICORE
-  call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE)
-!  emesh%FSEMICORE=1.0
-!  write(*,*) 'WARNING: FSEMICORE IS NOT UPDATED'
+    if(isMasterRank(my_mpi)) then
+    call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, getMySEcommunicator(my_mpi))
+    endif
   end if
 
   emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
@@ -1137,6 +1140,29 @@ end subroutine
   end subroutine
 
   !----------------------------------------------------------------------------
+  !> Communicate and sum up contributions to semicore charge
+
+  subroutine sumChargeSemi_com(CHRGSEMICORE, communicator)
+    implicit none
+    include 'mpif.h'
+    double precision, intent(inout) :: CHRGSEMICORE
+    integer, intent(in) :: communicator
+    !----------------------------------
+
+    double precision :: WORK1
+    double precision :: WORK2
+    integer :: ierr
+
+    WORK1 = CHRGSEMICORE
+
+    call MPI_ALLREDUCE(WORK1,WORK2,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
+    communicator,IERR)
+
+    CHRGSEMICORE = WORK2
+
+  end subroutine
+
+  !----------------------------------------------------------------------------
   !> Extracts the DOS at the Fermi level and stores result in DENEF
   !> @param IELAST energy index of Fermi level
   !> @param LMAXD1 lmax+1
@@ -1253,13 +1279,15 @@ end subroutine
   !----------------------------------------------------------------------------
   !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
 
-  subroutine calcFactorSemi(CHRGSEMICORE, FSEMICORE)
-
+  subroutine calcFactorSemi(CHRGSEMICORE, FSEMICORE, communicator)
+   
+   include 'mpif.h'
    double precision, intent(inout)  :: CHRGSEMICORE ! semicore charge
    double precision, intent(inout) :: FSEMICORE    ! semicore factor to be updated
-
+   integer, intent(in) :: communicator
+   double precision :: WORK
    integer :: I1                                ! auxiliary parameter, number of semicore bands
-
+   integer :: IERR
 
    IF ( CHRGSEMICORE.LT.1D-10 ) CHRGSEMICORE = 1D-10
 

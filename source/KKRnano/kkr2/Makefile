@@ -22,6 +22,9 @@ FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS = -O3
+ifeq ($(TYPE),debug)
+FCFLAGS += -g
+endif
 # set run paths to look for shared libraries (-Wl means pass to linker)
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'

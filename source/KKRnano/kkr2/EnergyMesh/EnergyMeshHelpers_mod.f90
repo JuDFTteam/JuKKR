@@ -249,7 +249,6 @@ contains
                  ebotsemi,emusemi,tk,npol,n1semi,n2semi,n3semi, &
                  IEMXD)
 
-    write(*,*) 'FSEMICORE=' , FSEMICORE
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*WEZ(IE)
       IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
