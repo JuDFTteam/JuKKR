@@ -98,6 +98,6 @@ c
      +                GSH,ILM,IMAXSH,IFUNM,THETAS,
      +                WTYR,IJD,LMSP,THET,YLM,DYLMT1,DYLMT2,
      +                DYLMF1,DYLMF2,DYLMTF,
-     &                irmd, irid, nfund, ngshd, ipand)
+     &                irmd, irid, nfund, ngshd, ipand, kxc)
         END IF
       END

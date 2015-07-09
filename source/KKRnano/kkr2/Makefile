@@ -243,3 +243,4 @@ ScatteringCalculation_mod.o: InputParams_mod.o TruncationZone_mod.o wrappers_mod
 TEST_lcutoff_mod.o: TruncationZone_mod.o Main2Arrays_mod.o lcutoff_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
 total_energy_mod.o: BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
+vxcgga.o: XCFunctionals_mod.o
