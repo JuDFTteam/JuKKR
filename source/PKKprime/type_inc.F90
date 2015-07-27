@@ -6,7 +6,7 @@ module type_inc
 
       sequence
 
-      integer :: N = 27
+      integer :: N = 29
 
       integer :: lmaxd  = -1
       integer :: lmax   = -1
@@ -37,7 +37,8 @@ module type_inc
 
       logical :: lrhod = .false.
       logical :: ltorq = .false.
-
+      logical :: lspinflux = .false.
+      logical :: lalpha = .false.
 !      logical :: simpson = .false.
 
     end type inc_TYPE
@@ -86,6 +87,8 @@ contains
     call MPI_Get_address(inc%nrootmax,disp(25), ierr)
     call MPI_Get_address(inc%lrhod,  disp(26), ierr)
     call MPI_Get_address(inc%ltorq,  disp(27), ierr)
+    call MPI_Get_address(inc%lspinflux,  disp(28), ierr)
+    call MPI_Get_address(inc%lalpha,  disp(29), ierr)
 !    call MPI_Get_address(inc%simpson,  disp(28), ierr)
 
     base = disp(1)
@@ -94,7 +97,7 @@ contains
     blocklen=1
 
     etype(1:25)  = MPI_INTEGER
-    etype(26:27) = MPI_LOGICAL
+    etype(26:29) = MPI_LOGICAL
 
     call MPI_Type_create_struct(N, blocklen, disp, etype, myMPItype, iout)
 

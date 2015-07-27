@@ -172,8 +172,6 @@ contains
 
 
 
-
-
   function points_in_wedge(nfaces, nvec, dscal, npts, points, mode)
 
     logical :: points_in_wedge

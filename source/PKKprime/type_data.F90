@@ -40,7 +40,7 @@ module type_data
 
     type :: tgmatrx_TYPE
 
-      integer          :: N = 8
+      integer          :: N = 10
 
       double complex, allocatable :: energies(:)
       double complex, allocatable :: tmatll(:,:,:,:)
@@ -49,6 +49,8 @@ module type_data
       double complex, allocatable :: ginp(:,:,:,:)
       double complex, allocatable :: rhod(:,:,:,:)
       double complex, allocatable :: torq(:,:,:,:)
+      double complex, allocatable :: spinflux(:,:,:,:)
+      double complex, allocatable :: alpha(:,:,:,:)
 
     end type tgmatrx_TYPE
 
@@ -159,6 +161,8 @@ contains
             & tgmatrx%ginp(inc%naclsd*inc%lmmax,inc%lmmax,inc%nclsd,inc%ielast),&
             & tgmatrx%rhod(inc%lmmaxso,inc%lmmaxso,inc%natypd,4),               &
             & tgmatrx%torq(inc%lmmaxso,inc%lmmaxso,inc%natypd,3),               &
+            & tgmatrx%spinflux(inc%lmmaxso,inc%lmmaxso,inc%natypd,3),           &
+            & tgmatrx%alpha(inc%lmmaxso,inc%lmmaxso,inc%natypd,3),              &
             & STAT=ierr                                                         )
     if(ierr/=0) stop 'Problem allocating arrays for tgmatrx'
 
@@ -169,6 +173,8 @@ contains
     tgmatrx%ginp     = (-1d0,0d0)
     tgmatrx%rhod     = (0d0,0d0)
     tgmatrx%torq     = (0d0,0d0)
+    tgmatrx%spinflux = (0d0,0d0)
+    tgmatrx%alpha    = (0d0,0d0)
 
   end subroutine tgmatrx_init
 
@@ -267,6 +273,8 @@ contains
     call MPI_Get_address(tgmatrx%ginp,    disp(6), ierr)
     call MPI_Get_address(tgmatrx%rhod,    disp(7), ierr)
     call MPI_Get_address(tgmatrx%torq,    disp(8), ierr)
+    call MPI_Get_address(tgmatrx%spinflux,disp(9), ierr)
+    call MPI_Get_address(tgmatrx%alpha,   disp(10), ierr)
 
     base = disp(1)
     disp = disp - base
@@ -279,9 +287,11 @@ contains
     blocklen(6)=size(tgmatrx%ginp)
     blocklen(7)=size(tgmatrx%rhod)
     blocklen(8)=size(tgmatrx%torq)
+    blocklen(9)=size(tgmatrx%spinflux)
+    blocklen(10)=size(tgmatrx%alpha)
 
     etype(1)   = MPI_INTEGER
-    etype(2:8) = MPI_DOUBLE_COMPLEX
+    etype(2:10) = MPI_DOUBLE_COMPLEX
 
     call MPI_Type_create_struct(tgmatrx%N, blocklen, disp, etype, myMPItype, ierr)
     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmatrx'

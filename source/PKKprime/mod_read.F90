@@ -3,7 +3,7 @@ module mod_read
   implicit none
 
   private
-  public :: read_inc, read_TBkkrdata, read_kpointsfile_vis, read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue
+  public :: read_inc, read_TBkkrdata, read_kpointsfile_vis, read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue, read_torqvalue_atom, read_spinvec_atom, read_spinflux_atom
 
 
 contains
@@ -16,7 +16,8 @@ contains
     use type_inc,     only: inc_type
     use mod_mympi,    only: myrank, nranks, master
     use mod_ioformat, only: fmt_fn_ext, ext_formatted, filename_tbkkrparams,&
-                          & filename_tbkkrrhod, filename_tbkkrtorq
+                          & filename_tbkkrrhod, filename_tbkkrtorq, filename_tbkkrspinflux,&
+                          & filename_tbkkralpha
     use mod_ioinput,  only: IoInput
 #ifdef CPP_MPI
     use type_inc,     only: create_mpimask_inc
@@ -102,6 +103,11 @@ contains
         write(filename,fmt_fn_ext) filename_tbkkrtorq, ext_formatted
         inquire(file=trim(filename), exist=inc%ltorq)
 
+        write(filename,fmt_fn_ext) filename_tbkkrspinflux, ext_formatted
+        inquire(file=trim(filename), exist=inc%lspinflux)
+
+        write(filename,fmt_fn_ext) filename_tbkkralpha, ext_formatted
+        inquire(file=trim(filename), exist=inc%lalpha)
       end if!myrank==master
 
 #ifdef CPP_MPI
@@ -131,7 +137,8 @@ contains
     use mod_mympi,    only: myrank, nranks, master
     use mod_kkrmat,   only: InvertT, CalcTmat
     use mod_ioformat, only: fmt_fn_ext, ext_formatted, filename_tbkkrcontainer,&
-                          & filename_tbkkrrhod,filename_tbkkrtorq
+                          & filename_tbkkrrhod,filename_tbkkrtorq, filename_tbkkrspinflux,&
+                          & filename_tbkkralpha
 #ifdef CPP_MPI
     use type_data,    only: create_mpimask_lattice, create_mpimask_cluster, create_mpimask_tgmatrx
     use mpi
@@ -346,7 +353,38 @@ contains
           close(ifile)
         end if!inc%ltorq
 
+        !read in spinflux
+        if(inc%lspinflux)then
+          write(filename,fmt_fn_ext) filename_tbkkrspinflux, ext_formatted
+          open(unit=ifile, file=trim(filename), form='formatted', action='read')
+          do isigma=1,3
+            do i1=1,inc%natypd
+              do lm2=1,inc%lmmaxso
+                do lm1=1,inc%lmmaxso
+                  read(ifile,'(2ES25.16)') tgmatrx%spinflux(lm1,lm2,i1,isigma)
+                end do!lm1
+              end do!lm2
+            end do!i1
+          end do!isigma
+          close(ifile)
+        end if!inc%lspinflux
         
+        !read in alpha
+        if(inc%lalpha)then
+          write(filename,fmt_fn_ext) filename_tbkkralpha, ext_formatted
+          open(unit=ifile, file=trim(filename), form='formatted', action='read')
+          do isigma=1,3
+            do i1=1,inc%natypd
+              do lm2=1,inc%lmmaxso
+                do lm1=1,inc%lmmaxso
+                  read(ifile,'(2ES25.16)') tgmatrx%alpha(lm1,lm2,i1,isigma)
+                end do!lm1
+              end do!lm2
+            end do!i1
+          end do!isigma
+          close(ifile)
+        end if!inc%ltorq
+
 
       end if!myrank==master
 
@@ -790,7 +828,262 @@ contains
 
   end subroutine read_torqvalue
 
+  subroutine read_torqvalue_atom(filemode, natyp, nkpts, ndegen, torqval_atom, nsym, isym)
 
+    use mod_ioformat, only: fmt_fn_atom_sub_ext, ext_formatted, filename_torq
+    use mod_mympi,    only: myrank, nranks, master
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    character(len=*), intent(in)  :: filemode
+    integer, intent(in)  :: natyp
+    integer, intent(out) :: nkpts, nsym, ndegen
+    integer,          allocatable, intent(out) :: isym(:)
+    double precision, allocatable, intent(out) :: torqval_atom(:,:,:,:) !torqval_atom(3,natyp,ndegen,nkpts)
+
+    integer :: ii, itmp(3), ierr
+    character(len=256) :: filename
+
+    if(myrank==master)then
+        write(filename,fmt_fn_atom_sub_ext) filename_torq, 1, trim(filemode), ext_formatted
+        open(unit=326526, file=trim(filename), form='formatted', action='read')
+        read(326526,'(3I8)') nkpts, nsym, ndegen
+        close(326526)
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    if(myrank==master)then
+      itmp(1) = nkpts
+      itmp(2) = nsym
+      itmp(3) = ndegen
+    end if!myrank==master
+
+    call MPI_Bcast(itmp,3,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting itmp_2'
+
+    if(myrank/=master)then
+      nkpts = itmp(1)
+      nsym  = itmp(2)
+      ndegen= itmp(3)
+    end if!myrank==master
+#endif
+
+    allocate(isym(nsym),torqval_atom(3,natyp,ndegen,nkpts), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating isym, torqval_atom'
+
+    if(myrank==master)then
+      do ii=1,natyp
+        write(filename,fmt_fn_atom_sub_ext) filename_torq, ii, trim(filemode), ext_formatted
+        open(unit=326526, file=trim(filename), form='formatted', action='read')
+        read(326526,'(3I8)') nkpts, nsym, ndegen ! not needed, but used to skip lines
+        read(326526,'(12I8)') isym
+        read(326526,'(3ES25.16)') torqval_atom(:,ii,:,:)
+        close(326526)
+      end do!ii
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    call MPI_Bcast(isym,nsym,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting isym'
+
+    call MPI_Bcast(torqval_atom,3*natyp*ndegen*nkpts,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting torqval_atom'
+#endif
+
+  end subroutine read_torqvalue_atom
+
+  subroutine read_spinvec_atom(filemode, natyp, nkpts, ndegen, spinvec_atom, nsym, isym)
+
+    use mod_ioformat, only: fmt_fn_atom_sub_ext, ext_formatted, filename_spinvec
+    use mod_mympi,    only: myrank, nranks, master
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    character(len=*), intent(in)  :: filemode
+    integer, intent(in)  :: natyp
+    integer, intent(out) :: nkpts, nsym, ndegen
+    integer,          allocatable, intent(out) :: isym(:)
+    double precision, allocatable, intent(out) :: spinvec_atom(:,:,:,:) !spinvec_atom(3,natyp,ndegen,nkpts)
+
+    integer :: ii, itmp(3), ierr
+    character(len=256) :: filename
+
+    if(myrank==master)then
+        write(filename,fmt_fn_atom_sub_ext) filename_spinvec, 1, trim(filemode), ext_formatted
+        open(unit=326526, file=trim(filename), form='formatted', action='read')
+        read(326526,'(3I8)') nkpts, nsym, ndegen
+        close(326526)
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    if(myrank==master)then
+      itmp(1) = nkpts
+      itmp(2) = nsym
+      itmp(3) = ndegen
+    end if!myrank==master
+
+    call MPI_Bcast(itmp,3,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting itmp_2'
+
+    if(myrank/=master)then
+      nkpts = itmp(1)
+      nsym  = itmp(2)
+      ndegen= itmp(3)
+    end if!myrank==master
+#endif
+
+    allocate(isym(nsym),spinvec_atom(3,natyp,ndegen,nkpts), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating isym, spinvec_atom'
+
+    if(myrank==master)then
+      do ii=1,natyp
+        write(filename,fmt_fn_atom_sub_ext) filename_spinvec, ii, trim(filemode), ext_formatted
+        open(unit=326526, file=trim(filename), form='formatted', action='read')
+        read(326526,'(3I8)') nkpts, nsym, ndegen ! not needed, but used to skip lines
+        read(326526,'(12I8)') isym
+        read(326526,'(3ES25.16)') spinvec_atom(:,ii,:,:)
+        close(326526)
+      end do!ii
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    call MPI_Bcast(isym,nsym,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting isym'
+
+    call MPI_Bcast(spinvec_atom,3*natyp*ndegen*nkpts,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting spinvec_atom'
+#endif
+
+  end subroutine read_spinvec_atom
+
+  subroutine read_spinflux_atom(filemode, natyp, nkpts, ndegen, spinflux, nsym, isym)
+
+    use mod_ioformat, only: fmt_fn_atom_sub_ext, ext_formatted, filename_spinflux
+    use mod_mympi,    only: myrank, nranks, master
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    character(len=*), intent(in)  :: filemode
+    integer, intent(in)  :: natyp
+    integer, intent(out) :: nkpts, nsym, ndegen
+    integer,          allocatable, intent(out) :: isym(:)
+    double precision, allocatable, intent(out) :: spinflux(:,:,:,:) !spinflux(3,natyp,ndegen,nkpts)
+
+    integer :: ii, itmp(3), ierr
+    character(len=256) :: filename
+
+    if(myrank==master)then
+        write(filename,fmt_fn_atom_sub_ext) filename_spinflux, 1, trim(filemode), ext_formatted
+        open(unit=326526, file=trim(filename), form='formatted', action='read')
+        read(326526,'(3I8)') nkpts, nsym, ndegen
+        close(326526)
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    if(myrank==master)then
+      itmp(1) = nkpts
+      itmp(2) = nsym
+      itmp(3) = ndegen
+    end if!myrank==master
+
+    call MPI_Bcast(itmp,3,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting itmp_2'
+
+    if(myrank/=master)then
+      nkpts = itmp(1)
+      nsym  = itmp(2)
+      ndegen= itmp(3)
+    end if!myrank==master
+#endif
+
+    allocate(isym(nsym), spinflux(3,natyp,ndegen,nkpts), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating isym, spinflux'
+
+    if(myrank==master)then
+      do ii=1,natyp
+        write(filename,fmt_fn_atom_sub_ext) filename_spinflux, ii, trim(filemode), ext_formatted
+        open(unit=326526, file=trim(filename), form='formatted', action='read')
+        read(326526,'(3I8)') nkpts, nsym, ndegen ! not needed, but used to skip lines
+        read(326526,'(12I8)') isym
+        read(326526,'(3ES25.16)') spinflux(:,ii,:,:)
+        close(326526)
+      end do!ii
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    call MPI_Bcast(isym,nsym,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting isym'
+
+    call MPI_Bcast(spinflux,3*natyp*ndegen*nkpts,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting spinflux'
+#endif
+
+  end subroutine read_spinflux_atom
+
+  subroutine read_alphavalue(filemode, nkpts, ndegen, alphaval, nsym, isym)
+
+    use mod_ioformat, only: fmt_fn_sub_ext, ext_formatted, filename_alpha
+    use mod_mympi,    only: myrank, nranks, master
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    character(len=*), intent(in)  :: filemode
+    integer, intent(out) :: nkpts, nsym, ndegen
+    integer,          allocatable, intent(out) :: isym(:)
+    double precision, allocatable, intent(out) :: alphaval(:,:,:)
+
+    integer :: ii, itmp(3), ierr
+    character(len=256) :: filename
+
+    if(myrank==master)then
+      write(filename,fmt_fn_sub_ext) filename_alpha, filemode, ext_formatted
+      open(unit=326526, file=trim(filename), form='formatted', action='read')
+      read(326526,'(3I8)') nkpts, nsym, ndegen
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    if(myrank==master)then
+      itmp(1) = nkpts
+      itmp(2) = nsym
+      itmp(3) = ndegen
+    end if!myrank==master
+
+    call MPI_Bcast(itmp,3,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting itmp_2'
+
+    if(myrank/=master)then
+      nkpts = itmp(1)
+      nsym  = itmp(2)
+      ndegen= itmp(3)
+    end if!myrank==master
+#endif
+
+    allocate(isym(nsym), alphaval(3,ndegen,nkpts), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating isym, alphaval'
+
+    if(myrank==master)then
+      read(326526,'(12I8)') isym
+      read(326526,'(3ES25.16)') alphaval
+      close(326526)
+    end if!myrank==master
+
+#ifdef CPP_MPI
+    call MPI_Bcast(isym,nsym,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting isym'
+
+    call MPI_Bcast(alphaval,3*ndegen*nkpts,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting alphaval'
+#endif
+
+  end subroutine read_alphavalue
 
 
 end module mod_read

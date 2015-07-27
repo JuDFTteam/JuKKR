@@ -4,19 +4,21 @@ module mod_calconfs
   implicit none
 
   private
-  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis, calculate_torkance_CRTA_int, calculate_torkance_CRTA_vis, order_lines, calculate_dos_int
+  public :: calc_on_fsurf_inputcard, calc_on_fsurf, get_nsqa, calc_spinvalue_state, calculate_spinmixing_int, calculate_spinmixing_vis, calculate_response_functions_CRTA_int, calculate_response_functions_CRTA_vis, order_lines, calculate_dos_int
 
   integer, parameter :: SPCZMAX=1, SPCXY0=2, ROT_NO=0, ROT_FULLBZ=1, ROT_SPEC=2
 
   type :: cfg_TYPE
 
-    integer :: N1 = 14
+    integer :: N1 = 16
     integer :: lspin=-1
     integer :: lfvel=-1
     integer :: lrashba=-1
     integer :: lspinperatom=-1
     integer :: ltorqperatom=-1
     integer :: ltorq=-1
+    integer :: lspinflux=-1
+    integer :: lalpha=-1
     integer :: nsqa=-1
     integer :: mode=-1
     integer :: rotatemode=-1
@@ -73,7 +75,8 @@ contains
 
     type(symmetries_type) :: symmetries
     double precision, allocatable :: fermivel(:,:), spinval(:,:,:), spinmix(:), torqval(:,:,:),&
-                                   & torqval_atom(:,:,:,:), spinvec(:,:,:,:), spinvec_atom(:,:,:,:)
+                                   & torqval_atom(:,:,:,:), spinvec(:,:,:,:), spinvec_atom(:,:,:,:),&
+                                   & spinflux_atom(:,:,:,:), alphaval(:,:,:)
     double precision, allocatable :: areas1(:), areas(:)
 
     integer :: nsym, ii, iatom, ierr, ikp, isqa
@@ -139,200 +142,56 @@ contains
     nvector=0
     nscalar=0
 
-    !************************************************************************************* 1st level of logical switches
-    if(cfg%lspin==1 .and. cfg%lfvel==1) then
-    !************************************************************************************* 1st level of logical switches
+    if(cfg%lfvel==1)then
+      nvector=nvector+1
+      allocate(fermivel(3,nkpts), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating fermivel'
+    endif!cfg%lfvel==1
 
+    if(cfg%lalpha==1)then
+      nvector=nvector+1
+      allocate(alphaval(3,inc%ndegen,nkpts), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating alphaval'
+    endif!cfg%lalpha==1
 
-      nscalar=nscalar+cfg%nsqa
-      nvector=nvector+1+cfg%nsqa
-      allocate( spinval(inc%ndegen,cfg%nsqa,nkpts),   &
-              & spinvec(3,inc%ndegen,cfg%nsqa,nkpts), &
-              & fermivel(3,nkpts),                    &
-              & STAT=ierr                             )
-      if(ierr/=0) stop 'Problem allocating spinval'
-
-      !************************************************************************************* 2nd level of logical switches
-      if(cfg%ltorq==1 .and. cfg%lspinperatom==1 .and. cfg%ltorqperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+1+2*inc%natypd
-        allocate( torqval(3,inc%ndegen,nkpts),                 &
-                & spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & torqval_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & STAT=ierr                                    )
-        if(ierr/=0) stop 'Problem allocating torqval, spinvec_atom and torqval_atom'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
-                          & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
-                          & spinvec=spinvec,spinvec_atom=spinvec_atom,torqvalue=torqval,     &
-                          & torqvalue_atom=torqval_atom                                      )
-
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%ltorq==1 .and. cfg%lspinperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+1+inc%natypd
-        allocate( torqval(3,inc%ndegen,nkpts),                 &
-                & spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & STAT=ierr                                    )
-        if(ierr/=0) stop 'Problem allocating torqval and spinvec_atom'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
-                          & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
-                          & spinvec=spinvec,spinvec_atom=spinvec_atom,torqvalue=torqval      )
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%ltorq==1 .and. cfg%ltorqperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+1+inc%natypd
-        allocate( torqval(3,inc%ndegen,nkpts),                 &
-                & torqval_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & STAT=ierr                                    )
-        if(ierr/=0) stop 'Problem allocating torqval and spinvec_atom'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
-                          & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
-                          & spinvec=spinvec,torqvalue=torqval,torqvalue_atom=torqval_atom    )
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%ltorq==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+1
-        allocate(torqval(3,inc%ndegen,nkpts), STAT=ierr)
-        if(ierr/=0) stop 'Problem allocating torqval'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
-                          & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
-                          & spinvec=spinvec,torqvalue=torqval                                )
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%lspinperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+inc%natypd
-        allocate( spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), STAT=ierr )
-        if(ierr/=0) stop 'Problem allocating spinvec etc.'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
-                          & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
-                          & spinvec=spinvec,spinvec_atom=spinvec_atom                        )
-
-      !************************************************************************************* 2nd level of logical switches
-      else
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
-                          & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
-                          & spinvec=spinvec                                                  )
-      end if
-      !************************************************************************************* 2nd level of logical switches
-
-    !************************************************************************************* 1st level of logical switches
-    elseif(cfg%lspin==1) then
-    !************************************************************************************* 1st level of logical switches
-
+    if(cfg%lspin==1)then
       nscalar=nscalar+cfg%nsqa
       nvector=nvector+cfg%nsqa
       allocate( spinval(inc%ndegen,cfg%nsqa,nkpts),   &
               & spinvec(3,inc%ndegen,cfg%nsqa,nkpts), &
               & STAT=ierr                             )
-      if(ierr/=0) stop 'Problem allocating spinval, spinvec'
+      if(ierr/=0) stop 'Problem allocating spinval and spinvec'
+    endif!cfg%lspin==1
 
-      !************************************************************************************* 2nd level of logical switches
-      if(cfg%ltorq==1 .and. cfg%lspinperatom==1 .and. cfg%ltorqperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
+    if(cfg%lspinperatom==1)then
+      nvector = nvector+inc%natypd
+      allocate( spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating spinvec_atom etc.'
+    endif!cfg%lspinperatom==1
 
-        nvector = nvector+1+2*inc%natypd
-        allocate( torqval(3,inc%ndegen,nkpts),                 &
-                & spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & torqval_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & STAT=ierr                                    )
-        if(ierr/=0) stop 'Problem allocating torqval and spinvec_atom'
+    if(cfg%ltorq==1)then
+      nvector = nvector+1
+      allocate(torqval(3,inc%ndegen,nkpts), STAT=ierr)
+      if(ierr/=0) stop 'Problem allocating torqval'
+    endif!cfg%ltorq==1
 
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                  &
-                          & spinvalue=spinval,save_eigv=cfg%saveeigv,                   &
-                          & spinvec=spinvec,spinvec_atom=spinvec_atom,torqvalue=torqval,&
-                          & torqvalue_atom=torqval_atom                                 )
+    if(cfg%ltorqperatom==1)then
+      nvector = nvector+inc%natypd
+      allocate( torqval_atom(3,inc%natypd,inc%ndegen,nkpts), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating torqval_atom'
+    endif!cfg%ltorqperatom==1
 
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%ltorq==1 .and. cfg%lspinperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
+    if(cfg%lspinflux==1)then
+      nvector = nvector+inc%natypd
+      allocate( spinflux_atom(3,inc%natypd,inc%ndegen,nkpts), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating spinflux_atom'
+    endif!cfg%lspinflux==1
 
-        nvector = nvector+1+inc%natypd
-        allocate( torqval(3,inc%ndegen,nkpts),                 &
-                & spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & STAT=ierr                                    )
-        if(ierr/=0) stop 'Problem allocating torqval and spinvec_atom'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                  &
-                          & spinvalue=spinval,save_eigv=cfg%saveeigv,                   &
-                          & spinvec=spinvec,spinvec_atom=spinvec_atom,torqvalue=torqval )
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%ltorq==1 .and. cfg%ltorqperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+1+inc%natypd
-        allocate( torqval(3,inc%ndegen,nkpts),                 &
-                & torqval_atom(3,inc%natypd,inc%ndegen,nkpts), &
-                & STAT=ierr                                    )
-        if(ierr/=0) stop 'Problem allocating torqval'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints, &
-                          & spinvalue=spinval,save_eigv=cfg%saveeigv,  &
-                          & spinvec=spinvec,torqvalue=torqval,         &
-                          & torqvalue_atom=torqval_atom                )
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%ltorq==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+1
-        allocate(torqval(3,inc%ndegen,nkpts), STAT=ierr)
-        if(ierr/=0) stop 'Problem allocating torqval'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints, &
-                          & spinvalue=spinval,save_eigv=cfg%saveeigv,  &
-                          & spinvec=spinvec,torqvalue=torqval          )
-
-      !************************************************************************************* 2nd level of logical switches
-      elseif(cfg%lspinperatom==1) then
-      !************************************************************************************* 2nd level of logical switches
-
-        nvector = nvector+inc%natypd
-        allocate( spinvec_atom(3,inc%natypd,inc%ndegen,nkpts), STAT=ierr )
-        if(ierr/=0) stop 'Problem allocating spinvec_atom etc.'
-
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints, &
-                          & spinvalue=spinval,save_eigv=cfg%saveeigv,  &
-                          & spinvec=spinvec,spinvec_atom=spinvec_atom  )
-
-      !************************************************************************************* 2nd level of logical switches
-      else
-        call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints, &
-                          & spinvalue=spinval,save_eigv=cfg%saveeigv,  &
-                          & spinvec=spinvec                            )
-      end if
-      !************************************************************************************* 2nd level of logical switches
-
-    !************************************************************************************* 1st level of logical switches
-    elseif(cfg%lfvel==1) then
-    !************************************************************************************* 1st level of logical switches
-
-      nvector=nvector+1
-      allocate(fermivel(3,nkpts), STAT=ierr)
-      if(ierr/=0) stop 'Problem allocating fermivel'
-
-      call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints, &
-                        & fermivelocity=fermivel)
-
-    !************************************************************************************* 1st level of logical switches
-    else
-      stop 'nothing to be done'
-    end if
-    !************************************************************************************* 1st level of logical switches
+    call calc_on_fsurf( inc,lattice,cluster,tgmatrx,nkpts,kpoints,                       &
+                      & fermivelocity=fermivel,spinvalue=spinval,save_eigv=cfg%saveeigv, &
+                      & spinvec=spinvec,spinvec_atom=spinvec_atom,torqvalue=torqval,     &
+                      & torqvalue_atom=torqval_atom,spinflux_atom=spinflux_atom,         &
+                      & alphavalue=alphaval                                              )
 
     allocate( scalarstring(nscalar), vectorstring(nvector), STAT=ierr)
     if(ierr/=0) stop 'Problem allocating scalarstring etc.'
@@ -340,15 +199,16 @@ contains
 
     !save the calculated properties to a file
     if(cfg%lfvel==1   .and. myrank==master) call save_fermivelocity(trim(filemode), nkpts, fermivel, nsym, isym)
+    if(cfg%lalpha==1  .and. myrank==master) call save_alpha(trim(filemode), nkpts, inc%ndegen, alphaval, nsym, isym)
     if(cfg%lfvel==1   .and. myrank==master .and. cfg%mode==MODE_INT) call calculate_and_save_weights(nkpts,nsym,isym,areas,fermivel)
     if(cfg%lspin==1   .and. myrank==master)then
        call save_spinvalue(trim(filemode), nkpts, cfg%nsqa, inc%ndegen, cfg%ispincomb, cfg%nvect, spinval, nsym, isym)
        call save_spinvec  (trim(filemode), nkpts, cfg%nsqa, inc%ndegen, cfg%ispincomb, cfg%nvect, spinvec, nsym, isym)
     end if!cfg%lspin==1 .and. myrank==master
-    if(cfg%lspinperatom==1 .and. myrank==master) call save_spinvec_atom(trim(filemode), nkpts, cfg%nsqa, inc%ndegen, inc%natypd, cfg%ispincomb, cfg%nvect, spinvec_atom, nsym, isym)
+    if(cfg%lspinperatom==1 .and. myrank==master) call save_spinvec_atom(trim(filemode), nkpts, inc%ndegen, inc%natypd, spinvec_atom, nsym, isym)
     if(cfg%ltorq==1        .and. myrank==master) call save_torqvalue(trim(filemode), nkpts, inc%ndegen, torqval, nsym, isym)
     if(cfg%ltorqperatom==1 .and. myrank==master) call save_torqvalue_atom(trim(filemode), nkpts, inc%ndegen, inc%natypd, torqval_atom, nsym, isym)
-
+    if(cfg%lspinflux==1    .and. myrank==master) call save_spinflux_atom(trim(filemode), nkpts, inc%ndegen, inc%natypd, spinflux_atom, nsym, isym)
 
 
     !calculate averages
@@ -367,18 +227,20 @@ contains
 
     end if
 
-    if(myrank==master .and. cfg%lfvel==1 .and. cfg%ltorq==1) then
-      if(cfg%mode==MODE_INT) call calculate_torkance_CRTA_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,areas,fermivel,torqval)
+!    if(myrank==master .and. cfg%lfvel==1 .and. cfg%ltorq==1) then
+    if(myrank==master.and.cfg%lfvel==1) then
+      if(cfg%mode==MODE_INT) call calculate_response_functions_CRTA_int(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,inc%natypd,nkpts,areas,fermivel,torqval,torqval_atom,spinvec_atom,spinflux_atom)
 !BZcomment: order changed to avoid simpson=T and 3D-case
       if(cfg%mode==MODE_VIS)then
         if(cfg%simpson .and. inc%nBZdim==2)then
+          write(*,*) 'Simpson rule is implemented only for torkance and damping. Only these quantities will be computed.'
           call calculate_torkance_CRTA_vis_simpson2D(nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
         else!cfg%simpson==.true.
           if(cfg%simpson) write(*,*) 'Simpson rule is not implemented for inc%nBZdim =/= 2. Taking standard (=linear) integration.'
-          call calculate_torkance_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
+          call calculate_response_functions_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,inc%natypd,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval,torqval_atom,spinvec_atom,spinflux_atom)
         end if!cfg%simpson==.true.
       end if!cfg%mode==MODE_VIS
-    end if
+    end if!myrank==master
 
     !output 3D visualization data
     if(myrank==master .and. cfg%mode==MODE_VIS .and. inc%nBZdim==3) then
@@ -407,6 +269,13 @@ contains
       end if!cfg%lfvel
       !===================================================================
 
+      !===================================================================
+      if(cfg%lalpha==1) then
+        ivector = ivector+1
+        vectordata(:,:,ivector) = alphaval(:,1,:)
+        vectorstring(ivector) = 'alpha'
+      end if!cfg%lalpha
+      !===================================================================
 
 
       !===================================================================
@@ -475,7 +344,17 @@ contains
           vectordata(:,:,ivector) = torqval_atom(:,iatom,1,:)
           write(vectorstring(ivector),'(A,I0)') 'torq_atom_', iatom
         end do!iatom
-      end if!cfg%lspinperatom==1
+      end if!cfg%ltorqperatom==1
+      !===================================================================
+
+      !===================================================================
+      if(cfg%lspinflux==1)then
+        do iatom=1,inc%natyp
+          ivector = ivector+1
+          vectordata(:,:,ivector) = spinflux_atom(:,iatom,1,:)
+          write(vectorstring(ivector),'(A,I0)') 'spinflux_atom_', iatom
+        end do!iatom
+      end if!cfg%lspinflux==1
       !===================================================================
 
       write(filename,fmt_fn_sub_ext) filename_vtkonfs, filemode_rot, ext_vtkxml
@@ -493,7 +372,7 @@ contains
 
 
 
-  subroutine calc_on_fsurf(inc,lattice,cluster,tgmatrx,nkpts,kpoints,fermivelocity,spinvalue,save_eigv,spinvec,spinvec_atom,torqvalue,torqvalue_atom)
+  subroutine calc_on_fsurf(inc,lattice,cluster,tgmatrx,nkpts,kpoints,fermivelocity,spinvalue,save_eigv,spinvec,spinvec_atom,torqvalue,torqvalue_atom,spinflux_atom,alphavalue)
 
     use type_inc,       only: inc_type
     use type_data,      only: lattice_type, cluster_type, tgmatrx_type
@@ -516,12 +395,14 @@ contains
 
     integer,          intent(in) :: nkpts
     double precision, intent(in) :: kpoints(3,nkpts)
-    double precision, intent(out), optional :: fermivelocity(3,nkpts),&
-                                             & spinvalue(inc%ndegen,cfg%nsqa,nkpts),&
-                                             & spinvec(3,inc%ndegen,cfg%nsqa,nkpts),&
-                                             & spinvec_atom(3,inc%natypd,inc%ndegen,nkpts),&
-                                             & torqvalue(3,inc%ndegen,nkpts),              &
-                                             & torqvalue_atom(3,inc%natypd,inc%ndegen,nkpts)
+    double precision, allocatable, intent(inout) :: fermivelocity(:,:),&!fermivelocity(3,nkpts),&
+                                   & spinvalue(:,:,:),       &!spinvalue(inc%ndegen,cfg%nsqa,nkpts),&
+                                   & spinvec(:,:,:,:),       &!spinvec(3,inc%ndegen,cfg%nsqa,nkpts),&
+                                   & spinvec_atom(:,:,:,:),  &!spinvec_atom(3,inc%natypd,inc%ndegen,nkpts),  &
+                                   & torqvalue(:,:,:),       &!torqvalue(3,inc%ndegen,nkpts),                &
+                                   & torqvalue_atom(:,:,:,:),&!torqvalue_atom(3,inc%natypd,inc%ndegen,nkpts),&
+                                   & spinflux_atom(:,:,:,:), &!spinflux_atom(3,inc%natypd,inc%ndegen,nkpts), &
+                                   & alphavalue(:,:,:)        !alphavalue(3,inc%ndegen,nkpts)
     logical,          intent(in), optional  :: save_eigv
 !   double complex,   intent(out), optional :: eigenvectors(inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa,nkpts)
 
@@ -530,16 +411,22 @@ contains
                                    & spinvec_tmp(:,:,:,:),&
                                    & spinvec_atom_tmp(:,:,:,:),&
                                    & torqval_tmp(:,:,:),       &
-                                   & torqval_atom_tmp(:,:,:,:)
+                                   & torqval_atom_tmp(:,:,:,:),&
+                                   & spinflux_atom_tmp(:,:,:,:),&
+                                   & alphaval_tmp(:,:,:)
 
     integer :: nkpt, ioff, ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
     double precision :: kpoint(3)
 
     integer          :: lm_fs, lm_fs2
-    double precision :: spinvec_tmp1(3,inc%ndegen,cfg%nsqa),        &
-                      & spinvec_atom_tmp1(3,inc%natypd,inc%ndegen), &
-                      & torqval_atom_tmp1(3,inc%natypd,inc%ndegen)  
-    double complex   :: eigwEF(inc%almso),&
+    double precision, allocatable :: spinvec_tmp1(:,:,:),      &!spinvec_tmp1(3,inc%ndegen,cfg%nsqa),        &
+                                   & spinvec_atom_tmp1(:,:,:), &!spinvec_atom_tmp1(3,inc%natypd,inc%ndegen), &
+                                   & torqval_tmp1(:,:),        &!torqval_tmp1(3,inc%ndegen),                 &
+                                   & torqval_atom_tmp1(:,:,:), &!torqval_atom_tmp1(3,inc%natypd,inc%ndegen), &
+                                   & spinflux_atom_tmp1(:,:,:),&!spinflux_atom_tmp1(3,inc%natypd,inc%ndegen),&
+                                   & alphaval_tmp1(:,:)         !alphaval_tmp1(3,inc%ndegen) 
+
+    double complex   :: eigwEF(inc%almso),           &
                       & LVeigEF(inc%almso,inc%almso),&
                       & RVeigEF(inc%almso,inc%almso),&
                       & rveig(inc%almso,inc%ndegen)
@@ -558,15 +445,17 @@ contains
 
     !Checks
     if(.not.cfg_read)                                         stop 'cfg not read when entering calc_on_fsurf'
-    if(present(torqvalue).and.cfg%nsqa>1)                     stop 'cfg%nsqa must be 1 if torquevalue is present in calc_on_fsurf'
-    if(present(torqvalue).and..not.inc%ltorq)                 stop 'TBKKR_torq-file not present'
-    if(present(spinvalue).and..not.inc%lrhod)                 stop 'TBKKR_rhod-file not present'
-    if(present(torqvalue).and.(.not.present(spinvalue)))      stop 'For torqvalue also spinvalue must be present in calc_on_fsurf'
-    if(present(spinvec).and.(.not.present(spinvalue)))        stop 'For spinvec also spinvalue must be present in calc_on_fsurf'
-    if(present(spinvec_atom).and.(.not.present(spinvalue)))   stop 'For spinvec_atom also spinvalue must be present in calc_on_fsurf'
-    if(present(torqvalue_atom).and.(.not.present(torqvalue))) stop 'For torqvalue_atom also torqvalue must be present in calc_on_fsurf'
+    if(allocated(torqvalue).and.cfg%nsqa>1)                     stop 'cfg%nsqa must be 1 if torquevalue is present in calc_on_fsurf'
+    if(allocated(torqvalue).and..not.inc%ltorq)                 stop 'TBKKR_torq-file not present'
+    if(allocated(spinvalue).and..not.inc%lrhod)                 stop 'TBKKR_rhod-file not present'
+    if(allocated(torqvalue).and.(.not.allocated(spinvalue)))      stop 'For torqvalue also spinvalue must be present in calc_on_fsurf'
+    if(allocated(spinvec).and.(.not.allocated(spinvalue)))        stop 'For spinvec also spinvalue must be present in calc_on_fsurf'
+    if(allocated(spinvec_atom).and.(.not.allocated(spinvalue)))   stop 'For spinvec_atom also spinvalue must be present in calc_on_fsurf'
+    if(allocated(torqvalue_atom).and.(.not.allocated(torqvalue))) stop 'For torqvalue_atom also torqvalue must be present in calc_on_fsurf'
+    if(allocated(spinflux_atom).and..not.inc%lspinflux)         stop 'TBkkr_spinflux-file not present'
     if(cfg%lrashba==1 .and. cfg%nsqa>1)                       stop 'cfg%nsqa must be 1 if cfg%lrashba=1 in calc_on_fsurf'
-    if(present(spinvec_atom) .and. cfg%nsqa>1)                stop 'cfg%nsqa must be 1 for spinvec_atom in calc_on_fsurf'
+    if(allocated(spinvec_atom) .and. cfg%nsqa>1)                stop 'cfg%nsqa must be 1 for spinvec_atom in calc_on_fsurf'
+    if(allocated(alphavalue).and..not.inc%lalpha)               stop 'TBkkr_alpha-file not present'
 
     !Parallelize
     call distribute_linear_on_tasks(nranks,myrank,master,nkpts,ntot_pT,ioff_pT,.true.)
@@ -584,46 +473,72 @@ contains
 #endif
 
     !allocate task-local arrays
-    if(present(fermivelocity))then
+    if(allocated(fermivelocity))then
       allocate( fermivel_tmp(3,nkpt), STAT=ierr )
       if(ierr/=0) stop 'Problem allocating fermivel_tmp'
       fermivelocity = 0d0
       fermivel_tmp  = 0d0
     end if
 
-    if(present(spinvalue))then
+    if(allocated(spinvalue))then
       allocate( spinval_tmp(inc%ndegen,cfg%nsqa,nkpt), STAT=ierr )
-      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
+      if(ierr/=0) stop 'Problem allocating spinval_tmp'
       spinvalue   = 0d0
       spinval_tmp = 0d0
     end if
 
-    if(present(spinvec))then
-      allocate( spinvec_tmp(3,inc%ndegen,cfg%nsqa,nkpt), STAT=ierr )
-      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
-      spinvec     = 0d0
-      spinvec_tmp = 0d0
+    if(allocated(spinvec))then
+      allocate( spinvec_tmp(3,inc%ndegen,cfg%nsqa,nkpt), &
+              & spinvec_tmp1(3,inc%ndegen,cfg%nsqa), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating spinvec_tmp'
+      spinvec      = 0d0
+      spinvec_tmp  = 0d0
+      spinvec_tmp1 = 0d0
     end if
 
-    if(present(spinvec_atom))then
-      allocate( spinvec_atom_tmp(3,inc%natypd,inc%ndegen,nkpt), STAT=ierr )
-      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
-      spinvec_atom     = 0d0
-      spinvec_atom_tmp = 0d0
+    if(allocated(spinvec_atom))then
+      allocate( spinvec_atom_tmp(3,inc%natypd,inc%ndegen,nkpt), &
+              & spinvec_atom_tmp1(3,inc%natypd,inc%ndegen), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating spinvec_atom_tmp'
+      spinvec_atom      = 0d0
+      spinvec_atom_tmp  = 0d0
+      spinvec_atom_tmp1 = 0d0
     end if
 
-    if(present(torqvalue))then
-      allocate( torqval_tmp(3,inc%ndegen,nkpt), STAT=ierr )
-      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
-      torqvalue   = 0d0
-      torqval_tmp = 0d0
+    if(allocated(torqvalue))then
+      allocate( torqval_tmp(3,inc%ndegen,nkpt), &
+              & torqval_tmp1(3,inc%ndegen),STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating torqval_tmp'
+      torqvalue    = 0d0
+      torqval_tmp  = 0d0
+      torqval_tmp1 = 0d0
     end if
 
-    if(present(torqvalue_atom))then
-      allocate( torqval_atom_tmp(3,inc%natypd,inc%ndegen,nkpt), STAT=ierr )
-      if(ierr/=0) stop 'Problem allocating fermivel_tmp'
-      torqvalue_atom = 0d0
-      torqval_atom_tmp = 0d0
+    if(allocated(torqvalue_atom))then
+      allocate( torqval_atom_tmp(3,inc%natypd,inc%ndegen,nkpt), &
+              & torqval_atom_tmp1(3,inc%natypd,inc%ndegen), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating torqval_atom_tmp'
+      torqvalue_atom    = 0d0
+      torqval_atom_tmp  = 0d0
+      torqval_atom_tmp1 = 0d0
+    end if
+
+    if(allocated(spinflux_atom))then
+      allocate( spinflux_atom_tmp(3,inc%natypd,inc%ndegen,nkpt), &
+              & spinflux_atom_tmp1(3,inc%natypd,inc%ndegen), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating spinflux_atom_tmp'
+      spinflux_atom      = 0d0
+      spinflux_atom_tmp  = 0d0
+      spinflux_atom_tmp1 = 0d0
+    end if
+
+    if(allocated(alphavalue))then
+      allocate( alphaval_tmp(3,inc%ndegen,nkpt), &
+              & alphaval_tmp1(3,inc%ndegen), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating alphaval_tmp'
+      alphavalue    = 0d0
+      alphaval_tmp  = 0d0
+      alphaval_tmp1 = 0d0
     end if
 
 
@@ -640,7 +555,6 @@ contains
                                & myrank, nranks, MPI_COMM_WORLD, fh_eigv                          )
     end if!l_save_eigv
 #endif
-
 
     !******************************************!
     !*************** B E G I N ****************!
@@ -673,7 +587,7 @@ contains
       !====================================!
       !=== Calculate the fermi-velocity ===!
       !====================================!
-      if(present(fermivelocity))then
+      if(allocated(fermivelocity))then
 
         call calc_fermivel( inc,lattice,cluster,tgmatrx,kpoint,   &
                               & eigwEF(lm_fs), LVeigEF(:,lm_fs),      &
@@ -684,11 +598,11 @@ contains
 
 
       !============================================!
-      !=== Calculate the spin-expectation value ===!
-      !=== (and torque-exp. value if specified) ===!
+      !===   Calculate the expectation values   ===!
       !============================================!
-      if(present(spinvalue))then
 
+      if(allocated(spinvalue).or.allocated(spinvec).or.allocated(spinvec_atom).or.&
+        &allocated(torqvalue).or.allocated(torqvalue_atom).or.allocated(alphavalue))then
         !copy the band
         rveig(:,1) = RVeigEF(:,lm_fs)
 
@@ -702,50 +616,41 @@ contains
 
 #ifdef CPP_MPI
         if(l_save_eigv)then
-          if (present(torqvalue))then         
-            call calc_spinvalue_state( inc, tgmatrx, rveig,              &
-                                     & spinval_tmp(:,:,ikp),             &
-                                     & eigvect_rot=rveigrot,             &
-                                     & spinvec=spinvec_tmp1,             &
-                                     & spinvec_atom=spinvec_atom_tmp1,   &
-                                     & torq_value=torqval_tmp(:,:,ikp),  &
-                                     & torq_value_atom=torqval_atom_tmp1 )
-          else
-            call calc_spinvalue_state( inc, tgmatrx, rveig,            &
-                                     & spinval_tmp(:,:,ikp),           &
-                                     & spinvec=spinvec_tmp1,           &
-                                     & spinvec_atom=spinvec_atom_tmp1, &
-                                     & eigvect_rot=rveigrot            )
-          end if
-
+          call calc_spinvalue_state_generalized( inc, tgmatrx, rveig, &
+                                     & spinval_tmp(:,:,ikp),          &
+                                     & spinvec_tmp1,                  &
+                                     & spinvec_atom_tmp1,             &
+                                     & torqval_tmp1,                  &
+                                     & torqval_atom_tmp1,             &
+                                     & spinflux_atom_tmp1,            &
+                                     & alphaval_tmp1,                 &
+                                     & eigvect_rot=rveigrot           )
           call MPI_File_write( fh_eigv, rveigrot, irveigel,        &
                              & MPI_DOUBLE_COMPLEX, mpistatus, ierr )
 
         else!l_save_eigv
 #endif
-          if (present(torqvalue))then
-            call calc_spinvalue_state( inc, tgmatrx, rveig,              &
+          call calc_spinvalue_state_generalized( inc, tgmatrx, rveig,  &
                                      & spinval_tmp(:,:,ikp),             &
                                      & spinvec=spinvec_tmp1,             &
                                      & spinvec_atom=spinvec_atom_tmp1,   &
-                                     & torq_value=torqval_tmp(:,:,ikp),  &
-                                     & torq_value_atom=torqval_atom_tmp1 )
-          else
-            call calc_spinvalue_state( inc, tgmatrx, rveig,           &
-                                     & spinval_tmp(:,:,ikp),          &
-                                     & spinvec=spinvec_tmp1,          &
-                                     & spinvec_atom=spinvec_atom_tmp1 )
-          end if
-
+                                     & torq_value=torqval_tmp1,          &
+                                     & torq_value_atom=torqval_atom_tmp1,&
+                                     & spinflux_atom=spinflux_atom_tmp1, &
+                                     & alpha_value=alphaval_tmp1         )
 #ifdef CPP_MPI
         end if!l_save_eigv
 #endif
-        if(present(spinvec))        spinvec_tmp(:,:,:,ikp) = spinvec_tmp1
-        if(present(spinvec_atom))   spinvec_atom_tmp(:,:,:,ikp) = spinvec_atom_tmp1
-        if(present(torqvalue_atom)) torqval_atom_tmp(:,:,:,ikp) = torqval_atom_tmp1
+        if(allocated(spinvec))        spinvec_tmp(:,:,:,ikp) = spinvec_tmp1
+        if(allocated(spinvec_atom))   spinvec_atom_tmp(:,:,:,ikp) = spinvec_atom_tmp1
+        if(allocated(torqvalue))      torqval_tmp(:,:,ikp) = torqval_tmp1
+        if(allocated(torqvalue_atom)) torqval_atom_tmp(:,:,:,ikp) = torqval_atom_tmp1
+        if(allocated(spinflux_atom))  spinflux_atom_tmp(:,:,:,ikp) = spinflux_atom_tmp1
+        if(allocated(alphavalue))     alphaval_tmp(:,:,ikp) = alphaval_tmp1 
 
-      end if!present(spinvalue)
-
+      end if!allocated(spinvalue).or.allocated(spinvec).or.allocated(spinvec_atom).or.
+            !allocated(torqvalue).or.allocated(torqvalue_atom).or.allocated(alphavalue)
+ 
     end do!ikp
     if(myrank==master) write(*,*) ''
 !   write(*,*) 'after loop, myrank=', myrank
@@ -763,7 +668,7 @@ contains
 
 
     !gather the fermi-velocity from the processes
-    if(present(fermivelocity))then
+    if(allocated(fermivelocity))then
 #ifdef CPP_MPI
       irecv  = 3*ntot_pT
       idispl = 3*ioff_pT
@@ -778,7 +683,7 @@ contains
 
 
     !gather the spinvalue from the processes
-    if(present(spinvalue))then
+    if(allocated(spinvalue))then
 #ifdef CPP_MPI
       itmp   = inc%ndegen*cfg%nsqa
       irecv  = itmp*ntot_pT
@@ -794,7 +699,7 @@ contains
 
 
     !gather the spinvec from the processes
-    if(present(spinvec))then
+    if(allocated(spinvec))then
 #ifdef CPP_MPI
       itmp   = 3*inc%ndegen*cfg%nsqa
       irecv  = itmp*ntot_pT
@@ -810,7 +715,7 @@ contains
 
 
     !gather the spinvec_atom from the processes
-    if(present(spinvec_atom))then
+    if(allocated(spinvec_atom))then
 #ifdef CPP_MPI
       itmp   = 3*inc%ndegen*inc%natypd
       irecv  = itmp*ntot_pT
@@ -826,7 +731,7 @@ contains
 
 
     !gather the torquevalue from the processes
-    if(present(torqvalue))then
+    if(allocated(torqvalue))then
 #ifdef CPP_MPI
       itmp   = 3*inc%ndegen
       irecv  = itmp*ntot_pT
@@ -841,7 +746,7 @@ contains
     end if!present(torqvalue)
 
     !gather the torquevalue_atom from the processes
-    if(present(torqvalue_atom))then
+    if(allocated(torqvalue_atom))then
 #ifdef CPP_MPI
       itmp   = 3*inc%ndegen*inc%natypd
       irecv  = itmp*ntot_pT
@@ -853,38 +758,165 @@ contains
 #else
       torqvalue_atom= torqval_atom_tmp
 #endif
-    end if!present(torqvalue)
+    end if!present(torqvalue_atom)
+
+    !gather the spinflux_atom from the processes
+    if(allocated(spinflux_atom))then
+#ifdef CPP_MPI
+      itmp   = 3*inc%ndegen*inc%natypd
+      irecv  = itmp*ntot_pT
+      idispl = itmp*ioff_pT
+      call MPI_Allgatherv( spinflux_atom_tmp, itmp*nkpt, MPI_DOUBLE_PRECISION, &
+                         & spinflux_atom, irecv, idispl,                     &
+                         & MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr    )
+      if(ierr/=MPI_SUCCESS) stop 'Problem in allgatherv spinflux_atom'
+#else
+      spinflux_atom= spinflux_atom_tmp
+#endif
+    end if!present(spinflux_atom)
+
+    !gather the alphavalue from the processes
+    if(allocated(alphavalue))then
+#ifdef CPP_MPI
+      itmp   = 3*inc%ndegen
+      irecv  = itmp*ntot_pT
+      idispl = itmp*ioff_pT
+      call MPI_Allgatherv( alphaval_tmp, itmp*nkpt, MPI_DOUBLE_PRECISION, &
+                         & alphavalue, irecv, idispl,                     &
+                         & MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, ierr     )
+      if(ierr/=MPI_SUCCESS) stop 'Problem in allgatherv alphavalue'
+#else
+      alphavalue= alphaval_tmp
+#endif
+    end if!present(alphavalue)
 
 
 190 FORMAT('                 |'$)
 200 FORMAT('|'$)
   end subroutine calc_on_fsurf
 
-
-
-
-  subroutine calc_spinvalue_state(inc,tgmatrx,rveig_in,spin_value,eigvect_rot,torq_value,torq_value_atom,spinvec,spinvec_atom)
+  subroutine calc_spinvalue_state(inc,tgmatrx,rveig_in,spin_value,eigvect_rot)
 
     use type_inc,       only: inc_type
     use type_data,      only: tgmatrx_type
     use mod_eigvects,   only: rewrite_eigv_atom, orthgonalize_wavefunc, normalize_wavefunc, calc_proj_wavefunc, calc_norm_wavefunc
-    use mod_spintools,  only: spin_expectationvalue, spin_crossterm, Spinrot_AlphaBeta, Spinrot_AlphaBeta_Rashba, rotate_wavefunction, torq_expectationvalue
+    use mod_spintools,  only: spin_expectationvalue, spin_crossterm, Spinrot_AlphaBeta, Spinrot_AlphaBeta_Rashba, rotate_wavefunction
     use mod_mympi, only: myrank
     implicit none
-
     type(inc_type),     intent(in)  :: inc
     type(tgmatrx_type), intent(in)  :: tgmatrx
     double complex,     intent(in)  :: rveig_in(inc%almso,inc%ndegen)
     double precision,   intent(out) :: spin_value(inc%ndegen,cfg%nsqa)
     double complex,     intent(out), optional :: eigvect_rot(inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa)
-    double precision,   intent(out), optional :: torq_value(3,inc%ndegen)
-    double precision,   intent(out), optional :: torq_value_atom(3,inc%natypd,inc%ndegen)
-    double precision,   intent(out), optional :: spinvec(3,inc%ndegen,cfg%nsqa)
-    double precision,   intent(out), optional :: spinvec_atom(3,inc%natypd,inc%ndegen)
 
     double complex :: rveig_atom_unrot(inc%lmmaxso,inc%natypd,inc%ndegen), &
                     & rveig_atom_rot(inc%lmmaxso,inc%natypd,inc%ndegen)
-    double complex :: Spin_ini(3,2), Spin_ini_atom(3,inc%natypd,2), Scross(3), Scross_atom(3,inc%natypd), Spin_final(3,inc%ndegen), Spin_final_atom(3,inc%natypd,inc%ndegen), Torq_final(3,inc%ndegen), Torq_atom(3,inc%natypd,inc%ndegen)
+    double complex :: Spin_ini(3,2), Spin_ini_atom(3,inc%natypd,2), Scross(3), Scross_atom(3,inc%natypd), Spin_final(3,inc%ndegen), Spin_final_atom(3,inc%natypd,inc%ndegen)
+    double precision :: alpha, beta, Spin_estimated
+    integer :: isqa, ient
+
+    if(.not.cfg_read) call read_cfg()
+
+    call rewrite_eigv_atom(inc,inc%ndegen,rveig_in,rveig_atom_unrot)
+
+    select case (inc%ndegen)
+    case( 1 ); !do nothing
+    case( 2 ); call orthgonalize_wavefunc(inc, tgmatrx%rhod(:,:,:,1), rveig_atom_unrot)
+    case default; stop 'inc%ndegen /= (1,2) not implemented'
+    end select
+    call normalize_wavefunc(inc, inc%ndegen, tgmatrx%rhod(:,:,:,1), rveig_atom_unrot)
+
+
+    if(inc%ndegen==1)then
+      !************************************************************************
+      !* in this case, the wave-functions are already uniquely defined        *
+      !* (except an overall phase, which does not influence the final result) *
+      !************************************************************************
+
+      !calculate spin-expectation value (vector-form)
+      spin_value = 0d0
+      call spin_expectationvalue(inc, inc%ndegen, tgmatrx%rhod, rveig_atom_unrot, Spin_final, Spin_atom=Spin_final_atom)
+
+      !make a projection onto the SQA
+      do isqa=1,cfg%nsqa
+        spin_value(1,isqa) = sum(cfg%nvect(:,isqa)*dble(Spin_final(:,1)))
+
+        !save the eigenvector into the array
+        if(present(eigvect_rot)) then
+          eigvect_rot(:,:,:,isqa) = rveig_atom_unrot
+        end if!present(eigvect_rot)
+
+      end do!isqa
+
+    elseif(inc%ndegen==2)then
+      !******************************************************************************
+      !* In this case, all states are two-fold degenerate and any linear            *
+      !* combination is also an eigenstat of the Hamiltonian. Therefore, we have    *
+      !* to find the (correct) linear combination first to find the wave functions. *
+      !******************************************************************************
+      
+      !calculate spin-expectation values of the (initial) wavefunctions
+      call spin_expectationvalue(inc, inc%ndegen, tgmatrx%rhod, rveig_atom_unrot, Spin_ini, Spin_ini_atom)
+      call spin_crossterm(inc, tgmatrx%rhod, rveig_atom_unrot, Scross, Scross_atom)
+
+      do isqa=1,cfg%nsqa
+
+        ! find parameter alpha and beta to perform the linear combination
+        if(cfg%lrashba==1)then
+          call Spinrot_AlphaBeta_Rashba(Spin_ini_atom(:,cfg%ilayer,:), Scross_atom(:,cfg%ilayer), alpha, beta)
+        else!cfg%lrashba
+          call Spinrot_AlphaBeta( cfg%ispincomb(isqa), cfg%nvect(:,isqa), Spin_ini, &
+                                & Scross, alpha, beta, Spin_estimated               )
+        end if!cfg%lrashba
+
+        ! perform the linear combination of the degenerate wavefunctions
+        call rotate_wavefunction(inc%lmmaxso, inc%natypd, alpha, beta, rveig_atom_unrot, rveig_atom_rot)
+
+        ! calculate the true (=final) spin-expectation value
+        call spin_expectationvalue(inc, inc%ndegen, tgmatrx%rhod, rveig_atom_rot, Spin_final, Spin_final_atom)
+
+        ! project onto direction n and save to output-array
+        do ient=1,2
+          spin_value(ient,isqa) = sum(cfg%nvect(:,isqa)*dble(Spin_final(:,ient)))
+        end do!ient
+
+        !save the eigenvector into the array
+        if(present(eigvect_rot)) then
+          eigvect_rot(:,:,:,isqa) = rveig_atom_rot
+        end if!present(eigvect_rot)
+
+      end do!isqa
+
+    end if!inc%ndegen==2
+
+  end subroutine calc_spinvalue_state
+
+
+
+  subroutine calc_spinvalue_state_generalized(inc,tgmatrx,rveig_in,spin_value,spinvec,spinvec_atom,torq_value,torq_value_atom,spinflux_atom,alpha_value,eigvect_rot)
+
+    use type_inc,       only: inc_type
+    use type_data,      only: tgmatrx_type
+    use mod_eigvects,   only: rewrite_eigv_atom, orthgonalize_wavefunc, normalize_wavefunc, calc_proj_wavefunc, calc_norm_wavefunc
+    use mod_spintools,  only: spin_expectationvalue, spin_crossterm, Spinrot_AlphaBeta, Spinrot_AlphaBeta_Rashba, rotate_wavefunction,&
+                            & torq_expectationvalue, spinflux_expectationvalue, alpha_expectationvalue
+    use mod_mympi, only: myrank
+    implicit none
+    type(inc_type),     intent(in)  :: inc
+    type(tgmatrx_type), intent(in)  :: tgmatrx
+    double complex,     intent(in)  :: rveig_in(inc%almso,inc%ndegen)
+    double precision,   intent(out) :: spin_value(inc%ndegen,cfg%nsqa)
+    double complex,     intent(inout), optional    :: eigvect_rot(:,:,:,:)  !eigvect_rot(inc%lmmaxso,inc%natypd,inc%ndegen,cfg%nsqa)
+    double precision,   allocatable, intent(inout) :: spinvec(:,:,:)        !spinvec(3,inc%ndegen,cfg%nsqa)
+    double precision,   allocatable, intent(inout) :: spinvec_atom(:,:,:)   !spinvec_atom(3,inc%natypd,inc%ndegen)
+    double precision,   allocatable, intent(inout) :: torq_value(:,:)       !torq_value(3,inc%ndegen)
+    double precision,   allocatable, intent(inout) :: torq_value_atom(:,:,:)!torq_value_atom(3,inc%natypd,inc%ndegen)
+    double precision,   allocatable, intent(inout) :: spinflux_atom(:,:,:)  !spinflux_atom(3,inc%natypd,inc%ndegen)
+    double precision,   allocatable, intent(inout) :: alpha_value(:,:)      !alpha_value(3,inc%ndegen)
+
+    double complex :: rveig_atom_unrot(inc%lmmaxso,inc%natypd,inc%ndegen), &
+                    & rveig_atom_rot(inc%lmmaxso,inc%natypd,inc%ndegen)
+    double complex :: Spin_ini(3,2), Spin_ini_atom(3,inc%natypd,2), Scross(3), Scross_atom(3,inc%natypd), Spin_final(3,inc%ndegen), Spin_final_atom(3,inc%natypd,inc%ndegen), Torq_final(3,inc%ndegen), Torq_atom(3,inc%natypd,inc%ndegen), Spinfluxes_atom(3,inc%natypd,inc%ndegen), Alpha_Final(3,inc%ndegen)
     double precision :: alpha, beta, Spin_estimated
     integer :: isqa, ient
 
@@ -920,16 +952,28 @@ contains
           eigvect_rot(:,:,:,isqa) = rveig_atom_unrot
         end if!present(eigvect_rot)
 
-        if(present(spinvec)) spinvec(:,:,isqa)=dble(Spin_final)
-        if(present(spinvec_atom) .and. isqa==1) spinvec_atom(:,:,:)=dble(Spin_final_atom)
+        if(allocated(spinvec)) spinvec(:,:,isqa)=dble(Spin_final)
+        if(allocated(spinvec_atom) .and. isqa==1) spinvec_atom(:,:,:)=dble(Spin_final_atom)
       end do!isqa
 
       !calculate torque expectation value
-      if(present(torq_value)) then
+      if(allocated(torq_value)) then
         call torq_expectationvalue(inc, inc%ndegen, tgmatrx%torq, rveig_atom_unrot, Torq_final, Torq_atom=Torq_atom)
         torq_value(:,:)=dble(Torq_final(:,:))
-        if(present(torq_value_atom)) torq_value_atom(:,:,:)=dble(Torq_atom(:,:,:))
+        if(allocated(torq_value_atom)) torq_value_atom(:,:,:)=dble(Torq_atom(:,:,:))
       end if!present(torq_value)
+
+      !calculate spinflux expectation value
+      if(allocated(spinflux_atom)) then
+        call spinflux_expectationvalue(inc, inc%ndegen, tgmatrx%spinflux, rveig_atom_unrot, Spinflux_atom=Spinfluxes_atom)
+        spinflux_atom(:,:,:)=dble(Spinfluxes_atom(:,:,:))
+      end if!present(spinflux_atom)
+
+      !calculate alpha expectation value
+      if(allocated(alpha_value)) then
+        call alpha_expectationvalue(inc, inc%ndegen, tgmatrx%alpha, rveig_atom_unrot, Alpha_final)
+        alpha_value(:,:)=dble(Alpha_final(:,:))
+      end if!present(alpha_value)
 
     elseif(inc%ndegen==2)then
       !******************************************************************************
@@ -964,8 +1008,8 @@ contains
         end do!ient
 
         !save the result to the putput-arrays
-        if(present(spinvec)) spinvec(:,:,isqa)=dble(Spin_final)
-        if(present(spinvec_atom) .and. isqa==1) spinvec_atom(:,:,:)=dble(Spin_final_atom)
+        if(allocated(spinvec)) spinvec(:,:,isqa)=dble(Spin_final)
+        if(allocated(spinvec_atom) .and. isqa==1) spinvec_atom(:,:,:)=dble(Spin_final_atom)
 
         !save the eigenvector into the array
         if(present(eigvect_rot)) then
@@ -977,18 +1021,27 @@ contains
         !                also when there is the two-fold conjugation degeneracy (AFMs???), this implementation
         !                would only store the torque of the last SQA. Therefore, in "read_cfg", we check 
         !                that cfg%nsqa=1 if ltorq=1.
-        if(present(torq_value)) then
+        if(allocated(torq_value)) then
           call torq_expectationvalue(inc, inc%ndegen, tgmatrx%torq, rveig_atom_unrot, Torq_final, Torq_atom)
           torq_value(:,:)=dble(Torq_final(:,:))
-          if(present(torq_value_atom)) torq_value_atom(:,:,:)=dble(Torq_atom(:,:,:))
+          if(allocated(torq_value_atom)) torq_value_atom(:,:,:)=dble(Torq_atom(:,:,:))
         end if!present(torq_value)
+
+        if(allocated(torq_value_atom)) then
+          call spinflux_expectationvalue(inc, inc%ndegen, tgmatrx%spinflux, rveig_atom_unrot, Spinfluxes_atom)
+          spinflux_atom(:,:,:)=dble(Spinfluxes_atom(:,:,:))
+        end if!present(torq_value_atom)
+
+        if(allocated(alpha_value)) then
+          call alpha_expectationvalue(inc, inc%ndegen, tgmatrx%spinflux, rveig_atom_unrot, Alpha_final)
+          alpha_value(:,:)=dble(Alpha_final(:,:))
+        end if!present(alpha_value)
 
       end do!isqa
 
     end if!inc%ndegen==2
 
-
-  end subroutine calc_spinvalue_state
+  end subroutine calc_spinvalue_state_generalized
 
 
 
@@ -1235,6 +1288,12 @@ contains
         call IoInput('LTORQATOM ',uio,1,7,ierr)
         read(unit=uio,fmt=*) cfg%ltorqperatom
 
+        call IoInput('LSPINFLUX ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) cfg%lspinflux
+
+        call IoInput('LALPHA    ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) cfg%lalpha
+
         call IoInput('SIMPSON   ',uio,1,7,ierr)
         read(unit=uio,fmt=*) cfg%simpson
 
@@ -1255,6 +1314,7 @@ contains
 
         call IoInput('NSQA      ',uio,1,7,ierr)
         read(unit=uio,fmt=*) cfg%nsqa
+        write(6,*)"cfg%nsqa=",cfg%nsqa
         allocate(vectintmp(3,cfg%nsqa), STAT=ierr)
         if(ierr/=0) stop 'Problem allocating vectintmp'
 
@@ -1396,22 +1456,24 @@ contains
     call MPI_Get_address(cfg%lspinperatom, disp1(5), ierr)
     call MPI_Get_address(cfg%ltorqperatom, disp1(6), ierr)
     call MPI_Get_address(cfg%ltorq,        disp1(7), ierr)
-    call MPI_Get_address(cfg%nsqa,         disp1(8), ierr)
-    call MPI_Get_address(cfg%mode,         disp1(9), ierr)
-    call MPI_Get_address(cfg%rotatemode,   disp1(10), ierr)
-    call MPI_Get_address(cfg%ilayer,       disp1(11), ierr)
-    call MPI_Get_address(cfg%dk_fv,        disp1(12), ierr)
-    call MPI_Get_address(cfg%saveeigv,     disp1(13), ierr)
-    call MPI_Get_address(cfg%simpson,      disp1(14), ierr)
+    call MPI_Get_address(cfg%lspinflux,    disp1(8), ierr)
+    call MPI_Get_address(cfg%lalpha,       disp1(9), ierr)
+    call MPI_Get_address(cfg%nsqa,         disp1(10), ierr)
+    call MPI_Get_address(cfg%mode,         disp1(11), ierr)
+    call MPI_Get_address(cfg%rotatemode,   disp1(12), ierr)
+    call MPI_Get_address(cfg%ilayer,       disp1(13), ierr)
+    call MPI_Get_address(cfg%dk_fv,        disp1(14), ierr)
+    call MPI_Get_address(cfg%saveeigv,     disp1(15), ierr)
+    call MPI_Get_address(cfg%simpson,      disp1(16), ierr)
 
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:14)=1
+    blocklen1(1:16)=1
 
-    etype1(1:11) = MPI_INTEGER
-    etype1(12)   = MPI_DOUBLE_PRECISION
-    etype1(13:14)= MPI_LOGICAL
+    etype1(1:13) = MPI_INTEGER
+    etype1(14)   = MPI_DOUBLE_PRECISION
+    etype1(15:16)= MPI_LOGICAL
 
     call MPI_Type_create_struct(cfg%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_cfg_1'
@@ -1541,28 +1603,23 @@ contains
 
 
 
-  subroutine save_spinvec_atom(filemode, nkpts, nsqa, ndegen, natyp, ispincomb, nvect, spinvec_atom, nsym, isym)
+  subroutine save_spinvec_atom(filemode, nkpts, ndegen, natyp, spinvec_atom, nsym, isym)
 
     use mod_ioformat,   only: fmt_fn_atom_sub_ext, ext_formatted, filename_spinvec
     implicit none
 
     character(len=*), intent(in) :: filemode
-    integer,          intent(in) :: nkpts, nsqa, ndegen, nsym, isym(nsym), ispincomb(nsqa), natyp
-    double precision, intent(in) :: nvect(3,nsqa), spinvec_atom(3,natyp,ndegen,nkpts)
+    integer,          intent(in) :: nkpts, ndegen, nsym, isym(nsym), natyp
+    double precision, intent(in) :: spinvec_atom(3,natyp,ndegen,nkpts)
 
     integer :: ii
     character(len=256) :: filename
 
-    if(nsqa>1) write(*,*) 'WARINING in save_spinvec_atom: nsqa>1 is not implemented. Only one SQA is actually stored.'
-
     do ii=1,natyp
       write(filename,fmt_fn_atom_sub_ext) filename_spinvec, ii, filemode, ext_formatted
       open(unit=326529, file=trim(filename), form='formatted', action='write')
-      if(nsqa>1) write(326529,'(A)') '#WARINING: nsqa>1 is not implemented. Only one SQA is actually stored.'
-      write(326529,'(3I8)') nkpts, nsym, nsqa, ndegen
+      write(326529,'(3I8)') nkpts, nsym, ndegen
       write(326529,'(12I8)') isym
-      write(326529,'(10I8)') ispincomb
-      write(326529,'(3ES25.16)') nvect
       write(326529,'(3ES25.16)') spinvec_atom(:,ii,:,:)
       close(326529)
    end do!ii=1,natyp
@@ -1616,121 +1673,289 @@ contains
 
   end subroutine save_torqvalue_atom
 
+  subroutine save_spinflux_atom(filemode, nkpts, ndegen, natyp, spinflux_atom, nsym, isym)
 
+    use mod_ioformat,   only: fmt_fn_atom_sub_ext, ext_formatted, filename_spinflux
+    implicit none
 
-  subroutine calculate_torkance_CRTA_int(nsym,isym,rotmat,alat,BZVol,ndeg,nkpts,areas,fermivel,torqval)
+    character(len=*), intent(in) :: filemode
+    integer,          intent(in) :: nkpts, ndegen, nsym, isym(nsym), natyp
+    double precision, intent(in) :: spinflux_atom(3,natyp,ndegen,nkpts)
+
+    integer :: ii
+    character(len=256) :: filename
+
+    do ii=1,natyp
+      write(filename,fmt_fn_atom_sub_ext) filename_spinflux, ii, filemode, ext_formatted
+      open(unit=326529, file=trim(filename), form='formatted', action='write')
+      write(326529,'(3I8)') nkpts, nsym, ndegen
+      write(326529,'(12I8)') isym
+      write(326529,'(3ES25.16)') spinflux_atom(:,ii,:,:)
+      close(326529)
+    end do!ii=1,natyp
+
+  end subroutine save_spinflux_atom
+
+  subroutine save_alpha(filemode, nkpts, ndegen, alpha, nsym, isym)
+
+    use mod_ioformat,   only: fmt_fn_sub_ext, ext_formatted, filename_alpha
+    implicit none
+
+    character(len=*), intent(in) :: filemode
+    integer,          intent(in) :: nkpts, ndegen, nsym, isym(nsym)
+    double precision, intent(in) :: alpha(3,ndegen,nkpts)
+
+    integer :: ii
+    character(len=256) :: filename
+
+    write(filename,fmt_fn_sub_ext) filename_alpha, filemode, ext_formatted
+    open(unit=326529, file=trim(filename), form='formatted', action='write')
+    write(326529,'(A)') '# To adapt this file to the fermivelocity.vis.txt format:'
+    write(326529,'(A)') '# if ndegen==1 : just remove the 1 on the second line'
+    write(326529,'(A)') '# if ndegen==2 : remove the 2 on the second line'
+    write(326529,'(A)') '#                and remove second half of the data'
+    write(326529,'(2I8)') nkpts, nsym, ndegen
+    write(326529,'(12I8)') isym
+    do ii=1,ndegen
+      write(326529,'(3ES25.16)') alpha(:,ii,:)
+    end do
+    close(326529)
+
+  end subroutine save_alpha
+
+  subroutine calculate_response_functions_CRTA_int(nsym,isym,rotmat,alat,BZVol,ndeg,natyp,nkpts,areas,fermivel,torqval,torqval_atom,spinvec_atom,spinflux)
     use mpi
     use mod_mympi,      only: myrank, master
     use mod_mathtools,  only: tpi
     use mod_symmetries, only: rotate_kpoints, expand_areas
     implicit none
 
-    integer,          intent(in)  :: nsym, ndeg, nkpts, isym(nsym)
+    integer,          intent(in)  :: nsym, ndeg, natyp, nkpts, isym(nsym)
     double precision, intent(in)  :: alat, BZVol
-    double precision, intent(in)  :: rotmat(64,3,3), areas(nkpts), fermivel(3,nkpts), torqval(3,ndeg,nkpts)
+    double precision, intent(in)  :: rotmat(64,3,3), areas(nkpts), fermivel(3,nkpts)
+    double precision, allocatable, intent(in)  :: torqval(:,:,:)      !torqval(3,ndeg,nkpts)
+    double precision, allocatable, intent(in)  :: torqval_atom(:,:,:,:) !torqval_atom(3,natypd,ndeg,nkpts)
+    double precision, allocatable, intent(in)  :: spinvec_atom(:,:,:,:) !spinvec_atom(3,natypd,ndeg,nkpts)
+    double precision, allocatable, intent(in)  :: spinflux(:,:,:,:)   !spinflux(3,natypd,ndegen,nkpts)
 
-    double precision, allocatable :: fermivel_r(:,:), areas_r(:), torqval_r(:,:,:), arrtmp1(:,:), arrtmp2(:,:)
+    double precision, allocatable :: fermivel_r(:,:), areas_r(:), arrtmp1(:,:), arrtmp2(:,:)
+    double precision, allocatable :: torqval_r(:,:,:), torqval_atom_r(:,:,:,:), spinvec_atom_r(:,:,:,:), spinflux_r(:,:,:,:)
 
     integer :: ierr, ikp, i1, i2, ideg, itmp, nkpts_tmp, nkpts_r
-    double precision :: torkance(3,3), damping(3,3)
-    double precision :: integ(3,3), vabs
+    double precision :: torkance(3,3), torkance_atom(3,3,natyp), damping(3,3), spinacc_atom(3,3,natyp), spinflux_resp(3,3,natyp)
+    double precision :: integ_torkance(3,3), integ_torkance_atom(3,3,natyp), integ_damping(3,3), integ_spinacc_atom(3,3,natyp), integ_spinflux(3,3,natyp)
+    double precision :: vabs
     double precision, parameter :: RyToinvfs = 20.67068667282055d0
-
+    integer, parameter :: iounit=13517
 
     if(nsym>1)then
       !apply symmetries to fermivel and areas
       call rotate_kpoints(rotmat, nkpts, fermivel, nsym, isym, nkpts_r, fermivel_r)
       call expand_areas(nsym,nkpts,areas,areas_r)
 
-      !next apply symmetries to torqval; as a first step, flatten the array
-      itmp = size(torqval)/3
-      allocate(arrtmp1(3,itmp), STAT=ierr)
-      if(ierr/=0) stop 'problem alloaction arrtmp1'
-      arrtmp1 = reshape(torqval, (/3, itmp/))
+      if(allocated(torqval))then
+        !next apply symmetries to torqval; as a first step, flatten the array
+        itmp = size(torqval)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(torqval, (/3, itmp/))
 
-      !now apply the symmetries
-      call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
-      if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
 
-      !transform back to old shape
-      allocate(torqval_r(3,ndeg,nkpts_r), STAT=ierr)
-      if(ierr/=0) stop 'problem allocating torqval_r'
-      torqval_r = reshape(arrtmp2,(/3,ndeg,nkpts_r/))
+        !transform back to old shape
+        allocate(torqval_r(3,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating torqval_r'
+        torqval_r = reshape(arrtmp2,(/3,ndeg,nkpts_r/))
 
-      deallocate(arrtmp1, arrtmp2)
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(torqval)
+
+      if(allocated(torqval_atom))then
+        !next apply symmetries to torqval_atom; as a first step, flatten the array
+        itmp = size(torqval_atom)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(torqval_atom, (/3, itmp/))
+
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg*natyp, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg*natyp /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
+
+        !transform back to old shape
+        allocate(torqval_atom_r(3,natyp,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating torqval_atom_r'
+        torqval_atom_r = reshape(arrtmp2,(/3,natyp,ndeg,nkpts_r/))
+
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(torqval_atom)
+
+      if(allocated(spinvec_atom))then
+        !next apply symmetries to spinvec_atom; as a first step, flatten the array
+        itmp = size(spinvec_atom)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(spinvec_atom, (/3, itmp/))
+
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg*natyp, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg*natyp /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
+
+        !transform back to old shape
+        allocate(spinvec_atom_r(3,natyp,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating spinvec_atom_r'
+        spinvec_atom_r = reshape(arrtmp2,(/3,natyp,ndeg,nkpts_r/))
+
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(spinvec_atom)
+
+      if(allocated(spinflux))then
+        !next apply symmetries to spinflux; as a first step, flatten the array
+        itmp = size(spinflux)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(spinflux, (/3, itmp/))
+
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg*natyp, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg*natyp /= nkpts_tmp) stop 'nkpts_r*ndeg*natyp /= nkpts_tmp'
+
+        !transform back to old shape
+        allocate(spinflux_r(3,natyp,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating spinflux_r'
+        spinflux_r = reshape(arrtmp2,(/3,natyp,ndeg,nkpts_r/))
+
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(spinflux)
 
     else
       nkpts_r = nkpts
-      allocate(fermivel_r(3,nkpts_r), areas_r(nkpts_r), torqval_r(3,ndeg,nkpts_r))
+
+      allocate(fermivel_r(3,nkpts_r), areas_r(nkpts_r))
       fermivel_r = fermivel
-      torqval_r  = torqval
-      areas_r    = areas
-    end if
+      areas_r = areas
 
-    !torkance
-    integ  = 0d0
+      if(allocated(torqval)) then
+        allocate(torqval_r(3,ndeg,nkpts_r))
+        torqval_r  = torqval
+      end if!(allocated(torqval))
+
+      if(allocated(torqval_atom)) then
+        allocate(torqval_atom_r(3,natyp,ndeg,nkpts_r))
+        torqval_atom_r  = torqval_atom
+      end if!(allocated(torqval))
+
+      if(allocated(spinvec_atom)) then
+        allocate(spinvec_atom_r(3,natyp,ndeg,nkpts_r))
+        spinvec_atom_r  = spinvec_atom
+      end if!(allocated(spinvec))
+
+      if(allocated(spinflux)) then
+        allocate(spinflux_r(3,natyp,ndeg,nkpts_r))
+        spinflux_r = spinflux
+      end if!(allocated(spinflux))
+    end if!nsym>1
+
+    !compute response functions
+    integ_torkance      = 0d0
+    integ_torkance_atom = 0d0
+    integ_damping       = 0d0
+    integ_spinacc_atom  = 0d0
+    integ_spinflux      = 0d0
+
     do ikp=1,nkpts_r
-      vabs = sqrt(sum(fermivel_r(:,ikp)**2))
-      do ideg=1,ndeg
-       do i1=1,3
-        do i2=1,3
-         integ(i2,i1) = integ(i2,i1)+areas_r(ikp)*torqval_r(i1,ideg,ikp)*fermivel_r(i2,ikp)/(vabs)
-        end do!i2
-       end do!i1
-      end do!ideg
+     vabs = sqrt(sum(fermivel_r(:,ikp)**2))
+     do ideg=1,ndeg
+      do i1=1,3
+       do i2=1,3
+        if(allocated(torqval))      &
+        &  integ_torkance(i2,i1)        = integ_torkance(i2,i1)        + areas_r(ikp)*torqval_r(i1,ideg,ikp)*fermivel_r(i2,ikp)/(vabs)
+        if(allocated(torqval_atom)) &
+        &  integ_torkance_atom(i2,i1,:) = integ_torkance_atom(i2,i1,:) + areas_r(ikp)*torqval_atom_r(i1,:,ideg,ikp)*fermivel_r(i2,ikp)/(vabs)
+        if(allocated(torqval))      &
+        &  integ_damping(i2,i1)         = integ_damping(i2,i1)         + areas_r(ikp)*torqval_r(i1,ideg,ikp)*torqval_r(i2,ideg,ikp)/(vabs)
+        if(allocated(spinvec_atom)) &
+        &  integ_spinacc_atom(i2,i1,:)  = integ_spinacc_atom(i2,i1,:)  + areas_r(ikp)*spinvec_atom_r(i1,:,ideg,ikp)*fermivel_r(i2,ikp)/(vabs)
+        if(allocated(spinflux))     &
+        &  integ_spinflux(i2,i1,:)      = integ_spinflux(i2,i1,:)      + areas_r(ikp)*spinflux_r(i1,:,ideg,ikp)*fermivel_r(i2,ikp)/(vabs)
+       end do!i2
+      end do!i1
+     end do!ideg
     end do!ikp
 
-    torkance = integ/BZVol*alat/tpi
+    if(allocated(torqval)) then
+      torkance = integ_torkance/BZVol*alat/tpi
 
-    if(myrank==master)then
-      if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
-      write(*,'(A)')
-      write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
-      write(*,'(A)') "  in units of e*abohr Rydberg:"
-      write(*,'(3(ES25.16))') torkance
-      write(*,'(A)')   
-      write(*,'(A)') "  in units of e*abohr / fs:     "
-      write(*,'(3(ES25.16))') torkance*RyToinvfs
-      write(*,'(A)')
-      write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
-      write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
-      write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
-      write(*,'(A)')
-    end if!myrank==master
+      if(myrank==master)then
+        if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
+        write(*,'(A)')
+        write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in units of e*abohr Rydberg:"
+        write(*,'(3(ES25.16))') torkance
+        write(*,'(A)')   
+        write(*,'(A)') "  in units of e*abohr / fs:     "
+        write(*,'(3(ES25.16))') torkance*RyToinvfs
+        write(*,'(A)')
+        write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
+        write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
+        write(*,'(A)')
+      end if!myrank==master
+    end if!allocated(torqval)
+
+    if(allocated(torqval_atom)) then
+      torkance_atom = integ_torkance_atom/BZVol*alat/tpi
+
+      if(myrank==master)then
+        open(unit=iounit,file="torkance.CRTA.int.dat",form='formatted',action='write')
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') torkance_atom*13.60569253/(2*25*0.001)
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(torqval_atom)
+
+    if(allocated(torqval)) then
+      damping = integ_damping/BZVol
+
+      if(myrank==master)then
+        if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
+        write(*,'(A)') "Gilbert damping in constant relaxation time approximation:"
+        write(*,'(A)') "In units of  Rydberg:"
+        write(*,'(3(ES25.16))') damping
+        write(*,'(A)') "In units of eV:"
+        write(*,'(3(ES25.16))') damping*13.60569253
+        write(*,'(A)') "For room temperature (hbar/(2*tau) = 25 meV):"
+        write(*,'(3(ES25.16))') damping*13.60569253/(2*25*0.001)
+      end if!myrank==master
+    end if!allocated(torqval)
+
+    if(allocated(spinvec_atom)) then
+      spinacc_atom = -integ_spinacc_atom/BZVol*alat/tpi ! units of (e a_0 mu_B)/(Rd)
+
+      if(myrank==master)then
+        open(unit=iounit,file="spinacc_resp.CRTA.int.dat",form='formatted',action='write')
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') spinacc_atom*13.60569253/(2*25*0.001)
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(spinvec_atom)
+
+    if(allocated(spinflux)) then
+      spinflux_resp = integ_spinflux/BZVol*alat/tpi
+
+      if(myrank==master)then
+        open(unit=iounit,file="spinflux_resp.CRTA.int.dat",form='formatted',action='write')
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') spinflux_resp*13.60569253/(2*25*0.001)
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(spinflux)
+
+  end subroutine calculate_response_functions_CRTA_int
 
 
-    !damping
-    integ  = 0d0
-    do ikp=1,nkpts_r
-      vabs = sqrt(sum(fermivel_r(:,ikp)**2))
-      do ideg=1,ndeg
-       do i1=1,3
-        do i2=1,3
-         integ(i2,i1) = integ(i2,i1)+areas_r(ikp)*torqval_r(i1,ideg,ikp)*torqval_r(i2,ideg,ikp)/(vabs)
-        end do!i2
-       end do!i1
-      end do!ideg
-    end do!ikp
-
-    damping = integ/BZVol
-
-    if(myrank==master)then
-      if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
-      write(*,'(A)') "Gilbert damping in constant relaxation time approximation:"
-      write(*,'(A)') "In units of  Rydberg:"
-      write(*,'(3(ES25.16))') damping
-      write(*,'(A)') "In units of eV:"
-      write(*,'(3(ES25.16))') damping*13.60569253
-      write(*,'(A)') "For room temperature (hbar/(2*tau) = 25 meV):"
-      write(*,'(3(ES25.16))') damping*13.60569253/(2*25*0.001)
-    end if!myrank==master
-
-
-
-  end subroutine calculate_torkance_CRTA_int
-
-
-  subroutine calculate_torkance_CRTA_vis(nBZdim,nsym,isym,rotmat,alat,BZVol,ndeg,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
+  subroutine calculate_response_functions_CRTA_vis(nBZdim,nsym,isym,rotmat,alat,BZVol,ndeg,natyp,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval,torqval_atom,spinvec_atom,spinflux)
     use mpi
     use mod_mympi,      only: myrank, master
     use mod_mathtools,  only: tpi, crossprod
@@ -1738,20 +1963,27 @@ contains
     use mod_mathtools,  only: simple_integration_general
     implicit none
 
-    integer,          intent(in)  :: nBZdim, nsym, ndeg, nkpts, nkpts_all, kpt2irr(nkpts_all), irr2kpt(nkpts), isym(nsym)
+    integer,          intent(in)  :: nBZdim, nsym, ndeg, natyp, nkpts, nkpts_all, kpt2irr(nkpts_all), irr2kpt(nkpts), isym(nsym)
     double precision, intent(in)  :: alat, BZVol, kpoints(3,nkpts)
-    double precision, intent(in)  :: rotmat(64,3,3), fermivel(3,nkpts), torqval(3,ndeg,nkpts)
+    double precision, intent(in)  :: rotmat(64,3,3), fermivel(3,nkpts)
+    double precision, allocatable, intent(in)  :: torqval(:,:,:)      !torqval(3,ndeg,nkpts)
+    double precision, allocatable, intent(in)  :: torqval_atom(:,:,:,:) !torqval_atom(3,natypd,ndeg,nkpts)
+    double precision, allocatable, intent(in)  :: spinvec_atom(:,:,:,:) !spinvec_atom(3,natypd,ndeg,nkpts)
+    double precision, allocatable, intent(in)  :: spinflux(:,:,:,:)   !spinflux(3,natypd,ndegen,nkpts)
 
     integer,          allocatable :: irr2kpt_r(:), kpt2irr_r(:)
-    double precision, allocatable :: kpoints_r(:,:), fermivel_r(:,:), torqval_r(:,:,:), arrtmp1(:,:), arrtmp2(:,:)
+    double precision, allocatable :: kpoints_r(:,:), fermivel_r(:,:), arrtmp1(:,:), arrtmp2(:,:)
+    double precision, allocatable :: torqval_r(:,:,:), torqval_atom_r(:,:,:,:), spinvec_atom_r(:,:,:,:), spinflux_r(:,:,:,:)
 
-    integer :: ierr, ikp, i1, i2, i3, ideg, itmp, nkpts_tmp, nkpts_r, nkpts_all_r, iline
+    integer :: ierr, ikp, i1, i2, i3, iat, ideg, itmp, nkpts_tmp, nkpts_r, nkpts_all_r, iline
     integer :: pointspick(nBZdim)
-    double precision :: kpoints_corners(3,nBZdim), fermi_velocity_corners(3,nBZdim), torq_corners(3,ndeg,nBZdim), k21(3), k31(3), kcross(3), area, integrand(nBZdim), dinteg, d_dos, dos
-    double precision :: torkance(3,3), damping(3,3)
-    double precision :: integ(3,3), vabs
+    double precision :: kpoints_corners(3,nBZdim), fermi_velocity_corners(3,nBZdim), torq_corners(3,ndeg,nBZdim), torq_corners_atom(3,natyp,ndeg,nBZdim), spinvec_corners_atom(3,natyp,ndeg,nBZdim), spinflux_corners(3,natyp,ndeg,nBZdim)
+    double precision :: k21(3), k31(3), kcross(3), area, integrand(nBZdim), dinteg, d_dos, dos
+    double precision :: torkance(3,3), torkance_atom(3,3,natyp), damping(3,3), spinacc_atom(3,3,natyp), spinflux_resp(3,3,natyp)
+    double precision :: integ_torkance(3,3), integ_torkance_atom(3,3,natyp), integ_damping(3,3), integ_spinacc_atom(3,3,natyp), integ_spinflux(3,3,natyp)
+    double precision :: vabs
     double precision, parameter :: RyToinvfs = 20.67068667282055d0
-
+    integer, parameter :: iounit=13518
 
     if(nsym>1)then
       !apply symmetries to kpoints and visarray
@@ -1761,37 +1993,120 @@ contains
       !apply symmetries to fermivel and areas
       call rotate_kpoints(rotmat, nkpts, fermivel, nsym, isym, nkpts_r, fermivel_r)
 
-      !next apply symmetries to torqval; as a first step, flatten the array
-      itmp = size(torqval)/3
-      allocate(arrtmp1(3,itmp), STAT=ierr)
-      if(ierr/=0) stop 'problem alloaction arrtmp1'
-      arrtmp1 = reshape(torqval, (/3, itmp/))
+      if(allocated(torqval))then
+        !next apply symmetries to torqval; as a first step, flatten the array
+        itmp = size(torqval)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(torqval, (/3, itmp/))
 
-      !now apply the symmetries
-      call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
-      if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
 
-      !transform back to old shape
-      allocate(torqval_r(3,ndeg,nkpts_r), STAT=ierr)
-      if(ierr/=0) stop 'problem allocating torqval_r'
-      torqval_r = reshape(arrtmp2,(/3,ndeg,nkpts_r/))
+        !transform back to old shape
+        allocate(torqval_r(3,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating torqval_r'
+        torqval_r = reshape(arrtmp2,(/3,ndeg,nkpts_r/))
 
-      deallocate(arrtmp1, arrtmp2)
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(torqval)
+
+      if(allocated(torqval_atom))then
+        !next apply symmetries to torqval_atom; as a first step, flatten the array
+        itmp = size(torqval_atom)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(torqval_atom, (/3, itmp/))
+
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg*natyp, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg*natyp /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
+
+        !transform back to old shape
+        allocate(torqval_atom_r(3,natyp,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating torqval_atom_r'
+        torqval_atom_r = reshape(arrtmp2,(/3,natyp,ndeg,nkpts_r/))
+
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(torqval_atom)
+
+      if(allocated(spinvec_atom))then
+        !next apply symmetries to spinvec_atom; as a first step, flatten the array
+        itmp = size(spinvec_atom)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(spinvec_atom, (/3, itmp/))
+
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg*natyp, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg*natyp /= nkpts_tmp) stop 'nkpts_r*ndeg /= nkpts_tmp'
+
+        !transform back to old shape
+        allocate(spinvec_atom_r(3,natyp,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating spinvec_atom_r'
+        spinvec_atom_r = reshape(arrtmp2,(/3,natyp,ndeg,nkpts_r/))
+
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(spinvec_atom)
+
+      if(allocated(spinflux))then
+        !next apply symmetries to spinflux; as a first step, flatten the array
+        itmp = size(spinflux)/3
+        allocate(arrtmp1(3,itmp), STAT=ierr)
+        if(ierr/=0) stop 'problem alloaction arrtmp1'
+        arrtmp1 = reshape(spinflux, (/3, itmp/))
+
+        !now apply the symmetries
+        call rotate_kpoints(rotmat, nkpts*ndeg*natyp, arrtmp1, nsym, isym, nkpts_tmp, arrtmp2)
+        if(nkpts_r*ndeg*natyp /= nkpts_tmp) stop 'nkpts_r*ndeg*natyp /= nkpts_tmp'
+
+        !transform back to old shape
+        allocate(spinflux_r(3,natyp,ndeg,nkpts_r), STAT=ierr)
+        if(ierr/=0) stop 'problem allocating spinflux_r'
+        spinflux_r = reshape(arrtmp2,(/3,natyp,ndeg,nkpts_r/))
+
+        deallocate(arrtmp1, arrtmp2)
+      end if!allocated(spinflux)
 
       nkpts_all_r = nkpts_all*nsym
 
     else
       nkpts_r = nkpts
-      allocate(fermivel_r(3,nkpts_r), torqval_r(3,ndeg,nkpts_r), kpoints_r(3,nkpts), kpt2irr_r(nkpts_all))
+      allocate(fermivel_r(3,nkpts_r), kpoints_r(3,nkpts), kpt2irr_r(nkpts_all))
       kpoints_r  = kpoints
       kpt2irr_r  = kpt2irr
-      fermivel_r = fermivel
-      torqval_r  = torqval
       nkpts_all_r = nkpts_all*nsym
+      fermivel_r = fermivel
+
+      if(allocated(torqval)) then
+        allocate(torqval_r(3,ndeg,nkpts_r))
+        torqval_r  = torqval
+      end if!(allocated(torqval))
+
+      if(allocated(torqval_atom)) then
+        allocate(torqval_atom_r(3,natyp,ndeg,nkpts_r))
+        torqval_atom_r  = torqval_atom
+      end if!(allocated(torqval))
+
+      if(allocated(spinvec_atom)) then
+        allocate(spinvec_atom_r(3,natyp,ndeg,nkpts_r))
+        spinvec_atom_r  = spinvec_atom
+      end if!(allocated(spinvec))
+
+      if(allocated(spinflux)) then
+        allocate(spinflux_r(3,natyp,ndeg,nkpts_r))
+        spinflux_r = spinflux
+      end if!(allocated(spinflux))
     end if
 
-    !torkance
-    integ  = 0d0
+    !compute response functions
+    integ_torkance      = 0d0
+    integ_torkance_atom = 0d0
+    integ_damping       = 0d0
+    integ_spinacc_atom  = 0d0
+    integ_spinflux      = 0d0
+
     dos    = 0d0
     do iline=1,nkpts_all_r/nBZdim
 
@@ -1802,7 +2117,10 @@ contains
       !rewrite corner point data
       kpoints_corners(:,:)        = kpoints_r(:,pointspick(:))
       fermi_velocity_corners(:,:) = fermivel_r(:,pointspick(:))
-      torq_corners(:,:,:)         = torqval_r(:,:,pointspick(:))
+      if(allocated(torqval)) torq_corners(:,:,:) = torqval_r(:,:,pointspick(:))
+      if(allocated(torqval_atom)) torq_corners_atom(:,:,:,:) = torqval_atom_r(:,:,:,pointspick(:))
+      if(allocated(spinvec_atom)) spinvec_corners_atom(:,:,:,:) = spinvec_atom_r(:,:,:,pointspick(:))
+      if(allocated(spinflux)) spinflux_corners(:,:,:,:) = spinflux_r(:,:,:,pointspick(:))
 
       if(nBZdim==3)then
         !compute area
@@ -1819,87 +2137,109 @@ contains
       do ideg=1,ndeg
        do i1=1,3
         do i2=1,3
-         integrand(:) = torq_corners(i1,ideg,:)*fermi_velocity_corners(i2,:)
-         call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
-         integ(i2,i1) = integ(i2,i1) + dinteg
+         if(allocated(torqval))then
+           integrand(:) = torq_corners(i1,ideg,:)*fermi_velocity_corners(i2,:)
+           call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
+           integ_torkance(i2,i1) = integ_torkance(i2,i1) + dinteg
+         end if!allocated(torqval)
+         if(allocated(torqval_atom))then
+           do iat=1,natyp
+             integrand(:) = torq_corners_atom(i1,iat,ideg,:)*fermi_velocity_corners(i2,:)
+             call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
+             integ_torkance_atom(i2,i1,iat) = integ_torkance_atom(i2,i1,iat) + dinteg
+           end do!iat
+         end if!allocated(torqval_atom)
+         if(allocated(torqval))then
+           integrand(:) = torq_corners(i1,ideg,:)*torq_corners(i2,ideg,:)
+           call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
+           integ_damping(i2,i1) = integ_damping(i2,i1) + dinteg
+         end if!allocated(torqval)
+         if(allocated(spinvec_atom))then
+           do iat=1,natyp
+             integrand(:) = spinvec_corners_atom(i1,iat,ideg,:)*fermi_velocity_corners(i2,:)
+             call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
+             integ_spinacc_atom(i2,i1,iat) = integ_spinacc_atom(i2,i1,iat) + dinteg
+           end do!iat
+         end if!allocated(spinvec_atom)
+         if(allocated(spinflux))then
+           do iat=1,natyp
+             integrand(:) = spinflux_corners(i1,iat,ideg,:)*fermi_velocity_corners(i2,:)
+             call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
+             integ_spinflux(i2,i1,iat) = integ_spinflux(i2,i1,iat) + dinteg
+           end do!iat
+         end if!allocated(spinflux)
         end do!i2
        end do!i1
       end do!ideg
       dos = dos+d_dos
-    end do!ikp
+    end do!iline
+    if(allocated(torqval)) then
+      torkance = integ_torkance/BZVol*alat/tpi
 
-    torkance = integ/BZVol*alat/tpi
+      if(myrank==master)then
+        if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
+        write(*,'(A)')
+        write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in units of e*abohr Rydberg:"
+        write(*,'(3(ES25.16))') torkance
+        write(*,'(A)')
+        write(*,'(A)') "In units of e*abohr / fs:"
+        write(*,'(3(ES25.16))') torkance*RyToinvfs
+        write(*,'(A)')
+        write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
+        write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
+        write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
+      end if!myrank==master
+    end if!allocated(torqval)
+    
+    if(allocated(torqval_atom)) then
+      torkance_atom = integ_torkance_atom/BZVol*alat/tpi
 
-    if(myrank==master)then
-      if(nsym/=1) write(*,*) 'ATTENTION: nsym =/= 1, make sure the following output is correct'
-      write(*,'(A)')
-      write(*,'(A)') "Torkance / relaxation time [in constant relaxation time approximation]:"
-!      write(*,'(A)') "Torkance per relaxation time in constant relaxation time approximation:"
-!      write(*,'(A)') "In units of e*abohr Rydberg:"
-      write(*,'(A)') "  in units of e*abohr Rydberg:"
-      write(*,'(3(ES25.16))') torkance
-      write(*,'(A)')
-      write(*,'(A)') "In units of e*abohr / fs:"
-      write(*,'(3(ES25.16))') torkance*RyToinvfs
-      write(*,'(A)')
-!      write(*,'(A)') "In units of e*abohr for room temperature (hbar/(2*tau) = 25 meV) :"
-      write(*,'(A)') "Torkance at room temperature [in constant relaxation time approximation]:"
-      write(*,'(A)') "  in units of e*abohr using hbar/(2*tau) = 25 meV:"
-      write(*,'(3(ES25.16))') torkance*13.60569253/(2*25*0.001)
-    end if!myrank==master
+      if(myrank==master)then
+        open(unit=iounit,file="torkance.CRTA.vis.dat",form='formatted',action='write')
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') torkance_atom*13.60569253/(2*25*0.001)
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(torqval_atom)
 
+    if(allocated(torqval)) then
+      damping = integ_damping/BZVol
 
-    !damping
-    integ  = 0d0
-    dos    = 0d0
-    do iline=1,nkpts_all_r/nBZdim
+      if(myrank==master)then
+        write(*,'(A)') "Gilbert damping in constant relaxation time approximation:"
+        write(*,'(A)') "In units of  Rydberg:"
+        write(*,'(3(ES25.16))') damping
+        write(*,'(A)') "In units of eV:"
+        write(*,'(3(ES25.16))') damping*13.60569253
+        write(*,'(A)') "For room temperature (hbar/(2*tau) = 25 meV):"
+        write(*,'(3(ES25.16))') damping*13.60569253/(2*25*0.001)
+      end if!myrank==master
+    end if!allocated(torqval)
 
-      do i3=1,nBZdim
-        pointspick(i3) = kpt2irr_r((iline-1)*nBZdim+i3)
-      end do!i3
+    if(allocated(spinvec_atom)) then
+      spinacc_atom = -integ_spinacc_atom*(2)**0.5/BZVol*alat/tpi ! sqrt(2) for mu_B
 
-      !rewrite corner point data
-      kpoints_corners(:,:)        = kpoints_r(:,pointspick(:))
-      fermi_velocity_corners(:,:) = fermivel_r(:,pointspick(:))
-      torq_corners(:,:,:)         = torqval_r(:,:,pointspick(:))
+      if(myrank==master)then
+        open(unit=iounit,file="spinacc_resp.CRTA.vis.dat",form='formatted',action='write')
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') spinacc_atom*13.60569253/(2*25*0.001)
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(spinvec_atom)
 
-      if(nBZdim==3)then
-        !compute area
-        k21 = kpoints_corners(:,2) - kpoints_corners(:,1)
-        k31 = kpoints_corners(:,3) - kpoints_corners(:,1)
-        call crossprod(k21, k31, kcross)
-        area = 0.5d0*sqrt(sum(kcross**2))
-      elseif(nBZdim==2)then
-        area = sqrt(sum((kpoints_corners(:,2) - kpoints_corners(:,1))**2))
-      else!nBZdim
-        stop 'nBZdim is neither 2 nor 3'
-      end if!nBZdim
+    if(allocated(spinflux)) then
+      spinflux_resp = integ_spinflux/BZVol*alat/tpi
 
+      if(myrank==master)then
+        open(unit=iounit,file="spinflux_resp.CRTA.vis.dat",form='formatted',action='write')
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') spinflux_resp*13.60569253/(2*25*0.001)
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(spinflux)
 
-      do ideg=1,ndeg
-       do i1=1,3
-        do i2=1,3
-         integrand(:) = torq_corners(i1,ideg,:)*torq_corners(i2,ideg,:)
-         call simple_integration_general(nBZdim, area, fermi_velocity_corners, integrand, dinteg, d_dos)
-         integ(i2,i1) = integ(i2,i1) + dinteg
-        end do!i2
-       end do!i1
-      end do!ideg
-    end do!iline=1,nkpts_all_r/nBZdim
-
-    damping = integ/BZVol
-
-    if(myrank==master)then
-      write(*,'(A)') "Gilbert damping in constant relaxation time approximation:"
-      write(*,'(A)') "In units of  Rydberg:"
-      write(*,'(3(ES25.16))') damping
-      write(*,'(A)') "In units of eV:"
-      write(*,'(3(ES25.16))') damping*13.60569253
-      write(*,'(A)') "For room temperature (hbar/(2*tau) = 25 meV):"
-      write(*,'(3(ES25.16))') damping*13.60569253/(2*25*0.001)
-    end if!myrank==master
-
-  end subroutine calculate_torkance_CRTA_vis
+  end subroutine calculate_response_functions_CRTA_vis
 
   subroutine calculate_torkance_CRTA_vis_simpson2D(nsym,isym,rotmat,alat,BZVol,ndeg,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval)
     use mpi
