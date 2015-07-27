@@ -4,7 +4,8 @@ module mod_spintools
 
   private
   public :: spin_expectationvalue, spin_crossterm, Spinrot_AlphaBeta, rotate_wavefunction, &
-          & torq_expectationvalue, Spinrot_AlphaBeta_Rashba
+          & torq_expectationvalue, spinflux_expectationvalue, alpha_expectationvalue,      &
+          & Spinrot_AlphaBeta_Rashba
 
 contains
 
@@ -133,7 +134,85 @@ contains
 
   end subroutine torq_expectationvalue
 
+  subroutine spinflux_expectationvalue(inc, nstates, spinflux, rveig_atom, Spinflux_atom)
+  ! Calculates the spinflux-expectation value of a state |psi_n> for each atom
+  ! and stores them into Spinflux_atom(ixyz)
+  !   The corresponding coefficientvector must be already properly normalized.
+  !                   adapted from torq_expectationvalue by G. Geranton
+  !                                                       created: 29.06.15
 
+  use type_inc
+  implicit none
+
+    ! Arguments
+    type(inc_type), intent(in)  :: inc
+    integer,        intent(in)  :: nstates
+    double complex, intent(in)  :: spinflux(inc%lmmaxso,inc%lmmaxso,inc%natypd,3),&
+                                 & rveig_atom(inc%lmmaxso,inc%natypd,nstates)
+    double complex, intent(out), optional :: Spinflux_atom(3,inc%natypd,nstates)
+
+    ! Locals
+    integer        :: ixyz, iatom, istate
+    double complex :: ztmp(inc%natypd), ckhelp(inc%lmmaxso)
+
+    !Parameter
+    double complex, parameter :: CONE=(1d0,0d0), CZERO=(0d0, 0d0)
+
+    ! calculate spinflux expectation value with wavefunctions as stored in rveig_atom
+    do istate=1,nstates
+      do ixyz=1,3
+
+        ztmp   = CZERO
+        do iatom=1,inc%natypd
+          ckhelp = CZERO
+          call ZGEMM('N', 'N', inc%lmmaxso, 1, inc%lmmaxso, CONE, spinflux(:,:,iatom,ixyz), inc%lmmaxso, rveig_atom(:,iatom,istate), inc%lmmaxso, CZERO, ckhelp, inc%lmmaxso)
+          call ZGEMM('C','N', 1, 1, inc%lmmaxso,CONE, rveig_atom(:,iatom,istate), inc%lmmaxso, ckhelp, inc%lmmaxso, CZERO, ztmp(iatom), 1)
+        end do!iatom
+
+        Spinflux_atom(ixyz,:,istate) = ztmp
+      end do!ixyz
+    end do!istate
+
+
+  end subroutine spinflux_expectationvalue
+
+  subroutine alpha_expectationvalue(inc, nstates, alpha, rveig_atom, Alpha_tot)
+
+    use type_inc
+    implicit none
+
+    ! Arguments
+    type(inc_type), intent(in)  :: inc
+    integer,        intent(in)  :: nstates
+    double complex, intent(in)  :: alpha(inc%lmmaxso,inc%lmmaxso,inc%natypd,3),&
+                                 & rveig_atom(inc%lmmaxso,inc%natypd,nstates)
+    double complex, intent(out) :: Alpha_tot(3,nstates)
+
+    ! Locals
+    integer        :: ixyz, iatom, istate
+    double complex :: ztmp(inc%natypd), ckhelp(inc%lmmaxso)
+
+    !Parameter
+    double complex, parameter :: CONE=(1d0,0d0), CZERO=(0d0, 0d0)
+
+    Alpha_tot  = CZERO
+    ! calculate Torq expectation value with wavefunctions as stored in rveig_atom
+    do istate=1,nstates
+      do ixyz=1,3
+
+        ztmp   = CZERO
+        do iatom=1,inc%natypd
+          ckhelp = CZERO
+          call ZGEMM('N', 'N', inc%lmmaxso, 1, inc%lmmaxso, CONE, alpha(:,:,iatom,ixyz), inc%lmmaxso, rveig_atom(:,iatom,istate), inc%lmmaxso, CZERO, ckhelp, inc%lmmaxso)
+          call ZGEMM('C','N', 1, 1, inc%lmmaxso,CONE, rveig_atom(:,iatom,istate), inc%lmmaxso, ckhelp, inc%lmmaxso, CZERO, ztmp(iatom), 1)
+        end do!iatom
+
+        Alpha_tot(ixyz,istate) = sum(ztmp)
+      end do!ixyz
+    end do!istate
+
+
+  end subroutine alpha_expectationvalue
 
 
   subroutine Spinrot_AlphaBeta(lincombtype, nvec, Spin_ini, Scross, alpha, beta, Spin_estimated, uio)

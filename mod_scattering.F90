@@ -9,19 +9,21 @@ module mod_scattering
 
 
   type :: sca_TYPE
-    integer :: N1 = 14
+    integer :: N1 = 16
     integer :: lscatfixk=-1
     integer :: llifetime=-1
-    integer :: lconductivity=-1
-    integer :: ltorkance=-1
+    integer :: lboltzmann=-1
     integer :: mode=-1
     integer :: nsteps=-1
     integer :: niter=-1
     integer :: roottake=-1
     integer :: savepkk=-1
     integer :: naverage=1
+    integer :: gammamode=0
     double precision :: rooteps   = -1d0
     double precision :: kfix(3,2) =  1d38
+    double precision :: gammaval  =  0.001837465441 ! 25 meV in Rydbergs
+    double precision :: impconc   =  1d0
     integer :: subarr_inp(2) = -1
     !allocatable arrays
     integer :: N2 = 3
@@ -69,23 +71,25 @@ contains
       call read_sca()
     end if
 
-    if(sca%lscatfixk==1 .or. sca%llifetime==1 .or. sca%lconductivity==1) call read_scattmat(inc, impcls, Amat)
-    if(sca%lscatfixk==1) call calc_scattering_fixk(inc, lattice, cluster, tgmatrx, impcls(1), Amat(:,:,1) )
-    if(sca%llifetime==1) call calc_lifetime(inc, lattice, impcls(1), Amat(:,:,1) )
-    if(sca%lconductivity==1) call calc_conductivity_torkance(inc, lattice, impcls, Amat)
+    if(sca%lscatfixk==1 .or. sca%llifetime==1 .or. sca%lboltzmann==1) call read_scattmat(inc, impcls, Amat)
+    if(sca%lscatfixk==1)  call calc_scattering_fixk(inc, lattice, cluster, tgmatrx, impcls(1), Amat(:,:,1) )
+    if(sca%llifetime==1)  call calc_lifetime(inc, lattice, impcls(1), Amat(:,:,1) )
+    if(sca%lboltzmann==1) call calc_boltzmann(inc, lattice, impcls, Amat)
 
   end subroutine calc_scattering_inputcard
 
 
 
-  subroutine calc_conductivity_torkance(inc, lattice, impcls, Amat)
+  subroutine calc_boltzmann(inc, lattice, impcls, Amat)
     use type_inc,       only: inc_type
     use type_data,      only: lattice_type
     use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints, expand_areas, expand_spinvalues, expand_torqvalues
-    use mod_read,       only: read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue
+    use mod_read,       only: read_kpointsfile_int, read_weights, read_fermivelocity, read_spinvalue, read_torqvalue, read_torqvalue_atom,&
+                            & read_spinvec_atom, read_spinflux_atom
     use mod_parutils,   only: distribute_linear_on_tasks
     use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume, file_present
-    use mod_ioformat,   only: filemode_int, filename_eigvect, filename_scattmat, fmt_fn_ext, ext_vtkxml, ext_mpiio
+    use mod_ioformat,   only: filemode_int, filename_eigvect, filename_scattmat, fmt_fn_ext, fmt_fn_atom_sub_ext, fmt_fn_sub_ext, ext_vtkxml, ext_mpiio
+    use mod_ioformat,   only: filename_torq, filename_spinvec, filename_spinflux, ext_formatted
     use mod_mympi,      only: myrank, nranks, master
     use mod_mathtools,  only: pi
 #ifdef CPP_TIMING
@@ -116,7 +120,9 @@ contains
     double precision, allocatable :: nvect(:,:), spinval(:,:,:), spinval1(:,:,:)
 
     !torque values locals
-    double precision, allocatable :: torqval(:,:,:), torqval1(:,:,:)
+    integer                       :: itmp
+    double precision, allocatable :: torqval(:,:,:), torqval_atom(:,:,:,:), spinvec_atom(:,:,:,:), spinflux_atom(:,:,:,:)
+    double precision, allocatable :: arrtmp1(:,:), arrtmp2(:,:)
 
     !subarray locals
     integer :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col, myrank_grid, myrank_row, myrank_col
@@ -128,7 +134,7 @@ contains
     double precision, allocatable :: Pkksub(:,:,:,:,:)
 
     !result locals
-    double precision, allocatable :: tau(:,:,:), tau2(:,:,:), tau_avg(:,:), meanfreepath(:,:,:,:), chcond(:,:,:), spcond(:,:,:), torkance(:,:,:)
+    double precision, allocatable :: tau(:,:,:), tau2(:,:,:), tau_avg(:,:), meanfreepath(:,:,:,:), chcond(:,:,:), spcond(:,:,:)
 
     !temp k-point arrays
     integer :: nkpts1, nkpts2
@@ -138,7 +144,9 @@ contains
     logical :: compute_scattmat=.true.
     character(len=256) :: filename
 
-    integer :: ierr, ikp, ii3
+    integer :: ierr, ikp, ii3, iat
+
+    logical :: l_torqfile, l_torqfile_atom, l_spinvecfile_atom, l_spinfluxfile_atom
 
     !parameter
     double precision, parameter :: RyToinvfs = 20.67068667282055d0
@@ -175,6 +183,35 @@ contains
     call expand_areas(nsym,nkpts1,weights1,weights)
     deallocate(isym, weights1)
 
+    !===========================================!
+    != Check for which observables files exist =!
+    write(filename,fmt_fn_sub_ext) filename_torq, trim(filemode_int), ext_formatted
+    inquire(file=filename, exist=l_torqfile)
+
+    ! l_torqfile_atom is true only if files are found for all atoms
+    l_torqfile_atom = .true.
+    do iat=1,inc%natypd
+      write(filename,fmt_fn_atom_sub_ext) filename_torq, iat, trim(filemode_int), ext_formatted
+      inquire(file=filename, exist=l_torqfile_atom)
+      if(.not.l_torqfile_atom) exit
+    end do!iat=1,inc%natypd
+
+    ! l_spinvecfile_atom is true only if files are found for all atoms
+    l_spinvecfile_atom = .true.
+    do iat=1,inc%natypd
+      write(filename,fmt_fn_atom_sub_ext) filename_spinvec, iat, trim(filemode_int), ext_formatted
+      inquire(file=filename, exist=l_spinvecfile_atom)
+      if(.not.l_spinvecfile_atom) exit
+    end do!iat=1,inc%natypd
+
+    ! l_spinfluxfile_atom is true only if files are found for all atoms
+    l_spinfluxfile_atom = .true.
+    do iat=1,inc%natypd
+      write(filename,fmt_fn_atom_sub_ext) filename_spinflux, iat, trim(filemode_int), ext_formatted
+      inquire(file=filename, exist=l_spinfluxfile_atom)
+      if(.not.l_spinfluxfile_atom) exit
+    end do!iat=1,inc%natypd
+
     !==============================!
     != Read in the fermi velocity =!
     call read_fermivelocity(filemode_int, nkpts1, fermivel1, nsym, isym)
@@ -210,12 +247,102 @@ contains
 
     !=============================!
     != Read in the torque values =!
-    if(sca%ltorkance==1) then
-      call read_torqvalue(filemode_int, nkpts1, ndegen1, torqval1, nsym, isym)
-      if(nkpts1*nsym/=nkpts) stop 'inconsistency in number of k-points'
-      if(ndegen1/=inc%ndegen) stop 'inconsistency in ndegen'
-      call expand_torqvalues(nsym,ndegen1,nkpts1,torqval1,torqval)
-      deallocate(isym, torqval1)
+    if(l_torqfile) then
+      call read_torqvalue(filemode_int, nkpts1, ndegen1, torqval, nsym, isym)
+
+      !next apply symmetries to torqval; as a first step, flatten the array
+      itmp = size(torqval)/3
+      allocate(arrtmp1(3,itmp), STAT=ierr)
+      if(ierr/=0) stop 'problem alloaction arrtmp1'
+      arrtmp1 = reshape(torqval, (/3, itmp/))
+
+      deallocate(torqval)
+
+      !now apply the symmetries
+      call rotate_kpoints(symmetries%rotmat, nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
+      if(nkpts2 /= nkpts) stop 'nkpts2 /= nkpts'
+
+      !transform back to old shape
+      allocate(torqval(3,ndegen1,nkpts1*nsym), STAT=ierr)
+      if(ierr/=0) stop 'problem allocating torqval'
+      torqval = reshape(arrtmp2,(/3,ndegen1,nkpts1*nsym/))
+
+      deallocate(arrtmp1, arrtmp2, isym)
+    endif
+
+    !======================================!
+    != Read in the torque values per atom =!
+    if(l_torqfile_atom) then
+      call read_torqvalue_atom(filemode_int, inc%natypd, nkpts1, ndegen1, torqval_atom, nsym, isym)
+
+      !next apply symmetries to torqval_atom; as a first step, flatten the array
+      itmp = size(torqval_atom)/3
+      allocate(arrtmp1(3,itmp), STAT=ierr)
+      if(ierr/=0) stop 'problem alloaction arrtmp1'
+      arrtmp1 = reshape(torqval_atom, (/3, itmp/))
+
+      deallocate(torqval_atom)
+
+      !now apply the symmetries
+      call rotate_kpoints(symmetries%rotmat, inc%natypd*nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
+      if(nkpts2 /= nkpts*inc%natypd) stop 'nkpts2 /= nkpts*natpyd'
+
+      !transform back to old shape
+      allocate(torqval_atom(3,inc%natypd,ndegen1,nkpts1*nsym), STAT=ierr)
+      if(ierr/=0) stop 'problem allocating torqval_atom'
+      torqval_atom = reshape(arrtmp2,(/3,inc%natypd,ndegen1,nkpts1*nsym/))
+
+      deallocate(arrtmp1, arrtmp2, isym)
+    endif
+
+    !====================================!
+    != Read in the spin values per atom =!
+    if(l_spinvecfile_atom) then
+      call read_spinvec_atom(filemode_int, inc%natypd, nkpts1, ndegen1, spinvec_atom, nsym, isym)
+
+      !next apply symmetries to spinvec_atom; as a first step, flatten the array
+      itmp = size(spinvec_atom)/3
+      allocate(arrtmp1(3,itmp), STAT=ierr)
+      if(ierr/=0) stop 'problem alloaction arrtmp1'
+      arrtmp1 = reshape(spinvec_atom, (/3, itmp/))
+
+      deallocate(spinvec_atom)
+
+      !now apply the symmetries
+      call rotate_kpoints(symmetries%rotmat, inc%natypd*nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
+      if(nkpts2 /= nkpts*inc%natypd) stop 'nkpts2 /= nkpts*natpyd'
+
+      !transform back to old shape
+      allocate(spinvec_atom(3,inc%natypd,ndegen1,nkpts1*nsym), STAT=ierr)
+      if(ierr/=0) stop 'problem allocating spinvec_atom'
+      spinvec_atom = reshape(arrtmp2,(/3,inc%natypd,ndegen1,nkpts1*nsym/))
+
+      deallocate(arrtmp1, arrtmp2, isym)
+    endif
+
+    !====================================!
+    != Read in the spin fluxes per atom =!
+    if(l_spinfluxfile_atom) then
+      call read_spinflux_atom(filemode_int, inc%natypd, nkpts1, ndegen1, spinflux_atom, nsym, isym)
+
+      !next apply symmetries to spinflux_atom; as a first step, flatten the array
+      itmp = size(spinflux_atom)/3
+      allocate(arrtmp1(3,itmp), STAT=ierr)
+      if(ierr/=0) stop 'problem alloaction arrtmp1'
+      arrtmp1 = reshape(spinflux_atom, (/3, itmp/))
+
+      deallocate(spinflux_atom)
+
+      !now apply the symmetries
+      call rotate_kpoints(symmetries%rotmat, inc%natypd*nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
+      if(nkpts2 /= nkpts*inc%natypd) stop 'nkpts2 /= nkpts*natpyd'
+
+      !transform back to old shape
+      allocate(spinflux_atom(3,inc%natypd,ndegen1,nkpts1*nsym), STAT=ierr)
+      if(ierr/=0) stop 'problem allocating spinflux_atom'
+      spinflux_atom = reshape(arrtmp2,(/3,inc%natypd,ndegen1,nkpts1*nsym/))
+
+      deallocate(arrtmp1, arrtmp2, isym)
     endif
 
     !=====================================!
@@ -334,9 +461,10 @@ contains
 
 !   call meanfreepath_RTA(nkpts, nsqa, inc%ndegen, fermivel, tau, tau_avg, meanfreepath )
 !   write(5000+myrank,*) 'check for NaNs in Pkksub:', sum(Pkksub)
-    call converge_meanfreepath( myrank_grid, myMPI_comm_grid, nkpts, nkpt1, nkpt2, &
-                              & ioff1, ioff2, nsqa, inc%ndegen, BZVol, weights,    &
-                              & fermivel, tau, tau_avg, Pkksub, meanfreepath       )
+    call converge_meanfreepath( myrank_grid, myMPI_comm_grid, nkpts, nkpt1, nkpt2,        &
+                              & ioff1, ioff2, nsqa, inc%ndegen, BZVol, weights,           &
+                              & fermivel, tau, tau_avg, Pkksub, meanfreepath,             &
+                              & sca%gammamode, gammaval=sca%gammaval, impconc=sca%impconc )
 
     if(myrank==master .and. inc%ndegen==1) then
       open(unit=1325,file='output_lifetime',form='formatted',action='write')
@@ -374,15 +502,19 @@ contains
 !     write(1325,'(3ES18.9)') meanfreepath
 !     close(1325)
 !   end if!myrank==master
-    call calc_condtensor( nkpts, nsqa, inc%ndegen, fermivel, spinval,         &
-                        & meanfreepath, weights, lattice%alat, inc%nBZdim, chcond, spcond )
 
-    if(sca%ltorkance==1) call calc_torktensor( nkpts, nsqa, inc%ndegen, fermivel, torqval,   &
-                        & meanfreepath, weights, lattice%alat, BZVol, torkance)
+    if(sca%lboltzmann==1) then
+      call calc_condtensor( nkpts, nsqa, inc%ndegen, fermivel, spinval,         &
+                           & meanfreepath, weights, lattice%alat, inc%nBZdim, chcond, spcond )
 
+      if(allocated(torqval).or.allocated(torqval_atom).or.allocated(spinvec_atom).or.allocated(spinflux_atom)) then
+        if(nsqa>1) write(*,*)"nsqa>1 : response functions will be computed only for sqa=1 !"
+        call calc_response_functions_tensors( inc%natypd, nkpts, nsqa, inc%ndegen, fermivel, torqval,   &
+                          & torqval_atom, spinvec_atom, spinflux_atom, meanfreepath, weights, lattice%alat, BZVol)
+      end if!allocated(torqval).or.allocated(torqval_atom).or.allocated(spinvec_atom).or.allocated(spinflux_atom)
+    end if!sca%lboltzmann==1
 
-  end subroutine calc_conductivity_torkance
-
+  end subroutine calc_boltzmann
 
 
 
@@ -521,25 +653,29 @@ contains
 
 
 
-  subroutine calc_torktensor( nkpts, nsqa, ndegen, fermivel, torqval,   &
-                            & meanfreepath, weights, alat, BZVol, torkance)
+  subroutine calc_response_functions_tensors( natyp, nkpts, nsqa, ndegen, fermivel, torqval,   &
+                            & torqval_atom, spinvec_atom, spinflux_atom, meanfreepath, weights, alat, BZVol)
     use mod_mathtools, only: tpi
     use mod_mympi, only: myrank, master
     use mpi
     implicit none
 
-    integer,          intent(in) :: nkpts, nsqa, ndegen
-    double precision, intent(in) :: fermivel(3,nkpts), torqval(3,ndegen,nkpts), meanfreepath(3,ndegen,nsqa,nkpts), weights(nkpts), alat, BZVol
+    integer,          intent(in) :: natyp, nkpts, nsqa, ndegen
+    double precision, intent(in) :: fermivel(3,nkpts), meanfreepath(3,ndegen,nsqa,nkpts), weights(nkpts), alat, BZVol
+    double precision, allocatable, intent(inout) :: torqval(:,:,:), torqval_atom(:,:,:,:), spinvec_atom(:,:,:,:), spinflux_atom(:,:,:,:) !torqval(3,ndegen,nkpts), torqval_atom(3,natyp,ndegen,nkpts), spinvec_atom(3,natyp,ndegen,nkpts), spinflux_atom(3,natyp,ndegen,nkpts)
 
+    double precision, allocatable ::  torkance(:,:), torkance_atom(:,:,:), spinacc_resp_atom(:,:,:), spinflux_resp_atom(:,:,:)
 
-    double precision, allocatable, intent(out) ::  torkance(:,:,:)
-
-    integer :: ihelp, ierr, ixyz1, ixyz2, ikp, isqa, ispin
-    double precision :: torkance_tmp(3,3,nsqa), dtmp, fac
-    character(len=256) :: testfile1, testfile2, unitstr
+    integer :: ihelp, ierr, ixyz1, ixyz2, ikp, isqa, ispin, iat
+    double precision :: dtmp
+    double precision :: torkance_tmp(3,3), torkance_atom_tmp(3,3,natyp), spinacc_resp_atom_tmp(3,3,natyp), spinflux_resp_atom_tmp(3,3,natyp)
+    double precision :: fac_torkance, fac_spinacc, fac_spinflux
+    character(len=256) :: testfile1, testfile2, unitstr_torkance, unitstr_spinacc, unitstr_spinflux
 
     logical, parameter :: SIunits=.false.    
-    double precision, parameter :: e = 1.602176565d-19, abohr = 0.52917721092d-10
+    double precision, parameter :: e = 1.602176565d-19, abohr = 0.52917721092d-10, Rd=2.1798741d-18, mu_B=9.27400968d-24
+
+    integer, parameter :: iounit=13521
 
     ! the equation for the torkance reads:
     !  \torkance = e/hbar * 1/(BZVol) * \int{ dS/|v_F| torq * \lambda }
@@ -551,45 +687,116 @@ contains
     ! In total, this yields an additional factor of hbar*a/2pi in the previous equation for the torkance, i.e. :
     !  \torkance = e * 1/(BZVol) * a/2pi * \sum{ area/|v_F| torq * \lambda }
     if(SIunits) then
-      fac = e*alat/(tpi)*abohr/BZVol
-      unitstr = 'SI units'
+      if(allocated(torqval)) fac_torkance = e*alat/(tpi)*abohr/BZVol
+      if(allocated(spinvec_atom)) fac_spinacc = e*alat/(tpi)*abohr/BZVol*mu_B/Rd
+      if(allocated(spinflux_atom)) fac_spinflux = e*alat/(tpi)*abohr/BZVol
+      unitstr_torkance = 'SI units'
+      unitstr_spinacc  = 'SI units'
+      unitstr_spinflux = 'SI units'
     else
-      fac = alat/(tpi)/BZVol
-      unitstr = 'unit of e times abohr'
-    end if
+      if(allocated(torqval)) fac_torkance = alat/(tpi)/BZVol
+      if(allocated(spinvec_atom)) fac_spinacc = alat/(tpi)/BZVol
+      if(allocated(spinflux_atom)) fac_spinflux = alat/(tpi)/BZVol
+      unitstr_torkance = 'unit of (e a_0)'
+      unitstr_spinacc  = 'unit of (e a_0 mu_B)/Rd'
+      unitstr_spinflux = 'unit of (e a_0)'
+    end if!SIunits
 
-    allocate( torkance(3,3,nsqa), STAT=ierr  )
-    if(ierr/=0) stop 'Problem allocating torkance'
+    if(allocated(torqval))then
+      allocate( torkance(3,3), STAT=ierr  )
+      if(ierr/=0) stop 'Problem allocating torkance'
+      torkance_tmp = 0d0
+      torkance     = 0d0
+    end if!allocated(torqval)
 
-    torkance_tmp = 0d0
-    torkance = 0d0
+    if(allocated(torqval_atom))then
+      allocate( torkance_atom(3,3,natyp), STAT=ierr  )
+      if(ierr/=0) stop 'Problem allocating torkance_atom'
+      torkance_atom_tmp = 0d0
+      torkance_atom     = 0d0
+    end if!allocated(torqval_atom)
+
+    if(allocated(spinvec_atom))then
+      allocate( spinacc_resp_atom(3,3,natyp), STAT=ierr  )
+      if(ierr/=0) stop 'Problem allocating spinacc_resp_atom'
+      spinacc_resp_atom_tmp = 0d0
+      spinacc_resp_atom     = 0d0
+    end if!allocated(spinvec_atom)
+
+    if(allocated(spinflux_atom))then
+      allocate( spinflux_resp_atom(3,3,natyp), STAT=ierr  )
+      if(ierr/=0) stop 'Problem allocating spinflux_resp_atom'
+      spinflux_resp_atom_tmp = 0d0
+      spinflux_resp_atom     = 0d0
+    end if!allocated(spinflux_atom)
+
     do ikp=1,nkpts
-      do ixyz1=1,3
-        do isqa=1,nsqa
+      do ixyz2=1,3
           do ispin=1,ndegen
-            dtmp = torqval(ixyz1,ispin,ikp)*weights(ikp)
-            do ixyz2=1,3
-              torkance_tmp(ixyz2,ixyz1,isqa) = torkance_tmp(ixyz2,ixyz1,isqa) + dtmp*meanfreepath(ixyz2,ispin,isqa,ikp)
+            dtmp=weights(ikp)*meanfreepath(ixyz2,ispin,1,ikp)
+            do ixyz1=1,3
+              if(allocated(torqval))       torkance_tmp(ixyz2,ixyz1)                = torkance_tmp(ixyz2,ixyz1)               &
+                                                                                  & + torqval(ixyz1,ispin,ikp)*dtmp
 !  TEST       torkance_tmp(ixyz2,ixyz1,isqa) = torkance_tmp(ixyz2,ixyz1,isqa) + dtmp*(1/(2*25*0.001/13.60569253))*fermivel(ixyz2,ikp)
+             do iat=1,natyp
+              if(allocated(torqval_atom))  torkance_atom_tmp(ixyz2,ixyz1,iat)       = torkance_atom_tmp(ixyz2,ixyz1,iat)      &
+                                                                                  & + torqval_atom(ixyz1,iat,ispin,ikp)*dtmp
+              if(allocated(spinvec_atom))  spinacc_resp_atom_tmp(ixyz2,ixyz1,iat)   = spinacc_resp_atom_tmp(ixyz2,ixyz1,iat)  &
+                                                                                  & + spinvec_atom(ixyz1,iat,ispin,ikp)*dtmp
+              if(allocated(spinflux_atom)) spinflux_resp_atom_tmp(ixyz2,ixyz1,iat)  = spinflux_resp_atom_tmp(ixyz2,ixyz1,iat) &
+                                                                                  & + spinflux_atom(ixyz1,iat,ispin,ikp)*dtmp
+             end do!iat
             end do!ixyz2
           end do!ispin
-        end do!isqa
       end do!ixyz1
     end do!ikp
 
-    !=== multiply in factors
-    torkance = torkance_tmp*fac
+    if(allocated(torqval))then
+      torkance = torkance_tmp * fac_torkance
 
-    if(myrank==master)then
-      write(*,'("Torkance / 1 at.% in ",A,":")') trim(unitstr)
-      do isqa=1,nsqa
-        write(*,'(2X,"isqa= ",I0)') isqa
-        write(*,'(4X,"(",3ES18.9,")")') torkance(:,:,isqa)
-      end do!isqa
-    end if!myrank==master
+      if(myrank==master)then
+        write(*,'("Torkance / 1 at.% in ",A,":")') trim(unitstr_torkance)
+          write(*,'(4X,"(",3ES18.9,")")') torkance
+      end if!myrank==master
+    endif!allocated(torqval)
 
-  end subroutine calc_torktensor
+    if(allocated(torqval_atom))then
+      torkance_atom = torkance_atom_tmp*fac_torkance
 
+      if(myrank==master)then
+        open(unit=iounit,file="torkance.SCAT.int.dat",form='formatted',action='write')
+        write(iounit,'("#Torkance / 1 at.% in ",A,":")') trim(unitstr_torkance)
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') torkance_atom
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(torqval_atom)
+
+    if(allocated(spinvec_atom))then
+      spinacc_resp_atom = spinacc_resp_atom_tmp*fac_spinacc
+
+      if(myrank==master)then
+        open(unit=iounit,file="spinacc_resp.SCAT.int.dat",form='formatted',action='write')
+        write(iounit,'("#Response of the spin accumulation to the electric field / 1 at.% in ",A,":")') trim(unitstr_spinacc)
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') spinacc_resp_atom
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(spinvec_atom)
+
+    if(allocated(spinflux_atom))then
+      spinflux_resp_atom = spinflux_resp_atom_tmp*fac_spinflux
+
+      if(myrank==master)then
+        open(unit=iounit,file="spinflux_resp.SCAT.int.dat",form='formatted',action='write')
+        write(iounit,'("#Response of the spin fluxes to the electric field / 1 at.% in ",A,":")') trim(unitstr_spinflux)
+        write(iounit,'(1I8)') natyp
+        write(iounit,'(9(ES25.16))') spinflux_resp_atom
+        close(iounit)
+      end if!myrank==master
+    end if!allocated(spinflux_atom)
+
+  end subroutine calc_response_functions_tensors
 
 
 
@@ -628,7 +835,8 @@ contains
   subroutine converge_meanfreepath( myrank_grid, comm_grid, nkpts, nkpt1, nkpt2, &
                                   & ioff1, ioff2, nsqa, ndegen, BZVol, weights,  &
                                   & fermivel, tau, tau_avg, Pkksub,              &
-                                  & meanfreepath_new                             )
+                                  & meanfreepath_new, add_gamma_mode, gammaval,  &
+                                  & impconc                                     )
 
 #ifdef CPP_TIMING
     use mod_timing, only: timing_start, timing_stop, timing_pause
@@ -640,6 +848,8 @@ contains
     integer,          intent(in) :: myrank_grid, comm_grid, nkpts, nkpt1, nkpt2, ioff1, ioff2, nsqa, ndegen
     double precision, intent(in) :: BZVol, weights(nkpts), fermivel(3,nkpts), &
                                   & tau(ndegen,nsqa,nkpts), tau_avg(ndegen,nsqa), Pkksub(ndegen,nkpt1,ndegen,nsqa,nkpt2)
+    integer,                       intent(in)  :: add_gamma_mode
+    double precision, optional,    intent(in)  :: gammaval, impconc
 
     double precision, allocatable, intent(out) :: meanfreepath_new(:,:,:,:)
 
@@ -648,6 +858,9 @@ contains
                                    & meanfreepath_tmp(:,:,:,:),   &
                                    & fveltau_sum(:,:,:),          &
                                    & fveltau_sum_w(:,:,:)
+
+    double precision :: tau_tilde(ndegen,nsqa,nkpts), Pkksub_tilde(ndegen,nkpt1,ndegen,nsqa,nkpt2)
+    double precision :: dos_Ef(nsqa)
 
     integer :: ikp, ikp1, ikp2, isqa, ispin, ispin1, ispin2, ixyz, iter, ierr, ihelp
     double precision :: dist, distxyz(3)
@@ -691,6 +904,15 @@ contains
     if(myrank==master) write(*,'("         fermivel-sum with taus: ",3ES25.16)') fveltau_sum
     if(myrank==master) write(*,'("weighted fermivel-sum with taus: ",3ES25.16)') fveltau_sum_w
 
+    ! if add_gamma_mode==1 or 2, a constant contribution hbar/(2*gamma) is added to the relaxation times
+    if(add_gamma_mode==1.or.add_gamma_mode==2)then
+      if(.not.present(gammaval)) stop 'gammaval should be present if add_gamma_mode==1 or 2'
+      tau_tilde(:,:,:) = tau(:,:,:)/impconc        ! rescale the tau for the specified impurity concentration
+      tau_tilde(:,:,:) = 1/(1/tau_tilde(:,:,:) + 2*gammaval)   ! 1/tau_tilde = 1/tau + 2*gamma/hbar
+    else
+      tau_tilde = tau
+    end if!add_gamma_mode==1.or.add_gamma_mode==2
+
 
     !=== first guess for the mean free path
 #ifdef CPP_TIMING
@@ -703,7 +925,11 @@ contains
         do ispin=1,ndegen
           do ixyz=1,3
 !           meanfreepath_new(ixyz,ispin,isqa,ikp) = tau(ispin,isqa,ikp)*fermivel(ixyz,ikp)/fveltau_sum(ixyz,ispin,isqa)
-            meanfreepath_new(ixyz,ispin,isqa,ikp) = tau(ispin,isqa,ikp)*fermivel(ixyz,ikp)
+            if(add_gamma_mode==1.or.add_gamma_mode==2)then
+              meanfreepath_new(ixyz,ispin,isqa,ikp) = tau_tilde(ispin,isqa,ikp)*fermivel(ixyz,ikp)
+            else
+              meanfreepath_new(ixyz,ispin,isqa,ikp) = tau(ispin,isqa,ikp)*fermivel(ixyz,ikp)
+            end if!present(add_gamma_mode).and.present(gammaval)
           end do!ixyz
         end do!ispin
       end do!isqa
@@ -719,6 +945,32 @@ contains
 !   write(*,'("rank ",I0," finds ",I0," NaNs in ",A)') myrank, count(IsNan(weights)), 'weights'
 !   write(*,'("rank ",I0," finds ",I0," NaNs in ",A)') myrank, count(IsNan(fermivel)), 'fermivel'
 !   write(*,'("rank ",I0," finds ",I0," NaNs in ",A)') myrank, count(IsNan(tau)), 'tau'
+
+    !=== compute density of states at Ef (needed if add_gamma_mode==2 only)
+    if(add_gamma_mode==2)then
+#ifdef CPP_TIMING
+        call timing_start('  Density of states at Ef')
+#endif
+
+      dos_Ef = 0d0 
+      do ikp=1,nkpts
+        do isqa=1,nsqa
+          dos_Ef(isqa) = dos_Ef(isqa) + weights(ikp)*ndegen ! ndegen accounts for spin degeneracy
+        end do!isqa
+      end do!ikp
+
+#ifdef CPP_TIMING
+    call timing_stop('  Density of states at Ef')
+#endif
+    end if!add_gamma_mode==2
+
+    ! if add_gamma_mode==2, a constant contribution 2*Gamma/(hbar*dos(Ef)) is added to the P matrix (for consistency with tau_tilde)
+    ! and the original (scattering) Pkksub is multiplied my the impurity concentration (in %) which may now differ from 1
+    if(add_gamma_mode==2)then
+      do isqa=1,nsqa
+        Pkksub_tilde(:,:,:,isqa,:) = Pkksub(:,:,:,isqa,:)*impconc + 2*gammaval/dos_Ef(isqa)  !Pkk'_tilde = Pkk' + 2*gamma/(hbar*dos)
+      end do!isqa
+    end if!add_gamma_mode==2
 
 
     !======== BEGIN =========!
@@ -760,8 +1012,14 @@ contains
             do ixyz=1,3
               do ikp1=1,nkpt1
                 do ispin1=1,ndegen
-                  meanfreepath_tmp(ixyz,ispin2,isqa,ikp2+ioff2) = meanfreepath_tmp(ixyz,ispin2,isqa,ikp2+ioff2) + &
-                  & Pkksub(ispin1,ikp1,ispin2,isqa,ikp2)*weights(ikp1+ioff1)*meanfreepath_old_t(ispin1,isqa,ikp1+ioff1,ixyz)
+
+                  if(add_gamma_mode==2) then
+                    meanfreepath_tmp(ixyz,ispin2,isqa,ikp2+ioff2) = meanfreepath_tmp(ixyz,ispin2,isqa,ikp2+ioff2) + &
+                    & Pkksub_tilde(ispin1,ikp1,ispin2,isqa,ikp2)*weights(ikp1+ioff1)*meanfreepath_old_t(ispin1,isqa,ikp1+ioff1,ixyz)
+                  else 
+                    meanfreepath_tmp(ixyz,ispin2,isqa,ikp2+ioff2) = meanfreepath_tmp(ixyz,ispin2,isqa,ikp2+ioff2) + &
+                    & Pkksub(ispin1,ikp1,ispin2,isqa,ikp2)*weights(ikp1+ioff1)*meanfreepath_old_t(ispin1,isqa,ikp1+ioff1,ixyz)
+                  endif!add_gamma_mode==2
                 end do!ispin1
               end do!ikp1
             end do!ixyz
@@ -787,7 +1045,11 @@ contains
       do ikp=1,nkpts
         do isqa=1,nsqa
           do ispin=1,ndegen
-            meanfreepath_new(:,ispin,isqa,ikp) = ( fermivel(:,ikp) + meanfreepath_new(:,ispin,isqa,ikp)/BZVol ) * tau(ispin,isqa,ikp)
+            if(add_gamma_mode==1.or.add_gamma_mode==2)then
+              meanfreepath_new(:,ispin,isqa,ikp) = ( fermivel(:,ikp) + meanfreepath_new(:,ispin,isqa,ikp)/BZVol ) * tau_tilde(ispin,isqa,ikp)
+            else
+              meanfreepath_new(:,ispin,isqa,ikp) = ( fermivel(:,ikp) + meanfreepath_new(:,ispin,isqa,ikp)/BZVol ) * tau(ispin,isqa,ikp)
+            end if!add_gamma_mode==1.or.add_gamma_mode==2
           end do!ispin
         end do!isqa
       end do!ikp
@@ -1918,23 +2180,25 @@ contains
 
 
 
-      call IoInput('LCONDUCTI ',uio,1,7,ierr)
-      read(unit=uio,fmt=*) sca%lconductivity
+      call IoInput('LBOLTZ    ',uio,1,7,ierr)
+      read(unit=uio,fmt=*) sca%lboltzmann
 
-      if(sca%lconductivity==1) then
+      if(sca%lboltzmann==1) then
         call IoInput('SAVEPKK   ',uio,1,7,ierr)
         read(unit=uio,fmt=*) sca%savepkk
         call IoInput('PROCMAP   ',uio,1,7,ierr)
         read(unit=uio,fmt=*) sca%subarr_inp
         call IoInput('NAVERAGE  ',uio,1,7,ierr)
         read(unit=uio,fmt=*) sca%naverage
-        call IoInput('LTORKANCE ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) sca%ltorkance
-      end if!sca%llifetime==1
-
-!     if(sca%lconductivity==1) then
-!       !something
-!     end if!sca%lconductivity==1
+        call IoInput('GAMMAMODE ',uio,1,7,ierr)
+        read(unit=uio,fmt=*) sca%gammamode
+        if(sca%gammamode==1.or.sca%gammamode==2)then
+          call IoInput('GAMMAVAL  ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%gammaval
+          call IoInput('IMPCONC   ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%impconc
+        end if!sca%gammamode==1.or.sca%gammamode==2
+      end if!sca%lboltzmann==1
 
     end if!myrank==master
 
@@ -1967,31 +2231,31 @@ contains
     call MPI_Get_address(sca%N1,            disp1(1), ierr)
     call MPI_Get_address(sca%lscatfixk,     disp1(2), ierr)
     call MPI_Get_address(sca%llifetime,     disp1(3), ierr)
-    call MPI_Get_address(sca%lconductivity, disp1(4), ierr)
+    call MPI_Get_address(sca%lboltzmann,    disp1(4), ierr)
     call MPI_Get_address(sca%mode,          disp1(5), ierr)
     call MPI_Get_address(sca%nsteps,        disp1(6), ierr)
     call MPI_Get_address(sca%niter,         disp1(7), ierr)
     call MPI_Get_address(sca%roottake,      disp1(8), ierr)
     call MPI_Get_address(sca%savepkk,       disp1(9), ierr)
     call MPI_Get_address(sca%naverage,      disp1(10), ierr)
-    call MPI_Get_address(sca%rooteps,       disp1(11), ierr)
-    call MPI_Get_address(sca%kfix,          disp1(12), ierr)
-    call MPI_Get_address(sca%subarr_inp,    disp1(13), ierr)
-    call MPI_Get_address(sca%ltorkance,     disp1(14), ierr)
+    call MPI_Get_address(sca%gammamode,     disp1(11), ierr)
+    call MPI_Get_address(sca%rooteps,       disp1(12), ierr)
+    call MPI_Get_address(sca%kfix,          disp1(13), ierr)
+    call MPI_Get_address(sca%gammaval,      disp1(14), ierr)
+    call MPI_Get_address(sca%impconc,       disp1(15), ierr)
+    call MPI_Get_address(sca%subarr_inp,    disp1(16), ierr)
 
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:11)=1
-    blocklen1(12)=6
-    blocklen1(13)=2
-    blocklen1(14)=1
+    blocklen1(1:12) =1
+    blocklen1(13)   =6
+    blocklen1(14:15)=1
+    blocklen1(16)   =2
 
-    etype1(1:11) = MPI_INTEGER
-    etype1(12)   = MPI_DOUBLE_PRECISION
-    etype1(13)   = MPI_INTEGER
-    etype1(14)   = MPI_INTEGER
-!   etype1(7)   = MPI_LOGICAL
+    etype1(1:12) = MPI_INTEGER
+    etype1(13:15)   = MPI_DOUBLE_PRECISION
+    etype1(16)   = MPI_INTEGER
 
     call MPI_Type_create_struct(sca%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_sca_1'
