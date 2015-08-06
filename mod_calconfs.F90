@@ -1289,10 +1289,20 @@ contains
         read(unit=uio,fmt=*) cfg%ltorqperatom
 
         call IoInput('LSPINFLUX ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%lspinflux
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%lspinflux
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : LSPINFLUX set to 0 by default !"
+          cfg%lspinflux=0
+        end if!ierr==0
 
         call IoInput('LALPHA    ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%lalpha
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%lalpha
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : LALPHA set to 0 by default !"
+          cfg%lalpha=0
+        end if!ierr==0
 
         call IoInput('SIMPSON   ',uio,1,7,ierr)
         read(unit=uio,fmt=*) cfg%simpson
