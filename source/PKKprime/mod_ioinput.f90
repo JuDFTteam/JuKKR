@@ -48,7 +48,7 @@ contains
       CHARACTER STRING1*80
       CHARACTER ATEST
 !
-      IER = 0
+      IERROR = 0
       CHAR(1:50)='                                                   '
       OPEN(UNIT=ifile,status='OLD',FILE='inputFS',iostat=ios,err=2000)
          if (ios.gt.0) then
@@ -117,8 +117,7 @@ contains
                end if
             end if
        END DO  ! i=1,npt
-       IER = 1
-       IERROR = IERROR + IER
+       IERROR = 1
        if (CHAR(1:20).eq.'                    ') then
        write(6,*) 'Parameter ........ ',CHARKEY , ' NOT found'
        write(6,*) 'Check your inputcard'

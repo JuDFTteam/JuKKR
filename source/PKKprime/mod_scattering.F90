@@ -2142,6 +2142,7 @@ contains
     implicit none
 
     integer           :: ierr
+    integer           :: conducti ! used to ensure compatibility of old format input files
     double precision  :: dtmpin(3), theta, phi
     character(len=80) :: uio
 
@@ -2181,24 +2182,52 @@ contains
 
 
       call IoInput('LBOLTZ    ',uio,1,7,ierr)
-      read(unit=uio,fmt=*) sca%lboltzmann
+      if(ierr==0) then ! new input file format
+        read(unit=uio,fmt=*) sca%lboltzmann
 
-      if(sca%lboltzmann==1) then
-        call IoInput('SAVEPKK   ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) sca%savepkk
-        call IoInput('PROCMAP   ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) sca%subarr_inp
-        call IoInput('NAVERAGE  ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) sca%naverage
-        call IoInput('GAMMAMODE ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) sca%gammamode
-        if(sca%gammamode==1.or.sca%gammamode==2)then
-          call IoInput('GAMMAVAL  ',uio,1,7,ierr)
-          read(unit=uio,fmt=*) sca%gammaval
-          call IoInput('IMPCONC   ',uio,1,7,ierr)
-          read(unit=uio,fmt=*) sca%impconc
-        end if!sca%gammamode==1.or.sca%gammamode==2
-      end if!sca%lboltzmann==1
+        if(sca%lboltzmann==1) then
+          call IoInput('SAVEPKK   ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%savepkk
+          call IoInput('PROCMAP   ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%subarr_inp
+          call IoInput('NAVERAGE  ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%naverage
+          call IoInput('GAMMAMODE ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%gammamode
+          if(sca%gammamode==1.or.sca%gammamode==2)then
+            call IoInput('GAMMAVAL  ',uio,1,7,ierr)
+            read(unit=uio,fmt=*) sca%gammaval
+            call IoInput('IMPCONC   ',uio,1,7,ierr)
+            read(unit=uio,fmt=*) sca%impconc
+          end if!sca%gammamode==1.or.sca%gammamode==2
+        end if!sca%lboltzmann==1
+
+      else ! old input file format
+        call IoInput('LCONDUCTI ',uio,1,7,ierr)
+        if(ierr/=0) stop 'Either LCONDUCTI or LBOLTZ should be present in input file'
+        read(unit=uio,fmt=*) conducti
+
+        if(conducti==1) then
+          call IoInput('SAVEPKK   ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%savepkk
+          call IoInput('PROCMAP   ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%subarr_inp
+          call IoInput('NAVERAGE  ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) sca%naverage
+
+          ! uses default values for keywords that are absent in old format input file
+          write(*,*) "Warning : the old format LCONDUCTI keyword has been found !"
+          write(*,*) "The following new format keywords will be assigned default values:"
+          write(*,*) "LBOLTZ    = 1"
+          write(*,*) "GAMMAMODE = 0"
+          write(*,*) "GAMMAVAL  = 0"
+          write(*,*) "IMPCONC   = 1"
+          sca%lboltzmann = 1
+          sca%gammamode  = 0
+          sca%gammaval   = 0
+          sca%impconc    = 1
+        endif
+      end if!ierr
 
     end if!myrank==master
 
