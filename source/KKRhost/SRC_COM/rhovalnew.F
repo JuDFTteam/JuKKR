@@ -22,7 +22,6 @@
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
-     &                     create_subarr_comm,
      &                     mympi_main1c_comm_newsosol
 #endif
        IMPLICIT NONE
@@ -102,9 +101,10 @@
        ! OMP - number of threads, thread id
        integer nth,ith
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ie_start, mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      integer :: ie_end, ie_num
 ! determine if omp is used
 !$omp parallel shared(nth,ith)
 !$omp single
@@ -167,7 +167,7 @@ c initial allocate
        ALLOCATE(R2ORBC(IRMDNEW,LMPOTD,4,0:nth-1))
        ALLOCATE(CDENTEMP(IRMDNEW,0:nth-1))
        ALLOCATE(GFLLE_PART(LMMAXSO,LMMAXSO,0:nth-1))
-       ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,1))
+       ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,1))
        ALLOCATE(DEN(0:LMAXD1,IEMXD,1,2),DENLM(LMMAXD,IEMXD,1,2))
        RHO2NSC=CZERO
        RHO2NSC_loop=CZERO
@@ -218,7 +218,8 @@ C        Read BZ path for qdos calculation:                             ! qdos r
          CLOSE(67)                                                      ! qdos ruess
 C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos ruess
          DEALLOCATE(GFLLE,DEN,DENLM)                                    ! qdos ruess
-         ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS))                  ! qdos ruess
+!          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS))                  ! qdos ruess
+         ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS))                  ! qdos ruess
          ALLOCATE(DEN(0:LMAXD1,IEMXD,NQDOS,2),
      +            DENLM(LMMAXD,IEMXD,NQDOS,2))
 3000  IF (IERR.NE.0) STOP 'ERROR READING ''qvec.dat'''                  ! qdos ruess
@@ -237,8 +238,11 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
 c energy loop
        if(myrank==master) WRITE(6,*) 'atom: ',I1
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
-         ie_end = t_mpi_c_grid%ntot2
+!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
+!          ie_end = t_mpi_c_grid%ntot2     
+         
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
        DO ie_num=1,ie_end
          IE = ie_start+ie_num
@@ -262,6 +266,8 @@ c energy loop
 !$omp& shared(t_tgmat)
 !$omp& private(alphasph,alphall)
        DO IE=1,IELAST
+         ie_num = ie
+         ie_end = ielast
 #endif
        
          if (nth>=1) then
@@ -429,7 +435,8 @@ c read in gf
            READ(69,REC=IREC) GMAT0 
         else
            IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
-     &            t_mpi_c_grid%ntot2 * (I1-1)
+     &            ie_end * (I1-1)
+!     &            t_mpi_c_grid%ntot2 * (I1-1)
            GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
         end if
         !$omp end critical
@@ -576,7 +583,7 @@ c get orbital moment
       
 #ifdef CPP_MPI
       call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
-     &                                LMMAXD,LMMAXSO,IEMXD,NQDOS,
+     &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
      &                            denorbmomsp,denorbmomlm,denorbmomns)
@@ -590,30 +597,48 @@ c Write out qdos and lm-dos:                                            ! lm-dos
        DO IE=1,IELAST                                                   ! lm-dos
        DO IQ=1,NQDOS                                                    ! lm-dos
        IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                                ! lm-dos
-           OPEN(29,                                                     ! lm-dos
-     &     FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//    ! lm-dos
-     &     char(48+1)//".dat")                                          ! lm-dos
+           if(NATYP.ge.100) then
+             OPEN(29,   ! lm-dos
+     +       FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +       char(48+mod(I1,10))//"."//char(48+1)//".dat")   ! lm-dos
+             OPEN(30,   ! lm-dos
+     +       FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +       char(48+mod(I1,10))//"."//char(48+2)//".dat")   ! lm-dos
+           else
+             OPEN(29,   ! lm-dos
+     +       FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +       char(48+1)//".dat")   ! lm-dos
+             OPEN(30,   ! lm-dos
+     +       FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +       char(48+2)//".dat")   ! lm-dos
+           end if
            WRITE (29,*) ' '                                             ! lm-dos
            WRITE (29,8600) '# ISPIN=',1,' I1=',I1                       ! lm-dos
-           OPEN(30,                                                     ! lm-dos
-     &     FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//    ! lm-dos
-     &     char(48+2)//".dat")                                          ! lm-dos
            WRITE (30,*) ' '                                             ! lm-dos
            WRITE (30,8600) '# ISPIN=',2,' I1=',I1                       ! lm-dos
        ENDIF                                                            ! lm-dos
 
        IF (OPT('qdos    ')) THEN                                        ! qdos ruess
          IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                              ! qdos ruess
-            OPEN(31,                                                    ! qdos ruess
-     +        FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//  ! qdos ruess
-     +        char(48+1)//".dat")                                       ! qdos ruess
+           if(NATYP.ge.100) then
+             OPEN(31,   ! lm-dos
+     +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +       char(48+mod(I1,10))//"."//char(48+1)//".dat")   ! lm-dos
+             OPEN(32,   ! lm-dos
+     +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +       char(48+mod(I1,10))//"."//char(48+2)//".dat")   ! lm-dos
+           else
+             OPEN(31,   ! lm-dos
+     +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +       char(48+1)//".dat")   ! lm-dos
+             OPEN(32,   ! lm-dos
+     +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +       char(48+2)//".dat")   ! lm-dos
+           end if
             WRITE (31,*) ' '                                            ! qdos ruess
             WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
             WRITE(31,'(7(A,3X))') '#   Re(E)','Im(E)','k_x','k_y','k_z',! qdos
      &                      'DEN_tot','DEN_s,p,...'                     ! qdos
-            OPEN(32,                                                    ! qdos ruess
-     +        FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//  ! qdos ruess
-     +        char(48+2)//".dat")                                       ! qdos ruess
             WRITE (32,*) ' '                                            ! qdos ruess
             WRITE (32,8600) '# ISPIN=',2,' I1=',I1                      ! qdos ruess
             WRITE(32,'(7A)') '#   Re(E)','Im(E)','k_x','k_y','k_z',     ! qdos
@@ -674,6 +699,7 @@ c write
 !          ENDDO !JSPIN                                                    ! lmlm-dos
 !  1000  FORMAT(5F10.6,I3,40E16.8)                                         ! lmlm-dos
 c write gflle to file                                                    ! lmlm-dos
+       write(*,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
        WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
        

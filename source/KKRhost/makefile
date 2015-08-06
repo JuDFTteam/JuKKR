@@ -40,6 +40,8 @@ INCP = ./inc.p
 INCR = ./sprkkr_rmesh.dim
 
 
+#mod_opt_test.o  : $(COM)/mod_opt_test.F90                 ; \
+#                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_opt_test.F90 -c -o $@
 mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_mympi.F90 -c -o $@
 mod_types.o  : $(COM)/mod_types.F90                 ; \
@@ -94,11 +96,11 @@ mpi:      CPP = -D CPP_MPI
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -r8 -traceback
+FFLAGS       =  -r8 -mcmodel=large  -shared-intel -g #-O2 -r8 -mcmodel=large  -shared-intel #-traceback -CB -check all -g
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 
-debug:    FFLAGS = -CB -check all -traceback -g
-mpidebug: FFLAGS = -CB -check all -traceback -g
+debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
+mpidebug: FFLAGS = -CB -check all -traceback -mcmodel=medium
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
@@ -128,8 +130,6 @@ debug:    mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OB
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 openmp:   mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-#mpi:      mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-#	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 mpi:      mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
 mpidebug: mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o

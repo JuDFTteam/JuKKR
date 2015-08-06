@@ -23,9 +23,9 @@
       use mod_mympi, only: myrank, nranks, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
-     &                     distribute_linear_on_tasks,
-     &                     create_subarr_comm
+     &                     distribute_linear_on_tasks
 #endif
+      use mod_timing
      
       INCLUDE 'inc.p'
 C
@@ -89,6 +89,10 @@ CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
      +                 RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NREFD),
      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
      +                 CLEB(NCLEB,2)
+!       DOUBLE PRECISION, allocatable :: DRDI(:,:),RMESH(:,:),ZAT(:),
+!      +                 RCLS(:,:,:),RMTREF(:),VREF(:),
+!      +                 VINS(:,:,:),VISP(:,:),
+!      +                 CLEB(:,:)
       INTEGER ATOM(NACLSD,NAEZD+NEMBD),CLS(NAEZD+NEMBD),ICLEB(NCLEB,4),
      +        IPAN(NATYPD),IRCUT(0:IPAND,NATYPD),
      +        LOFLM(LM2D),NACLS(NCLSD),REFPOT(NAEZD+NEMBD),
@@ -105,6 +109,14 @@ C
       DOUBLE PRECISION DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
      &                 R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
+!       DOUBLE PRECISION, allocatable :: SOCSCL(:,:)
+!       DOUBLE PRECISION, allocatable :: SOCSCALE(:)
+!       DOUBLE PRECISION, allocatable :: CSCL(:,:)
+!       DOUBLE PRECISION, allocatable :: VTREL(:,:)
+!       DOUBLE PRECISION, allocatable :: BTREL(:,:)
+!       DOUBLE PRECISION, allocatable :: DRDIREL(:,:),
+!      &                 R2DRDIREL(:,:),
+!      &                 RMREL(:,:)
       INTEGER JWSREL(NATYPD),ZREL(NATYPD)
       INTEGER ITMPDIR,ILTMP
       CHARACTER*80 TMPDIR
@@ -114,19 +126,22 @@ C LDA+U
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
+!       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
+      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
+!       DOUBLE PRECISION, allocatable :: WLDAU(:,:,:,:)
+!       DOUBLE COMPLEX, allocatable :: PHILDAU(:,:) 
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #ifdef CPP_MPI
-      integer :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col,
-     &           myrank_grid, myrank_row, myrank_col, nranks_row,
-     &           nranks_col
-      integer :: ntot1, dims(2), i1_start, i1_end, mytot
+      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
+     &           myrank_at, myrank_ie, nranks_at,nranks_ie
+      integer :: ntot1, dims(2), mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
 #endif
+      integer :: i1_start, i1_end
 
 C-----------------------------------------------------------------------
 C     ..
@@ -147,6 +162,21 @@ C     ..
       DATA LLY /0/
       DATA DELTAE /(1.D-3,0.D0)/
 C
+
+      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+!       ALLOCATE(WLDAU(MMAXD,MMAXD,NSPIND,NATYPD),PHILDAU(IRMD,NATYPD))
+!       ALLOCATE(        DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),ZAT(NATYPD),
+!      +                 RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NREFD),
+!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+!      +                 CLEB(NCLEB,2))
+!       ALLOCATE(SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)),
+!      &        SOCSCALE(NATYPD),CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)),
+!      &        VTREL(IRMD*KREL+(1-KREL),NATYPD),
+!      &        BTREL(IRMD*KREL+(1-KREL),NATYPD),
+!      &        DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
+!      &        R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
+!      &        RMREL(IRMD*KREL+(1-KREL),NATYPD))
+     
 Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
@@ -247,10 +277,12 @@ c        END IF
 C
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !
+#ifdef CPP_MPI
 ! MPI:     
       ntot1 = t_inc%NATYP
 !       if(.not.OPT('NEWSOSOL')) ntot1 = t_inc%NSPIN*t_inc%NATYP
 !
+#endif
 C     
 C -> no need to recalculate the reference system in SCF decimation case
 C
@@ -278,21 +310,49 @@ C
 C
       IF (.NOT.OPT('NEWSOSOL')) THEN
       
+! #ifdef CPP_MPI
+!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,
+!      &  t_mpi_c_grid%myrank_ie,master,ntot1,ntot_pT,ioff_pT,.true.)
+!         i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+!         i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+!      &             ntot_pT(t_mpi_c_grid%myrank_ie)
+!         t_mpi_c_grid%ntot1  = ntot1 
+!         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+!      &            allocated(t_mpi_c_grid%ioff_pT1))) 
+!      &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_at-1),
+!      &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_at-1))
+!         t_mpi_c_grid%ntot_pT1 = ntot_pT
+!         t_mpi_c_grid%ioff_pT1 = ioff_pT
+!         
+!         write(*,*) 'db_lin atoms:',myrank,t_mpi_c_grid%nranks_at,
+!      &  t_mpi_c_grid%myrank_ie,ntot1, i1_start,i1_end
+!      
+! #else
+!       i1_start = 1
+!       i1_end   = NATYP
+! #endif
 #ifdef CPP_MPI
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
-     &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.false.)
-!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
-!      &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.true.)
-        i1_start = ioff_pT(t_mpi_c_grid%myrank_row)+1
-        i1_end   = ioff_pT(t_mpi_c_grid%myrank_row)+
-     &             ntot_pT(t_mpi_c_grid%myrank_row)
-        t_mpi_c_grid%ntot1  = ntot1 
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+        if(myrank==master) write(*,*) 'dblin_atm ioff',ioff_pT,
+     &                          'npt',ntot_pT
+        if(myrank==nranks-1) write(*,*) 'dblin_atm ioff',ioff_pT,
+     &                          'npt',ntot_pT
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
-     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_row-1),
-     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_row-1))
+     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
+     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
+        
+        write(*,*) 'db_lin atoms:',myrank,t_mpi_c_grid%nranks_at,
+     &  t_mpi_c_grid%myrank_ie,ntot1, i1_start,i1_end
 #else
       i1_start = 1
       i1_end   = NATYP
@@ -364,19 +424,26 @@ c interpolate potential
 
 #ifdef CPP_MPI
 
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
-     &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.false.)
-!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_row, 
-!      &  t_mpi_c_grid%myrank_row,master,ntot1,ntot_pT,ioff_pT,.true.)
-        i1_start = ioff_pT(myrank_row)+1
-        i1_end   = ioff_pT(myrank_row)+ntot_pT(myrank_row)
-        t_mpi_c_grid%ntot1  = ntot1 
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+!      &                   t_mpi_c_grid%myrank_ie,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+!         t_mpi_c_grid%ntot1  = ntot1
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
-     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_row-1),
-     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_row-1))
+     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
+     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
+        
+!         write(*,*) 'db_lin atoms:',myrank,t_mpi_c_grid%nranks_ie,
+!      &  t_mpi_c_grid%myrank_ie,ntot1, i1_start,i1_end
+     
 #else
       i1_start = 1
       i1_end   = NATYP
@@ -412,14 +479,36 @@ C
 
 
 #ifdef CPP_MPI
-      if(.not.t_tgmat%tmat_to_file .and. t_mpi_c_grid%dims(1)>0) then
-         mytot = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_col)     
-         call get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
+!       if(.not.t_tgmat%tmat_to_file .and. t_mpi_c_grid%dims(1)>1) then
+      if(.not.t_tgmat%tmat_to_file) then
+      
+         call MPI_BARRIER(MPI_COMM_WORLD,i1)
+         write(*,*) myrank,
+     & 'dims',t_mpi_c_grid%dims,
+     & 'nranks_ie',t_mpi_c_grid%nranks_ie,
+     & 'nranks_ie',t_mpi_c_grid%nranks_at,
+     & 'nranks_atcomm',t_mpi_c_grid%nranks_atcomm ,
+     & 'ntot1',t_mpi_c_grid%ntot1,
+     & 'ntot_pT1',t_mpi_c_grid%ntot_pT1(:),
+     & 'ioff_pT1',t_mpi_c_grid%ioff_pT1(:),
+     & 'ntot2',t_mpi_c_grid%ntot2,
+     & 'ntot_pT2',t_mpi_c_grid%ntot_pT2(:),
+     & 'ioff_pT2',t_mpi_c_grid%ioff_pT2(:)
+         mytot = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_ie)     
+         call MPI_BARRIER(MPI_COMM_WORLD,i1)
+!          stop 'gather tmat'
+!          call get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
 !          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
 !      &                    mytot,MPI_COMM_WORLD)
+
+         do ii=0,t_mpi_c_grid%nranks_ie-1
+          ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
+          ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
+         end do
+          mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
 !      
          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
-     &                    mytot,t_mpi_c_grid%myMPI_comm_row)
+     &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
       end if
 #endif
 
@@ -428,31 +517,43 @@ CT3E  CALL SYSTEM_CLOCK(MEND)
 CT3E  TIME1 = (MEND-MSTART)
 CT3E  CALL SYSTEM_CLOCK(MSTART)
 #ifdef CPP_MPI
-      if(t_mpi_c_grid%myrank_row==0) then
+      if(t_mpi_c_grid%myrank_ie==0) then
 #endif
+        call timing_start('main1a - tbref')
         IF ( LREFSYS ) CALL TBREF(EZ,IELAST,ALAT,VREF,IEND,LMAX,NCLS,
      &                            NINEQ,NREF,CLEB,RCLS,ATOM,CLS,ICLEB,
      &                            LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,
      &                            TMPDIR,ITMPDIR,ILTMP,
      &                            NAEZ,LLY) ! LLY Lloyd
+        call timing_stop('main1a - tbref')
 
 #ifdef CPP_MPI
-        if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>0) then
-          call get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
-     
-         call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,
-     &                    t_mpi_c_grid%ntot_pT2,t_mpi_c_grid%ioff_pT2,
-     &                    mytot,t_mpi_c_grid%myMPI_comm_col)
-!          call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
-!      &                    mytot,t_mpi_c_grid%myMPI_comm_row)
+      end if !(t_mpi_c_grid%myrank_at==0)
+      
+      if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>1) then
+         do ii=0,t_mpi_c_grid%nranks_ie-1
+          ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
+          ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
+         end do
+!           ntot_all = t_mpi_c_grid%ntot_pT1
+!           ioff_all = t_mpi_c_grid%ioff_pT1
+          mytot = t_mpi_c_grid%ntot2 !t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+         call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
+     &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
         end if
       
-      end if !(t_mpi_c_grid%myrank_row==0)
 #endif
 
 
       if(myrank.eq.master) 
      &     WRITE (6,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
+
+
+      DEALLOCATE( ULDAU )
+!       DEALLOCATE(WLDAU,PHILDAU)
+!       DEALLOCATE(DRDI,RMESH,ZAT,RCLS,RMTREF,VREF,VINS,VISP,CLEB)
+!       DEALLOCATE(SOCSCL,SOCSCALE,CSCL,VTREL,
+!      &           BTREL,DRDIREL,R2DRDIREL,RMREL)
 
 
       END SUBROUTINE !main1a

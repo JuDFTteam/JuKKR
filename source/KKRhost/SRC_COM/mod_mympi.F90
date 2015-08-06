@@ -4,7 +4,10 @@ module mod_mympi
 implicit none
 
   private
-  public :: myrank, nranks, master, mympi_init, distribute_linear_on_tasks, find_dims_2d, create_subarr_comm, mympi_main1c_comm, mympi_main1c_comm_newsosol
+  public :: myrank, nranks, master, mympi_init
+#ifdef CPP_MPI
+  public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol
+#endif
 
   integer, save :: myrank = -1
   integer, save :: nranks = -1
@@ -43,6 +46,8 @@ contains
     integer, intent(out) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 
     integer :: irest, irank
+    
+!     write(*,*) 'distribute call:',myrank, nranks,ntot
 
     ntot_pT = int(ntot/nranks)
     ioff_pT = int(ntot/nranks)*(/ (irank, irank=0,nranks-1) /)
@@ -82,14 +87,14 @@ contains
     
 
     if(nranks.le.ntot2) then
-       dims(1) = 0
+       dims(1) = 1
        dims(2) = nranks
     else
        ! rest not implemented!!!
-       stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
-       dims(1) = ntot1
-       dims(2) = nranks/ntot1
-       if(mod(float(nranks)/float(ntot1),1.).ne.0) stop 'ERROR in find_dims_2d'
+!        stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
+       dims(1) = nranks/ntot2
+       dims(2) = ntot2
+!        if(mod(float(nranks)/float(ntot1),1.).ne.0) stop 'ERROR in find_dims_2d'
     end if
     
 !     write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
@@ -99,64 +104,234 @@ contains
 
 
 #ifdef CPP_MPI
-  subroutine create_subarr_comm( subarr_dim, myMPI_comm_grid, myMPI_comm_row,myMPI_comm_col, myrank_grid, myrank_row, myrank_col, nranks_row, nranks_col)
-    use mpi
-    implicit none
-    integer, intent(in) :: subarr_dim(2)
-    integer, intent(out) :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col,myrank_grid, myrank_row, myrank_col, nranks_row, nranks_col
-
-    integer :: ierr, testdims(2)
-    logical :: logic2(2)
-    logical, parameter :: periodic(2) = .false., reorder(2) = .false.
+  subroutine create_newcomms_group_ie(nranks,myrank,nat,ne,nkmesh,kmesh,mympi_comm_ie,  &
+  &                                  myrank_ie,nranks_ie,mympi_comm_at,myrank_at, nranks_at, myrank_atcomm, nranks_atcomm)
+  !takes vector kmesh with mesh/timing information and finds number of rest procs that are devided in fractions given in ktake for optimal division of work
+  
+  use mpi
+!   use mod_types, only: t_inc
+  implicit none
+  
+  integer, intent(in) :: nranks,myrank,ne,nat,nkmesh
+  integer, intent(in) :: kmesh(nkmesh)
+  integer, intent(out) :: mympi_comm_ie, mympi_comm_at, nranks_atcomm, nranks_at, nranks_ie, myrank_ie, myrank_at, myrank_atcomm
+  
+  integer :: rest, k(nkmesh-1), ktake(nkmesh-1), myg, ie, iat, ierr, ik, i1,i2,i3
+  double precision :: f(nkmesh-1), q, qmin
+  integer, allocatable :: groups(:,:), mygroup(:)
+  integer :: mympi_group_ie, mympi_group_world, myMPI_comm_grid
+  
+  if(myrank==0) write(*,*) 'create_newcomms_group_ie input:',nranks,ne,nat
+  
+  
+!   if(nranks>(t_inc%natyp*t_inc%ielast)) stop 'you can only use less or equal number of processors that energypoints*atoms'
+  
+  if((ne*nat)<nranks .and. (ne>1 .and. nat>1)) then
+  
+    rest = nranks-int(nranks/(ne*nat))*ne*nat
+    if(myrank==0) write(*,*) 'rest:',rest
+   
+    !find fraction of k:l:m
+    do ik=1,nkmesh-1
+      k(ik) = (real(kmesh(1))/real(kmesh(nkmesh-ik+1))-1.)
+    end do
     
-!     CALL MPI_Dims_create(nranks,2,testdims,ierr)
-!     write(*,*) myrank,nranks,testdims
+    do ik=1,nkmesh-2
+      f(ik) = real(k(ik+1))/real(k(ik))
+    end do
+    f(nkmesh-1) = real(k(nkmesh-1))/real(k(1))
     
+    if(myrank==0) write(*,*) 'set k,i:',k,'f',f
 
- 
-    if (subarr_dim(2).le.1) then
-      if(myrank==master) write(*,*) 'option 1 in create_subarr_comm'
-      myMPI_comm_grid = MPI_COMM_WORLD
-      myMPI_comm_row  = MPI_COMM_WORLD
-      myMPI_comm_col  = MPI_COMM_WORLD
-      myrank_grid     = myrank
-      myrank_row      = myrank
-      myrank_col      = 0
-      nranks_row      = nranks
-      nranks_col      = 1
-    elseif (subarr_dim(1).le.1) then
-      if(myrank==master) write(*,*) 'option 2 in create_subarr_comm'
-      myMPI_comm_grid = MPI_COMM_WORLD
-      myMPI_comm_row  = MPI_COMM_WORLD
-      myMPI_comm_col  = MPI_COMM_WORLD
-      myrank_grid     = myrank
-      myrank_row      = 0
-      myrank_col      = myrank
-      nranks_row      = 1
-      nranks_col      = nranks
+    !brute force look for optimal division of rest ranks after N_E*N_at are already
+    !assigned to rectangular part of processor matrix:
+    !                  N_E=8
+    !            <--------------->
+    !          ^ ( | | | | | | | )    example for 49 processors,
+    !          | ( | | | | | | | )    devided according to:
+    !  N_at=5  | ( | | | | | | | )         N_E = 8, N_at = 5 
+    !          | ( | | | | | | | )        rest = 9 = 5+3+1
+    !          v ( | | | | | | | )                   k+l+m  
+    !                 ^    ( | | ) m=1  ^
+    !             l=3 |      ( | )      |
+    !                 v      ( | )      | k=5
+    !                          ( )      |
+    !                          ( )      v
+    if(rest>0) then
+    
+    if(nkmesh==4) then
+     qmin = -1
+     ktake(:) = 0
+     do i1=1,rest
+      do i2=0,rest-i1
+        i3 = rest-i1-i2
+        if (i1>=i2 .and. i2>=i3) then
+           if(i3==0 .and. i2==0) then
+             q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-1.)**2+(f(3)-real(i3)/real(i1))**2)
+           else
+             q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-real(i3)/real(i2))**2+(f(3)-real(i3)/real(i1))**2)
+           endif
+           if(q<qmin .or. qmin==-1) then
+               ktake = (/ i1,i2,i3 /)
+               qmin = q
+           end if
+        end if
+      enddo
+     enddo
+    elseif(nkmesh==3) then
+     qmin = -1
+     ktake(:) = 0
+     do i1=1,rest
+        i2 = rest-i1
+        if (i1>=i2) then
+           q = sqrt((f(1)-real(i2)/real(i1))**2)
+           if(q<qmin .or. qmin==-1) then
+               ktake = (/ i1,i2 /)
+               qmin = q
+           end if
+        end if
+     enddo
+    elseif(nkmesh==2) then
+     ktake(1) = rest
     else
-      if(myrank==master) write(*,*) 'option 3 in create_subarr_comm'
-
-      call MPI_Cart_create( MPI_COMM_WORLD, 2, subarr_dim, periodic, reorder, myMPI_comm_grid, ierr )
-      call MPI_Comm_rank( myMPI_comm_grid, myrank_grid, ierr )
-
-      logic2 = (/ .true., .false. /)
-      call MPI_Cart_sub( myMPI_comm_grid, logic2, myMPI_comm_row, ierr ) ! row communicator
-      logic2 = (/ .false., .true. /)
-      call MPI_Cart_sub( myMPI_comm_grid, logic2, myMPI_comm_col, ierr ) ! col communicator
-
-      call MPI_Comm_rank( myMPI_comm_row, myrank_row, ierr )
-      call MPI_Comm_rank( myMPI_comm_col, myrank_col, ierr )
-      
-      call MPI_Comm_size ( myMPI_comm_row, nranks_row, ierr )
-      call MPI_Comm_size ( myMPI_comm_col, nranks_col, ierr )
-
+     stop 'ERROR: nkmesh>4 not implemented yet'
     end if
     
-!           write(*,*) 'in create_subarr_comm',myrank,nranks,subarr_dim,myrank_row,myrank_col,nranks_row,nranks_col
+    ! special case when only one additional rank
+    if(rest==1) ktake(1) = rest
 
+    if(myrank==0) write(*,*) 'found ktake',ktake,'with',qmin
+    end if
+   
+    !find processor groups according to non-uniform division
+    allocate(groups(ne+1,2))
+    groups(:,:) = -1
+   
+    do ie=1,ne+1
+     if(ie==ne-2 .and. nkmesh>3) then
+      groups(ie,1) = nat+ktake(3)
+     elseif(ie==ne-1 .and. nkmesh>2) then
+      groups(ie,1) = nat+ktake(2)
+     elseif(ie==ne-0 .and. nkmesh>1) then
+      groups(ie,1) = nat+ktake(1)
+     else
+      groups(ie,1) = nat
+     endif
+     if(ie==1) then
+      groups(ie,2) = 0
+     else
+      groups(ie,2) = groups(ie-1,1)+groups(ie-1,2)
+     endif
+    enddo
 
-  end subroutine create_subarr_comm
+    if(myrank==0) write(*,*) 'groups:',groups(1:ne,1)
+    if(myrank==0) write(*,*) 'groups:',groups(1:ne,2)
+   
+    !find my group
+    myg = -1
+    do ie=1,ne
+      do iat=groups(ie,2),groups(ie+1,2)-1
+        if (myrank==iat) myg = ie
+      end do
+    end do
+    
+    if(myg==-1) then
+      write(*,*) 'no group found for rank', myrank
+      stop
+    end if
+
+    !get group of processors in my group
+    allocate(mygroup(groups(myg,1)))
+   
+   
+    ie = 0
+    do iat=groups(myg,2),groups(myg+1,2)-1
+      ie = ie + 1
+      mygroup(ie) = iat
+    end do
+
+    write(*,'(A,I3,A,I3,A,I3,A,100I3)') 'rank ',myrank ,' found group: ',myg,' of size',groups(myg,1),' with group members:',mygroup
+ 
+    !create new communicator from group
+    call MPI_COMM_GROUP(MPI_COMM_WORLD,mympi_group_world,ierr)
+    call MPI_GROUP_INCL(mympi_group_world,groups(myg,1),mygroup,mympi_group_ie,ierr)
+    call MPI_COMM_CREATE(MPI_COMM_WORLD,mympi_group_ie,mympi_comm_ie,ierr)
+    call MPI_GROUP_FREE(mympi_group_ie,ierr)
+   
+    !get rank and size in new communicator
+    call MPI_COMM_RANK(mympi_comm_ie,myrank_ie,ierr)
+    call MPI_COMM_SIZE(mympi_comm_ie,nranks_ie,ierr)
+   
+    !create communicator to communicate between differen energies (i.e. different groups)
+    call MPI_COMM_SPLIT(MPI_COMM_WORLD,myrank_ie,myg,mympi_comm_at,ierr)
+    call MPI_COMM_RANK(mympi_comm_at,myrank_atcomm,ierr)
+    call MPI_COMM_SIZE(mympi_comm_at,nranks_atcomm,ierr)
+    
+    nranks_at = ne    
+    myrank_at = myg-1
+    
+  elseif((ne*nat)==nranks .and. (ne>1 .and. nat>1)) then
+  
+    rest = 0
+
+    call MPI_Cart_create( MPI_COMM_WORLD, 2, (/ ne, nat /), (/ .false., .false. /), (/ .true., .true. /), myMPI_comm_grid, ierr )
+
+    call MPI_Cart_sub( myMPI_comm_grid, (/ .true., .false. /), myMPI_comm_at, ierr ) ! row communicator
+    call MPI_Cart_sub( myMPI_comm_grid, (/ .false., .true. /), myMPI_comm_ie, ierr ) ! col communicator
+
+    call MPI_Comm_rank( myMPI_comm_ie, myrank_ie, ierr )
+    call MPI_Comm_rank( myMPI_comm_at, myrank_at, ierr )
+    
+    call MPI_Comm_size ( myMPI_comm_ie, nranks_ie, ierr )
+    call MPI_Comm_size ( myMPI_comm_at, nranks_at, ierr )
+    
+    myrank_atcomm = myrank_at
+    nranks_atcomm = nranks_at
+
+  else
+  
+    rest = 0
+
+    mympi_comm_at = MPI_COMM_WORLD
+    write(*,*) 'comm_test',myMPI_comm_at==MPI_COMM_WORLD
+    myrank_at     = myrank
+    nranks_at     = nranks
+    mympi_comm_ie = MPI_COMM_SELF
+    myrank_ie     = 0
+    nranks_ie     = 1
+    
+    myrank_atcomm = myrank_at
+    nranks_atcomm = nranks_at
+
+  end if
+  
+      write(*,'(A,100I3)') 'my_newcomm_props:',myrank,nranks,nranks_ie,myrank_ie,myrank_at,nranks_at,nranks_atcomm,myrank_atcomm
+      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!       write(*,*) 'newcomm_at:',myMPI_comm_at==MPI_COMM_WORLD,myMPI_comm_at==MPI_COMM_NULL,myMPI_comm_at==MPI_COMM_SELF
+!       write(*,*) 'newcomm_ie:',myMPI_comm_ie==MPI_COMM_WORLD,myMPI_comm_ie==MPI_COMM_NULL,myMPI_comm_ie==MPI_COMM_SELF
+!       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+
+  if(myrank==0) then
+    write(*,'(A)') '=================================================='  
+    write(*,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
+    !write(*,'(AI3AI5A)') '    devide these onto Ne=',ne,' energy points and ',nat,' atoms'
+    write(*,'(A,I3,A,I4,A,I3)') '    create processor array of size',nat,' x',ne,' with rest',rest
+    write(*,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
+    write(*,'(A)') '                N_E'
+    write(*,'(A)') '         <--------------->'
+    write(*,'(A)') '       ^ ( | | | | | | | )'
+    write(*,'(A)') '       | ( | | | | | | | )'
+    write(*,'(A)') '  N_at | ( | | | | | | | )'
+    write(*,'(A)') '       | ( | | | | | | | )'
+    write(*,'(A)') '       v ( | | | | | | | )'
+    write(*,'(A)') '              ^    ( | | ) m  ^'
+    write(*,'(A)') '            l |      ( | )    |'
+    write(*,'(A)') '              v      ( | )    | k'
+    write(*,'(A)') '                       ( )    |'
+    write(*,'(A)') '                       ( )    v'
+  end if
+
+  end subroutine create_newcomms_group_ie
 #endif
 
 #ifdef CPP_MPI
@@ -250,15 +425,15 @@ contains
 
 #ifdef CPP_MPI
   subroutine mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,LMMAXD,  &
-     &                                LMMAXSO,IEMXD,NQDOS,            &
+     &                                LMMAXSO,IEMXD,IELAST,NQDOS,            &
      &                                den,denlm,gflle,rho2nsc,r2nefc,   &
      &                                rho2int,espv,muorb,denorbmom,    &
      &                                denorbmomsp,denorbmomlm,denorbmomns)
      
      use mpi
      implicit none
-     integer, intent(in) :: IRMDNEW, LMPOTD, LMAXD, LMAXD1, LMMAXD, LMMAXSO, IEMXD, NQDOS
-     double complex, intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IEMXD,NQDOS,2), DENLM(LMMAXD,IEMXD,NQDOS,2), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS)
+     integer, intent(in) :: IRMDNEW, LMPOTD, LMAXD, LMAXD1, LMMAXD, LMMAXSO, IEMXD, IELAST, NQDOS
+     double complex, intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IEMXD,NQDOS,2), DENLM(LMMAXD,IEMXD,NQDOS,2), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS)
      double precision, intent(inout) :: ESPV(0:LMAXD1,2), MUORB(0:LMAXD1+1,3), DENORBMOM(3), DENORBMOMSP(2,4), DENORBMOMLM(0:LMAXD,3), DENORBMOMNS(3)
      
      integer :: ierr, idim
@@ -293,7 +468,7 @@ contains
      CALL ZCOPY(IDIM,WORK,1,RHO2INT,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for rho2int'
      
-     IDIM = LMMAXSO*LMMAXSO*IEMXD*NQDOS
+     IDIM = LMMAXSO*LMMAXSO*IELAST*NQDOS
      CALL MPI_ALLREDUCE(GFLLE,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
      CALL ZCOPY(IDIM,WORK,1,GFLLE,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for gflle'

@@ -32,9 +32,10 @@ C Dummy arguments
 C
       INTEGER NTLDAU,NSPIN,MMAXD,NPOTD
       INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
-      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD),
+      DOUBLE PRECISION !ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD),
      &                 UEFF(NATYPD),JEFF(NATYPD),EDC(NATYPD),EU(NATYPD),
      &                 WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
+      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
 C
 C Local variables
@@ -50,6 +51,10 @@ C     ..
       DATA FACTOR /1.D0/  ! if this is 1. then: n*(n-1) in Edc and potential
                           ! if this is 0. then: n**2    in Edc and potential
 C    ..
+
+
+      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+
       WRITE (6,'(/,79(1H#),/,16X,A,/,79(1H#))') 
      &     'LDA+U: Calculating interaction potential VLDAU'
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

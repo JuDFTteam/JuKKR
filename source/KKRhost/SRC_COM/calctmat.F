@@ -29,8 +29,10 @@ C *********************************************************************
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_mympi, only: myrank, nranks, master,
-     &                      distribute_linear_on_tasks
+      use mod_mympi, only: myrank, nranks, master
+#ifdef CPP_MPI
+     &                      ,distribute_linear_on_tasks
+#endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd 
       IMPLICIT NONE
@@ -103,10 +105,10 @@ C     .. Local Arrays ..
       INTEGER IPIV(LMMAXD) ! LLY
       CHARACTER*9 TXTS(2)
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot
+      integer :: ie_start, mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_num
+      integer :: ie_end, ie_num
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
@@ -154,22 +156,23 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       if(myrank==master) WRITE(6,*) 'atom: ',I1
 #ifdef CPP_MPI
-       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_col,
-     &                                 t_mpi_c_grid%myrank_col,master,
-     &                                 IELAST,ntot_pT,ioff_pT,.true.)
-       ie_start = ioff_pT(t_mpi_c_grid%myrank_col)
-       ie_end   = ntot_pT(t_mpi_c_grid%myrank_col)
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,IELAST,ntot_pT,ioff_pT,.true.)
+     
+        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
+        ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
 
-       t_mpi_c_grid%ntot2  = ie_end  !t_mpi_c_grid%nranks_col
-       if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .and. 
+        t_mpi_c_grid%ntot2=ie_end !t_mpi_c_grid%dims(1)
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
      &            allocated(t_mpi_c_grid%ioff_pT2))) 
-     &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_col-1),
-     &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_col-1))
-       t_mpi_c_grid%ntot_pT2 = ntot_pT !(t_mpi_c_grid%myrank_col)
-       t_mpi_c_grid%ioff_pT2 = ioff_pT !(t_mpi_c_grid%myrank_col)
-       ! now initialize arrays for tmat, gmat, and gref
-       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+     &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
+     &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
+        t_mpi_c_grid%ntot_pT2 = ntot_pT
+        t_mpi_c_grid%ioff_pT2 = ioff_pT
+        ! now initialize arrays for tmat, gmat, and gref
+        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 
        DO ie_num=1,ie_end
        
@@ -177,6 +180,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 #else
       DO IE = 1,IELAST
          ie_num = IE
+         ie_end = IELAST
 #endif
          WRITE(*,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
 
@@ -234,11 +238,11 @@ C
 C
 C-----------------------------------------------------------------------
 C=======================================================================
-            ELSE
-C=======================================================================
-               CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
-     &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
-     &                      CTL,LMMAXD,LMAXD,IRMD)
+!             ELSE
+! C=======================================================================
+!                CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
+!      &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
+!      &                      CTL,LMMAXD,LMAXD,IRMD)
             END IF
 C
 C non/scalar-relativistic OR relativistic

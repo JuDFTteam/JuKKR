@@ -1,7 +1,8 @@
 
+#$(OBJ)/bofm.o         $(OBJ)/btom.o         $(OBJ)/dclock.o       \
 
 SRAOBJS1b = \
-$(OBJ)/bofm.o         $(OBJ)/btom.o         $(OBJ)/dclock.o       \
+$(OBJ)/bofm.o         $(OBJ)/btom.o         \
 $(OBJ)/dlke0.o        $(OBJ)/dlke1.o        $(OBJ)/inversion.o    \
 $(OBJ)/invslab.o      $(OBJ)/invsupercell.o $(OBJ)/surfgf.o       
 
@@ -32,7 +33,7 @@ $(OBJ)/bofm.o         : $(SRA)/bofm.f                     ; \
 $(OBJ)/btom.o         : $(SRA)/btom.f                     ; \
                        $(FC) $(FFLAGS)  $(SRA)/btom.f -c -o $@
 
-$(OBJ)/dclock.o       : $(SRA)/dclock.f                   ; \
+#$(OBJ)/dclock.o       : $(SRA)/dclock.f                   ; \
                        $(FC) $(FFLAGS)  $(SRA)/dclock.f -c -o $@
 
 $(OBJ)/dlke0.o        : $(SRA)/dlke0.f  $(INCP)    ; \

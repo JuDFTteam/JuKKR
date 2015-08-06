@@ -229,9 +229,10 @@
          WRITE(*,*) 'rinput13: ALATBASIS not found in inputcard'
          STOP 'rinput13: ALATBASIS not found in inputcard'
       ENDIF
-      WRITE(6,2019) ABASIS,BBASIS,CBASIS 
-      WRITE(6,2107)
-      WRITE(6,2014) ALAT
+      ! move this writeout back to line 330 where A,B,CBASIS is set
+      !WRITE(6,2019) ABASIS,BBASIS,CBASIS 
+      !WRITE(6,2107)
+      !WRITE(6,2014) ALAT
 
 
       ! Set 2-d or 3-d geometry
@@ -327,6 +328,9 @@
       BBASIS = DVEC(2) 
       CBASIS = DVEC(3)
 
+      WRITE(6,2019) ABASIS,BBASIS,CBASIS 
+      WRITE(6,2107)
+      WRITE(6,2014) ALAT
 
       !----------------------------------------------------------------------
       ! Begin read left- and right-host information in 2d-case.
@@ -1316,9 +1320,12 @@
         NREF = MAX(NREF,REFPOT(I)) 
       ENDDO
 
-      WRITE(6,2016) NCLS,NREF,NINEQ
-      WRITE(6,2110)
-      WRITE(6,2103)
+      !in line 1792  this is done: NINEQ = NAEZ, so here NINEQ is still undefinded
+      !so we move this writeout back
+      ! 
+      !WRITE(6,2016) NCLS,NREF,NINEQ
+      !WRITE(6,2110)
+      !WRITE(6,2103)
 
       DO IQ=1,NAEZ
          SUM = 0D0
@@ -1786,6 +1793,9 @@
 
 
       NINEQ = NAEZ
+      WRITE(6,2016) NCLS,NREF,NINEQ
+      WRITE(6,2110)
+      WRITE(6,2103)
 
 
 !----------------------------------------------------------------------

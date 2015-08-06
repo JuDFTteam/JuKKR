@@ -32,8 +32,10 @@ C **********************************************************************
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_mympi, only: myrank, nranks, master,
-     &                      distribute_linear_on_tasks
+      use mod_mympi, only: myrank, nranks, master
+#ifdef CPP_MPI
+     &                     ,distribute_linear_on_tasks
+#endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
       
       IMPLICIT NONE
@@ -141,9 +143,10 @@ C     .. Local Arrays ..
       DOUBLE PRECISION QVEC(:,:)       ! qdos, q-vectors for qdos
       ALLOCATABLE QVEC,GFLLE,DUM_GFLLE      ! qdos, lmlm-dos
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ie_start, mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      integer :: ie_end, ie_num
 C     ..
 C     .. External Subroutines ..
       EXTERNAL DAXPY,DSCAL,CRADWF,DRVRHO,PNSQNS,RHOLM,
@@ -272,9 +275,15 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
 #ifndef CPP_MPI
       IF (OPT('qdos    ')) THEN
-      OPEN(31,   ! lm-dos
-     +FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +char(48+ISPIN)//".dat")   ! lm-dos
+         if(NATYP.ge.100) then
+           OPEN(31,   ! lm-dos
+     +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+         else
+           OPEN(31,   ! lm-dos
+     +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +     char(48+ISPIN)//".dat")   ! lm-dos
+         end if
       ENDIF
       OPEN(30,   ! lm-dos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
@@ -310,16 +319,45 @@ C        Read BZ path for qdos calculation:
       ALLOCATE(DUM_GFLLE(LMMAXD,LMMAXD))
 
       if(myrank==master) WRITE(*,*) 'atom',I1
+! #ifdef CPP_MPI
+!       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
+!       ie_end = t_mpi_c_grid%ntot2
+! !       write(*,*) myrank,ie_start,ie_end
+! 
+!       DO ie_num=1,ie_end
+!        
+!          IE = ie_start+ie_num
+! #else
+!       DO IE = 1,IELAST
+! #endif
 #ifdef CPP_MPI
-      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
-      ie_end = t_mpi_c_grid%ntot2
-!       write(*,*) myrank,ie_start,ie_end
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
-      DO ie_num=1,ie_end
-       
+       DO ie_num=1,ie_end
          IE = ie_start+ie_num
 #else
-      DO IE = 1,IELAST
+! omp: start parallel region here
+!$omp parallel do default(none)
+!$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
+!$omp& private(jlk_index,tmatll,ith)
+!$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
+!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
+!$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
+!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
+!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
+!$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
+!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
+!$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
+!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
+!$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
+!$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+!$omp& shared(t_tgmat)
+!$omp& private(alphasph,alphall)
+       DO IE=1,IELAST
+         ie_num = ie
+         ie_end = ielast
 #endif
          WRITE(*,*) 'energy',IE,EZ(IE)
 CMPI     IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN

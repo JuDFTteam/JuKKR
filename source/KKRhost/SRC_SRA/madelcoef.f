@@ -15,27 +15,36 @@ C     ..
 C     .. Local scalars
       DOUBLE PRECISION PI,FPI
       INTEGER I,L,L1,L2,LM1,LM2,LM3,LMPOT,LOFLM(LMXSPD),M
-      INTEGER ICALL
+!       INTEGER ICALL_madelcoef
 C     ..
 C     .. Local arrays
       DOUBLE PRECISION DFAC(0:LPOTD,0:LPOTD)
 C     ..
 C     .. Data statements
-      DATA ICALL /0/
+!       DATA ICALL_madelcoef /0/
+!       integer, save :: icall_madelcoef=0
 C     ..
 C     .. Intrinsic functions
       INTRINSIC ABS,DBLE
 C     ..
 C     .. Save statements
-      SAVE ICALL,LMPOT,PI,FPI
+!       SAVE ICALL_madelcoef,LMPOT,PI,FPI
+      SAVE LMPOT,PI,FPI
 C     ..................................................................
-      ICALL = ICALL + 1
+
+!       write(*,*) LINTERFACE,LPOT,IEND,
+!      &                     LPOTD,LMPOTD,LMXSPD,NCLEBD
+! 
+!       write(*,*) 'madelcoef',icall_madelcoef,lmpot,lpot
+!       stop
+
+!       ICALL_madelcoef = ICALL_madelcoef + 1
 C
-      IF ( ICALL.EQ.1 ) THEN
+!       IF ( ICALL_madelcoef.EQ.1 ) THEN
          PI = 4.0D0*ATAN(1.0D0)
          FPI = 4.0D0*PI
          LMPOT = (LPOT+1)**2
-      END IF
+!       END IF
 C
       I = 1
 C
@@ -66,6 +75,7 @@ C --> initialize
 C
       DO LM1 = 1,LMPOT
          DO LM2 = 1,LMPOT
+!            write(*,*) 'test',LM1,LM2,LMPOT,LMPOTD
             A(LM1,LM2) = 0.0D0
          END DO
       END DO

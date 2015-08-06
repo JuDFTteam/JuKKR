@@ -22,8 +22,7 @@
       use mod_mympi, only: myrank, nranks, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
-     &                     distribute_linear_on_tasks,
-     &                     create_subarr_comm
+     &                     distribute_linear_on_tasks
 #endif
       
       INCLUDE 'inc.p'
@@ -111,6 +110,7 @@ C     .. GINP   = cluster GF (ref. syst.)
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX
      +     GMATLL(LMMAXD,LMMAXD,NSHELD),GMAT0(LMMAXD,LMMAXD)
+!      DOUBLE COMPLEX, allocatable :: GMATLL(:,:,:),GMAT0(:,:)
       DOUBLE COMPLEX,ALLOCATABLE:: 
      &     GINP(:,:,:), ! cluster GF (ref syst.)              ! GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
      &     DGINP(:,:,:) ! LLY Lloyd Energy derivative of GINP ! DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
@@ -125,6 +125,13 @@ C     .. GINP   = cluster GF (ref. syst.)
      &               ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD), ! LLY Lloyd Alpha matrix and deriv.
      &               TRALPHAREF(IEMXD),                                ! LLY Lloyd  
      &               CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD)         ! LLY Lloyd
+! C     .. effective (site-dependent) Delta_t^(-1) matrix ..
+!       DOUBLE COMPLEX, allocatable :: TMAT(:,:),TSST(:,:,:),
+!      +               TREFLL(:,:,:),DTREFLL(:,:,:),DTMATLL(:,:,:),
+!      &               LLY_GRTR(:,:),LLY_G0TR(:),TRALPHA(:,:),
+!      &               TRACET(:,:),ALPHAREF(:,:),DALPHAREF(:,:),
+!      &               TRALPHAREF(:),CDOS_LLY(:,:),CDOSREF_LLY(:)
+!       DOUBLE COMPLEX TRALPHA1
 C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX WN2(LMGF0D,LMGF0D)                  ! LLY
       DOUBLE COMPLEX MSST(LMMAXD,LMMAXD,NATYPD)
@@ -133,10 +140,17 @@ C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX W1(LMMAXD,LMMAXD),WN1(LMGF0D,LMGF0D)
       DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
       DOUBLE COMPLEX FACTL(LMMAXD,LMMAXD)
+!       DOUBLE COMPLEX, allocatable :: WN2(:,:),MSST(:,:,:)
+!       DOUBLE COMPLEX, allocatable :: LEFTTINVLL(:,:,:,:,:),
+!      &                               RIGHTTINVLL(:,:,:,:,:)
+!       DOUBLE COMPLEX, allocatable :: W1(:,:),WN1(:,:)
+!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),FACTL(:,:)
       DOUBLE PRECISION RATOM(3,NSHELD),RROT(48,3,NSHELD)
       INTEGER NSH1(NSHELD),NSH2(NSHELD)
       INTEGER IJTABCALC(NOFGIJD),ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
       INTEGER IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),IQCALC(NAEZD)
+!       DOUBLE COMPLEX, allocatable :: CREL(:,:),RC(:,:),
+!      &               RREL(:,:),SRREL(:,:,:)
       DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
      &               RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD)
       INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD)
@@ -160,9 +174,10 @@ C     ..
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot, ie_num, ierr
+      integer :: ie_start, mytot, ierr
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      integer :: ie_num, ie_end
 C     ..
 C     .. Arrays in Common ..
       CHARACTER*8 OPTC(32),TESTC(32)
@@ -200,6 +215,23 @@ CMPI  EXTERNAL MPI_ALLREDUCE,MPI_COMM_RANK,MPI_COMM_SIZE,
 CMPI +         MPI_FINALIZE,MPI_INIT
 C     ..
 C
+
+!       ALLOCATE(TMAT(LMMAXD,LMMAXD),TSST(LMMAXD,LMMAXD,NATYPD),
+!      &        TREFLL(LMMAXD,LMMAXD,NREFD),DTREFLL(LMMAXD,LMMAXD,NREFD),
+!      &        DTMATLL(LMMAXD,LMMAXD,NAEZD),LLY_GRTR(IEMXD,NSPIND),
+!      &        LLY_G0TR(IEMXD),TRALPHA(IEMXD,NSPIND),
+!      &        TRACET(IEMXD,NSPIND),
+!      &        ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD),
+!      &        TRALPHAREF(IEMXD),
+!      &        CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD),
+!      &        WN2(LMGF0D,LMGF0D),MSST(LMMAXD,LMMAXD,NATYPD),
+!      &        LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+!      &        RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+!      &        W1(LMMAXD,LMMAXD),WN1(LMGF0D,LMGF0D),
+!      &        DSYMLL(LMMAXD,LMMAXD,NSYMAXD),FACTL(LMMAXD,LMMAXD),
+!      &        CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
+!      &        RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD),
+!      &        GMATLL(LMMAXD,LMMAXD,NSHELD),GMAT0(LMMAXD,LMMAXD))
 
 Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -467,8 +499,12 @@ C
          NCPAFAIL = 0
 C
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
-         ie_end = t_mpi_c_grid%ntot2
+!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
+!          ie_end = t_mpi_c_grid%ntot2
+         
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+         
          write(*,*) 'start e-loop',myrank,ie_start, ie_end
 
          DO 360 ie_num=1,ie_end
@@ -476,6 +512,7 @@ C
 #else
          DO 360 IE = 1,IELAST
             ie_num = ie
+            ie_end = ielast
 #endif
 C
             if (t_tgmat%gref_to_file) then
@@ -655,8 +692,10 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
                    WRITE (70,REC=IREC) GMAT0
                 else
                    IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
-     &                    t_mpi_c_grid%ntot2 * (ISPIN-1) + 
-     &                    NQDOS * t_mpi_c_grid%ntot2 * NSPIN * (I1-1)
+     &                    ie_end * (ISPIN-1) + 
+     &                    NQDOS * ie_end * NSPIN * (I1-1)
+!     &                    t_mpi_c_grid%ntot2 * (ISPIN-1) + 
+!     &                    NQDOS * t_mpi_c_grid%ntot2 * NSPIN * (I1-1)
                    t_tgmat%gmat(:,:,irec) = gmat0
                 end if
               ENDDO
@@ -774,8 +813,11 @@ C
       ELSE ! NEW SOC SOLVER 
 
 #ifdef CPP_MPI
-      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
-      ie_end = t_mpi_c_grid%ntot2
+!       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
+!       ie_end = t_mpi_c_grid%ntot2
+      
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
@@ -789,6 +831,7 @@ c read in Green function of reference system
        if (t_tgmat%gref_to_file) then
           READ (68,REC=IE) GINP
        else
+          write(*,*) ie_num
           ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
        end if
        if(t_lloyd%dgref_to_file) then
@@ -949,7 +992,8 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 !                      write(707070,*) gmat0
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
-     &                    t_mpi_c_grid%ntot2 * (I1-1)
+     &                    ie_end * (I1-1)
+!     &                    t_mpi_c_grid%ntot2 * (I1-1)
                      t_tgmat%gmat(:,:,irec) = gmat0
                   end if
                ENDDO
@@ -1020,7 +1064,7 @@ C
          IF (.NOT.OPT('NEWSOSOL')) THEN
           DO ISPIN = 1,NSPIN                                             ! LLY
 #ifdef CPP_MPI
-           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
            ie_end = t_mpi_c_grid%ntot2
            DO ie_num=1,ie_end
             IE = ie_start+ie_num
@@ -1039,7 +1083,7 @@ C
           ENDDO                                                          ! LLY
          ELSE                         
 #ifdef CPP_MPI
-           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
            ie_end = t_mpi_c_grid%ntot2
            DO ie_num=1,ie_end
             IE = ie_start+ie_num
@@ -1128,6 +1172,12 @@ CMPI  CALL MPI_FINALIZE(IERR)
      &             3(' E:',I3,F7.4,:,2X))
 99020 FORMAT (/,1X,79('*'),/,25X,'no problems with',
      &         '  CPA-cycle ',/,1X,79('*'),/)
+
+
+!       DEALLOCATE(TMAT,TSST,TREFLL,DTREFLL,DTMATLL,LLY_GRTR,
+!      &        LLY_G0TR,TRALPHA,TRACET,ALPHAREF,DALPHAREF,TRALPHAREF,
+!      &        CDOS_LLY,CDOSREF_LLY,WN2,MSST,LEFTTINVLL,RIGHTTINVLL,
+!      &        W1,WN1,DSYMLL,FACTL,CREL,RC,RREL,SRREL)
 
 
       END SUBROUTINE !main1b

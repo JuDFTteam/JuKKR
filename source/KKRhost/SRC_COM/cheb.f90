@@ -277,13 +277,16 @@ end subroutine
 
 
 subroutine diffCheb(fn,ncheb,dfndr)
+implicit none
+integer :: ncheb
 double precision    :: fn(0:ncheb)
 double precision    :: dfndr(0:ncheb)
 double precision :: CLambdaCinv(0:Ncheb,0:Ncheb)
+real(8), external :: matvec_dmdm
 
 !needs to be checked!!!!!!1
-call getCLambdaCinv(Ncheb,CLambdaCinv)
-dfndr=matvec_dmdm(CLambdaCinv,fn)
+call getCLambdaCinv(Ncheb,CLambdaCinv(0:ncheb,0:ncheb))
+dfndr(0:ncheb)=matvec_dmdm(CLambdaCinv(0:ncheb,0:ncheb),fn(0:ncheb))
 end subroutine
 
 

@@ -81,7 +81,9 @@ C     .. Save statements
       SAVE ICALL,CI,BOUND,PI,FPI,TPI
 C     ..................................................................
 C
-      ICALL = ICALL + 1
+      !write(*,*) 'in ewald2d:',icall,bound
+      ICALL = 1
+      !ICALL = ICALL + 1
       IF (ICALL.EQ.1) THEN
          CI = (0.0D0,1.0D0)
          BOUND = 1.0D-9
@@ -89,6 +91,7 @@ C
          FPI = 4.0D0*PI
          TPI = 2.0D0*PI
       END IF
+      !write(*,*) 'in ewald2d:',icall,bound
 C
 C Factorial
 C
@@ -415,7 +418,7 @@ C
       DO LM = 1,LMMAX
          IF ( ABS(DIMAG(STEST(LM))).GT.BOUND ) THEN
             WRITE (6,*) ' ERROR: Imaginary contribution',
-     &                  ' to REAL lattice sum'
+     &                  ' to REAL lattice sum',DIMAG(STEST(LM)),BOUND
             STOP
          END IF
          SUM2D(LM) = DBLE(STEST(LM))
@@ -425,15 +428,15 @@ C
       SUM2D(1) = SUM2D(1)/SQRT(FPI)
 C
 99001 FORMAT (5X,
-     &     'WARNING 1 : Convergence of 2D-sum is ',1P,E8.2,' > ',E8.2,
+     &     'WARNING 1 : Convergence of 2D-sum is ',1P,E9.2,' > ',E9.2,
      &     'LAYER PAIR',2I6,/,15X,
      &     'You should use more lattice vectors (RMAX)')
 99002 FORMAT (5X,
-     &     'WARNING 2 : Convergence of 2D-sum is ',1P,E8.2,' > ',E8.2,
+     &     'WARNING 2 : Convergence of 2D-sum is ',1P,E9.2,' > ',E9.2,
      &     'LAYER PAIR',2I6,/,15X,
      &     'You should use more lattice vectors (GMAX)')
 99003 FORMAT (5X,
-     &     'WARNING 3 : Convergence of 2D-sum is ',1P,E8.2,' > ',E8.2,
+     &     'WARNING 3 : Convergence of 2D-sum is ',1P,E9.2,' > ',E9.2,
      &     'LAYER PAIR',2I6,/,15X,
      &     'You should use more lattice vectors (GMAX)')
       END

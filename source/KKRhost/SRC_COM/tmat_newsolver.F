@@ -9,8 +9,10 @@
 #ifdef CPP_MPI
        use mpi
 #endif
-       use mod_mympi, only: myrank, nranks, master,
-     &                      distribute_linear_on_tasks
+       use mod_mympi, only: myrank, nranks, master
+#ifdef CPP_MPI
+     &                      ,distribute_linear_on_tasks
+#endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd 
 
@@ -68,9 +70,10 @@
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
-      integer :: ie_start, ie_end, mytot, ie_num
+      integer :: ie_start, mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      integer :: ie_end, ie_num
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
 !$omp parallel shared(nth,ith) 
 !$omp single 
@@ -123,23 +126,27 @@ c energy loop
        if(myrank==master) WRITE(6,*) 'atom: ',I1,' NSRA:',NSRA
 
 #ifdef CPP_MPI
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_col,
-     &                                 t_mpi_c_grid%myrank_col,master,
-     &                                 IELAST,ntot_pT,ioff_pT,.true.)
-        ie_start = ioff_pT(t_mpi_c_grid%myrank_col)
-        ie_end   = ntot_pT(t_mpi_c_grid%myrank_col)
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,IELAST,ntot_pT,ioff_pT,.true.)
+     
+        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
+        ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
 
-        t_mpi_c_grid%ntot2  = ie_end  !t_mpi_c_grid%nranks_col
-        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .and. 
+        t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
      &            allocated(t_mpi_c_grid%ioff_pT2))) 
-     &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_col-1),
-     &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_col-1))
-        t_mpi_c_grid%ntot_pT2 = ntot_pT !(t_mpi_c_grid%myrank_col)
-        t_mpi_c_grid%ioff_pT2 = ioff_pT !(t_mpi_c_grid%myrank_col)
+     &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
+     &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
+        t_mpi_c_grid%ntot_pT2 = ntot_pT
+        t_mpi_c_grid%ioff_pT2 = ioff_pT
         ! now initialize arrays for tmat, gmat, and gref
         call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
         if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 
+!         write(*,*) 'db_lin ener:',myrank,t_mpi_c_grid%nranks_at,
+!      &  t_mpi_c_grid%myrank_at,ielast, ie_start,ie_end
+     
 
 !        DO IE=ie_start,ie_end
        DO ie_num=1,ie_end
@@ -159,6 +166,8 @@ c energy loop
 !$omp& private(alpha0,alphall,tmat0,aux,dtmatll,dalphall) 
 !$omp& private(ideriv,ipiv) 
        DO IE=1,IELAST
+         ie_end = IELAST
+         ie_num = ie
 #endif
          ! get current thread
          if (nth>=1) then
@@ -306,9 +315,7 @@ c         STOP
         ENDIF ! LLY
          
          ! writeout
-!$omp end critial
-
-
+!$omp critical
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
@@ -332,7 +339,7 @@ c         STOP
              t_lloyd%tralpha(irec) = TRALPHA
            end if
          ENDIF
-!$omp end critial         
+!$omp end critical         
          
        ENDDO ! IE loop 
 !$omp end parallel do

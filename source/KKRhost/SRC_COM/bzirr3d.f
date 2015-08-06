@@ -38,7 +38,8 @@ C                 taken. Could also be a logical variable.
 C==========================================================================
       implicit none
       integer MAXK1,MAXK2,MAXK3,NSYMAXD
-      PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
+      PARAMETER (MAXK1=100,MAXK2=100,MAXK3=70,NSYMAXD=48)
+      !PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
 C i/o
       integer nkp,nkxyz(3),ibk(0:MAXK1,0:MAXK2,0:MAXK3),kpoibz,nsymat
       INTEGER ISYMINDEX(*),nkxyz1(3),krel

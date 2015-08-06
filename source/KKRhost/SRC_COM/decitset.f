@@ -305,31 +305,31 @@ C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
      &                   TREFLL(1,1,I1),DTREFLL(1,1,I1),
      &                   ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)
             END DO
-         ELSE
-CF90--------------------------------------------------------------------
-            ALLOCATE(WN1(LMGF0D,LMGF0D),STAT=I1)
-            IF ( I1.NE.0 ) STOP '    Allocate WN1'
-CF90--------------------------------------------------------------------
-            DO I1 = 1,NREF
-               CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAXD,IH,
-     &                       WN1,DTREFLL(1,1,I1),LMAXD+1,LMGF0D)
-C-----------------------------------------------------------------
-C add second spin-block for relativistic calculation and transform
-C from NREL to REL representation
-C-----------------------------------------------------------------
-               CALL CINIT(LMMAXD*LMMAXD,TMATLL)
-               IF ( LMMAXD.NE.IH*2 ) STOP 'LMMAXD <> IH*2 '
-               DO I=1,IH
-                  TMATLL(I,I) = WN1(I,I)
-                  TMATLL(IH+I,IH+I) = WN1(I,I)
-               END DO
-               CALL CHANGEREP(TMATLL,'RLM>REL',TREFLL(1,1,I1),LMMAXD,
-     &                        LMMAXD,RC,CREL,RREL,'TREFLL',0)
-            END DO
-CF90--------------------------------------------------------------------
-            DEALLOCATE(WN1,STAT=I1)
-            IF ( I1.NE.0 ) STOP '    Deallocate WN1'
-CF90--------------------------------------------------------------------
+!          ELSE
+! CF90--------------------------------------------------------------------
+!             ALLOCATE(WN1(LMGF0D,LMGF0D),STAT=I1)
+!             IF ( I1.NE.0 ) STOP '    Allocate WN1'
+! CF90--------------------------------------------------------------------
+!             DO I1 = 1,NREF
+!                CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAXD,IH,
+!      &                       WN1,DTREFLL(1,1,I1),LMAXD+1,LMGF0D)
+! C-----------------------------------------------------------------
+! C add second spin-block for relativistic calculation and transform
+! C from NREL to REL representation
+! C-----------------------------------------------------------------
+!                CALL CINIT(LMMAXD*LMMAXD,TMATLL)
+!                IF ( LMMAXD.NE.IH*2 ) STOP 'LMMAXD <> IH*2 '
+!                DO I=1,IH
+!                   TMATLL(I,I) = WN1(I,I)
+!                   TMATLL(IH+I,IH+I) = WN1(I,I)
+!                END DO
+!                CALL CHANGEREP(TMATLL,'RLM>REL',TREFLL(1,1,I1),LMMAXD,
+!      &                        LMMAXD,RC,CREL,RREL,'TREFLL',0)
+!             END DO
+! CF90--------------------------------------------------------------------
+!             DEALLOCATE(WN1,STAT=I1)
+!             IF ( I1.NE.0 ) STOP '    Deallocate WN1'
+! CF90--------------------------------------------------------------------
          END IF
 C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 C

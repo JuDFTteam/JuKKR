@@ -122,7 +122,9 @@ C     ---------------------------------------------------
          NS2 = 0
 C
          DO LR = 1,2*NLM
-            IF ( CDABS(RREL(LR,LAM)).GT.1D-6 ) THEN
+!             IF ( CDABS(RREL(LR,LAM)).GT.1D-6 ) THEN
+            IF ( CDABS(RREL(LR,LAM)).GT.1D-4 ) THEN
+               write(*,*) 'test, strsmat',CDABS(RREL(LR,LAM))
                IF ( LR.LE.NLM ) THEN
                   NS1 = NS1 + 1
                   IF ( NS1.GT.2 ) STOP ' IN <STRSMAT>   NS1 > 2'

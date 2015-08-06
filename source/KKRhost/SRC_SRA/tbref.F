@@ -66,8 +66,9 @@ C     .. Local Arrays ..
 #ifdef CPP_MPI
 C     ..
 C     .. MPI ..
-      integer :: IE_START, IE_END, IE_NUM
+      integer :: IE_START, IE_END
 #endif
+      integer :: ie_num
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
@@ -106,14 +107,18 @@ C     ..
 C
 C ======================================================================
 #ifdef CPP_MPI
-       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
-       ie_end = t_mpi_c_grid%ntot2
+        write(*,*) myrank, 'start tbref e-loop'
+!        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
+!        ie_end = t_mpi_c_grid%ntot2
+       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
        DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
 #else
       DO IE = 1,IELAST
+         ie_num = ie
 #endif
          WRITE(*,FMT='(A23,I5,2F14.8)') 
      &                         'TBREF: GREF for energy:',IE,EZ(IE)

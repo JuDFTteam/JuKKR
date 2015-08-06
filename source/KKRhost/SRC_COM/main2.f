@@ -97,6 +97,9 @@ C     .. input potential (spherical VISP, nonspherical VINS)
      +                 VISP(IRMD,NPOTD)
 C     .. output potential (nonspherical VONS)
       DOUBLE PRECISION VONS(IRMD,LMPOTD,NPOTD)
+!       DOUBLE PRECISION, allocatable :: VINS(:,:,:),VISP(:,:)
+! C     .. output potential (nonspherical VONS)
+!       DOUBLE PRECISION, allocatable :: VONS(:,:,:)
 C     ..
 C ----------------------------------------------------------------------
 C   ECOU(0:LPOTD,NATYPD)    ! Coulomb energy                    
@@ -116,6 +119,10 @@ C ----------------------------------------------------------------------
       DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD),ZAT(NATYPD)
 C     .. Dummy variables needed only in IMPURITY program 
       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD),VSPSMDUM(IRMD,NPOTD)
+!       DOUBLE PRECISION, allocatable :: ECOU(:,:),EPOTIN(:),ESPC(:,:),
+!      +  ESPV(:,:),EXC(:,:),A(:),B(:),DRDI(:,:),RMT(:),RMTNEW(:),RWS(:),
+!      +  R(:,:),ECORE(:,:),THETAS(:,:,:),ZAT(:),THESME(:,:,:),
+!      +  VSPSMDUM(:,:)
 C ----------------------------------------------------------------------
 C  R2NEF (IRMD,LMPOTD,NATYPD,2)  ! rho at FERMI energy
 C  RHO2NS(IRMD,LMPOTD,NATYPD,2)  ! radial density
@@ -137,6 +144,10 @@ C     ..
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
       DOUBLE PRECISION QMTET(NAEZD),QMPHI(NAEZD)
       DOUBLE PRECISION ECOREREL(KREL*20+(1-KREL),NPOTD) 
+!       DOUBLE PRECISION, allocatable :: R2NEF(:,:,:,:),RHO2NS(:,:,:,:),
+!      +                 RHOC(:,:),GSH(:),RHOORB(:,:),VTREL(:,:),
+!      +                 BTREL(:,:),DRDIREL(:,:),R2DRDIREL(:,:),
+!      +                 RMREL(:,:),QMTET(:),QMPHI(:),ECOREREL(:,:)
 C ----------------------------------------------------------------------
 C  CMINST(LMPOTD,NATYPD)            ! charge moment of interstitial
 C  CMOM(LMPOTD,NATYPD)              ! LM moment of total charge
@@ -156,6 +167,14 @@ C     ITERMDIR variables
       DOUBLE PRECISION FACT(0:100)
       DOUBLE PRECISION MVGAM(NATYPD,NMVECMAX),MVPHI(NATYPD,NMVECMAX),
      &                 MVTET(NATYPD,NMVECMAX)
+!       DOUBLE PRECISION, allocatable :: CMINST(:,:),CMOM(:,:),
+!      +         CHRGATOM(:,:),C00(:),CMOMHOST(:,:),CONC(:),DENEFAT(:)
+! C     .. FORCES
+!       DOUBLE PRECISION, allocatable :: FLM(:,:),FLMC(:,:)
+! C ----------------------------------------------------------------------
+! C     ITERMDIR variables
+!       DOUBLE PRECISION, allocatable :: QMGAM(:),FACT(:),MVGAM(:,:),
+!      +                                 MVPHI(:,:),MVTET(:,:)
 C     ITERMDIR variables
 C ----------------------------------------------------------------------
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -211,9 +230,9 @@ c
 C     .. Intrinsic Functions ..
       INTRINSIC DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
 C     ..
-C     .. External Functions ..
-       DOUBLE PRECISION DCLOCK
-       EXTERNAL DCLOCK
+! C     .. External Functions ..
+!        DOUBLE PRECISION DCLOCK
+!        EXTERNAL DCLOCK
 C declarations needed:
        DOUBLE PRECISION  AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
        INTEGER LRECABMAD,I2,IREC
@@ -223,6 +242,29 @@ c New variables for fixed Fermi energy calculations; noted as fxf
 
       REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
 C     ..
+
+
+!       ALLOCATE(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+!      + VONS(IRMD,LMPOTD,NPOTD),ECOU(0:LPOTD,NATYPD),EPOTIN(NATYPD),
+!      + ESPC(0:3,NPOTD),ESPV(0:LMAXD1,NPOTD),EXC(0:LPOTD,NATYPD),
+!      + A(NATYPD),B(NATYPD),DRDI(IRMD,NATYPD),RMT(NATYPD),RMTNEW(NATYPD),
+!      + RWS(NATYPD),R(IRMD,NATYPD),ECORE(20,NPOTD),
+!      + THETAS(IRID,NFUND,NCELLD),ZAT(NATYPD),THESME(IRID,NFUND,NCELLD),
+!      + VSPSMDUM(IRMD,NPOTD),R2NEF(IRMD,LMPOTD,NATYPD,2),
+!      + RHO2NS(IRMD,LMPOTD,NATYPD,2),RHOC(IRMD,NPOTD),GSH(NGSHD),
+!      + RHOORB(IRMD*KREL + (1-KREL),NATYPD),
+!      + VTREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + BTREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + RMREL(IRMD*KREL+(1-KREL),NATYPD),QMTET(NAEZD),QMPHI(NAEZD),
+!      + ECOREREL(KREL*20+(1-KREL),NPOTD),CMINST(LMPOTD,NATYPD),
+!      + CMOM(LMPOTD,NATYPD),CHRGATOM(NATYPD,2*KREL+(1-KREL)*NSPIND),
+!      + C00(LMPOTD),CMOMHOST(LMPOTD,NEMBD1),CONC(NATYPD),
+!      + DENEFAT(NATYPD),FLM(-1:1,NATYPD),FLMC(-1:1,NATYPD),QMGAM(NAEZD),
+!      + FACT(0:100),MVGAM(NATYPD,NMVECMAX),MVPHI(NATYPD,NMVECMAX),
+!      + MVTET(NATYPD,NMVECMAX))
+
 C     ..................................................................
 Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -333,7 +375,7 @@ C
      &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
       WRITE(6,'(79(1H*),/)')
 C
-      STIME0 = DCLOCK()
+!       STIME0 = DCLOCK()
       OPEN (IOBROY,FORM='unformatted',STATUS='unknown')
 C ----------------------------------------------------------------------
 C
@@ -1091,6 +1133,15 @@ C ======================================================================
  9160 FORMAT(20X,'mixing factor used : ',1P,D12.2)
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
+ 
+ 
+ 
+!       DEALLOCATE(VINS,VISP,VONS,ECOU,EPOTIN,ESPC,ESPV,EXC,A,B,DRDI,RMT,
+!      + RMTNEW,RWS,R,ECORE,THETAS,ZAT,THESME,VSPSMDUM,R2NEF,RHO2NS,RHOC,
+!      + GSH,RHOORB,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,QMTET,QMPHI,
+!      + ECOREREL,CMINST,CMOM,CHRGATOM,C00,CMOMHOST,CONC,
+!      + DENEFAT,FLM,FLMC,QMGAM,FACT,MVGAM,MVPHI,MVTET)
+ 
       END SUBROUTINE !main2
 
 

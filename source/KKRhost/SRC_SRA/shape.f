@@ -52,6 +52,8 @@ C
 C     
                   DO IAT = 1,NATYP
                      ICELL = NTCELL(IAT)
+!                      write(*,*) 'test icell=ntcell(iat) in shape.f',
+!      +                icell,iat
                      ISUM = ISUM + LMSP(ICELL,LM3)
                   END DO
 C     

@@ -23,7 +23,6 @@
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
-     &                     create_subarr_comm,
      &                     mympi_main1c_comm
 #endif
 
@@ -94,8 +93,12 @@ C LDA+U
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE PRECISION WLDAUOLD(MMAXD,MMAXD,NSPIND,NATYPD)
+!       DOUBLE PRECISION, allocatable :: EREFLDAU(:),UEFF(:),JEFF(:),
+!      &                 EDC(:),EU(:),ULDAU(:,:,:,:,:) 
+!       DOUBLE PRECISION, allocatable :: WLDAU(:,:,:,:),WLDAUOLD(:,:,:,:)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
       DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
+!       DOUBLE COMPLEX, allocatable :: PHILDAU(:,:),DENMATC(:,:,:)
 C for new spin-orbit solver
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD)
@@ -103,6 +106,10 @@ C for new spin-orbit solver
      +                 RNEW(NRMAXD,NATYPD),
      +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD),
      +                 THETASNEW(NRMAXD,NFUND,NCELLD)
+!       DOUBLE PRECISION R_LOG
+!       DOUBLE PRECISION, allocatable :: THETA(:),PHI(:)
+!       DOUBLE PRECISION, allocatable :: RPAN_INTERVALL(:,:),RNEW(:,:),
+!      +                                 VINSNEW(:,:,:),THETASNEW(:,:,:)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -127,6 +134,11 @@ CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
       DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
      +               CDOS2(NATYPD),cdos_dum(IEMXD,NSPIND)                     ! LLY Lloyd
+!       DOUBLE COMPLEX, allocatable :: DEN1(:,:,:),WEZNORM(:)
+!       DOUBLE COMPLEX CSUM                       ! LLY Lloyd
+!       DOUBLE COMPLEX, allocatable :: CDOSAT0(:),CDOSAT1(:)
+!       DOUBLE COMPLEX, allocatable :: CDOS0(:),CDOS_LLY(:,:),CDOS1(:),
+!      +                               CDOS2(:),cdos_dum(:,:)                     ! LLY Lloyd
       REAL*8 EREAD,CHARGE_LLY(NSPIND)                                         ! LLY Lloyd
       REAL*8 RENORM_AT(2,NATYPD)  ! 1: charge renormalization per atom        ! LLY Lloyd
                                   ! 2: spin moment renormalization per atom   ! LLY Lloyd
@@ -135,6 +147,10 @@ CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
      +                 DOSTOT(0:LMAXD1,2),ECORE(20,NPOTD),
      +                 ESPV(0:LMAXD1,NPOTD),DENEFAT(NATYPD)
       DOUBLE PRECISION ESPV1(0:LMAXD1,2)
+!       DOUBLE PRECISION, allocatable :: A(:),B(:),CHARGE(:,:,:),
+!      +                 CLEB(:,:),DRDI(:,:),RMESH(:,:),
+!      +                 DOSTOT(:,:),ECORE(:,:),
+!      +                 ESPV(:,:),DENEFAT(:),ESPV1(:,:)
 C ----------------------------------------------------------------------
 C  R2NEF (IRMD,LMPOTD,NATYPD,2)  ! rho at FERMI energy
 C  RHO2NS(IRMD,LMPOTD,NATYPD,2)  ! radial density
@@ -149,15 +165,21 @@ C ----------------------------------------------------------------------
      +                 RHO2N2(IRMD,LMPOTD,NPOTD),
      +                 RHO2M1(IRMD,LMPOTD,4),
      +                 RHO2M2(IRMD,LMPOTD,4)
+!       DOUBLE PRECISION, allocatable :: R2NEF(:,:,:,:),
+!      +                 RHO2NS(:,:,:,:),RHOC(:,:),RHO2N1(:,:,:),
+!      +                 RHO2N2(:,:,:),RHO2M1(:,:,:),RHO2M2(:,:,:)
       DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
      +                 THETAS(IRID,NFUND,NCELLD),
      +                 ZAT(NATYPD),CONC(NATYPD),
      &                 SOCSCALE(NATYPD)
+!       DOUBLE PRECISION, allocatable :: VINS(:,:,:),VISP(:,:),
+!      +                 THETAS(:,:,:),ZAT(:),CONC(:),SOCSCALE(:)
 C----------------------------------- orbital magnetic moment
 C     attention: muorb second index means both spins and total
 C----------------------------------- orbital density
       DOUBLE PRECISION  MUORB(0:LMAXD1+1,3,NATYPD)
       DOUBLE PRECISION  RHOORB(IRMD*KREL + (1-KREL),NATYPD)
+!       DOUBLE PRECISION, allocatable ::  MUORB(:,:,:),RHOORB(:,:)
 C---------------------------------------------------------------      
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
@@ -166,6 +188,8 @@ C---------------------------------------------------------------
       DOUBLE PRECISION DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
      &                 R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
+!       DOUBLE PRECISION, allocatable :: SOCSCL(:,:),CSCL(:,:),
+!      &    VTREL(:,:),BTREL(:,:),DRDIREL(:,:),R2DRDIREL(:,:),RMREL(:,:)
       INTEGER JWSREL(NATYPD),ZREL(NATYPD),IRSHIFT(NATYPD)
 C ===================================================================
 C   RELATIVISTIC TREATMENT OF CORE ELECTRONS   July/2002
@@ -190,16 +214,19 @@ C     .. itermdir variables
       DOUBLE COMPLEX MVEVIEF(NATYPD,3,NMVECMAX)        ! OUTPUT
       DOUBLE COMPLEX MVEVIL1(0:LMAXD,3,NMVECMAX)
       DOUBLE COMPLEX MVEVIL2(0:LMAXD,3,NMVECMAX) ! WORK ARRAYS
+!       DOUBLE COMPLEX, allocatable :: MVEVI(:,:,:),MVEVIL(:,:,:,:),
+!      &               MVEVIEF(:,:,:),MVEVIL1(:,:,:),MVEVIL2(:,:,:)
 C     .. qdos and lmlm-dos ..
       CHARACTER*8 QDOSOPT
-      DOUBLE COMPLEX DF(IEMXD),GFLLE(LMMAXSO,LMMAXSO,IEMXD,100)
+      DOUBLE COMPLEX DF(IEMXD)!,GFLLE(LMMAXSO,LMMAXSO,IEMXD,100)
       DOUBLE COMPLEX DENTOT ! qdos
       DOUBLE PRECISION, allocatable :: QVEC(:,:)
       INTEGER IREC,LM1,LM2
 #ifdef CPP_MPI
       integer :: i1_start, i1_end
-      integer :: ie_start, ie_end, ihelp
+      integer :: ihelp
 #endif
+      integer :: ie_start, ie_end
       integer :: ie_num
 C     ..
 C     .. Arrays in Common ..
@@ -225,6 +252,34 @@ C     .. Data statements ..
       DATA TEXTNS/' ns ='/
       DATA LDORHOEF/.TRUE./
       DATA IHOST / 1 /          ! this is the host program
+      
+      
+!       ALLOCATE(DEN1(0:LMAXD1,IEMXD,2),
+!      + WEZNORM(IEMXD),CDOSAT0(IEMXD),CDOSAT1(IEMXD),CDOS0(IEMXD),
+!      + CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),CDOS2(NATYPD),
+!      + cdos_dum(IEMXD,NSPIND),A(NATYPD),B(NATYPD),
+!      + CHARGE(0:LMAXD1,NATYPD,2),CLEB(NCLEB,2),DRDI(IRMD,NATYPD),
+!      + RMESH(IRMD,NATYPD),DOSTOT(0:LMAXD1,2),ECORE(20,NPOTD),
+!      + ESPV(0:LMAXD1,NPOTD),DENEFAT(NATYPD),ESPV1(0:LMAXD1,2),
+!      + R2NEF(IRMD,LMPOTD,NATYPD,2),RHO2NS(IRMD,LMPOTD,NATYPD,2),
+!      + RHOC(IRMD,NPOTD),RHO2N1(IRMD,LMPOTD,NPOTD),
+!      + RHO2N2(IRMD,LMPOTD,NPOTD),RHO2M1(IRMD,LMPOTD,4),
+!      + RHO2M2(IRMD,LMPOTD,4),VINS(IRMIND:IRMD,LMPOTD,NSPOTD),
+!      + VISP(IRMD,NPOTD),THETAS(IRID,NFUND,NCELLD),
+!      + ZAT(NATYPD),CONC(NATYPD),SOCSCALE(NATYPD),
+!      + MUORB(0:LMAXD1+1,3,NATYPD),RHOORB(IRMD*KREL + (1-KREL),NATYPD),
+!      + SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)),
+!      + CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)),
+!      + VTREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + BTREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
+!      + RMREL(IRMD*KREL+(1-KREL),NATYPD),MVEVI(NATYPD,3,NMVECMAX),
+!      + MVEVIL(0:LMAXD,NATYPD,3,NMVECMAX),MVEVIEF(NATYPD,3,NMVECMAX),
+!      + MVEVIL1(0:LMAXD,3,NMVECMAX),MVEVIL2(0:LMAXD,3,NMVECMAX),
+!      + THETA(NATYPD),PHI(NATYPD),RPAN_INTERVALL(0:NTOTD,NATYPD),
+!      + RNEW(NRMAXD,NATYPD),VINSNEW(NRMAXD,LMPOTD,NSPOTD),
+!      + THETASNEW(NRMAXD,NFUND,NCELLD))
 C     ..
 C
 Consistency check
@@ -440,8 +495,13 @@ c calculate contribution from free space
          else   !(t_lloyd%cdos_diff_lly_to_file)
             DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
 !                DO IE = 1,IELAST                                               ! LLY Lloyd
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+#ifdef CPP_MPI
+               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
                ie_end = t_mpi_c_grid%ntot2
+#else
+               ie_start = 1
+               ie_end = IELAST
+#endif
                DO ie_num=1,ie_end
                   IE = ie_start+ie_num
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
@@ -493,8 +553,13 @@ c calculate contribution from free space
             CLOSE(701)                                                     ! LLY
           else  !(t_lloyd%cdos_diff_lly_to_file)
 !             DO IE = 1,IELAST
-            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_col)
+#ifdef CPP_MPI
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
             ie_end = t_mpi_c_grid%ntot2
+#else
+            ie_start = 1
+            ie_end = IELAST
+#endif
             DO ie_num=1,ie_end
                IE = ie_start+ie_num
                CDOS_LLY(IE,1) = t_lloyd%cdos(ie_num,1)
@@ -535,8 +600,12 @@ C
 C ================================================================ NATYP
 
 #ifdef CPP_MPI
-      i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_row)+1
-      i1_end = t_mpi_c_grid%ntot1
+!       i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_at)+1
+!       i1_end = t_mpi_c_grid%ntot1
+      
+      i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+1
+      i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+
+     &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
 
       DO i1 = i1_start,i1_end
 #else
@@ -657,15 +726,27 @@ C ================================================================ NATYP
        DO ISPIN = 1,NSPIN
           IPOT = (I1-1) * NSPINPOT + ISPIN
        
-      OPEN(30,   ! lm-dos
-     +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +char(48+ISPIN)//".dat")   ! lm-dos
+      if(NATYP.ge.100) then
+         OPEN(30,
+     +   FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+     +   char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+      else
+         OPEN(30,
+     +   FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
+     +   char(48+ISPIN)//".dat")   ! lm-dos
+      end if
       WRITE (30,*) ' '   ! lm-dos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
  8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
-      OPEN(31,   ! lm-dos
-     +FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +char(48+ISPIN)//".dat")   ! lm-dos
+      if(NATYP.ge.100) then
+         OPEN(31,
+     +   FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+     +   char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+      else
+         OPEN(31,
+     +   FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
+     +   char(48+ISPIN)//".dat")   ! lm-dos
+      end if
          DO IE=1,IELAST
             DO IQ=1,NQDOS
             DENTOT = DCMPLX(0.D0,0.D0)
@@ -685,10 +766,15 @@ C ================================================================ NATYP
       ELSE
              DO ISPIN = 1,NSPIN
           IPOT = (I1-1) * NSPINPOT + ISPIN
-       
+       if(NATYP.ge.100) then
+      OPEN(30,   ! lm-dos
+     +FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+      else
       OPEN(30,   ! lm-dos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +char(48+ISPIN)//".dat")   ! lm-dos
+      end if
       WRITE (30,*) ' '   ! lm-dos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
          DO IE=1,IELAST
@@ -1018,6 +1104,15 @@ CMPI  CALL MPI_FINALIZE(IERR)
 #endif
       
       deallocate(den,denlm)
+      
+      
+!       DEALLOCATE(DEN1,WEZNORM,CDOSAT0,CDOSAT1,CDOS0,
+!      + CDOS_LLY,CDOS1,CDOS2,cdos_dum,A,B,CHARGE,CLEB,DRDI,RMESH,DOSTOT,
+!      + ESPV,DENEFAT,ESPV1,ECORE,R2NEF,RHO2NS,RHOC,RHO2N1,RHO2N2,RHO2M1,
+!      + RHO2M2,VINS,VISP,THETAS,ZAT,CONC,SOCSCALE,MUORB,RHOORB,
+!      + SOCSCL,CSCL,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,MVEVI,
+!      + MVEVIL,MVEVIEF,MVEVIL1,MVEVIL2)
+      
       
       END SUBROUTINE !MAIN1c
       

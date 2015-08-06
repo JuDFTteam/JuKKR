@@ -459,17 +459,18 @@ c
 
           END IF                    ! KSHAPE.EQ.0 .AND. KWS.EQ.0
 c
-          IF (KHFELD.EQ.1 ) THEN
-c          IF (KHFELD.EQ.1 .AND. NSPIN.EQ.2) THEN
-c
-c--->       maybe apply a magnetic field
-c
-            write(6,*) 'atom',ih,'spin',ispin,'shifted by',
-     +           -DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
-            DO 130 J = 1,IRCUT(IPAN(IH),IH)
-              VM2Z(J,I) = VM2Z(J,I) - DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
-  130       CONTINUE
-          END IF
+!           move this to end of main0 so that non-spherical part is also shifted
+!           IF (KHFELD.EQ.1 ) THEN
+! c          IF (KHFELD.EQ.1 .AND. NSPIN.EQ.2) THEN
+! c
+! c--->       maybe apply a magnetic field
+! c
+!             write(6,*) 'atom',ih,'spin',ispin,'shifted by',
+!      +           -DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
+!             DO 130 J = 1,IRCUT(IPAN(IH),IH)
+!               VM2Z(J,I) = VM2Z(J,I) - DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
+!   130       CONTINUE
+!           END IF
 
   140   CONTINUE                    ! ISPIN = 1,NSPIN
 

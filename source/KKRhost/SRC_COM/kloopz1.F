@@ -424,6 +424,7 @@ C  In first qdos run write out t matrix which is read in for the calculation for
 #ifdef CPP_MPI
             irec0 = LMMAXD**2*(ih-1)+LMMAXD**2*naez*(ie-1)+
      &              LMMAXD**2*t_inc%IELAST*naez*(ispin-1)
+            IF (OPT('deci-out'))  WRITE (37,99005) IE,ERYD,IH
 #else
             WRITE (37,99005) IE,ERYD,IH
 #endif
@@ -431,8 +432,12 @@ C  In first qdos run write out t matrix which is read in for the calculation for
                DO LM2 = 1,LMMAXD
                   IF ( LM1.EQ.LM2 ) THEN
 #ifdef CPP_MPI
+                     IF (.not.OPT('deci-out')) then
                      irec = irec0 + LM2 + LMMAXD*(LM1-1)
                      WRITE(37,rec=irec) MSSQ(LM1,LM2,IH)*CFCTORINV
+                     else
+                     WRITE(37,99006) LM1,LM2,MSSQ(LM1,LM2,IH)*CFCTORINV
+                     end if
 #else
                      WRITE(37,99006) LM1,LM2,MSSQ(LM1,LM2,IH)*CFCTORINV
 #endif
@@ -440,11 +445,17 @@ C  In first qdos run write out t matrix which is read in for the calculation for
 #ifdef CPP_MPI
                      irec = irec0 + LM2 + LMMAXD*(LM1-1)
                      IF ( CDABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH))
-     &                    .GT.TOLMSSQ ) THEN 
-                         WRITE(37,rec=irec) 
-     &                    MSSQ(LM1,LM2,IH)*CFCTORINV
+     &                    .GT.TOLMSSQ ) THEN
+                         if (.not.OPT('deci-out')) then
+                           WRITE(37,rec=irec) MSSQ(LM1,LM2,IH)*CFCTORINV
+                         else
+                           WRITE(37,99006) 
+     &                                LM1,LM2,MSSQ(LM1,LM2,IH)*CFCTORINV
+                         end if
                      ELSE
-                         WRITE(37,rec=irec) (0.d0, 0.d0) 
+                         if (.not.OPT('deci-out')) then
+                            WRITE(37,rec=irec) (0.d0, 0.d0) 
+                         end if
                      END IF
 #else
                      IF ( CDABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH))

@@ -280,6 +280,9 @@ C     .. Local Arrays ..
      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
+!       DOUBLE COMPLEX, allocatable :: DEZ(:),EZ(:),WEZ(:)
+!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),DSYMLL1(:,:,:),
+!      +               LEFTTINVLL(:,:,:,:,:),RIGHTTINVLL(:,:,:,:,:)
       DOUBLE PRECISION A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
@@ -296,6 +299,22 @@ C     .. Local Arrays ..
      +                 VREF(NREFD),WG(LASSLD),
      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3)
+!       DOUBLE PRECISION, allocatable :: A(:),B(:),BRAVAIS(:,:),
+!      +                 CLEB(:,:),CMOMHOST(:,:),DRDI(:,:),
+!      +                 DROR(:,:),ECORE(:,:),
+!      +                 MTFAC(:),R(:,:),RATOM(:,:),
+!      +                 RBASIS(:,:),RCLS(:,:,:),
+!      +                 RCLSIMP(:,:),RECBV(:,:),
+!      +                 RMT(:),RMTNEW(:),FPRADIUS(:),
+!      +                 RMTREF(:),RMTREFAT(:),RR(:,:),
+!      +                 RROT(:,:,:),RS(:,:,:),
+!      +                 RSYMAT(:,:,:),RWS(:),S(:,:),
+!      +                 THETAS(:,:,:),TLEFT(:,:),
+!      +                 TRIGHT(:,:),VBC(:),
+!      +                 VINS(:,:,:),VISP(:,:),
+!      +                 VREF(:),WG(:),
+!      +                 YRG(:,:,:),
+!      +                 ZAT(:),ZPERIGHT(:),ZPERLEFT(:)
       INTEGER ATOM(NACLSD,NAEZD+NEMBD),ATOMIMP(NATOMIMPD),
      &        CLS(NAEZD+NEMBD),EZOA(NACLSD,NAEZD+NEMBD),
      +        ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD),
@@ -362,6 +381,8 @@ C-----------------------------------------------------------------------
       INTEGER IRSHIFT(NATYPD),JWSREL(NATYPD),ZREL(NATYPD)
       INTEGER ISVATOM,NVATOM
       DOUBLE PRECISION ZATTEMP
+C     .. Dummy variables needed only in IMPURITY program 
+      DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
 
 C
 C-----------------------------------------------------------------------
@@ -390,7 +411,8 @@ C
 C     ..
 C     .. distinguish between spin-dependent and spin-independent
 C     .. quantities
-      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
+!       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
+      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD) ! Spin-Dependent
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U LDA+U LDA+U
@@ -402,6 +424,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
 C ruess: IVSHIFT test option
       INTEGER IVSHIFT
+      
 C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -422,6 +445,110 @@ C     .. Common blocks ..
       COMMON /OPTC/OPTC
       COMMON /TESTC/TESTC
 C     ..
+
+
+      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+!       ALLOCATE(DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD),
+!      +               DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
+!      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
+!      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+!      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
+!       ALLOCATE(A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
+!      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
+!      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
+!      +                 MTFAC(NATYPD),R(IRMD,NATYPD),RATOM(3,NSHELD),
+!      +                 RBASIS(3,NAEZD+NEMBD),RCLS(3,NACLSD,NCLSD),
+!      +                 RCLSIMP(3,NATOMIMPD),RECBV(3,3),
+!      +                 RMT(NATYPD),RMTNEW(NATYPD),FPRADIUS(NATYPD),
+!      +                 RMTREF(NREFD),RMTREFAT(NAEZD+NEMBD),RR(3,0:NRD),
+!      +                 RROT(48,3,NSHELD),RS(IRMD,0:LMAXD,NATYPD),
+!      +                 RSYMAT(64,3,3),RWS(NATYPD),S(0:LMAXD,NATYPD),
+!      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
+!      +                 TRIGHT(3,NEMBD1),VBC(2),
+!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+!      +                 VREF(NREFD),WG(LASSLD),
+!      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
+!      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3))
+      
+   
+!0:
+      write(*,*) 'kkr0:', 16.d0/1024.d0/1024.d0/1024.d0*(
+     +               (LMMAXD*LMMAXD*NSYMAXD)*2+
+     +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2)
+      write(*,*) 'kkr0:', 8.d0/1024.d0/1024.d0/1024.d0*( 
+     +                 (LMPOTD*NEMBD1)+(IRMD*NATYPD)+
+     +                 (IRMD*NATYPD)+(20*NPOTD)+
+     +                 (IRMD*NATYPD)+
+     +                 (3*NACLSD*NCLSD)+
+     +                 (NAEZD+NEMBD)+(3*(1+NRD))+
+     +                 (48*3*NSHELD)+(IRMD*(1+LMAXD)*NATYPD)+
+     +                 (64*3*3)+(LMAXD+1)+NATYPD+
+     +                 (IRID*NFUND*NCELLD)+
+     +                 (3*NEMBD1)*2+
+     +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
+     +                 (LASSLD*(LASSLD+1)*(LASSLD+1))+
+     +                 (NSHELD*NOFGIJD)+(NSHELD*NOFGIJD))
+!1a:     
+      write(*,*) 'kkr1a:', 16.d0/1024.d0/1024.d0/1024.d0*( 
+     +                 (MMAXD*MMAXD*NSPIND*NATYPD)+
+     +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
+     +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5+
+     +                 (IRMD*NATYPD)+(IRMD*NATYPD)+(NATYPD)+
+     +                 (3*NACLSD*NCLSD)+(NREFD)+(NREFD)+
+     +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
+     +                 (NCLEB*2) +
+     +                 ((NTOTD+1)*NATYPD)+
+     +                 (NTOTD*(NCHEBD+1)*NATYPD)+
+     +                 (NTOTD*(NCHEBD+1)*LMPOTD*NSPOTD))
+     
+     
+     
+!1b:     
+      write(*,*) 'kkr1b:', 16.d0/1024.d0/1024.d0/1024.d0*( 
+     +               (LMMAXD*LMMAXD*NATYPD)+
+     +               (LMMAXD*LMMAXD*NREFD)*2+
+     &               (LMMAXD*LMMAXD*NAEZD)+
+     &               (IEMXD*NSPIND)+
+     &               (IEMXD)+
+     &               (IEMXD*NSPIND)+
+     &               (IEMXD*NSPIND)+
+     &               (LMAXD*NREFD)+(LMAXD*NREFD)+
+     &               (IEMXD)+
+     &               (IEMXD*NSPIND)+(IEMXD)+
+     +               (LMMAXD*LMMAXD*NATYPD)+
+     +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2+
+     +               (LMGF0D*LMGF0D)*2+
+     +               (LMMAXD*LMMAXD*NSYMAXD)+
+     +               (LMMAXD*LMMAXD)*8)
+
+
+!1c:     
+      write(*,*) 'kkr1c:', 8.d0/1024.d0/1024.d0/1024.d0*( 
+     +                 (IRMD*LMPOTD*NATYPD*2)*2+(IRMD*NPOTD)+
+     +                 (IRMD*LMPOTD*NPOTD)*2+
+     +                 (IRMD*LMPOTD*4)*2+
+     +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
+     +                 (IRID*NFUND*NCELLD)+
+     +                 (NATYPD)+(NATYPD)+
+     &                 (NATYPD)+
+     +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
+     +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5)
+
+
+!2:     
+      write(*,*) 'kkr2:', 8.d0/1024.d0/1024.d0/1024.d0*( 
+     +                 (LPOTD*NATYPD)+(NATYPD)+
+     +                 (4*NPOTD)+(LMAXD*NPOTD)+
+     +                 (LPOTD*NATYPD)+
+     +                 (IRMD*NATYPD)+
+     +                 (NATYPD)*5+
+     +                 (IRMD*NATYPD)+(20*NPOTD)+
+     +                 2*(IRID*NFUND*NCELLD)+
+     +                 (IRMD*NPOTD))
+
+!          stop
+     
+     
 Consistency check
       WRITE(*,*) 'This is the KKR code version 2015_05_05.'
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -463,7 +590,8 @@ C
      &              IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,
      &              TOLRDIF,LLY,DELTAE,
      &              LCARTESIAN,BRAVAIS,RMAX,GMAX)
-        write(*,*) 'nrbasis, rinput', nrbasis
+     
+
 c
 C ================================================ deal with the lattice
 
@@ -475,7 +603,6 @@ C ================================================ deal with the lattice
      +              NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      +              TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ,NOQ,
      &              NAEZD,NATYPD,NEMBD)
-        write(*,*) 'nrbasis, scalevec', nrbasis
       ! After SCALEVEC all basis positions are in cartesian coords.
 
       NVIRT = 0
@@ -495,7 +622,6 @@ C ================================================ deal with the lattice
      &               TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &               REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,
      &               NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
-        write(*,*) 'nrbasis, clsgen_tb', nrbasis
 
 ! Now the clusters, reference potentials and muffin-tin radii have been set.
 C ......................................................................
@@ -540,6 +666,8 @@ C
      +             DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,
      +             IRWS,INIPOL,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
+     
+     
 
       IF ( TEST('Vspher  ') ) THEN
          WRITE(*,*) 'TEST OPTION Vspher,', 
@@ -634,6 +762,28 @@ C
                   CALL DCOPY(IRMD,VISP(1,I),1,VISP(1,I+1),1)
                END DO
             END IF
+!           from startb1 moved here
+            IF (KHFELD.EQ.1) THEN
+c
+c--->       maybe apply a magnetic field
+c
+               call BSHIFT_NS(VISP,VINS,NATYP,NSPIN,
+     +         IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,
+     +         THETAS,THESME,R,KSHAPE,HFIELD,INIPOL)
+            END IF
+        if ( TEST('vpotout ') ) then !ruess
+          open(unit=54633163,file='test_vpotout_bshift')
+          do i1=1,natyp*nspin
+              write(54633163,*) '# visp of atom ',i1
+              write(54633163,'(50000E)') visp(:,i1)
+          end do !iatom
+          do i1=1,natyp*nspin
+              write(54633163,*) '# vins of atom ',i1
+              write(54633163,'(50000E)') vins(:,:,i1)
+          end do !iatom
+          close(54633163)
+        end if
+            
          END IF
 C---------------------------------------------------------------
 C
@@ -671,6 +821,7 @@ C
 C --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
+      write(*,*) 'test call shape, ntcell=',ntcell
       IF (KSHAPE.NE.0) 
      +     CALL SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,
      +                LASSLD,LMPOTD,NATYPD,NGSHD)
@@ -681,7 +832,7 @@ C ----------------------------------------------------------------------
 C --> calculate Madelung constants (needed only for SCF calculations)
 C ----------------------------------------------------------------------
 cfivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-      OPEN(99,FILE='madelinfo.txt')
+      !OPEN(99,FILE='madelinfo.txt')
 
       IF ( LINTERFACE ) THEN
 C -------------------------------------------------------------- 2D case
@@ -699,7 +850,7 @@ C -------------------------------------------------------------- 3D case
      &                      NMAXD,ISHLD,NEMBD,WLENGTH)
       END IF
 
-      CLOSE(99)
+      !CLOSE(99)
 C ----------------------------------------------------------------------
 cfivos      END IF
 C ======================================================================
@@ -879,7 +1030,6 @@ C
             END DO
          END DO
       END IF
-C ======================================================================
 C
 C ======================================================================
 C LDA+U -- initialise 
@@ -972,8 +1122,125 @@ C
       WRITE (6,'(79(1H=),/,31X,"< KKR0 finished >",/,79(1H=),/)')
  9070 FORMAT (5X,'INFO:  Output of cluster Green function at E Fermi')
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
+ 
+ 
+      DEALLOCATE(ULDAU)
+!       DEALLOCATE(DEZ,EZ,WEZ,DSYMLL,DSYMLL1,LEFTTINVLL,
+!      +           RIGHTTINVLL,A,B,BRAVAIS,CLEB,CMOMHOST,DRDI,
+!      +           DROR,ECORE,MTFAC,R,RATOM,RBASIS,RCLS,
+!      +           RCLSIMP,RECBV,RMT,RMTNEW,FPRADIUS,RMTREF,RMTREFAT,RR,
+!      +           RROT,RS,RSYMAT,RWS,S,THETAS,TLEFT,TRIGHT,VBC,
+!      +           VINS,VISP,VREF,WG,YRG,ZAT,ZPERIGHT,ZPERLEFT)
 
       END SUBROUTINE !MAIN0
+      
+      
+      
+      
+      
+      SUBROUTINE BSHIFT_NS(VISP,VINS,NATYP,NSPIN,
+     +     IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,
+     +     THETAS,THESME,RMESH,KSHAPE,HFIELD,INIPOL)
+      implicit none
+c Adds a constant (=VSHIFT) to the potentials of atoms
+c
+c Parameters:
+      include 'inc.p'
+      INTEGER NPOTD,LMPOTD,LMXSPD,IRMIND
+      PARAMETER (NPOTD=NSPIND*NATYPD,LMPOTD= (LPOTD+1)**2
+     &     ,LMXSPD= (2*LPOTD+1)**2,IRMIND=IRMD-IRNSD)
+c Input
+      INTEGER KSHAPE,LMPOT,NATYP,NSPIN
+!       INTEGER, allocatable :: IRCUT,IRC,NTCELL
+!      &     ,IMAXSH,ILM,IFUNM
+!      &     ,LMSP,IRMIN,INIPOL
+!       DOUBLE PRECISION, allocatable :: GSH,THETAS
+!      &     ,RMESH
+      INTEGER IRCUT(0:IPAND,NATYPD),IRC(NATYPD),NTCELL(NATYPD)
+     &     ,IMAXSH(0:LMPOTD),ILM(NGSHD,3),IFUNM(NATYPD,LMXSPD)
+     &     ,LMSP(NATYPD,LMXSPD),IRMIN(NATYPD),INIPOL(NATYPD)
+      DOUBLE PRECISION GSH(NGSHD),THETAS(IRID,NFUND,NCELLD)
+     &     ,RMESH(IRMD,NATYPD)
+!       DOUBLE PRECISION, allocatable :: THESME
+      DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
+      DOUBLE PRECISION VSHIFT,HFIELD
+
+
+c Input/Output:
+!       DOUBLE PRECISION, allocatable :: VISP,VINS
+      DOUBLE PRECISION VISP(IRMD,NPOTD),VINS(IRMIND:IRMD,LMPOTD,NSPOTD)
+
+c Inside
+!       DOUBLE PRECISION, allocatable :: PSHIFTLMR,PSHIFTR
+      DOUBLE PRECISION PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
+      INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
+      INTEGER IER
+      CHARACTER*256 UIO ! NCOLIO=256
+      DOUBLE PRECISION RFPI
+      
+      RFPI = SQRT(16.0D0*ATAN(1.0D0))
+
+!       write(*,*) 'BSHIFT_NS input:',HFIELD,INIPOL,NATYP,NSPIN
+
+
+      DO IH = 1,NATYP
+      
+      
+         IMT1 = IRCUT(1,IH)
+         IRC1 = IRC(IH)
+         IRMIN1 = IRMIN(IH)
+
+         DO ISPIN = 1,NSPIN
+         
+            ! shift potential spin dependent
+            VSHIFT = -DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
+
+            WRITE (6,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,
+     &           'spin',ispin,' BY', VSHIFT, 'RY.'
+            IPOT = NSPIN * (IH-1) + ISPIN
+
+            CALL RINIT(IRMD*LMPOTD,PSHIFTLMR)
+            CALL RINIT(IRMD,PSHIFTR)
+            DO IR = 1,IRC1
+               PSHIFTLMR(IR,1) = VSHIFT
+            ENDDO
+
+            IF (KSHAPE.EQ.0) THEN ! ASA
+
+               DO IR = 1,IRC1
+                  VISP(IR,IPOT) = VISP(IR,IPOT) + PSHIFTLMR(IR,1)
+               END DO
+
+            ELSE                ! Full-potential
+
+! 
+               CALL CONVOL(IMT1,IRC1,NTCELL(IH),
+     &              IMAXSH(LMPOT),ILM,IFUNM,LMPOT,GSH,
+     &              THETAS,THESME,0.d0,RFPI,
+     &              RMESH(1,IH),PSHIFTLMR,PSHIFTR,LMSP)
+
+
+               DO IR = 1,IRC1
+                  VISP(IR,IPOT) = VISP(IR,IPOT) + PSHIFTLMR(IR,1)
+               ENDDO
+
+
+               DO LM = 2,LMPOT
+                  DO IR = IRMIN1,IRC1
+                VINS(IR,LM,IPOT)=VINS(IR,LM,IPOT)+PSHIFTLMR(IR,LM)*RFPI
+                  ENDDO
+               ENDDO
+
+            END IF              ! (KSHAPE.EQ.0)
+
+
+         END DO
+
+      END DO
+
+
+
+      END SUBROUTINE !bshift_ns
       
       
       END MODULE !MOD_MAIN0

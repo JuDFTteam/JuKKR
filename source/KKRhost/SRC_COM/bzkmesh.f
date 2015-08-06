@@ -1,6 +1,8 @@
       SUBROUTINE BZKMESH(NBXIN,NBYIN,NBZIN,MAXMESH,LIRR,BRAVAIS,RECBV,
      &                   NSYMAT,RSYMAT,ISYMINDEX,SYMUNITARY,
      &                   IELAST,EZ,KMESH,IPRINT,KREL,KPOIBZ,MAXMSHD)
+     
+      use mod_types, only: t_inc
       IMPLICIT NONE
 C     ..
 C     .. Scalar Arguments ..
@@ -75,6 +77,9 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       WRITE (6,99001) MAXMESH,NSYMAT
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
+      !save maxmesh and allocate kmesh for later use in t_inc
+      t_inc%nkmesh = maxmesh
+      allocate(t_inc%kmesh(maxmesh))
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       DO L = 1,MAXMESH
          IF (L.GT.1) THEN
@@ -100,6 +105,8 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
          WRITE (52,FMT='(I8,F15.10,/,(3F12.8,D20.10))') 
      +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
+         ! save nofks for this mesh in t_inc
+         t_inc%kmesh(L) = nofks
 C ---------------------------------------------------------------------
 C
 C -->  output of k-mesh

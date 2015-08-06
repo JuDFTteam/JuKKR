@@ -25,7 +25,7 @@ implicit none
 
    type :: type_inc
    
-      integer :: Nparams = 14   ! number of parameters in type_inc
+      integer :: Nparams = 15   ! number of parameters in type_inc, excluding allocatable array KMESH
       integer :: LMMAXD  = -1
       integer :: NSPIN   = -1
       integer :: IELAST  = -1
@@ -38,23 +38,25 @@ implicit none
       integer :: N_iteration = -1
       integer :: mit_bry = 1
       integer :: NSHELL0 = -1
+      integer :: NKMESH = -1
       logical :: NEWSOSOL = .false.
+      integer, allocatable :: KMESH(:)
          
    end type type_inc
    
    
    type :: type_mpi_cartesian_grid_info
    
-      integer :: Nparams = 10
+      integer :: Nparams = 12
       integer :: dims(2) = (/ -1, -1 /)
-      integer :: myMPI_comm_grid = -1
-      integer :: myMPI_comm_row  = -1
-      integer :: myMPI_comm_col  = -1
-      integer :: myrank_grid = -1
-      integer :: myrank_row  = -1
-      integer :: myrank_col  = -1
-      integer :: nranks_row  = -1
-      integer :: nranks_col  = -1
+      integer :: myMPI_comm_ie  = -1
+      integer :: myMPI_comm_at  = -1
+      integer :: myrank_ie  = -1
+      integer :: myrank_at  = -1
+      integer :: myrank_atcomm  = -1
+      integer :: nranks_ie  = -1
+      integer :: nranks_at  = -1
+      integer :: nranks_atcomm  = -1
       integer :: ntot1    = -1
       integer, allocatable :: ntot_pT1(:)
       integer, allocatable :: ioff_pT1(:)
@@ -106,58 +108,9 @@ contains
       
       integer :: ierr, nspin
       
-      logical :: test= .false.
-      
       nspin = t_inc%NSPIN
       if(t_inc%NEWSOSOL) nspin = 1
     
-    if(test .and. myrank==master) then
-   
-      if (.not. allocated(t_tgmat%tmat)) then
-         if (.not. t_tgmat%tmat_to_file) then
- 
-               !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
-               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
- 
-         else
-            allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
-         end if
-      
-         t_tgmat%tmat(:,:,:) = (0.d0, 0.d0)
-      endif
-      
-      if (.not. allocated(t_tgmat%gmat)) then
-         if (.not. t_tgmat%gmat_to_file) then
- 
-               !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
-               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
-            
-         else
-            allocate(t_tgmat%gmat(1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gmat'
-         end if
-      
-         t_tgmat%gmat(:,:,:) = (0.d0, 0.d0)
-      endif
-      
-      if (.not. allocated(t_tgmat%gref)) then
-         if (.not. t_tgmat%gref_to_file) then
-               !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
-               allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
-         else
-            allocate(t_tgmat%gref(1,1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gref'
-         end if
-   
-      t_tgmat%gref(:,:,:,:) = (0.d0, 0.d0)
-      endif
-    
-    else
-      
       if (.not. allocated(t_tgmat%tmat)) then
          if (.not. t_tgmat%tmat_to_file) then
             if(nranks.eq.1) then
@@ -206,6 +159,7 @@ contains
             else
                !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
                allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+               write(*,*) myrank, 'allocating gref with',t_mpi_c_grid%ntot2
                if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
             end if
          else
@@ -215,8 +169,6 @@ contains
    
       t_tgmat%gref(:,:,:,:) = (0.d0, 0.d0)
       endif
-      
-      end if
 
    end subroutine init_tgmat
    
@@ -254,25 +206,31 @@ contains
     call MPI_Get_address(t_inc%N_iteration,  disp1(11), ierr)
     call MPI_Get_address(t_inc%mit_bry,      disp1(12), ierr)
     call MPI_Get_address(t_inc%NSHELL0,      disp1(13), ierr)
-    call MPI_Get_address(t_inc%NEWSOSOL,     disp1(14), ierr)
+    call MPI_Get_address(t_inc%NKMESH,       disp1(14), ierr)
+    call MPI_Get_address(t_inc%NEWSOSOL,     disp1(15), ierr)
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:14)=1
+    blocklen1(1:15)=1
 
-    etype1(1:13) = MPI_INTEGER
-    etype1(14) = MPI_LOGICAL
+    etype1(1:14) = MPI_INTEGER
+    etype1(15) = MPI_LOGICAL
 
     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_impcls_1'
+    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_t_inc'
 
     call MPI_Type_commit(myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_impcls_1'
+    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_t_inc'
 
     call MPI_Bcast(t_inc%Nparams, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting impcls_1'
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc'
 
     call MPI_Type_free(myMPItype1, ierr)
+    
+    !broadcast allocatable array kmesh(nkmesh)
+    if(.not. allocated(t_inc%kmesh)) allocate(t_inc%kmesh(t_inc%nkmesh))
+    call MPI_Bcast(t_inc%KMESH, t_inc%nkmesh, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc%kmesh'
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -455,22 +413,23 @@ contains
 
 
 #ifdef CPP_MPI
-   subroutine save_t_mpi_c_grid(t_mpi_c_grid,subarr_dim, myMPI_comm_grid, myMPI_comm_row,myMPI_comm_col, myrank_grid, myrank_row, myrank_col, nranks_row, nranks_col)
+   subroutine save_t_mpi_c_grid(t_mpi_c_grid,subarr_dim, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
+   
       use mpi
       implicit none
       type(type_mpi_cartesian_grid_info), intent(inout) :: t_mpi_c_grid
       integer, intent(in) :: subarr_dim(2)
-      integer, intent(in) :: myMPI_comm_grid, myMPI_comm_row, myMPI_comm_col,myrank_grid, myrank_row, myrank_col, nranks_row, nranks_col
+      integer, intent(in) :: myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, nranks_ie, nranks_at, nranks_atcomm, myrank_atcomm
 
       t_mpi_c_grid%dims = subarr_dim
-      t_mpi_c_grid%myMPI_comm_grid = myMPI_comm_grid
-      t_mpi_c_grid%myMPI_comm_row  = myMPI_comm_row
-      t_mpi_c_grid%myMPI_comm_col  = myMPI_comm_col
-      t_mpi_c_grid%myrank_grid = myrank_grid
-      t_mpi_c_grid%myrank_row  = myrank_row
-      t_mpi_c_grid%myrank_col  = myrank_col
-      t_mpi_c_grid%nranks_row  = nranks_row
-      t_mpi_c_grid%nranks_col  = nranks_col   
+      t_mpi_c_grid%myMPI_comm_ie  = myMPI_comm_ie
+      t_mpi_c_grid%myMPI_comm_at  = myMPI_comm_at
+      t_mpi_c_grid%myrank_ie  = myrank_ie
+      t_mpi_c_grid%myrank_at  = myrank_at
+      t_mpi_c_grid%myrank_atcomm  = myrank_atcomm
+      t_mpi_c_grid%nranks_ie  = nranks_ie
+      t_mpi_c_grid%nranks_at  = nranks_at
+      t_mpi_c_grid%nranks_atcomm  = nranks_atcomm
    
    end subroutine save_t_mpi_c_grid
 #endif
@@ -483,18 +442,18 @@ contains
 !    use mod_mympi, only: myrank, nranks, master
    implicit none
    type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-   integer, intent(out) :: ntot_all(t_mpi_c_grid%nranks_row*t_mpi_c_grid%nranks_col), ioff_all(t_mpi_c_grid%nranks_row*t_mpi_c_grid%nranks_col)
+   integer, intent(out) :: ntot_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at), ioff_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at)
    
-   integer :: ntot_pT1(t_mpi_c_grid%nranks_row), ioff_pT1(t_mpi_c_grid%nranks_row)
-   integer :: ntot_pT2(t_mpi_c_grid%nranks_col), ioff_pT2(t_mpi_c_grid%nranks_col)
+   integer :: ntot_pT1(t_mpi_c_grid%nranks_ie), ioff_pT1(t_mpi_c_grid%nranks_ie)
+   integer :: ntot_pT2(t_mpi_c_grid%nranks_at), ioff_pT2(t_mpi_c_grid%nranks_at)
    integer :: N1, N2, i1, i2, i3
    
    ntot_pT1 = t_mpi_c_grid%ntot_pT1
    ioff_pT1 = t_mpi_c_grid%ioff_pT1
    ntot_pT2 = t_mpi_c_grid%ntot_pT2
    ioff_pT2 = t_mpi_c_grid%ioff_pT2
-   N1 = t_mpi_c_grid%nranks_row
-   N2 = t_mpi_c_grid%nranks_col
+   N1 = t_mpi_c_grid%nranks_ie
+   N2 = t_mpi_c_grid%nranks_at
    
    
    do i1=1,N1
@@ -518,93 +477,82 @@ contains
 
 
 #ifdef CPP_MPI
-   subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm)
+   subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm, nranks)
 
     use mpi
-    use mod_mympi,   only: myrank, nranks, master
+    use mod_mympi,   only: myrank, master
     implicit none
 
     type(type_inc), intent(in) :: t_inc
     type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
     type(type_tgmatices), intent(inout) :: t_tgmat
+    integer, intent(in) :: nranks
     integer, intent(in) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), mytot, mympi_comm
 
     integer :: ihelp
-    integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
+!     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
+    integer :: nspin
+    double complex, allocatable :: work(:,:,:)
     integer :: ierr
     
-    logical :: test= .false.
-    
-    if(test) then
-       write(*,*) myrank,'sends to master'
-!        ihelp      = t_inc%LMMAXD*t_inc%LMMAXD*t_inc%NSPIN*t_inc%NATYP!*t_mpi_c_grid%ntot2 !*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
-!        if(t_inc%NEWSOSOL) ihelp = ihelp/t_inc%NSPIN
-       ihelp      = t_inc%LMMAXD*t_inc%LMMAXD!*t_inc%NSPIN!*t_inc%NATYP!*t_mpi_c_grid%ntot2 !*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
-!        if(t_inc%NEWSOSOL) ihelp = ihelp/t_inc%NSPIN
-       recvcounts = ntot_pT*ihelp
-       displs     = ioff_pT*ihelp
-       call MPI_gatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                          & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-                          & master,mympi_comm, ierr )
-                          
-!                           int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-!                 void *recvbuf, const int *recvcounts, const int *displs,
-!                 MPI_Datatype recvtype, int root, MPI_Comm comm)
-    else
+
     !Gather tmat so that all processors the full matrix for their part of the energy contour
     if(t_mpi_c_grid%ntot1>1) then
-       ihelp      = t_inc%LMMAXD*t_inc%LMMAXD!*t_inc%NSPIN!*t_inc%NATYP!*t_mpi_c_grid%ntot2 !*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
-!        if(t_inc%NEWSOSOL) ihelp = ihelp/t_inc%NSPIN
-       recvcounts = ntot_pT*ihelp
-       displs     = ioff_pT*ihelp
-       call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                          & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-                          & mympi_comm, ierr )
+!        write(*,*) myrank,'gather_tmat',mytot,ntot_pT,ioff_pT
+!        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+!        ihelp      = t_inc%LMMAXD*t_inc%LMMAXD
+!        recvcounts = ntot_pT*ihelp
+!        displs     = ioff_pT*ihelp
+!        call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+!                           & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+!                           & mympi_comm, ierr )
+       nspin = t_inc%NSPIN
+       if(t_inc%NEWSOSOL) nspin = 1
+      
+       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
+       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP),stat=ierr)
+       if(ierr.ne.0) stop 'problem allocating work array in mympi_main1c_comm'
+       CALL MPI_ALLREDUCE(t_tgmat%tmat,WORK,ihelp,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,ierr)
+       CALL DCOPY(ihelp,WORK,1,t_tgmat%tmat,1)
+       deallocate(work)
     end if
-    end if !test
                           
    end subroutine gather_tmat
 #endif
 
 
 #ifdef CPP_MPI
-   subroutine gather_gref(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm)
+   subroutine gather_gref(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm, nranks)
 
     use mpi
-    use mod_mympi,   only: myrank, nranks, master
+    use mod_mympi,   only: myrank, master
     implicit none
 
     type(type_inc), intent(in) :: t_inc
     type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
     type(type_tgmatices), intent(inout) :: t_tgmat
-    integer, intent(in) :: ntot_pT(0:t_mpi_c_grid%nranks_col-1), ioff_pT(0:t_mpi_c_grid%nranks_col-1), mytot, mympi_comm
+    integer, intent(in) :: nranks
+    integer, intent(in) :: ntot_pT(0:t_mpi_c_grid%nranks_ie-1), ioff_pT(0:t_mpi_c_grid%nranks_ie-1), mytot, mympi_comm
 
     integer :: ihelp
-    integer :: recvcounts(0:t_mpi_c_grid%nranks_col-1), displs(0:t_mpi_c_grid%nranks_col-1)
+!     integer :: recvcounts(0:t_mpi_c_grid%nranks_ie-1), displs(0:t_mpi_c_grid%nranks_ie-1)
 !     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: ierr
         
-    logical :: test= .false.
-    
-    if(test) then
-       write(*,*) 'gather_gref:',myrank,t_inc%NACLSD,t_inc%LMGF0D,t_inc%NCLSD,mytot,ntot_pT,ioff_pT,shape(t_tgmat%gref)
-       ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD!*t_mpi_c_grid%ntot2!*t_inc%IELAST
-       recvcounts = ntot_pT*ihelp
-       displs     = ioff_pT*ihelp
-       call MPI_gatherv( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                       & t_tgmat%gref, recvcounts, displs, MPI_DOUBLE_COMPLEX,  &
-                       & master, mympi_comm, ierr )    
-    else
     !Gather gref so that all processors have the full matrix for their part of the energy countour
     if(t_mpi_c_grid%ntot1>1) then
-       ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD!*t_mpi_c_grid%ntot2!*t_inc%IELAST
-       recvcounts = ntot_pT*ihelp
-       displs     = ioff_pT*ihelp
-       call MPI_Allgatherv( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                          & t_tgmat%gref, recvcounts, displs, MPI_DOUBLE_COMPLEX,  &
+       ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD
+!        GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
+!       t_inc%LMGF0D = (LMAXD+1)**2  ! see main1b
+!       t_inc%NCLSD  = NCLS
+!       t_inc%NACLSD = NACLSMAX
+!        recvcounts = ntot_pT*ihelp
+!        displs     = ioff_pT*ihelp
+       write(*,*) myrank,'gather_ref',mytot,ntot_pT,ioff_pT,ihelp
+       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+       call MPI_Bcast( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX, 0 , &
                           & mympi_comm, ierr )
     end if
-    end if !test
     
    end subroutine gather_gref
 #endif
