@@ -1,7 +1,7 @@
 # Makefile for kkr2
 
 # default values
-PLATFORM = ifort_IFF
+PLATFORM = ifort
 TYPE = nodebug
 
 PROGRAM = kkr2.exe
@@ -29,6 +29,25 @@ endif
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 endif
+
+
+ifeq ($(PLATFORM),ifort)
+FC = mpif77 -warn
+FC90 = mpif90 -warn
+# -module <path> specifies where to put .mod files
+FCFLAGS = -openmp -mkl -module $(BUILDDIR)
+FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FC90FLAGS =
+FCFLAGS += -I $(BUILDDIR)
+LDFLAGS = -O3
+ifeq ($(TYPE),debug)
+FCFLAGS += -g
+endif
+# set run paths to look for shared libraries (-Wl means pass to linker)
+# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
+# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
+endif
+
 
 ifeq ($(PLATFORM),ifort_IFF_NOOMP)
 FC = mpif90 -warn

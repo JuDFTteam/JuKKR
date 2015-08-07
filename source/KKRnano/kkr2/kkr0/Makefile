@@ -26,7 +26,8 @@ FC90 = ifort
 FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR) -DTASKLOCAL_FILES
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
-LDFLAGS =-L/ -llapack_ifort -lblas_ifort
+# LDFLAGS =-L/ -llapack_ifort -lblas_ifort
+LDFLAGS =-L/ -llapack -lblas
 endif
 
 ifeq ($(PLATFORM),rwth)
