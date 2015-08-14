@@ -3,16 +3,14 @@
 #include "DebugHelpers/test_macros.h"
 
 module ProcessKKRresults_mod
-
   implicit none
+  private
 
-  public :: processKKRresults
-  private :: calculateDensities
-  private :: calculatePotentials
+  public :: processKKRresults, output_forces
 
   integer, private, parameter :: MAX_MADELUNG_RADIUS_INDEX = 101
 
-CONTAINS
+  CONTAINS
 
 !------------------------------------------------------------------------------
 !> Returns 1 when target rms error has been reached,
@@ -1280,36 +1278,30 @@ end subroutine
   !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
 
   subroutine calcFactorSemi(CHRGSEMICORE, FSEMICORE, communicator)
-   
-   include 'mpif.h'
-   double precision, intent(inout)  :: CHRGSEMICORE ! semicore charge
-   double precision, intent(inout) :: FSEMICORE    ! semicore factor to be updated
-   integer, intent(in) :: communicator
-   double precision :: WORK
-   integer :: I1                                ! auxiliary parameter, number of semicore bands
-   integer :: IERR
+!   include 'mpif.h'
+    double precision, intent(inout)  :: CHRGSEMICORE ! semicore charge
+    double precision, intent(inout) :: FSEMICORE    ! semicore factor to be updated
+    integer, intent(in) :: communicator
+    double precision :: WORK
+    integer :: I1                                ! auxiliary parameter, number of semicore bands
+    integer :: IERR
 
-   IF ( CHRGSEMICORE.LT.1D-10 ) CHRGSEMICORE = 1D-10
+    IF ( CHRGSEMICORE.LT.1D-10 ) CHRGSEMICORE = 1D-10
 
     I1 = NINT(CHRGSEMICORE)
 
     FSEMICORE = DBLE(I1)/CHRGSEMICORE * FSEMICORE
 
-         WRITE(6,'(6X,"< SEMICORE > : ",/, &
-               21X,"charge found in semicore :",F10.6,/, &
-               21X,"new normalisation factor :",F20.16,/)')  &
-               CHRGSEMICORE,FSEMICORE
-
+    WRITE(6,'(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)') CHRGSEMICORE,FSEMICORE
   end subroutine calcFactorSemi
 
   !----------------------------------------------------------------------------
   !> correct Fermi-energy (charge neutrality).
   !>
   !> Modifies charge density, Fermi energy and valence band energy!
-  subroutine doFermiEnergyCorrection(atomdata, output, naez, max_shift, CHRGNT, DENEF, R2NEF, &
-                                     ESPV, RHO2NS, E2)
-    use BasisAtom_mod
-    use RadialMeshData_mod
+  subroutine doFermiEnergyCorrection(atomdata, output, naez, max_shift, CHRGNT, DENEF, R2NEF, ESPV, RHO2NS, E2)
+    use BasisAtom_mod, only: BasisAtom
+    use RadialMeshData_mod, only: RadialMeshData
     implicit none
 
     type (BasisAtom), intent(in) :: atomdata

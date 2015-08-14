@@ -4,8 +4,11 @@
 !> Not very useful anymore, kept only for historical reasons.
 
 module CellData_mod
-  use ShapefunData_mod
+  use ShapefunData_mod, only: ShapefunData
   implicit none
+  private
+  public :: CellData, create, destroy
+  public :: createCellData, destroyCellData ! deprecated
 
   type CellData
     ! cell index?
@@ -13,29 +16,35 @@ module CellData_mod
     type (ShapefunData)   :: shdata
   end type
 
+  interface create
+    module procedure createCellData
+  endinterface
+  
+  interface destroy
+    module procedure destroyCellData
+  endinterface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createCellData(cell, irid, lmmax_shape, nfund)
-    use ShapefunData_mod
-    implicit none
+    use ShapefunData_mod, only: create
     type (CellData), intent(inout) :: cell
     integer, intent(in) :: irid
     integer, intent(in) :: lmmax_shape
     integer, intent(in) :: nfund
 
     cell%cell_index = -1
-    call createShapefunData(cell%shdata, irid, lmmax_shape, nfund)
+    call create(cell%shdata, irid, lmmax_shape, nfund)
 
   end subroutine
 
   !----------------------------------------------------------------------------
   subroutine destroyCellData(cell)
-    use ShapefunData_mod
-    implicit none
+    use ShapefunData_mod, only: destroy
     type (CellData), intent(inout) :: cell
 
-    call destroyShapefunData(cell%shdata)
+    call destroy(cell%shdata)
 
   end subroutine
 

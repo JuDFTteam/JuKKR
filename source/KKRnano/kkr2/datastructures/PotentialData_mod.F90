@@ -3,7 +3,11 @@
 
 module PotentialData_mod
   implicit none
-
+  private
+  public :: PotentialData, create, destroy, represent
+  public :: createPotentialData, destroyPotentialData, repr_PotentialData ! deprecated
+  public :: getNumPotentialValues
+  
   type PotentialData
     double precision, dimension(:,:,:), allocatable :: VINS        !< input potential - nonspherical parts only
 
@@ -24,11 +28,23 @@ module PotentialData_mod
 
   end type
 
+  interface create
+    module procedure createPotentialData
+  endinterface
+  
+  interface destroy
+    module procedure destroyPotentialData
+  endinterface
+
+  interface represent
+    module procedure repr_PotentialData
+  endinterface
+
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createPotentialData(potential, lpot, nspin, irmind, irmd)
-    implicit none
     type (PotentialData), intent(inout) :: potential
     integer, intent(in) :: lpot
     integer, intent(in) :: nspin
@@ -62,7 +78,6 @@ module PotentialData_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyPotentialData(potential)
-    implicit none
     type (PotentialData), intent(inout) :: potential
 
     deallocate(potential%VINS)
@@ -73,17 +88,13 @@ module PotentialData_mod
   !----------------------------------------------------------------------------
   !> Return the actual number of potential values.
   integer function getNumPotentialValues(potential)
-    implicit none
     type (PotentialData), intent(in) :: potential
-    getNumPotentialValues = (potential%irmd+(potential%irnsd+1) * &
-                            (potential%lmpot-1)) &
-                            * potential%nspin
+    getNumPotentialValues = (potential%irmd+(potential%irnsd+1) * (potential%lmpot-1)) * potential%nspin
   end function
 
   !----------------------------------------------------------------------------
   !> Returns a string representation of PotentialData.
   subroutine repr_PotentialData(potential, str)
-    implicit none
     class (PotentialData), intent(in) :: potential
     character(len=:), allocatable, intent(inout) :: str
 

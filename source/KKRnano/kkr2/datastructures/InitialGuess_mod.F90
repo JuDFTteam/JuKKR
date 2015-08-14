@@ -3,6 +3,11 @@
 !> initial guesses in next self consistency step.
 !> @author: Elias Rabel
 module InitialGuess_mod
+  implicit none
+  private
+  public :: InitialGuess, create, destroy
+  public :: update_ekm, iguess_set_energy_ind, iguess_set_spin_ind, iguess_set_k_ind, iguess_load, iguess_save
+  public :: iguess_init, iguess_destroy ! deprecated
 
 type InitialGuess
   !PRIVATE
@@ -15,15 +20,18 @@ type InitialGuess
   integer :: iguess
 end type
 
-private :: update_ekm
-private :: initialGuess_load_impl
-private :: initialGuess_save_impl
+  interface create
+    module procedure iguess_init
+  endinterface
+  
+  interface destroy
+    module procedure iguess_destroy
+  endinterface
 
-CONTAINS
+  CONTAINS
 
 !------------------------------------------------------------------------------
 subroutine iguess_init(self, nofks, num_spin, blocksize, iguess)
-  implicit none
   type(InitialGuess) :: self
   integer, intent(in) :: nofks(:)
   integer, intent(in) :: num_spin

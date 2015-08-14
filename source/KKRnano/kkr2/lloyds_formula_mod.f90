@@ -4,6 +4,8 @@
 ! Dependencies: kkr_helpers_mod
 module lloyds_formula_mod
   implicit none
+  private
+  public :: calcLloydTraceX, calcDerivativeGref, calcDerivativeP, renormalizeDOS, calcLloydTraceXRealSystem
 
   contains
 
@@ -26,8 +28,7 @@ module lloyds_formula_mod
   !> @param[in]     NGD      leading dimension of matrix LUfact, NGD=lmmaxd*naclsd
   !> @param[in]     NDIM     logical dimension of matrix NDIM=lmmaxd * (#atoms in cluster)
   !> @param[in]     LMGF0D   same as lmmaxd ???
-  subroutine calcLloydTraceX(LUfact, DGTDE, IPVT, LLY_G0TR, &
-                             NDIM, LMGF0D, NGD)
+  subroutine calcLloydTraceX(LUfact, DGTDE, IPVT, LLY_G0TR, NDIM, LMGF0D, NGD)
     implicit none
 
     double complex, intent(inout), dimension(NGD,NGD) :: LUfact
@@ -71,8 +72,7 @@ module lloyds_formula_mod
   !> @param[in]     NDIM    logical dimension of matrix NDIM=lmmaxd * (#atoms in cluster)
   !> @param[in]     LMGF0D  same as lmmaxd ???
 
-  subroutine calcDerivativeGref(LUfact, GREF0, DGTDE0, DGDE, IPVT, &
-                                NDIM, LMGF0D, NGD)
+  subroutine calcDerivativeGref(LUfact, GREF0, DGTDE0, DGDE, IPVT, NDIM, LMGF0D, NGD)
     implicit none
 
     integer, intent(in) :: NDIM  ! actual dimension
@@ -202,8 +202,7 @@ module lloyds_formula_mod
   !> @param[in,out] DTmatDE_LOCAL  derivative of Delta T-Matrix
   !> @param[in,out] Tmat_local                   Delta T-Matrix
   !!                unchanged on output???
-  subroutine calcDerivativeP(site_lm_size, lmmaxd, alat, &
-                             DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
+  subroutine calcDerivativeP(site_lm_size, lmmaxd, alat, DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
     ! calculate the following expression:
 
     ! dP(E,k)   dGref(E,k)                             d \Delta T(E)

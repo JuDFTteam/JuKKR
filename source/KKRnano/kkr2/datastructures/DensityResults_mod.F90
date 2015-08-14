@@ -8,6 +8,10 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module DensityResults_mod
+implicit none
+  private
+  public :: DensityResults, create, destroy
+  public :: createDensityResults, destroyDensityResults ! deprecated
 
   !> Contains densities and integrated densities (charges)
   !> for one specific atom.
@@ -35,6 +39,15 @@ module DensityResults_mod
     integer :: nspind
   end type DensityResults
 
+  
+  interface create
+    module procedure createDensityResults
+  endinterface
+  
+  interface destroy
+    module procedure destroyDensityResults
+  endinterface
+  
   CONTAINS
 
   !-----------------------------------------------------------------------------
@@ -42,14 +55,12 @@ module DensityResults_mod
   !> @param[in,out] self    The DensityResults object to construct.
   !> @param[in]     dims
   subroutine createDensityResults(self, dims, num_radial_irmd)
-    use DimParams_mod
-    implicit none
+    use DimParams_mod, only: DimParams
     type (DensityResults), intent(inout) :: self
     type (DimParams), intent(in) :: dims
     integer, intent(in) :: num_radial_irmd
 
-    call createDensityResultsImpl(self, num_radial_irmd, dims%lmpotd, dims%lmaxd, &
-                                  dims%iemxd, dims%nspind)
+    call createDensityResultsImpl(self, num_radial_irmd, dims%lmpotd, dims%lmaxd, dims%iemxd, dims%nspind)
 
   end subroutine
 
@@ -62,7 +73,6 @@ module DensityResults_mod
   !> @param[in]     iemxd
   !> @param[in]     nspind
   subroutine createDensityResultsImpl(self, irmd,lmpotd,lmaxd,iemxd,nspind)
-    implicit none
     type (DensityResults), intent(inout) :: self
     integer, intent(in) ::  irmd
     integer, intent(in) ::  lmpotd
@@ -97,7 +107,6 @@ module DensityResults_mod
   !> Destroys a DensityResults object.
   !> @param[in,out] self    The DensityResults object to destroy.
   subroutine destroyDensityResults(self)
-    implicit none
     type (DensityResults), intent(inout) :: self
 
     integer :: memory_stat

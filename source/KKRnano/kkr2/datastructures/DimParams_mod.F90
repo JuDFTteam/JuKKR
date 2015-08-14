@@ -5,6 +5,11 @@
 ! Dependencies: ConfigReader_mod
 
 module DimParams_mod
+implicit none
+  private
+  public :: DimParams, create, destroy
+  public :: createDimParams, destroyDimParams ! deprecated
+  public :: writeDimParams, createDimParamsFromConf
 
   type DimParams
     integer  :: NSYMAXD
@@ -47,13 +52,21 @@ module DimParams_mod
 
   end type DimParams
 
+  
+  interface create
+    module procedure createDimParams
+  endinterface
+  
+  interface destroy
+    module procedure destroyDimParams
+  endinterface
+  
   CONTAINS
 
   !-----------------------------------------------------------------------------
   !> Constructs a DimParams object from UNFORMATTED inp0.unf file
   !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParams(self)
-    implicit none
     type (DimParams), intent(inout) :: self
 
     integer, parameter :: FILEHANDLE = 67
@@ -96,8 +109,7 @@ module DimParams_mod
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParamsFromConf(self)
-    use Config_Reader
-    implicit none
+    use ConfigReader_mod, only: ConfigReader, getValueInteger, getUnreadVariable
     type (DimParams), intent(inout) :: self
 
     type (ConfigReader) :: conf
@@ -182,7 +194,6 @@ module DimParams_mod
   !> Write DimParams object to inp0.unf file
   !> @param[in,out] self    The DimParams object to construct.
   subroutine writeDimParams(self)
-    implicit none
     type (DimParams), intent(in) :: self
 
     integer, parameter :: FILEHANDLE = 67
@@ -222,12 +233,11 @@ module DimParams_mod
   !> Destroys a DimParams object.
   !> @param[in,out] self    The DimParams object to destroy.
   subroutine destroyDimParams(self)
-    implicit none
     type (DimParams), intent(inout) :: self
 
-    integer :: memory_stat
+!   integer :: memory_stat
 
-    continue ! Nothing to do.
+    ! Nothing to do.
 
   end subroutine
 
@@ -239,7 +249,6 @@ module DimParams_mod
   !> Helper routine to initialise some parameters derived from others
   !> correctly.
   subroutine calculateDerivedParameters(self)
-    implicit none
     type (DimParams), intent(inout) :: self
 
     ! derived parameters
@@ -273,11 +282,10 @@ module DimParams_mod
   ! Consistency checks
   !----------------------------------------------------------------------------
   subroutine consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
-    implicit none
-    integer :: IEMXD
-    integer :: LMAXD
-    integer :: NSPIND
-    integer :: SMPID
+    integer, intent(in) :: IEMXD
+    integer, intent(in) :: LMAXD
+    integer, intent(in) :: NSPIND
+    integer, intent(in) :: SMPID
 
     ! -------------------------------------------------------------------------
     ! consistency checks

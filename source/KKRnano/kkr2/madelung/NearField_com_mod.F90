@@ -10,11 +10,18 @@
 module NearField_com_mod
   USE_LOGGING_MOD
 
-  use NearField_mod
-  use NearField_kkr_mod
-  use one_sided_commD_mod
+  use NearField_mod, only:
+  use NearField_kkr_mod, only:
+  use one_sided_commD_mod, only:
   use MadelungCalculator_mod, only: MadelungClebschData
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
+  implicit none
+  private
+  public :: LocalCellInfo!, create, destroy
+  public :: NearFieldCorrection!, create, destroy
+!   public :: createNearFieldCorrection, destroyNearFieldCorrection ! deprecated
+!   public :: createLocalCellInfo, destroyLocalCellInfo ! deprecated
+  
   
   type LocalCellInfo
     double precision, allocatable :: charge_moments(:)
@@ -39,11 +46,22 @@ module NearField_com_mod
     procedure :: destroy => destroyNearFieldCorrection
   end type
   
+!   interface create
+!     module procedure createNearFieldCorrection, createLocalCellInfo
+!   endinterface
+!   
+!   interface destroy
+!     module procedure destroyNearFieldCorrection, destroyLocalCellInfo
+!   endinterface
+  
+  
   CONTAINS
   
   !----------------------------------------------------------------------------
   subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
-    implicit none
+    use NearField_kkr_mod, only: IntracellPotential
+    use one_sided_commD_mod, only: ChunkIndex, getChunkIndex, exposeBufferD, hideBufferD, copyChunksNoSyncD
+  
     type (NearFieldCorrection), intent(inout) :: nf_correction(:)
     type (LocalCellInfo), intent(in) :: local_cells(:)
     type (MadelungClebschData), intent(in) :: gaunt
@@ -107,8 +125,7 @@ module NearField_com_mod
       nf_correction(ilocal)%delta_potential = 0.0d0
       do icell = 1, size(local_cells(ilocal)%near_cell_indices)
       
-        chunk(1) = getChunkIndex(local_cells(ilocal)%near_cell_indices(icell), &
-                                 nranks*num_local_atoms, nranks)
+        chunk(1) = getChunkIndex(local_cells(ilocal)%near_cell_indices(icell), nranks*num_local_atoms, nranks)
         
         call MPI_Win_Lock(MPI_LOCK_SHARED, chunk(1)%owner, 0, win, ierr)
         CHECKASSERT(ierr == 0)
@@ -129,7 +146,7 @@ module NearField_com_mod
 
         call intra_pot%init() ! setup intra-cell pot. interpolation
 
-        call  add_potential_correction(nf_correction(ilocal)%delta_potential, intra_pot, &
+        call add_potential_correction(nf_correction(ilocal)%delta_potential, intra_pot, &
                                        local_cells(ilocal)%radial_points, &
                                        local_cells(ilocal)%near_cell_dist_vec(:,icell), gaunt, &
                                        local_cells(ilocal)%critical_index)
@@ -161,7 +178,9 @@ module NearField_com_mod
   !> Apply correction from 'critical_index' to size(radial_points)
   !> Set critical_index to 1 to calculate the near field correction everywhere
   subroutine add_potential_correction(delta_potential, intra_pot, radial_points, dist_vec, gaunt, critical_index)
-    implicit none
+    use NearField_kkr_mod, only: IntracellPotential
+    use MadelungCalculator_mod, only: MadelungClebschData
+    
     double precision, intent(inout) :: delta_potential(:,:)
     type(IntracellPotential), intent(inout) :: intra_pot
     double precision, intent(in) :: radial_points(:)
@@ -200,7 +219,6 @@ module NearField_com_mod
 
   !----------------------------------------------------------------------------
   subroutine createLocalCellInfo(self, irmd, lmpotd, critical_index)
-    implicit none
     class (LocalCellInfo), intent(inout) :: self
     integer, intent(in) :: irmd
     integer, intent(in) :: lmpotd
@@ -215,7 +233,6 @@ module NearField_com_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyLocalCellInfo(self)
-    implicit none
     class (LocalCellInfo), intent(inout) :: self
 
     deallocate(self%charge_moments)
@@ -229,7 +246,6 @@ module NearField_com_mod
 
   !----------------------------------------------------------------------------
   subroutine createNearFieldCorrection(self, irmd, lmpotd)
-    implicit none
     class (NearFieldCorrection), intent(inout) :: self
     integer, intent(in) :: irmd
     integer, intent(in) :: lmpotd
@@ -239,7 +255,6 @@ module NearField_com_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyNearFieldCorrection(self)
-    implicit none
     class (NearFieldCorrection), intent(inout) :: self
 
     deallocate(self%delta_potential)

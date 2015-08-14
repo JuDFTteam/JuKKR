@@ -3,12 +3,9 @@
 !> @author Elias Rabel
 !
 module InterpolateBasisAtom_mod
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  use PotentialData_mod
-  use AtomicCoreData_mod
-
   implicit none
+  private
+  public :: interpolateBasisAtom
 
   CONTAINS
 
@@ -19,7 +16,8 @@ module InterpolateBasisAtom_mod
   ! new_atom gets allocated
   ! old_atom unmodified
   subroutine interpolateBasisAtom(new_atom, old_atom, new_mesh, lpot_new)
-    implicit none
+    use BasisAtom_mod, only: BasisAtom
+    use RadialMeshData_mod, only: RadialMeshData
     type(BasisAtom), intent(inout) :: new_atom
     type(BasisAtom), intent(in) :: old_atom
     type(RadialMeshData), intent(in) :: new_mesh
@@ -119,7 +117,7 @@ module InterpolateBasisAtom_mod
   !> Interpolate function values with cubic splines
   !> @param[out] ynew  interpolated function values
   subroutine interpolate(xval, yval, xnew, ynew)
-    implicit none
+    ! use Splines_mod, only: spline
     double precision, intent(in) :: xval(:)
     double precision, intent(in) :: yval(:)
     double precision, intent(in) :: xnew(:)

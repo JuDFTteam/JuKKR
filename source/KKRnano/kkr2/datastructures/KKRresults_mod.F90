@@ -13,6 +13,10 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module KKRresults_mod
+  implicit none
+  private
+  public :: KKRresults, create, destroy
+  public :: createKKRresults, destroyKKRresults ! deprecated
 
   type KKRresults
     double complex , allocatable, dimension(:,:,:)  :: TMATN
@@ -35,6 +39,15 @@ module KKRresults_mod
     integer :: smpid
   end type KKRresults
 
+  interface create
+    module procedure createKKRresults
+  endinterface
+  
+  interface destroy
+    module procedure destroyKKRresults
+  endinterface
+  
+  
   CONTAINS
 
   !-----------------------------------------------------------------------------
@@ -43,15 +56,12 @@ module KKRresults_mod
   !> @param[in]    dims
   !> @param[in]    naclsd  maximal number of cluster atoms
   subroutine createKKRresults(self, dims, naclsd)
-    use DimParams_mod
-    implicit none
+    use DimParams_mod, only: DimParams
     type (KKRresults), intent(inout) :: self
     type (DimParams),  intent(in)    :: dims
     integer, intent(in)              :: naclsd
 
-    call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, &
-                              NACLSD, dims%IEMXD, &
-                              dims%nguessd, dims%ekmd, dims%smpid)
+    call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, NACLSD, dims%IEMXD, dims%nguessd, dims%ekmd, dims%smpid)
   end subroutine
 
   !-----------------------------------------------------------------------------
@@ -62,7 +72,6 @@ module KKRresults_mod
   !> @param[in]    NACLSD
   !> @param[in]    IEMXD
   subroutine createKKRresultsImpl(self, LMMAXD,NSPIND,NACLSD,IEMXD, nguessd, ekmd, smpid)
-    implicit none
     type (KKRresults), intent(inout) :: self
     integer, intent(in) ::  LMMAXD
     integer, intent(in) ::  NSPIND
@@ -112,7 +121,6 @@ module KKRresults_mod
   !> Destroys a KKRresults object.
   !> @param[inout] self    The KKRresults object to destroy.
   subroutine destroyKKRresults(self)
-    implicit none
     type (KKRresults), intent(inout) :: self
 
     integer :: memory_stat

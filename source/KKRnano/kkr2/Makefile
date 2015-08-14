@@ -36,7 +36,7 @@ FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -O0 -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FCFLAGS += -O0 -C -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS = -O3
@@ -220,7 +220,7 @@ ProcessKKRresults_mod.o: lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o KKRnanoParallel_mod.o CalculationData_mod.o
 NearField_mod.o: MadelungCalculator_mod.o
 KKRnano_Comm_mod.o: jij_calc_mod.o KKRnanoParallel_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o
-InputParams_mod.o: config_reader.o
+InputParams_mod.o: ConfigReader_mod.o
 tetrahedra_common.o: shape_constants_mod.o
 ShapeStandardMesh_mod.o: shape_constants_mod.o
 wrappers_mod.o: BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o
@@ -244,7 +244,7 @@ ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o shape_constants_mod.o angl
 BasisAtom_mod.o: RadialMeshData_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 mminvmod_oop_mod.o: OperatorT_mod.o SolverStats_mod.o
 KKRresults_mod.o: DimParams_mod.o
-DimParams_mod.o: config_reader.o
+DimParams_mod.o: ConfigReader_mod.o
 voronoi08.o: voronoi08_mod.o
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
@@ -253,7 +253,7 @@ NearField_kkr_mod.o: NearField_mod.o
 jij_calc_mod.o: JijData_mod.o
 broyden_kkr_mod.o: brydbm_new_com_mod.o broyden_second_mod.o BroydenData_mod.o CalculationData_mod.o
 ShapeFunctions_mod.o: tetrahedra_common.o angles_common.o ShapeCriticalPoints_mod.o shape_constants_mod.o ShapeIntegration_mod.o ShapeStandardMesh_mod.o
-config_reader.o: config_reader_dictionary.o
+ConfigReader_mod.o: ConfigReaderDictionary_mod.o
 angles_common.o: shape_constants_mod.o
 KKROperator_mod.o: MultScatData_mod.o OperatorT_mod.o ClusterInfo_mod.o SparseMatrixDescription_mod.o vbrmv_mat_mod.o
 lloyd0_new_mod.o: KKRnanoParallel_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o

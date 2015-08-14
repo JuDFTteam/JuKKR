@@ -1,5 +1,7 @@
 module main2_aux_mod
   implicit none
+  private
+  public :: printDoubleLineSep, is_abort_by_rank0, writeIterationTimings
 
   contains
 

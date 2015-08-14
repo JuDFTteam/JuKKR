@@ -1,17 +1,16 @@
 module broyden_kkr_mod
   use brydbm_new_com_mod, only: BRYSH1_new, BRYSH2_new, BRYSH3_new
-  use CalculationData_mod
-  use broyden_second_mod
-  use BroydenData_mod
+  use CalculationData_mod, only: CalculationData, getBroydenDim, getBroyden, getNumLocalAtoms, getAtomData
+  use broyden_second_mod, only:
+  use BroydenData_mod, only: BroydenData
+  use BasisAtom_mod, only: BasisAtom
+  use PotentialData_mod, only: getNumPotentialValues
 
   use, intrinsic :: ieee_features
   use, intrinsic :: ieee_arithmetic
 
   implicit none
-
-  private :: calc_metric
-  private :: collapse_input_potentials
-  private :: collapse_output_potentials
+  public :: mix_broyden2_com
 
   CONTAINS
 

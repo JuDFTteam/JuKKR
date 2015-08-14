@@ -7,7 +7,12 @@
 
 module EBalanceHandler_mod
   implicit none
-
+  private
+  public :: EBalanceHandler
+  public :: createEBalanceHandler, destroyEBalanceHandler
+  public :: startEBalanceTiming, stopEBalanceTiming
+  public :: initEBalanceHandler, updateEBalance_com, setEqualDistribution
+  
   type EBalanceHandler
 
     integer, dimension(:), allocatable :: eproc

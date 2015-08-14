@@ -147,15 +147,13 @@ program KKRnano
       call readEnergyMesh(emesh)  !every process does this!  !!!!
     end if
 
-    call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
-                                       getElapsedTime(program_timer), 0)
+    call OUTTIME(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
 
 #ifndef DEBUG_NO_ELECTROSTATICS
     call prepareMadelung(calc_data, arrays)
 #endif
 
-    call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...', &
-                 getElapsedTime(program_timer), 0)
+    call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...', getElapsedTime(program_timer), 0)
 
     call createEBalanceHandler(ebalance_handler, emesh%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
@@ -171,8 +169,7 @@ program KKRnano
 
       if (isMasterRank(my_mpi)) then
         call printDoubleLineSep(unit_number = 2)
-        call OUTTIME(isMasterRank(my_mpi),'started at ..........', &
-                     getElapsedTime(program_timer),ITER)
+        call OUTTIME(isMasterRank(my_mpi),'started at ..........', getElapsedTime(program_timer),ITER)
         call printDoubleLineSep(unit_number = 2)
       endif
 

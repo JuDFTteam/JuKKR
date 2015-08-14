@@ -17,12 +17,11 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module Main2Arrays_mod
-
-  public :: createMain2Arrays
-  public :: destroyMain2Arrays
-  private :: createMain2ArraysImpl
-
-  public :: Main2Arrays
+  implicit none
+  private
+  public :: Main2Arrays, create, destroy
+  public :: createMain2Arrays, destroyMain2Arrays ! deprecated
+  public :: readMain2Arrays, writeMain2Arrays
 
   type Main2Arrays
     double precision , dimension(3,3)  :: bravais
@@ -47,6 +46,15 @@ module Main2Arrays_mod
     integer :: MAXMSHD
 
   end type Main2Arrays
+  
+  interface create
+    module procedure createMain2Arrays
+  endinterface
+  
+  interface destroy
+    module procedure destroyMain2Arrays
+  endinterface
+
 
   CONTAINS
 
@@ -55,15 +63,13 @@ module Main2Arrays_mod
   !> @param[in,out] self    The Main2Arrays object to construct.
   !> @param[in]    dims    Dimension parameters
   subroutine createMain2Arrays(self, dims)
-    use DimParams_mod
-    implicit none
+    use DimParams_mod, only: DimParams
     type (Main2Arrays), intent(inout) :: self
     type (DimParams), intent(in) :: dims
 
-    call createMain2ArraysImpl(self, dims%lmaxd,dims%iemxd,dims%nspind, &
-    dims%LMMAXD,dims%NAEZ,dims%LMXSPD,dims%KPOIBZ,dims%MAXMSHD,0 , &
-    0,dims%nguessd,dims%ekmd, &
-    dims%smpid,dims%lpot,dims%IRMD,dims%LMPOTD)
+    call createMain2ArraysImpl(self, dims%lmaxd, dims%iemxd, dims%nspind, &
+    dims%LMMAXD, dims%NAEZ, dims%LMXSPD, dims%KPOIBZ, dims%MAXMSHD, 0, &
+    0, dims%nguessd, dims%ekmd, dims%smpid, dims%lpot, dims%IRMD, dims%LMPOTD)
 
   end subroutine
 
@@ -94,7 +100,7 @@ module Main2Arrays_mod
   subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
     use, intrinsic :: ieee_features
     use, intrinsic :: ieee_arithmetic
-    implicit none
+    
     type (Main2Arrays), intent(inout) :: self
     integer, intent(in) ::  lmaxd
     integer, intent(in) ::  iemxd
@@ -156,7 +162,6 @@ module Main2Arrays_mod
   !> Destroys a Main2Arrays object.
   !> @param[in,out] self    The Main2Arrays object to destroy.
   subroutine destroyMain2Arrays(self)
-    implicit none
     type (Main2Arrays), intent(inout) :: self
 
     integer :: memory_stat
@@ -176,7 +181,6 @@ module Main2Arrays_mod
   !> Writes Main2Arrays data to file.
   !> @param[in] self    The Main2Arrays object to write.
   subroutine writeMain2Arrays(self, filename)
-    implicit none
     type (Main2Arrays), intent(in) :: self
     character(len=*), intent(in) :: filename
 
@@ -204,7 +208,6 @@ module Main2Arrays_mod
   !> Reads Main2Arrays data from file.
   !> @param[in,out] self    The Main2Arrays object to read.
   subroutine readMain2Arrays(self, filename)
-    implicit none
     type (Main2Arrays), intent(inout) :: self
     character(len=*), intent(in) :: filename
 

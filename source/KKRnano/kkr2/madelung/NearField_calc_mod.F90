@@ -11,17 +11,22 @@
 !    to rotate back
 
 module NearField_calc_mod
-  use NearField_com_mod
-  use CalculationData_mod
-  use KKRnanoParallel_mod
-  use BasisAtom_mod
-  use RadialMeshData_mod
   implicit none
+  private
+  public :: add_near_field_corr
 
   contains
 
   subroutine add_near_field_corr(calc_data, arrays, alat, my_mpi)
-    implicit none
+    use Main2Arrays_mod, only: Main2Arrays
+    use DensityResults_mod, only: DensityResults
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getMadelungCalculator, getAtomData, getDensities, getAtomIndexOfLocal
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator
+    use BasisAtom_mod, only: BasisAtom
+    use RadialMeshData_mod, only: RadialMeshData
+    use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
+    use MadelungCalculator_mod, only: MadelungCalculator
+    
     type(CalculationData), intent(inout) :: calc_data
     type(Main2Arrays), intent(in) :: arrays
     double precision, intent(in) :: alat
@@ -96,9 +101,7 @@ module NearField_calc_mod
   !> NOTE: This is only approximately valid - but should be enough for
   !> realistic lattice structures
   !> Note: O(N**2) scaling!
-  subroutine find_near_cells(near_inds, dist_vecs, rbasis, bravais, &
-                             center_ind, radius_bounding)
-    implicit none
+  subroutine find_near_cells(near_inds, dist_vecs, rbasis, bravais, center_ind, radius_bounding)
     integer, allocatable, intent(out) :: near_inds(:)
     double precision, allocatable, intent(out) :: dist_vecs(:,:)
 
@@ -159,8 +162,8 @@ module NearField_calc_mod
   !> Calculate (point2 - point1) taking into account addition of a lattice vector
   !> as specified by integer indices nx, ny, nz
   function distance_vec(point1, point2, bravais, nx, ny, nz)
-    implicit none
     double precision :: distance_vec(3)
+    
     double precision, intent(in) :: point1(3)
     double precision, intent(in) :: point2(3)
     double precision, intent(in) :: bravais(3,3)

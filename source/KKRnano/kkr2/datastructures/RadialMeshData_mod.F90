@@ -10,9 +10,14 @@
 !> @author Elias Rabel
 module RadialMeshData_mod
   implicit none
-
-  !private :: initMuffinTinMesh
-  private :: initInterstitialMesh
+  private
+  public :: RadialMeshData, create, destroy, represent
+  public :: createRadialMeshData, destroyRadialMeshData ! deprecated
+  public :: getMinReclenMesh
+  public :: initRadialMesh, initMuffinTinMesh, initInterstitialMesh, createRadialMeshDataFromFile, writeRadialMeshDataDA           
+  public :: readRadialMeshDataDA, openRadialMeshDataDAFile, closeRadialMeshDataDAFile, writeRadialMeshDataIndexDA      
+  public :: readRadialMeshDataIndexDA, openRadialMeshDataIndexDAFile, closeRadialMeshDataIndexDAFile, repr_RadialMeshData             
+  public :: readRadialMeshDataHeader, test_mesh_consistency           
 
   type RadialMeshData
 
@@ -38,11 +43,22 @@ module RadialMeshData_mod
     integer, dimension(:), allocatable :: IRCUT  !< panel locations
   end type
 
+  interface create
+    module procedure createRadialMeshData
+  endinterface
+  
+  interface destroy
+    module procedure destroyRadialMeshData
+  endinterface
+  
+  interface represent
+    module procedure repr_RadialMeshData
+  endinterface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createRadialMeshData(meshdata, irmd, ipand)
-    implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: irmd
     integer, intent(in) :: ipand
@@ -76,7 +92,6 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyRadialMeshData(meshdata)
-    implicit none
     type (RadialMeshData), intent(inout) :: meshdata
 
     deallocate(meshdata%R)
@@ -87,7 +102,6 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
-    implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
     double precision, intent(in) :: xrn(:)
@@ -107,7 +121,6 @@ module RadialMeshData_mod
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat - in units of Bohr
   subroutine initMuffinTinMesh(meshdata, imt, radius_mt)
-    implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: imt
     double precision, intent(in) :: radius_mt
@@ -130,7 +143,6 @@ module RadialMeshData_mod
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat
   subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
-    implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
     double precision, intent(in) :: xrn(:)
@@ -184,7 +196,6 @@ module RadialMeshData_mod
   !> The index file with extension .idx is necessary because different
   !> atoms can have a different number of radial mesh points
   subroutine createRadialMeshDataFromFile(meshdata, filename, recnr)
-    implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     character(len=*), intent(in) :: filename
     integer, intent(in) :: recnr
@@ -211,8 +222,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Write mesh data to direct access file 'fileunit' at record 'recnr'
   subroutine writeRadialMeshDataDA(meshdata, fileunit, recnr)
-
-    implicit none
     type (RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
@@ -252,8 +261,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Read mesh data from direct access file 'fileunit' at record 'recnr'
   subroutine readRadialMeshDataDA(meshdata, fileunit, recnr)
-    implicit none
-
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
@@ -309,8 +316,6 @@ module RadialMeshData_mod
   !> Note: for a file containing meshes of several atoms, the maximum
   !> of all their record lengths has to be determined
   integer function getMinReclenMesh(meshdata) result(reclen)
-    implicit none
-
     type (RadialMeshData), intent(in) :: meshdata
     !------
 
@@ -337,8 +342,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Opens RadialMeshData direct access file.
   subroutine openRadialMeshDataDAFile(meshdata, fileunit, filename, max_reclen)
-    implicit none
-
     type (RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
@@ -361,7 +364,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Closes RadialMeshData direct access file.
   subroutine closeRadialMeshDataDAFile(fileunit)
-    implicit none
     integer, intent(in) :: fileunit
 #ifndef TASKLOCAL_FILES
     close(fileunit)
@@ -373,8 +375,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Write mesh dimension data to direct access file 'fileunit' at record 'recnr'
   subroutine writeRadialMeshDataIndexDA(meshdata, fileunit, recnr, max_reclen)
-
-    implicit none
     type (RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
@@ -393,10 +393,7 @@ module RadialMeshData_mod
   !> Read mesh dimension data from direct access file 'fileunit' at record 'recnr'
   !>
   !> Returns dimensions irmd and ipand
-  subroutine readRadialMeshDataIndexDA(meshdata, fileunit, recnr, &
-                                       irmd, ipand, max_reclen)
-    implicit none
-
+  subroutine readRadialMeshDataIndexDA(meshdata, fileunit, recnr, irmd, ipand, max_reclen)
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
@@ -423,8 +420,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Opens RadialMeshData index file.
   subroutine openRadialMeshDataIndexDAFile(meshdata, fileunit, filename)
-    implicit none
-
     type (RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
@@ -448,7 +443,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Closes RadialMeshData index file.
   subroutine closeRadialMeshDataIndexDAFile(fileunit)
-    implicit none
     integer, intent(in) :: fileunit
 
 #ifndef TASKLOCAL_FILES
@@ -467,7 +461,6 @@ module RadialMeshData_mod
   !>    call repr_RadialMeshData(old_mesh, str)
   !>    write(*,'(A)') str  ! format (A) necessary to avoid messy output
   subroutine repr_RadialMeshData(meshdata, str)
-    implicit none
     class (RadialMeshData), intent(in) :: meshdata
     character(len=:), allocatable, intent(inout) :: str
 
@@ -523,10 +516,7 @@ module RadialMeshData_mod
   end subroutine
 
 !================= private helper functions ===================================
-  subroutine readRadialMeshDataHeader(meshdata, fileunit, recnr, &
-                                       irmd, ipand, max_reclen)
-    implicit none
-
+  subroutine readRadialMeshDataHeader(meshdata, fileunit, recnr, irmd, ipand, max_reclen)
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
@@ -555,7 +545,6 @@ module RadialMeshData_mod
   !----------------------------------------------------------------------------
   !> Test consistency of mesh parameters.
   subroutine test_mesh_consistency(meshdata)
-    implicit none
     class (RadialMeshData), intent(in) :: meshdata
 
     double precision :: rmt_test

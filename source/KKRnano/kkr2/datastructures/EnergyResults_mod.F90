@@ -9,6 +9,10 @@
 
 !> Energy contributions of one atom.
 module EnergyResults_mod
+  implicit none
+  private
+  public :: EnergyResults, create, destroy
+  public :: createEnergyResults, destroyEnergyResults ! deprecated
 
   type EnergyResults
     double precision , dimension(2)  :: VBC !< new muffin-tin zero ???
@@ -30,6 +34,15 @@ module EnergyResults_mod
     integer :: lmaxd
   end type EnergyResults
 
+
+  interface create
+    module procedure createEnergyResults
+  endinterface
+  
+  interface destroy
+    module procedure destroyEnergyResults
+  endinterface
+
   CONTAINS
 
   !-----------------------------------------------------------------------------
@@ -38,7 +51,6 @@ module EnergyResults_mod
   !> @param[in]     nspind
   !> @param[in]     lmaxd
   subroutine createEnergyResults(self, nspind,lmaxd)
-    implicit none
     type (EnergyResults), intent(inout) :: self
     integer, intent(in) ::  nspind
     integer, intent(in) ::  lmaxd
@@ -74,7 +86,6 @@ module EnergyResults_mod
   !> Destroys a EnergyResults object.
   !> @param[in,out] self    The EnergyResults object to destroy.
   subroutine destroyEnergyResults(self)
-    implicit none
     type (EnergyResults), intent(inout) :: self
 
     integer :: memory_stat

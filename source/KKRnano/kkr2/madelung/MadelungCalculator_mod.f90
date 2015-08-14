@@ -7,12 +7,9 @@
 
 module MadelungCalculator_mod
   implicit none
+  private
 
-  public :: MadelungCalculator
-  public :: MadelungClebschData
-
-  private :: MadelungLatticeData
-  private :: MadelungHarmonics
+  public :: MadelungCalculator, MadelungClebschData, MadelungLatticeSum, create, destroy
 
   !----------------------------------------------------------------------------
   type MadelungLatticeData
@@ -69,14 +66,21 @@ module MadelungCalculator_mod
     integer :: num_atoms
   end type
 
+  
+  interface create
+    module procedure createMadelungCalculator, createMadelungClebschData, createMadelungLatticeSum
+  endinterface
+  
+  interface destroy
+    module procedure destroyMadelungCalculator, destroyMadelungClebschData, destroyMadelungLatticeSum
+  endinterface
+  
   contains
 
   !----------------------------------------------------------------------------
   !> Creates a MadelungCalculator object.
   !> Don't forget to free resources with destroyMadelungCalculator
-  subroutine createMadelungCalculator(madelung_calc, lmax, ALAT, RMAX, GMAX, &
-                                      BRAVAIS, NMAXD, ISHLD)
-    implicit none
+  subroutine createMadelungCalculator(madelung_calc, lmax, ALAT, RMAX, GMAX, BRAVAIS, NMAXD, ISHLD)
     type (MadelungCalculator), intent(inout) :: madelung_calc
     integer, intent(in) :: lmax
     double precision, intent(in) :: ALAT
@@ -147,7 +151,6 @@ module MadelungCalculator_mod
   !----------------------------------------------------------------------------
   !> Destroys a MadelungCalculator object.
   subroutine destroyMadelungCalculator(madelung_calc)
-    implicit none
     type (MadelungCalculator), intent(inout) :: madelung_calc
     !--------------------------------------------------------
 
@@ -166,7 +169,6 @@ module MadelungCalculator_mod
   !> The MadelungCalculator can be reused for several MadelungLatticeSums
   !> as long as the geometry and lmax does not change
   subroutine createMadelungLatticeSum(madelung_sum, madelung_calc, num_atoms)
-    implicit none
     type (MadelungLatticeSum), intent(inout) :: madelung_sum
     type (MadelungCalculator), target, intent(in)    :: madelung_calc
     integer, intent(in) :: num_atoms
@@ -186,7 +188,6 @@ module MadelungCalculator_mod
   !----------------------------------------------------------------------------
   !> Destroys and frees storage of Madelung lattice sum.
   subroutine destroyMadelungLatticeSum(madelung_sum)
-    implicit none
     type (MadelungLatticeSum), intent(inout) :: madelung_sum
 
     deallocate(madelung_sum%SMAT)
@@ -200,7 +201,6 @@ module MadelungCalculator_mod
   !> Needs a properly constructed MadelungLatticeSum object.
   !> STRMAT wrapper
   subroutine calculateMadelungLatticeSum(madelung_sum, atom_index, rbasis)
-    implicit none
     type (MadelungLatticeSum), intent(inout) :: madelung_sum
     integer, intent(in) :: atom_index
     double precision, dimension(3, madelung_sum%num_atoms), intent(in) :: rbasis
@@ -226,7 +226,6 @@ module MadelungCalculator_mod
   !                 dfac(l,l') = (4pi)**2 *  ----------------------
   !                                          (2*l+1)!! * (2*l'+1)!!
   subroutine calc_dfac(dfac, lpot)
-    implicit none
     double precision, intent(inout) :: dfac(0:lpot, 0:lpot)
     integer, intent(in) :: lpot
 
@@ -248,7 +247,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine initMadelungClebschData(clebsch, lmax)
-    implicit none
     type (MadelungClebschData), intent(inout) :: clebsch
     integer, intent(in) :: lmax
 
@@ -281,7 +279,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine createMadelungHarmonics(harmonics, lmax)
-    implicit none
     type (MadelungHarmonics), intent(inout) :: harmonics
     integer, intent(in) :: lmax
     !--------------------------------------------------------------------------
@@ -302,7 +299,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyMadelungHarmonics(harmonics)
-    implicit none
     type (MadelungHarmonics), intent(inout) :: harmonics
 
     deallocate(harmonics%WG)
@@ -311,7 +307,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine createMadelungLatticeData(mlattice, NMAXD, ISHLD)
-    implicit none
     type (MadelungLatticeData), intent(inout) :: mlattice
     integer, intent(in) :: NMAXD
     integer, intent(in) :: ISHLD
@@ -332,7 +327,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyMadelungLatticeData(mlattice)
-    implicit none
     type (MadelungLatticeData), intent(inout) :: mlattice
     !--------------------------------------------------------------------------
 
@@ -348,7 +342,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine createMadelungClebschData(clebsch, LMXSPD, LMPOTD)
-    implicit none
     type (MadelungClebschData), intent(inout) :: clebsch
     integer, intent(in) :: LMXSPD
     integer, intent(in) :: LMPOTD
@@ -361,7 +354,6 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyMadelungClebschData(clebsch)
-    implicit none
     type (MadelungClebschData), intent(inout) :: clebsch
     !--------------------------------------------------------------------------
 

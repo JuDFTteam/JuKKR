@@ -2,26 +2,22 @@
 
 !> Adds the Madelung Potential to all atoms.
 module MadelungPotential_mod
+  implicit none
+  private
+  public :: addMadelungPotentialnew_com
 
-  private :: sumAC
-  private :: addPot
-
-CONTAINS
+  CONTAINS
 
   !----------------------------------------------------------------------------
   !> Add Madelung potential to VONS.
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
-  subroutine addMadelungPotentialnew_com(calc_data, ZAT, rank, atoms_per_proc, &
-                                      communicator)
-
-    use CalculationData_mod
-    use MadelungCalculator_mod
-    implicit none
-
+  subroutine addMadelungPotentialnew_com(calc_data, ZAT, rank, atoms_per_proc, communicator)
+    use CalculationData_mod, only: CalculationData, getMadelungCalculator
+    use MadelungCalculator_mod, only: MadelungCalculator
+    
     type (CalculationData), intent(inout) :: calc_data
-
     double precision, intent(in) ::  ZAT(:)
 
     integer, intent(in) :: rank
@@ -74,21 +70,17 @@ CONTAINS
   !>    impurity-program adopted feb. 2004 (according to n.papanikalou)
   !>
   ! **********************************************************************
-  subroutine VMADELBLK_new2_com(calc_data,LPOT,NAEZ, &
-  ZAT, &
-  LMPOT,CLEB,ICLEB,IEND, &
-  LMXSPD,NCLEBD,LOFLM,DFAC, &
-  MYLRANK, atoms_per_proc, &
-  communicator)
+  subroutine VMADELBLK_new2_com(calc_data,LPOT,NAEZ, ZAT, &
+    LMPOT,CLEB,ICLEB,IEND, LMXSPD,NCLEBD,LOFLM,DFAC, MYLRANK, atoms_per_proc, communicator)
 
-    use CalculationData_mod
-    use MadelungCalculator_mod
-    use EnergyResults_mod
-    use DensityResults_mod
-    use BasisAtom_mod
-    use RadialMeshData_mod
+    use CalculationData_mod, only: CalculationData, getMadelungCalculator, getNumLocalAtoms, &
+      getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getMadelungSum, getAtomData
+    use MadelungCalculator_mod, only: MadelungLatticeSum
+    use EnergyResults_mod, only: EnergyResults
+    use DensityResults_mod, only: DensityResults
+    use BasisAtom_mod, only: BasisAtom
+    use RadialMeshData_mod, only: RadialMeshData
 
-    implicit none
     include 'mpif.h'
 
     type (CalculationData), intent(inout) :: calc_data
@@ -211,8 +203,6 @@ CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine addPot(VONS, VMAD, AC, LPOT, R, IRCUT, IPAN, NSPIN)
-    implicit none
-
     double precision, intent(inout) :: VONS(:,:,:)
     double precision, intent(inout) :: VMAD
     double precision, intent(in)    :: AC(:)
@@ -264,11 +254,7 @@ CONTAINS
 
 
   !------------------------------------------------------------------------------
-  subroutine sumAC(AC, CMOM_SAVE, CMINST_SAVE, ZAT_I2, SMAT_I2, &
-  LPOT, CLEB, ICLEB, IEND, LOFLM, DFAC)
-
-    implicit none
-
+  subroutine sumAC(AC, CMOM_SAVE, CMINST_SAVE, ZAT_I2, SMAT_I2, LPOT, CLEB, ICLEB, IEND, LOFLM, DFAC)
     double precision, intent(inout) :: AC(:)
     double precision, intent(in) :: CMOM_SAVE(:)
     double precision, intent(in) :: CMINST_SAVE(:)

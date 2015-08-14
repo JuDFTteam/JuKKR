@@ -1,9 +1,7 @@
 !> @author Elias Rabel
 
-module Config_Reader
-
-  use Config_Reader_Dictionary, only: Dictionary, CONFIG_READER_DICT_VAR_LENGTH, CONFIG_READER_DICT_VALUE_LENGTH
-
+module ConfigReader_mod
+  use ConfigReaderDictionary_mod, only: Dictionary
   implicit none
   ! Public constants, error codes
   !  Parse errors
@@ -40,15 +38,13 @@ module Config_Reader
   character(len=*), parameter, private :: STRING_DELIM = '"' // "'"
 
   character(len=*), parameter, private :: ALLOWED_CHARS = &
-  &  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz&
-     &1234567890+-._'
+   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+-._'
 
-contains
+  contains
 
 !---------------------------------------------------------------------
   subroutine createConfigReader(this)
-    use Config_Reader_Dictionary
-    implicit none
+    use ConfigReaderDictionary_mod, only: createDictionary, CONFIG_READER_DICT_VALUE_LENGTH
     type (ConfigReader), intent(inout) :: this
 
     if(CONFIG_READER_DICT_VALUE_LENGTH < MAX_LINE_LENGTH) then
@@ -64,8 +60,7 @@ contains
 
 !---------------------------------------------------------------------
   subroutine destroyConfigReader(this)
-    use Config_Reader_Dictionary
-    implicit none
+    use ConfigReaderDictionary_mod, only: destroyDictionary
     type (ConfigReader), intent(inout) :: this
 
     call destroyDictionary(this%parse_dict)
@@ -74,7 +69,6 @@ contains
 
 !---------------------------------------------------------------------
   subroutine parseFile(this, filename, ierror)
-    implicit none
 
     type (ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: filename
@@ -131,7 +125,7 @@ contains
   !> VAR = "#!"
   subroutine parseLine(this, line_buf, line_number, ierror)
 
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod, only: CONFIG_READER_DICT_VAR_LENGTH, CONFIG_READER_DICT_VALUE_LENGTH, CONFIG_READER_DICT_NOT_UNIQUE
     implicit none
     type (ConfigReader), intent(inout) :: this
     character(len = MAX_LINE_LENGTH), intent(in) :: line_buf
@@ -406,7 +400,7 @@ contains
 
 !---------------------------------------------------------------------
   subroutine getValueString(this, variable, value, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
 
     type (ConfigReader), intent(inout) :: this
@@ -433,7 +427,7 @@ contains
 !> a default value can be passed as int_value, which does not change on exit
 !> if the variable is not found
   subroutine getValueInteger(this, variable, int_value, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
 
     type (ConfigReader), intent(inout) :: this
@@ -468,7 +462,7 @@ contains
 !> a default value can be passed as double_value, which does not change on exit
 !> if the variable is not found
   subroutine getValueDouble(this, variable, double_value, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
 
     type (ConfigReader), intent(inout) :: this
@@ -503,7 +497,7 @@ contains
 ! a default value can be passed as logical_value, which does not change on exit
 ! if the variable is not found
   subroutine getValueLogical(this, variable, logical_value, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
 
     type (ConfigReader), intent(inout) :: this
@@ -542,7 +536,7 @@ contains
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
   subroutine getValueDoubleVector(this, variable, vector, length, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
 
     type (ConfigReader), intent(inout) :: this
@@ -587,7 +581,7 @@ contains
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
   subroutine getValueIntVector(this, variable, vector, length, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
 
     type (ConfigReader), intent(inout) :: this
@@ -630,7 +624,7 @@ contains
 !> subroutine, which gives the next unread variable
 !> If no unread variable was found then ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
   subroutine getUnreadVariable(this, variable, next_ptr, ierror)
-    use Config_Reader_Dictionary
+    use ConfigReaderDictionary_mod
     implicit none
     type (ConfigReader), intent(in) :: this
     character(len = *),  intent(out) :: variable
@@ -651,5 +645,5 @@ contains
 
   end subroutine getUnreadVariable
 
-end module Config_Reader
+end module ConfigReader_mod
 

@@ -6,17 +6,18 @@
 
 !> @author Elias Rabel, September 2011
 
-module Config_Reader_Dictionary
+module ConfigReaderDictionary_mod
   implicit none
+  private
+  public :: Dictionary, create, destroy
+  public :: createDictionary, destroyDictionary ! deprecated
 
   ! Status flags and error codes
-  integer, parameter, public :: CONFIG_READER_DICT_NOT_UNIQUE = 1
-  integer, parameter, public :: CONFIG_READER_DICT_NOT_FOUND = 2
+  integer, parameter, public :: CONFIG_READER_DICT_NOT_UNIQUE = 1, CONFIG_READER_DICT_NOT_FOUND = 2
 
   ! Maximal length of variable names and value string.
   ! Modify to allow different lengths.
-  integer, parameter, public :: CONFIG_READER_DICT_VAR_LENGTH = 64
-  integer, parameter, public :: CONFIG_READER_DICT_VALUE_LENGTH = 192
+  integer, parameter, public :: CONFIG_READER_DICT_VAR_LENGTH = 64, CONFIG_READER_DICT_VALUE_LENGTH = 192
 
   type Dictionary
     private
@@ -34,11 +35,20 @@ module Config_Reader_Dictionary
     logical :: tag
   end type DictionaryEntry
 
-contains
+  
+  interface create
+    module procedure createDictionary
+  endinterface
+  
+  interface destroy
+    module procedure destroyDictionary
+  endinterface
+  
+  contains
 
   subroutine fatalErrorDictionary(message)
     character(len=*), intent(in), optional :: message
-    write(*,*) "Config_Reader_Dictionary: << Fatal Error >>"
+    write(*,*) "ConfigReaderDictionary_mod: << Fatal Error >>"
 
     if (present(message)) then
       write(*,*) message
@@ -226,4 +236,4 @@ contains
     end if
   end subroutine destroyDictionary
 
-end module Config_Reader_Dictionary
+end module ConfigReaderDictionary_mod

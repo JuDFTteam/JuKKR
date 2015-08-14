@@ -4,15 +4,12 @@
 
 !> @author Modularisation: Elias Rabel
 module ScatteringCalculation_mod
-
 implicit none
+  private
+  public  :: energyLoop
+  private :: setup_solver, cleanup_solver, printEnergyPoint, calcDeltaTupTdown, substractReferenceTmatrix, rescaleTmatrix, gatherTrefMatrices_com, gatherTmatrices_com
 
-public  :: energyLoop
-private :: printEnergyPoint
-private :: calcDeltaTupTdown
-private :: substractReferenceTmatrix
-
-CONTAINS
+  CONTAINS
 
 !> Input:  *) ebalance_handler (properly initialised)
 !>         *) jij_data, ldau_data (properly initialised !!!)
@@ -26,40 +23,43 @@ CONTAINS
 !>         *) Logfiles (if requested)
 !>         *) JIJ-Files (if requested)
 !>         *) matrix dump (if requested)
-subroutine energyLoop(iter, calc_data, emesh, params, dims, &
-                      ebalance_handler, my_mpi, arrays)
+subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my_mpi, arrays)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
 
-  use TimerMpi_mod
-  use EBalanceHandler_mod
-
+  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer
+  use EBalanceHandler_mod, only: EBalanceHandler
   use TEST_lcutoff_mod, only: DEBUG_dump_matrix
 
-  use DimParams_mod
-  use InputParams_mod
-  use Main2Arrays_mod
+  use DimParams_mod, only: DimParams
+  use InputParams_mod, only: InputParams
+  use Main2Arrays_mod, only: Main2Arrays
 
-  use CalculationData_mod
-  use KKRresults_mod
-  use GauntCoefficients_mod
-  use BasisAtom_mod
-  use JijData_mod
-  use LDAUData_mod
-  use EnergyMesh_mod
-  use KKRnanoParallel_mod
-  use EBalanceHandler_mod
+  use CalculationData_mod, only: CalculationData, &
+    getTruncationZone, getGaunts, getKKR, getRefCluster, getJijData, getInitialGuessData, getAtomData, &
+    getLDAUData, getClusterInfo, getLatticeVectors, getNumLocalAtoms, getAtomIndexOfLocal
+    
+  use KKRresults_mod, only: KKRresults
+  use GauntCoefficients_mod, only: GauntCoefficients
+  use BasisAtom_mod, only: BasisAtom
+  use JijData_mod, only: JijData
+  use LDAUData_mod, only: LDAUData
+  use EnergyMesh_mod, only: EnergyMesh
+  
+  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyEnergyId, getMySEcommunicator, isWorkingSpinRank, getMyAtomRank, isInMasterGroup
+  use KKRnano_Comm_mod, only: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess_com
+  
+  use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
+  
+  use kloopz1_mod, only: kloopz1_new
+  use TruncationZone_mod, only: TruncationZone
+  use ClusterInfo_mod, only: ClusterInfo
+  use RefCluster_mod, only: RefCluster, LatticeVectors
+  use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
 
-  use KKRnano_Comm_mod
-  use kloopz1_mod
-  use TruncationZone_mod
-  use ClusterInfo_mod
-  use RefCluster_mod
-  use InitialGuess_mod
-
-  use wrappers_mod,     only: calctmat_wrapper, calcdtmat_wrapper
-  use jij_calc_mod,     only: clsjij, writejijs, global_jij_data
+  use wrappers_mod, only: calctmat_wrapper, calcdtmat_wrapper
+  use jij_calc_mod, only: clsjij, writejijs, global_jij_data
 
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator
@@ -473,7 +473,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   deallocate(DTref_local)
   deallocate(Tref_local)
 
-end subroutine
+end subroutine energyLoop
 
 ! =============================================================================
 ! Helper routines
@@ -485,13 +485,13 @@ end subroutine
 !> preconditioner not calculated yet
 !> Matrix setup happens later in kkrmat
 subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
-  use TFQMRSolver_mod
-  use KKROperator_mod
-  use BCPOperator_mod
-  use DimParams_mod
-  use ClusterInfo_mod
-  use SolverOptions_mod
-  use MultScatData_mod
+  use TFQMRSolver_mod, only: TFQMRSolver
+  use KKROperator_mod, only: KKROperator
+  use BCPOperator_mod, only: BCPOperator
+  use DimParams_mod, only: DimParams
+  use ClusterInfo_mod, only: ClusterInfo
+  use SolverOptions_mod, only: SolverOptions
+  use MultScatData_mod, only: MultScatData, createMultScatData
 
   type(TFQMRSolver), intent(inout) :: solv
   type(KKROperator), intent(inout) :: kkr_op
@@ -531,10 +531,10 @@ end subroutine
 
 !------------------------------------------------------------------------------
 subroutine cleanup_solver(solv, kkr_op, precond)
-  use TFQMRSolver_mod
-  use KKROperator_mod
-  use BCPOperator_mod
-  use MultScatData_mod
+  use TFQMRSolver_mod, only: TFQMRSolver
+  use KKROperator_mod, only: KKROperator
+  use BCPOperator_mod, only: BCPOperator
+  use MultScatData_mod, only: MultScatData, destroyMultScatData
 
   type(TFQMRSolver), intent(inout) :: solv
   type(KKROperator), intent(inout) :: kkr_op
@@ -637,7 +637,7 @@ end subroutine
 !> @param TrefLL       on exit all tref-matrices in ref_cluster
 subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, &
                                   communicator)
-  use RefCluster_mod
+  use RefCluster_mod, only: RefCluster
   use one_sided_commZ_mod, only: copyFromZ_com
   implicit none
 
@@ -669,9 +669,9 @@ end subroutine
 !>
 !> Uses MPI-RMA
 subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
-  use CalculationData_mod
-  use KKRresults_mod
-  use TruncationZone_mod
+  use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getTruncationZone, getKKR
+  use KKRresults_mod, only: KKRresults
+  use TruncationZone_mod, only: TruncationZone
   use one_sided_commZ_mod, only: copyFromZ_com
   implicit none
 

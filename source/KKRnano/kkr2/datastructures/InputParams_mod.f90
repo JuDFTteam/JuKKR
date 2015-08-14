@@ -9,6 +9,11 @@
 
 
 module InputParams_mod
+  implicit none
+  private
+  public :: InputParams, getInputParamsValues, readInputParamsFromFile, writeInputParamsToFile
+  
+  
 type InputParams
   integer :: icst
   integer :: kpre
@@ -59,15 +64,16 @@ type InputParams
   integer :: DEBUG_morgan_electrostatics
 end type InputParams
 
-CONTAINS
+  CONTAINS
 !-------------------------------------------------------------------------------
 integer function getInputParamsValues(filename, confvalues) result(ierror)
-  use Config_Reader
-  implicit none
+  use ConfigReader_mod, only: ConfigReader, CONFIG_READER_ERR_VAR_NOT_FOUND
+  use ConfigReader_mod, only: getValueInteger, getValueDouble, getValueDoubleVector, getValueIntVector, getValueLogical
 
-  character(len=*) :: filename
-  type (ConfigReader) :: conf
+  character(len=*), intent(in) :: filename
   type (InputParams), intent(inout) :: confvalues
+  
+  type (ConfigReader) :: conf
 
   ierror = 0
   write(*,*) "Reading information from input.conf..."
@@ -508,7 +514,6 @@ end function
 
 !-------------------------------------------------------------------------------
 integer function readInputParamsFromFile(filename, confvalues) result(ierror)
-  implicit none
   character(len=*), intent(in) :: filename
   type (InputParams), intent(inout) :: confvalues
 
@@ -568,7 +573,6 @@ end function
 
 !-------------------------------------------------------------------------------
 integer function writeInputParamsToFile(filename, confvalues) result(ierror)
-  implicit none
   character(len=*), intent(in) :: filename
   type (InputParams), intent(inout) :: confvalues
 

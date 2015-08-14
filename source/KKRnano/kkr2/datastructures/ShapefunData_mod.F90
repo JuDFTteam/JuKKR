@@ -2,6 +2,9 @@
 !> @author Elias Rabel
 module ShapefunData_mod
   implicit none
+  private
+  public :: ShapeFunData, create, destroy, represent
+  public :: createShapefunData, destroyShapefunData, repr_ShapefunData ! deprecated
 
   type ShapefunData
     ! dimension params
@@ -20,6 +23,20 @@ module ShapefunData_mod
 
   end type
 
+  
+  interface create
+    module procedure createShapefunData
+  endinterface
+  
+  interface destroy
+    module procedure destroyShapefunData
+  endinterface
+
+  interface represent
+    module procedure repr_ShapefunData
+  endinterface
+  
+  
   CONTAINS
 
   !----------------------------------------------------------------------------

@@ -1,6 +1,8 @@
 module kkr_helpers_mod
   implicit none
-
+  private
+  public :: lmmaxToLmax
+  
   contains
 
   !> Returns the l_max value which corresponds to a given lmmax-value

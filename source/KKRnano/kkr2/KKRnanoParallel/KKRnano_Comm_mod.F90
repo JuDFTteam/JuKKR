@@ -18,7 +18,10 @@
 
 module KKRnano_Comm_mod
   implicit none
-
+  private
+  public :: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess_com
+  public :: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
+  
   CONTAINS
 
   !----------------------------------------------------------------------------

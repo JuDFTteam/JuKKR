@@ -1,6 +1,8 @@
 module AtomicCoreData_mod
-
   implicit none
+  private
+  public :: AtomicCoreData, create, destroy 
+  public :: createAtomicCoreData, destroyAtomicCoreData ! deprecated
 
   !> Structure that contains information about core states
   type AtomicCoreData
@@ -16,11 +18,18 @@ module AtomicCoreData_mod
 
   end type
 
+  interface create
+    module procedure createAtomicCoreData
+  endinterface
+  
+  interface destroy
+    module procedure destroyAtomicCoreData
+  endinterface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createAtomicCoreData(core, irmd)
-    implicit none
     type (AtomicCoreData), intent(inout) :: core
     integer, intent(in) :: irmd
 
@@ -41,7 +50,6 @@ module AtomicCoreData_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyAtomicCoreData(core)
-    implicit none
     type (AtomicCoreData), intent(inout) :: core
 
     deallocate(core%RHOCAT)

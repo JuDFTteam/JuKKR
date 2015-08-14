@@ -1,5 +1,7 @@
 module lcutoff_mod
   implicit none
+  private
+  public :: distance_pbc, getLMarray, calcCutoffarray
 
   contains
 

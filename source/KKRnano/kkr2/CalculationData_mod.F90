@@ -4,36 +4,40 @@
 
 module CalculationData_mod
 
-  use MadelungCalculator_mod
-  use RadialMeshData_mod
-  use CellData_mod
-  use BasisAtom_mod
-  use KKRresults_mod
-  use DensityResults_mod
-  use JijData_mod
-  use LDAUData_mod
-  use BroydenData_mod
-  use EnergyResults_mod
-  use RefCluster_mod
-  use ClusterInfo_mod
-
-  use GauntCoefficients_mod
-  use ShapeGauntCoefficients_mod
-  use TruncationZone_mod
-  use InitialGuess_mod
-
+  use MadelungCalculator_mod, only: MadelungCalculator
+  use MadelungCalculator_mod, only: MadelungLatticeSum
+  use RadialMeshData_mod, only: RadialMeshData
+  use CellData_mod, only: CellData
+  use BasisAtom_mod, only: BasisAtom
+  use KKRresults_mod, only: KKRresults
+  use DensityResults_mod, only: DensityResults
+  use JijData_mod, only: JijData
+  use LDAUData_mod, only: LDAUData
+  use BroydenData_mod, only: BroydenData
+  use EnergyResults_mod, only: EnergyResults
+  use RefCluster_mod, only: RefCluster
+  use ClusterInfo_mod, only: ClusterInfo
+  use GauntCoefficients_mod, only: GauntCoefficients
+  use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
+  use TruncationZone_mod, only: TruncationZone
+  use InitialGuess_mod, only: InitialGuess
+  use RefCluster_mod, only: LatticeVectors
+  
   implicit none
+  private
 
-  public :: CalculationData
-  public :: createCalculationData
-  public :: destroyCalculationData
-  private :: constructEverything
-  private :: generateAtomsShapesMeshes
-  private :: generateShapesTEST
-  private :: recordLengths_com
-  private :: writePotentialIndexFile
+  public :: CalculationData, create, destroy
+  public :: createCalculationData, destroyCalculationData ! deprecated
+  public :: getBroydenDim, getBroyden, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getRefCluster, getKKR
+  public :: getMadelungSum, getDensities, getEnergies, getLDAUData, getJijData, getGaunts, getShapeGaunts
+  public :: getMadelungCalculator, getTruncationZone, getClusterInfo, getLatticeVectors, getInitialGuessData 
+  public :: getMaxReclenMeshes, getMaxReclenPotential      
+  public :: prepareMadelung, constructEverything, setup_iguess, generateAtomsShapesMeshes, generateShapesTEST         
+  public :: recordLengths_com, writePotentialIndexFile, writeNewMeshFiles, print_debug_info, constructClusters          
+  public :: constructTruncationZones, constructStorage           
+  
 
-  type CalculationData
+    type CalculationData
     PRIVATE
 
     integer :: num_local_atoms  ! <= atoms_per_proc
@@ -67,6 +71,14 @@ module CalculationData_mod
     type (InitialGuess), pointer           :: iguess_data       => null()
 
   end type
+  
+  interface create
+    module procedure createCalculationData
+  endinterface
+  
+  interface destroy
+    module procedure destroyCalculationData
+  endinterface
 
   CONTAINS
 
@@ -74,11 +86,10 @@ module CalculationData_mod
   ! TODO: atoms_per_procs * num_procs MUST BE = naez
   ! rank = 0,1,..., num_atom_ranks-1
   subroutine createCalculationData(calc_data, dims, params, arrays, my_mpi)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use InputParams_mod
-    use Main2Arrays_mod
-    implicit none
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getMyAtomRank, getNumAtomRanks
+    use DimParams_mod, only: DimParams
+    use InputParams_mod, only: InputParams
+    use Main2Arrays_mod, only: Main2Arrays
 
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)   :: dims
@@ -147,8 +158,7 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Calculate Madelung Lattice sums for all local atoms.
   subroutine prepareMadelung(calc_data, arrays)
-    use Main2Arrays_mod
-    implicit none
+    use Main2Arrays_mod, only: Main2Arrays
 
     type (CalculationData), intent(inout) :: calc_data
     type (Main2Arrays), intent(in):: arrays
@@ -168,9 +178,6 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyCalculationData(calc_data)
-
-    implicit none
-
     type (CalculationData), intent(inout) :: calc_data
 
     ! ---- locals ----
@@ -263,7 +270,6 @@ module CalculationData_mod
   !> Returns reference to atomdata for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getAtomData(calc_data, local_atom_index)
-    implicit none
     type (BasisAtom), pointer :: getAtomData ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -276,7 +282,6 @@ module CalculationData_mod
   !> Returns reference to 'reference cluster for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getRefCluster(calc_data, local_atom_index)
-    implicit none
     type (RefCluster), pointer :: getRefCluster ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -289,7 +294,6 @@ module CalculationData_mod
   !> Returns reference to kkr(results) for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getKKR(calc_data, local_atom_index)
-    implicit none
     type (KKRresults), pointer :: getKKR ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -302,7 +306,7 @@ module CalculationData_mod
   !> Returns reference to Madelung sum for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getMadelungSum(calc_data, local_atom_index)
-    implicit none
+        
     type (MadelungLatticeSum), pointer :: getMadelungSum ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -315,7 +319,6 @@ module CalculationData_mod
   !> Returns reference to density results for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getDensities(calc_data, local_atom_index)
-    implicit none
     type (DensityResults), pointer :: getDensities ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -328,7 +331,6 @@ module CalculationData_mod
   !> Returns reference to energy results for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getEnergies(calc_data, local_atom_index)
-    implicit none
     type (EnergyResults), pointer :: getEnergies ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -341,7 +343,6 @@ module CalculationData_mod
   !> Returns reference to LDA+U data for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getLDAUData(calc_data, local_atom_index)
-    implicit none
     type (LDAUData), pointer :: getLDAUData ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -354,7 +355,6 @@ module CalculationData_mod
   !> Returns reference to Jij-data for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getJijData(calc_data, local_atom_index)
-    implicit none
     type (JijData), pointer :: getJijData ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -367,7 +367,6 @@ module CalculationData_mod
   !> Returns reference to Broyden data for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getBroyden(calc_data, local_atom_index)
-    implicit none
     type (BroydenData), pointer :: getBroyden ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -379,7 +378,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to Gaunt coefficients.
   function getGaunts(calc_data)
-    implicit none
     type (GauntCoefficients), pointer :: getGaunts ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -390,7 +388,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to Shape-Gaunt coefficients.
   function getShapeGaunts(calc_data)
-    implicit none
     type (ShapeGauntCoefficients), pointer :: getShapeGaunts ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -401,7 +398,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to Madelung calculator.
   function getMadelungCalculator(calc_data)
-    implicit none
     type (MadelungCalculator), pointer :: getMadelungCalculator ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -412,7 +408,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to truncation zone.
   function getTruncationZone(calc_data)
-    implicit none
     type (TruncationZone), pointer :: getTruncationZone ! return value
     type (CalculationData), intent(in) :: calc_data
 
@@ -422,7 +417,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to cluster info (sparsity info).
   function getClusterInfo(calc_data)
-    implicit none
     type (ClusterInfo), pointer :: getClusterInfo ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -433,7 +427,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to lattice vector table.
   function getLatticeVectors(calc_data)
-    implicit none
     type (LatticeVectors), pointer :: getLatticeVectors ! return value
 
     type (CalculationData), intent(in) :: calc_data
@@ -444,7 +437,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to initial guess data.
   function getInitialGuessData(calc_data)
-    implicit none
     type (InitialGuess), pointer :: getInitialGuessData
 
     type (CalculationData), intent(in) :: calc_data
@@ -455,7 +447,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
   integer function getMaxReclenMeshes(calc_data)
-    implicit none
     type (CalculationData), intent(in) :: calc_data
 
     getMaxReclenMeshes = calc_data%max_reclen_meshes
@@ -464,7 +455,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
   integer function getMaxReclenPotential(calc_data)
-    implicit none
     type (CalculationData), intent(in) :: calc_data
 
     getMaxReclenPotential = calc_data%max_reclen_potential
@@ -475,13 +465,12 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
   subroutine constructEverything(calc_data, dims, params, arrays, my_mpi)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use InputParams_mod
-    use Main2Arrays_mod
-    use TEST_lcutoff_mod
-    implicit none
-
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank, isInMasterGroup
+    use DimParams_mod, only: DimParams
+    use InputParams_mod, only: InputParams
+    use Main2Arrays_mod, only: Main2Arrays
+    use TEST_lcutoff_mod, only: num_untruncated, num_truncated, num_truncated2
+    
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
     type (InputParams), intent(in):: params
@@ -595,10 +584,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Initialise iguess datastructure.
   subroutine setup_iguess(calc_data, dims, arrays)
-    use DimParams_mod
-    use Main2Arrays_mod
-    use InitialGuess_mod
-    implicit none
+    use DimParams_mod, only: DimParams
+    use Main2Arrays_mod, only: Main2Arrays
+
     type(CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
     type (Main2Arrays), intent(in):: arrays
@@ -633,13 +621,11 @@ module CalculationData_mod
 !> Generates basis atom information, radial mesh, shape-function and
 !> interpolates starting potential if necessary
   subroutine generateAtomsShapesMeshes(calc_data, dims, params, arrays)
-    use DimParams_mod
-    use InterpolateBasisAtom_mod
-    use RadialMeshData_mod
-    use InputParams_mod
-    use Main2Arrays_mod
+    use DimParams_mod, only: DimParams
+    use InterpolateBasisAtom_mod, only: interpolateBasisAtom
+    use InputParams_mod, only: InputParams
+    use Main2Arrays_mod, only: Main2Arrays
 
-    implicit none
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
     type (InputParams), intent(in):: params
@@ -740,16 +726,12 @@ module CalculationData_mod
   end subroutine
 
 !------------------------------------------------------------------------------
-  subroutine generateShapesTEST(calc_data, dims, params, arrays, &
-                                new_MT_radii, MT_scale)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use InputParams_mod
-    use Main2Arrays_mod
-    use ConstructShapes_mod, only: construct, InterstitialMesh, &
-                                   destroyInterstitialMesh, write_shapefun_file
-    use ShapefunData_mod
-    implicit none
+  subroutine generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii, MT_scale)
+    use DimParams_mod, only: DimParams
+    use InputParams_mod, only: InputParams
+    use Main2Arrays_mod, only: Main2Arrays
+    use ConstructShapes_mod, only: construct, InterstitialMesh, destroyInterstitialMesh, write_shapefun_file
+    use ShapefunData_mod, only: ShapefunData
 
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
@@ -825,10 +807,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Communicate and set record lengths.
   subroutine recordLengths_com(calc_data, my_mpi)
-    use KKRnanoParallel_mod
-    use RadialMeshData_mod
-    use BasisAtom_mod
-    implicit none
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySECommunicator, getMyAtomRank
+    use RadialMeshData_mod, only: getMinReclenMesh
+    use BasisAtom_mod, only: getMinReclenBasisAtomPotential
     include 'mpif.h'
 
     type (CalculationData), intent(inout) :: calc_data
@@ -851,8 +832,7 @@ module CalculationData_mod
       sendbuf(2) = max(sendbuf(2), getMinReclenMesh(mesh))
     end do
 
-    call MPI_Allreduce(sendbuf, recvbuf, 2, MPI_INTEGER, &
-                       MPI_MAX, getMySECommunicator(my_mpi), ierr)
+    call MPI_Allreduce(sendbuf, recvbuf, 2, MPI_INTEGER, MPI_MAX, getMySECommunicator(my_mpi), ierr)
 
     if (getMyAtomRank(my_mpi) == 0) then
       write(*,*) "Record length 'vpotnew' file: ", recvbuf(1)
@@ -867,9 +847,6 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Write potential index file.
   subroutine writePotentialIndexFile(calc_data)
-    use BasisAtom_mod
-    implicit none
-
     type (CalculationData), intent(in) :: calc_data
 
     type (BasisAtom), pointer :: atomdata
@@ -896,8 +873,6 @@ module CalculationData_mod
   !> The mesh can deviate from the input mesh if atoms are not in an ideal
   !> position. Therefore new mesh files have to be written.
   subroutine writeNewMeshFiles(calc_data)
-    use BasisAtom_mod
-    implicit none
     type (CalculationData), intent(in) :: calc_data
 
     type (RadialMeshData), pointer :: mesh
@@ -935,7 +910,8 @@ module CalculationData_mod
   !> Returns the number of potential values of ALL LOCAL atoms.
   !> This is needed for dimensioning the Broyden mixing work arrays.
   integer function getBroydenDim(calc_data)
-    implicit none
+    use PotentialData_mod, only: getNumPotentialValues
+    
     type (CalculationData), intent(in) :: calc_data
 
     integer :: ilocal
@@ -951,7 +927,10 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   ! Print some debugging info
   subroutine print_debug_info(calc_data)
-    implicit none
+    use RadialMeshData_mod, only: repr_RadialMeshData
+    use ShapefunData_mod, only: repr_ShapefunData
+    use PotentialData_mod, only: repr_PotentialData
+
     type (CalculationData), intent(in) :: calc_data
 
     integer :: ilocal
@@ -980,10 +959,9 @@ module CalculationData_mod
   ! Factored out some routines from 'constructEverything'
 
   subroutine constructClusters(calc_data, params, arrays)
-    use InputParams_mod
-    use Main2Arrays_mod
-    implicit none
-
+    use InputParams_mod, only: InputParams
+    use Main2Arrays_mod, only: Main2Arrays
+    
     type (CalculationData), intent(inout) :: calc_data
     type (InputParams), intent(in):: params
     type (Main2Arrays), intent(in):: arrays
@@ -1005,11 +983,10 @@ module CalculationData_mod
   end subroutine
 
   subroutine constructTruncationZones(calc_data, dims, arrays, my_mpi)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use Main2Arrays_mod
-    use TEST_lcutoff_mod
-    implicit none
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
+    use DimParams_mod, only: DimParams
+    use Main2Arrays_mod, only: Main2Arrays
+    use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated
 
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
@@ -1040,12 +1017,11 @@ module CalculationData_mod
   end subroutine
 
   subroutine constructStorage(calc_data, dims, params, arrays, my_mpi)
-    use KKRnanoParallel_mod
-    use DimParams_mod
-    use InputParams_mod
-    use Main2Arrays_mod
-    implicit none
-
+    use KKRnanoParallel_mod, only: KKRnanoParallel
+    use DimParams_mod, only: DimParams
+    use InputParams_mod, only: InputParams
+    use Main2Arrays_mod, only: Main2Arrays
+    
     type (CalculationData), intent(inout) :: calc_data
     type (DimParams), intent(in)  :: dims
     type (InputParams), intent(in):: params

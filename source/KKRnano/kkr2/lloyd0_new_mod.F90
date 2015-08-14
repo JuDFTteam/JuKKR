@@ -1,8 +1,11 @@
 #include "DebugHelpers/test_macros.h"
 
 module lloyd0_new_mod
+implicit none
+  private
+  public :: lloyd0_wrapper_com, LLOYD0_NEW, lloyd_calcRenormalisation, lloyd_communicate
 
-contains
+  contains
 
 !----------------------------------------------------------------------------
 !> Lloyd's formula.

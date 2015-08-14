@@ -45,6 +45,11 @@
 !end program
 
 module KKRnanoParallel_mod
+implicit none
+  public
+!   private
+!   public :: KKRnanoParallel
+
 
   !> Opaque object. Use getter routines to access member variables
   type KKRnanoParallel
