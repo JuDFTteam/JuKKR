@@ -4,34 +4,36 @@
 #include "DebugHelpers/test_macros.h"
 #include "DebugHelpers/logging_macros.h"
 
-program MAIN2
+program KKRnano
 
   USE_LOGGING_MOD
 
-  use KKRnanoParallel_mod
-  use KKRnano_Comm_mod
+  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup, &
+    getMyWorldRank, getMyAtomRank, getMyActiveCommunicator, getMySEcommunicator, createKKRnanoParallel, destroyKKRnanoParallel
+  use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
-  use main2_aux_mod
-  use EnergyMesh_mod
+  use main2_aux_mod, only: printDoubleLineSep, is_abort_by_rank0, writeIterationTimings
+  use EnergyMesh_mod, only: EnergyMesh, createEnergyMesh, readEnergyMesh, readEnergyMeshSemi, &
+    broadcastEnergyMesh_com, updateEnergyMesh, updateEnergyMeshSemi, destroyEnergyMesh, writeEnergyMesh, writeEnergyMeshSemi
 
-  use RadialMeshData_mod
-  use BasisAtom_mod
+  use RadialMeshData_mod, only: RadialMeshData
+  use BasisAtom_mod, only: BasisAtom
+  use LDAUData_mod, only: LDAUData
 
-  use LDAUData_mod
-
-  use TimerMpi_mod
-  use EBalanceHandler_mod
+  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer
+  use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroyEBalanceHandler
 
   use wrappers_mod, only: rhocore_wrapper
 
-  use DimParams_mod
-  use InputParams_mod
-  use Main2Arrays_mod
+  use DimParams_mod, only: DimParams, createDimParams, destroyDimParams
+  use InputParams_mod, only: InputParams, readInputParamsFromFile
+  use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, readMain2Arrays, destroyMain2Arrays
 
   use ScatteringCalculation_mod, only: energyloop
-  use ProcessKKRresults_mod
+  use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
-  use CalculationData_mod
+  use CalculationData_mod, only: CalculationData, createCalculationData, prepareMadelung, &
+    getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal, destroyCalculationData
 
   implicit none
 
@@ -140,9 +142,9 @@ program MAIN2
 
     ! TO DO: Getting rid of the many if-clauses used for semicore contour!
     if(params%use_semicore==1) then
-    call readEnergyMeshSemi(emesh) !every process does this!  !!!!
+      call readEnergyMeshSemi(emesh) !every process does this!  !!!!
     else
-    call readEnergyMesh(emesh)  !every process does this!  !!!!
+      call readEnergyMesh(emesh)  !every process does this!  !!!!
     end if
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', &
@@ -191,9 +193,9 @@ program MAIN2
         do ilocal = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ilocal)
           if (params%use_semicore==1) then
-          call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
+            call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
           else
-          call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
+            call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
           end if
         end do
         !!!$omp end parallel do
@@ -222,17 +224,14 @@ program MAIN2
       endif
 ! LDA+U
 
-      call OUTTIME(isMasterRank(my_mpi),'initialized .........', &
-                   getElapsedTime(program_timer),ITER)
+      call OUTTIME(isMasterRank(my_mpi),'initialized .........', getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
       ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
-      call energyLoop(iter, calc_data, emesh, params, dims, &
-                      ebalance_handler, my_mpi, arrays)
+      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my_mpi, arrays)
 
-      call OUTTIME(isMasterRank(my_mpi),'G obtained ..........', &
-                   getElapsedTime(program_timer),ITER)
+      call OUTTIME(isMasterRank(my_mpi),'G obtained ..........', getElapsedTime(program_timer),ITER)
 
 !----------------------------------------------------------------------
 ! BEGIN only processes in master-group are working
@@ -242,8 +241,7 @@ program MAIN2
         ! output: (some contained as references in calc_data)
         ! atomdata, densities, broyden, ldau_data,
         ! emesh (only correct for master)
-        flag = processKKRresults(iter, calc_data, my_mpi, emesh, dims, &
-                                 params, arrays, program_timer)
+        flag = processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, program_timer)
 
       endif
 !----------------------------------------------------------------------
@@ -255,9 +253,9 @@ program MAIN2
         ! (although other processes could update themselves)
 
         if(params%use_semicore==1) then
-        call updateEnergyMeshSemi(emesh)
+          call updateEnergyMeshSemi(emesh)
         else
-        call updateEnergyMesh(emesh)
+          call updateEnergyMesh(emesh)
         end if
 
         ! write file 'energy_mesh'
@@ -271,8 +269,7 @@ program MAIN2
 
 
         call printDoubleLineSep()
-        call writeIterationTimings(ITER, getElapsedTime(program_timer), &
-                                         getElapsedTime(iteration_timer))
+        call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
 
       endif
 
@@ -288,9 +285,7 @@ program MAIN2
 
     ! write forces if requested, master-group only
     if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) then
-
-      call output_forces(calc_data, 0, getMyAtomRank(my_mpi), &
-                                       getMySEcommunicator(my_mpi))
+      call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
     end if
 
     if (isMasterRank(my_mpi)) close(2)    ! TIME
@@ -316,4 +311,4 @@ program MAIN2
 
   call destroyKKRnanoParallel(my_mpi)
 
-end program MAIN2
+end program KKRnano
