@@ -12,33 +12,42 @@
 
 
 module RefCluster_mod
+  implicit none
+  private
+  public :: RefCluster, LatticeVectors, create, destroy
+  public :: createLatticeVectors, destroyLatticeVectors, createRefCluster, destroyRefCluster
+!   public :: 
 
-public
+  type LatticeVectors
+    integer nrd
+    double precision, allocatable :: rr(:,:)   !dim 0:nrd
+  end type
 
-type LatticeVectors
-  integer nrd
-  double precision, allocatable :: rr(:,:)   !dim 0:nrd
-end type
+  type RefCluster
+    !> reference to LatticeVectors datastructure
+    type (LatticeVectors), pointer :: lattice_vectors
+    double precision, allocatable :: rcls(:,:) !< positions relative to center
+    integer, allocatable :: atom(:)  !< basis atom indices of cluster atoms
+    integer, allocatable :: ezoa(:)  !< points into lattice_vectors%rr
+    integer, allocatable :: indn0(:) !< indices of inequivalent cluster atoms
+    integer :: numn0 !< number of inequivalent cluster atoms
+    integer :: nacls !< number of cluster atoms
 
-type RefCluster
-  !> reference to LatticeVectors datastructure
-  type (LatticeVectors), pointer :: lattice_vectors
-  double precision, allocatable :: rcls(:,:) !< positions relative to center
-  integer, allocatable :: atom(:)  !< basis atom indices of cluster atoms
-  integer, allocatable :: ezoa(:)  !< points into lattice_vectors%rr
-  integer, allocatable :: indn0(:) !< indices of inequivalent cluster atoms
-  integer :: numn0 !< number of inequivalent cluster atoms
-  integer :: nacls !< number of cluster atoms
+    integer :: atom_index !< basis atom index of central cluster atom
+  end type
 
-  integer :: atom_index !< basis atom index of central cluster atom
-end type
+  private vmul, veq, vadd, scalpr, xsort
+  private rrgen, rrgencount, clsgen99, clsgen99count
 
-!public createRefCluster
-
-private vmul, veq, vadd, scalpr, xsort
-private rrgen, rrgencount, clsgen99, clsgen99count
-
-CONTAINS
+  interface create
+    module procedure createLatticeVectors, createRefCluster
+  endinterface
+  
+  interface destroy
+    module procedure destroyLatticeVectors, destroyRefCluster
+  endinterface
+  
+  CONTAINS
 
 !------------------------------------------------------------------------------
 !> Creates a table of lattice vectors.
@@ -48,7 +57,6 @@ CONTAINS
 !> Several different reference clusters can (and should) share
 !> the same lattice vectors.
 subroutine createLatticeVectors(lattice_vectors, bravais)
-  implicit none
   type (LatticeVectors), intent(inout) :: lattice_vectors
   double precision, intent(in) :: bravais(3,3)
 
@@ -66,7 +74,6 @@ end subroutine
 !> Destroys table of lattice vectors.
 !>
 subroutine destroyLatticeVectors(lattice_vectors)
-  implicit none
   type (LatticeVectors), intent(inout) :: lattice_vectors
 
   deallocate( lattice_vectors%rr )
@@ -87,7 +94,6 @@ end subroutine
 !> call destroyLatticeVectors(lattice_vectors)
 !
 subroutine createRefCluster(self, lattice_vectors, rbasis, rcut, center_ind)
-  implicit none
   type(RefCluster), intent(inout) :: self
 
   type(LatticeVectors), target, intent(in) :: lattice_vectors
@@ -126,7 +132,6 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Destroys reference cluster.
 subroutine destroyRefCluster(self)
-  implicit none
   type(RefCluster), intent(inout) :: self
 
   deallocate ( self%atom, self%ezoa, self%indn0)
@@ -235,9 +240,7 @@ subroutine xsort (w,ind,max,pos)
 end subroutine xsort
 
 ! ************************************************************************
-subroutine clsgen99count(center_ind, naez,rr,rbasis,rcut, &
-                         nrd, nacls)
-  implicit none
+subroutine clsgen99count(center_ind, naez,rr,rbasis,rcut, nrd, nacls)
   ! ************************************************************************
   ! This subroutine is used to create the clusters around each atom 
   ! where repulsive potentials will be positioned.
@@ -307,12 +310,7 @@ end subroutine clsgen99count
 
 
 ! ************************************************************************
-subroutine clsgen99(center_ind, naez,rr,rbasis, &
-     atom,ezoa, &
-     rcls,rcut, &
-     numn0,indn0, &
-     nrd, nacls)
-  implicit none
+subroutine clsgen99(center_ind, naez,rr,rbasis, atom,ezoa, rcls,rcut, numn0,indn0, nrd, nacls)
   ! ************************************************************************
   ! This subroutine is used to create the clusters around each atom 
   ! where repulsive potentials will be positioned.
@@ -472,12 +470,10 @@ subroutine rrgencount (bv1,nrd)
   ! * routine CLSGEN99                                                   *
   ! *                                                                    *
   ! **********************************************************************
-  implicit none
-  !     ..
-  integer nr,nrd
-  !    ..
-  double precision bv1(3,3)
-  !    ..
+  integer, intent(out) :: nrd
+  double precision, intent(in) :: bv1(3,3)
+  
+  integer nr
   double precision epsshl,r,r1,r2,r3,rmax,rr2,rs
   integer i,j,k,n1,n2,n3,iprint
   integer nint
@@ -579,15 +575,12 @@ subroutine rrgen (bv1,rr,nrd)
   ! * routine CLSGEN99                                                   *
   ! *                                                                    *
   ! **********************************************************************
-  implicit none
-  !     ..
-  !     .. Scalar arguments ..
-  integer nr,nrd
-  !    ..
-  !    .. Array arguments ..
-  double precision bv1(3,3),rr(3,0:nrd)
+  integer, intent(in) :: nrd
+  double precision, intent(in) :: bv1(3,3)
+  double precision, intent(out) :: rr(3,0:nrd)
   !    ..
   !    .. Local scalars ..
+  integer nr
   double precision epsshl,r,r1,r2,r3,rmax,rr2,rs
   integer i,j,k,n1,n2,n3,pos,iprint
   integer nint
@@ -727,8 +720,9 @@ end module
 
 #ifdef TEST_CLUSTERS__
 program test_clusters
-  use RefCluster_mod
-  implicit none
+  use RefCluster_mod, only: RefCluster, LatticeVectors!, create, destroy
+  use RefCluster_mod, only: createLatticeVectors, destroyLatticeVectors ! deprecated
+  use RefCluster_mod, only: createRefCluster, destroyRefCluster ! deprecated
 
   double precision bravais(3,3)
   double precision rbasis(3,4)
@@ -741,14 +735,14 @@ program test_clusters
   integer :: center_ind = 4
   double precision :: dist
 
-  bravais = reshape( (/ 1.0, 0.0, 0.0, &
-                        0.0, 1.0, 0.0, &
-                        0.0, 0.0, 1.0 /), (/ 3, 3 /) )
+  bravais = reshape([ 1., 0., 0., &
+                      0., 1., 0., &
+                      0., 0., 1. ], [3, 3])
 
-  rbasis = reshape( (/ 0.0, 0.0, 0.0, &
-                       0.5, 0.5, 0.0, &
-                       0.5, 0.0, 0.5, &
-                       0.0, 0.5, 0.5  /), (/ 3, 4 /) )
+  rbasis = reshape([ .0, .0, .0, &
+                     .5, .5, .0, &
+                     .5, .0, .5, &
+                     .0, .5, .5  ], [3, 4])
 
   call createLatticeVectors(lattice_vectors, bravais)
   call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcut, center_ind)

@@ -8,6 +8,11 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module BroydenData_mod
+  implicit none
+  private
+  public :: BroydenData, create, destroy
+  public :: createBroydenData, destroyBroydenData ! deprecated
+  
 
   type BroydenData
     double precision , allocatable, dimension(:)  :: sm1s
@@ -24,6 +29,14 @@ module BroydenData_mod
     double precision :: mixing
   end type BroydenData
 
+  interface create
+    module procedure createBroydenData
+  endinterface
+  
+  interface destroy
+    module procedure destroyBroydenData
+  endinterface
+  
   CONTAINS
 
   !-----------------------------------------------------------------------------
@@ -32,7 +45,6 @@ module BroydenData_mod
   !> @param[in]    ntird
   !> @param[in]    itdbryd
   subroutine createBroydenData(self, ntird,itdbryd, imix, mixing)
-    implicit none
     type (BroydenData), intent(inout) :: self
     integer, intent(in) ::  ntird
     integer, intent(in) ::  itdbryd
@@ -65,7 +77,6 @@ module BroydenData_mod
   !> Destroys a BroydenData object.
   !> @param[inout] self    The BroydenData object to destroy.
   subroutine destroyBroydenData(self)
-    implicit none
     type (BroydenData), intent(inout) :: self
 
     integer :: memory_stat

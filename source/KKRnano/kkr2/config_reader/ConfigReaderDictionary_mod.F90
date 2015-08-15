@@ -11,7 +11,8 @@ module ConfigReaderDictionary_mod
   private
   public :: Dictionary, create, destroy
   public :: createDictionary, destroyDictionary ! deprecated
-
+  public :: pushBackDictionary, getDictionaryValue, getTaggedVariable
+  
   ! Status flags and error codes
   integer, parameter, public :: CONFIG_READER_DICT_NOT_UNIQUE = 1, CONFIG_READER_DICT_NOT_FOUND = 2
 

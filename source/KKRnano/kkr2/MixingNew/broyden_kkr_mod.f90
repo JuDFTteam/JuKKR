@@ -1,7 +1,7 @@
 module broyden_kkr_mod
   use brydbm_new_com_mod, only: BRYSH1_new, BRYSH2_new, BRYSH3_new
   use CalculationData_mod, only: CalculationData, getBroydenDim, getBroyden, getNumLocalAtoms, getAtomData
-  use broyden_second_mod, only:
+  use broyden_second_mod, only: broyden_second
   use BroydenData_mod, only: BroydenData
   use BasisAtom_mod, only: BasisAtom
   use PotentialData_mod, only: getNumPotentialValues

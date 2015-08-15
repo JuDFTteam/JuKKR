@@ -3,43 +3,59 @@
 module ConfigReader_mod
   use ConfigReaderDictionary_mod, only: Dictionary
   implicit none
+  private
+  public :: ConfigReader, create, destroy
+  public :: createConfigReader, destroyConfigReader ! deprecated
+  public :: parseFile
+  public :: getUnreadVariable
+  public :: getValueDouble, getValueDoubleVector, getValueInteger, getValueIntVector, getValueLogical, getValueString  
+  
   ! Public constants, error codes
   !  Parse errors
-  integer, parameter :: CONFIG_READER_ERR_NO_ERROR = 0
-  integer, parameter :: CONFIG_READER_ERR_BAD_CHAR = 1
-  integer, parameter :: CONFIG_READER_ERR_NO_EQUAL = 2
-  integer, parameter :: CONFIG_READER_ERR_NO_VALUE = 3
-  integer, parameter :: CONFIG_READER_ERR_EMPTY_STR = 4
-  integer, parameter :: CONFIG_READER_ERR_END_LINE = 5
+  integer, parameter, public :: CONFIG_READER_ERR_NO_ERROR = 0
+  integer, parameter, public :: CONFIG_READER_ERR_BAD_CHAR = 1
+  integer, parameter, public :: CONFIG_READER_ERR_NO_EQUAL = 2
+  integer, parameter, public :: CONFIG_READER_ERR_NO_VALUE = 3
+  integer, parameter, public :: CONFIG_READER_ERR_EMPTY_STR = 4
+  integer, parameter, public :: CONFIG_READER_ERR_END_LINE = 5
 
   !  Logical errors
-  integer, parameter :: CONFIG_READER_ERR_VAR_NOT_UNIQUE = 10
-  integer, parameter :: CONFIG_READER_ERR_VAR_NOT_FOUND = 11
+  integer, parameter, public :: CONFIG_READER_ERR_VAR_NOT_UNIQUE = 10
+  integer, parameter, public :: CONFIG_READER_ERR_VAR_NOT_FOUND = 11
 
   ! Datatype errors
-  integer, parameter :: CONFIG_READER_ERR_NOT_INTEGER = 100
-  integer, parameter :: CONFIG_READER_ERR_NOT_DOUBLE = 101
-  integer, parameter :: CONFIG_READER_ERR_NOT_LOGICAL = 102
+  integer, parameter, public :: CONFIG_READER_ERR_NOT_INTEGER = 100
+  integer, parameter, public :: CONFIG_READER_ERR_NOT_DOUBLE = 101
+  integer, parameter, public :: CONFIG_READER_ERR_NOT_LOGICAL = 102
 
   ! I/O Errors
-  integer, parameter :: CONFIG_READER_ERR_NO_FILE = 1000
-  integer, parameter :: CONFIG_READER_ERR_IO_FAIL = 1001
+  integer, parameter, public :: CONFIG_READER_ERR_NO_FILE = 1000
+  integer, parameter, public :: CONFIG_READER_ERR_IO_FAIL = 1001
 
   type ConfigReader
     private
     type (Dictionary) :: parse_dict
   end type ConfigReader
 
-  integer, parameter, private :: MAX_LINE_LENGTH = 150
-  integer, parameter, private :: MAX_FILENAME_LENGTH = 255
-  integer, parameter, private :: FILE_HANDLE = 242
-  character(len=*), parameter, private :: COMMENT_CHARS = '#!'
-  character(len=*), parameter, private :: EQUAL_CHARS = '='
-  character(len=*), parameter, private :: STRING_DELIM = '"' // "'"
+  integer, parameter :: MAX_LINE_LENGTH = 150
+  integer, parameter :: MAX_FILENAME_LENGTH = 255
+  integer, parameter :: FILE_HANDLE = 242
+  character(len=*), parameter :: COMMENT_CHARS = '#!'
+  character(len=*), parameter :: EQUAL_CHARS = '='
+  character(len=*), parameter :: STRING_DELIM = '"' // "'"
 
-  character(len=*), parameter, private :: ALLOWED_CHARS = &
+  character(len=*), parameter :: ALLOWED_CHARS = &
    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+-._'
 
+   
+  interface create
+    module procedure createConfigReader
+  endinterface
+  
+  interface destroy
+    module procedure destroyConfigReader
+  endinterface
+   
   contains
 
 !---------------------------------------------------------------------
@@ -125,8 +141,10 @@ module ConfigReader_mod
   !> VAR = "#!"
   subroutine parseLine(this, line_buf, line_number, ierror)
 
-    use ConfigReaderDictionary_mod, only: CONFIG_READER_DICT_VAR_LENGTH, CONFIG_READER_DICT_VALUE_LENGTH, CONFIG_READER_DICT_NOT_UNIQUE
-    implicit none
+    use ConfigReaderDictionary_mod, only: CONFIG_READER_DICT_VAR_LENGTH, &
+      CONFIG_READER_DICT_VALUE_LENGTH, CONFIG_READER_DICT_NOT_UNIQUE, &
+      pushBackDictionary
+
     type (ConfigReader), intent(inout) :: this
     character(len = MAX_LINE_LENGTH), intent(in) :: line_buf
     integer, intent(in) :: line_number
@@ -374,23 +392,22 @@ module ConfigReader_mod
 
 !---------------------------------------------------------------------
   subroutine displayParserError(line_number, column, ierror)
-    implicit none
     integer, intent(in) :: line_number, column, ierror
 
     if (ierror /= 0) then
-      write(*,'(A, I7, A, I4)') 'CONFIG_READER: Error in line ', line_number, ' in column ', column
+      write(*,'(9(A,I0))') 'CONFIG_READER: Error in line ', line_number, ' in column ', column
       select case (ierror)
-        case (CONFIG_READER_ERR_BAD_CHAR)
-          write (*,*) "Character not allowed."
-        case (CONFIG_READER_ERR_NO_EQUAL)
+        case (CONFIG_READER_ERR_BAD_CHAR)      
+      write (*,*) "Character not allowed."
+        case (CONFIG_READER_ERR_NO_EQUAL)      
           write (*,*) "Expected equal sign not found."
-        case (CONFIG_READER_ERR_NO_VALUE)
+        case (CONFIG_READER_ERR_NO_VALUE)      
           write (*,*) "No value assigned to variable."
-        case (CONFIG_READER_ERR_EMPTY_STR)
+        case (CONFIG_READER_ERR_EMPTY_STR)     
           write (*,*) "Value is empty string."
-        case (CONFIG_READER_ERR_END_LINE)
+        case (CONFIG_READER_ERR_END_LINE)      
           write (*,*) "Unexpected end of line."
-        case (CONFIG_READER_ERR_VAR_NOT_UNIQUE)
+        case (CONFIG_READER_ERR_VAR_NOT_UNIQUE);
           write (*,*) "Parameter is already defined."
         case default
           write (*,*) "Unknown error."
@@ -400,8 +417,7 @@ module ConfigReader_mod
 
 !---------------------------------------------------------------------
   subroutine getValueString(this, variable, value, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
+    use ConfigReaderDictionary_mod, only: getDictionaryValue
 
     type (ConfigReader), intent(inout) :: this
     character(len = *), intent(in) :: variable
@@ -427,9 +443,6 @@ module ConfigReader_mod
 !> a default value can be passed as int_value, which does not change on exit
 !> if the variable is not found
   subroutine getValueInteger(this, variable, int_value, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
-
     type (ConfigReader), intent(inout) :: this
     character(len = *), intent(in) :: variable
     integer, intent(inout) :: int_value
@@ -462,9 +475,6 @@ module ConfigReader_mod
 !> a default value can be passed as double_value, which does not change on exit
 !> if the variable is not found
   subroutine getValueDouble(this, variable, double_value, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
-
     type (ConfigReader), intent(inout) :: this
     character(len = *), intent(in) :: variable
     real(kind = kind(1.0d0)), intent(inout) :: double_value
@@ -497,9 +507,6 @@ module ConfigReader_mod
 ! a default value can be passed as logical_value, which does not change on exit
 ! if the variable is not found
   subroutine getValueLogical(this, variable, logical_value, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
-
     type (ConfigReader), intent(inout) :: this
     character(len = *), intent(in) :: variable
     logical, intent(inout) :: logical_value
@@ -536,9 +543,6 @@ module ConfigReader_mod
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
   subroutine getValueDoubleVector(this, variable, vector, length, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
-
     type (ConfigReader), intent(inout) :: this
     character(len = *), intent(in) :: variable
     double precision, dimension(length), intent(inout) :: vector
@@ -581,9 +585,6 @@ module ConfigReader_mod
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
   subroutine getValueIntVector(this, variable, vector, length, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
-
     type (ConfigReader), intent(inout) :: this
     character(len = *), intent(in) :: variable
     integer, dimension(length), intent(inout) :: vector
@@ -624,8 +625,8 @@ module ConfigReader_mod
 !> subroutine, which gives the next unread variable
 !> If no unread variable was found then ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
   subroutine getUnreadVariable(this, variable, next_ptr, ierror)
-    use ConfigReaderDictionary_mod
-    implicit none
+    use ConfigReaderDictionary_mod, only: getTaggedVariable, CONFIG_READER_DICT_NOT_FOUND
+
     type (ConfigReader), intent(in) :: this
     character(len = *),  intent(out) :: variable
     integer, intent(inout) :: next_ptr

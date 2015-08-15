@@ -3,9 +3,12 @@
 !> @author Elias Rabel
 
 module NearField_mod
-  use MadelungCalculator_mod
+  use MadelungCalculator_mod, only:
   implicit none
-
+  private
+  public :: Potential
+  public :: calc_near_field, calc_wrong_contribution_coeff
+  
   !> Objects of types derived from 'Potential' have to be passed to 'calc_near_field'.
   !>
   !> This allows to pass arbitrary (intra-cell) potentials
@@ -42,9 +45,8 @@ module NearField_mod
 
   !----------------------------------------------------------------------------
   !> V_(lm)(r) = ac_wrong(lm) * (-r)**l
-  subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, &
-                                           charge_mom_total, gaunt)
-    implicit none
+  subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, charge_mom_total, gaunt)
+    use MadelungCalculator_mod, only: MadelungClebschData, calc_dfac
     double precision, intent(inout) :: ac_wrong(:)
     double precision, intent(in)    :: dist_vec(3)
 
@@ -108,12 +110,11 @@ module NearField_mod
 
     ac_wrong = matmul(avmad, charge_mom_total)
 
-  end subroutine
+  end subroutine calc_wrong_contribution_coeff
 
   !----------------------------------------------------------------------------
   !> this is a general routine for shifting sph. harm. expansions
   subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)
-    implicit none
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
@@ -193,13 +194,12 @@ module NearField_mod
 
     v_near = sum(integrand, 1)
 
-  end subroutine
+  end subroutine calc_near_field
 
   !----------------------------------------------------------------------------
   ! Tests orthgonality of real spherical harmonics up to LMAX
   ! The first column of 'integrand' must be 1.0 and the others = 0.0
   subroutine test_lebedev()
-    implicit none
     integer, parameter :: LMAX = 2
     integer, parameter :: LMMAXD = (LMAX+1)**2
 
@@ -225,12 +225,11 @@ module NearField_mod
     end do
 
     write(*,*) integrand
-  end subroutine
+  end subroutine test_lebedev
 
   !----------------------------------------------------------------------------
   ! evaluate spherical harmonic expansion at angles given by 'vec'.
   double precision function eval_expansion(coeffs, vec)
-    implicit none
     double precision :: coeffs(:)
     double precision :: vec(3)
 
@@ -246,7 +245,7 @@ module NearField_mod
     call YMY(vec(1), vec(2), vec(3), vnorm, ylm, LMAX)
 
     eval_expansion = dot_product(coeffs, ylm)
-  end function
+  end function eval_expansion
 
 !------------------------------------------------------------------------------
 ! Some test potentials follow
@@ -256,7 +255,6 @@ module NearField_mod
   !> A test potential: constant multipole moments
   subroutine get_const_multipole(self, v_intra, radius)
     ! Test potential: assume multipoles Q_L = 1.0d0
-    implicit none
     class (TestPotentialConstMulti), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
@@ -277,12 +275,11 @@ module NearField_mod
       if (lm > size(v_intra)) exit
     end do
 
-  end subroutine
+  end subroutine get_const_multipole
 
   !----------------------------------------------------------------------------
   !> A test potential: potential of a (unit) monopole
   subroutine get_const_monopole(self, v_intra, radius)
-    implicit none
     class (TestPotentialMonopole), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
@@ -292,13 +289,13 @@ module NearField_mod
     v_intra = 0.0d0
     v_intra(1) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / radius
 
-  end subroutine
+  end subroutine get_const_monopole
 
 end module NearField_mod
 
 !  program test_it
-!    use NearField_mod
-!    use NearField_kkr_mod
+!    use NearField_mod, only: ...
+!    use NearField_kkr_mod, only: ...
 !    implicit none
 !    integer, parameter :: LMAX = 4
 !    integer, parameter :: LMMAXD = (LMAX+1)**2

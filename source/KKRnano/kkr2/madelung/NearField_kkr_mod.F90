@@ -12,9 +12,10 @@
 module NearField_kkr_mod
   use NearField_mod, only: Potential
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
-
-  double precision, parameter, private :: PI = 3.1415926535897932d0
-
+  implicit none
+  private
+  public :: IntracellPotential
+  
   !----------------------------------------------------------------------------
   !> Usage:
   !> type(IntracellPotential) :: pot
@@ -46,11 +47,15 @@ module NearField_kkr_mod
     procedure :: get_pot => get_intracell
   end type
   
+  
+  
+  double precision, parameter, private :: PI = 3.1415926535897932d0
+
+  
   contains
   
   !----------------------------------------------------------------------------
   subroutine get_intracell(self, v_intra, radius)
-    implicit none
     class (IntracellPotential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
@@ -92,7 +97,6 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine createIntracellPot(self, lmpotd, irmd)
-    implicit none
     class (IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
@@ -117,7 +121,6 @@ module NearField_kkr_mod
   
     !----------------------------------------------------------------------------
   subroutine createIntracellPotential(self, lmpotd, irmd)
-    implicit none
     class (IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
@@ -133,7 +136,6 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine initIntracellPotential(self)
-    implicit none
     class (IntracellPotential), intent(inout) :: self
     
     integer :: lmpotd
@@ -186,7 +188,6 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine destroyIntracellPotential(self)
-    implicit none
     class (IntracellPotential), intent(inout) :: self
     deallocate(self%charge_moments)
     deallocate(self%radial_points)
@@ -195,4 +196,5 @@ module NearField_kkr_mod
     deallocate(self%yarray)
     deallocate(self%y2ndder)
   end subroutine
+  
 end module

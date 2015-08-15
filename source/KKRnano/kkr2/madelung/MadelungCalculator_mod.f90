@@ -10,6 +10,9 @@ module MadelungCalculator_mod
   private
 
   public :: MadelungCalculator, MadelungClebschData, MadelungLatticeSum, create, destroy
+  public :: calculateMadelungLatticeSum, calc_dfac
+  public :: createMadelungLatticeSum, destroyMadelungLatticeSum ! deprecated
+  public :: createMadelungCalculator, destroyMadelungCalculator ! deprecated
 
   !----------------------------------------------------------------------------
   type MadelungLatticeData

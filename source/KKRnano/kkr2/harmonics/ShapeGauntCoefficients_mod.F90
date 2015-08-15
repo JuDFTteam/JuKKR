@@ -18,6 +18,9 @@
 
 module ShapeGauntCoefficients_mod
   implicit none
+  private
+  public :: ShapeGauntCoefficients, create, destroy
+  public :: createShapeGauntCoefficients, destroyShapeGauntCoefficients ! deprecated
 
   type ShapeGauntCoefficients
     double precision, dimension(:), allocatable :: GSH
@@ -27,12 +30,19 @@ module ShapeGauntCoefficients_mod
     integer :: lmax
     integer :: lmpotd
   end type
+  
+  interface create
+    module procedure createShapeGauntCoefficients
+  endinterface
+  
+  interface destroy
+    module procedure destroyShapeGauntCoefficients
+  endinterface
 
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createShapeGauntCoefficients(coeff, lmax)
-    implicit none
     type (ShapeGauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
@@ -78,7 +88,6 @@ module ShapeGauntCoefficients_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyShapeGauntCoefficients(coeff)
-    implicit none
     type (ShapeGauntCoefficients), intent(inout) :: coeff
     integer :: memory_stat
 

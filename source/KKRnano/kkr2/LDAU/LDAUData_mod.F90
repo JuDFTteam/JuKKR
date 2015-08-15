@@ -10,6 +10,10 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module LDAUData_mod
+  implicit none
+  private
+  public :: LDAUData, create, destroy
+  public :: createLDAUData, destroyLDAUData ! deprecated
 
   type LDAUData
     double precision::EULDAU
@@ -32,6 +36,14 @@ module LDAUData_mod
     integer :: nspind
   end type LDAUData
 
+  interface create
+    module procedure createLDAUData
+  endinterface
+  
+  interface destroy
+    module procedure destroyLDAUData
+  endinterface
+  
   CONTAINS
 
   !-----------------------------------------------------------------------------
@@ -42,7 +54,6 @@ module LDAUData_mod
   !> @param[in]    mmaxd
   !> @param[in]    nspind
   subroutine createLDAUData(self, ldau, irmd, lmaxd, nspind)
-    implicit none
     type (LDAUData), intent(inout) :: self
     integer, intent(in) ::  irmd
     integer, intent(in) ::  nspind
@@ -92,7 +103,6 @@ module LDAUData_mod
   !> Destroys a LDAUData object.
   !> @param[inout] self    The LDAUData object to destroy.
   subroutine destroyLDAUData(self)
-    implicit none
     type (LDAUData), intent(inout) :: self
 
     integer :: memory_stat

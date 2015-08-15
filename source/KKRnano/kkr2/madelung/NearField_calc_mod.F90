@@ -26,6 +26,7 @@ module NearField_calc_mod
     use RadialMeshData_mod, only: RadialMeshData
     use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
     use MadelungCalculator_mod, only: MadelungCalculator
+    use NearField_com_mod, only: calc_nf_correction
     
     type(CalculationData), intent(inout) :: calc_data
     type(Main2Arrays), intent(in) :: arrays
@@ -156,7 +157,7 @@ module NearField_calc_mod
     near_inds = near_inds_temp(1:count_near)
     allocate(dist_vecs(3, count_near))
     dist_vecs = dist_vecs_temp(:, 1:count_near)
-  end subroutine
+  end subroutine ! find_near_cells
 
   !----------------------------------------------------------------------------
   !> Calculate (point2 - point1) taking into account addition of a lattice vector
@@ -175,6 +176,6 @@ module NearField_calc_mod
 
     distance_vec = vec + nx*bravais(:, 1) + ny*bravais(:, 2) + nz*bravais(:, 3)
 
-  end function
+  end function distance_vec
 
 end module NearField_calc_mod

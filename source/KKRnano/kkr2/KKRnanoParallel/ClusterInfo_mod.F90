@@ -21,6 +21,9 @@
 
 module ClusterInfo_mod
   implicit none
+  private
+  public :: ClusterInfo, create, destroy
+  public :: createClusterInfo_com, destroyClusterInfo_do_nothing
 
   type ClusterInfo
     integer :: naclsd !< maximal number of cluster atoms
@@ -32,9 +35,14 @@ module ClusterInfo_mod
     integer, dimension(:,:), allocatable :: ezoa_trc
   end type
 
-  public :: createClusterInfo_com
-  private :: constructIndices
-
+  interface create
+    module procedure createClusterInfo_com
+  endinterface
+  
+  interface destroy
+    module procedure destroyClusterInfo_do_nothing
+  endinterface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
@@ -49,7 +57,6 @@ module ClusterInfo_mod
     use RefCluster_mod
     use TruncationZone_mod,  only: TruncationZone, translateInd
     use one_sided_commI_mod, only: copyFromI_com
-    implicit none
 
     include 'mpif.h'
 
@@ -80,8 +87,7 @@ module ClusterInfo_mod
     end do
 
     ! determine maximal number of cluster atoms
-    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, &
-                       MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
     self%naclsd = naclsd
 
@@ -127,11 +133,15 @@ module ClusterInfo_mod
 
   end subroutine
 
+  
+  subroutine destroyClusterInfo_do_nothing(self)
+    type (ClusterInfo), intent(inout) :: self
+  end subroutine ! destroy
+
   !----------------------------------------------------------------------------
   !> Helper routine.
   subroutine constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
-    use TruncationZone_mod,  only: TruncationZone, translateInd
-    implicit none
+    use TruncationZone_mod, only: TruncationZone, translateInd
 
     type (ClusterInfo), intent(inout) :: self
     type (TruncationZone), intent(in) :: trunc_zone

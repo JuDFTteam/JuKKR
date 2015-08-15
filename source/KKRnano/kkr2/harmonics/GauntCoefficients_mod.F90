@@ -17,6 +17,9 @@
 
 module GauntCoefficients_mod
   implicit none
+  private
+  public :: GauntCoefficients, create, destroy
+  public :: createGauntCoefficients, destroyGauntCoefficients ! deprecated
 
   type GauntCoefficients
     !> Contains the Gaunt coefficients
@@ -30,13 +33,20 @@ module GauntCoefficients_mod
     integer :: lmax
   end type
 
+  interface create
+    module procedure createGauntCoefficients
+  endinterface
+  
+  interface destroy
+    module procedure destroyGauntCoefficients
+  endinterface
+  
   !NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createGauntCoefficients(coeff, lmax)
-    implicit none
     type (GauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
@@ -81,7 +91,6 @@ module GauntCoefficients_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyGauntCoefficients(coeff)
-    implicit none
     type (GauntCoefficients), intent(inout) :: coeff
     integer :: memory_stat
     DEALLOCATECHECK(coeff%CLEB)

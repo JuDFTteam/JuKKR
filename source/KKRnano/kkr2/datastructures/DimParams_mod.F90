@@ -109,7 +109,9 @@ implicit none
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParamsFromConf(self)
-    use ConfigReader_mod, only: ConfigReader, getValueInteger, getUnreadVariable
+    use ConfigReader_mod, only: ConfigReader, getValueInteger, getUnreadVariable, parseFile
+    use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated
+    
     type (DimParams), intent(inout) :: self
 
     type (ConfigReader) :: conf

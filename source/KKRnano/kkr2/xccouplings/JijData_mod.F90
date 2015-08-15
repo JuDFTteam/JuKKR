@@ -8,7 +8,11 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module JijData_mod
-
+  implicit none
+  private
+  public :: JijData, create, destroy
+  public :: createJijData, destroyJijData ! deprecated
+  
   type JijData
 
   !double precision, dimension(:), allocatable :: RXIJ          ! interatomic distance Ri-Rj
@@ -40,6 +44,15 @@ module JijData_mod
 
   end type JijData
 
+  
+  interface create
+    module procedure createJijData
+  endinterface
+  
+  interface destroy
+    module procedure destroyJijData
+  endinterface
+  
   CONTAINS
 
   !-----------------------------------------------------------------------------
@@ -49,7 +62,6 @@ module JijData_mod
   !> @param[in]    lmmaxd
   !> @param[in]    nspind
   subroutine createJijData(self, do_jij_calculation, rcutjij, nxijd,lmmaxd,nspind)
-    implicit none
     type (JijData), intent(inout) :: self
     logical, intent(in) ::  do_jij_calculation
     double precision, intent(in) :: rcutjij
@@ -94,7 +106,6 @@ module JijData_mod
   !> Destroys a JijData object.
   !> @param[inout] self    The JijData object to destroy.
   subroutine destroyJijData(self)
-    implicit none
     type (JijData), intent(inout) :: self
 
     integer :: memory_stat

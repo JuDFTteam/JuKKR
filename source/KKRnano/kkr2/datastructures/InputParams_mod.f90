@@ -67,9 +67,9 @@ end type InputParams
   CONTAINS
 !-------------------------------------------------------------------------------
 integer function getInputParamsValues(filename, confvalues) result(ierror)
-  use ConfigReader_mod, only: ConfigReader, CONFIG_READER_ERR_VAR_NOT_FOUND
+  use ConfigReader_mod, only: ConfigReader, CONFIG_READER_ERR_VAR_NOT_FOUND, createConfigReader, destroyConfigReader
   use ConfigReader_mod, only: getValueInteger, getValueDouble, getValueDoubleVector, getValueIntVector, getValueLogical
-
+  use ConfigReader_mod, only: parseFile 
   character(len=*), intent(in) :: filename
   type (InputParams), intent(inout) :: confvalues
   

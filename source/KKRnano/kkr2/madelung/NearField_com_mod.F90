@@ -21,7 +21,7 @@ module NearField_com_mod
   public :: NearFieldCorrection!, create, destroy
 !   public :: createNearFieldCorrection, destroyNearFieldCorrection ! deprecated
 !   public :: createLocalCellInfo, destroyLocalCellInfo ! deprecated
-  
+  public :: calc_nf_correction
   
   type LocalCellInfo
     double precision, allocatable :: charge_moments(:)
@@ -180,6 +180,7 @@ module NearField_com_mod
   subroutine add_potential_correction(delta_potential, intra_pot, radial_points, dist_vec, gaunt, critical_index)
     use NearField_kkr_mod, only: IntracellPotential
     use MadelungCalculator_mod, only: MadelungClebschData
+    use NearField_mod, only: calc_near_field, calc_wrong_contribution_coeff
     
     double precision, intent(inout) :: delta_potential(:,:)
     type(IntracellPotential), intent(inout) :: intra_pot
