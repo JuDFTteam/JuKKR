@@ -9,7 +9,9 @@
 ! E_VXC = 1/2 \int V_XC \rho
 module total_energy_mod
   implicit none
-
+  private
+  public :: madelung_energy, madelung_ref_radius_correction, energy_electrostatic_wrapper, energy_electrostatic_L_resolved_wrapper
+  
   contains
 
 !----------------------------------------------------------------------------
@@ -17,13 +19,10 @@ module total_energy_mod
 !> and charge density 'rho2ns'.
 !>
 !> 1/2 \int \rho V
-function energy_electrostatic_wrapper(v_potential, Z_nuclear, RHO2NS, shgaunts, atomdata) result(ecou)
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  use CellData_mod
-  use ShapeGauntCoefficients_mod
-  implicit none
-  double precision :: ECOU
+double precision function energy_electrostatic_wrapper(v_potential, Z_nuclear, RHO2NS, shgaunts, atomdata) result(ecou)
+  use BasisAtom_mod, only: BasisAtom
+  use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
+
   double precision, intent(in), dimension(:,:,:) :: v_potential
   double precision, intent(in) :: Z_nuclear
   double precision, intent(in) :: RHO2NS(:,:,:)
@@ -51,11 +50,12 @@ end function
 !>
 !> 1/2 \int \rho V
 subroutine energy_electrostatic_L_resolved_wrapper(energy, v_potential, Z_nuclear, RHO2NS, shgaunts, atomdata)
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  use CellData_mod
-  use ShapeGauntCoefficients_mod
-  implicit none
+  use BasisAtom_mod, only: BasisAtom
+  use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
+  
+  use RadialMeshData_mod, only: RadialMeshData
+  use CellData_mod, only: CellData
+
   double precision, intent(out) :: energy(0:)
   double precision, intent(in), dimension(:,:,:) :: v_potential
   double precision, intent(in) :: Z_nuclear
@@ -104,18 +104,14 @@ end subroutine
 !>     the effect of a Coulomb singularity on the interstitial potential can be taken into account
 !>     by setting Z_nuclear to a value not equal to 0.0 - this is needed for the Coulomb energy
 !>     Note: effect only calculated in interstital!
-function energy_electrostatic(lpot, lmax_potential, &
+double precision function energy_electrostatic(lpot, lmax_potential, &
                  nspin,rho2ns,vons, Z_nuclear, r, drdi, &
                  ircut,ipan,imaxsh,ifunm,ilm, &
                  gsh,thetas,lmsp, &
                  irmd, irid, nfund, ipand, ngshd) result(ecou)
 
-implicit none
-
-  double precision :: ecou
-
   ! Arguments
-  integer :: lpot
+  integer, intent(in) :: lpot
   integer, intent(in) :: lmax_potential
   integer :: nspin
   double precision, dimension(irmd,(lpot + 1)**2,2) :: rho2ns
@@ -192,11 +188,9 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
 !                               b.drittler   jan. 1990
 !-----------------------------------------------------------------------
 
-implicit none
-
   double precision, intent(out) :: energy(0:lmax_potential)
 
-  integer :: lpot
+  integer, intent(in) :: lpot
   integer, intent(in) :: lmax_potential
   integer :: nspin
   double precision, dimension(irmd,(lpot + 1)**2,2) :: rho2ns
@@ -239,9 +233,9 @@ implicit none
   double precision, dimension(irmd) :: er
   double precision :: factor
 
-  external simpk
+  external :: simpk
 
-  intrinsic atan,sqrt
+  intrinsic :: atan,sqrt
   !     ..
   rfpi = sqrt(16.d0*atan(1.0d0))
   !
@@ -327,10 +321,9 @@ end subroutine
 !>
 !> An electrostatic Dirichlet problem is solved by specifying the potential on a
 !> surface of a sphere with a radius determined by 'ind_reference' <= ind_muffin_tin
-function madelung_energy(vons_spherical, rho2ns_spherical, &
+double precision function madelung_energy(vons_spherical, rho2ns_spherical, &
                          r, drdi, irmd, Z_nuclear, ind_reference) result(e_madelung)
 
-    double precision :: e_madelung
     double precision, intent(in)  :: vons_spherical(irmd)
     double precision, intent(in)  :: rho2ns_spherical(irmd)
     double precision, intent(in)  :: r(irmd)
@@ -360,10 +353,9 @@ end function
 !------------------------------------------------------------------------------
 !> Correction of the madelung energy that occurs when the reference radius is not equal to
 !> the muffin-tin radius and this term does not cancel anymore.
-function madelung_ref_radius_correction(rho2ns_spherical, &
+double precision function madelung_ref_radius_correction(rho2ns_spherical, &
                          r, drdi, irmd, Z_nuclear, ind_reference, ind_muffin_tin) result(e_correction)
 
-    double precision :: e_correction
     double precision, intent(in)  :: rho2ns_spherical(irmd)
     double precision, intent(in)  :: r(irmd)
     double precision, intent(in)  :: drdi(irmd)

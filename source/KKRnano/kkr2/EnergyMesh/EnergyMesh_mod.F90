@@ -10,7 +10,13 @@
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module EnergyMesh_mod
-
+  implicit none
+  private
+  public :: EnergyMesh, create, destroy
+  public :: createEnergyMesh, destroyEnergyMesh ! deprecated
+  public :: readEnergyMesh, readEnergyMeshSemi, writeEnergyMesh, writeEnergyMeshSemi
+  public :: broadcastEnergyMesh_com, updateEnergyMesh, updateEnergyMeshSemi
+  
   type EnergyMesh
 
     ! valence contour parameters
@@ -37,6 +43,14 @@ module EnergyMesh_mod
     integer :: N3SEMI
 
   end type EnergyMesh
+  
+  interface create
+    module procedure createEnergyMesh
+  endinterface
+  
+  interface destroy
+    module procedure destroyEnergyMesh
+  endinterface
 
   CONTAINS
 
@@ -45,7 +59,6 @@ module EnergyMesh_mod
   !> @param[inout] self    The EnergyMesh object to construct.
   !> @param[in]    ielast
   subroutine createEnergyMesh(self, ielast)
-    implicit none
     type (EnergyMesh), intent(inout) :: self
     integer, intent(in) ::  ielast
 
@@ -62,7 +75,6 @@ module EnergyMesh_mod
   !> Destroys a EnergyMesh object.
   !> @param[inout] self    The EnergyMesh object to destroy.
   subroutine destroyEnergyMesh(self)
-    implicit none
     type (EnergyMesh), intent(inout) :: self
 
     integer :: memory_stat
@@ -75,8 +87,7 @@ module EnergyMesh_mod
   !----------------------------------------------------------------------------
   !> read energy mesh data from file 'energy_mesh'
   subroutine readEnergyMesh(emesh)
-    use EnergyMeshHelpers_mod
-    implicit none
+    use EnergyMeshHelpers_mod, only: readEnergyMeshImpl
 
     type (EnergyMesh), intent(inout) :: emesh
 
@@ -84,28 +95,25 @@ module EnergyMesh_mod
                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
                             emesh%NPOL, emesh%TK, emesh%WEZ)
 
-
   end subroutine
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
   subroutine writeEnergyMesh(emesh)
-    use EnergyMeshHelpers_mod
-    implicit none
+    use EnergyMeshHelpers_mod, only: writeEnergyMeshImpl
 
     type (EnergyMesh), intent(in) :: emesh
 
     call writeEnergyMeshImpl(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
-    emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
-    emesh%NPOL, emesh%TK, emesh%WEZ)
+                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
+                             emesh%NPOL, emesh%TK, emesh%WEZ)
 
   end subroutine
 
-!------------------------------------------------------------------------------
-!> Update Energy mesh. Essentially a wrapper for EMESHT
-subroutine updateEnergyMesh(emesh)
-    use EnergyMeshHelpers_mod
-    implicit none
+  !------------------------------------------------------------------------------
+  !> Update Energy mesh. Essentially a wrapper for EMESHT
+  subroutine updateEnergyMesh(emesh)
+    use EnergyMeshHelpers_mod, only: updateEnergyMeshImpl
 
     type (EnergyMesh), intent(inout) :: emesh
 
@@ -118,9 +126,8 @@ subroutine updateEnergyMesh(emesh)
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from master-rank to all other ranks
   subroutine broadcastEnergyMesh_com(my_mpi, emesh)
-    use EnergyMeshHelpers_mod
-    use KKRnanoParallel_mod
-    implicit none
+    use EnergyMeshHelpers_mod, only: broadcastEnergyMeshImpl_com
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getMyActiveCommunicator, getMasterRank
 
     type (EnergyMesh), intent(inout) :: emesh
     type (KKRnanoParallel), intent(in) :: my_mpi
@@ -140,10 +147,7 @@ subroutine updateEnergyMesh(emesh)
   !----------------------------------------------------------------------------
   !> read energy mesh data from file 'energy_mesh'
   subroutine readEnergyMeshSemi(emesh)
-    use EnergyMeshHelpers_mod
-    implicit none
-
-    integer :: I
+    use EnergyMeshHelpers_mod, only: readEnergyMeshImplSemi
 
     type (EnergyMesh), intent(inout) :: emesh
 
@@ -153,17 +157,13 @@ subroutine updateEnergyMesh(emesh)
                             emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
                             emesh%N3SEMI)
 
-  do I = 1, emesh%IELAST
-  end do
-
   end subroutine
 
   ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
   subroutine writeEnergyMeshSemi(emesh)
-    use EnergyMeshHelpers_mod
-    implicit none
+    use EnergyMeshHelpers_mod, only: writeEnergyMeshImplSemi
 
     type (EnergyMesh), intent(in) :: emesh
 
@@ -179,8 +179,7 @@ subroutine updateEnergyMesh(emesh)
   !----------------------------------------------------------------------------
   !> Update Energy mesh. Essentially a wrapper for EPATHTB
   subroutine updateEnergyMeshSemi(emesh)
-    use EnergyMeshHelpers_mod
-    implicit none
+    use EnergyMeshHelpers_mod, only: updateEnergyMeshImplSemi
 
     type (EnergyMesh), intent(inout) :: emesh
 
@@ -189,7 +188,6 @@ subroutine updateEnergyMesh(emesh)
                               emesh%NPNT1,emesh%NPNT2,emesh%NPNT3,emesh%EBOTSEMI, &
                               emesh%EMUSEMI,emesh%IESEMICORE,emesh%FSEMICORE,emesh%N1SEMI, &
                               emesh%N2SEMI,emesh%N3SEMI)
-
 
   end subroutine
 

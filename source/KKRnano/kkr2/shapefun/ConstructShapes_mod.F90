@@ -8,22 +8,27 @@
 !> @author Elias Rabel
 !>
 module ConstructShapes_mod
+  implicit none
+  private
+  public :: InterstitialMesh
+  public :: destroyInterstitialMesh
+  public :: construct
+  public :: write_shapefun_file
 
-!> A datastructure containing the corresponding interstitial mesh.
-type InterstitialMesh
-  double precision, allocatable, dimension(:) :: xrn !< radial mesh points r(i)
-  double precision, allocatable, dimension(:) :: drn !< integration weights dr/di (i)
-  integer :: npan !< number of panels
-  integer, allocatable, dimension(:) :: nm !< positions of panels
-end type
+  !> A datastructure containing the corresponding interstitial mesh.
+  type InterstitialMesh
+    double precision, allocatable, dimension(:) :: xrn !< radial mesh points r(i)
+    double precision, allocatable, dimension(:) :: drn !< integration weights dr/di (i)
+    integer :: npan !< number of panels
+    integer, allocatable, dimension(:) :: nm !< positions of panels
+  end type
 
-CONTAINS
+  CONTAINS
 
 !------------------------------------------------------------------------------
 !> Reads Voronoi weights from file 'voro_weights'
 !> this is kind of a hack and does not scale well.
 subroutine read_voro_weights(weights, ATOM, num_atoms)
-  implicit none
   double precision, intent(inout) :: weights(:)
   integer, intent(in) :: ATOM(:)
   integer, intent(in) :: num_atoms
@@ -55,9 +60,9 @@ end subroutine
 subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
                      rcluster, lmax_shape, npoints_min, nmin_panel, &
                      num_MT_points, new_MT_radius, MT_scale)
-  use RefCluster_mod
-  use ShapefunData_mod
-  implicit none
+  use RefCluster_mod, only: LatticeVectors, RefCluster
+  use RefCluster_mod, only: createLatticeVectors, createRefCluster, destroyLatticeVectors, destroyRefCluster
+  use ShapefunData_mod, only: ShapefunData
 
   ! Output (shape-functions and interstitial mesh):
   type (ShapefunData), intent(inout) :: shdata
@@ -120,8 +125,7 @@ end subroutine
 subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
                                 lmax_shape, npoints_min, nmin, &
                                 num_MT_points, new_MT_radius, MT_scale)
-  use ShapefunData_mod
-  implicit none
+  use ShapefunData_mod, only: ShapefunData, createShapefunData
 
   type (ShapefunData), intent(inout) :: shdata
   type (InterstitialMesh), intent(inout) :: inter_mesh
@@ -254,7 +258,6 @@ end subroutine
 
 !------------------------------------------------------------------------------
 subroutine destroyInterstitialMesh(inter_mesh)
-  implicit none
   type(InterstitialMesh), intent(inout) :: inter_mesh
 
   deallocate(inter_mesh%xrn)
@@ -267,11 +270,6 @@ end subroutine
 !******************************************************************************
 SUBROUTINE MTMESH(NRAD,NPAN,MESHN,NM,XRN,DRN, &
                   NFU,THETAS,LMIFUN,MTRADIUS)
-!
-IMPLICIT NONE
-!
-!
-!
 ! Program  mtmesh.f adds one extra pannel inside the
 ! muffin-tin sphere to allow lattice relaxations.
 ! stores the mt-nized shapes in unit 15 as shapefun
@@ -303,7 +301,7 @@ Integer nm1(npan+1)
 integer meshn1,npan1
 !     ..
 !     .. Intrinsic Functions ..
-INTRINSIC ABS,DATAN,DSQRT,SQRT
+INTRINSIC :: ABS,DATAN,DSQRT,SQRT
 !     ..
 
 ibmaxd = size(thetas, 2)
@@ -393,8 +391,8 @@ End subroutine
 !>
 !> The name of the file written is shape.<shape_index>
 subroutine write_shapefun_file(shdata, inter_mesh, shape_index)
-  use ShapefunData_mod
-  implicit none
+  use ShapefunData_mod, only: ShapefunData
+
   type (ShapefunData), intent(in) :: shdata
   type (InterstitialMesh), intent(in) :: inter_mesh
   integer, intent(in) :: shape_index
@@ -435,8 +433,7 @@ end subroutine
 !> Only the LM=1 component is nonzero
 !> Atomic sphere has same volume as Voronoi cell
 subroutine replace_with_PseudoASA(shdata, inter_mesh, volume)
-  use ShapefunData_mod
-  implicit none
+  use ShapefunData_mod, only: ShapefunData
 
   type (ShapefunData), intent(inout) :: shdata
   type (InterstitialMesh), intent(in) :: inter_mesh

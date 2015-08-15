@@ -37,7 +37,7 @@ FC90 = mpif90 -warn all
 # -module <path> specifies where to put .mod files
 FCFLAGS = -mkl -module $(BUILDDIR)
 # FCFLAGS += -openmp
-# FCFLAGS += -O0 -C -traceback
+# FCFLAGS += -C -traceback
 FCFLAGS += -O0
 # FCFLAGS += -nocheckpointers
 FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
@@ -147,7 +147,7 @@ DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
          kkr0common MixingNew datastructures config_reader \
-         cluster shapefun IterativeSolverBCP debug_morgan
+         shapefun IterativeSolverBCP debug_morgan
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)

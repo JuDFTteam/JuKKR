@@ -1,6 +1,9 @@
 module SingleSiteRef_mod
+  implicit none
+  private
+  public :: GLL95
 
-CONTAINS
+  CONTAINS
 
 !**********************************************************************
 !> @param E complex energy
@@ -32,8 +35,6 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
 !     (TREFLL) centered at positions RATOM in free space,
 !
 ! ----------------------------------------------------------------------
-
-  implicit none
 
   integer, intent(in) :: lmaxd
   integer, intent(in) :: naclsd
@@ -98,7 +99,7 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
 
   !     ..
   !     .. External Subroutines ..
-  external GFREE,GREFSY,ZCOPY,ZGEMM
+  external :: GFREE, GREFSY, ZCOPY, ZGEMM
 
   !     ..
   !     .. Intrinsic Functions ..
@@ -244,8 +245,8 @@ subroutine GLL95(E,CLEB,ICLEB,LOFLM,IEND,TREFLL,DTREFLL, &
  !> @param[in]  derivative  .false. = calculate Free-Space-Greens Function
  !>                         .true.  = calculate Derivative of Free-Space-Greens Function
  subroutine calcFreeGreens(greenFree, energy, lmmaxd, NATOM, RATOM, ALAT, CLEB, ICLEB, ncleb, IEND, LOFLM, derivative)
-   use kkr_helpers_mod
-   implicit none
+   use kkr_helpers_mod, only: lmmaxToLmax
+
    integer, intent(in) :: ncleb
    double precision :: ALAT
    double precision :: CLEB(:)

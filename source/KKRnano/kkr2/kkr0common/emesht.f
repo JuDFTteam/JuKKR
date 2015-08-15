@@ -1,6 +1,6 @@
 C 06.10.09 *************************************************************
-      SUBROUTINE EMESHT(EZ,DF,NPNT,EBOT,EMU,EFERMI,TK,
-     &                  NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
+C     SUBROUTINE EMESHT(EZ,DF,NPNT,EBOT,EMU,EFERMI,TK,
+C    &                  NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
 C **********************************************************************
 C *                                                                    *
 C * This subroutine provides the energy mesh in array EZ and the       *
@@ -87,6 +87,8 @@ C *                                                                    *
 C *                                                                    *
 C **********************************************************************
 C     ..
+      SUBROUTINE EMESHT(EZ,DF,NPNT,EBOT,EMU,EFERMI,TK,
+     &                  NPOL,NPNT1,NPNT2,NPNT3,IEMXD)
       IMPLICIT NONE
 C     .. Parameters ..
       DOUBLE PRECISION KB,PI,RYD
@@ -96,7 +98,7 @@ C     .. Parameters ..
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION EBOT,FEBOT,EMU,FEMU,TK,EFERMI
-      INTEGER NPNT,NPNT1,NPNT2,NPNT3,NPOL,NPNT4,IEMXD
+      INTEGER NPNT,NPNT1,NPNT2,NPNT3,NPOL,IEMXD
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX DF(*),EZ(*)
@@ -104,7 +106,7 @@ C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX DE
       DOUBLE PRECISION ER,ETK
-      INTEGER I,NLEG
+      INTEGER I,NLEG,NPNT4
       LOGICAL FINEGRID
 C     ..
 C     .. Local Arrays ..
