@@ -2,6 +2,7 @@
 !> Hardcoded constants for shape function calculation
 module shape_constants_mod
   implicit none
+  public ! all module vars are constant
 
   integer, parameter :: DP = kind(1.0d0) !< double precision kind parameter
 

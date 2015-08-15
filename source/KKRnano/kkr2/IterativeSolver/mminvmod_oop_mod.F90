@@ -14,10 +14,11 @@
 #define COLUMN_XPAY(FACTORS, XVECTOR, YVECTOR) call col_xpay(FACTORS, XVECTOR, YVECTOR)
 
 module mminvmod_oop_mod
+  implicit none
+  private
+  public :: MMINVMOD_oop
 
-implicit none
-
-contains
+  contains
 
   ! :-)
 #define THREE 1
@@ -37,9 +38,8 @@ contains
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
   subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond, VECS, temp)
     USE_LOGGING_MOD
-    use SolverStats_mod
-    use OperatorT_mod
-    implicit none
+    use SolverStats_mod, only: SolverStats
+    use OperatorT_mod, only: OperatorT
 
     class (OperatorT) :: op
 
@@ -465,7 +465,7 @@ contains
  !> mat_out = A P mat_in
  !> preconditioner is used only when use_precond=.true.
  subroutine apply_precond_and_matrix(op, precond, mat, mat_out, temp, use_precond)
-   use OperatorT_mod
+   use OperatorT_mod, only: OperatorT
    class(OperatorT) :: op
    class(OperatorT) :: precond
    double complex, intent(in) :: mat(:,:)
@@ -484,7 +484,6 @@ contains
 
  !------------------------------------------------------------------------------
  subroutine col_AXPY(factors, xvector, yvector)
-   implicit none
    double complex, dimension(:), intent(in) :: factors
    double complex, dimension(:,:), intent(in) :: xvector
    double complex, dimension(:,:), intent(inout) :: yvector
@@ -505,7 +504,6 @@ contains
 
  !------------------------------------------------------------------------------
  subroutine col_MAXPY(factors, xvector, yvector)
-   implicit none
    double complex, dimension(:), intent(in) :: factors
    double complex, dimension(:,:), intent(in) :: xvector
    double complex, dimension(:,:), intent(inout) :: yvector
@@ -526,7 +524,6 @@ contains
 
  !------------------------------------------------------------------------------
  subroutine col_XPAY(factors, xvector, yvector)
-   implicit none
    double complex, dimension(:), intent(in) :: factors
    double complex, dimension(:,:), intent(in) :: xvector
    double complex, dimension(:,:), intent(inout) :: yvector
@@ -547,7 +544,6 @@ contains
 
  !------------------------------------------------------------------------------
  subroutine col_norms(norms, vectors)
-   implicit none
    double precision, dimension(:), intent(out) :: norms
    double complex, dimension(:,:), intent(in) :: vectors
 
@@ -567,7 +563,6 @@ contains
 
  !------------------------------------------------------------------------------
  subroutine col_dots(dots, vectorsv, vectorsw)
-   implicit none
    double complex, dimension(:), intent(out) :: dots
    double complex, dimension(:,:), intent(in) :: vectorsv
    double complex, dimension(:,:), intent(in) :: vectorsw
@@ -586,4 +581,4 @@ contains
    end do
  end subroutine
 
- end module
+end module

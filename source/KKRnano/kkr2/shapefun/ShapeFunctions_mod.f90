@@ -2,6 +2,9 @@
 
 module ShapeFunctions_mod
   implicit none
+  private
+  public :: SHAPEF
+  
   contains
 
 !------------------------------------------------------------------------------
@@ -142,12 +145,11 @@ THETAS_S, LMIFUN_S, NFUN, & ! shape function
 IBMAXD,MESHND, NPAND) ! new input parameters after inc.geometry was removed
 
   use shape_constants_mod, only: VERBOSITY, DP
-  use ShapeCriticalPoints_mod
-  use ShapeStandardMesh_mod
-  use ShapeIntegration_mod
-  use angles_common
-  use tetrahedra_common
-  implicit none
+  use ShapeCriticalPoints_mod, only: criticalShapePoints
+  use ShapeStandardMesh_mod, only: MESH
+  use ShapeIntegration_mod, only: shapeIntegration
+  use angles_common, only: createangles, destroyangles
+  use tetrahedra_common, only: createtetra, destroytetra
 
   integer,intent(in) :: NPOI
   real(kind=DP), intent(in) :: TOLVDIST

@@ -1,13 +1,12 @@
 module DLKE0_smat_mod
+  implicit none
+  private
+  public :: DLKE0_smat
 
-contains
+  contains
 
-  ! **********************************************************************
   subroutine DLKE0_smat(site_index,smat,ia,ka,kvstr,EIKRM,EIKRP,NACLS, &
-  ATOM,NUMN0,INDN0,GINP, &
-  naez, lmmaxd, naclsd)
-  ! **********************************************************************
-    implicit none
+    ATOM,NUMN0,INDN0,GINP, naez, lmmaxd, naclsd)
 
     double complex, dimension(:), intent(inout) :: smat
     integer, dimension(:), intent(in) :: ia

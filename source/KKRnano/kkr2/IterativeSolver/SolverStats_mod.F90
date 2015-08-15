@@ -1,6 +1,8 @@
 !> Module to collect statistics of iterative solver
 module SolverStats_mod
   implicit none
+  private
+  public :: SolverStats, sum_stats, reset_stats
 
   type SolverStats
     integer :: iterations = 0
@@ -14,7 +16,6 @@ module SolverStats_mod
   !----------------------------------------------------------------------------
   !> Add statistics of an iterative solver run to total statistics.
   subroutine sum_stats(self, total)
-    implicit none
     type (SolverStats), intent(in) :: self
     type (SolverStats), intent(inout) :: total
 
@@ -26,11 +27,11 @@ module SolverStats_mod
   !----------------------------------------------------------------------------
   !> Reset stats to zero.
   subroutine reset_stats(self)
-    implicit none
     type (SolverStats), intent(inout) :: self
     self%iterations = 0
     self%sum_iterations = 0
     self%max_iterations = 0
     self%max_residual = 0.0d0
   end subroutine
+  
 end module SolverStats_mod

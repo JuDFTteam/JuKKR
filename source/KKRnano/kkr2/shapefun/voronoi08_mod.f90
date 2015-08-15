@@ -1,9 +1,11 @@
 MODULE VORONOI08_MOD
+  implicit none
+  private
+  public :: DISTPLANE, NORMALPLANE0, POLYHEDRON08, DSORT
 
-CONTAINS
+  CONTAINS
 
-SUBROUTINE POLYHEDRON08( &
-                        NPLANE,NVERTMAX,NFACED,TOLVDIST,TOLAREA, &
+SUBROUTINE POLYHEDRON08(NPLANE,NVERTMAX,NFACED,TOLVDIST,TOLAREA, &
                         A3,B3,C3,D3, &
                         NFACE,NVERT,XVERT,YVERT,ZVERT,output)
 ! Given a set of planes, defined by A3*x+B3*y+C3*z=D3 and defining
@@ -15,9 +17,8 @@ SUBROUTINE POLYHEDRON08( &
 ! faces are returned in the same arrays A3,B3,C3, and D3.
 !
 ! Uses subroutine VERTEX3D. 
-implicit none
 
-logical :: output
+logical, intent(in) :: output
 
 ! Input:
 INTEGER NPLANE                ! Initial number of planes.
@@ -106,8 +107,7 @@ END SUBROUTINE
 
 
 !***********************************************************************
-SUBROUTINE VERTEX3D( &
-                    NPLANE,A3,B3,C3,D3,NVERTMAX,TOLVDIST, &
+SUBROUTINE VERTEX3D(NPLANE,A3,B3,C3,D3,NVERTMAX,TOLVDIST, &
                     NFACE,NVERT,XVERT,YVERT,ZVERT, output)
 ! Given a set of planes, defined by A3*x+B3*y+C3*z=D3 and defining
 ! a convex part of space (the minimal one containing the origin, 
@@ -306,12 +306,10 @@ IF (NVERT(IPLANE).GE.3) THEN
 ENDIF                     ! (NVERT(IPLANE).GE.3)
 ENDDO                     ! IPLANE = 1,NPLANE
 
-RETURN
 END SUBROUTINE
 
 !------------------------------------------------------------------------------
-SUBROUTINE ANALYZEVERT3D( &
-                          NVERTMAX,NFACED,TOLVDIST,TOLAREA,NPLANE, &
+SUBROUTINE ANALYZEVERT3D( NVERTMAX,NFACED,TOLVDIST,TOLAREA,NPLANE, &
                           NFACE,NVERT,XVERT,YVERT,ZVERT, &
                           A3,B3,C3,D3,output)
 ! Analyze the faces and vertices of the polyhedron.
@@ -439,8 +437,7 @@ DO 200 IPLANE = 1,NPLANE
          X3 = XVERT(IVERT+1,IPLANE)
          Y3 = YVERT(IVERT+1,IPLANE)
          Z3 = ZVERT(IVERT+1,IPLANE)
-         TRIANGLEAREA = 0.5d0 * DABS( &
-              (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )  ! formula incorrect? E.R.
+         TRIANGLEAREA = 0.5d0 * DABS( (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )  ! formula incorrect? E.R.
          FACEAREA(IPLANE) = FACEAREA(IPLANE)+ TRIANGLEAREA
       ENDDO
 
@@ -529,7 +526,7 @@ LOGICAL FUNCTION HALFSPACE(A,B,C,D,X,Y,Z)
 ! less than or equal to d**2:  (d_x,d_y,d_z)*(X,Y,Z) =< d**2.
 !
 ! Input:
-REAL*8           A,B,C,D,X,Y,Z,TEST,D1,D2
+REAL*8, intent(in) :: A,B,C,D,X,Y,Z
 
 IF (DABS(A)+DABS(B)+DABS(C).LT.1.D-80) &
                                 STOP 'HALFSPACE: A,B,C too small.'
@@ -539,7 +536,6 @@ HALFSPACE = .FALSE.
 IF (D*(A*X+B*Y+C*Z).LE.D*D) HALFSPACE = .TRUE.
 ! (re-checked 31May2008 FM)
 
-RETURN
 END FUNCTION
 
 !***********************************************************************
@@ -549,13 +545,12 @@ SUBROUTINE NORMALPLANE(X1,Y1,Z1,X2,Y2,Z2,TAU,A,B,C,D)
 ! equation A*x+B*y+C*z=D, which is normal to the vector r2-r1 and passes
 ! through the point (1.-TAU)*r1 + TAU*r2 (TAU thus being a parameter
 ! defining how close the plane is to each of the two points).
-implicit none
 ! Input:
-REAL*8           X1,Y1,Z1,X2,Y2,Z2,TAU
+REAL*8, intent(in) :: X1,Y1,Z1,X2,Y2,Z2,TAU
 ! Output:
-REAL*8           A,B,C,D
+REAL*8, intent(out) :: A,B,C,D
 ! Inside:
-REAL*8           ONEMTAU
+REAL*8 :: ONEMTAU
 ! The plane is defined as 
 ! (A,B,C)*(X-X1,Y-Y1,Z-Z1)=const=
 !                         =(distance from r1 to (1.-TAU)*r1 + TAU*r2)**2
@@ -568,22 +563,18 @@ B = ONEMTAU * Y1 + TAU * Y2
 C = ONEMTAU * Z1 + TAU * Z2
 D = A*(A+X1) + B*(B+Y1) + C*(C+Z1)
 
-RETURN
 END SUBROUTINE
 !***********************************************************************
-SUBROUTINE NORMALPLANE0( &
-     X1,Y1,Z1,TAU, &
-     A,B,C,D)
+SUBROUTINE NORMALPLANE0(X1,Y1,Z1,TAU, A,B,C,D)
 ! Given a point in space, r1=(X1,Y1,Z1), this
 ! subroutine returns the coefficients defining a plane through the 
 ! equation A*x+B*y+C*z=D, which is normal to the vector r1 and passes
 ! through the point TAU*r1 (TAU thus being a parameter
 ! defining how close the plane is to the point).
-implicit none
 ! Input:
-REAL*8           X1,Y1,Z1,TAU
+REAL*8, intent(in) :: X1,Y1,Z1,TAU
 ! Output:
-REAL*8           A,B,C,D
+REAL*8, intent(out) :: A,B,C,D
 ! Inside:
 ! The plane is defined by 
 ! (A,B,C)*(X,Y,Z) = D = (tau * r1)**2
@@ -602,7 +593,6 @@ ELSE
    D = 0.D0
 ENDIF
 
-RETURN
 END SUBROUTINE
 
 !***********************************************************************
@@ -610,9 +600,10 @@ SUBROUTINE SORTVERTICES(N,SINFI,X,Y,Z)
 ! Sorts the array SINFI(N) in ascending order using straight insertion. 
 ! The arrays Z(N), Y(N), and Z(N) follow.
 ! On output, arrays SINFI, X, Y, and Z return sorted.
-implicit none
-INTEGER N,I,J
-REAL*8           SINFI(*),X(*),Y(*),Z(*),TMPS,TMPX,TMPY,TMPZ
+INTEGER, intent(in) :: N
+REAL*8, intent(inout) :: SINFI(*), X(*),Y(*),Z(*)
+real*8 :: TMPS,TMPX,TMPY,TMPZ
+integer :: i, j 
 
 DO J = 2,N
    TMPS = SINFI(J)
@@ -633,7 +624,6 @@ DO J = 2,N
    Z(I+1) = TMPZ
 ENDDO
 
-RETURN
 END SUBROUTINE
 
 ! ************************************************************************
@@ -642,19 +632,18 @@ SUBROUTINE CROSPR(X,Y,Z)
 !     CROSP COMPUTES THE CROSS PRODUCT OF X AND Y RETURNING
 !     IT INTO Z.
 ! ------------------------------------------------------------------------
-REAL*8           X(*), Y(*), Z(*)
+REAL*8, intent(in) :: X(3), Y(3)
+real*8, intent(out) :: Z(3)
 Z(1)=X(2)*Y(3)-X(3)*Y(2)
 Z(2)=X(3)*Y(1)-X(1)*Y(3)
 Z(3)=X(1)*Y(2)-X(2)*Y(1)
-RETURN
 END SUBROUTINE
 
 !***********************************************************************
-REAL*8           FUNCTION DISTPLANE(A,B,C,D)
+REAL*8 FUNCTION DISTPLANE(A,B,C,D)
 ! Returns the distance of a plane A*x+B*y+C*z=D to the origin.
-implicit none
-REAL*8           A,B,C,D
-REAL*8           ABCSQ
+REAL*8, intent(in) :: A,B,C,D
+REAL*8 :: ABCSQ
 
 ABCSQ = A*A + B*B + C*C
 
@@ -662,12 +651,10 @@ IF (ABCSQ.LT.1.D-100) STOP 'DISTPLANE'
 
 DISTPLANE = DABS(D)/DSQRT(ABCSQ)  
 
-RETURN
 END FUNCTION
 
 ! ************************************************************************
 SUBROUTINE DSORT (W,IND,MAX,POS)
-implicit none
 ! ************************************************************************
 !     p.zahn, april 96
 !     W   is the original array returned unchanged
@@ -675,10 +662,10 @@ implicit none
 !     max number of ellements to be sorted
 !     pos the position where the first element is found
 ! ------------------------------------------------------------------------
-INTEGER MAX,POS
-REAL*8            W(*)
-REAL*8            BOUND, DIFF
-INTEGER IND(*)
+INTEGER, intent(in) :: MAX
+REAL*8, intent(in) :: W(*)
+REAL*8 :: BOUND, DIFF
+INTEGER, intent(out) :: IND(*),POS
 
 INTEGER I,II,J,JJ,K
 DATA BOUND /1.0D-12/
@@ -715,7 +702,6 @@ DO 50 I=1,MAX
   IF (IND(I) .EQ. 1) POS=I
 50 END DO
 
-RETURN
 END SUBROUTINE
 
 END MODULE

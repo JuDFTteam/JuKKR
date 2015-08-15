@@ -10,14 +10,14 @@
 
 
 module vbrmv_mat_mod
-contains
+  implicit none
+  private
+  public :: multiply_vbr
+  
+  contains
 
-!------------------------------------------------------------------------------
   subroutine multiply_vbr(a, x, b, sparse)
-!------------------------------------------------------------------------------
-
-    use SparseMatrixDescription_mod
-    implicit none
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
     type (SparseMatrixDescription), intent(in) :: sparse
     double complex a(:), x(:,:), b(:,:)
@@ -33,8 +33,7 @@ contains
 !-----------------------------------------------------------------------
   subroutine vbrmv_mat(blk_nrows, ia, ja, ka, a, kvstr, kvstc, x, b, &
                        max_blockdim, max_blocks_per_row)
-!-----------------------------------------------------------------------
-    implicit none
+                       
     integer blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(blk_nrows+1), kvstc(:)
     integer max_blockdim, max_blocks_per_row
     integer ncols

@@ -2,7 +2,9 @@
 
 module ShapeCriticalPoints_mod
   implicit none
-
+  private
+  public :: criticalShapePoints
+  
   contains
 
 !------------------------------------------------------------------------------
@@ -44,12 +46,9 @@ subroutine criticalShapePoints(AFACE,BFACE,CFACE,DFACE, &
   NPAN, CRT, &
   NPAND)
 
-  use shape_constants_mod, only: VERBOSITY, CHECK_GEOMETRY, &
-                                 ISUMD, LMAXD1, DP
-  use tetrahedra_common
-  use ShapeGeometryHelpers_mod
-
-  implicit none
+  use shape_constants_mod, only: VERBOSITY, CHECK_GEOMETRY, ISUMD, LMAXD1, DP, PI
+  use tetrahedra_common, only: NTT, FA, FB, FD, RD, ISIGNU
+  use ShapeGeometryHelpers_mod, only: POLCHK
 
   !integer ::   NVERTICES(NFACED)
   !real(kind=DP) ::    AFACE(NFACED),BFACE(NFACED),CFACE(NFACED),DFACE(NFACED)
@@ -227,11 +226,9 @@ subroutine CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT, &
   !     .. PARAMETER STATEMENTS ..
 
   use shape_constants_mod, only: PI, VERBOSITY, DP
-  use tetrahedra_common
-  use angles_common
-  use ShapeGeometryHelpers_mod
-
-  implicit none
+  use tetrahedra_common, only: NTT, R0, RD, ISIGNU, FD, FA, FB
+  use angles_common, only: ALPHA, BETA, GAMMA
+  use ShapeGeometryHelpers_mod, only: PERP
 
   integer:: NPAND
 
@@ -551,7 +548,6 @@ subroutine EULER(Z,XX,IFACE,TOLEULER)
 
   use shape_constants_mod, only: PI, DP
   use angles_common, only: ALPHA, BETA, GAMMA
-  implicit none
 
   !     .. SCALAR ARGUMENTS ..
 
@@ -667,7 +663,6 @@ subroutine ROTATE(V,VZ,IFACE,NVERT)
 
   use shape_constants_mod, only: PI, DP
   use angles_common, only: ALPHA, BETA, GAMMA
-  implicit none
 
 
   !     .. SCALAR ARGUMENTS ..

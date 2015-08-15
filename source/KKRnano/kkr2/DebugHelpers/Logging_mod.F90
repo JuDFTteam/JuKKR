@@ -18,12 +18,13 @@
 
 module Logging_mod
   implicit none
-
-  SAVE
+  private
+  
+  public :: openLogfile, closeLogfile, checkLog
   integer, public, parameter :: LOGFILEHANDLE = 121
-
-  integer, private, save :: logging_level = 0
-  logical, private, save :: log_created = .false.
+  
+  integer, private, protected :: logging_level = 0
+  logical, private, protected :: log_created = .false.
 
   CONTAINS
 
@@ -31,7 +32,6 @@ module Logging_mod
   !> Creates a logfile numbered by 'rank' and sets 'loglevel'
   !> @param loglevel determines amount of logging 0 (no logging) >0 write log
   subroutine openLogfile(rank, loglevel)
-    implicit none
     integer, intent(in) :: rank
     integer, intent(in) :: loglevel
 
@@ -53,7 +53,6 @@ module Logging_mod
   !----------------------------------------------------------------------------
   !> Closes the logfile
   subroutine closeLogfile()
-    implicit none
     if (log_created .eqv. .true.) then
       close(LOGFILEHANDLE)
       log_created = .false.
@@ -64,11 +63,11 @@ module Logging_mod
   !> Checks if a log entry should be written according to given level
   !> Returns true if logging_level >= level
   logical function checkLog(level)
-    implicit none
     integer, intent(in) :: level
     checkLog = .false.
     if (logging_level >= level .and. log_created .eqv. .true.) then
       checkLog = .true.
     end if
   end function
+  
 end module Logging_mod

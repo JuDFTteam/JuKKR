@@ -2,9 +2,9 @@ C>    Auxillary module needed for shape function calculation.
 
       MODULE ShapeGeometryHelpers_mod
       IMPLICIT NONE
+      private
 
-      PUBLIC :: POLCHK
-      PUBLIC :: PERP
+      PUBLIC :: POLCHK, PERP
 
       CONTAINS
 C---------------------------------------------------------------------

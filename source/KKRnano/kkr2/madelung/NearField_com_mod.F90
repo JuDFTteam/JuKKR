@@ -10,9 +10,6 @@
 module NearField_com_mod
   USE_LOGGING_MOD
 
-  use NearField_mod, only:
-  use NearField_kkr_mod, only:
-  use one_sided_commD_mod, only:
   use MadelungCalculator_mod, only: MadelungClebschData
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none

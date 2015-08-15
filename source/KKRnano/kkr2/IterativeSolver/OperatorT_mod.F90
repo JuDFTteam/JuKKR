@@ -6,6 +6,8 @@
 
 module OperatorT_mod
   implicit none
+  private
+  public :: OperatorT
 
   type, abstract :: OperatorT
     contains

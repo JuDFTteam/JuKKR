@@ -3,7 +3,6 @@
 !> @author Elias Rabel
 
 module NearField_mod
-  use MadelungCalculator_mod, only:
   implicit none
   private
   public :: Potential

@@ -2,6 +2,8 @@ C>    Auxillary module needed for shape function calculation.
 
       module ShapeIntegrationHelpers_mod
       implicit none
+      private
+      public :: PINTG, CCOEF, D_REAL
 
       contains
 
@@ -591,7 +593,7 @@ C>    THE ROTATION THROUGH THE EULER ANGLES ALPHA,BETA,GAMMA  FOR
 C>    REAL SPHERICAL HARMONICS UP TO QUANTUM NUMBER LMAX. THE RE-
 C>    SULTS ARE STORED IN DMATL(ISUMD)
 C------------------------------------------------------------------
-      SUBROUTINE DREAL(LMAX,ALPHA,BETA,GAMMA,
+      SUBROUTINE D_REAL(LMAX,ALPHA,BETA,GAMMA,
      &                 DMATL, ISUMD,
      &                 LMAXD1)
 C     new parameters: DMATL, ISUMD

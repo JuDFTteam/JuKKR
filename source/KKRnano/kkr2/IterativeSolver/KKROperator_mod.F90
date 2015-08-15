@@ -9,13 +9,13 @@
 !>    'apply'
 
 module KKROperator_mod
-  use OperatorT_mod
-
-  use SparseMatrixDescription_mod
-  use ClusterInfo_mod
-  use MultScatData_mod
-
+  use MultScatData_mod, only: MultScatData
+  use OperatorT_mod, only: OperatorT
   implicit none
+  private
+  public :: KKROperator, create, destroy
+  public :: create_KKROperator, destroy_KKROperator ! deprecated
+  public :: get_ms_workspace
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type, extends(OperatorT) :: KKROperator
@@ -28,6 +28,14 @@ module KKROperator_mod
     procedure :: destroy => destroy_KKROperator
   end type
 
+  interface create
+    module procedure create_KKROperator
+  endinterface
+  
+  interface destroy
+    module procedure destroy_KKROperator
+  endinterface
+  
   contains
 
   !----------------------------------------------------------------------------

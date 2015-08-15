@@ -9,16 +9,17 @@
 #endif
 
 module fillKKRMatrix_mod
+  implicit none
+  private
+  public :: getKKRMatrixStructure, buildKKRCoeffMatrix
 
-contains
+  contains
 
 !------------------------------------------------------------------------------
 !> Setup of the sparsity pattern of the KKR-Matrix.
-  subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, & ! in
-                                   sparse) ! out
-
-    use SparseMatrixDescription_mod
-    implicit none
+  subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    
     integer, dimension(:), intent(in) :: lmmaxd_array
     integer, dimension(:), intent(in) :: numn0
     integer, dimension(:,:), intent(in) :: indn0
@@ -97,8 +98,8 @@ contains
   !> ia    for each row give index of first non-zero block in ja
   !> ja    column index array of non-zero blocks
   subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, sparse)
-    use SparseMatrixDescription_mod
-    implicit none
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+
     double complex, dimension(:), intent(inout) :: smat
     double complex, dimension(lmmaxd,lmmaxd,num_atoms), intent(in) :: TMATLL
     integer, intent(in) :: lmmaxd
@@ -191,8 +192,6 @@ contains
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
   subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_indices, kvstr)
-    implicit none
-
     double complex, dimension(:,:), intent(inout) :: mat_B
     double complex, dimension(lmmaxd,lmmaxd,*), intent(in) :: TMATLL
     integer, intent(in) :: lmmaxd
@@ -252,7 +251,6 @@ contains
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
   subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, full)
-    implicit none
     double complex, dimension(:), intent(in) :: smat
     integer, dimension(:), intent(in) :: ia
     integer, dimension(:), intent(in) :: ja
@@ -304,8 +302,6 @@ contains
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B)
-    implicit none
-
     double complex, dimension(:,:), intent(inout) :: full
     double complex, dimension(:,:), intent(inout) :: mat_B
 
@@ -335,8 +331,6 @@ contains
   !> @param GLLKE1 output: solution in old format
   !> @param mat_X: solution with l-cutoff
   subroutine toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, kvstr)
-    implicit none
-
     double complex, dimension(:,:), intent(out) :: GLLKE1
     double complex, dimension(:,:), intent(in) :: mat_X
     integer, intent(in) :: lmmaxd
@@ -369,7 +363,6 @@ contains
   !> Write sparse matrix data (without description) to unformatted file
   !> - useful for testing.
   subroutine dumpSparseMatrixData(smat, filename)
-    implicit none
     double complex, dimension(:), intent(in) :: smat
     character(len = *), intent(in) :: filename
     !--------------
@@ -385,7 +378,6 @@ contains
   !> Read sparse matrix data from unformatted file
   !> - useful for testing.
   subroutine readSparseMatrixData(smat, filename)
-    implicit none
     double complex, dimension(:), intent(inout) :: smat
     character(len = *), intent(in) :: filename
     !--------------
@@ -401,7 +393,6 @@ contains
   !> Write dense matrix to unformatted file
   !> - useful for testing.
   subroutine dumpDenseMatrix(mat, filename)
-    implicit none
     double complex, dimension(:,:), intent(in) :: mat
     character(len = *), intent(in) :: filename
     !--------------
@@ -417,7 +408,6 @@ contains
   !> Read dense matrix data from unformatted file
   !> - useful for testing.
   subroutine readDenseMatrix(mat, filename)
-    implicit none
     double complex, dimension(:,:), intent(inout) :: mat
     character(len = *), intent(in) :: filename
     !--------------
@@ -433,7 +423,6 @@ contains
   !> Write GLLH to unformatted file
   !> - useful for testing.
   subroutine dumpGLLH(mat, filename)
-    implicit none
     double complex, dimension(:,:,:), intent(in) :: mat
     character(len = *), intent(in) :: filename
     !--------------
@@ -449,7 +438,6 @@ contains
   !> Read GLLH from unformatted file
   !> - useful for testing.
   subroutine readGLLH(mat, filename)
-    implicit none
     double complex, dimension(:,:,:), intent(inout) :: mat
     character(len = *), intent(in) :: filename
     !--------------
@@ -465,7 +453,6 @@ contains
   !> Write sparse matrix data (without description) to formatted file
   !> - useful for testing.
   subroutine dumpSparseMatrixDataFormatted(smat, filename)
-    implicit none
     double complex, dimension(:), intent(in) :: smat
     character(len = *), intent(in) :: filename
     !--------------
@@ -487,7 +474,6 @@ contains
   !> First line gives matrix dimension: rows cols
   !> - useful for testing.
   subroutine dumpDenseMatrixFormatted(mat, filename)
-    implicit none
     double complex, dimension(:,:), intent(in) :: mat
     character(len = *), intent(in) :: filename
     !--------------

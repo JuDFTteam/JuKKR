@@ -1,9 +1,12 @@
 !> Workspace for solution of the Dyson equation
 
 module MultScatData_mod
-  use SparseMatrixDescription_mod
-  use ClusterInfo_mod
+  use SparseMatrixDescription_mod, only: SparseMatrixDescription
+  use ClusterInfo_mod, only: ClusterInfo
   implicit none
+  private
+  public :: MultScatData, create, destroy
+  public :: createMultScatData, destroyMultScatData ! deprecated
 
   type MultScatData
     type (SparseMatrixDescription) :: sparse
@@ -20,15 +23,24 @@ module MultScatData_mod
     type (ClusterInfo), pointer :: cluster_info
 
   end type
-
-CONTAINS
+  
+  interface create
+    module procedure createMultScatData
+  endinterface
+  
+  interface destroy
+    module procedure destroyMultScatData
+  endinterface
+  
+  CONTAINS
 
 !------------------------------------------------------------------------------
 !> Create workspace for multiple scattering calculation.
 subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
   use TEST_lcutoff_mod, only: lmarray
   use fillKKRMatrix_mod, only: getKKRMatrixStructure
-  implicit none
+  use SparseMatrixDescription_mod, only: createSparseMatrixDescription, getNNZ
+
   type (MultScatData), intent(inout) :: ms
   type (ClusterInfo), target  :: cluster_info
   integer, intent(in) :: lmmaxd
@@ -66,7 +78,7 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Destroys workspace for multiple scattering calculation.
 subroutine destroyMultScatData(ms)
-  implicit none
+  use SparseMatrixDescription_mod, only: destroySparseMatrixDescription
   type (MultScatData), intent(inout) :: ms
 
   deallocate(ms%eikrp)

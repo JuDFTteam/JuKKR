@@ -1,4 +1,6 @@
 module arraytest2_mod
+  implicit none
+  public
 
   interface testarray
     module procedure dtest1d

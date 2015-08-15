@@ -3,11 +3,10 @@
 
 module ShapeStandardMesh_mod
   implicit none
-
+  private
   public :: MESH
-  private :: MESH0
 
-contains
+  contains
 
   !----------------------------------------------------------------------------
   !> Radial mesh generation for non-spherical part.
@@ -30,11 +29,9 @@ contains
   !> @param[in]     MESHND dimension of CRT, XRN and DRN arrays
   !> @param[in]     NPAND  dimension of NM array
   !> @param[in]     VERBOSITY  0=no screen output, 1=output info about radial mesh
-  subroutine MESH(CRT,NPAN,NM,XRN,DRN,MESHN,NPOI,KEYPAN,NMIN, &
-  MESHND,NPAND,VERBOSITY) ! new input parameters
+  subroutine MESH(CRT,NPAN,NM,XRN,DRN,MESHN,NPOI,KEYPAN,NMIN, MESHND,NPAND,VERBOSITY)
 
     use shape_constants_mod, only: DP
-    implicit none
 
     !     .. PARAMETER STATEMENTS ..
 
@@ -122,7 +119,6 @@ contains
 !------------------------------------------------------------------------------
   subroutine MESH0(CRT,NM,NPAN,NAPROX,NMIN,NPAND)
     use shape_constants_mod, only: DP
-    implicit none
     ! ***********************************************************
     ! *  THIS SUBROUTINE CALCULATES AN APPROPRIATE MESH FOR
     ! *  THE SHAPE FUNCTIONS. MORE THAN NMIN POINTS BETWEEN TWO

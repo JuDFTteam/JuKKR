@@ -2,6 +2,8 @@
 
 module ShapeIntegration_mod
   implicit none
+  private
+  public :: shapeIntegration
 
   contains
 
@@ -25,10 +27,9 @@ module ShapeIntegration_mod
 SUBROUTINE shapeIntegration(LMAX, NFACE, MESHN, XRN, DLT, THETAS_S, LMIFUN_S, NFUN, MESHND, IBMAXD)
 
   use shape_constants_mod, only: PI, LMAXD1, ISUMD, ICD, ICED
-  use tetrahedra_common
-  use angles_common
-  use ShapeIntegrationHelpers_mod
-  implicit none
+  use tetrahedra_common, only: RD, NTT, R0, FA, FB, FD, ISIGNU
+  use angles_common, only: ALPHA, BETA, GAMMA
+  use ShapeIntegrationHelpers_mod, only: PINTG, CCOEF, D_REAL
 
   integer :: LMAX
   integer :: NFACE
@@ -221,7 +222,7 @@ py: DO IFACE=1,NFACE
       IC=0
       ICE=0
       ! calculate transformation matrices for spherical harmonics
-      CALL DREAL(LMAX,ALPHA(IFACE),BETA(IFACE),GAMMA(IFACE),DMATL,ISUMD,LMAXD1)
+      CALL D_REAL(LMAX,ALPHA(IFACE),BETA(IFACE),GAMMA(IFACE),DMATL,ISUMD,LMAXD1)
 
       ISU=0
       DO L=0,LMAX

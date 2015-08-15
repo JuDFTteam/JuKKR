@@ -9,16 +9,13 @@
 #include "../DebugHelpers/test_macros.h"
 
 module kkrmat_new_mod
+  implicit none
+  private
+!   public ::
 
-use SparseMatrixDescription_mod
-use ClusterInfo_mod
-use MultScatData_mod
+  double complex, allocatable :: full(:,:)
 
-implicit none
-
-double complex, allocatable, dimension(:, :), save :: full
-
-CONTAINS
+  CONTAINS
 
 !------------------------------------------------------------------------------
 !> See H. Hoehler
@@ -43,10 +40,9 @@ CONTAINS
 subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
                                 indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
                                 trunc2atom_index, communicator)
-  use dlke0_smat_mod
-  use SparseMatrixDescription_mod
-  use one_sided_commZ_mod
-  implicit none
+  use dlke0_smat_mod, only:
+  use SparseMatrixDescription_mod, only: SparseMatrixDescription
+  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd
 
   include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)
@@ -148,7 +144,6 @@ end subroutine
 !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
 !> dependent on (k,E) into matrix G_diag
 subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
-  implicit none
 
   double complex, intent(out) :: G_diag (:,:,:) ! dim lmmaxd*lmmaxd*num_local_atoms
   double complex, intent(in) :: mat_X (:,:)
@@ -197,9 +192,7 @@ end subroutine
 !> Set GS to 0 before first call
 !> in: GLLKE1
 !> inout: GS (set to 0 before first call)
-subroutine greenKSummation(G_diag, GS, k_point_weight, &
-                           atom_indices, NSYMAT, lmmaxd)
-  implicit none
+subroutine greenKSummation(G_diag, GS, k_point_weight, atom_indices, NSYMAT, lmmaxd)
   integer, parameter :: NSYMAXD = 48
 
   integer, intent(in) :: lmmaxd
@@ -248,17 +241,18 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
                      TMATLL, GINP, ALAT, &
                      RR, &
                      trunc2atom_index, communicator, iguess_data)
-
-  use fillKKRMatrix_mod
-  use TFQMRSolver_mod
-  use dlke0_smat_mod
-  use SparseMatrixDescription_mod
-  use InitialGuess_mod
+  use fillKKRMatrix_mod, only:
+  use TFQMRSolver_mod, only: TFQMRSolver
+  use dlke0_smat_mod, only:
+  use SparseMatrixDescription_mod, only:
+  use InitialGuess_mod, only: InitialGuess
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
-  use SolverOptions_mod
-  use SolverStats_mod
-  use KKROperator_mod
-  use BCPOperator_mod
+  use SolverOptions_mod, only:
+  use SolverStats_mod, only:
+  use KKROperator_mod, only: KKROperator
+  use BCPOperator_mod, only: BCPOperator
+  use MultScatData_mod, only: MultScatData
+  use ClusterInfo_mod, only: ClusterInfo
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -408,20 +402,22 @@ end subroutine
 !>
 !> Returns diagonal k-integrated part of Green's function in GS.
 subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, &
-TMATLL, ALAT,NSYMAT,RR, &
-GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
+        TMATLL, ALAT,NSYMAT,RR, &
+        GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
-  use InitialGuess_mod
+  use InitialGuess_mod, only: InitialGuess
   use jij_calc_mod, only: global_jij_data, kkrjij
-  use SolverOptions_mod
-  use SolverStats_mod
-  use TFQMRSolver_mod
-  use BCPOperator_mod
-  use KKROperator_mod
-  implicit none
-
+  use SolverOptions_mod, only:
+  use SolverStats_mod, only: SolverStats
+  use TFQMRSolver_mod, only: TFQMRSolver
+  use BCPOperator_mod, only: BCPOperator
+  use KKROperator_mod, only: KKROperator, get_ms_workspace
+  use MultScatData_mod, only: MultScatData
+  use ClusterInfo_mod, only: ClusterInfo
+  use one_sided_commZ_mod, only: ChunkIndex
+  
   !     .. parameters ..
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
 
@@ -461,7 +457,7 @@ GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
   type (MultScatData), pointer :: ms
   type (ClusterInfo), pointer :: cluster_info
 
-  integer::k_point_index
+  integer :: k_point_index
 
   double complex, allocatable, dimension(:,:,:) ::G_diag
 
@@ -575,10 +571,9 @@ end subroutine KKRMAT01_new
 subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
                                 indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
                                 trunc2atom_index, communicator)
-  use dlke0_smat_mod
-  use SparseMatrixDescription_mod
-  use one_sided_commZ_mod
-  implicit none
+  use dlke0_smat_mod, only:
+  use SparseMatrixDescription_mod, only: SparseMatrixDescription
+  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd
 
   include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)

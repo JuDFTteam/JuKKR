@@ -10,11 +10,14 @@
 !> @author Elias Rabel
 
 module TFQMRSolver_mod
-  use Solver_mod
-  use OperatorT_mod
-  use SolverStats_mod
+  use Solver_mod, only: Solver
+  use OperatorT_mod, only: OperatorT
+  use SolverStats_mod, only: SolverStats
   implicit none
-
+  private
+  
+  public :: TFQMRSolver
+  
   type, extends(Solver) :: TFQMRSolver
     PRIVATE
     class(OperatorT), pointer :: op => null()
@@ -62,7 +65,8 @@ module TFQMRSolver_mod
   !> The workspace is allocated on demand and stays allocated.
   !> Deallocate with call TFQMRSolver%destroy
   subroutine solve_with_solver(self, mat_X, mat_B)
-    use mminvmod_oop_mod
+    use mminvmod_oop_mod, only: mminvmod_oop
+    use SolverStats_mod, only: sum_stats
     class(TFQMRSolver) :: self
     double complex, intent(inout) :: mat_X(:,:)
     double complex, intent(inout)    :: mat_B(:,:)
@@ -147,5 +151,6 @@ module TFQMRSolver_mod
 
     call reset_stats(self%total_stats)
   end subroutine
+  
 end module
 

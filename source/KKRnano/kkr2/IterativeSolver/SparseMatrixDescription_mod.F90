@@ -1,6 +1,11 @@
 module SparseMatrixDescription_mod
   implicit none
-
+  private
+  public :: SparseMatrixDescription
+  public :: createSparseMatrixDescription, createSparseMatrixDescriptionFromFile
+  public :: dumpSparseMatrixDescription, destroySparseMatrixDescription
+  public :: getNNZ
+  
   !> description of a (square) sparse matrix in VBR format
   !> VBR = variable block row.
   !>
@@ -36,7 +41,6 @@ module SparseMatrixDescription_mod
   !> Creates data structure that contains sparsity information of a
   !> square VBR (variable block row) matrix.
   subroutine createSparseMatrixDescription(sparse, blk_nrows, max_num_blocks)
-    implicit none
     type (SparseMatrixDescription), intent(inout) :: sparse
     integer, intent(in) :: blk_nrows
     integer, intent(in) :: max_num_blocks
@@ -60,7 +64,6 @@ module SparseMatrixDescription_mod
   !----------------------------------------------------------------------------
   !> Returns number of non-zero elements (only if properly setup!).
   integer function getNNZ(sparse)
-    implicit none
     type (SparseMatrixDescription), intent(in) :: sparse
 
     getNNZ = sparse%ka(sparse%ia(sparse%blk_nrows + 1)) - 1
@@ -70,7 +73,6 @@ module SparseMatrixDescription_mod
   !----------------------------------------------------------------------------
   !> Destroys SparseMatrixDescription object.
   subroutine destroySparseMatrixDescription(sparse)
-    implicit none
     type (SparseMatrixDescription), intent(inout) :: sparse
 
     deallocate(sparse%ia)
@@ -86,7 +88,6 @@ module SparseMatrixDescription_mod
   !---------------------------------------------------------------------------
   !> Writes SparseMatrixDescription to formatted file - useful for testing.
   subroutine dumpSparseMatrixDescription(sparse, filename)
-    implicit none
     type (SparseMatrixDescription), intent(inout) :: sparse
     character(len = *) :: filename
 
@@ -109,7 +110,6 @@ module SparseMatrixDescription_mod
   !> Creates and reads SparseMatrixDescription from formatted file
   !> - useful for testing.
   subroutine createSparseMatrixDescriptionFromFile(sparse, filename)
-    implicit none
     type (SparseMatrixDescription), intent(inout) :: sparse
     character(len = *) :: filename
 

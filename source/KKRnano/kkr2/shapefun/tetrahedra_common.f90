@@ -1,24 +1,22 @@
 !------------------------------------------------------------------------------
 !> Storage for tetrahedra data.
 module tetrahedra_common
-  use shape_constants_mod
+  use shape_constants_mod, only: DP
   implicit none
+  public
 
-  save
-
-  integer, dimension(:), allocatable :: ISIGNU  !< ??? sign for rotation sense ???
-  integer, dimension(:), allocatable :: NTT     !< number of tetrahedra for polygon
-  real(kind=DP), dimension(:), allocatable  ::RD       !< distances pyramid footpoint to edge
-  real(kind=DP), dimension(:), allocatable  ::R0       !< foot points of perpendicular of polygons
-  real(kind=DP), dimension(:), allocatable  ::FA       !< tetrahedron angle, phi-angle corresponding to 1st vertex  FA < FD < FB
-  real(kind=DP), dimension(:), allocatable  ::FB       !< tetrahedron angle, phi-angle corresponding to 2nd vertex
-  real(kind=DP), dimension(:), allocatable  ::FD       !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
+  integer, allocatable :: ISIGNU(:)   !< ??? sign for rotation sense ???
+  integer, allocatable :: NTT(:)      !< number of tetrahedra for polygon
+  real(kind=DP), allocatable :: RD(:) !< distances pyramid footpoint to edge
+  real(kind=DP), allocatable :: R0(:) !< foot points of perpendicular of polygons
+  real(kind=DP), allocatable :: FA(:) !< tetrahedron angle, phi-angle corresponding to 1st vertex  FA < FD < FB
+  real(kind=DP), allocatable :: FB(:) !< tetrahedron angle, phi-angle corresponding to 2nd vertex
+  real(kind=DP), allocatable :: FD(:) !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
 
   contains
 
   subroutine createtetra(nfaced, nvtotd)
-    implicit none
-    integer :: nfaced, nvtotd
+    integer, intent(in) :: nfaced, nvtotd
     allocate(ISIGNU(NVTOTD))
     allocate(NTT(NFACED))
     allocate(RD(NVTOTD))
@@ -29,7 +27,6 @@ module tetrahedra_common
   end subroutine
 
   subroutine destroytetra()
-    implicit none
     deallocate(ISIGNU)
     deallocate(NTT)
     deallocate(RD)
@@ -37,7 +34,6 @@ module tetrahedra_common
     deallocate(FA)
     deallocate(FB)
     deallocate(FD)
-
   end subroutine
 
 end module

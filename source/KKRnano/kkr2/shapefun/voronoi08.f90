@@ -62,7 +62,7 @@ subroutine voronoi08( &
   !
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
 
-  use voronoi08_mod ! import helper routines
+  use voronoi08_mod, only: distplane, dsort, normalplane0, polyhedron08 ! import helper routines
   implicit none
 
   ! Input:

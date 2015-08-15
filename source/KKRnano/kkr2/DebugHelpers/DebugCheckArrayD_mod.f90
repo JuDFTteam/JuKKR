@@ -1,6 +1,7 @@
 ! Author: Elias Rabel
 module DebugCheckArrayD_mod
   implicit none
+  public
 
   type DebugCheckArrayD
     private

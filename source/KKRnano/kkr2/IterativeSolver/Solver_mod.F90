@@ -6,6 +6,8 @@
 
 module Solver_mod
   implicit none
+  private
+  public :: Solver
 
   type, abstract :: Solver
     contains
