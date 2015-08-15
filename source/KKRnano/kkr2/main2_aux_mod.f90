@@ -8,30 +8,26 @@ module main2_aux_mod
   !----------------------------------------------------------------------------
   !> Print total number of Iterative solver iterations
   subroutine printSolverIterationNumber(ITER, NOITER_ALL)
-    implicit none
-    integer :: ITER
-    integer :: NOITER_ALL
+    integer, intent(in) :: ITER
+    integer, intent(in) :: NOITER_ALL
 
     write(6,'(79(1H=))')
-    write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', &
-    ITER,' SUM of QMR ',NOITER_ALL
+    write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', ITER,' SUM of QMR ',NOITER_ALL
     write(6,'(79(1H=),/)')
   end subroutine
 
   !----------------------------------------------------------------------------
   !> Print timing information for SCF iteration.
   subroutine writeIterationTimings(ITER, TIME_I, TIME_S)
-    implicit none
-    integer :: ITER
-    double precision :: TIME_I
-    double precision :: TIME_S
+    use TimerMpi_mod, only: outtime
+    integer, intent(in) :: ITER
+    double precision, intent(in) :: TIME_I
+    double precision, intent(in) :: TIME_S
 
-    call OUTTIME(.true. ,'end .................', &
-    TIME_I,ITER)
+    call OUTTIME(.true. ,'end .................', TIME_I,ITER)
     write(6,'(79(1H=))')
     write(2,'(79(1H=))')
-    call OUTTIME(.true. ,'finished in .........', &
-    TIME_S,ITER)
+    call OUTTIME(.true. ,'finished in .........', TIME_S,ITER)
     write(2,'(79(1H=))')
     write(6,'(79(1H=),/)')
   end subroutine
@@ -43,8 +39,6 @@ module main2_aux_mod
   !> otherwise .false.
   !> The value of flag passed by ranks other than rank 0 is ignored.
   logical function is_abort_by_rank0(flag, communicator)
-    implicit none
-
     integer, intent(in) :: flag
     integer, intent(in) :: communicator
 
@@ -67,13 +61,12 @@ module main2_aux_mod
   !> @param unit_number  optional: write to file 'unit_number' otherwise to
   !>                               stdout
   subroutine printDoubleLineSep(unit_number)
-    implicit none
     integer, intent(in), optional :: unit_number
 
-    if (.not. present(unit_number)) then
-      write(*,'(79("="))')
-    else
+    if (present(unit_number)) then
       write(unit_number,'(79("="))')
+    else
+      write(*,'(79("="))')
     end if
   end subroutine
 

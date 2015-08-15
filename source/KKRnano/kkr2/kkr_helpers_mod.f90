@@ -9,8 +9,8 @@ module kkr_helpers_mod
   !! for non-relativistic case.
   !! Terminates program for illegal value.
   integer function lmmaxToLmax(lmmax)
-    implicit none
     integer, intent(in) :: lmmax
+    
     integer :: ii
     integer :: lm
 
@@ -30,4 +30,5 @@ module kkr_helpers_mod
 
     lmmaxToLmax = ii
   end function
+  
 end module kkr_helpers_mod

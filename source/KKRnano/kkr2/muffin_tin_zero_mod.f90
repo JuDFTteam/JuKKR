@@ -1,20 +1,20 @@
 module muffin_tin_zero_mod
   implicit none
-
+  private
+  public :: allreduceMuffinTinShift_com, printMuffinTinShift
+  
   contains
 
   !----------------------------------------------------------------------------
   !> Communicate contributions to the muffin-tin-zero (potential)
   !> of each process in 'communicator'
   subroutine allreduceMuffinTinShift_com(communicator, VAV0, VBC, VOL0)
-    implicit none
-
     include 'mpif.h'
 
-    integer :: communicator
-    double precision :: VAV0
-    double precision :: VBC(2)
-    double precision :: VOL0
+    integer, intent(in) :: communicator
+    double precision, intent(inout) :: VAV0
+    double precision, intent(out)   :: VBC(2)
+    double precision, intent(inout) :: VOL0
 
     !-------------------------------
     integer :: IERR
@@ -26,8 +26,7 @@ module muffin_tin_zero_mod
     !****************************************************** MPI COLLECT DATA
     WORK1(1) = VAV0
     WORK1(2) = VOL0
-    call MPI_ALLREDUCE(WORK1,WORK2,2,MPI_DOUBLE_PRECISION,MPI_SUM, &
-    communicator,IERR)
+    call MPI_ALLREDUCE(WORK1,WORK2,2,MPI_DOUBLE_PRECISION,MPI_SUM, communicator,IERR)
     VAV0 = WORK2(1)
     VOL0 = WORK2(2)
     !****************************************************** MPI COLLECT DATA
@@ -39,15 +38,12 @@ module muffin_tin_zero_mod
   !----------------------------------------------------------------------------
   !> Print muffin-tin zero information on screen.
   subroutine printMuffinTinShift(VAV0, VBC, VOL0)
-    implicit none
-    double precision :: VAV0
-    double precision :: VBC(2)
-    double precision :: VOL0
+    double precision, intent(in) :: VAV0
+    double precision, intent(in) :: VBC(2)
+    double precision, intent(in) :: VOL0
 
-    write (6,fmt=9103) VOL0,VAV0,VBC(1)
+    write(6,fmt="('  VOL INT.',F16.9,'  VAV INT.',F16.9,'  VMT ZERO',F16.9)") VOL0,VAV0,VBC(1)
     write(6,'(79(1H=),/)')
-
-9103 format ('  VOL INT.',F16.9,'  VAV INT.',F16.9,'  VMT ZERO',F16.9)
   end subroutine
 
 end module muffin_tin_zero_mod

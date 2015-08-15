@@ -4,30 +4,30 @@
 ! replace by proper implementation
 module TEST_lcutoff_mod
   implicit none
+  private
 
-  SAVE
+  public :: initLcutoffNew
 
-  integer lm_low
-  double precision cutoff_radius
-  integer lm_low2
-  double precision cutoff_radius2
-  integer, dimension(:), allocatable :: lmarray
-  integer :: cutoffmode
-  logical :: DEBUG_dump_matrix = .false.
-  integer :: num_untruncated
-  integer :: num_truncated
-  integer :: num_truncated2
-  logical :: real_space_cutoff
+  integer,                protected, public :: lm_low
+  double precision,       protected, public :: cutoff_radius
+  integer,                protected, public :: lm_low2
+  double precision,       protected, public :: cutoff_radius2
+  integer, allocatable,   protected, public :: lmarray(:)
+  integer,                protected, public :: cutoffmode
+  logical,                protected, public :: DEBUG_dump_matrix = .false.
+  integer,                protected, public :: num_untruncated
+  integer,                protected, public :: num_truncated
+  integer,                protected, public :: num_truncated2
+  logical,                protected, public :: real_space_cutoff
 
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine initLcutoffNew(trunc_zone, atom_ids, arrays)
 
-    use Main2Arrays_mod
-    use lcutoff_mod
-    use TruncationZone_mod
-    implicit none
+    use Main2Arrays_mod, only: Main2Arrays
+    use lcutoff_mod, only: calcCutoffarray
+    use TruncationZone_mod, only: TruncationZone, createTruncationZone
 
     type (TruncationZone), intent(inout) :: trunc_zone
     type (Main2Arrays), intent(in) :: arrays
@@ -131,14 +131,13 @@ module TEST_lcutoff_mod
 
   !----------------------------------------------------------------------------
   subroutine cropGLLH(GLLH, lmmaxd, naclsd, naezd, lmarray, numn0, indn0)
-    implicit none
-    double complex GLLH(LMMAXD,NACLSD*LMMAXD,NAEZD)
-    integer lmmaxd
-    integer naclsd
-    integer naezd
-    integer, dimension(naezd) :: lmarray
-    integer, dimension(naezd) :: numn0
-    integer, dimension(naezd, naclsd) :: indn0
+    double complex, intent(inout) :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZD)
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) ::  naclsd
+    integer, intent(in) ::  naezd
+    integer, intent(in), dimension(naezd) :: lmarray
+    integer, intent(in), dimension(naezd) :: numn0
+    integer, intent(in), dimension(naezd, naclsd) :: indn0
     !-----
     integer ii, jj
     integer lmmax1, lmmax2, lm1, lm2
@@ -174,21 +173,19 @@ module TEST_lcutoff_mod
 !> T-MATRIX
 !> on input: GLLH contains G_ref, on output: GLLH contains coefficient matrix
 subroutine generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd, lmarray)
-  implicit none
-
-  double complex, parameter :: CONE  = ( 1.0D0,0.0D0)
-  double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
-
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd
-  integer :: NAEZ
-  double complex :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
-  integer :: INDN0(NAEZ,NACLSD)
-  integer :: NUMN0(NAEZ)
-  doublecomplex :: TMATLL(lmmaxd,lmmaxd,NAEZ)
-  integer, dimension(:) :: lmarray
+  integer, intent(in) :: NAEZ
+  double complex, intent(inout) :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
+  integer, intent(in) :: INDN0(NAEZ,NACLSD)
+  integer, intent(in) :: NUMN0(NAEZ)
+  doublecomplex, intent(in) :: TMATLL(lmmaxd,lmmaxd,NAEZ)
+  integer, intent(in), dimension(:) :: lmarray
 
+  
   !---------- local --------------
+  double complex, parameter :: CONE  = ( 1.0D0,0.0D0)
+  double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
   double complex :: TGH(lmmaxd)
   integer :: IL1B
   integer :: IL2B
@@ -199,7 +196,6 @@ subroutine generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, 
   integer :: site_lm_index
   integer :: cluster_site_index
   integer :: cluster_site_lm_index
-
   integer :: lmmax1, lmmax2, lmmax3
 
   ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------

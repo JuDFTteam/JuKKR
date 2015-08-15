@@ -20,7 +20,7 @@ program KKRnano
   use BasisAtom_mod, only: BasisAtom
   use LDAUData_mod, only: LDAUData
 
-  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer
+  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outtime
   use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroyEBalanceHandler
 
   use wrappers_mod, only: rhocore_wrapper

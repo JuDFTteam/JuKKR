@@ -5,7 +5,7 @@
 module lloyds_formula_mod
   implicit none
   private
-  public :: calcLloydTraceX, calcDerivativeGref, calcDerivativeP, renormalizeDOS, calcLloydTraceXRealSystem
+  public :: renormalizeDOS!, calcLloydTraceX, calcDerivativeGref, calcDerivativeP, calcLloydTraceXRealSystem
 
   contains
 
@@ -29,8 +29,6 @@ module lloyds_formula_mod
   !> @param[in]     NDIM     logical dimension of matrix NDIM=lmmaxd * (#atoms in cluster)
   !> @param[in]     LMGF0D   same as lmmaxd ???
   subroutine calcLloydTraceX(LUfact, DGTDE, IPVT, LLY_G0TR, NDIM, LMGF0D, NGD)
-    implicit none
-
     double complex, intent(inout), dimension(NGD,NGD) :: LUfact
     double complex, intent(inout), dimension(NGD,LMGF0D) :: DGTDE
     integer, intent(in) :: NDIM  ! actual dimension
@@ -73,8 +71,6 @@ module lloyds_formula_mod
   !> @param[in]     LMGF0D  same as lmmaxd ???
 
   subroutine calcDerivativeGref(LUfact, GREF0, DGTDE0, DGDE, IPVT, NDIM, LMGF0D, NGD)
-    implicit none
-
     integer, intent(in) :: NDIM  ! actual dimension
     integer, intent(in) :: LMGF0D
     integer, intent(in) :: NGD   ! lmmaxd*naclsd  leading dimension
@@ -93,8 +89,7 @@ module lloyds_formula_mod
       stop
     end if
 
-    call ZGEMM('N','N',NDIM,LMGF0D,NDIM,-CONE,DGTDE0,NGD, &
-                GREF0,NGD,CONE,DGDE,NGD)
+    call ZGEMM('N','N',NDIM,LMGF0D,NDIM,-CONE,DGTDE0,NGD, GREF0,NGD,CONE,DGDE,NGD)
 
     ! use LU-factorisation stored in LUfact
     call ZGETRS('N',NDIM,LMGF0D,LUfact,NGD,IPVT,DGDE,NGD,INFO)
@@ -209,7 +204,6 @@ module lloyds_formula_mod
     ! ------- = ---------- * \Delta T(E) + Gref(E,k) * -------------
     !   dE        dE                                    dE
 
-     implicit none
      integer, intent(in) :: site_lm_size
      integer, intent(in) :: lmmaxd
      double precision, intent(in) :: alat
@@ -262,8 +256,6 @@ module lloyds_formula_mod
    !> @param[out]    TRACEK             resulting trace
 
    subroutine calcLloydTraceXRealSystem(DPDE_LOCAL, GLLKE1, inv_Tmat, TRACEK, site_lm_size, lmmaxd)
-
-     implicit none
      integer, intent(in) :: site_lm_size
      integer, intent(in) :: lmmaxd
      double complex, dimension(site_lm_size, lmmaxd), intent(in) :: DPDE_LOCAL
@@ -316,8 +308,6 @@ module lloyds_formula_mod
 ! @param[in] RNORM normalisation factors: WARNING: 2nd dimension always 2 :-(
 
   subroutine renormalizeDOS(DEN,RNORM,LMAXD1,IELAST,NSPIN,IEMXD)
-    implicit none
-
     integer, intent(in) :: LMAXD1
     integer, intent(in) :: IELAST
     integer, intent(in) :: NSPIN

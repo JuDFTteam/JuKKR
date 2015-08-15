@@ -10,7 +10,6 @@ module lcutoff_mod
   !> Assume that points are in same unit cell
   !> Is this a valid assumption???
   double precision function distance_pbc(point1, point2, bravais)
-    implicit none
     double precision, intent(in) :: point1(3)
     double precision, intent(in) :: point2(3)
     double precision, intent(in) :: bravais(3,3)
@@ -37,7 +36,6 @@ module lcutoff_mod
   end function
 
   subroutine getLMarray(lmarray, rbasis, center, bravais, dist_cut, lm_high, lm_low)
-    implicit none
     integer, dimension(:), intent(out) :: lmarray
     double precision, dimension(:,:), intent(in) :: rbasis
     double precision, dimension(3), intent(in) :: center
@@ -69,7 +67,6 @@ module lcutoff_mod
   !> If merging = .true.: change the lm value only when it is larger than the
   !> original value -> this merges the truncation zones
   subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low, merging)
-    implicit none
     integer, dimension(:), intent(inout) :: cutoffarray
     double precision, dimension(:,:), intent(in) :: rbasis
     double precision, dimension(3), intent(in) :: center

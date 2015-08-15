@@ -3,7 +3,7 @@
 module lloyd0_new_mod
 implicit none
   private
-  public :: lloyd0_wrapper_com, LLOYD0_NEW, lloyd_calcRenormalisation, lloyd_communicate
+  public :: lloyd0_wrapper_com!, LLOYD0_NEW, lloyd_calcRenormalisation, lloyd_communicate
 
   contains
 
@@ -11,15 +11,15 @@ implicit none
 !> Lloyd's formula.
 !> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
 subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data)
-  use BasisAtom_mod
-  use RadialMeshData_mod
-  use CellData_mod
-  use GauntCoefficients_mod
-  use EnergyMesh_mod
-  use LDAUData_mod
-  use KKRnanoParallel_mod
+  use BasisAtom_mod, only: BasisAtom
+  use RadialMeshData_mod, only: RadialMeshData
+  use CellData_mod, only: CellData
+  use GauntCoefficients_mod, only: GauntCoefficients
+  use EnergyMesh_mod, only: EnergyMesh
+  use LDAUData_mod, only: LDAUData
+  use KKRnanoParallel_mod, only: KKRnanoParallel
+  use KKRnanoParallel_mod, only: getMySEcommunicator
 
-  implicit none
   integer, intent(in) :: LLY  !< use Lloyd 0/1
   integer, intent(in) :: ICST !< num. Born iterations
   integer, intent(in) :: NSRA !< flag scalar relativistic
@@ -107,8 +107,6 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   irid, nfund, ipand, ncleb)
 
   !USE_ARRAYTEST_MOD
-
-  implicit none
 
   integer :: lmax
   integer :: irmd
@@ -304,7 +302,6 @@ end subroutine LLOYD0_NEW
 
 !------------------------------------------------------------------------------
 subroutine lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
-  implicit none
   integer :: iemxd
   integer :: NSPIN
 
@@ -366,7 +363,6 @@ end subroutine
 
 !------------------------------------------------------------------------------
 subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
-  implicit none
   include 'mpif.h'
 
   double complex, intent(inout) :: DOS(IEMXD,2)

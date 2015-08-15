@@ -7,7 +7,6 @@ module ScatteringCalculation_mod
 implicit none
   private
   public  :: energyLoop
-  private :: setup_solver, cleanup_solver, printEnergyPoint, calcDeltaTupTdown, substractReferenceTmatrix, rescaleTmatrix, gatherTrefMatrices_com, gatherTmatrices_com
 
   CONTAINS
 
@@ -28,7 +27,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
 
-  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer
+  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer, outtime
   use EBalanceHandler_mod, only: EBalanceHandler
   use TEST_lcutoff_mod, only: DEBUG_dump_matrix
 
@@ -64,8 +63,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator
   use KKROperator_mod, only: KKROperator
-
-  implicit none
 
   integer, intent(in) :: iter
   type (CalculationData), intent(inout) :: calc_data
@@ -229,10 +226,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
         kkr => getKKR(calc_data, ilocal)
         ref_cluster => getRefCluster(calc_data, ilocal)
 
-        call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, ref_cluster, &
-                                     getMySEcommunicator(my_mpi))
-        call gatherTrefMatrices_com(DTref_local, kkr%DTrefLL, ref_cluster, &
-                                     getMySEcommunicator(my_mpi))
+        call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, ref_cluster, getMySEcommunicator(my_mpi))
+        call gatherTrefMatrices_com(DTref_local, kkr%DTrefLL, ref_cluster, getMySEcommunicator(my_mpi))
       end do
 
 !------------------------------------------------------------------------------
@@ -265,9 +260,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
         if(isWorkingSpinRank(my_mpi, ispin)) then
 
           if (dims%SMPID==1) then
-            PRSPIN   = ISPIN
+            PRSPIN = ISPIN
           else
-            PRSPIN   = 1
+            PRSPIN = 1
           endif
 
 !------------------------------------------------------------------------------
@@ -291,12 +286,10 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
             end if
 
             ! t_ref-matrix of central cluster atom has index 1
-            call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), &
-                                           kkr%TREFLL(:,:,1), kkr%LMMAXD)
+            call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), kkr%TREFLL(:,:,1), kkr%LMMAXD)
 
             ! do the same for derivative of T-matrix
-            call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), &
-                                           kkr%DTREFLL(:,:,1), kkr%LMMAXD)
+            call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), kkr%DTREFLL(:,:,1), kkr%LMMAXD)
 
             ! TMATN now contains Delta t = t - t_ref !!!
             ! DTDE now contains Delta dt !!!
@@ -323,8 +316,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 ! <<>> Multiple scattering part
 
           ! gather t-matrices from own truncation zone
-          call gatherTmatrices_com(calc_data, TMATLL, ispin, &
-                                   getMySEcommunicator(my_mpi))
+          call gatherTmatrices_com(calc_data, TMATLL, ispin, getMySEcommunicator(my_mpi))
 
           TESTARRAYLOG(3, TMATLL)
 
@@ -407,16 +399,13 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
   do ilocal = 1, num_local_atoms
     kkr => getKKR(calc_data, ilocal)
-    call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, &
-                              ebalance_handler%EPROC)
+    call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
   end do
 !=======================================================================
 
 ! TIME
-  call OUTTIME(isMasterRank(my_mpi),'Single Site took.....', &
-               getElapsedTime(single_site_timer),ITER)
-  call OUTTIME(isMasterRank(my_mpi),'Mult. Scat. took.....', &
-               getElapsedTime(mult_scattering_timer),ITER)
+  call OUTTIME(isMasterRank(my_mpi), 'Single Site took.....', getElapsedTime(single_site_timer), ITER)
+  call OUTTIME(isMasterRank(my_mpi), 'Mult. Scat. took.....', getElapsedTime(mult_scattering_timer), ITER)
 
 !=======================================================================
 !     output of Jij's
@@ -447,9 +436,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
       if(isWorkingSpinRank(my_mpi, ispin)) then
 
         if (dims%SMPID==1) then
-          PRSPIN   = ISPIN
+          PRSPIN = ISPIN
         else
-          PRSPIN   = 1
+          PRSPIN = 1
         endif
 
         WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
@@ -556,24 +545,20 @@ end subroutine
 !> Print info about Energy-Point currently treated.
 !>
 subroutine printEnergyPoint(EZ_point, IE, ISPIN, NMESH)
-  implicit none
-  double complex :: EZ_point
-  integer :: IE
-  integer :: ISPIN
-  integer :: NMESH
-  write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)')  &
-  ' ** IE = ',IE,' ENERGY =',EZ_point, &
-  ' KMESH = ', NMESH,' ISPIN = ',ISPIN
+  double complex, intent(in) :: EZ_point
+  integer, intent(in) :: IE
+  integer, intent(in) :: ISPIN
+  integer, intent(in) :: NMESH
+  write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)') ' ** IE = ',IE,' ENERGY =',EZ_point,' KMESH = ', NMESH,' ISPIN = ',ISPIN
 end subroutine
 
 !----------------------------------------------------------------------------
 !> Calculate \Delta T_up - T_down for exchange couplings calculation.
 !> The result is stored in DTIXIJ(:,:,1)
 subroutine calcDeltaTupTdown(DTIXIJ)
-  implicit none
   double complex, intent(inout) :: DTIXIJ(:,:,:)
+  
   integer :: LMMAXD
-
   integer :: LM1
   integer :: LM2
 
@@ -591,12 +576,11 @@ end subroutine
 !> Substract diagonal reference T matrix of certain spin channel
 !> from real system's T matrix.
 subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
-  implicit none
-  integer :: LM1
-  integer :: LMMAXD
-  double complex :: TMATN(:,:)
-  double complex :: TREFLL(:,:)
+  integer, intent(in) :: LMMAXD
+  double complex, intent(inout) :: TMATN(:,:)
+  double complex, intent(in) :: TREFLL(:,:)
 
+  integer :: LM1
   ! Note: TREFLL is diagonal! - spherical reference potential
   do LM1 = 1,LMMAXD
     TMATN(LM1,LM1) =  TMATN(LM1,LM1) - TREFLL(LM1,LM1)
@@ -607,8 +591,6 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Rescale and symmetrise T-matrix.
 subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
-  implicit none
-
   double complex, intent(inout), dimension(lmmaxd, lmmaxd) :: tsst_local
   integer, intent(in) :: lmmaxd
   double precision, intent(in) :: alat
@@ -635,11 +617,9 @@ end subroutine
 !> Gather all tref-matrices of reference cluster.
 !> @param Tref_local   all locally calculated tref-matrices
 !> @param TrefLL       on exit all tref-matrices in ref_cluster
-subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, &
-                                  communicator)
+subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, communicator)
   use RefCluster_mod, only: RefCluster
   use one_sided_commZ_mod, only: copyFromZ_com
-  implicit none
 
   double complex, intent(inout) :: Tref_local(:,:,:)
   double complex, intent(inout) :: TrefLL(:,:,:)
@@ -659,8 +639,7 @@ subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, &
 
   TrefLL = (0.0d0, 0.0d0)
 
-  call copyFromZ_com(TrefLL, Tref_local, ref_cluster%atom, &
-                     chunk_size, num_local_atoms, communicator)
+  call copyFromZ_com(TrefLL, Tref_local, ref_cluster%atom, chunk_size, num_local_atoms, communicator)
 
 end subroutine
 
@@ -673,7 +652,6 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
   use KKRresults_mod, only: KKRresults
   use TruncationZone_mod, only: TruncationZone
   use one_sided_commZ_mod, only: copyFromZ_com
-  implicit none
 
   type (CalculationData), intent(in) :: calc_data
   double complex, dimension(:,:,:), intent(inout) :: TMATLL
@@ -703,8 +681,7 @@ subroutine gatherTmatrices_com(calc_data, TMATLL, ispin, communicator)
     TSST_LOCAL(:,:,ilocal) = kkr%TMATN(:,:,ispin)
   end do
 
-  call copyFromZ_com(TMATLL, TSST_LOCAL, trunc_zone%trunc2atom_index, &
-                     chunk_size, num_local_atoms, communicator)
+  call copyFromZ_com(TMATLL, TSST_LOCAL, trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 
   deallocate(TSST_LOCAL)
 

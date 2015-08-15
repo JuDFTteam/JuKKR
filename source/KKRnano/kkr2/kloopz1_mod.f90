@@ -1,9 +1,11 @@
 !> multiple scattering k-loop and symmetrisation
 module kloopz1_mod
+  use SolverOptions_mod, only:
+  implicit none
+  private
+  public :: kloopz1_new
 
-use SolverOptions_mod
-
-CONTAINS
+  CONTAINS
 
     subroutine KLOOPZ1_new(GMATN, solv, kkr_op, precond, ALAT, &
     NOFKS, VOLBZ, BZKP, VOLCUB, &
@@ -37,8 +39,6 @@ CONTAINS
     use MultScatData_mod
 
     use jij_calc_mod, only: global_jij_data, symjij
-
-    implicit none
 
     class (TFQMRSolver) :: solv
     class (KKROperator) :: kkr_op

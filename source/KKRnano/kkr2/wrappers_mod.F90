@@ -7,6 +7,11 @@
 !> @todo check intents
 module wrappers_mod
   implicit none
+  private
+  
+  public :: RHOVAL_wrapper, CALCTMAT_wrapper, CALCDTMAT_wrapper, MIXSTR_wrapper, VINTRAS_wrapper
+  public :: RHOTOTB_wrapper, ESPCB_wrapper, EPOTINB_wrapper, VXCDRV_wrapper, MTZERO_wrapper
+  public :: CONVOL_wrapper, RHOCORE_wrapper, RHOMOM_NEW_wrapper    
 
   CONTAINS
 
@@ -20,7 +25,6 @@ subroutine RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, RHO2NS, R2NEF, DEN, ES
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
 
-  implicit none
   logical, intent(in) :: LdoRhoEF
   integer, intent(in) :: ICST !< num. Born iterations
   integer, intent(in) :: NSRA !< flag scalar relativistic
@@ -88,7 +92,6 @@ subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMAT
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
   use GauntCoefficients_mod, only: GauntCoefficients
-  implicit none
 
   type (BasisAtom), intent(in) :: atomdata
   type (GauntCoefficients), intent(in) :: gaunts
@@ -147,7 +150,6 @@ subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, DTD
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
   use GauntCoefficients_mod, only: GauntCoefficients
-  implicit none
 
   type (BasisAtom), intent(in) :: atomdata
   type (GauntCoefficients), intent(in) :: gaunts
@@ -207,7 +209,6 @@ end subroutine
 subroutine MIXSTR_wrapper(atomdata, RMSAVQ, RMSAVM, MIXING, FCM)
   use BasisAtom_mod, only: BasisAtom
   use RadialMeshData_mod, only: RadialMeshData
-  implicit none
 
   double precision, intent(inout) :: RMSAVQ, RMSAVM
   double precision, intent(in)    :: MIXING, FCM
@@ -242,7 +243,6 @@ subroutine VINTRAS_wrapper(RHO2NS, shgaunts, atomdata)
   use CellData_mod, only: CellData
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
 
-  implicit none
   double precision, intent(inout) :: RHO2NS(:,:) ! inout?
   type (BasisAtom), intent(inout) :: atomdata
   type (ShapeGauntCoefficients), intent(in) :: shgaunts
@@ -278,7 +278,6 @@ subroutine RHOTOTB_wrapper(CATOM, RHO2NS, atomdata)
   use RadialMeshData_mod, only: RadialMeshData
   use CellData_mod, only: CellData
 
-  implicit none
   double precision, intent(inout) :: CATOM(:)
   double precision, intent(inout) :: RHO2NS(:,:,:)
   type (BasisAtom), intent(inout) :: atomdata
@@ -311,7 +310,6 @@ end subroutine
 !> @param[out] ESPC  1st component l-resolved energies s,p,d,f
 subroutine ESPCB_wrapper(ESPC, LCOREMAX, atomdata)
   use BasisAtom_mod, only: BasisAtom
-  implicit none
 
   double precision, intent(out) :: ESPC(:,:) !ESPC(0:3,NSPIN)
   integer, intent(out) :: LCOREMAX
@@ -331,7 +329,6 @@ end subroutine
 subroutine EPOTINB_wrapper(EPOTIN,RHO2NS,atomdata)
   use BasisAtom_mod, only: BasisAtom
   use RadialMeshData_mod, only: RadialMeshData
-  implicit none
 
   double precision, intent(out)   :: EPOTIN
   double precision, intent(inout) :: RHO2NS(:,:,:)
@@ -366,7 +363,7 @@ subroutine VXCDRV_wrapper(vons_potential, EXC, KXC, RHO2NS, shgaunts, atomdata)
   use RadialMeshData_mod, only: RadialMeshData
   use CellData_mod, only: CellData
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
-  implicit none
+
   double precision, intent(inout) :: vons_potential(:,:,:)
   double precision, intent(inout) :: EXC(:)
   integer, intent(in)             :: KXC
@@ -406,7 +403,6 @@ subroutine MTZERO_wrapper(VAV0, VOL0, atomdata)
   use RadialMeshData_mod, only: RadialMeshData
   use CellData_mod, only: CellData
 
-  implicit none
   type (BasisAtom), intent(inout) :: atomdata
   double precision, intent(inout)    :: VAV0, VOL0
 
@@ -443,7 +439,7 @@ subroutine CONVOL_wrapper(VBC, shgaunts, atomdata)
   use RadialMeshData_mod, only: RadialMeshData
   use CellData_mod, only: CellData
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
-  implicit none
+
   type (BasisAtom), intent(inout) :: atomdata
   type (ShapeGauntCoefficients), intent(in) :: shgaunts
   double precision, intent(in)    :: VBC(2)
@@ -486,7 +482,6 @@ end subroutine
 subroutine RHOCORE_wrapper(E1, NSRA, atomdata)
   use BasisAtom_mod, only: BasisAtom
   use RadialMeshData_mod, only: RadialMeshData
-  implicit none
 
   double precision, intent(in)    :: E1
   integer, intent(in)             :: NSRA
@@ -519,11 +514,9 @@ end subroutine
 !-------------------------------------------------------------------------------
 !> A wrapper for the subroutine RHOMOM_NEW.
 subroutine RHOMOM_NEW_wrapper(CMOM,CMINST,RHO2NS, cell, mesh, shgaunts)
-
   use CellData_mod, only: CellData
   use RadialMeshData_mod, only: RadialMeshData
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
-  implicit none
 
   type (CellData), intent(in) :: cell
   type (RadialMeshData), intent(in) :: mesh
@@ -562,7 +555,6 @@ end subroutine
   !----------------------------------------------------------------------------
   !> Shift lm-decomposed potential by a constant sqrt(4 * pi) * VBC.
   subroutine shiftPotential(VONS_ISPIN, index_rmax, VBC)
-    implicit none
     double precision, dimension(:,:), intent(inout) :: VONS_ISPIN
     integer, intent(in) :: index_rmax
     double precision, intent(in) :: VBC

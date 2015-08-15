@@ -146,7 +146,7 @@ endif
 DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
-         timing kkr0common MixingNew datastructures config_reader \
+         kkr0common MixingNew datastructures config_reader \
          cluster shapefun IterativeSolverBCP debug_morgan
 
 #also add BUILDDIR to VPATH to look if object files have changed
@@ -254,6 +254,7 @@ voronoi08.o: voronoi08_mod.o
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
 CellData_mod.o: ShapefunData_mod.o
+main2_aux_mod.o: TimerMpi_mod.o
 NearField_kkr_mod.o: NearField_mod.o
 jij_calc_mod.o: JijData_mod.o
 broyden_kkr_mod.o: brydbm_new_com_mod.o broyden_second_mod.o BroydenData_mod.o CalculationData_mod.o

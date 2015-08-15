@@ -11,13 +11,12 @@
 !> This is a convinient workaround to make real space truncation possible.
 !> Note: O(N**2) scaling in storage and setup time
 module TruncationZone_mod
-
-  use Main2Arrays_mod
-
-  private :: filter1d
-  private :: filter2d1
-  private :: filter2d2
-  public :: translate
+! use Main2Arrays_mod
+  implicit none
+  private
+  public :: TruncationZone, create, destroy
+  public :: createTruncationZone, destroyTruncationZone
+  public :: translate, translateInd
 
   type TruncationZone
     integer :: naez_trc !< number of atoms in truncation zone
@@ -33,11 +32,19 @@ module TruncationZone_mod
     module procedure createTruncationZoneNew
   end interface
 
+  interface create
+    module procedure createTruncationZoneNew
+  end interface
+
+  interface destroy
+    module procedure destroyTruncationZone
+  end interface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine createTruncationZoneOld(self, mask, arrays)
-    implicit none
+    use Main2Arrays_mod, only: Main2Arrays
     type (TruncationZone), intent(inout) :: self
     integer, dimension(:), intent(in) :: mask
     type (Main2Arrays), intent(in) :: arrays
@@ -48,8 +55,6 @@ module TruncationZone_mod
   !----------------------------------------------------------------------------
   ! TODO: FIXME
   subroutine createTruncationZoneNew(self, mask)
-    implicit none
-
     type (TruncationZone), intent(inout) :: self
     integer, dimension(:), intent(in) :: mask
 
@@ -92,7 +97,6 @@ module TruncationZone_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyTruncationZone(self)
-    implicit none
     type (TruncationZone), intent(inout) :: self
 
     integer :: memory_stat
@@ -105,8 +109,6 @@ module TruncationZone_mod
   !----------------------------------------------------------------------------
   !> Translate atom index 'ind' to new atom index and return value
   elemental integer function translateInd(self, ind)
-    implicit none
-
     type (TruncationZone), intent(in) :: self
     integer, intent(in) :: ind
 
@@ -123,7 +125,6 @@ module TruncationZone_mod
 
   !----------------------------------------------------------------------------
   subroutine filter1d(mask, array, new_array)
-    implicit none
     integer, dimension(:), intent(in) :: mask
     integer, dimension(:), intent(in) :: array
     integer, dimension(:), intent(inout) :: new_array
@@ -141,7 +142,6 @@ module TruncationZone_mod
 
   !----------------------------------------------------------------------------
   subroutine filter2d1(mask, array, new_array)
-    implicit none
     integer, dimension(:), intent(in) :: mask
     integer, dimension(:,:), intent(in) :: array
     integer, dimension(:,:), intent(inout) :: new_array
@@ -159,7 +159,6 @@ module TruncationZone_mod
 
   !----------------------------------------------------------------------------
   subroutine filter2d2(mask, array, new_array)
-    implicit none
     integer, dimension(:), intent(in) :: mask
     integer, dimension(:,:), intent(in) :: array
     integer, dimension(:,:), intent(inout) :: new_array
@@ -178,7 +177,6 @@ module TruncationZone_mod
   !----------------------------------------------------------------------------
   !> Translate atom indices in 'array' to new atom indices using 'index_map'
   subroutine translate(index_map, array)
-    implicit none
     integer, dimension(:), intent(in) :: index_map
     integer, dimension(:), intent(inout) :: array
 
