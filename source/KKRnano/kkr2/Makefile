@@ -4,7 +4,7 @@
 PLATFORM = ifort
 TYPE = nodebug
 
-PROGRAM = kkr2.exe
+PROGRAM = kkr.exe
 
 # Path to put object files
 # and module files
@@ -150,7 +150,7 @@ DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
          EnergyMesh SingleSiteRef SingleSite LDAU atomiccore rhovalence \
          xccouplings energy force harmonics lattice KKRnanoParallel \
          kkr0common MixingNew datastructures config_reader \
-         shapefun IterativeSolverBCP debug_morgan
+         shapefun IterativeSolverBCP debug_morgan kkr0 
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -169,7 +169,7 @@ OBJS += $(notdir ${SRCS90FPP:.F90=.o})
 .PHONY: all
 all:	$(PROGRAM)
 
-$(PROGRAM): globals $(OBJS)
+$(PROGRAM): $(OBJS)
 	$(FC90) $(FCFLAGS) $(FC90FLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
 ifeq ($(PLATFORM),ifort_IFF)
@@ -216,15 +216,12 @@ depend:
 		$(SRCS90)
 		makedepend
 	
-# Compile these files first
-globals: arraytest2_mod.o Logging_mod.o
-	
 #======================== Module dependencies ========================================
 
 TruncationZone_mod.o: Main2Arrays_mod.o
-kkrmat01_new.o: dlke0_smat_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o TFQMRSolver_mod.o MultScatData_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o SolverOptions_mod.o SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
+kkrmat01_new.o: arraytest2_mod.o Logging_mod.o dlke0_smat_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o TFQMRSolver_mod.o MultScatData_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o SolverOptions_mod.o SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
 tbref.o: SingleSiteRef_mod.o
-ProcessKKRresults_mod.o: lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o KKRnanoParallel_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
+ProcessKKRresults_mod.o: arraytest2_mod.o Logging_mod.o lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o KKRnanoParallel_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o KKRnanoParallel_mod.o CalculationData_mod.o
 NearField_mod.o: MadelungCalculator_mod.o
 KKRnano_Comm_mod.o: jij_calc_mod.o KKRnanoParallel_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o
@@ -235,7 +232,7 @@ wrappers_mod.o: BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_m
 DensityResults_mod.o: DimParams_mod.o
 BCPOperator_mod.o: OperatorT_mod.o ClusterInfo_mod.o SolverOptions_mod.o
 CalculationData_mod.o: TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o KKRnanoParallel_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
-NearField_com_mod.o: one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
+NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
 ShapeIntegrationHelpers_mod.o: shape_constants_mod.o
 ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o
 EnergyMesh_mod.o: KKRnanoParallel_mod.o EnergyMeshHelpers_mod.o
@@ -243,14 +240,14 @@ InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_m
 shapewrapper.o: ShapeFunctions_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o
 TFQMRSolver_mod.o: Solver_mod.o OperatorT_mod.o mminvmod_oop_mod.o SolverStats_mod.o
-main2.o: KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
+main2.o: Logging_mod.o kkr0_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o MultScatData_mod.o kkrmat01_new.o jij_calc_mod.o TEST_lcutoff_mod.o TFQMRSolver_mod.o SolverOptions_mod.o InitialGuess_mod.o
 ShapeCriticalPoints_mod.o: shape_constants_mod.o ShapeGeometryHelpers_mod.o angles_common.o tetrahedra_common.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o
 ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o shape_constants_mod.o angles_common.o tetrahedra_common.o
 BasisAtom_mod.o: RadialMeshData_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
-mminvmod_oop_mod.o: OperatorT_mod.o SolverStats_mod.o
+mminvmod_oop_mod.o: Logging_mod.o OperatorT_mod.o SolverStats_mod.o
 KKRresults_mod.o: DimParams_mod.o
 DimParams_mod.o: ConfigReader_mod.o
 voronoi08.o: voronoi08_mod.o
@@ -268,8 +265,12 @@ KKROperator_mod.o: MultScatData_mod.o OperatorT_mod.o ClusterInfo_mod.o SparseMa
 lloyd0_new_mod.o: KKRnanoParallel_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o
 vbrmv_mat_mod.o: SparseMatrixDescription_mod.o
 ClusterInfo_mod.o: TruncationZone_mod.o RefCluster_mod.o one_sided_commI_mod.o
-ScatteringCalculation_mod.o: InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o KKRnanoParallel_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o SolverOptions_mod.o KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o TFQMRSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o MultScatData_mod.o
+ScatteringCalculation_mod.o: arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o KKRnanoParallel_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o SolverOptions_mod.o KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o TFQMRSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o MultScatData_mod.o
 TEST_lcutoff_mod.o: TruncationZone_mod.o Main2Arrays_mod.o lcutoff_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
 total_energy_mod.o: BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
+kkr0_mod.o: ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o bzkint0.o testdimlat.o rcstop.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o pointgrp.o findgroup.o test.o bzkmesh.o symtaumat.o rinit.o cross.o latvec.o bzirr3d.o checkrmat.o calcrotmat.o errortrap.o taustruc.o rinvgj.o
+startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
+
+

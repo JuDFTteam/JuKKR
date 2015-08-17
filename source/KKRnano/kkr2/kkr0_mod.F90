@@ -4,7 +4,15 @@
 ! E-Fermi -> k-mesh depends on E-mesh => k-mesh depends on EFERMI
 ! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT
 ! ON THE ACTUAL ONE!!!!!! - BUG?
-  program MAIN0
+!  program MAIN0
+module kkr0_mod
+  implicit none
+  private
+  public :: main0
+  
+  contains
+  
+  subroutine main0()
 
 ! Explanation of most variables follows below
 
@@ -93,7 +101,6 @@
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
     use DimParams_mod, only: DimParams, createDimParamsFromConf, writeDimParams
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
-    implicit none
 
 !   double precision KIND constant
     integer, parameter :: DP = kind(1.0D0)
@@ -155,24 +162,22 @@
     ! semicore contour is used
     if (params%use_semicore == 1) then
 
-     write(*,*) "WARNING: Using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing"
+      write(*,*) "WARNING: Using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing"
 
-     if (params%NPOL /= 0) then
-      IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3 + params%n1semi + params%n2semi + params%n3semi
-    else
-      ! DOS-calculation
-      IEMXD = params%NPNT2 + params%n2semi
-    end if
+      if (params%NPOL /= 0) then
+        IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3 + params%n1semi + params%n2semi + params%n3semi
+      else ! DOS-calculation
+        IEMXD = params%NPNT2 + params%n2semi
+      end if
 
     ! semicore contour is not used
     else
 
-    if (params%NPOL /= 0) then
-      IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3
-    else
-      ! DOS-calculation
-      IEMXD = params%NPNT2
-    end if
+      if (params%NPOL /= 0) then
+        IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3
+      else ! DOS-calculation
+        IEMXD = params%NPNT2
+      end if
 
     end if
 
@@ -191,7 +196,7 @@
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
-     call RINPUTNEW99(arrays%RBASIS, arrays%NAEZ)
+    call RINPUTNEW99(arrays%RBASIS, arrays%NAEZ)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo'
 !     and write 'wldau.unf', if it does not exist already
@@ -306,24 +311,20 @@
 
     ! write start energy mesh
     if (params%use_semicore == 1) then
-
-    open  (67,FILE='energy_mesh.0',FORM='unformatted')
-    write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
-    write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
-    write (67) EFERMI
-    write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
-    write (67) params%EMUSEMI
-    write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
-    close (67)
-
+      open  (67,FILE='energy_mesh.0',FORM='unformatted')
+      write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
+      write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
+      write (67) EFERMI
+      write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
+      write (67) params%EMUSEMI
+      write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
+      close (67)
     else
-
-    open  (67,FILE='energy_mesh.0',FORM='unformatted')
-    write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
-    write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
-    write (67) EFERMI
-    close (67)
-
+      open  (67,FILE='energy_mesh.0',FORM='unformatted')
+      write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
+      write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
+      write (67) EFERMI
+      close (67)
     end if
 
 ! ======================================================================
@@ -340,48 +341,47 @@
     deallocate(radius_muffin_tin, stat=ierror)
 
 ! -------------- Helper routine -----------------------------------------------
+  end subroutine ! main0
 
-    CONTAINS
+  !------------------------------------------------------------------------
+  ! Read k-mesh file
+  subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
+    double precision, intent(out) :: BZKP(:,:,:)
+    integer, intent(in) :: MAXMESH
+    integer, intent(out) :: NOFKS(:)
+    double precision, intent(out) :: VOLBZ(:)
+    double precision, intent(out) :: VOLCUB(:,:)
 
-      !------------------------------------------------------------------------
-      ! Read k-mesh file
-      subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
-        implicit none
-        double precision, intent(out) :: BZKP(:,:,:)
-        integer, intent(in) :: MAXMESH
-        integer, intent(out) :: NOFKS(:)
-        double precision, intent(out) :: VOLBZ(:)
-        double precision, intent(out) :: VOLCUB(:,:)
+    ! -----------------------------
+    integer :: I
+    integer :: ID
+    integer :: L
+    logical :: new_kpoints
 
-        ! -----------------------------
-        integer :: I
-        integer :: ID
-        integer :: L
-        logical :: new_kpoints
+    new_kpoints = .false.
+    inquire(file='new.kpoints',exist=new_kpoints)
 
-        new_kpoints = .false.
-        inquire(file='new.kpoints',exist=new_kpoints)
+    if (.not. new_kpoints) then
+      open (52,file='kpoints',form='formatted')
+    else
+      ! if file new.kpoints exists - use those kpoints
+      write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
+      open (52,file='new.kpoints',form='formatted')
+    end if
 
-        if (.not. new_kpoints) then
-          open (52,file='kpoints',form='formatted')
-        else
-          ! if file new.kpoints exists - use those kpoints
-          write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
-          open (52,file='new.kpoints',form='formatted')
-        end if
+    rewind (52)
 
-        rewind (52)
+    do L = 1,MAXMESH
+      read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
+      read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
+      do I=2,NOFKS(L)
+        read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
+      end do
+    end do
 
-        do L = 1,MAXMESH
-          read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-          read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
-          do I=2,NOFKS(L)
-            read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-          end do
-        end do
+    close (52)
+  end subroutine ! readKpointsFile
 
-        close (52)
-      end subroutine
-
-end program
+!end program
+end module ! kkr0_mod
 

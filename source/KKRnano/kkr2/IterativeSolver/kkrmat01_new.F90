@@ -9,6 +9,8 @@
 #include "../DebugHelpers/test_macros.h"
 
 module kkrmat_new_mod
+  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
+  use arraytest2_mod, only: !import no name here, just mention it for the module dependency 
   implicit none
   private
   public :: KKRMAT01_new

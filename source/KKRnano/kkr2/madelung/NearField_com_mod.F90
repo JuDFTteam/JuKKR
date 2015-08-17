@@ -8,9 +8,8 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module NearField_com_mod
+  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   USE_LOGGING_MOD
-
-  use MadelungCalculator_mod, only: MadelungClebschData
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
@@ -57,6 +56,7 @@ module NearField_com_mod
   !----------------------------------------------------------------------------
   subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
     use NearField_kkr_mod, only: IntracellPotential
+    use MadelungCalculator_mod, only: MadelungClebschData
     use one_sided_commD_mod, only: ChunkIndex, getChunkIndex, exposeBufferD, hideBufferD, copyChunksNoSyncD
   
     type (NearFieldCorrection), intent(inout) :: nf_correction(:)

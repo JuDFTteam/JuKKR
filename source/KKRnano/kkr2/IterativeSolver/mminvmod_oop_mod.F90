@@ -14,6 +14,7 @@
 #define COLUMN_XPAY(FACTORS, XVECTOR, YVECTOR) call col_xpay(FACTORS, XVECTOR, YVECTOR)
 
 module mminvmod_oop_mod
+  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   implicit none
   private
   public :: MMINVMOD_oop

@@ -6,6 +6,7 @@
 
 program KKRnano
 
+  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   USE_LOGGING_MOD
 
   use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup, &
@@ -34,7 +35,8 @@ program KKRnano
 
   use CalculationData_mod, only: CalculationData, createCalculationData, prepareMadelung, &
     getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal, destroyCalculationData
-
+  
+  use kkr0_mod, only: main0
   implicit none
 
   type (CalculationData) :: calc_data
@@ -62,6 +64,15 @@ program KKRnano
   type (RadialMeshData), pointer :: mesh
   type (BasisAtom), pointer      :: atomdata
   type (LDAUData), pointer       :: ldau_data
+  !----------------------------------------------------------------------------
+  character(len=16)              :: arg
+  integer                        :: ios, ilen
+  
+  call get_command_argument(1, arg, ilen, ios)
+  if (arg == '--convert') then
+    call main0() ! call former kkr0.exe
+    stop
+  endif
   !----------------------------------------------------------------------------
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
