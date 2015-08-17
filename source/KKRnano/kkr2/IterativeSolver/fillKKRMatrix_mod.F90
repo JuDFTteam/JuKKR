@@ -11,7 +11,8 @@
 module fillKKRMatrix_mod
   implicit none
   private
-  public :: getKKRMatrixStructure, buildKKRCoeffMatrix
+  public :: getKKRMatrixStructure, buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
+  public :: dumpDenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
 
   contains
 

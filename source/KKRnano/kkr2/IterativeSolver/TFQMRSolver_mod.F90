@@ -147,6 +147,7 @@ module TFQMRSolver_mod
   !----------------------------------------------------------------------------
   !> Reset accumulated statistics.
   subroutine reset_total_stats(self)
+    use SolverStats_mod, only: reset_stats
     class(TFQMRSolver) :: self
 
     call reset_stats(self%total_stats)

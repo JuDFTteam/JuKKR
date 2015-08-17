@@ -29,15 +29,14 @@ module kloopz1_mod
 ! DGINP ...      derivative of reference Green's function
 ! TSST_LOCAL ..  t-matrix
 
-    use kkrmat_new_mod
-    use TEST_lcutoff_mod
-    use InitialGuess_mod
-    use ClusterInfo_mod
-    use TFQMRSolver_mod
-    use BCPOperator_mod
-    use KKROperator_mod
-    use MultScatData_mod
-
+    use kkrmat_new_mod, only: KKRMAT01_new
+    use TEST_lcutoff_mod, only: cutoffmode
+    use InitialGuess_mod, only: InitialGuess
+    use ClusterInfo_mod, only: ClusterInfo
+    use TFQMRSolver_mod, only: TFQMRSolver
+    use BCPOperator_mod, only: BCPOperator
+    use KKROperator_mod, only: KKROperator
+    use MultScatData_mod, only: MultScatData
     use jij_calc_mod, only: global_jij_data, symjij
 
     class (TFQMRSolver) :: solv

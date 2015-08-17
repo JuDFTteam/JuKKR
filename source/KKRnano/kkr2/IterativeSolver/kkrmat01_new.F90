@@ -11,7 +11,7 @@
 module kkrmat_new_mod
   implicit none
   private
-!   public ::
+  public :: KKRMAT01_new
 
   double complex, allocatable :: full(:,:)
 
@@ -40,9 +40,9 @@ module kkrmat_new_mod
 subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
                                 indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
                                 trunc2atom_index, communicator)
-  use dlke0_smat_mod, only:
+  use dlke0_smat_mod, only: DLKE0_smat
   use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd
+  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd, exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 
   include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)
@@ -241,11 +241,12 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
                      TMATLL, GINP, ALAT, &
                      RR, &
                      trunc2atom_index, communicator, iguess_data)
-  use fillKKRMatrix_mod, only:
+  use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
+  use fillKKRMatrix_mod, only: dumpDenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
   use TFQMRSolver_mod, only: TFQMRSolver
   use dlke0_smat_mod, only:
-  use SparseMatrixDescription_mod, only:
-  use InitialGuess_mod, only: InitialGuess
+  use SparseMatrixDescription_mod, only: dumpSparseMatrixDescription
+  use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
   use SolverOptions_mod, only:
   use SolverStats_mod, only:
@@ -256,7 +257,6 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
-  implicit none
 
   class(TFQMRSolver) :: solv
   class(KKROperator) :: kkr_op
@@ -407,10 +407,10 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, &
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
-  use InitialGuess_mod, only: InitialGuess
+  use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
   use jij_calc_mod, only: global_jij_data, kkrjij
-  use SolverOptions_mod, only:
-  use SolverStats_mod, only: SolverStats
+! use SolverOptions_mod, only: 
+  use SolverStats_mod, only: SolverStats, reset_stats
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator
   use KKROperator_mod, only: KKROperator, get_ms_workspace
@@ -571,9 +571,9 @@ end subroutine KKRMAT01_new
 subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
                                 indn0, rr, ezoa, GINP, EIKRM, EIKRP, &
                                 trunc2atom_index, communicator)
-  use dlke0_smat_mod, only:
+  use dlke0_smat_mod, only: DLKE0_smat
   use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd
+  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd, exposeBufferZ, fenceZ, copyChunksNoSyncZ, hideBufferZ
 
   include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)
