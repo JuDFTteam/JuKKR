@@ -50,6 +50,8 @@ module TFQMRSolver_mod
     class(TFQMRSolver) :: self
     class(OperatorT), target :: op
     self%op => op
+    self%precond => op ! also init the pointer to precond with op, may be overwritten later
+    self%use_precond = .false.
   end subroutine
 
   subroutine init_precond_solver(self, precond)

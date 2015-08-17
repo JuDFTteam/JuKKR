@@ -35,16 +35,16 @@ ifeq ($(PLATFORM),ifort)
 FC = mpif77 -warn all
 FC90 = mpif90 -warn all
 # -module <path> specifies where to put .mod files
-FCFLAGS = -mkl -module $(BUILDDIR)
-# FCFLAGS += -openmp
-# FCFLAGS += -C -traceback
-FCFLAGS += -O0
-# FCFLAGS += -nocheckpointers
-FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
-FC90FLAGS =
+FCFLAGS  = -mkl
+FCFLAGS += -module $(BUILDDIR)
 FCFLAGS += -I $(BUILDDIR)
-# LDFLAGS = -O3
-LDFLAGS = -O0
+# FCFLAGS += -openmp
+FCFLAGS += -C -traceback
+# FCFLAGS += -gen-interfaces -warn interfaces
+FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FC90FLAGS =
+FCFLAGS += -O0
+LDFLAGS  = -O0
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
