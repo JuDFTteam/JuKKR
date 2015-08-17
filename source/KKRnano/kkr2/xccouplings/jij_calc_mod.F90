@@ -2,13 +2,17 @@
 
 !> Collection of the Jij calculation routines - have fun.
 module jij_calc_mod
+  use JijData_mod, only: JijData
+  implicit none
+  private
+  
+  public :: XCCPLJIJ_START, writeJiJs
+  public :: kkrjij, symjij, clsjij
+  
+  ! Let this point to the JijData workspace!
+  type(JijData), pointer, public :: global_jij_data => null()
 
-use JijData_mod
-
-! Let this point to the JijData workspace!
-type(JijData), save, pointer :: global_jij_data => null()
-
-CONTAINS
+  CONTAINS
 
 ! ************************************************************************
 subroutine clsjij( &
@@ -30,8 +34,6 @@ subroutine clsjij( &
   ! responsible processor
   !                                                          A.Thiess 7/2009
   ! ************************************************************************
-  implicit none
-
   integer nrd
   integer nxijd
 
@@ -185,8 +187,6 @@ subroutine kkrjij( &
      gsxij, &
      communicator, &
      lmmaxd, nxijd)
-
-  implicit none
   ! ------------------------------------------------------------------------
   ! a) performs scattering of the off-diagonal GLLKE-elements
   !    required to calculate Jij's
@@ -379,9 +379,6 @@ subroutine kkrjij( &
   !       onal elements
   !       now back to KLOOPZ1 ..
   ! ================================================================
-
-  return
-
 end subroutine kkrjij
 
 !------------------------------------------------------------------------------
@@ -401,9 +398,6 @@ subroutine symjij( &
   !  b) GMATXIJ = - Delta_t^(-1) * GLL * Delta_t^(-1)
   !                                                     A.Thiess Sep'09
   ! =======================================================================
-  !
-  implicit none
-
   integer naez
   integer lmmaxd
   integer nxijd
@@ -530,9 +524,6 @@ subroutine symjij( &
   enddo
   !================================
   !xccpl
-  !
-  return
-
 end subroutine symjij
 
 !------------------------------------------------------------------------------
@@ -568,8 +559,6 @@ naez, lmmaxd, nxijd, nspind)
   !   *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
   !   *  adopted for KKRnano, Jun 2009                                   *
   !   ********************************************************************
-
-  implicit none
 
   INCLUDE 'mpif.h'
 
@@ -778,8 +767,6 @@ end subroutine
 subroutine writeJiJs(I1, &
                      RXIJ,NXIJ,IXCP,RXCCLS, &
                      JXCIJINT, nxijd)
-  implicit none
-
   integer :: I1
   integer :: NXIJ
   integer :: nxijd
@@ -860,36 +847,21 @@ end subroutine
 
 !------------------------------------------------------------------------------
 subroutine CMATMUL(N,M,A,B,C)
+  integer, intent(in) :: N, M
+  double complex, intent(in) :: A(M,M), B(M,M)
+  double complex, intent(out) :: C(M,M)
   !   ********************************************************************
-  !   *                                                                  *
   !   *   perform  the matrix-matrix operation           C = A * B       *
   !   *                                                                  *
   !   *   A,B,C   complex  SQUARE  N x N - matrices                      *
   !   *   N       dimension of A, B and C                                *
   !   *   M       array size of A, B, C with M >= N                      *
-  !   *                                                                  *
   !   ********************************************************************
-  implicit double complex(a-h,o-z)
 
-  ! PARAMETER definitions
-
-  double complex :: C0
-  parameter (C0=(0.0D0,0.0D0))
-
-  ! Dummy arguments
-
-  integer :: M
-  integer :: N
-  double complex :: A(M,M)
-  double complex :: B(M,M)
-  double complex :: C(M,M)
-
-  ! Local variables
+  double complex, parameter :: C0=(0.0D0,0.0D0)
 
   double complex :: BLJ
-  integer :: I
-  integer :: J
-  integer :: L
+  integer :: I, J, L
 
   do J = 1,N
     do I = 1,N
@@ -900,7 +872,7 @@ subroutine CMATMUL(N,M,A,B,C)
   do J = 1,N
     do L = 1,N
       BLJ = B(L,J)
-      if ( BLJ/=C0 ) then
+      if ( BLJ /= C0 ) then
         do I = 1,N
           C(I,J) = C(I,J) + A(I,L)*BLJ
         end do
@@ -920,7 +892,6 @@ subroutine pointgrp(rotmat,rotname)
   ! Appendix D, p 324-325
   !
   ! *********************************************
-  implicit none
   integer i,j,i1,is
   double precision rotmat(64,3,3)
   double precision rthree,half
