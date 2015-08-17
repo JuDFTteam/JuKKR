@@ -1,8 +1,11 @@
 !> Extracted Broyden's 2nd method from classic code.
 
 module broyden_second_mod
+  implicit none
+  private
+  public :: broyden_second
 
-contains
+  contains
 
     !*********************************************************************
     !> Broyden mixing. Second method only

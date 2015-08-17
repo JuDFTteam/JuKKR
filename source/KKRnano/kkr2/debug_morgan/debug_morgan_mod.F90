@@ -28,9 +28,8 @@ module debug_morgan_mod
   !----------------------------------------------------------------------------
   !> evaluate spherical harmonic expansion at angles given by 'vec'.
   double precision function eval_expansion(coeffs, vec)
-    implicit none
-    double precision :: coeffs(:)
-    double precision :: vec(3)
+    double precision, intent(in) :: coeffs(:)
+    double precision, intent(in) :: vec(3)
 
     integer lmmaxd
     integer lmax

@@ -4,6 +4,9 @@ C>
 C> Modified to remove all atom dependencies.
 
       MODULE BRYDBM_new_com_mod
+      implicit none
+      private
+      public :: BRYDBM_new_com, BRYSH1_new, BRYSH2_new, BRYSH3_new
 
       CONTAINS
 

@@ -51,13 +51,24 @@
 #define NUMBERMPII MPI_INTEGER
 
 module one_sided_commD_mod
+  implicit none
+  private
+  public :: ChunkIndex, getOwner, getLocalInd, getChunkIndex
+  public :: copyFromD_com
+  public :: exposeBufferD
+  public :: copyChunksD
+  public :: copyChunksNoSyncD
+  public :: fenceD
+  public :: hideBufferD
 
   type ChunkIndex
     integer :: owner
     integer :: local_ind
   end type
+  
+  include 'mpif.h'
 
-contains
+  contains
 
 !------------------------------------------------------------------------------
 !> Routine for exchanging data within certain atoms only.
@@ -68,10 +79,6 @@ contains
 !> size of receive buffer:  chunk_size*size(atom_indices)
 !> Uses MPI-RMA
 subroutine copyFromD_com(receive_buf, local_buf, atom_indices, chunk_size, num_local_atoms, communicator)
-  implicit none
-
-  include 'mpif.h'
-
   NUMBERD, dimension(*), intent(inout) :: receive_buf     ! receive
   NUMBERD, dimension(*), intent(inout) :: local_buf ! send
   integer, intent(in) :: communicator
@@ -117,7 +124,6 @@ end subroutine
 !> @param num Total number of chunks/atoms/matrices
 !> @param nranks total number of ranks
 integer function getOwner(ind, num, nranks)
-  implicit none
   integer, intent(in) :: ind, num, nranks
 
   integer :: atoms_per_proc  
@@ -131,7 +137,6 @@ end function
 !> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
 !> @param num Total number of chunks/atoms/matrices
 integer function getLocalInd(ind, num, nranks)
-  implicit none
   integer, intent(in) :: ind, num, nranks
 
   integer :: atoms_per_proc  
@@ -159,10 +164,6 @@ function getChunkIndex(ind, num, nranks)
 end function
 
 subroutine exposeBufferD(win, buffer, bsize, chunk_size, communicator)
-  implicit none
-
-  include 'mpif.h' 
-
   integer, intent(inout) :: win 
   NUMBERD, dimension(*), intent(inout) :: buffer
   integer, intent(in) :: bsize
@@ -193,8 +194,6 @@ end subroutine
 !> On output dest_buffer contains chunks in 
 !> the order as specified in 'chunk_inds' 
 subroutine copyChunksD(dest_buffer, win, chunk_inds, chunk_size)
-  implicit none
-
   NUMBERD, dimension(*), intent(out) :: dest_buffer
   integer, intent(inout) :: win
   type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
@@ -215,8 +214,6 @@ end subroutine
 !>
 !> NOTE: MUST do fence calls before and after one or many calls to this routine.
 subroutine copyChunksNoSyncD(dest_buffer, win, chunk_inds, chunk_size)
-  implicit none
-  include 'mpif.h'
   NUMBERD, dimension(*), intent(out) :: dest_buffer
   integer, intent(inout) :: win
   type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
@@ -248,8 +245,6 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Wrapper for fence call.
 subroutine fenceD(win)
-  implicit none
-  include 'mpif.h'
   integer, intent(inout) :: win
 
   integer :: ierr
@@ -261,9 +256,6 @@ end subroutine
 !------------------------------------------------------------------------------
 !> Hide buffer after completing one-sided communication.
 subroutine hideBufferD(win)
-  implicit none
-  include 'mpif.h'
-
   integer, intent(inout) :: win
 
   integer :: ierr
@@ -272,6 +264,7 @@ subroutine hideBufferD(win)
   COMMCHECK(ierr)
 
 end subroutine
+
 end module one_sided_commD_mod
 
 #ifdef TEST_ONE_SIDED_COMM_D__

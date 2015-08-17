@@ -5,10 +5,11 @@
 
 module read_formatted_mod
   implicit none
+  private
 
   ! use the following 2 routines to read one potential entry from a file.
-  public :: create_read_PotentialEntry
-  public :: destroy_PotentialEntry
+  public :: PotentialEntry, create, destroy
+  public :: create_read_PotentialEntry, destroy_PotentialEntry
 
   type PotentialHeader
     integer :: ITITLE(20)
@@ -49,7 +50,15 @@ module read_formatted_mod
     type (SphericalBlock)  :: sblock
     type (NonSphericalBlocks)  :: nsblocks
   end type
-
+  
+  interface create
+    module procedure create_read_PotentialEntry
+  endinterface
+  
+  interface destroy
+    module procedure destroy_PotentialEntry
+  endinterface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
@@ -233,29 +242,29 @@ end module read_formatted_mod
 
 #ifdef TEST_READ_FORMATTED_MOD
 program test_read_formatted
-  use read_formatted_mod
+  use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
   implicit none
 
-  type(PotentialEntry) :: entry
+  type(PotentialEntry) :: pe
   integer, parameter :: UNIT = 42
   integer :: LM
 
   open(UNIT, form='formatted', file='potential')
-    call create_read_PotentialEntry(entry, UNIT)
+    call create_read_PotentialEntry(pe, UNIT)
 
-    write(*,fmt=9080) entry%header%ITITLE
-    write(*,*) entry%sblock%VISP
+    write(*,fmt=9080) pe%header%ITITLE
+    write(*,*) pe%sblock%VISP
     write(*,*) "---------------------------------------------------------------"
-    write(*,*) "Number of non-spherical components: ", entry%sblock%LMPOT
+    write(*,*) "Number of non-spherical components: ", pe%sblock%LMPOT
 
-    do LM = 1, entry%sblock%LMPOT
+    do LM = 1, pe%sblock%LMPOT
     write(*,*) "---------------------------------------------------------------"
     write(*,*) "LM = ", LM
     write(*,*) "---------------------------------------------------------------"
-    write(*,*) entry%nsblocks%VINS(:,LM)
+    write(*,*) pe%nsblocks%VINS(:,LM)
     enddo
 
-    call destroy_PotentialEntry(entry)
+    call destroy_PotentialEntry(pe)
   close(UNIT)
 9080 FORMAT (' <#',20a4)
 end program

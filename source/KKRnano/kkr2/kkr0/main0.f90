@@ -90,11 +90,9 @@
 !     NCORE(NPOTD)             : number of core states
 ! ----------------------------------------------------------------------
 
-    use Config_Reader
-    use InputParams_mod
-    use DimParams_mod
-    use Main2Arrays_mod
-
+    use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
+    use DimParams_mod, only: DimParams, createDimParamsFromConf, writeDimParams
+    use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
     implicit none
 
 !   double precision KIND constant
@@ -218,8 +216,8 @@
       write(*,*) &
       "WARNING: file 'potential' not found... skipping start potential generation."
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
-      open(67, file='EFERMI', form='formatted')
-      read(67, *) EFERMI
+      open (67, file='EFERMI', form='formatted')
+      read (67, *) EFERMI
       close(67)
     endif
 
@@ -243,16 +241,17 @@
     PI = 4.0D0*ATAN(1.0D0)
 
 ! --> set up semicore energy contour if use_semicore == 1
+    iesemicore = 0
     if (params%use_semicore == 1) then
 ! EPATHTB calls EMESHT both for the semicore contour and the valence contour
-    call EPATHTB(EZ,DEZ,EFERMI,IELAST,iesemicore,params%use_semicore, &
-                 params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
-                 params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
-                 IEMXD)
+      call EPATHTB(EZ,DEZ,EFERMI,IELAST,iesemicore,params%use_semicore, &
+                  params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
+                  params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
+                  IEMXD)
     else
 ! Call EMESTH for valence contour only (can be included in EPATHTB when semicore contour feature is stable)
-    call EMESHT(EZ,DEZ,IELAST,params%Emin,params%Emax,EFERMI,params%tempr, &
-    params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
+      call EMESHT(EZ,DEZ,IELAST,params%Emin,params%Emax,EFERMI,params%tempr, &
+      params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
     endif
 
     do IE = 1,IELAST
@@ -308,23 +307,21 @@
     ! write start energy mesh
     if (params%use_semicore == 1) then
 
-    open (67,FILE='energy_mesh.0',FORM='unformatted')
+    open  (67,FILE='energy_mesh.0',FORM='unformatted')
     write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
     write (67) EFERMI
     write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
     write (67) params%EMUSEMI
     write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
-
     close (67)
 
     else
 
-    open (67,FILE='energy_mesh.0',FORM='unformatted')
+    open  (67,FILE='energy_mesh.0',FORM='unformatted')
     write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
     write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
     write (67) EFERMI
-
     close (67)
 
     end if
@@ -350,11 +347,11 @@
       ! Read k-mesh file
       subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
         implicit none
-        double precision :: BZKP(:,:,:)
-        integer :: MAXMESH
-        integer :: NOFKS(:)
-        double precision :: VOLBZ(:)
-        double precision :: VOLCUB(:,:)
+        double precision, intent(out) :: BZKP(:,:,:)
+        integer, intent(in) :: MAXMESH
+        integer, intent(out) :: NOFKS(:)
+        double precision, intent(out) :: VOLBZ(:)
+        double precision, intent(out) :: VOLCUB(:,:)
 
         ! -----------------------------
         integer :: I

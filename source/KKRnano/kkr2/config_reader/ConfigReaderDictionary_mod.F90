@@ -1,4 +1,4 @@
-  !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 !> Implementation of a Dictionary
 !> given a name 'variable', look up the corresponding 'value'
 !> This is a slow implementation, using a dynamic array

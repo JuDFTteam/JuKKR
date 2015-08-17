@@ -1,22 +1,18 @@
 module broyden_kkr_mod
-  use brydbm_new_com_mod, only: BRYSH1_new, BRYSH2_new, BRYSH3_new
-  use CalculationData_mod, only: CalculationData, getBroydenDim, getBroyden, getNumLocalAtoms, getAtomData
-  use broyden_second_mod, only: broyden_second
-  use BroydenData_mod, only: BroydenData
-  use BasisAtom_mod, only: BasisAtom
-  use PotentialData_mod, only: getNumPotentialValues
-
   use, intrinsic :: ieee_features
   use, intrinsic :: ieee_arithmetic
-
   implicit none
+  private
   public :: mix_broyden2_com
 
   CONTAINS
 
   !----------------------------------------------------------------------------
   subroutine mix_broyden2_com(calc_data, iter, communicator)
-    implicit none
+    use CalculationData_mod, only: CalculationData, getBroydenDim, getBroyden
+    use broyden_second_mod, only: broyden_second
+    use BroydenData_mod, only: BroydenData
+
     type (CalculationData), intent(inout) :: calc_data
     integer, intent(in) :: iter
     integer, intent(in) :: communicator
@@ -67,7 +63,6 @@ module broyden_kkr_mod
   !----------------------------------------------------------------------------
   !> Returns if x is NaN.
   elemental logical function isnan(x)
-    implicit none
     double precision, intent(in) :: x
     isnan = .not. (x == x)
   end function
@@ -75,7 +70,10 @@ module broyden_kkr_mod
   !----------------------------------------------------------------------------
   !> Collapse all local input potentials into one array
   subroutine collapse_input_potentials(calc_data, array)
-    implicit none
+    use brydbm_new_com_mod, only: BRYSH3_new
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use BasisAtom_mod, only: BasisAtom
+  
     type (CalculationData), intent(in) :: calc_data
     double precision, dimension(*), intent(inout) :: array
 
@@ -102,7 +100,10 @@ module broyden_kkr_mod
   !----------------------------------------------------------------------------
   !> Collapse all local output potentials into one array
   subroutine collapse_output_potentials(calc_data, array)
-    implicit none
+    use brydbm_new_com_mod, only: BRYSH1_new
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use BasisAtom_mod, only: BasisAtom
+  
     type (CalculationData), intent(in) :: calc_data
     double precision, dimension(*), intent(inout) :: array
 
@@ -129,6 +130,11 @@ module broyden_kkr_mod
   !> Extract (mixed) output potentials for all local atoms from 'array' and
   !> overwrite potentials in their respective datastructures (VONS)
   subroutine extract_mixed_potentials(array, calc_data)
+    use brydbm_new_com_mod, only: BRYSH2_new
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use BasisAtom_mod, only: BasisAtom
+    use PotentialData_mod, only: getNumPotentialValues
+  
     double precision, dimension(:), intent(in) :: array
     type (CalculationData), intent(inout) :: calc_data
 
@@ -157,7 +163,10 @@ module broyden_kkr_mod
 
   !----------------------------------------------------------------------------
   subroutine calc_all_metrics(calc_data, g_metric_all)
-    implicit none
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use BasisAtom_mod, only: BasisAtom
+    use PotentialData_mod, only: getNumPotentialValues
+  
     type (CalculationData), intent(in) :: calc_data
     double precision, dimension(:), intent(inout) :: g_metric_all
 
@@ -186,8 +195,6 @@ module broyden_kkr_mod
 
   !----------------------------------------------------------------------------
   subroutine calc_metric(g_metric, lmpot,r,drdi,irc,irmin,nspin,imap)
-    implicit none
-
     double precision, intent(out) :: g_metric(imap)
     integer :: lmpot, imap, irc, irmin, nspin
     double precision :: r(:), drdi(:)

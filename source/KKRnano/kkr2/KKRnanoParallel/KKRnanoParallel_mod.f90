@@ -46,11 +46,16 @@
 
 module KKRnanoParallel_mod
 implicit none
-  public
-!   private
-!   public :: KKRnanoParallel
-
-
+  private
+  public :: KKRnanoParallel, create, destroy
+  public :: createKKRnanoParallel, destroyKKRnanoParallel ! deprecated
+  public :: getMyWorldRank, getMyAtomRank, getMasterRank 
+  public :: getMySEId, getMyAtomId, getMySpinId, getMyEnergyId, getResponsibleSpinId    
+  public :: getNumAtomRanks, getNumSpinRanks, getNumEnergyRanks, getNumSERanks, getNumWorldRanks
+  public :: getMySEcommunicator, getMyActiveCommunicator        
+  public :: isMasterRank, isInMasterGroup, isActiveRank, isWorkingSpinRank        
+  public :: mapToWorldRank, mapToWorldRankSE       
+  
   !> Opaque object. Use getter routines to access member variables
   type KKRnanoParallel
     PRIVATE
@@ -81,11 +86,18 @@ implicit none
     integer :: num_energy_ranks_
   end type
 
+  interface create
+    module procedure createKKRnanoParallel
+  endinterface
+  
+  interface destroy
+    module procedure destroyKKRnanoParallel
+  endinterface
+  
   contains
 
   !---------------------------------------------------------------------------------------
   subroutine createKKRnanoParallel(my_mpi, num_atom_ranks, num_spin_ranks, num_energy_ranks)
-    implicit none
     include 'mpif.h'
 
     type (KKRnanoParallel), intent(inout) :: my_mpi
@@ -194,7 +206,6 @@ implicit none
 
   !--------------------------------------------------------------
   subroutine destroyKKRnanoParallel(my_mpi)
-    implicit none
     include 'mpif.h'
 
     type (KKRnanoParallel), intent(inout) :: my_mpi
@@ -213,7 +224,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns rank of process in MPI_COMM_WORLD.
   integer function getMyWorldRank(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMyWorldRank = my_mpi%my_world_rank
   end function
@@ -222,7 +232,6 @@ implicit none
   !> Returns rank of process in (Spin,Energy)-communicator.
   !> Equals (getMyAtomId() - 1)
   integer function getMyAtomRank(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMyAtomRank = my_mpi%my_atom_rank
   end function
@@ -232,7 +241,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns atom id.
   integer function getMyAtomId(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMyAtomId = my_mpi%my_atom_id
   end function
@@ -240,7 +248,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns spin id.
   integer function getMySpinId(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMySpinId = my_mpi%my_spin_id
   end function
@@ -248,7 +255,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns energy id.
   integer function getMyEnergyId(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMyEnergyId = my_mpi%my_energy_id
   end function
@@ -256,7 +262,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns (spin,energy) id.
   integer function getMySEId(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMySEId = my_mpi%my_SE_id
   end function
@@ -266,7 +271,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns number of atom ranks.
   integer function getNumAtomRanks(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getNumAtomRanks = my_mpi%num_atom_ranks_
   end function
@@ -274,7 +278,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns number of spin ranks.
   integer function getNumSpinRanks(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getNumSpinRanks = my_mpi%num_spin_ranks_
   end function
@@ -282,7 +285,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns number of energy ranks.
   integer function getNumEnergyRanks(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getNumEnergyRanks = my_mpi%num_energy_ranks_
   end function
@@ -290,10 +292,8 @@ implicit none
   !--------------------------------------------------------------
   !> Returns number of (Spin,Energy)-ranks/groups.
   integer function getNumSERanks(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
-    getNumSERanks = my_mpi%num_energy_ranks_ * &
-                    my_mpi%num_spin_ranks_
+    getNumSERanks = my_mpi%num_energy_ranks_ * my_mpi%num_spin_ranks_
   end function
   
   !--------------------------------------------------------------
@@ -307,7 +307,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns rank number of MasterRank in MPI_COMM_WORLD.
   integer function getMasterRank(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMasterRank = 0
   end function
@@ -315,7 +314,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns .true. if rank is the master rank.
   logical function isMasterRank(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     isMasterRank = (my_mpi%my_world_rank == 0)
   end function
@@ -326,7 +324,6 @@ implicit none
   !> Returns .true. if rank is in the master group.
   !> means that SE-Id is 1
   logical function isInMasterGroup(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     isInMasterGroup = (my_mpi%my_SE_id == 1)
   end function
@@ -335,7 +332,6 @@ implicit none
   !> Returns (Spin,Energy)-communicator handle of the communicator
   !> the process belongs to
   integer function getMySEcommunicator(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMySEcommunicator = my_mpi%my_SE_communicator
   end function
@@ -344,7 +340,6 @@ implicit none
   !> Returns communicator handle of active/inactive ranks,
   !> according to the group the calling process belongs to
   integer function getMyActiveCommunicator(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     getMyActiveCommunicator = my_mpi%my_active_communicator
   end function
@@ -352,7 +347,6 @@ implicit none
   !--------------------------------------------------------------
   !> Returns .true. if rank is an active rank
   logical function isActiveRank(my_mpi)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     isActiveRank = (my_mpi%active == 1)
   end function
@@ -361,7 +355,6 @@ implicit none
   !> Given the spin index, determine which Spin-Id is responsible
   !> for this spin index.
   integer function getResponsibleSpinId(my_mpi, ispin)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     integer, intent(in) :: ispin
 
@@ -381,7 +374,6 @@ implicit none
   !> Given the spin index, determine whether process has to
   !> work or not.
   logical function isWorkingSpinRank(my_mpi, ispin)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     integer, intent(in) :: ispin
 
@@ -405,18 +397,15 @@ implicit none
   !> corresponding process in MPI_COMM_WORLD.
   !> Note id-s start from 1 !
   integer function mapToWorldRank(my_mpi, atom_id, spin_id, energy_id)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     integer, intent(in) :: spin_id
     integer, intent(in) :: atom_id  ! 1..N
     integer, intent(in) :: energy_id
 
-    mapToWorldRank = mapToWorldRankSE(my_mpi, atom_id, &
-                     (spin_id - 1)*my_mpi%num_energy_ranks_ + energy_id)
+    mapToWorldRank = mapToWorldRankSE(my_mpi, atom_id, (spin_id - 1)*my_mpi%num_energy_ranks_ + energy_id)
     
     !(((spin_id - 1) * my_mpi%num_energy_ranks_ + &
     !                    energy_id) - 1) * my_mpi%num_atom_ranks_ + atom_id - 1
-
   end function
   
   !---------------------------------------------------------------
@@ -426,13 +415,11 @@ implicit none
   !> combined (spin,energy)-id
   !> Note id-s start from 1 !
   integer function mapToWorldRankSE(my_mpi, atom_id, SE_id)
-    implicit none
     type (KKRnanoParallel), intent(in) :: my_mpi
     integer, intent(in) :: SE_id
     integer, intent(in) :: atom_id  ! 1..N
 
     mapToWorldRankSE = (SE_id - 1) * my_mpi%num_atom_ranks_ + atom_id - 1
-
   end function
 
 

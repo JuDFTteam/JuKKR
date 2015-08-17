@@ -19,15 +19,22 @@
 !> This creates the files for the different datatypes needed.
 !
 module comm_patternsZ_mod
-
+  implicit none
+  private
+  public :: comm_gatherZ
+  public :: comm_redistributeZ
+  public :: comm_redistributeVZ
+  public :: comm_bcastZ
+  public :: comm_bcast2Z
+  public :: send_arrayZ
+  
+  include 'mpif.h'
+  
   contains
 
 !--------------------------------------------------------------------------
 !> Communicates distributed array-parts to receiver.
   subroutine comm_gatherZ(my_world_rank, array, blocksize, owning_ranks, receiver)
-    implicit none
-    include 'mpif.h'
-
     integer, intent(in) :: my_world_rank
     NUMBERZ, intent(inout), dimension(*) :: array 
     integer, intent(in) :: blocksize
@@ -52,9 +59,6 @@ module comm_patternsZ_mod
 !--------------------------------------------------------------------------
 !> Redistributes array-parts among groups of ranks.
 subroutine comm_redistributeZ(my_world_rank, array, blocksize, old_owners, new_owners)
-  implicit none
-  include 'mpif.h'
-
   integer, intent(in) :: my_world_rank
   NUMBERZ, intent(inout), dimension(*) :: array 
   integer, intent(in) :: blocksize
@@ -83,9 +87,6 @@ end subroutine
 !> among groups of ranks.
 !> Note: each process needs a buffer that is large enough to hold ALL parts.
 subroutine comm_redistributeVZ(my_world_rank, array, blocksizes, old_owners, new_owners)
-  implicit none
-  include 'mpif.h'
-
   integer, intent(in) :: my_world_rank
   NUMBERZ, intent(inout), dimension(*) :: array
   integer, intent(in), dimension(:) :: blocksizes
@@ -117,9 +118,6 @@ end subroutine
 !> It is no problem if the owner is the first entry in 'ranks'
 !> Also accepts duplicate entries - but: unnecessary communication
 subroutine comm_bcastZ(my_world_rank, array, length, ranks, owner)
-  implicit none
-  include 'mpif.h'
-
   integer, intent(in) :: my_world_rank
   NUMBERZ, intent(inout), dimension(*) :: array
   integer, intent(in) :: length
@@ -151,9 +149,6 @@ end subroutine
 !> Also accepts single entry in ranks
 !> Also accepts duplicate entries - but: unnecessary communication
 subroutine comm_bcast2Z(my_world_rank, array, length, ranks)
-  implicit none
-  include 'mpif.h'
-
   integer, intent(in) :: my_world_rank
   NUMBERZ, intent(inout), dimension(*) :: array
   integer, intent(in) :: length
@@ -176,9 +171,6 @@ end subroutine
 !> Helper routine. Sends 'length' entries of 'array' from sender to
 !> receiver (ranks in MPI_COMM_WORLD).
 subroutine send_arrayZ(my_world_rank, array, length, sender, receiver)
-  implicit none
-  include 'mpif.h'
-
   integer, intent(in) :: my_world_rank
   NUMBERZ, intent(inout), dimension(*) :: array
   integer, intent(in) :: length

@@ -25,6 +25,7 @@ FC90 = ifort
 # -module <path> specifies where to put .mod files
 FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR) -DTASKLOCAL_FILES
 FC90FLAGS = -warn
+FC90FLAGS = -O0 -C
 FCFLAGS += -I $(BUILDDIR) 
 # LDFLAGS =-L/ -llapack_ifort -lblas_ifort
 LDFLAGS =-L/ -llapack -lblas
@@ -62,16 +63,24 @@ DIRS = . ../config_reader ../lattice ../kkr0common ../datastructures
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
 
-SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
-SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
-SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
-SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
+# SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
+# SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
+# SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
+# SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 
-# notdir extracts only filename
-OBJS =  $(notdir ${SRCS:.f=.o})
-OBJS += $(notdir ${SRCS90:.f90=.o})
-OBJS += $(notdir ${SRCSFPP:.F=.o})
-OBJS += $(notdir ${SRCS90FPP:.F90=.o})
+# # notdir extracts only filename
+# OBJS =  $(notdir ${SRCS:.f=.o})
+# OBJS += $(notdir ${SRCS90:.f90=.o})
+# OBJS += $(notdir ${SRCSFPP:.F=.o})
+# OBJS += $(notdir ${SRCS90FPP:.F90=.o})
+OBJS = main0.o ConfigReader_mod.o ConfigReaderDictionary_mod.o  \
+       InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o  \
+       BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o \
+       ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o \
+       rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o bzkint0.o testdimlat.o \
+       rcstop.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o pointgrp.o findgroup.o test.o bzkmesh.o symtaumat.o \
+       rinit.o cross.o latvec.o bzirr3d.o checkrmat.o calcrotmat.o errortrap.o taustruc.o rinvgj.o
+
 
 .PHONY: all
 all:	$(PROGRAM)
@@ -109,11 +118,11 @@ test:
 	
 #Module dependencies
 
-config_reader.o: config_reader_dictionary.o
-main0.o: config_reader.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o
+ConfigReader_mod.o: ConfigReaderDictionary_mod.o
+main0.o: InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
-DimParams_mod.o: config_reader.o
-
+DimParams_mod.o: ConfigReader_mod.o
+InputParams_mod.o: ConfigReader_mod.o
 BasisAtom_mod.o: CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o
 CellData_mod.o: ShapefunData_mod.o
 

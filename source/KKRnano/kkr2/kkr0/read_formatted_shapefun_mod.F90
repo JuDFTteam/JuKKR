@@ -5,143 +5,152 @@
 !> @author Elias Rabel, Marcel Bornemann
 !> 2015
 module read_formatted_shapefun_mod
-    implicit none
+  implicit none
+  private
+  
+  ! use the following 2 routines to read a shape function file.
+  public :: ShapefunFile, create, destroy
+  public :: create_read_ShapefunFile, destroy_ShapefunFile ! deprecated
 
-    ! use the following 2 routines to read a shape function file.
-    public :: create_read_ShapefunFile
-    public :: destroy_ShapefunFile
+  type Intermesh
+    integer :: NPAN
+    integer :: MESHN
+    integer, allocatable :: NM (:)
+    double precision, allocatable :: XRN (:)
+    double precision, allocatable :: DRN (:)
+  end type
 
-    type Intermesh
-      integer :: NPAN
-      integer :: MESHN
-      integer, allocatable :: NM (:)
-      double precision, allocatable :: XRN (:)
-      double precision, allocatable :: DRN (:)
-    end type
+  type Shapefunction
+    integer :: NFU
+    integer, allocatable :: LLMSP (:)
+    double precision, allocatable :: THETAS (:,:)
+  end type
 
-    type Shapefunction
-      integer :: NFU
-      integer, allocatable :: LLMSP (:)
-      double precision, allocatable :: THETAS (:,:)
-    end type
+  type ShapefunFile
+    integer NCELL
+    type (Intermesh), allocatable :: mesh (:)
+    type (Shapefunction), allocatable :: shapes (:)
+  end type
 
-    type ShapefunFile
-      integer NCELL
-      type (Intermesh), allocatable :: mesh (:)
-      type (Shapefunction), allocatable :: shapes (:)
-    end type
+  interface create
+    module procedure create_read_ShapefunFile
+  endinterface
+  
+  interface destroy
+    module procedure destroy_ShapefunFile
+  endinterface
+  
+  contains
 
-    contains
+  !--------------------------------------------------------------------------
+  subroutine create_read_intermesh (inter, unit)
 
-    !--------------------------------------------------------------------------
-    subroutine create_read_intermesh (inter, unit)
+    type (Intermesh), intent(out) :: inter
+    integer, intent(in) :: unit
 
-      type (Intermesh), intent(out) :: inter
-      integer, intent(in) :: unit
+    integer :: IPAN, IR
 
-      integer :: IPAN, IR
+    READ (unit,FMT=9000) inter%NPAN,inter%MESHN
 
-      READ (unit,FMT=9000) inter%NPAN,inter%MESHN
+    CHECKASSERT(inter%NPAN>=0)
+    CHECKASSERT(inter%MESHN>=0)
 
-      CHECKASSERT(inter%NPAN>=0)
-      CHECKASSERT(inter%MESHN>=0)
+    allocate (inter%NM(inter%NPAN))
+    allocate (inter%XRN(inter%MESHN))
+    allocate (inter%DRN(inter%MESHN))
 
-      allocate (inter%NM(inter%NPAN))
-      allocate (inter%XRN(inter%MESHN))
-      allocate (inter%DRN(inter%MESHN))
+    READ (unit,FMT=9000) (inter%NM(IPAN), IPAN=1,inter%NPAN)
+    READ (unit,FMT=9010) (inter%XRN(IR), inter%DRN(IR), IR=1,inter%MESHN)
 
-      READ (unit,FMT=9000) (inter%NM(IPAN), IPAN=1,inter%NPAN)
-      READ (unit,FMT=9010) (inter%XRN(IR), inter%DRN(IR), IR=1,inter%MESHN)
+    9000 FORMAT (16i5)
+    9010 FORMAT (4d20.12)
+  end subroutine
 
-      9000 FORMAT (16i5)
-      9010 FORMAT (4d20.12)
-    end subroutine
+  !--------------------------------------------------------------------------
+  subroutine destroy_intermesh (inter)
+    type (Intermesh), intent(inout) :: inter
 
-    !--------------------------------------------------------------------------
-    subroutine destroy_intermesh (inter)
-      type (Intermesh), intent(inout) :: inter
+    deallocate (inter%NM)
+    deallocate (inter%XRN)
+    deallocate (inter%DRN)
 
-      deallocate (inter%NM)
-      deallocate (inter%XRN)
-      deallocate (inter%DRN)
+  end subroutine
 
-    end subroutine
+  !--------------------------------------------------------------------------
+  subroutine create_read_shapefunction (shapef, inter, unit)
+    type (Shapefunction), intent(inout) :: shapef
+    type (Intermesh), intent(in) :: inter
+    integer, intent(in) :: unit
 
-    !--------------------------------------------------------------------------
-    subroutine create_read_shapefunction (shapef, inter, unit)
-      type (Shapefunction), intent(inout) :: shapef
-      type (Intermesh), intent(in) :: inter
-      integer, intent(in) :: unit
+    integer :: IFUN, N, LM
 
-      integer :: IFUN, N, LM
+    READ (unit,FMT=9000) shapef%NFU
 
-      READ (unit,FMT=9000) shapef%NFU
+    allocate (shapef%LLMSP(shapef%NFU))
+    allocate (shapef%THETAS(inter%MESHN,shapef%NFU))
 
-      allocate (shapef%LLMSP(shapef%NFU))
-      allocate (shapef%THETAS(inter%MESHN,shapef%NFU))
+    DO IFUN = 1, shapef%NFU
+          READ (unit,FMT=9000) LM
+          CHECKASSERT(LM > 0)
+          shapef%LLMSP(IFUN) = LM
+          READ (unit,FMT=9010) (shapef%THETAS(N,IFUN),N=1,inter%MESHN)
+    ENDDO
 
-      DO IFUN = 1, shapef%NFU
-            READ (unit,FMT=9000) LM
-            CHECKASSERT(LM > 0)
-            shapef%LLMSP(IFUN) = LM
-            READ (unit,FMT=9010) (shapef%THETAS(N,IFUN),N=1,inter%MESHN)
-      ENDDO
+    9000 FORMAT (16i5)
+    9010 FORMAT (4d20.12)
+  end subroutine
 
-      9000 FORMAT (16i5)
-      9010 FORMAT (4d20.12)
-    end subroutine
+  !--------------------------------------------------------------------------
+  subroutine destroy_shapefunction (shapef)
+    type (Shapefunction), intent(inout) :: shapef
 
-    !--------------------------------------------------------------------------
-    subroutine destroy_shapefunction (shapef)
-      type (Shapefunction), intent(inout) :: shapef
+    deallocate (shapef%LLMSP)
+    deallocate (shapef%THETAS)
+  end subroutine
 
-      deallocate (shapef%LLMSP)
-      deallocate (shapef%THETAS)
-    end subroutine
+  subroutine create_read_shapefunFile (sfile, unit)
+    type(ShapefunFile), intent (out) :: sfile
+    integer, intent(in) :: unit
 
-    subroutine create_read_shapefunfile (sfile, unit)
-      type(ShapefunFile), intent (out) :: sfile
-      integer, intent(in) :: unit
+    integer :: ICELL
+    double precision :: dummy
 
-      integer :: ICELL
-      double precision :: dummy
+    READ (unit,FMT=9000) sfile%NCELL
 
-      READ (unit,FMT=9000) sfile%NCELL
+    READ (unit, FMT=9010) (dummy, ICELL=1,sfile%NCELL)
 
-      READ (unit, FMT=9010) (dummy, ICELL=1,sfile%NCELL)
+    allocate (sfile%mesh(sfile%NCELL))
+    allocate (sfile%shapes(sfile%NCELL))
 
-      allocate (sfile%mesh(sfile%NCELL))
-      allocate (sfile%shapes(sfile%NCELL))
+    DO ICELL = 1, sfile%NCELL
+      CALL create_read_intermesh(sfile%mesh(ICELL), unit)
+      CALL create_read_shapefunction(sfile%shapes(ICELL), sfile%mesh(ICELL), unit)
+    ENDDO
 
-      DO ICELL = 1, sfile%NCELL
-        CALL create_read_intermesh(sfile%mesh(ICELL), unit)
-        CALL create_read_shapefunction(sfile%shapes(ICELL), sfile%mesh(ICELL), unit)
-      ENDDO
+    9000 FORMAT (16i5)
+    9010 FORMAT (4d20.12)
+  end subroutine
 
-      9000 FORMAT (16i5)
-      9010 FORMAT (4d20.12)
-    end subroutine
+  subroutine destroy_shapefunFile (sfile)
+    type(ShapefunFile), intent (inout) :: sfile
 
-    subroutine destroy_shapefunfile (sfile)
-      type(ShapefunFile), intent (inout) :: sfile
+    integer :: ICELL
 
-      integer :: ICELL
+    DO ICELL = 1, sfile%NCELL
+      CALL destroy_intermesh(sfile%mesh(ICELL))
+      CALL destroy_shapefunction(sfile%shapes(ICELL))
+    ENDDO
 
-      DO ICELL = 1, sfile%NCELL
-        CALL destroy_intermesh(sfile%mesh(ICELL))
-        CALL destroy_shapefunction(sfile%shapes(ICELL))
-      ENDDO
+    deallocate (sfile%mesh)
+    deallocate (sfile%shapes)
 
-      deallocate (sfile%mesh)
-      deallocate (sfile%shapes)
-
-    end subroutine
+  end subroutine
 
 end module read_formatted_shapefun_mod
 
 #ifdef TEST_READ_FORMATTED_SHAPEFUN_MOD
 program test_read_formatted
-  use read_formatted_shapefun_mod
+  use read_formatted_shapefun_mod, only: create_read_ShapefunFile, destroy_ShapefunFile
   implicit none
 
   type(ShapefunFile) :: sfile
@@ -163,7 +172,7 @@ program test_read_formatted
 
     enddo
 
-    call destroy_Shapefunfile(sfile)
+    call destroy_ShapefunFile(sfile)
   close(UNIT)
 
 end program
