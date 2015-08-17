@@ -8,11 +8,12 @@
 ! or amorphous structures
 
 module BCPOperator_mod
-  use OperatorT_mod
-  use SolverOptions_mod
-  use ClusterInfo_mod
-
+  use OperatorT_mod, only: OperatorT
+  use SolverOptions_mod, only: SolverOptions
+  use ClusterInfo_mod, only: ClusterInfo
   implicit none
+  private
+  public :: BCPOperator!, create, destroy, calc, apply
 
   !> Represents the Block-Circulant preconditioning matrix
   type, extends(OperatorT) :: BCPOperator
@@ -28,6 +29,22 @@ module BCPOperator_mod
     procedure :: destroy => destroy_BCPOperator
   end type
 
+  interface create
+    module procedure create_BCPOperator
+  endinterface
+
+  interface calc
+    module procedure calc_BCPOperator
+  endinterface
+
+  interface apply
+    module procedure apply_BCPOperator
+  endinterface
+  
+  interface destroy
+    module procedure destroy_BCPOperator
+  endinterface
+  
   contains
 
   !----------------------------------------------------------------------------
@@ -68,6 +85,7 @@ module BCPOperator_mod
     class(BCPOperator) :: self
     double complex, intent(in) :: GLLH(:)
 
+    external :: BCPWUPPER
     integer naezd
     integer blocks_per_row
 
@@ -90,6 +108,7 @@ module BCPOperator_mod
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 
+    external :: APPBLCKCIRC
     integer :: num_columns, naez
     integer :: natbld, xdim, ydim, zdim
 

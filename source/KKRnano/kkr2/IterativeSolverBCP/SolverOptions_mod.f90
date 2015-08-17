@@ -1,5 +1,7 @@
 module SolverOptions_mod
   implicit none
+  private
+  public :: SolverOptions
 
   !> type that provides additional options to the solver
   type SolverOptions
@@ -10,4 +12,5 @@ module SolverOptions_mod
     integer :: zdim = 1
     integer :: natbld = 1
   end type
+  
 end module SolverOptions_mod
