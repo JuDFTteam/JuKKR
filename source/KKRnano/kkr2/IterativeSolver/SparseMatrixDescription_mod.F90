@@ -1,9 +1,9 @@
 module SparseMatrixDescription_mod
   implicit none
   private
-  public :: SparseMatrixDescription
-  public :: createSparseMatrixDescription, createSparseMatrixDescriptionFromFile
-  public :: dumpSparseMatrixDescription, destroySparseMatrixDescription
+  public :: SparseMatrixDescription, create, destroy
+  public :: createSparseMatrixDescription, destroySparseMatrixDescription ! deprecated
+  public :: dumpSparseMatrixDescription, createSparseMatrixDescriptionFromFile
   public :: getNNZ
   
   !> description of a (square) sparse matrix in VBR format
@@ -33,6 +33,14 @@ module SparseMatrixDescription_mod
     integer :: max_blocks_per_row = 0
   end type
 
+  interface create
+    module procedure createSparseMatrixDescription, createSparseMatrixDescriptionFromFile
+  endinterface
+  
+  interface destroy
+    module procedure destroySparseMatrixDescription
+  endinterface
+  
   CONTAINS
 
   !----------------------------------------------------------------------------
@@ -89,7 +97,7 @@ module SparseMatrixDescription_mod
   !> Writes SparseMatrixDescription to formatted file - useful for testing.
   subroutine dumpSparseMatrixDescription(sparse, filename)
     type (SparseMatrixDescription), intent(inout) :: sparse
-    character(len = *) :: filename
+    character(len=*), intent(in) :: filename
 
     integer, parameter :: FILEHANDLE = 97
 
@@ -111,7 +119,7 @@ module SparseMatrixDescription_mod
   !> - useful for testing.
   subroutine createSparseMatrixDescriptionFromFile(sparse, filename)
     type (SparseMatrixDescription), intent(inout) :: sparse
-    character(len = *) :: filename
+    character(len=*), intent(in) :: filename
 
     integer, parameter :: FILEHANDLE = 97
     integer :: blk_nrows

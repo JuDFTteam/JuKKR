@@ -18,9 +18,9 @@ module vbrmv_mat_mod
 
   subroutine multiply_vbr(a, x, b, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-
+    double complex, intent(in)  :: a(:), x(:,:)
+    double complex, intent(out) :: b(:,:)
     type (SparseMatrixDescription), intent(in) :: sparse
-    double complex a(:), x(:,:), b(:,:)
 
     call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, &
                    a, sparse%kvstr, sparse%kvstr, x, b, &
@@ -34,10 +34,10 @@ module vbrmv_mat_mod
   subroutine vbrmv_mat(blk_nrows, ia, ja, ka, a, kvstr, kvstc, x, b, &
                        max_blockdim, max_blocks_per_row)
                        
-    integer blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(blk_nrows+1), kvstc(:)
-    integer max_blockdim, max_blocks_per_row
-    integer ncols
-    double complex  a(:), x(:,:), b(:,:)
+    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(blk_nrows+1), kvstc(:)
+    integer, intent(in) :: max_blockdim, max_blocks_per_row
+    double complex, intent(in)  :: a(:), x(:,:)
+    double complex, intent(out) :: b(:,:)
     !-----------------------------------------------------------------------
     !     Sparse matrix-full vector product, in VBR format.
     !-----------------------------------------------------------------------
@@ -59,16 +59,16 @@ module vbrmv_mat_mod
 
     !-----------------------------------------------------------------------
     !-----local variables
-    integer i, j, k, istart, istop
-
-    integer icols
+    integer :: i, j, k, istart, istop
+    integer :: ncols
+    integer :: icols
 
 !IBM* ALIGN(32, buffer)
-    double complex buffer(max_blockdim*max_blocks_per_row, size(x,2))
+    double complex :: buffer(max_blockdim*max_blocks_per_row, size(x,2))
 
-    integer nrowbuf, rowbuf, sum_nrowbuf
-    integer startrow, leaddim_b, num_rows, leaddim_buffer
-    integer jlow, jhigh
+    integer :: nrowbuf, rowbuf, sum_nrowbuf
+    integer :: startrow, leaddim_b, num_rows, leaddim_buffer
+    integer :: jlow, jhigh
 
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
     double complex, parameter :: CONE  = (1.0d0, 0.0d0)
@@ -82,10 +82,7 @@ module vbrmv_mat_mod
 
 !     can parallelise this loop
 
-!$OMP PARALLEL PRIVATE(i, istart, istop,num_rows,rowbuf, &
-!$OMP                  sum_nrowbuf,j,jlow,jhigh, &
-!$OMP                  startrow,nrowbuf,icols,buffer,k)
-
+!$OMP PARALLEL PRIVATE(i, istart, istop,num_rows,rowbuf, sum_nrowbuf,j,jlow,jhigh, startrow,nrowbuf,icols,buffer,k)
 !$OMP DO
     do i = 1, blk_nrows
       istart = kvstr(i)
@@ -105,10 +102,8 @@ module vbrmv_mat_mod
 
 !IBM* ASSERT(ITERCNT(16))
         do icols = 1, ncols
-          !call ZCOPY(nrowbuf, x(startrow, icols), 1, &
-          !               buffer(rowbuf,   icols), 1)
-          buffer(rowbuf:(rowbuf + nrowbuf -1), icols) = &
-          x(startrow:(startrow + nrowbuf - 1), icols)
+          !call ZCOPY(nrowbuf, x(startrow, icols), 1, buffer(rowbuf,   icols), 1)
+          buffer(rowbuf:(rowbuf + nrowbuf -1), icols) = x(startrow:(startrow + nrowbuf - 1), icols)
         enddo
 
         sum_nrowbuf = sum_nrowbuf + nrowbuf
@@ -117,14 +112,10 @@ module vbrmv_mat_mod
 
       !k = ka(ia(i))
 
-      call ZGEMM('N','N',num_rows,ncols,sum_nrowbuf, &
-      CONE,a(k),num_rows, &
-      buffer,leaddim_buffer, &
-      CZERO,b(istart,1),leaddim_b)
+      call ZGEMM('N','N',num_rows,ncols,sum_nrowbuf, CONE,a(k),num_rows, buffer,leaddim_buffer, CZERO,b(istart,1),leaddim_b)
 
     enddo
 !$OMP END DO
-
 !$OMP END PARALLEL
 
   end subroutine

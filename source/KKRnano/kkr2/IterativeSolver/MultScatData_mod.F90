@@ -42,7 +42,7 @@ subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
   use SparseMatrixDescription_mod, only: createSparseMatrixDescription, getNNZ
 
   type (MultScatData), intent(inout) :: ms
-  type (ClusterInfo), target  :: cluster_info
+  type (ClusterInfo), target, intent(in) :: cluster_info
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: atom_indices(:)
 

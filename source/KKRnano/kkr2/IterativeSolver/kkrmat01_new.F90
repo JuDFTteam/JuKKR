@@ -244,12 +244,9 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, &
   use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
   use fillKKRMatrix_mod, only: dumpDenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
   use TFQMRSolver_mod, only: TFQMRSolver
-  use dlke0_smat_mod, only:
   use SparseMatrixDescription_mod, only: dumpSparseMatrixDescription
   use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
-  use SolverOptions_mod, only:
-  use SolverStats_mod, only:
   use KKROperator_mod, only: KKROperator
   use BCPOperator_mod, only: BCPOperator
   use MultScatData_mod, only: MultScatData
@@ -409,7 +406,6 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, &
   USE_ARRAYLOG_MOD
   use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
   use jij_calc_mod, only: global_jij_data, kkrjij
-! use SolverOptions_mod, only: 
   use SolverStats_mod, only: SolverStats, reset_stats
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator

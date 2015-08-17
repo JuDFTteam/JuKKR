@@ -69,7 +69,7 @@ module TFQMRSolver_mod
     use SolverStats_mod, only: sum_stats
     class(TFQMRSolver) :: self
     double complex, intent(inout) :: mat_X(:,:)
-    double complex, intent(inout)    :: mat_B(:,:)
+    double complex, intent(inout) :: mat_B(:,:)
 
     integer nlen
     integer num_columns

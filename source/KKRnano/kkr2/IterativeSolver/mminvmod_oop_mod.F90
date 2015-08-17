@@ -41,53 +41,51 @@ module mminvmod_oop_mod
     use SolverStats_mod, only: SolverStats
     use OperatorT_mod, only: OperatorT
 
-    class (OperatorT) :: op
-
-    integer, intent(in) :: num_columns
-    logical, intent(in) :: initial_zero
-
-    double complex, dimension(NLEN,num_columns), intent(inout) :: mat_X
-    double complex, dimension(NLEN,num_columns), intent(inout) :: mat_B  !in?
+    class (OperatorT), intent(in) :: op
 
     double precision, intent(in) :: TOL
-    INTEGER :: NLEN
+    integer, intent(in) :: num_columns
+    INTEGER, intent(in) :: NLEN
+
+    double complex, intent(inout) :: mat_X(NLEN,num_columns)
+    double complex, intent(in) :: mat_B(NLEN,num_columns)
+
+    logical, intent(in) :: initial_zero
     type (SolverStats), intent(inout) :: stats
     class (OperatorT) :: precond
     logical, intent(in) :: use_precond
-
-    ! workspace
-    double complex, dimension(:,:,:), intent(inout) :: VECS
-    double complex, dimension(:,:), intent(inout) :: temp
+    double complex, intent(inout) :: VECS(:,:,:) ! workspace
+    double complex, intent(inout) :: temp(:,:) ! workspace only used when use_precond is true
 
     !----------------- local variables --------------------------------------------
 
     double complex, parameter :: CONE  = (1.0D0,0.0D0)
     double complex, parameter :: CZERO = (0.0D0,0.0D0)
 
-    integer::NLIM
+    integer :: NLIM
 
-    integer::IT
-    integer::PROBE
-    integer::ind
+    integer :: IT
+    integer :: PROBE
+    integer :: ind
 
     ! local arrays ..
 
     !     small, local arrays with dimension num_columns
-    double complex :: ZTMP(num_columns)
-    double precision::DTMP(num_columns)
+    double complex   :: ZTMP(num_columns)
+    double precision :: DTMP(num_columns)
 
     double complex :: RHO(num_columns)
     double complex :: ETA(num_columns)
     double complex :: BETA(num_columns)
     double complex :: ALPHA(num_columns)
 
-    double precision::R0(num_columns)
-    double precision::N2B(num_columns)  ! norm of right-hand side
-    double precision::RESN(num_columns)
-    double precision::VAR(num_columns)
-    double precision::TAU(num_columns)
-    double precision::COSI(num_columns)
-    double precision::residual_upper_bound(num_columns)
+    double precision :: R0(num_columns)
+    double precision :: N2B(num_columns)  ! norm of right-hand side
+    double precision :: RESN(num_columns)
+    double precision :: VAR(num_columns)
+    double precision :: TAU(num_columns)
+    double precision :: COSI(num_columns)
+    double precision :: residual_upper_bound(num_columns)
 
     ! 0 = not converged, negative = breakdown
     ! 1 = converged
@@ -97,7 +95,7 @@ module mminvmod_oop_mod
     ! 0 = never converged
     integer :: converged_at(num_columns)
 
-    logical::isDone
+    logical :: isDone
 
     !------------ convergence parameters-----------
     double precision :: max_residual
@@ -466,11 +464,10 @@ module mminvmod_oop_mod
  !> preconditioner is used only when use_precond=.true.
  subroutine apply_precond_and_matrix(op, precond, mat, mat_out, temp, use_precond)
    use OperatorT_mod, only: OperatorT
-   class(OperatorT) :: op
-   class(OperatorT) :: precond
-   double complex, intent(in) :: mat(:,:)
-   double complex, intent(out) :: mat_out(:,:)
-   double complex, intent(inout) :: temp(:,:)
+   class(OperatorT), intent(in) :: op, precond
+   double complex, intent(in)   :: mat(:,:)
+   double complex, intent(out)  :: mat_out(:,:)
+   double complex, intent(out)  :: temp(:,:)
    logical, intent(in) :: use_precond
 
    if (use_precond) then
@@ -484,9 +481,9 @@ module mminvmod_oop_mod
 
  !------------------------------------------------------------------------------
  subroutine col_AXPY(factors, xvector, yvector)
-   double complex, dimension(:), intent(in) :: factors
-   double complex, dimension(:,:), intent(in) :: xvector
-   double complex, dimension(:,:), intent(inout) :: yvector
+   double complex, intent(in) :: factors(:)
+   double complex, intent(in) :: xvector(:,:)
+   double complex, intent(inout) :: yvector(:,:)
 
    !---------
    integer :: col
@@ -504,9 +501,9 @@ module mminvmod_oop_mod
 
  !------------------------------------------------------------------------------
  subroutine col_MAXPY(factors, xvector, yvector)
-   double complex, dimension(:), intent(in) :: factors
-   double complex, dimension(:,:), intent(in) :: xvector
-   double complex, dimension(:,:), intent(inout) :: yvector
+   double complex, intent(in) :: factors(:) 
+   double complex, intent(in) :: xvector(:,:)
+   double complex, intent(inout) :: yvector(:,:)
 
    !---------
    integer :: col
@@ -524,9 +521,9 @@ module mminvmod_oop_mod
 
  !------------------------------------------------------------------------------
  subroutine col_XPAY(factors, xvector, yvector)
-   double complex, dimension(:), intent(in) :: factors
-   double complex, dimension(:,:), intent(in) :: xvector
-   double complex, dimension(:,:), intent(inout) :: yvector
+   double complex, intent(in) :: factors(:)
+   double complex, intent(in) :: xvector(:,:)
+   double complex, intent(inout) :: yvector(:,:)
 
    !---------
    integer :: col
@@ -544,8 +541,8 @@ module mminvmod_oop_mod
 
  !------------------------------------------------------------------------------
  subroutine col_norms(norms, vectors)
-   double precision, dimension(:), intent(out) :: norms
-   double complex, dimension(:,:), intent(in) :: vectors
+   double precision, intent(out) :: norms(:)
+   double complex, intent(in) :: vectors(:,:)
 
    !---------
    integer :: col
@@ -563,9 +560,9 @@ module mminvmod_oop_mod
 
  !------------------------------------------------------------------------------
  subroutine col_dots(dots, vectorsv, vectorsw)
-   double complex, dimension(:), intent(out) :: dots
-   double complex, dimension(:,:), intent(in) :: vectorsv
-   double complex, dimension(:,:), intent(in) :: vectorsw
+   double complex, intent(out) :: dots(:)
+   double complex, intent(in) :: vectorsv(:,:)
+   double complex, intent(in) :: vectorsw(:,:)
 
    !---------
    integer :: col
