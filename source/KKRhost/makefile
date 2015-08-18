@@ -29,12 +29,12 @@ mpidebug:   FC = mpiifort
 
 BIN = .
 OBJ = ./OBJ
-SRA = ./SRC_SRA
-COM = ./SRC_COM
-DRV = ./SRC_DRV
-REL = ./SRC_REL
-VXC = ./SRC_VXC
-VIR = ./SRC_VIRTUAL
+SRA = ./ALL_SOURCE_FILES
+COM = ./ALL_SOURCE_FILES
+DRV = ./ALL_SOURCE_FILES
+REL = ./ALL_SOURCE_FILES
+VXC = ./ALL_SOURCE_FILES
+VIR = ./ALL_SOURCE_FILES
 
 INCP = ./inc.p
 INCR = ./sprkkr_rmesh.dim
