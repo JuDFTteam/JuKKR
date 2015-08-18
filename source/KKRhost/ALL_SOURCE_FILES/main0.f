@@ -550,7 +550,7 @@ C     ..
      
      
 Consistency check
-      WRITE(*,*) 'This is the KKR code version 2015_05_05.'
+      WRITE(*,*) 'This is the KKR code version 2015_08_18.'
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 

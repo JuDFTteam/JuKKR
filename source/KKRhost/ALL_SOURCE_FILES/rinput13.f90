@@ -694,6 +694,7 @@
 
 
       IF (OPT('NEWSOSOL')) THEN ! Spin-orbit
+         IF ( OPT('NEWSOSOL') .AND. (NSPIN.NE.2) ) STOP ' set NSPIN = 2 for SOC solver in inputcard'
          NPAN_LOG = 30
          NPAN_EQ = 30
          NCHEB = 10
