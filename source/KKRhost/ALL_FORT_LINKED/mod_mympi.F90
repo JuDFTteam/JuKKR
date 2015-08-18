@@ -1,1 +1,0 @@
-../SRC_COM/mod_mympi.F90

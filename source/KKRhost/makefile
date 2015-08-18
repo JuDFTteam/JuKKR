@@ -77,7 +77,8 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 ####################################################
 
 # standart libs
-LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -96,7 +97,10 @@ mpi:      CPP = -D CPP_MPI
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -r8 -mcmodel=large  -shared-intel -g #-O2 -r8 -mcmodel=large  -shared-intel #-traceback -CB -check all -g
+# use -mcmodel=medium -shared-intel if you get the error message 
+# '...relocation truncated to fit...' when trying to compile, 
+# this happens for example for natyp>=75, iemxd>=101, KORBIT=1
+FFLAGS       =  -O2 -r8 #-mcmodel=medium -shared-intel #-traceback -CB -check all -g
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel

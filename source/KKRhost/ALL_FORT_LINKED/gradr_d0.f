@@ -1,1 +1,0 @@
-../SRC_VXC/gradr_d0.f
