@@ -43,8 +43,8 @@
 !     modified by r. zeller      aug. 1994
 !-----------------------------------------------------------------------
 !     added volterra equation by m. ogura      jan. 2006
-!     Fredholm: true -> use Fredholmholm equation
-!           false -> volterra equation
+!     Fredholm: true -> use Fredhol equation
+!               false -> volterra equation
 !-----------------------------------------------------------------------
       subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm,  &
                        qzlm, pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra,  &
@@ -139,10 +139,9 @@
         
         call zgeinv1(amat(1,1,irc1),ar,br,ipiv,lmmaxd)
 
-        ader(:,:,irmind:irc1) = zero
-        bder(:,:,irmind:irc1) = zero
-    
         do ir = irmind, irc1
+          ader(:,:,ir) = zero
+          bder(:,:,ir) = zero
           ! this should be written as zgemm
           do lm2 = 1, lmmaxd
             do lm3 = 1, lmmaxd
@@ -150,10 +149,10 @@
               bder(:,lm2,ir) = bder(:,lm2,ir) + bmat(:,lm3,ir)*ar(lm3,lm2)
             enddo ! lm3
           enddo ! lm2
+          ! end zgemm
+          amat(:,:,ir) = ader(:,:,ir)
+          bmat(:,:,ir) = bder(:,:,ir)
         enddo ! ir
-
-        amat(:,:,irmind:irc1) = ader(:,:,irmind:irc1)
-        bmat(:,:,irmind:irc1) = bder(:,:,irmind:irc1)
 
         ! create the final solution pns from amat and bmat
         do j = 1, nsra
