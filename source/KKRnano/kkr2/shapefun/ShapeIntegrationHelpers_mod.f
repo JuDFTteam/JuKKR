@@ -1,4 +1,4 @@
-C>    Auxillary module needed for shape function calculation.
+!>    Auxillary module needed for shape function calculation.
 
       module ShapeIntegrationHelpers_mod
       implicit none
@@ -7,47 +7,47 @@ C>    Auxillary module needed for shape function calculation.
 
       contains
 
-C-----------------------------------------------------------------------
-C>    THIS ROUTINE  ACCOMPLISHES THE  FI-INTEGRATION  OF REAL  SPHERICAL
-C>    HARMONICS BY THE REPEATED SIMPSON'S METHOD , OR ANALYTICALLY ACCOR
-C>    DING TO THE VALUE OF ITYPE. THE OBTAINED RESULTS HAVE TO BE MULTI-
-C>    PLIED BY THE APPROPRIATE EXPANSION COEFFICIENTS.
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!>    THIS ROUTINE  ACCOMPLISHES THE  FI-INTEGRATION  OF REAL  SPHERICAL
+!>    HARMONICS BY THE REPEATED SIMPSON'S METHOD , OR ANALYTICALLY ACCOR
+!>    DING TO THE VALUE OF ITYPE. THE OBTAINED RESULTS HAVE TO BE MULTI-
+!>    PLIED BY THE APPROPRIATE EXPANSION COEFFICIENTS.
+!-----------------------------------------------------------------------
       SUBROUTINE PINTG(X1,X2,DLT,S,LMAX,ISI,ARG,FD,ITYPE)
       USE shape_constants_mod, ONLY: LMAXD1, NDIM
       implicit none
 
-C
-C     .. PARAMETER STATEMENTS ..
-C
-C     include 'inc.geometry'
-c      INTEGER LMAXD,NDIM
-c      PARAMETER (LMAXD=25,NDIM=1000)
+!
+!     .. PARAMETER STATEMENTS ..
+!
+!     include 'inc.geometry'
+!      INTEGER LMAXD,NDIM
+!      PARAMETER (LMAXD=25,NDIM=1000)
 
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       REAL*8 X1,X2,DLT,ARG,FD
       INTEGER   LMAX,ISI,ITYPE
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 S(-LMAXD1:LMAXD1,0:LMAXD1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,M,N,K
       REAL*8    X,THETA,W
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8    XX(NDIM),WW(NDIM)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC DFLOAT,ACOS,ATAN,COS,IABS
 
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       IF(LMAX.LE.LMAXD1) GO TO 1
       WRITE(6,200)LMAX,LMAXD1
   200 FORMAT(3X,'FROM PINTG: LMAX=',I4,' GREATER THAN DIMENSIONED',I4)
@@ -64,7 +64,7 @@ C-----------------------------------------------------------------------
       CALL RECUR0(LMAX,X1,THETA,-DFLOAT(ISI),S)
       CALL RECUR0(LMAX,X2,THETA, DFLOAT(ISI),S)
       RETURN
-C                         E N D    I F
+!                         E N D    I F
    10 CONTINUE
       N=(X2-X1)/DLT+3
       IF(N.GT.NDIM) STOP 'INCREASE NDIM'
@@ -78,41 +78,41 @@ C                         E N D    I F
       RETURN
       END SUBROUTINE
 
-C======================================================================
+!======================================================================
 
-C-----------------------------------------------------------------------
-C>    THIS ROUTINE IS USED TO PERFORM THE FI-INTEGRATION OF REAL SPHE-
-C>    RICAL HARMONICS .THE THETA-INTEGRATION IS PERFORMED ANALYTICALLY
-C>    USING RECURRENCE RELATIONS.
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!>    THIS ROUTINE IS USED TO PERFORM THE FI-INTEGRATION OF REAL SPHE-
+!>    RICAL HARMONICS .THE THETA-INTEGRATION IS PERFORMED ANALYTICALLY
+!>    USING RECURRENCE RELATIONS.
+!-----------------------------------------------------------------------
       SUBROUTINE RECUR(LMAX,X,THETA,FAC,S)
       USE shape_constants_mod, ONLY: LMAXD1
       implicit none
 
-C
-C     .. PARAMETER STATEMENTS ..
-C
-C      include 'inc.geometry'
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. PARAMETER STATEMENTS ..
+!
+!      include 'inc.geometry'
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX
       REAL*8 X,THETA,FAC
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 S(-LMAXD1:LMAXD1,0:LMAXD1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   M,I
       REAL*8 OL0,OL,EL0,EL,C1,C2,SS,CC
       REAL*8 C01(LMAXD1),C02(LMAXD1),SSA(LMAXD1+2),CCA(LMAXD1+2)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN,DFLOAT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       SS=SIN(THETA)
       CC=COS(THETA)
       DO 13 I=1,LMAX
@@ -203,41 +203,41 @@ C-----------------------------------------------------------------------
       RETURN
       END SUBROUTINE
 
-C======================================================================
+!======================================================================
 
-C-----------------------------------------------------------------------
-C>    THIS ROUTINE IS USED TO PERFORM  THE  FI - INTEGRATION  OF REAL SP
-C>    RICAL HARMONICS ANALYTICALLY.  THE  THETA-INTEGRATION  IS   PERFOR
-C>    ALSO ANALYTICALLY USING RECURRENCE RELATIONS.(THETA IS FI-INDEPEND
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!>    THIS ROUTINE IS USED TO PERFORM  THE  FI - INTEGRATION  OF REAL SP
+!>    RICAL HARMONICS ANALYTICALLY.  THE  THETA-INTEGRATION  IS   PERFOR
+!>    ALSO ANALYTICALLY USING RECURRENCE RELATIONS.(THETA IS FI-INDEPEND
+!-----------------------------------------------------------------------
       SUBROUTINE RECUR0(LMAX,X,THETA,FAC,S)
       USE shape_constants_mod, ONLY: LMAXD1
       implicit none
-C
-C     .. PARAMETER STATEMENTS ..
-C
-C      include 'inc.geometry'
-c      INTEGER LMAXD
-c      PARAMETER (LMAXD=25)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. PARAMETER STATEMENTS ..
+!
+!      include 'inc.geometry'
+!      INTEGER LMAXD
+!      PARAMETER (LMAXD=25)
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX
       REAL*8 X,THETA,FAC
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 S(-LMAXD1:LMAXD1,0:LMAXD1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   M,I
       REAL*8 OL0,OL,EL0,EL,C1,C2,SS,CC
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN,DFLOAT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       SS=SIN(THETA)
       CC=COS(THETA)
       OL0=(THETA-SS*CC)/2D0
@@ -321,31 +321,31 @@ C-----------------------------------------------------------------------
       RETURN
       END SUBROUTINE
 
-C======================================================================
+!======================================================================
 
-C     ----------------------------------------------------------------
-C>    GINEN THE LOWER AND UPPER LIMITS OF INTEGRATION  X1 AND X2, AND
-C>    GIVEN N, THIS SUBROUTINE RETURNS THE  ARRAYS X(1:N) AND  W(1:N)
-C>    OF LENGTH N, CONTAINING THE ABSCISSAS AND WEIGHTS OF THE  GAUSS
-C>    LEGENDRE N-POINT QUADRATURE FORMULA (NUMERICAL RECIPES,2ND ED.).
-C     ----------------------------------------------------------------
+!     ----------------------------------------------------------------
+!>    GINEN THE LOWER AND UPPER LIMITS OF INTEGRATION  X1 AND X2, AND
+!>    GIVEN N, THIS SUBROUTINE RETURNS THE  ARRAYS X(1:N) AND  W(1:N)
+!>    OF LENGTH N, CONTAINING THE ABSCISSAS AND WEIGHTS OF THE  GAUSS
+!>    LEGENDRE N-POINT QUADRATURE FORMULA (NUMERICAL RECIPES,2ND ED.).
+!     ----------------------------------------------------------------
       SUBROUTINE GAULEG(X1,X2,X,W,N)
       IMPLICIT NONE
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   N
       REAL*8    X1,X2
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8    X(1),W(1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,J,M
       REAL*8    P1,P2,P3,PP,XL,XM,Z,Z1,PI314
-C     ----------------------------------------------------------------
+!     ----------------------------------------------------------------
       PI314 = 4.D0*DATAN(1.D0)
 
       M=(N+1)/2
@@ -373,62 +373,62 @@ C     ----------------------------------------------------------------
       RETURN
       END SUBROUTINE
 
-C-----------------------------------------------------------------------
-C>    THIS ROUTINE CALCULATES THE COEFFICIENTS OF A POLYNOMIAL EXPANSION
-C>    OF RENORMALIZED LEGENDRE FUNCTIONS IN POWERS OF COSINES.
-C>    THE POSSIBILITY OF OVERFLOW (HIGH LMAX) IS AVOIDED BY USING FACTO-
-C>    RIZED FORMS FOR THE NUMBERS.
-C-----------------------------------------------------------------------
-C     CHANGED: get constants from module shape_constants_mod instead
-C              of inc.geometry
+!-----------------------------------------------------------------------
+!>    THIS ROUTINE CALCULATES THE COEFFICIENTS OF A POLYNOMIAL EXPANSION
+!>    OF RENORMALIZED LEGENDRE FUNCTIONS IN POWERS OF COSINES.
+!>    THE POSSIBILITY OF OVERFLOW (HIGH LMAX) IS AVOIDED BY USING FACTO-
+!>    RIZED FORMS FOR THE NUMBERS.
+!-----------------------------------------------------------------------
+!     CHANGED: get constants from module shape_constants_mod instead
+!              of inc.geometry
       SUBROUTINE CCOEF(LMAX,CL,COE)
       USE shape_constants_mod, ONLY: ICD, ICED, LMAXD1
       implicit none
 
-C
-C     .. PARAMETER STATEMENTS ..
-C
-C     include 'inc.geometry'
-C     INTEGER ICD,ICED
+!
+!     .. PARAMETER STATEMENTS ..
+!
+!     include 'inc.geometry'
+!     INTEGER ICD,ICED
       INTEGER IFMX,LMA2D
-C     PARAMETER (ICD=1729,ICED=((LMAXD1+1)*(LMAXD1+2))/2)
+!     PARAMETER (ICD=1729,ICED=((LMAXD1+1)*(LMAXD1+2))/2)
       PARAMETER (IFMX=25,LMA2D=LMAXD1/2+1)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8    CL(ICD),COE(ICED)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   ICMAX,L,LI,ICE,IC,I1,L2P,M,K,K0,ISI,IRE,IR,IC1,IC2
       INTEGER   LA,LB,IEUPSQ,IEINT,IEMOD
       REAL*8    UP,DOWN,UPSQ
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       INTEGER   IE(IFMX,LMA2D),IED(IFMX),IFI(IFMX)
       INTEGER   L1ST(IFMX),L2ST(IFMX),L1(IFMX),L2(IFMX),JM0(IFMX)
       INTEGER   IEA(IFMX),IEB(IFMX),IL2P(IFMX)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC MOD,SQRT,DFLOAT
-C
-C     .. DATA STATEMENTS ..
-C
+!
+!     .. DATA STATEMENTS ..
+!
       DATA IFI/2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,
      &         61,67,71,73,79,83,89,97/
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       ICMAX=0
       DO 9 L=0,LMAX
       LI=L/2+1
     9 ICMAX=ICMAX+(LMAX+1-L)*LI
       IF(LMAX.GT.LMAXD1.OR.ICMAX.GT.ICD) GO TO 100
-C     if (TEST('SHAPE   ')) WRITE(6,203) ICMAX
+!     if (TEST('SHAPE   ')) WRITE(6,203) ICMAX
       ICE=0
       IC=1
       L=0
@@ -447,9 +447,9 @@ C     if (TEST('SHAPE   ')) WRITE(6,203) ICMAX
     2 CONTINUE
       ICE=ICE+1
       ISI=1
-C  THIS IS CHANGED
-C     ISI=1-2*MOD(M,2)
-C
+!  THIS IS CHANGED
+!     ISI=1-2*MOD(M,2)
+!
       K0=(L+M+1)/2
       K=L
       IRE=1
@@ -503,8 +503,8 @@ C
                                        E N D    I F
    17 CONTINUE
       COE(ICE)=SQRT(UPSQ)* UP / DOWN
-C     if (TEST('SHAPE   '))
-C    &      WRITE(6,201) L,M,UP,UPSQ,DOWN,(CL(IC),IC=IC1,IC2)
+!     if (TEST('SHAPE   '))
+!    &      WRITE(6,201) L,M,UP,UPSQ,DOWN,(CL(IC),IC=IC1,IC2)
       IF(M. EQ .0)  GO TO 20
       LA=L+M
       LB=L-M+1
@@ -516,7 +516,7 @@ C    &      WRITE(6,201) L,M,UP,UPSQ,DOWN,(CL(IC),IC=IC1,IC2)
       M=M-1
       GO TO 2
    20 CONTINUE
-C     if (TEST('SHAPE   ')) WRITE(6,202)
+!     if (TEST('SHAPE   ')) WRITE(6,202)
       IF(L. EQ .LMAX)   GO TO 10
       LA=(2*L+1)*(2*L+2)
       LB=(L+1)*2
@@ -540,30 +540,30 @@ C     if (TEST('SHAPE   ')) WRITE(6,202)
       END SUBROUTINE
 
 
-C-----------------------------------------------------------------------
-C>    THIS ROUTINE REDUCES A POSITIVE INTEGER   INPUT NUMBER 'NMBR'
-C>    TO A PRODUCT  OF  FIRST  NUMBERS 'IFI' , AT POWERS  'IEXP'.
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!>    THIS ROUTINE REDUCES A POSITIVE INTEGER   INPUT NUMBER 'NMBR'
+!>    TO A PRODUCT  OF  FIRST  NUMBERS 'IFI' , AT POWERS  'IEXP'.
+!-----------------------------------------------------------------------
       SUBROUTINE REDUCE(NMBR,IFMX,IFI,IEXP)
       implicit none
 
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   NMBR,IFMX
-C
-C     .. ARRAY  ARGUMENTS ..
-C
+!
+!     .. ARRAY  ARGUMENTS ..
+!
       INTEGER   IEXP(1),IFI(1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,NMB
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC MOD
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       IF(NMBR.LE.0) GO TO 4
       DO 5 I=1,IFMX
     5 IEXP(I)=0
@@ -587,50 +587,50 @@ C-----------------------------------------------------------------------
   101 FORMAT(3X,I15,'  NON POSITIVE NUMBER')
       END SUBROUTINE
 
-C------------------------------------------------------------------
-C>    THIS ROUTINE COMPUTES TRANSFORMATION MATRICES ASSOCIATED TO
-C>    THE ROTATION THROUGH THE EULER ANGLES ALPHA,BETA,GAMMA  FOR
-C>    REAL SPHERICAL HARMONICS UP TO QUANTUM NUMBER LMAX. THE RE-
-C>    SULTS ARE STORED IN DMATL(ISUMD)
-C------------------------------------------------------------------
+!------------------------------------------------------------------
+!>    THIS ROUTINE COMPUTES TRANSFORMATION MATRICES ASSOCIATED TO
+!>    THE ROTATION THROUGH THE EULER ANGLES ALPHA,BETA,GAMMA  FOR
+!>    REAL SPHERICAL HARMONICS UP TO QUANTUM NUMBER LMAX. THE RE-
+!>    SULTS ARE STORED IN DMATL(ISUMD)
+!------------------------------------------------------------------
       SUBROUTINE D_REAL(LMAX,ALPHA,BETA,GAMMA,
      &                 DMATL, ISUMD,
      &                 LMAXD1)
-C     new parameters: DMATL, ISUMD
-C     LMAXD1 from inc.geometry
+!     new parameters: DMATL, ISUMD
+!     LMAXD1 from inc.geometry
       implicit none
-C
-C     .. PARAMETER STATEMENTS ..
-C
-C     include 'inc.geometry'
-c      INTEGER LMAXD,ISUMD
-c     PARAMETER (LMAXD=25,ISUMD=23426)
-c      PARAMETER (LMAXD=25,ISUMD=100000)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. PARAMETER STATEMENTS ..
+!
+!     include 'inc.geometry'
+!      INTEGER LMAXD,ISUMD
+!     PARAMETER (LMAXD=25,ISUMD=23426)
+!      PARAMETER (LMAXD=25,ISUMD=100000)
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAXD1
       INTEGER   ISUMD
       INTEGER   LMAX
       REAL*8    ALPHA,BETA,GAMMA
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   L,M,MP,I,IMAX,IP,IPMAX,ISU,ISUM
       REAL*8    SQR2,FAC,FAC1,FAC2,D,D1,D2
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8 DMN(LMAXD1+1,LMAXD1+1),DPL(LMAXD1+1,LMAXD1+1),DMATL(ISUMD)
-C
-C     .. EXTERNAL ROUTINES ..
-C
-C     REAL*8 DROT
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. EXTERNAL ROUTINES ..
+!
+!     REAL*8 DROT
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN,MOD,SQRT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       SQR2=SQRT(2.D0)
       ISU=0
       DO 2 L=0,LMAX
@@ -681,9 +681,9 @@ C-----------------------------------------------------------------------
    10 D= SIN(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)
      *  +COS(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
     9 CONTINUE
-C THIS IS CHANGED
+! THIS IS CHANGED
       IF(MOD(M+MP,2) .NE. 0)  D=-D
-C
+!
       ISU=ISU+1
       DMATL(ISU)=D
     6 CONTINUE
@@ -696,36 +696,35 @@ C
       IF(M .LE.L) GOTO 12
     2 CONTINUE
       ISUM=ISU
-C     WRITE(ITEMP) (DMATL(ISU),ISU=1,ISUM)
+!     WRITE(ITEMP) (DMATL(ISU),ISU=1,ISUM)
       RETURN
       END SUBROUTINE
 
-C-----------------------------------------------------------------------
-C>    CALCULATION OF D COEFFICIENT ACCORDING TO ROSE, ELEMENTARY THEORY
-C>    ANGULAR MOMENTUM,J.WILEY & SONS ,1957 , EQ. (4.13).
-C-----------------------------------------------------------------------
-      FUNCTION DROT(L,MP,M,BETA)
+!-----------------------------------------------------------------------
+!>    CALCULATION OF D COEFFICIENT ACCORDING TO ROSE, ELEMENTARY THEORY
+!>    ANGULAR MOMENTUM,J.WILEY & SONS ,1957 , EQ. (4.13).
+!-----------------------------------------------------------------------
+      double precision FUNCTION DROT(L,MP,M,BETA)
       implicit none
-C
-C     .. SCALAR ARGUMENTS ..
-C
-      INTEGER   L,M,MP
-      REAL*8    BETA,DROT
-C
-C     .. LOCAL SCALARS ..
-C
-      INTEGER   L0,M0,MP0,N1,N2,N3,N4,NN,I,KMIN,KMAX,LTRM,N,K
-      REAL*8    SINB,TERM,FF,BETA2,COSB
-C
-C     .. LOCAL ARRAYS ..
-C
-      INTEGER        NF(4)
+!
+!     .. SCALAR ARGUMENTS ..
+!
+      INTEGER, intent(in) :: L, M, MP
+      REAL*8, intent(in) :: BETA
+!
+!     .. LOCAL SCALARS ..
+!
+      integer :: NN, I, KMIN, KMAX, LTRM, N, K
+      REAL*8 :: SINB, TERM, FF, BETA2, COSB
+!
+!     .. LOCAL ARRAYS ..
+!
+      integer :: N1, N2, N3, N4
+      INTEGER :: NF(4)
       EQUIVALENCE (N1,NF(1)),(N2,NF(2)),(N3,NF(3)),(N4,NF(4))
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
-      INTRINSIC IABS,ABS,SQRT,COS,SIN,MOD,MIN0,MAX0
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!     INTEGER, save :: L0=-1, M0=1, MP0=1
+      INTEGER :: L0, M0, MP0
       DATA L0,M0,MP0/-1,1,1/
          L0=-1
          M0=1
@@ -757,10 +756,10 @@ C-----------------------------------------------------------------------
     1 BETA2=BETA/2.D0
       COSB= COS(BETA2)
       SINB=-SIN(BETA2)
-      IF(ABS(COSB).LT.1.E-4) GO TO 9
-      IF(ABS(SINB).LT.1.E-4) GO TO 11
-      KMAX=MIN0(L-MP,L+M)
-      KMIN=MAX0(M-MP,0)
+      IF(ABS(COSB).LT.1.d-4) GO TO 9
+      IF(ABS(SINB).LT.1.d-4) GO TO 11
+      KMAX=MIN(L-MP,L+M)
+      KMIN=MAX(M-MP,0)
       TERM=COSB**(2*L+M-MP-2*KMIN)*SINB**(MP-M+2*KMIN)*FF
       GO TO 12
     9 LTRM=L
@@ -773,8 +772,8 @@ C-----------------------------------------------------------------------
    14 KMAX=M-MP
       IF(MOD(KMAX,2).NE.0) GO TO 13
       KMAX=LTRM+KMAX/2
-      IF(KMAX.LT.MAX0(M-MP,0)) GO TO 13
-      IF(KMAX.GT.MIN0(L-MP,L+M)) GO TO 13
+      IF(KMAX.LT.MAX(M-MP,0)) GO TO 13
+      IF(KMAX.GT.MIN(L-MP,L+M)) GO TO 13
       KMIN=KMAX
    12 IF(MOD(KMIN,2).NE.0) TERM=-TERM
       N1   =L-MP-KMIN
@@ -801,7 +800,6 @@ C-----------------------------------------------------------------------
     8 N3=N3+1
       RETURN
    13 DROT=0.D0
-      RETURN
       END FUNCTION
 
       end module ShapeIntegrationHelpers_mod

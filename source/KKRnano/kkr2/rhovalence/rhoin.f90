@@ -1,6 +1,3 @@
-subroutine rhoin(ar,cden,cr,df,gmat,ek,rho2ns,irc1,nsra,efac,pz, &
-fz,qz,sz,cleb,icleb,jend,iend,ekl, &
-lmax, irmd, ncleb)
   !-----------------------------------------------------------------------
   !
   !     calculates the charge density inside r(irmin) in case
@@ -47,86 +44,49 @@ lmax, irmd, ncleb)
   !       the gaunt coeffients are symmetric too (since the are calculated
   !       using the real spherical harmonics) . that is why the lm2- and
   !       the lm02- loops are only only going up to lm1 or lm01 and the
-  !       summands are multiplied by a factor of 2 in the case of lm1 .ne.
-  !       lm2 or lm01 .ne. lm02 .
+  !       summands are multiplied by a factor of 2 in the case of lm1  /= 
+  !       lm2 or lm01  /=  lm02 .
   !
   !             (see notes by b.drittler)
   !
   !                               b.drittler   aug. 1988
   !-----------------------------------------------------------------------
-  !     .. Parameters ..
+subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
+                fz, qz, sz, cleb, icleb, jend, iend, ekl, &
+                lmax, irmd, ncleb)
   implicit none
+  integer, intent(in) :: lmax, irmd, ncleb
+  double complex, intent(in) :: df, ek
+  integer, intent(in) :: iend, irc1, nsra
+  double complex, intent(in) :: ar((lmax+1)**2,*)
+  double complex, intent(out) :: cden(irmd,0:lmax)
+  double complex, intent(in) :: cr((lmax+1)**2,*)
+  double complex, intent(in) :: efac(*)
+  double complex, intent(in) :: ekl(0:lmax)
+  double complex, intent(in) :: fz(irmd,0:lmax)
+  double complex, intent(in) :: gmat((lmax+1)**2,(lmax+1)**2)
+  double complex, intent(in) :: pz(irmd,0:lmax)
+  double complex, intent(in) :: qz(irmd,0:lmax)
+  double complex, intent(in) :: sz(irmd,0:lmax)
+  double precision, intent(in) :: cleb(*)
+  double precision, intent(inout) :: rho2ns(irmd,(2*lmax+1)**2)
+  integer, intent(in) :: icleb(ncleb,3)
+  integer, intent(in) :: jend((2*lmax+1)**2,0:lmax,0:lmax)
 
-  !     INTEGER LMMAXD
-  !     INTEGER LMPOTD
-  !     parameter (lmmaxd= (lmaxd+1)**2)
-  !     PARAMETER (LMPOTD= (LPOTD+1)**2) ! = (2*LMAX+1)**2
-  !     ..
-  integer lmax
-  integer irmd
-  integer ncleb
-
-  !     .. Scalar Arguments ..
-  double complex df,ek
-  integer iend,irc1,nsra
-  !     ..
-  !     .. Array Arguments ..
-  !     DOUBLE COMPLEX AR(LMMAXD,*),CDEN(IRMD,0:LMAXD),CR(LMMAXD,*),
-  !    +               EFAC(*),EKL(0:LMAXD),FZ(IRMD,0:LMAXD),
-  !    +               GMAT(LMMAXD,LMMAXD),PZ(IRMD,0:LMAXD),
-  !    +               QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD)
-  !     DOUBLE PRECISION CLEB(*),RHO2NS(IRMD,LMPOTD)
-  !     INTEGER ICLEB(NCLEB,3),JEND(LMPOTD,0:LMAXD,0:LMAXD)
-
-  double complex ar((lmax+1)**2,*)
-  double complex cden(irmd,0:lmax)
-  double complex cr((lmax+1)**2,*)
-  double complex efac(*)
-  double complex ekl(0:lmax)
-  double complex fz(irmd,0:lmax)
-  double complex gmat((lmax+1)**2,(lmax+1)**2)
-  double complex pz(irmd,0:lmax)
-  double complex qz(irmd,0:lmax)
-  double complex sz(irmd,0:lmax)
-  double precision cleb(*)
-  double precision rho2ns(irmd,(2*lmax+1)**2)
-  integer icleb(ncleb,3)
-  integer jend((2*lmax+1)**2,0:lmax,0:lmax)
-
-  !     ..
-  !     .. Local Scalars ..
-  double complex czero,efac1,efac2,ffz,gmatl,ppz,v1,v2
-  double precision c0ll
-  integer i,ir,j,j0,j1,l,l1,l2,lm1,lm2,lm3,lm3max,ln2,ln3,m
-  !     ..
-  !     .. Local Arrays ..
-  !     DOUBLE COMPLEX VR(LMMAXD,LMMAXD),WF(IRMD,0:LMAXD,0:LMAXD),
-  !    +               WR(LMMAXD,LMMAXD)
-  double complex vr((lmax+1)**2, (lmax+1)**2)
-  double complex wf(irmd,0:lmax,0:lmax)
-  double complex wr((lmax+1)**2, (lmax+1)**2)
-  !     ..
-  !     .. External Functions ..
-  double complex zdotu
-  external zdotu
-  !     ..
-  !     .. Intrinsic Functions ..
-  intrinsic atan,dimag,sqrt
-  !     ..
-  !     .. Save statement ..
-  save czero
-  !     ..
-  !     .. Data statements ..
-  data czero/ (0.0d0,0.0d0)/
-  !     ..
-  !
-  integer lmmaxd
-  integer lmaxd
+  double complex, external :: zdotu
+  double complex, parameter :: zero = (0.d0, 0.d0)
+  double complex :: efac1,efac2,ffz,gmatl,ppz,v1,v2
+  double precision :: c0ll
+  integer :: i,ir,j,j0,j1,l,l1,l2,lm1,lm2,lm3,lm3max,ln2,ln3,m
+  double complex :: vr((lmax+1)**2, (lmax+1)**2)
+  double complex :: wf(irmd,0:lmax,0:lmax)
+  double complex :: wr((lmax+1)**2, (lmax+1)**2)
+  integer :: lmmaxd, lmaxd
+  
   lmaxd = lmax
   lmmaxd= (lmaxd+1)**2
 
-  !     C0LL = 1/sqrt(4*pi)
-  c0ll = 1.0d0/sqrt(16.0d0*atan(1.0d0))
+  c0ll = 1.d0/sqrt(16.d0*atan(1.d0))
   !
 
   lm3max = icleb(iend,3)
@@ -147,7 +107,7 @@ lmax, irmd, ncleb)
    !
    do 50 lm2 = 2,lmmaxd
      ln2 = lm2
-     efac2 = 2.0d0*efac(lm2)
+     efac2 = 2.d0*efac(lm2)
      do 40 lm3 = 1,lm2 - 1
        ln3 = lm3
        v1 = efac2*gmat(ln3,ln2)*efac(lm3)
@@ -160,23 +120,20 @@ lmax, irmd, ncleb)
 
    do 70 lm1 = 1,lmmaxd
      efac1 = efac(lm1)
-     wr(lm1,lm1) = zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm1,1),lmmaxd)/ &
-     (efac1*efac1)
+     wr(lm1,lm1) = zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm1,1),lmmaxd)/(efac1*efac1)
      do 60 lm2 = 1,lm1 - 1
        !
        !---> using symmetry of gaunt coeffients
        !
        efac2 = efac(lm2)
-       wr(lm1,lm2) = (zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm2,1), &
-       lmmaxd)+zdotu(lmmaxd,ar(lm2,1),lmmaxd,vr(lm1,1), &
-       lmmaxd))/ (efac1*efac2)
+       wr(lm1,lm2) = (zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm2,1), lmmaxd) + zdotu(lmmaxd,ar(lm2,1),lmmaxd,vr(lm1,1),lmmaxd))/(efac1*efac2)
 60   continue
 70 continue
 
    !
    !---> set up array wf(l1,l2) = pz(l1)*pz(l2)
    !
-   if (nsra.eq.2) then
+   if (nsra == 2) then
      do 100 l1 = 0,lmaxd
        do 90 l2 = 0,l1
          do 80 ir = 2,irc1
@@ -200,26 +157,25 @@ lmax, irmd, ncleb)
    !
 
    do 170 l = 0,lmaxd
-     gmatl = czero
+     gmatl = zero
      do 140 m = -l,l
        lm1 = l* (l+1) + m + 1
        gmatl = gmatl + wr(lm1,lm1)
 140  continue
      !
-     if (nsra.eq.2) then
+     if (nsra == 2) then
        do 150 i = 2,irc1
          ppz = pz(i,l)
          ffz = fz(i,l)
-         cden(i,l) = ppz* (gmatl*ppz+ekl(l)*qz(i,l)) + &
-         ffz* (gmatl*ffz+ekl(l)*sz(i,l))
-         rho2ns(i,1) = rho2ns(i,1) + c0ll*dimag(df*cden(i,l))
+         cden(i,l) = ppz*(gmatl*ppz+ekl(l)*qz(i,l)) + ffz*(gmatl*ffz+ekl(l)*sz(i,l))
+         rho2ns(i,1) = rho2ns(i,1) + c0ll*aimag(df*cden(i,l))
 150    continue
 
      else
        do 160 i = 2,irc1
          ppz = pz(i,l)
-         cden(i,l) = ppz* (gmatl*ppz+ekl(l)*qz(i,l))
-         rho2ns(i,1) = rho2ns(i,1) + c0ll*dimag(df*cden(i,l))
+         cden(i,l) = ppz*(gmatl*ppz+ekl(l)*qz(i,l))
+         rho2ns(i,1) = rho2ns(i,1) + c0ll*aimag(df*cden(i,l))
 160    continue
      end if
 
@@ -239,9 +195,9 @@ lmax, irmd, ncleb)
           !
           j1 = jend(lm3,l1,l2)
           !
-          if (j1.ne.0) then
+          if (j1 /= 0) then
             !
-            gmatl = czero
+            gmatl = zero
             !
             !---> sum over m1,m2 for fixed lm3,l1,l2
             !
@@ -256,7 +212,7 @@ lmax, irmd, ncleb)
             !
             gmatl = df*gmatl
             do 190 i = 2,irc1
-              rho2ns(i,lm3) = rho2ns(i,lm3) + dimag(gmatl*wf(i,l1,l2))
+              rho2ns(i,lm3) = rho2ns(i,lm3) + aimag(gmatl*wf(i,l1,l2))
 190         continue
           end if
 
@@ -264,4 +220,4 @@ lmax, irmd, ncleb)
 210   continue
 220 continue
 
-  end
+endsubroutine ! rhoin

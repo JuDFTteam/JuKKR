@@ -26,8 +26,8 @@ FCFLAGS += -C -traceback
 FCFLAGS += -gen-interfaces -warn interfaces
 FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
-FCFLAGS += -O3 -g
-LDFLAGS  = -O3 -ipa -g
+FCFLAGS += -O3 -g -pg
+LDFLAGS  = -O3 -ipa -g -pg
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
