@@ -82,3 +82,43 @@
       enddo ! ir
 #endif
       endsubroutine 
+
+      
+      subroutine wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra, irmind,irmd,lmmaxd)
+      implicit none
+!-----------------------------------------------------------------------
+!      determines the integrands cder, dder or ader, bder in the
+!        integral equations for the non-spherical wavefunctions from
+!        the non-spherical contributions of the potential vinspll.
+!        (this subroutine is used in zeroth order born approximation,
+!         otherwise subroutine wfint must be used)
+!      r. zeller      aug. 1994
+!-----------------------------------------------------------------------
+      integer, intent(in) :: irmd,irmind,lmmaxd,nsra
+      double complex, intent(out) :: cder(lmmaxd,lmmaxd,irmind:irmd)
+      double complex, intent(out) :: dder(lmmaxd,lmmaxd,irmind:irmd)
+      double complex, intent(in) :: pzekdr(lmmaxd,irmind:irmd,2)
+      double complex, intent(in) :: qzekdr(lmmaxd,irmind:irmd,2)
+      double complex, intent(in) :: qzlm(lmmaxd,irmind:irmd,2)
+      double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
+      
+      integer :: ir, lm
+
+      if (nsra == 2) then
+        do ir = irmind, irmd
+          do lm = 1,lmmaxd
+            cder(:,lm,ir) = qzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1) + qzekdr(:,ir,2)*vnspll(:,lm,ir)*qzlm(lm,ir,2)
+            dder(:,lm,ir) = pzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1) + pzekdr(:,ir,2)*vnspll(:,lm,ir)*qzlm(lm,ir,2)
+          enddo ! lm
+        enddo ! ir
+      else
+        do ir = irmind, irmd
+          do lm = 1,lmmaxd
+            cder(:,lm,ir) = qzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1)
+            dder(:,lm,ir) = pzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1)
+          enddo ! lm
+        enddo ! ir
+      endif
+      
+      endsubroutine
+      
