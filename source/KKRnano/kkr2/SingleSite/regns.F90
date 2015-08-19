@@ -43,7 +43,7 @@
 !     modified by r. zeller      aug. 1994
 !-----------------------------------------------------------------------
 !     added volterra equation by m. ogura      jan. 2006
-!     Fredholm: true -> use Fredhol equation
+!     Fredholm: true -> use Fredholm equation
 !               false -> volterra equation
 !-----------------------------------------------------------------------
       subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm,  &
@@ -74,7 +74,7 @@
       double complex pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd)
       integer ipiv(lmmaxd)
       double complex, parameter :: cone=(1.0d0,0.0d0), zero=(0.d0,0.d0)
-      logical, parameter :: Volterra = .true.
+      logical, parameter :: Volterra = .true. ! false ==> Fredholm equation
       
       irc1 = ircut(ipan)
     
@@ -89,12 +89,11 @@
 
 !---> call integration subroutines
         if (Volterra) then
-          call csout(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
-          call csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
+          call csout (ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
         else ! Fredholm equation
           call csinwd(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
-          call csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
         endif
+        call csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
         
         do ir = irmind, irc1
           if (Volterra) amat(:,:,ir) = -amat(:,:,ir)
@@ -112,37 +111,70 @@
           enddo ! ir
         enddo ! j
         
-!-----------------------------------------------------------------------
-! check convergence of pns w.r.t. the last iteration
-        pns0(:,:,irmind:irc1,1:nsra) = pns0(:,:,irmind:irc1,1:nsra) - pns(:,:,irmind:irc1,1:nsra)
-          
-        err = 0.d0
-        do j = 1, nsra
-          call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
-          err = max(err, maxval(abs(pns1(:,:,irc1))))
-        enddo ! j
-
-        ! convergence check
-        if (i == icst .and. err > 1d-3) then
-          write(*,*)'regns.f: Fredholmholm equation does not converge'
-          stop 'error 1 in regns.f'
-        endif
-
-        pns0(:,:,irmind:irc1,1:nsra) = pns(:,:,irmind:irc1,1:nsra)
-!-----------------------------------------------------------------------
+        if (i == icst-1) pns0(:,:,irmind:irc1,1:nsra) = pns(:,:,irmind:irc1,1:nsra) ! store a copy of pns in pns0 for the convergence check 
 
       enddo ! i
+    
+!-----------------------------------------------------------------------
+! check convergence of pns after the last iteration comparing to the previous iteration
+      pns0(:,:,irmind:irc1,1:nsra) = pns0(:,:,irmind:irc1,1:nsra) - pns(:,:,irmind:irc1,1:nsra)
+        
+      do j = 1, nsra
+        call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
+        err = maxval(abs(pns1(:,:,irc1)))
+        ! convergence check
+        if (err > 1d-3) then
+          if (Volterra) then
+            write(*,*)'regns.f: Volterra equation does not converge'
+          else
+            write(*,*)'regns.f: Fredholm equation does not converge'
+          endif
+          stop 'error 1 in regns.f'
+        endif
+      enddo ! j
+! end convergence check      
+!-----------------------------------------------------------------------
+      
     
       if (Volterra) then
 !-----------------------------------------------------------------------
 ! only Volterra equation
         
-        call zgeinv1(amat(1,1,irc1),ar,br,ipiv,lmmaxd)
+        call zgeinv1(amat(1,1,irc1),ar,br,ipiv,lmmaxd) ! invert the last amat
 
         do ir = irmind, irc1
+#define _USE_ZGEMM_in_REGNS_
+#ifdef  _USE_ZGEMM_in_REGNS_
+!!!! excerpt from zgemm.f, case TRANSA='N', TRANSB='N'
+! ! ! ! ! ! ! *
+! ! ! ! ! ! ! *           Form  C := alpha*A*B + beta*C.
+! ! ! ! ! ! ! *
+! ! ! ! ! ! !               DO 90 J = 1,N
+! ! ! ! ! ! !                   IF (BETA.EQ.ZERO) THEN
+! ! ! ! ! ! !                       DO 50 I = 1,M
+! ! ! ! ! ! !                           C(I,J) = ZERO
+! ! ! ! ! ! !    50                 CONTINUE
+! ! ! ! ! ! !                   ELSE IF (BETA.NE.ONE) THEN
+! ! ! ! ! ! !                       DO 60 I = 1,M
+! ! ! ! ! ! !                           C(I,J) = BETA*C(I,J)
+! ! ! ! ! ! !    60                 CONTINUE
+! ! ! ! ! ! !                   END IF
+! ! ! ! ! ! !                   DO 80 L = 1,K
+! ! ! ! ! ! !                       IF (B(L,J).NE.ZERO) THEN
+! ! ! ! ! ! !                           TEMP = ALPHA*B(L,J)
+! ! ! ! ! ! !                           DO 70 I = 1,M
+! ! ! ! ! ! !                               C(I,J) = C(I,J) + TEMP*A(I,L)
+! ! ! ! ! ! !    70                     CONTINUE
+! ! ! ! ! ! !                       END IF
+! ! ! ! ! ! !    80             CONTINUE
+! ! ! ! ! ! !    90         CONTINUE
+!!!!! identify lm1=I, lm2=J, lm3=L, ALPHA=cone, BETA=zero, M,N,K=lmmaxd, A=amat, B=ar
+          call ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,cone,amat(1,1,ir),lmmaxd,ar,lmmaxd,zero,ader(1,1,ir),lmmaxd)
+          call ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,cone,bmat(1,1,ir),lmmaxd,ar,lmmaxd,zero,bder(1,1,ir),lmmaxd)
+#else
+          ! the following 8 lines should be written as two zgemm calls
           ader(:,:,ir) = zero
           bder(:,:,ir) = zero
-          ! this should be written as zgemm
           do lm2 = 1, lmmaxd
             do lm3 = 1, lmmaxd
               ader(:,lm2,ir) = ader(:,lm2,ir) + amat(:,lm3,ir)*ar(lm3,lm2)
@@ -150,6 +182,8 @@
             enddo ! lm3
           enddo ! lm2
           ! end zgemm
+#endif          
+          ! overwrite amat and bmat, keep the valus in ader and bder (since these are intent(out)
           amat(:,:,ir) = ader(:,:,ir)
           bmat(:,:,ir) = bder(:,:,ir)
         enddo ! ir
@@ -158,12 +192,23 @@
         do j = 1, nsra
           do ir = irmind, irc1
             do lm = 1, lmmaxd
-              pns(:,lm,ir,j) = amat(:,lm,ir)*pzlm(:,ir,j) + bmat(:,lm,ir)*qzlm(:,ir,j)
+              pns(:,lm,ir,j) = efac(lm)*(amat(:,lm,ir)*pzlm(:,ir,j) + bmat(:,lm,ir)*qzlm(:,ir,j))
             enddo ! lm
           enddo ! ir
         enddo ! j
         
 !-----------------------------------------------------------------------
+      else  ! Volterra
+      
+!---> rescale with efac (Fredholm only)
+        do j = 1, nsra
+          do ir = irmind, irc1
+            do lm = 1, lmmaxd
+              pns(:,lm,ir,j) = pns(:,lm,ir,j)*efac(lm)
+            enddo ! lm
+          enddo ! ir
+        enddo ! j
+      
       endif ! Volterra
  
 !---> store alpha and t - matrix
@@ -172,14 +217,6 @@
         br(:,lm) = bmat(:,lm,irc1)*efac(1:lmmaxd)*efac(lm)/ek !---> t-matrix
       enddo ! lm
       
-!---> rescale with efac
-      do j = 1, nsra
-        do ir = irmind, irc1
-          do lm = 1, lmmaxd
-            pns(:,lm,ir,j) = pns(:,lm,ir,j)*efac(lm)
-          enddo ! lm
-        enddo ! ir
-      enddo ! j
 
       endsubroutine ! regns
 ! ************************************************************************
