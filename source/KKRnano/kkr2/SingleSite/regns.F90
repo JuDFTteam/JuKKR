@@ -69,9 +69,8 @@
       integer, intent(in) :: ircut(0:ipand)
 
       external :: csinwd, csout, wfint, wfint0, zgeinv1
-      double complex efac2!efac1,
-      double precision err
-      integer i,ir,irc1,j,lm1,lm2,lm3
+      double precision :: err
+      integer :: i, ir, irc1, j,lm2,lm3, lm
       double complex pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd)
       integer ipiv(lmmaxd)
       double complex, parameter :: cone=(1.0d0,0.0d0), zero=(0.d0,0.d0)
@@ -93,56 +92,38 @@
         call csinwd(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
         call csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
         do ir = irmind,irc1
-          do lm2 = 1,lmmaxd
-            amat(lm2,lm2,ir) = cone + amat(lm2,lm2,ir)
-          enddo ! lm2
+          do lm = 1, lmmaxd
+            amat(lm,lm,ir) = cone + amat(lm,lm,ir)
+          enddo ! lm
         enddo ! ir
 !---> calculate non sph. wft. in i-th born approximation
         do j = 1,nsra
-          do ir = irmind,irc1
-              do lm2 = 1,lmmaxd
+          do ir = irmind, irc1
+              do lm2 = 1, lmmaxd
                 pns(:,lm2,ir,j) = amat(:,lm2,ir)*pzlm(:,ir,j) + bmat(:,lm2,ir)*qzlm(:,ir,j)
               enddo ! lm2
           enddo ! ir
         enddo ! j
 !-----------------------------------------------------------------------
 ! check convergence
-      do j = 1,nsra
-      do ir = irmind,irc1
-      do lm1 = 1,lmmaxd
-      do lm2 = 1,lmmaxd
-        pns0(lm1,lm2,ir,j) = pns0(lm1,lm2,ir,j)-pns(lm1,lm2,ir,j)
-      enddo ! lm2
-      enddo ! lm1
-      enddo ! ir
-      enddo ! j
-      
-      err=0.d0
-      
-      do j=1,nsra
-      call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
-      do lm1=1,lmmaxd
-      do lm2=1,lmmaxd
-        err=max(err,abs(pns1(lm1,lm2,irc1)))
-      enddo ! lm2
-      enddo ! lm1
-      enddo ! j
+        pns0(:,:,irmind:irc1,1:nsra) = pns0(:,:,irmind:irc1,1:nsra) - pns(:,:,irmind:irc1,1:nsra)
+          
+        err=0.d0
+          
+        do j = 1, nsra
+        
+          call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
+          err = max(err, maxval(abs(pns1(:,:,irc1))))
+          
+        enddo ! j
 
-      ! convergence check
-      if(i == icst .and. err > 1d-3) then
-        write(*,*)'regns.f: Fredholmholm equation does not converge'
-        stop 'error 1 in regns.f'
-      endif
+        ! convergence check
+        if(i == icst .and. err > 1d-3) then
+          write(*,*)'regns.f: Fredholmholm equation does not converge'
+          stop 'error 1 in regns.f'
+        endif
 
-      do j = 1,nsra
-      do ir = irmind,irc1
-      do lm1 = 1,lmmaxd
-      do lm2 = 1,lmmaxd
-        pns0(lm1,lm2,ir,j) = pns(lm1,lm2,ir,j)
-      enddo ! lm2
-      enddo ! lm1
-      enddo ! ir
-      enddo ! j
+        pns0(:,:,irmind:irc1,1:nsra) = pns(:,:,irmind:irc1,1:nsra)
  
       enddo ! i
    
@@ -151,7 +132,7 @@
     else ! Fredholm
 !-----------------------------------------------------------------------
 ! begin Volterra equation
-      do i = 0,icst
+      do i = 0, icst
 !---> set up integrands for i-th born approximation
         if (i == 0) then
           call wfint0(ader,bder,pzlm,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
@@ -161,127 +142,82 @@
 !---> call integration subroutines
         call csout(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
         call csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-        do ir = irmind,irc1
-          do lm2 = 1,lmmaxd
-          do lm1 = 1,lmmaxd
-            if(lm1 == lm2)then
-              amat(lm1,lm2,ir) = cone - amat(lm1,lm2,ir)
-            else
-              amat(lm1,lm2,ir) = - amat(lm1,lm2,ir)
-            endif
-          enddo ! lm1
-          enddo ! lm2
+        do ir = irmind, irc1
+          amat(:,:,ir) = -amat(:,:,ir)
+          do lm = 1, lmmaxd
+            amat(lm,lm,ir) = amat(lm,lm,ir) + cone
+          enddo ! lm
         enddo ! ir
 !---> calculate non sph. wft. in i-th born approximation
-        do j = 1,nsra
-          do ir = irmind,irc1
-            do lm2 = 1,lmmaxd
-              do lm1 = 1,lmmaxd
-                pns(lm1,lm2,ir,j) = amat(lm1,lm2,ir)*pzlm(lm1,ir,j) + bmat(lm1,lm2,ir)*qzlm(lm1,ir,j)
-          enddo ! lm1
-        enddo ! lm2
-      enddo ! ir
-      enddo ! j
+        do j = 1, nsra
+          do ir = irmind, irc1
+            do lm2 = 1, lmmaxd
+              pns(:,lm2,ir,j) = amat(:,lm2,ir)*pzlm(:,ir,j) + bmat(:,lm2,ir)*qzlm(:,ir,j)
+            enddo ! lm2
+          enddo ! ir
+        enddo ! j
 !-----------------------------------------------------------------------
 ! check convergence
-       do j = 1,nsra
-       do ir = irmind,irc1
-       do lm2 = 1,lmmaxd
-       do lm1 = 1,lmmaxd
-         pns0(lm1,lm2,ir,j) = pns0(lm1,lm2,ir,j) - pns(lm1,lm2,ir,j)
-        enddo ! lm1
-        enddo ! lm2
-        enddo ! ir
+        pns0(:,:,irmind:irc1,1:nsra) = pns0(:,:,irmind:irc1,1:nsra) - pns(:,:,irmind:irc1,1:nsra)
+   
+        err = 0.d0
+        do j = 1, nsra
+          call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
+          err = max(err, maxval(abs(pns1(:,:,irc1))))
         enddo ! j
-  
-       err = 0.d0
-       do j=1,nsra
-       call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
-       do lm2=1,lmmaxd
-       do lm1=1,lmmaxd
-        err=max(err,abs(pns1(lm1,lm2,irc1)))
-      enddo ! lm1
-      enddo ! lm2
-      enddo ! j
-  
 
-      ! convergence check
-      if(i == icst.and.err > 1d-3) then
-      write(*,*)'regns.f: Volterra equation does not converge'
-      stop 'error 1 in regns.f'
-      endif
+        ! convergence check
+        if(i == icst .and. err > 1d-3) then
+          write(*,*)'regns.f: Volterra equation does not converge'
+          stop 'error 1 in regns.f'
+        endif
 
-       do j = 1,nsra
-       do ir = irmind,irc1
-       do lm2 = 1,lmmaxd
-       do lm1 = 1,lmmaxd
-        pns0(lm1,lm2,ir,j) = pns(lm1,lm2,ir,j)
-      enddo ! lm1
-      enddo ! lm2
-      enddo ! ir
-      enddo ! j
+        pns0(:,:,irmind:irc1,1:nsra) = pns(:,:,irmind:irc1,1:nsra)
   
 !-----------------------------------------------------------------------
       enddo ! i
+      
       call zgeinv1(amat(1,1,irc1),ar,br,ipiv,lmmaxd)
-      do ir=irmind,irc1
-      do lm2=1,lmmaxd
-      do lm1=1,lmmaxd
-        ader(lm1,lm2,ir)= zero
-        bder(lm1,lm2,ir)= zero
-      enddo ! lm1
-      enddo ! lm2
-      enddo ! ir
-
+      
+      ader(:,:,irmind:irc1) = zero
+      bder(:,:,irmind:irc1) = zero
   
-      do ir=irmind,irc1
-      do lm2=1,lmmaxd
-      do lm3=1,lmmaxd
-      do lm1=1,lmmaxd
-        ader(lm1,lm2,ir) = ader(lm1,lm2,ir) + amat(lm1,lm3,ir)*ar(lm3,lm2)
-        bder(lm1,lm2,ir) = bder(lm1,lm2,ir) + bmat(lm1,lm3,ir)*ar(lm3,lm2)
-      enddo ! lm1
-      enddo ! lm3
-      enddo ! lm2
+      do ir = irmind, irc1
+        do lm2 = 1, lmmaxd
+          do lm3 = 1, lmmaxd
+            ader(:,lm2,ir) = ader(:,lm2,ir) + amat(:,lm3,ir)*ar(lm3,lm2)
+            bder(:,lm2,ir) = bder(:,lm2,ir) + bmat(:,lm3,ir)*ar(lm3,lm2)
+          enddo ! lm3
+        enddo ! lm2
       enddo ! ir
 
-      do ir=irmind,irc1
-      do lm2=1,lmmaxd
-      do lm1=1,lmmaxd
-        amat(lm1,lm2,ir) = ader(lm1,lm2,ir)
-        bmat(lm1,lm2,ir) = bder(lm1,lm2,ir)
-      enddo ! lm1
-      enddo ! lm2
-      enddo ! ir
+      amat(:,:,irmind:irc1) = ader(:,:,irmind:irc1)
+      bmat(:,:,irmind:irc1) = bder(:,:,irmind:irc1)
 
-      do j = 1,nsra
-      do ir = irmind,irc1
-      do lm2 = 1,lmmaxd
-      do lm1 = 1,lmmaxd
-        pns(lm1,lm2,ir,j) = amat(lm1,lm2,ir)*pzlm(lm1,ir,j) + bmat(lm1,lm2,ir)*qzlm(lm1,ir,j)
-   enddo ! lm1
-   enddo ! lm2
-   enddo ! ir
-   enddo ! j
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm2 = 1, lmmaxd
+            pns(:,lm2,ir,j) = amat(:,lm2,ir)*pzlm(:,ir,j) + bmat(:,lm2,ir)*qzlm(:,ir,j)
+          enddo ! lm2
+        enddo ! ir
+      enddo ! j
 ! end Volterra equation
 !-----------------------------------------------------------------------
   endif ! Fredholm
-  
-      do lm2 = 1,lmmaxd
-        efac2 = efac(lm2)
+ 
+      do lm2 = 1, lmmaxd
 !---> store alpha and t - matrix
         ar(:,lm2) = amat(:,lm2,irmind)
-        br(:,lm2) = bmat(:,lm2,irc1)*efac(1:lmmaxd)*efac2/ek !---> t-matrix
+        br(:,lm2) = bmat(:,lm2,irc1)*efac(1:lmmaxd)*efac(lm2)/ek !---> t-matrix
       enddo ! lm2
 !---> rescale with efac
-      do j = 1,nsra
-         do ir = irmind,irc1
-            do lm2 = 1,lmmaxd
-               efac2 = efac(lm2)
-               pns(:,lm2,ir,j) = pns(:,lm2,ir,j)*efac2
-         enddo ! lm2
-      enddo ! ir
-   enddo ! j
+      do j = 1, nsra
+         do ir = irmind, irc1
+            do lm2 = 1, lmmaxd
+               pns(:,lm2,ir,j) = pns(:,lm2,ir,j)*efac(lm2)
+            enddo ! lm2
+          enddo ! ir
+      enddo ! j
  
       endsubroutine ! regns
 ! ************************************************************************
