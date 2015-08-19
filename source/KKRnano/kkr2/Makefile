@@ -13,6 +13,32 @@ BUILDDIR = $(HOME)/build/kkr2
 EXTRA_FLAGS =
 
 # ========= IFF Workstations ============
+
+ifeq ($(PLATFORM),ifort)
+FC = mpif77 -warn all
+FC90 = mpif90 -warn all
+# -module <path> specifies where to put .mod files
+FCFLAGS  = -mkl
+FCFLAGS += -module $(BUILDDIR)
+FCFLAGS += -I $(BUILDDIR)
+# FCFLAGS += -openmp
+FCFLAGS += -C -traceback
+FCFLAGS += -gen-interfaces -warn interfaces
+FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FC90FLAGS =
+FCFLAGS += -O3 -g
+LDFLAGS  = -O3 -ipa -g
+# LDFLAGS += -C -traceback
+ifeq ($(TYPE),debug)
+FCFLAGS += -g
+else
+FCFLAGS += -DNOLOGGING
+endif
+# set run paths to look for shared libraries (-Wl means pass to linker)
+# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
+# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
+endif
+
 ifeq ($(PLATFORM),ifort_IFF)
 FC = mpif77 -warn
 FC90 = mpif90 -warn
@@ -28,33 +54,6 @@ endif
 # set run paths to look for shared libraries (-Wl means pass to linker)
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
-endif
-
-
-ifeq ($(PLATFORM),ifort)
-FC = mpif77 -warn all
-FC90 = mpif90 -warn all
-# -module <path> specifies where to put .mod files
-FCFLAGS  = -mkl
-FCFLAGS += -module $(BUILDDIR)
-FCFLAGS += -I $(BUILDDIR)
-# FCFLAGS += -openmp
-FCFLAGS += -C -traceback
-FCFLAGS += -gen-interfaces -warn interfaces
-FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
-FC90FLAGS =
-# FCFLAGS += -O0 -g
-# LDFLAGS  = -O0 -g
-FCFLAGS += -O3 -g
-LDFLAGS  = -O3 -g
-### warning: -O3 fails for rhoout.o, use -O1
-# LDFLAGS += -C -traceback
-ifeq ($(TYPE),debug)
-FCFLAGS += -g
-endif
-# set run paths to look for shared libraries (-Wl means pass to linker)
-# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
-# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 endif
 
 
