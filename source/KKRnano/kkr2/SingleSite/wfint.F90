@@ -18,6 +18,9 @@
       double complex, intent(in) :: qzekdr(lmmaxd,irmind:irmd,2)
       double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
 
+#define _USE_ZGEMM_in_WFINT_      
+#ifndef _USE_ZGEMM_in_WFINT_     
+
       external :: dgemm
       integer :: ir, lm
       double precision :: qnsi(lmmaxd,lmmaxd), qnsr(lmmaxd,lmmaxd)
@@ -49,5 +52,33 @@
         endif ! nsra
 
       enddo ! ir
+#else
+! new version
+      external :: zgemm
+      integer :: ir, lm
+      double complex :: cvnspll(lmmaxd,lmmaxd), vtqns(lmmaxd,lmmaxd)
+      double complex, parameter :: zero=(0.d0,0.d0), cone=(1.d0,0.d0)
       
+      do ir = irmind, irmd
+      
+        cvnspll = dcmplx(vnspll(:,:,ir), 0.d0) ! convert the potential to complex
+
+        call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone,cvnspll,lmmaxd,qns(1,1,ir,1),lmmaxd,zero,vtqns,lmmaxd)
+        
+        do lm = 1, lmmaxd
+          cder(:,lm,ir) = qzekdr(:,ir,1)*vtqns(:,lm)
+          dder(:,lm,ir) = pzekdr(:,ir,1)*vtqns(:,lm)
+        enddo ! lm
+   
+        if (nsra == 2) then
+          call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone,cvnspll,lmmaxd,qns(1,1,ir,2),lmmaxd,zero,vtqns,lmmaxd)
+   
+          do lm = 1, lmmaxd
+            cder(:,lm,ir) = cder(:,lm,ir) + qzekdr(:,ir,2)*vtqns(:,lm)
+            dder(:,lm,ir) = dder(:,lm,ir) + pzekdr(:,ir,2)*vtqns(:,lm)
+          enddo ! lm
+        endif ! nsra
+
+      enddo ! ir
+#endif
       endsubroutine 
