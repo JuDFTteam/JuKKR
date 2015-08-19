@@ -19,41 +19,35 @@
       double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
 
       external :: dgemm
-      integer :: ir, lm1, lm2
+      integer :: ir, lm
       double precision :: qnsi(lmmaxd,lmmaxd), qnsr(lmmaxd,lmmaxd)
       double precision :: vtqnsi(lmmaxd,lmmaxd), vtqnsr(lmmaxd,lmmaxd)
       
-      do 90 ir = irmind,irmd
-        do 20 lm2 = 1,lmmaxd
-          do 10 lm1 = 1,lmmaxd
-            qnsr(lm1,lm2) =  dble(qns(lm1,lm2,ir,1))
-            qnsi(lm1,lm2) = dimag(qns(lm1,lm2,ir,1))
-   10     continue
-   20   continue
+      do ir = irmind, irmd
+      
+        qnsr =  dble(qns(:,:,ir,1))
+        qnsi = dimag(qns(:,:,ir,1))
+        
         call dgemm('n','n',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),lmmaxd,qnsr,lmmaxd,0.d0,vtqnsr,lmmaxd)
         call dgemm('n','n',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),lmmaxd,qnsi,lmmaxd,0.d0,vtqnsi,lmmaxd)
-        do 40 lm1 = 1,lmmaxd
-          do 30 lm2 = 1,lmmaxd
-            cder(lm1,lm2,ir) = qzekdr(lm1,ir,1)*dcmplx(vtqnsr(lm1,lm2),vtqnsi(lm1,lm2))
-            dder(lm1,lm2,ir) = pzekdr(lm1,ir,1)*dcmplx(vtqnsr(lm1,lm2),vtqnsi(lm1,lm2))
-   30     continue
-   40   continue
+        
+        do lm = 1, lmmaxd
+          cder(:,lm,ir) = qzekdr(:,ir,1)*dcmplx(vtqnsr(:,lm), vtqnsi(:,lm))
+          dder(:,lm,ir) = pzekdr(:,ir,1)*dcmplx(vtqnsr(:,lm), vtqnsi(:,lm))
+        enddo ! lm
+   
         if (nsra == 2) then
-          do 60 lm2 = 1,lmmaxd
-            do 50 lm1 = 1,lmmaxd
-              qnsr(lm1,lm2) =  dble(qns(lm1,lm2,ir,2))
-              qnsi(lm1,lm2) = dimag(qns(lm1,lm2,ir,2))
-   50       continue
-   60     continue
+          qnsr =  dble(qns(:,:,ir,2))
+          qnsi = dimag(qns(:,:,ir,2))
+   
           call dgemm('n','n',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),lmmaxd,qnsr,lmmaxd,0.d0,vtqnsr,lmmaxd)
           call dgemm('n','n',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),lmmaxd,qnsi,lmmaxd,0.d0,vtqnsi,lmmaxd)
-          do 80 lm2 = 1,lmmaxd
-            do 70 lm1 = 1,lmmaxd
-              cder(lm1,lm2,ir) = cder(lm1,lm2,ir) + qzekdr(lm1,ir,2)*dcmplx(vtqnsr(lm1,lm2),vtqnsi(lm1,lm2))
-              dder(lm1,lm2,ir) = dder(lm1,lm2,ir) + pzekdr(lm1,ir,2)*dcmplx(vtqnsr(lm1,lm2),vtqnsi(lm1,lm2))
-   70       continue
-   80     continue
-        end if
+          do lm = 1, lmmaxd
+            cder(:,lm,ir) = cder(:,lm,ir) + qzekdr(:,ir,2)*dcmplx(vtqnsr(:,lm), vtqnsi(:,lm))
+            dder(:,lm,ir) = dder(:,lm,ir) + pzekdr(:,ir,2)*dcmplx(vtqnsr(:,lm), vtqnsi(:,lm))
+          enddo ! lm
+        endif ! nsra
 
-   90 continue
+      enddo ! ir
+      
       endsubroutine 
