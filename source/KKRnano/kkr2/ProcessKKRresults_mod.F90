@@ -454,7 +454,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   if (dims%LLY /= 0 .and. num_local_atoms > 1) then
     if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
-    STOP
+!    STOP
   endif
 
   ! out: emesh, RNORM

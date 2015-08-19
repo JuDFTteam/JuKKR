@@ -7,9 +7,9 @@ CONTAINS
 
     subroutine KLOOPZ1_new(GMATN, solv, kkr_op, precond, ALAT, &
     NOFKS, VOLBZ, BZKP, VOLCUB, &
-    RR, GINP_LOCAL, &
+    RR, GINP_LOCAL, DGINP, &
     NSYMAT,DSYMLL, &
-    TMATLL, lmmaxd,  &
+    TMATLL, DTDE, TR_ALPH, LLY_GRDT, lmmaxd,  &
     nrd, trunc2atom_index, communicator, &
     iguess_data)
 
@@ -70,12 +70,14 @@ CONTAINS
     double complex :: GMATN(:,:,:)
 
     double complex :: GINP_LOCAL(:, :, :, :)
+    double complex :: DGINP(:, :, :, :)
     double complex, intent(inout), dimension(:,:,:) :: TMATLL
-
+    double complex, intent(inout), dimension(:,:,:) :: DTDE
+    double complex :: TR_ALPH(:)
     double precision::RR(3,0:NRD)
     double precision::BZKP(:,:)
     double precision::VOLCUB(:) ! dim kpoibz
-
+    double complex :: LLY_GRDT (:,:)
     !     .. Local Scalars ..
     !     ..
     double complex :: TAUVBZ
@@ -167,8 +169,8 @@ CONTAINS
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2 .or. cutoffmode == 0) then
-      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,TMATLL, &
-      ALAT, NSYMAT, RR, GINP_LOCAL, &
+      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,DTDE, TR_ALPH, LLY_GRDT, &
+      ALAT, NSYMAT, RR, GINP_LOCAL, DGINP, &
       lmmaxd, trunc2atom_index, communicator, &
       iguess_data)
     else

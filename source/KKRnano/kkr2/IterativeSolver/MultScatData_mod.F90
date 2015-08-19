@@ -13,6 +13,7 @@ module MultScatData_mod
     double complex, allocatable :: EIKRP(:)
     double complex, allocatable :: EIKRM(:)
     double complex, allocatable, dimension(:) :: GLLH
+    double complex, allocatable, dimension(:) :: DGLLH
 
     integer, allocatable :: atom_indices(:)
     integer :: lmmaxd
@@ -58,6 +59,7 @@ subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 
   ! allocate memory for sparse matrix
   allocate(ms%GLLH(getNNZ(ms%sparse)))
+  allocate(ms%DGLLH(getNNZ(ms%sparse)))
 
   allocate(ms%eikrm(naclsd))
   allocate(ms%eikrp(naclsd))
@@ -72,6 +74,7 @@ subroutine destroyMultScatData(ms)
   deallocate(ms%eikrp)
   deallocate(ms%eikrm)
   deallocate(ms%GLLH)
+  deallocate(ms%DGLLH)
   deallocate(ms%mat_X)
   deallocate(ms%mat_B)
 

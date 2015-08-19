@@ -505,4 +505,183 @@ contains
     close(FILEHANDLE)
   end subroutine
 
+SUBROUTINE vbrcsr(ia, ja, a, nr, kvstr, kvstc, ib, jb, kb, b, nzmax, ierr)
+!-----------------------------------------------------------------------
+
+INTEGER, INTENT(OUT)                     :: ia(*)
+INTEGER, INTENT(OUT)                     :: ja(*)
+double complex, INTENT(OUT)                      :: a(*)
+INTEGER, INTENT(IN)                      :: nr
+INTEGER, INTENT(IN)                      :: kvstr(nr+1)
+INTEGER, INTENT(IN)                      :: kvstc(*)
+INTEGER, INTENT(IN)                      :: ib(nr+1)
+INTEGER, INTENT(IN OUT)                  :: jb(*)
+INTEGER, INTENT(IN)                      :: kb(*)
+double complex, INTENT(IN)               :: b(nzmax)
+INTEGER, INTENT(IN)                      :: nzmax
+INTEGER, INTENT(OUT)                     :: ierr
+
+
+
+!-----------------------------------------------------------------------
+!     Converts variable block row to compressed sparse row format.
+!-----------------------------------------------------------------------
+!     On entry:
+!--------------
+!     nr      = number of block rows
+!     kvstr   = first row number for each block row
+!     kvstc   = first column number for each block column
+!     ib,jb,kb,b = input matrix in VBR format
+!     nzmax   = size of supplied ja and a arrays
+
+!     On return:
+!---------------
+!     ia,ja,a = output matrix in CSR format
+
+!     ierr    = error message
+!               ierr = 0 means normal return
+!               ierr = negative row number when out of space in
+!                      ja and a arrays
+
+!     Work space:
+!----------------
+!     None
+
+!     Algorithm:
+!---------------
+!     The VBR data structure is traversed in the order that is required
+!     to fill the CSR data structure.  In a given block row, consecutive
+!     entries in the CSR data structure are entries in the VBR data
+!     structure with stride equal to the row dimension of the block.
+!     The VBR data structure is assumed to be sorted by block columns.
+
+!-----------------------------------------------------------------------
+!     Local variables:
+!---------------------
+INTEGER :: neqr, numc, a0, b0, i, ii, j, jj
+
+!     neqr = number of rows in block row
+!     numc = number of nonzero columns in row
+!     a0 = index for entries in CSR a array
+!     b0 = index for entries in VBR b array
+!     i  = loop index for block rows
+!     ii = loop index for scalar rows in block row
+!     j  = loop index for block columns
+!     jj = loop index for scalar columns in block column
+
+!-----------------------------------------------------------------------
+ierr = 0
+a0 = 1
+b0 = 1
+!-----loop on block rows
+DO i = 1, nr
+!--------set num of rows in block row, and num of nonzero cols in row
+  neqr = kvstr(i+1) - kvstr(i)
+  numc = ( kb(ib(i+1)) - kb(ib(i)) ) / neqr
+!--------construct ja for a scalar row
+  DO j = ib(i), ib(i+1)-1
+    DO jj = kvstc(jb(j)), kvstc(jb(j)+1)-1
+      ja(a0) = jj
+      a0 = a0 + 1
+    END DO
+  END DO
+!--------construct neqr-1 additional copies of ja for the block row
+  DO ii = 1, neqr-1
+    DO j = 1, numc
+      ja(a0) = ja(a0-numc)
+      a0 = a0 + 1
+    END DO
+  END DO
+!--------reset a0 back to beginning of block row
+  a0 = kb(ib(i))
+!--------loop on scalar rows in block row
+  DO ii = 0, neqr-1
+    ia(kvstr(i)+ii) = a0
+    b0 = kb(ib(i)) + ii
+!-----------loop on elements in a scalar row
+    DO jj = 1, numc
+!--------------check there is enough space in a array
+      IF (a0 > nzmax) THEN
+        ierr = -(kvstr(i)+ii)
+        WRITE (*,*) 'vbrcsr: no space for row ', -ierr
+        RETURN
+      END IF
+      a(a0) = b(b0)
+      a0 = a0 + 1
+      b0 = b0 + neqr
+    END DO
+  END DO
+!-----endloop on block rows
+END DO
+ia(kvstr(nr+1)) = a0
+RETURN
+END SUBROUTINE vbrcsr
+!-----------------------------------------------------------------------
+!---------------------------end-of-vbrcsr-------------------------------
+
+
+SUBROUTINE csrdns(nrow,ncol,a,ja,ia,dns,ndns,ierr)
+
+INTEGER, INTENT(IN)                      :: nrow
+INTEGER, INTENT(IN)                      :: ncol
+double complex, INTENT(IN)               :: a(*)
+INTEGER, INTENT(IN)                      :: ja(*)
+INTEGER, INTENT(IN)                      :: ia(*)
+double complex, INTENT(OUT)              :: dns(ndns,*)
+INTEGER, INTENT(IN OUT)                  :: ndns
+INTEGER, INTENT(OUT)                     :: ierr
+
+
+!-----------------------------------------------------------------------
+! Compressed Sparse Row    to    Dense
+!-----------------------------------------------------------------------
+
+! converts a row-stored sparse matrix into a densely stored one
+
+! On entry:
+!----------
+
+! nrow = row-dimension of a
+! ncol = column dimension of a
+! a,
+! ja,
+! ia    = input matrix in compressed sparse row format.
+!         (a=value array, ja=column array, ia=pointer array)
+! dns   = array where to store dense matrix
+! ndns = first dimension of array dns
+
+! on return:
+!-----------
+! dns   = the sparse matrix a, ja, ia has been stored in dns(ndns,*)
+
+! ierr  = integer error indicator.
+!         ierr .eq. 0  means normal return
+!         ierr .eq. i  means that the code has stopped when processing
+!         row number i, because it found a column number .gt. ncol.
+
+!-----------------------------------------------------------------------
+ierr = 0
+DO  i=1, nrow
+  DO  j=1,ncol
+    dns(i,j) = 0.0D0
+  END DO
+END DO
+
+DO  i=1,nrow
+  DO  k=ia(i),ia(i+1)-1
+    j = ja(k)
+    IF (j > ncol) THEN
+      ierr = i
+      RETURN
+    END IF
+    dns(i,j) = a(k)
+  END DO
+END DO
+RETURN
+!---- end of csrdns ----------------------------------------------------
+!-----------------------------------------------------------------------
+END SUBROUTINE csrdns
+!-----------------------------------------------------------------------
+
+
 end module
