@@ -64,6 +64,8 @@
         cvnspll = dcmplx(vnspll(:,:,ir), 0.d0) ! convert the potential to complex
 
         call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone,cvnspll,lmmaxd,qns(1,1,ir,1),lmmaxd,zero,vtqns,lmmaxd)
+        ! if the multiplication were the other way round, i.e. call zgemm('n','n',N,N,N,cone,qns(1,1,ir,1),N,cvnspll,N,zero,vtqns,N),
+        ! we could call dgemm('n','n',2*N,N,N,cone,qns(1,1,ir,1),N,vnspll(1,1,ir),N,zero,vtqns,N)
         
         do lm = 1, lmmaxd
           cder(:,lm,ir) = qzekdr(:,ir,1)*vtqns(:,lm)
@@ -106,14 +108,14 @@
 
       if (nsra == 2) then
         do ir = irmind, irmd
-          do lm = 1,lmmaxd
+          do lm = 1, lmmaxd
             cder(:,lm,ir) = qzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1) + qzekdr(:,ir,2)*vnspll(:,lm,ir)*qzlm(lm,ir,2)
             dder(:,lm,ir) = pzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1) + pzekdr(:,ir,2)*vnspll(:,lm,ir)*qzlm(lm,ir,2)
           enddo ! lm
         enddo ! ir
       else
         do ir = irmind, irmd
-          do lm = 1,lmmaxd
+          do lm = 1, lmmaxd
             cder(:,lm,ir) = qzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1)
             dder(:,lm,ir) = pzekdr(:,ir,1)*vnspll(:,lm,ir)*qzlm(lm,ir,1)
           enddo ! lm

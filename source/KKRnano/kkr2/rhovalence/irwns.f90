@@ -1,6 +1,6 @@
-subroutine irwns(cr,dr,efac,qns,vnspll,icst,ipan,ircut,nsra, &
-pzlm,qzlm,pzekdr,qzekdr,cder,cmat,dder,dmat, &
-irmind,irmd,ipand,lmmaxd)
+subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra,  &
+                  pzlm, qzlm, pzekdr, qzekdr, cder, cmat, dder, dmat,  &
+                  irmind, irmd, ipand, lmmaxd)
   implicit none
   !-----------------------------------------------------------------------
   !     determines the irregular non spherical wavefunctions in the n-th.
@@ -43,86 +43,66 @@ irmind,irmd,ipand,lmmaxd)
   !-----------------------------------------------------------------------
   !     modified by R. Zeller      Aug. 1994
   !-----------------------------------------------------------------------
-  !     .. Parameters ..
-  double complex CONE
-  parameter (CONE= (1.d0,0.d0))
-  !     ..
-  !     .. Scalar Arguments ..
-  integer icst,ipan,ipand,irmd,irmind,lmmaxd,nsra
-  !     ..
-  !     .. Array Arguments ..
-  double complex cder(lmmaxd,lmmaxd,irmind:irmd), &
-  cmat(lmmaxd,lmmaxd,irmind:irmd),cr(lmmaxd,lmmaxd), &
-  dder(lmmaxd,lmmaxd,irmind:irmd), &
-  dmat(lmmaxd,lmmaxd,irmind:irmd),dr(lmmaxd,lmmaxd), &
-  efac(lmmaxd),pzekdr(lmmaxd,irmind:irmd,2), &
-  pzlm(lmmaxd,irmind:irmd,2), &
-  qns(lmmaxd,lmmaxd,irmind:irmd,2), &
-  qzekdr(lmmaxd,irmind:irmd,2), &
-  qzlm(lmmaxd,irmind:irmd,2)
+  integer, intent(in) :: icst,ipan,ipand,irmd,irmind,lmmaxd,nsra
+  double complex, intent(out)   :: cder(lmmaxd,lmmaxd,irmind:irmd), dder(lmmaxd,lmmaxd,irmind:irmd)
+  double complex, intent(inout) :: cmat(lmmaxd,lmmaxd,irmind:irmd), dmat(lmmaxd,lmmaxd,irmind:irmd)
+  double complex, intent(out)   :: cr(lmmaxd,lmmaxd), dr(lmmaxd,lmmaxd)
+  double complex, intent(inout) :: qns(lmmaxd,lmmaxd,irmind:irmd,2)
+  double complex, intent(in)    :: efac(lmmaxd)
+  double complex, intent(in)    :: pzlm(lmmaxd,irmind:irmd,2)
+  double complex, intent(in)    :: pzekdr(lmmaxd,irmind:irmd,2), qzekdr(lmmaxd,irmind:irmd,2)
+  double complex, intent(in)    :: qzlm(lmmaxd,irmind:irmd,2)
 
-  double precision vnspll(lmmaxd,lmmaxd,irmind:irmd)
-  integer ircut(0:ipand)
-  !     ..
-  !     .. Local Scalars ..
-  double complex efac2
-  integer i,ir,irc1,j,lm1,lm2
-  !     ..
-  !     .. External Subroutines ..
-  external csinwd,wfint,wfint0
-  !     ..
+  double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
+  integer, intent(in) :: ircut(0:ipand)
+  
+  external :: csinwd, wfint, wfint0
+  double complex, parameter :: CONE=(1.d0,0.d0)
+  double complex :: efac2
+  integer :: i, ir, irc1,j, lm
+  
   irc1 = ircut(ipan)
 
-  do 70 i = 0,icst
+  do i = 0, icst
     !---> set up integrands for i-th born approximation
-    if (i.eq.0) then
-      call wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra,irmind, &
-      irmd,lmmaxd)
+    if (i == 0) then
+      call wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
     else
-      call wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind, &
-      irmd,lmmaxd)
-    end if
+      call wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
+    endif ! first Born iteration
 
     !---> call integration subroutines
     call csinwd(cder,cmat,lmmaxd**2,irmind,irmd,ipan,ircut)
     call csinwd(dder,dmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    do 20 ir = irmind,irc1
-      do 10 lm2 = 1,lmmaxd
-        dmat(lm2,lm2,ir) = dmat(lm2,lm2,ir) - CONE
-10    continue
-20  continue
+    do ir = irmind, irc1
+      do lm = 1, lmmaxd
+        dmat(lm,lm,ir) = dmat(lm,lm,ir) - CONE
+      enddo ! lm
+    enddo ! ir
 
     !---> calculate non sph. wft. in i-th born approximation
-    do 60 j = 1,nsra
-      do 50 ir = irmind,irc1
-        do 40 lm1 = 1,lmmaxd
-          do 30 lm2 = 1,lmmaxd
-            qns(lm1,lm2,ir,j) = cmat(lm1,lm2,ir)*pzlm(lm1,ir,j) - &
-            dmat(lm1,lm2,ir)*qzlm(lm1,ir,j)
-30        continue
-40      continue
-50    continue
-60  continue
-70 continue
+    do j = 1, nsra
+      do ir = irmind, irc1
+        do lm = 1, lmmaxd
+          qns(:,lm,ir,j) = cmat(:,lm,ir)*pzlm(:,ir,j) - dmat(:,lm,ir)*qzlm(:,ir,j)
+        enddo ! lm
+      enddo ! ir
+    enddo ! j
+    
+  enddo ! i
 
-   do 90 lm2 = 1,lmmaxd
-     !---> store c - and d - matrix
-     do 80 lm1 = 1,lmmaxd
-       cr(lm1,lm2) = cmat(lm1,lm2,irmind)
-       dr(lm1,lm2) = -dmat(lm1,lm2,irmind)
-80   continue
-90 continue
+  !---> store c - and d - matrix
+  cr(:,:) =  cmat(:,:,irmind)
+  dr(:,:) = -dmat(:,:,irmind)
 
-   !---> rescale with efac
-   do 130 j = 1,nsra
-     do 120 lm2 = 1,lmmaxd
-       efac2 = 1.d0/efac(lm2)
-       do 110 ir = irmind,irc1
-         do 100 lm1 = 1,lmmaxd
-           qns(lm1,lm2,ir,j) = qns(lm1,lm2,ir,j)*efac2
-100      continue
-110    continue
-120  continue
-130 continue
+  !---> rescale with efac
+  do j = 1, nsra
+    do lm = 1, lmmaxd
+      efac2 = 1.d0/efac(lm)
+      do ir = irmind, irc1
+        qns(:,lm,ir,j) = qns(:,lm,ir,j)*efac2
+      enddo ! ir
+    enddo ! lm
+  enddo ! j
 
-  end
+  endsubroutine
