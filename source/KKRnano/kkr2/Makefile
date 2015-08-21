@@ -22,12 +22,14 @@ FCFLAGS  = -mkl
 FCFLAGS += -module $(BUILDDIR)
 FCFLAGS += -I $(BUILDDIR)
 # FCFLAGS += -openmp
-# FCFLAGS += -C -traceback
+FCFLAGS += -C -traceback
 FCFLAGS += -gen-interfaces -warn interfaces
 FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
-FCFLAGS += -O3 -g -pg
-LDFLAGS  = -O3 -ipa -g -pg
+FCFLAGS += -O0 -g
+LDFLAGS  = -O0 -g
+# FCFLAGS += -O3 -g -pg
+# LDFLAGS  = -O3 -ipa -g -pg
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
@@ -271,5 +273,6 @@ total_energy_mod.o: BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGau
 vxcgga.o: XCFunctionals_mod.o
 kkr0_mod.o: ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o bzkint0.o testdimlat.o rcstop.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o pointgrp.o findgroup.o test.o bzkmesh.o symtaumat.o rinit.o cross.o latvec.o bzirr3d.o checkrmat.o calcrotmat.o errortrap.o taustruc.o rinvgj.o
 startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
+SingleSite_mod.o: SingleSiteHelpers_mod.o
 
 
