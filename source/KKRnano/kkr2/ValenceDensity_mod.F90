@@ -116,14 +116,11 @@ subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra,  &
   
   
   
-subroutine pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz,pns,qns,nsra, &
-vins,ipan,ircut,cleb,icleb,iend,loflm,lkonv, &
-ispin,ldau,nldau,lldau, &
-wmldau,wmldauav,ldaucut, &
-lmaxd, nspind, irmd, irnsd, ipand, ncleb)
+subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
+  vins, ipan, ircut, cleb, icleb, iend, loflm, lkonv, ispin, ldau, nldau, lldau, &
+  wmldau, wmldauav, ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb)
   use SingleSite_mod, only: regns
   use SingleSiteHelpers_mod, only: vllns, wftsca
-  
 
   integer lmaxd
   integer nspind
@@ -236,8 +233,8 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
     do ildau=1,nldau
       if (lldau(ildau) >= 0) then
         !
-        lmlo = lldau(ildau)*lldau(ildau) + 1
-        lmhi = (lldau(ildau)+1)*(lldau(ildau)+1)
+        lmlo = lldau(ildau)**2 + 1
+        lmhi = (lldau(ildau)+1)**2
         !
         do ir = irmind,irmd
           !
@@ -247,14 +244,12 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
             m2 = lm2 - lmlo + 1
             do lm1 = lmlo,lmhi
               m1 = lm1 - lmlo + 1
-              vnspll(lm1,lm2,ir) =vnspll(lm1,lm2,ir) &
-              +wmldau(m1,m2,ildau,ispin)*ldaucut(ir)
+              vnspll(lm1,lm2,ir) = vnspll(lm1,lm2,ir) + wmldau(m1,m2,ildau,ispin)*ldaucut(ir)
             enddo
             !
             ! ... and then subtract average from diag. elements
             !
-            vnspll(lm2,lm2,ir) =  vnspll(lm2,lm2,ir) &
-            - wmldauav(ildau) * ldaucut(ir)
+            vnspll(lm2,lm2,ir) = vnspll(lm2,lm2,ir) - wmldauav(ildau) * ldaucut(ir)
           enddo
         enddo
       endif
@@ -268,20 +263,15 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
   !
   !---> get wfts of same magnitude by scaling with efac
   !
-  call wftsca(drdi,efac,pz,qz,fz,sz,nsra,pzlm,qzlm,pzekdr,qzekdr, &
-  ek,loflm,irmind,irmd,lmaxd,lmmaxd)
+  call wftsca(drdi,efac,pz,qz,fz,sz,nsra,pzlm,qzlm,pzekdr,qzekdr, ek,loflm,irmind,irmd,lmaxd,lmmaxd)
   !
   !---> determine the irregular non sph. wavefunction
   !
-  call irwns(cr,dr,efac,qns,vnspll,icst,ipan,ircut,nsra,pzlm,qzlm, &
-  pzekdr,qzekdr,qns(1,1,irmind,1),cmat, &
-  qns(1,1,irmind,2),dmat,irmind,irmd,ipand,lmmaxd)
+  call irwns(cr,dr,efac,qns,vnspll,icst,ipan,ircut,nsra,pzlm,qzlm, pzekdr,qzekdr,qns(1,1,irmind,1),cmat, qns(1,1,irmind,2),dmat,irmind,irmd,ipand,lmmaxd)
   !
   !---> determine the regular non sph. wavefunction
   !
-  call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, &
-  pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, &
-  pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
+  call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
   !
 
 endsubroutine
@@ -339,8 +329,7 @@ endsubroutine
   !                               b.drittler   aug. 1988
   !-----------------------------------------------------------------------
 subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
-                fz, qz, sz, cleb, icleb, jend, iend, ekl, &
-                lmax, irmd, ncleb)
+                fz, qz, sz, cleb, icleb, jend, iend, ekl, lmax, irmd, ncleb)
   
   integer, intent(in) :: lmax, irmd, ncleb
   double complex, intent(in) :: df, ek
@@ -371,8 +360,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
   integer :: lmmaxd, lmaxd
   
   lmaxd = lmax
-  lmmaxd= (lmaxd+1)**2
-
+  lmmaxd = (lmaxd+1)**2
 
   !
   !---> set up array wr(lm1,lm2), use first vr
@@ -496,10 +484,9 @@ endsubroutine ! rhoin
 
 
 
-subroutine rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,thetas, &
-ifunm,lmsp,nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb, &
-icleb,jend,iend,ekl, &
-lmax, irmd, irnsd, irid, ipand, nfund, ncleb)
+subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
+  ifunm, lmsp, nsra, qns, pns, ar, cr, pz, fz, qz, sz, cleb, &
+  icleb, jend, iend, ekl, lmax, irmd, irnsd, irid, ipand, nfund, ncleb)
   !-----------------------------------------------------------------------
   !
   !     the charge density is developed in spherical harmonics :
@@ -628,19 +615,14 @@ lmax, irmd, irnsd, irid, ipand, nfund, ncleb)
    imt1 = ircut(1)
    !
 
-   call rhoout(cden,df,gmat,ek,pns,qns,rho2ns,thetas,ifunm,ipan, &
-   imt1,lmsp,cdenns,nsra,cleb,icleb,iend, &
-   lmax, irmd, irnsd, irid, nfund, ncleb)
+   call rhoout(cden,df,gmat,ek,pns,qns,rho2ns,thetas,ifunm,ipan, imt1,lmsp,cdenns,nsra,cleb,icleb,iend, lmax, irmd, irnsd, irid, nfund, ncleb)
 
-   !
-   call rhoin(ar,cden,cr,df,gmat,ek,rho2ns,irmind,nsra,efac,pz,fz, &
-   qz,sz,cleb,icleb,jend,iend,ekl, &
-   lmax, irmd, ncleb)
+   call rhoin(ar,cden,cr,df,gmat,ek,rho2ns,irmind,nsra,efac,pz,fz, qz,sz,cleb,icleb,jend,iend,ekl, lmax, irmd, ncleb)
 
    !
    !---> calculate complex density of states
    !
-   do l = 0,lmax
+   do l = 0, lmax
      !
      !---> call integration subroutine
      !

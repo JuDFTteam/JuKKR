@@ -22,14 +22,14 @@ FCFLAGS  = -mkl
 FCFLAGS += -module $(BUILDDIR)
 FCFLAGS += -I $(BUILDDIR)
 # FCFLAGS += -openmp
-FCFLAGS += -C -traceback
+# FCFLAGS += -C -traceback
 FCFLAGS += -gen-interfaces -warn interfaces
 FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
-FCFLAGS += -O0 -g
-LDFLAGS  = -O0 -g
-# FCFLAGS += -O3 -g -pg
-# LDFLAGS  = -O3 -ipa -g -pg
+# FCFLAGS += -O0 -g
+# LDFLAGS  = -O0 -g
+FCFLAGS += -O3 -g -pg
+LDFLAGS  = -O3 -ipa -g -pg
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
@@ -276,3 +276,4 @@ startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o
 SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 ValenceDensity_mod.o: SingleSite_mod.o SingleSiteHelpers_mod.o
+lloyd0_new_mod.o: ValenceDensity_mod.o
