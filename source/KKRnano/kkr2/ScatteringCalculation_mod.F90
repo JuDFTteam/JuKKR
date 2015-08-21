@@ -66,6 +66,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   use BCPOperator_mod, only: BCPOperator
   use KKROperator_mod, only: KKROperator
 
+  use SingleSiteRef_mod, only: TREF, GREF
+  
   integer, intent(in) :: iter
   type (CalculationData), intent(inout) :: calc_data
   type (KKRnanoParallel), intent(in)    :: my_mpi

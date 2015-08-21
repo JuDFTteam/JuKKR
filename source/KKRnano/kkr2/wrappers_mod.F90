@@ -25,6 +25,8 @@ subroutine RHOVAL_wrapper(atomdata, LdoRhoEF, ICST, NSRA, RHO2NS, R2NEF, DEN, ES
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
 
+  use ValenceDensity_mod, only: RHOVAL
+  
   logical, intent(in) :: LdoRhoEF
   integer, intent(in) :: ICST !< num. Born iterations
   integer, intent(in) :: NSRA !< flag scalar relativistic
@@ -92,6 +94,8 @@ subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, TMAT
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
   use GauntCoefficients_mod, only: GauntCoefficients
+  
+  use SingleSite_mod, only: CALCTMAT
 
   type (BasisAtom), intent(in) :: atomdata
   type (GauntCoefficients), intent(in) :: gaunts
@@ -151,6 +155,8 @@ subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, ICST, NSRA, gaunts, DTD
   use LDAUData_mod, only: LDAUData
   use GauntCoefficients_mod, only: GauntCoefficients
 
+  use SingleSite_mod, only: CALCDTMAT, calcdtmat_DeltaEz
+  
   type (BasisAtom), intent(in) :: atomdata
   type (GauntCoefficients), intent(in) :: gaunts
   type (EnergyMesh), intent(in) :: emesh

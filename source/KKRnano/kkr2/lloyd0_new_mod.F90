@@ -105,6 +105,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   communicator, &                         ! >
                   lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ipand, ncleb)
+  use ValenceDensity_mod, only: RHOVAL, RHOVAL0
 
   !USE_ARRAYTEST_MOD
 

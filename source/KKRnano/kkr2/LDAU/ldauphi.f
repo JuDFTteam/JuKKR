@@ -16,6 +16,7 @@ C * be called for each atom seperately.                               *
 C *                                  ph. mavropoulos, juelich 2004    *
 C *                                                                   *
 C *********************************************************************
+      use SingleSiteHelpers_mod, only: regsol
       IMPLICIT NONE
 
       INTEGER lmaxd
