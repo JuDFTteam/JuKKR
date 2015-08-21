@@ -84,11 +84,11 @@ module SingleSiteRef_mod
     endif
 
     ndim = lmmaxd*natom ! warning: ndim can be smaller than ngd=lmmaxd*naclsd
-    call calcfreegreens(gref, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, .false.)
+    call calcFreeGreens(gref, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derivative=.false.)
 
-    if (lly==1) then
-      call calcfreegreens(dgde, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, .true.)
-    endif
+    if (lly == 1) then
+      call calcFreeGreens(dgde, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derivative=.true.)
+    endif ! lly == 1
 
   ! construct right hand side of linear equation system for grefsy
   ! the first lmmaxd columns of gref are copied into gref0
@@ -99,7 +99,6 @@ module SingleSiteRef_mod
   ! --------------------------------------------------------------
 
     if (lly == 1) then
-
       do n2 = 1, natom
         site_lm_index2 = (n2-1)*lmmaxd + 1
         ! -dg_0/de * \delta t_ref    -- stored in gtref
@@ -119,8 +118,10 @@ module SingleSiteRef_mod
       call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2),1)
     enddo ! n2
 
-    if (lly == 1) dgtde(1:ngd,1:lmmaxd) = dgtde0(1:ngd,1:lmmaxd)
-
+    if (lly == 1) then
+      dgtde(1:ngd,1:lmmaxd) = dgtde0(1:ngd,1:lmmaxd)
+    enddo ! lly == 1
+      
     ! solve dyson-equation for reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
     lly_g0tr = zero
@@ -217,7 +218,6 @@ module SingleSiteRef_mod
 !>    @param     lly do lloyd's formula calculation 0=no/1=yes
   subroutine tref(e, vref, lmax, rmtref, trefll, dtrefll, lly)
     use SingleSiteHelpers_mod, only: bessel
-    implicit none
     integer, intent(in) :: lmax, lly ! lly==0 or lly==1
     double complex, intent(in) :: e
     double precision, intent(in) :: rmtref, vref
@@ -285,17 +285,17 @@ module SingleSiteRef_mod
       dBjw2(0) = -Bjw2(1)/b1
       dHws1(0) = -Hws1(1)/a1
 
-      do l = 1, lmax + 1
-        ! recursion formula
+      do l = 1, lmax+1
+        ! recursion formulae
         dBjw1(l) = (Bjw1(l-1) - (l+1)*Bjw1(l)/a1)/a1
         dBjw2(l) = (Bjw2(l-1) - (l+1)*Bjw2(l)/b1)/b1
         dHws1(l) = (Hws1(l-1) - (l+1)*Hws1(l)/a1)/a1
-      enddo ! 
+      enddo ! l
 
       ! scale
-      dBjw1(:) = 0.5d0*dBjw1(:)*rmtref**2
-      dBjw2(:) = 0.5d0*dBjw2(:)*rmtref**2
-      dHws1(:) = 0.5d0*dHws1(:)*rmtref**2
+      dBjw1(:) = dBjw1(:)*0.5d0*rmtref**2
+      dBjw2(:) = dBjw2(:)*0.5d0*rmtref**2
+      dHws1(:) = dHws1(:)*0.5d0*rmtref**2
 
       do l = 0, lmax
         a1 = sqrt(e)*Bjw1(l+1)*Bjw2(l) - sqrt(e-vref)*Bjw1(l)*Bjw2(l+1)
@@ -322,7 +322,6 @@ module SingleSiteRef_mod
 
 !------------------------------------------------------------------------------
   subroutine gref(e,alatc,iend, cleb,rcls,icleb,loflm,nacls, trefll,dtrefll,grefn,dgrefn, lly_g0tr, lmaxd, naclsd, ncleb, lly)
-    implicit none
     integer, intent(in) :: lmaxd, naclsd, ncleb, lly
     double complex, intent(in) :: e
     double precision, intent(in) :: alatc
@@ -389,7 +388,6 @@ module SingleSiteRef_mod
 !>    @author: ???, commented by E. Rabel, Nov 2011
 
   subroutine grefsy(gtmat,gmat,ipvt,ndim,dgtde, lly_g0tr, naclsd, lmmaxd, lly)
-    implicit none
 !
 !---> solve the dyson equation to get reference green function
 !

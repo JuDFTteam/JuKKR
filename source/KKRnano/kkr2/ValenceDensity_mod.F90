@@ -3,234 +3,197 @@ module ValenceDensity_mod
   private
   public :: rhoval, rhoval0
   
-  double complex, parameter :: cone=(1.d0,0.d0), zero=(0.d0,0.d0)
+  double complex, parameter :: cone=(1.d0,0.d0), zero=(0.d0,0.d0), ci=(0.d0,1.d0)
+  double precision, parameter :: cvlight=274.0720442d0
   
   contains
 
-subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra,  &
-                  pzlm, qzlm, pzekdr, qzekdr, cder, cmat, dder, dmat,  &
-                  irmind, irmd, ipand, lmmaxd)
-  use SingleSiteHelpers_mod, only: csinwd, wfint, wfint0
-  !-----------------------------------------------------------------------
-  !     determines the irregular non spherical wavefunctions in the n-th.
-  !       born approximation ( n given by input parameter icst ) .
-  !
-  !
-  !     using the wave functions pz and qz ( regular and irregular
-  !       solution ) of the spherically averaged potential , the ir-
-  !       regular wavefunction qns is determined by
-  !
-  !           qns(ir,lm1,lm2) = cr(ir,lm1,lm2)*pz(ir,l1)
-  !
-  !                                   + dr(ir,lm1,lm2)*qz(ir,l1)
-  !
-  !      the matrices cr and dr are determined by integral equations
-  !        containing qns and only the non spherical contributions of
-  !        the potential , stored in vinspll . these integral equations
-  !        are solved iteratively with born approximation up to given n.
-  !
-  !     the original way of writing the cr and dr matrices in the equa-
-  !        tion above caused numerical troubles . therefore here are used
-  !        rescaled cr and dr matrices (compare subroutine wftsca):
-  !
-  !              ~
-  !              cr(ir,lm1,lm2) = sqrt(e)**(l1+l2)
-  !                             * cr(ir,lm1,lm2)/((2*l1-1)!!*(2*l2-1)!!)
-  !
-  !              ~
-  !              dr(ir,lm1,lm2) = sqrt(e)**(l2-l1)
-  !                             * dr(ir,lm1,lm2)*((2*l1-1)!!/(2*l2-1)!!)
-  !
-  !     attention :  the sign of the dr matrix is changed to reduce the
-  !     ===========  number of floating point operations
-  !
-  !     modified for the use of shape functions
-  !
-  !                              (see notes by b.drittler)
-  !
-  !                                b.drittler   mar.  1989
-  !-----------------------------------------------------------------------
-  !     modified by R. Zeller      Aug. 1994
-  !-----------------------------------------------------------------------
-  integer, intent(in) :: icst,ipan,ipand,irmd,irmind,lmmaxd,nsra
-  double complex, intent(out)   :: cder(lmmaxd,lmmaxd,irmind:irmd), dder(lmmaxd,lmmaxd,irmind:irmd)
-  double complex, intent(inout) :: cmat(lmmaxd,lmmaxd,irmind:irmd), dmat(lmmaxd,lmmaxd,irmind:irmd)
-  double complex, intent(out)   :: cr(lmmaxd,lmmaxd), dr(lmmaxd,lmmaxd)
-  double complex, intent(inout) :: qns(lmmaxd,lmmaxd,irmind:irmd,2)
-  double complex, intent(in)    :: efac(lmmaxd)
-  double complex, intent(in)    :: pzlm(lmmaxd,irmind:irmd,2)
-  double complex, intent(in)    :: pzekdr(lmmaxd,irmind:irmd,2), qzekdr(lmmaxd,irmind:irmd,2)
-  double complex, intent(in)    :: qzlm(lmmaxd,irmind:irmd,2)
+  subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra,  &
+                    pzlm, qzlm, pzekdr, qzekdr, cder, cmat, dder, dmat,  &
+                    irmind, irmd, ipand, lmmaxd)
+    use SingleSiteHelpers_mod, only: csinwd, wfint, wfint0
+    !-----------------------------------------------------------------------
+    !     determines the irregular non spherical wavefunctions in the n-th.
+    !       born approximation ( n given by input parameter icst ) .
+    !
+    !
+    !     using the wave functions pz and qz ( regular and irregular
+    !       solution ) of the spherically averaged potential , the ir-
+    !       regular wavefunction qns is determined by
+    !
+    !           qns(ir,lm1,lm2) = cr(ir,lm1,lm2)*pz(ir,l1)
+    !
+    !                                   + dr(ir,lm1,lm2)*qz(ir,l1)
+    !
+    !      the matrices cr and dr are determined by integral equations
+    !        containing qns and only the non spherical contributions of
+    !        the potential , stored in vinspll . these integral equations
+    !        are solved iteratively with born approximation up to given n.
+    !
+    !     the original way of writing the cr and dr matrices in the equa-
+    !        tion above caused numerical troubles . therefore here are used
+    !        rescaled cr and dr matrices (compare subroutine wftsca):
+    !
+    !              ~
+    !              cr(ir,lm1,lm2) = sqrt(e)**(l1+l2)
+    !                             * cr(ir,lm1,lm2)/((2*l1-1)!!*(2*l2-1)!!)
+    !
+    !              ~
+    !              dr(ir,lm1,lm2) = sqrt(e)**(l2-l1)
+    !                             * dr(ir,lm1,lm2)*((2*l1-1)!!/(2*l2-1)!!)
+    !
+    !     attention :  the sign of the dr matrix is changed to reduce the
+    !     ===========  number of floating point operations
+    !
+    !     modified for the use of shape functions
+    !
+    !                              (see notes by b.drittler)
+    !
+    !                                b.drittler   mar.  1989
+    !-----------------------------------------------------------------------
+    !     modified by r. zeller      aug. 1994
+    !-----------------------------------------------------------------------
+    integer, intent(in) :: icst,ipan,ipand,irmd,irmind,lmmaxd,nsra
+    double complex, intent(out)   :: cder(lmmaxd,lmmaxd,irmind:irmd), dder(lmmaxd,lmmaxd,irmind:irmd)
+    double complex, intent(inout) :: cmat(lmmaxd,lmmaxd,irmind:irmd), dmat(lmmaxd,lmmaxd,irmind:irmd)
+    double complex, intent(out)   :: cr(lmmaxd,lmmaxd), dr(lmmaxd,lmmaxd)
+    double complex, intent(inout) :: qns(lmmaxd,lmmaxd,irmind:irmd,2)
+    double complex, intent(in)    :: efac(lmmaxd)
+    double complex, intent(in)    :: pzlm(lmmaxd,irmind:irmd,2)
+    double complex, intent(in)    :: pzekdr(lmmaxd,irmind:irmd,2), qzekdr(lmmaxd,irmind:irmd,2)
+    double complex, intent(in)    :: qzlm(lmmaxd,irmind:irmd,2)
 
-  double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
-  integer, intent(in) :: ircut(0:ipand)
-  
-  double complex :: efac2
-  integer :: i, ir, irc1,j, lm
-  
-  irc1 = ircut(ipan)
+    double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
+    integer, intent(in) :: ircut(0:ipand)
+    
+    double complex :: efac2
+    integer :: i, ir, irc1,j, lm
+    
+    irc1 = ircut(ipan)
 
-  do i = 0, icst
-    !---> set up integrands for i-th born approximation
-    if (i == 0) then
-      call wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
-    else
-      call wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
-    endif ! first Born iteration
+    do i = 0, icst
+      !---> set up integrands for i-th born approximation
+      if (i == 0) then
+        call wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
+      else
+        call wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
+      endif ! first born iteration
 
-    !---> call integration subroutines
-    call csinwd(cder,cmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    call csinwd(dder,dmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    do ir = irmind, irc1
-      do lm = 1, lmmaxd
-        dmat(lm,lm,ir) = dmat(lm,lm,ir) - CONE
-      enddo ! lm
-    enddo ! ir
-
-    !---> calculate non sph. wft. in i-th born approximation
-    do j = 1, nsra
+      !---> call integration subroutines
+      call csinwd(cder,cmat,lmmaxd**2,irmind,irmd,ipan,ircut)
+      call csinwd(dder,dmat,lmmaxd**2,irmind,irmd,ipan,ircut)
       do ir = irmind, irc1
         do lm = 1, lmmaxd
-          qns(:,lm,ir,j) = cmat(:,lm,ir)*pzlm(:,ir,j) - dmat(:,lm,ir)*qzlm(:,ir,j)
+          dmat(lm,lm,ir) = dmat(lm,lm,ir) - cone
         enddo ! lm
       enddo ! ir
+
+      !---> calculate non sph. wft. in i-th born approximation
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm = 1, lmmaxd
+            qns(:,lm,ir,j) = cmat(:,lm,ir)*pzlm(:,ir,j) - dmat(:,lm,ir)*qzlm(:,ir,j)
+          enddo ! lm
+        enddo ! ir
+      enddo ! j
+      
+    enddo ! i
+
+    !---> store c- and d- matrix
+    cr(:,:) =  cmat(:,:,irmind)
+    dr(:,:) = -dmat(:,:,irmind)
+
+    !---> rescale with efac
+    do j = 1, nsra
+      do lm = 1, lmmaxd
+        efac2 = 1.d0/efac(lm)
+        do ir = irmind, irc1
+          qns(:,lm,ir,j) = qns(:,lm,ir,j)*efac2
+        enddo ! ir
+      enddo ! lm
     enddo ! j
-    
-  enddo ! i
 
-  !---> store c - and d - matrix
-  cr(:,:) =  cmat(:,:,irmind)
-  dr(:,:) = -dmat(:,:,irmind)
-
-  !---> rescale with efac
-  do j = 1, nsra
-    do lm = 1, lmmaxd
-      efac2 = 1.d0/efac(lm)
-      do ir = irmind, irc1
-        qns(:,lm,ir,j) = qns(:,lm,ir,j)*efac2
-      enddo ! ir
-    enddo ! lm
-  enddo ! j
-
-  endsubroutine
+  endsubroutine irwns
   
   
   
 subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
   vins, ipan, ircut, cleb, icleb, iend, loflm, lkonv, ispin, ldau, nldau, lldau, &
   wmldau, wmldauav, ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb)
-  use SingleSite_mod, only: regns
+  use singlesite_mod, only: regns
   use SingleSiteHelpers_mod, only: vllns, wftsca
 
-  integer lmaxd
-  integer nspind
-  integer irmd
-  integer irnsd
-  integer ipand
-  integer ncleb
-  !     ..
-  !     .. Scalar Arguments ..
-  double complex     ek
-  integer            icst,iend,ipan,lkonv,nsra,nldau,ispin
-  logical            ldau
-  !     ..
-  !     .. Array Arguments ..
+  integer, intent(in) :: lmaxd, nspind, irmd, irnsd, ipand, ncleb
+  double complex, intent(in) :: ek
+  integer, intent(in) :: icst,iend,ipan,lkonv,nsra,nldau,ispin
+  logical, intent(in) :: ldau
+  double complex, intent(out) :: ar((lmaxd+1)**2,(lmaxd+1)**2)
+  double complex, intent(out) :: cr((lmaxd+1)**2,(lmaxd+1)**2), dr((lmaxd+1)**2,(lmaxd+1)**2)
+  double complex, intent(in) :: fz(irmd,0:lmaxd)
+  double complex, intent(in) :: sz(irmd,0:lmaxd)
+  double complex, intent(inout) :: pns((lmaxd+1)**2,(lmaxd+1)**2,(irmd-irnsd):irmd,2)
+  double complex, intent(inout) :: qns((lmaxd+1)**2,(lmaxd+1)**2,(irmd-irnsd):irmd,2)
+  double complex, intent(in) :: pz(irmd,0:lmaxd)
+  double complex, intent(in) :: qz(irmd,0:lmaxd)
 
-  double complex     ar((lmaxd+1)**2,(lmaxd+1)**2)
-  double complex     cr((lmaxd+1)**2,(lmaxd+1)**2)
-  double complex     fz(irmd,0:lmaxd)
+  double precision, intent(in) :: cleb(ncleb,2)
+  double precision, intent(in) :: drdi(irmd)
+  double precision, intent(in) :: vins(irmd-irnsd:irmd,(2*lmaxd+1)**2)
+  double precision, intent(in) :: wmldau(2*lmaxd+1,2*lmaxd+1,lmaxd+1,nspind)
+  double precision, intent(in) :: ldaucut(irmd)
 
-  !     DOUBLE COMPLEX     PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
-  double complex     pns((lmaxd+1)**2,(lmaxd+1)**2, &
-  (irmd-irnsd):irmd,2)
+  integer, intent(in) :: icleb(ncleb,3), ircut(0:ipand), loflm(*)
+  integer, intent(in) :: lldau(lmaxd+1)
 
-  double complex     pz(irmd,0:lmaxd)
-  !     DOUBLE COMPLEX     QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
-  double complex     qns((lmaxd+1)**2,(lmaxd+1)**2, &
-  (irmd-irnsd):irmd,2)
-
-  double complex     qz(irmd,0:lmaxd)
-  double complex     sz(irmd,0:lmaxd)
-
-  double precision   cleb(ncleb,2)
-  double precision   drdi(irmd)
-  !     DOUBLE PRECISION   VINS(IRMIND:IRMD,LMPOTD)
-  double precision   vins(irmd-irnsd:irmd,(2*lmaxd+1)**2)
-  !     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  double precision   wmldau(2*lmaxd+1,2*lmaxd+1,lmaxd+1,nspind)
-  double precision   ldaucut(irmd)
-
-  integer            icleb(ncleb,3),ircut(0:ipand),loflm(*)
-  integer            lldau(lmaxd+1)
-  !     ..
-  !     .. Local Scalars ..
-  integer            i,ir,irc1,lm1,lm2,lmmkonv,m1,m2, &
-  lmlo,lmhi,ildau
-  !     ..
-  !     .. Local Arrays ..
-  !     DOUBLE COMPLEX     CMAT(LMMAXD,LMMAXD,IRMIND:IRMD)
+  integer            ir,irc1,lm1,lm2,lmmkonv,m1,m2, lmlo,lmhi,ildau
   double complex     cmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
-  !     DOUBLE COMPLEX     DMAT(LMMAXD,LMMAXD,IRMIND:IRMD)
   double complex     dmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
-  !     DOUBLE COMPLEX     DR(LMMAXD,LMMAXD)
-  double complex     dr((lmaxd+1)**2, (lmaxd+1)**2)
-  !     DOUBLE COMPLEX     EFAC(LMMAXD),PZEKDR(LMMAXD,IRMIND:IRMD,2)
   double complex     efac((lmaxd+1)**2)
   double complex     pzekdr((lmaxd+1)**2,irmd-irnsd:irmd,2)
-  !     DOUBLE COMPLEX     PZLM(LMMAXD,IRMIND:IRMD,2)
   double complex     pzlm((lmaxd+1)**2,(irmd-irnsd):irmd,2)
-  !     DOUBLE COMPLEX     QZEKDR(LMMAXD,IRMIND:IRMD,2)
   double complex     qzekdr((lmaxd+1)**2,(irmd-irnsd):irmd,2)
-  !     DOUBLE COMPLEX     QZLM(LMMAXD,IRMIND:IRMD,2)
-  double complex     qzlm((lmaxd+1)**2, (irmd-irnsd):irmd,2)
-  !     DOUBLE COMPLEX     TMATLL(LMMAXD,LMMAXD)
-  double complex     tmatll((lmaxd+1)**2, (lmaxd+1)**2)
-  !     DOUBLE PRECISION   VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
-  double precision   vnspll((lmaxd+1)**2, (lmaxd+1)**2, &
-  irmd-irnsd:irmd)
+  double complex     qzlm((lmaxd+1)**2,(irmd-irnsd):irmd,2)
+  double complex     tmatll((lmaxd+1)**2,(lmaxd+1)**2)
+  double precision :: vnspll((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
 
   double precision   wmldauav(lmaxd+1)
-  
-
   integer             lmmaxd
   integer             irmind
 
-  irmind= irmd-irnsd
-  lmmaxd= (lmaxd+1)**2
+  irmind = irmd-irnsd
+  lmmaxd = (lmaxd+1)**2
 
   irc1 = ircut(ipan)
-  !
 
-  ! calculate V_LL' potential
-  ! V_{LL'} = \sum_{L''} C_{L L' L''} V_{L''}
-  call vllns(vnspll,vins,cleb,icleb,iend, &
-  lmaxd, irmd, irnsd, ncleb)
+  ! calculate v_ll' potential
+  ! v_{ll'} = \sum_{l''} c_{l l' l''} v_{l''}
+  call vllns(vnspll,vins,cleb,icleb,iend, lmaxd, irmd, irnsd, ncleb)
 
 
   if (lkonv /= lmaxd) then
-    lmmkonv = (lkonv+1)* (lkonv+1)
-    do lm1 = 1,lmmaxd
-      do lm2 = lmmkonv + 1,lmmaxd
-        do i = irmind,irmd
-          vnspll(lm2,lm1,i) = 0.0d0
-          vnspll(lm1,lm2,i) = 0.0d0
-        end do
-      end do
-    end do
+    lmmkonv = (lkonv+1)**2
+    do lm1 = 1, lmmaxd
+      do lm2 = lmmkonv + 1, lmmaxd
+        do ir = irmind, irmd
+          vnspll(lm2,lm1,ir) = 0.d0
+          vnspll(lm1,lm2,ir) = 0.d0
+        enddo ! ir
+      enddo
+    enddo
   else
     lmmkonv = lmmaxd
-  end if
+  endif
 
   !-----------------------------------------------------------------------
-  ! LDA+U
-  ! Add WLDAU to non-spherical porential VINS in case of LDA+U
-  ! Use the average wldau (=wldauav) and the deviation
-  ! of wldau from this. Use the deviation in the Born series
+  ! lda+u
+  ! add wldau to non-spherical porential vins in case of lda+u
+  ! use the average wldau (=wldauav) and the deviation
+  ! of wldau from this. use the deviation in the born series
   ! for the non-spherical wavefunction, while the average is
   ! used for the spherical wavefunction.
   !
   if (ldau) then
-    do ildau=1,nldau
+    do ildau = 1, nldau
       if (lldau(ildau) >= 0) then
         !
         lmlo = lldau(ildau)**2 + 1
@@ -238,25 +201,25 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
         !
         do ir = irmind,irmd
           !
-          ! -> First add wldau to all elements ...
+          ! -> first add wldau to all elements ...
           !
           do lm2 = lmlo,lmhi
             m2 = lm2 - lmlo + 1
             do lm1 = lmlo,lmhi
               m1 = lm1 - lmlo + 1
               vnspll(lm1,lm2,ir) = vnspll(lm1,lm2,ir) + wmldau(m1,m2,ildau,ispin)*ldaucut(ir)
-            enddo
+            enddo ! lm1
             !
             ! ... and then subtract average from diag. elements
             !
-            vnspll(lm2,lm2,ir) = vnspll(lm2,lm2,ir) - wmldauav(ildau) * ldaucut(ir)
-          enddo
-        enddo
-      endif
-    enddo
-  endif
+            vnspll(lm2,lm2,ir) = vnspll(lm2,lm2,ir) - wmldauav(ildau)*ldaucut(ir)
+          enddo ! lm2
+        enddo ! ir
+      endif ! lldau
+    enddo ! ildau
+  endif ! ldau
   !
-  ! LDA+U
+  ! lda+u
   !-----------------------------------------------------------------------
 
 
@@ -272,9 +235,11 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
   !---> determine the regular non sph. wavefunction
   !
   call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
-  !
 
-endsubroutine
+endsubroutine pnsqns
+
+
+
   !-----------------------------------------------------------------------
   !
   !     calculates the charge density inside r(irmin) in case
@@ -296,8 +261,7 @@ endsubroutine
   !
   !           the irregular one (ir < irmin) :
   !
-  !              qns(ir,lm1,lm2) = pz(ir,l1) * cr(lm1,lm2)
-  !                                    + qz(ir,l1) * dr(lm1,lm2)
+  !              qns(ir,lm1,lm2) = pz(ir,l1) * cr(lm1,lm2) + qz(ir,l1) * dr(lm1,lm2)
   !
   !          where pz is the regular and qz is the irregular
   !          wavefct of the spherically symmetric part of the
@@ -349,7 +313,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
   integer, intent(in) :: icleb(ncleb,3)
   integer, intent(in) :: jend((2*lmax+1)**2,0:lmax,0:lmax)
 
-  double complex, external :: zdotu ! from BLAS
+  double complex, external :: zdotu ! from blas
   double complex, parameter :: zero = (0.d0, 0.d0)
   double complex :: efac1,efac2,ffz,gmatl,ppz,v1,v2
   double precision :: c0ll
@@ -411,7 +375,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
         wf(2:irc1,l1,l2) = pz(2:irc1,l1)*pz(2:irc1,l2)
       enddo ! l2
     enddo ! l1
-  end if
+  endif
   !
   !---> first calculate only the spherically symmetric contribution
   !     remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
@@ -440,7 +404,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
         cden(ir,l) = ppz*(gmatl*ppz + ekl(l)*qz(ir,l))
         rho2ns(ir,1) = rho2ns(ir,1) + c0ll*dimag(df*cden(ir,l))
       enddo ! ir
-    end if
+    endif
 
   enddo ! l
 
@@ -473,7 +437,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
           !
           gmatl = df*gmatl
           rho2ns(2:irc1,lm3) = rho2ns(2:irc1,lm3) + dimag(gmatl*wf(2:irc1,l1,l2))
-        end if
+        endif
 
       enddo ! l2
     enddo ! l1
@@ -539,28 +503,28 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
   integer ipand
   integer nfund
 
-  !     INTEGER IRMIND
-  !     PARAMETER (IRMIND=IRMD-IRNSD)
-  !     INTEGER LMPOTD,LMMAXD
-  !     PARAMETER (LMPOTD= (LPOTD+1)**2) ! LMPOTD= (2*LMAX+1)**2
-  !     PARAMETER (LMMAXD= (LMAXD+1)**2)
-  !     INTEGER LMAXD1
-  !     PARAMETER (LMAXD1= LMAXD+1)
+  !     integer irmind
+  !     parameter (irmind=irmd-irnsd)
+  !     integer lmpotd,lmmaxd
+  !     parameter (lmpotd= (lpotd+1)**2) ! lmpotd= (2*lmax+1)**2
+  !     parameter (lmmaxd= (lmaxd+1)**2)
+  !     integer lmaxd1
+  !     parameter (lmaxd1= lmaxd+1)
   !     ..
-  !     .. Scalar Arguments ..
+  !     .. scalar arguments ..
   double complex df,ek
   integer iend,ipan,nsra
   !     ..
-  !     .. Array Arguments ..
-  !     DOUBLE COMPLEX AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),DEN(0:LMAXD1),
-  !    +               EKL(0:LMAXD),FZ(IRMD,0:LMAXD),GMAT(LMMAXD,LMMAXD),
-  !    +               PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD),
-  !    +               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),QZ(IRMD,0:LMAXD),
-  !    +               SZ(IRMD,0:LMAXD)
-  !     DOUBLE PRECISION CLEB(*),DRDI(IRMD),RHO2NS(IRMD,LMPOTD),
-  !    +                 THETAS(IRID,NFUND)
-  !     INTEGER ICLEB(NCLEB,3),IFUNM(*),IRCUT(0:IPAND),
-  !    +        JEND(LMPOTD,0:LMAXD,0:LMAXD),LMSP(*)
+  !     .. array arguments ..
+  !     double complex ar(lmmaxd,lmmaxd),cr(lmmaxd,lmmaxd),den(0:lmaxd1),
+  !    +               ekl(0:lmaxd),fz(irmd,0:lmaxd),gmat(lmmaxd,lmmaxd),
+  !    +               pns(lmmaxd,lmmaxd,irmind:irmd,2),pz(irmd,0:lmaxd),
+  !    +               qns(lmmaxd,lmmaxd,irmind:irmd,2),qz(irmd,0:lmaxd),
+  !    +               sz(irmd,0:lmaxd)
+  !     double precision cleb(*),drdi(irmd),rho2ns(irmd,lmpotd),
+  !    +                 thetas(irid,nfund)
+  !     integer icleb(ncleb,3),ifunm(*),ircut(0:ipand),
+  !    +        jend(lmpotd,0:lmaxd,0:lmaxd),lmsp(*)
 
   double complex ar((lmax+1)**2,(lmax+1)**2)
   double complex cr((lmax+1)**2,(lmax+1)**2)
@@ -574,10 +538,10 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
   double complex qz(irmd,0:lmax)
   double complex sz(irmd,0:lmax)
 
-  !     DOUBLE PRECISION CLEB(*),DRDI(IRMD),RHO2NS(IRMD,LMPOTD),
-  !    +                 THETAS(IRID,NFUND)
-  !     INTEGER ICLEB(NCLEB,3),IFUNM(*),IRCUT(0:IPAND),
-  !    +        JEND(LMPOTD,0:LMAXD,0:LMAXD),LMSP(*)
+  !     double precision cleb(*),drdi(irmd),rho2ns(irmd,lmpotd),
+  !    +                 thetas(irid,nfund)
+  !     integer icleb(ncleb,3),ifunm(*),ircut(0:ipand),
+  !    +        jend(lmpotd,0:lmaxd,0:lmaxd),lmsp(*)
 
   double precision cleb(*)
   double precision drdi(irmd)
@@ -602,8 +566,8 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
   !
   !---> set up efac(lm) = sqrt(e))**l/(2l - 1)!!
   !
-  efac(1) = 1.0d0
-  v1 = 1.0d0
+  efac(1) = 1.d0
+  v1 = 1.d0
   do l = 1, lmax
     v1 = v1*ek/dble(2*l-1)
     do m = -l, l
@@ -632,7 +596,7 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
    if (ipan > 1) then
      call csimpk(cdenns,denns,ipan,ircut,drdi)
      den(lmax+1) = denns
-   end if
+   endif
 
  endsubroutine
  
@@ -680,7 +644,7 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm,  &
   double precision, intent(in) :: thetas(irid,nfund)
   integer, intent(in) :: icleb(ncleb,3), ifunm(*), lmsp(*)
 
-  external :: zgemm ! from BLAS
+  external :: zgemm ! from blas
   double complex :: cltdf
   double precision :: c0ll
   integer :: ifun, ir, j, l1, lm1, lm2, lm3, m1
@@ -699,14 +663,14 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm,  &
   
     qnsi(1:lmmaxd,1:lmmaxd) = qns(1:lmmaxd,1:lmmaxd,ir,1)
 
-    call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,1),lmmaxd,gmat,lmmaxd,ek,qnsi,lmmaxd)
-    call zgemm('N','T',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,1),lmmaxd,qnsi,lmmaxd,zero,wr(:,1,ir),lmmaxd)
+    call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,1),lmmaxd,gmat,lmmaxd,ek,qnsi,lmmaxd)
+    call zgemm('n','t',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,1),lmmaxd,qnsi,lmmaxd,zero,wr(:,1,ir),lmmaxd)
 
     if (nsra == 2) then
       qnsi(1:lmmaxd,1:lmmaxd) = qns(1:lmmaxd,1:lmmaxd,ir,2)
 
-      call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,2),lmmaxd,gmat,lmmaxd,ek,qnsi,lmmaxd)
-      call zgemm('N','T',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,2),lmmaxd,qnsi,lmmaxd,cone,wr(:,1,ir),lmmaxd)
+      call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,2),lmmaxd,gmat,lmmaxd,ek,qnsi,lmmaxd)
+      call zgemm('n','t',lmmaxd,lmmaxd,lmmaxd,cone,pns(:,1,ir,2),lmmaxd,qnsi,lmmaxd,cone,wr(:,1,ir),lmmaxd)
 
     endif ! nsra
 
@@ -765,426 +729,333 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm,  &
 
   enddo ! j
 
-end subroutine rhoout
+endsubroutine rhoout
 
 
 
-subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
-                  ISPIN,NSPIN, &
-                  EZ,WEZ,DRDI,R,IRMIN, &
-                  VINS,VISP,ZAT,IPAN,IRCUT, &
-                  THETAS,IFUNM,LMSP,RHO2NS,R2NEF,DEN, &
-                  ESPV,CLEB,LOFLM,ICLEB,IEND,JEND, &
-                  GMATN, &                                 ! input
-                  LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &       ! input
-                  DMATLDAU, &                              ! output
-                  ! new parameters after inc.p removal
-                  iemxd, &
-                  lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
-  use SingleSiteHelpers_mod, only: CRADWF, WFMESH
+  subroutine rhoval(ldorhoef,icst,ielast,nsra, &
+                    ispin,nspin, &
+                    ez,wez,drdi,r,irmin, &
+                    vins,visp,zat,ipan,ircut, &
+                    thetas,ifunm,lmsp,rho2ns,r2nef,den, &
+                    espv,cleb,loflm,icleb,iend,jend, &
+                    gmatn, &                                 ! input
+                    ldau,nldau,lldau,phildau,wmldau, &       ! input
+                    dmatldau, &                              ! output
+                    iemxd, lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+    use SingleSiteHelpers_mod, only: cradwf, wfmesh
 
-  integer :: iemxd
-  integer :: lmaxd
-  integer :: irmd
-  integer :: ncleb
-  integer :: irnsd
-  integer :: irid
-  integer :: ipand
-  integer :: nfund
+    integer, intent(in) :: iemxd, lmaxd, irmd, ncleb, irnsd, irid, ipand, nfund
+    double precision, intent(in) :: zat
+    integer, intent(in) :: icst, ielast, iend, ipan, ispin, nspin, nsra, irmin, nldau
+    logical, intent(in) :: ldorhoef, ldau
+    !     ..
+    !     .. array arguments ..
+    !     double complex     den(0:lmaxd1,iemxd),ez(iemxd),
+    !    +                   wez(iemxd),
+    !    +                   phildau(irmd,lmaxd1),
+    !    +                   dmatldau(mmaxd,mmaxd,nspind,lmaxd1)
+    !     double precision   cleb(ncleb,2),drdi(irmd),
+    !    +                   espv(0:lmaxd1,1),
+    !    +                   r(irmd),rho2ns(irmd,lmpotd,2),
+    !    +                   r2nef(irmd,lmpotd,2),   ! at fermi energy
+    !    +                   thetas(irid,nfund),vins(irmind:irmd,lmpotd),
+    !    +                   visp(irmd),
+    !    +                   wmldau(mmaxd,mmaxd,nspind,lmaxd1)
+    !     integer            icleb(ncleb,3),ifunm(lmxspd),ircut(0:ipand),
+    !    +                   jend(lmpotd,0:lmaxd,0:lmaxd),
+    !    +                   lmsp(lmxspd),loflm(lm2d),
+    !    +                   lldau(lmaxd1)
 
-  double precision, parameter :: CVLIGHT=274.0720442D0
-  !     ..
-  !     .. Scalar Arguments ..
-  double precision ::   ZAT
-  integer ::            ICST,IELAST,IEND,IPAN,ISPIN,NSPIN,NSRA, &
-  IRMIN,NLDAU
-  logical ::            LDORHOEF,LDAU
-  !     ..
-  !     .. Array Arguments ..
-  !     DOUBLE COMPLEX     DEN(0:LMAXD1,IEMXD),EZ(IEMXD),
-  !    +                   WEZ(IEMXD),
-  !    +                   PHILDAU(IRMD,LMAXD1),
-  !    +                   DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  !     DOUBLE PRECISION   CLEB(NCLEB,2),DRDI(IRMD),
-  !    +                   ESPV(0:LMAXD1,1),
-  !    +                   R(IRMD),RHO2NS(IRMD,LMPOTD,2),
-  !    +                   R2NEF(IRMD,LMPOTD,2),   ! at fermi energy
-  !    +                   THETAS(IRID,NFUND),VINS(IRMIND:IRMD,LMPOTD),
-  !    +                   VISP(IRMD),
-  !    +                   WMLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  !     INTEGER            ICLEB(NCLEB,3),IFUNM(LMXSPD),IRCUT(0:IPAND),
-  !    +                   JEND(LMPOTD,0:LMAXD,0:LMAXD),
-  !    +                   LMSP(LMXSPD),LOFLM(LM2D),
-  !    +                   LLDAU(LMAXD1)
+    double complex, intent(in) :: den(0:lmaxd+1,iemxd)
+    double complex, intent(in) :: ez(iemxd)
+    double complex, intent(in) :: wez(iemxd)
+    double complex, intent(in) :: phildau(irmd,lmaxd+1)
+    double complex, intent(in) :: dmatldau(2*lmaxd+1,2*lmaxd+1,nspin,lmaxd+1)
+    double complex, intent(in) :: gmatn((lmaxd+1)**2,(lmaxd+1)**2,iemxd,nspin)
 
-  double complex     DEN(0:LMAXD+1,IEMXD)
-  double complex     EZ(IEMXD)
-  double complex     WEZ(IEMXD)
-  double complex     PHILDAU(IRMD,LMAXD+1)
-  double complex     DMATLDAU(2*LMAXD+1,2*LMAXD+1,NSPIN,LMAXD+1)
+    double precision, intent(in) :: cleb(ncleb,2)
+    double precision, intent(in) :: drdi(irmd)
+    double precision, intent(out) :: espv(0:lmaxd+1,1)
+    double precision, intent(in) :: r(irmd)
+    double precision, intent(out) :: rho2ns(irmd,(2*lmaxd+1)**2,2)
+    double precision, intent(out) :: r2nef(irmd,(2*lmaxd+1)**2,2)
+    double precision, intent(in) :: thetas(irid,nfund)
+    double precision, intent(in) :: vins(irmd-irnsd:irmd,(2*lmaxd+1)**2)
+    double precision, intent(in) :: visp(irmd)
+    double precision, intent(in) :: wmldau(2*lmaxd+1,2*lmaxd+1,lmaxd+1,nspin)
 
-  double complex    GMATN((LMAXD+1)**2,(LMAXD+1)**2,IEMXD,NSPIN)
+    integer, intent(in) :: icleb(ncleb,3)
+    integer, intent(in) :: ifunm((4*lmaxd+1)**2)
+    integer, intent(in) :: ircut(0:ipand)
+    integer, intent(in) :: jend((2*lmaxd+1)**2,0:lmaxd,0:lmaxd)
+    integer, intent(in) :: lmsp((4*lmaxd+1)**2)
+    integer, intent(in) :: loflm((2*lmaxd+1)**2)
+    integer, intent(in) :: lldau(lmaxd+1)
 
-  double precision ::   CLEB(NCLEB,2)
-  double precision ::   DRDI(IRMD)
-  double precision ::   ESPV(0:LMAXD+1,1)
-  double precision ::   R(IRMD)
-  double precision ::   RHO2NS(IRMD,(2*LMAXD+1)**2,2)
-  double precision ::   R2NEF(IRMD,(2*LMAXD+1)**2,2)
-  double precision ::   THETAS(IRID,NFUND)
-  double precision ::   VINS(IRMD-IRNSD:IRMD,(2*LMAXD+1)**2)
-  double precision ::   VISP(IRMD)
-  double precision ::   WMLDAU(2*LMAXD+1,2*LMAXD+1,LMAXD+1,NSPIN)
-
-  integer ::            ICLEB(NCLEB,3)
-  integer ::            IFUNM((4*LMAXD+1)**2)
-  integer ::            IRCUT(0:IPAND)
-  integer ::            JEND((2*LMAXD+1)**2,0:LMAXD,0:LMAXD)
-  integer ::            LMSP((4*LMAXD+1)**2)
-  integer ::            LOFLM((2*LMAXD+1)**2)
-  integer ::            LLDAU(LMAXD+1)
-
-  !     .. Local Scalars ..
-  double complex     DF,ERYD,EK
-  integer ::            IDIM,IE,IR,L,LM1,LM2, &
-  LMLO,LMHI,MMAX,IM,ILDAU
-  !     ..
-  !     .. Local Arrays ..
-  !     DOUBLE COMPLEX     ALPHA(0:LMAXD),AR(LMMAXD,LMMAXD),
-  !    +                   DR(LMMAXD,LMMAXD),
-  !    +                   CR(LMMAXD,LMMAXD),
-  !    +                   EKL(0:LMAXD),FZ(IRMD,0:LMAXD),
-  !    +                   GMATLL(LMMAXD,LMMAXD),
-  !    +                   GMATN(LMMAXD,LMMAXD,IEMXD,NSPIND),
-  !    +                   PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-  !    +                   PZ(IRMD,0:LMAXD),
-  !    +                   QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),
-  !    +                   QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD),
-  !    +                   TMAT(0:LMAXD)
-  !     DOUBLE PRECISION   RS(IRMD,0:LMAXD),S(0:LMAXD),
-  !    +                   LDAUCUT(IRMD),
-  !    +                   WMLDAUAV(LMAXD1)
-  !     DOUBLE COMPLEX     DENDUM(0:LMAXD1)
-
-  ! The following arrays are local
-  double complex    ALPHA(0:LMAXD)
-  double complex    AR((LMAXD+1)**2,(LMAXD+1)**2)
-  double complex    DR((LMAXD+1)**2,(LMAXD+1)**2)
-  double complex    CR((LMAXD+1)**2,(LMAXD+1)**2)
-  double complex    EKL(0:LMAXD)
-  double complex    FZ(IRMD,0:LMAXD)
-  double complex    GMATLL((LMAXD+1)**2,(LMAXD+1)**2)
-
-  double complex    QZ(IRMD,0:LMAXD)
-  double complex    SZ(IRMD,0:LMAXD)
-  double complex    TMAT(0:LMAXD)
-  double complex    PZ(IRMD,0:LMAXD)
-
-  double precision ::   RS(IRMD,0:LMAXD)
-  double precision ::   S(0:LMAXD)
-  double precision ::   LDAUCUT(IRMD)
-  double precision ::   WMLDAUAV(LMAXD+1)
-
-  double complex     DENDUM(0:LMAXD+1)
-
-  ! dynamically allocate large arrays
-  ! DOUBLE COMPLEX    PNS((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD,2)
-  ! DOUBLE COMPLEX    QNS((LMAXD+1)**2,(LMAXD+1)**2,IRMD-IRNSD:IRMD,2)
-  double complex, dimension(:,:,:,:), allocatable :: PNS
-  double complex, dimension(:,:,:,:), allocatable :: QNS
-
-  external :: DAXPY,DSCAL ! from BLAS
-
-  integer :: memory_stat
-  logical :: memory_fail
-
-  integer ::             LMMAXD
-  integer ::             LMAXD1
-  integer ::             NSPIND
-  integer ::             LMPOTD
-
-  LMPOTD = (2*LMAXD+1)**2
-  LMMAXD= (LMAXD+1)**2
-  LMAXD1= LMAXD+1
-  NSPIND = NSPIN
-
-  !------------------- Array allocations ---------------------------------
-  memory_stat = 0
-  memory_fail = .false.
-
-  allocate(PNS(LMMAXD,LMMAXD,IRMD-IRNSD:IRMD,2), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(QNS(LMMAXD,LMMAXD,IRMD-IRNSD:IRMD,2), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-
-  if (memory_fail .eqv. .true.) then
-    write(*,*) "RHOVAL: FATAL Error, failure to allocate memory."
-    write(*,*) "        Probably out of memory."
-    stop
-  end if
-
-  !-----------------------------------------------------------------------
-  ! Initialise local variables to be on the safe side
-  EK = zero
-  PNS = zero
-  QNS = zero
-  ALPHA = zero
-  AR = zero
-  DR = zero
-  CR = zero
-  EKL = zero
-  FZ = zero
-  !GMATLL = zero initialised further down
-  QZ = zero
-  SZ = zero
-  TMAT = zero
-  PZ = zero
-  RS = 0.0d0
-  S = 0.0d0
-  LDAUCUT = 0.0d0
-  WMLDAUAV = 0.0d0
-  DENDUM = zero
-
-  !-----------------------------------------------------------------------
-  ! LDAU
-
-  if (LDAU) then
-    do ILDAU=1,NLDAU
-      WMLDAUAV(ILDAU) = 0.D0
-      LMLO = LLDAU(ILDAU)*LLDAU(ILDAU) + 1
-      LMHI = (LLDAU(ILDAU)+1)*(LLDAU(ILDAU)+1)
-      MMAX = LMHI - LMLO + 1
-      do IM = 1,MMAX
-        WMLDAUAV(ILDAU)=WMLDAUAV(ILDAU)+WMLDAU(IM,IM,ILDAU,ISPIN)
-      enddo
-      WMLDAUAV(ILDAU) = WMLDAUAV(ILDAU)/DBLE(MMAX)
-    enddo
+    external :: daxpy, dscal ! from blas
     
-    ! -> Note: Application if WLDAU makes the potential discontinuous.
-    !    A cutoff can be used if necessary to make the potential continuous
-    !    for example (array bounds should be adjusted):
-    
-!    if(TEST('CUTOFF  ')) then
-!      do IR = 1,IRMD
-!        LDAUCUT(IR) = ( 1.D0 + DEXP( 20.D0*(R(IR)-R(349)) ) ) * &
-!        ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
-!        LDAUCUT(IR) = 1D0/LDAUCUT(IR)
-!      enddo
-!    else
-!      do IR = 1,IRMD
-!        LDAUCUT(IR) = 1.D0
-!      enddo
-!    endif
-  endif
+    double complex :: df, eryd, ek
+    integer :: idm, ie, ir, l, lm1, lm2, lmlo, lmhi, mmax, im, ildau
+    !     ..
+    !     .. local arrays ..
+    !     double complex     alpha(0:lmaxd),ar(lmmaxd,lmmaxd),
+    !    +                   dr(lmmaxd,lmmaxd),
+    !    +                   cr(lmmaxd,lmmaxd),
+    !    +                   ekl(0:lmaxd),fz(irmd,0:lmaxd),
+    !    +                   gmatll(lmmaxd,lmmaxd),
+    !    +                   gmatn(lmmaxd,lmmaxd,iemxd,nspind),
+    !    +                   pns(lmmaxd,lmmaxd,irmind:irmd,2),
+    !    +                   pz(irmd,0:lmaxd),
+    !    +                   qns(lmmaxd,lmmaxd,irmind:irmd,2),
+    !    +                   qz(irmd,0:lmaxd),sz(irmd,0:lmaxd),
+    !    +                   tmat(0:lmaxd)
+    !     double precision   rs(irmd,0:lmaxd),s(0:lmaxd),
+    !    +                   ldaucut(irmd),
+    !    +                   wmldauav(lmaxd1)
+    !     double complex     dendum(0:lmaxd1)
 
-  ! LDAU
-  !-----------------------------------------------------------------------
+    ! the following arrays are local
+    double complex :: alpha(0:lmaxd)
+    double complex :: ar((lmaxd+1)**2,(lmaxd+1)**2)
+    double complex :: dr((lmaxd+1)**2,(lmaxd+1)**2)
+    double complex :: cr((lmaxd+1)**2,(lmaxd+1)**2)
+    double complex :: ekl(0:lmaxd)
+    double complex :: fz(irmd,0:lmaxd)
+    double complex :: gmatll((lmaxd+1)**2,(lmaxd+1)**2)
 
+    double complex :: qz(irmd,0:lmaxd)
+    double complex :: sz(irmd,0:lmaxd)
+    double complex :: tmat(0:lmaxd)
+    double complex :: pz(irmd,0:lmaxd)
 
+    double precision :: rs(irmd,0:lmaxd)
+    double precision :: s(0:lmaxd)
+    double precision :: ldaucut(irmd)
+    double precision :: wmldauav(lmaxd+1)
+    double complex :: dendum(0:lmaxd+1)
 
-  do LM1 = 1,LMPOTD
-    do IR = 1,IRMD
-      RHO2NS(IR,LM1,ISPIN) = 0.0D0
-      R2NEF(IR,LM1,ISPIN) = 0.0D0
-    end do
-  end do
+    ! dynamically allocate large arrays
+    ! double complex    pns((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd,2)
+    ! double complex    qns((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd,2)
+    double complex, allocatable :: pns(:,:,:,:), qns(:,:,:,:)
 
-  ESPV = 0.0D0
+    integer :: memory_stat
+    integer :: lmmaxd, lmaxd1, nspind, lmpotd
 
-  do IE = 1,IELAST
+    lmpotd = (2*lmaxd+1)**2
+    lmmaxd= (lmaxd+1)**2
+    lmaxd1= lmaxd+1
+    nspind = nspin
 
-    do LM2 = 1,LMMAXD
-      do LM1 = 1,LMMAXD
-        GMATLL(LM1,LM2) = GMATN(LM1,LM2,IE,ISPIN)
-      end do
-    end do
-
-    ERYD = EZ(IE)
-    DF = WEZ(IE)/DBLE(NSPIN)
-    
-    !=======================================================================
-    call WFMESH(ERYD,EK,CVLIGHT,NSRA,ZAT,R,S,RS,IRCUT(IPAN),IRMD,LMAXD)
-
-    call CRADWF(ERYD,EK,NSRA,ALPHA,IPAN,IRCUT,CVLIGHT,RS,S, &
-                PZ,FZ,QZ,SZ,TMAT,VISP,DRDI,R,ZAT, &
-                LDAU,NLDAU,LLDAU,WMLDAUAV,LDAUCUT, &
-                lmaxd, irmd, ipand)
-    !-----------------------------------------------------------------------
-    ! non-spherical
-    
-    call PNSQNS(AR,CR,DR,DRDI,EK,ICST,PZ,QZ,FZ,SZ, &
-                PNS,QNS,NSRA,VINS,IPAN,IRCUT, &
-                CLEB,ICLEB,IEND,LOFLM,LMAXD,ISPIN, &
-                LDAU,NLDAU,LLDAU, &
-                WMLDAU,WMLDAUAV,LDAUCUT, &
-                lmaxd, nspind, irmd, irnsd, ipand, ncleb)
-
-
-    do L = 0,LMAXD
-      EKL(L) = EK*DBLE(2*L+1)
-    end do
-    !-----------------------------------------------------------------------
-    call RHONS(DEN(0,IE),DF,DRDI,GMATLL,EK, &
-               RHO2NS(1,1,ISPIN),IPAN,IRCUT,THETAS,IFUNM,LMSP, &
-               NSRA,QNS,PNS,AR,CR,PZ,FZ,QZ,SZ,CLEB(1,1),ICLEB, &
-               JEND,IEND,EKL, &
-               lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
-
-    !-----------------------------------------------------------------------
-
-
-    do L = 0,LMAXD1
-      ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE)*DF)
-    end do
-    
-    ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    !     get the charge at the Fermi energy (IELAST)
-    !     call with the energy weight CONE --> not overwrite DF
-    !          with the dummy DENDUM       --> not overwrite DEN
-    
-    if ( (IE == IELAST) .and. (LDORHOEF) ) then
-      call RHONS(DENDUM,CONE,DRDI,GMATLL,EK, &
-                 R2NEF(1,1,ISPIN),IPAN,IRCUT,THETAS,IFUNM,LMSP, &
-                 NSRA,QNS,PNS,AR,CR,PZ,FZ,QZ,SZ,CLEB(1,1),ICLEB, &
-                 JEND,IEND,EKL, &
-                 lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
-    end if
-
-    
-    if (LDAU .and. NLDAU >= 1) then
-      call LDAUDMAT(DF,PZ,QZ,PNS,QNS,AR,CR,DR,GMATLL, &
-                    IPAN,IRCUT,DRDI,EK, &
-                    IRMIN,LLDAU,PHILDAU,NLDAU, &
-                    DMATLDAU,ISPIN, &
-                    lmaxd, nspind, irmd, irnsd, ipand)
-        
+    allocate(pns(lmmaxd,lmmaxd,irmd-irnsd:irmd,2), qns(lmmaxd,lmmaxd,irmd-irnsd:irmd,2), stat=memory_stat)
+    if (memory_stat /= 0) then
+      write(*,*) "rhoval: fatal error, failure to allocate memory, probably out of memory."
+      stop
     endif
 
+    !-----------------------------------------------------------------------
+    ! initialise local variables to be on the safe side
+    ek = zero
+    pns = zero
+    qns = zero
+    alpha = zero
+    ar = zero
+    dr = zero
+    cr = zero
+    ekl = zero
+    fz = zero
+    !gmatll = zero initialised further down
+    qz = zero
+    sz = zero
+    tmat = zero
+    pz = zero
+    rs = 0.d0
+    s = 0.d0
+    ldaucut = 0.d0
+    wmldauav = 0.d0
+    dendum = zero
 
-  end do
+    !-----------------------------------------------------------------------
+    ! ldau
 
-  ! this should really be separated into another routine
-  if (ISPIN == 2) then
-    IDIM = IRMD*LMPOTD
-    call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)
-    call DAXPY(IDIM,-0.5D0,RHO2NS(1,1,1),1,RHO2NS(1,1,2),1)
-    call DAXPY(IDIM,1.0D0,RHO2NS(1,1,2),1,RHO2NS(1,1,1),1)
+    if (ldau) then
+      do ildau = 1, nldau
+        wmldauav(ildau) = 0.d0
+        lmlo = lldau(ildau)**2 + 1
+        lmhi = (lldau(ildau)+1)**2
+        mmax = lmhi - lmlo + 1
+        do im = 1, mmax
+          wmldauav(ildau) = wmldauav(ildau) + wmldau(im,im,ildau,ispin)
+        enddo ! im
+        wmldauav(ildau) = wmldauav(ildau)/dble(mmax)
+      enddo ! ildau
+      
+      ! -> note: application if wldau makes the potential discontinuous.
+      !    a cutoff can be used if necessary to make the potential continuous
+      !    for example (array bounds should be adjusted):
+        
+    !    if(test('cutoff  ')) then
+    !      do ir = 1,irmd
+    !        ldaucut(ir) = ( 1.d0 + dexp( 20.d0*(r(ir)-r(349)) ) ) * &
+    !        ( 1.d0 + dexp( 20.d0*(r(276)-r(ir)) ) )
+    !        ldaucut(ir) = 1d0/ldaucut(ir)
+    !      enddo
+    !    else
+    !      do ir = 1,irmd
+    !        ldaucut(ir) = 1.d0
+    !      enddo
+    !    endif
+    endif
+
+    ! ldau
+    !-----------------------------------------------------------------------
+
+    rho2ns(:,:,ispin) = 0.d0
+    r2nef(:,:,ispin) = 0.d0
+
+    espv = 0.d0
+
+    do ie = 1, ielast
+
+      gmatll(:,:) = gmatn(:,:,ie,ispin)
+
+      eryd = ez(ie)
+      df = wez(ie)/dble(nspin)
+      
+      !=======================================================================
+      call wfmesh(eryd,ek,cvlight,nsra,zat,r,s,rs,ircut(ipan),irmd,lmaxd)
+
+      call cradwf(eryd,ek,nsra,alpha,ipan,ircut,cvlight,rs,s, pz,fz,qz,sz,tmat,visp,drdi,r,zat, &
+                  ldau,nldau,lldau,wmldauav,ldaucut, lmaxd, irmd, ipand)
+      !-----------------------------------------------------------------------
+      ! non-spherical
+      
+      call pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz, pns,qns,nsra,vins,ipan,ircut, &
+                  cleb,icleb,iend,loflm,lmaxd,ispin, ldau,nldau,lldau, &
+                  wmldau,wmldauav,ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb)
+
+      do l = 0, lmaxd
+        ekl(l) = ek*dble(2*l+1)
+      enddo ! l
+      !-----------------------------------------------------------------------
+      call rhons(den(0,ie),df,drdi,gmatll,ek, rho2ns(1,1,ispin),ipan,ircut,thetas,ifunm,lmsp, &
+                 nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb(1,1),icleb, jend,iend,ekl, lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+      !-----------------------------------------------------------------------
+
+
+      do l = 0, lmaxd1
+        espv(l,1) = espv(l,1) + dimag(eryd*den(l,ie)*df)
+      enddo ! l
+      
+      ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      !     get the charge at the fermi energy (ielast)
+      !     call with the energy weight cone --> not overwrite df
+      !          with the dummy dendum       --> not overwrite den
+      
+      if ( (ie == ielast) .and. (ldorhoef) ) then
+        call rhons(dendum,cone,drdi,gmatll,ek, r2nef(1,1,ispin),ipan,ircut,thetas,ifunm,lmsp, nsra,qns,pns,ar,cr,pz,fz,qz,sz, & 
+                   cleb(1,1),icleb, jend,iend,ekl, lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+      endif
+
+      
+      if (ldau .and. nldau >= 1) then
+        call ldaudmat(df,pz,qz,pns,qns,ar,cr,dr,gmatll, ipan,ircut,drdi,ek, irmin,lldau,phildau,nldau, dmatldau,ispin, lmaxd, nspind, irmd, irnsd, ipand)
+      endif
+
+    enddo ! ie
+
+    ! this should really be separated into another routine
+    if (ispin == 2) then
+      idm = irmd*lmpotd
+      call dscal(idm,2.d0,rho2ns(1,1,1),1)
+      call daxpy(idm,-.5d0,rho2ns(1,1,1),1,rho2ns(1,1,2),1)
+      call daxpy(idm,1.d0,rho2ns(1,1,2),1,rho2ns(1,1,1),1)
+      
+      ! --> do the same at the fermi energy
+      
+      call dscal(idm,2.d0,r2nef(1,1,1),1)
+      call daxpy(idm,-.5d0,r2nef(1,1,1),1,r2nef(1,1,2),1)
+      call daxpy(idm,1.d0,r2nef(1,1,2),1,r2nef(1,1,1),1)
+    endif ! ispin == 2
+
+    deallocate(pns, qns)
     
-    ! --> do the same at the Fermi energy
-    
-    call DSCAL(IDIM,2.D0,R2NEF(1,1,1),1)
-    call DAXPY(IDIM,-0.5D0,R2NEF(1,1,1),1,R2NEF(1,1,2),1)
-    call DAXPY(IDIM,1.0D0,R2NEF(1,1,2),1,R2NEF(1,1,1),1)
-  end if
-
-  !------------------- Array deallocations ---------------------------------
-  deallocate(PNS)
-  deallocate(QNS)
-!-----------------------------------------------------------------------
-
-end subroutine RHOVAL
-
-
-subroutine rhoval0(ez,wez,drdi,r,ipan,ircut, &
-thetas,dos0,dos1, &
-lmaxd, irmd, irid, ipand, nfund)
-  use SingleSiteHelpers_mod, only: beshan
+  endsubroutine rhoval
   
-  !
-  !     .. Parameters ..
 
-  integer lmaxd
-  integer irmd
-  integer irid
-  integer ipand
-  integer nfund
+  subroutine rhoval0(ez, wez, drdi, r, ipan, ircut, thetas, dos0, dos1, lmaxd, irmd, irid, ipand, nfund)
+    use SingleSiteHelpers_mod, only: beshan
+    integer, intent(in) :: lmaxd, irmd, irid, ipand, nfund, ipan
+    double complex, intent(in) :: ez,wez
+    double complex, intent(inout) :: dos0, dos1
+    double precision, intent(in) :: drdi(irmd), r(irmd), thetas(irid,nfund)
+    integer, intent(in) :: ircut(0:ipand)
 
-  double complex CONE,zero,CI
-  parameter ( CONE=(1.d0,0.d0),zero=(0.d0,0.d0),CI=(0.d0,1.d0) )
-  !     ..
-  !     .. Scalar Arguments ..
-  integer ipan
-  double complex ez,wez,dos0,dos1
-  !     ..
-  !     .. Array Arguments ..
-  double precision drdi(irmd), &
-  r(irmd), &
-  thetas(irid,nfund)
-  integer ircut(0:ipand)
-  !     ..
-  !     .. Local Scalars ..
-  double complex ek,ciek,denl
-  double precision c0ll
-  integer ir,l,l1,imt1
-  !     ..
-  !     .. Local Arrays ..
-  double complex pz(irmd,0:lmaxd),qz(irmd,0:lmaxd)
-  double complex bessjw(0:lmaxd+1)
-  double complex bessyw(0:lmaxd+1)
-  double complex hankws(0:lmaxd+1)
-  double complex cden0(irmd,0:lmaxd+1)
-  double complex cden1(irmd,0:lmaxd+1)
+    external :: csimpk ! todo: replace by a function
+    
+    double complex ek,ciek,denl
+    double precision c0ll
+    integer ir,l,l1,imt1
+    double complex pz(irmd,0:lmaxd),qz(irmd,0:lmaxd)
+    double complex bessjw(0:lmaxd+1)
+    double complex bessyw(0:lmaxd+1)
+    double complex hankws(0:lmaxd+1)
+    double complex cden0(irmd,0:lmaxd+1)
+    double complex cden1(irmd,0:lmaxd+1)
 
-  integer lmaxd1
+    integer lmaxd1
 
-  lmaxd1 = lmaxd+1
-  !     ..
-  !
-  ek = sqrt(ez)
-  c0ll = 1.0d0/sqrt(16.0d0*atan(1.0d0))
-  ciek=(0.0d0,1.0d0)*ek
-  !
-  ! initialize arrays ...
-  !
-  do ir = 1, irmd
+    lmaxd1 = lmaxd+1
+
+    ek = sqrt(ez)
+    c0ll = 1.d0/sqrt(16.d0*atan(1.d0))
+    ciek = (0.d0,1.d0)*ek
+
+    ! initialize arrays ...
+    cden0 = zero
+    cden1 = zero
+
+    do ir = 2, irmd
+      call beshan(hankws,bessjw,bessyw,r(ir)*ek,lmaxd1)
+      do l = 0, lmaxd
+        pz(ir,l) = bessjw(l)*r(ir)
+        qz(ir,l) = (bessyw(l) - ci*bessjw(l))*r(ir)
+      enddo ! l
+    enddo ! ir
+
+    imt1 = ircut(1)
     do l1 = 0, lmaxd1
-      cden0(ir,l1) = zero
-      cden1(ir,l1) = zero
-    enddo
-  enddo
-  !
-  !
-  !=======================================================================
-  do ir = 2,irmd
-    call beshan(hankws,bessjw,bessyw,r(ir)*ek,lmaxd1)
-    do l = 0,lmaxd
-      pz(ir,l) = bessjw(l)*r(ir)
-      qz(ir,l) = (bessyw(l) - CI*bessjw(l))*r(ir)
-    enddo
-  enddo
+      cden0(1,l1) = (0.d0,0.d0)
+      cden1(1,l1) = (0.d0,0.d0)
+    enddo ! l1
 
-  imt1=ircut(1)
-  do l1 = 0,lmaxd1
-    cden0(1,l1) = (0.0d0,0.0d0)
-    cden1(1,l1) = (0.0d0,0.0d0)
-  end do
+    do ir = 2, irmd
+      cden0(ir,0) = ek*pz(ir,0)*qz(ir,0)
+      cden1(ir,0) = ek*pz(ir,0)**2*(0.d0,-1.d0)
+      cden1(ir,lmaxd1) = ciek*r(ir)**2
+    enddo ! ir
 
-  do ir = 2,irmd
-    cden0(ir,0) = ek*pz(ir,0)*qz(ir,0)
-    cden1(ir,0) = ek*pz(ir,0)**2*(0.d0,-1.d0)
-    cden1(ir,lmaxd1) = ciek*r(ir)**2
-  end do
+    do l1 = 1, lmaxd
+      do ir = 2, irmd
+        cden0(ir,l1) = ek*pz(ir,l1)*qz(ir,l1)*(2*l1+1)
+        cden1(ir,l1) = ek*pz(ir,l1)**2*(0.d0,-1.d0)*(2*l1+1)
+      enddo ! ir
+    enddo ! l1
 
-  do l1 = 1,lmaxd
-    do ir = 2,irmd
-      cden0(ir,l1) = ek*pz(ir,l1)*qz(ir,l1)*(l1+l1+1)
-      cden1(ir,l1) = ek*pz(ir,l1)**2*(0.d0,-1.d0)*(l1+l1+1)
-    end do  
-  end do
+    do l1 = 0, lmaxd1
+      if (ipan > 1) then
+        do ir = imt1 + 1, irmd
+          cden0(ir,l1) = cden0(ir,l1)*thetas(ir-imt1,1)*c0ll
+          cden1(ir,l1) = cden1(ir,l1)*thetas(ir-imt1,1)*c0ll
+        enddo ! ir
+      endif ! ipan > 1
+      call csimpk(cden0(1,l1),denl,ipan,ircut,drdi)
+      dos0 = dos0 + wez*denl
+      call csimpk(cden1(1,l1),denl,ipan,ircut,drdi)
+      dos1 = dos1 + wez*denl
+    enddo ! l1
 
-  do l1 = 0,lmaxd1
-    if (ipan > 1) then
-      do ir = imt1 + 1,irmd
-        cden0(ir,l1) = cden0(ir,l1)*thetas(ir-imt1,1)*c0ll
-        cden1(ir,l1) = cden1(ir,l1)*thetas(ir-imt1,1)*c0ll
-      end do
-    end if
-    call csimpk(cden0(1,l1),denl,ipan,ircut,drdi)
-    dos0 = dos0 + wez*denl
-    call csimpk(cden1(1,l1),denl,ipan,ircut,drdi)
-    dos1 = dos1 + wez*denl
-  end do
-
-endsubroutine
+  endsubroutine ! rhoval0
 
 endmodule ValenceDensity_mod

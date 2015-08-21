@@ -994,7 +994,6 @@ module SingleSiteHelpers_mod
     external :: zgemm ! from BLAS
     integer :: ir, lm
     double complex :: cvnspll(lmmaxd,lmmaxd), vtqns(lmmaxd,lmmaxd)
-    double complex, parameter :: zero=(0.d0,0.d0), cone=(1.d0,0.d0)
     
     do ir = irmind, irmd
     
