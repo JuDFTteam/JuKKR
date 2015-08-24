@@ -60,7 +60,7 @@
      +                DALPHALL(LMMAXSO,LMMAXSO), ! LLY
      +                ALPHA0(LMMAXSO,LMMAXSO), ! LLY
      +                AUX(LMMAXSO,LMMAXSO)         ! LLY
-       DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:,:)!,DTMAT_OUT(:,:,:), ! LLY
+       DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:)!,DTMAT_OUT(:,:,:), ! LLY
 !      +                                TRAL_OUT(:) ! LLY
          
        INTEGER JLK_INDEX(2*LMMAXSO)
@@ -96,7 +96,11 @@
         ENDDO
        ENDDO
 cc set up the non-spherical ll' matrix for potential VLL'
-       USE_SRATRICK=1
+       IF (NSRA.EQ.2) THEN
+        USE_SRATRICK=1
+       ELSEIF (NSRA.EQ.1) THEN
+        USE_SRATRICK=0
+       ENDIF
        ALLOCATE(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW))
        ALLOCATE(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        VNSPLL0=CZERO
@@ -118,7 +122,7 @@ c initial allocate
        ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
 !        ALLOCATE(TMAT_OUT(LMMAXSO,LMMAXSO,IELAST))
-       ALLOCATE(ALPHASPH(2*(LMAX+1),0:nth-1)) ! LLY
+       ALLOCATE(ALPHASPH(2*(LMAX+1))) ! LLY
 !        ALLOCATE(DTMAT_OUT(LMMAXSO,LMMAXSO,IELAST)) ! LLY
 !        ALLOCATE(TRAL_OUT(IELAST)) ! LLY
           
@@ -162,9 +166,9 @@ c energy loop
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,tmat_out)
 !$omp& shared(tmatsph)
-!$omp& shared(lly,deltae,alphasph,tralpha,dtmat_out,tral_out)
-!$omp& private(alpha0,alphall,tmat0,aux,dtmatll,dalphall) 
-!$omp& private(ideriv,ipiv) 
+!$omp& shared(lly,deltae,dtmat_out,tral_out)
+!$omp& private(tralpha,alpha0,alphall,tmat0,alphasph,dtmatll,dalphall) 
+!$omp& private(aux,ideriv,ipiv) 
        DO IE=1,IELAST
          ie_end = IELAST
          ie_num = ie
@@ -188,7 +192,7 @@ c         ERYD = EZ(IE)
         IDERIV=0
         IF (LLY.NE.0) IDERIV=1
         DO SIGNDE=-IDERIV,IDERIV,2
-         ERYD = EZ(IE)+SIGNDE*DELTAE/2.D0 ! LLY
+         ERYD = EZ(IE)+DFLOAT(SIGNDE)*DELTAE/2.D0 ! LLY
 !$omp critical
         WRITE(6,*) 'energy:',IE,'',ERYD
         !write(*,*) 'nested omp?',omp_get_nested()
@@ -227,11 +231,12 @@ cc these are spherical hankel and bessel functions
      +                         GMATPREFACTOR)
 cc using spherical potential as reference
         IF (USE_SRATRICK.EQ.1) THEN
+        TMATSPH(:,ith)=CZERO
          CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),
      +                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),
-     +           ALPHASPH(:,ith),USE_SRATRICK)
+     +                ALPHASPH,USE_SRATRICK)
         ENDIF
 cc calculate the tmat and wavefunctions
         RLL(:,:,:,ith)=CZERO
@@ -260,8 +265,10 @@ c add spherical contribution of tmatrix
           DO LM1=1,LMMAXSO
            TMAT0(LM1,LM1)=TMAT0(LM1,LM1)+
      +                               TMATSPH(JLK_INDEX(LM1),ith)
-           DO LM2=1,LMMAXSO
-            ALPHA0(LM1,LM2)=ALPHASPH(JLK_INDEX(LM1),ith)*
+          ENDDO
+          DO LM2=1,LMMAXSO
+           DO LM1=1,LMMAXSO
+            ALPHA0(LM1,LM2)=ALPHASPH(JLK_INDEX(LM1))*
      +                                ALPHA0(LM1,LM2)        ! LLY
            ENDDO
           ENDDO
@@ -280,8 +287,10 @@ c add spherical contribution of tmatrix
          IF (LLY.NE.0) THEN
           DO LM1=1,LMMAXSO
            DO LM2=1,LMMAXSO
-            DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)+SIGNDE*TMAT0(LM1,LM2) ! LLY
-            DALPHALL(LM1,LM2)=DALPHALL(LM1,LM2)+SIGNDE*ALPHA0(LM1,LM2) ! LLY
+            DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)+
+     +                  DFLOAT(SIGNDE)*TMAT0(LM1,LM2) ! LLY
+            DALPHALL(LM1,LM2)=DALPHALL(LM1,LM2)+
+     +                  DFLOAT(SIGNDE)*ALPHA0(LM1,LM2) ! LLY
            ENDDO
           ENDDO
          ENDIF
@@ -302,9 +311,10 @@ c         STOP
         ENDDO
         IF (LLY.NE.0) THEN
 ! calculate Tr[alpha^-1*dalpha/de] for LLoyd's formula
-        CALL INVERSE(LMMAXSO,ALPHALL)
+        ALPHA0=CZERO ! LLY
         AUX=CZERO ! LLY
-        CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,ALPHALL,LMMAXSO,
+        CALL ZGEINV1(ALPHALL,ALPHA0,AUX,IPIV,LMMAXSO)
+        CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,ALPHA0,LMMAXSO,
      +             DALPHALL,LMMAXSO,CZERO,AUX,LMMAXSO) ! LLY
 
 ! Trace of AUX 

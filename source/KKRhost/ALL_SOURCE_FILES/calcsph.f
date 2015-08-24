@@ -11,14 +11,14 @@ c construct wavefunctions for spherical potentials
        DOUBLE COMPLEX E,GMATPREFACTOR
        DOUBLE PRECISION RNEW(NRMAXD),RPAN_INTERVALL(0:NPAN_TOT)
        DOUBLE PRECISION VINS(IRMDNEW,LMPOTD,NSPIN)
-       DOUBLE COMPLEX HLK(4*(LMAX+1),IRMDNEW),
-     +                JLK(4*(LMAX+1),IRMDNEW),
-     +                HLK2(4*(LMAX+1),IRMDNEW),
-     +                JLK2(4*(LMAX+1),IRMDNEW)
+       DOUBLE COMPLEX HLK(1:4*(LMAX+1),IRMDNEW),
+     +                JLK(1:4*(LMAX+1),IRMDNEW),
+     +                HLK2(1:4*(LMAX+1),IRMDNEW),
+     +                JLK2(1:4*(LMAX+1),IRMDNEW)
        INTEGER JLK_INDEX(2*LMMAXSO)
 
 c local
-       INTEGER LMSIZE,LMSIZE2,NVEC
+       INTEGER LMSIZE,LMSIZE2,NVEC,NSPINTEMP
        INTEGER IVEC,LVAL,IR,ISPIN,LSPIN,LSRA,I,L1,M1,LM1
        INTEGER, ALLOCATABLE :: JLK_INDEXTEMP(:)
        DOUBLE COMPLEX, ALLOCATABLE :: VLL0(:,:,:)
@@ -60,8 +60,17 @@ c local
        ELSE
          ALLOCATE(VLL(LMSIZE,LMSIZE,IRMDNEW))   
        ENDIF
+
+       ALPHA=(0d0,0d0)
 c spin loop
-       DO ISPIN=1,NSPIN
+       NSPINTEMP=NSPIN
+c       IF (NSRA.EQ.2) THEN 
+c         NSPINTEMP=NSPIN
+c       ELSEIF (NSRA.EQ.1) THEN
+c         NSPINTEMP=1
+c       ENDIF
+
+       DO ISPIN=1,NSPINTEMP
  
         LSPIN=(LMAX+1)*(ISPIN-1)
         LSRA=(LMAX+1)*NVEC
@@ -72,7 +81,6 @@ c the free-potential wavefunctions and potentials corresponding to l-value
          DO IR=1,IRMDNEW
           VLL0(LMSIZE,LMSIZE,IR)=VINS(IR,1,ISPIN)-2d0*Z/RNEW(IR)
          ENDDO
-          
          IF (NSRA.EQ.2) THEN
           CALL VLLMATSRA(VLL0,VLL,RNEW,LMSIZE,IRMDNEW,NRMAXD,
      +                  E,C,LMAX,LVAL,'Ref=0')
@@ -90,6 +98,8 @@ c the free-potential wavefunctions and potentials corresponding to l-value
           JLK2TEMP(2,:)=JLK2(LMAX+LVAL+2,:)
           HLK2TEMP(2,:)=HLK2(LMAX+LVAL+2,:)
          ENDIF
+         TMATTEMP=(0d0,0d0)
+         ALPHATEMP=(0d0,0d0)
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VLL,RLLTEMP,SLLTEMP,TMATTEMP,
      +           NCHEB,NPAN_TOT,LMSIZE,LMSIZE2,NVEC,IRMDNEW,NRMAXD,NVEC,
      +               JLK_INDEXTEMP,HLKTEMP,JLKTEMP,HLK2TEMP,JLK2TEMP,
@@ -116,38 +126,37 @@ c the free-potential wavefunctions and potentials corresponding to l-value
         DO I=1,2
          DO L1=0,LMAX
           DO M1=-L1,L1
-           JLK_INDEX(LM1)=L1+(IVEC-1)*NSPIN*(LMAX+1)+(I-1)*(LMAX+1)+1
+          JLK_INDEX(LM1)=L1+(IVEC-1)*NSPINTEMP*(LMAX+1)+(I-1)*(LMAX+1)+1
            LM1=LM1+1
           ENDDO
          ENDDO
         ENDDO
        ENDDO
        DO IR=1,IRMDNEW
-        DO L1=1,NVEC*(LMAX+1)*NSPIN
+        DO L1=1,NVEC*(LMAX+1)*NSPINTEMP
          HLK(L1,IR)=HLKNEW(L1,IR)
          JLK(L1,IR)=JLKNEW(L1,IR)
         ENDDO
        ENDDO
        IF (NSRA.EQ.2) THEN
         DO IR=1,IRMDNEW
-         DO L1=1,(LMAX+1)*NSPIN
+         DO L1=1,(LMAX+1)*NSPINTEMP
           HLK2(L1,IR)=-HLKNEW(L1+LMAX+1,IR)
           JLK2(L1,IR)=-JLKNEW(L1+LMAX+1,IR)
          ENDDO
-         DO L1=NSPIN*(LMAX+1)+1,NVEC*(LMAX+1)*NSPIN
-          HLK2(L1,IR)=HLKNEW(L1-(LMAX+1)*NSPIN,IR)
-          JLK2(L1,IR)=JLKNEW(L1-(LMAX+1)*NSPIN,IR)
+         DO L1=NSPINTEMP*(LMAX+1)+1,NVEC*(LMAX+1)*NSPINTEMP
+          HLK2(L1,IR)=HLKNEW(L1-(LMAX+1)*NSPINTEMP,IR)
+          JLK2(L1,IR)=JLKNEW(L1-(LMAX+1)*NSPINTEMP,IR)
          ENDDO
         ENDDO
        ELSE
         DO IR=1,IRMDNEW
-         DO L1=1,NVEC*(LMAX+1)*NSPIN
+         DO L1=1,NVEC*(LMAX+1)*NSPINTEMP
           HLK2(L1,IR)=-HLKNEW(L1,IR)
           JLK2(L1,IR)=-JLKNEW(L1,IR)
          ENDDO
         ENDDO
        ENDIF
-
        DEALLOCATE (RLLTEMP)
        DEALLOCATE (SLLTEMP)
        DEALLOCATE (HLKTEMP)

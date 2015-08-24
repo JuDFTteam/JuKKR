@@ -102,6 +102,7 @@ C LDA+U
 C for new spin-orbit solver
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD)
+      LOGICAL LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NRMAXD,NATYPD),
      +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD),
@@ -139,9 +140,11 @@ CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
 !       DOUBLE COMPLEX, allocatable :: CDOSAT0(:),CDOSAT1(:)
 !       DOUBLE COMPLEX, allocatable :: CDOS0(:),CDOS_LLY(:,:),CDOS1(:),
 !      +                               CDOS2(:),cdos_dum(:,:)                     ! LLY Lloyd
-      REAL*8 EREAD,CHARGE_LLY(NSPIND)                                         ! LLY Lloyd
-      REAL*8 RENORM_AT(2,NATYPD)  ! 1: charge renormalization per atom        ! LLY Lloyd
-                                  ! 2: spin moment renormalization per atom   ! LLY Lloyd
+     ! REAL*8 EREAD,CHARGE_LLY(NSPIND)                                         ! LLY Lloyd
+     ! REAL*8 RENORM_AT(2,NATYPD)  ! 1: charge renormalization per atom        ! LLY Lloyd
+     !                             ! 2: spin moment renormalization per atom   ! LLY Lloyd
+      DOUBLE PRECISION CHARGE_LLY(NSPIND)  ! LLY
+      DOUBLE COPMLEX EREAD                  !LLY
       DOUBLE PRECISION A(NATYPD),B(NATYPD),CHARGE(0:LMAXD1,NATYPD,2),
      +               CLEB(NCLEB,2),DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),
      +                 DOSTOT(0:LMAXD1,2),ECORE(20,NPOTD),
@@ -794,12 +797,22 @@ C ================================================================ NATYP
       THETA(:) = 0.D0
       PHI(:) = 0.D0
       LREAD = .FALSE.
+      LCHECKANGLES = .FALSE.
       INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
       IF (LREAD) THEN 
          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
          DO I1 = 1,NATYP
             READ(10,*) THETA(I1),PHI(I1)
+            THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
+            PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
+            IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
+               LCHECKANGELS=.TRUE.
+            ENDIF
          ENDDO
+         IF(LCHECKANGLES) write(*,*) 'WARNING: Check if your
+     & nonco_angels file is correct! Found only values that are
+     & smaller than pi for theta and 2pi for phi, respectively. But
+     & angles are given in degree (0...360)'
       ENDIF
 
       IF (.NOT.TEST('FIXMOM  ')) THEN
@@ -881,8 +894,16 @@ c rewrite new theta and phi to nonco_angle.dat
        CLOSE(10,status='delete')
        OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
        OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
+       LCHECKANGLES = .FALSE.
        DO I1=1,NATYP
         READ(11,*) THETA(I1),PHI(I1)
+        ! philipp 20.08.2015: ind code_LLOYD the following part does not
+        ! exist but has to be there!? ask long!!!
+        THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
+        PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
+        IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
+           LCHECKANGELS=.TRUE.
+        ENDIF
         WRITE(13,*) THETA(I1),PHI(I1)
        ENDDO
        CLOSE(11,status='delete')

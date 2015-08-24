@@ -314,7 +314,6 @@ C     copy read-in cpa t-matrix but only after fort.37 was created in first run 
          MSSQ(:,:,:) = TQDOS(:,:,:) ! lmmaxd,lmmaxd,naezd                       !qdos ruess
       ENDIF
 C
-
       CALL KKRMAT01(BZKP,NOFKS,GS,VOLCUB,MSSQ,RROT,NSHELL(0),NSDIA,
      &              ALAT,NSYMAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,
      &              NSH1,NSH2,GINP,RBASIS,RCLS,LEFTTINVLL(1,1,1,ISPIN),

@@ -63,13 +63,15 @@ C
       PARAMETER (LRECTRA=WLENGTH*4)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION ALAT
+      DOUBLE PRECISION ALAT,PI
+      PARAMETER :: PI=4.d0*datan(1.d0)
       INTEGER I1,ICST,IELAST,IEND,INS,IPOT,ISPIN,ITSCF,LMAX,NATYP,NAEZ, ! LLY added NAEZ
      +        NCLS,NINEQ,NREF,NSPIN,NSRA,LM1,IR
       INTEGER LLY ! LLY <> 0: apply Lloyds formula
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD),TOLRDIF
+      LOGICAL          LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NRMAXD,NATYPD),
      +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
@@ -160,7 +162,7 @@ C     .. Intrinsic Functions ..
 C     ..
       DATA TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       DATA LLY /0/
-      DATA DELTAE /(1.D-3,0.D0)/
+!      DATA DELTAE /(1.D-3,0.D0)/
 C
 
       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
@@ -407,12 +409,22 @@ C
        THETA(:) = 0.D0
        PHI(:) = 0.D0
        LREAD = .FALSE.
+       LCHECKANGLES = .TRUE.
        INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
        IF (LREAD) THEN
           OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
           DO I1 = 1,NATYP
              READ(10,*) THETA(I1),PHI(I1)
+            THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
+            PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
+            IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
+               LCHECKANGLES = .FALSE.
+            ENDIF
           ENDDO
+          IF(LCHECKANGLES) write(*,*) 'WARNING: Check if your
+     i& nonco_angels file is correct! Found only values that are
+      & smaller than pi for theta and 2pi for phi, respectively. But
+      & angles are given in degree (0...360)'
        ENDIF
 
 c interpolate potential

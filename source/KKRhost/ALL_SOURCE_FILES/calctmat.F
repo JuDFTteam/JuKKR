@@ -238,6 +238,9 @@ C
 C
 C-----------------------------------------------------------------------
 C=======================================================================
+!commented this out because compiling with debug options did not work
+!due to an erro in the interface to drvreltmat > talk to long,
+!philipp 20_08_2015
 !             ELSE
 ! C=======================================================================
 !                CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
@@ -335,11 +338,9 @@ C
             t_tgmat%tmat(:,:,irec) = tmat0
          end if
          IF (LLY.NE.0) THEN                                          ! LLY
-            TMAT0(1:LMMAXD,1:LMMAXD) = DTMATLL(1:LMMAXD,1:LMMAXD) ! LLY
-!             TMAT0(1:LMMAXD,1:LMMAXD) = DTMATLL(1:LMMAXD,1:LMMAXD,IE) ! LLY
             if(t_lloyd%dtmat_to_file) then
                IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
-               WRITE(691,REC=IREC) TMAT0                                ! LLY
+               WRITE(691,REC=IREC) DTMATLL                                ! LLY
             else
                irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
                t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)

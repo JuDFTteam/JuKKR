@@ -21,11 +21,11 @@
       INTEGER LMAXP1,NATYP,NSPIN,IRMAX         ! LMAX+1 for FP or LMAX for ASA, number of atoms,radial pts
       INTEGER IESTART,IEEND,IELAST             ! Starting and ending energy point for renormalization
       INTEGER IRCUT(0:IPAND,NATYPD),IPAN(NATYPD) ! Mesh info
-      REAL*8 CONC(NATYPD)                      ! Concentration (for cpa)
-      COMPLEX*16 CDEN(0:LMAXD1,IEMXD,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
-      COMPLEX*16 CDOS_LLY(IEMXD,NSPIND),
+      DOUBLE PRECISION CONC(NATYPD)                      ! Concentration (for cpa)
+      DOUBLE COMPLEX CDEN(0:LMAXD1,IEMXD,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
+      DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND),
      +           CDOS1(IEMXD),CDOS2(NATYPD)    ! DOS according to Lloyd's formula
-      COMPLEX*16 WEZ(IEMXD),EZ(IEMXD)
+      DOUBLE COMPLEX WEZ(IEMXD),EZ(IEMXD)
       DOUBLE PRECISION ZAT(NATYPD)
 ! Input/Output:
       DOUBLE PRECISION RHO2NS(IRMD,LMPOTD,NATYPD,2)
@@ -34,16 +34,16 @@
       DOUBLE PRECISION ESPV(0:LMAXD1,NPOTD)
 ! Internal:
       INTEGER LL,IE,I1,ISPIN,IPOT,SPINDEGEN,IRC1,SIGNSP,IDIM
-      REAL*8 RENORM_AT(NATYPD,2)                   ! 1: charge renormalization per atom (energy-integrated)
+      DOUBLE PRECISION RENORM_AT(NATYPD,2)                   ! 1: charge renormalization per atom (energy-integrated)
                                                    ! 2: same for spin moment
       DOUBLE COMPLEX CDOS_LOC(IEMXD,NSPIND),CDOS_LOCVC(IEMXD,NSPIND)   ! Density from local summation and from Lloyd's formula
-      REAL*8 CREN(IEMXD,2)                     ! Renormalization constant for charge and spin density
-      REAL*8 CHARGE(NATYPD,2),CHARGE_LLY(NATYPD,2) ! Atomic charge per spin (local summation and renormalized)
-      COMPLEX*16 CHADD(IEMXD,NATYPD,NSPIND),CDOS_ADD     ! Integration step for charge/atom/spin
-      COMPLEX*16 QLLY(2),QSTAR(2)
-      REAL*8 SUM0(2),SUM1(2)
-      COMPLEX*16 CZERO
-      REAL*8 PI
+      DOUBLE PRECISION CREN(IEMXD,2)                     ! Renormalization constant for charge and spin density
+      DOUBLE PRECISION CHARGE(NATYPD,2),CHARGE_LLY(NATYPD,2) ! Atomic charge per spin (local summation and renormalized)
+      DOUBLE COMPLEX CHADD(IEMXD,NATYPD,NSPIND),CDOS_ADD     ! Integration step for charge/atom/spin
+      DOUBLE COMPLEX QLLY(2),QSTAR(2)
+      DOUBLE PRECISION SUM0(2),SUM1(2)
+      DOUBLE COMPLEX CZERO
+      DOUBLE PRECISION PI
       LOGICAL OPT,TEST
       EXTERNAL OPT,TEST
 
@@ -60,17 +60,6 @@
       QSTAR(:)=CZERO
 
 ! First find renormalization factor per energy and atomic charges
-c      DO IE=IESTART,IEEND
-c       WRITE(65,'(2E17.9)') WEZ(IE)
-c       DO ISPIN=1,NSPIN
-c        DO I1=1,NATYP
-c         DO LL=0,LMAXP1
-c          IPOT=(I1-1)*NSPIN+ISPIN
-c          WRITE(66,'(3I5,2E17.9)') IE,IPOT,LL,CDEN(LL,IE,IPOT)
-c         ENDDO
-c        ENDDO
-c       ENDDO
-c      ENDDO
       CDOS_LOC = CZERO
       CDOS_LOCVC = CZERO
       CHADD=CZERO
@@ -88,7 +77,6 @@ c      ENDDO
                CDOS_LOCVC(IE,ISPIN) = CDOS_LOCVC(IE,ISPIN) + CDOS_ADD
                ENDIF
                CHADD(IE,I1,ISPIN) = WEZ(IE) * CDOS_ADD                 ! Complex charge
-c        WRITE(67,'(3I5,4E17.9)') IE,I1,ISPIN,CDOS_ADD,CHADD(IE,I1,ISPIN)
                CHARGE(I1,ISPIN) = CHARGE(I1,ISPIN) +  
      &                            DIMAG(CHADD(IE,I1,ISPIN))/DBLE(NSPIN)
             ENDDO ! I1=1,NATYP
@@ -119,7 +107,6 @@ c     +                        DIMAG(CDOS_LOC(IE,ISPIN)*WEZ(IE))
               ENDIF
              ENDDO
             ENDDO ! ISPIN = 1,NSPIN
-c             WRITE(68,'(1I5,4E17.9)') IE,(CREN(IE,ISPIN),ISPIN=1,NSPIN)
            ENDDO ! IE = IESTART,IEEND
           ELSE 
            DO IE=IESTART,IEEND
@@ -131,7 +118,6 @@ c            WEZ(IE) = CREN(IE,1)*WEZ(IE)
 c            CREN(IE,1) = DIMAG((CDOS_LLY(IE,1)-2d0*CDOS1(IE))*
 c     +                        WEZ(IE))/
 c     +                    DIMAG((CDOS_LOC(IE,1)+CDOS_LOC(IE,2))*WEZ(IE))
-c             WRITE(68,'(1I5,4E17.9)') IE,CREN(IE,1)
             ! Apply to DOS of each atom:
             DO ISPIN=1,NSPIN
              DO I1=1,NATYPD
@@ -226,10 +212,10 @@ c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
      &               DIMAG(EZ(IE)*CDEN(LL,IE,IPOT)*WEZ(IE)/DBLE(NSPIN))
           ENDDO
          ENDIF
-        ENDDO
-       ENDDO
+        ENDDO ! LL
+       ENDDO ! ISPIN
        DENEF = DENEF+DENEFAT(I1)
-      ENDDO
+      ENDDO ! I1
 ! Write out renormalization factors
       WRITE(*,*) 'Information on renormalization by Lloyds formula'
       WRITE(*,*)'RENORM_LLY: Complex renormalization factor per energy:'
@@ -242,7 +228,6 @@ c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
       WRITE(*,*) 'RENORM_LLY: renormalization factor per atom:'
       WRITE(*,FMT='(A5,2A16)') 'IAT','Spin down','Spin up'
       DO I1 = 1,NATYP
-c         WRITE(*,FMT='(I5,2F16.12)') 
          WRITE(*,FMT='(I5,2E17.9)') 
      &        I1,(RENORM_AT(I1,ISPIN),ISPIN=1,NSPIN)
       ENDDO

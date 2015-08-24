@@ -78,6 +78,8 @@ C     ..
    10   CONTINUE
    20 CONTINUE
 c
+      ICLEB=0
+      CLEB=0d0
       IF (LPOT.EQ.0) THEN
         IEND = 1
         ICLEB(1,1) = (LMAX+1)**2

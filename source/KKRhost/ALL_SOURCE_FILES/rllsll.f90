@@ -2,7 +2,7 @@
                         NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
                         NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
                         CMODERLL,CMODESLL,CMODETEST,USE_SRATRICK1,      &
-                        ALPHA) ! LLY
+                        ALPHAGET) ! LLY
 ! ************************************************************************
 ! radial wave functions by the integral equation method of
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -113,12 +113,12 @@ IMPLICIT NONE
       DOUBLE PRECISION CSLC1(0:NCHEB,0:NCHEB),CSRC1(0:NCHEB,0:NCHEB), &
                        TAU(0:NCHEB,0:NPAN),CDDRC1(0:NCHEB,0:NCHEB), &
                        SLC1SUM(0:NCHEB),RMESH(NRMAXD)
-      INTEGER JLK_INDEX(LMSIZE2),IPIV(0:NCHEB,LMSIZE2)
+      INTEGER JLK_INDEX(2*LMSIZE),IPIV(0:NCHEB,LMSIZE2)
       INTEGER,ALLOCATABLE :: IPIV2(:)
       LOGICAL TEST
       INTEGER :: IERROR,USE_SRATRICK,USE_SRATRICK1
       INTEGER,PARAMETER  :: DIRECTSOLV=1
-      DOUBLE COMPLEX ALPHA(LMSIZE,LMSIZE) ! LLY
+      DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
 
 
 !     .. External Subroutines ..
@@ -130,7 +130,6 @@ IMPLICIT NONE
 ! use pherical potential as references or not
 
       ALLOCATE ( ULL(LMSIZE2,LMSIZE,NRMAX) )
-
     IF (LMSIZE.EQ.1) THEN
      USE_SRATRICK=0
     ELSE
@@ -191,7 +190,6 @@ IMPLICIT NONE
       CALL GETCLAMBDACINV(NCHEB,CDDRC1)
 
       CALL CHEBINT(CSLC1,CSRC1,SLC1SUM,C1,NCHEB)
-
 ! loop over subintervals
       DO IPAN = 1,NPAN
 
@@ -679,16 +677,16 @@ IMPLICIT NONE
 !      +            LMSIZE,ALLP(1,1,MMAX),LMSIZE,CZERO,HLL(1,1,NM),LMSIZE)
 !       END DO
 ! end David
-
       CALL ZGETRF(LMSIZE,LMSIZE,ALLP(1,1,NPAN),LMSIZE,IPIV,INFO)              !invert alpha
       CALL ZGETRI(LMSIZE,ALLP(1,1,NPAN),LMSIZE,IPIV,WORK,LMSIZE*LMSIZE,INFO)   !invert alpha -> transformation matrix RLL=alpha^-1*RLL
-      CALL ZGEMM('N','N',LMSIZE,LMSIZE,LMSIZE,CONE/GMATPREFACTOR,BLLP(1,1,NPAN), &      ! calc t-matrix TLL = BLL*alpha^-1 
-                  LMSIZE,ALLP(1,1,NPAN),LMSIZE,CZERO,TLLP,LMSIZE)
+! get alpha matrix
       DO LM1=1,LMSIZE                          ! LLY
        DO LM2=1,LMSIZE                         ! LLY
-        ALPHA(LM1,LM2)=ALLP(LM1,LM2,NPAN)      ! LLY
+        ALPHAGET(LM1,LM2)=ALLP(LM1,LM2,NPAN)   ! LLY
        ENDDO                                   ! LLY
       ENDDO                                    ! LLY
+      CALL ZGEMM('N','N',LMSIZE,LMSIZE,LMSIZE,CONE/GMATPREFACTOR,BLLP(1,1,NPAN), &      ! calc t-matrix TLL = BLL*alpha^-1 
+                  LMSIZE,ALLP(1,1,NPAN),LMSIZE,CZERO,TLLP,LMSIZE)
 
       DO NM = 1,NRMAX
       CALL ZGEMM('N','N',LMSIZE2,LMSIZE,LMSIZE,CONE,ULL(1,1,NM), &

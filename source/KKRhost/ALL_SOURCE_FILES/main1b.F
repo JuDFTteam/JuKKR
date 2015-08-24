@@ -873,6 +873,14 @@ c read in t matrix
 
 c read in theta and phi for noncolinear
         IF (LREAD) READ(10,*) THETA,PHI
+          THETA=THETA*(2.0D0*PI/360.0D0)
+          PHI=PHI*(2.0D0*PI/360.0D0)
+          IF(ABS(THETA).GE.PI .OR. ABS(PHI).GE.2*PI) THEN
+             write(*,*) 'WARNING: Check if your
+     & nonco_angels file is correct! Found only values that are
+     & smaller than pi for theta and 2pi for phi, respectively. But
+     & angles are given in degree (0...360)'
+          ENDIF
 
 c read in t-matrix from file
         IREC = IE + IELAST*(I1-1)
