@@ -120,7 +120,7 @@ module SingleSiteRef_mod
 
     if (lly == 1) then
       dgtde(1:ngd,1:lmmaxd) = dgtde0(1:ngd,1:lmmaxd)
-    enddo ! lly == 1
+    endif ! lly == 1
       
     ! solve dyson-equation for reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
