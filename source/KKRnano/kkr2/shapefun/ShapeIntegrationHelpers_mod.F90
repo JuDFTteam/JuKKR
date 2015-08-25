@@ -492,9 +492,9 @@
     1 fac1 = 1.d0
       mp = 0
     3 continue
-      fac=fac1*fac2/2.d0
-      d1=drot(l,mp ,m,beta)
-      d2=drot(l,mp,-m,beta)
+      fac = fac1*fac2/2.d0
+      d1 = drot(l,mp, m,beta)
+      d2 = drot(l,mp,-m,beta)
       if (mod(m, 2) /= 0) d2 = -d2
       dpl(mp+1,m+1) = (d1 + d2)*fac
       dmn(mp+1,m+1) = (d1 - d2)*fac
@@ -546,97 +546,121 @@
       endsubroutine
 
 !-----------------------------------------------------------------------
+!>    calculation of d coefficient according to rose, elementary theory angular momentum,j.wiley & sons ,1957 , eq. (4.13).
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !>    calculation of d coefficient according to rose, elementary theory
 !>    angular momentum,j.wiley & sons ,1957 , eq. (4.13).
 !-----------------------------------------------------------------------
-      double precision function drot(l,mp,m,beta)
-      integer, intent(in) :: l, m, mp
+      real*8 function drot(l, mp, m, beta)
+      
+      integer, intent(in) :: l,m,mp
       real*8, intent(in) :: beta
 
-      integer :: nn, i, kmin, kmax, ltrm, n, k
-      real*8 :: sinb, term, ff, beta2, cosb
-      integer :: n1, n2, n3, n4
+      integer :: i,kmin,kmax,ltrm,n,k
+      real*8  :: cosb,sinb,term,ff
       integer :: nf(4)
-      equivalence (n1,nf(1)),(n2,nf(2)),(n3,nf(3)),(n4,nf(4))
 !-----------------------------------------------------------------------
-!     integer, save :: l0=-1, m0=1, mp0=1
-      integer :: l0, m0, mp0
-      data l0,m0,mp0/-1,1,1/
-         l0=-1
-         m0=1
-         mp0=1
-   10 if(l /= l0) goto 2
-        write(6,fmt="(3x,'l0,m0,mp0=',3i3)") l0,m0,mp0
-      if((iabs(m ) == iabs(m0).and.iabs(mp) == iabs(mp0)) .or. (iabs(mp) == iabs(m0).and.iabs(m ) == iabs(mp0))) goto 1
-    2 continue
-      ff = 1.d0 ! init
-      if(iabs(m) <= l.and.iabs(mp) <= l) goto 3
-        write(6,fmt="('     l=',i5,'    m=',i5,'    mp =',i5)") l,m,mp
-        return
-    3 n1   =l+m
-      n2   =l-m
-      n3   =l+mp
-      n4   =l-mp
-      l0=l
-      m0=m
-      mp0=mp
-      do 4 n=1,4
-      nn=nf(n)
-      if(nn == 0) goto 4
-      do i = 1, nn
-        ff = ff*i ! compute factorial of nn
-      enddo ! i
-    4 continue
-      ff = sqrt(ff)
+      drot = 0.d0 ! init result for early return
       
-    1 continue
-      beta2=beta/2.d0
-      cosb= cos(beta2)
-      sinb=-sin(beta2)
-      if(abs(cosb) < 1.d-4) goto 9
-      if(abs(sinb) < 1.d-4) goto 11
-      kmax=min(l-mp,l+m)
-      kmin=max(m-mp,0)
-      term=cosb**(2*l+m-mp-2*kmin)*sinb**(mp-m+2*kmin)*ff
-      goto 12
-    9 ltrm=l
-      term=ff
-      if(sinb < 0.d0 .and. mod(mp-m,2) /= 0) term=-term
-      goto 14
-   11 ltrm=0
-      term=ff
-      if(cosb < 0.d0 .and. mod(mp-m,2) /= 0) term=-term
-   14 kmax=m-mp
-      if(mod(kmax,2) /= 0) goto 13
-      kmax=ltrm+kmax/2
-      if(kmax < max(m-mp,0)) goto 13
-      if(kmax > min(l-mp,l+m)) goto 13
-      kmin=kmax
-   12 if(mod(kmin,2) /= 0) term=-term
-      n1   =l-mp-kmin
-      n2   =l+m-kmin
-      n3   =kmin+mp-m
-      n4   =kmin
-      do 6 n=1,4
-      nn=nf(n)
-      if(nn == 0) goto 6
-      do 7 i=1,nn
-    7 term=term/i
-    6 continue
-      drot=term
-      if(kmin == kmax) return
-      kmin=kmin+1
-      cosb=cosb**2
-      sinb=sinb**2
-      n3=n3   +1
-      do 8 k=kmin,kmax
-      term=-n1*n2*term*sinb/(cosb*k*n3)
-      drot=drot+term
-      n1=n1-1
-      n2=n2-1
-    8 n3=n3+1
-      return
-   13 drot=0.d0
-      endfunction ! drot
+      if (iabs(m) > l .or. iabs(mp) > l) then
+        write(*,fmt="('     l=',i5,'    m=',i5,'    mp =',i5)") l,m,mp
+        stop ! error
+      endif
+      
+      nf(1:4) = l + [m, -m, mp, -mp]
+      ff = 1.d0
+      do n = 1, 4
+        if (nf(n) == 0) cycle
+        do i = 1, nf(n)
+          ff = ff*i
+        enddo ! i
+      enddo ! n
+      ff = sqrt(ff)
+      cosb =  cos(beta*.5)
+      sinb = -sin(beta*.5)
+
+#if 0      
+      if (abs(cosb) < 1d-4) then
+!         goto 9
+        ltrm = l ! statement label 9
+        term = ff
+        if (sinb < 0.d0 .and. mod(mp-m, 2) /= 0) term = -term
+!         goto 14
+       if (mod(m-mp, 2) /= 0) return ! 0.d0 ! statement label 14
+        kmax = ltrm + (m-mp)/2
+        if (kmax < max(m-mp, 0) .or. kmax > min(l-mp, l+m)) return ! 0.d0
+        kmin = kmax
+!         goto 12
+      elseif (abs(sinb) < 1d-4) then ! we can use elseif here since sine and cosine are never both small
+!         goto 11
+        ltrm = 0 ! statement label 11
+        term = ff
+        if (cosb < 0.d0 .and. mod(mp-m, 2) /= 0) term = -term
+!       goto 14
+        if (mod(m-mp, 2) /= 0) return ! 0.d0  ! statement label 14
+        kmax = ltrm + (m-mp)/2
+        if (kmax < max(m-mp, 0) .or. kmax > min(l-mp, l+m)) return ! 0.d0
+        kmin = kmax
+!         goto 12
+      else
+        kmax = min(l-mp, l+m)
+        kmin = max(m-mp, 0)
+        term = cosb**(2*l+m-mp-2*kmin) * sinb**(mp-m+2*kmin) * ff
+!         goto 12
+      endif
+      
+#else
+      if (abs(cosb) < 1d-4) then
+        ltrm = l
+        term = sinb
+      elseif(abs(sinb) < 1d-4) then
+        ltrm = 0
+        term = cosb
+      else         
+        kmax = min(l-mp, l+m)
+        kmin = max(m-mp, 0)
+        term = cosb**(2*l+m-mp-2*kmin) * sinb**(mp-m+2*kmin) * ff
+        ltrm = -1
+      endif
+      
+      if (ltrm >= 0) then
+        if (mod(m-mp, 2) /= 0) return ! 0.d0
+        kmax = ltrm + (m-mp)/2
+        if (kmax < max(m-mp, 0) .or. kmax > min(l-mp, l+m)) return ! 0.d0
+!       if (term < 0.d0 .and. mod(mp-m, 2) /= 0) then; term = -ff; else; term = ff; endif
+!       ! or term = sign(ff, term) ! uses the sign of term, i.e. sinb or cosb and the absolute of ff
+        term = ff ! since the negative case is never reached because of the earlier return statement
+        kmin = kmax
+      endif ! ltrm >= 0
+      
+#endif
+      if (mod(kmin, 2) /= 0) term = -term ! statement label 12
+   
+      nf(1) = l-kmin-mp
+      nf(2) = l-kmin+m
+      nf(3) =   kmin+mp-m
+      nf(4) =   kmin
+      ff = 1.d0
+      do n = 1, 4
+        if (nf(n) == 0) cycle
+        do i = 1, nf(n)
+          ff = ff*i
+        enddo ! i
+      enddo ! n
+      term = term/ff
+      
+      drot = term
+      if (kmin == kmax) return
+      kmin = kmin+1
+      cosb = cosb**2
+      sinb = sinb**2
+      nf(3) = nf(3)+1
+      do k = kmin, kmax
+        term = -term*nf(1)*nf(2)*sinb/(cosb*k*nf(3))
+        drot = drot + term
+        nf(1:4) = nf(1:4) + [-1,-1,1,0]
+      enddo ! k
+      endfunction drot
 
       endmodule ShapeIntegrationHelpers_mod
