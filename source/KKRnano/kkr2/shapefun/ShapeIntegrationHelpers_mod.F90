@@ -331,7 +331,10 @@
       do 9 l=0,lmax
       li=l/2+1
     9 icmax=icmax+(lmax+1-l)*li
-      if(lmax > lmaxd1 .or. icmax > icd) goto 100
+      if (lmax > lmaxd1 .or. icmax > icd) then
+        write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
+        stop 'lmax > lmaxd1 .or. icmax > icd'
+      endif ! lmax > lmaxd1 .or. icmax > icd
 !     if (test('shape   ')) write(6,fmt="(13x,'there are',i5,'  coefficients'/)") icmax
       ice=0
       ic=1
@@ -401,9 +404,9 @@
       iemod =mod(ieupsq,2)
       upsq =upsq*ifi(i1) **iemod
       if(ieint >= 0)                   then
-      up   =up  *ifi(i1) **ieint
+      up   = up  *ifi(i1) **ieint
                                        else
-      down =down*ifi(i1) **(-ieint)
+      down = down*ifi(i1) **(-ieint)
                                        endif
    17 continue
       coe(ice)=sqrt(upsq)* up / down
@@ -431,9 +434,6 @@
       l=l+1
       goto 1
    10 continue
-      return
-  100 write(6,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
-      stop
       endsubroutine
 
 
@@ -443,30 +443,33 @@
 !-----------------------------------------------------------------------
       subroutine reduce(nmbr,ifmx,ifi,iexp)
       integer, intent(in) :: nmbr, ifmx
-      integer, intent(out) :: iexp(1:)
-      integer, intent(in) :: ifi(1:)
+      integer, intent(out) :: iexp(1:ifmx)
+      integer, intent(in) :: ifi(1:ifmx) ! set of lowest prime numbers
 !-----------------------------------------------------------------------
 
       integer :: i, nmb
       
-      if (nmbr <= 0) goto 4
-      do 5 i=1,ifmx
-    5 iexp(i)=0
-      if (nmbr == 1) return
-      nmb=nmbr
-      do 1 i=1,ifmx
-      iexp(i)=0
-    2 if (mod(nmb,ifi(i)) /= 0) goto 3
-      nmb=nmb/ifi(i)
-      iexp(i)=iexp(i)+1
-      goto 2
-    3 continue
-      if (nmb == 1) return
-    1 continue
-      write(6,fmt="(3x,i15,'  cannot be reduced in the basis of first numbers given'/20x,'increase the basis of first numbers')") nmbr
+      if (nmbr <= 0) then
+        write(*,fmt="(3x,i15,'  non positive number')") nmbr
+        stop
+      endif ! nmbr <= 0
+       
+      iexp(1:ifmx) = 0
+      if (nmbr == 1) return ! all iexp zero
+      
+      nmb = nmbr ! copy
+      do i = 1, ifmx
+!       iexp(i) = 0 ! redundant
+        do while (mod(nmb, ifi(i)) == 0)
+          nmb = nmb/ifi(i) ! integer division, reduce by the prime factor ifi(i)
+          iexp(i) = iexp(i)+1 ! and count up the number of exponents
+        enddo ! while
+        if (nmb == 1) return ! default exit point of this routine
+      enddo ! i ! loop over all prime factors
+      
+      write(*,fmt="(3x,i15,'  cannot be reduced in the basis of first numbers given'/20x,'increase the basis of first numbers')") nmbr
       stop
-    4 write(6,fmt="(3x,i15,'  non positive number')") nmbr
-      stop
+      
       endsubroutine reduce
 
 !------------------------------------------------------------------
@@ -485,65 +488,85 @@
       real*8 :: fac,fac1,fac2,d,d1,d2
       real*8 :: dmn(lmaxd1+1,lmaxd1+1), dpl(lmaxd1+1,lmaxd1+1)
       real*8, parameter :: sqr2 = sqrt(2.d0)
-      isu=0
-      do 2 l = 0, lmax
-      fac2 = 1.d0
-      m = 0
-    1 fac1 = 1.d0
-      mp = 0
-    3 continue
-      fac = fac1*fac2/2.d0
-      d1 = drot(l,mp, m,beta)
-      d2 = drot(l,mp,-m,beta)
-      if (mod(m, 2) /= 0) d2 = -d2
-      dpl(mp+1,m+1) = (d1 + d2)*fac
-      dmn(mp+1,m+1) = (d1 - d2)*fac
-      if (mod(m+mp, 2) /= 0) goto  4
-      dpl(m+1,mp+1) = dpl(mp+1,m+1)
-      dmn(m+1,mp+1) = dmn(mp+1,m+1)
-      goto  5
-    4 dmn(m+1,mp+1) = -dmn(mp+1,m+1)
-      dpl(m+1,mp+1) = -dpl(mp+1,m+1)
-    5 continue
-      fac1 = sqr2
-      mp = 1+mp
-      if (mp <= m) goto 3
-      fac2 = sqr2
-      m = 1+m
-      if (m <= l) goto 1
-      imax = 1
-      m = 0
-   12 continue
-      do 13 i = 1, imax
-      ipmax = 1
-      mp = 0
-   11 continue
-      do 6 ip = 1, ipmax
-      if (i == 2) goto  7
-      if (ip == 2) goto 10
-      d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1)
-      goto  9
-    7 if (ip == 2) goto  8
-      d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1)
-      goto  9
-    8 d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1)
-      goto  9
-   10 d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1)
-    9 continue
-      if (mod(m+mp, 2) /= 0) d = -d
-      isu = isu+1
-      dmatl(isu) = d
-    6 continue
-      ipmax = 2
-      mp = mp+1
-      if (mp <= l) goto 11
-   13 continue
-      imax = 2
-      m = m+1
-      if (m <= l) goto 12
-    2 continue
+      isu = 0
+      do l = 0, lmax
+      
+        fac2 = 1.d0
+        do m = 0, l
+          fac1 = 1.d0
+          do mp = 0, m
+            fac = 0.5d0*fac1*fac2
+            d1 = drot(l,mp, m,beta)
+            d2 = drot(l,mp,-m,beta)
+            if (mod(m, 2) /= 0) d2 = -d2
+            dpl(mp+1,m+1) = (d1 + d2)*fac
+            dmn(mp+1,m+1) = (d1 - d2)*fac
+            if (mod(m+mp, 2) /= 0) then
+              dmn(m+1,mp+1) = -dmn(mp+1,m+1)
+              dpl(m+1,mp+1) = -dpl(mp+1,m+1)
+            else
+              dmn(m+1,mp+1) =  dmn(mp+1,m+1)
+              dpl(m+1,mp+1) =  dpl(mp+1,m+1)
+            endif
+            fac1 = sqr2
+          enddo ! mp
+          fac2 = sqr2
+        enddo ! m
+        
+        imax = 1
+        do m = 0, l
+          do i = 1, imax
+            ipmax = 1
+            do mp = 0, l
+              do ip = 1, ipmax
+#if 0              
+                if (i == 2) goto  7
+                if (ip == 2) goto 10
+                d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
+                goto  9
+                
+    7           continue 
+                if (ip == 2) goto  8
+                d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==1
+                goto  9
+                
+    8           continue
+                d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==2
+                goto  9
+                
+   10           continue
+                d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==2
+                goto  9
+                
+    9           continue
+    
+#else
+                if (ip == 2) then
+                  if (i == 2) then
+                    d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==2
+                  else  ! i == 2
+                    d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==2
+                  endif ! i == 2
+                else  ! ip == 2
+                  if (i == 2) then
+                    d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==1
+                  else  ! i == 2
+                    d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
+                  endif ! i == 2
+                endif ! ip == 2
+#endif
+                if (mod(m+mp, 2) /= 0) d = -d
+                isu = isu+1
+                dmatl(isu) = d
+              enddo ! ip
+              ipmax = 2
+            enddo ! mp
+          enddo ! i
+          imax = 2
+        enddo ! m
+      enddo ! l
 !     isum = isu ! unused: minimal value of isumd
-      endsubroutine
+      endsubroutine d_real
 
 !-----------------------------------------------------------------------
 !>    calculation of d coefficient according to rose, elementary theory angular momentum,j.wiley & sons ,1957 , eq. (4.13).
@@ -565,7 +588,7 @@
       
       if (iabs(m) > l .or. iabs(mp) > l) then
         write(*,fmt="('     l=',i5,'    m=',i5,'    mp =',i5)") l,m,mp
-        stop ! error
+        stop 'drot: |m| or |m''| is larger than l' ! error
       endif
       
       nf(1:4) = l + [m, -m, mp, -mp]
@@ -577,40 +600,9 @@
         enddo ! i
       enddo ! n
       ff = sqrt(ff)
-      cosb =  cos(beta*.5)
-      sinb = -sin(beta*.5)
+      cosb =  cos(beta*0.5d0)
+      sinb = -sin(beta*0.5d0)
 
-#if 0      
-      if (abs(cosb) < 1d-4) then
-!         goto 9
-        ltrm = l ! statement label 9
-        term = ff
-        if (sinb < 0.d0 .and. mod(mp-m, 2) /= 0) term = -term
-!         goto 14
-       if (mod(m-mp, 2) /= 0) return ! 0.d0 ! statement label 14
-        kmax = ltrm + (m-mp)/2
-        if (kmax < max(m-mp, 0) .or. kmax > min(l-mp, l+m)) return ! 0.d0
-        kmin = kmax
-!         goto 12
-      elseif (abs(sinb) < 1d-4) then ! we can use elseif here since sine and cosine are never both small
-!         goto 11
-        ltrm = 0 ! statement label 11
-        term = ff
-        if (cosb < 0.d0 .and. mod(mp-m, 2) /= 0) term = -term
-!       goto 14
-        if (mod(m-mp, 2) /= 0) return ! 0.d0  ! statement label 14
-        kmax = ltrm + (m-mp)/2
-        if (kmax < max(m-mp, 0) .or. kmax > min(l-mp, l+m)) return ! 0.d0
-        kmin = kmax
-!         goto 12
-      else
-        kmax = min(l-mp, l+m)
-        kmin = max(m-mp, 0)
-        term = cosb**(2*l+m-mp-2*kmin) * sinb**(mp-m+2*kmin) * ff
-!         goto 12
-      endif
-      
-#else
       if (abs(cosb) < 1d-4) then
         ltrm = l
         term = sinb
@@ -621,10 +613,11 @@
         kmax = min(l-mp, l+m)
         kmin = max(m-mp, 0)
         term = cosb**(2*l+m-mp-2*kmin) * sinb**(mp-m+2*kmin) * ff
-        ltrm = -1
+        ltrm = -1 ! -1: do not execute the following if branch
       endif
       
       if (ltrm >= 0) then
+        ! either |cos| or |sin| is small
         if (mod(m-mp, 2) /= 0) return ! 0.d0
         kmax = ltrm + (m-mp)/2
         if (kmax < max(m-mp, 0) .or. kmax > min(l-mp, l+m)) return ! 0.d0
@@ -634,8 +627,7 @@
         kmin = kmax
       endif ! ltrm >= 0
       
-#endif
-      if (mod(kmin, 2) /= 0) term = -term ! statement label 12
+      if (mod(kmin, 2) /= 0) term = -term
    
       nf(1) = l-kmin-mp
       nf(2) = l-kmin+m

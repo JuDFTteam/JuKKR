@@ -8,323 +8,323 @@ module ShapeIntegration_mod
   contains
 
 !------------------------------------------------------------------------------
-!> Performs the shape-function integration.
+!> performs the shape-function integration.
 !> @brief
-!> Needs information from module/common block replacement "tetrahedra_common"
-!> Needs information from module/common block replacement "angles_common"
-!> @param[in]  LMAX calculate shape function up to lmax
-!> @param[in]  NFACE number of cell faces
-!> @param[out] MESHN number of radial mesh points
-!> @param[in]  XRN radial mesh points
-!> @param[in]  DLT step size for Gauss-Legendre integration
-!> @param[out] THETAS_S on output it contains the non-zero shape-functions
-!!                      dimension MESHND x IBMAXD
-!> @param[out] LMIFUN_S array with lm-indeices for which the shapefunction is non-zero
-!> @param[out] NFUN number of non-zero shape-functions
-!> @param[in]  MESHND
-!> @param[in]  IBMAXD
+!> needs information from module/common block replacement "tetrahedra_common"
+!> needs information from module/common block replacement "angles_common"
+!> @param[in]  lmax calculate shape function up to lmax
+!> @param[in]  nface number of cell faces
+!> @param[out] meshn number of radial mesh points
+!> @param[in]  xrn radial mesh points
+!> @param[in]  dlt step size for gauss-legendre integration
+!> @param[out] thetas_s on output it contains the non-zero shape-functions
+!!                      dimension meshnd x ibmaxd
+!> @param[out] lmifun_s array with lm-indeices for which the shapefunction is non-zero
+!> @param[out] nfun number of non-zero shape-functions
+!> @param[in]  meshnd
+!> @param[in]  ibmaxd
 
-SUBROUTINE shapeIntegration(LMAX, NFACE, MESHN, XRN, DLT, THETAS_S, LMIFUN_S, NFUN, MESHND, IBMAXD)
+subroutine shapeintegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  use shape_constants_mod, only: PI, LMAXD1, ISUMD, ICD, ICED
-  use tetrahedra_common, only: RD, NTT, R0, FA, FB, FD, ISIGNU
-  use angles_common, only: ALPHA, BETA, GAMMA
-  use ShapeIntegrationHelpers_mod, only: PINTG, CCOEF, D_REAL
+  use shape_constants_mod, only: pi, lmaxd1, isumd, icd, iced
+  use tetrahedra_common, only: rd, ntt, r0, fa, fb, fd, isignu
+  use angles_common, only: alpha, beta, gamma
+  use shapeintegrationhelpers_mod, only: pintg, ccoef, d_real
 
-  integer :: LMAX
-  integer :: NFACE
-  integer :: MESHN
-  REAL*8 ::  XRN(MESHND)
-  real*8 :: DLT
-  real*8 ::  THETAS_S(MESHND,IBMAXD)
-  integer :: LMIFUN_S(IBMAXD)
-  integer, intent(in) :: MESHND
-  integer, intent(in) :: IBMAXD
-  integer, intent(out) :: NFUN
+  integer :: lmax
+  integer :: nface
+  integer :: meshn
+  real*8 ::  xrn(meshnd)
+  real*8 :: dlt
+  real*8 ::  thetas_s(meshnd,ibmaxd)
+  integer :: lmifun_s(ibmaxd)
+  integer, intent(in) :: meshnd
+  integer, intent(in) :: ibmaxd
+  integer, intent(out) :: nfun
 
-  REAL*8 ::  DMATL(ISUMD)
+  real*8 ::  dmatl(isumd)
 
-  REAL*8 ::     CL(ICD)
-  REAL*8 ::     C(ICED)
+  real*8 ::     cl(icd)
+  real*8 ::     c(iced)
 
-  REAL*8 ::  R
-  REAL*8 ::  RAP
-  REAL*8 ::  RDOWN
+  real*8 ::  r
+  real*8 ::  rap
+  real*8 ::  rdown
 
-  REAL*8 ::  ARG1
-  REAL*8 ::  ARG2
+  real*8 ::  arg1
+  real*8 ::  arg2
 
-  integer :: IVTOT
-  integer :: IFACE
-  integer :: NTET
-  integer :: ITET
-  integer :: I
-  integer :: M
-  integer :: IC
-  integer :: ICE
-  integer :: IB
-  integer :: ISU
-  integer :: L
-  integer :: MP
-  integer :: K0
-  integer :: K
-  integer :: IS
-  integer :: IMAX
-  integer :: MO
-  integer :: IP
-  integer :: IPMAX
+  integer :: ivtot
+  integer :: iface
+  integer :: ntet
+  integer :: itet
+  integer :: i
+  integer :: m
+  integer :: ic
+  integer :: ice
+  integer :: ib
+  integer :: isu
+  integer :: l
+  integer :: mp
+  integer :: k0
+  integer :: k
+  integer :: is
+  integer :: imax
+  integer :: mo
+  integer :: ip
+  integer :: ipmax
   integer :: icount
 
-  integer :: IBM
-  integer :: IBMAX
-  integer :: N
+  integer :: ibm
+  integer :: ibmax
+  integer :: n
 
-  REAL*8, allocatable ::  RUPSQ(:) ! dim NVTOTD
+  real*8, allocatable ::  rupsq(:) ! dim nvtotd
 
-  REAL*8 ::     S(-LMAXD1:LMAXD1,0:LMAXD1)
-  REAL*8 ::    S1(-LMAXD1:LMAXD1,0:LMAXD1)
-  REAL*8 ::    S2(-LMAXD1:LMAXD1,0:LMAXD1)
-  REAL*8 ::    S3(-LMAXD1:LMAXD1,0:LMAXD1)
-  REAL*8 ::    SUM(0:LMAXD1,2)
-  REAL*8 ::    FK
-  REAL*8 ::    FL
-  REAL*8 ::    FPISQ
+  real*8 ::     s(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 ::    s1(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 ::    s2(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 ::    s3(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 ::    sum(0:lmaxd1,2)
+  real*8 ::    fk
+  real*8 ::    fl
+  real*8 ::    fpisq
 
   ! local automatic arrays
-  INTEGER ::   LOFM(IBMAXD)
-  integer ::   MOFM(IBMAXD)
-  REAL*8 ::    B(IBMAXD)
-  integer ::   ISW(IBMAXD)
-  ! ISW index array, value is 1 for lm for which shapefunction is non-zero
+  integer ::   lofm(ibmaxd)
+  integer ::   mofm(ibmaxd)
+  real*8 ::    b(ibmaxd)
+  integer ::   isw(ibmaxd)
+  ! isw index array, value is 1 for lm for which shapefunction is non-zero
   ! otherwise the value is 0
 
-  allocate(RUPSQ(size(RD))) ! dim: NVTOTD
+  allocate(rupsq(size(rd))) ! dim: nvtotd
 
-  FPISQ=DSQRT(4.D0*PI)
+  fpisq=dsqrt(4.d0*pi)
 
-  IBMAX=(LMAX+1)*(LMAX+1)
+  ibmax=(lmax+1)*(lmax+1)
 
-  THETAS_S = 0.0d0
+  thetas_s = 0.0d0
 
   !.......................................................................
-  !     E X P A N S I O N    C O E F F I C I E N T S
+  !     e x p a n s i o n    c o e f f i c i e n t s
   !.......................................................................
-  CALL CCOEF(LMAX,CL,C)
-  IVTOT=0
-  DO IFACE=1,NFACE
-    NTET=NTT(IFACE)
-    DO ITET=1,NTET
-      IVTOT=IVTOT+1
-      RUPSQ(IVTOT)=SQRT((RD(IVTOT)-R0(IFACE))*(RD(IVTOT)+R0(IFACE)))
-    END DO
-  END DO
-  DO IBM=1,IBMAX
-    ISW(IBM)=0
-  END DO
+  call ccoef(lmax,cl,c)
+  ivtot=0
+  do iface=1,nface
+    ntet=ntt(iface)
+    do itet=1,ntet
+      ivtot=ivtot+1
+      rupsq(ivtot)=sqrt((rd(ivtot)-r0(iface))*(rd(ivtot)+r0(iface)))
+    enddo
+  enddo
+  do ibm=1,ibmax
+    isw(ibm)=0
+  enddo
 
   !===================== split ??? =======================================
 
   !.......................................................................
-  !     L O O P    O V E R    R A D I A L    M E S H    P O I N T S
+  !     l o o p    o v e r    r a d i a l    m e s h    p o i n t s
   !.......................................................................
-  meshloop: DO N=1,MESHN
-    R=XRN(N)
-    DO IBM=1,IBMAX
-      B(IBM)=0.D0
-    END DO
-    IVTOT=0
+  meshloop: do n=1,meshn
+    r=xrn(n)
+    do ibm=1,ibmax
+      b(ibm)=0.d0
+    enddo
+    ivtot=0
     !.......................................................................
-    !     L O O P    O V E R    P Y R A M I D S
+    !     l o o p    o v e r    p y r a m i d s
     !.......................................................................
-py: DO IFACE=1,NFACE
-      NTET=NTT(IFACE)
+py: do iface=1,nface
+      ntet=ntt(iface)
 
-      IF(R > R0(IFACE))  GOTO 31
-      IVTOT=IVTOT+NTET
-      DO I=0,LMAX
-        S(0,I) =0.D0
-      END DO
-      DO M=1,LMAX
-        DO I=0,LMAX-M
-          S(-M,I)=0.D0
-          S( M,I)=0.D0
-        END DO
-      END DO
-      GOTO 13
-31    CONTINUE
-      !IF(NEWSCH(IFACE) == 1) GOTO 35
-      !IVTOT=IVTOT+NTET
-      !GOTO 32
-35    ARG1=R0(IFACE)/R
-      RDOWN=SQRT((R-R0(IFACE))*(R+R0(IFACE)))
-      DO I=0,LMAX
-        S(0,I) =0.D0
-      END DO
-      DO M=1,LMAX
-        DO I=0,LMAX-M
-          S(-M,I)=0.D0
-          S( M,I)=0.D0
-        END DO
-      END DO
+      if(r > r0(iface))  goto 31
+      ivtot=ivtot+ntet
+      do i=0,lmax
+        s(0,i) =0.d0
+      enddo
+      do m=1,lmax
+        do i=0,lmax-m
+          s(-m,i)=0.d0
+          s( m,i)=0.d0
+        enddo
+      enddo
+      goto 13
+31    continue
+      !if(newsch(iface) == 1) goto 35
+      !ivtot=ivtot+ntet
+      !goto 32
+35    arg1=r0(iface)/r
+      rdown=sqrt((r-r0(iface))*(r+r0(iface)))
+      do i=0,lmax
+        s(0,i) =0.d0
+      enddo
+      do m=1,lmax
+        do i=0,lmax-m
+          s(-m,i)=0.d0
+          s( m,i)=0.d0
+        enddo
+      enddo
       !.......................................................................
-      !     L O O P     O V E R     T E T R A H E D R A
+      !     l o o p     o v e r     t e t r a h e d r a
       !.......................................................................
-      DO ITET=1,NTET
-        IVTOT=IVTOT+1
-        IF(R <= RD(IVTOT))      THEN
-          CALL PINTG(FA(IVTOT),FB(IVTOT),DLT,S1,LMAX,ISIGNU(IVTOT), &
-          ARG1,FD(IVTOT),0)
-          DO I=0,LMAX
-            S(0,I)=S(0,I)+S1(0,I)
-          END DO
-          DO M=1,LMAX
-            DO I=0,LMAX-M
-              S(-M,I)=S(-M,I)+S1(-M,I)
-              S( M,I)=S( M,I)+S1( M,I)
-            END DO
-          END DO
-        ELSE
-          RAP =RUPSQ(IVTOT)/RDOWN
-          ARG2=RUPSQ(IVTOT)/R0(IFACE)
-          FK=FD(IVTOT)-ACOS(RAP)
-          FL=FD(IVTOT)+ACOS(RAP)
+      do itet=1,ntet
+        ivtot=ivtot+1
+        if(r <= rd(ivtot))      then
+          call pintg(fa(ivtot),fb(ivtot),dlt,s1,lmax,isignu(ivtot), &
+          arg1,fd(ivtot),0)
+          do i=0,lmax
+            s(0,i)=s(0,i)+s1(0,i)
+          enddo
+          do m=1,lmax
+            do i=0,lmax-m
+              s(-m,i)=s(-m,i)+s1(-m,i)
+              s( m,i)=s( m,i)+s1( m,i)
+            enddo
+          enddo
+        else
+          rap =rupsq(ivtot)/rdown
+          arg2=rupsq(ivtot)/r0(iface)
+          fk=fd(ivtot)-acos(rap)
+          fl=fd(ivtot)+acos(rap)
 
-          FK=DMAX1(FA(IVTOT),FK)
-          FL=DMAX1(FA(IVTOT),FL)
-          FK=DMIN1(FB(IVTOT),FK)
-          FL=DMIN1(FB(IVTOT),FL)
-          CALL PINTG(FA(IVTOT),FK,DLT,S1,LMAX,ISIGNU(IVTOT), &
-          ARG1,FD(IVTOT),0)
-          CALL PINTG(FK       ,FL,DLT,S2,LMAX,ISIGNU(IVTOT), &
-          ARG2,FD(IVTOT),1)
-          CALL PINTG(FL,FB(IVTOT),DLT,S3,LMAX,ISIGNU(IVTOT), &
-          ARG1,FD(IVTOT),0)
-          DO I=0,LMAX
-            S(0,I)=S(0,I)+S1(0,I)+S2(0,I)+S3(0,I)
-          END DO
-          DO M=1,LMAX
-            DO I=0,LMAX-M
-              S(-M,I)=S(-M,I)+S1(-M,I)+S2(-M,I)+S3(-M,I)
-              S( M,I)=S( M,I)+S1( M,I)+S2( M,I)+S3( M,I)
-            END DO
-          END DO
-        END IF
+          fk=dmax1(fa(ivtot),fk)
+          fl=dmax1(fa(ivtot),fl)
+          fk=dmin1(fb(ivtot),fk)
+          fl=dmin1(fb(ivtot),fl)
+          call pintg(fa(ivtot),fk,dlt,s1,lmax,isignu(ivtot), &
+          arg1,fd(ivtot),0)
+          call pintg(fk       ,fl,dlt,s2,lmax,isignu(ivtot), &
+          arg2,fd(ivtot),1)
+          call pintg(fl,fb(ivtot),dlt,s3,lmax,isignu(ivtot), &
+          arg1,fd(ivtot),0)
+          do i=0,lmax
+            s(0,i)=s(0,i)+s1(0,i)+s2(0,i)+s3(0,i)
+          enddo
+          do m=1,lmax
+            do i=0,lmax-m
+              s(-m,i)=s(-m,i)+s1(-m,i)+s2(-m,i)+s3(-m,i)
+              s( m,i)=s( m,i)+s1( m,i)+s2( m,i)+s3( m,i)
+            enddo
+          enddo
+        endif
 
-      END DO  ! tetraeder loop
+      enddo  ! tetraeder loop
 
-32    CONTINUE
+32    continue
 
       !.......................................................................
-      !     I N T E G R A L   E X P A N S I O N        B A C K - R O T A T I O
+      !     i n t e g r a l   e x p a n s i o n        b a c k - r o t a t i o
       !.......................................................................
 
-      IB=0
-      IC=0
-      ICE=0
+      ib=0
+      ic=0
+      ice=0
       ! calculate transformation matrices for spherical harmonics
-      CALL D_REAL(LMAX,ALPHA(IFACE),BETA(IFACE),GAMMA(IFACE),DMATL,ISUMD,LMAXD1)
+      call d_real(lmax,alpha(iface),beta(iface),gamma(iface),dmatl,isumd,lmaxd1)
 
-      ISU=0
-      DO L=0,LMAX
-        IB=IB+L+1
-        DO MP=L,1,-1
-          SUM(MP,1)=0.D0
-          SUM(MP,2)=0.D0
-          ICE=ICE+1
-          K0=(L+MP+1)/2
-          DO K=L,K0,-1
-            IS=2*K-L-MP
-            IC=IC+1
-            SUM(MP,2)=SUM(MP,2)+CL(IC)*S(-MP,IS)
-            SUM(MP,1)=SUM(MP,1)+CL(IC)*S( MP,IS)
-          END DO
-          SUM(MP,2)=SUM(MP,2)*C(ICE)
-          SUM(MP,1)=SUM(MP,1)*C(ICE)
-        END DO
-        SUM(0,1)=0.D0
-        ICE=ICE+1
-        K0=(L+1)/2
-        DO K=L,K0,-1
-          IS=2*K-L
-          IC=IC+1
-          SUM(0,1)=SUM(0,1)+CL(IC)*S(0,IS)
-        END DO
-        SUM(0,1)=SUM(0,1)*C(ICE)
-        IMAX=1
-        M=0
-  8     CONTINUE
-        DO I=1,IMAX
-          MO=(3-2*I)*M
-          IBM=IB+MO
-          LOFM(IBM)=L
-          MOFM(IBM)=MO
-          IPMAX=1
-          MP=0
-    16    CONTINUE
-          DO IP=1,IPMAX
-            ISU=ISU+1
-            B(IBM)=B(IBM)+SUM(MP,IP)*DMATL(ISU)
-          END DO
-          IPMAX=2
-          MP=MP+1
-          IF(MP <= L) GOTO 16
-        END DO
-        IMAX=2
-        M=M+1
-        IF(M <= L) GOTO 8
-        IB=IB+L
-      END DO ! loop over L
+      isu=0
+      do l=0,lmax
+        ib=ib+l+1
+        do mp=l,1,-1
+          sum(mp,1)=0.d0
+          sum(mp,2)=0.d0
+          ice=ice+1
+          k0=(l+mp+1)/2
+          do k=l,k0,-1
+            is=2*k-l-mp
+            ic=ic+1
+            sum(mp,2)=sum(mp,2)+cl(ic)*s(-mp,is)
+            sum(mp,1)=sum(mp,1)+cl(ic)*s( mp,is)
+          enddo
+          sum(mp,2)=sum(mp,2)*c(ice)
+          sum(mp,1)=sum(mp,1)*c(ice)
+        enddo
+        sum(0,1)=0.d0
+        ice=ice+1
+        k0=(l+1)/2
+        do k=l,k0,-1
+          is=2*k-l
+          ic=ic+1
+          sum(0,1)=sum(0,1)+cl(ic)*s(0,is)
+        enddo
+        sum(0,1)=sum(0,1)*c(ice)
+        imax=1
+        m=0
+  8     continue
+        do i=1,imax
+          mo=(3-2*i)*m
+          ibm=ib+mo
+          lofm(ibm)=l
+          mofm(ibm)=mo
+          ipmax=1
+          mp=0
+    16    continue
+          do ip=1,ipmax
+            isu=isu+1
+            b(ibm)=b(ibm)+sum(mp,ip)*dmatl(isu)
+          enddo
+          ipmax=2
+          mp=mp+1
+          if(mp <= l) goto 16
+        enddo
+        imax=2
+        m=m+1
+        if(m <= l) goto 8
+        ib=ib+l
+      enddo ! loop over l
 
-  13 CONTINUE
-    END DO py
+  13 continue
+    enddo py
     !.......................................................................
-    !     D E F I N E S   A N D    S A V E S   S H A P E    F U N C T I O N ???
+    !     d e f i n e s   a n d    s a v e s   s h a p e    f u n c t i o n ???
     !.......................................................................
-    B(1)=FPISQ-B(1)/FPISQ
-    DO IBM=2,IBMAX
-      B(IBM)=-B(IBM)/FPISQ
-    END DO
-    DO IBM=1,IBMAX
+    b(1)=fpisq-b(1)/fpisq
+    do ibm=2,ibmax
+      b(ibm)=-b(ibm)/fpisq
+    enddo
+    do ibm=1,ibmax
       !     write(6,*) ibm,b(ibm)
-      IF(ABS(B(IBM)) > 1.D-6) ISW(IBM)=1
-      !IREC=(IBM-1)*MESHN+N
-      !WRITE(11,REC=IREC) B(IBM)
-      THETAS_S(N, IBM) = B(IBM)
-    END DO
-  END DO meshloop
+      if(abs(b(ibm)) > 1.d-6) isw(ibm)=1
+      !irec=(ibm-1)*meshn+n
+      !write(11,rec=irec) b(ibm)
+      thetas_s(n, ibm) = b(ibm)
+    enddo
+  enddo meshloop
 
-  !Now rearrange Thetas_s array that it contains only non-zero shapefunctions
-  !This is done "in-place"
+  !now rearrange thetas_s array that it contains only non-zero shapefunctions
+  !this is done "in-place"
 
-  LMIFUN_S = 0
+  lmifun_s = 0
 
   icount = 1
-  DO IBM=1,IBMAX
-    IF (ISW(IBM) == 1) THEN
+  do ibm=1,ibmax
+    if (isw(ibm) == 1) then
 
-      LMIFUN_S(ICOUNT) = LOFM(IBM)*LOFM(IBM)+LOFM(IBM)+MOFM(IBM)+1
+      lmifun_s(icount) = lofm(ibm)*lofm(ibm)+lofm(ibm)+mofm(ibm)+1
 
-      IF (icount .ne. IBM) THEN
-        DO N = 1, MESHN
-          THETAS_S(N, icount) = THETAS_S(N, IBM)
-        END DO
-      END IF
+      if (icount .ne. ibm) then
+        do n = 1, meshn
+          thetas_s(n, icount) = thetas_s(n, ibm)
+        enddo
+      endif
       icount = icount + 1
 
-    ELSE
+    else
 
-      DO N = 1, MESHN
-        THETAS_S(N, IBM) = 0.0d0
-      END DO
-    END IF
-  END DO
+      do n = 1, meshn
+        thetas_s(n, ibm) = 0.0d0
+      enddo
+    endif
+  enddo
 
   ! count non-zero shape functions
-  NFUN=0
-  DO IBM=1,IBMAX
-    IF(ISW(IBM) == 1)  NFUN=NFUN+1
-  END DO
+  nfun=0
+  do ibm=1,ibmax
+    if(isw(ibm) == 1)  nfun=nfun+1
+  enddo
 
-END subroutine
+endsubroutine
 
-end module ShapeIntegration_mod
+endmodule ShapeIntegration_mod
