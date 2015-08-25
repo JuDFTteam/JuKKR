@@ -513,56 +513,35 @@
           fac2 = sqr2
         enddo ! m
         
-        imax = 1
+        imax = 0
         do m = 0, l
-          do i = 1, imax
-            ipmax = 1
+          do i = 0, imax
+            ipmax = 0
             do mp = 0, l
-              do ip = 1, ipmax
-#if 0              
-                if (i == 2) goto  7
-                if (ip == 2) goto 10
-                d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
-                goto  9
+              do ip = 0, ipmax
+              
+                if (ip == 1) then
+                  if (i == 1) then
+                    d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
+                  else  ! i == 1
+                    d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==0, ip==1
+                  endif ! i == 1
+                else  ! ip == 1
+                  if (i == 1) then
+                    d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==0
+                  else  ! i == 1
+                    d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==0, ip==0
+                  endif ! i == 1
+                endif ! ip == 1
                 
-    7           continue 
-                if (ip == 2) goto  8
-                d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==1
-                goto  9
-                
-    8           continue
-                d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==2
-                goto  9
-                
-   10           continue
-                d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==2
-                goto  9
-                
-    9           continue
-    
-#else
-                if (ip == 2) then
-                  if (i == 2) then
-                    d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==2
-                  else  ! i == 2
-                    d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==2
-                  endif ! i == 2
-                else  ! ip == 2
-                  if (i == 2) then
-                    d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==2, ip==1
-                  else  ! i == 2
-                    d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
-                  endif ! i == 2
-                endif ! ip == 2
-#endif
                 if (mod(m+mp, 2) /= 0) d = -d
                 isu = isu+1
                 dmatl(isu) = d
               enddo ! ip
-              ipmax = 2
+              ipmax = 1
             enddo ! mp
           enddo ! i
-          imax = 2
+          imax = 1
         enddo ! m
       enddo ! l
 !     isum = isu ! unused: minimal value of isumd
