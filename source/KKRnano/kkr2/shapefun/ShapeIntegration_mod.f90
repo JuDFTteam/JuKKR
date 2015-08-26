@@ -31,70 +31,46 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   use angles_common, only: alpha, beta, gamma
   use shapeintegrationhelpers_mod, only: pintg, ccoef, d_real
 
-  integer :: lmax
-  integer :: nface
-  integer :: meshn
-  real*8 ::  xrn(meshnd)
-  real*8 :: dlt
-  real*8 ::  thetas_s(meshnd,ibmaxd)
-  integer :: lmifun_s(ibmaxd)
+  integer, intent(in) :: lmax, nface, meshn
+  real*8, intent(in) :: xrn(meshnd)
+  real*8, intent(in) :: dlt
+  real*8, intent(out) :: thetas_s(meshnd,ibmaxd)
+  integer, intent(out) :: lmifun_s(ibmaxd)
   integer, intent(in) :: meshnd
   integer, intent(in) :: ibmaxd
   integer, intent(out) :: nfun
 
-  real*8 ::  dmatl(isumd)
+  real*8 :: dmatl(isumd)
+  real*8 :: cl(icd)
+  real*8 :: c(iced)
 
-  real*8 ::     cl(icd)
-  real*8 ::     c(iced)
+  real*8 :: r
+  real*8 :: rap
+  real*8 :: rdown
 
-  real*8 ::  r
-  real*8 ::  rap
-  real*8 ::  rdown
+  real*8 :: arg1
+  real*8 :: arg2
 
-  real*8 ::  arg1
-  real*8 ::  arg2
+  integer :: ivtot, iface, ntet, itet, i, m, ic, ice, ib, isu, l, mp, k0, k, is, imax, mo, ip, ipmax, icount
+  integer :: ibm, ibmax, ir
 
-  integer :: ivtot
-  integer :: iface
-  integer :: ntet
-  integer :: itet
-  integer :: i
-  integer :: m
-  integer :: ic
-  integer :: ice
-  integer :: ib
-  integer :: isu
-  integer :: l
-  integer :: mp
-  integer :: k0
-  integer :: k
-  integer :: is
-  integer :: imax
-  integer :: mo
-  integer :: ip
-  integer :: ipmax
-  integer :: icount
+  real*8, allocatable :: rupsq(:) ! dim nvtotd
 
-  integer :: ibm
-  integer :: ibmax
-  integer :: n
-
-  real*8, allocatable ::  rupsq(:) ! dim nvtotd
-
-  real*8 ::     s(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 ::    s1(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 ::    s2(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 ::    s3(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 ::    sm(2,0:lmaxd1)
-  real*8 ::    fk
-  real*8 ::    fl
-  real*8 ::    fpisq
+  real*8 ::  s(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 :: s1(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 :: s2(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 :: s3(-lmaxd1:lmaxd1,0:lmaxd1)
+  real*8 :: sm(2,0:lmaxd1)
+  real*8 :: fk
+  real*8 :: fl
+  real*8 :: fpisq
 
   ! local automatic arrays
-  integer ::   lofm(ibmaxd)
-  integer ::   mofm(ibmaxd)
-  real*8 ::    b(ibmaxd)
-  integer ::   isw(ibmaxd)
+  integer :: lofm(ibmaxd)
+  integer :: mofm(ibmaxd)
+  integer :: isw(ibmaxd)
+  real*8 :: b(ibmaxd)
+  
   ! isw index array, value is 1 for lm for which shapefunction is non-zero
   ! otherwise the value is 0
 
@@ -107,7 +83,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   thetas_s = 0.d0
 
   !.......................................................................
-  !     e x p a n s i o n    c o e f f i c i e n t s
+  !     e x p a ir s i o ir    c o e f f i c i e ir t s
   !.......................................................................
   call ccoef(lmax,cl,c)
   ivtot = 0
@@ -125,33 +101,25 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   !.......................................................................
   !     l o o p    o v e r    r a d i a l    m e s h    p o i n t s
   !.......................................................................
-  meshloop: do n = 1, meshn
-    r = xrn(n) ! radius
+  meshloop: do ir = 1, meshn
+    r = xrn(ir) ! radius
     b(1:ibmax) = 0.d0
     ivtot = 0
+    
     !.......................................................................
     !     l o o p    o v e r    p y r a m i d s
     !.......................................................................
 py: do iface = 1, nface
       ntet = ntt(iface)
 
-      if(r <= r0(iface)) then
+      if (r <= r0(iface)) then
         ivtot = ivtot+ntet
-        
-        do i = 0, lmax
-          s(0,i) = 0.d0
-        enddo ! i
-        do m = 1, lmax
-          do i = 0, lmax-m
-            s(-m,i) = 0.d0
-            s( m,i) = 0.d0
-          enddo ! i
-        enddo ! m
         cycle py
+        
       endif ! r <= r0
       
       arg1 = r0(iface)/r
-      rdown = sqrt((r - r0(iface))*(r + r0(iface)))
+      rdown = sqrt(r**2 - r0(iface)**2)
       do i = 0, lmax
         s(0,i) = 0.d0
       enddo ! i
@@ -166,7 +134,9 @@ py: do iface = 1, nface
       !.......................................................................
       do itet = 1, ntet
         ivtot = ivtot+1
-        if(r <= rd(ivtot)) then
+        
+        if (r <= rd(ivtot)) then
+        
           call pintg(fa(ivtot),fb(ivtot),dlt,s1,lmax,isignu(ivtot), arg1,fd(ivtot),0)
           do i = 0, lmax
             s(0,i) = s(0,i) + s1(0,i)
@@ -177,7 +147,9 @@ py: do iface = 1, nface
               s( m,i) = s( m,i) + s1( m,i)
             enddo ! i
           enddo ! m
+          
         else  ! r <= rd(ivtot)
+        
           rap  = rupsq(ivtot)/rdown
           arg2 = rupsq(ivtot)/r0(iface)
           fk = fd(ivtot) - acos(rap)
@@ -199,12 +171,13 @@ py: do iface = 1, nface
               s( m,i) = s( m,i) + s1( m,i) + s2( m,i) + s3( m,i)
             enddo ! i
           enddo ! m
+          
         endif ! r <= rd(ivtot)
 
-      enddo  ! tetraeder loop
+      enddo ! itet ! tetraeder loop
 
       !.......................................................................
-      !     i n t e g r a l   e x p a n s i o n        b a c k - r o t a t i o
+      !  i n t e g r a l   e x p a n s i o n        b a c k - r o t a t i o n
       !.......................................................................
 
       ib = 0
@@ -263,7 +236,7 @@ py: do iface = 1, nface
 
     enddo py
     !.......................................................................
-    !     d e f i n e s   a n d    s a v e s   s h a p e    f u n c t i o n ???
+    !     d e f i n e s   a n d    s a v e s   s h a p e    f u n c t i o n
     !.......................................................................
     b(1:ibmax) = -b(1:ibmax)/fpisq
     b(1) = fpisq + b(1)
@@ -271,9 +244,9 @@ py: do iface = 1, nface
     do ibm = 1, ibmax
       !     write(6,*) ibm,b(ibm)
       if (abs(b(ibm)) > 1d-6) isw(ibm) = 1
-      !irec=(ibm-1)*meshn+n
+      !irec=(ibm-1)*meshn+ir
       !write(11,rec=irec) b(ibm)
-      thetas_s(n,ibm) = b(ibm)
+      thetas_s(ir,ibm) = b(ibm)
     enddo ! ibm
     
   enddo meshloop
@@ -290,9 +263,9 @@ py: do iface = 1, nface
       lmifun_s(icount) = lofm(ibm)*lofm(ibm) + lofm(ibm) + mofm(ibm) + 1
 
       if (icount /= ibm) then
-        do n = 1, meshn
-          thetas_s(n,icount) = thetas_s(n,ibm)
-        enddo ! n
+        do ir = 1, meshn
+          thetas_s(ir,icount) = thetas_s(ir,ibm)
+        enddo ! ir
       endif
       icount = icount + 1
 

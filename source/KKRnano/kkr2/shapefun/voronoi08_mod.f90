@@ -1,707 +1,676 @@
-MODULE VORONOI08_MOD
+module voronoi08_mod
   implicit none
   private
-  public :: DISTPLANE, NORMALPLANE0, POLYHEDRON08, DSORT
+  public :: distplane, normalplane0, polyhedron08, dsort
 
-  CONTAINS
+  contains
 
-SUBROUTINE POLYHEDRON08(NPLANE,NVERTMAX,NFACED,TOLVDIST,TOLAREA, &
-                        A3,B3,C3,D3, &
-                        NFACE,NVERT,XVERT,YVERT,ZVERT,output)
-! Given a set of planes, defined by A3*x+B3*y+C3*z=D3 and defining
+subroutine polyhedron08(nplane,nvertmax,nfaced,tolvdist,tolarea, a3,b3,c3,d3, nface,nvert,xvert,yvert,zvert,output)
+! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
 ! a convex part of space (the minimal one containing the origin, 
-! usually a WS-polyhedron), this subroutine returns the actual faces of
-! the polyhedron, discarding the planes that do not contain faces. Also,
-! the coordinates of the verticess of the faces XVERT,YVERT,ZVERT and their 
-! number NVERT per face are returned. The coefficients of the actual
-! faces are returned in the same arrays A3,B3,C3, and D3.
+! usually a ws-polyhedron), this subroutine returns the actual faces of
+! the polyhedron, discarding the planes that do not contain faces. also,
+! the coordinates of the verticess of the faces xvert,yvert,zvert and their 
+! number nvert per face are returned. the coefficients of the actual
+! faces are returned in the same arrays a3,b3,c3, and d3.
 !
-! Uses subroutine VERTEX3D. 
+! uses subroutine vertex3d. 
 
 logical, intent(in) :: output
 
-! Input:
-INTEGER NPLANE                ! Initial number of planes.
-INTEGER NVERTMAX              ! Max. number of vertices per plane.
-INTEGER NFACED                ! Max. number of faces.
-REAL*8  TOLVDIST              ! Max. tolerance for distance of two vertices
-REAL*8  TOLAREA               ! Max. tolerance for area of polygon face
-! Input and Output
-REAL*8            A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes,
-!                                     ! dimensioned >= NPLANE.
-! Output:
-INTEGER NVERT(*)  ! Number of vertices found for each face
-INTEGER NFACE     ! Number of faces found (with nvert>0).
-INTEGER NVERTTOT  ! Total number of vertices
-REAL*8            XVERT(NVERTMAX,NFACED),YVERT(NVERTMAX,NFACED), &
-                  ZVERT(NVERTMAX,NFACED)
-!                            ! Cartesian coords. of vertices for each plane
+! input:
+integer nplane                ! initial number of planes.
+integer nvertmax              ! max. number of vertices per plane.
+integer nfaced                ! max. number of faces.
+double precision tolvdist              ! max. tolerance for distance of two vertices
+double precision tolarea               ! max. tolerance for area of polygon face
+! input and output
+double precision           a3(*),b3(*),c3(*),d3(*)  ! coefs. defining the planes,
+!                                     ! dimensioned >= nplane.
+! output:
+integer nvert(*)  ! number of vertices found for each face
+integer nface     ! number of faces found (with nvert>0).
+integer nverttot  ! total number of vertices
+double precision           xvert(nvertmax,nfaced),yvert(nvertmax,nfaced), &
+                  zvert(nvertmax,nfaced)
+!                            ! cartesian coords. of vertices for each plane
 !                            ! (2nd index is for planes).
-! Inside:
-INTEGER IPLANEHIGH,INDEXHIGH,INDEXLOW,IVERT,id
+! inside:
+integer iplanehigh,indexhigh,indexlow,ivert,id
 
 !---------------------------------------------------------------
-! Find all faces and vertices of the polyhedron. On output, the vertices of 
+! find all faces and vertices of the polyhedron. on output, the vertices of 
 ! each face are sorted (clockwise or anticlockwise).
-IF (output) then
-  WRITE(*,*) 'Entering VERTEX3D'
-END IF
+if (output) then
+  write(*,*) 'entering vertex3d'
+end if
 
-CALL VERTEX3D( &
-               NPLANE,A3,B3,C3,D3,NVERTMAX, TOLVDIST, &
-               NFACE,NVERT,XVERT,YVERT,ZVERT,output)
-IF (output) WRITE(*,*) 'VERTEX3D found',NFACE, &
-            ' faces with >3 vertices.'
+call vertex3d(nplane, a3, b3, c3, d3, nvertmax, tolvdist, nface, nvert, xvert, yvert, zvert, output)
+if (output) write(*,*) 'vertex3d found',nface,' faces with >3 vertices.'
 !---------------------------------------------------------------
-! Analyze the faces and vertices of the polyhedron.
-! Use criteria for rejecting faces that are too small 
+! analyze the faces and vertices of the polyhedron.
+! use criteria for rejecting faces that are too small 
 ! or vertices that are too close to each other.
-! On output, number of faces and vertices may be reduced 
+! on output, number of faces and vertices may be reduced 
 ! after some rejections have taken place.
-IF (output) WRITE(*,*) 'Entering ANALYZEVERT3D'
-CALL ANALYZEVERT3D( &
-                    NVERTMAX,NFACED,TOLVDIST,TOLAREA,NPLANE, &
-                    NFACE,NVERT,XVERT,YVERT,ZVERT, &
-                    A3,B3,C3,D3, output)
-IF (output) WRITE(*,*) 'ANALYZEVERT3D accepted',NFACE,' faces.'
+if (output) write(*,*) 'entering analyzevert3d'
+call analyzevert3d(nvertmax,nfaced,tolvdist,tolarea,nplane,nface,nvert,xvert,yvert,zvert,a3,b3,c3,d3, output)
+if (output) write(*,*) 'analyzevert3d accepted',nface,' faces.'
 
 !---------------------------------------------------------------
-! Pack the planes that contain faces at the beginning of the arrays
-! A3, B3, C3, D3, and do the same for NVERT,XVERT,YVERT,ZVERT. The
+! pack the planes that contain faces at the beginning of the arrays
+! a3, b3, c3, d3, and do the same for nvert,xvert,yvert,zvert. the
 ! order is changed.
 
-RETURN
+! return
+! 
+! 
+! ! **********************                                               from here on not used
+! ! **********************                                               from here on not used
+! ! **********************                                               from here on not used
+! ! **********************                                               from here on not used
+! ! **********************                                               from here on not used
+! ! **********************                                               from here on not used
+! 
+! ! you have to fill up the arrays up to nface, so...
+!    indexlow = 1
+! do while (indexlow <= nface)
+!     
+!    if (nvert(indexlow) == 0) then
+! !     promote all planes by one
+!       do id = indexlow+1,nplane
+!          a3(id-1) = a3(id)
+!          b3(id-1) = b3(id)
+!          c3(id-1) = c3(id)
+!          d3(id-1) = d3(id)
+!          nvert(id-1) = nvert(id) 
+!          do ivert = 1,nvert(id-1) 
+!             xvert(ivert,id-1) = xvert(ivert,id)
+!             yvert(ivert,id-1) = yvert(ivert,id)
+!             zvert(ivert,id-1) = zvert(ivert,id)
+!          enddo
+!       end do
+!    else
+!       indexlow = indexlow + 1
+!    end if
+! end do
 
-
-! **********************                                               FROM HERE ON NOT USED
-! **********************                                               FROM HERE ON NOT USED
-! **********************                                               FROM HERE ON NOT USED
-! **********************                                               FROM HERE ON NOT USED
-! **********************                                               FROM HERE ON NOT USED
-! **********************                                               FROM HERE ON NOT USED
-
-! You have to fill up the arrays up to NFACE, so...
-   indexlow = 1
-DO while (INDEXLOW.le.nface)
-    
-   IF (NVERT(INDEXLOW).EQ.0) THEN
-!     promote all planes by one
-      do id = indexlow+1,nplane
-         A3(Id-1) = A3(id)
-         B3(Id-1) = B3(Id)
-         C3(Id-1) = C3(Id)
-         D3(Id-1) = D3(Id)
-         NVERT(Id-1) = NVERT(Id) 
-         DO IVERT = 1,NVERT(Id-1) 
-            XVERT(IVERT,Id-1) = XVERT(IVERT,Id)
-            YVERT(IVERT,Id-1) = YVERT(IVERT,Id)
-            ZVERT(IVERT,Id-1) = ZVERT(IVERT,Id)
-         ENDDO
-      end do
-   else
-      indexlow = indexlow + 1
-   end if
-end do
-
-END SUBROUTINE
+endsubroutine polyhedron08
 
 
 !***********************************************************************
-SUBROUTINE VERTEX3D(NPLANE,A3,B3,C3,D3,NVERTMAX,TOLVDIST, &
-                    NFACE,NVERT,XVERT,YVERT,ZVERT, output)
-! Given a set of planes, defined by A3*x+B3*y+C3*z=D3 and defining
+subroutine vertex3d(nplane,a3,b3,c3,d3,nvertmax,tolvdist, &
+                    nface,nvert,xvert,yvert,zvert, output)
+! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
 ! a convex part of space (the minimal one containing the origin, 
-! usually a WS-polyhedron), this subroutine returns the vertices
-! of this polyhedron in cartesian coordinates. For the planes that
-! are not faces of the polyhedron, a value NVERT(IPLANE)=0 is returned.
-! The total no. of faces found is returned as NFACE.
+! usually a ws-polyhedron), this subroutine returns the vertices
+! of this polyhedron in cartesian coordinates. for the planes that
+! are not faces of the polyhedron, a value nvert(iplane)=0 is returned.
+! the total no. of faces found is returned as nface.
 !
-! Uses logical function HALFSPACE
+! uses logical function halfspace
 implicit none
-! Input:
-INTEGER NPLANE                ! Number of planes.
-INTEGER NVERTMAX              ! Max. number of vertices per plane.
-REAL*8           A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes, 
-!                                     ! dimensioned >= NPLANE.
-REAL*8 TOLVDIST               ! Min. distance between vertices
-! Output:
-INTEGER NVERT(*)  ! Number of vertices found for each face
-INTEGER NFACE     ! Number of faces found (with nvert>0).
-REAL*8  XVERT(NVERTMAX,*),YVERT(NVERTMAX,*),ZVERT(NVERTMAX,*)
-!                            ! Cartesian coords. of vertices for each plane
+! input:
+integer nplane                ! number of planes.
+integer nvertmax              ! max. number of vertices per plane.
+double precision          a3(*),b3(*),c3(*),d3(*)  ! coefs. defining the planes, 
+!                                     ! dimensioned >= nplane.
+double precision tolvdist               ! min. distance between vertices
+! output:
+integer nvert(*)  ! number of vertices found for each face
+integer nface     ! number of faces found (with nvert>0).
+double precision xvert(nvertmax,*),yvert(nvertmax,*),zvert(nvertmax,*)
+!                            ! cartesian coords. of vertices for each plane
 !                            ! (2nd index is for planes).
-LOGICAL output
+logical output
 
-! Inside:
-INTEGER IPLANE1,IPLANE2,IPLANE3,IPLANE,KPLANE ! Plane indices
-INTEGER IVERT                    ! Vertex index
-REAL*8           XCUT,YCUT,ZCUT ! Cut point of three planes.
-REAL*8           DET,DETX,DETY,DETZ ! Determinants of 3x3 system for 
-!                               ! XCUT,YCUT,ZCUT.
-REAL*8           DISTANCE   ! A distance criterium of two points in space
-! The following are for sorting the vertices of each face:
-REAL*8           V1(3),V2(3),V3(3)   ! Auxiliary vectors...
-REAL*8           SINFIV1V2,COSFIV1V2 ! ...and their inner and outer products
-REAL*8           FI(NVERTMAX)        ! ...and also their relative angles.
-REAL*8           UV(3),VL,SN         ! Unit vector, length, sign of sin(fi)
+! inside:
+integer ip1,ip2,ip3,ipl,kpl ! plane indices
+integer ivert                    ! vertex index
+double precision          xcut,ycut,zcut ! cut point of three planes.
+double precision          det,detx,dety,detz ! determinants of 3x3 system for 
+!                               ! xcut,ycut,zcut.
+double precision          distance   ! a distance criterium of two points in space
+! the following are for sorting the vertices of each face:
+double precision          v1(3),v2(3),v3(3)   ! auxiliary vectors...
+double precision          sinfiv1v2,cosfiv1v2 ! ...and their inner and outer products
+double precision          fi(nvertmax)        ! ...and also their relative angles.
+double precision          uv(3),vl,sn         ! unit vector, length, sign of sin(fi)
 
-LOGICAL LACCEPT      ! Determining whether a cut point is inside
+logical laccept      ! determining whether a cut point is inside
 !                          !                            the polyhedron.
 !---------------------------------------------------------------
-! Check & initialize
-IF (NPLANE.LT.4) THEN
-  WRITE(*,*) 'VERT3D: Error:NPLANE was only',NPLANE
-  STOP
-ENDIF
-DO IPLANE = 1,NPLANE
-   NVERT(IPLANE) = 0
-ENDDO
+! check & initialize
+if (nplane < 4) then
+  write(*,*) 'vert3d: error:nplane was only',nplane
+  stop
+endif
+do ipl = 1,nplane
+   nvert(ipl) = 0
+enddo
 !===============================================================
-! Start loop over all planes that can be cut:
-DO 120 IPLANE1 = 1,NPLANE
-! Start loop over all other planes:
-DO 110 IPLANE2 = 1,NPLANE
-IF (IPLANE2.EQ.IPLANE1) GOTO 110 
-! Start loop over all other-other (!) planes. Do from IPLANE2+1 to 
-! NPLANE so that no pair is considered twice.
-DO 100 IPLANE3 = IPLANE2+1,NPLANE        ! nikos  IPLANE2+1,NPLANE
-IF (IPLANE3.EQ.IPLANE1) GOTO 100
-!     IF (IPLANE3.EQ.IPLANE2) GOTO 100 ! added by nikos
-! Solve the 3x3 system to find the cut point.
-DET= A3(IPLANE1)*(B3(IPLANE2)*C3(IPLANE3)-B3(IPLANE3)*C3(IPLANE2)) &
-   + A3(IPLANE2)*(B3(IPLANE3)*C3(IPLANE1)-B3(IPLANE1)*C3(IPLANE3)) &
-   + A3(IPLANE3)*(B3(IPLANE1)*C3(IPLANE2)-B3(IPLANE2)*C3(IPLANE1))
+! start loop over all planes that can be cut:
+do 120 ip1 = 1,nplane
+! start loop over all other planes:
+do 110 ip2 = 1,nplane
+if (ip2 == ip1) goto 110 
+! start loop over all other-other (!) planes. do from ip2+1 to 
+! nplane so that no pair is considered twice.
+do 100 ip3 = ip2+1,nplane        ! nikos  ip2+1,nplane
+if (ip3 == ip1) goto 100
+!     if (ip3 == ip2) goto 100 ! added by nikos
+! solve the 3x3 system to find the cut point.
+det= a3(ip1)*(b3(ip2)*c3(ip3) - b3(ip3)*c3(ip2)) &
+   + a3(ip2)*(b3(ip3)*c3(ip1) - b3(ip1)*c3(ip3)) &
+   + a3(ip3)*(b3(ip1)*c3(ip2) - b3(ip2)*c3(ip1))
 
 !---------------------------------------------------------------
-IF (DABS(DET).GT.1.D-12) THEN ! there is a cut point 
+if (dabs(det) > 1.d-12) then ! there is a cut point 
 
-DETX=D3(IPLANE1)*(B3(IPLANE2)*C3(IPLANE3)-B3(IPLANE3)*C3(IPLANE2)) &
-   + D3(IPLANE2)*(B3(IPLANE3)*C3(IPLANE1)-B3(IPLANE1)*C3(IPLANE3)) &
-   + D3(IPLANE3)*(B3(IPLANE1)*C3(IPLANE2)-B3(IPLANE2)*C3(IPLANE1))
+detx=d3(ip1)*(b3(ip2)*c3(ip3) - b3(ip3)*c3(ip2)) &
+   + d3(ip2)*(b3(ip3)*c3(ip1) - b3(ip1)*c3(ip3)) &
+   + d3(ip3)*(b3(ip1)*c3(ip2) - b3(ip2)*c3(ip1))
 
-DETY=A3(IPLANE1)*(D3(IPLANE2)*C3(IPLANE3)-D3(IPLANE3)*C3(IPLANE2)) &
-   + A3(IPLANE2)*(D3(IPLANE3)*C3(IPLANE1)-D3(IPLANE1)*C3(IPLANE3)) &
-   + A3(IPLANE3)*(D3(IPLANE1)*C3(IPLANE2)-D3(IPLANE2)*C3(IPLANE1))
+dety=a3(ip1)*(d3(ip2)*c3(ip3) - d3(ip3)*c3(ip2)) &
+   + a3(ip2)*(d3(ip3)*c3(ip1) - d3(ip1)*c3(ip3)) &
+   + a3(ip3)*(d3(ip1)*c3(ip2) - d3(ip2)*c3(ip1))
 
-DETZ=A3(IPLANE1)*(B3(IPLANE2)*D3(IPLANE3)-B3(IPLANE3)*D3(IPLANE2)) &
-   + A3(IPLANE2)*(B3(IPLANE3)*D3(IPLANE1)-B3(IPLANE1)*D3(IPLANE3)) &
-   + A3(IPLANE3)*(B3(IPLANE1)*D3(IPLANE2)-B3(IPLANE2)*D3(IPLANE1))
+detz=a3(ip1)*(b3(ip2)*d3(ip3) - b3(ip3)*d3(ip2)) &
+   + a3(ip2)*(b3(ip3)*d3(ip1) - b3(ip1)*d3(ip3)) &
+   + a3(ip3)*(b3(ip1)*d3(ip2) - b3(ip2)*d3(ip1))
 
-XCUT = DETX/DET
-YCUT = DETY/DET
-ZCUT = DETZ/DET
-!     write(6,333) IPLANE1,IPLANE2,IPLANE3,XCUT,YCUT,ZCUT
-!333  format('Cutting point of planes ',3I5,':',3D15.7)
+xcut = detx/det
+ycut = dety/det
+zcut = detz/det
+!     write(6,333) ip1,ip2,ip3,xcut,ycut,zcut
+!333  format('cutting point of planes ',3i5,':',3d15.7)
 !-----------------------------------
-! Accept this cut point as a vertex, if it belongs to the polyhedron. So,
-! make a loop over all other (than IPLANE1,2,3) planes:
-LACCEPT = .TRUE.
-DO 50 KPLANE = 1,NPLANE
-   IF (KPLANE.EQ.IPLANE1.OR.KPLANE.EQ.IPLANE2 &
-                        .OR.KPLANE.EQ.IPLANE3) GOTO 50
-   LACCEPT = LACCEPT.AND.HALFSPACE(A3(KPLANE),B3(KPLANE), &
-                         C3(KPLANE),D3(KPLANE),XCUT,YCUT,ZCUT)
-50 CONTINUE
+! accept this cut point as a vertex, if it belongs to the polyhedron. so,
+! make a loop over all other (than ip1,2,3) planes:
+laccept = .true.
+do 50 kpl = 1,nplane
+   if (kpl == ip1 .or. kpl == ip2 .or. kpl == ip3) goto 50
+   laccept = laccept .and. halfspace(a3(kpl),b3(kpl),c3(kpl),d3(kpl),xcut,ycut,zcut)
+50 continue
 !-----------------------------------
-IF (LACCEPT) THEN
-! If the cut point found belongs to the cell, we accept it unless it has
-! occured before for this face (IPLANE1). Such a situation is possible
+if (laccept) then
+! if the cut point found belongs to the cell, we accept it unless it has
+! occured before for this face (ip1). such a situation is possible
 ! when 4 or more planes pass through the same point (e.g. for the vertices
-! of the fcc WS-cell). So...
-   DO IVERT = 1,NVERT(IPLANE1)
-      DISTANCE = (XVERT(IVERT,IPLANE1)-XCUT)**2 &
-               + (YVERT(IVERT,IPLANE1)-YCUT)**2 &
-               + (ZVERT(IVERT,IPLANE1)-ZCUT)**2
-      DISTANCE = DSQRT(DISTANCE)
-      IF (DISTANCE.LT.TOLVDIST ) THEN
-         LACCEPT = .FALSE. ! vertex is too close to a previous one.
-         EXIT              ! Jump loop, no need to continue.
-      ENDIF
-   ENDDO
-ENDIF
-! Now we're ready to add the point to the vertex list.
-IF (LACCEPT) THEN
-   NVERT(IPLANE1) = NVERT(IPLANE1) + 1
-   XVERT(NVERT(IPLANE1),IPLANE1) = XCUT
-   YVERT(NVERT(IPLANE1),IPLANE1) = YCUT
-   ZVERT(NVERT(IPLANE1),IPLANE1) = ZCUT
-ENDIF
+! of the fcc ws-cell). so...
+   do ivert = 1,nvert(ip1)
+      distance = (xvert(ivert,ip1) - xcut)**2 + (yvert(ivert,ip1) - ycut)**2 + (zvert(ivert,ip1) - zcut)**2
+      distance = dsqrt(distance)
+      if (distance < tolvdist ) then
+         laccept = .false. ! vertex is too close to a previous one.
+         exit              ! jump loop, no need to continue.
+      endif
+   enddo
+endif
+! now we're ready to add the point to the vertex list.
+if (laccept) then
+   nvert(ip1) = nvert(ip1) + 1
+   xvert(nvert(ip1),ip1) = xcut
+   yvert(nvert(ip1),ip1) = ycut
+   zvert(nvert(ip1),ip1) = zcut
+endif
 
-ENDIF ! (DABS(DET).GT.1.D-12)
+endif ! (dabs(det) > 1.d-12)
 !---------------------------------------------------------------
 
-100 CONTINUE       ! IPLANE3
-110 CONTINUE       ! IPLANE2
-!     write(6,*) 
-!    & 'Number of vertices for plane ',iplane1,'  :',nvert(iplane1)
-120 CONTINUE       ! IPLANE1
+100 continue       ! ip3
+110 continue       ! ip2
+!     write(6,*) 'number of vertices for plane ',ip1,'  :',nvert(ip1)
+120 continue       ! ip1
 
 !===============================================================
-! Each plane should finally have either at least 3 vertices, if it is a
-! face of the polyhedron, or none at all. Check this:
+! each plane should finally have either at least 3 vertices, if it is a
+! face of the polyhedron, or none at all. check this:
 if (output) then
-DO IPLANE = 1,NPLANE
-IF (NVERT(IPLANE).EQ.1.OR.NVERT(IPLANE).EQ.2) THEN
-WRITE(*,*) 'VERTEX3D: Error:There is a problem with the vertices.'
-WRITE(*,*) 'For plane',IPLANE, &
-  ' ,only ',NVERT(IPLANE),' vertices were found.'
-ENDIF
-ENDDO
+  do ipl = 1,nplane
+    if (nvert(ipl) == 1 .or. nvert(ipl) == 2) then
+      write(*,*) 'vertex3d: error:there is a problem with the vertices.'
+      write(*,*) 'for plane',ipl,' ,only ',nvert(ipl),' vertices were found.'
+    endif
+  enddo
 endif
 
 !===============================================================
-! For each face of the polyhedron, sort the vertices in a consecutive order
-! as vertices of the polygon. The order is not necessarily mathematically
+! for each face of the polyhedron, sort the vertices in a consecutive order
+! as vertices of the polygon. the order is not necessarily mathematically
 ! positive.
-NFACE = 0
-DO IPLANE = 1,NPLANE
-IF (NVERT(IPLANE).GE.3) THEN
-   NFACE = NFACE + 1      ! Count the faces
-   FI(1) = -4.D0          ! Just a number smaller than -pi.
-! Unit vector in the direction of first vertex:
-   VL = DSQRT( XVERT(1,IPLANE)**2 + &
-               YVERT(1,IPLANE)**2 + ZVERT(1,IPLANE)**2 )
-   UV(1) = XVERT(1,IPLANE) / VL
-   UV(2) = YVERT(1,IPLANE) / VL
-   UV(3) = ZVERT(1,IPLANE) / VL
+nface = 0
+do ipl = 1,nplane
+  if (nvert(ipl) >= 3) then
+    nface = nface + 1      ! count the faces
+    fi(1) = -4.d0          ! just a number smaller than -pi.
+  ! unit vector in the direction of first vertex:
+    vl = dsqrt(xvert(1,ipl)**2 + yvert(1,ipl)**2 + zvert(1,ipl)**2)
+    uv(1) = xvert(1,ipl)/vl
+    uv(2) = yvert(1,ipl)/vl
+    uv(3) = zvert(1,ipl)/vl
 
-! Define the vector connecting the first vertex to the (now-) second:
-   V1(1) = XVERT(2,IPLANE) - XVERT(1,IPLANE)
-   V1(2) = YVERT(2,IPLANE) - YVERT(1,IPLANE)
-   V1(3) = ZVERT(2,IPLANE) - ZVERT(1,IPLANE)
+  ! define the vector connecting the first vertex to the (now-) second:
+    v1(1) = xvert(2,ipl) - xvert(1,ipl)
+    v1(2) = yvert(2,ipl) - yvert(1,ipl)
+    v1(3) = zvert(2,ipl) - zvert(1,ipl)
 
-   DO IVERT = 2,NVERT(IPLANE)
-! Define the vector connecting the first vertex to the current one:
-      V2(1) = XVERT(IVERT,IPLANE) - XVERT(1,IPLANE)
-      V2(2) = YVERT(IVERT,IPLANE) - YVERT(1,IPLANE)
-      V2(3) = ZVERT(IVERT,IPLANE) - ZVERT(1,IPLANE)
-! Find the angle fi between v1 and v2 
-! ( always, -pi < fi < pi from the definition of DATAN2 )
-      COSFIV1V2 = V1(1)*V2(1) + V1(2)*V2(2) + V1(3)*V2(3)
-      CALL CROSPR(V1,V2,V3) ! Cross product = |v1|*|v2|*sinfi
-      SINFIV1V2 = DSQRT(V3(1)*V3(1) + V3(2)*V3(2) + V3(3)*V3(3))
-! Sign of sinfi is defined with respect to unit vector uv (see above)
-      SN = UV(1)*V3(1) + UV(2)*V3(2) + UV(3)*V3(3)
-      IF (SN.LT.0) SINFIV1V2 = -SINFIV1V2
+    do ivert = 2,nvert(ipl)
+  ! define the vector connecting the first vertex to the current one:
+        v2(1) = xvert(ivert,ipl) - xvert(1,ipl)
+        v2(2) = yvert(ivert,ipl) - yvert(1,ipl)
+        v2(3) = zvert(ivert,ipl) - zvert(1,ipl)
+  ! find the angle fi between v1 and v2 
+  ! ( always, -pi < fi < pi from the definition of datan2 )
+        cosfiv1v2 = v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3)
+        call crospr(v1,v2,v3) ! cross product = |v1|*|v2|*sinfi
+        sinfiv1v2 = dsqrt(v3(1)*v3(1) + v3(2)*v3(2) + v3(3)*v3(3))
+  ! sign of sinfi is defined with respect to unit vector uv (see above)
+        sn = uv(1)*v3(1) + uv(2)*v3(2) + uv(3)*v3(3)
+        if (sn < 0) sinfiv1v2 = -sinfiv1v2
 
-      IF (SINFIV1V2.EQ.0.D0.AND.COSFIV1V2.EQ.0.D0) THEN
-! Point falls exactly on 1st vertex...
-         FI(IVERT) = -4.D0
-         WRITE(*,*) &
-         'VERTEX3D: Error: Found two identical vertex points'
-! ...while it shouldn't ! (this was checked earlier)
-         STOP
-      ELSE
-         FI(IVERT) = DATAN2(SINFIV1V2,COSFIV1V2)
-      ENDIF
+        if (sinfiv1v2 == 0.d0 .and. cosfiv1v2 == 0.d0) then
+  ! point falls exactly on 1st vertex...
+          fi(ivert) = -4.d0
+          write(*,*) 'vertex3d: error: found two identical vertex points'
+  ! ...while it shouldn't ! (this was checked earlier)
+          stop
+        else
+          fi(ivert) = datan2(sinfiv1v2, cosfiv1v2)
+        endif
 
-   ENDDO                  ! IVERT = 3,NVERT(IPLANE)
+    enddo ! ivert = 3,nvert(ipl)
 
-! Store with respect to the angle found:
-   CALL SORTVERTICES(NVERT(IPLANE),FI,XVERT(1,IPLANE), &
-                   YVERT(1,IPLANE),ZVERT(1,IPLANE))
+  ! store with respect to the angle found:
+    call sortvertices(nvert(ipl), fi, xvert(1,ipl), yvert(1,ipl), zvert(1,ipl))
 
+  endif                     ! (nvert(ipl) >= 3)
+enddo                     ! ipl = 1,nplane
 
-
-ENDIF                     ! (NVERT(IPLANE).GE.3)
-ENDDO                     ! IPLANE = 1,NPLANE
-
-END SUBROUTINE
+endsubroutine
 
 !------------------------------------------------------------------------------
-SUBROUTINE ANALYZEVERT3D( NVERTMAX,NFACED,TOLVDIST,TOLAREA,NPLANE, &
-                          NFACE,NVERT,XVERT,YVERT,ZVERT, &
-                          A3,B3,C3,D3,output)
-! Analyze the faces and vertices of the polyhedron.
-! Use criteria for rejecting faces that are too small 
+subroutine analyzevert3d( nvertmax,nfaced,tolvdist,tolarea,nplane, nface,nvert,xvert,yvert,zvert, a3,b3,c3,d3,output)
+! analyze the faces and vertices of the polyhedron.
+! use criteria for rejecting faces that are too small 
 ! or vertices that are too close to each other.
-! On output, number of faces and vertices may be reduced 
+! on output, number of faces and vertices may be reduced 
 ! after some rejections have taken place.
 implicit none
 
 logical :: output
 
-! Input:
-INTEGER NVERTMAX,NFACED
-INTEGER NPLANE                 ! Number of planes
-! Input and output:
-INTEGER NFACE                  ! Number of faces (usually much less than nplane)
-INTEGER NVERT(NFACED)          ! Number of vertices for each face
-REAL*8  XVERT(NVERTMAX,NFACED),YVERT(NVERTMAX,NFACED) &
-       ,ZVERT(NVERTMAX,NFACED)
-REAL*8 TOLVDIST,TOLAREA  ! Max. tolerance for distance of two vertices and area of face.
-REAL*8 A3(*),B3(*),C3(*),D3(*)  ! Coefs. defining the planes, to be reordered at end
-! Inside
-REAL*8 VDIST             ! Distance between consecutive vertices
+! input:
+integer nvertmax,nfaced
+integer nplane                 ! number of planes
+! input and output:
+integer nface                  ! number of faces (usually much less than nplane)
+integer nvert(nfaced)          ! number of vertices for each face
+double precision xvert(nvertmax,nfaced),yvert(nvertmax,nfaced) &
+       ,zvert(nvertmax,nfaced)
+double precision tolvdist,tolarea  ! max. tolerance for distance of two vertices and area of face.
+double precision a3(*),b3(*),c3(*),d3(*)  ! coefs. defining the planes, to be reordered at end
+! inside
+double precision vdist             ! distance between consecutive vertices
 
-LOGICAL LACCEPTVERT(NVERTMAX),LACCTOT,LFOUNDNEXT,LTHISISTHELAST
-LOGICAL LACCEPTFACE(NFACED)
-INTEGER NEWINDEXFACE(NFACED)
+logical lacceptvert(nvertmax),lacctot,lfoundnext,lthisisthelast
+logical lacceptface(nfaced)
+integer newindexface(nfaced)
 
-INTEGER IFACE,IVERT,IVERT2,INEXT,IPLANE
-INTEGER IFACENEWCOUNT,IVERTNEWCOUNT
-REAL*8 DX,DY,DZ,X1,X2,X3,Y1,Y2,Y3,Z1,Z2,Z3,TRIANGLEAREA
-REAL*8 FACEAREA(NFACED)
+integer iface,ivert,ivert2,inext,iplane
+integer ifacenewcount,ivertnewcount
+double precision dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3,trianglearea
+double precision facearea(nfaced)
 
 
-REAL*8 X4,Y4,Z4,DET,DETSUM
+double precision x4,y4,z4,det,detsum
 
-! First analyze vertices.
-! Reject doubles (also vertices which fall almost on the previous vertex).
-DO 100 IPLANE = 1,NPLANE
-   IF (NVERT(IPLANE).EQ.0) GOTO 100  ! no need checking this one, proceed to next!
+! first analyze vertices.
+! reject doubles (also vertices which fall almost on the previous vertex).
+do 100 iplane = 1, nplane
+   if (nvert(iplane) == 0) cycle ! no need checking this one, proceed to next!
 
-   LACCTOT = .TRUE.
-! First vertices 1st with 2nd, 2nd with 3rd, etc...
-   LACCEPTVERT(1) = .TRUE.                 ! First vertex is always accepted.
-   IVERT = 1
-   LTHISISTHELAST = .FALSE.   ! This flag will go up at the last acceptable vertex.
+   lacctot = .true.
+! first vertices 1st with 2nd, 2nd with 3rd, etc...
+   lacceptvert(1) = .true.                 ! first vertex is always accepted.
+   ivert = 1
+   lthisisthelast = .false.   ! this flag will go up at the last acceptable vertex.
 
-! Double loop: First loop is over all vertices; 
+! double loop: first loop is over all vertices; 
 ! but if during the loop vertices are found that have to be rejected, they are jumped over.
-   DO WHILE (IVERT.LT.NVERT(IPLANE).AND..NOT.LTHISISTHELAST)
-      LFOUNDNEXT = .FALSE.    ! This flag will become true when the next acceptable vertex is found.
-      IVERT2 = IVERT + 1
-! Second loop is over subsequent vertices (i.e., vertices ivert2 > ivert).
-! Look for the first acceptable-as-next vertex, but do not go beyond last vertex.
-! Stop loop as soon as the acceptable next vertex is found.
-      DO WHILE (.NOT.LFOUNDNEXT.AND.IVERT2.LE.NVERT(IPLANE))
-         DX = XVERT(IVERT2,IPLANE) -  XVERT(IVERT,IPLANE)
-         DY = YVERT(IVERT2,IPLANE) -  YVERT(IVERT,IPLANE)
-         DZ = ZVERT(IVERT2,IPLANE) -  ZVERT(IVERT,IPLANE)
-         VDIST = DSQRT(DX*DX + DY*DY + DZ*DZ)
+   do while (ivert < nvert(iplane) .and. .not. lthisisthelast)
+      lfoundnext = .false.    ! this flag will become true when the next acceptable vertex is found.
+      ivert2 = ivert + 1
+! second loop is over subsequent vertices (i.e., vertices ivert2 > ivert).
+! look for the first acceptable-as-next vertex, but do not go beyond last vertex.
+! stop loop as soon as the acceptable next vertex is found.
+      do while (.not. lfoundnext .and. ivert2 <= nvert(iplane))
+         dx = xvert(ivert2,iplane) -  xvert(ivert,iplane)
+         dy = yvert(ivert2,iplane) -  yvert(ivert,iplane)
+         dz = zvert(ivert2,iplane) -  zvert(ivert,iplane)
+         vdist = dsqrt(dx*dx + dy*dy + dz*dz)
 
-         IF (VDIST.GE.TOLVDIST) THEN
-            LACCEPTVERT(IVERT2) = .TRUE.   ! Vertex is to be accepted
-            INEXT = IVERT2                 ! Set this as the next vertex
-            LFOUNDNEXT = .TRUE.            ! and we have a winner, exit loop.
-         ELSE
-            LACCEPTVERT(IVERT2) = .FALSE.  ! Remember that vertex is to be rejected later
-            LACCTOT = .FALSE.              ! Remember that at least one vertex has to be rejected.
-            IVERT2 = IVERT2 + 1            ! Now compare to the next vertex
-        ENDIF  
-      ENDDO
+         if (vdist >= tolvdist) then
+            lacceptvert(ivert2) = .true.   ! vertex is to be accepted
+            inext = ivert2                 ! set this as the next vertex
+            lfoundnext = .true.            ! and we have a winner, exit loop.
+         else
+            lacceptvert(ivert2) = .false.  ! remember that vertex is to be rejected later
+            lacctot = .false.              ! remember that at least one vertex has to be rejected.
+            ivert2 = ivert2 + 1            ! now compare to the next vertex
+        endif  
+      enddo ! while
 
-      IF (.NOT.LFOUNDNEXT) LTHISISTHELAST = .TRUE. ! If there is no next acceptable vertex,
-                                                        ! then this was the last one. Jump out.
-      IVERT = INEXT
+      if (.not.lfoundnext) lthisisthelast = .true. ! if there is no next acceptable vertex,
+                                                        ! then this was the last one. jump out.
+      ivert = inext
       
-   ENDDO
+   enddo
 
 ! ...and now 1st with last to close the cycle:
-   IVERT = 1
-   IVERT2 = NVERT(IPLANE)
-   DX = XVERT(IVERT2,IPLANE) -  XVERT(IVERT,IPLANE)
-   DY = YVERT(IVERT2,IPLANE) -  YVERT(IVERT,IPLANE)
-   DZ = ZVERT(IVERT2,IPLANE) -  ZVERT(IVERT,IPLANE)
-   VDIST = DSQRT(DX*DX + DY*DY + DZ*DZ)
-   IF (VDIST.GE.TOLVDIST) THEN
-      LACCEPTVERT(IVERT2) = .TRUE.        ! Vertex is to be accepted
-   ELSE
-      LACCEPTVERT(IVERT2) = .FALSE.       ! Remember that vertex is to be rejected later
-      LACCTOT = .FALSE.                   ! Remember that at least one vertex has to be rejected.
-   ENDIF
+   ivert = 1
+   ivert2 = nvert(iplane)
+   dx = xvert(ivert2,iplane) - xvert(ivert,iplane)
+   dy = yvert(ivert2,iplane) - yvert(ivert,iplane)
+   dz = zvert(ivert2,iplane) - zvert(ivert,iplane)
+   vdist = dsqrt(dx*dx + dy*dy + dz*dz)
+   if (vdist >= tolvdist) then
+      lacceptvert(ivert2) = .true.        ! vertex is to be accepted
+   else
+      lacceptvert(ivert2) = .false.       ! remember that vertex is to be rejected later
+      lacctot = .false.                   ! remember that at least one vertex has to be rejected.
+   endif
 
 
-! Reject vertices which were found inappropriate and re-index vertices in each plane:
-   IF (.NOT.LACCTOT) THEN
-      IVERTNEWCOUNT = 0
-      DO IVERT = 1,NVERT(IPLANE)
-         IF (LACCEPTVERT(IVERT)) THEN
-            IVERTNEWCOUNT = IVERTNEWCOUNT + 1    ! One more vertex to accept 
-            IF (IVERTNEWCOUNT.NE.IVERT) THEN     ! Otherwise the correct value is already at the correct place
-               XVERT(IVERTNEWCOUNT,IPLANE) = XVERT(IVERT,IPLANE) ! Re-index vertex
-               YVERT(IVERTNEWCOUNT,IPLANE) = YVERT(IVERT,IPLANE)
-               ZVERT(IVERTNEWCOUNT,IPLANE) = ZVERT(IVERT,IPLANE)
-            ENDIF
-         ENDIF
-      ENDDO
-      NVERT(IPLANE) = IVERTNEWCOUNT
-   ENDIF
+! reject vertices which were found inappropriate and re-index vertices in each plane:
+   if (.not. lacctot) then
+      ivertnewcount = 0
+      do ivert = 1, nvert(iplane)
+         if (lacceptvert(ivert)) then
+            ivertnewcount = ivertnewcount + 1    ! one more vertex to accept 
+            if (ivertnewcount /= ivert) then     ! otherwise the correct value is already at the correct place
+               xvert(ivertnewcount,iplane) = xvert(ivert,iplane) ! re-index vertex
+               yvert(ivertnewcount,iplane) = yvert(ivert,iplane)
+               zvert(ivertnewcount,iplane) = zvert(ivert,iplane)
+            endif
+         endif
+      enddo ! ivert
+      nvert(iplane) = ivertnewcount
+   endif
 
-100 ENDDO
+100 enddo ! iplane
 
 
 
-! Now analyze faces, reject faces with less than three vertices and faces of very small area.
-DO 200 IPLANE = 1,NPLANE
-   IF (NVERT(IPLANE).GE.3) THEN  ! calculate area
-      X1 = XVERT(1,IPLANE)
-      Y1 = YVERT(1,IPLANE)
-      Z1 = ZVERT(1,IPLANE)
-      FACEAREA(IPLANE) = 0.d0
-      DO IVERT = 2,NVERT(IPLANE)-1
-         X2 = XVERT(IVERT,IPLANE)
-         Y2 = YVERT(IVERT,IPLANE)
-         Z2 = ZVERT(IVERT,IPLANE)
-         X3 = XVERT(IVERT+1,IPLANE)
-         Y3 = YVERT(IVERT+1,IPLANE)
-         Z3 = ZVERT(IVERT+1,IPLANE)
-         TRIANGLEAREA = 0.5d0 * DABS( (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )  ! formula incorrect? E.R.
-         FACEAREA(IPLANE) = FACEAREA(IPLANE)+ TRIANGLEAREA
-      ENDDO
+! now analyze faces, reject faces with less than three vertices and faces of very small area.
+do 200 iplane = 1,nplane
+   if (nvert(iplane) >= 3) then  ! calculate area
+      x1 = xvert(1,iplane)
+      y1 = yvert(1,iplane)
+      z1 = zvert(1,iplane)
+      facearea(iplane) = 0.d0
+      do ivert = 2, nvert(iplane)-1
+         x2 = xvert(ivert,iplane)
+         y2 = yvert(ivert,iplane)
+         z2 = zvert(ivert,iplane)
+         x3 = xvert(ivert+1,iplane)
+         y3 = yvert(ivert+1,iplane)
+         z3 = zvert(ivert+1,iplane)
+         trianglearea = 0.5d0 * dabs( (x2 - x1)*(x3 - x1) + (y2 - y1)*(y3 - y1) + (z2 - z1)*(z3 - z1) )  ! formula incorrect? e.r.
+         facearea(iplane) = facearea(iplane)+ trianglearea
+      enddo ! ivert
 
-      IF (output) WRITE(*,8000) IPLANE,FACEAREA(IPLANE)
+      if (output) write(*,8000) iplane,facearea(iplane)
 
-      IF (FACEAREA(IPLANE).GE.TOLAREA) THEN
-         LACCEPTFACE(IPLANE) = .TRUE.
-      ELSE
-         LACCEPTFACE(IPLANE) = .FALSE.  ! Reject facees with small area
-         IF (output) WRITE(*,8010) TOLAREA 
-      ENDIF
+      if (facearea(iplane) >= tolarea) then
+         lacceptface(iplane) = .true.
+      else
+         lacceptface(iplane) = .false.  ! reject faces with small area
+         if (output) write(*,8010) tolarea 
+      endif
       
-   ELSE
-      LACCEPTFACE(IPLANE) = .FALSE.  ! Reject planes with less than 3 vertices
-      IF (output) WRITE(*,8020) IPLANE,NVERT(IPLANE)
-   ENDIF
+   else
+      lacceptface(iplane) = .false.  ! reject planes with less than 3 vertices
+      if (output) write(*,8020) iplane,nvert(iplane)
+   endif
 
-200 ENDDO
+200 enddo ! iplane
 
 
-! Re-order the faces so that the accepted ones are in the first NFACE positions (NFACE is recalculated);
-! The rest of the array entries are not taken care of, and can contain garbage.
-IFACENEWCOUNT = 0
-DO IPLANE = 1,NPLANE
-   IF (LACCEPTFACE(IPLANE)) THEN
-      IFACENEWCOUNT = IFACENEWCOUNT + 1  ! One more face to accept
-      IF (IFACENEWCOUNT.NE.IPLANE) THEN   ! Otherwise the correct value is already at the correct place
-         NVERT(IFACENEWCOUNT) = NVERT(IPLANE) ! Re-index face vertex number
-         DO IVERT = 1,NVERT(IPLANE)
-            XVERT(IVERT,IFACENEWCOUNT) = XVERT(IVERT,IPLANE) ! Re-index face vertices
-            YVERT(IVERT,IFACENEWCOUNT) = YVERT(IVERT,IPLANE) ! Re-index face vertices
-            ZVERT(IVERT,IFACENEWCOUNT) = ZVERT(IVERT,IPLANE) ! Re-index face vertices
-         ENDDO
-         A3(IFACENEWCOUNT) = A3(IPLANE) ! Re-index face equation parameters
-         B3(IFACENEWCOUNT) = B3(IPLANE) ! Re-index face equation parameters
-         C3(IFACENEWCOUNT) = C3(IPLANE) ! Re-index face equation parameters
-         D3(IFACENEWCOUNT) = D3(IPLANE) ! Re-index face equation parameters
-      ENDIF
-   ENDIF
-ENDDO
-NFACE = IFACENEWCOUNT
+! re-order the faces so that the accepted ones are in the first nface positions (nface is recalculated);
+! the rest of the array entries are not taken care of, and can contain garbage.
+ifacenewcount = 0
+do iplane = 1, nplane
+   if (lacceptface(iplane)) then
+      ifacenewcount = ifacenewcount + 1  ! one more face to accept
+      if (ifacenewcount /= iplane) then   ! otherwise the correct value is already at the correct place
+         nvert(ifacenewcount) = nvert(iplane) ! re-index face vertex number
+         do ivert = 1, nvert(iplane)
+            xvert(ivert,ifacenewcount) = xvert(ivert,iplane) ! re-index face vertices
+            yvert(ivert,ifacenewcount) = yvert(ivert,iplane) ! re-index face vertices
+            zvert(ivert,ifacenewcount) = zvert(ivert,iplane) ! re-index face vertices
+         enddo
+         a3(ifacenewcount) = a3(iplane) ! re-index face equation parameters
+         b3(ifacenewcount) = b3(iplane) ! re-index face equation parameters
+         c3(ifacenewcount) = c3(iplane) ! re-index face equation parameters
+         d3(ifacenewcount) = d3(iplane) ! re-index face equation parameters
+      endif
+   endif
+enddo ! iplane
+nface = ifacenewcount
 
-! Check for every face that all veritces lie on the same plane
+! check for every face that all veritces lie on the same plane
 ! by checking linear dependence
-DO IFACE = 1,NFACE
-   X2 = XVERT(2,IFACE) - XVERT(1,IFACE)
-   Y2 = XVERT(2,IFACE) - YVERT(1,IFACE)
-   Z2 = XVERT(2,IFACE) - ZVERT(1,IFACE)
-   X3 = XVERT(3,IFACE) - XVERT(1,IFACE)
-   Y3 = XVERT(3,IFACE) - YVERT(1,IFACE)
-   Z3 = XVERT(3,IFACE) - ZVERT(1,IFACE)
-   DETSUM = 0.d0
-   DO IVERT = 4,NVERT(IFACE)
-      X4 = XVERT(IVERT,IFACE) - XVERT(1,IFACE)
-      Y4 = XVERT(IVERT,IFACE) - YVERT(1,IFACE)
-      Z4 = XVERT(IVERT,IFACE) - ZVERT(1,IFACE)
-      DET = X2*(Y3*Z4-Y4*Z3)+Y2*(Z3*X4-Z4*X3)+Z2*(X3*Y4-X4*Y3)
-      DETSUM = DETSUM + DABS(DET)
-      IF (DABS(DET).GT.1.D-16 .AND. output) THEN
-        WRITE(*,9000) IFACE,IVERT,DET
-      END IF
-   ENDDO
-   IF (output) WRITE(*,9010) IFACE,DETSUM
-ENDDO
+do iface = 1, nface
+   x2 = xvert(2,iface) - xvert(1,iface)
+   y2 = xvert(2,iface) - yvert(1,iface)
+   z2 = xvert(2,iface) - zvert(1,iface)
+   x3 = xvert(3,iface) - xvert(1,iface)
+   y3 = xvert(3,iface) - yvert(1,iface)
+   z3 = xvert(3,iface) - zvert(1,iface)
+   detsum = 0.d0
+   do ivert = 4, nvert(iface)
+      x4 = xvert(ivert,iface) - xvert(1,iface)
+      y4 = xvert(ivert,iface) - yvert(1,iface)
+      z4 = xvert(ivert,iface) - zvert(1,iface)
+      det = x2*(y3*z4 - y4*z3) + y2*(z3*x4 - z4*x3) + z2*(x3*y4 - x4*y3)
+      detsum = detsum + dabs(det)
+      if (dabs(det) > 1.d-16 .and. output) then
+        write(*,9000) iface,ivert,det
+      endif
+   enddo ! ivert
+   if (output) write(*,9010) iface,detsum
+enddo ! iface
 
+8000 format('analyzevert3d: face',i5,' has area',e12.4)
+8010 format('face will be rejected ; max. area tolerance=',e12.4)
+8020 format('plane',i5,' has only',i3,' vertices and is rejected')
+9000 format('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)
+9010 format('analyzevert3d: checking that vertices lie on plane. iface=',i5,' ; determinants sum to be zero=',e12.4)
 
-8000 FORMAT('ANALYZEVERT3D: Face',I5,' has area',E12.4)
-8010 FORMAT('Face will be rejected ; Max. area tolerance=',E12.4)
-8020 FORMAT('Plane',I5,' has only',I3,' vertices and is rejected')
-9000 FORMAT('Error from ANALYZEVERT3D: Vertices not on single plane.', &
-        ' IFACE=',I5,' IVERT=',I5,' DETERMINANT=',E12.4)
-9010 FORMAT('ANALYZEVERT3D: Checking that vertices lie on plane.', &
-     ' IFACE=',I5,' ; Determinants sum to be zero=',E12.4)
+endsubroutine analyzevert3d
 
-END SUBROUTINE
+  !***********************************************************************
+  logical function halfspace(a,b,c,d,x,y,z)
+  ! given a plane a*x+b*y+c*z=d, and a point (x,y,z) in space, this 
+  ! function takes the value true if (x,y,z) lies in the half-space 
+  ! defined by the plane and the origin (0,0,0) (including the plane 
+  ! itself). else, the value false is returned.
+  !
+  ! the criterion used is that the inner product of the vector (x,y,z) 
+  ! with the vector d connecting the origin to the plane vertically be 
+  ! less than or equal to d**2:  (d_x,d_y,d_z)*(x,y,z) =< d**2.
+    double precision, intent(in) :: a,b,c,d,x,y,z
 
-!***********************************************************************
-LOGICAL FUNCTION HALFSPACE(A,B,C,D,X,Y,Z)
-! Given a plane A*x+B*y+C*z=D, and a point (X,Y,Z) in space, this 
-! function takes the value TRUE if (X,Y,Z) lies in the half-space 
-! defined by the plane and the origin (0,0,0) (including the plane 
-! itself). Else, the value FALSE is returned.
-!
-! The criterion used is that the inner product of the vector (X,Y,Z) 
-! with the vector d connecting the origin to the plane vertically be 
-! less than or equal to d**2:  (d_x,d_y,d_z)*(X,Y,Z) =< d**2.
-!
-! Input:
-REAL*8, intent(in) :: A,B,C,D,X,Y,Z
+    if (dabs(a)+dabs(b)+dabs(c) < 1.d-80) stop 'halfspace: a,b,c too small.'
 
-IF (DABS(A)+DABS(B)+DABS(C).LT.1.D-80) &
-                                STOP 'HALFSPACE: A,B,C too small.'
+    halfspace = (d*(a*x + b*y + c*z) <= d*d)
+    ! (re-checked 31may2008 fm)
 
-HALFSPACE = .FALSE.
+  endfunction ! halfspace
 
-IF (D*(A*X+B*Y+C*Z).LE.D*D) HALFSPACE = .TRUE.
-! (re-checked 31May2008 FM)
+  !***********************************************************************
+  subroutine normalplane(x1,y1,z1,x2,y2,z2,tau,a,b,c,d)
+    ! given two points in space, r1=(x1,y1,z1) and r2=(x2,y2,z2), this
+    ! subroutine returns the coefficients defining a plane through the 
+    ! equation a*x+b*y+c*z=d, which is normal to the vector r2-r1 and passes
+    ! through the point (1.-tau)*r1 + tau*r2 (tau thus being a parameter
+    ! defining how close the plane is to each of the two points).
+    double precision, intent(in) :: x1,y1,z1,x2,y2,z2,tau
+    double precision, intent(out) :: a,b,c,d
+    
+    double precision :: onemtau
+    ! the plane is defined as 
+    ! (a,b,c)*(x-x1,y-y1,z-z1)=const=
+    !                         =(distance from r1 to (1.-tau)*r1 + tau*r2)**2
+    ! so a,b,c are the coords. of a vector connecting the point r1 to
+    ! the point (1.-tau)*r1 + tau*r2.
+    onemtau = 1.d0 - tau
 
-END FUNCTION
+    a = onemtau*x1 + tau*x2
+    b = onemtau*y1 + tau*y2
+    c = onemtau*z1 + tau*z2
+    d = a*(a + x1) + b*(b + y1) + c*(c + z1)
 
-!***********************************************************************
-SUBROUTINE NORMALPLANE(X1,Y1,Z1,X2,Y2,Z2,TAU,A,B,C,D)
-! Given two points in space, r1=(X1,Y1,Z1) and r2=(X2,Y2,Z2), this
-! subroutine returns the coefficients defining a plane through the 
-! equation A*x+B*y+C*z=D, which is normal to the vector r2-r1 and passes
-! through the point (1.-TAU)*r1 + TAU*r2 (TAU thus being a parameter
-! defining how close the plane is to each of the two points).
-! Input:
-REAL*8, intent(in) :: X1,Y1,Z1,X2,Y2,Z2,TAU
-! Output:
-REAL*8, intent(out) :: A,B,C,D
-! Inside:
-REAL*8 :: ONEMTAU
-! The plane is defined as 
-! (A,B,C)*(X-X1,Y-Y1,Z-Z1)=const=
-!                         =(distance from r1 to (1.-TAU)*r1 + TAU*r2)**2
-! so A,B,C are the coords. of a vector connecting the point r1 to
-! the point (1.-TAU)*r1 + TAU*r2.
-ONEMTAU = 1.D0 - TAU
+  endsubroutine ! normalplane
+  
+  !***********************************************************************
+  subroutine normalplane0(x1,y1,z1,tau, a,b,c,d)
+    ! given a point in space, r1=(x1,y1,z1), this
+    ! subroutine returns the coefficients defining a plane through the 
+    ! equation a*x+b*y+c*z=d, which is normal to the vector r1 and passes
+    ! through the point tau*r1 (tau thus being a parameter
+    ! defining how close the plane is to the point).
+    double precision, intent(in) :: x1,y1,z1,tau
+    double precision, intent(out) :: a,b,c,d
+    ! the plane is defined by
+    ! (a,b,c)*(x,y,z) = d = (tau * r1)**2
+    ! so a,b,c are the coords. of the vector tau * r1.
+    ! if tau=0 (plane passes through the origin), then d=0.
 
-A = ONEMTAU * X1 + TAU * X2
-B = ONEMTAU * Y1 + TAU * Y2
-C = ONEMTAU * Z1 + TAU * Z2
-D = A*(A+X1) + B*(B+Y1) + C*(C+Z1)
+    if (tau /= 0.d0) then
+      a = tau*x1
+      b = tau*y1
+      c = tau*z1
+      d = a*a + b*b + c*c
+    else
+      a = x1
+      b = y1
+      c = z1
+      d = 0.d0
+    endif
 
-END SUBROUTINE
-!***********************************************************************
-SUBROUTINE NORMALPLANE0(X1,Y1,Z1,TAU, A,B,C,D)
-! Given a point in space, r1=(X1,Y1,Z1), this
-! subroutine returns the coefficients defining a plane through the 
-! equation A*x+B*y+C*z=D, which is normal to the vector r1 and passes
-! through the point TAU*r1 (TAU thus being a parameter
-! defining how close the plane is to the point).
-! Input:
-REAL*8, intent(in) :: X1,Y1,Z1,TAU
-! Output:
-REAL*8, intent(out) :: A,B,C,D
-! Inside:
-! The plane is defined by 
-! (A,B,C)*(X,Y,Z) = D = (tau * r1)**2
-! so A,B,C are the coords. of the vector tau * r1.
-! If tau=0 (plane passes through the origin), then D=0.
-
-IF (TAU.NE.0.D0) THEN
-   A = TAU * X1
-   B = TAU * Y1
-   C = TAU * Z1
-   D = A*A + B*B + C*C
-ELSE
-   A = X1
-   B = Y1
-   C = Z1
-   D = 0.D0
-ENDIF
-
-END SUBROUTINE
+  endsubroutine ! normalplane0
 
 !***********************************************************************
-SUBROUTINE SORTVERTICES(N,SINFI,X,Y,Z)
-! Sorts the array SINFI(N) in ascending order using straight insertion. 
-! The arrays Z(N), Y(N), and Z(N) follow.
-! On output, arrays SINFI, X, Y, and Z return sorted.
-INTEGER, intent(in) :: N
-REAL*8, intent(inout) :: SINFI(*), X(*),Y(*),Z(*)
-real*8 :: TMPS,TMPX,TMPY,TMPZ
-integer :: i, j 
+  subroutine sortvertices(n,s,x,y,z)
+  ! sorts the array s(n) in ascending order using straight insertion. 
+  ! the arrays z(n), y(n), and z(n) follow.
+  ! on output, arrays s, x, y, and z return sorted.
+    integer, intent(in) :: n
+    double precision, intent(inout) :: s(*), x(*),y(*),z(*)
+    double precision :: tmp(0:3)
+    integer :: i, j
 
-DO J = 2,N
-   TMPS = SINFI(J)
-   TMPX = X(J)
-   TMPY = Y(J)
-   TMPZ = Z(J)
-   DO I = J-1,1,-1
-      IF (SINFI(I).LE.TMPS) GOTO 10
-      SINFI(I+1) = SINFI(I)
-      X(I+1) = X(I)
-      Y(I+1) = Y(I)
-      Z(I+1) = Z(I)
-   ENDDO
-   I = 0
-10    SINFI(I+1) = TMPS
-   X(I+1) = TMPX
-   Y(I+1) = TMPY
-   Z(I+1) = TMPZ
-ENDDO
+    outer: do j = 2, n
+      tmp = [s(j), x(j), y(j), z(j)]
+      do i = j-1, 1, -1
+          if (s(i) <= tmp(0)) then
+            s(i+1) = tmp(0)
+            x(i+1) = tmp(1)
+            y(i+1) = tmp(2)
+            z(i+1) = tmp(3)
+            cycle outer
+          endif
+          s(i+1) = s(i)
+          x(i+1) = x(i)
+          y(i+1) = y(i)
+          z(i+1) = z(i)
+      enddo ! i
+      s(1) = tmp(0)
+      x(1) = tmp(1)
+      y(1) = tmp(2)
+      z(1) = tmp(3)
+    enddo outer ! j
 
-END SUBROUTINE
+  endsubroutine ! sort vertices
 
 ! ************************************************************************
-SUBROUTINE CROSPR(X,Y,Z)
+subroutine crospr(x,y,z)
 ! ************************************************************************
-!     CROSP COMPUTES THE CROSS PRODUCT OF X AND Y RETURNING
-!     IT INTO Z.
+!     crosp computes the cross product of x and y returning
+!     it into z.
 ! ------------------------------------------------------------------------
-REAL*8, intent(in) :: X(3), Y(3)
-real*8, intent(out) :: Z(3)
-Z(1)=X(2)*Y(3)-X(3)*Y(2)
-Z(2)=X(3)*Y(1)-X(1)*Y(3)
-Z(3)=X(1)*Y(2)-X(2)*Y(1)
-END SUBROUTINE
+double precision, intent(in) :: x(3), y(3)
+double precision, intent(out) :: z(3)
+  z(1) = x(2)*y(3) - x(3)*y(2)
+  z(2) = x(3)*y(1) - x(1)*y(3)
+  z(3) = x(1)*y(2) - x(2)*y(1)
+endsubroutine crospr
 
 !***********************************************************************
-REAL*8 FUNCTION DISTPLANE(A,B,C,D)
-! Returns the distance of a plane A*x+B*y+C*z=D to the origin.
-REAL*8, intent(in) :: A,B,C,D
-REAL*8 :: ABCSQ
+double precision function distplane(a,b,c,d)
+! returns the distance of a plane a*x+b*y+c*z=d to the origin.
+double precision, intent(in) :: a,b,c,d
+double precision :: abcsq
 
-ABCSQ = A*A + B*B + C*C
+abcsq = a*a + b*b + c*c
 
-IF (ABCSQ.LT.1.D-100) STOP 'DISTPLANE'
+if (abcsq < 1.d-100) stop 'distplane'
 
-DISTPLANE = DABS(D)/DSQRT(ABCSQ)  
+distplane = dabs(d)/dsqrt(abcsq)  
+! or: distplane = dsqrt(d*d/abcsq)  
 
-END FUNCTION
+endfunction distplane
 
 ! ************************************************************************
-SUBROUTINE DSORT (W,IND,MAX,POS)
+subroutine dsort(w, ind, nmax, pos)
 ! ************************************************************************
 !     p.zahn, april 96
-!     W   is the original array returned unchanged
-!     IND is an array that holds the new positions
-!     max number of ellements to be sorted
+!     w   is the original array returned unchanged
+!     ind is an array that holds the new positions
+!     nmax number of ellements to be sorted
 !     pos the position where the first element is found
 ! ------------------------------------------------------------------------
-INTEGER, intent(in) :: MAX
-REAL*8, intent(in) :: W(*)
-REAL*8 :: BOUND, DIFF
-INTEGER, intent(out) :: IND(*),POS
+  integer, intent(in) :: nmax
+  double precision, intent(in) :: w(*)
+  integer, intent(out) :: ind(*), pos
+  
+  double precision, parameter :: bound = 1.0d-12
+  double precision :: diff
+  integer :: i, ii, j, jj, k
+  ! ------------------------------------------------------------------------
+  do i = 1,nmax
+    ind(1:nmax) = i
+  enddo ! i
 
-INTEGER I,II,J,JJ,K
-DATA BOUND /1.0D-12/
-! ------------------------------------------------------------------------
-DO 10 I = 1,MAX
-  IND(I) = I
-10 END DO
+  j = nmax
+  j = 1
+  do while (j < nmax/3)
+    j = 3*j+1
+  enddo ! while
 
-J = MAX
-J = 1
-DO 60 WHILE (J.LT.MAX/3)
-  J = 3*J+1
-60 END DO
+  do while (j > 1)
+    j = j/3
+    jj = 1
+    do while (jj == 1)
+      jj = 0
+      do k = 1, nmax-j
+        diff = abs(w(ind(k)) - w(ind(k+j)))
+        if (w(ind(k)) > w(ind(k+j)) .and. diff > bound) then
+          ii       = ind(k)
+          ind(k)   = ind(k+j)
+          ind(k+j) = ii
+          jj = 1
+        endif
+      enddo ! k=1,nmax-j
+   enddo ! while (jj == 1)
+  enddo ! while (j > 1)
 
-DO 20 WHILE (J.GT.1)
-  J = J/3
-  JJ = 1
-  DO 30 WHILE (JJ.EQ.1)
-    JJ = 0
-    DO 40 K=1,MAX-J
-      DIFF = ABS( W(IND(K)) - W(IND(K+J)) )
-      IF ( W(IND(K)) .GT. W(IND(K+J)) .AND. &
-           DIFF.GT.BOUND ) THEN
-        II       = IND(K)
-        IND(K)   = IND(K+J)
-        IND(K+J) = II
-        JJ = 1
-      END IF
-40     END DO                    ! K=1,MAX-J
-30   END DO                      ! WHILE (JJ.EQ.1)
-20 END DO
+  do i = 1, nmax
+    if (ind(i) == 1) pos = i
+  enddo ! i
 
-DO 50 I=1,MAX
-  IF (IND(I) .EQ. 1) POS=I
-50 END DO
+endsubroutine ! dsort
 
-END SUBROUTINE
-
-END MODULE
+endmodule ! voronoi08_mod

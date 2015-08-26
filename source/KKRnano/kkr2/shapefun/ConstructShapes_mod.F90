@@ -17,10 +17,10 @@ module ConstructShapes_mod
 
   !> A datastructure containing the corresponding interstitial mesh.
   type InterstitialMesh
-    double precision, allocatable, dimension(:) :: xrn !< radial mesh points r(i)
-    double precision, allocatable, dimension(:) :: drn !< integration weights dr/di (i)
     integer :: npan !< number of panels
-    integer, allocatable, dimension(:) :: nm !< positions of panels
+    integer, allocatable :: nm(:) !< positions of panels
+    double precision, allocatable :: xrn(:) !< radial mesh points r(i)
+    double precision, allocatable :: drn(:) !< integration weights dr/di (i)
   end type
 
   CONTAINS
@@ -158,8 +158,8 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   integer, allocatable, dimension(:) :: nm
   integer, allocatable, dimension(:) :: nvertices
   double precision, allocatable, dimension(:) :: xrn, drn
-  double precision, allocatable, dimension(:, :, :) :: vertices 
-  double precision, allocatable, dimension(:, :) :: thetas_s
+  double precision, allocatable, dimension(:,:,:) :: vertices 
+  double precision, allocatable, dimension(:,:) :: thetas_s
   integer :: npan
   integer, allocatable, dimension(:) :: lmifun_s
   integer :: ii
@@ -181,8 +181,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   allocate( vertices(NVERTMAX, nfaced, 3) )
   nvertices = 0
 
-  call voronoi08( &
-       nfaced,rvec,NVERTMAX,nfaced,weights(1),weights(2:),TOLVDIST,TOLVAREA, &
+  call voronoi08(nfaced,rvec,NVERTMAX,nfaced,weights(1),weights(2:),TOLVDIST,TOLVAREA, &
        rmt,rout,volume,nface,aface,bface,cface,dface,nvertices, &
        vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
        OUTPUT)
@@ -397,33 +396,26 @@ subroutine write_shapefun_file(shdata, inter_mesh, shape_index)
   type (InterstitialMesh), intent(in) :: inter_mesh
   integer, intent(in) :: shape_index
 
-  integer :: NPAN
-  integer :: MESHN
-  integer :: NFU
+  integer :: ipan1, ir, ifun, npan, meshn, nfu
+  character(len=16) :: filename
+  character(len=*), parameter :: f9000="(16i5)", f9010="(4d20.12)" 
 
-  integer :: ipan1
-  integer :: ir
-  integer :: ifun
-  character(len=7) :: num
+  write(filename, '(a,i7.7)') 'shape.',shape_index
 
-  write(num, '(I7.7)') shape_index
+  npan = inter_mesh%npan
+  meshn = size(inter_mesh%xrn)
+  nfu = shdata%nfu
 
-  NPAN = inter_mesh%npan
-  MESHN = size(inter_mesh%xrn)
-  NFU = shdata%nfu
-
-  open(15, file='shape.' // num, form='formatted')
-  WRITE(15,FMT=9000) NPAN,MESHN
-  WRITE(15,FMT=9000) (inter_mesh%nm(ipan1),ipan1=1,npan)
-  WRITE(15,FMT=9010) (inter_mesh%xrn(ir),inter_mesh%drn(ir),ir=1,meshn)
-  WRITE(15,FMT=9000) nfu
-  DO IFUN = 1,NFU
-    WRITE(15,FMT=9000) shdata%llmsp(ifun)
-    WRITE(15,FMT=9010) (shdata%theta(ir,ifun),ir=1,meshn)
-  ENDDO
+  open(15, file=filename, form='formatted')
+  write(15,fmt=f9000) npan,meshn
+  write(15,fmt=f9000) inter_mesh%nm(1:npan)
+  write(15,fmt=f9010) (inter_mesh%xrn(ir), inter_mesh%drn(ir), ir=1,meshn) ! interleaved pairs (r, dr)
+  write(15,fmt=f9000) nfu
+  do ifun = 1, nfu
+    write(15,fmt=f9000) shdata%llmsp(ifun)
+    write(15,fmt=f9010) shdata%theta(1:meshn,ifun)
+  enddo ! ifun
   close(15)
-  9000 FORMAT (16i5)
-  9010 FORMAT (4d20.12)
 
 end subroutine
 

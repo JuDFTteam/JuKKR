@@ -30,6 +30,7 @@ module ShapeGeometryHelpers_mod
 !     ----------------------------------------------------------------
 ! ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  = 
   subroutine polchk(nface,nvertices,xvert,yvert,zvert,tolvdist)
+    use shape_constants_mod, only: pi
 !     integer, parameter :: nedged = nvrtd+nfaced-2
 !     integer   nvertices(nfaced)
 !     double precision    xvert(nvertd,nfaced),yvert(nvertd,nfaced),zvert(nvertd,nfaced)
@@ -42,24 +43,21 @@ module ShapeGeometryHelpers_mod
     integer :: ivert,inew,ivertp,ivertm,ivrt,iedge,nvrt,nedge, iface,nvert
     double precision :: arg,a1,a2,down,up,fisum,t
     double precision :: vrt0(3), vrtp(3), vrtm(3)
-    double precision :: pi314
     double precision, allocatable :: v1(:,:),v2(:,:),v(:,:),vrt(:,:) ! v1(3,nedged),v2(3,nedged),v(3,nvertd),vrt(3,nvrtd)
     integer :: nfaced, nedged, nvertd, nvrtd
 
-    nfaced  =  size(nvertices)
-    nvertd  =  size(xvert,1)
-    nvrtd   =  nfaced*nvertd
-    nedged  =  nvrtd+nfaced-2
+    nfaced = size(nvertices)
+    nvertd = size(xvert,1)
+    nvrtd  = nfaced*nvertd
+    nedged = nvrtd+nfaced-2
 
     allocate(v1(3,nedged), v2(3,nedged), v(3,nvertd), vrt(3,nvrtd))
-
-    pi314 = 4.d0*atan(1.d0)
 
     nvrt = 0
     nedge = 0
     do iface = 1, nface
       nvert = nvertices(iface)
-      fisum = (nvert-2)*pi314
+      fisum = (nvert-2)*pi
       do ivert = 1, nvert
         v(1:3,ivert) = [xvert(ivert,iface), yvert(ivert,iface), zvert(ivert,iface)]
       enddo ! ivert
@@ -70,7 +68,6 @@ module ShapeGeometryHelpers_mod
         vrt0 = v(1:3,ivert)
         inew = 1 ! 1:save all different vertices
         do ivrt = 1, nvrt
-!         t = (vrt0x-vrt(1,ivrt))**2 + (vrt0y-vrt(2,ivrt))**2 + (vrt0z-vrt(3,ivrt))**2
           if (nrm2(vrt0 - vrt(1:3,ivrt)) < tolvdist) inew = 0 ! 0:drop this vertex
         enddo ! ivrt
         
@@ -84,22 +81,12 @@ module ShapeGeometryHelpers_mod
         vrtp = v(1:3,ivertp)
         ivertm = ivert-1; if (ivert == 1) ivertm = nvert        !!! alternative: ivertm = modulo(ivert-1-1, nvert)+1
         vrtm = v(1:3,ivertm) ! check if the  consecutive vertices define a polygon
-        
-!         a1 = sqrt((vrtpx-vrt0x)**2 + (vrtpy-vrt0y)**2 + (vrtpz-vrt0z)**2)
-!         a2 = sqrt((vrtmx-vrt0x)**2 + (vrtmy-vrt0y)**2 + (vrtmz-vrt0z)**2)
-!         up = (vrtpx-vrt0x)*(vrtmx-vrt0x) + (vrtpy-vrt0y)*(vrtmy-vrt0y) + (vrtpz-vrt0z)*(vrtmz-vrt0z)
-!         down = a1*a2
 
         a1 = nrm2(vrtp - vrt0)
         a2 = nrm2(vrtm - vrt0)
         up = (vrtp - vrt0) .dot. (vrtm - vrt0)
         down = sqrt(a1*a2)
         
-        ! write(6,*)
-        ! write(6,*) vrt0x,vrt0y,vrt0z
-        ! write(6,*) vrtmx,vrtmy,vrtmz
-        ! write(6,*) vrtpx,vrtpy,vrtpz
-        ! write(6,*) 'fisum ',ivert,a1,a2,up,arg,acos(arg)
         if(down >= tolvdist)   then
           arg = up/down
           if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
@@ -158,16 +145,10 @@ module ShapeGeometryHelpers_mod
     double precision, intent(in) :: r0(3), r1(3), r2(3)
     double precision, intent(in) :: tolvdist
 !---------------------------------------------------------------------
-!     double precision :: dx,dy,dz,s,d,da,db,dc,d1,d2,co
     double precision :: dxyz(3), dabc(3), s, d
     
-!     dx = r2(1) - r1(1)
-!     dy = r2(2) - r1(2)
-!     dz = r2(3) - r1(3)
     dxyz = r2 - r1    
-!   s = r0(1)*dx + r0(2)*dy + r0(3)*dz
     s = r0 .dot. dxyz
-!   d = dx*dx + dy*dy + dz*dz
     d = nrm2(dxyz)
     
     if (d < tolvdist*tolvdist) then
