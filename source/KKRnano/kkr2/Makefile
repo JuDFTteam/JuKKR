@@ -228,6 +228,7 @@ NearField_mod.o: MadelungCalculator_mod.o
 KKRnano_Comm_mod.o: jij_calc_mod.o KKRnanoParallel_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o
 InputParams_mod.o: ConfigReader_mod.o
 tetrahedra_common.o: shape_constants_mod.o
+ShapeGeometryHelpers_mod.o: shape_constants_mod.o
 ShapeStandardMesh_mod.o: shape_constants_mod.o
 wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o
 DensityResults_mod.o: DimParams_mod.o
