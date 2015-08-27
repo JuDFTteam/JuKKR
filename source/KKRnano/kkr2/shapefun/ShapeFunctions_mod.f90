@@ -3,7 +3,7 @@
 module ShapeFunctions_mod
   implicit none
   private
-  public :: SHAPEF
+  public :: shapef
   
   contains
 
@@ -134,98 +134,86 @@ module ShapeFunctions_mod
 
 
 !------------------------------------------------------------------------------
-SUBROUTINE SHAPEF(NPOI,AFACE,BFACE,CFACE,DFACE, &
-TOLVDIST, &
-TOLEULER, &
-NMIN, &
-NVERTICES,XVERT,YVERT,ZVERT,NFACE,LMAX, &
-KEYPAN, DLT, &
-NPAN, NM, XRN, DRN, MESHN, &  ! radial mesh ! output parameters
-THETAS_S, LMIFUN_S, NFUN, & ! shape function
-IBMAXD,MESHND, NPAND) ! new input parameters after inc.geometry was removed
+subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nvertices,xvert,yvert,zvert,nface,lmax, &
+  keypan, dlt, npan, &
+  nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
+  thetas_s, lmifun_s, nfun, & ! shape function
+  ibmaxd, meshnd, npand) ! new input parameters after inc.geometry was removed
 
-  use shape_constants_mod, only: VERBOSITY, DP
-  use ShapeCriticalPoints_mod, only: criticalShapePoints
-  use ShapeStandardMesh_mod, only: MESH
-  use ShapeIntegration_mod, only: shapeIntegration
+  use shape_constants_mod, only: verbosity
+  use shapecriticalpoints_mod, only: criticalshapepoints
+  use shapestandardmesh_mod, only: mesh
+  use shapeintegration_mod, only: shapeintegration
   use angles_common, only: createangles, destroyangles
   use tetrahedra_common, only: createtetra, destroytetra
+  integer :: ist
 
-  integer,intent(in) :: NPOI
-  real(kind=DP), intent(in) :: TOLVDIST
-  real(kind=DP), intent(in) :: TOLEULER
-  integer, intent(in) :: NMIN
-  integer, intent(in) :: NFACE
-  integer, intent(in) :: LMAX
-  integer, intent(in) :: KEYPAN
-  real(kind=DP), intent(in) :: DLT
+  integer,intent(in) :: npoi
+  double precision, intent(in) :: tolvdist
+  double precision, intent(in) :: toleuler
+  integer, intent(in) :: nmin
+  integer, intent(in) :: nface
+  integer, intent(in) :: lmax
+  integer, intent(in) :: keypan
+  double precision, intent(in) :: dlt
 
-  integer, intent(in) :: IBMAXD
-  integer, intent(in) :: MESHND
-  integer, intent(in) :: NPAND
+  integer, intent(in) :: ibmaxd
+  integer, intent(in) :: meshnd
+  integer, intent(in) :: npand
 
-  !integer ::   NVERTICES(NFACED)
-  !real(kind=DP) ::    AFACE(NFACED),BFACE(NFACED),CFACE(NFACED),DFACE(NFACED)
-  !real(kind=DP) ::    XVERT(NVERTD,NFACED),YVERT(NVERTD,NFACED), &
-  !ZVERT(NVERTD,NFACED)
+  !integer ::   nvertices(nfaced)
+  !double precision ::    aface(nfaced),bface(nfaced),cface(nfaced),dface(nfaced)
+  !double precision ::    xvert(nvertd,nfaced),yvert(nvertd,nfaced), &
+  !zvert(nvertd,nfaced)
 
-  integer ::   NVERTICES(:)
-  real(kind=DP) ::    AFACE(:),BFACE(:),CFACE(:),DFACE(:)
-  real(kind=DP) ::    XVERT(:,:),YVERT(:,:), ZVERT(:,:)
-
-
+  integer :: nvertices(:) ! (nfaced)
+  double precision :: aface(:),bface(:),cface(:),dface(:) ! (nfaced)
+  double precision :: xvert(:,:),yvert(:,:), zvert(:,:) ! (nvertd,nfaced)
   ! output
-  integer ::   NM(NPAND)
-  real(kind=DP)  ::   XRN(MESHND)
-  real(kind=DP)  ::   DRN(MESHND)
-  integer ::   NPAN
-  integer ::   MESHN
+  integer ::   nm(npand)
+  double precision  ::   xrn(meshnd)
+  double precision  ::   drn(meshnd)
+  integer ::   npan
+  integer ::   meshn
 
-  real(kind=DP) ::  THETAS_S(MESHND,IBMAXD)
-  integer :: LMIFUN_S(IBMAXD)
-  integer :: NFUN
+  double precision ::  thetas_s(meshnd,ibmaxd)
+  integer :: lmifun_s(ibmaxd)
+  integer :: nfun
 
   ! local, automatic array
-  real(kind=DP) ::  CRT(NPAND)
+  double precision ::  crt(npand)
   integer :: nfaced, nvertd
   integer :: npoints_new
 
   nfaced = size(nvertices)
   nvertd = size(xvert, 1)
 
-  NM = 0
-  xrn = 0.0_DP
-  drn = 0.0_DP
-  THETAS_S = 0.0_DP
-  LMIFUN_S = 0
+  nm = 0
+  xrn = 0.d0
+  drn = 0.d0
+  thetas_s = 0.d0
+  lmifun_s = 0
 
-  call createtetra(nfaced, nfaced*nvertd)
+  ist = createtetra(nfaced, nfaced*nvertd)
   call createangles(nfaced)
 
-  call criticalShapePoints(AFACE,BFACE,CFACE,DFACE, &
-  TOLVDIST, &
-  TOLEULER, &
-  NVERTICES,XVERT,YVERT,ZVERT,NFACE,LMAX, &
-  ! output parameters
-  NPAN, CRT, &
-  ! new input parameters after inc.geometry was removed
-  NPAND)
+  call criticalShapePoints(aface,bface,cface,dface, tolvdist, toleuler, nvertices,xvert,yvert,zvert,nface,lmax, npan, crt, npand)
 
   ! increase number of mesh points if necessary but use at least 'npoi' points
-  ! (otherwise MESH0 complains)
+  ! (otherwise mesh0 complains)
   npoints_new = max(npoi, npan*nmin)
 
-  call MESH(CRT,NPAN,NM,XRN,DRN,MESHN,npoints_new, 0,NMIN,MESHND,NPAND,VERBOSITY)
+  call mesh(crt,npan,nm,xrn,drn,meshn,npoints_new, 0,nmin,meshnd,npand,verbosity)
 
-  call shapeIntegration(LMAX, NFACE, MESHN, XRN, DLT, THETAS_S, LMIFUN_S, NFUN, MESHND, IBMAXD)
+  call shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  ! in old code 1 is substracted from NPAN - why?
-  NPAN = NPAN - 1
+  ! in old code 1 is substracted from npan - why?
+  npan = npan - 1
 
-  call destroytetra()
+  ist = destroytetra()
   call destroyangles()
 
- END SUBROUTINE SHAPEF
+ endsubroutine shapef
 
-end module ShapeFunctions_mod
+endmodule ShapeFunctions_mod
 

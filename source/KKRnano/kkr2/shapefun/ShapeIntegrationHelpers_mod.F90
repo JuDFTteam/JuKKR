@@ -270,40 +270,41 @@
 !>    of length n, containing the abscissas and weights of the  gauss
 !>    legendre n-point quadrature formula (numerical recipes,2nd ed.).
 !     ----------------------------------------------------------------
-      subroutine gauleg(x1,x2,x,w,n)
-      integer, intent(in) :: n
-      real*8, intent(in) :: x1, x2
-      real*8, intent(out) :: x(1:), w(1:)
+  subroutine gauleg(x1,x2,x,w,n)
+    use shape_constants_mod, only: pi
+    
+    integer, intent(in) :: n
+    real*8, intent(in) :: x1, x2
+    real*8, intent(out) :: x(1:), w(1:)
 
 !     ----------------------------------------------------------------
-      integer :: i,j,m
-      real*8 :: p1,p2,p3,pp,xl,xm,z,z1,pi314
-      
-      pi314 = 4.d0*atan(1.d0)
+    integer :: i, j, m
+    real*8 :: p1,p2,p3,pp,xl,xm,z,z1
 
-      m = (n+1)/2
-      xm = 0.5d0*(x2 + x1)
-      xl = 0.5d0*(x2 - x1)
-      do 12 i=1,m
-      z = cos(pi314*(i-.25d0)/(n+.5d0))
-    1 continue
-      p1=1.d0
-      p2=0.d0
-      do 11 j=1,n
-      p3=p2
-      p2=p1
-      p1=((2.d0*j - 1.d0)*z*p2 - (j - 1.d0)*p3)/j
-   11 continue
-      pp=n*(z*p1-p2)/(z*z-1.d0)
-      z1=z
-      z=z1-p1/pp
-      if(abs(z-z1) > 3.d-14) goto 1
-      x(i)=xm-xl*z
-      x(n+1-i)=xm+xl*z
+    m = (n+1)/2
+    xm = 0.5d0*(x2 + x1)
+    xl = 0.5d0*(x2 - x1)
+    do i = 1, m
+      z = cos(pi*(i - .25d0)/(n + .5d0))
+      z1 = z + 99.
+      do while (abs(z - z1) > 3.d-14)
+        p1 = 1.d0
+        p2 = 0.d0
+        do j = 1, n
+          p3 = p2
+          p2 = p1
+          p1 = ((2*j-1)*z*p2 - (j-1)*p3)/dble(j)
+        enddo ! n
+        pp = n*(z*p1 - p2)/(z*z - 1.d0)
+        z1 = z
+        z = z1 - p1/pp
+      enddo ! while (abs(z - z1) > 3.d-14)
+      x(i) = xm - xl*z
+      x(n+1-i) = xm + xl*z
       w(i) = 2.d0*xl/((1.d0 - z*z)*pp*pp)
       w(n+1-i) = w(i)
-   12 continue
-      endsubroutine gauleg
+    enddo ! i
+  endsubroutine gauleg
 
 !-----------------------------------------------------------------------
 !>    this routine calculates the coefficients of a polynomial expansion
@@ -311,15 +312,14 @@
 !>    the possibility of overflow (high lmax) is avoided by using facto-
 !>    rized forms for the numbers.
 !-----------------------------------------------------------------------
-!     changed: get constants from module shape_constants_mod instead
-!              of inc.geometry
       subroutine ccoef(lmax,cl,coe)
+!     changed: get constants from module shape_constants_mod instead of inc.geometry
       use shape_constants_mod, only: icd, iced, lmaxd1
       integer, intent(in) :: lmax
-      real*8, intent(out) :: cl(icd), coe(iced)
-
+      real*8, intent(out) :: cl(icd), coe(iced) ! warning: old m-ordering
+     
       integer, parameter :: ifmx=25, lma2d=lmaxd1/2+1
-      integer :: icmax,l,li,ice,ic,i1,l2p,m,k,k0,isi,ire,ir,ic1,ic2
+      integer :: icmax,l,li,ice,ic,i,l2p,m,k,k0,isi,ire,ir,ic1,ic2
       integer :: la,lb,ieupsq,ieint,iemod
       real*8 :: up,down,upsq
       integer :: ie(ifmx,lma2d),ied(ifmx)
@@ -327,113 +327,124 @@
       integer :: iea(ifmx),ieb(ifmx),il2p(ifmx)
       integer, parameter :: ifi(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
 !-----------------------------------------------------------------------
-      icmax=0
-      do 9 l=0,lmax
-      li=l/2+1
-    9 icmax=icmax+(lmax+1-l)*li
+      icmax = 0
+      do l = 0, lmax
+        li = l/2+1
+        icmax = icmax+(lmax+1-l)*li
+      enddo ! l
       if (lmax > lmaxd1 .or. icmax > icd) then
         write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
         stop 'lmax > lmaxd1 .or. icmax > icd'
       endif ! lmax > lmaxd1 .or. icmax > icd
 !     if (test('shape   ')) write(6,fmt="(13x,'there are',i5,'  coefficients'/)") icmax
-      ice=0
-      ic=1
-      l=0
-      do 11 i1=1,ifmx
-      l1st(i1)=0
-   11 l2st(i1)=0
+      ice = 0
+      ic = 1
+      l = 0
+      do i = 1, ifmx
+        l1st(i) = 0
+        l2st(i) = 0
+      enddo ! i
+      
     1 continue
-      l2p=2*l+1
+      l2p = 2*l+1
       call reduce(l2p,ifmx,ifi,il2p)
-      il2p(1)=il2p(1)+1
-      m=l
-      do 12 i1=1,ifmx
-      l1(i1)=l1st(i1)
-      l2(i1)=l2st(i1)
-   12 jm0(i1)=0
+      il2p(1) = il2p(1)+1
+      m = l
+      do i = 1, ifmx
+        l1(i) = l1st(i)
+        l2(i) = l2st(i)
+        jm0(i) = 0
+      enddo ! i
+      
     2 continue
-      ice=ice+1
-      isi=1
+      ice = ice+1
+      isi = 1
 !  this is changed
 !     isi=1-2*mod(m,2)
 !
-      k0=(l+m+1)/2
-      k=l
-      ire=1
-      ic1=ic
-      do 13 i1=1,ifmx
-   13 ie(i1,ire)=jm0(i1)
+      k0 = (l+m+1)/2
+      k = l
+      ire = 1
+      ic1 = ic
+      do i = 1, ifmx
+       ie(i,ire) = jm0(i)
+      enddo ! i
+      
     3 continue
-      if((k-1) < k0)  goto 30
-      ire=ire+1
-      ic=ic+1
-      la=(2*k-l-m)*(2*k-l-m-1)
-      lb=2*(2*k-1)*(l-k+1)
+      if ((k-1) < k0) goto 30
+      ire = ire+1
+      ic = ic+1
+      la = (2*k-l-m)*(2*k-l-m-1)
+      lb = 2*(2*k-1)*(l-k+1)
       call reduce(la,ifmx,ifi,iea)
       call reduce(lb,ifmx,ifi,ieb)
-      do 14 i1=1,ifmx
-   14 ie(i1,ire)=ie(i1,ire-1)+iea(i1)-ieb(i1)
-      k=k-1
+      do i = 1, ifmx
+        ie(i,ire) = ie(i,ire-1)+iea(i)-ieb(i)
+      enddo ! i
+      k = k-1
       goto 3
    30 continue
-      ic2=ic
-      do 4 i1=1,ifmx
-      ied(i1)=ie(i1,1)
-      do 5 ir=2,ire
-      if(ie(i1,ir) < ied(i1))  ied(i1)=ie(i1,ir)
-    5 continue
-      do 6 ir=1,ire
-    6 ie(i1,ir)=ie(i1,ir)-ied(i1)
-    4 continue
-      ir=0
-      do 7 ic=ic1,ic2
-      ir=ir+1
-      cl(ic)=1.d0
-      do 8 i1=1,ifmx
-    8 cl(ic)=cl(ic)*ifi(i1)**ie(i1,ir)
-      cl(ic)=isi*cl(ic)
-      isi=-isi
-    7 continue
-      if(m == 0) il2p(1)=il2p(1)-1
-      up  =1.d0
-      upsq=1.d0
-      down=1.d0
-      do 17 i1=1,ifmx
-      ieupsq=2*ied(i1)+il2p(i1)+l1(i1)
-      ieint =ieupsq/2-l2(i1)
-      iemod =mod(ieupsq,2)
-      upsq =upsq*ifi(i1) **iemod
-      if(ieint >= 0)                   then
-      up   = up  *ifi(i1) **ieint
-                                       else
-      down = down*ifi(i1) **(-ieint)
-                                       endif
-   17 continue
-      coe(ice)=sqrt(upsq)* up / down
+      ic2 = ic
+      do i = 1, ifmx
+        ied(i) = ie(i,1)
+        do ir = 2, ire
+          if(ie(i,ir) < ied(i)) ied(i) = ie(i,ir)
+        enddo ! ir
+        do ir = 1, ire
+          ie(i,ir) = ie(i,ir)-ied(i)
+        enddo ! ir
+      enddo ! i
+      ir = 0
+      do ic = ic1, ic2
+        ir = ir+1
+        cl(ic) = 1.d0
+        do i = 1, ifmx
+          cl(ic) = cl(ic)*ifi(i)**ie(i,ir)
+        enddo ! i
+        cl(ic) = isi*cl(ic)
+        isi = -isi
+      enddo ! ic
+      if (m == 0) il2p(1) = il2p(1)-1
+      up   = 1.d0
+      upsq = 1.d0
+      down = 1.d0
+      do i = 1, ifmx
+        ieupsq = 2*ied(i)+il2p(i)+l1(i)
+        ieint = ieupsq/2-l2(i)
+        iemod = mod(ieupsq,2)
+        upsq  = upsq*ifi(i)**iemod
+        if (ieint >= 0) then ! for the ==0 case, we can do neither of both operations
+          up = up*ifi(i)**ieint
+        else
+          down = down*ifi(i)**(-ieint)
+        endif
+      enddo ! i
+      coe(ice) = sqrt(upsq)*up/down
 !     if (test('shape   ')) write(6,fmt="(2x,'l=',i2,' m=',i2,f10.3,' *sqrt(',f16.2,')/',f10.3/2x,'cl  :',6f14.2)") l,m,up,upsq,down,(cl(ic),ic=ic1,ic2)
-      if (m == 0)  goto 20
-      la=l+m
-      lb=l-m+1
+      if (m == 0) goto 20
+      la = l+m
+      lb = l-m+1
       call reduce(la,ifmx,ifi,iea)
       call reduce(lb,ifmx,ifi,ieb)
-      do 15 i1=1,ifmx
-      jm0(i1)=jm0(i1)+iea(i1)-ieb(i1)
-   15 l1 (i1)=l1 (i1)-iea(i1)+ieb(i1)
-      m=m-1
+      do i = 1, ifmx
+        jm0(i) = jm0(i)+iea(i)-ieb(i)
+        l1(i) =  l1(i) -iea(i)+ieb(i)
+      enddo ! i
+      m = m-1
       goto 2
    20 continue
 !     if (test('shape   ')) write(6,fmt="(80('*'))")
-      if(l == lmax)   goto 10
-      la=(2*l+1)*(2*l+2)
-      lb=(l+1)*2
+      if (l == lmax) return
+      la = (2*l+1)*(2*l+2)
+      lb = (l+1)*2
       call reduce(la,ifmx,ifi,iea)
       call reduce(lb,ifmx,ifi,ieb)
-      do 16 i1=1,ifmx
-      l1st(i1)=l1st(i1)+iea(i1)
-   16 l2st(i1)=l2st(i1)+ieb(i1)
-      l=l+1
+      do i = 1, ifmx
+        l1st(i) = l1st(i)+iea(i)
+        l2st(i) = l2st(i)+ieb(i)
+      enddo ! i
+      l = l+1
       goto 1
-   10 continue
       endsubroutine
 
 
@@ -488,7 +499,9 @@
       real*8 :: fac,fac1,fac2,d,d1,d2
       real*8 :: dmn(lmaxd1+1,lmaxd1+1), dpl(lmaxd1+1,lmaxd1+1)
       real*8, parameter :: sqr2 = sqrt(2.d0)
-      isu = 0
+      isu = 0 ! outer order is s,p,d,f,... and inner order for m and mp is 0,1,-1,2,-2,...,l,-l
+      ! therefore as a function of lmax, isumd can be as low as sum_l=0...lmax (2*l+1)^2
+      ! = (lmax*(3+4*(lmax+1)*(lmax+2)))/3+1
       do l = 0, lmax
       
         fac2 = 1.d0

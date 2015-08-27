@@ -1,35 +1,29 @@
 !------------------------------------------------------------------------------
 !> Storage for tetrahedra data.
 module tetrahedra_common
-  use shape_constants_mod, only: DP
+  use shape_constants_mod, only: dp
   implicit none
   public
 
-  integer, allocatable :: NTT(:)      !< number of tetrahedra for polygon
-  real(kind=DP), allocatable :: R0(:) !< foot points of perpendicular of polygons
+  integer, allocatable :: ntt(:)      !< number of tetrahedra for polygon
+  real(kind=dp), allocatable :: r0(:) !< foot points of perpendicular of polygons
   
-  real(kind=DP), allocatable :: RD(:) !< distances pyramid footpoint to edge
-  real(kind=DP), allocatable :: FA(:) !< tetrahedron angle, phi-angle corresponding to 1st vertex  FA < FD < FB
-  real(kind=DP), allocatable :: FB(:) !< tetrahedron angle, phi-angle corresponding to 2nd vertex
-  real(kind=DP), allocatable :: FD(:) !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
-  integer, allocatable :: ISIGNU(:)   !< ??? sign for rotation sense ???
+  real(kind=dp), allocatable :: rd(:) !< distances pyramid footpoint to edge
+  real(kind=dp), allocatable :: fa(:) !< tetrahedron angle, phi-angle corresponding to 1st vertex  fa < fd < fb
+  real(kind=dp), allocatable :: fb(:) !< tetrahedron angle, phi-angle corresponding to 2nd vertex
+  real(kind=dp), allocatable :: fd(:) !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
+  integer, allocatable :: isignu(:)   !< ??? sign for rotation sense ???
 
   contains
 
-  subroutine createtetra(nfaced, nvtotd)
+  integer function createtetra(nfaced, nvtotd) result(ist)
     integer, intent(in) :: nfaced, nvtotd
-    allocate(NTT(NFACED))
-    allocate(R0(NFACED))
-    
-    allocate(RD(NVTOTD))
-    allocate(FA(NVTOTD))
-    allocate(FB(NVTOTD))
-    allocate(FD(NVTOTD))
-    allocate(ISIGNU(NVTOTD))
-  end subroutine
+    allocate(ntt(nfaced), r0(nfaced), &
+    rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), stat=ist)
+  endfunction ! create
 
-  subroutine destroytetra()
-    deallocate(NTT, R0, RD, FA, FB, FD, ISIGNU)
-  end subroutine
+  integer function destroytetra() result(ist)
+    deallocate(ntt, r0, rd, fa, fb, fd, isignu, stat=ist)
+  endfunction ! destroy
 
-end module
+endmodule ! tetrahedra_common

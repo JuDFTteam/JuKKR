@@ -32,7 +32,7 @@ module shape_constants_mod
 
   integer, parameter :: ICD = 1729                      !< ???
   integer, parameter :: ICED =((LMAXD1+1)*(LMAXD1+2))/2 !< ???
-  integer, parameter :: ISUMD = 100000                  !< ???
+  integer, parameter :: ISUMD = (LMAXD1*(3+4*(LMAXD1+1)*(LMAXD1+2)))/3+1 !< ???
 
   !> maximal number of Gauss-Legendre integration points, used in PINTG
   integer, parameter :: NDIM = 1000
