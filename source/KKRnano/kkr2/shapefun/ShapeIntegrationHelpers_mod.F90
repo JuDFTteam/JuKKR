@@ -17,7 +17,9 @@
       use shape_constants_mod, only: lmaxd1, ndim
 !     include 'inc.geometry':   integer, parameter (lmaxd=25,ndim=1000)
       real*8, intent(in) :: x1, x2, dlt, arg, fd
-      integer, intent(in) :: lmax, isi, itype
+      integer, intent(in) :: lmax
+      integer, intent(in) :: isi ! sign
+      integer, intent(in) :: itype ! itype in [0, 1]
       real*8, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
       
       integer :: i, m, n, k
@@ -42,18 +44,17 @@
         theta = acos(arg)
         call recur0(lmax,x1,theta,-dble(isi),s)
         call recur0(lmax,x2,theta, dble(isi),s)
-        return
+      else
+        n = (x2 - x1)/dlt + 3
+        if (n > ndim) stop 'increase ndim'
+        call gauleg(x1, x2, xx, ww, n)
+        do k = 1, n
+          x = xx(k)
+          w = dble(isi)*ww(k)
+          theta = atan(arg/cos(x - fd))
+          call recur(lmax, x, theta, w, s)
+        enddo ! k
       endif ! itype == 0
-      
-      n = (x2 - x1)/dlt + 3
-      if (n > ndim) stop 'increase ndim'
-      call gauleg(x1, x2, xx, ww, n)
-      do k = 1, n
-        x = xx(k)
-        w = dble(isi)*ww(k)
-        theta = atan(arg/cos(x - fd))
-        call recur(lmax, x, theta, w, s)
-      enddo ! k
       
       endsubroutine pintg
 

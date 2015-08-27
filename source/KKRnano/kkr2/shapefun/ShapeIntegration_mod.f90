@@ -27,8 +27,9 @@ module ShapeIntegration_mod
 subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
   use shape_constants_mod, only: pi, lmaxd1, isumd, icd, iced
-  use tetrahedra_common, only: rd, ntt, r0, fa, fb, fd, isignu
-  use angles_common, only: alpha, beta, gamma
+  use tetrahedra_common, only: rd, fa, fb, fd, isignu ! vertex properties
+  use tetrahedra_common, only: ntt, r0 ! face properties
+  use angles_common, only: alpha, beta, gamma ! face properties
   use shapeintegrationhelpers_mod, only: pintg, ccoef, d_real
 
   integer, intent(in) :: lmax, nface, meshn
@@ -51,16 +52,13 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   real*8 :: arg1
   real*8 :: arg2
 
-  integer :: ivtot, iface, ntet, itet, i, m, ic, ice, ib, isu, l, mp, k0, k, is, imax, mo, ip, ipmax, icount
+  integer :: ivtot, iface, ntet, itet, i, m, ic, ice, ib, isu, l, mp, k0, k, is, imax, mo, ip, ipmax, jbm
   integer :: ibm, ibmax, ir
 
   real*8, allocatable :: rupsq(:) ! dim nvtotd
 
-  real*8 ::  s(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 :: s1(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 :: s2(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 :: s3(-lmaxd1:lmaxd1,0:lmaxd1)
-  real*8 :: sm(2,0:lmaxd1)
+  real*8 :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
+  real*8 :: sm(2,0:lmaxd1) ! this could be reshaped into sm(-lmaxd1:lmaxd1)
   real*8 :: fk
   real*8 :: fl
   real*8 :: fpisq
@@ -68,10 +66,10 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   ! local automatic arrays
   integer :: lofm(ibmaxd)
   integer :: mofm(ibmaxd)
-  integer :: isw(ibmaxd)
+  logical(kind=1) :: nonzero(ibmaxd)
   real*8 :: b(ibmaxd)
   
-  ! isw index array, value is 1 for lm for which shapefunction is non-zero
+  ! nonzero index array, value is 1 for lm for which shapefunction is non-zero
   ! otherwise the value is 0
 
   allocate(rupsq(size(rd))) ! dim: nvtotd
@@ -83,7 +81,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   thetas_s = 0.d0
 
   !.......................................................................
-  !     e x p a ir s i o ir    c o e f f i c i e ir t s
+  !     e x p a n s i o n    c o e f f i c i e n t s
   !.......................................................................
   call ccoef(lmax,cl,c)
   ivtot = 0
@@ -91,10 +89,10 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
     ntet = ntt(iface)
     do itet = 1, ntet
       ivtot = ivtot+1
-      rupsq(ivtot) = sqrt((rd(ivtot) - r0(iface))*(rd(ivtot) + r0(iface)))
+      rupsq(ivtot) = sqrt(rd(ivtot)**2 - r0(iface)**2) ! obviously |rd| >= |r0| 
     enddo ! itet
   enddo ! iface
-  isw(1:ibmax) = 0
+  nonzero(1:ibmax) = .false. ! init 
 
   !===================== split ??? =======================================
 
@@ -120,15 +118,17 @@ py: do iface = 1, nface
       
       arg1 = r0(iface)/r
       rdown = sqrt(r**2 - r0(iface)**2)
-      do i = 0, lmax
-        s(0,i) = 0.d0
-      enddo ! i
-      do m = 1, lmax
-        do i = 0, lmax-m
-          s(-m,i) = 0.d0
-          s( m,i) = 0.d0
-        enddo ! i
-      enddo ! m
+!       do i = 0, lmax
+!         s(0,i) = 0.d0
+!       enddo ! i
+!       do m = 1, lmax
+!         do i = 0, lmax-m
+!           s(-m,i) = 0.d0
+!           s( m,i) = 0.d0
+!         enddo ! i
+!       enddo ! m
+      s = 0.d0 ! init s
+      
       !.......................................................................
       !     l o o p     o v e r     t e t r a h e d r a
       !.......................................................................
@@ -138,15 +138,16 @@ py: do iface = 1, nface
         if (r <= rd(ivtot)) then
         
           call pintg(fa(ivtot),fb(ivtot),dlt,s1,lmax,isignu(ivtot), arg1,fd(ivtot),0)
-          do i = 0, lmax
-            s(0,i) = s(0,i) + s1(0,i)
-          enddo ! i
-          do m = 1, lmax
-            do i = 0, lmax-m
-              s(-m,i) = s(-m,i) + s1(-m,i)
-              s( m,i) = s( m,i) + s1( m,i)
-            enddo ! i
-          enddo ! m
+!           do i = 0, lmax
+!             s(0,i) = s(0,i) + s1(0,i)
+!           enddo ! i
+!           do m = 1, lmax
+!             do i = 0, lmax-m
+!               s(-m,i) = s(-m,i) + s1(-m,i)
+!               s( m,i) = s( m,i) + s1( m,i)
+!             enddo ! i
+!           enddo ! m
+          s = s + s1
           
         else  ! r <= rd(ivtot)
         
@@ -160,17 +161,21 @@ py: do iface = 1, nface
           fk = min(fb(ivtot), fk)
           fl = min(fb(ivtot), fl)
           call pintg(fa(ivtot),fk,dlt,s1,lmax,isignu(ivtot), arg1,fd(ivtot),0)
-          call pintg(fk       ,fl,dlt,s2,lmax,isignu(ivtot), arg2,fd(ivtot),1)
-          call pintg(fl,fb(ivtot),dlt,s3,lmax,isignu(ivtot), arg1,fd(ivtot),0)
-          do i = 0, lmax
-            s(0,i) = s(0,i) + s1(0,i) + s2(0,i) + s3(0,i)
-          enddo ! i
-          do m = 1, lmax
-            do i = 0, lmax-m
-              s(-m,i) = s(-m,i) + s1(-m,i) + s2(-m,i) + s3(-m,i)
-              s( m,i) = s( m,i) + s1( m,i) + s2( m,i) + s3( m,i)
-            enddo ! i
-          enddo ! m
+          s = s + s1
+          call pintg(fk       ,fl,dlt,s1,lmax,isignu(ivtot), arg2,fd(ivtot),1)
+          s = s + s1
+          call pintg(fl,fb(ivtot),dlt,s1,lmax,isignu(ivtot), arg1,fd(ivtot),0)
+          s = s + s1
+          
+!           do i = 0, lmax
+!             s(0,i) = s(0,i) + s1(0,i) + s2(0,i) + s3(0,i)
+!           enddo ! i
+!           do m = 1, lmax
+!             do i = 0, lmax-m
+!               s(-m,i) = s(-m,i) + s1(-m,i) + s2(-m,i) + s3(-m,i)
+!               s( m,i) = s( m,i) + s1( m,i) + s2( m,i) + s3( m,i)
+!             enddo ! i
+!           enddo ! m
           
         endif ! r <= rd(ivtot)
 
@@ -236,46 +241,39 @@ py: do iface = 1, nface
 
     enddo py
     !.......................................................................
-    !     d e f i n e s   a n d    s a v e s   s h a p e    f u n c t i o n
+    !     d e f i n e s   a n d    s a v e s   s h a p e    f u n c t i o n s
     !.......................................................................
-    b(1:ibmax) = -b(1:ibmax)/fpisq
-    b(1) = fpisq + b(1)
+    b(1:ibmax) = -b(1:ibmax)/fpisq ! scale
+    b(1) = fpisq + b(1) ! add constant sqrt(4*pi) in the l=0,m=0 channel
     
-    do ibm = 1, ibmax
-      !     write(6,*) ibm,b(ibm)
-      if (abs(b(ibm)) > 1d-6) isw(ibm) = 1
-      !irec=(ibm-1)*meshn+ir
-      !write(11,rec=irec) b(ibm)
-      thetas_s(ir,ibm) = b(ibm)
-    enddo ! ibm
+    nonzero = nonzero .or. (abs(b(:)) > 1d-6)
+    thetas_s(ir,1:ibmax) = b(1:ibmax)
     
   enddo meshloop
 
   !now rearrange thetas_s array that it contains only non-zero shapefunctions
   !this is done "in-place"
 
-  lmifun_s = 0
+  lmifun_s = 0 ! lm-index of this shape function
 
-  icount = 1
+  jbm = 0
   do ibm = 1, ibmax
-    if (isw(ibm) == 1) then
+    if (nonzero(ibm)) then
 
-      lmifun_s(icount) = lofm(ibm)*lofm(ibm) + lofm(ibm) + mofm(ibm) + 1
+      jbm = jbm + 1
+      lmifun_s(jbm) = lofm(ibm)*lofm(ibm) + lofm(ibm) + mofm(ibm) + 1
 
-      if (icount /= ibm) then
-        do ir = 1, meshn
-          thetas_s(ir,icount) = thetas_s(ir,ibm)
-        enddo ! ir
-      endif
-      icount = icount + 1
+      if (jbm < ibm) then
+        thetas_s(1:meshn,jbm) = thetas_s(1:meshn,ibm)
+      endif ! jbm < ibm
 
     else
       thetas_s(1:meshn,ibm) = 0.d0
-    endif ! isw == 1
+    endif ! nonzero
   enddo ! ibm
 
-  nfun = count(isw(1:ibmax) == 1) ! count non-zero shape functions
+  nfun = count(nonzero(1:ibmax)) ! count non-zero shape functions
 
-endsubroutine
+endsubroutine shapeIntegration
 
 endmodule ShapeIntegration_mod

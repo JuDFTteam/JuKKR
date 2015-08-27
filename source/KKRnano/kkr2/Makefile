@@ -25,11 +25,11 @@ FCFLAGS += -I $(BUILDDIR)
 FCFLAGS += -gen-interfaces -warn interfaces
 FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
-# FCFLAGS += -C -traceback
-# FCFLAGS += -O0 -g
-# LDFLAGS  = -O0 -g
-FCFLAGS += -O3 -g -pg
-LDFLAGS  = -O3 -ipa -g -pg
+FCFLAGS += -C -traceback
+FCFLAGS += -O0 -g
+LDFLAGS  = -O0 -g
+# FCFLAGS += -O3 -g -pg
+# LDFLAGS  = -O3 -ipa -g -pg
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
