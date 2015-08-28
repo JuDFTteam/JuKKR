@@ -227,7 +227,7 @@ NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o K
 NearField_mod.o: MadelungCalculator_mod.o
 KKRnano_Comm_mod.o: jij_calc_mod.o KKRnanoParallel_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o
 InputParams_mod.o: ConfigReader_mod.o
-tetrahedra_common.o: shape_constants_mod.o
+PolygonFaces_mod.o: shape_constants_mod.o
 ShapeGeometryHelpers_mod.o: shape_constants_mod.o
 ShapeStandardMesh_mod.o: shape_constants_mod.o
 wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o
@@ -244,10 +244,10 @@ SingleSiteRef_mod.o: kkr_helpers_mod.o SingleSiteHelpers_mod.o
 TFQMRSolver_mod.o: Solver_mod.o OperatorT_mod.o mminvmod_oop_mod.o SolverStats_mod.o
 main2.o: Logging_mod.o kkr0_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o MultScatData_mod.o kkrmat01_new.o jij_calc_mod.o TEST_lcutoff_mod.o TFQMRSolver_mod.o SolverOptions_mod.o InitialGuess_mod.o
-ShapeCriticalPoints_mod.o: shape_constants_mod.o ShapeGeometryHelpers_mod.o angles_common.o tetrahedra_common.o
+ShapeCriticalPoints_mod.o: shape_constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o
-ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o shape_constants_mod.o angles_common.o tetrahedra_common.o
+ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o shape_constants_mod.o  PolygonFaces_mod.o
 BasisAtom_mod.o: RadialMeshData_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 mminvmod_oop_mod.o: Logging_mod.o OperatorT_mod.o SolverStats_mod.o
 KKRresults_mod.o: DimParams_mod.o
@@ -260,9 +260,8 @@ main2_aux_mod.o: TimerMpi_mod.o
 NearField_kkr_mod.o: NearField_mod.o
 jij_calc_mod.o: JijData_mod.o
 broyden_kkr_mod.o: brydbm_new_com_mod.o broyden_second_mod.o BroydenData_mod.o CalculationData_mod.o
-ShapeFunctions_mod.o: tetrahedra_common.o angles_common.o ShapeCriticalPoints_mod.o shape_constants_mod.o ShapeIntegration_mod.o ShapeStandardMesh_mod.o
+ShapeFunctions_mod.o: PolygonFaces_mod.o  ShapeCriticalPoints_mod.o shape_constants_mod.o ShapeIntegration_mod.o ShapeStandardMesh_mod.o
 ConfigReader_mod.o: ConfigReaderDictionary_mod.o
-angles_common.o: shape_constants_mod.o
 KKROperator_mod.o: MultScatData_mod.o OperatorT_mod.o ClusterInfo_mod.o SparseMatrixDescription_mod.o vbrmv_mat_mod.o
 lloyd0_new_mod.o: KKRnanoParallel_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o
 vbrmv_mat_mod.o: SparseMatrixDescription_mod.o

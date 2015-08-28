@@ -20,7 +20,7 @@
       integer, intent(in) :: lmax
       integer, intent(in) :: isi ! sign
       integer, intent(in) :: itype ! itype in [0, 1]
-      real*8, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
+      real*8, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1) ! uses more memory than needed, about 55% used
       
       integer :: i, m, n, k
       real*8 :: x, theta, w
@@ -32,13 +32,7 @@
         stop
       endif
     
-      s(0,0:lmax) = 0.d0 ! Caution: slow index
-      do m = 1, lmax
-        do i = 0, lmax-m
-          s(-m,i) = 0.d0
-          s( m,i) = 0.d0
-        enddo ! i
-      enddo ! m
+      s = 0.d0
       
       if (itype == 0) then
         theta = acos(arg)
@@ -312,26 +306,22 @@
 !>    the possibility of overflow (high lmax) is avoided by using facto-
 !>    rized forms for the numbers.
 !-----------------------------------------------------------------------
-      subroutine ccoef(lmax,cl,coe)
+      subroutine ccoef(lmax, cl, coe)
 !     changed: get constants from module shape_constants_mod instead of inc.geometry
       use shape_constants_mod, only: icd, iced, lmaxd1
       integer, intent(in) :: lmax
-      real*8, intent(out) :: cl(icd), coe(iced) ! warning: old m-ordering
+      real*8, intent(out) :: cl(icd) ! warning: old m-ordering: ???
+      real*8, intent(out) :: coe(iced) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
      
       integer, parameter :: ifmx=25, lma2d=lmaxd1/2+1
-      integer :: icmax,l,li,ice,ic,i,l2p,m,k,k0,isi,ire,ir,ic1,ic2
-      integer :: la,lb,ieupsq,ieint,iemod
+      integer :: icmax,l,ice,ic,i,m,k,k0,isi,ire,ir,ic1,ic2, la, lb, ieupsq, ieint
       real*8 :: up,down,upsq
-      integer :: ie(ifmx,lma2d),ied(ifmx)
-      integer :: l1st(ifmx),l2st(ifmx),l1(ifmx),l2(ifmx),jm0(ifmx)
-      integer :: iea(ifmx),ieb(ifmx),il2p(ifmx)
-      integer, parameter :: ifi(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+      integer :: ie(ifmx,lma2d), ied(ifmx)
+      integer, dimension(ifmx) :: l1st, l2st, l1, l2, jm0, iea, ieb, il2p
+      integer, parameter :: primes(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
 !-----------------------------------------------------------------------
-      icmax = 0
-      do l = 0, lmax
-        li = l/2+1
-        icmax = icmax+(lmax+1-l)*li
-      enddo ! l
+      icmax = sum([( (lmax+1-l)*(l/2+1), l=0,lmax)])
+      
       if (lmax > lmaxd1 .or. icmax > icd) then
         write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
         stop 'lmax > lmaxd1 .or. icmax > icd'
@@ -340,35 +330,27 @@
       ice = 0
       ic = 1
       l = 0
-      do i = 1, ifmx
-        l1st(i) = 0
-        l2st(i) = 0
-      enddo ! i
+      l1st(:) = 0
+      l2st(:) = 0
       
     1 continue
-      l2p = 2*l+1
-      call reduce(l2p,ifmx,ifi,il2p)
-      il2p(1) = il2p(1)+1
+      call factorize(2*l+1, primes, il2p)
+      il2p(1) = il2p(1)+1 ! increase the exponent of the lowest prime factor (which is 2)
+      
       m = l
-      do i = 1, ifmx
-        l1(i) = l1st(i)
-        l2(i) = l2st(i)
-        jm0(i) = 0
-      enddo ! i
+      l1(:) = l1st(:)
+      l2(:) = l2st(:)
+      jm0(:) = 0
       
     2 continue
       ice = ice+1
       isi = 1
-!  this is changed
-!     isi=1-2*mod(m,2)
-!
+!  this is changed: old: isi = 1-2*mod(m,2)
       k0 = (l+m+1)/2
       k = l
       ire = 1
       ic1 = ic
-      do i = 1, ifmx
-       ie(i,ire) = jm0(i)
-      enddo ! i
+      ie(:,ire) = jm0(:)
       
     3 continue
       if ((k-1) < k0) goto 30
@@ -376,14 +358,13 @@
       ic = ic+1
       la = (2*k-l-m)*(2*k-l-m-1)
       lb = 2*(2*k-1)*(l-k+1)
-      call reduce(la,ifmx,ifi,iea)
-      call reduce(lb,ifmx,ifi,ieb)
-      do i = 1, ifmx
-        ie(i,ire) = ie(i,ire-1)+iea(i)-ieb(i)
-      enddo ! i
+      call factorize(la, primes, iea)
+      call factorize(lb, primes, ieb)
+      ie(:,ire) = ie(:,ire-1) + iea(:) - ieb(:)
       k = k-1
       goto 3
    30 continue
+   
       ic2 = ic
       do i = 1, ifmx
         ied(i) = ie(i,1)
@@ -391,88 +372,88 @@
           if(ie(i,ir) < ied(i)) ied(i) = ie(i,ir)
         enddo ! ir
         do ir = 1, ire
-          ie(i,ir) = ie(i,ir)-ied(i)
+          ie(i,ir) = ie(i,ir) - ied(i)
         enddo ! ir
       enddo ! i
       ir = 0
       do ic = ic1, ic2
         ir = ir+1
         cl(ic) = 1.d0
-        do i = 1, ifmx
-          cl(ic) = cl(ic)*ifi(i)**ie(i,ir)
-        enddo ! i
+        cl(ic) = cl(ic)*product(primes(:)**ie(:,ir))
         cl(ic) = isi*cl(ic)
         isi = -isi
       enddo ! ic
-      if (m == 0) il2p(1) = il2p(1)-1
+      if (m == 0) il2p(1) = il2p(1)-1 ! undo the increasing done above for m=0
+      
       up   = 1.d0
       upsq = 1.d0
       down = 1.d0
       do i = 1, ifmx
-        ieupsq = 2*ied(i)+il2p(i)+l1(i)
-        ieint = ieupsq/2-l2(i)
-        iemod = mod(ieupsq,2)
-        upsq  = upsq*ifi(i)**iemod
-        if (ieint >= 0) then ! for the ==0 case, we can do neither of both operations
-          up = up*ifi(i)**ieint
-        else
-          down = down*ifi(i)**(-ieint)
-        endif
+        ieupsq = 2*ied(i) + il2p(i) + l1(i)
+        ieint = ieupsq/2 - l2(i)
+        upsq  = upsq*primes(i)**mod(ieupsq, 2)
+        if (ieint > 0) then 
+          up = up*primes(i)**ieint
+        elseif (ieint < 0) then
+          down = down*primes(i)**(-ieint)
+        endif ! for the ==0 case, we need to do neither of both operations
       enddo ! i
       coe(ice) = sqrt(upsq)*up/down
+      
 !     if (test('shape   ')) write(6,fmt="(2x,'l=',i2,' m=',i2,f10.3,' *sqrt(',f16.2,')/',f10.3/2x,'cl  :',6f14.2)") l,m,up,upsq,down,(cl(ic),ic=ic1,ic2)
       if (m == 0) goto 20
       la = l+m
       lb = l-m+1
-      call reduce(la,ifmx,ifi,iea)
-      call reduce(lb,ifmx,ifi,ieb)
-      do i = 1, ifmx
-        jm0(i) = jm0(i)+iea(i)-ieb(i)
-        l1(i) =  l1(i) -iea(i)+ieb(i)
-      enddo ! i
+      call factorize(la, primes, iea)
+      call factorize(lb, primes, ieb)
+      jm0(:) = jm0(:) + iea(:) - ieb(:)
+      l1(:)  = l1(:)  - iea(:) + ieb(:)
       m = m-1
       goto 2
    20 continue
+   
 !     if (test('shape   ')) write(6,fmt="(80('*'))")
       if (l == lmax) return
+      
       la = (2*l+1)*(2*l+2)
       lb = (l+1)*2
-      call reduce(la,ifmx,ifi,iea)
-      call reduce(lb,ifmx,ifi,ieb)
-      do i = 1, ifmx
-        l1st(i) = l1st(i)+iea(i)
-        l2st(i) = l2st(i)+ieb(i)
-      enddo ! i
+      call factorize(la, primes, iea)
+      call factorize(lb, primes, ieb)
+      l1st(:) = l1st(:) + iea(:)
+      l2st(:) = l2st(:) + ieb(:)
       l = l+1
       goto 1
-      endsubroutine
+      
+      endsubroutine ccoef
 
 
 !-----------------------------------------------------------------------
 !>    this routine reduces a positive integer   input number 'nmbr'
-!>    to a product  of  first  numbers 'ifi' , at powers  'iexp'.
+!>    to a product  of  first  numbers 'primes' , at powers  'iexp'.
 !-----------------------------------------------------------------------
-      subroutine reduce(nmbr,ifmx,ifi,iexp)
-      integer, intent(in) :: nmbr, ifmx
-      integer, intent(out) :: iexp(1:ifmx)
-      integer, intent(in) :: ifi(1:ifmx) ! set of lowest prime numbers
+    subroutine factorize(nmbr, primes, iexp)
+      integer, intent(in)  :: nmbr
+      integer, intent(in)  :: primes(1:) ! set of lowest prime numbers
+      integer, intent(out) :: iexp(1:)
 !-----------------------------------------------------------------------
 
-      integer :: i, nmb
+      integer :: i, nmb, ifmx
       
       if (nmbr <= 0) then
         write(*,fmt="(3x,i15,'  non positive number')") nmbr
         stop
       endif ! nmbr <= 0
+      
+      ifmx = min(size(primes), size(iexp))
        
-      iexp(1:ifmx) = 0
+      iexp(:) = 0
       if (nmbr == 1) return ! all iexp zero
       
       nmb = nmbr ! copy
       do i = 1, ifmx
 !       iexp(i) = 0 ! redundant
-        do while (mod(nmb, ifi(i)) == 0)
-          nmb = nmb/ifi(i) ! integer division, reduce by the prime factor ifi(i)
+        do while (mod(nmb, primes(i)) == 0)
+          nmb = nmb/primes(i) ! integer division, reduce by the prime factor primes(i)
           iexp(i) = iexp(i)+1 ! and count up the number of exponents
         enddo ! while
         if (nmb == 1) return ! default exit point of this routine
@@ -481,7 +462,7 @@
       write(*,fmt="(3x,i15,'  cannot be reduced in the basis of first numbers given'/20x,'increase the basis of first numbers')") nmbr
       stop
       
-      endsubroutine reduce
+    endsubroutine factorize
 
 !------------------------------------------------------------------
 !>    this routine computes transformation matrices associated to
@@ -489,9 +470,9 @@
 !>    real spherical harmonics up to quantum number lmax. the re-
 !>    sults are stored in dmatl(isumd)
 !------------------------------------------------------------------
-      subroutine d_real(lmax,alpha,beta,gamma, dmatl, isumd, lmaxd1)
+      subroutine d_real(lmax,euler, dmatl, isumd, lmaxd1)
       integer, intent(in) :: lmaxd1, isumd, lmax
-      real*8, intent(in) :: alpha,beta,gamma
+      real*8, intent(in) :: euler(1:3) ! alpha, beta, gamma
       real*8, intent(out) :: dmatl(isumd)
       
 !-----------------------------------------------------------------------
@@ -509,8 +490,10 @@
           fac1 = 1.d0
           do mp = 0, m
             fac = 0.5d0*fac1*fac2
+#define beta euler(2)
             d1 = drot(l,mp, m,beta)
             d2 = drot(l,mp,-m,beta)
+#undef  beta            
             if (mod(m, 2) /= 0) d2 = -d2
             dpl(mp+1,m+1) = (d1 + d2)*fac
             dmn(mp+1,m+1) = (d1 - d2)*fac
@@ -532,7 +515,8 @@
             ipmax = 0
             do mp = 0, l
               do ip = 0, ipmax
-              
+#define alpha euler(1)
+#define gamma euler(3)
                 if (ip == 1) then
                   if (i == 1) then
                     d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
@@ -546,7 +530,8 @@
                     d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==0, ip==0
                   endif ! i == 1
                 endif ! ip == 1
-                
+#undef  gamma
+#undef  alpha
                 if (mod(m+mp, 2) /= 0) d = -d
                 isu = isu+1
                 dmatl(isu) = d

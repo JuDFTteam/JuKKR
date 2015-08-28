@@ -40,7 +40,8 @@ module ShapeCriticalPoints_mod
     npan, crt, npand)
 
     use shape_constants_mod, only: verbosity, check_geometry, isumd, lmaxd1, pi
-    use tetrahedra_common, only: ntt, fa, fb, fd, rd, isignu
+    use PolygonFaces_mod, only: face ! read-only if verbose
+    use PolygonFaces_mod, only: fa, fb, fd, rd, isignu ! read-only if verbose
     use shapegeometryhelpers_mod, only: polchk
 
     integer, intent(in) :: npand
@@ -117,7 +118,7 @@ module ShapeCriticalPoints_mod
 
       call crit(iface,nvertices(iface),v,z,ipan,ivtot,toleuler,tolvdist,crt,npand)
 
-      if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,ntt(iface)
+      if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,face(iface)%ntt
 
     enddo ! iface ! end of loop over faces
 
@@ -138,6 +139,8 @@ module ShapeCriticalPoints_mod
     
   endsubroutine criticalShapePoints
 
+  
+#define  get_angle(RESULT, SINE, COSINE) if (abs((SINE)) < toleuler .and. abs((COSINE) + 1.d0) < toleuler) then; RESULT = pi; else; RESULT = 2.d0*atan2((SINE), (COSINE) + 1.d0); endif
 
   !------------------------------------------------------------------------------
   !>    Calculates critical points where panels have to be placed.
@@ -162,7 +165,7 @@ module ShapeCriticalPoints_mod
   !>    @param[in]     TOLVDIST tolerance for distances
   !>    @param[in,out] CRT   array of critical points, CRT(NPAND)
   !>    @param[in]     NPAND maximal number of panels allowed
-  subroutine CRIT(iface,nvert,v,z,ipan,ivtot,toleuler,tolvdist,crt, npand)
+  subroutine CRIT(iface, nvert, v, z, ipan, ivtot, toleuler, tolvdist, crt, npand)
     !-----------------------------------------------------------------------
     !     this routine calculates the critical points 'crt' of the shape
     !     functions due to the face: z(1)*x + z(2)*y + z(3)*z = 1
@@ -172,8 +175,9 @@ module ShapeCriticalPoints_mod
     !     cessary quantities for the calculation are stored in common.
     !-----------------------------------------------------------------------
     use shape_constants_mod, only: pi, verbosity
-    use tetrahedra_common, only: ntt, r0, rd, isignu, fd, fa, fb
-    use angles_common, only: alpha, beta, gamma
+!    use PolygonFaces_mod, only: ntt, r0, alpha, beta, gamma ! face properties
+    use PolygonFaces_mod, only: face ! new data container
+    use PolygonFaces_mod, only: rd, isignu, fd, fa, fb ! vertex properties
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
 
     integer, intent(in) :: npand, iface, nvert
@@ -198,15 +202,19 @@ module ShapeCriticalPoints_mod
 
     allocate(in(size(v,2)), vz(3, size(v,2)))
 
-    ntt(iface) = 0
+!     ntt(iface) = 0
+    face(iface)%ntt = 0
 
     if (verbosity > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") iface,z(1:3)
 
     zmod2 = nrm2(z)
 
-    if (zmod2 <= tol_small) goto 100 ! error  ! check if normal vector of plane is valid
-
-    s = 2d0*pi
+    if (zmod2 <= tol_small) then ! check if normal vector of plane is valid
+      write(6,fmt="(//13x,'fatal error from crit: the',i3,'-th face of the polyhedron passes through the center'  /13x,'(',3e14.7,' )')") iface,z(1:3)
+      stop
+    endif
+ 
+    s = 2.d0*pi
 
     z = z/zmod2
 
@@ -216,20 +224,29 @@ module ShapeCriticalPoints_mod
     if (zvmod < tol_small) ix = 2
 
   ! call euler(z,v(:,ix),iface,toleuler) ! store euler angles in common block
-    call euler(z,v(:,ix),toleuler, alpha(iface), beta(iface), gamma(iface)) ! get euler angles directly
+!     call euler(z,v(:,ix),toleuler, alpha(iface), beta(iface), gamma(iface)) ! get euler angles directly
+!     face(iface)%euler = [alpha(iface), beta(iface), gamma(iface)]
+    call euler(z,v(:,ix),toleuler, face(iface)%euler(1), face(iface)%euler(2), face(iface)%euler(3)) ! get euler angles directly
 
-    if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") alpha(iface)/pi,beta(iface)/pi,gamma(iface)/pi
+    if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face(iface)%euler(1:3)/pi
 
   !   call rotate(v,vz,iface,nvert) ! pass the index iface and access the angles in the common block
-    call rotate(v, vz, nvert, alpha(iface), beta(iface), gamma(iface)) ! pass the angles directly
+!     call rotate(v, vz, nvert, alpha(iface), beta(iface), gamma(iface)) ! pass the angles directly
+    call rotate(v, vz, nvert, face(iface)%euler(1), face(iface)%euler(2), face(iface)%euler(3)) ! pass the angles directly
 
-    r0(iface) = 1.d0/sqrt(zmod2)
+!     r0(iface) = 1.d0/sqrt(zmod2)
+    face(iface)%r0 = 1.d0/sqrt(zmod2)
+    
     icorn = 0 ! 0: is not a corner
 
     if (verbosity > 0) write(6,fmt="(/'tetrahedron',14x,'coordinates'/11('*'),14x,11('*')/)")
 
     do ivert = 1, nvert
-      if (abs(r0(iface)-vz(3,ivert)) > tol_small) goto 101 ! error  ! check if vertices lie in same plane
+      if (abs(face(iface)%r0 - vz(3,ivert)) > tol_small) then ! check if vertices lie in same plane
+        write(6,fmt="(//13x,'fatal error from crit: the vertices of the',i3,'-th rotated polygon do not lie on the plane:'  ,e13.6,' *z = 1'/30(/13x, 3e13.6))") &
+          iface,face(iface)%r0,vz(1:3,1:nvert)
+        stop
+      endif
       !.......................................................................
       !     d i s t a n c e s   o f   v e r t i c e s   f r o m   c e n t e r
       !.......................................................................
@@ -243,13 +260,15 @@ module ShapeCriticalPoints_mod
 
       if (inew == 1) then
         ipan = ipan+1
-        if (ipan > npand) goto 102 ! error
+        if (ipan > npand) then
+          write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
+          stop        
+        endif
 
         crt(ipan) = crrt
       endif ! new
-      ivertp=ivert+1
-
-      if (ivert == nvert) ivertp = 1
+      
+      ivertp = ivert+1; if (ivert == nvert) ivertp = 1
 
       !.......................................................................
       !     d i s t a n c e s   o f   e d g e s   f r o m   c e n t e r
@@ -266,7 +285,10 @@ module ShapeCriticalPoints_mod
         enddo ! ip
         if (inew == 1) then
           ipan = ipan+1
-          if (ipan > npand) goto 102 ! error
+          if (ipan > npand) then
+            write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
+            stop        
+          endif
           crt(ipan) = rdd
         endif ! new
       endif ! inside
@@ -286,7 +308,9 @@ module ShapeCriticalPoints_mod
           !.......................................................................
           !     s u b d i v i s i o n    i n t o    t e t r a h e d r a
           !.......................................................................
-          ntt(iface) = ntt(iface)+1
+!           ntt(iface) = ntt(iface)+1
+          face(iface)%ntt = face(iface)%ntt + 1
+          
           ivtot = ivtot+1
 
           if (verbosity > 0) then
@@ -305,55 +329,67 @@ module ShapeCriticalPoints_mod
           cf3 = rdv(1)/a3
           sf3 = rdv(2)/a3
 
-          if (abs(sf1) < toleuler .and. abs(cf1+1d0) < toleuler) then
-            f1 = pi
-          else
-            f1 = 2d0*atan2(sf1, cf1+1d0)
-          endif
+!           if (abs(sf1) < toleuler .and. abs(cf1+1d0) < toleuler) then
+!             f1 = pi
+!           else
+!             f1 = 2.d0*atan2(sf1, cf1+1d0)
+!           endif
+          get_angle(f1, sf1, cf1)
+ 
 
-          if (abs(sf2) < toleuler .and. abs(cf2+1d0) < toleuler) then
-            f2 = pi
-          else
-            f2 = 2d0*atan2(sf2, cf2+1d0)
-          endif
+!           if (abs(sf2) < toleuler .and. abs(cf2+1d0) < toleuler) then
+!             f2 = pi
+!           else
+!             f2 = 2.d0*atan2(sf2, cf2+1d0)
+!           endif
+          get_angle(f2, sf2, cf2)
 
-          if (abs(sf3) < toleuler .and. abs(cf3+1d0) < toleuler) then
-            fd(ivtot) = pi
-          else
-            fd(ivtot) = 2d0*atan2(sf3, cf3+1d0)
-          endif
+!           if (abs(sf3) < toleuler .and. abs(cf3+1d0) < toleuler) then
+!             fd(ivtot) = pi
+!           else
+!             fd(ivtot) = 2.d0*atan2(sf3, cf3+1d0)
+!           endif
+          get_angle(fd(ivtot), sf3, cf3)
 
           fa(ivtot) = min(f1, f2)
           fb(ivtot) = max(f1, f2)
           if ((fb(ivtot) - fa(ivtot)) > pi) then
-            ff = fa(ivtot) + 2d0*pi ! increase new fb
+            ff = fa(ivtot) + 2.d0*pi ! increase new fb
             fa(ivtot) = fb(ivtot) ! swap
             fb(ivtot) = ff
           endif
-          if ((fa(ivtot) - fd(ivtot)) > pi) fd(ivtot) =  2d0*pi + fd(ivtot)
-          if ((fd(ivtot) - fa(ivtot)) > pi) fd(ivtot) = -2d0*pi + fd(ivtot)
-        endif
+          if ((fa(ivtot) - fd(ivtot)) > pi) fd(ivtot) =  2.d0*pi + fd(ivtot)
+          if ((fd(ivtot) - fa(ivtot)) > pi) fd(ivtot) = -2.d0*pi + fd(ivtot)
+        endif ! |omega - pi| > tol_small
+        
       else  ! down > tol_small
         icorn = 1 ! is a corner
       endif ! down > tol_small
+      
     enddo ! ivert ! end of vertex loop
     
     !.......................................................................
-    !     f o o t   o f   t h e    p e r p end i c u l a r   to    t h e
+    !     f o o t   o f   t h e    p e r p e n d i c u l a r   to    t h e
     !     f a c e   o u t s i d e   o r  i n s i d e   t h e   p o l y g o n
     !.......................................................................
     if (s < tol_small .or. icorn == 1) then
+    
       inew = 1
       do ip = 1, ipan
-        if (abs(r0(iface)-crt(ip)) < tol_large) inew=0
+        if (abs(face(iface)%r0 - crt(ip)) < tol_large) inew=0
       enddo ! ip
       
       if (inew == 1) then
         ipan = ipan+1
-        if (ipan > npand) goto 102 ! error
-        crt(ipan) = r0(iface)
+        if (ipan > npand) then
+          write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
+          stop        
+        endif
+        crt(ipan) = face(iface)%r0 ! found a new critical point
       endif ! new
-    else
+      
+    else  ! s < tol_small .or. icorn == 1
+    
       do ivert1 = 1, nvert
         in(ivert1) = 0
         do ivert = 1, nvert
@@ -381,9 +417,9 @@ module ShapeCriticalPoints_mod
           endif
 
   7     continue
-        enddo
+        enddo ! ivert
   6   continue
-      enddo
+      enddo ! ivert1
       iback = ivtot-nvert
 
       do ivert = 1, nvert
@@ -392,14 +428,7 @@ module ShapeCriticalPoints_mod
         if (in(ivert) == 0 .and. in(ivertp) == 0) isignu(iback) = -1
       enddo ! ivert
 
-    endif
-    return
-  100 write(6,fmt="(//13x,'fatal error from crit: the',i3,'-th face of the polyhedron passes through the center'  /13x,'(',3e14.7,' )')") iface,z(1:3)
-    stop
-  101 write(6,fmt="(//13x,'fatal error from crit: the vertices of the',i3,'-th rotated polygon do not lie on the plane:'  ,e13.6,' *z = 1'/30(/13x, 3e13.6))") iface,r0(iface),vz(1:3,1:nvert)
-    stop
-  102 write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
-    stop
+    endif ! s < tol_small .or. icorn == 1
   endsubroutine crit
 
   !-----------------------------------------------------------------------
@@ -447,13 +476,14 @@ module ShapeCriticalPoints_mod
       sg = -z(3)*x(2)
       cg =  z(3)*x(1)
 
-      if (abs(sg) < toleuler .and. abs(cg+1d0) < toleuler)  then
-        gamma = pi
-      else
-        gamma = 2d0*atan2(sg, cg+1d0)
-      endif
+!       if (abs(sg) < toleuler .and. abs(cg+1d0) < toleuler)  then
+!         gamma = pi
+!       else
+!         gamma = 2.d0*atan2(sg, cg+1d0)
+!       endif
+      get_angle(gamma, sg, cg)
 
-    else
+    else  ! p < toleuler
 
       rzp = rz/p
       ! y = z .cross. x or x .cross. z?
@@ -464,34 +494,34 @@ module ShapeCriticalPoints_mod
       sa = y(3)*rzp
       ca = x(3)*rzp
 
-      if (abs(sa) < toleuler .and. abs(ca+1.d0) < toleuler)  then
-        alpha = pi
-      else
-        alpha = 2d0*atan2(sa, ca+1d0)
-      endif
+!       if (abs(sa) < toleuler .and. abs(ca+1.d0) < toleuler)  then
+!         alpha = pi
+!       else
+!         alpha = 2.d0*atan2(sa, ca+1d0)
+!       endif
+      get_angle(alpha, sa, ca)
 
-      sg= z(2)*rzp
-      cg=-z(1)*rzp
+      sg =  z(2)*rzp
+      cg = -z(1)*rzp
 
-      if (abs(sg) < toleuler .and. abs(cg+1d0) < toleuler)  then
-        gamma = pi
-      else
-        gamma = 2d0*atan2(sg, cg+1d0)
-      endif
+!       if (abs(sg) < toleuler .and. abs(cg+1d0) < toleuler)  then
+!         gamma = pi
+!       else
+!         gamma = 2.d0*atan2(sg, cg+1d0)
+!       endif
+      get_angle(gamma, sg, cg)
 
-    endif
+    endif ! p < toleuler
       
     z = z*rz
 
   endsubroutine ! euler
 
 
-
-
   !-----------------------------------------------------------------------
   !> rotation by euler angles given in module angles_common.
   !>    this routine performs the rotation of nvert vectors through the
-  !>    euler angles: alpha(iface),beta(iface),gamma(iface).
+  !>    euler angles: input alpha, beta, gamma
   !>    v (i,ivert) : input   vectors
   !>    vz(i,ivert) : rotated vectors
   !-----------------------------------------------------------------------

@@ -144,8 +144,7 @@ subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nverti
   use shapecriticalpoints_mod, only: criticalshapepoints
   use shapestandardmesh_mod, only: mesh
   use shapeintegration_mod, only: shapeintegration
-  use angles_common, only: createangles, destroyangles
-  use tetrahedra_common, only: createtetra, destroytetra
+  use PolygonFaces_mod, only: createtetra, destroytetra
   integer :: ist
 
   integer,intent(in) :: npoi
@@ -195,7 +194,6 @@ subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nverti
   lmifun_s = 0
 
   ist = createtetra(nfaced, nfaced*nvertd)
-  call createangles(nfaced)
 
   call criticalShapePoints(aface,bface,cface,dface, tolvdist, toleuler, nvertices,xvert,yvert,zvert,nface,lmax, npan, crt, npand)
 
@@ -211,7 +209,6 @@ subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nverti
   npan = npan - 1
 
   ist = destroytetra()
-  call destroyangles()
 
  endsubroutine shapef
 

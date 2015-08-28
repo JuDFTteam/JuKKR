@@ -101,7 +101,7 @@ module ShapeStandardMesh_mod
     if ((npan-1)*nmin > naprox) then
       write(6,*) npan,nmin,naprox
       stop ' increase number of points'
-    end if
+    endif
 
     dist = abs(crt(1) - crt(npan))
     do i = 1, npan-1
