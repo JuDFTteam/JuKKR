@@ -28,11 +28,7 @@ module ShapeIntegration_mod
 subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
   use shape_constants_mod, only: pi, lmaxd1, icd, iced!, isumd
-! use PolygonFaces_mod, only: rd, fa, fb, fd, isignu ! vertex properties read-only
-! use PolygonFaces_mod, only: ntt, r0, alpha, beta, gamma ! face properties read-only ! deprecated
-!   use PolygonFaces_mod, only: face ! face properties
   use PolygonFaces_mod, only: PolygonFace, TetrahedronAngles
-  
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
 
   integer, intent(in) :: lmax, meshn

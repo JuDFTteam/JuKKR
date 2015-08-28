@@ -1,15 +1,217 @@
 module voronoi08_mod
   implicit none
   private
-  public :: distplane, normalplane0, polyhedron08, dsort
+  public :: voronoi08
+!   public :: polyhedron08
+!   public :: distplane, normalplane0, dsort ! helpers
+!   public :: normal_plane, dist_plane
 
   interface normal_plane
-    module procedure normal_plane0f, normal_planef, normalplane, normalplane0
+    module procedure normal_plane0f, normal_planef!, normalplane, normalplane0
   endinterface
   
   contains
+  
+  
+  !***********************************************************************
+  ! Given a cluster of atomic positions at RVEC(3,NVEC), this subroutine
+  ! returns information about the Voronoi cell around the origin. It is
+  ! supposed, of course, that the origin corresponds to an atomic position
+  ! which is not included in the RVEC(3,N). The information returned is:
+  !
+  ! RMT: Muffin-tin radius (radius of inscribed sphere centered at the 
+  !      origin).
+  !
+  ! ROUT: Radius of circumscribed sphere centered at the origin.
+  !
+  ! VOLUME: Volume of the Voronoi cell. 
+  !
+  ! NFACE: Number of faces of the cell.
+  !
+  ! A3(NFACE),B3(NFACE),C3(NFACE),D3(NFACE): Coefficients defining the
+  ! faces via A3*x+B3*y+C3*z=D3. The arrays are filled in the first
+  ! NFACE positions with the information, the rest can be garbage.
+  !
+  ! NVERT(NFACE): Number of vertices corresponting to each face.
+  !
+  ! vert(1,NVERTMAX,NFACE),vert(2,NVERTMAX,NFACE),vert(3,NVERTMAX,NFACE): 
+  ! Coordinates of theese vertices.
+  !
+  ! The Voronoi construction performed here allows for different than
+  ! 50%/50% bisections. For this, each atomic site, positioned say at
+  ! vector r(i), is assigned a weight w(i). Then a point r in space
+  ! belongs to the cell i if, for all j, 
+  ! |r-r(i)|**2 - w(i) < |r-r(j)|**2 - w(j).    (1)
+  ! The points for which the inequality becomes an equality is the 
+  ! bisector, and it can be easily shown that it is a plane perpendicular
+  ! to the vector r(j)-r(i).
+  ! One can parametrize the segment connecting r(i) and r(j) using a
+  ! parameter t, 0 < t < 1. For t=0 we are at r(i), for t=1 at r(j), and
+  ! in-between we have a linear dependence of the distance from r(i) with
+  ! t. I.e., the position vector is r = r(i)*(1-t) + r(j)*t.
+  ! The point where the bisector cuts this segment will then be at
+  ! t=(1/2)*( (w(i)-w(j))/dist**2 + 1 )         (2)
+  ! where dist is the distance of the two points. As a special case we see
+  ! that, for w(i)=w(j), the bisector will be in the middle, else the
+  ! atomic site with the bigger weight gains more space.
+  !
+  ! The above procedure is guaranteed to divide space into tesselating 
+  ! (:=space-filling) convex polyhedra (one of their sides could be at 
+  ! infinity in special cases). The convexity of the polyhedra is 
+  ! guaranteed by the constuction, i.e. as mutual cut of half-spaces, and
+  ! the property of tesselation is guaranteed by the fact that every point
+  ! in space is assigned to some atom.
+  !
+  ! However, this procedure might place the polyhedron in such a way that
+  ! its own atomic site is not contained in it. This can happen if there
+  ! is a big enough difference in the weights, whence, from eq.(2) above,
+  ! t can become <0 or >1 (then the bisector has passed one of the two
+  ! points). This cannot be allowed in a KKR calculation, and therefore
+  ! each time it is checked that this is not the case. If such a case
+  ! occurs, a different set of weights must be chosen.
+  !
+  !
+  ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
+  subroutine voronoi08(nvec,rvec,nvertmax,nfaced,weight0,weight,tolvdist,tolarea, &
+     rmt,rout,volume, nface, planes, nvert, vert, output)
 
-  subroutine polyhedron08(nplane, nvertmax, nfaced, tolvdist,tolarea, a3,b3,c3,d3, nface, nvert, xvert,yvert,zvert, output)
+  ! Input:
+  integer, intent(in) :: nvec, nvertmax, nfaced
+  double precision, intent(in) :: rvec(:,:) ! cluster positions without the origin among them
+  double precision, intent(in) :: weight0, weight(:)  ! Weight of central atom, and of all others (dimensioned as RVEC). 
+  double precision, intent(in) :: tolvdist ! Max. tolerance for distance of two vertices
+  double precision, intent(in) :: tolarea  ! Max. tolerance for area of polygon face
+  logical, intent(in) :: output ! test output
+
+  ! Output:
+  integer, intent(out) :: nface, nvert(:)
+  double precision, intent(out) :: volume, rmt, rout
+  double precision, intent(out) :: planes(0:,:)
+  double precision, intent(out) :: vert(3,nvertmax,nfaced) ! vertices
+  
+  ! Inside:
+  integer ivec,iface,ivert,i,nverttot
+  integer nplane
+  double precision :: tetrvol,rsq,tau, v1(3), v2(3), v3(3)
+  double precision  facearea(nfaced),trianglearea   
+  double precision  temp
+  integer isort(nfaced),pos,inew    ! Index for sorting
+  double precision rsort(nfaced)              ! Aux. function for sorting
+  double precision, allocatable :: ptmp(:,:), vtmp(:,:,:) ! For sorting
+  integer, allocatable :: ntmp(:)                        ! For sorting
+  integer npanel
+
+  !---------------------------------------------------------------
+  ! Check that the origin is not included in RVEC.
+  do ivec = 1, nvec
+     if (sum(abs(rvec(1:3,ivec))) < 1.d-12) then
+        write(*,*) 'VORONOI: Vector',ivec,'is zero.'
+        stop 'VORONOI'
+     endif
+  enddo ! ivec
+  !---------------------------------------------------------------
+  ! Define the planes as normal to the vectors RVEC, passing from t as in eq. (2) above:
+  do ivec = 1, nvec
+     rsq = rvec(1,ivec)**2 + rvec(2,ivec)**2 + rvec(3,ivec)**2
+     tau = 0.5d0*((weight0 - weight(ivec))/rsq + 1.d0)
+!    call normalplane0(rvec(1,ivec),rvec(2,ivec),rvec(3,ivec), tau, a3(ivec),b3(ivec),c3(ivec), d3(ivec))
+     planes(0:3,ivec) = normal_plane(rvec(1:3,ivec), tau)
+  enddo ! ivec
+  !---------------------------------------------------------------
+  ! Find the Voronoi polyhedron.
+  nplane = nvec
+  if (output) write(*,*) 'Entering POLYHEDRON08'
+  call polyhedron08(nplane, nvertmax, nfaced, tolvdist, tolarea, planes, nface, nvert, vert, output)
+  if (output) write(*,*) 'Exited POLYHEDRON08'
+
+  !---------------------------------------------------------------
+  ! Calculate the volume as sum of the volumes of all tetrahedra 
+  ! connecting the origin to the faces. Use for each tetrahedron
+  ! volume = det((r0-r1),(r0-r2),(r0-r3))/6, where r0 is here the
+  ! origin and r1,r2,r3 the vectors of the 3 other vertices.
+  ! Algorithm requires that the face is a convex polygon with the 
+  ! vertices ordered (doesn't matter if they are clock- or anticlockwise).
+  volume = 0.d0
+  do iface = 1, nface
+     v1(1:3) = vert(1:3,1,iface)
+     facearea(iface) = 0.d0
+     do ivert = 2, nvert(iface)-1
+        v2(1:3) = vert(1:3,ivert,iface)
+        v3(1:3) = vert(1:3,ivert+1,iface)
+        tetrvol = v1(1)*(v2(2)*v3(3)-v3(2)*v2(3))+v2(1)*(v3(2)*v1(3)-v1(2)*v3(3))+v3(1)*(v1(2)*v2(3)-v2(2)*v1(3))
+        volume = volume + abs(tetrvol)
+        trianglearea = 0.5d0 * sqrt( &
+               ( v1(1)*v2(2) + v2(1)*v3(2) + v3(1)*v1(2) - v2(2)*v3(1) - v3(2)*v1(1) - v1(2)*v2(1))**2 &
+             + ( v1(2)*v2(3) + v2(2)*v3(3) + v3(2)*v1(3) - v2(3)*v3(2) - v3(3)*v1(2) - v1(3)*v2(2))**2 &
+             + ( v1(3)*v2(1) + v2(3)*v3(1) + v3(3)*v1(1) - v2(1)*v3(3) - v3(1)*v1(3) - v1(1)*v2(3))**2 )
+        facearea(iface) = facearea(iface)+ trianglearea
+     enddo ! ivert
+  enddo ! iface
+  volume = volume/6.d0
+
+  if (output) then
+    write(6,*) ' Polyhedron properties '
+    write(6,*) ' Number of faces : ',nface
+  endif ! output
+
+  if (output) then
+     do iface=1,nface
+        write(6,fmt="(' Face ',i4,'   has ',i4,' vertices ','; Area= ',e12.4)") iface, nvert(iface), facearea(iface)
+        do ivert = 1, nvert(iface)
+           write(*,fmt="(i5,4e16.8)") ivert, vert(1:3,ivert,iface)
+        enddo ! ivert
+        write(*,fmt="(' Face coefficients:',4e16.8)") planes(1:3,iface), planes(0,iface)
+     enddo ! iface
+    write(6,*) 'The Volume is : ',volume
+  endif ! output
+
+  !---------------------------------------------------------------
+  ! Find RMT:
+  iface = 1
+  rmt = dist_plane(planes(1:3,iface), planes(0,iface))
+  do iface = 2, nface
+     temp = dist_plane(planes(1:3,iface), planes(0,iface))
+     if (temp < rmt) rmt = temp
+  enddo ! iface
+  
+  ! Fint ROUT, the largest radius of all vertices
+  rout = 0.d0
+  do iface = 1,nface
+     do ivert = 1, nvert(iface)
+        temp = sum(vert(1:3,ivert,iface)**2)
+        if (temp > rout) rout = temp
+     enddo ! ivert
+  enddo ! iface
+  rout = sqrt(rout)
+
+  if (output) write(*,fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %')") rmt,rout,rmt*100/rout
+
+  !---------------------------------------------------------------
+  ! Sort faces:
+  do iface = 1, nface
+    rsort(iface) = 1.d8*dist_plane(planes(1:3,iface), planes(0,iface)) + dot_product([0.1d0, 1.d2, 1.d5], planes(1:3,iface))
+  enddo ! iface
+  
+  call dsort(rsort, isort, nface)
+  ! Rearrange using a temporary array
+  allocate(ptmp(0:3,nface), vtmp(3,nvertmax,nface), ntmp(nface))
+  ptmp(0:3,:) = planes(0:3,1:nface)
+  vtmp(:,:,:) = vert(:,:,1:nface)
+  ntmp(:)     = nvert(1:nface)
+  do iface = 1, nface
+     inew = isort(iface)
+     planes(0:3,inew) = ptmp(0:3,  iface)
+     vert(1:3,:,inew) = vtmp(1:3,:,iface)
+     nvert     (inew) = ntmp      (iface)
+  enddo ! iface
+  
+  deallocate(ptmp, vtmp, ntmp)
+  !---------------------------------------------------------------
+
+endsubroutine voronoi08
+  
+
+  subroutine polyhedron08(nplane, nvertmax, nfaced, tolvdist,tolarea, planes, nface, nvert, vert, output)
     ! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
     ! a convex part of space (the minimal one containing the origin, 
     ! usually a ws-polyhedron), this subroutine returns the actual faces of
@@ -19,38 +221,34 @@ module voronoi08_mod
     ! faces are returned in the same arrays a3,b3,c3, and d3.
 
     logical, intent(in) :: output
-
-    ! input:
     integer, intent(in) :: nplane                ! initial number of planes.
     integer, intent(in) :: nvertmax              ! max. number of vertices per plane.
     integer, intent(in) :: nfaced                ! max. number of faces.
     double precision, intent(in) :: tolvdist              ! max. tolerance for distance of two vertices
     double precision, intent(in) :: tolarea               ! max. tolerance for area of polygon face
-    double precision, intent(inout) :: a3(*),b3(*),c3(*),d3(*)  ! coefs. defining the planes, dimensioned >= nplane.
-    double precision, intent(inout) :: xvert(nvertmax,nfaced), yvert(nvertmax,nfaced), zvert(nvertmax,nfaced) ! cartesian coords. of vertices for each plane (2nd index is for planes).
-    integer, intent(out) :: nvert(*)  ! number of vertices found for each face
+    double precision, intent(inout) :: planes(0:,:)  ! coefs. defining the planes, dimensioned >= nplane.
+    double precision, intent(inout) :: vert(3,nvertmax,nfaced) ! cartesian coords. of vertices for each plane (2nd index is for planes).
+    integer, intent(out) :: nvert(:)  ! number of vertices found for each face
     integer, intent(out) :: nface     ! number of faces found (with nvert>0).
-    
-!   integer :: nverttot ! total number of vertices
 
     !---------------------------------------------------------------
     ! find all faces and vertices of the polyhedron. on output, the vertices of each face are sorted (clockwise or anticlockwise).
     if (output) write(*,*) 'entering vertex3d'
-    call vertex3d(nplane, a3, b3, c3, d3, nvertmax, tolvdist, nface, nvert, xvert, yvert, zvert, output)
+    call vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, output)
     if (output) write(*,*) 'vertex3d found',nface,' faces with >3 vertices.'
     !---------------------------------------------------------------
     ! analyze the faces and vertices of the polyhedron.
     ! use criteria for rejecting faces that are too small or vertices that are too close to each other.
     ! on output, number of faces and vertices may be reduced after some rejections have taken place.
     if (output) write(*,*) 'entering analyzevert3d'
-    call analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, xvert,yvert,zvert, a3,b3,c3,d3, output)
+    call analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
     if (output) write(*,*) 'analyzevert3d accepted',nface,' faces.'
 
   endsubroutine polyhedron08
 
 
 !***********************************************************************
-subroutine vertex3d(nplane, a3,b3,c3,d3, nvertmax, tolvdist, nface, nvert, xvert,yvert,zvert, output)
+subroutine vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, output)
 ! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
 ! a convex part of space (the minimal one containing the origin, 
 ! usually a ws-polyhedron), this subroutine returns the vertices
@@ -60,11 +258,11 @@ subroutine vertex3d(nplane, a3,b3,c3,d3, nvertmax, tolvdist, nface, nvert, xvert
 
 integer, intent(in) :: nplane ! number of planes.
 integer, intent(in) :: nvertmax              ! max. number of vertices per plane.
-double precision, intent(in) :: a3(*),b3(*),c3(*),d3(*)  ! coefs. defining the planes, dimensioned >= nplane.
+double precision, intent(in) :: planes(0:,:)  ! coefs. defining the planes, dimensioned >= nplane.
 double precision, intent(in) :: tolvdist               ! min. distance between vertices
-integer, intent(out) :: nvert(*)  ! number of vertices found for each face
+integer, intent(out) :: nvert(:)  ! number of vertices found for each face
 integer, intent(out) :: nface     ! number of faces found (with nvert>0).
-double precision, intent(inout) :: xvert(nvertmax,*), yvert(nvertmax,*), zvert(nvertmax,*) ! cartesian coords. of vertices for each plane ! (2nd index is for planes).
+double precision, intent(inout) :: vert(3,nvertmax,*) ! cartesian coords. of vertices for each plane ! (2nd index is for planes).
 logical, intent(in) :: output
 
 integer ip1,ip2,ip3,ipl,kpl ! plane indices
@@ -98,6 +296,12 @@ plane3: do ip3 = ip2+1, nplane        ! nikos  ip2+1,nplane
 if (ip3 == ip1) cycle plane3
 !     if (ip3 == ip2) goto 100 ! added by nikos
 ! solve the 3x3 system to find the cut point.
+
+#define a3(I) planes(1,I)
+#define b3(I) planes(2,I)
+#define c3(I) planes(3,I)
+#define d3(I) planes(0,I)
+
 det  = a3(ip1)*(b3(ip2)*c3(ip3) - b3(ip3)*c3(ip2)) + a3(ip2)*(b3(ip3)*c3(ip1) - b3(ip1)*c3(ip3)) + a3(ip3)*(b3(ip1)*c3(ip2) - b3(ip2)*c3(ip1))
 
 !---------------------------------------------------------------
@@ -121,6 +325,12 @@ do kpl = 1, nplane
    if (kpl == ip1 .or. kpl == ip2 .or. kpl == ip3) cycle
    laccept = laccept .and. halfspace(a3(kpl),b3(kpl),c3(kpl),d3(kpl),xcut,ycut,zcut)
 enddo ! kpl
+
+#undef d3
+#undef c3
+#undef b3
+#undef a3
+
 !-----------------------------------
 if (laccept) then
 ! if the cut point found belongs to the cell, we accept it unless it has
@@ -128,7 +338,7 @@ if (laccept) then
 ! when 4 or more planes pass through the same point (e.g. for the vertices
 ! of the fcc ws-cell). so...
    do ivert = 1,nvert(ip1)
-      distance = (xvert(ivert,ip1) - xcut)**2 + (yvert(ivert,ip1) - ycut)**2 + (zvert(ivert,ip1) - zcut)**2
+      distance = (vert(1,ivert,ip1) - xcut)**2 + (vert(2,ivert,ip1) - ycut)**2 + (vert(3,ivert,ip1) - zcut)**2
       distance = dsqrt(distance)
       if (distance < tolvdist ) then
          laccept = .false. ! vertex is too close to a previous one.
@@ -140,9 +350,9 @@ endif ! laccept
 ! now we are ready to add the point to the vertex list.
 if (laccept) then
    nvert(ip1) = nvert(ip1) + 1
-   xvert(nvert(ip1),ip1) = xcut
-   yvert(nvert(ip1),ip1) = ycut
-   zvert(nvert(ip1),ip1) = zcut
+   vert(1,nvert(ip1),ip1) = xcut
+   vert(2,nvert(ip1),ip1) = ycut
+   vert(3,nvert(ip1),ip1) = zcut
 endif
 
 endif ! (dabs(det) > 1.d-12)
@@ -175,21 +385,21 @@ do ipl = 1, nplane
     nface = nface + 1      ! count the faces
     fi(1) = -4.d0          ! just a number smaller than -pi.
   ! unit vector in the direction of first vertex:
-    vl = dsqrt(xvert(1,ipl)**2 + yvert(1,ipl)**2 + zvert(1,ipl)**2)
-    uv(1) = xvert(1,ipl)/vl
-    uv(2) = yvert(1,ipl)/vl
-    uv(3) = zvert(1,ipl)/vl
+    vl = dsqrt(vert(1,1,ipl)**2 + vert(2,1,ipl)**2 + vert(3,1,ipl)**2)
+    uv(1) = vert(1,1,ipl)/vl
+    uv(2) = vert(2,1,ipl)/vl
+    uv(3) = vert(3,1,ipl)/vl
 
   ! define the vector connecting the first vertex to the (now-) second:
-    v1(1) = xvert(2,ipl) - xvert(1,ipl)
-    v1(2) = yvert(2,ipl) - yvert(1,ipl)
-    v1(3) = zvert(2,ipl) - zvert(1,ipl)
+    v1(1) = vert(1,2,ipl) - vert(1,1,ipl)
+    v1(2) = vert(2,2,ipl) - vert(2,1,ipl)
+    v1(3) = vert(3,2,ipl) - vert(3,1,ipl)
 
     do ivert = 2,nvert(ipl)
   ! define the vector connecting the first vertex to the current one:
-        v2(1) = xvert(ivert,ipl) - xvert(1,ipl)
-        v2(2) = yvert(ivert,ipl) - yvert(1,ipl)
-        v2(3) = zvert(ivert,ipl) - zvert(1,ipl)
+        v2(1) = vert(1,ivert,ipl) - vert(1,1,ipl)
+        v2(2) = vert(2,ivert,ipl) - vert(2,1,ipl)
+        v2(3) = vert(3,ivert,ipl) - vert(3,1,ipl)
   ! find the angle fi between v1 and v2 
   ! ( always, -pi < fi < pi from the definition of datan2 )
         cosfiv1v2 = v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3)
@@ -212,7 +422,7 @@ do ipl = 1, nplane
     enddo ! ivert = 3,nvert(ipl)
 
   ! store with respect to the angle found:
-    call sortvertices(nvert(ipl), fi, xvert(1,ipl), yvert(1,ipl), zvert(1,ipl))
+    call sortvertices(nvert(ipl), fi, vert(1,1,ipl), vert(2,1,ipl), vert(3,1,ipl))
 
   endif ! (nvert(ipl) >= 3)
 enddo ! ipl = 1, nplane
@@ -220,7 +430,7 @@ enddo ! ipl = 1, nplane
 endsubroutine vertex3d
 
 !------------------------------------------------------------------------------
-subroutine analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, xvert,yvert,zvert, a3,b3,c3,d3, output)
+subroutine analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
 ! analyze the faces and vertices of the polyhedron.
 ! use criteria for rejecting faces that are too small or vertices that are too close to each other.
 ! on output, number of faces and vertices may be reduced after some rejections have taken place.
@@ -229,9 +439,9 @@ integer, intent(in) :: nvertmax, nfaced
 integer, intent(in) :: nplane ! number of planes
 integer, intent(inout) :: nface ! number of faces (usually much less than nplane)
 integer, intent(inout) :: nvert(nfaced) ! number of vertices for each face
-double precision, intent(inout) :: xvert(nvertmax,nfaced), yvert(nvertmax,nfaced), zvert(nvertmax,nfaced)
+double precision, intent(inout) :: vert(3,nvertmax,nfaced)
+double precision, intent(inout) :: planes(0:3,*) ! coefs. defining the planes, to be reordered at end
 double precision, intent(in) :: tolvdist, tolarea  ! max. tolerance for distance of two vertices and area of face.
-double precision, intent(inout) :: a3(*),b3(*),c3(*),d3(*) ! coefs. defining the planes, to be reordered at end
 
 
 double precision vdist             ! distance between consecutive vertices
@@ -264,9 +474,9 @@ do iplane = 1, nplane
 ! look for the first acceptable-as-next vertex, but do not go beyond last vertex.
 ! stop loop as soon as the acceptable next vertex is found.
       do while (.not. lfoundnext .and. ivert2 <= nvert(iplane))
-         dx = xvert(ivert2,iplane) -  xvert(ivert,iplane)
-         dy = yvert(ivert2,iplane) -  yvert(ivert,iplane)
-         dz = zvert(ivert2,iplane) -  zvert(ivert,iplane)
+         dx = vert(1,ivert2,iplane) - vert(1,ivert,iplane)
+         dy = vert(2,ivert2,iplane) - vert(2,ivert,iplane)
+         dz = vert(3,ivert2,iplane) - vert(3,ivert,iplane)
          vdist = dsqrt(dx*dx + dy*dy + dz*dz)
 
          if (vdist >= tolvdist) then
@@ -289,9 +499,9 @@ do iplane = 1, nplane
 ! ...and now 1st with last to close the cycle:
    ivert = 1
    ivert2 = nvert(iplane)
-   dx = xvert(ivert2,iplane) - xvert(ivert,iplane)
-   dy = yvert(ivert2,iplane) - yvert(ivert,iplane)
-   dz = zvert(ivert2,iplane) - zvert(ivert,iplane)
+   dx = vert(1,ivert2,iplane) - vert(1,ivert,iplane)
+   dy = vert(2,ivert2,iplane) - vert(2,ivert,iplane)
+   dz = vert(3,ivert2,iplane) - vert(3,ivert,iplane)
    vdist = dsqrt(dx*dx + dy*dy + dz*dz)
    if (vdist >= tolvdist) then
       lacceptvert(ivert2) = .true.        ! vertex is to be accepted
@@ -308,9 +518,9 @@ do iplane = 1, nplane
          if (lacceptvert(ivert)) then
             ivertnewcount = ivertnewcount + 1    ! one more vertex to accept 
             if (ivertnewcount /= ivert) then     ! otherwise the correct value is already at the correct place
-               xvert(ivertnewcount,iplane) = xvert(ivert,iplane) ! re-index vertex
-               yvert(ivertnewcount,iplane) = yvert(ivert,iplane)
-               zvert(ivertnewcount,iplane) = zvert(ivert,iplane)
+               vert(1,ivertnewcount,iplane) = vert(1,ivert,iplane) ! re-index vertex
+               vert(2,ivertnewcount,iplane) = vert(2,ivert,iplane)
+               vert(3,ivertnewcount,iplane) = vert(3,ivert,iplane)
             endif
          endif ! lacceptvert(ivert)
       enddo ! ivert
@@ -324,17 +534,17 @@ enddo ! iplane
 ! now analyze faces, reject faces with less than three vertices and faces of very small area.
 do iplane = 1, nplane
    if (nvert(iplane) >= 3) then  ! calculate area
-      x1 = xvert(1,iplane)
-      y1 = yvert(1,iplane)
-      z1 = zvert(1,iplane)
+      x1 = vert(1,1,iplane)
+      y1 = vert(2,1,iplane)
+      z1 = vert(3,1,iplane)
       facearea(iplane) = 0.d0
       do ivert = 2, nvert(iplane)-1
-         x2 = xvert(ivert,iplane)
-         y2 = yvert(ivert,iplane)
-         z2 = zvert(ivert,iplane)
-         x3 = xvert(ivert+1,iplane)
-         y3 = yvert(ivert+1,iplane)
-         z3 = zvert(ivert+1,iplane)
+         x2 = vert(1,ivert,iplane)
+         y2 = vert(2,ivert,iplane)
+         z2 = vert(3,ivert,iplane)
+         x3 = vert(1,ivert+1,iplane)
+         y3 = vert(2,ivert+1,iplane)
+         z3 = vert(3,ivert+1,iplane)
          trianglearea = 0.5d0 * dabs( (x2 - x1)*(x3 - x1) + (y2 - y1)*(y3 - y1) + (z2 - z1)*(z3 - z1) )  ! formula incorrect? e.r.
          facearea(iplane) = facearea(iplane)+ trianglearea
       enddo ! ivert
@@ -365,33 +575,27 @@ do iplane = 1, nplane
       if (ifacenewcount /= iplane) then   ! otherwise the correct value is already at the correct place
          nvert(ifacenewcount) = nvert(iplane) ! re-index face vertex number
          do ivert = 1, nvert(iplane)
-            xvert(ivert,ifacenewcount) = xvert(ivert,iplane) ! re-index face vertices
-            yvert(ivert,ifacenewcount) = yvert(ivert,iplane) ! re-index face vertices
-            zvert(ivert,ifacenewcount) = zvert(ivert,iplane) ! re-index face vertices
+            vert(1:3,ivert,ifacenewcount) = vert(1:3,ivert,iplane) ! re-index face vertices
          enddo ! ivert
-         a3(ifacenewcount) = a3(iplane) ! re-index face equation parameters
-         b3(ifacenewcount) = b3(iplane) ! re-index face equation parameters
-         c3(ifacenewcount) = c3(iplane) ! re-index face equation parameters
-         d3(ifacenewcount) = d3(iplane) ! re-index face equation parameters
+         planes(0:3,ifacenewcount) = planes(0:3,iplane) ! re-index face equation parameters
       endif ! ifacenewcount /= iplane
    endif ! lacceptface(iplane)
 enddo ! iplane
 nface = ifacenewcount
 
-! check for every face that all veritces lie on the same plane
-! by checking linear dependence
+! check for every face that all vertices lie on the same plane by checking linear dependence
 do iface = 1, nface
-   x2 = xvert(2,iface) - xvert(1,iface)
-   y2 = xvert(2,iface) - yvert(1,iface)
-   z2 = xvert(2,iface) - zvert(1,iface)
-   x3 = xvert(3,iface) - xvert(1,iface)
-   y3 = xvert(3,iface) - yvert(1,iface)
-   z3 = xvert(3,iface) - zvert(1,iface)
+   x2 = vert(1,2,iface) - vert(1,1,iface)
+   y2 = vert(1,2,iface) - vert(2,1,iface)
+   z2 = vert(1,2,iface) - vert(3,1,iface)
+   x3 = vert(1,3,iface) - vert(1,1,iface)
+   y3 = vert(1,3,iface) - vert(2,1,iface)
+   z3 = vert(1,3,iface) - vert(3,1,iface)
    detsum = 0.d0
    do ivert = 4, nvert(iface)
-      x4 = xvert(ivert,iface) - xvert(1,iface)
-      y4 = xvert(ivert,iface) - yvert(1,iface)
-      z4 = xvert(ivert,iface) - zvert(1,iface)
+      x4 = vert(1,ivert,iface) - vert(1,1,iface)
+      y4 = vert(1,ivert,iface) - vert(2,1,iface)
+      z4 = vert(1,ivert,iface) - vert(3,1,iface)
       det = x2*(y3*z4 - y4*z3) + y2*(z3*x4 - z4*x3) + z2*(x3*y4 - x4*y3)
       detsum = detsum + dabs(det)
       if (dabs(det) > 1.d-16 .and. output) write(*,fmt="('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)") iface,ivert,det
@@ -448,7 +652,7 @@ endsubroutine analyzevert3d
     c = onemtau*z1 + tau*z2
     d = a*(a + x1) + b*(b + y1) + c*(c + z1)
 
-  endsubroutine ! normalplane
+  endsubroutine ! normal_plane
   
   !***********************************************************************
   subroutine normalplane0(x1,y1,z1,tau, a,b,c,d)
@@ -476,7 +680,7 @@ endsubroutine analyzevert3d
       d = 0.d0
     endif
 
-  endsubroutine ! normalplane
+  endsubroutine ! normal_plane
   
   function normal_plane0f(v1, tau) result(plane)
     double precision :: plane(0:3)
@@ -484,7 +688,7 @@ endsubroutine analyzevert3d
     
     call normalplane0(v1(1), v1(2), v1(3), tau, plane(1), plane(2), plane(3), plane(0))
 
-  endfunction ! normalplane
+  endfunction ! normal_plane
 
   function normal_planef(v1, v2, tau) result(plane)
     double precision :: plane(0:3)
@@ -492,7 +696,7 @@ endsubroutine analyzevert3d
     
     call normalplane(v1(1), v1(2), v1(3), v2(1), v2(2), v2(3), tau, plane(1), plane(2), plane(3), plane(0))
 
-  endfunction ! normalplane
+  endfunction ! normal_plane
   
 
 !***********************************************************************
@@ -541,20 +745,35 @@ endsubroutine analyzevert3d
   endfunction crospr
 
 !***********************************************************************
-double precision function distplane(a,b,c,d)
-! returns the distance of a plane a*x+b*y+c*z=d to the origin.
-  double precision, intent(in) :: a,b,c,d
-  double precision :: abcsq
+  double precision function distplane(a,b,c,d)
+  ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
+    double precision, intent(in) :: a,b,c,d
+    double precision :: abcsq
 
-  abcsq = a*a + b*b + c*c
+    abcsq = a*a + b*b + c*c
 
-  if (abcsq < 1.d-100) stop 'distplane'
+    if (abcsq < 1.d-100) stop 'distplane'
 
-  distplane = dabs(d)/dsqrt(abcsq)  
-  ! or: distplane = dsqrt(d*d/abcsq)  
+    distplane = dabs(d)/dsqrt(abcsq)  
+    ! or: distplane = dsqrt(d*d/abcsq)  
 
-endfunction distplane
+  endfunction distplane
 
+  double precision function dist_plane(abc, d)
+  ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
+    double precision, intent(in) :: abc(3), d
+    double precision :: abcsq
+
+    abcsq = abc(1)**2 + abc(2)**2 + abc(3)**2
+
+    if (abcsq < 1.d-100) stop 'distplane'
+
+    dist_plane = dsqrt(d*d/abcsq)  
+
+  endfunction dist_plane
+    
+  
+  
 ! ************************************************************************
 subroutine dsort(w, ind, nmax, pos)
 ! ************************************************************************

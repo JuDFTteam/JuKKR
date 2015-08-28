@@ -34,19 +34,15 @@ module ShapeCriticalPoints_mod
   !> Note: the smallest critical point corresponds to the muffin-tin radius
 
   !=====================================================================
-  subroutine criticalShapePoints(aface,bface,cface,dface, &
-    tolvdist, toleuler, &
-    nvertices,xvert,yvert,zvert,nface,lmax, &
-    npan, crt)
+  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface,lmax, npan, crt)
 
     use shape_constants_mod, only: verbosity, check_geometry, isumd, lmaxd1, pi
     use PolygonFaces_mod, only: faces => face ! read-only, if verbose
-!   use PolygonFaces_mod, only: fa, fb, fd, rd, isignu ! read-only, if verbose
     use shapegeometryhelpers_mod, only: polchk
 
     integer, intent(in) :: nvertices(:) ! (nfaced)
-    double precision, intent(in) :: aface(:), bface(:), cface(:), dface(:) ! (nfaced) --> collect to (0:3,nfaced)
-    double precision, intent(in) :: xvert(:,:), yvert(:,:), zvert(:,:) ! (nvertd,nfaced) --> collect to (3,nvertd,nfaced)
+    double precision, intent(in) :: planes(0:3,*) ! (0:3,nfaced)
+    double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
     integer, intent(in) :: nface, lmax
     double precision, intent(in) :: tolvdist, toleuler
     
@@ -56,20 +52,16 @@ module ShapeCriticalPoints_mod
     
     !-----------------------------------------------------------------------
     
-!     double precision :: sq3o3, coa
-    double precision, allocatable :: v(:,:)
+!   double precision :: sq3o3, coa
     double precision :: z(3)
     integer :: iface, isum, itt
     integer :: iv, ivtot, l
     integer :: nvertd
     integer :: ist
-    
-    nvertd = size(xvert,1)
-    allocate(v(3,nvertd), stat=ist)
 
     !-----------------------------------------
     !  this call does some geometrical tests (n.stefanou 98)
-    if (check_geometry) call polchk(nface, nvertices, xvert, yvert, zvert, tolvdist)
+    if (check_geometry) call polchk(nface, nvertices, vert, tolvdist)
 
 ! #define k_HCP 
 #ifdef k_HCP
@@ -96,29 +88,29 @@ module ShapeCriticalPoints_mod
     !.......................................................................
     do iface = 1, nface
 
-      z(1:3) = [aface(iface), bface(iface), cface(iface)]/dface(iface) ! plane normal
+      z(1:3) = planes(1:3,iface)/planes(0,iface) ! plane normal
 
-#ifdef k_HCP 
-      z(1) = z(1)*sq3o3
-      z(3) = z(3)*8.d0/(coa*3.d0)
-#endif      
+! #ifdef k_HCP 
+!       z(1) = z(1)*sq3o3
+!       z(3) = z(3)*8.d0/(coa*3.d0)
+! #endif      
+! 
+!       do iv = 1, nvertices(iface)
+!         v(1:3,iv) = vert(1:3,iv,iface)
+! 
+! #ifdef k_HCP 
+!         v(1,iv) = v(1,iv)*sq3o3
+!         v(3,iv) = v(3,iv)*coa
+! #endif
+!       enddo ! iv
 
-      do iv = 1, nvertices(iface)
-        v(1:3,iv) = [xvert(iv,iface), yvert(iv,iface), zvert(iv,iface)]
-
-#ifdef k_HCP 
-        v(1,iv) = v(1,iv)*sq3o3
-        v(3,iv) = v(3,iv)*coa
-#endif
-      enddo ! iv
-
-      call critical_points(faces(iface), nvertices(iface), v, z, npan, ivtot, toleuler, tolvdist, crt, face_index=iface)
+      call critical_points(faces(iface), nvertices(iface), vert(:,:,iface), z, npan, ivtot, toleuler, tolvdist, crt, face_index=iface)
 
       if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,faces(iface)%ntt
 
     enddo ! iface ! end of loop over faces
 
-    deallocate(v, stat=ist)
+!     deallocate(v, stat=ist)
     
     !.......................................................................
     !     definition of the suitable mesh
@@ -148,7 +140,7 @@ module ShapeCriticalPoints_mod
     else
       angle = 2.d0*atan2(sine, cosine + 1.d0)
     endif
-  endfunction
+  endfunction get_angle
   
 
   !------------------------------------------------------------------------------
@@ -231,12 +223,11 @@ module ShapeCriticalPoints_mod
     z = z/zmod2
 
     iv = 1; if (nrm2(v(1:3,1) - z) < tol_small**2) iv = 2 ! if the norm of the first vector is too small, use the second one
-
     face%euler = euler_angles(z, v(:,iv), toleuler) ! get euler angles directly
 
     if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
 
-    call rotate(face%euler(1:3), nvert, v, vz) ! pass the angles directly
+    call rotate(face%euler(1:3), nvert, v(1:3,1:nvert), vz) ! pass the angles directly
 
     face%r0 = 1.d0/sqrt(zmod2)
     

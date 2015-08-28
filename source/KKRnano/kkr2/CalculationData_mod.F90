@@ -46,29 +46,29 @@ module CalculationData_mod
     integer :: max_reclen_potential
 
     ! atom local data - different for each atom
-    type (RadialMeshData), pointer     :: mesh_array(:)         => null()
-    type (CellData), pointer           :: cell_array(:)         => null()
-    type (BasisAtom), pointer          :: atomdata_array(:)     => null()
-    type (RefCluster), pointer         :: ref_cluster_array(:)  => null()
-    type (KKRresults), pointer         :: kkr_array(:)          => null()
-    type (DensityResults), pointer     :: densities_array(:)    => null()
-    type (EnergyResults), pointer      :: energies_array(:)     => null()
-    type (MadelungLatticeSum), pointer :: madelung_sum_array(:) => null()
+    type(RadialMeshData), pointer     :: mesh_array(:)         => null()
+    type(CellData), pointer           :: cell_array(:)         => null()
+    type(BasisAtom), pointer          :: atomdata_array(:)     => null()
+    type(RefCluster), pointer         :: ref_cluster_array(:)  => null()
+    type(KKRresults), pointer         :: kkr_array(:)          => null()
+    type(DensityResults), pointer     :: densities_array(:)    => null()
+    type(EnergyResults), pointer      :: energies_array(:)     => null()
+    type(MadelungLatticeSum), pointer :: madelung_sum_array(:) => null()
 
-    type (LDAUData), pointer           :: ldau_data_array(:)    => null()
-    type (JijData), pointer            :: jij_data_array(:)     => null()
+    type(LDAUData), pointer           :: ldau_data_array(:)    => null()
+    type(JijData), pointer            :: jij_data_array(:)     => null()
 
     ! global data - same for each local atom
-    type (LatticeVectors), pointer         :: lattice_vectors   => null()
-    type (MadelungCalculator), pointer     :: madelung_calc     => null()
-    type (ShapeGauntCoefficients), pointer :: shgaunts          => null()
-    type (GauntCoefficients), pointer      :: gaunts            => null()
-    type (TruncationZone), pointer         :: trunc_zone        => null()
-    type (ClusterInfo), pointer            :: clusters          => null()
-    type (BroydenData), pointer            :: broyden           => null()
+    type(LatticeVectors), pointer         :: lattice_vectors   => null()
+    type(MadelungCalculator), pointer     :: madelung_calc     => null()
+    type(ShapeGauntCoefficients), pointer :: shgaunts          => null()
+    type(GauntCoefficients), pointer      :: gaunts            => null()
+    type(TruncationZone), pointer         :: trunc_zone        => null()
+    type(ClusterInfo), pointer            :: clusters          => null()
+    type(BroydenData), pointer            :: broyden           => null()
 
     ! storage for initial guess
-    type (InitialGuess), pointer           :: iguess_data       => null()
+    type(InitialGuess), pointer           :: iguess_data       => null()
 
   end type
   
@@ -92,11 +92,11 @@ module CalculationData_mod
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
 
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)   :: dims
-    type (InputParams), intent(in) :: params
-    type (Main2Arrays), intent(in) :: arrays
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(CalculationData), intent(inout) :: calc_data
+    type(DimParams), intent(in)   :: dims
+    type(InputParams), intent(in) :: params
+    type(Main2Arrays), intent(in) :: arrays
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     integer :: atoms_per_proc
     integer :: num_local_atoms
@@ -162,13 +162,13 @@ module CalculationData_mod
     use Main2Arrays_mod, only: Main2Arrays
     use MadelungCalculator_mod, only: calculateMadelungLatticeSum
 
-    type (CalculationData), intent(inout) :: calc_data
-    type (Main2Arrays), intent(in):: arrays
+    type(CalculationData), intent(inout) :: calc_data
+    type(Main2Arrays), intent(in):: arrays
 
     ! ----- locals ------
     integer :: I1
     integer :: ilocal
-    type (MadelungLatticeSum), pointer :: madelung_sum
+    type(MadelungLatticeSum), pointer :: madelung_sum
 
     do ilocal = 1, calc_data%num_local_atoms
       I1 = calc_data%atom_ids(ilocal)
@@ -198,20 +198,20 @@ module CalculationData_mod
     use BroydenData_mod, only: destroyBroydenData
     use InitialGuess_mod, only: iguess_destroy ! deprecated exceptional naming!
     
-    type (CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: calc_data
 
     ! ---- locals ----
     integer :: ilocal
     integer :: I1
-    type (KKRresults), pointer :: kkr
-    type (DensityResults), pointer :: densities
-    type (EnergyResults), pointer :: energies
-    type (BasisAtom), pointer :: atomdata
-    type (CellData), pointer :: cell
-    type (RadialMeshData), pointer :: mesh
-    type (LDAUData), pointer :: ldau_data
-    type (JijData), pointer :: jij_data
-    type (MadelungLatticeSum), pointer :: madelung_sum
+    type(KKRresults), pointer :: kkr
+    type(DensityResults), pointer :: densities
+    type(EnergyResults), pointer :: energies
+    type(BasisAtom), pointer :: atomdata
+    type(CellData), pointer :: cell
+    type(RadialMeshData), pointer :: mesh
+    type(LDAUData), pointer :: ldau_data
+    type(JijData), pointer :: jij_data
+    type(MadelungLatticeSum), pointer :: madelung_sum
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -273,14 +273,14 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   integer function getNumLocalAtoms(calc_data)
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getNumLocalAtoms = calc_data%num_local_atoms
   end function
 
   !----------------------------------------------------------------------------
   integer function getAtomIndexOfLocal(calc_data, ilocal)
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: ilocal
 
     getAtomIndexOfLocal = calc_data%atom_ids(ilocal)
@@ -290,9 +290,9 @@ module CalculationData_mod
   !> Returns reference to atomdata for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getAtomData(calc_data, local_atom_index)
-    type (BasisAtom), pointer :: getAtomData ! return value
+    type(BasisAtom), pointer :: getAtomData ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getAtomData => calc_data%atomdata_array(local_atom_index)
@@ -302,9 +302,9 @@ module CalculationData_mod
   !> Returns reference to 'reference cluster for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getRefCluster(calc_data, local_atom_index)
-    type (RefCluster), pointer :: getRefCluster ! return value
+    type(RefCluster), pointer :: getRefCluster ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getRefCluster => calc_data%ref_cluster_array(local_atom_index)
@@ -314,9 +314,9 @@ module CalculationData_mod
   !> Returns reference to kkr(results) for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getKKR(calc_data, local_atom_index)
-    type (KKRresults), pointer :: getKKR ! return value
+    type(KKRresults), pointer :: getKKR ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getKKR => calc_data%kkr_array(local_atom_index)
@@ -327,9 +327,9 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getMadelungSum(calc_data, local_atom_index)
         
-    type (MadelungLatticeSum), pointer :: getMadelungSum ! return value
+    type(MadelungLatticeSum), pointer :: getMadelungSum ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getMadelungSum => calc_data%madelung_sum_array(local_atom_index)
@@ -339,9 +339,9 @@ module CalculationData_mod
   !> Returns reference to density results for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getDensities(calc_data, local_atom_index)
-    type (DensityResults), pointer :: getDensities ! return value
+    type(DensityResults), pointer :: getDensities ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getDensities => calc_data%densities_array(local_atom_index)
@@ -351,9 +351,9 @@ module CalculationData_mod
   !> Returns reference to energy results for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getEnergies(calc_data, local_atom_index)
-    type (EnergyResults), pointer :: getEnergies ! return value
+    type(EnergyResults), pointer :: getEnergies ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getEnergies => calc_data%energies_array(local_atom_index)
@@ -363,9 +363,9 @@ module CalculationData_mod
   !> Returns reference to LDA+U data for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getLDAUData(calc_data, local_atom_index)
-    type (LDAUData), pointer :: getLDAUData ! return value
+    type(LDAUData), pointer :: getLDAUData ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getLDAUData => calc_data%ldau_data_array(local_atom_index)
@@ -375,9 +375,9 @@ module CalculationData_mod
   !> Returns reference to Jij-data for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getJijData(calc_data, local_atom_index)
-    type (JijData), pointer :: getJijData ! return value
+    type(JijData), pointer :: getJijData ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: local_atom_index
 
     getJijData => calc_data%jij_data_array(local_atom_index)
@@ -387,9 +387,9 @@ module CalculationData_mod
   !> Returns reference to Broyden data for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getBroyden(calc_data, local_atom_index)
-    type (BroydenData), pointer :: getBroyden ! return value
+    type(BroydenData), pointer :: getBroyden ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in), optional :: local_atom_index
 
     getBroyden => calc_data%broyden
@@ -398,9 +398,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to Gaunt coefficients.
   function getGaunts(calc_data)
-    type (GauntCoefficients), pointer :: getGaunts ! return value
+    type(GauntCoefficients), pointer :: getGaunts ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getGaunts => calc_data%gaunts
   end function
@@ -408,9 +408,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to Shape-Gaunt coefficients.
   function getShapeGaunts(calc_data)
-    type (ShapeGauntCoefficients), pointer :: getShapeGaunts ! return value
+    type(ShapeGauntCoefficients), pointer :: getShapeGaunts ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getShapeGaunts => calc_data%shgaunts
   end function
@@ -418,9 +418,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to Madelung calculator.
   function getMadelungCalculator(calc_data)
-    type (MadelungCalculator), pointer :: getMadelungCalculator ! return value
+    type(MadelungCalculator), pointer :: getMadelungCalculator ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getMadelungCalculator => calc_data%madelung_calc
   end function
@@ -428,8 +428,8 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to truncation zone.
   function getTruncationZone(calc_data)
-    type (TruncationZone), pointer :: getTruncationZone ! return value
-    type (CalculationData), intent(in) :: calc_data
+    type(TruncationZone), pointer :: getTruncationZone ! return value
+    type(CalculationData), intent(in) :: calc_data
 
     getTruncationZone => calc_data%trunc_zone
   end function
@@ -437,9 +437,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to cluster info (sparsity info).
   function getClusterInfo(calc_data)
-    type (ClusterInfo), pointer :: getClusterInfo ! return value
+    type(ClusterInfo), pointer :: getClusterInfo ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getClusterInfo => calc_data%clusters
   end function
@@ -447,9 +447,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to lattice vector table.
   function getLatticeVectors(calc_data)
-    type (LatticeVectors), pointer :: getLatticeVectors ! return value
+    type(LatticeVectors), pointer :: getLatticeVectors ! return value
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getLatticeVectors => calc_data%lattice_vectors
   end function
@@ -457,9 +457,9 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to initial guess data.
   function getInitialGuessData(calc_data)
-    type (InitialGuess), pointer :: getInitialGuessData
+    type(InitialGuess), pointer :: getInitialGuessData
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getInitialGuessData => calc_data%iguess_data
   end function
@@ -467,7 +467,7 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
   integer function getMaxReclenMeshes(calc_data)
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getMaxReclenMeshes = calc_data%max_reclen_meshes
   end function
@@ -475,7 +475,7 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
   integer function getMaxReclenPotential(calc_data)
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     getMaxReclenPotential = calc_data%max_reclen_potential
   end function
@@ -506,22 +506,22 @@ module CalculationData_mod
     use BroydenData_mod, only: createBroydenData             
     use KKRresults_mod, only: createKKRresults
     
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (InputParams), intent(in):: params
-    type (Main2Arrays), intent(in):: arrays
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(CalculationData), intent(inout) :: calc_data
+    type(DimParams), intent(in)  :: dims
+    type(InputParams), intent(in):: params
+    type(Main2Arrays), intent(in):: arrays
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     ! ----- locals ------
     integer :: I1
     integer :: ilocal
-    type (KKRresults), pointer :: kkr
-    type (DensityResults), pointer :: densities
-    type (EnergyResults), pointer :: energies
-    type (LDAUData), pointer :: ldau_data
-    type (JijData), pointer :: jij_data
-    type (MadelungLatticeSum), pointer :: madelung_sum
-    type (RadialMeshData), pointer :: mesh
+    type(KKRresults), pointer :: kkr
+    type(DensityResults), pointer :: densities
+    type(EnergyResults), pointer :: energies
+    type(LDAUData), pointer :: ldau_data
+    type(JijData), pointer :: jij_data
+    type(MadelungLatticeSum), pointer :: madelung_sum
+    type(RadialMeshData), pointer :: mesh
 
     call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
 
@@ -622,8 +622,8 @@ module CalculationData_mod
     use InitialGuess_mod, only: iguess_init ! deprecated exceptional naming
 
     type(CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (Main2Arrays), intent(in):: arrays
+    type(DimParams), intent(in)  :: dims
+    type(Main2Arrays), intent(in):: arrays
 
     integer, allocatable :: num_k_points(:)
     integer :: ii
@@ -664,20 +664,20 @@ module CalculationData_mod
     use RadialMeshData_mod, only: createRadialMeshDataFromFile
     use BasisAtom_mod, only: associateBasisAtomMesh, associateBasisAtomCell
     
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (InputParams), intent(in):: params
-    type (Main2Arrays), intent(in):: arrays
+    type(CalculationData), intent(inout) :: calc_data
+    type(DimParams), intent(in)  :: dims
+    type(InputParams), intent(in):: params
+    type(Main2Arrays), intent(in):: arrays
 
     integer ilocal, I1
-    type (BasisAtom), pointer :: atomdata
-    type (CellData), pointer :: cell
-    type (RadialMeshData), pointer :: mesh
-    type (BasisAtom), pointer :: old_atom
-    type (RadialMeshData), pointer :: old_mesh
+    type(BasisAtom), pointer :: atomdata
+    type(CellData), pointer :: cell
+    type(RadialMeshData), pointer :: mesh
+    type(BasisAtom), pointer :: old_atom
+    type(RadialMeshData), pointer :: old_mesh
 
-    type (BasisAtom), pointer :: old_atom_array(:)
-    type (RadialMeshData), pointer :: old_mesh_array(:)
+    type(BasisAtom), pointer :: old_atom_array(:)
+    type(RadialMeshData), pointer :: old_mesh_array(:)
     double precision, allocatable :: new_MT_radii(:)
 
     allocate(old_atom_array(calc_data%num_local_atoms))
@@ -771,21 +771,21 @@ module CalculationData_mod
     use RadialMeshData_mod, only: createRadialMeshData, initRadialMesh
     use ShapefunData_mod, only: destroyShapefunData
 
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (InputParams), intent(in):: params
-    type (Main2Arrays), intent(in):: arrays
+    type(CalculationData), intent(inout) :: calc_data
+    type(DimParams), intent(in)  :: dims
+    type(InputParams), intent(in):: params
+    type(Main2Arrays), intent(in):: arrays
     double precision, intent(in) :: new_MT_radii(:)
     double precision, intent(in) :: MT_scale
     !-----------------
 
     integer :: I1, ilocal, nfun, ii
     integer :: irmd, irid, ipand, irnsd
-    type (InterstitialMesh) :: inter_mesh
-    type (ShapefunData) :: shdata ! temporary shape-fun data
+    type(InterstitialMesh) :: inter_mesh
+    type(ShapefunData) :: shdata ! temporary shape-fun data
     double precision :: new_MT_radius
     integer :: num_MT_points
-    type (RadialMeshData), pointer :: mesh
+    type(RadialMeshData), pointer :: mesh
 
     !integer flag
 
@@ -840,15 +840,15 @@ module CalculationData_mod
     use BasisAtom_mod, only: getMinReclenBasisAtomPotential
     include 'mpif.h'
 
-    type (CalculationData), intent(inout) :: calc_data
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(CalculationData), intent(inout) :: calc_data
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     integer :: ierr
     integer :: ilocal
     integer :: sendbuf(2)
     integer :: recvbuf(2)
-    type (RadialMeshData), pointer :: mesh
-    type (BasisAtom), pointer :: atomdata
+    type(RadialMeshData), pointer :: mesh
+    type(BasisAtom), pointer :: atomdata
 
     sendbuf = -1
     recvbuf = -1
@@ -876,9 +876,9 @@ module CalculationData_mod
   !> Write potential index file.
   subroutine writePotentialIndexFile(calc_data)
     use BasisAtom_mod, only: openBasisAtomPotentialIndexDAFile, writeBasisAtomPotentialIndexDA, closeBasisAtomPotentialIndexDAFile
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
-    type (BasisAtom), pointer :: atomdata
+    type(BasisAtom), pointer :: atomdata
     integer :: ilocal
     integer :: I1, max_reclen
 
@@ -907,9 +907,9 @@ module CalculationData_mod
 #endif
     use RadialMeshData_mod, only: openRadialMeshDataDAFile, writeRadialMeshDataDA, closeRadialMeshDataDAFile
     
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
-    type (RadialMeshData), pointer :: mesh
+    type(RadialMeshData), pointer :: mesh
     integer :: ilocal
     integer :: I1, max_reclen
 
@@ -946,10 +946,10 @@ module CalculationData_mod
   integer function getBroydenDim(calc_data)
     use PotentialData_mod, only: getNumPotentialValues
     
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     integer :: ilocal
-    type (BasisAtom), pointer :: atomdata
+    type(BasisAtom), pointer :: atomdata
 
     getBroydenDim = 0
     do ilocal = 1, calc_data%num_local_atoms
@@ -965,12 +965,12 @@ module CalculationData_mod
     use ShapefunData_mod, only: repr_ShapefunData
     use PotentialData_mod, only: repr_PotentialData
 
-    type (CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: calc_data
 
     integer :: ilocal
-    type (RadialMeshData), pointer :: mesh
-    type (BasisAtom), pointer :: atomdata
-    type (CellData), pointer :: cell
+    type(RadialMeshData), pointer :: mesh
+    type(BasisAtom), pointer :: atomdata
+    type(CellData), pointer :: cell
     character(len=:), allocatable :: str
 
     do ilocal = 1, calc_data%num_local_atoms
@@ -997,9 +997,9 @@ module CalculationData_mod
     use Main2Arrays_mod, only: Main2Arrays
     use RefCluster_mod, only: createRefCluster, createLatticeVectors
     
-    type (CalculationData), intent(inout) :: calc_data
-    type (InputParams), intent(in):: params
-    type (Main2Arrays), intent(in):: arrays
+    type(CalculationData), intent(inout) :: calc_data
+    type(InputParams), intent(in):: params
+    type(Main2Arrays), intent(in):: arrays
 
     ! ----- locals ------
     integer :: ilocal
@@ -1025,10 +1025,10 @@ module CalculationData_mod
     use TEST_lcutoff_mod, only: initLcutoffNew
     use ClusterInfo_mod, only: createClusterInfo_com
 
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (Main2Arrays), intent(in):: arrays
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(CalculationData), intent(inout) :: calc_data
+    type(DimParams), intent(in)  :: dims
+    type(Main2Arrays), intent(in):: arrays
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     ! setup the truncation zone
     call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
@@ -1062,22 +1062,22 @@ module CalculationData_mod
     use JijData_mod, only: createJijData
     use MadelungCalculator_mod, only: createMadelungLatticeSum
     
-    type (CalculationData), intent(inout) :: calc_data
-    type (DimParams), intent(in)  :: dims
-    type (InputParams), intent(in):: params
-    type (Main2Arrays), intent(in):: arrays
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(CalculationData), intent(inout) :: calc_data
+    type(DimParams), intent(in)  :: dims
+    type(InputParams), intent(in):: params
+    type(Main2Arrays), intent(in):: arrays
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     ! ----- locals ------
     integer :: I1
     integer :: ilocal
-    type (KKRresults), pointer :: kkr
-    type (DensityResults), pointer :: densities
-    type (EnergyResults), pointer :: energies
-    type (LDAUData), pointer :: ldau_data
-    type (JijData), pointer :: jij_data
-    type (MadelungLatticeSum), pointer :: madelung_sum
-    type (RadialMeshData), pointer :: mesh
+    type(KKRresults), pointer :: kkr
+    type(DensityResults), pointer :: densities
+    type(EnergyResults), pointer :: energies
+    type(LDAUData), pointer :: ldau_data
+    type(JijData), pointer :: jij_data
+    type(MadelungLatticeSum), pointer :: madelung_sum
+    type(RadialMeshData), pointer :: mesh
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------

@@ -135,9 +135,9 @@ module ShapeFunctions_mod
 
 !------------------------------------------------------------------------------
 subroutine shapef(npoi, &
-  aface,bface,cface,dface, &
+  planes, &
   tolvdist, toleuler, nmin, &
-  nvertices,xvert,yvert,zvert, &
+  nvertices, vert, &
   nface, lmax, &
   keypan, dlt, npan, &
   nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
@@ -149,6 +149,7 @@ subroutine shapef(npoi, &
   use shapestandardmesh_mod, only: mesh
   use shapeintegration_mod, only: shapeintegration
   use PolygonFaces_mod, only: createtetra, destroytetra, face
+!   use PolygonFaces_mod, only: PolygonFace
   integer :: ist
 
   integer,intent(in) :: npoi
@@ -165,8 +166,8 @@ subroutine shapef(npoi, &
   integer, intent(in) :: npand
 
   integer, intent(in) :: nvertices(:) ! (nfaced)
-  double precision, intent(in) :: aface(:),bface(:),cface(:),dface(:) ! (nfaced)
-  double precision, intent(in) :: xvert(:,:),yvert(:,:), zvert(:,:) ! (nvertd,nfaced)
+  double precision, intent(in) :: planes(0:3,*) ! (nfaced)
+  double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
   ! output radial grid
   double precision, intent(out) :: xrn(meshnd), drn(meshnd)
   integer, intent(out) :: npan, meshn, nm(npand)
@@ -177,6 +178,8 @@ subroutine shapef(npoi, &
 
   double precision :: crt(npand) ! critical points
 
+!   type(PolygonFace), allocatable :: face(:)
+  
   nm = 0
   xrn = 0.d0
   drn = 0.d0
@@ -188,9 +191,9 @@ subroutine shapef(npoi, &
   lmifun_s = 0
   nfun = 0
 
-  ist = createtetra(size(nvertices), size(nvertices)*size(xvert,1))
+  ist = createtetra(size(nvertices), size(nvertices)*size(vert,2))
 
-  call criticalShapePoints(aface,bface,cface,dface, tolvdist, toleuler, nvertices, xvert,yvert,zvert, nface,lmax, npan, crt) ! output: npan, crt
+  call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, npan, crt) ! output: npan, crt
 
   ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
   call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)

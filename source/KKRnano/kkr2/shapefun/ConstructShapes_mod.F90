@@ -130,6 +130,9 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
                                 lmax_shape, npoints_min, nmin, &
                                 num_MT_points, new_MT_radius, MT_scale)
   use ShapefunData_mod, only: ShapefunData, createShapefunData
+  use voronoi08_mod, only: voronoi08
+  use shapefunctions_mod, only: shapef
+
 
   type (ShapefunData), intent(inout) :: shdata
   type (InterstitialMesh), intent(inout) :: inter_mesh
@@ -142,13 +145,13 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   integer, intent(in) :: num_MT_points
   double precision, intent(in) :: new_MT_radius
   double precision, intent(in) :: MT_scale
-
-  integer, parameter :: NVERTMAX = 30  ! hoping for at most 30 vertices for each face
-  logical, parameter :: OUTPUT = .false.
   
-  double precision, parameter :: TOLVDIST = 1.d-12
-  double precision, parameter :: TOLVAREA = 1.d-10
-  double precision, parameter :: DLT = 0.05d0 ! step-size angular integration
+  integer, parameter :: nvertmax = 30  ! hoping for at most 30 vertices for each face
+  logical, parameter :: output = .false.
+  
+  double precision, parameter :: tolvdist = 1.d-12
+  double precision, parameter :: tolvarea = 1.d-10, toleuler = 1.d-10
+  double precision, parameter :: dlt = 0.05d0 ! step-size angular integration
 
   double precision :: rmt, rout, volume
   integer :: ibmaxd
@@ -158,33 +161,32 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   integer :: meshn
   integer :: nfaced
   integer :: nfun
-  double precision, allocatable :: dabc_face(:,:)
+  double precision, allocatable :: planes(:,:)
   integer, allocatable :: nm(:), nvertices(:), lmifun_s(:)
   double precision, allocatable :: xrn(:), drn(:)
-  double precision, allocatable :: vertices(:,:,:)
+  double precision, allocatable :: vert(:,:,:)
   double precision, allocatable :: thetas_s(:,:)
   integer :: npan, ii
 
   double precision :: radius
 
+  integer, parameter :: keypan = 0
+  
   nfaced = size(rvec,2)
 
   ibmaxd = (lmax_shape+1)**2
   allocate(lmifun_s(ibmaxd))
   lmifun_s = 0
   
-  allocate(dabc_face(nfaced,0:3))
+  allocate(planes(0:3,nfaced)) ! 0: distance, 1..3:normal vector
 
-  allocate(nvertices(nfaced), vertices(NVERTMAX,nfaced,3))
+  allocate(nvertices(nfaced), vert(3,nvertmax,nfaced))
   nvertices = 0
 
-  call voronoi08(nfaced,rvec,NVERTMAX,nfaced,weights(1),weights(2:),TOLVDIST,TOLVAREA, &
-       rmt,rout,volume,nface,dabc_face(:,1),dabc_face(:,2),dabc_face(:,3),dabc_face(:,0),nvertices, &
-       vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
-       OUTPUT)
+  call voronoi08(nfaced,rvec,nvertmax,nfaced, weights(1), weights(2:),tolvdist,tolvarea, rmt,rout,volume,nface, planes, nvertices, vert, output)
 
   npand = sum(nvertices) + nface + 1  ! +1 for possible muffin-tinisation
-  meshnd = max(npoints_min, npand*NMIN) + num_MT_points
+  meshnd = max(npoints_min, npand*nmin) + num_mt_points
 
   ! increase meshnd, since in some cases the above empirical formula was
   ! not enough
@@ -196,17 +198,27 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   allocate(xrn(meshnd))
   allocate(drn(meshnd))
 
-  call shapewrapper(npoints_min,dabc_face(:,1),dabc_face(:,2),dabc_face(:,3),dabc_face(:,0), &
-                    NMIN, &
-                    nvertices,vertices(:,:,1),vertices(:,:,2),vertices(:,:,3), &
-                    nface,lmax_shape, DLT, &
-                    npan, nm, xrn, drn, meshn, & 
-                    thetas_s, lmifun_s, nfun, & 
-                    ibmaxd,meshnd, npand,nfaced, NVERTMAX)
+!   call shapewrapper(npoints_min,planes, &
+!                     nmin, &
+!                     nvertices, vert, &
+!                     nface, lmax_shape, dlt, &
+!                     npan, nm, xrn, drn, meshn, & 
+!                     thetas_s, lmifun_s, nfun, & 
+!                     ibmaxd, meshnd, npand, nfaced, nvertmax)
+  
+  call shapef(npoints_min, planes, &
+    tolvdist, toleuler, &
+    nmin, &
+    nvertices, vert, nface, lmax_shape, &
+    keypan, dlt, &
+    npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
+    thetas_s, lmifun_s, nfun, & ! shape function
+    ibmaxd, meshnd, npand)
+                   
 
   ! muffin-tinization
-  radius = new_MT_radius
-  if (MT_scale > TOLVDIST) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
+  radius = new_mt_radius
+  if (mt_scale > tolvdist) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
 
   if (num_MT_points > 0) call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s, radius)
 

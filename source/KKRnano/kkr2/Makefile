@@ -25,11 +25,11 @@ FCFLAGS += -I $(BUILDDIR)
 FCFLAGS += -gen-interfaces -warn interfaces
 FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
-# FCFLAGS += -C -traceback
-# FCFLAGS += -O0 -g
-# LDFLAGS  = -O0 -g
-FCFLAGS += -O3 -g -pg
-LDFLAGS  = -O3 -ipa -g -pg
+FCFLAGS += -C -traceback -CB
+FCFLAGS += -O0 -g
+LDFLAGS  = -O0 -g
+# FCFLAGS += -O3 -g -pg
+# LDFLAGS  = -O3 -ipa -g -pg
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
@@ -236,10 +236,9 @@ BCPOperator_mod.o: OperatorT_mod.o ClusterInfo_mod.o SolverOptions_mod.o
 CalculationData_mod.o: TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o KKRnanoParallel_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
 NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
 ShapeIntegrationHelpers_mod.o: shape_constants_mod.o
-ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o
+ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o voronoi08_mod.o ShapeFunctions_mod.o
 EnergyMesh_mod.o: KKRnanoParallel_mod.o EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
-shapewrapper.o: ShapeFunctions_mod.o
 SingleSiteRef_mod.o: kkr_helpers_mod.o SingleSiteHelpers_mod.o
 TFQMRSolver_mod.o: Solver_mod.o OperatorT_mod.o mminvmod_oop_mod.o SolverStats_mod.o
 main2.o: Logging_mod.o kkr0_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o

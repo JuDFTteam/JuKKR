@@ -29,96 +29,97 @@ module ShapeGeometryHelpers_mod
 !
 !     ----------------------------------------------------------------
 ! ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  = 
-  subroutine polchk(nface,nvertices,xvert,yvert,zvert,tolvdist)
+  subroutine polchk(nface, nvertices, vert, tolvdist)
     use shape_constants_mod, only: pi
-!     integer, parameter :: nedged = nvrtd+nfaced-2
-!     integer   nvertices(nfaced)
-!     double precision    xvert(nvertd,nfaced),yvert(nvertd,nfaced),zvert(nvertd,nfaced)
-
     integer, intent(in) :: nface
     integer, intent(in) :: nvertices(:)
-    double precision, intent(in) :: xvert(:,:),yvert(:,:),zvert(:,:) ! todo: unite into an array of shape vert(3,nvertd,nfaced)
+    double precision, intent(in) :: vert(:,:,:) ! vert(3,nvertd,nfaced)
     double precision, intent(in) :: tolvdist
 
-    integer :: ivert,inew,ivertp,ivertm,ivrt,iedge,nvrt,nedge, iface,nvert
-    double precision :: arg,a1,a2,down,up,fisum,t
+    integer :: ivert, ivertp,ivertm,ivrt,iedge,nvrt,nedge, iface,nvert
+    double precision :: arg, down, up, fisum
     double precision :: vrt0(3), vrtp(3), vrtm(3)
-    double precision, allocatable :: v1(:,:),v2(:,:),v(:,:),vrt(:,:) ! v1(3,nedged),v2(3,nedged),v(3,nvertd),vrt(3,nvrtd)
+    double precision, allocatable :: v1(:,:), v2(:,:), vrt(:,:)
     integer :: nfaced, nedged, nvertd, nvrtd
-
+    logical :: new
+    
     nfaced = size(nvertices)
-    nvertd = size(xvert,1)
+    nvertd = size(vert, 2)
     nvrtd  = nfaced*nvertd
     nedged = nvrtd+nfaced-2
 
-    allocate(v1(3,nedged), v2(3,nedged), v(3,nvertd), vrt(3,nvrtd))
+    allocate(v1(3,nedged), v2(3,nedged), vrt(3,nvrtd))
 
     nvrt = 0
     nedge = 0
     do iface = 1, nface
       nvert = nvertices(iface)
-      fisum = (nvert-2)*pi
-      do ivert = 1, nvert
-        v(1:3,ivert) = [xvert(ivert,iface), yvert(ivert,iface), zvert(ivert,iface)]
-      enddo ! ivert
+      fisum = (nvert - 2)*pi
 !
-!------> t r e a t m e n t   o f   v e r t i c e s
+!------> treatment of vertices
 !
       do ivert = 1, nvert
-        vrt0 = v(1:3,ivert)
-        inew = 1 ! 1:save all different vertices
+        vrt0 = vert(1:3,ivert,iface)
+        new = .true.
         do ivrt = 1, nvrt
-          if (nrm2(vrt0 - vrt(1:3,ivrt)) < tolvdist) inew = 0 ! 0:drop this vertex
+          if (nrm2(vrt0 - vrt(1:3,ivrt)) < tolvdist) new = .false. ! 0:drop this vertex
         enddo ! ivrt
         
-        if (inew == 1) then
+        if (new) then
           nvrt = nvrt+1
-          if(nvrt > nvrtd) stop 'increase nvrtd'
-          vrt(1:3,nvrt) = v(1:3,ivert)
-        endif ! inew
+          if (nvrt > nvrtd) stop 'increase nvrtd'
+          vrt(1:3,nvrt) = vert(1:3,ivert,iface)
+        endif ! new
         
         ivertp = ivert+1; if (ivert == nvert) ivertp = 1        !!! alternative: ivertp = modulo(ivert+1-1, nvert)+1
-        vrtp = v(1:3,ivertp)
+        vrtp = vert(1:3,ivertp,iface)
         ivertm = ivert-1; if (ivert == 1) ivertm = nvert        !!! alternative: ivertm = modulo(ivert-1-1, nvert)+1
-        vrtm = v(1:3,ivertm) ! check if the  consecutive vertices define a polygon
+        vrtm = vert(1:3,ivertm,iface) ! check if the  consecutive vertices define a polygon
 
-        a1 = nrm2(vrtp - vrt0)
-        a2 = nrm2(vrtm - vrt0)
+        down = sqrt(nrm2(vrtp - vrt0)*nrm2(vrtm - vrt0))
         up = (vrtp - vrt0) .dot. (vrtm - vrt0)
-        down = sqrt(a1*a2)
         
-        if(down >= tolvdist)   then
-          arg = up/down
-          if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
-          fisum = fisum - acos(arg)
-        else
+        if (down < tolvdist) then
           write(6,*) 'down',down
           stop 'identical consecutive vertices'
         endif
+        
+        arg = up/down
+        ! if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
+        arg = min(max(-1.d0, arg), 1.d0)
+        fisum = fisum - acos(arg)
 !
-!------> t r e a t m e n t   o f   e d g e s
+!------> treatment of edges
 !
-        inew = 1 ! 1:save all different edges
+        new = .true. ! 1:save all different edges
         do iedge = 1, nedge
           if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
-            if (nrm2(vrtp - v2(1:3,iedge)) < tolvdist) inew = 0 ! 0:do not save
+            if (nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
           else
             if (nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
-              if (nrm2(vrtp - v1(1:3,iedge)) < tolvdist) inew = 0 ! 0:do not save
+              if (nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
             endif
           endif
         enddo ! iedge
         
-        if (inew == 1) then
+        if (new) then
           nedge = nedge+1
           if (nedge > nedged) stop 'insufficient nedged'
-          v1(1:3,nedge) = v(1:3,ivert)
-          v2(1:3,nedge) = v(1:3,ivertp)
-        endif ! inew
+          v1(1:3,nedge) = vert(1:3,ivert ,iface)
+          v2(1:3,nedge) = vert(1:3,ivertp,iface)
+        endif ! new
         
       enddo ! ivert
-      if (fisum > 1d-6) then
+      
+      if (fisum > 1.d-6) then
         write(6,*) 'fisum  = ',fisum
+        write(6,*) 'iface  = ',iface
+        write(6,*) 'nedge  = ',nedge
+        write(6,*) 'nvert  = ',nvert
+        write(6,*) 'nvrt   = ',nvrt
+        do ivert = 1, nvrt
+          write(6,'(3F16.9)') vert(1:3,ivert,iface)
+        enddo ! ivert
         stop 'not consecutive vertices of a polygon'
       endif ! fisum
       
