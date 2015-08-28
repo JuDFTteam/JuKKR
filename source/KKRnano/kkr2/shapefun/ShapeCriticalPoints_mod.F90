@@ -117,7 +117,7 @@ module ShapeCriticalPoints_mod
 #endif
       enddo ! ivert
 
-      call crit(iface, nvertices(iface), v, z, ipan, ivtot, toleuler, tolvdist, crt, npand)
+      call crit(face(iface), nvertices(iface), v, z, ipan, ivtot, toleuler, tolvdist, crt, npand, face_index=iface)
 
       if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,face(iface)%ntt
 
@@ -175,7 +175,7 @@ module ShapeCriticalPoints_mod
   !>    @param[in]     TOLVDIST tolerance for distances
   !>    @param[in,out] CRT   array of critical points, CRT(NPAND)
   !>    @param[in]     NPAND maximal number of panels allowed
-  subroutine crit(iface, nvert, v, z, ipan, ivtot, toleuler, tolvdist, crt, npand)
+  subroutine crit(face, nvert, v, z, ipan, ivtot, toleuler, tolvdist, crt, npand, face_index)
     !-----------------------------------------------------------------------
     !     this routine calculates the critical points 'crt' of the shape
     !     functions due to the face: z(1)*x + z(2)*y + z(3)*z = 1
@@ -185,19 +185,20 @@ module ShapeCriticalPoints_mod
     !     cessary quantities for the calculation are stored in common.
     !-----------------------------------------------------------------------
     use shape_constants_mod, only: pi, verbosity
-    use PolygonFaces_mod, only: face ! new data container for face properties
+!     use PolygonFaces_mod, only: face ! new data container for face properties
 !   use PolygonFaces_mod, only: rd, isignu, fd, fa, fb ! tetrahedron properties are written here
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
 
-    integer, intent(in) :: npand, nvert, iface ! in the future iface will only be needed for verbose output since we will pass the face descriptor to this routine
-!     type(PolygonFace), intent(inout) :: face
+    integer, intent(in) :: npand, nvert
+    type(PolygonFace), intent(inout) :: face
     integer, intent(inout) :: ipan, ivtot
     double precision, intent(in) :: toleuler, tolvdist
     double precision, intent(in) :: v(:,:) ! (3,nvertd)
     double precision, intent(inout) :: z(3)
     double precision, intent(inout) :: crt(npand)
-
+    integer, intent(in) :: face_index ! is only needed for verbose output since we pass the face descriptor to this routine
+    
     integer :: iv, ivert, ivertp, jv, iback
     double precision :: arg, a1, a2, a3, cf1, cf2, cf3, co, crrt, dd, down, d1, d2, ff, f1, f2, f3, omega, rdd, s, sf1, sf2, sf3, up, xj, yj, zmod2
 
@@ -213,15 +214,16 @@ module ShapeCriticalPoints_mod
     
     !-----------------------------------------------------------------------
 
+    
     allocate(in(nvert), vz(3,nvert), stat=ist)
 
 
-    if (verbosity > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") iface,z(1:3)
+    if (verbosity > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") face_index,z(1:3)
 
     zmod2 = nrm2(z)
 
     if (zmod2 <= tol_small) then ! check if normal vector of plane is valid
-      write(6,fmt="(//13x,'fatal error from crit: the',i3,'-th face of the polyhedron passes through the center'  /13x,'(',3e14.7,' )')") iface,z(1:3)
+      write(6,fmt="(//13x,'fatal error from crit: the',i3,'-th face of the polyhedron passes through the center'  /13x,'(',3e14.7,' )')") face_index,z(1:3)
       stop
     endif
  
@@ -231,25 +233,25 @@ module ShapeCriticalPoints_mod
 
     iv = 1; if (nrm2(v(1:3,1) - z) < tol_small**2) iv = 2 ! if the norm of the first vector is too small, use the second one
 
-    face(iface)%euler = euler_angles(z, v(:,iv), toleuler) ! get euler angles directly
+    face%euler = euler_angles(z, v(:,iv), toleuler) ! get euler angles directly
 
-    if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face(iface)%euler(1:3)/pi
+    if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
 
-    call rotate(face(iface)%euler(1:3), nvert, v, vz) ! pass the angles directly
+    call rotate(face%euler(1:3), nvert, v, vz) ! pass the angles directly
 
-    face(iface)%r0 = 1.d0/sqrt(zmod2)
+    face%r0 = 1.d0/sqrt(zmod2)
     
     corner = .false. ! is not a corner
 
     if (verbosity > 0) write(6,fmt="(/'tetrahedron',14x,'coordinates'/11('*'),14x,11('*')/)")
 
-    face(iface)%ntt = 0
+    face%ntt = 0
     
     do ivert = 1, nvert
     
-      if (abs(face(iface)%r0 - vz(3,ivert)) > tol_small) then ! check if vertices lie in same plane
+      if (abs(face%r0 - vz(3,ivert)) > tol_small) then ! check if vertices lie in same plane
         write(6,fmt="(//13x,'fatal error from crit: the vertices of the',i3,'-th rotated polygon do not lie on the plane:'  ,e13.6,' *z = 1'/30(/13x, 3e13.6))") &
-          iface,face(iface)%r0,vz(1:3,1:nvert)
+          face_index,face%r0,vz(1:3,1:nvert)
         stop
       endif
       !.......................................................................
@@ -311,7 +313,7 @@ module ShapeCriticalPoints_mod
           !.......................................................................
           !____subdivision____into____tetrahedra
           !.......................................................................
-          face(iface)%ntt = face(iface)%ntt + 1 ! count up the number of accepted tetrahedra
+          face%ntt = face%ntt + 1 ! count up the number of accepted tetrahedra
           
           ivtot = ivtot + 1
 
@@ -347,7 +349,7 @@ module ShapeCriticalPoints_mod
           
           t1%isignu = 1
           t1%rd = rdd
-!         t1%rupsq = sqrt(rd(ivtot)**2 - face(iface)%r0**2) ! could be introduced here
+!         t1%rupsq = sqrt(rd(ivtot)**2 - face%r0**2) ! could be introduced here
 
 ! !         to keep the old one updated          
 !           rd(ivtot) = rdd ! store rd
@@ -356,7 +358,7 @@ module ShapeCriticalPoints_mod
 !           fb(ivtot) = t1%fb
 !           fd(ivtot) = t1%fd
           
-          ta(face(iface)%ntt) = t1 ! copy
+          ta(face%ntt) = t1 ! copy
           
         endif ! |omega - pi| > tol_small
         
@@ -369,16 +371,16 @@ module ShapeCriticalPoints_mod
     enddo ! ivert ! end of vertex loop
     
     
-    deallocate(face(iface)%ta, stat=ist)
-    allocate(face(iface)%ta(face(iface)%ntt), stat=ist)
-    face(iface)%ta = ta(1:face(iface)%ntt) ! copy
+    deallocate(face%ta, stat=ist)
+    allocate(face%ta(face%ntt), stat=ist)
+    face%ta = ta(1:face%ntt) ! copy
     
     !.......................................................................
     ! foot_of_the_perpendicular_to_the_face_outside_or_inside_the_polygon
     !.......................................................................
     if (s < tol_small .or. corner) then
     
-      new = all(abs(face(iface)%r0 - crt(1:ipan)) >= tol_large)
+      new = all(abs(face%r0 - crt(1:ipan)) >= tol_large)
       
       if (new) then
         ipan = ipan+1
@@ -386,7 +388,7 @@ module ShapeCriticalPoints_mod
           write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
           stop        
         endif
-        crt(ipan) = face(iface)%r0 ! found a new critical point
+        crt(ipan) = face%r0 ! found a new critical point
       endif ! new
       
     else  ! s < tol_small .or. corner
@@ -428,8 +430,8 @@ module ShapeCriticalPoints_mod
         ivertp = modulo(ivert, nvert) + 1
         if (.not. in(ivert) .and. .not. in(ivertp)) then
 !           isignu(iback) = -1
-          if (ivert <= face(iface)%ntt) then
-            face(iface)%ta(ivert)%isignu = -1
+          if (ivert <= face%ntt) then
+            face%ta(ivert)%isignu = -1
           else
             write(*,*) 'error! a sign could not be stored!'
             stop
