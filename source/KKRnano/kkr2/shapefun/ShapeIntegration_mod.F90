@@ -28,9 +28,10 @@ module ShapeIntegration_mod
 subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
   use shape_constants_mod, only: pi, lmaxd1, isumd, icd, iced
-  use PolygonFaces_mod, only: rd, fa, fb, fd, isignu ! vertex properties read-only
+! use PolygonFaces_mod, only: rd, fa, fb, fd, isignu ! vertex properties read-only
 ! use PolygonFaces_mod, only: ntt, r0, alpha, beta, gamma ! face properties read-only ! deprecated
   use PolygonFaces_mod, only: face ! face properties
+  use PolygonFaces_mod, only: TetrahedronAngles
   
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
 
@@ -58,7 +59,8 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   
   real*8, allocatable :: rupsq_precomputed(:) ! dim nvtotd
   real*8, allocatable :: dmatl_precomputed(:,:)
-
+  type(TetrahedronAngles) :: t1
+  
   real*8 :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
   real*8 :: sm(2,0:lmaxd1) ! this could be reshaped into sm(-lmaxd1:lmaxd1)
 !   real*8 :: smm(-lmaxd1:lmaxd1)
@@ -70,7 +72,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   logical, parameter :: precompute_dmtl = .true. ! needs some memory but reduces the number of calls to d_real from meshn*nface to nface
   logical, parameter :: precompute_rupsq = .false.
   
-  if (precompute_rupsq) allocate(rupsq_precomputed(size(rd)))
+!   if (precompute_rupsq) allocate(rupsq_precomputed(size(rd)))
   if (precompute_dmtl) allocate(dmatl_precomputed(isumd,nface))
   
   fpisq = sqrt(4.d0*pi)
@@ -125,7 +127,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   !.......................................................................
   meshloop: do ir = 1, meshn
     b(1:mlm) = 0.d0
-    ivtot = 0
+!     ivtot = 0
     
     !.......................................................................
     !     loop over pyramids
@@ -135,7 +137,7 @@ py: do iface = 1, nface
       if (xrn(ir) <= face(iface)%r0) then ! r0(iface)) then
         ! the radius is smaller than the distance of the base points from the origin.
         ! so, no contribution to the shapefunctions is expected (except for l=0,m=0 which is treated analytically.
-        ivtot = ivtot + face(iface)%ntt ! ntt(iface) ! fast forward total vertex index
+!         ivtot = ivtot + face(iface)%ntt ! ntt(iface) ! fast forward total vertex index
         cycle py ! jump to the head of the loop over pyramids (loop counter iface)
         
       endif ! r <= r0
@@ -147,34 +149,59 @@ py: do iface = 1, nface
       !     loop over tetrahedra
       !.......................................................................
       do itet = 1, face(iface)%ntt ! ntt(iface)
-        ivtot = ivtot+1 ! forward total vertex index
+!         ivtot = ivtot+1 ! forward total vertex index
+!         
+!         if (xrn(ir) <= rd(ivtot)) then
+!         
+!           call pintg(fa(ivtot), fb(ivtot), dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
+!           s = s + s1
+!           
+!         else  ! r <= rd(ivtot)
+!         
+!           rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2) ! r0(iface)**2)
+!           if (precompute_rupsq) then
+!             rupsq = rupsq_precomputed(ivtot)
+!           else
+!             rupsq = sqrt(rd(ivtot)**2 - face(iface)%r0**2)
+!           endif
+!           rap  = rupsq/rdown
+!           arg2 = rupsq/face(iface)%r0 ! /r0(iface)
+!           fk = min(fb(ivtot), max(fa(ivtot), fd(ivtot) - acos(rap)))
+!           fl = min(fb(ivtot), max(fa(ivtot), fd(ivtot) + acos(rap)))
+!           
+!           call pintg(fa(ivtot), fk,        dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
+!           s = s + s1
+!           call pintg(fk,        fl,        dlt, s1, lmax, isignu(ivtot), arg2, fd(ivtot), 1)
+!           s = s + s1
+!           call pintg(fl,        fb(ivtot), dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
+!           s = s + s1
+!           
+!         endif ! r <= rd(ivtot)
+
+        t1 = face(iface)%ta(itet) ! copy, todo: text-pointer
+
+        if (xrn(ir) <= t1%rd) then
         
-        if (xrn(ir) <= rd(ivtot)) then
-        
-          call pintg(fa(ivtot), fb(ivtot), dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
+          call pintg(t1%fa, t1%fb, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
           s = s + s1
           
-        else  ! r <= rd(ivtot)
+        else  ! r <= t1%rd
         
           rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2) ! r0(iface)**2)
-          if (precompute_rupsq) then
-            rupsq = rupsq_precomputed(ivtot)
-          else
-            rupsq = sqrt(rd(ivtot)**2 - face(iface)%r0**2)
-          endif
+          rupsq = sqrt(t1%rd**2 - face(iface)%r0**2)
           rap  = rupsq/rdown
-          arg2 = rupsq/face(iface)%r0 ! /r0(iface)
-          fk = min(fb(ivtot), max(fa(ivtot), fd(ivtot) - acos(rap)))
-          fl = min(fb(ivtot), max(fa(ivtot), fd(ivtot) + acos(rap)))
+          arg2 = rupsq/face(iface)%r0
+          fk = min(t1%fb, max(t1%fa, t1%fd - acos(rap)))
+          fl = min(t1%fb, max(t1%fa, t1%fd + acos(rap)))
           
-          call pintg(fa(ivtot), fk,        dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
+          call pintg(t1%fa, fk, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
           s = s + s1
-          call pintg(fk,        fl,        dlt, s1, lmax, isignu(ivtot), arg2, fd(ivtot), 1)
+          call pintg(fk,    fl, dlt, s1, lmax, t1%isignu, arg2, t1%fd, 1)
           s = s + s1
-          call pintg(fl,        fb(ivtot), dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
+          call pintg(fl, t1%fb, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
           s = s + s1
           
-        endif ! r <= rd(ivtot)
+        endif ! r <= t1%rd
 
       enddo ! itet ! tetraeder loop
 
