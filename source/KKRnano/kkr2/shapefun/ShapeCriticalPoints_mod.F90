@@ -140,7 +140,16 @@ module ShapeCriticalPoints_mod
   endsubroutine criticalShapePoints
 
   
-#define  get_angle(RESULT, SINE, COSINE) if (abs((SINE)) < toleuler .and. abs((COSINE) + 1.d0) < toleuler) then; RESULT = pi; else; RESULT = 2.d0*atan2((SINE), (COSINE) + 1.d0); endif
+  double precision function get_angle(sine, cosine, tolerance) result(angle)
+    use shape_constants_mod, only: pi
+    double precision, intent(in) :: sine, cosine, tolerance
+    if (abs(sine) < tolerance .and. abs(cosine + 1.d0) < tolerance) then
+      angle = pi
+    else
+      angle = 2.d0*atan2(sine, cosine + 1.d0)
+    endif
+  endfunction
+  
 
   !------------------------------------------------------------------------------
   !>    Calculates critical points where panels have to be placed.
@@ -226,13 +235,15 @@ module ShapeCriticalPoints_mod
   ! call euler(z,v(:,ix),iface,toleuler) ! store euler angles in common block
 !     call euler(z,v(:,ix),toleuler, alpha(iface), beta(iface), gamma(iface)) ! get euler angles directly
 !     face(iface)%euler = [alpha(iface), beta(iface), gamma(iface)]
-    call euler(z,v(:,ix),toleuler, face(iface)%euler(1), face(iface)%euler(2), face(iface)%euler(3)) ! get euler angles directly
+!     call euler(z,v(:,ix),toleuler, face(iface)%euler(1), face(iface)%euler(2), face(iface)%euler(3)) ! get euler angles directly
+    face(iface)%euler = euler_angles(z, v(:,ix), toleuler) ! get euler angles directly
 
     if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face(iface)%euler(1:3)/pi
 
   !   call rotate(v,vz,iface,nvert) ! pass the index iface and access the angles in the common block
 !     call rotate(v, vz, nvert, alpha(iface), beta(iface), gamma(iface)) ! pass the angles directly
-    call rotate(v, vz, nvert, face(iface)%euler(1), face(iface)%euler(2), face(iface)%euler(3)) ! pass the angles directly
+!     call rotate(v, vz, nvert, face(iface)%euler(1), face(iface)%euler(2), face(iface)%euler(3)) ! pass the angles directly
+    call rotate(v, vz, nvert, face(iface)%euler(1:3)) ! pass the angles directly
 
 !     r0(iface) = 1.d0/sqrt(zmod2)
     face(iface)%r0 = 1.d0/sqrt(zmod2)
@@ -329,27 +340,9 @@ module ShapeCriticalPoints_mod
           cf3 = rdv(1)/a3
           sf3 = rdv(2)/a3
 
-!           if (abs(sf1) < toleuler .and. abs(cf1+1d0) < toleuler) then
-!             f1 = pi
-!           else
-!             f1 = 2.d0*atan2(sf1, cf1+1d0)
-!           endif
-          get_angle(f1, sf1, cf1)
- 
-
-!           if (abs(sf2) < toleuler .and. abs(cf2+1d0) < toleuler) then
-!             f2 = pi
-!           else
-!             f2 = 2.d0*atan2(sf2, cf2+1d0)
-!           endif
-          get_angle(f2, sf2, cf2)
-
-!           if (abs(sf3) < toleuler .and. abs(cf3+1d0) < toleuler) then
-!             fd(ivtot) = pi
-!           else
-!             fd(ivtot) = 2.d0*atan2(sf3, cf3+1d0)
-!           endif
-          get_angle(fd(ivtot), sf3, cf3)
+          f1        = get_angle(sf1, cf1, tolerance=toleuler)
+          f2        = get_angle(sf2, cf2, tolerance=toleuler)
+          fd(ivtot) = get_angle(sf3, cf3, tolerance=toleuler)
 
           fa(ivtot) = min(f1, f2)
           fb(ivtot) = max(f1, f2)
@@ -439,24 +432,25 @@ module ShapeCriticalPoints_mod
   !>    the euler angles rotating this local coordinate system back to the
   !>    original frame of reference are calculated  and stored  in common.
   !-----------------------------------------------------------------------
-  subroutine euler(z, xx, toleuler, alpha, beta, gamma)
+  function euler_angles(zz, xx, toleuler) result(alpha_beta_gamma)
     use shape_constants_mod, only: pi
+!     use ShapeGeometryHelpers, only: nrm2, operator(.dot.)
     double precision, intent(in) :: xx(3)
-    double precision, intent(inout) :: z(3)
-    double precision, intent(in) :: toleuler   ! introduced by phivos (05.2008) to account for inaccuracies.
-    ! earlier, 1.d-5 was hard-coded at the places in this subr. where tol is used
-    !     data toleuler /1.d-10/
-    double precision, intent(out) :: alpha, beta, gamma
+    double precision, intent(in) :: zz(3)
+    double precision, intent(in) :: toleuler ! introduced by phivos (05.2008) to account for inaccuracies.
+    ! earlier, 1.d-5 was hard-coded at the places in this subr. where tol is used data toleuler /1.d-10/
+    double precision :: alpha_beta_gamma(3) ! result
 
     double precision :: rx,rz,s,p,rzp,sa,ca,sg,cg
-    double precision :: x(3), y(3)
+    double precision :: x(3), y(3), z(3)
     double precision, parameter :: tolerance = 1d-6
 
     !-----------------------------------------------------------------------
+    z = zz
     x = xx - z
-    rx = sqrt(x(1)*x(1) + x(2)*x(2) + x(3)*x(3))
-    rz = sqrt(z(1)*z(1) + z(2)*z(2) + z(3)*z(3))
-    s = x(1)*z(1) + x(2)*z(2) + x(3)*z(3)
+    rx = sqrt(x(1)*x(1) + x(2)*x(2) + x(3)*x(3)) ! sqrt(nrm2(x))
+    rz = sqrt(z(1)*z(1) + z(2)*z(2) + z(3)*z(3)) ! sqrt(nrm2(z))
+    s = x(1)*z(1) + x(2)*z(2) + x(3)*z(3) ! x .dot. z
 
     if (rx < tolerance .or. rz < tolerance .or. s > tolerance) then
       write(6,fmt="(/13x,'from euler,illegal vectors:'/13x,2(' (',3e13.6,' )'))") x(1:3), z(1:3)
@@ -468,20 +462,15 @@ module ShapeCriticalPoints_mod
     x = x/rx
     z = z/rz
 
-    alpha = 0.d0
-    beta = acos(z(3))
+    alpha_beta_gamma(2) = acos(z(3)) ! beta
 
     if (p < toleuler) then
     
       sg = -z(3)*x(2)
       cg =  z(3)*x(1)
 
-!       if (abs(sg) < toleuler .and. abs(cg+1d0) < toleuler)  then
-!         gamma = pi
-!       else
-!         gamma = 2.d0*atan2(sg, cg+1d0)
-!       endif
-      get_angle(gamma, sg, cg)
+      alpha_beta_gamma(1) = 0.d0             ! alpha
+      alpha_beta_gamma(3) = get_angle(sg, cg, tolerance=toleuler) ! gamma
 
     else  ! p < toleuler
 
@@ -494,28 +483,16 @@ module ShapeCriticalPoints_mod
       sa = y(3)*rzp
       ca = x(3)*rzp
 
-!       if (abs(sa) < toleuler .and. abs(ca+1.d0) < toleuler)  then
-!         alpha = pi
-!       else
-!         alpha = 2.d0*atan2(sa, ca+1d0)
-!       endif
-      get_angle(alpha, sa, ca)
+      alpha_beta_gamma(1) = get_angle(sa, ca, tolerance=toleuler) ! alpha
 
       sg =  z(2)*rzp
       cg = -z(1)*rzp
 
-!       if (abs(sg) < toleuler .and. abs(cg+1d0) < toleuler)  then
-!         gamma = pi
-!       else
-!         gamma = 2.d0*atan2(sg, cg+1d0)
-!       endif
-      get_angle(gamma, sg, cg)
+      alpha_beta_gamma(3) = get_angle(sg, cg, tolerance=toleuler) ! gamma
 
     endif ! p < toleuler
-      
-    z = z*rz
 
-  endsubroutine ! euler
+  endfunction ! euler_angles
 
 
   !-----------------------------------------------------------------------
@@ -525,33 +502,28 @@ module ShapeCriticalPoints_mod
   !>    v (i,ivert) : input   vectors
   !>    vz(i,ivert) : rotated vectors
   !-----------------------------------------------------------------------
-  subroutine rotate(v, vz, nvert, alpha, beta, gamma)
+  subroutine rotate(v, vz, nvert, abg)
     use shape_constants_mod, only: pi
     integer, intent(in) :: nvert
-    double precision, intent(in) :: alpha, beta, gamma
+    double precision, intent(in) :: abg(3) ! former alpha, beta, gamma
     double precision, intent(in) :: v(3,*) ! (3,nvertd)
     double precision, intent(out) :: vz(3,*) ! (3,nvertd)
 
     integer :: j, ivert
-    double precision :: sa,sb,sg,ca,cb,cg
-    double precision :: a(3,3)
+    double precision :: sn(3), cs(3), a(3,3)
 
-    ca = cos(alpha)
-    sa = sin(alpha)
-    cb = cos(beta)
-    sb = sin(beta)
-    cg = cos(gamma)
-    sg = sin(gamma)
+    cs = cos(abg(1:3))
+    sn = sin(abg(1:3))
     
-    a(1,1) = ca*cb*cg - sa*sg
-    a(2,1) = sa*cb*cg + ca*sg
-    a(3,1) = -sb*cg
-    a(1,2) = -ca*cb*sg - sa*cg
-    a(2,2) = -sa*cb*sg + ca*cg
-    a(3,2) = sb*sg
-    a(1,3) = ca*sb
-    a(2,3) = sa*sb
-    a(3,3) = cb
+    a(1,1) = cs(1)*cs(2)*cs(3) - sn(1)*sn(3)
+    a(2,1) = sn(1)*cs(2)*cs(3) + cs(1)*sn(3)
+    a(3,1) = -sn(2)*cs(3)
+    a(1,2) = -cs(1)*cs(2)*sn(3) - sn(1)*cs(3)
+    a(2,2) = -sn(1)*cs(2)*sn(3) + cs(1)*cs(3)
+    a(3,2) = sn(2)*sn(3)
+    a(1,3) = cs(1)*sn(2)
+    a(2,3) = sn(1)*sn(2)
+    a(3,3) = cs(2)
     
     do ivert = 1, nvert
       vz(1:3,ivert) = 0.d0
