@@ -10,6 +10,11 @@ module PolygonFaces_mod
 !   double precision, allocatable :: beta(:)     !< Euler angles beta
 !   double precision, allocatable :: gamma(:)    !< Euler angles gamma
 
+  type Plane
+    double precision :: abc(3) !< normal vector
+    double precision :: d !< distance from origin in length units of the vector
+  endtype
+
   type TetrahedronAngles
     double precision :: rd !< distances pyramid footpoint to edge
     double precision :: fa !< tetrahedron angle, phi-angle corresponding to 1st vertex  fa < fd < fb
@@ -27,11 +32,11 @@ module PolygonFaces_mod
   
   type(PolygonFace), allocatable :: face(:)
   
-  double precision, allocatable :: rd(:) !< distances pyramid footpoint to edge
-  double precision, allocatable :: fa(:) !< tetrahedron angle, phi-angle corresponding to 1st vertex  fa < fd < fb
-  double precision, allocatable :: fb(:) !< tetrahedron angle, phi-angle corresponding to 2nd vertex
-  double precision, allocatable :: fd(:) !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
-  integer(kind=1), allocatable :: isignu(:)   !< ??? sign for rotation sense ???
+!   double precision, allocatable :: rd(:) !< distances pyramid footpoint to edge
+!   double precision, allocatable :: fa(:) !< tetrahedron angle, phi-angle corresponding to 1st vertex  fa < fd < fb
+!   double precision, allocatable :: fb(:) !< tetrahedron angle, phi-angle corresponding to 2nd vertex
+!   double precision, allocatable :: fd(:) !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
+!   integer(kind=1), allocatable :: isignu(:)   !< ??? sign for rotation sense ???
   
   contains
 
@@ -39,14 +44,14 @@ module PolygonFaces_mod
     integer, intent(in) :: nfaced, nvtotd
     allocate(&!ntt(nfaced), r0(nfaced), alpha(nfaced), beta(nfaced), gamma(nfaced), &
       face(nfaced), &
-      rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), &
+!       rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), &
       stat=ist)
   endfunction ! create
 
   integer function destroytetra() result(ist)
     deallocate(&!ntt, r0, alpha, beta, gamma, &
       face, &
-      rd, fa, fb, fd, isignu, &
+!       rd, fa, fb, fd, isignu, &
       stat=ist)
   endfunction ! destroy
 

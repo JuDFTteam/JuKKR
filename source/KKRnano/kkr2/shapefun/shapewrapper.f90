@@ -1,60 +1,57 @@
 !------------------------------------------------------------------------------
-!> Wrapper for shape-function generation from Voronoi data using sensible
+!> wrapper for shape-function generation from voronoi data using sensible
 !> defaults for some parameters.
 
-SUBROUTINE shapewrapper(NPOI,AFACE,BFACE,CFACE,DFACE, &
-NMIN, &
-NVERTICES,XVERT,YVERT,ZVERT,NFACE,LMAX, DLT, &
-NPAN, NM, XRN, DRN, MESHN, &  ! radial mesh ! output parameters
-THETAS_S, LMIFUN_S, NFUN, & ! shape function
-IBMAXD,MESHND, NPAND,NFACED, NVERTD)
+subroutine shapewrapper(npoi,aface,bface,cface,dface, &
+  nmin, &
+  nvertices,xvert,yvert,zvert,nface,lmax, dlt, &
+  npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
+  thetas_s, lmifun_s, nfun, & ! shape function
+  ibmaxd,meshnd, npand,nfaced, nvertd)
 
-  use ShapeFunctions_mod, only: SHAPEF
+  use shapefunctions_mod, only: shapef
   implicit none
 
-  integer, parameter :: DP = 8
-  integer :: NVERTD !< maximal number of cell vertices
-  integer :: NFACED !< maximal number of cell faces
+  integer :: nvertd !< maximal number of cell vertices
+  integer :: nfaced !< maximal number of cell faces
 
 
-  integer,intent(in) :: NPOI
-  real(kind=DP), parameter :: TOLVDIST = 1.d-12
-  real(kind=DP), parameter :: TOLEULER = 1.d-10
-  integer, intent(in) :: NMIN
-  integer, intent(in) :: NFACE
-  integer, intent(in) :: LMAX
-  integer, parameter :: KEYPAN = 0
-  real(kind=DP), intent(in) :: DLT
+  integer, intent(in) :: npoi
+  integer, intent(in) :: nmin
+  integer, intent(in) :: nface
+  integer, intent(in) :: lmax
+  double precision, intent(in) :: dlt
+  integer, intent(in) :: ibmaxd
+  integer, intent(in) :: meshnd
+  integer, intent(in) :: npand
 
-  integer, intent(in) :: IBMAXD
-  integer, intent(in) :: MESHND
-  integer, intent(in) :: NPAND
-
-  integer ::   NVERTICES(NFACED)
-  real(kind=DP) ::    AFACE(NFACED),BFACE(NFACED),CFACE(NFACED),DFACE(NFACED)
-  real(kind=DP) ::    XVERT(NVERTD,NFACED),YVERT(NVERTD,NFACED), &
-  ZVERT(NVERTD,NFACED)
+  integer :: nvertices(nfaced)
+  double precision :: aface(nfaced), bface(nfaced), cface(nfaced), dface(nfaced)
+  double precision :: xvert(nvertd,nfaced), yvert(nvertd,nfaced), zvert(nvertd,nfaced)
 
   ! output
-  integer, intent(out) ::   NM(NPAND)
-  real(kind=DP), intent(out)  ::   XRN(MESHND)
-  real(kind=DP), intent(out)  ::   DRN(MESHND)
-  integer, intent(out) ::   NPAN
-  integer, intent(out) ::   MESHN
+  integer, intent(out) ::   nm(npand)
+  double precision, intent(out)  ::   xrn(meshnd)
+  double precision, intent(out)  ::   drn(meshnd)
+  integer, intent(out) ::   npan
+  integer, intent(out) ::   meshn
 
-  real(kind=DP), intent(out) ::  THETAS_S(MESHND,IBMAXD)
-  integer, intent(out) :: LMIFUN_S(IBMAXD)
-  integer, intent(out) :: NFUN
+  double precision, intent(out) ::  thetas_s(meshnd,ibmaxd)
+  integer, intent(out) :: lmifun_s(ibmaxd)
+  integer, intent(out) :: nfun
 
-  call SHAPEF(NPOI,AFACE,BFACE,CFACE,DFACE, &
-    TOLVDIST, &
-    TOLEULER, &
-    NMIN, &
-    NVERTICES,XVERT,YVERT,ZVERT,NFACE,LMAX, &
-    KEYPAN, DLT, &
-    NPAN, NM, XRN, DRN, MESHN, &  ! radial mesh ! output parameters
-    THETAS_S, LMIFUN_S, NFUN, & ! shape function
-    IBMAXD,MESHND, NPAND)
+  double precision, parameter :: tolvdist = 1.d-12, toleuler = 1.d-10
+  integer, parameter :: keypan = 0
+  
+  call shapef(npoi,aface,bface,cface,dface, &
+    tolvdist, &
+    toleuler, &
+    nmin, &
+    nvertices,xvert,yvert,zvert,nface,lmax, &
+    keypan, dlt, &
+    npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
+    thetas_s, lmifun_s, nfun, & ! shape function
+    ibmaxd,meshnd, npand)
 
 
 end subroutine

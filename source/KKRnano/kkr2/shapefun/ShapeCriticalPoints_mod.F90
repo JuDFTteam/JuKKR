@@ -37,32 +37,30 @@ module ShapeCriticalPoints_mod
   subroutine criticalShapePoints(aface,bface,cface,dface, &
     tolvdist, toleuler, &
     nvertices,xvert,yvert,zvert,nface,lmax, &
-    npan, crt, npand)
+    npan, crt)
 
     use shape_constants_mod, only: verbosity, check_geometry, isumd, lmaxd1, pi
-    use PolygonFaces_mod, only: face ! read-only, if verbose
-    use PolygonFaces_mod, only: fa, fb, fd, rd, isignu ! read-only, if verbose
+    use PolygonFaces_mod, only: faces => face ! read-only, if verbose
+!   use PolygonFaces_mod, only: fa, fb, fd, rd, isignu ! read-only, if verbose
     use shapegeometryhelpers_mod, only: polchk
 
     integer, intent(in) :: nvertices(:) ! (nfaced)
     double precision, intent(in) :: aface(:), bface(:), cface(:), dface(:) ! (nfaced) --> collect to (0:3,nfaced)
     double precision, intent(in) :: xvert(:,:), yvert(:,:), zvert(:,:) ! (nvertd,nfaced) --> collect to (3,nvertd,nfaced)
+    integer, intent(in) :: nface, lmax
+    double precision, intent(in) :: tolvdist, toleuler
     
     integer, intent(out) :: npan
-    double precision, intent(out) :: crt(npand)
+    double precision, intent(out) :: crt(:)
+    
     
     !-----------------------------------------------------------------------
     
-    integer, intent(in) :: nface, lmax, npand
-!     integer, intent(out) :: ibmax
-    double precision, intent(in) :: tolvdist, toleuler
-    
 !     double precision :: sq3o3, coa
-!     double precision :: a1,a2,a3,a4
     double precision, allocatable :: v(:,:)
     double precision :: z(3)
-    integer :: iface, ipan, isum, is0
-    integer :: nvtot, iv,ivert,ivtot,l
+    integer :: iface, isum, itt
+    integer :: iv, ivtot, l
     integer :: nvertd
     integer :: ist
     
@@ -80,11 +78,9 @@ module ShapeCriticalPoints_mod
     sq3o3 = sqrt(3.d0)/3.d0
 #endif
 
-!   ibmax = (lmax+1)**2
     isum = 0
     do l = 0, lmax
-      is0 = (2*l+1)**2
-      isum = isum + is0
+      isum = isum + (2*l+1)**2
     enddo ! l
 
     if (isum > isumd .or. lmax > lmaxd1)  then
@@ -93,49 +89,52 @@ module ShapeCriticalPoints_mod
       stop
     endif
 
-    ipan = 0
-    ivtot = 0
+    npan = 0 ! will be modified by routine critical_points
+    ivtot = 0 ! deprecated, for comparable verbose output only
     !.......................................................................
-    !     s t o r a g e            i n    c o m m o n        b l o c k s
-    !     c a l c u l a t i o n    o f    r o t a t i o n    m a t r i c e s
+    ! calculation of rotation matrices
     !.......................................................................
     do iface = 1, nface
 
-      z(1:3) = [aface(iface), bface(iface), cface(iface)]/dface(iface)
+      z(1:3) = [aface(iface), bface(iface), cface(iface)]/dface(iface) ! plane normal
 
 #ifdef k_HCP 
       z(1) = z(1)*sq3o3
       z(3) = z(3)*8.d0/(coa*3.d0)
 #endif      
 
-      do ivert = 1, nvertices(iface)
-        v(1:3,ivert) = [xvert(ivert,iface), yvert(ivert,iface), zvert(ivert,iface)]
+      do iv = 1, nvertices(iface)
+        v(1:3,iv) = [xvert(iv,iface), yvert(iv,iface), zvert(iv,iface)]
 
 #ifdef k_HCP 
-        v(1,ivert) = v(1,ivert)*sq3o3
-        v(3,ivert) = v(3,ivert)*coa
+        v(1,iv) = v(1,iv)*sq3o3
+        v(3,iv) = v(3,iv)*coa
 #endif
-      enddo ! ivert
+      enddo ! iv
 
-      call crit(face(iface), nvertices(iface), v, z, ipan, ivtot, toleuler, tolvdist, crt, npand, face_index=iface)
+      call critical_points(faces(iface), nvertices(iface), v, z, npan, ivtot, toleuler, tolvdist, crt, face_index=iface)
 
-      if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,face(iface)%ntt
+      if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,faces(iface)%ntt
 
     enddo ! iface ! end of loop over faces
 
     deallocate(v, stat=ist)
     
     !.......................................................................
-    !     d e f i n i t i o n    o f    t h e    s u i t a b l e    m e s h
+    !     definition of the suitable mesh
     !.......................................................................
-    nvtot = ivtot
-    npan = ipan
 
     if (verbosity > 1) then
       write(6,fmt="(//15x,'fa/pi',5x,'fb/pi',5x,'fd/pi',6x,'rd',8x,'isignu'/)")
-      do iv = 1, nvtot
-        write(6,fmt="(i10,4f10.4,i10)") iv,fa(iv)/pi,fb(iv)/pi,fd(iv)/pi,rd(iv),isignu(iv)
-      enddo ! iv
+      iv = 0
+      do iface = 1, nface
+        do itt = 1, faces(iface)%ntt
+          iv = iv+1
+#define tet faces(iface)%ta(itt)
+          write(6,fmt="(i10,4f10.4,i10)") iv, [tet%fa, tet%fb, tet%fd]/pi, tet%rd, tet%isignu
+#undef tet
+        enddo ! itt
+      enddo ! iface
     endif ! verbosity
     
   endsubroutine criticalShapePoints
@@ -175,7 +174,7 @@ module ShapeCriticalPoints_mod
   !>    @param[in]     TOLVDIST tolerance for distances
   !>    @param[in,out] CRT   array of critical points, CRT(NPAND)
   !>    @param[in]     NPAND maximal number of panels allowed
-  subroutine crit(face, nvert, v, z, ipan, ivtot, toleuler, tolvdist, crt, npand, face_index)
+  subroutine critical_points(face, nvert, v, z, ipan, ivtot, toleuler, tolvdist, crt, face_index)
     !-----------------------------------------------------------------------
     !     this routine calculates the critical points 'crt' of the shape
     !     functions due to the face: z(1)*x + z(2)*y + z(3)*z = 1
@@ -190,16 +189,16 @@ module ShapeCriticalPoints_mod
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
 
-    integer, intent(in) :: npand, nvert
+    integer, intent(in) :: nvert
     type(PolygonFace), intent(inout) :: face
-    integer, intent(inout) :: ipan, ivtot
+    integer, intent(inout) :: ipan, ivtot ! ivtot can be removed when we do not try to have the verbose output compatible with older versions
     double precision, intent(in) :: toleuler, tolvdist
     double precision, intent(in) :: v(:,:) ! (3,nvertd)
     double precision, intent(inout) :: z(3)
-    double precision, intent(inout) :: crt(npand)
+    double precision, intent(inout) :: crt(:)
     integer, intent(in) :: face_index ! is only needed for verbose output since we pass the face descriptor to this routine
     
-    integer :: iv, ivert, ivertp, jv, iback
+    integer :: iv, ivert, ivertp, jv, npand
     double precision :: arg, a1, a2, a3, cf1, cf2, cf3, co, crrt, dd, down, d1, d2, ff, f1, f2, f3, omega, rdd, s, sf1, sf2, sf3, up, xj, yj, zmod2
 
     logical(kind=1), allocatable :: in(:) ! (nvertd)
@@ -213,7 +212,7 @@ module ShapeCriticalPoints_mod
     integer :: ist
     
     !-----------------------------------------------------------------------
-
+    npand = size(crt)
     
     allocate(in(nvert), vz(3,nvert), stat=ist)
 
@@ -263,12 +262,11 @@ module ShapeCriticalPoints_mod
       new = all(abs(crrt - crt(1:ipan)) >= tol_small)
 
       if (new) then
-        ipan = ipan+1
+        ipan = ipan + 1 ! add a new critical point
         if (ipan > npand) then
           write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
           stop        
         endif
-
         crt(ipan) = crrt
       endif ! new
       
@@ -288,7 +286,7 @@ module ShapeCriticalPoints_mod
         new = all(abs(rdd - crt(1:ipan)) >= tol_large)
         
         if (new) then
-          ipan = ipan+1
+          ipan = ipan + 1 ! add a new critical point
           if (ipan > npand) then
             write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
             stop        
@@ -315,8 +313,7 @@ module ShapeCriticalPoints_mod
           !.......................................................................
           face%ntt = face%ntt + 1 ! count up the number of accepted tetrahedra
           
-          ivtot = ivtot + 1
-
+          ivtot = ivtot + 1 ! can be removed when we do not try to have the verbose output compatible with older versions
           if (verbosity > 0) then
             write(6,fmt="(i5,'       vz(',i2,')  =  (',3f10.4,' )')") ivtot,ivert, vz(1:3,ivert )
             write(6,fmt="(5x,'       vz(',i2,')  =  (',3f10.4,' )')")       ivertp,vz(1:3,ivertp)
@@ -349,7 +346,7 @@ module ShapeCriticalPoints_mod
           
           t1%isignu = 1
           t1%rd = rdd
-!         t1%rupsq = sqrt(rd(ivtot)**2 - face%r0**2) ! could be introduced here
+!         t1%rupsq = sqrt(rdd**2 - face%r0**2) ! could be introduced here
 
 ! !         to keep the old one updated          
 !           rd(ivtot) = rdd ! store rd
@@ -383,7 +380,7 @@ module ShapeCriticalPoints_mod
       new = all(abs(face%r0 - crt(1:ipan)) >= tol_large)
       
       if (new) then
-        ipan = ipan+1
+        ipan = ipan + 1 ! add a new critical point
         if (ipan > npand) then
           write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
           stop        
@@ -426,7 +423,7 @@ module ShapeCriticalPoints_mod
       enddo ! jv
       
       do ivert = 1, nvert
-        iback = ivtot-nvert+ivert
+!       iback = ivtot-nvert+ivert
         ivertp = modulo(ivert, nvert) + 1
         if (.not. in(ivert) .and. .not. in(ivertp)) then
 !           isignu(iback) = -1
@@ -442,7 +439,7 @@ module ShapeCriticalPoints_mod
     endif ! s < tol_small .or. corner
     
     deallocate(in, vz, stat=ist)
-  endsubroutine crit
+  endsubroutine critical_points
 
   !-----------------------------------------------------------------------
   !>    given two distinct points (z(1),z(2),z(3)) and (xx(1),xx(2),xx(3))

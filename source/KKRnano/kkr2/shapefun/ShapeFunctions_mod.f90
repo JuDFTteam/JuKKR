@@ -130,15 +130,19 @@ module ShapeFunctions_mod
   !     IF YOU WANT TO HAVE ANGULAR MOMENTUM COMPONENTS IN THE STANDARD BA
   !     SIS CHANGE THE FOLLOWING STATEMENTS IN THE ROUTINES :
   !     IN CCOEF      ISI=1                        ---->    ISI=1-2*MOD(M,
-  !     IN DREAL      IF(MOD(M+MP),2).EQ.0) D=-D   ---->    DELETE THE LIN
+  !     IN D_REAL     IF(MOD(M+MP),2).EQ.0) D=-D   ---->    DELETE THE LIN
 
 
 !------------------------------------------------------------------------------
-subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nvertices,xvert,yvert,zvert,nface,lmax, &
+subroutine shapef(npoi, &
+  aface,bface,cface,dface, &
+  tolvdist, toleuler, nmin, &
+  nvertices,xvert,yvert,zvert, &
+  nface, lmax, &
   keypan, dlt, npan, &
   nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
   thetas_s, lmifun_s, nfun, & ! shape function
-  ibmaxd, meshnd, npand) ! new input parameters after inc.geometry was removed
+  ibmaxd, meshnd, npand)
 
   use shape_constants_mod, only: verbosity
   use shapecriticalpoints_mod, only: criticalshapepoints
@@ -160,53 +164,40 @@ subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nverti
   integer, intent(in) :: meshnd
   integer, intent(in) :: npand
 
-  !integer ::   nvertices(nfaced)
-  !double precision ::    aface(nfaced),bface(nfaced),cface(nfaced),dface(nfaced)
-  !double precision ::    xvert(nvertd,nfaced),yvert(nvertd,nfaced), &
-  !zvert(nvertd,nfaced)
+  integer, intent(in) :: nvertices(:) ! (nfaced)
+  double precision, intent(in) :: aface(:),bface(:),cface(:),dface(:) ! (nfaced)
+  double precision, intent(in) :: xvert(:,:),yvert(:,:), zvert(:,:) ! (nvertd,nfaced)
+  ! output radial grid
+  double precision, intent(out) :: xrn(meshnd), drn(meshnd)
+  integer, intent(out) :: npan, meshn, nm(npand)
+  ! output shape functions
+  double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
+  integer, intent(out) :: lmifun_s(ibmaxd)
+  integer, intent(out) :: nfun
 
-  integer :: nvertices(:) ! (nfaced)
-  double precision :: aface(:),bface(:),cface(:),dface(:) ! (nfaced)
-  double precision :: xvert(:,:),yvert(:,:), zvert(:,:) ! (nvertd,nfaced)
-  ! output
-  integer ::   nm(npand)
-  double precision  ::   xrn(meshnd)
-  double precision  ::   drn(meshnd)
-  integer ::   npan
-  integer ::   meshn
-
-  double precision ::  thetas_s(meshnd,ibmaxd)
-  integer :: lmifun_s(ibmaxd)
-  integer :: nfun
-
-  ! local, automatic array
-  double precision ::  crt(npand)
-  integer :: nfaced, nvertd
-  integer :: npoints_new
-
-  nfaced = size(nvertices)
-  nvertd = size(xvert, 1)
+  double precision :: crt(npand) ! critical points
 
   nm = 0
   xrn = 0.d0
   drn = 0.d0
+  crt = 0.d0
+  meshn = 0
+  npan = 0
+  
   thetas_s = 0.d0
   lmifun_s = 0
+  nfun = 0
 
-  ist = createtetra(nfaced, nfaced*nvertd)
+  ist = createtetra(size(nvertices), size(nvertices)*size(xvert,1))
 
-  call criticalShapePoints(aface,bface,cface,dface, tolvdist, toleuler, nvertices,xvert,yvert,zvert,nface,lmax, npan, crt, npand)
+  call criticalShapePoints(aface,bface,cface,dface, tolvdist, toleuler, nvertices, xvert,yvert,zvert, nface,lmax, npan, crt) ! output: npan, crt
 
-  ! increase number of mesh points if necessary but use at least 'npoi' points
-  ! (otherwise mesh0 complains)
-  npoints_new = max(npoi, npan*nmin)
-
-  call mesh(crt,npan,nm,xrn,drn,meshn,npoints_new, 0,nmin,meshnd,npand,verbosity)
+  ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
+  call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)
 
   call shapeIntegration(lmax, face(1:nface), meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  ! in old code 1 is substracted from npan - why?
-  npan = npan - 1
+  npan = npan - 1 ! in old code 1 is substracted from npan - why?
 
   ist = destroytetra()
 
