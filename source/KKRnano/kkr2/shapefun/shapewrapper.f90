@@ -12,10 +12,8 @@ subroutine shapewrapper(npoi,aface,bface,cface,dface, &
   use shapefunctions_mod, only: shapef
   implicit none
 
-  integer :: nvertd !< maximal number of cell vertices
-  integer :: nfaced !< maximal number of cell faces
-
-
+  integer, intent(in) :: nvertd !< maximal number of cell vertices
+  integer, intent(in) :: nfaced !< maximal number of cell faces
   integer, intent(in) :: npoi
   integer, intent(in) :: nmin
   integer, intent(in) :: nface
@@ -25,20 +23,17 @@ subroutine shapewrapper(npoi,aface,bface,cface,dface, &
   integer, intent(in) :: meshnd
   integer, intent(in) :: npand
 
-  integer :: nvertices(nfaced)
-  double precision :: aface(nfaced), bface(nfaced), cface(nfaced), dface(nfaced)
-  double precision :: xvert(nvertd,nfaced), yvert(nvertd,nfaced), zvert(nvertd,nfaced)
+  integer, intent(in) :: nvertices(nfaced)
+  double precision, intent(in) :: aface(nfaced), bface(nfaced), cface(nfaced), dface(nfaced)
+  double precision, intent(in) :: xvert(nvertd,nfaced), yvert(nvertd,nfaced), zvert(nvertd,nfaced)
 
-  ! output
-  integer, intent(out) ::   nm(npand)
-  double precision, intent(out)  ::   xrn(meshnd)
-  double precision, intent(out)  ::   drn(meshnd)
-  integer, intent(out) ::   npan
-  integer, intent(out) ::   meshn
-
-  double precision, intent(out) ::  thetas_s(meshnd,ibmaxd)
-  integer, intent(out) :: lmifun_s(ibmaxd)
-  integer, intent(out) :: nfun
+  ! output radial grid
+  integer, intent(out) :: nm(npand), npan, meshn
+  double precision, intent(out) :: xrn(meshnd), drn(meshnd)
+  ! output shape functions
+  double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
+  integer, intent(out) :: lmifun_s(ibmaxd) ! lm-index (compressed storage)
+  integer, intent(out) :: nfun ! number of non-trivial shape functions
 
   double precision, parameter :: tolvdist = 1.d-12, toleuler = 1.d-10
   integer, parameter :: keypan = 0

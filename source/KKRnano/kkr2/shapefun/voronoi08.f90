@@ -1,8 +1,4 @@
 !***********************************************************************
-subroutine voronoi08( &
-     nvec,rvec,nvertmax,nfaced,weight0,weight,tolvdist,tolarea, &
-     rmt,rout,volume,nface,a3,b3,c3,d3,nvert,xvert,yvert,zvert, &
-     output)
   ! Given a cluster of atomic positions at RVEC(3,NVEC), this subroutine
   ! returns information about the Voronoi cell around the origin. It is
   ! supposed, of course, that the origin corresponds to an atomic position
@@ -61,71 +57,62 @@ subroutine voronoi08( &
   !
   !
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
+  subroutine voronoi08(nvec,rvec,nvertmax,nfaced,weight0,weight,tolvdist,tolarea, &
+     rmt,rout,volume,nface,a3,b3,c3,d3,nvert,xvert,yvert,zvert, output)
 
   use voronoi08_mod, only: distplane, dsort, normalplane0, polyhedron08 ! import helper routines
   implicit none
 
   ! Input:
-  integer  nvec,nvertmax,nfaced
-  real*8   rvec(3,nfaced)
-  real*8   weight0,weight(nfaced)  ! Weight of central atom, 
+  integer, intent(in) :: nvec, nvertmax, nfaced
+  double precision, intent(in) :: rvec(3,nfaced) ! cluster positions without the origin among them
+  double precision, intent(in) :: weight0, weight(nfaced)  ! Weight of central atom, 
   !                          !   and of all others (dimensioned as RVEC). 
-  real*8  tolvdist              ! Max. tolerance for distance of two vertices
-  real*8  tolarea               ! Max. tolerance for area of polygon face
-  logical output  ! test output
+  double precision, intent(in) :: tolvdist ! Max. tolerance for distance of two vertices
+  double precision, intent(in) :: tolarea  ! Max. tolerance for area of polygon face
+  logical, intent(in) :: output ! test output
 
   ! Output:
-  integer nface
-  integer nvert(nfaced)
-  real*8              volume
-  real*8              a3(nfaced),b3(nfaced),c3(nfaced),d3(nfaced)
-  real*8              xvert(nvertmax,nfaced),yvert(nvertmax,nfaced), &
-       zvert(nvertmax,nfaced)
-  real*8              rmt,rout
+  integer, intent(out) :: nface, nvert(nfaced)
+  double precision, intent(out) :: volume, rmt, rout
+  double precision, intent(out) :: a3(nfaced),b3(nfaced),c3(nfaced),d3(nfaced) ! planes
+  double precision, intent(out) :: xvert(nvertmax,nfaced), yvert(nvertmax,nfaced), zvert(nvertmax,nfaced) ! vertices
+  
   ! Inside:
   integer ivec,iface,ivert,i,nverttot
   integer nplane
-  real*8           x1,y1,z1,x2,y2,z2,x3,y3,z3,tetrvol,rsq,tau
-  real*8           facearea(nfaced),trianglearea   
-  real*8           temp
-
+  double precision  x1,y1,z1,x2,y2,z2,x3,y3,z3,tetrvol,rsq,tau
+  double precision  facearea(nfaced),trianglearea   
+  double precision  temp
   integer isort(nfaced),pos,inew    ! Index for sorting
-  real*8 rsort(nfaced)              ! Aux. function for sorting
-  real*8 atmp(nfaced),btmp(nfaced),ctmp(nfaced),dtmp(nfaced) ! For sorting
-  real*8 xvtmp(nvertmax,nfaced),yvtmp(nvertmax,nfaced)       ! For sorting
-  real*8 zvtmp(nvertmax,nfaced)                              ! For sorting
+  double precision rsort(nfaced)              ! Aux. function for sorting
+  double precision atmp(nfaced),btmp(nfaced),ctmp(nfaced),dtmp(nfaced) ! For sorting
+  double precision xvtmp(nvertmax,nfaced),yvtmp(nvertmax,nfaced)       ! For sorting
+  double precision zvtmp(nvertmax,nfaced)                              ! For sorting
   integer nvtmp(nfaced)                                      ! For sorting
   integer npanel
 
   !---------------------------------------------------------------
   ! Check that the origin is not included in RVEC.
-  do ivec = 1,nvec
-     if (dabs(rvec(1,ivec))+dabs(rvec(2,ivec))+dabs(rvec(3,ivec)) &
-          .lt.1.d-12) then
+  do ivec = 1, nvec
+     if (sum(abs(rvec(1:3,ivec))) < 1.d-12) then
         write(*,*) 'VORONOI: Vector',ivec,'is zero.'
         stop 'VORONOI'
      endif
-  enddo
+  enddo ! ivec
   !---------------------------------------------------------------
   ! Define the planes as normal to the vectors RVEC, passing from t as
   ! in eq. (2) above:
-  do ivec = 1,nvec
-     rsq = rvec(1,ivec) * rvec(1,ivec) &
-          + rvec(2,ivec) * rvec(2,ivec) &
-          + rvec(3,ivec) * rvec(3,ivec)
-     tau = 0.5d0*((weight0-weight(ivec))/rsq + 1.d0)
-     call normalplane0( &
-          rvec(1,ivec),rvec(2,ivec),rvec(3,ivec),tau, &
-          a3(ivec),b3(ivec),c3(ivec),d3(ivec))
-  enddo
+  do ivec = 1, nvec
+     rsq = rvec(1,ivec)**2 + rvec(2,ivec)**2 + rvec(3,ivec)**2
+     tau = 0.5d0*((weight0 - weight(ivec))/rsq + 1.d0)
+     call normalplane0(rvec(1,ivec),rvec(2,ivec),rvec(3,ivec), tau, a3(ivec),b3(ivec),c3(ivec), d3(ivec))
+  enddo ! ivec
   !---------------------------------------------------------------
   ! Find the Voronoi polyhedron.
   nplane = nvec
   if (output) write(*,*) 'Entering POLYHEDRON08'
-  call polyhedron08( &
-       nplane,nvertmax,nfaced,tolvdist,tolarea, &
-       a3,b3,c3,d3, &
-       nface,nvert,xvert,yvert,zvert,output)
+  call polyhedron08(nplane, nvertmax, nfaced, tolvdist, tolarea, a3,b3,c3,d3, nface, nvert, xvert,yvert,zvert, output)
   if (output) write(*,*) 'Exited POLYHEDRON08'
 
   !---------------------------------------------------------------
@@ -136,12 +123,12 @@ subroutine voronoi08( &
   ! Algorithm requires that the face is a convex polygon with the 
   ! vertices ordered (doesn't matter if they are clock- or anticlockwise).
   volume = 0.d0
-  do iface = 1,nface
+  do iface = 1, nface
      x1 = xvert(1,iface)
      y1 = yvert(1,iface)
      z1 = zvert(1,iface)
      facearea(iface) = 0.d0
-     do ivert = 2,nvert(iface)-1
+     do ivert = 2, nvert(iface)-1
         x2 = xvert(ivert,iface)
         y2 = yvert(ivert,iface)
         z2 = zvert(ivert,iface)
@@ -149,74 +136,60 @@ subroutine voronoi08( &
         y3 = yvert(ivert+1,iface)
         z3 = zvert(ivert+1,iface)
         tetrvol = x1*(y2*z3-y3*z2)+x2*(y3*z1-y1*z3)+x3*(y1*z2-y2*z1)
-        volume = volume + dabs(tetrvol)
-        trianglearea = 0.5d0 * dsqrt( &
-             ( x1*y2 + x2*y3 + x3*y1 - y2*x3 - y3*x1 - y1*x2)**2 &
+        volume = volume + abs(tetrvol)
+        trianglearea = 0.5d0 * sqrt( &
+               ( x1*y2 + x2*y3 + x3*y1 - y2*x3 - y3*x1 - y1*x2)**2 &
              + ( y1*z2 + y2*z3 + y3*z1 - z2*y3 - z3*y1 - z1*y2)**2 &
              + ( z1*x2 + z2*x3 + z3*x1 - x2*z3 - x3*z1 - x1*z2)**2 )
-        ! wrong           TRIANGLEAREA = 0.5d0 * DABS(
-        !     &           (X2-X1)*(X3-X1)+(Y2-Y1)*(Y3-Y1)+(Z2-Z1)*(Z3-Z1) )
         facearea(iface) = facearea(iface)+ trianglearea
-     enddo
-  enddo
+     enddo ! ivert
+  enddo ! iface
   volume = volume/6.d0
 
   if (output) then
     write(6,*) ' Polyhedron properties '
     write(6,*) ' Number of faces : ',nface
-  end if
+  endif ! output
 
   if (output) then
      do iface=1,nface
-        write(6,201) iface,nvert(iface),facearea(iface)
-201     format(' Face ',i4,'   has ',i4,' vertices ','; Area= ',e12.4)   ! 
-        do ivert=1,nvert(iface)
-           write(*,9000) ivert,xvert(ivert,iface),yvert(ivert,iface) &
-                ,zvert(ivert,iface)
-        enddo
-        write(*,9010) a3(iface),b3(iface),c3(iface),d3(iface)
-     end do
-
+        write(6,fmt="(' Face ',i4,'   has ',i4,' vertices ','; Area= ',e12.4)") iface, nvert(iface), facearea(iface)
+        do ivert = 1, nvert(iface)
+           write(*,fmt="(i5,4e16.8)") ivert, xvert(ivert,iface), yvert(ivert,iface), zvert(ivert,iface)
+        enddo ! ivert
+        write(*,fmt="(' Face coefficients:',4e16.8)") a3(iface),b3(iface),c3(iface),d3(iface)
+     enddo ! iface
     write(6,*) 'The Volume is : ',volume
-  endif
+  endif ! output
 
-9000 format(i5,4e16.8)
-9010 format(' Face coefficients:',4e16.8)
   !---------------------------------------------------------------
   ! Find RMT:
   rmt = distplane(a3(1),b3(1),c3(1),d3(1))
   do iface = 2,nface
-     temp = distplane(a3(iface),b3(iface),c3(iface),d3(iface))
-     if (temp.lt.rmt) rmt = temp
-  enddo
-  ! Fint ROUT:
+     temp = distplane(a3(iface),b3(iface),c3(iface), d3(iface))
+     if (temp < rmt) rmt = temp
+  enddo ! iface
+  
+  ! Fint ROUT, the largest radius of all vertices
   rout = 0.d0
   do iface = 1,nface
-     do ivert = 1,nvert(iface)
-        temp = xvert(ivert,iface)*xvert(ivert,iface) &
-             + yvert(ivert,iface)*yvert(ivert,iface) &
-             + zvert(ivert,iface)*zvert(ivert,iface)
-        if (temp.gt.rout) rout = temp
-     enddo
-  enddo
-  rout = dsqrt(rout)
+     do ivert = 1, nvert(iface)
+        temp = xvert(ivert,iface)**2 + yvert(ivert,iface)**2 + zvert(ivert,iface)**2
+        if (temp > rout) rout = temp
+     enddo ! ivert
+  enddo ! iface
+  rout = sqrt(rout)
 
-  if (output) write(*,9020) rmt,rout,rmt*100/rout
+  if (output) write(*,fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %')") rmt,rout,rmt*100/rout
 
-9020 format('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8, &
-       '; RATIO=',f12.2,' %')
   !---------------------------------------------------------------
   ! Sort faces:
   do iface = 1,nface
-     rsort(iface) = &
-          distplane(a3(iface),b3(iface),c3(iface),d3(iface))
-     rsort(iface) = 100000000.d0  * rsort(iface) + &
-          100000.d0  * c3(iface)    + &
-          100.d0  * b3(iface)    + &
-          0.1d0 * a3(iface)
-  enddo
-  call dsort(rsort,isort,nface,pos)
-  !     Rearrange using a temporary array
+    rsort(iface) = 1.d8*distplane(a3(iface), b3(iface), c3(iface), d3(iface)) + 1.d5*c3(iface) + 1.d2*b3(iface) + 0.1d0*a3(iface)
+  enddo ! iface
+  
+  call dsort(rsort, isort, nface)
+  ! Rearrange using a temporary array
   atmp(:) = a3(:)
   btmp(:) = b3(:)
   ctmp(:) = c3(:)
@@ -225,7 +198,7 @@ subroutine voronoi08( &
   yvtmp(:,:) = yvert(:,:)
   zvtmp(:,:) = zvert(:,:)
   nvtmp(1:nface) = nvert(1:nface)
-  do iface = 1,nface
+  do iface = 1, nface
      inew = isort(iface)
      a3(inew) = atmp(iface)
      b3(inew) = btmp(iface)
@@ -235,10 +208,10 @@ subroutine voronoi08( &
      yvert(:,inew) = yvtmp(:,iface)
      zvert(:,inew) = zvtmp(:,iface)
      nvert(inew) = nvtmp(iface)
-  enddo
+  enddo ! iface
   !---------------------------------------------------------------
 
-end subroutine voronoi08
+endsubroutine voronoi08
 
 
 
