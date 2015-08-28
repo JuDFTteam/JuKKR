@@ -18,7 +18,7 @@
 !     include 'inc.geometry':   integer, parameter (lmaxd=25,ndim=1000)
       real*8, intent(in) :: x1, x2, dlt, arg, fd
       integer, intent(in) :: lmax
-      integer, intent(in) :: isi ! sign
+      integer(kind=1), intent(in) :: isi ! sign
       integer, intent(in) :: itype ! itype in [0, 1]
       real*8, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1) ! uses more memory than needed, about 55% used
       

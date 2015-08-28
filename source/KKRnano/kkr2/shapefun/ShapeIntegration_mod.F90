@@ -29,7 +29,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
 
   use shape_constants_mod, only: pi, lmaxd1, isumd, icd, iced
   use PolygonFaces_mod, only: rd, fa, fb, fd, isignu ! vertex properties read-only
-!   use PolygonFaces_mod, only: ntt, r0, alpha, beta, gamma ! face properties read-only ! deprecated
+! use PolygonFaces_mod, only: ntt, r0, alpha, beta, gamma ! face properties read-only ! deprecated
   use PolygonFaces_mod, only: face ! face properties
   
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
@@ -53,24 +53,24 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   real*8 :: arg1
   real*8 :: arg2
 
-  integer :: ivtot, iface, itet, i, m, ic, ic0, ice, ice0, ib, isu, isu0, l, mp, k0, k, is, imax, mo, ip, ipmax, jlm
-  integer :: ilm, mlm, ir
-
+  integer :: ivtot, iface, itet, i, m, ic, ice, isu, isu0, l, mp, k0, k, is, imax, mo, ip, ipmax, ilm, mlm, ir
+!   integer :: ib, ic0, ice0
+  
   real*8, allocatable :: rupsq_precomputed(:) ! dim nvtotd
   real*8, allocatable :: dmatl_precomputed(:,:)
 
   real*8 :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
   real*8 :: sm(2,0:lmaxd1) ! this could be reshaped into sm(-lmaxd1:lmaxd1)
 !   real*8 :: smm(-lmaxd1:lmaxd1)
-  real*8 :: fk, fl, fpisq
+  real*8 :: fk, fl, fpisq, rupsq
 
   ! local automatic arrays
   logical(kind=1) :: nonzero(ibmaxd)
   real*8 :: b(ibmaxd)
   logical, parameter :: precompute_dmtl = .true. ! needs some memory but reduces the number of calls to d_real from meshn*nface to nface
+  logical, parameter :: precompute_rupsq = .false.
   
-  allocate(rupsq_precomputed(size(rd))) ! dim: nvtotd, sum(ntt) should suffice, or?
- 
+  if (precompute_rupsq) allocate(rupsq_precomputed(size(rd)))
   if (precompute_dmtl) allocate(dmatl_precomputed(isumd,nface))
   
   fpisq = sqrt(4.d0*pi)
@@ -80,7 +80,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   thetas_s = 0.d0
 
   !.......................................................................
-  !     e x p a n s i o n    c o e f f i c i e n t s
+  !     expansion coefficients
   !.......................................................................
   call ccoef(lmax, cl,c ) ! sets the coefficients: 
   !  cl in m-order (0,(m,-m, m=1..l), l=0,lmax) ??
@@ -105,7 +105,7 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   
     do itet = 1, face(iface)%ntt ! ntt(iface)
       ivtot = ivtot+1
-      rupsq_precomputed(ivtot) = sqrt(rd(ivtot)**2 - face(iface)%r0**2) ! r0(iface)**2) ! obviously |rd| >= |r0| 
+!     rupsq_precomputed(ivtot) = sqrt(rd(ivtot)**2 - face(iface)%r0**2) ! r0(iface)**2) ! obviously |rd| >= |r0| 
     enddo ! itet
     
     if (precompute_dmtl) then
@@ -121,14 +121,14 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   !===================== split ??? =======================================
 
   !.......................................................................
-  !     l o o p    o v e r    r a d i a l    m e s h    p o i n t s
+  !     loop over radial mesh points
   !.......................................................................
   meshloop: do ir = 1, meshn
     b(1:mlm) = 0.d0
     ivtot = 0
     
     !.......................................................................
-    !     l o o p    o v e r    p y r a m i d s
+    !     loop over pyramids
     !.......................................................................
 py: do iface = 1, nface
 
@@ -144,7 +144,7 @@ py: do iface = 1, nface
       s = 0.d0 ! init s
       
       !.......................................................................
-      !     l o o p     o v e r     t e t r a h e d r a
+      !     loop over tetrahedra
       !.......................................................................
       do itet = 1, face(iface)%ntt ! ntt(iface)
         ivtot = ivtot+1 ! forward total vertex index
@@ -157,8 +157,13 @@ py: do iface = 1, nface
         else  ! r <= rd(ivtot)
         
           rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2) ! r0(iface)**2)
-          rap  = rupsq_precomputed(ivtot)/rdown
-          arg2 = rupsq_precomputed(ivtot)/face(iface)%r0 ! /r0(iface)
+          if (precompute_rupsq) then
+            rupsq = rupsq_precomputed(ivtot)
+          else
+            rupsq = sqrt(rd(ivtot)**2 - face(iface)%r0**2)
+          endif
+          rap  = rupsq/rdown
+          arg2 = rupsq/face(iface)%r0 ! /r0(iface)
           fk = min(fb(ivtot), max(fa(ivtot), fd(ivtot) - acos(rap)))
           fl = min(fb(ivtot), max(fa(ivtot), fd(ivtot) + acos(rap)))
           
@@ -174,7 +179,7 @@ py: do iface = 1, nface
       enddo ! itet ! tetraeder loop
 
       !.......................................................................
-      !  i n t e g r a l   e x p a n s i o n        b a c k - r o t a t i o n
+      !  integral expansion back-rotation
       !.......................................................................
 
       if (precompute_dmtl) then
@@ -255,7 +260,7 @@ py: do iface = 1, nface
 
     enddo py
     !.......................................................................
-    !     d e f i n e s   a n d    s a v e s   s h a p e    f u n c t i o n s
+    !     defines and saves shapefunctions
     !.......................................................................
     b(1:mlm) = -b(1:mlm)/fpisq ! scale
     b(1) = fpisq + b(1) ! add constant sqrt(4*pi) in the l=0,m=0 channel
@@ -266,28 +271,26 @@ py: do iface = 1, nface
   enddo meshloop
   
   if (precompute_dmtl) deallocate(dmatl_precomputed)
+  if (precompute_rupsq) deallocate(rupsq_precomputed)
 
   !now rearrange thetas_s array that it contains only non-zero shapefunctions
   !this is done "in-place"
 
   lmifun_s = 0 ! lm-index of this shape function
 
-  jlm = 0
+  nfun = 0 ! number of non-zero shape function
   do ilm = 1, mlm ! this loop must run ordered in serial
     if (nonzero(ilm)) then
 
-      jlm = jlm + 1
-      lmifun_s(jlm) = ilm
+      nfun = nfun + 1
+      lmifun_s(nfun) = ilm
 
-      if (jlm < ilm) thetas_s(1:meshn,jlm) = thetas_s(1:meshn,ilm) ! compress the storage by overwriting functions that are zero or close to zero
+      if (nfun < ilm) thetas_s(1:meshn,nfun) = thetas_s(1:meshn,ilm) ! compress the storage by overwriting functions that are zero or close to zero
 
     else
       thetas_s(1:meshn,ilm) = 0.d0 ! clear to exact zeros
     endif ! nonzero
   enddo ! ilm
-
-  nfun = count(nonzero(1:mlm)) ! count non-zero shape functions
-  CHECKASSERT(jlm == nfun)
   
 endsubroutine shapeIntegration
 
