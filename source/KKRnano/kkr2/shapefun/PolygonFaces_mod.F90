@@ -39,13 +39,15 @@ module PolygonFaces_mod
     integer, intent(in) :: nfaced, nvtotd
     allocate(&!ntt(nfaced), r0(nfaced), alpha(nfaced), beta(nfaced), gamma(nfaced), &
       face(nfaced), &
-      rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), stat=ist)
+      rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), &
+      stat=ist)
   endfunction ! create
 
   integer function destroytetra() result(ist)
     deallocate(&!ntt, r0, alpha, beta, gamma, &
       face, &
-      rd, fa, fb, fd, isignu, stat=ist)
+      rd, fa, fb, fd, isignu, &
+      stat=ist)
   endfunction ! destroy
 
 endmodule ! PolygonFaces_mod

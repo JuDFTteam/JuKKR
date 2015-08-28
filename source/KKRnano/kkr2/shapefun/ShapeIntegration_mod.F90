@@ -25,26 +25,27 @@ module ShapeIntegration_mod
 !> @param[in]  meshnd
 !> @param[in]  ibmaxd
 
-subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
+subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  use shape_constants_mod, only: pi, lmaxd1, isumd, icd, iced
+  use shape_constants_mod, only: pi, lmaxd1, icd, iced!, isumd
 ! use PolygonFaces_mod, only: rd, fa, fb, fd, isignu ! vertex properties read-only
 ! use PolygonFaces_mod, only: ntt, r0, alpha, beta, gamma ! face properties read-only ! deprecated
-  use PolygonFaces_mod, only: face ! face properties
-  use PolygonFaces_mod, only: TetrahedronAngles
+!   use PolygonFaces_mod, only: face ! face properties
+  use PolygonFaces_mod, only: PolygonFace, TetrahedronAngles
   
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
 
-  integer, intent(in) :: lmax, nface, meshn
+  integer, intent(in) :: lmax, meshn
   real*8, intent(in) :: xrn(meshnd)
   real*8, intent(in) :: dlt
-  real*8, intent(out) :: thetas_s(meshnd,ibmaxd)
-  integer, intent(out) :: lmifun_s(ibmaxd)
   integer, intent(in) :: meshnd
   integer, intent(in) :: ibmaxd
+  type(PolygonFace), intent(in) :: face(:)
+  integer, intent(out) :: lmifun_s(ibmaxd)
+  real*8, intent(out) :: thetas_s(meshnd,ibmaxd)
   integer, intent(out) :: nfun
+  
 
-  real*8 :: dmatl(isumd)
   real*8 :: cl(icd)
   real*8 :: c(iced), c_table(-lmaxd1:lmaxd1,0:lmaxd1)
 
@@ -54,11 +55,10 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   real*8 :: arg1
   real*8 :: arg2
 
-  integer :: ivtot, iface, itet, i, m, ic, ice, isu, isu0, l, mp, k0, k, is, imax, mo, ip, ipmax, ilm, mlm, ir
+  integer :: iface, itet, i, m, ic, ice, isu, isu0, l, mp, k0, k, is, imax, mo, ip, ipmax, ilm, mlm, ir, ist, isumd, nface 
 !   integer :: ib, ic0, ice0
   
-  real*8, allocatable :: rupsq_precomputed(:) ! dim nvtotd
-  real*8, allocatable :: dmatl_precomputed(:,:)
+  real*8, allocatable :: dmatl(:,:) ! (isumd,nface)
   type(TetrahedronAngles) :: t1
   
   real*8 :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
@@ -67,13 +67,13 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   real*8 :: fk, fl, fpisq, rupsq
 
   ! local automatic arrays
-  logical(kind=1) :: nonzero(ibmaxd)
+  logical(kind=1) :: nontrivial(ibmaxd) ! the trivial shape function is zero from ilm>1 and sqrt(4*pi) for ilm==1
   real*8 :: b(ibmaxd)
-  logical, parameter :: precompute_dmtl = .true. ! needs some memory but reduces the number of calls to d_real from meshn*nface to nface
-  logical, parameter :: precompute_rupsq = .false.
+  integer, parameter :: idmatl_RECOMPUTE = 0 ! recompute every time, calls d_real meshn*nface times
+  integer, parameter :: idmatl_MEMORIZE  = 1 ! needs some memory but calls d_real only nface times
+  integer, parameter :: idmatl = idmatl_MEMORIZE ! must be in {0, 1}
   
-!   if (precompute_rupsq) allocate(rupsq_precomputed(size(rd)))
-  if (precompute_dmtl) allocate(dmatl_precomputed(isumd,nface))
+  CHECKASSERT(idmatl == idmatl**2) ! check that idmatl is in {0, 1}
   
   fpisq = sqrt(4.d0*pi)
 
@@ -100,25 +100,21 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   enddo ! l
   
   ! todo: do the equivalent for cl
+  ! ...  
   
+  nface = size(face, 1) ! number of faces
   
-  ivtot = 0
-  do iface = 1, nface
+  isumd = (lmaxd1*(3+4*(lmaxd1+1)*(lmaxd1+2)))/3+1 !< number of compressed rotation matrix elements = sum_l=0..lmaxd1 (2*l+1)^2
+  allocate(dmatl(isumd,0:nface*idmatl), stat=ist)
   
-    do itet = 1, face(iface)%ntt ! ntt(iface)
-      ivtot = ivtot+1
-!     rupsq_precomputed(ivtot) = sqrt(rd(ivtot)**2 - face(iface)%r0**2) ! r0(iface)**2) ! obviously |rd| >= |r0| 
-    enddo ! itet
-    
-    if (precompute_dmtl) then
-      ! calculate transformation matrices for spherical harmonics
-!       call d_real(lmax,alpha(iface),beta(iface),gamma(iface),dmatl_precomputed(:,iface),isumd,lmaxd1)
-!       call d_real(lmax, [alpha(iface), beta(iface), gamma(iface)], dmatl_precomputed(:,iface), isumd, lmaxd1)
-      call d_real(lmax, face(iface)%euler, dmatl_precomputed(:,iface), isumd, lmaxd1)
-    endif ! precompute_dmtl
-    
-  enddo ! iface
-  nonzero(1:mlm) = .false. ! init 
+  if (idmatl == idmatl_MEMORIZE) then
+    do iface = 1, nface
+      ! calculate transformation matrices for spherical harmonics (once only)
+      call d_real(lmax, face(iface)%euler, dmatl(:,iface), isumd, lmaxd1)
+    enddo ! iface
+  endif ! memorize
+  
+  nontrivial(1:mlm) = .false. ! init
 
   !===================== split ??? =======================================
 
@@ -126,59 +122,30 @@ subroutine shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nf
   !     loop over radial mesh points
   !.......................................................................
   meshloop: do ir = 1, meshn
-    b(1:mlm) = 0.d0
-!     ivtot = 0
+  
+    b(1:mlm) = 0.d0 ! init shape function temporary at this radius
     
     !.......................................................................
     !     loop over pyramids
     !.......................................................................
 py: do iface = 1, nface
 
-      if (xrn(ir) <= face(iface)%r0) then ! r0(iface)) then
+      if (xrn(ir) <= face(iface)%r0) then
         ! the radius is smaller than the distance of the base points from the origin.
-        ! so, no contribution to the shapefunctions is expected (except for l=0,m=0 which is treated analytically.
-!         ivtot = ivtot + face(iface)%ntt ! ntt(iface) ! fast forward total vertex index
+        ! so, no contribution to the shapefunctions is expected (except for l=0,m=0 which is treated analytically).
         cycle py ! jump to the head of the loop over pyramids (loop counter iface)
         
       endif ! r <= r0
       
-      arg1 = face(iface)%r0/xrn(ir) ! r0(iface)/xrn(ir)
+      arg1 = face(iface)%r0/xrn(ir)
       s = 0.d0 ! init s
       
       !.......................................................................
       !     loop over tetrahedra
       !.......................................................................
       do itet = 1, face(iface)%ntt ! ntt(iface)
-!         ivtot = ivtot+1 ! forward total vertex index
-!         
-!         if (xrn(ir) <= rd(ivtot)) then
-!         
-!           call pintg(fa(ivtot), fb(ivtot), dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
-!           s = s + s1
-!           
-!         else  ! r <= rd(ivtot)
-!         
-!           rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2) ! r0(iface)**2)
-!           if (precompute_rupsq) then
-!             rupsq = rupsq_precomputed(ivtot)
-!           else
-!             rupsq = sqrt(rd(ivtot)**2 - face(iface)%r0**2)
-!           endif
-!           rap  = rupsq/rdown
-!           arg2 = rupsq/face(iface)%r0 ! /r0(iface)
-!           fk = min(fb(ivtot), max(fa(ivtot), fd(ivtot) - acos(rap)))
-!           fl = min(fb(ivtot), max(fa(ivtot), fd(ivtot) + acos(rap)))
-!           
-!           call pintg(fa(ivtot), fk,        dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
-!           s = s + s1
-!           call pintg(fk,        fl,        dlt, s1, lmax, isignu(ivtot), arg2, fd(ivtot), 1)
-!           s = s + s1
-!           call pintg(fl,        fb(ivtot), dlt, s1, lmax, isignu(ivtot), arg1, fd(ivtot), 0)
-!           s = s + s1
-!           
-!         endif ! r <= rd(ivtot)
 
-        t1 = face(iface)%ta(itet) ! copy, todo: text-pointer
+        t1 = face(iface)%ta(itet) ! get a work copy of the TetrahedronAngles
 
         if (xrn(ir) <= t1%rd) then
         
@@ -187,8 +154,10 @@ py: do iface = 1, nface
           
         else  ! r <= t1%rd
         
-          rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2) ! r0(iface)**2)
-          rupsq = sqrt(t1%rd**2 - face(iface)%r0**2)
+          ! rupsq could be precomputed since it depends only on properties of the tetrahedron and the face
+          rupsq = sqrt(t1%rd**2 - face(iface)%r0**2) 
+          
+          rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2)
           rap  = rupsq/rdown
           arg2 = rupsq/face(iface)%r0
           fk = min(t1%fb, max(t1%fa, t1%fd - acos(rap)))
@@ -209,13 +178,10 @@ py: do iface = 1, nface
       !  integral expansion back-rotation
       !.......................................................................
 
-      if (precompute_dmtl) then
-        dmatl = dmatl_precomputed(:,iface)
-      else  ! precompute
+      if (idmatl /= idmatl_MEMORIZE) then
         ! calculate transformation matrices for spherical harmonics (for each ir again!)
-        ! call d_real(lmax, [alpha(iface), beta(iface), gamma(iface)], dmatl, isumd, lmaxd1)
-        call d_real(lmax, face(iface)%euler, dmatl, isumd, lmaxd1)
-      endif ! precompute
+        call d_real(lmax, face(iface)%euler, dmatl(:,0), isumd, lmaxd1)
+      endif ! recompute every time
       
 !     ib = 0
       ic = 0
@@ -266,6 +232,7 @@ py: do iface = 1, nface
         
         
         ! rotate back in the l-subspace and add to the shape functions
+        ! still uses the m-ordering 0,1,-1,...,l,-l for m and mp
         imax = 1
         do m = 0, l
           do i = 1, imax
@@ -275,7 +242,7 @@ py: do iface = 1, nface
             do mp = 0, l
               do ip = 1, ipmax
                 isu = isu+1
-                b(ilm) = b(ilm) + sm(ip,mp)*dmatl(isu)
+                b(ilm) = b(ilm) + sm(ip,mp)*dmatl(isu,idmatl*iface)
               enddo ! ip
               ipmax = 2
             enddo ! mp
@@ -292,13 +259,13 @@ py: do iface = 1, nface
     b(1:mlm) = -b(1:mlm)/fpisq ! scale
     b(1) = fpisq + b(1) ! add constant sqrt(4*pi) in the l=0,m=0 channel
     
-    nonzero = nonzero .or. (abs(b(:)) > 1d-6)
+    nontrivial = nontrivial .or. (abs(b(:)) > 1d-6)
+    
     thetas_s(ir,1:mlm) = b(1:mlm)
     
   enddo meshloop
   
-  if (precompute_dmtl) deallocate(dmatl_precomputed)
-  if (precompute_rupsq) deallocate(rupsq_precomputed)
+  deallocate(dmatl, stat=ist)
 
   !now rearrange thetas_s array that it contains only non-zero shapefunctions
   !this is done "in-place"
@@ -307,7 +274,7 @@ py: do iface = 1, nface
 
   nfun = 0 ! number of non-zero shape function
   do ilm = 1, mlm ! this loop must run ordered in serial
-    if (nonzero(ilm)) then
+    if (nontrivial(ilm)) then
 
       nfun = nfun + 1
       lmifun_s(nfun) = ilm
@@ -316,7 +283,7 @@ py: do iface = 1, nface
 
     else
       thetas_s(1:meshn,ilm) = 0.d0 ! clear to exact zeros
-    endif ! nonzero
+    endif ! nontrivial
   enddo ! ilm
   
 endsubroutine shapeIntegration

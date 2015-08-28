@@ -144,7 +144,7 @@ subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nverti
   use shapecriticalpoints_mod, only: criticalshapepoints
   use shapestandardmesh_mod, only: mesh
   use shapeintegration_mod, only: shapeintegration
-  use PolygonFaces_mod, only: createtetra, destroytetra
+  use PolygonFaces_mod, only: createtetra, destroytetra, face
   integer :: ist
 
   integer,intent(in) :: npoi
@@ -203,7 +203,7 @@ subroutine shapef(npoi,aface,bface,cface,dface, tolvdist, toleuler, nmin, nverti
 
   call mesh(crt,npan,nm,xrn,drn,meshn,npoints_new, 0,nmin,meshnd,npand,verbosity)
 
-  call shapeIntegration(lmax, nface, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
+  call shapeIntegration(lmax, face(1:nface), meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
   ! in old code 1 is substracted from npan - why?
   npan = npan - 1

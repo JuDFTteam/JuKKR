@@ -117,7 +117,7 @@ module ShapeCriticalPoints_mod
 #endif
       enddo ! ivert
 
-      call crit(iface,nvertices(iface),v,z,ipan,ivtot,toleuler,tolvdist,crt,npand)
+      call crit(iface, nvertices(iface), v, z, ipan, ivtot, toleuler, tolvdist, crt, npand)
 
       if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,face(iface)%ntt
 
@@ -186,11 +186,12 @@ module ShapeCriticalPoints_mod
     !-----------------------------------------------------------------------
     use shape_constants_mod, only: pi, verbosity
     use PolygonFaces_mod, only: face ! new data container for face properties
-    use PolygonFaces_mod, only: rd, isignu, fd, fa, fb ! tetrahedron properties are written here
-    use PolygonFaces_mod, only: TetrahedronAngles
+!   use PolygonFaces_mod, only: rd, isignu, fd, fa, fb ! tetrahedron properties are written here
+    use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
 
     integer, intent(in) :: npand, nvert, iface ! in the future iface will only be needed for verbose output since we will pass the face descriptor to this routine
+!     type(PolygonFace), intent(inout) :: face
     integer, intent(inout) :: ipan, ivtot
     double precision, intent(in) :: toleuler, tolvdist
     double precision, intent(in) :: v(:,:) ! (3,nvertd)
@@ -212,7 +213,7 @@ module ShapeCriticalPoints_mod
     
     !-----------------------------------------------------------------------
 
-    allocate(in(size(v,2)), vz(3,size(v,2)), stat=ist)
+    allocate(in(nvert), vz(3,nvert), stat=ist)
 
 
     if (verbosity > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") iface,z(1:3)
@@ -348,12 +349,12 @@ module ShapeCriticalPoints_mod
           t1%rd = rdd
 !         t1%rupsq = sqrt(rd(ivtot)**2 - face(iface)%r0**2) ! could be introduced here
 
-!         to keep the old one updated          
-          rd(ivtot) = rdd ! store rd
-          isignu(ivtot) = 1
-          fa(ivtot) = t1%fa
-          fb(ivtot) = t1%fb
-          fd(ivtot) = t1%fd
+! !         to keep the old one updated          
+!           rd(ivtot) = rdd ! store rd
+!           isignu(ivtot) = 1
+!           fa(ivtot) = t1%fa
+!           fb(ivtot) = t1%fb
+!           fd(ivtot) = t1%fd
           
           ta(face(iface)%ntt) = t1 ! copy
           
@@ -426,7 +427,7 @@ module ShapeCriticalPoints_mod
         iback = ivtot-nvert+ivert
         ivertp = modulo(ivert, nvert) + 1
         if (.not. in(ivert) .and. .not. in(ivertp)) then
-          isignu(iback) = -1
+!           isignu(iback) = -1
           if (ivert <= face(iface)%ntt) then
             face(iface)%ta(ivert)%isignu = -1
           else
