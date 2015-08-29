@@ -49,6 +49,7 @@ module ShapeGeometryHelpers_mod
     nedged = nvrtd+nfaced-2
 
     allocate(v1(3,nedged), v2(3,nedged), vrt(3,nvrtd))
+    ! todo: change mode from storing copies of vertices to storing indicies ivert and iface only!  
 
     nvrt = 0
     nedge = 0
@@ -93,13 +94,8 @@ module ShapeGeometryHelpers_mod
 !
         new = .true. ! 1:save all different edges
         do iedge = 1, nedge
-          if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
-            if (nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
-          else
-            if (nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
-              if (nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
-            endif
-          endif
+          if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist .or. &
+              nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
         enddo ! iedge
         
         if (new) then
