@@ -87,7 +87,7 @@ module voronoi08_mod
   integer, intent(out) :: nface, nvert(:)
   double precision, intent(out) :: volume, rmt, rout
   double precision, intent(out) :: planes(0:,:)
-  double precision, intent(out) :: vert(3,nvertmax,nfaced) ! vertices
+  double precision, intent(out) :: vert(:,:,:) ! (3,nvertmax,nfaced) ! vertices
   
   ! Inside:
   integer ivec,iface,ivert,i,nverttot
@@ -227,7 +227,7 @@ endsubroutine voronoi08
     double precision, intent(in) :: tolvdist              ! max. tolerance for distance of two vertices
     double precision, intent(in) :: tolarea               ! max. tolerance for area of polygon face
     double precision, intent(inout) :: planes(0:,:)  ! coefs. defining the planes, dimensioned >= nplane.
-    double precision, intent(inout) :: vert(3,nvertmax,nfaced) ! cartesian coords. of vertices for each plane (2nd index is for planes).
+    double precision, intent(inout) :: vert(:,:,:) ! (3,nvertmax,nfaced) ! cartesian coords. of vertices for each plane (2nd index is for planes).
     integer, intent(out) :: nvert(:)  ! number of vertices found for each face
     integer, intent(out) :: nface     ! number of faces found (with nvert>0).
 
@@ -262,7 +262,7 @@ double precision, intent(in) :: planes(0:,:)  ! coefs. defining the planes, dime
 double precision, intent(in) :: tolvdist               ! min. distance between vertices
 integer, intent(out) :: nvert(:)  ! number of vertices found for each face
 integer, intent(out) :: nface     ! number of faces found (with nvert>0).
-double precision, intent(inout) :: vert(3,nvertmax,*) ! cartesian coords. of vertices for each plane ! (2nd index is for planes).
+double precision, intent(inout) :: vert(:,:,: ) ! (3,nvertmax,*) ! cartesian coords. of vertices for each plane ! (2nd index is for planes).
 logical, intent(in) :: output
 
 integer ip1,ip2,ip3,ipl,kpl ! plane indices
@@ -422,7 +422,7 @@ do ipl = 1, nplane
     enddo ! ivert = 3,nvert(ipl)
 
   ! store with respect to the angle found:
-    call sortvertices(nvert(ipl), fi, vert(1,1,ipl), vert(2,1,ipl), vert(3,1,ipl))
+    call sortvertices(nvert(ipl), fi, vert(:,:,ipl)) ! sort the vertices in-place
 
   endif ! (nvert(ipl) >= 3)
 enddo ! ipl = 1, nplane
@@ -438,9 +438,9 @@ logical, intent(in) :: output
 integer, intent(in) :: nvertmax, nfaced
 integer, intent(in) :: nplane ! number of planes
 integer, intent(inout) :: nface ! number of faces (usually much less than nplane)
-integer, intent(inout) :: nvert(nfaced) ! number of vertices for each face
-double precision, intent(inout) :: vert(3,nvertmax,nfaced)
-double precision, intent(inout) :: planes(0:3,*) ! coefs. defining the planes, to be reordered at end
+integer, intent(inout) :: nvert(:) ! (nfaced) ! number of vertices for each face
+double precision, intent(inout) :: vert(:,:,:) ! (3,nvertmax,nfaced)
+double precision, intent(inout) :: planes(0:,:) ! coefs. defining the planes, to be reordered at end
 double precision, intent(in) :: tolvdist, tolarea  ! max. tolerance for distance of two vertices and area of face.
 
 
@@ -700,34 +700,28 @@ endsubroutine analyzevert3d
   
 
 !***********************************************************************
-  subroutine sortvertices(n,s,x,y,z)
+  subroutine sortvertices(n, s, xyz)
   ! sorts the array s(n) in ascending order using straight insertion. 
   ! the arrays z(n), y(n), and z(n) follow.
   ! on output, arrays s, x, y, and z return sorted.
     integer, intent(in) :: n
-    double precision, intent(inout) :: s(*), x(*),y(*),z(*)
+    double precision, intent(inout) :: s(:), xyz(:,:)
     double precision :: tmp(0:3)
     integer :: i, j
 
     outer: do j = 2, n
-      tmp = [s(j), x(j), y(j), z(j)]
+      tmp = [s(j), xyz(1,j), xyz(2,j), xyz(3,j)]
       do i = j-1, 1, -1
           if (s(i) <= tmp(0)) then
             s(i+1) = tmp(0)
-            x(i+1) = tmp(1)
-            y(i+1) = tmp(2)
-            z(i+1) = tmp(3)
+            xyz(1:3,i+1) = tmp(1:3)
             cycle outer
           endif
           s(i+1) = s(i)
-          x(i+1) = x(i)
-          y(i+1) = y(i)
-          z(i+1) = z(i)
+          xyz(1:3,i+1) = xyz(1:3,i)
       enddo ! i
       s(1) = tmp(0)
-      x(1) = tmp(1)
-      y(1) = tmp(2)
-      z(1) = tmp(3)
+      xyz(1:3,1) = tmp(1:3)
     enddo outer ! j
 
   endsubroutine ! sort vertices

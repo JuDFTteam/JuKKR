@@ -166,7 +166,7 @@ subroutine shapef(npoi, &
   integer, intent(in) :: npand
 
   integer, intent(in) :: nvertices(:) ! (nfaced)
-  double precision, intent(in) :: planes(0:3,*) ! (nfaced)
+  double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
   double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
   ! output radial grid
   double precision, intent(out) :: xrn(meshnd), drn(meshnd)

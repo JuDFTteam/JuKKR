@@ -86,8 +86,8 @@ module ShapeGeometryHelpers_mod
         endif
         
         arg = up/down
-        ! if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
-        arg = min(max(-1.d0, arg), 1.d0)
+        if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
+        ! arg = min(max(-1.d0, arg), 1.d0) ! new formulation
         fisum = fisum - acos(arg)
 !
 !------> treatment of edges

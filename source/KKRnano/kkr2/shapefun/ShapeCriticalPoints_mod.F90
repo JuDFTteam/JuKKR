@@ -41,7 +41,7 @@ module ShapeCriticalPoints_mod
     use shapegeometryhelpers_mod, only: polchk
 
     integer, intent(in) :: nvertices(:) ! (nfaced)
-    double precision, intent(in) :: planes(0:3,*) ! (0:3,nfaced)
+    double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
     double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
     integer, intent(in) :: nface, lmax
     double precision, intent(in) :: tolvdist, toleuler
