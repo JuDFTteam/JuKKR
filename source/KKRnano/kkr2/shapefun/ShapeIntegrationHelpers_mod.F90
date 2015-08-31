@@ -16,6 +16,7 @@
       subroutine pintg(x1, x2, dlt, s, lmax, isi, arg, fd, itype)
       use shape_constants_mod, only: lmaxd1, ndim
 !     include 'inc.geometry':   integer, parameter (lmaxd=25,ndim=1000)
+
       real*8, intent(in) :: x1, x2, dlt, arg, fd
       integer, intent(in) :: lmax
       integer(kind=1), intent(in) :: isi ! sign

@@ -134,78 +134,75 @@ module ShapeFunctions_mod
 
 
 !------------------------------------------------------------------------------
-subroutine shapef(npoi, &
-  planes, &
-  tolvdist, toleuler, nmin, &
-  nvertices, vert, &
-  nface, lmax, &
-  keypan, dlt, npan, &
-  nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
-  thetas_s, lmifun_s, nfun, & ! shape function
-  ibmaxd, meshnd, npand)
+  subroutine shapef(npoi, &
+    planes, &
+    tolvdist, toleuler, nmin, &
+    nvertices, vert, &
+    nface, lmax, &
+    keypan, dlt, npan, &
+    nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
+    thetas_s, lmifun_s, nfun, & ! shape function
+    ibmaxd, meshnd, npand)
 
-  use shape_constants_mod, only: verbosity
-  use shapecriticalpoints_mod, only: criticalshapepoints
-  use shapestandardmesh_mod, only: mesh
-  use shapeintegration_mod, only: shapeintegration
-!   use PolygonFaces_mod, only: createtetra, destroytetra, face
-  use PolygonFaces_mod, only: PolygonFace
-  integer :: ist
+    use shape_constants_mod, only: verbosity
+    use shapecriticalpoints_mod, only: criticalshapepoints
+    use shapestandardmesh_mod, only: mesh
+    use shapeintegration_mod, only: shapeintegration
+    use PolygonFaces_mod, only: PolygonFace
+    integer :: ist
 
-  integer,intent(in) :: npoi
-  double precision, intent(in) :: tolvdist
-  double precision, intent(in) :: toleuler
-  integer, intent(in) :: nmin
-  integer, intent(in) :: nface
-  integer, intent(in) :: lmax
-  integer, intent(in) :: keypan
-  double precision, intent(in) :: dlt
+    integer,intent(in) :: npoi
+    double precision, intent(in) :: tolvdist
+    double precision, intent(in) :: toleuler
+    integer, intent(in) :: nmin
+    integer, intent(in) :: nface
+    integer, intent(in) :: lmax
+    integer, intent(in) :: keypan
+    double precision, intent(in) :: dlt
 
-  integer, intent(in) :: ibmaxd
-  integer, intent(in) :: meshnd
-  integer, intent(in) :: npand
+    integer, intent(in) :: ibmaxd
+    integer, intent(in) :: meshnd
+    integer, intent(in) :: npand
 
-  integer, intent(in) :: nvertices(:) ! (nfaced)
-  double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
-  double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
-  ! output radial grid
-  double precision, intent(out) :: xrn(meshnd), drn(meshnd)
-  integer, intent(out) :: npan, meshn, nm(npand)
-  ! output shape functions
-  double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
-  integer, intent(out) :: lmifun_s(ibmaxd)
-  integer, intent(out) :: nfun
+    integer, intent(in) :: nvertices(:) ! (nfaced)
+    double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
+    double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
+    ! output radial grid
+    double precision, intent(out) :: xrn(meshnd), drn(meshnd)
+    integer, intent(out) :: npan, meshn, nm(npand)
+    ! output shape functions
+    double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
+    integer, intent(out) :: lmifun_s(ibmaxd)
+    integer, intent(out) :: nfun
 
-  double precision :: crt(npand) ! critical points
-  type(PolygonFace), allocatable :: faces(:)
-  
-  nm = 0
-  xrn = 0.d0
-  drn = 0.d0
-  crt = 0.d0
-  meshn = 0
-  npan = 0
-  
-  thetas_s = 0.d0
-  lmifun_s = 0
-  nfun = 0
+    double precision :: crt(npand) ! critical points
+    type(PolygonFace), allocatable :: faces(:)
+    
+    nm = 0
+    xrn = 0.d0
+    drn = 0.d0
+    crt = 0.d0
+    meshn = 0
+    npan = 0
+    
+    thetas_s = 0.d0
+    lmifun_s = 0
+    nfun = 0
 
-!   ist = createtetra(size(nvertices), size(nvertices)*size(vert,2))
-  allocate(faces(size(nvertices)), stat=ist)
+    allocate(faces(size(nvertices)), stat=ist)
 
-  call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt) ! output: faces, npan, crt
+    call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt) ! output: faces, npan, crt
 
-  ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
-  call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)
+    ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
+    call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)
 
-  call shapeIntegration(lmax, faces(1:nface), meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
+    call shapeIntegration(lmax, faces(1:nface), meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  npan = npan - 1 ! in old code 1 is substracted from npan - why?
+    npan = npan - 1 ! in old code 1 is substracted from npan - why?
 
-!   ist = destroytetra()
-  deallocate(faces, stat=ist)
-
- endsubroutine shapef
+    deallocate(faces, stat=ist)
+    
+  endsubroutine shapef
 
 endmodule ShapeFunctions_mod
 

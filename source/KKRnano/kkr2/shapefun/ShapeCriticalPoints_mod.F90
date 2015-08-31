@@ -177,8 +177,6 @@ module ShapeCriticalPoints_mod
     !     cessary quantities for the calculation are stored in common.
     !-----------------------------------------------------------------------
     use shape_constants_mod, only: pi, verbosity
-!   use PolygonFaces_mod, only: face ! new data container for face properties
-!   use PolygonFaces_mod, only: rd, isignu, fd, fa, fb ! tetrahedron properties are written here
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
 
@@ -339,13 +337,6 @@ module ShapeCriticalPoints_mod
           t1%isignu = 1
           t1%rd = rdd
 !         t1%rupsq = sqrt(rdd**2 - face%r0**2) ! could be introduced here
-
-! !         to keep the old one updated          
-!           rd(ivtot) = rdd ! store rd
-!           isignu(ivtot) = 1
-!           fa(ivtot) = t1%fa
-!           fb(ivtot) = t1%fb
-!           fd(ivtot) = t1%fd
           
           ta(face%ntt) = t1 ! copy
           

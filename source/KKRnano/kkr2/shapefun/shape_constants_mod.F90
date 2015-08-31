@@ -4,8 +4,6 @@ module shape_constants_mod
   implicit none
   public ! all module vars are constant
 
-  integer, parameter :: DP = kind(1.0d0) !< double precision kind parameter
-
   !> Parameter to control diagnostic output, set to 0 for no output
   !! 1 for output as in old program, 2 for additional output about tetrahedra
 
@@ -19,7 +17,7 @@ module shape_constants_mod
 
   logical, parameter :: CHECK_GEOMETRY = .true.
 
-  real(kind=DP), parameter :: PI = 3.1415926535897932_DP
+  double precision, parameter :: PI = 3.1415926535897932d0
 
   !integer, parameter :: NVERTD = 250 !< maximal number of cell vertices
   !integer, parameter :: NFACED = 200 !< maximal number of cell faces
@@ -36,6 +34,7 @@ module shape_constants_mod
 
   !> maximal number of Gauss-Legendre integration points, used in PINTG
   integer, parameter :: NDIM = 1000
+  
 end module
 
 
