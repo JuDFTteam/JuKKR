@@ -1,3 +1,4 @@
+#include "DebugHelpers/test_macros.h"
 !>    Auxillary module needed for shape function calculation.
 
 module ShapeGeometryHelpers_mod
@@ -43,7 +44,9 @@ module ShapeGeometryHelpers_mod
     integer :: nfaced, nedged, nvertd, nvrtd
     logical :: new
     
+    
     nfaced = size(nvertices)
+    CHECKASSERT(size(vert, 3) == nfaced)
     nvertd = size(vert, 2)
     nvrtd  = nfaced*nvertd
     nedged = nvrtd+nfaced-2
@@ -94,8 +97,11 @@ module ShapeGeometryHelpers_mod
 !
         new = .true. ! 1:save all different edges
         do iedge = 1, nedge
-          if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist .or. &
-              nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
+            if(nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          elseif(nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
+            if(nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          endif
         enddo ! iedge
         
         if (new) then
