@@ -37,13 +37,16 @@ module ShapeGeometryHelpers_mod
     double precision, intent(in) :: vert(:,:,:) ! vert(3,nvertd,nfaced)
     double precision, intent(in) :: tolvdist
 
-    integer :: ivert, ivertp,ivertm,ivrt,iedge,nvrt,nedge, iface,nvert
+    integer :: ivert, ivertp, ivertm, ivrt, iedge, nvrt, nedge, iface, nvert, nfaced, nedged, nvertd, nvrtd
     double precision :: arg, down, up, fisum
     double precision :: vrt0(3), vrtp(3), vrtm(3)
-    double precision, allocatable :: v1(:,:), v2(:,:), vrt(:,:)
-    integer :: nfaced, nedged, nvertd, nvrtd
+#define SAVE_MEMORY
+#ifndef SAVE_MEMORY
+    double precision, allocatable :: v1(:,:), v2(:,:), vrt(:,:) ! close to original version
+#else    
+    integer(kind=2), allocatable :: i1(:,:), i2(:,:), irt(:,:) ! assert nfaced < 2**15 and nvertd < 2**15
+#endif
     logical :: new
-    
     
     nfaced = size(nvertices)
     CHECKASSERT(size(vert, 3) == nfaced)
@@ -51,8 +54,12 @@ module ShapeGeometryHelpers_mod
     nvrtd  = nfaced*nvertd
     nedged = nvrtd+nfaced-2
 
+#ifndef SAVE_MEMORY
     allocate(v1(3,nedged), v2(3,nedged), vrt(3,nvrtd))
-    ! todo: change mode from storing copies of vertices to storing indicies ivert and iface only!  
+#else    
+    ! changed from storing copies of vertices to storing the corresponding indicies ivert and iface in array vert only.  
+    allocate(i1(2:3,nedged), i2(2:3,nedged), irt(2:3,nvrtd))
+#endif    
 
     nvrt = 0
     nedge = 0
@@ -66,13 +73,21 @@ module ShapeGeometryHelpers_mod
         vrt0 = vert(1:3,ivert,iface)
         new = .true.
         do ivrt = 1, nvrt
+#ifndef SAVE_MEMORY
           if (nrm2(vrt0 - vrt(1:3,ivrt)) < tolvdist) new = .false. ! 0:drop this vertex
+#else          
+          if (nrm2(vrt0 - vert(1:3,irt(2,ivrt),irt(3,ivrt))) < tolvdist) new = .false. ! 0:drop this vertex
+#endif          
         enddo ! ivrt
         
         if (new) then
           nvrt = nvrt+1
           if (nvrt > nvrtd) stop 'increase nvrtd'
+#ifndef SAVE_MEMORY
           vrt(1:3,nvrt) = vert(1:3,ivert,iface)
+#else         
+          irt(2:3,nvrt) = [ivert, iface]
+#endif          
         endif ! new
         
         ivertp = ivert+1; if (ivert == nvert) ivertp = 1        !!! alternative: ivertp = modulo(ivert+1-1, nvert)+1
@@ -97,18 +112,31 @@ module ShapeGeometryHelpers_mod
 !
         new = .true. ! 1:save all different edges
         do iedge = 1, nedge
+#ifndef SAVE_MEMORY
           if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
             if(nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
           elseif(nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
             if(nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
           endif
+#else          
+          if (nrm2(vrt0 - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) then
+            if(nrm2(vrtp - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) new = .false. ! 0:do not save
+          elseif(nrm2(vrt0 - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
+            if(nrm2(vrtp - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
+          endif
+#endif          
         enddo ! iedge
         
         if (new) then
           nedge = nedge+1
           if (nedge > nedged) stop 'insufficient nedged'
+#ifndef SAVE_MEMORY
           v1(1:3,nedge) = vert(1:3,ivert ,iface)
           v2(1:3,nedge) = vert(1:3,ivertp,iface)
+#else          
+          i1(2:3,nedge) = [ivert , iface]
+          i2(2:3,nedge) = [ivertp, iface]
+#endif
         endif ! new
         
       enddo ! ivert
@@ -131,8 +159,13 @@ module ShapeGeometryHelpers_mod
       write(6,*) '    serious warning from shape      '
       write(6,*) '   >>  stop illegal polyhedron      '
       write(6,*) 'nvrt = ',nvrt,' ; nface = ',nface,' ; nedge = ',nedge
-    endif
+    endif ! (nvrt+nface) /= (nedge+2)
     
+#ifndef SAVE_MEMORY
+    deallocate(v1, v2, vrt, stat=ivrt)
+#else    
+    deallocate(i1, i2, irt, stat=ivrt)
+#endif    
   endsubroutine polchk
 
 !-----------------------------------------------------------------------
