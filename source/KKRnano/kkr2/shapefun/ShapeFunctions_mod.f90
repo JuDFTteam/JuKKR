@@ -148,8 +148,8 @@ subroutine shapef(npoi, &
   use shapecriticalpoints_mod, only: criticalshapepoints
   use shapestandardmesh_mod, only: mesh
   use shapeintegration_mod, only: shapeintegration
-  use PolygonFaces_mod, only: createtetra, destroytetra, face
-!   use PolygonFaces_mod, only: PolygonFace
+!   use PolygonFaces_mod, only: createtetra, destroytetra, face
+  use PolygonFaces_mod, only: PolygonFace
   integer :: ist
 
   integer,intent(in) :: npoi
@@ -177,8 +177,7 @@ subroutine shapef(npoi, &
   integer, intent(out) :: nfun
 
   double precision :: crt(npand) ! critical points
-
-!   type(PolygonFace), allocatable :: face(:)
+  type(PolygonFace), allocatable :: faces(:)
   
   nm = 0
   xrn = 0.d0
@@ -191,18 +190,20 @@ subroutine shapef(npoi, &
   lmifun_s = 0
   nfun = 0
 
-  ist = createtetra(size(nvertices), size(nvertices)*size(vert,2))
+!   ist = createtetra(size(nvertices), size(nvertices)*size(vert,2))
+  allocate(faces(size(nvertices)), stat=ist)
 
-  call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, npan, crt) ! output: npan, crt
+  call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt) ! output: faces, npan, crt
 
   ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
   call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)
 
-  call shapeIntegration(lmax, face(1:nface), meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
+  call shapeIntegration(lmax, faces(1:nface), meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
   npan = npan - 1 ! in old code 1 is substracted from npan - why?
 
-  ist = destroytetra()
+!   ist = destroytetra()
+  deallocate(faces, stat=ist)
 
  endsubroutine shapef
 

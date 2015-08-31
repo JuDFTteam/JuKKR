@@ -34,11 +34,11 @@ module ShapeCriticalPoints_mod
   !> Note: the smallest critical point corresponds to the muffin-tin radius
 
   !=====================================================================
-  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface,lmax, npan, crt)
+  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface,lmax, faces, npan, crt)
 
     use shape_constants_mod, only: verbosity, check_geometry, isumd, lmaxd1, pi
-    use PolygonFaces_mod, only: faces => face ! read-only, if verbose
-    use shapegeometryhelpers_mod, only: polchk
+    use PolygonFaces_mod, only: PolygonFace
+    use ShapeGeometryHelpers_mod, only: polchk
 
     integer, intent(in) :: nvertices(:) ! (nfaced)
     double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
@@ -46,6 +46,7 @@ module ShapeCriticalPoints_mod
     integer, intent(in) :: nface, lmax
     double precision, intent(in) :: tolvdist, toleuler
     
+    type(PolygonFace), intent(out) :: faces(:)
     integer, intent(out) :: npan
     double precision, intent(out) :: crt(:)
     
@@ -176,7 +177,7 @@ module ShapeCriticalPoints_mod
     !     cessary quantities for the calculation are stored in common.
     !-----------------------------------------------------------------------
     use shape_constants_mod, only: pi, verbosity
-!     use PolygonFaces_mod, only: face ! new data container for face properties
+!   use PolygonFaces_mod, only: face ! new data container for face properties
 !   use PolygonFaces_mod, only: rd, isignu, fd, fa, fb ! tetrahedron properties are written here
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)

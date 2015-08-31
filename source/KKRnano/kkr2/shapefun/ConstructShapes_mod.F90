@@ -130,8 +130,8 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
                                 lmax_shape, npoints_min, nmin, &
                                 num_MT_points, new_MT_radius, MT_scale)
   use ShapefunData_mod, only: ShapefunData, createShapefunData
-  use voronoi08_mod, only: voronoi08
-  use shapefunctions_mod, only: shapef
+  use Voronoi_mod, only: Voronoi_construction
+  use ShapeFunctions_mod, only: shapef
 
 
   type (ShapefunData), intent(inout) :: shdata
@@ -146,26 +146,21 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   double precision, intent(in) :: new_MT_radius
   double precision, intent(in) :: MT_scale
   
-  integer, parameter :: nvertmax = 30  ! hoping for at most 30 vertices for each face
+  integer, parameter :: nvertmax = 32 ! hoping for at most 32 vertices for each face
   logical, parameter :: output = .false.
   
   double precision, parameter :: tolvdist = 1.d-12
-  double precision, parameter :: tolvarea = 1.d-10, toleuler = 1.d-10
+  double precision, parameter :: tolvarea = 1.d-10
+  double precision, parameter :: toleuler = 1.d-10
   double precision, parameter :: dlt = 0.05d0 ! step-size angular integration
 
   double precision :: rmt, rout, volume
-  integer :: ibmaxd
-  integer :: npand
-  integer :: nface
-  integer :: meshnd
-  integer :: meshn
-  integer :: nfaced
-  integer :: nfun
+  integer :: ibmaxd, npand, nface, meshnd, meshn, nfaced, nfun
   double precision, allocatable :: planes(:,:)
-  integer, allocatable :: nm(:), nvertices(:), lmifun_s(:)
-  double precision, allocatable :: xrn(:), drn(:)
   double precision, allocatable :: vert(:,:,:)
+  double precision, allocatable :: xrn(:), drn(:)
   double precision, allocatable :: thetas_s(:,:)
+  integer, allocatable :: nm(:), nvertices(:), lmifun_s(:)
   integer :: npan, ii
 
   double precision :: radius
@@ -179,17 +174,15 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   lmifun_s = 0
   
   allocate(planes(0:3,nfaced)) ! 0: distance, 1..3:normal vector
-
   allocate(nvertices(nfaced), vert(3,nvertmax,nfaced))
   nvertices = 0
 
-  call voronoi08(nfaced,rvec,nvertmax,nfaced, weights(1), weights(2:),tolvdist,tolvarea, rmt,rout,volume,nface, planes, nvertices, vert, output)
+  call Voronoi_construction(nfaced, rvec, nvertmax, nfaced, weights(1), weights(2:), tolvdist, tolvarea, rmt, rout, volume, nface, planes, nvertices, vert, output)
 
   npand = sum(nvertices) + nface + 1  ! +1 for possible muffin-tinisation
   meshnd = max(npoints_min, npand*nmin) + num_mt_points
 
-  ! increase meshnd, since in some cases the above empirical formula was
-  ! not enough
+  ! increase meshnd, since in some cases the above empirical formula was not enough
   meshnd = meshnd + npoints_min
 
   ! these arrays are overdimensioned - but used only in this routine
@@ -197,24 +190,11 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
   allocate(thetas_s(meshnd, ibmaxd))
   allocate(xrn(meshnd))
   allocate(drn(meshnd))
-
-!   call shapewrapper(npoints_min,planes, &
-!                     nmin, &
-!                     nvertices, vert, &
-!                     nface, lmax_shape, dlt, &
-!                     npan, nm, xrn, drn, meshn, & 
-!                     thetas_s, lmifun_s, nfun, & 
-!                     ibmaxd, meshnd, npand, nfaced, nvertmax)
   
-  call shapef(npoints_min, planes, &
-    tolvdist, toleuler, &
-    nmin, &
-    nvertices, vert, nface, lmax_shape, &
-    keypan, dlt, &
-    npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
-    thetas_s, lmifun_s, nfun, & ! shape function
+  call shapef(npoints_min, planes, tolvdist, toleuler, nmin, nvertices, vert, nface, lmax_shape, keypan, dlt, & 
+    npan, nm, xrn, drn, meshn, &  ! radial mesh (output)
+    thetas_s, lmifun_s, nfun, & ! shape function (output)
     ibmaxd, meshnd, npand)
-                   
 
   ! muffin-tinization
   radius = new_mt_radius
@@ -248,9 +228,7 @@ subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
 
   !TODO: check that nm is always >= 5
 
-  !DEBUG
-  ! uncommenting the next line would replace shape function with atomic sphere shape function
-  !call replace_with_PseudoASA(shdata, inter_mesh, volume)
+  !call replace_with_PseudoASA(shdata, inter_mesh, volume) ! uncommenting this line would replace shape function with atomic sphere shape function
 
 endsubroutine
 

@@ -10,10 +10,10 @@ module PolygonFaces_mod
 !   double precision, allocatable :: beta(:)     !< Euler angles beta
 !   double precision, allocatable :: gamma(:)    !< Euler angles gamma
 
-  type Plane
-    double precision :: abc(3) !< normal vector
-    double precision :: d !< distance from origin in length units of the vector
-  endtype
+!   type Plane
+!     double precision :: abc(3) !< normal vector
+!     double precision :: d !< distance from origin in length units of the vector
+!   endtype
 
   type TetrahedronAngles
     double precision :: rd !< distances pyramid footpoint to edge
@@ -30,7 +30,7 @@ module PolygonFaces_mod
     type(TetrahedronAngles), allocatable :: ta(:)
   endtype
   
-  type(PolygonFace), allocatable :: face(:)
+!   type(PolygonFace), allocatable :: face(:)
   
 !   double precision, allocatable :: rd(:) !< distances pyramid footpoint to edge
 !   double precision, allocatable :: fa(:) !< tetrahedron angle, phi-angle corresponding to 1st vertex  fa < fd < fb
@@ -38,21 +38,21 @@ module PolygonFaces_mod
 !   double precision, allocatable :: fd(:) !< tetrahedron angle, phi-angle corresponding to foot point between 1st and 2nd vertex
 !   integer(kind=1), allocatable :: isignu(:)   !< ??? sign for rotation sense ???
   
-  contains
-
-  integer function createtetra(nfaced, nvtotd) result(ist)
-    integer, intent(in) :: nfaced, nvtotd
-    allocate(&!ntt(nfaced), r0(nfaced), alpha(nfaced), beta(nfaced), gamma(nfaced), &
-      face(nfaced), &
-!       rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), &
-      stat=ist)
-  endfunction ! create
-
-  integer function destroytetra() result(ist)
-    deallocate(&!ntt, r0, alpha, beta, gamma, &
-      face, &
-!       rd, fa, fb, fd, isignu, &
-      stat=ist)
-  endfunction ! destroy
+!   contains
+! 
+!   integer function createtetra(nfaced, nvtotd) result(ist)
+!     integer, intent(in) :: nfaced, nvtotd
+!     allocate(&!ntt(nfaced), r0(nfaced), alpha(nfaced), beta(nfaced), gamma(nfaced), &
+!       face(nfaced), &
+! !       rd(nvtotd), fa(nvtotd), fb(nvtotd), fd(nvtotd), isignu(nvtotd), &
+!       stat=ist)
+!   endfunction ! create
+! 
+!   integer function destroytetra() result(ist)
+!     deallocate(&!ntt, r0, alpha, beta, gamma, &
+!       face, &
+! !       rd, fa, fb, fd, isignu, &
+!       stat=ist)
+!   endfunction ! destroy
 
 endmodule ! PolygonFaces_mod

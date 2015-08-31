@@ -1,10 +1,7 @@
-module voronoi08_mod
+module Voronoi_mod
   implicit none
   private
-  public :: voronoi08
-!   public :: polyhedron08
-!   public :: distplane, normalplane0, dsort ! helpers
-!   public :: normal_plane, dist_plane
+  public :: Voronoi_construction
 
   interface normal_plane
     module procedure normal_plane0f, normal_planef!, normalplane, normalplane0
@@ -72,7 +69,7 @@ module voronoi08_mod
   !
   !
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
-  subroutine voronoi08(nvec,rvec,nvertmax,nfaced,weight0,weight,tolvdist,tolarea, &
+  subroutine Voronoi_construction(nvec,rvec,nvertmax,nfaced,weight0,weight,tolvdist,tolarea, &
      rmt,rout,volume, nface, planes, nvert, vert, output)
 
   ! Input:
@@ -90,23 +87,21 @@ module voronoi08_mod
   double precision, intent(out) :: vert(:,:,:) ! (3,nvertmax,nfaced) ! vertices
   
   ! Inside:
-  integer ivec,iface,ivert,i,nverttot
-  integer nplane
+  integer :: ivec, iface, ivert, i, nverttot, nplane, npanel
   double precision :: tetrvol,rsq,tau, v1(3), v2(3), v3(3)
-  double precision  facearea(nfaced),trianglearea   
-  double precision  temp
-  integer isort(nfaced),pos,inew    ! Index for sorting
-  double precision rsort(nfaced)              ! Aux. function for sorting
+  double precision :: facearea(nfaced),trianglearea   
+  double precision :: temp
+  integer :: isort(nfaced) ! Index for sorting
+  double precision :: rsort(nfaced)              ! Aux. function for sorting
   double precision, allocatable :: ptmp(:,:), vtmp(:,:,:) ! For sorting
   integer, allocatable :: ntmp(:)                        ! For sorting
-  integer npanel
 
   !---------------------------------------------------------------
   ! Check that the origin is not included in RVEC.
   do ivec = 1, nvec
      if (sum(abs(rvec(1:3,ivec))) < 1.d-12) then
-        write(*,*) 'VORONOI: Vector',ivec,'is zero.'
-        stop 'VORONOI'
+        write(*,*) 'Voronoi: Vector',ivec,'is zero.'
+        stop 'Voronoi'
      endif
   enddo ! ivec
   !---------------------------------------------------------------
@@ -114,7 +109,6 @@ module voronoi08_mod
   do ivec = 1, nvec
      rsq = rvec(1,ivec)**2 + rvec(2,ivec)**2 + rvec(3,ivec)**2
      tau = 0.5d0*((weight0 - weight(ivec))/rsq + 1.d0)
-!    call normalplane0(rvec(1,ivec),rvec(2,ivec),rvec(3,ivec), tau, a3(ivec),b3(ivec),c3(ivec), d3(ivec))
      planes(0:3,ivec) = normal_plane(rvec(1:3,ivec), tau)
   enddo ! ivec
   !---------------------------------------------------------------
@@ -193,22 +187,22 @@ module voronoi08_mod
   enddo ! iface
   
   call dsort(rsort, isort, nface)
-  ! Rearrange using a temporary array
+  ! Rearrange using a temporary arrays ptmp, vtmp, ntmp
   allocate(ptmp(0:3,nface), vtmp(3,nvertmax,nface), ntmp(nface))
   ptmp(0:3,:) = planes(0:3,1:nface)
   vtmp(:,:,:) = vert(:,:,1:nface)
   ntmp(:)     = nvert(1:nface)
   do iface = 1, nface
-     inew = isort(iface)
-     planes(0:3,inew) = ptmp(0:3,  iface)
-     vert(1:3,:,inew) = vtmp(1:3,:,iface)
-     nvert     (inew) = ntmp      (iface)
+     i = isort(iface)
+     planes(:,i) = ptmp(:,  iface) ! (0:3, ...)
+     vert(:,:,i) = vtmp(:,:,iface) ! (1:3,:, ...)
+     nvert   (i) = ntmp    (iface)
   enddo ! iface
   
   deallocate(ptmp, vtmp, ntmp)
   !---------------------------------------------------------------
 
-endsubroutine voronoi08
+endsubroutine Voronoi_construction
   
 
   subroutine polyhedron08(nplane, nvertmax, nfaced, tolvdist,tolarea, planes, nface, nvert, vert, output)
@@ -820,4 +814,4 @@ subroutine dsort(w, ind, nmax, pos)
 
 endsubroutine ! dsort
 
-endmodule ! voronoi08_mod
+endmodule ! Voronoi_mod
