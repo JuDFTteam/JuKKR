@@ -69,10 +69,24 @@ program KKRnano
   integer                        :: ios, ilen
   
   call get_command_argument(1, arg, ilen, ios)
-  if (arg == '--convert') then
+  selectcase (arg)
+  case('--prepare')
     call main0() ! call former kkr0.exe
     stop
-  endif
+  case('--help')
+    call get_command_argument(0, arg, ilen, ios)
+    write(*,'(9A)') 'usage: ',trim(arg),' [options]'
+    write(*,'(A)') '  options:', &
+    '    --prepare             Former kkr0.exe functionality', &
+    '    --help                This command line help function', &
+    '  options to be implemented in the future:', &
+    '    --check               Check input files for errors', &
+    '    --convert             Converter to and from ASCII files', &
+    ''
+    stop
+  case default
+    
+  endselect ! arg
   !----------------------------------------------------------------------------
 
   call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
@@ -124,15 +138,15 @@ program KKRnano
  ! =                     End read in variables                          =
  ! ======================================================================
 
-  if ((params%JIJ .eqv. .true.) .and. (dims%nspind /= 2)) then
+  if (params%JIJ .and. (dims%nspind /= 2)) then
     write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
     stop
-  end if
+  endif
 
   if (dims%LLY /= 0) then
     write(*,*) "WARNING: Lloyds formula not supported in this version. Set LLY=0"
     stop
-  end if
+  endif
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
@@ -156,7 +170,7 @@ program KKRnano
       call readEnergyMeshSemi(emesh) !every process does this!  !!!!
     else
       call readEnergyMesh(emesh)  !every process does this!  !!!!
-    end if
+    endif
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
 
@@ -192,7 +206,7 @@ program KKRnano
         atomdata => getAtomdata(calc_data, ilocal)
         call communicatePotential(my_mpi, atomdata%potential%VISP, &
                                   atomdata%potential%VINS, atomdata%core%ECORE)
-      end do
+      enddo ! ilocal
 
       ! Core relaxation - only mastergroup needs results
       if (isInMasterGroup(my_mpi)) then
@@ -204,8 +218,8 @@ program KKRnano
             call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
           else
             call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
-          end if
-        end do
+          endif
+        enddo ! ilocal
         !!!$omp end parallel do
       endif
 
@@ -264,7 +278,7 @@ program KKRnano
           call updateEnergyMeshSemi(emesh)
         else
           call updateEnergyMesh(emesh)
-        end if
+        endif
 
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
@@ -273,7 +287,7 @@ program KKRnano
           call writeEnergyMeshSemi(emesh)
         else
           call writeEnergyMesh(emesh)
-        end if
+        endif
 
 
         call printDoubleLineSep()
@@ -287,14 +301,14 @@ program KKRnano
 
 ! ######################################################################
 ! ######################################################################
-    enddo          ! SC ITERATION LOOP ITER=1, SCFSTEPS
+    enddo ! ITER ! SC ITERATION LOOP ITER=1, SCFSTEPS
 ! ######################################################################
 ! ######################################################################
 
     ! write forces if requested, master-group only
     if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) then
       call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
-    end if
+    endif
 
     if (isMasterRank(my_mpi)) close(2)    ! TIME
 
