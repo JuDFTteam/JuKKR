@@ -17,15 +17,15 @@
       use shape_constants_mod, only: lmaxd1, ndim
 !     include 'inc.geometry':   integer, parameter (lmaxd=25,ndim=1000)
 
-      real*8, intent(in) :: x1, x2, dlt, arg, fd
+      double precision, intent(in) :: x1, x2, dlt, arg, fd
       integer, intent(in) :: lmax
       integer(kind=1), intent(in) :: isi ! sign
       integer, intent(in) :: itype ! itype in [0, 1]
-      real*8, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1) ! uses more memory than needed, about 55% used
+      double precision, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1) ! uses more memory than needed, about 55% used
       
-      integer :: i, m, n, k
-      real*8 :: x, theta, w
-      real*8 :: xx(ndim), ww(ndim)
+      integer :: n, k
+      double precision :: x, theta, w
+      double precision :: xx(ndim), ww(ndim)
 
 !-----------------------------------------------------------------------
       if (lmax > lmaxd1) then
@@ -34,11 +34,12 @@
       endif
     
       s = 0.d0
+      if (x1 == x2) return ! 0.d0 if the integration range is zero
       
       if (itype == 0) then
         theta = acos(arg)
-        call recur0(lmax,x1,theta,-dble(isi),s)
-        call recur0(lmax,x2,theta, dble(isi),s)
+        call recur0(lmax, x1, theta, -dble(isi), s)
+        call recur0(lmax, x2, theta,  dble(isi), s)
       else
         n = (x2 - x1)/dlt + 3
         if (n > ndim) stop 'increase ndim'
@@ -63,12 +64,12 @@
       subroutine recur(lmax,x,theta,fac,s)
       use shape_constants_mod, only: lmaxd1
       integer, intent(in) :: lmax
-      real*8, intent(in) :: x, theta, fac
-      real*8, intent(inout) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
+      double precision, intent(in) :: x, theta, fac
+      double precision, intent(inout) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
 
       integer :: m,i
-      real*8 :: ol0,ol,el0,el,c1,c2,ss,cc
-      real*8 :: c01(lmaxd1),c02(lmaxd1),ssa(lmaxd1+2),cca(lmaxd1+2)
+      double precision :: ol0,ol,el0,el,c1,c2,ss,cc
+      double precision :: c01(lmaxd1),c02(lmaxd1),ssa(lmaxd1+2),cca(lmaxd1+2)
 !-----------------------------------------------------------------------
       ss=sin(theta)
       cc=cos(theta)
@@ -169,11 +170,11 @@
       subroutine recur0(lmax,x,theta,fac,s)
       use shape_constants_mod, only: lmaxd1
       integer, intent(in) :: lmax
-      real*8, intent(in) :: x, theta, fac
-      real*8, intent(inout) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
+      double precision, intent(in) :: x, theta, fac
+      double precision, intent(inout) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
 
       integer :: m, i
-      real*8 :: ol0,ol,el0,el,c1,c2,ss,cc
+      double precision :: ol0,ol,el0,el,c1,c2,ss,cc
 !-----------------------------------------------------------------------
       ss=sin(theta)
       cc=cos(theta)
@@ -269,12 +270,12 @@
     use shape_constants_mod, only: pi
     
     integer, intent(in) :: n
-    real*8, intent(in) :: x1, x2
-    real*8, intent(out) :: x(1:), w(1:)
+    double precision, intent(in) :: x1, x2
+    double precision, intent(out) :: x(1:), w(1:)
 
 !     ----------------------------------------------------------------
     integer :: i, j, m
-    real*8 :: p1,p2,p3,pp,xl,xm,z,z1
+    double precision :: p1,p2,p3,pp,xl,xm,z,z1
 
     m = (n+1)/2
     xm = 0.5d0*(x2 + x1)
@@ -311,12 +312,12 @@
 !     changed: get constants from module shape_constants_mod instead of inc.geometry
       use shape_constants_mod, only: icd, iced, lmaxd1
       integer, intent(in) :: lmax
-      real*8, intent(out) :: cl(icd) ! warning: old m-ordering: ???
-      real*8, intent(out) :: coe(iced) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
+      double precision, intent(out) :: cl(icd) ! warning: old m-ordering: ???
+      double precision, intent(out) :: coe(iced) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
      
       integer, parameter :: ifmx=25, lma2d=lmaxd1/2+1
       integer :: icmax,l,ice,ic,i,m,k,k0,isi,ire,ir,ic1,ic2, la, lb, ieupsq, ieint
-      real*8 :: up,down,upsq
+      double precision :: up,down,upsq
       integer :: ie(ifmx,lma2d), ied(ifmx)
       integer, dimension(ifmx) :: l1st, l2st, l1, l2, jm0, iea, ieb, il2p
       integer, parameter :: primes(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
@@ -473,14 +474,14 @@
 !------------------------------------------------------------------
       subroutine d_real(lmax,euler, dmatl, isumd, lmaxd1)
       integer, intent(in) :: lmaxd1, isumd, lmax
-      real*8, intent(in) :: euler(1:3) ! alpha, beta, gamma
-      real*8, intent(out) :: dmatl(isumd)
+      double precision, intent(in) :: euler(1:3) ! alpha, beta, gamma
+      double precision, intent(out) :: dmatl(isumd)
       
 !-----------------------------------------------------------------------
       integer :: l,m,mp,i,imax,ip,ipmax,isu!,isum
-      real*8 :: fac,fac1,fac2,d,d1,d2
-      real*8 :: dmn(lmaxd1+1,lmaxd1+1), dpl(lmaxd1+1,lmaxd1+1)
-      real*8, parameter :: sqr2 = sqrt(2.d0)
+      double precision :: fac,fac1,fac2,d,d1,d2
+      double precision :: dmn(lmaxd1+1,lmaxd1+1), dpl(lmaxd1+1,lmaxd1+1)
+      double precision, parameter :: sqr2 = sqrt(2.d0)
       isu = 0 ! outer order is s,p,d,f,... and inner order for m and mp is 0,1,-1,2,-2,...,l,-l
       ! therefore as a function of lmax, isumd can be as low as sum_l=0...lmax (2*l+1)^2
       ! = (lmax*(3+4*(lmax+1)*(lmax+2)))/3+1
@@ -553,13 +554,13 @@
 !>    calculation of d coefficient according to rose, elementary theory
 !>    angular momentum,j.wiley & sons ,1957 , eq. (4.13).
 !-----------------------------------------------------------------------
-      real*8 function drot(l, mp, m, beta)
+      double precision function drot(l, mp, m, beta)
       
       integer, intent(in) :: l,m,mp
-      real*8, intent(in) :: beta
+      double precision, intent(in) :: beta
 
       integer :: i,kmin,kmax,ltrm,n,k
-      real*8  :: cosb,sinb,term,ff
+      double precision  :: cosb,sinb,term,ff
       integer :: nf(4)
 !-----------------------------------------------------------------------
       drot = 0.d0 ! init result for early return

@@ -32,39 +32,34 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
 
   integer, intent(in) :: lmax, meshn
-  real*8, intent(in) :: xrn(meshnd)
-  real*8, intent(in) :: dlt
+  double precision, intent(in) :: xrn(meshnd)
+  double precision, intent(in) :: dlt
   integer, intent(in) :: meshnd
   integer, intent(in) :: ibmaxd
   type(PolygonFace), intent(in) :: face(:)
   integer, intent(out) :: lmifun_s(ibmaxd)
-  real*8, intent(out) :: thetas_s(meshnd,ibmaxd)
+  double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
   integer, intent(out) :: nfun
   
 
-  real*8 :: cl(icd)
-  real*8 :: c(iced), c_table(-lmaxd1:lmaxd1,0:lmaxd1)
+  double precision :: cl(icd)
+  double precision :: c(iced), c_table(-lmaxd1:lmaxd1,0:lmaxd1)
 
-  real*8 :: rap
-  real*8 :: rdown
-
-  real*8 :: arg1
-  real*8 :: arg2
+  double precision :: rap, rdown, arg1, arg2, fk, fl, fpisq, rupsq
 
   integer :: iface, itet, i, m, ic, ice, isu, isu0, l, mp, k0, k, is, imax, mo, ip, ipmax, ilm, mlm, ir, ist, isumd, nface 
 !   integer :: ib, ic0, ice0
   
-  real*8, allocatable :: dmatl(:,:) ! (isumd,nface)
+  double precision, allocatable :: dmatl(:,:) ! (isumd,nface)
   type(TetrahedronAngles) :: t1
   
-  real*8 :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
-  real*8 :: sm(2,0:lmaxd1) ! this could be reshaped into sm(-lmaxd1:lmaxd1)
-!   real*8 :: smm(-lmaxd1:lmaxd1)
-  real*8 :: fk, fl, fpisq, rupsq
+  double precision :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
+  double precision :: sm(2,0:lmaxd1) ! this could be reshaped into sm(-lmaxd1:lmaxd1)
+!   double precision :: smm(-lmaxd1:lmaxd1)
 
   ! local automatic arrays
   logical(kind=1) :: nontrivial(ibmaxd) ! the trivial shape function is zero from ilm>1 and sqrt(4*pi) for ilm==1
-  real*8 :: b(ibmaxd)
+  double precision :: b(ibmaxd)
   integer, parameter :: idmatl_RECOMPUTE = 0 ! recompute every time, calls d_real meshn*nface times
   integer, parameter :: idmatl_MEMORIZE  = 1 ! needs some memory but calls d_real only nface times
   integer, parameter :: idmatl = idmatl_MEMORIZE ! must be in {0, 1}
@@ -131,7 +126,7 @@ py: do iface = 1, nface
         ! so, no contribution to the shapefunctions is expected (except for l=0,m=0 which is treated analytically).
         cycle py ! jump to the head of the loop over pyramids (loop counter iface)
         
-      endif ! r <= r0
+      endif ! xrn(ir) <= r0
       
       arg1 = face(iface)%r0/xrn(ir)
       s = 0.d0 ! init s
@@ -139,7 +134,7 @@ py: do iface = 1, nface
       !.......................................................................
       !     loop over tetrahedra
       !.......................................................................
-      do itet = 1, face(iface)%ntt ! ntt(iface)
+      do itet = 1, face(iface)%ntt
 
         t1 = face(iface)%ta(itet) ! get a work copy of the TetrahedronAngles
 
@@ -148,7 +143,7 @@ py: do iface = 1, nface
           call pintg(t1%fa, t1%fb, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
           s = s + s1
           
-        else  ! r <= t1%rd
+        else  ! xrn(ir) <= t1%rd
         
           ! rupsq could be precomputed since it depends only on properties of the tetrahedron and the face
           rupsq = sqrt(t1%rd**2 - face(iface)%r0**2) 
@@ -156,9 +151,9 @@ py: do iface = 1, nface
           rdown = sqrt(xrn(ir)**2 - face(iface)%r0**2)
           rap  = rupsq/rdown
           arg2 = rupsq/face(iface)%r0
-          fk = min(t1%fb, max(t1%fa, t1%fd - acos(rap)))
-          fl = min(t1%fb, max(t1%fa, t1%fd + acos(rap)))
-          
+          fk = min(max(t1%fa, t1%fd - acos(rap)), t1%fb)
+          fl = min(max(t1%fa, t1%fd + acos(rap)), t1%fb)
+
           call pintg(t1%fa, fk, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
           s = s + s1
           call pintg(fk,    fl, dlt, s1, lmax, t1%isignu, arg2, t1%fd, 1)
@@ -166,7 +161,7 @@ py: do iface = 1, nface
           call pintg(fl, t1%fb, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
           s = s + s1
           
-        endif ! r <= t1%rd
+        endif ! xrn(ir) <= t1%rd
 
       enddo ! itet ! tetraeder loop
 
