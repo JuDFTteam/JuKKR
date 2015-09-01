@@ -27,7 +27,7 @@ module ShapeIntegration_mod
 
 subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  use shape_constants_mod, only: pi, lmaxd1, icd, iced!, isumd
+  use shape_constants_mod, only: pi, lmaxd1!, icd, iced!, isumd
   use PolygonFaces_mod, only: PolygonFace, TetrahedronAngles
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
 
@@ -42,12 +42,12 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   integer, intent(out) :: nfun
   
 
-  double precision :: cl(icd)
-  double precision :: c(iced), c_table(-lmaxd1:lmaxd1,0:lmaxd1)
+  double precision :: cl_table(-lmax:lmax,0:lmax,0:lmax) !, cl(icd) 
+  double precision :: c_table(-lmax:lmax,0:lmax) !, c(iced) 
 
   double precision :: rap, rdown, arg1, arg2, fk, fl, fpisq, rupsq
 
-  integer :: iface, itet, i, m, ic, ice, isu, isu0, l, mp, k0, k, is, imax, mo, ip, ipmax, ilm, mlm, ir, ist, isumd, nface 
+  integer :: iface, itet, i, m, ic, ice, isu, isu0, l, mp, k, lp, imax, mo, ip, ipmax, ilm, mlm, ir, ist, isumd, nface 
 !   integer :: ib, ic0, ice0
   
   double precision, allocatable :: dmatl(:,:) ! (isumd,nface)
@@ -75,23 +75,7 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   !.......................................................................
   !     expansion coefficients
   !.......................................................................
-  call ccoef(lmax, cl,c ) ! sets the coefficients: 
-  !  cl in m-order (0,(m,-m, m=1..l), l=0,lmax) ??
-  ! and c in order ((m, m=l...0), l=0,lmax)
-  
-  ! copy c into a useful format
-  c_table = 0.d0
-  ice = 0
-  do l = 0, lmax
-    do mp = l, 0, -1
-      ice = ice+1
-      c_table(-mp,l) = c(ice) ! scaling factor
-      c_table( mp,l) = c(ice) ! scaling factor
-    enddo ! mp
-  enddo ! l
-  
-  ! todo: do the equivalent for cl
-  ! ...  
+  call ccoef(lmax, cl_table, c_table) ! sets the coefficients: 
   
   nface = size(face, 1) ! number of faces
   
@@ -175,7 +159,7 @@ py: do iface = 1, nface
       endif ! recompute every time
       
 !     ib = 0
-      ic = 0
+!       ic = 0
 !     ice = 0
 !     isu = 0
 
@@ -197,9 +181,9 @@ py: do iface = 1, nface
 !         do m = -l, l
 !           smm(m) = 0.d0
 !           do k = l, (l+abs(m)+1)/2, -1
-!             is = 2*k-l-abs(m)
+!             lp = 2*k-l-abs(m)
 ! !           ic = ic+1
-! !           smm(m) = smm(m) + cl(ic)*s(m,is)
+! !           smm(m) = smm(m) + cl(ic)*s(m,lp)
 !           enddo ! k
 !           smm(m) = smm(m)*c(ice0+1)
 !         enddo ! m
@@ -208,18 +192,18 @@ py: do iface = 1, nface
         
         do mp = l, 0, -1
           sm(1:2,mp) = 0.d0
-          k0 = (l+mp+1)/2
-          do k = l, k0, -1
-            is = 2*k-l-mp
-            ic = ic+1
-            sm(1:2,mp) = sm(1:2,mp) + cl(ic)*[s( mp,is), s(-mp,is)]
+          do k = l, (l+mp+1)/2, -1
+            lp = 2*k-l-mp
+!             ic = ic+1
+!             sm(1:2,mp) = sm(1:2,mp) + cl(ic)*[s( mp,lp), s(-mp,lp)]
+            sm(1:2,mp) = sm(1:2,mp) + cl_table(mp,lp,l)*[s( mp,lp), s(-mp,lp)]
           enddo ! k
 !           ice = ice+1
 !           sm(1:2,mp) = sm(1:2,mp)*c(ice) ! scale
           sm(1,mp) = sm(1,mp)*c_table( mp,l) ! scale
           sm(2,mp) = sm(2,mp)*c_table(-mp,l) ! scale
         enddo ! mp
-        sm(2,0) = 0.d0 ! corrrect since there is no m=-0
+        sm(2,0) = 0.d0 ! correct since there is no m=-0
         
         
         ! rotate back in the l-subspace and add to the shape functions
@@ -258,8 +242,7 @@ py: do iface = 1, nface
   
   deallocate(dmatl, stat=ist)
 
-  !now rearrange thetas_s array that it contains only non-zero shapefunctions
-  !this is done "in-place"
+  !now rearrange thetas_s array that it contains only non-zero shapefunctions, this is done "in-place"
 
   lmifun_s = 0 ! lm-index of this shape function
 
