@@ -26,7 +26,8 @@ module mod_scattering
     double precision :: impconc   =  1d0
     integer :: subarr_inp(2) = -1
     !allocatable arrays
-    integer :: N2 = 3
+    integer :: N2 = 2
+    double precision, allocatable :: weight_imp(:)
 !   integer,          allocatable :: ispincomb(:)
 !   double precision, allocatable :: nvect(:,:)
   end type sca_TYPE
@@ -1272,7 +1273,7 @@ contains
                                    & optical_right_thread(:,:,:)
 
     integer          :: clmso, ierr, ikp1, ikp2, ispin1, ispin2, isqa, ihelp, iaverage
-    double precision :: Tkk_abs(nkpt1,nkpt2), fac, righttmp, BZvol
+    double precision :: Tkk_abs(nkpt1,nkpt2), fac(sca%naverage), righttmp, BZvol
     double complex   :: Tkk_tmp(nkpt1,nkpt2), &
                       & rvcls1(impcls(1)%clmso,nkpt1),&
                       & rvcls2(impcls(1)%clmso,nkpt2),&
@@ -1283,7 +1284,8 @@ contains
     ! parameter
     double complex, parameter :: CZERO=(0d0, 0d0), CONE=(1d0,0d0), CI=(0d0,1d0)
 
-    fac     = 2d0*pi*0.01d0/sca%naverage !concentration = 1 atom percent
+    ! weights are rescaled such that sum(weights) = 1
+    fac     = 2d0*pi*0.01d0*(sca%weight_imp/sum(sca%weight_imp)) !concentration = 1 atom percent
     clmso   = impcls(1)%clmso
     BZVol   = getBZvolume(lattice%recbv)
 
@@ -1341,7 +1343,7 @@ contains
 
             ! Pkk' = |Tkk'|^2
             Tkk_abs(:,:) = dble(Tkk_tmp(:,:))**2 + aimag(Tkk_tmp(:,:))**2
-            Pkksub(ispin1,:,ispin2,isqa,:) = Pkksub(ispin1,:,ispin2,isqa,:) + Tkk_abs(:,:)*fac
+            Pkksub(ispin1,:,ispin2,isqa,:) = Pkksub(ispin1,:,ispin2,isqa,:) + Tkk_abs(:,:)*fac(iaverage)
           end do!ispin1
         end do!ispin2
       end do!isqa
@@ -2188,10 +2190,24 @@ contains
         if(sca%lboltzmann==1) then
           call IoInput('SAVEPKK   ',uio,1,7,ierr)
           read(unit=uio,fmt=*) sca%savepkk
+
           call IoInput('PROCMAP   ',uio,1,7,ierr)
           read(unit=uio,fmt=*) sca%subarr_inp
+
           call IoInput('NAVERAGE  ',uio,1,7,ierr)
           read(unit=uio,fmt=*) sca%naverage
+
+          allocate(sca%weight_imp(sca%naverage), STAT=ierr)
+          if(ierr/=0) stop 'Problem allocating weight_imp'
+
+          call IoInput('WEIGHTIMP ',uio,1,7,ierr)
+          if(ierr==0) then
+            read(unit=uio,fmt=*) sca%weight_imp
+          else ! ensures compatibility of old format input files
+            write(*,*) "Warning : WEIGHTIMP set to 1/naverage by default !"
+            sca%weight_imp(:)=1d0/sca%naverage
+          end if!ierr/=0
+
           call IoInput('GAMMAMODE ',uio,1,7,ierr)
           read(unit=uio,fmt=*) sca%gammamode
           if(sca%gammamode==1.or.sca%gammamode==2)then
@@ -2297,39 +2313,36 @@ contains
 
     call MPI_Type_free(myMPItype1, ierr)
 
-!   if(cfg%lspin==1)then
+    if(sca%lboltzmann==1)then
+      if(myrank/=master) then
+        allocate( sca%weight_imp(sca%naverage), STAT=ierr )
+        if(ierr/=0) stop 'Problem allocating cfg_arrays on slaves'
+      end if!if(myrank/=master)
 
-!     if(myrank/=master) then
-!       allocate( cfg%ispincomb(cfg%nsqa), cfg%nvect(3,cfg%nsqa), STAT=ierr )
-!       if(ierr/=0) stop 'Problem allocating cfg_arrays on slaves'
-!     end if
+      call MPI_Get_address(sca%N2,         disp2(1), ierr)
+      call MPI_Get_address(sca%weight_imp, disp2(2), ierr)
 
-!     call MPI_Get_address(cfg%N2,        disp2(1), ierr)
-!     call MPI_Get_address(cfg%ispincomb, disp2(2), ierr)
-!     call MPI_Get_address(cfg%nvect,     disp2(3), ierr)
+      base  = disp2(1)
+      disp2 = disp2 - base
 
-!     base  = disp2(1)
-!     disp2 = disp2 - base
+      blocklen2(1)=1
+      blocklen2(2)=size(sca%weight_imp)
 
-!     blocklen2(1)=1
-!     blocklen2(2)=size(cfg%ispincomb)
-!     blocklen2(3)=size(cfg%nvect)
+      etype2(1)   = MPI_INTEGER
+      etype2(2)   = MPI_DOUBLE_PRECISION
 
-!     etype2(1:2) = MPI_INTEGER
-!     etype2(3)   = MPI_DOUBLE_PRECISION
+      call MPI_Type_create_struct(sca%N2, blocklen2, disp2, etype2, myMPItype2, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_sca_2'
 
-!     call MPI_Type_create_struct(cfg%N2, blocklen2, disp2, etype2, myMPItype2, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_cfg_2'
+      call MPI_Type_commit(myMPItype2, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_sca_2'
 
-!     call MPI_Type_commit(myMPItype2, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_cfg_2'
+      call MPI_Bcast(sca%N2, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error brodcasting sca_2'
 
-!     call MPI_Bcast(cfg%N2, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
-!     if(ierr/=MPI_SUCCESS) stop 'error brodcasting cfg_2'
+      call MPI_Type_free(myMPItype2, ierr)
 
-!     call MPI_Type_free(myMPItype2, ierr)
-
-!   end if!sca%lspin==1
+    end if!sca%lboltzmann==1
 
   end subroutine myBcast_sca
 #endif
