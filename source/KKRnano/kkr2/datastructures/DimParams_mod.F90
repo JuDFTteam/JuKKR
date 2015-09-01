@@ -1,5 +1,4 @@
-!> Module that defines a datatype, which contains
-!> the parameters used to dimension important arrays
+!> Module that defines a datatype, which contains the parameters used to dimension important arrays
 !> E.R.
 
 ! Dependencies: ConfigReader_mod
@@ -9,7 +8,7 @@ implicit none
   private
   public :: DimParams, create, destroy
   public :: createDimParams, destroyDimParams ! deprecated
-  public :: writeDimParams, createDimParamsFromConf
+  public :: writeDimParams, createDimParamsFromFile
 
   type DimParams
     integer  :: NSYMAXD
@@ -63,56 +62,16 @@ implicit none
   
   CONTAINS
 
-  !-----------------------------------------------------------------------------
-  !> Constructs a DimParams object from UNFORMATTED inp0.unf file
-  !> @param[in,out] self    The DimParams object to construct.
-  subroutine createDimParams(self)
-    type (DimParams), intent(inout) :: self
-
-    integer, parameter :: FILEHANDLE = 67
-
-    open (FILEHANDLE, FILE='inp0.unf', FORM='unformatted')
-
-    read(FILEHANDLE) self%LMAXD
-    read(FILEHANDLE) self%NSPIND
-    read(FILEHANDLE) self%NAEZ
-    read(FILEHANDLE) self%IRNSD
-    read(FILEHANDLE) self%IRMD
-    read(FILEHANDLE) self%IRID
-    read(FILEHANDLE) self%NXIJD
-    read(FILEHANDLE) self%KPOIBZ
-    read(FILEHANDLE) self%IGUESSD
-    read(FILEHANDLE) self%BCPD
-    read(FILEHANDLE) self%NMAXD
-    read(FILEHANDLE) self%ISHLD
-    read(FILEHANDLE) self%LLY
-    read(FILEHANDLE) self%SMPID
-    read(FILEHANDLE) self%EMPID
-    read(FILEHANDLE) self%NTHRDS
-    read(FILEHANDLE) self%XDIM
-    read(FILEHANDLE) self%YDIM
-    read(FILEHANDLE) self%ZDIM
-    read(FILEHANDLE) self%NATBLD
-    read(FILEHANDLE) self%ITDBRYD
-    read(FILEHANDLE) self%IEMXD
-    read(FILEHANDLE) self%EKMD
-    read(FILEHANDLE) self%num_atom_procs
-
-    close(FILEHANDLE)
-
-    ! deal with derived parameters
-    call calculateDerivedParameters(self)
-
-  end subroutine
 
   !-----------------------------------------------------------------------------
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
-  subroutine createDimParamsFromConf(self)
+  subroutine createDimParamsFromFile(self, filename)
     use ConfigReader_mod, only: ConfigReader, getValueInteger, getUnreadVariable, parseFile
     use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated
     
     type (DimParams), intent(inout) :: self
+    character(len=*), intent(in) :: filename ! usually 'global.conf'
 
     type (ConfigReader) :: conf
     integer :: ierror
@@ -124,7 +83,7 @@ implicit none
     self%EKMD = 0
 
     call createConfigReader(conf)
-    call parseFile(conf, 'global.conf', ierror)
+    call parseFile(conf, filename, ierror)
     if (ierror /= 0) stop
 
     call getValueInteger(conf, "LMAXD", self%LMAXD, ierror)
@@ -183,24 +142,69 @@ implicit none
       call getUnreadVariable(conf, variable, next_ptr, ierror)
       if (ierror /= 0) exit
       write (*,*) variable
-    end do
+    enddo
 
     call destroyConfigReader(conf)
 
     ! deal with derived parameters
     call calculateDerivedParameters(self)
 
-  end subroutine
+  endsubroutine
 
+  
   !-----------------------------------------------------------------------------
-  !> Write DimParams object to inp0.unf file
+  !> Constructs a DimParams object from UNFORMATTED inp0.unf file
   !> @param[in,out] self    The DimParams object to construct.
-  subroutine writeDimParams(self)
-    type (DimParams), intent(in) :: self
+  subroutine createDimParams(self, filename)
+    type (DimParams), intent(inout) :: self
+    character(len=*), intent(in) :: filename ! usually 'inp0.unf' binary file
 
     integer, parameter :: FILEHANDLE = 67
 
-    open (FILEHANDLE, FILE='inp0.unf', FORM='unformatted')
+    open (FILEHANDLE, FILE=filename, FORM='unformatted')
+
+    read(FILEHANDLE) self%LMAXD
+    read(FILEHANDLE) self%NSPIND
+    read(FILEHANDLE) self%NAEZ
+    read(FILEHANDLE) self%IRNSD
+    read(FILEHANDLE) self%IRMD
+    read(FILEHANDLE) self%IRID
+    read(FILEHANDLE) self%NXIJD
+    read(FILEHANDLE) self%KPOIBZ
+    read(FILEHANDLE) self%IGUESSD
+    read(FILEHANDLE) self%BCPD
+    read(FILEHANDLE) self%NMAXD
+    read(FILEHANDLE) self%ISHLD
+    read(FILEHANDLE) self%LLY
+    read(FILEHANDLE) self%SMPID
+    read(FILEHANDLE) self%EMPID
+    read(FILEHANDLE) self%NTHRDS
+    read(FILEHANDLE) self%XDIM
+    read(FILEHANDLE) self%YDIM
+    read(FILEHANDLE) self%ZDIM
+    read(FILEHANDLE) self%NATBLD
+    read(FILEHANDLE) self%ITDBRYD
+    read(FILEHANDLE) self%IEMXD
+    read(FILEHANDLE) self%EKMD
+    read(FILEHANDLE) self%num_atom_procs
+
+    close(FILEHANDLE)
+
+    ! deal with derived parameters
+    call calculateDerivedParameters(self)
+
+  endsubroutine
+  
+  !-----------------------------------------------------------------------------
+  !> Write DimParams object to inp0.unf file
+  !> @param[in,out] self    The DimParams object to construct.
+  subroutine writeDimParams(self, filename)
+    type (DimParams), intent(in) :: self
+    character(len=*), intent(in) :: filename ! usually 'inp0.unf'
+
+    integer, parameter :: FILEHANDLE = 67
+
+    open (FILEHANDLE, FILE=filename, FORM='unformatted')
 
     write(FILEHANDLE) self%LMAXD
     write(FILEHANDLE) self%NSPIND
@@ -238,10 +242,8 @@ implicit none
     type (DimParams), intent(inout) :: self
 
 !   integer :: memory_stat
-
     ! Nothing to do.
-
-  end subroutine
+  endsubroutine
 
 !------------------------------------------------------------------------------
 !  HELPER ROUTINES
@@ -278,7 +280,7 @@ implicit none
 
     call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
 
-  end subroutine
+  endsubroutine
 
 
   ! Consistency checks

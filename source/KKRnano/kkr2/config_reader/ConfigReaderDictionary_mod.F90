@@ -14,18 +14,18 @@ module ConfigReaderDictionary_mod
   public :: pushBackDictionary, getDictionaryValue, getTaggedVariable
   
   ! Status flags and error codes
-  integer, parameter, public :: CONFIG_READER_DICT_NOT_UNIQUE = 1, CONFIG_READER_DICT_NOT_FOUND = 2
+  integer, parameter, public :: CONFIG_READER_DICT_NOT_UNIQUE=1, CONFIG_READER_DICT_NOT_FOUND=2
 
   ! Maximal length of variable names and value string.
   ! Modify to allow different lengths.
-  integer, parameter, public :: CONFIG_READER_DICT_VAR_LENGTH = 64, CONFIG_READER_DICT_VALUE_LENGTH = 192
+  integer, parameter, public :: CONFIG_READER_DICT_VAR_LENGTH=64, CONFIG_READER_DICT_VALUE_LENGTH=192
 
   type Dictionary
     private
-    type (DictionaryEntry), dimension(:), pointer :: dict
+    type (DictionaryEntry), pointer :: dict(:)
     integer :: counter
-  end type Dictionary
-
+  endtype 
+  
 ! private declarations
 
   integer, parameter, private :: INITIAL_SIZE = 50
@@ -34,8 +34,7 @@ module ConfigReaderDictionary_mod
     character(len=CONFIG_READER_DICT_VAR_LENGTH) :: variable
     character(len=CONFIG_READER_DICT_VALUE_LENGTH) :: value
     logical :: tag
-  end type DictionaryEntry
-
+  endtype
   
   interface create
     module procedure createDictionary
@@ -53,10 +52,10 @@ module ConfigReaderDictionary_mod
 
     if (present(message)) then
       write(*,*) message
-    end if
+    endif
 
     stop
-  end subroutine
+  endsubroutine
 
   subroutine createDictionary(this)
     type (Dictionary), intent(inout) :: this
@@ -67,13 +66,13 @@ module ConfigReaderDictionary_mod
 
     if (associated(this%dict)) then
       call fatalErrorDictionary("It seems that the dictionary was already created.")
-    end if
+    endif
 
     allocate(this%dict(INITIAL_SIZE), stat=ierror)
     if (ierror /= 0) then
       call fatalErrorDictionary()
-    end if
-  end subroutine createDictionary
+    endif
+  endsubroutine createDictionary
 
 
   !----------------------------------------------------------------------------
@@ -97,17 +96,17 @@ module ConfigReaderDictionary_mod
 
     if (.not. associated(this%dict)) then
       call fatalErrorDictionary("Dictionary was not created.")
-    end if
+    endif
 
     ierror = 0
 
     ! check if variable already exists
     do ind = 1, this%counter
-      if (variable .eq. this%dict(ind)%variable) then
+      if (variable == this%dict(ind)%variable) then
         ierror = CONFIG_READER_DICT_NOT_UNIQUE
         return
-      end if
-    end do
+      endif
+    enddo !
 
     ! index of next entry
     ind = this%counter + 1
@@ -119,19 +118,19 @@ module ConfigReaderDictionary_mod
       allocate(dict_new(capacity * 2), stat = ios)
       if (ios /= 0) then
         call fatalErrorDictionary()
-      end if
+      endif
 
       do loop_ind = 1, capacity
         dict_new(loop_ind) = this%dict(loop_ind)
-      end do
+      enddo !
 
       deallocate(this%dict, stat = ios)
 
       this%dict => dict_new
       if (ios /= 0) then
         call fatalErrorDictionary()
-      end if
-    end if
+      endif
+    endif
 
     this%dict(ind)%variable = variable
     this%dict(ind)%value = value
@@ -140,7 +139,7 @@ module ConfigReaderDictionary_mod
     ! don't forget to increment counter
     this%counter = this%counter + 1
 
-  end subroutine
+  endsubroutine
 
 
   !----------------------------------------------------------------------------
@@ -158,20 +157,20 @@ module ConfigReaderDictionary_mod
     ierror = CONFIG_READER_DICT_NOT_FOUND
 
     do ind = 1, this%counter
-      if (variable .eq. this%dict(ind)%variable) then
+      if (variable == this%dict(ind)%variable) then
         ierror = 0
         value = this%dict(ind)%value
         this%dict(ind)%tag = tag     ! set the tag
         return
-      end if
-    end do
-  end subroutine
+      endif
+    enddo ! ind
+    
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> This routine can be used to find variables that have never been looked up.
   !>
-  !> Use this to get all variables name which are tagged (with logical
-  !> value given in 'tag')
+  !> Use this to get all variable names which are tagged (with logical value given in 'tag')
   !> next_ptr is an integer which points to the next value that should be
   !> checked, set it to 1 if you want to start searching at the beginning
   !> if next_ptr has an illegal value or no tagged variable was found
@@ -190,19 +189,19 @@ module ConfigReaderDictionary_mod
 
     if (next_ptr < 1 .or. next_ptr > this%counter) then
       return
-    end if
+    endif
 
     do ind = next_ptr, this%counter
       if (this%dict(ind)%tag .eqv. tag) then
         ierror = 0
-          variable = this%dict(ind)%variable
+        variable = this%dict(ind)%variable
         exit
-      end if
-    end do
+      endif
+    enddo ! ind
 
     next_ptr = ind + 1
 
-  end subroutine
+  endsubroutine
 
   !> output of dictionary content to stdout
   !> useful for testing purposes
@@ -210,13 +209,12 @@ module ConfigReaderDictionary_mod
     type (Dictionary), intent(in) :: this
 
     integer :: ind
-
+    
     do ind = 1, this%counter
-      write (*,*)  trim(this%dict(ind)%variable), " ", &
-                 & trim(this%dict(ind)%value), &
-                 & this%dict(ind)%tag
-    end do
-  end subroutine
+      write(*,*) trim(this%dict(ind)%variable), " ", trim(this%dict(ind)%value), this%dict(ind)%tag
+    enddo ! ind
+    
+  endsubroutine ! print
 
   !----------------------------------------------------------------------------
   !> Frees resources used by dictionary.
@@ -229,12 +227,12 @@ module ConfigReaderDictionary_mod
 
     if (.not. associated(this%dict)) then
       call fatalErrorDictionary("Dictionary was already destroyed.")
-    end if
+    endif
 
     deallocate(this%dict, stat=ierror)
     if (ierror /= 0) then
       call fatalErrorDictionary()
-    end if
-  end subroutine destroyDictionary
+    endif
+  endsubroutine destroyDictionary
 
-end module ConfigReaderDictionary_mod
+endmodule ConfigReaderDictionary_mod

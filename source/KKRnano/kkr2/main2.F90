@@ -70,10 +70,10 @@ program KKRnano
   
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
-  case('--prepare')
+  case ('--prepare')
     call main0() ! call former kkr0.exe
     stop
-  case('--help')
+  case ('--help')
     call get_command_argument(0, arg, ilen, ios)
     write(*,'(9A)') 'usage: ',trim(arg),' [options]'
     write(*,'(A)') '  options:', &
@@ -89,7 +89,7 @@ program KKRnano
   endselect ! arg
   !----------------------------------------------------------------------------
 
-  call createDimParams(dims) ! read dim. parameters from 'inp0.unf'
+  call createDimParams(dims, 'inp0.unf') ! read dim. parameters from file 'inp0.unf'
 
 ! -----------------------------------------------------------------------------
   call createKKRnanoParallel(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
@@ -127,7 +127,7 @@ program KKRnano
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
   call createMain2Arrays(arrays, dims)
-  call readMain2Arrays(arrays, 'arrays.unf') !every process does this!
+  call readMain2Arrays(arrays, 'arrays.unf') ! every process does this!
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
@@ -270,11 +270,11 @@ program KKRnano
 ! END only processes in master-group are working
 !----------------------------------------------------------------------
 
-      if(isMasterRank(my_mpi)) then
+      if (isMasterRank(my_mpi)) then
         ! only MASTERRANK updates, other ranks get it broadcasted later
         ! (although other processes could update themselves)
 
-        if(params%use_semicore==1) then
+        if (params%use_semicore == 1) then
           call updateEnergyMeshSemi(emesh)
         else
           call updateEnergyMesh(emesh)
@@ -283,7 +283,7 @@ program KKRnano
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
-        if(params%use_semicore==1) then
+        if (params%use_semicore == 1) then
           call writeEnergyMeshSemi(emesh)
         else
           call writeEnergyMesh(emesh)
@@ -310,7 +310,7 @@ program KKRnano
       call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
     endif
 
-    if (isMasterRank(my_mpi)) close(2)    ! TIME
+    if (isMasterRank(my_mpi)) close(2) ! time-info
 
     call destroyEBalanceHandler(ebalance_handler)
     call destroyEnergyMesh(emesh)
@@ -333,4 +333,4 @@ program KKRnano
 
   call destroyKKRnanoParallel(my_mpi)
 
-end program KKRnano
+endprogram KKRnano

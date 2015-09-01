@@ -18,19 +18,19 @@ module read_formatted_shapefun_mod
     integer, allocatable :: NM (:)
     double precision, allocatable :: XRN (:)
     double precision, allocatable :: DRN (:)
-  end type
+  endtype
 
   type Shapefunction
     integer :: NFU
     integer, allocatable :: LLMSP (:)
     double precision, allocatable :: THETAS (:,:)
-  end type
+  endtype
 
   type ShapefunFile
     integer NCELL
     type (Intermesh), allocatable :: mesh (:)
     type (Shapefunction), allocatable :: shapes (:)
-  end type
+  endtype
 
   interface create
     module procedure create_read_ShapefunFile
@@ -50,7 +50,7 @@ module read_formatted_shapefun_mod
 
     integer :: IPAN, IR
 
-    READ (unit,FMT=9000) inter%NPAN,inter%MESHN
+    READ (unit,FMT="(16i5)") inter%NPAN,inter%MESHN
 
     CHECKASSERT(inter%NPAN>=0)
     CHECKASSERT(inter%MESHN>=0)
@@ -59,12 +59,10 @@ module read_formatted_shapefun_mod
     allocate (inter%XRN(inter%MESHN))
     allocate (inter%DRN(inter%MESHN))
 
-    READ (unit,FMT=9000) (inter%NM(IPAN), IPAN=1,inter%NPAN)
-    READ (unit,FMT=9010) (inter%XRN(IR), inter%DRN(IR), IR=1,inter%MESHN)
+    READ (unit,FMT="(16i5)") (inter%NM(IPAN), IPAN=1,inter%NPAN)
+    READ (unit,FMT="(4d20.12)") (inter%XRN(IR), inter%DRN(IR), IR=1,inter%MESHN)
 
-    9000 FORMAT (16i5)
-    9010 FORMAT (4d20.12)
-  end subroutine
+  endsubroutine
 
   !--------------------------------------------------------------------------
   subroutine destroy_intermesh (inter)
@@ -74,7 +72,7 @@ module read_formatted_shapefun_mod
     deallocate (inter%XRN)
     deallocate (inter%DRN)
 
-  end subroutine
+  endsubroutine
 
   !--------------------------------------------------------------------------
   subroutine create_read_shapefunction (shapef, inter, unit)
@@ -84,21 +82,19 @@ module read_formatted_shapefun_mod
 
     integer :: IFUN, N, LM
 
-    READ (unit,FMT=9000) shapef%NFU
+    READ (unit,FMT="(16i5)") shapef%NFU
 
     allocate (shapef%LLMSP(shapef%NFU))
     allocate (shapef%THETAS(inter%MESHN,shapef%NFU))
 
     DO IFUN = 1, shapef%NFU
-          READ (unit,FMT=9000) LM
+          READ (unit,FMT="(16i5)") LM
           CHECKASSERT(LM > 0)
           shapef%LLMSP(IFUN) = LM
-          READ (unit,FMT=9010) (shapef%THETAS(N,IFUN),N=1,inter%MESHN)
+          READ (unit,FMT="(4d20.12)") (shapef%THETAS(N,IFUN),N=1,inter%MESHN)
     ENDDO
-
-    9000 FORMAT (16i5)
-    9010 FORMAT (4d20.12)
-  end subroutine
+    
+  endsubroutine
 
   !--------------------------------------------------------------------------
   subroutine destroy_shapefunction (shapef)
@@ -106,7 +102,7 @@ module read_formatted_shapefun_mod
 
     deallocate (shapef%LLMSP)
     deallocate (shapef%THETAS)
-  end subroutine
+  endsubroutine
 
   subroutine create_read_shapefunFile (sfile, unit)
     type(ShapefunFile), intent (out) :: sfile
@@ -115,9 +111,9 @@ module read_formatted_shapefun_mod
     integer :: ICELL
     double precision :: dummy
 
-    READ (unit,FMT=9000) sfile%NCELL
+    READ (unit,FMT="(16i5)") sfile%NCELL
 
-    READ (unit, FMT=9010) (dummy, ICELL=1,sfile%NCELL)
+    READ (unit, FMT="(4d20.12)") (dummy, ICELL=1,sfile%NCELL)
 
     allocate (sfile%mesh(sfile%NCELL))
     allocate (sfile%shapes(sfile%NCELL))
@@ -127,9 +123,7 @@ module read_formatted_shapefun_mod
       CALL create_read_shapefunction(sfile%shapes(ICELL), sfile%mesh(ICELL), unit)
     ENDDO
 
-    9000 FORMAT (16i5)
-    9010 FORMAT (4d20.12)
-  end subroutine
+  endsubroutine
 
   subroutine destroy_shapefunFile (sfile)
     type(ShapefunFile), intent (inout) :: sfile
@@ -144,9 +138,9 @@ module read_formatted_shapefun_mod
     deallocate (sfile%mesh)
     deallocate (sfile%shapes)
 
-  end subroutine
+  endsubroutine
 
-end module read_formatted_shapefun_mod
+endmodule read_formatted_shapefun_mod
 
 #ifdef TEST_READ_FORMATTED_SHAPEFUN_MOD
 program test_read_formatted
@@ -175,5 +169,5 @@ program test_read_formatted
     call destroy_ShapefunFile(sfile)
   close(UNIT)
 
-end program
+endprogram
 #endif

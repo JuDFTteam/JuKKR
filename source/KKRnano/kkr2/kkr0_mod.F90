@@ -2,8 +2,7 @@
 ! input.conf match those in energy_mesh.0
 ! PROBLEM: Fermi-Energy specified in 'potential' file - E-mesh depends on
 ! E-Fermi -> k-mesh depends on E-mesh => k-mesh depends on EFERMI
-! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT
-! ON THE ACTUAL ONE!!!!!! - BUG?
+! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT ON THE ACTUAL ONE!!!!!! - BUG?
 !  program MAIN0
 module kkr0_mod
   implicit none
@@ -99,22 +98,11 @@ module kkr0_mod
 ! ----------------------------------------------------------------------
 
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
-    use DimParams_mod, only: DimParams, createDimParamsFromConf, writeDimParams
+    use DimParams_mod, only: DimParams, createDimParamsFromFile, writeDimParams
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
 
-!   double precision KIND constant
-    integer, parameter :: DP = kind(1.0D0)
-
-!     .. Parameters ..
-
-    integer :: NSYMAXD
-    integer :: MAXMSHD
-!
-!     Maximal number of Brillouin zone symmetries, 48 is largest
-!     possible number
-    parameter (NSYMAXD=48)
-!     Maximal number of k-meshes used
-    parameter (MAXMSHD=8)
+    integer, parameter :: NSYMAXD=48 ! Maximal number of Brillouin zone symmetries, 48 is largest possible number
+    integer, parameter :: MAXMSHD=8 ! Maximal number of k-meshes used
 
 !     .. Energy Mesh ..
     double precision :: EFERMI
@@ -122,37 +110,31 @@ module kkr0_mod
     integer :: IELAST
     integer :: iesemicore
 
-    complex(kind=DP), dimension(:), allocatable :: EZ
-    complex(kind=DP), dimension(:), allocatable :: WEZ
+    double complex, allocatable :: EZ(:)
+    double complex, allocatable :: WEZ(:)
 
     double precision :: VOLUME0
     double precision :: RECBV(3,3)
 
-    integer, dimension(:),   allocatable :: NTCELL
-    double precision, dimension(:), allocatable :: radius_muffin_tin
+    integer,   allocatable :: NTCELL(:)
+    double precision, allocatable :: radius_muffin_tin(:)
 
 !     .. auxillary variables, not passed to kkr2
     double precision :: PI
-
     integer :: IE
-
     integer :: ierror
-
-    complex(kind=DP), dimension(:), allocatable :: DEZ ! needed for EMESHT
-
-    integer ::   IEMXD
+    double complex, allocatable :: DEZ(:) ! needed for EMESHT
+    integer :: IEMXD
     integer, parameter :: KREL = 0
-
     integer :: EKMD
     logical :: startpot_exists
-
     type (InputParams)    :: params
     type (DimParams)      :: dims
     type (Main2Arrays)    :: arrays
 
 ! ------------ end of declarations ---------------------------------
 
-    call createDimParamsFromConf(dims)
+    call createDimParamsFromFile(dims, "global.conf")
 
     ierror = getInputParamsValues("input.conf", params)
     if (ierror /= 0) stop
@@ -168,7 +150,7 @@ module kkr0_mod
         IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3 + params%n1semi + params%n2semi + params%n3semi
       else ! DOS-calculation
         IEMXD = params%NPNT2 + params%n2semi
-      end if
+      endif
 
     ! semicore contour is not used
     else
@@ -177,9 +159,9 @@ module kkr0_mod
         IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3
       else ! DOS-calculation
         IEMXD = params%NPNT2
-      end if
+      endif
 
-    end if
+    endif
 
 
     dims%IEMXD = IEMXD
@@ -202,7 +184,7 @@ module kkr0_mod
 !     and write 'wldau.unf', if it does not exist already
     if (params%LDAU) then
       call ldauinfo_read(dims%LMAXD, dims%NSPIND, arrays%ZAT, dims%NAEZ)
-    end if
+    endif
 
 !===================================================================
 
@@ -218,8 +200,7 @@ module kkr0_mod
 
     else
       ! no formatted potential provided
-      write(*,*) &
-      "WARNING: file 'potential' not found... skipping start potential generation."
+      write(*,*) "WARNING: file 'potential' not found... skipping start potential generation."
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
       open (67, file='EFERMI', form='formatted')
       read (67, *) EFERMI
@@ -240,11 +221,9 @@ module kkr0_mod
 
 ! for non-DOS calculation upper energy bound corresponds to Fermi energy
 ! BAD: params%Emax is changed
-    if ( params%NPOL /= 0 ) params%Emax = EFERMI
+    if (params%NPOL /= 0) params%Emax = EFERMI
 
 ! --> set up energy contour
-    PI = 4.0D0*ATAN(1.0D0)
-
 ! --> set up semicore energy contour if use_semicore == 1
     iesemicore = 0
     if (params%use_semicore == 1) then
@@ -256,13 +235,15 @@ module kkr0_mod
     else
 ! Call EMESTH for valence contour only (can be included in EPATHTB when semicore contour feature is stable)
       call EMESHT(EZ,DEZ,IELAST,params%Emin,params%Emax,EFERMI,params%tempr, &
-      params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
+                  params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
     endif
 
-    do IE = 1,IELAST
+    PI = 4.0D0*ATAN(1.0D0)
+
+    do IE = 1, IELAST
       WEZ(IE) = -2.D0/PI*DEZ(IE)
-      IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*params%FSEMICORE
-    end do
+      IF (IE <= IESEMICORE) WEZ(IE) = WEZ(IE)*params%FSEMICORE
+    enddo ! ie
 
 
 ! ================================================ deal with the lattice
@@ -275,8 +256,7 @@ module kkr0_mod
     call LATTIX99(params%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
 
 
-    call SCALEVEC(arrays%RBASIS, &
-                  arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
+    call SCALEVEC(arrays%RBASIS, arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
 
 ! ======================================================================
 !     setting up kpoints
@@ -294,8 +274,7 @@ module kkr0_mod
     dims%EKMD = EKMD
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
-    call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, &
-                         arrays%VOLBZ, arrays%VOLCUB)
+    call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, arrays%VOLBZ, arrays%VOLCUB)
 
 !     Conversion of RMAX and GMAX to atomic units
     params%RMAX = params%RMAX*params%ALAT
@@ -304,7 +283,7 @@ module kkr0_mod
     call TESTDIMLAT(params%ALAT,arrays%BRAVAIS,RECBV,params%RMAX,params%GMAX, &
                     dims%NMAXD, dims%ISHLD)
 
-    call writeDimParams(dims)
+    call writeDimParams(dims, 'inp0.unf')
     ierror = writeInputParamsToFile('input.unf', params)
 
     call writeMain2Arrays(arrays, 'arrays.unf')
@@ -325,7 +304,7 @@ module kkr0_mod
       write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
       write (67) EFERMI
       close (67)
-    end if
+    endif
 
 ! ======================================================================
 
@@ -341,7 +320,7 @@ module kkr0_mod
     deallocate(radius_muffin_tin, stat=ierror)
 
 ! -------------- Helper routine -----------------------------------------------
-  end subroutine ! main0
+  endsubroutine ! main0
 
   !------------------------------------------------------------------------
   ! Read k-mesh file
@@ -353,6 +332,7 @@ module kkr0_mod
     double precision, intent(out) :: VOLCUB(:,:)
 
     ! -----------------------------
+    integer, parameter :: fu = 52 ! file unit
     integer :: I
     integer :: ID
     integer :: L
@@ -362,26 +342,24 @@ module kkr0_mod
     inquire(file='new.kpoints',exist=new_kpoints)
 
     if (.not. new_kpoints) then
-      open (52,file='kpoints',form='formatted')
+      open (fu,file='kpoints',form='formatted')
     else
       ! if file new.kpoints exists - use those kpoints
       write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
-      open (52,file='new.kpoints',form='formatted')
-    end if
+      open (fu,file='new.kpoints',form='formatted')
+    endif
 
-    rewind (52)
+    rewind (fu)
 
-    do L = 1,MAXMESH
-      read (52,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-      read (52,fmt=*) (BZKP(ID,1,L),ID=1,3),VOLCUB(1,L)
-      do I=2,NOFKS(L)
-        read (52,fmt=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-      end do
-    end do
+    do L = 1, MAXMESH
+      read (fu,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
+      do I = 1, NOFKS(L)
+        read (fu,fmt=*) BZKP(1:3,I,L),VOLCUB(I,L)
+      enddo ! i
+    enddo ! l
 
-    close (52)
-  end subroutine ! readKpointsFile
+    close (fu)
+  endsubroutine ! readKpointsFile
 
-!end program
-end module ! kkr0_mod
+endmodule ! kkr0_mod
 

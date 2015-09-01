@@ -28,9 +28,11 @@ FC90FLAGS =
 # FCFLAGS += -C -traceback -CB
 # FCFLAGS += -O0 -g
 # LDFLAGS  = -O0 -g
-FCFLAGS += -O3 -g -pg
-LDFLAGS  = -O3 -ipa -g -pg
+FCFLAGS += -O3  -g -pg
+LDFLAGS  = -O3  -g -pg
 # LDFLAGS += -C -traceback
+# FCFLAGS += -ipo
+# LDFLAGS += -ipo
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
 else

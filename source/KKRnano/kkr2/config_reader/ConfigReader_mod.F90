@@ -34,7 +34,7 @@ module ConfigReader_mod
 
   type ConfigReader
     private
-    type (Dictionary) :: parse_dict
+    type(Dictionary) :: parse_dict
   end type ConfigReader
 
   integer, parameter :: MAX_LINE_LENGTH = 150
@@ -61,71 +61,69 @@ module ConfigReader_mod
 !---------------------------------------------------------------------
   subroutine createConfigReader(this)
     use ConfigReaderDictionary_mod, only: createDictionary, CONFIG_READER_DICT_VALUE_LENGTH
-    type (ConfigReader), intent(inout) :: this
+    type(ConfigReader), intent(inout) :: this
 
-    if(CONFIG_READER_DICT_VALUE_LENGTH < MAX_LINE_LENGTH) then
+    if (CONFIG_READER_DICT_VALUE_LENGTH < MAX_LINE_LENGTH) then
       write(*,*) "CONFIG_READER: << FATAL ERROR >>"
       write(*,*) "Constant CONFIG_READER_DICT_VALUE_LENGTH has to be >= MAX_LINE_LENGTH"
       stop
-    end if
+    endif
 
     call createDictionary(this%parse_dict)
 
-  end subroutine createConfigReader
+  endsubroutine createConfigReader
 
 
 !---------------------------------------------------------------------
   subroutine destroyConfigReader(this)
     use ConfigReaderDictionary_mod, only: destroyDictionary
-    type (ConfigReader), intent(inout) :: this
+    type(ConfigReader), intent(inout) :: this
 
     call destroyDictionary(this%parse_dict)
 
-  end subroutine destroyConfigReader
+  endsubroutine destroyConfigReader
 
 !---------------------------------------------------------------------
   subroutine parseFile(this, filename, ierror)
 
-    type (ConfigReader), intent(inout) :: this
+    type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: filename
     integer, intent(out) :: ierror ! for parse errors
 
     integer :: line_number
     integer :: ios ! for I/O errors
-    character(len = MAX_LINE_LENGTH) :: line_buf
+    character(len=MAX_LINE_LENGTH) :: line_buf
 
     ierror = CONFIG_READER_ERR_NO_ERROR
     ios = 0
 
     line_number = 1
 
-    open(unit = FILE_HANDLE, file = filename, status='old', & 
-         action='read', iostat = ios)
+    open(unit=FILE_HANDLE, file=filename, status='old', action='read', iostat=ios)
 
     if (ios /= 0) then
       write(*,*) "CONFIG_READER: Could not open file ", filename
       ierror = CONFIG_READER_ERR_NO_FILE
-    end if
+    endif
 
-      do while (ios == 0 .and. ierror == CONFIG_READER_ERR_NO_ERROR)
-        read(FILE_HANDLE, '(A)', iostat = ios) line_buf
+    do while (ios == 0 .and. ierror == CONFIG_READER_ERR_NO_ERROR)
+      read(FILE_HANDLE, '(A)', iostat = ios) line_buf
 
-        if (ios > 0) then
-          write(*,*) "CONFIG_READER: Error reading file ", filename
-          ierror = CONFIG_READER_ERR_IO_FAIL
-        end if
+      if (ios > 0) then
+        write(*,*) "CONFIG_READER: Error reading file ", filename
+        ierror = CONFIG_READER_ERR_IO_FAIL
+      endif
 
-        if (ios == 0) then
-          !write(*,*) line_buf
-          call parseLine(this, line_buf, line_number, ierror)
-          line_number = line_number + 1
-        end if
-      end do
-
+      if (ios == 0) then
+        !write(*,*) line_buf
+        call parseLine(this, line_buf, line_number, ierror)
+        line_number = line_number + 1
+      endif
+    enddo ! while
 
     close(FILE_HANDLE)
 
-  end subroutine parseFile
+  endsubroutine parseFile
 
 !---------------------------------------------------------------------
   !> parse a line with some simple syntax rules
@@ -145,15 +143,15 @@ module ConfigReader_mod
       CONFIG_READER_DICT_VALUE_LENGTH, CONFIG_READER_DICT_NOT_UNIQUE, &
       pushBackDictionary
 
-    type (ConfigReader), intent(inout) :: this
-    character(len = MAX_LINE_LENGTH), intent(in) :: line_buf
+    type(ConfigReader), intent(inout) :: this
+    character(len=MAX_LINE_LENGTH), intent(in) :: line_buf
     integer, intent(in) :: line_number
     integer, intent(out) :: ierror ! for parse errors
 
     character :: parse_char
     character :: string_delim_used
-    character(len = CONFIG_READER_DICT_VAR_LENGTH) :: variable
-    character(len = CONFIG_READER_DICT_VALUE_LENGTH) :: value
+    character(len=CONFIG_READER_DICT_VAR_LENGTH) :: variable
+    character(len=CONFIG_READER_DICT_VALUE_LENGTH) :: value
 
     integer :: dict_error ! for errors such as duplicate variable etc.
     integer :: column
@@ -193,11 +191,11 @@ module ConfigReader_mod
 
     do column = 1, len(variable)
       variable(column:column) = ' '
-    end do
+    enddo ! column
 
     do column = 1, len(value)
       value(column:column) = ' '
-    end do
+    enddo ! column
 
     char_loop: do column = 1, len(line_buf)
 
@@ -212,45 +210,45 @@ module ConfigReader_mod
       action = NO_ACTION ! default: do nothing
       ierror = CONFIG_READER_ERR_NO_ERROR
 
-      select case (state)
+      selectcase (state)
 
-      case(START_MODE)
+      case (START_MODE)
         if (is_blank) then
           action = NO_ACTION
-        else if (is_allowed_char) then
+        elseif (is_allowed_char) then
           state = READ_VARIABLE_MODE
           action = ADD_TO_VARIABLE
-        else if (is_comment_char) then
+        elseif (is_comment_char) then
           state = FINISHED
         else
           ! Unexpected Character found
           state = FINISHED
           ierror = CONFIG_READER_ERR_BAD_CHAR
-        end if 
+        endif 
 
       case (READ_VARIABLE_MODE)
         if (parse_char == ' ') then
           state = SEARCH_EQUAL_MODE
-        else if (is_equal_char) then
+        elseif (is_equal_char) then
           state = SEARCH_VALUE_MODE
-        else if (is_allowed_char) then
+        elseif (is_allowed_char) then
           action = ADD_TO_VARIABLE
-        else if (is_comment_char) then
+        elseif (is_comment_char) then
           state = FINISHED
           ierror = CONFIG_READER_ERR_NO_VALUE
         else
           state = FINISHED
           ierror = CONFIG_READER_ERR_BAD_CHAR
-        end if
+        endif
 
       case (SEARCH_EQUAL_MODE)
         if (is_blank) then
           action = NO_ACTION
 
-        else if (is_equal_char) then
+        elseif (is_equal_char) then
           state = SEARCH_VALUE_MODE
 
-        else if (is_comment_char) then
+        elseif (is_comment_char) then
           ! no equal sign found
           state = FINISHED
           ierror = CONFIG_READER_ERR_NO_EQUAL
@@ -258,22 +256,22 @@ module ConfigReader_mod
           ! expected =
           state = FINISHED
           ierror = CONFIG_READER_ERR_NO_EQUAL
-        end if
+        endif
 
       case (SEARCH_VALUE_MODE)
         if (is_blank) then
           action = NO_ACTION
 
-        else if (is_allowed_char) then
+        elseif (is_allowed_char) then
           state = READ_VALUE_MODE
           action = ADD_TO_VALUE
 
-        else if (is_string_delim) then
+        elseif (is_string_delim) then
           state = SEARCH_STRING_MODE
           ! remember string delimiter used
           string_delim_used = parse_char
 
-        else if (is_comment_char) then
+        elseif (is_comment_char) then
         ! expected Value - none found
           state = FINISHED
           ierror = CONFIG_READER_ERR_NO_VALUE
@@ -282,7 +280,7 @@ module ConfigReader_mod
         ! unexpected character
           state = FINISHED
           ierror = 1
-        end if
+        endif
 
        case (READ_VALUE_MODE)
          if (is_blank) then
@@ -292,16 +290,16 @@ module ConfigReader_mod
            !state = FINISHED
            !action = NO_ACTION
 
-         else if (is_allowed_char) then
+         elseif (is_allowed_char) then
            action = ADD_TO_VALUE
 
-         else if (is_comment_char) then
+         elseif (is_comment_char) then
            state = FINISHED
          else
          ! unexpected character
            state = FINISHED
            ierror = CONFIG_READER_ERR_BAD_CHAR
-         end if
+         endif
 
        ! check for non-empty string
        case (SEARCH_STRING_MODE)
@@ -312,7 +310,7 @@ module ConfigReader_mod
          else
            state = READ_STRING_MODE
            action = ADD_TO_VALUE
-         end if
+         endif
 
        case (READ_STRING_MODE)
          if (parse_char == string_delim_used) then
@@ -320,16 +318,16 @@ module ConfigReader_mod
            state = FINISHED
          else
            action = ADD_TO_VALUE
-         end if
+         endif
 
        case default
          write (*,*) "FATAL ERROR in simple_parser. Parser is in unknown state."
          STOP
-      end select
+      endselect
 
       !write(*,*) state, action
 
-      select case (action)
+      selectcase (action)
 
         case (ADD_TO_VARIABLE)
 
@@ -341,38 +339,24 @@ module ConfigReader_mod
           value_counter = value_counter + 1
           value(value_counter:value_counter) = parse_char
 
-      end select
+      endselect
 
       if (state == FINISHED) exit
 
-    end do char_loop
+    enddo char_loop
 
     ! check the state at end of line
 
-    select case (state)
-
-      case (START_MODE)
-        ! do nothing
-
-      case (READ_VALUE_MODE)
-        ! do nothing
-
-      case (READ_VARIABLE_MODE)
-        ierror = CONFIG_READER_ERR_NO_VALUE
-
-      case (SEARCH_EQUAL_MODE)
-        ierror = CONFIG_READER_ERR_NO_VALUE
-
-      case (SEARCH_VALUE_MODE)
-        ierror = CONFIG_READER_ERR_NO_VALUE
-
-      case (SEARCH_STRING_MODE)
-        ierror = CONFIG_READER_ERR_END_LINE
-
-      case (READ_STRING_MODE)
-        ierror = CONFIG_READER_ERR_END_LINE
-
-    end select
+    selectcase (state)
+      case (READ_VARIABLE_MODE);  ierror = CONFIG_READER_ERR_NO_VALUE
+      case (SEARCH_EQUAL_MODE);   ierror = CONFIG_READER_ERR_NO_VALUE
+      case (SEARCH_VALUE_MODE);   ierror = CONFIG_READER_ERR_NO_VALUE
+      case (SEARCH_STRING_MODE);  ierror = CONFIG_READER_ERR_END_LINE
+      case (READ_STRING_MODE);    ierror = CONFIG_READER_ERR_END_LINE
+      case (START_MODE) ! do nothing
+      case (READ_VALUE_MODE) ! do nothing
+      case default ! do nothing
+    endselect
 
     !if (variable_counter /= 0) write(*,*) variable
     !if (value_counter /= 0) write(*,*) value
@@ -381,47 +365,37 @@ module ConfigReader_mod
       call pushBackDictionary(this%parse_dict, variable, value, .false., dict_error)
       if (dict_error == CONFIG_READER_DICT_NOT_UNIQUE) then
         ierror = CONFIG_READER_ERR_VAR_NOT_UNIQUE
-      end if
-    end if
+      endif
+    endif
 
-    if (ierror /= 0) then
-      call displayParserError(line_number, column, ierror)
-    end if
+    if (ierror /= 0) call displayParserError(line_number, column, ierror)
 
-  end subroutine parseLine
+  endsubroutine parseLine
 
 !---------------------------------------------------------------------
   subroutine displayParserError(line_number, column, ierror)
     integer, intent(in) :: line_number, column, ierror
 
-    if (ierror /= 0) then
-      write(*,'(9(A,I0))') 'CONFIG_READER: Error in line ', line_number, ' in column ', column
-      select case (ierror)
-        case (CONFIG_READER_ERR_BAD_CHAR)      
-      write (*,*) "Character not allowed."
-        case (CONFIG_READER_ERR_NO_EQUAL)      
-          write (*,*) "Expected equal sign not found."
-        case (CONFIG_READER_ERR_NO_VALUE)      
-          write (*,*) "No value assigned to variable."
-        case (CONFIG_READER_ERR_EMPTY_STR)     
-          write (*,*) "Value is empty string."
-        case (CONFIG_READER_ERR_END_LINE)      
-          write (*,*) "Unexpected end of line."
-        case (CONFIG_READER_ERR_VAR_NOT_UNIQUE);
-          write (*,*) "Parameter is already defined."
-        case default
-          write (*,*) "Unknown error."
-      end select
-    end if
-  end subroutine displayParserError
+    if (ierror == 0) return
+    write(*,'(9(A,I0))') 'CONFIG_READER: Error in line ', line_number, ' in column ', column
+    selectcase (ierror)
+      case (CONFIG_READER_ERR_BAD_CHAR);       write (*,*) "Character not allowed."
+      case (CONFIG_READER_ERR_NO_EQUAL);       write (*,*) "Expected equal sign not found."
+      case (CONFIG_READER_ERR_NO_VALUE);       write (*,*) "No value assigned to variable."
+      case (CONFIG_READER_ERR_EMPTY_STR);      write (*,*) "Value is empty string."
+      case (CONFIG_READER_ERR_END_LINE);       write (*,*) "Unexpected end of line."
+      case (CONFIG_READER_ERR_VAR_NOT_UNIQUE); write (*,*) "Parameter is already defined."
+      case default;                            write (*,*) "Unknown error."
+    endselect
+  endsubroutine displayParserError
 
 !---------------------------------------------------------------------
   subroutine getValueString(this, variable, value, ierror)
     use ConfigReaderDictionary_mod, only: getDictionaryValue
 
-    type (ConfigReader), intent(inout) :: this
-    character(len = *), intent(in) :: variable
-    character(len = *), intent(inout) :: value
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
+    character(len=*), intent(inout) :: value
     integer, intent(out) :: ierror
 
     logical :: tag
@@ -434,8 +408,8 @@ module ConfigReader_mod
 
     if (dict_error /= 0) then
       ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
-    end if
-  end subroutine getValueString
+    endif
+  endsubroutine getValueString
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as integer value.
@@ -443,12 +417,12 @@ module ConfigReader_mod
 !> a default value can be passed as int_value, which does not change on exit
 !> if the variable is not found
   subroutine getValueInteger(this, variable, int_value, ierror)
-    type (ConfigReader), intent(inout) :: this
-    character(len = *), intent(in) :: variable
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
     integer, intent(inout) :: int_value
     integer, intent(out) :: ierror
 
-    character(len = MAX_LINE_LENGTH) :: value_string
+    character(len=MAX_LINE_LENGTH) :: value_string
     integer :: value_read
     integer :: ios
 
@@ -464,10 +438,10 @@ module ConfigReader_mod
         int_value = value_read
       else
         ierror = CONFIG_READER_ERR_NOT_INTEGER
-      end if
-    end if
+      endif
+    endif
 
-  end subroutine getValueInteger
+  endsubroutine getValueInteger
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as double prec. value.
@@ -475,12 +449,12 @@ module ConfigReader_mod
 !> a default value can be passed as double_value, which does not change on exit
 !> if the variable is not found
   subroutine getValueDouble(this, variable, double_value, ierror)
-    type (ConfigReader), intent(inout) :: this
-    character(len = *), intent(in) :: variable
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
     real(kind = kind(1.0d0)), intent(inout) :: double_value
     integer, intent(out) :: ierror
 
-    character(len = MAX_LINE_LENGTH) :: value_string
+    character(len=MAX_LINE_LENGTH) :: value_string
     real(kind = kind(1.0d0)) :: value_read
     integer :: ios
 
@@ -496,10 +470,10 @@ module ConfigReader_mod
         double_value = value_read
       else
         ierror = CONFIG_READER_ERR_NOT_DOUBLE
-      end if
-    end if
+      endif
+    endif
 
-  end subroutine getValueDouble
+  endsubroutine getValueDouble
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as logical value.
@@ -507,12 +481,12 @@ module ConfigReader_mod
 ! a default value can be passed as logical_value, which does not change on exit
 ! if the variable is not found
   subroutine getValueLogical(this, variable, logical_value, ierror)
-    type (ConfigReader), intent(inout) :: this
-    character(len = *), intent(in) :: variable
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
     logical, intent(inout) :: logical_value
     integer, intent(out) :: ierror
 
-    character(len = MAX_LINE_LENGTH) :: value_string
+    character(len=MAX_LINE_LENGTH) :: value_string
     logical :: value_read
     integer :: ios
 
@@ -528,10 +502,10 @@ module ConfigReader_mod
         logical_value = value_read
       else
         ierror = CONFIG_READER_ERR_NOT_LOGICAL
-      end if
-    end if
+      endif
+    endif
 
-  end subroutine getValueLogical
+  endsubroutine getValueLogical
 
 !---------------------------------------------------------------------
 !> Reads a double precision vector of fixed length from config-File.
@@ -543,14 +517,14 @@ module ConfigReader_mod
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
   subroutine getValueDoubleVector(this, variable, vector, length, ierror)
-    type (ConfigReader), intent(inout) :: this
-    character(len = *), intent(in) :: variable
-    double precision, dimension(length), intent(inout) :: vector
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
+    double precision, intent(inout) :: vector(length)
     integer, intent(in) :: length
     integer, intent(out) :: ierror
 
-    character(len = MAX_LINE_LENGTH) :: value_string
-    double precision, dimension(length) :: vector_read
+    character(len=MAX_LINE_LENGTH) :: value_string
+    double precision :: vector_read(length)
     integer :: ios
     integer :: ii
 
@@ -570,10 +544,10 @@ module ConfigReader_mod
         vector = vector_read
         write(*,*) ios
         ierror = CONFIG_READER_ERR_NOT_DOUBLE
-      end if
-    end if
+      endif
+    endif
 
-  end subroutine getValueDoubleVector
+  endsubroutine getValueDoubleVector
 
 !---------------------------------------------------------------------
 !> Reads an integer vector of fixed length from config-File.
@@ -585,14 +559,14 @@ module ConfigReader_mod
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
   subroutine getValueIntVector(this, variable, vector, length, ierror)
-    type (ConfigReader), intent(inout) :: this
-    character(len = *), intent(in) :: variable
-    integer, dimension(length), intent(inout) :: vector
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
+    integer, intent(inout) :: vector(length)
     integer, intent(in) :: length
     integer, intent(out) :: ierror
 
-    character(len = MAX_LINE_LENGTH) :: value_string
-    integer, dimension(length) :: vector_read
+    character(len=MAX_LINE_LENGTH) :: value_string
+    integer :: vector_read(length)
     integer :: ios
     integer :: ii
 
@@ -612,10 +586,10 @@ module ConfigReader_mod
         vector = vector_read
         write(*,*) ios
         ierror = CONFIG_READER_ERR_NOT_INTEGER
-      end if
-    end if
+      endif
+    endif
 
-  end subroutine getValueIntVector
+  endsubroutine getValueIntVector
 
 !---------------------------------------------------------------------
 !> This subroutine is used to get variables, which have not been read (yet).
@@ -627,8 +601,8 @@ module ConfigReader_mod
   subroutine getUnreadVariable(this, variable, next_ptr, ierror)
     use ConfigReaderDictionary_mod, only: getTaggedVariable, CONFIG_READER_DICT_NOT_FOUND
 
-    type (ConfigReader), intent(in) :: this
-    character(len = *),  intent(out) :: variable
+    type(ConfigReader), intent(in) :: this
+    character(len=*),  intent(out) :: variable
     integer, intent(inout) :: next_ptr
     integer, intent(out) :: ierror
 
@@ -642,9 +616,9 @@ module ConfigReader_mod
 
     if (dict_error == CONFIG_READER_DICT_NOT_FOUND) then
       ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
-    end if
+    endif
 
-  end subroutine getUnreadVariable
+  endsubroutine getUnreadVariable
 
-end module ConfigReader_mod
+endmodule ConfigReader_mod
 

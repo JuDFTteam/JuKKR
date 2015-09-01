@@ -42,6 +42,13 @@ HEADER = ("""
 print HEADER
 
 print 'module ' + configname + '_mod'
+print '  implicit none'
+print '  private'
+print '  public :: InputParams'
+print '  public :: getInputParamsValues'
+print '  public :: readInputParamsFromFile'
+print '  public :: writeInputParamsToFile'
+print
 
 #------------Generate type declaration -------------------
 print 'type ' + configname

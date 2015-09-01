@@ -23,14 +23,14 @@ module read_formatted_mod
     integer :: IRWS
     double precision :: A_log_mesh
     double precision :: B_log_mesh
-  end type
+  endtype
 
   type CoreStatesBlock
      integer :: NCORE
      integer :: INEW
      integer :: LCORE (20)
      double precision :: ECORE (20)
-  end type
+  endtype
 
   type SphericalBlock
      integer :: IRT1P
@@ -38,18 +38,18 @@ module read_formatted_mod
      integer :: LMPOT
      integer :: ISAVE
      double precision, allocatable :: VISP(:)
-  end type
+  endtype
 
   type NonSphericalBlocks
      double precision, allocatable :: VINS(:,:)
-  end type
+  endtype
 
   type PotentialEntry
     type (PotentialHeader) :: header
     type (CoreStatesBlock) :: csblock
     type (SphericalBlock)  :: sblock
     type (NonSphericalBlocks)  :: nsblocks
-  end type
+  endtype
   
   interface create
     module procedure create_read_PotentialEntry
@@ -67,19 +67,17 @@ module read_formatted_mod
     type (PotentialHeader), intent(out) :: header
     integer, intent(in) :: unit
 
-    integer IA
-
-    READ (unit,FMT=9020) (header%ITITLE(IA),IA=1,20)
+    READ (unit,FMT="(20a4)") header%ITITLE(1:20)
 
 !---  >read muffin-tin radius , lattice constant and new muffin radius
 !      (not used)
-    READ (unit,FMT=9030) header%RMT, header%ALAT, header%RMTNEW
+    READ (unit,FMT="(3f12.8)") header%RMT, header%ALAT, header%RMTNEW
 
 !---> read nuclear charge
 !     wigner seitz radius (not used), fermi energy and energy difference
 !     between electrostatic zero and muffin tin zero (not used)
 
-    READ (unit,FMT=9040) header%Z_nuclear, header%RWS, header%EFERMI, header%VBC
+    READ (unit,FMT="(f10.5,/,f10.5,2f15.10)") header%Z_nuclear, header%RWS, header%EFERMI, header%VBC
 
 !---> read : number of radial mesh points
 !     (in case of ws input-potential: last mesh point corresponds
@@ -91,12 +89,8 @@ module read_formatted_mod
 !     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 !     the no. of different core states and some other stuff
 
-      READ (unit,FMT=9050) header%IRWS, header%A_log_mesh, header%B_log_mesh
+      READ (unit,FMT="(i3,/,2d15.8)") header%IRWS, header%A_log_mesh, header%B_log_mesh
 
-      9020 FORMAT (20a4)
-      9030 FORMAT (3f12.8)
-      9040 FORMAT (f10.5,/,f10.5,2f15.10)
-      9050 FORMAT (i3,/,2d15.8)
   end subroutine
 
   !----------------------------------------------------------------------------
@@ -107,7 +101,7 @@ module read_formatted_mod
 
     integer :: ICORE
 
-    READ (unit,FMT=9055) block%NCORE, block%inew
+    READ (unit,FMT="(2i2)") block%NCORE, block%inew
 
 ! read the different core states : l and energy
 
@@ -122,14 +116,11 @@ module read_formatted_mod
 
     IF (block%NCORE.GE.1) THEN
        DO ICORE=1,block%NCORE
-          READ (unit,FMT=9070) block%LCORE(ICORE), block%ECORE(ICORE)
+          READ (unit,FMT="(i5,1p,d20.11)") block%LCORE(ICORE), block%ECORE(ICORE)
        END DO
     END IF
 
-    9055 FORMAT (2i2)
-    9070 FORMAT (i5,1p,d20.11)
-
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Read SphericalBlock, do not forget to run destroy_SphericalBlock.
@@ -139,24 +130,21 @@ module read_formatted_mod
 
     integer IR, NR
 
-    READ (unit,FMT=9090) block%IRT1P,block%IRNS,block%LMPOT,block%ISAVE
+    READ (unit,FMT="(10i5)") block%IRT1P,block%IRNS,block%LMPOT,block%ISAVE
 
     NR = block%IRT1P
     allocate(block%VISP(NR))
 
-    READ (unit,FMT=9100) (block%VISP(IR), IR=1,NR)
+    READ (unit,FMT="(1p,4d20.13)") (block%VISP(IR), IR=1,NR)
 
-9090 FORMAT (10i5)
-9100 FORMAT (1p,4d20.13)
-
-  end subroutine
+  endsubroutine
 
     !----------------------------------------------------------------------------
   !> Deallocate array for VISP data
   subroutine destroy_SphericalBlock(block)
     type (SphericalBlock), intent(inout) :: block
     deallocate (block%VISP)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Read NonSphericalBlocks, do not forget to run destroy_NonSphericalBlocks.
@@ -178,11 +166,11 @@ module read_formatted_mod
 
     IF (LMPOT.GT.1) THEN
       LM1 = 2
-      DO 50 LM = 2, LMPOT
+      DO LM = 2, LMPOT
         IF (LM1.NE.1) THEN
 
           IF (ISAVE.EQ.1) THEN
-            READ (unit,FMT=9090) LM1
+            READ (unit,FMT="(10i5)") LM1
           ELSE
             LM1 = LM
           END IF
@@ -195,26 +183,20 @@ module read_formatted_mod
               STOP
             endif
 
-            READ (unit,FMT=9100) (blocks%VINS(IR, LM1),IR=IRMIN,IRMD)
+            READ (unit,FMT="(1p,4d20.13)") (blocks%VINS(IR, LM1),IR=IRMIN,IRMD)
           END IF
-
         END IF
-
-50    CONTINUE
-
+      END DO
     END IF
 
-9090 FORMAT (10i5)
-9100 FORMAT (1p,4d20.13)
-
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Deallocate array for VINS data.
   subroutine destroy_NonSphericalBlocks(blocks)
     type (NonSphericalBlocks), intent(inout) :: blocks
     deallocate (blocks%VINS)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Create a PotentialEntry by reading from file 'unit'.
@@ -227,7 +209,7 @@ module read_formatted_mod
     call create_read_SphericalBlock(potential_entry%sblock, unit)
     call create_read_NonSphericalBlocks(potential_entry%nsblocks, potential_entry%sblock, unit)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Destroy a PotentialEntry.
@@ -236,7 +218,7 @@ module read_formatted_mod
 
     call destroy_SphericalBlock(potential_entry%sblock)
     call destroy_NonSphericalBlocks(potential_entry%nsblocks)
-  end subroutine
+  endsubroutine
 
 end module read_formatted_mod
 
@@ -246,13 +228,13 @@ program test_read_formatted
   implicit none
 
   type(PotentialEntry) :: pe
-  integer, parameter :: UNIT = 42
+  integer, parameter :: UNIT=42
   integer :: LM
 
   open(UNIT, form='formatted', file='potential')
     call create_read_PotentialEntry(pe, UNIT)
 
-    write(*,fmt=9080) pe%header%ITITLE
+    write(*,fmt="(' <#',20a4)") pe%header%ITITLE
     write(*,*) pe%sblock%VISP
     write(*,*) "---------------------------------------------------------------"
     write(*,*) "Number of non-spherical components: ", pe%sblock%LMPOT
@@ -266,7 +248,6 @@ program test_read_formatted
 
     call destroy_PotentialEntry(pe)
   close(UNIT)
-9080 FORMAT (' <#',20a4)
-end program
+endprogram
 #endif
 
