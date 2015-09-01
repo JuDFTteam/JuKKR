@@ -315,12 +315,14 @@
       double precision, intent(out) :: cl(icd) ! warning: old m-ordering: ???
       double precision, intent(out) :: coe(iced) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
      
-      integer, parameter :: ifmx=25, lma2d=lmaxd1/2+1
-      integer :: icmax,l,ice,ic,i,m,k,k0,isi,ire,ir,ic1,ic2, la, lb, ieupsq, ieint
-      double precision :: up,down,upsq
+      integer, parameter :: lma2d=lmaxd1/2+1
+      integer, parameter :: ifmx=25
+      integer, parameter :: primes(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+      
+      integer :: icmax, l, ice, ic, i, m, k, k0, isi, ire, ir, ic1, ic2, la, lb, ieupsq, ieint
+      double precision :: up, down, upsq
       integer :: ie(ifmx,lma2d), ied(ifmx)
       integer, dimension(ifmx) :: l1st, l2st, l1, l2, jm0, iea, ieb, il2p
-      integer, parameter :: primes(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
 !-----------------------------------------------------------------------
       icmax = sum([( (lmax+1-l)*(l/2+1), l=0,lmax)])
       
@@ -331,100 +333,97 @@
 !     if (test('shape   ')) write(6,fmt="(13x,'there are',i5,'  coefficients'/)") icmax
       ice = 0
       ic = 1
-      l = 0
       l1st(:) = 0
       l2st(:) = 0
       
-    1 continue
-      call factorize(2*l+1, primes, il2p)
-      il2p(1) = il2p(1)+1 ! increase the exponent of the lowest prime factor (which is 2)
-      
-      m = l
-      l1(:) = l1st(:)
-      l2(:) = l2st(:)
-      jm0(:) = 0
-      
-    2 continue
-      ice = ice+1
-      isi = 1
-!  this is changed: old: isi = 1-2*mod(m,2)
-      k0 = (l+m+1)/2
-      k = l
-      ire = 1
-      ic1 = ic
-      ie(:,ire) = jm0(:)
-      
-    3 continue
-      if ((k-1) < k0) goto 30
-      ire = ire+1
-      ic = ic+1
-      la = (2*k-l-m)*(2*k-l-m-1)
-      lb = 2*(2*k-1)*(l-k+1)
-      call factorize(la, primes, iea)
-      call factorize(lb, primes, ieb)
-      ie(:,ire) = ie(:,ire-1) + iea(:) - ieb(:)
-      k = k-1
-      goto 3
-   30 continue
+      l = 0
+      do while (l <= lmax) ! 1 continue
+        call factorize(2*l+1, primes, il2p)
+        il2p(1) = il2p(1)+1 ! increase the exponent of the lowest prime factor (which is 2)
+        
+        m = l
+        l1(:) = l1st(:)
+        l2(:) = l2st(:)
+        jm0(:) = 0
+        
+        2 continue 
+        ice = ice+1
+        isi = 1 ! this is changed: old: isi = 1-2*mod(m,2)
+        k0 = (l+m+1)/2
+        ire = 1
+        ic1 = ic
+        ie(:,ire) = jm0(:)
+        k = l
+    
+        do while (k-1 >= k0) ! 3 continue ; if (k-1 >= k0) then
+          ire = ire+1
+          ic = ic+1
+          la = (2*k-l-m)*(2*k-l-m-1)
+          lb = 2*(2*k-1)*(l-k+1)
+          call factorize(la, primes, iea)
+          call factorize(lb, primes, ieb)
+          ie(:,ire) = ie(:,ire-1) + iea(:) - ieb(:)
+          k = k-1
+        enddo ! while (k-1 >= k0) ! goto 3 ; endif ! (k-1 >= k0)
    
-      ic2 = ic
-      do i = 1, ifmx
-        ied(i) = ie(i,1)
-        do ir = 2, ire
-          if(ie(i,ir) < ied(i)) ied(i) = ie(i,ir)
-        enddo ! ir
-        do ir = 1, ire
-          ie(i,ir) = ie(i,ir) - ied(i)
-        enddo ! ir
-      enddo ! i
-      ir = 0
-      do ic = ic1, ic2
-        ir = ir+1
-        cl(ic) = 1.d0
-        cl(ic) = cl(ic)*product(primes(:)**ie(:,ir))
-        cl(ic) = isi*cl(ic)
-        isi = -isi
-      enddo ! ic
-      if (m == 0) il2p(1) = il2p(1)-1 ! undo the increasing done above for m=0
-      
-      up   = 1.d0
-      upsq = 1.d0
-      down = 1.d0
-      do i = 1, ifmx
-        ieupsq = 2*ied(i) + il2p(i) + l1(i)
-        ieint = ieupsq/2 - l2(i)
-        upsq  = upsq*primes(i)**mod(ieupsq, 2)
-        if (ieint > 0) then 
-          up = up*primes(i)**ieint
-        elseif (ieint < 0) then
-          down = down*primes(i)**(-ieint)
-        endif ! for the ==0 case, we need to do neither of both operations
-      enddo ! i
-      coe(ice) = sqrt(upsq)*up/down
-      
-!     if (test('shape   ')) write(6,fmt="(2x,'l=',i2,' m=',i2,f10.3,' *sqrt(',f16.2,')/',f10.3/2x,'cl  :',6f14.2)") l,m,up,upsq,down,(cl(ic),ic=ic1,ic2)
-      if (m == 0) goto 20
-      la = l+m
-      lb = l-m+1
-      call factorize(la, primes, iea)
-      call factorize(lb, primes, ieb)
-      jm0(:) = jm0(:) + iea(:) - ieb(:)
-      l1(:)  = l1(:)  - iea(:) + ieb(:)
-      m = m-1
-      goto 2
-   20 continue
+        ic2 = ic
+        do i = 1, ifmx
+          ied(i) = ie(i,1)
+          do ir = 2, ire
+            if (ie(i,ir) < ied(i)) ied(i) = ie(i,ir)
+          enddo ! ir
+          do ir = 1, ire
+            ie(i,ir) = ie(i,ir) - ied(i)
+          enddo ! ir
+        enddo ! i
+        ir = 0
+        do ic = ic1, ic2
+          ir = ir+1
+          cl(ic) = 1.d0
+          cl(ic) = cl(ic)*product(primes(:)**ie(:,ir))
+          cl(ic) = isi*cl(ic)
+          isi = -isi
+        enddo ! ic
+        if (m == 0) il2p(1) = il2p(1)-1 ! undo the increasing done above for m=0
+        
+        up   = 1.d0
+        upsq = 1.d0
+        down = 1.d0
+        do i = 1, ifmx
+          ieupsq = 2*ied(i) + il2p(i) + l1(i)
+          ieint = ieupsq/2 - l2(i)
+          upsq  = upsq*primes(i)**mod(ieupsq, 2)
+          if (ieint > 0) then 
+            up = up*primes(i)**ieint
+          elseif (ieint < 0) then
+            down = down*primes(i)**(-ieint)
+          endif ! for the ==0 case, we need to do neither of both operations
+        enddo ! i
+        coe(ice) = sqrt(upsq)*up/down
+        
+!       if (test('shape   ')) write(6,fmt="(2x,'l=',i2,' m=',i2,f10.3,' *sqrt(',f16.2,')/',f10.3/2x,'cl  :',6f14.2)") l,m,up,upsq,down,(cl(ic),ic=ic1,ic2)
+        if (m > 0) then
+          la = l+m
+          lb = l-m+1
+          call factorize(la, primes, iea)
+          call factorize(lb, primes, ieb)
+          jm0(:) = jm0(:) + iea(:) - ieb(:)
+          l1(:)  = l1(:)  - iea(:) + ieb(:)
+          m = m-1
+          goto 2
+        endif ! m /= 0
    
-!     if (test('shape   ')) write(6,fmt="(80('*'))")
-      if (l == lmax) return
-      
-      la = (2*l+1)*(2*l+2)
-      lb = (l+1)*2
-      call factorize(la, primes, iea)
-      call factorize(lb, primes, ieb)
-      l1st(:) = l1st(:) + iea(:)
-      l2st(:) = l2st(:) + ieb(:)
-      l = l+1
-      goto 1
+!       if (test('shape   ')) write(6,fmt="(80('*'))")
+        if (l == lmax) return
+        
+        la = (2*l+1)*(2*l+2)
+        lb = (l+1)*2
+        call factorize(la, primes, iea)
+        call factorize(lb, primes, ieb)
+        l1st(:) = l1st(:) + iea(:)
+        l2st(:) = l2st(:) + ieb(:)
+        l = l+1
+      enddo ! while (l <= lmax) ! goto 1
       
       endsubroutine ccoef
 
@@ -559,10 +558,10 @@
       integer, intent(in) :: l,m,mp
       double precision, intent(in) :: beta
 
-      integer :: i,kmin,kmax,ltrm,n,k
-      double precision  :: cosb,sinb,term,ff
-      integer :: nf(4)
 !-----------------------------------------------------------------------
+      integer :: i, kmin, kmax, ltrm, n, k, nf(4)
+      double precision :: cosb, sinb, term, ff
+      
       drot = 0.d0 ! init result for early return
       
       if (iabs(m) > l .or. iabs(mp) > l) then
