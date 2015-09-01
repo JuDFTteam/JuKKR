@@ -273,9 +273,9 @@
     double precision, intent(in) :: x1, x2
     double precision, intent(out) :: x(1:), w(1:)
 
-!     ----------------------------------------------------------------
+!----------------------------------------------------------------
     integer :: i, j, m
-    double precision :: p1,p2,p3,pp,xl,xm,z,z1
+    double precision :: p1, p2, p3, pp, xl, xm, z, z1
 
     m = (n+1)/2
     xm = 0.5d0*(x2 + x1)
@@ -309,35 +309,39 @@
 !>    rized forms for the numbers.
 !-----------------------------------------------------------------------
       subroutine ccoef(lmax, cl, coe)
-!     changed: get constants from module shape_constants_mod instead of inc.geometry
-      use shape_constants_mod, only: icd, iced, lmaxd1
+!       use shape_constants_mod, only: lmaxd1!, icd, iced ! not needed any more
+      
       integer, intent(in) :: lmax
-      double precision, intent(out) :: cl(icd) ! warning: old m-ordering: ???
-      double precision, intent(out) :: coe(iced) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
+      double precision, intent(out) :: cl(1:) ! (icd) ! warning: old m-ordering: ???
+      double precision, intent(out) :: coe(1:) ! (iecd) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
      
-      integer, parameter :: lma2d=lmaxd1/2+1
+!       integer, parameter :: lma2d=lmaxd1/2+1
       integer, parameter :: ifmx=25
       integer, parameter :: primes(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
       
-      integer :: icmax, l, ice, ic, i, m, k, k0, isi, ire, ir, ic1, ic2, la, lb, ieupsq, ieint
+      integer :: icmax, l, ice, ic, i, m, k, k0, isi, ire, ir, ic1, ic2, la, lb, ieupsq, ieint, icd!, iecd
       double precision :: up, down, upsq
-      integer :: ie(ifmx,lma2d), ied(ifmx)
+      integer :: ied(ifmx), ie(ifmx,1+lmax/2) !, ie(ifmx,lma2d)
       integer, dimension(ifmx) :: l1st, l2st, l1, l2, jm0, iea, ieb, il2p
 !-----------------------------------------------------------------------
       icmax = sum([( (lmax+1-l)*(l/2+1), l=0,lmax)])
-      
-      if (lmax > lmaxd1 .or. icmax > icd) then
-        write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
+      icd = size(cl)
+      if (icmax > icd) then
+!       if (lmax > lmaxd1 .or. icmax > icd) then
+!         write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
+        write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',i5/13x,'icmax:',2i5)") lmax,icmax,icd
         stop 'lmax > lmaxd1 .or. icmax > icd'
       endif ! lmax > lmaxd1 .or. icmax > icd
 !     if (test('shape   ')) write(6,fmt="(13x,'there are',i5,'  coefficients'/)") icmax
+
+!     iecd = size(coe, 1)
+      
       ice = 0
       ic = 1
       l1st(:) = 0
       l2st(:) = 0
       
-      l = 0
-      do while (l <= lmax) ! 1 continue
+      do l = 0, lmax
         call factorize(2*l+1, primes, il2p)
         il2p(1) = il2p(1)+1 ! increase the exponent of the lowest prime factor (which is 2)
         
@@ -345,17 +349,14 @@
         l2(:) = l2st(:)
         jm0(:) = 0
         
-        m = l
-        do while (m >= 0) ! 2 continue 
+        do m = l, 0, -1
           ice = ice+1
           isi = 1 ! this is changed: old: isi = 1-2*mod(m,2)
           k0 = (l+m+1)/2
           ire = 1
           ic1 = ic
           ie(:,ire) = jm0(:)
-          k = l
-      
-          do while (k-1 >= k0) ! 3 continue ; if (k-1 >= k0) then
+          do k = l, k0+1, -1
             ire = ire+1
             ic = ic+1
             la = (2*k-l-m)*(2*k-l-m-1)
@@ -363,8 +364,7 @@
             call factorize(la, primes, iea)
             call factorize(lb, primes, ieb)
             ie(:,ire) = ie(:,ire-1) + iea(:) - ieb(:)
-            k = k-1
-          enddo ! while (k-1 >= k0) ! goto 3 ; endif ! (k-1 >= k0)
+          enddo ! k = l, k0+1, -1
     
           ic2 = ic
           do i = 1, ifmx
@@ -379,12 +379,10 @@
           ir = 0
           do ic = ic1, ic2
             ir = ir+1
-            cl(ic) = 1.d0
-            cl(ic) = cl(ic)*product(primes(:)**ie(:,ir))
-            cl(ic) = isi*cl(ic)
+            cl(ic) = isi*product(primes(:)**ie(:,ir))
             isi = -isi
           enddo ! ic
-          if (m == 0) il2p(1) = il2p(1)-1 ! undo the increasing done above for m=0
+          if (m == 0) il2p(1) = il2p(1)-1 ! undo the increasing done above for m==0
           
           up   = 1.d0
           upsq = 1.d0
@@ -402,7 +400,7 @@
           coe(ice) = sqrt(upsq)*up/down
           
 !         if (test('shape   ')) write(6,fmt="(2x,'l=',i2,' m=',i2,f10.3,' *sqrt(',f16.2,')/',f10.3/2x,'cl  :',6f14.2)") l,m,up,upsq,down,(cl(ic),ic=ic1,ic2)
-          if (m > 0) then
+          if (m > 0) then ! the following 6 instructions are not needed for m == 0
             la = l+m
             lb = l-m+1
             call factorize(la, primes, iea)
@@ -410,20 +408,18 @@
             jm0(:) = jm0(:) + iea(:) - ieb(:)
             l1(:)  = l1(:)  - iea(:) + ieb(:)
           endif ! m > 0
-          m = m-1
-        enddo ! while (m >= 0) m = m-1; goto 2 ; endif ! m > 0
+
+        enddo ! m = l, 0, -1
    
 !       if (test('shape   ')) write(6,fmt="(80('*'))")
-        if (l == lmax) return
-        
+        if (l == lmax) return ! the following 6 instructions are not needed for l == lmax
         la = (2*l+1)*(2*l+2)
         lb = (l+1)*2
         call factorize(la, primes, iea)
         call factorize(lb, primes, ieb)
         l1st(:) = l1st(:) + iea(:)
         l2st(:) = l2st(:) + ieb(:)
-        l = l+1
-      enddo ! while (l <= lmax) ! goto 1
+      enddo ! l = 0, lmax
       
       endsubroutine ccoef
 
