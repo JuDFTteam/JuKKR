@@ -368,8 +368,8 @@ module ShapeIntegrationHelpers_mod
     integer, intent(in) :: lmax
 !     double precision, intent(out) :: cl(1:) ! (icd) ! warning: old m-ordering: ???
 !     double precision, intent(out) :: coe(1:) ! (iecd) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
-    double precision, intent(out) :: cl_table(-lmax:lmax,0:lmax,0:lmax)
-    double precision, intent(out) :: c_table(-lmax:lmax,0:lmax)
+    double precision, intent(out) :: cl_table(0:lmax,0:lmax,0:lmax)
+    double precision, intent(out) :: c_table(0:lmax,0:lmax)
     
 !       integer, parameter :: lma2d=lmaxd1/2+1
     integer, parameter :: ifmx=25
@@ -461,8 +461,8 @@ module ShapeIntegrationHelpers_mod
         
         coe(ice) = sqrt(upsq)*up/down ! old 
         
-        c_table( m,l) = sqrt(upsq)*up/down
-        c_table(-m,l) = c_table( m,l) ! symmetric
+        c_table(m,l) = sqrt(upsq)*up/down
+        ! c_table(-m,l) = c_table(m,l) ! symmetric, therefore negative m-indices are out of bounds, use |m|
         
         
 !         if (test('shape   ')) write(6,fmt="(2x,'l=',i2,' m=',i2,f10.3,' *sqrt(',f16.2,')/',f10.3/2x,'cl  :',6f14.2)") l,m,up,upsq,down,(cl(ic),ic=ic1,ic2)
@@ -495,8 +495,8 @@ module ShapeIntegrationHelpers_mod
         do k = l, (l+mp+1)/2, -1
           lp = 2*k-l-mp
           ic = ic+1
-          cl_table(-mp,lp,l) = cl(ic) !
-          cl_table( mp,lp,l) = cl(ic) !
+!         cl_table(-mp,lp,l) = cl(ic) ! symmetric, therefore negative m-indices are out of bounds, use |m|
+          cl_table(mp,lp,l) = cl(ic) ! symmetric, therefore negative m-indices are out of bounds, use |m|
         enddo ! k
       enddo ! mp
     enddo ! l
@@ -555,7 +555,7 @@ module ShapeIntegrationHelpers_mod
 !-----------------------------------------------------------------------
     integer :: l,m,mp,i,imax,ip,ipmax,isu!,isum
     double precision :: fac,fac1,fac2,d,d1,d2
-    double precision :: dmn(lmaxd1+1,lmaxd1+1), dpl(lmaxd1+1,lmaxd1+1)
+    double precision :: dmn(0:lmaxd1,0:lmaxd1), dpl(0:lmaxd1,0:lmaxd1)
     double precision, parameter :: sqr2 = sqrt(2.d0)
     isu = 0 ! outer order is s,p,d,f,... and inner order for m and mp is 0,1,-1,2,-2,...,l,-l
     ! therefore as a function of lmax, isumd can be as low as sum_l=0...lmax (2*l+1)^2
@@ -572,14 +572,14 @@ module ShapeIntegrationHelpers_mod
           d2 = drot(l,mp,-m,beta)
 #undef  beta            
           if (mod(m, 2) /= 0) d2 = -d2
-          dpl(mp+1,m+1) = (d1 + d2)*fac
-          dmn(mp+1,m+1) = (d1 - d2)*fac
+          dpl(mp,m) = (d1 + d2)*fac
+          dmn(mp,m) = (d1 - d2)*fac
           if (mod(m+mp, 2) /= 0) then
-            dmn(m+1,mp+1) = -dmn(mp+1,m+1)
-            dpl(m+1,mp+1) = -dpl(mp+1,m+1)
+            dmn(m,mp) = -dmn(mp,m)
+            dpl(m,mp) = -dpl(mp,m)
           else
-            dmn(m+1,mp+1) =  dmn(mp+1,m+1)
-            dpl(m+1,mp+1) =  dpl(mp+1,m+1)
+            dmn(m,mp) =  dmn(mp,m)
+            dpl(m,mp) =  dpl(mp,m)
           endif
           fac1 = sqr2
         enddo ! mp
@@ -596,15 +596,15 @@ module ShapeIntegrationHelpers_mod
 #define gamma euler(3)
               if (ip == 1) then
                 if (i == 1) then
-                  d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==1
+                  d = -sin(mp*alpha)*sin(m*gamma)*dpl(mp,m) + cos(mp*alpha)*cos(m*gamma)*dmn(mp,m) ! i==1, ip==1
                 else  ! i == 1
-                  d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) + cos(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==0, ip==1
+                  d =  sin(mp*alpha)*cos(m*gamma)*dpl(mp,m) + cos(mp*alpha)*sin(m*gamma)*dmn(mp,m) ! i==0, ip==1
                 endif ! i == 1
               else  ! ip == 1
                 if (i == 1) then
-                  d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*cos(m*gamma)*dmn(mp+1,m+1) ! i==1, ip==0
+                  d = -cos(mp*alpha)*sin(m*gamma)*dpl(mp,m) - sin(mp*alpha)*cos(m*gamma)*dmn(mp,m) ! i==1, ip==0
                 else  ! i == 1
-                  d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp+1,m+1) - sin(mp*alpha)*sin(m*gamma)*dmn(mp+1,m+1) ! i==0, ip==0
+                  d =  cos(mp*alpha)*cos(m*gamma)*dpl(mp,m) - sin(mp*alpha)*sin(m*gamma)*dmn(mp,m) ! i==0, ip==0
                 endif ! i == 1
               endif ! ip == 1
 #undef  gamma
@@ -619,7 +619,7 @@ module ShapeIntegrationHelpers_mod
         imax = 1
       enddo ! m
     enddo ! l
-!     isum = isu ! unused: minimal value of isumd
+!     isum = isu ! unused: export the minimal value for isumd
   endsubroutine d_real
 
 !-----------------------------------------------------------------------

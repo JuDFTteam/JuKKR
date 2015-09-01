@@ -42,21 +42,22 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   integer, intent(out) :: nfun
   
 
-  double precision :: cl_table(-lmax:lmax,0:lmax,0:lmax) !, cl(icd) 
-  double precision :: c_table(-lmax:lmax,0:lmax) !, c(iced) 
+  double precision :: cl_table(0:lmax,0:lmax,0:lmax) !, cl(icd) 
+  double precision :: c_table(0:lmax,0:lmax) !, c(iced) 
 
   double precision :: rap, rdown, arg1, arg2, fk, fl, fpisq, rupsq
 
-  integer :: iface, itet, i, m, ic, ice, isu, isu0, l, mp, k, lp, imax, mo, ip, ipmax, ilm, mlm, ir, ist, isumd, nface 
-!   integer :: ib, ic0, ice0
+  integer :: iface, itet, m, isu, isu0, l, mp, k, lp, ilm, mlm, ir, ist, isumd, nface 
+!   integer :: ib, ic0, ice0, i, ic, ice, imax, mo, ip, ipmax
   
   double precision, allocatable :: dmatl(:,:) ! (isumd,nface)
   type(TetrahedronAngles) :: t1
   
-  double precision :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format usese only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
-  double precision :: sm(2,0:lmaxd1) ! this could be reshaped into sm(-lmaxd1:lmaxd1)
-!   double precision :: smm(-lmaxd1:lmaxd1)
+  double precision :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format uses only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
+  double precision :: smm(-lmaxd1:lmaxd1)
 
+  integer :: imo(-lmaxd1:lmaxd1) ! index translation from m=-l,-l+1,...,l-1,l to 0,1,-1,...,l,-l since the dmatl make use of this ordering
+  
   ! local automatic arrays
   logical(kind=1) :: nontrivial(ibmaxd) ! the trivial shape function is zero from ilm>1 and sqrt(4*pi) for ilm==1
   double precision :: b(ibmaxd)
@@ -72,6 +73,12 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
 
   thetas_s = 0.d0
 
+  imo = 0
+  do m = 1, lmaxd1
+    imo( m) = 2*m-1
+    imo(-m) = 2*m
+  enddo ! m
+  
   !.......................................................................
   !     expansion coefficients
   !.......................................................................
@@ -157,72 +164,52 @@ py: do iface = 1, nface
         ! calculate transformation matrices for spherical harmonics (for each ir again!)
         call d_real(lmax, face(iface)%euler, dmatl(:,0), isumd, lmaxd1)
       endif ! recompute every time
-      
-!     ib = 0
-!       ic = 0
-!     ice = 0
-!     isu = 0
 
       do l = 0, lmax
       
-!         CHECKASSERT(ib == l**2) ! works
-!       ib = ib+l+1
+        ! transform to summed coefficients
+        
+        ! cl_table and c_table are symmetric w.r.t. m <--> -m, so no negative indices
+        
+        smm = 0.d0
+        do m = -l, l
+!         smm(m) = 0.d0
+          do k = l, (l+abs(m)+1)/2, -1
+            lp = 2*k-l-abs(m)
+            smm(m) = smm(m) + cl_table(abs(m),lp,l)*s(m,lp)
+          enddo ! k
+          smm(m) = smm(m)*c_table(abs(m),l) ! scale
+        enddo ! m
+
         isu0 = ((l-1)*(3+4*l*(l+1)))/3+1
         isu = isu0
         
-!       ic0 = ic ! store offset
-        
-!       ice0 = ice ! store offset
-!       CHECKASSERT(ice0 == (l*(l+1))/2) ! works
-!         ice0 = (l*(l+1))/2
-!         ice = ice0
-        
-!         smm = 0.d0
-!         do m = -l, l
-!           smm(m) = 0.d0
-!           do k = l, (l+abs(m)+1)/2, -1
-!             lp = 2*k-l-abs(m)
-! !           ic = ic+1
-! !           smm(m) = smm(m) + cl(ic)*s(m,lp)
-!           enddo ! k
-!           smm(m) = smm(m)*c(ice0+1)
-!         enddo ! m
-        
-        ! transform to summed coeffcients
-        
-        do mp = l, 0, -1
-          sm(1:2,mp) = 0.d0
-          do k = l, (l+mp+1)/2, -1
-            lp = 2*k-l-mp
-!             ic = ic+1
-!             sm(1:2,mp) = sm(1:2,mp) + cl(ic)*[s( mp,lp), s(-mp,lp)]
-            sm(1:2,mp) = sm(1:2,mp) + cl_table(mp,lp,l)*[s( mp,lp), s(-mp,lp)]
-          enddo ! k
-!           ice = ice+1
-!           sm(1:2,mp) = sm(1:2,mp)*c(ice) ! scale
-          sm(1,mp) = sm(1,mp)*c_table( mp,l) ! scale
-          sm(2,mp) = sm(2,mp)*c_table(-mp,l) ! scale
-        enddo ! mp
-        sm(2,0) = 0.d0 ! correct since there is no m=-0
-        
-        
         ! rotate back in the l-subspace and add to the shape functions
         ! still uses the m-ordering 0,1,-1,...,l,-l for m and mp
-        imax = 1
-        do m = 0, l
-          do i = 1, imax
-            mo = (3-2*i)*m ! mapping i=1 --> mo=m and i=2 --> mo=-m (reconstruction of signed m quantum number)
-            ilm = l*l+l+mo+1
-            ipmax = 1
-            do mp = 0, l
-              do ip = 1, ipmax
-                isu = isu+1
-                b(ilm) = b(ilm) + sm(ip,mp)*dmatl(isu,idmatl*iface)
-              enddo ! ip
-              ipmax = 2
-            enddo ! mp
-          enddo ! i
-          imax = 2
+!         imax = 1
+!         do m = 0, l
+!           do i = 1, imax
+!             mo = (3-2*i)*m ! mapping i=1 --> mo=m and i=2 --> mo=-m (reconstruction of signed m quantum number)
+!             ilm = l*l+l+mo+1
+!             ipmax = 1
+!             do mp = 0, l
+!               do ip = 1, ipmax
+!                 isu = isu+1
+!                 b(ilm) = b(ilm) + sm(ip,mp)*dmatl(isu,idmatl*iface)
+!               enddo ! ip
+!               ipmax = 2
+!             enddo ! mp
+!           enddo ! i
+!           imax = 2
+!         enddo ! m
+
+        do m = -l, l
+          ilm = l*l+l+m+1
+          do mp = -l, l
+            isu = isu0 + 1 + (2*l+1)*imo(m) + imo(mp) ! index for dmatl(isu) since it is ordered m=0,1,-1,...,l,-l
+!           isu = isu0 + (2*l+1)*(m+l) + (mp+l) + 1 ! index for dmatl(isu) if it were ordered m=-l...l
+            b(ilm) = b(ilm) + smm(mp)*dmatl(isu,idmatl*iface)
+          enddo ! mp
         enddo ! m
         
       enddo ! l
