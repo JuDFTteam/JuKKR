@@ -164,6 +164,7 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
                  ircut,ipan,imaxsh,ifunm,ilm, &
                  gsh,thetas,lmsp, &
                  irmd, irid, nfund, ipand, ngshd)
+                 
 ! ************************************************************************
 !
 !
@@ -187,6 +188,7 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
 !                 modified for band structure code
 !                               b.drittler   jan. 1990
 !-----------------------------------------------------------------------
+  use Quadrature_mod, only: simpson
 
   double precision, intent(out) :: energy(0:lmax_potential)
 
@@ -233,10 +235,6 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
   double precision, dimension(irmd) :: er
   double precision :: factor
 
-  external :: simpk
-
-  intrinsic :: atan,sqrt
-  !     ..
   rfpi = sqrt(16.d0*atan(1.0d0))
   !
   ipan1 = ipan
@@ -306,7 +304,8 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
   !
   !--->     now integrate
   !
-    call simpk(er, energy(L),ipan1,ircut, drdi)
+!   call simpk(er, energy(L),ipan1,ircut, drdi)
+    energy(L) = simpson(er, ipan1, ircut, drdi)
 
   80   continue                    ! L = 0, lmax_potential
 
@@ -323,13 +322,13 @@ end subroutine
 !> surface of a sphere with a radius determined by 'ind_reference' <= ind_muffin_tin
 double precision function madelung_energy(vons_spherical, rho2ns_spherical, &
                          r, drdi, irmd, Z_nuclear, ind_reference) result(e_madelung)
-
-    double precision, intent(in)  :: vons_spherical(irmd)
-    double precision, intent(in)  :: rho2ns_spherical(irmd)
-    double precision, intent(in)  :: r(irmd)
-    double precision, intent(in)  :: drdi(irmd)
+  use Quadrature_mod, only: simpson
+    double precision, intent(in) :: vons_spherical(irmd)
+    double precision, intent(in) :: rho2ns_spherical(irmd)
+    double precision, intent(in) :: r(irmd)
+    double precision, intent(in) :: drdi(irmd)
     integer, intent(in) :: irmd
-    double precision, intent(in)  :: Z_nuclear
+    double precision, intent(in) :: Z_nuclear
     integer, intent(in) :: ind_reference
 
     double precision :: ER(irmd)
@@ -342,7 +341,8 @@ double precision function madelung_energy(vons_spherical, rho2ns_spherical, &
     ER(1:ind_reference) = RHO2NS_spherical(1:ind_reference) * RFPI
 
     charge_in_sphere = 0.0d0
-    CALL SIMP3(ER,charge_in_sphere,1,ind_reference,DRDI)
+!   CALL SIMP3(ER,charge_in_sphere,1,ind_reference,DRDI)
+    charge_in_sphere = simpson(ER, 1, ind_reference, DRDI)
 
     VMAD = VONS_spherical(ind_reference)/RFPI - 2.0D0 * charge_in_sphere/R(ind_reference)
 
@@ -355,7 +355,7 @@ end function
 !> the muffin-tin radius and this term does not cancel anymore.
 double precision function madelung_ref_radius_correction(rho2ns_spherical, &
                          r, drdi, irmd, Z_nuclear, ind_reference, ind_muffin_tin) result(e_correction)
-
+  use Quadrature_mod, only: simpson
     double precision, intent(in)  :: rho2ns_spherical(irmd)
     double precision, intent(in)  :: r(irmd)
     double precision, intent(in)  :: drdi(irmd)
@@ -379,7 +379,8 @@ double precision function madelung_ref_radius_correction(rho2ns_spherical, &
         ER(ii) = RHO2NS_spherical(ii)/R(ii)
       enddo
 
-      CALL SIMP3(ER,VM,ind_reference,ind_muffin_tin,DRDI)
+!     CALL SIMP3(ER,VM,ind_reference,ind_muffin_tin,DRDI)
+      VM = simpson(ER, ind_reference, ind_muffin_tin, DRDI)
     endif
 
     VM = -2.0D0*RFPI*VM

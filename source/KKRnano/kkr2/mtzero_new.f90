@@ -4,7 +4,7 @@
 subroutine mtzero_new(lmpot,nspin,vons,z,r,drdi,imt1,ircut, &
 ipan1,lmsp,ifunm,thetas,irws,vav0,vol0, &
 irmd, irid, nfund, ipand)
-
+  use Quadrature_mod, only: simpson
   implicit none
   ! ************************************************************************
   !
@@ -35,21 +35,12 @@ irmd, irid, nfund, ipand)
   integer &
   ifunm(*),ircut(0:ipand), &
   lmsp(*), irws
-  !     ..
-  !     .. Local Scalars ..
-  double precision fpi,rfpi,vav0,vol0,zzor
-  integer ifun,imt1,ipan1,ir,irc1,irh,is,lm
-  !     ..
-  !     .. Local Arrays ..
-  double precision v1(irmd),v2(irmd),vav1(2),vol1(2)
-  !     ..
-  !     .. External Subroutines ..
-  logical test
-  external simp3,simpk,test
-  !     ..
-  !     .. Intrinsic Functions ..
-  intrinsic atan,sqrt
-  !     ..
+
+  double precision :: fpi,rfpi,vav0,vol0,zzor
+  integer :: ifun,imt1,ipan1,ir,irc1,irh,is,lm
+  double precision :: v1(irmd),v2(irmd),vav1(2),vol1(2)
+  logical, external :: test
+
   fpi = 16.0d0*atan(1.0d0)
   rfpi = sqrt(fpi)
 
@@ -72,8 +63,8 @@ irmd, irid, nfund, ipand)
          v1(ir) = (vons(ir,1,is)/rfpi-zzor)*v2(ir)
 20     continue
         
-       call simp3(v1,vav1(is),imt1,irc1,drdi)
-       call simp3(v2,vol1(is),imt1,irc1,drdi)
+       vav1(is) = simpson(v1, imt1, irc1, drdi) ! simp3
+       vol1(is) = simpson(v2, imt1, irc1, drdi) ! simp3
         
      else                 ! (IPAN1.EQ.1)
        !
@@ -102,8 +93,8 @@ irmd, irid, nfund, ipand)
            
 50     continue          ! LM = 2,LMPOT
         
-       call simpk(v1,vav1(is),ipan1,ircut(0),drdi)
-       call simpk(v2,vol1(is),ipan1,ircut(0),drdi)
+       vav1(is) = simpson(v1, ipan1, ircut(0:), drdi) ! simpk
+       vol1(is) = simpson(v2, ipan1, ircut(0:), drdi) ! simpk
         
      end if               ! (IPAN1.EQ.1)
    !

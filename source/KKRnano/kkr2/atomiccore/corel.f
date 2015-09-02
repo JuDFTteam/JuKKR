@@ -9,6 +9,7 @@ c     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
 c                                      krypton core: 4430=4s,4p,3d
 c                                      xenon core: 5540=5s,5p,4d
 c-----------------------------------------------------------------------
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 C     .. Parameters ..
       INTEGER NITMAX,IRNUMX
@@ -156,7 +157,8 @@ C     start energy: E(n_max, l) / 10.
 c
 c---> integrate core density to get core charge
 c
-      CALL SIMP3(RHOC,QC,1,NR,DRDI)
+c     CALL SIMP3(RHOC,QC,1,NR,DRDI)
+      QC = simpson(RHOC(1:NR), 1, NR, DRDI)
 
  9000 FORMAT (1x,90 ('*'),/,'  n = ',i1,'  l = ',a4,'   nnode = ',i1,
      +       '  spin=',a4,i5,'th cell','    einput = ',1p,d16.8)

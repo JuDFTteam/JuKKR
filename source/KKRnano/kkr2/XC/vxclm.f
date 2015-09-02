@@ -36,6 +36,7 @@ c     simplified and modified for Paragon X/PS
 c                                       R. Zeller Nov. 1993
 c                            cor error 23/6/1996
 c-----------------------------------------------------------------------
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 
       INTEGER irmd
@@ -234,7 +235,8 @@ c
               END IF
   170       CONTINUE
   180     CONTINUE
-          CALL SIMPK(ER(1,L),EXC(L),IPAN,IRCUT,DRDI)
+c         CALL SIMPK(ER(1,L),EXC(L),IPAN,IRCUT,DRDI)
+          EXC(L) = simpson(ER(1:,L), IPAN, IRCUT, DRDI)
   190     CONTINUE
 
       END IF

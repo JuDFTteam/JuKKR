@@ -6,7 +6,7 @@ drdi, &
 ircut,lpot,nfu,llmsp,thetas,ipan, &
 catom, &
 irmd, irid, ipand, nfund)
-
+  use Quadrature_mod, only: simpson
   implicit none
   ! ************************************************************************
   !     add core and valence density expanded in spherical harmonics
@@ -118,8 +118,8 @@ irmd, irid, ipand, nfund)
     !
     !--->       integrate over circumscribed sphere
     !
-    call simpk(rho,catom(ispin),ipan1, &
-    ircut, drdi)
+!   call simpk(rho,catom(ispin),ipan1, ircut, drdi)
+    catom(ispin) = simpson(rho, ipan1, ircut, drdi)
 
   end do                      ! ISPIN = 1,NSPIN
 !

@@ -17,6 +17,7 @@ C *                                  ph. mavropoulos, juelich 2004    *
 C *                                                                   *
 C *********************************************************************
       use SingleSiteHelpers_mod, only: regsol
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 
       INTEGER lmaxd
@@ -140,7 +141,8 @@ C
 C
 C --> integrate, normalisation factor = WNORM
 C
-      CALL SIMPK(WINT,WNORM,IPAN,IRCUT(0),DRDI(1))
+c     CALL SIMPK(WINT,WNORM,IPAN,IRCUT(0),DRDI(1))
+      WNORM = simpson(WINT, IPAN, IRCUT(0:), DRDI(1:))
 C
 C --> normalise PZ,FZ to unit probability in WS cell
 C

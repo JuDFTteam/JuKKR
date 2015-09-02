@@ -1,4 +1,4 @@
-      SUBROUTINE LDAUOVRLP(RESULT,PHI,PZ,QZ,PQNS,ACR,DR,LIRREG,
+      SUBROUTINE LDAUOVRLP(RSLT,PHI,PZ,QZ,PQNS,ACR,DR,LIRREG,
      &                     IPAN,IRCUT,DRDI,IRMIN,LPHI,
      &                     IPAND,LMAXD,LMMAXD,MMAXD,LMPOTD,IRMIND,IRMD)
 C **********************************************************************
@@ -12,7 +12,7 @@ C * THETAS are the shape functions (needed only in case of cell        *
 C *        integration)                                                *
 C * LPHI is the angular momentum of PHI.                               *
 C * LIRREG is true if the irrregular wavefunction is to be used.       *
-C * The overlap is given out in array RESULT                           *
+C * The overlap is given out in array RSLT                           *
 C *                                                                    *
 C * In the inner region the non-spherical wavefunctions are            *
 C * approximated as:                                                   *
@@ -39,10 +39,10 @@ C *             sra index.                                             *
 C *                                                                    *
 C *  The integrand is convoluted with the shape functions:             *
 C *  (commented out now)                                               *
-C *    Result = Int conjg(phi_l)                                       *
+C *    RSLT = Int conjg(phi_l)                                       *
 C *                 sum_{L''L'''} R_L''L' Theta_L''' GAUNT_LL''L'''    *
 C *                                                                    *
-C *  Finally, the result should then be transformed to complex         *
+C *  Finally, the RSLT should then be transformed to complex         *
 C *  spherical harmonics basis.                                        *
 C *                                                                    *
 C *  Querry: Here only large component is used, but was PHI normalised *
@@ -51,6 +51,8 @@ C *                                                                    *
 C *                             ph. mavropoulos, juelich, 2002         *
 C *                                                                    *
 C **********************************************************************
+c     use Quadrature_mod, only: csimpk
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 C     ..
 C     .. Scalar Arguments ..
@@ -62,7 +64,7 @@ C     .. Array arguments ..
       DOUBLE COMPLEX PHI(IRMD),PZ(IRMD,0:LMAXD),QZ(IRMD,0:LMAXD)
       DOUBLE COMPLEX PQNS(LMMAXD,LMMAXD,IRMIND:IRMD,2)
       DOUBLE COMPLEX ACR(LMMAXD,LMMAXD),DR(LMMAXD,LMMAXD)
-      DOUBLE COMPLEX RESULT(MMAXD,MMAXD)
+      DOUBLE COMPLEX RSLT(MMAXD,MMAXD)
       DOUBLE PRECISION DRDI(IRMD)
       INTEGER IRCUT(0:IPAND)
 C     ..
@@ -82,7 +84,7 @@ C
       DO LM1 = 1,LMMAXD
          GAUNT(LM1,LM1,1) = 1.D0
       ENDDO
-      CALL CINIT(MMAXD*MMAXD,RESULT)
+      CALL CINIT(MMAXD*MMAXD,RSLT)
 C
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 C Loop over mm1,mm2:
@@ -141,7 +143,8 @@ C
             ENDDO
 C ----------------------------------------------------------------------
 C
-            CALL CSIMPK(WINT,RESULT(MM1,MM2),IPAN,IRCUT,DRDI(1))
+c           CALL CSIMPK(WINT,RSLT(MM1,MM2),IPAN,IRCUT,DRDI(1))
+            RSLT(MM1,MM2) = simpson(WINT, IPAN, IRCUT, DRDI(1:))
          ENDDO                 
       ENDDO                    
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

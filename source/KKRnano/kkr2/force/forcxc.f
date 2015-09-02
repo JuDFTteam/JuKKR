@@ -1,6 +1,7 @@
       SUBROUTINE FORCXC(FLM,FLMC,LPOT,NSPIN,RHOC,V,R,
      +                  DRDI,IRWS, irmd)
 C
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     calculates the force on nucleus m
@@ -33,9 +34,6 @@ C     .. Local Arrays ..
 
       DOUBLE PRECISION FLMXC(-1:1),V1(IRMD)
       DOUBLE PRECISION TAIL_COR(-1:1)
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL SIMP3
 C     ..
 C     .. Save statement ..
       SAVE PI
@@ -111,7 +109,8 @@ CDEBUG
 c
 c---> integrate with simpson subroutine
 c
-            CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
+c           CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
+            VINT1 = simpson(V1, 1, IRWS1, DRDI)
 
             FLMXC(M) = -FAC*VINT1 - FLMC(M)
             FLM(M) = FLM(M) + FLMXC(M)

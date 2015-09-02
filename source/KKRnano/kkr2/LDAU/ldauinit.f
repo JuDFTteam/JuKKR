@@ -11,6 +11,7 @@ C
 C                         new input parameters after inc.p removal
      &                    lmax, irmd, ipand)
 C
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 
       INTEGER lmax
@@ -91,7 +92,7 @@ C
          FACT(IU) = FACT(IU-1)*DBLE(IU) ! factorial
       END DO
 C
-      WINFO = .FALSE.                   ! set to .true. if information on initilization 
+      WINFO = .FALSE. ! set to .true. if information on initilization 
 C                                         should be written to output
 C
 C
@@ -189,7 +190,8 @@ C
               SG(IR) = WINT(IR) * SL(IR)
             ENDDO
 C
-            CALL SIMPK(SG,FCLMB(LF),IPAN,IRCUT(0),DRDI(1))
+c           CALL SIMPK(SG,FCLMB(LF),IPAN,IRCUT(0),DRDI(1))
+            FCLMB(LF) = simpson(SG(:), IPAN, IRCUT(0:), DRDI(1:))
 C
             WIG3J = (-1)**NINT(RLOP) * (1D0/SQRT(2D0*RLOP+1D0))
      &            * CGCRAC(FACT,RLOP,DBLE(LF),RLOP,0D0,0D0,0D0)

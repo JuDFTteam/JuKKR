@@ -37,7 +37,8 @@ SUBROUTINE vxcgga(exc,kte,lpot,nspin,rho2ns,v,r,drdi,a, &
 !                                       R. Zeller Nov. 1993
 !-----------------------------------------------------------------------
 
-use XCFunctionals_mod
+  use XCFunctionals_mod ! todo: fill only-list
+  use Quadrature_mod, only: simpson
 
 IMPLICIT NONE
 
@@ -97,9 +98,7 @@ DOUBLE PRECISION :: vxcr(2:3,2)
 EXTERNAL ddot
 !     ..
 !     .. External Subroutines ..
-EXTERNAL gradrl,mkxcpe,simpk
-!     ..
-
+EXTERNAL gradrl,mkxcpe
 
 !     .. Intrinsic Functions ..
 INTRINSIC ABS,ATAN,MOD
@@ -307,7 +306,8 @@ IF (kte == 1) THEN
         END IF
       END DO
     END DO
-    CALL simpk(er(1,l),exc(l),ipan1,ircut,drdi)
+!   CALL simpk(er(1,l),exc(l),ipan1,ircut,drdi)
+    exc(l) = simpson(er(1:,l), ipan1, ircut, drdi)
   END DO
   
 END IF

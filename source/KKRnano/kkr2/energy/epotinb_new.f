@@ -56,6 +56,7 @@ c                  tions
 c
 c                               b.drittler   oct. 1989
 c-----------------------------------------------------------------------
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 
       INTEGER irmd
@@ -92,13 +93,7 @@ C     ..
 C     .. Local Arrays ..(automatic Fortran arrays)
       DOUBLE PRECISION ER(IRMD)
       INTEGER IRCUTM(0:IPAND)
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL SIMP3,SIMPK
-C     ..
-C     .. Intrinsic Functions ..
-      INTRINSIC ATAN,SQRT
-C     ..
+
       PI = 4.0D0*ATAN(1.0D0)
       RFPI = SQRT(4.0D0*PI)
 
@@ -143,9 +138,11 @@ c
 c--->   now integrate er to get epotin
 c
         IF (IPAN1.GT.1) THEN
-          CALL SIMPK(ER,TEMP,IPAN,IRCUT,DRDI)
+c         CALL SIMPK(ER,TEMP,IPAN,IRCUT,DRDI)
+          TEMP = simpson(ER, IPAN, IRCUT, DRDI)
         ELSE
-          CALL SIMP3(ER,TEMP,1,IRS1,DRDI)
+c         CALL SIMP3(ER,TEMP,1,IRS1,DRDI)
+          TEMP = simpson(ER, 1, IRS1, DRDI)
         END IF
 
         EPOTIN = TEMP
@@ -182,7 +179,8 @@ c
      +                  R2RHOD*VINS(I,LM,IPOTD)
    60         CONTINUE
    70       CONTINUE
-            CALL SIMPK(ER,TEMP,IPAN1,IRCUTM,DRDI)
+c           CALL SIMPK(ER,TEMP,IPAN1,IRCUTM,DRDI)
+            TEMP = simpson(ER, IPAN1, IRCUTM, DRDI)
 c
             EPOTIN = EPOTIN + TEMP
 !ART            ENS(L1,IATYP) = TEMP

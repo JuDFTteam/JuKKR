@@ -493,8 +493,8 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
   !
   !                               b.drittler   july 1989
   !-----------------------------------------------------------------------
+  use Quadrature_mod, only: simpson
   
-
   integer lmax
   integer irmd
   integer ncleb
@@ -554,7 +554,6 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
   integer jend((2*lmax+1)**2,0:lmax,0:lmax)
   integer lmsp(*)
   
-  external :: csimpk
   double complex denns,v1
   integer imt1,l,lm,m
   double complex cden(irmd,0:lmax)
@@ -590,13 +589,10 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
      !
      !---> call integration subroutine
      !
-     call csimpk(cden(1,l),den(l),ipan,ircut,drdi)
+     den(l) = simpson(cden(1:,l), ipan, ircut, drdi)
    enddo ! l
 
-   if (ipan > 1) then
-     call csimpk(cdenns,denns,ipan,ircut,drdi)
-     den(lmax+1) = denns
-   endif
+   if (ipan > 1) den(lmax+1) = simpson(cdenns, ipan, ircut, drdi)
 
  endsubroutine
  
@@ -986,14 +982,14 @@ endsubroutine rhoout
 
   subroutine rhoval0(ez, wez, drdi, r, ipan, ircut, thetas, dos0, dos1, lmaxd, irmd, irid, ipand, nfund)
     use SingleSiteHelpers_mod, only: beshan
+    use Quadrature_mod, only: simpson
+    
     integer, intent(in) :: lmaxd, irmd, irid, ipand, nfund, ipan
     double complex, intent(in) :: ez,wez
     double complex, intent(inout) :: dos0, dos1
     double precision, intent(in) :: drdi(irmd), r(irmd), thetas(irid,nfund)
     integer, intent(in) :: ircut(0:ipand)
 
-    external :: csimpk ! todo: replace by a function
-    
     double complex ek,ciek,denl
     double precision c0ll
     integer ir,l,l1,imt1
@@ -1050,10 +1046,8 @@ endsubroutine rhoout
           cden1(ir,l1) = cden1(ir,l1)*thetas(ir-imt1,1)*c0ll
         enddo ! ir
       endif ! ipan > 1
-      call csimpk(cden0(1,l1),denl,ipan,ircut,drdi)
-      dos0 = dos0 + wez*denl
-      call csimpk(cden1(1,l1),denl,ipan,ircut,drdi)
-      dos1 = dos1 + wez*denl
+      dos0 = dos0 + wez*simpson(cden0(1:,l1), ipan, ircut, drdi)
+      dos1 = dos1 + wez*simpson(cden1(1:,l1), ipan, ircut, drdi)
     enddo ! l1
 
   endsubroutine ! rhoval0

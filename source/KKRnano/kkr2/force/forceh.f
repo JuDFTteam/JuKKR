@@ -4,6 +4,7 @@ C     ATTENTION: a factor sqrt(4*pi/3) is missing here, this is
 C     corrected in routine 'FORCE'
       SUBROUTINE FORCEH(FLMH,LPOT,RHO2NS,V,R,DRDI,
      &                  IRWS,Z,irmd)
+      use Quadrature_mod, only: simpson
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     calculates the force on nucleus m with hellmann - feynman theorem
@@ -29,9 +30,6 @@ C     .. Local Scalars ..
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION FLM(-1:1,2),V1(IRMD)
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL SIMP3
 C     ..
 C     .. Save statement ..
       SAVE PI
@@ -67,7 +65,8 @@ c
 c
 c---> integrate with simpson subroutine
 c
-            CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
+c           CALL SIMP3(V1,VINT1,1,IRWS1,DRDI)
+            VINT1 = simpson(V1, 1, IRWS1, DRDI)
 c
             FLM(M,1) = 2.0D0*VINT1
 c

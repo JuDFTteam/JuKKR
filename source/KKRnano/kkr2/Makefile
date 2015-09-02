@@ -269,16 +269,27 @@ ClusterInfo_mod.o: TruncationZone_mod.o RefCluster_mod.o one_sided_commI_mod.o
 ScatteringCalculation_mod.o: SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o KKRnanoParallel_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o SolverOptions_mod.o KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o TFQMRSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o MultScatData_mod.o
 TEST_lcutoff_mod.o: TruncationZone_mod.o Main2Arrays_mod.o lcutoff_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
-total_energy_mod.o: BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
+total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
 kkr0_mod.o: Exceptions_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o bzkint0.o testdimlat.o rcstop.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o pointgrp.o findgroup.o test.o bzkmesh.o symtaumat.o rinit.o cross.o latvec.o bzirr3d.o checkrmat.o calcrotmat.o errortrap.o taustruc.o rinvgj.o
 startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
 SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
-ValenceDensity_mod.o: SingleSite_mod.o SingleSiteHelpers_mod.o
+ValenceDensity_mod.o: Quadrature_mod.o SingleSite_mod.o SingleSiteHelpers_mod.o
 lloyd0_new_mod.o: ValenceDensity_mod.o
 Voronoi_mod.o: Exceptions_mod.o
 Exceptions_mod.o: Errors_mod.o Warnings_mod.o StringHelpers_mod.o
 Errors_mod.o: Warnings_mod.o
-
+ldauovrlp.o: Quadrature_mod.o
+ldauinit.o: Quadrature_mod.o
+ldauphi.o: Quadrature_mod.o
+force.o: Quadrature_mod.o
+forceh.o: Quadrature_mod.o
+forcxc.o: Quadrature_mod.o
+corel.o: Quadrature_mod.o
+mtzero_new.o: Quadrature_mod.o
+epotinb_new.o: Quadrature_mod.o
+vxclm.o: Quadrature_mod.o
+rhototb_new.o: Quadrature_mod.o
+vxcgga.o: Quadrature_mod.o
 
