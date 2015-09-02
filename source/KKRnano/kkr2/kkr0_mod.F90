@@ -1,3 +1,9 @@
+#define warn(unit, message)  call launch_warning(message, unit, __FILE__, __LINE__)
+#define die_here(message) call die(message, file=__FILE__, line=__LINE__)
+#define here trim(__FILE__-":"-__LINE__)
+#define assert(condition) if((condition)) then ; else ; die_here("assert("#condition") failed!") ; endif
+
+
 ! TODO: if energy_mesh.0 is not generated, check if settings in
 ! input.conf match those in energy_mesh.0
 ! PROBLEM: Fermi-Energy specified in 'potential' file - E-mesh depends on
@@ -5,6 +11,9 @@
 ! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT ON THE ACTUAL ONE!!!!!! - BUG?
 !  program MAIN0
 module kkr0_mod
+  use Errors_mod, only: die
+  use Warnings_mod, only: launch_warning
+  use StringHelpers_mod, only: operator(-), operator(+)
   implicit none
   private
   public :: main0
@@ -100,6 +109,7 @@ module kkr0_mod
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
     use DimParams_mod, only: DimParams, createDimParamsFromFile, writeDimParams
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
+    use Warnings_mod, only: get_number_of_warnings, show_warning_lines
 
     integer, parameter :: NSYMAXD=48 ! Maximal number of Brillouin zone symmetries, 48 is largest possible number
     integer, parameter :: MAXMSHD=8 ! Maximal number of k-meshes used
@@ -190,17 +200,18 @@ module kkr0_mod
 
     ! read starting potential and shapefunctions
     startpot_exists = .false.
-    inquire(file = 'potential', exist = startpot_exists)
+    inquire(file='potential', exist=startpot_exists)
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
-      call STARTB1_wrapper_new(params%alat, dims%NSPIND,NTCELL, &
+      call STARTB1_wrapper_new(params%alat, dims%NSPIND, NTCELL, &
                                EFERMI, arrays%ZAT, radius_muffin_tin, &
                                dims%NAEZ)
 
     else
       ! no formatted potential provided
       write(*,*) "WARNING: file 'potential' not found... skipping start potential generation."
+      warn(6, "file 'potential' not found... skipping start potential generation.")
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
       open (67, file='EFERMI', form='formatted')
       read (67, *) EFERMI
@@ -319,7 +330,11 @@ module kkr0_mod
     deallocate(NTCELL, stat=ierror)
     deallocate(radius_muffin_tin, stat=ierror)
 
+    
 ! -------------- Helper routine -----------------------------------------------
+
+    if (get_number_of_warnings() > 0) ierror = show_warning_lines(unit=6)
+    
   endsubroutine ! main0
 
   !------------------------------------------------------------------------
@@ -346,6 +361,7 @@ module kkr0_mod
     else
       ! if file new.kpoints exists - use those kpoints
       write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
+      warn(6, "rejecting file kpoints - using file new.kpoints instead.")
       open (fu,file='new.kpoints',form='formatted')
     endif
 

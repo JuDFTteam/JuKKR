@@ -14,8 +14,7 @@ module ShapeIntegrationHelpers_mod
 !>    plied by the appropriate expansion coefficients.
 !-----------------------------------------------------------------------
   subroutine pintg(x1, x2, dlt, s, lmax, isi, arg, fd, itype)
-    use shape_constants_mod, only: lmaxd1, ndim
-!     include 'inc.geometry':   integer, parameter (lmaxd=25,ndim=1000)
+    use shape_constants_mod, only: lmaxd1
 
     double precision, intent(in) :: x1, x2, dlt, arg, fd
     integer, intent(in) :: lmax
@@ -24,7 +23,8 @@ module ShapeIntegrationHelpers_mod
     double precision, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1) ! uses more memory than needed, about 55% used
     
     integer :: n, k
-    double precision :: theta, w1, w2, xx(ndim), ww(ndim)
+    double precision :: theta, w1, w2
+    double precision, allocatable :: xx(:), ww(:) ! formerly (ndim)
 
 !-----------------------------------------------------------------------
     if (lmax > lmaxd1) then
@@ -43,13 +43,14 @@ module ShapeIntegrationHelpers_mod
       call recur0(lmax, x2, theta, w2, s)
     else
       n = (x2 - x1)/dlt + 3
-      if (n > ndim) stop 'increase ndim'
+      allocate(xx(n), ww(n))
       call gauleg(x1, x2, xx, ww, n)
       do k = 1, n
         w1 = isi*ww(k)
         theta = atan(arg/cos(xx(k) - fd))
         call recur(lmax, xx(k), theta, w1, s)
       enddo ! k
+      deallocate(xx, ww, stat=k)
     endif ! itype == 0
     
   endsubroutine pintg

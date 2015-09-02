@@ -35,11 +35,9 @@ implicit none
   endtype
 
   integer, parameter, private :: Max_archived = 8
-  integer, private, save      :: num_archived = 0
   integer, private, save      :: num_launched = 0
   
   type(warning_line), private :: archive(0:Max_archived-1)
-  
   
   contains
 
@@ -64,9 +62,9 @@ implicit none
     
     now = MPI_Wtime() ! now
       
-    idx = modulo(num_archived, Max_archived)
-    num_archived = num_archived + 1 ! count up
-    archive(idx) = warning_line(text, fil, lin, num_archived, now, lev) ! store using default constructor
+    idx = modulo(num_launched, Max_archived)
+    num_launched = num_launched + 1 ! count up
+    archive(idx) = warning_line(text, fil, lin, num_launched, now, lev) ! store using default constructor
 
   endsubroutine ! launch_warning
   
@@ -80,15 +78,15 @@ implicit none
     
     ios = 0; if (unit < 1) return ! silent
 
-    if (num_archived < 1) then
+    if (num_launched < 1) then
       write(unit=unit, fmt='(/,A,/)', iostat=ios) 'No Warnings launched!'
       return
     endif
     
     now = MPI_Wtime() ! wall clock time now
     
-    write(unit=unit, fmt='(/,A,I0,A,/)') 'Show last ',min(num_archived, Max_archived),' warnings:'
-    do num = max(0, num_archived - Max_archived), num_archived - 1
+    write(unit=unit, fmt='(/,A,I0,A,/)') 'Show last ',min(num_launched, Max_archived),' warnings:'
+    do num = max(0, num_launched - Max_archived), num_launched - 1
       idx = modulo(num, Max_archived)
       wrn_or_err = 'Warning! ' ; if (archive(idx)%level > 0) wrn_or_err = 'Error!   ' ! for soft errors
       write(unit=unit, fmt='(I8,6A,I0)', iostat=ios) floor(now - archive(idx)%time),' seconds ago: ', &
@@ -104,6 +102,8 @@ implicit none
   endfunction ! get_number_of_warnings
 
   status_t function test()
+    test = 0
+#if 0  
     write(*,*,iostat=test) __FILE__,': start module test:'
     write(*,*,iostat=test) __FILE__,': so far ',get_number_of_warnings(),' warnings have been launched.'
     test = show_warning_lines(unit=6)
@@ -116,6 +116,7 @@ implicit none
     call launch_warning('w07')
     test = show_warning_lines(unit=6)
     write(*,*,iostat=test) __FILE__,': by now ',get_number_of_warnings(),' warnings have been launched.'
+#endif  
   endfunction ! test
 
 endmodule ! warnings

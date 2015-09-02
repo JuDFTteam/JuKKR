@@ -12,7 +12,7 @@ module Voronoi_mod
   public :: Voronoi_construction
 
   interface normal_plane
-    module procedure normal_plane0f, normal_planef!, normalplane, normalplane0
+    module procedure normal_plane0f, normal_planef
   endinterface
   
   contains
@@ -263,14 +263,14 @@ module Voronoi_mod
 
     integer ip1,ip2,ip3,ipl,kpl ! plane indices
     integer ivert                    ! vertex index
-    double precision          cut(1:3) ! cut point of three planes.
-    double precision          det(0:3) ! determinants of 3x3 system for xcut,ycut,zcut.
-    double precision          tolvdist2, distance2   ! a distance criterium of two points in space
+    double precision cut(1:3) ! cut point of three planes.
+    double precision det(0:3) ! determinants of 3x3 system for xcut,ycut,zcut.
+    double precision tolvdist2, distance2   ! a distance criterium of two points in space
     ! the following are for sorting the vertices of each face:
-    double precision          v1(3),v2(3),v3(3)   ! auxiliary vectors...
-    double precision          sinfiv1v2,cosfiv1v2 ! ...and their inner and outer products
-    double precision          fi(nvertmax)        ! ...and also their relative angles.
-    double precision          uv(3),vl,sn         ! unit vector, length, sign of sin(fi)
+    double precision v1(3),v2(3),v3(3)   ! auxiliary vectors...
+    double precision sinfiv1v2,cosfiv1v2 ! ...and their inner and outer products
+    double precision fi(nvertmax)        ! ...and also their relative angles.
+    double precision uv(3),vl,sn         ! unit vector, length, sign of sin(fi)
     logical laccept ! determining whether a cut point is inside the polyhedron.
     !---------------------------------------------------------------
     ! check & initialize

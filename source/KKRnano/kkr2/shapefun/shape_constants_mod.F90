@@ -33,7 +33,7 @@ module shape_constants_mod
   integer, parameter :: ISUMD = (LMAXD1*(3+4*(LMAXD1+1)*(LMAXD1+2)))/3+1 !< number of compressed rotation matrix elements = sum_l=0..lmaxd1 (2*l+1)^2
 
   !> maximal number of Gauss-Legendre integration points, used in PINTG
-  integer, parameter :: NDIM = 1000
+!   integer, parameter :: NDIM = 1000
   
 end module
 
