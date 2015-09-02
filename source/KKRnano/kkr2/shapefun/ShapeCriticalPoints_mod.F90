@@ -36,7 +36,7 @@ module ShapeCriticalPoints_mod
   !=====================================================================
   subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface,lmax, faces, npan, crt)
 
-    use shape_constants_mod, only: verbosity, check_geometry, isumd, lmaxd1, pi
+    use shape_constants_mod, only: verbosity, check_geometry, pi !, isumd, lmaxd1
     use PolygonFaces_mod, only: PolygonFace
     use ShapeGeometryHelpers_mod, only: polchk
 
@@ -55,7 +55,7 @@ module ShapeCriticalPoints_mod
     
 !   double precision :: sq3o3, coa
     double precision :: z(3)
-    integer :: iface, isum, itt
+    integer :: iface, itt
     integer :: iv, ivtot, l
     integer :: nvertd
     integer :: ist
@@ -70,17 +70,6 @@ module ShapeCriticalPoints_mod
     coa = 2.d0
     sq3o3 = sqrt(3.d0)/3.d0
 #endif
-
-    isum = 0
-    do l = 0, lmax
-      isum = isum + (2*l+1)**2
-    enddo ! l
-
-    if (isum > isumd .or. lmax > lmaxd1)  then
-      ! check needed for routine dreal
-      write(6,fmt="(23x,'from main : isum=',i7,'  greater than dimensioned',i7/23x,'       or   lmax=',i7,'  greater than dimensioned',i7)") isum,isumd,lmax,lmaxd1
-      stop
-    endif
 
     npan = 0 ! will be modified by routine critical_points
     ivtot = 0 ! deprecated, for comparable verbose output only

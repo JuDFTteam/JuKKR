@@ -27,7 +27,7 @@ module ShapeIntegration_mod
 
 subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
 
-  use shape_constants_mod, only: pi, lmaxd1!, icd, iced!, isumd
+  use shape_constants_mod, only: pi !, lmaxd1!, icd, iced!, isumd
   use PolygonFaces_mod, only: PolygonFace, TetrahedronAngles
   use shapeIntegrationhelpers_mod, only: pintg, ccoef, d_real
 
@@ -53,10 +53,10 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   double precision, allocatable :: dmatl(:,:) ! (isumd,nface)
   type(TetrahedronAngles) :: t1
   
-  double precision :: s(-lmaxd1:lmaxd1,0:lmaxd1), s1(-lmaxd1:lmaxd1,0:lmaxd1) ! this storage format uses only (lmaxd1+1)**2 of (lmaxd1+1)*(2*lmaxd1+1) elements so roughly 55%
-  double precision :: smm(-lmaxd1:lmaxd1)
+  double precision :: s(-lmax:lmax,0:lmax), s1(-lmax:lmax,0:lmax) ! this storage format uses only (lmax+1)**2 of (lmax+1)*(2*lmax+1) elements so roughly 55%
+  double precision :: smm(-lmax:lmax)
 
-  integer :: imo(-lmaxd1:lmaxd1) ! index translation from m=-l,-l+1,...,l-1,l to 0,1,-1,...,l,-l since the dmatl make use of this ordering
+  integer :: imo(-lmax:lmax) ! index translation from m=-l,-l+1,...,l-1,l to 0,1,-1,...,l,-l since the dmatl make use of this ordering
   
   ! local automatic arrays
   logical(kind=1) :: nontrivial(ibmaxd) ! the trivial shape function is zero from ilm>1 and sqrt(4*pi) for ilm==1
@@ -74,7 +74,7 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   thetas_s = 0.d0
 
   imo = 0
-  do m = 1, lmaxd1
+  do m = 1, lmax
     imo( m) = 2*m-1
     imo(-m) = 2*m
   enddo ! m
@@ -86,13 +86,13 @@ subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfu
   
   nface = size(face, 1) ! number of faces
   
-  isumd = (lmaxd1*(3+4*(lmaxd1+1)*(lmaxd1+2)))/3+1 !< number of compressed rotation matrix elements = sum_l=0..lmaxd1 (2*l+1)^2
+  isumd = (lmax*(3+4*(lmax+1)*(lmax+2)))/3+1 !< number of compressed rotation matrix elements = sum_l=0..lmax (2*l+1)^2
   allocate(dmatl(isumd,0:nface*idmatl), stat=ist)
   
   if (idmatl == idmatl_MEMORIZE) then
     do iface = 1, nface
       ! calculate transformation matrices for spherical harmonics (once only)
-      call d_real(lmax, face(iface)%euler, dmatl(:,iface), isumd, lmaxd1)
+      call d_real(lmax, face(iface)%euler, dmatl(:,iface))
     enddo ! iface
   endif ! memorize
   
@@ -162,7 +162,7 @@ py: do iface = 1, nface
 
       if (idmatl /= idmatl_MEMORIZE) then
         ! calculate transformation matrices for spherical harmonics (for each ir again!)
-        call d_real(lmax, face(iface)%euler, dmatl(:,0), isumd, lmaxd1)
+        call d_real(lmax, face(iface)%euler, dmatl(:,0))
       endif ! recompute every time
 
       do l = 0, lmax

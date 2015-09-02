@@ -26,11 +26,11 @@ module shape_constants_mod
 
   ! TODO: remove
   !> highest quantum number for shape functions (from inc.geometry) why 25? - limits KKR calculation to l_max=6
-  integer, parameter :: LMAXD1 = 25
+!   integer, parameter :: LMAXD1 = 25
 
-  integer, parameter :: ICD = (((2*LMAXD1+15)*LMAXD1+34)*LMAXD1)/24+1 !< number of compress contraction coefficients
-  integer, parameter :: ICED = ((LMAXD1+1)*(LMAXD1+2))/2 !< sum_l=0..lmaxd1 (l+1) number of compressed scaling coefficients
-  integer, parameter :: ISUMD = (LMAXD1*(3+4*(LMAXD1+1)*(LMAXD1+2)))/3+1 !< number of compressed rotation matrix elements = sum_l=0..lmaxd1 (2*l+1)^2
+!   integer, parameter :: ICD = (((2*LMAXD1+15)*LMAXD1+34)*LMAXD1)/24+1 !< number of compress contraction coefficients
+!   integer, parameter :: ICED = ((LMAXD1+1)*(LMAXD1+2))/2 !< sum_l=0..lmaxd1 (l+1) number of compressed scaling coefficients
+!   integer, parameter :: ISUMD = (LMAXD1*(3+4*(LMAXD1+1)*(LMAXD1+2)))/3+1 !< number of compressed rotation matrix elements = sum_l=0..lmaxd1 (2*l+1)^2
 
   !> maximal number of Gauss-Legendre integration points, used in PINTG
 !   integer, parameter :: NDIM = 1000

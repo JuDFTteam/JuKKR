@@ -14,23 +14,17 @@ module ShapeIntegrationHelpers_mod
 !>    plied by the appropriate expansion coefficients.
 !-----------------------------------------------------------------------
   subroutine pintg(x1, x2, dlt, s, lmax, isi, arg, fd, itype)
-    use shape_constants_mod, only: lmaxd1
-
     double precision, intent(in) :: x1, x2, dlt, arg, fd
     integer, intent(in) :: lmax
     integer(kind=1), intent(in) :: isi ! sign
     integer, intent(in) :: itype ! itype in [0, 1]
-    double precision, intent(out) :: s(-lmaxd1:lmaxd1,0:lmaxd1) ! uses more memory than needed, about 55% used
+    double precision, intent(out) :: s(-lmax:lmax,0:lmax) ! uses more memory than needed, about 55% used
     
     integer :: n, k
     double precision :: theta, w1, w2
     double precision, allocatable :: xx(:), ww(:) ! formerly (ndim)
 
 !-----------------------------------------------------------------------
-    if (lmax > lmaxd1) then
-      write(*,fmt="(3x,'from pintg: lmax=',i4,' greater than dimensioned',i4)")lmax,lmaxd1
-      stop
-    endif
   
     s = 0.d0
     if (x1 == x2) return ! 0.d0 if the integration range is zero
@@ -63,20 +57,19 @@ module ShapeIntegrationHelpers_mod
 !>    using recurrence relations.
 !-----------------------------------------------------------------------
   subroutine recur(lmax, x, theta, fac, s)
-    use shape_constants_mod, only: lmaxd1
     integer, intent(in) :: lmax
     double precision, intent(in) :: x, theta, fac
-    double precision, intent(inout) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
+    double precision, intent(inout) :: s(-lmax:lmax,0:lmax)
 
-    integer :: m,i
+    integer :: m, i
     double precision :: ol0, ol, el0, el, c1, c2, ss, cc
-    double precision :: c01(lmaxd1), c02(lmaxd1), ssa(lmaxd1+2), cca(lmaxd1+2)
+    double precision :: c01(lmax), c02(lmax), ssa(lmax+2), cca(lmax+2)
 !-----------------------------------------------------------------------
 #define  PREPARE_INTEGER_INVERSE
 
 #ifdef   PREPARE_INTEGER_INVERSE
-    double precision :: inv(1:lmaxd1+9)
-    do i = 1, lmaxd1+9
+    double precision :: inv(1:lmax+9)
+    do i = 1, lmax+9
       inv(i) = 1.d0/dble(i) ! saves floating point inversions
 #define INV(n) *inv(n)
     enddo ! i
@@ -193,17 +186,16 @@ module ShapeIntegrationHelpers_mod
 !>    also analytically using recurrence relations.(theta is fi-independ
 !-----------------------------------------------------------------------
   subroutine recur0(lmax, x, theta, fac, s)
-    use shape_constants_mod, only: lmaxd1
     integer, intent(in) :: lmax
     double precision, intent(in) :: x, theta, fac
-    double precision, intent(inout) :: s(-lmaxd1:lmaxd1,0:lmaxd1)
+    double precision, intent(inout) :: s(-lmax:lmax,0:lmax)
 
     integer :: m, i
     double precision :: ol0, ol, el0, el, c1, c2, ss, cc
-    double precision :: c01(lmaxd1), c02(lmaxd1), ssa(lmaxd1+2), cca(lmaxd1+2)
+    double precision :: c01(lmax), c02(lmax), ssa(lmax+2), cca(lmax+2)
 #ifdef   PREPARE_INTEGER_INVERSE
-    double precision :: inv(1:lmaxd1+9)
-    do i = 1, lmaxd1+9
+    double precision :: inv(1:lmax+9)
+    do i = 1, lmax+9
       inv(i) = 1.d0/dble(i) ! saves floating point inversions
 #define INV(n) *inv(n)
     enddo ! i
@@ -364,8 +356,6 @@ module ShapeIntegrationHelpers_mod
 !>    rized forms for the numbers.
 !-----------------------------------------------------------------------
   subroutine ccoef(lmax, cl_table, c_table)
-!   use shape_constants_mod, only: lmaxd1!, icd, iced ! not needed any more
-      
     integer, intent(in) :: lmax
 !     double precision, intent(out) :: cl(1:) ! (icd) ! warning: old m-ordering: ???
 !     double precision, intent(out) :: coe(1:) ! (iecd) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
@@ -390,7 +380,8 @@ module ShapeIntegrationHelpers_mod
 !       if (lmax > lmaxd1 .or. icmax > icd) then
 !         write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',2i5/13x,'icmax:',2i5)") lmax,lmaxd1,icmax,icd
       write(*,fmt="(13x,'from ccoef: inconsistency data-dimension'/14x,'lmax:',i5/13x,'icmax:',2i5)") lmax,icmax,icd
-      stop 'lmax > lmaxd1 .or. icmax > icd'
+!       stop 'lmax > lmaxd1 .or. icmax > icd'
+      stop 'icmax > icd'
     endif ! lmax > lmaxd1 .or. icmax > icd
 !     if (test('shape   ')) write(6,fmt="(13x,'there are',i5,'  coefficients'/)") icmax
 
@@ -548,15 +539,15 @@ module ShapeIntegrationHelpers_mod
 !>    real spherical harmonics up to quantum number lmax. the re-
 !>    sults are stored in dmatl(isumd)
 !------------------------------------------------------------------
-  subroutine d_real(lmax, euler, dmatl, isumd, lmaxd1)
-    integer, intent(in) :: lmaxd1, isumd, lmax
+  subroutine d_real(lmax, euler, dmatl)
+    integer, intent(in) :: lmax
     double precision, intent(in) :: euler(1:3) ! alpha, beta, gamma
     double precision, intent(out) :: dmatl(:)
     
 !-----------------------------------------------------------------------
     integer :: l,m,mp,i,imax,ip,ipmax,isu!,isum
     double precision :: fac,fac1,fac2,d,d1,d2
-    double precision :: dmn(0:lmaxd1,0:lmaxd1), dpl(0:lmaxd1,0:lmaxd1)
+    double precision :: dmn(0:lmax,0:lmax), dpl(0:lmax,0:lmax)
     double precision, parameter :: sqr2 = sqrt(2.d0)
     isu = 0 ! outer order is s,p,d,f,... and inner order for m and mp is 0,1,-1,2,-2,...,l,-l
     ! therefore as a function of lmax, isumd can be as low as sum_l=0...lmax (2*l+1)^2
