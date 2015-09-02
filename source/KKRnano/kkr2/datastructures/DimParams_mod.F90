@@ -67,14 +67,13 @@ implicit none
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParamsFromFile(self, filename)
-    use ConfigReader_mod, only: ConfigReader, getValueInteger, getUnreadVariable, parseFile
+    use ConfigReader_mod, only: ConfigReader, getValue, getUnreadVariable, parseFile
     use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated
     
     type (DimParams), intent(inout) :: self
     character(len=*), intent(in) :: filename ! usually 'global.conf'
 
     type (ConfigReader) :: conf
-    integer :: ierror
     character(len=40) :: variable
     integer :: next_ptr
 
@@ -83,64 +82,38 @@ implicit none
     self%EKMD = 0
 
     call createConfigReader(conf)
-    call parseFile(conf, filename, ierror)
-    if (ierror /= 0) stop
+    if (parseFile(conf, filename) /= 0) stop
 
-    call getValueInteger(conf, "LMAXD", self%LMAXD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NSPIND", self%NSPIND, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NAEZD", self%NAEZ, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IRNSD", self%IRNSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IRMD", self%IRMD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IRID", self%IRID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NXIJD", self%NXIJD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "KPOIBZ", self%KPOIBZ, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "IGUESSD", self%IGUESSD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "BCPD", self%BCPD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NMAXD", self%NMAXD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "ISHLD", self%ISHLD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "LLY", self%LLY, ierror)
-    if (ierror /= 0) stop
-
-    call getValueInteger(conf, "SMPID", self%SMPID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "EMPID", self%EMPID, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NTHRDS", self%NTHRDS, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "XDIM", self%XDIM, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "YDIM", self%YDIM, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "ZDIM", self%ZDIM, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "NATBLD", self%NATBLD, ierror)
-    if (ierror /= 0) stop
-    call getValueInteger(conf, "ITDBRYD", self%ITDBRYD, ierror)
-    if (ierror /= 0) stop
-
-    call getValueInteger(conf, "num_atom_procs", self%num_atom_procs, ierror)
-    if (ierror /= 0) then
+    if (getValue(conf, "LMAXD",   self%LMAXD) /= 0) stop
+    if (getValue(conf, "NSPIND",  self%NSPIND) /= 0) stop
+    if (getValue(conf, "NAEZD",   self%NAEZ) /= 0) stop
+    if (getValue(conf, "IRNSD",   self%IRNSD) /= 0) stop
+    if (getValue(conf, "IRMD",    self%IRMD) /= 0) stop
+    if (getValue(conf, "IRID",    self%IRID) /= 0) stop
+    if (getValue(conf, "NXIJD",   self%NXIJD) /= 0) stop
+    if (getValue(conf, "KPOIBZ",  self%KPOIBZ) /= 0) stop
+    if (getValue(conf, "IGUESSD", self%IGUESSD) /= 0) stop
+    if (getValue(conf, "BCPD",    self%BCPD) /= 0) stop
+    if (getValue(conf, "NMAXD",   self%NMAXD) /= 0) stop
+    if (getValue(conf, "ISHLD",   self%ISHLD) /= 0) stop
+    if (getValue(conf, "LLY",     self%LLY) /= 0) stop
+    if (getValue(conf, "SMPID",   self%SMPID) /= 0) stop
+    if (getValue(conf, "EMPID",   self%EMPID) /= 0) stop
+    if (getValue(conf, "NTHRDS",  self%NTHRDS) /= 0) stop
+    if (getValue(conf, "XDIM",    self%XDIM) /= 0) stop
+    if (getValue(conf, "YDIM",    self%YDIM) /= 0) stop
+    if (getValue(conf, "ZDIM",    self%ZDIM) /= 0) stop
+    if (getValue(conf, "NATBLD",  self%NATBLD) /= 0) stop
+    if (getValue(conf, "ITDBRYD", self%ITDBRYD) /= 0) stop
+    if (getValue(conf, "num_atom_procs", self%num_atom_procs) /= 0) then
       write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
-      self%num_atom_procs = self%naez
-    end if
+      self%num_atom_procs = self%NAEZ
+    endif
 
     write(*,*) "The following variables have not been read from global.conf:"
     next_ptr = 1
     do
-      call getUnreadVariable(conf, variable, next_ptr, ierror)
-      if (ierror /= 0) exit
+      if (getUnreadVariable(conf, variable, next_ptr) /= 0) exit
       write (*,*) variable
     enddo
 

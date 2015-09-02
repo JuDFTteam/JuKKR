@@ -32,7 +32,7 @@ HEADER = ("""
 ! Automatically generated source file. Do not edit by hand.
 ! To add/remove/modify input parameters:
 """ +
-"! Edit " +  deffilename + " and run \n! 'inputgenerator.py " + configname + " " + deffilename + " > source.f90'" +
+"! Edit " +  deffilename + " and run \n! 'inputgenerator.py " + configname + " " + deffilename + " > source.F90'" +
 """
 ! to generate source code.
 !------------------------------------------------------------------------------
@@ -44,10 +44,10 @@ print HEADER
 print 'module ' + configname + '_mod'
 print '  implicit none'
 print '  private'
-print '  public :: InputParams'
-print '  public :: getInputParamsValues'
-print '  public :: readInputParamsFromFile'
-print '  public :: writeInputParamsToFile'
+print '  public :: ' + configname
+print '  public :: get' + configname + 'Values'
+print '  public :: read' + configname + 'FromFile'
+print '  public :: write' + configname + 'ToFile'
 print
 
 #------------Generate type declaration -------------------
@@ -65,7 +65,7 @@ for line in deffile:
     else:
       print
 
-print 'end type ' + configname
+print 'endtype ! ' + configname
 
 print
 
@@ -73,28 +73,31 @@ deffile.close()
 
 deffile = open(deffilename, 'r')
 
-print 'CONTAINS'
+print '  contains'
 
 #----------- Generate code for retrieving config values -
 print '!'+'-'*79
-print 'integer function get' + configname + 'Values(filename, confvalues) result(ierror)'
+print 'integer function get' + configname + 'Values(filename, values) result(ierror)'
+print '  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroyConfigReader'
+print '  use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND'
+print '  use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE'
+print '  use ConfigReader_mod, only: getValue, parseFile'
 
-print '  use Config_Reader'
-print '  implicit none'
 print
-print '  character(len=*) :: filename'
-print '  type (ConfigReader) :: conf'
-print '  type (' + configname + '), intent(inout) :: confvalues'
+print '  character(len=*), intent(in) :: filename'
+print
+print '  type(' + configname + '), intent(inout) :: values'
+print '  type(ConfigReader) :: cr'
 print
 print """  ierror = 0
   write(*,*) "Reading information from input.conf..."
-  call createConfigReader(conf)
-  call parseFile(conf, filename, ierror)
+  call createConfigReader(cr)
+#define destroy_and_return   call destroyConfigReader(cr) ; return
+  ierror = parseFile(cr, filename)
   if (ierror /= 0) then
-    write(*,*) "Error reading configfile", filename
-    call destroyConfigReader(conf)
-    return
-  end if
+    write(*,*) "Error reading configfile ", trim(filename)
+    destroy_and_return
+  endif
 
 """
 
@@ -103,54 +106,66 @@ for line in deffile:
     if line[0] == '#': continue  #skip comment
     splitted_line = line.split()
 
-    gettername = getterNamesdict[splitted_line[0]]
+    gettername = 'getValue' #getterNamesdict[splitted_line[0]]
     default_value = None
 
     if (splitted_line[0] in vectors):
-      print '  call ' + gettername + \
-            '(conf, "' + splitted_line[1] + '", confvalues%' + splitted_line[1] + \
-            ', ' + splitted_line[2] + ', ierror)'
       if len(splitted_line) > 3:
           default_value = splitted_line[3]    
     else:
-      print '  call ' + gettername + \
-            '(conf, "' + splitted_line[1] + '", confvalues%' + splitted_line[1] + \
-            ', ierror)'
       if len(splitted_line) > 2:
           default_value = splitted_line[2]             
+          
+    #print '  ierror = ' + gettername + '(cr, "' + splitted_line[1] + '", values%' + splitted_line[1],
+
+    #if default_value is not None:
+        #print ', def=' + default_value + ')'
+        #print '  if (ierror == use_default) then'
+        #print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + '. Set to ' + splitted_line[1] + ' = ' + default_value + '"' 
+        #print '    ierror = 0'
+        #print '  endif'
+    #else:
+        #print ')'
+    #print '  if (ierror /= 0) then'
+    #print '    write(*,*) "Bad/no value given for ' + splitted_line[1] + '."'
+    #print '    destroy_and_return' # program will die
+    #print '  endif'
+    #print
+
 
     if default_value is not None:
-        print '  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then'
-        print '    confvalues%' + splitted_line[1] + ' = ' + default_value
-        print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + \
-                   '. Set to ' + splitted_line[1] + ' = ' + default_value + '"' 
-        print '    ierror = 0'
-        print '  end if'
-
-    print '  if (ierror /= 0) then'
+        print '  ierror = ' + gettername + '(cr, "' + splitted_line[1] + '", values%' + splitted_line[1],
+        print ', def=' + default_value + ')'
+        print '  if (ierror == use_default) then'
+        print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + '. Set to ' + splitted_line[1] + ' = ' + default_value + '"' 
+        print '    ierror = 0 ! ok, no error'
+        print '  elseif (ierror /= 0) then'
+    else:
+        print '  ierror = ' + gettername + '(cr, "' + splitted_line[1] + '", values%' + splitted_line[1] + ')'
+        print '  if (ierror /= 0) then'
     print '    write(*,*) "Bad/no value given for ' + splitted_line[1] + '."'
-    print '    call destroyConfigReader(conf)'
-    print '    return'
-    print '  end if'
+    print '    destroy_and_return' # program will die
+    print '  endif'
+    print
 
 deffile.close()
 
-print '  call destroyConfigReader(conf)'
-print 'write(*,*) "Finished reading information from input.conf"'
-print 'end function'
+print '  write(*,*) "Finished reading information from input.conf"'
+print '  destroy_and_return'
+print '#undef destroy_and_return'
+print 'endfunction !'
 print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function read' + configname + 'FromFile(filename, confvalues) result(ierror)'
-print '  implicit none'
+print 'integer function read' + configname + 'FromFile(filename, values) result(ierror)'
 print '  character(len=*), intent(in) :: filename'
-print '  type (' + configname + '), intent(inout) :: confvalues'
+print '  type(' + configname + '), intent(inout) :: values'
 print
-print '  integer, parameter :: FILEHANDLE = ' + str(FILE_UNIT)
+print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
 print '  ierror = 0'
-print '  open(FILEHANDLE, file=filename, form="unformatted")'
+print '  open(fu, file=filename, form="unformatted")'
 
 deffile = open(deffilename, 'r')
 
@@ -158,25 +173,24 @@ for line in deffile:
     if line[0] == '#': continue  #skip comment
     splitted_line = line.split()
 
-    print '  read(FILEHANDLE) confvalues%' + splitted_line[1]
+    print '  read(fu) values%' + splitted_line[1]
 
 deffile.close()
 
-print '  close(FILEHANDLE)'
-print 'end function'
+print '  close(fu)'
+print 'endfunction ! readFromFile'
 print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function write' + configname + 'ToFile(filename, confvalues) result(ierror)'
-print '  implicit none'
+print 'integer function write' + configname + 'ToFile(filename, values) result(ierror)'
 print '  character(len=*), intent(in) :: filename'
-print '  type (' + configname + '), intent(inout) :: confvalues'
+print '  type(' + configname + '), intent(inout) :: values'
 print
-print '  integer, parameter :: FILEHANDLE = ' + str(FILE_UNIT)
+print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
 print '  ierror = 0'
-print '  open(FILEHANDLE, file=filename, form="unformatted")'
+print '  open(fu, file=filename, form="unformatted")'
 
 deffile = open(deffilename, 'r')
 
@@ -184,15 +198,15 @@ for line in deffile:
     if line[0] == '#': continue  #skip comment
     splitted_line = line.split()
 
-    print '  write(FILEHANDLE) confvalues%' + splitted_line[1]
+    print '  write(fu) values%' + splitted_line[1]
 
 deffile.close()
 
-print '  close(FILEHANDLE)'
-print 'end function'
+print '  close(fu)'
+print 'endfunction ! writeToFile'
 print
 
-print 'end module'
+print 'endmodule !'
 
 #------------ Assignment statements ------------------------------
 #deffile = open(deffilename, 'r')

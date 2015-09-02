@@ -22,7 +22,7 @@ module ConfigReaderDictionary_mod
 
   type Dictionary
     private
-    type (DictionaryEntry), pointer :: dict(:)
+    type(DictionaryEntry), pointer :: dict(:)
     integer :: counter
   endtype 
   
@@ -58,7 +58,7 @@ module ConfigReaderDictionary_mod
   endsubroutine
 
   subroutine createDictionary(this)
-    type (Dictionary), intent(inout) :: this
+    type(Dictionary), intent(inout) :: this
 
     integer :: ierror
 
@@ -80,14 +80,14 @@ module ConfigReaderDictionary_mod
   !> exists then ierror = CONFIG_READER_DICT_NOT_UNIQUE and the variable/value
   !> pair is not inserted in the dictionary
   subroutine pushBackDictionary(this, variable, value, tag, ierror)
-    type (Dictionary), intent(inout) :: this
+    type(Dictionary), intent(inout) :: this
     character(len=*), intent(in) :: variable
     character(len=*), intent(in) :: value
     logical, intent(in) :: tag
 
     integer, intent(out) :: ierror
 
-    type (DictionaryEntry), dimension(:), pointer :: dict_new
+    type(DictionaryEntry), pointer :: dict_new(:)
 
     integer :: ind
     integer :: capacity
@@ -146,7 +146,7 @@ module ConfigReaderDictionary_mod
   !> retrieves the value corresponding to 'variable' and sets the
   !> tag to the given logical value (true/false)
   subroutine getDictionaryValue(this, variable, value, tag, ierror)
-    type (Dictionary), intent(inout) :: this
+    type(Dictionary), intent(inout) :: this
     character(len=*), intent(in) :: variable
     character(len=*), intent(inout) :: value
     logical, intent(in) :: tag
@@ -177,7 +177,7 @@ module ConfigReaderDictionary_mod
   !> then ierror = CONFIG_READER_DICT_NOT_FOUND
   !> variable then has the value it had on entry!
   subroutine getTaggedVariable(this, variable, tag, next_ptr, ierror)
-    type (Dictionary), intent(in) :: this
+    type(Dictionary), intent(in) :: this
     character(len=*), intent(inout) :: variable
     logical, intent(in) :: tag
     integer, intent(inout) :: next_ptr
@@ -206,7 +206,7 @@ module ConfigReaderDictionary_mod
   !> output of dictionary content to stdout
   !> useful for testing purposes
   subroutine printDictionary(this)
-    type (Dictionary), intent(in) :: this
+    type(Dictionary), intent(in) :: this
 
     integer :: ind
     
@@ -221,7 +221,7 @@ module ConfigReaderDictionary_mod
   !>
   !> This routine has to be called after use of the dictionary
   subroutine destroyDictionary(this)
-    type (Dictionary), intent(inout) :: this
+    type(Dictionary), intent(inout) :: this
 
     integer :: ierror
 

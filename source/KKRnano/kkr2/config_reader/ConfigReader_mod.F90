@@ -8,7 +8,8 @@ module ConfigReader_mod
   public :: createConfigReader, destroyConfigReader ! deprecated
   public :: parseFile
   public :: getUnreadVariable
-  public :: getValueDouble, getValueDoubleVector, getValueInteger, getValueIntVector, getValueLogical, getValueString  
+  public :: getValue ! (interfaced)
+!   public :: getValueDouble, getValueDoubleVector, getValueInteger, getValueIntVector, getValueLogical, getValueString  
   
   ! Public constants, error codes
   !  Parse errors
@@ -32,6 +33,9 @@ module ConfigReader_mod
   integer, parameter, public :: CONFIG_READER_ERR_NO_FILE = 1000
   integer, parameter, public :: CONFIG_READER_ERR_IO_FAIL = 1001
 
+  
+  integer, parameter, public :: CONFIG_READER_USE_DEFAULT_VALUE = -1
+  
   type ConfigReader
     private
     type(Dictionary) :: parse_dict
@@ -55,7 +59,11 @@ module ConfigReader_mod
   interface destroy
     module procedure destroyConfigReader
   endinterface
-   
+  
+  interface getValue
+    module procedure getValueDouble, getValueReal, getValueDoubleVector, getValueInteger, getValueIntVector, getValueLogical, getValueString
+  endinterface
+  
   contains
 
 !---------------------------------------------------------------------
@@ -84,11 +92,9 @@ module ConfigReader_mod
   endsubroutine destroyConfigReader
 
 !---------------------------------------------------------------------
-  subroutine parseFile(this, filename, ierror)
-
+  integer function parseFile(this, filename) result(ierror) ! for parse errors
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: filename
-    integer, intent(out) :: ierror ! for parse errors
 
     integer :: line_number
     integer :: ios ! for I/O errors
@@ -116,14 +122,14 @@ module ConfigReader_mod
 
       if (ios == 0) then
         !write(*,*) line_buf
-        call parseLine(this, line_buf, line_number, ierror)
+        ierror = parseLine(this, line_buf, line_number)
         line_number = line_number + 1
       endif
     enddo ! while
 
     close(FILE_HANDLE)
 
-  endsubroutine parseFile
+  endfunction parseFile
 
 !---------------------------------------------------------------------
   !> parse a line with some simple syntax rules
@@ -137,16 +143,14 @@ module ConfigReader_mod
   !> VAR = "Hello world!"
   !> the comment characters are allowed in strings
   !> VAR = "#!"
-  subroutine parseLine(this, line_buf, line_number, ierror)
+  integer function parseLine(this, line_buf, line_number) result(ierror) ! for parse errors
 
-    use ConfigReaderDictionary_mod, only: CONFIG_READER_DICT_VAR_LENGTH, &
-      CONFIG_READER_DICT_VALUE_LENGTH, CONFIG_READER_DICT_NOT_UNIQUE, &
-      pushBackDictionary
+    use ConfigReaderDictionary_mod, only: pushBackDictionary, &
+      CONFIG_READER_DICT_VAR_LENGTH, CONFIG_READER_DICT_VALUE_LENGTH, CONFIG_READER_DICT_NOT_UNIQUE
 
     type(ConfigReader), intent(inout) :: this
     character(len=MAX_LINE_LENGTH), intent(in) :: line_buf
     integer, intent(in) :: line_number
-    integer, intent(out) :: ierror ! for parse errors
 
     character :: parse_char
     character :: string_delim_used
@@ -370,7 +374,7 @@ module ConfigReader_mod
 
     if (ierror /= 0) call displayParserError(line_number, column, ierror)
 
-  endsubroutine parseLine
+  endfunction parseLine
 
 !---------------------------------------------------------------------
   subroutine displayParserError(line_number, column, ierror)
@@ -387,40 +391,45 @@ module ConfigReader_mod
       case (CONFIG_READER_ERR_VAR_NOT_UNIQUE); write (*,*) "Parameter is already defined."
       case default;                            write (*,*) "Unknown error."
     endselect
+    
   endsubroutine displayParserError
 
 !---------------------------------------------------------------------
-  subroutine getValueString(this, variable, value, ierror)
+  integer function getValueString(this, variable, value, def) result(ierror)
     use ConfigReaderDictionary_mod, only: getDictionaryValue
 
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
     character(len=*), intent(inout) :: value
-    integer, intent(out) :: ierror
+    character(len=*), intent(in), optional :: def
 
     logical :: tag
-    integer :: dict_error
 
     tag = .true.
-    dict_error = 0
     ierror = 0
-    call getDictionaryValue(this%parse_dict, variable, value, tag, dict_error)
-
-    if (dict_error /= 0) then
-      ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
+    call getDictionaryValue(this%parse_dict, variable, value, tag, ierror)
+    
+    if (ierror /= 0) then
+      if (present(def)) then
+        value = def
+        ierror = CONFIG_READER_USE_DEFAULT_VALUE
+      else
+        ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
+      endif
     endif
-  endsubroutine getValueString
+    
+  endfunction getValueString
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as integer value.
 !>
 !> a default value can be passed as int_value, which does not change on exit
 !> if the variable is not found
-  subroutine getValueInteger(this, variable, int_value, ierror)
+  integer function getValueInteger(this, variable, value, def) result(ierror)
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
-    integer, intent(inout) :: int_value
-    integer, intent(out) :: ierror
+    integer, intent(inout) :: value
+    integer, intent(in), optional :: def
 
     character(len=MAX_LINE_LENGTH) :: value_string
     integer :: value_read
@@ -429,62 +438,82 @@ module ConfigReader_mod
     ierror = 0
     ios = 0
 
-    call getValueString(this, variable, value_string, ierror)
+    ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
       read(unit=value_string, fmt=*, iostat=ios) value_read
       ! test if an integer was read
       if (ios == 0) then
-        int_value = value_read
+        value = value_read
       else
         ierror = CONFIG_READER_ERR_NOT_INTEGER
       endif
     endif
 
-  endsubroutine getValueInteger
+    if (ierror /= 0 .and. present(def)) then
+      value = def
+      ierror = CONFIG_READER_USE_DEFAULT_VALUE
+    endif
+    
+  endfunction getValueInteger
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as double prec. value.
 !>
-!> a default value can be passed as double_value, which does not change on exit
+!> a default value can be passed as value, which does not change on exit
 !> if the variable is not found
-  subroutine getValueDouble(this, variable, double_value, ierror)
+  integer function getValueDouble(this, variable, value, def) result(ierror)
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
-    real(kind = kind(1.0d0)), intent(inout) :: double_value
-    integer, intent(out) :: ierror
+    double precision, intent(inout) :: value
+    double precision, intent(in), optional :: def
 
     character(len=MAX_LINE_LENGTH) :: value_string
-    real(kind = kind(1.0d0)) :: value_read
+    double precision :: value_read
     integer :: ios
 
     ierror = 0
     ios = 0
 
-    call getValueString(this, variable, value_string, ierror)
+    ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
       read(unit=value_string, fmt=*, iostat=ios) value_read
       ! test if a double was read
       if (ios == 0) then
-        double_value = value_read
+        value = value_read
       else
         ierror = CONFIG_READER_ERR_NOT_DOUBLE
       endif
     endif
+    
+    if (ierror /= 0 .and. present(def)) then
+      value = def
+      ierror = CONFIG_READER_USE_DEFAULT_VALUE
+    endif
 
-  endsubroutine getValueDouble
+  endfunction getValueDouble
 
+  !! warpper for single precision
+  integer function getValueReal(this, variable, value, def) result(ierror)
+    type(ConfigReader), intent(inout) :: this
+    character(len=*), intent(in) :: variable
+    double precision, intent(inout) :: value
+    real, intent(in) :: def
+    ierror = getValueDouble(this, variable, value, def=dble(def))
+  endfunction getValueReal
+  
+  
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as logical value.
 !>
-! a default value can be passed as logical_value, which does not change on exit
+! a default value can be passed as value, which does not change on exit
 ! if the variable is not found
-  subroutine getValueLogical(this, variable, logical_value, ierror)
+  integer function getValueLogical(this, variable, value, def) result(ierror)
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
-    logical, intent(inout) :: logical_value
-    integer, intent(out) :: ierror
+    logical, intent(inout) :: value
+    logical, intent(in), optional :: def
 
     character(len=MAX_LINE_LENGTH) :: value_string
     logical :: value_read
@@ -493,19 +522,24 @@ module ConfigReader_mod
     ierror = 0
     ios = 0
 
-    call getValueString(this, variable, value_string, ierror)
+    ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
       read(unit=value_string, fmt=*, iostat=ios) value_read
       ! test if a logical was read
       if (ios == 0) then
-        logical_value = value_read
+        value = value_read
       else
         ierror = CONFIG_READER_ERR_NOT_LOGICAL
       endif
     endif
 
-  endsubroutine getValueLogical
+    if (ierror /= 0 .and. present(def)) then
+      value = def
+      ierror = CONFIG_READER_USE_DEFAULT_VALUE
+    endif
+    
+  endfunction getValueLogical
 
 !---------------------------------------------------------------------
 !> Reads a double precision vector of fixed length from config-File.
@@ -516,38 +550,42 @@ module ConfigReader_mod
 !
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
-  subroutine getValueDoubleVector(this, variable, vector, length, ierror)
+  integer function getValueDoubleVector(this, variable, value, def) result(ierror)
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
-    double precision, intent(inout) :: vector(length)
-    integer, intent(in) :: length
-    integer, intent(out) :: ierror
+    double precision, intent(inout) :: value(:)
+    double precision, intent(in), optional :: def(:)
 
     character(len=MAX_LINE_LENGTH) :: value_string
-    double precision :: vector_read(length)
+    double precision :: vector_read(size(value))
     integer :: ios
-    integer :: ii
 
     ierror = 0
     ios = 0
 
-    call getValueString(this, variable, value_string, ierror)
+    ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
-      read(unit=value_string, fmt=*, iostat=ios) (vector_read(ii), ii = 1, length)
+      read(unit=value_string, fmt=*, iostat=ios) vector_read(:)
       ! test if read was successful
       if (ios == 0) then
-        vector = vector_read
+        value = vector_read
       else
         write(*,*) value_string
         write(*,*) vector_read
-        vector = vector_read
+        value = vector_read
         write(*,*) ios
         ierror = CONFIG_READER_ERR_NOT_DOUBLE
       endif
     endif
 
-  endsubroutine getValueDoubleVector
+    if (ierror /= 0 .and. present(def)) then
+      if (size(def) /= size(value)) stop 'DoubleVector: lengths of arguments VALUE and DEF do not match!'
+      value = def
+      ierror = CONFIG_READER_USE_DEFAULT_VALUE
+    endif
+    
+  endfunction getValueDoubleVector
 
 !---------------------------------------------------------------------
 !> Reads an integer vector of fixed length from config-File.
@@ -558,38 +596,42 @@ module ConfigReader_mod
 !
 !> A default value can be passed as vector, which does not change on exit
 !> if the variable is not found
-  subroutine getValueIntVector(this, variable, vector, length, ierror)
+  integer function getValueIntVector(this, variable, value, def) result(ierror)
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
-    integer, intent(inout) :: vector(length)
-    integer, intent(in) :: length
-    integer, intent(out) :: ierror
+    integer, intent(inout) :: value(:)
+    double precision, intent(in), optional :: def(:)
 
     character(len=MAX_LINE_LENGTH) :: value_string
-    integer :: vector_read(length)
+    integer :: vector_read(size(value))
     integer :: ios
-    integer :: ii
 
     ierror = 0
     ios = 0
 
-    call getValueString(this, variable, value_string, ierror)
+    ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
-      read(unit=value_string, fmt=*, iostat=ios) (vector_read(ii), ii = 1, length)
+      read(unit=value_string, fmt=*, iostat=ios) vector_read(:)
       ! test if read was successful
       if (ios == 0) then
-        vector = vector_read
+        value = vector_read
       else
         write(*,*) value_string
         write(*,*) vector_read
-        vector = vector_read
+        value = vector_read
         write(*,*) ios
         ierror = CONFIG_READER_ERR_NOT_INTEGER
       endif
     endif
 
-  endsubroutine getValueIntVector
+    if (ierror /= 0 .and. present(def)) then
+      if (size(def) /= size(value)) stop 'IntVector: lengths of arguments VALUE and DEF do not match!'
+      value = def
+      ierror = CONFIG_READER_USE_DEFAULT_VALUE
+    endif
+    
+  endfunction getValueIntVector
 
 !---------------------------------------------------------------------
 !> This subroutine is used to get variables, which have not been read (yet).
@@ -598,13 +640,12 @@ module ConfigReader_mod
 !> next_ptr is an integer which has to be kept for the next call to this
 !> subroutine, which gives the next unread variable
 !> If no unread variable was found then ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
-  subroutine getUnreadVariable(this, variable, next_ptr, ierror)
+  integer function getUnreadVariable(this, variable, next_ptr) result(ierror)
     use ConfigReaderDictionary_mod, only: getTaggedVariable, CONFIG_READER_DICT_NOT_FOUND
 
     type(ConfigReader), intent(in) :: this
     character(len=*),  intent(out) :: variable
     integer, intent(inout) :: next_ptr
-    integer, intent(out) :: ierror
 
     integer :: dict_error
 
@@ -614,11 +655,9 @@ module ConfigReader_mod
 
     call getTaggedVariable(this%parse_dict, variable, .false., next_ptr, dict_error)
 
-    if (dict_error == CONFIG_READER_DICT_NOT_FOUND) then
-      ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
-    endif
+    if (dict_error == CONFIG_READER_DICT_NOT_FOUND) ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
 
-  endsubroutine getUnreadVariable
+  endfunction getUnreadVariable
 
 endmodule ConfigReader_mod
 
