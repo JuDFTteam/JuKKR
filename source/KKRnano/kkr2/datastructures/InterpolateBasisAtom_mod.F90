@@ -7,7 +7,7 @@ module InterpolateBasisAtom_mod
   private
   public :: interpolateBasisAtom
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   ! Interpolate 'old_atom' to 'new_mesh' and return result in 'new_atom' using
@@ -76,8 +76,8 @@ module InterpolateBasisAtom_mod
         ! this avoids numerical inaccuracies - arising from
         ! spline interpolation routine
         do_interpolation = .false.
-      end if
-    end if
+      endif
+    endif
 
     if (do_interpolation .eqv. .true.) then
 
@@ -92,26 +92,26 @@ module InterpolateBasisAtom_mod
                            old_atom%potential%VINS(irmin_old:irws_old,lm,ii), &
                            new_mesh%r(irmin_new:irws_new), &
                            new_atom%potential%VINS(irmin_new:irws_new,lm,ii))
-        end do
-      end do
+        enddo ! lm
+      enddo ! ii
 
       ! be careful when mesh partition has changed
       if (irmin_new < irmin_old) then
         new_atom%potential%VINS(irmin_new:min(irmin_old, irws_new),:,:) = 0.0d0
-      end if
+      endif
 
       ! interpolate spherical potential
       do ii = 1, nspin
         call interpolate(old_mesh%r, old_atom%potential%VISP(:,ii), &
                          new_mesh%r, new_atom%potential%VISP(:,ii))
-      end do
+      enddo ! ii
 
     else
       ! no interpolation - just copy
       new_atom%potential = old_atom%potential
 
-    end if
-  end subroutine interpolateBasisAtom
+    endif
+  endsubroutine interpolateBasisAtom
 
 
   !----------------------------------------------------------------------------
@@ -148,8 +148,8 @@ module InterpolateBasisAtom_mod
         counter = counter + 1
         xarray(counter) = xval(ii)
         yarray(counter) = yval(ii)
-      end if
-    end do
+      endif
+    enddo ! ii
 
     ! note: 1st derivative at upper boundary forced to 0.0d0                                                  
     call spline(num, xarray, yarray, counter, 1.d35, 0.0d0, y2ndder)
@@ -163,8 +163,8 @@ module InterpolateBasisAtom_mod
         ynew(ii) = yarray(counter)
       endif
 
-    end do
+    enddo ! ii
 
-  end subroutine interpolate
+  endsubroutine interpolate
   
-end module InterpolateBasisAtom_mod
+endmodule InterpolateBasisAtom_mod

@@ -32,7 +32,7 @@ module NearField_com_mod
     procedure :: create => createLocalCellInfo
     procedure :: destroy => destroyLocalCellInfo
 
-  end type
+  endtype
   
   type NearFieldCorrection
     double precision, allocatable :: delta_potential(:, :)
@@ -40,7 +40,7 @@ module NearField_com_mod
     contains
     procedure :: create => createNearFieldCorrection
     procedure :: destroy => destroyNearFieldCorrection
-  end type
+  endtype
   
 !   interface create
 !     module procedure createNearFieldCorrection, createLocalCellInfo
@@ -51,7 +51,7 @@ module NearField_com_mod
 !   endinterface
   
   
-  CONTAINS
+  contains
   
   !----------------------------------------------------------------------------
   subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
@@ -90,7 +90,7 @@ module NearField_com_mod
     npoints = 0
     do ii = 1, num_local_atoms
       npoints = max(npoints, size(local_cells(ii)%radial_points))
-    end do
+    enddo ! ii
 
     call MPI_Comm_size(communicator, nranks, ierr)
     call MPI_Allreduce(npoints, max_npoints, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
@@ -112,7 +112,7 @@ module NearField_com_mod
       ! we also have to store the actual number of mesh points for each local atom
       ! small hack: convert integer number to double to simplify communication
       send_buffer(max_npoints+1, lmpotd+1, ii) = dble(irmd) 
-    end do
+    enddo ! ii
 
     call exposeBufferD(win, send_buffer, &
                        (max_npoints+1)*(lmpotd+1)*num_local_atoms, &
@@ -149,7 +149,7 @@ module NearField_com_mod
                                        local_cells(ilocal)%critical_index)
         
         call intra_pot%destroy()
-      end do
+      enddo ! icell
 
       WRITELOG(2,*) "Near field corrections for local atom ", ilocal
       WRITELOG(2,*) "Near field - delta potential (point/norm):"
@@ -157,18 +157,18 @@ module NearField_com_mod
         WRITELOG(2,*) ii, local_cells(ilocal)%radial_points(ii), &
                       sqrt(dot_product(nf_correction(ilocal)%delta_potential(ii,:), &
                                        nf_correction(ilocal)%delta_potential(ii,:)))
-      end do
+      enddo ! ii
 
       WRITELOG(2,*) "Near field - delta potential (LM/norm):"
       do ii = 1, size(nf_correction(ilocal)%delta_potential, 2)
         WRITELOG(2,*) ii, sqrt(dot_product(nf_correction(ilocal)%delta_potential(:,ii), &
                                nf_correction(ilocal)%delta_potential(:,ii)))
-      end do
+      enddo ! ii
 
-    end do
+    enddo ! ilocal
 
     call hideBufferD(win)
-  end subroutine
+  endsubroutine
   
   !> Set delta_potential to 0.0d0 before first call!
   !>
@@ -199,21 +199,21 @@ module NearField_com_mod
     do lm = 1, size(coeffs)
       do ii = critical_index, size(radial_points)
         delta_potential(ii, lm) = delta_potential(ii, lm) - coeffs(lm) * (-radial_points(ii))**L
-      end do
+      enddo ! ii
       M = M + 1
       if (M > L) then
         L = L+1
         M = -L
-      end if
-    end do
+      endif
+    enddo ! lm
     
     ! add correct contribution
     do ii = critical_index, size(radial_points)
       call calc_near_field(coeffs, radial_points(ii), dist_vec, intra_pot)
       delta_potential(ii, :) = delta_potential(ii, :) + coeffs
-    end do
+    enddo ! ii
 
-  end subroutine
+  endsubroutine ! add
 
   !----------------------------------------------------------------------------
   subroutine createLocalCellInfo(self, irmd, lmpotd, critical_index)
@@ -227,7 +227,7 @@ module NearField_com_mod
     allocate(self%radial_points(irmd))
     self%critical_index = critical_index
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyLocalCellInfo(self)
@@ -240,7 +240,7 @@ module NearField_com_mod
     if (allocated(self%near_cell_indices)) deallocate(self%near_cell_indices)
     if (allocated(self%near_cell_dist_vec)) deallocate(self%near_cell_dist_vec)
 
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   subroutine createNearFieldCorrection(self, irmd, lmpotd)
@@ -249,12 +249,13 @@ module NearField_com_mod
     integer, intent(in) :: lmpotd
 
     allocate(self%delta_potential(irmd, lmpotd))
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyNearFieldCorrection(self)
     class (NearFieldCorrection), intent(inout) :: self
 
     deallocate(self%delta_potential)
-  end subroutine
-end module
+  endsubroutine ! destroy
+  
+endmodule

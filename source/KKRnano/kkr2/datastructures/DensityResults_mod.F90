@@ -17,27 +17,24 @@ implicit none
   !> for one specific atom.
   type DensityResults
 
-    double precision  :: total_charge_neutrality                    !< excess charge in system
-    double precision , allocatable, dimension(:,:,:)  :: R2NEF      !< density of states at Fermi energy
-    double precision , allocatable, dimension(:,:,:)  :: RHO2NS     !< l-expanded density times radius**2
-    double precision , allocatable, dimension(:,:)  :: CHARGE       !< CHARGE(:,1) l-resolved charge, CHARGE(:,2) l-resolved mag. moment
-    double precision  :: CHRGSEMICORE_per_atom                      !< semicore charge per atom
-    double precision , allocatable, dimension(:)  :: CMINST         !< charge moments in interstitial
-    double precision , allocatable, dimension(:)  :: CMOM           !< charge moments in muffin-tin sphere
-    double precision , allocatable, dimension(:)  :: CATOM          !< CATOM(1) = total charge in cell, CATOM(2) = total mag. moment in cell
-    double complex , allocatable, dimension(:,:,:)  :: DEN          !< complex density of states
-
+    double precision  :: total_charge_neutrality     !< excess charge in system
+    double precision, allocatable :: R2NEF(:,:,:)    !< density of states at Fermi energy
+    double precision, allocatable :: RHO2NS(:,:,:)   !< l-expanded density times radius**2
+    double precision, allocatable :: CHARGE(:,:)     !< CHARGE(:,1) l-resolved charge, CHARGE(:,2) l-resolved mag. moment
+    double precision :: CHRGSEMICORE_per_atom        !< semicore charge per atom
+    double precision, allocatable  :: CMINST(:)      !< charge moments in interstitial
+    double precision, allocatable  :: CMOM(:)        !< charge moments in muffin-tin sphere
+    double precision, allocatable :: CATOM(:)        !< CATOM(1) = total charge in cell, CATOM(2) = total mag. moment in cell
+    double complex, allocatable :: DEN(:,:,:)        !< complex density of states
     double precision :: force_flm(-1:1)
-
-    !> Renormalisation factors LLoyd - leave here?
-    double precision , allocatable, dimension(:,:)  :: RNORM
+    double precision, allocatable :: RNORM(:,:)      !> Renormalisation factors LLoyd - leave here?
 
     integer :: irmd
     integer :: lmpotd
     integer :: lmaxd
     integer :: iemxd
     integer :: nspind
-  end type DensityResults
+  endtype ! DensityResults
 
   
   interface create
@@ -48,7 +45,7 @@ implicit none
     module procedure destroyDensityResults
   endinterface
   
-  CONTAINS
+  contains
 
   !-----------------------------------------------------------------------------
   !> Constructs a DensityResults object.
@@ -62,7 +59,7 @@ implicit none
 
     call createDensityResultsImpl(self, num_radial_irmd, dims%lmpotd, dims%lmaxd, dims%iemxd, dims%nspind)
 
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Constructs a DensityResults object.
@@ -101,7 +98,7 @@ implicit none
     self%RHO2NS = 0.0d0
     self%R2NEF = 0.0d0
     self%force_flm = 9999.9d0
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a DensityResults object.
@@ -119,6 +116,6 @@ implicit none
     DEALLOCATECHECK(self%CATOM)
     DEALLOCATECHECK(self%DEN)
     DEALLOCATECHECK(self%RNORM)
-  end subroutine
+  endsubroutine ! destroy
 
-end module
+endmodule ! DensityResults_mod

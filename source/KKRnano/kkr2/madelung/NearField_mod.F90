@@ -11,12 +11,12 @@ module NearField_mod
   !> Objects of types derived from 'Potential' have to be passed to 'calc_near_field'.
   !>
   !> This allows to pass arbitrary (intra-cell) potentials
-  !> Classes that inherit from/extend this type have to override 'get_pot' using a subroutine
+  !> Classes that inherit from/extendthis type have to override 'get_pot' using a subroutine
   !> with an interface as specified by 'potential_func'
   type, abstract :: Potential
     contains
     procedure (potential_func), deferred :: get_pot
-  end type
+  endtype
 
   !> The methods 'get_pot' of any type derived from 'Potential' have to conform to this interface
   abstract interface
@@ -25,20 +25,20 @@ module NearField_mod
     class (Potential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
-    end subroutine
-  end interface
+    endsubroutine
+  endinterface
 
   !> Some test potentials - educational and testing purposes
   type, extends(Potential) :: TestPotentialConstMulti
     contains
     procedure :: get_pot => get_const_multipole
-  end type
+  endtype
   
   !> Potential of a monopole (= point charge)
   type, extends(Potential) :: TestPotentialMonopole
     contains
     procedure :: get_pot => get_const_monopole
-  end type  
+  endtype  
 
   contains
 
@@ -50,7 +50,7 @@ module NearField_mod
     double precision, intent(in)    :: dist_vec(3)
 
     double precision, intent(in)    :: charge_mom_total(:)
-    type (MadelungClebschData), intent(in) :: gaunt
+    type(MadelungClebschData), intent(in) :: gaunt
 
     integer :: lmx, L, m, ii, lmmaxd, L1, L2, lm1, lm2, lm3
     double precision :: r, rfac
@@ -87,8 +87,8 @@ module NearField_mod
        do m = -L,L
           lm1 = L*(L+1) + m + 1
           smat(lm1) = ylm(lm1)*rfac
-       end do
-    end do
+       enddo
+    enddo
 
     avmad = 0.0d0
 
@@ -102,14 +102,13 @@ module NearField_mod
       ! --> Gaunt property: l1+l2<=l3
 
       if (lm1 <= lmmaxd .and. lm2 <= lmmaxd .and. lm3 <= lmmaxd_prime) then
-          AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
-                           2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)  ! factor 2 comes from the use of Rydberg units
-      end if
-    end do
+        AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + 2.0D0*DFAC(L1,L2)*SMAT(LM3)*gaunt%CLEB(ii)  ! factor 2 comes from the use of Rydberg units
+      endif
+    enddo
 
     ac_wrong = matmul(avmad, charge_mom_total)
 
-  end subroutine calc_wrong_contribution_coeff
+  endsubroutine ! calc
 
   !----------------------------------------------------------------------------
   !> this is a general routine for shifting sph. harm. expansions
@@ -138,14 +137,14 @@ module NearField_mod
     integer :: lmax_p
 
 
-    FOUR_PI = 16.0d0 * atan(1.0d0)
+    FOUR_PI = 16.0d0*atan(1.0d0)
 
     lmmaxd = size(v_near)
     lmax = int(sqrt(dble(lmmaxd) + 0.1) - 1)
     
     if (.not. present(lmax_prime)) then
       lmax_p = lmax
-    end if
+    endif
     
     lmmaxd_prime = (lmax_p+1)**2
 
@@ -163,37 +162,37 @@ module NearField_mod
 
       call ymy(v_leb(1), v_leb(2), v_leb(3), dummy, temp, lmax)
       do lm = 1, lmmaxd
-        sph_harm_leb(ij, lm) = temp(lm)
-      end do
+        sph_harm_leb(ij,lm) = temp(lm)
+      enddo ! lm
 
-      vec = radius * v_leb + dist_vec
+      vec = radius*v_leb + dist_vec
 
       if (vec(1)**2 + vec(2)**2 + vec(3)**2 > 0.0d0) then  ! can be zero
         call ymy(vec(1), vec(2), vec(3), norm_vec, sph_harm, lmax_p)
       else
         norm_vec = 0.0d0
         sph_harm = 0.0d0
-        sph_harm(1) = 1.d0 / sqrt(FOUR_PI)
-      end if
+        sph_harm(1) = 1.d0/sqrt(FOUR_PI)
+      endif
 
       ! get intracell potential at radius 'norm_vec'
       call pot%get_pot(v_intra, norm_vec)
 
       ! perform summation over L'
       integrand(ij,1) = dot_product(sph_harm, v_intra)
-    end do
+    enddo ! ij
 
     integrand(:,1) = integrand(:,1) * weight_leb * FOUR_PI
 
     do lm = 1, lmmaxd
       integrand(:,lm) = integrand(:,1)
-    end do
+    enddo ! lm
 
     integrand = integrand * sph_harm_leb
 
-    v_near = sum(integrand, 1)
+    v_near = sum(integrand, dim=1)
 
-  end subroutine calc_near_field
+  endsubroutine ! calc
 
   !----------------------------------------------------------------------------
   ! Tests orthgonality of real spherical harmonics up to LMAX
@@ -202,12 +201,12 @@ module NearField_mod
     integer, parameter :: LMAX = 2
     integer, parameter :: LMMAXD = (LMAX+1)**2
 
-    real(8) :: integrand(LMMAXD, LMMAXD)
-    real(8) :: ylm(LMMAXD)
-    real(8) :: vnorm
-    real(8) :: vec(3)
-    real(8) :: weight
-    real(8) :: FOUR_PI
+    double precision :: integrand(LMMAXD, LMMAXD)
+    double precision :: ylm(LMMAXD)
+    double precision :: vnorm
+    double precision :: vec(3)
+    double precision :: weight
+    double precision :: FOUR_PI
     integer ij, lm1, lm2
 
     FOUR_PI = 16.0d0 * atan(1.0d0)
@@ -219,12 +218,12 @@ module NearField_mod
       do lm1 = 1, LMMAXD
         do lm2 = 1, LMMAXD
         integrand(lm2,lm1) = integrand(lm2, lm1) + ylm(lm2) * ylm(mod((lm2 + lm1 - 2), LMMAXD)+1) * weight * FOUR_PI
-        end do
-      end do
-    end do
+        enddo
+      enddo
+    enddo
 
     write(*,*) integrand
-  end subroutine test_lebedev
+  endsubroutine ! test
 
   !----------------------------------------------------------------------------
   ! evaluate spherical harmonic expansion at angles given by 'vec'.
@@ -244,7 +243,7 @@ module NearField_mod
     call YMY(vec(1), vec(2), vec(3), vnorm, ylm, LMAX)
 
     eval_expansion = dot_product(coeffs, ylm)
-  end function eval_expansion
+  endfunction ! eval
 
 !------------------------------------------------------------------------------
 ! Some test potentials follow
@@ -270,11 +269,11 @@ module NearField_mod
       if (M > L) then
         L = L + 1
         M = -L
-      end if
+      endif
       if (lm > size(v_intra)) exit
-    end do
+    enddo ! while
 
-  end subroutine get_const_multipole
+  endsubroutine ! get
 
   !----------------------------------------------------------------------------
   !> A test potential: potential of a (unit) monopole
@@ -288,9 +287,9 @@ module NearField_mod
     v_intra = 0.0d0
     v_intra(1) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / radius
 
-  end subroutine get_const_monopole
+  endsubroutine ! get
 
-end module NearField_mod
+endmodule NearField_mod
 
 !  program test_it
 !    use NearField_mod, only: ...
@@ -313,7 +312,7 @@ end module NearField_mod
 !    double precision :: radius =  1.400000d0
 !    double precision :: r_temp
 !  
-!    type (MadelungClebschData) :: clebsch
+!    type(MadelungClebschData) :: clebsch
 !    integer :: L, M, ii
 !  
 !    !call test_lebedev()
@@ -336,8 +335,8 @@ end module NearField_mod
 !        v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
 !        write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
 !        ii = ii + 1
-!      end do
-!    end do
+!      enddo
+!    enddo
 !  
 !    vec = 0.0d0
 !    vec(3) = -radius
@@ -356,7 +355,7 @@ end module NearField_mod
 !      intra_pot%radial_points(ii) = (ii) * 1.0d0 / (NPOINTS)
 !      call pot%get_pot(v_near, intra_pot%radial_points(ii))
 !      intra_pot%v_intra_values(ii, :) = v_near
-!    end do
+!    enddo
 !    
 !    call intra_pot%init()
 ! 
@@ -369,13 +368,13 @@ end module NearField_mod
 ! !      write(*,*) v_near(1)
 ! !      call intra_pot%get_pot(v_near, intra_pot%radial_points(ii))
 ! !      write(*,*) v_near(1)
-! !    end do
+! !    enddo
 !    
 !    !do ii = 1, NPOINTS * 4
 !    !  r_temp = (ii) * 2.0d0 / (NPOINTS*4) + 1.0d0
 !    !  call intra_pot%get_pot(v_near, r_temp)
 !    !  write(*,*) r_temp, v_near(7), v_near(15)
-!    !end do
+!    !enddo
 !    !call calc_near_field(v_near, radius, d , intra_pot, LMAX)
 !    !write(*,*) v_near
-!  end program
+!  endprogram

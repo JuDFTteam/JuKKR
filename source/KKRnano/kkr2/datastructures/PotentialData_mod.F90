@@ -9,24 +9,21 @@ module PotentialData_mod
   public :: getNumPotentialValues
   
   type PotentialData
-    double precision, dimension(:,:,:), allocatable :: VINS        !< input potential - nonspherical parts only
-
+    double precision, allocatable :: VINS(:,:,:)        !< input potential - nonspherical parts only
     !> spherically averaged input potential
     !> ATTENTION: this differs by a factor of 1/sqrt(4pi) from the L=(0,0) component
     !> of the L-expansion
     !> Note: the L=(0,0) (index 1) component of the output potential VONS does not
     !> contain this factor!
-    double precision, dimension(:,:), allocatable :: VISP
-
-    double precision, dimension(:,:,:), allocatable :: VONS        !< output potential - contains all L-components
+    double precision, allocatable :: VISP(:,:)
+    double precision, allocatable :: VONS(:,:,:)        !< output potential - contains all L-components
     integer :: nspin
     integer :: lpot
     integer :: irmind
     integer :: irmd
     integer :: irnsd
     integer :: lmpot
-
-  end type
+  endtype
 
   interface create
     module procedure createPotentialData
@@ -41,7 +38,7 @@ module PotentialData_mod
   endinterface
 
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createPotentialData(potential, lpot, nspin, irmind, irmd)
@@ -69,11 +66,11 @@ module PotentialData_mod
     allocate(potential%VINS(IRMIND:IRMD,LMPOT,2))
     allocate(potential%VISP(IRMD,2))
     allocate(potential%VONS(IRMD,LMPOT,2))
-    potential%VINS = 0.0d0
-    potential%VISP = 0.0d0
-    potential%VONS = 0.0d0
+    potential%VINS = 0.d0
+    potential%VISP = 0.d0
+    potential%VONS = 0.d0
 
-  end subroutine
+  endsubroutine ! create
 
 
   !----------------------------------------------------------------------------
@@ -83,23 +80,24 @@ module PotentialData_mod
     deallocate(potential%VINS)
     deallocate(potential%VISP)
     deallocate(potential%VONS)
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Return the actual number of potential values.
   integer function getNumPotentialValues(potential)
     type (PotentialData), intent(in) :: potential
     getNumPotentialValues = (potential%irmd+(potential%irnsd+1) * (potential%lmpot-1)) * potential%nspin
-  end function
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns a string representation of PotentialData.
   subroutine repr_PotentialData(potential, str)
-    class (PotentialData), intent(in) :: potential
+  ! todo: can be simplified by this: use StringHelpers_mod, only: operator(+), operator(-)
+    class(PotentialData), intent(in) :: potential
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl
-    character(80) :: buffer
+    character(len=80) :: buffer
     integer :: ind, lm, ispin
 
     nl = new_line(' ')
@@ -128,8 +126,8 @@ module PotentialData_mod
       do ind = 1, size(potential%VISP, 1)
         write(buffer, '(I5, 2X, I5, 2X, E23.16)') ind, ispin, potential%VISP(ind, ispin)
         str = str // trim(buffer) // nl
-      end do
-    end do
+      enddo
+    enddo
 
     str = str // nl
 
@@ -146,10 +144,10 @@ module PotentialData_mod
           do ind = lbound(potential%VINS, 1), ubound(potential%VINS, 1)
             write(buffer, '(I5, 2X, I5, 2X, I5, 2X E23.16)') ind, lm, ispin, potential%VINS(ind, lm, ispin)
             str = str // trim(buffer) // nl
-          end do
-        end if
-      end do
-    end do
+          enddo ! ind
+        endif
+      enddo ! lm
+    enddo ! ispin
 
     str = str // nl
 
@@ -164,13 +162,13 @@ module PotentialData_mod
         ! print only non-zero potential components
         if (sum(abs(potential%VONS(:, lm, ispin))) > 0.0) then
           do ind = lbound(potential%VONS, 1), ubound(potential%VONS, 1)
-            write(buffer, '(I5, 2X, I5, 2X, I5, 2X E23.16)') &
-              ind, lm, ispin, potential%VONS(ind, lm, ispin)
+            write(buffer, '(I5, 2X, I5, 2X, I5, 2X E23.16)') ind, lm, ispin, potential%VONS(ind, lm, ispin)
             str = str // trim(buffer) // nl
-          end do
-        end if
-      end do
-    end do
-  end subroutine
+          enddo ! ind
+        endif
+      enddo ! lm
+    enddo ! ispin
+    
+  endsubroutine ! represent
 
-end module PotentialData_mod
+endmodule PotentialData_mod

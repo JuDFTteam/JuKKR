@@ -15,21 +15,21 @@ module read_formatted_shapefun_mod
   type Intermesh
     integer :: NPAN
     integer :: MESHN
-    integer, allocatable :: NM (:)
-    double precision, allocatable :: XRN (:)
-    double precision, allocatable :: DRN (:)
+    integer, allocatable :: NM(:)
+    double precision, allocatable :: XRN(:)
+    double precision, allocatable :: DRN(:)
   endtype
 
   type Shapefunction
     integer :: NFU
-    integer, allocatable :: LLMSP (:)
-    double precision, allocatable :: THETAS (:,:)
+    integer, allocatable :: LLMSP(:)
+    double precision, allocatable :: THETAS(:,:)
   endtype
 
   type ShapefunFile
     integer NCELL
-    type (Intermesh), allocatable :: mesh (:)
-    type (Shapefunction), allocatable :: shapes (:)
+    type(Intermesh), allocatable :: mesh(:)
+    type(Shapefunction), allocatable :: shapes(:)
   endtype
 
   interface create
@@ -44,8 +44,7 @@ module read_formatted_shapefun_mod
 
   !--------------------------------------------------------------------------
   subroutine create_read_intermesh (inter, unit)
-
-    type (Intermesh), intent(out) :: inter
+    type(Intermesh), intent(out) :: inter
     integer, intent(in) :: unit
 
     integer :: IPAN, IR
@@ -62,22 +61,22 @@ module read_formatted_shapefun_mod
     READ (unit,FMT="(16i5)") (inter%NM(IPAN), IPAN=1,inter%NPAN)
     READ (unit,FMT="(4d20.12)") (inter%XRN(IR), inter%DRN(IR), IR=1,inter%MESHN)
 
-  endsubroutine
+  endsubroutine ! create
 
   !--------------------------------------------------------------------------
   subroutine destroy_intermesh (inter)
-    type (Intermesh), intent(inout) :: inter
+    type(Intermesh), intent(inout) :: inter
 
     deallocate (inter%NM)
     deallocate (inter%XRN)
     deallocate (inter%DRN)
 
-  endsubroutine
+  endsubroutine ! destroy
 
   !--------------------------------------------------------------------------
   subroutine create_read_shapefunction (shapef, inter, unit)
-    type (Shapefunction), intent(inout) :: shapef
-    type (Intermesh), intent(in) :: inter
+    type(Shapefunction), intent(inout) :: shapef
+    type(Intermesh), intent(in) :: inter
     integer, intent(in) :: unit
 
     integer :: IFUN, N, LM
@@ -92,17 +91,17 @@ module read_formatted_shapefun_mod
           CHECKASSERT(LM > 0)
           shapef%LLMSP(IFUN) = LM
           READ (unit,FMT="(4d20.12)") (shapef%THETAS(N,IFUN),N=1,inter%MESHN)
-    ENDDO
+    ENDDO ! IFUN
     
-  endsubroutine
+  endsubroutine ! create
 
   !--------------------------------------------------------------------------
   subroutine destroy_shapefunction (shapef)
-    type (Shapefunction), intent(inout) :: shapef
+    type(Shapefunction), intent(inout) :: shapef
 
     deallocate (shapef%LLMSP)
     deallocate (shapef%THETAS)
-  endsubroutine
+  endsubroutine ! destroy
 
   subroutine create_read_shapefunFile (sfile, unit)
     type(ShapefunFile), intent (out) :: sfile
@@ -121,9 +120,9 @@ module read_formatted_shapefun_mod
     DO ICELL = 1, sfile%NCELL
       CALL create_read_intermesh(sfile%mesh(ICELL), unit)
       CALL create_read_shapefunction(sfile%shapes(ICELL), sfile%mesh(ICELL), unit)
-    ENDDO
+    ENDDO ! ICELL
 
-  endsubroutine
+  endsubroutine ! create
 
   subroutine destroy_shapefunFile (sfile)
     type(ShapefunFile), intent (inout) :: sfile
@@ -133,12 +132,12 @@ module read_formatted_shapefun_mod
     DO ICELL = 1, sfile%NCELL
       CALL destroy_intermesh(sfile%mesh(ICELL))
       CALL destroy_shapefunction(sfile%shapes(ICELL))
-    ENDDO
+    ENDDO ! ICELL
 
     deallocate (sfile%mesh)
     deallocate (sfile%shapes)
 
-  endsubroutine
+  endsubroutine ! destroy
 
 endmodule read_formatted_shapefun_mod
 
@@ -152,21 +151,21 @@ program test_read_formatted
   integer :: IFUN, ICELL
 
   open(UNIT, form='formatted', file='shapefun')
-    call create_read_ShapefunFile(sfile, UNIT)
+  call create_read_ShapefunFile(sfile, UNIT)
 
-    do ICELL = 1, sfile%NCELL
+  do ICELL = 1, sfile%NCELL
 
-      write(*,*) "NM :", sfile%mesh(ICELL)%NM
+    write(*,*) "NM :", sfile%mesh(ICELL)%NM
 
-      do IFUN = 1, sfile%shapes(ICELL)%NFU
-        write(*,*) "LM = ", sfile%shapes(ICELL)%LLMSP(IFUN)
-        write(*,*) "-----------------------------------------------"
-        write(*,*) sfile%shapes(ICELL)%THETAS(:, IFUN)
-      enddo
-
+    do IFUN = 1, sfile%shapes(ICELL)%NFU
+      write(*,*) "LM = ", sfile%shapes(ICELL)%LLMSP(IFUN)
+      write(*,*) "-----------------------------------------------"
+      write(*,*) sfile%shapes(ICELL)%THETAS(:, IFUN)
     enddo
 
-    call destroy_ShapefunFile(sfile)
+  enddo
+
+  call destroy_ShapefunFile(sfile)
   close(UNIT)
 
 endprogram

@@ -12,16 +12,16 @@ module ShapefunData_mod
     integer :: nfund
     integer :: lmmax_shape !< former name LMXSPD
 
-    double precision, dimension(:,:), allocatable :: THETA
-    integer, dimension(:), allocatable :: LLMSP
-    integer, dimension(:), allocatable :: IFUNM
-    integer, dimension(:), allocatable :: LMSP !< =0 if shape-function component is zero, otherwise =1
+    double precision, allocatable :: THETA(:,:)
+    integer, allocatable :: LLMSP(:)
+    integer, allocatable :: IFUNM(:)
+    integer, allocatable :: LMSP(:) !< =0 if shape-function component is zero, otherwise =1
     integer :: NFU
 
     double precision :: max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
     integer :: num_faces !< number of faces of voronoi-cell
 
-  end type
+  endtype
 
   
   interface create
@@ -37,12 +37,11 @@ module ShapefunData_mod
   endinterface
   
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createShapefunData(shdata, irid, lmmax_shape, nfund)
-    implicit none
-    type (ShapeFunData), intent(inout) :: shdata
+    type(ShapeFunData), intent(inout) :: shdata
     integer, intent(in) :: irid
     integer, intent(in) :: lmmax_shape
     integer, intent(in) :: nfund
@@ -65,28 +64,26 @@ module ShapefunData_mod
     shdata%num_faces = 0
 
     ! TODO: check lmmax_shape <= nfund
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyShapefunData(shdata)
-    implicit none
-    type (ShapeFunData), intent(inout) :: shdata
+    type(ShapeFunData), intent(inout) :: shdata
 
     deallocate(shdata%THETA)
     deallocate(shdata%LLMSP)
     deallocate(shdata%IFUNM)
     deallocate(shdata%LMSP)
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Returns a string representation of ShapefunData.
   subroutine repr_ShapefunData(shdata, str)
-    implicit none
-    class (ShapefunData), intent(in) :: shdata
+    class(ShapefunData), intent(in) :: shdata
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl
-    character(80) :: buffer
+    character(len=80) :: buffer
     integer :: ind, ifun
 
     nl = new_line(' ')
@@ -110,7 +107,7 @@ module ShapefunData_mod
     do ind = 1, size(shdata%llmsp)
       write(buffer, *) shdata%llmsp(ind)
       str = str // trim(buffer) // nl
-    end do
+    enddo ! ind
 
     write(buffer, '(A5, 2X, A5, 2X, A5)') "LM", "LMSP", "IFUNM"
     str = str // trim(buffer) // nl
@@ -119,7 +116,7 @@ module ShapefunData_mod
     do ind = 1, size(shdata%lmsp)
       write(buffer, '(I5, 2X, I5, 2X, I5)') ind, shdata%lmsp(ind), shdata%ifunm(ind)
       str = str // trim(buffer) // nl
-    end do
+    enddo ! ind
 
     write(buffer, '(A5, 2X, A5, 2X, A5, 2X, A5)') "ind", "ifun", "LM", "THETA"
     str = str // trim(buffer) // nl
@@ -128,10 +125,10 @@ module ShapefunData_mod
         do ind = 1, size(shdata%theta, 1)
           write(buffer, '(I5, 2X, I5, 2X, I5, 2X, E23.16)') ind, ifun, shdata%llmsp(ifun), shdata%THETA(ind, ifun)
           str = str // trim(buffer) // nl
-        end do
-      end if
-    end do
+        enddo ! ind
+      endif
+    enddo ! ifun
 
-  end subroutine
+  endsubroutine ! represent
 
-end module ShapefunData_mod
+endmodule ShapefunData_mod

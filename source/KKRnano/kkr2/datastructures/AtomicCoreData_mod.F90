@@ -14,9 +14,8 @@ module AtomicCoreData_mod
 
     ! data used for calculation - not written to disk
     double precision :: QC_corecharge !< total charge of core electrons
-    double precision, dimension(:,:), allocatable ::  RHOCAT !< radial charge density of core
-
-  end type
+    double precision, allocatable :: RHOCAT(:,:) !< radial charge density of core
+  endtype
 
   interface create
     module procedure createAtomicCoreData
@@ -26,11 +25,11 @@ module AtomicCoreData_mod
     module procedure destroyAtomicCoreData
   endinterface
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createAtomicCoreData(core, irmd)
-    type (AtomicCoreData), intent(inout) :: core
+    type(AtomicCoreData), intent(inout) :: core
     integer, intent(in) :: irmd
 
     core%irmd = irmd
@@ -38,22 +37,22 @@ module AtomicCoreData_mod
     ! initialise with garbage values
     core%LCORE = -1
     core%NCORE = -1
-    core%ECORE = 1d9
+    core%ECORE = 1.d9 ! much to high to be reasonable
     core%ITITLE = 0
-    core%QC_corecharge = 0.0d0
+    core%QC_corecharge = 0.d0
 
     allocate(core%RHOCAT(irmd, 2)) ! allocate for both spin directions
-    core%RHOCAT = 0.0d0
+    core%RHOCAT = 0.d0
 
-  end subroutine
+  endsubroutine ! create
 
 
   !----------------------------------------------------------------------------
   subroutine destroyAtomicCoreData(core)
-    type (AtomicCoreData), intent(inout) :: core
+    type(AtomicCoreData), intent(inout) :: core
 
     deallocate(core%RHOCAT)
 
-  end subroutine
+  endsubroutine ! destroy
 
-end module AtomicCoreData_mod
+endmodule AtomicCoreData_mod

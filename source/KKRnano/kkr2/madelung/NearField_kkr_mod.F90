@@ -45,8 +45,7 @@ module NearField_kkr_mod
     procedure :: init => initIntracellPotential
     procedure :: destroy => destroyIntracellPotential
     procedure :: get_pot => get_intracell
-  end type
-  
+  endtype
   
   
   double precision, parameter, private :: PI = 3.1415926535897932d0
@@ -56,7 +55,7 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine get_intracell(self, v_intra, radius)
-    class (IntracellPotential), intent(inout) :: self
+    class(IntracellPotential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
     
@@ -80,8 +79,8 @@ module NearField_kkr_mod
         if (M > L) then
           L = L + 1
           M = -L
-        end if
-      end do
+        endif
+      enddo ! lm
 
     else
 
@@ -89,15 +88,15 @@ module NearField_kkr_mod
       do lm = 1, lmpotd
         call splint(self%xarray, self%yarray(:, lm), self%y2ndder(:, lm), &
                     self%counter_spline, radius, v_intra(lm), yderiv)
-      end do
+      enddo ! lm
 
     endif
 
-  end subroutine
+  endsubroutine ! get
   
   !----------------------------------------------------------------------------
   subroutine createIntracellPot(self, lmpotd, irmd)
-    class (IntracellPotential), intent(inout) :: self
+    class(IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
     double precision :: nan
@@ -117,11 +116,11 @@ module NearField_kkr_mod
     self%xarray = nan
     self%yarray = nan
     self%y2ndder = nan
-  end subroutine
+  endsubroutine ! create
   
     !----------------------------------------------------------------------------
   subroutine createIntracellPotential(self, lmpotd, irmd)
-    class (IntracellPotential), intent(inout) :: self
+    class(IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
     allocate(self%charge_moments(lmpotd))
@@ -132,11 +131,11 @@ module NearField_kkr_mod
     allocate(self%xarray(irmd))
     allocate(self%yarray(irmd, lmpotd))
     allocate(self%y2ndder(irmd, lmpotd))
-  end subroutine
+  endsubroutine ! create
   
   !----------------------------------------------------------------------------
   subroutine initIntracellPotential(self)
-    class (IntracellPotential), intent(inout) :: self
+    class(IntracellPotential), intent(inout) :: self
     
     integer :: lmpotd
     integer :: irmd
@@ -162,8 +161,8 @@ module NearField_kkr_mod
         counter = counter + 1
         self%xarray(counter) = self%radial_points(ii)
         self%yarray(counter, :) = self%v_intra_values(ii, :)
-      end if
-    end do
+      endif
+    enddo ! ii
           
     self%counter_spline = counter
     
@@ -181,20 +180,20 @@ module NearField_kkr_mod
       if (M > L) then
         L = L + 1
         M = -L
-      end if
-    end do
+      endif
+    enddo ! ii
     
-  end subroutine
+  endsubroutine ! init
   
   !----------------------------------------------------------------------------
   subroutine destroyIntracellPotential(self)
-    class (IntracellPotential), intent(inout) :: self
+    class(IntracellPotential), intent(inout) :: self
     deallocate(self%charge_moments)
     deallocate(self%radial_points)
     deallocate(self%v_intra_values)
     deallocate(self%xarray)
     deallocate(self%yarray)
     deallocate(self%y2ndder)
-  end subroutine
+  endsubroutine ! destroy
   
-end module
+endmodule

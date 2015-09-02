@@ -15,9 +15,9 @@ module shape_constants_mod
 
   !> Parameter to enable/disable geometry checks (routine POLCHK)
 
-  logical, parameter :: CHECK_GEOMETRY = .true.
+!   logical, parameter :: CHECK_GEOMETRY = .true. ! moved to where it is needed
 
-  double precision, parameter :: PI = 3.1415926535897932d0
+  double precision, parameter :: pi = 3.1415926535897932d0
 
   !integer, parameter :: NVERTD = 250 !< maximal number of cell vertices
   !integer, parameter :: NFACED = 200 !< maximal number of cell faces

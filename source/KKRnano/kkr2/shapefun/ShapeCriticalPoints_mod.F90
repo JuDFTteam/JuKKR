@@ -36,9 +36,9 @@ module ShapeCriticalPoints_mod
   !> Note: the smallest critical point corresponds to the muffin-tin radius
 
   !=====================================================================
-  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface,lmax, faces, npan, crt)
+  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt)
 
-    use shape_constants_mod, only: verbosity, check_geometry, pi !, isumd, lmaxd1
+    use shape_constants_mod, only: verbosity, pi !, isumd, lmaxd1
     use PolygonFaces_mod, only: PolygonFace
     use ShapeGeometryHelpers_mod, only: polchk
 
@@ -52,9 +52,8 @@ module ShapeCriticalPoints_mod
     integer, intent(out) :: npan
     double precision, intent(out) :: crt(:)
     
-    
     !-----------------------------------------------------------------------
-    
+    logical, parameter :: check_geometry = .true.
 !   double precision :: sq3o3, coa
     double precision :: z(3)
     integer :: iface, itt
@@ -63,8 +62,7 @@ module ShapeCriticalPoints_mod
     integer :: ist
 
     !-----------------------------------------
-    !  this call does some geometrical tests (n.stefanou 98)
-    if (check_geometry) call polchk(nface, nvertices, vert, tolvdist)
+    if (check_geometry) call polchk(nface, nvertices, vert, tolvdist) !  this call does some geometrical tests (n.stefanou 98)
 
 ! #define k_HCP 
 #ifdef k_HCP

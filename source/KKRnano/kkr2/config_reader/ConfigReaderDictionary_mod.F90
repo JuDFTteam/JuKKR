@@ -50,9 +50,7 @@ module ConfigReaderDictionary_mod
     character(len=*), intent(in), optional :: message
     write(*,*) "ConfigReaderDictionary_mod: << Fatal Error >>"
 
-    if (present(message)) then
-      write(*,*) message
-    endif
+    if (present(message)) write(*,*) message
 
     stop
   endsubroutine
@@ -69,9 +67,7 @@ module ConfigReaderDictionary_mod
     endif
 
     allocate(this%dict(INITIAL_SIZE), stat=ierror)
-    if (ierror /= 0) then
-      call fatalErrorDictionary()
-    endif
+    if (ierror /= 0) call fatalErrorDictionary()
   endsubroutine createDictionary
 
 
@@ -94,9 +90,7 @@ module ConfigReaderDictionary_mod
     integer :: ios
     integer :: loop_ind
 
-    if (.not. associated(this%dict)) then
-      call fatalErrorDictionary("Dictionary was not created.")
-    endif
+    if (.not. associated(this%dict)) call fatalErrorDictionary("Dictionary was not created.")
 
     ierror = 0
 
@@ -116,9 +110,7 @@ module ConfigReaderDictionary_mod
     ! if array is full, reallocate memory
     if (ind > capacity) then
       allocate(dict_new(capacity * 2), stat = ios)
-      if (ios /= 0) then
-        call fatalErrorDictionary()
-      endif
+      if (ios /= 0) call fatalErrorDictionary()
 
       do loop_ind = 1, capacity
         dict_new(loop_ind) = this%dict(loop_ind)
@@ -127,9 +119,7 @@ module ConfigReaderDictionary_mod
       deallocate(this%dict, stat = ios)
 
       this%dict => dict_new
-      if (ios /= 0) then
-        call fatalErrorDictionary()
-      endif
+      if (ios /= 0) call fatalErrorDictionary()
     endif
 
     this%dict(ind)%variable = variable
@@ -187,9 +177,7 @@ module ConfigReaderDictionary_mod
 
     ierror = CONFIG_READER_DICT_NOT_FOUND
 
-    if (next_ptr < 1 .or. next_ptr > this%counter) then
-      return
-    endif
+    if (next_ptr < 1 .or. next_ptr > this%counter) return
 
     do ind = next_ptr, this%counter
       if (this%dict(ind)%tag .eqv. tag) then
@@ -225,14 +213,10 @@ module ConfigReaderDictionary_mod
 
     integer :: ierror
 
-    if (.not. associated(this%dict)) then
-      call fatalErrorDictionary("Dictionary was already destroyed.")
-    endif
+    if (.not. associated(this%dict)) call fatalErrorDictionary("Dictionary was already destroyed.")
 
     deallocate(this%dict, stat=ierror)
-    if (ierror /= 0) then
-      call fatalErrorDictionary()
-    endif
+    if (ierror /= 0) call fatalErrorDictionary()
   endsubroutine destroyDictionary
 
 endmodule ConfigReaderDictionary_mod

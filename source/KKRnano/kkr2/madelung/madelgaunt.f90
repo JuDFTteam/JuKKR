@@ -23,10 +23,9 @@ subroutine madelgaunt(lpot,yrg,wg,cleb,icleb,iend,lassld,nclebd)
   !     recognize that they are needed here only for l3=l1+l2
   !
   if ( 2*lpot.gt.lassld ) then
-     write (6,*) 'Dim ERROR in MADELGAUNT -- 2*LPOT > LASSLD', &
-          2*lpot,lassld
+     write (6,*) 'Dim ERROR in MADELGAUNT -- 2*LPOT > LASSLD', 2*lpot,lassld
      stop
-  end if
+  endif
   !
   i = 1
   ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -47,22 +46,17 @@ subroutine madelgaunt(lpot,yrg,wg,cleb,icleb,iend,lassld,nclebd)
                     m3a = abs(m3)
                     !
                     factor = 0.0d0
-                    if ( m1a+m2a.eq.m3a ) factor = factor + &
-                         dble(3*m3s+sign(1,-m3))/8.0d0
-                    if ( m1a-m2a.eq.m3a ) factor = factor + &
-                         dble(m1s)/4.0d0
-                    if ( m2a-m1a.eq.m3a ) factor = factor + &
-                         dble(m2s)/4.0d0
+                    if ( m1a+m2a.eq.m3a ) factor = factor + dble(3*m3s+sign(1,-m3))/8.0d0
+                    if ( m1a-m2a.eq.m3a ) factor = factor + dble(m1s)/4.0d0
+                    if ( m2a-m1a.eq.m3a ) factor = factor + dble(m2s)/4.0d0
                     ! ======================================================================
                     if ( factor.ne.0.0d0 ) then
-                       if ( m1s*m2s.ne.1 .or. m2s*m3s.ne.1 .or. &
-                            m1s*m3s.ne.1 ) factor = -factor
+                       if ( m1s*m2s.ne.1 .or. m2s*m3s.ne.1 .or. m1s*m3s.ne.1 ) factor = -factor
                        !
                        s = 0.0d0
                        do j = 1,lassld
-                          s = s + wg(j)*yrg(j,l1,m1a)*yrg(j,l2,m2a) &
-                               *yrg(j,l3,m3a)
-                       end do
+                          s = s + wg(j)*yrg(j,l1,m1a)*yrg(j,l2,m2a)*yrg(j,l3,m3a)
+                       enddo
                        !
                        clecg = s*factor
                        ! ----------------------------------------------------------------------
@@ -75,19 +69,19 @@ subroutine madelgaunt(lpot,yrg,wg,cleb,icleb,iend,lassld,nclebd)
                           if ( i.gt.nclebd ) then
                              write (6,fmt='(2I10)') i,nclebd
                              stop ' Dim stop in MADELGAUNT '
-                          end if
-                       end if
+                          endif
+                       endif
                        ! ----------------------------------------------------------------------
-                    end if
+                    endif
                     ! ======================================================================
-                 end if
+                 endif
                  ! **********************************************************************
-              end do
-           end do
-        end do
+              enddo
+           enddo
+        enddo
         ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-     end do
-  end do
+     enddo
+  enddo
   ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-  iend = i - 1
-end subroutine madelgaunt
+  iend= i - 1
+endsubroutine madelgaunt

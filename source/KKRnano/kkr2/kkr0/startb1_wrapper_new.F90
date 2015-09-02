@@ -28,7 +28,7 @@ subroutine STARTB1_wrapper_new(alat,NSPIN, &
   ! read the complete shapefun file to -> sfile
   open (91, file='shapefun', status='old', form='formatted')
   call create_read_ShapefunFile(sfile, 91)
-  close (91)
+  close(91)
 
   ! write atoms file and get maximum record lengths for vpotnew file and meshes file
   call write_atoms_file(alat, NSPIN, &
@@ -43,7 +43,7 @@ subroutine STARTB1_wrapper_new(alat,NSPIN, &
 
   call destroy_ShapefunFile(sfile)
 
-end subroutine
+endsubroutine
 
 !------------------------------------------------------------------------------
 !> Write the 'atoms' file (= binary analogue to atominfo - used for parallel reading in kkr2)
@@ -176,12 +176,12 @@ subroutine write_atoms_file(alat, NSPIN, &
         call destroy_PotentialEntry(pe(ispin))
       enddo
 
-    enddo ! end loop over atoms
+    enddo ! endloop over atoms
   close(UNIT)
 
   call closeBasisAtomDAFile(37)
 
-end subroutine
+endsubroutine
 
 integer function lmpot_to_lpot(lmpot)
   implicit none
@@ -189,7 +189,7 @@ integer function lmpot_to_lpot(lmpot)
 
   lmpot_to_lpot = int( sqrt(dble(lmpot)) - 1.0d0 + 0.01d0)
 
-end function
+endfunction
 
 
 subroutine write_binary_potential(alat, NSPIN, &
@@ -284,7 +284,7 @@ subroutine write_binary_potential(alat, NSPIN, &
         call destroy_PotentialEntry(pe(ispin))
       enddo
 
-    enddo ! end loop over atoms
+    enddo ! endloop over atoms
 
   call closeBasisAtomPotentialDAFile(39)
   call closeRadialMeshDataDAFile(94)
@@ -296,4 +296,4 @@ subroutine write_binary_potential(alat, NSPIN, &
   call closeBasisAtomPotentialIndexDAFile(38)
 #endif
 
-end subroutine
+endsubroutine

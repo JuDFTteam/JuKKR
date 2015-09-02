@@ -24,17 +24,16 @@ module Main2Arrays_mod
   public :: readMain2Arrays, writeMain2Arrays
 
   type Main2Arrays
-    double precision , dimension(3,3)  :: bravais
-    integer , dimension(48)  :: isymindex
-    double complex , allocatable, dimension(:,:,:)  :: DSYMLL  !< tau symmetry matrices
-    double precision , allocatable, dimension(:,:)  :: RBASIS  !< basis atom positions
-    double precision , allocatable, dimension(:,:,:)  :: BZKP  !< kpoints for each mesh
-    double precision , allocatable, dimension(:,:)  :: VOLCUB  !< kpoint weights
-    double precision , allocatable, dimension(:)  :: VOLBZ     !< BZ volume?
-    integer , allocatable, dimension(:)  :: KMESH !< mapping E-point to k-mesh
-    integer , allocatable, dimension(:)  :: NOFKS !< number of k points for each mesh
-    double precision , allocatable, dimension(:)  :: ZAT  !< atomic numbers
-
+    double precision :: bravais(3,3)
+    integer :: isymindex(48)
+    double complex, allocatable  :: DSYMLL(:,:,:)  !< tau symmetry matrices
+    double precision, allocatable  :: RBASIS(:,:)  !< basis atom positions
+    double precision, allocatable  :: BZKP(:,:,:)  !< kpoints for each mesh
+    double precision, allocatable  :: VOLCUB(:,:)  !< kpoint weights
+    double precision, allocatable  :: VOLBZ(:)     !< BZ volume?
+    integer, allocatable  :: KMESH(:) !< mapping E-point to k-mesh
+    integer, allocatable  :: NOFKS(:) !< number of k points for each mesh
+    double precision, allocatable  :: ZAT(:)  !< atomic numbers
     double precision :: VREF !< repulsive screening pot. strength
 
     integer  :: NSYMAT
@@ -45,7 +44,7 @@ module Main2Arrays_mod
     integer :: KPOIBZ
     integer :: MAXMSHD
 
-  end type Main2Arrays
+  endtype Main2Arrays
   
   interface create
     module procedure createMain2Arrays
@@ -56,7 +55,7 @@ module Main2Arrays_mod
   endinterface
 
 
-  CONTAINS
+  contains
 
   !-----------------------------------------------------------------------------
   !> Constructs a Main2Arrays object.
@@ -64,14 +63,14 @@ module Main2Arrays_mod
   !> @param[in]    dims    Dimension parameters
   subroutine createMain2Arrays(self, dims)
     use DimParams_mod, only: DimParams
-    type (Main2Arrays), intent(inout) :: self
-    type (DimParams), intent(in) :: dims
+    type(Main2Arrays), intent(inout) :: self
+    type(DimParams), intent(in) :: dims
 
     call createMain2ArraysImpl(self, dims%lmaxd, dims%iemxd, dims%nspind, &
     dims%LMMAXD, dims%NAEZ, dims%LMXSPD, dims%KPOIBZ, dims%MAXMSHD, 0, &
     0, dims%nguessd, dims%ekmd, dims%smpid, dims%lpot, dims%IRMD, dims%LMPOTD)
 
-  end subroutine
+  endsubroutine ! create
 
 
 
@@ -101,7 +100,7 @@ module Main2Arrays_mod
     use, intrinsic :: ieee_features
     use, intrinsic :: ieee_arithmetic
     
-    type (Main2Arrays), intent(inout) :: self
+    type(Main2Arrays), intent(inout) :: self
     integer, intent(in) ::  lmaxd
     integer, intent(in) ::  iemxd
     integer, intent(in) ::  nspind
@@ -156,13 +155,13 @@ module Main2Arrays_mod
     self%nofks = -99
     self%zat = nan
 
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a Main2Arrays object.
   !> @param[in,out] self    The Main2Arrays object to destroy.
   subroutine destroyMain2Arrays(self)
-    type (Main2Arrays), intent(inout) :: self
+    type(Main2Arrays), intent(inout) :: self
 
     integer :: memory_stat
 
@@ -175,60 +174,60 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%NOFKS)
     DEALLOCATECHECK(self%ZAT)
 
-  end subroutine
+  endsubroutine ! destroy
 
   !-----------------------------------------------------------------------------
   !> Writes Main2Arrays data to file.
   !> @param[in] self    The Main2Arrays object to write.
   subroutine writeMain2Arrays(self, filename)
-    type (Main2Arrays), intent(in) :: self
+    type(Main2Arrays), intent(in) :: self
     character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 67
+    integer, parameter :: fu = 67
 
-    open (FILEHANDLE, file=filename, form='unformatted')
-    write (FILEHANDLE) self%BRAVAIS, &
-                       self%ISYMINDEX, &
-                       self%DSYMLL, &
-                       self%RBASIS, &
-                       self%BZKP, &
-                       self%VOLCUB, &
-                       self%VOLBZ, &
-                       self%KMESH, &
-                       self%NOFKS, &
-                       self%ZAT, &
-                       self%VREF, &
-                       self%NSYMAT, &  ! write some scalars too
-                       self%MAXMESH
-    close (FILEHANDLE)
+    open (fu, file=filename, form='unformatted')
+    write(fu) self%BRAVAIS, &
+              self%ISYMINDEX, &
+              self%DSYMLL, &
+              self%RBASIS, &
+              self%BZKP, &
+              self%VOLCUB, &
+              self%VOLBZ, &
+              self%KMESH, &
+              self%NOFKS, &
+              self%ZAT, &
+              self%VREF, &
+              self%NSYMAT, &  ! write some scalars too
+              self%MAXMESH
+    close(fu)
 
-  end subroutine
+  endsubroutine ! write
 
   !-----------------------------------------------------------------------------
   !> Reads Main2Arrays data from file.
   !> @param[in,out] self    The Main2Arrays object to read.
   subroutine readMain2Arrays(self, filename)
-    type (Main2Arrays), intent(inout) :: self
+    type(Main2Arrays), intent(inout) :: self
     character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 67
+    integer, parameter :: fu = 67
 
-    open (FILEHANDLE, file=filename, form='unformatted')
-    read  (FILEHANDLE) self%BRAVAIS, &
-                       self%ISYMINDEX, &
-                       self%DSYMLL, &
-                       self%RBASIS, &
-                       self%BZKP, &
-                       self%VOLCUB, &
-                       self%VOLBZ, &
-                       self%KMESH, &
-                       self%NOFKS, &
-                       self%ZAT, &
-                       self%VREF, &
-                       self%NSYMAT, & ! write some scalars too
-                       self%MAXMESH
-    close (FILEHANDLE)
+    open (fu, file=filename, form='unformatted')
+    read (fu) self%BRAVAIS, &
+              self%ISYMINDEX, &
+              self%DSYMLL, &
+              self%RBASIS, &
+              self%BZKP, &
+              self%VOLCUB, &
+              self%VOLBZ, &
+              self%KMESH, &
+              self%NOFKS, &
+              self%ZAT, &
+              self%VREF, &
+              self%NSYMAT, & ! write some scalars too
+              self%MAXMESH
+    close(fu)
 
-  end subroutine
+  endsubroutine ! read
 
-end module
+endmodule ! Main2Arrays_mod

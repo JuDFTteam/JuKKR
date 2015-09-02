@@ -43,7 +43,7 @@ subroutine madelung3d(lpot,yrg,wg,alat, &
   integer loflm(lmxspd)
   !     ..
   !     .. External subroutines
-  external lattice3d,madelgaunt
+  external :: lattice3d, madelgaunt
   ! ......................................................................
   iprint = 0
   nclebd = lmxspd*lmpotd
@@ -58,8 +58,8 @@ subroutine madelung3d(lpot,yrg,wg,alat, &
      do m = -l,l
         loflm(i) = l
         i = i + 1
-     end do
-  end do
+     enddo
+  enddo
   !
   ! --> calculate:                             (2*(l+l')-1)!!
   !                 dfac(l,l') = 4pi**2 *  ----------------------
@@ -72,8 +72,8 @@ subroutine madelung3d(lpot,yrg,wg,alat, &
      do l2 = 1,l1
         dfac(l1,l2) = dfac(l1,l2-1)*dble(2*(l1+l2)-1)/dble(2*l2+1)
         dfac(l2,l1) = dfac(l1,l2)
-     end do
-  end do
+     enddo
+  enddo
   !
   ! --> calculate the gaunt coefficients
   !
@@ -85,4 +85,4 @@ subroutine madelung3d(lpot,yrg,wg,alat, &
   !
   ! ======================================================================
   !
-end subroutine madelung3d
+endsubroutine madelung3d

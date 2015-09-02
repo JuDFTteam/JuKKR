@@ -19,15 +19,15 @@ module KKRresults_mod
   public :: createKKRresults, destroyKKRresults ! deprecated
 
   type KKRresults
-    double complex , allocatable, dimension(:,:,:)  :: TMATN
-    double complex , allocatable, dimension(:,:,:)  :: DTDE
-    double complex , allocatable, dimension(:,:,:)  :: TREFLL
-    double complex , allocatable, dimension(:,:,:)  :: DTREFLL
-    double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
-    double complex , allocatable, dimension(:,:,:,:)  :: GMATN
-    double complex , allocatable, dimension(:)  :: LLY_G0TR
-    double complex , allocatable, dimension(:,:)  :: LLY_GRDT
-    double complex , allocatable, dimension(:)  :: TR_ALPH
+    double complex, allocatable :: TMATN(:,:,:)  
+    double complex, allocatable :: DTDE(:,:,:)  
+    double complex, allocatable :: TREFLL(:,:,:)  
+    double complex, allocatable :: DTREFLL(:,:,:)  
+    double complex, allocatable :: DGREFN(:,:,:,:)
+    double complex, allocatable :: GMATN(:,:,:,:)
+    double complex, allocatable :: LLY_G0TR(:)   
+    double complex, allocatable :: LLY_GRDT(:,:)  
+    double complex, allocatable :: TR_ALPH(:)  
     integer  :: NOITER
 
     integer :: LMMAXD
@@ -37,7 +37,7 @@ module KKRresults_mod
     integer :: ekmd
     integer :: nguessd
     integer :: smpid
-  end type KKRresults
+  endtype ! KKRresults
 
   interface create
     module procedure createKKRresults
@@ -48,7 +48,7 @@ module KKRresults_mod
   endinterface
   
   
-  CONTAINS
+  contains
 
   !-----------------------------------------------------------------------------
   !> Constructs a KKRresults object.
@@ -62,7 +62,7 @@ module KKRresults_mod
     integer, intent(in)              :: naclsd
 
     call createKKRresultsImpl(self, dims%LMMAXD, dims%NSPIND, NACLSD, dims%IEMXD, dims%nguessd, dims%ekmd, dims%smpid)
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Constructs a KKRresults object.
@@ -82,7 +82,7 @@ module KKRresults_mod
     integer, intent(in) ::  smpid
 
     integer :: memory_stat
-    double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+    double complex, parameter :: CZERO=(0.d0, 0.d0)
 
     self%LMMAXD = LMMAXD
     self%NSPIND = NSPIND
@@ -92,10 +92,10 @@ module KKRresults_mod
     self%ekmd = ekmd
     self%smpid = smpid
 
-    if (.not. naclsd > 0) then
+    if (naclsd < 1) then
       write(*,*) "ERROR: Number of atoms in cluster <= 0", __FILE__, __LINE__
-      STOP
-    end if
+      stop
+    endif
 
     ALLOCATECHECK(self%TMATN(LMMAXD,LMMAXD,NSPIND))
     ALLOCATECHECK(self%DTDE(LMMAXD,LMMAXD,NSPIND))
@@ -115,7 +115,7 @@ module KKRresults_mod
     ! use garbage values for initialisation
     self%GMATN = dcmplx(99999.0d0, 99999.0d0)
     self%LLY_GRDT = dcmplx(99999.0d0, 99999.0d0)
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a KKRresults object.
@@ -135,6 +135,6 @@ module KKRresults_mod
     DEALLOCATECHECK(self%LLY_GRDT)
     DEALLOCATECHECK(self%TR_ALPH)
 
-  end subroutine
+  endsubroutine ! destroy
 
-end module
+endmodule

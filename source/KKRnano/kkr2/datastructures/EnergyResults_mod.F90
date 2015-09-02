@@ -32,7 +32,7 @@ module EnergyResults_mod
     integer :: lpot
     integer :: nspind
     integer :: lmaxd
-  end type EnergyResults
+  endtype ! EnergyResults
 
 
   interface create
@@ -43,7 +43,7 @@ module EnergyResults_mod
     module procedure destroyEnergyResults
   endinterface
 
-  CONTAINS
+  contains
 
   !-----------------------------------------------------------------------------
   !> Constructs a EnergyResults object.
@@ -80,7 +80,7 @@ module EnergyResults_mod
     self%e_madelung = 0.0d0
     self%e_total = 0.0d0
 
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a EnergyResults object.
@@ -95,6 +95,6 @@ module EnergyResults_mod
     DEALLOCATECHECK(self%ESPV)
     DEALLOCATECHECK(self%EXC)
     DEALLOCATECHECK(self%AC_madelung)
-  end subroutine
+  endsubroutine ! destroy
 
-end module
+endmodule

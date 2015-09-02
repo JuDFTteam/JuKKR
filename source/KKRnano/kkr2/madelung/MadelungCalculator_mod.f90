@@ -18,56 +18,56 @@ module MadelungCalculator_mod
   type MadelungLatticeData
     integer NGMAX
     integer NRMAX
-    integer, allocatable, dimension(:) :: NSG
-    integer, allocatable, dimension(:) :: NSR
+    integer, allocatable :: NSG(:)
+    integer, allocatable :: NSR(:)
     integer NSHLG
     integer NSHLR
-    double precision, allocatable, dimension(:,:) :: GN
-    double precision, allocatable, dimension(:,:) :: RM
+    double precision, allocatable :: GN(:,:)
+    double precision, allocatable :: RM(:,:)
     integer NMAXD
     integer ISHLD
-  end type
+  endtype
 
   !----------------------------------------------------------------------------
   type MadelungHarmonics
-    double precision, dimension(:), allocatable :: WG
-    double precision, dimension(:,:,:), allocatable :: YRG
+    double precision, allocatable :: WG(:)
+    double precision, allocatable :: YRG(:,:,:)
     integer :: LASSLD
-  end type
+  endtype
 
   !----------------------------------------------------------------------------
   type MadelungClebschData
-    double precision, dimension(:), allocatable :: CLEB
-    integer, dimension(:,:), allocatable :: ICLEB
-    integer, dimension(:), allocatable :: LOFLM
+    double precision, allocatable :: CLEB(:)
+    integer, allocatable :: ICLEB(:,:)
+    integer, allocatable :: LOFLM(:)
     integer :: IEND
     integer :: NCLEBD
-  end type
+  endtype
 
   !----------------------------------------------------------------------------
   type MadelungCalculator
     !private
 
-    double precision ALAT
-    integer LMXSPD
-    integer LPOT
-    integer LMPOTD
-    integer LASSLD
-    double precision VOLUME0
+    double precision :: ALAT
+    integer :: LMXSPD
+    integer :: LPOT
+    integer :: LMPOTD
+    integer :: LASSLD
+    double precision :: VOLUME0
 
-    double precision, dimension(:,:), allocatable :: DFAC
+    double precision, allocatable :: DFAC(:,:)
 
-    type (MadelungLatticeData) :: mlattice
-    type (MadelungClebschData) :: clebsch
+    type(MadelungLatticeData) :: mlattice
+    type(MadelungClebschData) :: clebsch
 
-  end type
+  endtype
 
   !----------------------------------------------------------------------------
   type MadelungLatticeSum
-    double precision , allocatable, dimension(:,:)  :: SMAT
-    type (MadelungCalculator), pointer :: madelung_calc
+    double precision, allocatable :: SMAT(:,:)
+    type(MadelungCalculator), pointer :: madelung_calc
     integer :: num_atoms
-  end type
+  endtype
 
   
   interface create
@@ -84,7 +84,7 @@ module MadelungCalculator_mod
   !> Creates a MadelungCalculator object.
   !> Don't forget to free resources with destroyMadelungCalculator
   subroutine createMadelungCalculator(madelung_calc, lmax, ALAT, RMAX, GMAX, BRAVAIS, NMAXD, ISHLD)
-    type (MadelungCalculator), intent(inout) :: madelung_calc
+    type(MadelungCalculator), intent(inout) :: madelung_calc
     integer, intent(in) :: lmax
     double precision, intent(in) :: ALAT
     double precision, intent(in) :: RMAX
@@ -95,7 +95,7 @@ module MadelungCalculator_mod
     integer, intent(in) :: ISHLD
     !---------------------------------------------------------
 
-    type (MadelungHarmonics) :: harmonics
+    type(MadelungHarmonics) :: harmonics
 
     double precision ::  RECBV(3,3)
 
@@ -122,7 +122,7 @@ module MadelungCalculator_mod
     if(memory_stat /= 0) then
       write(*,*) "MadelungCalculator: Allocation error, DFAC"
       stop
-    end if
+    endif
 
     call LATTIX99(ALAT,BRAVAIS,RECBV,madelung_calc%VOLUME0, .false.)
 
@@ -149,12 +149,12 @@ module MadelungCalculator_mod
 
     call destroyMadelungHarmonics(harmonics)
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Destroys a MadelungCalculator object.
   subroutine destroyMadelungCalculator(madelung_calc)
-    type (MadelungCalculator), intent(inout) :: madelung_calc
+    type(MadelungCalculator), intent(inout) :: madelung_calc
     !--------------------------------------------------------
 
     call destroyMadelungLatticeData(madelung_calc%mlattice)
@@ -163,7 +163,7 @@ module MadelungCalculator_mod
 
     deallocate(madelung_calc%DFAC)
 
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Creates data storage for a Madelung lattice sum.
@@ -172,12 +172,12 @@ module MadelungCalculator_mod
   !> The MadelungCalculator can be reused for several MadelungLatticeSums
   !> as long as the geometry and lmax does not change
   subroutine createMadelungLatticeSum(madelung_sum, madelung_calc, num_atoms)
-    type (MadelungLatticeSum), intent(inout) :: madelung_sum
-    type (MadelungCalculator), target, intent(in)    :: madelung_calc
+    type(MadelungLatticeSum), intent(inout) :: madelung_sum
+    type(MadelungCalculator), target, intent(in)    :: madelung_calc
     integer, intent(in) :: num_atoms
 
     !---- local
-    type (MadelungCalculator), pointer    :: mad_ptr
+    type(MadelungCalculator), pointer    :: mad_ptr
 
     mad_ptr => madelung_calc
     madelung_sum%madelung_calc => mad_ptr
@@ -186,16 +186,16 @@ module MadelungCalculator_mod
 
     allocate(madelung_sum%SMAT(madelung_calc%LMXSPD, num_atoms))
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Destroys and frees storage of Madelung lattice sum.
   subroutine destroyMadelungLatticeSum(madelung_sum)
-    type (MadelungLatticeSum), intent(inout) :: madelung_sum
+    type(MadelungLatticeSum), intent(inout) :: madelung_sum
 
     deallocate(madelung_sum%SMAT)
 
-  end subroutine
+  endsubroutine ! destroy  
 
   !----------------------------------------------------------------------------
   !> Calculates Lattice sum for atom 'atom_index' for positions 'rbasis'
@@ -204,11 +204,11 @@ module MadelungCalculator_mod
   !> Needs a properly constructed MadelungLatticeSum object.
   !> STRMAT wrapper
   subroutine calculateMadelungLatticeSum(madelung_sum, atom_index, rbasis)
-    type (MadelungLatticeSum), intent(inout) :: madelung_sum
+    type(MadelungLatticeSum), intent(inout) :: madelung_sum
     integer, intent(in) :: atom_index
-    double precision, dimension(3, madelung_sum%num_atoms), intent(in) :: rbasis
+    double precision, intent(in) :: rbasis(3,madelung_sum%num_atoms)
     !---------------------------------------------------------
-    type (MadelungCalculator), pointer :: madelung_calc
+    type(MadelungCalculator), pointer :: madelung_calc
     integer :: naez
 
     madelung_calc => madelung_sum%madelung_calc
@@ -221,7 +221,7 @@ module MadelungCalculator_mod
     madelung_calc%VOLUME0, &
     madelung_calc%LASSLD,madelung_calc%LMXSPD,naez,atom_index)
 
-  end subroutine
+  endsubroutine ! calc
 
   !----------------------------------------------------------------------------
   !
@@ -244,17 +244,17 @@ module MadelungCalculator_mod
        do l2 = 1,l1
           dfac(l1,l2) = dfac(l1,l2-1)*dble(2*(l1+l2)-1)/dble(2*l2+1)
           dfac(l2,l1) = dfac(l1,l2)
-       end do
-    end do
-  end subroutine
+       enddo
+    enddo
+  endsubroutine ! calc
 
   !----------------------------------------------------------------------------
   subroutine initMadelungClebschData(clebsch, lmax)
-    type (MadelungClebschData), intent(inout) :: clebsch
+    type(MadelungClebschData), intent(inout) :: clebsch
     integer, intent(in) :: lmax
 
     integer lpot, lassld, lmxspd, lmpotd, nclebd, L, M, I
-    type (MadelungHarmonics) :: harmonics
+    type(MadelungHarmonics) :: harmonics
 
     LPOT = 2*lmax
     LASSLD = 4*lmax
@@ -267,8 +267,8 @@ module MadelungCalculator_mod
        do m = -l,l
           clebsch%loflm(i) = l
           i = i + 1
-       end do
-    end do
+       enddo
+    enddo
 
     call createMadelungHarmonics(harmonics, lmax)
 
@@ -276,13 +276,13 @@ module MadelungCalculator_mod
     clebsch%nclebd = nclebd
 
     call destroyMadelungHarmonics(harmonics)
-  end subroutine
+  endsubroutine ! init
 
 !============= Helper routines =============================================
 
   !----------------------------------------------------------------------------
   subroutine createMadelungHarmonics(harmonics, lmax)
-    type (MadelungHarmonics), intent(inout) :: harmonics
+    type(MadelungHarmonics), intent(inout) :: harmonics
     integer, intent(in) :: lmax
     !--------------------------------------------------------------------------
 
@@ -291,26 +291,24 @@ module MadelungCalculator_mod
 
     LASSLD = 4*lmax
     harmonics%LASSLD = LASSLD
-
     allocate(harmonics%WG(LASSLD))
-
     allocate(harmonics%YRG(LASSLD,0:LASSLD,0:LASSLD))
 
     call GAUNT2(harmonics%WG,harmonics%YRG,LMAX)
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyMadelungHarmonics(harmonics)
-    type (MadelungHarmonics), intent(inout) :: harmonics
+    type(MadelungHarmonics), intent(inout) :: harmonics
 
     deallocate(harmonics%WG)
     deallocate(harmonics%YRG)
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   subroutine createMadelungLatticeData(mlattice, NMAXD, ISHLD)
-    type (MadelungLatticeData), intent(inout) :: mlattice
+    type(MadelungLatticeData), intent(inout) :: mlattice
     integer, intent(in) :: NMAXD
     integer, intent(in) :: ISHLD
     !--------------------------------------------------------------------------
@@ -319,33 +317,27 @@ module MadelungCalculator_mod
     mlattice%ISHLD = ISHLD
 
     allocate(mlattice%GN(3,NMAXD))
-
     allocate(mlattice%RM(3,NMAXD))
-
     allocate(mlattice%NSG(ISHLD))
-
     allocate(mlattice%NSR(ISHLD))
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyMadelungLatticeData(mlattice)
-    type (MadelungLatticeData), intent(inout) :: mlattice
+    type(MadelungLatticeData), intent(inout) :: mlattice
     !--------------------------------------------------------------------------
 
     deallocate(mlattice%GN)
-
     deallocate(mlattice%RM)
-
     deallocate(mlattice%NSG)
-
     deallocate(mlattice%NSR)
 
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   subroutine createMadelungClebschData(clebsch, LMXSPD, LMPOTD)
-    type (MadelungClebschData), intent(inout) :: clebsch
+    type(MadelungClebschData), intent(inout) :: clebsch
     integer, intent(in) :: LMXSPD
     integer, intent(in) :: LMPOTD
     !--------------------------------------------------------------------------
@@ -353,17 +345,17 @@ module MadelungCalculator_mod
     allocate(clebsch%CLEB(LMXSPD*LMPOTD))
     allocate(clebsch%LOFLM(LMXSPD))
     allocate(clebsch%ICLEB(LMXSPD*LMPOTD,3))
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyMadelungClebschData(clebsch)
-    type (MadelungClebschData), intent(inout) :: clebsch
+    type(MadelungClebschData), intent(inout) :: clebsch
     !--------------------------------------------------------------------------
 
     deallocate(clebsch%CLEB)
     deallocate(clebsch%LOFLM)
     deallocate(clebsch%ICLEB)
 
-  end subroutine
+  endsubroutine ! destroy
 
-end module MadelungCalculator_mod
+endmodule MadelungCalculator_mod

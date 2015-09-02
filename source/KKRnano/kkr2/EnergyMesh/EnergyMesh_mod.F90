@@ -20,17 +20,17 @@ module EnergyMesh_mod
   type EnergyMesh
 
     ! valence contour parameters
-    double precision  :: E1
-    double precision  :: E2
-    double precision  :: EFERMI
-    double complex , allocatable, dimension(:)  :: EZ
-    integer  :: npnt1
-    integer  :: npnt2
-    integer  :: npnt3
-    integer  :: npol
-    double precision  :: TK
-    double complex , allocatable, dimension(:)  :: WEZ
-    double complex , allocatable, dimension(:,:)  :: WEZRN
+    double precision :: E1
+    double precision :: E2
+    double precision :: EFERMI
+    double complex, allocatable :: EZ(:)
+    integer :: npnt1
+    integer :: npnt2
+    integer :: npnt3
+    integer :: npol
+    double precision :: TK
+    double complex, allocatable :: WEZ(:)
+    double complex, allocatable :: WEZRN(:,:)
     integer :: ielast
 
     ! semicore contour parameters
@@ -42,7 +42,7 @@ module EnergyMesh_mod
     integer :: N2SEMI
     integer :: N3SEMI
 
-  end type EnergyMesh
+  endtype EnergyMesh
   
   interface create
     module procedure createEnergyMesh
@@ -69,7 +69,7 @@ module EnergyMesh_mod
     ALLOCATECHECK(self%EZ(ielast))
     ALLOCATECHECK(self%WEZ(ielast))
     ALLOCATECHECK(self%WEZRN(ielast, 2)) ! for both spin channels - historical reasons
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a EnergyMesh object.
@@ -82,7 +82,7 @@ module EnergyMesh_mod
     DEALLOCATECHECK(self%EZ)
     DEALLOCATECHECK(self%WEZ)
     DEALLOCATECHECK(self%WEZRN)
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> read energy mesh data from file 'energy_mesh'
@@ -95,7 +95,7 @@ module EnergyMesh_mod
                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
                             emesh%NPOL, emesh%TK, emesh%WEZ)
 
-  end subroutine
+  endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
@@ -108,7 +108,7 @@ module EnergyMesh_mod
                              emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
                              emesh%NPOL, emesh%TK, emesh%WEZ)
 
-  end subroutine
+  endsubroutine ! write
 
   !------------------------------------------------------------------------------
   !> Update Energy mesh. Essentially a wrapper for EMESHT
@@ -121,7 +121,7 @@ module EnergyMesh_mod
                               emesh%E1,emesh%E2,emesh%TK,emesh%NPOL, &
                               emesh%NPNT1,emesh%NPNT2,emesh%NPNT3)
 
-  end subroutine
+  endsubroutine ! update
 
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from master-rank to all other ranks
@@ -135,7 +135,7 @@ module EnergyMesh_mod
     call broadcastEnergyMeshImpl_com(getMyActiveCommunicator(my_mpi), getMasterRank(my_mpi), &
          emesh%E1, emesh%E2, emesh%EZ, emesh%IELAST, emesh%WEZ)
 
-  end subroutine
+  endsubroutine ! broadcast
 
 
   !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -157,7 +157,7 @@ module EnergyMesh_mod
                             emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
                             emesh%N3SEMI)
 
-  end subroutine
+  endsubroutine ! read
 
   ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
@@ -173,7 +173,7 @@ module EnergyMesh_mod
                              emesh%FSEMICORE, emesh%IESEMICORE, emesh%N1SEMI, emesh%N2SEMI, &
                              emesh%N3SEMI)
 
-  end subroutine
+  endsubroutine ! write
 
   ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
@@ -189,6 +189,6 @@ module EnergyMesh_mod
                               emesh%EMUSEMI,emesh%IESEMICORE,emesh%FSEMICORE,emesh%N1SEMI, &
                               emesh%N2SEMI,emesh%N3SEMI)
 
-  end subroutine
+  endsubroutine ! update
 
-end module
+endmodule EnergyMesh_mod

@@ -59,7 +59,7 @@ module read_formatted_mod
     module procedure destroy_PotentialEntry
   endinterface
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   !> Read header of potential entry.
@@ -91,7 +91,7 @@ module read_formatted_mod
 
       READ (unit,FMT="(i3,/,2d15.8)") header%IRWS, header%A_log_mesh, header%B_log_mesh
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Read core state block.
@@ -117,8 +117,8 @@ module read_formatted_mod
     IF (block%NCORE.GE.1) THEN
        DO ICORE=1,block%NCORE
           READ (unit,FMT="(i5,1p,d20.11)") block%LCORE(ICORE), block%ECORE(ICORE)
-       END DO
-    END IF
+       ENDDO ! ICORE
+    ENDIF
 
   endsubroutine
 
@@ -137,14 +137,14 @@ module read_formatted_mod
 
     READ (unit,FMT="(1p,4d20.13)") (block%VISP(IR), IR=1,NR)
 
-  endsubroutine
+  endsubroutine ! create
 
     !----------------------------------------------------------------------------
   !> Deallocate array for VISP data
   subroutine destroy_SphericalBlock(block)
     type (SphericalBlock), intent(inout) :: block
     deallocate (block%VISP)
-  endsubroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Read NonSphericalBlocks, do not forget to run destroy_NonSphericalBlocks.
@@ -173,7 +173,7 @@ module read_formatted_mod
             READ (unit,FMT="(10i5)") LM1
           ELSE
             LM1 = LM
-          END IF
+          ENDIF
 
           IF (LM1.GT.1) THEN
 
@@ -184,19 +184,19 @@ module read_formatted_mod
             endif
 
             READ (unit,FMT="(1p,4d20.13)") (blocks%VINS(IR, LM1),IR=IRMIN,IRMD)
-          END IF
-        END IF
-      END DO
-    END IF
+          ENDIF
+        ENDIF
+      ENDDO ! LM
+    ENDIF
 
-  endsubroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Deallocate array for VINS data.
   subroutine destroy_NonSphericalBlocks(blocks)
     type (NonSphericalBlocks), intent(inout) :: blocks
-    deallocate (blocks%VINS)
-  endsubroutine
+    deallocate(blocks%VINS)
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Create a PotentialEntry by reading from file 'unit'.
@@ -209,7 +209,7 @@ module read_formatted_mod
     call create_read_SphericalBlock(potential_entry%sblock, unit)
     call create_read_NonSphericalBlocks(potential_entry%nsblocks, potential_entry%sblock, unit)
 
-  endsubroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Destroy a PotentialEntry.
@@ -218,9 +218,9 @@ module read_formatted_mod
 
     call destroy_SphericalBlock(potential_entry%sblock)
     call destroy_NonSphericalBlocks(potential_entry%nsblocks)
-  endsubroutine
+  endsubroutine ! destroy
 
-end module read_formatted_mod
+endmodule read_formatted_mod
 
 #ifdef TEST_READ_FORMATTED_MOD
 program test_read_formatted
@@ -232,21 +232,21 @@ program test_read_formatted
   integer :: LM
 
   open(UNIT, form='formatted', file='potential')
-    call create_read_PotentialEntry(pe, UNIT)
+  call create_read_PotentialEntry(pe, UNIT)
 
-    write(*,fmt="(' <#',20a4)") pe%header%ITITLE
-    write(*,*) pe%sblock%VISP
-    write(*,*) "---------------------------------------------------------------"
-    write(*,*) "Number of non-spherical components: ", pe%sblock%LMPOT
+  write(*,fmt="(' <#',20a4)") pe%header%ITITLE
+  write(*,*) pe%sblock%VISP
+  write(*,*) "---------------------------------------------------------------"
+  write(*,*) "Number of non-spherical components: ", pe%sblock%LMPOT
 
-    do LM = 1, pe%sblock%LMPOT
+  do LM = 1, pe%sblock%LMPOT
     write(*,*) "---------------------------------------------------------------"
     write(*,*) "LM = ", LM
     write(*,*) "---------------------------------------------------------------"
     write(*,*) pe%nsblocks%VINS(:,LM)
-    enddo
+  enddo ! LM
 
-    call destroy_PotentialEntry(pe)
+  call destroy_PotentialEntry(pe)
   close(UNIT)
 endprogram
 #endif

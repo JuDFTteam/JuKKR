@@ -29,7 +29,7 @@ module EnergyMeshHelpers_mod
     !if ( NPOL==0 ) read(67) EFERMI
     read (67) EFERMI
     close(67)
-  end subroutine
+  endsubroutine ! read
 
   ! VALENCE CONTOUR ONLY!
   !----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ module EnergyMeshHelpers_mod
     write (67) NPOL,TK,NPNT1,NPNT2,NPNT3
     write (67) EFERMI
     close (67)
-  end subroutine
+  endsubroutine ! write
 
   ! VALENCE CONTOUR ONLY!
   !------------------------------------------------------------------------------
@@ -84,9 +84,9 @@ module EnergyMeshHelpers_mod
 
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*WEZ(IE)
-    end do
+    enddo
     
-  end subroutine
+  endsubroutine ! update
 
 
   ! VALENCE CONTOUR ONLY!
@@ -108,7 +108,7 @@ module EnergyMeshHelpers_mod
     call MPI_BCAST(WEZ,IEMXD,MPI_DOUBLE_COMPLEX, BCRANK,ACTVCOMM,IERR)
     call MPI_BCAST(E1,1,MPI_DOUBLE_PRECISION, BCRANK,ACTVCOMM,IERR)
     call MPI_BCAST(E2,1,MPI_DOUBLE_PRECISION, BCRANK,ACTVCOMM,IERR)
-  end subroutine
+  endsubroutine ! broadcast
 
 
   !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -151,7 +151,7 @@ module EnergyMeshHelpers_mod
     read (67) EMUSEMI
     read (67) N1SEMI,N2SEMI,N3SEMI
     close(67)
-  end subroutine
+  endsubroutine ! read
 
   ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
@@ -188,7 +188,7 @@ module EnergyMeshHelpers_mod
     write (67) EMUSEMI
     write (67) N1SEMI,N2SEMI,N3SEMI
     close (67)
-  end subroutine
+  endsubroutine ! write
 
   ! VALENCE AND SEMICORE CONTOUR!
   !------------------------------------------------------------------------------
@@ -232,9 +232,9 @@ module EnergyMeshHelpers_mod
     do IE = 1,IELAST
       WEZ(IE) = -2.D0/PI*WEZ(IE)
       IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
-    end do
+    enddo ! IE
 
-  end subroutine
+  endsubroutine ! update
 
 
   ! VALENCE AND SEMICORE CONTOUR!
@@ -263,6 +263,6 @@ module EnergyMeshHelpers_mod
     call MPI_BCAST(E2,1,MPI_DOUBLE_PRECISION, BCRANK,ACTVCOMM,IERR)
     call MPI_BCAST(EBOTSEMI,1,MPI_DOUBLE_PRECISION, BCRANK,ACTVCOMM,IERR)
     call MPI_BCAST(EMUSEMI,1,MPI_DOUBLE_PRECISION, BCRANK,ACTVCOMM,IERR)
-  end subroutine
+  endsubroutine ! broadcast
 
-end module
+endmodule EnergyMeshHelpers_mod

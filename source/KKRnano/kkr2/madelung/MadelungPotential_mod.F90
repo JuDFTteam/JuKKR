@@ -17,15 +17,14 @@ module MadelungPotential_mod
     use CalculationData_mod, only: CalculationData, getMadelungCalculator
     use MadelungCalculator_mod, only: MadelungCalculator
     
-    type (CalculationData), intent(inout) :: calc_data
-    double precision, intent(in) ::  ZAT(:)
-
+    type(CalculationData), intent(inout) :: calc_data
+    double precision, intent(in) :: ZAT(:)
     integer, intent(in) :: rank
     integer, intent(in) :: atoms_per_proc
     integer, intent(in) :: communicator
     !------------------------------------
 
-    type (MadelungCalculator), pointer :: madelung_calc
+    type(MadelungCalculator), pointer :: madelung_calc
     integer :: naez
 
     madelung_calc => getMadelungCalculator(calc_data)
@@ -39,7 +38,7 @@ module MadelungPotential_mod
          rank, atoms_per_proc, &
          communicator)
 
-  end subroutine
+  endsubroutine
 
   ! **********************************************************************
   !
@@ -70,8 +69,8 @@ module MadelungPotential_mod
   !>    impurity-program adopted feb. 2004 (according to n.papanikalou)
   !>
   ! **********************************************************************
-  subroutine VMADELBLK_new2_com(calc_data,LPOT,NAEZ, ZAT, &
-    LMPOT,CLEB,ICLEB,IEND, LMXSPD,NCLEBD,LOFLM,DFAC, MYLRANK, atoms_per_proc, communicator)
+  subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
+    lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, mylrank, atoms_per_proc, communicator)
 
     use CalculationData_mod, only: CalculationData, getMadelungCalculator, getNumLocalAtoms, &
       getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getMadelungSum, getAtomData
@@ -83,61 +82,48 @@ module MadelungPotential_mod
 
     include 'mpif.h'
 
-    type (CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: calc_data
 
-    integer IEND,LPOT,LMXSPD,NCLEBD,LMPOT,NAEZ
+    integer, intent(in) :: iend, lpot, lmxspd, nclebd, lmpot, naez
 
-    type (BasisAtom), pointer :: atomdata
-    type (DensityResults), pointer :: densities
-    type (EnergyResults), pointer :: energies
-    type (MadelungLatticeSum), pointer :: madelung_sum
-    type (RadialMeshData), pointer :: mesh
+    type(basisatom), pointer :: atomdata
+    type(densityresults), pointer :: densities
+    type(energyresults), pointer :: energies
+    type(madelunglatticesum), pointer :: madelung_sum
+    type(radialmeshdata), pointer :: mesh
 
-    double precision ZAT(*)
-    double precision CLEB(NCLEBD)
-    double precision DFAC(0:LPOT,0:LPOT)
-    integer ICLEB(NCLEBD,3)
-    integer LOFLM(LMXSPD)
-    !     ..
-    !     .. Local Scalars ..
-    integer I2,ILM
-
-    !     .. Local Arrays ..
-    !     Fortran 90 automatic arrays
-
-    double precision CMOM_SAVE((LPOT+1)**2)
-    double precision CMINST_SAVE((LPOT+1)**2)
-
-    !----- MPI ---------------------------------------------------------------
-    integer IERR
-    !     .. L-MPI
-    integer MYLRANK, communicator
+    double precision, intent(in) :: zat(:)
+    double precision, intent(in) :: cleb(nclebd)
+    double precision, intent(in) :: dfac(0:lpot,0:lpot)
+    integer, intent(in) :: icleb(nclebd,3)
+    integer, intent(in) :: loflm(lmxspd)
     integer, intent(in) :: atoms_per_proc
 
+    external :: MPI_Bcast
+    
+    integer :: i2, ilm
+    integer ierr, mylrank, communicator
+    double precision :: cmom_save((lpot+1)**2)
+    double precision :: cminst_save((lpot+1)**2)
     integer :: num_local_atoms
     integer :: ilocal
     integer :: ilocal2
     integer :: root
-
-    external MPI_BCAST
-    !     .. Intrinsic Functions ..
-    intrinsic ATAN,SQRT
-
-    integer LMPOTD
-    LMPOTD=(LPOT+1)**2
+    integer :: lmpotd
+    lmpotd = (lpot+1)**2
     !     ..................................................................
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
     do ilocal = 1, num_local_atoms
       energies => getEnergies(calc_data, ilocal)
-      energies%AC_madelung = 0.0d0
-    end do
+      energies%AC_madelung = 0.d0
+    enddo
 
     !===== begin loop over all atoms =========================================
     ! O(N**2) in calculation and communication !!!
 
-    do I2 = 1,NAEZ
+    do I2 = 1, NAEZ
 
       ! use omp single for MPI part?
       ! if MPI comm. dominates over calculation, OpenMP won't do much
@@ -162,12 +148,10 @@ module MadelungPotential_mod
         CMINST_SAVE = 0.0d0
       endif
 
-      call MPI_BCAST(CMOM_SAVE,LMPOTD,MPI_DOUBLE_PRECISION, &
-      root, communicator,IERR)
-      call MPI_BCAST(CMINST_SAVE,LMPOTD,MPI_DOUBLE_PRECISION, &
-      root, communicator,IERR)
+      call MPI_BCAST(CMOM_SAVE,   LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
+      call MPI_BCAST(CMINST_SAVE, LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
 
-      !-------- bcast information of cmom and cminst end ----------------------
+      !-------- bcast information of cmom and cminst end----------------------
 
 
       ! --> calculate avmad(lm1,lm2)
@@ -180,10 +164,10 @@ module MadelungPotential_mod
                    madelung_sum%SMAT(:,I2), &
                    LPOT, CLEB, ICLEB, IEND, LOFLM, DFAC)
 
-      end do ! ilocal
+      enddo ! ilocal
 
-    end do
-    !===== end loop over all atoms =========================================
+    enddo ! I2
+    !===== endloop over all atoms =========================================
 
     !     contributions are accumulated in AC !!!
 
@@ -197,147 +181,118 @@ module MadelungPotential_mod
                   energies%AC_madelung, atomdata%potential%LPOT, &
                   mesh%R, mesh%IRCUT, mesh%IPAN, atomdata%potential%NSPIN)
 
-    end do   !ilocal
+    enddo ! ilocal
 
-  end subroutine VMADELBLK_new2_com
+  endsubroutine ! VMADELBLK_new2_com
 
   !----------------------------------------------------------------------------
-  subroutine addPot(VONS, VMAD, AC, LPOT, R, IRCUT, IPAN, NSPIN)
-    double precision, intent(inout) :: VONS(:,:,:)
-    double precision, intent(inout) :: VMAD
-    double precision, intent(in)    :: AC(:)
-    integer, intent(in) :: LPOT
-    double precision, intent(in) :: R(:)
-    integer, intent(in) :: IRCUT(0:)
-    integer, intent(in) :: IPAN
-    integer, intent(in) :: NSPIN
+  subroutine addPot(vons, vmad, ac, lpot, r, ircut, ipan, nspin)
+    double precision, intent(inout) :: vons(:,:,:)
+    double precision, intent(inout) :: vmad
+    double precision, intent(in)    :: ac(:)
+    integer, intent(in) :: lpot
+    double precision, intent(in) :: r(:)
+    integer, intent(in) :: ircut(0:)
+    integer, intent(in) :: ipan
+    integer, intent(in) :: nspin
 
-    integer :: IRS1
-    integer :: L, M, LM, I
-    integer :: ISPIN
-    double precision :: PI
+    integer :: irs1
+    integer :: l, m, lm, i
+    integer :: ispin
+    double precision :: pi
 
-    PI = 4.0D0*atan(1.0D0)
-    VMAD = 0.0d0
+    pi = 4.0d0*atan(1.0d0)
+    vmad = 0.0d0
 
-    IRS1 = IRCUT(IPAN)
+    irs1 = ircut(ipan)
 
-    ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-    do L = 0,LPOT
-      ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-      do M = -L,L
-        LM = L*L + L + M + 1
+    do l = 0, lpot
+      do m = -l, l
+        lm = l*l + l + m + 1
 
-        ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        if ( LM.eq.1 ) VMAD = AC(1)/sqrt(4.D0*PI)
+        if (lm == 1) vmad = ac(1)/sqrt(4.d0*pi)
 
         !---> add to v the intercell-potential
 
-        ! ================================================================= SPIN
-        do ISPIN = 1,NSPIN
+        do ispin = 1,nspin
 
           !---> in the case of l=0 : r(1)**l is not defined
 
-          if ( L.eq.0 ) VONS(1,1,ISPIN) = VONS(1,1,ISPIN) + AC(LM)
-          do I = 2,IRS1
-            VONS(I,LM,ISPIN) = VONS(I,LM,ISPIN) + (-R(I))**L*AC(LM)
-          end do
-        end do
-         ! ================================================================= SPIN
+          if (l == 0) vons(1,1,ispin) = vons(1,1,ispin) + ac(lm)
+          do i = 2, irs1
+            vons(i,lm,ispin) = vons(i,lm,ispin) + (-r(i))**l*ac(lm)
+          enddo ! i
+        enddo ! ispin
 
-      end do
-       ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-    end do
-    ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+      enddo ! m
+    enddo ! l
 
-  end subroutine
+  endsubroutine ! add
 
 
   !------------------------------------------------------------------------------
-  subroutine sumAC(AC, CMOM_SAVE, CMINST_SAVE, ZAT_I2, SMAT_I2, LPOT, CLEB, ICLEB, IEND, LOFLM, DFAC)
-    double precision, intent(inout) :: AC(:)
-    double precision, intent(in) :: CMOM_SAVE(:)
-    double precision, intent(in) :: CMINST_SAVE(:)
-    double precision, intent(in) :: ZAT_I2
-    double precision, intent(in) :: SMAT_I2(:)
+  subroutine sumAC(ac, cmom_save, cminst_save, zat_i2, smat_i2, lpot, cleb, icleb, iend, loflm, dfac)
+    double precision, intent(inout) :: ac(:)
+    double precision, intent(in) :: cmom_save(:)
+    double precision, intent(in) :: cminst_save(:)
+    double precision, intent(in) :: zat_i2
+    double precision, intent(in) :: smat_i2(:)
 
-    double precision, intent(in) :: CLEB(:)
-    integer, intent(in) :: IEND
-    double precision, intent(in) :: DFAC(0:,0:)
-    integer, intent(in) :: ICLEB(:,:)
-    integer, intent(in) :: LOFLM(:)
+    double precision, intent(in) :: cleb(:)
+    integer, intent(in) :: iend
+    double precision, intent(in) :: dfac(0:,0:)
+    integer, intent(in) :: icleb(:,:)
+    integer, intent(in) :: loflm(:)
 
-    integer, intent(in) :: LPOT
+    integer, intent(in) :: lpot
 
     !------------------
-    integer :: LM, LM1, LM2, LM3, L1, L2, I
-    integer :: LMMAX, LMPOT
+    integer :: lm, lm1, lm2, lm3, l1, l2, i
+    integer :: lmmax, lmpot
 
-    double precision :: PI, FPI
+    double precision :: pi, fpi
+    double precision :: avmad((lpot+1)**2,(lpot+1)**2)
+    double precision :: bvmad((lpot+1)**2)
 
-    !     .. Local Arrays ..
-    !     Fortran 90 automatic arrays
-    double precision AVMAD((LPOT+1)**2,(LPOT+1)**2)
-    double precision BVMAD((LPOT+1)**2)
+    pi = 4.0d0*atan(1.0d0)
+    fpi = 4.0d0*pi
 
-    PI = 4.0D0*atan(1.0D0)
-    FPI = 4.0D0*PI
+    lmpot = (lpot+1)**2
+    lmmax = lmpot
 
-    LMPOT = (LPOT+1)**2
-    LMMAX = LMPOT
+    avmad(:,:) = 0.d0
 
-    do LM1 = 1,LMPOT
-      do LM2 = 1,LMPOT
-        AVMAD(LM1,LM2) = 0.0D0
-      end do
-    end do
-
-    do I = 1,IEND
-      LM1 = ICLEB(I,1)
-      LM2 = ICLEB(I,2)
-      LM3 = ICLEB(I,3)
-      L1 = LOFLM(LM1)
-      L2 = LOFLM(LM2)
+    do i = 1, iend
+      lm1 = icleb(i,1)
+      lm2 = icleb(i,2)
+      lm3 = icleb(i,3)
+      l1 = loflm(lm1)
+      l2 = loflm(lm2)
 
       ! --> this loop has to be calculated only for l1+l2=l3
 
-      AVMAD(LM1,LM2) = AVMAD(LM1,LM2) + &
-      2.0D0*DFAC(L1,L2)*SMAT_I2(LM3)*CLEB(I)
-    end do
-
+      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.0d0*dfac(l1,l2)*smat_i2(lm3)*cleb(i)
+    enddo ! i
 
     ! --> calculate bvmad(lm1)
 
-    do LM1 = 1,LMPOT
-      BVMAD(LM1) = 0.0D0
-    end do
-    !     IF(NAEZ.GT.1) THEN
-    !---> lm = 1 component disappears if there is only one host atom
-    !     WRONG E.R.
+    bvmad(:) = 0.d0
 
-    do LM1 = 1,LMPOT
-      L1 = LOFLM(LM1)
-      BVMAD(LM1) = BVMAD(LM1) - &
-      2.0D0*FPI/dble(2*L1+1)*SMAT_I2(LM1)
-    end do
+    do lm1 = 1, lmpot
+      l1 = loflm(lm1)
+      bvmad(lm1) = bvmad(lm1) - 2.0d0*fpi/dble(2*l1+1)*smat_i2(lm1)
+    enddo ! lm1
 
-    !     END IF
-
-    do LM = 1,LMPOT
-      !if(I2.eq.1) AC(LM) = 0.0D0
-      AC(LM) = AC(LM) + BVMAD(LM)*ZAT_I2
+    do lm = 1, lmpot
+      ac(lm) = ac(lm) + bvmad(lm)*zat_i2
 
       !---> take moments of sphere
 
-      do LM2 = 1,LMMAX
-        AC(LM) = AC(LM) + AVMAD(LM,LM2)*CMOM_SAVE(LM2)
-      end do
+      do lm2 = 1, lmmax
+        ac(lm) = ac(lm) + avmad(lm,lm2)*(cmom_save(lm2) + cminst_save(lm2))
+      enddo ! lm2
+    enddo ! lm
 
-      do LM2 = 1,LMMAX
-        AC(LM) = AC(LM) + AVMAD(LM,LM2)*CMINST_SAVE(LM2)
-      end do
-    end do
+  endsubroutine ! sum
 
-  end subroutine
-
-end module
+endmodule MadelungPotential_mod

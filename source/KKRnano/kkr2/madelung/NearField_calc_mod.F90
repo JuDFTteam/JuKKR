@@ -74,7 +74,7 @@ module NearField_calc_mod
       ! VERY IMPORTANT: convert distance vectors to units of alat!
       local_cell(ilocal)%near_cell_dist_vec = local_cell(ilocal)%near_cell_dist_vec * alat
 
-    end do
+    enddo ! ilocal
 
     call calc_nf_correction(nf_correction, local_cell, madelung_calc%clebsch, &
                             getMySEcommunicator(my_mpi))
@@ -86,10 +86,10 @@ module NearField_calc_mod
       do ispin = 1, atomdata%potential%nspin
         atomdata%potential%vons(:,:,ispin) = atomdata%potential%vons(:,:,ispin) &
                                          + nf_correction(ilocal)%delta_potential
-      end do
-    end do
+      enddo ! ispin
+    enddo ! ilocal
 
-  end subroutine
+  endsubroutine
 
 
   !----------------------------------------------------------------------------
@@ -111,14 +111,10 @@ module NearField_calc_mod
     integer, intent(in) :: center_ind
     double precision, intent(in) :: radius_bounding
 
-    integer :: ii, num
-    integer :: nx, ny, nz
-    integer :: count_near
-    double precision :: center(3), vec(3)
-    double precision :: four_rws_squared, dist_sq
+    integer :: ii, num, nx, ny, nz, count_near
+    double precision :: center(3), vec(3), four_rws_squared, dist_sq
     integer, parameter :: MAX_NEAR = 64 ! there should be never more than 64 near cells
-    double precision :: near_inds_temp(MAX_NEAR)
-    double precision :: dist_vecs_temp(3, MAX_NEAR)
+    double precision :: near_inds_temp(MAX_NEAR), dist_vecs_temp(3,MAX_NEAR)
 
     double precision, parameter :: TOL = 1.d-6
 
@@ -126,7 +122,7 @@ module NearField_calc_mod
     CHECKASSERT( .not. allocated(dist_vecs) )
 
     center = rbasis(:, center_ind)
-    four_rws_squared = 4.0d0 * radius_bounding**2
+    four_rws_squared = 4.d0*radius_bounding**2
 
     count_near = 0
     num = size(rbasis, 2)
@@ -144,38 +140,32 @@ module NearField_calc_mod
 
               CHECKASSERT (count_near <= MAX_NEAR )
               near_inds_temp(count_near) = ii
-              dist_vecs_temp(:, count_near) = vec
-            end if
+              dist_vecs_temp(:,count_near) = vec
+            endif
 
-          end do
-        end do
-      end do
+          enddo ! nz
+        enddo ! ny
+      enddo ! nx
 
-    end do
+    enddo ! ii
 
-    allocate(near_inds(count_near))
+    allocate(near_inds(count_near), dist_vecs(3,count_near))
     near_inds = near_inds_temp(1:count_near)
-    allocate(dist_vecs(3, count_near))
-    dist_vecs = dist_vecs_temp(:, 1:count_near)
-  end subroutine ! find_near_cells
+    dist_vecs = dist_vecs_temp(:,1:count_near)
+  endsubroutine ! find_near_cells
 
   !----------------------------------------------------------------------------
   !> Calculate (point2 - point1) taking into account addition of a lattice vector
   !> as specified by integer indices nx, ny, nz
-  function distance_vec(point1, point2, bravais, nx, ny, nz)
-    double precision :: distance_vec(3)
+  function distance_vec(point1, point2, bravais, nx, ny, nz) result(dv)
+    double precision :: dv(3)
     
-    double precision, intent(in) :: point1(3)
-    double precision, intent(in) :: point2(3)
-    double precision, intent(in) :: bravais(3,3)
+    double precision, intent(in) :: point1(3), point2(3), bravais(3,3)
     integer, intent(in) :: nx, ny, nz
     !----------------
-    double precision :: vec(3)
 
-    vec = point2 - point1
+    dv(1:3) = point2(1:3) - point1(1:3) + nx*bravais(:,1) + ny*bravais(:,2) + nz*bravais(:,3)
 
-    distance_vec = vec + nx*bravais(:, 1) + ny*bravais(:, 2) + nz*bravais(:, 3)
+  endfunction distance_vec
 
-  end function distance_vec
-
-end module NearField_calc_mod
+endmodule NearField_calc_mod
