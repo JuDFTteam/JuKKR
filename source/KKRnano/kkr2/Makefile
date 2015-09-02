@@ -277,3 +277,5 @@ SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 ValenceDensity_mod.o: SingleSite_mod.o SingleSiteHelpers_mod.o
 lloyd0_new_mod.o: ValenceDensity_mod.o
+Errors_mod.o: Warnings_mod.o
+Voronoi_mod.o: Errors_mod.o Warnings_mod.o StringHelpers_mod.o
