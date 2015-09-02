@@ -1,7 +1,9 @@
 #include "DebugHelpers/test_macros.h"
+#include "macros.h"
 !>    Auxillary module needed for shape function calculation.
 
 module ShapeGeometryHelpers_mod
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
 
@@ -46,7 +48,8 @@ module ShapeGeometryHelpers_mod
 #else    
     integer(kind=2), allocatable :: i1(:,:), i2(:,:), irt(:,:) ! assert nfaced < 2**15 and nvertd < 2**15
 #endif
-    logical :: new
+    logical :: new, show_nvrtd
+    show_nvrtd = .false.
     
     nfaced = size(nvertices)
     CHECKASSERT(size(vert, 3) == nfaced)
@@ -82,12 +85,12 @@ module ShapeGeometryHelpers_mod
         
         if (new) then
           nvrt = nvrt+1
-          if (nvrt > nvrtd) stop 'increase nvrtd'
+          if (nvrt > nvrtd) die_here("increase nfaced*nvertd to at least"+nvrt)
 #ifndef SAVE_MEMORY
           vrt(1:3,nvrt) = vert(1:3,ivert,iface)
 #else         
           irt(2:3,nvrt) = [ivert, iface]
-#endif          
+#endif
         endif ! new
         
         ivertp = ivert+1; if (ivert == nvert) ivertp = 1        !!! alternative: ivertp = modulo(ivert+1-1, nvert)+1
@@ -98,10 +101,7 @@ module ShapeGeometryHelpers_mod
         down = sqrt(nrm2(vrtp - vrt0)*nrm2(vrtm - vrt0))
         up = (vrtp - vrt0) .dot. (vrtm - vrt0)
         
-        if (down < tolvdist) then
-          write(6,*) 'down',down
-          stop 'identical consecutive vertices'
-        endif
+        if (down < tolvdist) die_here("identical consecutive vertices, down ="+down)
         
         arg = up/down
         if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
@@ -124,12 +124,13 @@ module ShapeGeometryHelpers_mod
           elseif(nrm2(vrt0 - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
             if(nrm2(vrtp - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
           endif
-#endif          
+#endif
         enddo ! iedge
         
         if (new) then
           nedge = nedge+1
-          if (nedge > nedged) stop 'insufficient nedged'
+          if (nedge > nedged) die_here("insufficient nedged = nfaced*(nvertd+1)-2, nfaced ="+nfaced+" nvertd ="+nvertd) 
+
 #ifndef SAVE_MEMORY
           v1(1:3,nedge) = vert(1:3,ivert ,iface)
           v2(1:3,nedge) = vert(1:3,ivertp,iface)
@@ -142,24 +143,21 @@ module ShapeGeometryHelpers_mod
       enddo ! ivert
       
       if (fisum > 1.d-6) then
-        write(6,*) 'fisum  = ',fisum
-        write(6,*) 'iface  = ',iface
-        write(6,*) 'nedge  = ',nedge
-        write(6,*) 'nvert  = ',nvert
-        write(6,*) 'nvrt   = ',nvrt
+        write(*,*) 'fisum  = ',fisum
+        write(*,*) 'iface  = ',iface
+        write(*,*) 'nedge  = ',nedge
+        write(*,*) 'nvert  = ',nvert
+        write(*,*) 'nvrt   = ',nvrt
         do ivert = 1, nvrt
-          write(6,'(3F16.9)') vert(1:3,ivert,iface)
+          write(*,'(3F16.9)') vert(1:3,ivert,iface)
         enddo ! ivert
-        stop 'not consecutive vertices of a polygon'
+        die_here("not consecutive vertices of a polygon, fisum ="+fisum)
       endif ! fisum
       
     enddo ! iface
-    if ((nvrt+nface) /= (nedge+2)) then
-      write(6,*) '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
-      write(6,*) '    serious warning from shape      '
-      write(6,*) '   >>  stop illegal polyhedron      '
-      write(6,*) 'nvrt = ',nvrt,' ; nface = ',nface,' ; nedge = ',nedge
-    endif ! (nvrt+nface) /= (nedge+2)
+    
+    if ((nvrt+nface) /= (nedge+2)) &
+      warn(6, "serious warning about illegal polyhedron: nvrt+nface /= nedge+2, nvrt ="+nvrt-", nface ="+nface-", nedge ="+nedge)
     
 #ifndef SAVE_MEMORY
     deallocate(v1, v2, vrt, stat=ivrt)
@@ -187,10 +185,7 @@ module ShapeGeometryHelpers_mod
     s = r0 .dot. dxyz
     d = nrm2(dxyz)
     
-    if (d < tolvdist**2) then
-      write(6,fmt="(///33x,'from perp:   identical points'/33x,2('(',3e14.6,')',3x))") r1(1:3), r2(1:3)
-      stop
-    endif
+    if (d < tolvdist**2) die_here("perp: identical points r1 ="+r1-", r2 ="+r2)
     
     dabc(1) = s*dxyz(1) + dxyz(2)*(r1(1)*r2(2) - r1(2)*r2(1)) + dxyz(3)*(r1(1)*r2(3) - r1(3)*r2(1))
     dabc(2) = s*dxyz(2) + dxyz(3)*(r1(2)*r2(3) - r1(3)*r2(2)) + dxyz(1)*(r1(2)*r2(1) - r1(1)*r2(2))
@@ -203,12 +198,11 @@ module ShapeGeometryHelpers_mod
   double precision function inner_product_v3(v, w) result(vxw)
     double precision, intent(in) :: v(3), w(3)
     vxw = v(1)*w(1) + v(2)*w(2) + v(3)*w(3)
-  endfunction
+  endfunction ! .dot.
   
   double precision function norm2_squared_v3(v) result(vxv)
     double precision, intent(in) :: v(3)
     vxv = v(1)*v(1) + v(2)*v(2) + v(3)*v(3)
-  endfunction
-  
+  endfunction ! nrm2
 
 endmodule ShapeGeometryHelpers_mod

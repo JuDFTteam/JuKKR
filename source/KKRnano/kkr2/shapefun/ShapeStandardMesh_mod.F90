@@ -3,9 +3,7 @@
 !> (= panel positions).
 
 module ShapeStandardMesh_mod
-  use Errors_mod, only: die
-  use Warnings_mod, only: launch_warning
-  use StringHelpers_mod, only: operator(-), operator(+)
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: mesh
@@ -57,7 +55,7 @@ module ShapeStandardMesh_mod
       enddo ! ipan
     enddo ! iord
 
-    if (keypan == 0) call mesh0(crt,npan,npoi,nmin,nm)
+    if (keypan == 0) call mesh0(crt, npan, npoi, nmin, nm)
 
     if (verbosity > 0) write(6,fmt="(/50('-')/'i',13x,'suitable radial mesh',15x,'i'/'i',13x,20('*'),15x,'i'/'i',3x,'ipan',7x,'from',7x,'to',13x,'points  i'/'i',48x,'i')")
 
@@ -68,14 +66,12 @@ module ShapeStandardMesh_mod
 
       ir_start = ir_off + 1 ! ir start index
       ir_end   = ir_off + nm(ipan) ! prelim. end index
-      if (meshnd < ir_end) then
-        write (6,fmt="('   *** from mesh  :    nxr=',i4,' is too small')") meshnd
-        stop
-      endif
+      if (meshnd < ir_end) die_here("nxr ="+meshnd+"is too small!")
+      
       step = (crt(ipan+1) - crt(ipan))/dble(ir_end-ir_start)
       off = crt(ipan) - step*dble(ir_start)
       do ir = ir_start, ir_end
-        xrn(ir) = step*dble(ir) + off
+        xrn(ir) = step*ir + off
         drn(ir) = step
       enddo ! ir
       ir_off = ir_off + nm(ipan)
@@ -98,13 +94,10 @@ module ShapeStandardMesh_mod
     integer, intent(in) :: naprox, npan, nmin
     integer, intent(out) :: nm(:)
     
-    double precision :: dist,d1
-    integer :: n,ntot,i,na
+    double precision :: dist, d1
+    integer :: n, ntot, i, na
 
-    if ((npan-1)*nmin > naprox) then
-      write(6,*) npan,nmin,naprox
-      stop ' increase number of points'
-    endif
+    if ((npan-1)*nmin > naprox) die_here("npan ="+npan+"  nmin ="+nmin+"  naprox ="+naprox-", increase number of points!")
 
     dist = abs(crt(1) - crt(npan))
     do i = 1, npan-1
@@ -114,8 +107,8 @@ module ShapeStandardMesh_mod
     enddo ! i (panels)
     n = nmin*(npan-1)
     n = naprox-n
-    if (n <= 0) stop '*** increase number of mesh points ***'
-    d1 = dble(n)/dble(naprox)
+    if (n <= 0) die_here("increase number of mesh points! n ="+n)
+    d1 = n/dble(naprox)
     ntot = n
     do i = 1, npan-1
       na = nint(d1*nm(i))

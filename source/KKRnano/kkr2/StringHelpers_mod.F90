@@ -65,14 +65,14 @@ implicit none
 
   string_t function concat_string_whitespace_real(left, right) result(str)
     character(len=*), intent(in) :: left
-    real, intent(in)             :: right
+    double precision, intent(in) :: right
     status_t :: ios
     write(unit=str,fmt='(2A,F0.6)',iostat=ios) trim(left),' ',right
   endfunction ! string," ",real
 
   string_t function concat_string_whitespace_reals(left, right) result(str)
     character(len=*), intent(in) :: left
-    real, intent(in)             :: right(:)
+    double precision, intent(in) :: right(:)
     status_t :: ios
     write(unit=str,fmt='(A,9999(" ",F0.6))',iostat=ios) trim(left),right
   endfunction ! string," ",real(1)," ",real(2), ...
@@ -120,8 +120,8 @@ implicit none
   endfunction ! replace_underscore
 
   status_t function test()
-    write(*,'(A)',iostat=test) "s"+"s" , "i"+1, "i"+0.123
-    write(*,'(A)',iostat=test) "s"-"s"!, "i"-1, "i"-0.123
+    write(*,'(A)',iostat=test) "s"+"s" , "i"+1, "i"+0.123d0
+    write(*,'(A)',iostat=test) "s"-"s"!, "i"-1, "i"-0.123d0
     write(*,'(9A)',iostat=test) 'replace_underscore("_a_Bc_DeF_gHiJ_kLmNo_PqR...") = "',trim(replace_underscore("_a_Bc_DeF_gHiJ_kLmNo_PqR...")),'"'
     write(*,'(9A)',iostat=test) 'replace_underscore("a_Bc_DeF_gHiJ_kLmNo_PqR...") = "',trim(replace_underscore("a_Bc_DeF_gHiJ_kLmNo_PqR...")),'"'
   endfunction ! test

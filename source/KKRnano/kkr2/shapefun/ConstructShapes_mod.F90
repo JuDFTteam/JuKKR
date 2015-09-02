@@ -245,88 +245,88 @@ module ConstructShapes_mod
   endsubroutine ! destroy
 
   !******************************************************************************
-    subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius)
-      use shape_constants_mod, only: pi
-      ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.
-      ! stores the mt-nized shapes in unit 15 as shapefun
-      !     nrad : number of points added inside the mt radius
-      integer, intent(in) :: nrad, nfu
-      integer, intent(inout) :: npan, meshn
-      integer, intent(inout) :: nm(:)
-      double precision, intent(inout) :: xrn(:), drn(:)
-      double precision, intent(inout) :: thetas(:,:)
-      integer, intent(inout) :: lmifun(:) ! unchanged
-      double precision, intent(in) :: mtradius
+  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius)
+    use shape_constants_mod, only: pi
+    ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.
+    ! stores the mt-nized shapes in unit 15 as shapefun
+    !     nrad : number of points added inside the mt radius
+    integer, intent(in) :: nrad, nfu
+    integer, intent(inout) :: npan, meshn
+    integer, intent(inout) :: nm(:)
+    double precision, intent(inout) :: xrn(:), drn(:)
+    double precision, intent(inout) :: thetas(:,:)
+    integer, intent(inout) :: lmifun(:) ! unchanged
+    double precision, intent(in) :: mtradius
 
-      double precision :: drn1(meshn+nrad), thetas1(meshn+nrad,size(thetas,2)), xrn1(meshn+nrad)
-      integer :: ibmaxd, irid, npand, meshn1, npan1, nm1(npan+1), ifun, ir, ip
-      double precision :: dist, dn1
+    double precision :: drn1(meshn+nrad), thetas1(meshn+nrad,size(thetas,2)), xrn1(meshn+nrad)
+    integer :: ibmaxd, irid, npand, meshn1, npan1, nm1(npan+1), ifun, ir, ip
+    double precision :: dist, dn1
 
-      ibmaxd = size(thetas, 2)
-      irid   = size(thetas, 1)
-      npand  = size(nm)
+    ibmaxd = size(thetas, 2)
+    irid   = size(thetas, 1)
+    npand  = size(nm)
 
-      npan1 = npan + 1
-      meshn1 = meshn + nrad
-      nm1(1) = nrad
+    npan1 = npan + 1
+    meshn1 = meshn + nrad
+    nm1(1) = nrad
 
-      nm1(2:npan1) = nm(1:npan1-1)
+    nm1(2:npan1) = nm(1:npan1-1)
 
-      if (npan1 > npand) then
-        write (6,fmt=*) ' npan , npand ',npan1,npand
-        stop
-      endif
+    if (npan1 > npand) then
+      write (6,fmt=*) ' npan , npand ',npan1,npand
+      stop
+    endif
 
-      if (meshn1 > irid) then
-        write (6,fmt=*) ' meshn , irid ',meshn1,irid
-        stop
-      endif
+    if (meshn1 > irid) then
+      write (6,fmt=*) ' meshn , irid ',meshn1,irid
+      stop
+    endif
 
-      dist = xrn(1) - mtradius
+    dist = xrn(1) - mtradius
 
-      if (dist < 1.d-5) then
-        write(6,fmt=*) 'error from mtmesh '
-        write(6,*) 'your mt-radius is bigger that the minimum shape radius ' 
-        write(6,*) 'your mt-radius .....',mtradius
-        write(6,*) 'shape radius .......',xrn(1)    
-        stop
-      endif
-          
-      dn1 = dist/(nrad-1)
-      xrn1(nrad) = xrn(1)
-      drn1(nrad) = dn1
-      do ir = 1, nrad-1
-        xrn1(ir) = mtradius + dn1*(ir-1)
-        drn1(ir) = dn1
-      enddo ! ir
-
-      xrn1(1+nrad:meshn1) = xrn(1:meshn1-nrad)
-      drn1(1+nrad:meshn1) = drn(1:meshn1-nrad) 
-
-      thetas1(1:nrad,1) = sqrt(4.d0*pi)
-      do ifun = 2, ibmaxd
-        thetas1(1:nrad,ifun) = 0.d0
-      enddo ! ifun
-
-      do ifun = 1, nfu
-        thetas1(1+nrad:meshn1,ifun) = thetas(1:meshn1-nrad,ifun)
-      enddo ! ifun
-      !
-      !  now map back and return. 
-      !
-      npan = npan1
-      meshn = meshn1
-
-      do ip = 1, npan
-        nm(ip) = nm1(ip)
-      enddo ! ip
-
-      xrn(1:meshn) = xrn1(1:meshn)
-      drn(1:meshn) = drn1(1:meshn)
+    if (dist < 1.d-5) then
+      write(6,fmt=*) 'error from mtmesh '
+      write(6,*) 'your mt-radius is bigger that the minimum shape radius ' 
+      write(6,*) 'your mt-radius .....',mtradius
+      write(6,*) 'shape radius .......',xrn(1)    
+      stop
+    endif
         
-      thetas(1:meshn,1:nfu) = thetas1(1:meshn,1:nfu)
+    dn1 = dist/(nrad-1)
+    xrn1(nrad) = xrn(1)
+    drn1(nrad) = dn1
+    do ir = 1, nrad-1
+      xrn1(ir) = mtradius + dn1*(ir-1)
+      drn1(ir) = dn1
+    enddo ! ir
 
-    endsubroutine ! mtmesh
+    xrn1(1+nrad:meshn1) = xrn(1:meshn1-nrad)
+    drn1(1+nrad:meshn1) = drn(1:meshn1-nrad) 
+
+    thetas1(1:nrad,1) = sqrt(4.d0*pi)
+    do ifun = 2, ibmaxd
+      thetas1(1:nrad,ifun) = 0.d0
+    enddo ! ifun
+
+    do ifun = 1, nfu
+      thetas1(1+nrad:meshn1,ifun) = thetas(1:meshn1-nrad,ifun)
+    enddo ! ifun
+    !
+    !  now map back and return. 
+    !
+    npan = npan1
+    meshn = meshn1
+
+    do ip = 1, npan
+      nm(ip) = nm1(ip)
+    enddo ! ip
+
+    xrn(1:meshn) = xrn1(1:meshn)
+    drn(1:meshn) = drn1(1:meshn)
+      
+    thetas(1:meshn,1:nfu) = thetas1(1:meshn,1:nfu)
+
+  endsubroutine ! mtmesh
 
   !------------------------------------------------------------------------------
   !> Write shape function, interstitial mesh + panels in a format compatible

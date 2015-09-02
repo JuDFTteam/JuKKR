@@ -4,9 +4,7 @@
 #define assert(condition) if((condition)) then ; else ; die_here("assert("#condition") failed!") ; endif
 
 module Voronoi_mod
-  use Errors_mod, only: die
-  use Warnings_mod, only: launch_warning
-  use StringHelpers_mod, only: operator(-), operator(+)
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: Voronoi_construction

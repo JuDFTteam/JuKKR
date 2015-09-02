@@ -7,9 +7,7 @@
 ! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT ON THE ACTUAL ONE!!!!!! - BUG?
 !  program MAIN0
 module kkr0_mod
-  use Errors_mod, only: die
-  use Warnings_mod, only: launch_warning
-  use StringHelpers_mod, only: operator(-), operator(+)
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: main0

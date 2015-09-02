@@ -1,6 +1,8 @@
+#include "macros.h"
 !> Module to determine radial mesh panel positions.
 
 module ShapeCriticalPoints_mod
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: criticalShapePoints
@@ -69,6 +71,7 @@ module ShapeCriticalPoints_mod
     ! hexagonal closed package - lattice structure
     coa = 2.d0
     sq3o3 = sqrt(3.d0)/3.d0
+    die_here("case K_HCP is decatived!")
 #endif
 
     npan = 0 ! will be modified by routine critical_points
@@ -201,10 +204,8 @@ module ShapeCriticalPoints_mod
 
     zmod2 = nrm2(z)
 
-    if (zmod2 <= tol_small) then ! check if normal vector of plane is valid
-      write(6,fmt="(//13x,'fatal error from crit: the',i3,'-th face of the polyhedron passes through the center'  /13x,'(',3e14.7,' )')") face_index,z(1:3)
-      stop
-    endif
+    if (zmod2 <= tol_small) & ! check if normal vector of plane is valid
+      die_here("the"+face_index-"-th face of the polyhedron passes through the center"+z)
  
     s = 2.d0*pi
 
@@ -227,11 +228,8 @@ module ShapeCriticalPoints_mod
     
     do ivert = 1, nvert
     
-      if (abs(face%r0 - vz(3,ivert)) > tol_small) then ! check if vertices lie in same plane
-        write(6,fmt="(//13x,'fatal error from crit: the vertices of the',i3,'-th rotated polygon do not lie on the plane:'  ,e13.6,' *z = 1'/30(/13x, 3e13.6))") &
-          face_index,face%r0,vz(1:3,1:nvert)
-        stop
-      endif
+      if (abs(face%r0 - vz(3,ivert)) > tol_small) & ! check if vertices lie in same plane
+        die_here("the vertices of the"+face_index-"-th rotated polygon do not lie on the plane, r0 ="+face%r0+" z ="+vz(3,ivert))
       !.......................................................................
       !____distances__of__vertices__from__center
       !.......................................................................
@@ -243,10 +241,10 @@ module ShapeCriticalPoints_mod
       if (new) then
         ipan = ipan + 1 ! add a new critical point
         if (ipan > npand) then
-          write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
-          stop        
+          die_here("number of panels ="+ipan+" is greater than dimensioned ="+npand)
+        else
+          crt(ipan) = crrt
         endif
-        crt(ipan) = crrt
       endif ! new
       
       ivertp = modulo(ivert, nvert) + 1
@@ -267,10 +265,10 @@ module ShapeCriticalPoints_mod
         if (new) then
           ipan = ipan + 1 ! add a new critical point
           if (ipan > npand) then
-            write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
-            stop        
+            die_here("number of panels ="+ipan+" is greater than dimensioned ="+npand)
+          else
+            crt(ipan) = rdd
           endif
-          crt(ipan) = rdd
         endif ! new
         
       endif ! inside
@@ -354,10 +352,10 @@ module ShapeCriticalPoints_mod
       if (new) then
         ipan = ipan + 1 ! add a new critical point
         if (ipan > npand) then
-          write(6,fmt="(//13x,'error from crit: number of panels=',i5,' greater than dimensioned='  ,i5)") ipan,npand
-          stop        
+          die_here("number of panels ="+ipan+" is greater than dimensioned ="+npand)
+        else
+          crt(ipan) = face%r0 ! found a new critical point
         endif
-        crt(ipan) = face%r0 ! found a new critical point
       endif ! new
       
     else  ! s < tol_small .or. corner
@@ -395,15 +393,12 @@ module ShapeCriticalPoints_mod
       enddo ! jv
       
       do ivert = 1, nvert
-!       iback = ivtot-nvert+ivert
         ivertp = modulo(ivert, nvert) + 1
         if (.not. in(ivert) .and. .not. in(ivertp)) then
-!           isignu(iback) = -1
-          if (ivert <= face%ntt) then
-            face%ta(ivert)%isignu = -1
+          if (ivert > face%ntt) then
+            die_here("a sign could not be stored! the face has"+face%ntt+"tetrahedra, but we try to access #"-ivert)
           else
-            write(*,*) 'error! a sign could not be stored!'
-            stop
+            face%ta(ivert)%isignu = -1
           endif
         endif
       enddo ! ivert
@@ -423,7 +418,8 @@ module ShapeCriticalPoints_mod
   !-----------------------------------------------------------------------
   function euler_angles(zz, xx, toleuler) result(alpha_beta_gamma)
     use shape_constants_mod, only: pi
-!     use ShapeGeometryHelpers, only: nrm2, operator(.dot.)
+!     use ShapeGeometryHelpers, only: nrm2, operator(.dot.) ! todo
+
     double precision, intent(in) :: xx(3)
     double precision, intent(in) :: zz(3)
     double precision, intent(in) :: toleuler ! introduced by phivos (05.2008) to account for inaccuracies.
@@ -441,10 +437,8 @@ module ShapeCriticalPoints_mod
     rz = sqrt(z(1)*z(1) + z(2)*z(2) + z(3)*z(3)) ! sqrt(nrm2(z))
     s = x(1)*z(1) + x(2)*z(2) + x(3)*z(3) ! x .dot. z
 
-    if (rx < tolerance .or. rz < tolerance .or. s > tolerance) then
-      write(6,fmt="(/13x,'from euler,illegal vectors:'/13x,2(' (',3e13.6,' )'))") x(1:3), z(1:3)
-      stop
-    endif
+    if (rx < tolerance .or. rz < tolerance .or. s > tolerance) &
+      die_here("Euler_angles: illegal vectors x ="+x+" z ="+z)
 
     p = sqrt(z(1)*z(1) + z(2)*z(2))
 
@@ -493,6 +487,7 @@ module ShapeCriticalPoints_mod
   !-----------------------------------------------------------------------
   subroutine rotate(abg, nvert, v, vz)
     use shape_constants_mod, only: pi
+    
     double precision, intent(in) :: abg(3) ! former alpha, beta, gamma
     integer, intent(in) :: nvert
     double precision, intent(in) :: v(3,*) ! (3,nvertd)

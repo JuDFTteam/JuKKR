@@ -632,7 +632,7 @@ module ShapeIntegrationHelpers_mod
     
     drot = 0.d0 ! init result for early return
     
-    if (iabs(m) > l .or. iabs(mp) > l) then
+    if (m*m > l*l .or. mp*mp > l*l) then
       write(*,fmt="('     l=',i5,'    m=',i5,'    mp =',i5)") l,m,mp
       stop 'drot: |m| or |m''| is larger than l' ! error
     endif
