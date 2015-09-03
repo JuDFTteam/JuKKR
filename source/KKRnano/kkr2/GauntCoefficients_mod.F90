@@ -41,7 +41,7 @@ module GauntCoefficients_mod
     module procedure destroyGauntCoefficients
   endinterface
   
-  !NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
+  !NCLEB = (2*LMAXD+1)**2 * (LMAXD+1)**2
 
   contains
 

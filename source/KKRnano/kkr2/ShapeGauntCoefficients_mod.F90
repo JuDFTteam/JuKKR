@@ -45,10 +45,10 @@ module ShapeGauntCoefficients_mod
   subroutine createShapeGauntCoefficients(coeff, lmax)
     use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
     use Harmonics_mod, only: SHAPEG_count
+    use Harmonics_mod, only: SHAPEG
     type(ShapeGauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
-    external :: SHAPEG
     integer :: memory_stat
     integer :: LASSLD
     integer :: LPOT
@@ -69,7 +69,7 @@ module ShapeGauntCoefficients_mod
     ALLOCATECHECK(YRG(LASSLD,0:LASSLD,0:LASSLD))
 
     call GAUNT2(WG, YRG, lmax)
-    call SHAPEG_count(LPOT,WG,YRG,LMAX, NGSHD) ! determine number of coefficients
+    call SHAPEG_count(LPOT, WG, YRG, LMAX, NGSHD) ! determine number of coefficients
 
     ALLOCATECHECK(coeff%GSH(NGSHD))
     ALLOCATECHECK(coeff%ILM(NGSHD,3))
