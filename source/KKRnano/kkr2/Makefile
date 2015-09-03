@@ -292,4 +292,4 @@ epotinb_new.o: Quadrature_mod.o
 vxclm.o: Quadrature_mod.o
 rhototb_new.o: Quadrature_mod.o
 vxcgga.o: Quadrature_mod.o
-
+GauntCoefficients_mod.o: Harmonics_mod.o

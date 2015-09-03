@@ -47,9 +47,13 @@ module GauntCoefficients_mod
 
   !----------------------------------------------------------------------------
   subroutine createGauntCoefficients(coeff, lmax)
+!     use Harmonics_mod, only: Gaunt
+    use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
     type(GauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
+    external :: Gaunt
+    
     integer :: memory_stat
     integer :: LASSLD
     integer :: LPOT
