@@ -23,13 +23,13 @@ module ShapeGauntCoefficients_mod
   public :: createShapeGauntCoefficients, destroyShapeGauntCoefficients ! deprecated
 
   type ShapeGauntCoefficients
-    double precision, dimension(:), allocatable :: GSH
-    integer, dimension(:,:), allocatable :: ILM
-    integer, dimension(:),   allocatable :: IMAXSH
+    double precision, allocatable :: GSH(:)
+    integer, allocatable :: ILM(:,:)
+    integer, allocatable :: IMAXSH(:)
     integer :: NGSHD
     integer :: lmax
     integer :: lmpotd
-  end type
+  endtype
   
   interface create
     module procedure createShapeGauntCoefficients
@@ -39,11 +39,11 @@ module ShapeGauntCoefficients_mod
     module procedure destroyShapeGauntCoefficients
   endinterface
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createShapeGauntCoefficients(coeff, lmax)
-    type (ShapeGauntCoefficients), intent(inout) :: coeff
+    type(ShapeGauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
 
@@ -52,8 +52,8 @@ module ShapeGauntCoefficients_mod
     integer :: LPOT
     integer :: LMPOTD
     integer :: NGSHD
-    double precision, dimension(:),     allocatable :: WG  !local
-    double precision, dimension(:,:,:), allocatable :: YRG !local
+    double precision, allocatable :: WG(:) 
+    double precision, allocatable :: YRG(:,:,:)
 
     LPOT = 2*lmax
     LASSLD = 4*lmax
@@ -77,23 +77,23 @@ module ShapeGauntCoefficients_mod
     coeff%ILM = -1
     coeff%IMAXSH = -1
 
-    call SHAPEG(LPOT,coeff%GSH,coeff%ILM,coeff%IMAXSH,WG,YRG,LMAX, NGSHD)
+    call SHAPEG(LPOT, coeff%GSH, coeff%ILM, coeff%IMAXSH, WG, YRG, LMAX, NGSHD)
 
     coeff%NGSHD = NGSHD
 
     DEALLOCATECHECK(WG)
     DEALLOCATECHECK(YRG)
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyShapeGauntCoefficients(coeff)
-    type (ShapeGauntCoefficients), intent(inout) :: coeff
+    type(ShapeGauntCoefficients), intent(inout) :: coeff
     integer :: memory_stat
 
     DEALLOCATECHECK(coeff%GSH)
     DEALLOCATECHECK(coeff%ILM)
     DEALLOCATECHECK(coeff%IMAXSH)
-  end subroutine
+  endsubroutine ! destroy
 
-end module ShapeGauntCoefficients_mod
+endmodule ShapeGauntCoefficients_mod

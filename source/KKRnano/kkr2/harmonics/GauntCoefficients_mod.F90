@@ -24,14 +24,14 @@ module GauntCoefficients_mod
   type GauntCoefficients
     !> Contains the Gaunt coefficients
     !> CLEB(:,1) and CLEB(:,2) contain Gaunts but with different prefactors
-    double precision, dimension(:,:), allocatable :: CLEB
-    integer, dimension(:,:), allocatable :: ICLEB
-    integer, dimension(:,:,:), allocatable :: JEND
-    integer, dimension(:), allocatable :: LOFLM ! gives l from LM index
+    double precision, allocatable :: CLEB(:,:)
+    integer, allocatable :: ICLEB(:,:)
+    integer, allocatable :: JEND(:,:,:)
+    integer, allocatable :: LOFLM(:) ! gives l from LM index
     integer :: IEND
     integer :: ncleb
     integer :: lmax
-  end type
+  endtype
 
   interface create
     module procedure createGauntCoefficients
@@ -43,11 +43,11 @@ module GauntCoefficients_mod
   
   !NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createGauntCoefficients(coeff, lmax)
-    type (GauntCoefficients), intent(inout) :: coeff
+    type(GauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
     integer :: memory_stat
@@ -56,8 +56,8 @@ module GauntCoefficients_mod
     integer :: LM2D
     integer :: NCLEB
     integer :: LMPOTD
-    double precision, dimension(:),     allocatable :: WG
-    double precision, dimension(:,:,:), allocatable :: YRG
+    double precision, allocatable :: WG(:)
+    double precision, allocatable :: YRG(:,:,:)
 
     NCLEB = (lmax*2+1)**2 * (lmax+1)**2
     LPOT = 2*lmax
@@ -72,31 +72,30 @@ module GauntCoefficients_mod
     ALLOCATECHECK(coeff%ICLEB(NCLEB,3))
     ALLOCATECHECK(coeff%JEND(LMPOTD,0:LMAX,0:LMAX))
     ALLOCATECHECK(coeff%LOFLM(LM2D))
-    coeff%CLEB = 0.0d0
+    coeff%CLEB = 0.d0
     coeff%ICLEB = -1
-    coeff%JEND = -1
+    coeff%Jend = -1
     coeff%LOFLM = -1
 
     ALLOCATECHECK(WG(LASSLD))
     ALLOCATECHECK(YRG(LASSLD,0:LASSLD,0:LASSLD))
 
-    call GAUNT2(WG,YRG,lmax)
-    call GAUNT(lmax,LPOT,WG,YRG,coeff%CLEB,coeff%LOFLM, &
-               coeff%ICLEB,coeff%IEND,coeff%JEND,coeff%NCLEB)
+    call GAUNT2(WG, YRG, lmax)
+    call GAUNT(lmax, LPOT, WG, YRG, coeff%CLEB, coeff%LOFLM, coeff%ICLEB, coeff%IEND, coeff%JEND, coeff%NCLEB)
 
     DEALLOCATECHECK(WG)
     DEALLOCATECHECK(YRG)
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyGauntCoefficients(coeff)
-    type (GauntCoefficients), intent(inout) :: coeff
+    type(GauntCoefficients), intent(inout) :: coeff
     integer :: memory_stat
     DEALLOCATECHECK(coeff%CLEB)
     DEALLOCATECHECK(coeff%ICLEB)
     DEALLOCATECHECK(coeff%JEND)
     DEALLOCATECHECK(coeff%LOFLM)
-  end subroutine
+  endsubroutine ! destroy
 
-end module GauntCoefficients_mod
+endmodule GauntCoefficients_mod
