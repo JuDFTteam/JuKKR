@@ -282,6 +282,7 @@ module MadelungCalculator_mod
 
   !----------------------------------------------------------------------------
   subroutine createMadelungHarmonics(harmonics, lmax)
+    use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
     type(MadelungHarmonics), intent(inout) :: harmonics
     integer, intent(in) :: lmax
     !--------------------------------------------------------------------------
@@ -294,7 +295,7 @@ module MadelungCalculator_mod
     allocate(harmonics%WG(LASSLD))
     allocate(harmonics%YRG(LASSLD,0:LASSLD,0:LASSLD))
 
-    call GAUNT2(harmonics%WG,harmonics%YRG,LMAX)
+    call GAUNT2(harmonics%WG, harmonics%YRG, LMAX)
 
   endsubroutine ! create
 
