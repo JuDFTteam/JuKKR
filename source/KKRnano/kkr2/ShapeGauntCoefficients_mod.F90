@@ -44,10 +44,11 @@ module ShapeGauntCoefficients_mod
   !----------------------------------------------------------------------------
   subroutine createShapeGauntCoefficients(coeff, lmax)
     use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
+    use Harmonics_mod, only: SHAPEG_count
     type(ShapeGauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
     !---------------------------
-    external :: SHAPEG_count, SHAPEG
+    external :: SHAPEG
     integer :: memory_stat
     integer :: LASSLD
     integer :: LPOT
