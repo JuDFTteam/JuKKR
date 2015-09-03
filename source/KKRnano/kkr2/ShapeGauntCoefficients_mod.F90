@@ -67,7 +67,7 @@ module ShapeGauntCoefficients_mod
     ALLOCATECHECK(WG(LASSLD))
     ALLOCATECHECK(YRG(LASSLD,0:LASSLD,0:LASSLD))
 
-    call GAUNT2(WG,YRG,lmax)
+    call GAUNT2(WG, YRG, lmax)
     call SHAPEG_count(LPOT,WG,YRG,LMAX, NGSHD) ! determine number of coefficients
 
     ALLOCATECHECK(coeff%GSH(NGSHD))
