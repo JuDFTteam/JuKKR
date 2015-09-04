@@ -41,11 +41,11 @@ module Harmonics_mod
     integer, intent(in) :: lpot
     integer, intent(in) :: ncleb
     double precision, intent(out) :: cleb(ncleb,2)
-    double precision, intent(in) :: w(*)
+    double precision, intent(in) :: w(1:)
     double precision, intent(in) :: yr(4*lmax,0:4*lmax,0:4*lmax) ! (1:n,0:n,0:n)
     integer, intent(out) :: icleb(ncleb,3)
     integer, intent(out) :: jend((lpot+1)**2,0:lmax,0:lmax) ! (lmpotd,0:lmaxd,0:lmaxd)
-    integer, intent(out) :: loflm(*)
+    integer, intent(out) :: loflm(1:)
 
     double complex, parameter :: ci=(0.d0,1.d0)
     double precision clecg,factor,fci,s
@@ -203,7 +203,7 @@ module Harmonics_mod
 !
 !-----------------------------------------------------------------------
     integer, intent(in) :: lmax
-    double precision, intent(out) :: w(*)
+    double precision, intent(out) :: w(1:)
     double precision, intent(out) :: yr(4*lmax,0:4*lmax,0:4*lmax)
 
     double precision a,cd,cth,fac,fpi,rf,sth
@@ -281,7 +281,7 @@ module Harmonics_mod
 !
 !***********************************************************************
     integer, intent(in) :: n
-    double precision, intent(out) :: w(*), x(*)
+    double precision, intent(out) :: w(1:), x(1:)
 
     double precision :: d1,d2pn,d3pn,d4pn,den,dp,dpn,e1,fx,h,p,pi,pk,pkm1,pkp1,t,t1,u,v,x0
     integer :: i,it,k,m
@@ -340,10 +340,10 @@ module Harmonics_mod
     integer, intent(in) :: ngshd
     integer, intent(in) :: lmax
     integer, intent(in) :: lpot
-    double precision, intent(in) :: w(*)
+    double precision, intent(in) :: w(1:)
     double precision, intent(in) :: yr(4*lmax,0:4*lmax,0:4*lmax)
     
-    double precision, intent(out) :: gsh(*)
+    double precision, intent(out) :: gsh(1:)
     integer, intent(out) :: ilm(ngshd,3)
     integer, intent(out) :: imaxsh(0:(lpot+1)**2) ! (0:lmpotd)
     
@@ -436,7 +436,7 @@ module Harmonics_mod
   subroutine shapeg_count(lpot, w, yr, lmax, ncount)
     integer, intent(in) :: lpot
     integer, intent(in) :: lmax
-    double precision, intent(in) :: w(*)
+    double precision, intent(in) :: w(1:)
     double precision, intent(in) :: yr(4*lmax,0:4*lmax,0:4*lmax)
     integer, intent(out) :: ncount
 
@@ -456,10 +456,10 @@ module Harmonics_mod
     integer, intent(in) :: ngshd
     integer, intent(in) :: lmax
     integer, intent(in) :: lpot
-    double precision, intent(in) :: w(*)
+    double precision, intent(in) :: w(1:)
     double precision, intent(in) :: yr(4*lmax,0:4*lmax,0:4*lmax)
     
-    double precision, intent(out) :: gsh(*)
+    double precision, intent(out) :: gsh(1:)
     integer, intent(out) :: ilm(ngshd,3)
     integer, intent(out) :: imaxsh(0:(lpot+1)**2) ! (0:lmpotd)
     
@@ -486,7 +486,7 @@ module Harmonics_mod
     double precision, intent(in) :: v1, v2, v3
     double precision, intent(out) :: r
     integer, intent(in) :: lmax
-    double precision, intent(out) :: ylm(*)
+    double precision, intent(out) :: ylm(1:)
     
     double precision, parameter :: szero=1.d-20
     

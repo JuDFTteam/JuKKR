@@ -59,8 +59,6 @@ module EnergyMeshHelpers_mod
   !> Update Energy mesh. Essentially a wrapper for EMESHT
   subroutine updateEnergyMeshImpl(EZ,WEZ,IELAST,E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3)
   
-    external :: EMESHT
-    
     double complex, intent(out) :: EZ(:)
     double complex, intent(out) :: WEZ(:)
     integer, intent(inout) :: IELAST
@@ -71,6 +69,8 @@ module EnergyMeshHelpers_mod
     integer, intent(in) :: NPNT1
     integer, intent(in) :: NPNT2
     integer, intent(in) :: NPNT3
+
+    external :: EMESHT
     
     integer :: IE, IEMXD
     double precision :: PI
@@ -216,6 +216,8 @@ module EnergyMeshHelpers_mod
     integer, intent(in) :: N2SEMI
     integer, intent(in) :: N3SEMI
 
+    external :: EPATHTB
+    
     double precision :: PI
     integer :: IEMXD
     integer :: IE

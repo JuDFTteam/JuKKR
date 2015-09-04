@@ -8,7 +8,7 @@ PROGRAM = kkr.exe
 
 # Path to put object files
 # and module files
-BUILDDIR = $(HOME)/build/kkr2
+BUILDDIR = $(HOME)/build
 
 EXTRA_FLAGS =
 
