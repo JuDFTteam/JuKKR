@@ -5,7 +5,10 @@ module Symmetry_mod
 
   contains
   
-  subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, isymindex, nsym, naezd)
+!! turn around the dimensions from (64,3,3) to (3,3,64)
+#define ROTMAT(A,B,C) rotmat(B,C,A)
+
+  subroutine findgroup(bravais, recbv, rbasis, nbasis, rotmat, rotname, isymindex, nsym, naezd)
 ! **********************************************************
 ! This subroutine finds the rotation matrices that leave the
 ! real lattice unchanged. 
@@ -14,7 +17,7 @@ module Symmetry_mod
 !         recbv(i,j)      reciprocal basis vectors 
 !         rbasis          coordinates of basis atoms
 !         nbasis          number of basis atoms
-!         rsymat          all 64 rotation matrices.
+!         rotmat          all 64 rotation matrices.
 !         rotname         names for the rotation matrices
 ! output: nsym            number of rotations that restore the lattice.
 !         ISYMINDEX       index for the symmeties found
@@ -31,7 +34,7 @@ module Symmetry_mod
     integer, intent(in)  :: nbasis, naezd
     integer, intent(out) :: isymindex(nsymaxd)
     double precision, intent(in) :: bravais(3,3), rbasis(3,naezd), recbv(3,3)
-    double precision, intent(in) :: rsymat(64,3,3)
+    double precision, intent(in) :: ROTMAT(64,3,3)
     character(len=*), intent(in) :: rotname(64)
 
     double precision, external :: ddot,ddet33
@@ -60,7 +63,7 @@ module Symmetry_mod
 !
 !--------------------------------- store rotation matrix
 !
-      mrotr(1:3,1:3) = rsymat(isym,1:3,1:3)
+      mrotr(1:3,1:3) = ROTMAT(isym,1:3,1:3)
       summdotmp = 0.d0
       symdet = ddet33(mrotr)
 !
@@ -69,12 +72,12 @@ module Symmetry_mod
 !     in the case of slab/interface geometry look only for 
 !     symmetry opperations that preserve the z axis..
 !     
-      if (lbulk .or. rsymat(isym,3,3) == 1.d0) then 
+      if (lbulk .or. ROTMAT(isym,3,3) == 1.d0) then 
 !     do rotation only in case bulk or if slab and z axis is restored..  
           
         do i = 1, 3            ! loop on bravais vectors
           do j = 1, 3         ! loop on coordinates
-            r(j,i) = rsymat(isym,j,1)*bravais1(1,i) + rsymat(isym,j,2)*bravais1(2,i) + rsymat(isym,j,3)*bravais1(3,i)
+            r(j,i) = ROTMAT(isym,j,1)*bravais1(1,i) + ROTMAT(isym,j,2)*bravais1(2,i) + ROTMAT(isym,j,3)*bravais1(3,i)
           enddo ! j
         enddo ! i
 !     
@@ -86,7 +89,7 @@ module Symmetry_mod
         llatbas = .true.
         do ia = 1, nbasis      ! loop on basis atoms
           do j = 1, 3         ! loop on coordinates
-            rotrbas(j,ia) = rsymat(isym,j,1)*rbasis(1,ia) + rsymat(isym,j,2)*rbasis(2,ia) + rsymat(isym,j,3)*rbasis(3,ia)
+            rotrbas(j,ia) = ROTMAT(isym,j,1)*rbasis(1,ia) + ROTMAT(isym,j,2)*rbasis(2,ia) + ROTMAT(isym,j,3)*rbasis(3,ia)
             rotrbas(j,ia) = rotrbas(j,ia) - rbasis(j,ia)
             r(j,4) = rotrbas(j,ia) 
           enddo ! j
@@ -109,7 +112,7 @@ module Symmetry_mod
           nsym = nsym + 1
           isymindex(nsym) = isym
         endif ! llatbas
-      endif ! (lbulk .or. (rsymat(isym,3,3) == 1))
+      endif ! (lbulk .or. (ROTMAT(isym,3,3) == 1))
     enddo ! isym = 1, nmatd
 !     nsym symmetries were found
 !     the isymindex array has the numbers of the symmetries found
@@ -135,10 +138,6 @@ module Symmetry_mod
   
   
   
-  
-  
-  
-  
 !*==symtaumat.f    processed by SPAG 6.05Rc at 15:50 on 10 Dec 2002
       subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, nqmax, nkmmax, nq, nl, krel, iprint, nsymaxd)
 !   ********************************************************************
@@ -148,7 +147,7 @@ module Symmetry_mod
 !   *  KREL=1: for relativistic represntation                          *
 !   *                                                                  *
 !   *  The NSYM allowed symmetry operations are indicated by ISYMINDEX *
-!   *  in the table  ROTMAT. 
+!   *  in the table rotmat. 
 !   *                                                                  *
 !   *  The routine determines first the Euler angles correponding      *
 !   *  to a symmetry operation. Reflections are decomposed into        *
@@ -158,7 +157,7 @@ module Symmetry_mod
       integer, intent(in) :: iprint,krel,nkmmax,nl,nq,nqmax,nsym,nsymaxd
       double complex, intent(out) :: drot(nkmmax,nkmmax,48)
       integer, intent(in) :: isymindex(nsymaxd)
-      double precision, intent(in) :: rotmat(64,3,3)
+      double precision, intent(in) :: ROTMAT(64,3,3)
       character(len=*), intent(in) :: rotname(64)
       
       double complex, parameter :: ci=(0.d0,1.d0), c1=(1.d0,0.d0), c0=(0.d0,0.d0)
@@ -234,7 +233,7 @@ module Symmetry_mod
 !
          do i1 = 1,3
             do i2 = 1,3
-               rmat(i1,i2) = rotmat(isymindex(isym),i1,i2)
+               rmat(i1,i2) = ROTMAT(isymindex(isym),i1,i2)
             enddo
          enddo
 !
@@ -332,7 +331,7 @@ module Symmetry_mod
 !
       do isym = 1,nsym
 !
-         call calcrotmat(nkeff,ireleff,symeulang(1,isym), symeulang(2,isym),symeulang(3,isym), drot(1,1,isym),fact,nkmmax)
+         call calcROTMAT(nkeff,ireleff,symeulang(1,isym), symeulang(2,isym),symeulang(3,isym), drot(1,1,isym),fact,nkmmax)
 !
       enddo
 !-----------------------------------------------------------------------
@@ -567,135 +566,135 @@ module Symmetry_mod
 ! Appendix D, p 324-325
 ! 
 ! *********************************************    
-    double precision, intent(out) :: rotmat(64,3,3)
+    double precision, intent(out) :: ROTMAT(64,3,3)
     character(len=*), intent(out) :: rotname(64)
     integer :: is
     double precision, parameter :: RTHREE = SQRT(3.d0)/2.d0, HALF=0.5d0, ONE=1.d0
 
-    rotmat(:,:,:) =  0.d0 ! set all matrices to zero
+    ROTMAT(:,:,:) =  0.d0 ! set all matrices to zero
 
-    rotmat(1,1,1) =  ONE
-    rotmat(1,2,2) =  ONE
-    rotmat(1,3,3) =  ONE
+    ROTMAT(1,1,1) =  ONE
+    ROTMAT(1,2,2) =  ONE
+    ROTMAT(1,3,3) =  ONE
     rotname(1) = 'E'
 
-    rotmat(2,1,2) =  ONE
-    rotmat(2,2,3) = -ONE
-    rotmat(2,3,1) = -ONE
+    ROTMAT(2,1,2) =  ONE
+    ROTMAT(2,2,3) = -ONE
+    ROTMAT(2,3,1) = -ONE
     rotname(2) = 'C3alfa'          
 
-    rotmat(3,1,2) = -ONE
-    rotmat(3,2,3) = -ONE
-    rotmat(3,3,1) =  ONE
+    ROTMAT(3,1,2) = -ONE
+    ROTMAT(3,2,3) = -ONE
+    ROTMAT(3,3,1) =  ONE
     rotname(3) = 'C3beta '
 
-    rotmat(4,1,2) = -ONE
-    rotmat(4,2,3) =  ONE
-    rotmat(4,3,1) = -ONE
+    ROTMAT(4,1,2) = -ONE
+    ROTMAT(4,2,3) =  ONE
+    ROTMAT(4,3,1) = -ONE
     rotname(4) = 'C3gamma'
 
-    rotmat(5,1,2) = ONE
-    rotmat(5,2,3) = ONE
-    rotmat(5,3,1) = ONE
+    ROTMAT(5,1,2) = ONE
+    ROTMAT(5,2,3) = ONE
+    ROTMAT(5,3,1) = ONE
     rotname(5) = 'C3delta '
 
-    rotmat(6,1,3) = -ONE
-    rotmat(6,2,1) =  ONE
-    rotmat(6,3,2) = -ONE
+    ROTMAT(6,1,3) = -ONE
+    ROTMAT(6,2,1) =  ONE
+    ROTMAT(6,3,2) = -ONE
     rotname(6) = 'C3alfa-1'
 
-    rotmat(7,1,3) =  ONE
-    rotmat(7,2,1) = -ONE
-    rotmat(7,3,2) = -ONE
+    ROTMAT(7,1,3) =  ONE
+    ROTMAT(7,2,1) = -ONE
+    ROTMAT(7,3,2) = -ONE
     rotname(7) = 'C3beta-1 '
 
-    rotmat(8,1,3) = -ONE
-    rotmat(8,2,1) = -ONE
-    rotmat(8,3,2) =  ONE
+    ROTMAT(8,1,3) = -ONE
+    ROTMAT(8,2,1) = -ONE
+    ROTMAT(8,3,2) =  ONE
     rotname(8) = 'C3gamma-1'
 
-    rotmat(9,1,3) =  ONE
-    rotmat(9,2,1) =  ONE
-    rotmat(9,3,2) =  ONE
+    ROTMAT(9,1,3) =  ONE
+    ROTMAT(9,2,1) =  ONE
+    ROTMAT(9,3,2) =  ONE
     rotname(9) = 'C3delta-1'
 
-    rotmat(10,1,1) =  ONE
-    rotmat(10,2,2) = -ONE
-    rotmat(10,3,3) = -ONE
+    ROTMAT(10,1,1) =  ONE
+    ROTMAT(10,2,2) = -ONE
+    ROTMAT(10,3,3) = -ONE
     rotname(10) = 'C2x'
           
-    rotmat(11,1,1) = -ONE
-    rotmat(11,2,2) =  ONE
-    rotmat(11,3,3) = -ONE
+    ROTMAT(11,1,1) = -ONE
+    ROTMAT(11,2,2) =  ONE
+    ROTMAT(11,3,3) = -ONE
     rotname(11) = 'C2y'
 
-    rotmat(12,1,1) = -ONE
-    rotmat(12,2,2) = -ONE
-    rotmat(12,3,3) =  ONE
+    ROTMAT(12,1,1) = -ONE
+    ROTMAT(12,2,2) = -ONE
+    ROTMAT(12,3,3) =  ONE
     rotname(12) = 'C2z'
 
-    rotmat(13,1,1) =  ONE
-    rotmat(13,2,3) =  ONE
-    rotmat(13,3,2) = -ONE
+    ROTMAT(13,1,1) =  ONE
+    ROTMAT(13,2,3) =  ONE
+    ROTMAT(13,3,2) = -ONE
     rotname(13) = 'C4x'
           
-    rotmat(14,1,3) = -ONE
-    rotmat(14,2,2) =  ONE
-    rotmat(14,3,1) =  ONE
+    ROTMAT(14,1,3) = -ONE
+    ROTMAT(14,2,2) =  ONE
+    ROTMAT(14,3,1) =  ONE
     rotname(14) = 'C4y '
 
-    rotmat(15,1,2) =  ONE
-    rotmat(15,2,1) = -ONE
-    rotmat(15,3,3) =  ONE
+    ROTMAT(15,1,2) =  ONE
+    ROTMAT(15,2,1) = -ONE
+    ROTMAT(15,3,3) =  ONE
     rotname(15) = 'C4z'
           
-    rotmat(16,1,1) =  ONE
-    rotmat(16,2,3) = -ONE
-    rotmat(16,3,2) =  ONE
+    ROTMAT(16,1,1) =  ONE
+    ROTMAT(16,2,3) = -ONE
+    ROTMAT(16,3,2) =  ONE
     rotname(16) = 'C4x-1 '
 
-    rotmat(17,1,3) =  ONE
-    rotmat(17,2,2) =  ONE
-    rotmat(17,3,1) = -ONE
+    ROTMAT(17,1,3) =  ONE
+    ROTMAT(17,2,2) =  ONE
+    ROTMAT(17,3,1) = -ONE
     rotname(17) = 'C4y-1'
 
-    rotmat(18,1,2) = -ONE
-    rotmat(18,2,1) =  ONE
-    rotmat(18,3,3) =  ONE
+    ROTMAT(18,1,2) = -ONE
+    ROTMAT(18,2,1) =  ONE
+    ROTMAT(18,3,3) =  ONE
     rotname(18) = 'C4z-1'
           
-    rotmat(19,1,2) =  ONE
-    rotmat(19,2,1) =  ONE
-    rotmat(19,3,3) = -ONE
+    ROTMAT(19,1,2) =  ONE
+    ROTMAT(19,2,1) =  ONE
+    ROTMAT(19,3,3) = -ONE
     rotname(19) = 'C2a'
 
-    rotmat(20,1,2) = -ONE
-    rotmat(20,2,1) = -ONE
-    rotmat(20,3,3) = -ONE
+    ROTMAT(20,1,2) = -ONE
+    ROTMAT(20,2,1) = -ONE
+    ROTMAT(20,3,3) = -ONE
     rotname(20) = 'C2b'
 
-    rotmat(21,1,3) =  ONE
-    rotmat(21,2,2) = -ONE
-    rotmat(21,3,1) =  ONE
+    ROTMAT(21,1,3) =  ONE
+    ROTMAT(21,2,2) = -ONE
+    ROTMAT(21,3,1) =  ONE
     rotname(21) = 'C2c'
 
-    rotmat(22,1,3) = -ONE
-    rotmat(22,2,2) = -ONE
-    rotmat(22,3,1) = -ONE
+    ROTMAT(22,1,3) = -ONE
+    ROTMAT(22,2,2) = -ONE
+    ROTMAT(22,3,1) = -ONE
     rotname(22) = 'C2d'
 
-    rotmat(23,1,1) = -ONE
-    rotmat(23,2,3) =  ONE
-    rotmat(23,3,2) =  ONE
+    ROTMAT(23,1,1) = -ONE
+    ROTMAT(23,2,3) =  ONE
+    ROTMAT(23,3,2) =  ONE
     rotname(23) = 'C2e'
 
-    rotmat(24,1,1) = -ONE
-    rotmat(24,2,3) = -ONE
-    rotmat(24,3,2) = -ONE
+    ROTMAT(24,1,1) = -ONE
+    ROTMAT(24,2,3) = -ONE
+    ROTMAT(24,3,2) = -ONE
     rotname(24) = 'C2f'
     
     do is = 1, 24
-      rotmat(is+24,1:3,1:3) = -rotmat(is,1:3,1:3)
+      ROTMAT(is+24,1:3,1:3) = -ROTMAT(is,1:3,1:3)
       rotname(is+24) = 'I'//rotname(is)
     enddo ! i1      
 
@@ -704,64 +703,64 @@ module Symmetry_mod
 ! Trigonal and hexagonal groups
 !*********************************************
 !
-    rotmat(49,1,1) = -HALF
-    rotmat(49,1,2) =  RTHREE
-    rotmat(49,2,1) = -RTHREE
-    rotmat(49,2,2) = -HALF
-    rotmat(49,3,3) =  ONE
+    ROTMAT(49,1,1) = -HALF
+    ROTMAT(49,1,2) =  RTHREE
+    ROTMAT(49,2,1) = -RTHREE
+    ROTMAT(49,2,2) = -HALF
+    ROTMAT(49,3,3) =  ONE
     rotname(49) = 'C3z'  
 
-    rotmat(50,1,1) = -HALF
-    rotmat(50,1,2) = -RTHREE
-    rotmat(50,2,1) =  RTHREE
-    rotmat(50,2,2) = -HALF
-    rotmat(50,3,3) =  ONE
+    ROTMAT(50,1,1) = -HALF
+    ROTMAT(50,1,2) = -RTHREE
+    ROTMAT(50,2,1) =  RTHREE
+    ROTMAT(50,2,2) = -HALF
+    ROTMAT(50,3,3) =  ONE
     rotname(50) = 'C3z-1'
 
-    rotmat(51,1,1) =  HALF
-    rotmat(51,1,2) =  RTHREE
-    rotmat(51,2,1) = -RTHREE
-    rotmat(51,2,2) =  HALF
-    rotmat(51,3,3) =  ONE
+    ROTMAT(51,1,1) =  HALF
+    ROTMAT(51,1,2) =  RTHREE
+    ROTMAT(51,2,1) = -RTHREE
+    ROTMAT(51,2,2) =  HALF
+    ROTMAT(51,3,3) =  ONE
     rotname(51) = 'C6z'
 
-    rotmat(52,1,1) =  HALF
-    rotmat(52,1,2) = -RTHREE
-    rotmat(52,2,1) =  RTHREE
-    rotmat(52,2,2) =  HALF
-    rotmat(52,3,3) =  ONE
+    ROTMAT(52,1,1) =  HALF
+    ROTMAT(52,1,2) = -RTHREE
+    ROTMAT(52,2,1) =  RTHREE
+    ROTMAT(52,2,2) =  HALF
+    ROTMAT(52,3,3) =  ONE
     rotname(52) = 'C6z-1'
 
-    rotmat(53,1,1) = -HALF
-    rotmat(53,1,2) =  RTHREE
-    rotmat(53,2,1) =  RTHREE
-    rotmat(53,2,2) =  HALF
-    rotmat(53,3,3) = -ONE
+    ROTMAT(53,1,1) = -HALF
+    ROTMAT(53,1,2) =  RTHREE
+    ROTMAT(53,2,1) =  RTHREE
+    ROTMAT(53,2,2) =  HALF
+    ROTMAT(53,3,3) = -ONE
     rotname(53) = 'C2A'    
 
-    rotmat(54,1,1) = -HALF
-    rotmat(54,1,2) = -RTHREE
-    rotmat(54,2,1) = -RTHREE
-    rotmat(54,2,2) =  HALF
-    rotmat(54,3,3) = -ONE
+    ROTMAT(54,1,1) = -HALF
+    ROTMAT(54,1,2) = -RTHREE
+    ROTMAT(54,2,1) = -RTHREE
+    ROTMAT(54,2,2) =  HALF
+    ROTMAT(54,3,3) = -ONE
     rotname(54) = 'C2B'
 
-    rotmat(55,1,1) =  HALF
-    rotmat(55,1,2) = -RTHREE
-    rotmat(55,2,1) = -RTHREE
-    rotmat(55,2,2) = -HALF
-    rotmat(55,3,3) = -ONE
+    ROTMAT(55,1,1) =  HALF
+    ROTMAT(55,1,2) = -RTHREE
+    ROTMAT(55,2,1) = -RTHREE
+    ROTMAT(55,2,2) = -HALF
+    ROTMAT(55,3,3) = -ONE
     rotname(55) = 'C2C'
 
-    rotmat(56,1,1) =  HALF
-    rotmat(56,1,2) =  RTHREE
-    rotmat(56,2,1) =  RTHREE
-    rotmat(56,2,2) = -HALF
-    rotmat(56,3,3) = -ONE
+    ROTMAT(56,1,1) =  HALF
+    ROTMAT(56,1,2) =  RTHREE
+    ROTMAT(56,2,1) =  RTHREE
+    ROTMAT(56,2,2) = -HALF
+    ROTMAT(56,3,3) = -ONE
     rotname(56) = 'C2D'
     
     do is = 1, 8
-      rotmat(56+is,1:3,1:3) = -rotmat(48+is,1:3,1:3)
+      ROTMAT(56+is,1:3,1:3) = -ROTMAT(48+is,1:3,1:3)
       rotname(56+is) = 'I'//rotname(48+is) 
     enddo ! is
       
