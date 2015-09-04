@@ -500,7 +500,7 @@ module Harmonics_mod
 
 !--->    calculate sin and cos of theta and phi
     xy2 = v1**2 + v2**2
-    xyz2 = xy + v3**2
+    xyz2 = xy2 + v3**2
 
     r = sqrt(xyz2)
     if (xyz2 <= 0.d0) then

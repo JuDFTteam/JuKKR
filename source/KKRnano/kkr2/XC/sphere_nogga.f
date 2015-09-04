@@ -1,5 +1,7 @@
 c **********************************************************************
       SUBROUTINE SPHERE_NOGGA(LMAX,YR,WTYR,RIJ,IJD)
+      use Harmonics_mod, only: ymy
+      implicit none
 c **********************************************************************
 c-----------------------------------------------------------------------
 c     generate an angular mesh and spherical harmonics at those
@@ -15,9 +17,6 @@ C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION PI,R,R1,R2,R3
       INTEGER IJ,LM1
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL YMY
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION RIJ(IJD,3),WTYR(IJD,*),YR(IJD,*)

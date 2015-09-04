@@ -28,6 +28,8 @@ module debug_morgan_mod
   !----------------------------------------------------------------------------
   !> evaluate spherical harmonic expansion at angles given by 'vec'.
   double precision function eval_expansion(coeffs, vec)
+    use Harmonics_mod, only: ymy
+  
     double precision, intent(in) :: coeffs(:)
     double precision, intent(in) :: vec(3)
 
@@ -87,6 +89,7 @@ module debug_morgan_mod
   !----------------------------------------------------------------------------
   !> Calculate the spherical harmonic expansion of \exp(i \vec{G} \vec{r}).
   subroutine calc_exponential_expansion(coeffs, g_vector, radius, lmax)
+    use Harmonics_mod, only: ymy
     double complex, intent(inout) :: coeffs(:)
     double precision, intent(in) :: g_vector(3) !< reciprocal lattice vectors of first shell
     double precision, intent(in) :: radius !< position to evaluate potential

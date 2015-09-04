@@ -1,5 +1,6 @@
       SUBROUTINE SPHERE_GGA(LMAX,YR,WTYR,RIJ,IJD,LMMAXD,THET,YLM,
      +                      DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF)
+      use Harmonics_mod, only: ymy
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     generate an angular mesh and spherical harmonics at those
@@ -18,7 +19,7 @@ C     .. Local Scalars ..
       INTEGER IJ,LM1
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL CYLM02,YMY
+      EXTERNAL :: CYLM02
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DYLMF1(IJD,LMMAXD),DYLMF2(IJD,LMMAXD),

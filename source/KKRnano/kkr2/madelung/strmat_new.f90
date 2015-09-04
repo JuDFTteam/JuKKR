@@ -31,7 +31,7 @@
 
 subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
      gn,rm,qi0,smat,vol,lassld,lmxspd,naezd,i1)
-
+  use Harmonics_mod, only: ymy
   implicit none
   ! Parameters
   double complex, parameter :: CI=(0.d0,1.d0)

@@ -46,6 +46,7 @@ module NearField_mod
   !> V_(lm)(r) = ac_wrong(lm) * (-r)**l
   subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, charge_mom_total, gaunt)
     use MadelungCalculator_mod, only: MadelungClebschData, calc_dfac
+    use Harmonics_mod, only: ymy
     double precision, intent(inout) :: ac_wrong(:)
     double precision, intent(in)    :: dist_vec(3)
 
@@ -113,6 +114,7 @@ module NearField_mod
   !----------------------------------------------------------------------------
   !> this is a general routine for shifting sph. harm. expansions
   subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)
+    use Harmonics_mod, only: ymy
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
@@ -198,6 +200,7 @@ module NearField_mod
   ! Tests orthgonality of real spherical harmonics up to LMAX
   ! The first column of 'integrand' must be 1.0 and the others = 0.0
   subroutine test_lebedev()
+    use Harmonics_mod, only: ymy
     integer, parameter :: LMAX = 2
     integer, parameter :: LMMAXD = (LMAX+1)**2
 
@@ -228,6 +231,7 @@ module NearField_mod
   !----------------------------------------------------------------------------
   ! evaluate spherical harmonic expansion at angles given by 'vec'.
   double precision function eval_expansion(coeffs, vec)
+    use Harmonics_mod, only: ymy
     double precision :: coeffs(:)
     double precision :: vec(3)
 

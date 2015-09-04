@@ -437,6 +437,8 @@ module SingleSiteRef_mod
   
   subroutine gfree(rdiff,e0,gmll,cleb,icleb,loflm,iend,lmax, ncleb, derivative)
     use SingleSiteHelpers_mod, only: beshan
+    use Harmonics_mod, only: ymy
+    
     integer, intent(in) :: lmax, ncleb, iend
     double complex, intent(in) :: e0
     double complex, intent(inout) :: gmll((lmax+1)**2,(lmax+1)**2)
@@ -444,7 +446,6 @@ module SingleSiteRef_mod
     integer, intent(in) :: icleb(ncleb,3), loflm(*)
     logical, intent(in) :: derivative
     
-    external :: ymy
     double precision fpi,pi,rfpi
     integer ifac,j,lm1,lm2,lm3,lp1
     double complex bl(lmax*2+1),hl(lmax*2+1)

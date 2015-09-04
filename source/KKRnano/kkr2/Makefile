@@ -226,7 +226,7 @@ kkrmat01_new.o: arraytest2_mod.o Logging_mod.o dlke0_smat_mod.o KKROperator_mod.
 tbref.o: SingleSiteRef_mod.o
 ProcessKKRresults_mod.o: arraytest2_mod.o Logging_mod.o lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o KKRnanoParallel_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o KKRnanoParallel_mod.o CalculationData_mod.o
-NearField_mod.o: MadelungCalculator_mod.o
+NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o
 KKRnano_Comm_mod.o: jij_calc_mod.o KKRnanoParallel_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o
 InputParams_mod.o: ConfigReader_mod.o
 PolygonFaces_mod.o: shape_constants_mod.o
@@ -241,7 +241,7 @@ ShapeIntegrationHelpers_mod.o: shape_constants_mod.o
 ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o
 EnergyMesh_mod.o: KKRnanoParallel_mod.o EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
-SingleSiteRef_mod.o: kkr_helpers_mod.o SingleSiteHelpers_mod.o
+SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o
 TFQMRSolver_mod.o: Solver_mod.o OperatorT_mod.o mminvmod_oop_mod.o SolverStats_mod.o
 main2.o: Logging_mod.o kkr0_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o MultScatData_mod.o kkrmat01_new.o jij_calc_mod.o TEST_lcutoff_mod.o TFQMRSolver_mod.o SolverOptions_mod.o InitialGuess_mod.o
@@ -295,3 +295,9 @@ vxcgga.o: Quadrature_mod.o
 GauntCoefficients_mod.o: Harmonics_mod.o
 ShapeGauntCoefficients_mod.o: Harmonics_mod.o
 MadelungCalculator_mod.o: Harmonics_mod.o
+sphere_gga.o: Harmonics_mod.o
+sphere_nogga.o: Harmonics_mod.o
+strmat_new.o: Harmonics_mod.o
+debug_morgan_mod.o: Harmonics_mod.o
+
+# DO NOT DELETE
