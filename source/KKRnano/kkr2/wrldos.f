@@ -73,7 +73,7 @@ C
      + //achar(D1+iachar('1')-1)
      + //'.dat'
 
-      OPEN(48,FILE=FNAME,FORM='formatted')
+      OPEN(48,FILE=FNAME,FORM='formatted',ACTION='WRITE')
 C
         DO ISPIN = 1,NSPIN
             IPOT = NSPIN * (I1-1) + ISPIN
@@ -174,7 +174,7 @@ C
 C open file complex.dos - kept for correspondence to complexdos3.f
 C
       IF(I1.EQ.1) THEN
-      OPEN (49,FILE='complex.dos',FORM='formatted')
+      OPEN (49,FILE='complex.dos',FORM='formatted',ACTION='write')
       WRITE (49,*) NAEZ*NSPIN
       WRITE (49,*) IELAST
       WRITE (49,*) LMAXD1

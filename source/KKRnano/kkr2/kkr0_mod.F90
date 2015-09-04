@@ -206,7 +206,7 @@ module kkr0_mod
       write(*,*) "WARNING: file 'potential' not found... skipping start potential generation."
       warn(6, "file 'potential' not found... skipping start potential generation.")
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
-      open (67, file='EFERMI', form='formatted')
+      open (67, file='EFERMI', form='formatted', action='read', status='old')
       read (67, *) EFERMI
       close(67)
     endif
@@ -287,7 +287,7 @@ module kkr0_mod
       call writeMain2Arrays(arrays, 'arrays.unf')
 
       ! write start energy mesh
-        open  (67,FILE='energy_mesh.0',FORM='unformatted')
+        open  (67, FILE='energy_mesh.0', FORM='unformatted', action='write')
         write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
         write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
         write (67) EFERMI

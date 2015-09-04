@@ -19,18 +19,18 @@
      & 'routine called for IREL = 3   and   even  NK                ',
      & 'anti-unitary symmetry matrices created for IREL = 2         '/
 
-      IF( K.GE.1 .AND. K.LE.KMAX) THEN
+      IF (K > 0 .and. K <= KMAX) THEN
          TEXT = T(K)
       ELSE
          TEXT = 'unknown reason   key out of bounds'
-      END IF
+      ENDIF
 
-      IF( ISTOP .EQ. 1 ) THEN
+      IF (ISTOP == 1) THEN
          WRITE(6,9000) ROUTINE, TEXT
          STOP
       ELSE
          WRITE(6,9001) ROUTINE, TEXT
-      END IF
+      ENDIF
 
  9000 FORMAT(/,1X,79('*'),/,1X,79('*'),/,5X,'STOP in subroutine <',
      &       A,'>',/,5X,A,/,1X,79('*'),/,1X,79('*'),/)

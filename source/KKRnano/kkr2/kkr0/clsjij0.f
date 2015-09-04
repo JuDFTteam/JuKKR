@@ -1,6 +1,5 @@
 c ************************************************************************
-      SUBROUTINE CLSJIJ0(
-     &                   NAEZ,RR,NR,RBASIS,RCUT,JIJ,NRD,NXIJD)
+      SUBROUTINE CLSJIJ0(NAEZ, RR, NR, RBASIS, RCUT, JIJ, NRD, NXIJD)
 c ************************************************************************
 c This subroutine is used check the cluster size around each atom 
 c where Jij's are calculated
@@ -16,17 +15,17 @@ c
 c
 c     .. array arguments
 c
-      DOUBLE PRECISION RBASIS(3,NAEZ),   ! pos. of basis atoms in EZ
-     +                 RR(3,0:NRD)        ! set of lattice vectors
+      DOUBLE PRECISION, INTENT(IN) :: RBASIS(3,NAEZ) ! pos. of basis atoms in EZ
+      DOUBLE PRECISION, INTENT(IN) :: RR(3,0:NRD)    ! set of lattice vectors
 c
 c
 c     .. scalar arguments
 c
       INTEGER, INTENT(IN) :: NRD
       INTEGER, INTENT(IN) :: NXIJD
-      DOUBLE PRECISION RCUT
-      INTEGER          NAEZ,            ! number of atoms in EZ
-     +                 NR               ! number of lattice vectors RR
+      DOUBLE PRECISION, INTENT(IN) :: RCUT
+      INTEGER, INTENT(IN) :: NAEZ ! number of atoms in EZ
+      INTEGER, INTENT(IN) :: NR   ! number of lattice vectors RR
       LOGICAL          JIJ
 c
 c     .. local arrays
@@ -36,7 +35,7 @@ c
 c     .. local scalars
 c
       DOUBLE PRECISION EPSSHL,RCUT2,RTMP
-      INTEGER          IAEZ,IR,IV,NXIJ,I1
+      INTEGER          IAEZ,IR,NXIJ,I1
 c
 c
       DATA             EPSSHL   / 1.0D-4 /
@@ -47,22 +46,20 @@ c than RCUT2.
 c ------------------------------------------------------------------------
        IF (JIJ) THEN
 C
-       RCUT2   = (RCUT+EPSSHL)*(RCUT+EPSSHL)
+       RCUT2 = (RCUT + EPSSHL)**2
 C======================================================================
 C loop in all atoms begin
 C======================================================================
-       DO I1 = 1,NAEZ ! loop over all Jij-centers
+       DO I1 = 1, NAEZ ! loop over all Jij-centers
 C
          NXIJ = 0           ! counter for atoms in cluster
-         DO IAEZ = 1,NAEZ   ! loop in all atoms
+         DO IAEZ = 1, NAEZ   ! loop in all atoms
            DO IR = 0, NR    ! loop in all bravais vectors    
-             DO IV=1,3
-               TMP(IV) = RR(IV,IR)+RBASIS(IV,IAEZ)-RBASIS(IV,I1)
-             ENDDO
+             TMP(1:3) = RR(1:3,IR) + RBASIS(1:3,IAEZ) - RBASIS(1:3,I1)
              RTMP = TMP(3)**2 + TMP(1)**2+TMP(2)**2
-             IF (RTMP.LE.RCUT2)  THEN
+             IF (RTMP <= RCUT2)  THEN
                NXIJ = NXIJ + 1
-               IF (NXIJ.GT.NXIJD) THEN 
+               IF (NXIJ > NXIJD) THEN 
                  WRITE (6,*) 
      &           ' ERROR: Dimension NXIJD in inc.cls too small',
      &           NXIJ, NXIJD

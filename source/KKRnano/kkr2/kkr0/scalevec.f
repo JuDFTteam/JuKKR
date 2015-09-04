@@ -1,5 +1,4 @@
-      SUBROUTINE SCALEVEC(RBASIS,
-     &                    NAEZ,BRAVAIS, LCARTESIAN)
+      SUBROUTINE SCALEVEC(RBASIS, NAEZ, BRAVAIS, LCARTESIAN)
       IMPLICIT NONE
 C      INCLUDE 'inc.p'
 C
@@ -7,9 +6,10 @@ C PARAMETER definitions
 C
 C Dummy arguments
 C
-      INTEGER NAEZ
-      DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,*)
-      LOGICAL LCARTESIAN
+      INTEGER, intent(in) :: NAEZ
+      DOUBLE PRECISION, intent(inout) :: RBASIS(3,*)
+      DOUBLE PRECISION, intent(in) :: BRAVAIS(3,3)
+      LOGICAL, intent(in) :: LCARTESIAN
 C
 C Local variables
 C
@@ -24,11 +24,9 @@ C
 C
 C -->   normalization of basis vectors
 C
-      DO I = 1,NAEZ
-         RBASIS1(1,I) = RBASIS(1,I)
-         RBASIS1(2,I) = RBASIS(2,I)
-         RBASIS1(3,I) = RBASIS(3,I)
-      END DO
+      DO I = 1, NAEZ
+         RBASIS1(1:3,I) = RBASIS(1:3,I)
+      ENDDO ! I
 C
 C
 C ---> normalization of atomic positions in the unit cell
@@ -43,10 +41,10 @@ C
          WRITE (6,'(A)') ' CARTESIAN coordinates'
       ELSE
          WRITE (6,'(A)') ' LATTICE VECTORS units'
-      END IF
+      endif
 C
 C**********************************************************************
-      IF ( .NOT.LCARTESIAN ) THEN ! Rescale lattice
+      IF (.NOT. LCARTESIAN) THEN ! Rescale lattice
 C----------------------------------------------------------------------
          WRITE (6,*)
          WRITE(6,'(12X,49(1H-))') 
@@ -57,12 +55,12 @@ C----------------------------------------------------------------------
          DO I = 1,NAEZ
             DO J = 1,3
                RBASIS(J,I) = (RBASIS1(1,I)*BRAVAIS(J,1)
-     &                       +RBASIS1(2,I)*BRAVAIS(J,2)
-     &                       +RBASIS1(3,I)*BRAVAIS(J,3))
-            END DO
+     &                      + RBASIS1(2,I)*BRAVAIS(J,2)
+     &                      + RBASIS1(3,I)*BRAVAIS(J,3))
+            enddo ! J
 C
-               WRITE (6,99005) I,(RBASIS(J,I),J=1,3),I
-         END DO
+               WRITE (6,99005) I,RBASIS(1:3,I),I
+         enddo ! I
          WRITE(6,'(12X,49(1H-),/)')
 C----------------------------------------------------------------------
       ELSE
@@ -74,15 +72,15 @@ C     changed by v.Bellini 21/10/99
          DO J = 1,NAEZ
             DO I = 1,3
                RBASIS(I,J) = RBASIS1(I,J)
-            END DO
+            enddo ! I
 C
-               WRITE (6,99001) J,(RBASIS(I,J),I=1,3),J
-         END DO
+               WRITE (6,99001) J,RBASIS(1:3,J),J
+         enddo ! J
 C     end of the change
          WRITE(6,'(12X,51(1H-),/)')
 C----------------------------------------------------------------------
 C======================================================================
-      END IF
+      endif
 C**********************************************************************
 C
 C FROM NOW ON after < SCALEVEC > RBASIS are the basis vectors
@@ -97,4 +95,4 @@ C**********************************************************************
      &        12X,51(1H-),/,
      &        15X,'IQ       x           y           z       IT',/,
      &        12X,51(1H-))
-      END
+      ENDSUBROUTINE SCALEVEC

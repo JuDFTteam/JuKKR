@@ -15,25 +15,23 @@ module EBalanceHandler_mod
   
   type EBalanceHandler
 
-    integer, dimension(:), allocatable :: eproc
-    integer, dimension(:), allocatable :: eproc_old
-
-    real, dimension(:), allocatable :: etime
+    integer, allocatable :: eproc(:)
+    integer, allocatable :: eproc_old(:)
+    real, allocatable :: etime(:)
     integer :: ierlast
     integer :: num_eprocs_empid
-    real::TIME_E
-    real::TIME_EX
+    real :: TIME_E
+    real :: TIME_EX
     logical :: equal_distribution
-  end type
+  endtype
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   !> Creates EBalanceHandler.
   !> Call initEBalanceHandler before use
   subroutine createEBalanceHandler(balance, num_epoints)
-    implicit none
-    type (EBalanceHandler), intent(inout) :: balance
+    type(EBalanceHandler), intent(inout) :: balance
     integer, intent(in) :: num_epoints
 
     integer :: memory_stat
@@ -50,15 +48,15 @@ module EBalanceHandler_mod
     balance%num_eprocs_empid = 0
     balance%equal_distribution = .false.
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Initialises EBalanceHandler.
   subroutine initEBalanceHandler(balance, my_mpi)
     use KKRnanoParallel_mod
     implicit none
-    type (EBalanceHandler), intent(inout) :: balance
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(EBalanceHandler), intent(inout) :: balance
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     logical :: readit
     integer :: file_points, file_procs
@@ -70,7 +68,7 @@ module EBalanceHandler_mod
       balance%eproc = 1
       balance%eproc_old = 1
       return
-    end if
+    endif
 
     if (getMyWorldRank(my_mpi) == 0) then
       ! TODO: check and read ebalance file
@@ -91,11 +89,11 @@ module EBalanceHandler_mod
 
         else
           write(*,*) "WARNING: Bad ebalance file provided."
-        end if
+        endif
 
         close(FILEHANDLE)
 
-      end if
+      endif
 
     endif
 
@@ -104,29 +102,26 @@ module EBalanceHandler_mod
 
     balance%eproc_old = balance%eproc
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Sets option for equal work distribution.
   !> Equal work distribution is used for DOS calculation.
   !> Default is: no equal work distribution
   subroutine setEqualDistribution(balance, flag)
-    implicit none
-    type (EBalanceHandler), intent(inout) :: balance
+    type(EBalanceHandler), intent(inout) :: balance
     logical, intent(in) :: flag
 
     balance%equal_distribution = flag
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> (Re)Starts measurement for dynamical load balancing
   subroutine startEBalanceTiming(balance, ie)
     use KKRnanoParallel_mod
 
-    implicit none
-
-    type (EBalanceHandler), intent(inout) :: balance
+    type(EBalanceHandler), intent(inout) :: balance
     integer, intent(in) :: ie
 
     ! Start timing:
@@ -134,15 +129,14 @@ module EBalanceHandler_mod
     call CPU_TIME(balance%time_e)
     balance%etime(ie) = 0.0d0
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Finishes time measurement for energy-point ie
   subroutine stopEBalanceTiming(balance, ie)
     use KKRnanoParallel_mod
-    implicit none
-
-    type (EBalanceHandler), intent(inout) :: balance
+    
+    type(EBalanceHandler), intent(inout) :: balance
     integer, intent(in) :: ie
 
     real :: time_finish
@@ -151,7 +145,7 @@ module EBalanceHandler_mod
 
     balance%etime(ie) = time_finish - balance%time_e
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Gathers all timings and redistributes energy processes.
@@ -161,18 +155,17 @@ module EBalanceHandler_mod
 
     include 'mpif.h'
 
-    type (EBalanceHandler), intent(inout) :: balance
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(EBalanceHandler), intent(inout) :: balance
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
-    integer :: NPNT1
-    integer :: ierr
+    integer :: NPNT1, ierr
 
     real MTIME(balance%ierlast)
 
     NPNT1 = 1
-    if (balance%equal_distribution .eqv. .true.) then
+    if (balance%equal_distribution) then
        NPNT1 = 0
-    end if
+    endif
 
     ! TODO: extract allreduce -> reduce
     ! TODO: let only master rank calculate
@@ -197,17 +190,16 @@ module EBalanceHandler_mod
 
       call bcastEBalance_com(balance, my_mpi)
 
-   end if
+   endif
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Destroys EBalanceHandler.
   !> Call initEBalanceHandler before use
   subroutine destroyEBalanceHandler(balance)
     use KKRnanoParallel_mod
-    implicit none
-    type (EBalanceHandler), intent(inout) :: balance
+    type(EBalanceHandler), intent(inout) :: balance
 
     integer :: memory_stat
 
@@ -215,7 +207,7 @@ module EBalanceHandler_mod
     DEALLOCATECHECK(balance%eproc_old)
     DEALLOCATECHECK(balance%etime)
 
-  end subroutine
+  endsubroutine
 
 
 !==============================================================================
@@ -226,12 +218,10 @@ module EBalanceHandler_mod
   !> Broadcast ebalance information from rank 0 to all ranks.
   subroutine bcastEBalance_com(balance, my_mpi)
     use KKRnanoParallel_mod
-    implicit none
-
     include 'mpif.h'
 
-    type (EBalanceHandler), intent(inout) :: balance
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(EBalanceHandler), intent(inout) :: balance
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     !-----
     integer :: ierr
@@ -244,13 +234,12 @@ module EBalanceHandler_mod
 
     COMMCHECK(IERR)
 
-  end subroutine
+  endsubroutine
 
   !---------------------------------------------------------------------------
   !> Reads header of opened ebalance file and returns number of points
   !> and process-groups from file
   subroutine readEBalanceHeader(filehandle, npoints, nprocs)
-    implicit none
     integer, intent(in) :: filehandle
     integer, intent(out) :: npoints
     integer, intent(out) :: nprocs
@@ -260,15 +249,14 @@ module EBalanceHandler_mod
     read(filehandle, *)
     read(filehandle, *)
     read(filehandle, *) npoints, nprocs
-  end subroutine
+  endsubroutine
 
   !---------------------------------------------------------------------------
   !> Reads body of opened ebalance file and returns energy group distribution
   !> note: no proper error handling
   subroutine readEBalanceDistribution(filehandle, eproc, num_points)
-    implicit none
     integer, intent(in) :: filehandle
-    integer, dimension(:), intent(inout) :: eproc
+    integer, intent(inout) :: eproc(:)
     integer, intent(in) :: num_points
 
     integer :: idummy, ie
@@ -277,50 +265,43 @@ module EBalanceHandler_mod
 
     do ie = 1, num_points
       read(filehandle, *) idummy, eproc(ie), rdummy
-    end do
-  end subroutine
+    enddo
+  endsubroutine
 
 !------------------------------------------------------------------------------
 !                                                optional: equal
-subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd, equal)
+subroutine ebalance1(ierlast, eproc, eproco, empid, iemxd, equal)
   ! ======================================================================
-  !                       build MPI_Groups
+  !                       build mpi_groups
   ! ======================================================================
 
   ! this routine balances the distribution of energy points
-  ! to the set of processors of EMPI=1,...,EMPID
+  ! to the set of processors of empi=1,...,empid
 
 
-  !                               Alexander Thiess, 7th of December 2009
+  !                               alexander thiess, 7th of december 2009
   ! =======================================================================
-
-  implicit none
 
   include 'mpif.h'
 
-  integer empid
-  integer iemxd
+  integer, intent(in) :: ierlast, empid, iemxd ! iemxd is to be removed
+  integer, intent(out) :: eproc(iemxd), eproco(iemxd)
+  logical, intent(in), optional :: equal
 
-  !     .. global scalars ..
-  integer IERLAST
-
-  integer        EPROC(IEMXD), EPROCO(IEMXD)
-
-  integer        IER,IERI
-  !logical        TEST
-  logical, optional :: equal
+  integer :: ier,ieri
+  ! logical, external :: test
   logical :: flag
 
   if (present(equal)) then
      flag = equal
   else
      flag = .false.
-  end if
+  endif
 
   !=======================================================================
   ! 1st guess >>>
   !=======================================================================
-  !     Trying to figure out what this code means:
+  !     trying to figure out what this code means:
   !     *) if there is only one energy process -> it calculates everything
   !     *) if there are two processes -> last two points calculated by
   !        process 1, rest is calculated by process 2
@@ -328,241 +309,201 @@ subroutine EBALANCE1(IERLAST, EPROC, EPROCO, empid, iemxd, equal)
   !                     2nd process calculates first 2/3 of all points
   !                     3rd process calculates last 1/3 of points except
   !                     last
-  !     *) MORE than 3 processes: 1st proc. last point
+  !     *) more than 3 processes: 1st proc. last point
   !                               2nd proc. first 1/2 of all points
   !                               other procs.: rest
 
 
-  if (EMPID.eq.1) then
-    do IER=1,IERLAST
-      EPROC(IER)     = 1
+  if (empid == 1) then
+    do ier = 1, ierlast
+      eproc(ier) = 1
+    enddo ! ier
+  elseif (empid == 2) then
+    eproc(ierlast)   = 1
+    eproc(ierlast-1) = 1
+    do ier = 1, ierlast-2
+      eproc(ier)     = 2
+    enddo ! ier
+  elseif (empid == 3) then
+    eproc(ierlast)   = 1
+    ieri = floor(ierlast/3.*2.)
+    do ier = 1, ieri
+      eproc(ier) = 2
     enddo
-  elseif (EMPID.eq.2) then
-    EPROC(IERLAST)   = 1
-    EPROC(IERLAST-1) = 1
-    do IER=1,(IERLAST-2)
-      EPROC(IER)     = 2
-    enddo
-  elseif (EMPID.eq.3) then
-    EPROC(IERLAST)   = 1
-    IERI = FLOOR(REAL(IERLAST)/(REAL(3))*REAL(2))
-    do IER=1, IERI
-      EPROC(IER) = 2
-    enddo
-    do IER=(IERI+1), (IERLAST-1)
-      EPROC(IER) = 3
+    do ier = ieri+1, ierlast-1
+      eproc(ier) = 3
     enddo
   else
-    EPROC(IERLAST)   = 1
-    IERI = IERLAST / 2
-    do IER=1, IERI
-      EPROC(IER) = 2
-    enddo
-    do IER=(IERI+1), (IERLAST-1)
-      EPROC(IER) = mod(IER, (EMPID-2)) + 3
-    enddo
+    eproc(ierlast) = 1
+    ieri = ierlast / 2
+    do ier = 1, ieri
+      eproc(ier) = 2
+    enddo ! ier
+    do ier = ieri+1, ierlast-1
+      eproc(ier) = mod(ier, empid-2) + 3
+    enddo ! ier
   endif
 
-  !     if DOS shall be calculated make use of special scheme allowing for
-  !     broader Energy-parallelization
+  !     if dos shall be calculated make use of special scheme allowing for
+  !     broader energy-parallelization
 
-  ! Remark E.R.:
-  ! The amazing "special"-scheme just means equal work distribution
+  ! remark e.r.:
+  ! the amazing "special"-scheme just means equal work distribution
 
-  !if (TEST('DOS     ')) then
-  if (flag .eqv. .true.) then
-    do IER=1,IERLAST
-      EPROC(IER)     = MOD(IER,EMPID) + 1
-    enddo
+  !if (test('dos     ')) then
+  if (flag) then
+    do ier = 1, ierlast
+      eproc(ier) = mod(ier,empid) + 1
+    enddo ! ier
   endif
 
-  EPROCO = EPROC
+  eproco = eproc
 
   !=======================================================================
   ! >>> 1st guess
   !=======================================================================
-end subroutine
+endsubroutine
 
 !==============================================================================
 
-subroutine EBALANCE2(IERLAST,NPNT1, MYACTVRANK,ACTVCOMM, &
-MTIME,EPROC,EPROCO, &
-empid, iemxd)
+subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco, empid, iemxd)
   ! ======================================================================
-  !                       build MPI_Groups
+  !                       build mpi_groups
   ! ======================================================================
-
   ! this routine balances the distribution of energy points
-  ! to the set of processors of EMPI=1,...,EMPID
-
-
-  !                               Alexander Thiess, 7th of December 2009
+  ! to the set of processors of empi=1,...,empid
+  !                               alexander thiess, 7th of december 2009
   ! =======================================================================
-
-  implicit none
-
-  !include 'mpif.h'
-
   integer empid
   integer iemxd
+  integer        ierlast,npnt1
+  integer        eproc(iemxd), eproco(iemxd), epoint(iemxd,empid)
+  real           aimtm,sumtm
+  integer empi,ier,ieri
 
-  integer        IERLAST,NPNT1
-
-  !real           ETIME(IEMXD)
-  integer        EPROC(IEMXD), EPROCO(IEMXD), EPOINT(IEMXD,EMPID)
-
-  !     .. local scalars ..
-  real           AIMTM,SUMTM
-  integer EMPI,IER,IERI
-
-
-  !     .. local arrays ..
-  real           PROCTM(EMPID), MTIME(IEMXD)
-
-  !     .. MPI ACTV ..
-  integer        MYACTVRANK,ACTVCOMM,IERR
-
-  external       LSAME
+  real           proctm(empid), mtime(iemxd)
+  integer        myactvrank,actvcomm,ierr
 
   !=======================================================================
-  ! use timing of ITER-1 >>>
+  ! use timing of iter-1 >>>
   !=======================================================================
-
   !     gather on all processors all timings
-
-  !call MPI_ALLREDUCE(ETIME,MTIME,IEMXD,MPI_REAL,MPI_MAX, &
-  !ACTVCOMM,IERR)
+  !call mpi_allreduce(etime,mtime,iemxd,mpi_real,mpi_max, actvcomm,ierr)
 
 
   !----------------------------------------------------------------------
   !     analyze balance of last iteration
   !----------------------------------------------------------------------
 
-  do EMPI=1,EMPID
-    PROCTM(EMPI)        = 0.0D0
-  enddo
+  do empi = 1, empid
+    proctm(empi) = 0.d0
+  enddo ! empi
+  
+  sumtm = 0.d0
+  do ier = 1, ierlast
+    sumtm = sumtm + mtime(ier)
+    proctm(eproc(ier))  = proctm(eproc(ier)) + mtime(ier)
+    eproco(ier) = eproc(ier)
+  enddo ! ier
 
-  SUMTM                 = 0.0D0
-
-  do IER=1,IERLAST
-    SUMTM               = SUMTM + MTIME(IER)
-    PROCTM(EPROC(IER))  = PROCTM(EPROC(IER)) + MTIME(IER)
-
-    EPROCO(IER)         = EPROC(IER)
-  enddo
-
-  do EMPI=1,EMPID
-    if (MYACTVRANK.eq.0) &
-    write(6,*) 'EMPID: group ',EMPI,' took',PROCTM(EMPI),'%:', &
-    REAL(100)*PROCTM(EMPI)/SUMTM
-  enddo
-
-  !----------------------------------------------------------------------
-  !----------------------------------------------------------------------
-
+  do empi = 1, empid
+    if (myactvrank == 0) write(6,*) 'EMPID: group ',empi,' took',proctm(empi),'%:',100.*proctm(empi)/sumtm
+  enddo ! empi
 
   !----------------------------------------------------------------------
   !     intitialize
   !----------------------------------------------------------------------
 
-  SUMTM = 0.0D0
+  sumtm = 0.0d0
 
-  do IER = 1, IERLAST
-    SUMTM         = SUMTM + MTIME(IER)
-    do EMPI = 1, EMPID
-      EPOINT(IER,EMPI) = 0
-    enddo
-    EPROC(IER)    = 0
-  enddo
+  do ier = 1, ierlast
+    sumtm = sumtm + mtime(ier)
+    do empi = 1, empid
+      epoint(ier,empi) = 0
+    enddo ! empi
+    eproc(ier) = 0
+  enddo ! ier
 
   !----------------------------------------------------------------------
   !----------------------------------------------------------------------
 
 
-  !     goal for total time on each processor 1,...,EMPID
+  !     goal for total time on each processor 1,...,empid
 
-  AIMTM = SUMTM/EMPID
+  aimtm = sumtm/empid
 
-  !     1st processor (EMPI=1) acts always on IER=IERLAST
-  !     and if more time is availible on energy points starting with NPNT1
-  !     2nd ... EMPID processors sum up timing from IER=1 up to IERLAST-1
+  !     1st processor (empi=1) acts always on ier=ierlast
+  !     and if more time is availible on energy points starting with npnt1
+  !     2nd ... empid processors sum up timing from ier=1 up to ierlast-1
   !     taking time limits into account
 
-  !     loop over processors EMPI=1,EMPID >>>
-  do EMPI=1,EMPID
+  !     loop over processors empi=1,empid >>>
+  do empi = 1, empid
 
-    PROCTM(EMPI)        = 0.0D0
+    proctm(empi) = 0.d0
 
-    if (EMPI.eq.1) then
-      PROCTM(1)         = MTIME(IERLAST)
-      EPOINT(IERLAST,1) = IERLAST
-      EPROC(IERLAST)    = 1
-      IERI              = NPNT1
+    if (empi == 1) then
+      proctm(1) = mtime(ierlast)
+      epoint(ierlast,1) = ierlast
+      eproc(ierlast) = 1
+      ieri = npnt1
     else
-      IERI              = 1
+      ieri = 1
     endif
 
-    if (EMPID.eq.1) then
-      IERI              = 1
-    endif
+    if (empid == 1) ieri = 1
 
 
-    !     Quick fix: if NPNT1=0 then IERI=0 -> leads to read out of bounds
-    !     E.R.
-    if (IERI .eq. 0) then
-      IERI = 1
-    end if
+    !     quick fix: if npnt1=0 then ieri=0 -> leads to read out of bounds
+    !     e.r.
+    if (ieri == 0) ieri = 1
 
-    !     loop over processors IER=IERI,IERLAST >>>
-    do IER = IERI, IERLAST
-      if (EMPI.lt.EMPID) then
-        if ((PROCTM(EMPI).lt.AIMTM).and.(EPROC(IER).eq.0)) then
-          PROCTM(EMPI)    = PROCTM(EMPI) + MTIME(IER)
-          EPOINT(IER,EMPI)= IER
-          EPROC(IER)      = EMPI
+    !     loop over processors ier=ieri,ierlast >>>
+    do ier = ieri, ierlast
+      if (empi < empid) then
+        if ((proctm(empi) < aimtm) .and. (eproc(ier) == 0)) then
+          proctm(empi) = proctm(empi) + mtime(ier)
+          epoint(ier,empi)= ier
+          eproc(ier) = empi
         endif
-      elseif (EMPI.eq.EMPID) then
-        if (EPROC(IER).eq.0) then
-          PROCTM(EMPI)    = PROCTM(EMPI) + MTIME(IER)
-          EPOINT(IER,EMPI)= IER
-          EPROC(IER)      = EMPI
+      elseif (empi == empid) then
+        if (eproc(ier) == 0) then
+          proctm(empi) = proctm(empi) + mtime(ier)
+          epoint(ier,empi)= ier
+          eproc(ier) = empi
         endif
       endif
     enddo
-    !     >>> loop over processors IER=IERI,IERLAST
+    !     >>> loop over processors ier=ieri,ierlast
 
-    if (MYACTVRANK.eq.0) &
-    write(6,*) 'EMPID: group ',EMPI,'will take',PROCTM(EMPI),'%:', &
-    REAL(100)*PROCTM(EMPI)/SUMTM
+    if (myactvrank == 0) write(6,*) 'EMPID: group ',empi,'will take',proctm(empi),'%:',100.*proctm(empi)/sumtm
 
-
-  enddo
-  !     >>> loop over processors EMPI=1,EMPID
+  enddo ! empi
+  !     >>> loop over processors empi=1,empid
 
 
   !     write information on load-balancing to formatted file 'balance'
 
-  !     INQUIRE(FILE='STOP',EXIST=STOPIT)
-!  if (ITER.eq.SCFSTEPS) then
+  !     inquire(file='stop', exist=stopit)
+!  if (iter == scfsteps) then
 !
-    if (MYACTVRANK.eq.0) then
-
-      open (50,file='ebalance',form='formatted', status='replace')
+    if (myactvrank == 0) then
+      open (50, file='ebalance', form='formatted', status='replace', action='write')
       write(50, *) "# Energy load-balancing file"
       write(50, *) "# 1st line: number of E-points, number of E-processes."
       write(50, *) "# point --- process --- timing used"
-      write(50, *) IERLAST,EMPID
+      write(50, *) ierlast,empid
 
-      do IER = 1,IERLAST
-        write(50,*) IER, EPROC(IER), MTIME(IER)
-      end do
-
+      do ier = 1, ierlast
+        write(50,*) ier, eproc(ier), mtime(ier)
+      enddo ! ier
+      
       close(50)
     endif
 !
 !  endif
 
-end subroutine
+endsubroutine
 
 
-end module
+endmodule

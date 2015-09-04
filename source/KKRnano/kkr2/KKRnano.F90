@@ -122,7 +122,7 @@ program KKRnano
 ! ========= TIMING =========================================================
     call resetTimer(program_timer)
     if (isMasterRank(my_mpi)) then
-      open (2,file='time-info',form='formatted')
+      open(2, file='time-info', form='formatted', action='write')
     endif
 !========= TIMING END ======================================================
 

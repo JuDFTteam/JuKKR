@@ -499,14 +499,12 @@ module Harmonics_mod
     rtwo = sqrt(2.d0)
 
 !--->    calculate sin and cos of theta and phi
-    xy2 = v1**2 + v2**2
-    xyz2 = xy2 + v3**2
+    xy2 = v1*v1 + v2*v2
+    xyz2 = xy2 + v3*v3
 
+    if (xyz2 <= 0.d0) stop 'ylm=0' ! call rcstop('ylm=0   ')
     r = sqrt(xyz2)
-    if (xyz2 <= 0.d0) then
-      stop 'ylm=0' ! call rcstop('ylm=0   ')
-    endif
-
+ 
     if (xy2 > szero*xyz2) then
       xy = sqrt(xy2)
       ! xyz = sqrt(xyz2) ! done for r

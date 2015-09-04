@@ -39,21 +39,21 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   
   include 'mpif.h'
 
-  integer, intent(in)                                  :: iter
-  type (CalculationData), intent(inout)                :: calc_data
-  type (KKRnanoParallel), intent(in)                   :: my_mpi
-  type (EnergyMesh), intent(inout)                     :: emesh
-  type (Main2Arrays), intent(in)                       :: arrays
-  type (DimParams)  , intent(in)                       :: dims
-  type (InputParams), intent(in)                       :: params
-  type (TimerMpi), intent(in)                          :: program_timer
+  integer, intent(in)                                 :: iter
+  type(CalculationData), intent(inout)                :: calc_data
+  type(KKRnanoParallel), intent(in)                   :: my_mpi
+  type(EnergyMesh), intent(inout)                     :: emesh
+  type(Main2Arrays), intent(in)                       :: arrays
+  type(DimParams), intent(in)                         :: dims
+  type(InputParams), intent(in)                       :: params
+  type(TimerMpi), intent(in)                          :: program_timer
 
   ! locals
-  type (BasisAtom) , pointer                           :: atomdata
-  type (DensityResults), pointer                       :: densities
-  type (EnergyResults), pointer                        :: energies
+  type(BasisAtom) , pointer                           :: atomdata
+  type(DensityResults), pointer                       :: densities
+  type(EnergyResults), pointer                        :: energies
 
-  type (RadialMeshData), pointer :: mesh
+  type(RadialMeshData), pointer :: mesh
   integer :: I1
   integer :: ierr
   integer :: ilocal
@@ -62,8 +62,8 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
   processKKRresults = 0
   num_local_atoms = getNumLocalAtoms(calc_data)
 
-  densities    => getDensities(calc_data, 1)
-  energies     => getEnergies(calc_data, 1)
+  densities => getDensities(calc_data, 1)
+  energies  => getEnergies(calc_data, 1)
 
   ! kkr
   !  |
@@ -109,17 +109,17 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
     TESTARRAYLOG(3, atomdata%potential%VISP)
     TESTARRAYLOG(3, atomdata%potential%VONS)
 
-  !----------------------------------------------------------------------
-  ! -->    reset to start new iteration
-  ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    !----------------------------------------------------------------------
+    ! -->    reset to start new iteration
+    ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     call resetPotentials(atomdata)
 
-  ! ----------------------------------------------------- output_potential
+    ! ----------------------------------------------------- output_potential
     call writeBasisAtomPotentialDA(atomdata, 37, I1)
-  ! ----------------------------------------------------- output_potential
+    ! ----------------------------------------------------- output_potential
 
-  end do ! ilocal
+  enddo ! ilocal
 
   call closeBasisAtomPotentialDAFile(37)
 
@@ -131,7 +131,7 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 
   call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
 
-  call OUTTIME(isMasterRank(my_mpi), 'barrier end ... ', getElapsedTime(program_timer), iter)
+  call OUTTIME(isMasterRank(my_mpi), 'barrier end... ', getElapsedTime(program_timer), iter)
 
   ! output of local density of states (task-local files)
   if (params%NPOL == 0) then
@@ -167,7 +167,7 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
     arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
     arrays%iemxd)
 
-    call OUTTIME(isMasterRank(my_mpi),'results......',getElapsedTime(program_timer), iter)
+    call OUTTIME(isMasterRank(my_mpi),'results......', getElapsedTime(program_timer), iter)
 
     ! manual exit possible by creation of file 'STOP' in home directory
     processKKRresults = processKKRresults + 2*stopfile_flag()
@@ -177,7 +177,7 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 ! END: only MASTERRANK is working here
 ! -----------------------------------------------------------------
 
-end function
+endfunction
 
 
 !------------------------------------------------------------------------------
@@ -206,16 +206,15 @@ integer function mix_potential(calc_data, iter, params, dims, my_mpi)
   use BRYDBM_new_com_mod, only: BRYDBM_new_com
   use wrappers_mod, only: MIXSTR_wrapper
 
-  integer, intent(in)                                  :: iter
-  type (CalculationData), intent(inout)                :: calc_data
-  type (KKRnanoParallel), intent(in)                   :: my_mpi
-  type (DimParams)  , intent(in)                       :: dims
-  type (InputParams), intent(in)                       :: params
+  integer, intent(in)                   :: iter
+  type(CalculationData), intent(inout)  :: calc_data
+  type(KKRnanoParallel), intent(in)     :: my_mpi
+  type(DimParams), intent(in)           :: dims
+  type(InputParams), intent(in)         :: params
 
-  type (BasisAtom) , pointer                           :: atomdata
-  type (BroydenData), pointer                          :: broyden
-
-  type (RadialMeshData), pointer :: mesh
+  type(BasisAtom) , pointer             :: atomdata
+  type(BroydenData), pointer            :: broyden
+  type(RadialMeshData), pointer         :: mesh
   double precision :: RMSAVQ ! rms error charge dens. (contribution of all local sites)
   double precision :: RMSAVM ! rms error mag. density (contribution of all local sites)
   double precision :: RMSAVQ_single
@@ -228,8 +227,8 @@ integer function mix_potential(calc_data, iter, params, dims, my_mpi)
   num_local_atoms = getNumLocalAtoms(calc_data)
 
   ! -->   calculation of RMS and final construction of the potentials (straight mixing)
-  RMSAVQ = 0.0d0
-  RMSAVM = 0.0d0
+  RMSAVQ = 0.d0
+  RMSAVM = 0.d0
 
   ! straight/simple mixing
   !$omp parallel do reduction(+: RMSAVQ, RMSAVM) private(ilocal, atomdata, RMSAVQ_single, RMSAVM_single)
@@ -242,8 +241,8 @@ integer function mix_potential(calc_data, iter, params, dims, my_mpi)
 
     RMSAVQ = RMSAVQ + RMSAVQ_single
     RMSAVM = RMSAVM + RMSAVM_single
-  end do
-  !$omp end parallel do
+  enddo
+  !$omp endparallel do
 
   ! summation and output of RMS error
   call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, &
@@ -253,18 +252,18 @@ integer function mix_potential(calc_data, iter, params, dims, my_mpi)
   if (rmsavq <= params%target_rms) then
     mix_potential = 1
     if (isMasterRank(my_mpi)) write(*,*) "TARGET RMS ERROR REACHED..."
-  end if
+  endif
 
   ! straight mixing is called in any case before
   ! Broyden mixing - it is undone in Broyden routines
 
 ! -->   potential mixing procedures: Broyden or Andersen updating schemes
-  if (params%IMIX>=3 .and. params%IMIX<6) then
+  if (params%IMIX >= 3 .and. params%IMIX < 6) then
 
     if (num_local_atoms > 1) then
       if (isMasterRank(my_mpi)) write(*,*) "Broyden mixing and num_local_atoms > 1 not supported."
       STOP
-    end if
+    endif
 
     ! Take data from 1st local atom, since only one local atom is supported
     atomdata     => getAtomData(calc_data, 1)
@@ -286,9 +285,9 @@ integer function mix_potential(calc_data, iter, params, dims, my_mpi)
   else if (params%imix == 6) then
     ! use Broyden mixing that supports num_local_atoms > 1
     call mix_broyden2_com(calc_data, iter, getMySEcommunicator(my_mpi))
-  end if
+  endif
 
-end function
+endfunction
 
 !------------------------------------------------------------------------------
 !> Write forces to file 'forces'.
@@ -317,18 +316,18 @@ subroutine output_forces(calc_data, master, rank, comm)
 
   if (rank == master) then
     call MPI_Comm_size(comm, nranks, ierr)
-    allocate(force_buffer(NUM, num_local_atoms * nranks))
+    allocate(force_buffer(NUM,num_local_atoms*nranks))
   else
-    allocate(force_buffer(1, 1))
-  end if
+    allocate(force_buffer(1,1))
+  endif
 
   allocate(local_buffer(NUM, num_local_atoms))
 
   do ilocal = 1, num_local_atoms
-    densities    => getDensities(calc_data, ilocal)
+    densities => getDensities(calc_data, ilocal)
 
-    local_buffer(:, ilocal) = densities%force_flm(-1:1)
-  end do
+    local_buffer(:,ilocal) = densities%force_flm(-1:1)
+  enddo
 
   call MPI_Gather(local_buffer, NUM*num_local_atoms, MPI_DOUBLE_PRECISION, &
                   force_buffer, NUM*num_local_atoms, MPI_DOUBLE_PRECISION, &
@@ -336,16 +335,16 @@ subroutine output_forces(calc_data, master, rank, comm)
 
   if (rank == master) then
     call openForceFile()
-    do I1 = 1, num_local_atoms * nranks
+    do I1 = 1, num_local_atoms*nranks
       call writeForces(force_buffer(:,I1), I1)
-    end do
+    enddo
     call closeForceFile()
-  end if
+  endif
 
   deallocate(force_buffer)
   deallocate(local_buffer)
 
-end subroutine
+endsubroutine
 
 !==============================================================================
 
@@ -382,27 +381,27 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
   use wrappers_mod, only: rhoval_wrapper, RHOTOTB_wrapper, RHOMOM_NEW_wrapper
   use lloyds_formula_mod, only: renormalizeDOS
 
-  integer, intent(in)                        :: iter
-  type (CalculationData), intent(inout)      :: calc_data
-  type (KKRnanoParallel), intent(in)         :: my_mpi
-  type (EnergyMesh), intent(inout)           :: emesh
-  type (Main2Arrays), intent(in)             :: arrays
-  type (DimParams), intent(in)               :: dims
-  type (InputParams), intent(in)             :: params
-  type (TimerMpi), intent(in)                :: program_timer
+  integer, intent(in)                       :: iter
+  type(CalculationData), intent(inout)      :: calc_data
+  type(KKRnanoParallel), intent(in)         :: my_mpi
+  type(EnergyMesh), intent(inout)           :: emesh
+  type(Main2Arrays), intent(in)             :: arrays
+  type(DimParams), intent(in)               :: dims
+  type(InputParams), intent(in)             :: params
+  type(TimerMpi), intent(in)                :: program_timer
 
   ! locals
-  type (ShapeGauntCoefficients), pointer     :: shgaunts  ! const ref.
-  type (GauntCoefficients), pointer          :: gaunts    ! const ref
-  type (BasisAtom), pointer                  :: atomdata  ! not const
-  type (LDAUData), pointer                   :: ldau_data ! not const
-  type (KKRresults), pointer                 :: kkr       ! const ref
-  type (DensityResults), pointer             :: densities ! not const
-  type (EnergyResults), pointer              :: energies  ! not const
-  type (RadialMeshData), pointer             :: mesh
-  type (CellData), pointer                   :: cell
+  type(ShapeGauntCoefficients), pointer     :: shgaunts  ! const ref.
+  type(GauntCoefficients), pointer          :: gaunts    ! const ref
+  type(BasisAtom), pointer                  :: atomdata  ! not const
+  type(LDAUData), pointer                   :: ldau_data ! not const
+  type(KKRresults), pointer                 :: kkr       ! const ref
+  type(DensityResults), pointer             :: densities ! not const
+  type(EnergyResults), pointer              :: energies  ! not const
+  type(RadialMeshData), pointer             :: mesh
+  type(CellData), pointer                   :: cell
 
-  double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
+  double complex, parameter :: CZERO = (0.d0, 0.d0)
   logical :: LdoRhoEF
   integer :: I1
   double precision :: denEf !< charge density at Fermi level
@@ -418,18 +417,18 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
 
   num_local_atoms = getNumLocalAtoms(calc_data)
 
-  shgaunts     => getShapeGaunts(calc_data)
-  gaunts       => getGaunts(calc_data)
-  atomdata     => getAtomData(calc_data, 1)
-  ldau_data    => getLDAUData(calc_data, 1)
-  kkr          => getKKR(calc_data, 1)
-  densities    => getDensities(calc_data, 1)
-  energies     => null()
-  mesh         => null()
-  cell         => null()
+  shgaunts  => getShapeGaunts(calc_data)
+  gaunts    => getGaunts(calc_data)
+  atomdata  => getAtomData(calc_data, 1)
+  ldau_data => getLDAUData(calc_data, 1)
+  kkr       => getKKR(calc_data, 1)
+  densities => getDensities(calc_data, 1)
+  energies  => null()
+  mesh      => null()
+  cell      => null()
 
   I1 = 0
-  CHRGSEMICORE=0.0d0 !< Initialize semicore charge to zero
+  CHRGSEMICORE = 0.d0 !< Initialize semicore charge to zero
 
   if (dims%LLY /= 0 .and. num_local_atoms > 1) then
     if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
@@ -450,8 +449,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
 
   ! now WEZRN stores the weights for E-integration
 
-  DENEF = 0.0D0
-  CHRGNT = 0.0D0
+  DENEF = 0.d0
+  CHRGNT = 0.d0
 
   LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
@@ -477,7 +476,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
                         gaunts, emesh, ldau_data)
 
     ! LDAU
-    if (ldau_data%LDAU.and.ldau_data%NLDAU>=1) then
+    if (ldau_data%LDAU .and. ldau_data%NLDAU >= 1) then
         call LDAUWMAT(I1,ldau_data%NSPIND,ITER,params%MIXING,ldau_data%DMATLDAU, &
                       ldau_data%NLDAU,ldau_data%LLDAU, &
                       ldau_data%ULDAU,ldau_data%JLDAU, &
@@ -500,7 +499,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
       call renormalizeDOS(densities%DEN,densities%RNORM, &
                           densities%LMAXD+1,densities%IEMXD, &
                           densities%NSPIND,densities%IEMXD)
-    end if
+    endif
 
     ! calculate DOS at Fermi level
     DENEF_local = calcDOSatFermi(densities%DEN, densities%IEMXD, &
@@ -524,7 +523,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
                          densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
                          densities%IEMXD)
 
-    end if
+    endif
 
 
     DENEF = DENEF + DENEF_local
@@ -534,8 +533,8 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
     CHRGSEMICORE = CHRGSEMICORE+densities%CHRGSEMICORE_per_atom
 
 !------------------------------------------------------------------------------
-  end do ! ilocal
-  !$omp end parallel do
+  enddo ! ilocal
+  !$omp endparallel do
 !------------------------------------------------------------------------------
 
   call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
@@ -554,7 +553,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
       call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
                              atomdata%core%ECORE, I1, emesh%NPOL, &
                              atomdata%core%QC_corecharge)
-    end do
+    enddo
 
     call closeResults1File()
   endif
@@ -580,7 +579,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
       call overwrite_densities_gen_morgan(densities%RHO2NS, mesh%R, 2*dims%LMAXD, &
                     arrays%rbasis, arrays%rbasis(:,I1), arrays%bravais, prefactors)
       deallocate(prefactors)
-      CHRGNT = 0.0d0  ! don't do the Fermi energy correction
+      CHRGNT = 0.d0  ! don't do the Fermi energy correction
     endif
 !==============================================================================
 
@@ -595,25 +594,25 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
 
     ! calculate multipole moments
     !output: CMOM, CMINST  ! only RHO2NS(:,:,1) passed (charge density)
-    densities%CMOM   = 0.0D0
-    densities%CMINST = 0.0D0
+    densities%CMOM   = 0.d0
+    densities%CMINST = 0.d0
 
     call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
                             densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
 
 !------------------------------------------------------------------------------
-  end do ! ilocal
-  !!!$omp end parallel do
+  enddo ! ilocal
+  !!!$omp endparallel do
 !------------------------------------------------------------------------------
 
   if(params%use_semicore==1) then
-  ! --> Sum up semicore charges from different MPI ranks
+    ! --> Sum up semicore charges from different MPI ranks
     call sumChargeSemi_com(CHRGSEMICORE, getMySEcommunicator(my_mpi))
-  ! --> Recalculate the semicore contour factor FSEMICORE
+    ! --> Recalculate the semicore contour factor FSEMICORE
     if(isMasterRank(my_mpi)) then
     call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, getMySEcommunicator(my_mpi))
     endif
-  end if
+  endif
 
   emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
                         ! was calculated !!!
@@ -630,10 +629,10 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
     TESTARRAYLOG(3, densities%CMOM)
     TESTARRAYLOG(3, densities%CMINST)
     TESTARRAYLOG(3, densities%RHO2NS)
-  enddo
+  enddo ! ilocal
 #endif
 
-end subroutine
+endsubroutine
 
 
 !------------------------------------------------------------------------------
@@ -669,20 +668,20 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
   use wrappers_mod, only: VINTRAS_wrapper, VXCDRV_wrapper, MTZERO_wrapper, CONVOL_wrapper
   
   integer, intent(in)                        :: iter
-  type (CalculationData), intent(inout)      :: calc_data
-  type (KKRnanoParallel), intent(in)         :: my_mpi
-  type (Main2Arrays), intent(in)             :: arrays
-  type (DimParams), intent(in)               :: dims
-  type (InputParams), intent(in)             :: params
-  type (TimerMpi), intent(in)                :: program_timer
+  type(CalculationData), intent(inout)      :: calc_data
+  type(KKRnanoParallel), intent(in)         :: my_mpi
+  type(Main2Arrays), intent(in)             :: arrays
+  type(DimParams), intent(in)               :: dims
+  type(InputParams), intent(in)             :: params
+  type(TimerMpi), intent(in)                :: program_timer
 
   ! locals
-  type (ShapeGauntCoefficients), pointer     :: shgaunts     ! const ref
-  type (BasisAtom), pointer                  :: atomdata     ! not const
-  type (LDAUData), pointer                   :: ldau_data    ! not const
-  type (EnergyResults), pointer              :: energies     ! not const
-  type (DensityResults), pointer             :: densities    ! not const
-  type (RadialMeshData), pointer             :: mesh
+  type(ShapeGauntCoefficients), pointer     :: shgaunts     ! const ref
+  type(BasisAtom), pointer                  :: atomdata     ! not const
+  type(LDAUData), pointer                   :: ldau_data    ! not const
+  type(EnergyResults), pointer              :: energies     ! not const
+  type(DensityResults), pointer             :: densities    ! not const
+  type(RadialMeshData), pointer             :: mesh
 
   integer :: I1
   integer :: lcoremax
@@ -710,7 +709,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
 
   I1 = 0
 
-  new_total_energy = 0.0d0
+  new_total_energy = 0.d0
 
   allocate(vons_temp, source = atomdata%potential%vons)
 
@@ -728,8 +727,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
     call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
 
 !------------------------------------------------------------------------------
-  end do ! ilocal
-  !!!$omp end parallel do
+  enddo ! ilocal
+  !!!$omp endparallel do
 !------------------------------------------------------------------------------
 
   call OUTTIME(isMasterRank(my_mpi), 'VINTRAS ......', getElapsedTime(program_timer), ITER)
@@ -737,10 +736,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
   ! perform near field correction for ALL local atoms
   if (params%near_field > 0) then
     call add_near_field_corr(calc_data, arrays, params%alat, my_mpi)
-
-    call OUTTIME(isMasterRank(my_mpi),'near field....',&
-                 getElapsedTime(program_timer),ITER)
-  end if
+    call OUTTIME(isMasterRank(my_mpi),'near field....', getElapsedTime(program_timer),ITER)
+  endif
 
 #ifndef DEBUG_NO_ELECTROSTATICS
   ! output: VONS (changed), VMAD
@@ -767,8 +764,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
     endif
 !==============================================================================
 
-  VAV0 = 0.0d0
-  VOL0 = 0.0d0
+  VAV0 = 0.d0
+  VOL0 = 0.d0
 
   if (params%KTE >= 0) call openResults2File(dims%LRECRES2)
 
@@ -793,14 +790,14 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
                   densities%RHO2NS,atomdata%potential%VONS, &
                   mesh%R,mesh%DRDI, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), atomdata%Z_nuclear,mesh%irmd)
 
-      force_FLMC = 0.0d0 ! temporary needed later in forcxc
+      force_FLMC = 0.d0 ! temporary needed later in forcxc
 
       call FORCE(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
                  atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                  atomdata%potential%VONS, mesh%R, mesh%DRDI, &
                  mesh%IMT, mesh%irmd)
 
-    end if
+    endif
 
 ! Force Calculation stops here look after VXCDRV
 
@@ -810,7 +807,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
     ! TODO: OpenMP critical !!! VXCDRV is most likely not threadsafe!
     ! output: vons_temp, EXC (exchange energy) (l-resolved)
 
-    vons_temp = 0.0d0 ! V_XC stored in temporary, must not add before energy calc.
+    vons_temp = 0.d0 ! V_XC stored in temporary, must not add before energy calc.
     call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, &
                         shgaunts, atomdata)
 
@@ -827,7 +824,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
                   atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                   atomdata%potential%VONS, mesh%R, &
                   mesh%DRDI, mesh%IMT, mesh%irmd)
-    end if
+    endif
 
     ! writes some results (mostly energies) to direct access file 'results2',
     ! those are read in again in routine 'RESULTS'
@@ -835,18 +832,18 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
       call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
                              energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
                              energies%EXC, I1, LCOREMAX, energies%VMAD)
-    end if
+    endif
 
     ! calculate new muffin-tin zero. output: VAV0, VOL0
-    VAV0_local = 0.0d0
-    VOL0_local = 0.0d0
+    VAV0_local = 0.d0
+    VOL0_local = 0.d0
     call MTZERO_wrapper(VAV0_local, VOL0_local, atomdata)
     VAV0 = VAV0 + VAV0_local
     VOL0 = VOL0 + VOL0_local
 
 !------------------------------------------------------------------------------
-  end do ! ilocal
-  !!!$omp end parallel do
+  enddo ! ilocal
+  !!!$omp endparallel do
 !------------------------------------------------------------------------------
 
   if (params%KTE >= 0) call closeResults2File()
@@ -857,7 +854,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
 
   if(isMasterRank(my_mpi)) then
     call printMuffinTinShift(VAV0, VBC_new, VOL0)
-  end if
+  endif
 
 !------------------------------------------------------------------------------
   !$omp parallel do private(ilocal, atomdata, energies, densities) reduction(+:new_total_energy)
@@ -889,8 +886,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
     !write(*,*) energies%e_vxc, energies%e_shift, energies%e_madelung
 
 !------------------------------------------------------------------------------
-  end do
-  !$omp end parallel do
+  enddo
+  !$omp endparallel do
 !------------------------------------------------------------------------------
 
   call OUTTIME(isMasterRank(my_mpi), 'calculated pot ......', getElapsedTime(program_timer), ITER)
@@ -899,11 +896,11 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
 
   if(isMasterRank(my_mpi)) then
     call printTotalEnergies(new_total_energy_all)
-  end if
+  endif
 
   deallocate(vons_temp)
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   !> Inner subroutine: energy calculation.
@@ -921,7 +918,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
 
     double precision :: energy_temp
 
-    energies%e_total = 0.0d0
+    energies%e_total = 0.d0
 
     ! core electron contribution
     call ESPCB_wrapper(energies%ESPC, LCOREMAX, atomdata)
@@ -957,8 +954,8 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
     energies%e_total = energies%e_total + sum(sum(energies%ESPV, 2))
 
     ! part of double counting energy that stems from V_XC (Weinert only)
-    energies%e_vxc = - 2.0d0 * energy_electrostatic_wrapper(vons_temp, &
-                               0.0d0, densities%RHO2NS, shgaunts, atomdata)
+    energies%e_vxc = - 2.d0 * energy_electrostatic_wrapper(vons_temp, &
+                               0.d0, densities%RHO2NS, shgaunts, atomdata)
 
     energies%e_total(2) = energies%e_total(2) + energies%e_vxc
 
@@ -969,38 +966,38 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
     energies%e_total = energies%e_total + ldau_data%EULDAU - ldau_data%EDCLDAU
 
     ! missing contributions to energies%e_total(2), Weinert only: muffin-tin shift energy
-  end subroutine
+  endsubroutine
 
-end subroutine
+endsubroutine
 
-!------------------------------------------------------------------------------
-subroutine openForceFile()
-  integer :: reclen
-  double precision :: dummy(-1:1)
+  !------------------------------------------------------------------------------
+  subroutine openForceFile()
+    integer :: reclen
+    double precision :: dummy(-1:1)
 
-  inquire (iolength = reclen) dummy ! get reclen for 3 doubles
-  open(91, access='direct', file='forces', recl=reclen, form='unformatted', status='replace')
-end subroutine
+    inquire(iolength=reclen) dummy ! get reclen for 3 doubles
+    open(91, access='direct', file='forces', recl=reclen, form='unformatted', action='write')
+  endsubroutine
 
-!------------------------------------------------------------------------------
-subroutine writeForces(forces_flm, recnr)
-  double precision, intent(in) :: forces_flm(-1:1)
-  integer, intent(in) :: recnr
+  !------------------------------------------------------------------------------
+  subroutine writeForces(forces_flm, recnr)
+    double precision, intent(in) :: forces_flm(-1:1)
+    integer, intent(in) :: recnr
 
-  write(91, rec=recnr) forces_flm
-end subroutine
+    write(91, rec=recnr) forces_flm
+  endsubroutine
 
-!------------------------------------------------------------------------------
-subroutine closeForceFile()
-  close(91)
-end subroutine
+  !------------------------------------------------------------------------------
+  subroutine closeForceFile()
+    close(91)
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Open Results2 File
   subroutine openResults2File(LRECRES2)
     integer, intent(in) :: LRECRES2
-    open (72,access='direct',recl=LRECRES2,file='results2',form='unformatted')
-  end subroutine
+    open(72, access='direct', recl=LRECRES2, file='results2', form='unformatted', action='write')
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write calculated stuff into historical 'results2' file
@@ -1017,14 +1014,14 @@ end subroutine
     integer, intent(in) :: LCOREMAX
     double precision, intent(in) :: VMAD
 
-    write(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX,EULDAU,EDCLDAU
-  end subroutine
+    write(72, rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX,EULDAU,EDCLDAU
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Close the file 'results2'
   subroutine closeResults2File()
     close(72)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Open the file 'results1'
@@ -1036,12 +1033,10 @@ end subroutine
     integer :: LRECRES1
 
     LRECRES1 = 8*43 + 16*(LMAXD+2)
-    if (NPOL==0) then
-      LRECRES1 = LRECRES1 + 32*(LMAXD+2)*IEMXD
-    end if
+    if (NPOL == 0) LRECRES1 = LRECRES1 + 32*(LMAXD+2)*IEMXD
 
-    open (71,access='direct',recl=LRECRES1,file='results1',form='unformatted')
-  end subroutine
+    open(71, access='direct', recl=LRECRES1, file='results1', form='unformatted', action='write')
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
@@ -1054,126 +1049,120 @@ end subroutine
     integer, intent(in) :: NPOL
     double precision, intent(in) :: QC
 
-    if (NPOL==0) then
-      write(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
+    if (NPOL == 0) then
+      write(71, rec=I1) QC,CATOM,CHARGE,ECORE,DEN  ! write density of states (DEN) only when certain options set
     else
-      write(71,rec=I1) QC,CATOM,CHARGE,ECORE
-    end if
-  end subroutine
+      write(71, rec=I1) QC,CATOM,CHARGE,ECORE
+    endif
+  endsubroutine
 
   !---------------------------------------------------------------------------
   !> Closes the file 'results1'
   subroutine closeResults1File()
     close(71)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Communicate and sum up contributions for charge neutrality and
   !> density of states at Fermi level.
-  subroutine sumNeutralityDOSFermi_com(CHRGNT, DENEF, communicator)
+  subroutine sumNeutralityDOSFermi_com(chrgnt, denef, communicator)
     include 'mpif.h'
-    double precision, intent(inout) :: CHRGNT
-    double precision, intent(inout) :: DENEF
+    double precision, intent(inout) :: chrgnt
+    double precision, intent(inout) :: denef
     integer, intent(in) :: communicator
     !----------------------------------
 
-    double precision :: WORK1(2)
-    double precision :: WORK2(2)
+    double precision :: work1(2)
+    double precision :: work2(2)
     integer :: ierr
 
-    WORK1(1) = CHRGNT
-    WORK1(2) = DENEF
+    work1(1) = chrgnt
+    work1(2) = denef
 
-    call MPI_ALLREDUCE(WORK1,WORK2,2,MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
+    call MPI_ALLREDUCE(WORK1,WORK2,2,MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
-    CHRGNT = WORK2(1)
-    DENEF  = WORK2(2)
+    chrgnt = work2(1)
+    denef  = work2(2)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Communicate and sum up contributions to semicore charge
 
-  subroutine sumChargeSemi_com(CHRGSEMICORE, communicator)
+  subroutine sumChargeSemi_com(chrgsemicore, communicator)
     include 'mpif.h'
-    double precision, intent(inout) :: CHRGSEMICORE
+    double precision, intent(inout) :: chrgsemicore
     integer, intent(in) :: communicator
     !----------------------------------
 
-    double precision :: WORK1
-    double precision :: WORK2
+    double precision :: work1
+    double precision :: work2
     integer :: ierr
 
-    WORK1 = CHRGSEMICORE
+    work1 = chrgsemicore
 
-    call MPI_ALLREDUCE(WORK1,WORK2,1,MPI_DOUBLE_PRECISION,MPI_SUM,communicator,IERR)
+    call MPI_ALLREDUCE(WORK1,WORK2,1,MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
-    CHRGSEMICORE = WORK2
+    chrgsemicore = work2
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Extracts the DOS at the Fermi level and stores result in DENEF
   !> @param IELAST energy index of Fermi level
   !> @param LMAXD1 lmax+1
-  double precision function calcDOSatFermi(DEN, IELAST, IEMXD, LMAXD1, NSPIN)
-    double complex, intent(in) :: DEN(0:LMAXD1,IEMXD,NSPIN)
-    integer, intent(in) :: IELAST
-    integer, intent(in) :: IEMXD
-    integer, intent(in) :: LMAXD1
-    integer, intent(in) :: NSPIN
+  double precision function calcDOSatFermi(den, ielast, iemxd, lmaxd1, nspin) result(denef)
+    double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin)
+    integer, intent(in) :: ielast
+    integer, intent(in) :: iemxd
+    integer, intent(in) :: lmaxd1
+    integer, intent(in) :: nspin
 
-    integer :: ISPIN
-    integer :: L
-    double precision :: PI
-    double precision :: DENEF
+    integer :: ispin, l
+    double precision :: pi
 
-    PI = 4.0D0*ATAN(1.0D0)
+    pi = 4.d0*atan(1.d0)
 
-    ! get density of states at Fermi-level
-    DENEF = 0.0d0
-    do ISPIN = 1,NSPIN
-      do L = 0,LMAXD1
-        DENEF = DENEF - 2.0D0 * DIMAG(DEN(L,IELAST,ISPIN))/PI/DBLE(NSPIN)
-      end do
-    end do
+    ! get density of states at fermi-level
+    denef = 0.d0
+    do ispin = 1, nspin
+      do l = 0, lmaxd1
+        denef = denef - 2.d0*dimag(den(l,ielast,ispin))/pi/dble(nspin)
+      enddo ! l
+    enddo ! ispin
 
-    calcDOSatFermi = DENEF
-
-  end function calcDOSatFermi
+  endfunction calcDOSatFermi
 
   !----------------------------------------------------------------------------
   !> Calculates the l-resolved charges.
   !> This is done by energy integration in the complex plane over the imaginary
   !> part of the diagonal of the structural Green's function (DEN)
 
-  subroutine calcChargesLres(CHARGE, DEN, IELAST, LMAXD1, NSPIN, WEZ, IEMXD)
-    double precision, intent(out) :: CHARGE(0:LMAXD1,2)
-    double complex, intent(in) :: DEN(0:LMAXD1,IEMXD,NSPIN)
-    doublecomplex, intent(in) :: WEZ(IEMXD)
+  subroutine calcChargesLres(charge, den, ielast, lmaxd1, nspin, wez, iemxd)
+    double precision, intent(out) :: charge(0:lmaxd1,2)
+    double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin)
+    doublecomplex, intent(in) :: wez(iemxd)
 
-    integer, intent(in) :: IEMXD
-    integer, intent(in) :: NSPIN
-    integer, intent(in) :: LMAXD1
-    integer, intent(in) :: IELAST
+    integer, intent(in) :: iemxd
+    integer, intent(in) :: nspin
+    integer, intent(in) :: lmaxd1
+    integer, intent(in) :: ielast
 
-    integer :: ISPIN
-    integer :: L
-    integer :: IE
+    integer :: ispin
+    integer :: l
+    integer :: ie
 
     ! ---> l/m_s/atom-resolved charges
 
-    do ISPIN = 1,NSPIN
-      do L = 0,LMAXD1
-        CHARGE(L,ISPIN) = 0.0D0
-
-        do IE = 1,IELAST
-          CHARGE(L,ISPIN) = CHARGE(L,ISPIN) + DIMAG(WEZ(IE)*DEN(L,IE,ISPIN))/DBLE(NSPIN)
-        end do
-
-      end do
-    end do
-  end subroutine calcChargesLres
+    do ispin = 1, nspin
+      do l = 0, lmaxd1
+        charge(l,ispin) = 0.d0
+        do ie = 1, ielast
+          charge(l,ispin) = charge(l,ispin) + dimag(wez(ie)*den(l,ie,ispin))/dble(nspin)
+        enddo ! ie
+      enddo ! l
+    enddo ! ispin
+  endsubroutine calcChargesLres
 
    !----------------------------------------------------------------------------
   !> Calculates the l-resolved charges including the semicore charge.
@@ -1181,130 +1170,123 @@ end subroutine
   !> part of the diagonal of the structural Green's function (DEN)
   !> TO DO: Combine calcChargesLres and calcChargesLresSemi once semicore feature is stable!
 
-  subroutine calcChargesLresSemi(CHARGE, CHRGSEMICORE, DEN, IELAST, IESEMICORE, LMAXD1, NSPIN, WEZ, IEMXD)
-    double precision, intent(out) :: CHARGE(0:LMAXD1,2)
-    double precision, intent(out) :: CHRGSEMICORE
-    double complex, intent(in) :: DEN(0:LMAXD1,IEMXD,NSPIN)
-    doublecomplex, intent(in) :: WEZ(IEMXD)
+  subroutine calcChargesLresSemi(charge, chrgsemicore, den, ielast, iesemicore, lmaxd1, nspin, wez, iemxd)
+    double precision, intent(out) :: charge(0:lmaxd1,2)
+    double precision, intent(out) :: chrgsemicore
+    double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin)
+    doublecomplex, intent(in) :: wez(iemxd)
 
-    integer, intent(in) :: IEMXD
-    integer, intent(in) :: NSPIN
-    integer, intent(in) :: LMAXD1
-    integer, intent(in) :: IELAST
-    integer, intent(in) :: IESEMICORE
+    integer, intent(in) :: iemxd
+    integer, intent(in) :: nspin
+    integer, intent(in) :: lmaxd1
+    integer, intent(in) :: ielast
+    integer, intent(in) :: iesemicore
 
-    integer :: ISPIN
-    integer :: L
-    integer :: IE
+    integer :: ispin
+    integer :: l
+    integer :: ie
 
     ! ---> l/m_s/atom-resolved charges
 
-    CHRGSEMICORE=0.0d0
+    chrgsemicore = 0.d0
 
-    do ISPIN = 1,NSPIN
-      do L = 0,LMAXD1
-        CHARGE(L,ISPIN) = 0.0D0
-        do IE = 1,IELAST
-          CHARGE(L,ISPIN) = CHARGE(L,ISPIN) + DIMAG(WEZ(IE)*DEN(L,IE,ISPIN))/DBLE(NSPIN)
-          if (IE.EQ.IESEMICORE) THEN
-          CHRGSEMICORE = CHRGSEMICORE + CHARGE(L,ISPIN)
-          end if
-        end do
-
-      end do
-    end do
-  end subroutine calcChargesLresSemi
+    do ispin = 1, nspin
+      do l = 0, lmaxd1
+        charge(l,ispin) = 0.d0
+        do ie = 1, ielast
+          charge(l,ispin) = charge(l,ispin) + dimag(wez(ie)*den(l,ie,ispin))/dble(nspin)
+          if (ie == iesemicore) chrgsemicore = chrgsemicore + charge(l,ispin)
+        enddo ! ie
+      enddo ! l
+    enddo ! ispin
+  endsubroutine calcChargesLresSemi
 
   !----------------------------------------------------------------------------
   !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
 
-  subroutine calcFactorSemi(CHRGSEMICORE, FSEMICORE, communicator)
+  subroutine calcFactorSemi(chrgsemicore, fsemicore, communicator)
 !   include 'mpif.h' ! not used any more
-    double precision, intent(inout)  :: CHRGSEMICORE ! semicore charge
-    double precision, intent(inout) :: FSEMICORE    ! semicore factor to be updated
+    double precision, intent(inout)  :: chrgsemicore ! semicore charge
+    double precision, intent(inout) :: fsemicore    ! semicore factor to be updated
     integer, intent(in) :: communicator             ! communicator not used any more
     
-    double precision :: WORK
-    integer :: I1                                ! auxiliary parameter, number of semicore bands
-    integer :: IERR
+    double precision :: work
+    integer :: i1                                ! auxiliary parameter, number of semicore bands
+    integer :: ierr
 
-    IF ( CHRGSEMICORE.LT.1D-10 ) CHRGSEMICORE = 1D-10
+    if (chrgsemicore < 1d-10) chrgsemicore = 1d-10
 
-    I1 = NINT(CHRGSEMICORE)
+    i1 = nint(chrgsemicore)
 
-    FSEMICORE = DBLE(I1)/CHRGSEMICORE * FSEMICORE
+    fsemicore = dble(i1)/chrgsemicore*fsemicore
 
-    WRITE(6,'(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)') CHRGSEMICORE,FSEMICORE
-  end subroutine calcFactorSemi
+    write(6,'(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)') chrgsemicore, fsemicore
+  endsubroutine calcFactorSemi
 
   !----------------------------------------------------------------------------
   !> correct Fermi-energy (charge neutrality).
   !>
   !> Modifies charge density, Fermi energy and valence band energy!
-  subroutine doFermiEnergyCorrection(atomdata, output, naez, max_shift, CHRGNT, DENEF, R2NEF, ESPV, RHO2NS, E2)
+  subroutine doFermiEnergyCorrection(atomdata, output, naez, max_shift, chrgnt, denef, r2nef, espv, rho2ns, e2)
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
 
-    type (BasisAtom), intent(in) :: atomdata
+    type(BasisAtom), intent(in) :: atomdata
     logical, intent(in) :: output !< output to stdout - yes/no
     integer, intent(in) :: naez
-    double precision, intent(in) :: max_shift !< maximally allowed Fermi-Energy shift (good: 0.03d0)
-    double precision, intent(in) :: CHRGNT
-    double precision, intent(in) :: DENEF
-    double precision, dimension(:,:,:), intent(in) ::  R2NEF
+    double precision, intent(in) :: max_shift !< maximally allowed fermi-energy shift (good: 0.03d0)
+    double precision, intent(in) :: chrgnt
+    double precision, intent(in) :: denef
+    double precision, intent(in) :: r2nef(:,:,:)
 
     ! in,out - arguments
-    double precision, dimension(0:,:), intent(inout) :: ESPV
-    double precision, dimension(:,:,:), intent(inout) ::  RHO2NS
-    double precision, intent(inout) :: E2
+    double precision, intent(inout) :: espv(0:,:)
+    double precision, intent(inout) :: rho2ns(:,:,:)
+    double precision, intent(inout) :: e2
 
     !-------- locals
     integer :: nspind
-    type (RadialMeshData), pointer :: mesh
+    type(RadialMeshData), pointer :: mesh
 
-    double precision :: E2SHIFT
-    double precision :: EFold
-    double precision :: DF
-    double precision :: PI
+    double precision :: e2shift
+    double precision :: efold
+    double precision :: df
+    double precision :: pi
     integer :: ispin, lm, lmpotd
 
-    PI = 4.0D0*ATAN(1.0D0)
+    pi = 4.d0*atan(1.d0)
 
     nspind = atomdata%nspin
     lmpotd = atomdata%potential%lmpot
 
     mesh => atomdata%mesh_ptr
-! --> determine new Fermi level due to valence charge up to
-!     old Fermi level E2 and density of states DENEF
+! --> determine new fermi level due to valence charge up to
+!     old fermi level e2 and density of states denef
 
-        E2SHIFT = CHRGNT/DENEF
-        E2SHIFT = DMIN1(DABS(E2SHIFT),max_shift)*DSIGN(1.0D0,E2SHIFT)
-        EFOLD = E2
+    e2shift = chrgnt/denef
+    e2shift = dmin1(dabs(e2shift), max_shift)*dsign(1.d0, e2shift)
+    efold = e2
 
-        E2 = E2 - E2SHIFT
+    e2 = e2 - e2shift
 
-        if( output ) then
-          call printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
-        end if
+    if (output) call printFermiEnergy(denef, e2, e2shift, efold, naez)
 
 ! ----------------------------------------------------------------------
-        DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIND)
+    df = 2.d0/pi*e2shift/dble(nspind)
 ! ----------------------------------------------------------------------
 
-        do ISPIN = 1,NSPIND
+    do ispin = 1, nspind
 
 ! -->     get correct density and valence band energies
 
-          ESPV(0,ISPIN) = ESPV(0,ISPIN) - &
-          EFOLD*CHRGNT/DBLE(NSPIND*NAEZ)
+      espv(0,ispin) = espv(0,ispin) - efold*chrgnt/dble(nspind*naez)
 
-          do LM = 1,LMPOTD
-            call DAXPY(mesh%IRC,DF,R2NEF(1,LM,ISPIN),1, &
-            RHO2NS(1,LM,ISPIN),1)
-          end do
-        end do
+      do lm = 1, lmpotd
+        call daxpy(mesh%irc,df,r2nef(1,lm,ispin),1, rho2ns(1,lm,ispin),1)
+      enddo ! lm
+    enddo ! ispin
 ! ----------------------------------------------------------------------
-  end subroutine
+  endsubroutine
 
   !---------------------------------------------------------------------------
   !> Checks for file 'STOP' in current working directory, returns 1 if it
@@ -1315,33 +1297,30 @@ end subroutine
   
     logical :: stopfile_exists
     stopfile_exists = .false.
-    inquire(file='STOP',exist=stopfile_exists)
+    inquire(file='STOP', exist=stopfile_exists)
     stopfile_flag = 0
-    if (stopfile_exists) then
-      stopfile_flag = 1
-    end if
-  end function
+    if (stopfile_exists) stopfile_flag = 1
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Print Fermi-Energy information to screen.
-  subroutine printFermiEnergy(DENEF, E2, E2SHIFT, EFOLD, NAEZ)
-    double precision, intent(in) :: DENEF
-    double precision, intent(in) :: E2
-    double precision, intent(in) :: E2SHIFT
-    double precision, intent(in) :: EFOLD
-    integer, intent(in) :: NAEZ
+  subroutine printFermiEnergy(denef, e2, e2shift, efold, naez)
+    double precision, intent(in) :: denef
+    double precision, intent(in) :: e2
+    double precision, intent(in) :: e2shift
+    double precision, intent(in) :: efold
+    integer, intent(in) :: naez
 
-    write(6,fmt="('                old',' E FERMI ',F12.6,' Delta E_F = ',f12.6)") EFOLD,E2SHIFT
+    write(6,fmt="('                old',' E FERMI ',F12.6,' Delta E_F = ',f12.6)") efold,e2shift
 
-    ! --> divided by NAEZ because the weight of each atom has been already
-    !     taken into account in 1c
+    ! --> divided by naez because the weight of each atom has been already taken into account in 1c
 
-    write(6,fmt="('                new',' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") E2,DENEF/DBLE(NAEZ)
-    write(6,'(79(1H+),/)')
-  end subroutine
+    write(6,fmt="('                new',' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") e2,denef/dble(naez)
+    write(6,'(79(1h+),/)')
+  endsubroutine
 
   !----------------------------------------------------------------------------
-  !> Sums up the total energies of all processes - returns result in 'total' on master, 0.0d0 on
+  !> Sums up the total energies of all processes - returns result in 'total' on master, 0.d0 on
   !> other ranks.
   subroutine sum_total_energy_com(total, total_energies, master, communicator)
     include 'mpif.h'
@@ -1357,10 +1336,10 @@ end subroutine
     length = 2
     send = total_energies
 
-    total = 0.0d0
+    total = 0.d0
     call MPI_Reduce(send, total, length, MPI_DOUBLE_PRECISION, MPI_SUM, master, communicator, ierr)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Print total energy to screen (both methods: Harris and Weinert).
@@ -1370,12 +1349,9 @@ end subroutine
     write(*, 99014) total_energies(1), total_energies(1)*13.6058D0
     write(*, 99015) total_energies(2), total_energies(2)*13.6058D0
 
-    99014 FORMAT (/,3X,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f21.8,/15x, &
-             '                 eV  : ',F21.8,/,3x,70('+'))
-
-    99015 FORMAT (/,3X,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x, &
-             '                 eV  : ',F21.8,/,3x,70('+'))
-  end subroutine
+    99014 format (/,3x,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))
+    99015 format (/,3x,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))
+  endsubroutine
 
 !=============== DEBUG: Morgan charge distribution test =======================
 
@@ -1387,12 +1363,13 @@ end subroutine
     write(*,*) "= Set option DEBUG_morgan_electrostatics = 0 to deactivate    ="
     write(*,*) "= Results of calculation are wrong.                           ="
     write(*,*) "==============================================================="
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write results of potential in direction 'dir' to a file.
   subroutine write_morgan_potential_dir(vons, mesh_points, dir)
     use debug_morgan_mod, only: eval_expansion
+    
     double precision, intent(in) :: vons(:,:)
     double precision, intent(in) :: mesh_points(:)
     double precision, intent(in) :: dir(3)
@@ -1402,20 +1379,20 @@ end subroutine
     double precision :: vec(3), norm_dir(3), val
     integer :: ii
 
-    norm_dir = dir / norm2(dir)
+    norm_dir = dir/norm2(dir)
 
-    open(UNIT, form='formatted', file='morgan_potential_dir.txt')
+    open(UNIT, form='formatted', file='morgan_potential_dir.txt', action='write')
 
     do ii = 1, size(mesh_points)
       vec = norm_dir * mesh_points(ii)
-      if (norm2(vec) == 0.0d0) vec(1) = 1e-6
+      if (norm2(vec) == 0.d0) vec(1) = 1e-6
       val = eval_expansion(vons(ii,:), vec)
       write(UNIT, *) mesh_points(ii), val
     enddo
 
     close(UNIT)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Stores generalised Morgan test charge distribution into rho2ns_density.
@@ -1447,20 +1424,20 @@ end subroutine
       call calc_gen_morgan_rho_expansion(coeffs, reciprocals, prefactors, rbasis, center, mesh_points(ii), lpot)
 
       ! since we are using real spherical harmonics, one can just take the real part of the expansion coeffs
-      rho2ns_density(ii, :, 1) = real(coeffs)
-    enddo
+      rho2ns_density(ii,:,1) = real(coeffs)
+    enddo ! ii
 
     ! multiply with r**2 (mesh_points = r)
     do ii = 1, size(rho2ns_density, 2)
-      rho2ns_density(:, ii, 1) = rho2ns_density(:, ii, 1) * mesh_points * mesh_points
-    enddo
+      rho2ns_density(:, ii, 1) = rho2ns_density(:,ii,1) * mesh_points * mesh_points
+    enddo ! ii
 
-    if (size(rho2ns_density, 3) > 1) rho2ns_density(:, :, 2:) = 0.0d0
+    if (size(rho2ns_density, 3) > 1) rho2ns_density(:,:,2:) = 0.d0
 
     deallocate(reciprocals)
     deallocate(coeffs)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Read file 'morgan_prefactors.dat'.
@@ -1475,20 +1452,20 @@ end subroutine
     logical :: flag
 
     flag = .true.
-    inquire(file = 'morgan_prefactors.dat', exist = flag)
+    inquire(file='morgan_prefactors.dat', exist=flag)
 
     if (.not. flag) then
-      prefactors = dcmplx(1.0d0, 0.0d0)
+      prefactors = dcmplx(1.d0, 0.d0)
       return
     endif
 
-    open(99, form='formatted', file='morgan_prefactors.dat')
-      do ii = 1, size(prefactors)
-        read(99, *) re, im
-        prefactors(ii) = dcmplx(re, im)
-      enddo
+    open(99, form='formatted', file='morgan_prefactors.dat', action='read', status='old')
+    do ii = 1, size(prefactors)
+      read(99, *) re, im
+      prefactors(ii) = dcmplx(re, im)
+    enddo ! ii
     close(99)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Read file a direction vector from file 'directions.dat'.
@@ -1496,11 +1473,10 @@ end subroutine
   !> If the file does not exist, prefactors are set to 1.0
   function read_direction()
     double precision :: read_direction(3)
-    integer :: ii
-    open(99, form='formatted', file='directions.dat')
-      read(99, *) (read_direction(ii), ii = 1, 3)
+    open(99, form='formatted', file='directions.dat', action='read', status='old')
+    read(99, fmt=*) read_direction(1:3)
     close(99)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Write analytical values of generalised morgan potential in direction 'dir' to a file.
@@ -1518,16 +1494,16 @@ end subroutine
 
     double precision :: vec(3), norm_dir(3), val
     integer :: ii
-    double precision, allocatable :: reciprocals(:, :)
+    double precision, allocatable :: reciprocals(:,:)
     double precision :: rec_basis(3, 3)
 
     call calc_reciprocal_basis(rec_basis, bravais)
     call calc_reciprocal_first_shell(reciprocals, rec_basis) ! reciprocals gets allocated here
 
-    norm_dir = dir / norm2(dir)
+    norm_dir = dir/norm2(dir)
 
     ! also write the analytical solution
-    open(UNIT, form='formatted', file='gen_morgan_potential_dir_analytical.txt')
+    open(UNIT, form='formatted', file='gen_morgan_potential_dir_analytical.txt', action='write')
 
     do ii = 1, size(mesh_points)
       vec = norm_dir * mesh_points(ii)
@@ -1537,7 +1513,7 @@ end subroutine
 
     close(UNIT)
 
-  end subroutine
+  endsubroutine
 
-end module ProcessKKRresults_mod
+endmodule ProcessKKRresults_mod
 

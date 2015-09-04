@@ -46,7 +46,7 @@ module TEST_lcutoff_mod
     allocate(lmarray_temp(size(arrays%rbasis,2)))
 
     real_space_cutoff = .false.
-    open(91, file='lcutoff', form='formatted')
+    open(91, file='lcutoff', form='formatted', action='read', status='old')
       read(91,*) cutoff_radius
       read(91,*) lm_low
       read(91,*) cutoffmode

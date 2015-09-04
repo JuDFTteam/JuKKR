@@ -336,7 +336,7 @@ module BrillouinZone_mod
                   ibk(ind2(3),ind2(2),ind2(1)) = isym ! mark this k-point to be covered by symmetry number isym
                   iwt = iwt + 1 ! increase the weight of this irreducible k-point
               endif
-!               mesh point in the unit cell found.
+!             mesh point in the unit cell found.
             enddo ! isym
 !========================================================================
             

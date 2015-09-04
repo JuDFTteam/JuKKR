@@ -1,24 +1,23 @@
-C>    Reads atominfo and rbasis files.
-      SUBROUTINE RINPUTNEW99(RBASIS,NAEZ)
-
+!>    Reads atominfo and rbasis files.
+      SUBROUTINE RINPUTNEW99(RBASIS, NAEZ)
       IMPLICIT NONE
 
-C     .. Array Arguments ..
+!     .. Array Arguments ..
 !      INTEGER IRNS_dummy,KFGdummy(4),LMXCdummy,
 !     &        NTCELL(naez),CLS, refpot
 
 !      DOUBLE PRECISION Z(*),MTFACdummy,RBASIS(3,*),radius_muffin_tin(*)
-      DOUBLE PRECISION RBASIS(3,*)
-
-      INTEGER NAEZ
+      DOUBLE PRECISION, intent(out) :: RBASIS(3,*)
+      INTEGER, intent(in) :: NAEZ
+      
 !      double precision temp
-      INTEGER NREF,NCLS
+!       INTEGER :: NREF, NCLS
                                  ! atom types located at a given site
-C-----------------------------------------------------------------------
-C     .. Local Scalars ..
+!-----------------------------------------------------------------------
+!     .. Local Scalars ..
       INTEGER I!,J
 
-c------------ array set up and definition of input parameter -----------
+!------------ array set up and definition of input parameter -----------
 
       WRITE (6,2004) 'Jun 2013'
 
@@ -44,23 +43,23 @@ c------------ array set up and definition of input parameter -----------
 !      END DO
 !      CLOSE (77)
 
-c----------------------------------------------------------------------
-c
+!----------------------------------------------------------------------
+!
       OPEN(77,FILE='rbasis',FORM='formatted')
       DO I=1,NAEZ
              READ (UNIT=77,FMT=*) RBASIS(1:3,I)
       ENDDO                         
       CLOSE (77)
 
-c     WRITE(6,2110)
-c     WRITE(6,2103)
+!     WRITE(6,2110)
+!     WRITE(6,2103)
       WRITE(6,fmt="( 3(7(1H-),1H+) ,55(1H-))")
       WRITE(6,fmt="(10(3(1H-),1H+) ,39(1H-))")
 
-C *********************************************Input-End ********
-C
-C     No cleanup of Format statements due to nostalgic reasons.
-C
+! *********************************************Input-End ********
+!
+!     No cleanup of Format statements due to nostalgic reasons.
+!
  2004 FORMAT( /80(1H=)/
      & '|',78X,'|'/
      & '|',1X,'KKRnano ',69X,'|'/
@@ -81,7 +80,7 @@ C
  2019 FORMAT('         ABASIS         BBASIS         CBASIS'/3F15.8)
  2025 FORMAT((i4,3F15.8))
  2028 FORMAT(' NAEZ ',/,I8)
-C ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
  2100 FORMAT(79(1H-))
  2101 format(   3(1H-),1H+  , 3(14(1H-),1H+),  30(1H-))
  2102 format( 3(9(1H-),1H+) ,49(1H-))
@@ -142,5 +141,5 @@ C ------------------------------------------------------------------------
  9307 format(6(1H-),1H+,72(1H-))
  9308 format(11(1H-),1H+,67(1H-))
  9309 format(5(6(1H-),1H+) ,44(1H-))
-C
+!
       END

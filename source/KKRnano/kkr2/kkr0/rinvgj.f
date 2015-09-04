@@ -1,4 +1,4 @@
-      SUBROUTINE RINVGJ(AINV,A,ARRAYDIM,N)
+      SUBROUTINE RINVGJ(AINV,A,ADIM,N)
 C   ********************************************************************
 C   *                                                                  *
 C   *                      AINV = A**(-1)                              *
@@ -6,7 +6,7 @@ C   *                                                                  *
 C   *  invert A using the GAUSS-JORDAN - algorithm                     *
 C   *  the 1- matrix is not set up and use is made of its structure    *
 C   *                                                                  *
-C   *                    REAL*8 VERSION                                *
+C   *                    double precision VERSION                      *
 C   *                                                                  *
 C   ********************************************************************
 C
@@ -15,15 +15,16 @@ C
 C
 C Dummy arguments
 C
-      INTEGER ARRAYDIM,N
-      REAL*8 A(ARRAYDIM,ARRAYDIM),AINV(ARRAYDIM,ARRAYDIM)
+      INTEGER, intent(in) :: ADIM, N
+      double precision, intent(inout) ::  A(ADIM,ADIM)
+      double precision, intent(out) :: AINV(ADIM,ADIM)
 C
 C Local variables
 C
-      INTEGER ICOL,L,LL
-      REAL*8 T,T1
+      INTEGER :: ICOL, L, LL
+      double precision :: T, T1
 C
-      AINV(1,1) = 0D0
+      AINV(1,1) = 0.D0
 C                                                        scan columns
       DO ICOL = 1,N
 C
@@ -40,7 +41,7 @@ C
 C
 C                                    make A(LL,ICOL) = 0 for LL<>ICOL
          DO LL = 1,N
-            IF ( LL.NE.ICOL ) THEN
+            IF (LL /= ICOL) THEN
                T = A(LL,ICOL)
                DO L = (ICOL+1),N
                   A(LL,L) = A(LL,L) - A(ICOL,L)*T

@@ -3,7 +3,7 @@
 C **********************************************************************
 C *  modified version of lattice3d.f                                   *
 C *  this one only tests the dimension of arrays!                      *
-C *  										Alexander Thieß		2010   *
+C *                                            Alexander Thiess 2010   *
 C **********************************************************************
 C *  generate lattice vectors of direct and reciprocal space from      *
 C *  basic translation vectors br                                      *
@@ -34,30 +34,30 @@ C     ..
       INTEGER ISHLD
 
 C     .. Scalar arguments ..
-      INTEGER 			NGMAX,NRMAX,NSHLG,NSHLR
-      DOUBLE PRECISION 	ALAT
+      INTEGER       NGMAX,NRMAX,NSHLG,NSHLR
+      DOUBLE PRECISION  ALAT
 C     ..
 C     .. Array arguments ..
-      DOUBLE PRECISION 	BRAVAIS(3,3),RECBV(3,3)
-      DOUBLE PRECISION 	GN(3,NMAXD),RM(3,NMAXD)
-      INTEGER 			NSG(ISHLD),NSR(ISHLD)
+      DOUBLE PRECISION  BRAVAIS(3,3),RECBV(3,3)
+      DOUBLE PRECISION  GN(3,NMAXD),RM(3,NMAXD)
+      INTEGER           NSG(ISHLD),NSR(ISHLD)
 C     ..
 C     .. Local scalars ..
-      DOUBLE PRECISION 	A,ABSGM,ABSRM,AG,AR,B,C,DA,DB,GMAX,GX,GY,GZ,PI,
-     &                 	RMAX,RX,RY,RZ,VMIN
-      INTEGER 			I,K,L,M,N,N1,NG,NR,
-     &					NSH,NSHL,NUMG,NUMGH,NUMR,
-     &        			NUMRH
+      DOUBLE PRECISION  A,ABSGM,ABSRM,AG,AR,B,C,DA,DB,GMAX,GX,GY,GZ,PI,
+     &                  RMAX,RX,RY,RZ,VMIN
+      INTEGER           I,K,L,M,N,N1,NG,NR,
+     &                  NSH,NSHL,NUMG,NUMGH,NUMR,
+     &                  NUMRH
       DOUBLE PRECISION  DBLE
-      INTEGER 			IDINT
+      INTEGER IDINT
 
 C     ..
 C     .. Local arrays ..
-      DOUBLE PRECISION 	ABSG(3),ABSR(3),BG(3,3),BR(3,3),CJ(4,NMAXD)
-      DOUBLE PRECISION 	GNR(NMAXD),RMR(NMAXD)
+      DOUBLE PRECISION ABSG(3),ABSR(3),BG(3,3),BR(3,3),CJ(4,NMAXD)
+      DOUBLE PRECISION GNR(NMAXD),RMR(NMAXD)
 C     ..
 C     .. Intrinsic functions ..
-      INTRINSIC 		ABS,ATAN,DBLE,IDINT,MAX,MOD,SQRT
+      INTRINSIC ABS,ATAN,DBLE,IDINT,MAX,MOD,SQRT
 C     ..
 C     ..................................................................
 C

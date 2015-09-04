@@ -1,5 +1,5 @@
 
-! process with MYLRANK(LMPIC).EQ.0 and LMPIC.EQ.1 writes results
+! process with MYLRANK(LMPIC) == 0 and LMPIC == 1 writes results
 
 subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   KPRE,KTE,LPOT,E1,E2,TK,EFERMI,ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ, &
@@ -49,32 +49,30 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   LRECRES1 = 8*43 + 16*(LMAX+2)
 
   ! DOS calc.
-  if (NPOL.eq.0) then
+  if (NPOL == 0) then
     LRECRES1 = LRECRES1 + 32*(LMAX+2)*IEMXD
   end if
 
 
   if (KTE >= 0) then
 
-    open (71,access='direct',recl=LRECRES1,file='results1', &
-    form='unformatted')
-
+    open (71, access='direct', recl=LRECRES1, file='results1', form='unformatted', action='read', status='old')
 
     ! Moments output
     do I1 = 1,NAEZ
-      if (NPOL.eq.0) then
-        read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
+      if (NPOL == 0) then
+        read(71, rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
-        read(71,rec=I1) QC,CATOM,CHARGE,ECORE
+        read(71, rec=I1) QC,CATOM,CHARGE,ECORE
       end if
       call WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAX,LMAX+1)
     end do
 
 
     ! Density of states output
-    if (NPOL.eq.0) then
+    if (NPOL == 0) then
       do I1 = 1,NAEZ
-        read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
+        read(71, rec=I1) QC,CATOM,CHARGE,ECORE,DEN
         call WRLDOS(DEN,EZ,WEZ, &
         LMAX+1,IEMXD,NPOTD,ITITLE,EFERMI,E1,E2,ALAT,TK, &
         NSPIN,NAEZ,IELAST,I1,DOSTOT)
@@ -84,7 +82,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
     TOTSMOM = 0.0D0
     do I1 = 1,NAEZ
-      if (NPOL.eq.0) then
+      if (NPOL == 0) then
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE
@@ -97,11 +95,11 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
         end if
       end do
       write (6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
-      if (NSPIN.eq.2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
+      if (NSPIN == 2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
     end do
     write(6,'(79(1H+))')
     write (6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
-    if (NSPIN.eq.2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
+    if (NSPIN == 2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
     write(6,'(79(1H+))')
 
     close(71)
@@ -138,14 +136,12 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 !  !      WRITE(6,'(79(1H=))')
 !
 
-  if (KTE.eq.1) then
+  if (KTE == 1) then
 
-    open (72,access='direct',recl=LRECRES2,file='results2', &
-    form='unformatted')
+    open (72, access='direct', recl=LRECRES2, file='results2', form='unformatted', action='read', status='old')
 
     do I1 = 1,NAEZ
-      read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
-      EULDAU,EDCLDAU
+      read(72, rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX,EULDAU,EDCLDAU
 
       ! output unfortunaltely integrated into ETOTB1
       ! ETOTB1 depends on 'SAVED' variables !!!
