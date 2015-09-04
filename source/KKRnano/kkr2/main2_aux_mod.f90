@@ -14,7 +14,7 @@ module main2_aux_mod
     write(6,'(79(1H=))')
     write(6,'(19X,A,I3,A,I10)') '       ITERATION : ', ITER,' SUM of QMR ',NOITER_ALL
     write(6,'(79(1H=),/)')
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Print timing information for SCF iteration.
@@ -30,7 +30,7 @@ module main2_aux_mod
     call OUTTIME(.true. ,'finished in .........', TIME_S,ITER)
     write(2,'(79(1H=))')
     write(6,'(79(1H=),/)')
-  end subroutine
+  endsubroutine
 
   !-------------------------------------------------------------------------
   !> Checks for abort flag on rank 0.
@@ -54,7 +54,7 @@ module main2_aux_mod
 
     is_abort_by_rank0 = (stop_integer >= 1)
 
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Prints a double line separator. (=========)
@@ -67,7 +67,7 @@ module main2_aux_mod
       write(unit_number,'(79("="))')
     else
       write(*,'(79("="))')
-    end if
-  end subroutine
+    endif
+  endsubroutine
 
-end module main2_aux_mod
+endmodule main2_aux_mod

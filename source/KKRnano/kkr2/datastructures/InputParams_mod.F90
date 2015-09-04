@@ -462,9 +462,9 @@ integer function getInputParamsValues(filename, values) result(ierror)
 endfunction !
 
 !-------------------------------------------------------------------------------
-integer function readInputParamsFromFile(filename, values) result(ierror)
-  character(len=*), intent(in) :: filename
+integer function readInputParamsFromFile(values, filename) result(ierror)
   type(InputParams), intent(inout) :: values
+  character(len=*), intent(in) :: filename
 
   integer, parameter :: fu = 67
 
@@ -521,9 +521,9 @@ integer function readInputParamsFromFile(filename, values) result(ierror)
 endfunction ! readFromFile
 
 !-------------------------------------------------------------------------------
-integer function writeInputParamsToFile(filename, values) result(ierror)
-  character(len=*), intent(in) :: filename
+integer function writeInputParamsToFile(values, filename) result(ierror)
   type(InputParams), intent(inout) :: values
+  character(len=*), intent(in) :: filename
 
   integer, parameter :: fu = 67
 

@@ -237,20 +237,20 @@ module RadialMeshData_mod
 #endif
 
     FILEWRITE (fileunit, rec=recnr) MAGIC_NUMBER + recnr, &
-                                meshdata%A, &
-                                meshdata%B, &
-                                meshdata%RWS, &
-                                meshdata%RMT, &
-                                meshdata%IPAN, &
-                                meshdata%IRC, &
-                                meshdata%IMT, &
-                                meshdata%IRNS, &
-                                meshdata%IRWS, &
-                                meshdata%IRMIN, &
-                                meshdata%R, &
-                                meshdata%DRDI, &
-                                meshdata%IRCUT, &
-                                MAGIC_NUMBER + recnr
+                                    meshdata%A, &
+                                    meshdata%B, &
+                                    meshdata%RWS, &
+                                    meshdata%RMT, &
+                                    meshdata%IPAN, &
+                                    meshdata%IRC, &
+                                    meshdata%IMT, &
+                                    meshdata%IRNS, &
+                                    meshdata%IRWS, &
+                                    meshdata%IRMIN, &
+                                    meshdata%R, &
+                                    meshdata%DRDI, &
+                                    meshdata%IRCUT, &
+                                    MAGIC_NUMBER + recnr
 
 #ifdef TASKLOCAL_FILES
     close(fileunit)
@@ -281,21 +281,21 @@ module RadialMeshData_mod
 
     checkmagic = MAGIC_NUMBER + recnr
 
-    FILEREAD (fileunit, rec=recnr) magic, &
-                                meshdata%A, &
-                                meshdata%B, &
-                                meshdata%RWS, &
-                                meshdata%RMT, &
-                                meshdata%IPAN, &
-                                meshdata%IRC, &
-                                meshdata%IMT, &
-                                meshdata%IRNS, &
-                                meshdata%IRWS, &
-                                meshdata%IRMIN, &
-                                meshdata%R, &
-                                meshdata%DRDI, &
-                                meshdata%IRCUT, &
-                                magic2
+    FILEREAD (fileunit, rec=recnr)  magic, &
+                                    meshdata%A, &
+                                    meshdata%B, &
+                                    meshdata%RWS, &
+                                    meshdata%RMT, &
+                                    meshdata%IPAN, &
+                                    meshdata%IRC, &
+                                    meshdata%IMT, &
+                                    meshdata%IRNS, &
+                                    meshdata%IRWS, &
+                                    meshdata%IRMIN, &
+                                    meshdata%R, &
+                                    meshdata%DRDI, &
+                                    meshdata%IRCUT, &
+                                    magic2
 #ifdef TASKLOCAL_FILES
     close(fileunit)
 #endif
@@ -318,21 +318,21 @@ module RadialMeshData_mod
     type(RadialMeshData), intent(in) :: meshdata
     !------
 
-    inquire (iolength = reclen) MAGIC_NUMBER, &
-                                meshdata%A, &
-                                meshdata%B, &
-                                meshdata%RWS, &
-                                meshdata%RMT, &
-                                meshdata%IPAN, &
-                                meshdata%IRC, &
-                                meshdata%IMT, &
-                                meshdata%IRNS, &
-                                meshdata%IRWS, &
-                                meshdata%IRMIN, &
-                                meshdata%R, &
-                                meshdata%DRDI, &
-                                meshdata%IRCUT, &
-                                MAGIC_NUMBER
+    inquire (iolength=reclen) MAGIC_NUMBER, &
+                              meshdata%A, &
+                              meshdata%B, &
+                              meshdata%RWS, &
+                              meshdata%RMT, &
+                              meshdata%IPAN, &
+                              meshdata%IRC, &
+                              meshdata%IMT, &
+                              meshdata%IRNS, &
+                              meshdata%IRWS, &
+                              meshdata%IRMIN, &
+                              meshdata%R, &
+                              meshdata%DRDI, &
+                              meshdata%IRCUT, &
+                              MAGIC_NUMBER
 
   endfunction ! get
 
@@ -380,9 +380,9 @@ module RadialMeshData_mod
     integer, parameter :: MAGIC_NUMBER = -889271554
 
     FILEWRITE (fileunit, rec=recnr) meshdata%irmd, &
-                                meshdata%ipand, &
-                                max_reclen, &
-                                MAGIC_NUMBER + recnr
+                                    meshdata%ipand, &
+                                    max_reclen, &
+                                    MAGIC_NUMBER + recnr
 
   endsubroutine ! write
 
@@ -425,10 +425,10 @@ module RadialMeshData_mod
 
 #ifndef TASKLOCAL_FILES
     max_reclen = 0
-    inquire (iolength = reclen) meshdata%irmd, &
-                                meshdata%ipand, &
-                                max_reclen, &
-                                MAGIC_NUMBER
+    inquire (iolength=reclen) meshdata%irmd, &
+                              meshdata%ipand, &
+                              max_reclen, &
+                              MAGIC_NUMBER
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 #endif
@@ -526,9 +526,9 @@ module RadialMeshData_mod
     checkmagic = MAGIC_NUMBER + recnr
 
     FILEREAD  (fileunit, rec=recnr) irmd, &
-                                ipand, &
-                                max_reclen, &
-                                magic
+                                    ipand, &
+                                    max_reclen, &
+                                    magic
 
     if (magic /= checkmagic) then
       write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__

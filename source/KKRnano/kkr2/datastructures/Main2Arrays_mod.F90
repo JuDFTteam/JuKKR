@@ -26,18 +26,18 @@ module Main2Arrays_mod
   type Main2Arrays
     double precision :: bravais(3,3)
     integer :: isymindex(48)
-    double complex, allocatable  :: DSYMLL(:,:,:)  !< tau symmetry matrices
-    double precision, allocatable  :: RBASIS(:,:)  !< basis atom positions
-    double precision, allocatable  :: BZKP(:,:,:)  !< kpoints for each mesh
-    double precision, allocatable  :: VOLCUB(:,:)  !< kpoint weights
-    double precision, allocatable  :: VOLBZ(:)     !< BZ volume?
-    integer, allocatable  :: KMESH(:) !< mapping E-point to k-mesh
-    integer, allocatable  :: NOFKS(:) !< number of k points for each mesh
-    double precision, allocatable  :: ZAT(:)  !< atomic numbers
+    double complex, allocatable :: DSYMLL(:,:,:)  !< tau symmetry matrices
+    double precision, allocatable :: RBASIS(:,:)  !< basis atom positions
+    double precision, allocatable :: BZKP(:,:,:)  !< kpoints for each mesh
+    double precision, allocatable :: VOLCUB(:,:)  !< kpoint weights
+    double precision, allocatable :: VOLBZ(:)     !< BZ volume?
+    integer, allocatable :: KMESH(:) !< mapping E-point to k-mesh
+    integer, allocatable :: NOFKS(:) !< number of k points for each mesh
+    double precision, allocatable :: ZAT(:)  !< atomic numbers
     double precision :: VREF !< repulsive screening pot. strength
 
-    integer  :: NSYMAT
-    integer  :: MAXMESH
+    integer :: NSYMAT
+    integer :: MAXMESH
     integer :: iemxd
     integer :: LMMAXD
     integer :: NAEZ

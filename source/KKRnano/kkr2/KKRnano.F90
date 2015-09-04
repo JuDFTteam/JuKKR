@@ -71,7 +71,10 @@ program KKRnano
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
   case ('--prepare')
-    call main0() ! call former kkr0.exe
+    call main0(checkmode=0) ! call former kkr0.exe
+    stop
+  case ('--check')
+    call main0(checkmode=1) ! former kkr0.exe without overwriting the binary files *.unf
     stop
   case ('--help')
     call get_command_argument(0, arg, ilen, ios)
@@ -79,8 +82,8 @@ program KKRnano
     write(*,'(A)') '  options:', &
     '    --prepare             Former kkr0.exe functionality', &
     '    --help                This command line help function', &
-    '  options to be implemented in the future:', &
     '    --check               Check input files for errors', &
+    '  options to be implemented in the future:', &
     '    --convert             Converter to and from ASCII files', &
     ''
     stop
@@ -132,7 +135,7 @@ program KKRnano
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
-  flag = readInputParamsFromFile('input.unf', params)
+  flag = readInputParamsFromFile(params, 'input.unf')
 
  ! ======================================================================
  ! =                     End read in variables                          =
@@ -332,5 +335,5 @@ program KKRnano
 ! Free KKRnano mpi resources
 
   call destroyKKRnanoParallel(my_mpi)
-
+  
 endprogram KKRnano

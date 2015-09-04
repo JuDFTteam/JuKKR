@@ -158,9 +158,9 @@ print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function read' + configname + 'FromFile(filename, values) result(ierror)'
-print '  character(len=*), intent(in) :: filename'
+print 'integer function read' + configname + 'FromFile(values, filename) result(ierror)'
 print '  type(' + configname + '), intent(inout) :: values'
+print '  character(len=*), intent(in) :: filename'
 print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
@@ -183,9 +183,9 @@ print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function write' + configname + 'ToFile(filename, values) result(ierror)'
-print '  character(len=*), intent(in) :: filename'
+print 'integer function write' + configname + 'ToFile(values, filename) result(ierror)'
 print '  type(' + configname + '), intent(inout) :: values'
+print '  character(len=*), intent(in) :: filename'
 print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print

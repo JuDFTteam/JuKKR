@@ -14,7 +14,7 @@ module kkr0_mod
   
   contains
   
-  subroutine main0()
+  subroutine main0(checkmode)
 
 ! Explanation of most variables follows below
 
@@ -105,6 +105,8 @@ module kkr0_mod
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
 
+    integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only
+    
     integer, parameter :: NSYMAXD=48 ! Maximal number of Brillouin zone symmetries, 48 is largest possible number
     integer, parameter :: MAXMSHD=8 ! Maximal number of k-meshes used
 
@@ -120,7 +122,7 @@ module kkr0_mod
     double precision :: VOLUME0
     double precision :: RECBV(3,3)
 
-    integer,   allocatable :: NTCELL(:)
+    integer, allocatable :: NTCELL(:)
     double precision, allocatable :: radius_muffin_tin(:)
 
 !     .. auxillary variables, not passed to kkr2
@@ -130,11 +132,10 @@ module kkr0_mod
     double complex, allocatable :: DEZ(:) ! needed for EMESHT
     integer :: IEMXD
     integer, parameter :: KREL = 0
-    integer :: EKMD
     logical :: startpot_exists
-    type (InputParams)    :: params
-    type (DimParams)      :: dims
-    type (Main2Arrays)    :: arrays
+    type(InputParams)    :: params
+    type(DimParams)      :: dims
+    type(Main2Arrays)    :: arrays
 
 ! ------------ end of declarations ---------------------------------
 
@@ -184,8 +185,7 @@ module kkr0_mod
 
     call RINPUTNEW99(arrays%RBASIS, arrays%NAEZ)
 
-!     in case of a LDA+U calculation - read file 'ldauinfo'
-!     and write 'wldau.unf', if it does not exist already
+!     in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) then
       call ldauinfo_read(dims%LMAXD, dims%NSPIND, arrays%ZAT, dims%NAEZ)
     endif
@@ -198,9 +198,7 @@ module kkr0_mod
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
-      call STARTB1_wrapper_new(params%alat, dims%NSPIND, NTCELL, &
-                               EFERMI, arrays%ZAT, radius_muffin_tin, &
-                               dims%NAEZ)
+      call STARTB1_wrapper_new(params%alat, dims%NSPIND, NTCELL, EFERMI, arrays%ZAT, radius_muffin_tin, dims%NAEZ, nowrite=(checkmode /= 0))
 
     else
       ! no formatted potential provided
@@ -258,58 +256,51 @@ module kkr0_mod
     arrays%BRAVAIS(:,3) = params%bravais_c
 
     ! only for informative purposes - prints info about lattice
-    call LATTIX99(params%ALAT,arrays%BRAVAIS,RECBV,VOLUME0, .true.)
+    call LATTIX99(params%ALAT, arrays%BRAVAIS, RECBV, VOLUME0, .true.)
 
 
-    call SCALEVEC(arrays%RBASIS, arrays%NAEZ,arrays%BRAVAIS,params%CARTESIAN)
+    call SCALEVEC(arrays%RBASIS, arrays%NAEZ, arrays%BRAVAIS, params%CARTESIAN)
 
 ! ======================================================================
 !     setting up kpoints
 ! ======================================================================
 
-    call BZKINT0(arrays%NAEZ, &
-                 arrays%RBASIS,arrays%BRAVAIS,RECBV, &
-                 arrays%NSYMAT,arrays%ISYMINDEX, &
-                 arrays%DSYMLL, &
-                 params%bzdivide(1),params%bzdivide(2),params%bzdivide(3), &
-                 IELAST,EZ,arrays%KMESH,arrays%MAXMESH,MAXMSHD, &
-                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD)
-
-    ! after return from bzkint0, EKMD contains the right value
-    dims%EKMD = EKMD
+    call BZKINT0(arrays%NAEZ, arrays%RBASIS, arrays%BRAVAIS,RECBV, arrays%NSYMAT, arrays%ISYMINDEX, &
+                 arrays%DSYMLL, params%bzdivide(1), params%bzdivide(2), params%bzdivide(3), &
+                 IELAST,EZ, arrays%KMESH, arrays%MAXMESH, MAXMSHD, &
+                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, dims%EKMD) ! after return from bzkint0, EKMD contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
-    call readKpointsFile(arrays%BZKP, arrays%MAXMESH, arrays%NOFKS, arrays%VOLBZ, arrays%VOLCUB)
-
-!     Conversion of RMAX and GMAX to atomic units
+    call readKpointsFile(arrays%MAXMESH, arrays%NOFKS, arrays%BZKP, arrays%VOLCUB, arrays%VOLBZ)
+    
+!   Conversion of RMAX and GMAX to atomic units
     params%RMAX = params%RMAX*params%ALAT
     params%GMAX = params%GMAX/params%ALAT
 
-    call TESTDIMLAT(params%ALAT,arrays%BRAVAIS,RECBV,params%RMAX,params%GMAX, &
-                    dims%NMAXD, dims%ISHLD)
+    call TESTDIMLAT(params%ALAT, arrays%BRAVAIS, RECBV, params%RMAX, params%GMAX, dims%NMAXD, dims%ISHLD)
 
-    call writeDimParams(dims, 'inp0.unf')
-    ierror = writeInputParamsToFile('input.unf', params)
+    if (checkmode == 0) then 
+      ! write binary files that are needed in the main program
+    
+      call writeDimParams(dims, 'inp0.unf')
+      ierror = writeInputParamsToFile(params, 'input.unf')
+      call writeMain2Arrays(arrays, 'arrays.unf')
 
-    call writeMain2Arrays(arrays, 'arrays.unf')
-
-    ! write start energy mesh
-    if (params%use_semicore == 1) then
-      open  (67,FILE='energy_mesh.0',FORM='unformatted')
-      write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
-      write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
-      write (67) EFERMI
-      write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
-      write (67) params%EMUSEMI
-      write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
-      close (67)
-    else
-      open  (67,FILE='energy_mesh.0',FORM='unformatted')
-      write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
-      write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
-      write (67) EFERMI
-      close (67)
-    endif
+      ! write start energy mesh
+        open  (67,FILE='energy_mesh.0',FORM='unformatted')
+        write (67) IELAST,EZ,WEZ,params%Emin,params%Emax
+        write (67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
+        write (67) EFERMI
+      if (params%use_semicore == 1) then
+        write (67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
+        write (67) params%EMUSEMI
+        write (67) params%N1SEMI,params%N2SEMI,params%N3SEMI
+      endif ! semicore
+        close (67)
+        
+     else  ! checkmode == 0
+       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!"
+     endif ! checkmode == 0
 
 ! ======================================================================
 
@@ -327,48 +318,45 @@ module kkr0_mod
     
 ! -------------- Helper routine -----------------------------------------------
 
-    if (get_number_of_warnings() > 0) ierror = show_warning_lines(unit=6)
+    if (get_number_of_warnings() > 0) &
+      ierror = show_warning_lines(unit=6)
     
   endsubroutine ! main0
 
   !------------------------------------------------------------------------
   ! Read k-mesh file
-  subroutine readKpointsFile(BZKP, MAXMESH, NOFKS, VOLBZ, VOLCUB)
-    double precision, intent(out) :: BZKP(:,:,:)
-    integer, intent(in) :: MAXMESH
-    integer, intent(out) :: NOFKS(:)
-    double precision, intent(out) :: VOLBZ(:)
-    double precision, intent(out) :: VOLCUB(:,:)
+  subroutine readKpointsFile(maxmesh, nofks, bzkp, volcub, volbz)
+    integer, intent(in) :: maxmesh
+    integer, intent(out) :: nofks(:)
+    double precision, intent(out) :: bzkp(:,:,:), volcub(:,:), volbz(:)
 
     ! -----------------------------
     integer, parameter :: fu = 52 ! file unit
-    integer :: I
-    integer :: ID
-    integer :: L
+    integer :: i, l
     logical :: new_kpoints
 
     new_kpoints = .false.
-    inquire(file='new.kpoints',exist=new_kpoints)
+    inquire(file='new.kpoints', exist=new_kpoints)
 
-    if (.not. new_kpoints) then
-      open (fu,file='kpoints',form='formatted')
-    else
+    if (new_kpoints) then
       ! if file new.kpoints exists - use those kpoints
       write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
       warn(6, "rejecting file kpoints - using file new.kpoints instead.")
-      open (fu,file='new.kpoints',form='formatted')
+      
+      open (fu, file='new.kpoints', form='formatted', status='old', action='read')
+    else
+      open (fu, file='kpoints', form='formatted', status='old', action='read')
     endif
 
     rewind (fu)
-
-    do L = 1, MAXMESH
-      read (fu,fmt='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-      do I = 1, NOFKS(L)
-        read (fu,fmt=*) BZKP(1:3,I,L),VOLCUB(I,L)
+    do l = 1, maxmesh
+      read (fu,fmt='(i8,f15.10)') nofks(l), volbz(l)
+      do i = 1, nofks(l)
+        read (fu,fmt=*) bzkp(1:3,i,l), volcub(i,l)
       enddo ! i
     enddo ! l
-
     close (fu)
+    
   endsubroutine ! readKpointsFile
 
 endmodule ! kkr0_mod

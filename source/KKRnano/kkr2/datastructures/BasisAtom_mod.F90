@@ -283,7 +283,7 @@ module BasisAtom_mod
     !------
     integer :: reclen
 
-    inquire (iolength = reclen) MAGIC_NUMBER, &
+    inquire (iolength=reclen) MAGIC_NUMBER, &
                                 atom%atom_index, &
                                 atom%cell_index, &
                                 atom%nspin, &
@@ -329,8 +329,8 @@ module BasisAtom_mod
 #endif
 
     FILEWRITE (fileunit, rec=recnr) atom%potential%VINS, &
-                                atom%potential%VISP, &
-                                atom%core%ECORE
+                                    atom%potential%VISP, &
+                                    atom%core%ECORE
 
 #ifdef TASKLOCAL_FILES
     close(fileunit)
@@ -372,9 +372,9 @@ module BasisAtom_mod
   integer function getMinReclenBasisAtomPotential(atom) result(reclen)
     type(BasisAtom), intent(in) :: atom
 
-    inquire (iolength = reclen)   atom%potential%VINS, &
-                                  atom%potential%VISP, &
-                                  atom%core%ECORE
+    inquire (iolength=reclen) atom%potential%VINS, &
+                              atom%potential%VISP, &
+                              atom%core%ECORE
   endfunction ! get
 
   !----------------------------------------------------------------------------
@@ -433,11 +433,11 @@ module BasisAtom_mod
     integer, intent(in) :: max_reclen
 
     FILEWRITE (fileunit, rec=recnr) atom%potential%lpot, &
-                                atom%potential%nspin, &
-                                atom%potential%irmind, &
-                                atom%potential%irmd, &
-                                max_reclen, &
-                                MAGIC_NUMBER + recnr
+                                    atom%potential%nspin, &
+                                    atom%potential%irmind, &
+                                    atom%potential%irmd, &
+                                    max_reclen, &
+                                    MAGIC_NUMBER + recnr
 
   endsubroutine ! write
 
@@ -482,12 +482,12 @@ module BasisAtom_mod
 
 #ifndef TASKLOCAL_FILES
     max_reclen = 0
-    inquire (iolength = reclen) atom%potential%lpot, &
-                                atom%potential%nspin, &
-                                atom%potential%irmind, &
-                                atom%potential%irmd, &
-                                max_reclen, &
-                                MAGIC_NUMBER
+    inquire (iolength=reclen) atom%potential%lpot, &
+                              atom%potential%nspin, &
+                              atom%potential%irmind, &
+                              atom%potential%irmd, &
+                              max_reclen, &
+                              MAGIC_NUMBER
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 #endif

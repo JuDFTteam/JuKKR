@@ -13,21 +13,21 @@ module read_formatted_shapefun_mod
   public :: create_read_ShapefunFile, destroy_ShapefunFile ! deprecated
 
   type Intermesh
-    integer :: NPAN
-    integer :: MESHN
-    integer, allocatable :: NM(:)
-    double precision, allocatable :: XRN(:)
-    double precision, allocatable :: DRN(:)
+    integer :: npan
+    integer :: meshn
+    integer, allocatable :: nm(:)
+    double precision, allocatable :: xrn(:)
+    double precision, allocatable :: drn(:)
   endtype
 
   type Shapefunction
-    integer :: NFU
-    integer, allocatable :: LLMSP(:)
-    double precision, allocatable :: THETAS(:,:)
+    integer :: nfu
+    integer, allocatable :: llmsp(:)
+    double precision, allocatable :: thetas(:,:)
   endtype
 
   type ShapefunFile
-    integer NCELL
+    integer :: ncell
     type(Intermesh), allocatable :: mesh(:)
     type(Shapefunction), allocatable :: shapes(:)
   endtype
@@ -47,19 +47,19 @@ module read_formatted_shapefun_mod
     type(Intermesh), intent(out) :: inter
     integer, intent(in) :: unit
 
-    integer :: IPAN, IR
+    integer :: ir
 
-    READ (unit,FMT="(16i5)") inter%NPAN,inter%MESHN
+    read (unit,fmt="(16i5)") inter%npan, inter%meshn
 
-    CHECKASSERT(inter%NPAN>=0)
-    CHECKASSERT(inter%MESHN>=0)
+    CHECKASSERT(inter%npan>=0)
+    CHECKASSERT(inter%meshn>=0)
 
-    allocate (inter%NM(inter%NPAN))
-    allocate (inter%XRN(inter%MESHN))
-    allocate (inter%DRN(inter%MESHN))
+    allocate (inter%nm(inter%npan))
+    allocate (inter%xrn(inter%meshn))
+    allocate (inter%drn(inter%meshn))
 
-    READ (unit,FMT="(16i5)") (inter%NM(IPAN), IPAN=1,inter%NPAN)
-    READ (unit,FMT="(4d20.12)") (inter%XRN(IR), inter%DRN(IR), IR=1,inter%MESHN)
+    read (unit,fmt="(16i5)") inter%nm(1:inter%npan)
+    read (unit,fmt="(4d20.12)") (inter%xrn(ir), inter%drn(ir), ir=1,inter%meshn)
 
   endsubroutine ! create
 
@@ -67,9 +67,9 @@ module read_formatted_shapefun_mod
   subroutine destroy_intermesh (inter)
     type(Intermesh), intent(inout) :: inter
 
-    deallocate (inter%NM)
-    deallocate (inter%XRN)
-    deallocate (inter%DRN)
+    deallocate (inter%nm)
+    deallocate (inter%xrn)
+    deallocate (inter%drn)
 
   endsubroutine ! destroy
 
@@ -79,19 +79,19 @@ module read_formatted_shapefun_mod
     type(Intermesh), intent(in) :: inter
     integer, intent(in) :: unit
 
-    integer :: IFUN, N, LM
+    integer :: ifun, lm
 
-    READ (unit,FMT="(16i5)") shapef%NFU
+    read (unit,fmt="(16i5)") shapef%nfu
 
-    allocate (shapef%LLMSP(shapef%NFU))
-    allocate (shapef%THETAS(inter%MESHN,shapef%NFU))
+    allocate (shapef%llmsp(shapef%nfu))
+    allocate (shapef%thetas(inter%meshn,shapef%nfu))
 
-    DO IFUN = 1, shapef%NFU
-          READ (unit,FMT="(16i5)") LM
-          CHECKASSERT(LM > 0)
-          shapef%LLMSP(IFUN) = LM
-          READ (unit,FMT="(4d20.12)") (shapef%THETAS(N,IFUN),N=1,inter%MESHN)
-    ENDDO ! IFUN
+    do ifun = 1, shapef%nfu
+      read (unit,fmt="(16i5)") lm
+      CHECKASSERT(lm > 0)
+      shapef%llmsp(ifun) = lm
+      read (unit,fmt="(4d20.12)") shapef%thetas(1:inter%meshn,ifun)
+    enddo ! ifun
     
   endsubroutine ! create
 
@@ -99,40 +99,40 @@ module read_formatted_shapefun_mod
   subroutine destroy_shapefunction (shapef)
     type(Shapefunction), intent(inout) :: shapef
 
-    deallocate (shapef%LLMSP)
-    deallocate (shapef%THETAS)
+    deallocate (shapef%llmsp)
+    deallocate (shapef%thetas)
   endsubroutine ! destroy
 
   subroutine create_read_shapefunFile (sfile, unit)
-    type(ShapefunFile), intent (out) :: sfile
+    type(ShapefunFile), intent(out) :: sfile
     integer, intent(in) :: unit
 
-    integer :: ICELL
+    integer :: icell
     double precision :: dummy
 
-    READ (unit,FMT="(16i5)") sfile%NCELL
+    read (unit,fmt="(16i5)") sfile%ncell
 
-    READ (unit, FMT="(4d20.12)") (dummy, ICELL=1,sfile%NCELL)
+    read (unit, fmt="(4d20.12)") (dummy, icell=1,sfile%ncell)
 
-    allocate (sfile%mesh(sfile%NCELL))
-    allocate (sfile%shapes(sfile%NCELL))
+    allocate (sfile%mesh(sfile%ncell))
+    allocate (sfile%shapes(sfile%ncell))
 
-    DO ICELL = 1, sfile%NCELL
-      CALL create_read_intermesh(sfile%mesh(ICELL), unit)
-      CALL create_read_shapefunction(sfile%shapes(ICELL), sfile%mesh(ICELL), unit)
-    ENDDO ! ICELL
+    do icell = 1, sfile%ncell
+      call create_read_intermesh(sfile%mesh(icell), unit)
+      call create_read_shapefunction(sfile%shapes(icell), sfile%mesh(icell), unit)
+    enddo ! icell
 
   endsubroutine ! create
 
   subroutine destroy_shapefunFile (sfile)
     type(ShapefunFile), intent (inout) :: sfile
 
-    integer :: ICELL
+    integer :: icell
 
-    DO ICELL = 1, sfile%NCELL
-      CALL destroy_intermesh(sfile%mesh(ICELL))
-      CALL destroy_shapefunction(sfile%shapes(ICELL))
-    ENDDO ! ICELL
+    DO icell = 1, sfile%ncell
+      call destroy_intermesh(sfile%mesh(icell))
+      call destroy_shapefunction(sfile%shapes(icell))
+    enddo ! icell
 
     deallocate (sfile%mesh)
     deallocate (sfile%shapes)
@@ -147,26 +147,26 @@ program test_read_formatted
   implicit none
 
   type(ShapefunFile) :: sfile
-  integer, parameter :: UNIT = 42
-  integer :: IFUN, ICELL
+  integer, parameter :: fu = 42
+  integer :: ifun, icell
 
-  open(UNIT, form='formatted', file='shapefun')
-  call create_read_ShapefunFile(sfile, UNIT)
+  open(fu, form='formatted', file='shapefun')
+  call create_read_ShapefunFile(sfile, fu)
 
-  do ICELL = 1, sfile%NCELL
+  do icell = 1, sfile%ncell
 
-    write(*,*) "NM :", sfile%mesh(ICELL)%NM
+    write(*,*) "nm :", sfile%mesh(icell)%nm
 
-    do IFUN = 1, sfile%shapes(ICELL)%NFU
-      write(*,*) "LM = ", sfile%shapes(ICELL)%LLMSP(IFUN)
+    do ifun = 1, sfile%shapes(icell)%nfu
+      write(*,*) "lm = ", sfile%shapes(icell)%llmsp(ifun)
       write(*,*) "-----------------------------------------------"
-      write(*,*) sfile%shapes(ICELL)%THETAS(:, IFUN)
-    enddo
+      write(*,*) sfile%shapes(icell)%thetas(:, ifun)
+    enddo ! ifun
 
-  enddo
+  enddo ! icell
 
   call destroy_ShapefunFile(sfile)
-  close(UNIT)
+  close(fu)
 
 endprogram
 #endif
