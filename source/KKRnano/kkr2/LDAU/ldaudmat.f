@@ -108,7 +108,7 @@ C     Fortran 90 automatic arrays - matrices with dimension MMAXD
 
       INTEGER            LM1,LM2,M1,M2,ILDAU
 C     ..
-      EXTERNAL CINIT,OVERLAP,RINIT
+      EXTERNAL CINIT,OVERLAP
 
       INTEGER        LMMAXD
       INTEGER        MMAXD

@@ -16,7 +16,7 @@ C     .. Array Arguments ..
                                  ! atom types located at a given site
 C-----------------------------------------------------------------------
 C     .. Local Scalars ..
-      INTEGER I,J
+      INTEGER I!,J
 
 c------------ array set up and definition of input parameter -----------
 
@@ -48,7 +48,7 @@ c----------------------------------------------------------------------
 c
       OPEN(77,FILE='rbasis',FORM='formatted')
       DO I=1,NAEZ
-             READ (UNIT=77,FMT=*) (RBASIS(J,I), J=1,3)
+             READ (UNIT=77,FMT=*) RBASIS(1:3,I)
       ENDDO                         
       CLOSE (77)
 

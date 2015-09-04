@@ -16,20 +16,20 @@ module LDAUData_mod
   public :: createLDAUData, destroyLDAUData ! deprecated
 
   type LDAUData
-    double precision::EULDAU
-    double precision::EDCLDAU
-    double precision::EREFLDAU
-    integer  :: lmaxd
-    integer  :: mmaxd
-    logical  :: ldau
-    integer  :: nldau
-    double complex , allocatable, dimension(:,:)  :: phildau
-    double complex , allocatable, dimension(:,:,:,:)  :: dmatldau
-    double precision , allocatable, dimension(:)  :: uldau
-    double precision , allocatable, dimension(:)  :: jldau
-    double precision , allocatable, dimension(:,:,:,:,:)  :: umldau
-    double precision , allocatable, dimension(:,:,:,:)  :: wmldau
-    integer , allocatable, dimension(:)  :: lldau
+    double precision :: EULDAU
+    double precision :: EDCLDAU
+    double precision :: EREFLDAU
+    integer :: lmaxd
+    integer :: mmaxd
+    logical :: ldau
+    integer :: nldau
+    double complex, allocatable :: phildau(:,:) 
+    double complex, allocatable :: dmatldau(:,:,:,:) 
+    double precision, allocatable :: uldau(:) 
+    double precision, allocatable :: jldau(:) 
+    double precision, allocatable :: umldau(:,:,:,:,:) 
+    double precision, allocatable :: wmldau(:,:,:,:) 
+    integer, allocatable :: lldau(:)
 
     integer :: irmd
     integer :: lmaxd1
@@ -44,7 +44,7 @@ module LDAUData_mod
     module procedure destroyLDAUData
   endinterface
   
-  CONTAINS
+  contains
 
   !-----------------------------------------------------------------------------
   !> Constructs a LDAUData object.
@@ -97,7 +97,7 @@ module LDAUData_mod
     self%wmldau = 0.0d0
     self%lldau = 0
 
-  end subroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a LDAUData object.
@@ -114,6 +114,6 @@ module LDAUData_mod
     DEALLOCATECHECK(self%umldau)
     DEALLOCATECHECK(self%wmldau)
     DEALLOCATECHECK(self%lldau)
-  end subroutine
+  endsubroutine ! destroy
 
-end module
+endmodule ! LDAUData_mod

@@ -151,8 +151,8 @@ C
 
       IF (MYLRANK.EQ.0) WRITE(*,*) 'ITERATION: ',ITER
 
-      IF (ITDBRYD.GT.ITDTHD .OR. ITDTHD.GT.200) CALL RCSTOP('ITDBRYD  ')
-      IF (IMIX.LE.2 .OR. IMIX.GT.5) CALL RCSTOP('IMIXD   ')
+      IF (ITDBRYD.GT.ITDTHD .OR. ITDTHD.GT.200) stop 'ITDBRYD'
+      IF (IMIX.LE.2 .OR. IMIX.GT.5) stop 'IMIXD'
 
       MIT = ITER
       DO WHILE (MIT.GT.ITDBRYD)
@@ -187,7 +187,7 @@ c
 
       CALL BRYSH1_new(FM1,V,IRMIN,IRC,NSPIN,IMAP,LMPOT,irmd)
 
-      IF (IMAP.GT.NTIRD) CALL RCSTOP('NIRDBRY ')
+      IF (IMAP.GT.NTIRD) stop 'NIRDBRY'
 
       DO 10 IJ = 1,IMAP
         FM1(IJ) = RMIXIV* (FM1(IJ)-SM1(IJ))
@@ -354,7 +354,7 @@ c
 
         VMDENO = DDOT_GLOBAL - SMNORM_GLOBAL
 
-          IF (ABS(VMDENO).LT.1D-70) CALL RCSTOP('BRY0SN  ')
+          IF (ABS(VMDENO).LT.1D-70) stop 'BRY0SN'
 
           CALL DSCAL(IMAP,ONE/VMDENO,VI3,1)
 c
@@ -420,7 +420,7 @@ C----> complete the evaluation of v[m]
 
           VMDENO = DDOT_GLOBAL
 
-          IF (ABS(VMDENO).LT.1D-70) CALL RCSTOP('BRY1SN  ')
+          IF (ABS(VMDENO).LT.1D-70) stop 'BRY1SN'
 
           CALL DSCAL(IMAP,ONE/VMDENO,VI3,1)
 

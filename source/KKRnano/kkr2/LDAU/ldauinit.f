@@ -56,8 +56,7 @@ C local arrays ..
 
 C     Fortran 90 - automatic arrays
 C     DOUBLE PRECISION   AA(MMAXD,MMAXD,MMAXD,MMAXD,0:2*LMAX) ! large?
-      DOUBLE PRECISION   AA(2*LMAX+1,2*LMAX+1,
-     &                      2*LMAX+1,2*LMAX+1,0:2*LMAX)
+      DOUBLE PRECISION AA(2*LMAX+1,2*LMAX+1,2*LMAX+1,2*LMAX+1,0:2*LMAX)
 
       DOUBLE PRECISION   FACT(0:100),
      +                   RPW(IRMD,2*LMAX+1),
@@ -217,7 +216,7 @@ C ======================================================================
 C
 C 2.   Calculate coefficient matrix AA = a(m1,m2,m3,m4)
 C
-          CALL RINIT(MMAXD*MMAXD*MMAXD*MMAXD*(2*LMAXD+1),AA)
+          AA = 0.d0! CALL RINIT(MMAXD*MMAXD*MMAXD*MMAXD*(2*LMAXD+1),AA)
           LL = LLDAU(ILDAU)
           DO LF = 0,LFMAX,2
             DO M3 = -LL,LL
@@ -249,7 +248,8 @@ C
 C UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
 C 3.  Calculate ULDAU
 C
-          CALL RINIT(MMAXD*MMAXD*MMAXD*MMAXD,UMLDAU(1,1,1,1,ILDAU))
+c         CALL RINIT(MMAXD*MMAXD*MMAXD*MMAXD,UMLDAU(1,1,1,1,ILDAU))
+          UMLDAU(:,:,:,:,ildau) = 0.d0
 C
           DO LF = 0,LFMAX,2
             DO IM4 = 1,2*LL + 1

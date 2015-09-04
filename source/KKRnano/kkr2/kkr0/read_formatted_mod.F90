@@ -208,7 +208,6 @@ module read_formatted_mod
     call read_CoreStateBlock(potential_entry%csblock, unit)
     call create_read_SphericalBlock(potential_entry%sblock, unit)
     call create_read_NonSphericalBlocks(potential_entry%nsblocks, potential_entry%sblock, unit)
-
   endsubroutine ! create
 
   !----------------------------------------------------------------------------

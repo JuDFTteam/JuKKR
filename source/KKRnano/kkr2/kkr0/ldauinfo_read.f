@@ -41,7 +41,7 @@ c
         INQUIRE(FILE='ldauinfo',EXIST=LLDAUINFO)
         IF (.NOT.LLDAUINFO) THEN
           WRITE(6,*) 'file ldauinfo has to be provided!'
-          CALL RCSTOP('LDAUINFO')
+          stop 'LDAUINFO'
         ENDIF
 c
 c open 'ldauinfo'
@@ -72,7 +72,7 @@ c
           READ (77,FMT=*) NLDAU,(LLDAU(J), J=1,NLDAU),
      &                   (ULDAU(J),J=1,NLDAU),
      &                   (JLDAU(J), J=1,NLDAU)
-          IF (NLDAU.GT.4) CALL RCSTOP('NLDAU   ')
+          IF (NLDAU.GT.4) stop 'NLDAU'
           IF (NLDAU.GT.0) THEN
             WRITE(6,*) 'atom=',I,' (Z=',INT(Z(I)),') with ',NLDAU,
      &                 ' Coulomb rep. coeff.'

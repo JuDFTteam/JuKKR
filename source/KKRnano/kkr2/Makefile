@@ -221,6 +221,7 @@ depend:
 	
 #======================== Module dependencies ========================================
 
+KKRnano.o: Logging_mod.o kkr0_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
 kkrmat01_new.o: arraytest2_mod.o Logging_mod.o dlke0_smat_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o TFQMRSolver_mod.o MultScatData_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o SolverOptions_mod.o SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
 tbref.o: SingleSiteRef_mod.o
@@ -243,7 +244,6 @@ EnergyMesh_mod.o: KKRnanoParallel_mod.o EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o
 TFQMRSolver_mod.o: Solver_mod.o OperatorT_mod.o mminvmod_oop_mod.o SolverStats_mod.o
-main2.o: Logging_mod.o kkr0_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o MultScatData_mod.o kkrmat01_new.o jij_calc_mod.o TEST_lcutoff_mod.o TFQMRSolver_mod.o SolverOptions_mod.o InitialGuess_mod.o
 ShapeCriticalPoints_mod.o: shape_constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
@@ -271,7 +271,7 @@ TEST_lcutoff_mod.o: TruncationZone_mod.o Main2Arrays_mod.o lcutoff_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
-kkr0_mod.o: Exceptions_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o bzkint0.o testdimlat.o rcstop.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o pointgrp.o findgroup.o test.o bzkmesh.o symtaumat.o rinit.o cross.o latvec.o bzirr3d.o checkrmat.o calcrotmat.o errortrap.o taustruc.o rinvgj.o
+kkr0_mod.o: Exceptions_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o bzkint0.o testdimlat.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o pointgrp.o findgroup.o test.o bzkmesh.o symtaumat.o cross.o latvec.o bzirr3d.o checkrmat.o calcrotmat.o errortrap.o taustruc.o rinvgj.o
 startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
 SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o

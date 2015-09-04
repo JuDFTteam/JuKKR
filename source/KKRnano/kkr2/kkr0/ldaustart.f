@@ -38,7 +38,7 @@ C global scalars ..
 C ..
 C local arrays ..
 C     DOUBLE PRECISION   WMLDAU(MMAXD,MMAXD,LMAXD1,NSPIND)
-      DOUBLE PRECISION   WMLDAU(2*LMAXD + 1,2*LMAXD + 1,LMAXD+1, NSPIND)
+      DOUBLE PRECISION   WMLDAU(2*LMAXD+1,2*LMAXD+1,LMAXD+1,NSPIND)
 C ..
 C local scalars ..
       INTEGER            ILDAU
@@ -70,7 +70,8 @@ C
 C
       IF (.NOT.LINIT) THEN
 C
-        CALL RINIT(MMAXD*MMAXD*NSPIND*LMAXD1,WMLDAU)
+c       CALL RINIT(MMAXD*MMAXD*LMAXD1*NSPIND,WMLDAU)
+        WMLDAU(:,:,:,:) = 0.d0
         WRITE(6,*) 'set WMLDAU to zero and write to file wldau.unf'
 C
         WRITE(65,REC=I) NLDAU,LLDAU,ULDAU,JLDAU,WMLDAU
