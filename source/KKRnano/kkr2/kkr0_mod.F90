@@ -103,6 +103,7 @@ module kkr0_mod
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
     use DimParams_mod, only: DimParams, createDimParamsFromFile, writeDimParams
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
+    use BrillouinZone_mod, only: bzkint0
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only
@@ -266,9 +267,8 @@ module kkr0_mod
 ! ======================================================================
 
     call BZKINT0(arrays%NAEZ, arrays%RBASIS, arrays%BRAVAIS,RECBV, arrays%NSYMAT, arrays%ISYMINDEX, &
-                 arrays%DSYMLL, params%bzdivide(1), params%bzdivide(2), params%bzdivide(3), &
-                 IELAST,EZ, arrays%KMESH, arrays%MAXMESH, MAXMSHD, &
-                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, dims%EKMD) ! after return from bzkint0, EKMD contains the right value
+                 arrays%DSYMLL, params%bzdivide, IELAST, EZ, arrays%KMESH, arrays%MAXMESH, MAXMSHD, &
+                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, dims%EKMD, nowrite=(checkmode /= 0)) ! after return from bzkint0, EKMD contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
     call readKpointsFile(arrays%MAXMESH, arrays%NOFKS, arrays%BZKP, arrays%VOLCUB, arrays%VOLBZ)
