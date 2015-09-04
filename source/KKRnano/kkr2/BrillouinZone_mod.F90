@@ -6,10 +6,6 @@ module BrillouinZone_mod
 
   contains
   
-  
-!! turn around the dimensions from (64,3,3) to (3,3,64)
-#define RSYMAT(A,B,C) rsymat(B,C,A)
-  
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
                      dsymll, intervxyz, ielast, ez, kmesh, maxmesh, maxmshd, lmax, iemxd, krel, kpoibz, ekmd, nowrite)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat      
@@ -31,7 +27,7 @@ module BrillouinZone_mod
     
     integer iprint
     logical lirr
-    double precision :: RSYMAT(3,3,64)
+    double precision :: rsymat(3,3,64)
     character(len=10) :: rotname(64)
     integer :: lmmaxd
 
@@ -74,7 +70,7 @@ module BrillouinZone_mod
     integer, intent(out) :: maxmesh, ekmd
     integer, intent(in) :: nbxyz(3), nsymat, iprint, ielast, maxmshd
     logical, intent(in) :: lirr, nowrite
-    double precision, intent(in) :: bravais(3,3), recbv(3,3), RSYMAT(64,3,3)
+    double precision, intent(in) :: bravais(3,3), recbv(3,3), rsymat(64,3,3)
     integer, intent(in) :: isymindex(*)
     integer, intent(out) :: kmesh(iemxd)
     double complex, intent(in) :: ez(iemxd)
@@ -217,7 +213,7 @@ module BrillouinZone_mod
     integer, intent(inout) :: nkxyz(3)
     integer, intent(in) :: kpoibz, nsymat, iprint
     integer, intent(in) :: isymindex(*)
-    double precision, intent(in) :: recbv(3,3), bravais(3,3), RSYMAT(64,3,3) ! todo: transpose into (3,3,*)
+    double precision, intent(in) :: recbv(3,3), bravais(3,3), rsymat(3,3,64) ! todo: transpose into (3,3,*)
     logical, intent(in) :: irr !< use irreducible BZ only
     integer, intent(out) :: nkp
     double precision, intent(out) :: kp(3,*), wtkp(*), volbz
@@ -268,7 +264,7 @@ module BrillouinZone_mod
 
       do n = 1, nsym
         isym = isymindex(n)
-        u(1:3,1:3,n) = RSYMAT(isym,1:3,1:3)
+        u(1:3,1:3,n) = rsymat(1:3,1:3,isym)
       enddo ! n
     else  ! irreducible
       nsym = 1
