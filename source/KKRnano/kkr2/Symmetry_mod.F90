@@ -1,7 +1,7 @@
 module Symmetry_mod
   implicit none
   private
-  public :: pointgrp, findgroup
+  public :: pointgrp, findgroup, symtaumat
 
   contains
   
@@ -93,8 +93,8 @@ module Symmetry_mod
 !     do j=1,4
 !     do i=1,3
 !     write(6,*) 'rrr',i,j,r(i,j)
-!     end do
-!     end do
+!     enddo
+!     enddo
 !     write(6,*) 'latvec',latvec(4,recbv,r)
           if (.not. latvec(4,recbv,r)) llatbas = .false.
           if (test('Oh-symm ') .and. isym <= 48)  llatbas = .true.
@@ -109,7 +109,7 @@ module Symmetry_mod
           nsym = nsym + 1
           isymindex(nsym) = isym
         endif ! llatbas
-      endif ! (lbulk .or. (rsymat(isym,3,3) == 1) )
+      endif ! (lbulk .or. (rsymat(isym,3,3) == 1))
     enddo ! isym = 1, nmatd
 !     nsym symmetries were found
 !     the isymindex array has the numbers of the symmetries found
@@ -132,6 +132,430 @@ module Symmetry_mod
     write(6,fmt="(8x,60(1h-),/)")
     
   endsubroutine findgroup
+  
+  
+  
+  
+  
+  
+  
+!*==symtaumat.f    processed by SPAG 6.05Rc at 15:50 on 10 Dec 2002
+      subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, nqmax, nkmmax, nq, nl, krel, iprint, nsymaxd)
+!   ********************************************************************
+!   *                                                                  *
+!   *  Find the symmetry matrices DROT that act on t, tau, ....        *
+!   *  KREL=0: for real spherical harmonics                            *
+!   *  KREL=1: for relativistic represntation                          *
+!   *                                                                  *
+!   *  The NSYM allowed symmetry operations are indicated by ISYMINDEX *
+!   *  in the table  ROTMAT. 
+!   *                                                                  *
+!   *  The routine determines first the Euler angles correponding      *
+!   *  to a symmetry operation. Reflections are decomposed into        *
+!   *  inversion + rotation for this reason.                           *
+!   *                                                                  *
+!   ********************************************************************
+      integer, intent(in) :: iprint,krel,nkmmax,nl,nq,nqmax,nsym,nsymaxd
+      double complex, intent(out) :: drot(nkmmax,nkmmax,48)
+      integer, intent(in) :: isymindex(nsymaxd)
+      double precision, intent(in) :: rotmat(64,3,3)
+      character(len=*), intent(in) :: rotname(64)
+      
+      double complex, parameter :: ci=(0.d0,1.d0), c1=(1.d0,0.d0), c0=(0.d0,0.d0)
+      double precision a,b,co1,co2,co3,det,fact(0:100),pi,rj,rmj,si1,si2,si3,sk, symeulang(3,48),tet(1:3)
+      logical checkrmat
+      double precision, external :: ddet33
+      double complex dinv(nkmmax,nkmmax),dtim(nkmmax,nkmmax), rc(nkmmax,nkmmax),w1(nkmmax,nkmmax),w2(nkmmax,nkmmax)
+      logical equal
+      integer i,i1,i2,ind0q(nqmax),invflag(48),iq,irel,ireleff,isym, itop,j,k,l,loop,m,n,nk,nkeff,nkm,nlm,nok,ns
+      double precision rmat(3,3)
+      double precision w
+
+      equal(a,b) = (abs(a-b) < 1d-7) ! inline function?
+
+      write (6,99001)
+
+      pi = 4.d0*atan(1.d0)
+
+      irel = krel*3
+      nk = (1-krel)*nl + krel*(2*nl-1)
+      nkm = (1+krel)*nl**2
+!
+!-----------------------------------------------------------------------
+      fact(0) = 1.d0
+      do i = 1,100
+         fact(i) = fact(i-1)*dble(i)
+      enddo
+!-----------------------------------------------------------------------
+!
+      ind0q(1) = 0
+      do iq = 2,nq
+         ind0q(iq) = ind0q(iq-1) + nkm
+      enddo
+!
+! ----------------------------------------------------------------------
+!    rc  transforms from  real to  complex (l,m,s) - representation
+!                 |lc> = sum[lr] |lr> * rc(lr,lc)
+! ----------------------------------------------------------------------
+      if (krel == 0) then
+         nlm = nkm
+!
+         call zcopy(nkmmax*nkmmax,c0,0,rc,1)
+!
+         w = 1.d0/sqrt(2.d0)
+!
+         do l = 0,(nl-1)
+            do m = -l,l
+               i = l*(l+1) + m + 1
+               j = l*(l+1) - m + 1
+!
+               if (m < 0) then
+                  rc(i,i) = -ci*w
+                  rc(j,i) = w
+               endif
+               if (m == 0) then
+                  rc(i,i) = c1
+               endif
+               if (m > 0) then
+                  rc(i,i) = w*(-1.d0)**m
+                  rc(j,i) = ci*w*(-1.d0)**m
+               endif
+            enddo
+         enddo
+      endif
+!
+!=======================================================================
+!     the routine determines first the euler angles correponding
+!     to a symmetry operation. reflections are decomposed into
+!     inversion + rotation for this reason.
+!=======================================================================
+!
+      do isym = 1,nsym
+!
+         do i1 = 1,3
+            do i2 = 1,3
+               rmat(i1,i2) = rotmat(isymindex(isym),i1,i2)
+            enddo
+         enddo
+!
+         det = ddet33(rmat)
+!
+         invflag(isym) = 0
+         if (det < 0.d0) then
+            call dscal(9,-1.d0,rmat,1)
+            invflag(isym) = 1
+         endif
+!
+!----------------------------------------------------------------------
+         co2 = rmat(3,3)
+         tet(2) = acos(co2)
+         loop = 0
+ 50      continue
+         if (loop == 1) tet(2) = -tet(2)
+         si2 = sin(tet(2))
+!
+         if (equal(co2,1d0)) then
+            tet(1) = acos(rmat(1,1))
+            if (.not.equal(rmat(1,2),sin(tet(1)))) then
+               tet(1) = -tet(1)
+               if (.not.equal(rmat(1,2),sin(tet(1)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 1'
+            endif
+            tet(2:3) = 0.d0
+         else if (equal(co2,-1d0)) then
+            tet(1) = acos(-rmat(1,1))
+            if (.not.equal(rmat(1,2),-sin(tet(1)))) then
+               tet(1) = -tet(1)
+               if (.not.equal(rmat(1,2),-sin(tet(1)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 2'
+            endif
+            tet(2:3) = [pi, 0.d0]
+         else
+            tet(1) = acos(rmat(3,1)/si2)
+            if (.not.equal(rmat(3,2),si2*sin(tet(1)))) then
+               tet(1) = -tet(1)
+               if (.not.equal(rmat(3,2),si2*sin(tet(1)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 3'
+            endif
+!
+            tet(3) = acos(-rmat(1,3)/si2)
+            if (.not.equal(rmat(2,3),si2*sin(tet(3)))) then
+               tet(3) = -tet(3)
+               if (.not.equal(rmat(2,3),si2*sin(tet(3)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 4'
+            endif
+
+         endif
+
+         co1 = cos(tet(1))
+         si1 = sin(tet(1))
+         co2 = cos(tet(2))
+         si2 = sin(tet(2))
+         co3 = cos(tet(3))
+         si3 = sin(tet(3))
+!
+         nok = 0
+         do i1 = 1,3
+            do i2 = 1,3
+               if (checkrmat(rmat,co1,si1,co2,si2,co3,si3,i1,i2)) then
+                  nok = nok + 1
+               else if (loop < 1) then
+                  loop = loop + 1
+                  goto 50
+               endif
+            enddo
+         enddo
+!
+         symeulang(1,isym) = tet(1)*(180.d0/pi)
+         symeulang(2,isym) = tet(2)*(180.d0/pi)
+         symeulang(3,isym) = tet(3)*(180.d0/pi)
+!
+         if (nok /= 9) write (*,99009) nok
+         write (*,99008) isym,rotname(isymindex(isym)),invflag(isym),(symeulang(i,isym),i=1,3)
+!
+      enddo
+      write(6,'(8x,57(1h-),/)')
+!
+!-----------------------------------------------------------------------
+!                    initialize all rotation matrices
+!-----------------------------------------------------------------------
+!
+      call zcopy(nkmmax*nkmmax*nsym,c0,0,drot,1)
+!
+!-----------------------------------------------------------------------
+!                       create rotation matrices
+!-----------------------------------------------------------------------
+!
+      if (irel <= 2) then
+         ireleff = 0
+         nkeff = nl
+      else
+         ireleff = 3
+         nkeff = nk
+      endif
+!
+      do isym = 1,nsym
+!
+         call calcrotmat(nkeff,ireleff,symeulang(1,isym), symeulang(2,isym),symeulang(3,isym), drot(1,1,isym),fact,nkmmax)
+!
+      enddo
+!-----------------------------------------------------------------------
+!                     create matrix for inversion
+!-----------------------------------------------------------------------
+      call zcopy(nkmmax*nkmmax,c0,0,dinv,1)
+!
+      i = 0
+      if (irel > 2) then
+         ns = 2
+      else
+         ns = 1
+      endif
+      do l = 0,(nl-1)
+         do m = 1,ns*(2*l+1)
+            i = i + 1
+            dinv(i,i) = (-1.d0)**l
+         enddo
+      enddo
+      itop = i
+!
+!-----------------------------------------------------------------------
+!                         include inversion
+!-----------------------------------------------------------------------
+      do isym = 1,nsym
+         if (invflag(isym) /= 0) then
+!
+            call zgemm('n','n',nkm,nkm,nkm,c1,drot(1,1,isym),nkmmax,dinv,nkmmax,c0,w2,nkmmax)
+!
+            do j = 1,nkm
+               call zcopy(nkm,w2(1,j),1,drot(1,j,isym),1)
+            enddo
+         endif
+      enddo
+!
+!-----------------------------------------------------------------------
+!            add second spin-diagonal block for  irel=2
+!            spin off-diagonal blocks have been initialized before
+!-----------------------------------------------------------------------
+      if (irel == 2) then
+         nlm = nkm/2
+         if (itop /= nlm) call errortrap('SYMTAUMAT',11,1)
+         do isym = 1,nsym
+!
+            do j = 1,nlm
+               call zcopy(nlm,drot(1,j,isym),1,drot(nlm+1,nlm+j,isym),1)
+            enddo
+         enddo
+      endif
+!-----------------------------------------------------------------------
+!            transform to real spherical representation for  krel=0
+!-----------------------------------------------------------------------
+      n = nkm
+      m = nkmmax
+      if (krel == 0) then
+         do isym = 1,nsym
+            call zgemm('n','n',n,n,n,c1,rc,m,drot(1,1,isym),m,c0,w1,m)
+            call zgemm('n','c',n,n,n,c1,w1,m,rc,m,c0,drot(1,1,isym),m)
+         enddo
+      endif
+!-----------------------------------------------------------------------
+!                     create matrix for time reversal
+!-----------------------------------------------------------------------
+      if (irel > 1) then
+!
+         call zcopy(nkmmax*nkmmax,c0,0,dtim,1)
+!
+         i = 0
+         do k = 1,nk
+            l = k/2
+            if (l*2 == k) then
+               sk = -1d0
+            else
+               sk = +1d0
+            endif
+            rj = l + sk*0.5d0
+!           do rmj = -rj, + rj ! real do loop iterator transformed
+!                              ! to integer do loop iterator e.rabel
+            do j = 0, (2*l + nint(sk))
+               rmj = -rj + dble(j)
+               i1 = nint(2*l*(rj+0.5d0)+rj+rmj+1)
+               i2 = nint(2*l*(rj+0.5d0)+rj-rmj+1)
+               dtim(i1,i2) = sk*(-1)**nint(rmj+0.5d0)
+            enddo
+         enddo
+!
+      endif
+!=======================================================================
+!            set up of transformation matrices completed
+!=======================================================================
+!
+!
+!-----------------------------------------------------------------------
+! for testing
+!
+!ccc      write (6,*) ' number of symmetries : ', nsym
+!ccc      
+!ccc      do isym = 1,nsym
+!ccc         write(6,*) ' isym = ',isym
+!ccc         call cmatstr('DROT',4,drot(1,1,isym),nkm,nkmmax,krel*3,krel*3,0,1d-12,6)
+!ccc         write(6,*)
+!ccc      enddo
+!
+!-----------------------------------------------------------------------
+!
+      if (iprint == 0) return
+!
+!=======================================================================
+!       find the structure of the site-diagonal tau - matrices  tauq
+!=======================================================================
+!
+      call taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel)
+
+      return
+99001 format (5x,'<SYMTAUMAT> : rotation matrices acting on t/G/tau',//,8x,57(1h-),/,8x,'ISYM            INV          Euler angles      Unitarity',/,8x,57(1h-))
+99008 format (8x,i2,3x,a,i3,3f10.5)
+99009 format (50('>'),' trouble in <SYMTAUMAT>',i3,f10.5)
+      endsubroutine symtaumat
+  
+  
+  
+  
+  
+!*==taustruct.f    processed by SPAG 6.05Rc at 15:50 on 10 Dec 2002
+      subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel)
+!   ********************************************************************
+!   *                                                                  *
+!   *   find the structure of the site-diagonal tau - matrices  tauq   *
+!   *                                                                  *
+!   ********************************************************************
+      integer, intent(in) :: iprint, irel, nkm, nkmmax, nq, nqmax, nsym
+      double complex, intent(in) :: drot(nkmmax,nkmmax,48)
+      
+      double complex, parameter :: c0=(0.d0,0.d0)
+      double precision :: abst,x
+      integer :: i,i0,imweight,iq,isym,iw,iwr,j,k,l,lin,nelmt, nkmq(nqmax), nkmtop,nlin,non0(nqmax)
+      double complex :: st(nkmmax,nkmmax), tauk(nkmmax,nkmmax,nqmax)
+
+      do iq = 1,nq
+        nkmq(iq) = nkm
+      enddo
+
+      imweight = 0
+      nelmt = 0
+      nlin = 0
+      iw = 6
+
+      do iq = 1,nq
+         non0(iq) = 0
+         nkmtop = nkmq(iq)
+
+         if (iprint > 0) write (6,99004) iq
+         do i = 1,nkmtop
+            do j = 1,nkmtop
+               st(i,j) = 0.d0
+
+               call zcopy(nkmmax*nkmmax*nqmax,c0,0,tauk,1)
+
+               do isym = 1,nsym
+                  i0 = iq
+
+                     do l = 1,nkmtop
+                        do k = 1,nkmtop
+                           tauk(k,l,i0) = tauk(k,l,i0) + drot(i,k,isym)*dconjg(drot(j,l,isym))
+                        enddo
+                     enddo
+               enddo
+
+               lin = 0
+               iwr = 0
+               do k = 1,nkmq(iq)
+                  do l = 1,nkmq(iq)
+                     abst = abs(tauk(k,l,iq))
+                     st(i,j) = st(i,j) + abst
+                     if (abst > 1d-8) then
+                        if (dimag(tauk(k,l,iq)) > 1d-5) then
+                           if (iprint > 0) write (*,*) ' Im(Weight) > 1D-5 ',i,j,k,l
+                           imweight = 1
+                        endif
+                        x = dreal(tauk(k,l,iq))/dble(nsym)
+
+                        if (iprint > 1) then
+                           if (iwr == 0) then
+                              iwr = 1
+                              write (iw,99002) i,j,iq,x,k + (iq-1)*nkm, l + (iq-1)*nkm
+                           else
+                              write (iw,99003) x,k + (iq-1)*nkm, l + (iq-1)*nkm
+                           endif
+                        endif
+                        lin = lin + 1
+                     endif
+
+                  enddo
+               enddo
+
+               if (lin > 0) then
+                  nlin = nlin + lin
+                  nelmt = nelmt + 1
+                  non0(iq) = non0(iq) + 1
+               endif
+
+               if (abs(st(i,j)) > 1d-5) st(i,j) = 2
+
+            enddo
+         enddo
+      enddo
+
+      write (6,99005) nelmt,(non0(iq),iq=1,nq)
+      write (6,99006) nlin
+
+      if (imweight /= 0) write (*,99007)
+
+      return
+99002 format ('     TAUQ(',I2,',',I2,',',I2,') =  ','   ',F10.4,' * <',I3,'|T(K)|',I3,'>')
+99003 FORMAT (23X,' + ',F10.4,' * <',I3,'|T(K)|',I3,'>')
+99004 FORMAT (//,' ===========================================================',/,'   structure of  TAU-matrix   INT <i|t(k)|j>     IQ=',I3,/,' ===========================================================',/)
+99005 FORMAT (/,5X,'non-0 TAU-elements          ',I5,'   Q:',80I4)
+99006 FORMAT (5X,'terms to sum up             ',I5,/)
+99007 FORMAT (/,5X,50('#'),/,5X,'WARNING: complex TAU weights found',/,5X,'this may occur for rotated magnetic moments',/,5X,'relevant only for tetrahedron BZ-integration',/,5X,50('#'),/)
+      endsubroutine taustruct
+  
+  
+  
   
   
   

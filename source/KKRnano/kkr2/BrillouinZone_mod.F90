@@ -8,7 +8,7 @@ module BrillouinZone_mod
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
                      dsymll, intervxyz, ielast, ez, kmesh, maxmesh, maxmshd, lmax, iemxd, krel, kpoibz, ekmd, nowrite)
-    use Symmetry_mod, only: pointgrp, findgroup          
+    use Symmetry_mod, only: pointgrp, findgroup, symtaumat      
                      
     integer, parameter :: nsymaxd=48
 
@@ -24,7 +24,6 @@ module BrillouinZone_mod
     logical, intent(in) :: nowrite
     
     logical, external :: test
-    external :: symtaumat
     
     integer iprint
     logical lirr
