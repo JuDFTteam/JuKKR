@@ -43,8 +43,11 @@ FCFLAGS += -C -traceback
 # FCFLAGS += -gen-interfaces -warn interfaces
 FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
-FCFLAGS += -O0 -g
-LDFLAGS  = -O0 -g
+# FCFLAGS += -O0 -g
+# LDFLAGS  = -O0 -g
+FCFLAGS += -O3 -g
+LDFLAGS  = -O3 -g
+### warning: -O3 fails for rhoout.o, use -O1
 # LDFLAGS += -C -traceback
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
