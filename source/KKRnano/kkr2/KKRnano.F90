@@ -37,6 +37,7 @@ program KKRnano
     getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal, destroyCalculationData
   
   use kkr0_mod, only: main0
+  use PotentialConverter_mod, only: kkrvform
   implicit none
 
   type (CalculationData) :: calc_data
@@ -76,6 +77,9 @@ program KKRnano
   case ('--check')
     call main0(checkmode=1) ! former kkr0.exe without overwriting the binary files *.unf
     stop
+  case ('--convert')
+    call kkrvform()
+    stop
   case ('--help')
     call get_command_argument(0, arg, ilen, ios)
     write(*,'(9A)') 'usage: ',trim(arg),' [options]'
@@ -83,12 +87,11 @@ program KKRnano
     '    --prepare             Former kkr0.exe functionality', &
     '    --help                This command line help function', &
     '    --check               Check input files for errors', &
-    '  options to be implemented in the future:', &
     '    --convert             Converter to and from ASCII files', &
     ''
     stop
   case default
-    
+    ! start the former kkr2.exe    
   endselect ! arg
   !----------------------------------------------------------------------------
 

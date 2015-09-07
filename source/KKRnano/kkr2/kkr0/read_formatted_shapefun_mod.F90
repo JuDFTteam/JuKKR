@@ -51,8 +51,8 @@ module read_formatted_shapefun_mod
 
     read (unit,fmt="(16i5)") inter%npan, inter%meshn
 
-    CHECKASSERT(inter%npan>=0)
-    CHECKASSERT(inter%meshn>=0)
+    CHECKASSERT(inter%npan >= 0)
+    CHECKASSERT(inter%meshn >= 0)
 
     allocate (inter%nm(inter%npan))
     allocate (inter%xrn(inter%meshn))
