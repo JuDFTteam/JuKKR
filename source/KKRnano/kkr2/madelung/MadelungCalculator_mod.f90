@@ -84,6 +84,7 @@ module MadelungCalculator_mod
   !> Creates a MadelungCalculator object.
   !> Don't forget to free resources with destroyMadelungCalculator
   subroutine createMadelungCalculator(madelung_calc, lmax, ALAT, RMAX, GMAX, BRAVAIS, NMAXD, ISHLD)
+    use Lattice_mod, only: lattix99
     type(MadelungCalculator), intent(inout) :: madelung_calc
     integer, intent(in) :: lmax
     double precision, intent(in) :: ALAT
@@ -124,7 +125,7 @@ module MadelungCalculator_mod
       stop
     endif
 
-    call LATTIX99(ALAT,BRAVAIS,RECBV,madelung_calc%VOLUME0, .false.)
+    call lattix99(alat, bravais, recbv, madelung_calc%volume0, .false.)
 
     call createMadelungHarmonics(harmonics, lmax)
 

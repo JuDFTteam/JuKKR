@@ -273,7 +273,7 @@ TEST_lcutoff_mod.o: TruncationZone_mod.o Main2Arrays_mod.o lcutoff_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
-kkr0_mod.o: Exceptions_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o testdimlat.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o test.o cross.o latvec.o checkrmat.o calcrotmat.o errortrap.o rinvgj.o
+kkr0_mod.o: Exceptions_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o startb1_wrapper_new.o read_formatted_mod.o read_formatted_shapefun_mod.o rinput99new.o ldauinfo_read.o epathtb.o emesht.o lattix99.o scalevec.o testdimlat.o ldaustart.o gauleg.o gaufd.o ddet33.o crospr.o spatpr.o test.o cross.o latvec.o checkrmat.o calcrotmat.o errortrap.o rinvgj.o
 startb1_wrapper_new.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
 SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
@@ -296,11 +296,15 @@ rhototb_new.o: Quadrature_mod.o
 vxcgga.o: Quadrature_mod.o
 GauntCoefficients_mod.o: Harmonics_mod.o
 ShapeGauntCoefficients_mod.o: Harmonics_mod.o
-MadelungCalculator_mod.o: Harmonics_mod.o
+MadelungCalculator_mod.o: Harmonics_mod.o Lattice_mod.o
 sphere_gga.o: Harmonics_mod.o
 sphere_nogga.o: Harmonics_mod.o
 strmat_new.o: Harmonics_mod.o
 debug_morgan_mod.o: Harmonics_mod.o
-BrillouinZone_mod.o: Symmetry_mod.o
+BrillouinZone_mod.o: Symmetry_mod.o VectorMath_mod.o
+Lattice_mod.o: VectorMath_mod.o
+Symmetry_mod.o: VectorMath_mod.o
+GaussWeights_mod.o: Exceptions_mod.o
+
 
 # DO NOT DELETE

@@ -178,6 +178,7 @@ module BrillouinZone_mod
   
   
   subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, rsymat, nsymat, isymindex, irr, iprint)
+    use VectorMath_mod, only: ddet33
 !===========================================================================
 !info 
 !info   find irreducible BZ and create mesh in it.
@@ -218,7 +219,7 @@ module BrillouinZone_mod
     integer, intent(out) :: nkp
     double precision, intent(out) :: kp(3,*), wtkp(*), volbz
     
-    double precision, external :: ddet33, ddot
+    double precision, external :: ddot
     
     double precision bginv(3,3), bgmat(3,3), bgp(3,3), bv(3), cf(3), u(3,3,48), gq(3,3), v1
     integer nbgp(3,3,48), mkxyz(3), ind1(3), ind2(3)

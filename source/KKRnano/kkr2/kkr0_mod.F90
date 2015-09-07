@@ -105,6 +105,7 @@ module kkr0_mod
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
     use BrillouinZone_mod, only: bzkint0
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
+    use Lattice_mod, only: lattix99
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only
     
@@ -257,7 +258,7 @@ module kkr0_mod
     arrays%BRAVAIS(:,3) = params%bravais_c
 
     ! only for informative purposes - prints info about lattice
-    call LATTIX99(params%ALAT, arrays%BRAVAIS, RECBV, VOLUME0, .true.)
+    call lattix99(params%ALAT, arrays%BRAVAIS, RECBV, VOLUME0, .true.)
 
 
     call SCALEVEC(arrays%RBASIS, arrays%NAEZ, arrays%BRAVAIS, params%CARTESIAN)
