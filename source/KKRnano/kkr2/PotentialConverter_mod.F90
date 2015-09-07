@@ -43,10 +43,11 @@ module PotentialConverter_mod
 
       call associateBasisAtomMesh(atomdata, mesh)
 
-      call repr_RadialMeshData(mesh, str)
-      write(*, '(A)') str
-      call repr_PotentialData(atomdata%potential, str)
-      write(*, '(A)') str
+!       ! show data on stdout
+!       call repr_RadialMeshData(mesh, str)
+!       write(*, '(A)') str
+!       call repr_PotentialData(atomdata%potential, str)
+!       write(*, '(A)') str
 
       call writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
 
@@ -125,7 +126,7 @@ module PotentialConverter_mod
 
     write(*,*) "WARNING: COULD NOT GET ALAT and KXC - TODO"
     alat = 0.d0
-    kxc = -9
+    kxc = 2
 
   endsubroutine ! getStuffFromInputCard
   
@@ -181,15 +182,14 @@ module PotentialConverter_mod
     double precision, intent(in) :: visp(irmd,2)
     double precision, intent(in) :: z
 
-    double precision, parameter :: qbound = 1d-10
-    character(len=24), parameter :: txc(0:3) = [' Morruzi,Janak,Williams ', &
-      ' von Barth,Hedin        ', ' Vosko,Wilk,Nusair      ', ' GGA PW91               ']
     double precision :: rv, sm
     integer :: ic, ir, irmin, is, lm, lmnr, lmpot, nr
+    integer, parameter :: isave = 1, inew = 1
+    double precision, parameter :: qbound = 1d-10
+    character(len=24), parameter :: txc(0:3) = [' Morruzi,Janak,Williams', ' von Barth,Hedin', ' Vosko,Wilk,Nusair', ' GGA PW91']
     character(len=*), parameter :: F9000 = "(7a4,6x,'  exc:',a24,3x,a10)", &
       F9010 = "(3f12.8)", F9020 = "(f10.5,/,f10.5,2f15.10)", F9030 = "(i3,/,2d15.8,/,2i2)", &
       F9040 = "(i5,1p,d20.11)", F9060 = "(10i5)", F9070 = "(1p,4d20.13)"
-    integer, parameter :: isave = 1, inew = 1
     
     lmpot = (lpot+1)**2
 
