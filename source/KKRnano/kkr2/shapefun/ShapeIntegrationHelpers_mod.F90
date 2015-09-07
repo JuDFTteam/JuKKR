@@ -432,7 +432,7 @@ module ShapeIntegrationHelpers_mod
         ir = 0
         do ic = ic1, ic2
           ir = ir+1
-          cl(ic) = isi*product(primes(:)**ie(:,ir))
+          cl(ic) = isi*product(dble(primes(:))**ie(:,ir)) ! the conversion to double precision is needed for high lmax values
           isi = -isi
         enddo ! ic
         if (m == 0) il2p(1) = il2p(1)-1 ! undo the increasing done above for m==0
