@@ -524,7 +524,7 @@ module Symmetry_mod
     double precision, intent(out) :: rotmat(3,3,64)
     character(len=*), intent(out) :: rotname(64)
     integer :: is
-    double precision, parameter :: RTHREE = SQRT(3.d0)/2.d0, HALF=0.5d0, ONE=1.d0
+    double precision, parameter :: RTHREE = SQRT(3.d0)*.5d0, HALF=0.5d0, ONE=1.d0
 
     rotmat(:,:,:) =  0.d0 ! set all matrices to zero
 

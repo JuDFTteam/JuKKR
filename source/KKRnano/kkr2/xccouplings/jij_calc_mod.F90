@@ -21,6 +21,7 @@ subroutine clsjij( &
      ixcp,nxcp,nxij,rxij,rxccls,zkrxij, &
      !                       new parameters after inc.p removal
      nrd, nxijd)
+  use Sorting_mod, only: dsort
   ! ************************************************************************
   ! This subroutine is used to create the clusters around each atom 
   ! where Jij's are calculated
@@ -68,11 +69,10 @@ subroutine clsjij( &
   !     .. local scalars
   !
   double precision epsshl,rcut2,rtmp
-  integer          iaez,ib,id,ir,iv,ix,pos
+  integer          iaez,ib,id,ir,iv,ix
   character*10     rotname(64)
   !
   !
-  external         xsort
   intrinsic        sqrt
   !
   data             epsshl   / 1.0d-4 /
@@ -129,7 +129,7 @@ subroutine clsjij( &
           0.1d0*rxccls(1,ix)
   enddo
   !
-  call xsort(rsort,isort,nxij,pos)
+  call dsort(rsort, isort, nxij)
   !
   !     Rearange exchange ia with ib
   ! MAP temporarily to another array

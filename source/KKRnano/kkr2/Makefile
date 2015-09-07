@@ -279,7 +279,7 @@ SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 ValenceDensity_mod.o: Quadrature_mod.o SingleSite_mod.o SingleSiteHelpers_mod.o
 lloyd0_new_mod.o: ValenceDensity_mod.o
-Voronoi_mod.o: Exceptions_mod.o
+Voronoi_mod.o: Exceptions_mod.o Sorting_mod.o
 Exceptions_mod.o: Errors_mod.o Warnings_mod.o StringHelpers_mod.o
 Errors_mod.o: Warnings_mod.o
 ldauovrlp.o: Quadrature_mod.o
@@ -305,6 +305,7 @@ BrillouinZone_mod.o: Symmetry_mod.o VectorMath_mod.o
 Lattice_mod.o: VectorMath_mod.o
 Symmetry_mod.o: VectorMath_mod.o
 GaussWeights_mod.o: Exceptions_mod.o
-
+EnergyMeshHelpers_mod.o: GaussWeights_mod.o
+jij_calc_mod.o: Sorting_mod.o
 
 # DO NOT DELETE

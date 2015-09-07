@@ -11,7 +11,7 @@ module GaussWeights_mod
 
   integer function gauss_legendre_weights(n, xi, wi) result(ist)
     integer, intent(in) :: n
-    real, intent(out) :: xi(:), wi(:) 
+    doubleprecision, intent(out) :: xi(:), wi(:) 
     integer :: i
 
     if (n > 32) then
@@ -836,7 +836,7 @@ module GaussWeights_mod
 
   integer function gauss_fermi_dirac_weights(n, xi, wi) result(ist)
     integer, intent(in) :: n
-    real, intent(out) :: xi(:), wi(:) 
+    doubleprecision, intent(out) :: xi(:), wi(:) 
 
     selectcase (n)
     case (1)

@@ -106,6 +106,7 @@ module kkr0_mod
     use BrillouinZone_mod, only: bzkint0
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
     use Lattice_mod, only: lattix99
+    use EnergyMeshHelpers_mod, only: emesht, epathtb
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only
     

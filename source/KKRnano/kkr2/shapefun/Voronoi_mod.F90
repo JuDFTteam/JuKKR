@@ -77,6 +77,7 @@ module Voronoi_mod
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
   subroutine Voronoi_construction(nvec,rvec,nvertmax,nfaced,weight0,weight,tolvdist,tolarea, &
      rmt,rout,volume, nface, planes, nvert, vert, output)
+    use Sorting_mod, only: dsort
 
     integer, intent(in) :: nvec, nvertmax, nfaced
     double precision, intent(in) :: rvec(:,:) ! cluster positions without the origin among them
@@ -678,7 +679,6 @@ module Voronoi_mod
   endfunction ! normal_plane
   
 
-!***********************************************************************
   subroutine sortvertices(n, s, xyz)
   ! sorts the array s(n) in ascending order using straight insertion. 
   ! the arrays z(n), y(n), and z(n) follow.
@@ -705,11 +705,8 @@ module Voronoi_mod
 
   endsubroutine ! sort vertices
 
-! ************************************************************************
   function crospr(x, y) result(z)
-! ************************************************************************
 !     crosp computes the cross product of x and y returning it into z.
-! ------------------------------------------------------------------------
   double precision :: z(3) ! result
   double precision, intent(in) :: x(3), y(3)
     z(1) = x(2)*y(3) - x(3)*y(2)
@@ -717,7 +714,6 @@ module Voronoi_mod
     z(3) = x(1)*y(2) - x(2)*y(1)
   endfunction crospr
 
-!***********************************************************************
   double precision function distplane(a,b,c,d)
   ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
     double precision, intent(in) :: a,b,c,d
@@ -744,57 +740,5 @@ module Voronoi_mod
     dist_plane = dsqrt(d*d/abcsq)  
 
   endfunction dist_plane
-  
-  ! ************************************************************************
-  subroutine dsort(w, ind, nmax, pos)
-  ! ************************************************************************
-  !     p.zahn, april 96
-  !     w   is the original array returned unchanged
-  !     ind is an array that holds the new positions
-  !     nmax number of ellements to be sorted
-  !     pos the position where the first element is found
-  ! ------------------------------------------------------------------------
-    integer, intent(in) :: nmax
-    double precision, intent(in) :: w(*)
-    integer, intent(out) :: ind(*)
-    integer, intent(out), optional :: pos
-    
-    double precision, parameter :: bound = 1.0d-12
-    double precision :: diff
-    integer :: i, ii, j, jj, k
-    ! ------------------------------------------------------------------------
-    do i = 1, nmax
-      ind(1:nmax) = i
-    enddo ! i
-
-    j = 1
-    do while (j < nmax/3)
-      j = 3*j+1
-    enddo ! while
-
-    do while (j > 1)
-      j = j/3
-      jj = 1
-      do while (jj == 1)
-        jj = 0
-        do k = 1, nmax-j
-          diff = abs(w(ind(k)) - w(ind(k+j)))
-          if (w(ind(k)) > w(ind(k+j)) .and. diff > bound) then
-            ii       = ind(k)
-            ind(k)   = ind(k+j)
-            ind(k+j) = ii
-            jj = 1
-          endif
-        enddo ! k=1,nmax-j
-    enddo ! while (jj == 1)
-    enddo ! while (j > 1)
-
-    if (present(pos)) then
-      do i = 1, nmax
-        if (ind(i) == 1) pos = i
-      enddo ! i
-    endif
-
-  endsubroutine ! dsort
 
 endmodule ! Voronoi_mod
