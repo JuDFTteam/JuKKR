@@ -409,7 +409,7 @@ module SingleSite_mod
     pns0(:,:,irmind:irc1,1:nsra) = pns0(:,:,irmind:irc1,1:nsra) - pns(:,:,irmind:irc1,1:nsra)
       
     do j = 1, nsra
-      call csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
+      call csout(pns0(1,1,irmind,j), pns1, lmmaxd**2, irmind, irmd, ipan, ircut)
       err = maxval(abs(pns1(:,:,irc1)))
       ! convergence check
       if (err > 1d-3) then
@@ -429,50 +429,14 @@ module SingleSite_mod
 !-----------------------------------------------------------------------
 ! only Volterra equation
       
-      call zgeinv1(amat(1,1,irc1),ar,br,ipiv,lmmaxd) ! invert the last amat
+      call zgeinv1(amat(1,1,irc1), ar, br, ipiv, lmmaxd) ! invert the last amat
 
       do ir = irmind, irc1
-#define _USE_zgemm_in_REGNS_
-#ifdef  _USE_zgemm_in_REGNS_
-!!!! excerpt from zgemm.f, case TRANSA='N', TRANSB='N'
-! ! ! ! ! ! ! *
-! ! ! ! ! ! ! *           Form  C := alpha*A*B + beta*C.
-! ! ! ! ! ! ! *
-! ! ! ! ! ! !               DO 90 J = 1,N
-! ! ! ! ! ! !                   IF (BETA.EQ.ZERO) THEN
-! ! ! ! ! ! !                       DO 50 I = 1,M
-! ! ! ! ! ! !                           C(I,J) = ZERO
-! ! ! ! ! ! !    50                 CONTINUE
-! ! ! ! ! ! !                   ELSE IF (BETA.NE.ONE) THEN
-! ! ! ! ! ! !                       DO 60 I = 1,M
-! ! ! ! ! ! !                           C(I,J) = BETA*C(I,J)
-! ! ! ! ! ! !    60                 CONTINUE
-! ! ! ! ! ! !                   endif
-! ! ! ! ! ! !                   DO 80 L = 1,K
-! ! ! ! ! ! !                       IF (B(L,J).NE.ZERO) THEN
-! ! ! ! ! ! !                           TEMP = ALPHA*B(L,J)
-! ! ! ! ! ! !                           DO 70 I = 1,M
-! ! ! ! ! ! !                               C(I,J) = C(I,J) + TEMP*A(I,L)
-! ! ! ! ! ! !    70                     CONTINUE
-! ! ! ! ! ! !                       endif
-! ! ! ! ! ! !    80             CONTINUE
-! ! ! ! ! ! !    90         CONTINUE
-!!!!! identify lm1=I, lm2=J, lm3=L, ALPHA=cone, BETA=zero, M,N,K=lmmaxd, A=amat, B=ar
+      
         call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,amat(1,1,ir),lmmaxd,ar,lmmaxd,zero,ader(1,1,ir),lmmaxd)
         call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,bmat(1,1,ir),lmmaxd,ar,lmmaxd,zero,bder(1,1,ir),lmmaxd)
-#else
-        ! the following 8 lines should be written as two zgemm calls
-        ader(:,:,ir) = zero
-        bder(:,:,ir) = zero
-        do lm2 = 1, lmmaxd
-          do lm3 = 1, lmmaxd
-            ader(:,lm2,ir) = ader(:,lm2,ir) + amat(:,lm3,ir)*ar(lm3,lm2)
-            bder(:,lm2,ir) = bder(:,lm2,ir) + bmat(:,lm3,ir)*ar(lm3,lm2)
-          enddo ! lm3
-        enddo ! lm2
-        ! end zgemm
-#endif          
-        ! overwrite amat and bmat, keep the valus in ader and bder (since these are intent(out)
+
+        ! overwrite amat and bmat, keep the values in ader and bder (since these are intent(out)
         amat(:,:,ir) = ader(:,:,ir)
         bmat(:,:,ir) = bder(:,:,ir)
       enddo ! ir

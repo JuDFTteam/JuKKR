@@ -23,21 +23,22 @@ FCFLAGS += -module $(BUILDDIR)
 FCFLAGS += -I $(BUILDDIR)
 # FCFLAGS += -openmp
 FCFLAGS += -gen-interfaces -warn interfaces
-FCFLAGS += -DTASKLOCAL_FILES 
-FCFLAGS += -DUSE_VOROWEIGHTS
+FCFLAGS += -D TASKLOCAL_FILES 
+FCFLAGS += -D USE_VOROWEIGHTS
+# FCFLAGS += -D DEBUG1
 FC90FLAGS =
 # FCFLAGS += -C -traceback -CB
 # FCFLAGS += -O0 -g
 # LDFLAGS  = -O0 -g
-FCFLAGS += -O3  -g -pg
-LDFLAGS  = -O3  -g -pg
+FCFLAGS += -O3  -g 
+LDFLAGS  = -O3  -g 
 # LDFLAGS += -C -traceback
 # FCFLAGS += -ipo
 # LDFLAGS += -ipo
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
 else
-FCFLAGS += -DNOLOGGING
+FCFLAGS += -D NOLOGGING
 endif
 # set run paths to look for shared libraries (-Wl means pass to linker)
 # LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
