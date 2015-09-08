@@ -28,7 +28,7 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION DV,FAC,PI,RWS,VINT1
-      INTEGER I,IPOT,IREP,IRWS1,ISPIN,LM,M
+      INTEGER I,IPOT,IRWS1,ISPIN,LM,M
 C     ..
 C     .. Local Arrays ..
 

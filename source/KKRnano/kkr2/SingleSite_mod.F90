@@ -86,7 +86,7 @@ module SingleSite_mod
 
     double precision, parameter :: cvlight = 274.0720442d0
     double complex   :: eryd, ek, det
-    integer          :: lm1, lm2, l, lmlo, lmhi, mmax, im, ildau
+    integer          :: l, lmlo, lmhi, mmax, im, ildau
     double complex   :: alpha(0:lmax), fz(irmd,0:lmax)
     double complex   :: pns((lmax+1)**2,(lmax+1)**2,(irmd-irnsd):irmd,2)
     double complex   :: pz(irmd,0:lmax), qz(irmd,0:lmax), sz(irmd,0:lmax), tmat(0:lmax)
@@ -360,7 +360,7 @@ module SingleSite_mod
 
     external :: zgemm ! from BLAS
     double precision :: err
-    integer :: i, ir, irc1, j,lm2,lm3, lm
+    integer :: i, ir, irc1, j, lm
     double complex :: pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd)
     integer :: ipiv(lmmaxd)
     logical, parameter :: Volterra = .true. ! false ==> Fredholm equation

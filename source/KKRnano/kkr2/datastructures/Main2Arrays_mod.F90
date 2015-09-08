@@ -24,6 +24,13 @@ module Main2Arrays_mod
   public :: readMain2Arrays, writeMain2Arrays
 
   type Main2Arrays
+    integer :: NSYMAT
+    integer :: MAXMESH
+    integer :: iemxd
+    integer :: LMMAXD
+    integer :: NAEZ
+    integer :: KPOIBZ
+    integer :: MAXMSHD
     double precision :: bravais(3,3)
     integer :: isymindex(48)
     double complex, allocatable :: DSYMLL(:,:,:)  !< tau symmetry matrices
@@ -35,16 +42,7 @@ module Main2Arrays_mod
     integer, allocatable :: NOFKS(:) !< number of k points for each mesh
     double precision, allocatable :: ZAT(:)  !< atomic numbers
     double precision :: VREF !< repulsive screening pot. strength
-
-    integer :: NSYMAT
-    integer :: MAXMESH
-    integer :: iemxd
-    integer :: LMMAXD
-    integer :: NAEZ
-    integer :: KPOIBZ
-    integer :: MAXMSHD
-
-  endtype Main2Arrays
+  endtype ! Main2Arrays
   
   interface create
     module procedure createMain2Arrays
@@ -96,28 +94,29 @@ module Main2Arrays_mod
   !> @param[in]    lpot
   !> @param[in]    IRMD
   !> @param[in]    LMPOTD
-  subroutine createMain2ArraysImpl(self, lmaxd,iemxd,nspind,LMMAXD,NAEZ,LMXSPD,KPOIBZ,MAXMSHD,nrd,NACLSD,nguessd,ekmd,smpid,lpot,IRMD,LMPOTD)
+  subroutine createMain2ArraysImpl(self, lmaxd, iemxd, nspind, LMMAXD, NAEZ, LMXSPD, &
+              KPOIBZ, MAXMSHD, nrd, NACLSD, nguessd, ekmd, smpid, lpot, IRMD, LMPOTD)
     use, intrinsic :: ieee_features
     use, intrinsic :: ieee_arithmetic
     
     type(Main2Arrays), intent(inout) :: self
-    integer, intent(in) ::  lmaxd
+    integer, intent(in) ::  lmaxd  ! remove
     integer, intent(in) ::  iemxd
-    integer, intent(in) ::  nspind
+    integer, intent(in) ::  nspind  ! remove
     integer, intent(in) ::  LMMAXD
     integer, intent(in) ::  NAEZ
-    integer, intent(in) ::  LMXSPD
+    integer, intent(in) ::  LMXSPD  ! remove
     integer, intent(in) ::  KPOIBZ
     integer, intent(in) ::  MAXMSHD
-    integer, intent(in) ::  nrd
-    integer, intent(in) ::  NACLSD
-    integer, intent(in) ::  nguessd
-    integer, intent(in) ::  ekmd
-    integer, intent(in) ::  smpid
-    integer, intent(in) ::  lpot
-    integer, intent(in) ::  IRMD
+    integer, intent(in) ::  nrd  ! remove
+    integer, intent(in) ::  NACLSD  ! remove
+    integer, intent(in) ::  nguessd  ! remove
+    integer, intent(in) ::  ekmd  ! remove
+    integer, intent(in) ::  smpid  ! remove
+    integer, intent(in) ::  lpot  ! remove
+    integer, intent(in) ::  IRMD  ! remove
     integer, intent(in) ::  LMPOTD
-
+    
     integer :: memory_stat
     double precision :: nan
 

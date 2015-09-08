@@ -1206,15 +1206,12 @@ endsubroutine
   !----------------------------------------------------------------------------
   !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
 
-  subroutine calcFactorSemi(chrgsemicore, fsemicore, communicator)
-!   include 'mpif.h' ! not used any more
-    double precision, intent(inout)  :: chrgsemicore ! semicore charge
+  subroutine calcFactorSemi(chrgsemicore, fsemicore, communicator) ! todo: delete communicator from interface
+    double precision, intent(inout) :: chrgsemicore ! semicore charge
     double precision, intent(inout) :: fsemicore    ! semicore factor to be updated
     integer, intent(in) :: communicator             ! communicator not used any more
     
-    double precision :: work
-    integer :: i1                                ! auxiliary parameter, number of semicore bands
-    integer :: ierr
+    integer :: i1 ! auxiliary parameter, number of semicore bands
 
     if (chrgsemicore < 1d-10) chrgsemicore = 1d-10
 

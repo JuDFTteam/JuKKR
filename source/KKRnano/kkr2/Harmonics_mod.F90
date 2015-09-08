@@ -49,7 +49,7 @@ module Harmonics_mod
 
     double complex, parameter :: ci=(0.d0,1.d0)
     double precision clecg,factor,fci,s
-    integer :: n,i,j,l,l1,l1p,l2,l2p,l3,lm1,lm2,lm3,lm3p,lmpot,m,m1,m1a,m1s,m2,m2a,m2s,m3,m3a,m3s
+    integer :: n,i,j,l,l1,l1p,l2,l2p,l3,lm1,lm2,lm3,lm3p,m,m1,m1a,m1s,m2,m2a,m2s,m3,m3a,m3s
 
     n = 4*lmax
 
@@ -74,25 +74,25 @@ module Harmonics_mod
     i = 0
     do l3 = 1, lpot
       do m3 = -l3, l3
+        m3s = sign(1, m3)
+        m3a = abs(m3)
         do l1 = 0, lmax
           do l2 = 0, l1
             if (mod(l1+l2+l3, 2) /= 1 .and. l1+l2 >= l3 .and. l1+l3 >= l2 .and. l2+l3 >= l1) then
               fci = dble(ci**(l2-l1+l3)) ! real part of i^(l2-l1+l3)
               do m1 = -l1, l1
                 lm1 = l1*l1 + l1 + m1 + 1
+                m1s = sign(1, m1)
+                m1a = abs(m1)
                 do m2 = -l2, l2
                   lm2 = l2*l2 + l2 + m2 + 1
 
 !---> store only gaunt coeffients for lm2 <= lm1
                   if (lm2 <= lm1) then
-                    m1s = sign(1, m1)
                     m2s = sign(1, m2)
-                    m3s = sign(1, m3)
                     if (m1s*m2s*m3s >= 0) then
-                      m1a = abs(m1)
-                      m2a = abs(m2)
-                      m3a = abs(m3)
                       factor = 0.d0
+                      m2a = abs(m2)
 
                       if (m1a+m2a == m3a) factor = factor + 0.125d0*(3*m3s + sign(1, -m3))
                       if (m1a-m2a == m3a) factor = factor + 0.25d0*m1s

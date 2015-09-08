@@ -257,40 +257,19 @@ module DimParams_mod
 
   ! Consistency checks
   !----------------------------------------------------------------------------
-  subroutine consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID)
-    integer, intent(in) :: IEMXD
-    integer, intent(in) :: LMAXD
-    integer, intent(in) :: NSPIND
-    integer, intent(in) :: SMPID
+  subroutine consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID) ! todo: remove IEMXD
+    integer, intent(in) :: IEMXD, LMAXD, NSPIND, SMPID
 
-    ! -------------------------------------------------------------------------
-    ! consistency checks
-!    if (IEMXD < 1) then
-!      write (*,*) "main2: IEMXD must be >= 1"
-!      stop
-!    endif
+!   if (IEMXD < 1) stop "main2: IEMXD must be >= 1"
 
-    if (LMAXD < 0) then
-      write (*,*) "main2: LMAXD must be >= 0"
-      stop
-    endif
+    if (LMAXD < 0) stop "main2: LMAXD must be >= 0"
 
-    if (SMPID /= 1 .and. SMPID /=2) then
-      write (*,*) "main2: SMPID must be 1 or 2"
-      stop
-    endif
+    if (SMPID /= 1 .and. SMPID /=2) stop "main2: SMPID must be 1 or 2"
 
-    if (NSPIND /= 1 .and. NSPIND /=2) then
-      write (*,*) "main2: NSPIND must be 1 or 2"
-      stop
-    endif
+    if (NSPIND /= 1 .and. NSPIND /=2) stop "main2: NSPIND must be 1 or 2"
 
-    if ((SMPID == 2) .and. (NSPIND /= 2)) then
-      write (*,*) "main2: Spin parallelism is only possible if NSPIND=2."
-      write (*,*) "Set SMPID=1"
-      stop
-    endif
+    if ((SMPID == 2) .and. (NSPIND /= 2)) stop "main2: Spin parallelism is only possible if NSPIND=2, set SMPID=1"
     
-  endsubroutine
+  endsubroutine ! check
 
-endmodule
+endmodule DimParams_mod

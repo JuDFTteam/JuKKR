@@ -1,140 +1,148 @@
-C from the SPECFUN package as included in scipy
+c from the specfun package as included in scipy
 
-        SUBROUTINE SPHJ(N,X,NM,SJ,DJ)
-C       MODIFIED to ALLOW N=0 CASE (ALSO IN CSPHJY, SPHY)
-C
-C       =======================================================
-C       Purpose: Compute spherical Bessel functions jn(x) and
-C                their derivatives
-C       Input :  x --- Argument of jn(x)
-C                n --- Order of jn(x)  ( n = 0,1,… )
-C       Output:  SJ(n) --- jn(x)
-C                DJ(n) --- jn'(x)
-C                NM --- Highest order computed
-C       Routines called:
-C                MSTA1 and MSTA2 for computing the starting
-C                point for backward recurrence
-C       =======================================================
-C
-        IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-        DIMENSION SJ(0:N),DJ(0:N)
-        NM=N
-        IF (DABS(X).LT.1.0D-100) THEN
-           DO 10 K=0,N
-              SJ(K)=0.0D0
-10            DJ(K)=0.0D0
-           SJ(0)=1.0D0
-           IF (N.GT.0) THEN
-              DJ(1)=.3333333333333333D0
-           ENDIF
-           RETURN
-        ENDIF
-        SJ(0)=DSIN(X)/X
-        DJ(0)=(DCOS(X)-DSIN(X)/X)/X
-        IF (N.LT.1) THEN
-           RETURN
-        ENDIF
-        SJ(1)=(SJ(0)-DCOS(X))/X
-        IF (N.GE.2) THEN
-           SA=SJ(0)
-           SB=SJ(1)
-           M=MSTA1(X,200)
-           IF (M.LT.N) THEN
-              NM=M
-           ELSE
-              M=MSTA2(X,N,15)
-           ENDIF
-           F=0.0D0
-           F0=0.0D0
-           F1=1.0D0-100
-           DO 15 K=M,0,-1
-              F=(2.0D0*K+3.0D0)*F1/X-F0
-              IF (K.LE.NM) SJ(K)=F
-              F0=F1
-15            F1=F
-           CS=0.0D0
-           IF (DABS(SA).GT.DABS(SB)) CS=SA/F
-           IF (DABS(SA).LE.DABS(SB)) CS=SB/F0
-           DO 20 K=0,NM
-20            SJ(K)=CS*SJ(K)
-        ENDIF
-        DO 25 K=1,NM
-25         DJ(K)=SJ(K-1)-(K+1.0D0)*SJ(K)/X
-        RETURN
-        END
+        subroutine sphj(n,x,nm,sj,dj)
+c       modified to allow n=0 case (also in csphjy, sphy)
+c
+c       =======================================================
+c       purpose: compute spherical bessel functions jn(x) and
+c                their derivatives
+c       input :  x --- argument of jn(x)
+c                n --- order of jn(x)  ( n = 0,1,… )
+c       output:  sj(n) --- jn(x)
+c                dj(n) --- jn'(x)
+c                nm --- highest order computed
+c       routines called:
+c                msta1 and msta2 for computing the starting
+c                point for backward recurrence
+c       =======================================================
+c
+        implicit none ! double precision (a-h,o-z)
+        integer, intent(in) :: n
+        integer, intent(out) :: nm
+        double precision, intent(in) :: x
+        double precision, intent(out) :: sj(0:n), dj(0:n)
+        
+        integer, external :: msta1, msta2
+        double precision :: f, f0, f1, cs, sa, sb
+        integer :: k, m
+        nm=n
+        if (dabs(x).lt.1.0d-100) then
+           do 10 k=0,n
+              sj(k)=0.0d0
+10            dj(k)=0.0d0
+           sj(0)=1.0d0
+           if (n.gt.0) dj(1)=.3333333333333333d0
+           return
+        endif
+        sj(0)=dsin(x)/x
+        dj(0)=(dcos(x)-dsin(x)/x)/x
+        if (n.lt.1) return
+        sj(1)=(sj(0)-dcos(x))/x
+        if (n.ge.2) then
+           sa=sj(0)
+           sb=sj(1)
+           m=msta1(x,200)
+           if (m.lt.n) then
+              nm=m
+           else
+              m=msta2(x,n,15)
+           endif
+           f=0.0d0
+           f0=0.0d0
+           f1=1.0d0-100
+           do 15 k=m,0,-1
+              f=(2.0d0*k+3.0d0)*f1/x-f0
+              if (k.le.nm) sj(k)=f
+              f0=f1
+15            f1=f
+           cs=0.0d0
+           if (dabs(sa).gt.dabs(sb)) cs=sa/f
+           if (dabs(sa).le.dabs(sb)) cs=sb/f0
+           do 20 k=0,nm
+20            sj(k)=cs*sj(k)
+        endif
+        do 25 k=1,nm
+25         dj(k)=sj(k-1)-(k+1.0d0)*sj(k)/x
+        endsubroutine
 
-        INTEGER FUNCTION MSTA1(X,MP)
-C
-C       ===================================================
-C       Purpose: Determine the starting point for backward
-C                recurrence such that the magnitude of
-C                Jn(x) at that point is about 10^(-MP)
-C       Input :  x     --- Argument of Jn(x)
-C                MP    --- Value of magnitude
-C       Output:  MSTA1 --- Starting point
-C       ===================================================
-C
-        IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-        A0=DABS(X)
-        N0=INT(1.1D0*A0)+1
-        F0=ENVJ(N0,A0)-MP
-        N1=N0+5
-        F1=ENVJ(N1,A0)-MP
-        DO 10 IT=1,20
-           NN=N1-(N1-N0)/(1.0D0-F0/F1)
-           F=ENVJ(NN,A0)-MP
-           IF(ABS(NN-N1).LT.1) GO TO 20
-           N0=N1
-           F0=F1
-           N1=NN
- 10        F1=F
- 20     MSTA1=NN
-        RETURN
-        END
+        integer function msta1(x,mp)
+c       ===================================================
+c       purpose: determine the starting point for backward
+c                recurrence such that the magnitude of
+c                jn(x) at that point is about 10^(-mp)
+c       input :  x     --- argument of jn(x)
+c                mp    --- value of magnitude
+c       output:  msta1 --- starting point
+c       ===================================================
+        implicit none ! double precision (a-h,o-z)
+        double precision, intent(in) :: x
+        integer, intent(in) :: mp
+        double precision, external :: envj
+        double precision :: a0, f0, f1, f
+        integer :: n0, n1, nn, it
+        
+        a0=dabs(x)
+        n0=int(1.1d0*a0)+1
+        f0=envj(n0,a0)-mp
+        n1=n0+5
+        f1=envj(n1,a0)-mp
+        do 10 it=1,20
+           nn=n1-(n1-n0)/(1.0d0-f0/f1)
+           f=envj(nn,a0)-mp
+           if(abs(nn-n1).lt.1) go to 20
+           n0=n1
+           f0=f1
+           n1=nn
+ 10        f1=f
+ 20     msta1=nn
+        endfunction
 
 
-        INTEGER FUNCTION MSTA2(X,N,MP)
-C
-C       ===================================================
-C       Purpose: Determine the starting point for backward
-C                recurrence such that all Jn(x) has MP
-C                significant digits
-C       Input :  x  --- Argument of Jn(x)
-C                n  --- Order of Jn(x)
-C                MP --- Significant digit
-C       Output:  MSTA2 --- Starting point
-C       ===================================================
-C
-        IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-        A0=DABS(X)
-        HMP=0.5D0*MP
-        EJN=ENVJ(N,A0)
-        IF (EJN.LE.HMP) THEN
-           OBJ=MP
-           N0=INT(1.1*A0)+1
-        ELSE
-           OBJ=HMP+EJN
-           N0=N
-        ENDIF
-        F0=ENVJ(N0,A0)-OBJ
-        N1=N0+5
-        F1=ENVJ(N1,A0)-OBJ
-        DO 10 IT=1,20
-           NN=N1-(N1-N0)/(1.0D0-F0/F1)
-           F=ENVJ(NN,A0)-OBJ
-           IF (ABS(NN-N1).LT.1) GO TO 20
-           N0=N1
-           F0=F1
-           N1=NN
-10         F1=F
-20      MSTA2=NN+10
-        RETURN
-        END
+        integer function msta2(x,n,mp)
+c       ===================================================
+c       purpose: determine the starting point for backward
+c                recurrence such that all jn(x) has mp
+c                significant digits
+c       input :  x  --- argument of jn(x)
+c                n  --- order of jn(x)
+c                mp --- significant digit
+c       output:  msta2 --- starting point
+c       ===================================================
+        implicit none ! double precision (a-h,o-z)
+        double precision, intent(in) :: x
+        integer, intent(in) :: n, mp
+        double precision, external :: envj
+        double precision :: a0, hmp, ejn, obj, f0, f1, f
+        integer :: n0, n1, nn, it
+        a0=dabs(x)
+        hmp=0.5d0*mp
+        ejn=envj(n,a0)
+        if (ejn.le.hmp) then
+           obj=mp
+           n0=int(1.1*a0)+1
+        else
+           obj=hmp+ejn
+           n0=n
+        endif
+        f0=envj(n0,a0)-obj
+        n1=n0+5
+        f1=envj(n1,a0)-obj
+        do 10 it=1,20
+           nn=n1-(n1-n0)/(1.0d0-f0/f1)
+           f=envj(nn,a0)-obj
+           if (abs(nn-n1).lt.1) go to 20
+           n0=n1
+           f0=f1
+           n1=nn
+10         f1=f
+20      msta2=nn+10
+        endfunction
 
-        REAL*8 FUNCTION ENVJ(N,X)
-        DOUBLE PRECISION X
-        ENVJ=0.5D0*DLOG10(6.28D0*N)-N*DLOG10(1.36D0*X/N)
-        RETURN
-        END
+        real*8 function envj(n,x)
+        implicit none
+        integer, intent(in) :: n
+        double precision, intent(in) :: x
+        envj=0.5d0*dlog10(6.28d0*n)-n*dlog10(1.36d0*x/n)
+        endfunction
 
-C       **********************************
+c       **********************************

@@ -24,8 +24,8 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION DOS,DOSSGN,EFCTOR,PI
-      INTEGER          I1,IA,IE,IPOT,ISPIN,L,D1,D10,D100,D1000,OFF(3)
-      CHARACTER*12     FNAME
+      INTEGER          I1,IA,IE,IPOT,ISPIN,L
+      CHARACTER(len=16) :: FNAME
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,DIMAG
@@ -34,8 +34,8 @@ C     .. External Functions ..
       LOGICAL TEST
       EXTERNAL TEST
 C     ..
-      PI = 4.0D0*ATAN(1.0D0)
-      EFCTOR = 1.0D0
+      PI = 4.d0*ATAN(1.d0)
+      EFCTOR = 1.d0
 C     IF (TEST('EV      ')) EFCTOR = 13.6058D0
 C
       IELAST = IEMXD
@@ -44,41 +44,24 @@ C initialize DOSTOT
 C
       DO ISPIN = 1,NSPIN
         DO L = 0,LMAXD1
-          DOSTOT(L,ISPIN) = 0.0D0
-          PDOSTOT(L,ISPIN) = 0.0D0
-        END DO
-      END DO
+          DOSTOT(L,ISPIN) = 0.d0
+          PDOSTOT(L,ISPIN) = 0.d0
+        endDO
+      endDO
 
 C=======================================================================
 C write DOS to file DOS.I1.dat - begin
 C=======================================================================
 C
-      D1 = mod(I1,10)
-      D10 = int( (mod(I1,100) + 0.5)/10 )
-      D100 = int( (mod(I1,1000) + 0.5)/100 )
-      D1000 = int( (mod(I1,10000) + 0.5)/1000 )
 
-      OFF(1) = iachar('1')-1
-      OFF(2) = iachar('1')-1
-      OFF(3) = iachar('1')-1
+      WRITE(UNIT=FNAME, FMT="(a,i4.4,a)") 'DOS.',I1,'.dat'
 
-      IF ( D10.GE.10 ) OFF(1) = iachar('7')
-      IF ( D100.GE.100 ) OFF(2) = iachar('7')
-      IF ( D1000.GE.1000 ) OFF(3) = iachar('7')
-
-      FNAME='DOS.'
-     + //achar(D1000+OFF(3))
-     + //achar(D100+OFF(2))
-     + //achar(D10+OFF(1))
-     + //achar(D1+iachar('1')-1)
-     + //'.dat'
-
-      OPEN(48,FILE=FNAME,FORM='formatted',ACTION='WRITE')
+      OPEN(48, FILE=FNAME, FORM='formatted', ACTION='WRITE')
 C
         DO ISPIN = 1,NSPIN
             IPOT = NSPIN * (I1-1) + ISPIN
-            DOSSGN = 1.0D0
-            IF (ISPIN.NE.NSPIN) DOSSGN = -1.0D0
+            DOSSGN = 1.d0
+            IF (ISPIN /= NSPIN) DOSSGN = -1.d0
 C
             WRITE (48,FMT=9010) (ITITLE(IA,ISPIN),IA=1,19)
             WRITE (48,FMT=9020) I1
@@ -87,22 +70,22 @@ C
             WRITE (48,FMT=9050) TK,PI*KB*TK,ALATC
 C
             DO IE = 1,IELAST
-                DOS = 0.0D0
+                DOS = 0.d0
                 DO L = 0,LMAXD1
-                    DOS = DOS - 2.0D0 *
+                    DOS = DOS - 2.d0 *
      &               DIMAG(DEN(L,IE,ISPIN))/PI/DBLE(NSPIN)
                     DOSTOT(L,ISPIN) = DOSTOT(L,ISPIN) +
      +                   DIMAG(WEZ(IE)*DEN(L,IE,ISPIN))
-                END DO
+                endDO
                 WRITE (48,FMT=9060) DBLE(EZ(IE))*EFCTOR,
-     +               (-2.0D0*DIMAG(DEN(L,IE,ISPIN))*DOSSGN/EFCTOR/PI
+     +               (-2.d0*DIMAG(DEN(L,IE,ISPIN))*DOSSGN/EFCTOR/PI
      &               /DBLE(NSPIN),L=0,LMAXD1),DOS*DOSSGN/EFCTOR
-            END DO
+            endDO
 C
             WRITE (48,FMT=9070) (DOSTOT(L,ISPIN)/EFCTOR/DBLE(NSPIN),
      +                                                      L=0,LMAXD1)
-            IF (ISPIN.NE.NSPIN) WRITE (48,FMT=9000)
-        END DO
+            IF (ISPIN /= NSPIN) WRITE (48,FMT=9000)
+        endDO
         CLOSE (48)
 C
 C=======================================================================
@@ -136,19 +119,19 @@ C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ALATC,E1,E2,EFERMI,TK
       INTEGER          IELAST,IEMXD,LMAXD1,
-     +                 NAEZ,NPOTD
+     +                 NAEZ,NPOTD ! todo: remove NPOTD
       INTEGER          NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   DEN(0:LMAXD1,IEMXD,NSPIN),
-     +                 EZ(IEMXD),WEZ(IEMXD)
+     +                 EZ(IEMXD),WEZ(IEMXD) ! todo: remove WEZ
       DOUBLE PRECISION DOSTOT(0:LMAXD1,2),
      +                 PDOSTOT(0:LMAXD1,2)
       INTEGER          ITITLE(20,NSPIN)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX   DOSCMPLX
-      DOUBLE PRECISION DOS,DOSSGN,EFCTOR,PI
+      DOUBLE PRECISION DOSSGN,EFCTOR,PI
       INTEGER          I1,IA,IE,IPOT,ISPIN,L
 C     ..
 C     .. Intrinsic Functions ..
@@ -158,27 +141,27 @@ C     .. External Functions ..
       LOGICAL TEST
       EXTERNAL TEST
 C     ..
-      PI = 4.0D0*ATAN(1.0D0)
-      EFCTOR = 1.0D0
+      PI = 4.d0*ATAN(1.d0)
+      EFCTOR = 1.d0
 
 C initialize DOSTOT
 C
       DO ISPIN = 1,NSPIN
         DO L = 0,LMAXD1
-          DOSTOT(L,ISPIN) = 0.0D0
-          PDOSTOT(L,ISPIN) = 0.0D0
-        END DO
-      END DO
+          DOSTOT(L,ISPIN) = 0.d0
+          PDOSTOT(L,ISPIN) = 0.d0
+        endDO
+      endDO
 C
 C
 C open file complex.dos - kept for correspondence to complexdos3.f
 C
-      IF(I1.EQ.1) THEN
-      OPEN (49,FILE='complex.dos',FORM='formatted',ACTION='write')
+      IF(I1 == 1) THEN
+      OPEN (49,FILE='complex.dos', FORM='formatted', ACTION='write')
       WRITE (49,*) NAEZ*NSPIN
       WRITE (49,*) IELAST
       WRITE (49,*) LMAXD1
-      END IF
+      endIF
 
 C=======================================================================
 C Write complex DOS to file complex.dos - begin
@@ -186,8 +169,8 @@ C=======================================================================
 C
         DO ISPIN = 1,NSPIN
             IPOT = NSPIN * (I1-1) + ISPIN
-            DOSSGN = 1.0D0
-            IF (ISPIN.NE.NSPIN) DOSSGN = -1.0D0
+            DOSSGN = 1.d0
+            IF (ISPIN /= NSPIN) DOSSGN = -1.d0
 C
             WRITE (49,FMT=9010) (ITITLE(IA,ISPIN),IA=1,19)
             WRITE (49,FMT=9020) I1
@@ -196,19 +179,19 @@ C
             WRITE (49,FMT=9050) TK,PI*KB*TK,ALATC
 C
             DO IE = 1,IELAST
-                DOSCMPLX = DCMPLX(0.0D0,0.D0)
+                DOSCMPLX = DCMPLX(0.d0,0.D0)
                 DO L = 0,LMAXD1
-                    DOSCMPLX = DOSCMPLX - 2.0D0 *
+                    DOSCMPLX = DOSCMPLX - 2.d0 *
      &               DEN(L,IE,ISPIN)/PI/DBLE(NSPIN)
-                END DO
+                endDO
                 WRITE (49,FMT=9065) EZ(IE)*EFCTOR,
-     +               (-2.0D0*DEN(L,IE,ISPIN)*DOSSGN/EFCTOR/PI
+     +               (-2.d0*DEN(L,IE,ISPIN)*DOSSGN/EFCTOR/PI
      &               /DBLE(NSPIN),L=0,LMAXD1),DOSCMPLX*DOSSGN/EFCTOR
-            END DO
+            endDO
 C
-            IF (ISPIN.NE.NSPIN.OR.I1.NE.NAEZ) WRITE (49,FMT=9000)
-        END DO
-      IF(I1.EQ.NAEZ) CLOSE (49)
+            IF (ISPIN /= NSPIN.OR.I1 /= NAEZ) WRITE (49,FMT=9000)
+        endDO
+      IF(I1 == NAEZ) CLOSE (49)
 C
 C=======================================================================
 C Write complex DOS to file complex.dos - end

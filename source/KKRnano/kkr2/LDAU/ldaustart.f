@@ -23,7 +23,7 @@ C
       INTEGER NSPIND
 
 C global arrays ..
-      INTEGER            LLDAU(LMAXD+1), ! quantum no. of affected orbital
+      INTEGER    LLDAU(LMAXD+1), ! quantum no. of affected orbital
      +                   LLDAU0(LMAXD+1)
       DOUBLE PRECISION   ULDAU(LMAXD+1), ! effective repulsion U
      +                   ULDAU0(LMAXD+1),

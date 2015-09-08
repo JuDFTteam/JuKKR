@@ -21,7 +21,9 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   double precision E1,E2,TK,EFERMI
   double precision CHRGNT,TOTSMOM,ALAT,PI
   !     ..
-  logical TEST,LDAU
+  logical LDAU
+! logical, external :: TEST
+#define TEST(STRING) .false.
   !     ..
   !     .. Local Arrays ..
   double complex EZ(IEMXD),WEZ(IEMXD)
@@ -51,7 +53,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   ! DOS calc.
   if (NPOL == 0) then
     LRECRES1 = LRECRES1 + 32*(LMAX+2)*IEMXD
-  end if
+  endif
 
 
   if (KTE >= 0) then
@@ -64,9 +66,9 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
         read(71, rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
         read(71, rec=I1) QC,CATOM,CHARGE,ECORE
-      end if
+      endif
       call WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAX,LMAX+1)
-    end do
+    enddo
 
 
     ! Density of states output
@@ -76,8 +78,8 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
         call WRLDOS(DEN,EZ,WEZ, &
         LMAX+1,IEMXD,NPOTD,ITITLE,EFERMI,E1,E2,ALAT,TK, &
         NSPIN,NAEZ,IELAST,I1,DOSTOT)
-      end do
-    end if
+      enddo
+    endif
 
 
     TOTSMOM = 0.0D0
@@ -86,17 +88,17 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE
-      end if
+      endif
       do ISPIN = 1,NSPIN
         if (ISPIN.ne.1) then
           write (6,fmt=9011) CATOM(ISPIN)                  ! spin moments
         else
           write (6,fmt=9001) I1,CATOM(ISPIN)               ! atom charge
-        end if
-      end do
+        endif
+      enddo
       write (6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
       if (NSPIN == 2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
-    end do
+    enddo
     write(6,'(79(1H+))')
     write (6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
     if (NSPIN == 2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
@@ -104,7 +106,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
     close(71)
 
-  end if
+  endif
 
 9001 format ('  Atom ',I4,' charge in wigner seitz cell =',f10.6)
 9011 format (7X,'spin moment in wigner seitz cell =',f10.6)
@@ -131,7 +133,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 !    read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
 !    EULDAU,EDCLDAU
 !  !        WRITE (6,FMT=99003) I1,(CATOM(1)-ZAT(I1)),VMAD  ! was already commented out
-!  end do
+!  enddo
 !  !      WRITE(6,'(25X,30(1H-),/)')
 !  !      WRITE(6,'(79(1H=))')
 !
@@ -149,10 +151,10 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
       EULDAU,EDCLDAU,LDAU, &
       KPRE,LMAX,LPOT, &
       LCOREMAX,NSPIN,I1,NAEZ)
-    end do
+    enddo
 
     close(72)
 
-  end if
+  endif
 
 end

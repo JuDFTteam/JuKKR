@@ -15,8 +15,8 @@ c
 c
 c     .. array arguments
 c
-      DOUBLE PRECISION, INTENT(IN) :: RBASIS(3,NAEZ) ! pos. of basis atoms in EZ
-      DOUBLE PRECISION, INTENT(IN) :: RR(3,0:NRD)    ! set of lattice vectors
+      DOUBLE PRECISION, INTENT(IN) :: RBASIS(3,NAEZ) ! positions in EZ
+      DOUBLE PRECISION, INTENT(IN) :: RR(3,0:NRD) ! lattice vectors
 c
 c
 c     .. scalar arguments

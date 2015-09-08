@@ -1,27 +1,28 @@
-#include "macros.h"
 
 module GaussWeights_mod
+#include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   
-  public :: gauss_legendre_weights, gauss_fermi_dirac_weights
+  public :: Gauss_Legendre_weights, Gauss_Fermi_Dirac_weights
   
   contains
 
-  integer function gauss_legendre_weights(n, xi, wi) result(ist)
+  integer function Gauss_Legendre_weights(n, xi, wi) result(ist)
     integer, intent(in) :: n
     doubleprecision, intent(out) :: xi(:), wi(:) 
     integer :: i
 
+    ist = 0
     if (n > 32) then
       ist = n - ((n-1)/4+1)*4
-      if (ist /= 0) return
-      if (ist /= 0) die_here("error gauleg: if n greater than 32 then n has to be multiple of 4, N="+n)
+      if (ist /= 0) die_here("error Gauss_Legendre_weights: if n greater than 32 then n has to be multiple of 4, N="+n)
+!     if (ist /= 0) return 
     elseif (n > 64) then
       ist = n - ((n-1)/8+1)*8
-      if (ist /= 0) return
-      if (ist /= 0) die_here("error gauleg: if n greater than 64 then n has to be multiple of 8, N="+n)
+      if (ist /= 0) die_here("error Gauss_Legendre_weights: if n greater than 64 then n has to be multiple of 8, N="+n)
+!     if (ist /= 0) return
     endif
 
     selectcase (n)
@@ -821,8 +822,8 @@ module GaussWeights_mod
       xi(56) = -13962042448558683275.d-21; wi(56) = 27922270225496082396.d-21
     case default
       ist = -n
-      write(*,*) here,' case N=',n,' is not provided in gauss_legendre_weights!'
-      ! die_here('case N='+n+' is not provided in gauss_legendre_weights!')
+      write(*,*) here,' case N=',n,' is not provided in Gauss_Legendre_weights!'
+      ! die_here('case N='+n+' is not provided in Gauss_Legendre_weights!')
     endselect ! n
 
     ! generate the second half of the weights and positions
@@ -831,13 +832,14 @@ module GaussWeights_mod
       wi(i) =  wi(n+1-i) ! weights are symmetric
     enddo ! i
     
-  endfunction ! gauss_legendre_weights
+  endfunction ! Gauss_Legendre_weights
 
 
-  integer function gauss_fermi_dirac_weights(n, xi, wi) result(ist)
+  integer function Gauss_Fermi_Dirac_weights(n, xi, wi) result(ist)
     integer, intent(in) :: n
     doubleprecision, intent(out) :: xi(:), wi(:) 
 
+    ist = 0
     selectcase (n)
     case (1)
       xi(1) = -49817229548128141768.d-20; wi(1) = 10000000000000031192.d-19
@@ -993,10 +995,10 @@ module GaussWeights_mod
       xi(16) = 10394188783181811718.d-19 ; wi(16) = 11117372791599461059.d-33
     case default
       ist = -N
-      write(*,*) here,' case N=',N,' is not provided in gauss_fermi_dirac_weights!'
-      ! die_here('case N='+N+' is not provided in gauss_fermi_dirac_weights!')
+      warn(6, 'case N ='+N+'is not provided in Gauss_Fermi_Dirac_weights!')
+      ! die_here('case N='+N+' is not provided in Gauss_Fermi_Dirac_weights!')
     endselect
 
-  endfunction ! gauss_fermi_dirac_weights
+  endfunction ! Gauss_Fermi_Dirac_weights
 
 endmodule GaussWeights_mod      

@@ -244,17 +244,17 @@ ShapeIntegrationHelpers_mod.o: Constants_mod.o
 ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o
 EnergyMesh_mod.o: KKRnanoParallel_mod.o EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
-SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o
+SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o Exceptions_mod.o
 TFQMRSolver_mod.o: Solver_mod.o OperatorT_mod.o mminvmod_oop_mod.o SolverStats_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o MultScatData_mod.o kkrmat01_new.o jij_calc_mod.o TEST_lcutoff_mod.o TFQMRSolver_mod.o SolverOptions_mod.o InitialGuess_mod.o
 ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
-EBalanceHandler_mod.o: KKRnanoParallel_mod.o
+EBalanceHandler_mod.o: KKRnanoParallel_mod.o Exceptions_mod.o
 ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o Constants_mod.o  PolygonFaces_mod.o
-BasisAtom_mod.o: RadialMeshData_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
+BasisAtom_mod.o: Exceptions_mod.o RadialMeshData_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 mminvmod_oop_mod.o: Logging_mod.o OperatorT_mod.o SolverStats_mod.o
 KKRresults_mod.o: DimParams_mod.o
-DimParams_mod.o: ConfigReader_mod.o
+DimParams_mod.o: ConfigReader_mod.o Exceptions_mod.o
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
 CellData_mod.o: ShapefunData_mod.o
@@ -301,10 +301,10 @@ sphere_nogga.o: Harmonics_mod.o
 strmat_new.o: Harmonics_mod.o
 debug_morgan_mod.o: Harmonics_mod.o
 BrillouinZone_mod.o: Symmetry_mod.o VectorMath_mod.o
-Lattice_mod.o: VectorMath_mod.o
-Symmetry_mod.o: VectorMath_mod.o
+Lattice_mod.o: VectorMath_mod.o Constants_mod.o
+Symmetry_mod.o: VectorMath_mod.o Exceptions_mod.o
 GaussWeights_mod.o: Exceptions_mod.o
-EnergyMeshHelpers_mod.o: GaussWeights_mod.o
+EnergyMeshHelpers_mod.o: GaussWeights_mod.o Constants_mod.o
 jij_calc_mod.o: Sorting_mod.o
 PotentialConverter_mod.o: DimParams_mod.o BasisAtom_mod.o RadialMeshData_mod.o PotentialData_mod.o
 Startb1_mod.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o

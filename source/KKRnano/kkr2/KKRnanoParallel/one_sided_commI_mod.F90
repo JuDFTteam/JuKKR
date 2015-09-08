@@ -39,8 +39,6 @@
 #define COMMCHECK(X) if ( (X) /= 0 ) then; write(*,*) "Comm failure", X, __LINE__; STOP; endif
 #define CHECK(X) if ( .not. (X) ) then; write(*,*) "FAIL: ", __LINE__; STOP; endif
 
-#define NUMBERI integer
-#define NUMBERMPII MPI_INTEGER
 #define NUMBERZ double complex
 #define NUMBERMPIZ MPI_DOUBLE_COMPLEX
 #define NUMBERC complex
@@ -50,21 +48,56 @@
 #define NUMBERI integer
 #define NUMBERMPII MPI_INTEGER
 
+#ifndef NUMBERI
+! defaults
+#define NUMBERI integer
+#define NUMBERMPII MPI_INTEGER
+#endif
+
 module one_sided_commI_mod
   implicit none
   private
+  
   public :: ChunkIndex, getOwner, getLocalInd, getChunkIndex
+  type ChunkIndex
+    integer :: owner
+    integer :: local_ind
+  endtype
+
+  
+  public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
+  
+  interface copyFrom
+    module procedure copyFromI_com
+  endinterface
+  
+  interface exposeBuffer
+    module procedure exposeBufferI
+  endinterface
+  
+  interface copyChunks
+    module procedure copyChunksI
+  endinterface
+  
+  interface copyChunksNoSync
+    module procedure copyChunksNoSyncI
+  endinterface
+  
+  interface fence
+    module procedure fenceI
+  endinterface
+  
+  interface hideBuffer
+    module procedure hideBufferI
+  endinterface
+  
+  ! deprecated public statements (to be private in the future)
   public :: copyFromI_com
   public :: exposeBufferI
   public :: copyChunksI
   public :: copyChunksNoSyncI
   public :: fenceI
   public :: hideBufferI
-
-  type ChunkIndex
-    integer :: owner
-    integer :: local_ind
-  end type
   
   include 'mpif.h'
 
@@ -79,15 +112,15 @@ module one_sided_commI_mod
 !> size of receive buffer:  chunk_size*size(atom_indices)
 !> Uses MPI-RMA
 subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_local_atoms, communicator)
-  NUMBERI, dimension(*), intent(inout) :: receive_buf     ! receive
-  NUMBERI, dimension(*), intent(inout) :: local_buf ! send
+  NUMBERI, intent(inout) :: receive_buf(*)    ! receive
+  NUMBERI, intent(inout) :: local_buf(*) ! send
   integer, intent(in) :: communicator
-  integer, dimension(:), intent(in) :: atom_indices
+  integer, intent(in) :: atom_indices(:)
 
   integer, intent(in) :: chunk_size
   integer, intent(in) :: num_local_atoms
 
-  type (ChunkIndex), dimension(:), allocatable :: chunk_inds
+  type (ChunkIndex), allocatable :: chunk_inds(:)
   integer :: ii
   integer :: ierr
   integer :: naez_trc ! size(atomindices)
@@ -109,7 +142,7 @@ subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
     atom_requested = atom_indices(ii)
     chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
     chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
-  end do
+  enddo
 
   call exposeBufferI(win, local_buf, chunk_size*num_local_atoms, chunk_size, communicator)
   call copyChunksI(receive_buf, win, chunk_inds, chunk_size)
@@ -117,7 +150,7 @@ subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
 
   deallocate(chunk_inds)
 
-end subroutine
+endsubroutine copyFromI_com
 
 !------------------------------------------------------------------------------
 !> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
@@ -131,7 +164,7 @@ integer function getOwner(ind, num, nranks)
   atoms_per_proc = num / nranks  
   getOwner = (ind - 1) / atoms_per_proc
   ! 0 ... nranks-1  
-end function
+endfunction getOwner
 
 !------------------------------------------------------------------------------
 !> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
@@ -146,7 +179,7 @@ integer function getLocalInd(ind, num, nranks)
 
   ! 1 ... atoms_per_proc
   
-end function
+endfunction getLocalInd
 
 !------------------------------------------------------------------------------
 !> Returns chunk index of atom/matrix/chunk with index 'ind'.
@@ -154,14 +187,13 @@ end function
 !> @param num    Total number of chunks/atoms/matrices
 !> @param nranks number of ranks
 function getChunkIndex(ind, num, nranks)
-  implicit none
   type (ChunkIndex) :: getChunkIndex
   integer, intent(in) :: ind, num, nranks
 
   getChunkIndex%owner = getOwner(ind, num, nranks)
   getChunkIndex%local_ind = getLocalInd(ind, num, nranks)
 
-end function
+endfunction getChunkIndex
 
 subroutine exposeBufferI(win, buffer, bsize, chunk_size, communicator)
   integer, intent(inout) :: win 
@@ -181,12 +213,10 @@ subroutine exposeBufferI(win, buffer, bsize, chunk_size, communicator)
   disp_unit = typesize * chunk_size ! has to be plain integer!!
 
   ! Measure in units of chunks here disp_unit = CHUNKSIZE
-  call MPI_Win_create(buffer, typesize*bsize, &
-                      disp_unit, MPI_INFO_NULL, &
-                      communicator, win, ierr)
+  call MPI_Win_create(buffer, typesize*bsize, disp_unit, MPI_INFO_NULL, communicator, win, ierr)
   COMMCHECK(ierr)
   
-end subroutine
+endsubroutine exposeBufferI
 
 !------------------------------------------------------------------------------
 !> Copy chunks of size 'chunk_size' located at 
@@ -194,9 +224,9 @@ end subroutine
 !> On output dest_buffer contains chunks in 
 !> the order as specified in 'chunk_inds' 
 subroutine copyChunksI(dest_buffer, win, chunk_inds, chunk_size)
-  NUMBERI, dimension(*), intent(out) :: dest_buffer
+  NUMBERI, intent(out) :: dest_buffer(*)
   integer, intent(inout) :: win
-  type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
+  type(ChunkIndex), intent(in) :: chunk_inds(:)
   integer, intent(in) :: chunk_size
 
   call fenceI(win)
@@ -204,7 +234,7 @@ subroutine copyChunksI(dest_buffer, win, chunk_inds, chunk_size)
   ! ensure that Get has completed and dest_buffer is valid
   call fenceI(win)
 
-end subroutine
+endsubroutine copyChunksI
 
 !------------------------------------------------------------------------------
 !> Copy chunks of size 'chunk_size' located at
@@ -214,9 +244,9 @@ end subroutine
 !>
 !> NOTE: MUST do fence calls before and after one or many calls to this routine.
 subroutine copyChunksNoSyncI(dest_buffer, win, chunk_inds, chunk_size)
-  NUMBERI, dimension(*), intent(out) :: dest_buffer
+  NUMBERI, intent(out) :: dest_buffer(*)
   integer, intent(inout) :: win
-  type(ChunkIndex), dimension(:), intent(in) :: chunk_inds
+  type(ChunkIndex), intent(in) :: chunk_inds(:)
   integer, intent(in) :: chunk_size
 
   integer :: owner_rank
@@ -234,13 +264,12 @@ subroutine copyChunksNoSyncI(dest_buffer, win, chunk_inds, chunk_size)
 
     disp = local_ind - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
 
-    call MPI_Get(dest_buffer( (ii - 1) * chunk_size + 1 ), chunk_size, &
-                 NUMBERMPII, owner_rank, &
-                 disp, chunk_size, NUMBERMPII, win, ierr)
+    call MPI_Get(dest_buffer((ii-1)*chunk_size+1), chunk_size, NUMBERMPII, &
+                       owner_rank, disp, chunk_size, NUMBERMPII, win, ierr)
 
-  end do
+  enddo ! ii
 
-end subroutine
+endsubroutine copyChunksNoSyncI
 
 !------------------------------------------------------------------------------
 !> Wrapper for fence call.
@@ -251,7 +280,7 @@ subroutine fenceI(win)
   call MPI_Win_fence(0, win, ierr)
 
   COMMCHECK(ierr)
-end subroutine
+endsubroutine fenceI
 
 !------------------------------------------------------------------------------
 !> Hide buffer after completing one-sided communication.
@@ -263,9 +292,9 @@ subroutine hideBufferI(win)
   call MPI_Win_free(win, ierr)
   COMMCHECK(ierr)
 
-end subroutine
+endsubroutine hideBufferI
 
-end module one_sided_commI_mod
+endmodule one_sided_commI_mod
 
 #ifdef TEST_ONE_SIDED_COMM_I__
 ! a test program - not compiled due to conditional compilation
@@ -304,7 +333,7 @@ program test
   !buffer = dcmplx( dble(myrank+1), dble(myrank+1) )
   do ii = 1, CHUNKSPERPROC
     buffer(:,ii) = (myrank * CHUNKSPERPROC + ii - 1) ! encode rank and local index in 1 number
-  end do
+  enddo ! ii
   !write(*,*) buffer
 
   call MPI_Comm_size(MPI_COMM_WORLD, num_ranks, ierr)
@@ -316,7 +345,7 @@ program test
     chunks_req(ii) = mod((myrank + 1) * CHUNKSPERPROC + ii - 1, CHUNKSPERPROC*num_ranks) + 1
     chunk_inds(ii)%owner      = getOwner(chunks_req(ii), nchunks_total, num_ranks)
     chunk_inds(ii)%local_ind  = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
-  end do
+  enddo ! ii
 
   call exposeBufferI(win, buffer, size(buffer), CHUNKSIZE, MPI_COMM_WORLD)
   call copyChunksI(dest_buffer, win, chunk_inds, CHUNKSIZE)
@@ -330,7 +359,7 @@ program test
     partner_rank = getOwner(chunks_req(ii), nchunks_total, num_ranks)
     local_ind = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
     CHECK( sum( abs( dest_buffer(:, ii) - (partner_rank * CHUNKSPERPROC + local_ind - 1) ) ) < 1e-10 )
-  end do  
+  enddo ! ii  
 
   write(*,*) "Rank ", myrank, " has finished." ! correct if EVERY rank prints this message
 
@@ -338,5 +367,5 @@ program test
   COMMCHECK(ierr)
   
   !write(*,*) "OK: TEST successful"
-end program
+endprogram
 #endif
