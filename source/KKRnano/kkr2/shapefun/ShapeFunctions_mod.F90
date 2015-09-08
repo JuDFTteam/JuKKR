@@ -5,6 +5,13 @@ module ShapeFunctions_mod
   private
   public :: shapef
   
+  
+#ifdef DEBUGSHAPEFUNCTIONS
+  integer, parameter :: verbosity = 2
+#else
+  integer, parameter :: verbosity = 0
+#endif
+
   contains
 
 !------------------------------------------------------------------------------
@@ -143,11 +150,10 @@ module ShapeFunctions_mod
     nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
     thetas_s, lmifun_s, nfun, & ! shape function
     ibmaxd, meshnd, npand)
-
-    use shape_constants_mod, only: verbosity
-    use shapecriticalpoints_mod, only: criticalshapepoints
-    use shapestandardmesh_mod, only: mesh
-    use shapeintegration_mod, only: shapeintegration
+    
+    use ShapeCriticalPoints_mod, only: criticalshapepoints
+    use ShapeStandardMesh_mod, only: mesh
+    use ShapeIntegration_mod, only: shapeintegration
     use PolygonFaces_mod, only: PolygonFace
     integer :: ist
 

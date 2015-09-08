@@ -1,23 +1,24 @@
 !------------------------------------------------------------------------------
-!> Hardcoded constants for shape function calculation
-module shape_constants_mod
+!> Hardcoded constants
+module Constants_mod
   implicit none
   public ! all module vars are constant
 
+  double precision, parameter :: pi = 4.d0*atan(1.d0) ! 3.1415926535897932d0
+  
   !> Parameter to control diagnostic output, set to 0 for no output
   !! 1 for output as in old program, 2 for additional output about tetrahedra
 
-#ifdef DEBUGSHAPEFUNCTIONS
-  integer, parameter :: VERBOSITY = 2
-#else
-  integer, parameter :: VERBOSITY = 0
-#endif
+! #ifdef DEBUGSHAPEFUNCTIONS
+!   integer, parameter :: VERBOSITY = 2
+! #else
+!   integer, parameter :: VERBOSITY = 0
+! #endif
 
   !> Parameter to enable/disable geometry checks (routine POLCHK)
 
 !   logical, parameter :: CHECK_GEOMETRY = .true. ! moved to where it is needed
 
-  double precision, parameter :: pi = 3.1415926535897932d0
 
   !integer, parameter :: NVERTD = 250 !< maximal number of cell vertices
   !integer, parameter :: NFACED = 200 !< maximal number of cell faces
@@ -35,6 +36,6 @@ module shape_constants_mod
   !> maximal number of Gauss-Legendre integration points, used in PINTG
 !   integer, parameter :: NDIM = 1000
   
-end module
+endmodule Constants_mod
 
 

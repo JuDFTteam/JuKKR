@@ -4,6 +4,8 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module PotentialConverter_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: kkrvform
@@ -125,6 +127,7 @@ module PotentialConverter_mod
     !READ (UNIT=UIO,FMT=*) ALAT
 
     write(*,*) "WARNING: COULD NOT GET ALAT and KXC - TODO"
+    warn(6, "ToBeImplemented: could not get ALAT and KXC")
     alat = 0.d0
     kxc = 2
 

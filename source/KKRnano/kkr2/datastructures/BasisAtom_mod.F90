@@ -54,6 +54,8 @@
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module BasisAtom_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use CellData_mod, only: CellData
   use PotentialData_mod, only: PotentialData
   use AtomicCoreData_mod, only: AtomicCoreData
@@ -62,34 +64,28 @@ module BasisAtom_mod
   
   public :: BasisAtom, create, destroy
   public :: getMinReclenBasisAtomPotential, getCellIndex
-  public :: createBasisAtom, destroyBasisAtom ! deprecated
+  public :: createBasisAtom, destroyBasisAtom, createBasisAtomFromFile ! deprecated
   public :: associateBasisAtomCell, associateBasisAtomMesh, resetPotentials, readBasisAtomPotentialHeader
-  public :: createBasisAtomFromFile
   ! direct access file routines
-  public :: writeBasisAtomDA, readBasisAtomDA, openBasisAtomDAFile, closeBasisAtomDAFile, writeBasisAtomPotentialDA           
-  public :: openBasisAtomPotentialDAFile, readBasisAtomPotentialDA, closeBasisAtomPotentialDAFile       
-  public :: writeBasisAtomPotentialIndexDA, readBasisAtomPotentialIndexDA, openBasisAtomPotentialIndexDAFile, closeBasisAtomPotentialIndexDAFile
+  public :: openBasisAtomDAFile, writeBasisAtomDA, readBasisAtomDA, closeBasisAtomDAFile
+  public :: openBasisAtomPotentialDAFile, writeBasisAtomPotentialDA, readBasisAtomPotentialDA, closeBasisAtomPotentialDAFile  
+  public :: openBasisAtomPotentialIndexDAFile, writeBasisAtomPotentialIndexDA, readBasisAtomPotentialIndexDA, closeBasisAtomPotentialIndexDAFile
 
   type BasisAtom
-
     integer :: atom_index !< position in atominfo/rbasis file
     integer :: cell_index
     double precision :: Z_nuclear
     integer :: nspin
-
     double precision :: RMTref !< radius of repulsive reference potential
     double precision :: radius_muffin_tin !< user-specified muffin-tin radius
-
     type(PotentialData) :: potential
     type(AtomicCoreData) :: core
-
     type(CellData), pointer :: cell_ptr => null()
     type(RadialMeshData), pointer :: mesh_ptr => null()
-
   endtype
 
   interface create
-    module procedure createBasisAtom
+    module procedure createBasisAtom, createBasisAtomFromFile
   endinterface
   
   interface destroy
@@ -97,7 +93,6 @@ module BasisAtom_mod
   endinterface
   
   integer, parameter, private :: MAGIC_NUMBER = 385306
-
   
   contains
 
@@ -142,10 +137,8 @@ module BasisAtom_mod
     cell_ptr => cell
     atom%cell_ptr => cell_ptr
 
-    if (atom%cell_index /= cell_ptr%cell_index) then
-      write(*,*) "ERROR: Mismatch in cell indices for atom ", atom%atom_index
-      stop
-    endif
+    if (atom%cell_index /= cell_ptr%cell_index) &
+      die_here("Mismatch in cell indices for atom"+atom%atom_index)
 
   endsubroutine ! associate
 
@@ -210,7 +203,7 @@ module BasisAtom_mod
     integer, parameter :: FILEUNIT = 42
 
     ! index file has extension .idx
-    call openBasisAtomPotentialIndexDAFile(atom, FILEUNIT, filenamepot // ".idx")
+    call openBasisAtomPotentialIndexDAFile(atom, FILEUNIT, filenamepot-".idx")
     call readBasisAtomPotentialIndexDA(atom, FILEUNIT, recnr, lpot, nspin, irmind, irmd, max_reclen)
     call closeBasisAtomPotentialDAFile(FILEUNIT)
 
@@ -267,10 +260,7 @@ module BasisAtom_mod
                                 atom%core%ITITLE, &
                                 magic2
 
-    if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) then
-      write (*,*) "ERROR: Invalid basis atom data read. ", __FILE__, __LINE__
-      stop
-    endif
+    if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) die_here("Invalid basis atom data read.")
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
@@ -280,7 +270,6 @@ module BasisAtom_mod
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
 
-    !------
     integer :: reclen
 
     inquire (iolength=reclen) MAGIC_NUMBER, &
@@ -321,9 +310,9 @@ module BasisAtom_mod
     integer, intent(in) :: recnr
 
 #ifdef TASKLOCAL_FILES
-    character(len=7) :: num
-    write(num, '(I7.7)') recnr
-    open(fileunit, file="pot." // num, form='unformatted')
+    character(len=16) :: num
+    write(unit=num, fmt='(A,I7.7)') "pot.",recnr
+    open(fileunit, file=num, form='unformatted', action='write')
 
     call writeBasisAtomPotentialIndexDA(atom, FILEUNIT, recnr, 0)
 #endif
@@ -389,11 +378,11 @@ module BasisAtom_mod
     integer, intent(in) :: recnr
 
 #ifdef TASKLOCAL_FILES
-    character(len=7) :: num
+    character(len=16) :: num
     integer :: lpot, nspin, irmind, irmd, max_reclen
 
-    write(num, '(I7.7)') recnr
-    open(fileunit, file="pot." // num, form='unformatted')
+    write(unit=num, fmt='(A,I7.7)') 'pot.',recnr
+    open(fileunit, file=num, form='unformatted', action="read", status="old")
 
     !  skip header at beginning of file
     call readBasisAtomPotentialHeader(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
@@ -456,10 +445,10 @@ module BasisAtom_mod
     integer, intent(out) :: max_reclen
 
 #ifdef TASKLOCAL_FILES
-    character(len=7) :: num
+    character(len=16) :: num
 
-    write(num, '(I7.7)') recnr
-    open(fileunit, file="pot." // num, form='unformatted')
+    write(unit=num, fmt='(A,I7.7)') "pot.",recnr
+    open(fileunit, file=num, form='unformatted', action='read', status="old")
 #endif
 
     call readBasisAtomPotentialHeader(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
@@ -476,7 +465,7 @@ module BasisAtom_mod
     type(BasisAtom), intent(in) :: atom
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
-    !------
+
     integer :: reclen
     integer :: max_reclen
 
@@ -539,10 +528,7 @@ module BasisAtom_mod
 
     FILEREAD  (fileunit, rec=recnr) lpot, nspin, irmind, irmd, max_reclen, magic
 
-    if (magic /= checkmagic) then
-      write (*,*) "ERROR: Invalid mesh index data read. ", __FILE__, __LINE__
-      stop
-    endif
+    if (magic /= checkmagic) die_here("Invalid mesh index data read.")
 
   endsubroutine ! read
 
@@ -557,17 +543,8 @@ module BasisAtom_mod
 
     integer :: ispin, j, lm
     
-    !debug
-    if (irmin1 < irmind) then
-      write(*,*) "resetpotentials: irmin1 < irmind", irmin1, irmind
-      stop
-    endif
-
-    !debug
-    if (irc1 > irmd) then
-      write(*,*) "resetpotentials: irc1 > irmd"
-      stop
-    endif
+    if (irmin1 < irmind) die_here("resetpotentials:"+irmin1+"= irmin1 < irmind ="+irmind) ! debug
+    if (irc1 > irmd) die_here("resetpotentials:"+irc1+"= irc1 > irmd ="+irmd) ! debug
 
     vins(:,:,:) = 0.d0 ! initialise vins
     visp(:,:) = 0.d0 ! initialise visp

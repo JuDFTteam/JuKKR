@@ -33,7 +33,7 @@ module ShapeGeometryHelpers_mod
 !     ----------------------------------------------------------------
 ! ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  = 
   subroutine polchk(nface, nvertices, vert, tolvdist)
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
     integer, intent(in) :: nface
     integer, intent(in) :: nvertices(:)
     double precision, intent(in) :: vert(:,:,:) ! vert(3,nvertd,nfaced)

@@ -5,7 +5,10 @@
 
 #define COMMCHECK(IERR) if((IERR) /= 0) then; write(*,*) "ERROR: Communication failure: ", __FILE__, __LINE__; STOP; endif
 
+
 module EBalanceHandler_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: EBalanceHandler
@@ -14,7 +17,6 @@ module EBalanceHandler_mod
   public :: initEBalanceHandler, updateEBalance_com, setEqualDistribution
   
   type EBalanceHandler
-
     integer, allocatable :: eproc(:)
     integer, allocatable :: eproc_old(:)
     real, allocatable :: etime(:)
@@ -58,9 +60,9 @@ module EBalanceHandler_mod
     type(EBalanceHandler), intent(inout) :: balance
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    logical :: readit
-    integer :: file_points, file_procs
+    integer :: file_points, file_procs, ios
     integer, parameter :: FILEHANDLE = 50
+    character(len=*), parameter :: filename = 'ebalance'
 
     balance%num_eprocs_empid = getNumEnergyRanks(my_mpi)
 
@@ -76,23 +78,19 @@ module EBalanceHandler_mod
       call EBALANCE1(balance%ierlast, balance%eproc, balance%eproc_old, &
                      balance%num_eprocs_empid, balance%ierlast)
 
-      inquire(FILE='ebalance', EXIST=readit)
-
-      if (readit) then
-        open(FILEHANDLE, file='ebalance', form='formatted')
+      open(FILEHANDLE, file=filename, form='formatted', status='old', action='read', iostat=ios)
+      if (ios == 0) then
         call readEBalanceHeader(filehandle, file_points, file_procs)
 
-        if (         balance%ierlast == file_points .and. &
-            balance%num_eprocs_empid == file_procs) then
+        if (balance%ierlast == file_points .and. balance%num_eprocs_empid == file_procs) then
 
           call readEBalanceDistribution(filehandle, balance%eproc, file_points)
 
         else
+          warn(6, "Bad file "-filename-" provided")
           write(*,*) "WARNING: Bad ebalance file provided."
         endif
-
         close(FILEHANDLE)
-
       endif
 
     endif
@@ -162,18 +160,14 @@ module EBalanceHandler_mod
 
     real MTIME(balance%ierlast)
 
-    NPNT1 = 1
-    if (balance%equal_distribution) then
-       NPNT1 = 0
-    endif
+    NPNT1 = 1; if (balance%equal_distribution) NPNT1 = 0
 
     ! TODO: extract allreduce -> reduce
     ! TODO: let only master rank calculate
     ! TODO: broadcast
     if (balance%num_eprocs_empid > 1) then
 
-      call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, &
-      getMyActiveCommunicator(my_mpi),IERR)
+      call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, getMyActiveCommunicator(my_mpi),IERR)
 
       COMMCHECK(IERR)
 
@@ -223,14 +217,12 @@ module EBalanceHandler_mod
     type(EBalanceHandler), intent(inout) :: balance
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    !-----
     integer :: ierr
 
     ! save old ebalance information WRONG!!!! already done
     ! balance%eproc_old = balance%eproc
 
-    call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, &
-    0, getMyActiveCommunicator(my_mpi), ierr)
+    call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, 0, getMyActiveCommunicator(my_mpi), ierr)
 
     COMMCHECK(IERR)
 
@@ -261,11 +253,11 @@ module EBalanceHandler_mod
 
     integer :: idummy, ie
     real :: rdummy
-    !skip first 3 lines - those are comments
 
     do ie = 1, num_points
       read(filehandle, *) idummy, eproc(ie), rdummy
-    enddo
+    enddo ! ie
+    
   endsubroutine
 
 !------------------------------------------------------------------------------
@@ -482,11 +474,10 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco,
   !     >>> loop over processors empi=1,empid
 
 
-  !     write information on load-balancing to formatted file 'balance'
+!   write information on load-balancing to formatted file 'balance'
 
-  !     inquire(file='stop', exist=stopit)
-!  if (iter == scfsteps) then
-!
+!   inquire(file='stop', exist=stopit)
+!   if (iter == scfsteps) then
     if (myactvrank == 0) then
       open (50, file='ebalance', form='formatted', status='replace', action='write')
       write(50, *) "# Energy load-balancing file"
@@ -500,8 +491,7 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco,
       
       close(50)
     endif
-!
-!  endif
+!   endif
 
 endsubroutine
 

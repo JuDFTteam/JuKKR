@@ -1,4 +1,6 @@
 module Symmetry_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: pointgrp, findgroup, symtaumat
@@ -35,7 +37,8 @@ module Symmetry_mod
     double precision, intent(in) :: rotmat(3,3,64)
     character(len=*), intent(in) :: rotname(64)
 
-    logical, external :: test
+!!  logical, external :: test
+#define test(STRING) .false.
     
     double precision :: r(3,4), rotrbas(3,naezd), bravais1(3,3)
     integer :: i, j, isym, i0, ia
@@ -43,16 +46,16 @@ module Symmetry_mod
     double precision :: mrotr(3,3), symdet, summdotmp
     double precision :: stet
     character(len=10) :: name(64)
-    logical :: llatbas, latvec, lbulk
+    logical :: llatbas, lbulk
 
-    write (6,fmt="(5x,'< FINDGROUP > : Finding symmetry operations',/)")
+    write(6, fmt="(5x,'< FINDGROUP > : Finding symmetry operations',/)")
 
     nsym = 0
     bravais1(1:3,1:3) = bravais(1:3,1:3)
     
 !     check for surface mode. if so, set bravais1(3,3) very large, so
 !     that only the in-plane symmetries are found. not checked, be careful of z--> -z!
-    lbulk=.true.
+    lbulk = .true.
 !     now check the bravais vectors if they have a z component 
     if (all(bravais(1:3,3) == 0.d0)) lbulk = .false.
 !     
@@ -96,7 +99,7 @@ module Symmetry_mod
 !     enddo
 !     enddo
 !     write(6,*) 'latvec',latvec(4,recbv,r)
-          if (.not. latvec(4,recbv,r)) llatbas = .false.
+          if (.not. latvec(4, recbv, r)) llatbas = .false.
           if (test('Oh-symm ') .and. isym <= 48)  llatbas = .true.
           if (test('Td-symm ') .and. isym <= 12)  llatbas = .true.
           if (test('Td-symm ') .and. isym >= 37 .and. isym <= 48) llatbas = .true.
@@ -114,22 +117,22 @@ module Symmetry_mod
 !     nsym symmetries were found
 !     the isymindex array has the numbers of the symmetries found
  
-    write(6,'(8x,60(1h-))')
+    write(6, fmt="(8x,60(1h-))")
     if (lbulk) then
-      write(6,fmt="(8X,'3D symmetries',$)") 
+      write(6, fmt="(8X,'3D symmetries',$)") 
     else  ! bulk
-      write(6,fmt="(8X,'surface symmetries',$)") 
+      write(6, fmt="(8X,'surface symmetries',$)") 
     endif ! bulk
-    write(6,fmt="(' found for this lattice: ',i2,/,8x,60(1h-))") nsym
+    write(6, fmt="(' found for this lattice: ',i2,/,8x,60(1h-))") nsym
     do i = 1, nsym
       i0 = isymindex(i)
       name(i) = rotname(i0) 
     enddo ! i
     do i = 1, nsym/5 + 1
       isym = min(5, nsym - (i-1)*5)
-      write(6,fmt="(8x,5(a10,2x))") (name(j),j=(i-1)*5+1,(i-1)*5+isym)
+      write(6, fmt="(8x,5(a10,2x))") (name(j),j=(i-1)*5+1,(i-1)*5+isym)
     enddo ! i
-    write(6,fmt="(8x,60(1h-),/)")
+    write(6, fmt="(8x,60(1h-),/)")
     
   endsubroutine findgroup
   
@@ -138,6 +141,7 @@ module Symmetry_mod
 !*==symtaumat.f    processed by SPAG 6.05Rc at 15:50 on 10 Dec 2002
   subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, nqmax, nkmmax, nq, nl, krel, iprint, nsymaxd)
     use VectorMath_mod, only: ddet33
+    use Constants_mod, only: pi
 !   ********************************************************************
 !   *                                                                  *
 !   *  Find the symmetry matrices DROT that act on t, tau, ....        *
@@ -159,8 +163,7 @@ module Symmetry_mod
     character(len=*), intent(in) :: rotname(64)
     
     double complex, parameter :: ci=(0.d0,1.d0), c1=(1.d0,0.d0), c0=(0.d0,0.d0)
-    double precision :: a,b,co1,co2,co3,det,fact(0:100),pi,rj,rmj,si1,si2,si3,sk, symeulang(3,48),tet(1:3)
-    logical :: checkrmat
+    double precision :: a,b,co1,co2,co3,det,fact(0:100),rj,rmj,si1,si2,si3,sk, symeulang(3,48),tet(1:3)
     logical :: equal
     double complex :: dinv(nkmmax,nkmmax), dtim(nkmmax,nkmmax), rc(nkmmax,nkmmax), w1(nkmmax,nkmmax), w2(nkmmax,nkmmax)
     integer :: i,i1,i2,ind0q(nqmax),invflag(48),iq,irel,ireleff,isym, itop,j,k,l,loop,m,n,nk,nkeff,nkm,nlm,nok,ns
@@ -168,9 +171,7 @@ module Symmetry_mod
 
     equal(a,b) = (abs(a-b) < 1d-7) ! inline function?
 
-    write (6, fmt="(5x,'<SYMTAUMAT> : rotation matrices acting on t/G/tau',//,8x,57(1h-),/,8x,'ISYM            INV          Euler angles      Unitarity',/,8x,57(1h-))")
-
-    pi = 4.d0*atan(1.d0)
+    write(6, fmt="(5x,'<SYMTAUMAT> : rotation matrices acting on t/G/tau',//,8x,57(1h-),/,8x,'ISYM            INV          Euler angles      Unitarity',/,8x,57(1h-))")
 
     irel = krel*3
     nk = (1-krel)*nl + krel*(2*nl-1)
@@ -234,7 +235,7 @@ module Symmetry_mod
       co2 = rmat(3,3)
       tet(2) = acos(co2)
       loop = 0
-50    continue
+555   continue
       if (loop == 1) tet(2) = -tet(2)
       si2 = sin(tet(2))
 
@@ -242,27 +243,27 @@ module Symmetry_mod
         tet(1) = acos(rmat(1,1))
         if (.not. equal(rmat(1,2), sin(tet(1)))) then
           tet(1) = -tet(1)
-          if (.not. equal(rmat(1,2), sin(tet(1)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 1'
+          if (.not. equal(rmat(1,2), sin(tet(1)))) write(*,*) '>>>>>>>>>>>>>>> STRAGE 1'
         endif
         tet(2:3) = 0.d0
-      else if (equal(co2, -1.d0)) then
+      elseif (equal(co2, -1.d0)) then
         tet(1) = acos(-rmat(1,1))
         if (.not. equal(rmat(1,2), -sin(tet(1)))) then
           tet(1) = -tet(1)
-          if (.not. equal(rmat(1,2), -sin(tet(1)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 2'
+          if (.not. equal(rmat(1,2), -sin(tet(1)))) write(*,*) '>>>>>>>>>>>>>>> STRAGE 2'
         endif
         tet(2:3) = [pi, 0.d0]
       else
         tet(1) = acos(rmat(3,1)/si2)
         if (.not. equal(rmat(3,2), si2*sin(tet(1)))) then
           tet(1) = -tet(1)
-          if (.not. equal(rmat(3,2), si2*sin(tet(1)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 3'
+          if (.not. equal(rmat(3,2), si2*sin(tet(1)))) write(*,*) '>>>>>>>>>>>>>>> STRAGE 3'
         endif
 
         tet(3) = acos(-rmat(1,3)/si2)
         if (.not. equal(rmat(2,3), si2*sin(tet(3)))) then
           tet(3) = -tet(3)
-          if (.not. equal(rmat(2,3), si2*sin(tet(3)))) write (*,*) '>>>>>>>>>>>>>>> STRAGE 4'
+          if (.not. equal(rmat(2,3), si2*sin(tet(3)))) write(*,*) '>>>>>>>>>>>>>>> STRAGE 4'
         endif
       endif
 
@@ -273,13 +274,13 @@ module Symmetry_mod
             nok = nok + 1
           elseif (loop < 1) then
             loop = loop + 1
-            goto 50
+            goto 555
           endif
         enddo ! i2
       enddo ! i1
 
       symeulang(1:3,isym) = tet(1:3)*(180.d0/pi)
-      if (nok /= 9) write (*, fmt="(50('>'),' trouble in <SYMTAUMAT>',i3,f10.5)") nok
+      if (nok /= 9) write(*, fmt="(50('>'),' trouble in <SYMTAUMAT>',i3,f10.5)") nok
       write(*, fmt="(8x,i2,3x,a,i3,3f10.5)") isym, rotname(isymindex(isym)), invflag(isym), symeulang(1:3,isym)
     enddo ! isym
     write(6,'(8x,57(1h-),/)')
@@ -396,7 +397,7 @@ module Symmetry_mod
 !-----------------------------------------------------------------------
 ! for testing
 !
-!ccc      write (6,*) ' number of symmetries : ', nsym
+!ccc      write(6,*) ' number of symmetries : ', nsym
 !ccc      
 !ccc      do isym = 1, nsym
 !ccc         write(6,*) ' isym = ',isym
@@ -416,16 +417,9 @@ module Symmetry_mod
 
   endsubroutine symtaumat
   
-  
-  
-  
-  
-!*==taustruct.f    processed by SPAG 6.05Rc at 15:50 on 10 Dec 2002
   subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel)
 !   ********************************************************************
-!   *                                                                  *
 !   *   find the structure of the site-diagonal tau - matrices  tauq   *
-!   *                                                                  *
 !   ********************************************************************
     integer, intent(in) :: iprint, irel, nkm, nkmmax, nq, nqmax, nsym
     double complex, intent(in) :: drot(nkmmax,nkmmax,48)
@@ -435,9 +429,7 @@ module Symmetry_mod
     integer :: i,i0,imweight,iq,isym,iw,iwr,j,k,l,lin,nelmt, nkmq(nqmax), nkmtop,nlin,non0(nqmax)
     double complex :: st(nkmmax,nkmmax), tauk(nkmmax,nkmmax,nqmax)
 
-    do iq = 1, nq
-      nkmq(iq) = nkm
-    enddo ! iq
+    nkmq(1:nq) = nkm
 
     imweight = 0
     nelmt = 0
@@ -504,10 +496,13 @@ module Symmetry_mod
       enddo ! i
     enddo ! iq
 
-    write (6, fmt="(/,5X,'non-0 TAU-elements          ',I5,'   Q:',80I4)") nelmt, non0(1:nq)
-    write (6, fmt="(5X,'terms to sum up             ',I5,/)") nlin
+    write(6, fmt="(/,5X,'non-0 TAU-elements          ',I5,'   Q:',80I4)") nelmt, non0(1:nq)
+    write(6, fmt="(5X,'terms to sum up             ',I5,/)") nlin
 
-    if (imweight /= 0) write (*, fmt="(/,5X,50('#'),/,5X,'WARNING: complex TAU weights found',/,5X,'this may occur for rotated magnetic moments',/,5X,'relevant only for tetrahedron BZ-integration',/,5X,50('#'),/)")
+    if (imweight /= 0) then
+      write(*, fmt="(/,5X,50('#'),/,5X,'WARNING: complex TAU weights found',/,5X,'this may occur for rotated magnetic moments',/,5X,'relevant only for tetrahedron BZ-integration',/,5X,50('#'),/)")
+      warn(6, "complex TAU weights found, this may occur for rotated magnetic moments (relevant only for tetrahedron BZ-integration).")
+    endif ! imweight nonzero
 
   endsubroutine taustruct
  
@@ -720,5 +715,219 @@ module Symmetry_mod
     enddo ! is
       
   endsubroutine pointgrp
+  
+  
+  
+  subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
+    use Constants_mod, only: pi
+!   ********************************************************************
+!   *                                                                  *
+!   *   SETS UP THE ROTATION-MATRICES FOR THE EULER ANGLES             *
+!   *           (ALFDEG, BETDEG, GAMDEG)                               *
+!   *                                                                  *
+!   *   SEE:     E.M. ROSE  ELEMENTARY THEORY OF ANGULAR MOMENTUM      *
+!   *            EQS. (4.8), (4.12) AND (4.13)                         *
+!   *                                                                  *
+!   *   for IREL=0,1   NK == NL           non-relativistic (l,m_l)     *
+!   *       IREL=3     NK == odd          relativistic (kappa,mue)     *
+!   *                                                                  *
+!   *   12/11/96  HE  deal with beta = 0                               *
+!   ********************************************************************
+    integer, intent(in) :: nk, irel, nkmmax
+    double precision, intent(in) :: alfdeg, betdeg, gamdeg
+    
+    double complex, parameter :: ci = (0.d0,1.d0), c0 = (0.d0,0.d0)
+!   double precision, parameter :: pi = 3.141592653589793238462643d0   
 
+    double precision :: num, msb05, msb05sq, msb05pw, j,m1,m2, rfac,x
+    double precision :: fact(0:100)
+
+    integer :: s, slow, shigh, off
+    double complex :: emim2a, emim1g, rot(nkmmax,nkmmax) 
+    integer :: i2, i1, k, l, nmue, im2, im1
+    double precision :: cb05, cb05sq, sm, cb05pw, dom
+!                       
+! inline function    factorial for real argument
+    rfac(x) = fact(nint(x))
+
+    if(irel == 2) call errortrap('calcrotmat', 12, 1) 
+    if(irel == 3 .and. mod(nk, 2) == 0) call errortrap('calcrotmat', 13, 1) 
+
+    rot(:,:) = c0
+
+    cb05    =  dcos(betdeg*0.5d0*pi/180.d0)
+    cb05sq  =  cb05*cb05
+    msb05   = -dsin(betdeg*0.5d0*pi/180.d0)
+    msb05sq =  msb05*msb05
+    
+    off = 0
+    do k = 1, nk 
+      if (irel < 2) then
+        l = k - 1
+        j = l
+      else
+        l = k/2
+        if (l*2 == k) then
+          j = l - 0.5d0
+        else
+          j = l + 0.5d0
+        endif         
+      endif
+
+      nmue = nint(2*j + 1)
+
+      do im2 = 1, nmue
+        m2 = - j + (im2 - 1.d0)
+        emim2a = cdexp(-ci*m2*alfdeg*pi/180.d0)
+
+          do im1 = 1, nmue
+            m1 = - j + (im1 - 1.d0)
+            emim1g = cdexp(-ci*m1*gamdeg*pi/180.d0)
+
+            if (dabs(betdeg) < 1d-8) then
+              if (im1 == im2) then 
+                sm = 1.d0
+              else
+                sm = 0.d0
+              endif
+            else
+              slow   = max(           0, nint(m1 - m2))
+              shigh  = min(nint(j - m2), nint( j + m1))
+              cb05pw =  cb05** nint(2*j + m1 - m2 - 2*slow + 2)
+              msb05pw = msb05**nint(      m2 - m1 + 2*slow - 2)
+              dom = (-1.d0)**(slow-1) * dsqrt(rfac(j+m1)*rfac(j-m1)*rfac(j+m2)*rfac(j-m2))
+              sm = 0.d0
+
+              do s = slow, shigh
+                dom = -dom
+                num = fact(s) * rfac(j-m2-s) * rfac(j+m1-s) * rfac(m2-m1+s)
+                cb05pw  = cb05pw  /  cb05sq
+                msb05pw = msb05pw * msb05sq
+                sm = sm + (dom/num) * cb05pw * msb05pw
+              enddo ! s
+            endif
+
+            rot(off+im2,off+im1) = emim1g * sm * emim2a
+          enddo ! im1
+        enddo ! im2
+
+      off = off + nmue
+    enddo ! k
+
+  endsubroutine calcrotmat
+
+  
+  subroutine errortrap(routine, k, istop)
+    character(len=*), intent(in) :: routine
+    integer, intent(in) :: k, istop
+    
+    integer, parameter :: kmax=14
+    character(len=60) :: text
+    character(len=*), parameter :: t(kmax) = [ &
+    'program KKRSCF called for TASK <> SCF    check input file   ', &
+    'TASK = SCF in input   but not program KKRSCF called         ', &
+    'ITEST should be <=4                                         ', &
+    'DATASET not initialized           >>>> check input file     ', &
+    'POTFIL  not initialized           >>>> check input file     ', &
+    'SCFSTART for   PROGRAM <> KKRSCF  >>>>  call  kkrscf instead', &
+    'SUM OF CONC <> 1                                            ', &
+    'all SOCTL should be >= 0          >>>> check input file     ', &
+    'all SOCTL should be < 0           >>>> check input file     ', &
+    'use BZINT = POINTS    for SP-SREL case and for spin spirals ', &
+    'I < > NLM   for IREL = 2                                    ', &
+    'routine called for IREL = 2   deal with that case outside   ', &
+    'routine called for IREL = 3   and   even  NK                ', &
+    'anti-unitary symmetry matrices created for IREL = 2         ']
+
+    if (k > 0 .and. k <= kmax) then
+      text = t(k)
+    else
+      text = 'unknown reason   key out of bounds'
+    endif
+
+    if (istop == 1) then
+      write(6, fmt="(/,1x,79('*'),/,1x,79('*'),/,5x,'STOP in subroutine <',a,'>',/,5x,a,/,1x,79('*'),/,1x,79('*'),/)") routine, text
+      die_here(" in subroutine"+routine-", message=''"-text-"''.")
+    else
+      write(6, fmt="(/,1x,79('<'),/,5x,'warning from subroutine <',a,'>',/,5x,a,/,1x,79('>'),/)") routine, text
+      warn(6, " in subroutine"+routine-", message=''"-text-"''.")
+    endif
+
+  endsubroutine errortrap
+  
+  
+  logical function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
+!   ********************************************************************
+!   *                                                                  *
+!   *  check whether the values of the cosinus and sinus found for the *
+!   *  euler angles tet1, tet2, tet3 are consistent with the           *
+!   *  rotation matrix   rmat                                          *
+!   *                                                                  *
+!   ********************************************************************
+    double precision, intent(in) :: co1, co2, co3, si1, si2, si3
+    double precision, intent(in) :: rmat(3,3)
+    integer, intent(in) :: i, j
+
+    double precision :: a, b
+    logical equal
+
+    equal(a,b) = (abs(a-b) < 1.d-7)
+
+    checkrmat = .false.
+
+    if (i == 1) then
+      if (j == 1) then
+        checkrmat = equal(rmat(1,1), co3*co2*co1-si3*si1)
+      elseif (j == 2) then
+        checkrmat = equal(rmat(1,2), co3*co2*si1+si3*co1)
+      elseif (j == 3) then
+        checkrmat = equal(rmat(1,3), -co3*si2)
+      endif
+    elseif (i == 2) then
+      if (j == 1) then
+        checkrmat = equal(rmat(2,1), -si3*co2*co1-co3*si1)
+      elseif (j == 2) then
+        checkrmat = equal(rmat(2,2), -si3*co2*si1+co3*co1)
+      elseif (j == 3) then
+        checkrmat = equal(rmat(2,3), si3*si2)
+      endif
+    elseif (j == 1) then
+      checkrmat = equal(rmat(3,1), si2*co1)
+    elseif (j == 2) then
+      checkrmat = equal(rmat(3,2), si2*si1)
+    elseif (j == 3) then
+      checkrmat = equal(rmat(3,3), co2)
+    endif
+  endfunction checkrmat
+  
+  
+  logical function latvec(n, qlat, vec) 
+!- Checks if a set of vectors are lattice vectors                       
+! ----------------------------------------------------------------------
+!i Inputs:                                                              
+!i   n     :number of vectors                                           
+!i   qlat  :primitive translation vectors in reciprocal space           
+!i   vec   :double-precision vector                                     
+!o Outputs:                                                             
+!o   latvec:.true. if all vectors are lattice vectors                   
+!r Remarks:                                                             
+! ----------------------------------------------------------------------
+    integer, intent(in) :: n 
+    double precision, intent(in) :: qlat(3,3), vec(3,*) 
+
+    integer :: i, m 
+    double precision :: vdiff 
+    double precision, parameter :: tol=1.d-3 
+    
+    latvec = .false. 
+    do i = 1, n 
+      do m = 1, 3 
+        vdiff = vec(1,i)*qlat(1,m) + vec(2,i)*qlat(2,m) + vec(3,i)*qlat(3,m) 
+        vdiff = dabs(vdiff - nint(vdiff)) 
+        if (vdiff > tol) return ! false
+      enddo ! m
+    enddo ! i
+    latvec = .true.
+  endfunction latvec
+  
 endmodule Symmetry_mod      

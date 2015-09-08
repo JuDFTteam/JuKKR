@@ -50,7 +50,7 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) :: communicator
-  type (InitialGuess), intent(inout) :: iguess_data
+  type(InitialGuess), intent(inout) :: iguess_data
   double precision, intent(in) :: ALAT
   integer, intent(in) :: NOFKS
   integer, intent(in) :: NSYMAT
@@ -61,8 +61,8 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
   double precision, intent(in) :: VOLCUB(:)
   double precision, intent(in) :: RR(:,0:) 
 
-  type (MultScatData), pointer :: ms
-  type (ClusterInfo), pointer :: cluster_info
+  type(MultScatData), pointer :: ms
+  type(ClusterInfo), pointer :: cluster_info
   integer :: k_point_index
   double complex, allocatable :: G_diag(:,:,:)
   integer::  site_lm_size
@@ -70,7 +70,7 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
   integer :: num_local_atoms
   integer :: naclsd
   integer :: naez
-  type (SolverStats) :: total_stats
+  type(SolverStats) :: total_stats
 
   ! array dimensions
 
@@ -99,14 +99,12 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
 
   TESTARRAYLOG(3, GINP)
 
-  if (global_jij_data%do_jij_calculation) then
-    global_jij_data%GSXIJ = zero
-  end if
+  if (global_jij_data%do_jij_calculation) global_jij_data%GSXIJ = zero
 
   call reset_stats(total_stats)
 
 !==============================================================================
-  do k_point_index = 1, NOFKS                       ! K-POINT-LOOP
+  do k_point_index = 1, NOFKS ! K-POINT-LOOP
 !==============================================================================
 
     WRITELOG(4, *) "k-point ", k_point_index
@@ -139,11 +137,11 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
     enddo ! iat
 
 !==============================================================================
-  enddo ! KPT = 1,NOFKS
+  enddo ! KPT = 1, NOFKS
 !==============================================================================
 
-  ! Cleanup
-  deallocate(G_diag)
+  
+  deallocate(G_diag) ! Cleanup
 
   total_stats = solv%get_total_stats()
 
@@ -382,8 +380,8 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
 
   integer :: NAEZ
   logical :: initial_zero
-  type (MultScatData), pointer :: ms
-  type (ClusterInfo), pointer :: cluster_info
+  type(MultScatData), pointer :: ms
+  type(ClusterInfo), pointer :: cluster_info
   integer :: lmmaxd
 
   ms => kkr_op%get_ms_workspace()
@@ -537,7 +535,7 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
   integer num_local_atoms
   integer atom_requested
   double complex, allocatable :: Gref_buffer(:,:,:)
-  type (ChunkIndex) :: chunk_inds(1)
+  type(ChunkIndex) :: chunk_inds(1)
   integer :: win
   integer :: nranks
   integer :: ierr

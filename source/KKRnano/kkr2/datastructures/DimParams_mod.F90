@@ -4,7 +4,9 @@
 ! Dependencies: ConfigReader_mod
 
 module DimParams_mod
-implicit none
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+  implicit none
   private
   public :: DimParams, create, destroy
   public :: createDimParams, destroyDimParams ! deprecated
@@ -62,7 +64,6 @@ implicit none
   
   contains
 
-
   !-----------------------------------------------------------------------------
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
@@ -82,32 +83,32 @@ implicit none
     self%EKMD = 0
 
     call createConfigReader(conf)
-    if (parseFile(conf, filename) /= 0) stop
+    if (parseFile(conf, filename) /= 0) die_here("parsing file"+filename+"failed!")
 
-    if (getValue(conf, "LMAXD",   self%LMAXD) /= 0) stop
-    if (getValue(conf, "NSPIND",  self%NSPIND) /= 0) stop
-    if (getValue(conf, "NAEZD",   self%NAEZ) /= 0) stop
-    if (getValue(conf, "IRNSD",   self%IRNSD) /= 0) stop
-    if (getValue(conf, "IRMD",    self%IRMD) /= 0) stop
-    if (getValue(conf, "IRID",    self%IRID) /= 0) stop
-    if (getValue(conf, "NXIJD",   self%NXIJD) /= 0) stop
-    if (getValue(conf, "KPOIBZ",  self%KPOIBZ) /= 0) stop
-    if (getValue(conf, "IGUESSD", self%IGUESSD) /= 0) stop
-    if (getValue(conf, "BCPD",    self%BCPD) /= 0) stop
-    if (getValue(conf, "NMAXD",   self%NMAXD) /= 0) stop
-    if (getValue(conf, "ISHLD",   self%ISHLD) /= 0) stop
-    if (getValue(conf, "LLY",     self%LLY) /= 0) stop
-    if (getValue(conf, "SMPID",   self%SMPID) /= 0) stop
-    if (getValue(conf, "EMPID",   self%EMPID) /= 0) stop
-    if (getValue(conf, "NTHRDS",  self%NTHRDS) /= 0) stop
-    if (getValue(conf, "XDIM",    self%XDIM) /= 0) stop
-    if (getValue(conf, "YDIM",    self%YDIM) /= 0) stop
-    if (getValue(conf, "ZDIM",    self%ZDIM) /= 0) stop
-    if (getValue(conf, "NATBLD",  self%NATBLD) /= 0) stop
-    if (getValue(conf, "ITDBRYD", self%ITDBRYD) /= 0) stop
+    if (getValue(conf, "LMAXD",   self%LMAXD) /= 0)     die_here("did not find in LMAXD file"+filename)
+    if (getValue(conf, "NSPIND",  self%NSPIND) /= 0)    die_here("did not find in NSPIND file"+filename)
+    if (getValue(conf, "NAEZD",   self%NAEZ) /= 0)      die_here("did not find in NAEZD file"+filename)
+    if (getValue(conf, "IRNSD",   self%IRNSD) /= 0)     die_here("did not find in IRNSD file"+filename)
+    if (getValue(conf, "IRMD",    self%IRMD) /= 0)      die_here("did not find in IRMD file"+filename)
+    if (getValue(conf, "IRID",    self%IRID) /= 0)      die_here("did not find in IRID file"+filename)
+    if (getValue(conf, "NXIJD",   self%NXIJD) /= 0)     die_here("did not find in NXIJD file"+filename)
+    if (getValue(conf, "KPOIBZ",  self%KPOIBZ) /= 0)    die_here("did not find in KPOIBZ file"+filename)
+    if (getValue(conf, "IGUESSD", self%IGUESSD) /= 0)   die_here("did not find in IGUESSD file"+filename)
+    if (getValue(conf, "BCPD",    self%BCPD) /= 0)      die_here("did not find in BCPD file"+filename)
+    if (getValue(conf, "NMAXD",   self%NMAXD) /= 0)     die_here("did not find in NMAXD file"+filename)
+    if (getValue(conf, "ISHLD",   self%ISHLD) /= 0)     die_here("did not find in ISHLD file"+filename)
+    if (getValue(conf, "LLY",     self%LLY) /= 0)       die_here("did not find in LLY file"+filename)
+    if (getValue(conf, "SMPID",   self%SMPID) /= 0)     die_here("did not find in SMPID file"+filename)
+    if (getValue(conf, "EMPID",   self%EMPID) /= 0)     die_here("did not find in EMPID file"+filename)
+    if (getValue(conf, "NTHRDS",  self%NTHRDS) /= 0)    die_here("did not find in NTHRDS file"+filename)
+    if (getValue(conf, "XDIM",    self%XDIM) /= 0)      die_here("did not find in XDIM file"+filename)
+    if (getValue(conf, "YDIM",    self%YDIM) /= 0)      die_here("did not find in YDIM file"+filename)
+    if (getValue(conf, "ZDIM",    self%ZDIM) /= 0)      die_here("did not find in ZDIM file"+filename)
+    if (getValue(conf, "NATBLD",  self%NATBLD) /= 0)    die_here("did not find in NATBLD file"+filename)
+    if (getValue(conf, "ITDBRYD", self%ITDBRYD) /= 0)   die_here("did not find in ITDBRYD file"+filename)
     if (getValue(conf, "num_atom_procs", self%num_atom_procs) /= 0) then
       write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
-      self%num_atom_procs = self%NAEZ
+      self%num_atom_procs = self%NAEZ ! default value
     endif
 
     write(*,*) "The following variables have not been read from global.conf:"
@@ -118,9 +119,7 @@ implicit none
     enddo
 
     call destroyConfigReader(conf)
-
-    ! deal with derived parameters
-    call calculateDerivedParameters(self)
+    call calculateDerivedParameters(self) ! deal with derived parameters
 
   endsubroutine ! create
 
@@ -134,7 +133,7 @@ implicit none
 
     integer, parameter :: fu = 67
 
-    open (fu, FILE=filename, FORM='unformatted')
+    open (fu, FILE=filename, FORM='unformatted', action='read', status='old')
 
     read(fu) self%LMAXD
     read(fu) self%NSPIND
@@ -177,7 +176,7 @@ implicit none
 
     integer, parameter :: fu = 67
 
-    open (fu, FILE=filename, FORM='unformatted')
+    open (fu, FILE=filename, FORM='unformatted', action='write')
 
     write(fu) self%LMAXD
     write(fu) self%NSPIND

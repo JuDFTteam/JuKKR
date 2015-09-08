@@ -313,7 +313,7 @@ module ShapeIntegrationHelpers_mod
 !>    legendre n-point quadrature formula (numerical recipes,2nd ed.).
 !     ----------------------------------------------------------------
   subroutine gauleg(x1,x2,x,w,n)
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
     
     integer, intent(in) :: n
     double precision, intent(in) :: x1, x2

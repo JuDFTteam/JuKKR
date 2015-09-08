@@ -9,6 +9,7 @@ module Lattice_mod
   !*==lattix99.f    processed by spag 6.05rc at 17:56 on 17 may 2004
   subroutine lattix99(alat, bravais, recbv, volume, output)
     use VectorMath_mod, only: ddet33, spatpr, cross
+    use Constants_mod, only: pi
     ! **********************************************************************
     ! *                                                                    *
     ! * lattix99 generates the real space and reciprocal lattices.         *
@@ -27,10 +28,9 @@ module Lattice_mod
     double precision, intent(out) :: recbv(3,3) !> reciprocal lattice vectors in 2*pi/alat
 
     integer :: i!, j
-    double precision :: voluc, det, pi, tpia
+    double precision :: voluc, det, tpia
     character(len=*), parameter :: F99001="(9x,32(1h-),6x,32(1h-))", F99002="(5x,a2,i1,':',3f10.6,8x,3f10.6)"
 
-    pi = 4.d0*atan(1.d0)
     tpia = 2.d0*pi/alat
 
     ! ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo output

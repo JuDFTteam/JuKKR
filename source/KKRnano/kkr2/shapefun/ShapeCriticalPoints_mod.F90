@@ -7,6 +7,13 @@ module ShapeCriticalPoints_mod
   private
   public :: criticalShapePoints
   
+  
+#ifdef DEBUGSHAPEFUNCTIONS
+  integer, parameter :: verbosity = 2
+#else
+  integer, parameter :: verbosity = 0
+#endif
+  
   contains
 
   !------------------------------------------------------------------------------
@@ -38,7 +45,7 @@ module ShapeCriticalPoints_mod
   !=====================================================================
   subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt)
 
-    use shape_constants_mod, only: verbosity, pi !, isumd, lmaxd1
+    use Constants_mod, only: pi
     use PolygonFaces_mod, only: PolygonFace
     use ShapeGeometryHelpers_mod, only: polchk
 
@@ -124,7 +131,7 @@ module ShapeCriticalPoints_mod
 
   
   double precision function get_angle(sine, cosine, tolerance) result(angle)
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
     double precision, intent(in) :: sine, cosine, tolerance
     if (abs(sine) < tolerance .and. abs(cosine + 1.d0) < tolerance) then
       angle = pi
@@ -166,7 +173,7 @@ module ShapeCriticalPoints_mod
     !     tral pyramid into elementary tetrahedra is performed. the  ne-
     !     cessary quantities for the calculation are stored in common.
     !-----------------------------------------------------------------------
-    use shape_constants_mod, only: pi, verbosity
+    use Constants_mod, only: pi
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
 
@@ -415,7 +422,7 @@ module ShapeCriticalPoints_mod
   !>    original frame of reference are calculated  and stored  in common.
   !-----------------------------------------------------------------------
   function euler_angles(zz, xx, toleuler) result(alpha_beta_gamma)
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
 !     use ShapeGeometryHelpers, only: nrm2, operator(.dot.) ! todo
 
     double precision, intent(in) :: xx(3)
@@ -484,7 +491,7 @@ module ShapeCriticalPoints_mod
   !>    vz(i,ivert) : rotated vectors
   !-----------------------------------------------------------------------
   subroutine rotate(abg, nvert, v, vz)
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
     
     double precision, intent(in) :: abg(3) ! former alpha, beta, gamma
     integer, intent(in) :: nvert

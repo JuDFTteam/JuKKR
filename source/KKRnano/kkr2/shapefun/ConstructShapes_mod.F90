@@ -246,7 +246,7 @@ module ConstructShapes_mod
 
   !******************************************************************************
   subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius)
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
     ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.
     ! stores the mt-nized shapes in unit 15 as shapefun
     !     nrad : number of points added inside the mt radius
@@ -369,7 +369,7 @@ module ConstructShapes_mod
   !> Atomic sphere has same volume as Voronoi cell
   subroutine replace_with_PseudoASA(shdata, inter_mesh, volume)
     use ShapefunData_mod, only: ShapefunData
-    use shape_constants_mod, only: pi
+    use Constants_mod, only: pi
 
     type(ShapefunData), intent(inout) :: shdata
     type(InterstitialMesh), intent(in) :: inter_mesh

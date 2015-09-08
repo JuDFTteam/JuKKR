@@ -32,6 +32,8 @@
 subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
      gn,rm,qi0,smat,vol,lassld,lmxspd,naezd,i1)
   use Harmonics_mod, only: ymy
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   ! Parameters
   double complex, parameter :: CI=(0.d0,1.d0)
@@ -197,10 +199,7 @@ subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
         ! ---------------------------------------------------------------------
         if ( it == 1 ) then
            do lm = 1, lmxsp
-              if ( abs(dimag(stest(lm))).gt.BOUND ) then
-                 write (6,*) ' ERROR: Imaginary contribution to REAL lattice sum'
-                 stop
-              endif
+              if (abs(dimag(stest(lm))) > BOUND) die_here("Imaginary contribution to REAL lattice sum")
               smat(lm,i2) = dble(stest(lm))
               stest(lm) = 0.d0
            enddo ! lm
@@ -211,7 +210,7 @@ subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
            do lm = 1, lmxsp
               s = dble(stest(lm))
               smat(lm,i2) = smat(lm,i2) + s
-              !IF (2.LT.1.AND. ABS(S).GT.BOUND ) WRITE (6,FMT=99001) I1,I2, &
+              !IF (2 < 1 .AND. ABS(S) > BOUND ) WRITE (6,FMT=99001) I1,I2, &
               !LM,ABS(S)
            enddo ! lm
         endif

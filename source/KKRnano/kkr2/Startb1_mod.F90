@@ -4,12 +4,19 @@
 !> A wrapper for the subroutine STARTB1
 !> Returns: EFERMI (from first entry in potential file)
 
-! determine the record length
-  subroutine STARTB1_wrapper_new(alat, nspin, ntcell, EFERMI, ZAT, radius_muffin_tin, naezd, nowrite)
-    use read_formatted_shapefun_mod, only: ShapefunFile, create_read_ShapefunFile, destroy_ShapefunFile
-    implicit none
+module Startb1_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+  implicit none
+  private
+  
+  public :: startb1_wrapper_new
+  
+  contains
 
-    ! Arguments
+! determine the record length
+  subroutine startb1_wrapper_new(alat, nspin, ntcell, EFERMI, ZAT, radius_muffin_tin, naezd, nowrite)
+    use read_formatted_shapefun_mod, only: ShapefunFile, create_read_ShapefunFile, destroy_ShapefunFile
     double precision, intent(in) :: alat
     integer, intent(in) :: naezd
     double precision, intent(out) :: EFERMI
@@ -23,7 +30,7 @@
     type(ShapefunFile) :: sfile
 
     ! read the complete shapefun file to -> sfile
-    open (91, file='shapefun', status='old', form='formatted')
+    open (91, file='shapefun', form='formatted', status='old', action='read')
     call create_read_ShapefunFile(sfile, 91)
     close(91)
 
@@ -35,7 +42,7 @@
 
     call destroy_ShapefunFile(sfile)
 
-  endsubroutine STARTB1_wrapper_new
+  endsubroutine startb1_wrapper_new
 
 !------------------------------------------------------------------------------
 !> Write the 'atoms' file (= binary analogue to atominfo - used for parallel reading in kkr2)
@@ -46,9 +53,6 @@
     use read_formatted_shapefun_mod, only: ShapefunFile
     use BasisAtom_mod, only: BasisAtom, createBasisAtom, openBasisAtomDAFile, writeBasisAtomDA, closeBasisAtomDAFile, destroyBasisAtom
     use RadialMeshData_mod, only: RadialMeshData, getMinReclenMesh, createRadialMeshData, destroyRadialMeshData
-    implicit none
-
-    ! Arguments
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
     double precision :: ZAT(*)
@@ -65,14 +69,11 @@
     integer :: ispin
     integer :: lpot_atom
     integer :: reclen
-
     type(PotentialEntry) :: pe(2)
     type(BasisAtom) :: atom
     type(RadialMeshData) :: mesh
     integer, parameter :: fu = 13
     integer :: cell_index
-    
-    integer, external :: lmpot_to_lpot
 
     max_reclen = 0
     max_reclen_mesh = 0
@@ -80,7 +81,7 @@
 
     call openBasisAtomDAFile(atom, 37, 'atoms')
 
-    open (unit=fu, file='potential', status='old', form='formatted')
+    open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naezd
 
       do ispin = 1, nspin
@@ -109,11 +110,9 @@
 !          STOP
 !        endif
 
-
-        if (abs(alat - pe(ispin)%header%alat) > 1.d-8) then
-          write(*,*) "WARNING: alat in potential file is not the same as in input.conf."
-        endif
-      enddo
+        if (abs(alat - pe(ispin)%header%alat) > 1.d-8) &
+          warn(6, "alat in potential file is not the same as in input.conf.")
+      enddo ! ispin
 
       lpot_atom = lmpot_to_lpot(pe(1)%sblock%lmpot)
       CHECKASSERT( (lpot_atom+1)**2 == pe(1)%sblock%lmpot)
@@ -148,9 +147,7 @@
         atom%core%ITITLE(:, ispin) = pe(ispin)%header%ITITLE
       enddo
 
-      if (.not. nowrite) then
-        call writeBasisAtomDA(atom, 37, iatom)
-      endif
+      if (.not. nowrite) call writeBasisAtomDA(atom, 37, iatom)
 
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
@@ -174,16 +171,13 @@
   endsubroutine ! write_atoms_file
 
   integer function lmpot_to_lpot(lmpot)
-    implicit none
     integer, intent(in) :: lmpot
 
     lmpot_to_lpot = int( sqrt(dble(lmpot)) - 1.d0 + 0.01d0)
-
   endfunction
 
 
   subroutine write_binary_potential(alat, nspin, ntcell, naezd, sfile, max_reclen, max_reclen_mesh, nowrite)
-
     use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
     use read_formatted_shapefun_mod, only: ShapefunFile
     use BasisAtom_mod, only: BasisAtom, createBasisAtom, destroyBasisAtom
@@ -194,9 +188,6 @@
 #endif
     use RadialMeshData_mod, only: RadialMeshData, initRadialMesh, createRadialMeshData, destroyRadialMeshData
     use RadialMeshData_mod, only: openRadialMeshDataDAFile, writeRadialMeshDataDA, closeRadialMeshDataDAFile
-    implicit none
-    
-    ! Arguments
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
     integer, intent(in) :: naezd
@@ -206,20 +197,14 @@
     integer, intent(in) :: max_reclen_mesh
     logical, intent(in) :: nowrite
 
-    integer :: iatom
-    integer :: ispin
-
     type(BasisAtom) :: atom
     type(PotentialEntry) :: pe(2)
     type(RadialMeshData) :: meshdata
     integer, parameter :: fu=13
-    integer :: cell_index
+    integer :: cell_index, lpot, irmd, irmind, ipand, irns, irid, iatom, ispin
 
-    integer lpot, irmd, irmind, ipand, irns, irid
-    integer, external :: lmpot_to_lpot
-
-    open (fu, file='potential', status='old', form='formatted')
-
+    open(unit=fu, file='potential', form='formatted', status='old', action='read')
+    
     do iatom = 1, naezd
 
       do ispin = 1, nspin
@@ -291,3 +276,5 @@
     endif ! not nowrite
 
   endsubroutine write_binary_potential
+
+endmodule ! 

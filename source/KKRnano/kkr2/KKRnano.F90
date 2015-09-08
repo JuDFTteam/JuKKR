@@ -5,17 +5,22 @@
 #include "DebugHelpers/logging_macros.h"
 
 program KKRnano
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   USE_LOGGING_MOD
 
-  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup, &
-    getMyWorldRank, getMyAtomRank, getMyActiveCommunicator, getMySEcommunicator, createKKRnanoParallel, destroyKKRnanoParallel
+  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup
+  use KKRnanoParallel_mod, only: getMyWorldRank, getMyAtomRank, getMyActiveCommunicator, getMySEcommunicator 
+  use KKRnanoParallel_mod, only: createKKRnanoParallel, destroyKKRnanoParallel
+  
   use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
   use main2_aux_mod, only: printDoubleLineSep, is_abort_by_rank0, writeIterationTimings
-  use EnergyMesh_mod, only: EnergyMesh, createEnergyMesh, readEnergyMesh, readEnergyMeshSemi, &
-    broadcastEnergyMesh_com, updateEnergyMesh, updateEnergyMeshSemi, destroyEnergyMesh, writeEnergyMesh, writeEnergyMeshSemi
+  use EnergyMesh_mod, only: EnergyMesh, createEnergyMesh, destroyEnergyMesh
+  use EnergyMesh_mod, only: readEnergyMesh, broadcastEnergyMesh_com, updateEnergyMesh, writeEnergyMesh
+  use EnergyMesh_mod, only: readEnergyMeshSemi, updateEnergyMeshSemi, writeEnergyMeshSemi
 
   use RadialMeshData_mod, only: RadialMeshData
   use BasisAtom_mod, only: BasisAtom
@@ -33,17 +38,15 @@ program KKRnano
   use ScatteringCalculation_mod, only: energyloop
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
-  use CalculationData_mod, only: CalculationData, createCalculationData, prepareMadelung, &
-    getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal, destroyCalculationData
+  use CalculationData_mod, only: CalculationData, createCalculationData, prepareMadelung
+  use CalculationData_mod, only: getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal, destroyCalculationData
   
-  use kkr0_mod, only: main0
+  use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
+  
   implicit none
 
   type (CalculationData) :: calc_data
-
-  !     .. Local Scalars ..
-
   type (TimerMpi) :: program_timer
   type (TimerMpi) :: iteration_timer
   type (EBalanceHandler) :: ebalance_handler
@@ -151,7 +154,7 @@ program KKRnano
 
   if (dims%LLY /= 0) then
     write(*,*) "WARNING: Lloyds formula not supported in this version. Set LLY=0"
-    stop
+    die_here("Lloyds formula not supported in this version. Set lly=0")
   endif
 
 !=====================================================================

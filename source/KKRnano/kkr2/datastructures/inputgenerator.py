@@ -165,7 +165,7 @@ print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
 print '  ierror = 0'
-print '  open(fu, file=filename, form="unformatted")'
+print '  open(fu, file=filename, form="unformatted", action="read", status="old")'
 
 deffile = open(deffilename, 'r')
 
@@ -190,7 +190,7 @@ print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
 print '  ierror = 0'
-print '  open(fu, file=filename, form="unformatted")'
+print '  open(fu, file=filename, form="unformatted", action="write")'
 
 deffile = open(deffilename, 'r')
 

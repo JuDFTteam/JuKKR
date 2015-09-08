@@ -23,7 +23,8 @@ module BrillouinZone_mod
     integer, intent(out) :: kmesh(iemxd)
     logical, intent(in) :: nowrite
     
-    logical, external :: test
+!!  logical, external :: test
+#define test(STRING) .false.
     
     integer iprint
     logical lirr
@@ -376,5 +377,50 @@ module BrillouinZone_mod
     enddo ! i
     
   endsubroutine bzirr3d
+  
+  
+  
+  subroutine rinvgj(ainv,a,adim,n)
+!   ********************************************************************
+!   *                      ainv = a**(-1)                              *
+!   *  invert a using the gauss-jordan - algorithm                     *
+!   *  the 1- matrix is not set up and use is made of its structure    *
+!   *                    double precision version                      *
+!   ********************************************************************
+    integer, intent(in) :: adim, n
+    double precision, intent(inout) ::  a(adim,adim)
+    double precision, intent(out) :: ainv(adim,adim)
+
+    integer :: icol, l, ll
+    double precision :: t, t1
+
+    ainv(1,1) = 0.d0
+    do icol = 1, n ! scan columns
+      t1 = 1.0d0/a(icol,icol) ! make a(icol,icol) = 1
+      do l = (icol+1),n
+        a(icol,l) = a(icol,l)*t1
+      enddo ! l
+
+      do l = 1,(icol-1)
+        ainv(icol,l) = ainv(icol,l)*t1
+      enddo ! l
+      ainv(icol,icol) = t1
+                                
+      do ll = 1, n ! make a(ll,icol) = 0 for ll /= icol
+        if (ll /= icol) then
+            t = a(ll,icol)
+            do l = (icol+1),n
+              a(ll,l) = a(ll,l) - a(icol,l)*t
+            enddo ! l
+            do l = 1,(icol-1)
+              ainv(ll,l) = ainv(ll,l) - ainv(icol,l)*t
+            enddo ! l
+            ainv(ll,icol) = -t1*t
+        endif ! ll /= icol
+      enddo ! ll
+    enddo ! icol
+    
+  endsubroutine rinvgj
+  
   
 endmodule ! BrillouinZone_mod

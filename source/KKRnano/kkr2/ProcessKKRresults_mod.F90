@@ -3,6 +3,8 @@
 #include "DebugHelpers/test_macros.h"
 
 module ProcessKKRresults_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   use arraytest2_mod, only: !import no name here, just mention it for the module dependency 
   implicit none
@@ -1363,6 +1365,7 @@ endsubroutine
     write(*,*) "= Set option DEBUG_morgan_electrostatics = 0 to deactivate    ="
     write(*,*) "= Results of calculation are wrong.                           ="
     write(*,*) "==============================================================="
+    warn(6, "MORGAN charge distribution test activated")
   endsubroutine
 
   !----------------------------------------------------------------------------

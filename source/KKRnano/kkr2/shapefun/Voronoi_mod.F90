@@ -1,9 +1,6 @@
-#define warn(unit, message)  call launch_warning(message, unit, __FILE__, __LINE__)
-#define die_here(message) call die(message, file=__FILE__, line=__LINE__)
-#define here trim(__FILE__-":"-__LINE__)
-#define assert(condition) if((condition)) then ; else ; die_here("assert("#condition") failed!") ; endif
 
 module Voronoi_mod
+#include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
@@ -405,7 +402,7 @@ module Voronoi_mod
            
         enddo ! ivert = 3,nvert(ipl)
 
-      ! store with respect to the angle found:
+        ! store with respect to the angle found:
         call sortvertices(nvert(ipl), fi, vert(:,:,ipl)) ! sort the vertices in-place
 
       endif ! (nvert(ipl) >= 3)
@@ -680,9 +677,9 @@ module Voronoi_mod
   
 
   subroutine sortvertices(n, s, xyz)
-  ! sorts the array s(n) in ascending order using straight insertion. 
-  ! the arrays z(n), y(n), and z(n) follow.
-  ! on output, arrays s, x, y, and z return sorted.
+    ! sorts the array s(n) in ascending order using straight insertion. 
+    ! the arrays z(n), y(n), and z(n) follow.
+    ! on output, arrays s, x, y, and z return sorted.
     integer, intent(in) :: n
     double precision, intent(inout) :: s(:), xyz(:,:)
     double precision :: tmp(0:3)
@@ -706,16 +703,16 @@ module Voronoi_mod
   endsubroutine ! sort vertices
 
   function crospr(x, y) result(z)
-!     crosp computes the cross product of x and y returning it into z.
-  double precision :: z(3) ! result
-  double precision, intent(in) :: x(3), y(3)
+    ! crosp computes the cross product of x and y returning it into z.
+    double precision :: z(3) ! result
+    double precision, intent(in) :: x(3), y(3)
     z(1) = x(2)*y(3) - x(3)*y(2)
     z(2) = x(3)*y(1) - x(1)*y(3)
     z(3) = x(1)*y(2) - x(2)*y(1)
   endfunction crospr
 
   double precision function distplane(a,b,c,d)
-  ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
+    ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
     double precision, intent(in) :: a,b,c,d
     double precision :: abcsq
 
@@ -729,7 +726,7 @@ module Voronoi_mod
   endfunction distplane
 
   double precision function dist_plane(abc, d)
-  ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
+    ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
     double precision, intent(in) :: abc(3), d
     double precision :: abcsq
 

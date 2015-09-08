@@ -1,4 +1,6 @@
 module SingleSiteRef_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: gll95, gref, tref
@@ -78,12 +80,9 @@ module SingleSiteRef_mod
       allocate(dgde(ngd,ngd), stat=memory_stat) ; memory_fail = memory_fail + memory_stat**2
     end if
 
-    if (memory_fail /= 0) then
-      write(*,*) "gll95: fatal error, failure to allocate memory, probably out of memory."
-      stop
-    endif
+    if (memory_fail /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
 
-    ndim = lmmaxd*natom ! warning: ndim can be smaller than ngd=lmmaxd*naclsd
+    ndim = lmmaxd*natom ! ndim can be smaller than ngd=lmmaxd*naclsd
     call calcFreeGreens(gref, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derivative=.false.)
 
     if (lly == 1) then
