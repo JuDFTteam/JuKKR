@@ -590,7 +590,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
     new_fermi = emesh%E2
 
     ! allow only a maximal Fermi Energy shift of 0.03 Ry
-    call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi), arrays%naez, &
+    call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi) .and. (ilocal == 1), arrays%naez, &
                                  0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                  energies%ESPV, densities%RHO2NS, new_fermi)
 
@@ -1310,11 +1310,9 @@ endsubroutine
     double precision, intent(in) :: efold
     integer, intent(in) :: naez
 
-    write(6,fmt="('                old',' E FERMI ',F12.6,' Delta E_F = ',f12.6)") efold,e2shift
-
+    write(6,fmt="('                old E FERMI ',F12.6,' Delta E_F = ',f12.6)") efold,e2shift
     ! --> divided by naez because the weight of each atom has been already taken into account in 1c
-
-    write(6,fmt="('                new',' E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") e2,denef/dble(naez)
+    write(6,fmt="('                new E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") e2,denef/dble(naez)
     write(6,'(79(1h+),/)')
   endsubroutine
 
@@ -1509,7 +1507,7 @@ endsubroutine
       vec = norm_dir * mesh_points(ii)
       val = real(eval_gen_morgan_potential(reciprocals, vec, prefactors, rbasis, center))
       write(UNIT, *) mesh_points(ii), val
-    enddo
+    enddo ! ii
 
     close(UNIT)
 

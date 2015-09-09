@@ -23,10 +23,10 @@ type InputParams
   double precision :: bravais_b (3)
   double precision :: bravais_c (3)
   double precision :: gmax
+  double precision :: rmax
   double precision :: qmrbound
   integer :: nsra
   integer :: kxc
-  double precision :: rmax
   double precision :: tempr
   double precision :: alat
   double precision :: rclust
@@ -35,14 +35,14 @@ type InputParams
   integer :: scfsteps
   integer :: kforce
   double precision :: emin
+  double precision :: emax
   logical :: jij
   logical :: ldau
+  logical :: cartesian
   double precision :: rcutjij
-  double precision :: emax
   integer :: kte
   integer :: imix
   integer :: bzdivide (3)
-  logical :: cartesian
   integer :: npol
   integer :: npnt1
   integer :: npnt2
@@ -132,6 +132,12 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "rmax", values%rmax)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for rmax."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "qmrbound", values%qmrbound , def=1.0D-6)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for qmrbound. Set to qmrbound = 1.0D-6"
@@ -141,8 +147,11 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "nsra", values%nsra)
-  if (ierror /= 0) then
+  ierror = getValue(cr, "nsra", values%nsra , def=2)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for nsra. Set to nsra = 2"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for nsra."
     destroy_and_return
   endif
@@ -156,12 +165,6 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "rmax", values%rmax)
-  if (ierror /= 0) then
-    write(*,*) "Bad/no value given for rmax."
-    destroy_and_return
-  endif
-
   ierror = getValue(cr, "tempr", values%tempr , def=800.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for tempr. Set to tempr = 800.0"
@@ -171,8 +174,11 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "alat", values%alat)
-  if (ierror /= 0) then
+  ierror = getValue(cr, "alat", values%alat , def=1.0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for alat. Set to alat = 1.0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for alat."
     destroy_and_return
   endif
@@ -222,6 +228,12 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "emax", values%emax)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for emax."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "jij", values%jij , def=.FALSE.)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for jij. Set to jij = .FALSE."
@@ -240,6 +252,15 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "cartesian", values%cartesian , def=.TRUE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for cartesian. Set to cartesian = .TRUE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for cartesian."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "rcutjij", values%rcutjij , def=2.30)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for rcutjij. Set to rcutjij = 2.30"
@@ -249,20 +270,20 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "emax", values%emax)
-  if (ierror /= 0) then
-    write(*,*) "Bad/no value given for emax."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "kte", values%kte)
-  if (ierror /= 0) then
+  ierror = getValue(cr, "kte", values%kte , def=1)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for kte. Set to kte = 1"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for kte."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "imix", values%imix)
-  if (ierror /= 0) then
+  ierror = getValue(cr, "imix", values%imix , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for imix. Set to imix = 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for imix."
     destroy_and_return
   endif
@@ -270,15 +291,6 @@ integer function getInputParamsValues(filename, values) result(ierror)
   ierror = getValue(cr, "bzdivide", values%bzdivide)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for bzdivide."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "cartesian", values%cartesian , def=.TRUE.)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for cartesian. Set to cartesian = .TRUE."
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for cartesian."
     destroy_and_return
   endif
 
@@ -469,17 +481,17 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   integer, parameter :: fu = 67
 
   ierror = 0
-  open(fu, file=filename, form="unformatted")
+  open(fu, file=filename, form="unformatted", action="read", status="old")
   read(fu) values%icst
   read(fu) values%kpre
   read(fu) values%bravais_a
   read(fu) values%bravais_b
   read(fu) values%bravais_c
   read(fu) values%gmax
+  read(fu) values%rmax
   read(fu) values%qmrbound
   read(fu) values%nsra
   read(fu) values%kxc
-  read(fu) values%rmax
   read(fu) values%tempr
   read(fu) values%alat
   read(fu) values%rclust
@@ -488,14 +500,14 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%scfsteps
   read(fu) values%kforce
   read(fu) values%emin
+  read(fu) values%emax
   read(fu) values%jij
   read(fu) values%ldau
+  read(fu) values%cartesian
   read(fu) values%rcutjij
-  read(fu) values%emax
   read(fu) values%kte
   read(fu) values%imix
   read(fu) values%bzdivide
-  read(fu) values%cartesian
   read(fu) values%npol
   read(fu) values%npnt1
   read(fu) values%npnt2
@@ -528,17 +540,17 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   integer, parameter :: fu = 67
 
   ierror = 0
-  open(fu, file=filename, form="unformatted")
+  open(fu, file=filename, form="unformatted", action="write")
   write(fu) values%icst
   write(fu) values%kpre
   write(fu) values%bravais_a
   write(fu) values%bravais_b
   write(fu) values%bravais_c
   write(fu) values%gmax
+  write(fu) values%rmax
   write(fu) values%qmrbound
   write(fu) values%nsra
   write(fu) values%kxc
-  write(fu) values%rmax
   write(fu) values%tempr
   write(fu) values%alat
   write(fu) values%rclust
@@ -547,14 +559,14 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%scfsteps
   write(fu) values%kforce
   write(fu) values%emin
+  write(fu) values%emax
   write(fu) values%jij
   write(fu) values%ldau
+  write(fu) values%cartesian
   write(fu) values%rcutjij
-  write(fu) values%emax
   write(fu) values%kte
   write(fu) values%imix
   write(fu) values%bzdivide
-  write(fu) values%cartesian
   write(fu) values%npol
   write(fu) values%npnt1
   write(fu) values%npnt2

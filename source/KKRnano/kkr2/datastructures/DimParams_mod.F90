@@ -115,7 +115,7 @@ module DimParams_mod
     next_ptr = 1
     do
       if (getUnreadVariable(conf, variable, next_ptr) /= 0) exit
-      write (*,*) variable
+      write(*,*) trim(variable)
     enddo
 
     call destroyConfigReader(conf)
@@ -133,7 +133,7 @@ module DimParams_mod
 
     integer, parameter :: fu = 67
 
-    open (fu, FILE=filename, FORM='unformatted', action='read', status='old')
+    open (fu, file=filename, FORM='unformatted', action='read', status='old')
 
     read(fu) self%LMAXD
     read(fu) self%NSPIND
@@ -212,8 +212,6 @@ module DimParams_mod
   !> @param[in,out] self    The DimParams object to destroy.
   subroutine destroyDimParams(self)
     type(DimParams), intent(inout) :: self
-
-!   integer :: memory_stat
     ! Nothing to do.
   endsubroutine ! destroy
 
@@ -222,30 +220,29 @@ module DimParams_mod
 !------------------------------------------------------------------------------
 
   !----------------------------------------------------------------------------
-  !> Helper routine to initialise some parameters derived from others
-  !> correctly.
+  !> Helper routine to initialise some parameters derived from others correctly.
   subroutine calculateDerivedParameters(self)
     type(DimParams), intent(inout) :: self
 
     ! derived parameters
     self%MAXMSHD = 8
-    self%NSYMAXD  = 48
+    self%NSYMAXD = 48
     self%LPOT = 2*self%LMAXD
 
     ! derived dimension parameters
-    self%LMMAXD= (self%LMAXD+1)**2
+    self%LMMAXD = (self%LMAXD+1)**2
 
-    self%LMAXD1=self%LMAXD+1
+    self%LMAXD1 = self%LMAXD+1
     self%MMAXD  = 2*self%LMAXD + 1
-    self%LMXSPD= (2*self%LPOT+1)**2
+    self%LMXSPD = (2*self%LPOT+1)**2
 
-    self%LMPOTD= (self%LPOT+1)**2
-    !self%NTIRD=(self%IRMD+(self%IRNSD+1)*(self%LMPOTD-1))*self%NSPIND
-    self%IRMIND=self%IRMD-self%IRNSD
+    self%LMPOTD = (self%LPOT+1)**2
+    !self%NTIRD = (self%IRMD+(self%IRNSD+1)*(self%LMPOTD-1))*self%NSPIND
+    self%IRMIND = self%IRMD-self%IRNSD
     self%NGUESSD = 1 + self%IGUESSD * ( self%NAEZ * (self%LMAXD+1)**2 - 1 )
 
     ! Record lengths
-    self%LRECRES2=4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
+    self%LRECRES2 = 4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
 
     ! Calculate atoms per process
     self%atoms_per_proc = self%naez / self%num_atom_procs

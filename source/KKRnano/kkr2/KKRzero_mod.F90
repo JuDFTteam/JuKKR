@@ -285,7 +285,7 @@ module KKRzero_mod
       call writeMain2Arrays(arrays, 'arrays.unf')
 
       ! write start energy mesh
-        open  (67, FILE='energy_mesh.0', FORM='unformatted', action='write')
+        open (67, file='energy_mesh.0', form='unformatted', action='write')
         write(67) IELAST,EZ,WEZ,params%Emin,params%Emax
         write(67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
         write(67) EFERMI
@@ -294,7 +294,7 @@ module KKRzero_mod
         write(67) params%EMUSEMI
         write(67) params%N1SEMI,params%N2SEMI,params%N3SEMI
       endif ! semicore
-        close (67)
+        close(67)
         
      else  ! checkmode == 0
        write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
@@ -380,7 +380,7 @@ module KKRzero_mod
     open(77, file='rbasis', form='formatted', action='read', status='old') ! open input file containing the atomic positions
     do i = 1, naez
       read(unit=77, fmt=*) rbasis(1:3,i) ! reading atomic positions
-    enddo ! i                    
+    enddo ! i
     close(77)
 
     write(6, fmt="(3(7(1h-),1h+) ,55(1h-))")
@@ -693,27 +693,27 @@ module KKRzero_mod
 !
     write(6,'(5x,a,$)') 'Position of atoms in the unit cell READ IN as:'
     if (lcartesian) then
-        write(6,'(a)') ' CARTESIAN coordinates'
-        write(6,'(42x,a,/)') '---> No transformation required'
-        write(6, fmt="(12x,51(1h-),/,16x,'    Positions of (ALL) generated sites')")
-        write(6, fmt="(16x,'   in CARTESIAN coordinates (ALAT units)')")
-        write(6, fmt="(12x,51(1h-),/,15x,a,/,12x,51(1h-))") 'IQ       x           y           z       IT'
-        do i = 1, naez
-          write(6, fmt="(13x,i5,3f12.6,10i3)") i, rbasis(1:3,i), i
-        enddo ! i
-        write(6,'(12x,51(1h-),/)')
+      write(6,'(a)') ' CARTESIAN coordinates'
+      write(6,'(42x,a,/)') '---> No transformation required'
+      write(6, fmt="(12x,51(1h-),/,16x,'    Positions of (ALL) generated sites')")
+      write(6, fmt="(16x,'   in CARTESIAN coordinates (ALAT units)')")
+      write(6, fmt="(12x,51(1h-),/,15x,a,/,12x,51(1h-))") 'IQ       x           y           z       IT'
+      do i = 1, naez
+        write(6, fmt="(13x,i5,3f12.6,10i3)") i, rbasis(1:3,i), i
+      enddo ! i
+      write(6,'(12x,51(1h-),/)')
     else ! rescale lattice
-        write(6,'(a)') ' LATTICE VECTORS units'
-        write(6,*)
-        write(6,'(12x,49(1h-))') 
-        write(6,'(13x,a)') 'Input positions transformed to CARTESIAN system'
-        write(6,'(12x,49(1h-),/,13x,a,/,12x,49(1h-))') 'IQ        x             y             z        IT'
-        do i = 1, naez
-          rb(1:3) = rbasis(1:3,i)
-          rbasis(1:3,i) = rb(1)*bravais(1:3,1) + rb(2)*bravais(1:3,2) + rb(3)*bravais(1:3,3)
-          write(6, fmt="(12x,i3,3f14.8,10i3)") i, rbasis(1:3,i), i
-        enddo ! i
-        write(6,'(12x,49(1h-),/)')
+      write(6,'(a)') ' LATTICE VECTORS units'
+      write(6,*)
+      write(6,'(12x,49(1h-))') 
+      write(6,'(13x,a)') 'Input positions transformed to CARTESIAN system'
+      write(6,'(12x,49(1h-),/,13x,a,/,12x,49(1h-))') 'IQ        x             y             z        IT'
+      do i = 1, naez
+        rb(1:3) = rbasis(1:3,i)
+        rbasis(1:3,i) = rb(1)*bravais(1:3,1) + rb(2)*bravais(1:3,2) + rb(3)*bravais(1:3,3)
+        write(6, fmt="(12x,i3,3f14.8,10i3)") i, rbasis(1:3,i), i
+      enddo ! i
+      write(6,'(12x,49(1h-),/)')
     endif
     ! todo: last section only differ in terms of the output format --> make same
     

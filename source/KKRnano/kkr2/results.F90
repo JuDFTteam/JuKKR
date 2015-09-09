@@ -2,7 +2,7 @@
 ! process with MYLRANK(LMPIC) == 0 and LMPIC == 1 writes results
 
 subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
-  KPRE,KTE,LPOT,E1,E2,TK,EFERMI,ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ, &
+  KPRE,compute_total_energy,LPOT,E1,E2,TK,EFERMI,ALAT,ITITLE,CHRGNT,ZAT,EZ,WEZ, &
   LDAU, &
   iemxd) ! new input parameter after inc.p removal
 
@@ -14,7 +14,8 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   !     ..
   !     .. Local Scalars ..
   integer IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN
-  integer KPRE,KTE
+  integer KPRE
+  integer, intent(in) :: compute_total_energy ! former KTE
   integer I1,ISPIN,LPOT
   integer LRECRES1,LRECRES2
   !     ..
@@ -29,9 +30,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   double complex EZ(IEMXD),WEZ(IEMXD)
   double complex DEN(0:LMAX+1,IEMXD,NSPIN)
   double precision DOSTOT(0:LMAX+1,2)
-  double precision ECOU(0:LPOT),EPOTIN,EULDAU,EDCLDAU, &
-  ESPC(0:3,NSPIN),ESPV(0:LMAX+1,NSPIN), &
-  EXC(0:LPOT)
+  double precision ECOU(0:LPOT), EPOTIN, EULDAU, EDCLDAU, ESPC(0:3,NSPIN),ESPV(0:LMAX+1,NSPIN), EXC(0:LPOT)
   double precision ECORE(20,2)
   double precision ZAT(NAEZ)
   double precision CHARGE(0:LMAX+1,2)
@@ -56,29 +55,29 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
   endif
 
 
-  if (KTE >= 0) then
+  if (compute_total_energy >= 0) then
 
-    open (71, access='direct', recl=LRECRES1, file='results1', form='unformatted', action='read', status='old')
+    open(71, access='direct', recl=LRECRES1, file='results1', form='unformatted', action='read', status='old')
 
     ! Moments output
-    do I1 = 1,NAEZ
+    do I1 = 1, NAEZ
       if (NPOL == 0) then
         read(71, rec=I1) QC,CATOM,CHARGE,ECORE,DEN
       else
         read(71, rec=I1) QC,CATOM,CHARGE,ECORE
       endif
       call WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAX,LMAX+1)
-    enddo
+    enddo ! I1
 
 
     ! Density of states output
     if (NPOL == 0) then
-      do I1 = 1,NAEZ
+      do I1 = 1, NAEZ
         read(71, rec=I1) QC,CATOM,CHARGE,ECORE,DEN
         call WRLDOS(DEN,EZ,WEZ, &
         LMAX+1,IEMXD,NPOTD,ITITLE,EFERMI,E1,E2,ALAT,TK, &
         NSPIN,NAEZ,IELAST,I1,DOSTOT)
-      enddo
+      enddo ! I1
     endif
 
 
@@ -90,18 +89,18 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
         read(71,rec=I1) QC,CATOM,CHARGE,ECORE
       endif
       do ISPIN = 1,NSPIN
-        if (ISPIN.ne.1) then
-          write (6,fmt=9011) CATOM(ISPIN)                  ! spin moments
+        if (ISPIN /= 1) then
+          write(6,fmt=9011) CATOM(ISPIN)                  ! spin moments
         else
-          write (6,fmt=9001) I1,CATOM(ISPIN)               ! atom charge
+          write(6,fmt=9001) I1,CATOM(ISPIN)               ! atom charge
         endif
-      enddo
-      write (6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
+      enddo ! ISPIN
+      write(6,fmt=9041) ZAT(I1),QC                        ! nuclear charge, total charge
       if (NSPIN == 2) TOTSMOM = TOTSMOM + CATOM(NSPIN)
-    enddo
+    enddo ! I1
     write(6,'(79(1H+))')
-    write (6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
-    if (NSPIN == 2) write (6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
+    write(6,fmt=9021) ITSCF,CHRGNT                        ! Charge neutrality
+    if (NSPIN == 2) write(6,fmt=9031) TOTSMOM             ! TOTAL mag. moment
     write(6,'(79(1H+))')
 
     close(71)
@@ -124,7 +123,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 
   !=======================================================================
   ! output of information stored in 'results2'
-  ! set KTE=1 in inputcard for output of energy contributions
+  ! set compute_total_energy = 1 in inputcard for output of energy contributions
   !=======================================================================
 
 
@@ -132,17 +131,17 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
 !  do I1 = 1,NAEZ
 !    read(72,rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX, &
 !    EULDAU,EDCLDAU
-!  !        WRITE (6,FMT=99003) I1,(CATOM(1)-ZAT(I1)),VMAD  ! was already commented out
+!  !        write(6,FMT=99003) I1,(CATOM(1)-ZAT(I1)),VMAD  ! was already commented out
 !  enddo
 !  !      WRITE(6,'(25X,30(1H-),/)')
 !  !      WRITE(6,'(79(1H=))')
 !
 
-  if (KTE == 1) then
+  if (compute_total_energy == 1) then
 
     open (72, access='direct', recl=LRECRES2, file='results2', form='unformatted', action='read', status='old')
 
-    do I1 = 1,NAEZ
+    do I1 = 1, NAEZ
       read(72, rec=I1) CATOM,VMAD,ECOU,EPOTIN,ESPC,ESPV,EXC,LCOREMAX,EULDAU,EDCLDAU
 
       ! output unfortunaltely integrated into ETOTB1
@@ -151,10 +150,10 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
       EULDAU,EDCLDAU,LDAU, &
       KPRE,LMAX,LPOT, &
       LCOREMAX,NSPIN,I1,NAEZ)
-    enddo
+    enddo ! i1
 
     close(72)
 
   endif
 
-end
+endsubroutine

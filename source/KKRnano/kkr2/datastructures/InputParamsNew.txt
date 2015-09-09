@@ -4,27 +4,27 @@ dv bravais_a 3
 dv bravais_b 3
 dv bravais_c 3
 d gmax
+d rmax
 d qmrbound 1.0D-6
 #i kvrel use nsra instead
-i nsra
+i nsra 2
 i kxc 2
-d rmax
 d tempr 800.0
-d alat
+d alat 1.0
 d rclust 1.5
 d mixing
 d fcm 20.0
 i scfsteps
 i kforce 1
 d emin
+d emax
 l jij .FALSE.
 l ldau .FALSE.
-d rcutjij 2.30
-d emax
-i kte
-i imix
-iv bzdivide 3
 l cartesian .TRUE.
+d rcutjij 2.30
+i kte 1
+i imix 0
+iv bzdivide 3
 i npol
 i npnt1
 i npnt2
