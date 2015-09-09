@@ -17,7 +17,6 @@ module PotentialConverter_mod
     use BasisAtom_mod, only: BasisAtom, createBasisAtomFromFile, associateBasisAtomMesh, destroyBasisAtom
     use RadialMeshData_mod, only: RadialMeshData, createRadialMeshDataFromFile, repr_RadialMeshData, destroyRadialMeshData
     use PotentialData_mod, only: repr_PotentialData
-    implicit none
 
     type(DimParams)      :: dims
     type(RadialMeshData) :: mesh

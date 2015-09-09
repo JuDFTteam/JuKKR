@@ -456,7 +456,7 @@ module RadialMeshData_mod
     str = str // trim(buffer) // nl
     write(buffer, *) "RMT   = ", meshdata%RMT !< muffin-tin radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "IPAN  = ", meshdata%IPAN   !< number of mesh panels
+    write(buffer, *) "IPAN  = ", meshdata%IPAN !< number of mesh panels
     str = str // trim(buffer) // nl
     write(buffer, *) "IRC   = ", meshdata%IRC
     str = str // trim(buffer) // nl

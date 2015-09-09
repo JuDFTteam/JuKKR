@@ -92,7 +92,6 @@ module PotentialData_mod
   !----------------------------------------------------------------------------
   !> Returns a string representation of PotentialData.
   subroutine repr_PotentialData(potential, str)
-  ! todo: can be simplified by this: use StringHelpers_mod, only: operator(+), operator(-)
     class(PotentialData), intent(in) :: potential
     character(len=:), allocatable, intent(inout) :: str
 
@@ -124,10 +123,10 @@ module PotentialData_mod
 
     do ispin = 1, size(potential%VISP, 2)
       do ind = 1, size(potential%VISP, 1)
-        write(buffer, '(I5, 2X, I5, 2X, E23.16)') ind, ispin, potential%VISP(ind, ispin)
+        write(buffer, '(2(i5,2x),e23.16)') ind, ispin, potential%VISP(ind, ispin)
         str = str // trim(buffer) // nl
-      enddo
-    enddo
+      enddo ! ind
+    enddo ! ispin
 
     str = str // nl
 
@@ -142,7 +141,7 @@ module PotentialData_mod
         ! print only non-zero potential components
         if (sum(abs(potential%VINS(:, lm, ispin))) > 0.0) then
           do ind = lbound(potential%VINS, 1), ubound(potential%VINS, 1)
-            write(buffer, '(I5, 2X, I5, 2X, I5, 2X E23.16)') ind, lm, ispin, potential%VINS(ind, lm, ispin)
+            write(buffer, '(3(i5,2x),e23.16)') ind, lm, ispin, potential%VINS(ind, lm, ispin)
             str = str // trim(buffer) // nl
           enddo ! ind
         endif
@@ -162,7 +161,7 @@ module PotentialData_mod
         ! print only non-zero potential components
         if (sum(abs(potential%VONS(:, lm, ispin))) > 0.0) then
           do ind = lbound(potential%VONS, 1), ubound(potential%VONS, 1)
-            write(buffer, '(I5, 2X, I5, 2X, I5, 2X E23.16)') ind, lm, ispin, potential%VONS(ind, lm, ispin)
+            write(buffer, '(3(i5,2x),e23.16)') ind, lm, ispin, potential%VONS(ind, lm, ispin)
             str = str // trim(buffer) // nl
           enddo ! ind
         endif
