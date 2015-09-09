@@ -1,6 +1,6 @@
 !> A simple linear equation solver class.
 !>
-!> Extend from this class to implement a solver.
+!> Extendfrom this class to implement a solver.
 !>
 !> @author Elias Rabel
 
@@ -12,7 +12,7 @@ module Solver_mod
   type, abstract :: Solver
     contains
       procedure (solve_interface), deferred :: solve
-  end type
+  endtype
 
   interface
     !> Specify a right hand side mat_B - get result in mat_X
@@ -21,8 +21,8 @@ module Solver_mod
       class(Solver) :: self
       double complex, intent(inout) :: mat_X(:,:)
       double complex, intent(inout) :: mat_B(:,:)
-    end subroutine
-  end interface
+    endsubroutine
+  endinterface
 
-end module
+endmodule
 

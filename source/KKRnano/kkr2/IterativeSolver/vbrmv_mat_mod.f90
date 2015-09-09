@@ -26,7 +26,7 @@ module vbrmv_mat_mod
                    a, sparse%kvstr, sparse%kvstr, x, b, &
                    sparse%max_blockdim, sparse%max_blocks_per_row)
 
-  end subroutine
+  endsubroutine ! multiply_vbr
 
 
 !     Heavily modified routine from SPARSKIT
@@ -104,20 +104,20 @@ module vbrmv_mat_mod
         do icols = 1, ncols
           !call ZCOPY(nrowbuf, x(startrow, icols), 1, buffer(rowbuf,   icols), 1)
           buffer(rowbuf:(rowbuf + nrowbuf -1), icols) = x(startrow:(startrow + nrowbuf - 1), icols)
-        enddo
+        enddo ! icols
 
         sum_nrowbuf = sum_nrowbuf + nrowbuf
         rowbuf = rowbuf + nrowbuf
-      enddo
+      enddo ! j
 
       !k = ka(ia(i))
 
       call ZGEMM('N','N',num_rows,ncols,sum_nrowbuf, CONE,a(k),num_rows, buffer,leaddim_buffer, CZERO,b(istart,1),leaddim_b)
 
-    enddo
-!$OMP END DO
-!$OMP END PARALLEL
+    enddo ! i
+!$OMP endDO
+!$OMP endPARALLEL
 
-  end subroutine
+  endsubroutine ! vbrmv_mat
 
-end module
+endmodule ! vbrmv_mat_mod

@@ -26,7 +26,7 @@ module KKROperator_mod
     procedure :: apply  => apply_KKROperator
     procedure :: get_ms_workspace
     procedure :: destroy => destroy_KKROperator
-  end type
+  endtype
 
   interface create
     module procedure create_KKROperator
@@ -43,14 +43,14 @@ module KKROperator_mod
     class(KKROperator) :: self
 
     allocate(self%ms)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine destroy_KKROperator(self)
     class(KKROperator) :: self
 
     deallocate(self%ms)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
@@ -60,12 +60,12 @@ module KKROperator_mod
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 
-    double complex, parameter :: CZERO = (0.0D0,0.0D0)
+    double complex, parameter :: CZERO = (0.d0, 0.d0)
     mat_AX = CZERO
 
     ! perform sparse VBR matrix * dense matrix
     call multiply_vbr(self%ms%GLLH, mat_X, mat_AX, self%ms%sparse)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Return a reference to the multiple scattering workspace.
@@ -74,6 +74,6 @@ module KKROperator_mod
     type(MultScatData), pointer :: ms
 
     ms => self%ms
-  end function
+  endfunction
 
-end module
+endmodule

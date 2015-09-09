@@ -42,7 +42,7 @@ module mminvmod_oop_mod
     use SolverStats_mod, only: SolverStats
     use OperatorT_mod, only: OperatorT
 
-    class (OperatorT), intent(in) :: op
+    class(OperatorT), intent(in) :: op
 
     double precision, intent(in) :: TOL
     integer, intent(in) :: num_columns
@@ -52,16 +52,16 @@ module mminvmod_oop_mod
     double complex, intent(in) :: mat_B(NLEN,num_columns)
 
     logical, intent(in) :: initial_zero
-    type (SolverStats), intent(inout) :: stats
-    class (OperatorT) :: precond
+    type(SolverStats), intent(inout) :: stats
+    class(OperatorT) :: precond
     logical, intent(in) :: use_precond
     double complex, intent(inout) :: VECS(:,:,:) ! workspace
     double complex, intent(inout) :: temp(:,:) ! workspace only used when use_precond is true
 
     !----------------- local variables --------------------------------------------
 
-    double complex, parameter :: CONE  = (1.0D0,0.0D0)
-    double complex, parameter :: CZERO = (0.0D0,0.0D0)
+    double complex, parameter :: CONE  = (1.d0, 0.d0)
+    double complex, parameter :: CZERO = (0.d0, 0.d0)
 
     integer :: NLIM
 
@@ -102,7 +102,7 @@ module mminvmod_oop_mod
     double precision :: max_residual
     double precision :: target_upper_bound
     double precision :: max_upper_bound
-    double precision, parameter :: TEST_FACTOR = 100d0
+    double precision, parameter :: TEST_FACTOR = 100.d0
     double precision :: EPSILON_DP
 
     !------------- diagnostic variables -------------
@@ -113,7 +113,7 @@ module mminvmod_oop_mod
     ! INITIALIZATION
     !=======================================================================
 
-    EPSILON_DP = epsilon(0.0d0)
+    EPSILON_DP = epsilon(0.d0)
     tfqmr_status = 0
     converged_at = 0
 
@@ -147,7 +147,7 @@ module mminvmod_oop_mod
       !r0 = b - Ax0 = v2 - v9
       VECS(:,:,FIVE) = mat_B - VECS(:,:,NINE)
 
-    end if
+    endif
 
     ! R0 = norm(v5)
     COLUMNNORMS(R0, VECS(:,:,FIVE))
@@ -158,16 +158,16 @@ module mminvmod_oop_mod
     ! N2B = norm(v2)
     COLUMNNORMS(N2B, mat_B)
 
-    where (abs(N2B) < EPSILON_DP) N2B = 1.0d0  ! where N2B = 0 use absolute residual
+    where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
     ! Supply auxiliary start vector r*
     call ZRANDN (NLEN*num_columns,VECS(:,:,THREE),1)
 
     !     Initialize the variables.
 
-    RESN = 1.0D0
+    RESN = 1.d0
     RHO  = CONE
-    VAR  = 0.0D0
+    VAR  = 0.d0
     ETA  = CZERO
     TAU  = R0 * R0
 
@@ -195,7 +195,7 @@ module mminvmod_oop_mod
       elsewhere
         BETA = ZTMP / RHO
         RHO  = ZTMP
-      end where
+      endwhere
 
       ! v4 = beta*v4 + v8
       COLUMN_XPAY(BETA, VECS(:,:,EIGHT), VECS(:,:,FOUR))
@@ -230,7 +230,7 @@ module mminvmod_oop_mod
         ALPHA = CZERO
         ZTMP = CZERO
         tfqmr_status = -1
-      end where
+      endwhere
 
       ! v7 = ZTMP*v7 + v6
       COLUMN_XPAY(ZTMP, VECS(:,:,SIX), VECS(:,:,SEVEN))
@@ -245,7 +245,7 @@ module mminvmod_oop_mod
       DTMP = DTMP * DTMP
       where (abs(TAU) > EPSILON_DP)
         VAR  = DTMP / TAU
-        COSI  = 1.0D0 / ( 1.0D0 + VAR )
+        COSI  = 1.d0 / ( 1.d0 + VAR )
         ZTMP = VAR * COSI
       elsewhere
         ! early convergence or breakdown(stagnation)
@@ -253,14 +253,14 @@ module mminvmod_oop_mod
         VAR = CZERO
         ZTMP = CONE
         tfqmr_status = -2
-      end where
+      endwhere
       TAU  = DTMP * COSI
       ETA  = ALPHA * COSI
 
       ! do not modify brokedown components
       where (tfqmr_status < 0)
         ETA = CZERO
-      end where
+      endwhere
 
       ! v1 = v1 + eta*v7
       COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
@@ -299,20 +299,20 @@ module mminvmod_oop_mod
       DTMP = DTMP * DTMP
       where (abs(TAU) > EPSILON_DP)
         VAR  = DTMP / TAU
-        COSI  = 1.0D0 / ( 1.0D0 + VAR )
+        COSI  = 1.d0 / ( 1.d0 + VAR )
       elsewhere
         ! early convergence or breakdown
         VAR = CZERO
         COSI = CZERO
         tfqmr_status = -2
-      end where
+      endwhere
       TAU  = DTMP * COSI
       ETA  = ALPHA * COSI
 
       ! do not modify brokedown components
       where (tfqmr_status < 0)
         ETA = CZERO
-      end where
+      endwhere
 
       ! v1 = v1 + eta*v7
       COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
@@ -326,11 +326,11 @@ module mminvmod_oop_mod
         PROBE = IT ! probe residual
       else
         PROBE = IT+1 ! don't probe residual
-      end if
+      endif
 
       if (IT == NLIM) then
         PROBE = IT
-      end if
+      endif
 
       !check for complete breakdown
       isDone = .true.
@@ -381,12 +381,12 @@ module mminvmod_oop_mod
             if (tfqmr_status(ind) == 0) then
               ! if no breakdown has occured continue converging
               isDone = .false.
-            end if
+            endif
           else
             if (tfqmr_status(ind) <= 0) then
               tfqmr_status(ind) = 1
               converged_at(ind) = IT ! component converged
-            end if
+            endif
           endif
         enddo
 
@@ -441,21 +441,18 @@ module mminvmod_oop_mod
    do ind=1, num_columns
      if (converged_at(ind) == 0) then
        select case (tfqmr_status(ind))
-         case (-1)
-           WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", ind
-         case (-2)
-           WRITELOG(3,*) "Component not converged (stagnated): ", ind
-         case default
-           WRITELOG(3,*) "Component not converged: ", ind
-       end select
-     end if
-   end do
+         case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", ind
+         case (-2)    ; WRITELOG(3,*) "Component not converged (stagnated): ", ind
+         case default ; WRITELOG(3,*) "Component not converged: ", ind
+       endselect
+     endif
+   enddo
 
    WRITELOG(3,*) tfqmr_status
    WRITELOG(3,*) converged_at
    WRITELOG(3,*) RESN
 
- end subroutine
+ endsubroutine
 
  !------------------------------------------------------------------------------
  !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
@@ -472,13 +469,13 @@ module mminvmod_oop_mod
    logical, intent(in) :: use_precond
 
    if (use_precond) then
-      call precond%apply(mat, temp)
-      call op%apply(temp, mat_out)
+     call precond%apply(mat, temp)
+     call op%apply(temp, mat_out)
    else
-      call op%apply(mat, mat_out)
+     call op%apply(mat, mat_out)
    endif
 
- end subroutine
+ endsubroutine
 
  !------------------------------------------------------------------------------
  subroutine col_AXPY(factors, xvector, yvector)
@@ -486,19 +483,16 @@ module mminvmod_oop_mod
    double complex, intent(in) :: xvector(:,:)
    double complex, intent(inout) :: yvector(:,:)
 
-   !---------
-   integer :: col
-   integer :: ncol
-   integer :: nlen
-   double complex, parameter :: CONE = (1.0d0, 0.0d0)
+   integer :: col, ncol, nlen
+   double complex, parameter :: CONE = (1.d0, 0.d0)
 
    ncol = size(factors)
    nlen = size(xvector,1)
 
    do col = 1, ncol
      call zaxpby(nlen, yvector(:,col), factors(col), xvector(:,col), CONE, yvector(:,col))
-   end do
- end subroutine
+   enddo
+ endsubroutine
 
  !------------------------------------------------------------------------------
  subroutine col_MAXPY(factors, xvector, yvector)
@@ -506,19 +500,16 @@ module mminvmod_oop_mod
    double complex, intent(in) :: xvector(:,:)
    double complex, intent(inout) :: yvector(:,:)
 
-   !---------
-   integer :: col
-   integer :: ncol
-   integer :: nlen
-   double complex, parameter :: CONE = (1.0d0, 0.0d0)
+   integer :: col, ncol, nlen
+   double complex, parameter :: CONE = (1.d0, 0.d0)
 
    ncol = size(factors)
    nlen = size(xvector,1)
 
    do col = 1, ncol
      call zaxpby(nlen, yvector(:,col), -factors(col), xvector(:,col), CONE, yvector(:,col))
-   end do
- end subroutine
+   enddo ! col
+ endsubroutine
 
  !------------------------------------------------------------------------------
  subroutine col_XPAY(factors, xvector, yvector)
@@ -526,29 +517,23 @@ module mminvmod_oop_mod
    double complex, intent(in) :: xvector(:,:)
    double complex, intent(inout) :: yvector(:,:)
 
-   !---------
-   integer :: col
-   integer :: ncol
-   integer :: nlen
-   double complex, parameter :: CONE = (1.0d0, 0.0d0)
+   integer :: col, ncol, nlen
+   double complex, parameter :: CONE = (1.d0, 0.d0)
 
    ncol = size(factors)
    nlen = size(xvector,1)
 
    do col = 1, ncol
      call zaxpby(nlen, yvector(:,col), CONE, xvector(:,col), factors(col), yvector(:,col))
-   end do
- end subroutine
+   enddo ! col
+ endsubroutine
 
  !------------------------------------------------------------------------------
  subroutine col_norms(norms, vectors)
    double precision, intent(out) :: norms(:)
    double complex, intent(in) :: vectors(:,:)
 
-   !---------
-   integer :: col
-   integer :: ncol
-   integer :: nlen
+   integer :: col, ncol, nlen
    double precision, external :: DZNRM2
 
    ncol = size(norms)
@@ -556,8 +541,8 @@ module mminvmod_oop_mod
 
    do col = 1, ncol
      norms(col) = DZNRM2(nlen,vectors(:,col),1)
-   end do
- end subroutine
+   enddo ! col
+ endsubroutine
 
  !------------------------------------------------------------------------------
  subroutine col_dots(dots, vectorsv, vectorsw)
@@ -565,10 +550,7 @@ module mminvmod_oop_mod
    double complex, intent(in) :: vectorsv(:,:)
    double complex, intent(in) :: vectorsw(:,:)
 
-   !---------
-   integer :: col
-   integer :: ncol
-   integer :: nlen
+   integer :: col, ncol, nlen
    double complex, external :: ZDOTU
 
    ncol = size(vectorsv,2)
@@ -576,7 +558,7 @@ module mminvmod_oop_mod
 
    do col = 1, ncol
      dots(col) = ZDOTU(nlen, vectorsv(:,col), 1, vectorsw(:,col), 1)
-   end do
- end subroutine
+   enddo ! col
+ endsubroutine
 
-end module
+endmodule

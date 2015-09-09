@@ -19,15 +19,15 @@ module BCPOperator_mod
   type, extends(OperatorT) :: BCPOperator
     ! private
     double complex, allocatable :: GLLHBLCK(:,:)
-    type (SolverOptions) :: solver_opts
-    type (ClusterInfo), pointer :: cluster_info
+    type(SolverOptions) :: solver_opts
+    type(ClusterInfo), pointer :: cluster_info
     integer :: lmmaxd
     contains
     procedure :: create => create_BCPOperator
     procedure :: calc   => calc_BCPOperator
     procedure :: apply  => apply_BCPOperator
     procedure :: destroy => destroy_BCPOperator
-  end type
+  endtype
 
   interface create
     module procedure create_BCPOperator
@@ -52,7 +52,7 @@ module BCPOperator_mod
   subroutine create_BCPOperator(self, solver_opts, cluster_info, lmmaxd)
     class(BCPOperator) :: self
     type(SolverOptions), intent(in) :: solver_opts
-    type (ClusterInfo), target  :: cluster_info
+    type(ClusterInfo), target  :: cluster_info
     integer, intent(in) :: lmmaxd
 
     integer naezd
@@ -75,7 +75,7 @@ module BCPOperator_mod
     self%cluster_info => cluster_info
     self%lmmaxd = lmmaxd
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Calculation of BCP preconditioner.
@@ -99,7 +99,7 @@ module BCPOperator_mod
                    self%solver_opts%ydim, self%solver_opts%zdim, &
                    blocks_per_row)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Applies Preconditioner/Operator on mat_X and returns result in mat_AX.
@@ -126,7 +126,7 @@ module BCPOperator_mod
                        naez, self%lmmaxd, &
                        natbld, xdim, ydim, zdim, num_columns)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine destroy_BCPOperator(self)
@@ -134,6 +134,6 @@ module BCPOperator_mod
 
     if (allocated(self%GLLHBLCK)) deallocate(self%GLLHBLCK)
     nullify(self%cluster_info)
-  end subroutine
+  endsubroutine
 
-end module
+endmodule

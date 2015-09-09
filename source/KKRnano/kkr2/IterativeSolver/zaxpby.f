@@ -15,148 +15,148 @@ C     *****************************************************************
 C
 C**********************************************************************
 C
-      SUBROUTINE ZAXPBY (N,ZZ,ZA,ZX,ZB,ZY)
-C
-C     Purpose:
-C     This subroutine computes ZZ = ZA * ZX + ZB * ZY.  Several special
-C     cases are handled separately:
-C        ZA =  0.0, ZB =  0.0 => ZZ = 0.0
-C        ZA =  0.0, ZB =  1.0 => ZZ = ZY  (this is COPY)
-C        ZA =  0.0, ZB = -1.0 => ZZ = -ZY
-C        ZA =  0.0, ZB =   ZB => ZZ = ZB * ZY  (this is SCAL)
-C        ZA =  1.0, ZB =  0.0 => ZZ = ZX  (this is COPY)
-C        ZA =  1.0, ZB =  1.0 => ZZ = ZX + ZY
-C        ZA =  1.0, ZB = -1.0 => ZZ = ZX - ZY
-C        ZA =  1.0, ZB =   ZB => ZZ = ZX + ZB * ZY (this is AXPY)
-C        ZA = -1.0, ZB =  0.0 => ZZ = -ZX
-C        ZA = -1.0, ZB =  1.0 => ZZ = -ZX + ZY
-C        ZA = -1.0, ZB = -1.0 => ZZ = -ZX - ZY
-C        ZA = -1.0, ZB =   ZB => ZZ = -ZX + ZB * ZY
-C        ZA =   ZA, ZB =  0.0 => ZZ = ZA * ZX  (this is SCAL)
-C        ZA =   ZA, ZB =  1.0 => ZZ = ZA * ZX + ZY  (this is AXPY)
-C        ZA =   ZA, ZB = -1.0 => ZZ = ZA * ZX - ZY
-C        ZA =   ZA, ZB =   ZB => ZZ = ZA * ZX + ZB * ZY
-C     ZZ may be the same as ZX or ZY.
-C
-C     Parameters:
-C     N  = the dimension of the vectors (input).
-C     ZZ = the vector result (output).
-C     ZA = scalar multiplier for ZX (input).
-C     ZX = one of the vectors (input).
-C     ZB = scalar multiplier for ZY (input).
-C     ZY = the other vector (input).
-C
-C     Noel M. Nachtigal
-C     March 23, 1993
-C
-C**********************************************************************
-C
-      INTRINSIC DIMAG, DREAL
-C
-      INTEGER N
-      DOUBLE COMPLEX ZA, ZB, ZX(N), ZY(N), ZZ(N)
-C
-C     Local variables.
-C
-      INTEGER I
-      DOUBLE PRECISION DAI, DAR, DBI, DBR
-C
-      IF (N.LE.0) RETURN
-C
-      DAI = DIMAG(ZA)
-      DAR = DREAL(ZA)
-      DBI = DIMAG(ZB)
-      DBR = DREAL(ZB)
-      IF ((DAR.EQ.0.0D0).AND.(DAI.EQ.0.0D0)) THEN
-         IF ((DBR.EQ.0.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = 0.0, ZB = 0.0 => ZZ = 0.0.
-            DO 10 I = 1, N
-               ZZ(I) = (0.0D0,0.0D0)
- 10         CONTINUE
-         ELSE IF ((DBR.EQ.1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = 0.0, ZB = 1.0 => ZZ = ZY (this is COPY).
-            DO 20 I = 1, N
-               ZZ(I) = ZY(I)
- 20         CONTINUE
-         ELSE IF ((DBR.EQ.-1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = 0.0, ZB = -1.0 => ZZ = -ZY.
-            DO 30 I = 1, N
-               ZZ(I) = -ZY(I)
- 30         CONTINUE
-         ELSE
-C           ZA = 0.0, ZB = ZB => ZZ = ZB * ZY (this is SCAL).
-            DO 40 I = 1, N
-               ZZ(I) = ZB * ZY(I)
- 40         CONTINUE
-         END IF
-      ELSE IF ((DAR.EQ.1.0D0).AND.(DAI.EQ.0.0D0)) THEN
-         IF ((DBR.EQ.0.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = 1.0, ZB = 0.0 => ZZ = ZX (this is COPY).
-            DO 50 I = 1, N
-               ZZ(I) = ZX(I)
- 50         CONTINUE
-         ELSE IF ((DBR.EQ.1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = 1.0, ZB = 1.0 => ZZ = ZX + ZY.
-            DO 60 I = 1, N
-               ZZ(I) = ZX(I) + ZY(I)
- 60         CONTINUE
-         ELSE IF ((DBR.EQ.-1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = 1.0, ZB = -1.0 => ZZ = ZX - ZY.
-            DO 70 I = 1, N
-               ZZ(I) = ZX(I) - ZY(I)
- 70         CONTINUE
-         ELSE
-C           ZA = 1.0, ZB = ZB => ZZ = ZX + ZB * ZY (this is AXPY).
-            DO 80 I = 1, N
-               ZZ(I) = ZX(I) + ZB * ZY(I)
- 80         CONTINUE
-         END IF
-      ELSE IF ((DAR.EQ.-1.0D0).AND.(DAI.EQ.0.0D0)) THEN
-         IF ((DBR.EQ.0.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = -1.0, ZB = 0.0 => ZZ = -ZX
-            DO 90 I = 1, N
-               ZZ(I) = -ZX(I)
- 90         CONTINUE
-         ELSE IF ((DBR.EQ.1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = -1.0, ZB = 1.0 => ZZ = -ZX + ZY
-            DO 100 I = 1, N
-               ZZ(I) = -ZX(I) + ZY(I)
- 100        CONTINUE
-         ELSE IF ((DBR.EQ.-1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = -1.0, ZB = -1.0 => ZZ = -ZX - ZY.
-            DO 110 I = 1, N
-               ZZ(I) = -ZX(I) - ZY(I)
- 110        CONTINUE
-         ELSE
-C           ZA = -1.0, ZB = ZB => ZZ = -ZX + ZB * ZY
-            DO 120 I = 1, N
-               ZZ(I) = -ZX(I) + ZB * ZY(I)
- 120        CONTINUE
-         END IF
-      ELSE
-         IF ((DBR.EQ.0.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = ZA, ZB = 0.0 => ZZ = ZA * ZX (this is SCAL).
-            DO 130 I = 1, N
-               ZZ(I) = ZA * ZX(I)
- 130        CONTINUE
-         ELSE IF ((DBR.EQ.1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = ZA, ZB = 1.0 => ZZ = ZA * ZX + ZY (this is AXPY)
-            DO 140 I = 1, N
-               ZZ(I) = ZA * ZX(I) + ZY(I)
- 140        CONTINUE
-         ELSE IF ((DBR.EQ.-1.0D0).AND.(DBI.EQ.0.0D0)) THEN
-C           ZA = ZA, ZB = -1.0 => ZZ = ZA * ZX - ZY.
-            DO 150 I = 1, N
-               ZZ(I) = ZA * ZX(I) - ZY(I)
- 150        CONTINUE
-         ELSE
-C           ZA = ZA, ZB = ZB => ZZ = ZA * ZX + ZB * ZY.
-            DO 160 I = 1, N
-               ZZ(I) = ZA * ZX(I) + ZB * ZY(I)
- 160        CONTINUE
-         END IF
-      END IF
-C
-      RETURN
+      subroutine zaxpby (n,zz,za,zx,zb,zy)
+c
+c     purpose:
+c     this subroutine computes zz = za * zx + zb * zy.  several special
+c     cases are handled separately:
+c        za =  0.0, zb =  0.0 => zz = 0.0
+c        za =  0.0, zb =  1.0 => zz = zy  (this is copy)
+c        za =  0.0, zb = -1.0 => zz = -zy
+c        za =  0.0, zb =   zb => zz = zb * zy  (this is scal)
+c        za =  1.0, zb =  0.0 => zz = zx  (this is copy)
+c        za =  1.0, zb =  1.0 => zz = zx + zy
+c        za =  1.0, zb = -1.0 => zz = zx - zy
+c        za =  1.0, zb =   zb => zz = zx + zb * zy (this is axpy)
+c        za = -1.0, zb =  0.0 => zz = -zx
+c        za = -1.0, zb =  1.0 => zz = -zx + zy
+c        za = -1.0, zb = -1.0 => zz = -zx - zy
+c        za = -1.0, zb =   zb => zz = -zx + zb * zy
+c        za =   za, zb =  0.0 => zz = za * zx  (this is scal)
+c        za =   za, zb =  1.0 => zz = za * zx + zy  (this is axpy)
+c        za =   za, zb = -1.0 => zz = za * zx - zy
+c        za =   za, zb =   zb => zz = za * zx + zb * zy
+c     zz may be the same as zx or zy.
+c
+c     parameters:
+c     n  = the dimension of the vectors (input).
+c     zz = the vector result (output).
+c     za = scalar multiplier for zx (input).
+c     zx = one of the vectors (input).
+c     zb = scalar multiplier for zy (input).
+c     zy = the other vector (input).
+c
+c     noel m. nachtigal
+c     march 23, 1993
+c
+c**********************************************************************
+c
+      intrinsic dimag, dreal
+c
+      integer n
+      double complex za, zb, zx(n), zy(n), zz(n)
+c
+c     local variables.
+c
+      integer i
+      double precision dai, dar, dbi, dbr
+c
+      if (n.le.0) return
+c
+      dai = dimag(za)
+      dar = dreal(za)
+      dbi = dimag(zb)
+      dbr = dreal(zb)
+      if ((dar == 0.d0).and.(dai == 0.d0)) then
+         if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+c           za = 0.0, zb = 0.0 => zz = 0.0.
+            do 10 i = 1, n
+               zz(i) = (0.d0,0.d0)
+ 10         continue
+         else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+c           za = 0.0, zb = 1.0 => zz = zy (this is copy).
+            do 20 i = 1, n
+               zz(i) = zy(i)
+ 20         continue
+         else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+c           za = 0.0, zb = -1.0 => zz = -zy.
+            do 30 i = 1, n
+               zz(i) = -zy(i)
+ 30         continue
+         else
+c           za = 0.0, zb = zb => zz = zb * zy (this is scal).
+            do 40 i = 1, n
+               zz(i) = zb * zy(i)
+ 40         continue
+         end if
+      else if ((dar == 1.d0).and.(dai == 0.d0)) then
+         if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+c           za = 1.0, zb = 0.0 => zz = zx (this is copy).
+            do 50 i = 1, n
+               zz(i) = zx(i)
+ 50         continue
+         else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+c           za = 1.0, zb = 1.0 => zz = zx + zy.
+            do 60 i = 1, n
+               zz(i) = zx(i) + zy(i)
+ 60         continue
+         else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+c           za = 1.0, zb = -1.0 => zz = zx - zy.
+            do 70 i = 1, n
+               zz(i) = zx(i) - zy(i)
+ 70         continue
+         else
+c           za = 1.0, zb = zb => zz = zx + zb * zy (this is axpy).
+            do 80 i = 1, n
+               zz(i) = zx(i) + zb * zy(i)
+ 80         continue
+         end if
+      else if ((dar == -1.d0).and.(dai == 0.d0)) then
+         if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+c           za = -1.0, zb = 0.0 => zz = -zx
+            do 90 i = 1, n
+               zz(i) = -zx(i)
+ 90         continue
+         else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+c           za = -1.0, zb = 1.0 => zz = -zx + zy
+            do 100 i = 1, n
+               zz(i) = -zx(i) + zy(i)
+ 100        continue
+         else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+c           za = -1.0, zb = -1.0 => zz = -zx - zy.
+            do 110 i = 1, n
+               zz(i) = -zx(i) - zy(i)
+ 110        continue
+         else
+c           za = -1.0, zb = zb => zz = -zx + zb * zy
+            do 120 i = 1, n
+               zz(i) = -zx(i) + zb * zy(i)
+ 120        continue
+         end if
+      else
+         if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+c           za = za, zb = 0.0 => zz = za * zx (this is scal).
+            do 130 i = 1, n
+               zz(i) = za * zx(i)
+ 130        continue
+         else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+c           za = za, zb = 1.0 => zz = za * zx + zy (this is axpy)
+            do 140 i = 1, n
+               zz(i) = za * zx(i) + zy(i)
+ 140        continue
+         else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+c           za = za, zb = -1.0 => zz = za * zx - zy.
+            do 150 i = 1, n
+               zz(i) = za * zx(i) - zy(i)
+ 150        continue
+         else
+c           za = za, zb = zb => zz = za * zx + zb * zy.
+            do 160 i = 1, n
+               zz(i) = za * zx(i) + zb * zy(i)
+ 160        continue
+         end if
+      end if
+c
+      return
 
-      END
+      end

@@ -1,11 +1,8 @@
-!> Apply block circulant preconditioner on VECS_in and put result into VECS_out
-subroutine APPBLCKCIRC(VECS_in, VECS_out, GLLHBLCK, &
-                       naez,lmmaxd, &
-                       natbld, xdim, ydim, zdim, num_columns)
-
+!> apply block circulant preconditioner on vecs_in and put result into vecs_out
+subroutine appblckcirc(vecs_in, vecs_out, gllhblck, naez,lmmaxd, natbld, xdim, ydim, zdim, num_columns)
   implicit none
 
-  INCLUDE 'fftw3.f'
+  include 'fftw3.f'
 
   integer naez
   integer lmmaxd
@@ -18,157 +15,136 @@ subroutine APPBLCKCIRC(VECS_in, VECS_out, GLLHBLCK, &
   integer num_columns
 
 
-  double complex CONE
-  parameter      (CONE  = ( 1.0D0,0.0D0))
-  double complex CZERO
-  parameter      (CZERO = ( 0.0D0,0.0D0))
+  double complex, parameter :: cone  = (1.d0, 0.d0)
+  double complex, parameter :: czero = (0.d0, 0.d0)
 
-  double complex VECS_in(NAEZ*LMMAXD,num_columns)
-  double complex VECS_out(NAEZ*LMMAXD,num_columns)
-  double complex GLLHBLCK(NATBLD*LMMAXD, &
-  XDIM*YDIM*ZDIM*NATBLD*LMMAXD)
+  double complex vecs_in(naez*lmmaxd,num_columns)
+  double complex vecs_out(naez*lmmaxd,num_columns)
+  double complex gllhblck(natbld*lmmaxd,xdim*ydim*zdim*natbld*lmmaxd)
 
   !     local arrays - large, stack based!!!
-  double complex :: TBLCK(NATBLD*LMMAXD,NATBLD*LMMAXD)
-  double complex :: TXK(NATBLD*LMMAXD)
-  double complex :: TYK(NATBLD*LMMAXD)
+  double complex :: tblck(natbld*lmmaxd,natbld*lmmaxd)
+  double complex :: txk(natbld*lmmaxd)
+  double complex :: tyk(natbld*lmmaxd)
 
   !     local arrays - large, stack based!!!
-  double complex :: X(XDIM,YDIM,ZDIM)
-  double complex :: XK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
-  double complex :: Y(XDIM,YDIM,ZDIM)
-  double complex :: YK(NATBLD*LMMAXD,XDIM,YDIM,ZDIM)
+  double complex :: x(xdim,ydim,zdim)
+  double complex :: xk(natbld*lmmaxd,xdim,ydim,zdim)
+  double complex :: y(xdim,ydim,zdim)
+  double complex :: yk(natbld*lmmaxd,xdim,ydim,zdim)
 
-!IBM* ALIGN(32, XK, YK)
+!ibm* align(32, xk, yk)
 
   ! ..
   ! local scalars ..
-  double precision FAC
-  integer        LM1,LMATBL,IX,IY,IZ,I,J
-  integer(8)     FFTWPLAN_fwd
-  integer(8)     FFTWPLAN_bwd
-  integer        num
+  double precision :: fac
+  integer :: lm1, lmatbl, ix, iy, iz, j, num
+  integer(kind=8) :: FFTwplan_fwd, FFTwplan_bwd
 
   num = lmmaxd*natbld
 
-  FAC = 1/FLOAT(XDIM*YDIM*ZDIM)
+  fac = 1.d0/dble(xdim*ydim*zdim)
 
-  ! all threads use the same fftw3-plans
-  ! - possible according to fftw3 documentation
-  call DFFTW_PLAN_DFT_3D(FFTWPLAN_bwd,XDIM,YDIM,ZDIM,X,X, &
-  FFTW_BACKWARD,FFTW_ESTIMATE)
-  call DFFTW_PLAN_DFT_3D(FFTWPLAN_fwd,XDIM,YDIM,ZDIM,Y,Y, &
-  FFTW_FORWARD,FFTW_ESTIMATE)
-
+  ! all threads use the same FFTw3-plans
+  ! - possible according to FFTw3 documentation
+  call dFFTw_plan_dft_3d(FFTwplan_bwd, xdim, ydim, zdim, x, x,  FFTw_backward, FFTw_estimate)
+  call dFFTw_plan_dft_3d(FFTwplan_fwd, xdim, ydim, zdim, y, y,  FFTw_forward,  FFTw_estimate)
 
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  !$OMP PARALLEL PRIVATE(X,Y,TBLCK,TXK,TYK,XK,YK)
+  !$omp parallel private(x,y,tblck,txk,tyk,xk,yk)
   !$omp do
-  do LM1=1,num_columns
+  do lm1 = 1, num_columns
 
     !=======================================================================
 
     !-----------------------------------------------------------------------
-    ! perform Fourier-transform backward              begin
+    ! perform fourier-transform backward              begin
     !-----------------------------------------------------------------------
 
-    do LMATBL = 1,num
+    do lmatbl = 1, num
 
-        do IZ =1,ZDIM
-          do IY =1,YDIM
-            do IX =1,XDIM
+      do iz = 1, zdim
+        do iy = 1, ydim
+          do ix = 1, xdim
 
-              X(IX,IY,IZ) = VECS_in(((IX-1)+(IY-1)*XDIM+ &
-              (IZ-1)*XDIM*YDIM)*num+LMATBL,LM1)
+            x(ix,iy,iz) = vecs_in(((ix-1)+(iy-1)*xdim+(iz-1)*xdim*ydim)*num+lmatbl,lm1)
 
-            enddo
-          enddo
-        enddo
+          enddo ! ix
+        enddo ! iy
+      enddo ! iz
 
-        call DFFTW_EXECUTE_DFT(FFTWPLAN_bwd,X,X)
+      call dFFTw_execute_dft(FFTwplan_bwd, x, x)
 
-        do IZ =1,ZDIM
-          do IY =1,YDIM
-            do IX =1,XDIM
-              XK(LMATBL,IX,IY,IZ) = X(IX,IY,IZ)*FAC
-            enddo
-          enddo
-        enddo
+      do iz = 1, zdim
+        do iy = 1, ydim
+          do ix = 1, xdim
+            xk(lmatbl,ix,iy,iz) = x(ix,iy,iz)*fac
+          enddo ! ix
+        enddo ! iy
+      enddo ! iz
 
-    enddo
-
-    !-----------------------------------------------------------------------
-    ! perform Fourier-transform backward              end
-    !-----------------------------------------------------------------------
-
-    do IZ =1,ZDIM
-        do IY =1,YDIM
-          do IX =1,XDIM
-
-            do I=1,num
-              TXK(I) = XK(I,IX,IY,IZ)
-            end do
-
-            do J=1,num
-              do I=1,num
-                TBLCK(I,J) = GLLHBLCK(I,num* &
-                ((IX-1)+(IY-1)*XDIM+(IZ-1)*XDIM*YDIM)+J)
-              enddo
-            enddo
-
-            call ZGEMV('N',num,num, &
-            CONE,TBLCK, &
-            num,TXK, &
-            1,CZERO,TYK,1)
-
-            do I=1,num
-              YK(I,IX,IY,IZ) = TYK(I)
-            enddo
-
-          enddo
-        enddo
-    enddo
+    enddo ! lmatbl
 
     !-----------------------------------------------------------------------
-    ! perform Fourier-transform forward               begin
+    ! perform fourier-transform backward              end
     !-----------------------------------------------------------------------
 
-    do LMATBL = 1,num
+    do iz = 1, zdim
+      do iy = 1, ydim
+        do ix = 1, xdim
 
-        do IZ =1,ZDIM
-          do IY =1,YDIM
-            do IX =1,XDIM
-              Y(IX,IY,IZ) = YK(LMATBL,IX,IY,IZ)
-            enddo
-          enddo
-        enddo
+          txk(1:num) = xk(1:num,ix,iy,iz)
 
-        call DFFTW_EXECUTE_DFT(FFTWPLAN_fwd,Y,Y)
+          do j = 1, num
+            tblck(1:num,j) = gllhblck(1:num,num*((ix-1)+(iy-1)*xdim+(iz-1)*xdim*ydim)+j)
+          enddo ! j
 
-        do IZ =1,ZDIM
-          do IY =1,YDIM
-            do IX =1,XDIM
+          call zgemv('n',num, num, cone, tblck, num, txk, 1, czero, tyk, 1)
 
-              VECS_out(((IX-1)+(IY-1)*XDIM+ &
-              (IZ-1)*XDIM*YDIM)*num+LMATBL,LM1) = Y(IX,IY,IZ)
+          yk(1:num,ix,iy,iz) = tyk(1:num)
 
-            enddo
-          enddo
-        enddo
+        enddo ! ix
+      enddo ! iy
+    enddo ! iz
 
-    enddo ! LM1
+    !-----------------------------------------------------------------------
+    ! perform fourier-transform forward               begin
+    !-----------------------------------------------------------------------
+
+    do lmatbl = 1, num
+
+      do iz = 1, zdim
+        do iy = 1, ydim
+          do ix = 1, xdim
+            y(ix,iy,iz) = yk(lmatbl,ix,iy,iz)
+          enddo ! ix
+        enddo ! iy
+      enddo ! iz
+
+      call dFFTw_execute_dft(FFTwplan_fwd, y, y)
+
+      do iz = 1, zdim
+        do iy = 1, ydim
+          do ix = 1, xdim
+
+            vecs_out(((ix-1)+(iy-1)*xdim+(iz-1)*xdim*ydim)*num+lmatbl,lm1) = y(ix,iy,iz)
+
+          enddo ! ix
+        enddo ! iy
+      enddo ! iz
+
+    enddo ! lmatbl
 
   !-----------------------------------------------------------------------
-  ! perform Fourier-transform forward               end
+  ! perform fourier-transform forward               end
   !-----------------------------------------------------------------------
 
-  enddo
-  !$omp end do
-  !$OMP END PARALLEL
+  enddo ! lm1
+  !$omp enddo
+  !$omp endparallel
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  call DFFTW_DESTROY_PLAN(FFTWPLAN_fwd)
-  call DFFTW_DESTROY_PLAN(FFTWPLAN_bwd)
+  call dFFTw_destroy_plan(FFTwplan_fwd)
+  call dFFTw_destroy_plan(FFTwplan_bwd)
 
-end
+endsubroutine ! appblckcirc

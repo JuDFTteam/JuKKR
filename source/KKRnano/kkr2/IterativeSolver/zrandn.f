@@ -15,58 +15,58 @@ C     Noel M. Nachtigal
 C     April 23, 1993
 C
 C**********************************************************************
-C
-      INTRINSIC DBLE, DCMPLX, IABS, MOD
-C
-      INTEGER N, SEED
-      DOUBLE COMPLEX ZX(N)
-C
-C     Local variables.
-C
-      INTEGER I, J
-      DOUBLE PRECISION IMAGX, REALX
-C
-C     Local variables that are saved from one call to the next.
-C
-      DOUBLE PRECISION DMAX
-      INTEGER IM, IMAX, IS
-      SAVE DMAX, IM, IMAX, IS
-      DATA IM/0/
-C
-C     Initialize the generator data.
-C
-      IF (IM.EQ.0) THEN
-         J  = 0
-         IM = 1
-         DO 10 I = 1, 31
-            J = J + 1
-            IF (IM*2.LE.IM) GO TO 20
-            IM = IM * 2
- 10      CONTINUE
- 20      IMAX = (IM-1) * 2 + 1
-         DMAX = DBLE(IMAX)
-         DO 30 I = 1, MOD(J,3)
-            J = J - 1
-            IM = IM / 2
- 30      CONTINUE
-         IM = IM + 5
-         IS = IABS(MOD(IM*30107,IMAX))
-      END IF
-C
-C     Check whether there is a new seed.
-C
-      IF (SEED.GT.0) IS = (SEED / 2) * 2 + 1
-C
-C     Here goes the rest.
-C
-      DO 40 I = 1, N
-         REALX = DBLE(IS) / DMAX
-         IS    = IABS(MOD(IM*IS,IMAX))
-         IMAGX = DBLE(IS) / DMAX
-         IS    = IABS(MOD(IM*IS,IMAX))
-         ZX(I) = DCMPLX(REALX,IMAGX)
- 40   CONTINUE
-C
-      RETURN
+c
+      intrinsic dble, dcmplx, iabs, mod
+c
+      integer n, seed
+      double complex zx(n)
+c
+c     local variables.
+c
+      integer i, j
+      double precision imagx, realx
+c
+c     local variables that are saved from one call to the next.
+c
+      double precision dmax
+      integer im, imax, is
+      save dmax, im, imax, is
+      data im/0/
+c
+c     initialize the generator data.
+c
+      if (im == 0) then
+         j  = 0
+         im = 1
+         do 10 i = 1, 31
+            j = j + 1
+            if (im*2 <= im) go to 20
+            im = im * 2
+ 10      continue
+ 20      imax = (im-1) * 2 + 1
+         dmax = dble(imax)
+         do 30 i = 1, mod(j,3)
+            j = j - 1
+            im = im / 2
+ 30      continue
+         im = im + 5
+         is = iabs(mod(im*30107,imax))
+      end if
+c
+c     check whether there is a new seed.
+c
+      if (seed > 0) is = (seed / 2) * 2 + 1
+c
+c     here goes the rest.
+c
+      do 40 i = 1, n
+         realx = dble(is) / dmax
+         is    = iabs(mod(im*is,imax))
+         imagx = dble(is) / dmax
+         is    = iabs(mod(im*is,imax))
+         zx(i) = dcmplx(realx,imagx)
+ 40   continue
+c
+      return
 
-      END
+      end

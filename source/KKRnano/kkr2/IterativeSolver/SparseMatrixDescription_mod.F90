@@ -17,21 +17,21 @@ module SparseMatrixDescription_mod
   !> in an 1D array.
   type SparseMatrixDescription
     !> block dimensions of block-rows and block-cols
-    integer, allocatable, dimension(:) :: kvstr
+    integer, allocatable :: kvstr(:)
     !> For each block row, give index in ja (and ka)
-    integer, allocatable, dimension(:) :: ia
+    integer, allocatable :: ia(:)
     !> Column-indices of non-zero blocks
-    integer, allocatable, dimension(:) :: ja
+    integer, allocatable :: ja(:)
     !> ia indices into ka - gives start indices of non-zero blocks
     !> in matrix data array
-    integer, allocatable, dimension(:) :: ka
+    integer, allocatable :: ka(:)
     !> number of block rows
     integer :: blk_nrows = 0
     !> maximal block dimension
     integer :: max_blockdim = 0
     !> Maximum number of non-zero blocks per block-row
     integer :: max_blocks_per_row = 0
-  end type
+  endtype
 
   interface create
     module procedure createSparseMatrixDescription, createSparseMatrixDescriptionFromFile
@@ -41,7 +41,7 @@ module SparseMatrixDescription_mod
     module procedure destroySparseMatrixDescription
   endinterface
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   !> Creates SparseMatrixDescription object.
@@ -49,7 +49,7 @@ module SparseMatrixDescription_mod
   !> Creates data structure that contains sparsity information of a
   !> square VBR (variable block row) matrix.
   subroutine createSparseMatrixDescription(sparse, blk_nrows, max_num_blocks)
-    type (SparseMatrixDescription), intent(inout) :: sparse
+    type(SparseMatrixDescription), intent(inout) :: sparse
     integer, intent(in) :: blk_nrows
     integer, intent(in) :: max_num_blocks
 
@@ -67,21 +67,21 @@ module SparseMatrixDescription_mod
     sparse%max_blockdim = 0
     sparse%max_blocks_per_row = 0
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Returns number of non-zero elements (only if properly setup!).
   integer function getNNZ(sparse)
-    type (SparseMatrixDescription), intent(in) :: sparse
+    type(SparseMatrixDescription), intent(in) :: sparse
 
     getNNZ = sparse%ka(sparse%ia(sparse%blk_nrows + 1)) - 1
 
-  end function
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Destroys SparseMatrixDescription object.
   subroutine destroySparseMatrixDescription(sparse)
-    type (SparseMatrixDescription), intent(inout) :: sparse
+    type(SparseMatrixDescription), intent(inout) :: sparse
 
     deallocate(sparse%ia)
     deallocate(sparse%kvstr)
@@ -91,52 +91,51 @@ module SparseMatrixDescription_mod
     sparse%blk_nrows = 0
     sparse%max_blockdim = 0
     sparse%max_blocks_per_row = 0
-  end subroutine
+  endsubroutine ! destroy
 
   !---------------------------------------------------------------------------
   !> Writes SparseMatrixDescription to formatted file - useful for testing.
   subroutine dumpSparseMatrixDescription(sparse, filename)
-    type (SparseMatrixDescription), intent(inout) :: sparse
+    type(SparseMatrixDescription), intent(inout) :: sparse
     character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='formatted')
+    open(fu, file=filename, form='formatted', action='write')
 
-    write(FILEHANDLE, *) sparse%blk_nrows, size(sparse%ja)
-    write(FILEHANDLE, *) sparse%kvstr
-    write(FILEHANDLE, *) sparse%ia
-    write(FILEHANDLE, *) sparse%ja
-    write(FILEHANDLE, *) sparse%ka
-    write(FILEHANDLE, *) sparse%max_blockdim
-    write(FILEHANDLE, *) sparse%max_blocks_per_row
+    write(fu, *) sparse%blk_nrows, size(sparse%ja)
+    write(fu, *) sparse%kvstr
+    write(fu, *) sparse%ia
+    write(fu, *) sparse%ja
+    write(fu, *) sparse%ka
+    write(fu, *) sparse%max_blockdim
+    write(fu, *) sparse%max_blocks_per_row
 
-    close(FILEHANDLE)
-  end subroutine
+    close(fu)
+  endsubroutine ! dump
 
   !---------------------------------------------------------------------------
   !> Creates and reads SparseMatrixDescription from formatted file
   !> - useful for testing.
   subroutine createSparseMatrixDescriptionFromFile(sparse, filename)
-    type (SparseMatrixDescription), intent(inout) :: sparse
+    type(SparseMatrixDescription), intent(inout) :: sparse
     character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
-    integer :: blk_nrows
-    integer :: max_num_blocks
+    integer, parameter :: fu = 97
+    integer :: blk_nrows, max_num_blocks
 
-    open(FILEHANDLE, file=filename, form='formatted')
+    open(fu, file=filename, form='formatted', action='read', status='old')
 
-    read(FILEHANDLE, *)  blk_nrows, max_num_blocks
+    read(fu, *)  blk_nrows, max_num_blocks
     call createSparseMatrixDescription(sparse, blk_nrows, max_num_blocks)
-    read(FILEHANDLE, *) sparse%kvstr
-    read(FILEHANDLE, *) sparse%ia
-    read(FILEHANDLE, *) sparse%ja
-    read(FILEHANDLE, *) sparse%ka
-    read(FILEHANDLE, *) sparse%max_blockdim
-    read(FILEHANDLE, *) sparse%max_blocks_per_row
+    read(fu, *) sparse%kvstr
+    read(fu, *) sparse%ia
+    read(fu, *) sparse%ja
+    read(fu, *) sparse%ka
+    read(fu, *) sparse%max_blockdim
+    read(fu, *) sparse%max_blocks_per_row
 
-    close(FILEHANDLE)
-  end subroutine
+    close(fu)
+  endsubroutine ! create
 
-end module SparseMatrixDescription_mod
+endmodule SparseMatrixDescription_mod

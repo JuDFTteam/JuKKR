@@ -11,52 +11,52 @@ C     << Output parameters
 C>    @param     EIKRM   Fourier exponential factor with minus sign
 C>    @param     EIKRP   Fourier exponential factor with plus sign
 
-      SUBROUTINE DLKE1(ALAT,NACLS,RR,EZOA,
-     &                 BZKP,EIKRM,EIKRP,
+      subroutine dlke1(alat,nacls,rr,ezoa,
+     &                 bzkp,eikrm,eikrp,
      &                 nrd, naclsd)
-      IMPLICIT NONE
+      implicit none
 c ----------------------------------------------------------------------
 c
 c     Fourier transformation of the cluster Greens function
 c     Prepares the calculation (calculates Fourier factors) for dlke0
 c ----------------------------------------------------------------------
 
-      INTEGER nrd
-      INTEGER naclsd
+      integer nrd
+      integer naclsd
 
-      DOUBLE COMPLEX CI,CONE
-      PARAMETER (CI= (0.0D0,1.0D0),CONE=(1.D0,0.D0))
-C     ..
-C     .. Scalar Arguments ..
-      DOUBLE PRECISION ALAT
-C     ..
-C     .. Array Arguments ..
-      INTEGER EZOA(*),NACLS
-      DOUBLE COMPLEX EIKRP(NACLSD),EIKRM(NACLSD)
-      DOUBLE PRECISION BZKP(*),RR(3,0:NRD)
-C     ..
-C     .. Local Scalars ..
-      DOUBLE PRECISION CONVPU,TPI
-      INTEGER M
-      DOUBLE COMPLEX TT
-C     ..
-C     .. Local Arrays ..
-      DOUBLE COMPLEX ARG(3)
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL CINIT,TEST,OPT,ZAXPY
-C     ..
-C     .. Intrinsic Functions ..
-      INTRINSIC ATAN,EXP
-C     ..
-C     .. Save statement ..
-      SAVE
-C     ..
-C
-      TPI = 8.0D0*ATAN(1.0D0)         
-      CONVPU = ALAT/TPI
+      double complex ci,cone
+      parameter (ci= (0.0d0,1.0d0),cone=(1.d0,0.d0))
+c     ..
+c     .. scalar arguments ..
+      double precision alat
+c     ..
+c     .. array arguments ..
+      integer ezoa(*),nacls
+      double complex eikrp(naclsd),eikrm(naclsd)
+      double precision bzkp(*),rr(3,0:nrd)
+c     ..
+c     .. local scalars ..
+      double precision convpu,tpi
+      integer m
+      double complex tt
+c     ..
+c     .. local arrays ..
+      double complex arg(3)
+c     ..
+c     .. external subroutines ..
+      external cinit,test,opt,zaxpy
+c     ..
+c     .. intrinsic functions ..
+      intrinsic atan,exp
+c     ..
+c     .. save statement ..
+      save
+c     ..
+c
+      tpi = 8.0d0*atan(1.0d0)         
+      convpu = alat/tpi
 
-      DO 90 M = 1,NACLS
+      do 90 m = 1,nacls
 
 c
 c     
@@ -71,17 +71,17 @@ c  the repulsive potential GF is calculated for 0n and not n0!
 c  and that is why we need a minus sign extra!
 c  
 
-           ARG(1) = -CI*TPI*RR(1,EZOA(M))
-           ARG(2) = -CI*TPI*RR(2,EZOA(M))
-           ARG(3) = -CI*TPI*RR(3,EZOA(M))
+           arg(1) = -ci*tpi*rr(1,ezoa(m))
+           arg(2) = -ci*tpi*rr(2,ezoa(m))
+           arg(3) = -ci*tpi*rr(3,ezoa(m))
 c
-        TT = BZKP(1)*ARG(1)+BZKP(2)*ARG(2)+BZKP(3)*ARG(3)
+        tt = bzkp(1)*arg(1)+bzkp(2)*arg(2)+bzkp(3)*arg(3)
 c
 c  convert to p.u. and multiply with 1/2
-        EIKRP(M) = EXP(TT) * CONVPU * 0.5D0
-        EIKRM(M) = EXP(-TT) * CONVPU * 0.5D0
+        eikrp(m) = exp( tt) * convpu * 0.5d0
+        eikrm(m) = exp(-tt) * convpu * 0.5d0
 c
- 90   CONTINUE                    
+ 90   continue                    
 
-      RETURN
-      END
+      return
+      end

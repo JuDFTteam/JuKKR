@@ -1,81 +1,75 @@
 module DLKE0_smat_mod
   implicit none
   private
-  public :: DLKE0_smat
+  public :: dlke0_smat
 
   contains
 
-  subroutine DLKE0_smat(site_index,smat,ia,ka,kvstr,EIKRM,EIKRP,NACLS, &
-    ATOM,NUMN0,INDN0,GINP, naez, lmmaxd, naclsd)
+  subroutine dlke0_smat(site_index,smat,ia,ka,kvstr,eikrm,eikrp,nacls, &
+    atom,numn0,indn0,ginp, naez, lmmaxd, naclsd)
 
-    double complex, dimension(:), intent(inout) :: smat
-    integer, dimension(:), intent(in) :: ia
-    integer, dimension(:), intent(in) :: ka
-    integer, dimension(:), intent(in) :: kvstr
+    double complex, intent(inout) :: smat(:)
+    integer, intent(in) :: ia(:)
+    integer, intent(in) :: ka(:)
+    integer, intent(in) :: kvstr(:)
 
-    integer naez
-    integer lmmaxd
-    integer naclsd
+    integer :: naez, lmmaxd, naclsd
 
     integer :: site_index
-    double complex, intent(in) :: GINP(lmmaxd, lmmaxd, NACLSD)
-    !double complex, dimension(:) :: GLLH(lmmaxd, NACLSD * lmmaxd, *)
-    double complex EIKRM(NACLSD),EIKRP(NACLSD)
-    integer ATOM(NACLSD),NACLS,INDN0(NAEZ,naclsd),NUMN0(naez)
+    double complex, intent(in) :: ginp(lmmaxd,lmmaxd,naclsd)
+    !double complex :: gllh(lmmaxd,naclsd*lmmaxd,*)
+    double complex :: eikrm(naclsd), eikrp(naclsd)
+    integer :: atom(naclsd), nacls,indn0(naez,naclsd), numn0(naez)
+    integer :: j,lm1,lm2,m,n1,n2,ind1,ind2, lmmax1, lmmax2, ind
 
-    integer J,LM1,LM2,M,N1,N2,IND1,IND2
-    integer lmmax1, lmmax2
-    integer ind
 
-    ! ----------------------------------------------------------------------
+    do m = 1, nacls
 
-    do M = 1,NACLS
-
-      do N1 = 1,NUMN0(site_index)
-        IND1 = INDN0(site_index,N1)
-        if(ATOM(M).eq.IND1 .and. ATOM(M) > 0) then
+      do n1 = 1, numn0(site_index)
+        ind1 = indn0(site_index,n1)
+        if (atom(m) == ind1 .and. atom(m) > 0) then
 
           lmmax1 = kvstr(site_index + 1) - kvstr(site_index)
-          lmmax2 = kvstr(IND1 + 1) - kvstr(IND1)
+          lmmax2 = kvstr(ind1 + 1) - kvstr(ind1)
 
-          do LM1 = 1,lmmax1
-            do LM2 = 1,lmmax2
+          do lm1 = 1, lmmax1
+            do lm2 = 1, lmmax2
 
-              ind = ka(ia(site_index) + N1 - 1) + (LM2 - 1) * lmmax1 + LM1 - 1
+              ind = ka(ia(site_index) + n1 - 1) + (lm2 - 1) * lmmax1 + lm1 - 1
 
-              smat(ind) = smat(ind) + EIKRM(M) * GINP(LM2,LM1,M)
+              smat(ind) = smat(ind) + eikrm(m) * ginp(lm2,lm1,m)
 
-            enddo
-          enddo
-
-        endif
-      enddo
-
-      J = ATOM(M)
-      if (J < 1) cycle
-
-      do N2 = 1,NUMN0(J)
-        IND2 = INDN0(J,N2)
-        if(site_index.eq.IND2) then
-
-          lmmax1 = kvstr(J + 1) - kvstr(J)
-          lmmax2 = kvstr(IND2 + 1) - kvstr(IND2)
-
-          do LM2 = 1,lmmax2
-            do LM1 = 1,lmmax1
-
-              ind = ka(ia(J) + N2 - 1) + (LM2 - 1) * lmmax1 + LM1 - 1
-
-              smat(ind) = smat(ind) + EIKRP(M) * GINP(LM1,LM2,M)
-
-            enddo
-          enddo
+            enddo ! lm2
+          enddo ! lm1
 
         endif
-      enddo
+      enddo ! n1
 
-    enddo
+      j = atom(m)
+      if (j < 1) cycle
 
-  end subroutine
+      do n2 = 1, numn0(j)
+        ind2 = indn0(j,n2)
+        if (site_index == ind2) then
 
-end module
+          lmmax1 = kvstr(j + 1) - kvstr(j)
+          lmmax2 = kvstr(ind2 + 1) - kvstr(ind2)
+
+          do lm2 = 1, lmmax2
+            do lm1 = 1, lmmax1
+
+              ind = ka(ia(j) + n2 - 1) + (lm2 - 1) * lmmax1 + lm1 - 1
+
+              smat(ind) = smat(ind) + eikrp(m) * ginp(lm1,lm2,m)
+
+            enddo ! lm1
+          enddo ! lm2
+
+        endif
+      enddo ! n2
+
+    enddo ! m
+
+  endsubroutine
+
+endmodule

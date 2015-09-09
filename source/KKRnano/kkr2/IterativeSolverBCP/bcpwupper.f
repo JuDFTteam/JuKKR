@@ -108,15 +108,15 @@ C
 C
       DO IX = 1, XDIM
         IX2 = IX - 2
-        IF (IX2.LT.0) IX2 = IX2 + XDIM
+        IF (IX2 < 0) IX2 = IX2 + XDIM
 
         DO IY = 1, YDIM
           IY2 = IY - 2
-          IF (IY2.LT.0) IY2 = IY2 + YDIM
+          IF (IY2 < 0) IY2 = IY2 + YDIM
 
           DO IZ = 1, ZDIM
             IZ2 = IZ - 2
-            IF (IZ2.LT.0) IZ2 = IZ2 + ZDIM
+            IF (IZ2 < 0) IZ2 = IZ2 + ZDIM
 C
             CEN = MOD(IX-1,XDIM) + 1 +
      +            MOD(IY-1,YDIM)*XDIM+
@@ -411,7 +411,7 @@ C
           IL2B = 0
 C
           DO ISRH=1,NUMN0((I-1)*NATBLD+I1)
-          IF (INDN0((I-1)*NATBLD+I1,ISRH).EQ.(J-1)*NATBLD+I2)
+          IF (INDN0((I-1)*NATBLD+I1,ISRH) == (J-1)*NATBLD+I2)
      +      IL2B = ISRH
           ENDDO
 C
@@ -419,7 +419,7 @@ C also a pointer array POINTTO(NAEZD,NAEZD) could come up for this
 C job
 C          IL2B = POINTTO((J-1)*NATBLD+I2,(I-1)*NATBLD+I1)
 C
-          IF (IL2B.NE.0) THEN
+          IF (IL2B /= 0) THEN
             DO LM1 = 1, LMMAXD
               IL1=LMMAXD*(I1-1)+LM1
               DO LM2 = 1, LMMAXD

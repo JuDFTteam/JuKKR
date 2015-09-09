@@ -21,12 +21,11 @@ module fillKKRMatrix_mod
   subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     
-    integer, dimension(:), intent(in) :: lmmaxd_array
-    integer, dimension(:), intent(in) :: numn0
-    integer, dimension(:,:), intent(in) :: indn0
-    type (SparseMatrixDescription), intent(inout) :: sparse
+    integer, intent(in) :: lmmaxd_array(:)
+    integer, intent(in) :: numn0(:)
+    integer, intent(in) :: indn0(:,:)
+    type(SparseMatrixDescription), intent(inout) :: sparse
 
-    !----- local
     integer :: nnz_blocks
     integer :: nrows
     integer :: ii
@@ -48,7 +47,7 @@ module fillKKRMatrix_mod
     nnz_blocks = 0
     do ii = 1, nrows
       nnz_blocks = nnz_blocks + numn0(ii)
-    end do
+    enddo ! ii
 
     ASSERT(nnz_blocks <= size(sparse%ja))
     ASSERT(nnz_blocks + 1 <= size(sparse%ka))
@@ -56,7 +55,7 @@ module fillKKRMatrix_mod
     sparse%kvstr(1) = 1
     do ii = 2, nrows + 1
       sparse%kvstr(ii) = sparse%kvstr(ii-1) + lmmaxd_array(ii - 1)
-    end do
+    enddo ! ii
 
     ii = 1
     do irow = 1, nrows
@@ -66,29 +65,28 @@ module fillKKRMatrix_mod
         ASSERT(ii <= nnz_blocks)
         sparse%ja(ii) = indn0(irow, icol)
         ii = ii + 1
-      end do
-    end do
+      enddo ! icol
+    enddo ! irow
     sparse%ia(nrows + 1) = ii
 
     start_address = 1
     ii = 1
     do irow = 1, nrows
       do icol = 1, numn0(irow)
-      sparse%ka(ii) = start_address
+        sparse%ka(ii) = start_address
 
-      ASSERT( indn0(irow, icol) >= 1 .and. indn0(irow, icol) <= nrows )
+        ASSERT( indn0(irow, icol) >= 1 .and. indn0(irow, icol) <= nrows )
 
-      start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(indn0(irow,icol))
-      ii = ii + 1
-      end do
-    end do
+        start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(indn0(irow,icol))
+        ii = ii + 1
+      enddo ! icol
+    enddo ! irow
     sparse%ka(ii) = start_address
 
     sparse%max_blockdim = maxval(lmmaxd_array)
     sparse%max_blocks_per_row = maxval(numn0)
 
-  ! DONE!
-  end subroutine
+  endsubroutine
 
   !---------------------------------------------------------------------
   !> Given G_ref - build (1 - TG_ref) -> coefficent matrix.
@@ -101,15 +99,12 @@ module fillKKRMatrix_mod
   subroutine buildKKRCoeffMatrix(smat, TMATLL, lmmaxd, num_atoms, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
-    double complex, dimension(:), intent(inout) :: smat
-    double complex, dimension(lmmaxd,lmmaxd,num_atoms), intent(in) :: TMATLL
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: num_atoms
+    double complex, intent(inout) :: smat(:)
+    double complex, intent(in) :: TMATLL(lmmaxd,lmmaxd,num_atoms)
+    integer, intent(in) :: lmmaxd, num_atoms
+    type(SparseMatrixDescription), intent(inout) :: sparse
 
-    type (SparseMatrixDescription), intent(inout) :: sparse
-    ! ------- local
-
-    double complex, dimension(lmmaxd) :: temp
+    double complex :: temp(lmmaxd)
     integer :: block_row
     integer :: block_col
     integer :: start
@@ -119,9 +114,8 @@ module fillKKRMatrix_mod
     integer :: lmmax1, lmmax2, lmmax3
     integer :: istart_row,istop_row
     integer :: istart_col,istop_col, ind_ia
-
-    double complex, parameter :: CZERO =(0.0D0,0.0D0)
-    double complex :: CONE = (1.0D0,0.0D0)
+    double complex, parameter :: CZERO =(0.d0,0.d0)
+    double complex :: CONE = (1.d0,0.d0)
 
     start = 0
     do block_row = 1, num_atoms
@@ -138,12 +132,12 @@ module fillKKRMatrix_mod
         if (block_row < 1 .or. block_row > num_atoms) then
           write (*,*) "buildKKRCoeffMatrix: invalid block_row", block_row
           STOP
-        end if
+        endif
 
         if (block_col < 1 .or. block_col > num_atoms) then
           write (*,*) "buildKKRCoeffMatrix: invalid block_col", block_col
           STOP
-        end if
+        endif
 #endif
         ! Note: naive truncation - truncate T matrix to square matrix with
         ! dimension lmmax1 * lmmax1
@@ -169,38 +163,36 @@ module fillKKRMatrix_mod
           do lm1 = 1, lmmax1
             do lm3 = 1, lmmax3
               temp(lm1) = temp(lm1) - TMATLL(lm1,lm3,block_row) * smat(start + (lm2 - 1) * lmmax3 + lm3)  ! -T*G
-            end do
-          end do
+            enddo ! lm3
+          enddo ! lm1
 
           do lm1 = 1, lmmax1
 
-            if (block_row == block_col .and. lm1 == lm2) then
-              temp(lm1) = temp(lm1) + CONE  ! add 1 on the diagonal
-            end if
+            if (block_row == block_col .and. lm1 == lm2) temp(lm1) = temp(lm1) + CONE  ! add 1 on the diagonal
 
             smat(start + (lm2 - 1) * lmmax1 + lm1) = temp(lm1)
             !smat(start + (lm2 - 1) * lmmax1 + lm1) = (block_row * 100.d0 + block_col) * CONE
-          end do
+          enddo ! lm1
 
-        end do ! lm2
+        enddo ! lm2
 
         start = start + lmmax2*lmmax1
-      end do ! block columns
-    end do ! block rows
+      enddo ! ind_ia ! block columns
+    enddo ! block rows
 
-  end subroutine
+  endsubroutine
 
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
   subroutine buildRightHandSide(mat_B, TMATLL, lmmaxd, atom_indices, kvstr)
-    double complex, dimension(:,:), intent(inout) :: mat_B
-    double complex, dimension(lmmaxd,lmmaxd,*), intent(in) :: TMATLL
+    double complex, intent(inout) :: mat_B(:,:)
+    double complex, intent(in) :: TMATLL(lmmaxd,lmmaxd,*)
     integer, intent(in) :: lmmaxd
-    integer, dimension(:), intent(in) :: atom_indices
-    integer, dimension(:), intent(in) :: kvstr
+    integer, intent(in) :: atom_indices(:)
+    integer, intent(in) :: kvstr(:)
 
-    double complex, parameter :: CZERO =(0.0D0,0.0D0)
-    double complex, parameter :: CONE =(1.0D0,0.0D0)
+    double complex, parameter :: CZERO =(0.d0, 0.d0)
+    double complex, parameter :: CONE =(1.d0, 0.d0)
     integer :: start
     integer :: ii
     integer :: num_atoms
@@ -222,7 +214,7 @@ module fillKKRMatrix_mod
           if (lmmax1 /= lmmaxd) then
             write (*,*) "Central atom not treated with highest lmax", atom_index
             STOP
-          end if
+          endif
 #endif
 
       !lmmax2 = lmmaxd
@@ -236,13 +228,13 @@ module fillKKRMatrix_mod
         do lm1 = 1, lmmax1
                       ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
 !         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
-        if(lm1==lm2)  mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - CONE
-        end do
-      end do
+          if (lm1 == lm2) mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - CONE
+        enddo ! lm1
+      enddo ! lm2
 
-    end do ! ii
+    enddo ! ii
 
-  end subroutine
+  endsubroutine
 
 !==============================================================================
 ! Routines for testing
@@ -252,15 +244,14 @@ module fillKKRMatrix_mod
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
   subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, full)
-    double complex, dimension(:), intent(in) :: smat
-    integer, dimension(:), intent(in) :: ia
-    integer, dimension(:), intent(in) :: ja
-    integer, dimension(:), intent(in) :: ka
-    integer, dimension(:), intent(in) :: kvstr
-    integer, dimension(:), intent(in) :: kvstc
-    double complex, dimension(:,:), intent(out) :: full
+    double complex, intent(in) :: smat(:)
+    integer, intent(in) :: ia(:)
+    integer, intent(in) :: ja(:)
+    integer, intent(in) :: ka(:)
+    integer, intent(in) :: kvstr(:)
+    integer, intent(in) :: kvstc(:)
+    double complex, intent(out) :: full(:,:)
 
-    !------------
     integer :: iblockrow
     integer :: iblockcol
     integer :: irow
@@ -270,7 +261,7 @@ module fillKKRMatrix_mod
     integer :: ind_ia
     integer :: istartcol, istartrow, istopcol, istoprow
 
-    double complex, parameter :: CZERO =(0.0D0,0.0D0)
+    double complex, parameter :: CZERO =(0.d0,0.d0)
 
     full = CZERO
 
@@ -291,23 +282,22 @@ module fillKKRMatrix_mod
           do irow = istartrow, istoprow
             full(irow, icol) = smat(ind)
             ind = ind + 1
-          end do
-        end do
+          enddo ! irow
+        enddo ! icol
 
-      end do
-    end do
+      enddo ! ind_ia
+    enddo ! iblockrow
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B)
-    double complex, dimension(:,:), intent(inout) :: full
-    double complex, dimension(:,:), intent(inout) :: mat_B
+    double complex, intent(inout) :: full(:,:)
+    double complex, intent(inout) :: mat_B(:,:)
 
-    !------------
-    integer, dimension(:), allocatable :: ipvt
+    integer, allocatable :: ipvt(:)
     integer :: info
     integer :: ndim
     integer :: num_rhs
@@ -323,7 +313,7 @@ module fillKKRMatrix_mod
 
     deallocate(ipvt)
 
-  end subroutine
+  endsubroutine solveFull
 
 
   !------------------------------------------------------------------------------
@@ -332,17 +322,13 @@ module fillKKRMatrix_mod
   !> @param GLLKE1 output: solution in old format
   !> @param mat_X: solution with l-cutoff
   subroutine toOldSolutionFormat(GLLKE1, mat_X, lmmaxd, kvstr)
-    double complex, dimension(:,:), intent(out) :: GLLKE1
-    double complex, dimension(:,:), intent(in) :: mat_X
+    double complex, intent(out) :: GLLKE1(:,:)
+    double complex, intent(in) :: mat_X(:,:)
     integer, intent(in) :: lmmaxd
-    integer, dimension(:), intent(in) :: kvstr
-    !---------------------
+    integer, intent(in) :: kvstr(:)
 
-    integer :: num_atoms, atom_index
-    double complex, parameter :: CZERO =(0.0D0,0.0D0)
-    integer :: start
-    integer :: lm1
-    integer :: lmmax1
+    double complex, parameter :: CZERO =(0.d0, 0.d0)
+    integer :: num_atoms, atom_index, start, lm1, lmmax1
 
     GLLKE1 = CZERO
     num_atoms = size(kvstr) - 1
@@ -354,142 +340,134 @@ module fillKKRMatrix_mod
 
       do lm1 = 1, lmmax1
         GLLKE1((atom_index - 1)*lmmaxd + lm1, : ) = mat_X(start + lm1, :)
-      end do
+      enddo ! lm1
 
-    end do
+    enddo ! atom_index
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to unformatted file
   !> - useful for testing.
   subroutine dumpSparseMatrixData(smat, filename)
-    double complex, dimension(:), intent(in) :: smat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(in) :: smat(:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='unformatted')
-    write(FILEHANDLE) smat
-    close(FILEHANDLE)
-  end subroutine
+    open(fu, file=filename, form='unformatted', action='write')
+    write(fu) smat
+    close(fu)
+  endsubroutine ! dump
 
   !----------------------------------------------------------------------------
   !> Read sparse matrix data from unformatted file
   !> - useful for testing.
   subroutine readSparseMatrixData(smat, filename)
-    double complex, dimension(:), intent(inout) :: smat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(inout) :: smat(:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='unformatted')
-    read(FILEHANDLE) smat
-    close(FILEHANDLE)
-  end subroutine
+    open(fu, file=filename, form='unformatted', action='read', status='old')
+    read(fu) smat
+    close(fu)
+  endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> Write dense matrix to unformatted file
   !> - useful for testing.
   subroutine dumpDenseMatrix(mat, filename)
-    double complex, dimension(:,:), intent(in) :: mat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(in) :: mat(:,:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='unformatted')
-    write(FILEHANDLE) mat
-    close(FILEHANDLE)
-  end subroutine
+    open(fu, file=filename, form='unformatted', action='write')
+    write(fu) mat
+    close(fu)
+  endsubroutine ! dump
 
   !----------------------------------------------------------------------------
   !> Read dense matrix data from unformatted file
   !> - useful for testing.
   subroutine readDenseMatrix(mat, filename)
-    double complex, dimension(:,:), intent(inout) :: mat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(inout) :: mat(:,:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='unformatted')
-    read(FILEHANDLE) mat
-    close(FILEHANDLE)
-  end subroutine
+    open(fu, file=filename, form='unformatted', action='read', status='old')
+    read(fu) mat
+    close(fu)
+  endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> Write GLLH to unformatted file
   !> - useful for testing.
   subroutine dumpGLLH(mat, filename)
-    double complex, dimension(:,:,:), intent(in) :: mat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(in) :: mat(:,:,:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='unformatted')
-    write(FILEHANDLE) mat
-    close(FILEHANDLE)
-  end subroutine
+    open(fu, file=filename, form='unformatted', action='write')
+    write(fu) mat
+    close(fu)
+  endsubroutine ! dump
 
   !----------------------------------------------------------------------------
   !> Read GLLH from unformatted file
   !> - useful for testing.
   subroutine readGLLH(mat, filename)
-    double complex, dimension(:,:,:), intent(inout) :: mat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(inout) :: mat(:,:,:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
 
-    open(FILEHANDLE, file=filename, form='unformatted')
-    read(FILEHANDLE) mat
-    close(FILEHANDLE)
-  end subroutine
+    open(fu, file=filename, form='unformatted', action='read', status='old')
+    read(fu) mat
+    close(fu)
+  endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to formatted file
   !> - useful for testing.
   subroutine dumpSparseMatrixDataFormatted(smat, filename)
-    double complex, dimension(:), intent(in) :: smat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(in) :: smat(:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
     integer :: ii
 
-    open(FILEHANDLE, file=filename, form='formatted')
+    open(fu, file=filename, form='formatted', action='write')
 
     do ii = 1, size(smat)
-      write(FILEHANDLE, *) real(smat(ii)), imag(smat(ii))
-    end do
+      write(fu, *) real(smat(ii)), imag(smat(ii))
+    enddo ! ii
 
-    close(FILEHANDLE)
-  end subroutine
+    close(fu)
+  endsubroutine ! dump
 
   !----------------------------------------------------------------------------
   !> Write dense matrix to formatted file
   !> First line gives matrix dimension: rows cols
   !> - useful for testing.
   subroutine dumpDenseMatrixFormatted(mat, filename)
-    double complex, dimension(:,:), intent(in) :: mat
-    character(len = *), intent(in) :: filename
-    !--------------
+    double complex, intent(in) :: mat(:,:)
+    character(len=*), intent(in) :: filename
 
-    integer, parameter :: FILEHANDLE = 97
+    integer, parameter :: fu = 97
     integer :: ii, jj
 
-    open(FILEHANDLE, file=filename, form='formatted')
-    write(FILEHANDLE, *) size(mat,1), size(mat,2)
+    open(fu, file=filename, form='formatted', action='write')
+    write(fu, *) size(mat,1), size(mat,2)
     do jj = 1, size(mat,2)
       do ii = 1, size(mat,1)
-         write(FILEHANDLE, *) real(mat(ii,jj)), imag(mat(ii,jj))
-      end do
-    end do
-    close(FILEHANDLE)
-  end subroutine
+         write(fu, *) real(mat(ii,jj)), imag(mat(ii,jj))
+      enddo ! ii
+    enddo ! jj
+    close(fu)
+  endsubroutine ! dump
 
-end module
+endmodule

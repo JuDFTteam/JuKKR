@@ -11,6 +11,6 @@ module SolverOptions_mod
     integer :: ydim = 1
     integer :: zdim = 1
     integer :: natbld = 1
-  end type
+  endtype
   
-end module SolverOptions_mod
+endmodule SolverOptions_mod

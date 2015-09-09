@@ -11,18 +11,18 @@ module MultScatData_mod
   type MultScatData
     type (SparseMatrixDescription) :: sparse
 
-    double complex, dimension(:,:), allocatable :: mat_B
-    double complex, dimension(:,:), allocatable :: mat_X
+    double complex, allocatable :: mat_B(:,:)
+    double complex, allocatable :: mat_X(:,:)
     double complex, allocatable :: EIKRP(:)
     double complex, allocatable :: EIKRM(:)
-    double complex, allocatable, dimension(:) :: GLLH
+    double complex, allocatable :: GLLH(:)
 
     integer, allocatable :: atom_indices(:)
     integer :: lmmaxd
     integer :: naez
     type (ClusterInfo), pointer :: cluster_info
 
-  end type
+  endtype
   
   interface create
     module procedure createMultScatData
@@ -73,7 +73,7 @@ subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 
   allocate(ms%eikrm(naclsd))
   allocate(ms%eikrp(naclsd))
-end subroutine
+endsubroutine ! create
 
 !------------------------------------------------------------------------------
 !> Destroys workspace for multiple scattering calculation.
@@ -90,6 +90,6 @@ subroutine destroyMultScatData(ms)
   call destroySparseMatrixDescription(ms%sparse)
 
   deallocate(ms%atom_indices)
-end subroutine
+endsubroutine ! destroy
 
-end module MultScatData_mod
+endmodule MultScatData_mod

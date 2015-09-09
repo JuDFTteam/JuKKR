@@ -42,7 +42,7 @@ module TFQMRSolver_mod
       procedure :: get_stats
       procedure :: get_total_stats
       procedure :: reset_total_stats
-  end type
+  endtype
 
   contains
 
@@ -52,14 +52,14 @@ module TFQMRSolver_mod
     self%op => op
     self%precond => op ! also init the pointer to precond with op, may be overwritten later
     self%use_precond = .false.
-  end subroutine
+  endsubroutine
 
   subroutine init_precond_solver(self, precond)
     class(TFQMRSolver) :: self
     class(OperatorT), target :: precond
     self%precond => precond
     self%use_precond = .true.
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Solves problem for right hand side mat_B, solution in mat_X.
@@ -101,7 +101,7 @@ module TFQMRSolver_mod
 
     call sum_stats(self%stats, self%total_stats)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine destroy_solver(self)
@@ -112,21 +112,21 @@ module TFQMRSolver_mod
 
     nullify(self%op)
     nullify(self%precond)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine set_qmrbound(self, qmrbound)
     class(TFQMRSolver) :: self
     double precision, intent(in) :: qmrbound
     self%qmrbound = qmrbound
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine set_initial_zero(self, initial_zero)
     class(TFQMRSolver) :: self
     logical, intent(in) :: initial_zero
     self%initial_zero = initial_zero
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Get statistics of last solver run.
@@ -135,7 +135,7 @@ module TFQMRSolver_mod
     type(SolverStats) :: get_stats
 
     get_stats = self%stats
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Get accumulated statistics of all solver runs.
@@ -144,7 +144,7 @@ module TFQMRSolver_mod
     type(SolverStats) :: get_total_stats
 
     get_total_stats = self%total_stats
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Reset accumulated statistics.
@@ -153,7 +153,7 @@ module TFQMRSolver_mod
     class(TFQMRSolver) :: self
 
     call reset_stats(self%total_stats)
-  end subroutine
+  endsubroutine
   
-end module
+endmodule
 

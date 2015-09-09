@@ -12,7 +12,7 @@ module OperatorT_mod
   type, abstract :: OperatorT
     contains
     procedure(apply), deferred :: apply
-  end type
+  endtype
 
   interface
     !----------------------------------------------------------------------------
@@ -22,7 +22,7 @@ module OperatorT_mod
       class(OperatorT) :: self
       double complex, intent(in)  :: mat_X(:,:)
       double complex, intent(out) :: mat_AX(:,:)
-    end subroutine
-  end interface
+    endsubroutine
+  endinterface
 
-end module
+endmodule

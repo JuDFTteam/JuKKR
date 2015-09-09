@@ -16,7 +16,7 @@ module kkrmat_new_mod
   public :: KKRMAT01_new
 
   double complex, allocatable :: full(:,:)
-  double complex, parameter :: zero=(0.d0,0.d0), cone=(1.d0,0.d0)
+  double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
 
   CONTAINS
 
