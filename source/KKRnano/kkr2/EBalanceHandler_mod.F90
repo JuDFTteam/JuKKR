@@ -374,7 +374,7 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco,
   integer empi,ier,ieri
 
   real           proctm(empid), mtime(iemxd)
-  integer        myactvrank,actvcomm,ierr
+  integer        myactvrank,actvcomm!,ierr
 
   !=======================================================================
   ! use timing of iter-1 >>>

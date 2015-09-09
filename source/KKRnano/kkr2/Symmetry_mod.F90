@@ -163,7 +163,7 @@ module Symmetry_mod
     character(len=*), intent(in) :: rotname(64)
     
     double complex, parameter :: ci=(0.d0,1.d0), c1=(1.d0,0.d0), c0=(0.d0,0.d0)
-    double precision :: a, b, det, fact(0:100),rj, rmj, sk, symeulang(3,48), tet(1:3), co2, si2
+    double precision :: a, b, fact(0:100),rj, rmj, sk, symeulang(3,48), tet(1:3), co2, si2
     logical :: equal
     double complex :: dinv(nkmmax,nkmmax), dtim(nkmmax,nkmmax), rc(nkmmax,nkmmax), w1(nkmmax,nkmmax), w2(nkmmax,nkmmax)
     integer :: i,i1,i2,ind0q(nqmax),invflag(48),iq,irel,ireleff,isym, itop,j,k,l,loop,m,n,nk,nkeff,nkm,nlm,nok,ns

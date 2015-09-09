@@ -141,28 +141,21 @@ module ShapeFunctions_mod
 
 
 !------------------------------------------------------------------------------
-  subroutine shapef(npoi, &
-    planes, &
-    tolvdist, toleuler, nmin, &
-    nvertices, vert, &
-    nface, lmax, &
-    keypan, dlt, npan, &
-    nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
-    thetas_s, lmifun_s, nfun, & ! shape function
-    ibmaxd, meshnd, npand)
+  subroutine shapef(npoi, planes, tolvdist, toleuler, nmin, nvertices, vert, nface, lmax, &
+                    keypan, & ! todo: remove from interface
+                    dlt, npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
+                    thetas_s, lmifun_s, nfun, & ! shape function
+                    ibmaxd, meshnd, npand)
     
     use ShapeCriticalPoints_mod, only: criticalshapepoints
     use ShapeStandardMesh_mod, only: mesh
     use ShapeIntegration_mod, only: shapeintegration
-    use PolygonFaces_mod, only: PolygonFace
+    use PolygonFaces_mod, only: PolygonFace, destroy
     integer :: ist
 
-    integer,intent(in) :: npoi
-    double precision, intent(in) :: tolvdist
-    double precision, intent(in) :: toleuler
-    integer, intent(in) :: nmin
-    integer, intent(in) :: nface
-    integer, intent(in) :: lmax
+    integer, intent(in) :: npoi
+    double precision, intent(in) :: tolvdist, toleuler
+    integer, intent(in) :: nmin, nface, lmax
     integer, intent(in) :: keypan
     double precision, intent(in) :: dlt
 
@@ -206,7 +199,7 @@ module ShapeFunctions_mod
 
     npan = npan - 1 ! in old code 1 is substracted from npan - why?
 
-    deallocate(faces, stat=ist)
+    call destroy(faces)
     
   endsubroutine shapef
 

@@ -22,7 +22,7 @@ module NearField_mod
   abstract interface
     subroutine potential_func(self, v_intra, radius)
     import Potential
-    class (Potential), intent(inout) :: self
+    class(Potential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
     endsubroutine
@@ -38,7 +38,7 @@ module NearField_mod
   type, extends(Potential) :: TestPotentialMonopole
     contains
     procedure :: get_pot => get_const_monopole
-  endtype  
+  endtype
 
   contains
 
@@ -257,7 +257,7 @@ module NearField_mod
   !> A test potential: constant multipole moments
   subroutine get_const_multipole(self, v_intra, radius)
     ! Test potential: assume multipoles Q_L = 1.0d0
-    class (TestPotentialConstMulti), intent(inout) :: self
+    class(TestPotentialConstMulti), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
@@ -282,11 +282,9 @@ module NearField_mod
   !----------------------------------------------------------------------------
   !> A test potential: potential of a (unit) monopole
   subroutine get_const_monopole(self, v_intra, radius)
-    class (TestPotentialMonopole), intent(inout) :: self
+    class(TestPotentialMonopole), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
-
-    integer :: lm, L, M
 
     v_intra = 0.0d0
     v_intra(1) = 4.0d0 * sqrt(4.0d0 * atan(1.0d0)) / radius

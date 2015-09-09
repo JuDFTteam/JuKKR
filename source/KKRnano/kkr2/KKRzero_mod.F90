@@ -464,7 +464,7 @@ module KKRzero_mod
   
   
   
-  subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld)
+  subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld) ! todo: remove nmaxd and ishld from interface
 ! **********************************************************************
 ! *  modified version of lattice3d.f                                   *
 ! *  this one only tests the dimension of arrays!                      *
