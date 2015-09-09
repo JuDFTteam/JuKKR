@@ -554,7 +554,7 @@ subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, thetas, &
   integer jend((2*lmax+1)**2,0:lmax,0:lmax)
   integer lmsp(*)
   
-  double complex denns,v1
+  double complex v1
   integer imt1,l,lm,m
   double complex cden(irmd,0:lmax)
   double complex cdenns(irmd)
@@ -745,23 +745,6 @@ endsubroutine rhoout
     double precision, intent(in) :: zat
     integer, intent(in) :: icst, ielast, iend, ipan, ispin, nspin, nsra, irmin, nldau
     logical, intent(in) :: ldorhoef, ldau
-    !     ..
-    !     .. array arguments ..
-    !     double complex     den(0:lmaxd1,iemxd),ez(iemxd),
-    !    +                   wez(iemxd),
-    !    +                   phildau(irmd,lmaxd1),
-    !    +                   dmatldau(mmaxd,mmaxd,nspind,lmaxd1)
-    !     double precision   cleb(ncleb,2),drdi(irmd),
-    !    +                   espv(0:lmaxd1,1),
-    !    +                   r(irmd),rho2ns(irmd,lmpotd,2),
-    !    +                   r2nef(irmd,lmpotd,2),   ! at fermi energy
-    !    +                   thetas(irid,nfund),vins(irmind:irmd,lmpotd),
-    !    +                   visp(irmd),
-    !    +                   wmldau(mmaxd,mmaxd,nspind,lmaxd1)
-    !     integer            icleb(ncleb,3),ifunm(lmxspd),ircut(0:ipand),
-    !    +                   jend(lmpotd,0:lmaxd,0:lmaxd),
-    !    +                   lmsp(lmxspd),loflm(lm2d),
-    !    +                   lldau(lmaxd1)
 
     double complex, intent(in) :: den(0:lmaxd+1,iemxd)
     double complex, intent(in) :: ez(iemxd)
@@ -792,24 +775,7 @@ endsubroutine rhoout
     external :: daxpy, dscal ! from blas
     
     double complex :: df, eryd, ek
-    integer :: idm, ie, ir, l, lm1, lm2, lmlo, lmhi, mmax, im, ildau
-    !     ..
-    !     .. local arrays ..
-    !     double complex     alpha(0:lmaxd),ar(lmmaxd,lmmaxd),
-    !    +                   dr(lmmaxd,lmmaxd),
-    !    +                   cr(lmmaxd,lmmaxd),
-    !    +                   ekl(0:lmaxd),fz(irmd,0:lmaxd),
-    !    +                   gmatll(lmmaxd,lmmaxd),
-    !    +                   gmatn(lmmaxd,lmmaxd,iemxd,nspind),
-    !    +                   pns(lmmaxd,lmmaxd,irmind:irmd,2),
-    !    +                   pz(irmd,0:lmaxd),
-    !    +                   qns(lmmaxd,lmmaxd,irmind:irmd,2),
-    !    +                   qz(irmd,0:lmaxd),sz(irmd,0:lmaxd),
-    !    +                   tmat(0:lmaxd)
-    !     double precision   rs(irmd,0:lmaxd),s(0:lmaxd),
-    !    +                   ldaucut(irmd),
-    !    +                   wmldauav(lmaxd1)
-    !     double complex     dendum(0:lmaxd1)
+    integer :: idm, ie, l, lmlo, lmhi, mmax, im, ildau
 
     ! the following arrays are local
     double complex :: alpha(0:lmaxd)
@@ -832,9 +798,7 @@ endsubroutine rhoout
     double complex :: dendum(0:lmaxd+1)
 
     ! dynamically allocate large arrays
-    ! double complex    pns((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd,2)
-    ! double complex    qns((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd,2)
-    double complex, allocatable :: pns(:,:,:,:), qns(:,:,:,:)
+    double complex, allocatable :: pns(:,:,:,:), qns(:,:,:,:) ! dims: ((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd,2)
 
     integer :: memory_stat
     integer :: lmmaxd, lmaxd1, nspind, lmpotd
@@ -990,7 +954,7 @@ endsubroutine rhoout
     double precision, intent(in) :: drdi(irmd), r(irmd), thetas(irid,nfund)
     integer, intent(in) :: ircut(0:ipand)
 
-    double complex ek,ciek,denl
+    double complex ek,ciek
     double precision c0ll
     integer ir,l,l1,imt1
     double complex pz(irmd,0:lmaxd),qz(irmd,0:lmaxd)

@@ -26,25 +26,27 @@
 module comm_patternsD_mod
   implicit none
   private
-  public :: comm_gather, comm_redistribute, comm_bcast, send_array
   
-  interface comm_gather
-    module procedure comm_gatherD
-  endinterface
-
-  interface comm_redistribute
-    module procedure comm_redistributeD, &
-                     comm_redistributeVD
-  endinterface
-  
-  interface comm_bcast
-    module procedure comm_bcastD, &
-                     comm_bcast2D
-  endinterface
-
-  interface send_array
-    module procedure send_arrayD
-  endinterface
+!   !!! interfacing these functions does not work because of (*) interfaces
+!   public :: comm_gather, comm_redistribute, comm_bcast, send_array
+!   
+!   interface comm_gather
+!     module procedure comm_gatherD
+!   endinterface
+! 
+!   interface comm_redistribute
+!     module procedure comm_redistributeD, &
+!                      comm_redistributeVD
+!   endinterface
+!   
+!   interface comm_bcast
+!     module procedure comm_bcastD, &
+!                      comm_bcast2D
+!   endinterface
+! 
+!   interface send_array
+!     module procedure send_arrayD
+!   endinterface
   
   ! deprecated public statements (to be private in the future)
   public :: comm_gatherD

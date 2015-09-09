@@ -544,13 +544,9 @@ end subroutine symjij
 !>    @param JXCIJINT integrated Jij(E), for IER=1 they are initialised
 !>           then pass old JXCIJINT for next energy point -
 !>           therefore integration is achieved: in,out
-subroutine XCCPLJIJ_START( &
-I1,IER,WGTE, &
-RXIJ,NXIJ,IXCP,RXCCLS, &
-GMATXIJ,DTIXIJ, &
+subroutine XCCPLJIJ_START(I1,IER,WGTE, RXIJ,NXIJ,IXCP,RXCCLS, GMATXIJ,DTIXIJ, &
 communicator, &
-JXCIJINT,ERESJIJ, &
-naez, lmmaxd, nxijd, nspind)
+JXCIJINT,ERESJIJ, naez, lmmaxd, nxijd, nspind) ! todo: remove I1, RXIJ, RXCCLS
   !   ********************************************************************
   !   *                                                                  *
   !   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -596,18 +592,12 @@ naez, lmmaxd, nxijd, nspind)
   integer :: ISPIN
   integer :: LM1
   integer :: LM2
-  integer :: D1
-  integer :: D10
-  integer :: D100
-  integer :: D1000
   double complex :: CSUM
   double complex :: JSCAL
   double precision :: JOUT
-  character(len=12)::FNAME
+! character(len=16) :: FNAME
   !     ..
   !     .. Local arrays
-  integer :: OFF(3)
-
   double complex :: GMIJ_down(lmmaxd,lmmaxd)
   double complex :: GMJI_up(lmmaxd,lmmaxd)
   double complex :: W1(lmmaxd,lmmaxd)
@@ -615,7 +605,7 @@ naez, lmmaxd, nxijd, nspind)
   double complex :: W3(lmmaxd,lmmaxd)
 
   !     large local array
-  double complex, allocatable, dimension(:,:,:) :: DTNXIJ_ALL
+  double complex, allocatable :: DTNXIJ_ALL(:,:,:)
 
   !     .. MPI ..
   integer :: IERR
@@ -655,27 +645,8 @@ naez, lmmaxd, nxijd, nspind)
     JXCIJINT = CZERO
 
     if (ERESJIJ) then
-!      D1 = mod(I1,10)
-!      D10 = int( (mod(I1,100) + 0.5)/10 )
-!      D100 = int( (mod(I1,1000) + 0.5)/100 )
-!      D1000 = int( (mod(I1,10000) + 0.5)/1000 )
-!
-!      OFF(1) = iachar('1')-1
-!      OFF(2) = iachar('1')-1
-!      OFF(3) = iachar('1')-1
-!
-!      if ( D10>=10 ) OFF(1) = iachar('7')
-!      if ( D100>=100 ) OFF(2) = iachar('7')
-!      if ( D1000>=1000 ) OFF(3) = iachar('7')
-!
-!      FNAME='Eij.' &
-!      //achar(D1000+OFF(3)) &
-!      //achar(D100+OFF(2)) &
-!      //achar(D10+OFF(1)) &
-!      //achar(D1+iachar('1')-1) &
-!      //'.dat'
-!
-!      open(75,file=FNAME,form='formatted')
+!      write(unit=FNAME, fmt="(a,i4.4,a)") 'Eij.',I1,'.dat'
+!      open(75, file=FNAME, form='formatted')
     endif
   endif
 
@@ -780,15 +751,8 @@ subroutine writeJiJs(I1, &
   parameter        ( CONE  = (1D0,0D0) )
 
   integer :: XIJ
-  integer :: D1
-  integer :: D10
-  integer :: D100
-  integer :: D1000
-
-  integer :: OFF(3)
-
   double complex :: JSCAL
-  character(len=12) :: FNAME
+  character(len=16) :: FNAME
 
 
   if (nxij > nxijd) then
@@ -800,28 +764,9 @@ subroutine writeJiJs(I1, &
   JSCAL = CONE/4D0
   ! .. ...........................................................
   ! write Jij's to file Jij.I1.dat
-  ! ..
-  D1 = mod(I1,10)
-  D10 = int( (mod(I1,100) + 0.5)/10 )
-  D100 = int( (mod(I1,1000) + 0.5)/100 )
-  D1000 = int( (mod(I1,10000) + 0.5)/1000 )
 
-  OFF(1) = iachar('1')-1
-  OFF(2) = iachar('1')-1
-  OFF(3) = iachar('1')-1
-
-  if ( D10>=10 ) OFF(1) = iachar('7')
-  if ( D100>=100 ) OFF(2) = iachar('7')
-  if ( D1000>=1000 ) OFF(3) = iachar('7')
-
-  FNAME='Jij.' &
-  //achar(D1000+OFF(3)) &
-  //achar(D100+OFF(2)) &
-  //achar(D10+OFF(1)) &
-  //achar(D1+iachar('1')-1) &
-  //'.dat'
-
-  open(73,file=FNAME,form='formatted')
+  write(unit=FNAME, fmt="(a,i4.4,a)") 'Jij.',I1,'.dat' 
+  open(73, file=FNAME, form='formatted', action='write')
 
   write(73,73000) I1
 

@@ -30,7 +30,7 @@
 ! OpenMP parallelised, needs threadsafe erfcex, gamfc and ymy E.R.
 
 subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
-     gn,rm,qi0,smat,vol,lassld,lmxspd,naezd,i1)
+     gn,rm,qi0,smat,vol,lassld,lmxspd,naezd,i1) ! todo: remove naezd
   use Harmonics_mod, only: ymy
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)

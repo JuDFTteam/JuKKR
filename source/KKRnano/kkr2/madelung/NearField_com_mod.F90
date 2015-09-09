@@ -21,7 +21,7 @@ module NearField_com_mod
   
   type LocalCellInfo
     double precision, allocatable :: charge_moments(:)
-    double precision, allocatable :: v_intra(:, :)
+    double precision, allocatable :: v_intra(:,:)
     double precision, allocatable :: radial_points(:)
     integer :: critical_index !< apply correction only starting at 'critical_index'
     integer, allocatable :: near_cell_indices(:)
@@ -35,7 +35,7 @@ module NearField_com_mod
   endtype
   
   type NearFieldCorrection
-    double precision, allocatable :: delta_potential(:, :)
+    double precision, allocatable :: delta_potential(:,:)
 
     contains
     procedure :: create => createNearFieldCorrection
@@ -57,17 +57,18 @@ module NearField_com_mod
   subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
     use NearField_kkr_mod, only: IntracellPotential
     use MadelungCalculator_mod, only: MadelungClebschData
-    use one_sided_commD_mod, only: ChunkIndex, getChunkIndex, exposeBufferD, hideBufferD, copyChunksNoSyncD
+    use ChunkIndex_mod, only: ChunkIndex, getChunkIndex
+    use one_sided_commD_mod, only: exposeBufferD, hideBufferD, copyChunksNoSyncD
   
-    type (NearFieldCorrection), intent(inout) :: nf_correction(:)
-    type (LocalCellInfo), intent(in) :: local_cells(:)
-    type (MadelungClebschData), intent(in) :: gaunt
+    type(NearFieldCorrection), intent(inout) :: nf_correction(:)
+    type(LocalCellInfo), intent(in) :: local_cells(:)
+    type(MadelungClebschData), intent(in) :: gaunt
     integer, intent(in) :: communicator
     
     include 'mpif.h'
     
-    type (IntracellPotential) :: intra_pot
-    type (ChunkIndex) :: chunk(1)
+    type(IntracellPotential) :: intra_pot
+    type(ChunkIndex) :: chunk(1)
     integer :: npoints, lmpotd
     integer :: num_local_atoms
     integer :: max_npoints

@@ -102,10 +102,7 @@ module BasisAtom_mod
     use AtomicCoreData_mod, only: createAtomicCoreData
 
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: lpot
-    integer, intent(in) :: nspin
-    integer, intent(in) :: irmind
-    integer, intent(in) :: irmd  !< number of mesh points
+    integer, intent(in) :: lpot, nspin, irmind, irmd  !< number of mesh points
     integer, intent(in) :: atom_index
 
     atom%atom_index = atom_index
@@ -194,12 +191,10 @@ module BasisAtom_mod
   !> recnr = atom_index
   subroutine createBasisAtomFromFile(atom, filename, filenamepot, recnr)
     type(BasisAtom), intent(inout) :: atom
-    character(len=*), intent(in) :: filename
-    character(len=*), intent(in) :: filenamepot
+    character(len=*), intent(in) :: filename, filenamepot
     integer, intent(in) :: recnr
-    integer :: irmd, lpot, nspin, irmind
-    integer :: max_reclen
-
+    
+    integer :: irmd, lpot, nspin, irmind, max_reclen
     integer, parameter :: FILEUNIT = 42
 
     ! index file has extension .idx
@@ -223,8 +218,7 @@ module BasisAtom_mod
   !> Write basis atom data to direct access file 'fileunit' at record 'recnr'.
   subroutine writeBasisAtomDA(atom, fileunit, recnr)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
+    integer, intent(in) :: fileunit, recnr
 
     write (fileunit, rec=recnr) MAGIC_NUMBER, &
                                 atom%atom_index, &
@@ -243,8 +237,7 @@ module BasisAtom_mod
   !> Read basis atom data from direct access file 'fileunit' at record 'recnr'.
   subroutine readBasisAtomDA(atom, fileunit, recnr)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
+    integer, intent(in) :: fileunit, recnr
 
     integer :: magic, magic2
 
@@ -306,8 +299,7 @@ module BasisAtom_mod
   !> File has to be opened and closed by user. No checks
   subroutine writeBasisAtomPotentialDA(atom, fileunit, recnr)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
+    integer, intent(in) :: fileunit, recnr
 
 #ifdef TASKLOCAL_FILES
     character(len=16) :: num
@@ -324,7 +316,6 @@ module BasisAtom_mod
 #ifdef TASKLOCAL_FILES
     close(fileunit)
 #endif
-
   endsubroutine ! write
 
   !----------------------------------------------------------------------------
@@ -339,9 +330,9 @@ module BasisAtom_mod
     character(len=*), intent(in) :: filename
     integer, intent(in), optional :: max_reclen
 
-    integer :: reclen
-
 #ifndef TASKLOCAL_FILES
+    integer :: reclen
+    
     if (present(max_reclen)) then
       reclen = max_reclen
     else
@@ -350,7 +341,6 @@ module BasisAtom_mod
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 #endif
-
   endsubroutine ! open
 
   !---------------------------------------------------------------------------
@@ -374,8 +364,7 @@ module BasisAtom_mod
   !> File has to be opened and closed by user. No checks
   subroutine readBasisAtomPotentialDA(atom, fileunit, recnr)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
+    integer, intent(in) :: fileunit, recnr
 
 #ifdef TASKLOCAL_FILES
     character(len=16) :: num
@@ -395,7 +384,6 @@ module BasisAtom_mod
 #ifdef TASKLOCAL_FILES
     close(fileunit)
 #endif
-
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
@@ -408,7 +396,6 @@ module BasisAtom_mod
 #ifndef TASKLOCAL_FILES
     close(fileunit)
 #endif
-
   endsubroutine ! close
 
   !===========  Index file ======================================================
@@ -417,9 +404,7 @@ module BasisAtom_mod
   !> Write potential dimension data to direct access file 'fileunit' at record 'recnr'
   subroutine writeBasisAtomPotentialIndexDA(atom, fileunit, recnr, max_reclen)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
-    integer, intent(in) :: max_reclen
+    integer, intent(in) :: fileunit, recnr, max_reclen
 
     FILEWRITE (fileunit, rec=recnr) atom%potential%lpot, &
                                     atom%potential%nspin, &
@@ -436,14 +421,9 @@ module BasisAtom_mod
   !> Returns dimensions irmd and ipand
   subroutine readBasisAtomPotentialIndexDA(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
-    integer, intent(out) :: lpot
-    integer, intent(out) :: nspin
-    integer, intent(out) :: irmind
-    integer, intent(out) :: irmd
-    integer, intent(out) :: max_reclen
-
+    integer, intent(in) :: fileunit, recnr
+    integer, intent(out) :: lpot, nspin, irmind, irmd, max_reclen
+    
 #ifdef TASKLOCAL_FILES
     character(len=16) :: num
 
@@ -466,10 +446,9 @@ module BasisAtom_mod
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
 
-    integer :: reclen
-    integer :: max_reclen
-
 #ifndef TASKLOCAL_FILES
+    integer :: reclen, max_reclen
+    
     max_reclen = 0
     inquire (iolength=reclen) atom%potential%lpot, &
                               atom%potential%nspin, &
@@ -480,7 +459,6 @@ module BasisAtom_mod
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 #endif
-
   endsubroutine ! open
 
   !----------------------------------------------------------------------------
@@ -491,7 +469,6 @@ module BasisAtom_mod
 #ifndef TASKLOCAL_FILES
     close(fileunit)
 #endif
-
   endsubroutine ! close
 
   !----------------------------------------------------------------------------
@@ -513,16 +490,10 @@ module BasisAtom_mod
 
   subroutine readBasisAtomPotentialHeader(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit
-    integer, intent(in) :: recnr
-    integer, intent(out) :: lpot
-    integer, intent(out) :: nspin
-    integer, intent(out) :: irmind
-    integer, intent(out) :: irmd
-    integer, intent(out) :: max_reclen
+    integer, intent(in) :: fileunit, recnr
+    integer, intent(out) :: lpot, nspin, irmind, irmd, max_reclen
 
-    integer :: magic
-    integer :: checkmagic
+    integer :: magic, checkmagic
 
     checkmagic = MAGIC_NUMBER + recnr
 
@@ -536,12 +507,11 @@ module BasisAtom_mod
   !> Copy output potential to input potential for new iteration.
   subroutine resetPotentialsImpl(irc1, irmd, irmin1, irmind, lmpotd, nspin, vins, visp, vons)
     integer, intent(in) :: irc1, irmin1, irmd, irmind, lmpotd, nspin
-
     double precision, intent(out) :: vins(irmind:irmd,lmpotd,2)
     double precision, intent(out) :: visp(irmd,2)
     double precision, intent(inout) :: vons(irmd,lmpotd,2)
 
-    integer :: ispin, j, lm
+    integer :: ispin
     
     if (irmin1 < irmind) die_here("resetpotentials:"+irmin1+"= irmin1 < irmind ="+irmind) ! debug
     if (irc1 > irmd) die_here("resetpotentials:"+irc1+"= irc1 > irmd ="+irmd) ! debug

@@ -70,7 +70,7 @@ module CalculationData_mod
     ! storage for initial guess
     type(InitialGuess), pointer           :: iguess_data       => null()
 
-  end type
+  endtype
   
   interface create
     module procedure createCalculationData
@@ -80,7 +80,7 @@ module CalculationData_mod
     module procedure destroyCalculationData
   endinterface
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   ! TODO: atoms_per_procs * num_procs MUST BE = naez
@@ -148,13 +148,13 @@ module CalculationData_mod
     do ii = 1, num_local_atoms
       calc_data%atom_ids(ii) = atom_rank * atoms_per_proc + ii
       ASSERT( calc_data%atom_ids(ii) <= dims%naez )
-    end do
+    enddo ! ii
 
     ! Now construct all datastructures and calculate initial data
     call constructEverything(calc_data, dims, params, arrays, my_mpi)
 
     !call print_debug_info(calc_data)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Calculate Madelung Lattice sums for all local atoms.
@@ -174,9 +174,9 @@ module CalculationData_mod
       I1 = calc_data%atom_ids(ilocal)
       madelung_sum => calc_data%madelung_sum_array(ilocal)
       call calculateMadelungLatticeSum(madelung_sum, I1, arrays%rbasis)
-    end do
+    enddo
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine destroyCalculationData(calc_data) ! todo: text-replace calc_data by self in this routine
@@ -244,7 +244,7 @@ module CalculationData_mod
       call destroyKKRresults(kkr)
       call destroyEnergyResults(energies)
 
-    end do
+    enddo ! ilocal
 
     call destroyLatticeVectors(calc_data%lattice_vectors)
     call destroyMadelungCalculator(calc_data%madelung_calc)
@@ -269,14 +269,14 @@ module CalculationData_mod
     deallocate(calc_data%jij_data_array)
     deallocate(calc_data%broyden)
     deallocate(calc_data%atom_ids)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   integer function getNumLocalAtoms(calc_data)
     type(CalculationData), intent(in) :: calc_data
 
     getNumLocalAtoms = calc_data%num_local_atoms
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   integer function getAtomIndexOfLocal(calc_data, ilocal)
@@ -284,7 +284,7 @@ module CalculationData_mod
     integer, intent(in) :: ilocal
 
     getAtomIndexOfLocal = calc_data%atom_ids(ilocal)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to atomdata for atom with LOCAL atom index
@@ -296,7 +296,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getAtomData => calc_data%atomdata_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to 'reference cluster for atom with LOCAL atom index
@@ -308,7 +308,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getRefCluster => calc_data%ref_cluster_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to kkr(results) for atom with LOCAL atom index
@@ -320,7 +320,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getKKR => calc_data%kkr_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Madelung sum for atom with LOCAL atom index
@@ -333,7 +333,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getMadelungSum => calc_data%madelung_sum_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to density results for atom with LOCAL atom index
@@ -345,7 +345,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getDensities => calc_data%densities_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to energy results for atom with LOCAL atom index
@@ -357,7 +357,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getEnergies => calc_data%energies_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to LDA+U data for atom with LOCAL atom index
@@ -369,7 +369,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getLDAUData => calc_data%ldau_data_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Jij-data for atom with LOCAL atom index
@@ -381,19 +381,19 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getJijData => calc_data%jij_data_array(local_atom_index)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Broyden data for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getBroyden(calc_data, local_atom_index)
+  function getBroyden(calc_data, local_atom_index) ! todo: remove local_atom_index from interface (although optional)
     type(BroydenData), pointer :: getBroyden ! return value
 
     type(CalculationData), intent(in) :: calc_data
     integer, intent(in), optional :: local_atom_index
 
     getBroyden => calc_data%broyden
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Gaunt coefficients.
@@ -403,7 +403,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getGaunts => calc_data%gaunts
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Shape-Gaunt coefficients.
@@ -413,7 +413,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getShapeGaunts => calc_data%shgaunts
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Madelung calculator.
@@ -423,7 +423,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getMadelungCalculator => calc_data%madelung_calc
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to truncation zone.
@@ -432,7 +432,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getTruncationZone => calc_data%trunc_zone
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to cluster info (sparsity info).
@@ -442,7 +442,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getClusterInfo => calc_data%clusters
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to lattice vector table.
@@ -452,7 +452,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getLatticeVectors => calc_data%lattice_vectors
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to initial guess data.
@@ -462,7 +462,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getInitialGuessData => calc_data%iguess_data
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
@@ -470,7 +470,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getMaxReclenMeshes = calc_data%max_reclen_meshes
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
@@ -478,7 +478,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: calc_data
 
     getMaxReclenPotential = calc_data%max_reclen_potential
-  end function
+  endfunction
 
 ! ==================== Helper routines ========================================
 
@@ -532,8 +532,8 @@ module CalculationData_mod
                             calc_data%lattice_vectors, arrays%rbasis, &
                             params%rclust, calc_data%atom_ids(ilocal))
       !write(*,*) "Atoms in ref. cluster: ", calc_data%ref_cluster_array(ilocal)%nacls
-    end do
-    !$omp end parallel do
+    enddo
+    !$omp endparallel do
 
     ! setup the truncation zone
     call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
@@ -553,7 +553,7 @@ module CalculationData_mod
       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-    end if
+    endif
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
 
     call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
@@ -570,7 +570,7 @@ module CalculationData_mod
       call writePotentialIndexFile(calc_data)
 #endif
       call writeNewMeshFiles(calc_data)
-    end if
+    endif
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -599,7 +599,7 @@ module CalculationData_mod
       !ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
 
     !--------------------------------------------------------------------------
-    end do
+    enddo ! ilocal
     !--------------------------------------------------------------------------
 
     ! calculate Gaunt coefficients
@@ -612,7 +612,7 @@ module CalculationData_mod
     ! setup storage for iguess
     call setup_iguess(calc_data, dims, arrays)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Initialise iguess datastructure.
@@ -636,7 +636,7 @@ module CalculationData_mod
     allocate(num_k_points(dims%iemxd))
     do ii = 1, dims%iemxd
       num_k_points(ii) = arrays%nofks(arrays%kmesh(ii))
-    end do
+    enddo ! ii
 
     ! setup storage for iguess
     if (dims%smpid == 1 .and. dims%nspind == 2) then
@@ -646,7 +646,7 @@ module CalculationData_mod
       call iguess_init(calc_data%iguess_data, num_k_points, 1, blocksize, dims%iguessd)
     endif
 
-  end subroutine
+  endsubroutine
 
 !------------------------------------------------------------------------------
 !> Generates basis atom information, radial mesh, shape-function and
@@ -688,7 +688,7 @@ module CalculationData_mod
     do ilocal = 1, calc_data%num_local_atoms
       cell => calc_data%cell_array(ilocal)
       call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
-    end do
+    enddo
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -714,7 +714,7 @@ module CalculationData_mod
 
       new_MT_radii(ilocal) = old_atom%radius_muffin_tin / params%alat
     !--------------------------------------------------------------------------
-    end do
+    enddo ! ilocal
     !--------------------------------------------------------------------------
 
     ! generate shapes and meshes
@@ -753,13 +753,13 @@ module CalculationData_mod
 
       call destroyBasisAtom(old_atom)
       call destroyRadialMeshData(old_mesh)
-    end do
+    enddo ! ilocal
 
     deallocate(new_MT_radii)
     deallocate(old_atom_array)
     deallocate(old_mesh_array)
 
-  end subroutine
+  endsubroutine
 
 !------------------------------------------------------------------------------
   subroutine generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii, MT_scale)
@@ -779,7 +779,7 @@ module CalculationData_mod
     double precision, intent(in) :: MT_scale
     !-----------------
 
-    integer :: I1, ilocal, nfun, ii
+    integer :: I1, ilocal
     integer :: irmd, irid, ipand, irnsd
     type(InterstitialMesh) :: inter_mesh
     type(ShapefunData) :: shdata ! temporary shape-fun data
@@ -823,14 +823,14 @@ module CalculationData_mod
       ! optional output of shape functions
       if (params%write_shapes == 1) then
         call write_shapefun_file(shdata, inter_mesh, I1)
-      end if
+      endif
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
 
-    end do
+    enddo ! ilocal
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Communicate and set record lengths.
@@ -858,19 +858,19 @@ module CalculationData_mod
 
       sendbuf(1) = max(sendbuf(1), getMinReclenBasisAtomPotential(atomdata))
       sendbuf(2) = max(sendbuf(2), getMinReclenMesh(mesh))
-    end do
+    enddo ! ilocal
 
     call MPI_Allreduce(sendbuf, recvbuf, 2, MPI_INTEGER, MPI_MAX, getMySECommunicator(my_mpi), ierr)
 
     if (getMyAtomRank(my_mpi) == 0) then
       write(*,*) "Record length 'vpotnew' file: ", recvbuf(1)
       write(*,*) "Record length 'meshes'  file: ", recvbuf(2)
-    end if
+    endif
 
     calc_data%max_reclen_potential = recvbuf(1)
     calc_data%max_reclen_meshes = recvbuf(2)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write potential index file.
@@ -891,10 +891,10 @@ module CalculationData_mod
       atomdata  => calc_data%atomdata_array(ilocal)
       I1 = calc_data%atom_ids(ilocal)
       call writeBasisAtomPotentialIndexDA(atomdata, 37, I1, max_reclen)
-    end do
+    enddo ! ilocal
 
     call closeBasisAtomPotentialIndexDAFile(37)
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write new mesh files.
@@ -929,14 +929,14 @@ module CalculationData_mod
       call writeRadialMeshDataIndexDA(mesh, 37, I1, max_reclen)
 #endif
       call writeRadialMeshDataDA(mesh, 38, I1)
-    end do
+    enddo ! ilocal
 
     call closeRadialMeshDataDAFile(38)
 #ifndef TASKLOCAL_FILES
     call closeRadialMeshDataIndexDAFile(37)
 #endif
 
-  end subroutine
+  endsubroutine
 
 !============ Helper routines for Broyden mixing ==============================
 
@@ -955,8 +955,9 @@ module CalculationData_mod
     do ilocal = 1, calc_data%num_local_atoms
       atomdata  => calc_data%atomdata_array(ilocal)
       getBroydenDim = getBroydenDim + getNumPotentialValues(atomdata%potential)
-    end do
-  end function
+    enddo ! ilocal
+    
+  endfunction
 
   !----------------------------------------------------------------------------
   ! Print some debugging info
@@ -983,8 +984,9 @@ module CalculationData_mod
       write(*, '(A)') str
       call repr_ShapefunData(cell%shdata, str)
       write(*, '(A)') str
-    end do
-  end subroutine
+    enddo ! ilocal
+    
+  endsubroutine
 
 !==============================================================================
 !=             WORK in PROGRESS - not used yet                                =
@@ -1012,10 +1014,10 @@ module CalculationData_mod
       call createRefCluster(calc_data%ref_cluster_array(ilocal), &
                             calc_data%lattice_vectors, arrays%rbasis, &
                             params%rclust, calc_data%atom_ids(ilocal))
-    end do
-    !$omp end parallel do
+    enddo ! ilocal
+    !$omp endparallel do
 
-  end subroutine
+  endsubroutine
 
   subroutine constructTruncationZones(calc_data, dims, arrays, my_mpi)
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
@@ -1045,11 +1047,11 @@ module CalculationData_mod
       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-    end if
+    endif
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
-  end subroutine
+  endsubroutine
 
-  subroutine constructStorage(calc_data, dims, params, arrays, my_mpi)
+  subroutine constructStorage(calc_data, dims, params, arrays, my_mpi) ! todo: remove arrays, my_mpi from interface
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -1104,8 +1106,8 @@ module CalculationData_mod
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
 
     !--------------------------------------------------------------------------
-    end do
+    enddo ! ilocal
     !--------------------------------------------------------------------------
-  end subroutine
+  endsubroutine
 
-end module CalculationData_mod
+endmodule CalculationData_mod

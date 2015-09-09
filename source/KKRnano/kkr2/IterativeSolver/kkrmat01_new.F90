@@ -37,7 +37,7 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
   use KKROperator_mod, only: KKROperator, get_ms_workspace
   use MultScatData_mod, only: MultScatData
   use ClusterInfo_mod, only: ClusterInfo
-  use one_sided_commZ_mod, only: ChunkIndex
+  use ChunkIndex_mod, only: ChunkIndex
   ! ************************************************************************
   !   performs k-space integration,
   !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -178,7 +178,8 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
               indn0, rr, ezoa, GINP, EIKRM, EIKRP, trunc2atom_index, communicator)
   use dlke0_smat_mod, only: DLKE0_smat
   use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd, exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
+  use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
+  use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 
   include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)
@@ -502,7 +503,8 @@ endsubroutine kloopbody
 subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, GINP, EIKRM, EIKRP, trunc2atom_index, communicator)
   use dlke0_smat_mod, only: DLKE0_smat
   use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  use one_sided_commZ_mod, only: ChunkIndex, getOwner, getLocalInd, exposeBufferZ, fenceZ, copyChunksNoSyncZ, hideBufferZ
+  use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
+  use one_sided_commZ_mod, only: exposeBufferZ, fenceZ, copyChunksNoSyncZ, hideBufferZ
 
   include 'mpif.h'
   double complex, intent(inout) :: GLLH(:)

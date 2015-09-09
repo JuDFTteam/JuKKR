@@ -26,25 +26,27 @@
 module comm_patterns_TYPE_mod
   implicit none
   private
-  public :: comm_gather, comm_redistribute, comm_bcast, send_array
   
-  interface comm_gather
-    module procedure comm_gather_TYPE
-  endinterface
-
-  interface comm_redistribute
-    module procedure comm_redistribute_TYPE, &
-                     comm_redistributeV_TYPE
-  endinterface
-  
-  interface comm_bcast
-    module procedure comm_bcast_TYPE, &
-                     comm_bcast2_TYPE
-  endinterface
-
-  interface send_array
-    module procedure send_array_TYPE
-  endinterface
+!   !!! interfacing these functions does not work because of (*) interfaces
+!   public :: comm_gather, comm_redistribute, comm_bcast, send_array
+!   
+!   interface comm_gather
+!     module procedure comm_gather_TYPE
+!   endinterface
+! 
+!   interface comm_redistribute
+!     module procedure comm_redistribute_TYPE, &
+!                      comm_redistributeV_TYPE
+!   endinterface
+!   
+!   interface comm_bcast
+!     module procedure comm_bcast_TYPE, &
+!                      comm_bcast2_TYPE
+!   endinterface
+! 
+!   interface send_array
+!     module procedure send_array_TYPE
+!   endinterface
   
   ! deprecated public statements (to be private in the future)
   public :: comm_gather_TYPE

@@ -88,7 +88,7 @@ module Voronoi_mod
     double precision, intent(out) :: planes(0:,:)
     double precision, intent(out) :: vert(:,:,:) ! (3,nvertmax,nfaced) ! vertices
     
-    integer :: ivec, iface, ivert, i, nverttot, nplane, npanel
+    integer :: ivec, iface, ivert, i, nplane
     double precision :: tetrvol,rsq,tau, v1(3), v2(3), v3(3)
     double precision :: facearea(nfaced),trianglearea   
     double precision :: temp
@@ -427,7 +427,7 @@ module Voronoi_mod
     double precision vdist2, tolvdist2 !, vdist ! distance between consecutive vertices
     logical lacceptvert(nvertmax),lacctot,lfoundnext,lthisisthelast
     logical lacceptface(nfaced)
-    integer newindexface(nfaced)
+!   integer newindexface(nfaced)
     integer iface,ivert,ivert2,inext,iplane
     integer ifacenewcount,ivertnewcount
     double precision dv(3),x1,x2,x3,y1,y2,y3,z1,z2,z3,x4,y4,z4,trianglearea

@@ -42,9 +42,9 @@ module Symmetry_mod
     
     double precision :: r(3,4), rotrbas(3,naezd), bravais1(3,3)
     integer :: i, j, isym, i0, ia
-    double precision :: mdotmp, mvecq(3,naezd), mvecqp(3,naezd)
+!   double precision :: mdotmp, mvecq(3,naezd), mvecqp(3,naezd)
     double precision :: mrotr(3,3), symdet, summdotmp
-    double precision :: stet
+!   double precision :: stet
     character(len=10) :: name(64)
     logical :: llatbas, lbulk
 
@@ -163,7 +163,7 @@ module Symmetry_mod
     character(len=*), intent(in) :: rotname(64)
     
     double complex, parameter :: ci=(0.d0,1.d0), c1=(1.d0,0.d0), c0=(0.d0,0.d0)
-    double precision :: a,b,co1,co2,co3,det,fact(0:100),rj,rmj,si1,si2,si3,sk, symeulang(3,48),tet(1:3)
+    double precision :: a, b, det, fact(0:100),rj, rmj, sk, symeulang(3,48), tet(1:3), co2, si2
     logical :: equal
     double complex :: dinv(nkmmax,nkmmax), dtim(nkmmax,nkmmax), rc(nkmmax,nkmmax), w1(nkmmax,nkmmax), w2(nkmmax,nkmmax)
     integer :: i,i1,i2,ind0q(nqmax),invflag(48),iq,irel,ireleff,isym, itop,j,k,l,loop,m,n,nk,nkeff,nkm,nlm,nok,ns
@@ -417,7 +417,7 @@ module Symmetry_mod
 
   endsubroutine symtaumat
   
-  subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel)
+  subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel) ! todo: remove irel
 !   ********************************************************************
 !   *   find the structure of the site-diagonal tau - matrices  tauq   *
 !   ********************************************************************
@@ -744,7 +744,7 @@ module Symmetry_mod
 
     integer :: s, slow, shigh, off
     double complex :: emim2a, emim1g, rot(nkmmax,nkmmax) 
-    integer :: i2, i1, k, l, nmue, im2, im1
+    integer :: k, l, nmue, im2, im1
     double precision :: cb05, cb05sq, sm, cb05pw, dom
 !                       
 ! inline function    factorial for real argument

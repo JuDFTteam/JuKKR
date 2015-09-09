@@ -55,41 +55,37 @@
 #endif
 
 module one_sided_commZ_mod
+  use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
   implicit none
   private
-  
-  public :: ChunkIndex, getOwner, getLocalInd, getChunkIndex
-  type ChunkIndex
-    integer :: owner
-    integer :: local_ind
-  endtype
 
   
-  public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
-  
-  interface copyFrom
-    module procedure copyFromZ_com
-  endinterface
-  
-  interface exposeBuffer
-    module procedure exposeBufferZ
-  endinterface
-  
-  interface copyChunks
-    module procedure copyChunksZ
-  endinterface
-  
-  interface copyChunksNoSync
-    module procedure copyChunksNoSyncZ
-  endinterface
-  
-  interface fence
-    module procedure fenceZ
-  endinterface
-  
-  interface hideBuffer
-    module procedure hideBufferZ
-  endinterface
+!   !!! interfacing these functions does not work because of (*) interfaces
+!   public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
+!   
+!   interface copyFrom
+!     module procedure copyFromZ_com
+!   endinterface
+!   
+!   interface exposeBuffer
+!     module procedure exposeBufferZ
+!   endinterface
+!   
+!   interface copyChunks
+!     module procedure copyChunksZ
+!   endinterface
+!   
+!   interface copyChunksNoSync
+!     module procedure copyChunksNoSyncZ
+!   endinterface
+!   
+!   interface fence
+!     module procedure fenceZ
+!   endinterface
+!   
+!   interface hideBuffer
+!     module procedure hideBufferZ
+!   endinterface
   
   ! deprecated public statements (to be private in the future)
   public :: copyFromZ_com
@@ -106,7 +102,7 @@ module one_sided_commZ_mod
 !------------------------------------------------------------------------------
 !> Routine for exchanging data within certain atoms only.
 !>
-!> Convinience function
+!> Convenience function
 !>
 !> size of local buffer  :  chunk_size*num_local_atoms
 !> size of receive buffer:  chunk_size*size(atom_indices)
@@ -114,13 +110,12 @@ module one_sided_commZ_mod
 subroutine copyFromZ_com(receive_buf, local_buf, atom_indices, chunk_size, num_local_atoms, communicator)
   NUMBERZ, intent(inout) :: receive_buf(*)    ! receive
   NUMBERZ, intent(inout) :: local_buf(*) ! send
-  integer, intent(in) :: communicator
   integer, intent(in) :: atom_indices(:)
-
   integer, intent(in) :: chunk_size
   integer, intent(in) :: num_local_atoms
+  integer, intent(in) :: communicator
 
-  type (ChunkIndex), allocatable :: chunk_inds(:)
+  type(ChunkIndex), allocatable :: chunk_inds(:)
   integer :: ii
   integer :: ierr
   integer :: naez_trc ! size(atomindices)
@@ -133,7 +128,7 @@ subroutine copyFromZ_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
 
   call MPI_Comm_size(communicator, nranks, ierr)
 
-  naez = num_local_atoms * nranks
+  naez = num_local_atoms*nranks
 
   allocate(chunk_inds(naez_trc))
 
@@ -152,55 +147,14 @@ subroutine copyFromZ_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
 
 endsubroutine copyFromZ_com
 
-!------------------------------------------------------------------------------
-!> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
-!> @param num Total number of chunks/atoms/matrices
-!> @param nranks total number of ranks
-integer function getOwner(ind, num, nranks)
-  integer, intent(in) :: ind, num, nranks
 
-  integer :: atoms_per_proc  
-
-  atoms_per_proc = num / nranks  
-  getOwner = (ind - 1) / atoms_per_proc
-  ! 0 ... nranks-1  
-endfunction getOwner
-
-!------------------------------------------------------------------------------
-!> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
-!> @param num Total number of chunks/atoms/matrices
-integer function getLocalInd(ind, num, nranks)
-  integer, intent(in) :: ind, num, nranks
-
-  integer :: atoms_per_proc  
-
-  atoms_per_proc = num / nranks
-  getLocalInd = mod((ind - 1), atoms_per_proc) + 1
-
-  ! 1 ... atoms_per_proc
-  
-endfunction getLocalInd
-
-!------------------------------------------------------------------------------
-!> Returns chunk index of atom/matrix/chunk with index 'ind'.
-!> @param ind    "atom"-index
-!> @param num    Total number of chunks/atoms/matrices
-!> @param nranks number of ranks
-function getChunkIndex(ind, num, nranks)
-  type (ChunkIndex) :: getChunkIndex
-  integer, intent(in) :: ind, num, nranks
-
-  getChunkIndex%owner = getOwner(ind, num, nranks)
-  getChunkIndex%local_ind = getLocalInd(ind, num, nranks)
-
-endfunction getChunkIndex
 
 subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
   integer, intent(inout) :: win 
-  NUMBERZ, dimension(*), intent(inout) :: buffer
+  NUMBERZ, intent(inout) :: buffer(*)
   integer, intent(in) :: bsize
-  integer, intent(in) :: communicator
   integer, intent(in) :: chunk_size 
+  integer, intent(in) :: communicator
 
   integer :: ierr
 
@@ -316,7 +270,7 @@ program test
   NUMBERZ :: buffer(CHUNKSIZE,CHUNKSPERPROC)
   NUMBERZ :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
   integer :: chunks_req(NUMREQUESTED)
-  type (ChunkIndex), dimension(NUMREQUESTED) :: chunk_inds
+  type(ChunkIndex) :: chunk_inds(NUMREQUESTED)
   integer :: win
   integer :: ierr
   integer :: ii 

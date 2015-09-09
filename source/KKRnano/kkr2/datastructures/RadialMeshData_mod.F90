@@ -9,6 +9,8 @@
 !> This module defines a datatype that contains data related to the radial mesh
 !> @author Elias Rabel
 module RadialMeshData_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: RadialMeshData, create, destroy, represent
@@ -56,7 +58,6 @@ module RadialMeshData_mod
   endinterface
 
   integer, parameter :: MAGIC_NUMBER = -889271554
-  
   
   contains
 
@@ -136,7 +137,7 @@ module RadialMeshData_mod
     do ii = 1, imt
       meshdata%r(ii)    = meshdata%B * (exp(A * (ii - 1)) - 1.d0)
       meshdata%drdi(ii) = A * meshdata%B * exp(A * (ii - 1))
-    enddo
+    enddo ! ii
 
     meshdata%rmt = radius_MT
 
@@ -147,14 +148,11 @@ module RadialMeshData_mod
   subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
     type(RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
-    double precision, intent(in) :: xrn(:)
-    double precision, intent(in) :: drn(:)
+    double precision, intent(in) :: xrn(:), drn(:)
     integer, intent(in) :: nm(:)
-    integer, intent(in) :: imt
-    integer, intent(in) :: irns
+    integer, intent(in) :: imt, irns
 
-    integer :: isum, ii
-    integer :: ipan
+    integer :: isum, ii, ipan
 
     ipan = size(nm) + 1 ! +1 for muffin-tin region 1..imt
     meshdata%ipan = ipan
@@ -165,10 +163,10 @@ module RadialMeshData_mod
     meshdata%ircut(1) = imt
 
     isum = imt
-    do ii = 2,ipan
+    do ii = 2, ipan
       isum = isum + nm(ii - 1)
       meshdata%ircut(ii) = isum
-    enddo
+    enddo ! ii
     meshdata%irc = meshdata%ircut(ipan)
 
     meshdata%irws = isum
@@ -180,7 +178,7 @@ module RadialMeshData_mod
     do ii = 1, meshdata%irws - imt
       meshdata%r(ii + imt) = xrn(ii) * alat
       meshdata%drdi(ii + imt) = drn(ii) * alat
-    enddo
+    enddo ! ii
 
     meshdata%irmin = meshdata%irws - irns
     meshdata%irns = irns
@@ -202,15 +200,13 @@ module RadialMeshData_mod
     character(len=*), intent(in) :: filename
     integer, intent(in) :: recnr
 
-    integer :: FILEUNIT = 37
+    integer, parameter :: FILEUNIT = 37
     integer :: irmd, ipand, max_reclen
 
     ! index file has extension .idx
 
-    call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, &
-                                       filename // ".idx") !ignored for task-local files
-    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, &
-                                       irmd, ipand, max_reclen)
+    call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, filename // ".idx") !ignored for task-local files
+    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
     call closeRadialMeshDataIndexDAFile(FILEUNIT)
 
     call createRadialMeshData(meshdata, irmd, ipand)
@@ -229,9 +225,9 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
 
 #ifdef TASKLOCAL_FILES
-    character(len=7) :: num
-    write(num, '(I7.7)') recnr
-    open(fileunit, file="mesh." // num, form='unformatted')
+    character(len=16) :: num
+    write(unit=num, fmt='(a,i7.7)') "mesh.",recnr
+    open(fileunit, file=num, form='unformatted', action='write')
 
     call writeRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, 0)
 #endif
@@ -251,11 +247,9 @@ module RadialMeshData_mod
                                     meshdata%DRDI, &
                                     meshdata%IRCUT, &
                                     MAGIC_NUMBER + recnr
-
 #ifdef TASKLOCAL_FILES
     close(fileunit)
 #endif
-
   endsubroutine ! write
 
   !----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
-#define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
+#define CHECKALLOC(STAT) if((STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
+#define CHECKDEALLOC(STAT) if((STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
@@ -22,41 +22,41 @@ module TruncationZone_mod
     integer :: naez_trc !< number of atoms in truncation zone
     integer :: naclsd
     !> map atom index to truncation zone atom index (-1 = not in trunc. zone)
-    integer, dimension(:), allocatable :: index_map
+    integer, allocatable :: index_map(:)
     !> map truncation zone atom index to atom index ("inverse" of index_map)
-    integer, dimension(:), allocatable :: trunc2atom_index
-  end type
+    integer, allocatable :: trunc2atom_index(:)
+  endtype
 
   interface createTruncationZone
     module procedure createTruncationZoneOld
     module procedure createTruncationZoneNew
-  end interface
+  endinterface
 
   interface create
     module procedure createTruncationZoneNew
-  end interface
+  endinterface
 
   interface destroy
     module procedure destroyTruncationZone
-  end interface
+  endinterface
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createTruncationZoneOld(self, mask, arrays)
     use Main2Arrays_mod, only: Main2Arrays
-    type (TruncationZone), intent(inout) :: self
-    integer, dimension(:), intent(in) :: mask
-    type (Main2Arrays), intent(in) :: arrays
+    type(TruncationZone), intent(inout) :: self
+    integer, intent(in) :: mask(:)
+    type(Main2Arrays), intent(in) :: arrays
 
-    call createTruncationZoneNew( self, mask )
-  end subroutine
+    call createTruncationZoneNew(self, mask)
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   ! TODO: FIXME
   subroutine createTruncationZoneNew(self, mask)
-    type (TruncationZone), intent(inout) :: self
-    integer, dimension(:), intent(in) :: mask
+    type(TruncationZone), intent(inout) :: self
+    integer, intent(in) :: mask(:)
 
     !-----
     integer :: num_atoms
@@ -77,8 +77,8 @@ module TruncationZone_mod
         self%index_map(ii) = ind
       else
         self%index_map(ii) = -1 ! atom not in trunc. cluster
-      end if
-    end do
+      endif
+    enddo ! ii
     naez_trc = ind
 
     ! setup "inverse" of index_map
@@ -88,28 +88,28 @@ module TruncationZone_mod
       if (self%index_map(ii) > 0) then
         ind = ind + 1
         self%trunc2atom_index(ind) = ii
-      end if
-    end do
+      endif
+    enddo ! ii
 
     self%naez_trc = naez_trc
 
-  end subroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyTruncationZone(self)
-    type (TruncationZone), intent(inout) :: self
+    type(TruncationZone), intent(inout) :: self
 
     integer :: memory_stat
 
     DEALLOCATECHECK(self%index_map)
     DEALLOCATECHECK(self%trunc2atom_index)
 
-  end subroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Translate atom index 'ind' to new atom index and return value
   elemental integer function translateInd(self, ind)
-    type (TruncationZone), intent(in) :: self
+    type(TruncationZone), intent(in) :: self
     integer, intent(in) :: ind
 
     integer :: mapped_index
@@ -119,15 +119,15 @@ module TruncationZone_mod
     if (ind > 0) then
       mapped_index = self%index_map(ind)
       translateInd = mapped_index
-    end if
+    endif
 
-  end function
+  endfunction ! translateInd
 
   !----------------------------------------------------------------------------
   subroutine filter1d(mask, array, new_array)
-    integer, dimension(:), intent(in) :: mask
-    integer, dimension(:), intent(in) :: array
-    integer, dimension(:), intent(inout) :: new_array
+    integer, intent(in) :: mask(:)
+    integer, intent(in) :: array(:)
+    integer, intent(inout) :: new_array(:)
 
     integer :: ii, ind
 
@@ -136,15 +136,15 @@ module TruncationZone_mod
       if (mask(ii) > 0) then
         ind = ind + 1
         new_array(ind) = array(ii)
-      end if
-    end do
-  end subroutine
+      endif
+    enddo ! ii
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine filter2d1(mask, array, new_array)
-    integer, dimension(:), intent(in) :: mask
-    integer, dimension(:,:), intent(in) :: array
-    integer, dimension(:,:), intent(inout) :: new_array
+    integer, intent(in) :: mask(:) 
+    integer, intent(in) :: array(:,:)
+    integer, intent(inout) :: new_array(:,:)
 
     integer :: ii, ind
 
@@ -152,16 +152,16 @@ module TruncationZone_mod
     do ii = 1, size(mask)
       if (mask(ii) > 0) then
         ind = ind + 1
-        new_array(ind, :) = array(ii, :)
-      end if
-    end do
-  end subroutine
+        new_array(ind,:) = array(ii,:)
+      endif
+    enddo ! ii
+  endsubroutine ! filter2d1
 
   !----------------------------------------------------------------------------
   subroutine filter2d2(mask, array, new_array)
-    integer, dimension(:), intent(in) :: mask
-    integer, dimension(:,:), intent(in) :: array
-    integer, dimension(:,:), intent(inout) :: new_array
+    integer, intent(in) :: mask(:)
+    integer, intent(in) :: array(:,:)
+    integer, intent(inout) :: new_array(:,:)
 
     integer :: ii, ind
 
@@ -169,25 +169,25 @@ module TruncationZone_mod
     do ii = 1, size(mask)
       if (mask(ii) > 0) then
         ind = ind + 1
-        new_array(:, ind) = array(:, ii)
-      end if
-    end do
-  end subroutine
+        new_array(:,ind) = array(:,ii)
+      endif
+    enddo ! ii
+  endsubroutine ! filter2d2
 
   !----------------------------------------------------------------------------
   !> Translate atom indices in 'array' to new atom indices using 'index_map'
   subroutine translate(index_map, array)
-    integer, dimension(:), intent(in) :: index_map
-    integer, dimension(:), intent(inout) :: array
+    integer, intent(in) :: index_map(:)
+    integer, intent(inout) :: array(:)
 
     integer :: ii, mapped_index
 
     do ii = 1, size(array)
-        if (array(ii) > 0) then
-          mapped_index = index_map(array(ii))
-          array(ii) = mapped_index
-        end if
-    end do
-  end subroutine
+      if (array(ii) > 0) then
+        mapped_index = index_map(array(ii))
+        array(ii) = mapped_index
+      endif
+    enddo ! ii
+  endsubroutine ! translate
 
-end module TruncationZone_mod
+endmodule TruncationZone_mod

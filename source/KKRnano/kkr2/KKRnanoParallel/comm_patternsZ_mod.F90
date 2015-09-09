@@ -26,25 +26,27 @@
 module comm_patternsZ_mod
   implicit none
   private
-  public :: comm_gather, comm_redistribute, comm_bcast, send_array
   
-  interface comm_gather
-    module procedure comm_gatherZ
-  endinterface
-
-  interface comm_redistribute
-    module procedure comm_redistributeZ, &
-                     comm_redistributeVZ
-  endinterface
-  
-  interface comm_bcast
-    module procedure comm_bcastZ, &
-                     comm_bcast2Z
-  endinterface
-
-  interface send_array
-    module procedure send_arrayZ
-  endinterface
+!   !!! interfacing these functions does not work because of (*) interfaces
+!   public :: comm_gather, comm_redistribute, comm_bcast, send_array
+!   
+!   interface comm_gather
+!     module procedure comm_gatherZ
+!   endinterface
+! 
+!   interface comm_redistribute
+!     module procedure comm_redistributeZ, &
+!                      comm_redistributeVZ
+!   endinterface
+!   
+!   interface comm_bcast
+!     module procedure comm_bcastZ, &
+!                      comm_bcast2Z
+!   endinterface
+! 
+!   interface send_array
+!     module procedure send_arrayZ
+!   endinterface
   
   ! deprecated public statements (to be private in the future)
   public :: comm_gatherZ

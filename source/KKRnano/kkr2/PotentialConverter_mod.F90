@@ -45,11 +45,11 @@ module PotentialConverter_mod
 
       call associateBasisAtomMesh(atomdata, mesh)
 
-!       ! show data on stdout
-!       call repr_RadialMeshData(mesh, str)
-!       write(*, '(A)') str
-!       call repr_PotentialData(atomdata%potential, str)
-!       write(*, '(A)') str
+      ! show data on stdout
+      call repr_RadialMeshData(mesh, str)
+      write(*, '(A)') str
+      call repr_PotentialData(atomdata%potential, str)
+      write(*, '(A)') str
 
       call writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
 

@@ -28,12 +28,12 @@ module ClusterInfo_mod
   type ClusterInfo
     integer :: naclsd !< maximal number of cluster atoms
     integer :: naez_trc
-    integer, dimension(:), allocatable :: nacls_trc
-    integer, dimension(:), allocatable :: numn0_trc
-    integer, dimension(:,:), allocatable :: indn0_trc
-    integer, dimension(:,:), allocatable :: atom_trc
-    integer, dimension(:,:), allocatable :: ezoa_trc
-  end type
+    integer, allocatable :: nacls_trc(:)
+    integer, allocatable :: numn0_trc(:)
+    integer, allocatable :: indn0_trc(:,:)
+    integer, allocatable :: atom_trc(:,:)
+    integer, allocatable :: ezoa_trc(:,:)
+  endtype
 
   interface create
     module procedure createClusterInfo_com
@@ -56,14 +56,15 @@ module ClusterInfo_mod
   subroutine createClusterInfo_com(self, ref_cluster_array, trunc_zone, communicator)
     use RefCluster_mod
     use TruncationZone_mod,  only: TruncationZone, translateInd
+!     use one_sided_commI_mod, only: copyFromI_com
     use one_sided_commI_mod, only: copyFromI_com
 
     include 'mpif.h'
 
-    type (ClusterInfo),    intent(inout) :: self
-    type (RefCluster),     intent(in), dimension(:) :: ref_cluster_array
-    type (TruncationZone), intent(in)    :: trunc_zone
-    integer,               intent(in)    :: communicator
+    type(ClusterInfo),    intent(inout) :: self
+    type(RefCluster),     intent(in)    :: ref_cluster_array(:)
+    type(TruncationZone), intent(in)    :: trunc_zone
+    integer,              intent(in)    :: communicator
 
     integer :: ii
     integer :: ierr
@@ -73,8 +74,8 @@ module ClusterInfo_mod
     integer :: num_local_atoms
     integer :: blocksize
     integer :: memory_stat
-    integer, allocatable, dimension(:,:) :: buffer
-    integer, allocatable, dimension(:,:) :: recv_buf
+    integer, allocatable :: buffer(:,:)
+    integer, allocatable :: recv_buf(:,:)
 
     integer, parameter :: MAGIC = 385306
 
@@ -84,7 +85,7 @@ module ClusterInfo_mod
     nacls_loc = 0
     do ii = 1, num_local_atoms
       nacls_loc = max(nacls_loc, ref_cluster_array(ii)%nacls)
-    end do
+    enddo ! ii
 
     ! determine maximal number of cluster atoms
     call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
@@ -121,7 +122,7 @@ module ClusterInfo_mod
       buffer((naclsd + 4)  :(naclsd + 3 + nacls) , ii) = ref_cluster_array(ii)%atom
       buffer((2*naclsd + 4):(2*naclsd+3 + nacls) , ii) = ref_cluster_array(ii)%ezoa
       buffer((3*naclsd + 4), ii) = MAGIC
-    end do
+    enddo ! ii
 
     call copyFromI_com(recv_buf, buffer, trunc_zone%trunc2atom_index, &
                        blocksize, num_local_atoms, communicator)
@@ -131,22 +132,22 @@ module ClusterInfo_mod
     DEALLOCATECHECK(recv_buf)
     DEALLOCATECHECK(buffer)
 
-  end subroutine
+  endsubroutine ! create
 
   
   subroutine destroyClusterInfo_do_nothing(self)
-    type (ClusterInfo), intent(inout) :: self
-  end subroutine ! destroy
+    type(ClusterInfo), intent(inout) :: self
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Helper routine.
   subroutine constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
     use TruncationZone_mod, only: TruncationZone, translateInd
 
-    type (ClusterInfo), intent(inout) :: self
-    type (TruncationZone), intent(in) :: trunc_zone
+    type(ClusterInfo), intent(inout) :: self
+    type(TruncationZone), intent(in) :: trunc_zone
     integer, intent(in) :: naez_trc
-    integer, intent(in), dimension(:,:) :: recv_buf
+    integer, intent(in) :: recv_buf(:,:)
     integer, intent(in) :: naclsd
 
     integer :: ii, jj
@@ -168,8 +169,8 @@ module ClusterInfo_mod
         if (ind > 0) then
           counter = counter + 1
           self%indn0_trc(ii, counter) = ind
-        end if
-      end do
+        endif
+      enddo ! jj
 
       self%numn0_trc(ii) = counter
 
@@ -180,8 +181,8 @@ module ClusterInfo_mod
         if (ind > 0) then
           counter = counter + 1
           self%atom_trc(counter, ii) = ind
-        end if
-      end do
+        endif
+      enddo
 
       self%nacls_trc(ii) = counter
 
@@ -192,7 +193,7 @@ module ClusterInfo_mod
 
       ! check if end of buffer is correct
       CHECKASSERT( recv_buf((3*naclsd + 4), ii) == MAGIC )
-    end do
-  end subroutine
+    enddo ! ii
+  endsubroutine constructIndices
 
-end module ClusterInfo_mod
+endmodule ClusterInfo_mod

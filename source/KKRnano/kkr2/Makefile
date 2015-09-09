@@ -27,11 +27,11 @@ FCFLAGS += -D TASKLOCAL_FILES
 FCFLAGS += -D USE_VOROWEIGHTS
 # FCFLAGS += -D DEBUG1
 FC90FLAGS =
-# FCFLAGS += -C -traceback -CB
-# FCFLAGS += -O0 -g
-# LDFLAGS  = -O0 -g
-FCFLAGS += -O3  -g 
-LDFLAGS  = -O3  -g 
+FCFLAGS += -C -traceback -CB
+FCFLAGS += -O0 -g
+LDFLAGS  = -O0 -g
+# FCFLAGS += -O3  -g 
+# LDFLAGS  = -O3  -g 
 # LDFLAGS += -C -traceback
 # FCFLAGS += -ipo
 # LDFLAGS += -ipo
@@ -150,12 +150,11 @@ endif
 #==============================================================================
 
 # Paths to look for files
-#DIRS = . dir1 dir2
-DIRS = . DebugHelpers IterativeSolver XC quadrature madelung \
-         EnergyMesh LDAU atomiccore rhovalence \
-         xccouplings energy force harmonics lattice KKRnanoParallel \
-         kkr0common MixingNew datastructures config_reader \
-         shapefun IterativeSolverBCP debug_morgan kkr0 
+DIRS = . DebugHelpers IterativeSolver XC madelung \
+         LDAU atomiccore \
+         xccouplings energy force lattice KKRnanoParallel \
+         MixingNew datastructures \
+         shapefun IterativeSolverBCP debug_morgan  
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -309,5 +308,11 @@ jij_calc_mod.o: Sorting_mod.o
 PotentialConverter_mod.o: DimParams_mod.o BasisAtom_mod.o RadialMeshData_mod.o PotentialData_mod.o
 Startb1_mod.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
 strmat_new.o: Exceptions_mod.o
+one_sided_commZ_mod.o: ChunkIndex_mod.o 
+one_sided_commI_mod.o: ChunkIndex_mod.o 
+one_sided_commD_mod.o: ChunkIndex_mod.o 
+ClusterInfo_mod.o: one_sided_commI_mod.o
+RadialMeshData_mod.o: Exceptions_mod.o
+
 
 # DO NOT DELETE

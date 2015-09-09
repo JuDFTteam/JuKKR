@@ -2,7 +2,7 @@
      +                 GGGRU,GGGRD,GRGRU,GRGRD,GZGR,XCPTU,XCPTD,XCED,
      +                 VXLU,VXLD,VCLU,VCLD,XEDL,CEDL,VXGU,VXGD,VCGU,
      +                 VCGD,XEDG,CEDG)
-
+      implicit none 
 c.....-----------------------------------------------------------------
 c.....gxcp: exchange-correlation potential in ry. also total-energy.
 c.....-----------------------------------------------------------------
@@ -51,7 +51,7 @@ C     .. Statement Functions ..
 C     ..
 C     .. Save statement ..
       SAVE GP,GF,B1P,B1F,B2P,B2F,CP,CF,DP,DF,AP,BP,AF,BF,A1,X01,B1,C1,
-     +     A2,X02,B2,C2,A3,X03,B3,C3,FDD0,HUGEO,HUGES,HUGEF,DSPR,IGL,
+     +     A2,X02,B2,C2,A3,X03,B3,C3,FDD0,HUGES,HUGEF,DSPR,IGL,
      +     IGH,IMJ,IBH,ICA,ICG,IVN,IPG,IVG,IP9,IGD,IXLF,IEX,XLF
 C     ..
 C     .. Statement Function definitions ..
@@ -87,9 +87,9 @@ C     .. Data statements ..
       DATA A2,X02,B2,C2/.0310907d0,-.32500d0,7.06042d0,18.0578d0/
       DATA A3,X03,B3,C3/-.03377373d0,-.0047584d0,1.13107d0,13.0045d0/
       DATA FDD0/1.70992093d0/
-      DATA HUGEO,HUGES,HUGEF,DSPR/625.D0,1.d+6,50.D0,1.d-4/
-      DATA IGL,IGH,IMJ,IBH,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,IEX,
-     +     XLF/0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.00D0/
+      DATA HUGES,HUGEF,DSPR/1.d+6,50.D0,1.d-4/
+      DATA IGL,IGH,IMJ,IBH,ICA,ICG,IVN,IPG,IVG,IP9,IGD,IXLF,IEX,
+     +     XLF/0,0,0,0,0,0,0,0,0,0,0,0,0,0.00D0/
 C     ..
 c.....-----------------------------------------------------------------
 c.....Perdew-zunger parametrization of Ceperley-Alder. g,a,b,c,d in ry.
