@@ -20,7 +20,7 @@ module TEST_lcutoff_mod
   integer,                protected, public :: num_truncated2
   logical,                protected, public :: real_space_cutoff
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine initLcutoffNew(trunc_zone, atom_ids, arrays)
@@ -29,30 +29,27 @@ module TEST_lcutoff_mod
     use lcutoff_mod, only: calcCutoffarray
     use TruncationZone_mod, only: TruncationZone, createTruncationZone
 
-    type (TruncationZone), intent(inout) :: trunc_zone
-    type (Main2Arrays), intent(in) :: arrays
-    integer, dimension(:), intent(in) :: atom_ids
+    type(TruncationZone), intent(inout) :: trunc_zone
+    type(Main2Arrays), intent(in) :: arrays
+    integer, intent(in) :: atom_ids(:)
 
-    integer :: lmmaxd
-    integer :: atomindex, ilocal, ii, ind
-    integer :: num_local_atoms
-    integer, dimension(:), allocatable :: lmarray_temp
-    integer, dimension(:), allocatable :: lmarray_full
+    integer :: lmmaxd, atomindex, ilocal, ii, ind, ios, num_local_atoms
+    integer, allocatable :: lmarray_temp(:), lmarray_full(:)
 
     lmmaxd = arrays%lmmaxd
 
     allocate(lmarray_full(size(arrays%rbasis,2)))
-
     allocate(lmarray_temp(size(arrays%rbasis,2)))
 
     real_space_cutoff = .false.
-    open(91, file='lcutoff', form='formatted', action='read', status='old')
+    open(91, file='lcutoff', form='formatted', action='read', status='old', iostat=ios)
+    if (ios == 0) then ! opening was successful
       read(91,*) cutoff_radius
       read(91,*) lm_low
       read(91,*) cutoffmode
 
       lm_low2 = -1
-      cutoff_radius2 = 0.0d0
+      cutoff_radius2 = 0.d0
       if (cutoffmode > 4) then
         cutoffmode = cutoffmode - 2
         ! cutoff-mode 5: iterative solver with 2 cutoffs,
@@ -61,7 +58,15 @@ module TEST_lcutoff_mod
         read(91,*) lm_low2
         real_space_cutoff = .true.
       endif
-    close(91)
+      close(91)
+    else
+      write(6,*) 'No file "lcutoff" found, use defaults.' ! todo: convert to warning
+      cutoff_radius =  9.d9 ! effectively infinity
+      cutoff_radius2 = 9.d9
+      lm_low  = 999 
+      lm_low2 = 999
+      cutoffmode = 4 ! 3:iterative solver, 4:full solver
+    endif
 
     lmarray_full      = lmmaxd
     num_local_atoms = size(atom_ids)
@@ -87,9 +92,9 @@ module TEST_lcutoff_mod
         do ii = 1, size(lmarray_full)
           ! merge truncation zones of local atoms
           lmarray_full(ii) = max(lmarray_full(ii), lmarray_temp(ii))
-        end do
-      end if
-    end do
+        enddo
+      endif
+    enddo
 
     ! TODO: a bit confusing, is never deallocated
     call createTruncationZone(trunc_zone, lmarray_full, arrays)
@@ -104,15 +109,15 @@ module TEST_lcutoff_mod
         num_truncated = num_truncated + 1
       else if (lmarray_full(ii) == lm_low2) then
         num_truncated2 = num_truncated2 + 1
-      end if
-    end do
+      endif
+    enddo
 
     ind = 0
     do ii = 1, size(lmarray_full)
       if (lmarray_full(ii) > 0) then
         ind = ind + 1
-      end if
-    end do
+      endif
+    enddo
 
     allocate(lmarray(ind)) ! never deallocated - who cares
 
@@ -121,77 +126,69 @@ module TEST_lcutoff_mod
       if (lmarray_full(ii) > 0) then
         ind = ind + 1
         lmarray(ind) = lmarray_full(ii)
-        CHECKASSERT(trunc_zone%index_map(ii) == ind) !TODO
-      end if
-    end do
+        CHECKASSERT(trunc_zone%index_map(ii) == ind) ! TODO
+      endif
+    enddo
 
-    deallocate(lmarray_temp)
-    deallocate(lmarray_full)
-  end subroutine
+    deallocate(lmarray_temp, lmarray_full)
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine cropGLLH(GLLH, lmmaxd, naclsd, naezd, lmarray, numn0, indn0)
     double complex, intent(inout) :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZD)
     integer, intent(in) :: lmmaxd
-    integer, intent(in) ::  naclsd
-    integer, intent(in) ::  naezd
-    integer, intent(in), dimension(naezd) :: lmarray
-    integer, intent(in), dimension(naezd) :: numn0
-    integer, intent(in), dimension(naezd, naclsd) :: indn0
-    !-----
-    integer ii, jj
-    integer lmmax1, lmmax2, lm1, lm2
-    integer clustersitelm
-    double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+    integer, intent(in) :: naclsd
+    integer, intent(in) :: naezd
+    integer, intent(in) :: lmarray(naezd)
+    integer, intent(in) :: numn0(naezd)
+    integer, intent(in) :: indn0(naezd,naclsd)
+
+    integer ii, jj, lmmax1, lmmax2, lm1, lm2, clustersitelm
+    double complex, parameter :: CZERO = (0.d0, 0.d0)
 
     do ii = 1, naezd
       do jj = 1, numn0(ii)
 
-      lmmax1 = lmarray(ii)
-      lmmax2 = lmarray(indn0(ii, jj))
+        lmmax1 = lmarray(ii)
+        lmmax2 = lmarray(indn0(ii,jj))
 
         do lm2 = 1, lmmaxd
           do lm1 = 1, lmmaxd
 
-          clustersitelm = (jj-1)*lmmaxd + lm2
+            clustersitelm = (jj-1)*lmmaxd + lm2
 
-          if (lm1 > lmmax1 .or. lm2 > lmmax2) then
-            GLLH(lm1, clustersitelm, ii) = CZERO
-          end if
+            if (lm1 > lmmax1 .or. lm2 > lmmax2)  GLLH(lm1,clustersitelm,ii) = CZERO
 
-          end do
-        end do
-
-
-      end do
-    end do
-  end subroutine
+          enddo ! lm1
+        enddo ! lm2
+      enddo ! jj
+    enddo ! ii
+    
+  endsubroutine
 
 
 !------------------------------------------------------------------------------
 !> Generates matrix (\Delta T G_ref - 1) BUT PERFORMS L-CUTOFF BY TRUNCATING
 !> T-MATRIX
 !> on input: GLLH contains G_ref, on output: GLLH contains coefficient matrix
-subroutine generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, naclsd, lmarray)
+subroutine generateCoeffMatrixCROPPED(gllh, numn0, indn0, tmatll, naez, lmmaxd, naclsd, lmarray)
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: naclsd
-  integer, intent(in) :: NAEZ
-  double complex, intent(inout) :: GLLH(LMMAXD,NACLSD*LMMAXD,NAEZ)
-  integer, intent(in) :: INDN0(NAEZ,NACLSD)
-  integer, intent(in) :: NUMN0(NAEZ)
-  doublecomplex, intent(in) :: TMATLL(lmmaxd,lmmaxd,NAEZ)
-  integer, intent(in), dimension(:) :: lmarray
+  integer, intent(in) :: naez
+  double complex, intent(inout) :: gllh(lmmaxd,naclsd*lmmaxd,naez)
+  integer, intent(in) :: indn0(naez,naclsd)
+  integer, intent(in) :: numn0(naez)
+  doublecomplex, intent(in) :: tmatll(lmmaxd,lmmaxd,naez)
+  integer, intent(in) :: lmarray(:)
 
-  
-  !---------- local --------------
-  double complex, parameter :: CONE  = ( 1.0D0,0.0D0)
-  double complex, parameter :: CZERO = ( 0.0D0,0.0D0)
-  double complex :: TGH(lmmaxd)
-  integer :: IL1B
-  integer :: IL2B
-  integer :: LM1
-  integer :: LM2
-  integer :: LM3
+  double complex, parameter :: cone  = ( 1.d0,0.d0)
+  double complex, parameter :: czero = ( 0.d0,0.d0)
+  double complex :: tgh(lmmaxd)
+  integer :: il1b
+  integer :: il2b
+  integer :: lm1
+  integer :: lm2
+  integer :: lm3
   integer :: site_index
   integer :: site_lm_index
   integer :: cluster_site_index
@@ -208,46 +205,45 @@ subroutine generateCoeffMatrixCROPPED(GLLH, NUMN0, INDN0, TMATLL, NAEZ, lmmaxd, 
   ! -------------------------------------------------------------------
 
   !$omp parallel do private(site_index, site_lm_index, cluster_site_index, &
-  !$omp                     cluster_site_lm_index, IL1B, IL2B, &
-  !$omp                     LM1, LM2, LM3, TGH)
-  do site_index=1,NAEZ
-    IL1B=LMMAXD*(site_index-1)
-    do cluster_site_index=1,NUMN0(site_index)
+  !$omp                     cluster_site_lm_index, il1b, il2b, &
+  !$omp                     lm1, lm2, lm3, tgh)
+  do site_index = 1, naez
+    il1b = lmmaxd*(site_index-1)
+    do cluster_site_index = 1, numn0(site_index)
 
-    lmmax2 = lmarray(INDN0(site_index,cluster_site_index))
-    lmmax1 = lmarray(site_index)
-    lmmax3 = lmmax1
+      lmmax2 = lmarray(indn0(site_index,cluster_site_index))
+      lmmax1 = lmarray(site_index)
+      lmmax3 = lmmax1
 
-      do LM2=1,LMMAXD
-        cluster_site_lm_index=LMMAXD*(cluster_site_index-1)+LM2
-        IL2B=LMMAXD*(INDN0(site_index,cluster_site_index)-1)+LM2
+      do lm2 = 1, lmmaxd
+        cluster_site_lm_index = lmmaxd*(cluster_site_index-1)+lm2
+        il2b = lmmaxd*(indn0(site_index,cluster_site_index)-1)+lm2
 
-        TGH = CZERO
-        do LM1=1,lmmax1
-          do LM3=1,lmmax3
-            TGH(LM1)=TGH(LM1)+TMATLL(LM1,LM3,site_index)*GLLH(LM3,cluster_site_lm_index,site_index)
-          enddo !lm3
-        enddo !lm1
+        tgh = czero
+        do lm1 = 1, lmmax1
+          do lm3 = 1, lmmax3
+            tgh(lm1) = tgh(lm1) + tmatll(lm1,lm3,site_index)*gllh(lm3,cluster_site_lm_index,site_index)
+          enddo ! lm3
+        enddo ! lm1
 
-        do LM1=1,LMMAXD
-          site_lm_index=IL1B+LM1
-          GLLH(LM1,cluster_site_lm_index,site_index) = TGH(LM1)
+        do lm1 = 1, lmmaxd
+          site_lm_index = il1b+lm1
+          gllh(lm1,cluster_site_lm_index,site_index) = tgh(lm1)
 
-          if (site_lm_index == IL2B) then
+          if (site_lm_index == il2b) then
             ! substract 1 only at the 'diagonal'
-            GLLH(LM1,cluster_site_lm_index,site_index) = GLLH(LM1,cluster_site_lm_index,site_index) - CONE
+            gllh(lm1,cluster_site_lm_index,site_index) = &
+            gllh(lm1,cluster_site_lm_index,site_index) - cone
           endif
 
-          if (lm1 > lmmax1 .or. lm2 > lmmax2) then
-            GLLH(LM1,cluster_site_lm_index,site_index) = CZERO
-          end if
+          if (lm1 > lmmax1 .or. lm2 > lmmax2) gllh(lm1,cluster_site_lm_index,site_index) = czero
 
-        enddo !lm1
-      enddo !lm2
+        enddo ! lm1
+      enddo ! lm2
 
-    enddo
-  enddo
-  !$omp end parallel do
-end subroutine
+    enddo ! cluster_site_index
+  enddo ! site_index
+  !$omp endparallel do
+endsubroutine
 
-end module TEST_lcutoff_mod
+endmodule TEST_lcutoff_mod

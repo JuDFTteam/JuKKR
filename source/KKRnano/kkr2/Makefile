@@ -23,18 +23,22 @@ FCFLAGS += -module $(BUILDDIR)
 FCFLAGS += -I $(BUILDDIR)
 # FCFLAGS += -openmp
 FCFLAGS += -gen-interfaces -warn interfaces
-FCFLAGS += -D TASKLOCAL_FILES 
+# FCFLAGS += -D TASKLOCAL_FILES
 FCFLAGS += -D USE_VOROWEIGHTS
 # FCFLAGS += -D DEBUG1
 FC90FLAGS =
 # FCFLAGS += -C -traceback -CB
 # FCFLAGS += -O0 -g
 # LDFLAGS  = -O0 -g
-FCFLAGS += -O3  -g 
-LDFLAGS  = -O3  -g 
+FCFLAGS += -O3  -g
+LDFLAGS  = -O3  -g
 # LDFLAGS += -C -traceback
+
+### interprocedural optimization at link-time 
+###   (add -ipo also to compiler flags to prepare the objects)
 # FCFLAGS += -ipo
 # LDFLAGS += -ipo
+
 ifeq ($(TYPE),debug)
 FCFLAGS += -g
 else

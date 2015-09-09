@@ -450,7 +450,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
   if (iguess_data%iguess == 1) then
     initial_zero = .false.
     call iguess_load(iguess_data, ms%mat_X)
-  end if
+  endif
 
   call solv%set_initial_zero(initial_zero)
 
@@ -481,7 +481,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
   if (cutoffmode == 4) then
     if (.not. allocated(full)) then
       allocate(full(size(ms%mat_B,1), size(ms%mat_B,1)))
-    end if
+    endif
     call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%sparse%kvstr, ms%sparse%kvstr, full)
     TESTARRAYLOG(3, full)
     call solveFull(full, ms%mat_B)
@@ -585,7 +585,7 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
 
       call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
       !!!Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
-    end if
+    endif
 
     call fenceZ(win) ! ensures that data has arrived in Gref_buffer
 
