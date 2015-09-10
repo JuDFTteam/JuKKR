@@ -151,7 +151,7 @@ integer function processKKRresults(iter, calc_data, my_mpi, emesh, dims, params,
 ! -----------------------------------------------------------------
 ! BEGIN: only MASTERRANK is working here
 ! -----------------------------------------------------------------
-  if(isMasterRank(my_mpi)) then
+  if (isMasterRank(my_mpi)) then
 
     ! DOS was written to file 'results1' and read out here just
     ! to be written in routine wrldos (new: file complex.dos only)
@@ -513,17 +513,17 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
     ! CHARGE -> written to result file
 
     ! Semicore contour included
-    if(params%use_semicore==1) then
+    if (params%use_semicore==1) then
 
-    call calcChargesLresSemi(densities%CHARGE, densities%CHRGSEMICORE_per_atom, densities%DEN, emesh%ielast, &
-                         emesh%IESEMICORE, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
-                         densities%IEMXD)
+      call calcChargesLresSemi(densities%CHARGE, densities%CHRGSEMICORE_per_atom, densities%DEN, emesh%ielast, &
+                          emesh%IESEMICORE, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
+                          densities%IEMXD)
 
     else
-    ! Only valence contour
-    call calcChargesLres(densities%CHARGE, densities%DEN, emesh%ielast, &
-                         densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
-                         densities%IEMXD)
+      ! Only valence contour
+      call calcChargesLres(densities%CHARGE, densities%DEN, emesh%ielast, &
+                          densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
+                          densities%IEMXD)
 
     endif
 
@@ -607,11 +607,11 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, program_tim
   !!!$omp endparallel do
 !------------------------------------------------------------------------------
 
-  if(params%use_semicore==1) then
+  if (params%use_semicore==1) then
     ! --> Sum up semicore charges from different MPI ranks
     call sumChargeSemi_com(CHRGSEMICORE, getMySEcommunicator(my_mpi))
     ! --> Recalculate the semicore contour factor FSEMICORE
-    if(isMasterRank(my_mpi)) then
+    if (isMasterRank(my_mpi)) then
     call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, getMySEcommunicator(my_mpi))
     endif
   endif
@@ -854,7 +854,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
 
   call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC_new, VOL0)
 
-  if(isMasterRank(my_mpi)) then
+  if (isMasterRank(my_mpi)) then
     call printMuffinTinShift(VAV0, VBC_new, VOL0)
   endif
 
@@ -896,9 +896,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
 
   call sum_total_energy_com(new_total_energy_all, new_total_energy, getMasterRank(my_mpi), getMySECommunicator(my_mpi))
 
-  if(isMasterRank(my_mpi)) then
-    call printTotalEnergies(new_total_energy_all)
-  endif
+  if (isMasterRank(my_mpi)) call printTotalEnergies(new_total_energy_all)
 
   deallocate(vons_temp)
 
@@ -1234,57 +1232,41 @@ endsubroutine
     logical, intent(in) :: output !< output to stdout - yes/no
     integer, intent(in) :: naez
     double precision, intent(in) :: max_shift !< maximally allowed fermi-energy shift (good: 0.03d0)
-    double precision, intent(in) :: chrgnt
-    double precision, intent(in) :: denef
+    double precision, intent(in) :: chrgnt, denef
     double precision, intent(in) :: r2nef(:,:,:)
-
-    ! in,out - arguments
-    double precision, intent(inout) :: espv(0:,:)
-    double precision, intent(inout) :: rho2ns(:,:,:)
+    double precision, intent(inout) :: espv(0:,:), rho2ns(:,:,:)
     double precision, intent(inout) :: e2
 
-    !-------- locals
-    integer :: nspind
     type(RadialMeshData), pointer :: mesh
-
-    double precision :: e2shift
-    double precision :: efold
-    double precision :: df
-    double precision :: pi
-    integer :: ispin, lm, lmpotd
+    double precision :: e2shift, efold, df, pi
+    integer :: nspind, lmpotd!, ispin, lm
 
     pi = 4.d0*atan(1.d0)
 
     nspind = atomdata%nspin
     lmpotd = atomdata%potential%lmpot
 
-    mesh => atomdata%mesh_ptr
-! --> determine new fermi level due to valence charge up to
-!     old fermi level e2 and density of states denef
-
-    e2shift = chrgnt/denef
-    e2shift = dmin1(dabs(e2shift), max_shift)*dsign(1.d0, e2shift)
+    mesh => atomdata%mesh_ptr 
+    
+    ! --> determine new fermi level due to valence charge up to old fermi level e2 and density of states denef
+    e2shift = min(max(-max_shift, chrgnt/denef), max_shift)
     efold = e2
-
     e2 = e2 - e2shift
 
     if (output) call printFermiEnergy(denef, e2, e2shift, efold, naez)
 
-! ----------------------------------------------------------------------
+    espv(0,1:nspind) = espv(0,1:nspind) - efold*chrgnt/dble(nspind*naez) ! get correct density and valence band energies
     df = 2.d0/pi*e2shift/dble(nspind)
-! ----------------------------------------------------------------------
+    rho2ns(1:mesh%irc,1:lmpotd,1:nspind) = rho2ns(1:mesh%irc,1:lmpotd,1:nspind) + df * r2nef(1:mesh%irc,1:lmpotd,1:nspind)
 
-    do ispin = 1, nspind
-
+!    ! old code
+!    do ispin = 1, nspind
 ! -->     get correct density and valence band energies
-
-      espv(0,ispin) = espv(0,ispin) - efold*chrgnt/dble(nspind*naez)
-
-      do lm = 1, lmpotd
-        call daxpy(mesh%irc,df,r2nef(1,lm,ispin),1, rho2ns(1,lm,ispin),1)
-      enddo ! lm
-    enddo ! ispin
-! ----------------------------------------------------------------------
+!       espv(0,ispin) = espv(0,ispin) - efold*chrgnt/dble(nspind*naez)
+!       do lm = 1, lmpotd
+!         call daxpy(mesh%irc, df, r2nef(1,lm,ispin), 1, rho2ns(1,lm,ispin), 1)
+!       enddo ! lm
+!    enddo ! ispin
   endsubroutine
 
   !---------------------------------------------------------------------------
