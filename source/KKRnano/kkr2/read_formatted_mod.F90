@@ -4,6 +4,8 @@
 !> 2015
 
 module read_formatted_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
 
@@ -11,6 +13,8 @@ module read_formatted_mod
   public :: PotentialEntry, create, destroy
   public :: create_read_PotentialEntry, destroy_PotentialEntry
 
+  integer, parameter :: max_number_core_states
+  
   type PotentialHeader
     integer :: ititle(20)
     double precision :: rmt
@@ -28,8 +32,8 @@ module read_formatted_mod
   type CoreStatesBlock
      integer :: ncore
      integer :: inew
-     integer :: lcore(20)
-     double precision :: ecore(20)
+     integer :: lcore(max_number_core_states)
+     double precision :: ecore(max_number_core_states)
   endtype
 
   type SphericalBlock
@@ -41,7 +45,7 @@ module read_formatted_mod
   endtype
 
   type NonSphericalBlocks
-     double precision, allocatable :: vins(:,:)
+    double precision, allocatable :: vins(:,:)
   endtype
 
   type PotentialEntry
@@ -66,18 +70,23 @@ module read_formatted_mod
   subroutine read_PotentialHeader(header, unit)
     type(PotentialHeader), intent(out) :: header
     integer, intent(in) :: unit
+    
+    integer :: iostat
 
-    read (unit,fmt="(20a4)") header%ititle(1:20)
+    read(unit, fmt="(20a4)", iostat=iostat) header%ititle(1:20)
+    if (iostat /= 0) die_here("failed to read   ititle!")
 
 !---  >read muffin-tin radius , lattice constant and new muffin radius
 !      (not used)
-    read (unit,fmt="(3f12.8)") header%rmt, header%alat, header%rmtnew
+    read(unit, fmt="(3f12.8)", iostat=iostat) header%rmt, header%alat, header%rmtnew
+    if (iostat /= 0) die_here("failed to read   rMT, alat, rMTnew!")
 
 !---> read nuclear charge
 !     wigner seitz radius (not used), fermi energy and energy difference
 !     between electrostatic zero and muffin tin zero (not used)
 
-    read (unit,fmt="(f10.5,/,f10.5,2f15.10)") header%z_nuclear, header%rws, header%efermi, header%vbc
+    read(unit, fmt="(f10.5,/,f10.5,2f15.10)", iostat=iostat) header%z_nuclear, header%rws, header%efermi, header%vbc
+    if (iostat /= 0) die_here("failed to read   Z, rWS, EFermi, vbc!")
 
 !---> read : number of radial mesh points
 !     (in case of ws input-potential: last mesh point corresponds
@@ -89,7 +98,8 @@ module read_formatted_mod
 !     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 !     the no. of different core states and some other stuff
 
-      read (unit,fmt="(i3,/,2d15.8)") header%irws, header%a_log_mesh, header%b_log_mesh
+    read(unit, fmt="(i3,/,2d15.8)", iostat=iostat) header%irws, header%a_log_mesh, header%b_log_mesh
+    if (iostat /= 0) die_here("failed to read   irws, a, b!")
 
   endsubroutine
 
@@ -99,18 +109,21 @@ module read_formatted_mod
     type(CoreStatesBlock), intent(out) :: block
     integer, intent(in) :: unit
 
-    integer :: icore
+    integer :: icore, iostat
 
-    read (unit,fmt="(2i2)") block%ncore, block%inew
+    read(unit, fmt="(2i2)", iostat=iostat) block%ncore, block%inew
+    if (iostat /= 0) die_here("failed to read   ncore, inew!")
 
 ! read the different core states : l and energy
-    if (block%ncore  >  20) stop "Error: More than 20 core states."
+    if (block%ncore > max_number_core_states) &
+      die_here("Found"+block%ncore+" core states, but hard limit is"+max_number_core_states)
 
     block%lcore(:) = -1
     block%ecore(:) = 9999.0d0
 
     do icore = 1, block%ncore
-      read(unit,fmt="(i5,1p,d20.11)") block%lcore(icore), block%ecore(icore)
+      read(unit, fmt="(i5,1p,d20.11)", iostat=iostat) block%lcore(icore), block%ecore(icore)
+      if (iostat /= 0) die_here("failed to read   lcore, Ecore for core state #"-icore)
     enddo ! icore
 
   endsubroutine
@@ -121,9 +134,13 @@ module read_formatted_mod
     type(SphericalBlock), intent(out) :: block
     integer, intent(in) :: unit
 
-    read (unit,fmt="(10i5)") block%irt1p, block%irns, block%lmpot, block%isave
+    integer :: iostat
+    
+    read(unit, fmt="(10i5)", iostat=iostat) block%irt1p, block%irns, block%lmpot, block%isave
+    if (iostat /= 0) die_here("failed to read   irt1p, irns, lmpot, isave!")
     allocate(block%visp(block%irt1p))
-    read (unit,fmt="(1p,4d20.13)") block%visp(1:block%irt1p)
+    read(unit, fmt="(1p,4d20.13)", iostat=iostat) block%visp(1:block%irt1p)
+    if (iostat /= 0) die_here("failed to read spherical potential array VISP!")
 
   endsubroutine ! create
 
@@ -141,7 +158,7 @@ module read_formatted_mod
     type(SphericalBlock), intent(in) :: sb ! only integers members from the spherical block are read-accessed
     integer, intent(in) :: unit
 
-    integer :: irmin, lm, lm1
+    integer :: irmin, lm, lm1, iostat
 
     irmin = sb%irt1p - sb%irns
 
@@ -153,22 +170,21 @@ module read_formatted_mod
       if (lm1 /= 1) then
 
         if (sb%isave == 1) then
-          read (unit,fmt="(10i5)") lm1
+          read(unit, fmt="(10i5)", iostat=iostat) lm1
+          if (iostat /= 0) die_here("failed to read   lm1 index, although isave == 1!")
         else
           lm1 = lm
         endif
 
         if (lm1 > 1) then
 
-          if (lm1 < 1 .or. lm1 > sb%lmpot) then
-            write(*,*) "ERROR: potential file is not correctly formatted."
-            write(*,*) "Error when trying to read entry: ", LM1
-            stop
-          endif
+          if (lm1 < 1)        die_here("potential file is not formatted correctly, lm ="+lm1+"out of range!")
+          if (lm1 > sb%lmpot) die_here("potential file is not formatted correctly, lm ="+lm1-", but lmpot ="+sb%lmpot)
 
-          read (unit,fmt="(1p,4d20.13)") blocks%vins(irmin:sb%irt1p,lm1)
-        endif
-      endif
+          read(unit, fmt="(1p,4d20.13)", iostat=iostat) blocks%vins(irmin:sb%irt1p,lm1)
+          if (iostat /= 0) die_here("failed to read non-spherical potential array VINS(:,"-lm1-")!")
+        endif ! lm1 > 1
+      endif ! lm1 /= 1
     enddo ! lm
 
   endsubroutine ! create
@@ -215,7 +231,7 @@ program test_read_formatted
   open(fu, form='formatted', file='potential')
   call create_read_PotentialEntry(pe, fu)
 
-  write(*,fmt="(' <#',20a4)") pe%header%ITITLE
+  write(*, fmt="(' <#',20a4)") pe%header%ITITLE
   write(*,*) pe%sblock%VISP
   write(*,*) "---------------------------------------------------------------"
   write(*,*) "Number of non-spherical components: ", pe%sblock%LMPOT
