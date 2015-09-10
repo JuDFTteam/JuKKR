@@ -74,10 +74,13 @@ module Startb1_mod
     type(RadialMeshData) :: mesh
     integer, parameter :: fu = 13
     integer :: cell_index
+    integer :: n_warn_alat_differs
 
     max_reclen = 0
     max_reclen_mesh = 0
     reclen = 0
+    
+    n_warn_alat_differs = 0
 
     call openBasisAtomDAFile(atom, 37, 'atoms')
 
@@ -110,8 +113,7 @@ module Startb1_mod
 !          STOP
 !        endif
 
-        if (abs(alat - pe(ispin)%header%alat) > 1.d-8) &
-          warn(6, "alat in potential file is not the same as in input.conf.")
+        if (abs(alat - pe(ispin)%header%alat) > 1.d-8) n_warn_alat_differs = n_warn_alat_differs + 1
       enddo ! ispin
 
       lpot_atom = lmpot_to_lpot(pe(1)%sblock%lmpot)
@@ -143,8 +145,8 @@ module Startb1_mod
 
       do ispin = 1, nspin
         atom%core%NCORE(ispin) = pe(ispin)%csblock%NCORE
-        atom%core%LCORE(:, ispin) = pe(ispin)%csblock%LCORE
-        atom%core%ITITLE(:, ispin) = pe(ispin)%header%ITITLE
+        atom%core%LCORE(:,ispin) = pe(ispin)%csblock%LCORE
+        atom%core%ITITLE(:,ispin) = pe(ispin)%header%ITITLE
       enddo
 
       if (.not. nowrite) call writeBasisAtomDA(atom, 37, iatom)
@@ -152,7 +154,7 @@ module Startb1_mod
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
       cell_index = ntcell(iatom)
-      CHECKASSERT (cell_index <= sfile%ncell .and. cell_index > 0)
+      CHECKASSERT (1 <= cell_index .and. cell_index <= sfile%ncell)
       call createRadialMeshData(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1)
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
       
@@ -165,8 +167,11 @@ module Startb1_mod
 
     enddo ! iatom ! end loop over atoms
     close(fu)
-
+    
     call closeBasisAtomDAFile(37)
+    
+    if (n_warn_alat_differs > 0) &
+      warn(6, "alat in"+n_warn_alat_differs/nspin+"potential files is not the same as in the input!")
 
   endsubroutine ! write_atoms_file
 
@@ -226,7 +231,7 @@ module Startb1_mod
       ! set potential
       do ispin = 1, nspin
         atom%potential%VINS(:,:,ispin) = pe(ispin)%nsblocks%VINS
-        atom%potential%VISP(:, ispin) = pe(ispin)%sblock%VISP
+        atom%potential%VISP(:,ispin) = pe(ispin)%sblock%VISP
         atom%core%ECORE(:,ispin) = pe(ispin)%csblock%ECORE
       enddo ! ispin
 

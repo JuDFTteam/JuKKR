@@ -37,8 +37,8 @@ module CalculationData_mod
   public :: constructTruncationZones, constructStorage           
   
 
-    type CalculationData
-    PRIVATE
+  type CalculationData
+    private
 
     integer :: num_local_atoms  ! <= atoms_per_proc
     integer, allocatable :: atom_ids(:)
@@ -54,7 +54,6 @@ module CalculationData_mod
     type(DensityResults), pointer     :: densities_array(:)    => null()
     type(EnergyResults), pointer      :: energies_array(:)     => null()
     type(MadelungLatticeSum), pointer :: madelung_sum_array(:) => null()
-
     type(LDAUData), pointer           :: ldau_data_array(:)    => null()
     type(JijData), pointer            :: jij_data_array(:)     => null()
 
@@ -777,7 +776,6 @@ module CalculationData_mod
     type(Main2Arrays), intent(in):: arrays
     double precision, intent(in) :: new_MT_radii(:)
     double precision, intent(in) :: MT_scale
-    !-----------------
 
     integer :: I1, ilocal
     integer :: irmd, irid, ipand, irnsd
@@ -786,8 +784,6 @@ module CalculationData_mod
     double precision :: new_MT_radius
     integer :: num_MT_points
     type(RadialMeshData), pointer :: mesh
-
-    !integer flag
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
@@ -821,9 +817,7 @@ module CalculationData_mod
                           inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
 
       ! optional output of shape functions
-      if (params%write_shapes == 1) then
-        call write_shapefun_file(shdata, inter_mesh, I1)
-      endif
+      if (params%write_shapes == 1) call write_shapefun_file(shdata, inter_mesh, I1)
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
@@ -1003,7 +997,6 @@ module CalculationData_mod
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
 
-    ! ----- locals ------
     integer :: ilocal
 
     call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
@@ -1049,6 +1042,7 @@ module CalculationData_mod
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
     endif
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
+    
   endsubroutine
 
   subroutine constructStorage(calc_data, dims, params, arrays, my_mpi) ! todo: remove arrays, my_mpi from interface
@@ -1070,9 +1064,7 @@ module CalculationData_mod
     type(Main2Arrays), intent(in):: arrays
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    ! ----- locals ------
-    integer :: I1
-    integer :: ilocal
+    integer :: I1, ilocal
     type(KKRresults), pointer :: kkr
     type(DensityResults), pointer :: densities
     type(EnergyResults), pointer :: energies
@@ -1081,11 +1073,7 @@ module CalculationData_mod
     type(MadelungLatticeSum), pointer :: madelung_sum
     type(RadialMeshData), pointer :: mesh
 
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
-
       I1 = calc_data%atom_ids(ilocal)
 
       kkr       => calc_data%kkr_array(ilocal)
@@ -1104,10 +1092,8 @@ module CalculationData_mod
       call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
 
       call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
-
-    !--------------------------------------------------------------------------
     enddo ! ilocal
-    !--------------------------------------------------------------------------
+    
   endsubroutine
 
 endmodule CalculationData_mod

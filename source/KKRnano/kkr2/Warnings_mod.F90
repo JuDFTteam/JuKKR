@@ -10,20 +10,7 @@ implicit none
   public :: show_warning_lines
   public :: test
 
-!   public :: ERROR
-!   private :: WARNING
-! character(len=*), parameter, public :: ERROR = 'ERROR! ' !! the constant string "ERROR! " for easy grepping
-
-! #ifdef COUNT_WARNINGS
-!   ! WARNING(i) is a character(len=10) function, that returns the
-!   ! string ' WARNING! ' for i==0 and the count of warnings for i==1
-!   integer, private, save :: nWarnings = 0 !! counter for warnings
-!   ! Important: the warning counter is only correct, if the output unit is on (o/=0).
-! #else
-!   character(len=9), parameter :: WARNING(0:0) = ['WARNING! '] !! the constant string WARNING(0)
-! #endif
   character(len=*), parameter :: WARNING = 'WARNING! ' !< the constant string WARNING!
-
 
   type, private :: warning_line
     character(len=128) :: text
@@ -34,7 +21,7 @@ implicit none
     integer            :: level
   endtype
 
-  integer, parameter, private :: Max_archived = 8
+  integer, parameter, private :: Max_archived = 16
   integer, private, save      :: num_launched = 0
   
   type(warning_line), private :: archive(0:Max_archived-1)
@@ -85,8 +72,12 @@ implicit none
     
     now = MPI_Wtime() ! wall clock time now
     
-    write(unit=unit, fmt='(/,A,I0,A,/)') 'Show last ',min(num_launched, Max_archived),' warnings:'
-    do num = max(0, num_launched - Max_archived), num_launched - 1
+    if (num_launched > Max_archived) then
+      write(unit=unit, fmt='(/,A,I0,A,I0,A,/)') 'Show last ',Max_archived,' of ',num_launched,' warnings:'
+    else
+      write(unit=unit, fmt='(/,A,I0,A,/)') 'Show last ',num_launched,' warnings:'
+    endif
+    do num = max(0, num_launched - Max_archived), num_launched - 1 ! loop in order of launch time
       idx = modulo(num, Max_archived)
       wrn_or_err = 'Warning! ' ; if (archive(idx)%level > 0) wrn_or_err = 'Error!   ' ! for soft errors
       write(unit=unit, fmt='(I8,6A,I0)', iostat=ios) floor(now - archive(idx)%time),' seconds ago: ', &

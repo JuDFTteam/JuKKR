@@ -1,4 +1,6 @@
 module BrillouinZone_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   
@@ -76,8 +78,8 @@ module BrillouinZone_mod
     integer, intent(out) :: kmesh(iemxd)
     double complex, intent(in) :: ez(iemxd)
 
-    integer :: i, ks, l, n, nb(3), nofks, ekmin, nxyz(3), nofks0(maxmshd), newnofks(maxmshd)
-    logical :: newkp
+    integer :: i, ks, l, n, nb(3), nofks, ekmin, nxyz(3), nofks0(maxmshd), newnofks(maxmshd), fu
+    logical :: newkp, oldkp
     double precision :: bzkp(3,kpoibz), volcub(kpoibz), newbzkp(3,kpoibz,maxmshd), newvolcub(kpoibz,maxmshd), volbz, newvolbz
     logical, external :: test
 
@@ -110,8 +112,17 @@ module BrillouinZone_mod
     write(6,*)
     write(6,fmt="(8x,'number of different k-meshes :',i2,/,8x,'the direct lattice',i3,' symmetries will be used',//,8x,35(1h-),/,8x,'k-mesh NofKs N kx N ky N kz vol BZ',/,8x,35(1h-))") maxmesh,nsymat
 
-    if (.not. nowrite) then
-      open(52, file='kpoints', form='formatted', action='write') ! create or overwrite existing file with the same name
+    if (nowrite) then
+      fu = 0
+      inquire(file='kpoints', exist=oldkp)
+      if (oldkp) then
+        warn(6, "a file 'kpoints' exists and is not overwritten.")
+      else
+        warn(6, "file 'kpoints' is not created.")
+      endif
+    else
+      fu = 52
+      open(unit=fu, file='kpoints', form='formatted', action='write') ! create or overwrite existing file with the same name
     endif
     
     do l = 1, maxmesh
@@ -121,25 +132,23 @@ module BrillouinZone_mod
       nxyz(1:3) = nb(1:3)
       call bzirr3d(nofks, nxyz, kpoibz, bzkp, recbv, bravais, volcub, volbz, rsymat, nsymat, isymindex, lirr, iprint)
 
-      write(6,fmt="(8x,2i6,3i5,f8.4)") l, nofks, nxyz(1:3), volbz
+      write(6, fmt="(8x,2i6,3i5,f8.4)") l, nofks, nxyz(1:3), volbz
       if (l == maxmesh) write(6,fmt="(8x,35(1h-),/)")
 
-      if (.not. nowrite) then
-        write(52,fmt='(i8,f15.10,/,(3f12.8,d20.10))') nofks, volbz, (bzkp(1:3,i), volcub(i), i=1,nofks)
-      endif
+      if (fu > 0) write(unit=fu, fmt='(i8,f15.10,/,(3f12.8,d20.10))') nofks, volbz, (bzkp(1:3,i), volcub(i), i=1,nofks)
       
 ! -->  output of k-mesh
       if (test('k-net   ')) then
         do ks = 1, nofks
-          write(6,fmt="(3f12.5,f15.8)") bzkp(1:3,ks), volcub(ks)
+          write(6, fmt="(3f12.5,f15.8)") bzkp(1:3,ks), volcub(ks)
         enddo ! ks
       endif
 
       nofks0(l) = nofks
     enddo ! l ! loop over different meshes
-    close (52, iostat=i)
-!
-!
+    if (fu > 0) close(unit=fu, iostat=i)
+
+
 ! check dimensions of ekmd precond. array
 ! fix: check regardless of iguessd
 
@@ -151,15 +160,15 @@ module BrillouinZone_mod
     ekmd = ekmin
     write(6,*) '           EKMIN=',ekmin,'  EKMD=',ekmd
 
-    inquire(file='new.kpoints',exist=newkp)
+    inquire(file='new.kpoints', exist=newkp)
     if (newkp) then
 
       open(53, file='new.kpoints', form='formatted', action='read', status='old')
       rewind(53)
       do l = 1, maxmesh
-        read(53,fmt='(i8,f15.10)') newnofks(l), newvolbz
+        read(53, fmt='(i8,f15.10)') newnofks(l), newvolbz
         do i = 1, newnofks(l)
-          read(53,fmt=*) newbzkp(1:3,i,l), newvolcub(i,l)
+          read(53, fmt=*) newbzkp(1:3,i,l), newvolcub(i,l)
         enddo ! i
       enddo ! l
       close(53)

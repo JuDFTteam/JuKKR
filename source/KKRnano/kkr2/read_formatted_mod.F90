@@ -13,7 +13,7 @@ module read_formatted_mod
   public :: PotentialEntry, create, destroy
   public :: create_read_PotentialEntry, destroy_PotentialEntry
 
-  integer, parameter :: max_number_core_states
+  integer, parameter :: max_number_core_states = 20
   
   type PotentialHeader
     integer :: ititle(20)

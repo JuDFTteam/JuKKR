@@ -97,23 +97,30 @@ implicit none
   contains
 
   !---------------------------------------------------------------------------------------
-  subroutine createKKRnanoParallel(my_mpi, num_atom_ranks, num_spin_ranks, num_energy_ranks)
+  subroutine createKKRnanoParallel(my_mpi, n_atom_ranks, num_spin_ranks, num_energy_ranks)
     include 'mpif.h'
 
     type(KKRnanoParallel), intent(inout) :: my_mpi
-    integer, intent(in) :: num_atom_ranks
+    integer, intent(in) :: n_atom_ranks
     integer, intent(in) :: num_spin_ranks
     integer, intent(in) :: num_energy_ranks
 
-    integer :: num_comms
-    integer :: procs_per_comm
-    integer :: ierr
-    integer :: color
-    integer :: key
-    integer :: num_ranks    
+    integer :: num_comms, procs_per_comm, ierr, color, key, num_ranks    
+    integer :: num_atom_ranks
+ 
+    call MPI_Init(ierr)
+    call MPI_Comm_size(MPI_COMM_WORLD, num_ranks, ierr)
  
     num_comms = num_spin_ranks * num_energy_ranks
+     
+    num_atom_ranks = n_atom_ranks
+    if (n_atom_ranks < 1) then
+      ! the number of atomic ranks is chosen atomatically
+      num_atom_ranks = num_ranks / num_comms
+      ! todo: warn if the numbers are not divisible
+    endif
     procs_per_comm = num_atom_ranks
+
 
     my_mpi%num_comms_ = num_comms
     my_mpi%procs_per_comm_ = procs_per_comm
@@ -121,17 +128,12 @@ implicit none
     my_mpi%num_energy_ranks_ = num_energy_ranks
     my_mpi%num_spin_ranks_ = num_spin_ranks
 
-    call MPI_Init(ierr)
-
-    call MPI_Comm_size(MPI_COMM_WORLD, num_ranks, ierr)
     my_mpi%num_ranks_ = num_ranks
     call MPI_Comm_rank(MPI_COMM_WORLD, my_mpi%my_world_rank, ierr)
 
     ! Check if there are enough ranks.
     if (num_ranks < num_comms*procs_per_comm) then
-      if (my_mpi%my_world_rank == 0) then
-        write(*,*) "Not enough MPI ranks."
-      endif
+      if (my_mpi%my_world_rank == 0) write(*,'(9(A,I0))') "Not enough MPI ranks, found ",num_ranks," ranks, but requires ",num_comms,"*",procs_per_comm
       call MPI_Finalize(ierr)
       stop
     endif

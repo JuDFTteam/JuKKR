@@ -85,8 +85,8 @@ module DimParams_mod
     call createConfigReader(conf)
     if (parseFile(conf, filename) /= 0) die_here("parsing file"+filename+"failed!")
 
-    if (getValue(conf, "LMAXD",   self%LMAXD) /= 0)     die_here("did not find in LMAXD file"+filename)
-    if (getValue(conf, "NSPIND",  self%NSPIND) /= 0)    die_here("did not find in NSPIND file"+filename)
+    if (getValue(conf, "LMAXD",   self%LMAXD, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
+    if (getValue(conf, "NSPIND",  self%NSPIND, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
     if (getValue(conf, "NAEZD",   self%NAEZ) /= 0)      die_here("did not find in NAEZD file"+filename)
     if (getValue(conf, "IRNSD",   self%IRNSD) /= 0)     die_here("did not find in IRNSD file"+filename)
     if (getValue(conf, "IRMD",    self%IRMD) /= 0)      die_here("did not find in IRMD file"+filename)
@@ -94,22 +94,25 @@ module DimParams_mod
     if (getValue(conf, "NXIJD",   self%NXIJD) /= 0)     die_here("did not find in NXIJD file"+filename)
     if (getValue(conf, "KPOIBZ",  self%KPOIBZ) /= 0)    die_here("did not find in KPOIBZ file"+filename)
     if (getValue(conf, "IGUESSD", self%IGUESSD) /= 0)   die_here("did not find in IGUESSD file"+filename)
-    if (getValue(conf, "BCPD",    self%BCPD) /= 0)      die_here("did not find in BCPD file"+filename)
     if (getValue(conf, "NMAXD",   self%NMAXD) /= 0)     die_here("did not find in NMAXD file"+filename)
     if (getValue(conf, "ISHLD",   self%ISHLD) /= 0)     die_here("did not find in ISHLD file"+filename)
-    if (getValue(conf, "LLY",     self%LLY) /= 0)       die_here("did not find in LLY file"+filename)
-    if (getValue(conf, "SMPID",   self%SMPID) /= 0)     die_here("did not find in SMPID file"+filename)
-    if (getValue(conf, "EMPID",   self%EMPID) /= 0)     die_here("did not find in EMPID file"+filename)
-    if (getValue(conf, "NTHRDS",  self%NTHRDS) /= 0)    die_here("did not find in NTHRDS file"+filename)
-    if (getValue(conf, "XDIM",    self%XDIM) /= 0)      die_here("did not find in XDIM file"+filename)
-    if (getValue(conf, "YDIM",    self%YDIM) /= 0)      die_here("did not find in YDIM file"+filename)
-    if (getValue(conf, "ZDIM",    self%ZDIM) /= 0)      die_here("did not find in ZDIM file"+filename)
-    if (getValue(conf, "NATBLD",  self%NATBLD) /= 0)    die_here("did not find in NATBLD file"+filename)
     if (getValue(conf, "ITDBRYD", self%ITDBRYD) /= 0)   die_here("did not find in ITDBRYD file"+filename)
-    if (getValue(conf, "num_atom_procs", self%num_atom_procs) /= 0) then
-      write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
-      self%num_atom_procs = self%NAEZ ! default value
-    endif
+    if (getValue(conf, "LLY",     self%LLY, def=0) > 0)       die_here("did not find in LLY file"+filename)
+    if (getValue(conf, "SMPID",   self%SMPID, def=1) > 0)     die_here("did not find in SMPID file"+filename)
+    if (getValue(conf, "EMPID",   self%EMPID, def=1) > 0)     die_here("did not find in EMPID file"+filename)
+    if (getValue(conf, "NTHRDS",  self%NTHRDS, def=0) > 0)    die_here("did not find in NTHRDS file"+filename) ! 0: automatically use environment variable OMP_NUM_THREADS
+    if (getValue(conf, "BCPD",    self%BCPD, def=0) > 0)      die_here("did not find in BCPD file"+filename)
+    if (getValue(conf, "NATBLD",  self%NATBLD, def=4) > 0)    die_here("did not find in NATBLD file"+filename)
+    if (getValue(conf, "XDIM",    self%XDIM, def=1) > 0)      die_here("did not find in XDIM file"+filename)
+    if (getValue(conf, "YDIM",    self%YDIM, def=1) > 0)      die_here("did not find in YDIM file"+filename)
+    if (getValue(conf, "ZDIM",    self%ZDIM, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
+!     if (getValue(conf, "num_atom_procs", self%num_atom_procs) /= 0) then
+!       write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
+!       self%num_atom_procs = self%NAEZ ! default value
+!     endif
+
+    ! new default 0: automatically adopt to the number of currently running MPI processes
+    if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=1) > 0) die_here("num_atom_procs could not be parsed in file"+filename)
 
     write(*,*) "The following variables have not been read from global.conf:"
     next_ptr = 1
@@ -245,7 +248,7 @@ module DimParams_mod
     self%LRECRES2 = 4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
 
     ! Calculate atoms per process
-    self%atoms_per_proc = self%naez / self%num_atom_procs
+    self%atoms_per_proc = self%naez / max(1, self%num_atom_procs)
 
     call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
 
