@@ -6,7 +6,7 @@ module MadelungPotential_mod
   private
   public :: addMadelungPotentialnew_com
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   !> Add Madelung potential to VONS.
@@ -19,10 +19,8 @@ module MadelungPotential_mod
     
     type(CalculationData), intent(inout) :: calc_data
     double precision, intent(in) :: ZAT(:)
-    integer, intent(in) :: rank
-    integer, intent(in) :: atoms_per_proc
+    integer, intent(in) :: rank, atoms_per_proc
     integer, intent(in) :: communicator
-    !------------------------------------
 
     type(MadelungCalculator), pointer :: madelung_calc
     integer :: naez

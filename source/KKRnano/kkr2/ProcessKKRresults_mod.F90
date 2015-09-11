@@ -648,7 +648,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
   USE_ARRAYLOG_MOD
 
   use CalculationData_mod, only: CalculationData
-  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyAtomRank, getMySECommunicator, getMasterRank
+  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyAtomRank, getMySECommunicator, getMasterRank, getNumAtomRanks
   use Main2Arrays_mod, only: Main2Arrays
   use DimParams_mod, only: DimParams
   use InputParams_mod, only: InputParams
@@ -745,7 +745,7 @@ subroutine calculatePotentials(iter, calc_data, my_mpi, dims, params, program_ti
   ! output: VONS (changed), VMAD
   ! operation on all atoms! O(N**2)
   call addMadelungPotentialnew_com(calc_data, arrays%ZAT, getMyAtomRank(my_mpi), &
-                                dims%atoms_per_proc, &
+                                dims%naez/getNumAtomRanks(my_mpi), &
                                 getMySEcommunicator(my_mpi))
 
   call OUTTIME(isMasterRank(my_mpi), 'VMADELBLK ......', getElapsedTime(program_timer), ITER)

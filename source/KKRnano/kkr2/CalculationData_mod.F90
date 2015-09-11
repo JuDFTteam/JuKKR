@@ -97,13 +97,11 @@ module CalculationData_mod
     type(Main2Arrays), intent(in) :: arrays
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    integer :: atoms_per_proc
-    integer :: num_local_atoms
     integer, external :: mapblock
-    integer :: ii
-    integer :: atom_rank
+    integer :: atoms_per_proc, num_local_atoms, ii, atom_rank
 
-    atoms_per_proc = dims%atoms_per_proc
+    atoms_per_proc = dims%naez / getNumAtomRanks(my_mpi)
+    ASSERT( getNumAtomRanks(my_mpi) * atoms_per_proc == dims%naez )
     num_local_atoms = atoms_per_proc !TODO
 
     calc_data%num_local_atoms = num_local_atoms
@@ -140,9 +138,8 @@ module CalculationData_mod
     ! process 2 treats atoms 3,4 and so on
     ! FOR USE OF TRUNCATION THESE atoms have to be close together!!!
 
-    ASSERT( size(calc_data%atom_ids) == num_local_atoms)
-    ASSERT ( getNumAtomRanks(my_mpi) * atoms_per_proc == dims%naez )
-    ASSERT ( mod(dims%naez, atoms_per_proc) == 0 )
+    ASSERT( size(calc_data%atom_ids) == num_local_atoms )
+    ASSERT( mod(dims%naez, atoms_per_proc) == 0 )
 
     do ii = 1, num_local_atoms
       calc_data%atom_ids(ii) = atom_rank * atoms_per_proc + ii

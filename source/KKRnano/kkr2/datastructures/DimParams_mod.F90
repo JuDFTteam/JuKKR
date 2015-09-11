@@ -49,7 +49,6 @@ module DimParams_mod
     integer :: MAXMSHD
 
     integer :: num_atom_procs !< atom-parallelisation number of MPI-procs
-    integer :: atoms_per_proc
 
   endtype ! DimParams
 
@@ -85,8 +84,6 @@ module DimParams_mod
     call createConfigReader(conf)
     if (parseFile(conf, filename) /= 0) die_here("parsing file"+filename+"failed!")
 
-    if (getValue(conf, "LMAXD",   self%LMAXD, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
-    if (getValue(conf, "NSPIND",  self%NSPIND, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
     if (getValue(conf, "NAEZD",   self%NAEZ) /= 0)      die_here("did not find in NAEZD file"+filename)
     if (getValue(conf, "IRNSD",   self%IRNSD) /= 0)     die_here("did not find in IRNSD file"+filename)
     if (getValue(conf, "IRMD",    self%IRMD) /= 0)      die_here("did not find in IRMD file"+filename)
@@ -97,6 +94,9 @@ module DimParams_mod
     if (getValue(conf, "NMAXD",   self%NMAXD) /= 0)     die_here("did not find in NMAXD file"+filename)
     if (getValue(conf, "ISHLD",   self%ISHLD) /= 0)     die_here("did not find in ISHLD file"+filename)
     if (getValue(conf, "ITDBRYD", self%ITDBRYD) /= 0)   die_here("did not find in ITDBRYD file"+filename)
+    ! optionals
+    if (getValue(conf, "LMAXD",   self%LMAXD, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
+    if (getValue(conf, "NSPIND",  self%NSPIND, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
     if (getValue(conf, "LLY",     self%LLY, def=0) > 0)       die_here("did not find in LLY file"+filename)
     if (getValue(conf, "SMPID",   self%SMPID, def=1) > 0)     die_here("did not find in SMPID file"+filename)
     if (getValue(conf, "EMPID",   self%EMPID, def=1) > 0)     die_here("did not find in EMPID file"+filename)
@@ -112,7 +112,7 @@ module DimParams_mod
 !     endif
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
-    if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=1) > 0) die_here("num_atom_procs could not be parsed in file"+filename)
+    if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename)
 
     write(*,*) "The following variables have not been read from global.conf:"
     next_ptr = 1
@@ -241,14 +241,11 @@ module DimParams_mod
 
     self%LMPOTD = (self%LPOT+1)**2
     !self%NTIRD = (self%IRMD+(self%IRNSD+1)*(self%LMPOTD-1))*self%NSPIND
-    self%IRMIND = self%IRMD-self%IRNSD
+    self%IRMIND = self%IRMD - self%IRNSD
     self%NGUESSD = 1 + self%IGUESSD * ( self%NAEZ * (self%LMAXD+1)**2 - 1 )
 
     ! Record lengths
     self%LRECRES2 = 4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
-
-    ! Calculate atoms per process
-    self%atoms_per_proc = self%naez / max(1, self%num_atom_procs)
 
     call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
 
