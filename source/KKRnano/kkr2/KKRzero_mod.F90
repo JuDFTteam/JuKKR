@@ -465,6 +465,7 @@ module KKRzero_mod
   
   
   subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld) ! todo: remove nmaxd and ishld from interface
+    use Constants_mod, only: pi
 ! **********************************************************************
 ! *  modified version of lattice3d.f                                   *
 ! *  this one only tests the dimension of arrays!                      *
@@ -494,29 +495,22 @@ module KKRzero_mod
     double precision, intent(in) :: alat, rmax, gmax
     double precision, intent(in) :: bravais(3,3), recbv(3,3)
     
-!   double precision :: gn(3,nmaxd), rm(3,nmaxd)
-!   integer :: nsg(ishld), nsr(ishld)
-!   double precision, allocatable :: gnr(:), rmr(:), gn(:,:), rm(:,:) ! gnr(nmaxd), rmr(nmaxd), gn(3,nmaxd), rm(3,nmaxd)
-    integer :: ngmax, nrmax, nshlr, nshlg
-    double precision :: absgm,absrm, ar2, da,db, pi, rv(3), av(3),vmin, rmax2, gv(3), gmax2, ag2 !, ag, ar
-    integer          :: i,k,n,n1,ng,nr,nsh,nshl,numg,numgh,numr,numrh, i1, i2, i3, ist
-    double precision :: absg(3), absr(3), bg(3,3), br(3,3)
-    double precision, allocatable :: cj(:,:) ! cj(0:3,nmaxd)
+    integer :: ngmax, nrmax, nshlr, nshlg, i,k,n,n1,ng,nr,nsh,nshl,numg,numgh,numr,numrh, i1, i2, i3, ist
+    double precision :: absg2(3), absr2(3), bg(3,3), br(3,3)
+    double precision :: absgm, absrm, ar2, da, db, rv(3), av(3), vmin, vmin2, rmax2, gv(3), gmax2, ag2
+    double precision, allocatable :: cv(:,:), cd(:) ! cv(1:3,nmaxd), cd(nmaxd)
     
-    pi = 4.0d0*atan(1.0d0)
     br = bravais*alat ! --> basic trans. vectors and basis vectors
     bg = recbv*(2.d0*pi/alat) ! --> generate primitive vectors bg of reciprocal space
 
     ! --> estimate no. of lattice vectors
     do i = 1, 3
-      absr(i) = sqrt(br(1,i)**2 + br(2,i)**2 + br(3,i)**2)
-      absg(i) = sqrt(bg(1,i)**2 + bg(2,i)**2 + bg(3,i)**2)
+      absr2(i) = br(1,i)**2 + br(2,i)**2 + br(3,i)**2
+      absg2(i) = bg(1,i)**2 + bg(2,i)**2 + bg(3,i)**2
     enddo ! i
 
-    absrm = maxval(absr(1:3))
-    absgm = maxval(absg(1:3))
-    absrm = 2.0d0*pi/absrm
-    absgm = 2.0d0*pi/absgm
+    absrm = 2.0d0*pi/sqrt(maxval(absr2(1:3)))
+    absgm = 2.0d0*pi/sqrt(maxval(absg2(1:3)))
     numr = 2*ceiling(rmax/absgm) + 1
     numg = 2*ceiling(gmax/absrm) + 1
     numrh = numr/2 + 1
@@ -525,8 +519,9 @@ module KKRzero_mod
     rmax2 = rmax**2
     gmax2 = gmax**2
     
-    allocate(cj(0:3,max(numr**3, numg**3)), stat=ist)
-    if (ist /= 0) stop 'testdimlat out of memory'
+!     allocate(cv(0:3,numr**3), stat=ist)
+    allocate(cd(numr**3), stat=ist)
+    if (ist /= 0) stop 'testdimlat out of memory (real space)'
     
 !   generate lattice vectors of real space
     nr = 0
@@ -540,12 +535,9 @@ module KKRzero_mod
           ar2 = rv(1)**2 + rv(2)**2 + rv(3)**2
           if (ar2 <= rmax2) then
             nr = nr + 1
-!             if (nr > nmaxd) then
-!               write(6,*) ' error: dimension nmaxd in inc.p too small',nr,nmaxd
-!               stop
-!             endif
-            cj(0,nr) = sqrt(ar2) ! also store the radius
-            cj(1:3,nr) = rv(1:3)
+!             cv(0,nr) = sqrt(ar2) ! also store the radius
+!             cv(1:3,nr) = rv(1:3)
+            cd(nr) = ar2
           endif ! ar <= rmax
         enddo ! i3
       enddo ! i2
@@ -556,45 +548,46 @@ module KKRzero_mod
     da = 1.d-6
     nsh = 0
     nshl = -1
-    do k = 1, nr
-      vmin = rmax + 1.d0
+    do k = 1, nr 
+!     vmin = rmax + 1.d0
+      vmin2 = rmax**2 + 1.d0
+      
+      ! find vmin2 = minval(cd(1:nr))
+      ! find n1    = minloc(cd(1:nr))
       do n = 1, nr
-        if (cj(0,n) - vmin < 0.d0) then
-          vmin = cj(0,n)
+!       if (cv(0,n) - vmin < 0.d0) then
+        if (cd(n) < vmin2) then
+!         vmin = cv(0,n)
+          vmin2 = cd(n)
           n1 = n
         endif
       enddo ! n
       
       nshl = nshl + 1
-!     rm(1:3,k) = cj(1:3,n1)
-!     rmr(k) = cj(0,n1)
-      db = vmin
+      db = sqrt(vmin2)
 
       if (db > da + 1.d-6) then
         nsh = nsh + 1
-!         if (nsh > ishld) then
-!           write(6,*) ' error: dimension ishld in inc.p too small',nsh,ishld
-!           stop
-!         endif
-!       nsr(nsh) = nshl
         nshl = 0
         da = db
       endif
       
-      cj(0,n1) = rmax + 1.d0
+!       cv(0,n1) = rmax + 1.d0
+      cd(n1) = rmax**2 + 1.d0
     enddo ! k
-
+    
     nsh = nsh + 1
     nshl = nshl + 1
-!     if (nsh > ishld) then
-!       write(6,*) ' error: dimension ishld in inc.p too small',nsh,ishld
-!       stop
-!     endif
 
 !   nsr(nsh) = nshl
     nshlr = nsh
     if (nshlr <= 1) die_here("cut-off radius rmax too small")
 
+    deallocate(cd, stat=ist)    
+    
+    allocate(cv(0:3,numg**3), stat=ist)
+    if (ist /= 0) stop 'testdimlat out of memory (reciprocal space)'
+    
 !   generate lattice vectors of real space
     ng = 0
     do i1 = 1, numg
@@ -607,12 +600,8 @@ module KKRzero_mod
           ag2 = gv(1)**2 + gv(2)**2 + gv(3)**2
           if (ag2 <= gmax2) then
             ng = ng + 1
-!             if (ng > nmaxd) then
-!               write(6,*) ' error: dimension nmaxd in inc.p too small',ng,nmaxd
-!               stop
-!             endif
-            cj(0,ng) = sqrt(ag2)
-            cj(1:3,ng) = gv(1:3)
+            cv(0,ng) = sqrt(ag2)
+            cv(1:3,ng) = gv(1:3)
           endif
         enddo ! i3
       enddo ! i2
@@ -626,42 +615,36 @@ module KKRzero_mod
     do k = 1, ng
       vmin = gmax + 1.d0
       do n = 1, ng
-        if (cj(0,n) < vmin) then
-          vmin = cj(0,n)
+        if (cv(0,n) < vmin) then
+          vmin = cv(0,n)
           n1 = n
         endif
       enddo ! n
 
       nshl = nshl + 1
-!     gn(1:3,k) = cj(1:3,n1)
-!     gnr(k) = cj(0,n1)
+!     gn(1:3,k) = cv(1:3,n1)
+!     gnr(k) = cv(0,n1)
       db = vmin
       if (db > da + 1.d-7) then
         nsh = nsh + 1
-!         if (nsh > ishld) then
-!           write(6,*) ' error: dimension ishld in inc.p too small',nsh,ishld
-!           stop
-!         endif
 
 !       nsg(nsh) = nshl
         nshl = 0
         da = db
       endif
 
-      cj(0,n1) = gmax + 1.d0
+      cv(0,n1) = gmax + 1.d0
     enddo ! k
 
     nsh = nsh + 1
     nshl = nshl + 1
-!     if (nsh > ishld) then
-!       write(6,*) ' error: dimension ishld in inc.p too small',nsh,ishld
-!       stop
-!     endif
 
 !   nsg(nsh) = nshl
     nshlg = nsh
     if (nshlg <= 1) die_here("cut-off radius gmax too small")
 
+    deallocate(cv, stat=ist)    
+    
     write(6,'(79(1h=),/)')
     write(6, fmt="(10x,'R max =',F9.5,' (a.u.)',/,10X,'G max =',f9.5,' (1/a.u.)',/)") rmax, gmax
     write(6,'(79(1h=),/,15x,a)') 'checking lattice for Ewald-summ ........... OK'

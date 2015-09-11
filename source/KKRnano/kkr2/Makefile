@@ -320,5 +320,6 @@ RadialMeshData_mod.o: Exceptions_mod.o
 read_formatted_mod.o: Exceptions_mod.o
 BrillouinZone_mod.o: Exceptions_mod.o
 KKRnanoParallel_mod.o: Exceptions_mod.o
+MadelungCalculator_mod.o: Exceptions_mod.o
 
 # DO NOT DELETE

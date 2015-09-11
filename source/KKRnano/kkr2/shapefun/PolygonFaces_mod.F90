@@ -29,7 +29,7 @@ module PolygonFaces_mod
   elemental subroutine destroyPolygonFace(self)
     type(PolygonFace), intent(inout) :: self
     integer :: ist
-    call destroy(self%ta) 
+    if (allocated(self%ta)) call destroy(self%ta) 
     deallocate(self%ta, stat=ist)
   endsubroutine ! destroy
   
