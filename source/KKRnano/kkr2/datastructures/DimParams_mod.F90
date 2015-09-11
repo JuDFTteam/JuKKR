@@ -138,30 +138,30 @@ module DimParams_mod
 
     open (fu, file=filename, FORM='unformatted', action='read', status='old')
 
-    read(fu) self%LMAXD
-    read(fu) self%NSPIND
-    read(fu) self%NAEZ
-    read(fu) self%IRNSD
-    read(fu) self%IRMD
-    read(fu) self%IRID
-    read(fu) self%NXIJD
-    read(fu) self%KPOIBZ
-    read(fu) self%IGUESSD
-    read(fu) self%BCPD
-    read(fu) self%NMAXD
-    read(fu) self%ISHLD
-    read(fu) self%LLY
-    read(fu) self%SMPID
-    read(fu) self%EMPID
-    read(fu) self%NTHRDS
-    read(fu) self%XDIM
-    read(fu) self%YDIM
-    read(fu) self%ZDIM
-    read(fu) self%NATBLD
-    read(fu) self%ITDBRYD
-    read(fu) self%IEMXD
-    read(fu) self%EKMD
-    read(fu) self%num_atom_procs
+    read (fu) self%LMAXD
+    read (fu) self%NSPIND
+    read (fu) self%NAEZ
+    read (fu) self%IRNSD
+    read (fu) self%IRMD
+    read (fu) self%IRID
+    read (fu) self%NXIJD
+    read (fu) self%KPOIBZ
+    read (fu) self%IGUESSD
+    read (fu) self%BCPD
+    read (fu) self%NMAXD
+    read (fu) self%ISHLD
+    read (fu) self%LLY
+    read (fu) self%SMPID
+    read (fu) self%EMPID
+    read (fu) self%NTHRDS
+    read (fu) self%XDIM
+    read (fu) self%YDIM
+    read (fu) self%ZDIM
+    read (fu) self%NATBLD
+    read (fu) self%ITDBRYD
+    read (fu) self%IEMXD
+    read (fu) self%EKMD
+    read (fu) self%num_atom_procs
 
     close(fu)
 

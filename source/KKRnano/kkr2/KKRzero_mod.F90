@@ -375,7 +375,7 @@ module KKRzero_mod
     write(6, fmt="('|',78x,'|')") 
     write(6, fmt="('| established Juelich 2008',26x,'Version : ',a9,8x,'|')") version
     write(6, fmt="('|',78x,'|')") 
-    write(6, fmt="(/80(1h=))") 
+    write(6, fmt="(80(1h=))") 
       
     open(77, file='rbasis', form='formatted', action='read', status='old') ! open input file containing the atomic positions
     do i = 1, naez

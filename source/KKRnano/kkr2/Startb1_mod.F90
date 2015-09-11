@@ -88,7 +88,7 @@ module Startb1_mod
     do iatom = 1, naezd
 
       do ispin = 1, nspin
-        call create_read_PotentialEntry(pe(ispin), fu)
+        call create_read_PotentialEntry(pe(ispin), fu, iatom)
 
         if (iatom == 1 .and. ispin == 1) EFERMI = pe(ispin)%header%EFERMI ! take approximate Fermi energy from 1st potential entry
 
@@ -213,7 +213,7 @@ module Startb1_mod
     do iatom = 1, naezd
 
       do ispin = 1, nspin
-        call create_read_PotentialEntry(pe(ispin), fu)
+        call create_read_PotentialEntry(pe(ispin), fu, iatom)
       enddo ! spin
 
       cell_index = ntcell(iatom)
