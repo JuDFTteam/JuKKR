@@ -258,7 +258,7 @@ module MadelungCalculator_mod
     type(MadelungHarmonics), intent(inout) :: harmonics
     integer, intent(in) :: lmax
 
-    integer :: lassld, memory_stat
+    integer :: lassld!, memory_stat
 
     lassld = 4*lmax
     harmonics%lassld = lassld
@@ -543,7 +543,7 @@ endsubroutine ! lattice3d
     character, intent(in) :: space ! for debug: 'r' or 'g'
     
     integer :: numh(3), i, i1, i2, i3, ivmin, iminl(1), i01, ish, nshl
-    double precision :: dmax2, v2, vmin, very_large, da, db, vx(3), vxy(3), vxyz(3), vmin2
+    double precision :: dmax2, v2, vmin, very_large, da, db, vx(3), vxy(3), vxyz(3)
     double precision, allocatable :: cv(:,:), d2(:)
     integer, allocatable :: nvis(:) ! tmp for nsh
   
@@ -604,18 +604,9 @@ endsubroutine ! lattice3d
     
     do i = 1, nvecs
     
-!       iminl = minloc(d2) ! find the location of the smallest element in d2
-!       ivmin = iminl(1) ! pass index
-      vmin2 = very_large
-      do i2 = 1, nvecs
-        if (d2(i2) < vmin2) then
-          vmin2 = d2(i2)
-          ivmin = i2
-        endif
-      enddo ! i2
-  
-      assert( vmin2 == d2(ivmin) )
-      vmin = sqrt(vmin2)
+      iminl = minloc(d2) ! find the location of the smallest element in d2
+      ivmin = iminl(1) ! pass index
+      vmin = sqrt(d2(ivmin))
 
       nshl = nshl + 1 ! increase the number of points in this shell
       
