@@ -171,7 +171,7 @@ module Startb1_mod
     call closeBasisAtomDAFile(37)
     
     if (n_warn_alat_differs > 0) &
-      warn(6, "alat in"+n_warn_alat_differs/nspin+"potential files is not the same as in the input!")
+      warn(6, "In"+n_warn_alat_differs/nspin+"potential files ALAT is not the same as in the input!")
 
   endsubroutine ! write_atoms_file
 

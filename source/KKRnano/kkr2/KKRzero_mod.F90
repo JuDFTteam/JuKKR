@@ -275,7 +275,8 @@ module KKRzero_mod
     params%RMAX = params%RMAX*params%ALAT
     params%GMAX = params%GMAX/params%ALAT
 
-    call TESTDIMLAT(params%ALAT, arrays%BRAVAIS, RECBV, params%RMAX, params%GMAX, dims%NMAXD, dims%ISHLD)
+!   ! this call is not needed since the DimParam members NMAXD and ISHLD will not be needed in the future 
+!   call TESTDIMLAT(params%ALAT, arrays%BRAVAIS, RECBV, params%RMAX, params%GMAX, dims%NMAXD, dims%ISHLD)
 
     if (checkmode == 0) then 
       ! write binary files that are needed in the main program

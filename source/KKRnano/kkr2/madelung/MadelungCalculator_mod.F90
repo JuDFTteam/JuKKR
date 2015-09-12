@@ -463,13 +463,13 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr,
   numr(1:3) = 2*idint(rmax/absgm) + 3 ! Warning: cross term here: direct depends on reciprocal
   numg(1:3) = 2*idint(gmax/absrm) + 3 ! Warning: cross term here: reciprocal depends on direct
 
-! write(0,'(a)') trim(__FILE__+"alat"+alat)
-! write(0,'(a)') trim(__FILE__+"bravais"+reshape(bravais, [9]))
-! write(0,'(a)') trim(__FILE__+"br"+reshape(br, [9]))
-! write(0,'(a)') trim(__FILE__+"recbv"+reshape(recbv, [9]))
-! write(0,'(a)') trim(__FILE__+"bg"+reshape(bg, [9]))
-! write(0,*) trim(__FILE__+"loop"+numg+" in g-space from gmax ="+gmax)
-! write(0,*) trim(__FILE__+"loop"+numr+" in r-space from rmax ="+rmax)
+! ! write(0,'(a)') trim(__FILE__+"alat"+alat)
+! ! write(0,'(a)') trim(__FILE__+"bravais"+reshape(bravais, [9]))
+! ! write(0,'(a)') trim(__FILE__+"br"+reshape(br, [9]))
+! ! write(0,'(a)') trim(__FILE__+"recbv"+reshape(recbv, [9]))
+! ! write(0,'(a)') trim(__FILE__+"bg"+reshape(bg, [9]))
+! ! write(0,*) trim(__FILE__+"loop"+numg+" in g-space from gmax ="+gmax)
+! ! write(0,*) trim(__FILE__+"loop"+numr+" in r-space from rmax ="+rmax)
 
   ! **********************************************************************
   !                 generate lattice vectors of real space
@@ -585,7 +585,7 @@ endsubroutine ! lattice3d
 
     enddo ! i01    
     ! ======================================================================
-! write(0,*) trim(__FILE__+"loop"+num+" in"+space-"-space finds"+nvecs+"vectors")
+!!! write(0,*) trim(__FILE__+"loop"+num+" in"+space-"-space finds"+nvecs+"vectors")
     !
     ! --> sort vectors in order of increasing absolute value
     !
@@ -619,7 +619,7 @@ endsubroutine ! lattice3d
         ! create a new shell
         ish = ish + 1 ! create a shell index of the current shell
         nvis(ish) = nshl ! store the number of points in the last shell
-! write(0,*) trim(__FILE__+"create shell"+ish+"with"+nshl+"points in"+space-"-space")
+!!! write(0,*) trim(__FILE__+"create shell"+ish+"with"+nshl+"points in"+space-"-space")
         
         nshl = 0 ! init number of points for the new shell
         da = db
@@ -634,7 +634,7 @@ endsubroutine ! lattice3d
     ish = ish + 1
     nshl = nshl + 1
     nvis(ish) = nshl
-! write(0,*) trim(__FILE__+"create shell"+ish+"with"+nshl+"points in"+space-"-space (last)")
+!!! write(0,*) trim(__FILE__+"create shell"+ish+"with"+nshl+"points in"+space-"-space (last)")
 
     nshells = ish ! export the max number of shells
     
