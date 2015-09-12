@@ -167,7 +167,8 @@ module CalculationData_mod
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
-      call calculateMadelungLatticeSum(self%madelung_sum_array(ila), atom_id, arrays%rbasis)
+!       call calculateMadelungLatticeSum(self%madelung_sum_array(ila), atom_id, arrays%rbasis)
+      call calculateMadelungLatticeSum(self%madelung_sum_array(ila), self%madelung_calc, atom_id, arrays%rbasis)
     enddo ! ila
 
   endsubroutine ! prepare Madelung
@@ -196,10 +197,7 @@ module CalculationData_mod
 
     integer :: ila, atom_id
 
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
     do ila = 1, self%num_local_atoms
-    !--------------------------------------------------------------------------
 
       atom_id = self%atom_ids(ila)
 
@@ -535,7 +533,7 @@ module CalculationData_mod
       call createLDAUData(self%ldau_data_array(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
       call createJijData(self%jij_data_array(ila), .false., params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
 
-      call createMadelungLatticeSum(self%madelung_sum_array(ila), self%madelung_calc, dims%naez)
+      call createMadelungLatticeSum(self%madelung_sum_array(ila), self%madelung_calc%lmxspd, dims%naez) 
 
       ! ASSERT( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
 
@@ -636,15 +634,12 @@ module CalculationData_mod
       call associateBasisAtomMesh(old_atom_array(ila), old_mesh_array(ila))
 
       new_MT_radii(ila) = old_atom_array(ila)%radius_muffin_tin / params%alat
-    !--------------------------------------------------------------------------
     enddo ! ila
-    !--------------------------------------------------------------------------
 
     ! generate shapes and meshes
     call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale)
 
     ! interpolate to new mesh
-
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
 

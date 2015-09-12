@@ -57,7 +57,7 @@ module MadelungCalculator_mod
   type MadelungLatticeSum
     integer :: num_atoms
     double precision, allocatable :: smat(:,:)
-    type(MadelungCalculator), pointer :: madelung_calc
+!   type(MadelungCalculator), pointer :: madelung_calc
   endtype
 
   
@@ -163,19 +163,17 @@ module MadelungCalculator_mod
   !> Has to be configured with a properly setup MadelungCalculator.
   !> The MadelungCalculator can be reused for several MadelungLatticeSums
   !> as long as the geometry and lmax does not change
-  subroutine createMadelungLatticeSum(madelung_sum, madelung_calc, num_atoms)
+  subroutine createMadelungLatticeSum(madelung_sum, lmxspd, num_atoms)!, madelung_calc
     type(MadelungLatticeSum), intent(inout) :: madelung_sum
-    type(MadelungCalculator), target, intent(in)    :: madelung_calc
-    integer, intent(in) :: num_atoms
-
-    type(MadelungCalculator), pointer :: mad_ptr
-
-    mad_ptr => madelung_calc
-    madelung_sum%madelung_calc => mad_ptr
+    integer, intent(in) :: lmxspd, num_atoms
+    
+!     type(MadelungCalculator), target, intent(in) :: madelung_calc
+!     type(MadelungCalculator), pointer :: mad_ptr
+!     mad_ptr => madelung_calc
+!     madelung_sum%madelung_calc => mad_ptr
 
     madelung_sum%num_atoms = num_atoms
-
-    allocate(madelung_sum%smat(madelung_calc%lmxspd,num_atoms))
+    allocate(madelung_sum%smat(lmxspd,num_atoms))
   endsubroutine ! create
 
   
@@ -202,17 +200,19 @@ module MadelungCalculator_mod
   !>  needed for Madelung potential calculation.
   !>
   !> Needs a properly constructed MadelungLatticeSum object.
-  subroutine calculateMadelungLatticeSum(self, atom_index, rbasis)
+  subroutine calculateMadelungLatticeSum(self, calc, atom_index, rbasis)
     type(MadelungLatticeSum), intent(inout) :: self
+    type(MadelungCalculator), intent(in) :: calc ! by introducing this, I try to get rid of the pointers in all the MadelungLatticeSum objects that all point to the same calculator
     integer, intent(in) :: atom_index
     double precision, intent(in) :: rbasis(3,self%num_atoms)
 
-#define mc self%madelung_calc
-    call strmat(mc%alat, lmax=2*mc%lpot, naez=self%num_atoms, &
-      ngmax=mc%lattice%ngmax, nrmax=mc%lattice%nrmax, &
-      nlshellg=mc%lattice%nsg(mc%lattice%nshlg), nlshellr=mc%lattice%nsr(mc%lattice%nshlr), &
-      gv=mc%lattice%gn, rv=mc%lattice%rm, qv=rbasis, vol=mc%volume0, i1=atom_index, smat=self%smat)
-#undef  mc
+! #define mc self%madelung_calc
+    call strmat(calc%alat, lmax=2*calc%lpot, naez=self%num_atoms, &
+      ngmax=calc%lattice%ngmax, nrmax=calc%lattice%nrmax, &
+      nlshellg=calc%lattice%nsg(calc%lattice%nshlg), nlshellr=calc%lattice%nsr(calc%lattice%nshlr), &
+      gv=calc%lattice%gn, rv=calc%lattice%rm, qv=rbasis, vol=calc%volume0, i1=atom_index, &
+      smat=self%smat) ! result
+! #undef  mc
 
   endsubroutine ! calc
 
