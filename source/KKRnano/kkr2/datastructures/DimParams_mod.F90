@@ -86,11 +86,11 @@ module DimParams_mod
     if (getValue(conf, "IRNSD",   self%irnsd) /= 0)     die_here("did not find in IRNSD file"+filename)
     if (getValue(conf, "IRMD",    self%irmd) /= 0)      die_here("did not find in IRMD file"+filename)
     if (getValue(conf, "IRID",    self%irid) /= 0)      die_here("did not find in IRID file"+filename)
-    if (getValue(conf, "NXIJD",   self%nxijd) /= 0)     die_here("did not find in NXIJD file"+filename)
     if (getValue(conf, "KPOIBZ",  self%kpoibz) /= 0)    die_here("did not find in KPOIBZ file"+filename)
     if (getValue(conf, "IGUESSD", self%iguessd) /= 0)   die_here("did not find in IGUESSD file"+filename)
     if (getValue(conf, "ITDBRYD", self%itdbryd) /= 0)   die_here("did not find in ITDBRYD file"+filename)
     ! optionals
+    if (getValue(conf, "NXIJD",   self%nxijd, def=1) > 0)     die_here("did not find in NXIJD file"+filename) ! todo: switch to dynamic allocation in Jij module
     if (getValue(conf, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
     if (getValue(conf, "NSPIND",  self%nspind, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
     if (getValue(conf, "LLY",     self%lly, def=0) > 0)       die_here("did not find in LLY file"+filename)

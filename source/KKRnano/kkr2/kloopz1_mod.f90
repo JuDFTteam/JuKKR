@@ -56,7 +56,7 @@ module kloopz1_mod
     double complex, intent(inout) :: GINP_LOCAL(:,:,:,:)
     double complex, intent(inout) :: TMATLL(:,:,:)
     double precision, intent(in) :: RR(3,0:NRD)
-    double precision, intent(in) :: BZKP(:,:)
+    double precision, intent(in) :: BZKP(:,:) ! dim (3,kpoibz)
     double precision, intent(in) :: VOLCUB(:) ! dim kpoibz
     
     double complex :: TAUVBZ

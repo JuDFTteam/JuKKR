@@ -24,24 +24,24 @@ module Main2Arrays_mod
   public :: readMain2Arrays, writeMain2Arrays
 
   type Main2Arrays
-    integer :: NSYMAT
-    integer :: MAXMESH
+    integer :: nsymat
+    integer :: maxmesh
     integer :: iemxd
-    integer :: LMMAXD
-    integer :: NAEZ
-    integer :: KPOIBZ
-    integer :: MAXMSHD
+    integer :: lmmaxd
+    integer :: naez
+    integer :: kpoibz
+    integer :: maxmshd
     double precision :: bravais(3,3)
     integer :: isymindex(48)
-    double complex, allocatable :: DSYMLL(:,:,:)  !< tau symmetry matrices
-    double precision, allocatable :: RBASIS(:,:)  !< basis atom positions
-    double precision, allocatable :: BZKP(:,:,:)  !< kpoints for each mesh
-    double precision, allocatable :: VOLCUB(:,:)  !< kpoint weights
-    double precision, allocatable :: VOLBZ(:)     !< BZ volume?
-    integer, allocatable :: KMESH(:) !< mapping E-point to k-mesh
-    integer, allocatable :: NOFKS(:) !< number of k points for each mesh
-    double precision, allocatable :: ZAT(:)  !< atomic numbers
-    double precision :: VREF !< repulsive screening pot. strength
+    double complex, allocatable :: dsymll(:,:,:)  !< tau symmetry matrices
+    double precision, allocatable :: rbasis(:,:)  !< basis atom positions
+    double precision, allocatable :: bzkp(:,:,:)  !< kpoints for each mesh
+    double precision, allocatable :: volcub(:,:)  !< kpoint weights
+    double precision, allocatable :: volbz(:)     !< bz volume?
+    integer, allocatable :: kmesh(:) !< mapping e-point to k-mesh
+    integer, allocatable :: nofks(:) !< number of k points for each mesh
+    double precision, allocatable :: zat(:)  !< atomic numbers
+    double precision :: vref !< repulsive screening pot. strength
   endtype ! Main2Arrays
   
   interface create
@@ -51,7 +51,6 @@ module Main2Arrays_mod
   interface destroy
     module procedure destroyMain2Arrays
   endinterface
-
 
   contains
 
@@ -64,88 +63,52 @@ module Main2Arrays_mod
     type(Main2Arrays), intent(inout) :: self
     type(DimParams), intent(in) :: dims
 
-    call createMain2ArraysImpl(self, dims%lmaxd, dims%iemxd, dims%nspind, &
-    dims%LMMAXD, dims%NAEZ, dims%LMXSPD, dims%KPOIBZ, dims%MAXMSHD, 0, &
-    0, dims%nguessd, dims%ekmd, dims%smpid, dims%lpot, dims%IRMD, dims%LMPOTD)
-
+    call createMain2ArraysImpl(self, dims%iemxd, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)    
+    
   endsubroutine ! create
-
-
 
   !-----------------------------------------------------------------------------
   !> Constructs a Main2Arrays object. (implementation, don't call directly!)
   !> @param[in,out] self    The Main2Arrays object to construct.
-  !> @param[in]    lmaxd
   !> @param[in]    iemxd
-  !> @param[in]    nspind
-  !> @param[in]    LMMAXD
-  !> @param[in]    NAEZ
-  !> @param[in]    LMXSPD
-  !> @param[in]    IEMXD
-  !> @param[in]    KPOIBZ
-  !> @param[in]    MAXMSHD
-  !> @param[in]    nrd
-  !> @param[in]    NACLSD
-  !> @param[in]    NSPIND
-  !> @param[in]    nguessd
   !> @param[in]    lmmaxd
-  !> @param[in]    ekmd
-  !> @param[in]    smpid
-  !> @param[in]    lpot
-  !> @param[in]    IRMD
-  !> @param[in]    LMPOTD
-  subroutine createMain2ArraysImpl(self, lmaxd, iemxd, nspind, LMMAXD, NAEZ, LMXSPD, &
-              KPOIBZ, MAXMSHD, nrd, NACLSD, nguessd, ekmd, smpid, lpot, IRMD, LMPOTD)
+  !> @param[in]    naez
+  !> @param[in]    kpoibz
+  !> @param[in]    maxmshd
+  subroutine createMain2ArraysImpl(self, iemxd, lmmaxd, naez, kpoibz, maxmshd)
     use, intrinsic :: ieee_features
     use, intrinsic :: ieee_arithmetic
     
     type(Main2Arrays), intent(inout) :: self
-    integer, intent(in) ::  lmaxd  ! remove
-    integer, intent(in) ::  iemxd
-    integer, intent(in) ::  nspind  ! remove
-    integer, intent(in) ::  LMMAXD
-    integer, intent(in) ::  NAEZ
-    integer, intent(in) ::  LMXSPD  ! remove
-    integer, intent(in) ::  KPOIBZ
-    integer, intent(in) ::  MAXMSHD
-    integer, intent(in) ::  nrd  ! remove
-    integer, intent(in) ::  NACLSD  ! remove
-    integer, intent(in) ::  nguessd  ! remove
-    integer, intent(in) ::  ekmd  ! remove
-    integer, intent(in) ::  smpid  ! remove
-    integer, intent(in) ::  lpot  ! remove
-    integer, intent(in) ::  IRMD  ! remove
-    integer, intent(in) ::  LMPOTD
+    integer, intent(in) :: iemxd, lmmaxd, naez, kpoibz, maxmshd
     
     integer :: memory_stat
     double precision :: nan
 
-    self%NSYMAT = 0
-    self%MAXMESH = 0
+    self%nsymat = 0
+    self%maxmesh = 0
 
-!    Repulsive reference potential
+!    repulsive reference potential
 !    in future: move as parameter to inputfile
-    self%VREF = 8.0d0
+    self%vref = 8.d0
 
     self%iemxd = iemxd
-    self%LMMAXD = LMMAXD
-    self%NAEZ = NAEZ
-    self%IEMXD = IEMXD
-    self%KPOIBZ = KPOIBZ
-    self%MAXMSHD = MAXMSHD
     self%lmmaxd = lmmaxd
+    self%naez = naez
+    self%kpoibz = kpoibz
+    self%maxmshd = maxmshd
 
-    ALLOCATECHECK(self%DSYMLL(LMMAXD,LMMAXD,48))
-    ALLOCATECHECK(self%RBASIS(3,NAEZ))
-    ALLOCATECHECK(self%BZKP(3,KPOIBZ,MAXMSHD))
-    ALLOCATECHECK(self%VOLCUB(KPOIBZ,MAXMSHD))
-    ALLOCATECHECK(self%VOLBZ(MAXMSHD))
-    ALLOCATECHECK(self%KMESH(IEMXD))
-    ALLOCATECHECK(self%NOFKS(MAXMSHD))
-    ALLOCATECHECK(self%ZAT(NAEZ))
+    ALLOCATECHECK(self%dsymll(lmmaxd,lmmaxd,48))
+    ALLOCATECHECK(self%rbasis(3,naez))
+    ALLOCATECHECK(self%bzkp(3,kpoibz,maxmshd))
+    ALLOCATECHECK(self%volcub(kpoibz,maxmshd))
+    ALLOCATECHECK(self%volbz(maxmshd))
+    ALLOCATECHECK(self%kmesh(iemxd))
+    ALLOCATECHECK(self%nofks(maxmshd))
+    ALLOCATECHECK(self%zat(naez))
 
-    nan = ieee_value(nan, IEEE_SIGNALING_NAN)
-    self%DSYMLL = nan
+    nan = ieee_value(nan, ieee_signaling_nan)
+    self%dsymll = nan
     self%rbasis = nan
     self%bzkp = nan
     self%volcub = nan
@@ -164,14 +127,14 @@ module Main2Arrays_mod
 
     integer :: memory_stat
 
-    DEALLOCATECHECK(self%DSYMLL)
-    DEALLOCATECHECK(self%RBASIS)
-    DEALLOCATECHECK(self%BZKP)
-    DEALLOCATECHECK(self%VOLCUB)
-    DEALLOCATECHECK(self%VOLBZ)
-    DEALLOCATECHECK(self%KMESH)
-    DEALLOCATECHECK(self%NOFKS)
-    DEALLOCATECHECK(self%ZAT)
+    DEALLOCATECHECK(self%dsymll)
+    DEALLOCATECHECK(self%rbasis)
+    DEALLOCATECHECK(self%bzkp)
+    DEALLOCATECHECK(self%volcub)
+    DEALLOCATECHECK(self%volbz)
+    DEALLOCATECHECK(self%kmesh)
+    DEALLOCATECHECK(self%nofks)
+    DEALLOCATECHECK(self%zat)
 
   endsubroutine ! destroy
 
@@ -185,19 +148,19 @@ module Main2Arrays_mod
     integer, parameter :: fu = 67
 
     open (fu, file=filename, form='unformatted')
-    write(fu) self%BRAVAIS, &
-              self%ISYMINDEX, &
-              self%DSYMLL, &
-              self%RBASIS, &
-              self%BZKP, &
-              self%VOLCUB, &
-              self%VOLBZ, &
-              self%KMESH, &
-              self%NOFKS, &
-              self%ZAT, &
-              self%VREF, &
-              self%NSYMAT, &  ! write some scalars too
-              self%MAXMESH
+    write(fu) self%bravais, &
+              self%isymindex, &
+              self%dsymll, &
+              self%rbasis, &
+              self%bzkp, &
+              self%volcub, &
+              self%volbz, &
+              self%kmesh, &
+              self%nofks, &
+              self%zat, &
+              self%vref, &
+              self%nsymat, &  ! write some scalars too
+              self%maxmesh
     close(fu)
 
   endsubroutine ! write
@@ -212,19 +175,19 @@ module Main2Arrays_mod
     integer, parameter :: fu = 67
 
     open (fu, file=filename, form='unformatted')
-    read (fu) self%BRAVAIS, &
-              self%ISYMINDEX, &
-              self%DSYMLL, &
-              self%RBASIS, &
-              self%BZKP, &
-              self%VOLCUB, &
-              self%VOLBZ, &
-              self%KMESH, &
-              self%NOFKS, &
-              self%ZAT, &
-              self%VREF, &
-              self%NSYMAT, & ! write some scalars too
-              self%MAXMESH
+    read (fu) self%bravais, &
+              self%isymindex, &
+              self%dsymll, &
+              self%rbasis, &
+              self%bzkp, &
+              self%volcub, &
+              self%volbz, &
+              self%kmesh, &
+              self%nofks, &
+              self%zat, &
+              self%vref, &
+              self%nsymat, & ! write some scalars too
+              self%maxmesh
     close(fu)
 
   endsubroutine ! read
