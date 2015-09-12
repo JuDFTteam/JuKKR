@@ -106,39 +106,33 @@ module KKRzero_mod
     use BrillouinZone_mod, only: bzkint0
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
     use Lattice_mod, only: lattix99
+    use Constants_mod, only: pi
     use EnergyMeshHelpers_mod, only: emesht, epathtb
     use Startb1_mod, only: startb1_wrapper_new
 
-    integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only
+    integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     
     integer, parameter :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
     integer, parameter :: maxmshd=8 ! maximal number of k-meshes used
 
 !     .. energy mesh ..
     double precision :: efermi
-
     integer :: ielast
     integer :: iesemicore
-
     double complex, allocatable :: ez(:)
     double complex, allocatable :: wez(:)
 
-    double precision :: volume0
-    double precision :: recbv(3,3)
+    double precision :: recbv(3,3), volume0
 
-    integer, allocatable :: ntcell(:)
     double precision, allocatable :: radius_muffin_tin(:)
 
 !     .. auxillary variables, not passed to kkr2
-    double precision :: pi
-    integer :: ie
-    integer :: ierror
+    integer :: ie, ierror, iemxd
     double complex, allocatable :: dez(:) ! needed for emesht
-    integer :: iemxd
     integer, parameter :: KREL = 0
     logical :: startpot_exists
-    type(InputParams)    :: params
     type(DimParams)      :: dims
+    type(InputParams)    :: params
     type(Main2Arrays)    :: arrays
 
 
@@ -178,7 +172,7 @@ module KKRzero_mod
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
-    allocate(ntcell(dims%naez), radius_muffin_tin(dims%naez))
+    allocate(radius_muffin_tin(dims%naez))
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
@@ -187,7 +181,7 @@ module KKRzero_mod
 
 !     in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) then
-      call ldauinfo_read(dims%LMAXD, dims%NSPIND, arrays%ZAT, dims%NAEZ)
+      call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
     endif ! ldau calculation
 
 !===================================================================
@@ -198,7 +192,7 @@ module KKRzero_mod
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
-      call STARTB1_wrapper_new(params%alat, dims%NSPIND, NTCELL, EFERMI, arrays%ZAT, radius_muffin_tin, dims%NAEZ, nowrite=(checkmode /= 0))
+      call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, radius_muffin_tin, dims%naez, nowrite=(checkmode /= 0))
 
     else
       ! no formatted potential provided
@@ -234,9 +228,7 @@ module KKRzero_mod
       call emesht(ez,dez,ielast,params%emin,params%emax,efermi,params%tempr, &
                   params%npol,params%npnt1,params%npnt2,params%npnt3,iemxd)
     endif
-
-    pi = 4.0d0*atan(1.0d0)
-
+ 
     do ie = 1, ielast
       wez(ie) = -2.d0/pi*dez(ie)
       if (ie <= iesemicore) wez(ie) = wez(ie)*params%fsemicore
@@ -279,23 +271,22 @@ module KKRzero_mod
 
       ! write start energy mesh
         open (67, file='energy_mesh.0', form='unformatted', action='write')
-        write(67) ielast,ez,wez,params%emin,params%emax
-        write(67) params%npol,params%tempr,params%npnt1,params%npnt2,params%npnt3
+        write(67) ielast, ez, wez, params%emin, params%emax
+        write(67) params%npol, params%tempr, params%npnt1, params%npnt2, params%npnt3
         write(67) efermi
       if (params%use_semicore == 1) then
-        write(67) iesemicore,params%fsemicore,params%ebotsemi
+        write(67) iesemicore, params% fsemicore, params%ebotsemi
         write(67) params%emusemi
-        write(67) params%n1semi,params%n2semi,params%n3semi
+        write(67) params%n1semi, params%n2semi, params%n3semi
       endif ! semicore
         close(67)
         
-     else  ! checkmode == 0
-       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
-     endif ! checkmode == 0
-
+    else  ! checkmode == 0
+      write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
+    endif ! checkmode == 0
 
     deallocate(ez, wez, stat=ierror) ! energy mesh
-    deallocate(dez, ntcell, radius_muffin_tin, stat=ierror) !   auxillary
+    deallocate(dez, radius_muffin_tin, stat=ierror) !   auxillary
 
     if (get_number_of_warnings() > 0) &
       ierror = show_warning_lines(unit=6)

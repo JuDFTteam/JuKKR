@@ -71,7 +71,7 @@ module DimParams_mod
     type(DimParams), intent(inout) :: self
     character(len=*), intent(in) :: filename ! usually 'global.conf'
 
-    type(ConfigReader) :: conf
+    type(ConfigReader) :: cr
     character(len=40) :: variable
     integer :: next_ptr
 
@@ -79,41 +79,43 @@ module DimParams_mod
     self%IEMXD = 0
     self%EKMD = 0
 
-    call createConfigReader(conf)
-    if (parseFile(conf, filename) /= 0) die_here("parsing file"+filename+"failed!")
+    call createConfigReader(cr)
+    if (parseFile(cr, filename) /= 0) die_here("parsing file"+filename+"failed!")
 
-    if (getValue(conf, "NAEZD",   self%naez) /= 0)      die_here("did not find in NAEZD file"+filename)
-    if (getValue(conf, "IRNSD",   self%irnsd) /= 0)     die_here("did not find in IRNSD file"+filename)
-    if (getValue(conf, "IRMD",    self%irmd) /= 0)      die_here("did not find in IRMD file"+filename)
-    if (getValue(conf, "IRID",    self%irid) /= 0)      die_here("did not find in IRID file"+filename)
-    if (getValue(conf, "KPOIBZ",  self%kpoibz) /= 0)    die_here("did not find in KPOIBZ file"+filename)
-    if (getValue(conf, "IGUESSD", self%iguessd) /= 0)   die_here("did not find in IGUESSD file"+filename)
-    if (getValue(conf, "ITDBRYD", self%itdbryd) /= 0)   die_here("did not find in ITDBRYD file"+filename)
+    ! these parameters are not optional (so far)
+    if (getValue(cr, "NAEZD",   self%naez) /= 0)      die_here("did not find in NAEZD file"+filename)
+    if (getValue(cr, "IRNSD",   self%irnsd) /= 0)     die_here("did not find in IRNSD file"+filename)
+    if (getValue(cr, "IRMD",    self%irmd) /= 0)      die_here("did not find in IRMD file"+filename)
+    if (getValue(cr, "IRID",    self%irid) /= 0)      die_here("did not find in IRID file"+filename)
     ! optionals
-    if (getValue(conf, "NXIJD",   self%nxijd, def=1) > 0)     die_here("did not find in NXIJD file"+filename) ! todo: switch to dynamic allocation in Jij module
-    if (getValue(conf, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
-    if (getValue(conf, "NSPIND",  self%nspind, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
-    if (getValue(conf, "LLY",     self%lly, def=0) > 0)       die_here("did not find in LLY file"+filename)
-    if (getValue(conf, "SMPID",   self%smpid, def=1) > 0)     die_here("did not find in SMPID file"+filename)
-    if (getValue(conf, "EMPID",   self%empid, def=1) > 0)     die_here("did not find in EMPID file"+filename)
-    if (getValue(conf, "NTHRDS",  self%nthrds, def=0) > 0)    die_here("did not find in NTHRDS file"+filename) ! 0: automatically use environment variable OMP_NUM_THREADS
-    if (getValue(conf, "BCPD",    self%bcpd, def=0) > 0)      die_here("did not find in BCPD file"+filename)
-    if (getValue(conf, "NATBLD",  self%natbld, def=4) > 0)    die_here("did not find in NATBLD file"+filename)
-    if (getValue(conf, "XDIM",    self%xdim, def=1) > 0)      die_here("did not find in XDIM file"+filename)
-    if (getValue(conf, "YDIM",    self%ydim, def=1) > 0)      die_here("did not find in YDIM file"+filename)
-    if (getValue(conf, "ZDIM",    self%zdim, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
+    if (getValue(cr, "ITDBRYD", self%itdbryd, def=30) > 0)  die_here("did not find in ITDBRYD file"+filename) ! this can be moved to input params
+    if (getValue(cr, "IGUESSD", self%iguessd, def=0) > 0)   die_here("did not find in IGUESSD file"+filename) ! this var has acutally become a switch (0 or 1)
+    
+    if (getValue(cr, "KPOIBZ",  self%kpoibz, def=1024) > 0) die_here("did not find in KPOIBZ file"+filename) ! todo: switch to dynamic allocation for kpoints
+    if (getValue(cr, "NXIJD",   self%nxijd, def=1) > 0)     die_here("did not find in NXIJD file"+filename) ! todo: switch to dynamic allocation in Jij module
+    if (getValue(cr, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
+    if (getValue(cr, "NSPIND",  self%nspind, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
+    if (getValue(cr, "LLY",     self%lly, def=0) > 0)       die_here("did not find in LLY file"+filename)
+    if (getValue(cr, "SMPID",   self%smpid, def=1) > 0)     die_here("did not find in SMPID file"+filename)
+    if (getValue(cr, "EMPID",   self%empid, def=1) > 0)     die_here("did not find in EMPID file"+filename)
+    if (getValue(cr, "NTHRDS",  self%nthrds, def=0) > 0)    die_here("did not find in NTHRDS file"+filename) ! 0:automatically use environment variable OMP_NUM_THREADS
+    if (getValue(cr, "BCPD",    self%bcpd, def=0) > 0)      die_here("did not find in BCPD file"+filename)
+    if (getValue(cr, "NATBLD",  self%natbld, def=4) > 0)    die_here("did not find in NATBLD file"+filename)
+    if (getValue(cr, "XDIM",    self%xdim, def=1) > 0)      die_here("did not find in XDIM file"+filename)
+    if (getValue(cr, "YDIM",    self%ydim, def=1) > 0)      die_here("did not find in YDIM file"+filename)
+    if (getValue(cr, "ZDIM",    self%zdim, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
-    if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename)
+    if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename) ! 0:auto
 
     write(*,*) "The following variables have not been read from global.conf:"
     next_ptr = 1
     do
-      if (getUnreadVariable(conf, variable, next_ptr) /= 0) exit
+      if (getUnreadVariable(cr, variable, next_ptr) /= 0) exit
       write(*,*) trim(variable)
     enddo
 
-    call destroyConfigReader(conf)
+    call destroyConfigReader(cr)
     call calculateDerivedParameters(self) ! deal with derived parameters
 
   endsubroutine ! create

@@ -15,7 +15,7 @@ module Startb1_mod
   contains
 
 ! determine the record length
-  subroutine startb1_wrapper_new(alat, nspin, ntcell, EFERMI, ZAT, radius_muffin_tin, naezd, nowrite)
+  subroutine startb1_wrapper_new(alat, nspin, EFERMI, ZAT, radius_muffin_tin, naezd, nowrite)
     use read_formatted_shapefun_mod, only: ShapefunFile, create_read_ShapefunFile, destroy_ShapefunFile
     double precision, intent(in) :: alat
     integer, intent(in) :: naezd
@@ -23,9 +23,9 @@ module Startb1_mod
     integer, intent(in) :: nspin
     double precision, intent(out):: ZAT(*)
     double precision, intent(inout) :: radius_muffin_tin(naezd)
-    integer, intent(out) :: ntcell(*)
     logical, intent(in) :: nowrite
 
+    integer :: ntcell(naezd)
     integer :: max_reclen, max_reclen_mesh
     type(ShapefunFile) :: sfile
 
@@ -92,26 +92,26 @@ module Startb1_mod
 
         if (iatom == 1 .and. ispin == 1) EFERMI = pe(ispin)%header%EFERMI ! take approximate Fermi energy from 1st potential entry
 
-!        The nuclear charge Z is now solely determined by the 'potential' file, 'atominfo' is no longer needed
+  !        The nuclear charge Z is now solely determined by the 'potential' file, 'atominfo' is no longer needed
 
-         ZAT(iatom) = pe(ispin)%header%Z_nuclear
+        ZAT(iatom) = pe(ispin)%header%Z_nuclear
 
-!        The parameter ntcell is now automatically set to the index of the atom (1st atom -> 1st pe in shapefun file,
-!        2nd atom -> 2nd pe in shapefun file), 'atominfo' is no longer needed
+  !        The parameter ntcell is now automatically set to the index of the atom (1st atom -> 1st pe in shapefun file,
+  !        2nd atom -> 2nd pe in shapefun file), 'atominfo' is no longer needed
 
-         ntcell(iatom) = iatom
+        ntcell(iatom) = iatom
 
-!        The muffin-tin radius (formerly RMT in atominfo) is set to the value of RMT in the 'potential' file,
-!        'atominfo' is no longer needed
+  !        The muffin-tin radius (formerly RMT in atominfo) is set to the value of RMT in the 'potential' file,
+  !        'atominfo' is no longer needed
 
-         radius_muffin_tin(iatom) = pe(ispin)%header%RMT
+        radius_muffin_tin(iatom) = pe(ispin)%header%RMT
 
-!        ! do some consistency checks
-!        if (abs(ZAT(iatom) - pe(ispin)%header%Z_nuclear) > 1.d-8) then
-!          write(*,*) "ERROR: Mismatch of nuclear charge between atominfo and potential file for pe: ", iatom
-!          write(*,*) ZAT(iatom), pe(ispin)%header%Z_nuclear
-!          STOP
-!        endif
+  !        ! do some consistency checks
+  !        if (abs(ZAT(iatom) - pe(ispin)%header%Z_nuclear) > 1.d-8) then
+  !          write(*,*) "ERROR: Mismatch of nuclear charge between atominfo and potential file for pe: ", iatom
+  !          write(*,*) ZAT(iatom), pe(ispin)%header%Z_nuclear
+  !          STOP
+  !        endif
 
         if (abs(alat - pe(ispin)%header%alat) > 1.d-8) n_warn_alat_differs = n_warn_alat_differs + 1
       enddo ! ispin

@@ -81,7 +81,7 @@ module BrillouinZone_mod
     integer :: i, ks, l, n, nb(3), nofks, ekmin, nxyz(3), nofks0(maxmshd), newnofks(maxmshd), fu
     logical :: newkp, oldkp
     double precision :: bzkp(3,kpoibz), volcub(kpoibz), newbzkp(3,kpoibz,maxmshd), newvolcub(kpoibz,maxmshd), volbz, newvolbz
-    logical, external :: test
+!   logical, external :: test
 
 ! --> set number of different k-meshes 
     maxmesh = 1
