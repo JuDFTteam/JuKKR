@@ -28,7 +28,7 @@ module CalculationData_mod
   implicit none
   private
 
-  public :: CalculationData, create, destroy
+  public :: CalculationData, create, destroy, represent
   public :: createCalculationData, destroyCalculationData ! deprecated
   public :: getBroydenDim, getBroyden, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getRefCluster, getKKR
   public :: getMadelungSum, getDensities, getEnergies, getLDAUData, getJijData, getGaunts, getShapeGaunts
@@ -43,7 +43,7 @@ module CalculationData_mod
   type CalculationData
     private
 
-    integer :: num_local_atoms  ! <= atoms_per_proc
+    integer :: num_local_atoms !< atoms in this process
     integer, allocatable :: atom_ids(:)
     integer :: max_reclen_meshes
     integer :: max_reclen_potential
@@ -80,6 +80,10 @@ module CalculationData_mod
   
   interface destroy
     module procedure destroyCalculationData
+  endinterface
+  
+  interface represent
+    module procedure repr_CalculationData
   endinterface
 
   contains

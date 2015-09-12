@@ -46,28 +46,23 @@ program KKRnano
   
   implicit none
 
-  type (CalculationData) :: calc_data
-  type (TimerMpi) :: program_timer
-  type (TimerMpi) :: iteration_timer
-  type (EBalanceHandler) :: ebalance_handler
+  type(CalculationData) :: calc_data
+  type(TimerMpi) :: program_timer
+  type(TimerMpi) :: iteration_timer
+  type(EBalanceHandler) :: ebalance_handler
 
-  integer :: ITER
-  integer :: I1
-  integer :: ilocal
-  integer :: num_local_atoms
+  integer :: ITER, I1, ilocal, num_local_atoms, flag
 
   type(KKRnanoParallel) :: my_mpi
 
-  integer :: flag
+  type(EnergyMesh), target     :: emesh
+  type(Main2Arrays), target    :: arrays
+  type(DimParams), target      :: dims
+  type(InputParams)            :: params
 
-  type (EnergyMesh), target     :: emesh
-  type (Main2Arrays), target    :: arrays
-  type (DimParams), target      :: dims
-  type (InputParams)            :: params
-
-  type (RadialMeshData), pointer :: mesh
-  type (BasisAtom), pointer      :: atomdata
-  type (LDAUData), pointer       :: ldau_data
+  type(RadialMeshData), pointer :: mesh
+  type(BasisAtom), pointer      :: atomdata
+  type(LDAUData), pointer       :: ldau_data
   !----------------------------------------------------------------------------
   character(len=16)              :: arg
   integer                        :: ios, ilen
@@ -297,7 +292,6 @@ program KKRnano
         else
           call writeEnergyMesh(emesh)
         endif
-
 
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
