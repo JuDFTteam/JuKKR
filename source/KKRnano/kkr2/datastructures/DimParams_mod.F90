@@ -89,8 +89,6 @@ module DimParams_mod
     if (getValue(conf, "NXIJD",   self%nxijd) /= 0)     die_here("did not find in NXIJD file"+filename)
     if (getValue(conf, "KPOIBZ",  self%kpoibz) /= 0)    die_here("did not find in KPOIBZ file"+filename)
     if (getValue(conf, "IGUESSD", self%iguessd) /= 0)   die_here("did not find in IGUESSD file"+filename)
-!     if (getValue(conf, "NMAXD",   self%nmaxd) /= 0)     die_here("did not find in NMAXD file"+filename)
-!     if (getValue(conf, "ISHLD",   self%ishld) /= 0)     die_here("did not find in ISHLD file"+filename)
     if (getValue(conf, "ITDBRYD", self%itdbryd) /= 0)   die_here("did not find in ITDBRYD file"+filename)
     ! optionals
     if (getValue(conf, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
@@ -104,10 +102,6 @@ module DimParams_mod
     if (getValue(conf, "XDIM",    self%xdim, def=1) > 0)      die_here("did not find in XDIM file"+filename)
     if (getValue(conf, "YDIM",    self%ydim, def=1) > 0)      die_here("did not find in YDIM file"+filename)
     if (getValue(conf, "ZDIM",    self%zdim, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
-!     if (getValue(conf, "num_atom_procs", self%num_atom_procs) /= 0) then
-!       write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
-!       self%num_atom_procs = self%naez ! default value
-!     endif
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
     if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename)

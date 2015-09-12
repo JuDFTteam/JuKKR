@@ -28,7 +28,7 @@ module MadelungCalculator_mod
   type MadelungHarmonics
     double precision, allocatable :: wg(:)
     double precision, allocatable :: yrg(:,:,:)
-    integer :: lassld
+    integer :: lassld = -1
   endtype
 
   !----------------------------------------------------------------------------
@@ -248,37 +248,6 @@ module MadelungCalculator_mod
     
   endsubroutine ! create
 
-!   !----------------------------------------------------------------------------
-!   subroutine initMadelungClebschData(clebsch, lmax)
-!     type(MadelungClebschData), intent(inout) :: clebsch
-!     integer, intent(in) :: lmax
-! 
-!     integer lpot, lassld, lmxspd, lmpotd, nclebd, l, m, i
-!     type(MadelungHarmonics) :: harmonics
-! 
-!     lpot = 2*lmax
-!     lassld = 4*lmax
-!     lmxspd = (2*lpot+1)**2
-!     lmpotd = (lpot+1)**2
-!     nclebd = lmxspd*lmpotd
-! 
-!     i = 1
-!     do l = 0, 2*lpot
-!       do m = -l, l
-!         clebsch%loflm(i) = l
-!         i = i + 1
-!       enddo ! m
-!     enddo ! l
-! 
-!     call createMadelungHarmonics(harmonics, lmax)
-! 
-!     clebsch%nclebd = nclebd
-!     call madelgaunt(lpot, harmonics%yrg, harmonics%wg, clebsch%cleb, clebsch%icleb, clebsch%iend, lassld, nclebd)
-! 
-!     call destroyMadelungHarmonics(harmonics)
-!   endsubroutine ! init
-
-!============= Helper routines =============================================
 
   !----------------------------------------------------------------------------
   subroutine createMadelungHarmonics(harmonics, lmax)
@@ -286,15 +255,18 @@ module MadelungCalculator_mod
     type(MadelungHarmonics), intent(inout) :: harmonics
     integer, intent(in) :: lmax
 
-    integer :: lassld!, ist
+    integer :: lassld, ist
 
     lassld = 4*lmax
-    harmonics%lassld = lassld
+    if (harmonics%lassld == lassld) return ! already done
+
+    deallocate(harmonics%wg, harmonics%yrg, stat=ist)
+    allocate(harmonics%wg(lassld), harmonics%yrg(lassld,0:lassld,0:lassld), stat=ist)
+    if (ist /= 0) die_here("Allocation of YRG with lmax="-lassld+"failed!")
     
-    allocate(harmonics%wg(lassld), harmonics%yrg(lassld,0:lassld,0:lassld))
-
     call gaunt2(harmonics%wg, harmonics%yrg, lmax)
-
+    
+    harmonics%lassld = lassld
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
@@ -305,39 +277,12 @@ module MadelungCalculator_mod
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
-  subroutine createMadelungLatticeData(lattice)!, NMAXD, ISHLD)
-    type(MadelungLatticeData), intent(inout) :: lattice
-!     integer, intent(in) :: NMAXD
-!     integer, intent(in) :: ISHLD
-!     !--------------------------------------------------------------------------
-! 
-!     lattice%NMAXD = NMAXD
-!     lattice%ISHLD = ISHLD
-! 
-!     allocate(lattice%GN(3,NMAXD))
-!     allocate(lattice%RM(3,NMAXD))
-!     allocate(lattice%NSG(ISHLD))
-!     allocate(lattice%NSR(ISHLD))
-
-  endsubroutine ! create
-
-  !----------------------------------------------------------------------------
   subroutine destroyMadelungLatticeData(lattice)
     type(MadelungLatticeData), intent(inout) :: lattice
 
     deallocate(lattice%gn, lattice%nsg)
     deallocate(lattice%rm, lattice%nsr)
   endsubroutine ! destroy
-
-!   !----------------------------------------------------------------------------
-!   subroutine createMadelungClebschData_dim(self, lmxspd, lmpotd)
-!     type(MadelungClebschData), intent(inout) :: self
-!     integer, intent(in) :: lmxspd, lmpotd
-! 
-!     allocate(self%cleb(lmxspd*lmpotd))
-!     allocate(self%loflm(lmxspd))
-!     allocate(self%icleb(lmxspd*lmpotd,3))
-!   endsubroutine ! create
  
   !----------------------------------------------------------------------------
   subroutine createMadelungClebschData(self, lmax)
