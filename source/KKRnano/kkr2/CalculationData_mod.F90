@@ -35,9 +35,10 @@ module CalculationData_mod
   public :: getMadelungCalculator, getTruncationZone, getClusterInfo, getLatticeVectors, getInitialGuessData 
   public :: getMaxReclenMeshes, getMaxReclenPotential      
   public :: prepareMadelung, constructEverything, setup_iguess, generateAtomsShapesMeshes, generateShapesTEST         
-  public :: recordLengths_com, writePotentialIndexFile, writeNewMeshFiles, repr_CalculationData, constructClusters          
-  public :: constructTruncationZones, constructStorage           
+  public :: recordLengths_com, writePotentialIndexFile, writeNewMeshFiles, repr_CalculationData
   
+! public :: constructTruncationZones, constructStorage, constructClusters ! not yet used
+
 
   type CalculationData
     private
@@ -807,7 +808,7 @@ module CalculationData_mod
 
     ! the opening routines require any instance of type RadialMeshData
 #ifndef TASKLOCAL_FILES
-    ! don't write index when using task-local files
+    ! do not write index when using task-local files
     call openRadialMeshDataIndexDAFile(self%mesh_array(1), 37, 'meshes.idx')
 #endif
     call openRadialMeshDataDAFile(self%mesh_array(1), 38, 'meshes', max_reclen)
@@ -824,24 +825,23 @@ module CalculationData_mod
 #ifndef TASKLOCAL_FILES
     call closeRadialMeshDataIndexDAFile(37)
 #endif
-
-  endsubroutine writeNewMeshFiles
+  endsubroutine ! writeNewMeshFiles
 
 !============ Helper routines for Broyden mixing ==============================
 
   !----------------------------------------------------------------------------
   !> Returns the number of potential values of ALL LOCAL atoms.
   !> This is needed for dimensioning the Broyden mixing work arrays.
-  integer function getBroydenDim(self)
-    use PotentialData_mod, only: getNumPotentialValues
+  integer function getBroydenDim(self) result(ndof)
+    use PotentialData_mod, only: getNumPotentialValues ! todo: make it an elemental function
     
     type(CalculationData), intent(in) :: self
 
     integer :: ila
 
-    getBroydenDim = 0
+    ndof = 0
     do ila = 1, self%num_local_atoms
-      getBroydenDim = getBroydenDim + getNumPotentialValues(self%atomdata_array(ila)%potential)
+      ndof = ndof + getNumPotentialValues(self%atomdata_array(ila)%potential)
     enddo ! ila
     
   endfunction ! getBroydenDim
@@ -869,6 +869,8 @@ module CalculationData_mod
     
   endsubroutine ! represent
 
+  
+#if 0  
 !==============================================================================
 !=             WORK in PROGRESS - not used yet                                =
 !==============================================================================
@@ -897,18 +899,17 @@ module CalculationData_mod
 
   endsubroutine ! constructClusters
 
-  subroutine constructTruncationZones(self, dims, arrays, my_mpi)
+  subroutine constructTruncationZones(self, arrays, my_mpi, naez)
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
-    use DimParams_mod, only: DimParams
     use Main2Arrays_mod, only: Main2Arrays
     use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integers
     use TEST_lcutoff_mod, only: initLcutoffNew
     use ClusterInfo_mod, only: createClusterInfo_com
 
     type(CalculationData), intent(inout) :: self
-    type(DimParams), intent(in)  :: dims
     type(Main2Arrays), intent(in):: arrays
     type(KKRnanoParallel), intent(in) :: my_mpi
+    integer, intent(in) :: naez
 
     ! setup the truncation zone
     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
@@ -924,7 +925,7 @@ module CalculationData_mod
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
     endif
-    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
+    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == naez)
     
   endsubroutine ! constructTruncationZones
 
@@ -946,7 +947,7 @@ module CalculationData_mod
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
-      irmd = self%mesh_array(ila)%irmd
+      irmd = self%mesh_array(ila)%irmd ! abbrev.
 
       call createKKRresults(self%kkr_array(ila), dims, self%clusters%naclsd)
       call createDensityResults(self%densities_array(ila), dims, irmd)
@@ -957,5 +958,6 @@ module CalculationData_mod
     enddo ! ila
     
   endsubroutine ! constructStorage
+#endif
 
 endmodule CalculationData_mod

@@ -737,17 +737,12 @@ module Symmetry_mod
     double precision, intent(in) :: alfdeg, betdeg, gamdeg
     
     double complex, parameter :: ci = (0.d0,1.d0), c0 = (0.d0,0.d0)
-!   double precision, parameter :: pi = 3.141592653589793238462643d0   
+    double precision :: num, msb05, msb05sq, msb05pw, j, m1, m2, rfac,x
+    double precision, intent(in) :: fact(0:) !< factorial for the first 100 numbers
+    integer :: s, slow, shigh, off, k, l, nmue, im2, im1
+    double complex :: emim2a, emim1g, rot(nkmmax,nkmmax), cb05, cb05sq, sm, cb05pw, dom
 
-    double precision :: num, msb05, msb05sq, msb05pw, j,m1,m2, rfac,x
-    double precision :: fact(0:100)
-
-    integer :: s, slow, shigh, off
-    double complex :: emim2a, emim1g, rot(nkmmax,nkmmax) 
-    integer :: k, l, nmue, im2, im1
-    double precision :: cb05, cb05sq, sm, cb05pw, dom
-!                       
-! inline function    factorial for real argument
+! inline function: rfac = factorial for real argument
     rfac(x) = fact(nint(x))
 
     if(irel == 2) call errortrap('calcrotmat', 12, 1) 

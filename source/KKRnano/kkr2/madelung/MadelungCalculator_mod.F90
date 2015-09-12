@@ -82,7 +82,7 @@ module MadelungCalculator_mod
     double precision, intent(in) :: alat, rmax, gmax, bravais(3,3)
 
     double precision :: recbv(3,3)
-    integer :: lpot, ist
+    integer :: lpot!, ist
     
     self%alat = alat
     
@@ -202,21 +202,16 @@ module MadelungCalculator_mod
   !>  needed for Madelung potential calculation.
   !>
   !> Needs a properly constructed MadelungLatticeSum object.
-  !> STRMAT wrapper
   subroutine calculateMadelungLatticeSum(self, atom_index, rbasis)
     type(MadelungLatticeSum), intent(inout) :: self
     integer, intent(in) :: atom_index
     double precision, intent(in) :: rbasis(3,self%num_atoms)
 
-    type(MadelungCalculator), pointer :: madelung_calc
-    
 #define mc self%madelung_calc
-    call STRMAT(mc%alat, mc%lpot, self%num_atoms, mc%lattice%ngmax, &
-      mc%lattice%nrmax, mc%lattice%nsg, mc%lattice%nsr, &
-      mc%lattice%nshlg, mc%lattice%nshlr, &
-      mc%lattice%gn, mc%lattice%rm, rbasis, self%smat, &
-      mc%volume0, &
-      mc%lassld, mc%lmxspd, self%num_atoms, atom_index)
+    call strmat(mc%alat, lmax=2*mc%lpot, naez=self%num_atoms, &
+      ngmax=mc%lattice%ngmax, nrmax=mc%lattice%nrmax, &
+      nlshellg=mc%lattice%nsg(mc%lattice%nshlg), nlshellr=mc%lattice%nsr(mc%lattice%nshlr), &
+      gv=mc%lattice%gn, rv=mc%lattice%rm, qv=rbasis, vol=mc%volume0, i1=atom_index, smat=self%smat)
 #undef  mc
 
   endsubroutine ! calc
@@ -678,199 +673,137 @@ endsubroutine ! lattice3d
 
 ! OpenMP parallelised, needs threadsafe erfcex, gamfc and ymy E.R.
 
-subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
-     gv,rv,qi0,smat,vol,lassld,lmxspd,naezd,i1) ! todo: remove naezd
+subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv, vol, i1, smat)
   use Harmonics_mod, only: ymy
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use Constants_mod, only: pi
-  implicit none
-  ! Parameters
-  double complex, parameter :: CI=(0.d0,1.d0)
-  double precision, parameter :: BOUND=1.d-8
 
-  ! Arguments
-  double precision, intent(in) :: alat
-  double precision, intent(in) :: vol
-  integer, intent(in) :: lpot
-  integer, intent(in) :: naez
-  integer, intent(in) :: ngmax
-  integer, intent(in) :: nrmax
-  integer, intent(in) :: nshlg
-  integer, intent(in) :: nshlr
-  integer, intent(in) :: lassld
-  integer, intent(in) :: lmxspd
-  integer, intent(in) :: naezd
-  double precision, intent(in) :: gv(3,*)
-  double precision, intent(in) :: qi0(3,*)
-  double precision, intent(in) :: rv(3,*)
-  double precision, intent(inout) :: smat(lmxspd,*)
-  integer, intent(in) :: nsg(*)
-  integer, intent(in) :: nsr(*)
-  integer, intent(in) :: i1
+    double precision, intent(in) :: alat
+    double precision, intent(in) :: vol
+    integer, intent(in) :: lmax !< usually 2*lpot
+    integer, intent(in) :: naez !< number of all atoms 
+    integer, intent(in) :: ngmax !< number of reciprocal space vectors
+    integer, intent(in) :: nrmax !< number of real space vectors
+    integer, intent(in) :: nlshellg !< =nsg(nshlg) number of vectors in the largest shell
+    integer, intent(in) :: nlshellr !< =nsr(nshlr) number of vectors in the largest shell
+    ! (todo for gv and rv: introduce a forth component that has the vector absolute, so the evaluation of ymy can be made faster)
+    double precision, intent(in) :: gv(3,*) !< list of vectors in the reciprocal space 
+    double precision, intent(in) :: rv(3,*) !< list of vectors in the real space 
+    double precision, intent(in) :: qv(3,*) !< list of atomic positions (usuall called rbasis)
+    integer, intent(in) :: i1 !< atom index of the source atom
+    double precision, intent(out) :: smat(:,:) ! ((lmax+1)^2,naez)
 
- !local variables of strmat
- double complex :: bfac
- double precision :: alpha, beta
- double precision :: dq1
- double precision :: dq2
- double precision :: dq3
- double precision :: dqdotg
- double precision :: expbsq
- double precision :: fpi
- double precision :: g1
- double precision :: g2
- double precision :: g3
- double precision :: ga
- double precision :: lamda
- double precision :: r
- double precision :: r1
- double precision :: r2
- double precision :: r3
- double precision :: rfac
- double precision :: s
- integer :: i
- integer :: i2
- integer :: it
- integer :: l
- integer :: lm
- integer :: lmx
- integer :: lmxsp
- integer :: m
- integer :: nge
- integer :: ngs
- integer :: nre
- integer :: nrs
- integer :: nstart
+    double complex, parameter :: CI=(0.d0,1.d0)
+    double precision, parameter :: BOUND=1.d-8
+    double precision :: alpha, lamda, kappa!, beta
+    double precision :: dq(3), ga, vr(3), ra, ga2
+    double precision :: dqdotg!, expbsq
+    double precision :: fpi, rfac, sqrtPiInv, sqrtPi
+    integer :: i, i2, i01
+    integer :: l, m, lm
+    integer :: nge, ngs, nre, nrs, nstart
+    double complex :: bfac, stest((lmax+1)**2)
+    double precision :: g(0:lmax), ylm((lmax+1)**2)
 
- double complex :: stest(lmxspd)
- double precision :: g(0:lassld), ylm(lmxspd)
+    fpi = 4.d0*pi
+    sqrtPi = sqrt(pi)
+    sqrtPiInv = 1./sqrtPi
 
-  lmx = 2*lpot
-  lmxsp = (lmx+1)**2
-  fpi = 4.0d0*pi
+    assert( size(smat, 1) == (lmax+1)**2 ) ! check leading dimension
 
-  ! --> choose proper splitting parameter
+    lamda = sqrt(pi)/alat ! choose proper splitting parameter
+    kappa = -0.25d0/(lamda*lamda)
 
-  lamda = sqrt(pi)/alat
+    ! **********************************************************************
+    !$omp parallel do private(i2,dq,stest,lm,nstart,i01,nrs,ngs,nre,nge,i,vr,ylm,ra,alpha,g,rfac,l,m,vg,ga,ga2,dqdotg,bfac)
+    do i2 = 1, naez
+      !======================================================================
+      dq(1:3) = (qv(1:3,i1) - qv(1:3,i2)) * alat
 
-  ! **********************************************************************
-  !$omp parallel do private(I2,DQ1,DQ2,DQ3,STEST,LM,NSTART,IT, &
-  !$omp                     NRS,NGS,NRE,NGE,I,R1,R2,R3, &
-  !$omp                     YLM,R,ALPHA,G,RFAC,L,M, &
-  !$omp                     G1,G2,G3,GA,BETA,EXPBSQ,DQDOTG,BFAC,S)
-  do i2 = 1, naez
-     !======================================================================
-     dq1 = (qi0(1,i1) - qi0(1,i2)) * alat
-     dq2 = (qi0(2,i1) - qi0(2,i2)) * alat
-     dq3 = (qi0(3,i1) - qi0(3,i2)) * alat
-
-     stest(1) = -sqrt(fpi)/vol/(4d0*lamda*lamda)
-     do lm = 2,lmxsp
-        stest(lm) = 0.0d0
-     enddo
-
-     ! --> exclude the origine and add correction if i1 == i2
-
-     if ( i1 == i2 ) then
+      stest(:) = 0.d0
+      stest(1) = -sqrtPi/(vol*2.d0*lamda*lamda)
+      
+      ! --> exclude the origin and add correction if i1 == i2
+      if (i1 == i2) then
         stest(1) = stest(1) - lamda/pi
         nstart = 2
-     else
+      else
         nstart = 1
-     endif
-     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-     ! --> loop first over n-1 shells of real and reciprocal lattice - then
-     !     add the contribution of the last shells to see convergence
-
-     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     do it = 1, 2
-        if ( it == 1 ) then
-           nrs = nstart
-           ngs = 2
-           nre = nrmax - nsr(nshlr)
-           nge = ngmax - nsg(nshlg)
+      endif
+      
+      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      ! --> loop first over n-1 shells of real and reciprocal lattice - then
+      !     add the contribution of the last shells to see convergence
+      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      do i01 = 0, 1
+      
+        if (i01 == 0) then
+          nrs = nstart
+          ngs = 2
+          nre = nrmax - nlshellr ! nsr(nshlr)
+          nge = ngmax - nlshellg ! nsg(nshlg)
         else
-           nrs = nre + 1
-           ngs = nge + 1
-           nre = nrmax
-           nge = ngmax
+          nrs = nre + 1
+          ngs = nge + 1
+          nre = nrmax
+          nge = ngmax
         endif
 
         ! --> sum over real lattice
-
-        ! ---------------------------------------------------------------------
         do i = nrs, nre
-           r1 = dq1 - rv(1,i)
-           r2 = dq2 - rv(2,i)
-           r3 = dq3 - rv(3,i)
+          vr(1:3) = dq(1:3) - rv(1:3,i)
 
-           call ymy(r1, r2, r3, r, ylm, lmx)
-           alpha = lamda*r
-           g(0:lmx) = gamfc(lmx, alpha, r)
+          call ymy(vr(1), vr(2), vr(3), ra, ylm, lmax)
+          alpha = lamda*ra
+          g(0:lmax) = gamfc(lmax, alpha, ra)
 
-           do l = 0, lmx
-              rfac = g(l)/sqrt(pi)
-              do m = -l, l
-                 lm = l*(l+1) + m + 1
-                 stest(lm) = stest(lm) + ylm(lm)*rfac
-              enddo ! m
-           enddo ! l
+          do l = 0, lmax
+            rfac = g(l)*sqrtPiInv!/sqrt(pi)
+            do m = -l, l
+              lm = l*l + l + m + 1
+              stest(lm) = stest(lm) + ylm(lm)*rfac
+            enddo ! m
+          enddo ! l
+         
         enddo ! i
-        ! ---------------------------------------------------------------------
 
         ! --> sum over reciprocal lattice
-
-        ! ---------------------------------------------------------------------
         do i = ngs, nge
-           g1 = gv(1,i)
-           g2 = gv(2,i)
-           g3 = gv(3,i)
 
-           call ymy(g1,g2,g3,ga,ylm,lmx)
-           beta = ga/lamda
-           expbsq = exp(beta*beta*0.25d0)
-           dqdotg = dq1*g1 + dq2*g2 + dq3*g3
+          call ymy(gv(1,i), gv(2,i), gv(3,i), ga, ylm, lmax)
+          ga2 = ga*ga
+          dqdotg = dq(1)*gv(1,i) + dq(2)*gv(2,i) + dq(3)*gv(3,i)
 
-           bfac = fpi*exp(CI*dqdotg)/(ga*ga*expbsq*vol)
-
-           do l = 0,lmx
-              do m = -l,l
-                 lm = l*(l+1) + m + 1
-                 stest(lm) = stest(lm) + ylm(lm)*bfac
-              enddo ! m
-              bfac = bfac*ga/dble(2*l+1)*(-CI)
-           enddo ! l
+          bfac = fpi*exp(dcmplx(kappa*ga2, dqdotg))/(ga2*vol)
+          do l = 0, lmax
+            do m = -l, l
+              lm = l*l + l + m + 1
+              stest(lm) = stest(lm) + ylm(lm)*bfac
+            enddo ! m
+            bfac = (-CI)*bfac*ga/dble(2*l+1)
+          enddo ! l
+          
         enddo ! i
-        ! ---------------------------------------------------------------------
-        if ( it == 1 ) then
-           do lm = 1, lmxsp
-              if (abs(dimag(stest(lm))) > BOUND) die_here("Imaginary contribution to REAL lattice sum")
-              smat(lm,i2) = dble(stest(lm))
-              stest(lm) = 0.d0
-           enddo ! lm
+
+        if (i01 == 0) then
+          if (any(abs(dimag(stest(:))) > BOUND)) die_here("Imaginary contribution to REAL lattice sum")
+          smat(:,i2) = dble(stest(:)) ! store only real part
+          stest(:) = 0.d0
         else
-
-           ! --> test convergence
-
-           do lm = 1, lmxsp
-              s = dble(stest(lm))
-              smat(lm,i2) = smat(lm,i2) + s
-              !IF (2 < 1 .AND. ABS(S) > BOUND ) WRITE (6,FMT=99001) I1,I2, &
-              !LM,ABS(S)
-           enddo ! lm
+          smat(:,i2) = smat(:,i2) + dble(stest(:)) ! add only real part
+!           ! --> test convergence
+!           do lm = 1, (lmax+1)**2
+!             !IF (2 < 1 .AND. ABS(dble(stest(lm))) > BOUND ) WRITE (6,FMT=99001) I1,I2,LM,ABS(dble(stest(lm)))
+! 99001       format (5x,'WARNING : Convergence of SMAT(',i2,',',i2,') for LMXSP =',i3,' is ',1p,d8.2,' > 1D-8',/,15x,'You should use more lattice vectors (RMAX/GMAX)')
+!           enddo ! lm
         endif
-        ! ---------------------------------------------------------------------
-     enddo ! it
-     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  enddo ! I2 ! loop over all atoms
-  !$omp endparallel do
-  ! **********************************************************************
-
-! 99001 format (5x,'WARNING : Convergence of SMAT(',i2,',',i2,') ', &
-!        ' for LMXSP =',i3,' is ',1p,d8.2,' > 1D-8',/,15x, &
-!        'You should use more lattice vectors (RMAX/GMAX)')
-endsubroutine strmat
+        
+      enddo ! i01
+    enddo ! i2 ! loop over all atoms
+    !$omp end parallel do
+    
+  endsubroutine strmat
   
   
   
@@ -900,7 +833,7 @@ endsubroutine strmat
     integer :: l
 
     arg = alpha*alpha
-    facl = 2.0d0*alpha
+    facl = 2.d0*alpha
 
     glh(0) = erfcex(alpha)
     !---> recursion
