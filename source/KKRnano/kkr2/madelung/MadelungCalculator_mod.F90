@@ -12,7 +12,7 @@ module MadelungCalculator_mod
   private
 
   public :: MadelungCalculator, MadelungClebschData, MadelungLatticeSum, create, destroy
-  public :: calculateMadelungLatticeSum, calc_dfac
+  public :: calculateMadelungLatticeSum, createDfac ! deprecated
   public :: createMadelungLatticeSum, destroyMadelungLatticeSum ! deprecated
   public :: createMadelungCalculator, destroyMadelungCalculator ! deprecated
 
@@ -22,7 +22,6 @@ module MadelungCalculator_mod
     integer :: nshlg, nshlr
     integer, allocatable :: nsg(:), nsr(:)
     double precision, allocatable :: gn(:,:), rm(:,:)
-    integer :: nmaxd, ishld
   endtype
 
   !----------------------------------------------------------------------------
@@ -36,22 +35,22 @@ module MadelungCalculator_mod
   type MadelungClebschData
     integer :: iend
     double precision, allocatable :: cleb(:)
-    integer, allocatable :: icleb(:,:)
+    integer, allocatable :: icleb(:,:) !< dimension(nclebd,3)
     integer, allocatable :: loflm(:)
     integer :: nclebd
   endtype
 
   !----------------------------------------------------------------------------
   type MadelungCalculator
-    double precision :: alat
     integer :: lpot
+    double precision :: alat
     double precision :: volume0
     double precision, allocatable :: dfac(:,:)
-    type(MadelungLatticeData) :: mlattice
+    type(MadelungLatticeData) :: lattice
     type(MadelungClebschData) :: clebsch
-    integer :: lmxspd
-    integer :: lmpotd
-    integer :: lassld
+    integer :: lmxspd ! == (2*lpot+1)**2
+    integer :: lmpotd ! == (lpot+1)**2
+    integer :: lassld ! == 2*lpot
   endtype
 
   !----------------------------------------------------------------------------
@@ -63,11 +62,12 @@ module MadelungCalculator_mod
 
   
   interface create
-    module procedure createMadelungCalculator, createMadelungClebschData, createMadelungLatticeSum
+    module procedure createMadelungCalculator, createMadelungClebschData, createMadelungLatticeSum, createDfac
   endinterface
   
   interface destroy
-    module procedure destroyMadelungCalculator, destroyMadelungClebschData, destroyMadelungLatticeSum
+    module procedure destroyMadelungCalculator, destroyMadelungClebschData, destroyMadelungLatticeSum, &
+                     destroyMadelungHarmonics, destroyMadelungLatticeData
   endinterface
   
   contains
@@ -75,68 +75,87 @@ module MadelungCalculator_mod
   !----------------------------------------------------------------------------
   !> Creates a MadelungCalculator object.
   !> Don't forget to free resources with destroyMadelungCalculator
-  subroutine createMadelungCalculator(madelung_calc, lmax, alat, rmax, gmax, bravais, nmaxd, ishld)
+  subroutine createMadelungCalculator(self, lmax, alat, rmax, gmax, bravais)
     use lattice_mod, only: lattix99
-    type(MadelungCalculator), intent(inout) :: madelung_calc
+    type(MadelungCalculator), intent(inout) :: self
     integer, intent(in) :: lmax
     double precision, intent(in) :: alat, rmax, gmax, bravais(3,3)
-    integer, intent(in) :: nmaxd, ishld
 
-    type(MadelungHarmonics) :: harmonics
     double precision :: recbv(3,3)
-    integer :: lpot, lmxspd, lmpotd, lassld
-    integer :: memory_stat
-    integer, parameter :: no_output = 1
-
+    integer :: lpot, ist
+    
+    self%alat = alat
+    
     lpot = 2*lmax
-    lassld = 4*lmax
-    lmxspd = (2*lpot+1)**2
-    lmpotd = (lpot+1)**2
+    
+    self%lpot = lpot
+    self%lmxspd = (2*lpot+1)**2
+    self%lmpotd = (lpot+1)**2
+    self%lassld = 4*lmax ! == 2*lpot
+    
+    call createDfac(self%dfac, lpot)
 
-    madelung_calc%alat = alat
-    madelung_calc%lpot = lpot
-    madelung_calc%lmxspd = lmxspd
-    madelung_calc%lmpotd = lmpotd
-    madelung_calc%lassld = lassld
+    call lattix99(alat, bravais, recbv, self%volume0, .false.)
 
-    allocate(madelung_calc%dfac(0:lpot,0:lpot), stat=memory_stat)
-    if (memory_stat /= 0) die_here("Allocation error, DFAC")
+    call createMadelungClebschData(self%clebsch, lmax)
 
-    call lattix99(alat, bravais, recbv, madelung_calc%volume0, .false.)
-
-    call createMadelungHarmonics(harmonics, lmax)
-
-    call createMadelungLatticeData(madelung_calc%mlattice, NMAXD, ISHLD)
-
-    call createMadelungClebschData(madelung_calc%clebsch, LMXSPD, LMPOTD)
-
-    ! now wrap nasty function call
-    call madelung3d(lpot, harmonics%yrg, harmonics%wg, alat, rmax, gmax, bravais, recbv, &
-     lmxspd, lassld, lpot, lmpotd, nmaxd, ishld, lmpotd, &
-     madelung_calc%clebsch%cleb,   madelung_calc%clebsch%icleb, madelung_calc%clebsch%iend, &
-     madelung_calc%clebsch%nclebd, madelung_calc%clebsch%loflm, madelung_calc%dfac, &
-     madelung_calc%mlattice%ngmax, madelung_calc%mlattice%nrmax, &
-     madelung_calc%mlattice%nsg,   madelung_calc%mlattice%nsr, &
-     madelung_calc%mlattice%nshlg, madelung_calc%mlattice%nshlr, &
-     madelung_calc%mlattice%gn,    madelung_calc%mlattice%rm, no_output)
-
-    call destroyMadelungHarmonics(harmonics)
+#define ml self%lattice
+    call lattice3d(alat, bravais, recbv, ml%ngmax, ml%nrmax, ml%nshlg, ml%nshlr, ml%nsg, ml%nsr, rmax, gmax, ml%gn, ml%rm, iprint=0, print_info=1) ! 1:no_output
+#undef  ml
 
   endsubroutine ! create
 
-  !----------------------------------------------------------------------------
-  !> Destroys a MadelungCalculator object.
-  subroutine destroyMadelungCalculator(madelung_calc)
-    type(MadelungCalculator), intent(inout) :: madelung_calc
-    !--------------------------------------------------------
-
-    call destroyMadelungLatticeData(madelung_calc%mlattice)
-
-    call destroyMadelungClebschData(madelung_calc%clebsch)
-
-    deallocate(madelung_calc%DFAC)
-
-  endsubroutine ! destroy
+  
+  
+!   !>    @param print_info  0=print some info  1=print nothing
+!   subroutine madelung3d(lpot, yrg, wg, alat, rmax, gmax, bravais, recbv, &
+!       lmxspd,lassld,lpotd,lmpotd, &
+!       lmpot,cleb,icleb,iend, nclebd,loflm, &
+!       ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm, print_info)
+!     use Constants_mod, only: pi
+!     ! **********************************************************************
+!     ! *                                                                    *
+!     ! * This subroutine calculates the Madelung potential coefficients     *
+!     ! *                                                                    *
+!     ! **********************************************************************
+!     integer, intent(in) :: lpot, lmxspd, lassld, lpotd, lmpotd, print_info
+!     double precision, intent(in) :: alat, rmax, gmax, bravais(3,3), recbv(3,3)
+!     double precision, intent(in) :: yrg(lassld,0:lassld,0:lassld), wg(lassld)
+!     integer, allocatable, intent(out) :: nsg(:), nsr(:) ! nsg(ishld), nsr(ishld)
+!     double precision, allocatable, intent(out) :: gn(:,:), rm(:,:) ! gn(3,nmaxd), rm(3,nmaxd)
+!     integer, intent(out) :: ngmax, nrmax, nshlg, nshlr
+!     double precision, intent(out) :: cleb(lmxspd*lmpotd) ! Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1
+!     integer, intent(out) :: icleb(lmxspd*lmpotd,3), iend
+!     integer, intent(out) :: loflm(:)
+!     integer, intent(inout) :: nclebd, lmpot ! has intent in?
+!     
+!     integer :: i, iprint, l, m, l1, l2, icleb_dummy(1,3)
+!     double precision :: cleb_dummy(1)
+! 
+!     iprint = 0
+!     nclebd = lmxspd*lmpotd
+!     lmpot = (lpot+1)**2
+! 
+! !     ! --> determine the l-value for given lm
+! !     assert( size(loflm, 1) >= (2*lpot+1)**2 )
+! !     i = 0
+! !     do l = 0, 2*lpot
+! !       do m = -l, l
+! !         i = i + 1
+! !         assert(i == l*l + l + m + 1)
+! !         loflm(i) = l
+! !       enddo ! m
+! !     enddo ! l
+! !     
+! ! !   call madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
+! !     iend = madelgaunt(lpot, yrg, wg, cleb, icleb, lassld) ! calculate the gaunt coefficients
+! !     allocate(
+! !     iend = madelgaunt(lpot, yrg, wg, cleb, icleb, lassld) ! calculate the gaunt coefficients
+!     
+!     call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, print_info)
+!     
+!   endsubroutine madelung3d
+  
   
   !----------------------------------------------------------------------------
   !> Creates data storage for a Madelung lattice sum.
@@ -156,17 +175,26 @@ module MadelungCalculator_mod
 
     madelung_sum%num_atoms = num_atoms
 
-    allocate(madelung_sum%SMAT(madelung_calc%LMXSPD, num_atoms))
-
+    allocate(madelung_sum%smat(madelung_calc%lmxspd,num_atoms))
   endsubroutine ! create
 
+  
+  !----------------------------------------------------------------------------
+  !> Destroys a MadelungCalculator object.
+  subroutine destroyMadelungCalculator(madelung_calc)
+    type(MadelungCalculator), intent(inout) :: madelung_calc
+
+    call destroyMadelungLatticeData(madelung_calc%lattice)
+    call destroyMadelungClebschData(madelung_calc%clebsch)
+    deallocate(madelung_calc%dfac)
+  endsubroutine ! destroy
+  
   !----------------------------------------------------------------------------
   !> Destroys and frees storage of Madelung lattice sum.
   subroutine destroyMadelungLatticeSum(madelung_sum)
     type(MadelungLatticeSum), intent(inout) :: madelung_sum
 
-    deallocate(madelung_sum%SMAT)
-
+    deallocate(madelung_sum%smat)
   endsubroutine ! destroy  
 
   !----------------------------------------------------------------------------
@@ -175,21 +203,21 @@ module MadelungCalculator_mod
   !>
   !> Needs a properly constructed MadelungLatticeSum object.
   !> STRMAT wrapper
-  subroutine calculateMadelungLatticeSum(madelung_sum, atom_index, rbasis)
-    type(MadelungLatticeSum), intent(inout) :: madelung_sum
+  subroutine calculateMadelungLatticeSum(self, atom_index, rbasis)
+    type(MadelungLatticeSum), intent(inout) :: self
     integer, intent(in) :: atom_index
-    double precision, intent(in) :: rbasis(3,madelung_sum%num_atoms)
+    double precision, intent(in) :: rbasis(3,self%num_atoms)
 
     type(MadelungCalculator), pointer :: madelung_calc
     
-    madelung_calc => madelung_sum%madelung_calc
-
-    call STRMAT(madelung_calc%ALAT,madelung_calc%LPOT,madelung_sum%num_atoms,madelung_calc%mlattice%NGMAX, &
-    madelung_calc%mlattice%NRMAX,madelung_calc%mlattice%NSG,madelung_calc%mlattice%NSR, &
-    madelung_calc%mlattice%NSHLG,madelung_calc%mlattice%NSHLR, &
-    madelung_calc%mlattice%GN,madelung_calc%mlattice%RM, RBASIS, madelung_sum%SMAT, &
-    madelung_calc%VOLUME0, &
-    madelung_calc%LASSLD,madelung_calc%LMXSPD,madelung_sum%num_atoms,atom_index)
+#define mc self%madelung_calc
+    call STRMAT(mc%alat, mc%lpot, self%num_atoms, mc%lattice%ngmax, &
+      mc%lattice%nrmax, mc%lattice%nsg, mc%lattice%nsr, &
+      mc%lattice%nshlg, mc%lattice%nshlr, &
+      mc%lattice%gn, mc%lattice%rm, rbasis, self%smat, &
+      mc%volume0, &
+      mc%lassld, mc%lmxspd, self%num_atoms, atom_index)
+#undef  mc
 
   endsubroutine ! calc
 
@@ -198,17 +226,17 @@ module MadelungCalculator_mod
   ! --> calculate:                               (2*(l+l')-1)!!
   !                 dfac(l,l') = (4pi)**2 *  ----------------------
   !                                          (2*l+1)!! * (2*l'+1)!!
-  subroutine calc_dfac(dfac, lpot)
+  subroutine createDfac(dfac, lpot)
     use Constants_mod, only: pi
-    double precision, intent(inout) :: dfac(0:lpot, 0:lpot)
+    double precision, allocatable, intent(out) :: dfac(:,:) !(0:lpot,0:lpot)
     integer, intent(in) :: lpot
 
-    double precision :: fpi
-    integer :: l1, l2
-    
-    fpi = 4.d0*pi
+    integer :: l1, l2, ist
 
-    dfac(0,0) = fpi*fpi
+    deallocate(dfac, stat=ist)
+    allocate(dfac(0:lpot,0:lpot), stat=ist); if (ist /= 0) die_here("Allocation of dfac failed")
+    
+    dfac(0,0) = (4.d0*pi)**2
     do l1 = 1, lpot
       dfac(l1,0) = dfac(l1-1,0)*dble(2*l1-1)/dble(2*l1+1)
       dfac(0,l1) = dfac(l1,0) ! symmetric
@@ -218,37 +246,37 @@ module MadelungCalculator_mod
       enddo ! l2
     enddo ! l1
     
-  endsubroutine ! calc
+  endsubroutine ! create
 
-  !----------------------------------------------------------------------------
-  subroutine initMadelungClebschData(clebsch, lmax)
-    type(MadelungClebschData), intent(inout) :: clebsch
-    integer, intent(in) :: lmax
-
-    integer lpot, lassld, lmxspd, lmpotd, nclebd, l, m, i
-    type(MadelungHarmonics) :: harmonics
-
-    lpot = 2*lmax
-    lassld = 4*lmax
-    lmxspd = (2*lpot+1)**2
-    lmpotd = (lpot+1)**2
-    nclebd = lmxspd*lmpotd
-
-    i = 1
-    do l = 0, 2*lpot
-      do m = -l, l
-        clebsch%loflm(i) = l
-        i = i + 1
-      enddo ! m
-    enddo ! l
-
-    call createMadelungHarmonics(harmonics, lmax)
-
-    call madelgaunt(lpot, harmonics%yrg, harmonics%wg, clebsch%cleb, clebsch%icleb, clebsch%iend, lassld, nclebd)
-    clebsch%nclebd = nclebd
-
-    call destroyMadelungHarmonics(harmonics)
-  endsubroutine ! init
+!   !----------------------------------------------------------------------------
+!   subroutine initMadelungClebschData(clebsch, lmax)
+!     type(MadelungClebschData), intent(inout) :: clebsch
+!     integer, intent(in) :: lmax
+! 
+!     integer lpot, lassld, lmxspd, lmpotd, nclebd, l, m, i
+!     type(MadelungHarmonics) :: harmonics
+! 
+!     lpot = 2*lmax
+!     lassld = 4*lmax
+!     lmxspd = (2*lpot+1)**2
+!     lmpotd = (lpot+1)**2
+!     nclebd = lmxspd*lmpotd
+! 
+!     i = 1
+!     do l = 0, 2*lpot
+!       do m = -l, l
+!         clebsch%loflm(i) = l
+!         i = i + 1
+!       enddo ! m
+!     enddo ! l
+! 
+!     call createMadelungHarmonics(harmonics, lmax)
+! 
+!     clebsch%nclebd = nclebd
+!     call madelgaunt(lpot, harmonics%yrg, harmonics%wg, clebsch%cleb, clebsch%icleb, clebsch%iend, lassld, nclebd)
+! 
+!     call destroyMadelungHarmonics(harmonics)
+!   endsubroutine ! init
 
 !============= Helper routines =============================================
 
@@ -258,12 +286,12 @@ module MadelungCalculator_mod
     type(MadelungHarmonics), intent(inout) :: harmonics
     integer, intent(in) :: lmax
 
-    integer :: lassld!, memory_stat
+    integer :: lassld!, ist
 
     lassld = 4*lmax
     harmonics%lassld = lassld
-    allocate(harmonics%wg(lassld))
-    allocate(harmonics%yrg(lassld,0:lassld,0:lassld))
+    
+    allocate(harmonics%wg(lassld), harmonics%yrg(lassld,0:lassld,0:lassld))
 
     call gaunt2(harmonics%wg, harmonics%yrg, lmax)
 
@@ -273,126 +301,88 @@ module MadelungCalculator_mod
   subroutine destroyMadelungHarmonics(harmonics)
     type(MadelungHarmonics), intent(inout) :: harmonics
 
-    deallocate(harmonics%WG)
-    deallocate(harmonics%YRG)
+    deallocate(harmonics%wg, harmonics%yrg)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
-  subroutine createMadelungLatticeData(mlattice, NMAXD, ISHLD)
-    type(MadelungLatticeData), intent(inout) :: mlattice
-    integer, intent(in) :: NMAXD
-    integer, intent(in) :: ISHLD
-    !--------------------------------------------------------------------------
-
-    mlattice%NMAXD = NMAXD
-    mlattice%ISHLD = ISHLD
-
-    allocate(mlattice%GN(3,NMAXD))
-    allocate(mlattice%RM(3,NMAXD))
-    allocate(mlattice%NSG(ISHLD))
-    allocate(mlattice%NSR(ISHLD))
+  subroutine createMadelungLatticeData(lattice)!, NMAXD, ISHLD)
+    type(MadelungLatticeData), intent(inout) :: lattice
+!     integer, intent(in) :: NMAXD
+!     integer, intent(in) :: ISHLD
+!     !--------------------------------------------------------------------------
+! 
+!     lattice%NMAXD = NMAXD
+!     lattice%ISHLD = ISHLD
+! 
+!     allocate(lattice%GN(3,NMAXD))
+!     allocate(lattice%RM(3,NMAXD))
+!     allocate(lattice%NSG(ISHLD))
+!     allocate(lattice%NSR(ISHLD))
 
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyMadelungLatticeData(mlattice)
-    type(MadelungLatticeData), intent(inout) :: mlattice
-    !--------------------------------------------------------------------------
+  subroutine destroyMadelungLatticeData(lattice)
+    type(MadelungLatticeData), intent(inout) :: lattice
 
-    deallocate(mlattice%GN)
-    deallocate(mlattice%RM)
-    deallocate(mlattice%NSG)
-    deallocate(mlattice%NSR)
-
+    deallocate(lattice%gn, lattice%nsg)
+    deallocate(lattice%rm, lattice%nsr)
   endsubroutine ! destroy
 
+!   !----------------------------------------------------------------------------
+!   subroutine createMadelungClebschData_dim(self, lmxspd, lmpotd)
+!     type(MadelungClebschData), intent(inout) :: self
+!     integer, intent(in) :: lmxspd, lmpotd
+! 
+!     allocate(self%cleb(lmxspd*lmpotd))
+!     allocate(self%loflm(lmxspd))
+!     allocate(self%icleb(lmxspd*lmpotd,3))
+!   endsubroutine ! create
+ 
   !----------------------------------------------------------------------------
-  subroutine createMadelungClebschData(clebsch, LMXSPD, LMPOTD)
-    type(MadelungClebschData), intent(inout) :: clebsch
-    integer, intent(in) :: LMXSPD
-    integer, intent(in) :: LMPOTD
-    !--------------------------------------------------------------------------
+  subroutine createMadelungClebschData(self, lmax)
+    type(MadelungClebschData), intent(inout) :: self
+    integer, intent(in) :: lmax
 
-    allocate(clebsch%CLEB(LMXSPD*LMPOTD))
-    allocate(clebsch%LOFLM(LMXSPD))
-    allocate(clebsch%ICLEB(LMXSPD*LMPOTD,3))
-  endsubroutine ! create
+    integer :: icleb_dummy(1,3), iend
+    double precision :: cleb_dummy(1)
+    integer :: l, m, i, ist, lpot
 
-  !----------------------------------------------------------------------------
-  subroutine destroyMadelungClebschData(clebsch)
-    type(MadelungClebschData), intent(inout) :: clebsch
-    !--------------------------------------------------------------------------
+    type(MadelungHarmonics) :: hmx
 
-    deallocate(clebsch%CLEB)
-    deallocate(clebsch%LOFLM)
-    deallocate(clebsch%ICLEB)
+    deallocate(self%cleb, self%icleb, self%loflm, stat=ist)
+    lpot = 2*lmax
 
-  endsubroutine ! destroy
-
-  
-  
-  !>    @param print_info  0=print some info  1=print nothing
-  subroutine madelung3d(lpot, yrg, wg, alat, rmax, gmax, bravais, recbv, &
-      lmxspd,lassld,lpotd,lmpotd, nmaxd, ishld, &
-      lmpot,cleb,icleb,iend, nclebd,loflm,dfac, &
-      ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm, print_info)
-    use Constants_mod, only: pi
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine calculates the Madelung potential coefficients     *
-    ! *                                                                    *
-    ! **********************************************************************
-    integer, intent(in) :: lpot, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, print_info
-    double precision, intent(in) :: alat, rmax, gmax, bravais(3,3), recbv(3,3)
-    double precision, intent(in) :: yrg(lassld,0:lassld,0:lassld), wg(lassld)
-    integer, allocatable, intent(out) :: nsg(:), nsr(:) ! nsg(ishld), nsr(ishld)
-    double precision, allocatable, intent(out) :: gn(:,:), rm(:,:) ! gn(3,nmaxd), rm(3,nmaxd)
-    integer, intent(out) :: ngmax, nrmax, nshlg, nshlr
-    double precision, intent(out) :: cleb(lmxspd*lmpotd) ! Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1
-    double precision, intent(out) :: dfac(0:lpotd,0:lpotd)
-    integer, intent(out) :: icleb(lmxspd*lmpotd,3), iend
-    integer, intent(out) :: loflm(:)
-    integer, intent(inout) :: nclebd, lmpot ! has intent in?
+    call createMadelungHarmonics(hmx, lmax)
     
-    double precision :: fpi
-    integer :: i, iprint, l, m, l1, l2
-
-    iprint = 0
-    nclebd = lmxspd*lmpotd
-    fpi = 4.d0*pi
-    lmpot = (lpot+1)**2
-
-    ! --> determine the l-value for given lm
-    assert( size(loflm, 1) >= (2*lpot+1)**2 )
+    iend = madelgaunt(lpot, hmx%yrg, hmx%wg, hmx%lassld, cleb_dummy, icleb_dummy) ! only count the gaunt coefficients
+    allocate(self%cleb(iend), self%icleb(iend,3))
+    self%nclebd = iend
+    self%iend = madelgaunt(lpot, hmx%yrg, hmx%wg, hmx%lassld, self%cleb, self%icleb) ! calculate and store the gaunt coefficients
+    if (iend /= self%iend) die_here("first and second call did not return the same number of non-zero Gaunt coefficients!")
+    
+    call destroyMadelungHarmonics(hmx)
+    
+    allocate(self%loflm((2*lpot+1)**2))
     i = 0
     do l = 0, 2*lpot
       do m = -l, l
         i = i + 1
         assert(i == l*l + l + m + 1)
-        loflm(i) = l
+        self%loflm(i) = l
       enddo ! m
     enddo ! l
     
-    ! --> calculate:                            (2*(l+l')-1)!!
-    !                 dfac(l,l') = 4pi**2 *  ----------------------
-    !                                       (2*l+1)!! * (2*l'+1)!!
+  endsubroutine ! create
+  
+  !----------------------------------------------------------------------------
+  subroutine destroyMadelungClebschData(self)
+    type(MadelungClebschData), intent(inout) :: self
 
-    dfac(0,0) = fpi*fpi
-    do l1 = 1, lpot
-      dfac(l1,0) = dfac(l1-1,0)*dble(2*l1-1)/dble(2*l1+1)
-      dfac(0,l1) = dfac(l1,0) ! symmetric
-      do l2 = 1, l1
-        dfac(l1,l2) = dfac(l1,l2-1)*dble(2*(l1+l2)-1)/dble(2*l2+1)
-        dfac(l2,l1) = dfac(l1,l2) ! symmetric
-      enddo ! l2
-    enddo ! l1
+    deallocate(self%cleb, self%loflm, self%icleb)
+  endsubroutine ! destroy
 
-    ! --> calculate the gaunt coefficients
-    call madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
-
-    call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, nmaxd, ishld, print_info)
-    
-  endsubroutine madelung3d
+  
 
   
   ! **********************************************************************
@@ -418,11 +408,10 @@ module MadelungCalculator_mod
   ! *                                                                    *
   ! **********************************************************************
 
-subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, nmaxd, ishld, print_info)
+subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, print_info)
   use Constants_mod, only: pi
   implicit none
   integer, intent(in) :: iprint, print_info
-  integer, intent(in) :: nmaxd, ishld ! old dimensioning
   double precision, intent(in) :: alat !< lattice constant
   
   integer, intent(out) :: ngmax
@@ -439,6 +428,11 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr,
   integer, allocatable, intent(out) :: nsr(:) ! (ishld)
   integer, intent(out) :: nshlr
 
+  
+  character(len=*), parameter :: F97="(34x,3f10.5)", F98="(13x,52('-'))", F99="(10x,55('+'),/)", &
+  F92="(25x,'vectors  shells  max. R ',/,25x,30('-'))", F93="(10x,a,i7,2x,i6,2x,f9.5)", F94="(25x,30('-'),/)", F96="(10x,i5,i5,f12.6,2x,3f10.5)", &
+  F95="(10x,55('+'),/,18x,'generated ',a,' lattice vectors',/,10x,55('+'),/,10x,'shell Nvec    radius          x         y         z',/,10x,55('-'))"
+  
   integer :: i, n, l, k, ist, numr(3), numg(3)
   double precision :: bg(3,3), absg2(3), absgm
   double precision :: br(3,3), absr2(3), absrm
@@ -490,45 +484,37 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr,
   if (nshlg <= 1) die_here("cut-off radius GMAX too small!")
 
   if (print_info == 0) then
-     write(6, fmt=99002)
-     write(6, fmt=99003) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
-     write(6, fmt=99003) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
-     write(6, fmt=99004)
+     write(6, fmt=F92)
+     write(6, fmt=F93) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
+     write(6, fmt=F93) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
+     write(6, fmt=F94)
   endif
 
   if (iprint < 3) return
 
   k = 0
-  write(6, fmt=99005) 'real-space'
+  write(6, fmt=F95) 'real-space'
   do l = 1, nshlr
-    write(6, fmt=99006) l, nsr(l), rmr(k+1), rm(1:3,k+1)
+    write(6, fmt=F96) l, nsr(l), rmr(k+1), rm(1:3,k+1)
     do n = 2, nsr(l)
-      write(6, fmt=99007) rm(1:3,k+n)
+      write(6, fmt=F97) rm(1:3,k+n)
     enddo ! n
-    if (l /= nshlr) write(6, fmt=99008)
+    if (l /= nshlr) write(6, fmt=F98)
     k = k + nsr(l)
   enddo ! l
-  write(6, fmt=99009)
+  write(6, fmt=F99)
   k = 0
-  write(6, fmt=99005) 'reciprocal'
+  write(6, fmt=F95) 'reciprocal'
   do l = 1, nshlg
-    write(6, fmt=99006) l, nsg(l), gnr(k+1), gn(1:3,k+1)
+    write(6, fmt=F96) l, nsg(l), gnr(k+1), gn(1:3,k+1)
     do n = 2, nsg(l)
-      write(6, fmt=99007) gn(1:3,k+n)
+      write(6, fmt=F97) gn(1:3,k+n)
     enddo ! n
-    if (l /= nshlg) write(6, fmt=99008)
+    if (l /= nshlg) write(6, fmt=F98)
     k = k + nsg(l)
   enddo ! l
-  write(6, fmt=99009)
+  write(6, fmt=F99)
 
-99002 format (10x,'               vectors  shells  max. R ',/,10x,'               ------------------------------')
-99003 format (10x,a,i7,2x,i6,2x,f9.5)
-99004 format (10x,'               ------------------------------',/)
-99005 format (10x,55('+'),/,18x,'generated ',a,' lattice vectors',/,10x,55('+'),/,10x,'shell Nvec    radius          x         y         z',/,10x,55('-'))
-99006 format (10x,i5,i5,f12.6,2x,3f10.5)
-99007 format (34x,3f10.5)
-99008 format (13x,52('-'))
-99009 format (10x,55('+'),/)
 endsubroutine ! lattice3d
   
   
@@ -649,9 +635,8 @@ endsubroutine ! lattice3d
   endfunction ! count_vectors_in_sphere
   
   
-  subroutine madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
-    integer, intent(in) :: lpot, lassld, nclebd
-    integer, intent(out) :: iend
+  integer function madelgaunt(lpot, yrg, wg, lassld, cleb, icleb) result(iend)
+    integer, intent(in) :: lpot, lassld
     double precision, intent(in) :: yrg(lassld,0:lassld,0:lassld), wg(lassld)
     double precision, intent(out) :: cleb(:) ! (nclebd) ! Attention: Dimension NCLEBD appears sometimes as NCLEB1, an empirical factor that has to be optimized
     integer, intent(out) :: icleb(:,:) ! (nclebd,3)
@@ -662,10 +647,7 @@ endsubroutine ! lattice3d
     ! --> set up of the gaunt coefficients with an index field
     !     recognize that they are needed here only for l3=l1+l2
     !
-    if (2*lpot > lassld) then
-      write (6,*) 'Dim ERROR in MADELGAUNT -- 2*LPOT > LASSLD', 2*lpot, lassld
-      stop
-    endif
+    if (2*lpot > lassld) die_here("madelgaunt 2*lpot ="+(2*lpot)+">"+lassld)
     
     mclebd = min(size(cleb, 1), size(icleb, 1))
 
@@ -714,11 +696,284 @@ endsubroutine ! lattice3d
     enddo ! l1
     iend = i
     
-    if (iend > mclebd) then
-      write (6,fmt='(3I10)') i, nclebd, mclebd
-      stop ' Dim stop in MADELGAUNT '
-    endif
+    if (iend > mclebd .and. mclebd > 1) & ! if the arrays are dimensioned 1, this is intentional for counting
+      warn(6, "coefficients in MadelungGaunt have been truncated: arrays store only"+mclebd+"of"+iend) 
     
-  endsubroutine madelgaunt
+  endfunction madelgaunt
+  
+  
+  ! **********************************************************************
+  ! *                                                                    *
+  !>*  calculation of lattice sums for l .le. 2*lpot :                   *
+  !>*                                                                    *
+  !>*                   ylm( q(i) - q(j) - rv )                          *
+  !>*        sum      ===========================                        *
+  !>*                 | q(i) - q(j) - rv |**(l+1)                        *
+  !>*                                                                    *
+  !>*         - summed over all lattice vectors rv  -                    *
+  !>*                                                                    *
+  !>*  ylm       : real spherical harmic to given l,m                    *
+  !>*  q(i),q(j) : basis vectors of the unit cell                        *
+  !>*                                                                    *
+  !>*  in the case of i = j, rv = 0 is omitted.                          *
+  !>*                                                                    *
+  !>*  the ewald method is used to perform the lattice summations        *
+  !>*  the splitting parameter lamda is set equal sqrt(pi)/alat          *
+  !>*  (alat is the lattice constant) .                                  *
+  !>*                                                                    *
+  !>*  if the contribution of the last shell of the direct and the       *
+  !>*  reciprocal lattice is greater than 1.0e-8 a message is written    *
+  !>*                                                                    *
+  !>*                                    b.drittler may 1989             *
+  !>*                                                                    *
+  !>*  Dimension of arrays gv,rv changed from (4,*) to (3,*), the 4th    *
+  !>*  one not being used (see also lattice3d)     v.popescu May 2004    *
+  ! *                                                                    *
+  ! **********************************************************************
+
+! OpenMP parallelised, needs threadsafe erfcex, gamfc and ymy E.R.
+
+subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr, &
+     gv,rv,qi0,smat,vol,lassld,lmxspd,naezd,i1) ! todo: remove naezd
+  use Harmonics_mod, only: ymy
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+  use Constants_mod, only: pi
+  implicit none
+  ! Parameters
+  double complex, parameter :: CI=(0.d0,1.d0)
+  double precision, parameter :: BOUND=1.d-8
+
+  ! Arguments
+  double precision, intent(in) :: alat
+  double precision, intent(in) :: vol
+  integer, intent(in) :: lpot
+  integer, intent(in) :: naez
+  integer, intent(in) :: ngmax
+  integer, intent(in) :: nrmax
+  integer, intent(in) :: nshlg
+  integer, intent(in) :: nshlr
+  integer, intent(in) :: lassld
+  integer, intent(in) :: lmxspd
+  integer, intent(in) :: naezd
+  double precision, intent(in) :: gv(3,*)
+  double precision, intent(in) :: qi0(3,*)
+  double precision, intent(in) :: rv(3,*)
+  double precision, intent(inout) :: smat(lmxspd,*)
+  integer, intent(in) :: nsg(*)
+  integer, intent(in) :: nsr(*)
+  integer, intent(in) :: i1
+
+ !local variables of strmat
+ double complex :: bfac
+ double precision :: alpha, beta
+ double precision :: dq1
+ double precision :: dq2
+ double precision :: dq3
+ double precision :: dqdotg
+ double precision :: expbsq
+ double precision :: fpi
+ double precision :: g1
+ double precision :: g2
+ double precision :: g3
+ double precision :: ga
+ double precision :: lamda
+ double precision :: r
+ double precision :: r1
+ double precision :: r2
+ double precision :: r3
+ double precision :: rfac
+ double precision :: s
+ integer :: i
+ integer :: i2
+ integer :: it
+ integer :: l
+ integer :: lm
+ integer :: lmx
+ integer :: lmxsp
+ integer :: m
+ integer :: nge
+ integer :: ngs
+ integer :: nre
+ integer :: nrs
+ integer :: nstart
+
+ double complex :: stest(lmxspd)
+ double precision :: g(0:lassld), ylm(lmxspd)
+
+  lmx = 2*lpot
+  lmxsp = (lmx+1)**2
+  fpi = 4.0d0*pi
+
+  ! --> choose proper splitting parameter
+
+  lamda = sqrt(pi)/alat
+
+  ! **********************************************************************
+  !$omp parallel do private(I2,DQ1,DQ2,DQ3,STEST,LM,NSTART,IT, &
+  !$omp                     NRS,NGS,NRE,NGE,I,R1,R2,R3, &
+  !$omp                     YLM,R,ALPHA,G,RFAC,L,M, &
+  !$omp                     G1,G2,G3,GA,BETA,EXPBSQ,DQDOTG,BFAC,S)
+  do i2 = 1, naez
+     !======================================================================
+     dq1 = (qi0(1,i1) - qi0(1,i2)) * alat
+     dq2 = (qi0(2,i1) - qi0(2,i2)) * alat
+     dq3 = (qi0(3,i1) - qi0(3,i2)) * alat
+
+     stest(1) = -sqrt(fpi)/vol/(4d0*lamda*lamda)
+     do lm = 2,lmxsp
+        stest(lm) = 0.0d0
+     enddo
+
+     ! --> exclude the origine and add correction if i1 == i2
+
+     if ( i1 == i2 ) then
+        stest(1) = stest(1) - lamda/pi
+        nstart = 2
+     else
+        nstart = 1
+     endif
+     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     ! --> loop first over n-1 shells of real and reciprocal lattice - then
+     !     add the contribution of the last shells to see convergence
+
+     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     do it = 1, 2
+        if ( it == 1 ) then
+           nrs = nstart
+           ngs = 2
+           nre = nrmax - nsr(nshlr)
+           nge = ngmax - nsg(nshlg)
+        else
+           nrs = nre + 1
+           ngs = nge + 1
+           nre = nrmax
+           nge = ngmax
+        endif
+
+        ! --> sum over real lattice
+
+        ! ---------------------------------------------------------------------
+        do i = nrs, nre
+           r1 = dq1 - rv(1,i)
+           r2 = dq2 - rv(2,i)
+           r3 = dq3 - rv(3,i)
+
+           call ymy(r1, r2, r3, r, ylm, lmx)
+           alpha = lamda*r
+           g(0:lmx) = gamfc(lmx, alpha, r)
+
+           do l = 0, lmx
+              rfac = g(l)/sqrt(pi)
+              do m = -l, l
+                 lm = l*(l+1) + m + 1
+                 stest(lm) = stest(lm) + ylm(lm)*rfac
+              enddo ! m
+           enddo ! l
+        enddo ! i
+        ! ---------------------------------------------------------------------
+
+        ! --> sum over reciprocal lattice
+
+        ! ---------------------------------------------------------------------
+        do i = ngs, nge
+           g1 = gv(1,i)
+           g2 = gv(2,i)
+           g3 = gv(3,i)
+
+           call ymy(g1,g2,g3,ga,ylm,lmx)
+           beta = ga/lamda
+           expbsq = exp(beta*beta*0.25d0)
+           dqdotg = dq1*g1 + dq2*g2 + dq3*g3
+
+           bfac = fpi*exp(CI*dqdotg)/(ga*ga*expbsq*vol)
+
+           do l = 0,lmx
+              do m = -l,l
+                 lm = l*(l+1) + m + 1
+                 stest(lm) = stest(lm) + ylm(lm)*bfac
+              enddo ! m
+              bfac = bfac*ga/dble(2*l+1)*(-CI)
+           enddo ! l
+        enddo ! i
+        ! ---------------------------------------------------------------------
+        if ( it == 1 ) then
+           do lm = 1, lmxsp
+              if (abs(dimag(stest(lm))) > BOUND) die_here("Imaginary contribution to REAL lattice sum")
+              smat(lm,i2) = dble(stest(lm))
+              stest(lm) = 0.d0
+           enddo ! lm
+        else
+
+           ! --> test convergence
+
+           do lm = 1, lmxsp
+              s = dble(stest(lm))
+              smat(lm,i2) = smat(lm,i2) + s
+              !IF (2 < 1 .AND. ABS(S) > BOUND ) WRITE (6,FMT=99001) I1,I2, &
+              !LM,ABS(S)
+           enddo ! lm
+        endif
+        ! ---------------------------------------------------------------------
+     enddo ! it
+     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  enddo ! I2 ! loop over all atoms
+  !$omp endparallel do
+  ! **********************************************************************
+
+! 99001 format (5x,'WARNING : Convergence of SMAT(',i2,',',i2,') ', &
+!        ' for LMXSP =',i3,' is ',1p,d8.2,' > 1D-8',/,15x, &
+!        'You should use more lattice vectors (RMAX/GMAX)')
+endsubroutine strmat
+  
+  
+  
+  function gamfc(lmax, alpha, r) result(glh)
+    !----------------------------------------------------------------------
+    !      calculation of convergence function
+    !
+    !       glh = i(alpha,l)/r**(l+1)*sqrt(pi)
+    !
+    !      with
+    !            alpha = r times the splitting paramter lamda
+    !      and
+    !            i(x,l) = erfc(x) + exp(-x*x)/sqrt(pi) *
+    !
+    !                                sum ( 2**i * x**(2i-1) / (2i-1)!! )
+    !                              1..i..l
+    !
+    !
+    ! Note: gamfc( alpha -> 0, ... ) => glh = sqrt(pi) for all l  E.R.
+    !-----------------------------------------------------------------------
+    double precision :: glh(0:lmax) ! result
+    integer, intent(in) :: lmax
+    double precision, intent(in) :: alpha, r
+
+    double precision, external :: erfcex
+    double precision :: arg, facl, fex
+    integer :: l
+
+    arg = alpha*alpha
+    facl = 2.0d0*alpha
+
+    glh(0) = erfcex(alpha)
+    !---> recursion
+    do l = 1, lmax
+      glh(l) = glh(l-1) + facl
+      facl = facl*arg/(l + 0.5d0)
+    enddo ! l
+
+    ! if arg is to big then cannot calculate 1/exp(arg) !!
+
+    fex = exp(-arg)
+
+    do l = 0, lmax
+      fex = fex/r
+      glh(l) = glh(l)*fex
+    enddo ! l
+
+  endfunction gamfc
+  
   
 endmodule MadelungCalculator_mod

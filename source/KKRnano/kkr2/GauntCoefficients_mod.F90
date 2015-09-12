@@ -7,13 +7,13 @@
 !> @author Elias Rabel and authors of gaunt and gaunt2
 
 ! Some macros for checked allocation/deallocation
-! they need an integer variable named memory_stat declared in each routine
+! they need an integer variable named ist declared in each routine
 ! they are used.
 
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
 #define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
-#define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
+#define ALLOCATECHECK(X) allocate(X, stat=ist); CHECKALLOC(ist)
+#define DEALLOCATECHECK(X) deallocate(X, stat=ist); CHECKDEALLOC(ist)
 
 module GauntCoefficients_mod
   implicit none
@@ -22,13 +22,13 @@ module GauntCoefficients_mod
   public :: createGauntCoefficients, destroyGauntCoefficients ! deprecated
 
   type GauntCoefficients
-    !> Contains the Gaunt coefficients
-    !> CLEB(:,1) and CLEB(:,2) contain Gaunts but with different prefactors
-    double precision, allocatable :: CLEB(:,:)
-    integer, allocatable :: ICLEB(:,:)
-    integer, allocatable :: JEND(:,:,:)
-    integer, allocatable :: LOFLM(:) ! gives l from LM index
-    integer :: IEND
+    !> contains the gaunt coefficients
+    !> cleb(:,1) and cleb(:,2) contain gaunts but with different prefactors
+    double precision, allocatable :: cleb(:,:)
+    integer, allocatable :: icleb(:,:)
+    integer, allocatable :: jend(:,:,:)
+    integer, allocatable :: loflm(:) ! gives l from lm index
+    integer :: iend
     integer :: ncleb
     integer :: lmax
   endtype
@@ -41,59 +41,55 @@ module GauntCoefficients_mod
     module procedure destroyGauntCoefficients
   endinterface
   
-  !NCLEB = (2*LMAXD+1)**2 * (LMAXD+1)**2
+  !ncleb = (2*lmaxd+1)**2 * (lmaxd+1)**2
 
   contains
 
   !----------------------------------------------------------------------------
   subroutine createGauntCoefficients(coeff, lmax)
-    use Harmonics_mod, only: Gaunt
-    use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
+    use Harmonics_mod, only: Gaunt, Gaunt2 ! initialization of wg and yrg
     type(GauntCoefficients), intent(inout) :: coeff
     integer, intent(in) :: lmax
-    !---------------------------
-    integer :: memory_stat
-    integer :: LASSLD
-    integer :: LPOT
-    integer :: LM2D
-    integer :: NCLEB
-    integer :: LMPOTD
-    double precision, allocatable :: WG(:)
-    double precision, allocatable :: YRG(:,:,:)
+    
+    integer :: ist
+    integer :: lassld, lpot, lm2d, ncleb, lmpotd
+    double precision, allocatable :: wg(:), yrg(:,:,:)
 
-    NCLEB = (lmax*2+1)**2 * (lmax+1)**2
-    LPOT = 2*lmax
-    LASSLD = 4*lmax
-    LM2D = (2*lmax+1)**2
-    LMPOTD = (LPOT+1) ** 2
+    ncleb = (lmax*2+1)**2 * (lmax+1)**2
+    lpot = 2*lmax
+    lassld = 4*lmax
+    lm2d = (2*lmax+1)**2
+    lmpotd = (lpot+1) ** 2
 
     coeff%lmax = lmax
-    coeff%NCLEB = NCLEB
+    coeff%ncleb = ncleb
 
-    ALLOCATECHECK(coeff%CLEB(NCLEB,2))
-    ALLOCATECHECK(coeff%ICLEB(NCLEB,3))
-    ALLOCATECHECK(coeff%JEND(LMPOTD,0:LMAX,0:LMAX))
-    ALLOCATECHECK(coeff%LOFLM(LM2D))
-    coeff%CLEB = 0.d0
-    coeff%ICLEB = -1
-    coeff%Jend = -1
-    coeff%LOFLM = -1
+    ALLOCATECHECK(coeff%cleb(ncleb,2))
+    ALLOCATECHECK(coeff%icleb(ncleb,3))
+    ALLOCATECHECK(coeff%jend(lmpotd,0:lmax,0:lmax))
+    ALLOCATECHECK(coeff%loflm(lm2d))
+    
+    coeff%cleb = 0.d0
+    coeff%icleb = -1
+    coeff%jend = -1
+    coeff%loflm = -1
 
-    ALLOCATECHECK(WG(LASSLD))
-    ALLOCATECHECK(YRG(LASSLD,0:LASSLD,0:LASSLD))
+    ALLOCATECHECK(wg(lassld))
+    ALLOCATECHECK(yrg(lassld,0:lassld,0:lassld))
 
-    call GAUNT2(WG, YRG, lmax)
-    call GAUNT(lmax, LPOT, WG, YRG, coeff%CLEB, coeff%LOFLM, coeff%ICLEB, coeff%IEND, coeff%JEND, coeff%NCLEB)
+    call Gaunt2(wg, yrg, lmax)
+    call Gaunt(lmax, lpot, wg, yrg, coeff%cleb, coeff%loflm, coeff%icleb, coeff%iend, coeff%jend, coeff%ncleb)
 
-    DEALLOCATECHECK(WG)
-    DEALLOCATECHECK(YRG)
+    DEALLOCATECHECK(wg)
+    DEALLOCATECHECK(yrg)
 
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
   subroutine destroyGauntCoefficients(coeff)
     type(GauntCoefficients), intent(inout) :: coeff
-    integer :: memory_stat
+    integer :: ist
+    
     DEALLOCATECHECK(coeff%CLEB)
     DEALLOCATECHECK(coeff%ICLEB)
     DEALLOCATECHECK(coeff%JEND)

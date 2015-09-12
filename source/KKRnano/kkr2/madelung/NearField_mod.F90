@@ -45,7 +45,7 @@ module NearField_mod
   !----------------------------------------------------------------------------
   !> V_(lm)(r) = ac_wrong(lm) * (-r)**l
   subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, charge_mom_total, gaunt)
-    use MadelungCalculator_mod, only: MadelungClebschData, calc_dfac
+    use MadelungCalculator_mod, only: MadelungClebschData, createDfac
     use Harmonics_mod, only: ymy
     double precision, intent(inout) :: ac_wrong(:)
     double precision, intent(in)    :: dist_vec(3)
@@ -79,7 +79,7 @@ module NearField_mod
     allocate(dfac(0:lmx, 0:lmx))
 
     ! calculate complicated prefactor
-    call calc_dfac(dfac, lmx)
+    call createDfac(dfac, lmx)
 
     call ymy(dist_vec(1),dist_vec(2),dist_vec(3),r,ylm,lmx_prime)
 

@@ -13,42 +13,40 @@ module DimParams_mod
   public :: writeDimParams, createDimParamsFromFile
 
   type DimParams
-    integer :: NSYMAXD
-    integer :: NAEZ
-    integer :: LMAXD
-    integer :: IRID
-    integer :: BCPD
-    integer :: IRMD
-    integer :: IEMXD
-    integer :: IGUESSD
-    integer :: ISHLD
-    integer :: IRNSD
-    integer :: KPOIBZ
-    integer :: NMAXD
-    integer :: NSPIND
-    integer :: NXIJD
-    integer :: LLY
-    integer :: EKMD
-    integer :: XDIM
-    integer :: YDIM
-    integer :: ZDIM
-    integer :: NATBLD
-    integer :: ITDBRYD
-    integer :: LMMAXD
-    integer :: LMAXD1
-    integer :: MMAXD
-    integer :: LMXSPD
-    integer :: LMPOTD
-    integer :: IRMIND
-    integer :: LRECRES2
-    integer :: LPOT
-    integer :: NGUESSD
-    integer :: SMPID
-    integer :: EMPID
-    integer :: NTHRDS
-    integer :: MAXMSHD
+    integer :: nsymaxd
+    integer :: naez
+    integer :: lmaxd
+    integer :: irid
+    integer :: bcpd
+    integer :: irmd
+    integer :: iemxd
+    integer :: iguessd
+    integer :: irnsd
+    integer :: kpoibz
+    integer :: nspind
+    integer :: nxijd
+    integer :: lly
+    integer :: ekmd
+    integer :: xdim
+    integer :: ydim
+    integer :: zdim
+    integer :: natbld
+    integer :: itdbryd
+    integer :: lmmaxd
+    integer :: lmaxd1
+    integer :: mmaxd
+    integer :: lmxspd
+    integer :: lmpotd
+    integer :: irmind
+    integer :: lrecres2
+    integer :: lpot
+    integer :: nguessd
+    integer :: smpid
+    integer :: empid
+    integer :: nthrds
+    integer :: maxmshd
 
-    integer :: num_atom_procs !< atom-parallelisation number of MPI-procs
+    integer :: num_atom_procs !< atom-parallelisation number of mpi-procs
 
   endtype ! DimParams
 
@@ -84,31 +82,31 @@ module DimParams_mod
     call createConfigReader(conf)
     if (parseFile(conf, filename) /= 0) die_here("parsing file"+filename+"failed!")
 
-    if (getValue(conf, "NAEZD",   self%NAEZ) /= 0)      die_here("did not find in NAEZD file"+filename)
-    if (getValue(conf, "IRNSD",   self%IRNSD) /= 0)     die_here("did not find in IRNSD file"+filename)
-    if (getValue(conf, "IRMD",    self%IRMD) /= 0)      die_here("did not find in IRMD file"+filename)
-    if (getValue(conf, "IRID",    self%IRID) /= 0)      die_here("did not find in IRID file"+filename)
-    if (getValue(conf, "NXIJD",   self%NXIJD) /= 0)     die_here("did not find in NXIJD file"+filename)
-    if (getValue(conf, "KPOIBZ",  self%KPOIBZ) /= 0)    die_here("did not find in KPOIBZ file"+filename)
-    if (getValue(conf, "IGUESSD", self%IGUESSD) /= 0)   die_here("did not find in IGUESSD file"+filename)
-    if (getValue(conf, "NMAXD",   self%NMAXD) /= 0)     die_here("did not find in NMAXD file"+filename)
-    if (getValue(conf, "ISHLD",   self%ISHLD) /= 0)     die_here("did not find in ISHLD file"+filename)
-    if (getValue(conf, "ITDBRYD", self%ITDBRYD) /= 0)   die_here("did not find in ITDBRYD file"+filename)
+    if (getValue(conf, "NAEZD",   self%naez) /= 0)      die_here("did not find in NAEZD file"+filename)
+    if (getValue(conf, "IRNSD",   self%irnsd) /= 0)     die_here("did not find in IRNSD file"+filename)
+    if (getValue(conf, "IRMD",    self%irmd) /= 0)      die_here("did not find in IRMD file"+filename)
+    if (getValue(conf, "IRID",    self%irid) /= 0)      die_here("did not find in IRID file"+filename)
+    if (getValue(conf, "NXIJD",   self%nxijd) /= 0)     die_here("did not find in NXIJD file"+filename)
+    if (getValue(conf, "KPOIBZ",  self%kpoibz) /= 0)    die_here("did not find in KPOIBZ file"+filename)
+    if (getValue(conf, "IGUESSD", self%iguessd) /= 0)   die_here("did not find in IGUESSD file"+filename)
+!     if (getValue(conf, "NMAXD",   self%nmaxd) /= 0)     die_here("did not find in NMAXD file"+filename)
+!     if (getValue(conf, "ISHLD",   self%ishld) /= 0)     die_here("did not find in ISHLD file"+filename)
+    if (getValue(conf, "ITDBRYD", self%itdbryd) /= 0)   die_here("did not find in ITDBRYD file"+filename)
     ! optionals
-    if (getValue(conf, "LMAXD",   self%LMAXD, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
-    if (getValue(conf, "NSPIND",  self%NSPIND, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
-    if (getValue(conf, "LLY",     self%LLY, def=0) > 0)       die_here("did not find in LLY file"+filename)
-    if (getValue(conf, "SMPID",   self%SMPID, def=1) > 0)     die_here("did not find in SMPID file"+filename)
-    if (getValue(conf, "EMPID",   self%EMPID, def=1) > 0)     die_here("did not find in EMPID file"+filename)
-    if (getValue(conf, "NTHRDS",  self%NTHRDS, def=0) > 0)    die_here("did not find in NTHRDS file"+filename) ! 0: automatically use environment variable OMP_NUM_THREADS
-    if (getValue(conf, "BCPD",    self%BCPD, def=0) > 0)      die_here("did not find in BCPD file"+filename)
-    if (getValue(conf, "NATBLD",  self%NATBLD, def=4) > 0)    die_here("did not find in NATBLD file"+filename)
-    if (getValue(conf, "XDIM",    self%XDIM, def=1) > 0)      die_here("did not find in XDIM file"+filename)
-    if (getValue(conf, "YDIM",    self%YDIM, def=1) > 0)      die_here("did not find in YDIM file"+filename)
-    if (getValue(conf, "ZDIM",    self%ZDIM, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
+    if (getValue(conf, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
+    if (getValue(conf, "NSPIND",  self%nspind, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
+    if (getValue(conf, "LLY",     self%lly, def=0) > 0)       die_here("did not find in LLY file"+filename)
+    if (getValue(conf, "SMPID",   self%smpid, def=1) > 0)     die_here("did not find in SMPID file"+filename)
+    if (getValue(conf, "EMPID",   self%empid, def=1) > 0)     die_here("did not find in EMPID file"+filename)
+    if (getValue(conf, "NTHRDS",  self%nthrds, def=0) > 0)    die_here("did not find in NTHRDS file"+filename) ! 0: automatically use environment variable OMP_NUM_THREADS
+    if (getValue(conf, "BCPD",    self%bcpd, def=0) > 0)      die_here("did not find in BCPD file"+filename)
+    if (getValue(conf, "NATBLD",  self%natbld, def=4) > 0)    die_here("did not find in NATBLD file"+filename)
+    if (getValue(conf, "XDIM",    self%xdim, def=1) > 0)      die_here("did not find in XDIM file"+filename)
+    if (getValue(conf, "YDIM",    self%ydim, def=1) > 0)      die_here("did not find in YDIM file"+filename)
+    if (getValue(conf, "ZDIM",    self%zdim, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
 !     if (getValue(conf, "num_atom_procs", self%num_atom_procs) /= 0) then
 !       write(*,*) "WARNING: num_atom_procs not specified, using default = NAEZD."
-!       self%num_atom_procs = self%NAEZ ! default value
+!       self%num_atom_procs = self%naez ! default value
 !     endif
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
@@ -138,29 +136,27 @@ module DimParams_mod
 
     open (fu, file=filename, FORM='unformatted', action='read', status='old')
 
-    read (fu) self%LMAXD
-    read (fu) self%NSPIND
-    read (fu) self%NAEZ
-    read (fu) self%IRNSD
-    read (fu) self%IRMD
-    read (fu) self%IRID
-    read (fu) self%NXIJD
-    read (fu) self%KPOIBZ
-    read (fu) self%IGUESSD
-    read (fu) self%BCPD
-    read (fu) self%NMAXD
-    read (fu) self%ISHLD
-    read (fu) self%LLY
-    read (fu) self%SMPID
-    read (fu) self%EMPID
-    read (fu) self%NTHRDS
-    read (fu) self%XDIM
-    read (fu) self%YDIM
-    read (fu) self%ZDIM
-    read (fu) self%NATBLD
-    read (fu) self%ITDBRYD
-    read (fu) self%IEMXD
-    read (fu) self%EKMD
+    read (fu) self%lmaxd
+    read (fu) self%nspind
+    read (fu) self%naez
+    read (fu) self%irnsd
+    read (fu) self%irmd
+    read (fu) self%irid
+    read (fu) self%nxijd
+    read (fu) self%kpoibz
+    read (fu) self%iguessd
+    read (fu) self%bcpd
+    read (fu) self%lly
+    read (fu) self%smpid
+    read (fu) self%empid
+    read (fu) self%nthrds
+    read (fu) self%xdim
+    read (fu) self%ydim
+    read (fu) self%zdim
+    read (fu) self%natbld
+    read (fu) self%itdbryd
+    read (fu) self%iemxd
+    read (fu) self%ekmd
     read (fu) self%num_atom_procs
 
     close(fu)
@@ -179,31 +175,29 @@ module DimParams_mod
 
     integer, parameter :: fu = 67
 
-    open (fu, FILE=filename, FORM='unformatted', action='write')
+    open (fu, file=filename, form='unformatted', action='write')
 
-    write(fu) self%LMAXD
-    write(fu) self%NSPIND
-    write(fu) self%NAEZ
-    write(fu) self%IRNSD
-    write(fu) self%IRMD
-    write(fu) self%IRID
-    write(fu) self%NXIJD
-    write(fu) self%KPOIBZ
-    write(fu) self%IGUESSD
-    write(fu) self%BCPD
-    write(fu) self%NMAXD
-    write(fu) self%ISHLD
-    write(fu) self%LLY
-    write(fu) self%SMPID
-    write(fu) self%EMPID
-    write(fu) self%NTHRDS
-    write(fu) self%XDIM
-    write(fu) self%YDIM
-    write(fu) self%ZDIM
-    write(fu) self%NATBLD
-    write(fu) self%ITDBRYD
-    write(fu) self%IEMXD
-    write(fu) self%EKMD
+    write(fu) self%lmaxd
+    write(fu) self%nspind
+    write(fu) self%naez
+    write(fu) self%irnsd
+    write(fu) self%irmd
+    write(fu) self%irid
+    write(fu) self%nxijd
+    write(fu) self%kpoibz
+    write(fu) self%iguessd
+    write(fu) self%bcpd
+    write(fu) self%lly
+    write(fu) self%smpid
+    write(fu) self%empid
+    write(fu) self%nthrds
+    write(fu) self%xdim
+    write(fu) self%ydim
+    write(fu) self%zdim
+    write(fu) self%natbld
+    write(fu) self%itdbryd
+    write(fu) self%iemxd
+    write(fu) self%ekmd
     write(fu) self%num_atom_procs
 
     close(fu)
@@ -218,9 +212,6 @@ module DimParams_mod
     ! Nothing to do.
   endsubroutine ! destroy
 
-!------------------------------------------------------------------------------
-!  HELPER ROUTINES
-!------------------------------------------------------------------------------
 
   !----------------------------------------------------------------------------
   !> Helper routine to initialise some parameters derived from others correctly.
@@ -228,44 +219,44 @@ module DimParams_mod
     type(DimParams), intent(inout) :: self
 
     ! derived parameters
-    self%MAXMSHD = 8
-    self%NSYMAXD = 48
-    self%LPOT = 2*self%LMAXD
+    self%maxmshd = 8
+    self%nsymaxd = 48
+    self%lpot = 2*self%lmaxd
 
     ! derived dimension parameters
-    self%LMMAXD = (self%LMAXD+1)**2
+    self%lmmaxd = (self%lmaxd+1)**2
 
-    self%LMAXD1 = self%LMAXD+1
-    self%MMAXD  = 2*self%LMAXD + 1
-    self%LMXSPD = (2*self%LPOT+1)**2
+    self%lmaxd1 = self%lmaxd+1
+    self%mmaxd  = 2*self%lmaxd + 1
+    self%lmxspd = (2*self%lpot+1)**2
 
-    self%LMPOTD = (self%LPOT+1)**2
-    !self%NTIRD = (self%IRMD+(self%IRNSD+1)*(self%LMPOTD-1))*self%NSPIND
-    self%IRMIND = self%IRMD - self%IRNSD
-    self%NGUESSD = 1 + self%IGUESSD * ( self%NAEZ * (self%LMAXD+1)**2 - 1 )
+    self%lmpotd = (self%lpot+1)**2
+    !self%ntird = (self%irmd+(self%irnsd+1)*(self%lmpotd-1))*self%nspind
+    self%irmind = self%irmd - self%irnsd
+    self%nguessd = 1 + self%iguessd * ( self%naez * (self%lmaxd+1)**2 - 1 )
 
-    ! Record lengths
-    self%LRECRES2 = 4+8*(self%NSPIND*(self%LMAXD+7)+2*self%LPOT+4+2)
+    ! record lengths
+    self%lrecres2 = 4+8*(self%nspind*(self%lmaxd+7)+2*self%lpot+4+2)
 
-    call consistencyCheck01(self%IEMXD, self%LMAXD, self%NSPIND, self%SMPID)
+    call consistencyCheck01(self%iemxd, self%lmaxd, self%nspind, self%smpid)
 
   endsubroutine ! calc
 
 
   ! Consistency checks
   !----------------------------------------------------------------------------
-  subroutine consistencyCheck01(IEMXD, LMAXD, NSPIND, SMPID) ! todo: remove IEMXD
-    integer, intent(in) :: IEMXD, LMAXD, NSPIND, SMPID
+  subroutine consistencyCheck01(iemxd, lmaxd, nspind, smpid) ! todo: remove iemxd
+    integer, intent(in) :: iemxd, lmaxd, nspind, smpid
 
-!   if (IEMXD < 1) stop "main2: IEMXD must be >= 1"
+!   if (iemxd < 1) stop "main2: IEMXD must be >= 1"
 
-    if (LMAXD < 0) stop "main2: LMAXD must be >= 0"
+    if (lmaxd < 0) stop "main2: LMAXD must be >= 0"
 
-    if (SMPID /= 1 .and. SMPID /=2) stop "main2: SMPID must be 1 or 2"
+    if (smpid /= 1 .and. smpid /=2) stop "main2: SMPID must be 1 or 2"
 
-    if (NSPIND /= 1 .and. NSPIND /=2) stop "main2: NSPIND must be 1 or 2"
+    if (nspind /= 1 .and. nspind /=2) stop "main2: NSPIND must be 1 or 2"
 
-    if ((SMPID == 2) .and. (NSPIND /= 2)) stop "main2: Spin parallelism is only possible if NSPIND=2, set SMPID=1"
+    if ((smpid == 2) .and. (nspind /= 2)) stop "main2: Spin parallelism is only possible if NSPIND=2, set SMPID=1"
     
   endsubroutine ! check
 

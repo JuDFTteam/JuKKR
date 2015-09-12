@@ -111,37 +111,36 @@ module KKRzero_mod
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only
     
-    integer, parameter :: NSYMAXD=48 ! Maximal number of Brillouin zone symmetries, 48 is largest possible number
-    integer, parameter :: MAXMSHD=8 ! Maximal number of k-meshes used
+    integer, parameter :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
+    integer, parameter :: maxmshd=8 ! maximal number of k-meshes used
 
-!     .. Energy Mesh ..
-    double precision :: EFERMI
+!     .. energy mesh ..
+    double precision :: efermi
 
-    integer :: IELAST
+    integer :: ielast
     integer :: iesemicore
 
-    double complex, allocatable :: EZ(:)
-    double complex, allocatable :: WEZ(:)
+    double complex, allocatable :: ez(:)
+    double complex, allocatable :: wez(:)
 
-    double precision :: VOLUME0
-    double precision :: RECBV(3,3)
+    double precision :: volume0
+    double precision :: recbv(3,3)
 
-    integer, allocatable :: NTCELL(:)
+    integer, allocatable :: ntcell(:)
     double precision, allocatable :: radius_muffin_tin(:)
 
 !     .. auxillary variables, not passed to kkr2
-    double precision :: PI
-    integer :: IE
+    double precision :: pi
+    integer :: ie
     integer :: ierror
-    double complex, allocatable :: DEZ(:) ! needed for EMESHT
-    integer :: IEMXD
+    double complex, allocatable :: dez(:) ! needed for emesht
+    integer :: iemxd
     integer, parameter :: KREL = 0
     logical :: startpot_exists
     type(InputParams)    :: params
     type(DimParams)      :: dims
     type(Main2Arrays)    :: arrays
 
-! ------------ endof declarations ---------------------------------
 
     call createDimParamsFromFile(dims, "global.conf")
 
@@ -149,32 +148,29 @@ module KKRzero_mod
     if (ierror /= 0) die_here("failed to read ''input.conf''!")
 
     ! Calculate number of energy points
-
-    ! semicore contour is used
-    if (params%use_semicore == 1) then
+    if (params%use_semicore == 1) then ! semicore contour is used
 
       write(*,*) "WARNING: Using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing"
       warn(6, "using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing")
       
-      if (params%NPOL /= 0) then
-        IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3 + params%n1semi + params%n2semi + params%n3semi
-      else ! DOS-calculation
-        IEMXD = params%NPNT2 + params%n2semi
+      if (params%npol /= 0) then
+        iemxd = params%npol + params%npnt1 + params%npnt2 + params%npnt3 + params%n1semi + params%n2semi + params%n3semi
+      else ! dos-calculation
+        iemxd = params%npnt2 + params%n2semi
+      endif
+    
+    else ! semicore contour is not used
+
+      if (params%npol /= 0) then
+        iemxd = params%npol + params%npnt1 + params%npnt2 + params%npnt3
+      else ! dos-calculation
+        iemxd = params%npnt2
       endif
 
-    ! semicore contour is not used
-    else
-
-      if (params%NPOL /= 0) then
-        IEMXD = params%NPOL + params%NPNT1 + params%NPNT2 + params%NPNT3
-      else ! DOS-calculation
-        IEMXD = params%NPNT2
-      endif
-
-    endif
+    endif ! semicore
 
 
-    dims%IEMXD = IEMXD
+    dims%iemxd = iemxd
 
     ! important: determine IEMXD before creating arrays
     call createMain2Arrays(arrays, dims)
@@ -182,18 +178,17 @@ module KKRzero_mod
 !-----------------------------------------------------------------------------
 ! Array allocations BEGIN
 !-----------------------------------------------------------------------------
-    allocate(NTCELL(dims%NAEZ))
-    allocate(radius_muffin_tin(dims%naez))
+    allocate(ntcell(dims%naez), radius_muffin_tin(dims%naez))
 !-----------------------------------------------------------------------------
 ! Array allocations END
 !-----------------------------------------------------------------------------
 
-    call RINPUTNEW99(arrays%RBASIS, arrays%NAEZ)
+    call rinputnew99(arrays%rbasis, arrays%naez)
 
 !     in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) then
       call ldauinfo_read(dims%LMAXD, dims%NSPIND, arrays%ZAT, dims%NAEZ)
-    endif
+    endif ! ldau calculation
 
 !===================================================================
 
@@ -211,72 +206,69 @@ module KKRzero_mod
       warn(6, "file 'potential' not found... skipping start potential generation.")
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
       open (67, file='EFERMI', form='formatted', action='read', status='old')
-      read (67, *) EFERMI
+      read (67, *) efermi
       close(67)
     endif
 
 ! ----------------------------------------------------------------------
-! update Fermi energy, adjust energy window according to running options
+! update fermi energy, adjust energy window according to running options
 
-    IELAST = IEMXD
-    allocate(EZ(IEMXD), WEZ(IEMXD), DEZ(IEMXD), stat=ierror) ! Energy mesh, DEZ is aux.
+    ielast = iemxd
+    allocate(ez(iemxd), wez(iemxd), dez(iemxd), stat=ierror) ! energy mesh, dez is aux.
 
-! for non-DOS calculation upper energy bound corresponds to Fermi energy
-! BAD: params%Emax is changed
-    if (params%NPOL /= 0) params%Emax = EFERMI
+! for non-dos calculation upper energy bound corresponds to fermi energy
+! bad: params%emax is changed
+    if (params%npol /= 0) params%emax = efermi
 
 ! --> set up energy contour
 ! --> set up semicore energy contour if use_semicore == 1
     iesemicore = 0
     if (params%use_semicore == 1) then
-! EPATHTB calls EMESHT both for the semicore contour and the valence contour
-      call EPATHTB(EZ,DEZ,EFERMI,IELAST,iesemicore,params%use_semicore, &
+! epathtb calls emesht both for the semicore contour and the valence contour
+      call epathtb(ez,dez,efermi,ielast,iesemicore,params%use_semicore, &
                   params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
                   params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
-                  IEMXD)
+                  iemxd)
     else
-! Call EMESTH for valence contour only (can be included in EPATHTB when semicore contour feature is stable)
-      call EMESHT(EZ,DEZ,IELAST,params%Emin,params%Emax,EFERMI,params%tempr, &
-                  params%NPOL,params%NPNT1,params%NPNT2,params%NPNT3,IEMXD)
+! call emesth for valence contour only (can be included in epathtb when semicore contour feature is stable)
+      call emesht(ez,dez,ielast,params%emin,params%emax,efermi,params%tempr, &
+                  params%npol,params%npnt1,params%npnt2,params%npnt3,iemxd)
     endif
 
-    PI = 4.0D0*ATAN(1.0D0)
+    pi = 4.0d0*atan(1.0d0)
 
-    do IE = 1, IELAST
-      WEZ(IE) = -2.D0/PI*DEZ(IE)
-      IF (IE <= IESEMICORE) WEZ(IE) = WEZ(IE)*params%FSEMICORE
+    do ie = 1, ielast
+      wez(ie) = -2.d0/pi*dez(ie)
+      if (ie <= iesemicore) wez(ie) = wez(ie)*params%fsemicore
     enddo ! ie
 
 
 ! ================================================ deal with the lattice
 
-    arrays%BRAVAIS(:,1) = params%bravais_a
-    arrays%BRAVAIS(:,2) = params%bravais_b
-    arrays%BRAVAIS(:,3) = params%bravais_c
+    arrays%bravais(:,1) = params%bravais_a
+    arrays%bravais(:,2) = params%bravais_b
+    arrays%bravais(:,3) = params%bravais_c
 
     ! only for informative purposes - prints info about lattice
-    call lattix99(params%ALAT, arrays%BRAVAIS, RECBV, VOLUME0, .true.)
+    call lattix99(params%alat, arrays%bravais, recbv, volume0, .true.)
 
 
-    call SCALEVEC(arrays%RBASIS, arrays%NAEZ, arrays%BRAVAIS, params%CARTESIAN)
+    call scalevec(arrays%rbasis, arrays%naez, arrays%bravais, params%cartesian)
 
 ! ======================================================================
 !     setting up kpoints
 ! ======================================================================
 
-    call BZKINT0(arrays%NAEZ, arrays%RBASIS, arrays%BRAVAIS,RECBV, arrays%NSYMAT, arrays%ISYMINDEX, &
-                 arrays%DSYMLL, params%bzdivide, IELAST, EZ, arrays%KMESH, arrays%MAXMESH, MAXMSHD, &
-                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, dims%EKMD, nowrite=(checkmode /= 0)) ! after return from bzkint0, EKMD contains the right value
+    call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais,recbv, arrays%nsymat, arrays%isymindex, &
+                 arrays%dsymll, params%bzdivide, ielast, ez, arrays%kmesh, arrays%maxmesh, maxmshd, &
+                 dims%lmaxd, iemxd, krel, arrays%kpoibz, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
-    call readKpointsFile(arrays%MAXMESH, arrays%NOFKS, arrays%BZKP, arrays%VOLCUB, arrays%VOLBZ)
+    call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
     
-!   Conversion of RMAX and GMAX to atomic units
-    params%RMAX = params%RMAX*params%ALAT
-    params%GMAX = params%GMAX/params%ALAT
-
-!   ! this call is not needed since the DimParam members NMAXD and ISHLD will not be needed in the future 
-!   call TESTDIMLAT(params%ALAT, arrays%BRAVAIS, RECBV, params%RMAX, params%GMAX, dims%NMAXD, dims%ISHLD)
+!   Conversion of rmax and gmax to atomic units
+    params%rmax = params%rmax*params%alat
+    params%gmax = params%gmax/params%alat
 
     if (checkmode == 0) then 
       ! write binary files that are needed in the main program
@@ -287,13 +279,13 @@ module KKRzero_mod
 
       ! write start energy mesh
         open (67, file='energy_mesh.0', form='unformatted', action='write')
-        write(67) IELAST,EZ,WEZ,params%Emin,params%Emax
-        write(67) params%NPOL,params%tempr,params%NPNT1,params%NPNT2,params%NPNT3
-        write(67) EFERMI
+        write(67) ielast,ez,wez,params%emin,params%emax
+        write(67) params%npol,params%tempr,params%npnt1,params%npnt2,params%npnt3
+        write(67) efermi
       if (params%use_semicore == 1) then
-        write(67) IESEMICORE,params%FSEMICORE,params%EBOTSEMI
-        write(67) params%EMUSEMI
-        write(67) params%N1SEMI,params%N2SEMI,params%N3SEMI
+        write(67) iesemicore,params%fsemicore,params%ebotsemi
+        write(67) params%emusemi
+        write(67) params%n1semi,params%n2semi,params%n3semi
       endif ! semicore
         close(67)
         
@@ -301,14 +293,9 @@ module KKRzero_mod
        write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
      endif ! checkmode == 0
 
-! ======================================================================
 
-! deallocations
-
-    deallocate(EZ, WEZ, stat=ierror) ! Energy mesh
-    deallocate(DEZ, NTCELL, radius_muffin_tin, stat=ierror) !   auxillary
-    
-! -------------- Helper routine -----------------------------------------------
+    deallocate(ez, wez, stat=ierror) ! energy mesh
+    deallocate(dez, ntcell, radius_muffin_tin, stat=ierror) !   auxillary
 
     if (get_number_of_warnings() > 0) &
       ierror = show_warning_lines(unit=6)
@@ -322,16 +309,13 @@ module KKRzero_mod
     integer, intent(out) :: nofks(:)
     double precision, intent(out) :: bzkp(:,:,:), volcub(:,:), volbz(:)
 
-    ! -----------------------------
     integer, parameter :: fu = 52 ! file unit
     integer :: i, l, ios
 
     open (fu, file='new.kpoints', form='formatted', status='old', action='read', iostat=ios)
-    if (ios /= 0) then
-      ! default to the old kpoint file name
+    if (ios /= 0) then ! default to the old kpoint file name
       open (fu, file='kpoints', form='formatted', status='old', action='read')
-    else
-      ! if file new.kpoints exists - use those kpoints
+    else ! file new.kpoints exists - use those kpoints
       write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
       warn(6, "rejecting file kpoints - using file new.kpoints instead.")
     endif
@@ -464,7 +448,7 @@ module KKRzero_mod
   endsubroutine ! rinputnew99
   
   
-  
+#if 0  
   subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld) ! todo: remove nmaxd and ishld from interface
     use Constants_mod, only: pi
 ! **********************************************************************
@@ -652,7 +636,7 @@ module KKRzero_mod
     write(6,'(79(1h=),/)')
       
   endsubroutine ! testdimlat
-  
+#endif  
   
   
   subroutine scalevec(rbasis, naez, bravais, lcartesian)

@@ -22,17 +22,15 @@ module MadelungPotential_mod
     integer, intent(in) :: rank, atoms_per_proc
     integer, intent(in) :: communicator
 
-    type(MadelungCalculator), pointer :: madelung_calc
+    type(MadelungCalculator), pointer :: mc
     integer :: naez
 
-    madelung_calc => getMadelungCalculator(calc_data)
+    mc => getMadelungCalculator(calc_data)
     naez = size(ZAT)
 
-    call VMADELBLK_new2_com(calc_data,madelung_calc%LPOT,naez,ZAT, &
-         madelung_calc%LMPOTD,madelung_calc%clebsch%CLEB,madelung_calc%clebsch%ICLEB, &
-         madelung_calc%clebsch%IEND, &
-         madelung_calc%LMXSPD,madelung_calc%clebsch%NCLEBD,madelung_calc%clebsch%LOFLM, &
-         madelung_calc%DFAC, &
+    call VMADELBLK_new2_com(calc_data, mc%LPOT, naez, ZAT, mc%LMPOTD, &
+         mc%clebsch%CLEB, mc%clebsch%ICLEB, mc%clebsch%IEND, &
+         mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, &
          rank, atoms_per_proc, &
          communicator)
 
@@ -84,11 +82,11 @@ module MadelungPotential_mod
 
     integer, intent(in) :: iend, lpot, lmxspd, nclebd, lmpot, naez
 
-    type(basisatom), pointer :: atomdata
-    type(densityresults), pointer :: densities
-    type(energyresults), pointer :: energies
-    type(madelunglatticesum), pointer :: madelung_sum
-    type(radialmeshdata), pointer :: mesh
+    type(BasisAtom), pointer :: atomdata
+    type(DensityResults), pointer :: densities
+    type(EnergyResults), pointer :: energies
+    type(MadelungLatticeSum), pointer :: madelung_sum
+    type(RadialMeshData), pointer :: mesh
 
     double precision, intent(in) :: zat(:)
     double precision, intent(in) :: cleb(nclebd)
@@ -108,8 +106,8 @@ module MadelungPotential_mod
     integer :: ilocal2
     integer :: root
     integer :: lmpotd
+    
     lmpotd = (lpot+1)**2
-    !     ..................................................................
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -142,8 +140,8 @@ module MadelungPotential_mod
           CMINST_SAVE(ILM) = densities%CMINST(ILM)
         enddo
       else
-        CMOM_SAVE = 0.0d0
-        CMINST_SAVE = 0.0d0
+        CMOM_SAVE = 0.d0
+        CMINST_SAVE = 0.d0
       endif
 
       call MPI_BCAST(CMOM_SAVE,   LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
@@ -199,8 +197,8 @@ module MadelungPotential_mod
     integer :: ispin
     double precision :: pi
 
-    pi = 4.0d0*atan(1.0d0)
-    vmad = 0.0d0
+    pi = 4.d0*atan(1.d0)
+    vmad = 0.d0
 
     irs1 = ircut(ipan)
 
@@ -235,25 +233,20 @@ module MadelungPotential_mod
     double precision, intent(in) :: cminst_save(:)
     double precision, intent(in) :: zat_i2
     double precision, intent(in) :: smat_i2(:)
-
     double precision, intent(in) :: cleb(:)
     integer, intent(in) :: iend
     double precision, intent(in) :: dfac(0:,0:)
     integer, intent(in) :: icleb(:,:)
     integer, intent(in) :: loflm(:)
-
     integer, intent(in) :: lpot
 
-    !------------------
-    integer :: lm, lm1, lm2, lm3, l1, l2, i
-    integer :: lmmax, lmpot
-
+    integer :: lm, lm1, lm2, lm3, l1, l2, i, lmmax, lmpot
     double precision :: pi, fpi
     double precision :: avmad((lpot+1)**2,(lpot+1)**2)
     double precision :: bvmad((lpot+1)**2)
 
-    pi = 4.0d0*atan(1.0d0)
-    fpi = 4.0d0*pi
+    pi = 4.d0*atan(1.d0)
+    fpi = 4.d0*pi
 
     lmpot = (lpot+1)**2
     lmmax = lmpot
@@ -269,7 +262,7 @@ module MadelungPotential_mod
 
       ! --> this loop has to be calculated only for l1+l2=l3
 
-      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.0d0*dfac(l1,l2)*smat_i2(lm3)*cleb(i)
+      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.d0*dfac(l1,l2)*smat_i2(lm3)*cleb(i)
     enddo ! i
 
     ! --> calculate bvmad(lm1)
@@ -278,7 +271,7 @@ module MadelungPotential_mod
 
     do lm1 = 1, lmpot
       l1 = loflm(lm1)
-      bvmad(lm1) = bvmad(lm1) - 2.0d0*fpi/dble(2*l1+1)*smat_i2(lm1)
+      bvmad(lm1) = bvmad(lm1) - 2.d0*fpi/dble(2*l1+1)*smat_i2(lm1)
     enddo ! lm1
 
     do lm = 1, lmpot

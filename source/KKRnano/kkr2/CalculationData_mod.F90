@@ -3,6 +3,8 @@
 #include "DebugHelpers/test_macros.h"
 
 module CalculationData_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 
   use MadelungCalculator_mod, only: MadelungCalculator, create, destroy
   use MadelungCalculator_mod, only: MadelungLatticeSum, create, destroy
@@ -33,7 +35,7 @@ module CalculationData_mod
   public :: getMadelungCalculator, getTruncationZone, getClusterInfo, getLatticeVectors, getInitialGuessData 
   public :: getMaxReclenMeshes, getMaxReclenPotential      
   public :: prepareMadelung, constructEverything, setup_iguess, generateAtomsShapesMeshes, generateShapesTEST         
-  public :: recordLengths_com, writePotentialIndexFile, writeNewMeshFiles, print_debug_info, constructClusters          
+  public :: recordLengths_com, writePotentialIndexFile, writeNewMeshFiles, repr_CalculationData, constructClusters          
   public :: constructTruncationZones, constructStorage           
   
 
@@ -84,53 +86,52 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   ! TODO: atoms_per_procs * num_procs MUST BE = naez
   ! rank = 0,1,..., num_atom_ranks-1
-  subroutine createCalculationData(calc_data, dims, params, arrays, my_mpi)
+  subroutine createCalculationData(self, dims, params, arrays, my_mpi)
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use KKRnanoParallel_mod, only: getMyAtomRank, getNumAtomRanks
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
 
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)   :: dims
     type(InputParams), intent(in) :: params
     type(Main2Arrays), intent(in) :: arrays
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    integer, external :: mapblock
     integer :: atoms_per_proc, num_local_atoms, ii, atom_rank
 
     atoms_per_proc = dims%naez / getNumAtomRanks(my_mpi)
     ASSERT( getNumAtomRanks(my_mpi) * atoms_per_proc == dims%naez )
     num_local_atoms = atoms_per_proc !TODO
 
-    calc_data%num_local_atoms = num_local_atoms
+    self%num_local_atoms = num_local_atoms
 
     ! one datastructure for each local atom
-    allocate(calc_data%mesh_array(num_local_atoms))
-    allocate(calc_data%cell_array(num_local_atoms))
-    allocate(calc_data%atomdata_array(num_local_atoms))
-    allocate(calc_data%ref_cluster_array(num_local_atoms))
-    allocate(calc_data%kkr_array(num_local_atoms))
-    allocate(calc_data%densities_array(num_local_atoms))
-    allocate(calc_data%energies_array(num_local_atoms))
-    allocate(calc_data%madelung_sum_array(num_local_atoms))
-    allocate(calc_data%ldau_data_array(num_local_atoms))
-    allocate(calc_data%jij_data_array(num_local_atoms))
-
-    allocate(calc_data%atom_ids(num_local_atoms))
+    allocate(self%mesh_array(num_local_atoms))
+    allocate(self%cell_array(num_local_atoms))
+    allocate(self%atomdata_array(num_local_atoms))
+    allocate(self%ref_cluster_array(num_local_atoms))
+    allocate(self%kkr_array(num_local_atoms))
+    allocate(self%densities_array(num_local_atoms))
+    allocate(self%energies_array(num_local_atoms))
+    allocate(self%madelung_sum_array(num_local_atoms))
+    allocate(self%ldau_data_array(num_local_atoms))
+    allocate(self%jij_data_array(num_local_atoms))
 
     ! These datastructures are the same for all (local) atoms
-    allocate(calc_data%lattice_vectors)
-    allocate(calc_data%madelung_calc)
-    allocate(calc_data%gaunts)
-    allocate(calc_data%shgaunts)
-    allocate(calc_data%trunc_zone)
-    allocate(calc_data%clusters)
-    allocate(calc_data%broyden)
-    allocate(calc_data%iguess_data)
+    allocate(self%lattice_vectors)
+    allocate(self%madelung_calc)
+    allocate(self%gaunts)
+    allocate(self%shgaunts)
+    allocate(self%trunc_zone)
+    allocate(self%clusters)
+    allocate(self%broyden)
+    allocate(self%iguess_data)
 
     atom_rank = getMyAtomRank(my_mpi)
+    
+    allocate(self%atom_ids(num_local_atoms))
 
     ! assign atom ids to processes with atom rank 'atom_rank'
     ! E.g. for 2 atoms per proc:
@@ -138,44 +139,40 @@ module CalculationData_mod
     ! process 2 treats atoms 3,4 and so on
     ! FOR USE OF TRUNCATION THESE atoms have to be close together!!!
 
-    ASSERT( size(calc_data%atom_ids) == num_local_atoms )
+    ASSERT( size(self%atom_ids) == num_local_atoms )
     ASSERT( mod(dims%naez, atoms_per_proc) == 0 )
 
     do ii = 1, num_local_atoms
-      calc_data%atom_ids(ii) = atom_rank * atoms_per_proc + ii
-      ASSERT( calc_data%atom_ids(ii) <= dims%naez )
+      self%atom_ids(ii) = atom_rank * atoms_per_proc + ii
+      ASSERT( self%atom_ids(ii) <= dims%naez )
     enddo ! ii
 
     ! Now construct all datastructures and calculate initial data
-    call constructEverything(calc_data, dims, params, arrays, my_mpi)
+    call constructEverything(self, dims, params, arrays, my_mpi)
 
-    !call print_debug_info(calc_data)
-  endsubroutine
+    ! call repr_CalculationData(self)
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Calculate Madelung Lattice sums for all local atoms.
-  subroutine prepareMadelung(calc_data, arrays)
+  subroutine prepareMadelung(self, arrays)
     use Main2Arrays_mod, only: Main2Arrays
     use MadelungCalculator_mod, only: calculateMadelungLatticeSum
 
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(Main2Arrays), intent(in):: arrays
 
-    ! ----- locals ------
-    integer :: I1
-    integer :: ilocal
-    type(MadelungLatticeSum), pointer :: madelung_sum
+    integer :: atom_id, ila
 
-    do ilocal = 1, calc_data%num_local_atoms
-      I1 = calc_data%atom_ids(ilocal)
-      madelung_sum => calc_data%madelung_sum_array(ilocal)
-      call calculateMadelungLatticeSum(madelung_sum, I1, arrays%rbasis)
-    enddo
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
+      call calculateMadelungLatticeSum(self%madelung_sum_array(ila), atom_id, arrays%rbasis)
+    enddo ! ila
 
-  endsubroutine
+  endsubroutine ! prepare Madelung
 
   !----------------------------------------------------------------------------
-  subroutine destroyCalculationData(calc_data) ! todo: text-replace calc_data by self in this routine
+  subroutine destroyCalculationData(self) ! todo: text-replace self by self in this routine
     ! deprecated interfaces
     use RefCluster_mod, only: destroyRefCluster
     use MadelungCalculator_mod, only: destroyMadelungLatticeSum
@@ -194,293 +191,268 @@ module CalculationData_mod
     use BroydenData_mod, only: destroyBroydenData
     use InitialGuess_mod, only: iguess_destroy ! deprecated exceptional naming!
     
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
 
-    ! ---- locals ----
-    integer :: ilocal
-    integer :: I1
-    type(KKRresults), pointer :: kkr
-    type(DensityResults), pointer :: densities
-    type(EnergyResults), pointer :: energies
-    type(BasisAtom), pointer :: atomdata
-    type(CellData), pointer :: cell
-    type(RadialMeshData), pointer :: mesh
-    type(LDAUData), pointer :: ldau_data
-    type(JijData), pointer :: jij_data
-    type(MadelungLatticeSum), pointer :: madelung_sum
+    integer :: ila, atom_id
 
     ! loop over all LOCAL atoms
     !--------------------------------------------------------------------------
-    do ilocal = 1, calc_data%num_local_atoms
+    do ila = 1, self%num_local_atoms
     !--------------------------------------------------------------------------
 
-      I1 = calc_data%atom_ids(ilocal)
+      atom_id = self%atom_ids(ila)
 
-      kkr       => calc_data%kkr_array(ilocal)
-      densities => calc_data%densities_array(ilocal)
-      atomdata  => calc_data%atomdata_array(ilocal)
-      cell      => calc_data%cell_array(ilocal)
-      mesh      => calc_data%mesh_array(ilocal)
-      ldau_data => calc_data%ldau_data_array(ilocal)
-      jij_data  => calc_data%jij_data_array(ilocal)
-      madelung_sum   => calc_data%madelung_sum_array(ilocal)
-      energies  => calc_data%energies_array(ilocal)
+      call destroyRefCluster(self%ref_cluster_array(ila))
+      call destroyMadelungLatticeSum(self%madelung_sum_array(ila))
+      call destroyBasisAtom(self%atomdata_array(ila))
+      call destroyCellData(self%cell_array(ila))
+      call destroyRadialMeshData(self%mesh_array(ila))
+      call destroyLDAUData(self%ldau_data_array(ila))
+      call destroyJijData(self%jij_data_array(ila))
+      call destroyDensityResults(self%densities_array(ila))
+      call destroyKKRresults(self%kkr_array(ila))
+      call destroyEnergyResults(self%energies_array(ila))
 
-      call destroyRefCluster(calc_data%ref_cluster_array(ilocal))
+    enddo ! ila
 
-      call destroyMadelungLatticeSum(madelung_sum)
+    call destroyLatticeVectors(self%lattice_vectors)
+    call destroyMadelungCalculator(self%madelung_calc)
+    call destroyGauntCoefficients(self%gaunts)
+    call destroyShapeGauntCoefficients(self%shgaunts)
+    call destroyBroydenData(self%broyden)
+    call iguess_destroy(self%iguess_data)
 
-      call destroyBasisAtom(atomdata)
-      call destroyCellData(cell)
-      call destroyRadialMeshData(mesh)
-
-      call destroyLDAUData(ldau_data)
-      call destroyJijData(jij_data)
-      call destroyDensityResults(densities)
-      call destroyKKRresults(kkr)
-      call destroyEnergyResults(energies)
-
-    enddo ! ilocal
-
-    call destroyLatticeVectors(calc_data%lattice_vectors)
-    call destroyMadelungCalculator(calc_data%madelung_calc)
-    call destroyGauntCoefficients(calc_data%gaunts)
-    call destroyShapeGauntCoefficients(calc_data%shgaunts)
-    call destroyBroydenData(calc_data%broyden)
-    call iguess_destroy(calc_data%iguess_data)
-
-    deallocate(calc_data%mesh_array)
-    deallocate(calc_data%cell_array)
-    deallocate(calc_data%atomdata_array)
-    deallocate(calc_data%ref_cluster_array)
-    deallocate(calc_data%kkr_array)
-    deallocate(calc_data%densities_array)
-    deallocate(calc_data%energies_array)
-    deallocate(calc_data%madelung_sum_array)
-    deallocate(calc_data%trunc_zone)
-    deallocate(calc_data%clusters)
-    deallocate(calc_data%iguess_data)
-
-    deallocate(calc_data%ldau_data_array)
-    deallocate(calc_data%jij_data_array)
-    deallocate(calc_data%broyden)
-    deallocate(calc_data%atom_ids)
-  endsubroutine
+    deallocate(self%mesh_array)
+    deallocate(self%cell_array)
+    deallocate(self%atomdata_array)
+    deallocate(self%ref_cluster_array)
+    deallocate(self%kkr_array)
+    deallocate(self%densities_array)
+    deallocate(self%energies_array)
+    deallocate(self%madelung_sum_array)
+    deallocate(self%trunc_zone)
+    deallocate(self%clusters)
+    deallocate(self%iguess_data)
+    deallocate(self%ldau_data_array)
+    deallocate(self%jij_data_array)
+    deallocate(self%broyden)
+    deallocate(self%atom_ids)
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
-  integer function getNumLocalAtoms(calc_data)
-    type(CalculationData), intent(in) :: calc_data
+  integer function getNumLocalAtoms(self)
+    type(CalculationData), intent(in) :: self
 
-    getNumLocalAtoms = calc_data%num_local_atoms
+    getNumLocalAtoms = self%num_local_atoms
   endfunction
 
   !----------------------------------------------------------------------------
-  integer function getAtomIndexOfLocal(calc_data, ilocal)
-    type(CalculationData), intent(in) :: calc_data
-    integer, intent(in) :: ilocal
+  integer function getAtomIndexOfLocal(self, ila)
+    type(CalculationData), intent(in) :: self
+    integer, intent(in) :: ila
 
-    getAtomIndexOfLocal = calc_data%atom_ids(ilocal)
+    getAtomIndexOfLocal = self%atom_ids(ila)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to atomdata for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getAtomData(calc_data, local_atom_index)
+  function getAtomData(self, local_atom_index)
     type(BasisAtom), pointer :: getAtomData ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getAtomData => calc_data%atomdata_array(local_atom_index)
+    getAtomData => self%atomdata_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to 'reference cluster for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getRefCluster(calc_data, local_atom_index)
+  function getRefCluster(self, local_atom_index)
     type(RefCluster), pointer :: getRefCluster ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getRefCluster => calc_data%ref_cluster_array(local_atom_index)
+    getRefCluster => self%ref_cluster_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to kkr(results) for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getKKR(calc_data, local_atom_index)
+  function getKKR(self, local_atom_index)
     type(KKRresults), pointer :: getKKR ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getKKR => calc_data%kkr_array(local_atom_index)
+    getKKR => self%kkr_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Madelung sum for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getMadelungSum(calc_data, local_atom_index)
+  function getMadelungSum(self, local_atom_index)
         
     type(MadelungLatticeSum), pointer :: getMadelungSum ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getMadelungSum => calc_data%madelung_sum_array(local_atom_index)
+    getMadelungSum => self%madelung_sum_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to density results for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getDensities(calc_data, local_atom_index)
+  function getDensities(self, local_atom_index)
     type(DensityResults), pointer :: getDensities ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getDensities => calc_data%densities_array(local_atom_index)
+    getDensities => self%densities_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to energy results for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getEnergies(calc_data, local_atom_index)
+  function getEnergies(self, local_atom_index)
     type(EnergyResults), pointer :: getEnergies ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getEnergies => calc_data%energies_array(local_atom_index)
+    getEnergies => self%energies_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to LDA+U data for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getLDAUData(calc_data, local_atom_index)
+  function getLDAUData(self, local_atom_index)
     type(LDAUData), pointer :: getLDAUData ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getLDAUData => calc_data%ldau_data_array(local_atom_index)
+    getLDAUData => self%ldau_data_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Jij-data for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getJijData(calc_data, local_atom_index)
+  function getJijData(self, local_atom_index)
     type(JijData), pointer :: getJijData ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
-    getJijData => calc_data%jij_data_array(local_atom_index)
+    getJijData => self%jij_data_array(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Broyden data for atom with LOCAL atom index
   !> 'local_atom_index'.
-  function getBroyden(calc_data, local_atom_index) ! todo: remove local_atom_index from interface (although optional)
+  function getBroyden(self, local_atom_index) ! todo: remove local_atom_index from interface (although optional)
     type(BroydenData), pointer :: getBroyden ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
     integer, intent(in), optional :: local_atom_index
 
-    getBroyden => calc_data%broyden
+    getBroyden => self%broyden
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Gaunt coefficients.
-  function getGaunts(calc_data)
+  function getGaunts(self)
     type(GauntCoefficients), pointer :: getGaunts ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getGaunts => calc_data%gaunts
+    getGaunts => self%gaunts
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Shape-Gaunt coefficients.
-  function getShapeGaunts(calc_data)
+  function getShapeGaunts(self)
     type(ShapeGauntCoefficients), pointer :: getShapeGaunts ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getShapeGaunts => calc_data%shgaunts
+    getShapeGaunts => self%shgaunts
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to Madelung calculator.
-  function getMadelungCalculator(calc_data)
+  function getMadelungCalculator(self)
     type(MadelungCalculator), pointer :: getMadelungCalculator ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getMadelungCalculator => calc_data%madelung_calc
+    getMadelungCalculator => self%madelung_calc
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to truncation zone.
-  function getTruncationZone(calc_data)
+  function getTruncationZone(self)
     type(TruncationZone), pointer :: getTruncationZone ! return value
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getTruncationZone => calc_data%trunc_zone
+    getTruncationZone => self%trunc_zone
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to cluster info (sparsity info).
-  function getClusterInfo(calc_data)
+  function getClusterInfo(self)
     type(ClusterInfo), pointer :: getClusterInfo ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getClusterInfo => calc_data%clusters
+    getClusterInfo => self%clusters
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to lattice vector table.
-  function getLatticeVectors(calc_data)
+  function getLatticeVectors(self)
     type(LatticeVectors), pointer :: getLatticeVectors ! return value
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getLatticeVectors => calc_data%lattice_vectors
+    getLatticeVectors => self%lattice_vectors
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns reference to initial guess data.
-  function getInitialGuessData(calc_data)
+  function getInitialGuessData(self)
     type(InitialGuess), pointer :: getInitialGuessData
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    getInitialGuessData => calc_data%iguess_data
+    getInitialGuessData => self%iguess_data
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
-  integer function getMaxReclenMeshes(calc_data)
-    type(CalculationData), intent(in) :: calc_data
+  integer function getMaxReclenMeshes(self)
+    type(CalculationData), intent(in) :: self
 
-    getMaxReclenMeshes = calc_data%max_reclen_meshes
+    getMaxReclenMeshes = self%max_reclen_meshes
   endfunction
 
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
-  integer function getMaxReclenPotential(calc_data)
-    type(CalculationData), intent(in) :: calc_data
+  integer function getMaxReclenPotential(self)
+    type(CalculationData), intent(in) :: self
 
-    getMaxReclenPotential = calc_data%max_reclen_potential
+    getMaxReclenPotential = self%max_reclen_potential
   endfunction
 
 ! ==================== Helper routines ========================================
 
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
-  subroutine constructEverything(calc_data, dims, params, arrays, my_mpi)
+  subroutine constructEverything(self, dims, params, arrays, my_mpi)
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank, isInMasterGroup
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -502,132 +474,101 @@ module CalculationData_mod
     use BroydenData_mod, only: createBroydenData             
     use KKRresults_mod, only: createKKRresults
     
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    ! ----- locals ------
-    integer :: I1
-    integer :: ilocal
-    type(KKRresults), pointer :: kkr
-    type(DensityResults), pointer :: densities
-    type(EnergyResults), pointer :: energies
-    type(LDAUData), pointer :: ldau_data
-    type(JijData), pointer :: jij_data
-    type(MadelungLatticeSum), pointer :: madelung_sum
-    type(RadialMeshData), pointer :: mesh
+    integer :: atom_id, ila, irmd
 
-    call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
+    call createLatticeVectors(self%lattice_vectors, arrays%bravais)
 
     ! create cluster for each local atom
-    !$omp parallel do private(ilocal)
-    do ilocal = 1, calc_data%num_local_atoms
-      call createRefCluster(calc_data%ref_cluster_array(ilocal), &
-                            calc_data%lattice_vectors, arrays%rbasis, &
-                            params%rclust, calc_data%atom_ids(ilocal))
-      !write(*,*) "Atoms in ref. cluster: ", calc_data%ref_cluster_array(ilocal)%nacls
+    !$omp parallel do private(ila)
+    do ila = 1, self%num_local_atoms
+      call createRefCluster(self%ref_cluster_array(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
+      !write(*,*) "Atoms in ref. cluster: ", self%ref_cluster_array(ila)%nacls
     enddo
     !$omp endparallel do
 
     ! setup the truncation zone
-    call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
+    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
 
 
-    call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
-                          calc_data%trunc_zone, getMySEcommunicator(my_mpi))
+    call createClusterInfo_com(self%clusters, self%ref_cluster_array, self%trunc_zone, getMySEcommunicator(my_mpi))
 
     if (isMasterRank(my_mpi)) then
-      write(*,*) "Number of lattice vectors created     : ", &
-                  calc_data%lattice_vectors%nrd
-
-      write(*,*) "Max. number of reference cluster atoms: ", &
-                  calc_data%clusters%naclsd
-
+      write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
+      write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
       write(*,*) "On node 0: "
       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-    endif
-    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
+    endif ! master
+    CHECKASSERT( num_truncated + num_untruncated + num_truncated2 == dims%naez )
 
-    call createMadelungCalculator(calc_data%madelung_calc, dims%lmaxd, &
-                                  params%ALAT, params%RMAX, params%GMAX, &
-                                  arrays%BRAVAIS, dims%NMAXD, dims%ISHLD)
+    call createMadelungCalculator(self%madelung_calc, dims%lmaxd, params%alat, params%rmax, params%gmax, arrays%bravais)
 
     ! a very crucial routine
-    call generateAtomsShapesMeshes(calc_data, dims, params, arrays)
+    call generateAtomsShapesMeshes(self, dims, params, arrays)
 
-    call recordLengths_com(calc_data, my_mpi)
+    call recordLengths_com(self, my_mpi)
 
     if (isInMasterGroup(my_mpi)) then
 #ifndef TASKLOCAL_FILES
-      call writePotentialIndexFile(calc_data)
+      call writePotentialIndexFile(self)
 #endif
-      call writeNewMeshFiles(calc_data)
+      call writeNewMeshFiles(self)
     endif
 
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
-    do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
+    do ila = 1, self%num_local_atoms
 
-      I1 = calc_data%atom_ids(ilocal)
+      atom_id = self%atom_ids(ila)
+      irmd = self%mesh_array(ila)%irmd
 
-      kkr       => calc_data%kkr_array(ilocal)
-      densities => calc_data%densities_array(ilocal)
-      ldau_data => calc_data%ldau_data_array(ilocal)
-      jij_data  => calc_data%jij_data_array(ilocal)
-      madelung_sum   => calc_data%madelung_sum_array(ilocal)
-      energies  => calc_data%energies_array(ilocal)
-      mesh => calc_data%mesh_array(ilocal)
+      call createKKRresults(self%kkr_array(ila), dims, self%clusters%naclsd)
+      call createDensityResults(self%densities_array(ila), dims, irmd)
+      call createEnergyResults(self%energies_array(ila), dims%nspind, dims%lmaxd)
 
-      call createKKRresults(kkr, dims, calc_data%clusters%naclsd)
-      call createDensityResults(densities, dims, mesh%irmd)
-      call createEnergyResults(energies, dims%nspind, dims%lmaxd)
+      call createLDAUData(self%ldau_data_array(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
+      call createJijData(self%jij_data_array(ila), .false., params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
 
-      call createLDAUData(ldau_data, params%ldau, mesh%irmd, dims%lmaxd, dims%nspind)
-      call createJijData(jij_data, .false., params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
+      call createMadelungLatticeSum(self%madelung_sum_array(ila), self%madelung_calc, dims%naez)
 
-      call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
+      ! ASSERT( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
 
-      !ASSERT( arrays%ZAT(I1) == atomdata%Z_nuclear )
-
-    !--------------------------------------------------------------------------
-    enddo ! ilocal
-    !--------------------------------------------------------------------------
+    enddo ! ila
 
     ! calculate Gaunt coefficients
-    call createGauntCoefficients(calc_data%gaunts, dims%lmaxd)
-    call createShapeGauntCoefficients(calc_data%shgaunts, dims%lmaxd)
-    call createBroydenData(calc_data%broyden, &
-         getBroydenDim(calc_data), &  ! former NTIRD
-         dims%itdbryd, params%imix, params%mixing)
+    call createGauntCoefficients(self%gaunts, dims%lmaxd)
+    call createShapeGauntCoefficients(self%shgaunts, dims%lmaxd)
+    call createBroydenData(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing)  ! getBroydenDim replaces former NTIRD
 
-    ! setup storage for iguess
-    call setup_iguess(calc_data, dims, arrays)
-
-  endsubroutine
+    call setup_iguess(self, dims, arrays) ! setup storage for iguess
+    
+  endsubroutine ! constructEverything
 
   !----------------------------------------------------------------------------
   !> Initialise iguess datastructure.
-  subroutine setup_iguess(calc_data, dims, arrays)
+  subroutine setup_iguess(self, dims, arrays)
     use DimParams_mod, only: DimParams
     use Main2Arrays_mod, only: Main2Arrays
-    use InitialGuess_mod, only: iguess_init ! deprecated exceptional naming
-
-    type(CalculationData), intent(inout) :: calc_data
+    use InitialGuess_mod, only: iguess_init ! deprecated exceptional naming with underscore
+    use TEST_lcutoff_mod, only: num_untruncated
+     
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
     type(Main2Arrays), intent(in):: arrays
 
     integer, allocatable :: num_k_points(:)
-    integer :: ii
-    integer :: blocksize
+    integer :: ii, blocksize
 
     ! TODO: This is overdimensioned when l-cutoff is used!!!
+    if (num_untruncated /= dims%naez) &
+      warn(6, "The memory proportions for iGuess are overdimensioned when l-dependent truncation is applied!")
     ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
-    blocksize = calc_data%trunc_zone%naez_trc * calc_data%num_local_atoms * dims%lmmaxd**2
+    blocksize = self%trunc_zone%naez_trc * self%num_local_atoms * dims%lmmaxd**2
 
     allocate(num_k_points(dims%iemxd))
     do ii = 1, dims%iemxd
@@ -637,17 +578,17 @@ module CalculationData_mod
     ! setup storage for iguess
     if (dims%smpid == 1 .and. dims%nspind == 2) then
       ! no spin parallelisation choosen, processes must store both spin-directions
-      call iguess_init(calc_data%iguess_data, num_k_points, 2, blocksize, dims%iguessd)
+      call iguess_init(self%iguess_data, num_k_points, 2, blocksize, dims%iguessd)
     else
-      call iguess_init(calc_data%iguess_data, num_k_points, 1, blocksize, dims%iguessd)
+      call iguess_init(self%iguess_data, num_k_points, 1, blocksize, dims%iguessd)
     endif
 
-  endsubroutine
+  endsubroutine ! setup_iguess
 
 !------------------------------------------------------------------------------
 !> Generates basis atom information, radial mesh, shape-function and
 !> interpolates starting potential if necessary
-  subroutine generateAtomsShapesMeshes(calc_data, dims, params, arrays)
+  subroutine generateAtomsShapesMeshes(self, dims, params, arrays)
     use DimParams_mod, only: DimParams
     use InterpolateBasisAtom_mod, only: interpolateBasisAtom
     use InputParams_mod, only: InputParams
@@ -660,105 +601,81 @@ module CalculationData_mod
     use RadialMeshData_mod, only: createRadialMeshDataFromFile
     use BasisAtom_mod, only: associateBasisAtomMesh, associateBasisAtomCell
     
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
 
-    integer ilocal, I1
-    type(BasisAtom), pointer :: atomdata
-    type(CellData), pointer :: cell
-    type(RadialMeshData), pointer :: mesh
-    type(BasisAtom), pointer :: old_atom
-    type(RadialMeshData), pointer :: old_mesh
+    integer :: ila, atom_id
+    type(BasisAtom), allocatable      :: old_atom_array(:)
+    type(RadialMeshData), allocatable :: old_mesh_array(:)
+    double precision, allocatable     :: new_MT_radii(:)
 
-    type(BasisAtom), pointer :: old_atom_array(:)
-    type(RadialMeshData), pointer :: old_mesh_array(:)
-    double precision, allocatable :: new_MT_radii(:)
-
-    allocate(old_atom_array(calc_data%num_local_atoms))
-    allocate(old_mesh_array(calc_data%num_local_atoms))
-    allocate(new_MT_radii(calc_data%num_local_atoms))
+    allocate(old_atom_array(self%num_local_atoms))
+    allocate(old_mesh_array(self%num_local_atoms))
+    allocate(new_MT_radii(self%num_local_atoms))
 
     ! generate storage for cell information + shape-functions
-    do ilocal = 1, calc_data%num_local_atoms
-      cell => calc_data%cell_array(ilocal)
-      call createCellData(cell, dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
-    enddo
+    do ila = 1, self%num_local_atoms
+      call createCellData(self%cell_array(ila), dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
+    enddo ! ila
 
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
-    do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
 
-      I1 = calc_data%atom_ids(ilocal)
-
-      ! We want to allow the actual radial mesh to be different from the one
-      ! given by the input
-      ! Therefore read 'potential' and 'meshes' data into temporary data-
-      ! structures
+      ! We want to allow the actual radial mesh to be different from the one given by the input
+      ! Therefore read 'potential' and 'meshes' data into temporary data structures
       ! Then interpolate potential to the new mesh
-      old_atom  => old_atom_array(ilocal)
-      old_mesh  => old_mesh_array(ilocal)
 
       ! load the input data
-      call createBasisAtomFromFile(old_atom, "atoms", "vpotnew.0", I1)
+      call createBasisAtomFromFile(old_atom_array(ila), "atoms", "vpotnew.0", atom_id)
 
-      call createRadialMeshDataFromFile(old_mesh, "meshes.0", I1)
+      call createRadialMeshDataFromFile(old_mesh_array(ila), "meshes.0", atom_id)
 
-      call associateBasisAtomMesh(old_atom, old_mesh)
+      call associateBasisAtomMesh(old_atom_array(ila), old_mesh_array(ila))
 
-      new_MT_radii(ilocal) = old_atom%radius_muffin_tin / params%alat
+      new_MT_radii(ila) = old_atom_array(ila)%radius_muffin_tin / params%alat
     !--------------------------------------------------------------------------
-    enddo ! ilocal
+    enddo ! ila
     !--------------------------------------------------------------------------
 
     ! generate shapes and meshes
-    call generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii, params%MT_scale)
+    call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale)
 
     ! interpolate to new mesh
 
-    !--------------------------------------------------------------------------
-    do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
-      I1 = calc_data%atom_ids(ilocal)
-      atomdata  => calc_data%atomdata_array(ilocal)
-      cell      => calc_data%cell_array(ilocal)
-      mesh      => calc_data%mesh_array(ilocal)
-      old_atom  => old_atom_array(ilocal)
-      old_mesh  => old_mesh_array(ilocal)
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
 
       ! Geometry might have changed - interpolate to new mesh
-      call interpolateBasisAtom(atomdata, old_atom, mesh, dims%lpot)
+      call interpolateBasisAtom(self%atomdata_array(ila), old_atom_array(ila), self%mesh_array(ila), dims%lpot)
 
       ! set new MT radius
-      atomdata%radius_muffin_tin = mesh%rmt
+      self%atomdata_array(ila)%radius_muffin_tin = self%mesh_array(ila)%rmt
 
       ! set radius of repulsive reference potential
-      if (params%RMT_ref_scale > 0.0d0) then
-        atomdata%RMTref = cell%shdata%max_muffin_tin * params%alat * params%RMT_ref_scale
+      if (params%RMT_ref_scale > 0.d0) then
+        self%atomdata_array(ila)%RMTref = self%cell_array(ila)%shdata%max_muffin_tin * params%alat * params%RMT_ref_scale
       else
-        atomdata%RMTref = atomdata%radius_muffin_tin ! old behaviour=Mt-radius
+        self%atomdata_array(ila)%RMTref = self%atomdata_array(ila)%radius_muffin_tin ! old behaviour=Mt-radius
       endif
 
-      cell%cell_index = atomdata%cell_index
-      call associateBasisAtomCell(atomdata, cell)
+      self%cell_array(ila)%cell_index = self%atomdata_array(ila)%cell_index
+      call associateBasisAtomCell(self%atomdata_array(ila), self%cell_array(ila))
 
-      CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
-      CHECKASSERT( atomdata%atom_index == I1 )
+      CHECKASSERT( dims%IRMIND == self%mesh_array(ila)%IRMIN ) !check mesh
+      CHECKASSERT( self%atomdata_array(ila)%atom_index == atom_id )
 
-      call destroyBasisAtom(old_atom)
-      call destroyRadialMeshData(old_mesh)
-    enddo ! ilocal
+      call destroyBasisAtom(old_atom_array(ila))
+      call destroyRadialMeshData(old_mesh_array(ila))
+    enddo ! ila
 
-    deallocate(new_MT_radii)
-    deallocate(old_atom_array)
-    deallocate(old_mesh_array)
+    deallocate(new_MT_radii, old_atom_array, old_mesh_array)
 
-  endsubroutine
+  endsubroutine generateAtomsShapesMeshes
 
 !------------------------------------------------------------------------------
-  subroutine generateShapesTEST(calc_data, dims, params, arrays, new_MT_radii, MT_scale)
+  subroutine generateShapesTEST(self, dims, params, arrays, new_MT_radii, MT_scale)
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
@@ -767,217 +684,190 @@ module CalculationData_mod
     use RadialMeshData_mod, only: createRadialMeshData, initRadialMesh
     use ShapefunData_mod, only: destroyShapefunData
 
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
     double precision, intent(in) :: new_MT_radii(:)
     double precision, intent(in) :: MT_scale
 
-    integer :: I1, ilocal
-    integer :: irmd, irid, ipand, irnsd
+    integer :: atom_id, ila, irmd, irid, ipand, irnsd
     type(InterstitialMesh) :: inter_mesh
     type(ShapefunData) :: shdata ! temporary shape-fun data
     double precision :: new_MT_radius
     integer :: num_MT_points
-    type(RadialMeshData), pointer :: mesh
 
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
-    do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
-      I1 = calc_data%atom_ids(ilocal)
-      mesh => calc_data%mesh_array(ilocal)
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
 
-      new_MT_radius = new_MT_radii(ilocal)
+      new_MT_radius = new_MT_radii(ila)
       num_MT_points = params%num_MT_points
 
-      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
+      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
                      params%rclust_voronoi, 4*dims%lmaxd, &
                      dims%irid - num_MT_points, &
                      params%nmin_panel, num_MT_points, new_MT_radius, MT_scale)
 
       ! use it
-      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
+      self%cell_array(ila)%shdata = shdata ! possible in Fortran 2003
 
       irmd = dims%irmd - dims%irid + size(inter_mesh%xrn)
       irid = size(inter_mesh%xrn)
       ipand = size(inter_mesh%nm) + 1
       irnsd = irmd - (dims%irmd - dims%irnsd)
 
-      ASSERT(inter_mesh%xrn(1) /= 0.0d0)
+      ASSERT(inter_mesh%xrn(1) /= 0.d0)
       !write(*,*) irmd, irid, ipand, irnsd
 
-      call createRadialMeshData(mesh, irmd, ipand)
+      call createRadialMeshData(self%mesh_array(ila), irmd, ipand)
 
-      call initRadialMesh(mesh, params%alat, inter_mesh%xrn, &
+      call initRadialMesh(self%mesh_array(ila), params%alat, inter_mesh%xrn, &
                           inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
 
       ! optional output of shape functions
-      if (params%write_shapes == 1) call write_shapefun_file(shdata, inter_mesh, I1)
+      if (params%write_shapes == 1) call write_shapefun_file(shdata, inter_mesh, atom_id)
 
       call destroyShapefunData(shdata)
       call destroyInterstitialMesh(inter_mesh)
 
-    enddo ! ilocal
+    enddo ! ila
 
-  endsubroutine
+  endsubroutine ! generateShapesTEST
 
   !----------------------------------------------------------------------------
   !> Communicate and set record lengths.
-  subroutine recordLengths_com(calc_data, my_mpi)
+  subroutine recordLengths_com(self, my_mpi)
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySECommunicator, getMyAtomRank
     use RadialMeshData_mod, only: getMinReclenMesh
     use BasisAtom_mod, only: getMinReclenBasisAtomPotential
     include 'mpif.h'
 
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    integer :: ierr
-    integer :: ilocal
-    integer :: sendbuf(2)
-    integer :: recvbuf(2)
-    type(RadialMeshData), pointer :: mesh
-    type(BasisAtom), pointer :: atomdata
+    integer, parameter :: ND=2
+    integer :: ierr, ila, sendbuf(ND), recvbuf(ND)
 
     sendbuf = -1
     recvbuf = -1
-    do ilocal = 1, calc_data%num_local_atoms
-      atomdata  => calc_data%atomdata_array(ilocal)
-      mesh      => calc_data%mesh_array(ilocal)
+    do ila = 1, self%num_local_atoms
+      sendbuf(1) = max(sendbuf(1), getMinReclenBasisAtomPotential(self%atomdata_array(ila)))
+      sendbuf(2) = max(sendbuf(2), getMinReclenMesh(self%mesh_array(ila)))
+    enddo ! ila
 
-      sendbuf(1) = max(sendbuf(1), getMinReclenBasisAtomPotential(atomdata))
-      sendbuf(2) = max(sendbuf(2), getMinReclenMesh(mesh))
-    enddo ! ilocal
-
-    call MPI_Allreduce(sendbuf, recvbuf, 2, MPI_INTEGER, MPI_MAX, getMySECommunicator(my_mpi), ierr)
+    call MPI_Allreduce(sendbuf, recvbuf, ND, MPI_INTEGER, MPI_MAX, getMySECommunicator(my_mpi), ierr)
 
     if (getMyAtomRank(my_mpi) == 0) then
       write(*,*) "Record length 'vpotnew' file: ", recvbuf(1)
       write(*,*) "Record length 'meshes'  file: ", recvbuf(2)
     endif
 
-    calc_data%max_reclen_potential = recvbuf(1)
-    calc_data%max_reclen_meshes = recvbuf(2)
+    self%max_reclen_potential = recvbuf(1)
+    self%max_reclen_meshes    = recvbuf(2)
 
   endsubroutine
 
   !----------------------------------------------------------------------------
   !> Write potential index file.
-  subroutine writePotentialIndexFile(calc_data)
+  subroutine writePotentialIndexFile(self)
     use BasisAtom_mod, only: openBasisAtomPotentialIndexDAFile, writeBasisAtomPotentialIndexDA, closeBasisAtomPotentialIndexDAFile
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    type(BasisAtom), pointer :: atomdata
-    integer :: ilocal
-    integer :: I1, max_reclen
+    integer :: ila, atom_id, max_reclen
 
-    max_reclen = getMaxReclenPotential(calc_data)
+    max_reclen = getMaxReclenPotential(self)
 
-    atomdata  => calc_data%atomdata_array(1)
-    call openBasisAtomPotentialIndexDAFile(atomdata, 37, 'vpotnew.idx')
+    ! the opening routine requires any instance of type BasisAtom
+    call openBasisAtomPotentialIndexDAFile(self%atomdata_array(1), 37, 'vpotnew.idx')
 
-    do ilocal = 1, calc_data%num_local_atoms
-      atomdata  => calc_data%atomdata_array(ilocal)
-      I1 = calc_data%atom_ids(ilocal)
-      call writeBasisAtomPotentialIndexDA(atomdata, 37, I1, max_reclen)
-    enddo ! ilocal
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
+      call writeBasisAtomPotentialIndexDA(self%atomdata_array(ila), 37, atom_id, max_reclen)
+    enddo ! ila
 
     call closeBasisAtomPotentialIndexDAFile(37)
-  endsubroutine
+  endsubroutine ! write potential file
 
   !----------------------------------------------------------------------------
   !> Write new mesh files.
   !>
   !> The mesh can deviate from the input mesh if atoms are not in an ideal
   !> position. Therefore new mesh files have to be written.
-  subroutine writeNewMeshFiles(calc_data)
+  subroutine writeNewMeshFiles(self)
 #ifndef TASKLOCAL_FILES
     use RadialMeshData_mod, only: openRadialMeshDataIndexDAFile, writeRadialMeshDataIndexDA, closeRadialMeshDataIndexDAFile
 #endif
     use RadialMeshData_mod, only: openRadialMeshDataDAFile, writeRadialMeshDataDA, closeRadialMeshDataDAFile
     
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    type(RadialMeshData), pointer :: mesh
-    integer :: ilocal
-    integer :: I1, max_reclen
+    integer :: ila, atom_id, max_reclen
 
-    max_reclen = getMaxReclenMeshes(calc_data)
+    max_reclen = getMaxReclenMeshes(self)
 
-    mesh      => calc_data%mesh_array(1)
+    ! the opening routines require any instance of type RadialMeshData
 #ifndef TASKLOCAL_FILES
     ! don't write index when using task-local files
-    call openRadialMeshDataIndexDAFile(mesh, 37, 'meshes.idx')
+    call openRadialMeshDataIndexDAFile(self%mesh_array(1), 37, 'meshes.idx')
 #endif
-    call openRadialMeshDataDAFile(mesh, 38, 'meshes', max_reclen)
+    call openRadialMeshDataDAFile(self%mesh_array(1), 38, 'meshes', max_reclen)
 
-    do ilocal = 1, calc_data%num_local_atoms
-      mesh      => calc_data%mesh_array(ilocal)
-      I1 = calc_data%atom_ids(ilocal)
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
 #ifndef TASKLOCAL_FILES
-      call writeRadialMeshDataIndexDA(mesh, 37, I1, max_reclen)
+      call writeRadialMeshDataIndexDA(self%mesh_array(ila), 37, atom_id, max_reclen)
 #endif
-      call writeRadialMeshDataDA(mesh, 38, I1)
-    enddo ! ilocal
+      call writeRadialMeshDataDA(self%mesh_array(ila), 38, atom_id)
+    enddo ! ila
 
     call closeRadialMeshDataDAFile(38)
 #ifndef TASKLOCAL_FILES
     call closeRadialMeshDataIndexDAFile(37)
 #endif
 
-  endsubroutine
+  endsubroutine writeNewMeshFiles
 
 !============ Helper routines for Broyden mixing ==============================
 
   !----------------------------------------------------------------------------
   !> Returns the number of potential values of ALL LOCAL atoms.
   !> This is needed for dimensioning the Broyden mixing work arrays.
-  integer function getBroydenDim(calc_data)
+  integer function getBroydenDim(self)
     use PotentialData_mod, only: getNumPotentialValues
     
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    integer :: ilocal
-    type(BasisAtom), pointer :: atomdata
+    integer :: ila
 
     getBroydenDim = 0
-    do ilocal = 1, calc_data%num_local_atoms
-      atomdata  => calc_data%atomdata_array(ilocal)
-      getBroydenDim = getBroydenDim + getNumPotentialValues(atomdata%potential)
-    enddo ! ilocal
+    do ila = 1, self%num_local_atoms
+      getBroydenDim = getBroydenDim + getNumPotentialValues(self%atomdata_array(ila)%potential)
+    enddo ! ila
     
-  endfunction
+  endfunction ! getBroydenDim
 
   !----------------------------------------------------------------------------
   ! Print some debugging info
-  subroutine print_debug_info(calc_data)
+  subroutine repr_CalculationData(self)
     use RadialMeshData_mod, only: repr_RadialMeshData
     use ShapefunData_mod, only: repr_ShapefunData
     use PotentialData_mod, only: repr_PotentialData
 
-    type(CalculationData), intent(in) :: calc_data
+    type(CalculationData), intent(in) :: self
 
-    integer :: ilocal
-    type(RadialMeshData), pointer :: mesh
-    type(BasisAtom), pointer :: atomdata
-    type(CellData), pointer :: cell
+    integer :: ila
     character(len=:), allocatable :: str
 
-    do ilocal = 1, calc_data%num_local_atoms
-      mesh     => calc_data%mesh_array(ilocal)
-      atomdata => calc_data%atomdata_array(ilocal)
-      cell     => calc_data%cell_array(ilocal)
-      call repr_RadialMeshData(mesh, str)
+    do ila = 1, self%num_local_atoms
+      call repr_RadialMeshData(self%mesh_array(ila), str)
       write(*, '(A)') str
-      call repr_PotentialData(atomdata%potential, str)
+      call repr_PotentialData(self%atomdata_array(ila)%potential, str)
       write(*, '(A)') str
-      call repr_ShapefunData(cell%shdata, str)
+      call repr_ShapefunData(self%cell_array(ila)%shdata, str)
       write(*, '(A)') str
-    enddo ! ilocal
+    enddo ! ila
     
-  endsubroutine
+  endsubroutine ! represent
 
 !==============================================================================
 !=             WORK in PROGRESS - not used yet                                =
@@ -985,54 +875,50 @@ module CalculationData_mod
 
   ! Factored out some routines from 'constructEverything'
 
-  subroutine constructClusters(calc_data, params, arrays)
+  subroutine constructClusters(self, params, arrays)
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use RefCluster_mod, only: createRefCluster, createLatticeVectors
     
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
 
-    integer :: ilocal
+    integer :: ila
 
-    call createLatticeVectors(calc_data%lattice_vectors, arrays%bravais)
+    call createLatticeVectors(self%lattice_vectors, arrays%bravais)
 
     ! create cluster for each local atom
-    !$omp parallel do private(ilocal)
-    do ilocal = 1, calc_data%num_local_atoms
-      call createRefCluster(calc_data%ref_cluster_array(ilocal), &
-                            calc_data%lattice_vectors, arrays%rbasis, &
-                            params%rclust, calc_data%atom_ids(ilocal))
-    enddo ! ilocal
+    !$omp parallel do private(ila)
+    do ila = 1, self%num_local_atoms
+      call createRefCluster(self%ref_cluster_array(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
+    enddo ! ila
     !$omp endparallel do
 
-  endsubroutine
+  endsubroutine ! constructClusters
 
-  subroutine constructTruncationZones(calc_data, dims, arrays, my_mpi)
+  subroutine constructTruncationZones(self, dims, arrays, my_mpi)
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
     use DimParams_mod, only: DimParams
     use Main2Arrays_mod, only: Main2Arrays
-    use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integer
+    use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integers
     use TEST_lcutoff_mod, only: initLcutoffNew
     use ClusterInfo_mod, only: createClusterInfo_com
 
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
     type(Main2Arrays), intent(in):: arrays
     type(KKRnanoParallel), intent(in) :: my_mpi
 
     ! setup the truncation zone
-    call initLcutoffNew(calc_data%trunc_zone, calc_data%atom_ids, arrays)
+    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
 
-    ! get information about all the reference clusters of
-    ! atoms in truncation zone
-    call createClusterInfo_com(calc_data%clusters, calc_data%ref_cluster_array, &
-                          calc_data%trunc_zone, getMySEcommunicator(my_mpi))
+    ! get information about all the reference clusters of atoms in truncation zone
+    call createClusterInfo_com(self%clusters, self%ref_cluster_array, self%trunc_zone, getMySEcommunicator(my_mpi))
 
     if (isMasterRank(my_mpi)) then
-      write(*,*) "Number of lattice vectors created     : ", calc_data%lattice_vectors%nrd
-      write(*,*) "Max. number of reference cluster atoms: ", calc_data%clusters%naclsd
+      write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
+      write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
       write(*,*) "On node 0: "
       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
@@ -1040,14 +926,11 @@ module CalculationData_mod
     endif
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == dims%naez)
     
-  endsubroutine
+  endsubroutine ! constructTruncationZones
 
-  subroutine constructStorage(calc_data, dims, params, arrays, my_mpi) ! todo: remove arrays, my_mpi from interface
-    use KKRnanoParallel_mod, only: KKRnanoParallel
+  subroutine constructStorage(self, dims, params)
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
-    use Main2Arrays_mod, only: Main2Arrays
-    
     use KKRresults_mod, only: createKKRresults
     use DensityResults_mod, only: createDensityResults
     use EnergyResults_mod, only: createEnergyResults
@@ -1055,42 +938,24 @@ module CalculationData_mod
     use JijData_mod, only: createJijData
     use MadelungCalculator_mod, only: createMadelungLatticeSum
     
-    type(CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
     type(InputParams), intent(in):: params
-    type(Main2Arrays), intent(in):: arrays
-    type(KKRnanoParallel), intent(in) :: my_mpi
 
-    integer :: I1, ilocal
-    type(KKRresults), pointer :: kkr
-    type(DensityResults), pointer :: densities
-    type(EnergyResults), pointer :: energies
-    type(LDAUData), pointer :: ldau_data
-    type(JijData), pointer :: jij_data
-    type(MadelungLatticeSum), pointer :: madelung_sum
-    type(RadialMeshData), pointer :: mesh
+    integer :: atom_id, ila, irmd
 
-    do ilocal = 1, calc_data%num_local_atoms
-      I1 = calc_data%atom_ids(ilocal)
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
+      irmd = self%mesh_array(ila)%irmd
 
-      kkr       => calc_data%kkr_array(ilocal)
-      densities => calc_data%densities_array(ilocal)
-      ldau_data => calc_data%ldau_data_array(ilocal)
-      jij_data  => calc_data%jij_data_array(ilocal)
-      madelung_sum   => calc_data%madelung_sum_array(ilocal)
-      energies  => calc_data%energies_array(ilocal)
-      mesh => calc_data%mesh_array(ilocal)
-
-      call createKKRresults(kkr, dims, calc_data%clusters%naclsd)
-      call createDensityResults(densities, dims, mesh%irmd)
-      call createEnergyResults(energies, dims%nspind, dims%lmaxd)
-
-      call createLDAUData(ldau_data, params%ldau, mesh%irmd, dims%lmaxd, dims%nspind)
-      call createJijData(jij_data, params%jij, params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
-
-      call createMadelungLatticeSum(madelung_sum, calc_data%madelung_calc, dims%naez)
-    enddo ! ilocal
+      call createKKRresults(self%kkr_array(ila), dims, self%clusters%naclsd)
+      call createDensityResults(self%densities_array(ila), dims, irmd)
+      call createEnergyResults(self%energies_array(ila), dims%nspind, dims%lmaxd)
+      call createLDAUData(self%ldau_data_array(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
+      call createJijData(self%jij_data_array(ila), params%jij, params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
+      call createMadelungLatticeSum(self%madelung_sum_array(ila), self%madelung_calc, dims%naez)
+    enddo ! ila
     
-  endsubroutine
+  endsubroutine ! constructStorage
 
 endmodule CalculationData_mod

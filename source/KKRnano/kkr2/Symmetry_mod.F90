@@ -413,15 +413,15 @@ module Symmetry_mod
 !       find the structure of the site-diagonal tau - matrices  tauq
 !=======================================================================
 
-    call taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel)
+    call taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint)
 
   endsubroutine symtaumat
   
-  subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint, irel) ! todo: remove irel
+  subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint)
 !   ********************************************************************
 !   *   find the structure of the site-diagonal tau - matrices  tauq   *
 !   ********************************************************************
-    integer, intent(in) :: iprint, irel, nkm, nkmmax, nq, nqmax, nsym
+    integer, intent(in) :: iprint, nkm, nkmmax, nq, nqmax, nsym
     double complex, intent(in) :: drot(nkmmax,nkmmax,48)
     
     double complex, parameter :: c0=(0.d0,0.d0)
