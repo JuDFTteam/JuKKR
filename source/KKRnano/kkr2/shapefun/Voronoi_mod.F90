@@ -424,15 +424,13 @@ module Voronoi_mod
     double precision, intent(inout) :: planes(0:,:) ! coefs. defining the planes, to be reordered at end
     double precision, intent(in) :: tolvdist, tolarea  ! max. tolerance for distance of two vertices and area of face.
 
-    double precision vdist2, tolvdist2 !, vdist ! distance between consecutive vertices
-    logical lacceptvert(nvertmax),lacctot,lfoundnext,lthisisthelast
-    logical lacceptface(nfaced)
-!   integer newindexface(nfaced)
-    integer iface,ivert,ivert2,inext,iplane
-    integer ifacenewcount,ivertnewcount
-    double precision dv(3),x1,x2,x3,y1,y2,y3,z1,z2,z3,x4,y4,z4,trianglearea
-    double precision facearea(nfaced)
-    double precision det,detsum
+    double precision :: vdist2, tolvdist2 ! distance between consecutive vertices
+    logical :: lacceptvert(nvertmax),lacctot,lfoundnext,lthisisthelast
+    logical :: lacceptface(nfaced)
+    integer :: iface, ivert, ivert2, inext, iplane, ifacenewcount, ivertnewcount
+    double precision :: dv(3), v1(3), v2(3), v3(3), v4(3), trianglearea
+    double precision :: facearea(nfaced)
+    double precision :: det, detsum
 
     tolvdist2 = tolvdist**2
     
@@ -476,7 +474,7 @@ module Voronoi_mod
         ivert = inext
       enddo ! while
 
-    ! ...and now 1st with last to close the cycle:
+      ! ...and now 1st with last to close the cycle:
       ivert = 1
       ivert2 = nvert(iplane)
       dv(1:3) = vert(1:3,ivert2,iplane) - vert(1:3,ivert,iplane)
@@ -490,7 +488,7 @@ module Voronoi_mod
       endif ! vdist > tolvdist
 
 
-    ! reject vertices which were found inappropriate and re-index vertices in each plane:
+      ! reject vertices which were found inappropriate and re-index vertices in each plane:
       if (.not. lacctot) then
         ivertnewcount = 0
         do ivert = 1, nvert(iplane)
@@ -511,18 +509,12 @@ module Voronoi_mod
     ! now analyze faces, reject faces with less than three vertices and faces of very small area.
     do iplane = 1, nplane
       if (nvert(iplane) >= 3) then  ! calculate area
-        x1 = vert(1,1,iplane)
-        y1 = vert(2,1,iplane)
-        z1 = vert(3,1,iplane)
+        v1(1:3) = vert(1:3,1,iplane)
         facearea(iplane) = 0.d0
         do ivert = 2, nvert(iplane)-1
-          x2 = vert(1,ivert,iplane)
-          y2 = vert(2,ivert,iplane)
-          z2 = vert(3,ivert,iplane)
-          x3 = vert(1,ivert+1,iplane)
-          y3 = vert(2,ivert+1,iplane)
-          z3 = vert(3,ivert+1,iplane)
-          trianglearea = 0.5d0 * dabs( (x2 - x1)*(x3 - x1) + (y2 - y1)*(y3 - y1) + (z2 - z1)*(z3 - z1) )  ! formula incorrect? e.r.
+          v2(1:3) = vert(1:3,ivert,iplane)
+          v3(1:3) = vert(1:3,ivert+1,iplane)
+          trianglearea = 0.5d0*abs((v2(1) - v1(1))*(v3(1) - v1(1)) + (v2(2) - v1(2))*(v3(2) - v1(2)) + (v2(3) - v1(3))*(v3(3) - v1(3)))  ! formula incorrect? e.r.
           facearea(iplane) = facearea(iplane)+ trianglearea
         enddo ! ivert
 
@@ -562,18 +554,12 @@ module Voronoi_mod
 
     ! check for every face that all vertices lie on the same plane by checking linear dependence
     do iface = 1, nface
-      x2 = vert(1,2,iface) - vert(1,1,iface)
-      y2 = vert(1,2,iface) - vert(2,1,iface)
-      z2 = vert(1,2,iface) - vert(3,1,iface)
-      x3 = vert(1,3,iface) - vert(1,1,iface)
-      y3 = vert(1,3,iface) - vert(2,1,iface)
-      z3 = vert(1,3,iface) - vert(3,1,iface)
+      v2(1:3) = [vert(1,2,iface) - vert(1,1,iface), vert(1,2,iface) - vert(2,1,iface), vert(1,2,iface) - vert(3,1,iface)]
+      v3(1:3) = [vert(1,3,iface) - vert(1,1,iface), vert(1,3,iface) - vert(2,1,iface), vert(1,3,iface) - vert(3,1,iface)]
       detsum = 0.d0
       do ivert = 4, nvert(iface)
-        x4 = vert(1,ivert,iface) - vert(1,1,iface)
-        y4 = vert(1,ivert,iface) - vert(2,1,iface)
-        z4 = vert(1,ivert,iface) - vert(3,1,iface)
-        det = x2*(y3*z4 - y4*z3) + y2*(z3*x4 - z4*x3) + z2*(x3*y4 - x4*y3)
+        v4(1:3) = vert(1,ivert,iface) - vert(1:3,1,iface) ! yesss, the left argument is a scalar here
+        det = v2(1)*(v3(2)*v4(3) - v4(2)*v3(3)) + v2(2)*(v3(3)*v4(1) - v4(3)*v3(1)) + v2(3)*(v3(1)*v4(2) - v4(1)*v3(2))
         detsum = detsum + abs(det)
         if (abs(det) > 1.d-16 .and. output) write(*,fmt="('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)") iface,ivert,det
       enddo ! ivert
@@ -596,8 +582,7 @@ module Voronoi_mod
 
     if (dabs(a)+dabs(b)+dabs(c) < 1.d-80) die_here('halfspace: a,b,c too small.')
 
-    halfspace = (d*(a*x + b*y + c*z) <= d*d)
-    ! (re-checked 31may2008 fm)
+    halfspace = (d*(a*x + b*y + c*z) <= d*d) !!! re-checked 31may2008 FM
 
   endfunction ! halfspace
   
@@ -606,72 +591,47 @@ module Voronoi_mod
     half_space = halfspace(plane(1), plane(2), plane(3), plane(0), vec(1), vec(2), vec(3))
   endfunction ! halfspace
 
-  !***********************************************************************
-  subroutine normalplane(x1,y1,z1,x2,y2,z2,tau,a,b,c,d)
-    ! given two points in space, r1=(x1,y1,z1) and r2=(x2,y2,z2), this
+  
+  
+  function normal_plane0f(v1, tau) result(plane)
+    double precision :: plane(0:3) ! former [d,a,b,c]
+    double precision, intent(in) :: v1(3), tau
+!     ! given a point in space, r1=(v1(1),v1(2),v1(3)), this
+!     ! subroutine returns the coefficients defining a plane through the 
+!     ! equation a*x+b*y+c*z=d, which is normal to the vector r1 and passes
+!     ! through the point tau*r1 (tau thus being a parameter
+!     ! defining how close the plane is to the point).
+    
+!     ! so a,b,c are the coords. of the vector tau * r1.
+!     ! if tau=0 (plane passes through the origin), then d=0.
+
+    if (tau /= 0.d0) then
+      plane(1:3) = tau*v1(1:3)
+      plane(0) = sum(plane(1:3)**2)
+    else
+      plane(1:3) = v1(1:3)
+      plane(0) = 0.d0
+    endif
+
+  endfunction ! normal_plane
+  
+  function normal_planef(v1, v2, tau) result(plane)
+    double precision :: plane(0:3) ! former [d,a,b,c]
+    double precision, intent(in) :: v1(3), v2(3), tau
+    ! given two points in space, r1=(v1(1),v1(2),v1(3)) and r2=(v2(1),v2(2),v2(3)), this
     ! subroutine returns the coefficients defining a plane through the 
     ! equation a*x+b*y+c*z=d, which is normal to the vector r2-r1 and passes
     ! through the point (1.-tau)*r1 + tau*r2 (tau thus being a parameter
     ! defining how close the plane is to each of the two points).
-    double precision, intent(in) :: x1,y1,z1,x2,y2,z2,tau
-    double precision, intent(out) :: a,b,c,d
     
-    double precision :: onemtau
     ! the plane is defined as 
-    ! (a,b,c)*(x-x1,y-y1,z-z1)=const=
+    ! (a,b,c)*(x-v1(1),y-v1(2),z-v1(3))=const=
     !                         =(distance from r1 to (1.-tau)*r1 + tau*r2)**2
     ! so a,b,c are the coords. of a vector connecting the point r1 to
     ! the point (1.-tau)*r1 + tau*r2.
-    onemtau = 1.d0 - tau
 
-    a = onemtau*x1 + tau*x2
-    b = onemtau*y1 + tau*y2
-    c = onemtau*z1 + tau*z2
-    d = a*(a + x1) + b*(b + y1) + c*(c + z1)
-
-  endsubroutine ! normal_plane
-  
-  !***********************************************************************
-  subroutine normalplane0(x1,y1,z1,tau, a,b,c,d)
-    ! given a point in space, r1=(x1,y1,z1), this
-    ! subroutine returns the coefficients defining a plane through the 
-    ! equation a*x+b*y+c*z=d, which is normal to the vector r1 and passes
-    ! through the point tau*r1 (tau thus being a parameter
-    ! defining how close the plane is to the point).
-    double precision, intent(in) :: x1,y1,z1,tau
-    double precision, intent(out) :: a,b,c,d
-    ! the plane is defined by
-    ! (a,b,c)*(x,y,z) = d = (tau * r1)**2
-    ! so a,b,c are the coords. of the vector tau * r1.
-    ! if tau=0 (plane passes through the origin), then d=0.
-
-    if (tau /= 0.d0) then
-      a = tau*x1
-      b = tau*y1
-      c = tau*z1
-      d = a*a + b*b + c*c
-    else
-      a = x1
-      b = y1
-      c = z1
-      d = 0.d0
-    endif
-
-  endsubroutine ! normal_plane
-  
-  function normal_plane0f(v1, tau) result(plane)
-    double precision :: plane(0:3)
-    double precision, intent(in) :: v1(3), tau
-    
-    call normalplane0(v1(1), v1(2), v1(3), tau, plane(1), plane(2), plane(3), plane(0))
-
-  endfunction ! normal_plane
-
-  function normal_planef(v1, v2, tau) result(plane)
-    double precision :: plane(0:3)
-    double precision, intent(in) :: v1(3), v2(3), tau
-    
-    call normalplane(v1(1), v1(2), v1(3), v2(1), v2(2), v2(3), tau, plane(1), plane(2), plane(3), plane(0))
+    plane(1:3) = (1.d0 - tau)*v1(1:3) + tau*v2(1:3)
+    plane(0) = dot_product(plane(1:3), plane(1:3) + v1(1:3))
 
   endfunction ! normal_plane
   
@@ -711,26 +671,13 @@ module Voronoi_mod
     z(3) = x(1)*y(2) - x(2)*y(1)
   endfunction crospr
 
-  double precision function distplane(a,b,c,d)
-    ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
-    double precision, intent(in) :: a,b,c,d
-    double precision :: abcsq
-
-    abcsq = a*a + b*b + c*c
-
-    assert(abcsq >= 1.d-100)
-
-    distplane = dabs(d)/dsqrt(abcsq)  
-    ! or: distplane = dsqrt(d*d/abcsq)  
-
-  endfunction distplane
-
+ 
   double precision function dist_plane(abc, d)
     ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
     double precision, intent(in) :: abc(3), d
     double precision :: abcsq
 
-    abcsq = abc(1)**2 + abc(2)**2 + abc(3)**2
+    abcsq = sum(abc(1:3)**2)
 
     assert(abcsq >= 1.d-100)
 

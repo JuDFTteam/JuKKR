@@ -32,12 +32,13 @@ module ShapeGeometryHelpers_mod
 !
 !     ----------------------------------------------------------------
 ! ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  = 
-  subroutine polchk(nface, nvertices, vert, tolvdist)
+  subroutine polchk(nface, nvertices, vert, tolvdist, atom_id)
     use Constants_mod, only: pi
     integer, intent(in) :: nface
     integer, intent(in) :: nvertices(:)
     double precision, intent(in) :: vert(:,:,:) ! vert(3,nvertd,nfaced)
     double precision, intent(in) :: tolvdist
+    integer, intent(in) :: atom_id
 
     integer :: ivert, ivertp, ivertm, ivrt, iedge, nvrt, nedge, iface, nvert, nfaced, nedged, nvertd, nvrtd
     double precision :: arg, down, up, fisum
@@ -55,23 +56,23 @@ module ShapeGeometryHelpers_mod
     CHECKASSERT(size(vert, 3) == nfaced)
     nvertd = size(vert, 2)
     nvrtd  = nfaced*nvertd
-    nedged = nvrtd+nfaced-2
+    nedged = nvrtd + nfaced - 2
 
 #ifndef SAVE_MEMORY
     allocate(v1(3,nedged), v2(3,nedged), vrt(3,nvrtd))
 #else    
     ! changed from storing copies of vertices to storing the corresponding indicies ivert and iface in array vert only.  
-    allocate(i1(2:3,nedged), i2(2:3,nedged), irt(2:3,nvrtd))
-#endif    
+    assert(nvertd < 2**15) ! since we are using integer(kind=2)
+    allocate(i1(2:3,nedged), i2(2:3,nedged), irt(2:3,nvrtd)) ! store only the index tables: i(2:3) = [ivert, iface]
+#endif
 
     nvrt = 0
     nedge = 0
     do iface = 1, nface
       nvert = nvertices(iface)
       fisum = (nvert - 2)*pi
-!
-!------> treatment of vertices
-!
+
+      ! treatment of vertices
       do ivert = 1, nvert
         vrt0 = vert(1:3,ivert,iface)
         new = .true.
@@ -107,29 +108,29 @@ module ShapeGeometryHelpers_mod
         if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
         ! arg = min(max(-1.d0, arg), 1.d0) ! new formulation
         fisum = fisum - acos(arg)
-!
-!------> treatment of edges
-!
+
+        ! treatment of edges
         new = .true. ! 1:save all different edges
         do iedge = 1, nedge
 #ifndef SAVE_MEMORY
-          if (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
-            if(nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
-          elseif(nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
-            if(nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          if     (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
+            if   (nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          elseif (nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
+            if   (nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
           endif
 #else          
-          if (nrm2(vrt0 - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) then
-            if(nrm2(vrtp - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) new = .false. ! 0:do not save
-          elseif(nrm2(vrt0 - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
-            if(nrm2(vrtp - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
+          if     (nrm2(vrt0 - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) then
+            if   (nrm2(vrtp - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) new = .false. ! 0:do not save
+          elseif (nrm2(vrt0 - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
+            if   (nrm2(vrtp - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
           endif
 #endif
         enddo ! iedge
         
         if (new) then
           nedge = nedge+1
-          if (nedge > nedged) die_here("insufficient nedged = nfaced*(nvertd+1)-2, nfaced ="+nfaced+" nvertd ="+nvertd) 
+          if (nedge > nedged) &
+            die_here("insufficient nedged = nfaced*(nvertd+1)-2, nfaced="-nfaced-", nvertd="-nvertd+"for atom #"-atom_id) 
 
 #ifndef SAVE_MEMORY
           v1(1:3,nedge) = vert(1:3,ivert ,iface)
@@ -143,27 +144,21 @@ module ShapeGeometryHelpers_mod
       enddo ! ivert
       
       if (fisum > 1.d-6) then
-        write(*,*) 'fisum  = ',fisum
-        write(*,*) 'iface  = ',iface
-        write(*,*) 'nedge  = ',nedge
-        write(*,*) 'nvert  = ',nvert
-        write(*,*) 'nvrt   = ',nvrt
-        do ivert = 1, nvrt
-          write(*,'(3F16.9)') vert(1:3,ivert,iface)
-        enddo ! ivert
-        die_here("not consecutive vertices of a polygon, fisum ="+fisum)
+        write(*,'(4(a,i0),9(a,f0.9))') 'ShapeError: (not consecutive) nvrt=',nvrt,', nvert=',nvert,', nedge=',nedge,', iface=',iface,', fisum= ',fisum,', vertices:'
+        write(*,'(3F16.9)') vert(1:3,1:nvrt,iface)
+        die_here("not consecutive vertices of a polygon, fisum="+fisum-", face #"-iface)
       endif ! fisum
       
     enddo ! iface
     
-    if ((nvrt+nface) /= (nedge+2)) &
-      warn(6, "serious warning about illegal polyhedron: nvrt+nface /= nedge+2, nvrt ="+nvrt-", nface ="+nface-", nedge ="+nedge)
-    
+    if (nvrt + nface /= nedge + 2) &
+      warn(6, "ill-defined polyhedron: nvrt+nface /= nedge+2, nvrt="-nvrt-", nface="-nface-", nedge="-nedge+"for atom #"-atom_id)
+
 #ifndef SAVE_MEMORY
     deallocate(v1, v2, vrt, stat=ivrt)
 #else    
     deallocate(i1, i2, irt, stat=ivrt)
-#endif    
+#endif
   endsubroutine polchk
 
 !-----------------------------------------------------------------------
@@ -178,7 +173,7 @@ module ShapeGeometryHelpers_mod
     double precision, intent(in) :: tolvdist
     double precision, intent(out) :: rd(3)
     logical,          intent(out) :: inside
-!---------------------------------------------------------------------
+
     double precision :: dxyz(3), dabc(3), s, d
     
     dxyz = r2 - r1    

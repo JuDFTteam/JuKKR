@@ -145,7 +145,7 @@ module ShapeFunctions_mod
                     keypan, & ! todo: remove from interface
                     dlt, npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
                     thetas_s, lmifun_s, nfun, & ! shape function
-                    ibmaxd, meshnd, npand)
+                    ibmaxd, meshnd, npand, atom_id)
     
     use ShapeCriticalPoints_mod, only: criticalshapepoints
     use ShapeStandardMesh_mod, only: mesh
@@ -173,6 +173,7 @@ module ShapeFunctions_mod
     double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
     integer, intent(out) :: lmifun_s(ibmaxd)
     integer, intent(out) :: nfun
+    integer, intent(in) :: atom_id
 
     double precision :: crt(npand) ! critical points
     type(PolygonFace), allocatable :: faces(:)
@@ -190,7 +191,7 @@ module ShapeFunctions_mod
 
     allocate(faces(size(nvertices)), stat=ist)
 
-    call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt) ! output: faces, npan, crt
+    call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt, atom_id) ! output: faces, npan, crt
 
     ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
     call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)

@@ -12,7 +12,7 @@ module ConstructShapes_mod
   private
   public :: InterstitialMesh
   public :: destroyInterstitialMesh
-  public :: construct
+  public :: createShapefunData
   public :: write_shapefun_file
 
   !> A datastructure containing the corresponding interstitial mesh.
@@ -59,15 +59,15 @@ module ConstructShapes_mod
   !> (use destroyInterstitialMesh)
   !>
   !> MT_scale > 0.0 overrides new_MT_radius!!!
-  subroutine construct(shdata, inter_mesh, rbasis, bravais, center_ind, &
+  subroutine createShapefunData(self, inter_mesh, rbasis, bravais, center_ind, &
                       rcluster, lmax_shape, npoints_min, nmin_panel, &
-                      num_MT_points, new_MT_radius, MT_scale)
+                      num_MT_points, new_MT_radius, MT_scale, atom_id)
     use RefCluster_mod, only: LatticeVectors, RefCluster
     use RefCluster_mod, only: createLatticeVectors, createRefCluster, destroyLatticeVectors, destroyRefCluster
     use ShapefunData_mod, only: ShapefunData
 
     ! Output (shape-functions and interstitial mesh):
-    type(ShapefunData), intent(inout) :: shdata
+    type(ShapefunData), intent(inout) :: self
     type(InterstitialMesh), intent(inout) :: inter_mesh
 
     ! Input:
@@ -81,8 +81,8 @@ module ConstructShapes_mod
     integer, intent(in) :: num_MT_points
     double precision, intent(in) :: new_MT_radius
     double precision, intent(in) :: MT_scale
+    integer, intent(in) :: atom_id
 
-    !----------
     type(LatticeVectors) :: lattice_vectors
     type(RefCluster) :: ref_cluster
     double precision, allocatable :: weights(:)
@@ -110,9 +110,9 @@ module ConstructShapes_mod
       STOP
     endif
 
-    call constructFromCluster(shdata, inter_mesh, ref_cluster%rcls(:,2:), weights, &
+    call constructFromCluster(self, inter_mesh, ref_cluster%rcls(:,2:), weights, &
                               lmax_shape, npoints_min, nmin_panel, &
-                              num_MT_points, new_MT_radius, MT_scale)
+                              num_MT_points, new_MT_radius, MT_scale, atom_id)
 
     call destroyLatticeVectors(lattice_vectors)
     call destroyRefCluster(ref_cluster)
@@ -129,14 +129,14 @@ module ConstructShapes_mod
   ! TODO: return 'NM' -> panel info!!!
   !
   !> @param weights weights for weighted Voronoi diagram (power diagram)
-  subroutine constructFromCluster(shdata, inter_mesh, rvec, weights, &
+  subroutine constructFromCluster(self, inter_mesh, rvec, weights, &
                                   lmax_shape, npoints_min, nmin, &
-                                  num_MT_points, new_MT_radius, MT_scale)
+                                  num_MT_points, new_MT_radius, MT_scale, atom_id)
     use ShapefunData_mod, only: ShapefunData, createShapefunData
     use Voronoi_mod, only: Voronoi_construction
     use ShapeFunctions_mod, only: shapef
 
-    type(ShapefunData), intent(out) :: shdata
+    type(ShapefunData), intent(out) :: self
     type(InterstitialMesh), intent(out) :: inter_mesh
 
     double precision, intent(in) :: rvec(:,:)
@@ -147,6 +147,7 @@ module ConstructShapes_mod
     integer, intent(in) :: num_MT_points
     double precision, intent(in) :: new_MT_radius
     double precision, intent(in) :: MT_scale
+    integer, intent(in) :: atom_id
     
     integer, parameter :: nvertmax = 32 ! hoping for at most 32 vertices for each face
     logical, parameter :: output = .false.
@@ -196,7 +197,7 @@ module ConstructShapes_mod
     call shapef(npoints_min, planes, tolvdist, toleuler, nmin, nvertices, vert, nface, lmax_shape, keypan, dlt, & 
       npan, nm, xrn, drn, meshn, &  ! radial mesh (output)
       thetas_s, lmifun_s, nfun, & ! shape function (output)
-      ibmaxd, meshnd, npand)
+      ibmaxd, meshnd, npand, atom_id)
 
     ! muffin-tinization
     radius = new_mt_radius
@@ -205,20 +206,20 @@ module ConstructShapes_mod
     if (num_MT_points > 0) call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s, radius)
 
     ! Construct shape-fun datastructure
-    call createShapefunData(shdata, meshn, ibmaxd, nfun)
+    call createShapefunData(self, meshn, ibmaxd, nfun)
 
-    shdata%theta = thetas_s(1:meshn,1:nfun) ! store the shape functions
+    self%theta = thetas_s(1:meshn,1:nfun) ! store the shape functions
     
-    shdata%max_muffin_tin = rmt ! set maximum possible muffin-tin radius (ALAT units)
-    shdata%num_faces = nface ! store number of faces of Voronoi cell
+    self%max_muffin_tin = rmt ! set maximum possible muffin-tin radius (ALAT units)
+    self%num_faces = nface ! store number of faces of Voronoi cell
 
-    shdata%nfu = nfun
-    shdata%ifunm = 0
-    shdata%lmsp = 0
+    self%nfu = nfun
+    self%ifunm = 0
+    self%lmsp = 0
     do ii = 1, nfun
-      shdata%llmsp(ii) = lmifun_s(ii)
-      shdata%lmsp(lmifun_s(ii)) = 1
-      shdata%ifunm(lmifun_s(ii)) = ii
+      self%llmsp(ii) = lmifun_s(ii)
+      self%lmsp(lmifun_s(ii)) = 1
+      self%ifunm(lmifun_s(ii)) = ii
     enddo ! ii
 
     ! createInterstitialMesh
@@ -231,7 +232,7 @@ module ConstructShapes_mod
 
     !TODO: check that nm is always >= 5
 
-    !call replace_with_PseudoASA(shdata, inter_mesh, volume) ! uncommenting this line would replace shape function with atomic sphere shape function
+    !call replace_with_PseudoASA(self, inter_mesh, volume) ! uncommenting this line would replace shape function with atomic sphere shape function
 
   endsubroutine ! construct
 
@@ -259,7 +260,7 @@ module ConstructShapes_mod
     double precision, intent(in) :: mtradius
 
     double precision :: drn1(meshn+nrad), thetas1(meshn+nrad,size(thetas,2)), xrn1(meshn+nrad)
-    integer :: ibmaxd, irid, npand, meshn1, npan1, nm1(npan+1), ifun, ir, ip
+    integer :: ibmaxd, irid, npand, meshn1, npan1, nm1(npan+1), ir
     double precision :: dist, dn1
 
     ibmaxd = size(thetas, 2)
@@ -289,7 +290,9 @@ module ConstructShapes_mod
       write(6,*) 'your mt-radius is bigger that the minimum shape radius ' 
       write(6,*) 'your mt-radius .....',mtradius
       write(6,*) 'shape radius .......',xrn(1)    
-      stop
+!       stop
+      write(6,*) 'WARNING! stop statement deactivated:',__FILE__,":",__LINE__
+
     endif
         
     dn1 = dist/(nrad-1)
@@ -303,23 +306,17 @@ module ConstructShapes_mod
     xrn1(1+nrad:meshn1) = xrn(1:meshn1-nrad)
     drn1(1+nrad:meshn1) = drn(1:meshn1-nrad) 
 
+    thetas1(1:nrad,:) = 0.d0
     thetas1(1:nrad,1) = sqrt(4.d0*pi)
-    do ifun = 2, ibmaxd
-      thetas1(1:nrad,ifun) = 0.d0
-    enddo ! ifun
 
-    do ifun = 1, nfu
-      thetas1(1+nrad:meshn1,ifun) = thetas(1:meshn1-nrad,ifun)
-    enddo ! ifun
+    thetas1(nrad+1:meshn1,1:nfu) = thetas(1:meshn1-nrad,1:nfu)
     !
     !  now map back and return. 
     !
     npan = npan1
     meshn = meshn1
 
-    do ip = 1, npan
-      nm(ip) = nm1(ip)
-    enddo ! ip
+    nm(1:npan) = nm1(1:npan)
 
     xrn(1:meshn) = xrn1(1:meshn)
     drn(1:meshn) = drn1(1:meshn)
@@ -333,16 +330,16 @@ module ConstructShapes_mod
   !> to what the Juelich KKR programs expect.
   !>
   !> The name of the file written is shape.<shape_index>
-  subroutine write_shapefun_file(shdata, inter_mesh, shape_index)
+  subroutine write_shapefun_file(self, inter_mesh, shape_index)
     use ShapefunData_mod, only: ShapefunData
 
-    type(ShapefunData), intent(in) :: shdata
+    type(ShapefunData), intent(in) :: self
     type(InterstitialMesh), intent(in) :: inter_mesh
     integer, intent(in) :: shape_index
 
     integer :: ir, ifun, npan, meshn
     character(len=16) :: filename
-    character(len=*), parameter :: f9000="(16i5)", f9010="(4d20.12)" 
+    character(len=*), parameter :: F9000="(16i5)", F9010="(4d20.12)" ! todo: define these formats with meaningful names in ShapefunData_mod
 
     write(filename, fmt="(a,i7.7)") "shape.",shape_index
 
@@ -350,13 +347,13 @@ module ConstructShapes_mod
     meshn = size(inter_mesh%xrn)
 
     open(15, file=filename, form="formatted")
-    write(15,fmt=f9000) npan,meshn
-    write(15,fmt=f9000) inter_mesh%nm(1:npan)
-    write(15,fmt=f9010) (inter_mesh%xrn(ir), inter_mesh%drn(ir), ir=1,meshn) ! interleaved pairs (r, dr)
-    write(15,fmt=f9000) shdata%nfu
-    do ifun = 1, shdata%nfu
-      write(15,fmt=f9000) shdata%llmsp(ifun)
-      write(15,fmt=f9010) shdata%theta(1:meshn,ifun)
+    write(15, fmt=F9000) npan,meshn
+    write(15, fmt=F9000) inter_mesh%nm(1:npan)
+    write(15, fmt=F9010) (inter_mesh%xrn(ir), inter_mesh%drn(ir), ir=1,meshn) ! interleaved pairs (r, dr)
+    write(15, fmt=F9000) self%nfu
+    do ifun = 1, self%nfu
+      write(15, fmt=F9000) self%llmsp(ifun)
+      write(15, fmt=F9010) self%theta(1:meshn,ifun)
     enddo ! ifun
     close(15)
 
@@ -367,26 +364,26 @@ module ConstructShapes_mod
   !>
   !> Only the LM=1 component is nonzero
   !> Atomic sphere has same volume as Voronoi cell
-  subroutine replace_with_PseudoASA(shdata, inter_mesh, volume)
+  subroutine replace_with_PseudoASA(self, inter_mesh, volume)
     use ShapefunData_mod, only: ShapefunData
     use Constants_mod, only: pi
 
-    type(ShapefunData), intent(inout) :: shdata
+    type(ShapefunData), intent(inout) :: self
     type(InterstitialMesh), intent(in) :: inter_mesh
     double precision, intent(in) :: volume
 
     double precision :: radius
     integer :: ir
 
-    shdata%lmsp = 0
-    shdata%lmsp(1) = 1
-    shdata%nfu = 1
+    self%lmsp = 0
+    self%lmsp(1) = 1
+    self%nfu = 1
 
     radius = (3*volume/(4*pi))**(1.d0/3.d0)
 
-    shdata%theta = 0.d0
+    self%theta = 0.d0
     do ir = 1, size(inter_mesh%xrn)
-      if (inter_mesh%xrn(ir) <= radius) shdata%theta(ir,1) = sqrt(4.d0*pi)
+      if (inter_mesh%xrn(ir) <= radius) self%theta(ir,1) = sqrt(4.d0*pi)
     enddo ! ir
 
   endsubroutine ! replace_with_PseudoASA

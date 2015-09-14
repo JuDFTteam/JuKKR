@@ -107,6 +107,7 @@ module KKRzero_mod
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
     use Lattice_mod, only: lattix99
     use Constants_mod, only: pi
+    use MadelungCalculator_mod, only: testdimlat
     use EnergyMeshHelpers_mod, only: emesht, epathtb
     use Startb1_mod, only: startb1_wrapper_new
 
@@ -251,7 +252,7 @@ module KKRzero_mod
 !     setting up kpoints
 ! ======================================================================
 
-    call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais,recbv, arrays%nsymat, arrays%isymindex, &
+    call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
                  arrays%dsymll, params%bzdivide, ielast, ez, arrays%kmesh, arrays%maxmesh, maxmshd, &
                  dims%lmaxd, iemxd, krel, arrays%kpoibz, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
 
@@ -282,6 +283,9 @@ module KKRzero_mod
         close(67)
         
     else  ! checkmode == 0
+    
+      call testdimlat(params%alat, arrays%bravais, recbv, params%rmax, params%gmax)!, dims%NMAXD, dims%ISHLD) ! modifies NMAXD and ISHLD to the mimimum values
+    
       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
     endif ! checkmode == 0
 
@@ -440,7 +444,7 @@ module KKRzero_mod
   
   
 #if 0  
-  subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld) ! todo: remove nmaxd and ishld from interface
+  subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld)
     use Constants_mod, only: pi
 ! **********************************************************************
 ! *  modified version of lattice3d.f                                   *

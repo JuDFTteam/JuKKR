@@ -1,3 +1,4 @@
+
 !> Instructions:
 !> Create Madelung calculator
 !> Create Madelung lattice sum(s) and configure with Madelung calculator
@@ -15,6 +16,8 @@ module MadelungCalculator_mod
   public :: calculateMadelungLatticeSum, createDfac ! deprecated
   public :: createMadelungLatticeSum, destroyMadelungLatticeSum ! deprecated
   public :: createMadelungCalculator, destroyMadelungCalculator ! deprecated
+  
+  public :: testdimlat ! public for then --check functionality
 
   !----------------------------------------------------------------------------
   type MadelungLatticeData
@@ -105,58 +108,6 @@ module MadelungCalculator_mod
 
   endsubroutine ! create
 
-  
-  
-!   !>    @param print_info  0=print some info  1=print nothing
-!   subroutine madelung3d(lpot, yrg, wg, alat, rmax, gmax, bravais, recbv, &
-!       lmxspd,lassld,lpotd,lmpotd, &
-!       lmpot,cleb,icleb,iend, nclebd,loflm, &
-!       ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm, print_info)
-!     use Constants_mod, only: pi
-!     ! **********************************************************************
-!     ! *                                                                    *
-!     ! * This subroutine calculates the Madelung potential coefficients     *
-!     ! *                                                                    *
-!     ! **********************************************************************
-!     integer, intent(in) :: lpot, lmxspd, lassld, lpotd, lmpotd, print_info
-!     double precision, intent(in) :: alat, rmax, gmax, bravais(3,3), recbv(3,3)
-!     double precision, intent(in) :: yrg(lassld,0:lassld,0:lassld), wg(lassld)
-!     integer, allocatable, intent(out) :: nsg(:), nsr(:) ! nsg(ishld), nsr(ishld)
-!     double precision, allocatable, intent(out) :: gn(:,:), rm(:,:) ! gn(3,nmaxd), rm(3,nmaxd)
-!     integer, intent(out) :: ngmax, nrmax, nshlg, nshlr
-!     double precision, intent(out) :: cleb(lmxspd*lmpotd) ! Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1
-!     integer, intent(out) :: icleb(lmxspd*lmpotd,3), iend
-!     integer, intent(out) :: loflm(:)
-!     integer, intent(inout) :: nclebd, lmpot ! has intent in?
-!     
-!     integer :: i, iprint, l, m, l1, l2, icleb_dummy(1,3)
-!     double precision :: cleb_dummy(1)
-! 
-!     iprint = 0
-!     nclebd = lmxspd*lmpotd
-!     lmpot = (lpot+1)**2
-! 
-! !     ! --> determine the l-value for given lm
-! !     assert( size(loflm, 1) >= (2*lpot+1)**2 )
-! !     i = 0
-! !     do l = 0, 2*lpot
-! !       do m = -l, l
-! !         i = i + 1
-! !         assert(i == l*l + l + m + 1)
-! !         loflm(i) = l
-! !       enddo ! m
-! !     enddo ! l
-! !     
-! ! !   call madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
-! !     iend = madelgaunt(lpot, yrg, wg, cleb, icleb, lassld) ! calculate the gaunt coefficients
-! !     allocate(
-! !     iend = madelgaunt(lpot, yrg, wg, cleb, icleb, lassld) ! calculate the gaunt coefficients
-!     
-!     call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, print_info)
-!     
-!   endsubroutine madelung3d
-  
-  
   !----------------------------------------------------------------------------
   !> Creates data storage for a Madelung lattice sum.
   !>
@@ -166,11 +117,6 @@ module MadelungCalculator_mod
   subroutine createMadelungLatticeSum(madelung_sum, lmxspd, num_atoms)!, madelung_calc
     type(MadelungLatticeSum), intent(inout) :: madelung_sum
     integer, intent(in) :: lmxspd, num_atoms
-    
-!     type(MadelungCalculator), target, intent(in) :: madelung_calc
-!     type(MadelungCalculator), pointer :: mad_ptr
-!     mad_ptr => madelung_calc
-!     madelung_sum%madelung_calc => mad_ptr
 
     madelung_sum%num_atoms = num_atoms
     allocate(madelung_sum%smat(lmxspd,num_atoms))
@@ -206,13 +152,11 @@ module MadelungCalculator_mod
     integer, intent(in) :: atom_index
     double precision, intent(in) :: rbasis(3,self%num_atoms)
 
-! #define mc self%madelung_calc
     call strmat(calc%alat, lmax=2*calc%lpot, naez=self%num_atoms, &
       ngmax=calc%lattice%ngmax, nrmax=calc%lattice%nrmax, &
       nlshellg=calc%lattice%nsg(calc%lattice%nshlg), nlshellr=calc%lattice%nsr(calc%lattice%nshlr), &
       gv=calc%lattice%gn, rv=calc%lattice%rm, qv=rbasis, vol=calc%volume0, i1=atom_index, &
       smat=self%smat) ! result
-! #undef  mc
 
   endsubroutine ! calc
 
@@ -321,9 +265,29 @@ module MadelungCalculator_mod
 
     deallocate(self%cleb, self%loflm, self%icleb)
   endsubroutine ! destroy
+ 
 
-  
-
+  ! call TESTDIMLAT(params%ALAT,arrays%BRAVAIS,RECBV,params%RMAX,params%GMAX, dims%NMAXD, dims%ISHLD) ! former call syntax
+  subroutine testdimlat(alat, bravais, recbv, rmax, gmax)!, NMAXD, ISHLD)
+    double precision, intent(in) :: alat !< lattice constant
+    
+    double precision, intent(in) :: gmax, rmax
+    double precision, intent(in) :: bravais(3,3), recbv(3,3) !< bravais matrix and reciprocal basis vectors
+    integer :: NMAXD, ISHLD!!!, intent(out)
+    
+    integer :: ngmax, nrmax, nshlg, nshlr
+    double precision, allocatable :: vec(:,:) ! (3,nmaxd)
+    integer, allocatable :: nsh(:)
+    
+    call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsh, nsh, rmax, gmax, vec, vec, iprint=0, print_info=0)
+    
+    NMAXD = max(ngmax, nrmax)
+    write(*,'(a,i13,9a)') ' NMAXD  =',NMAXD,'  ! minimum determined in ',__FILE__
+    ISHLD = max(nshlg, nshlr)
+    write(*,'(a,i13,9a)') ' ISHLD  =',ISHLD,'  ! minimum determined in ',__FILE__
+    
+  endsubroutine ! testdimlat
+      
   
   ! **********************************************************************
   ! *                                                                    *
@@ -347,119 +311,127 @@ module MadelungCalculator_mod
   ! *  one it is used only locally (GNR/RMR)       v.popescu May 2004    *
   ! *                                                                    *
   ! **********************************************************************
+  subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, print_info)
+    use Constants_mod, only: pi
+    integer, intent(in) :: iprint, print_info
+    double precision, intent(in) :: alat !< lattice constant
+    
+    integer, intent(out) :: ngmax
+    double precision, intent(in) :: gmax
+    double precision, intent(in) :: recbv(3,3) !< reciprocal basis vectors
+    double precision, allocatable, intent(out) :: gn(:,:) ! (3,nmaxd)
+    integer, allocatable, intent(out) :: nsg(:) ! (ishld)
+    integer, intent(out) :: nshlg
+    
+    integer, intent(out) :: nrmax
+    double precision, intent(in) :: rmax
+    double precision, intent(in) :: bravais(3,3) !< bravais matrix == real space basis vectors
+    double precision, allocatable, intent(out) :: rm(:,:) ! (3,nmaxd)
+    integer, allocatable, intent(out) :: nsr(:) ! (ishld)
+    integer, intent(out) :: nshlr
 
-subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, rmax, gmax, gn, rm, iprint, print_info)
-  use Constants_mod, only: pi
-  implicit none
-  integer, intent(in) :: iprint, print_info
-  double precision, intent(in) :: alat !< lattice constant
+    
+    character(len=*), parameter :: F97="(34x,3f10.5)", F98="(13x,52('-'))", F99="(10x,55('+'),/)", &
+    F92="(25x,'vectors  shells  max. R ',/,25x,30('-'))", F93="(10x,a,i7,2x,i6,2x,f9.5)", F94="(25x,30('-'),/)", F96="(10x,i5,i5,f12.6,2x,3f10.5)", &
+    F95="(10x,55('+'),/,18x,'generated ',a,' lattice vectors',/,10x,55('+'),/,10x,'shell Nvec    radius          x         y         z',/,10x,55('-'))"
+    
+    integer :: i, n, l, k, ist, numr(3), numg(3), naiver, naiveg
+    double precision :: bg(3,3), absg2(3), absgm
+    double precision :: br(3,3), absr2(3), absrm
+    double precision, allocatable :: gnr(:), rmr(:) ! gnr(nmaxd), rmr(nmaxd)
+
+    if (print_info == 0) write(6,'(5X,2A,/)') '< LATTICE3D > : ','generating direct/reciprocal lattice vectors'
+
+    ! --> basic trans. vectors and basis vectors
+    br(1:3,1:3) = bravais(1:3,1:3)*alat
+
+    ! --> generate primitive vectors BG of reciprocal space
+    bg(1:3,1:3) = recbv(1:3,1:3)*(2.d0*pi/alat)
+
+    ! --> estimate no. of lattice vectors, todo: compare Fleur routine boxdim
+    do i = 1, 3
+      absr2(i) = sum(br(1:3,i)**2)
+      absg2(i) = sum(bg(1:3,i)**2)
+    enddo ! i
+    
+    absrm = (2.d0*pi)/sqrt(max(absr2(1), absr2(2), absr2(3)))
+    absgm = (2.d0*pi)/sqrt(max(absg2(1), absg2(2), absg2(3)))
+    naiver = ceiling(rmax/absgm) ! Warning: cross term here: direct depends on reciprocal
+    naiveg = ceiling(gmax/absrm) ! Warning: cross term here: reciprocal depends on direct
+! write(0,*) trim(__FILE__+"loop"+(2*naiveg+1)+"in g-space from gmax ="+gmax)
+! write(0,*) trim(__FILE__+"loop"+(2*naiver+1)+"in r-space from rmax ="+rmax)
+    
+    numr(1:3) = boxdim(bmat=br, dcut=rmax, naive=naiver, space='r')
+    numg(1:3) = boxdim(bmat=bg, dcut=gmax, naive=naiveg, space='g')
+! write(0,*) trim(__FILE__+"loop only"+(2*numg+1)+"in g-space from gmax ="+gmax)
+! write(0,*) trim(__FILE__+"loop only"+(2*numr+1)+"in r-space from rmax ="+rmax)
+    
+  ! ! write(0,'(a)') trim(__FILE__+"alat"+alat)
+  ! ! write(0,'(a)') trim(__FILE__+"bravais"+reshape(bravais, [9]))
+  ! ! write(0,'(a)') trim(__FILE__+"br"+reshape(br, [9]))
+  ! ! write(0,'(a)') trim(__FILE__+"recbv"+reshape(recbv, [9]))
+  ! ! write(0,'(a)') trim(__FILE__+"bg"+reshape(bg, [9]))
+
+    ! **********************************************************************
+    !                 generate lattice vectors of real space
+    ! **********************************************************************
+    ist = count_vectors_in_sphere(numr, br, rmax, & ! inputs
+      vec=rm, rad=rmr, nvecs=nrmax, nshells=nshlr, nsh=nsr, & ! outputs
+      tol_origin=1.d-6, tol_newshell=1.d-6, space='r') ! config
+    
+    if (nshlr <= 1) die_here("cut-off radius RMAX too small!")
+    
+    ! **********************************************************************
+    !                 generate lattice vectors of reciprocal space
+    ! **********************************************************************
+    ist = count_vectors_in_sphere(numg, bg, gmax, & ! inputs
+      vec=gn, rad=gnr, nvecs=ngmax, nshells=nshlg, nsh=nsg, & ! outputs
+      tol_origin=1.d-6, tol_newshell=1.d-7, space='g') ! config
+    
+    if (nshlg <= 1) die_here("cut-off radius GMAX too small!")
+
+    if (print_info == 0) then
+      write(6, fmt=F92)
+      write(6, fmt=F93) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
+      write(6, fmt=F93) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
+      write(6, fmt=F94)
+    endif
+
+    if (iprint < 3) return
+
+    k = 0
+    write(6, fmt=F95) 'real-space'
+    do l = 1, nshlr
+      write(6, fmt=F96) l, nsr(l), rmr(k+1), rm(1:3,k+1)
+      do n = 2, nsr(l)
+        write(6, fmt=F97) rm(1:3,k+n)
+      enddo ! n
+      if (l /= nshlr) write(6, fmt=F98)
+      k = k + nsr(l)
+    enddo ! l
+    write(6, fmt=F99)
+    k = 0
+    write(6, fmt=F95) 'reciprocal'
+    do l = 1, nshlg
+      write(6, fmt=F96) l, nsg(l), gnr(k+1), gn(1:3,k+1)
+      do n = 2, nsg(l)
+        write(6, fmt=F97) gn(1:3,k+n)
+      enddo ! n
+      if (l /= nshlg) write(6, fmt=F98)
+      k = k + nsg(l)
+    enddo ! l
+    write(6, fmt=F99)
+
+  endsubroutine ! lattice3d
   
-  integer, intent(out) :: ngmax
-  double precision, intent(in) :: gmax
-  double precision, intent(in) :: recbv(3,3) !< reciprocal basis vectors
-  double precision, allocatable, intent(out) :: gn(:,:) ! (3,nmaxd)
-  integer, allocatable, intent(out) :: nsg(:) ! (ishld)
-  integer, intent(out) :: nshlg
   
-  integer, intent(out) :: nrmax
-  double precision, intent(in) :: rmax
-  double precision, intent(in) :: bravais(3,3) !< bravais matrix == real space basis vectors
-  double precision, allocatable, intent(out) :: rm(:,:) ! (3,nmaxd)
-  integer, allocatable, intent(out) :: nsr(:) ! (ishld)
-  integer, intent(out) :: nshlr
-
+! #define ORIGINAL_N_SQUARE_ALGORITHM    
   
-  character(len=*), parameter :: F97="(34x,3f10.5)", F98="(13x,52('-'))", F99="(10x,55('+'),/)", &
-  F92="(25x,'vectors  shells  max. R ',/,25x,30('-'))", F93="(10x,a,i7,2x,i6,2x,f9.5)", F94="(25x,30('-'),/)", F96="(10x,i5,i5,f12.6,2x,3f10.5)", &
-  F95="(10x,55('+'),/,18x,'generated ',a,' lattice vectors',/,10x,55('+'),/,10x,'shell Nvec    radius          x         y         z',/,10x,55('-'))"
-  
-  integer :: i, n, l, k, ist, numr(3), numg(3)
-  double precision :: bg(3,3), absg2(3), absgm
-  double precision :: br(3,3), absr2(3), absrm
-  double precision, allocatable :: gnr(:), rmr(:) ! gnr(nmaxd), rmr(nmaxd)
-
-  if (print_info == 0) write(6,'(5X,2A,/)') '< LATTICE3D > : ','generating direct/reciprocal lattice vectors'
-
-  ! --> basic trans. vectors and basis vectors
-  br(1:3,1:3) = bravais(1:3,1:3)*alat
-
-  ! --> generate primitive vectors BG of reciprocal space
-  bg(1:3,1:3) = recbv(1:3,1:3)*(2.d0*pi/alat)
-
-  ! --> estimate no. of lattice vectors, todo: compare Fleur routine boxdim
-  do i = 1, 3
-    absr2(i) = sum(br(1:3,i)**2)
-    absg2(i) = sum(bg(1:3,i)**2)
-  enddo ! i
-  
-  absrm = (2.d0*pi)/sqrt(max(absr2(1), absr2(2), absr2(3)))
-  absgm = (2.d0*pi)/sqrt(max(absg2(1), absg2(2), absg2(3)))
-  numr(1:3) = 2*idint(rmax/absgm) + 3 ! Warning: cross term here: direct depends on reciprocal
-  numg(1:3) = 2*idint(gmax/absrm) + 3 ! Warning: cross term here: reciprocal depends on direct
-
-! ! write(0,'(a)') trim(__FILE__+"alat"+alat)
-! ! write(0,'(a)') trim(__FILE__+"bravais"+reshape(bravais, [9]))
-! ! write(0,'(a)') trim(__FILE__+"br"+reshape(br, [9]))
-! ! write(0,'(a)') trim(__FILE__+"recbv"+reshape(recbv, [9]))
-! ! write(0,'(a)') trim(__FILE__+"bg"+reshape(bg, [9]))
-! ! write(0,*) trim(__FILE__+"loop"+numg+" in g-space from gmax ="+gmax)
-! ! write(0,*) trim(__FILE__+"loop"+numr+" in r-space from rmax ="+rmax)
-
-  ! **********************************************************************
-  !                 generate lattice vectors of real space
-  ! **********************************************************************
-  ist = count_vectors_in_sphere(numr, br, rmax, & ! inputs
-    vec=rm, rad=rmr, nvecs=nrmax, nshells=nshlr, nsh=nsr, & ! outputs
-    tol_origin=1.d-6, tol_newshell=1.d-6, space='r') ! config
-  
-  if (nshlr <= 1) die_here("cut-off radius RMAX too small!")
-  
-  ! **********************************************************************
-  !                 generate lattice vectors of reciprocal space
-  ! **********************************************************************
-  ist = count_vectors_in_sphere(numg, bg, gmax, & ! inputs
-    vec=gn, rad=gnr, nvecs=ngmax, nshells=nshlg, nsh=nsg, & ! outputs
-    tol_origin=1.d-6, tol_newshell=1.d-7, space='g') ! config
-  
-  if (nshlg <= 1) die_here("cut-off radius GMAX too small!")
-
-  if (print_info == 0) then
-     write(6, fmt=F92)
-     write(6, fmt=F93) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
-     write(6, fmt=F93) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
-     write(6, fmt=F94)
-  endif
-
-  if (iprint < 3) return
-
-  k = 0
-  write(6, fmt=F95) 'real-space'
-  do l = 1, nshlr
-    write(6, fmt=F96) l, nsr(l), rmr(k+1), rm(1:3,k+1)
-    do n = 2, nsr(l)
-      write(6, fmt=F97) rm(1:3,k+n)
-    enddo ! n
-    if (l /= nshlr) write(6, fmt=F98)
-    k = k + nsr(l)
-  enddo ! l
-  write(6, fmt=F99)
-  k = 0
-  write(6, fmt=F95) 'reciprocal'
-  do l = 1, nshlg
-    write(6, fmt=F96) l, nsg(l), gnr(k+1), gn(1:3,k+1)
-    do n = 2, nsg(l)
-      write(6, fmt=F97) gn(1:3,k+n)
-    enddo ! n
-    if (l /= nshlg) write(6, fmt=F98)
-    k = k + nsg(l)
-  enddo ! l
-  write(6, fmt=F99)
-
-endsubroutine ! lattice3d
-  
-  
-  integer function count_vectors_in_sphere(num, bm, dmax, vec, rad, nvecs, nshells, nsh, tol_origin, tol_newshell, space) result(ist)
-    integer, intent(in) :: num(3)
+  integer function count_vectors_in_sphere(numh, bm, dmax, vec, rad, nvecs, nshells, nsh, tol_origin, tol_newshell, space) result(ist)
+#ifndef ORIGINAL_N_SQUARE_ALGORITHM
+    use Sorting_mod, only: permutation_of
+#endif    
+    integer, intent(in) :: numh(3)
     double precision, intent(in) :: bm(3,3) !< bravais matrix or reciprocal space basis
     double precision, intent(in) :: dmax !< cutoff radius of the sphere
     double precision, allocatable, intent(out), optional :: vec(:,:), rad(:) ! check where this data is needed --> maybe better in one array (0:3,:)
@@ -468,26 +440,32 @@ endsubroutine ! lattice3d
     double precision, intent(in) :: tol_origin, tol_newshell
     character, intent(in) :: space ! for debug: 'r' or 'g'
     
-    integer :: numh(3), i, i1, i2, i3, ivmin, iminl(1), i01, ish, nshl
-    double precision :: dmax2, v2, vmin, very_large, da, db, vx(3), vxy(3), vxyz(3)
+    integer :: i, i1, i2, i3, ivmin, i01, ish!, num(3) 
+    double precision :: dmax2, v2, da, db, vx(3), vxy(3), vxyz(3)
     double precision, allocatable :: cv(:,:), d2(:)
-    integer, allocatable :: nvis(:) ! tmp for nsh
-  
-    numh = num/2 + 1
+    integer, allocatable :: perm(:), nvis(:) ! tmp for nsh, nvis=number_of_vectors_in_shell
+#ifdef  ORIGINAL_N_SQUARE_ALGORITHM
+    double precision :: very_large
+    integer :: iminl(1)
+#endif
+
+!     numh = num/2 + 1
+!  ==> 1 - numh(1) : num(1) - numh(1) is equivalent to -num/2 : num - num/2, however, num was chosen odd, so its a symmetric
+    
     dmax2 = dmax**2 ! radius^2
     
     ! **********************************************************************
     !                 generate lattice vectors of real or reciprocal space
     ! **********************************************************************
-   
+
     do i01 = 0, 1 ! loop runs twice: iteration #0: count & allocate, iteration #1: store
     
       i = 0 ! init
-      do i1 = 1 - numh(1), num(1) - numh(1)
+      do i1 = -numh(1), numh(1) ! 1 - numh(1), num(1) - numh(1)
         vx(1:3) = i1*bm(1:3,1)
-        do i2 = 1 - numh(2), num(2) - numh(2)
+        do i2 = -numh(2), numh(2) ! 1 - numh(2), num(2) - numh(2)
           vxy(1:3) = i2*bm(1:3,2) + vx(1:3) 
-          do i3 = 1 - numh(3), num(3) - numh(3)
+          do i3 = -numh(3), numh(3) ! 1 - numh(3), num(3) - numh(3)
             vxyz(1:3) = i3*bm(1:3,3) + vxy(1:3) 
             
             v2 = sum(vxyz(1:3)**2)
@@ -504,65 +482,69 @@ endsubroutine ! lattice3d
         enddo ! i2
       enddo ! i1
       
-      if (i01 == 0) then ! after first iterations (count iteration)
+      if (i01 == 0) then ! after first iteration (the "count" iteration) and before the second iteration (the "store" iteration)
         nvecs = i
         allocate(cv(1:3,nvecs), d2(nvecs), nvis(nvecs), stat=ist)
       endif
 
     enddo ! i01    
     ! ======================================================================
-!!! write(0,*) trim(__FILE__+"loop"+num+" in"+space-"-space finds"+nvecs+"vectors")
-    !
-    ! --> sort vectors in order of increasing absolute value
-    !
-    
+!DBG  write(0,*) trim(__FILE__+"loop"+(2*numh+1)+" in"+space-"-space finds"+nvecs+"vectors")
+
     if (present(vec)) then; deallocate(vec, stat=ist); allocate(vec(1:3,nvecs), stat=ist); endif
     if (present(rad)) then; deallocate(rad, stat=ist); allocate(rad(nvecs), stat=ist); endif
-    
-    ! warning: this method of computing the shell structure
-    ! scales N^2 with N=nvecs, better would be sorting with N*log(N)
-    
-    da = tol_origin
-    
-    ish = 0
-    nshl = -1 ! start first shell with one less
+
+
+    ! sort vectors in order of increasing absolute value
+    ! warning: the original method of computing the shell structure scales N^2 with N=nvecs, better would be sorting with N*log(N)
+
+#ifdef  ORIGINAL_N_SQUARE_ALGORITHM    
     very_large = dmax**2 + 9.d9
+#else
+    allocate(perm(1:nvecs), stat=ist)
+    perm = permutation_of(d2(1:nvecs)) ! sort such that d2(perm(:)) is smallest first. This scales N*log(N)
+#endif
+
+    da = 0.d0 ! = tol_origin ! init ! todo: revise this (the first vector is [0.,0.,0.] always, so we can init with 0.d0)
+                                    ! todo discuss why the origin tolerance was introduced althoug there is tol_newshell and (if redundant) remove it
+    ish = 1 ! open the first shell
+    nvis(ish) = 0 ! init number of vectors for the first shell
     
     do i = 1, nvecs
-    
-      iminl = minloc(d2) ! find the location of the smallest element in d2
+#ifdef  ORIGINAL_N_SQUARE_ALGORITHM    
+      iminl = minloc(d2) ! find the location of the smallest element in d2 --> here, this algorithm scales Order(nvec^2)
       ivmin = iminl(1) ! pass index
-      vmin = sqrt(d2(ivmin))
+#else
+      ivmin = perm(i) ! use the index order found by quicksort
+#endif
 
-      nshl = nshl + 1 ! increase the number of points in this shell
-      
-      if (present(vec)) vec(1:3,i) = cv(1:3,ivmin) ! store vector
-      if (present(rad)) rad(i) = vmin ! store radius
-      
-      db = vmin
+      db = sqrt(d2(ivmin))
       ! ----------------------------------------------------------------------
       if (db > da + tol_newshell) then
-        ! create a new shell
-        ish = ish + 1 ! create a shell index of the current shell
-        nvis(ish) = nshl ! store the number of points in the last shell
-!!! write(0,*) trim(__FILE__+"create shell"+ish+"with"+nshl+"points in"+space-"-space")
         
-        nshl = 0 ! init number of points for the new shell
+!DBG  write(0,*) trim(__FILE__+"create shell"+ish+"with"+nvis(ish)+"points in"+space-"-space") ! show the last shell
+        
+        ish = ish + 1 ! create a shell index of the current shell
+        nvis(ish) = 0 ! init number of vectors for the new shell
+        
         da = db
-      endif
+      endif ! does not lie in the open shell
       ! ----------------------------------------------------------------------
       
+      nvis(ish) = nvis(ish) + 1 ! increase the number of points in this shell
+
+      if (present(vec)) vec(1:3,i) = cv(1:3,ivmin) ! store vector
+      if (present(rad)) rad(i) = db ! store radius
+      
+#ifdef  ORIGINAL_N_SQUARE_ALGORITHM    
       d2(ivmin) = very_large ! take it out of the loop
+#endif      
     enddo ! i
-    deallocate(cv, d2, stat=ist) ! free local arrays
-
-    ! close current shell
-    ish = ish + 1
-    nshl = nshl + 1
-    nvis(ish) = nshl
-!!! write(0,*) trim(__FILE__+"create shell"+ish+"with"+nshl+"points in"+space-"-space (last)")
-
     nshells = ish ! export the max number of shells
+
+!DBG  write(0,*) trim(__FILE__+"create shell"+ish+"with"+nvis(ish)+"points in"+space-"-space (last)") ! show the last shell
+
+    deallocate(cv, d2, perm, stat=ist) ! free local arrays
     
     if (present(nsh)) then
       deallocate(nsh, stat=ist)
@@ -646,7 +628,7 @@ endsubroutine ! lattice3d
   ! *                                                                    *
   !>*  calculation of lattice sums for l .le. 2*lpot :                   *
   !>*                                                                    *
-  !>*                   ylm( q(i) - q(j) - rv )                          *
+  !>*                   ylm(q(i) - q(j) - rv)                          *
   !>*        sum      ===========================                        *
   !>*                 | q(i) - q(j) - rv |**(l+1)                        *
   !>*                                                                    *
@@ -675,8 +657,6 @@ endsubroutine ! lattice3d
 
 subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv, vol, i1, smat)
   use Harmonics_mod, only: ymy
-#include "macros.h"
-  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use Constants_mod, only: pi
 
     double precision, intent(in) :: alat
@@ -710,7 +690,7 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     sqrtPi = sqrt(pi)
     sqrtPiInv = 1./sqrtPi
 
-    assert( size(smat, 1) == (lmax+1)**2 ) ! check leading dimension
+    assert(size(smat, 1) == (lmax+1)**2) ! check leading dimension
 
     lamda = sqrt(pi)/alat ! choose proper splitting parameter
     kappa = -0.25d0/(lamda*lamda)
@@ -794,7 +774,7 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
           smat(:,i2) = smat(:,i2) + dble(stest(:)) ! add only real part
 !           ! --> test convergence
 !           do lm = 1, (lmax+1)**2
-!             !IF (2 < 1 .AND. ABS(dble(stest(lm))) > BOUND ) WRITE (6,FMT=99001) I1,I2,LM,ABS(dble(stest(lm)))
+!             !IF (2 < 1 .AND. ABS(dble(stest(lm))) > BOUND) WRITE (6,FMT=99001) I1,I2,LM,ABS(dble(stest(lm)))
 ! 99001       format (5x,'WARNING : Convergence of SMAT(',i2,',',i2,') for LMXSP =',i3,' is ',1p,d8.2,' > 1D-8',/,15x,'You should use more lattice vectors (RMAX/GMAX)')
 !           enddo ! lm
         endif
@@ -804,6 +784,80 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     !$omp end parallel do
     
   endsubroutine strmat
+  
+  
+  
+  function boxdim(bmat, dcut, naive, space) result(ngv)
+    integer          :: ngv(3) ! result
+    double precision, intent(in) :: bmat(3,3), dcut
+    integer , intent(in) :: naive
+    character, intent(in) :: space
+
+    integer :: i, j, k, i1, i2, i3
+    double precision :: quad(3,3), rr(3,3), determ, wrap(3,3), scl(3,3), wGGw(3,3)
+
+    quad = matmul(transpose(bmat), bmat) ! construct the metric such that [i1,i2,i3]*quad*[i1,i2,i3] = K2
+
+    ! now: K^2 = i_1^2 Q_{11} + 2 i_1 i_2 Q_{12} + i_2^2 Q_{22}
+    ! and in 3D:              + 2 i_2 i_3 Q_{23} + i_3^2 Q_{33} + 2 i_3 i_1 Q_{31}
+    ! here, we have used that Q_{12} + Q_{21} = 2Q_{12} the metric is symmetric.
+    ! for the k-th component i_k: derive the equation above w.r.t. the other two variables
+    ! this is the perpendicular gradient. We demand it to vanish where the ellipsoid is at its maximum w.r.t. the coordinate i_k
+    ! example: for i_1: derive equation above w.r.t. i_2 and i_3
+    ! solve these equations finding i_2(i_1) and i_3(i_1)
+    ! plug in i_2(i_1) and i_3(i_1) into the equation above and solve for i_1
+       
+    determ = invert3x3_r(quad, inverse=rr) ! the inverse solves the linear equations such that the perpendicular gradient is zero
+    if (determ < 1d-12) then
+      warn(6, "boxdim failed in"+space-"space")
+      ngv(1:3) = naive
+      return
+    endif
+
+    scl = 0. ; do i = 1, 3 ; scl(i,i) = 1./rr(i,i) ; enddo ! create a diagonal matrix
+    
+    wrap = matmul(rr, scl) ! wrap is unitless and has 1.0 in all three diagonal elements, however, the off-diagonal elements are important
+    wGGw = matmul(wrap, matmul(quad, wrap))
+
+    do i = 1, 3 ; ngv(i) = ceiling(dcut/sqrt(wGGw(i,i))) ; enddo ! i
+
+  endfunction ! boxdim
+  
+  
+  !! determinant of a 3 by 3 matrix
+  double precision function determinant3x3_r(a) result(det)
+    double precision, intent(in) :: a(3,3)
+    det = a(1,1)*(a(2,2)*a(3,3)-a(3,2)*a(2,3)) &
+        + a(2,1)*(a(3,2)*a(1,3)-a(1,2)*a(3,3)) &
+        + a(3,1)*(a(1,2)*a(2,3)-a(2,2)*a(1,3))
+  endfunction ! determinant3x3
+
+  !! inverts a 3 by 3 matrix, if the determinant is non-zero
+  double precision function invert3x3_r(a, inverse) result(det) !! result: determinant of matrix a
+    double precision, intent(in)                :: a(3,3) !! matrix
+    double precision, intent(out)               :: inverse(3,3) !! inverse
+    double precision :: invdet
+    det = determinant3x3_r(a)
+    if(det == 0.) then
+#ifdef DEBUG
+      if(o>0) write(o,'(9A)') sym,' invert3x3: determinant = 0.'
+#endif
+      inverse = 0.
+      return
+    endif ! det == 0
+    invdet = 1./det
+    inverse(1,1) = (a(2,2)*a(3,3)-a(2,3)*a(3,2))*invdet
+    inverse(2,1) = (a(2,3)*a(3,1)-a(2,1)*a(3,3))*invdet
+    inverse(3,1) = (a(2,1)*a(3,2)-a(2,2)*a(3,1))*invdet
+
+    inverse(1,2) = (a(3,2)*a(1,3)-a(3,3)*a(1,2))*invdet
+    inverse(2,2) = (a(3,3)*a(1,1)-a(3,1)*a(1,3))*invdet
+    inverse(3,2) = (a(3,1)*a(1,2)-a(3,2)*a(1,1))*invdet
+
+    inverse(1,3) = (a(1,2)*a(2,3)-a(1,3)*a(2,2))*invdet
+    inverse(2,3) = (a(1,3)*a(2,1)-a(1,1)*a(2,3))*invdet
+    inverse(3,3) = (a(1,1)*a(2,2)-a(1,2)*a(2,1))*invdet
+  endfunction ! invert3x3
   
   
   
@@ -818,11 +872,11 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     !      and
     !            i(x,l) = erfc(x) + exp(-x*x)/sqrt(pi) *
     !
-    !                                sum ( 2**i * x**(2i-1) / (2i-1)!! )
+    !                                sum (2**i * x**(2i-1) / (2i-1)!!)
     !                              1..i..l
     !
     !
-    ! Note: gamfc( alpha -> 0, ... ) => glh = sqrt(pi) for all l  E.R.
+    ! Note: gamfc(alpha -> 0, ...) => glh = sqrt(pi) for all l  E.R.
     !-----------------------------------------------------------------------
     double precision :: glh(0:lmax) ! result
     integer, intent(in) :: lmax

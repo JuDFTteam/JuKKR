@@ -649,10 +649,10 @@ module ShapeIntegrationHelpers_mod
     cosb =  cos(beta*0.5d0)
     sinb = -sin(beta*0.5d0)
 
-    if (abs(cosb) < 1d-4) then
+    if (abs(cosb) < 1.d-4) then
       ltrm = l
       term = sinb
-    elseif(abs(sinb) < 1d-4) then
+    elseif(abs(sinb) < 1.d-4) then
       ltrm = 0
       term = cosb
     else         
@@ -675,10 +675,7 @@ module ShapeIntegrationHelpers_mod
     
     if (mod(kmin, 2) /= 0) term = -term
   
-    nf(1) = l-kmin-mp
-    nf(2) = l-kmin+m
-    nf(3) =   kmin+mp-m
-    nf(4) =   kmin
+    nf(1:4) = [l-kmin-mp, l-kmin+m, kmin+mp-m, kmin]
     ff = 1.d0
     do n = 1, 4
       if (nf(n) == 0) cycle
@@ -697,7 +694,7 @@ module ShapeIntegrationHelpers_mod
     do k = kmin, kmax
       term = -term*nf(1)*nf(2)*sinb/(cosb*k*nf(3))
       drot = drot + term
-      nf(1:4) = nf(1:4) + [-1,-1,1,0]
+      nf(1:3) = nf(1:3) + [-1,-1,1]
     enddo ! k
       
   endfunction drot

@@ -106,15 +106,14 @@ module DimParams_mod
     if (getValue(cr, "ZDIM",    self%zdim, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
-    if (getValue(conf, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename) ! 0:auto
+    if (getValue(cr, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename) ! 0:auto
 
-    write(*,*) "The following variables have not been read from global.conf:"
+    write(*,'(9a)') " The following variables have not been read from ",filename,":"
     next_ptr = 1
-    do
-      if (getUnreadVariable(cr, variable, next_ptr) /= 0) exit
+    do while (getUnreadVariable(cr, variable, next_ptr) == 0)
       write(*,*) trim(variable)
     enddo
-
+    
     call destroyConfigReader(cr)
     call calculateDerivedParameters(self) ! deal with derived parameters
 

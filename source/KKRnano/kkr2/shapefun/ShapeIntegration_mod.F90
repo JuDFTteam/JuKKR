@@ -107,24 +107,19 @@ module ShapeIntegration_mod
     
       b(1:mlm) = 0.d0 ! init shape function temporary at this radius
       
-      !.......................................................................
-      !     loop over pyramids
-      !.......................................................................
-      py: do iface = 1, nface
+      pyramids: do iface = 1, nface ! loop over pyramids
 
         if (xrn(ir) <= face(iface)%r0) then
           ! the radius is smaller than the distance of the base points from the origin.
           ! so, no contribution to the shapefunctions is expected (except for l=0,m=0 which is treated analytically).
-          cycle py ! jump to the head of the loop over pyramids (loop counter iface)
+          cycle pyramids ! jump to the head of the loop over pyramids (loop counter iface)
           
         endif ! xrn(ir) <= r0
         
         arg1 = face(iface)%r0/xrn(ir)
         s = 0.d0 ! init s
         
-        !.......................................................................
-        !     loop over tetrahedra
-        !.......................................................................
+        ! loop over tetrahedra
         do itet = 1, face(iface)%ntt
 
           t1 = face(iface)%ta(itet) ! get a work copy of the TetrahedronAngles
@@ -156,10 +151,7 @@ module ShapeIntegration_mod
 
         enddo ! itet ! tetraeder loop
 
-        !.......................................................................
-        !  integral expansion back-rotation
-        !.......................................................................
-
+        ! integral expansion back-rotation
         if (idmatl /= idmatl_MEMORIZE) then
           ! calculate transformation matrices for spherical harmonics (for each ir again!)
           call d_real(lmax, face(iface)%euler, dmatl(:,0))
@@ -181,11 +173,11 @@ module ShapeIntegration_mod
             smm(m) = smm(m)*c_table(abs(m),l) ! scale
           enddo ! m
 
-          isu0 = ((l-1)*(3+4*l*(l+1)))/3+1
-          isu = isu0
-          
+          isu0 = ((l-1)*(3+4*l*(l+1)))/3+1 ! index offset in compressed storage of square matrices of dimension (2*l+1)
+         
           ! rotate back in the l-subspace and add to the shape functions
           ! still uses the m-ordering 0,1,-1,...,l,-l for m and mp
+  !         isu = isu0
   !         imax = 1
   !         do m = 0, l
   !           do i = 1, imax
@@ -214,14 +206,13 @@ module ShapeIntegration_mod
           
         enddo ! l
 
-      enddo py
-      !.......................................................................
-      !     defines and saves shapefunctions
-      !.......................................................................
+      enddo pyramids
+
+      ! defines and saves shapefunctions
       b(1:mlm) = -b(1:mlm)/fpisq ! scale
       b(1) = fpisq + b(1) ! add constant sqrt(4*pi) in the l=0,m=0 channel
       
-      nontrivial = nontrivial .or. (abs(b(:)) > 1d-6)
+      nontrivial(:) = nontrivial(:) .or. (abs(b(:)) > 1d-6)
       
       thetas_s(ir,1:mlm) = b(1:mlm)
       
@@ -229,7 +220,7 @@ module ShapeIntegration_mod
     
     deallocate(dmatl, stat=ist)
 
-    !now rearrange thetas_s array that it contains only non-zero shapefunctions, this is done "in-place"
+    ! now rearrange thetas_s array that it contains only non-zero shapefunctions, this is done "in-place"
 
     lmifun_s = 0 ! lm-index of this shape function
 
