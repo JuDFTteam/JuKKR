@@ -18,23 +18,22 @@ module ConfigReaderDictionary_mod
 
   ! Maximal length of variable names and value string.
   ! Modify to allow different lengths.
-  integer, parameter, public :: CONFIG_READER_DICT_VAR_LENGTH=64, CONFIG_READER_DICT_VALUE_LENGTH=192
-
-  type Dictionary
-    private
-    type(DictionaryEntry), pointer :: dict(:)
-    integer :: counter
-  endtype 
-  
-! private declarations
-
-  integer, parameter, private :: INITIAL_SIZE = 50
+  integer, parameter, public :: CONFIG_READER_DICT_VAR_LENGTH=64, CONFIG_READER_DICT_VALUE_LENGTH=191
 
   type, private :: DictionaryEntry
     character(len=CONFIG_READER_DICT_VAR_LENGTH) :: variable
     character(len=CONFIG_READER_DICT_VALUE_LENGTH) :: value
-    logical :: tag
+    logical(kind=1) :: tag
   endtype
+  
+  type Dictionary
+    private
+    integer :: counter
+    type(DictionaryEntry), allocatable :: dict(:)
+  endtype 
+  
+
+  integer, parameter, private :: INITIAL_SIZE = 256
   
   interface create
     module procedure createDictionary
@@ -62,9 +61,7 @@ module ConfigReaderDictionary_mod
 
     this%counter = 0
 
-    if (associated(this%dict)) then
-      call fatalErrorDictionary("It seems that the dictionary was already created.")
-    endif
+    if (allocated(this%dict)) call fatalErrorDictionary("It seems that the dictionary was already created.")
 
     allocate(this%dict(INITIAL_SIZE), stat=ierror)
     if (ierror /= 0) call fatalErrorDictionary()
@@ -83,14 +80,11 @@ module ConfigReaderDictionary_mod
 
     integer, intent(out) :: ierror
 
-    type(DictionaryEntry), pointer :: dict_new(:)
+    type(DictionaryEntry), allocatable :: dict_tmp(:)
 
-    integer :: ind
-    integer :: capacity
-    integer :: ios
-    integer :: loop_ind
+    integer :: ind, capacity, new_capacity, ios
 
-    if (.not. associated(this%dict)) call fatalErrorDictionary("Dictionary was not created.")
+    if (.not. allocated(this%dict)) call fatalErrorDictionary("Dictionary was not created.")
 
     ierror = 0
 
@@ -100,34 +94,35 @@ module ConfigReaderDictionary_mod
         ierror = CONFIG_READER_DICT_NOT_UNIQUE
         return
       endif
-    enddo !
+    enddo ! ind
 
-    ! index of next entry
-    ind = this%counter + 1
+    ind = this%counter + 1 ! index of next entry
 
     capacity = size(this%dict)
 
     ! if array is full, reallocate memory
     if (ind > capacity) then
-      allocate(dict_new(capacity * 2), stat = ios)
+      new_capacity = 2*capacity ! size doubling
+      allocate(dict_tmp(capacity), stat=ios)
       if (ios /= 0) call fatalErrorDictionary()
 
-      do loop_ind = 1, capacity
-        dict_new(loop_ind) = this%dict(loop_ind)
-      enddo !
-
-      deallocate(this%dict, stat = ios)
-
-      this%dict => dict_new
+      dict_tmp(1:capacity) = this%dict(:)
+      
+      deallocate(this%dict, stat=ios) ! ignore status
+      allocate(this%dict(new_capacity), stat=ios)
       if (ios /= 0) call fatalErrorDictionary()
+      
+      this%dict(1:capacity) = dict_tmp(:)
+      ! this%dict(capacity+1:) = DictionaryEntry("", "", .true.) ! do we need to init this array part?
+
+      deallocate(dict_tmp, stat=ios) ! ignore status
     endif
 
     this%dict(ind)%variable = variable
     this%dict(ind)%value = value
     this%dict(ind)%tag = tag
-
-    ! don't forget to increment counter
-    this%counter = this%counter + 1
+    
+    this%counter = this%counter + 1 ! increment the counter
 
   endsubroutine
 
@@ -150,7 +145,7 @@ module ConfigReaderDictionary_mod
       if (variable == this%dict(ind)%variable) then
         ierror = 0
         value = this%dict(ind)%value
-        this%dict(ind)%tag = tag     ! set the tag
+        this%dict(ind)%tag = tag ! set the tag
         return
       endif
     enddo ! ind
@@ -213,7 +208,8 @@ module ConfigReaderDictionary_mod
 
     integer :: ierror
 
-    if (.not. associated(this%dict)) call fatalErrorDictionary("Dictionary was already destroyed.")
+    if (.not. allocated(this%dict)) &
+      call fatalErrorDictionary("Dictionary was already destroyed.")
 
     deallocate(this%dict, stat=ierror)
     if (ierror /= 0) call fatalErrorDictionary()
