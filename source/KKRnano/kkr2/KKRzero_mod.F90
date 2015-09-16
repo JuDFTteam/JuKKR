@@ -110,6 +110,9 @@ module KKRzero_mod
     use MadelungCalculator_mod, only: testdimlat
     use EnergyMeshHelpers_mod, only: emesht, epathtb
     use Startb1_mod, only: startb1_wrapper_new
+    
+    use PositionReader_mod, only: getAtomData  
+   
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     
@@ -125,10 +128,10 @@ module KKRzero_mod
 
     double precision :: recbv(3,3), volume0
 
-    double precision, allocatable :: radius_muffin_tin(:)
+    double precision, allocatable :: radius_muffin_tin(:), pos(:,:)
 
 !     .. auxillary variables, not passed to kkr2
-    integer :: ie, ierror, iemxd
+    integer :: ie, ierror, iemxd, natoms
     double complex, allocatable :: dez(:) ! needed for emesht
     integer, parameter :: KREL = 0
     logical :: startpot_exists
@@ -137,10 +140,15 @@ module KKRzero_mod
     type(Main2Arrays)    :: arrays
 
 
+    if (checkmode /= 0) then 
+!       ierror = getAtomData('pos.xyz', natoms, pos, comm=0)
+!       if (ierror /= 0) warn(6, "getAtomData failed!")
+    endif ! checks
+    
     call createDimParamsFromFile(dims, "global.conf")
 
     ierror = getInputParamsValues("input.conf", params)
-    if (ierror /= 0) die_here("failed to read ''input.conf''!")
+    if (ierror /= 0) die_here('failed to read "input.conf"!')
 
     ! Calculate number of energy points
     if (params%use_semicore == 1) then ! semicore contour is used

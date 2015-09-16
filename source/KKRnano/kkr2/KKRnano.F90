@@ -63,9 +63,13 @@ program KKRnano
   type(RadialMeshData), pointer :: mesh
   type(BasisAtom), pointer      :: atomdata
   type(LDAUData), pointer       :: ldau_data
+  
+  external :: MPI_Init
   !----------------------------------------------------------------------------
   character(len=16)              :: arg
   integer                        :: ios, ilen
+  
+  call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
