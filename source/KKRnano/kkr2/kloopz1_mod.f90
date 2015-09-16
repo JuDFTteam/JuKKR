@@ -10,7 +10,7 @@ CONTAINS
     RR, GINP_LOCAL, DGINP, &
     NSYMAT,DSYMLL, &
     TMATLL, DTDE, TR_ALPH, LLY_GRDT, lmmaxd,  &
-    nrd, trunc2atom_index, communicator, &
+    nrd, trunc2atom_index, communicator, my_mpi,  &
     iguess_data)
 
 ! **********************************************************************
@@ -35,6 +35,7 @@ CONTAINS
     use BCPOperator_mod
     use KKROperator_mod
     use MultScatData_mod
+    use KKRnanoParallel_mod
 
     use jij_calc_mod, only: global_jij_data, symjij
 
@@ -49,6 +50,7 @@ CONTAINS
     !> mapping trunc. index -> atom index
     integer, intent(in) :: trunc2atom_index(:)
     integer, intent(in) :: communicator
+    type (KKRnanoParallel), intent(in)  :: my_mpi
     type(InitialGuess), intent(inout) :: iguess_data
 
     !     .. Parameters ..
@@ -77,7 +79,7 @@ CONTAINS
     double precision::RR(3,0:NRD)
     double precision::BZKP(:,:)
     double precision::VOLCUB(:) ! dim kpoibz
-    double complex :: LLY_GRDT (:,:)
+    double complex :: LLY_GRDT
     !     .. Local Scalars ..
     !     ..
     double complex :: TAUVBZ
@@ -171,7 +173,7 @@ CONTAINS
     if (cutoffmode > 2 .or. cutoffmode == 0) then
       call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,DTDE, TR_ALPH, LLY_GRDT, &
       ALAT, NSYMAT, RR, GINP_LOCAL, DGINP, &
-      lmmaxd, trunc2atom_index, communicator, &
+      lmmaxd, trunc2atom_index, communicator, my_mpi, &
       iguess_data)
     else
       write(*,*) "0 < cutoffmode < 3 not supported."

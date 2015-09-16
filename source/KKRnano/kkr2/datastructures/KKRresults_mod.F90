@@ -21,7 +21,7 @@ module KKRresults_mod
     double complex , allocatable, dimension(:,:,:)  :: DTREFLL
     double complex , allocatable, dimension(:,:,:,:)  :: DGREFN
     double complex , allocatable, dimension(:,:,:,:)  :: GMATN
-    double complex , allocatable, dimension(:)  :: LLY_G0TR
+    double complex , allocatable, dimension(:)      :: LLY_G0TR
     double complex , allocatable, dimension(:,:)  :: LLY_GRDT
     double complex , allocatable, dimension(:)  :: TR_ALPH
     integer  :: NOITER

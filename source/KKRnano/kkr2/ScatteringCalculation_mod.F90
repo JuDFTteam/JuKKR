@@ -114,7 +114,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   double complex, allocatable, dimension(:,:,:) :: GmatN_buffer !< GmatN for all local atoms
   double complex, allocatable, dimension(:,:,:,:) :: GrefN_buffer !< GrefN for all local atoms
   double complex, allocatable, dimension(:,:,:,:) :: DGrefN_buffer !< Derivative of GrefN for all local atoms
-  double complex, allocatable, dimension (:,:) :: LLY_GRDT_buffer
+  double complex, allocatable, dimension (:,:) :: LLY_GRDT
+
   lmmaxd = (dims%lmaxd + 1) ** 2
 
   trunc_zone => getTruncationZone(calc_data)
@@ -140,7 +141,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
   allocate(GrefN_buffer(lmmaxd,lmmaxd, clusters%naclsd, num_local_atoms))
   allocate(DGrefN_buffer(lmmaxd,lmmaxd, clusters%naclsd, num_local_atoms))
-  allocate(LLY_GRDT_buffer(dims%NAEZ,2))
+  allocate(LLY_GRDT(dims%IEMXD,2))
 
   allocate(atom_indices(num_local_atoms))
 
@@ -155,6 +156,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
   endif
 
   xccpl = .false.
+  LLY_GRDT=CZERO  
 
   call resetTimer(mult_scattering_timer)
   call stopTimer(mult_scattering_timer)
@@ -340,14 +342,16 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !            getMyEnergyId(my_mpi),getMySEId(my_mpi),getNumAtomRanks(my_mpi),getNumSpinRanks(my_mpi),getNumEnergyRanks(my_mpi),
 !            getNumSERanks(my_mpi),getNumWorldRanks(my_mpi),getMasterRank(my_mpi),isMasterRank(my_mpi),isInMasterGroup(my_mpi)
 
+        kkr => getKKR(calc_data, 1)
+
 !------------------------------------------------------------------------------
           call KLOOPZ1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
           arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), &
           lattice_vectors%RR, &
           GrefN_buffer, DGrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
-          TMATLL, kkr%DTDE, kkr%TR_ALPH, LLY_GRDT_buffer, arrays%lmmaxd, lattice_vectors%nrd, &
-          trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
+          TMATLL, kkr%DTDE, kkr%TR_ALPH, LLY_GRDT(IE,ISPIN), arrays%lmmaxd, lattice_vectors%nrd, &
+          trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), my_mpi,  &
           iguess_data)
 !------------------------------------------------------------------------------
 
@@ -356,7 +360,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           do ilocal = 1, num_local_atoms
             kkr => getKKR(calc_data, ilocal)
             kkr%GMATN(:,:,ie,ispin) = GmatN_buffer(:,:,ilocal)
-            kkr%LLY_GRDT=LLY_GRDT_buffer
+            kkr%LLY_GRDT(ie,ispin)=LLY_GRDT(ie,ispin)
           end do
 
           call stopTimer(mult_scattering_timer)

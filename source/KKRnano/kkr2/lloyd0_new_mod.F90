@@ -57,29 +57,29 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
 
   ielast = emesh%ielast
 
- ! if (LLY==1) then
+  if (LLY==1) then
     ! get WEZRN and RNORM, the important input from previous
     ! calculations is LLY_GRDT_ALL
 
- !   call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
- !                   atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
- !                   cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
- !                   gaunts%JEND,gaunts%LOFLM,ICST,ielast,gaunts%IEND,NSPIND,NSRA, &
- !                   emesh%WEZRN,RNORM, &
- !                   GMATN, &
- !                   LLY_GRDT, &
- !                   ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
- !                   getMySEcommunicator(my_mpi), &
- !                   lmaxd, mesh%irmd, irnsd, ielast, &
- !                   cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb)
+    call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
+                    atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
+                    cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
+                    gaunts%JEND,gaunts%LOFLM,ICST,ielast,gaunts%IEND,NSPIND,NSRA, &
+                    emesh%WEZRN,RNORM, &
+                    GMATN, &
+                    LLY_GRDT, &
+                    ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
+                    getMySEcommunicator(my_mpi), &
+                    lmaxd, mesh%irmd, irnsd, ielast, &
+                    cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb)
 
-  !else ! no Lloyd
+  else ! no Lloyd
 
     do IE=1,IELAST
       emesh%WEZRN(IE,1) = emesh%WEZ(IE)
       emesh%WEZRN(IE,2) = emesh%WEZ(IE)
     enddo
-!  endif
+  endif
 
 
 end subroutine
