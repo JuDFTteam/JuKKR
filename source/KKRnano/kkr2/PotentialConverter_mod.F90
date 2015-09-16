@@ -65,7 +65,6 @@ module PotentialConverter_mod
   !> Wraps writeFormattedPotentialImpl
   subroutine writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
     use BasisAtom_mod, only: BasisAtom
-    use RadialMeshData_mod, only: RadialMeshData
     
     double precision, intent(in) :: Efermi
     double precision, intent(in) :: ALAT
@@ -74,12 +73,10 @@ module PotentialConverter_mod
     type(BasisAtom), intent(in) :: atomdata
 
     integer :: nspind, irnsd
-    type(RadialMeshData), pointer :: mesh
 
     nspind = atomdata%nspin
 
-    mesh => atomdata%mesh_ptr
-
+#define mesh atomdata%mesh_ptr
     CHECKASSERT( associated(atomdata%mesh_ptr) )
 
     irnsd = atomdata%potential%irmd - atomdata%potential%irmind
@@ -91,7 +88,7 @@ module PotentialConverter_mod
               atomdata%potential%VINS,atomdata%potential%VISP,mesh%DRDI,mesh%IRNS,mesh%R,mesh%RWS,mesh%RMT,ALAT, &
               atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
               atomdata%atom_index, mesh%irmd, irnsd)
-
+#undef mesh
   endsubroutine
 
   !----------------------------------------------------------------------------

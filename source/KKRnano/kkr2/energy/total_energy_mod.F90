@@ -8,6 +8,7 @@
 !
 ! E_VXC = 1/2 \int V_XC \rho
 module total_energy_mod
+  use Constants_mod, only : pi
   implicit none
   private
   public :: madelung_energy, madelung_ref_radius_correction, energy_electrostatic_wrapper, energy_electrostatic_L_resolved_wrapper
@@ -23,13 +24,12 @@ double precision function energy_electrostatic_wrapper(v_potential, Z_nuclear, R
   use BasisAtom_mod, only: BasisAtom
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
 
-  double precision, intent(in), dimension(:,:,:) :: v_potential
+  double precision, intent(in) :: v_potential(:,:,:)
   double precision, intent(in) :: Z_nuclear
   double precision, intent(in) :: RHO2NS(:,:,:)
-  type (BasisAtom), intent(in) :: atomdata
-  type (ShapeGauntCoefficients), intent(in) :: shgaunts
+  type(BasisAtom), intent(in) :: atomdata
+  type(ShapeGauntCoefficients), intent(in) :: shgaunts
 
-  !-------- locals
   integer :: lmax_potential
   double precision, allocatable :: energy(:)
 
@@ -42,7 +42,7 @@ double precision function energy_electrostatic_wrapper(v_potential, Z_nuclear, R
 
   deallocate(energy)
 
-end function
+endfunction
 
 !----------------------------------------------------------------------------
 !> Calculates electrostatic energy 'ecou' for arbitrary potential 'v_potential'
@@ -52,27 +52,20 @@ end function
 subroutine energy_electrostatic_L_resolved_wrapper(energy, v_potential, Z_nuclear, RHO2NS, shgaunts, atomdata)
   use BasisAtom_mod, only: BasisAtom
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
-  
-  use RadialMeshData_mod, only: RadialMeshData
-  use CellData_mod, only: CellData
 
   double precision, intent(out) :: energy(0:)
-  double precision, intent(in), dimension(:,:,:) :: v_potential
+  double precision, intent(in) :: v_potential(:,:,:)
   double precision, intent(in) :: Z_nuclear
   double precision, intent(in) :: RHO2NS(:,:,:)
-  type (BasisAtom), intent(in) :: atomdata
-  type (ShapeGauntCoefficients), intent(in) :: shgaunts
+  type(BasisAtom), intent(in) :: atomdata
+  type(ShapeGauntCoefficients), intent(in) :: shgaunts
 
-  !-------- locals
-  integer :: nspind
-  type (RadialMeshData), pointer :: mesh
-  type (CellData), pointer       :: cell
-  integer :: lpot, lmax_potential
+  integer :: nspind, lpot, lmax_potential
 
   nspind = atomdata%nspin
 
-  mesh => atomdata%mesh_ptr
-  cell => atomdata%cell_ptr
+#define mesh atomdata%mesh_ptr
+#define cell atomdata%cell_ptr
 
   CHECKASSERT( associated(atomdata%mesh_ptr) )
   CHECKASSERT( associated(atomdata%cell_ptr) )
@@ -89,8 +82,9 @@ subroutine energy_electrostatic_L_resolved_wrapper(energy, v_potential, Z_nuclea
                  mesh%ircut, mesh%ipan, shgaunts%imaxsh, cell%shdata%ifunm, shgaunts%ilm, &
                  shgaunts%gsh, cell%shdata%theta, cell%shdata%lmsp, &
                  mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
-
-end subroutine
+#undef cell
+#undef mesh
+endsubroutine
 
 !------------------------------------------------------------------------------
 !>    Modified ecoub to calculate electrostatic energy.
@@ -114,19 +108,19 @@ double precision function energy_electrostatic(lpot, lmax_potential, &
   integer, intent(in) :: lpot
   integer, intent(in) :: lmax_potential
   integer :: nspin
-  double precision, dimension(irmd,(lpot + 1)**2,2) :: rho2ns
-  double precision, dimension(irmd,(lmax_potential + 1)**2,2) :: vons
+  double precision :: rho2ns(irmd,(lpot+1)**2,2)
+  double precision :: vons(irmd,(lmax_potential+1)**2,2)
   double precision, intent(in) :: Z_nuclear
-  double precision, dimension(irmd) :: r
-  double precision, dimension(irmd) :: drdi
-  integer, dimension(0:ipand) :: ircut
+  double precision :: r(irmd)
+  double precision :: drdi(irmd)
+  integer :: ircut(0:ipand)
   integer :: ipan
-  integer, dimension(0:(lmax_potential + 1)**2) :: imaxsh
-  integer, dimension(*) :: ifunm
-  integer, dimension(ngshd,3) :: ilm
-  double precision, dimension(ngshd) :: gsh
-  double precision, dimension(irid,nfund) :: thetas
-  integer, dimension(*) :: lmsp
+  integer :: imaxsh(0:(lmax_potential+1)**2)
+  integer :: ifunm(*)
+  integer :: ilm(ngshd,3)
+  double precision :: gsh(ngshd)
+  double precision :: thetas(irid,nfund)
+  integer :: lmsp(*)
   integer :: irmd
   integer :: irid
   integer :: nfund
@@ -144,10 +138,10 @@ double precision function energy_electrostatic(lpot, lmax_potential, &
 
   ecou = sum(energy)
 
-end function
+endfunction
 
 !------------------------------------------------------------------------------
-!>    Modified ecoub to calculate electrostatic energies - returns L-resolved
+!>    Modified ecoub to calculate electrostatic energies - returns l-resolved
 !>    energy in 'energy'
 !>
 !>     Calculates 1/2 * \int \rho * V
@@ -195,19 +189,19 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
   integer, intent(in) :: lpot
   integer, intent(in) :: lmax_potential
   integer :: nspin
-  double precision, dimension(irmd,(lpot + 1)**2,2) :: rho2ns
-  double precision, dimension(irmd,(lmax_potential + 1)**2,2) :: vons
+  double precision :: rho2ns(irmd,(lpot+1)**2,2)
+  double precision :: vons(irmd,(lmax_potential+1)**2,2)
   double precision, intent(in) :: Z_nuclear
-  double precision, dimension(irmd) :: r
-  double precision, dimension(irmd) :: drdi
-  integer, dimension(0:ipand) :: ircut
+  double precision :: r(irmd)
+  double precision :: drdi(irmd)
+  integer :: ircut(0:ipand)
   integer :: ipan
-  integer, dimension(0:(lmax_potential + 1)**2) :: imaxsh
-  integer, dimension(*) :: ifunm
-  integer, dimension(ngshd,3) :: ilm
-  double precision, dimension(ngshd) :: gsh
-  double precision, dimension(irid,nfund) :: thetas
-  integer, dimension(*) :: lmsp
+  integer :: imaxsh(0:(lmax_potential+1)**2)
+  integer :: ifunm(*)
+  integer :: ilm(ngshd,3)
+  double precision :: gsh(ngshd)
+  double precision :: thetas(irid,nfund)
+  integer :: lmsp(*)
   integer :: irmd
   integer :: irid
   integer :: nfund
@@ -215,101 +209,62 @@ subroutine energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
   integer :: ngshd
 
   ! Local variables
-  double precision :: rfpi
-  double precision :: rhosp
-  double precision :: sign
-  integer :: i
-  integer :: ifun
-  integer :: ipan1
-  integer :: ipot
-  integer :: ir
-  integer :: irc1
-  integer :: irh
-  integer :: irs1
-  integer :: ispin
-  integer :: j
-  integer :: L
-  integer :: lm
-  integer :: lm2
-  integer :: m
-  double precision, dimension(irmd) :: er
-  double precision :: factor
+  double precision :: er(irmd), rfpi, rhosp, sgn, factor
+  integer :: ifun, ipan1, ipot, ir, irc1, irh, irs1, ispin, j, l, m, lm, lm2
 
-  rfpi = sqrt(16.d0*atan(1.0d0))
-  !
+  rfpi = 2.d0*sqrt(pi)
+
   ipan1 = ipan
   irs1 = ircut(1)
   irc1 = ircut(ipan1)
-  !
-  !--->   determine the right potential numbers - the coulomb potential
-  !       is not spin dependend
-  !
+
+  ! determine the right potential numbers - the Coulomb potential is not spin dependend
   ipot = nspin
 
-  energy = 0.0d0
+  energy = 0.d0
 
-  do 80 L = 0, lmax_potential
+  do l = 0, lmax_potential
+    er(:) = 0.d0
+    do ispin = 1, nspin
 
-    er = 0.0d0
+      sgn = -1.d0; if (ispin == nspin) sgn = 1.d0
 
-    do 70 ispin = 1,nspin
+      do m = -l, l
+        lm = l*l + l + m + 1
 
-      if (ispin.eq.nspin) then
-        sign = 1.0d0
-      else
-        sign = -1.0d0
-      end if
-
-      do 60 m = -L,L
-        lm = L*L + L + m + 1
-
-
-        if (L <= lpot) then
-        do 20 i = 1,irs1
-          rhosp = (rho2ns(i,lm,1)+ &
-                  sign*rho2ns(i,lm,nspin))/4.0d0
-          er(i) = er(i) + rhosp*vons(i,lm,ipot)
-  20       continue
+        if (l <= lpot) then
+          do ir = 1, irs1
+            rhosp = (rho2ns(ir,lm,1) + sgn*rho2ns(ir,lm,nspin))*0.25d0
+            er(ir) = er(ir) + rhosp*vons(ir,lm,ipot)
+          enddo ! ir
         endif
-  !
-  !--->           convolute with shape function
-  !
-        do 50 j = imaxsh(lm-1) + 1,imaxsh(lm)
-          lm2 = ilm(j,2)
 
-          if (lmsp(ilm(j,3)).gt.0) then
+        ! convolute with shape function
+        do j = imaxsh(lm-1) + 1,imaxsh(lm)
+
+          if (lmsp(ilm(j,3)) > 0) then
             ifun = ifunm(ilm(j,3))
+            lm2 = ilm(j,2)
 
-              if (lm == 1) then
-                factor = 1.0d0
-              else
-                factor = 0.0d0
-              endif
+            factor = 0.d0; if (lm == 1) factor = 1.d0
 
-              do 40 ir = irs1 + 1,irc1
-                irh = ir - irs1
-                rhosp = (rho2ns(ir,lm2,1)+ &
-                        sign*rho2ns(ir,lm2,nspin))/2.0d0
-                er(ir) = er(ir) + rhosp*gsh(j)* &
-                         thetas(irh,ifun)* (vons(ir,lm,ipot) / 2.0d0 - factor * Z_nuclear / r(ir) * RFPI)
-  40          continue
+            do ir = irs1+1, irc1
+              irh = ir - irs1
+              rhosp = (rho2ns(ir,lm2,1) + sgn*rho2ns(ir,lm2,nspin))*0.5d0
+              er(ir) = er(ir) + rhosp*gsh(j) * thetas(irh,ifun)*(vons(ir,lm,ipot)*0.5d0 - factor*RFPI*Z_nuclear/r(ir))
+            enddo ! ir
+          endif ! lmsp(ilm(j,3)) > 0
+        enddo ! j
+        
+      enddo ! m
+      
+    enddo ! ispin
 
-          end if
+    energy(l) = simpson(er, ipan1, ircut, drdi) ! now integrate
 
-  50       continue
+  enddo ! l = 0, lmax_potential
 
-  60     continue
-
-  70   continue
-  !
-  !--->     now integrate
-  !
-!   call simpk(er, energy(L),ipan1,ircut, drdi)
-    energy(L) = simpson(er, ipan1, ircut, drdi)
-
-  80   continue                    ! L = 0, lmax_potential
-
-end subroutine
+endsubroutine
 
 !------------------------------------------------------------------------------
 !> Calculates generalised Madelung energy except a contribution that cancels with
@@ -331,24 +286,20 @@ double precision function madelung_energy(vons_spherical, rho2ns_spherical, &
     double precision, intent(in) :: Z_nuclear
     integer, intent(in) :: ind_reference
 
-    double precision :: ER(irmd)
-    double precision :: rfpi
-    double precision :: VMAD, charge_in_sphere
+    double precision :: er(irmd), rfpi, vmad, charge_in_sphere
 
-    rfpi = sqrt(16.0d0 * atan(1.0d0))
+    rfpi = 2.d0*sqrt(pi)
 
-    ER = 0.0d0
-    ER(1:ind_reference) = RHO2NS_spherical(1:ind_reference) * RFPI
+    er = 0.d0
+    er(1:ind_reference) = rho2ns_spherical(1:ind_reference)*rfpi
 
-    charge_in_sphere = 0.0d0
-!   CALL SIMP3(ER,charge_in_sphere,1,ind_reference,DRDI)
-    charge_in_sphere = simpson(ER, 1, ind_reference, DRDI)
+    charge_in_sphere = simpson(er, 1, ind_reference, drdi)
 
-    VMAD = VONS_spherical(ind_reference)/RFPI - 2.0D0 * charge_in_sphere/R(ind_reference)
+    vmad = vons_spherical(ind_reference)/rfpi - 2.d0*charge_in_sphere/r(ind_reference)
 
-    e_madelung = -Z_nuclear/2.0d0 * VMAD
+    e_madelung = -0.5d0*z_nuclear*vmad
 
-end function
+endfunction
 
 !------------------------------------------------------------------------------
 !> Correction of the madelung energy that occurs when the reference radius is not equal to
@@ -364,29 +315,24 @@ double precision function madelung_ref_radius_correction(rho2ns_spherical, &
     integer, intent(in) :: ind_reference
     integer, intent(in) :: ind_muffin_tin
 
-    double precision :: ER(irmd)
-    double precision :: rfpi
-    double precision :: VM
+    double precision :: rfpi, vm, er(irmd)
     integer :: ii
 
-    rfpi = sqrt(16.0d0 * atan(1.0d0))
+    rfpi = 2.d0*sqrt(pi)
 
-    ER = 0.0D0
-    VM = 0.0d0
+    er = 0.d0
+    vm = 0.d0
 
     if (ind_reference /= ind_muffin_tin) then
       do ii = ind_reference, ind_muffin_tin
-        ER(ii) = RHO2NS_spherical(ii)/R(ii)
-      enddo
-
-!     CALL SIMP3(ER,VM,ind_reference,ind_muffin_tin,DRDI)
-      VM = simpson(ER, ind_reference, ind_muffin_tin, DRDI)
+        er(ii) = rho2ns_spherical(ii)/r(ii)
+      enddo ! ii
+      vm = simpson(er, ind_reference, ind_muffin_tin, drdi)
     endif
 
-    VM = -2.0D0*RFPI*VM
+    vm = -2.d0*rfpi*vm
+    e_correction = -0.5d0*z_nuclear*vm
 
-    e_correction = -Z_nuclear/2.0d0 * VM
+endfunction
 
-end function
-
-end module total_energy_mod
+endmodule total_energy_mod

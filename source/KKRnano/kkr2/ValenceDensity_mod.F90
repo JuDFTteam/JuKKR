@@ -386,10 +386,10 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
   
     gmatl = zero
     do m = -l, l
-      lm1 = l*(l+1)+m+1
+      lm1 = l*l + l + m + 1
       gmatl = gmatl + wr(lm1,lm1)
     enddo ! m
-    !
+
     if (nsra == 2) then
       do ir = 2, irc1
         ppz = pz(ir,l)
@@ -397,7 +397,6 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
         cden(ir,l) = ppz*(gmatl*ppz + ekl(l)*qz(ir,l)) + ffz*(gmatl*ffz + ekl(l)*sz(ir,l))
         rho2ns(ir,1) = rho2ns(ir,1) + c0ll*dimag(df*cden(ir,l))
       enddo ! ir
-
     else
       do ir = 2, irc1
         ppz = pz(ir,l)
@@ -408,33 +407,27 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz,  &
 
   enddo ! l
 
-  !
   !---> calculate the non spherically symmetric contribution
-  !        to speed up the pointer jend generated in gaunt is used
+  !        to speed up the upper loop limit jend generated in gaunt is used
   !        remember that the wavefunctions are l and not lm dependent
-  !
   lm3max = icleb(iend,3)
   j0 = 1
-  !
+
   do lm3 = 2, lm3max
     do l1 = 0, lmaxd
       do l2 = 0, l1
-        !
+
         j1 = jend(lm3,l1,l2)
         if (j1 /= 0) then
-          !
           gmatl = zero
-          !
           !---> sum over m1,m2 for fixed lm3,l1,l2
-          !
-          do j = j0,j1
+          do j = j0, j1
             lm1 = icleb(j,1)
             lm2 = icleb(j,2)
             gmatl = gmatl + cleb(j)*wr(lm1,lm2)
           enddo ! j
-          !
           j0 = j1 + 1
-          !
+
           gmatl = df*gmatl
           rho2ns(2:irc1,lm3) = rho2ns(2:irc1,lm3) + dimag(gmatl*wf(2:irc1,l1,l2))
         endif
