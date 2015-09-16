@@ -92,7 +92,7 @@ module ConstructShapes_mod
     call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcluster, center_ind)
 
     allocate(weights(size(ref_cluster%rcls, 2)))
-    weights = 1.0d0 ! all weights are the same, so their differences are zero 
+    weights = 1.d0 ! all weights are the same, so their differences are zero 
     ! --> planes cut space in the exact center between two atomic cores
 
 #ifdef USE_VOROWEIGHTS
@@ -203,7 +203,7 @@ module ConstructShapes_mod
     radius = new_mt_radius
     if (mt_scale > tolvdist) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
 
-    if (num_MT_points > 0) call mtmesh(num_MT_points,npan,meshn,nm,xrn,drn,nfun,thetas_s,lmifun_s, radius)
+    if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, lmifun_s, radius, atom_id)
 
     ! Construct shape-fun datastructure
     call createShapefunData(self, meshn, ibmaxd, nfun)
@@ -246,7 +246,7 @@ module ConstructShapes_mod
   endsubroutine ! destroy
 
   !******************************************************************************
-  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius)
+  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius, atom_id)
     use Constants_mod, only: pi
     ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.
     ! stores the mt-nized shapes in unit 15 as shapefun
@@ -258,6 +258,7 @@ module ConstructShapes_mod
     double precision, intent(inout) :: thetas(:,:)
     integer, intent(inout) :: lmifun(:) ! unchanged
     double precision, intent(in) :: mtradius
+    integer, intent(in) :: atom_id
 
     double precision :: drn1(meshn+nrad), thetas1(meshn+nrad,size(thetas,2)), xrn1(meshn+nrad)
     integer :: ibmaxd, irid, npand, meshn1, npan1, nm1(npan+1), ir
@@ -286,7 +287,7 @@ module ConstructShapes_mod
     dist = xrn(1) - mtradius
 
     if (dist < 1.d-5) then
-      write(6,fmt=*) 'error from mtmesh '
+      write(6,fmt=*) 'error from mtmesh for atom #',atom_id
       write(6,*) 'your mt-radius is bigger that the minimum shape radius ' 
       write(6,*) 'your mt-radius .....',mtradius
       write(6,*) 'shape radius .......',xrn(1)    

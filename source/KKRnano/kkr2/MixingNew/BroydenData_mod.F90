@@ -15,11 +15,11 @@ module BroydenData_mod
   
 
   type BroydenData
-    double precision , allocatable, dimension(:)  :: sm1s
-    double precision , allocatable, dimension(:)  :: fm1s
-    double precision , allocatable, dimension(:,:)  :: ui2
-    double precision , allocatable, dimension(:,:)  :: vi2
-    double precision , allocatable, dimension(:)  :: wit
+    double precision, allocatable :: sm1s(:)
+    double precision, allocatable :: fm1s(:)
+    double precision, allocatable :: ui2(:,:)
+    double precision, allocatable :: vi2(:,:)
+    double precision, allocatable :: wit(:)
 
     integer :: ntird
     integer :: itdbryd
@@ -27,7 +27,7 @@ module BroydenData_mod
     integer :: iteration_count
     integer :: imix
     double precision :: mixing
-  end type BroydenData
+  endtype BroydenData
 
   interface create
     module procedure createBroydenData
@@ -66,12 +66,12 @@ module BroydenData_mod
     ALLOCATECHECK(self%vi2(ntird,2:itdbryd))
     ALLOCATECHECK(self%wit(2:itdbryd))
 
-    self%sm1s = 0.0d0
-    self%fm1s = 0.0d0
-    self%ui2  = 0.0d0
-    self%vi2  = 0.0d0
-    self%wit  = 0.0d0
-  end subroutine
+    self%sm1s = 0.d0
+    self%fm1s = 0.d0
+    self%ui2  = 0.d0
+    self%vi2  = 0.d0
+    self%wit  = 0.d0
+  endsubroutine
 
   !-----------------------------------------------------------------------------
   !> Destroys a BroydenData object.
@@ -86,5 +86,5 @@ module BroydenData_mod
     DEALLOCATECHECK(self%ui2)
     DEALLOCATECHECK(self%vi2)
     DEALLOCATECHECK(self%wit)
-  end subroutine
-end module
+  endsubroutine
+endmodule

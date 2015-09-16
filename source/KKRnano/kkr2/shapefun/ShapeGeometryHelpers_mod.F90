@@ -30,8 +30,7 @@ module ShapeGeometryHelpers_mod
 !>    the angular sum of the polygons is checked. it has to be (n-2)*pi
 !>    n is the number of vertices.
 !
-!     ----------------------------------------------------------------
-! ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  = 
+!    ----------------------------------------------------------------
   subroutine polchk(nface, nvertices, vert, tolvdist, atom_id)
     use Constants_mod, only: pi
     integer, intent(in) :: nface
@@ -51,6 +50,12 @@ module ShapeGeometryHelpers_mod
 #endif
     logical :: new, show_nvrtd
     show_nvrtd = .false.
+
+#define cTeX1c(TEXT)    
+cTeX1c("this subroutine reads the coordinates of the vertices of each polygon face of a convex polyhedron and checks if its")
+cTeX1c("vertices arranged consecutively define a polygon. The sets of vertices and the sets of edges of each polyhedron is determined and checked.")
+cTeX1c("As a check, $n_{\mathrm{vertices}} + n_{\mathrm{faces}} = n_{\mathrm{edges}} + 2$.")
+cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi$, where $n$ is the number of vertices.")
     
     nfaced = size(nvertices)
     CHECKASSERT(size(vert, 3) == nfaced)
@@ -79,9 +84,10 @@ module ShapeGeometryHelpers_mod
         do ivrt = 1, nvrt
 #ifndef SAVE_MEMORY
           if (nrm2(vrt0 - vrt(1:3,ivrt)) < tolvdist) new = .false. ! 0:drop this vertex
-#else          
+#else
           if (nrm2(vrt0 - vert(1:3,irt(2,ivrt),irt(3,ivrt))) < tolvdist) new = .false. ! 0:drop this vertex
-#endif          
+#endif
+          if (.not. new) exit
         enddo ! ivrt
         
         if (new) then
@@ -89,7 +95,7 @@ module ShapeGeometryHelpers_mod
           if (nvrt > nvrtd) die_here("increase nfaced*nvertd to at least"+nvrt)
 #ifndef SAVE_MEMORY
           vrt(1:3,nvrt) = vert(1:3,ivert,iface)
-#else         
+#else
           irt(2:3,nvrt) = [ivert, iface]
 #endif
         endif ! new
@@ -105,7 +111,7 @@ module ShapeGeometryHelpers_mod
         if (down < tolvdist) die_here("identical consecutive vertices, down ="+down)
         
         arg = up/down
-        if (abs(arg) >= 1.d0) arg = sign(1.d0,arg)
+        if (abs(arg) >= 1.d0) arg = sign(1.d0, arg)
         ! arg = min(max(-1.d0, arg), 1.d0) ! new formulation
         fisum = fisum - acos(arg)
 
@@ -118,15 +124,16 @@ module ShapeGeometryHelpers_mod
           elseif (nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
             if   (nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
           endif
-#else          
+#else
           if     (nrm2(vrt0 - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) then
             if   (nrm2(vrtp - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) new = .false. ! 0:do not save
           elseif (nrm2(vrt0 - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
             if   (nrm2(vrtp - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
           endif
 #endif
+          if (.not. new) exit
         enddo ! iedge
-        
+
         if (new) then
           nedge = nedge+1
           if (nedge > nedged) &
@@ -135,7 +142,7 @@ module ShapeGeometryHelpers_mod
 #ifndef SAVE_MEMORY
           v1(1:3,nedge) = vert(1:3,ivert ,iface)
           v2(1:3,nedge) = vert(1:3,ivertp,iface)
-#else          
+#else
           i1(2:3,nedge) = [ivert , iface]
           i2(2:3,nedge) = [ivertp, iface]
 #endif

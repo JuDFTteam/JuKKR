@@ -7,30 +7,28 @@ module PositionReader_mod
   public :: getAtomData !, readXYZfile, PSE, atomic_number_by_symbol
 
   ! element symbols
-  character(len=2), parameter :: PSE(-1:116) = [ & !! element symbol from the periodic tabel of elements
-  'e ', '__', &                                                    ! vacuum
-  'H ',                              'He', &                       ! 1s
-  'Li','Be','B ','C ','N ','O ','F ','Ne', &                       ! 2s, 2p
-  'Na','Mg','Al','Si','P ','S ','Cl','Ar',&                        ! 3s, 3p
-  'K ','Ca', &                                                     ! 4s
-        'Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu','Zn', &       ! 3d
-            'Ga','Ge','As','Se','Br','Kr', &                       ! 4p
-  'Rb','Sr', &                                                     ! 5s
-        'Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd', &       ! 4d
-            'In','Sn','Sb','Te','I ','Xe', &                       ! 5p
-  'Cs','Ba', &                                                     ! 6s
-        'La', &                                                    ! 5d
-                            'Ce','Pr','Nd','Pm','Sm','Eu','Gd', &  ! 4f Lanthanides
-                            'Tb','Dy','Ho','Er','Tm','Yb','Lu', &  ! 4f Lanthanides
-            'Hf','Ta','W ','Re','Os','Ir','Pt','Au','Hg', &        ! 5d
-            'Tl','Pb','Bi','Po','At','Rn', &                       ! 6p
-  'Fr','Ra', &                                                     ! 7s
-        'Ac', &                                                    ! 7p
-                            'Th','Pa','U ','Np','Pu','Am','Cm', &  ! 5f Actinides
-                            'Bk','Cf','Es','Fm','Md','No','Lr', &  ! 5f Actinides
-            'Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn', &        ! 6d
-            '+-','Fl','++','Lv']                                   ! 7p and custom
-  
+  character(len=2), parameter :: PSE(-1:120) = [ & !! element symbol from the periodic tabel of elements
+  'e ','__', &                                           ! electron, vacuum
+  'H ','He', &                                           ! 1s
+  'Li','Be', &                                           ! 2s
+  'B ','C ','N ','O ','F ','Ne', &                       ! 2p
+  'Na','Mg', &                                           ! 3s
+  'Al','Si','P ','S ','Cl','Ar',&                        ! 3p
+  'K ','Ca', &                                           ! 4s
+  'Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu','Zn', &   ! 3d
+  'Ga','Ge','As','Se','Br','Kr', &                       ! 4p
+  'Rb','Sr', &                                           ! 5s
+  'Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd', &   ! 4d
+  'In','Sn','Sb','Te','I ','Xe', &                       ! 5p
+  'Cs','Ba', &                                           ! 6s
+  'La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb', &  ! 4f Lanthanides
+  'Lu','Hf','Ta','W ','Re','Os','Ir','Pt','Au','Hg', &   ! 5d
+  'Tl','Pb','Bi','Po','At','Rn', &                       ! 6p
+  'Fr','Ra', &                                           ! 7s
+  'Ac','Th','Pa','U ','Np','Pu','Am','Cm','Bk','Cf','Es','Fm','Md','No', &  ! 5f Actinides
+  'Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn', &   ! 6d
+  'ut','Fl','up','Lv','us','uo', &                       ! 7p
+  'un','ud']                                             ! 8s
   
   integer(kind=1), parameter :: & ! enum-replacement
     MODIFIED_INITIALIZED  = 0,  & ! set to zero
@@ -342,15 +340,16 @@ module PositionReader_mod
     case('O'); t(1:2) = [  8, 76]; Z = t(scan(' s', y))
     case('Y'); t(1:2) = [ 39, 70]; Z = t(scan(' b', y))
     case('Z'); t(1:2) = [ 30, 40]; Z = t(scan('nr', y))
-    case('U'); if (y == ' ') Z =  92 ! Uranium
     case('V'); if (y == ' ') Z =  23 ! Vanadium
     case('W'); if (y == ' ') Z =  74 ! Tungsten (Wolfram)
     case('X'); if (y == 'e') Z =  54 ! Xenon
-    ! ==== specialties ====
                if (y == ' ') Z = 115 ! custom element X (jmol style)
     case('_'); if (y == '_') Z =   0 ! "__" vacuum
     case('e'); if (y == ' ') Z =  -1 ! electron
-    case('+'); t(1:2) = [113,115]; Z = t(scan('-+', y)) ! custom
+    case('U'); if (y == ' ') Z =  92 ! Uranium
+    ! for these elements the full Symbol should read "Uu"-y
+               if (y == 'u') then; t(1:6) = [120,119,118,115,117,113]; Z = t(scan('dnopst', Sym(3:3))); endif
+    case('u'); t(1:6) = [120,119,118,115,117,113]; Z = t(scan('dnopst', y))
     endselect ! S
 
   endfunction ! atomic_number_by_symbol

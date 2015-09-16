@@ -61,15 +61,10 @@ module ShapeCriticalPoints_mod
     
     integer, intent(in) :: atom_id
     
-    !-----------------------------------------------------------------------
     logical, parameter :: check_geometry = .true.
-!   double precision :: sq3o3, coa
     double precision :: z(3)
     integer :: iface, itt, iv, ivtot!, l
-!   integer :: nvertd
-!   integer :: ist
 
-    !-----------------------------------------
     if (check_geometry) call polchk(nface, nvertices, vert, tolvdist, atom_id) !  this call does some geometrical tests (n.stefanou 98)
 
 ! #define k_HCP 
