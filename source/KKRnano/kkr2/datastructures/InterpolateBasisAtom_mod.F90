@@ -24,14 +24,14 @@ module InterpolateBasisAtom_mod
     type(RadialMeshData), intent(in) :: new_mesh
     integer, intent(in) :: lpot_new
 
+    type(RadialMeshData), pointer :: old_mesh
+    double precision, parameter :: TOL = 1.d-8
     integer :: nspin
     integer :: lmpot_min
     integer :: irmin_old, irmin_new
     integer :: irws_old, irws_new
     integer :: ii, lm
-    type (RadialMeshData), pointer :: old_mesh
     logical :: do_interpolation
-    double precision, parameter :: TOL = 1.d-8
 
     do_interpolation = .true.
 
@@ -72,17 +72,17 @@ module InterpolateBasisAtom_mod
         old_atom%potential%lmpot == new_atom%potential%lmpot) then
       if (sum(abs(old_mesh%r - new_mesh%r)) < TOL .and. &
           irmin_old == irmin_new .and. irws_old == irws_new) then
-        ! mesh has not changed - don't interpolate
+        ! mesh has not changed - do not interpolate
         ! this avoids numerical inaccuracies - arising from
         ! spline interpolation routine
         do_interpolation = .false.
       endif
     endif
 
-    if (do_interpolation .eqv. .true.) then
+    if (do_interpolation) then
 
-      new_atom%potential%VINS = 0.0d0
-      new_atom%potential%VISP = 0.0d0
+      new_atom%potential%VINS = 0.d0
+      new_atom%potential%VISP = 0.d0
 
       ! TODO: scale?
       ! interpolate non-spherical potential - use only non-spherical part of mesh
@@ -97,7 +97,7 @@ module InterpolateBasisAtom_mod
 
       ! be careful when mesh partition has changed
       if (irmin_new < irmin_old) then
-        new_atom%potential%VINS(irmin_new:min(irmin_old, irws_new),:,:) = 0.0d0
+        new_atom%potential%VINS(irmin_new:min(irmin_old, irws_new),:,:) = 0.d0
       endif
 
       ! interpolate spherical potential
@@ -118,13 +118,12 @@ module InterpolateBasisAtom_mod
   !> Interpolate function values with cubic splines
   !> @param[out] ynew  interpolated function values
   subroutine interpolate(xval, yval, xnew, ynew)
-    ! use Splines_mod, only: spline
+    ! use Splines_mod, only: spline, splint
     double precision, intent(in) :: xval(:)
     double precision, intent(in) :: yval(:)
     double precision, intent(in) :: xnew(:)
     double precision, intent(out) :: ynew(:)
 
-    !-----------------
     double precision, allocatable :: xarray(:)
     double precision, allocatable :: yarray(:)
     double precision, allocatable :: y2ndder(:)
@@ -151,8 +150,8 @@ module InterpolateBasisAtom_mod
       endif
     enddo ! ii
 
-    ! note: 1st derivative at upper boundary forced to 0.0d0                                                  
-    call spline(num, xarray, yarray, counter, 1.d35, 0.0d0, y2ndder)
+    ! note: 1st derivative at upper boundary forced to 0.d0                                                  
+    call spline(num, xarray, yarray, counter, 1.d35, 0.d0, y2ndder)
 
     do ii = 1, size(ynew)
 

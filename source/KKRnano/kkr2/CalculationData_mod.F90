@@ -262,7 +262,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getAtomData(self, local_atom_index)
     type(BasisAtom), pointer :: getAtomData ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -274,7 +273,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getRefCluster(self, local_atom_index)
     type(RefCluster), pointer :: getRefCluster ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -286,7 +284,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getKKR(self, local_atom_index)
     type(KKRresults), pointer :: getKKR ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -297,9 +294,7 @@ module CalculationData_mod
   !> Returns reference to Madelung sum for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getMadelungSum(self, local_atom_index)
-        
     type(MadelungLatticeSum), pointer :: getMadelungSum ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -311,7 +306,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getDensities(self, local_atom_index)
     type(DensityResults), pointer :: getDensities ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -323,7 +317,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getEnergies(self, local_atom_index)
     type(EnergyResults), pointer :: getEnergies ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -335,7 +328,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getLDAUData(self, local_atom_index)
     type(LDAUData), pointer :: getLDAUData ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -347,7 +339,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getJijData(self, local_atom_index)
     type(JijData), pointer :: getJijData ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in) :: local_atom_index
 
@@ -359,7 +350,6 @@ module CalculationData_mod
   !> 'local_atom_index'.
   function getBroyden(self, local_atom_index) ! todo: remove local_atom_index from interface (although optional)
     type(BroydenData), pointer :: getBroyden ! return value
-
     type(CalculationData), intent(in) :: self
     integer, intent(in), optional :: local_atom_index
 
@@ -370,7 +360,6 @@ module CalculationData_mod
   !> Returns reference to Gaunt coefficients.
   function getGaunts(self)
     type(GauntCoefficients), pointer :: getGaunts ! return value
-
     type(CalculationData), intent(in) :: self
 
     getGaunts => self%gaunts
@@ -380,7 +369,6 @@ module CalculationData_mod
   !> Returns reference to Shape-Gaunt coefficients.
   function getShapeGaunts(self)
     type(ShapeGauntCoefficients), pointer :: getShapeGaunts ! return value
-
     type(CalculationData), intent(in) :: self
 
     getShapeGaunts => self%shgaunts
@@ -390,7 +378,6 @@ module CalculationData_mod
   !> Returns reference to Madelung calculator.
   function getMadelungCalculator(self)
     type(MadelungCalculator), pointer :: getMadelungCalculator ! return value
-
     type(CalculationData), intent(in) :: self
 
     getMadelungCalculator => self%madelung_calc
@@ -409,7 +396,6 @@ module CalculationData_mod
   !> Returns reference to cluster info (sparsity info).
   function getClusterInfo(self)
     type(ClusterInfo), pointer :: getClusterInfo ! return value
-
     type(CalculationData), intent(in) :: self
 
     getClusterInfo => self%clusters
@@ -419,7 +405,6 @@ module CalculationData_mod
   !> Returns reference to lattice vector table.
   function getLatticeVectors(self)
     type(LatticeVectors), pointer :: getLatticeVectors ! return value
-
     type(CalculationData), intent(in) :: self
 
     getLatticeVectors => self%lattice_vectors
@@ -428,8 +413,7 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   !> Returns reference to initial guess data.
   function getInitialGuessData(self)
-    type(InitialGuess), pointer :: getInitialGuessData
-
+    type(InitialGuess), pointer :: getInitialGuessData ! return value
     type(CalculationData), intent(in) :: self
 
     getInitialGuessData => self%iguess_data

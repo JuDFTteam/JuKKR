@@ -129,12 +129,9 @@ module BasisAtom_mod
     type(BasisAtom), intent(inout) :: atom
     type(CellData), target, intent(in) :: cell
     
-    type(CellData), pointer :: cell_ptr
+    atom%cell_ptr => cell
 
-    cell_ptr => cell
-    atom%cell_ptr => cell_ptr
-
-    if (atom%cell_index /= cell_ptr%cell_index) &
+    if (atom%cell_index /= cell%cell_index) &
       die_here("Mismatch in cell indices for atom"+atom%atom_index)
 
   endsubroutine ! associate
@@ -148,10 +145,7 @@ module BasisAtom_mod
     type(BasisAtom), intent(inout) :: atom
     type(RadialMeshData), target, intent(in) :: mesh
 
-    type(RadialMeshData), pointer :: mesh_ptr
-
-    mesh_ptr => mesh
-    atom%mesh_ptr => mesh_ptr
+    atom%mesh_ptr => mesh
 
     ! check if mesh fits potential dimensions
     CHECKASSERT(mesh%irmd == atom%potential%irmd)
@@ -195,22 +189,22 @@ module BasisAtom_mod
     integer, intent(in) :: recnr
     
     integer :: irmd, lpot, nspin, irmind, max_reclen
-    integer, parameter :: FILEUNIT = 42
+    integer, parameter :: FU=42
 
     ! index file has extension .idx
-    call openBasisAtomPotentialIndexDAFile(atom, FILEUNIT, filenamepot-".idx")
-    call readBasisAtomPotentialIndexDA(atom, FILEUNIT, recnr, lpot, nspin, irmind, irmd, max_reclen)
-    call closeBasisAtomPotentialDAFile(FILEUNIT)
+    call openBasisAtomPotentialIndexDAFile(atom, FU, filenamepot-".idx")
+    call readBasisAtomPotentialIndexDA(atom, FU, recnr, lpot, nspin, irmind, irmd, max_reclen)
+    call closeBasisAtomPotentialDAFile(FU)
 
     call createBasisAtom(atom, recnr, lpot, nspin, irmind, irmd)
 
-    call openBasisAtomDAFile(atom, FILEUNIT, filename)
-    call readBasisAtomDA(atom, FILEUNIT, recnr)
-    call closeBasisAtomDAFile(FILEUNIT)
+    call openBasisAtomDAFile(atom, FU, filename)
+    call readBasisAtomDA(atom, FU, recnr)
+    call closeBasisAtomDAFile(FU)
 
-    call openBasisAtomPotentialDAFile(atom, FILEUNIT, filenamepot, max_reclen)
-    call readBasisAtomPotentialDA(atom, FILEUNIT, recnr)
-    call closeBasisAtomPotentialDAFile(FILEUNIT)
+    call openBasisAtomPotentialDAFile(atom, FU, filenamepot, max_reclen)
+    call readBasisAtomPotentialDA(atom, FU, recnr)
+    call closeBasisAtomPotentialDAFile(FU)
 
   endsubroutine
 
@@ -476,14 +470,12 @@ module BasisAtom_mod
   subroutine resetPotentials(atom)
     type(BasisAtom), intent(inout) :: atom
 
-    type(RadialMeshData), pointer :: mesh
-
-    mesh => atom%mesh_ptr
+#define  mesh atom%mesh_ptr
     call resetPotentialsImpl(mesh%IRC, mesh%IRMD, mesh%IRMIN, &
                          atom%potential%IRMIND, atom%potential%LMPOT, &
                          atom%potential%NSPIN, atom%potential%VINS, &
                          atom%potential%VISP, atom%potential%VONS)
-
+#undef mesh
   endsubroutine ! reset
 
 !================ Private helper functions ====================================

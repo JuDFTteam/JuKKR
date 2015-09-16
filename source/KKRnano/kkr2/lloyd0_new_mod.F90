@@ -12,8 +12,6 @@ implicit none
 !> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
 subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data)
   use BasisAtom_mod, only: BasisAtom
-  use RadialMeshData_mod, only: RadialMeshData
-  use CellData_mod, only: CellData
   use GauntCoefficients_mod, only: GauntCoefficients
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
@@ -26,31 +24,20 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
   double complex, intent(in) :: LLY_GRDT(:,:) ! in
 
   double complex, intent(in) :: GMATN(:,:,:,:) !in
-  type (BasisAtom), intent(inout) :: atomdata !in or inout?
-  type (GauntCoefficients), intent(in) :: gaunts
-  type (EnergyMesh), intent(inout) :: emesh !inout or in?
-  type (LDAUData), intent(inout) :: ldau_data ! inout?
+  type(BasisAtom), intent(inout) :: atomdata !in or inout?
+  type(GauntCoefficients), intent(in) :: gaunts
+  type(EnergyMesh), intent(inout) :: emesh !inout or in?
+  type(LDAUData), intent(inout) :: ldau_data ! inout?
   double precision, intent(inout) :: RNORM(:,:)  !out
-  type (KKRnanoParallel), intent(in) :: my_mpi
+  type(KKRnanoParallel), intent(in) :: my_mpi
 
-  !-------- locals
-  integer :: nspind
-  integer :: irmind
-  integer :: irnsd
-  integer :: lmaxd
-  integer :: ielast
-  integer :: ie
-  type (RadialMeshData), pointer :: mesh
-  type (CellData), pointer       :: cell
+  integer :: nspind, irmind, irnsd, lmaxd, ielast, ie
 
   nspind = atomdata%nspin
 
-  mesh => atomdata%mesh_ptr
-  cell => atomdata%cell_ptr
-
-  CHECKASSERT( associated(atomdata%mesh_ptr) )
-  CHECKASSERT( associated(atomdata%cell_ptr) )
-
+#define  mesh atomdata%mesh_ptr
+#define  cell atomdata%cell_ptr
+  
   irmind = atomdata%potential%irmind
   irnsd = atomdata%potential%irmd - atomdata%potential%irmind
 
@@ -84,8 +71,10 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
     enddo
   endif
 
+#undef  mesh
+#undef  cell
 
-end subroutine
+endsubroutine
 
 !> This routine uses the previously calculated Lloyd's formula terms
 !> to calculate the correction to the DOS and renormalized weights for
@@ -186,13 +175,13 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   !double precision::RHO2N2(IRMD,(2*LMAX+1)**2, 2)   ! loc
   !double precision::ESPV(0:LMAX+1,NSPIN) ! loc
 
-  double complex, dimension(:,:),     allocatable :: DOS
-  double complex, dimension(:),       allocatable :: DOS0
-  double complex, dimension(:),       allocatable :: DOS1
-  double complex, dimension(:,:,:),   allocatable :: DEN0
-  double precision, dimension(:,:,:), allocatable :: RHO2N1
-  double precision, dimension(:,:,:), allocatable :: RHO2N2
-  double precision, dimension(:,:),   allocatable :: ESPV
+  double complex, allocatable :: DOS(:,:)
+  double complex, allocatable :: DOS0(:)
+  double complex, allocatable :: DOS1(:)
+  double complex, allocatable :: DEN0(:,:,:)
+  double precision, allocatable :: RHO2N1(:,:,:)
+  double precision, allocatable :: RHO2N2(:,:,:)
+  double precision, allocatable :: ESPV(:,:)
 
   integer :: lmaxd
   integer :: nspind
@@ -212,7 +201,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   if (ielast /= iemxd) then !assertion
     write(*,*) "lloyd0_new: ielast /= iemxd"
     stop
-  end if
+  endif
 
   ! ----------- allocate work arrays ----------------------------------
   memory_fail = .false.
@@ -236,7 +225,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
     write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
     write(*,*) "        Probably out of memory."
     stop
-  end if
+  endif
   ! -------------------------------------------------------------------
 
   ! initialise
@@ -272,10 +261,10 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
         do IE = 1,IELAST
           do L = 0,LMAXD1
             DOS(IE,ISPIN) = DOS(IE,ISPIN) + WEZ(IE)*DEN0(L,IE,ISPIN)
-          end do
-        end do
+          enddo
+        enddo
 
-      end do
+      enddo
 
       do IE = 1,IELAST
         call RHOVAL0(EZ(IE),WEZ(IE),DRDI,R, &
@@ -283,7 +272,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                      THETAS, &
                      DOS0(IE),DOS1(IE), &
                      lmaxd, irmd, irid, ipand, nfund)
-      end do
+      enddo
 
   ! communicate the DOS results
   call lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
@@ -299,7 +288,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   deallocate(ESPV)
   ! -------------------------------------------------------------------
 
-end subroutine LLOYD0_NEW
+endsubroutine LLOYD0_NEW
 
 !------------------------------------------------------------------------------
 subroutine lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
@@ -359,7 +348,7 @@ subroutine lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZR
     enddo
 
   enddo
-end subroutine
+endsubroutine
 
 
 !------------------------------------------------------------------------------
@@ -373,8 +362,7 @@ subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
   integer, intent(in) :: communicator
 
   integer :: IERR
-  double complex, dimension(:), allocatable :: WORK1
-  double complex, dimension(:), allocatable :: WORK2
+  double complex, allocatable :: WORK1(:), WORK2(:)
   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
 
   integer :: memory_stat
@@ -385,7 +373,7 @@ subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
     write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
     write(*,*) "        Probably out of memory."
     stop
-  end if
+  endif
 
   allocate(WORK2(4*IEMXD), stat = memory_stat)
 
@@ -393,7 +381,7 @@ subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
     write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
     write(*,*) "        Probably out of memory."
     stop
-  end if
+  endif
 
   WORK1 = CZERO
   WORK2 = CZERO
@@ -424,6 +412,6 @@ subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
 
   deallocate(WORK1)
   deallocate(WORK2)
-end subroutine
+endsubroutine
 
-end module
+endmodule
