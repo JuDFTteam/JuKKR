@@ -271,6 +271,8 @@ module KKRzero_mod
     params%rmax = params%rmax*params%alat
     params%gmax = params%gmax/params%alat
 
+    call testdimlat(params%alat, arrays%bravais, recbv, params%rmax, params%gmax)!, dims%NMAXD, dims%ISHLD) ! modifies NMAXD and ISHLD to the mimimum values
+    
     if (checkmode == 0) then 
       ! write binary files that are needed in the main program
     
@@ -291,8 +293,6 @@ module KKRzero_mod
         close(67)
         
     else  ! checkmode == 0
-    
-      call testdimlat(params%alat, arrays%bravais, recbv, params%rmax, params%gmax)!, dims%NMAXD, dims%ISHLD) ! modifies NMAXD and ISHLD to the mimimum values
     
       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
     endif ! checkmode == 0
@@ -449,198 +449,6 @@ module KKRzero_mod
  9309 format(5(6(1H-),1H+) ,44(1H-))
 #endif
   endsubroutine ! rinputnew99
-  
-  
-#if 0  
-  subroutine testdimlat(alat, bravais, recbv, rmax, gmax, nmaxd, ishld)
-    use Constants_mod, only: pi
-! **********************************************************************
-! *  modified version of lattice3d.f                                   *
-! *  this one only tests the dimension of arrays!                      *
-! *                                            Alexander Thiess 2010   *
-! **********************************************************************
-! *  generate lattice vectors of direct and reciprocal space from      *
-! *  basic translation vectors br                                      *
-! *                                                                    *
-! *  alat            : lattice constant                                *
-! *  br(i,j)         : i=x,y,z j= 1,2,3 bravais vectors                *
-! *                    *** in a.u. ****                                *
-! *  rmax            : maximum radius in real space        (input)     *
-! *  gmax            : maximum radius in reciprocal space  (input)     *
-! *  ngmax           : Number of reciprocal lattice vectors            *
-! *  gn(3,nmaxd)     : x,y,z   of reciprocal lattice vectors           *
-! *  nrmax           : Number of real lattice vectors                  *
-! *  rm(3,nmaxd)     : x,y,z  of real space vectors                    *
-! *  nshlg           : shells in reciprocal space                      *
-! *  nshlr           : shells in real space                            *
-! *  nsg,nsr         : integer arrays, number of atoms in each shell   *
-! *                                                                    *
-! *  Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th    *
-! *  one it is used only locally (GNR/RMR)       v.popescu May 2004    *
-! *                                                                    *
-! **********************************************************************
-    integer, intent(in) :: nmaxd, ishld
-    double precision, intent(in) :: alat, rmax, gmax
-    double precision, intent(in) :: bravais(3,3), recbv(3,3)
-    
-    integer :: ngmax, nrmax, nshlr, nshlg, i,k,n,n1,ng,nr,nsh,nshl,numg,numgh,numr,numrh, i1, i2, i3, ist
-    double precision :: absg2(3), absr2(3), bg(3,3), br(3,3)
-    double precision :: absgm, absrm, ar2, da, db, rv(3), av(3), vmin, vmin2, rmax2, gv(3), gmax2, ag2
-    double precision, allocatable :: cv(:,:), cd(:) ! cv(1:3,nmaxd), cd(nmaxd)
-    
-    br = bravais*alat ! --> basic trans. vectors and basis vectors
-    bg = recbv*(2.d0*pi/alat) ! --> generate primitive vectors bg of reciprocal space
-
-    ! --> estimate no. of lattice vectors
-    do i = 1, 3
-      absr2(i) = br(1,i)**2 + br(2,i)**2 + br(3,i)**2
-      absg2(i) = bg(1,i)**2 + bg(2,i)**2 + bg(3,i)**2
-    enddo ! i
-
-    absrm = 2.0d0*pi/sqrt(maxval(absr2(1:3)))
-    absgm = 2.0d0*pi/sqrt(maxval(absg2(1:3)))
-    numr = 2*ceiling(rmax/absgm) + 1
-    numg = 2*ceiling(gmax/absrm) + 1
-    numrh = numr/2 + 1
-    numgh = numg/2 + 1
-
-    rmax2 = rmax**2
-    gmax2 = gmax**2
-    
-!     allocate(cv(0:3,numr**3), stat=ist)
-    allocate(cd(numr**3), stat=ist)
-    if (ist /= 0) stop 'testdimlat out of memory (real space)'
-    
-!   generate lattice vectors of real space
-    nr = 0
-    do i1 = 1, numr
-      av(1) = dble(i1 - numrh)
-      do i2 = 1, numr
-        av(2) = dble(i2 - numrh)
-        do i3 = 1, numr
-          av(3) = dble(i3 - numrh)
-          rv(1:3) = av(1)*br(1:3,1) + av(2)*br(1:3,2) + av(3)*br(1:3,3)
-          ar2 = rv(1)**2 + rv(2)**2 + rv(3)**2
-          if (ar2 <= rmax2) then
-            nr = nr + 1
-!             cv(0,nr) = sqrt(ar2) ! also store the radius
-!             cv(1:3,nr) = rv(1:3)
-            cd(nr) = ar2
-          endif ! ar <= rmax
-        enddo ! i3
-      enddo ! i2
-    enddo ! i1
-    nrmax = nr
-
-    ! --> sort vectors in order of increasing absolute value
-    da = 1.d-6
-    nsh = 0
-    nshl = -1
-    do k = 1, nr 
-!     vmin = rmax + 1.d0
-      vmin2 = rmax**2 + 1.d0
-      
-      ! find vmin2 = minval(cd(1:nr))
-      ! find n1    = minloc(cd(1:nr))
-      do n = 1, nr
-!       if (cv(0,n) - vmin < 0.d0) then
-        if (cd(n) < vmin2) then
-!         vmin = cv(0,n)
-          vmin2 = cd(n)
-          n1 = n
-        endif
-      enddo ! n
-      
-      nshl = nshl + 1
-      db = sqrt(vmin2)
-
-      if (db > da + 1.d-6) then
-        nsh = nsh + 1
-        nshl = 0
-        da = db
-      endif
-      
-!       cv(0,n1) = rmax + 1.d0
-      cd(n1) = rmax**2 + 1.d0
-    enddo ! k
-    
-    nsh = nsh + 1
-    nshl = nshl + 1
-
-!   nsr(nsh) = nshl
-    nshlr = nsh
-    if (nshlr <= 1) die_here("cut-off radius rmax too small")
-
-    deallocate(cd, stat=ist)    
-    
-    allocate(cv(0:3,numg**3), stat=ist)
-    if (ist /= 0) stop 'testdimlat out of memory (reciprocal space)'
-    
-!   generate lattice vectors of real space
-    ng = 0
-    do i1 = 1, numg
-      av(1) = dble(i1 - numgh)
-      do i2 = 1, numg
-        av(2) = dble(i2 - numgh)
-        do i3 = 1, numg
-          av(3) = dble(i3 - numgh)
-          gv(1:3) = av(1)*bg(1:3,1) + av(2)*bg(1:3,2) + av(3)*bg(1:3,3)
-          ag2 = gv(1)**2 + gv(2)**2 + gv(3)**2
-          if (ag2 <= gmax2) then
-            ng = ng + 1
-            cv(0,ng) = sqrt(ag2)
-            cv(1:3,ng) = gv(1:3)
-          endif
-        enddo ! i3
-      enddo ! i2
-    enddo ! i1
-    ngmax = ng
-
-    ! --> sort vectors in order of increasing abs. value
-    da = 1.d-6
-    nsh = 0
-    nshl = -1
-    do k = 1, ng
-      vmin = gmax + 1.d0
-      do n = 1, ng
-        if (cv(0,n) < vmin) then
-          vmin = cv(0,n)
-          n1 = n
-        endif
-      enddo ! n
-
-      nshl = nshl + 1
-!     gn(1:3,k) = cv(1:3,n1)
-!     gnr(k) = cv(0,n1)
-      db = vmin
-      if (db > da + 1.d-7) then
-        nsh = nsh + 1
-
-!       nsg(nsh) = nshl
-        nshl = 0
-        da = db
-      endif
-
-      cv(0,n1) = gmax + 1.d0
-    enddo ! k
-
-    nsh = nsh + 1
-    nshl = nshl + 1
-
-!   nsg(nsh) = nshl
-    nshlg = nsh
-    if (nshlg <= 1) die_here("cut-off radius gmax too small")
-
-    deallocate(cv, stat=ist)    
-    
-    write(6,'(79(1h=),/)')
-    write(6, fmt="(10x,'R max =',F9.5,' (a.u.)',/,10X,'G max =',f9.5,' (1/a.u.)',/)") rmax, gmax
-    write(6,'(79(1h=),/,15x,a)') 'checking lattice for Ewald-summ ........... OK'
-    write(6,'(79(1h=),/)')
-      
-  endsubroutine ! testdimlat
-#endif  
-  
   
   subroutine scalevec(rbasis, naez, bravais, lcartesian)
     integer, intent(in) :: naez

@@ -151,24 +151,22 @@ implicit none
 
   
   subroutine dsort(w, ind, nmax, pos)
-  ! ************************************************************************
   !     p.zahn, april 96
   !     w   is the original array returned unchanged
   !     ind is an array that holds the new positions
   !     nmax number of ellements to be sorted
   !     pos the position where the first element is found
-  ! ------------------------------------------------------------------------
     integer, intent(in) :: nmax
-    double precision, intent(in) :: w(*)
-    integer, intent(out) :: ind(*)
+    double precision, intent(in) :: w(:)
+    integer, intent(out) :: ind(:)
     integer, intent(out), optional :: pos
     
     double precision, parameter :: bound = 1.0d-12
     double precision :: diff
     integer :: i, ii, j, jj, k
-    ! ------------------------------------------------------------------------
+
     do i = 1, nmax
-      ind(1:nmax) = i
+      ind(i) = i ! zero-permutation
     enddo ! i
 
     j = 1

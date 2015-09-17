@@ -475,7 +475,7 @@ module CalculationData_mod
     !$omp parallel do private(ila)
     do ila = 1, self%num_local_atoms
       call createRefCluster(self%ref_cluster_array(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
-      !write(*,*) "Atoms in ref. cluster: ", self%ref_cluster_array(ila)%nacls
+!     write(*,*) "Atoms in ref. cluster: ", self%ref_cluster_array(ila)%nacls
     enddo
     !$omp endparallel do
 

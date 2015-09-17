@@ -42,8 +42,11 @@ module ClusterInfo_mod
   interface destroy
     module procedure destroyClusterInfo_do_nothing
   endinterface
+
   
-  CONTAINS
+  integer, parameter, private :: MAGIC = 385306
+  
+  contains
 
   !----------------------------------------------------------------------------
   !> Communicates and creates cluster info.
@@ -54,9 +57,8 @@ module ClusterInfo_mod
   !>
   !> @param ref_cluster_array    all the local ref. clusters
   subroutine createClusterInfo_com(self, ref_cluster_array, trunc_zone, communicator)
-    use RefCluster_mod
-    use TruncationZone_mod,  only: TruncationZone, translateInd
-!     use one_sided_commI_mod, only: copyFromI_com
+    use RefCluster_mod, only: RefCluster
+    use TruncationZone_mod,  only: TruncationZone
     use one_sided_commI_mod, only: copyFromI_com
 
     include 'mpif.h'
@@ -68,7 +70,7 @@ module ClusterInfo_mod
 
     integer :: ii
     integer :: ierr
-    integer :: nacls_loc, nacls
+    integer :: nacls, numn0
     integer :: naclsd
     integer :: naez_trc
     integer :: num_local_atoms
@@ -77,18 +79,17 @@ module ClusterInfo_mod
     integer, allocatable :: buffer(:,:)
     integer, allocatable :: recv_buf(:,:)
 
-    integer, parameter :: MAGIC = 385306
 
     num_local_atoms = size(ref_cluster_array)
 
     ! find maximum for locally stored clusters
-    nacls_loc = 0
+    nacls = 0
     do ii = 1, num_local_atoms
-      nacls_loc = max(nacls_loc, ref_cluster_array(ii)%nacls)
+      nacls = max(nacls, ref_cluster_array(ii)%nacls)
     enddo ! ii
 
     ! determine maximal number of cluster atoms
-    call MPI_Allreduce(nacls_loc, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(nacls, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
     self%naclsd = naclsd
 
@@ -99,33 +100,33 @@ module ClusterInfo_mod
     self%nacls_trc = 0
     ALLOCATECHECK(self%numn0_trc(naez_trc))
     self%numn0_trc = 0
-    ALLOCATECHECK(self%indn0_trc(naez_trc, naclsd))
+    ALLOCATECHECK(self%indn0_trc(naez_trc,naclsd))
     self%indn0_trc = -1
-    ALLOCATECHECK(self%atom_trc(naclsd, naez_trc))
+    ALLOCATECHECK(self%atom_trc(naclsd,naez_trc))
     self%atom_trc = 0
-    ALLOCATECHECK(self%ezoa_trc(naclsd, naez_trc))
+    ALLOCATECHECK(self%ezoa_trc(naclsd,naez_trc))
     self%ezoa_trc = -1
 
-    blocksize = 3*naclsd + 4
+    blocksize = 3*naclsd+4
     ALLOCATECHECK(buffer(blocksize, num_local_atoms) )
-    buffer = -1
+    buffer(:,:) = -1
     ALLOCATECHECK(recv_buf(blocksize, naez_trc) )
 
     do ii = 1, num_local_atoms
       nacls = ref_cluster_array(ii)%nacls
-      CHECKASSERT(nacls <= naclsd)
-      buffer(1, ii) = ref_cluster_array(ii)%atom_index
-      buffer(2, ii) = ref_cluster_array(ii)%nacls
-      buffer(3, ii) = ref_cluster_array(ii)%numn0
-
-      buffer(4             :(3 + nacls)          , ii) = ref_cluster_array(ii)%indn0
-      buffer((naclsd + 4)  :(naclsd + 3 + nacls) , ii) = ref_cluster_array(ii)%atom
-      buffer((2*naclsd + 4):(2*naclsd+3 + nacls) , ii) = ref_cluster_array(ii)%ezoa
-      buffer((3*naclsd + 4), ii) = MAGIC
+      numn0 = ref_cluster_array(ii)%numn0
+      CHECKASSERT( nacls <= naclsd )
+!!!!  buffer(:,:) = -1 ! introducing this line leads to an error -- suspicious
+      buffer(1,ii) = ref_cluster_array(ii)%atom_index
+      buffer(2,ii) = ref_cluster_array(ii)%nacls
+      buffer(3,ii) = ref_cluster_array(ii)%numn0
+      buffer(4         :         3+numn0,ii) = ref_cluster_array(ii)%indn0 ! indn0 is dim(numn0) now, however, numn0 <= nacls holds
+      buffer(4+naclsd  :  naclsd+3+nacls,ii) = ref_cluster_array(ii)%atom
+      buffer(4+2*naclsd:2*naclsd+3+nacls,ii) = ref_cluster_array(ii)%ezoa
+      buffer(4+3*naclsd,ii) = MAGIC
     enddo ! ii
 
-    call copyFromI_com(recv_buf, buffer, trunc_zone%trunc2atom_index, &
-                       blocksize, num_local_atoms, communicator)
+    call copyFromI_com(recv_buf, buffer, trunc_zone%trunc2atom_index, blocksize, num_local_atoms, communicator)
 
     call constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
 
@@ -137,6 +138,7 @@ module ClusterInfo_mod
   
   subroutine destroyClusterInfo_do_nothing(self)
     type(ClusterInfo), intent(inout) :: self
+    ! nothing to be done
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -150,49 +152,48 @@ module ClusterInfo_mod
     integer, intent(in) :: recv_buf(:,:)
     integer, intent(in) :: naclsd
 
-    integer :: ii, jj
-    integer :: counter
-    integer :: ind
-    integer, parameter :: MAGIC = 385306
+    integer :: ii, jj, counter, ind
 
     do ii = 1, naez_trc
       ! check if buffer from right atom was received
-      CHECKASSERT( recv_buf(1, ii) == trunc_zone%trunc2atom_index(ii) )
+      CHECKASSERT( recv_buf(1,ii) == trunc_zone%trunc2atom_index(ii) )
 
       ! indn0 and atom have to be transformed to 'truncation-zone-indices'
       counter = 0
       do jj = 1, naclsd
-        ind = translateInd(trunc_zone, &
-                               recv_buf(3 + jj, ii))
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(3+jj,ii)   
+        ind = translateInd(trunc_zone, recv_buf(3+jj,ii))
 
         ! ind = -1 means that atom is outside of truncation zone
         if (ind > 0) then
           counter = counter + 1
-          self%indn0_trc(ii, counter) = ind
-        endif
+          self%indn0_trc(ii,counter) = ind
+        endif ! ind > 0
       enddo ! jj
 
       self%numn0_trc(ii) = counter
 
       counter = 0
       do jj = 1, naclsd
-        ind = translateInd(trunc_zone, &
-                                recv_buf(naclsd + 3 + jj, ii))
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(naclsd+3+jj,ii)
+        ind = translateInd(trunc_zone, recv_buf(naclsd+3+jj,ii))
+        
         if (ind > 0) then
           counter = counter + 1
-          self%atom_trc(counter, ii) = ind
-        endif
-      enddo
+          self%atom_trc(counter,ii) = ind
+        endif ! ind > 0
+      enddo ! jj
 
       self%nacls_trc(ii) = counter
-
+      
+! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' naclsd=',naclsd
       CHECKASSERT( self%nacls_trc(ii) <= naclsd .and. self%nacls_trc(ii) > 0 )
       CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
 
-      self%ezoa_trc(:,ii)  = recv_buf((2*naclsd + 4) : (3*naclsd + 3), ii)
+      self%ezoa_trc(:,ii) = recv_buf(2*naclsd+4:3*naclsd+3,ii)
 
       ! check if end of buffer is correct
-      CHECKASSERT( recv_buf((3*naclsd + 4), ii) == MAGIC )
+      CHECKASSERT( recv_buf(3*naclsd+4,ii) == MAGIC )
     enddo ! ii
   endsubroutine constructIndices
 

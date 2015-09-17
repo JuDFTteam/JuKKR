@@ -103,7 +103,7 @@ module MadelungCalculator_mod
     call createMadelungClebschData(self%clebsch, lmax)
 
 #define ml self%lattice
-    call lattice3d(alat, bravais, recbv, ml%ngmax, ml%nrmax, ml%nshlg, ml%nshlr, ml%nsg, ml%nsr, rmax, gmax, ml%gn, ml%rm, iprint=0, print_info=1) ! 1:no_output
+    call lattice3d(alat, bravais, recbv, ml%ngmax, ml%nrmax, ml%nshlg, ml%nshlr, ml%nsg, ml%nsr, rmax, gmax, ml%gn, ml%rm, iprint=0, print_info=0)
 #undef  ml
 
   endsubroutine ! create
@@ -286,6 +286,11 @@ module MadelungCalculator_mod
     ISHLD = max(nshlg, nshlr)
     write(*,'(a,i13,9a)') ' ISHLD  =',ISHLD,'  ! minimum determined in ',__FILE__
     
+    write(6,'(79(1h=),/)')
+    write(6, fmt="(10x,'R max =',F9.5,' (a.u.)',/,10X,'G max =',f9.5,' (1/a.u.)',/)") rmax, gmax
+    write(6,'(79(1h=),/,15x,a)') 'checking lattice for Ewald-summ ........... OK'
+    write(6,'(79(1h=),/)')
+
   endsubroutine ! testdimlat
       
   
@@ -335,12 +340,12 @@ module MadelungCalculator_mod
     F92="(25x,'vectors  shells  max. R ',/,25x,30('-'))", F93="(10x,a,i7,2x,i6,2x,f9.5)", F94="(25x,30('-'),/)", F96="(10x,i5,i5,f12.6,2x,3f10.5)", &
     F95="(10x,55('+'),/,18x,'generated ',a,' lattice vectors',/,10x,55('+'),/,10x,'shell Nvec    radius          x         y         z',/,10x,55('-'))"
     
-    integer :: i, n, l, k, ist, numr(3), numg(3), naiver, naiveg
-    double precision :: bg(3,3), absg2(3), absgm
-    double precision :: br(3,3), absr2(3), absrm
+    integer :: i, n, l, k, ist, numr(3), numg(3), naive_r, naive_g
+    double precision :: bg(3,3), absg2(3)
+    double precision :: br(3,3), absr2(3)
     double precision, allocatable :: gnr(:), rmr(:) ! gnr(nmaxd), rmr(nmaxd)
 
-    if (print_info == 0) write(6,'(5X,2A,/)') '< LATTICE3D > : ','generating direct/reciprocal lattice vectors'
+    if (print_info > 0) write(6,'(5X,2A,/)') '< LATTICE3D > : ','generating direct/reciprocal lattice vectors'
 
     ! --> basic trans. vectors and basis vectors
     br(1:3,1:3) = bravais(1:3,1:3)*alat
@@ -354,15 +359,13 @@ module MadelungCalculator_mod
       absg2(i) = sum(bg(1:3,i)**2)
     enddo ! i
     
-    absrm = (2.d0*pi)/sqrt(max(absr2(1), absr2(2), absr2(3)))
-    absgm = (2.d0*pi)/sqrt(max(absg2(1), absg2(2), absg2(3)))
-    naiver = ceiling(rmax/absgm) ! Warning: cross term here: direct depends on reciprocal
-    naiveg = ceiling(gmax/absrm) ! Warning: cross term here: reciprocal depends on direct
-! write(0,*) trim(__FILE__+"loop"+(2*naiveg+1)+"in g-space from gmax ="+gmax)
-! write(0,*) trim(__FILE__+"loop"+(2*naiver+1)+"in r-space from rmax ="+rmax)
+    naive_r = ceiling(rmax*sqrt(maxval(absg2(1:3)))/(2.d0*pi)) ! Warning: cross term here: direct depends on reciprocal
+    naive_g = ceiling(gmax*sqrt(maxval(absr2(1:3)))/(2.d0*pi)) ! Warning: cross term here: reciprocal depends on direct
+! write(0,*) trim(__FILE__+"loop"+(2*naive_g+1)+"in g-space from gmax ="+gmax)
+! write(0,*) trim(__FILE__+"loop"+(2*naive_r+1)+"in r-space from rmax ="+rmax)
     
-    numr(1:3) = boxdim(bmat=br, dcut=rmax, naive=naiver, space='r')
-    numg(1:3) = boxdim(bmat=bg, dcut=gmax, naive=naiveg, space='g')
+    numr(1:3) = boxdim(bmat=br, dcut=rmax, naive=naive_r, space='r')
+    numg(1:3) = boxdim(bmat=bg, dcut=gmax, naive=naive_g, space='g')
 ! write(0,*) trim(__FILE__+"loop only"+(2*numg+1)+"in g-space from gmax ="+gmax)
 ! write(0,*) trim(__FILE__+"loop only"+(2*numr+1)+"in r-space from rmax ="+rmax)
     
@@ -390,7 +393,7 @@ module MadelungCalculator_mod
     
     if (nshlg <= 1) die_here("cut-off radius GMAX too small!")
 
-    if (print_info == 0) then
+    if (print_info > 0) then
       write(6, fmt=F92)
       write(6, fmt=F93) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
       write(6, fmt=F93) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
@@ -793,7 +796,7 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     integer , intent(in) :: naive
     character, intent(in) :: space
 
-    integer :: i, j, k, i1, i2, i3
+    integer :: i
     double precision :: quad(3,3), rr(3,3), determ, wrap(3,3), scl(3,3), wGGw(3,3)
 
     quad = matmul(transpose(bmat), bmat) ! construct the metric such that [i1,i2,i3]*quad*[i1,i2,i3] = K2

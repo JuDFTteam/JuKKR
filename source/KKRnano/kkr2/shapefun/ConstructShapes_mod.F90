@@ -105,10 +105,7 @@ module ConstructShapes_mod
     ! the voronoi routine expects array without position (0,0,0) -> pass rcls(:,2:)
     ! therfore check if the first index of %rcls is the origin
 
-    if (any(abs(ref_cluster%rcls(:,1)) > 1.d-8)) then
-      write(*,*) "Expected origin in ref_cluster%rcls(:,1)"
-      STOP
-    endif
+    if (any(abs(ref_cluster%rcls(:,1)) > 1.d-8)) stop "Expected origin in ref_cluster%rcls(:,1)"
 
     call constructFromCluster(self, inter_mesh, ref_cluster%rcls(:,2:), weights, &
                               lmax_shape, npoints_min, nmin_panel, &

@@ -28,8 +28,7 @@ module TruncationZone_mod
   endtype
 
   interface createTruncationZone
-    module procedure createTruncationZoneOld
-    module procedure createTruncationZoneNew
+    module procedure createTruncationZoneOld, createTruncationZoneNew
   endinterface
 
   interface create
@@ -58,13 +57,7 @@ module TruncationZone_mod
     type(TruncationZone), intent(inout) :: self
     integer, intent(in) :: mask(:)
 
-    !-----
-    integer :: num_atoms
-    integer :: ii
-    integer :: ind
-    integer :: naez_trc
-
-    integer :: memory_stat
+    integer :: num_atoms, ii, ind, naez_trc, memory_stat
 
     num_atoms = size(mask)
 
@@ -112,15 +105,9 @@ module TruncationZone_mod
     type(TruncationZone), intent(in) :: self
     integer, intent(in) :: ind
 
-    integer :: mapped_index
-
     translateInd = -1
-
-    if (ind > 0) then
-      mapped_index = self%index_map(ind)
-      translateInd = mapped_index
-    endif
-
+!   if (ind > ubound(self%index_map, 1)) stop 'TruncationZone: translateInd: ind too large!' ! not allowed in a pure function
+    if (ind > 0) translateInd = self%index_map(ind)
   endfunction ! translateInd
 
   !----------------------------------------------------------------------------
@@ -180,13 +167,10 @@ module TruncationZone_mod
     integer, intent(in) :: index_map(:)
     integer, intent(inout) :: array(:)
 
-    integer :: ii, mapped_index
+    integer :: ii
 
     do ii = 1, size(array)
-      if (array(ii) > 0) then
-        mapped_index = index_map(array(ii))
-        array(ii) = mapped_index
-      endif
+      if (array(ii) > 0) array(ii) = index_map(array(ii))
     enddo ! ii
   endsubroutine ! translate
 

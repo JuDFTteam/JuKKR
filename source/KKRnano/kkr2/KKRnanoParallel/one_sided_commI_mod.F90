@@ -116,13 +116,8 @@ subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
   integer, intent(in) :: communicator
 
   type(ChunkIndex), allocatable :: chunk_inds(:)
-  integer :: ii
-  integer :: ierr
-  integer :: naez_trc ! size(atomindices)
-  integer :: naez
-  integer :: nranks
-  integer :: atom_requested
-  integer :: win
+  integer :: ii, ierr, naez_trc ! size(atom_indices)
+  integer :: naez, nranks, atom_requested, win
 
   naez_trc = size(atom_indices)
 
@@ -137,7 +132,7 @@ subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
     atom_requested = atom_indices(ii)
     chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
     chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
-  enddo
+  enddo ! ii
 
   call exposeBufferI(win, local_buf, chunk_size*num_local_atoms, chunk_size, communicator)
   call copyChunksI(receive_buf, win, chunk_inds, chunk_size)
