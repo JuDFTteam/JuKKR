@@ -166,7 +166,7 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
 #else    
     deallocate(i1, i2, irt, stat=ivrt)
 #endif
-  endsubroutine polchk
+  endsubroutine ! polchk
 
 !-----------------------------------------------------------------------
 !>    given  two  distinct  points   r1 , r2, this  routine calculates
@@ -195,7 +195,7 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
     rd(1:3) = dabc/d
 
     inside = (d - max(nrm2(rd - r1), nrm2(rd - r2)) > tolvdist)
-  endsubroutine perp
+  endsubroutine ! perp
   
   double precision function inner_product_v3(v, w) result(vxw)
     double precision, intent(in) :: v(3), w(3)

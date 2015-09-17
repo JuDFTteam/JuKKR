@@ -22,7 +22,6 @@ program KKRnano
   use EnergyMesh_mod, only: readEnergyMesh, broadcastEnergyMesh_com, updateEnergyMesh, writeEnergyMesh
   use EnergyMesh_mod, only: readEnergyMeshSemi, updateEnergyMeshSemi, writeEnergyMeshSemi
 
-  use RadialMeshData_mod, only: RadialMeshData
   use BasisAtom_mod, only: BasisAtom
   use LDAUData_mod, only: LDAUData
 
@@ -60,7 +59,6 @@ program KKRnano
   type(DimParams), target      :: dims
   type(InputParams)            :: params
 
-  type(RadialMeshData), pointer :: mesh
   type(BasisAtom), pointer      :: atomdata
   type(LDAUData), pointer       :: ldau_data
   
@@ -238,18 +236,19 @@ program KKRnano
 
         atomdata      => getAtomData(calc_data, 1)
         ldau_data     => getLDAUData(calc_data, 1)
-        mesh          => atomdata%mesh_ptr
         I1 = getAtomIndexOfLocal(calc_data, 1)
 
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48    ! ???
 
+#define mesh atomdata%mesh_ptr
         call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU, &
                       ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
                       atomdata%potential%VISP,ldau_data%NSPIND,mesh%R,mesh%DRDI, &
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
                       ldau_data%PHILDAU,ldau_data%UMLDAU,ldau_data%WMLDAU, &
                       ldau_data%lmaxd, mesh%irmd, mesh%ipand)
+#undef mesh                      
 
       endif
 ! LDA+U

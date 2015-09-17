@@ -202,7 +202,7 @@ module ShapeFunctions_mod
 
     call destroy(faces)
     
-  endsubroutine shapef
+  endsubroutine ! shapef
 
-endmodule ShapeFunctions_mod
+endmodule ! ShapeFunctions_mod
 

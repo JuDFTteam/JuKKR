@@ -60,7 +60,7 @@ implicit none
   
   !> Opaque object. Use getter routines to access member variables
   type KKRnanoParallel
-    PRIVATE
+    private
     
     !> MPI communicator handle
     !> This communicator contains all atom process belonging
@@ -109,7 +109,7 @@ implicit none
 
     integer :: n, ierr, color, key
  
-!   call MPI_Init(ierr) ! --> moved to the main program, otherwise, MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
+!   call MPI_Init(ierr) ! must have been call earlier
     call MPI_Comm_size(MPI_COMM_WORLD, self%num_all_ranks, ierr)
     call MPI_Comm_rank(MPI_COMM_WORLD, self%my_world_rank,  ierr)
  

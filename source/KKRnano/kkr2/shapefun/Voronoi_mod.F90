@@ -404,7 +404,7 @@ module Voronoi_mod
     if (output .and. nwarn > 0) & !  ! todo: this should happen in the medium verbose case
       warn(6, "there is a problem with the vertices for"+nwarn+"planes: only 1 or 2 vertices were found!")
     
-    endsubroutine vertex3d
+    endsubroutine ! vertex3d
 
     !------------------------------------------------------------------------------
     subroutine analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
@@ -557,12 +557,12 @@ module Voronoi_mod
         v4(1:3) = vert(1,ivert,iface) - vert(1:3,1,iface) ! yesss, the left argument is a scalar here
         det = v2(1)*(v3(2)*v4(3) - v4(2)*v3(3)) + v2(2)*(v3(3)*v4(1) - v4(3)*v3(1)) + v2(3)*(v3(1)*v4(2) - v4(1)*v3(2))
         detsum = detsum + abs(det)
-        if (abs(det) > 1.d-16 .and. output) write(*,fmt="('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)") iface,ivert,det
+        if (abs(det) > 1.d-16 .and. output) write(*, fmt="('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)") iface,ivert,det
       enddo ! ivert
       if (output) write(*,fmt="('analyzevert3d: checking that vertices lie on plane. iface=',i5,' ; determinants sum to be zero=',e12.4)") iface,detsum
     enddo ! iface
 
-  endsubroutine analyzevert3d
+  endsubroutine ! analyzevert3d
 
 !   !***********************************************************************
 !   logical function halfspace(a,b,c,d,x,y,z)
