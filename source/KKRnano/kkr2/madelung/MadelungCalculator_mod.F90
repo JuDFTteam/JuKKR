@@ -60,7 +60,6 @@ module MadelungCalculator_mod
   type MadelungLatticeSum
     integer :: num_atoms
     double precision, allocatable :: smat(:,:)
-!   type(MadelungCalculator), pointer :: madelung_calc
   endtype
 
   
@@ -715,10 +714,8 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
         nstart = 1
       endif
       
-      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       ! --> loop first over n-1 shells of real and reciprocal lattice - then
       !     add the contribution of the last shells to see convergence
-      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       do i01 = 0, 1
       
         if (i01 == 0) then

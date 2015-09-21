@@ -144,15 +144,9 @@ program KKRnano
  ! =                     End read in variables                          =
  ! ======================================================================
 
-  if (params%JIJ .and. (dims%nspind /= 2)) then
-    write(*,*) "ERROR: Jij calculation not possible for spin-unpolarized calc."
-    stop
-  endif
+  if (params%JIJ .and. dims%nspind /= 2) die_here("Jij calculation not possible for spin-unpolarized calc.")
 
-  if (dims%LLY /= 0) then
-    write(*,*) "WARNING: Lloyds formula not supported in this version. Set LLY=0"
-    die_here("Lloyds formula not supported in this version. Set lly=0")
-  endif
+  if (dims%LLY /= 0) die_here("Lloyds formula not supported in this version. Set lly=0")
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
@@ -172,7 +166,7 @@ program KKRnano
     call createEnergyMesh(emesh, dims%iemxd) !!!!
 
     ! TO DO: Getting rid of the many if-clauses used for semicore contour!
-    if(params%use_semicore==1) then
+    if(params%use_semicore == 1) then
       call readEnergyMeshSemi(emesh) !every process does this!  !!!!
     else
       call readEnergyMesh(emesh)  !every process does this!  !!!!
@@ -204,7 +198,7 @@ program KKRnano
         call printDoubleLineSep(unit_number = 2)
         call OUTTIME(isMasterRank(my_mpi),'started at ..........', getElapsedTime(program_timer),ITER)
         call printDoubleLineSep(unit_number = 2)
-      endif
+      endif ! master
 
       WRITELOG(2, *) "Iteration atom-rank ", ITER, getMyAtomRank(my_mpi)
 
@@ -222,14 +216,14 @@ program KKRnano
         !!!$omp parallel do private(ilocal, atomdata)
         do ilocal = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ilocal)
-          if (params%use_semicore==1) then
+          if (params%use_semicore == 1) then
             call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
           else
             call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
           endif
         enddo ! ilocal
         !!!$omp end parallel do
-      endif
+      endif ! in master group
 
 ! LDA+U ! TODO: doesn't work for num_local_atoms > 1
       if (params%LDAU) then
@@ -252,7 +246,7 @@ program KKRnano
                       ldau_data%lmaxd, mesh%irmd, mesh%ipand)
 #undef mesh                      
 
-      endif
+      endif ! ldau
 ! LDA+U
 
       call OUTTIME(isMasterRank(my_mpi),'initialized .........', getElapsedTime(program_timer),ITER)
@@ -274,7 +268,7 @@ program KKRnano
         ! emesh (only correct for master)
         flag = processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, program_timer)
 
-      endif
+      endif ! in master group
 !----------------------------------------------------------------------
 ! END only processes in master-group are working
 !----------------------------------------------------------------------
@@ -301,7 +295,7 @@ program KKRnano
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
 
-      endif
+      endif ! master
 
       if (is_abort_by_rank0(flag, getMyActiveCommunicator(my_mpi))) exit
 
@@ -316,7 +310,7 @@ program KKRnano
     ! write forces if requested, master-group only
     if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) then
       call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
-    endif
+    endif ! foces
 
     if (isMasterRank(my_mpi)) close(2) ! time-info
 

@@ -195,12 +195,11 @@ module ProcessKKRresults_mod
   integer function mix_potential(calc, iter, params, dims, my_mpi)
 
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMyAtomRank, getMySEcommunicator, isMasterRank
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData, getBroyden
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     
     use BasisAtom_mod, only: BasisAtom
-    use BroydenData_mod, only: BroydenData
     use RadialMeshData_mod, only: RadialMeshData
     use broyden_kkr_mod, only: mix_broyden2_com
     use BRYDBM_new_com_mod, only: BRYDBM_new_com
@@ -213,7 +212,6 @@ module ProcessKKRresults_mod
     type(InputParams), intent(in)         :: params
 
     type(BasisAtom) , pointer             :: atomdata
-    type(BroydenData), pointer            :: broyden
     type(RadialMeshData), pointer         :: mesh
     double precision :: RMSAVQ ! rms error charge dens. (contribution of all local sites)
     double precision :: RMSAVM ! rms error mag. density (contribution of all local sites)
@@ -263,9 +261,9 @@ module ProcessKKRresults_mod
 
       ! Take data from 1st local atom, since only one local atom is supported
       atomdata     => getAtomData(calc, 1)
-      broyden      => getBroyden(calc, 1)
       mesh => atomdata%mesh_ptr
 
+#define broyden calc%broyden
       call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS, &
       atomdata%potential%VINS, &
       atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
@@ -276,6 +274,7 @@ module ProcessKKRresults_mod
       getMySEcommunicator(my_mpi), &
       broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, &
       atomdata%potential%nspin)
+#undef broyden
 
     ! this method supports num_local_atoms > 1
     else if (params%imix == 6) then
@@ -350,14 +349,12 @@ module ProcessKKRresults_mod
     use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMySECommunicator
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getDensities, getAtomData
-    use CalculationData_mod, only: getLDAUData, getShapeGaunts, getGaunts, getKKR, getEnergies, getAtomIndexOfLocal
+    use CalculationData_mod, only: getLDAUData, getKKR, getEnergies, getAtomIndexOfLocal!, getShapeGaunts, getGaunts
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
     use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
     
-    use GauntCoefficients_mod, only: GauntCoefficients
-    use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
     use RadialMeshData_mod, only: RadialMeshData
     use CellData_mod, only: CellData
     use BasisAtom_mod, only: BasisAtom
@@ -380,8 +377,6 @@ module ProcessKKRresults_mod
     type(TimerMpi), intent(in)                :: program_timer
 
     ! locals
-    type(ShapeGauntCoefficients), pointer     :: shgaunts  ! const ref.
-    type(GauntCoefficients), pointer          :: gaunts    ! const ref
     type(BasisAtom), pointer                  :: atomdata  ! not const
     type(LDAUData), pointer                   :: ldau_data ! not const
     type(KKRresults), pointer                 :: kkr       ! const ref
@@ -406,8 +401,7 @@ module ProcessKKRresults_mod
 
     num_local_atoms = getNumLocalAtoms(calc)
 
-    shgaunts  => getShapeGaunts(calc)
-    gaunts    => getGaunts(calc)
+!     gaunts    => getGaunts(calc)
     atomdata  => getAtomData(calc, 1)
     ldau_data => getLDAUData(calc, 1)
     kkr       => getKKR(calc, 1)
@@ -428,7 +422,7 @@ module ProcessKKRresults_mod
     call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
                             emesh, densities%RNORM, &
                             dims%LLY, params%ICST, params%NSRA, &
-                            kkr%GMATN, gaunts, ldau_data)
+                            kkr%GMATN, calc%gaunts, ldau_data)
 
     if (dims%LLY == 1) then
       TESTARRAYLOG(3, emesh%WEZRN)
@@ -462,7 +456,7 @@ module ProcessKKRresults_mod
       call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                           densities%RHO2NS, densities%R2NEF, &
                           densities%DEN, energies%ESPV, kkr%GMATN, &
-                          gaunts, emesh, ldau_data)
+                          calc%gaunts, emesh, ldau_data)
 
       ! LDAU
       if (ldau_data%LDAU .and. ldau_data%NLDAU >= 1) then
@@ -587,7 +581,7 @@ module ProcessKKRresults_mod
       densities%CMINST = 0.d0
 
       call RHOMOM_NEW_wrapper(densities%CMOM,densities%CMINST, &
-                              densities%RHO2NS(:,:,1), cell, mesh, shgaunts)
+                              densities%RHO2NS(:,:,1), cell, mesh, calc%shgaunts)
 
   !------------------------------------------------------------------------------
     enddo ! ila
@@ -641,14 +635,13 @@ module ProcessKKRresults_mod
     use InputParams_mod, only: InputParams
     use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
     
-    use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
     use BasisAtom_mod, only: BasisAtom
     use LDAUData_mod, only: LDAUData
     use DensityResults_mod, only: DensityResults
     use EnergyResults_mod, only: EnergyResults
     use RadialMeshData_mod, only: RadialMeshData
     
-    use CalculationData_mod, only: getNumLocalAtoms, getDensities, getShapeGaunts, getAtomData, getLDAUData, getEnergies, getDensities, getAtomIndexOfLocal
+    use CalculationData_mod, only: getNumLocalAtoms, getDensities, getAtomData, getLDAUData, getEnergies, getDensities, getAtomIndexOfLocal
     
     use NearField_calc_mod, only: add_near_field_corr
     use total_energy_mod, only: madelung_energy, madelung_ref_radius_correction, energy_electrostatic_wrapper
@@ -665,7 +658,6 @@ module ProcessKKRresults_mod
     type(TimerMpi), intent(in)                :: program_timer
 
     ! locals
-    type(ShapeGauntCoefficients), pointer     :: shgaunts     ! const ref
     type(BasisAtom), pointer                  :: atomdata     ! not const
     type(LDAUData), pointer                   :: ldau_data    ! not const
     type(EnergyResults), pointer              :: energies     ! not const
@@ -690,7 +682,6 @@ module ProcessKKRresults_mod
 
     num_local_atoms = getNumLocalAtoms(calc)
 
-    shgaunts     => getShapeGaunts(calc)
     atomdata     => getAtomData(calc, 1)
     ldau_data    => getLDAUData(calc, 1)
     densities    => null()
@@ -713,7 +704,7 @@ module ProcessKKRresults_mod
   !------------------------------------------------------------------------------
 
       !output: VONS
-      call VINTRAS_wrapper(densities%RHO2NS(:,:,1), shgaunts, atomdata)
+      call VINTRAS_wrapper(densities%RHO2NS(:,:,1), calc%shgaunts, atomdata)
 
   !------------------------------------------------------------------------------
     enddo ! ila
@@ -798,7 +789,7 @@ module ProcessKKRresults_mod
 
       vons_temp = 0.d0 ! V_XC stored in temporary, must not add before energy calc.
       call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, &
-                          shgaunts, atomdata)
+                          calc%shgaunts, atomdata)
 
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       call calculatePotentials_energies()
@@ -860,7 +851,7 @@ module ProcessKKRresults_mod
   !       Note: also the effect of the nuclear potential on the interstitial region
   !       is added in 'convol'
       energies%VBC = VBC_new + params%mt_zero_shift
-      call CONVOL_wrapper(energies%VBC, shgaunts, atomdata)
+      call CONVOL_wrapper(energies%VBC, calc%shgaunts, atomdata)
 
       ! MT-shift energy for Weinert energy only
       energies%e_shift = - energies%VBC(1) * densities%CATOM(1)
@@ -912,7 +903,7 @@ module ProcessKKRresults_mod
       call EPOTINB_wrapper(energies%EPOTIN,densities%RHO2NS,atomdata)
 
       ! output: ECOU - l resolved Coulomb energy
-      call energy_electrostatic_L_resolved_wrapper(energies%ECOU, atomdata%potential%vons, atomdata%Z_nuclear, densities%RHO2NS, shgaunts, atomdata)
+      call energy_electrostatic_L_resolved_wrapper(energies%ECOU, atomdata%potential%vons, atomdata%Z_nuclear, densities%RHO2NS, calc%shgaunts, atomdata)
 
       ! coulomb energy and part of double counting
       energies%e_total(1) = energies%e_total(1) + sum(energies%ECOU) + energies%EPOTIN  ! Harris
@@ -940,7 +931,7 @@ module ProcessKKRresults_mod
 
       ! part of double counting energy that stems from V_XC (Weinert only)
       energies%e_vxc = - 2.d0 * energy_electrostatic_wrapper(vons_temp, &
-                                0.d0, densities%RHO2NS, shgaunts, atomdata)
+                                0.d0, densities%RHO2NS, calc%shgaunts, atomdata)
 
       energies%e_total(2) = energies%e_total(2) + energies%e_vxc
 

@@ -24,7 +24,7 @@ implicit none
 !>         *) Logfiles (if requested)
 !>         *) JIJ-Files (if requested)
 !>         *) matrix dump (if requested)
-subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my_mpi, arrays)
+subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi, arrays)
 
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
@@ -37,12 +37,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   use InputParams_mod, only: InputParams
   use Main2Arrays_mod, only: Main2Arrays
 
-  use CalculationData_mod, only: CalculationData, &
-    getTruncationZone, getGaunts, getKKR, getRefCluster, getJijData, getInitialGuessData, getAtomData, &
-    getLDAUData, getClusterInfo, getLatticeVectors, getNumLocalAtoms, getAtomIndexOfLocal
+  use CalculationData_mod, only: CalculationData, getKKR, getRefCluster, getJijData, getAtomData, &
+    getLDAUData, getNumLocalAtoms, getAtomIndexOfLocal
     
   use KKRresults_mod, only: KKRresults
-  use GauntCoefficients_mod, only: GauntCoefficients
+! use GauntCoefficients_mod, only: GauntCoefficients
   use BasisAtom_mod, only: BasisAtom
   use JijData_mod, only: JijData
   use LDAUData_mod, only: LDAUData
@@ -54,8 +53,6 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
   
   use kloopz1_mod, only: kloopz1_new
-  use TruncationZone_mod, only: TruncationZone
-  use ClusterInfo_mod, only: ClusterInfo
   use RefCluster_mod, only: RefCluster, LatticeVectors
   use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
 
@@ -69,7 +66,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   use SingleSiteRef_mod, only: TREF, GREF
   
   integer, intent(in) :: iter
-  type(CalculationData), intent(inout) :: calc_data
+  type(CalculationData), intent(inout) :: calc
   type(KKRnanoParallel), intent(in)    :: my_mpi
   type(EBalanceHandler), intent(inout) :: ebalance_handler
   type(EnergyMesh), intent(in)         :: emesh
@@ -81,14 +78,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 
   type(BasisAtom), pointer             :: atomdata  ! referenced data does not change
   type(KKRresults), pointer            :: kkr       ! changes
-  type(GauntCoefficients), pointer     :: gaunts    ! never changes
   type(LDAUData), pointer              :: ldau_data ! changes
   type(JijData), pointer               :: jij_data  ! changes
-  type(TruncationZone), pointer        :: trunc_zone  ! never changes
-  type(ClusterInfo), pointer           :: clusters    ! never changes
   type(RefCluster), pointer            :: ref_cluster ! never changes
-  type(LatticeVectors), pointer        :: lattice_vectors ! never changes
-  type(InitialGuess), pointer          :: iguess_data ! changes
 
   type(TFQMRSolver), target :: solv
   type(KKROperator), target :: kkr_op
@@ -111,28 +103,26 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 
   lmmaxd = (dims%lmaxd+1)**2
 
-  trunc_zone => getTruncationZone(calc_data)
-  gaunts    => getGaunts(calc_data)
-  atomdata  => getAtomData(calc_data, 1)
+  atomdata  => getAtomData(calc, 1)
   I1 = atomdata%atom_index
   kkr       => null()
-  ldau_data => getLDAUData(calc_data, 1)
-  jij_data  => getJijData(calc_data, 1)
-  clusters  => getClusterInfo(calc_data)
-  lattice_vectors  => getLatticeVectors(calc_data)
-  iguess_data => getInitialGuessData(calc_data)
+  ldau_data => getLDAUData(calc, 1)
+  jij_data  => getJijData(calc, 1)
+#define clusters calc%clusters
+#define lattice_vectors calc%lattice_vectors
+#define trunc_zone calc%trunc_zone
 
-  num_local_atoms = getNumLocalAtoms(calc_data)
+  num_local_atoms = getNumLocalAtoms(calc)
 
-  global_jij_data => getJijData(calc_data, 1)
+  global_jij_data => getJijData(calc, 1)
 
   ! allocate buffer for t-matrices
-  allocate(tmatll(lmmaxd, lmmaxd, trunc_zone%naez_trc))
+  allocate(tmatll(lmmaxd,lmmaxd,trunc_zone%naez_trc))
   ! allocate buffers for reference t-matrices
-  allocate( Tref_local(lmmaxd, lmmaxd, num_local_atoms))
-  allocate(DTref_local(lmmaxd, lmmaxd, num_local_atoms))
+  allocate( Tref_local(lmmaxd, lmmaxd,num_local_atoms))
+  allocate(DTref_local(lmmaxd, lmmaxd,num_local_atoms))
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
-  allocate(GrefN_buffer(lmmaxd,lmmaxd, clusters%naclsd, num_local_atoms))
+  allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms))
 
   allocate(atom_indices(num_local_atoms))
 
@@ -177,7 +167,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   ! get the indices of atoms that shall be treated at once by the process
   ! = truncation zone indices of local atoms
   do ilocal = 1, num_local_atoms
-    atom_indices(ilocal) = getAtomIndexOfLocal(calc_data, ilocal)
+    atom_indices(ilocal) = getAtomIndexOfLocal(calc, ilocal)
     atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
     CHECKASSERT(atom_indices(ilocal) > 0)
   enddo
@@ -202,8 +192,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !------------------------------------------------------------------------------
       !$omp parallel do private(ilocal, kkr, atomdata)
       do ilocal = 1, num_local_atoms
-        kkr => getKKR(calc_data, ilocal)
-        atomdata  => getAtomData(calc_data, ilocal)
+        kkr => getKKR(calc, ilocal)
+        atomdata  => getAtomData(calc, ilocal)
 !------------------------------------------------------------------------------
 
         call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%RMTref, &
@@ -221,8 +211,8 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 
       ! Exchange the reference t-matrices within reference clusters
       do ilocal = 1, num_local_atoms
-        kkr => getKKR(calc_data, ilocal)
-        ref_cluster => getRefCluster(calc_data, ilocal)
+        kkr => getKKR(calc, ilocal)
+        ref_cluster => getRefCluster(calc, ilocal)
 
         call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, ref_cluster, getMySEcommunicator(my_mpi))
         call gatherTrefMatrices_com(DTref_local, kkr%DTrefLL, ref_cluster, getMySEcommunicator(my_mpi))
@@ -231,16 +221,16 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !------------------------------------------------------------------------------
       !$omp parallel do private(ilocal, kkr, ref_cluster)
       do ilocal = 1, num_local_atoms
-        kkr => getKKR(calc_data, ilocal)
-        ref_cluster => getRefCluster(calc_data, ilocal)
+        kkr => getKKR(calc, ilocal)
+        ref_cluster => getRefCluster(calc, ilocal)
 !------------------------------------------------------------------------------
 
-        call GREF(emesh%EZ(IE),params%ALAT,gaunts%IEND, &
-                      gaunts%CLEB,ref_cluster%RCLS,gaunts%ICLEB, &
-                      gaunts%LOFLM,ref_cluster%NACLS, &
+        call GREF(emesh%EZ(IE),params%ALAT,calc%gaunts%IEND, &
+                      calc%gaunts%CLEB,ref_cluster%RCLS,calc%gaunts%ICLEB, &
+                      calc%gaunts%LOFLM,ref_cluster%NACLS, &
                       kkr%TREFLL,kkr%DTREFLL, GrefN_buffer(:,:,:,ilocal), &
                       kkr%DGREFN, kkr%LLY_G0TR(IE), &
-                      dims%lmaxd, kkr%naclsd, gaunts%ncleb, &
+                      dims%lmaxd, kkr%naclsd, calc%gaunts%ncleb, &
                       dims%LLY)
 
 !------------------------------------------------------------------------------
@@ -254,7 +244,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !------------------------------------------------------------------------------
 !     beginning of SMPID-parallel section
 !------------------------------------------------------------------------------
-      spinloop: do ISPIN = 1,dims%NSPIND
+      spinloop: do ISPIN = 1, dims%NSPIND
         if (isWorkingSpinRank(my_mpi, ispin)) then
 
           PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
@@ -262,21 +252,21 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !------------------------------------------------------------------------------
           !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1)
           do ilocal = 1, num_local_atoms
-            kkr => getKKR(calc_data, ilocal)
-            atomdata => getAtomData(calc_data, ilocal)
-            ldau_data => getLDAUData(calc_data, ilocal)
-            jij_data  => getJijData(calc_data, ilocal)
-            I1 = getAtomIndexOfLocal(calc_data, ilocal)
+            kkr => getKKR(calc, ilocal)
+            atomdata => getAtomData(calc, ilocal)
+            ldau_data => getLDAUData(calc, ilocal)
+            jij_data  => getJijData(calc, ilocal)
+            I1 = getAtomIndexOfLocal(calc, ilocal)
 !------------------------------------------------------------------------------
 
             call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                            params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
+                            params%NSRA, calc%gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
 
             jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
             if (dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                            params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
+                            params%NSRA, calc%gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
             endif
 
             ! t_ref-matrix of central cluster atom has index 1
@@ -310,12 +300,12 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 ! <<>> Multiple scattering part
 
           ! gather t-matrices from own truncation zone
-          call gatherTmatrices_com(calc_data, tmatll, ispin, getMySEcommunicator(my_mpi))
+          call gatherTmatrices_com(calc, tmatll, ispin, getMySEcommunicator(my_mpi))
 
           TESTARRAYLOG(3, tmatll)
 
-          call iguess_set_energy_ind(iguess_data, ie)
-          call iguess_set_spin_ind(iguess_data, PRSPIN)
+          call iguess_set_energy_ind(calc%iguess_data, ie)
+          call iguess_set_spin_ind(calc%iguess_data, PRSPIN)
 
           jij_data%active_spin = ispin
 
@@ -331,21 +321,21 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
           GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
           tmatll, arrays%lmmaxd, lattice_vectors%nrd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
-          iguess_data)
+          calc%iguess_data)
 !------------------------------------------------------------------------------
 
           ! copy results from buffer: G_LL'^NN (E, spin) =
           !                           GmatN_buffer_LL'^N(ilocal) N(ilocal)
           do ilocal = 1, num_local_atoms
-            kkr => getKKR(calc_data, ilocal)
+            kkr => getKKR(calc, ilocal)
             kkr%GMATN(:,:,ie,ispin) = GmatN_buffer(:,:,ilocal)
-          enddo
+          enddo ! ilocal
 
           call stopTimer(mult_scattering_timer)
           call resumeTimer(single_site_timer)
 
         endif
-      enddo spinloop                          ! ISPIN = 1,NSPIN
+      enddo spinloop ! ISPIN = 1,NSPIN
 !------------------------------------------------------------------------------
 !        endof SMPID-parallel section
 !------------------------------------------------------------------------------
@@ -392,7 +382,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !=======================================================================
 !communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
   do ilocal = 1, num_local_atoms
-    kkr => getKKR(calc_data, ilocal)
+    kkr => getKKR(calc, ilocal)
     call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
   enddo
 !=======================================================================
@@ -424,26 +414,22 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
 !     in case of IGUESS and EMPID > 1 initial guess arrays might
 !     have to be adjusted to new distributions
 !=======================================================================
-  if ((dims%IGUESSD==1) .and. (dims%EMPID>1)) then
+  if (dims%IGUESSD == 1 .and. dims%EMPID > 1) then
 
     do ISPIN = 1,dims%NSPIND
       if (isWorkingSpinRank(my_mpi, ispin)) then
 
-        if (dims%SMPID==1) then
-          PRSPIN = ISPIN
-        else
-          PRSPIN = 1
-        endif
+        PRSPIN = 1 ; if (dims%SMPID ==1 ) PRSPIN = ISPIN
 
         WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
-        call redistributeInitialGuess_com(my_mpi, iguess_data%PRSC(:,:,PRSPIN), &
+        call redistributeInitialGuess_com(my_mpi, calc%iguess_data%PRSC(:,:,PRSPIN), &
              ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
              arrays%KMESH, arrays%NofKs)
 
       endif
-    enddo
+    enddo ! ISPIN
 
   endif  ! IGUESS == 1 .and. EMPID > 1
 
@@ -455,6 +441,9 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my
   deallocate(GmatN_buffer)
   deallocate(DTref_local)
   deallocate(Tref_local)
+#undef clusters
+#undef lattice_vectors
+#undef trunc_zone
 
 endsubroutine energyLoop
 
@@ -631,19 +620,17 @@ endsubroutine
 !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
 !>
 !> Uses MPI-RMA
-subroutine gatherTmatrices_com(calc_data, tmatll, ispin, communicator)
-  use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getTruncationZone, getKKR
+subroutine gatherTmatrices_com(calc, tmatll, ispin, communicator)
+  use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getKKR
   use KKRresults_mod, only: KKRresults
-  use TruncationZone_mod, only: TruncationZone
   use one_sided_commZ_mod, only: copyFromZ_com
 
-  type(CalculationData), intent(in) :: calc_data
+  type(CalculationData), intent(in) :: calc
   double complex, intent(inout) :: tmatll(:,:,:)
   integer, intent(in) :: ispin
   integer, intent(in) :: communicator
 
   type(KKRresults), pointer :: kkr
-  type(TruncationZone), pointer :: trunc_zone
 
   integer :: ilocal
   integer :: num_local_atoms
@@ -652,8 +639,7 @@ subroutine gatherTmatrices_com(calc_data, tmatll, ispin, communicator)
   integer :: chunk_size
   double complex, allocatable :: tsst_local(:,:,:)
 
-  num_local_atoms = getNumLocalAtoms(calc_data)
-  trunc_zone => getTruncationZone(calc_data)
+  num_local_atoms = getNumLocalAtoms(calc)
   lmmaxd = size(tmatll, 1)
 
   allocate(tsst_local(lmmaxd, lmmaxd, num_local_atoms))
@@ -661,11 +647,11 @@ subroutine gatherTmatrices_com(calc_data, tmatll, ispin, communicator)
   chunk_size = size(tsst_local, 1) * size(tsst_local, 2)
 
   do ilocal = 1, num_local_atoms
-    kkr => getKKR(calc_data, ilocal)
+    kkr => getKKR(calc, ilocal)
     tsst_local(:,:,ilocal) = kkr%TMATN(:,:,ispin)
   enddo
 
-  call copyFromZ_com(tmatll, tsst_local, trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
+  call copyFromZ_com(tmatll, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 
   deallocate(tsst_local)
 

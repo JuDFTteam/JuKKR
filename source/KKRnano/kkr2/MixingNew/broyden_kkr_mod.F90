@@ -5,27 +5,24 @@ module broyden_kkr_mod
   private
   public :: mix_broyden2_com
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine mix_broyden2_com(calc_data, iter, communicator)
-    use CalculationData_mod, only: CalculationData, getBroydenDim, getBroyden
+    use CalculationData_mod, only: CalculationData, getBroydenDim
     use broyden_second_mod, only: broyden_second
-    use BroydenData_mod, only: BroydenData
 
-    type (CalculationData), intent(inout) :: calc_data
+    type(CalculationData), intent(inout) :: calc_data
     integer, intent(in) :: iter
     integer, intent(in) :: communicator
 
     integer :: length
-    type (BroydenData), pointer :: broyden
-    double precision, dimension(:), allocatable :: g_metric_all
-    double precision, dimension(:), allocatable :: sm_input
-    double precision, dimension(:), allocatable :: fm_output
+    double precision, allocatable :: g_metric_all(:)
+    double precision, allocatable :: sm_input(:)
+    double precision, allocatable :: fm_output(:)
     double precision :: nan
 
     length = getBroydenDim(calc_data)
-    broyden => getBroyden(calc_data)
 
     allocate(sm_input(length))
     allocate(fm_output(length))
@@ -36,36 +33,37 @@ module broyden_kkr_mod
     sm_input = nan
     fm_output = nan
     g_metric_all = nan
-    ! end debug
+    ! enddebug
     ! ASSERT length=ntird
 
     call collapse_input_potentials(calc_data, sm_input)
     call collapse_output_potentials(calc_data, fm_output)
     call calc_all_metrics(calc_data, g_metric_all)
 
+#define broyden calc_data%broyden
     call broyden_second(sm_input, fm_output, broyden%sm1s, broyden%fm1s, &
                         broyden%ui2, broyden%vi2, g_metric_all, broyden%mixing, &
                         communicator, broyden%itdbryd, length, iter)
-
+#undef broyden
     call extract_mixed_potentials(sm_input, calc_data)
 
     if (any(isnan(sm_input))) then
       write(*,*) "NaN detected!"
       STOP
-    end if
+    endif
 
     deallocate(g_metric_all)
     deallocate(fm_output)
     deallocate(sm_input)
 
-  end subroutine
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Returns if x is NaN.
   elemental logical function isnan(x)
     double precision, intent(in) :: x
     isnan = .not. (x == x)
-  end function
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Collapse all local input potentials into one array
@@ -74,13 +72,13 @@ module broyden_kkr_mod
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
     use BasisAtom_mod, only: BasisAtom
   
-    type (CalculationData), intent(in) :: calc_data
-    double precision, dimension(*), intent(inout) :: array
+    type(CalculationData), intent(in) :: calc_data
+    double precision, intent(inout) :: array(*)
 
     integer ilocal
     integer num_local_atoms
     integer imap, imap_new
-    type (BasisAtom), pointer :: atomdata
+    type(BasisAtom), pointer :: atomdata
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -94,8 +92,8 @@ module broyden_kkr_mod
                       atomdata%potential%irmd, atomdata%potential%irnsd)
 
       imap = imap + imap_new
-    end do
-  end subroutine
+    enddo
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Collapse all local output potentials into one array
@@ -104,13 +102,13 @@ module broyden_kkr_mod
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
     use BasisAtom_mod, only: BasisAtom
   
-    type (CalculationData), intent(in) :: calc_data
-    double precision, dimension(*), intent(inout) :: array
+    type(CalculationData), intent(in) :: calc_data
+    double precision, intent(inout) :: array(*)
 
     integer ilocal
     integer num_local_atoms
     integer imap, imap_new
-    type (BasisAtom), pointer :: atomdata
+    type(BasisAtom), pointer :: atomdata
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -123,8 +121,8 @@ module broyden_kkr_mod
                       atomdata%potential%irmd)
 
       imap = imap + imap_new
-    end do
-  end subroutine
+    enddo
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Extract (mixed) output potentials for all local atoms from 'array' and
@@ -135,13 +133,13 @@ module broyden_kkr_mod
     use BasisAtom_mod, only: BasisAtom
     use PotentialData_mod, only: getNumPotentialValues
   
-    double precision, dimension(:), intent(in) :: array
-    type (CalculationData), intent(inout) :: calc_data
+    double precision, intent(in) :: array(:)
+    type(CalculationData), intent(inout) :: calc_data
 
-    integer ilocal
-    integer num_local_atoms
-    integer ind, num
-    type (BasisAtom), pointer :: atomdata
+    integer :: ilocal
+    integer :: num_local_atoms
+    integer :: ind, num
+    type(BasisAtom), pointer :: atomdata
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -158,8 +156,8 @@ module broyden_kkr_mod
 
       ind = ind+num
 
-    end do
-  end subroutine
+    enddo
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine calc_all_metrics(calc_data, g_metric_all)
@@ -167,13 +165,13 @@ module broyden_kkr_mod
     use BasisAtom_mod, only: BasisAtom
     use PotentialData_mod, only: getNumPotentialValues
   
-    type (CalculationData), intent(in) :: calc_data
-    double precision, dimension(:), intent(inout) :: g_metric_all
+    type(CalculationData), intent(in) :: calc_data
+    double precision, intent(inout) :: g_metric_all(:)
 
     integer ilocal
     integer num_local_atoms
     integer ind, num
-    type (BasisAtom), pointer :: atomdata
+    type(BasisAtom), pointer :: atomdata
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -190,8 +188,8 @@ module broyden_kkr_mod
 
       ind = ind + num
 
-    end do
-  end subroutine
+    enddo
+  endsubroutine
 
   !----------------------------------------------------------------------------
   subroutine calc_metric(g_metric, lmpot,r,drdi,irc,irmin,nspin,imap)
@@ -210,19 +208,19 @@ module broyden_kkr_mod
       do ir = 1,irc
         ij = ij + 1
         g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-      end do
+      enddo
       !
-      if (lmpot.gt.1) then
+      if (lmpot > 1) then
 
-        do lm = 2,lmpot
-          do ir = irmin,irc
+        do lm = 2, lmpot
+          do ir = irmin, irc
             ij = ij + 1
             g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-          end do
-        end do
-      end if
+          enddo
+        enddo
+      endif
 
-   end do
- end subroutine
+   enddo
+ endsubroutine
 
-end module broyden_kkr_mod
+endmodule broyden_kkr_mod

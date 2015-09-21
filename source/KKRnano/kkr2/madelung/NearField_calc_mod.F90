@@ -20,12 +20,12 @@ module NearField_calc_mod
   subroutine add_near_field_corr(calc_data, arrays, alat, my_mpi)
     use Main2Arrays_mod, only: Main2Arrays
     use DensityResults_mod, only: DensityResults
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getMadelungCalculator, getAtomData, getDensities, getAtomIndexOfLocal
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData, getDensities, getAtomIndexOfLocal!, getMadelungCalculator
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
     use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
-    use MadelungCalculator_mod, only: MadelungCalculator
+!   use MadelungCalculator_mod, only: MadelungCalculator
     use NearField_com_mod, only: calc_nf_correction
     
     type(CalculationData), intent(inout) :: calc_data
@@ -42,13 +42,13 @@ module NearField_calc_mod
     type(BasisAtom), pointer :: atomdata
     type(RadialMeshData), pointer :: mesh
     type(DensityResults), pointer :: densities
-    type(MadelungCalculator), pointer :: madelung_calc
+!   type(MadelungCalculator), pointer :: madelung_calc
 
     num_local_atoms  = getNumLocalAtoms(calc_data)
     allocate(local_cell(num_local_atoms))
     allocate(nf_correction(num_local_atoms))
 
-    madelung_calc => getMadelungCalculator(calc_data)
+!   madelung_calc => getMadelungCalculator(calc_data)
 
     do ilocal = 1, num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)
@@ -76,7 +76,8 @@ module NearField_calc_mod
 
     enddo ! ilocal
 
-    call calc_nf_correction(nf_correction, local_cell, madelung_calc%clebsch, &
+    call calc_nf_correction(nf_correction, local_cell, &
+         calc_data%madelung_calc%clebsch, &
                             getMySEcommunicator(my_mpi))
 
     do ilocal = 1, num_local_atoms

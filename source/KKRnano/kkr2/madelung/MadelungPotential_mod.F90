@@ -14,26 +14,23 @@ module MadelungPotential_mod
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
   subroutine addMadelungPotentialnew_com(calc_data, ZAT, rank, atoms_per_proc, communicator)
-    use CalculationData_mod, only: CalculationData, getMadelungCalculator
-    use MadelungCalculator_mod, only: MadelungCalculator
+    use CalculationData_mod, only: CalculationData
     
     type(CalculationData), intent(inout) :: calc_data
     double precision, intent(in) :: ZAT(:)
     integer, intent(in) :: rank, atoms_per_proc
     integer, intent(in) :: communicator
 
-    type(MadelungCalculator), pointer :: mc
     integer :: naez
 
-    mc => getMadelungCalculator(calc_data)
     naez = size(ZAT)
-
+#define mc calc_data%madelung_calc
     call VMADELBLK_new2_com(calc_data, mc%LPOT, naez, ZAT, mc%LMPOTD, &
          mc%clebsch%CLEB, mc%clebsch%ICLEB, mc%clebsch%IEND, &
          mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, &
          rank, atoms_per_proc, &
          communicator)
-
+#undef mc
   endsubroutine
 
   ! **********************************************************************
@@ -68,9 +65,8 @@ module MadelungPotential_mod
   subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
     lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, mylrank, atoms_per_proc, communicator)
 
-    use CalculationData_mod, only: CalculationData, getMadelungCalculator, getNumLocalAtoms, &
-      getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getMadelungSum, getAtomData
-    use MadelungCalculator_mod, only: MadelungLatticeSum
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, &
+      getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getAtomData
     use EnergyResults_mod, only: EnergyResults
     use DensityResults_mod, only: DensityResults
     use BasisAtom_mod, only: BasisAtom
@@ -85,7 +81,6 @@ module MadelungPotential_mod
     type(BasisAtom), pointer :: atomdata
     type(DensityResults), pointer :: densities
     type(EnergyResults), pointer :: energies
-    type(MadelungLatticeSum), pointer :: madelung_sum
     type(RadialMeshData), pointer :: mesh
 
     double precision, intent(in) :: zat(:)
@@ -153,11 +148,10 @@ module MadelungPotential_mod
       ! --> calculate avmad(lm1,lm2)
 
       do ilocal = 1, num_local_atoms  ! no OpenMP ?
-        madelung_sum => getMadelungSum(calc_data, ilocal)
         energies => getEnergies(calc_data, ilocal)
 
         call sumAC(energies%AC_madelung, CMOM_SAVE, CMINST_SAVE, ZAT(I2), &
-                   madelung_sum%SMAT(:,I2), &
+                   calc_data%madelung_sum_a(ilocal)%SMAT(:,I2), &
                    LPOT, CLEB, ICLEB, IEND, LOFLM, DFAC)
 
       enddo ! ilocal

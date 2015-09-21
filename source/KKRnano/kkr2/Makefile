@@ -324,6 +324,7 @@ MadelungCalculator_mod.o: Exceptions_mod.o
 PositionReader_mod.o: Exceptions_mod.o #ConfigReader_mod.o
 RefCluster_mod.o: Sorting_mod.o
 jij_calc_mod.o: Symmetry_mod.o
+Harmonics_mod.o: Constants_mod.o
 
 
 # DO NOT DELETE
