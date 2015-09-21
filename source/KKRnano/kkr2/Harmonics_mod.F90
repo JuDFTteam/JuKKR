@@ -133,7 +133,7 @@ module Harmonics_mod
 !
 !---> set up of the pointer array jend,use explicitly the ordering of the gaunt coeffients
 !
-    jend = 0
+    jend(:,:,:) = 0
 !     lmpot = (lpot+1)**2
 !     do l1 = 0, lmax
 !       do l2 = 0, l1
@@ -482,7 +482,7 @@ module Harmonics_mod
 !>                                 b.drittler 1987
 ! **********************************************************************
   subroutine ymy(v1, v2, v3, r, ylm, lmax)
-! **********************************************************************
+    use Constants_mod, only: pi
     double precision, intent(in) :: v1, v2, v3
     double precision, intent(out) :: r
     integer, intent(in) :: lmax
@@ -490,11 +490,10 @@ module Harmonics_mod
     
     double precision, parameter :: szero=1.d-20
     
-    double precision :: a,cd,cph,cth,fac,fpi,pi,rtwo,sgm,sph,sth,t,xy2,xyz2,xy!,xyz
+    double precision :: a,cd,cph,cth,fac,fpi,rtwo,sgm,sph,sth,t,xy2,xyz2,xy
     double precision :: c(0:lmax), p(0:lmax,0:lmax), s(0:lmax)
     integer :: i,l,m
 
-    pi = 4.d0*atan(1.d0)
     fpi = 4.d0*pi
     rtwo = sqrt(2.d0)
 
@@ -524,7 +523,7 @@ module Harmonics_mod
 !        loop over m values
     fac = 1.d0
     do m = 0, lmax-1
-      fac = (1-2*m)*fac
+      fac = -fac*(2*m-1)
       p(m,m) = fac
       p(m+1,m) = (2*m+1)*cth*fac
 
@@ -534,7 +533,7 @@ module Harmonics_mod
       enddo ! l
       fac = fac*sth
     enddo ! m
-    p(lmax,lmax) = (1-2*lmax)*fac
+    p(lmax,lmax) = -fac*(2*lmax-1)
 
 !--->    determine sin and cos of phi ! todo: can this be done much easier with complex multiplication?
     s(0:1) = [0.d0, sph]
@@ -546,11 +545,11 @@ module Harmonics_mod
 
 !--->    multiply in the normalization factors
     i = 0
-    do l = 0,lmax
+    do l = 0, lmax
       i = i + l + 1 ! forward i to the center (m==0) of this l-section
-      a = sqrt((2*l+1)/fpi)
+      a = sqrt(dble(2*l+1)/fpi)
       cd = 1.d0
-      ylm(i) = a*p(l,0)
+      ylm(i) = a*p(l,0) ! m == 0
       sgm = -rtwo
       do m = 1, l
         cd = cd/dble((l+1-m)*(l+m))

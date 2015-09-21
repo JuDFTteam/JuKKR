@@ -180,7 +180,9 @@ program KKRnano
 
     call OUTTIME(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
 
-#ifndef DEBUG_NO_ELECTROSTATICS
+#ifdef DEBUG_NO_ELECTROSTATICS
+    warn(6, "preprocessor define has switched off electrostatics for debugging")
+#else
     call prepareMadelung(calc_data, arrays)
 #endif
 

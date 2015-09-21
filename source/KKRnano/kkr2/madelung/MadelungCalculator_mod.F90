@@ -867,9 +867,7 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
   function gamfc(lmax, alpha, r) result(glh)
     !----------------------------------------------------------------------
     !      calculation of convergence function
-    !
-    !       glh = i(alpha,l)/r**(l+1)*sqrt(pi)
-    !
+    !            glh = i(alpha,l)/r**(l+1)*sqrt(pi)
     !      with
     !            alpha = r times the splitting paramter lamda
     !      and
@@ -877,7 +875,6 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     !
     !                                sum (2**i * x**(2i-1) / (2i-1)!!)
     !                              1..i..l
-    !
     !
     ! Note: gamfc(alpha -> 0, ...) => glh = sqrt(pi) for all l  E.R.
     !-----------------------------------------------------------------------
