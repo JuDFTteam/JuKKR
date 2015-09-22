@@ -39,7 +39,7 @@ subroutine iguess_init(self, nofks, num_spin, blocksize, iguess)
   integer, intent(in) :: iguess
   integer :: ii
   integer :: ekmd
-  double complex, parameter :: czero=(0.d0,0.d0)
+  double complex, parameter :: czero=(0.d0, 0.d0)
 
   allocate(self%ek_indices(size(nofks) + 1))
 

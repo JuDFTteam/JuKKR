@@ -71,7 +71,7 @@
 
       q = literlast/lnodelast ! calculate blocksize
 
-!---    calculate iteration mapping
+!---  calculate iteration mapping
       if (q*lnodelast == literlast) then
 
         mapblock = (nodefirst - 1) + ceiling(dble(litercurr)/dble(q)) ! equally sized blocks
@@ -89,12 +89,12 @@
       endif
 
       if ((mapblock < nodefirst) .or. (mapblock > nodelast)) then
-        write (6,fmt=*) 'internal error in mapblock'
-#define OUT(VAR) "  ",#VAR," =",VAR
-        write (6,fmt='(99(3a,i0))') OUT(mapblock) ! result
-        write (6,fmt='(99(3a,i0))') OUT(itercurr),OUT(iterfirst),OUT(iterlast),OUT(iterstep),OUT(nodefirst),OUT(nodelast) ! arguments
-        write (6,fmt='(99(3a,i0))') OUT(literlast),OUT(litercurr),OUT(lnodelast),OUT(q),OUT(r),OUT(nprime) ! internal numbers
-#undef OUT        
+        write (6, fmt=*) 'internal error in mapblock'
+#define PR(VAR) "  ",#VAR," =",VAR
+        write (6, fmt='(99(3a,i0))') PR(mapblock) ! result
+        write (6, fmt='(99(3a,i0))') PR(itercurr),PR(iterfirst),PR(iterlast),PR(iterstep),PR(nodefirst),PR(nodelast) ! arguments
+        write (6, fmt='(99(3a,i0))') PR(literlast),PR(litercurr),PR(lnodelast),PR(q),PR(r),PR(nprime) ! internal numbers
+#undef  PR
         stop
       endif
 

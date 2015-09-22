@@ -91,7 +91,6 @@ module Voronoi_mod
     integer :: ivec, iface, ivert, i, nplane
     double precision :: tetrvol, rsq, tau, v1(3), v2(3), v3(3), rout2, dist
     double precision :: facearea(nfaced), trianglearea   
-    double precision :: temp
     integer :: isort(nfaced) ! Index for sorting
     double precision :: rsort(nfaced)              ! Aux. function for sorting
     double precision, allocatable :: ptmp(:,:), vtmp(:,:,:) ! For sorting

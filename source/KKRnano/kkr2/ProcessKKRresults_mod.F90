@@ -137,13 +137,13 @@ module ProcessKKRresults_mod
     if (params%NPOL == 0) then
       do ila = 1, num_local_atoms
         densities => getDensities(calc, ila)
-        atomdata => getAtomData(calc, ila)
+        atomdata  => getAtomData(calc, ila)
         atom_id = getAtomIndexOfLocal(calc, ila)
 
         ! TODO: Fermi energy written to DOS files is just a dummy value (99.99)
         call write_LDOS(densities%DEN,emesh%EZ,densities%lmaxd+1,emesh%IELAST,atomdata%core%ITITLE(:,1:dims%NSPIND), 99.99d0, &
                         emesh%E1, emesh%E2, params%ALAT, emesh%TK, dims%NSPIND, atom_id)
-      enddo
+      enddo ! ila
     endif
 
   ! -----------------------------------------------------------------
@@ -239,7 +239,7 @@ module ProcessKKRresults_mod
 
       RMSAVQ = RMSAVQ + RMSAVQ_single
       RMSAVM = RMSAVM + RMSAVM_single
-    enddo
+    enddo ! ila
     !$omp endparallel do
 
     ! summation and output of RMS error
@@ -290,15 +290,12 @@ module ProcessKKRresults_mod
   !> Gather all forces at rank 'master', only this rank writes the file.
   !> Since the amount of data for forces is low this is a reasonable approach.
   subroutine output_forces(calc, master, rank, comm)
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getDensities
-    
-    use DensityResults_mod, only: DensityResults
+    use CalculationData_mod, only: CalculationData, getNumLocalAtoms
     include 'mpif.h'
     type(CalculationData), intent(in) :: calc
     integer, intent(in) :: master, rank, comm
 
     integer :: ila, atom_id, num_local_atoms, nranks, ierr, max_local_atoms
-    type(DensityResults), pointer :: densities
     double precision, allocatable :: force_buffer(:,:), local_buffer(:,:)
 
     num_local_atoms = getNumLocalAtoms(calc) ! must be the same for all ranks, therefore get the maximum
@@ -314,9 +311,8 @@ module ProcessKKRresults_mod
     allocate(local_buffer(3,max_local_atoms))
     local_buffer = 0.d0
     do ila = 1, num_local_atoms
-      densities => getDensities(calc, ila)
-      local_buffer(:,ila) = densities%force_flm(-1:1)
-    enddo ! 
+      local_buffer(:,ila) = calc%densities_a(ila)%force_flm(-1:1)
+    enddo ! ila
 
     call MPI_Gather(local_buffer, 3*max_local_atoms, MPI_DOUBLE_PRECISION, &
                     force_buffer, 3*max_local_atoms, MPI_DOUBLE_PRECISION, &
@@ -330,7 +326,7 @@ module ProcessKKRresults_mod
       call closeForceFile()
     endif
 
-    deallocate(force_buffer, local_buffer)
+    deallocate(force_buffer, local_buffer, stat=ierr)
 
   endsubroutine
 
@@ -349,7 +345,7 @@ module ProcessKKRresults_mod
     use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMySECommunicator
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getDensities, getAtomData
-    use CalculationData_mod, only: getLDAUData, getKKR, getEnergies, getAtomIndexOfLocal!, getShapeGaunts, getGaunts
+    use CalculationData_mod, only: getLDAUData, getKKR, getEnergies, getAtomIndexOfLocal
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
@@ -401,7 +397,6 @@ module ProcessKKRresults_mod
 
     num_local_atoms = getNumLocalAtoms(calc)
 
-!     gaunts    => getGaunts(calc)
     atomdata  => getAtomData(calc, 1)
     ldau_data => getLDAUData(calc, 1)
     kkr       => getKKR(calc, 1)
@@ -438,8 +433,7 @@ module ProcessKKRresults_mod
     LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
   !------------------------------------------------------------------------------
-    !$omp parallel do reduction(+: chrgnt, denef) private(ila, atomdata, &
-    !$omp densities, energies, kkr, ldau_data, denef_local, chrgnt_local)
+    !$omp parallel do reduction(+: chrgnt,denef) private(ila,atomdata,densities,energies,kkr,ldau_data,denef_local,chrgnt_local)
     do ila = 1, num_local_atoms
       atomdata  => getAtomData(calc, ila)
       densities => getDensities(calc, ila)
@@ -494,7 +488,7 @@ module ProcessKKRresults_mod
       ! CHARGE -> written to result file
 
       ! Semicore contour included
-      if (params%use_semicore==1) then
+      if (params%use_semicore == 1) then
 
         call calcChargesLresSemi(densities%CHARGE, densities%CHRGSEMICORE_per_atom, densities%DEN, emesh%ielast, &
                             emesh%IESEMICORE, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
@@ -550,8 +544,8 @@ module ProcessKKRresults_mod
       atomdata  => getAtomData(calc, ila)
       densities => getDensities(calc, ila)
       energies  => getEnergies(calc, ila)
-      mesh         => atomdata%mesh_ptr
-      cell         => atomdata%cell_ptr
+      mesh      => atomdata%mesh_ptr
+      cell      => atomdata%cell_ptr
       atom_id = getAtomIndexOfLocal(calc, ila)
 
   !=============== DEBUG: Morgan charge distribution test =======================

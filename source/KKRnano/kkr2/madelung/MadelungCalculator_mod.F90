@@ -698,8 +698,8 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     kappa = -0.25d0/(lamda*lamda)
 
     ! **********************************************************************
-    !$omp parallel do private(i2,dq,stest,lm,nstart,i01,nrs,ngs,nre,nge,i,vr,ylm,ra,alpha,g,rfac,l,m,vg,ga,ga2,dqdotg,bfac)
-    do i2 = 1, naez
+    !$omp parallel do private(i2,dq,stest,lm,nstart,i01,nrs,ngs,nre,nge,i,vr,ylm,ra,alpha,g,rfac,l,m,ga,ga2,dqdotg,bfac)
+    do i2 = 1, naez 
       !======================================================================
       dq(1:3) = (qv(1:3,i1) - qv(1:3,i2)) * alat
 

@@ -37,11 +37,9 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   use InputParams_mod, only: InputParams
   use Main2Arrays_mod, only: Main2Arrays
 
-  use CalculationData_mod, only: CalculationData, getKKR, getRefCluster, getJijData, getAtomData, &
-    getLDAUData, getNumLocalAtoms, getAtomIndexOfLocal
+  use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData, getNumLocalAtoms, getAtomIndexOfLocal
     
   use KKRresults_mod, only: KKRresults
-! use GauntCoefficients_mod, only: GauntCoefficients
   use BasisAtom_mod, only: BasisAtom
   use JijData_mod, only: JijData
   use LDAUData_mod, only: LDAUData
@@ -57,7 +55,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
 
   use wrappers_mod, only: calctmat_wrapper, calcdtmat_wrapper
-  use jij_calc_mod, only: clsjij, writejijs, global_jij_data
+  use jij_calc_mod, only: clsjij, writejijs, jij_data => global_jij_data
 
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator
@@ -79,8 +77,6 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   type(BasisAtom), pointer             :: atomdata  ! referenced data does not change
   type(KKRresults), pointer            :: kkr       ! changes
   type(LDAUData), pointer              :: ldau_data ! changes
-  type(JijData), pointer               :: jij_data  ! changes
-  type(RefCluster), pointer            :: ref_cluster ! never changes
 
   type(TFQMRSolver), target :: solv
   type(KKROperator), target :: kkr_op
@@ -107,34 +103,26 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   I1 = atomdata%atom_index
   kkr       => null()
   ldau_data => getLDAUData(calc, 1)
-  jij_data  => getJijData(calc, 1)
 #define clusters calc%clusters
 #define lattice_vectors calc%lattice_vectors
 #define trunc_zone calc%trunc_zone
 
-  num_local_atoms = getNumLocalAtoms(calc)
+  jij_data => calc%jij_data_a(1) ! global, jij works only with max. 1 local atom
 
-  global_jij_data => getJijData(calc, 1)
+  num_local_atoms = getNumLocalAtoms(calc)
 
   ! allocate buffer for t-matrices
   allocate(tmatll(lmmaxd,lmmaxd,trunc_zone%naez_trc))
   ! allocate buffers for reference t-matrices
-  allocate( Tref_local(lmmaxd, lmmaxd,num_local_atoms))
-  allocate(DTref_local(lmmaxd, lmmaxd,num_local_atoms))
+  allocate( Tref_local(lmmaxd,lmmaxd,num_local_atoms))
+  allocate(DTref_local(lmmaxd,lmmaxd,num_local_atoms))
   allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
   allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms))
 
   allocate(atom_indices(num_local_atoms))
 
-  if (params%jij .and. num_local_atoms > 1) then
-    if (isMasterRank(my_mpi)) write(*,*) "Jij and num_local_atoms > 1 not supported."
-    STOP
-  endif
-
-  if (params%ldau .and. num_local_atoms > 1) then
-    if (isMasterRank(my_mpi)) write(*,*) "LDA+U and num_local_atoms > 1 not supported."
-    STOP
-  endif
+  if (params%jij  .and. num_local_atoms > 1) stop "Jij and num_local_atoms > 1 not supported."
+  if (params%ldau .and. num_local_atoms > 1) stop "LDA+U and num_local_atoms > 1 not supported."
 
   xccpl = .false.
 
@@ -146,22 +134,19 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   prspin = 1
 
   ! calculate exchange couplings only at last self-consistency step and when Jij=true
-  if ((ITER==params%SCFSTEPS).and.params%JIJ) XCCPL = .true.
+  if (ITER == params%SCFSTEPS .and. params%JIJ) XCCPL = .true. ! activate in last SCF iteration
 
   if (XCCPL) then
+    jij_data%do_jij_calculation = .true. ! Trigger jij-calculation
 
-    ! Trigger jij-calculation
-    jij_data%do_jij_calculation = .true.
-
-    call CLSJIJ(I1,dims%NAEZ,lattice_vectors%RR,lattice_vectors%nrd,arrays%RBASIS, &
-                jij_data%RCUTJIJ,arrays%NSYMAT,arrays%ISYMINDEX, &
-                jij_data%IXCP,jij_data%NXCP,jij_data%NXIJ,jij_data%RXIJ, &
-                jij_data%RXCCLS,jij_data%ZKRXIJ, &
+    call CLSJIJ(I1, dims%NAEZ, lattice_vectors%RR, lattice_vectors%nrd, arrays%RBASIS, &
+                jij_data%RCUTJIJ, arrays%NSYMAT, arrays%ISYMINDEX, &
+                jij_data%IXCP, jij_data%NXCP, jij_data%NXIJ, jij_data%RXIJ, &
+                jij_data%RXCCLS, jij_data%ZKRXIJ, &
                 lattice_vectors%nrd, jij_data%nxijd)
 
     jij_data%JXCIJINT = CZERO
     jij_data%GMATXIJ = CZERO
-
   endif
 
   ! get the indices of atoms that shall be treated at once by the process
@@ -170,7 +155,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
     atom_indices(ilocal) = getAtomIndexOfLocal(calc, ilocal)
     atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
     CHECKASSERT(atom_indices(ilocal) > 0)
-  enddo
+  enddo ! ilocal
 
   ! setup the solver + bcp preconditioner, allocates a lot of memory
   ! it is good to do these allocations outside of energy loop
@@ -190,16 +175,13 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
       Tref_local = CZERO
       DTref_local = CZERO
 !------------------------------------------------------------------------------
-      !$omp parallel do private(ilocal, kkr, atomdata)
+      !$omp parallel do private(ilocal, atomdata)
       do ilocal = 1, num_local_atoms
-        kkr => getKKR(calc, ilocal)
         atomdata  => getAtomData(calc, ilocal)
-!------------------------------------------------------------------------------
 
-        call TREF(emesh%EZ(IE),arrays%VREF,dims%LMAXD,atomdata%RMTref, &
+        call TREF(emesh%EZ(IE), arrays%VREF, dims%LMAXD, atomdata%RMTref, &
                   Tref_local(:,:,ilocal), DTref_local(:,:,ilocal), dims%LLY)
 
-!------------------------------------------------------------------------------
       enddo  ! ilocal
       !$omp endparallel do
 !------------------------------------------------------------------------------
@@ -212,28 +194,24 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
       ! Exchange the reference t-matrices within reference clusters
       do ilocal = 1, num_local_atoms
         kkr => getKKR(calc, ilocal)
-        ref_cluster => getRefCluster(calc, ilocal)
 
-        call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, ref_cluster, getMySEcommunicator(my_mpi))
-        call gatherTrefMatrices_com(DTref_local, kkr%DTrefLL, ref_cluster, getMySEcommunicator(my_mpi))
-      enddo
+        call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, calc%ref_cluster_a(ilocal), getMySEcommunicator(my_mpi))
+        call gatherTrefMatrices_com(DTref_local, kkr%DTrefLL, calc%ref_cluster_a(ilocal), getMySEcommunicator(my_mpi))
+      enddo ! ilocal
 
 !------------------------------------------------------------------------------
       !$omp parallel do private(ilocal, kkr, ref_cluster)
       do ilocal = 1, num_local_atoms
         kkr => getKKR(calc, ilocal)
-        ref_cluster => getRefCluster(calc, ilocal)
-!------------------------------------------------------------------------------
 
-        call GREF(emesh%EZ(IE),params%ALAT,calc%gaunts%IEND, &
-                      calc%gaunts%CLEB,ref_cluster%RCLS,calc%gaunts%ICLEB, &
-                      calc%gaunts%LOFLM,ref_cluster%NACLS, &
-                      kkr%TREFLL,kkr%DTREFLL, GrefN_buffer(:,:,:,ilocal), &
-                      kkr%DGREFN, kkr%LLY_G0TR(IE), &
-                      dims%lmaxd, kkr%naclsd, calc%gaunts%ncleb, &
-                      dims%LLY)
+        call GREF(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
+                  calc%gaunts%CLEB, calc%ref_cluster_a(ilocal)%RCLS, calc%gaunts%ICLEB, &
+                  calc%gaunts%LOFLM, calc%ref_cluster_a(ilocal)%NACLS, &
+                  kkr%TREFLL, kkr%DTREFLL, GrefN_buffer(:,:,:,ilocal), &
+                  kkr%DGREFN, kkr%LLY_G0TR(IE), &
+                  dims%lmaxd, kkr%naclsd, calc%gaunts%ncleb, &
+                  dims%LLY)
 
-!------------------------------------------------------------------------------
       enddo  ! ilocal
       !$omp endparallel do
 !------------------------------------------------------------------------------
@@ -250,21 +228,19 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
           PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
 !------------------------------------------------------------------------------
-          !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, jij_data, I1)
+          !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, I1)
           do ilocal = 1, num_local_atoms
             kkr => getKKR(calc, ilocal)
             atomdata => getAtomData(calc, ilocal)
             ldau_data => getLDAUData(calc, ilocal)
-            jij_data  => getJijData(calc, ilocal)
             I1 = getAtomIndexOfLocal(calc, ilocal)
-!------------------------------------------------------------------------------
 
             call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
                             params%NSRA, calc%gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
 
             jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
-            if (dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
+            if (dims%LLY == 1) then  ! calculate derivative of t-matrix for Lloyd's formula
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
                             params%NSRA, calc%gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
             endif
@@ -283,16 +259,14 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 
             call rescaleTmatrix(kkr%TMATN(:,:,ISPIN), kkr%lmmaxd, params%alat)
 
-!------------------------------------------------------------------------------
           enddo ! ilocal
           !$omp endparallel do
 !------------------------------------------------------------------------------
 
           NMESH = arrays%KMESH(IE)
 
-          if ( getMyAtomRank(my_mpi)==0 ) then
-            if (params%KTE >= 0) call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH)
-          endif
+          if (getMyAtomRank(my_mpi) == 0 .and. params%KTE >= 0) &
+            call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH)
 
           call stopTimer(single_site_timer)
           call resumeTimer(mult_scattering_timer)
@@ -324,8 +298,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
           calc%iguess_data)
 !------------------------------------------------------------------------------
 
-          ! copy results from buffer: G_LL'^NN (E, spin) =
-          !                           GmatN_buffer_LL'^N(ilocal) N(ilocal)
+          ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ilocal) N(ilocal)
           do ilocal = 1, num_local_atoms
             kkr => getKKR(calc, ilocal)
             kkr%GMATN(:,:,ie,ispin) = GmatN_buffer(:,:,ilocal)
@@ -335,7 +308,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
           call resumeTimer(single_site_timer)
 
         endif
-      enddo spinloop ! ISPIN = 1,NSPIN
+      enddo spinloop ! ISPIN = 1, NSPIN
 !------------------------------------------------------------------------------
 !        endof SMPID-parallel section
 !------------------------------------------------------------------------------
@@ -359,7 +332,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
                                         jij_data%DTIXIJ(:,:,1), jij_data%RXIJ,&
                                         jij_data%NXIJ, jij_data%IXCP, &
                                         jij_data%RXCCLS, jij_data%JXCIJINT)
-      endif
+      endif ! xccpl
 
 ! xccpl
 ! endof Jij calculation
@@ -371,7 +344,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
     endif
 ! IE ====================================================================
 
-  enddo                   ! IE = 1,IELAST
+  enddo ! IE = 1,IELAST
 
 ! IE ====================================================================
 !     enddo loop over energies (EMPID-parallel)
@@ -395,13 +368,10 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 !     output of Jij's
 !=======================================================================
   if (XCCPL) then
-
     call jijReduceIntResults_com(my_mpi, jij_data%JXCIJINT)
 
-    if (isInMasterGroup(my_mpi)) then
-      call writeJiJs(I1,jij_data%RXIJ,jij_data%NXIJ,jij_data%IXCP, &
-                     jij_data%RXCCLS,jij_data%JXCIJINT, jij_data%nxijd)
-    endif
+    if (isInMasterGroup(my_mpi)) &
+      call writeJiJs(I1, jij_data%RXIJ, jij_data%NXIJ, jij_data%IXCP, jij_data%RXCCLS, jij_data%JXCIJINT, jij_data%nxijd)
   endif
 
 !=======================================================================

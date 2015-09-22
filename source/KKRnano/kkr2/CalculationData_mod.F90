@@ -31,8 +31,8 @@ module CalculationData_mod
   public :: CalculationData, create, destroy, represent
   public :: createCalculationData, destroyCalculationData ! deprecated
   
-  public :: getBroydenDim, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getRefCluster, getKKR
-  public :: getDensities, getEnergies, getLDAUData, getJijData
+  public :: getBroydenDim, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getKKR
+  public :: getDensities, getEnergies, getLDAUData
   public :: getMaxReclenMeshes, getMaxReclenPotential      
   
   public :: prepareMadelung         
@@ -51,12 +51,12 @@ module CalculationData_mod
     type(RadialMeshData), pointer     :: mesh_a(:)         => null()
     type(CellData), pointer           :: cell_a(:)         => null()
     type(BasisAtom), pointer          :: atomdata_a(:)     => null()
-    type(RefCluster), pointer         :: ref_cluster_a(:)  => null()
+    type(RefCluster), allocatable     :: ref_cluster_a(:)
     type(KKRresults), pointer         :: kkr_a(:)          => null()
     type(DensityResults), pointer     :: densities_a(:)    => null()
     type(EnergyResults), pointer      :: energies_a(:)     => null()
     type(LDAUData), pointer           :: ldau_data_a(:)    => null()
-    type(JijData), pointer            :: jij_data_a(:)     => null()
+    type(JijData), pointer                :: jij_data_a(:) => null()
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
 
     ! global data - same for each local atom
@@ -88,8 +88,8 @@ module CalculationData_mod
   contains
 
   !----------------------------------------------------------------------------
-  ! TODO: atoms_per_procs * num_procs MUST BE = naez
-  ! rank = 0,1,..., num_atom_ranks-1
+  ! TODO: atoms_per_procs * num_procs MUST BE = naez, 
+  !       rank = 0,1,..., num_atom_ranks-1
   subroutine createCalculationData(self, dims, params, arrays, my_mpi)
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use KKRnanoParallel_mod, only: getMyAtomRank, getNumAtomRanks
@@ -253,17 +253,6 @@ module CalculationData_mod
   endfunction
 
   !----------------------------------------------------------------------------
-  !> Returns reference to 'reference cluster for atom with LOCAL atom index
-  !> 'local_atom_index'.
-  function getRefCluster(self, local_atom_index)
-    type(RefCluster), pointer :: getRefCluster ! return value
-    type(CalculationData), intent(in) :: self
-    integer, intent(in) :: local_atom_index
-
-    getRefCluster => self%ref_cluster_a(local_atom_index)
-  endfunction
-
-  !----------------------------------------------------------------------------
   !> Returns reference to kkr(results) for atom with LOCAL atom index
   !> 'local_atom_index'.
   function getKKR(self, local_atom_index)
@@ -305,17 +294,6 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getLDAUData => self%ldau_data_a(local_atom_index)
-  endfunction
-
-  !----------------------------------------------------------------------------
-  !> Returns reference to Jij-data for atom with LOCAL atom index
-  !> 'local_atom_index'.
-  function getJijData(self, local_atom_index)
-    type(JijData), pointer :: getJijData ! return value
-    type(CalculationData), intent(in) :: self
-    integer, intent(in) :: local_atom_index
-
-    getJijData => self%jij_data_a(local_atom_index)
   endfunction
 
   !----------------------------------------------------------------------------
@@ -378,9 +356,7 @@ module CalculationData_mod
     enddo
     !$omp endparallel do
 
-    ! setup the truncation zone
-    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
-
+    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays) ! setup the truncation zone
 
     call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
 
@@ -396,8 +372,7 @@ module CalculationData_mod
 
     call createMadelungCalculator(self%madelung_calc, dims%lmaxd, params%alat, params%rmax, params%gmax, arrays%bravais)
 
-    ! a very crucial routine
-    call generateAtomsShapesMeshes(self, dims, params, arrays)
+    call generateAtomsShapesMeshes(self, dims, params, arrays) ! a very crucial routine
 
     call recordLengths_com(self, my_mpi)
 
@@ -406,7 +381,7 @@ module CalculationData_mod
       call writePotentialIndexFile(self)
 #endif
       call writeNewMeshFiles(self)
-    endif
+    endif ! in master group
 
     do ila = 1, self%num_local_atoms
 
@@ -432,7 +407,7 @@ module CalculationData_mod
     call createBroydenData(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing)  ! getBroydenDim replaces former NTIRD
 
     call setup_iguess(self, dims, arrays) ! setup storage for iguess
-    
+
   endsubroutine ! constructEverything
 
   !----------------------------------------------------------------------------
@@ -448,7 +423,7 @@ module CalculationData_mod
     type(Main2Arrays), intent(in):: arrays
 
     integer, allocatable :: num_k_points(:)
-    integer :: ii, blocksize
+    integer :: ii, blocksize, ns
 
     ! TODO: This is overdimensioned when l-cutoff is used!!!
     if (num_untruncated /= dims%naez) &
@@ -461,13 +436,8 @@ module CalculationData_mod
       num_k_points(ii) = arrays%nofks(arrays%kmesh(ii))
     enddo ! ii
 
-    ! setup storage for iguess
-    if (dims%smpid == 1 .and. dims%nspind == 2) then
-      ! no spin parallelisation choosen, processes must store both spin-directions
-      call iguess_init(self%iguess_data, num_k_points, 2, blocksize, dims%iguessd)
-    else
-      call iguess_init(self%iguess_data, num_k_points, 1, blocksize, dims%iguessd)
-    endif
+    ns = 1; if (dims%smpid == 1 .and. dims%nspind == 2) ns = 2 ! no spin parallelisation choosen, processes must store both spin-directions
+    call iguess_init(self%iguess_data, num_k_points, ns, blocksize, dims%iguessd) ! setup storage for iguess
 
   endsubroutine ! setup_iguess
 
@@ -555,7 +525,7 @@ module CalculationData_mod
 
     deallocate(new_MT_radii, old_atom_a, old_mesh_a)
 
-  endsubroutine generateAtomsShapesMeshes
+  endsubroutine ! generateAtomsShapesMeshes
 
 !------------------------------------------------------------------------------
   subroutine generateShapesTEST(self, dims, params, arrays, new_MT_radii, MT_scale)
@@ -613,8 +583,6 @@ module CalculationData_mod
       call destroyInterstitialMesh(inter_mesh)
 
     enddo ! ila
-    
-    
 
   endsubroutine ! generateShapesTEST
 
