@@ -32,6 +32,8 @@ FC90FLAGS =
 # LDFLAGS  = -O0 -g
 FCFLAGS += -O3  -g
 LDFLAGS  = -O3  -g
+# FCFLAGS += -pg
+# LDFLAGS += -pg
 # LDFLAGS += -C -traceback
 
 ### interprocedural optimization at link-time 
@@ -271,7 +273,7 @@ KKROperator_mod.o: MultScatData_mod.o OperatorT_mod.o ClusterInfo_mod.o SparseMa
 lloyd0_new_mod.o: KKRnanoParallel_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o
 vbrmv_mat_mod.o: SparseMatrixDescription_mod.o
 ClusterInfo_mod.o: TruncationZone_mod.o RefCluster_mod.o one_sided_commI_mod.o
-ScatteringCalculation_mod.o: SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o KKRnanoParallel_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o SolverOptions_mod.o KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o TFQMRSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o MultScatData_mod.o
+ScatteringCalculation_mod.o: Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o KKRnanoParallel_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o SolverOptions_mod.o KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o TFQMRSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o MultScatData_mod.o
 TEST_lcutoff_mod.o: TruncationZone_mod.o Main2Arrays_mod.o lcutoff_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
@@ -325,6 +327,5 @@ PositionReader_mod.o: Exceptions_mod.o #ConfigReader_mod.o
 RefCluster_mod.o: Sorting_mod.o
 jij_calc_mod.o: Symmetry_mod.o
 Harmonics_mod.o: Constants_mod.o
-
 
 # DO NOT DELETE

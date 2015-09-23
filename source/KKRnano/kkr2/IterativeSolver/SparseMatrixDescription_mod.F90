@@ -83,10 +83,11 @@ module SparseMatrixDescription_mod
   subroutine destroySparseMatrixDescription(sparse)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    deallocate(sparse%ia)
-    deallocate(sparse%kvstr)
-    deallocate(sparse%ja)
-    deallocate(sparse%ka)
+    integer :: ist ! ignore status
+    deallocate(sparse%ia, stat=ist)
+    deallocate(sparse%kvstr, stat=ist)
+    deallocate(sparse%ja, stat=ist)
+    deallocate(sparse%ka, stat=ist)
 
     sparse%blk_nrows = 0
     sparse%max_blockdim = 0
@@ -96,7 +97,7 @@ module SparseMatrixDescription_mod
   !---------------------------------------------------------------------------
   !> Writes SparseMatrixDescription to formatted file - useful for testing.
   subroutine dumpSparseMatrixDescription(sparse, filename)
-    type(SparseMatrixDescription), intent(inout) :: sparse
+    type(SparseMatrixDescription), intent(in) :: sparse
     character(len=*), intent(in) :: filename
 
     integer, parameter :: fu = 97
@@ -124,6 +125,8 @@ module SparseMatrixDescription_mod
     integer, parameter :: fu = 97
     integer :: blk_nrows, max_num_blocks
 
+    call destroy(sparse)
+    
     open(fu, file=filename, form='formatted', action='read', status='old')
 
     read(fu, *)  blk_nrows, max_num_blocks
@@ -138,4 +141,4 @@ module SparseMatrixDescription_mod
     close(fu)
   endsubroutine ! create
 
-endmodule SparseMatrixDescription_mod
+endmodule ! SparseMatrixDescription_mod

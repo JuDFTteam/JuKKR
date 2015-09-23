@@ -27,7 +27,7 @@ module BroydenData_mod
     integer :: iteration_count
     integer :: imix
     double precision :: mixing
-  endtype BroydenData
+  endtype
 
   interface create
     module procedure createBroydenData
@@ -37,17 +37,17 @@ module BroydenData_mod
     module procedure destroyBroydenData
   endinterface
   
-  CONTAINS
+  contains
 
   !-----------------------------------------------------------------------------
   !> Constructs a BroydenData object.
   !> @param[inout] self    The BroydenData object to construct.
   !> @param[in]    ntird
   !> @param[in]    itdbryd
-  subroutine createBroydenData(self, ntird,itdbryd, imix, mixing)
-    type (BroydenData), intent(inout) :: self
-    integer, intent(in) ::  ntird
-    integer, intent(in) ::  itdbryd
+  subroutine createBroydenData(self, ntird, itdbryd, imix, mixing)
+    type(BroydenData), intent(inout) :: self
+    integer, intent(in) :: ntird
+    integer, intent(in) :: itdbryd
     integer, intent(in) :: imix
     double precision, intent(in) :: mixing
 
@@ -71,13 +71,13 @@ module BroydenData_mod
     self%ui2  = 0.d0
     self%vi2  = 0.d0
     self%wit  = 0.d0
-  endsubroutine
+  endsubroutine ! create
 
   !-----------------------------------------------------------------------------
   !> Destroys a BroydenData object.
   !> @param[inout] self    The BroydenData object to destroy.
   subroutine destroyBroydenData(self)
-    type (BroydenData), intent(inout) :: self
+    type(BroydenData), intent(inout) :: self
 
     integer :: memory_stat
 
@@ -86,5 +86,6 @@ module BroydenData_mod
     DEALLOCATECHECK(self%ui2)
     DEALLOCATECHECK(self%vi2)
     DEALLOCATECHECK(self%wit)
-  endsubroutine
-endmodule
+  endsubroutine ! destroy
+  
+endmodule ! BroydenData_mod

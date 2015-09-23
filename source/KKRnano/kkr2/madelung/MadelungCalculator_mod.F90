@@ -267,12 +267,11 @@ module MadelungCalculator_mod
  
 
   ! call TESTDIMLAT(params%ALAT,arrays%BRAVAIS,RECBV,params%RMAX,params%GMAX, dims%NMAXD, dims%ISHLD) ! former call syntax
-  subroutine testdimlat(alat, bravais, recbv, rmax, gmax)!, NMAXD, ISHLD)
+  subroutine testdimlat(alat, bravais, recbv, rmax, gmax)
     double precision, intent(in) :: alat !< lattice constant
     
     double precision, intent(in) :: gmax, rmax
     double precision, intent(in) :: bravais(3,3), recbv(3,3) !< bravais matrix and reciprocal basis vectors
-    integer :: NMAXD, ISHLD!!!, intent(out)
     
     integer :: ngmax, nrmax, nshlg, nshlr
     double precision, allocatable :: vec(:,:) ! (3,nmaxd)
@@ -280,13 +279,12 @@ module MadelungCalculator_mod
     
     call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsh, nsh, rmax, gmax, vec, vec, iprint=0, print_info=0)
     
-    NMAXD = max(ngmax, nrmax)
-    write(*,'(a,i13,9a)') ' NMAXD  =',NMAXD,'  ! minimum determined in ',__FILE__
-    ISHLD = max(nshlg, nshlr)
-    write(*,'(a,i13,9a)') ' ISHLD  =',ISHLD,'  ! minimum determined in ',__FILE__
+    write(*,'(a,i13,9(a,i0))') ' NMAXD  =',max(ngmax, nrmax),'  ! the maximum of ',ngmax,' (g-space) and ',nrmax,' (real-space)'
+    write(*,'(a,i13,9(a,i0))') ' ISHLD  =',max(nshlg, nshlr),'  ! the maximum of ',nshlg,' (g-space) and ',nshlr,' (real-space)'
     
     write(6,'(79(1h=),/)')
-    write(6, fmt="(10x,'R max =',F9.5,' (a.u.)',/,10X,'G max =',f9.5,' (1/a.u.)',/)") rmax, gmax
+    write(6, fmt="(10x,'R max =',f9.5,' (a.u.)')")     rmax
+    write(6, fmt="(10x,'G max =',f9.5,' (1/a.u.)',/)") gmax
     write(6,'(79(1h=),/,15x,a)') 'checking lattice for Ewald-summ ........... OK'
     write(6,'(79(1h=),/)')
 
@@ -721,9 +719,9 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
         if (i01 == 0) then
           nrs = nstart
           ngs = 2
-          nre = nrmax - nlshellr ! nsr(nshlr)
-          nge = ngmax - nlshellg ! nsg(nshlg)
-        else
+          nre = nrmax - nlshellr ! nlshellr==nsr(nshlr), loop over all but the last shell
+          nge = ngmax - nlshellg ! nlshellg==nsg(nshlg), loop over all but the last shell
+        else ! loop over the last shell only (to check the convergence)
           nrs = nre + 1
           ngs = nge + 1
           nre = nrmax

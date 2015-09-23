@@ -2,25 +2,20 @@
 subroutine appblckcirc(vecs_in, vecs_out, gllhblck, naez,lmmaxd, natbld, xdim, ydim, zdim, num_columns)
   implicit none
 
+  integer, intent(in)  :: naez !< number of all atoms
+  integer, intent(in)  :: lmmaxd !< number of atoms per preconditioning block
+  integer, intent(in)  :: natbld !< number of preconditioning blocks in each direction
+  integer, intent(in)  :: xdim, ydim, zdim
+  integer, intent(in)  :: num_columns
+  double complex, intent(in)  :: vecs_in(naez*lmmaxd,num_columns)
+  double complex, intent(out) :: vecs_out(naez*lmmaxd,num_columns)
+  double complex, intent(in)  :: gllhblck(natbld*lmmaxd,xdim*ydim*zdim*natbld*lmmaxd)
+
   include 'fftw3.f'
-
-  integer naez
-  integer lmmaxd
-  !     number of atoms per preconditioning block
-  integer natbld
-  !     number of preconditioning blocks in each direction
-  integer xdim
-  integer ydim
-  integer zdim
-  integer num_columns
-
-
+  
   double complex, parameter :: cone  = (1.d0, 0.d0)
   double complex, parameter :: czero = (0.d0, 0.d0)
 
-  double complex vecs_in(naez*lmmaxd,num_columns)
-  double complex vecs_out(naez*lmmaxd,num_columns)
-  double complex gllhblck(natbld*lmmaxd,xdim*ydim*zdim*natbld*lmmaxd)
 
   !     local arrays - large, stack based!!!
   double complex :: tblck(natbld*lmmaxd,natbld*lmmaxd)
@@ -47,10 +42,9 @@ subroutine appblckcirc(vecs_in, vecs_out, gllhblck, naez,lmmaxd, natbld, xdim, y
 
   ! all threads use the same FFTw3-plans
   ! - possible according to FFTw3 documentation
-  call dFFTw_plan_dft_3d(FFTwplan_bwd, xdim, ydim, zdim, x, x,  FFTw_backward, FFTw_estimate)
-  call dFFTw_plan_dft_3d(FFTwplan_fwd, xdim, ydim, zdim, y, y,  FFTw_forward,  FFTw_estimate)
+  call dFFTw_plan_dft_3d(FFTwplan_bwd, xdim, ydim, zdim, x, x, FFTw_backward, FFTw_estimate)
+  call dFFTw_plan_dft_3d(FFTwplan_fwd, xdim, ydim, zdim, y, y, FFTw_forward,  FFTw_estimate)
 
-  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !$omp parallel private(x,y,tblck,txk,tyk,xk,yk)
   !$omp do
   do lm1 = 1, num_columns
@@ -142,7 +136,6 @@ subroutine appblckcirc(vecs_in, vecs_out, gllhblck, naez,lmmaxd, natbld, xdim, y
   enddo ! lm1
   !$omp enddo
   !$omp endparallel
-  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   call dFFTw_destroy_plan(FFTwplan_fwd)
   call dFFTw_destroy_plan(FFTwplan_bwd)

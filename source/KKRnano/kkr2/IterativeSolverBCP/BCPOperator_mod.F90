@@ -55,8 +55,7 @@ module BCPOperator_mod
     type(ClusterInfo), target  :: cluster_info
     integer, intent(in) :: lmmaxd
 
-    integer naezd
-    integer blocks_per_row
+    integer :: naezd, blocks_per_row
 
     naezd = cluster_info%naez_trc
 
@@ -75,7 +74,7 @@ module BCPOperator_mod
     self%cluster_info => cluster_info
     self%lmmaxd = lmmaxd
 
-  endsubroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Calculation of BCP preconditioner.
@@ -86,8 +85,7 @@ module BCPOperator_mod
     double complex, intent(in) :: GLLH(:)
 
     external :: BCPWUPPER
-    integer naezd
-    integer blocks_per_row
+    integer :: naezd, blocks_per_row
 
     if (self%solver_opts%bcp /= 1) return ! no preconditioning selected
 
@@ -99,7 +97,7 @@ module BCPOperator_mod
                    self%solver_opts%ydim, self%solver_opts%zdim, &
                    blocks_per_row)
 
-  endsubroutine
+  endsubroutine ! calc
 
   !----------------------------------------------------------------------------
   !> Applies Preconditioner/Operator on mat_X and returns result in mat_AX.
@@ -109,8 +107,7 @@ module BCPOperator_mod
     double complex, intent(out) :: mat_AX(:,:)
 
     external :: APPBLCKCIRC
-    integer :: num_columns, naez
-    integer :: natbld, xdim, ydim, zdim
+    integer :: num_columns, naez, natbld, xdim, ydim, zdim
 
     natbld = self%solver_opts%natbld
     xdim = self%solver_opts%xdim
@@ -126,7 +123,7 @@ module BCPOperator_mod
                        naez, self%lmmaxd, &
                        natbld, xdim, ydim, zdim, num_columns)
 
-  endsubroutine
+  endsubroutine ! apply
 
   !----------------------------------------------------------------------------
   subroutine destroy_BCPOperator(self)
@@ -134,6 +131,6 @@ module BCPOperator_mod
 
     if (allocated(self%GLLHBLCK)) deallocate(self%GLLHBLCK)
     nullify(self%cluster_info)
-  endsubroutine
+  endsubroutine ! destroy
 
-endmodule
+endmodule ! BCPOperator_mod

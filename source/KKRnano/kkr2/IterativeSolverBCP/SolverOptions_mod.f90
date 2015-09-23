@@ -13,4 +13,4 @@ module SolverOptions_mod
     integer :: natbld = 1
   endtype
   
-endmodule SolverOptions_mod
+endmodule ! SolverOptions_mod

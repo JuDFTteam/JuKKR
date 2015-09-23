@@ -30,7 +30,7 @@ module TFQMRSolver_mod
     type(SolverStats) :: total_stats
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
-    double precision :: qmrbound = 1d-6
+    double precision :: qmrbound = 1.d-6
 
     contains
       procedure :: init => init_solver
@@ -52,14 +52,14 @@ module TFQMRSolver_mod
     self%op => op
     self%precond => op ! also init the pointer to precond with op, may be overwritten later
     self%use_precond = .false.
-  endsubroutine
+  endsubroutine ! init
 
   subroutine init_precond_solver(self, precond)
     class(TFQMRSolver) :: self
     class(OperatorT), target :: precond
     self%precond => precond
     self%use_precond = .true.
-  endsubroutine
+  endsubroutine ! init with preconditioner
 
   !----------------------------------------------------------------------------
   !> Solves problem for right hand side mat_B, solution in mat_X.
@@ -71,7 +71,7 @@ module TFQMRSolver_mod
     use SolverStats_mod, only: sum_stats
     class(TFQMRSolver) :: self
     double complex, intent(inout) :: mat_X(:,:)
-    double complex, intent(inout) :: mat_B(:,:)
+    double complex, intent(in)    :: mat_B(:,:)
 
     integer nlen
     integer num_columns
@@ -101,18 +101,19 @@ module TFQMRSolver_mod
 
     call sum_stats(self%stats, self%total_stats)
 
-  endsubroutine
+  endsubroutine ! solve
 
   !----------------------------------------------------------------------------
   subroutine destroy_solver(self)
     class(TFQMRSolver) :: self
+    
+    integer :: ist ! ignore status
 
-    if (allocated(self%vecs)) deallocate(self%vecs)
-    if (allocated(self%temp)) deallocate(self%temp)
+    deallocate(self%vecs, self%temp, stat=ist)
 
     nullify(self%op)
     nullify(self%precond)
-  endsubroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   subroutine set_qmrbound(self, qmrbound)
@@ -155,5 +156,5 @@ module TFQMRSolver_mod
     call reset_stats(self%total_stats)
   endsubroutine
   
-endmodule
+endmodule ! TFQMRSolver_mod
 

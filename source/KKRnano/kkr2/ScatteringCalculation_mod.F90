@@ -357,7 +357,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   do ilocal = 1, num_local_atoms
     kkr => getKKR(calc, ilocal)
     call collectMSResults_com(my_mpi, kkr%GMATN, kkr%LLY_GRDT, ebalance_handler%EPROC)
-  enddo
+  enddo ! ilocal
 !=======================================================================
 
 ! TIME
@@ -401,7 +401,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
       endif
     enddo ! ISPIN
 
-  endif  ! IGUESS == 1 .and. EMPID > 1
+  endif ! IGUESS == 1 .and. EMPID > 1
 
   call cleanup_solver(solv, kkr_op, precond)
 
@@ -525,7 +525,7 @@ subroutine substractReferenceTmatrix(tmatn, trefll, lmmaxd)
 
   integer :: lm1
   ! note: trefll is diagonal! - spherical reference potential
-  do lm1 = 1,lmmaxd
+  do lm1 = 1, lmmaxd
     tmatn(lm1,lm1) =  tmatn(lm1,lm1) - trefll(lm1,lm1)
   enddo ! lm1
 
@@ -534,22 +534,24 @@ endsubroutine
   !------------------------------------------------------------------------------
   !> Rescale and symmetrise T-matrix.
   subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
+    use Constants_mod, only: pi
     double complex, intent(inout) :: tsst_local(lmmaxd,lmmaxd)
     integer, intent(in) :: lmmaxd
     double precision, intent(in) :: alat
 
     integer :: lm1, lm2
-    double precision :: rfctor
+    double precision :: rfctori
 
   !     rfctor=a/(2*pi) conversion factor to p.u.
-    rfctor = alat/(8.d0*atan(1.d0))           ! = alat/(2*pi)
+!     rfctor = alat/(8.d0*atan(1.d0))           ! = alat/(2*pi)
+    rfctori = pi/alat           ! = 0.5*(alat/(2*pi))^(-1)
 
 ! --> convert inverted delta_t-matrices to p.u.
 !     also a symmetrisation of the matrix is performed
 
     do lm2 = 1, lmmaxd
       do lm1 = 1, lm2
-        tsst_local(lm1,lm2) = 0.5d0/rfctor * (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))
+        tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
         tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmtric
       enddo ! lm1
     enddo ! lm2
@@ -569,9 +571,7 @@ subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, communicator)
   type(RefCluster), intent(in) :: ref_cluster
   integer, intent(in) :: communicator
 
-  !-------------------
-  integer chunk_size
-  integer num_local_atoms
+  integer :: chunk_size, num_local_atoms
 
   chunk_size = size(Tref_local, 1) * size(Tref_local, 2)
   num_local_atoms = size(Tref_local, 3)
@@ -602,11 +602,7 @@ subroutine gatherTmatrices_com(calc, tmatll, ispin, communicator)
 
   type(KKRresults), pointer :: kkr
 
-  integer :: ilocal
-  integer :: num_local_atoms
-  integer :: lmmaxd
-
-  integer :: chunk_size
+  integer :: ilocal, num_local_atoms, lmmaxd, chunk_size
   double complex, allocatable :: tsst_local(:,:,:)
 
   num_local_atoms = getNumLocalAtoms(calc)
@@ -619,7 +615,7 @@ subroutine gatherTmatrices_com(calc, tmatll, ispin, communicator)
   do ilocal = 1, num_local_atoms
     kkr => getKKR(calc, ilocal)
     tsst_local(:,:,ilocal) = kkr%TMATN(:,:,ispin)
-  enddo
+  enddo ! ilocal
 
   call copyFromZ_com(tmatll, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 

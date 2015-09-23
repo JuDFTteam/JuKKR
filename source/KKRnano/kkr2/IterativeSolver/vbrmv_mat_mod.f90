@@ -29,10 +29,8 @@ module vbrmv_mat_mod
   endsubroutine ! multiply_vbr
 
 
-!     Heavily modified routine from SPARSKIT
-!-----------------------------------------------------------------------
-  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, a, kvstr, kvstc, x, b, &
-                       max_blockdim, max_blocks_per_row)
+  !> Heavily modified routine from SPARSKIT
+  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, a, kvstr, kvstc, x, b, max_blockdim, max_blocks_per_row)
                        
     integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(blk_nrows+1), kvstc(:)
     integer, intent(in) :: max_blockdim, max_blocks_per_row
@@ -70,8 +68,8 @@ module vbrmv_mat_mod
     integer :: startrow, leaddim_b, num_rows, leaddim_buffer
     integer :: jlow, jhigh
 
-    double complex, parameter :: CZERO = (0.0d0, 0.0d0)
-    double complex, parameter :: CONE  = (1.0d0, 0.0d0)
+    double complex, parameter :: CZERO = (0.d0, 0.d0)
+    double complex, parameter :: CONE  = (1.d0, 0.d0)
 
     leaddim_b = size(b, 1)
     leaddim_buffer = size(buffer, 1)

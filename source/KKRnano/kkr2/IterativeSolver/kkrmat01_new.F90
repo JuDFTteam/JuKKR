@@ -18,7 +18,7 @@ module kkrmat_new_mod
   double complex, allocatable :: full(:,:)
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
 
-  CONTAINS
+  contains
 
 !------------------------------------------------------------------------------
 !> Solves multiple scattering problem for every k-point.
@@ -26,7 +26,6 @@ module kkrmat_new_mod
 !> Returns diagonal k-integrated part of Green's function in GS.
 subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALAT,NSYMAT,RR, &
                         GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
-
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
   use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
@@ -151,7 +150,7 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
 
   call solv%reset_total_stats()
 
-endsubroutine KKRMAT01_new
+endsubroutine ! kkrmat01_new
 
   
 !------------------------------------------------------------------------------
@@ -269,7 +268,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
   deallocate(Gref_buffer)
 
-endsubroutine referenceFourier_com
+endsubroutine ! referenceFourier_com
 
 !------------------------------------------------------------------------------
 !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
@@ -301,11 +300,11 @@ subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
     ASSERT(lmmax1 == size(G_diag, 1))
     ASSERT(lmmax1 == size(G_diag, 2))
 
-    G_diag(1:lmmax1,:,ii) = mat_X(start+1:start+lmmax1,((ii-1)*lmmax1+1):(ii*lmmax1))
+    G_diag(1:lmmax1,:,ii) = mat_X(start+1:start+lmmax1,(ii-1)*lmmax1+1:ii*lmmax1)
 
   enddo ! ii
 
-endsubroutine getGreenDiag
+endsubroutine ! getGreenDiag
 
 
 !------------------------------------------------------------------------------
@@ -327,17 +326,13 @@ subroutine greenKSummation(g_diag, gs, k_point_weight, atom_indices, nsymat, lmm
   integer, intent(in) :: nsymat
   double precision, intent(in) :: k_point_weight
 
-  ! -------- local ------------------
-
-  integer :: isym
-  integer :: ii !< local atom index
+  integer :: isym, ii !< local atom index
 ! integer :: iat
 
   do ii = 1, size(atom_indices)
 !   iat = atom_indices(ii)
 
     ! perform the k-space integration for diagonal element of green's function of atom iat
-
     do isym = 1, nsymat
       gs(:,:,isym,ii) = gs(:,:,isym,ii) + k_point_weight * g_diag(:,:,ii)
     enddo ! isym
@@ -491,7 +486,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
   TESTARRAYLOG(3, ms%mat_X)
   ! RESULT: mat_X
 
-endsubroutine kloopbody
+endsubroutine ! kloopbody
 
 
 !------------------------------------------------------------------------------
@@ -567,7 +562,7 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
   ! share GINP with all other processes in 'communicator'
   call exposeBufferZ(win, GINP, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
 
-  GLLH = zero
+  GLLH = zero ! init
 
   ! loop up to naez_max to ensure that each rank does the same amount of fence calls
   do site_index = 1, naez_max
@@ -598,6 +593,6 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
 
   deallocate(Gref_buffer)
 
-endsubroutine referenceFourier_com_fenced
+endsubroutine ! referenceFourier_com_fenced
 
-endmodule kkrmat_new_mod
+endmodule ! kkrmat_new_mod

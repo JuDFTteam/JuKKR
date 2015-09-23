@@ -163,6 +163,7 @@ module CalculationData_mod
       call calculateMadelungLatticeSum(self%madelung_sum_a(ila), self%madelung_calc, atom_id, arrays%rbasis)
     enddo ! ila
 
+!   stop 'DEBUG: stop after calculateMadelungLatticeSum in CalculationData_mod.F90:166'    
   endsubroutine ! prepare Madelung
 
   !----------------------------------------------------------------------------
@@ -404,8 +405,11 @@ module CalculationData_mod
     ! calculate Gaunt coefficients
     call createGauntCoefficients(self%gaunts, dims%lmaxd)
     call createShapeGauntCoefficients(self%shgaunts, dims%lmaxd)
+    
+!   write(*,*) __FILE__,__LINE__," createBroydenData deavtivated for DEBUG!"
     call createBroydenData(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing)  ! getBroydenDim replaces former NTIRD
 
+!   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
     call setup_iguess(self, dims, arrays) ! setup storage for iguess
 
   endsubroutine ! constructEverything

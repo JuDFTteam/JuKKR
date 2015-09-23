@@ -25,4 +25,4 @@ module OperatorT_mod
     endsubroutine
   endinterface
 
-endmodule
+endmodule ! OperatorT_mod

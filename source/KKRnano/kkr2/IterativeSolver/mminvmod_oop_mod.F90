@@ -17,7 +17,7 @@ module mminvmod_oop_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   implicit none
   private
-  public :: MMINVMOD_oop
+  public :: mminvmod_oop
 
   contains
 
@@ -37,7 +37,7 @@ module mminvmod_oop_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine MMINVMOD_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond, VECS, temp)
+  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond, VECS, temp)
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
     use OperatorT_mod, only: OperatorT
