@@ -24,6 +24,7 @@ FCFLAGS += -I $(BUILDDIR)
 # FCFLAGS += -openmp
 FCFLAGS += -gen-interfaces -warn interfaces
 # FCFLAGS += -D TASKLOCAL_FILES
+# FCFLAGS += -D DEBUGSHAPEFUNCTIONS
 FCFLAGS += -D USE_VOROWEIGHTS
 # FCFLAGS += -D DEBUG1
 FC90FLAGS =
@@ -323,7 +324,7 @@ read_formatted_mod.o: Exceptions_mod.o
 BrillouinZone_mod.o: Exceptions_mod.o
 KKRnanoParallel_mod.o: Exceptions_mod.o
 MadelungCalculator_mod.o: Exceptions_mod.o
-PositionReader_mod.o: Exceptions_mod.o #ConfigReader_mod.o
+PositionReader_mod.o: Exceptions_mod.o
 RefCluster_mod.o: Sorting_mod.o
 jij_calc_mod.o: Symmetry_mod.o
 Harmonics_mod.o: Constants_mod.o

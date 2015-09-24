@@ -191,7 +191,7 @@ module ShapeFunctions_mod
 
     allocate(faces(size(nvertices)), stat=ist)
 
-    call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt, atom_id) ! output: faces, npan, crt
+    call criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, faces, npan, crt, atom_id) ! outputs: faces, npan, crt
 
     ! increase number of mesh points if necessary but use at least 'npoi' points (otherwise mesh0 complains)
     call mesh(crt, npan, nm, xrn, drn, meshn, max(npoi, npan*nmin), 0, nmin, meshnd, npand, verbosity)

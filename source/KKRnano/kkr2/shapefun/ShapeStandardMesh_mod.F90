@@ -39,30 +39,30 @@ module ShapeStandardMesh_mod
     double precision, intent(out) :: xrn(meshnd), drn(meshnd)
 
     integer :: iord, ipan, ir_start, ir, ir_end, ir_off
-    double precision :: ctm, off, step
+    double precision :: crt_temp, off, step
 
     !-----------------------------------------------------------------------
 
     ! sort critical points with a stupid algorithm
     do iord = 1, npan
-      ctm = crt(iord)
+      crt_temp = crt(iord)
       do ipan = npan, iord, -1
-        if (crt(ipan) <= ctm) then
-          ctm = crt(ipan)
+        if (crt(ipan) <= crt_temp) then
+          crt_temp  = crt(ipan)
           crt(ipan) = crt(iord)
-          crt(iord) = ctm
+          crt(iord) = crt_temp
         endif ! unordered
       enddo ! ipan
     enddo ! iord
 
     if (keypan == 0) call mesh0(crt, npan, npoi, nmin, nm)
 
-    if (verbosity > 0) write(6,fmt="(/50('-')/'i',13x,'suitable radial mesh',15x,'i'/'i',13x,20('*'),15x,'i'/'i',3x,'ipan',7x,'from',7x,'to',13x,'points  i'/'i',48x,'i')")
+    if (verbosity > 0) write(6, fmt="(/50('-')/'i',13x,'suitable radial mesh',15x,'i'/'i',13x,20('*'),15x,'i'/'i',3x,'ipan',7x,'from',7x,'to',13x,'points  i'/'i',48x,'i')")
 
     ir_off = 0
     do ipan = 1, npan-1
 
-      if (verbosity > 0) write(6,fmt="('i',2x,i5,2e14.7,i10,'   i')") ipan,crt(ipan),crt(ipan+1),nm(ipan)
+      if (verbosity > 0) write(6, fmt="('i',2x,i5,2e14.7,i10,'   i')") ipan, crt(ipan:ipan+1), nm(ipan)
 
       ir_start = ir_off + 1 ! ir start index
       ir_end   = ir_off + nm(ipan) ! prelim. end index

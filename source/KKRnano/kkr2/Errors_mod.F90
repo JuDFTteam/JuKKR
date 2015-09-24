@@ -51,6 +51,7 @@ implicit none
       
     else  ! soft_errors
     
+      write( * ,'(/,2A,I0,9A)') file,':',lin,' Error: ',trim(text)
       write(err,'(/,2A,I0,9A)') file,':',lin,' Error: ',trim(text)
       
       call MPI_Abort(MPI_COMM_WORLD, lin, ierr) ! pass sourceline as errorcode

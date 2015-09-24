@@ -51,12 +51,13 @@ module CalculationData_mod
     type(RadialMeshData), pointer     :: mesh_a(:)         => null()
     type(CellData), pointer           :: cell_a(:)         => null()
     type(BasisAtom), pointer          :: atomdata_a(:)     => null()
-    type(RefCluster), allocatable     :: ref_cluster_a(:)
     type(KKRresults), pointer         :: kkr_a(:)          => null()
     type(DensityResults), pointer     :: densities_a(:)    => null()
     type(EnergyResults), pointer      :: energies_a(:)     => null()
     type(LDAUData), pointer           :: ldau_data_a(:)    => null()
     type(JijData), pointer                :: jij_data_a(:) => null()
+    
+    type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
 
     ! global data - same for each local atom
@@ -536,7 +537,7 @@ module CalculationData_mod
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use ConstructShapes_mod, only: createShapefunData, InterstitialMesh, destroyInterstitialMesh, write_shapefun_file
+    use ConstructShapes_mod, only: createShape, InterstitialMesh, destroyInterstitialMesh, write_shapefun_file
     use ShapefunData_mod, only: ShapefunData
     use RadialMeshData_mod, only: createRadialMeshData, initRadialMesh
     use ShapefunData_mod, only: destroyShapefunData
@@ -560,7 +561,7 @@ module CalculationData_mod
       new_MT_radius = new_MT_radii(ila)
       num_MT_points = params%num_MT_points
 
-      call createShapefunData(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
+      call createShape(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
                      params%rclust_voronoi, 4*dims%lmaxd, &
                      dims%irid - num_MT_points, &
                      params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id)

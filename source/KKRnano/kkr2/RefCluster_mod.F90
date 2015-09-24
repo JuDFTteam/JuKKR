@@ -49,11 +49,15 @@ module RefCluster_mod
   !> lattice vectors has to be created.
   !> Several different reference clusters can (and should) share
   !> the same lattice vectors.
-  subroutine createLatticeVectors(lattice_vectors, bravais)
+  subroutine createLatticeVectors(lattice_vectors, bravais, rmax)
     type(LatticeVectors), intent(inout) :: lattice_vectors
     double precision, intent(in) :: bravais(3,3)
-
-    call rrgen(bravais, lattice_vectors%rr, lattice_vectors%nrd)
+    double precision, intent(in), optional :: rmax
+    
+    double precision :: rmx
+    rmx = 5.d0; if (present(rmax)) rmx = rmax
+     
+    call rrgen(bravais, rmx, lattice_vectors%rr, lattice_vectors%nrd)
 #ifdef DEBUG  
     write(*,*) "Num. real space vectors: ", lattice_vectors%nrd
 #endif
@@ -229,29 +233,25 @@ module RefCluster_mod
     write(*,'(a,3F16.12)') 'rcls(:,1) = ',rcls(:,1)
 #endif
     ! todo: display some statistics
-  endsubroutine clsgen99
+  endsubroutine ! clsgen99
 
 
 
   !*==rrgen.f    processed by SPAG 6.05Rc at 20:37 on 17 May 2004
   ! 02.08.95 *************************************************************
-  subroutine rrgen(bv, rr, nr)
+  subroutine rrgen(bv, rmax, rr, nr)
     !> generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms in routine CLSGEN99
     use Sorting_mod, only: dsort
     
     double precision, intent(in) :: bv(3,3) ! bravais vectors or matrix
+    double precision, intent(in) :: rmax ! radius
     double precision, allocatable, intent(out) :: rr(:,:) ! (3,0:nr)
     integer, intent(out) :: nr
     
-! #define ORIGINAL_VERSION  
-  
     !    .. Locals
-    double precision :: r, rmax, rr2, rs
+    double precision :: r, rr2, rs
     integer :: i, i1, i2, i3, nn(1:3), iprint, mr
     double precision :: v(3)
-#ifdef  ORIGINAL_VERSION  
-    double precision :: vx(3), vy(3), vz(3), vx0(3), vy0(3), vz0(3)
-#endif
     double precision, allocatable :: rabs2(:), rr1(:,:) 
     integer, allocatable :: ind(:)!(nr) ! permutation for sorting
     double precision, parameter :: epsshl = 1.d-5
@@ -267,15 +267,10 @@ module RefCluster_mod
     
 
     do i = 1, 3 
-#ifdef  ORIGINAL_VERSION  
-      call scalpr(bv(1:3,i), bv(1:3,i), v(i)) ! v(i) = bv(1,i)*bv(1,i) + bv(2,i)*bv(2,i) + bv(3,i)*bv(3,i)
-#else
       v(i) = sum(bv(1:3,i)**2)
-#endif
     enddo ! i
     v(1:3) = sqrt(v(1:3))
     
-    rmax = 5.d0
     r = 1.5d0*rmax + sqrt(sum(v(1:3)**2)) + epsshl
     rs = r*r
     
@@ -294,34 +289,12 @@ module RefCluster_mod
 
     allocate(rabs2(mr), rr1(3,mr))
 
-#ifdef  ORIGINAL_VERSION  
-    call vmul(bv(1,1),dble(-nn(1)-1),vx0(1)) ! vx0(1:3) = (-nn(1)-1)*bv(1:3,1)
-    call vmul(bv(1,2),dble(-nn(2)-1),vy0(1)) ! vy0(1:3) = (-nn(2)-1)*bv(1:3,2)
-    call vmul(bv(1,3),dble(-nn(3)-1),vz0(1)) ! vz0(1:3) = (-nn(3)-1)*bv(1:3,3)
-    call veq(vx0,vx) ! vx(1:3) = vx0(1:3)
-#endif
-
     nr = 0
     do i1 = -nn(1), nn(1)
-#ifdef  ORIGINAL_VERSION  
-      call vadd(vx,bv(1,1),vx) ! vx(1:3) = vx(1:3) + bv(1:3,1)
-      call veq(vy0,vy) ! vy(1:3) = vy0(1:3)
-#endif
       do i2 = -nn(2), nn(2)
-#ifdef  ORIGINAL_VERSION  
-        call vadd(vy,bv(1,2),vy) ! vy(1:3) = vy(1:3) + bv(1:3,2)
-        call veq(vz0,vz) ! vz(1:3) = vz0(1:3)
-#endif    
         do i3 = -nn(3), nn(3)
-#ifdef  ORIGINAL_VERSION  
-          call vadd(vz,bv(1,3),vz) ! vz(1:3) = vz(1:3) + bv(1:3,3)
-          call vadd(vx,vy,v) ! v(1:3) = vx(1:3) + vy(1:3)
-          call vadd(v,vz,v) ! v(1:3) = v(1:3) + vz(1:3)
-          call scalpr(v,v,rr2) ! rr2 = v(1)*v(1) + v(2)*v(2) + v(3)*v(3)
-#else
           v(1:3) = i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3)
           rr2 = sum(v(1:3)**2)
-#endif
                   
           ! todo: verify that v(1:3) == i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3) 
           !       ... and then get rid of the vector-subroutines vmul, vadd, veq
@@ -371,175 +344,9 @@ module RefCluster_mod
     
     if (iprint > 0)  write(6, fmt="(10x,60('+'))")
     
-  endsubroutine rrgen
+  endsubroutine ! rrgen
 
-
-
-#ifdef ORIGINAL_VERSION  
-  !+ORIGINAL_VERSION
-
-  !todo: inline these very simple functions
-  subroutine scalpr(x,y,z)
-    ! scalsp computes the scalar product of x and y returning it into z.
-    double precision :: x(*), y(*), z
-    z = x(1)*y(1) + x(2)*y(2) + x(3)*y(3)
-  endsubroutine
-
-  subroutine vadd(a,b,c)
-    double precision :: a(*), b(*), c(*)
-    c(1:3) = a(1:3) + b(1:3)
-  endsubroutine
-
-  subroutine veq(a,b)
-    double precision :: a(*), b(*)
-    b(1:3) = a(1:3)
-  endsubroutine
-
-  subroutine vmul(a,b,c)
-    double precision :: a(*), b, c(*)
-    c(1:3) = b*a(1:3)
-  endsubroutine
-
-  !-ORIGINAL_VERSION
-#endif
-
-! subroutine rrgencount(bv1, nrd)
-!   ! **********************************************************************
-!   ! * COUNTS      number of real space vectors to construct the          *
-!   ! * clusters representing the local surrounding of the atoms in        *
-!   ! * routine CLSGEN99                                                   *
-!   ! **********************************************************************
-!   integer, intent(out) :: nrd
-!   double precision, intent(in) :: bv1(3,3)
-!   
-!   double precision :: r,r1,r2,r3,rmax,rr2,rs
-!   integer :: i,j,k,n1,n2,n3
-!   double precision :: v(3),vx(3),vy(3),vz(3), vx0(3),vy0(3),vz0(3)
-!   double precision, parameter :: epsshl = 1.d-5
-! 
-!   
-!   call scalpr(bv1(1,1),bv1(1,1),r1)
-!   call scalpr(bv1(1,2),bv1(1,2),r2)
-!   call scalpr(bv1(1,3),bv1(1,3),r3)
-!   rmax = 5.d0
-! 
-!   r1 = sqrt(r1)
-!   r2 = sqrt(r2)
-!   r3 = sqrt(r3)
-!   r = 1.5d0*rmax + sqrt(r1*r1 + r2*r2 + r3*r3) + epsshl
-!   
-!   rs = r*r
-!   n1 = nint(r/r1)
-!   n2 = nint(r/r2)
-!   n3 = nint(r/r3)
-!   
-!   n1 = min(12,n1)
-!   n2 = min(12,n2)
-!   n3 = min(12,n3)
-! 
-!   n1 = max(2,n1)
-!   n2 = max(2,n2)
-!   n3 = max(2,n3)
-!   
-!   nrd = 0
-! 
-!   call vmul(bv1(1,1),dble(-n1-1),vx0(1))
-!   call vmul(bv1(1,2),dble(-n2-1),vy0(1))
-!   call vmul(bv1(1,3),dble(-n3-1),vz0(1))
-!   call veq(vx0,vx)
-! 
-!   do i = -n1, n1
-!      call vadd(vx,bv1(1,1),vx)
-!      call veq(vy0,vy)
-! 
-!      do j = -n2, n2
-!         call vadd(vy,bv1(1,2),vy)
-!         call veq(vz0,vz)
-! 
-!         do k = -n3, n3
-!            call vadd(vz,bv1(1,3),vz)
-!            call vadd(vx,vy,v)
-!            call vadd(v,vz,v)
-!            call scalpr(v,v,rr2)
-! 
-!            if ((rr2 <= rs .or. abs(i)+abs(j)+abs(k) <= 6) .and. rr2 > epsshl) nrd = nrd + 1
-!         enddo ! k
-!      enddo ! j
-!   enddo ! i
-! 
-! endsubroutine rrgencount
-
-
-! subroutine clsgen99count(center_ind, naez, rr, rbasis, rcut, nrd, nacls)
-!   ! This subroutine is used to create the clusters around each atom 
-!   ! where repulsive potentials will be positioned.
-!   !
-!   ! STRATEGY : 
-!   ! Calculate the cluster of each atom by the lattice
-!   ! parameters avaliable. Sort the atoms in a unique way :big r, big z, big y
-!   ! compare the positions with the previous clusters to see if there is 
-!   ! a difference. If not keep only previous clusters and make indexing if
-!   ! a new cluster is found then check dimensions and continue for the new
-!   ! atom.  
-!   !
-!   !     .. arguments
-!   !
-!   integer, intent(in) :: center_ind 
-!   integer, intent(in) :: nrd
-!   integer, intent(out) :: nacls
-! 
-!   double precision, intent(in) :: rcut
-!   double precision, intent(in) :: &
-!        rbasis(3,*), &      ! pos. of basis atoms in EZ 
-!   rr(3,0:nrd)              ! set of lattice vectors
-! 
-!   integer, intent(in) :: naez !< number of atoms in EZ
-!   
-!   !     .. locals
-!   integer :: nr                       ! number of lattice vectors RR
-!   integer i, &
-!           na,number,n, &
-!           jatom
-! 
-!   double precision r2,epsshl, tmp(3)
-!   double precision rcut2,rcutxy2,rxy2,rcutxy
-!   !
-!   data     epsshl   / 1.0d-4 /
-! 
-!   nr = nrd
-! 
-!   rcutxy = rcut ! only spherical clusters allowed
-! 
-!   rcutxy2 = (rcutxy + epsshl)*(rcutxy+epsshl)
-!   rcut2   = (rcut+epsshl)*(rcut+epsshl)
-! 
-!   !do jatom = 1,naez       ! loop in all atoms
-!   jatom = center_ind       ! modification to original: treat only one atom
-!      number = 0           ! counter for atoms in cluster
-!      do na = 1,naez  ! loop in all atoms
-!         do n=0,nr    ! loop in all bravais vectors    
-!            do i=1,3
-!               tmp(i) = rr(i,n)+rbasis(i,na)-rbasis(i,jatom)
-!            enddo
-!            rxy2 =  tmp(1)**2+tmp(2)**2
-!            r2   =  tmp(3)**2 + tmp(1)**2+tmp(2)**2
-! 
-!            if ((rxy2 <= rcutxy2).and.(r2 <= rcut2))  then
-!               number = number + 1
-!               !atom(number) = na ! store the atom in elem cell
-!               !ezoa(number) = n ! store the bravais vector
-!            endif
-!         enddo              ! N loop in bravais
-! 
-!      enddo                 ! NA loop in NAEZ
-! 
-!   nacls = number ! return number of atoms in cluster
-! 
-! endsubroutine clsgen99count
-
-
-
-endmodule
+endmodule ! RefCluster_mod
 
 #ifdef TEST_CLUSTERS__
 program test_clusters

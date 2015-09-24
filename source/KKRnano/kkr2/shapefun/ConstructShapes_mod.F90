@@ -12,7 +12,7 @@ module ConstructShapes_mod
   private
   public :: InterstitialMesh
   public :: destroyInterstitialMesh
-  public :: createShapefunData
+  public :: createShape
   public :: write_shapefun_file
 
   !> A datastructure containing the corresponding interstitial mesh.
@@ -59,7 +59,7 @@ module ConstructShapes_mod
   !> (use destroyInterstitialMesh)
   !>
   !> MT_scale > 0.0 overrides new_MT_radius!!!
-  subroutine createShapefunData(self, inter_mesh, rbasis, bravais, center_ind, &
+  subroutine createShape(self, inter_mesh, rbasis, bravais, center_ind, &
                       rcluster, lmax_shape, npoints_min, nmin_panel, &
                       num_MT_points, new_MT_radius, MT_scale, atom_id)
     use RefCluster_mod, only: LatticeVectors, RefCluster
@@ -147,7 +147,6 @@ module ConstructShapes_mod
     integer, intent(in) :: atom_id
     
     integer, parameter :: nvertmax = 32 ! hoping for at most 32 vertices for each face
-    logical, parameter :: output = .false.
     
     double precision, parameter :: tolvdist = 1.d-12
     double precision, parameter :: tolvarea = 1.d-10
@@ -177,8 +176,13 @@ module ConstructShapes_mod
     allocate(nvertices(nfaced), vert(3,nvertmax,nfaced))
     nvertices = 0
 
-    call Voronoi_construction(nfaced, rvec, nvertmax, nfaced, weights(1), weights(2:), tolvdist, tolvarea, rmt, rout, volume, nface, planes, nvertices, vert, output)
-
+    call Voronoi_construction(nfaced, rvec, nvertmax, nfaced, weights(1), weights(2:), tolvdist, tolvarea, rmt, rout, volume, nface, planes, nvertices, vert, &
+#ifdef DEBUGSHAPEFUNCTIONS
+         atom_id, output=.true.) ! for debug
+#else
+         atom_id, output=.false.)
+#endif
+         
     npand = sum(nvertices) + nface + 1  ! +1 for possible muffin-tinisation
     meshnd = max(npoints_min, npand*nmin) + num_mt_points
 
@@ -197,8 +201,7 @@ module ConstructShapes_mod
       ibmaxd, meshnd, npand, atom_id)
 
     ! muffin-tinization
-    radius = new_mt_radius
-    if (mt_scale > tolvdist) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
+    radius = new_MT_radius; if (MT_scale > tolvdist) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
 
     if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, lmifun_s, radius, atom_id)
 
@@ -284,15 +287,14 @@ module ConstructShapes_mod
     dist = xrn(1) - mtradius
 
     if (dist < 1.d-5) then
-      write(6,fmt=*) 'error from mtmesh for atom #',atom_id
-      write(6,*) 'your mt-radius is bigger that the minimum shape radius ' 
+      write(6,*) 'error from mtmesh for atom #',atom_id
+      write(6,*) 'your mt-radius is bigger than the minimum shape radius ' 
       write(6,*) 'your mt-radius .....',mtradius
       write(6,*) 'shape radius .......',xrn(1)    
 !       stop
       write(6,*) 'WARNING! stop statement deactivated:',__FILE__,":",__LINE__
-
     endif
-        
+
     dn1 = dist/(nrad-1)
     xrn1(nrad) = xrn(1)
     drn1(nrad) = dn1

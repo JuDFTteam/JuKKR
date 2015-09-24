@@ -451,8 +451,8 @@ module KKRzero_mod
   endsubroutine ! rinputnew99
   
   subroutine scalevec(rbasis, naez, bravais, lcartesian)
-    integer, intent(in) :: naez
     double precision, intent(inout) :: rbasis(3,*)
+    integer, intent(in) :: naez
     double precision, intent(in) :: bravais(3,3)
     logical, intent(in) :: lcartesian
     

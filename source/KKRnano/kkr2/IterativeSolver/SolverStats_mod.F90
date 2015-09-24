@@ -22,7 +22,7 @@ module SolverStats_mod
     total%sum_iterations = total%sum_iterations + self%iterations
     total%max_residual = max(total%max_residual, self%max_residual)
     total%max_iterations = max(total%max_iterations, self%iterations)
-  endsubroutine
+  endsubroutine ! sum
 
   !----------------------------------------------------------------------------
   !> Reset stats to zero.
@@ -32,6 +32,6 @@ module SolverStats_mod
     self%sum_iterations = 0
     self%max_iterations = 0
     self%max_residual = 0.d0
-  endsubroutine
+  endsubroutine ! reset
   
-endmodule SolverStats_mod
+endmodule ! SolverStats_mod

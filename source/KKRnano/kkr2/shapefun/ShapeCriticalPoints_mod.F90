@@ -43,7 +43,7 @@ module ShapeCriticalPoints_mod
   !> Note: the smallest critical point corresponds to the muffin-tin radius
 
   !=====================================================================
-  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, lmax, faces, npan, crt, atom_id) ! todo: remove lmax from interface
+  subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, faces, npan, crt, atom_id)
 
     use Constants_mod, only: pi
     use PolygonFaces_mod, only: PolygonFace
@@ -52,7 +52,7 @@ module ShapeCriticalPoints_mod
     integer, intent(in) :: nvertices(:) ! (nfaced)
     double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
     double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
-    integer, intent(in) :: nface, lmax
+    integer, intent(in) :: nface
     double precision, intent(in) :: tolvdist, toleuler
     
     type(PolygonFace), intent(out) :: faces(:)
@@ -190,12 +190,11 @@ module ShapeCriticalPoints_mod
     double precision :: rdv(3)
     logical :: inside, new, corner
     double precision, parameter :: origin(3) = 0.d0
-    double precision, parameter :: tol_small = 1d-6
-    double precision, parameter :: tol_large = 1d-4
+    double precision, parameter :: tol_small = 1.d-6
+    double precision, parameter :: tol_large = 1.d-4
     type(TetrahedronAngles) :: ta(nvert), t1
     integer :: ist
     
-    !-----------------------------------------------------------------------
     npand = size(crt)
     
     allocate(in(nvert), vz(3,nvert), stat=ist)
@@ -215,7 +214,7 @@ module ShapeCriticalPoints_mod
     iv = 1; if (nrm2(v(1:3,1) - z) < tol_small**2) iv = 2 ! if the norm of the first vector is too small, use the second one
     face%euler = euler_angles(z, v(:,iv), toleuler) ! get euler angles directly
 
-    if (verbosity > 0) write(6,fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
+    if (verbosity > 0) write(6, fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
 
     call rotate(face%euler(1:3), nvert, v(1:3,1:nvert), vz) ! pass the angles directly
 
@@ -223,7 +222,7 @@ module ShapeCriticalPoints_mod
     
     corner = .false. ! is not a corner
 
-    if (verbosity > 0) write(6,fmt="(/'tetrahedron',14x,'coordinates'/11('*'),14x,11('*')/)")
+    if (verbosity > 0) write(6, fmt="(/'tetrahedron',14x,'coordinates'/11('*'),14x,11('*')/)")
 
     face%ntt = 0
     
@@ -231,13 +230,12 @@ module ShapeCriticalPoints_mod
     
       if (abs(face%r0 - vz(3,ivert)) > tol_small) & ! check if vertices lie in same plane
         die_here("the vertices of the"+face_index-"-th rotated polygon do not lie on the plane, r0 ="+face%r0+" z ="+vz(3,ivert))
-      !.......................................................................
+
       !____distances__of__vertices__from__center
-      !.......................................................................
+
       crrt = sqrt(nrm2(vz(1:3,ivert)))
 
-      !     check if a new panel has been found (at radial point crrt)
-      new = all(abs(crrt - crt(1:ipan)) >= tol_small)
+      new = all(abs(crrt - crt(1:ipan)) >= tol_small) ! check if a new panel has been found (at radial point crrt)
 
       if (new) then
         ipan = ipan + 1 ! add a new critical point
@@ -247,12 +245,10 @@ module ShapeCriticalPoints_mod
           crt(ipan) = crrt
         endif
       endif ! new
-      
+
       ivertp = modulo(ivert, nvert) + 1
 
-      !.......................................................................
       !____distances__of__edges__from__center
-      !.......................................................................
 
       call perp(origin, vz(1:3,ivert), vz(1:3,ivertp), tolvdist, rdv, inside)
 
@@ -286,15 +282,15 @@ module ShapeCriticalPoints_mod
         s = s - omega
 
         if (abs(omega - pi) > tol_small) then
-          !.......................................................................
+        
           !____subdivision____into____tetrahedra
-          !.......................................................................
+
           face%ntt = face%ntt + 1 ! count up the number of accepted tetrahedra
           
           ivtot = ivtot + 1 ! can be removed when we do not try to have the verbose output compatible with older versions
           if (verbosity > 0) then
-            write(6,fmt="(i5,'       vz(',i2,')  =  (',3f10.4,' )')") ivtot,ivert, vz(1:3,ivert )
-            write(6,fmt="(5x,'       vz(',i2,')  =  (',3f10.4,' )')")       ivertp,vz(1:3,ivertp)
+            write(6, fmt="(i5,'       vz(',i2,')  =  (',3f10.4,' )')") ivtot,ivert, vz(1:3,ivert)
+            write(6, fmt="(5x,'       vz(',i2,')  =  (',3f10.4,' )')")       ivertp,vz(1:3,ivertp)
           endif
 
           a3 = sqrt(rdv(1)*rdv(1) + rdv(2)*rdv(2))
@@ -343,9 +339,8 @@ module ShapeCriticalPoints_mod
     allocate(face%ta(face%ntt), stat=ist)
     face%ta = ta(1:face%ntt) ! copy
     
-    !.......................................................................
     ! foot_of_the_perpendicular_to_the_face_outside_or_inside_the_polygon
-    !.......................................................................
+
     if (s < tol_small .or. corner) then
     
       new = all(abs(face%r0 - crt(1:ipan)) >= tol_large)
@@ -407,7 +402,7 @@ module ShapeCriticalPoints_mod
     endif ! s < tol_small .or. corner
     
     deallocate(in, vz, stat=ist)
-  endsubroutine critical_points
+  endsubroutine ! critical_points
 
   !-----------------------------------------------------------------------
   !>    given two distinct points (z(1),z(2),z(3)) and (xx(1),xx(2),xx(3))
@@ -429,7 +424,7 @@ module ShapeCriticalPoints_mod
 
     double precision :: rx,rz,s,p,rzp,sa,ca,sg,cg
     double precision :: x(3), y(3), z(3)
-    double precision, parameter :: tolerance = 1d-6
+    double precision, parameter :: tolerance = 1.d-6
 
     !-----------------------------------------------------------------------
     z = zz
@@ -453,7 +448,7 @@ module ShapeCriticalPoints_mod
       sg = -z(3)*x(2)
       cg =  z(3)*x(1)
 
-      alpha_beta_gamma(1) = 0.d0             ! alpha
+      alpha_beta_gamma(1) = 0.d0 ! alpha
       alpha_beta_gamma(3) = get_angle(sg, cg, tolerance=toleuler) ! gamma
 
     else  ! p < toleuler
@@ -487,6 +482,14 @@ module ShapeCriticalPoints_mod
   !>    vz(i,ivert) : rotated vectors
   !-----------------------------------------------------------------------
   subroutine rotate(abg, nvert, v, vz)
+    ! todo: discuss if this rotation is really necessary to be done with euler angles.
+    !       in principle, the third (or z-) component of the rotated vectors will alywas be
+    !       the distance of the plane to the origin. Furthermore, the second (or y-) component
+    !       of the first vector of a pyramid is zero by definition of the rotation angles.
+    !       Therefore, we could alternatively construct the rotation matrix from
+    !       the normalized normal vector of the plane (new 3rd component), 
+    !       a unit vector parallel to the first vector (new 1st component) and
+    !       a third unit vector that is orthogonal to these two.
     use Constants_mod, only: pi
     
     double precision, intent(in) :: abg(3) ! former alpha, beta, gamma

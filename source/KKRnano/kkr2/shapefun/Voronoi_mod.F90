@@ -73,7 +73,7 @@ module Voronoi_mod
   !
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
   subroutine Voronoi_construction(nvec, rvec, nvertmax, nfaced, weight0, weights, tolvdist, tolarea, &
-     rmt, rout, volume, nface, planes, nvert, vert, output)
+     rmt, rout, volume, nface, planes, nvert, vert, atom_id, output)
     use Sorting_mod, only: dsort
 
     integer, intent(in) :: nvec, nvertmax, nfaced
@@ -81,6 +81,7 @@ module Voronoi_mod
     double precision, intent(in) :: weight0, weights(:)  ! Weight of central atom, and of all others (dimensioned as RVEC). 
     double precision, intent(in) :: tolvdist ! Max. tolerance for distance of two vertices
     double precision, intent(in) :: tolarea  ! Max. tolerance for area of polygon face
+    integer, intent(in) :: atom_id
     logical, intent(in) :: output ! test output
 
     integer, intent(out) :: nface, nvert(:)
@@ -96,26 +97,26 @@ module Voronoi_mod
     double precision, allocatable :: ptmp(:,:), vtmp(:,:,:) ! For sorting
     integer, allocatable :: ntmp(:)                        ! For sorting
 
-    !---------------------------------------------------------------
+
     ! Check that the origin is not included in RVEC.
     do ivec = 1, nvec
       if (sum(abs(rvec(1:3,ivec))) < 1.d-12) die_here("vector #"-ivec+"is zero!")
     enddo ! ivec
-    !---------------------------------------------------------------
+
     ! Define the planes as normal to the vectors RVEC, passing from t as in eq. (2) above:
     do ivec = 1, nvec
       rsq = sum(rvec(1:3,ivec)**2)
       tau = 0.5d0*((weight0 - weights(ivec))/rsq + 1.d0)
       planes(0:3,ivec) = normal_plane(rvec(1:3,ivec), tau)
     enddo ! ivec
-    !---------------------------------------------------------------
+
     ! Find the Voronoi polyhedron.
     nplane = nvec
-    if (output) write(*,*) 'Entering POLYHEDRON08'
+    if (output) write(*,'(a,i0)') ' Entering POLYHEDRON08 for atom #',atom_id
     call polyhedron08(nplane, nvertmax, nfaced, tolvdist, tolarea, planes, nface, nvert, vert, output)
-    if (output) write(*,*) 'Exited POLYHEDRON08'
+    if (output) write(*,'(a,i0)') ' Exited POLYHEDRON08 for atom #',atom_id
 
-    !---------------------------------------------------------------
+
     ! Calculate the volume as sum of the volumes of all tetrahedra 
     ! connecting the origin to the faces. Use for each tetrahedron
     ! volume = det((r0-r1),(r0-r2),(r0-r3))/6, where r0 is here the
@@ -143,9 +144,6 @@ module Voronoi_mod
     if (output) then
       write(*,*) ' Polyhedron properties '
       write(*,*) ' Number of faces : ',nface
-    endif ! output
-
-    if (output) then
       do iface = 1, nface
         write(*,fmt="(' Face ',i4,'   has ',i4,' vertices ','; Area= ',e12.4)") iface, nvert(iface), facearea(iface)
         do ivert = 1, nvert(iface)
@@ -156,7 +154,7 @@ module Voronoi_mod
       write(*,*) 'The Volume is : ',volume
     endif ! output
     
-    ! Fint ROUT, the largest radius of all vertices
+    ! Fint rout, the largest radius of all vertices
     rout2 = 0.d0
     do iface = 1, nface
       do ivert = 1, nvert(iface)
@@ -165,16 +163,16 @@ module Voronoi_mod
     enddo ! iface
     rout = sqrt(rout2)
 
-    !---------------------------------------------------------------
     ! Find rmt and preprare sorting of faces
     rmt = dist_plane(planes(0:3,1)) ! init with the distance of the 1st plane
     do iface = 1, nface
       dist = dist_plane(planes(0:3,iface))
-      rmt = min(rmt, dist)
       rsort(iface) = 1.d9*dist + dot_product([1.d0, 1.d3, 1.d6], planes(1:3,iface)) ! first criterion is the distance, 2nd is z-coords, 3rd y, 4th x
+      rmt = min(rmt, dist)
     enddo ! iface
 
-    if (output) write(*, fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %')") rmt,rout,rmt*100/rout
+    if (output) &
+      write(*, fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %, atom #',i0)") rmt,rout,rmt*100/rout,atom_id
     
     call dsort(rsort, isort, nface)
     ! Rearrange using a temporary arrays ptmp, vtmp, ntmp
@@ -190,9 +188,8 @@ module Voronoi_mod
     enddo ! iface
     
     deallocate(ptmp, vtmp, ntmp)
-    !---------------------------------------------------------------
 
-  endsubroutine Voronoi_construction
+  endsubroutine ! Voronoi_construction
   
 
   subroutine polyhedron08(nplane, nvertmax, nfaced, tolvdist,tolarea, planes, nface, nvert, vert, output)
@@ -228,7 +225,7 @@ module Voronoi_mod
     call analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
     if (output) write(*,*) 'analyzevert3d accepted',nface,' faces.'
 
-  endsubroutine polyhedron08
+  endsubroutine ! polyhedron08
 
 
     !***********************************************************************
@@ -666,7 +663,7 @@ module Voronoi_mod
     z(1) = x(2)*y(3) - x(3)*y(2)
     z(2) = x(3)*y(1) - x(1)*y(3)
     z(3) = x(1)*y(2) - x(2)*y(1)
-  endfunction crospr
+  endfunction ! crospr
 
  
   double precision function dist_plane(dabc)
@@ -678,6 +675,6 @@ module Voronoi_mod
     assert(abcsq >= 1.d-100)
     dist_plane = sqrt(dabc(0)**2/abcsq)  
 
-  endfunction dist_plane
+  endfunction ! dist_plane
 
 endmodule ! Voronoi_mod
