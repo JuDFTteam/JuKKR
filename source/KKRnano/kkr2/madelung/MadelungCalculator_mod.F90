@@ -680,11 +680,14 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     double precision :: dq(3), ga, vr(3), ra, ga2
     double precision :: dqdotg!, expbsq
     double precision :: fpi, rfac, sqrtPiInv, sqrtPi
-    integer :: i, i2, i01
+    integer :: i, i2, i01, ist
     integer :: l, m, lm
     integer :: nge, ngs, nre, nrs, nstart
     double complex :: bfac, stest((lmax+1)**2)
     double precision :: g(0:lmax), ylm((lmax+1)**2)
+
+    logical, parameter :: precompute_Ymy_g = .true.
+    double precision, allocatable :: Ymy_g(:,:)
 
     fpi = 4.d0*pi
     sqrtPi = sqrt(pi)
@@ -694,6 +697,17 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
 
     lamda = sqrt(pi)/alat ! choose proper splitting parameter
     kappa = -0.25d0/(lamda*lamda)
+
+    if (precompute_Ymy_g) then
+      write(*,'(9(2a,f0.3))') __FILE__,' allocate ',(lmax+1)**2*ngmax*.5**17,' MiByte to precompute Ylm in g-space'
+      allocate(Ymy_g(0:(lmax+1)**2,2:ngmax), stat=ist)
+      do i = 2, ngmax
+        call ymy(gv(1,i), gv(2,i), gv(3,i), ga, Ymy_g(1:,i), lmax)
+        Ymy_g(0,i) = ga ! store the length of the g-space vector
+      enddo ! i
+    endif ! precompute
+
+
 
     ! **********************************************************************
     !$omp parallel do private(i2,dq,stest,lm,nstart,i01,nrs,ngs,nre,nge,i,vr,ylm,ra,alpha,g,rfac,l,m,ga,ga2,dqdotg,bfac)
@@ -749,7 +763,12 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
         ! --> sum over reciprocal lattice
         do i = ngs, nge
 
-          call ymy(gv(1,i), gv(2,i), gv(3,i), ga, ylm, lmax)
+          if (precompute_Ymy_g) then
+            ylm = Ymy_g(1:,i)
+            ga = Ymy_g(0,i)
+          else
+            call ymy(gv(1,i), gv(2,i), gv(3,i), ga, ylm, lmax)
+          endif
           ga2 = ga*ga
           dqdotg = dq(1)*gv(1,i) + dq(2)*gv(2,i) + dq(3)*gv(3,i)
 
@@ -780,6 +799,8 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
       enddo ! i01
     enddo ! i2 ! loop over all atoms
     !$omp end parallel do
+
+    if (precompute_Ymy_g) deallocate(Ymy_g, stat=ist)
     
   endsubroutine strmat
   

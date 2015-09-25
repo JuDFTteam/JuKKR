@@ -33,9 +33,9 @@ FC90FLAGS =
 # LDFLAGS  = -O0 -g
 FCFLAGS += -O3  -g
 LDFLAGS  = -O3  -g
-# FCFLAGS += -pg
-# LDFLAGS += -pg
-# LDFLAGS += -C -traceback
+
+FCFLAGS += -pg
+LDFLAGS += -pg
 
 ### interprocedural optimization at link-time 
 ###   (add -ipo also to compiler flags to prepare the objects)
