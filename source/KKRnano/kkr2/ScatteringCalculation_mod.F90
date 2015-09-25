@@ -128,7 +128,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 
   call resetTimer(mult_scattering_timer)
   call stopTimer(mult_scattering_timer)
-
+  
   call resetTimer(single_site_timer)
 
   prspin = 1

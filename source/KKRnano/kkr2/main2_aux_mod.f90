@@ -24,10 +24,10 @@ module main2_aux_mod
     double precision, intent(in) :: TIME_I
     double precision, intent(in) :: TIME_S
 
-    call OUTTIME(.true. ,'end .................', TIME_I,ITER)
+    call OUTTIME(.true. ,'end .................', TIME_I, ITER)
     write(6,'(79(1H=))')
     write(2,'(79(1H=))')
-    call OUTTIME(.true. ,'finished in .........', TIME_S,ITER)
+    call OUTTIME(.true. ,'finished in .........', TIME_S, ITER)
     write(2,'(79(1H=))')
     write(6,'(79(1H=),/)')
   endsubroutine

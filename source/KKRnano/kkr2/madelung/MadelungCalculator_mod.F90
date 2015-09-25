@@ -699,14 +699,13 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
     kappa = -0.25d0/(lamda*lamda)
 
     if (precompute_Ymy_g) then
-      write(*,'(9(2a,f0.3))') __FILE__,' allocate ',(lmax+1)**2*ngmax*.5**17,' MiByte to precompute Ylm in g-space'
+!     write(*,'(9(2a,f0.3))') __FILE__,' allocate ',(1+(lmax+1)**2)*(ngmax-1)*.5**17,' MiByte to precompute Ylm in g-space'
       allocate(Ymy_g(0:(lmax+1)**2,2:ngmax), stat=ist)
       do i = 2, ngmax
         call ymy(gv(1,i), gv(2,i), gv(3,i), ga, Ymy_g(1:,i), lmax)
         Ymy_g(0,i) = ga ! store the length of the g-space vector
       enddo ! i
     endif ! precompute
-
 
 
     ! **********************************************************************

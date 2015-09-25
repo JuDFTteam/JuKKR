@@ -17,14 +17,12 @@ module TimerMpi_mod
   contains
 
   subroutine outtime(output, name, time_i, iter)
-!>**********************************************************************
 !>     every time this subroutine is called it produces one line of
-!>     output on the file with the unit-number 2, which consitst
+!>     output on the file with the unit-number 2, which consists
 !>     of up to 59 characters (from the variable name) and the time.
 !>     here the time must be in seconds. in the output the time is
 !>     given in seconds, but also in hours minutes and seconds.
 !>                                              p.kurz   8.2.96
-!>**********************************************************************
     logical         , intent(in) :: output
     character(len=*), intent(in) :: name
     double precision, intent(in) :: time_i
@@ -35,7 +33,7 @@ module TimerMpi_mod
     character(len=*), parameter :: F8000 = "('iter: ',i3,2x,a,t42,f9.2,' sec = ',i3,' h ',i2,' min ',f5.2,' sec')"
     character(len=*), parameter :: F80 = "('iter: ',i3,2x,a,t42,f9.2,' sec')"
 
-!     only one processor proceeds ...
+!   only one processor proceeds ...
     if (output) then
 !     calculate time in hours, minutes and seconds
       rest = time_i
@@ -45,9 +43,9 @@ module TimerMpi_mod
       iminutes = int(rest/60.0)
       seconds = rest - real(iminutes)*60
 
-!       output of the results to unit 2 and unit 6
+!     output of the results to unit 2 and unit 6
 
-      write(2,fmt=F8000) iter,name,time_i,ihours,iminutes,seconds
+      write(2,fmt=F8000) iter,name,time_i,ihours,iminutes,seconds ! write to "time-info" unit
       write(6,fmt=F80)   iter,name,time_i ! skip hours,minutes,seconds display here
     endif ! output
 ! 8000 format ('ITER: ',i3,2x,a,t42,f9.2,' sec = ',i3,' h ',i2,' min ',f5.2,' sec')
