@@ -66,7 +66,7 @@ module DimParams_mod
   !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParamsFromFile(self, filename)
     use ConfigReader_mod, only: ConfigReader, getValue, getUnreadVariable, parseFile
-    use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated
+    use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated, new: destroy, create
     
     type(DimParams), intent(inout) :: self
     character(len=*), intent(in) :: filename ! usually 'global.conf'
@@ -108,11 +108,11 @@ module DimParams_mod
     ! new default 0: automatically adopt to the number of currently running MPI processes
     if (getValue(cr, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename) ! 0:auto
 
-    write(*,'(9a)') " The following variables have not been read from ",filename,":"
+    write(*,'(9a)') " The following variables have not been read from ",trim(filename),":"
     next_ptr = 1
     do while (getUnreadVariable(cr, variable, next_ptr) == 0)
       write(*,*) trim(variable)
-    enddo
+    enddo ! while
     
     call destroyConfigReader(cr)
     call calculateDerivedParameters(self) ! deal with derived parameters
