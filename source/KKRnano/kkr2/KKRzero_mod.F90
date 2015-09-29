@@ -262,7 +262,7 @@ module KKRzero_mod
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
                  arrays%dsymll, params%bzdivide, ielast, ez, arrays%kmesh, arrays%maxmesh, maxmshd, &
-                 dims%lmaxd, iemxd, krel, arrays%kpoibz, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
+                 dims%lmaxd, iemxd, krel, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
     call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)

@@ -51,22 +51,21 @@ print '  public :: write' + configname + 'ToFile'
 print
 
 #------------Generate type declaration -------------------
-print 'type ' + configname
+print '  type ' + configname
 
 for line in deffile:
     if line[0] == '#': continue  #skip comment
     splitted_line = line.split()
 
     typename = typedict[splitted_line[0]]
-    print '  ' + typename + " :: " + splitted_line[1],
+    print '    ' + typename + " :: " + splitted_line[1],
 
     if (splitted_line[0] in vectors):
       print '(' + str(splitted_line[2]) + ')'
     else:
       print
 
-print 'endtype ! ' + configname
-
+print '  endtype ! ' + configname
 print
 
 deffile.close()
@@ -78,7 +77,7 @@ print '  contains'
 #----------- Generate code for retrieving config values -
 print '!'+'-'*79
 print 'integer function get' + configname + 'Values(filename, values) result(ierror)'
-print '  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroyConfigReader'
+print '  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroy'
 print '  use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND'
 print '  use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE'
 print '  use ConfigReader_mod, only: getValue, parseFile'
@@ -92,7 +91,7 @@ print
 print """  ierror = 0
   write(*,*) "Reading information from input.conf..."
   call createConfigReader(cr)
-#define destroy_and_return   call destroyConfigReader(cr) ; return
+#define destroy_and_return   call destroy(cr) ; return
   ierror = parseFile(cr, filename)
   if (ierror /= 0) then
     write(*,*) "Error reading configfile ", trim(filename)

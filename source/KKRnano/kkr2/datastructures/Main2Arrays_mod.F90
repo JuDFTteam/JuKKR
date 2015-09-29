@@ -35,11 +35,14 @@ module Main2Arrays_mod
     integer :: isymindex(48)
     double complex, allocatable :: dsymll(:,:,:)  !< tau symmetry matrices
     double precision, allocatable :: rbasis(:,:)  !< basis atom positions
+    
     double precision, allocatable :: bzkp(:,:,:)  !< kpoints for each mesh
     double precision, allocatable :: volcub(:,:)  !< kpoint weights
     double precision, allocatable :: volbz(:)     !< bz volume?
-    integer, allocatable :: kmesh(:) !< mapping e-point to k-mesh
     integer, allocatable :: nofks(:) !< number of k points for each mesh
+    
+    integer, allocatable :: kmesh(:) !< mapping e-point to k-mesh
+    
     double precision, allocatable :: zat(:)  !< atomic numbers
     double precision :: vref !< repulsive screening pot. strength
   endtype ! Main2Arrays
@@ -88,8 +91,7 @@ module Main2Arrays_mod
     self%nsymat = 0
     self%maxmesh = 0
 
-!    repulsive reference potential
-!    in future: move as parameter to inputfile
+!    repulsive reference potential, TODO in future: move as parameter to inputfile
     self%vref = 8.d0
 
     self%iemxd = iemxd

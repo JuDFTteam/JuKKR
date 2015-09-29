@@ -39,7 +39,7 @@ module ConfigReader_mod
   type ConfigReader
     private
     type(Dictionary) :: parse_dict
-  end type ConfigReader
+  endtype
 
   integer, parameter :: MAX_LINE_LENGTH = 150
   integer, parameter :: MAX_FILENAME_LENGTH = 255
@@ -79,7 +79,7 @@ module ConfigReader_mod
 
     call createDictionary(this%parse_dict)
 
-  endsubroutine createConfigReader
+  endsubroutine ! create
 
 
 !---------------------------------------------------------------------
@@ -89,7 +89,7 @@ module ConfigReader_mod
 
     call destroyDictionary(this%parse_dict)
 
-  endsubroutine destroyConfigReader
+  endsubroutine ! destroy
 
 !---------------------------------------------------------------------
   integer function parseFile(this, filename) result(ierror) ! for parse errors
@@ -110,10 +110,11 @@ module ConfigReader_mod
     if (ios /= 0) then
       write(*,*) "CONFIG_READER: Could not open file ", filename
       ierror = CONFIG_READER_ERR_NO_FILE
+      return
     endif
 
     do while (ios == 0 .and. ierror == CONFIG_READER_ERR_NO_ERROR)
-      read(FILE_HANDLE, '(A)', iostat = ios) line_buf
+      read(unit=FILE_HANDLE, fmt='(A)', iostat=ios) line_buf
 
       if (ios > 0) then
         write(*,*) "CONFIG_READER: Error reading file ", filename
@@ -127,9 +128,9 @@ module ConfigReader_mod
       endif
     enddo ! while
 
-    close(FILE_HANDLE)
+    close(unit=FILE_HANDLE, iostat=ios)
 
-  endfunction parseFile
+  endfunction ! parseFile
 
 !---------------------------------------------------------------------
   !> parse a line with some simple syntax rules
@@ -374,7 +375,7 @@ module ConfigReader_mod
 
     if (ierror /= 0) call displayParserError(line_number, column, ierror)
 
-  endfunction parseLine
+  endfunction ! parseLine
 
 !---------------------------------------------------------------------
   subroutine displayParserError(line_number, column, ierror)
@@ -392,7 +393,7 @@ module ConfigReader_mod
       case default;                            write (*,*) "Unknown error."
     endselect
     
-  endsubroutine displayParserError
+  endsubroutine ! displayParserError
 
 !---------------------------------------------------------------------
   integer function getValueString(this, variable, value, def) result(ierror)
@@ -418,7 +419,7 @@ module ConfigReader_mod
       endif
     endif
     
-  endfunction getValueString
+  endfunction ! getValue
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as integer value.
@@ -455,7 +456,7 @@ module ConfigReader_mod
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
     
-  endfunction getValueInteger
+  endfunction ! getValue
 
 !---------------------------------------------------------------------
 !> Get value of 'variable' and interpret it as double prec. value.
@@ -492,7 +493,7 @@ module ConfigReader_mod
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
 
-  endfunction getValueDouble
+  endfunction ! getValue
 
   !! warpper for single precision
   integer function getValueReal(this, variable, value, def) result(ierror)
@@ -501,7 +502,7 @@ module ConfigReader_mod
     double precision, intent(inout) :: value
     real, intent(in) :: def
     ierror = getValueDouble(this, variable, value, def=dble(def))
-  endfunction getValueReal
+  endfunction ! getValue
   
   
 !---------------------------------------------------------------------
@@ -539,7 +540,7 @@ module ConfigReader_mod
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
     
-  endfunction getValueLogical
+  endfunction ! getValue
 
 !---------------------------------------------------------------------
 !> Reads a double precision vector of fixed length from config-File.
@@ -585,7 +586,7 @@ module ConfigReader_mod
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
     
-  endfunction getValueDoubleVector
+  endfunction ! getValue
 
 !---------------------------------------------------------------------
 !> Reads an integer vector of fixed length from config-File.
@@ -631,7 +632,7 @@ module ConfigReader_mod
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
     
-  endfunction getValueIntVector
+  endfunction ! getValue
 
 !---------------------------------------------------------------------
 !> This subroutine is used to get variables, which have not been read (yet).
@@ -657,7 +658,7 @@ module ConfigReader_mod
 
     if (dict_error == CONFIG_READER_DICT_NOT_FOUND) ierror = CONFIG_READER_ERR_VAR_NOT_FOUND
 
-  endfunction getUnreadVariable
+  endfunction ! get
 
-endmodule ConfigReader_mod
+endmodule ! ConfigReader_mod
 
