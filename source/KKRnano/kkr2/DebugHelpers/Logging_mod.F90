@@ -26,7 +26,7 @@ module Logging_mod
   integer, private, protected :: logging_level = 0
   logical, private, protected :: log_created = .false.
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   !> Creates a logfile numbered by 'rank' and sets 'loglevel'
@@ -35,39 +35,35 @@ module Logging_mod
     integer, intent(in) :: rank
     integer, intent(in) :: loglevel
 
-    character(len=6) :: str
+    character(len=16) :: str
 
-    write (str, '(I6.6)') rank
+    write(unit=str, fmt='(a,i6.6)') 'log.',rank
 
     logging_level = loglevel
     log_created = .false.
 
-    if (loglevel > 0 .and. (log_created .eqv. .false.)) then
-      open(LOGFILEHANDLE, file='log.' // str, form='formatted', &
-           status='replace')
-
+    if (loglevel > 0 .and. (.not. log_created)) then
+      open(LOGFILEHANDLE, file=str, form='formatted', status='replace')
       log_created = .true.
-    end if
-  end subroutine
+    endif
+    
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Closes the logfile
   subroutine closeLogfile()
-    if (log_created .eqv. .true.) then
+    if (log_created) then
       close(LOGFILEHANDLE)
       log_created = .false.
-    end if
-  end subroutine
+    endif
+  endsubroutine
 
   !----------------------------------------------------------------------------
   !> Checks if a log entry should be written according to given level
   !> Returns true if logging_level >= level
   logical function checkLog(level)
     integer, intent(in) :: level
-    checkLog = .false.
-    if (logging_level >= level .and. log_created .eqv. .true.) then
-      checkLog = .true.
-    end if
-  end function
+    checkLog = (logging_level >= level .and. log_created)
+  endfunction
   
-end module Logging_mod
+endmodule ! Logging_mod

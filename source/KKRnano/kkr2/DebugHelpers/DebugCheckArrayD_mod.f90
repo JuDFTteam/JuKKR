@@ -5,18 +5,16 @@ module DebugCheckArrayD_mod
 
   type DebugCheckArrayD
     private
-    double precision, dimension(:), pointer :: array_data
+    double precision, allocatable :: array_data(:)
     integer :: num_elements
     character(len=32) :: array_name 
-  end type
+  endtype
 
   contains
 
   subroutine createDebugCheckArrayD(debug_array, array_to_check, num_elements, array_name)
-    implicit none
-
-    type (DebugCheckArrayD), intent(inout) :: debug_array
-    double precision, dimension(num_elements), intent(in) :: array_to_check
+    type(DebugCheckArrayD), intent(inout) :: debug_array
+    double precision, intent(in) :: array_to_check(num_elements)
     integer, intent(in) :: num_elements
     character(len=*), intent(in) :: array_name
 
@@ -29,15 +27,13 @@ module DebugCheckArrayD_mod
 
     do ii = 1, num_elements
       debug_array%array_data(ii) = array_to_check(ii)  
-    end do 
+    enddo ! ii
 
-  end subroutine
+  endsubroutine
 
   logical function testDebugCheckArrayD(debug_array, array_to_check, fail_message)
-    implicit none
-
-    type (DebugCheckArrayD), intent(in) :: debug_array
-    double precision, dimension(*), intent(in) :: array_to_check ! accept any array
+    type(DebugCheckArrayD), intent(in) :: debug_array
+    double precision, intent(in) :: array_to_check(*) ! accept any array
     character(len=*), intent(in), optional :: fail_message
 
     integer :: ii
@@ -45,29 +41,28 @@ module DebugCheckArrayD_mod
     testDebugCheckArrayD = .false.
 
     do ii = 1, debug_array%num_elements
-      if(debug_array%array_data(ii) /= array_to_check(ii)) then
-      write(*,*) "testDebugCheckArrayD: Arrays do not match. Element ", ii
+      if (debug_array%array_data(ii) /= array_to_check(ii)) then
+        write(*,*) "testDebugCheckArrayD: Arrays do not match. Element ", ii
         if (present(fail_message)) then
           write(*,*) debug_array%array_name, fail_message
         else
           write(*,*) debug_array%array_name 
-        end if
-      return
-      end if  
-    end do 
+        endif
+        return
+      endif  
+    enddo ! ii
      
     testDebugCheckArrayD = .true.
 
-  end function testDebugCheckArrayD
+  endfunction
 
   subroutine destroyDebugCheckArrayD(debug_array)
-    implicit none
-
-    type (DebugCheckArrayD), intent(inout) :: debug_array
+    type(DebugCheckArrayD), intent(inout) :: debug_array
     
     deallocate(debug_array%array_data)
-  end subroutine
-end module
+  endsubroutine
+  
+endmodule
 
 !
 !program TryDebugCheckArrayD
@@ -82,13 +77,13 @@ end module
 !  integer :: x, y
 !  logical :: flag
 !
-!  type (DebugCheckArrayD) :: db
+!  type(DebugCheckArrayD) :: db
 !
 !  do y = 1, dimy
 !    do x = 1, dimx
 !      my_array(x,y) = x * y
-!    end do
-!  end do
+!    enddo
+!  enddo
 !
 !  call createDebugCheckArrayD(db, my_array, dimx*dimy, "my_array")
 !
@@ -107,4 +102,4 @@ end module
 !
 !
 !  call destroyDebugCheckArrayD(db)
-!end program
+!endprogram

@@ -17,7 +17,7 @@ module arraytest2_mod
     !module procedure itest1d
 
     ! repeat until 4d
-  end interface testarray
+  endinterface
 
   contains
 
@@ -27,7 +27,7 @@ module arraytest2_mod
       double precision, intent(in) :: array(:,:,:,:)
 
       dtest4d = doubleprectest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function dtest3d(nr, msg, array)
       integer, intent(in) :: nr
@@ -35,7 +35,7 @@ module arraytest2_mod
       double precision, intent(in) :: array(:,:,:)
 
       dtest3d = doubleprectest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function dtest2d(nr, msg, array)
       integer, intent(in) :: nr
@@ -43,7 +43,7 @@ module arraytest2_mod
       double precision, intent(in) :: array(:,:)
 
       dtest2d = doubleprectest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function dtest1d(nr, msg, array)
       integer, intent(in) :: nr
@@ -51,7 +51,7 @@ module arraytest2_mod
       double precision, intent(in) :: array(:)
 
       dtest1d = doubleprectest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function ztest4d(nr, msg, array)
       integer, intent(in) :: nr
@@ -59,7 +59,7 @@ module arraytest2_mod
       double complex, intent(in) :: array(:,:,:,:)
 
       ztest4d = doublecomplextest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function ztest3d(nr, msg, array)
       integer, intent(in) :: nr
@@ -67,7 +67,7 @@ module arraytest2_mod
       double complex, intent(in) :: array(:,:,:)
 
       ztest3d = doublecomplextest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function ztest2d(nr, msg, array)
       integer, intent(in) :: nr
@@ -75,7 +75,7 @@ module arraytest2_mod
       double complex, intent(in) :: array(:,:)
 
       ztest2d = doublecomplextest(nr, msg, array, size(array))
-    end function
+    endfunction
 
     character(len=80) function ztest1d(nr, msg, array)
       integer, intent(in) :: nr
@@ -83,51 +83,35 @@ module arraytest2_mod
       double complex, intent(in) :: array(:)
 
       ztest1d = doublecomplextest(nr, msg, array, size(array))
-    end function
+    endfunction
 
 !=================== Helper routines ==========================================
 
-   character(len=80) function doubleprectest(nr, msg, array, length)
+   character(len=80) function doubleprectest(nr, msg, array, length) result(str)
      integer, intent(in) :: nr
      character(len=*), intent(in) :: msg
      double precision, intent(in) :: array(*)
      integer, intent(in) :: length
 
      double precision, external :: DNRM2
-     double precision :: asum
-     integer :: ii
-
-     asum = 0.0d0
-     do ii = 1, length
-       asum = asum + array(ii)
-     end do
 
      ! print norm and average
-     write(doubleprectest,'(A7,I4,X,A16,X,E16.9,X,E16.9)') "DEBUG: ", nr, &
-                              msg, DNRM2(length, array, 1), asum / length
-     !write (doubleprectest,*) "Just a test"
-   end function
+     write(unit=str, fmt='(a7,i4,x,a16,x,e16.9,x,e16.9)') &
+       "DEBUG: ", nr, msg, DNRM2(length, array, 1), sum(array(1:length))/length
+   endfunction
 
-   character(len=80) function doublecomplextest(nr, msg, array, length)
+   character(len=80) function doublecomplextest(nr, msg, array, length) result(str)
      integer, intent(in) :: nr
      character(len=*), intent(in) :: msg
      double complex, intent(in) :: array(*)
      integer, intent(in) :: length
 
      double precision, external :: DZNRM2
-     double complex :: asum
-     integer :: ii
-
-     asum = dcmplx(0.0d0, 0.0d0)
-     do ii = 1, length
-       asum = asum + array(ii)
-     end do
-  
+ 
      ! print norm and average
-     write(doublecomplextest,'(A7,I4,X,A16,X,E12.5,X,E12.5,X,E12.5)') &
-            "DEBUG: ", nr, msg, DZNRM2(length, array, 1), asum / length
+     write(unit=str, fmt='(a7,i4,x,a16,x,e12.5,x,e12.5,x,e12.5)') &
+       "DEBUG: ", nr, msg, DZNRM2(length, array, 1), sum(array(1:length))/length
 
-     !write(doublecomplextest,*) "Just a test"
-   end function
+   endfunction
 
-end module
+endmodule

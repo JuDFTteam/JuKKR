@@ -358,13 +358,10 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
     integer, intent(in) :: max_reclen
 
-    integer, parameter :: MAGIC_NUMBER = -889271554
-
     FILEWRITE (fileunit, rec=recnr) meshdata%irmd, &
                                     meshdata%ipand, &
                                     max_reclen, &
                                     MAGIC_NUMBER + recnr
-
   endsubroutine ! write
 
   !----------------------------------------------------------------------------
