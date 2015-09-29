@@ -20,14 +20,13 @@ module vbrmv_mat_mod
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     double complex, intent(in)  :: a(:), x(:,:)
     double complex, intent(out) :: b(:,:)
-    type (SparseMatrixDescription), intent(in) :: sparse
+    type(SparseMatrixDescription), intent(in) :: sparse
 
     call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, &
                    a, sparse%kvstr, sparse%kvstr, x, b, &
                    sparse%max_blockdim, sparse%max_blocks_per_row)
 
   endsubroutine ! multiply_vbr
-
 
   !> Heavily modified routine from SPARSKIT
   subroutine vbrmv_mat(blk_nrows, ia, ja, ka, a, kvstr, kvstc, x, b, max_blockdim, max_blocks_per_row)

@@ -29,10 +29,12 @@ module BrillouinZone_mod
 !     deallocate(self%kp, stat=ist) ! ignore status
 !   endsubroutine
   
+  integer, parameter :: maxmshd = 8
+  
   contains
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
-                     dsymll, intervxyz, ielast, ez, kmesh, maxmesh, maxmshd, lmax, iemxd, krel, ekmd, nowrite)
+                     dsymll, intervxyz, ielast, ez, kmesh, maxmesh, lmax, iemxd, krel, ekmd, nowrite)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat      
                      
     integer, parameter :: nsymaxd=48
@@ -40,7 +42,7 @@ module BrillouinZone_mod
     integer, intent(out) :: ekmd
     integer, intent(in)  :: naez, krel, lmax, iemxd
     integer, intent(out) :: nsymat, maxmesh
-    integer, intent(in)  :: intervxyz(3), maxmshd, ielast
+    integer, intent(in)  :: intervxyz(3), ielast
     double complex, intent(out) :: dsymll((lmax+1)**2,(lmax+1)**2,nsymaxd) ! (lmmaxd,lmmaxd,nsymaxd)
     double complex, intent(in) :: ez(iemxd)
     double precision, intent(in) :: bravais(3,3), rbasis(3,naez), recbv(3,3)
@@ -77,7 +79,7 @@ module BrillouinZone_mod
     endif ! full BZ
 
 ! --> generate bz k-mesh
-    call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, maxmshd, iemxd, ekmd, nowrite)
+    call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite)
 !
     call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
 !
@@ -90,19 +92,20 @@ module BrillouinZone_mod
 
       
       
-  subroutine bzkmesh(nbxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, maxmshd, iemxd, ekmd, nowrite)
+  subroutine bzkmesh(nbxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite)
     integer, intent(in) :: iemxd
-    integer, intent(out) :: maxmesh, ekmd
-    integer, intent(in) :: nbxyz(3), nsymat, iprint, ielast, maxmshd
+    integer, intent(in) :: nbxyz(3), nsymat, iprint, ielast
     logical, intent(in) :: lirr, nowrite
     double precision, intent(in) :: bravais(3,3), recbv(3,3), rsymat(64,3,3)
     integer, intent(in) :: isymindex(:) !< dim(nsymaxd)
-    integer, intent(out) :: kmesh(iemxd)
-    double complex, intent(in) :: ez(iemxd)
+    double complex, intent(in) :: ez(iemxd) !< energy contour points
+    
+    integer, intent(out) :: maxmesh, ekmd
+    integer, intent(out) :: kmesh(iemxd) !< mapping of k-meshes and energy contour points
 
-    integer :: i, ks, l, n, nb(3), nofks, ekmin, nxyz(3), nofks0(maxmshd), newnofks(maxmshd), fu
+    integer :: i, ks, l, n, nb(3), ekmin, nxyz(3), nofks(maxmshd), newnofks(maxmshd), fu
     logical :: newkp, oldkp
-    double precision :: xyz(1:3), w8, volbz, newvolbz
+    double precision :: wxyz(0:3), volbz, newvolbz
     double precision, allocatable :: kwxyz(:,:) !< dim(0:3,product(nbxyz(1:3)))
 !   logical, external :: test
 
@@ -112,9 +115,9 @@ module BrillouinZone_mod
       kmesh(1:ielast) = 1
     else
       do i = 1, ielast
-        n = int(1.001d0 + log(dimag(ez(i))/dimag(ez(ielast)))/log(2.0d0))
+        n = int(1.001d0 + log(dimag(ez(i))/dimag(ez(ielast)))/log(2.d0))
         kmesh(i) = n
-        maxmesh = max(maxmesh,n)
+        maxmesh = max(maxmesh, n)
         if (kmesh(i) < 1) kmesh(i) = 1
       enddo ! i
       kmesh(1) = maxmesh
@@ -122,18 +125,17 @@ module BrillouinZone_mod
     endif ! fix mesh
 
     if (maxmesh > maxmshd) then
-      write(6,fmt='(5x,a,i2)') 'Dimension ERROR: Please increase MAXMSHD to ',maxmesh
-      write(6,fmt='(22x,a,/)') 'in the programs < main0 > and < main1b >'
-      stop '< BZKMESH >'
+      write(6, fmt='(a,i0,9a)') 'Dimension ERROR: Please increase hard limit MAXMSHD to ',maxmesh,' in ',__FILE__
+      stop __FILE__
     endif
-! ---------------------------------------------------------------------
-    nb(1:3) = nbxyz(1:3)
 
     write(6,'(79(1h=))')
-    write(6,fmt="(12x,' BZKMESH : creating k-mesh,',' write to file kpoints')")
+    write(6, fmt="(12x,' BZKMESH : creating k-mesh,',' write to file kpoints')")
     write(6,'(79(1h=))')
     write(6,*)
-    write(6,fmt="(8x,'number of different k-meshes :',i2,/,8x,'the direct lattice',i3,' symmetries will be used',//,8x,35(1h-),/,8x,'k-mesh NofKs N kx N ky N kz vol BZ',/,8x,35(1h-))") maxmesh,nsymat
+    write(6, fmt="(8x,'number of different k-meshes :',i2)") maxmesh
+    write(6, fmt="(8x,'the direct lattice',i3,' symmetries will be used')") nsymat
+    write(6, fmt="(/,8x,35(1h-),/,8x,'k-mesh NofKs N kx N ky N kz vol BZ',/,8x,35(1h-))")
 
     if (nowrite) then
       fu = 0
@@ -148,32 +150,31 @@ module BrillouinZone_mod
       open(unit=fu, file='kpoints', form='formatted', action='write') ! create or overwrite existing file with the same name
     endif
     
+    nb(1:3) = nbxyz(1:3)
+    allocate(kwxyz(0:3,product(nbxyz(1:3))))
     do l = 1, maxmesh
-      if (l > 1) nb(1:3) = nb(1:3)/1.4
       nb = max(1, nb)
 
       nxyz(1:3) = nb(1:3)
-      allocate(kwxyz(0:3,product(nxyz(1:3))))
       
-      call bzirr3d(nxyz, recbv, bravais, nofks, volbz, kwxyz, rsymat, nsymat, isymindex, lirr, iprint)
+      call bzirr3d(nxyz, recbv, bravais, nofks(l), volbz, kwxyz, rsymat, nsymat, isymindex, lirr, iprint)
 
-      write(6, fmt="(8x,2i6,3i5,f8.4)") l, nofks, nxyz(1:3), volbz
-      if (l == maxmesh) write(6,fmt="(8x,35(1h-),/)")
+      write(6, fmt="(8x,2i6,3i5,f8.4)") l, nofks(l), nxyz(1:3), volbz
+      if (l == maxmesh) write(6, fmt="(8x,35(1h-),/)")
 
-      if (fu > 0) write(unit=fu, fmt='(i8,f15.10,/,(3f12.8,d20.10))') nofks, volbz, (kwxyz(1:3,i), kwxyz(0,i), i=1,nofks)
+      if (fu > 0) write(unit=fu, fmt='(i8,f15.10,/,(3f12.8,d20.10))') nofks(l), volbz, (kwxyz(1:3,i), kwxyz(0,i), i=1,nofks(l))
       
 ! -->  output of k-mesh
       if (test('k-net   ')) then
-        do ks = 1, nofks
+        do ks = 1, nofks(l)
           write(6, fmt="(3f12.5,f15.8)") kwxyz(1:3,ks), kwxyz(0,ks)
         enddo ! ks
       endif
 
-      nofks0(l) = nofks
-      deallocate(kwxyz)
+      nb(1:3) = nb(1:3)/1.4 ! use less k-points on the next level grid
     enddo ! l ! loop over different meshes
     if (fu > 0) close(unit=fu, iostat=i)
-
+    deallocate(kwxyz)
 
 ! check dimensions of ekmd precond. array
 ! fix: check regardless of iguessd
@@ -181,7 +182,7 @@ module BrillouinZone_mod
     write(6,'(79(1h=))')
     write(6,'(12x,a)') 'BZKMESH: checking dimensions of precond. arrays ...'
 
-    ekmin = sum(nofks0(kmesh(1:ielast)))
+    ekmin = sum(nofks(kmesh(1:ielast)))
 !   set ekmd to the minimum value needed
     ekmd = ekmin
     write(6,*) '           EKMIN=',ekmin,'  EKMD=',ekmd
@@ -194,7 +195,7 @@ module BrillouinZone_mod
       do l = 1, maxmesh
         read(53, fmt='(i8,f15.10)') newnofks(l), newvolbz
         do i = 1, newnofks(l)
-          read(53, fmt=*) xyz(1:3), w8
+          read(53, fmt=*) wxyz(1:3), wxyz(0) ! read dummies just to see if the format is good
         enddo ! i
       enddo ! l
       close(53)
@@ -313,7 +314,7 @@ module BrillouinZone_mod
 !
 !==========================================================================
     do is = 1, nsym
-      if (iprint > 2) write(*,fmt="(5x,'rotated GQ  for IROT=',i3)") is
+      if (iprint > 2) write(*, fmt="(5x,'rotated GQ  for IROT=',i3)") is
   
       do i = 1, 3
         call dgemv('n',3,3,1.d0,u(1,1,is),3,gq(1,i),1,0.d0,bgp(1,i),1)
@@ -322,10 +323,10 @@ module BrillouinZone_mod
         enddo ! j
         call dgemv('n',3,3,1d0,bginv,3,bv,1,0.d0,cf,1)
         do j = 1, 3
-          if (abs(nint(cf(j)) - cf(j)) > 1d-8) write (*,fmt="(5x,2i3,3f7.3)") i, j, cf(j)
+          if (abs(nint(cf(j)) - cf(j)) > 1d-8) write (*, fmt="(5x,2i3,3f7.3)") i, j, cf(j)
           nbgp(j,i,is) = nint(cf(j))
         enddo !
-        if (iprint > 2) write(*,fmt="(5x,i3,3f7.3,2x,3f7.3,2x,3f7.3,2x,3i3)") i, bgp(1:3,i), bv, cf, nbgp(1:3,i,is)
+        if (iprint > 2) write(*, fmt="(5x,i3,3f7.3,2x,3f7.3,2x,3f7.3,2x,3i3)") i, bgp(1:3,i), bv, cf, nbgp(1:3,i,is)
       enddo ! i
     enddo ! is
 !========================================================================
@@ -411,7 +412,7 @@ module BrillouinZone_mod
   subroutine rinvgj(ainv,a,M,n)
 !   ********************************************************************
 !   *                      ainv = a**(-1)                              *
-!   *  invert a using the gauss-jordan - algorithm                     *
+!   *  invert a using the Gauss-Jordan - algorithm                     *
 !   *  the 1- matrix is not set up and use is made of its structure    *
 !   *                    double precision version                      *
 !   ********************************************************************
@@ -424,7 +425,7 @@ module BrillouinZone_mod
 
     ainv(1,1) = 0.d0
     do icol = 1, n ! scan columns
-      t1 = 1.0d0/a(icol,icol) ! make a(icol,icol) = 1
+      t1 = 1.d0/a(icol,icol) ! make a(icol,icol) = 1
       do l = icol+1, n
         a(icol,l) = a(icol,l)*t1
       enddo ! l

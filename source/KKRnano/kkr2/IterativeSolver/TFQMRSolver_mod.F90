@@ -16,7 +16,7 @@ module TFQMRSolver_mod
   implicit none
   private
   
-  public :: TFQMRSolver
+  public :: TFQMRSolver, solve, destroy
   
   type, extends(Solver) :: TFQMRSolver
     PRIVATE
@@ -36,13 +36,21 @@ module TFQMRSolver_mod
       procedure :: init => init_solver
       procedure :: init_precond => init_precond_solver
       procedure :: solve => solve_with_solver
-      procedure :: destroy => destroy_solver
       procedure :: set_qmrbound
       procedure :: set_initial_zero
       procedure :: get_stats
       procedure :: get_total_stats
       procedure :: reset_total_stats
+!     procedure :: destroy => destroy_solver
   endtype
+  
+  interface solve
+    module procedure solve_with_solver
+  endinterface
+
+  interface destroy
+    module procedure destroy_solver
+  endinterface
 
   contains
 
@@ -73,15 +81,14 @@ module TFQMRSolver_mod
     double complex, intent(inout) :: mat_X(:,:)
     double complex, intent(in)    :: mat_B(:,:)
 
-    integer nlen
-    integer num_columns
+    integer :: nlen, num_columns
 
     nlen = size(mat_B, 1)
     num_columns = size(mat_B, 2)
 
     if (.not. allocated(self%vecs)) then
-      allocate(self%vecs(nlen, num_columns, 7))
-      allocate(self%temp(nlen, num_columns))
+      allocate(self%vecs(nlen,num_columns,7))
+      allocate(self%temp(nlen,num_columns))
     else
       if (size(self%vecs, 1) /= nlen .or. size(self%vecs, 2) /= num_columns) then
         ! when problem size has changed, one should destroy the solver and create a new one
@@ -95,7 +102,7 @@ module TFQMRSolver_mod
       STOP
     endif
 
-    call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, num_columns, NLEN, &
+    call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, num_columns, nlen, &
                       .true., self%stats, self%precond, self%use_precond, &
                       self%vecs, self%temp)
 
@@ -104,13 +111,12 @@ module TFQMRSolver_mod
   endsubroutine ! solve
 
   !----------------------------------------------------------------------------
-  subroutine destroy_solver(self)
-    class(TFQMRSolver) :: self
+  elemental subroutine destroy_solver(self)
+    class(TFQMRSolver), intent(inout) :: self
     
     integer :: ist ! ignore status
 
     deallocate(self%vecs, self%temp, stat=ist)
-
     nullify(self%op)
     nullify(self%precond)
   endsubroutine ! destroy

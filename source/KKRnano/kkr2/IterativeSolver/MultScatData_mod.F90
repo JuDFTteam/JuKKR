@@ -13,8 +13,8 @@ module MultScatData_mod
 
     double complex, allocatable :: mat_B(:,:)
     double complex, allocatable :: mat_X(:,:)
-    double complex, allocatable :: EIKRP(:)
-    double complex, allocatable :: EIKRM(:)
+    double complex, allocatable :: eikrp(:)
+    double complex, allocatable :: eikrm(:)
     double complex, allocatable :: GLLH(:)
 
     integer, allocatable :: atom_indices(:)
@@ -62,19 +62,16 @@ module MultScatData_mod
 
     call getKKRMatrixStructure(lmarray, cluster_info%numn0_trc, cluster_info%indn0_trc, ms%sparse)
 
-    allocate(ms%mat_B(ms%sparse%kvstr(naez+1)-1,LMMAXD*size(atom_indices)))
-    allocate(ms%mat_X(ms%sparse%kvstr(naez+1)-1,LMMAXD*size(atom_indices)))
-
+    allocate(ms%mat_B(ms%sparse%kvstr(naez+1)-1,lmmaxd*size(atom_indices)))
+    allocate(ms%mat_X(ms%sparse%kvstr(naez+1)-1,lmmaxd*size(atom_indices)))
     allocate(ms%GLLH(getNNZ(ms%sparse))) ! allocate memory for sparse matrix
-
-    allocate(ms%eikrm(naclsd))
-    allocate(ms%eikrp(naclsd))
+    allocate(ms%eikrm(naclsd), ms%eikrp(naclsd))
   endsubroutine ! create
 
   !------------------------------------------------------------------------------
   !> Destroys workspace for multiple scattering calculation.
-  subroutine destroyMultScatData(ms)
-    use SparseMatrixDescription_mod, only: destroySparseMatrixDescription
+  elemental subroutine destroyMultScatData(ms)
+    use SparseMatrixDescription_mod, only: destroy
     type(MultScatData), intent(inout) :: ms
 
     integer :: ist ! ignore status
@@ -85,9 +82,10 @@ module MultScatData_mod
     deallocate(ms%mat_X, stat=ist)
     deallocate(ms%mat_B, stat=ist)
 
-    call destroySparseMatrixDescription(ms%sparse)
+    call destroy(ms%sparse)
 
     deallocate(ms%atom_indices, stat=ist)
+    nullify(ms%cluster_info)
   endsubroutine ! destroy
 
-endmodule MultScatData_mod
+endmodule ! MultScatData_mod

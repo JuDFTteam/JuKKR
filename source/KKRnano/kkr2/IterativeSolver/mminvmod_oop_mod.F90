@@ -3,14 +3,16 @@
 #include "../DebugHelpers/logging_macros.h"
 
 #define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
+
 #define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
 
-! YVECTOR = FACTORS*XVECTOR + YVECTOR
+! YVECTOR = YVECTOR + FACTORS*XVECTOR
 #define COLUMN_AXPY(FACTORS, XVECTOR, YVECTOR) call col_axpy(FACTORS, XVECTOR, YVECTOR)
-! YVECTOR = -FACTORS*XVECTOR + YVECTOR
+
+! YVECTOR = YVECTOR -FACTORS*XVECTOR
 #define COLUMN_MAXPY(FACTORS, XVECTOR, YVECTOR) call col_maxpy(FACTORS, XVECTOR, YVECTOR)
 
-! YVECTOR =         XVECTOR + FACTORS*YVECTOR
+! YVECTOR = XVECTOR + FACTORS*YVECTOR
 #define COLUMN_XPAY(FACTORS, XVECTOR, YVECTOR) call col_xpay(FACTORS, XVECTOR, YVECTOR)
 
 module mminvmod_oop_mod
@@ -37,19 +39,17 @@ module mminvmod_oop_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, NLEN, initial_zero, stats, precond, use_precond, VECS, temp)
+  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, nlen, initial_zero, stats, precond, use_precond, VECS, temp)
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
     use OperatorT_mod, only: OperatorT
 
     class(OperatorT), intent(in) :: op
-
     double precision, intent(in) :: TOL
     integer, intent(in) :: num_columns
-    INTEGER, intent(in) :: NLEN
-
+    integer, intent(in) :: nlen
     double complex, intent(inout) :: mat_X(NLEN,num_columns)
-    double complex, intent(in) :: mat_B(NLEN,num_columns)
+    double complex, intent(in)    :: mat_B(NLEN,num_columns)
 
     logical, intent(in) :: initial_zero
     type(SolverStats), intent(inout) :: stats
@@ -410,7 +410,7 @@ module mminvmod_oop_mod
    ! ITERATION
    !============================================================================
    !============================================================================
-67 continue
+
       !     Done.
 
       ! >>>>>>>>>>>
@@ -438,7 +438,7 @@ module mminvmod_oop_mod
    stats%iterations = IT
    stats%max_residual = max_residual
 
-   do ind=1, num_columns
+   do ind = 1, num_columns
      if (converged_at(ind) == 0) then
        select case (tfqmr_status(ind))
          case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", ind
@@ -446,13 +446,13 @@ module mminvmod_oop_mod
          case default ; WRITELOG(3,*) "Component not converged: ", ind
        endselect
      endif
-   enddo
+   enddo ! ind
 
    WRITELOG(3,*) tfqmr_status
    WRITELOG(3,*) converged_at
    WRITELOG(3,*) RESN
 
- endsubroutine
+ endsubroutine ! mminvmod_oop
 
  !------------------------------------------------------------------------------
  !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
@@ -475,7 +475,7 @@ module mminvmod_oop_mod
      call op%apply(mat, mat_out)
    endif
 
- endsubroutine
+ endsubroutine ! apply
 
  !------------------------------------------------------------------------------
  subroutine col_AXPY(factors, xvector, yvector)
@@ -483,16 +483,16 @@ module mminvmod_oop_mod
    double complex, intent(in) :: xvector(:,:)
    double complex, intent(inout) :: yvector(:,:)
 
-   integer :: col, ncol, nlen
+   integer :: col, ncol, NLEN
    double complex, parameter :: CONE = (1.d0, 0.d0)
 
    ncol = size(factors)
-   nlen = size(xvector,1)
+   NLEN = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector(:,col), factors(col), xvector(:,col), CONE, yvector(:,col))
-   enddo
- endsubroutine
+     call zaxpby(NLEN, yvector(:,col), factors(col), xvector(:,col), CONE, yvector(:,col))
+   enddo ! col
+ endsubroutine ! axpy
 
  !------------------------------------------------------------------------------
  subroutine col_MAXPY(factors, xvector, yvector)
@@ -500,16 +500,16 @@ module mminvmod_oop_mod
    double complex, intent(in) :: xvector(:,:)
    double complex, intent(inout) :: yvector(:,:)
 
-   integer :: col, ncol, nlen
+   integer :: col, ncol, NLEN
    double complex, parameter :: CONE = (1.d0, 0.d0)
 
    ncol = size(factors)
-   nlen = size(xvector,1)
+   NLEN = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector(:,col), -factors(col), xvector(:,col), CONE, yvector(:,col))
+     call zaxpby(NLEN, yvector(:,col), -factors(col), xvector(:,col), CONE, yvector(:,col))
    enddo ! col
- endsubroutine
+ endsubroutine ! maxpy
 
  !------------------------------------------------------------------------------
  subroutine col_XPAY(factors, xvector, yvector)
@@ -517,32 +517,32 @@ module mminvmod_oop_mod
    double complex, intent(in) :: xvector(:,:)
    double complex, intent(inout) :: yvector(:,:)
 
-   integer :: col, ncol, nlen
+   integer :: col, ncol, NLEN
    double complex, parameter :: CONE = (1.d0, 0.d0)
 
    ncol = size(factors)
-   nlen = size(xvector,1)
+   NLEN = size(xvector,1)
 
    do col = 1, ncol
-     call zaxpby(nlen, yvector(:,col), CONE, xvector(:,col), factors(col), yvector(:,col))
+     call zaxpby(NLEN, yvector(:,col), CONE, xvector(:,col), factors(col), yvector(:,col))
    enddo ! col
- endsubroutine
+ endsubroutine ! xpay
 
  !------------------------------------------------------------------------------
  subroutine col_norms(norms, vectors)
    double precision, intent(out) :: norms(:)
    double complex, intent(in) :: vectors(:,:)
 
-   integer :: col, ncol, nlen
+   integer :: col, ncol, NLEN
    double precision, external :: DZNRM2
 
    ncol = size(norms)
-   nlen = size(vectors,1)
+   NLEN = size(vectors,1)
 
    do col = 1, ncol
-     norms(col) = DZNRM2(nlen,vectors(:,col),1)
+     norms(col) = DZNRM2(NLEN,vectors(:,col),1)
    enddo ! col
- endsubroutine
+ endsubroutine ! norms
 
  !------------------------------------------------------------------------------
  subroutine col_dots(dots, vectorsv, vectorsw)
@@ -550,15 +550,132 @@ module mminvmod_oop_mod
    double complex, intent(in) :: vectorsv(:,:)
    double complex, intent(in) :: vectorsw(:,:)
 
-   integer :: col, ncol, nlen
+   integer :: col, ncol, NLEN
    double complex, external :: ZDOTU
 
    ncol = size(vectorsv,2)
-   nlen = size(vectorsv,1)
+   NLEN = size(vectorsv,1)
 
    do col = 1, ncol
-     dots(col) = ZDOTU(nlen, vectorsv(:,col), 1, vectorsw(:,col), 1)
+     dots(col) = ZDOTU(NLEN, vectorsv(:,col), 1, vectorsw(:,col), 1)
    enddo ! col
- endsubroutine
+ endsubroutine ! dots
 
-endmodule
+ 
+!**********************************************************************
+!
+!     Copyright (C) 1992  Roland W. Freund and Noel M. Nachtigal
+!     All rights reserved.
+!
+!     This code is part of a copyrighted package.  For details, see the
+!     file `cpyrit.doc' in the top-level directory.
+!
+!     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE COPYRIGHT NOTICE
+!**********************************************************************
+  subroutine zaxpby (n,zz,za,zx,zb,zy)
+!
+!     purpose:
+!     this subroutine computes zz = za * zx + zb * zy.  several special
+!     cases are handled separately:
+!        za =  0.0, zb =  0.0 => zz = 0.0
+!        za =  0.0, zb =  1.0 => zz = zy  (this is copy)
+!        za =  0.0, zb = -1.0 => zz = -zy
+!        za =  0.0, zb =   zb => zz = zb * zy  (this is scal)
+!        za =  1.0, zb =  0.0 => zz = zx  (this is copy)
+!        za =  1.0, zb =  1.0 => zz = zx + zy
+!        za =  1.0, zb = -1.0 => zz = zx - zy
+!        za =  1.0, zb =   zb => zz = zx + zb * zy (this is axpy)
+!        za = -1.0, zb =  0.0 => zz = -zx
+!        za = -1.0, zb =  1.0 => zz = -zx + zy
+!        za = -1.0, zb = -1.0 => zz = -zx - zy
+!        za = -1.0, zb =   zb => zz = -zx + zb * zy
+!        za =   za, zb =  0.0 => zz = za * zx  (this is scal)
+!        za =   za, zb =  1.0 => zz = za * zx + zy  (this is axpy)
+!        za =   za, zb = -1.0 => zz = za * zx - zy
+!        za =   za, zb =   zb => zz = za * zx + zb * zy
+!     zz may be the same as zx or zy.
+!
+!     parameters:
+!     n  = the dimension of the vectors (input).
+!     zz = the vector result (output).
+!     za = scalar multiplier for zx (input).
+!     zx = one of the vectors (input).
+!     zb = scalar multiplier for zy (input).
+!     zy = the other vector (input).
+!
+!     noel m. nachtigal
+!     march 23, 1993
+!
+!**********************************************************************
+    integer, intent(in) :: n
+    double complex, intent(in) :: za, zb, zx(n), zy(n)
+    double complex, intent(out) :: zz(n)
+
+    double precision :: dai, dar, dbi, dbr
+
+    if (n < 1) return
+
+    dai = dimag(za)
+    dar = dreal(za)
+    dbi = dimag(zb)
+    dbr = dreal(zb)
+    if ((dar == 0.d0).and.(dai == 0.d0)) then
+      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+        ! za = 0.0, zb = 0.0 => zz = 0.0.
+        zz(1:n) = (0.d0,0.d0)
+      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+        ! za = 0.0, zb = 1.0 => zz = zy (this is copy).
+        zz(1:n) = zy(1:n)
+      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+        ! za = 0.0, zb = -1.0 => zz = -zy.
+        zz(1:n) = -zy(1:n)
+      else
+        ! za = 0.0, zb = zb => zz = zb * zy (this is scal).
+        zz(1:n) = zb * zy(1:n)
+      endif
+    else if ((dar == 1.d0).and.(dai == 0.d0)) then
+      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+        ! za = 1.0, zb = 0.0 => zz = zx (this is copy).
+        zz(1:n) = zx(1:n)
+      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+        ! za = 1.0, zb = 1.0 => zz = zx + zy.
+        zz(1:n) = zx(1:n) + zy(1:n)
+      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+        ! za = 1.0, zb = -1.0 => zz = zx - zy.
+        zz(1:n) = zx(1:n) - zy(1:n)
+      else
+        ! za = 1.0, zb = zb => zz = zx + zb * zy (this is axpy).
+        zz(1:n) = zx(1:n) + zb * zy(1:n)
+      endif
+    else if ((dar == -1.d0).and.(dai == 0.d0)) then
+      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+        ! za = -1.0, zb = 0.0 => zz = -zx
+        zz(1:n) = -zx(1:n)
+      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+        ! za = -1.0, zb = 1.0 => zz = -zx + zy
+        zz(1:n) = -zx(1:n) + zy(1:n)
+      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+        ! za = -1.0, zb = -1.0 => zz = -zx - zy.
+        zz(1:n) = -zx(1:n) - zy(1:n)
+      else
+        ! za = -1.0, zb = zb => zz = -zx + zb * zy
+        zz(1:n) = -zx(1:n) + zb * zy(1:n)
+      endif
+    else
+      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
+        ! za = za, zb = 0.0 => zz = za * zx (this is scal).
+        zz(1:n) = za * zx(1:n)
+      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
+        ! za = za, zb = 1.0 => zz = za * zx + zy (this is axpy)
+        zz(1:n) = za * zx(1:n) + zy(1:n)
+      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
+        ! za = za, zb = -1.0 => zz = za * zx - zy.
+        zz(1:n) = za * zx(1:n) - zy(1:n)
+      else
+        ! za = za, zb = zb => zz = za * zx + zb * zy.
+        zz(1:n) = za * zx(1:n) + zb * zy(1:n)
+      endif
+    endif
+  endsubroutine
+ 
+endmodule ! mminvmod_oop_mod

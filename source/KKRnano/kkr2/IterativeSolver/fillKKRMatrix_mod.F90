@@ -103,10 +103,8 @@ module fillKKRMatrix_mod
     type(SparseMatrixDescription), intent(inout) :: sparse
 
     double complex :: temp(lmmaxd)
-    integer :: block_row, block_col, start
-    integer :: lm1, lm2, lm3, lmmax1, lmmax2, lmmax3
-    integer :: istart_row, istop_row
-    integer :: istart_col, istop_col, ind_ia
+    integer :: block_row, block_col, start, lm1, lm2, lm3, lmmax1, lmmax2, lmmax3
+    integer :: istart_row, istop_row, istart_col, istop_col, ind_ia
 
     start = 0
     do block_row = 1, num_atoms
@@ -182,8 +180,7 @@ module fillKKRMatrix_mod
     integer, intent(in) :: atom_indices(:)
     integer, intent(in) :: kvstr(:)
 
-    integer :: start, ii, num_atoms, atom_index
-    integer :: lm1, lm2, lmmax1, lmmax2
+    integer :: start, ii, num_atoms, atom_index, lm2, lmmax1, lmmax2 
 
     mat_B = ZERO
 
@@ -210,11 +207,12 @@ module fillKKRMatrix_mod
 
       start = kvstr(atom_index) - 1
       do lm2 = 1, lmmax2
-        do lm1 = 1, lmmax1
+!         do lm1 = 1, lmmax1
                       ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-!         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
-          if (lm1 == lm2) mat_B(start+lm1,(ii-1)*lmmax2+lm2) = - CONE
-        enddo ! lm1
+!           mat_B(start+lm1,(ii-1)*lmmax2+lm2) = - TMATLL(lm1,lm2,atom_index)
+!           if (lm1 == lm2) mat_B(start+lm1,(ii-1)*lmmax2+lm2) = - CONE
+!         enddo ! lm1
+        mat_B(start+lm2,(ii-1)*lmmax2+lm2) = - CONE
       enddo ! lm2
 
     enddo ! ii
@@ -271,24 +269,24 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
-  subroutine solveFull(full, mat_B)
+  subroutine solveFull(full, mat_B, mat_X)
     double complex, intent(inout) :: full(:,:)
-    double complex, intent(inout) :: mat_B(:,:)
+    double complex, intent(in)  :: mat_B(:,:)
+    double complex, intent(out) :: mat_X(:,:)
 
     integer, allocatable :: ipvt(:)
     integer :: ndim, num_rhs, info
 
     ndim = size(full, 1)
-
     allocate(ipvt(ndim))
 
     num_rhs = size(mat_B, 2)
+    mat_X(:,:) = mat_B(:,:)
+    
+    CALL ZGETRF(ndim,ndim,full,ndim,IPVT,info)
+    CALL ZGETRS('N',ndim,num_rhs,full,ndim,IPVT,mat_X,ndim,info)
 
-    CALL ZGETRF(ndim,ndim,full,ndim,IPVT,INFO)
-    CALL ZGETRS('N',ndim,num_rhs,full,ndim,IPVT,mat_B,ndim,INFO)
-
-    deallocate(ipvt)
-
+    deallocate(ipvt, stat=info)
   endsubroutine ! solveFull
 
 

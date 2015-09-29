@@ -1,7 +1,7 @@
 module SparseMatrixDescription_mod
   implicit none
   private
-  public :: SparseMatrixDescription, create, destroy
+  public :: SparseMatrixDescription, create, destroy, dump
   public :: createSparseMatrixDescription, destroySparseMatrixDescription ! deprecated
   public :: dumpSparseMatrixDescription, createSparseMatrixDescriptionFromFile
   public :: getNNZ
@@ -40,7 +40,11 @@ module SparseMatrixDescription_mod
   interface destroy
     module procedure destroySparseMatrixDescription
   endinterface
-  
+
+  interface dump
+    module procedure dumpSparseMatrixDescription
+  endinterface
+
   contains
 
   !----------------------------------------------------------------------------
@@ -80,7 +84,7 @@ module SparseMatrixDescription_mod
 
   !----------------------------------------------------------------------------
   !> Destroys SparseMatrixDescription object.
-  subroutine destroySparseMatrixDescription(sparse)
+  elemental subroutine destroySparseMatrixDescription(sparse)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
     integer :: ist ! ignore status

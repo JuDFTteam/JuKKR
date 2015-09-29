@@ -15,17 +15,17 @@ module Startb1_mod
   contains
 
 ! determine the record length
-  subroutine startb1_wrapper_new(alat, nspin, EFERMI, ZAT, radius_muffin_tin, naezd, nowrite)
+  subroutine startb1_wrapper_new(alat, nspin, EFERMI, Zat, radius_muffin_tin, naez, nowrite)
     use read_formatted_shapefun_mod, only: ShapefunFile, create_read_ShapefunFile, destroy_ShapefunFile
     double precision, intent(in) :: alat
-    integer, intent(in) :: naezd
+    integer, intent(in) :: naez
     double precision, intent(out) :: EFERMI
     integer, intent(in) :: nspin
-    double precision, intent(out):: ZAT(*)
-    double precision, intent(inout) :: radius_muffin_tin(naezd)
+    double precision, intent(out):: Zat(:)
+    double precision, intent(inout) :: radius_muffin_tin(naez)
     logical, intent(in) :: nowrite
 
-    integer :: ntcell(naezd)
+    integer :: ntcell(naez)
     integer :: max_reclen, max_reclen_mesh
     type(ShapefunFile) :: sfile
 
@@ -35,10 +35,10 @@ module Startb1_mod
     close(91)
 
     ! write atoms file and get maximum record lengths for vpotnew file and meshes file
-    call write_atoms_file(alat, nspin, ntcell, ZAT, radius_muffin_tin, naezd, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
+    call write_atoms_file(alat, nspin, ntcell, Zat, radius_muffin_tin, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
 
     ! routine to write binary potential and binary meshes
-    call write_binary_potential(alat, nspin, ntcell, naezd, sfile, max_reclen, max_reclen_mesh, nowrite)
+    call write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
 
     call destroy_ShapefunFile(sfile)
 
@@ -47,7 +47,7 @@ module Startb1_mod
 !------------------------------------------------------------------------------
 !> Write the 'atoms' file (= binary analogue to atominfo - used for parallel reading in kkr2)
 !> and determine the record length ('max_reclen') for the binary direct access potential file.
-  subroutine write_atoms_file(alat, nspin, ntcell, ZAT, radius_muffin_tin, naezd, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
+  subroutine write_atoms_file(alat, nspin, ntcell, Zat, radius_muffin_tin, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
 
     use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
     use read_formatted_shapefun_mod, only: ShapefunFile
@@ -55,10 +55,10 @@ module Startb1_mod
     use RadialMeshData_mod, only: RadialMeshData, getMinReclenMesh, createRadialMeshData, destroyRadialMeshData
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
-    double precision :: ZAT(*)
-    double precision, intent(inout) :: radius_muffin_tin(naezd)
-    integer, intent(in) :: naezd
-    integer, intent(out) :: ntcell(*)
+    double precision, intent(out) :: Zat(:)
+    double precision, intent(inout) :: radius_muffin_tin(naez)
+    integer, intent(in) :: naez
+    integer, intent(out) :: ntcell(:)
     type(ShapefunFile), intent(in) :: sfile
     double precision, intent(out) :: EFERMI
     integer, intent(out) :: max_reclen
@@ -85,7 +85,7 @@ module Startb1_mod
     call openBasisAtomDAFile(atom, 37, 'atoms')
 
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
-    do iatom = 1, naezd
+    do iatom = 1, naez
 
       do ispin = 1, nspin
         call create_read_PotentialEntry(pe(ispin), fu, iatom)
@@ -94,7 +94,7 @@ module Startb1_mod
 
   !        The nuclear charge Z is now solely determined by the 'potential' file, 'atominfo' is no longer needed
 
-        ZAT(iatom) = pe(ispin)%header%Z_nuclear
+        Zat(iatom) = pe(ispin)%header%Z_nuclear
 
   !        The parameter ntcell is now automatically set to the index of the atom (1st atom -> 1st pe in shapefun file,
   !        2nd atom -> 2nd pe in shapefun file), 'atominfo' is no longer needed
@@ -107,9 +107,9 @@ module Startb1_mod
         radius_muffin_tin(iatom) = pe(ispin)%header%RMT
 
   !        ! do some consistency checks
-  !        if (abs(ZAT(iatom) - pe(ispin)%header%Z_nuclear) > 1.d-8) then
+  !        if (abs(Zat(iatom) - pe(ispin)%header%Z_nuclear) > 1.d-8) then
   !          write(*,*) "ERROR: Mismatch of nuclear charge between atominfo and potential file for pe: ", iatom
-  !          write(*,*) ZAT(iatom), pe(ispin)%header%Z_nuclear
+  !          write(*,*) Zat(iatom), pe(ispin)%header%Z_nuclear
   !          STOP
   !        endif
 
@@ -135,7 +135,7 @@ module Startb1_mod
       ! write file 'atoms'
       atom%atom_index = iatom
       atom%cell_index = ntcell(iatom)
-      atom%Z_nuclear = ZAT(iatom)
+      atom%Z_nuclear = Zat(iatom)
 
       atom%radius_muffin_tin = radius_muffin_tin(iatom)
 
@@ -182,7 +182,7 @@ module Startb1_mod
   endfunction
 
 
-  subroutine write_binary_potential(alat, nspin, ntcell, naezd, sfile, max_reclen, max_reclen_mesh, nowrite)
+  subroutine write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
     use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
     use read_formatted_shapefun_mod, only: ShapefunFile
     use BasisAtom_mod, only: BasisAtom, createBasisAtom, destroyBasisAtom
@@ -195,7 +195,7 @@ module Startb1_mod
     use RadialMeshData_mod, only: openRadialMeshDataDAFile, writeRadialMeshDataDA, closeRadialMeshDataDAFile
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
-    integer, intent(in) :: naezd
+    integer, intent(in) :: naez
     integer, intent(in) :: ntcell(*)
     type(ShapefunFile), intent(in) :: sfile
     integer, intent(in) :: max_reclen
@@ -210,7 +210,7 @@ module Startb1_mod
 
     open(unit=fu, file='potential', form='formatted', status='old', action='read')
     
-    do iatom = 1, naezd
+    do iatom = 1, naez
 
       do ispin = 1, nspin
         call create_read_PotentialEntry(pe(ispin), fu, iatom)

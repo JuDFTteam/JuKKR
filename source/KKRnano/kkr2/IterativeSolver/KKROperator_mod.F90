@@ -13,19 +13,16 @@ module KKROperator_mod
   use OperatorT_mod, only: OperatorT
   implicit none
   private
-  public :: KKROperator, create, destroy
-  public :: create_KKROperator, destroy_KKROperator ! deprecated
-  public :: get_ms_workspace
+  public :: KKROperator, create, destroy, apply
+! public :: create_KKROperator, destroy_KKROperator ! deprecated
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type, extends(OperatorT) :: KKROperator
-    private
-    type(MultScatData), pointer :: ms => null()
+    type(MultScatData) :: ms
     contains
-    procedure :: create => create_KKROperator
-    procedure :: apply  => apply_KKROperator
-    procedure :: get_ms_workspace
-    procedure :: destroy => destroy_KKROperator
+      procedure :: apply  => apply_KKROperator
+!     procedure :: create => create_KKROperator
+!     procedure :: destroy => destroy_KKROperator
   endtype
 
   interface create
@@ -36,21 +33,23 @@ module KKROperator_mod
     module procedure destroy_KKROperator
   endinterface
   
+  interface apply
+    module procedure apply_KKROperator
+  endinterface
+  
   contains
 
-  !----------------------------------------------------------------------------
   subroutine create_KKROperator(self)
     class(KKROperator) :: self
 
-    allocate(self%ms)
-  endsubroutine
+  endsubroutine ! create
 
-  !----------------------------------------------------------------------------
   subroutine destroy_KKROperator(self)
+    use MultScatData_mod, only: destroy
     class(KKROperator) :: self
 
-    deallocate(self%ms)
-  endsubroutine
+    call destroy(self%ms)
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
@@ -66,14 +65,5 @@ module KKROperator_mod
     ! perform sparse VBR matrix * dense matrix
     call multiply_vbr(self%ms%GLLH, mat_X, mat_AX, self%ms%sparse)
   endsubroutine
-
-  !----------------------------------------------------------------------------
-  !> Return a reference to the multiple scattering workspace.
-  function get_ms_workspace(self) result(ms)
-    class(KKROperator) :: self
-    type(MultScatData), pointer :: ms
-
-    ms => self%ms
-  endfunction
 
 endmodule

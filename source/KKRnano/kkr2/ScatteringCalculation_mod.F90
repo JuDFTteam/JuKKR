@@ -166,7 +166,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 ! IE ====================================================================
   do IE = 1, emesh%ielast
 ! IE ====================================================================
-    if (getMyEnergyId(my_mpi)==ebalance_handler%EPROC(IE)) then
+    if (getMyEnergyId(my_mpi) == ebalance_handler%EPROC(IE)) then
 ! IE ====================================================================
       call startEBalanceTiming(ebalance_handler, IE)
 
@@ -289,8 +289,8 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 
 !------------------------------------------------------------------------------
           call KLOOPZ1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
-          arrays%NOFKS(NMESH),arrays%VOLBZ(NMESH), &
-          arrays%BZKP(:,:,NMESH),arrays%VOLCUB(:,NMESH), &
+          arrays%NOFKS(NMESH), arrays%VOLBZ(NMESH), &
+          arrays%BZKP(:,:,NMESH), arrays%VOLCUB(:,NMESH), &
           lattice_vectors%RR, &
           GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
           tmatll, arrays%lmmaxd, lattice_vectors%nrd, &
@@ -389,7 +389,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
     do ISPIN = 1,dims%NSPIND
       if (isWorkingSpinRank(my_mpi, ispin)) then
 
-        PRSPIN = 1 ; if (dims%SMPID ==1 ) PRSPIN = ISPIN
+        PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
         WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
         WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
@@ -415,7 +415,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 #undef lattice_vectors
 #undef trunc_zone
 
-endsubroutine energyLoop
+endsubroutine ! energyLoop
 
 ! =============================================================================
 ! Helper routines
@@ -428,12 +428,11 @@ endsubroutine energyLoop
 !> Matrix setup happens later in kkrmat
 subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
   use TFQMRSolver_mod, only: TFQMRSolver
-  use KKROperator_mod, only: KKROperator
-  use BCPOperator_mod, only: BCPOperator
+  use KKROperator_mod, only: KKROperator, create
+  use BCPOperator_mod, only: BCPOperator, create
   use DimParams_mod, only: DimParams
   use ClusterInfo_mod, only: ClusterInfo
-  use SolverOptions_mod, only: SolverOptions
-  use MultScatData_mod, only: MultScatData, createMultScatData
+  use MultScatData_mod, only: MultScatData, create
 
   type(TFQMRSolver), intent(inout) :: solv
   type(KKROperator), intent(inout) :: kkr_op
@@ -442,57 +441,39 @@ subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbo
   type(ClusterInfo), intent(in) :: cluster_info
   integer, intent(in) :: lmmaxd
   double precision, intent(in) :: qmrbound
-  integer, dimension(:), intent(in) :: atom_indices !< indices of atoms treated at once
+  integer, intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
-  type(SolverOptions) :: solver_opts
-  type(MultScatData), pointer :: ms
+  call create(kkr_op)
 
-  ! set the solver options for bcp preconditioner
-  solver_opts%bcp = dims%bcpd
-  solver_opts%xdim = dims%xdim
-  solver_opts%ydim = dims%ydim
-  solver_opts%zdim = dims%zdim
-  solver_opts%natbld = dims%natbld
+  call solv%init(kkr_op) ! register sparse matrix and preconditioner at solver
 
-  call kkr_op%create()
-  ms => kkr_op%get_ms_workspace()
-
-  ! register sparse matrix and preconditioner at solver
-  call solv%init(kkr_op)
-
-  if (solver_opts%bcp == 1) then
-    call precond%create(solver_opts, cluster_info, lmmaxd)
+  if (dims%bcpd == 1) then
+    ! set the solver options for bcp preconditioner
+    call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmmaxd)
     call solv%init_precond(precond)
   endif
 
   call solv%set_qmrbound(qmrbound)
 
-  call createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
+  call create(kkr_op%ms, cluster_info, lmmaxd, atom_indices)
 
-endsubroutine
+endsubroutine ! setup_solver
 
 !------------------------------------------------------------------------------
 subroutine cleanup_solver(solv, kkr_op, precond)
-  use TFQMRSolver_mod, only: TFQMRSolver
-  use KKROperator_mod, only: KKROperator
-  use BCPOperator_mod, only: BCPOperator
-  use MultScatData_mod, only: MultScatData, destroyMultScatData
+  use TFQMRSolver_mod, only: TFQMRSolver, destroy
+  use KKROperator_mod, only: KKROperator, destroy
+  use BCPOperator_mod, only: BCPOperator, destroy
 
   type(TFQMRSolver), intent(inout) :: solv
   type(KKROperator), intent(inout) :: kkr_op
   type(BCPOperator), intent(inout) :: precond
 
-  type(MultScatData), pointer :: ms
+  call destroy(solv)
+  call destroy(precond)
+  call destroy(kkr_op)
 
-  ms => kkr_op%get_ms_workspace()
-
-  call solv%destroy()
-  call precond%destroy()
-
-  call destroyMultScatData(ms)
-  call kkr_op%destroy()
-
-endsubroutine
+endsubroutine ! cleanup_solver
 
 !----------------------------------------------------------------------------
 !> Print info about Energy-Point currently treated.
@@ -500,8 +481,8 @@ endsubroutine
 subroutine printEnergyPoint(ez_point, ie, ispin, nmesh)
   double complex, intent(in) :: ez_point
   integer, intent(in) :: ie, ispin, nmesh
-  write (6,'(A,I3,A,2(1X,F10.6),A,I3,A,I3)') ' ** IE = ',ie,' ENERGY =',ez_point,' KMESH = ',nmesh,' ISPIN = ',ispin
-endsubroutine
+  write(6, fmt='(A,I3,A,2(1X,F10.6),A,I3,A,I3)') ' ** IE = ',ie,' ENERGY =',ez_point,' KMESH = ',nmesh,' ISPIN = ',ispin
+endsubroutine ! print
 
 !----------------------------------------------------------------------------
 !> Calculate \Delta T_up - T_down for exchange couplings calculation.
@@ -513,7 +494,7 @@ subroutine calcDeltaTupTdown(dtixij)
 
   lmmaxd = size(dtixij,1)
   dtixij(1:lmmaxd,1:lmmaxd,1) = dtixij(1:lmmaxd,1:lmmaxd,2) - dtixij(1:lmmaxd,1:lmmaxd,1)
-endsubroutine
+endsubroutine ! calc
 
 !----------------------------------------------------------------------------
 !> Substract diagonal reference T matrix of certain spin channel
@@ -529,7 +510,7 @@ subroutine substractReferenceTmatrix(tmatn, trefll, lmmaxd)
     tmatn(lm1,lm1) =  tmatn(lm1,lm1) - trefll(lm1,lm1)
   enddo ! lm1
 
-endsubroutine
+endsubroutine ! subtract
 
   !------------------------------------------------------------------------------
   !> Rescale and symmetrise T-matrix.
@@ -552,11 +533,11 @@ endsubroutine
     do lm2 = 1, lmmaxd
       do lm1 = 1, lm2
         tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
-        tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmtric
+        tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
       enddo ! lm1
     enddo ! lm2
     
-  endsubroutine
+  endsubroutine ! rescale
 
 !------------------------------------------------------------------------------
 !> Gather all tref-matrices of reference cluster.
@@ -584,7 +565,7 @@ subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, communicator)
 
   call copyFromZ_com(TrefLL, Tref_local, ref_cluster%atom, chunk_size, num_local_atoms, communicator)
 
-endsubroutine
+endsubroutine ! gather
 
 !------------------------------------------------------------------------------
 !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
@@ -621,6 +602,6 @@ subroutine gatherTmatrices_com(calc, tmatll, ispin, communicator)
 
   deallocate(tsst_local)
 
-endsubroutine
+endsubroutine ! gather
 
-endmodule
+endmodule ! ScatteringCalculation_mod

@@ -10,7 +10,9 @@
 
 module kkrmat_new_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
-  use arraytest2_mod, only: !import no name here, just mention it for the module dependency 
+  use arraytest2_mod, only: !import no name here, just mention it for the module dependency
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: KKRMAT01_new
@@ -26,6 +28,9 @@ module kkrmat_new_mod
 !> Returns diagonal k-integrated part of Green's function in GS.
 subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALAT,NSYMAT,RR, &
                         GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
+  !   performs k-space integration,
+  !   determines scattering path operator (g(k,e)-t**-1)**-1 and
+  !   Greens function of the real system -> GS(*,*,*,*),
   USE_LOGGING_MOD
   USE_ARRAYLOG_MOD
   use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
@@ -33,19 +38,12 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
   use SolverStats_mod, only: SolverStats, reset_stats
   use TFQMRSolver_mod, only: TFQMRSolver
   use BCPOperator_mod, only: BCPOperator
-  use KKROperator_mod, only: KKROperator, get_ms_workspace
-  use MultScatData_mod, only: MultScatData
-  use ClusterInfo_mod, only: ClusterInfo
+  use KKROperator_mod, only: KKROperator
   use ChunkIndex_mod, only: ChunkIndex
-  ! ************************************************************************
-  !   performs k-space integration,
-  !   determines scattering path operator (g(k,e)-t**-1)**-1 and
-  !   Greens function of the real system -> GS(*,*,*,*),
-  ! ------------------------------------------------------------------------
 
-  class (TFQMRSolver), intent(inout) :: solv
-  class (KKROperator), intent(inout) :: kkr_op
-  class (BCPOperator), intent(inout) :: precond
+  class(TFQMRSolver), intent(inout) :: solv
+  class(KKROperator), intent(inout) :: kkr_op
+  class(BCPOperator), intent(inout) :: precond
   integer, intent(in) :: lmmaxd
   integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) :: communicator
@@ -60,22 +58,14 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
   double precision, intent(in) :: VOLCUB(:)
   double precision, intent(in) :: RR(:,0:) 
 
-  type(MultScatData), pointer :: ms
-  type(ClusterInfo), pointer :: cluster_info
-  integer :: k_point_index
   double complex, allocatable :: G_diag(:,:,:)
-  integer::  site_lm_size
-  integer :: iat
-  integer :: num_local_atoms
-  integer :: naclsd
-  integer :: naez
+  integer :: site_lm_size, iat, num_local_atoms, naclsd, naez, k_point_index
   type(SolverStats) :: total_stats
 
+#define ms kkr_op%ms
+#define cluster_info ms%cluster_info
+
   ! array dimensions
-
-  ms => get_ms_workspace(kkr_op)
-  cluster_info => ms%cluster_info
-
   naez = cluster_info%naez_trc
   naclsd = cluster_info%naclsd
 
@@ -150,9 +140,11 @@ subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALA
 
   call solv%reset_total_stats()
 
+#undef cluster_info
+#undef ms
 endsubroutine ! kkrmat01_new
 
-  
+
 !------------------------------------------------------------------------------
 !> See H. Hoehler
 !=======================================================================
@@ -202,19 +194,11 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) :: communicator
 
-  ! local
-  integer site_index
-  integer naez
-  integer nrd
-  integer naclsd
-  integer lmmaxd
-  integer num_local_atoms
-  integer atom_requested
+  integer :: site_index, naez, nrd, naclsd, lmmaxd
+  integer :: num_local_atoms, atom_requested
   double complex, allocatable :: Gref_buffer(:,:,:)
   type(ChunkIndex) :: chunk_inds(1)
-  integer :: win
-  integer :: nranks
-  integer :: ierr
+  integer :: win, nranks, ierr
 
   naez = size(nacls)
   nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
@@ -240,7 +224,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
   GLLH = zero
   do site_index = 1, NAEZ
 
-    call DLKE1(ALAT,NACLS(site_index),RR,EZOA(:,site_index), kpoint,EIKRM,EIKRP, nrd, naclsd)
+    call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
     ! get GINP(:,:,:)[trunc2atom_index(site_index)]
 
@@ -350,14 +334,12 @@ endsubroutine ! greenKSummation
 subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trunc2atom_index, communicator, iguess_data)
   use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
   use fillKKRMatrix_mod, only: dumpDenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
-  use TFQMRSolver_mod, only: TFQMRSolver
+  use TFQMRSolver_mod, only: TFQMRSolver, solve
   use SparseMatrixDescription_mod, only: dumpSparseMatrixDescription
   use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
   use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
   use KKROperator_mod, only: KKROperator
   use BCPOperator_mod, only: BCPOperator
-  use MultScatData_mod, only: MultScatData
-  use ClusterInfo_mod, only: ClusterInfo
 
   USE_ARRAYLOG_MOD
   USE_LOGGING_MOD
@@ -374,17 +356,13 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
   double precision, intent(in) :: RR(:,0:)
   doublecomplex, intent(inout) :: TMATLL(:,:,:) ! todo: check intent
 
-  integer :: NAEZ
+  integer :: NAEZ, lmmaxd, n, ist
   logical :: initial_zero
-  type(MultScatData), pointer :: ms
-  type(ClusterInfo), pointer :: cluster_info
-  integer :: lmmaxd
 
-  ms => kkr_op%get_ms_workspace()
-
+#define ms kkr_op%ms
+#define cluster_info ms%cluster_info
   lmmaxd = ms%lmmaxd
   naez = ms%naez
-  cluster_info => ms%cluster_info
 
   !=======================================================================
   ! ---> fourier transformation
@@ -449,11 +427,12 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
 
   call solv%set_initial_zero(initial_zero)
 
-  call precond%calc(ms%GLLH)  ! calculate preconditioner from sparse matrix data
+  call precond%calc(ms%GLLH) ! calculate preconditioner from sparse matrix data
 
   if (cutoffmode == 3 .or. cutoffmode == 0) then
 
-    call solv%solve(ms%mat_X, ms%mat_B)
+!     call solv%solve(ms%mat_X, ms%mat_B) ! try to get rid of procedure pointer
+    call solve(solv, ms%mat_X, ms%mat_B)
 
     if (DEBUG_dump_matrix) then
       call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
@@ -464,7 +443,8 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
       call dumpDenseMatrix(ms%mat_B, "rhs.unf")
       call dumpDenseMatrixFormatted(ms%mat_B, "rhs_form.dat")
     endif ! DEBUG_dump_matrix
-  endif
+    
+  endif ! cutoffmode in {0,3}
 
   ! store the initial guess in previously selected slot
   ! (selected with 'iguess_set_k_ind')
@@ -474,18 +454,21 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
 
   ! ALTERNATIVE: direct solution with LAPACK
   if (cutoffmode == 4) then
-    if (.not. allocated(full)) then
-      allocate(full(size(ms%mat_B,1), size(ms%mat_B,1)))
+    n = size(ms%mat_B,1)
+    if (any(shape(full) /= [n,n])) then
+      deallocate(full, stat=ist)
+      allocate(full(n,n), stat=ist)
+      if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*n*.5d0**16)+"MiByte!")
     endif
     call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%sparse%kvstr, ms%sparse%kvstr, full)
     TESTARRAYLOG(3, full)
-    call solveFull(full, ms%mat_B)
-    ms%mat_X = ms%mat_B
-  endif
+    call solveFull(full, ms%mat_B, ms%mat_X)
+  endif ! cutoffmode == 4
 
   TESTARRAYLOG(3, ms%mat_X)
   ! RESULT: mat_X
-
+#undef cluster_info
+#undef ms
 endsubroutine ! kloopbody
 
 
@@ -524,19 +507,11 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
   integer, intent(in) :: communicator
 
   ! local
-  integer site_index
-  integer naez
-  integer nrd
-  integer naclsd
-  integer lmmaxd
-  integer num_local_atoms
-  integer atom_requested
+  integer :: site_index, naez, nrd, naclsd, lmmaxd
+  integer :: num_local_atoms, atom_requested
   double complex, allocatable :: Gref_buffer(:,:,:)
   type(ChunkIndex) :: chunk_inds(1)
-  integer :: win
-  integer :: nranks
-  integer :: ierr
-  integer :: naez_max
+  integer :: win, nranks, ierr, naez_max
 
   naez = size(nacls)
   nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
@@ -570,7 +545,7 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
     call fenceZ(win)
 
     if (site_index <= naez) then
-      call DLKE1(ALAT,NACLS(site_index),RR,EZOA(:,site_index), kpoint,EIKRM,EIKRP, nrd, naclsd)
+      call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
       ! get GINP(:,:,:)[trunc2atom_index(site_index)]
 
@@ -610,18 +585,17 @@ endsubroutine ! referenceFourier_com_fenced
 !>    @param     EIKRM   Fourier exponential factor with minus sign
 !>    @param     EIKRP   Fourier exponential factor with plus sign
 
-  subroutine dlke1(alat, nacls, rr, ezoa, bzkp, eikrm, eikrp, nrd, naclsd)
+  subroutine dlke1(alat, nacls, rr, ezoa, bzkp, eikrm, eikrp)
 ! ----------------------------------------------------------------------
 !     Fourier transformation of the cluster Greens function
 !     Prepares the calculation (calculates Fourier factors) for dlke0
 ! ----------------------------------------------------------------------
-    integer, intent(in) :: nrd, naclsd ! todo: remove these and change arrays to deferred shape
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls !< number of vectors in the cluster
     integer, intent(in) :: ezoa(1:) !< index list of ...
-    double complex, intent(out) :: eikrp(naclsd), eikrm(naclsd)
+    double complex, intent(out) :: eikrp(:), eikrm(:)
     double precision, intent(in) :: bzkp(1:3) !< k-point (vector in the Brillouin zone)
-    double precision, intent(in) :: rr(3,0:nrd) !< real space cluster vectors
+    double precision, intent(in) :: rr(1:,0:) !< dim(1:3,0:nrd) real space cluster vectors
     
     double complex, parameter :: ci=(0.d0,1.d0)
     double precision :: convpuh, tpi

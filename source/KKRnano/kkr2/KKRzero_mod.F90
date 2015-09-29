@@ -117,7 +117,6 @@ module KKRzero_mod
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     
     integer, parameter :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
-    integer, parameter :: maxmshd=8 ! maximal number of k-meshes used
 
 !     .. energy mesh ..
     double precision :: efermi
@@ -261,7 +260,7 @@ module KKRzero_mod
 ! ======================================================================
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
-                 arrays%dsymll, params%bzdivide, ielast, ez, arrays%kmesh, arrays%maxmesh, maxmshd, &
+                 arrays%dsymll, params%bzdivide, ielast, ez, arrays%kmesh, arrays%maxmesh, &
                  dims%lmaxd, iemxd, krel, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
