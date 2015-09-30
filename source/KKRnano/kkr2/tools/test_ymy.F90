@@ -12,7 +12,7 @@ program test_ymy
   double precision :: vec(3)
   double precision :: radius = 1.0
 
-  integer :: LL, MM, count
+  integer :: LL, MM, cnt
 
   vec(1) = radius * sin(theta) * cos(phi)
   vec(2) = radius * sin(theta) * sin(phi)
@@ -24,13 +24,13 @@ program test_ymy
 
   call YMY(vec(1),vec(2),vec(3),radius,YLM,LMAX) 
 
-  count = 1
+  cnt = 0
   do LL = 0, LMAX
     do MM = -LL, LL
-       write(*,*) ylm(count)
-       count = count + 1
-    end do
-  write(*,*) "------------------------"
-  end do
+      cnt = cnt + 1
+      write(*,*) ylm(cnt)
+    enddo ! mm
+    write(*,*) "------------------------"
+  enddo ! ll
 
-end program
+endprogram

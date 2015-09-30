@@ -137,8 +137,6 @@ module kloopz1_mod
 
         ! --->    ull(1) is equal to unity matrix
 
-          ! call ZCOPY(N*N,gs(1,1,1,ilocal),1,gll,1)
-          ! call ZSCAL(N*N,tauvBZ,gll,1)
           gll(:,:) = tauvBZ*gs(1:N,1:N,isym,ilocal)
 
         else

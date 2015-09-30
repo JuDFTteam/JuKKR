@@ -346,8 +346,8 @@ module ConstructShapes_mod
     npan = inter_mesh%npan
     meshn = size(inter_mesh%xrn)
 
-    open(15, file=filename, form="formatted")
-    write(15, fmt=F9000) npan,meshn
+    open(15, file=filename, form="formatted", action='write')
+    write(15, fmt=F9000) npan, meshn
     write(15, fmt=F9000) inter_mesh%nm(1:npan)
     write(15, fmt=F9010) (inter_mesh%xrn(ir), inter_mesh%drn(ir), ir=1,meshn) ! interleaved pairs (r, dr)
     write(15, fmt=F9000) self%nfu

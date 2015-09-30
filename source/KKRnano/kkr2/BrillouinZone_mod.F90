@@ -53,11 +53,10 @@ module BrillouinZone_mod
 !!  logical, external :: test
 #define test(STRING) .false.
     
-    integer iprint
-    logical lirr
+    logical :: lirr
     double precision :: rsymat(3,3,64)
     character(len=10) :: rotname(64)
-    integer :: lmmaxd
+    integer :: lmmaxd, iprint
 
     lmmaxd = (lmax+1)**2
 
@@ -68,8 +67,7 @@ module BrillouinZone_mod
     call findgroup(bravais, recbv, rbasis, naez, rsymat, rotname, isymindex, nsymat, naez)
 
     lirr = .true.
-    iprint = 0    
-    if (test('TAUSTRUC')) iprint = 2
+    iprint = 0 ; if (test('TAUSTRUC')) iprint = 2
 
 ! --> test: full bz integration
     if (test('fullBZ  ')) then
@@ -80,11 +78,10 @@ module BrillouinZone_mod
 
 ! --> generate bz k-mesh
     call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite)
-!
+
     call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
-!
-! now dsymll hold nsymat symmetrization matrices
-! ----------------------------------------------------------------------
+
+!   now dsymll hold nsymat symmetrization matrices
   endsubroutine ! bzkint0
   
   
@@ -120,9 +117,8 @@ module BrillouinZone_mod
         maxmesh = max(maxmesh, n)
         if (kmesh(i) < 1) kmesh(i) = 1
       enddo ! i
-      kmesh(1) = maxmesh
-      kmesh(2) = maxmesh
-    endif ! fix mesh
+      kmesh(1:2) = maxmesh
+    endif ! variable mesh
 
     if (maxmesh > maxmshd) then
       write(6, fmt='(a,i0,9a)') 'Dimension ERROR: Please increase hard limit MAXMSHD to ',maxmesh,' in ',__FILE__
@@ -254,17 +250,15 @@ module BrillouinZone_mod
     integer, intent(out) :: nkp
     double precision, intent(out) :: volbz, kwxyz(0:,1:) ! (0:3,1:max...)
     
-    double precision, external :: ddot
-    
-    double precision bginv(3,3), bgmat(3,3), bgp(3,3), bv(3), cf(3), u(3,3,48), gq(3,3), v1
-    integer nbgp(3,3,48), mkxyz(3), ind1(3), ind2(3)
-    integer i,j,jx,jy,jz,nsym,iws,iwt,is,nk,n,ndim,isym
+    external :: dgemv
+    double precision :: bginv(3,3), bgmat(3,3), bgp(3,3), bv(3), cf(3), u(3,3,48), gq(3,3), v1
+    integer :: nbgp(3,3,48), mkxyz(3), ind1(3), ind2(3)
+    integer :: i, j, jx, jy, jz, nsym, iws, iwt, is, nk, n, ndim, isym
     integer(kind=1), allocatable :: ibk(:,:,:)
-    logical surface
+    logical :: surface
 
 ! --> check if we are in surface mode
-    surface = .false.
-    if (bravais(1,3) == 0.d0 .and. bravais(2,3) == 0.d0 .and. bravais(3,3) == 0.d0) surface = .true. 
+    surface = all(bravais(1:3,3) == 0.d0)
 
     mkxyz(1:3) = nkxyz(1:3)
     
@@ -283,15 +277,15 @@ module BrillouinZone_mod
     do j = 1, 3
       gq(1:3,j) = recbv(1:3,j)/dble(mkxyz(j))
     enddo ! j
-    
-    do j = 1,3
+
+    do j = 1, 3
       do i = 1, 3
-        bgmat(i,j) = ddot(3,gq(1,i),1,gq(1,j),1) ! ==? dot_product(gq(1:3,i), gq(1:3,j)) 
+        bgmat(i,j) = dot_product(gq(1:3,i), gq(1:3,j)) 
       enddo ! i
     enddo ! j
 
     call rinvgj(bginv, bgmat, 3, ndim)
-    
+
     if (irr) then
       nsym = nsymat
       
@@ -319,11 +313,11 @@ module BrillouinZone_mod
       do i = 1, 3
         call dgemv('n',3,3,1.d0,u(1,1,is),3,gq(1,i),1,0.d0,bgp(1,i),1)
         do j = 1, 3
-          bv(j) = ddot(3,gq(1,j),1,bgp(1,i),1) ! ==? dot_product(gq(1:3,j), bgp(1:3,i))
+          bv(j) = dot_product(gq(1:3,j), bgp(1:3,i))
         enddo ! j
-        call dgemv('n',3,3,1d0,bginv,3,bv,1,0.d0,cf,1)
+        call dgemv('n',3,3,1.d0,bginv,3,bv,1,0.d0,cf,1)
         do j = 1, 3
-          if (abs(nint(cf(j)) - cf(j)) > 1d-8) write (*, fmt="(5x,2i3,3f7.3)") i, j, cf(j)
+          if (abs(nint(cf(j)) - cf(j)) > 1.d-8) write(*, fmt="(5x,2i3,3f7.3)") i, j, cf(j)
           nbgp(j,i,is) = nint(cf(j))
         enddo !
         if (iprint > 2) write(*, fmt="(5x,i3,3f7.3,2x,3f7.3,2x,3f7.3,2x,3i3)") i, bgp(1:3,i), bv, cf, nbgp(1:3,i,is)
@@ -362,10 +356,8 @@ module BrillouinZone_mod
                 is = 0
                 do i = 1, 3
                   is = is + ind1(i)*nbgp(j,i,isym)
-                enddo !
-                is = modulo(is, mkxyz(j))
-!                 if (is < 0) is = is + mkxyz(j) ! this should never happen using modulo instead of mod in the line above
-                ind2(j) = is
+                enddo ! i
+                ind2(j) = modulo(is, mkxyz(j))
               enddo ! j
 
               if (ibk(ind2(3),ind2(2),ind2(1)) == 0) then
@@ -376,13 +368,8 @@ module BrillouinZone_mod
             enddo ! isym
 !========================================================================
             
-            do i = 1, 3
-              kwxyz(i,nkp) = 0.d0
-              do j = 1, 3
-                kwxyz(i,nkp) = kwxyz(i,nkp) + gq(i,j)*dble(ind1(j))
-              enddo ! j
-            enddo ! i
-            kwxyz(0,nkp) = dble(iwt)/dble(nk) ! weight
+            kwxyz(1:3,nkp) = gq(1:3,1)*ind1(1) + gq(1:3,2)*ind1(2) + gq(1:3,3)*ind1(3)
+            kwxyz(0,nkp) = dble(iwt) ! un-normalized weight
             
           endif ! not lbk
           iws = iws + iwt ! add op to global weight sum
@@ -391,7 +378,7 @@ module BrillouinZone_mod
       enddo ! jy
     enddo ! jx
 
-    kwxyz(0,nkp+1:) = 0.d0
+    kwxyz(:,nkp+1:) = 0.d0
     
     deallocate(ibk, stat=i)
     
@@ -403,10 +390,11 @@ module BrillouinZone_mod
 
     volbz = 0.d0
     do i = 1, nkp
-      volbz = volbz + kwxyz(0,i)*v1
-      kwxyz(0,i) = kwxyz(0,i)*v1/dble(nsym)
+      volbz = volbz + kwxyz(0,i)
+      kwxyz(0,i) = kwxyz(0,i)*v1/dble(nsym*nk) ! normalize
     enddo ! i
-    
+    volbz = volbz*v1/dble(nk)
+ 
   endsubroutine ! bzirr3d
   
   subroutine rinvgj(ainv,a,M,n)
