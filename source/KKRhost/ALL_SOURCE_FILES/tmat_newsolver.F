@@ -157,6 +157,12 @@ c energy loop
        
          IE = ie_start+ie_num
 #else
+       t_mpi_c_grid%ntot2=IELAST
+       t_mpi_c_grid%ntot_pT2 = IELAST 
+       t_mpi_c_grid%ioff_pT2 = 0      
+       ! now initialize arrays for tmat, gmat, and gref
+       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 !$omp parallel do default(none) 
 !$omp& private(eryd,ie,i1,ir,irec,nvec,lm1,lm2,gmatprefactor) 
 !$omp& private(jlk_index,tmatll,ith,irec, ie_num) 

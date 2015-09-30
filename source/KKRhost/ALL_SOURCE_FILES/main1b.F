@@ -831,7 +831,7 @@ c read in Green function of reference system
        if (t_tgmat%gref_to_file) then
           READ (68,REC=IE) GINP
        else
-          write(*,*) ie_num
+          !write(*,*) ie_num,shape(ginp),shape(t_tgmat%gref)
           ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
        end if
        if(t_lloyd%dgref_to_file) then

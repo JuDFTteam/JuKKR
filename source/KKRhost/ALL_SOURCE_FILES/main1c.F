@@ -140,11 +140,8 @@ CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
 !       DOUBLE COMPLEX, allocatable :: CDOSAT0(:),CDOSAT1(:)
 !       DOUBLE COMPLEX, allocatable :: CDOS0(:),CDOS_LLY(:,:),CDOS1(:),
 !      +                               CDOS2(:),cdos_dum(:,:)                     ! LLY Lloyd
-     ! REAL*8 EREAD,CHARGE_LLY(NSPIND)                                         ! LLY Lloyd
-     ! REAL*8 RENORM_AT(2,NATYPD)  ! 1: charge renormalization per atom        ! LLY Lloyd
-     !                             ! 2: spin moment renormalization per atom   ! LLY Lloyd
       DOUBLE PRECISION CHARGE_LLY(NSPIND)  ! LLY
-      DOUBLE COPMLEX EREAD                  !LLY
+      DOUBLE COMPLEX EREAD                  !LLY
       DOUBLE PRECISION A(NATYPD),B(NATYPD),CHARGE(0:LMAXD1,NATYPD,2),
      +               CLEB(NCLEB,2),DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),
      +                 DOSTOT(0:LMAXD1,2),ECORE(20,NPOTD),
@@ -806,7 +803,7 @@ C ================================================================ NATYP
             THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
             PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
             IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
-               LCHECKANGELS=.TRUE.
+               LCHECKANGLES=.TRUE.
             ENDIF
          ENDDO
          IF(LCHECKANGLES) write(*,*) 'WARNING: Check if your
@@ -902,7 +899,7 @@ c rewrite new theta and phi to nonco_angle.dat
         THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
         PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
         IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
-           LCHECKANGELS=.TRUE.
+           LCHECKANGLES=.TRUE.
         ENDIF
         WRITE(13,*) THETA(I1),PHI(I1)
        ENDDO
@@ -911,8 +908,10 @@ c rewrite new theta and phi to nonco_angle.dat
       ENDIF
       end if !(myrank==master)
 
+      CLOSE (29) !close lmdos file
       CLOSE (30) !close lmdos file
       CLOSE (31) !close qdos file
+      CLOSE (32) !close qdos file
       CLOSE (91) !close gflle file
       
       ENDIF !NEWSOSOL

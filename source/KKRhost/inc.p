@@ -87,13 +87,13 @@ C     general settings
       PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 1 )
+      PARAMETER ( NAEZD = 16)
       PARAMETER ( NATYPD = NAEZD )
 !      PARAMETER ( NSHELD = NATYPD + 155)
       PARAMETER ( NSHELD = NATYPD + 300)
       PARAMETER ( NATOMIMPD = 50)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD =  2 )
+      PARAMETER ( NPRINCD =  2)
       PARAMETER ( NEMBD = 20)
 C ---------------------------------------------------------------------
 C     non-spherical potential 
@@ -102,7 +102,7 @@ C     non-spherical potential
       PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 60000) ! 13079
 C ---------------------------------------------------------------------
 !     I/O
-      PARAMETER (WLENGTH = 1)
+      PARAMETER (WLENGTH = 4)
       
 C
 C =====================================================================

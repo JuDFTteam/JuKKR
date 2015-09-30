@@ -178,6 +178,13 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
        
          IE = ie_start+ie_num
 #else
+      t_mpi_c_grid%ntot2=IELAST
+      t_mpi_c_grid%ntot_pT2 = IELAST
+      t_mpi_c_grid%ioff_pT2 = 0
+      ! now initialize arrays for tmat, gmat, and gref
+      call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+      if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+
       DO IE = 1,IELAST
          ie_num = IE
          ie_end = IELAST

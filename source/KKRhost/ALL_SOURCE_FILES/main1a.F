@@ -64,7 +64,7 @@ C
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,PI
-      PARAMETER :: PI=4.d0*datan(1.d0)
+      PARAMETER  (PI=4.d0*datan(1.d0))
       INTEGER I1,ICST,IELAST,IEND,INS,IPOT,ISPIN,ITSCF,LMAX,NATYP,NAEZ, ! LLY added NAEZ
      +        NCLS,NINEQ,NREF,NSPIN,NSRA,LM1,IR
       INTEGER LLY ! LLY <> 0: apply Lloyds formula
@@ -422,9 +422,9 @@ C
             ENDIF
           ENDDO
           IF(LCHECKANGLES) write(*,*) 'WARNING: Check if your
-     i& nonco_angels file is correct! Found only values that are
-      & smaller than pi for theta and 2pi for phi, respectively. But
-      & angles are given in degree (0...360)'
+     & nonco_angels file is correct! Found only values that are
+     & smaller than pi for theta and 2pi for phi, respectively. But
+     & angles are given in degree (0...360)'
        ENDIF
 
 c interpolate potential
