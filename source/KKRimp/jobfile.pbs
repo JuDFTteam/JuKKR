@@ -1,0 +1,4 @@
+#PBS -N hello_world_MPI_test
+#PBS -l nodes=4:ppn=4
+cd $PBS_O_WORKDIR
+mpirun -r ssh -np 16 kkrflex.exe > OUT

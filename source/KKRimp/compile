@@ -1,0 +1,3 @@
+cd SOURCE
+make $*
+cp kkrflex.exe ../
