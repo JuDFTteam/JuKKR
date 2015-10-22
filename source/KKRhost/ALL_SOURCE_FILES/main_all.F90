@@ -170,7 +170,7 @@ program kkrcode
 
     call timing_stop('Time in Iteration')
 
-    call print_time_and_date('Iteration finished')
+    if (myrank==master) call print_time_and_date('Iteration finished')
     
   end do ! scf-iteration
   
