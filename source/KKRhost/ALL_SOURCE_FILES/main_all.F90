@@ -100,6 +100,7 @@ program kkrcode
      write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
      write(*,*) '+++            SCF ITERATIONS START                +++'
      write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     call print_time_and_date('started')
   end if
   do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.-1) )
   
@@ -168,6 +169,8 @@ program kkrcode
 #endif
 
     call timing_stop('Time in Iteration')
+
+    call print_time_and_date('Iteration finished')
     
   end do ! scf-iteration
   

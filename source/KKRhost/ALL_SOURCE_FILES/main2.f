@@ -10,7 +10,6 @@
       subroutine main2()
       
       use mod_types, only: t_inc
-!       use mod_timing, only: t_time
       
       implicit none
       

@@ -175,4 +175,14 @@ subroutine timing_delkey(char1)
   stop '[timing_delkey] timing key not found'
 end subroutine timing_delkey
 
+
+subroutine print_time_and_date(message)
+    implicit none
+    character(len=*), intent(in) :: message
+    integer,dimension(8) :: values
+    call date_and_time(VALUES=values)
+    print '(a,a,i4,5(a,i2))',message,' on ',  values(1),'/', values(2),'/',values(3),' at ', values(5),':', values(6),':', values(7)
+end subroutine print_time_and_date
+
+
 end module mod_timing
