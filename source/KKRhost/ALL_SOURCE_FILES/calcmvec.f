@@ -140,7 +140,7 @@ C
             NSOLCB(IKM) = NSOL
             IF ( IT.NE.ITI ) STOP ' IT(INI) <> IT  in <MENABIRR>'
             IF ( STR3.NE.'IRR' ) STOP 'WFT(INI) <> IRR in <MENABIRR>'
-            IF ( IPRINT.GT.3 ) WRITE (*,*) ITI,LI,MJ,NSOL,STR3,KAPCB
+            IF ( IPRINT.GT.3 ) WRITE (1337,*) ITI,LI,MJ,NSOL,STR3,KAPCB
          END DO
 C
 
@@ -247,18 +247,18 @@ C
                   SUM = ABS(MEZZ(I,J,IT,1)) + ABS(MEZJ(I,J,IT,1))
                   SUM = SUM + ABS(MEREG(I,J,3,1)) + ABS(MEIRR(I,J,3,1))
                   IF ( SUM.GT.1D-8 ) THEN
-                     WRITE (*,*) ' spin '
-                     WRITE (*,'(2i3,2e17.8,2x,2e17.8)') I,J,
+                     WRITE (1337,*) ' spin '
+                     WRITE (1337,'(2i3,2e17.8,2x,2e17.8)') I,J,
      &                      MEZZ(I,J,IT,2),MEZJ(I,J,IT,2)
-                     WRITE (*,'(6x,2e17.8,2x,2e17.8)') MEREG(I,J,3,1),
-     &                      MEIRR(I,J,3,1),
+                     WRITE (1337,'(6x,2e17.8,2x,2e17.8)') MEREG(I,J,3,1)
+     &                     ,MEIRR(I,J,3,1),
      &                      (MEZZ(I,J,IT,2)-MEREG(I,J,3,1)),
      &                      (MEZJ(I,J,IT,2)-MEIRR(I,J,3,1))
-                     WRITE (*,*) ' orb '
-                     WRITE (*,'(2i3,2e17.8,2x,2e17.8)') I,J,
+                     WRITE (1337,*) ' orb '
+                     WRITE (1337,'(2i3,2e17.8,2x,2e17.8)') I,J,
      &                      MEZZ(I,J,IT,3),MEZJ(I,J,IT,3)
-                     WRITE (*,'(6x,2e17.8,2x,2e17.8)') MEREG(I,J,3,2),
-     &                      MEIRR(I,J,3,2),
+                     WRITE (1337,'(6x,2e17.8,2x,2e17.8)') MEREG(I,J,3,2)
+     &                     ,MEIRR(I,J,3,2),
      &                      (MEZZ(I,J,IT,3)-MEREG(I,J,3,2)),
      &                      (MEZJ(I,J,IT,3)-MEIRR(I,J,3,2))
                   END IF

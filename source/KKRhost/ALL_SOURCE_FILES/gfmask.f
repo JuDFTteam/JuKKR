@@ -37,7 +37,7 @@ C     .. Data statements
      &             'BANDED MATRIX (slab)               ',
      &             'BANDED + CORNERS MATRIX (supercell)' /
 
-      WRITE (6,99000)
+      WRITE (1337,99000)
 C
 C --> set default inversion to SUPERCELL mode = banded matrix + corners
 C
@@ -57,7 +57,7 @@ C
          STOP
       END IF
 C
-      WRITE (6,99002) INVALG(INVMOD)
+      WRITE (1337,99002) INVALG(INVMOD)
 C
       NLAYER=NAEZ/NPRINCD  
 C ----------------------------------------------------------- INVMOD = 1
@@ -209,11 +209,11 @@ C
             LFCHK = LFCHK+2
          END DO
 C
-         WRITE (6,'(8X,A,/,8X,A)') 'ICHECK matrix :',FMTCHK(1:LFCHK)
+         WRITE (1337,'(8X,A,/,8X,A)') 'ICHECK matrix :',FMTCHK(1:LFCHK)
          DO I=1,NLAYER
-            WRITE (6,'(9X,35I2)') (ICHECK(I,J),J=1,MIN(35,NLAYER))
+            WRITE (1337,'(9X,35I2)') (ICHECK(I,J),J=1,MIN(35,NLAYER))
          ENDDO
-         WRITE (6,'(8X,A,/)') FMTCHK(1:LFCHK)
+         WRITE (1337,'(8X,A,/)') FMTCHK(1:LFCHK)
       END IF
 C
 99000 FORMAT (5X,'< GFMASK > : set KKR matrix inversion algorithm',/)

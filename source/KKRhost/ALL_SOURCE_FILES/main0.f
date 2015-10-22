@@ -471,82 +471,82 @@ C     ..
 !      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3))
       
    
-!0:
-      write(*,*) 'kkr0:', 16.d0/1024.d0/1024.d0/1024.d0*(
-     +               (LMMAXD*LMMAXD*NSYMAXD)*2+
-     +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2)
-      write(*,*) 'kkr0:', 8.d0/1024.d0/1024.d0/1024.d0*( 
-     +                 (LMPOTD*NEMBD1)+(IRMD*NATYPD)+
-     +                 (IRMD*NATYPD)+(20*NPOTD)+
-     +                 (IRMD*NATYPD)+
-     +                 (3*NACLSD*NCLSD)+
-     +                 (NAEZD+NEMBD)+(3*(1+NRD))+
-     +                 (48*3*NSHELD)+(IRMD*(1+LMAXD)*NATYPD)+
-     +                 (64*3*3)+(LMAXD+1)+NATYPD+
-     +                 (IRID*NFUND*NCELLD)+
-     +                 (3*NEMBD1)*2+
-     +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
-     +                 (LASSLD*(LASSLD+1)*(LASSLD+1))+
-     +                 (NSHELD*NOFGIJD)+(NSHELD*NOFGIJD))
-!1a:     
-      write(*,*) 'kkr1a:', 16.d0/1024.d0/1024.d0/1024.d0*( 
-     +                 (MMAXD*MMAXD*NSPIND*NATYPD)+
-     +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
-     +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5+
-     +                 (IRMD*NATYPD)+(IRMD*NATYPD)+(NATYPD)+
-     +                 (3*NACLSD*NCLSD)+(NREFD)+(NREFD)+
-     +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
-     +                 (NCLEB*2) +
-     +                 ((NTOTD+1)*NATYPD)+
-     +                 (NTOTD*(NCHEBD+1)*NATYPD)+
-     +                 (NTOTD*(NCHEBD+1)*LMPOTD*NSPOTD))
-     
-     
-     
-!1b:     
-      write(*,*) 'kkr1b:', 16.d0/1024.d0/1024.d0/1024.d0*( 
-     +               (LMMAXD*LMMAXD*NATYPD)+
-     +               (LMMAXD*LMMAXD*NREFD)*2+
-     &               (LMMAXD*LMMAXD*NAEZD)+
-     &               (IEMXD*NSPIND)+
-     &               (IEMXD)+
-     &               (IEMXD*NSPIND)+
-     &               (IEMXD*NSPIND)+
-     &               (LMAXD*NREFD)+(LMAXD*NREFD)+
-     &               (IEMXD)+
-     &               (IEMXD*NSPIND)+(IEMXD)+
-     +               (LMMAXD*LMMAXD*NATYPD)+
-     +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2+
-     +               (LMGF0D*LMGF0D)*2+
-     +               (LMMAXD*LMMAXD*NSYMAXD)+
-     +               (LMMAXD*LMMAXD)*8)
-
-
-!1c:     
-      write(*,*) 'kkr1c:', 8.d0/1024.d0/1024.d0/1024.d0*( 
-     +                 (IRMD*LMPOTD*NATYPD*2)*2+(IRMD*NPOTD)+
-     +                 (IRMD*LMPOTD*NPOTD)*2+
-     +                 (IRMD*LMPOTD*4)*2+
-     +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
-     +                 (IRID*NFUND*NCELLD)+
-     +                 (NATYPD)+(NATYPD)+
-     &                 (NATYPD)+
-     +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
-     +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5)
-
-
-!2:     
-      write(*,*) 'kkr2:', 8.d0/1024.d0/1024.d0/1024.d0*( 
-     +                 (LPOTD*NATYPD)+(NATYPD)+
-     +                 (4*NPOTD)+(LMAXD*NPOTD)+
-     +                 (LPOTD*NATYPD)+
-     +                 (IRMD*NATYPD)+
-     +                 (NATYPD)*5+
-     +                 (IRMD*NATYPD)+(20*NPOTD)+
-     +                 2*(IRID*NFUND*NCELLD)+
-     +                 (IRMD*NPOTD))
-
-!          stop
+! 0!:
+!       write(*,*) 'kkr0:', 16.d0/1024.d0/1024.d0/1024.d0*(
+!      +               (LMMAXD*LMMAXD*NSYMAXD)*2+
+!      +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2)
+!       write(*,*) 'kkr0:', 8.d0/1024.d0/1024.d0/1024.d0*( 
+!      +                 (LMPOTD*NEMBD1)+(IRMD*NATYPD)+
+!      +                 (IRMD*NATYPD)+(20*NPOTD)+
+!      +                 (IRMD*NATYPD)+
+!      +                 (3*NACLSD*NCLSD)+
+!      +                 (NAEZD+NEMBD)+(3*(1+NRD))+
+!      +                 (48*3*NSHELD)+(IRMD*(1+LMAXD)*NATYPD)+
+!      +                 (64*3*3)+(LMAXD+1)+NATYPD+
+!      +                 (IRID*NFUND*NCELLD)+
+!      +                 (3*NEMBD1)*2+
+!      +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
+!      +                 (LASSLD*(LASSLD+1)*(LASSLD+1))+
+!      +                 (NSHELD*NOFGIJD)+(NSHELD*NOFGIJD))
+! !1a:     
+!       write(*,*) 'kkr1a:', 16.d0/1024.d0/1024.d0/1024.d0*( 
+!      +                 (MMAXD*MMAXD*NSPIND*NATYPD)+
+!      +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
+!      +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5+
+!      +                 (IRMD*NATYPD)+(IRMD*NATYPD)+(NATYPD)+
+!      +                 (3*NACLSD*NCLSD)+(NREFD)+(NREFD)+
+!      +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
+!      +                 (NCLEB*2) +
+!      +                 ((NTOTD+1)*NATYPD)+
+!      +                 (NTOTD*(NCHEBD+1)*NATYPD)+
+!      +                 (NTOTD*(NCHEBD+1)*LMPOTD*NSPOTD))
+!      
+!      
+!      
+! !1b:     
+!       write(*,*) 'kkr1b:', 16.d0/1024.d0/1024.d0/1024.d0*( 
+!      +               (LMMAXD*LMMAXD*NATYPD)+
+!      +               (LMMAXD*LMMAXD*NREFD)*2+
+!      &               (LMMAXD*LMMAXD*NAEZD)+
+!      &               (IEMXD*NSPIND)+
+!      &               (IEMXD)+
+!      &               (IEMXD*NSPIND)+
+!      &               (IEMXD*NSPIND)+
+!      &               (LMAXD*NREFD)+(LMAXD*NREFD)+
+!      &               (IEMXD)+
+!      &               (IEMXD*NSPIND)+(IEMXD)+
+!      +               (LMMAXD*LMMAXD*NATYPD)+
+!      +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2+
+!      +               (LMGF0D*LMGF0D)*2+
+!      +               (LMMAXD*LMMAXD*NSYMAXD)+
+!      +               (LMMAXD*LMMAXD)*8)
+! 
+! 
+! !1c:     
+!       write(*,*) 'kkr1c:', 8.d0/1024.d0/1024.d0/1024.d0*( 
+!      +                 (IRMD*LMPOTD*NATYPD*2)*2+(IRMD*NPOTD)+
+!      +                 (IRMD*LMPOTD*NPOTD)*2+
+!      +                 (IRMD*LMPOTD*4)*2+
+!      +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
+!      +                 (IRID*NFUND*NCELLD)+
+!      +                 (NATYPD)+(NATYPD)+
+!      &                 (NATYPD)+
+!      +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
+!      +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5)
+! 
+! 
+! !2:     
+!       write(*,*) 'kkr2:', 8.d0/1024.d0/1024.d0/1024.d0*( 
+!      +                 (LPOTD*NATYPD)+(NATYPD)+
+!      +                 (4*NPOTD)+(LMAXD*NPOTD)+
+!      +                 (LPOTD*NATYPD)+
+!      +                 (IRMD*NATYPD)+
+!      +                 (NATYPD)*5+
+!      +                 (IRMD*NATYPD)+(20*NPOTD)+
+!      +                 2*(IRID*NFUND*NCELLD)+
+!      +                 (IRMD*NPOTD))
+! 
+! !          stop
      
      
 Consistency check
@@ -607,7 +607,7 @@ C ================================================ deal with the lattice
 
       NVIRT = 0
       IF ( OPT('VIRATOMS') ) THEN
-         WRITE(6,*) 'Calling ADDVIRATOMS'
+         WRITE(1337,*) 'Calling ADDVIRATOMS'
          CALL ADDVIRATOMS14(
      &  LINTERFACE,NVIRT,NAEZ,NAEZD,NATYPD,NEMB,NEMBD,
      &  RBASIS,.TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,
@@ -659,7 +659,7 @@ C
       IF ( ICC.GT.0 )    OPEN (25,FILE=I25,STATUS='unknown',
      &                         FORM='formatted')
 C
-      CALL STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KWS,KHFELD,LMAX,1,NATYP,
+      CALL STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,KHFELD,LMAX,1,NATYP,
      +             ALATNEW,RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,INS,
      +             IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,KSHAPE,NTCELL,
      +             IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,C,
@@ -670,18 +670,19 @@ C
      
 
       IF ( TEST('Vspher  ') ) THEN
-         WRITE(*,*) 'TEST OPTION Vspher,', 
+         WRITE(1337,*) 'TEST OPTION Vspher,', 
      &        'keeping only spherical component of potential.' 
          VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       ENDIF
 
 
       IF (OPT('zeropot ').OR.TEST('zeropot ')) THEN
-         WRITE(*,*) 'Using OPT zeropot, setting potential to zero.'
-         WRITE(*,*) 'Using OPT zeropot, setting nuclear charge to zero.'
-         VINS(IRMIND:IRMD,1:LMPOTD,1:NSPOTD) = 0.D0
-         VISP(1:IRMD,1:NPOTD) = 0.D0
-         ZAT(1:NATYPD) = 0.D0
+        WRITE(1337,*) 'Using OPT zeropot, setting potential to zero.'
+        WRITE(1337,*) 
+     &           'Using OPT zeropot, setting nuclear charge to zero.'
+        VINS(IRMIND:IRMD,1:LMPOTD,1:NSPOTD) = 0.D0
+        VISP(1:IRMD,1:NPOTD) = 0.D0
+        ZAT(1:NATYPD) = 0.D0
       ENDIF
 C
       DO I1 = 1,NATYPD
@@ -697,9 +698,9 @@ C
       IF ( OPT('GF-EF   ') .OR. OPT('DOS-EF  ') ) THEN
          E1 = E2IN
          IF ( OPT('GF-EF   ') ) THEN
-            WRITE (6,FMT=9070)
+            WRITE (1337,FMT=9070)
          ELSE
-            WRITE (6,FMT=9080)
+            WRITE (1337,FMT=9080)
          END IF
       END IF
 C
@@ -821,7 +822,7 @@ C
 C --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
-      write(*,*) 'test call shape, ntcell=',ntcell
+      write(1337,*) 'test call shape, ntcell=',ntcell
       IF (KSHAPE.NE.0) 
      +     CALL SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,
      +                LASSLD,LMPOTD,NATYPD,NGSHD)
@@ -885,10 +886,7 @@ C ======================================================================
 C
       IF ( OPT('KKRFLEX ') ) THEN
 
-      write(*,*) 'call wrthosttstruc',bravais,nrbasis,rbasis,naezd,nembd
-!       stop
       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZD,NEMBD)
-!       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NRBASIS,RBASIS,NAEZD,NEMBD)
 
         OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
         NVATOM=0
@@ -920,18 +918,18 @@ C
 ! fivos write out nshell and nsh1,nsh2 into standard output and in file shells.dat
       IF (ICC.NE.0 .and. .not.OPT('KKRFLEX ')) THEN
          OPEN(58,FILE='shells.dat')
-         write(*,*) 'Writing out shells (also in shells.dat):' ! fivos
-         write(*,*) 'itype,jtype,iat,jat,r(iat),r(jat)' ! fivos
-         write(*,*) NSHELL(0), 'NSHELL(0)' ! fivos
+         write(1337,*) 'Writing out shells (also in shells.dat):' ! fivos
+         write(1337,*) 'itype,jtype,iat,jat,r(iat),r(jat)' ! fivos
+         write(1337,*) NSHELL(0), 'NSHELL(0)' ! fivos
          write(78,*) NSHELL(0), 'NSHELL(0)' ! fivos
          do i1 = 1,NSHELL(0)    ! fivos
-            write(*,*) i1,NSHELL(i1), 
+            write(1337,*) i1,NSHELL(i1), 
      &                 'No. of shell, No. of atoms in shell' ! fivos
             write(58,*) i1,NSHELL(i1), 
      &                 'No. of shell, No. of atoms in shell' ! fivos
             do lm = 1,NSHELL(i1) ! fivos
-               write(*,*) 'ish(i1,lm)',ish(i1,lm)
-               write(*,8614) NSH1(i1),NSH2(i1) ! fivos
+               write(1337,*) 'ish(i1,lm)',ish(i1,lm)
+               write(1337,8614) NSH1(i1),NSH2(i1) ! fivos
      &              ,ISH(i1,lm),JSH(i1,lm) ! fivos
      &              ,(RCLSIMP(i,ISH(i1,lm)),i=1,3) ! fivos
      &              ,(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
@@ -942,7 +940,7 @@ C
  8614          format(4i5,6f16.6) ! fivos
             enddo               ! fivos
          enddo                  ! fivos
-         write(*,*) '###################'
+         write(1337,*) '###################'
          CLOSE(58)
       ENDIF
 ! end fivos
@@ -1016,9 +1014,9 @@ C ======================================================================
 C ITERMDIR  -- initialise 
 C
       IF (OPT('ITERMDIR')) THEN
-         WRITE (6,*)
-         WRITE (6,*) 'Angle mixing scheme will be applied '
-         WRITE (6,*)
+         WRITE (1337,*)
+         WRITE (1337,*) 'Angle mixing scheme will be applied '
+         WRITE (1337,*)
          DO I1 = 1,NAEZ
             QMPHITAB(I1,1) = QMPHI(I1)
             QMTETTAB(I1,1) = QMTET(I1)
@@ -1104,8 +1102,8 @@ C new solver for full-potential, spin-orbit, initialise
 
 C Check for inputcard consistency in case of qdos option
       IF (OPT('qdos    ')) THEN
-         write(*,*)
-         write(*,*) '     < QDOS > : consistency check '
+         write(1337,*)
+         write(1337,*) '     < QDOS > : consistency check '
          IF ((NPOL.NE.0).AND.(NPNT1.EQ.0).AND.(NPNT3.EQ.0)) THEN
             STOP 'For qdos calculation change enery contour to dos path'
          ENDIF
@@ -1113,13 +1111,17 @@ C Check for inputcard consistency in case of qdos option
      & smearing due to high value of TEMPR for energy contour
      & integration could not be of advantage. Consider changeing
      & ''TEMPR'' to lower value'
-         write(*,*) '       QDOS: consistecy check complete'
+         IF (TK.GT.50.d0) write(1337,*) 'WARNING:  high energy
+     & smearing due to high value of TEMPR for energy contour
+     & integration could not be of advantage. Consider changeing
+     & ''TEMPR'' to lower value'
+         write(1337,*) '       QDOS: consistecy check complete'
       ENDIF
 
 
 C ======================================================================
 C
-      WRITE (6,'(79(1H=),/,31X,"< KKR0 finished >",/,79(1H=),/)')
+      WRITE (1337,'(79(1H=),/,31X,"< KKR0 finished >",/,79(1H=),/)')
  9070 FORMAT (5X,'INFO:  Output of cluster Green function at E Fermi')
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
@@ -1180,8 +1182,6 @@ c Inside
       
       RFPI = SQRT(16.0D0*ATAN(1.0D0))
 
-!       write(*,*) 'BSHIFT_NS input:',HFIELD,INIPOL,NATYP,NSPIN
-
 
       DO IH = 1,NATYP
       
@@ -1195,7 +1195,7 @@ c Inside
             ! shift potential spin dependent
             VSHIFT = -DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
 
-            WRITE (6,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,
+            WRITE (1337,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,
      &           'spin',ispin,' BY', VSHIFT, 'RY.'
             IPOT = NSPIN * (IH-1) + ISPIN
 

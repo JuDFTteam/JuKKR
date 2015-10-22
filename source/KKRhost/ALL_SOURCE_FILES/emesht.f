@@ -94,9 +94,10 @@ C     .. Data statements ..
 C     ..
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,'(5X,A,F12.6," (Ry)",8X,A,F12.6," (Ry)")')
+      WRITE (1337,'(5X,A,F12.6," (Ry)",8X,A,F12.6," (Ry)")')
      &     'E min = ',EBOT,'Fermi energy = ',EFERMI
-      WRITE (6,'(5X,A,F12.6," (Ry)",8X,A,F12.6," (K )",/,5X,62(1H-))')
+      WRITE (1337,
+     &       '(5X,A,F12.6," (Ry)",8X,A,F12.6," (K )",/,5X,62(1H-))') 
      &     'E max = ',EMU,'Temperature  = ',TK
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -122,7 +123,7 @@ C ======================================================================
             EZ(NPNT) = DCMPLX(ER,ETK)
             DF(NPNT) = DE
  10      CONTINUE
-         WRITE (6,FMT=9000) NPNT,ETK,ETK*RYD
+         WRITE (1337,FMT=9000) NPNT,ETK,ETK*RYD
 C ------------------------------------------------------------- NPOL > 0
       ELSE IF (NPOL.GT.0) THEN
          CALL GAULEG(XI,WI,NPNT1)
@@ -176,7 +177,7 @@ C ------------------------------------------------------------- NPOL > 0
             EZ(NPNT) = EMU + (2*I-1)*DCMPLX(0.0D0,ETK)
             DF(NPNT) = -2*DCMPLX(0.0D0,ETK)
  50      CONTINUE
-         WRITE(6,9090) NPNT,NPOL,NPNT1,NPNT2,NPNT3
+         WRITE(1337,9090) NPNT,NPOL,NPNT1,NPNT2,NPNT3
 C ------------------------------------------------------------- NPOL < 0
       ELSE
          IF (NPNT1.GT.0) CALL GAULEG(XI,WI,NPNT1)
@@ -220,10 +221,10 @@ C ------------------------------------------------------------- NPOL < 0
             EZ(NPNT) = XI(I)*DE + DE + EMU
             DF(NPNT) = -WI(I)*DE
  80      CONTINUE
-         WRITE(6,9091) NPNT,-NPOL,NPNT1,NPNT2,NPNT3
+         WRITE(1337,9091) NPNT,-NPOL,NPNT1,NPNT2,NPNT3
        END IF
 C ======================================================================
-       WRITE(6,*)
+       WRITE(1337,*)
 c*****************************************************************
 c************Correction Factor for the weight in the integration
 c*********according to Phivos Idea******************************

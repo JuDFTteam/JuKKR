@@ -56,7 +56,7 @@ C     ..
       DO I1 = 1,100
          FACT(I1) = FACT(I1-1)*DBLE(I1) ! factorial
       END DO
-      WRITE (6,'(/,79(1H=),/,22X,A,/,79(1H=))') 
+      WRITE (1337,'(/,79(1H=),/,22X,A,/,79(1H=))') 
      &                            'LDA+U:  INITIALISE Coulomb matrix U'
 C
 C -> Calculate test functions Phi. Phi is already normalised to
@@ -72,7 +72,7 @@ C                                         which need LDA+U ( LOPT >= 0 )
      &                EREFLDAU(I1),PHI(1,I1),NSPIN,NSRA)
       ENDDO
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-      WRITE (6,'(6X,43(1H-),/,6X,A,/,6X,43(1H-))')
+      WRITE (1337,'(6X,43(1H-),/,6X,A,/,6X,43(1H-))')
      &     'Slater integrals F^n'
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
       DO IT = 1,NTLDAU
@@ -213,40 +213,40 @@ C
 C UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-         WRITE (6,'(/,8X,A,I3,/)') 'ATOM: ',I1
-         WRITE (6,'(12X,A,F8.4,A)') 'LDA+U reference energy :',
+         WRITE (1337,'(/,8X,A,I3,/)') 'ATOM: ',I1
+         WRITE (1337,'(12X,A,F8.4,A)') 'LDA+U reference energy :',
      &        EREFLDAU(I1),' Ry'
-         WRITE (6,'(12X,A,2F8.4,A,/)') 'Ueff and Jeff = ',UEFF(I1),
+         WRITE (1337,'(12X,A,2F8.4,A,/)') 'Ueff and Jeff = ',UEFF(I1),
      &        JEFF(I1),' Ry'
-         WRITE (6,'(12X,"Scaling factor for F^n :",F10.6,/)') SCL
-         WRITE (6,'(12X,"  n   F^n calculated   F^n scaled ")')
+         WRITE (1337,'(12X,"Scaling factor for F^n :",F10.6,/)') SCL
+         WRITE (1337,'(12X,"  n   F^n calculated   F^n scaled ")')
          DO LF = 2,LFMAX,2
-            WRITE (6,'(12X,I3,2(2X,F12.8," Ry"))') 
+            WRITE (1337,'(12X,I3,2(2X,F12.8," Ry"))') 
      &           LF,FCLMB(LF)/SCL,FCLMB(LF)
          END DO
-         IF ( IT.LT.NTLDAU ) WRITE(6,'(8X,58(1H~))')
+         IF ( IT.LT.NTLDAU ) WRITE(1337,'(8X,58(1H~))')
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
       END DO
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 C
-      WRITE (6,'(/,6X,60(1H-),/,6X,A,/,6X,60(1H-))')
+      WRITE (1337,'(/,6X,60(1H-),/,6X,A,/,6X,60(1H-))')
      &     'Coulomb matrix U(m1,m1,m3,m3)'
       DO IT = 1,NTLDAU
          I1 = ITLDAU(IT)
          LL = LOPT(I1)
          LL = MIN(3,LL)
-         WRITE(6,'(/,8X,"ATOM :",I3,/)') I1
+         WRITE(1337,'(/,8X,"ATOM :",I3,/)') I1
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
          DO IM1 = 1,2*LL + 1
-            WRITE (6,99001) (ULDAU(IM1,IM1,IM3,IM3,I1),IM3=1,2*LL+1)
+            WRITE (1337,99001) (ULDAU(IM1,IM1,IM3,IM3,I1),IM3=1,2*LL+1)
          END DO
-         IF ( IT.LT.NTLDAU ) WRITE(6,'(8X,58(1H~))')
+         IF ( IT.LT.NTLDAU ) WRITE(1337,'(8X,58(1H~))')
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
       END DO
-      WRITE (6,'(/,6X,60(1H-),/)')
+      WRITE (1337,'(/,6X,60(1H-),/)')
 99001 FORMAT(6X,7F10.6)
       END
 C

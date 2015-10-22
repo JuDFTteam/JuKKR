@@ -142,7 +142,7 @@
       NDIM=LMMAXD*NAEZ
 
       IF ( TEST('flow     ') )
-     +     WRITE(6,*) '>>> kkrmat1: loop over k-points'
+     +     WRITE(1337,*) '>>> kkrmat1: loop over k-points'
 !
       CITPI = CMI*8.D0*ATAN(1.D0)    ! = -i*2*PI 
 !
@@ -568,7 +568,7 @@ c            DEALLOCATE(GLLKE0)
 !OMPI     CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
 !OMPI   END DO
 
-      IF ( TEST('flow    ') ) WRITE(6,*) '<<< KKRMAT1'
+      IF ( TEST('flow    ') ) WRITE(1337,*) '<<< KKRMAT1'
 
 
       END

@@ -113,7 +113,7 @@ c
       IF ((KSHAPE.NE.0) .AND. (ISHAPE.EQ.0)) THEN
         ISHAPE = 1
         READ (19,FMT=9000) NCELL
-        WRITE (6,FMT=*) '  ncell : ',NCELL,NCELLD
+        WRITE (1337,FMT=*) '  ncell : ',NCELL,NCELLD
 c
         IF(NCELL.GT.NCELLD) THEN
           WRITE(6,*) 'Please, change the parameter ncelld (',NCELLD,
@@ -143,7 +143,7 @@ c
 
           READ (19,FMT=9000) NFU(ICELL)
           NFUN = NFU(ICELL)
-          WRITE (6,FMT=*) '  nfun  : ',NFUN,NFUND
+          WRITE (1337,FMT=*) '  nfun  : ',NFUN,NFUND
 c
           IF(NFUN.GT.NFUND) THEN
             WRITE(6,*) 'Please, change the parameter nfund (',NFUND,
@@ -189,9 +189,9 @@ c
             READ (IFILE,FMT=9020) (ITITLE(IA,I),IA=1,20)
             IF (IINFO.NE.0) THEN 
               IF (INS.EQ.0) THEN
-                WRITE (6,FMT=9080) (ITITLE(IA,I),IA=1,20)
+                WRITE (1337,FMT=9080) (ITITLE(IA,I),IA=1,20)
               ELSE
-                WRITE (6,FMT=9081) (ITITLE(IA,I),IA=1,20)
+                WRITE (1337,FMT=9081) (ITITLE(IA,I),IA=1,20)
               END IF
             END IF
 c
@@ -435,7 +435,7 @@ c      in case of test option 'atptshft' shift only potential of atom at positio
 c
 
             IF (TEST('atptshft').AND.(IH.EQ.IVSHIFT)) THEN
-              write(*,*) 'atptshft',IH,IVSHIFT,VCONST,NR,IRMIN(IH)
+              write(1337,*) 'atptshft',IH,IVSHIFT,VCONST,NR,IRMIN(IH)
               DO 120 J = 1,IRMIN(IH)
                 VM2Z(J,I) = VM2Z(J,I) + VCONST
   120         CONTINUE

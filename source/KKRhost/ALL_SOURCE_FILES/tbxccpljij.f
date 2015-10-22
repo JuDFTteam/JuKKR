@@ -99,7 +99,7 @@ c      write(*,*) 'test brahim 2'
       IF ( IE.EQ.1 ) THEN
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-         WRITE(6,99000)
+         WRITE(1337,99000)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 c         open(22,STATUS='unknown',FILE='integrand.dat',
@@ -184,7 +184,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
                END DO
 Cccc               WRITE (6,99012) IT,(JTAUX(JT),JT=1,MIN(25,NATYP))
             END DO
-            WRITE (6,99013)
+            WRITE (1337,99013)
          END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
@@ -256,34 +256,34 @@ C SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
       IF ( IPRINT.GT.1 ) THEN
-         WRITE(6,'(8X,60(1H-),/,10X,
+         WRITE(1337,'(8X,60(1H-),/,10X,
      &        "Single-site and projection matrices read in",
      &        " for IT=1,",I3,/)') NATYP
          DO ISPIN = 1,2
-            WRITE(6,'(8X,60(1H+),/,30X,
+            WRITE(1337,'(8X,60(1H+),/,30X,
      &           " ISPIN = ",I1,/,8X,60(1H+),/)') ISPIN
             DO IT = 1,NATYP
-               WRITE(6,'(12X," IE = ",I2," IT =",I3)') IE,IT
+               WRITE(1337,'(12X," IE = ",I2," IT =",I3)') IE,IT
                CALL CMATSTR(' T MAT ',7,TSST(1,1,IT,ISPIN),
      &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
                CALL CMATSTR(' D MAT ',7,DMATTS(1,1,IT,ISPIN),
      &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
                CALL CMATSTR(' D~ MAT',7,DTILTS(1,1,IT,ISPIN),
      &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
-               IF ( IT.NE.NATYP) WRITE(6,'(8X,60(1H-),/)')
+               IF ( IT.NE.NATYP) WRITE(1337,'(8X,60(1H-),/)')
             END DO
-            WRITE(6,'(8X,60(1H+),/)')
+            WRITE(1337,'(8X,60(1H+),/)')
          END DO
-         WRITE(6,'(8X,60(1H-),/,10X,
+         WRITE(1337,'(8X,60(1H-),/,10X,
      &        "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,",
      &        I3,/)') NATYP
          DO IT = 1,NATYP
-            WRITE(6,'(12X," IE = ",I2," IT =",I3)') IE,IT
+            WRITE(1337,'(12X," IE = ",I2," IT =",I3)') IE,IT
             CALL CMATSTR(' DEL T ',7,DELTSST(1,1,IT),
      &           LMMAXD,LMMAXD,0,0,0,1D-8,6)
-            IF ( IT.NE.NATYP) WRITE(6,'(8X,60(1H-),/)')
+            IF ( IT.NE.NATYP) WRITE(1337,'(8X,60(1H-),/)')
          END DO
-         WRITE(6,'(8X,60(1H-),/)')
+         WRITE(1337,'(8X,60(1H-),/)')
       END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
@@ -341,7 +341,7 @@ C ----------------------------------------------------------------------
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             IF ( IPRINT.GT.2 ) THEN
-               WRITE(6,'(8X,60(1H-),/,10X,
+               WRITE(1337,'(8X,60(1H-),/,10X,
      &              " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3,
      &              " IE =",I3,/,8X,60(1H-))') IA,JA,IE
                CALL CMATSTR(' Gij DN',7,GMIJ,LMMAXD,LMMAXD,0,0,0,1D-8,6)
@@ -488,10 +488,10 @@ C
          STRBAR(1:LSTR)=STRTMP(1:LSTR)
       END DO
       
-      WRITE(6,99002) STRBAR(1:LSTR),STRBAR(1:LSTR)
+      WRITE(1337,99002) STRBAR(1:LSTR),STRBAR(1:LSTR)
       DO I1 = 1,NTCALC
          IT = JTAUX(I1)
-         WRITE (6,99003) IT,IQAT(IT)
+         WRITE (1337,99003) IT,IQAT(IT)
          L1 = 0
          DO NS = 1,NSHCALC
             LM1 = 0
@@ -501,30 +501,30 @@ C
             IF ( LM1.NE.0 ) THEN
                LM2 = 0
                IF ( L1.EQ.0 ) THEN
-                  WRITE(6,99005) RSH(NS)
+                  WRITE(1337,99005) RSH(NS)
                   L1 = 1
                ELSE
-                  WRITE (6,99006) RSH(NS)
+                  WRITE (1337,99006) RSH(NS)
                END IF
                DO JT = 1,NATYP
                   IF ( JIJDONE(IT,JT,NS).NE.0 ) THEN
                      LM2 = LM2 + 1
                      IF ( LM2.EQ.1 ) THEN
-                        WRITE (6,99007) IQAT(JT),
+                        WRITE (1337,99007) IQAT(JT),
      &                       DIMAG(JXCIJINT(IT,JT,NS))*1D3,JT
-                        write(6,*) ns+nsmax,' shell'
+                        write(1337,*) ns+nsmax,' shell'
                      ELSE
-                        WRITE (6,99008) DIMAG(JXCIJINT(IT,JT,NS))*1D3,JT
-                        write(6,*) ns+nsmax,' shell'
+                        WRITE (1337,99008) DIMAG(JXCIJINT(IT,JT,NS))*1D3,JT
+                        write(1337,*) ns+nsmax,' shell'
                      END IF
-                     IF ( LM2.EQ.LM1 ) WRITE (6,*)
+                     IF ( LM2.EQ.LM1 ) WRITE (1337,*)
                   END IF
                END DO
             END IF
          END DO
-         WRITE (6,99004) STRBAR(1:LSTR)
+         WRITE (1337,99004) STRBAR(1:LSTR)
       END DO !I1 = 1,NTCALC
-      WRITE (6,*)
+      WRITE (1337,*)
 C ----------------------------------------------------------------------
 C --> prepare output files 
 C
@@ -582,7 +582,7 @@ c            end do
          CLOSE (49)
 c         Close(22)
       END DO !i1=1,ntcalc
-      WRITE (6,99011) 
+      WRITE (1337,99011) 
 C ----------------------------------------------------------------------
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C

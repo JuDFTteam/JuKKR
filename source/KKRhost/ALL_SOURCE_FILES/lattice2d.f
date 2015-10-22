@@ -60,7 +60,7 @@ C
       PI = 4.0D0*ATAN(1.0D0)
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,'(5X,2A,/)') '< LATTICE2D > : ',
+      WRITE (1337,'(5X,2A,/)') '< LATTICE2D > : ',
      &                    'generating direct/reciprocal lattice vectors'
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -69,7 +69,7 @@ C
       GMAX = GMAX/ALAT
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,FMT=99001) RMAX,GMAX
+      WRITE (1337,FMT=99001) RMAX,GMAX
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C ======================================================================
@@ -110,7 +110,7 @@ C **********************************************************************
 C                 generate lattice vectors of real space
 C **********************************************************************
 C
-      WRITE(6,*) 'Real space...'
+      WRITE(1337,*) 'Real space...'
       NR = 0
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       DO L = 1,NUMR
@@ -144,7 +144,7 @@ C ======================================================================
 C
 C --> sort vectors in order of increasing absolute value
 C
-      WRITE(6,FMT='(A11,I8,A11)') '...sorting ',NRMAX,' vectors...'
+      WRITE(1337,FMT='(A11,I8,A11)') '...sorting ',NRMAX,' vectors...'
 
       DA = 1.D-06
       NSH = 0
@@ -193,7 +193,7 @@ C
       NSHLR = NSH
       IF ( NSHLR.LE.1 ) STOP 
      &     'lattice2d: ERROR: cut-off radius RMAX too small '
-      WRITE(6,*) '...done.'
+      WRITE(1337,*) '...done.'
 C
 C **********************************************************************
 C
@@ -201,7 +201,7 @@ C **********************************************************************
 C                 generate lattice vectors of real space
 C **********************************************************************
 C
-      WRITE(6,*) 'Reciprocal space...'
+      WRITE(1337,*) 'Reciprocal space...'
       NG = 0
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       DO L = 1,NUMG
@@ -235,7 +235,7 @@ C ======================================================================
 C
 C --> sort vectors in order of increasing abs. value
 C
-      WRITE(6,FMT='(A11,I8,A11)') '...sorting ',NGMAX,' vectors...'
+      WRITE(1337,FMT='(A11,I8,A11)') '...sorting ',NGMAX,' vectors...'
       DO N = 1,NG
          LENGTH(N) = CJ(4,N)
       ENDDO
@@ -287,41 +287,41 @@ C
       IF ( NSHLG.LE.1 ) 
      &     STOP 'lattice2dERROR: cut-off radius GMAX too small '
 
-      WRITE(6,*) '...done.'
+      WRITE(1337,*) '...done.'
 C **********************************************************************
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,FMT=99002)
-      WRITE (6,FMT=99003) 'Direct  lattice',NRMAX,NSHLR,RMR(NRMAX)
-      WRITE (6,FMT=99003) 'Recipr. lattice',NGMAX,NSHLG,GNR(NGMAX)
-      WRITE (6,FMT=99004)
+      WRITE (1337,FMT=99002)
+      WRITE (1337,FMT=99003) 'Direct  lattice',NRMAX,NSHLR,RMR(NRMAX)
+      WRITE (1337,FMT=99003) 'Recipr. lattice',NGMAX,NSHLG,GNR(NGMAX)
+      WRITE (1337,FMT=99004)
 C
       IF ( IPRINT.LT.3 ) RETURN
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
       K = 0
-      WRITE (6,FMT=99005) 'real-space'
+      WRITE (1337,FMT=99005) 'real-space'
       DO L = 1,NSHLR
-         WRITE (6,99006) L,NSR(L),RMR(K+1),(RM(M,K+1),M=1,2)
+         WRITE (1337,99006) L,NSR(L),RMR(K+1),(RM(M,K+1),M=1,2)
          DO N = 2,NSR(L)
-            WRITE (6,FMT=99007) (RM(M,K+N),M=1,2)
+            WRITE (1337,FMT=99007) (RM(M,K+N),M=1,2)
          END DO
-         IF ( L.NE.NSHLR ) WRITE (6,99008)
+         IF ( L.NE.NSHLR ) WRITE (1337,99008)
          K = K + NSR(L)
       END DO
-      WRITE (6,99009)
+      WRITE (1337,99009)
       K = 0
-      WRITE (6,FMT=99005) 'reciprocal'
+      WRITE (1337,FMT=99005) 'reciprocal'
       DO L = 1,NSHLG
-         WRITE (6,99006) L,NSG(L),GNR(K+1),(GN(M,K+1),M=1,2)
+         WRITE (1337,99006) L,NSG(L),GNR(K+1),(GN(M,K+1),M=1,2)
          DO N = 2,NSG(L)
-            WRITE (6,FMT=99007) (GN(M,K+N),M=1,2)
+            WRITE (1337,FMT=99007) (GN(M,K+N),M=1,2)
          END DO
-         IF ( L.NE.NSHLG ) WRITE (6,99008)
+         IF ( L.NE.NSHLG ) WRITE (1337,99008)
          K = K + NSG(L)
       END DO
-      WRITE (6,99009)
+      WRITE (1337,99009)
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 C
 99001 FORMAT (10X,'R max =',F10.5,' (a.u.)',/,10X,'G max =',F10.5,

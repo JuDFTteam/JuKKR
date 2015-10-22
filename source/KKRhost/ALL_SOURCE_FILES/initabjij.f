@@ -63,34 +63,34 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       END DO
 C
       LM2 = MIN(25,NATOMIMP)
-      WRITE (6,99002) NAEZ,NATYP,NATOMIMP,NOFGIJ,NSHELL(0),LM2
+      WRITE (1337,99002) NAEZ,NATYP,NATOMIMP,NOFGIJ,NSHELL(0),LM2
       DO I1 = 1,NIDONE
          DO IA = 1,NATOMIMP
             IF (ATOMIMP(IA).EQ.IDONE(I1)) THEN
                LM1 = (IA-1)*NATOMIMP
-               WRITE (6,99003) IA,(IJTABCALC(LM1+JA),JA=1,LM2)
+               WRITE (1337,99003) IA,(IJTABCALC(LM1+JA),JA=1,LM2)
                GOTO 100
             END IF
          END DO
  100     CONTINUE
       END DO
-      WRITE (6,99004) LM2
+      WRITE (1337,99004) LM2
       DO I1 = 1,NIDONE
          DO IA = 1,NATOMIMP
             IF (ATOMIMP(IA).EQ.IDONE(I1)) THEN
                LM1 = (IA-1)*NATOMIMP
-               WRITE (6,99003) IA,(IJTABSH(LM1+JA),JA=1,LM2)
+               WRITE (1337,99003) IA,(IJTABSH(LM1+JA),JA=1,LM2)
                GOTO 110
             END IF
          END DO
  110     CONTINUE
       END DO
-      WRITE (6,99005) LM2
+      WRITE (1337,99005) LM2
       DO I1 = 1,NIDONE
          DO IA = 1,NATOMIMP
             IF (ATOMIMP(IA).EQ.IDONE(I1)) THEN
                LM1 = (IA-1)*NATOMIMP
-               WRITE (6,99003) IA,(IJTABSYM(LM1+JA),JA=1,LM2)
+               WRITE (1337,99003) IA,(IJTABSYM(LM1+JA),JA=1,LM2)
                GOTO 120
             END IF
          END DO
@@ -101,12 +101,12 @@ C
          LM2 = MAX(LM2,NIJCALC(NS))
       END DO
       LM2 = MIN(5,LM2)
-      WRITE (6,99006)
+      WRITE (1337,99006)
       DO NS = NSMAX + 1,NSHELL(0)
-         WRITE (6,99007) NS,(ISH(NS,KIJSH(I1,NS)),JSH(NS,KIJSH(I1,NS)),
-     &                   I1=1,MIN(NIJCALC(NS),LM2))
-         WRITE (6,99008) (ATOMIMP(ISH(NS,KIJSH(I1,NS))),ATOMIMP(JSH(NS,
-     &                   KIJSH(I1,NS))),
+         WRITE (1337,99007) NS,(ISH(NS,KIJSH(I1,NS)),
+     &            JSH(NS,KIJSH(I1,NS)),I1=1,MIN(NIJCALC(NS),LM2))
+         WRITE (1337,99008) (ATOMIMP(ISH(NS,KIJSH(I1,NS))),
+     &                   ATOMIMP(JSH(NS,KIJSH(I1,NS))),
      &                   IJTABSYM((ISH(NS,KIJSH(I1,NS))-1)
      &                   *NATOMIMP+JSH(NS,KIJSH(I1,NS))),I1=1,
      &                   MIN(NIJCALC(NS),LM2))

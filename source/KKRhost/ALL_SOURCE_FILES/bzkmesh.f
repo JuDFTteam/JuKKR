@@ -73,8 +73,8 @@ C ---------------------------------------------------------------------
       OPEN (52,FILE='kpoints',FORM='formatted')
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,99000)
-      WRITE (6,99001) MAXMESH,NSYMAT
+      WRITE (1337,99000)
+      WRITE (1337,99001) MAXMESH,NSYMAT
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       !save maxmesh and allocate kmesh for later use in t_inc
@@ -99,8 +99,8 @@ C
      +                LIRR,KREL,IPRINT)
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-         WRITE(6,99002) L,NOFKS,(NXYZ(I),I=1,3),VOLBZ
-         IF ( L.EQ.MAXMESH ) WRITE(6,99003)
+         WRITE(1337,99002) L,NOFKS,(NXYZ(I),I=1,3),VOLBZ
+         IF ( L.EQ.MAXMESH ) WRITE(1337,99003)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
          WRITE (52,FMT='(I8,F15.10,/,(3F12.8,D20.10))') 
@@ -113,7 +113,7 @@ C -->  output of k-mesh
 C
         IF (TEST('k-net   ')) THEN
            DO KS = 1,NOFKS
-              WRITE (6,FMT=9000) (BZKP(I,KS),I=1,3),VOLCUB(KS)
+              WRITE (1337,FMT=9000) (BZKP(I,KS),I=1,3),VOLCUB(KS)
            END DO
         END IF
 C ---------------------------------------------------------------------

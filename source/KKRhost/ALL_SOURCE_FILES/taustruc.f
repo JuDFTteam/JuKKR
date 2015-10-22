@@ -41,7 +41,7 @@ C
          NON0(IQ) = 0
          NKMTOP = NKMQ(IQ)
 C
-         IF ( IPRINT.GT.0 ) WRITE (6,99004) IQ
+         IF ( IPRINT.GT.0 ) WRITE (1337,99004) IQ
          DO I = 1,NKMTOP
             DO J = 1,NKMTOP
                ST(I,J) = 0.0D0
@@ -76,7 +76,7 @@ C
                      ST(I,J) = ST(I,J) + ABST
                      IF ( ABST.GT.1D-8 ) THEN
                         IF ( DIMAG(TAUK(K,L,IQ)).GT.1D-5 ) THEN
-                           IF ( IPRINT.GT.0 ) WRITE (*,*)
+                           IF ( IPRINT.GT.0 ) WRITE (1337,*)
      &                           ' Im(Weight) > 1D-5 ',I,J,K,L
                            IMWEIGHT = 1
                         END IF
@@ -113,10 +113,10 @@ C
      &        IREL,IREL,0,1D-8,6)
       END DO
 C
-      WRITE (6,99005) NELMT,(NON0(IQ),IQ=1,NQ)
-      WRITE (6,99006) NLIN
+      WRITE (1337,99005) NELMT,(NON0(IQ),IQ=1,NQ)
+      WRITE (1337,99006) NLIN
 C
-      IF ( IMWEIGHT.NE.0 ) WRITE (*,99007)
+      IF ( IMWEIGHT.NE.0 ) WRITE (1337,99007)
 C
 C-----------------------------------------------------------------------
 C

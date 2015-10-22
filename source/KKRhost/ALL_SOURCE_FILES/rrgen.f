@@ -38,7 +38,7 @@ C     ..
 C     .. Data Statements ..
       DATA  EPSSHL /1.0D-5/
 C     ..................................................................
-      WRITE (6,'(5X,A,/)') 
+      WRITE (1337,'(5X,A,/)') 
      &                '< RRGEN > : generation of real space mesh RR(NR)'
 C
       IPRINT = 0
@@ -67,12 +67,12 @@ C
 C
       IF ( LSURF ) N3 = 0
 C
-      WRITE (6,99001) R
-      WRITE (6,99002) RS
+      WRITE (1337,99001) R
+      WRITE (1337,99002) RS
       IF ( LSURF ) THEN
-         WRITE (6,99003) N1,N2
+         WRITE (1337,99003) N1,N2
       ELSE
-         WRITE (6,99004) N1,N2,N3
+         WRITE (1337,99004) N1,N2,N3
       END IF
 C
       NR = 0
@@ -121,12 +121,12 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       END DO
 C **********************************************************************
 C
-      WRITE (6,99005) NR+1
+      WRITE (1337,99005) NR+1
 C
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
       IF ( IPRINT.GT.0 ) THEN
-         WRITE (6,99006)
-         WRITE (6,99008) 0,0.0,0.0,0.0,0.0
+         WRITE (1337,99006)
+         WRITE (1337,99008) 0,0.0,0.0,0.0,0.0
       END IF
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 C
@@ -137,13 +137,13 @@ C
          RR(2,I) = RR1(2,POS)
          RR(3,I) = RR1(3,POS)
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-      IF ( IPRINT.GT.0 ) WRITE (6,99008) I,RR(1,I),RR(2,I),
+      IF ( IPRINT.GT.0 ) WRITE (1337,99008) I,RR(1,I),RR(2,I),
      &                                  RR(3,I),RABS(POS)
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
       END DO
 C
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-      IF ( IPRINT.GT.0 )  WRITE (6,99007)
+      IF ( IPRINT.GT.0 )  WRITE (1337,99007)
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 C
 99001 FORMAT (10X,'Radius R        : ',F15.6,' (ALAT    units)')

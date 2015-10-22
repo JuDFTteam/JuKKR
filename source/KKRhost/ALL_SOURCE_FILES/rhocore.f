@@ -68,9 +68,9 @@ C
          CALL COREL(NSRA,IPR,I1,RHOC(1,ISPIN),VISP,ECORE,LCORE,NCORE,
      +        DRDI,ZAT,QC1,A,B,ISPIN,NSPIN,NR,RMAX,IRMD)
 C     
-         IF (IPR.NE.0) WRITE (6,FMT=99001) I1
+         IF (IPR.NE.0) WRITE (1337,FMT=99001) I1
          QC = QC + QC1
-         IF (ISPIN.EQ.NSPIN) WRITE (6,FMT=99002) ZAT,QC
+         IF (ISPIN.EQ.NSPIN) WRITE (1337,FMT=99002) ZAT,QC
 C=======================================================================
       ELSE
 C=======================================================================

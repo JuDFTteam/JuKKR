@@ -61,7 +61,7 @@ C     ..
 C
       II = 3
       IF (OPT('COMPLEX ')) II = 6
-      IF (TEST('BZKP    ')) write(6,FMT='(6f12.6)') (bzkp(i),i=1,ii)
+      IF (TEST('BZKP    ')) write(1337,FMT='(6f12.6)') (bzkp(i),i=1,ii)
 c
       TPI = 8.0D0*ATAN(1.0D0)                 ! = 2*PI
       CONVPU = ALAT/TPI

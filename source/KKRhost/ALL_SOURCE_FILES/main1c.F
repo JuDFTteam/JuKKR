@@ -116,17 +116,10 @@ C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C     ..
 C     .. Local Arrays ..
-CMPI  INTEGER MYRANK,NROFNODES,IERR,IDIM
-CMPI  COMMON /MPI/MYRANK,NROFNODES
 #ifdef CPP_MPI
       DOUBLE COMPLEX WORK(IRMD,LMPOTD,NATYPD,2)
       integer ierr,idim
 #endif
-CMPI  DOUBLE COMPLEX WORK(IRMD,LMPOTD,NATYPD,2)
-CMPI  EXTERNAL MPI_ALLREDUCE,MPI_COMM_RANK,MPI_COMM_SIZE,
-CMPI +         MPI_FINALIZE,MPI_INIT,ZCOPY,DCOPY
-CT3E  INTEGER ICLKTCK,ICLOCKS,MEND,MSTART
-CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
 !       DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
 !       DOUBLE COMPLEX DENLM(0:LMMAXD1,IEMXD,NPOTD)
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
@@ -288,12 +281,6 @@ Consistency check
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 
      &   STOP ' set NSPIND = 1 for KREL = 1 in inc.p'
 C
-CT3E  CALL SYSTEM_CLOCK(MSTART)
-CMPI  CALL MPI_INIT(IERR)
-CMPI  CALL MPI_COMM_RANK(MPI_COMM_WORLD,MYRANK,IERR)
-CMPI  CALL MPI_COMM_SIZE(MPI_COMM_WORLD,NROFNODES,IERR)
-CMPI  IF(MYRANK.NE.0) OPEN (6,STATUS='scratch',FORM='formatted')
-C
 C ======================================================================
 C =             read in variables from unformatted files               =
 C ======================================================================
@@ -377,17 +364,6 @@ C
       RHO2N2(:,:,:) = 0.d0
 C ======================================================================
 C =                     End read in variables                          =
-C ======================================================================
-C     
-CT3E  CALL SYSTEM_CLOCK(MEND)
-CT3E  TIME1 = (MEND-MSTART)
-CT3E  TIME2 = (MEND-MSTART)
-CT3E  CALL SYSTEM_CLOCK(MSTART)
-CMPI  CALL MPI_BARRIER(MPI_COMM_WORLD,IERR)
-CT3E  CALL SYSTEM_CLOCK(MEND)
-CT3E  TIME3 = (MEND-MSTART)
-CT3E  CALL SYSTEM_CLOCK(MSTART)
-C
 C ======================================================================
 C
       NQDOS=1
@@ -541,6 +517,8 @@ c calculate contribution from free space
          CLOSE(701)                                                        ! LLY Lloyd
          WRITE(*,*) 'Valence charge from Lloyds formula:',                 ! LLY Lloyd
      &        (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                            ! LLY Lloyd
+         WRITE(1337,*) 'Valence charge from Lloyds formula:',                 ! LLY Lloyd
+     &        (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                            ! LLY Lloyd
          end if ! myrank==master
          
          ELSE !NEWSOSOL
@@ -586,6 +564,8 @@ c Add free-space contribution cdos0                                     ! LLY
           ENDDO                                                         ! LLY 
           CLOSE(701)                                                    ! LLY 
           WRITE(*,*) 'Valence charge from Lloyds formula:',
+     &        (CHARGE_LLY(1))                                          ! LLY 
+          WRITE(1337,*) 'Valence charge from Lloyds formula:',
      &        (CHARGE_LLY(1))                                          ! LLY 
           end if ! myrank==master
           
@@ -806,7 +786,7 @@ C ================================================================ NATYP
                LCHECKANGLES=.TRUE.
             ENDIF
          ENDDO
-         IF(LCHECKANGLES) write(*,*) 'WARNING: Check if your
+         IF(LCHECKANGLES) write(1337,*) 'WARNING: Check if your
      & nonco_angels file is correct! Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
      & angles are given in degree (0...360)'
@@ -1030,10 +1010,10 @@ C ---------------------------------------------------------- CORE STATES
 C   RHO_core is calculated only if also RHO_valence was
 C
       IF (NPOL.NE.0) THEN 
-         WRITE (6,*)
-         WRITE (6,'(78(1H#))')
-         WRITE (6,'(33X,A)') 'CORE  STATES'
-         WRITE (6,'(78(1H#))')
+         WRITE (1337,*)
+         WRITE (1337,'(78(1H#))')
+         WRITE (1337,'(33X,A)') 'CORE  STATES'
+         WRITE (1337,'(78(1H#))')
          DO I1 = 1,NATYP
             DO ISPIN = 1,NSPIN
                IPOT = (I1-1) * NSPINPOT + ISPIN
@@ -1053,9 +1033,9 @@ C
 C
             END DO
          END DO
-         WRITE (6,*)
-         WRITE (6,'(78(1H#))')
-         WRITE (6,*)
+         WRITE (1337,*)
+         WRITE (1337,'(78(1H#))')
+         WRITE (1337,*)
       END IF
 C
 C ---------------------------------------------------------- CORE STATES
@@ -1094,30 +1074,7 @@ C      ITERMDIR
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 
 
 C
-CT3E  CALL SYSTEM_CLOCK(MEND)
-CT3E  TIME4 = (MEND-MSTART)
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1,' seconds',
-CT3E +  TIME2,' seconds',
-CT3E +  TIME3,' seconds',
-CT3E +  TIME4,' seconds'
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1+TIME2+TIME3+TIME4,' seconds'
-CT3E  TIME1=TIME1*NROFNODES
-CT3E  TIME2=TIME2*NROFNODES
-CT3E  TIME3=TIME3*NROFNODES
-CT3E  TIME4=TIME4*NROFNODES
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1,' seconds',
-CT3E +  TIME2,' seconds',
-CT3E +  TIME3,' seconds',
-CT3E +  TIME4,' seconds'
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1+TIME2+TIME3+TIME4,' seconds'
-CMPI  CALL MPI_FINALIZE(IERR)
-      !STOP
-
-      WRITE (6,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
+      WRITE (1337,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
      
 #ifdef CPP_MPI
       end if !myrank==master

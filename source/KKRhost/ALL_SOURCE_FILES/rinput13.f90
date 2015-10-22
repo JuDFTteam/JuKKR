@@ -180,7 +180,7 @@
       TXC(4) = ' GGA PW91               '
 
       IPRINT = 0
-      WRITE (6,2004) VERSION
+      WRITE (1337,2004) VERSION
 
       OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
 
@@ -328,9 +328,9 @@
       BBASIS = DVEC(2) 
       CBASIS = DVEC(3)
 
-      WRITE(6,2019) ABASIS,BBASIS,CBASIS 
-      WRITE(6,2107)
-      WRITE(6,2014) ALAT
+      WRITE(1337,2019) ABASIS,BBASIS,CBASIS 
+      WRITE(1337,2107)
+      WRITE(1337,2014) ALAT
 
       !----------------------------------------------------------------------
       ! Begin read left- and right-host information in 2d-case.
@@ -338,7 +338,7 @@
 
       IF (LINTERFACE) THEN
 
-         WRITE(6,9410)
+         WRITE(1337,9410)
 
          NRIGHT = 10
          CALL IoInput('NRIGHTHO        ',UIO,1,7,IER)
@@ -360,7 +360,7 @@
 
          CALL IoInput('<NLBASIS>       ',UIO,1,7,IER)
          IF (IER.NE.0) THEN
-            WRITE(*,*) 'rinput13: <NLBASIS> not found in inputcard'
+            WRITE(1337,*) 'rinput13: <NLBASIS> not found in inputcard'
             IER = 0
             CALL IoInput('NLBASIS         ',UIO,1,7,IER)
             IF (IER.NE.0) THEN
@@ -375,7 +375,7 @@
 
          CALL IoInput('<NRBASIS>       ',UIO,1,7,IER)
          IF (IER.NE.0) THEN
-            WRITE(*,*) 'rinput13: <NRBASIS> not found in inputcard'
+            WRITE(1337,*) 'rinput13: <NRBASIS> not found in inputcard'
             IER = 0
             CALL IoInput('NRBASIS         ',UIO,1,7,IER)
             IF (IER.NE.0) THEN
@@ -390,7 +390,7 @@
 
 
          NEMB = NLBASIS + NRBASIS
-         WRITE(*,*) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=',NEMB
+         WRITE(1337,*) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=',NEMB
          IF(NEMB.GT.NEMBD) THEN
            write(6,*) 'Please, increase the parameter nembd (',nembd,') in inc.p to',nemb
             STOP 'ERROR in NEMBD.'
@@ -513,31 +513,31 @@
          ENDIF
          CALL IDREALS(ZPERIGHT(1),3,IPRINT)
 
-         WRITE(6,9430) NLEFT,NLBASIS
-         WRITE(6,9440) NRIGHT,NRBASIS
-         WRITE(6,9450) (ZPERLEFT(i1),I1=1,3)
-         WRITE(6,9460) (ZPERIGHT(i1),I1=1,3)
-         WRITE(6,9465)
-         WRITE(6,9470)
+         WRITE(1337,9430) NLEFT,NLBASIS
+         WRITE(1337,9440) NRIGHT,NRBASIS
+         WRITE(1337,9450) (ZPERLEFT(i1),I1=1,3)
+         WRITE(1337,9460) (ZPERIGHT(i1),I1=1,3)
+         WRITE(1337,9465)
+         WRITE(1337,9470)
          DO I=NLEFT,1,-1
             DO I1=NLBASIS,1,-1
             tx = TLEFT(1,i1) + (I-1)*ZPERLEFT(1)
             ty = TLEFT(2,i1) + (I-1)*ZPERLEFT(2)
             tz = TLEFT(3,i1) + (I-1)*ZPERLEFT(3)
-            WRITE(6,9420) (I-1)*NLBASIS+i1, tx,ty,tz,KAOEZ(1,I1)
+            WRITE(1337,9420) (I-1)*NLBASIS+i1, tx,ty,tz,KAOEZ(1,I1)
             END DO 
          END DO
-          WRITE(6,9475)
+          WRITE(1337,9475)
          DO I=1,NAEZ
-            WRITE(6,9420) I, (RBASIS(I1,I),I1=1,3)
+            WRITE(1337,9420) I, (RBASIS(I1,I),I1=1,3)
          END DO
-          WRITE(6,9480)
+          WRITE(1337,9480)
           DO I=1,NRIGHT
             DO I1=1,NRBASIS
             tx = TRIGHT(1,i1) + (I-1)*ZPERIGHT(1)
             ty = TRIGHT(2,i1) + (I-1)*ZPERIGHT(2)
             tz = TRIGHT(3,i1) + (I-1)*ZPERIGHT(3) 
-            WRITE(6,9420) (I-1)*NRBASIS+i1,tx,ty,tz,KAOEZ(1,I1)
+            WRITE(1337,9420) (I-1)*NRBASIS+i1,tx,ty,tz,KAOEZ(1,I1)
             END DO 
          END DO  
 
@@ -587,8 +587,8 @@
          WRITE(111,*) 'NSPIN=',NSPIN
       ENDIF          
 
-      WRITE(6,2010) NSPIN
-      WRITE(6,2104)
+      WRITE(1337,2010) NSPIN
+      WRITE(1337,2104)
 
       ! Atomic number
       ZAT(1:NATYP) = -1.D0  ! Negative value signals read-in from pot-file
@@ -631,7 +631,7 @@
          CALL IoInput('<SITE>          ',UIO,1,7,IER)
          CALL IoInput('<CPA-CONC>      ',UIO,1,7,IER2)
          IF (IER.NE.0.OR.IER2.NE.0) THEN
-            WRITE(*,*) '<SITE> or <CPA-CONC> not found, will search for ATOMINFOC'
+            WRITE(1337,*) '<SITE> or <CPA-CONC> not found, will search for ATOMINFOC'
          ELSE
 
 
@@ -771,7 +771,7 @@
       ENDIF
 
       IF ( (KREL.EQ.1).AND.(KSHAPE.NE.0) ) THEN
-         WRITE(6,*) ' WARNING : KSHAPE set to ZERO for REL case'
+         WRITE(1337,*) ' WARNING : KSHAPE set to ZERO for REL case'
          WRITE(111,*) ' WARNING : kshape set to ZERO for REL case'
          KSHAPE = 0
       END IF
@@ -779,7 +779,7 @@
 
       
       ! Read cell information
-      WRITE(*,*) 'Cell information <SHAPE>:'
+      WRITE(1337,*) 'Cell information <SHAPE>:'
       WRITE(111,FMT='(A16)') '<SHAPE>         '
       DO I = 1,NATYP
          NTCELL(I) = IQAT(I) ! Default: Different shape function per atom
@@ -825,12 +825,12 @@
 
          !Check for LDA+U consistency -- if INS=0 suppress it
          IF ((INS.EQ.0) ) THEN
-            WRITE (6,*)
-            WRITE (6,*)&
+            WRITE (1337,*)
+            WRITE (1337,*)&
                  &        ' WARNING: LDA+U should be used only in NON-SPHERICAL',&
                  &        ' case (INS=1) '
-            WRITE (6,*) ' Running option LDA+U will be ignored'
-            WRITE (6,*)
+            WRITE (1337,*) ' Running option LDA+U will be ignored'
+            WRITE (1337,*)
             DO I=1,32
                IF (OPTC(I)(1:8).EQ.'LDA+U   ') OPTC(I)='        '
             END DO
@@ -902,7 +902,7 @@
 
 
       IF (TEST('atptshft')) THEN
-        write(*,*) 'READ IN IVSHIFT'
+        write(1337,*) 'READ IN IVSHIFT'
         CALL IoInput('IVSHIFT         ',UIO,1,7,IER)
                       READ (UNIT=UIO,FMT=*) ivshift
       ENDIF
@@ -931,8 +931,8 @@
       ENDIF
 
 
-      WRITE (6,2021) (INIPOL(I),I=1,NATYP) 
-      WRITE(6,2103)
+      WRITE (1337,2021) (INIPOL(I),I=1,NATYP) 
+      WRITE(1337,2103)
 
 
 
@@ -994,9 +994,9 @@
       ELSE
           WRITE(111,FMT='(A17,3I5)') 'Default BZDIVIDE=',INTERVX,INTERVY,INTERVZ
       ENDIF
-      WRITE(6,2104)
-      WRITE(6,2015) INTERVX,INTERVY,INTERVZ 
-      WRITE(6,2102)
+      WRITE(1337,2104)
+      WRITE(1337,2015) INTERVX,INTERVY,INTERVZ 
+      WRITE(1337,2102)
 
 
       ! Energy contour
@@ -1018,7 +1018,7 @@
          EMIN = -1.D0
          WRITE(111,*) 'Default for DOS: EMIN= ',EMIN
       ELSE
-         WRITE(*,*) 'Error in rinput13: EMIN not found'
+         WRITE(1337,*) 'Error in rinput13: EMIN not found'
          WRITE(111,*) 'Error in rinput13: EMIN not found'
          STOP 'Error in rinput13: EMIN not found'
       ENDIF
@@ -1119,10 +1119,10 @@
          IDOSEMICORE = 1
 99800    CONTINUE
          IF ( IDOSEMICORE.EQ.0 ) THEN 
-            WRITE (6,*)
-            WRITE (6,*) ' WARNING: SEMICORE used',&
+            WRITE (1337,*)
+            WRITE (1337,*) ' WARNING: SEMICORE used',&
      &           ' with incomplete/incorrect contour description'
-            WRITE (6,*) ' Running option SEMICORE will be ignored'
+            WRITE (1337,*) ' Running option SEMICORE will be ignored'
             WRITE (111,*)
             WRITE (111,*) ' WARNING: SEMICORE used',&
      &           ' with incomplete/incorrect contour description'
@@ -1169,18 +1169,18 @@
          WRITE(111,*) 'Default RCLUSTXY=',RCUTXY
       ENDIF
 
-      WRITE(6,*) 'Parameters used for the cluster calculation'
+      WRITE(1337,*) 'Parameters used for the cluster calculation'
       if (abs(rcutz-rcutxy).lt.1.d-4) then
-      write(6,*) 'Clusters inside spheres with radius R = ',rcutz
+      write(1337,*) 'Clusters inside spheres with radius R = ',rcutz
       else
-      write(6,*) 'Clusters inside cylinders with '
-      write(6,*) 'Rz = ',rcutz,' Rxy = ',rcutxy
+      write(1337,*) 'Clusters inside cylinders with '
+      write(1337,*) 'Rz = ',rcutz,' Rxy = ',rcutxy
       end if
-      write(6,2104)
-      write(6,2018)                 ! rbasis
-      write(6,2101)
+      write(1337,2104)
+      write(1337,2018)                 ! rbasis
+      write(1337,2101)
       do i=1,naez
-        write(6,2025) i,(rbasis(j,i),j=1,3),&
+        write(1337,2025) i,(rbasis(j,i),j=1,3),&
      &       QMTET(I),QMPHI(I),ICPA(I),NOQ(I),(KAOEZ(J,I),J=1,NOQ(I))
       enddo         
 
@@ -1229,7 +1229,7 @@
       ELSE
          WRITE(111,*) 'Default <LLOYD>=',LLY  
       ENDIF
-      IF (LLY.NE.0) WRITE(*,*) 'Applying Lloyds formula, LLY=',LLY
+      IF (LLY.NE.0) WRITE(1337,*) 'Applying Lloyds formula, LLY=',LLY
 
       DELTAE = (1.D-5,0.D0) ! Difference for numer. derivative in Lloyds formula
       CALL IoInput('<DELTAE>        ',UIO,1,7,IER)
@@ -1249,7 +1249,7 @@
       LATOMINFO = .FALSE.
       ! Initialize all clusters to 1
       CLS(1:NAEZD+NEMBD) = 1
-      WRITE(*,*) 'ATOMINFOC or ATOMINFO:'
+      WRITE(1337,*) 'ATOMINFOC or ATOMINFO:'
       DO I=1,NATYP
          CALL IoInput('ATOMINFOC       ',UIO,I+1,7,IER)
          IA = 1
@@ -1350,9 +1350,9 @@
 
 
       ! Write out atominfo
-      WRITE(6,2028) NATYP
-      WRITE(6,2104)
-      WRITE(6,1029) ( &
+      WRITE(1337,2028) NATYP
+      WRITE(1337,2104)
+      WRITE(1337,1029) ( &
      &     ZAT(I),&
      &     LMXC(I),&
      &     (KFG(J,I),J=1,4),&
@@ -1362,8 +1362,8 @@
      &     MTFAC(I),&
      &     IRNS(I),&
      &     IQAT(I),CONC(I),I=1,NATYP)
-      WRITE(6,2108)
-      WRITE(6,2104)
+      WRITE(1337,2108)
+      WRITE(1337,2104)
 
 
 ! =============================================================
@@ -1378,29 +1378,29 @@
       ENDIF
       IF (NPOL.EQ.0) THEN
          NSTEPS = 1
-         WRITE(*,*) 'NPOL=0, setting NSTEPS to 1'
+         WRITE(1337,*) 'NPOL=0, setting NSTEPS to 1'
       ENDIF
       IF (IGF.NE.0) THEN
          NSTEPS = 1
-         WRITE(*,*) 'IGF.NE.0, setting NSTEPS to 1'
+         WRITE(1337,*) 'IGF.NE.0, setting NSTEPS to 1'
       ENDIF
       IF (ICC.NE.0) THEN
          NSTEPS = 1
-         WRITE(*,*) 'ICC.NE.0, setting NSTEPS to 1'
+         WRITE(1337,*) 'ICC.NE.0, setting NSTEPS to 1'
       ENDIF
       IF (OPT('XCPL    ')) THEN
          NSTEPS = 1
-         WRITE(*,*) 'RUNOPT XCPL used, setting NSTEPS to 1'
+         WRITE(1337,*) 'RUNOPT XCPL used, setting NSTEPS to 1'
       ENDIF
       IF (OPT('KKRFLEX ')) THEN
          NSTEPS = 1
-         WRITE(*,*) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
+         WRITE(1337,*) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
       ENDIF
 
 
 
-      WRITE(6,2011) NSTEPS
-      WRITE(6,2104)
+      WRITE(1337,2011) NSTEPS
+      WRITE(1337,2104)
 
       IMIX = 0
       CALL IoInput('IMIX            ',UIO,1,7,IER)
@@ -1411,7 +1411,7 @@
          WRITE(111,*) 'Default IMIX= ',IMIX
       ENDIF
       IF (NPOL.EQ.0) THEN
-         WRITE(*,*) 'NPOL=0, setting IMIX= 0'
+         WRITE(1337,*) 'NPOL=0, setting IMIX= 0'
          IMIX = 0
       ENDIF
 
@@ -1424,7 +1424,7 @@
          WRITE(111,*) 'Default STRMIX= ',STRMIX
       ENDIF
       IF (NPOL.EQ.0) THEN
-         WRITE(*,*) 'NPOL=0, setting STRMIX= 0.'
+         WRITE(1337,*) 'NPOL=0, setting STRMIX= 0.'
          STRMIX = 0
       ENDIF
 
@@ -1508,11 +1508,11 @@
 
 
 
-      WRITE(6,*) 'I12="',I12,'"'
-      WRITE(6,*) 'I13="',I13,'"'
-      WRITE(6,*) 'I40="',I40,'"'
-      WRITE(6,*) 'I19="',I19,'"'
-      WRITE(6,*) 'I25="',I25,'"'
+      WRITE(1337,*) 'I12="',I12,'"'
+      WRITE(1337,*) 'I13="',I13,'"'
+      WRITE(1337,*) 'I40="',I40,'"'
+      WRITE(1337,*) 'I19="',I19,'"'
+      WRITE(1337,*) 'I25="',I25,'"'
 
 ! End file name definitions
 ! ======================================================================
@@ -1541,12 +1541,12 @@
       ENDIF
       IF (  OPT('rigid-ef').OR. OPT('DECIMATE') ) THEN
         ISHIFT = 2
-        WRITE(6,*) ' Rigid Fermi Energy, ISHIFT is set to ',ISHIFT
+        WRITE(1337,*) ' Rigid Fermi Energy, ISHIFT is set to ',ISHIFT
         WRITE(111,*) ' Rigid Fermi Energy, ishift is set to ',ISHIFT
       END IF
       IF ( TEST('no-neutr').OR.OPT('no-neutr') )   THEN
          ISHIFT = 1
-         WRITE(6,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
+         WRITE(1337,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
          WRITE(111,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
       ENDIF
 
@@ -1638,36 +1638,36 @@
 
 
 ! ------------------------------------------------------------------------
-      WRITE (6,9210) LMAX
-      WRITE (6,9301)
-      WRITE (6,9220) EMIN,EMAX,TK
-      WRITE (6,9302)
-      WRITE (6,9230) NPOL,NPNT1,NPNT2,NPNT3
-      WRITE (6,9304)
-      WRITE (6,9303)
-      WRITE (6,9250) IFILE,IPE,ISHIFT,ESHIFT
-      WRITE (6,9305)
-      WRITE (6,9260) KSHAPE,IRM,INS,ICST,INSREF
-      WRITE (6,9309)
-      WRITE (6,9270) KCOR,KVREL,KWS,KHYP,KHFIELD,KXC
-      WRITE (6,9306)
-      WRITE (6,9330) KTE,KPRE,KEFG,KVMAD
-      WRITE (6,9309)
-      WRITE (6,9290) IMIX,IGF,ICC
-      WRITE (6,9304)
-      WRITE (6,9300) ITDBRY
-      WRITE (6,9307)
-      WRITE (6,9310) STRMIX,FCM,QBOUND
-      WRITE (6,9302)
-      WRITE (6,9320) BRYMIX
-      WRITE (6,9308)
-      WRITE (6,9280) HFIELD,VCONST
+      WRITE (1337,9210) LMAX
+      WRITE (1337,9301)
+      WRITE (1337,9220) EMIN,EMAX,TK
+      WRITE (1337,9302)
+      WRITE (1337,9230) NPOL,NPNT1,NPNT2,NPNT3
+      WRITE (1337,9304)
+      WRITE (1337,9303)
+      WRITE (1337,9250) IFILE,IPE,ISHIFT,ESHIFT
+      WRITE (1337,9305)
+      WRITE (1337,9260) KSHAPE,IRM,INS,ICST,INSREF
+      WRITE (1337,9309)
+      WRITE (1337,9270) KCOR,KVREL,KWS,KHYP,KHFIELD,KXC
+      WRITE (1337,9306)
+      WRITE (1337,9330) KTE,KPRE,KEFG,KVMAD
+      WRITE (1337,9309)
+      WRITE (1337,9290) IMIX,IGF,ICC
+      WRITE (1337,9304)
+      WRITE (1337,9300) ITDBRY
+      WRITE (1337,9307)
+      WRITE (1337,9310) STRMIX,FCM,QBOUND
+      WRITE (1337,9302)
+      WRITE (1337,9320) BRYMIX
+      WRITE (1337,9308)
+      WRITE (1337,9280) HFIELD,VCONST
 ! ------------------------------------------------------------------------
 
 ! ------------------------------------------------------------------------
 
 
-      IPF = 6
+      IPF = 1337
       IPFE = IPF + 3
 
       IF (OPT('SEARCHEF')) THEN
@@ -1676,9 +1676,9 @@
          STRMIX=MIXING
          ITDBRY=1
          QBOUND=1.0d-10
-         WRITE(6,'(1X,A)') 'Option SEARCHEF used overriding INPUT for'
-         WRITE(6,'(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
-         WRITE(6,*)
+         WRITE(1337,'(1X,A)') 'Option SEARCHEF used overriding INPUT for'
+         WRITE(1337,'(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
+         WRITE(1337,*)
       ENDIF
 
       IF (IMIX.GT.2) THEN
@@ -1688,33 +1688,33 @@
         MIXING = STRMIX
       END IF
 
-      IF (IMIX.GE.6) WRITE (6,FMT=9110) (IMIX-5),ITDBRY - 1
+      IF (IMIX.GE.6) WRITE (1337,FMT=9110) (IMIX-5),ITDBRY - 1
 
-      WRITE (6,FMT=9090) MIXING,QBOUND
+      WRITE (1337,FMT=9090) MIXING,QBOUND
 !--------------------------------------------------------
-      WRITE (6,FMT=9091) CPAFLAG(NCPA)
-      IF (NCPA.NE.0) WRITE(6,9092) ITCPAMAX,CPATOL
+      WRITE (1337,FMT=9091) CPAFLAG(NCPA)
+      IF (NCPA.NE.0) WRITE(1337,9092) ITCPAMAX,CPATOL
 !--------------------------------------------------------
 
       LMMAX = (LMAX+1)**2
       LPOT  = MIN(2*LMAX,LPOTD)
       LMPOT = (LPOT+1)* (LPOT+1)
 
-      WRITE (6,FMT=9020) LMAX,LMAXD,NATYP,NATYPD,IRM,IRMD,NSPIN,NSPIND
+      WRITE (1337,FMT=9020) LMAX,LMAXD,NATYP,NATYPD,IRM,IRMD,NSPIN,NSPIND
 
 
       IF (INS.GT.0) THEN
-        WRITE (6,FMT=9130)
-        WRITE (6,FMT=9140)
+        WRITE (1337,FMT=9130)
+        WRITE (1337,FMT=9140)
         DO 20 I = 1,NATYP
-          WRITE (6,FMT=9150) I,IRNS(I),IRNSD
+          WRITE (1337,FMT=9150) I,IRNS(I),IRNSD
 
           IF (IRNS(I).GT.IRNSD) CALL RCSTOP('19      ')
 
    20   CONTINUE
 
         IF (LMAX.NE.LMAXD) THEN
-          WRITE (6,FMT=9120)
+          WRITE (1337,FMT=9120)
 
           CALL RCSTOP('20      ')
 
@@ -1723,29 +1723,29 @@
       END IF
 
 
-      WRITE (6,FMT=9130)
+      WRITE (1337,FMT=9130)
 
 
 
 
-      IF (KHFIELD.EQ.1) WRITE (6,FMT=9030) HFIELD
+      IF (KHFIELD.EQ.1) WRITE (1337,FMT=9030) HFIELD
       IF (KVREL.LE.1 ) THEN 
-          WRITE (6,FMT=9050) TSPIN(NSPIN)
+          WRITE (1337,FMT=9050) TSPIN(NSPIN)
       ELSE
-          WRITE (6,FMT=9050) TSPIN(NSPIN+1)
+          WRITE (1337,FMT=9050) TSPIN(NSPIN+1)
       END IF
-      WRITE (6,FMT=9170) TVREL(KVREL)
-      WRITE (6,FMT=9170) TKCOR(KFROZN)
+      WRITE (1337,FMT=9170) TVREL(KVREL)
+      WRITE (1337,FMT=9170) TKCOR(KFROZN)
       IF (KSHAPE.EQ.0) THEN
-        WRITE (6,FMT=9070) TKWS(KWS+1)
+        WRITE (1337,FMT=9070) TKWS(KWS+1)
 
       ELSE
-        WRITE (6,FMT=9170) TSHAPE
+        WRITE (1337,FMT=9170) TSHAPE
       END IF
 
-      WRITE (6,FMT=9100) TXC(KXC+1)
-      IF (INS.GT.0) WRITE (6,FMT=9160) TINS(INS),ICST
-      WRITE (6,FMT=9080)
+      WRITE (1337,FMT=9100) TXC(KXC+1)
+      IF (INS.GT.0) WRITE (1337,FMT=9160) TINS(INS),ICST
+      WRITE (1337,FMT=9080)
 
 
       VBC(1) = VCONST
@@ -1762,8 +1762,8 @@
 
 
       IF ( (NCPA.NE.0).AND.LRHOSYM ) THEN
-         WRITE(6,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-         WRITE(6,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
+         WRITE(1337,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+         WRITE(1337,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
          WRITE(111,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
          WRITE(111,*) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
          LRHOSYM = .FALSE.
@@ -1774,8 +1774,8 @@
 
         CALL IoInput('IXIPOL          ',UIO,1,7,IER)
                       READ (UNIT=UIO,FMT=*) (ixipol(I),I=1,natyp) 
-        write (6,2022) (ixipol(i),i=1,natyp) 
-        write (6,2103)
+        write (1337,2022) (ixipol(i),i=1,natyp) 
+        write (1337,2103)
         DO I=1,NATYP
           IF ( IXIPOL(I).NE.0 .AND. ABS(IXIPOL(ABS(IXIPOL(I)))).NE.I) THEN
             write(6,*) 'Error in IXIPOL at atom ',I,'.'
@@ -1786,17 +1786,17 @@
         DO I=1,NATYP
           IXIPOL(I) = 0
         END DO
-        write (6,2022) (ixipol(i),i=1,natyp) 
-        write (6,2103)
+        write (1337,2022) (ixipol(i),i=1,natyp) 
+        write (1337,2103)
       END IF
-      write(6,2023) NAEZ,NEMB
-      write(6,2110)
+      write(1337,2023) NAEZ,NEMB
+      write(1337,2110)
 
 
       NINEQ = NAEZ
-      WRITE(6,2016) NCLS,NREF,NINEQ
-      WRITE(6,2110)
-      WRITE(6,2103)
+      WRITE(1337,2016) NCLS,NREF,NINEQ
+      WRITE(1337,2110)
+      WRITE(1337,2103)
 
 
 !----------------------------------------------------------------------
@@ -1825,8 +1825,8 @@
 
 !-------------------------------------------------------------
 
-      if (nemb.gt.0) write(6,*) 
-      write(6,2031) ((rbasis(j,i),j=1,3),i,refpot(i),i=naez+1,naez+nemb)
+      if (nemb.gt.0) write(1337,*) 
+      write(1337,2031) ((rbasis(j,i),j=1,3),i,refpot(i),i=naez+1,naez+nemb)
 
 
 
@@ -1841,7 +1841,7 @@
 
 
 ! ------------------------------------------------------------------------
-      WRITE(6,2111)
+      WRITE(1337,2111)
 
 !Check for DECIMATE consistency
 
@@ -1861,15 +1861,15 @@
 !Check for ITERMDIR consistency -- if KMROT=0 suppress it
 
       IF ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) THEN
-         WRITE (6,*)
-         WRITE (6,*)&
+         WRITE (1337,*)
+         WRITE (1337,*)&
      &        ' WARNING: ITERMDIR running option used with collinear/',&
      &        'parallel Oz starting'
-         WRITE (6,*)&
+         WRITE (1337,*)&
      &        '          system (KMROT = 0 ). Please check token',&
      &        ' RBASISANG in your input'
-         WRITE (6,*) ' Running option ITERMDIR will be ignored'
-         WRITE (6,*)
+         WRITE (1337,*) ' Running option ITERMDIR will be ignored'
+         WRITE (1337,*)
          DO I=1,32
             IF (OPTC(I)(1:8).EQ.'ITERMDIR') OPTC(I)='        '
          END DO
@@ -1879,24 +1879,24 @@
 
       MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NPOL.NE.0 ).AND.( NSPIN.GT.1 )
       IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
-         WRITE (6,*)
-         WRITE (6,*)&
+         WRITE (1337,*)
+         WRITE (1337,*)&
      &        ' WARNING: XCPL running option requires collinear ',&
      &        'magnetic systems, complex'
-         WRITE (6,*)&
+         WRITE (1337,*)&
      &        '          energy contour (NPOL<>0) in a NON/SCALAR',&
      &        ' relativistic mode (KREL=0)'
-         WRITE (6,*) ' Running option XCPL will be ignored'
-         WRITE (6,*)
+         WRITE (1337,*) ' Running option XCPL will be ignored'
+         WRITE (1337,*)
          DO I=1,32
             IF (OPTC(I)(1:8).EQ.'XCPL    ') OPTC(I)='        '
          END DO
       END IF
 
 
-      WRITE(6,62) (OPTC(I),I=1,8)                                              
+      WRITE(1337,62) (OPTC(I),I=1,8)                                              
  62   FORMAT(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
-      WRITE(6,52) (TESTC(I),I=1,16)                                    
+      WRITE(1337,52) (TESTC(I),I=1,16)                                    
  52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
  980  FORMAT(8A8)
 
@@ -1939,15 +1939,15 @@
                      DO I=1,NATYP
                         SOCSCL(1:LMAXD+1,I) = SOSCALE
                      END DO
-                     WRITE(6,99010) SOCII(NINT(SOSCALE))
+                     WRITE(1337,99010) SOCII(NINT(SOSCALE))
                   END IF
                ELSE
-                  WRITE(6,99001) '< SOC >'
-                  WRITE(6,99003)
+                  WRITE(1337,99001) '< SOC >'
+                  WRITE(1337,99003)
                END IF
             ELSE
-               WRITE(6,99002) '< SOC >'
-               WRITE(6,99003)
+               WRITE(1337,99002) '< SOC >'
+               WRITE(1337,99003)
             END IF
 
             IF ( MANSOC .AND. (SOSCALE.GE.0D0) ) THEN
@@ -1976,31 +1976,31 @@
                   END IF
                END IF
      
-               WRITE(6,2100)
+               WRITE(1337,2100)
                DO I=1,NATYP
                   IF (IMANSOC(I).EQ.1) THEN
                      SOCSCL(1:LMAXD+1,I)=SOSCALE
                   END IF
                END DO
-               WRITE(6,99004)
-               IF (NASOC.EQ.0) WRITE(6,99005)
+               WRITE(1337,99004)
+               IF (NASOC.EQ.0) WRITE(1337,99005)
                IF (NASOC.GT.0) THEN
-                  WRITE(6,99006)
-                  WRITE(6,99008) (ISP(I),I=1,NASOC)
+                  WRITE(1337,99006)
+                  WRITE(1337,99008) (ISP(I),I=1,NASOC)
                END IF
                IF (NASOC.LT.0) THEN
-                  WRITE(6,99007)
-                  WRITE(6,99008) (ISP(I),I=1,ABS(NASOC))
+                  WRITE(1337,99007)
+                  WRITE(1337,99008) (ISP(I),I=1,ABS(NASOC))
                END IF
-               WRITE(6,99009) SOSCALE
-               WRITE(6,2100)
+               WRITE(1337,99009) SOSCALE
+               WRITE(1337,2100)
             END IF
          END IF
 
 ! ============================================================= SOC-MAN
 
-         WRITE(6,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
-         WRITE(6,2100)
+         WRITE(1337,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
+         WRITE(1337,2100)
 
 ! ============================================================= CTL-MAN
 
@@ -2011,21 +2011,21 @@
                IF (CTLSCALE.GE.1D-12) THEN 
                   MANCTL=.TRUE.
                ELSE
-                  WRITE(6,99001) '< CSCALE >'
-                  WRITE(6,99011)
+                  WRITE(1337,99001) '< CSCALE >'
+                  WRITE(1337,99011)
                END IF
             ELSE
-               WRITE(6,99002) '< CSCALE >'
-               WRITE(6,99011)
+               WRITE(1337,99002) '< CSCALE >'
+               WRITE(1337,99011)
             END IF
 
             IF (MANCTL) THEN
                CSCL(1:LMAXD+1,1:NATYP) = CSCL(1:LMAXD+1,1:NATYP)/DSQRT(CTLSCALE)
-               WRITE(6,99012)
-               WRITE(6,99005)
-               WRITE(6,99009) 1.D0/DSQRT(CTLSCALE)
+               WRITE(1337,99012)
+               WRITE(1337,99005)
+               WRITE(1337,99009) 1.D0/DSQRT(CTLSCALE)
             END IF
-            WRITE(6,2100)
+            WRITE(1337,2100)
          END IF
 
 ! ============================================================= CTL-MAN
@@ -2034,10 +2034,10 @@
 
 
 
-      WRITE(6,2100) 
-      WRITE(6,2040) KMROT
-      WRITE(6,2110)
-      WRITE(6,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
+      WRITE(1337,2100) 
+      WRITE(1337,2040) KMROT
+      WRITE(1337,2110)
+      WRITE(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
 
 
       CLOSE(111) ! Close file inputcard_generated.txt

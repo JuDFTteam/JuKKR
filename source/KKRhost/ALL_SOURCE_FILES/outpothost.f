@@ -55,7 +55,7 @@ C     .. 1     2     3     4    5     6     7     8     9     0
      &     'Cf ','Es ','Fm ','Md ','No ','Lr ','Rf','Db ','Sg ','Bh ',
      &     'Hs ','Mt ','Uun','Uuu','Uub','NoE'/
 C     ..
-      WRITE (6,'(5X,A,A,/)') '< OUTPOTHOST > : ',
+      WRITE (1337,'(5X,A,A,/)') '< OUTPOTHOST > : ',
      &                     'creating decimate.pot file - host potential'
       OPEN (37,FILE='decimate.pot',STATUS='unknown')
       WRITE (37,FMT=*) 'Host structure and potential for decimation'

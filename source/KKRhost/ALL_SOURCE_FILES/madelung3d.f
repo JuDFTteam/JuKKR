@@ -45,11 +45,11 @@ C ......................................................................
       NCLEBD = LMXSPD*LMPOTD
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(18X,A)') 
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,'(18X,A)') 
      &                  'MADELUNG3D: setting bulk Madelung coefficients'
-      WRITE (6,'(79(1H=))')
-      WRITE (6,*)
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C ======================================================================

@@ -147,7 +147,7 @@ C     B(i) = SUM(j) GQ(j) * n(j,i)  with integer coefficients n(j,i)
 C
 C==========================================================================
       DO IS = 1,NSYM
-          IF ( IPRINT.GT.2 ) WRITE (*,99004) IS
+          IF ( IPRINT.GT.2 ) WRITE (1337,99004) IS
 C     
           DO I = 1,3
               CALL DGEMV('N',3,3,1D0,U(1,1,IS),3,GQ(1,I),1,
@@ -160,11 +160,11 @@ C
 C     
               DO J = 1,3
                   IF ( ABS(NINT(CF(J))-CF(J)).GT.1D-8 ) 
-     &                 WRITE (*,99006) I,J,CF(J)
+     &                 WRITE (1337,99006) I,J,CF(J)
                   NBGP(J,I,IS) = NINT(CF(J))
               END DO
-              IF ( IPRINT.GT.2 ) WRITE (*,99005) I,(BGP(J,I),J=1,3),BV
-     &             ,CF,(NBGP(J,I,IS),J=1,3)
+              IF ( IPRINT.GT.2 ) WRITE (1337,99005) I,
+     &            (BGP(J,I),J=1,3), BV, CF, (NBGP(J,I,IS),J=1,3)
 C     
           END DO
 C     

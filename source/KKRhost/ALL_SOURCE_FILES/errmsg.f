@@ -37,9 +37,9 @@
       ipos(nline)=l 
                                                                         
       nunit=1 
-      if (nunit.eq.1) write(*,*) 
+      if (nunit.eq.1) write(1337,*) 
       do iline=1,nline 
-         write(*,300)c(iisev),messg(ipos(iline-1)+1:ipos(iline)-1) 
+         write(1337,300)c(iisev),messg(ipos(iline-1)+1:ipos(iline)-1) 
       enddo 
                                                                         
       if (iabs(isev).ge.3) stop

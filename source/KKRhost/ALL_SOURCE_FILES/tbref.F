@@ -107,7 +107,7 @@ C     ..
 C
 C ======================================================================
 #ifdef CPP_MPI
-        write(*,*) myrank, 'start tbref e-loop'
+        write(1337,*) myrank, 'start tbref e-loop'
 !        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !        ie_end = t_mpi_c_grid%ntot2
        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
@@ -120,7 +120,7 @@ C ======================================================================
       DO IE = 1,IELAST
          ie_num = ie
 #endif
-         WRITE(*,FMT='(A23,I5,2F14.8)') 
+         WRITE(1337,FMT='(A23,I5,2F14.8)') 
      &                         'TBREF: GREF for energy:',IE,EZ(IE)
 C
 CMPI      IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
@@ -131,10 +131,11 @@ C
      &                    TREFLL(1,1,I1),DTREFLL(1,1,I1),                   ! LLY Lloyd
      &                    ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)    ! LLY Lloyd
 
-            IF (TEST('flow    ')) WRITE (6,FMT=*) 'tll(ref),  i1 = ',I1
+            IF (TEST('flow    ')) WRITE (1337,FMT=*) 
+     &                           'tll(ref),  i1 = ',I1
          END DO
 C
-         IF (TEST('flow    ')) WRITE (6,FMT=*) 't-mat(Ref) o.k.', IE
+         IF (TEST('flow    ')) WRITE (1337,FMT=*) 't-mat(Ref) o.k.', IE
 C ----------------------------------------------------------------------
          DO ICLS = 1,NCLS
             I1 = 1
@@ -145,7 +146,7 @@ C ----------------------------------------------------------------------
             END DO
 C     
             IF (IC.EQ.0) STOP 'Error in CLS(*) array in tbref'
-            IF (TEST('flow    ')) WRITE (6,FMT=*) 'CLUSTER ',ICLS,
+            IF (TEST('flow    ')) WRITE (1337,FMT=*) 'CLUSTER ',ICLS,
      +           ' at ATOM ',IC
 C     
             CALL GLL13(ERYD,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
@@ -182,7 +183,8 @@ C ----------------------------------------------------------------------
             end if                                         ! LLY Lloyd
          END IF ! LLY.NE.0                                 ! LLY Lloyd
 C
-         IF (TEST('flow    ')) WRITE (6,FMT=*) 'G(n,lm,n,lm) (Ref) o.k.'
+         IF (TEST('flow    ')) WRITE (1337,FMT=*) 
+     &                               'G(n,lm,n,lm) (Ref) o.k.'
 
       END DO
 C ======================================================================

@@ -66,7 +66,7 @@ c
           npt = npt - 1
 c          write(6,*) 'LINES :',npt
           if (NPT.GE.NLINIO) 
-     &             WRITE(6,*)'Not all lines are read in from inputcard'
+     &         WRITE(1337,*)'Not all lines are read in from inputcard'
 
 c 2 lines below where changed
 c       ILEN = VERIFY(CHARKEY,ABC)
@@ -76,9 +76,9 @@ c for linux
 c for linux
 c        write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
           IF(ILEN.LT.1) THEN 
-             write(6,*) 'Input ERROR!' 
-             write(6,*) 'Cannot evaluate : ',CHARKEY
-             write(6,*) 'IoInput is returning no value! '
+             write(1337,*) 'Input ERROR!' 
+             write(1337,*) 'Cannot evaluate : ',CHARKEY
+             write(1337,*) 'IoInput is returning no value! '
              RETURN              
           END IF
 c
@@ -106,8 +106,8 @@ c                    write(6,*) IPOS,ILEN
                    if (ipos-4.gt.0) then    ! Changed on 28.01.2000
                    ATEST= STRING(I+ILINE)(IPOS-4:IPOS-3)
                    IF (ATEST.NE.' ') THEN
-                   write(6,*) 'Possible ERROR !!!'
-                   write(6,*) 'Parameter ',CHARKEY, 
+                   write(1337,*) 'Possible ERROR !!!'
+                   write(1337,*) 'Parameter ',CHARKEY, 
      &                        ' maybe read in incorrectrly'
                    END IF
                    end if
@@ -115,7 +115,7 @@ c                   write(6,*) CHARKEY,CHAR ! test
                   close(ifile)
                   return 
                   else
-                  write(6,*) 'IoInput : No more lines in file '  
+                  write(1337,*) 'IoInput : No more lines in file '  
                   end if
                end if
             end if

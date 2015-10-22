@@ -148,13 +148,13 @@ C
       RMSAVQ = SQRT(RMSAVQ/NATOM)
       RMSAVM = SQRT(RMSAVM/NATOM)
 
-      WRITE(6,'(79(1H-),/)')
+      WRITE(1337,'(79(1H-),/)')
       IF (NSPIN.EQ.2) THEN
         WRITE (IPF,FMT=9040) ITC,RMSAVQ,RMSAVM
       ELSE
         WRITE (IPF,FMT=9050) ITC,RMSAVQ
       END IF
-      WRITE(6,'(79(1H-))')
+      WRITE(1337,'(79(1H-))')
 
  9000 FORMAT (5x,' rms-error for atom',i3,1x,':','v+ + v- = ',1p,d11.4,
      +       2x,',',2x,'v+ - v- = ',1p,d11.4)

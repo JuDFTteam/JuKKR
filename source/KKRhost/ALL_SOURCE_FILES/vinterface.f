@@ -68,15 +68,15 @@ C     ..
 C     .. External Functions/Subroutines
       EXTERNAL OPT,TEST
 C     ..
-      IF(TEST('flow    ')) WRITE (6,*) '>>>>>> Vinterface'
+      IF(TEST('flow    ')) WRITE (1337,*) '>>>>>> Vinterface'
 C
       LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD
 C
       OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
      +     FORM='unformatted')
 C
-      WRITE(6,FMT=99001)
-      WRITE(6,FMT=99002)
+      WRITE(1337,FMT=99001)
+      WRITE(1337,FMT=99002)
 C
       PI = 4.D0*ATAN(1.D0)
       FPI = 4.D0*PI
@@ -233,7 +233,7 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
          END IF                 ! (OPT(DECIMATE)
 C ######################################################################
 C
-         WRITE (6,FMT=99003) IT1,(CATOM(IT1)-ZAT(IT1)),
+         WRITE (1337,FMT=99003) IT1,(CATOM(IT1)-ZAT(IT1)),
      &                       (AC(1)/SQRT(4.D0*PI)),
      &                       (AC(3)/SQRT(4.D0*PI))
 C ++++++++++++++++++++++++++++++++++++++++++ loop over spins of atom IT1
@@ -273,8 +273,8 @@ C ----------------------------------------------------------------------
 C **********************************************************************
 C
       CLOSE (69)
-      WRITE(6,'(15X,45(1H-),/)')
-      WRITE(6,'(79(1H=))')
+      WRITE(1337,'(15X,45(1H-),/)')
+      WRITE(1337,'(79(1H=))')
       IF ( ICC.EQ.0 .and. OPT('KKRFLEX ')==.false.) RETURN
 C
 C ######################################################################
@@ -282,23 +282,23 @@ C
 C Now Prepare output for Impurity calculation
 C
       OPEN (91,FILE='intercell_ref',STATUS='unknown',FORM='formatted')
-      WRITE(6,*) 
-      WRITE(6,*) '                     ',
+      WRITE(1337,*) 
+      WRITE(1337,*) '                     ',
      &     'Writing intercell potential for impurity'
-      WRITE(6,'(/,20X,55(1H-))')
-      WRITE(6,99004) HOSTIMP(0),LMPOT
-      WRITE(6,'(20X,55(1H-),/,35X,"  i host lm  Vint")') 
+      WRITE(1337,'(/,20X,55(1H-))')
+      WRITE(1337,99004) HOSTIMP(0),LMPOT
+      WRITE(1337,'(20X,55(1H-),/,35X,"  i host lm  Vint")') 
       DO I=1,HOSTIMP(0)
-         WRITE(6,*)
+         WRITE(1337,*)
          LM = 1
-         WRITE(6,'(35X,I4,I4,I3,1X,F10.6)') I, HOSTIMP(I),
+         WRITE(1337,'(35X,I4,I4,I3,1X,F10.6)') I, HOSTIMP(I),
      &        LM,VINTERS(LM,HOSTIMP(I))
          DO LM=2,9
-            WRITE (6,'(43X,I3,1X,F10.6)') LM,VINTERS(LM,HOSTIMP(I))
+            WRITE (1337,'(43X,I3,1X,F10.6)') LM,VINTERS(LM,HOSTIMP(I))
          END DO
-         WRITE(6,'(20X,55(1H-))')
+         WRITE(1337,'(20X,55(1H-))')
       END DO
-      WRITE(6,'(79(1H=),/)')
+      WRITE(1337,'(79(1H=),/)')
       
       WRITE(91,99005) HOSTIMP(0),LMPOT 
       DO I=1,HOSTIMP(0)

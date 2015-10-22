@@ -19,7 +19,7 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC MAX
 C     ..
-      write(6,*) 'potcut: potential equal 2*Z/R between MT ',
+      write(1337,*) 'potcut: potential equal 2*Z/R between MT ',
      +           'and outer sphere'
       DO IR = IMT1 + 1,IRC1
          VM2Z(IR) = 2.0D0*Z1/R(IR)

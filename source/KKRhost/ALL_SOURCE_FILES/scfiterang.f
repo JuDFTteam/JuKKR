@@ -48,7 +48,7 @@ C
 C      ITERMDIR I/O
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
-      WRITE (6,FMT=99002)
+      WRITE (1337,FMT=99002)
 C
       IF ( ITRSCF.EQ.0 ) THEN
 C
@@ -151,7 +151,7 @@ C
                C = (QMGAMTAB(IQ,3)+QMGAMTAB(IQ,1)-2.D0*A)*0.5D0
                QMGAM(IQ) = A + B*DBLE(IXTR) + C*DBLE(IXTR)**2
 C
-               IF ( IPRINT.GT.0 ) WRITE (*,99001) IQ,IXTR,LASTERR,
+               IF ( IPRINT.GT.0 ) WRITE (1337,99001) IQ,IXTR,LASTERR,
      &              ('PHI',I,QMPHITAB(IQ,I),I=1,3),'PHIMIX',QMPHIMIX,
      &              'PHIXTR',PHIXTR,'PHINEW',QMPHI(IQ),
      &              ('TET',I,QMTETTAB(IQ,I),I=1,3),'TETMIX',QMTETMIX,
@@ -171,7 +171,7 @@ C
             IPREV = 2
          END IF
 C
-         WRITE (6,99004)
+         WRITE (1337,99004)
 C
          ERRAVANG = 0D0
          DO IQ = 1,NQ
@@ -180,7 +180,7 @@ C
             DELTET = ABS(QMTET(IQ)-QMTETTAB(IQ,IPREV))
             ERRAVANG = MAX(ERRAVANG,DELPHI,DELTET)
 C
-            WRITE (6,99005) IQ,QMPHITAB(IQ,IPREV),QMTETTAB(IQ,IPREV),
+            WRITE (1337,99005) IQ,QMPHITAB(IQ,IPREV),QMTETTAB(IQ,IPREV),
      &                      QMPHI(IQ),QMTET(IQ),DELPHI,DELTET
 C
 C --> update the rotation matrices DROTQ for the new angles
@@ -190,8 +190,8 @@ C
 C
          END DO
 C
-         WRITE (6,FMT=99003) ITRSCF,ERRAVANG
-         WRITE (6,'(I5,4F10.3,'' #  ANGLES'',/,79(1H+),/)') ITRSCF,
+         WRITE (1337,FMT=99003) ITRSCF,ERRAVANG
+         WRITE (1337,'(I5,4F10.3,'' #  ANGLES'',/,79(1H+),/)') ITRSCF,
      &          (QMPHI(IQ),QMTET(IQ),IQ=1,MIN(2,NQ))
 C
          LASTERR = ERRAVANG

@@ -72,8 +72,8 @@ C     .. External Functions ..
       EXTERNAL OPT
 C     
 C ======================================================================
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(15X,A,/,79(1H=),/)')
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,'(15X,A,/,79(1H=),/)')
      &               'DECIOPT: reading left/right host decimation files'
       IL = 1
       IERROR = 0

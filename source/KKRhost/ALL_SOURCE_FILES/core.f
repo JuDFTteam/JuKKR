@@ -228,11 +228,11 @@ C
             FERRO = .TRUE.
          ELSE
             FERRO = .FALSE.
-            IF ( IPRINT.GE.1 ) WRITE (6,99001)
+            IF ( IPRINT.GE.1 ) WRITE (1337,99001)
          END IF
 C
          IF ( ITXRAY.EQ.0 .AND. IPRINT.GT.0 ) 
-     &        WRITE (6,99002) ITPRT,Z(IT)
+     &        WRITE (1337,99002) ITPRT,Z(IT)
 C
 C
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -357,7 +357,7 @@ C                                      --------------------
                         GOTO 65
                      END IF
                   END DO
-                  WRITE (6,99004) ITPRT,NQN,L,EC
+                  WRITE (1337,99004) ITPRT,NQN,L,EC
 C
  65               CONTINUE
                   CALL COREDIR(IT,CTL(IT,ILC),EC,L,MJ,'OUT',VV,BB,RC,
@@ -371,8 +371,8 @@ C
                   END DO
 C
 C
-                  IF ( IPRINT.GE.2 ) WRITE (6,99016) ITPRT,NQN,L,KAP(S),
-     &                 (2*MUEM05+1),IC,ISH,0,EC,NMATCH,RC(NMATCH),NZERO,
+                  IF ( IPRINT.GE.2 ) WRITE (1337,99016) ITPRT,NQN,L,
+     &         KAP(S),(2*MUEM05+1),IC,ISH,0,EC,NMATCH,RC(NMATCH),NZERO,
      &                 RC(NZERO),NODE,(GC(S,S,NMATCH)/GC(S,S,NMATCH-1))
 C
                   IF ( NODE.NE.(NQN-L-1) ) THEN
@@ -472,7 +472,7 @@ C                         ----------------------------------
                         IF ( GC(S,S,N)*GC(S,S,N-1).LT.0.0 )
      &                       NODE = NODE + 1
                      END DO
-                     IF ( IPRINT.GE.2 ) WRITE (6,99016) ITPRT,NQN,L,
+                     IF ( IPRINT.GE.2 ) WRITE (1337,99016) ITPRT,NQN,L,
      &                    KAP(S),(2*MUEM05+1),IC,ISH,ITER,EC,NMATCH,
      &                    RC(NMATCH),NZERO,RC(NZERO),NODE,
      &                    (GC(S,S,NMATCH)/GC(S,S,NMATCH-1))
@@ -499,7 +499,7 @@ C
      &                       = VAR(IV)
      &                         *(1.0D0+DSIGN(DVSTEP*TOLVAR,DV(IV)))
                      ELSE IF ( FERRO ) THEN
-                        WRITE (6,99011) ' VAR(',IV,
+                        WRITE (1337,99011) ' VAR(',IV,
      &                                  ') = 0 for (T,N,L,K,M;S,NSOL) ',
      &                                  ITPRT,NQN,L,KAP(S),(2*MUEM05+1),
      &                                  '/2  ',S,NSOL,'  --- suppress B'
@@ -562,7 +562,7 @@ C
                   END DO
 C
                   IF ( VAR(1).GT.0.0D0 ) THEN
-                     IF ( IPRINT.GE.1 ) WRITE (6,*)
+                     IF ( IPRINT.GE.1 ) WRITE (1337,*)
      &                     ' warning from <CORE> E=',VAR(1),IT,NQN,L
                      VAR(1) = -0.2D0
                   END IF
@@ -580,8 +580,8 @@ C
 C
                   EC = VAR(1)
 C
-                  IF ( IPRINT.GE.2 ) WRITE (6,99005) LOOP,SCALE,VAR(1),
-     &                 (VAR(IV),IV=1,4),(DV(IV),IV=1,4),(ERR(IE),IE=1,4)
+                  IF ( IPRINT.GE.2 ) WRITE (1337,99005) LOOP,SCALE,
+     &        VAR(1),(VAR(IV),IV=1,4),(DV(IV),IV=1,4),(ERR(IE),IE=1,4)
 C
 C----------------------------------  check relative change in parameters
 C ----------------------- parameters 3 and 4 = 0 for paramagnetic case !
@@ -591,7 +591,7 @@ C ----------------------- parameters 3 and 4 = 0 for paramagnetic case !
 C           IF( ABS(VAR(IV)) .EQ. 0.0D0 ) THEN
                         IF ( (ABS(VAR(IV))+ABS(VAR(IV))).LT.1.0D-30 )
      &                       THEN
-                           IF ( FERRO ) WRITE (6,'(A,I3,A)') ' VAR ',IV,
+                           IF ( FERRO ) WRITE (1337,'(A,I3,A)') ' VAR ',IV,
      &                          ' = 0 ??????!!!!!'
                         ELSE IF ( ABS(DV(IV)/VAR(IV)).GT.TOLVAR ) THEN
                            GOTO 70
@@ -602,7 +602,7 @@ C           IF( ABS(VAR(IV)) .EQ. 0.0D0 ) THEN
                         ITXRAY = -1
                         RETURN
                      END IF
-                     WRITE (6,99006) ITERMAX,(VAR(IV),IV=1,4),
+                     WRITE (1337,99006) ITERMAX,(VAR(IV),IV=1,4),
      &                               (DV(IV),IV=1,4),(ERR(IE),IE=1,4)
                   END IF
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
@@ -856,16 +856,16 @@ C---------------------------------------------------- l-shell UNCOMPLETE
                   IF ( ISH.GE.NSH ) THEN
 C----------------------------------------------------- l-shell completed
                      IF ( ITXRAY.EQ.0 .AND. IPRINT.GT.0 ) THEN
-                        WRITE (6,99012) ITPRT,NQN,TXTL(L),
+                        WRITE (1337,99012) ITPRT,NQN,TXTL(L),
      &                                  TXTK(IABS(KAP(S))),(2*MUEM05+1),
      &                                  KAP(S),ITER,EC,BSOL*.001D0,
      &                                  BSH*.001D0
                         IF ( ISMQHFI.EQ.1 ) THEN
                            DO K = 1,NMEMAX
-                              WRITE (6,99013) TXTB(K),SPLIT(K)*.001D0,
-     &                               SPLIT1(K)*.001D0
+                              WRITE (1337,99013) TXTB(K),SPLIT(K)*.001D0
+     &                               ,SPLIT1(K)*.001D0
                            END DO
-                           WRITE (6,99014) 'total error in %',
+                           WRITE (1337,99014) 'total error in %',
      &                            100.0D0*(1.0D0-SPLIT(4)/SPLIT(5))
                         END IF
                      END IF
@@ -899,33 +899,33 @@ C                              ----------------------------
                         END DO
 C
                         IF ( FERRO .AND. (IFLAG.EQ.1) ) THEN
-                           WRITE (6,99007)
+                           WRITE (1337,99007)
                            SCALEB = .TRUE.
                            IF ( LOOP.EQ.1 ) THEN
                               LOOP = 2
-                              WRITE (6,99008) ITPRT
+                              WRITE (1337,99008) ITPRT
                               GOTO 50
                            END IF
                         END IF
 C
                      END IF
                   ELSE IF ( ITXRAY.EQ.0 .AND. IPRINT.GT.0 ) THEN
-                     WRITE (6,99012) ITPRT,NQN,TXTL(L),
+                     WRITE (1337,99012) ITPRT,NQN,TXTL(L),
      &                               TXTK(IABS(KAP(S))),
      &                               (2*MUEM05+1),KAP(S),ITER,EC,
      &                               BSOL*.001D0
                      IF ( ISMQHFI.EQ.1 ) THEN
                         DO K = 1,NMEMAX
-                           WRITE (6,99013) TXTB(K),SPLIT(K)*.001D0
+                           WRITE (1337,99013) TXTB(K),SPLIT(K)*.001D0
                         END DO
-                        WRITE (6,99014) 'total error in %',
+                        WRITE (1337,99014) 'total error in %',
      &                                  100.0D0*(1.0D0-SPLIT(4)/SPLIT(5)
      &                                  )
                      END IF
                   END IF
 C-----------------------------------------------------------------------
 C
-                  IF ( IPRINT.GE.1 ) WRITE (6,99015)
+                  IF ( IPRINT.GE.1 ) WRITE (1337,99015)
      &                 ((BHF(I,J)*.001D0,I=1,NSOL),J=1,NSOL)
 C
 C
@@ -969,7 +969,7 @@ C
      &                     NMATCH))/NORM
                      ECC = ECC + DEC
                      IF ( ABS(DEC/ECC).GT.TOLVAR ) GOTO 72
-                     WRITE (6,'(7X,''CHECK-E:'',10X,F12.5,/)') ECC
+                     WRITE (1337,'(7X,''CHECK-E:'',10X,F12.5,/)') ECC
                   END IF
 C
 C
@@ -1021,15 +1021,16 @@ C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C
 C
-         IF ( ITXRAY.EQ.0 .AND. IPRINT.GT.0 ) WRITE (6,99009) BCOR(IT)
-     &        *.001D0,BCORS(IT)*.001D0
+         IF ( ITXRAY.EQ.0 .AND. IPRINT.GT.0 ) WRITE (1337,99009) 
+     &        BCOR(IT)*.001D0,BCORS(IT)*.001D0
          IF ( ISMQHFI.EQ.1 ) THEN
             DO N = 1,NMEMAX
-               WRITE (6,99010) SPLIT2(N,IT)*.001D0,SPLIT3(N,IT)*.001D0
+               WRITE (1337,99010) SPLIT2(N,IT)*.001D0,
+     &                            SPLIT3(N,IT)*.001D0
             END DO
-            WRITE (6,99014) 'total error',
+            WRITE (1337,99014) 'total error',
      &                      100.0D0*(1.0D0-SPLIT2(4,IT)/SPLIT2(5,IT))
-            WRITE (6,99014) 'total error',
+            WRITE (1337,99014) 'total error',
      &                      100.0D0*(1.0D0-SPLIT3(4,IT)/SPLIT3(5,IT))
          END IF
 C
@@ -1038,12 +1039,12 @@ C
                RINT(N) = RHOCHR(N,IT)*R2DRDI(N,IM)
             END DO
             CALL RINTSIMP(RINT,JTOP,AUX)
-            IF( IPRINT.GT. -2 ) WRITE (6,99017) 'charge',ITPRT,AUX
+            IF( IPRINT.GT. -2 ) WRITE (1337,99017) 'charge',ITPRT,AUX
             DO N = 1,JTOP
                RINT(N) = RHOSPN(N,IT)*R2DRDI(N,IM)
             END DO
             CALL RINTSIMP(RINT,JTOP,AUX)
-            IF( IPRINT.GT. -2 ) WRITE (6,99017) ' spin ',ITPRT,AUX
+            IF( IPRINT.GT. -2 ) WRITE (1337,99017) ' spin ',ITPRT,AUX
          END IF
 C
       END DO

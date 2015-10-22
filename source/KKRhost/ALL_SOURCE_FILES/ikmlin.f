@@ -50,6 +50,6 @@ C
       END DO
 C
       IF ( IPRINT.LT.2 ) RETURN
-      WRITE (6,FMT='('' INT='',I3,''  IKM=('',I3,'','',I3,'')'')')
+      WRITE (1337,FMT='('' INT='',I3,''  IKM=('',I3,'','',I3,'')'')')
      &       (I,IKM1LIN(I),IKM2LIN(I),I=1,LIN)
       END

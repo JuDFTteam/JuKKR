@@ -66,7 +66,7 @@ C     .. Data statements
 C     ..
 C ========================================================== IENERGY = 0
       IF ( IENERGY.LT.1 ) THEN
-         WRITE (6,'(5X,A,/,8X,65(1H-))')
+         WRITE (1337,'(5X,A,/,8X,65(1H-))')
      &           'Reading in host Delta_t matrices'
          VACFLAG(1) = .FALSE.
          VACFLAG(2) = .FALSE.
@@ -80,14 +80,14 @@ C :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
             END IF
             ILHOST = LNGSTRING(FILEHOST,40)
 C
-            WRITE (6,'(8X,A5," side host: ",$)') CHHOST(IHOST)
+            WRITE (1337,'(8X,A5," side host: ",$)') CHHOST(IHOST)
 C ----------------------------------------------------------------------
             IF ( FILEHOST(1:7).EQ.'vacuum' ) THEN
-               WRITE (6,'(A)') 'VACUUM will be used'
+               WRITE (1337,'(A)') 'VACUUM will be used'
                VACFLAG(IHOST) = .TRUE.
 C ----------------------------------------------------------------------
             ELSE
-               WRITE (6,'(A,/)') FILEHOST(1:ILHOST)
+               WRITE (1337,'(A,/)') FILEHOST(1:ILHOST)
                OPEN (36+IHOST,FILE=FILEHOST,STATUS='OLD',IOSTAT=IOS)
 C ......................................................................
                IF ( IOS.GT.0 ) THEN
@@ -119,25 +119,25 @@ C ......................................................................
                   STOP '       < DECIMAREAD > '
                END IF
 C ......................................................................
-               WRITE (6,99001) ALATL,NSPINL,NAEZL,LMMAXL,INSL,KRELL,
+               WRITE (1337,99001) ALATL,NSPINL,NAEZL,LMMAXL,INSL,KRELL,
      &                         KMROTL
 C
                READ (36+IHOST,99007) BANER1
                READ (36+IHOST,99003) BRAVAISL
-               WRITE (6,99002) BRAVAISL
+               WRITE (1337,99002) BRAVAISL
                READ (36+IHOST,99007) BANER1
                IH = LNGSTRING(BANER1,80)
-               WRITE (6,99008) BANER1(1:IH)
+               WRITE (1337,99008) BANER1(1:IH)
 C ......................................................................
                IF ( KREL.EQ.0 ) THEN
                   DO IH = 1,NAEZL
                      READ (36+IHOST,99003) (RBASISL(I,IH),I=1,3)
-                     WRITE (6,99003) (RBASISL(I,IH),I=1,3)
+                     WRITE (1337,99003) (RBASISL(I,IH),I=1,3)
                   END DO
                ELSE
                   DO IH = 1,NAEZL
                      READ (36+IHOST,99014) (RBASISL(I,IH),I=1,3),QMT,QMP
-                     WRITE (6,99004) (RBASISL(I,IH),I=1,3),QMT,QMP
+                     WRITE (1337,99004) (RBASISL(I,IH),I=1,3),QMT,QMP
                   END DO
                END IF
 C ......................................................................
@@ -158,11 +158,11 @@ C ......................................................................
                   STOP '       < DECIMAREAD > '
                END IF
 C ......................................................................
-               WRITE (6,99005) E2L,TEMPL
-               WRITE (6,99006) NPT1L,NPT2L,NPT3L,NPOLL
+               WRITE (1337,99005) E2L,TEMPL
+               WRITE (1337,99006) NPT1L,NPT2L,NPT3L,NPOLL
             END IF
 C ----------------------------------------------------------------------
-            WRITE (6,'(8X,65(1H-))')
+            WRITE (1337,'(8X,65(1H-))')
          END DO
 C :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
 C                            Headers read in
@@ -251,7 +251,7 @@ C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
       END IF                    ! ispin.ne.2 .or. .nspin.ne.1
 C ======================================================================
 C
-      IF ( IENERGY.EQ.IELAST ) WRITE (6,*)
+      IF ( IENERGY.EQ.IELAST ) WRITE (1337,*)
       RETURN
  300  CONTINUE
       STOP '        Error reading hostfile'

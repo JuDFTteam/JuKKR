@@ -73,13 +73,13 @@ C
       BANDESUM = 0.0D0
       ETOTLDAU = 0.0D0
 C
-      IF ( KPRE.EQ.1 ) WRITE (6,FMT=99001)
+      IF ( KPRE.EQ.1 ) WRITE (1337,FMT=99001)
 C
 C---> loop over host atoms
 C
       DO IATYP = 1,NATYP
 C
-         IF ( KPRE.EQ.1 ) WRITE (6,FMT=99002) IATYP
+         IF ( KPRE.EQ.1 ) WRITE (1337,FMT=99002) IATYP
 C
          EDC = 0.0D0
          ET = 0.0D0
@@ -94,11 +94,11 @@ C
             IPOT = (IATYP-1)*NSPIN + ISPIN
 C
             IF ( KPRE.EQ.1 ) THEN
-               WRITE (6,FMT=99003) TEXTS(IS)
-               WRITE (6,FMT=99004) (TEXTL(L),ESPC(L,IPOT),L=0,LCOREMAX(
-     &                             IATYP))
-               WRITE (6,FMT=99005) (TEXTL(L),ESPV(L,IPOT),L=0,LMAX)
-               WRITE (6,FMT=99006) TEXTNS,ESPV(LMAXD1,IPOT)
+               WRITE (1337,FMT=99003) TEXTS(IS)
+               WRITE (1337,FMT=99004) (TEXTL(L),ESPC(L,IPOT),L=0,
+     &                             LCOREMAX(IATYP))
+               WRITE (1337,FMT=99005) (TEXTL(L),ESPV(L,IPOT),L=0,LMAX)
+               WRITE (1337,FMT=99006) TEXTNS,ESPV(LMAXD1,IPOT)
             END IF
 C
             DO L = 0,LCOREMAX(IATYP)
@@ -118,7 +118,7 @@ C
          ET = ET + EU(IATYP)
          BANDET = BANDET + EU(IATYP)
          IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
-     &        WRITE(6,99019) EU(IATYP)
+     &        WRITE(1337,99019) EU(IATYP)
 C
 C --->  sum up Coulomb and Ex.-Corel. contribution
 C
@@ -128,15 +128,15 @@ C
          END DO
 C
          IF ( KPRE.EQ.1 ) THEN
-            WRITE (6,FMT=99007) ET
-            WRITE (6,FMT=99008) BANDET
-            WRITE (6,FMT=99009) (L,ECOU(L,IATYP),L=0,LPOT)
-            WRITE (6,FMT=99010)
-            WRITE (6,FMT=99018) ECOUS
-            WRITE (6,FMT=99011) (L,EXC(L,IATYP),L=0,LPOT)
-            WRITE (6,FMT=99010)
-            WRITE (6,FMT=99017) EXCS
-            WRITE (6,FMT=99015) EPOTIN(IATYP)
+            WRITE (1337,FMT=99007) ET
+            WRITE (1337,FMT=99008) BANDET
+            WRITE (1337,FMT=99009) (L,ECOU(L,IATYP),L=0,LPOT)
+            WRITE (1337,FMT=99010)
+            WRITE (1337,FMT=99018) ECOUS
+            WRITE (1337,FMT=99011) (L,EXC(L,IATYP),L=0,LPOT)
+            WRITE (1337,FMT=99010)
+            WRITE (1337,FMT=99017) EXCS
+            WRITE (1337,FMT=99015) EPOTIN(IATYP)
          END IF
 C
          IF ( .NOT.(TEST('NoMadel ')) ) THEN
@@ -149,8 +149,8 @@ C
 C
             IF ( KPRE.EQ.1 ) THEN
                IF ( IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
-     &              WRITE(6,99020) -EDCLDAU(IATYP)
-               WRITE (6,FMT=99016) EDC
+     &              WRITE(1337,99020) -EDCLDAU(IATYP)
+               WRITE (1337,FMT=99016) EDC
             END IF
 C
          END IF
@@ -158,8 +158,8 @@ C
          IF ( NATYP.GT.1 .OR. NSHELL(IATYP).GT.1 ) THEN
             WRITE (6,FMT=99012) IATYP,ET
             IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
-     &           WRITE(6,99021) EU(IATYP) - EDCLDAU(IATYP)
-            WRITE (6,FMT=99022)
+     &           WRITE(1337,99021) EU(IATYP) - EDCLDAU(IATYP)
+            WRITE (1337,FMT=99022)
          END IF
 C
          ETOT = ETOT + ET*DBLE(NSHELL(IATYP))*CONC(IATYP)
@@ -167,8 +167,9 @@ C
 C
       END DO                        ! IATYP = 1,NATYP
 C
-      WRITE (6,FMT=99013) BANDESUM
-      WRITE (6,FMT=99014) ETOT,ETOT/EFCTOR
+      WRITE (1337,FMT=99013) BANDESUM
+      WRITE (1337,FMT=99014) ETOT,ETOT/EFCTOR
+      WRITE (*,FMT=99014) ETOT,ETOT/EFCTOR
 C
 C
       RETURN

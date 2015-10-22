@@ -318,7 +318,7 @@ C        Read BZ path for qdos calculation:
       ALLOCATE(GFLLE(LMMAXD,LMMAXD,IELAST,NQDOS))
       ALLOCATE(DUM_GFLLE(LMMAXD,LMMAXD))
 
-      if(myrank==master) WRITE(*,*) 'atom',I1
+      if(myrank==master) WRITE(1337,*) 'atom',I1
 ! #ifdef CPP_MPI
 !       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !       ie_end = t_mpi_c_grid%ntot2
@@ -359,7 +359,7 @@ C        Read BZ path for qdos calculation:
          ie_num = ie
          ie_end = ielast
 #endif
-         WRITE(*,*) 'energy',IE,EZ(IE)
+         WRITE(1337,*) 'energy',IE,EZ(IE)
 CMPI     IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
 C
 !          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)

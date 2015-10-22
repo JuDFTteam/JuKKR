@@ -147,7 +147,7 @@ c check convergence
       DO 270 LM1=1,LMMAXD
       DO 270 LM2=1,LMMAXD
  270  ERR=MAX(ERR,ABS(PNS1(LM1,LM2,IRC1)))
-      WRITE(*,*) 'Born_Fred',I,ERR
+      WRITE(1337,*) 'Born_Fred',I,ERR
 c      IF(I.EQ.ICST.AND.ERR.GT.1D-3)WRITE(*,*)'NOT CONVERGENT',ERR
       DO 280 J = 1,NSRA
       DO 280 IR = IRMIN,IRC1
@@ -206,7 +206,7 @@ c check convergence
        DO 300 LM2=1,LMMAXD
        DO 300 LM1=1,LMMAXD
   300  ERR=MAX(ERR,ABS(PNS1(LM1,LM2,IRC1)))
-       WRITE(*,*) 'Born',I,ERR 
+       WRITE(1337,*) 'Born',I,ERR 
 c      IF(I.EQ.ICST.AND.ERR.GT.1D-3)WRITE(*,*)'NOT CONVERGENT',ERR
        DO 310 J = 1,NSRA
        DO 310 IR = IRMIN,IRC1

@@ -40,7 +40,7 @@ c
 
         IF (IATYP1.GE.IATYP) THEN
 
-          write(6,*) 'Symmetrize atom ',IATYP,' with ',IATYP1,'.'
+          write(1337,*) 'Symmetrize atom ',IATYP,' with ',IATYP1,'.'
           IF (KSHAPE.NE.0) THEN
             IRC  = IRCUT(IPAN(IATYP),IATYP)
             IRC1 = IRCUT(IPAN(IATYP1),IATYP1)

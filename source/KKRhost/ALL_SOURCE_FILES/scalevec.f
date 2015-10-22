@@ -21,11 +21,11 @@ C     .. Locals ..
       DOUBLE PRECISION RBASIS1(3,NAEZD+NEMBD),TEMP(3),TX,TY,TZ
       CHARACTER*256 UIO ! NCOLIO=256
 C
-      WRITE(6,'(79(1H=))')
-      WRITE (6,'(23X,A)') 'SCALEVEC: scale site coordinates'
-      WRITE (6,'(23X,A)') '          bring all to CARTESIAN system'
-      WRITE (6,'(79(1H=))')
-      WRITE (6,*)
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,'(23X,A)') 'SCALEVEC: scale site coordinates'
+      WRITE (1337,'(23X,A)') '          bring all to CARTESIAN system'
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,*)
 C
 C -->   normalization of basis vectors
 C       multiplication instead of division 04/2004
@@ -57,13 +57,14 @@ C
       END IF
 C
       IF ( ABASIS.NE.1D0 .OR. BBASIS.NE.1D0 .OR. CBASIS.NE.1D0 ) THEN
-         WRITE (6,'(5X,A,2(/,34X,F12.8,A))') 
+         WRITE (1337,'(5X,A,2(/,34X,F12.8,A))') 
      &        'Scaling site coordinates with:',
      &        ABASIS,'  x',BBASIS,'  y'
-         IF ( .NOT.LINTERFACE ) WRITE (6,'(34X,F12.8,A)') CBASIS,'  z'
-         WRITE (6,'(5X,44(1H-))')
+         IF ( .NOT.LINTERFACE ) WRITE (1337,'(34X,F12.8,A)') 
+     &                               CBASIS,'  z'
+         WRITE (1337,'(5X,44(1H-))')
       ELSE
-         WRITE (6,'(5X,A)') 
+         WRITE (1337,'(5X,A)') 
      &        'Site coordinates will not be scaled'
       END IF
 C
@@ -73,9 +74,9 @@ C      if lcartesian is true cartesian coordinates are used
 C      else the basis atoms are in units of the lattice vectors
 C
       IF ( LCARTESIAN ) THEN
-         WRITE (6,'(A)') ' CARTESIAN coordinates'
+         WRITE (1337,'(A)') ' CARTESIAN coordinates'
       ELSE
-         WRITE (6,'(A)') ' LATTICE VECTOR coordinates will be', 
+         WRITE (1337,'(A)') ' LATTICE VECTOR coordinates will be', 
      &                   ' changed to CARTESIAN coordinates'
       END IF
 C
@@ -85,11 +86,11 @@ C**********************************************************************
 C======================================================================
          IF ( .NOT.LCARTESIAN ) THEN
 C----------------------------------------------------------------------
-            WRITE (6,*)
-            WRITE(6,'(12X,49(1H-))') 
-            WRITE(6,'(13X,A)') 
+            WRITE (1337,*)
+            WRITE(1337,'(12X,49(1H-))') 
+            WRITE(1337,'(13X,A)') 
      &           'Input positions transformed to CARTESIAN system'
-            WRITE(6,'(12X,49(1H-),/,13X,A,/,12X,49(1H-))') 
+            WRITE(1337,'(12X,49(1H-),/,13X,A,/,12X,49(1H-))') 
      &           'IQ        x             y             z        IT'
             DO I = 1,NAEZ + NEMB
                DO J = 1,2
@@ -99,14 +100,14 @@ C----------------------------------------------------------------------
                RBASIS(3,I) = RBASIS1(3,I)
 C
                IF ( I.LE.NAEZ ) THEN
-                  WRITE (6,99005) I,(RBASIS(J,I),J=1,3),
+                  WRITE (1337,99005) I,(RBASIS(J,I),J=1,3),
      &                            (KAOEZ(J,I),J=1,NOQ(I))
                ELSE
-                  WRITE (6,99005) I,(RBASIS(J,I),J=1,3),KAOEZ(1,I)
+                  WRITE (1337,99005) I,(RBASIS(J,I),J=1,3),KAOEZ(1,I)
                END IF
-               IF ( I.EQ.NAEZ ) WRITE(6,'(12X,49(1H.))')
+               IF ( I.EQ.NAEZ ) WRITE(1337,'(12X,49(1H.))')
             END DO
-            WRITE(6,'(12X,49(1H-),/)')
+            WRITE(1337,'(12X,49(1H-),/)')
 C~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 C
 C -->  Do the same for the boundary vectors
@@ -153,7 +154,7 @@ C~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 C----------------------------------------------------------------------
          ELSE
 C----------------------------------------------------------------------
-            WRITE(6,'(42X,A)') 
+            WRITE(1337,'(42X,A)') 
      &           '---> No transformation required'
             DO I = 1,3
                DO J = 1,NAEZ + NEMB
@@ -164,42 +165,42 @@ C----------------------------------------------------------------------
          END IF                 ! IF (.NOT.LCARTESIAN)
 C======================================================================
 C
-         WRITE (6,99002)
+         WRITE (1337,99002)
          DO I = NLEFT,1, - 1
             DO I1 = NLBASIS,1, - 1
                TX = TLEFT(1,I1) + (I-1)*ZPERLEFT(1)
                TY = TLEFT(2,I1) + (I-1)*ZPERLEFT(2)
                TZ = TLEFT(3,I1) + (I-1)*ZPERLEFT(3)
-               WRITE (6,99001) (I-1)*NLBASIS + I1,TX,TY,TZ,
+               WRITE (1337,99001) (I-1)*NLBASIS + I1,TX,TY,TZ,
      &                         KAOEZ(1,NAEZ+I1)
             END DO
          END DO
 C
-         WRITE (6,99003)
+         WRITE (1337,99003)
          DO I = 1,NAEZ
-            WRITE (6,99001) I,(RBASIS(I1,I),I1=1,3),
+            WRITE (1337,99001) I,(RBASIS(I1,I),I1=1,3),
      &                      (KAOEZ(I1,I),I1=1,NOQ(I))
          END DO
 C
-         WRITE (6,99004)
+         WRITE (1337,99004)
          DO I = 1,NRIGHT
             DO I1 = 1,NRBASIS
                TX = TRIGHT(1,I1) + (I-1)*ZPERIGHT(1)
                TY = TRIGHT(2,I1) + (I-1)*ZPERIGHT(2)
                TZ = TRIGHT(3,I1) + (I-1)*ZPERIGHT(3)
-               WRITE (6,99001) (I-1)*NRBASIS + I1,TX,TY,TZ,
+               WRITE (1337,99001) (I-1)*NRBASIS + I1,TX,TY,TZ,
      &                         KAOEZ(1,NAEZ+NLBASIS+I1)
             END DO
          END DO
-         WRITE(6,'(14X,45(1H-),/)')
+         WRITE(1337,'(14X,45(1H-),/)')
 C======================================================================
       ELSE IF ( .NOT.LCARTESIAN ) THEN ! Rescale lattice
 C----------------------------------------------------------------------
-         WRITE (6,*)
-         WRITE(6,'(12X,49(1H-))') 
-         WRITE(6,'(13X,A)') 
+         WRITE (1337,*)
+         WRITE(1337,'(12X,49(1H-))') 
+         WRITE(1337,'(13X,A)') 
      &        'Input positions transformed to CARTESIAN system'
-         WRITE(6,'(12X,49(1H-),/,13X,A,/,12X,49(1H-))') 
+         WRITE(1337,'(12X,49(1H-),/,13X,A,/,12X,49(1H-))') 
      &        'IQ        x             y             z        IT'
          DO I = 1,NAEZ + NEMB
             DO J = 1,3
@@ -209,20 +210,20 @@ C----------------------------------------------------------------------
             END DO
 C
             IF ( I.LE.NAEZ ) THEN
-               WRITE (6,99005) I,(RBASIS(J,I),J=1,3),
+               WRITE (1337,99005) I,(RBASIS(J,I),J=1,3),
      &                         (KAOEZ(J,I),J=1,NOQ(I))
             ELSE
-               WRITE (6,99005) I,(RBASIS(J,I),J=1,3),KAOEZ(1,I)
+               WRITE (1337,99005) I,(RBASIS(J,I),J=1,3),KAOEZ(1,I)
             END IF
-            IF ( I.EQ.NAEZ .AND. NEMB.GT.0 ) WRITE(6,'(12X,49(1H.))')
+            IF ( I.EQ.NAEZ .AND. NEMB.GT.0 ) WRITE(1337,'(12X,49(1H.))')
          END DO
-         WRITE(6,'(12X,49(1H-),/)')
+         WRITE(1337,'(12X,49(1H-),/)')
 C----------------------------------------------------------------------
       ELSE
 C----------------------------------------------------------------------
-         WRITE(6,'(42X,A,/)') 
+         WRITE(1337,'(42X,A,/)') 
      &           '---> No transformation required'
-         WRITE(6,99006) 
+         WRITE(1337,99006) 
 C     changed by v.Bellini 21/10/99
          DO J = 1,NAEZ + NEMB
             DO I = 1,3
@@ -230,15 +231,15 @@ C     changed by v.Bellini 21/10/99
             END DO
 C
             IF ( J.LE.NAEZ ) THEN
-               WRITE (6,99001) J,(RBASIS(I,J),I=1,3),
+               WRITE (1337,99001) J,(RBASIS(I,J),I=1,3),
      &                         (KAOEZ(I,J),I=1,NOQ(J))
             ELSE
-               WRITE (6,99001) J,(RBASIS(I,J),I=1,3),KAOEZ(1,J)
+               WRITE (1337,99001) J,(RBASIS(I,J),I=1,3),KAOEZ(1,J)
             END IF
-            IF ( I.EQ.NAEZ .AND. NEMB.GT.0 ) WRITE(6,'(12X,51(1H.))')
+            IF ( I.EQ.NAEZ .AND. NEMB.GT.0 ) WRITE(1337,'(12X,51(1H.))')
          END DO
 C     end of the change
-         WRITE(6,'(12X,51(1H-),/)')
+         WRITE(1337,'(12X,51(1H-),/)')
 C----------------------------------------------------------------------
 C======================================================================
       END IF                    !  IF (.NOT.LINTERFACE )

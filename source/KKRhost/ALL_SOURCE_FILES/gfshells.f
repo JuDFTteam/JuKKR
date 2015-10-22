@@ -43,7 +43,7 @@ C     ..
 C     .. External subroutines
       EXTERNAL IMPCHECK,IMPCOEFS,SHELLGEN2K,OPT
 C
-      WRITE (6,99000)
+      WRITE (1337,99000)
       NSIZE = NATOMIMPD*LMMAXD
 C
 C **********************************************************************
@@ -94,7 +94,7 @@ C
        END DO
 C
        IF ( ICC.EQ.0 ) THEN
-          WRITE(6,99003) NSHELL(0)
+          WRITE(1337,99003) NSHELL(0)
           RETURN
        END IF
 C
@@ -115,7 +115,7 @@ C **********************************************************************
 C
 C --->  ICC.LT.1 all shells are (should be) prepared
 C
-          WRITE(6,99011) NATOMIMP
+          WRITE(1337,99011) NATOMIMP
        ELSE
 C
 C --> read-in the cluster coordinates from an external file
@@ -127,7 +127,7 @@ C
              WRITE(6,99001) 'NATOMIMPD',NATOMIMP
              STOP
           END IF
-          WRITE(6,99004) IFILIMP,NATOMIMP
+          WRITE(1337,99004) IFILIMP,NATOMIMP
 C
           DO I=1,NATOMIMP
              READ (25,FMT=*) (RCLSIMP(J,I),J=1,3),ATOMIMP(I)
@@ -140,7 +140,7 @@ C
 C
 C **********************************************************************
        IF ( ICC.GT.0 ) THEN
-          WRITE(6,99005) 
+          WRITE(1337,99005) 
 C
 C --> set up the number of all (I,J)-pairs to be looked for, 
 C     avoid considering again the diagonal elements
@@ -186,46 +186,46 @@ C
      &                    HOSTIMP,NATYPD,LMAXD,NSHELD,NSIZE)
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-       WRITE(6,99003) NSHELL(0)
-       WRITE(6,99006) 
+       WRITE(1337,99003) NSHELL(0)
+       WRITE(1337,99006) 
        NB = MAX(NATYP,NAEZ)
        DO NS = 1,NSHELL(0)
-          IF ( NS.EQ.NB+1 ) WRITE(6,99012) 
+          IF ( NS.EQ.NB+1 ) WRITE(1337,99012) 
           IF ( NS.LE.NB ) THEN
              CALL SETPAIRSTR(NSH1(NS),NSH2(NS),STR9)
-             WRITE(6,99007) 
+             WRITE(1337,99007) 
      +            NS,NSH1(NS),NSH2(NS),(RATOM(II,NS),II=1,3),
      +            SQRT(RATOM(1,NS)**2+RATOM(2,NS)**2+RATOM(3,NS)**2),
      +            STR9
           ELSE
-             WRITE(6,99008) 
+             WRITE(1337,99008) 
      +            NS,NSH1(NS),NSH2(NS),(RATOM(II,NS),II=1,3),
      +            SQRT(RATOM(1,NS)**2+RATOM(2,NS)**2+RATOM(3,NS)**2)
              IO = MIN(2,NSHELL(NS))
              DO I = 1,IO
                 CALL SETPAIRSTR(ISH(NS,I),JSH(NS,I),STR9)
-                WRITE(6,'(A9,$)') STR9
+                WRITE(1337,'(A9,$)') STR9
              END DO
-             WRITE(6,*)
+             WRITE(1337,*)
              POS = (NSHELL(NS)+1)/2
              DO I = 2,POS
                 IO = (I-1)*2
                 IN = MIN(2,NSHELL(NS)-IO)
-                WRITE(6,99009)
+                WRITE(1337,99009)
                 DO J = 1,IN
                    CALL SETPAIRSTR(ISH(NS,IO+J),JSH(NS,IO+J),STR9)
-                   WRITE(6,'(A9,$)') STR9
+                   WRITE(1337,'(A9,$)') STR9
                 END DO
-                WRITE(6,*)
+                WRITE(1337,*)
              END DO
           END IF
        END DO
-       WRITE(6,'(6X,72(1H-))') 
+       WRITE(1337,'(6X,72(1H-))') 
        NB = 0
        DO NS=1,NSHELL(0)
           NB = NB + NSHELL(NS)     
        END DO
-       WRITE(6,99010) NB
+       WRITE(1337,99010) NB
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C ----------------------------------------------------------------------

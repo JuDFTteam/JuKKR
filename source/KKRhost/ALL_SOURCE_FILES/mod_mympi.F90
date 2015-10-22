@@ -67,11 +67,11 @@ contains
     end if!irest>0
 
     if(myrank==master .and. output) then
-      write(*,*) '==== DISTRIBUTION OF POINTS ON TASKS: ===='
+      write(1337,*) '==== DISTRIBUTION OF POINTS ON TASKS: ===='
       do irank=0,nranks-1
-        write(*,'("Task ",I0," treats points ",I0," to ",I0,", #of points= ",I0)') irank, ioff_pT(irank)+1, ioff_pT(irank)+ntot_pT(irank), ntot_pT(irank)
+        write(1337,'("Task ",I0," treats points ",I0," to ",I0,", #of points= ",I0)') irank, ioff_pT(irank)+1, ioff_pT(irank)+ntot_pT(irank), ntot_pT(irank)
       end do!irank
-      write(*,*) '=========================================='
+      write(1337,*) '=========================================='
     end if!myrank==master
 
   end subroutine distribute_linear_on_tasks
@@ -121,7 +121,7 @@ contains
   integer, allocatable :: groups(:,:), mygroup(:)
   integer :: mympi_group_ie, mympi_group_world, myMPI_comm_grid
   
-  if(myrank==0) write(*,*) 'create_newcomms_group_ie input:',nranks,ne,nat
+  if(myrank==0) write(1337,*) 'create_newcomms_group_ie input:',nranks,ne,nat
   
   
 !   if(nranks>(t_inc%natyp*t_inc%ielast)) stop 'you can only use less or equal number of processors that energypoints*atoms'
@@ -129,7 +129,7 @@ contains
   if((ne*nat)<nranks .and. (ne>1 .and. nat>1)) then
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
-    if(myrank==0) write(*,*) 'rest:',rest
+    if(myrank==0) write(1337,*) 'rest:',rest
    
     !find fraction of k:l:m
     do ik=1,nkmesh-1
@@ -141,7 +141,7 @@ contains
     end do
     f(nkmesh-1) = real(k(nkmesh-1))/real(k(1))
     
-    if(myrank==0) write(*,*) 'set k,i:',k,'f',f
+    if(myrank==0) write(1337,*) 'set k,i:',k,'f',f
 
     !brute force look for optimal division of rest ranks after N_E*N_at are already
     !assigned to rectangular part of processor matrix:
@@ -200,7 +200,7 @@ contains
     ! special case when only one additional rank
     if(rest==1) ktake(1) = rest
 
-    if(myrank==0) write(*,*) 'found ktake',ktake,'with',qmin
+    if(myrank==0) write(1337,*) 'found ktake',ktake,'with',qmin
     end if
    
     !find processor groups according to non-uniform division
@@ -224,8 +224,8 @@ contains
      endif
     enddo
 
-    if(myrank==0) write(*,*) 'groups:',groups(1:ne,1)
-    if(myrank==0) write(*,*) 'groups:',groups(1:ne,2)
+    if(myrank==0) write(1337,*) 'groups:',groups(1:ne,1)
+    if(myrank==0) write(1337,*) 'groups:',groups(1:ne,2)
    
     !find my group
     myg = -1
@@ -236,7 +236,7 @@ contains
     end do
     
     if(myg==-1) then
-      write(*,*) 'no group found for rank', myrank
+      write(1337,*) 'no group found for rank', myrank
       stop
     end if
 
@@ -250,7 +250,7 @@ contains
       mygroup(ie) = iat
     end do
 
-    write(*,'(A,I3,A,I3,A,I3,A,100I3)') 'rank ',myrank ,' found group: ',myg,' of size',groups(myg,1),' with group members:',mygroup
+    write(1337,'(A,I3,A,I3,A,I3,A,100I3)') 'rank ',myrank ,' found group: ',myg,' of size',groups(myg,1),' with group members:',mygroup
  
     !create new communicator from group
     call MPI_COMM_GROUP(MPI_COMM_WORLD,mympi_group_world,ierr)
@@ -293,7 +293,7 @@ contains
     rest = 0
 
     mympi_comm_at = MPI_COMM_WORLD
-    write(*,*) 'comm_test',myMPI_comm_at==MPI_COMM_WORLD
+    write(1337,*) 'comm_test',myMPI_comm_at==MPI_COMM_WORLD
     myrank_at     = myrank
     nranks_at     = nranks
     mympi_comm_ie = MPI_COMM_SELF
@@ -305,30 +305,30 @@ contains
 
   end if
   
-      write(*,'(A,100I3)') 'my_newcomm_props:',myrank,nranks,nranks_ie,myrank_ie,myrank_at,nranks_at,nranks_atcomm,myrank_atcomm
+      write(1337,'(A,100I3)') 'my_newcomm_props:',myrank,nranks,nranks_ie,myrank_ie,myrank_at,nranks_at,nranks_atcomm,myrank_atcomm
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 !       write(*,*) 'newcomm_at:',myMPI_comm_at==MPI_COMM_WORLD,myMPI_comm_at==MPI_COMM_NULL,myMPI_comm_at==MPI_COMM_SELF
 !       write(*,*) 'newcomm_ie:',myMPI_comm_ie==MPI_COMM_WORLD,myMPI_comm_ie==MPI_COMM_NULL,myMPI_comm_ie==MPI_COMM_SELF
 !       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 
   if(myrank==0) then
-    write(*,'(A)') '=================================================='  
-    write(*,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
-    !write(*,'(AI3AI5A)') '    devide these onto Ne=',ne,' energy points and ',nat,' atoms'
-    write(*,'(A,I3,A,I4,A,I3)') '    create processor array of size',nat,' x',ne,' with rest',rest
-    write(*,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
-    write(*,'(A)') '                N_E'
-    write(*,'(A)') '         <--------------->'
-    write(*,'(A)') '       ^ ( | | | | | | | )'
-    write(*,'(A)') '       | ( | | | | | | | )'
-    write(*,'(A)') '  N_at | ( | | | | | | | )'
-    write(*,'(A)') '       | ( | | | | | | | )'
-    write(*,'(A)') '       v ( | | | | | | | )'
-    write(*,'(A)') '              ^    ( | | ) m  ^'
-    write(*,'(A)') '            l |      ( | )    |'
-    write(*,'(A)') '              v      ( | )    | k'
-    write(*,'(A)') '                       ( )    |'
-    write(*,'(A)') '                       ( )    v'
+    write(1337,'(A)') '=================================================='  
+    write(1337,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
+    !write(1337,'(AI3AI5A)') '    devide these onto Ne=',ne,' energy points and ',nat,' atoms'
+    write(1337,'(A,I3,A,I4,A,I3)') '    create processor array of size',nat,' x',ne,' with rest',rest
+    write(1337,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
+    write(1337,'(A)') '                N_E'
+    write(1337,'(A)') '         <--------------->'
+    write(1337,'(A)') '       ^ ( | | | | | | | )'
+    write(1337,'(A)') '       | ( | | | | | | | )'
+    write(1337,'(A)') '  N_at | ( | | | | | | | )'
+    write(1337,'(A)') '       | ( | | | | | | | )'
+    write(1337,'(A)') '       v ( | | | | | | | )'
+    write(1337,'(A)') '              ^    ( | | ) m  ^'
+    write(1337,'(A)') '            l |      ( | )    |'
+    write(1337,'(A)') '              v      ( | )    | k'
+    write(1337,'(A)') '                       ( )    |'
+    write(1337,'(A)') '                       ( )    v'
   end if
 
   end subroutine create_newcomms_group_ie

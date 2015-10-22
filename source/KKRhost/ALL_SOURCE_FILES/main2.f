@@ -56,7 +56,7 @@ C     .. Local Scalars ..
       INTEGER IELAST,ICC,INS,LMAX,NATYP,
      &        NPNT1,NPNT2,NPNT3,NPOL,NSPIN,NSRA,IE,ICONT
       INTEGER ITSCF,SCFSTEPS
-      INTEGER IPF,IMIX,ISHIFT,ITDBRY,KSHAPE  
+      INTEGER IPF,IPF2,IMIX,ISHIFT,ITDBRY,KSHAPE  
       INTEGER KPRE,KTE,KVMAD,KXC,KFORCE,LSMEAR
       INTEGER LPOT,LMPOT,NAEZ
       INTEGER I,J,IPOT,ISPIN,I1,IH,IRC1,IRMIN1,IT,IO,LM,IR
@@ -342,7 +342,7 @@ C
      &          IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
       IF (KREL.EQ.1) READ(67) RHOORB,ECOREREL,NKCORE,KAPCORE
       CLOSE (67)
-      write(*,*) 'test fivos scfsteps,qbound',scfsteps,qbound
+!       write(*,*) 'test fivos scfsteps,qbound',scfsteps,qbound
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -358,7 +358,8 @@ C
       LSMEAR=0
 C
       ICONT = 1
-      IPF = 6
+      IPF = 1337
+      IPF2 = 6
       NSPIN = 2*KREL + (1-KREL)*NSPIN
       IDOSEMICORE = 0
       IF ( OPT('SEMICORE') ) IDOSEMICORE = 1
@@ -373,7 +374,11 @@ C
       WRITE(6,'(/,79(1H*))')
       WRITE(6,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
      &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
-      WRITE(6,'(79(1H*),/)')
+      WRITE(6,'(79(1H*),/)')      
+      WRITE(1337,'(/,79(1H*))')
+      WRITE(1337,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
+     &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
+      WRITE(1337,'(79(1H*),/)')
 C
 !       STIME0 = DCLOCK()
       OPEN (IOBROY,FORM='unformatted',STATUS='unknown')
@@ -389,13 +394,13 @@ C ----------------------------------------------------------------------
 C
 C -->   determine total charge density expanded in spherical harmonics
 C
-      IF(TEST('flow    ')) write(6,*) '>>> RHOTOTB'
-      CALL RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,
+      IF(TEST('flow    ')) write(1337,*) '>>> RHOTOTB'
+      CALL RHOTOTB(IPF2,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,
      +             ZAT,DRDI,IRWS,IRCUT,
      +             LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,
      +             ITSCF,NSHELL,NOQ,CONC,KAOEZ,CHRGATOM)
 
-      IF(TEST('flow    ')) write(6,*) '<<< RHOTOTB'
+      IF(TEST('flow    ')) write(1337,*) '<<< RHOTOTB'
 
       IF ( TEST('RHOVALTW') ) THEN !Bauer
         DO I1 = 1,NATYP
@@ -425,12 +430,12 @@ C
       EFOLD = E2
       CHRGOLD = CHRGNT
       IF (TEST('no-neutr').OR.OPT('no-neutr')) THEN
-         WRITE(*,*) 
+         WRITE(1337,*) 
      &        'test-opt no-neutr: Setting FERMI level shift to zero'
          E2SHIFT = 0.d0
       ENDIF
       IF (TEST('slow-neu').OR.OPT('slow-neu')) THEN
-         WRITE(*,*) 
+         WRITE(1337,*) 
      &        'test-opt slow-neu: FERMI level shift * STRMIX'
          E2SHIFT = E2SHIFT * MIXING
       ENDIF
@@ -446,7 +451,7 @@ C
 C    -> number of semicore bands
          I1 = NINT(CHRGSEMICORE)
          FSEMICORE = DBLE(I1)/CHRGSEMICORE * FSOLD
-         WRITE(6,'(6X,"< SEMICORE > : ",/,
+         WRITE(1337,'(6X,"< SEMICORE > : ",/,
      &        21X,"charge found in semicore :",F10.6,/,
      &        21X,"new normalisation factor :",F20.16,/)')
      &        CHRGSEMICORE,FSEMICORE
@@ -454,12 +459,13 @@ C    -> number of semicore bands
 C ----------------------------------------------------------------------
 C
       WRITE (6,FMT=9020) EFOLD,E2SHIFT
+      WRITE (1337,FMT=9020) EFOLD,E2SHIFT
 C
 C --> divided by NAEZ because the weight of each atom has been already
 C     taken into account in 1c
 C
-      WRITE (6,FMT=9030) E2,DENEF/DBLE(NAEZ) 
-      WRITE(6,'(79(1H+),/)')
+      WRITE (1337,FMT=9030) E2,DENEF/DBLE(NAEZ) 
+      WRITE(1337,'(79(1H+),/)')
 C ----------------------------------------------------------------------
       DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIN)
 C ----------------------------------------------------------------------
@@ -576,7 +582,7 @@ C ---------------------------------------------------------------------
 C ---------------------------------------------------------------------
          ELSE
 C ---------------------------------------------------------------------
-            WRITE(*,*) 'CALL VMADELBLK'
+!             WRITE(*,*) 'CALL VMADELBLK'
             CALL VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,
      &                     NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
      &                     NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),
@@ -703,7 +709,7 @@ C =====================================================================
                EXCDIFF = EXCDIFF + EXC(LM,I1) - EXCNM(LM,I1)
             END DO
          END DO
-         WRITE(*,*) 'LAMBDA_XC=',LAMBDA_XC,'EXCDIF=',EXCDIFF
+         WRITE(1337,*) 'LAMBDA_XC=',LAMBDA_XC,'EXCDIF=',EXCDIFF
       ENDIF
 
       VONS(:,:,:) = VONS(:,:,:) + ! Add xc-potential with magn. part weighted by lambda_xc
@@ -787,7 +793,7 @@ C =====================================================================
       END IF                    ! fxf
 C =====================================================================
 C
-      WRITE(6,'(79(1H=),/)')
+      WRITE(1337,'(79(1H=),/)')
 C ---------------------------------------------------------------------
 C
 C -->   convolute potential with shape function for next iteration
@@ -848,8 +854,8 @@ C -->   symmetrisation of the potentials
 C
 C Keep only symmetric part of the potential
       if (test('potcubic')) then
-      write(*,*) 'Keeping only symmetric part of potential:'
-      write(*,*) 'Components L = 1, 11, 21, 25, 43, 47.'
+      write(1337,*) 'Keeping only symmetric part of potential:'
+      write(1337,*) 'Components L = 1, 11, 21, 25, 43, 47.'
       do ipot = 1,npotd
          do lm = 1, lmpotd
             if (lm.ne.1.and.lm.ne.11.and.lm.ne.21
@@ -884,7 +890,7 @@ C ..................
          END DO
          DO LM = 1,LMPOTD
            IF(LPOTSYMM(I1,LM)) THEN
-              WRITE(6,*) 'atom ',I1,'lm = ',LM,' contribution used'
+              WRITE(1337,*) 'atom ',I1,'lm = ',LM,' contribution used'
               ELSE
               DO ISPIN=1,NSPIN
                  IPOT = NSPIN* (I1-1) + ISPIN
@@ -919,10 +925,10 @@ C
       IF (TEST('spec mix')) 
      +       MIX = MIXING/
      +       (1.0D0 + 1.0D+3 * ABS(CHRGNT)/DBLE(NAEZ*NSPIN))
-      write(*,*) 'MIXSTR',MIX
+      write(1337,*) 'MIXSTR',MIX
       CALL MIXSTR(RMSAVQ,RMSAVM,INS,LPOT,LMPOT,0,NSHELL,
      +            1,NATYP,CONC,NSPIN,
-     +            ITSCF,RFPI,FPI,IPF,
+     +            ITSCF,RFPI,FPI,IPF2,
      +            MIX,
      +            FCM,IRC,IRMIN,R,DRDI,VONS,
      +            VISP,VINS,
@@ -934,8 +940,8 @@ C
 C ======================================================================
       IF (ITSCF.NE.1) RMSAV0 = 1.0d2*MAX(RMSAVQ,RMSAVM)
 C
-      WRITE(6,FMT=9160) MIX
-      WRITE(6,'(79(1H=),/)')
+      WRITE(1337,FMT=9160) MIX
+      WRITE(1337,'(79(1H=),/)')
 !       OPEN(28,FILE='not.converged',FORM='formatted',
 !      &        STATUS='old',IOSTAT=I1)
 !       IF ( I1.NE.0 ) THEN 
@@ -1012,7 +1018,7 @@ C
      +        VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL, ! fxf
      +        IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,! fxf
      +        RFPI,R,KSHAPE,VSHIFT)                         ! fxf
-         WRITE(6,*) 'New VMT ZERO:',VBC(1)                  ! fxf
+         WRITE(1337,*) 'New VMT ZERO:',VBC(1)                  ! fxf
       END IF                                                ! fxf
 C
       CALL RITES(11,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,ITITLE,
@@ -1028,9 +1034,6 @@ C
      &                 LOPT,EU,EDC)
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-C
-!       ETIME0 = DCLOCK()
-!       WRITE (6,FMT=9100) ETIME0 - STIME0
 C
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC CONVERGENCY TESTS
 C
@@ -1090,7 +1093,7 @@ C
             WEZ(IE) = -2.D0/PI*DEZ(IE)
             IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
          END DO
-         WRITE(6,'(79(1H=))')
+         WRITE(1337,'(79(1H=))')
       END IF
 C ======================================================================
 C
@@ -1187,7 +1190,7 @@ c Inside
 
          DO ISPIN = 1,NSPIN
 
-            WRITE (6,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,
+            WRITE (1337,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,
      &           ' BY', VSHIFT, 'RY.'
             IPOT = NSPIN * (IH-1) + ISPIN
 

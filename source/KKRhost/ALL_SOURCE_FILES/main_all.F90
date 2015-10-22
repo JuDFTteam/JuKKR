@@ -29,13 +29,13 @@ program kkrcode
 #endif
 
   integer :: ie,irec,i1,ispin
+  character(len=3) :: ctemp
+
   
   
 !       integer,allocatable :: ntot_pT(:), ioff_pT(:)
 !       integer :: ie_start, ie_end
-  
-  write(*,*) 'STARTING program'
-  
+    
 #ifdef CPP_MPI
   ! initialize MPI
   call MPI_Init ( ierr )
@@ -48,6 +48,17 @@ program kkrcode
     
   ! start KKR program, first do main0, where everything is read in and initialized
   call timing_start('main0')
+  
+  ! open output files
+  if(myrank==master) then
+     write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+     write(*,*) '!!! Most output written to output.myrank.txt files !!!'
+     write(*,*) '!!! please check these files as well               !!!'
+     write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+  end if
+  write(ctemp,'(I03.3)') myrank
+  open(1337, file='output.'//trim(ctemp)//'.txt')
+  
 !      write(*,*) 'nkmesh',myrank, t_inc%nkmesh, allocated(t_inc%kmesh)
   if(myrank==master) call main0()
 !      write(*,*) 'nkmesh',myrank, t_inc%nkmesh, allocated(t_inc%kmesh)
@@ -71,7 +82,7 @@ program kkrcode
   
   ! create_subcomms_2d:
   call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims)
-  write(*,*) 'find dims:', dims
+!   write(*,*) 'find dims:', dims
   
   ! create communicator for atom/energy matrix
 !   if(t_inc%nkmesh>1) then
@@ -85,6 +96,11 @@ program kkrcode
   
   
   ! Then start scf iterations and do all steps of the KKR formalism until convergence
+  if(myrank==master) then
+     write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     write(*,*) '+++            SCF ITERATIONS START                +++'
+     write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+  end if
   do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.-1) )
   
   

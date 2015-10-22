@@ -49,7 +49,7 @@ C
 C     ..
       DATA IPRINT /1/
 C    ..
-      WRITE (6,'(/,79(1H#),/,16X,A,/,79(1H#))') 
+      WRITE (1337,'(/,79(1H#),/,16X,A,/,79(1H#))') 
      &     'LDA+U: Calculating interaction potential VLDAU'
      
      
@@ -62,13 +62,13 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
          IF ( LOPT(I1).GE.0 ) THEN
             CALL RINIT(MMAXD*MMAXD*NSPIND,DENMAT(1,1,1))
             MMAX = 2*LOPT(I1) + 1
-            WRITE (6,99001) I1,LOPT(I1)
+            WRITE (1337,99001) I1,LOPT(I1)
 C
 C Result is in real Ylm basis. 
 C It must be converted to complex Ylm basis:
 C
             IF ( IPRINT.GT.1 ) 
-     &           WRITE (6,99002) 'Occupation matrix in REAL basis:'
+     &           WRITE (1337,99002) 'Occupation matrix in REAL basis:'
 C ----------------------------------------------------------------------
             DO IS = 1,NSPIN
                IPOT = (I1-1)*NSPIN + IS
@@ -84,7 +84,7 @@ C
             END DO
 C ----------------------------------------------------------------------
             IF ( IPRINT.GT.1 ) 
-     &           WRITE (6,99002) 'Occupation matrix in COMPLEX basis:'
+     &           WRITE (1337,99002) 'Occupation matrix in COMPLEX basis:'
             DENTOT = 0.D0
 C ----------------------------------------------------------------------
             DO IS = 1,NSPIN
@@ -114,13 +114,13 @@ C
             END DO
 C ----------------------------------------------------------------------
             IF ( IPRINT.GT.0 ) THEN
-               WRITE (6,99002) 'Occupation matrix (real):'
+               WRITE (1337,99002) 'Occupation matrix (real):'
                DO IS = 1,NSPIN
-                  WRITE(6,99003) IS
-                  CALL RWRITE(DENMAT(1,1,IS),MMAXD,MMAX,6)
-                  WRITE(6,99004) 'Trace     =',DENTOTS(IS)
+                  WRITE(1337,99003) IS
+                  CALL RWRITE(DENMAT(1,1,IS),MMAXD,MMAX,1337)
+                  WRITE(1337,99004) 'Trace     =',DENTOTS(IS)
                END DO
-                  WRITE(6,99005) 'Spins sum =',DENTOT
+                  WRITE(1337,99005) 'Spins sum =',DENTOT
             END IF
 C
 C In paramagnetic case the spin degeneracy has been accounted
@@ -189,7 +189,7 @@ C
            EDC(I1) = EDC(I1) + JEFF(I1)*DENTOTS(IS)*(DENTOTS(IS)-1.D0)
             END DO
 C ----------------------------------------------------------------------
-            IF ( IPRINT.GT.0 ) WRITE (6,99002)
+            IF ( IPRINT.GT.0 ) WRITE (1337,99002)
      &           'Interaction potential in COMPLEX basis:'
 C ----------------------------------------------------------------------
             DO IS = 1,NSPIN
@@ -217,7 +217,7 @@ C
             END DO
 C ----------------------------------------------------------------------
             IF ( IPRINT.GT.0 ) THEN
-               WRITE (6,99002) 'Interaction potential in REAL basis:'
+               WRITE (1337,99002) 'Interaction potential in REAL basis:'
                DO IS = 1,NSPIN
                   WRITE (STR15,'(4X,"> ",A,I1)') 'ISPIN = ',IS
                   CALL CMATSTR(STR15,15,VLDAU(1,1,IS),
@@ -225,12 +225,12 @@ C ----------------------------------------------------------------------
                END DO
             END IF
 C ----------------------------------------------------------------------
-            WRITE (6,99002) 'Interaction potential (real):'
+            WRITE (1337,99002) 'Interaction potential (real):'
             DO IS = 1,NSPIN
-               WRITE(6,99003) IS
-               CALL RWRITE(WLDAU(1,1,IS,I1),MMAXD,MMAX,6)
+               WRITE(1337,99003) IS
+               CALL RWRITE(WLDAU(1,1,IS,I1),MMAXD,MMAX,1337)
             END DO
-            WRITE(6,*)
+            WRITE(1337,*)
 C ----------------------------------------------------------------------
 C
 C Corrections in total energy:
@@ -241,11 +241,11 @@ C
 C -> Write out corrections on energy:
 C    E[LDA+U] = E[LDA] + EU - EDC
 C
-            WRITE(6,99002) 'Corrections to the total energy:'
-            WRITE(6,*)
-            WRITE(6,99004) 'EU  =',EU(I1)
-            WRITE(6,99004) 'Edc =',EDC(I1)
-            WRITE(6,99006) 'E[LDA+U] = E[LDA] + EU - Edc'
+            WRITE(1337,99002) 'Corrections to the total energy:'
+            WRITE(1337,*)
+            WRITE(1337,99004) 'EU  =',EU(I1)
+            WRITE(1337,99004) 'Edc =',EDC(I1)
+            WRITE(1337,99006) 'E[LDA+U] = E[LDA] + EU - Edc'
          END IF
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       END DO                    ! I1 = 1,NTLDAU

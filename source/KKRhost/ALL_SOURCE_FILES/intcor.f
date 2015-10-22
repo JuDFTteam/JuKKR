@@ -32,7 +32,7 @@ C     ..
       NITER = 0
       E1 = F1
       E2 = F2
-      IF (IPR.EQ.2) WRITE (6,FMT=9000) L,NN,NR,F1,E,F2,TOL,VALUE,SLOPE
+      IF (IPR.EQ.2) WRITE (1337,FMT=9000) L,NN,NR,F1,E,F2,TOL,VALUE,SLOPE
    10 CONTINUE
       NITER = NITER + 1
       DO 20 IR = 1,IRM
@@ -56,7 +56,7 @@ C     ..
         XXX = 1.D0
         VALU = 1.D-1
         SLOP = -1.D-1
-        IF (NRE.LT.NR .AND. NITER.EQ.1 .AND. IPR.NE.0) WRITE (6,
+        IF (NRE.LT.NR .AND. NITER.EQ.1 .AND. IPR.NE.0) WRITE (1337,
      +      FMT=9010)
         IF (NRE.GE.NR) THEN
           VALU = VALUE
@@ -130,7 +130,7 @@ c--->   single site  boundary condition
           SUM = SUM + SUM + RPB*Q* (G(NRE)*G(NRE)+F(NRE)*F(NRE))
           SUM = A*SUM/3.D0
           DE = PI*QKC2* (PKC2-PKC1)/SUM/RKC
-          IF (NITER.GE.NITMAX-10 .OR. IPR.EQ.2) WRITE (6,
+          IF (NITER.GE.NITMAX-10 .OR. IPR.EQ.2) WRITE (1337,
      +        FMT=9020) NITER,NNE,NRE,KC,E1,E,E2,DE
           IF (DE.GT.0.D0) E1 = E
           IF (DE.LT.0.D0) E2 = E
@@ -138,7 +138,7 @@ c--->   single site  boundary condition
           IF (ABS(DE).GT.TOL .AND. NITER.LT.NITMAX) GO TO 10
 
         ELSE
-          IF (NITER.GE.NITMAX-10 .OR. IPR.EQ.2) WRITE (6,
+          IF (NITER.GE.NITMAX-10 .OR. IPR.EQ.2) WRITE (1337,
      +        FMT=9020) NITER,NNE,NRE,KC,E1,E,E2
           IF (NNE.GT.NN) E2 = E
           IF (NNE.LT.NN) E1 = E
@@ -153,9 +153,9 @@ c--->   single site  boundary condition
       DO 70 K = 1,NRE
         RHO(K) = G(K)*G(K) + F(K)*F(K)
    70 CONTINUE
-      IF (XXX.LE.0.D0) WRITE (6,FMT=9030)
-      IF (NITER.GE.NITMAX-10 .OR. IPR.GE.1 .OR. XXX.LE.0.D0) WRITE (6,
-     +    FMT=9040) L,NN,NITER,KC,NRE,VALU,SLOP,E,DE,SUM
+      IF (XXX.LE.0.D0) WRITE (1337,FMT=9030)
+      IF (NITER.GE.NITMAX-10 .OR. IPR.GE.1 .OR. XXX.LE.0.D0) 
+     +    WRITE (1337,FMT=9040) L,NN,NITER,KC,NRE,VALU,SLOP,E,DE,SUM
       RETURN
 
    80 WRITE (6,FMT=9050) NITMAX

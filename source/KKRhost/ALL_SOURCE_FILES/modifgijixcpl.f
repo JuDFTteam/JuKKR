@@ -69,7 +69,7 @@ C     ..
        IDO = 0
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-       WRITE (6,99000)
+       WRITE (1337,99000)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
        TOL = 1.0D-4
@@ -95,7 +95,7 @@ C
           END IF
           LSPHER = ( ABS(CLURAD-CLURADXY).LT.TOL )
        ELSE
-          WRITE (6,99001)
+          WRITE (1337,99001)
        END IF
 C
        DO I = 1,3
@@ -110,12 +110,12 @@ C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
        IF ( CLURAD.GT.0D0 ) THEN
           IF ( LSPHER ) THEN
-             WRITE (6,99002) CLURAD,((2*NBR(I)+1),I=1,3)
+             WRITE (1337,99002) CLURAD,((2*NBR(I)+1),I=1,3)
           ELSE
-             WRITE (6,99003) CLURADXY,CLURAD,((2*NBR(I)+1),I=1,3)
+             WRITE (1337,99003) CLURADXY,CLURAD,((2*NBR(I)+1),I=1,3)
           END IF
        ELSE
-          WRITE (6,99004)
+          WRITE (1337,99004)
        END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -163,9 +163,9 @@ CF90----------------------------------------------------------------
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
        IF ( NIQCALC.EQ.NAEZ ) THEN
-          WRITE (6,99005) NAEZ
+          WRITE (1337,99005) NAEZ
        ELSE
-          WRITE (6,99006) NIQCALC,NAEZ
+          WRITE (1337,99006) NIQCALC,NAEZ
        END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -216,7 +216,7 @@ C **********************************************************************
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 CF77----------------------------------------------------------------
 Cccc      IF ( NN.GT.NAEZ*NB3MAX ) THEN
-Cccc         WRITE (6,99007) 'local','NBMAX',NBMAX + 1
+Cccc         WRITE (1337,99007) 'local','NBMAX',NBMAX + 1
 Cccc         STOP
 Cccc      END IF
 CF77----------------------------------------------------------------
@@ -365,7 +365,7 @@ C
 C
              NATOMIMP = NATOMIMP + 1
              IF ( NATOMIMP.GT.NATOMIMPD ) THEN
-                WRITE (6,99007) 'global','NATOMIMPD',NATOMIMP
+                WRITE (1337,99007) 'global','NATOMIMPD',NATOMIMP
                 STOP
              END IF
              DO J = 1,3
@@ -396,7 +396,7 @@ C
           IJTABCALC(IQ) = 0
        END DO
 C ======================================================================
-       WRITE (6,99008)
+       WRITE (1337,99008)
        DO IQ = 1,NIQCALC
           NN = (IQ-1)*NATOMIMP
           NOUT = 0
@@ -415,9 +415,9 @@ c                  END IF
              END IF
 C ----------------------------------------------------------------------
           END DO
-          WRITE (6,99009) IQ,NOUT
+          WRITE (1337,99009) IQ,NOUT
        END DO
-       WRITE (6,99010)
+       WRITE (1337,99010)
 C ======================================================================
        IDO = 1
   100  CONTINUE

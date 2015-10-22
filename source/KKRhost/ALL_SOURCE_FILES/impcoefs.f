@@ -59,13 +59,6 @@ C
          NSHOUT(I) = 1
       END DO
 C
-!       IF ( OPT('KKRFLEX ') ) THEN
-!         OPEN (58,FILE='kkrflex_impurity.coefs',FORM='FORMATTED')
-!         DO I = 1,NATOMIMP
-!           WRITE (58,99004) (RCLSIMP(J,I),J=1,3)
-!         END DO
-!         CLOSE (58)
-!       END DO
       OPEN (58,FILE='impurity.coefs',FORM='FORMATTED')
       WRITE (58,99002) NREP,NATOMIMP,LMAXD,NATOMIMP,
      &                 (NSHOUT(I),I=1,NATOMIMP)

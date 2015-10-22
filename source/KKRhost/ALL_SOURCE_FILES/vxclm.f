@@ -70,7 +70,7 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN
 C     ..
-      WRITE(*,*) 'Including cutoff of vxc for small density'
+      WRITE(1337,*) 'Including cutoff of vxc for small density'
       FPI = 16.0D0*ATAN(1.0D0)
       LMMAX = (LMAX+1)* (LMAX+1)
 

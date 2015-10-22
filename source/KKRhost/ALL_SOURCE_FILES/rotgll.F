@@ -88,12 +88,12 @@ CF90--------------------------------------------------------------------
 C **********************************************************************
       IF ( ICALL.EQ.1) THEN
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-         if(myrank==master) WRITE (6,'(79(1H=))')
-         if(myrank==master) WRITE (6,'(6X,2A)') 
+         if(myrank==master) WRITE (1337,'(79(1H=))')
+         if(myrank==master) WRITE (1337,'(6X,2A)') 
      &     'ROTGLL : Expand GF for all pairs by rotation',
      &     ' and write out (all E-points)'      
-         if(myrank==master) WRITE (6,'(79(1H=))')
-         if(myrank==master) WRITE (6,*)
+         if(myrank==master) WRITE (1337,'(79(1H=))')
+         if(myrank==master) WRITE (1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       END IF
 C***********************************************************************
@@ -124,11 +124,11 @@ C
 C     visualise Gij
 C
       IF ( TEST('Gmatij  ') ) THEN
-         WRITE (6,'(/,4X,70(1H+),/,4X,A,I4)')
+         WRITE (1337,'(/,4X,70(1H+),/,4X,A,I4)')
      &                     'cluster G_ij matrices for i,j = 1,',NATOMIMP
 C
          DO IQ = 1,NATOMIMP
-            WRITE(6,'(/,8X,66(1H=))')
+            WRITE(1337,'(/,8X,66(1H=))')
             DO JQ = 1,NATOMIMP
 C
                WRITE(STR4I,'(I4)') IQ
@@ -141,11 +141,11 @@ C
                   CALL CHANGEREP(GLL(1,1,IQ,JQ),'REL>RLM',TPG,LMMAXD,
      &                           LMMAXD,RC,CREL,RREL,STR18,18)
                END IF
-               IF (JQ.LT.NATOMIMP) WRITE(6,'(/,9X,65(1H-))')
+               IF (JQ.LT.NATOMIMP) WRITE(1337,'(/,9X,65(1H-))')
             END DO
-            IF (IQ.EQ.NATOMIMP) WRITE(6,'(/,8X,66(1H=),/)')
+            IF (IQ.EQ.NATOMIMP) WRITE(1337,'(/,8X,66(1H=),/)')
          END DO
-         WRITE(6,'(4X,70(1H+))')
+         WRITE(1337,'(4X,70(1H+))')
       END IF
 C     
 C***********************************************************************

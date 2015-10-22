@@ -33,8 +33,8 @@ C     .. External Functions ..
       LOGICAL OPT
       EXTERNAL OPT
 
-      write(*,*) 'KKRFLEX WRITEOUT'
-      writE(*,*) OPT('KKRFLEX ')
+      write(1337,*) 'KKRFLEX WRITEOUT'
+      writE(1337,*) OPT('KKRFLEX ')
       IF ( OPT('KKRFLEX ') ) THEN
         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
         write(6699,*) '#',NATOMIMP,NSPIN,IELAST,LMMAXD,KORBIT
@@ -95,7 +95,7 @@ C     .. External Functions ..
         DO IATOM = 1,NATOMIMP      ! Bauer 2011-10-11
           I=ATOMIMP(IATOM)         !
 !         DO I=1,HOSTIMP(0)
-         write(*,*) 'ac2',I,HOSTIMP(I),lmpot,
+         write(1337,*) 'ac2',I,HOSTIMP(I),lmpot,
 !      +                (VINTERS(LM,HOSTIMP(I)),LM=1,lmpot)
      +                (VINTERS(LM,I),LM=1,lmpot)
           WRITE(91,'(5000G)') (VINTERS(LM,I),LM=1,lmpot)
@@ -116,7 +116,7 @@ C     .. External Functions ..
           I1=KAOEZ(1,I)
 !         DO IATOM=1,HOSTIMP(0)
 !           I=HOSTIMP(IATOM)
-          WRITE(*,*) 'NOQ',I,NOQ(I)
+          WRITE(1337,*) 'NOQ',I,NOQ(I)
           IF (NOQ(I)/=1 .and. NOQ(I)/=0) 
      +      stop '[vmadelblk] VIRATOMS: NOQ/=1'
           IF (NOQ(I)==0) then

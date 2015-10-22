@@ -388,7 +388,7 @@ C
             GOTO 100
 C
  50      END DO
-         WRITE (6,99001) KAP1,N,R(N),DIFFA,DIFFB,IT,L,INT(2*MJ),'REG'
+         WRITE (1337,99001) KAP1,N,R(N),DIFFA,DIFFB,IT,L,INT(2*MJ),'REG'
 C
 C                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 C
@@ -726,7 +726,7 @@ C
             GOTO 200
 C
  150     END DO
-         WRITE (6,99001) KAP1,N,R(N),DIFFA,DIFFB,IT,L,INT(2*MJ),'IRR'
+         WRITE (1337,99001) KAP1,N,R(N),DIFFA,DIFFB,IT,L,INT(2*MJ),'IRR'
 C
 C                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 C
@@ -815,7 +815,7 @@ C
 C
       DO I = 2,N
          IF ( X(I).LE.X(I-1) ) THEN
-            WRITE (6,99001) I
+            WRITE (1337,99001) I
             A(1) = 1.D0
             RETURN
          END IF

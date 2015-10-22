@@ -29,7 +29,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC ATAN
 C     ..
       PI = 4.D0*ATAN(1.D0)
-      WRITE (6,*) ' SPHERE : read LEBEDEV mesh'
+      WRITE (1337,*) ' SPHERE : read LEBEDEV mesh'
       IF (IJD.GT.1000) STOP ' SPHERE '
 c
 c

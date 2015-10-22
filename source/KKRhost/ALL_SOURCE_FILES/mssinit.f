@@ -169,11 +169,11 @@ C
         END DO
 C
         IF ( TEST('tmat    ') ) THEN
-          WRITE(*,*) 'IQ,IT,RF',IQ,IT,RF
-          WRITE (6,*) 'DELTA_TMATLL (',IQ,' )'
+          WRITE(1337,*) 'IQ,IT,RF',IQ,IT,RF
+          WRITE (1337,*) 'DELTA_TMATLL (',IQ,' )'
           CALL CMATSTR(' ',1,MSSQ(1,1,IQ),LMMAXD,LMMAXD,
      &                 2*KREL+1,2*KREL+1,0,1d-8,6)
-          WRITE (6,*)
+          WRITE (1337,*)
         END IF
 C
 !            open(23234,file='test1')

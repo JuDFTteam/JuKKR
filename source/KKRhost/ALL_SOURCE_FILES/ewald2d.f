@@ -81,7 +81,6 @@ C     .. Save statements
       SAVE ICALL,CI,BOUND,PI,FPI,TPI
 C     ..................................................................
 C
-      !write(*,*) 'in ewald2d:',icall,bound
       ICALL = 1
       !ICALL = ICALL + 1
       IF (ICALL.EQ.1) THEN
@@ -91,7 +90,6 @@ C
          FPI = 4.0D0*PI
          TPI = 2.0D0*PI
       END IF
-      !write(*,*) 'in ewald2d:',icall,bound
 C
 C Factorial
 C
@@ -204,7 +202,7 @@ C ======================================================================
             END DO
          END DO
 C ======================================================================
-         IF ( S.GT.BOUND ) WRITE (6,FMT=99001) ABS(S),BOUND,IQ1,IQ2
+         IF ( S.GT.BOUND ) WRITE (1337,FMT=99001) ABS(S),BOUND,IQ1,IQ2
 C
 C --> Sum in reciprocal lattice
 C
@@ -302,7 +300,7 @@ C --> end of correction
 C ----------------------------------------------------------------------
 C
          IF ( S.GT.BOUND.AND.NGMAX1.EQ.NGMAX ) 
-     &                     WRITE (6,FMT=99002) ABS(S),BOUND,IQ1,IQ2
+     &                     WRITE (1337,FMT=99002) ABS(S),BOUND,IQ1,IQ2
 C
          DO LM = 1,LMMAX
             STEST(LM) = STESTNEW(LM)
@@ -411,7 +409,7 @@ C
             IF ( S.LT.STEST0 ) S = STEST0
          END DO
          IF ( S.GT.BOUND.AND.NGMAX1.EQ.NGMAX ) 
-     &                     WRITE (6,FMT=99003) ABS(S),BOUND,IQ1,IQ2
+     &                     WRITE (1337,FMT=99003) ABS(S),BOUND,IQ1,IQ2
       END IF 
 C **********************************************************************
 C

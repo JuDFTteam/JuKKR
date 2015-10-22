@@ -136,8 +136,8 @@ C
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
       DO IT = 1,NT
 C
-         IF ( IPRINT.GT.0 ) WRITE (*,'(A,I3,A,10F10.4)') ' SOLVER ',IT,
-     &                             SOLVER,(SOCTL(IT,IL),IL=1,NLMAX)
+         IF ( IPRINT.GT.0 ) WRITE (1337,'(A,I3,A,10F10.4)') ' SOLVER ',
+     &                             IT,SOLVER,(SOCTL(IT,IL),IL=1,NLMAX)
 C
          IQ = IQAT(1,IT)
          IM = IMT(IT)
@@ -346,7 +346,7 @@ C
                CALL ZGETRF(NSOL,NSOL,TSST2,2,IPIV,INFO)
                CALL ZGETRI(NSOL,TSST2,2,IPIV,MAUX,2*2,INFO)
 C
-               IF ( IPRINT.GE.3 ) WRITE (6,99001) IT,L,MJ,
+               IF ( IPRINT.GE.3 ) WRITE (1337,99001) IT,L,MJ,
      &              ((TSST2(I1,I2),I2=1,NSOL),I1=1,NSOL)
 C------------------------------------------------------------------------
 C
@@ -662,13 +662,14 @@ C
                IF ( WRONSKI ) THEN
                   DO I = 1,JTOP,40
                      CRSQ = C*R(I,IM)**2
-                     WRITE (6,99002) IT,L,NINT(2*MJ),I,R(I,IM),
+                     WRITE (1337,99002) IT,L,NINT(2*MJ),I,R(I,IM),
      &                               1.0D0 - (ZF(I,1,1)*JG(I,1,1)
      &                               -ZG(I,1,1)*JF(I,1,1)+ZF(I,2,1)
      &                               *JG(I,2,1)-ZG(I,2,1)*JF(I,2,1))
      &                               *CRSQ
                      IF ( NSOL.EQ.2 ) THEN
-                        WRITE (6,99003) 1.0D0 - (ZF(I,1,2)*JG(I,1,2)-ZG(
+                        WRITE (1337,99003) 1.0D0 - 
+     &                                  (ZF(I,1,2)*JG(I,1,2)-ZG(
      &                                  I,1,2)*JF(I,1,2)+ZF(I,2,2)
      &                                  *JG(I,2,2)-ZG(I,2,2)*JF(I,2,2))
      &                                  *CRSQ,
@@ -681,7 +682,7 @@ C
      &                                  *JG(I,2,2)-ZG(I,2,1)*JF(I,2,2))
      &                                  *CRSQ
                      ELSE
-                        WRITE (6,*)
+                        WRITE (1337,*)
                      END IF
                   END DO
                END IF
@@ -711,10 +712,13 @@ C
             DO LIN = 1,NLINQ(IQ)
                I1 = IKM1LIN(LIN)
                I2 = IKM2LIN(LIN)
-               WRITE (6,99004) IT,LIN
-               WRITE (6,99004) IT,I1,I2,' DZZ ',DZZ(LIN,IT),DZJ(LIN,IT)
-               WRITE (6,99004) IT,I1,I2,' SZZ ',SZZ(LIN,IT),SZJ(LIN,IT)
-               WRITE (6,99004) IT,I1,I2,' OZZ ',OZZ(LIN,IT),OZJ(LIN,IT)
+               WRITE (1337,99004) IT,LIN
+               WRITE (1337,99004) IT,I1,I2,' DZZ ',
+     &                            DZZ(LIN,IT),DZJ(LIN,IT)
+               WRITE (1337,99004) IT,I1,I2,' SZZ ',
+     &                            SZZ(LIN,IT),SZJ(LIN,IT)
+               WRITE (1337,99004) IT,I1,I2,' OZZ ',
+     &                            OZZ(LIN,IT),OZJ(LIN,IT)
             END DO
          END IF
       END DO

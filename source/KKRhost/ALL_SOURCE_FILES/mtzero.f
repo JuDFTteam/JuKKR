@@ -124,7 +124,7 @@ c
 c     19.5.99   Nikos
 c     This way it is compatible with old kkr and tb-kkr
         if(lsurf.and.(ih.eq.1)) 
-     &       write(6,*) 'Vacancies are ignored for VBC'
+     &       write(1337,*) 'Vacancies are ignored for VBC'
         
         IF (LSURF.AND.(Z(IH).LT.1.d0)) GOTO 60
         VAV0 = VAV0 + CONC(IH)*NSHELL(IH)*(VAV1(1)+VAV1(2))/2.D0
@@ -136,7 +136,7 @@ c     This way it is compatible with old kkr and tb-kkr
          IF (ISHIFT.GT.0) VBC(1) = VBC(1) + ESHIFT
       END IF
       
-      WRITE (6,FMT=9000) VOL0,VAV0,VBC(1)
+      WRITE (1337,FMT=9000) VOL0,VAV0,VBC(1)
       VBC(2) = VBC(1) 
 c     
 c---  > shift potential to muffin tin zero

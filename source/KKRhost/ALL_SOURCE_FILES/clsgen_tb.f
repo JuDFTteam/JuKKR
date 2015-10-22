@@ -97,7 +97,7 @@
       DATA     TOL2   / 1.D-7 /
 
 ! ------------------------------------------------------------------------
-      WRITE(6,*) '>>> CLSGEN_TB: generation of cluster coordinates'
+      WRITE(1337,*) '>>> CLSGEN_TB: generation of cluster coordinates'
 ! This is generating the clusters which have a distance smaller
 ! than RCUT and RCUTXY in plane .
 ! The cluster atoms are ordered with radius and then z>y>x 
@@ -105,9 +105,9 @@
 ! The principal layer for each layer (atom in unit cell) is
 ! calculated also for each cluster and the maximum number
 ! is returned. Some dimension tests are also done      
-      WRITE(6,*) 'RCUT = ',RCUT,' RCUTXY = ',RCUTXY
+      WRITE(1337,*) 'RCUT = ',RCUT,' RCUTXY = ',RCUTXY
       IF (ABS(RCUTXY - RCUT).LT.1.D-4) THEN
-          WRITE(6,*) 'Spherical Clusters are created'
+          WRITE(1337,*) 'Spherical Clusters are created'
 !          LSPHER=.TRUE.
       END IF 
       OPEN(8,FILE='clusters',status='unknown')
@@ -197,8 +197,10 @@
 !     
          MAXNUMBER = MAX(MAXNUMBER,NUMBER) ! Find largest cluster size
 
-         WRITE(*,*) 'clsgen_tb: cluster size of site:',JATOM,':',NUMBER
-         WRITE(*,*) 'clsgen_tb: Touching RMT of site:',JATOM,':',DISTMIN
+         WRITE(1337,*) 'clsgen_tb: cluster size of site:',JATOM,':',
+     &                                                          NUMBER
+         WRITE(1337,*) 'clsgen_tb: Touching RMT of site:',JATOM,':',
+     &                                                          DISTMIN
 
 
  100  ENDDO
@@ -395,23 +397,23 @@
 ! Now all clusters of all atoms are found.
 
 
-      WRITE(6,*) 'Clusters from clsgen_tb:'
+      WRITE(1337,*) 'Clusters from clsgen_tb:'
       DO JATOM = 1,NAEZ
-         WRITE(6,8000) JATOM,IREFPOT(JATOM),RMTREFAT(JATOM),
+         WRITE(1337,8000) JATOM,IREFPOT(JATOM),RMTREFAT(JATOM),
      &        VREFAT(JATOM),CLS(JATOM),NACLS(CLS(JATOM))
       ENDDO
       IF (L2DIM) THEN
-         WRITE(6,*) 'Clusters from clsgen_tb in outer region, left:'
+         WRITE(1337,*) 'Clusters from clsgen_tb in outer region, left:'
          DO IA = 1,NLBASIS
             JATOM = NAEZ + IA
-            WRITE(6,8000) JATOM,IREFPOT(JATOM),RMTREFAT(JATOM),
+            WRITE(1337,8000) JATOM,IREFPOT(JATOM),RMTREFAT(JATOM),
      &           VREFAT(JATOM),CLS(JATOM),NACLS(CLS(JATOM))
          ENDDO
          
-         WRITE(6,*) 'Clusters from clsgen_tb in outer region, right:'
+         WRITE(1337,*) 'Clusters from clsgen_tb in outer region, right:'
          DO IA = 1,NRBASIS
             JATOM = NAEZ + NLBASIS + IA
-            WRITE(6,8000) JATOM,IREFPOT(JATOM),RMTREFAT(JATOM),
+            WRITE(1337,8000) JATOM,IREFPOT(JATOM),RMTREFAT(JATOM),
      &           VREFAT(JATOM),CLS(JATOM),NACLS(CLS(JATOM))
          ENDDO
       ENDIF
@@ -437,7 +439,7 @@
       ENDDO
 
       ! Write out the coupling matrix
-      WRITE(*,*) 'Coupling matrix:'
+      WRITE(1337,*) 'Coupling matrix:'
       DO JATOM = 1,NAEZ
           DO IAT = 1,NAEZ
              ICOUPLMAT(JATOM,IAT) = 0
@@ -447,7 +449,7 @@
                 END IF
              END DO
           END DO
-          WRITE(6,9060) JATOM,(ICOUPLMAT(JATOM,IAT),IAT=1,NAEZ)          
+          WRITE(1337,9060) JATOM,(ICOUPLMAT(JATOM,IAT),IAT=1,NAEZ)          
        END DO
 
        IF (L2DIM) THEN
@@ -461,7 +463,7 @@
            IF (ICOUPLMAT(JATOM,IAT).EQ.1) NPRINC = MAX(NPRINC,IAT-JATOM)
           ENDDO
        ENDDO
-       WRITE(*,*)
+       WRITE(1337,*)
      &      'CLSGEN_TB: Number of layers in a principal layer: NPRINC=',
      &       NPRINC
        ENDIF
@@ -469,7 +471,7 @@
 
 
 ! ------------------------------------------------------------------------
-       WRITE(6,*) ' Sub clsgen_tb  exiting <<<<<<<<<<<<<'
+       WRITE(1337,*) ' Sub clsgen_tb  exiting <<<<<<<<<<<<<'
 ! ------------------------------------------------------------------------
 
  1000   format(' cluster around atom     ',10I4/,

@@ -38,7 +38,7 @@ C
                X = DARRY(I2)*DARRY(I2)*DSQ
                XN = DNINT(X)
                IF ( DABS(X-XN)/DSQ.LT.TOL .AND. XN.NE.0.D0 ) THEN
-                  IF (IPRINT.GT.4) WRITE (6,99000) 
+                  IF (IPRINT.GT.4) WRITE (1337,99000) 
      &                 DABS(DARRY(I2)),NINT(X),DIV
                   DARRY(I2) = DSIGN(1D0,DARRY(I2))*DSQRT(XN/DSQ)
                   IDONE(I2) = 1
@@ -58,7 +58,7 @@ C
                   X = DARRY(I2)*DSQ
                   XN = DNINT(X)
                   IF ( DABS(X-XN)/DSQ.LT.TOL .AND. XN.NE.0.D0 ) THEN
-                     IF (IPRINT.GT.4) WRITE (6,99001) 
+                     IF (IPRINT.GT.4) WRITE (1337,99001) 
      &                    DABS(DARRY(I2)),ISQR(I1),
      &                    IABS(IDNINT(XN)),IABS(ISQR(I1)*DIV)
                      DARRY(I2) = XN/DSQ
@@ -80,7 +80,7 @@ C
                   X = DARRY(I2)*DSQ
                   XN = DNINT(X)
                   IF ( DABS(X-XN)/DSQ.LT.TOL .AND. XN.NE.0.D0 ) THEN
-                     IF (IPRINT.GT.4) WRITE(6,99002) 
+                     IF (IPRINT.GT.4) WRITE(1337,99002) 
      &                    DABS(DARRY(I2)),IMUL(I1),IABS(IDNINT(XN)),DIV
                      DARRY(I2) = XN/DSQ
                      IDONE(I2) = 1

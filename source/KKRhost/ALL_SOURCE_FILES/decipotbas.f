@@ -41,19 +41,19 @@ C
          IHF = IH + IQOFF
          READ (36+IHOST,99001) IL,(RBASIS(I,IHF),I=1,3)
          IF ( IH.NE.IL ) STOP ' Inconsistent data '
-         WRITE (6,99001) IL,(RBASIS(I,IHF),I=1,3)
+         WRITE (1337,99001) IL,(RBASIS(I,IHF),I=1,3)
       END DO
       READ (36+IHOST,*)
-      WRITE (6,99003)
+      WRITE (1337,99003)
       DO IH = 1,NQ
          IHF = IH + IQOFF
          READ (36+IHOST,FMT=99002) IL,QMTET(IHF),QMPHI(IHF),NOQ(IHF),
      &                             (KAOEZ(I,IHF),I=1,NOQ(IHF))
          IF ( IH.NE.IL ) STOP ' Inconsistent data '
-         WRITE (6,99004) IH,QMTET(IHF),QMPHI(IHF),NOQ(IHF),
+         WRITE (1337,99004) IH,QMTET(IHF),QMPHI(IHF),NOQ(IHF),
      &                   (KAOEZ(I,IHF),I=1,NOQ(IHF))
       END DO
-      WRITE (6,99005)
+      WRITE (1337,99005)
       IF ( KREL.EQ.1 ) READ (36+IHOST,'(7X,A10)') SOLVER
       READ (36+IHOST,*)
 C
@@ -82,8 +82,8 @@ C
          READ (36+IHOST,*)
          READ (36+IHOST,99008) IL,TXTT(IH),RMT(IHF),RWS(IHF)
          IF ( IH.NE.IL ) STOP ' Inconsistent data '
-         WRITE (6,99009) IH,TXTT(IH),NINT(ZAT(IHF)),CONC(IHF),IRWS(IHF),
-     &                   RWS(IHF)
+         WRITE (1337,99009) IH,TXTT(IH),NINT(ZAT(IHF)),CONC(IHF),
+     &                   IRWS(IHF),RWS(IHF)
          IF ( KREL.EQ.0 ) THEN
             READ (36+IHOST,*)
             DO I = 1,IRWS(IHF)

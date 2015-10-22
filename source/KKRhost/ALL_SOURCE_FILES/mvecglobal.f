@@ -73,11 +73,11 @@ C
             ENDDO
          ENDIF
 C     
-         WRITE (6,'(78(1H#))')
-         WRITE (6,99001)
-         WRITE (6,'(78(1H#))')
-         WRITE (6,*)
-         WRITE (6,99002)
+         WRITE (1337,'(78(1H#))')
+         WRITE (1337,99001)
+         WRITE (1337,'(78(1H#))')
+         WRITE (1337,*)
+         WRITE (1337,99002)
 C
          NMVEC = 2
          PI = 4.D0 * ATAN(1.D0)
@@ -248,17 +248,17 @@ C **********************************************************************
 C output vector components, in and out angles
 C ----------------------------------------------------------------------
       L = 0 
-      WRITE (6,99003) IT,IQ,TXTL(L),((MVGLOL(L,I,IMV),I=1,3),IMV=1,2)
-      WRITE (6,99004) (TXTL(L),((MVGLOL(L,I,IMV),I=1,3),IMV=1,2),
+      WRITE (1337,99003) IT,IQ,TXTL(L),((MVGLOL(L,I,IMV),I=1,3),IMV=1,2)
+      WRITE (1337,99004) (TXTL(L),((MVGLOL(L,I,IMV),I=1,3),IMV=1,2),
      &     L=1,LMAXD)
-      WRITE (6,99005) ((MVGLO(I,IMV),I=1,3),IMV=1,2)
-      WRITE (6,99006) QMPHI,QMTET,(MVPHI(IMV),MVTET(IMV),IMV=1,2)
+      WRITE (1337,99005) ((MVGLO(I,IMV),I=1,3),IMV=1,2)
+      WRITE (1337,99006) QMPHI,QMTET,(MVPHI(IMV),MVTET(IMV),IMV=1,2)
 C ----------------------------------------------------------------------
       IF ( IT.LT.NATYP ) THEN
-         WRITE (6,'(3X,75(1H=))')
+         WRITE (1337,'(3X,75(1H=))')
       ELSE
-         WRITE (6,*)
-         WRITE (6,'(78(1H#))')
+         WRITE (1337,*)
+         WRITE (1337,'(78(1H#))')
       END IF
 C ----------------------------------------------------------------------
 C

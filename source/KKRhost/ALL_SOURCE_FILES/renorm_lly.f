@@ -217,24 +217,25 @@ c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
        DENEF = DENEF+DENEFAT(I1)
       ENDDO ! I1
 ! Write out renormalization factors
-      WRITE(*,*) 'Information on renormalization by Lloyds formula'
-      WRITE(*,*)'RENORM_LLY: Complex renormalization factor per energy:'
-      WRITE(*,FMT='(A5,2A32)') 'IE',
+      WRITE(1337,*) 'Information on renormalization by Lloyds formula'
+      WRITE(1337,*) 
+     &        'RENORM_LLY: Complex renormalization factor per energy:'
+      WRITE(1337,FMT='(A5,2A32)') 'IE',
      &               'Spin 1 (down)           ','Spin 2 (up)           '
       DO IE = IESTART,IEEND
-         WRITE(*,FMT='(I5,4F16.12)') IE,
+         WRITE(1337,FMT='(I5,4F16.12)') IE,
      +                (CREN(IE,ISPIN),ISPIN=1,NSPIN)
       ENDDO
-      WRITE(*,*) 'RENORM_LLY: renormalization factor per atom:'
-      WRITE(*,FMT='(A5,2A16)') 'IAT','Spin down','Spin up'
+      WRITE(1337,*) 'RENORM_LLY: renormalization factor per atom:'
+      WRITE(1337,FMT='(A5,2A16)') 'IAT','Spin down','Spin up'
       DO I1 = 1,NATYP
-         WRITE(*,FMT='(I5,2E17.9)') 
+         WRITE(1337,FMT='(I5,2E17.9)') 
      &        I1,(RENORM_AT(I1,ISPIN),ISPIN=1,NSPIN)
       ENDDO
-      WRITE(*,*) 'RENORM_LLY: Renormalized charge per atom:'
-      WRITE(*,FMT='(A5,2A16)') 'IAT','Spin down','Spin up'
+      WRITE(1337,*) 'RENORM_LLY: Renormalized charge per atom:'
+      WRITE(1337,FMT='(A5,2A16)') 'IAT','Spin down','Spin up'
       DO I1 = 1,NATYP
-         WRITE(*,FMT='(I5,2F16.12)') 
+         WRITE(1337,FMT='(I5,2F16.12)') 
      &        I1,(CHARGE_LLY(I1,ISPIN),ISPIN=1,NSPIN)
       ENDDO
       SUM0(:) = 0.D0
@@ -250,13 +251,13 @@ c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
    
          ENDDO
       ENDDO
-      WRITE(*,FMT='(A45,2E17.9)') 
+      WRITE(1337,FMT='(A45,2E17.9)') 
      &              'RENORM_LLY: Locally summed charge and moment:', 
      &               (SUM0(ISPIN),ISPIN=1,NSPIN) 
-      WRITE(*,FMT='(A45,2E17.9)') 
+      WRITE(1337,FMT='(A45,2E17.9)') 
      &              'RENORM_LLY: Renormalized charge and moment:  ',
      &               (SUM1(ISPIN),ISPIN=1,NSPIN) 
-      WRITE(*,FMT='(A50,2E17.9)') 
+      WRITE(1337,FMT='(A50,2E17.9)') 
      &            'RENORM_LLY: Renormalization factor of total charge:',
      &             SUM1(1)/SUM0(1)
 

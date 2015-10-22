@@ -34,7 +34,7 @@ c First calculate rms error in interaction matrix
                ENDDO
             ENDDO
             RMSERR = DSQRT(RMSERR)
-            WRITE(*,9000) IAT,RMSERR
+            WRITE(1337,9000) IAT,RMSERR
  9000       FORMAT('LDA+U interaction matrix rms error for atom',
      &           I6,' = ',E10.2)
          ENDIF
@@ -48,7 +48,7 @@ c Now mix old/new interaction matrices
          RETURN
       ELSE
          READ (UNIT=UIO,FMT=*) XMIX
-         WRITE(*,*) 'Using MIXLDAU = ',XMIX
+         WRITE(1337,*) 'Using MIXLDAU = ',XMIX
       ENDIF
 
       XMIX2 = 1.D0 - XMIX

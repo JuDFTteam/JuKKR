@@ -63,7 +63,7 @@
           enddo 
         endif 
       enddo 
-      if (iprint.ge.30) write(*,300) nsymop 
+      if (iprint.ge.30) write(1337,300) nsymop 
   300 format(/' SYMLAT: lattice invariant under ',i2,                   &
      &        ' symmetry operations.')                                  
       END                                           

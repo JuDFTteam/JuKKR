@@ -16,7 +16,7 @@ C     ..
 C     .. Locals ..
       INTEGER I,IH
 C ----------------------------------------------------------------------
-      WRITE(6,'(5X,A,/)')
+      WRITE(1337,'(5X,A,/)')
      &                 '< DECIOPT > : writing header of decimation file'
       OPEN (37,FILE='decifile',STATUS='unknown')
       WRITE (37,FMT=*) 'INVERSE T-MATRIX AND CMOMS'

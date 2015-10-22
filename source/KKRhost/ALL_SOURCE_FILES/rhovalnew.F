@@ -112,7 +112,7 @@
        nth = 1
 #ifdef CPP_OMP
        nth = omp_get_num_threads()
-       write(*,*) 'nth =',nth
+       write(1337,*) 'nth =',nth
 #endif
 !$omp end single
 !$omp end parallel
@@ -236,7 +236,7 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
         DEN=CZERO
         DENLM=CZERO
 c energy loop
-       if(myrank==master) WRITE(6,*) 'atom: ',I1
+       if(myrank==master) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
 !          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !          ie_end = t_mpi_c_grid%ntot2     
@@ -284,7 +284,7 @@ c energy loop
         IF (NSRA.EQ.2) EK = SQRT( ERYD + ERYD*ERYD/(CVLIGHT*CVLIGHT) ) *
      &                          ( 1d0 + ERYD/(CVLIGHT*CVLIGHT) )
 !$omp critical
-        WRITE(6,*) 'energy:',IE,'',ERYD
+        WRITE(1337,*) 'energy:',IE,'',ERYD
 !$omp end critical
 ! 
 !         IREC=IE+IELAST*(I1-1)
@@ -699,7 +699,7 @@ c write
 !          ENDDO !JSPIN                                                    ! lmlm-dos
 !  1000  FORMAT(5F10.6,I3,40E16.8)                                         ! lmlm-dos
 c write gflle to file                                                    ! lmlm-dos
-       write(*,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
+       write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
        WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
        
@@ -777,9 +777,9 @@ c calculate new THETA and PHI for non-colinear
 c          THETANEW=ACOS(MOMENT(3)/TOTMOMENT)
 c          PHINEW=DATAN2(MOMENT(2),MOMENT(1))
 !         WRITE(6,*) 'moment',MOMENT(1),MOMENT(2),MOMENT(3)
-        WRITE(6,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
+        WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
 c        WRITE(6,*) 'total moment',TOTMOMENT,TOTXYMOMENT
-        WRITE(6,*) THETANEW,PHINEW
+        WRITE(1337,*) THETANEW,PHINEW
         WRITE(11,*) THETANEW,PHINEW
         WRITE(12,*) THETANEW,PHINEW
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,

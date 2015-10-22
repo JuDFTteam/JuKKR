@@ -39,7 +39,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC ABS,ACOS,ATAN,COS,SIN,SQRT
 C     ..
       PI = 4.D0*ATAN(1.D0)
-      WRITE (6,*) 'SPHERE for GGA: read LEBEDEV mesh'
+      WRITE (1337,*) 'SPHERE for GGA: read LEBEDEV mesh'
       IF (IJD.GT.1000) STOP 'SPHERE'
 c
 c

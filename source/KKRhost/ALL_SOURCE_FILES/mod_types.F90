@@ -160,7 +160,7 @@ contains
             else
                !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
                allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-               write(*,*) myrank, 'allocating gref with',t_mpi_c_grid%ntot2
+               write(1337,*) myrank, 'allocating gref with',t_mpi_c_grid%ntot2
                if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
             end if
          else
@@ -550,7 +550,7 @@ contains
 !       t_inc%NACLSD = NACLSMAX
 !        recvcounts = ntot_pT*ihelp
 !        displs     = ioff_pT*ihelp
-       write(*,*) myrank,'gather_ref',mytot,ntot_pT,ioff_pT,ihelp
+       write(1337,*) myrank,'gather_ref',mytot,ntot_pT,ioff_pT,ihelp
        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
        call MPI_Bcast( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX, 0 , &
                           & mympi_comm, ierr )

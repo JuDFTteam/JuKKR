@@ -21,19 +21,19 @@ C
       CHARACTER*80 FMT1,FMT2,FMT31,FMT32
       INTEGER IS,ISPIN,IT,L,LF1,LF2
 C
-      WRITE (6,*)
+      WRITE (1337,*)
       IF ((KREL.EQ.1).OR.(NSPIN.EQ.2)) THEN
-         WRITE (6,'(78(1H#))')
-         WRITE (6,99001)
-         WRITE (6,'(78(1H#))')
+         WRITE (1337,'(78(1H#))')
+         WRITE (1337,99001)
+         WRITE (1337,'(78(1H#))')
       ELSE
-         WRITE (6,'(44(1H#))')
-         WRITE (6,99002)
-         WRITE (6,'(44(1H#))')
+         WRITE (1337,'(44(1H#))')
+         WRITE (1337,99002)
+         WRITE (1337,'(44(1H#))')
       END IF
       
-      WRITE (6,*)
-      WRITE (6,99003)
+      WRITE (1337,*)
+      WRITE (1337,99003)
       DO IT = 1,NATYP
          MUSPIN(IT,LMAXD1+1) = 0D0
          SUMCH(IT,1) = 0D0
@@ -58,23 +58,23 @@ C
       IF ( NSPIN.EQ.1 ) IS = IS + 2
       DO ISPIN = 1,NSPIN
          IS = IS + 1
-         WRITE (6,99004) TEXTS(IS)
+         WRITE (1337,99004) TEXTS(IS)
       END DO
 C
       IF (KREL.EQ.1) THEN
-         WRITE (6,99005)
-         WRITE (6,99006)
+         WRITE (1337,99005)
+         WRITE (1337,99006)
       ELSE
-         IF (NSPIN.EQ.2) WRITE(6,99005)
-         WRITE(6,*)
+         IF (NSPIN.EQ.2) WRITE(1337,99005)
+         WRITE(1337,*)
       END IF
 C
-      WRITE (6,'(3X,26(1H=),$)')
+      WRITE (1337,'(3X,26(1H=),$)')
       IF ( KREL.EQ.1 ) THEN
-         WRITE (6,'(46(1H=))')
+         WRITE (1337,'(46(1H=))')
       ELSE
-         IF (NSPIN.EQ.2) WRITE (6,'(23(1H=),$)')
-         WRITE(6,*)
+         IF (NSPIN.EQ.2) WRITE (1337,'(23(1H=),$)')
+         WRITE(1337,*)
       END IF
 C
       FMT1 = '(4X,I3,2X,A4,2(F12.8),2X,F8.4'
@@ -99,96 +99,96 @@ C
 C
       DO IT = 1,NATYP
          IF ( KREL.EQ.1 ) THEN
-            WRITE (6,FMT=FMT1) IT,TEXTL(0),
+            WRITE (1337,FMT=FMT1) IT,TEXTL(0),
      &                         (CHARGE(0,IT,ISPIN),ISPIN=1,NSPIN),
      &                         MUSPIN(IT,0),MUORB(0,3,IT),
      &                         (MUORB(0,ISPIN,IT),ISPIN=1,NSPIN)
          ELSE 
             IF (NSPIN.EQ.2) THEN
-               WRITE (6,FMT=FMT1) IT,TEXTL(0),
+               WRITE (1337,FMT=FMT1) IT,TEXTL(0),
      &              (CHARGE(0,IT,ISPIN),ISPIN=1,NSPIN),
      &              MUSPIN(IT,0)
             ELSE
-               WRITE (6,FMT=FMT1) IT,TEXTL(0),CHARGE(0,IT,1)
+               WRITE (1337,FMT=FMT1) IT,TEXTL(0),CHARGE(0,IT,1)
             END IF
          END IF
 C
          DO L = 1,LMAXD
             IF ( KREL.EQ.1 ) THEN
-               WRITE (6,FMT=FMT2) TEXTL(L),
+               WRITE (1337,FMT=FMT2) TEXTL(L),
      &                            (CHARGE(L,IT,ISPIN),ISPIN=1,NSPIN),
      &                            MUSPIN(IT,L),MUORB(L,3,IT),
      &                            (MUORB(L,ISPIN,IT),ISPIN=1,NSPIN)
             ELSE
                IF (NSPIN.EQ.2) THEN
-                  WRITE (6,FMT=FMT2) TEXTL(L),
+                  WRITE (1337,FMT=FMT2) TEXTL(L),
      &                 (CHARGE(L,IT,ISPIN),ISPIN=1,NSPIN),
      &                 MUSPIN(IT,L)
                ELSE
-                  WRITE (6,FMT=FMT2) TEXTL(L),CHARGE(L,IT,1)
+                  WRITE (1337,FMT=FMT2) TEXTL(L),CHARGE(L,IT,1)
                END IF
             END IF
 C
          END DO
 C
          IF ( KREL.EQ.1 ) THEN
-            WRITE (6,FMT=FMT2) TEXTNS,
+            WRITE (1337,FMT=FMT2) TEXTNS,
      &                         (CHARGE(LMAXD1,IT,ISPIN),ISPIN=1,NSPIN),
      &                         MUSPIN(IT,LMAXD1),MUORB(LMAXD1,3,IT),
      &                         (MUORB(LMAXD1,ISPIN,IT),ISPIN=1,NSPIN)
          ELSE
             IF (NSPIN.EQ.2) THEN
-               WRITE (6,FMT=FMT2) TEXTNS,
+               WRITE (1337,FMT=FMT2) TEXTNS,
      &              (CHARGE(LMAXD1,IT,ISPIN),ISPIN=1,NSPIN),
      &              MUSPIN(IT,LMAXD1)
             ELSE
-               WRITE (6,FMT=FMT2) TEXTNS,CHARGE(LMAXD1,IT,1)
+               WRITE (1337,FMT=FMT2) TEXTNS,CHARGE(LMAXD1,IT,1)
             END IF
          END IF
 C
-         WRITE (6,'(10x,19(1H-),$)')
+         WRITE (1337,'(10x,19(1H-),$)')
          IF ( KREL.EQ.1 ) THEN
-            WRITE (6,'(44(1H-))')
-            WRITE (6,FMT=FMT2) ' TOT',(SUMCH(IT,ISPIN),ISPIN=1,NSPIN),
-     &                         MUSPIN(IT,LMAXD1+1),MUORB(LMAXD1+1,3,IT),
+            WRITE (1337,'(44(1H-))')
+            WRITE (1337,FMT=FMT2) ' TOT',(SUMCH(IT,ISPIN),ISPIN=1,NSPIN)
+     &                        ,MUSPIN(IT,LMAXD1+1),MUORB(LMAXD1+1,3,IT),
      &                         (MUORB(LMAXD1+1,ISPIN,IT),ISPIN=1,NSPIN)
-            WRITE (6,'(25X,F12.8,12X,F8.4)') CHTOT(IT),MUTOT(IT)
+            WRITE (1337,'(25X,F12.8,12X,F8.4)') CHTOT(IT),MUTOT(IT)
          ELSE
             IF (NSPIN.EQ.2) THEN
-               WRITE (6,'(17(1H-))')
-               WRITE (6,FMT=FMT2) ' TOT',
+               WRITE (1337,'(17(1H-))')
+               WRITE (1337,FMT=FMT2) ' TOT',
      &              (SUMCH(IT,ISPIN),ISPIN=1,NSPIN),MUSPIN(IT,LMAXD1+1)
-               WRITE (6,'(25X,F12.8)') CHTOT(IT)
+               WRITE (1337,'(25X,F12.8)') CHTOT(IT)
             ELSE
-               WRITE (6,*)
-               WRITE (6,FMT=FMT2) ' TOT',SUMCH(IT,1)
+               WRITE (1337,*)
+               WRITE (1337,FMT=FMT2) ' TOT',SUMCH(IT,1)
             END IF
          END IF
 C
          IF ( IT.NE.NATYP ) THEN
-            WRITE (6,'(3X,26(1H=),$)')
+            WRITE (1337,'(3X,26(1H=),$)')
             IF ( KREL.EQ.1 ) THEN
-               WRITE (6,'(40(1H=))')
+               WRITE (1337,'(40(1H=))')
             ELSE
-               IF (NSPIN.EQ.2) WRITE(6,'(17(1H=),$)')
-               WRITE (6,*)
+               IF (NSPIN.EQ.2) WRITE(1337,'(17(1H=),$)')
+               WRITE (1337,*)
             END IF
          END IF
       END DO
 C
-      WRITE (6,*)
+      WRITE (1337,*)
       IF ((KREL.EQ.1).OR.(NSPIN.EQ.2)) THEN
-         WRITE (6,'(78(1H#))')
+         WRITE (1337,'(78(1H#))')
       ELSE
-         WRITE (6,'(44(1H#))')
+         WRITE (1337,'(44(1H#))')
       END IF
-      WRITE (6,*)
+      WRITE (1337,*)
 
       CHVAL = 0.D0
       DO IT = 1,NATYP
          CHVAL = CHVAL + CHTOT(IT)
       ENDDO
-      WRITE(*,*) 'Sum of valence charges of atoms (local summation)'
+      WRITE(1337,*) 'Sum of valence charges of atoms (local summation)'
      &           ,CHVAL
 C
       RETURN

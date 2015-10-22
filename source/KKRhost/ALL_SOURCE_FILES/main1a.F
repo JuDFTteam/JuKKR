@@ -1,8 +1,5 @@
       module MOD_MAIN1A
-      
-      
-      !use modulename, only rountine1
-      
+            
       implicit none
       
       contains
@@ -78,14 +75,6 @@ C     .. Local Scalars ..
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
 C     ..
 C     .. Local Arrays ..
-CMPI  INTEGER MYRANK,NROFNODES,IERR
-CMPI  COMMON /MPI/MYRANK,NROFNODES
-CMPI  DOUBLE COMPLEX WORK(IRMD,LMPOTD,NATYPD,NSPIND)
-CMPI  DOUBLE COMPLEX WORK1(NACLSD+IEMXD,LMMAXD,LMMAXD,NCLSD)
-CMPI  EXTERNAL CINIT,MPI_ALLREDUCE,MPI_COMM_RANK,MPI_COMM_SIZE,
-CMPI +         MPI_FINALIZE,MPI_INIT
-CT3E  INTEGER ICLKTCK,ICLOCKS,IE,MEND,MSTART
-CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
       DOUBLE COMPLEX EZ(IEMXD)
       DOUBLE PRECISION DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),ZAT(NATYPD),
      +                 RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NREFD),
@@ -185,10 +174,6 @@ Consistency check
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 
      &   STOP ' set NSPIND = 1 for KREL = 1 in inc.p'
 C
-CT3E  CALL SYSTEM_CLOCK(MSTART)
-CMPI  CALL MPI_INIT(IERR)
-CMPI  CALL MPI_COMM_RANK(MPI_COMM_WORLD,MYRANK,IERR)
-CMPI  CALL MPI_COMM_SIZE(MPI_COMM_WORLD,NROFNODES,IERR)
 C
 C ======================================================================
 C =             read in variables from unformatted files               =
@@ -337,10 +322,10 @@ C
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                             master,ntot1,ntot_pT,ioff_pT,.true.)
-        if(myrank==master) write(*,*) 'dblin_atm ioff',ioff_pT,
-     &                          'npt',ntot_pT
-        if(myrank==nranks-1) write(*,*) 'dblin_atm ioff',ioff_pT,
-     &                          'npt',ntot_pT
+!         if(myrank==master) write(*,*) 'dblin_atm ioff',ioff_pT,
+!      &                          'npt',ntot_pT
+!         if(myrank==nranks-1) write(*,*) 'dblin_atm ioff',ioff_pT,
+!      &                          'npt',ntot_pT
         i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
         i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &             ntot_pT(t_mpi_c_grid%myrank_ie)
@@ -353,8 +338,8 @@ C
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
         
-        write(*,*) 'db_lin atoms:',myrank,t_mpi_c_grid%nranks_at,
-     &  t_mpi_c_grid%myrank_ie,ntot1, i1_start,i1_end
+!         write(*,*) 'db_lin atoms:',myrank,t_mpi_c_grid%nranks_at,
+!      &  t_mpi_c_grid%myrank_ie,ntot1, i1_start,i1_end
 #else
       i1_start = 1
       i1_end   = NATYP
@@ -421,7 +406,7 @@ C
                LCHECKANGLES = .FALSE.
             ENDIF
           ENDDO
-          IF(LCHECKANGLES) write(*,*) 'WARNING: Check if your
+          IF(LCHECKANGLES) write(1337,*) 'WARNING: Check if your
      & nonco_angels file is correct! Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
      & angles are given in degree (0...360)'
@@ -495,17 +480,17 @@ C
       if(.not.t_tgmat%tmat_to_file) then
       
          call MPI_BARRIER(MPI_COMM_WORLD,i1)
-         write(*,*) myrank,
-     & 'dims',t_mpi_c_grid%dims,
-     & 'nranks_ie',t_mpi_c_grid%nranks_ie,
-     & 'nranks_ie',t_mpi_c_grid%nranks_at,
-     & 'nranks_atcomm',t_mpi_c_grid%nranks_atcomm ,
-     & 'ntot1',t_mpi_c_grid%ntot1,
-     & 'ntot_pT1',t_mpi_c_grid%ntot_pT1(:),
-     & 'ioff_pT1',t_mpi_c_grid%ioff_pT1(:),
-     & 'ntot2',t_mpi_c_grid%ntot2,
-     & 'ntot_pT2',t_mpi_c_grid%ntot_pT2(:),
-     & 'ioff_pT2',t_mpi_c_grid%ioff_pT2(:)
+!          write(*,*) myrank,
+!      & 'dims',t_mpi_c_grid%dims,
+!      & 'nranks_ie',t_mpi_c_grid%nranks_ie,
+!      & 'nranks_ie',t_mpi_c_grid%nranks_at,
+!      & 'nranks_atcomm',t_mpi_c_grid%nranks_atcomm ,
+!      & 'ntot1',t_mpi_c_grid%ntot1,
+!      & 'ntot_pT1',t_mpi_c_grid%ntot_pT1(:),
+!      & 'ioff_pT1',t_mpi_c_grid%ioff_pT1(:),
+!      & 'ntot2',t_mpi_c_grid%ntot2,
+!      & 'ntot_pT2',t_mpi_c_grid%ntot_pT2(:),
+!      & 'ioff_pT2',t_mpi_c_grid%ioff_pT2(:)
          mytot = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_ie)     
          call MPI_BARRIER(MPI_COMM_WORLD,i1)
 !          stop 'gather tmat'
@@ -525,9 +510,6 @@ C
 #endif
 
 
-CT3E  CALL SYSTEM_CLOCK(MEND)
-CT3E  TIME1 = (MEND-MSTART)
-CT3E  CALL SYSTEM_CLOCK(MSTART)
 #ifdef CPP_MPI
       if(t_mpi_c_grid%myrank_ie==0) then
 #endif
@@ -557,8 +539,7 @@ CT3E  CALL SYSTEM_CLOCK(MSTART)
 #endif
 
 
-      if(myrank.eq.master) 
-     &     WRITE (6,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
+      WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
 
 
       DEALLOCATE( ULDAU )

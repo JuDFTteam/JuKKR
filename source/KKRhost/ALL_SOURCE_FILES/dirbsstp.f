@@ -82,12 +82,12 @@ C
       IF ( ERRMAX.LT.1000D0 ) THEN
           X = X + H
           CALL DIRBSRAD(X,Y,DYDX,DRDI,B,V,R,NMESH)
-          WRITE (6,*) '<DIRBSSTP>  not converged after ',ISEQMAX,
+          WRITE (1337,*) '<DIRBSSTP>  not converged after ',ISEQMAX,
      &         ' refinements'
-          WRITE (6,*) 'step size will not be adjusted !!!!!!'
-          WRITE (6,*) 'max. relative error : ',ERRMAX*EPS
-          WRITE (6,*) 'tolerance             ',EPS
-          WRITE (6,*) 'grid position  X      ',X
+          WRITE (1337,*) 'step size will not be adjusted !!!!!!'
+          WRITE (1337,*) 'max. relative error : ',ERRMAX*EPS
+          WRITE (1337,*) 'tolerance             ',EPS
+          WRITE (1337,*) 'grid position  X      ',X
       ELSE 
           WRITE (6,*) '<DIRBSSTP>  not converged after ',ISEQMAX,
      &         ' refinements'

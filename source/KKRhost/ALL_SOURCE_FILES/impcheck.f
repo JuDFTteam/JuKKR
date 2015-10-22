@@ -83,12 +83,12 @@ C
       NMAXZ = NMAX 
       IF ( NDIM.EQ.2 ) NMAXZ = 0
       RMAXGEN = 0D0
-      WRITE(6,*) NMAX,NMAXZ
+      WRITE(1337,*) NMAX,NMAXZ
 C
 C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      WRITE(6,*) 'rbasis of impurity (in cartesian coordinate)'
+      WRITE(1337,*) 'rbasis of impurity (in cartesian coordinate)'
       DO I = 1,NATOMIMP
-         WRITE(6,*) (RCLSNEW(J,I),J=1,3)
+         WRITE(1337,*) (RCLSNEW(J,I),J=1,3)
          AIN(I) = ATOMIMP(I)
          LPOS(I) = .FALSE.
          LATOM(I) = .TRUE.
@@ -129,8 +129,8 @@ C-----------------------------------------------------------------------
 C=======================================================================
  100  END DO
 C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      WRITE (6,99001) RMAXCLUS,RMAXGEN
-      WRITE (6,99002) 
+      WRITE (1337,99001) RMAXCLUS,RMAXGEN
+      WRITE (1337,99002) 
      &               'Input data for impurity sites - consistency check'
 C
 C
@@ -152,11 +152,11 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
          ELSE IF ( LPOS(I) ) THEN
             WRITE (STRAT,'(I3)') ATOMIMP(I)
          END IF
-         WRITE (6,99003) I,(RCLSIMP(J,I),J=1,3),AIN(I),STRPOS,STRAT
+         WRITE (1337,99003) I,(RCLSIMP(J,I),J=1,3),AIN(I),STRPOS,STRAT
          WRITE (58,FMT='(I6,3E16.8,I6)') I,(RCLSIMP(J,I),J=1,3),AIN(I)
       END DO
       CLOSE(58)
-      WRITE (6,99004)
+      WRITE (1337,99004)
 C
       IF ( IPOSOK.NE.0 ) THEN
          WRITE (6,99005)
@@ -171,9 +171,9 @@ C
       END DO
 C
       IF ( IATOK.NE.0 ) THEN
-         WRITE (6,99006)
+         WRITE (1337,99006)
       ELSE
-         WRITE (6,99007)
+         WRITE (1337,99007)
       END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C

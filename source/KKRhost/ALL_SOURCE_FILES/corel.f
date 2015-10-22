@@ -88,14 +88,14 @@ c
             INUC = INUC + IRNUMX
             E = ECORE(NC)
             EI = ECORE(NC)
-            IF (IPR.NE.0) WRITE (6,FMT=9000) IN,TEXT(LP1),NN,SPN(IS),
+            IF (IPR.NE.0) WRITE (1337,FMT=9000) IN,TEXT(LP1),NN,SPN(IS),
      +          IP,E
             CALL INTCOR(E1,E2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SUM,NRE,
      +                    VLNC,A,B,Z,RMAX,NR,TOL,IRMD,IPR,NITMAX,NSRA)
             EDIFF = E - EI
             ECORE(NC) = E
             WGT = REAL(L+L+1)/SUM*2.D0/REAL(NSPIN)
-            IF (IPR.NE.0) WRITE (6,FMT=9010) EI,EDIFF,E
+            IF (IPR.NE.0) WRITE (1337,FMT=9010) EI,EDIFF,E
    40       CONTINUE
 c
 c---> sum up contributions to total core charge

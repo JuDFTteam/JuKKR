@@ -19,7 +19,9 @@ default: serial
 # default value
 FC =  ifort
 # change default value if a flag is matched
-mpi:       FC = mpiifort
+mpi:       FC =  mpiifort
+# mac:
+#mpi:       FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
 
 ####################################################
@@ -53,19 +55,15 @@ FILENAME0 = kkr.x  #kkr0.exe
 include makefile0
 OBJECTS0 = $(PROGOBJS0)
 
-FILENAME1a = kkr1a.exe
 include makefile1a_omp
-OBJECTS1a = $(PROGOBJS1a)
+OBJECTS1a= $(PROGOBJS1a)
 
-FILENAME1b = kkr1b.exe
 include makefile1b_omp
-OBJECTS1b = $(PROGOBJS1b)
+OBJECTS1b= $(PROGOBJS1b)
 
-FILENAME1c = kkr1c.exe
 include makefile1c_omp
-OBJECTS1c = $(PROGOBJS1c)
+OBJECTS1c= $(PROGOBJS1c)
 
-FILENAME2 = kkr2.exe
 include makefile2
 OBJECTS2 = $(PROGOBJS2)
 
@@ -77,11 +75,18 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 ####################################################
 
 # standart libs
+# serial:
 #LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+# openmp:
 LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+# mac libs:
+#libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
+#LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+# mac:
+#LLIBSOPENMP = -L${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 ####################################################
 # C preprocessor options                           #
@@ -100,7 +105,9 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O2 -r8 -traceback #-mcmodel=medium -shared-intel #-traceback -CB -check all -g
+FFLAGS       =  -O2 -r8 -traceback -mcmodel=medium -shared-intel #-traceback -CB -check all -g
+## mac:
+##FFLAGS      +=  -mmacosx-version-min=10.5
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel

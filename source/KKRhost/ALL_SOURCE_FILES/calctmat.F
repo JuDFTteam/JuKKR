@@ -154,7 +154,7 @@ C
 C ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-      if(myrank==master) WRITE(6,*) 'atom: ',I1
+      if(myrank==master) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
@@ -189,7 +189,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
          ie_num = IE
          ie_end = IELAST
 #endif
-         WRITE(*,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
+         WRITE(1337,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
 
          TMATLL(1:LMMAXD,1:LMMAXD) = CZERO
 !          TMATLL(1:LMMAXD,1:LMMAXD,IE) = CZERO
@@ -213,7 +213,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
             ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
 
             ERYD = EZ(IE) + SIGNDE * DELTAE / 2.D0 ! LLY
-            WRITE(6,*) 'energy:',IE,'',ERYD
+            WRITE(1337,*) 'energy:',IE,'',ERYD
 C
 C=======================================================================
 C non/scalar-relativistic OR relativistic
@@ -362,13 +362,13 @@ C
          ENDIF                                                       ! LLY
 C ----------------------------------------------------------------------
          IF ( TEST('tmat    ') ) THEN
-            WRITE (6,*)
-            WRITE (6,99001) '-----> t matrix for atom: ',I1
-            IF ( KREL.EQ.0 ) WRITE (6,99002) TXTS(ISPIN)
-            WRITE (6,99003) ', energy: ',ERYD
+            WRITE (1337,*)
+            WRITE (1337,99001) '-----> t matrix for atom: ',I1
+            IF ( KREL.EQ.0 ) WRITE (1337,99002) TXTS(ISPIN)
+            WRITE (1337,99003) ', energy: ',ERYD
             CALL CMATSTR(' ',1,TMAT0,LMMAXD,LMMAXD,
      &                   2*KREL+1,2*KREL+1,0,1D-8,6)
-            WRITE (6,*)
+            WRITE (1337,*)
          END IF
 C ----------------------------------------------------------------------
 CMPI     END IF

@@ -13,14 +13,14 @@ C **********************************************************************
       INTEGER IREC
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,99001) 'A(1,1)',MIN(6,NAEZ),'avmad.dat'
+      WRITE (1337,99001) 'A(1,1)',MIN(6,NAEZ),'avmad.dat'
       FMT = ' '
       LFMT = 0
       DO IQ1 = 1,MIN(6,NAEZ)
          FMT = FMT(1:LFMT)//'------------'
          LFMT = LFMT + 12
       END DO
-      WRITE (6,'(4X,A,/,8X," Inside the slab ",/,4X,A)') 
+      WRITE (1337,'(4X,A,/,8X," Inside the slab ",/,4X,A)') 
      &     (FMT(1:LFMT),IQ1=1,2)
 C
       OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
@@ -45,19 +45,19 @@ C
       CLOSE(69)
 C
       DO IQ1 = 1,MIN(6,NAEZ)
-         WRITE (6,99002) (SMAT(IQ1,IQ2),IQ2=1,MIN(6,NAEZ))
+         WRITE (1337,99002) (SMAT(IQ1,IQ2),IQ2=1,MIN(6,NAEZ))
       END DO
-      WRITE (6,'(4X,A,/,8X," Slab - left host",/,4X,A)') 
+      WRITE (1337,'(4X,A,/,8X," Slab - left host",/,4X,A)') 
      &     (FMT(1:LFMT),IQ1=1,2)
       DO IQ2 = 1,MIN(200,NLEFTALL)
-         WRITE (6,99002) (SMAT1(IQ1,IQ2),IQ1=1,MIN(6,NAEZ))
+         WRITE (1337,99002) (SMAT1(IQ1,IQ2),IQ1=1,MIN(6,NAEZ))
       END DO
-      WRITE (6,'(4X,A,/,8X," Slab - right host",/,4X,A)') 
+      WRITE (1337,'(4X,A,/,8X," Slab - right host",/,4X,A)') 
      &     (FMT(1:LFMT),IQ1=1,2)
       DO IQ2 = 1,MIN(200,NRIGHTALL)
-         WRITE (6,99002) (SMAT2(IQ1,IQ2),IQ1=1,MIN(6,NAEZ))
+         WRITE (1337,99002) (SMAT2(IQ1,IQ2),IQ1=1,MIN(6,NAEZ))
       END DO
-      WRITE (6,'(4X,A,/)') FMT(1:LFMT)
+      WRITE (1337,'(4X,A,/)') FMT(1:LFMT)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       IF ( IPRINT.LT.3 ) RETURN
@@ -148,24 +148,24 @@ C **********************************************************************
       INTEGER IREC
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,99001) 'A(1,1)',MIN(6,NAEZ),'avmad.dat'
+      WRITE (1337,99001) 'A(1,1)',MIN(6,NAEZ),'avmad.dat'
       FMT = ' '
       LFMT = 0
       DO IQ1 = 1,MIN(6,NAEZ)
          FMT = FMT(1:LFMT)//'------------'
          LFMT = LFMT + 12
       END DO
-      WRITE (6,'(4X,A)') FMT(1:LFMT)
+      WRITE (1337,'(4X,A)') FMT(1:LFMT)
       DO IQ1 = 1,MIN(6,NAEZ)
-         WRITE (6,99002) (SMAT1(IQ1,IQ2),IQ2=1,MIN(6,NAEZ))
+         WRITE (1337,99002) (SMAT1(IQ1,IQ2),IQ2=1,MIN(6,NAEZ))
       END DO
-      WRITE (6,'(4X,A,/)') FMT(1:LFMT)
-      WRITE (6,99001) 'B(1,1)',MIN(6,NAEZ),'bvmad.dat'
-      WRITE (6,'(4X,A)') FMT(1:LFMT)
+      WRITE (1337,'(4X,A,/)') FMT(1:LFMT)
+      WRITE (1337,99001) 'B(1,1)',MIN(6,NAEZ),'bvmad.dat'
+      WRITE (1337,'(4X,A)') FMT(1:LFMT)
       DO IQ1 = 1,MIN(6,NAEZ)
-         WRITE (6,99002) (SMAT2(IQ1,IQ2),IQ2=1,MIN(6,NAEZ))
+         WRITE (1337,99002) (SMAT2(IQ1,IQ2),IQ2=1,MIN(6,NAEZ))
       END DO
-      WRITE (6,'(4X,A,/)') FMT(1:LFMT)
+      WRITE (1337,'(4X,A,/)') FMT(1:LFMT)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       IF ( IPRINT.LT.3 ) RETURN

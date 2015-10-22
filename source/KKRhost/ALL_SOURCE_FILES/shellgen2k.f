@@ -78,7 +78,7 @@ C     .. Data statements
 C     .. 
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,99001)
+      WRITE (1337,99001)
       IF ( IPRINT.GT.1 ) CALL PRINTIJTAB(NATOM,IJTABCALC)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -174,7 +174,7 @@ C
                   IF ( R1.LT.SMALL ) THEN
                      LFOUND = .TRUE.
                      NSHELLI(NS) = NSHELLI(NS) + 1
-                     IF ( NS.LE.NSHELL(0) ) WRITE(6,99002) 
+                     IF ( NS.LE.NSHELL(0) ) WRITE(1337,99002) 
      &                    AI,(RCLS(II,I),II=1,3),
      &                    AJ,(RCLS(II,J),II=1,3),NS
                      ISH(NS,NSHELLI(NS)) = I
@@ -302,17 +302,17 @@ C***********************************************************************
       IF ( IPRINT.LE.0 ) RETURN
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,99003) 'assigned shells and symmetries'
+      WRITE (1337,99003) 'assigned shells and symmetries'
       DO I = 1,NATOM
          AI = (I-1)*NATOM + J
          DO J = 1,NATOM
             IJ = AI + J
             IF ( IJTABCALC(IJ).NE.0 ) 
-     &           WRITE(6,99004) I,J,IJTABSH(IJ),IJTABSYM(IJ),
+     &           WRITE(1337,99004) I,J,IJTABSH(IJ),IJTABSYM(IJ),
      &                          ROTNAME(IJTABSYM(IJ))
          END DO
       END DO
-      WRITE (6,99005)
+      WRITE (1337,99005)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 99000 FORMAT(6X,"Dimension ERROR: please increase the ",A," parameter",
@@ -341,25 +341,25 @@ C     ..
       INTEGER LGMAX
 C     ..
       LGMAX = 59
-      WRITE(6,99000) 
+      WRITE(1337,99000) 
      &     '  searched for pairs marked with 1 in the table below'
       DO J = 1,MIN(NATOM+3,LGMAX)
-         WRITE(6,'(1H-,$)')
+         WRITE(1337,'(1H-,$)')
       END DO
-      WRITE(6,*)
+      WRITE(1337,*)
       DO I = 1,NATOM
-         WRITE(6,'(14X,I3," | ",$)') I
+         WRITE(1337,'(14X,I3," | ",$)') I
          IJ = (I-1)*NATOM
          DO J = 1,NATOM
-            WRITE(6,'(I1,$)') IJTAB(IJ+J)
+            WRITE(1337,'(I1,$)') IJTAB(IJ+J)
          END DO
-         WRITE(6,*)
+         WRITE(1337,*)
       END DO
-      WRITE(6,'(13X,6(1H-),$)')
+      WRITE(1337,'(13X,6(1H-),$)')
       DO J = 1,MIN(NATOM+3,LGMAX)
-         WRITE(6,'(1H-,$)')
+         WRITE(1337,'(1H-,$)')
       END DO
-      WRITE(6,'(/)')
+      WRITE(1337,'(/)')
 C     ...........................................         
 99000 FORMAT(13X,65(1H-),/,18X,A,/,13X,65(1H-),/,13X,
      &     "   J |",/,13X,"I    | 1..NATCLUS",/,13X,6(1H-),$)

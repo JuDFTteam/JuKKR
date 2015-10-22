@@ -52,7 +52,7 @@ C
 C
       EQUAL(A,B) = (ABS(A-B).LT.1D-7)
 C
-      WRITE (6,99001)
+      WRITE (1337,99001)
 C
       PI = 4D0*ATAN(1D0)
 C
@@ -137,7 +137,7 @@ C
             TET1 = ACOS(RMAT(1,1))
             IF ( .NOT.EQUAL(RMAT(1,2),SIN(TET1)) ) THEN
                TET1 = -TET1
-               IF ( .NOT.EQUAL(RMAT(1,2),SIN(TET1)) ) WRITE (*,*)
+               IF ( .NOT.EQUAL(RMAT(1,2),SIN(TET1)) ) WRITE (1337,*)
      &               '>>>>>>>>>>>>>>> STRANGE 1'
             END IF
             TET2 = 0D0
@@ -146,7 +146,7 @@ C
             TET1 = ACOS(-RMAT(1,1))
             IF ( .NOT.EQUAL(RMAT(1,2),-SIN(TET1)) ) THEN
                TET1 = -TET1
-               IF ( .NOT.EQUAL(RMAT(1,2),-SIN(TET1)) ) WRITE (*,*)
+               IF ( .NOT.EQUAL(RMAT(1,2),-SIN(TET1)) ) WRITE (1337,*)
      &               '>>>>>>>>>>>>>>> STRANGE 2'
             END IF
             TET2 = PI
@@ -155,14 +155,14 @@ C
             TET1 = ACOS(RMAT(3,1)/SI2)
             IF ( .NOT.EQUAL(RMAT(3,2),SI2*SIN(TET1)) ) THEN
                TET1 = -TET1
-               IF ( .NOT.EQUAL(RMAT(3,2),SI2*SIN(TET1)) ) WRITE (*,*)
+               IF ( .NOT.EQUAL(RMAT(3,2),SI2*SIN(TET1)) ) WRITE (1337,*)
      &               '>>>>>>>>>>>>>>> STRANGE 3'
             END IF
 C
             TET3 = ACOS(-RMAT(1,3)/SI2)
             IF ( .NOT.EQUAL(RMAT(2,3),SI2*SIN(TET3)) ) THEN
                TET3 = -TET3
-               IF ( .NOT.EQUAL(RMAT(2,3),SI2*SIN(TET3)) ) WRITE (*,*)
+               IF ( .NOT.EQUAL(RMAT(2,3),SI2*SIN(TET3)) ) WRITE (1337,*)
      &               '>>>>>>>>>>>>>>> STRANGE 4'
             END IF
 C
@@ -191,12 +191,12 @@ C
          SYMEULANG(2,ISYM) = TET2*(180D0/PI)
          SYMEULANG(3,ISYM) = TET3*(180D0/PI)
 C
-         IF ( NOK.NE.9 ) WRITE (*,99009) NOK
-         WRITE (*,99008) ISYM,ROTNAME(ISYMINDEX(ISYM)),INVFLAG(ISYM),
+         IF ( NOK.NE.9 ) WRITE (1337,99009) NOK
+         WRITE (1337,99008) ISYM,ROTNAME(ISYMINDEX(ISYM)),INVFLAG(ISYM),
      &                   (SYMEULANG(I,ISYM),I=1,3),SYMUNITARY(ISYM)
 C
       END DO
-      WRITE(6,'(8X,57(1H-),/)')
+      WRITE(1337,'(8X,57(1H-),/)')
 C
 C-----------------------------------------------------------------------
 C                    initialize all rotation matrices

@@ -64,11 +64,11 @@ C ......................................................................
       NCLEBD = LMXSPD*LMPOTD
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(18X,A)') 
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,'(18X,A)') 
      &                  'MADELUNG2D: setting 2D Madelung coefficients'
-      WRITE (6,'(79(1H=))')
-      WRITE (6,*)
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C ======================================================================
@@ -98,10 +98,10 @@ C ++++++++++++++++++++++++++++++++ loop over all other sites in the slab
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
             IF ( IQ1.EQ.1 .AND. IQ2.EQ.1 ) THEN
-               WRITE (6,'(5X,2A,/)')
+               WRITE (1337,'(5X,2A,/)')
      &              '< EWALD2D > : calculating 2D-lattice sums ',
      &              'inside the slab'
-               IF ( IPRINT.GE.2 ) WRITE(6,99001)
+               IF ( IPRINT.GE.2 ) WRITE(1337,99001)
             END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -117,9 +117,9 @@ C
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
             IF ( IPRINT.GE.2 ) THEN
-               WRITE(6,99002) IQ1,IQ2,SUM(1)
+               WRITE(1337,99002) IQ1,IQ2,SUM(1)
                IF ( IQ2.EQ.NAEZ .AND. IQ1.NE.NAEZ ) 
-     &              WRITE(6,'(20X,20(1H-))')
+     &              WRITE(1337,'(20X,20(1H-))')
             END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -132,7 +132,7 @@ C
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       END DO
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      IF ( IPRINT.GE.2 ) WRITE(6,'(18X,22(1H-),/)')
+      IF ( IPRINT.GE.2 ) WRITE(1337,'(18X,22(1H-),/)')
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C ********************************************** loop over atoms in slab
 
@@ -160,10 +160,10 @@ C ++++++++++++++++++++++++++++++++ loop over all sites in the left host
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
                   IF ( IQ1.EQ.1 .AND. ILEFT.EQ.1 ) THEN
-                     WRITE (6,'(5X,2A,/)')
+                     WRITE (1337,'(5X,2A,/)')
      &                    '< EWALD2D > : calculating 2D-lattice sums ',
      &                    'slab - left host'
-                     IF ( IPRINT.GE.2 ) WRITE(6,99001)
+                     IF ( IPRINT.GE.2 ) WRITE(1337,99001)
                   END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -177,9 +177,9 @@ C
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
                   IF ( IPRINT.GE.2 ) THEN
-                     WRITE(6,99002) IQ1,ILEFT,SUM(1)
+                     WRITE(1337,99002) IQ1,ILEFT,SUM(1)
                      IF ( ILEFT.EQ.NLEFTALL .AND. IQ1.NE.NAEZ ) 
-     &                    WRITE(6,'(20X,20(1H-))')
+     &                    WRITE(1337,'(20X,20(1H-))')
                   END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -200,7 +200,7 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C **********************************************************************
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      IF ( IPRINT.GE.2 ) WRITE(6,'(18X,22(1H-),/)')
+      IF ( IPRINT.GE.2 ) WRITE(1337,'(18X,22(1H-),/)')
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C ********************************************** loop over atoms in slab
@@ -219,10 +219,10 @@ C ++++++++++++++++++++++++++++++++ loop over all sites in the right host
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
                   IF ( IQ1.EQ.1 .AND. IRIGHT.EQ.1 ) THEN
-                     WRITE (6,'(5X,2A,/)')
+                     WRITE (1337,'(5X,2A,/)')
      &                    '< EWALD2D > : calculating 2D-lattice sums ',
      &                    'slab - right host'
-                     IF ( IPRINT.GE.2 ) WRITE(6,99001)
+                     IF ( IPRINT.GE.2 ) WRITE(1337,99001)
                   END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -235,9 +235,9 @@ C
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
                   IF ( IPRINT.GE.2 ) THEN
-                     WRITE(6,99002) IQ1,IRIGHT,SUM(1)
+                     WRITE(1337,99002) IQ1,IRIGHT,SUM(1)
                      IF ( IRIGHT.EQ.NRIGHTALL .AND. IQ1.NE.NAEZ ) 
-     &                    WRITE(6,'(20X,20(1H-))')
+     &                    WRITE(1337,'(20X,20(1H-))')
                   END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
@@ -258,7 +258,7 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C **********************************************************************
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      IF ( IPRINT.GE.2 ) WRITE(6,'(18X,22(1H-),/)')
+      IF ( IPRINT.GE.2 ) WRITE(1337,'(18X,22(1H-),/)')
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       END IF

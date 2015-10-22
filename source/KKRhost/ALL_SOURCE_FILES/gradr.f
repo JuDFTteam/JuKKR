@@ -122,7 +122,7 @@ c.....six point formula for the 2nd deriv.
 C     ..
 
 c.....-----------------------------------------------------------------
-      IF (IWR.EQ.1) WRITE (6,FMT=
+      IF (IWR.EQ.1) WRITE (1337,FMT=
      +'(/''  igl,igh,imj,ihb,ica,icg,ivn,ipw,ipg,'',            ''ivg,ip
      +9,igd,ixlf,iex,xlf='',14i2,f10.4)') IGL,IGH,IMJ,IHB,ICA,ICG,IVN,
      +    IPW,IPG,IVG,IP9,IGD,IXLF,IEX,XLF

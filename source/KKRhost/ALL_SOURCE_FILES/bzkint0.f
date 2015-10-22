@@ -56,9 +56,9 @@ C     .. External Subroutines ..
 C     ..
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE(6,'(79(1H=),/,15X,A)') 
+      WRITE(1337,'(79(1H=),/,15X,A)') 
      &     'BZKINT0: finding symmetry, setting BZ integration'
-      WRITE (6,'(79(1H=),/)')
+      WRITE (1337,'(79(1H=),/)')
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       CALL POINTGRP(RSYMAT,ROTNAME)
@@ -75,7 +75,7 @@ C
       IF ( TEST('fullBZ  ').OR.OPT('NEWSOSOL') ) THEN
          NSYMAT = 1
          LIRR = .FALSE.
-         WRITE(6,'(8X,2A,/)') 
+         WRITE(1337,'(8X,2A,/)') 
      &        'Test option < fullBZ > or Run option < NEWSOSOL >: ',
      &        ' overriding NSYMAT, generate full BZ k-mesh'
       END IF
@@ -107,8 +107,8 @@ C
 C ----------------------------------------------------------------------
       IF ( IPRINT.GT.2 ) THEN
          DO ISHELL = 1,NSHELL(0)
-            WRITE (6,FMT='(I4)') ISHELL
-            WRITE (6,FMT='((I4,3F10.1))') 
+            WRITE (1337,FMT='(I4)') ISHELL
+            WRITE (1337,FMT='((I4,3F10.1))') 
      &           (IU, (RROT(IU,I,ISHELL),I=1,3),IU=1,NSYMAT)
          END DO
       END IF

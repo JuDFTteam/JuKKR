@@ -89,7 +89,7 @@ C     ..
 C     .. Data statements ..
       DATA ZERO,ZERO1/0.d0,1.d-12/
 C     ..
-      WRITE (6,FMT=*) ' GGA CALCULATION '
+      WRITE (1337,FMT=*) ' GGA CALCULATION '
       FPI = 16.0D0*ATAN(1.0D0)
       LMMAX = (LMAX+1)* (LMAX+1)
 c

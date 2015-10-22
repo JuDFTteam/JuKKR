@@ -127,7 +127,7 @@ c initial allocate
 !        ALLOCATE(TRAL_OUT(IELAST)) ! LLY
           
 c energy loop
-       if(myrank==master) WRITE(6,*) 'atom: ',I1,' NSRA:',NSRA
+       if(myrank==master) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
 
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
@@ -200,7 +200,7 @@ c         ERYD = EZ(IE)
         DO SIGNDE=-IDERIV,IDERIV,2
          ERYD = EZ(IE)+DFLOAT(SIGNDE)*DELTAE/2.D0 ! LLY
 !$omp critical
-        WRITE(6,*) 'energy:',IE,'',ERYD
+        WRITE(1337,*) 'energy:',IE,'',ERYD
         !write(*,*) 'nested omp?',omp_get_nested()
 !$omp end critical
 

@@ -400,14 +400,14 @@ C
 C ----------------------------------------------------------------------
 C tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
                   IF ( TEST('tmat    ') ) THEN
-                     WRITE (6,*)
-                     WRITE (6,99002) 
+                     WRITE (1337,*)
+                     WRITE (1337,99002) 
      &                    '      ---> Delta_t  matrix for site: ',IQH
-                     IF ( KREL.EQ.0 ) WRITE (6,99003) TXTS(ISPIN)
-                     WRITE (6,99004) ', energy: ',ERYD
+                     IF ( KREL.EQ.0 ) WRITE (1337,99003) TXTS(ISPIN)
+                     WRITE (1337,99004) ', energy: ',ERYD
                      CALL CMATSTR(' ',1,DHMAT(1,1,ISPIN),LMMAXD,LMMAXD,
      &                            2*KREL+1,2*KREL+1,0,1D-8,6)
-                     WRITE (6,*)
+                     WRITE (1337,*)
                   END IF
 C tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
 C

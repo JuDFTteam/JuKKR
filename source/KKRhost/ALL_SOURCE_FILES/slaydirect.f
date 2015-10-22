@@ -110,13 +110,13 @@ c     test the convergence
             
          end do                 ! all atoms in plane 
 
-         if (ipar.ne.0) write(6,*) 'SUMLAYER  Asymetric sum '             
+         if (ipar.ne.0) write(1337,*) 'SUMLAYER  Asymetric sum '             
          LM2POT=(2*Lpot+1)**2
 c   Now test the sum
          IF (TEST('electro '))THEN
          do lm=2 ,lm2pot ! test only l=3 terms!
             if (dabs(sum(lm)).gt.1.d-8) then ! test 
-        write(6,100) vec1(1),vec1(2),vec2(1),vec2(2),lm,sum(lm),sumt(lm)
+        write(1337,100) vec1(1),vec1(2),vec2(1),vec2(2),lm,sum(lm),sumt(lm)
             end if 
          end do
          END IF         

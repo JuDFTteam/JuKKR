@@ -89,17 +89,17 @@ c is returned. Some dimension tests are also done
 
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(16X,A)') 
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,'(16X,A)') 
      &     'CLSGEN99: generation of TB-clusters coordinates'
-      WRITE (6,'(79(1H=))')
-      WRITE (6,*)
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       LSPHER = .FALSE.
-      WRITE(6,*) 'RCUT = ',rcut,' RCUTXY = ',rcutxy
+      WRITE(1337,*) 'RCUT = ',rcut,' RCUTXY = ',rcutxy
       IF (ABS(rcutxy - rcut).LT.1.D-4) THEN
-          WRITE(6,*) 'Spherical Clusters are created'
+          WRITE(1337,*) 'Spherical Clusters are created'
           LSPHER = .TRUE.
       END IF 
 Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -279,14 +279,14 @@ c return true if found before
                DO II=1,3
                RCLS(II,IN,ICLUSTER) = RCLS1(II,IN)
                END DO
-               write(6,800) jatom,atom(in,jatom),ezoa(in,jatom),
+               write(1337,800) jatom,atom(in,jatom),ezoa(in,jatom),
      &                  (rcls1(i,in),i=1,3),
      &      sqrt(rcls1(1,in)**2+rcls1(2,in)**2+rcls1(3,in)**2)
             END DO   
             ICLUSTER = ICLUSTER + 1
          END IF 
 c ******************************************************
-       write(6,*) 'Atom ',JATOM,' has cluster ', CLS(JATOM),
+       write(1337,*) 'Atom ',JATOM,' has cluster ', CLS(JATOM),
      &            'with ',NUMBER,' sites'
  2    CONTINUE                      ! JATOM = 1,NAEZ
 c
@@ -324,7 +324,7 @@ c
              END DO
           END DO
 
-          WRITE(6,9060) JATOM,(ICOUPLMAT(JATOM,IAT),IAT=1,NAEZ)          
+          WRITE(1337,9060) JATOM,(ICOUPLMAT(JATOM,IAT),IAT=1,NAEZ)          
 
  22       END DO ! Do loop in JATOM (second test loop)
 c
@@ -332,7 +332,7 @@ c Now testing the shape of the dyson equation
 c
           ITEST1 = ICOUPLMAT(NAEZ,1)+ICOUPLMAT(1,NAEZ)
           IF (ITEST1.NE.0) THEN 
-          WRITE (6,*) ' This is not a banded matrix ' 
+          WRITE (1337,*) ' This is not a banded matrix ' 
           END IF
           nprin = 0
           do i=1,naez-1
@@ -343,20 +343,20 @@ c
              end if
           end do
           if (nprin.eq.0) nprin = 1
-          WRITE(6,*) '***********************************************'
-          WRITE(6,*) '********** TESTING THE COUPLING MATRIX ********'
-           WRITE(6,*) '***********************************************'
-          WRITE(6,9090) NPRIN
+          WRITE(1337,*) '***********************************************'
+          WRITE(1337,*) '********** TESTING THE COUPLING MATRIX ********'
+          WRITE(1337,*) '***********************************************'
+          WRITE(1337,9090) NPRIN
           IF (NPRIN.NE.NPRINCD) THEN 
-              WRITE(6,*) 'Please change NPRINCD in your inc.p file'
-              WRITE(6,*) 'from ',NPRINCD, 'to ',NPRIN
-              WRITE(6,*) ' ******** RESULTS COULD BE WRONG ******** '
+              WRITE(1337,*) 'Please change NPRINCD in your inc.p file'
+              WRITE(1337,*) 'from ',NPRINCD, 'to ',NPRIN
+              WRITE(1337,*) ' ******** RESULTS COULD BE WRONG ******** '
            END IF 
 c Now check if you can divide the matrix correctly
           IF (MOD(NAEZ,NPRIN).NE.0) THEN
-              WRITE(6,*) ' Your matrix cannot be divided in '
-              WRITE(6,*) ' Principal layers. Use a number of layers '
-              write(6,*) ' which is multiple of ',NPRIN
+              WRITE(1337,*) ' Your matrix cannot be divided in '
+              WRITE(1337,*) ' Principal layers. Use a number of layers '
+              write(1337,*) ' which is multiple of ',NPRIN
           END IF 
 c                       NPR 
 c NL + 2*NPR*NL - 4* sum  {n}
@@ -376,12 +376,12 @@ c
           end do
 
           IF (ISUM.EQ.INUM) THEN 
-              WRITE(6,*) ' Your matrix is BAND DIAGONAL' 
+              WRITE(1337,*) ' Your matrix is BAND DIAGONAL' 
           ELSE 
-              WRITE(6,*) ' Your matrix is *NOT* BAND DIAGONAL',ISUM,INUM
+              WRITE(1337,*) ' Your matrix is *NOT* BAND DIAGONAL',ISUM,INUM
           END IF  
-          WRITE(6,*) 
-          WRITE(6,*) ' Sub clsgen99  exiting <<<<<<<<<<<<<'
+          WRITE(1337,*) 
+          WRITE(1337,*) ' Sub clsgen99  exiting <<<<<<<<<<<<<'
 c ------------------------------------------------------------------------
 
  1030   FORMAT(3I8)

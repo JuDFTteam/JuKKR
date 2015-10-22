@@ -38,66 +38,67 @@ C ----------------------------------------------------------------------
       END DO
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-      WRITE(6,'(79(1H=),/,27X,A,/,
+      WRITE(1337,'(79(1H=),/,27X,A,/,
      &          79(1H=),/)') 'LDA+U: starting parameters'
-      WRITE(6,99001) NATYP,NTLDAU
-      WRITE(6,99002) 
-      WRITE(6,99003)
+      WRITE(1337,99001) NATYP,NTLDAU
+      WRITE(1337,99002) 
+      WRITE(1337,99003)
       DO IT = 1,NTLDAU
          I1 = ITLDAU(IT)
-         WRITE(6,99004) I1,UEFF(I1),JEFF(I1),EREFLDAU(I1)
+         WRITE(1337,99004) I1,UEFF(I1),JEFF(I1),EREFLDAU(I1)
       END DO
-      WRITE(6,99003)
-      WRITE(6,*)
+      WRITE(1337,99003)
+      WRITE(1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
 C -> read in LDA+U from file if available (KREADLDAU=1)
 C
       CALL RINIT(MMAXD*MMAXD*NSPIND*NATYPD,WLDAU)
       IF ( KREADLDAU.EQ.1 ) THEN
-         WRITE(6,99005)
+         WRITE(1337,99005)
          CALL READLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,WLDAU,ULDAU,PHILDAU,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
       ELSE
-         WRITE(6,99006)
+         WRITE(1337,99006)
       END IF
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
       IF ( ITRUNLDAU.NE.0 ) THEN
-         WRITE(6,99007) 'Coulomb matrix U(m1,m1,m3,m3)'
+         WRITE(1337,99007) 'Coulomb matrix U(m1,m1,m3,m3)'
          DO IT = 1,NTLDAU
             I1 = ITLDAU(IT)
             LL = LOPT(I1)
             LL = MIN(3,LL)
-            WRITE(6,99008) I1
+            WRITE(1337,99008) I1
             DO IM1 = 1,2*LL+1
-               WRITE(6,99009) (ULDAU(IM1,IM1,IM3,IM3,I1),IM3=1,2*LL+1)
+               WRITE(1337,99009) 
+     &                   (ULDAU(IM1,IM1,IM3,IM3,I1),IM3=1,2*LL+1)
             END DO
-            WRITE(6,*)
-            IF ( IT.LT.NTLDAU ) WRITE(6,99010)
+            WRITE(1337,*)
+            IF ( IT.LT.NTLDAU ) WRITE(1337,99010)
          END DO
-         WRITE(6,99007) 'Interaction potential W(m1,m2)'
+         WRITE(1337,99007) 'Interaction potential W(m1,m2)'
          DO IT = 1,NTLDAU
             I1 = ITLDAU(IT)
             LL = LOPT(I1)
             LL = MIN(3,LL)
             DO IS = 1,NSPIN
-               WRITE(6,99011) I1,IS
+               WRITE(1337,99011) I1,IS
                DO IM1 = 1,2*LL+1
-                  WRITE(6,99009) (WLDAU(IM1,IM3,IS,I1),IM3=1,2*LL+1)
+                  WRITE(1337,99009) (WLDAU(IM1,IM3,IS,I1),IM3=1,2*LL+1)
                END DO
-               WRITE(6,*)
+               WRITE(1337,*)
             END DO
-            IF ( IT.LT.NTLDAU ) WRITE(6,99010)
+            IF ( IT.LT.NTLDAU ) WRITE(1337,99010)
          END DO
-         WRITE(6,'(9X,60(1H-))')
+         WRITE(1337,'(9X,60(1H-))')
       ELSE
          CALL RINIT(MMAXD*MMAXD*MMAXD*MMAXD*NATYPD,ULDAU)
          CALL RINIT(MMAXD*MMAXD*NSPIND*NATYPD,WLDAU)
          CALL CINIT(IRMD*NATYPD,PHILDAU)
       END IF
-      WRITE(6,*)
+      WRITE(1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
 99001 FORMAT(6X,'Number of atoms ','  in the u.c. :',I4,/,

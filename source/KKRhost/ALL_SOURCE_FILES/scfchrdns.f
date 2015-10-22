@@ -195,7 +195,7 @@ C------------------------------------------------------------------------
                IF ( IREL.LE.1 ) THEN
                   IKM1 = IL
                   IKM2 = IL
-                  IF ( NKM.NE.NL**2 ) WRITE (*,99001) NKM
+                  IF ( NKM.NE.NL**2 ) WRITE (1337,99001) NKM
                END IF
 C
 C
@@ -328,7 +328,7 @@ C
                IF ( IREL.GT.1 ) THEN
                   JJ = 2*L + 2
 C
-                  WRITE (6,99005) IECURR,ERYD,L,IT,TXTT(IT),
+                  WRITE (1337,99005) IECURR,ERYD,L,IT,TXTT(IT),
      &                            'CRYSTAL TERMS       ',DOSINT(IL,IT),
      &                            SMTINT(IL,IT),OMTINT(IL,IT),
      &                            (HFFINT(IL,IT)*1D-3),DOSL,SMTL,OMTL,
@@ -339,7 +339,7 @@ C
                ELSE
                   JJ = 2*L + 1
 C
-                  WRITE (6,99014) IECURR,ERYD,L,IT,TXTT(IT),
+                  WRITE (1337,99014) IECURR,ERYD,L,IT,TXTT(IT),
      &                            'CRYSTAL TERMS       ',DOSINT(IL,IT),
      &                            SMTINT(IL,IT),OMTINT(IL,IT),
      &                            (HFFINT(IL,IT)*1D-3),DOSL,SMTL,OMTL,
@@ -371,16 +371,16 @@ C
 C
          IF ( IPRINT.GT.0 ) THEN
 C
-            WRITE (6,99006) IECURR,ERYD,IT,TXTT(IT),DOSI(IT),SMTI(IT),
-     &                      OMTI(IT),(HFFI(IT)*1D-3),DOS(IT),SMT(IT),
-     &                      OMT(IT),(HFF(IT)*1D-3)
+            WRITE (1337,99006) IECURR,ERYD,IT,TXTT(IT),DOSI(IT),
+     &                      SMTI(IT),OMTI(IT),(HFFI(IT)*1D-3),DOS(IT),
+     &                      SMT(IT),OMT(IT),(HFF(IT)*1D-3)
 C
             IF ( IT.LT.NT ) THEN
-               WRITE (6,'(1X,79(''-''))')
+               WRITE (1337,'(1X,79(''-''))')
             ELSE IF ( (IPRINT.GT.0) .OR. (IECURR.EQ.NETAB) ) THEN
-               WRITE (6,99010) TOTDOS,TOTNOS,MUESPN,MUEORB
+               WRITE (1337,99010) TOTDOS,TOTNOS,MUESPN,MUEORB
             ELSE
-               WRITE (6,'('' '',79(''=''))')
+               WRITE (1337,'('' '',79(''=''))')
             END IF
          END IF
 C
@@ -407,9 +407,9 @@ C
             EFERMI = EFERMI + DEFERMI
             SHFTEF = DEFERMI
 C
-            WRITE (6,'(/)')
-            WRITE (6,99012) (TXTT(IT),CONC(IT),IT=1,NT)
-            WRITE (6,99013) DQ,DEFERMI,EFERMI
+            WRITE (1337,'(/)')
+            WRITE (1337,99012) (TXTT(IT),CONC(IT),IT=1,NT)
+            WRITE (1337,99013) DQ,DEFERMI,EFERMI
 C
             GOTO 100
          END IF
@@ -426,7 +426,7 @@ C
                CHKQ(IT) = AUX - CHKQ(IT)
                IF ( ABS(CHKQ(IT)-DOSI(IT)).GT.1.0D-8 ) THEN
                   IFLAG = 1
-                  WRITE (*,99004) IT,'Q',DOSI(IT),CHKQ(IT),DOSI(IT)
+                  WRITE (1337,99004) IT,'Q',DOSI(IT),CHKQ(IT),DOSI(IT)
      &                            /CHKQ(IT)
                END IF
                DO I = 1,JTOP
@@ -436,7 +436,7 @@ C
                CHKS(IT) = AUX - CHKS(IT)
                IF ( ABS(CHKS(IT)-SMTI(IT)).GT.1.0D-8 ) THEN
                   IFLAG = 1
-                  WRITE (*,99004) IT,'S',SMTI(IT),CHKS(IT),SMTI(IT)
+                  WRITE (1337,99004) IT,'S',SMTI(IT),CHKS(IT),SMTI(IT)
      &                            /CHKS(IT)
                END IF
                DO I = 1,JTOP
@@ -446,33 +446,33 @@ C
                CHKO(IT) = AUX - CHKO(IT)
                IF ( ABS(CHKO(IT)-OMTI(IT)).GT.1.0D-8 ) THEN
                   IFLAG = 1
-                  WRITE (*,99004) IT,'O',OMTI(IT),CHKO(IT),OMTI(IT)
+                  WRITE (1337,99004) IT,'O',OMTI(IT),CHKO(IT),OMTI(IT)
      &                            /CHKO(IT)
                END IF
             END DO
 C
             IF ( IFLAG.EQ.0 ) THEN
-               WRITE (6,99002)
+               WRITE (1337,99002)
             ELSE
-               WRITE (6,99003)
+               WRITE (1337,99003)
             END IF
          END IF
 C
 C
          DO IT = 1,NT
 C
-            WRITE (6,99006) (IECURR+1),EFERMI,0.0D0,IT,TXTT(IT)
+            WRITE (1337,99006) (IECURR+1),EFERMI,0.0D0,IT,TXTT(IT)
 C
             BDUM(1) = BCORS(IT)*1D-3
             BDUM(2) = (BCOR(IT)-BCORS(IT))*1D-3
             BDUM(3) = BCOR(IT)*1D-3
 C
-            WRITE (6,99007) (DIMAG(DOSL0(IL,IT)),DIMAG(DOSINT(IL,IT)),
-     &                      DIMAG(SMTL0(IL,IT)),DIMAG(SMTINT(IL,IT)),
+            WRITE (1337,99007) (DIMAG(DOSL0(IL,IT)),DIMAG(DOSINT(IL,IT))
+     &                     ,DIMAG(SMTL0(IL,IT)),DIMAG(SMTINT(IL,IT)),
      &                      DIMAG(OMTL0(IL,IT)),DIMAG(OMTINT(IL,IT)),
      &                      DIMAG(HFFINT(IL,IT))*1D-3,BDUM(IL),IL=1,
      &                      MIN(3,NL))
-            IF ( NL.GT.3 ) WRITE (6,99008)
+            IF ( NL.GT.3 ) WRITE (1337,99008)
      &                            (DIMAG(DOSL0(IL,IT)),DIMAG(DOSINT(IL,
      &                            IT)),DIMAG(SMTL0(IL,IT)),
      &                            DIMAG(SMTINT(IL,IT)),
@@ -480,14 +480,15 @@ C
      &                            DIMAG(OMTINT(IL,IT)),
      &                            DIMAG(HFFINT(IL,IT))*1D-3,IL=4,NL)
 C
-            WRITE (6,99009) DOS(IT),DOSI(IT),SMT(IT),SMTI(IT),OMT(IT),
-     &                      OMTI(IT),(HFFI(IT)*1D-3),
+            WRITE (1337,99009) DOS(IT),DOSI(IT),SMT(IT),SMTI(IT),OMT(IT)
+     &                     ,OMTI(IT),(HFFI(IT)*1D-3),
      &                      ((HFFI(IT)+BCOR(IT))*1D-3)
 C
             IF ( IT.LT.NT ) THEN
-               WRITE (6,'(1X,79(''-''))')
+               WRITE (1337,'(1X,79(''-''))')
             ELSE
-               WRITE (6,99011) TOTDOS,TOTNOS,MUESPN,MUEORB,DIMAG(EBAND)
+               WRITE (1337,99011) TOTDOS,TOTNOS,MUESPN,MUEORB,
+     &                            DIMAG(EBAND)
             END IF
 C
             IM = IMT(IT)

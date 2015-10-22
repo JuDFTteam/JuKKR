@@ -191,7 +191,7 @@ C
                DO I = 1,N
                   CSUM = CSUM + MSSQ(I,I,IQ)
                END DO
-               WRITE (6,99001) IQ,CPAERR,CPACORR,CSUM
+               WRITE (1337,99001) IQ,CPAERR,CPACORR,CSUM
             END IF
 C-----------------------------------------------------------------------
             IF ( CHECK ) THEN

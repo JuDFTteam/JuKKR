@@ -26,20 +26,20 @@ C **********************************************************************
 
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      WRITE (6,*)
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(20X,A)') 'EPATHTB: generates a complex E contour'
-      WRITE (6,'(79(1H=))')
-      WRITE (6,*)
+      WRITE (1337,*)
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,'(20X,A)') 'EPATHTB: generates a complex E contour'
+      WRITE (1337,'(79(1H=))')
+      WRITE (1337,*)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       IESEMICORE = 0 
       IF ( IDOSEMICORE.EQ.1 ) THEN
-         WRITE(6,99001) 'semi-core contour'
+         WRITE(1337,99001) 'semi-core contour'
          CALL EMESHT(EZSEMI,DFSEMI,NPNTSEMI,EBOTSEM,EMUSEM,EFERMI,
      &               TKSEM,-NPOLSEM,N1SEM,N2SEM,N3SEM,IEMXD)
          IESEMICORE = NPNTSEMI
-         WRITE(6,99001) 'valence contour'
+         WRITE(1337,99001) 'valence contour'
       ENDIF
       CALL EMESHT(EZVAL,DFVAL,NPNTVAL,EBOTVAL,EMUVAL,EFERMI,TKVAL,
      &            NPOLVAL,N1VAL,N2VAL,N3VAL,IEMXD)

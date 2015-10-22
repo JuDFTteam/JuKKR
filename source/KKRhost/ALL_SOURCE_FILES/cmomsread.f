@@ -37,14 +37,14 @@ C     ..
 C     .. Data statements
       DATA CHHOST/'LEFT ','RIGHT'/
 C     ..
-      WRITE (6,'(5X,A,/,8X,30(1H-),/,8X,3A6,A10,/,8X,30(1H-))')
+      WRITE (1337,'(5X,A,/,8X,30(1H-),/,8X,3A6,A10,/,8X,30(1H-))')
      &        'Reading in host charge moments ( SCFSTEPS > 1 )',
      &       ' HOST ','  IBAS','  ATOM','   CMOM(1)'
 C :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
       DO IHOST = 1,2
          NATHOST = NLBASIS
          IF ( IHOST.EQ.2 ) NATHOST = NRBASIS
-         WRITE (6,'(8X,A5,1X,$)') CHHOST(IHOST)
+         WRITE (1337,'(8X,A5,1X,$)') CHHOST(IHOST)
 C ----------------------------------------------------------------------
          IF ( VACFLAG(IHOST) ) THEN
             DO IH = 1,NLBASIS
@@ -53,11 +53,11 @@ C ----------------------------------------------------------------------
 C mapping the CMOMHOST array, ordering is important
                END DO
             END DO
-            WRITE (6,'(A)') ' Vacuum setting    0.000'
+            WRITE (1337,'(A)') ' Vacuum setting    0.000'
             IF ( IHOST.EQ.1 ) THEN
-               WRITE (6,'(14X,24(1H-))')
+               WRITE (1337,'(14X,24(1H-))')
             ELSE
-               WRITE (6,'(8X,30(1H-))')
+               WRITE (1337,'(8X,30(1H-))')
             END IF
 C ----------------------------------------------------------------------
          ELSE
@@ -88,22 +88,22 @@ C mapping the CMOMHOST array, ordering is important
                END DO
 C
                IF ( IH.EQ.1 ) THEN
-                  WRITE (6,'(1X,2I6,D12.4)') IH,IH1,C00(1)
+                  WRITE (1337,'(1X,2I6,D12.4)') IH,IH1,C00(1)
                ELSE
-                  WRITE (6,'(14X,2I6,D12.4)') IH,IH1,C00(1)
+                  WRITE (1337,'(14X,2I6,D12.4)') IH,IH1,C00(1)
                END IF
             END DO
 C ......................................................................
             IF ( IHOST.EQ.1 ) THEN
-               WRITE (6,'(14X,24(1H-))')
+               WRITE (1337,'(14X,24(1H-))')
             ELSE
-               WRITE (6,'(8X,30(1H-))')
+               WRITE (1337,'(8X,30(1H-))')
             END IF
          END IF
 C ----------------------------------------------------------------------
       END DO
 C :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
-      WRITE (6,*)
+      WRITE (1337,*)
 C
 99001 FORMAT (4D22.14)
 99002 FORMAT (5X,2I6)

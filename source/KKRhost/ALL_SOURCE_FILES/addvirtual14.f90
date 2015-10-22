@@ -48,13 +48,13 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
       tol = 1.d-5
 
 
-      write(*,*) 'LINTERFACE',LINTERFACE
-      write(*,*) 'NAEZ',NAEZ
-      write(*,*) 'NAEZD',NAEZD
-      write(*,*) 'NEMB',NEMB
-      write(*,*) 'RBASISOLD'
+      write(1337,*) 'LINTERFACE',LINTERFACE
+      write(1337,*) 'NAEZ',NAEZ
+      write(1337,*) 'NAEZD',NAEZD
+      write(1337,*) 'NEMB',NEMB
+      write(1337,*) 'RBASISOLD'
       do ibasis=1,naez+nemb
-        write(6,*) ibasis,rbasis(:,ibasis)
+        write(1337,*) ibasis,rbasis(:,ibasis)
         REFPOTOLD(IBASIS)=REFPOT(IBASIS)
         KAOEZOLD(1,IBASIS)=KAOEZ(1,IBASIS)
         RBASISSAVE(:,IBASIS)=RBASIS(:,IBASIS)
@@ -67,16 +67,16 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
 !  -----------------------------------------------------------------
 
       open(unit=32452345,file=I25,iostat=ierr)
-      write(*,*) '*',I25,'*'
-      write(*,*) '*',Ierr,'*'
+      write(1337,*) '*',I25,'*'
+      write(1337,*) '*',Ierr,'*'
       if (ierr/=0) stop '[addvirtual] file not found'
       read(32452345,*) natomimp
-      write(*,*) 'natomimp',natomimp
+      write(1337,*) 'natomimp',natomimp
       allocate(ratomimp(3,natomimp))
       allocate(ATOMIMP(natomimp))
       do iatom=1,natomimp
         read(32452345,*) ratomimp(:,iatom),ATOMIMP(iatom)
-        write(*,'(A,I,A,3F)') 'IMPATOM ',iatom,' :',ratomimp(:,iatom)
+        write(1337,'(A,I,A,3F)') 'IMPATOM ',iatom,' :',ratomimp(:,iatom)
       end do
 
 !  -----------------------------------------------------------------
@@ -84,10 +84,10 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
 !  -----------------------------------------------------------------
       IF ( LINTERFACE ) THEN
          NDIM = 2
-         WRITE (6,'(23X,A)') 'ADDVIRTUAL : surface geometry mode'
+         WRITE (1337,'(23X,A)') 'ADDVIRTUAL : surface geometry mode'
       ELSE
          NDIM = 3
-         WRITE (6,'(23X,A)') 'ADDVIRTUAL : bulk geometry mode'
+         WRITE (1337,'(23X,A)') 'ADDVIRTUAL : bulk geometry mode'
       END IF
 !  -----------------------------------------------------------------
 !                      read bravais vectors
@@ -103,7 +103,7 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
       DO IBASIS=1,NAEZ+NEMB
         NREFOLD = MAX(NREFOLD,REFPOTOLD(IBASIS)) 
       ENDDO
-      write(*,*) 'Number of reference potentials is currently', nrefold
+      write(1337,*) 'Number of reference potentials is currently', nrefold
 
 ! Change basis vectors to cartesian coordinates in order to calculate distances.
       IF (.NOT.LCARTESIAN) THEN
@@ -198,7 +198,7 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
          ELSE
             RBASISNEW1(1:3,I)=RBASISNEW(1)*BRAVAISINV(1:3,1)+RBASISNEW(2)*BRAVAISINV(1:3,2)+RBASISNEW(3)*BRAVAISINV(1:3,3)
          ENDIF
-         WRITE(6,*) 'rnew',RBASISNEW1(:,I)
+         WRITE(1337,*) 'rnew',RBASISNEW1(:,I)
          IF (I.GT.1) THEN
             DO I1=1,I-1
                DIFF=SQRT((RBASISNEW1(1,I)-RBASISNEW1(1,I1))**2+(RBASISNEW1(2,I)-RBASISNEW1(2,I1))**2+(RBASISNEW1(3,I)-RBASISNEW1(3,I1))**2)
@@ -209,7 +209,7 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
          IVIR(IBASIS)=I
 100   CONTINUE
       ! IBASIS is the number of virtual atoms
-      WRITE(6,*) 'ibasis',IBASIS,(IVIR(J),J=1,IBASIS)
+      WRITE(1337,*) 'ibasis',IBASIS,(IVIR(J),J=1,IBASIS)
 
       if (ibasis+naez>naezd) then
          write(*,*) '[addvirtual] naez increased to ',ibasis
@@ -217,7 +217,7 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
          write(*,*) '[addvirtual] naeznew > naezd please change naezd'
          stop 'addvistual'
       else
-         write(*,*) 'NAEZ will soon be increased to : ',ibasis+naez
+         write(1337,*) 'NAEZ will soon be increased to : ',ibasis+naez
       end if
 
 
@@ -258,23 +258,23 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
 !  -----------------------------------------------------------------
 !     write out stuff
 !  -----------------------------------------------------------------
-    write(*,*) 'addvirtual: List of new basis atoms including virtual atoms'
+    write(1337,*) 'addvirtual: List of new basis atoms including virtual atoms'
     do j = 1, naeznew+nemb
-      write(*,*) rbasis(:,j)
+      write(1337,*) rbasis(:,j)
     end do
-    write(*,*) '-------------------------------------------------'
+    write(1337,*) '-------------------------------------------------'
 
-     write(*,*) 'naeznew is now ',naeznew
-     write(*,*) 'setting naez to naeznew'
+     write(1337,*) 'naeznew is now ',naeznew
+     write(1337,*) 'setting naez to naeznew'
      naez=naeznew
-     write(*,*) 'updating rbasis array with virtual basis sites'
+     write(1337,*) 'updating rbasis array with virtual basis sites'
 
 
 
     do ibasis = 1, naeznew+nemb
-       write(*,*) 'REFPOT',REFPOT(ibasis)
-       write(*,*) 'NOQ',   NOQ(ibasis)
-       write(*,*) 'KAOEZ', KAOEZ(1,ibasis)
+       write(1337,*) 'REFPOT',REFPOT(ibasis)
+       write(1337,*) 'NOQ',   NOQ(ibasis)
+       write(1337,*) 'KAOEZ', KAOEZ(1,ibasis)
     end do
 
 

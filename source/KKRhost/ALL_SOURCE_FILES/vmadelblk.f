@@ -73,8 +73,8 @@ C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
 C     ..................................................................
 C
-      WRITE(6,FMT=99001)
-      WRITE(6,FMT=99002)
+      WRITE(1337,FMT=99001)
+      WRITE(1337,FMT=99002)
 C
       PI = 4.0D0*ATAN(1.0D0) 
       LRECABMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD
@@ -179,7 +179,7 @@ C ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 C +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C
                IF ( LM.EQ.1 ) 
-     &              WRITE (6,FMT=99003) IT1,(CATOM(IT1)-ZAT(IT1)),
+     &              WRITE (1337,FMT=99003) IT1,(CATOM(IT1)-ZAT(IT1)),
      &                    (AC/SQRT(4.D0*PI))
 C
 C---> add to v the intercell-potential
@@ -203,7 +203,7 @@ C
 C ================================================================= SPIN
                IF (ICC.NE.0 .or. OPT('KKRFLEX ')) THEN
                   LM = L*L + L + M + 1
-                  write(*,*) 'ac',iq1,lm,ac
+                  write(1337,*) 'ac',iq1,lm,ac
                   VINTERS(LM,IQ1) = AC
                END IF
 C 
@@ -216,9 +216,9 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C *********************************************************************
       CLOSE(69)
 C *********************************************************************
-      WRITE(*,*) 'ICC in VMADELBLK',ICC
-      WRITE(6,'(25X,30(1H-),/)')
-      WRITE(6,'(79(1H=))')
+      WRITE(1337,*) 'ICC in VMADELBLK',ICC
+      WRITE(1337,'(25X,30(1H-),/)')
+      WRITE(1337,'(79(1H=))')
 C
       IF (ICC.EQ.0 .and. OPT('KKRFLEX ')==.false.) RETURN
 C *********************************************************************
@@ -227,23 +227,23 @@ C Now Prepare output for Impurity calculation
 C
 C *********************************************************************
       OPEN (91,FILE='intercell_ref',STATUS='unknown',FORM='formatted')
-      WRITE(6,*) 
-      WRITE(6,*) '                     ',
+      WRITE(1337,*) 
+      WRITE(1337,*) '                     ',
      &     'Writing intercell potential for impurity'
-      WRITE(6,'(/,20X,55(1H-))')
-      WRITE(6,99004) HOSTIMP(0),LMMAX
-      WRITE(6,'(20X,55(1H-),/,35X,"  i host lm  Vint")') 
+      WRITE(1337,'(/,20X,55(1H-))')
+      WRITE(1337,99004) HOSTIMP(0),LMMAX
+      WRITE(1337,'(20X,55(1H-),/,35X,"  i host lm  Vint")') 
       DO I=1,HOSTIMP(0)
-         WRITE(6,*)
+         WRITE(1337,*)
          LM = 1
-         WRITE(6,'(35X,I4,I4,I3,1X,F10.6)') I, HOSTIMP(I),
+         WRITE(1337,'(35X,I4,I4,I3,1X,F10.6)') I, HOSTIMP(I),
      &        LM,VINTERS(LM,HOSTIMP(I))
          DO LM=2,9
-            WRITE (6,'(43X,I3,1X,F10.6)') LM,VINTERS(LM,HOSTIMP(I))
+            WRITE (1337,'(43X,I3,1X,F10.6)') LM,VINTERS(LM,HOSTIMP(I))
          END DO
-         WRITE(6,'(20X,55(1H-))')
+         WRITE(1337,'(20X,55(1H-))')
       END DO
-      WRITE(6,'(79(1H=),/)')
+      WRITE(1337,'(79(1H=),/)')
 C         
       WRITE(91,99005) HOSTIMP(0),LMMAX
       DO I=1,HOSTIMP(0)

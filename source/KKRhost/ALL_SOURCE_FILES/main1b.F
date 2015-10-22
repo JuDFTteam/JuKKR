@@ -205,15 +205,6 @@ C     .. Data statements
      &             'BANDED + CORNERS MATRIX (supercell)' /
       DATA IPRINT / 1 /
 C     ..
-C     .. MPI variables ..
-CMPI  INTEGER MYRANK,NROFNODES,IERR
-CMPI  COMMON /MPI/MYRANK,NROFNODES
-CT3E  INTEGER ICLKTCK,ICLOCKS,IE,MEND,MSTART
-CT3E  DOUBLE PRECISION TIME1,TIME2,TIME3,TIME4
-CMPI  INTEGER MAPBLOCK
-CMPI  EXTERNAL MPI_ALLREDUCE,MPI_COMM_RANK,MPI_COMM_SIZE,
-CMPI +         MPI_FINALIZE,MPI_INIT
-C     ..
 C
 
 !       ALLOCATE(TMAT(LMMAXD,LMMAXD),TSST(LMMAXD,LMMAXD,NATYPD),
@@ -240,12 +231,6 @@ Consistency check
      &   STOP ' set NSPIND = 1 for KREL = 1 in inc.p'
 
       PI = 4.D0*DATAN(1.D0)
-C    
-CT3E  CALL SYSTEM_CLOCK(MSTART)
-CMPI  CALL MPI_INIT(IERR)
-CMPI  CALL MPI_COMM_RANK(MPI_COMM_WORLD,MYRANK,IERR)
-CMPI  CALL MPI_COMM_SIZE(MPI_COMM_WORLD,NROFNODES,IERR)
-CMPI  IF ( MYRANK.NE.0 ) OPEN (6,STATUS='scratch',FORM='formatted')
 C
 C ======================================================================
 C =             read in variables from unformatted files               =
@@ -374,7 +359,7 @@ C
 
       CALL SETFACTL(FACTL,LMAX,KREL,LMMAXD)
 C     
-      if(myrank==master) WRITE(6,2100) INVALG(INVMOD)
+      WRITE(1337,2100) INVALG(INVMOD)
 C
 
 
@@ -505,7 +490,7 @@ C
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
          
-         write(*,*) 'start e-loop',myrank,ie_start, ie_end
+!          write(*,*) 'start e-loop',myrank,ie_start, ie_end
 
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
@@ -528,7 +513,7 @@ C
 
             ERYD = EZ(IE)
             NMESH = KMESH(IE)
-            WRITE (6,'(A,I3,A,2(1X,F10.6),A,I3)') 
+            WRITE (1337,'(A,I3,A,2(1X,F10.6),A,I3)') 
      &             ' ************ IE = ',IE,' ENERGY =',EZ(IE),
      &                ' KMESH = ', NMESH
 C ********************************************************** I1 = 1,NREF
@@ -628,8 +613,8 @@ C
      &                   LMMAXD**2*naez*(ie-1)+
      &                   LMMAXD**2*ielast*naez*(ispin-1)
                   read(37,rec=irec) tread
-                  write(*,'(A,7I5,2F15.8)') 'irec_read',myrank,irec,
-     &             lm1,lm2,isite,ie,ispin, tread
+!                   write(*,'(A,7I5,2F15.8)') 'irec_read',myrank,irec,
+!      &             lm1,lm2,isite,ie,ispin, tread
                   IF ( (LM1+LM2).NE.0 ) THEN                  ! qdos ruess
                      TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
                   END IF                                      ! qdos ruess
@@ -686,8 +671,8 @@ C           Skip this part if first part of the qdos is running
 C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- before introducing qdos
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
-                if(myrank==master) write(*,*) 'test_gmat',irec,iq,ie,
-     &                     ispin,i1,gmat0(2,5)
+!                 if(myrank==master) write(*,*) 'test_gmat',irec,iq,ie,
+!      &                     ispin,i1,gmat0(2,5)
                 if (t_tgmat%gmat_to_file) then
                    WRITE (70,REC=IREC) GMAT0
                 else
@@ -728,7 +713,7 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
                     ENDDO
                 ENDDO
                 irec = ielast*(ispin-1)+ ie+1
-                write(*,*) 'write gimp',myrank,ie_num,ie,ispin,irec
+!                 write(*,*) 'write gimp',myrank,ie_num,ie,ispin,irec
                 WRITE(888,REC=irec) GIMP
                 IF ( ( OPT('GPLAIN  ') ) ) THEN
                   WRITE(8888,'(50000E)') GIMP
@@ -786,26 +771,23 @@ C
 
 c ------------------------------------------------------------------------
 
-CMPI     END IF
  360     CONTINUE               ! IE = 1,IELAST
 
-CMPI     IF( MYRANK.EQ.0 ) THEN
          IF( NCPAFAIL .NE. 0 ) THEN
-            WRITE(6,*)
-            WRITE(6,'(1X,79(''*''),/)')
-            WRITE(6,99019) CPATOL, NCPAFAIL,
+            WRITE(1337,*)
+            WRITE(1337,'(1X,79(''*''),/)')
+            WRITE(1337,99019) CPATOL, NCPAFAIL,
      &           (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),
      &           IE=1,NCPAFAIL)
-            WRITE(6,'(1X,79(''*''),/)')
-            WRITE(6,*)
+            WRITE(1337,'(1X,79(''*''),/)')
+            WRITE(1337,*)
          ELSE
             IF( NCPA .NE. 0 ) THEN
-               WRITE(6,*)
-               WRITE(6,99020)
-               WRITE(6,*)
+               WRITE(1337,*)
+               WRITE(1337,99020)
+               WRITE(1337,*)
             END IF
          END IF
-CMPI     END IF
 C         
  370  CONTINUE                  !  ISPIN = 1,NSPIN
       
@@ -841,7 +823,7 @@ c read in Green function of reference system
        endif
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
-            WRITE (6,'(A,I3,A,2(1X,F10.6),A,I3)') 
+            WRITE (1337,'(A,I3,A,2(1X,F10.6),A,I3)') 
      &             ' ************ IE = ',IE,' ENERGY =',EZ(IE),
      &                ' KMESH = ', NMESH
 
@@ -876,7 +858,7 @@ c read in theta and phi for noncolinear
           THETA=THETA*(2.0D0*PI/360.0D0)
           PHI=PHI*(2.0D0*PI/360.0D0)
           IF(ABS(THETA).GE.PI .OR. ABS(PHI).GE.2*PI) THEN
-             write(*,*) 'WARNING: Check if your
+             write(1337,*) 'WARNING: Check if your
      & nonco_angels file is correct! Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
      & angles are given in degree (0...360)'
@@ -1112,7 +1094,6 @@ C
 !          CLOSE(702)                                                      ! LLY
       ENDIF                                                              ! LLY
 C
-CMPI  IF( MYRANK.EQ.0 ) THEN
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
 !       open(23,FILE='energies.dat',STATUS='unknown',FORM='formatted')
@@ -1129,7 +1110,6 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !         close (23)
       END IF
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-CMPI  END IF
 C
       CLOSE (69)
       CLOSE (70)
@@ -1146,31 +1126,8 @@ C     kpoint (defined in qvec.dat)
       if(t_lloyd%tralpha_to_file) CLOSE(692)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
 C ----------------------------------------------------------------------C
-CT3E  CALL SYSTEM_CLOCK(MEND)
-CT3E  TIME3 = (MEND-MSTART)
-CT3E  TIME4 = 0.0D0
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1,' seconds',
-CT3E +  TIME2,' seconds',
-CT3E +  TIME3,' seconds',
-CT3E +  TIME4,' seconds'
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1+TIME2+TIME3+TIME4,' seconds'
-CT3E  TIME1=TIME1*NROFNODES
-CT3E  TIME2=TIME2*NROFNODES
-CT3E  TIME3=TIME3*NROFNODES
-CT3E  TIME4=TIME4*NROFNODES
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1,' seconds',
-CT3E +  TIME2,' seconds',
-CT3E +  TIME3,' seconds',
-CT3E +  TIME4,' seconds'
-CT3E  IF (MYRANK.EQ.0) WRITE (6,FMT=*) 'elapsed time ',
-CT3E +  TIME1+TIME2+TIME3+TIME4,' seconds'
-CMPI  CALL MPI_FINALIZE(IERR)
       !STOP
-      if(myrank==master) 
-     & WRITE (6,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
+      WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
 
  2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
      &     79(1H=),/)

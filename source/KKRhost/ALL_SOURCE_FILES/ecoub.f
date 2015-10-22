@@ -206,8 +206,8 @@ c
 c         atom nr. iatyp is the iatyp-th atom on the potential cards
 c         e. g., in binary alloys iatyp=1 and iatyp=2 refer to host
 c
-          WRITE (6,FMT=9010) IATYP,VMAD
-          WRITE (6,FMT=9000) IATYP,VM
+          WRITE (1337,FMT=9010) IATYP,VMAD
+          WRITE (1337,FMT=9000) IATYP,VM
         END IF                      ! (KVMAD.EQ.1)
 
   100 CONTINUE                      ! IATYP = 1,NATYP

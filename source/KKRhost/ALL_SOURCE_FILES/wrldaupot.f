@@ -29,7 +29,7 @@ C ======================================================================
       
       
       OPEN (67,FILE='ldaupot_new',FORM='FORMATTED')
-      WRITE(6,99001)
+      WRITE(1337,99001)
       WRITE(67,99002) ITRUNLDAU,'    ITRUNLDAU'
       WRITE(67,99002) NATYP,'    NATYP'
       WRITE(67,99003) NATYP

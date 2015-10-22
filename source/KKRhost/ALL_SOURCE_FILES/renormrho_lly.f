@@ -65,7 +65,7 @@
      &           RHOSPHER(1:IRMD,IE,ISPIN,1:NATYP) * RENORM(ISPIN)  ! Integration weight included in RHOSPHER
          ENDDO
 
-         WRITE(*,FMT='(A12,I5,2F16.12)') 
+         WRITE(1337,FMT='(A12,I5,2F16.12)') 
      &           'RENORM_LLY: ',IE,RENORM(1),RENORM(2)
 
 
