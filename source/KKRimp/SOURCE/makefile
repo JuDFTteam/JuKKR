@@ -19,12 +19,19 @@
 # specify the compiler which is going to be used   #
 ####################################################
 # default value
-FC =  ifort
+#FC =  ifort
+# on Aachen cluster:
+# $(FC) points to standard compiler in environment
+#
+
 # change default value if a flag is matched
-mpi:       FC = mpiifort
+#mpi:        FC = mpiifort
+mpi:        FC = $(MPIFC)
+mpitrace:  FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
-gfort:     FC = /usr/users/iff_th1/bauer/bin/gfortran
-pg:        FC = pgf90 
+gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
+pg:         FC = pgf90 
+hybrid:     FC= $(MPIFC)
 
 ####################################################
 # Objects to compile                               #
@@ -49,10 +56,17 @@ OBJECTS2 = $(OBJECTS_TYPE) $(OBJECTS_MATH) $(OBJECTS_DIRAC2) $(OBJECTS_LDAU) $(O
 ####################################################
 
 # standart libs
-LLIBS = -llapack_ifort -lblas_ifort  -L/usr/local/intel/lib/intel64 -lifcore -limf  -Wl,-rpath,/usr/local/intel/lib/intel64
+#LLIBS = -llapack_ifort -lblas_ifort  -L/usr/local/intel/lib/intel64 -lifcore -limf  -Wl,-rpath,/usr/local/intel/lib/intel64
+# Aachen cluster
+#LLIBS =-L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+### for sequential libraries (no hybrid parallelisation) use this
+LLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 # openmp libs
-LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+#LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+### link parallel omp libraries for hybrid parallelisation
+LLIBSOPENMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 
+LLIBSOPENMP+=  -lmkl_intel_thread -liomp5
 
 # Special libraries for gfortran:
 LLIBSGFORT = -L/usr/local/nag/lib -lnag -llapack_ifort -lblas_ifort  -L/usr/local/intel/current/lib/intel64 -lifcore -liomp5 -lintlc -limf -lirc -lpthread -Wl,-rpath,/usr/local/intel/current/lib/intel64
@@ -68,8 +82,10 @@ LLIBSMAC  =  -L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries/32 -l
 CPP=
 # change to if flag is matched
 mpidebug:      CPP = -D MPI
+mpitrace:      CPP = -D MPI
 mpi:      CPP = -D MPI
 gfort:    CPP = -D GFORT
+hybrid:   CPP = -D MPI
 
 ####################################################
 # Compiler flags                                   #
@@ -79,8 +95,8 @@ FFLAGS       =  -O2
 # Change to if flag is matched:
 gfort:    FFLAGS = -O0 -fcheck=all -frange-check  -fbounds-check -g -ff2c
 pg:       FFLAGS = -C
-#debug:    FFLAGS = -CB -check all -traceback -g
-debug:    FFLAGS = -debug all -fno-omit-frame-pointer -ftrapuv -check all -traceback  -O0
+debug:    FFLAGS = -CB -check all -traceback -g
+#debug:    FFLAGS = -debug all -fno-omit-frame-pointer -ftrapuv -check all -traceback  -O0
 mpidebug: FFLAGS = -CB -check all -traceback -g
 ####################################################
 # Linking                                          #
@@ -90,6 +106,8 @@ SOURCEDIR = .
 
 cbg:   $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
+hybrid:   $(OBJECTS)
+	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSOPENMP)
 openmp:   $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSOPENMP)
 debug:   $(OBJECTS)
@@ -99,6 +117,8 @@ pg:   $(OBJECTS)
 gfort: $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSGFORT)
 mpi:   $(OBJECTS)
+	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
+mpitrace: $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
 mpidebug: $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)

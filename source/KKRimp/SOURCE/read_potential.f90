@@ -389,7 +389,8 @@ DO IATOM= 1, NATOM
 
 
    IF (INS==1) THEN
-      IF (abs(ALAT*XRN(1,IATOM)-CELL(IATOM)%RCORE)>10e-10)  THEN
+      !IF (abs(ALAT*XRN(1,IATOM)-CELL(IATOM)%RCORE)>10e-10)  THEN
+      IF (abs(ALAT*XRN(1,IATOM)-CELL(IATOM)%RCORE)>10e-7)  THEN
          write(*,*) IATOM,ALAT*XRN(1,IATOM),CELL(IATOM)%RCORE
          stop '[read_potential] RMT inconsistency betweeen shape and potential file'
       END IF
