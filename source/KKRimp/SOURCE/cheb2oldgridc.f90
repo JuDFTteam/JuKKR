@@ -20,7 +20,8 @@ double precision,allocatable :: CCmatrix(:,:)
 double complex :: alphaparams(0:ncheb,lmmaxpot)
 double precision  :: rmeshnorm(cell%nrmax)
 double precision  :: halfsum,halfdiffinv,rshift,tol
-parameter(tol=1.d-13)
+parameter(tol=1.d-10)
+!parameter(tol=1.d-13)
 
 ! divide the mesh into subintervals
 intsub(1,:)=0
