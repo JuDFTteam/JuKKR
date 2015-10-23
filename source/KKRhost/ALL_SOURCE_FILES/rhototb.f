@@ -223,13 +223,13 @@ c
           END DO                      ! ISPIN = 1,NSPIN
 C
 C-----------------------------------------------------------------------
-          IF (IOEZ.NE.NOQ(IQEZ)) WRITE(1337,'(2X,77(1H-))')
+          IF (IOEZ.NE.NOQ(IQEZ)) WRITE(IPF,'(2X,77(1H-))')
         END DO
 C                                     ! IOEZ = 1, NOQ(IQEZ)
 C ======================================================================
 
         IF (NOQ(IQEZ).GT.1) THEN
-          WRITE(1337,'(2X,77(1H=))')
+          WRITE(IPF,'(2X,77(1H=))')
           WRITE(IPF,FMT=9071) IQEZ,CSITE(IQEZ,1)
           IF (NSPIN.EQ.2) THEN
               WRITE(IPF,FMT=9072) CSITE(IQEZ,NSPIN)
@@ -238,13 +238,13 @@ C ======================================================================
                   WRITE(IPF,FMT=9074) CSITE(IQEZ,NSPIN)+MUOSITE(IQEZ)
               END IF
           END IF
-          IF (IQEZ.NE.NAEZ) WRITE(1337,'(2X,77(1H=))')
+          IF (IQEZ.NE.NAEZ) WRITE(IPF,'(2X,77(1H=))')
         ELSE
-          IF (IQEZ.NE.NAEZ) WRITE(1337,'(2X,77(1H=))')
+          IF (IQEZ.NE.NAEZ) WRITE(IPF,'(2X,77(1H=))')
         END IF
 
       END DO
-      WRITE(1337,*)
+      WRITE(IPF,*)
 C                                     ! IQEZ = 1, NAEZ
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -255,8 +255,9 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      &           + DBLE(NSHELL(I1))*(CATOM(I1,1) - Z(I1))*CONC(I1)
       END DO
 
-      WRITE(1337,'(79(1H+))')
+      WRITE(IPF,'(79(1H+))')
       WRITE (IPF,FMT=9020) ITC,CHRGNT
+      WRITE ( 6 ,FMT=9020) ITC,CHRGNT
 
       IF (NSPIN.EQ.2) THEN
         TOTSMOM = 0.0D0
@@ -270,10 +271,14 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         IF (KREL.EQ.0) THEN
           WRITE (IPF,FMT=9030) TOTSMOM
+          WRITE ( 6 ,FMT=9030) TOTSMOM
         ELSE
           WRITE (IPF,FMT=9030) TOTSMOM+TOTOMOM
           WRITE (IPF,FMT=9031) TOTSMOM
           WRITE (IPF,FMT=9032) TOTOMOM
+          WRITE ( 6 ,FMT=9030) TOTSMOM+TOTOMOM
+          WRITE ( 6 ,FMT=9031) TOTSMOM
+          WRITE ( 6 ,FMT=9032) TOTOMOM
         END IF
       END IF
       WRITE (IPF,*)

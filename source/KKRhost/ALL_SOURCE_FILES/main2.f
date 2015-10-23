@@ -55,7 +55,7 @@ C     .. Local Scalars ..
       INTEGER IELAST,ICC,INS,LMAX,NATYP,
      &        NPNT1,NPNT2,NPNT3,NPOL,NSPIN,NSRA,IE,ICONT
       INTEGER ITSCF,SCFSTEPS
-      INTEGER IPF,IPF2,IMIX,ISHIFT,ITDBRY,KSHAPE  
+      INTEGER IPF,IMIX,ISHIFT,ITDBRY,KSHAPE  
       INTEGER KPRE,KTE,KVMAD,KXC,KFORCE,LSMEAR
       INTEGER LPOT,LMPOT,NAEZ
       INTEGER I,J,IPOT,ISPIN,I1,IH,IRC1,IRMIN1,IT,IO,LM,IR
@@ -358,7 +358,6 @@ C
 C
       ICONT = 1
       IPF = 1337
-      IPF2 = 6
       NSPIN = 2*KREL + (1-KREL)*NSPIN
       IDOSEMICORE = 0
       IF ( OPT('SEMICORE') ) IDOSEMICORE = 1
@@ -394,7 +393,7 @@ C
 C -->   determine total charge density expanded in spherical harmonics
 C
       IF(TEST('flow    ')) write(1337,*) '>>> RHOTOTB'
-      CALL RHOTOTB(IPF2,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,
+      CALL RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,
      +             ZAT,DRDI,IRWS,IRCUT,
      +             LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,
      +             ITSCF,NSHELL,NOQ,CONC,KAOEZ,CHRGATOM)
@@ -457,7 +456,7 @@ C    -> number of semicore bands
       END IF
 C ----------------------------------------------------------------------
 C
-      WRITE (6,FMT=9020) EFOLD,E2SHIFT
+      !WRITE (6,FMT=9020) EFOLD,E2SHIFT
       WRITE (1337,FMT=9020) EFOLD,E2SHIFT
 C
 C --> divided by NAEZ because the weight of each atom has been already
