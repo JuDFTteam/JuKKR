@@ -156,7 +156,7 @@ C
          END IF
 C
          IF ( NATYP.GT.1 .OR. NSHELL(IATYP).GT.1 ) THEN
-            WRITE (6,FMT=99012) IATYP,ET
+            WRITE (1337,FMT=99012) IATYP,ET
             IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
      &           WRITE(1337,99021) EU(IATYP) - EDCLDAU(IATYP)
             WRITE (1337,FMT=99022)

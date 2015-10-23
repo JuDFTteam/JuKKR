@@ -75,7 +75,7 @@ C =====================================================================
 C ---------------------------------------------------------------------
 C     general settings
       PARAMETER ( KREL = 0 )
-      PARAMETER ( KORBIT = 1 ) 
+      PARAMETER ( KORBIT = 0 ) 
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
@@ -87,7 +87,7 @@ C     general settings
       PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 10)
+      PARAMETER ( NAEZD = 24)
       PARAMETER ( NATYPD = NAEZD )
 !      PARAMETER ( NSHELD = NATYPD + 155)
       PARAMETER ( NSHELD = NATYPD + 300)
