@@ -927,7 +927,7 @@ C
       write(1337,*) 'MIXSTR',MIX
       CALL MIXSTR(RMSAVQ,RMSAVM,INS,LPOT,LMPOT,0,NSHELL,
      +            1,NATYP,CONC,NSPIN,
-     +            ITSCF,RFPI,FPI,IPF2,
+     +            ITSCF,RFPI,FPI,IPF,
      +            MIX,
      +            FCM,IRC,IRMIN,R,DRDI,VONS,
      +            VISP,VINS,
