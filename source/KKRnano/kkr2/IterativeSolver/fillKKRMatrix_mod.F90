@@ -295,9 +295,9 @@ module fillKKRMatrix_mod
   !>
   !> @param GLLKE1 output: solution in old format
   !> @param mat_X: solution with l-cutoff
-  subroutine toOldSolutionFormat(gllke1, mat_x, lmmaxd, kvstr)
+  subroutine toOldSolutionFormat(gllke1, mat_X, lmmaxd, kvstr)
     double complex, intent(out) :: gllke1(:,:)
-    double complex, intent(in) :: mat_x(:,:)
+    double complex, intent(in) :: mat_X(:,:)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: kvstr(:)
 
@@ -312,7 +312,7 @@ module fillKKRMatrix_mod
       lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
 
       do lm1 = 1, lmmax1
-        gllke1((atom_index-1)*lmmaxd+lm1,:) = mat_x(start+lm1,:)
+        gllke1((atom_index-1)*lmmaxd+lm1,:) = mat_X(start+lm1,:)
       enddo ! lm1
 
     enddo ! atom_index
