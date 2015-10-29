@@ -58,36 +58,7 @@ module one_sided_commZ_mod
   use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
   implicit none
   private
-
   
-!   !!! interfacing these functions does not work because of (*) interfaces
-!   public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
-!   
-!   interface copyFrom
-!     module procedure copyFromZ_com
-!   endinterface
-!   
-!   interface exposeBuffer
-!     module procedure exposeBufferZ
-!   endinterface
-!   
-!   interface copyChunks
-!     module procedure copyChunksZ
-!   endinterface
-!   
-!   interface copyChunksNoSync
-!     module procedure copyChunksNoSyncZ
-!   endinterface
-!   
-!   interface fence
-!     module procedure fenceZ
-!   endinterface
-!   
-!   interface hideBuffer
-!     module procedure hideBufferZ
-!   endinterface
-  
-  ! deprecated public statements (to be private in the future)
   public :: copyFromZ_com
   public :: exposeBufferZ
   public :: copyChunksZ
@@ -151,7 +122,7 @@ endsubroutine copyFromZ_com
 
 subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
   integer, intent(inout) :: win 
-  NUMBERZ, intent(inout) :: buffer(*)
+  NUMBERZ, intent(in) :: buffer(*)
   integer, intent(in) :: bsize
   integer, intent(in) :: chunk_size 
   integer, intent(in) :: communicator

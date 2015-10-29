@@ -18,18 +18,18 @@ module RefCluster_mod
 
   type LatticeVectors
     integer :: nrd
-    double precision, allocatable :: rr(:,:) ! dim(3,0:nrd)
+    double precision, allocatable :: rr(:,:) !< dim(3,0:nrd)
   endtype
 
   type RefCluster
-    !> reference to LatticeVectors datastructure
-    double precision, allocatable :: rcls(:,:) !< dim(3,nacls) positions relative to center
-    integer, allocatable :: atom(:)  !< dim(nacls) basis atom indices of cluster atoms
-    integer, allocatable :: ezoa(:)  !< dim(nacls) points into lattice_vectors%rr
-    integer, allocatable :: indn0(:) !< dim(numn0) indices of inequivalent cluster atoms
     integer :: numn0 !< number of inequivalent cluster atoms
     integer :: nacls !< number of cluster atoms
     integer :: atom_index !< basis atom index of central cluster atom
+    !> reference to LatticeVectors datastructure
+    integer, allocatable :: atom(:)  !< dim(nacls) basis atom indices of cluster atoms
+    integer, allocatable :: indn0(:) !< dim(numn0) indices of inequivalent cluster atoms
+    integer, allocatable :: ezoa(:)  !< dim(nacls) points into lattice_vectors%rr, which periodic image
+    double precision, allocatable :: rcls(:,:) !< dim(3,nacls) positions relative to center
   endtype
 
   interface create
@@ -120,7 +120,7 @@ module RefCluster_mod
   endsubroutine ! destroy
 
 
-  ! ************************************************************************
+  !------------------------------------------------------------------------------
   subroutine clsgen99(jatom, rcut, nr, rr, naez, rbasis, nacls, rcls, atom, ezoa, indn0, numn0)
     use Sorting_mod, only: dsort
     
@@ -237,8 +237,7 @@ module RefCluster_mod
 
 
 
-  !*==rrgen.f    processed by SPAG 6.05Rc at 20:37 on 17 May 2004
-  ! 02.08.95 *************************************************************
+  !------------------------------------------------------------------------------
   subroutine rrgen(bv, rmax, rr, nr)
     !> generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms in routine CLSGEN99
     use Sorting_mod, only: dsort
@@ -294,7 +293,7 @@ module RefCluster_mod
       do i2 = -nn(2), nn(2)
         do i3 = -nn(3), nn(3)
           v(1:3) = i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3)
-          rr2 = sum(v(1:3)**2)
+          rr2 = sum(v(1:3)*v(1:3))
                   
           ! todo: verify that v(1:3) == i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3) 
           !       ... and then get rid of the vector-subroutines vmul, vadd, veq

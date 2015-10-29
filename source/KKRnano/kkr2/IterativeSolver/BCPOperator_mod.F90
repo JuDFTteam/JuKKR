@@ -24,10 +24,7 @@ module BCPOperator_mod
     type(ClusterInfo), pointer :: cluster_info
     integer :: lmmaxd
     contains
-      procedure :: calc   => calc_BCPOperator
-      procedure :: apply  => apply_BCPOperator
-!     procedure :: create => create_BCPOperator
-!     procedure :: destroy => destroy_BCPOperator ! todo: delete this
+      procedure :: apply => apply_BCPOperator
   endtype
 
   interface create

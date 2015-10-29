@@ -20,9 +20,7 @@ module KKROperator_mod
   type, extends(OperatorT) :: KKROperator
     type(MultScatData) :: ms
     contains
-      procedure :: apply  => apply_KKROperator
-!     procedure :: create => create_KKROperator
-!     procedure :: destroy => destroy_KKROperator
+      procedure :: apply => apply_KKROperator
   endtype
 
   interface create
@@ -59,8 +57,8 @@ module KKROperator_mod
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 
-    double complex, parameter :: CZERO = (0.d0, 0.d0)
-    mat_AX = CZERO
+    double complex, parameter :: ZERO = (0.d0, 0.d0)
+    mat_AX = ZERO
 
     ! perform sparse VBR matrix * dense matrix
     call multiply_vbr(self%ms%GLLH, mat_X, mat_AX, self%ms%sparse)

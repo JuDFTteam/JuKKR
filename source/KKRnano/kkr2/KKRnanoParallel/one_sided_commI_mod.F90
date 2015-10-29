@@ -58,36 +58,7 @@ module one_sided_commI_mod
   use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
   implicit none
   private
-
   
-!   !!! interfacing these functions does not work because of (*) interfaces
-!   public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
-!   
-!   interface copyFrom
-!     module procedure copyFromI_com
-!   endinterface
-!   
-!   interface exposeBuffer
-!     module procedure exposeBufferI
-!   endinterface
-!   
-!   interface copyChunks
-!     module procedure copyChunksI
-!   endinterface
-!   
-!   interface copyChunksNoSync
-!     module procedure copyChunksNoSyncI
-!   endinterface
-!   
-!   interface fence
-!     module procedure fenceI
-!   endinterface
-!   
-!   interface hideBuffer
-!     module procedure hideBufferI
-!   endinterface
-  
-  ! deprecated public statements (to be private in the future)
   public :: copyFromI_com
   public :: exposeBufferI
   public :: copyChunksI
@@ -116,8 +87,13 @@ subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
   integer, intent(in) :: communicator
 
   type(ChunkIndex), allocatable :: chunk_inds(:)
-  integer :: ii, ierr, naez_trc ! size(atom_indices)
-  integer :: naez, nranks, atom_requested, win
+  integer :: ii
+  integer :: ierr
+  integer :: naez_trc ! size(atomindices)
+  integer :: naez
+  integer :: nranks
+  integer :: atom_requested
+  integer :: win
 
   naez_trc = size(atom_indices)
 
@@ -132,7 +108,7 @@ subroutine copyFromI_com(receive_buf, local_buf, atom_indices, chunk_size, num_l
     atom_requested = atom_indices(ii)
     chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
     chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
-  enddo ! ii
+  enddo
 
   call exposeBufferI(win, local_buf, chunk_size*num_local_atoms, chunk_size, communicator)
   call copyChunksI(receive_buf, win, chunk_inds, chunk_size)
@@ -146,7 +122,7 @@ endsubroutine copyFromI_com
 
 subroutine exposeBufferI(win, buffer, bsize, chunk_size, communicator)
   integer, intent(inout) :: win 
-  NUMBERI, intent(inout) :: buffer(*)
+  NUMBERI, intent(in) :: buffer(*)
   integer, intent(in) :: bsize
   integer, intent(in) :: chunk_size 
   integer, intent(in) :: communicator

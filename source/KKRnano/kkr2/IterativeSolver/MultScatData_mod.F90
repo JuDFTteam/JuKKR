@@ -8,19 +8,14 @@ module MultScatData_mod
   public :: MultScatData, create, destroy
 
   type MultScatData
-    type(SparseMatrixDescription) :: sparse
-
-    double complex, allocatable :: mat_B(:,:)
-    double complex, allocatable :: mat_X(:,:)
-    double complex, allocatable :: eikrp(:)
-    double complex, allocatable :: eikrm(:)
-    double complex, allocatable :: GLLH(:)
-
-    integer, allocatable :: atom_indices(:)
     integer :: lmmaxd
     integer :: naez
+    type(SparseMatrixDescription) :: sparse
+    double complex, allocatable :: GLLh(:)
+    double complex, allocatable :: mat_B(:,:)
+    double complex, allocatable :: mat_X(:,:)
+    integer, allocatable :: atom_indices(:) !< a copy of the atom indices
     type(ClusterInfo), pointer :: cluster_info
-
   endtype
   
   interface create
@@ -38,20 +33,20 @@ module MultScatData_mod
   subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
     use TEST_lcutoff_mod, only: lmarray
     use fillKKRMatrix_mod, only: getKKRMatrixStructure
-    use SparseMatrixDescription_mod, only: create, getNNZ
+    use SparseMatrixDescription_mod, only: create, getNNZ, getNrows
 
     type(MultScatData), intent(inout) :: ms
     type(ClusterInfo), target, intent(in) :: cluster_info
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: atom_indices(:)
 
-    integer :: sum_cluster, naez, naclsd
+    integer :: sum_cluster, naez, naclsd, nCols, nRows
 
     ms%cluster_info => cluster_info
 
     sum_cluster = sum(cluster_info%numn0_trc)
     naez   = size(cluster_info%indn0_trc, 1)
-    naclsd = size(cluster_info%indn0_trc, 2)
+    naclsd = size(cluster_info%indn0_trc, 2) ! not used
     ms%lmmaxd = lmmaxd
     ms%naez = naez
 
@@ -61,10 +56,13 @@ module MultScatData_mod
 
     call getKKRMatrixStructure(lmarray, cluster_info%numn0_trc, cluster_info%indn0_trc, ms%sparse)
 
-    allocate(ms%mat_B(ms%sparse%kvstr(naez+1)-1,lmmaxd*size(atom_indices)))
-    allocate(ms%mat_X(ms%sparse%kvstr(naez+1)-1,lmmaxd*size(atom_indices)))
-    allocate(ms%GLLH(getNNZ(ms%sparse))) ! allocate memory for sparse matrix
-    allocate(ms%eikrm(naclsd), ms%eikrp(naclsd))
+    nRows = getNrows(ms%sparse, naez)
+    nCols = lmmaxd*size(atom_indices)
+    
+    allocate(ms%mat_B(nRows,nCols))
+    allocate(ms%mat_X(nRows,nCols))
+    allocate(ms%GLLh(getNNZ(ms%sparse))) ! allocate memory for sparse matrix
+    
   endsubroutine ! create
 
   !------------------------------------------------------------------------------
@@ -75,9 +73,7 @@ module MultScatData_mod
 
     integer :: ist ! ignore status
     
-    deallocate(ms%eikrp, stat=ist)
-    deallocate(ms%eikrm, stat=ist)
-    deallocate(ms%GLLH, stat=ist)
+    deallocate(ms%GLLh, stat=ist)
     deallocate(ms%mat_X, stat=ist)
     deallocate(ms%mat_B, stat=ist)
 

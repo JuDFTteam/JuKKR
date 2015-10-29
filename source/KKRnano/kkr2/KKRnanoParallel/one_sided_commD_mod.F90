@@ -58,36 +58,7 @@ module one_sided_commD_mod
   use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
   implicit none
   private
-
   
-!   !!! interfacing these functions does not work because of (*) interfaces
-!   public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
-!   
-!   interface copyFrom
-!     module procedure copyFromD_com
-!   endinterface
-!   
-!   interface exposeBuffer
-!     module procedure exposeBufferD
-!   endinterface
-!   
-!   interface copyChunks
-!     module procedure copyChunksD
-!   endinterface
-!   
-!   interface copyChunksNoSync
-!     module procedure copyChunksNoSyncD
-!   endinterface
-!   
-!   interface fence
-!     module procedure fenceD
-!   endinterface
-!   
-!   interface hideBuffer
-!     module procedure hideBufferD
-!   endinterface
-  
-  ! deprecated public statements (to be private in the future)
   public :: copyFromD_com
   public :: exposeBufferD
   public :: copyChunksD
@@ -151,7 +122,7 @@ endsubroutine copyFromD_com
 
 subroutine exposeBufferD(win, buffer, bsize, chunk_size, communicator)
   integer, intent(inout) :: win 
-  NUMBERD, intent(inout) :: buffer(*)
+  NUMBERD, intent(in) :: buffer(*)
   integer, intent(in) :: bsize
   integer, intent(in) :: chunk_size 
   integer, intent(in) :: communicator

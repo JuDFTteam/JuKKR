@@ -11,13 +11,13 @@ module OperatorT_mod
 
   type, abstract :: OperatorT
     contains
-    procedure(apply), deferred :: apply
+      procedure(apply_interface), deferred :: apply
   endtype
 
   interface
     !----------------------------------------------------------------------------
     !> Applies Operator on mat_X and returns result in mat_AX
-    subroutine apply(self, mat_X, mat_AX)
+    subroutine apply_interface(self, mat_X, mat_AX)
       import OperatorT
       class(OperatorT) :: self
       double complex, intent(in)  :: mat_X(:,:)

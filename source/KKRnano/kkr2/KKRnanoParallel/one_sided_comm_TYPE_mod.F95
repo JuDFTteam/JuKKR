@@ -58,36 +58,7 @@ module one_sided_comm_TYPE_mod
   use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
   implicit none
   private
-
   
-!   !!! interfacing these functions does not work because of (*) interfaces
-!   public :: copyFrom, exposeBuffer, copyChunks, copyChunksNoSync, fence, hideBuffer
-!   
-!   interface copyFrom
-!     module procedure copyFrom_TYPE_com
-!   endinterface
-!   
-!   interface exposeBuffer
-!     module procedure exposeBuffer_TYPE
-!   endinterface
-!   
-!   interface copyChunks
-!     module procedure copyChunks_TYPE
-!   endinterface
-!   
-!   interface copyChunksNoSync
-!     module procedure copyChunksNoSync_TYPE
-!   endinterface
-!   
-!   interface fence
-!     module procedure fence_TYPE
-!   endinterface
-!   
-!   interface hideBuffer
-!     module procedure hideBuffer_TYPE
-!   endinterface
-  
-  ! deprecated public statements (to be private in the future)
   public :: copyFrom_TYPE_com
   public :: exposeBuffer_TYPE
   public :: copyChunks_TYPE
@@ -151,7 +122,7 @@ endsubroutine copyFrom_TYPE_com
 
 subroutine exposeBuffer_TYPE(win, buffer, bsize, chunk_size, communicator)
   integer, intent(inout) :: win 
-  NUMBER_TYPE, intent(inout) :: buffer(*)
+  NUMBER_TYPE, intent(in) :: buffer(*)
   integer, intent(in) :: bsize
   integer, intent(in) :: chunk_size 
   integer, intent(in) :: communicator

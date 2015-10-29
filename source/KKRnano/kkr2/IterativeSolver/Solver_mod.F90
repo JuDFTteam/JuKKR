@@ -11,7 +11,7 @@ module Solver_mod
 
   type, abstract :: Solver
     contains
-      procedure (solve_interface), deferred :: solve
+      procedure(solve_interface), deferred :: solve
   endtype
 
   interface
