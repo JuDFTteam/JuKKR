@@ -15,355 +15,460 @@ module kkrmat_new_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: KKRMAT01_new
+  public :: kkrmat01_new
 
   double complex, allocatable :: full(:,:)
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
 
   contains
 
-!------------------------------------------------------------------------------
-!> Solves multiple scattering problem for every k-point.
-!>
-!> Returns diagonal k-integrated part of Green's function in GS.
-subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, TMATLL, ALAT,NSYMAT,RR, &
-                        GINP, lmmaxd, trunc2atom_index, communicator, iguess_data)
-  !   performs k-space integration,
-  !   determines scattering path operator (g(k,e)-t**-1)**-1 and
-  !   Greens function of the real system -> GS(*,*,*,*),
-  USE_LOGGING_MOD
-  USE_ARRAYLOG_MOD
-  use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
-  use jij_calc_mod, only: global_jij_data, kkrjij
-  use SolverStats_mod, only: SolverStats, reset_stats
-  use TFQMRSolver_mod, only: TFQMRSolver
-  use BCPOperator_mod, only: BCPOperator
-  use KKROperator_mod, only: KKROperator
-  use ChunkIndex_mod, only: ChunkIndex
+  !------------------------------------------------------------------------------
+  !> Solves multiple scattering problem for every k-point.
+  !>
+  !> Returns diagonal k-integrated part of Green's function in GS.
+  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, NOFKS, VOLCUB, GS, tmatLL, alat, nsymat, RR, &
+                          Ginp, lmmaxd, trunc2atom_index, communicator, iguess_data)
+    !   performs k-space integration,
+    !   determines scattering path operator (g(k,e)-t**-1)**-1 and
+    !   Greens function of the real system -> GS(*,*,*,*),
+    USE_LOGGING_MOD
+    USE_ARRAYLOG_MOD
+    use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
+    use jij_calc_mod, only: global_jij_data, kkrjij
+    use SolverStats_mod, only: SolverStats, reset_stats
+    use TFQMRSolver_mod, only: TFQMRSolver
+    use BCPOperator_mod, only: BCPOperator
+    use KKROperator_mod, only: KKROperator
+    use ChunkIndex_mod, only: ChunkIndex
 
-  class(TFQMRSolver), intent(inout) :: solv
-  class(KKROperator), intent(inout) :: kkr_op
-  class(BCPOperator), intent(inout) :: precond
-  integer, intent(in) :: lmmaxd
-  integer, intent(in) :: trunc2atom_index(:)
-  integer, intent(in) :: communicator
-  type(InitialGuess), intent(inout) :: iguess_data
-  double precision, intent(in) :: ALAT
-  integer, intent(in) :: NOFKS
-  integer, intent(in) :: NSYMAT
-  double complex, intent(inout) :: TMATLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
-  doublecomplex, intent(inout) :: GINP(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
-  double complex, intent(out) ::  GS(:,:,:,:) ! (lmmaxd,lmmaxd,NSYMAXD,num_local_atoms)
-  double precision, intent(in) :: BZKP(:,:)
-  double precision, intent(in) :: VOLCUB(:)
-  double precision, intent(in) :: RR(:,0:) 
+    class(TFQMRSolver), intent(inout) :: solver
+    class(KKROperator), intent(inout) :: kkr_op
+    class(BCPOperator), intent(inout) :: preconditioner
+    
+    double precision, intent(in) :: Bzkp(:,:) !< list of k-points
+    integer, intent(in) :: NOFKS !< number of k-points
+    double precision, intent(in) :: VOLCUB(:) !< k-point weights
 
-  double complex, allocatable :: G_diag(:,:,:)
-  integer :: site_lm_size, iat, num_local_atoms, naclsd, naez, k_point_index
-  type(SolverStats) :: total_stats
+    double complex, intent(out) ::  GS(:,:,:,:) ! (lmmaxd,lmmaxd,nsymat,num_local_atoms)
+    double complex, intent(inout) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
+    double precision, intent(in) :: alat
+    integer, intent(in) :: nsymat
+    double precision, intent(in) :: RR(:,0:)
+    double complex, intent(inout) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: communicator
+    type(InitialGuess), intent(inout) :: iguess_data
+
+    ! locals
+    double complex, allocatable :: G_diag(:,:,:)
+    integer :: site_lm_size, iat, num_local_atoms, naclsd, naez, k_point_index
+    type(SolverStats) :: total_stats
 
 #define ms kkr_op%ms
 #define cluster_info ms%cluster_info
 
-  ! array dimensions
-  naez = cluster_info%naez_trc
-  naclsd = cluster_info%naclsd
+    ! array dimensions
+    naez = cluster_info%naez_trc
+    naclsd = cluster_info%naclsd
 
-  site_lm_size = NAEZ*LMMAXD
+    site_lm_size = naez*LMMAXD
 
-  num_local_atoms = size(ms%atom_indices)
+    num_local_atoms = size(ms%atom_indices)
 
-  !-----------------------------------------------------------------------
-  ! Allocate arrays
-  !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    ! Allocate arrays
+    !-----------------------------------------------------------------------
 
-  allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms))
+    allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms))
 
-  ! WARNING: Symmetry assumptions might have been used that are
-  ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
-  ! ---> use sit
-  !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
+    ! WARNING: Symmetry assumptions might have been used that are
+    ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
+    ! ---> use sit
+    !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
 
-  GS = zero
+    GS = zero ! init zero
 
-  TESTARRAYLOG(3, GINP)
+    TESTARRAYLOG(3, Ginp)
 
-  if (global_jij_data%do_jij_calculation) global_jij_data%GSXIJ = zero
+    if (global_jij_data%do_jij_calculation) global_jij_data%GSXIJ = zero
 
-  call reset_stats(total_stats)
+    call reset_stats(total_stats)
 
-!==============================================================================
-  do k_point_index = 1, NOFKS ! K-POINT-LOOP
-!==============================================================================
+    !==============================================================================
+    do k_point_index = 1, NOFKS ! K-POINT-LOOP
+    !==============================================================================
 
-    WRITELOG(4, *) "k-point ", k_point_index
+      WRITELOG(4, *) "k-point ", k_point_index
 
-    ! select right slot for storing initial guess
-    call iguess_set_k_ind(iguess_data, k_point_index)
+      ! select right slot for storing initial guess
+      call iguess_set_k_ind(iguess_data, k_point_index)
 
-    ! Get the scattering path operator for k-point BZKP(:, k_point_index)
-    ! output: ms%mat_X
+      ! Get the scattering path operator for k-point Bzkp(:, k_point_index)
+      ! output: ms%mat_X
 
-    call kloopbody(solv, kkr_op, precond, BZKP(:,k_point_index), TMATLL, GINP, ALAT, RR, trunc2atom_index, communicator, iguess_data)
+      call kloopbody(solver, kkr_op, preconditioner, Bzkp(:,k_point_index), tmatLL, Ginp, alat, RR, trunc2atom_index, communicator, iguess_data)
 
-    call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
+      call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
 
-    ! TODO: use mat_X to calculate Jij
+      ! TODO: use mat_X to calculate Jij
 
-    ! ----------- Integrate Scattering Path operator over k-points --> GS -----
-    ! Note: here k-integration only in irreducible wedge
-    call greenKSummation(G_diag, GS, VOLCUB(k_point_index), ms%atom_indices, NSYMAT, lmmaxd)
-    ! -------------------------------------------------------------------------
+      ! ----------- Integrate Scattering Path operator over k-points --> GS -----
+      ! Note: here k-integration only in irreducible wedge
+      call greenKSummation(G_diag, GS, VOLCUB(k_point_index), ms%atom_indices, nsymat, lmmaxd)
+      ! -------------------------------------------------------------------------
 
-    if (global_jij_data%do_jij_calculation) then
-      !communicate off-diagonal elements and multiply with exp-factor
-      call KKRJIJ( BZKP(:,k_point_index),VOLCUB(k_point_index), NSYMAT,NAEZ,ms%atom_indices(1), global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
-      ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
-    endif
+      if (global_jij_data%do_jij_calculation) then
+        ! communicate off-diagonal elements and multiply with exp-factor
+        call KKRJIJ(Bzkp(:,k_point_index), VOLCUB(k_point_index), nsymat, naez, ms%atom_indices(1), &
+                    global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
+                    ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
+      endif
 
-    do iat = 1, size(ms%atom_indices)
-      TESTARRAYLOG(3, GS(:,:,:,iat))
-    enddo ! iat
+      do iat = 1, size(ms%atom_indices)
+        TESTARRAYLOG(3, GS(:,:,:,iat))
+      enddo ! iat
 
-!==============================================================================
-  enddo ! KPT = 1, NOFKS
-!==============================================================================
+    !==============================================================================
+    enddo ! k_point_index = 1, NOFKS
+    !==============================================================================
 
-  
-  deallocate(G_diag) ! Cleanup
+    
+    deallocate(G_diag) ! Cleanup
 
-  total_stats = solv%get_total_stats()
+    total_stats = solver%get_total_stats()
 
-  WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
-  WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
-  WRITELOG(3, *) "Sum of iterations for this E-point:   ", total_stats%sum_iterations
+    WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
+    WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
+    WRITELOG(3, *) "Sum of iterations for this E-point:   ", total_stats%sum_iterations
 
-  call solv%reset_total_stats()
+    call solver%reset_total_stats()
 
 #undef cluster_info
 #undef ms
-endsubroutine ! kkrmat01_new
+  endsubroutine ! kkrmat01_new
 
 
-!------------------------------------------------------------------------------
-!> See H. Hoehler
-!=======================================================================
-! ---> fourier transformation
-!
-!     added by h.hoehler 3.7.2002
-!                                                     n   0          n
-!     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
-!                                   L  L'             L   L'
-!
-!                                             n   0           n
-!                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
-!                                             L'  L
-!
-!     this operation has to be done to satisfy e.g. the point symmetry!
-!     application of fourier transformation is just an approximation
-!     for the tb system, since the transl. invariance is not satisfied.
-!
-! The same calculation as with lloyds formula is done all over again ???
-! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
-subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, &
-              indn0, rr, ezoa, GINP, EIKRM, EIKRP, trunc2atom_index, communicator)
-  use dlke0_smat_mod, only: DLKE0_smat
-  use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
-  use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 
-  include 'mpif.h'
-  double complex, intent(inout) :: GLLH(:)
-  type(SparseMatrixDescription), intent(in) :: sparse
-  double precision, intent(in) :: kpoint(3)
-  double precision, intent(in) :: alat
-  integer, intent(in) :: nacls(:)
-  integer, intent(in) :: atom(:,:)
-  integer, intent(in) :: numn0(:)
-  integer, intent(in) :: indn0(:,:)
+  !------------------------------------------------------------------------------
+  !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
+  !> dependent on (k,E) into matrix G_diag
+  subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
+    double complex, intent(out) :: G_diag(:,:,:) ! dim lmmaxd*lmmaxd*num_local_atoms
+    double complex, intent(in) :: mat_X(:,:)
+    integer, intent(in) :: atom_indices(:)
+    integer, intent(in) :: kvstr(:)
 
-  double precision, intent(in) :: rr(:,:)
-  integer, intent(in) :: ezoa(:,:)
-  double complex, intent(inout) :: GINP(:,:,:,:)
+    integer :: atom_index, lmmax1, start, ii !< local atom index
 
-  ! work arrays
-  double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
-  double complex, intent(inout) :: EIKRP(:)
+    !                                      nn
+    !         Copy the diagonal elements G_LL' of the Green's-function,
+    !         dependent on (k,E) into matrix G_diag
+    !         (n = n' = atom_index)
 
-  !> mapping trunc. index -> atom index
-  integer, intent(in) :: trunc2atom_index(:)
-  integer, intent(in) :: communicator
+    ASSERT(size(atom_indices) == size(G_diag, 3))
 
-  integer :: site_index, naez, nrd, naclsd, lmmaxd
-  integer :: num_local_atoms, atom_requested
-  double complex, allocatable :: Gref_buffer(:,:,:)
-  type(ChunkIndex) :: chunk_inds(1)
-  integer :: win, nranks, ierr
+    G_diag = zero
 
-  naez = size(nacls)
-  nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
-  lmmaxd = size(GINP,1)
-  naclsd = size(GINP, 3)
-  num_local_atoms = size(GINP, 4)
+    do ii = 1, size(atom_indices)
 
-  ! checks
-  ASSERT(lmmaxd == size(GINP,2))
-  ASSERT(naclsd == size(eikrm))
-  ASSERT(naclsd == size(eikrp))
-  ASSERT(naez == size(trunc2atom_index))
+      atom_index = atom_indices(ii)
 
-  ! Note: some MPI implementations might need
-  ! the use of MPI_Alloc_mem (for GINP)
-  allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
+      start = kvstr(atom_index)-1
+      lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
 
-  call MPI_Comm_size(communicator, nranks, ierr)
+      ASSERT(lmmax1 == size(G_diag, 1))
+      ASSERT(lmmax1 == size(G_diag, 2))
 
-  ! share GINP with all other processes in 'communicator'
-  call exposeBufferZ(win, GINP, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
+      G_diag(1:lmmax1,:,ii) = mat_X(start+1:start+lmmax1,(ii-1)*lmmax1+1:ii*lmmax1)
 
-  GLLH = zero
-  do site_index = 1, NAEZ
+    enddo ! ii
 
-    call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
-
-    ! get GINP(:,:,:)[trunc2atom_index(site_index)]
-
-    atom_requested = trunc2atom_index(site_index)
-    chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
-    chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
-
-#ifndef IDENTICAL_REF
-    call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
-    CHECKASSERT(ierr == 0)
-
-    call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
-
-    call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
-    CHECKASSERT(ierr == 0)
-#else
-    Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
-#endif
-
-    call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, &
-                    NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, Gref_buffer, naez, lmmaxd, naclsd)
-  enddo ! site_index
-
-  call hideBufferZ(win)
-
-  deallocate(Gref_buffer)
-
-endsubroutine ! referenceFourier_com
-
-!------------------------------------------------------------------------------
-!> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
-!> dependent on (k,E) into matrix G_diag
-subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
-  double complex, intent(out) :: G_diag(:,:,:) ! dim lmmaxd*lmmaxd*num_local_atoms
-  double complex, intent(in) :: mat_X(:,:)
-  integer, intent(in) :: atom_indices(:)
-  integer, intent(in) :: kvstr(:)
-
-  integer :: atom_index, lmmax1, start, ii !< local atom index
-
-  !                                      nn
-  !         Copy the diagonal elements G_LL' of the Green's-function,
-  !         dependent on (k,E) into matrix G_diag
-  !         (n = n' = atom_index)
-
-  ASSERT(size(atom_indices) == size(G_diag, 3))
-
-  G_diag = zero
-
-  do ii = 1, size(atom_indices)
-
-    atom_index = atom_indices(ii)
-
-    start = kvstr(atom_index)-1
-    lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
-
-    ASSERT(lmmax1 == size(G_diag, 1))
-    ASSERT(lmmax1 == size(G_diag, 2))
-
-    G_diag(1:lmmax1,:,ii) = mat_X(start+1:start+lmmax1,(ii-1)*lmmax1+1:ii*lmmax1)
-
-  enddo ! ii
-
-endsubroutine ! getGreenDiag
+  endsubroutine ! getGreenDiag
 
 
-!------------------------------------------------------------------------------
-!> Summation of Green's function over k-points. Has to be called for every k-point
-!> TODO: it would be better to do the k-space-symmetry treatment separately ???
-!> this routine creates nsymat copies of the same solution
-!> set gs to 0 before first call
-!> in: gllke1
-!> inout: gs (set to 0 before first call)
-subroutine greenKSummation(g_diag, gs, k_point_weight, atom_indices, nsymat, lmmaxd)
-  integer, parameter :: nsymaxd = 48
+  !------------------------------------------------------------------------------
+  !> Summation of Green's function over k-points. Has to be called for every k-point
+  !> TODO: it would be better to do the k-space-symmetry treatment separately ???
+  !> this routine creates nsymat copies of the same solution
+  !> set GS to 0 before first call
+  !> in: gllke1
+  !> inout: GS (set to 0 before first call)
+  subroutine greenKSummation(G_diag, GS, k_point_weight, atom_indices, nsymat, lmmaxd)
+    integer, parameter :: nsymaxd = 48
 
-  integer, intent(in) :: lmmaxd
-  integer, intent(in) :: atom_indices(:) ! not used except for its array length information
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: atom_indices(:) ! not used except for its array length information
 
-  double complex, intent(in) :: g_diag(lmmaxd,lmmaxd,size(atom_indices))
-  double complex, intent(inout) :: gs(lmmaxd,lmmaxd,nsymaxd,size(atom_indices))
+    double complex, intent(in) :: G_diag(lmmaxd,lmmaxd,size(atom_indices))
+    double complex, intent(inout) :: GS(lmmaxd,lmmaxd,nsymat,size(atom_indices))
 
-  integer, intent(in) :: nsymat
-  double precision, intent(in) :: k_point_weight
+    integer, intent(in) :: nsymat
+    double precision, intent(in) :: k_point_weight
 
-  integer :: isym, ii !< local atom index
-! integer :: iat
+    integer :: isym, ii !< local atom index
 
-  do ii = 1, size(atom_indices)
-!   iat = atom_indices(ii)
+    do ii = 1, size(atom_indices)
 
-    ! perform the k-space integration for diagonal element of green's function of atom iat
-    do isym = 1, nsymat
-      gs(:,:,isym,ii) = gs(:,:,isym,ii) + k_point_weight * g_diag(:,:,ii)
-    enddo ! isym
-  enddo ! ii
-  
-endsubroutine ! greenKSummation
+      ! perform the k-space integration for diagonal element of green's function of atom iat
+      do isym = 1, nsymat
+        GS(:,:,isym,ii) = GS(:,:,isym,ii) + k_point_weight * G_diag(:,:,ii)
+      enddo ! isym
+    enddo ! ii
+    
+  endsubroutine ! greenKSummation
 
-!------------------------------------------------------------------------------
-!> Calculate scattering path operator for 'kpoint'.
-!>
-!> Input are the \Delta T and the realspace G_ref (GINP).
-!> Solution is stored in ms%mat_X.
-!> Scattering path operator is calculated for atoms given in
-!> ms%atom_indices(:)
-subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trunc2atom_index, communicator, iguess_data)
-  use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
-  use fillKKRMatrix_mod, only: dumpDenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
-  use TFQMRSolver_mod, only: TFQMRSolver, solve
-  use SparseMatrixDescription_mod, only: dumpSparseMatrixDescription
-  use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
-  use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
-  use KKROperator_mod, only: KKROperator
-  use BCPOperator_mod, only: BCPOperator
+  !------------------------------------------------------------------------------
+  !> Calculate scattering path operator for 'kpoint'.
+  !>
+  !> Input are the \Delta T and the realspace G_ref (Ginp).
+  !> Solution is stored in ms%mat_X.
+  !> Scattering path operator is calculated for atoms given in
+  !> ms%atom_indices(:)
+  subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, trunc2atom_index, communicator, iguess_data)
+    use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
+    use fillKKRMatrix_mod, only: dump!DenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
+    use TFQMRSolver_mod, only: TFQMRSolver, solve
+    use SparseMatrixDescription_mod, only: dump!SparseMatrixDescription
+    use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
+    use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
+    use KKROperator_mod, only: KKROperator
+    use BCPOperator_mod, only: BCPOperator
 
-  USE_ARRAYLOG_MOD
-  USE_LOGGING_MOD
+    USE_ARRAYLOG_MOD
+    USE_LOGGING_MOD
 
-  class(TFQMRSolver), intent(inout) :: solv
-  class(KKROperator), intent(inout) :: kkr_op
-  class(BCPOperator), intent(inout) :: precond
-  integer, intent(in) :: trunc2atom_index(:)
-  integer, intent(in) :: communicator
-  type(InitialGuess), intent(inout) :: iguess_data
-  double precision, intent(in) :: ALAT
-  double precision, intent(in) :: kpoint(3)
-  doublecomplex, intent(inout) :: GINP(:,:,:,:) ! todo: check intent ! dim: lmmaxd, lmmaxd, naclsd, nclsd
-  double precision, intent(in) :: RR(:,0:)
-  doublecomplex, intent(inout) :: TMATLL(:,:,:) ! todo: check intent
+    class(TFQMRSolver), intent(inout) :: solver
+    class(KKROperator), intent(inout) :: kkr_op
+    class(BCPOperator), intent(inout) :: preconditioner
+    double precision, intent(in) :: kpoint(3)
+    double complex, intent(inout) :: tmatLL(:,:,:) ! todo: check intent
+    double complex, intent(inout) :: Ginp(:,:,:,:) ! todo: check intent ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+    double precision, intent(in) :: alat
+    double precision, intent(in)  :: RR(:,0:)
+    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: communicator
+    type(InitialGuess), intent(inout) :: iguess_data
 
-  integer :: NAEZ, lmmaxd, n, ist
-  logical :: initial_zero
+    integer :: naez, lmmaxd, n, ist
+    logical :: initial_zero
 
 #define ms kkr_op%ms
 #define cluster_info ms%cluster_info
-  lmmaxd = ms%lmmaxd
-  naez = ms%naez
+    lmmaxd = ms%lmmaxd
+    naez = ms%naez
 
+    !=======================================================================
+    ! ---> fourier transformation
+    !
+    !     added by h.hoehler 3.7.2002
+    !                                                     n   0          n
+    !     define fourier transform as g mu mu'= ( sum_n g mu mu' exp(-iKR )
+    !                                   L  L'             L   L'
+    !
+    !                                             n   0           n
+    !                                 +   sum_n g mu'mu exp(-iK(-R ))) *0.5
+    !                                             L'  L
+    !
+    !     this operation has to be done to satisfy e.g. the point symmetry!
+    !     application of fourier transformation is just an approximation
+    !     for the tb system, since the transl. invariance is not satisfied.
+    !
+    ! The same calculation as with Lloyds formula is done all over again ???
+    ! - NO! eikrm and eikrp are SWAPPED in call to DLKE0 !!!!
+
+    !TODO: use an alternative referenceFourier to work around a bug on BGQ
+    !call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
+
+  ! if the following macro is defined, don't use MPI RMA locks
+  ! not using locks does not scale well
+
+#ifdef NO_LOCKS_MPI
+#define REF_FOURIER referenceFourier_com_fenced
+#else
+#define REF_FOURIER referenceFourier_com
+#endif
+
+    call REF_FOURIER (ms%GLLh, ms%sparse, kpoint, alat, cluster_info%nacls_trc, cluster_info%atom_trc,  cluster_info%numn0_trc, cluster_info%indn0_trc, &
+                      rr, cluster_info%ezoa_trc, Ginp, ms%eikrm, ms%eikrp, trunc2atom_index, communicator)
+
+    TESTARRAYLOG(3, ms%GLLh)
+
+    !----------------------------------------------------------------------------
+    call buildKKRCoeffMatrix(ms%GLLh, tmatLL, ms%lmmaxd, naez, ms%sparse)
+    !----------------------------------------------------------------------------
+
+    TESTARRAYLOG(3, ms%GLLh)
+
+    ! ==> now GLLh holds (1 - Delta_t * G_ref)
+
+    ! Now solve the linear matrix equation A*X = b (b is also a matrix),
+    ! where A = (1 - Delta_t*G_ref) (inverse of scattering path operator)
+    ! and b = Delta_t
+
+    !===================================================================
+    ! 3) solve linear set of equations by iterative TFQMR scheme
+    !    solve (1 - \Delta t * G_ref) X = \Delta t
+    !    the solution X is the scattering path operator
+
+    call buildRightHandSide(ms%mat_B, tmatLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
+
+    initial_zero = .true.
+    if (iguess_data%iguess == 1) then
+      initial_zero = .false.
+      call iguess_load(iguess_data, ms%mat_X)
+    endif
+
+    call solver%set_initial_zero(initial_zero)
+
+    call preconditioner%calc(ms%GLLh) ! calculate preconditioner from sparse matrix data
+
+    if (cutoffmode == 3 .or. cutoffmode == 0) then
+
+  !     call solver%solve(ms%mat_X, ms%mat_B) ! try to get rid of procedure pointer
+      call solve(solver, ms%mat_X, ms%mat_B)
+
+      if (DEBUG_dump_matrix) then
+        call dump(ms%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
+        call dump(ms%GLLh,  "matrix.unf", formatted=.false.)
+        call dump(ms%GLLh,  "matrix_form.dat", formatted=.true.)
+        call dump(ms%mat_X, "solution.unf", formatted=.false.)
+        call dump(ms%mat_X, "solution_form.dat", formatted=.true.)
+        call dump(ms%mat_B, "rhs.unf", formatted=.false.)
+        call dump(ms%mat_B, "rhs_form.dat", formatted=.true.)
+      endif ! DEBUG_dump_matrix
+      
+    endif ! cutoffmode in {0,3}
+
+    ! store the initial guess in previously selected slot
+    ! (selected with 'iguess_set_k_ind')
+    call iguess_save(iguess_data, ms%mat_X)
+
+    TESTARRAYLOG(3, ms%mat_B)
+
+    ! ALTERNATIVE: direct solution with LAPACK
+    if (cutoffmode == 4) then
+      n = size(ms%mat_B,1)
+      if (any(shape(full) /= [n,n])) then
+        deallocate(full, stat=ist)
+        allocate(full(n,n), stat=ist)
+        if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*n*.5**16)+"MiByte!")
+      endif
+      call convertToFullMatrix(ms%GLLh, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%sparse%kvstr, ms%sparse%kvstr, full)
+      TESTARRAYLOG(3, full)
+      call solveFull(full, ms%mat_B, ms%mat_X)
+    endif ! cutoffmode == 4
+
+    TESTARRAYLOG(3, ms%mat_X)
+    ! RESULT: mat_X
+#undef cluster_info
+#undef ms
+  endsubroutine ! kloopbody
+
+
+  !------------------------------------------------------------------------------
+  !> Alternative implementation of 'referenceFourier_com' to prevent a bug that occured on
+  !> BGQ regarding MPI RMA locks.
+  !>
+  !> Uses fence calls instead of locks.
+  !> Might not perform and scale as well as referenceFourier_com
+  subroutine referenceFourier_com_fenced(GLLh, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, Ginp, eikrm, eikrp, trunc2atom_index, communicator)
+    use dlke0_smat_mod, only: dlke0_smat
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
+    use one_sided_commZ_mod, only: exposeBufferZ, fenceZ, copyChunksNoSyncZ, hideBufferZ
+
+    include 'mpif.h'
+    double complex, intent(inout) :: GLLh(:)
+    type(SparseMatrixDescription), intent(in) :: sparse
+    double precision, intent(in) :: kpoint(3)
+    double precision, intent(in) :: alat
+    integer, intent(in) :: nacls(:)
+    integer, intent(in) :: atom(:,:)
+    integer, intent(in) :: numn0(:)
+    integer, intent(in) :: indn0(:,:)
+
+    double precision, intent(in) :: rr(:,:)
+    integer, intent(in) :: ezoa(:,:)
+    double complex, intent(inout) :: Ginp(:,:,:,:)
+
+    ! work arrays
+    double complex, intent(inout) :: eikrm(:), eikrp(:) ! dim: naclsd
+
+    !> mapping trunc. index -> atom index
+    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: communicator
+
+    ! local
+    integer :: site_index, naez, nrd, naclsd, lmmaxd, ist
+    integer :: num_local_atoms, atom_requested
+    double complex, allocatable :: Gref_buffer(:,:,:)
+    type(ChunkIndex) :: chunk_inds(1)
+    integer :: win, nranks, ierr, naez_max
+
+    naez = size(nacls)
+    nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
+    lmmaxd = size(Ginp,1)
+    naclsd = size(Ginp, 3)
+    num_local_atoms = size(Ginp, 4)
+
+    ! checks
+    ASSERT(lmmaxd == size(Ginp,2))
+    ASSERT(naclsd == size(eikrm))
+    ASSERT(naclsd == size(eikrp))
+    ASSERT(naez == size(trunc2atom_index))
+
+    ! Note: some MPI implementations might need
+    ! the use of MPI_Alloc_mem
+    allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
+
+    call MPI_Comm_size(communicator, nranks, ierr)
+
+    ! get maximum number of atoms of all truncation zones
+    call MPI_Allreduce(naez, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+
+    ! share Ginp with all other processes in 'communicator'
+    call exposeBufferZ(win, Ginp, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
+
+    GLLh = zero ! init
+
+    ! loop up to naez_max to ensure that each rank does the same amount of fence calls
+    do site_index = 1, naez_max
+
+      call fenceZ(win)
+
+      if (site_index <= naez) then
+        call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+
+        ! get Ginp(:,:,:)[trunc2atom_index(site_index)]
+
+        atom_requested = trunc2atom_index(site_index)
+        chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
+        chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
+
+        call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
+        !!!Gref_buffer(:,:,:) = Ginp(:,:,:,1) ! use this if all Grefs are the same
+      endif
+
+      call fenceZ(win) ! ensures that data has arrived in Gref_buffer
+
+      if (site_index <= naez) then
+        call dlke0_smat(site_index, GLLh, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+                        nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer, naez, lmmaxd, naclsd)
+      endif ! si < N
+      
+    enddo ! site_index
+
+    call hideBufferZ(win)
+
+    deallocate(Gref_buffer, stat=ist)
+
+  endsubroutine ! referenceFourier_com_fenced
+
+
+  
+  !------------------------------------------------------------------------------
+  !> See H. Hoehler
   !=======================================================================
   ! ---> fourier transformation
   !
@@ -381,220 +486,120 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, TMATLL, GINP, ALAT, RR, trun
   !     for the tb system, since the transl. invariance is not satisfied.
   !
   ! The same calculation as with lloyds formula is done all over again ???
-  ! - NO! EIKRM and EIKRP are SWAPPED in call to DLKE0 !!!!
+  ! - NO! eikrm and eikrp are SWAPPED in call to DLKE0 !!!!
+  subroutine referenceFourier_com(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
+                indn0, rr, ezoa, Ginp, eikrm, eikrp, trunc2atom_index, communicator)
+    use dlke0_smat_mod, only: dlke0_smat
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
+    use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 
-  !TODO: use an alternative referenceFourier to work around a bug on BGQ
-  !call referenceFourier_com(ms%GLLH, ms%sparse, kpoint, alat, &
+    include 'mpif.h'
+    double complex, intent(inout) :: GLLh(:)
+    type(SparseMatrixDescription), intent(in) :: sparse
+    double precision, intent(in) :: kpoint(3)
+    double precision, intent(in) :: alat
+    integer, intent(in) :: nacls(:)
+    integer, intent(in) :: atom(:,:)
+    integer, intent(in) :: numn0(:)
+    integer, intent(in) :: indn0(:,:)
 
-! if the following macro is defined, don't use MPI RMA locks
-! not using locks does not scale well
+    double precision, intent(in) :: rr(:,0:)
+    integer, intent(in) :: ezoa(:,:)
+    double complex, intent(inout) :: Ginp(:,:,:,:)
 
-#ifdef NO_LOCKS_MPI
-#define REF_FOURIER referenceFourier_com_fenced
-#else
-#define REF_FOURIER referenceFourier_com
-#endif
+    ! work arrays
+    double complex, intent(inout) :: eikrm(:)   ! dim: naclsd
+    double complex, intent(inout) :: eikrp(:)
 
-  call REF_FOURIER (ms%GLLH, ms%sparse, kpoint, alat, cluster_info%nacls_trc, cluster_info%atom_trc,  cluster_info%numn0_trc, cluster_info%indn0_trc, &
-                    rr, cluster_info%ezoa_trc, GINP, ms%EIKRM, ms%EIKRP, trunc2atom_index, communicator)
+    !> mapping trunc. index -> atom index
+    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: communicator
 
-  TESTARRAYLOG(3, ms%GLLH)
+    integer :: site_index, naez, naclsd, lmmaxd
+    integer :: num_local_atoms, atom_requested
+    double complex, allocatable :: Gref_buffer(:,:,:)
+    type(ChunkIndex) :: chunk_inds(1)
+    integer :: win, nranks, ierr
 
-  !----------------------------------------------------------------------------
-  call buildKKRCoeffMatrix(ms%GLLH, TMATLL, ms%lmmaxd, naez, ms%sparse)
-  !----------------------------------------------------------------------------
+    naez = size(nacls)
+    lmmaxd = size(Ginp, 1)
+    naclsd = size(Ginp, 3)
+    num_local_atoms = size(Ginp, 4)
 
-  TESTARRAYLOG(3, ms%GLLH)
+    ! checks
+    ASSERT(lmmaxd == size(Ginp, 2))
+    ASSERT(naclsd == size(eikrm))
+    ASSERT(naclsd == size(eikrp))
+    ASSERT(naez == size(trunc2atom_index))
 
-  ! ==> now GLLH holds (1 - Delta_t * G_ref)
+    ! Note: some MPI implementations might need
+    ! the use of MPI_Alloc_mem (for Ginp)
+    allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd))
 
-  ! Now solve the linear matrix equation A*X = b (b is also a matrix),
-  ! where A = (1 - Delta_t*G_ref) (inverse of scattering path operator)
-  ! and b = Delta_t
+    call MPI_Comm_size(communicator, nranks, ierr)
 
-  !===================================================================
-  ! 3) solve linear set of equations by iterative TFQMR scheme
-  !    solve (1 - \Delta t * G_ref) X = \Delta t
-  !    the solution X is the scattering path operator
+    ! share Ginp with all other processes in 'communicator'
+    call exposeBufferZ(win, Ginp, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
 
-  call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
+    GLLh = zero
+    do site_index = 1, naez
 
-  initial_zero = .true.
-  if (iguess_data%iguess == 1) then
-    initial_zero = .false.
-    call iguess_load(iguess_data, ms%mat_X)
-  endif
-
-  call solv%set_initial_zero(initial_zero)
-
-  call precond%calc(ms%GLLH) ! calculate preconditioner from sparse matrix data
-
-  if (cutoffmode == 3 .or. cutoffmode == 0) then
-
-!     call solv%solve(ms%mat_X, ms%mat_B) ! try to get rid of procedure pointer
-    call solve(solv, ms%mat_X, ms%mat_B)
-
-    if (DEBUG_dump_matrix) then
-      call dumpSparseMatrixDescription(ms%sparse, "matrix_desc.dat")
-      call dumpSparseMatrixData(ms%GLLH, "matrix.unf")
-      call dumpSparseMatrixDataFormatted(ms%GLLH, "matrix_form.dat")
-      call dumpDenseMatrix(ms%mat_X, "solution.unf")
-      call dumpDenseMatrixFormatted(ms%mat_X, "solution_form.dat")
-      call dumpDenseMatrix(ms%mat_B, "rhs.unf")
-      call dumpDenseMatrixFormatted(ms%mat_B, "rhs_form.dat")
-    endif ! DEBUG_dump_matrix
-    
-  endif ! cutoffmode in {0,3}
-
-  ! store the initial guess in previously selected slot
-  ! (selected with 'iguess_set_k_ind')
-  call iguess_save(iguess_data, ms%mat_X)
-
-  TESTARRAYLOG(3, ms%mat_B)
-
-  ! ALTERNATIVE: direct solution with LAPACK
-  if (cutoffmode == 4) then
-    n = size(ms%mat_B,1)
-    if (any(shape(full) /= [n,n])) then
-      deallocate(full, stat=ist)
-      allocate(full(n,n), stat=ist)
-      if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*n*.5d0**16)+"MiByte!")
-    endif
-    call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%sparse%kvstr, ms%sparse%kvstr, full)
-    TESTARRAYLOG(3, full)
-    call solveFull(full, ms%mat_B, ms%mat_X)
-  endif ! cutoffmode == 4
-
-  TESTARRAYLOG(3, ms%mat_X)
-  ! RESULT: mat_X
-#undef cluster_info
-#undef ms
-endsubroutine ! kloopbody
-
-
-!------------------------------------------------------------------------------
-!> Alternative implementation of 'referenceFourier_com' to prevent a bug that occured on
-!> BGQ regarding MPI RMA locks.
-!>
-!> Uses fence calls instead of locks.
-!> Might not perform and scale as well as referenceFourier_com
-subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, GINP, EIKRM, EIKRP, trunc2atom_index, communicator)
-  use dlke0_smat_mod, only: DLKE0_smat
-  use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
-  use one_sided_commZ_mod, only: exposeBufferZ, fenceZ, copyChunksNoSyncZ, hideBufferZ
-
-  include 'mpif.h'
-  double complex, intent(inout) :: GLLH(:)
-  type(SparseMatrixDescription), intent(in) :: sparse
-  double precision, intent(in) :: kpoint(3)
-  double precision, intent(in) :: alat
-  integer, intent(in) :: nacls(:)
-  integer, intent(in) :: atom(:,:)
-  integer, intent(in) :: numn0(:)
-  integer, intent(in) :: indn0(:,:)
-
-  double precision, intent(in) :: rr(:,:)
-  integer, intent(in) :: ezoa(:,:)
-  double complex, intent(inout) :: GINP(:,:,:,:)
-
-  ! work arrays
-  double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
-  double complex, intent(inout) :: EIKRP(:)
-
-  !> mapping trunc. index -> atom index
-  integer, intent(in) :: trunc2atom_index(:)
-  integer, intent(in) :: communicator
-
-  ! local
-  integer :: site_index, naez, nrd, naclsd, lmmaxd
-  integer :: num_local_atoms, atom_requested
-  double complex, allocatable :: Gref_buffer(:,:,:)
-  type(ChunkIndex) :: chunk_inds(1)
-  integer :: win, nranks, ierr, naez_max
-
-  naez = size(nacls)
-  nrd = size(rr, 2) - 1  ! because rr has dim (0:nrd)
-  lmmaxd = size(GINP,1)
-  naclsd = size(GINP, 3)
-  num_local_atoms = size(GINP, 4)
-
-  ! checks
-  ASSERT(lmmaxd == size(GINP,2))
-  ASSERT(naclsd == size(eikrm))
-  ASSERT(naclsd == size(eikrp))
-  ASSERT(naez == size(trunc2atom_index))
-
-  ! Note: some MPI implementations might need
-  ! the use of MPI_Alloc_mem
-  allocate(Gref_buffer(lmmaxd, lmmaxd, naclsd))
-
-  call MPI_Comm_size(communicator, nranks, ierr)
-
-  ! get maximum number of atoms of all truncation zones
-  call MPI_Allreduce(naez, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
-
-  ! share GINP with all other processes in 'communicator'
-  call exposeBufferZ(win, GINP, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
-
-  GLLH = zero ! init
-
-  ! loop up to naez_max to ensure that each rank does the same amount of fence calls
-  do site_index = 1, naez_max
-
-    call fenceZ(win)
-
-    if (site_index <= naez) then
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-      ! get GINP(:,:,:)[trunc2atom_index(site_index)]
+      ! get Ginp(:,:,:)[trunc2atom_index(site_index)]
 
       atom_requested = trunc2atom_index(site_index)
       chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms * nranks, nranks)
       chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms * nranks, nranks)
 
+#ifndef IDENTICAL_REF
+      call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
+      CHECKASSERT(ierr == 0)
+
       call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
-      !!!Gref_buffer(:,:,:) = GINP(:,:,:,1) ! use this if all Grefs are the same
-    endif
 
-    call fenceZ(win) ! ensures that data has arrived in Gref_buffer
+      call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
+      CHECKASSERT(ierr == 0)
+#else
+      Gref_buffer(:,:,:) = Ginp(:,:,:,1) ! use this if all Grefs are the same
+#endif
 
-    if (site_index <= naez) then
-      call DLKE0_smat(site_index,GLLH,sparse%ia,sparse%ka,sparse%kvstr,EIKRM,EIKRP, NACLS(site_index), ATOM(:,site_index),NUMN0,INDN0, Gref_buffer, naez, lmmaxd, naclsd)
-    endif ! si < N
-  enddo ! site_index
+      call dlke0_smat(site_index, GLLh, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+                      nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer, naez, lmmaxd, naclsd)
+    enddo ! site_index
 
-  call hideBufferZ(win)
+    call hideBufferZ(win)
 
-  deallocate(Gref_buffer)
+    deallocate(Gref_buffer)
 
-endsubroutine ! referenceFourier_com_fenced
-
-
+  endsubroutine ! referenceFourier_com
+  
+  
 
 !     >> Input parameters
-!>    @param     ALAT    lattice constant a
-!>    @param     NACLS   number of atoms in cluster
+!>    @param     alat    lattice constant a
+!>    @param     nacls   number of atoms in cluster
 !>    @param     RR      array of real space vectors
 !>    @param     EZOA
-!>    @param     BZKP
+!>    @param     Bzkp
 !>    @param     nrd     There are nrd+1 real space vectors in RR
 !>    @param     naclsd. maximal number of atoms in cluster
 
 !     << Output parameters
-!>    @param     EIKRM   Fourier exponential factor with minus sign
-!>    @param     EIKRP   Fourier exponential factor with plus sign
+!>    @param     eikrm   Fourier exponential factor with minus sign
+!>    @param     eikrp   Fourier exponential factor with plus sign
 
-  subroutine dlke1(alat, nacls, rr, ezoa, bzkp, eikrm, eikrp)
-! ----------------------------------------------------------------------
-!     Fourier transformation of the cluster Greens function
-!     Prepares the calculation (calculates Fourier factors) for dlke0
-! ----------------------------------------------------------------------
+  subroutine dlke1(alat, nacls, rr, ezoa, Bzkp, eikrm, eikrp)
+    ! ----------------------------------------------------------------------
+    !     Fourier transformation of the cluster Greens function
+    !     Prepares the calculation (calculates Fourier factors) for dlke0
+    ! ----------------------------------------------------------------------
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls !< number of vectors in the cluster
     integer, intent(in) :: ezoa(1:) !< index list of ...
     double complex, intent(out) :: eikrp(:), eikrm(:)
-    double precision, intent(in) :: bzkp(1:3) !< k-point (vector in the Brillouin zone)
+    double precision, intent(in) :: Bzkp(1:3) !< k-point (vector in the Brillouin zone)
     double precision, intent(in) :: rr(1:,0:) !< dim(1:3,0:nrd) real space cluster vectors
     
     double complex, parameter :: ci=(0.d0,1.d0)
@@ -606,20 +611,20 @@ endsubroutine ! referenceFourier_com_fenced
     convpuh = alat/tpi * 0.5d0
 
     do m = 1, nacls
-!     
-!     Here we do   --                  nn'
-!                  \                   ii'          ii'
-!                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
-!                  --          n'  n   LL'          LL'
-!                  n'
-!  Be careful a minus sign must be included here. RR is not
-!  symmetric around each atom. The minus comes from the fact that
-!  the repulsive potential GF is calculated for 0n and not n0!                   
-!  and that is why we need a minus sign extra!
-!  
-      tt = -ci*tpi*dot_product(bzkp(1:3), rr(1:3,ezoa(m))) ! purely imaginary number
-!
-!  convert to p.u. and multiply with 1/2 (done above)
+       
+  !     Here we do   --                  nn'
+  !                  \                   ii'          ii'
+  !                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
+  !                  --          n'  n   LL'          LL'
+  !                  n'
+  !  Be careful about the minus sign included here. RR is not
+  !  symmetric around each atom. The minus comes from the fact that
+  !  the repulsive potential GF is calculated for 0n and not n0!                   
+  !  and that is why we need a minus sign extra!
+  
+      tt = -ci*tpi*dot_product(Bzkp(1:3), rr(1:3,ezoa(m))) ! purely imaginary number
+
+  !  convert to p.u. and multiply with 1/2 (done above)
       exparg = exp(tt)
       eikrp(m) =       exparg  * convpuh
       eikrm(m) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary

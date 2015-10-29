@@ -13,8 +13,8 @@ implicit none
   
   interface operator(+) ! left," ",right
     module procedure concat_string_whitespace_string, &
-      concat_string_whitespace_integer, concat_string_whitespace_real, &
-      concat_string_whitespace_integers, concat_string_whitespace_reals
+      concat_string_whitespace_integer, concat_string_whitespace_real, concat_string_whitespace_double, &
+      concat_string_whitespace_integers, concat_string_whitespace_doubles
   endinterface
 
   interface operator(-) ! left,right ! without space in between
@@ -65,17 +65,24 @@ implicit none
 
   string_t function concat_string_whitespace_real(left, right) result(str)
     character(len=*), intent(in) :: left
-    double precision, intent(in) :: right
+    real(kind=4), intent(in) :: right
     status_t :: ios
     write(unit=str,fmt='(2A,F0.6)',iostat=ios) trim(left),' ',right
   endfunction ! string," ",real
 
-  string_t function concat_string_whitespace_reals(left, right) result(str)
+  string_t function concat_string_whitespace_double(left, right) result(str)
+    character(len=*), intent(in) :: left
+    double precision, intent(in) :: right
+    status_t :: ios
+    write(unit=str,fmt='(2A,F0.6)',iostat=ios) trim(left),' ',right
+  endfunction ! string," ",double
+  
+  string_t function concat_string_whitespace_doubles(left, right) result(str)
     character(len=*), intent(in) :: left
     double precision, intent(in) :: right(:)
     status_t :: ios
     write(unit=str,fmt='(A,9999(" ",F0.6))',iostat=ios) trim(left),right
-  endfunction ! string," ",real(1)," ",real(2), ...
+  endfunction ! string," ",double(1)," ",double(2), ...
   
   integer function to_lowercase(mixedcase, lowercase) result(n_chars_converted)
     character(len=*), intent(in)  :: mixedcase !! string containing possible mixed case characters

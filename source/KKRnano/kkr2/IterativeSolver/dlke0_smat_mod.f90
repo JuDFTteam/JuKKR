@@ -1,27 +1,25 @@
-module DLKE0_smat_mod
+module dlke0_smat_mod
   implicit none
   private
-  public :: dlke0_smat
+  public :: dlke0_smat ! todo: merge into module kkrmat01_new
 
   contains
 
-  subroutine dlke0_smat(site_index,smat,ia,ka,kvstr,eikrm,eikrp,nacls, &
-    atom,numn0,indn0,ginp, naez, lmmaxd, naclsd)
-
+  subroutine dlke0_smat(site_index, smat, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp, naez, lmmaxd, naclsd)
+    integer, intent(in) :: site_index
     double complex, intent(inout) :: smat(:)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ka(:)
     integer, intent(in) :: kvstr(:)
-
-    integer :: naez, lmmaxd, naclsd
-
-    integer :: site_index
-    double complex, intent(in) :: ginp(lmmaxd,lmmaxd,naclsd)
-    !double complex :: gllh(lmmaxd,naclsd*lmmaxd,*)
-    double complex :: eikrm(naclsd), eikrp(naclsd)
-    integer :: atom(naclsd), nacls,indn0(naez,naclsd), numn0(naez)
-    integer :: j,lm1,lm2,m,n1,n2,ind1,ind2, lmmax1, lmmax2, ind
-
+    double complex, intent(in) :: eikrm(naclsd), eikrp(naclsd)
+    integer, intent(in) :: nacls, atom(naclsd) 
+    integer, intent(in) :: numn0(naez)
+    integer, intent(in) :: indn0(naez,naclsd)
+    integer, intent(in) :: naez, lmmaxd, naclsd
+    
+    double complex, intent(in) :: Ginp(lmmaxd,lmmaxd,naclsd)
+    
+    integer :: j, lm1, lm2, m, n1, n2, ind1, ind2, lmmax1, lmmax2, ind
 
     do m = 1, nacls
 
@@ -35,9 +33,9 @@ module DLKE0_smat_mod
           do lm1 = 1, lmmax1
             do lm2 = 1, lmmax2
 
-              ind = ka(ia(site_index) + n1 - 1) + (lm2 - 1) * lmmax1 + lm1 - 1
+              ind = ka(ia(site_index) + n1-1) + lmmax1*(lm2-1) + (lm1-1)
 
-              smat(ind) = smat(ind) + eikrm(m) * ginp(lm2,lm1,m)
+              smat(ind) = smat(ind) + eikrm(m) * Ginp(lm2,lm1,m)
 
             enddo ! lm2
           enddo ! lm1
@@ -60,7 +58,7 @@ module DLKE0_smat_mod
 
               ind = ka(ia(j) + n2 - 1) + (lm2 - 1) * lmmax1 + lm1 - 1
 
-              smat(ind) = smat(ind) + eikrp(m) * ginp(lm1,lm2,m)
+              smat(ind) = smat(ind) + eikrp(m) * Ginp(lm1,lm2,m)
 
             enddo ! lm1
           enddo ! lm2
@@ -70,6 +68,6 @@ module DLKE0_smat_mod
 
     enddo ! m
 
-  endsubroutine
+  endsubroutine ! dlke0_smat
 
-endmodule
+endmodule ! dlke0_smat_mod

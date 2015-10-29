@@ -339,7 +339,7 @@ module KKRzero_mod
     double precision, intent(out) :: rbasis(3,*)
     integer, intent(in) :: naez
     
-    character(len=9), parameter :: version = "Sept 2015"
+    character(len=9), parameter :: version = "Oct  2015"
     integer :: i
 
 !------------ array set up and definition of input parameter -----------

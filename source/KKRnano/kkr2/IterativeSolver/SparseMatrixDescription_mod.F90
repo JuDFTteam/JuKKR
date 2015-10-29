@@ -1,10 +1,7 @@
 module SparseMatrixDescription_mod
   implicit none
   private
-  public :: SparseMatrixDescription, create, destroy, dump
-  public :: createSparseMatrixDescription, destroySparseMatrixDescription ! deprecated
-  public :: dumpSparseMatrixDescription, createSparseMatrixDescriptionFromFile
-  public :: getNNZ
+  public :: SparseMatrixDescription, create, destroy, dump, getNNZ
   
   !> description of a (square) sparse matrix in VBR format
   !> VBR = variable block row.
@@ -107,7 +104,6 @@ module SparseMatrixDescription_mod
     integer, parameter :: fu = 97
 
     open(fu, file=filename, form='formatted', action='write')
-
     write(fu, *) sparse%blk_nrows, size(sparse%ja)
     write(fu, *) sparse%kvstr
     write(fu, *) sparse%ia
@@ -115,7 +111,6 @@ module SparseMatrixDescription_mod
     write(fu, *) sparse%ka
     write(fu, *) sparse%max_blockdim
     write(fu, *) sparse%max_blocks_per_row
-
     close(fu)
   endsubroutine ! dump
 
@@ -132,7 +127,6 @@ module SparseMatrixDescription_mod
     call destroy(sparse)
     
     open(fu, file=filename, form='formatted', action='read', status='old')
-
     read(fu, *)  blk_nrows, max_num_blocks
     call createSparseMatrixDescription(sparse, blk_nrows, max_num_blocks)
     read(fu, *) sparse%kvstr
@@ -141,7 +135,6 @@ module SparseMatrixDescription_mod
     read(fu, *) sparse%ka
     read(fu, *) sparse%max_blockdim
     read(fu, *) sparse%max_blocks_per_row
-
     close(fu)
   endsubroutine ! create
 

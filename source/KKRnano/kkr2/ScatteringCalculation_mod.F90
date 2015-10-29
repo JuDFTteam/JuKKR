@@ -152,8 +152,7 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
   ! get the indices of atoms that shall be treated at once by the process
   ! = truncation zone indices of local atoms
   do ilocal = 1, num_local_atoms
-    atom_indices(ilocal) = getAtomIndexOfLocal(calc, ilocal)
-    atom_indices(ilocal) = trunc_zone%index_map(atom_indices(ilocal))
+    atom_indices(ilocal) = trunc_zone%index_map(getAtomIndexOfLocal(calc, ilocal))
     CHECKASSERT(atom_indices(ilocal) > 0)
   enddo ! ilocal
 
@@ -288,12 +287,12 @@ subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi,
 !            getNumSERanks(my_mpi),getNumWorldRanks(my_mpi),getMasterRank(my_mpi),isMasterRank(my_mpi),isInMasterGroup(my_mpi)
 
 !------------------------------------------------------------------------------
-          call KLOOPZ1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
+          call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
           arrays%NOFKS(NMESH), arrays%VOLBZ(NMESH), &
           arrays%BZKP(:,:,NMESH), arrays%VOLCUB(:,NMESH), &
           lattice_vectors%RR, &
           GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
-          tmatll, arrays%lmmaxd, lattice_vectors%nrd, &
+          tmatll, arrays%lmmaxd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
           calc%iguess_data)
 !------------------------------------------------------------------------------
@@ -448,7 +447,7 @@ subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbo
   call solv%init(kkr_op) ! register sparse matrix and preconditioner at solver
 
   if (dims%bcpd == 1) then
-    ! set the solver options for bcp preconditioner
+    ! set the solver options for BCP preconditioner
     call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmmaxd)
     call solv%init_precond(precond)
   endif

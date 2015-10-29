@@ -19,7 +19,7 @@ module TFQMRSolver_mod
   public :: TFQMRSolver, solve, destroy
   
   type, extends(Solver) :: TFQMRSolver
-    PRIVATE
+    private
     class(OperatorT), pointer :: op => null()
     class(OperatorT), pointer :: precond => null()
 

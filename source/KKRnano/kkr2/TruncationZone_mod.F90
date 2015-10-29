@@ -8,52 +8,39 @@
 
 !------------------------------------------------------------------------------
 !> Set up modified index arrays for real space truncation.
-!> This is a convinient workaround to make real space truncation possible.
+!> This is a convenient workaround to make real space truncation possible.
 !> Note: O(N**2) scaling in storage and setup time
 module TruncationZone_mod
 ! use Main2Arrays_mod
   implicit none
   private
   public :: TruncationZone, create, destroy
-  public :: createTruncationZone, destroyTruncationZone
-  public :: translate, translateInd
+  public :: createTruncationZone!, destroyTruncationZone ! deprecated
+  public :: translateInd
+! public :: translate
 
   type TruncationZone
-    integer :: naez_trc !< number of atoms in truncation zone
-    integer :: naclsd
-    !> map atom index to truncation zone atom index (-1 = not in trunc. zone)
-    integer, allocatable :: index_map(:)
-    !> map truncation zone atom index to atom index ("inverse" of index_map)
-    integer, allocatable :: trunc2atom_index(:)
+    integer :: naez_trc = 0 !< number of atoms in truncation zone
+    integer, allocatable :: index_map(:) !> map atom index to truncation zone atom index (-1 = not in trunc. zone = OUTSIDE)
+    integer, allocatable :: trunc2atom_index(:) !> map truncation zone atom index to atom index ("inverse" of index_map)
+!   integer :: naclsd !< not used
   endtype
 
-  interface createTruncationZone
-    module procedure createTruncationZoneOld, createTruncationZoneNew
-  endinterface
-
   interface create
-    module procedure createTruncationZoneNew
+    module procedure createTruncationZone
   endinterface
 
   interface destroy
     module procedure destroyTruncationZone
   endinterface
+
+  integer, parameter, private :: OUTSIDE = -1
   
   contains
 
   !----------------------------------------------------------------------------
-  subroutine createTruncationZoneOld(self, mask, arrays)
-    use Main2Arrays_mod, only: Main2Arrays
-    type(TruncationZone), intent(inout) :: self
-    integer, intent(in) :: mask(:)
-    type(Main2Arrays), intent(in) :: arrays
-
-    call createTruncationZoneNew(self, mask)
-  endsubroutine ! create
-
-  !----------------------------------------------------------------------------
   ! TODO: FIXME
-  subroutine createTruncationZoneNew(self, mask)
+  subroutine createTruncationZone(self, mask)
     type(TruncationZone), intent(inout) :: self
     integer, intent(in) :: mask(:)
 
@@ -69,13 +56,14 @@ module TruncationZone_mod
         ind = ind + 1
         self%index_map(ii) = ind
       else
-        self%index_map(ii) = -1 ! atom not in trunc. cluster
+        self%index_map(ii) = OUTSIDE ! atom not in truncation cluster
       endif
     enddo ! ii
     naez_trc = ind
 
     ! setup "inverse" of index_map
     ALLOCATECHECK(self%trunc2atom_index(naez_trc))
+    
     ind = 0
     do ii = 1, num_atoms
       if (self%index_map(ii) > 0) then
@@ -84,19 +72,21 @@ module TruncationZone_mod
       endif
     enddo ! ii
 
+    ! inverse means that all(self%index_map(self%trunc2atom_index(:)) == [1, 2, 3, ..., naez_trc])
+    
     self%naez_trc = naez_trc
 
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyTruncationZone(self)
+  elemental subroutine destroyTruncationZone(self)
     type(TruncationZone), intent(inout) :: self
 
-    integer :: memory_stat
+    integer :: ist ! ignore status
 
-    DEALLOCATECHECK(self%index_map)
-    DEALLOCATECHECK(self%trunc2atom_index)
-
+    deallocate(self%index_map, self%trunc2atom_index, stat=ist)
+    self%naez_trc = 0
+    
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -105,11 +95,33 @@ module TruncationZone_mod
     type(TruncationZone), intent(in) :: self
     integer, intent(in) :: ind
 
-    translateInd = -1
-!   if (ind > ubound(self%index_map, 1)) stop 'TruncationZone: translateInd: ind too large!' ! not allowed in a pure function
+    translateInd = OUTSIDE
+!   if (ind > ubound(self%index_map, 1)) stop 'TruncationZone: translateInd: ind too large!' ! stop not allowed in a pure function
+
     if (ind > 0) translateInd = self%index_map(ind)
   endfunction ! translateInd
 
+#if 0
+!!! not used
+
+
+  !----------------------------------------------------------------------------
+  !> Translate atom indices in 'array' to new atom indices using 'index_map'
+  subroutine translate(index_map, array)
+    integer, intent(in) :: index_map(:)
+    integer, intent(inout) :: array(:)
+
+    where(array > 0)
+      array = index_map(array)
+    endwhere
+    
+!     integer :: ii
+! 
+!     do ii = 1, size(array)
+!       if (array(ii) > 0) array(ii) = index_map(array(ii))
+!     enddo ! ii
+  endsubroutine ! translate
+  
   !----------------------------------------------------------------------------
   subroutine filter1d(mask, array, new_array)
     integer, intent(in) :: mask(:)
@@ -125,7 +137,7 @@ module TruncationZone_mod
         new_array(ind) = array(ii)
       endif
     enddo ! ii
-  endsubroutine
+  endsubroutine ! filter1d
 
   !----------------------------------------------------------------------------
   subroutine filter2d1(mask, array, new_array)
@@ -160,18 +172,6 @@ module TruncationZone_mod
       endif
     enddo ! ii
   endsubroutine ! filter2d2
+#endif  
 
-  !----------------------------------------------------------------------------
-  !> Translate atom indices in 'array' to new atom indices using 'index_map'
-  subroutine translate(index_map, array)
-    integer, intent(in) :: index_map(:)
-    integer, intent(inout) :: array(:)
-
-    integer :: ii
-
-    do ii = 1, size(array)
-      if (array(ii) > 0) array(ii) = index_map(array(ii))
-    enddo ! ii
-  endsubroutine ! translate
-
-endmodule TruncationZone_mod
+endmodule ! TruncationZone_mod
