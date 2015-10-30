@@ -369,10 +369,10 @@ C
       ITSCF = ITSCF + 1         ! initialised to 0 in main0
       t_inc%i_iteration = ITSCF
 C      
-      WRITE(6,'(/,79(1H*))')
-      WRITE(6,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
-     &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
-      WRITE(6,'(79(1H*),/)')      
+!      WRITE(6,'(/,79(1H*))')
+!      WRITE(6,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
+!     &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
+!      WRITE(6,'(79(1H*),/)')      
       WRITE(1337,'(/,79(1H*))')
       WRITE(1337,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
      &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
