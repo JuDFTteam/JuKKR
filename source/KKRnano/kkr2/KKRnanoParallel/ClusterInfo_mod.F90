@@ -195,6 +195,6 @@ module ClusterInfo_mod
       ! check if end of buffer is correct
       CHECKASSERT( recv_buf(3*naclsd+4,ii) == MAGIC )
     enddo ! ii
-  endsubroutine constructIndices
+  endsubroutine ! constructIndices
 
-endmodule ClusterInfo_mod
+endmodule ! ClusterInfo_mod

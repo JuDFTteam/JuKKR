@@ -18,13 +18,6 @@ module TEST_lcutoff_mod
   integer,                protected, public :: cutoffmode
   logical,                protected, public :: DEBUG_dump_matrix = .false.
   integer,                protected, public :: num_truncated(0:N_radii)
-  
-!   integer,                protected, public :: lm_low2 !---> lm_low(2)
-!   double precision,       protected, public :: cutoff_radius2 !---> cutoff_radius(2)
-!   integer,                protected, public :: num_untruncated !---> num_truncated(0)
-!   integer,                protected, public :: num_truncated2 !---> num_truncated(2)
-  
-  logical, private :: real_space_cutoff
 
   contains
 
@@ -48,8 +41,8 @@ module TEST_lcutoff_mod
     nrad = 0
     cutoff_radius(:) = 9.d9 ! effectively infinity
     lm_low(:) = lmmaxd
+    cutoffmode = 4 ! 3:iterative solver, 4:full solver
     
-    real_space_cutoff = .false.
     open(91, file='lcutoff', form='formatted', action='read', status='old', iostat=ios)
     if (ios == 0) then ! opening was successful
       nrad = 1
@@ -66,16 +59,13 @@ module TEST_lcutoff_mod
         nrad = nrad+1
         read(91,*) cutoff_radius(nrad)
         read(91,*) lm_low(nrad)
-        real_space_cutoff = .true. ! activate a second or even third cutoff radius
-
       enddo ! while
       close(91)
     else
       write(6,*) 'No file "lcutoff" found, use defaults.' ! todo: convert to warning
-      cutoffmode = 4 ! 3:iterative solver, 4:full solver
     endif
 
-    lmarray_full    = 0 ! set to default
+    lmarray_full = 0 ! init
     num_local_atoms = size(atom_ids)
     
     if (num_local_atoms > 1 .and. nrad > 0) &
@@ -240,7 +230,7 @@ module TEST_lcutoff_mod
   !>
   !> If merging = .true.: change the lm value only when it is larger than the
   !> original value -> this merges the truncation zones
-  subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)!, merging)
+  subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
     integer, intent(inout) :: cutoffarray(:)
     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
     double precision, intent(in) :: center(3)
@@ -250,19 +240,8 @@ module TEST_lcutoff_mod
 
     integer :: ii
     
-!     logical, intent(in), optional :: merging
-!     logical :: do_merge
-!     do_merge = .false.; if (present(merging)) do_merge = merging
-
     do ii = 1, size(rbasis, 2)
       if (distance2_pbc(rbasis(1:3,ii), center(1:3), bravais) > dist_cut*dist_cut) cutoffarray(ii) = lm_low
-!     then
-!         if (do_merge) then
-!           cutoffarray(ii) = max(cutoffarray(ii), lm_low)
-!         else
-!           cutoffarray(ii) = lm_low
-!         endif
-!       endif
     enddo ! ii
 
   endsubroutine ! calc
@@ -275,7 +254,7 @@ module TEST_lcutoff_mod
     double precision, intent(in) :: point1(3), point2(3)
     double precision, intent(in) :: bravais(3,3)
 
-    double precision :: vec(3), vectrans(3)
+    double precision :: vec(3), vt(3)
     integer :: nx, ny, nz
 
     vec(1:3) = point2(1:3) - point1(1:3)
@@ -286,8 +265,8 @@ module TEST_lcutoff_mod
     do nx = -1, 1
       do ny = -1, 1
         do nz = -1, 1
-          vectrans = vec + nx*bravais(:,1) + ny*bravais(:,2) + nz*bravais(:,3)
-          dist_sq = min(dist_sq, vectrans(1)**2 + vectrans(2)**2 + vectrans(3)**2)
+          vt(:) = vec(:) + nx*bravais(:,1) + ny*bravais(:,2) + nz*bravais(:,3)
+          dist_sq = min(dist_sq, vt(1)*vt(1) + vt(2)*vt(2) + vt(3)*vt(3))
         enddo ! nz
       enddo ! ny
     enddo ! nx

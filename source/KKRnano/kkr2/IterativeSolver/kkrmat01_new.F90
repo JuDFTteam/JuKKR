@@ -391,8 +391,9 @@ module kkrmat_new_mod
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
     use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
+#ifdef NO_LOCKS_MPI
     use one_sided_commZ_mod, only: fenceZ
-
+#endif
     include 'mpif.h'
     double complex, intent(out) :: GLLh(:)
     type(SparseMatrixDescription), intent(in) :: sparse
@@ -417,17 +418,13 @@ module kkrmat_new_mod
     integer :: naez_max
 
     naez = size(nacls)
+    ASSERT(naez == size(trunc2atom_index))
     lmmaxd = size(Ginp, 1)
+    ASSERT(lmmaxd == size(Ginp, 2))
     naclsd = size(Ginp, 3)
     num_local_atoms = size(Ginp, 4)
     
     allocate(eikrm(naclsd), eikrp(naclsd))
-
-    ! checks
-    ASSERT(lmmaxd == size(Ginp, 2))
-    ASSERT(naclsd == size(eikrm))
-    ASSERT(naclsd == size(eikrp))
-    ASSERT(naez == size(trunc2atom_index))
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd))
@@ -523,13 +520,13 @@ module kkrmat_new_mod
     
     double complex, parameter :: ci=(0.d0,1.d0)
     double precision :: convpuh, tpi
-    integer :: m
+    integer :: iacls
     double complex :: tt, exparg
 
     tpi = 8.d0*atan(1.d0)         
     convpuh = alat/tpi * 0.5d0
 
-    do m = 1, nacls
+    do iacls = 1, nacls
        
   !     Here we do   --                  nn'
   !                  \                   ii'          ii'
@@ -541,13 +538,13 @@ module kkrmat_new_mod
   !  the repulsive potential GF is calculated for 0n and not n0!                   
   !  and that is why we need a minus sign extra!
   
-      tt = -ci*tpi*dot_product(Bzkp(1:3), rr(1:3,ezoa(m))) ! purely imaginary number
+      tt = -ci*tpi*dot_product(Bzkp(1:3), rr(1:3,ezoa(iacls))) ! purely imaginary number
 
   !  convert to p.u. and multiply with 1/2 (done above)
       exparg = exp(tt)
-      eikrp(m) =       exparg  * convpuh
-      eikrm(m) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
-    enddo ! m
+      eikrp(iacls) =       exparg  * convpuh
+      eikrm(iacls) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
+    enddo ! iacls
   
   endsubroutine ! dlke1
   
@@ -566,54 +563,54 @@ module kkrmat_new_mod
     
     double complex, intent(in) :: Ginp(lmmaxd,lmmaxd,nacls)
     
-    integer :: j, lm1, lm2, m, n1, n2, ind1, ind2, lmmax1, lmmax2, ind
+    integer :: i, j, lm1, lm2, iacls, ni, ind, lmmax1, lmmax2, is
 
-    do m = 1, nacls
-
-      do n1 = 1, numn0(site_index)
-        ind1 = indn0(site_index,n1)
-        if (atom(m) == ind1 .and. atom(m) > 0) then
-
-          lmmax1 = kvstr(site_index + 1) - kvstr(site_index)
-          lmmax2 = kvstr(ind1 + 1) - kvstr(ind1)
-
-          do lm1 = 1, lmmax1
-            do lm2 = 1, lmmax2
-
-              ind = ka(ia(site_index) + n1-1) + lmmax1*(lm2-1) + (lm1-1)
-
-              smat(ind) = smat(ind) + eikrm(m) * Ginp(lm2,lm1,m)
-
-            enddo ! lm2
-          enddo ! lm1
-
-        endif
-      enddo ! n1
-
-      j = atom(m)
+    do iacls = 1, nacls
+      j = atom(iacls)
       if (j < 1) cycle
+      i = site_index
 
-      do n2 = 1, numn0(j)
-        ind2 = indn0(j,n2)
-        if (site_index == ind2) then
+      do ni = 1, numn0(i)
+        ind = indn0(i,ni)
+        if (j == ind) then
 
-          lmmax1 = kvstr(j + 1) - kvstr(j)
-          lmmax2 = kvstr(ind2 + 1) - kvstr(ind2)
+          lmmax1 = kvstr(i+1) - kvstr(i)
+          lmmax2 = kvstr(ind+1) - kvstr(ind)
 
           do lm2 = 1, lmmax2
             do lm1 = 1, lmmax1
 
-              ind = ka(ia(j) + n2 - 1) + (lm2 - 1) * lmmax1 + lm1 - 1
+              is = ka(ia(i) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
 
-              smat(ind) = smat(ind) + eikrp(m) * Ginp(lm1,lm2,m)
+              smat(is) = smat(is) + eikrm(iacls) * Ginp(lm2,lm1,iacls)
 
             enddo ! lm1
           enddo ! lm2
 
-        endif
-      enddo ! n2
+        endif ! j == ind
+      enddo ! ni
 
-    enddo ! m
+      do ni = 1, numn0(j)
+        ind = indn0(j,ni)
+        if (i == ind) then
+
+          lmmax1 = kvstr(j+1) - kvstr(j)
+          lmmax2 = kvstr(ind+1) - kvstr(ind)
+
+          do lm2 = 1, lmmax2
+            do lm1 = 1, lmmax1
+
+              is = ka(ia(j) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
+
+              smat(is) = smat(is) + eikrp(iacls) * Ginp(lm1,lm2,iacls)
+
+            enddo ! lm1
+          enddo ! lm2
+
+        endif ! i == ind
+      enddo ! ni
+
+    enddo ! iacls
 
   endsubroutine ! dlke0_smat
 
