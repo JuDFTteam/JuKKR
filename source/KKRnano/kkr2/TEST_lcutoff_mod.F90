@@ -3,23 +3,28 @@
 ! JUST FOR TESTING purposes
 ! replace by proper implementation
 module TEST_lcutoff_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
 
   public :: initLcutoffNew
-
-  integer,                protected, public :: lm_low
-  integer,                protected, public :: lm_low2
-  double precision,       protected, public :: cutoff_radius
-  double precision,       protected, public :: cutoff_radius2
   
+  integer, parameter, public :: N_radii = 4
+
+  integer,                protected, public :: lm_low(N_radii)
+  double precision,       protected, public :: cutoff_radius(N_radii)
   integer, allocatable,   protected, public :: lmarray(:)
   integer,                protected, public :: cutoffmode
   logical,                protected, public :: DEBUG_dump_matrix = .false.
-  integer,                protected, public :: num_untruncated
-  integer,                protected, public :: num_truncated
-  integer,                protected, public :: num_truncated2
-  logical,                protected, public :: real_space_cutoff
+  integer,                protected, public :: num_truncated(0:N_radii)
+  
+!   integer,                protected, public :: lm_low2 !---> lm_low(2)
+!   double precision,       protected, public :: cutoff_radius2 !---> cutoff_radius(2)
+!   integer,                protected, public :: num_untruncated !---> num_truncated(0)
+!   integer,                protected, public :: num_truncated2 !---> num_truncated(2)
+  
+  logical, private :: real_space_cutoff
 
   contains
 
@@ -32,7 +37,7 @@ module TEST_lcutoff_mod
     type(Main2Arrays), intent(in) :: arrays
     integer, intent(in) :: atom_ids(:) ! list of global atom IDs
 
-    integer :: lmmaxd, atomindex, ilocal, ii, ind, ios, num_local_atoms, num, ist
+    integer :: lmmaxd, atomindex, ilocal, ii, ind, ios, num_local_atoms, num, ist, nrad, irad
     integer, allocatable :: lmarray_temp(:), lmarray_full(:)
 
     lmmaxd = arrays%lmmaxd
@@ -40,76 +45,65 @@ module TEST_lcutoff_mod
     allocate(lmarray_full(size(arrays%rbasis, 2)))
     allocate(lmarray_temp(size(arrays%rbasis, 2)))
 
+    nrad = 0
+    cutoff_radius(:) = 9.d9 ! effectively infinity
+    lm_low(:) = lmmaxd
+    
     real_space_cutoff = .false.
     open(91, file='lcutoff', form='formatted', action='read', status='old', iostat=ios)
     if (ios == 0) then ! opening was successful
-      read(91,*) cutoff_radius
-      read(91,*) lm_low
+      nrad = 1
+      read(91,*) cutoff_radius(nrad)
+      read(91,*) lm_low(nrad)
       read(91,*) cutoffmode
 
-      lm_low2 = -1
-      cutoff_radius2 = 0.d0
-      if (cutoffmode > 4) then
+      lm_low(nrad+1:) = -1
+      cutoff_radius(nrad+1:) = 0.d0
+      do while (cutoffmode > 4)
         cutoffmode = cutoffmode - 2
         ! cutoff-mode 5: iterative solver with 2 cutoffs,
         !             6: direct solver with 2 cutoffs
-        read(91,*) cutoff_radius2
-        read(91,*) lm_low2
-        real_space_cutoff = .true. ! activate a second cutoff radius
-        
-!         !!! extend to another cutoff level:
-!         if (cutoffmode > 4) then
-!           cutoffmode = cutoffmode - 2
-!           ! cutoff-mode 7: iterative solver with 2 cutoffs,
-!           !             8: direct solver with 2 cutoffs
-!           read(91,*) cutoff_radius3
-!           read(91,*) lm_low3
-!         endif
+        nrad = nrad+1
+        read(91,*) cutoff_radius(nrad)
+        read(91,*) lm_low(nrad)
+        real_space_cutoff = .true. ! activate a second or even third cutoff radius
 
-      endif
+      enddo ! while
       close(91)
     else
       write(6,*) 'No file "lcutoff" found, use defaults.' ! todo: convert to warning
-      cutoff_radius =  9.d9 ! effectively infinity
-      cutoff_radius2 = 9.d9
-      lm_low  = lmmaxd
-      lm_low2 = lmmaxd
       cutoffmode = 4 ! 3:iterative solver, 4:full solver
     endif
 
     lmarray_full    = 0 ! set to default
     num_local_atoms = size(atom_ids)
+    
+    if (num_local_atoms > 1 .and. nrad > 0) &
+      warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
 
     do ilocal = 1, num_local_atoms
       atomindex = atom_ids(ilocal) ! global atom index
 
-      lmarray_temp = lmmaxd ! init with the maximum
+      lmarray_temp(:) = lmmaxd ! init with the maximum
 
-      ! inner truncation zone
-      call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, cutoff_radius, lm_low)!, .false.)
+      do irad = 1, nrad
+      
+        ! truncation zones
+        call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, cutoff_radius(irad), lm_low(irad))
 
-      ! outer truncation zone
-      if (real_space_cutoff) &
-      call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, cutoff_radius2, lm_low2)!, .false.)
-
+      enddo ! irad
+        
       lmarray_full = max(lmarray_full, lmarray_temp) ! reduction: merge truncation zones of local atoms
     enddo ! ilocal
 
     ! TODO: a bit confusing, is never deallocated
-    call createTruncationZone(trunc_zone, lmarray_full)!, arrays)
+    call createTruncationZone(trunc_zone, lmarray_full)
 
-    num_untruncated = 0
-    num_truncated = 0
-    num_truncated2 = 0
-    do ii = 1, size(lmarray_full)
-      if (lmarray_full(ii) == lmmaxd) then
-        num_untruncated = num_untruncated + 1
-      else if (lmarray_full(ii) == lm_low) then
-        num_truncated = num_truncated + 1
-      else if (lmarray_full(ii) == lm_low2) then
-        num_truncated2 = num_truncated2 + 1
-      endif
-    enddo ! ii
+    num_truncated(:) = 0
+    num_truncated(0) = count(lmarray_full == lmmaxd)
+    do irad = 1, nrad
+      num_truncated(irad) = count(lmarray_full == lm_low(irad))
+    enddo ! irad
 
     num = count(lmarray_full > 0)
     allocate(lmarray(num)) ! never deallocated - who cares

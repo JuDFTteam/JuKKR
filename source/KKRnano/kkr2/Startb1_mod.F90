@@ -154,7 +154,7 @@ module Startb1_mod
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
       cell_index = ntcell(iatom)
-      CHECKASSERT (1 <= cell_index .and. cell_index <= sfile%ncell)
+      CHECKASSERT( 1 <= cell_index .and. cell_index <= sfile%ncell )
       call createRadialMeshData(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1)
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
       

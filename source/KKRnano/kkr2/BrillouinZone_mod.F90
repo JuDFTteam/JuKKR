@@ -260,7 +260,7 @@ module BrillouinZone_mod
 ! --> check if we are in surface mode
     surface = all(bravais(1:3,3) == 0.d0)
 
-    mkxyz(1:3) = nkxyz(1:3)
+    mkxyz(1:3) = max(1, nkxyz(1:3))
     
     ndim = 3
     if (surface) then
@@ -269,7 +269,6 @@ module BrillouinZone_mod
       ndim = 2
     endif ! surface
 
-    allocate(ibk(0:mkxyz(1)-1,0:mkxyz(2)-1,0:mkxyz(3)-1))
     
 !-------------------
 !
@@ -327,6 +326,7 @@ module BrillouinZone_mod
 
     nk = product(mkxyz(1:3))
 
+    allocate(ibk(0:mkxyz(3)-1,0:mkxyz(2)-1,0:mkxyz(1)-1))
     ibk(:,:,:) = 0 ! since the legacy code has x as outermost of the three loops, we index ibk in (3,2,1)-order
 
     nkp = 0
@@ -353,10 +353,7 @@ module BrillouinZone_mod
 !                = sum(j) [sum(i) m(i) n(i,j)] gq(j)
 
               do j = 1, 3
-                is = 0
-                do i = 1, 3
-                  is = is + ind1(i)*nbgp(j,i,isym)
-                enddo ! i
+                is = ind1(1)*nbgp(j,1,isym) + ind1(2)*nbgp(j,2,isym) + ind1(3)*nbgp(j,3,isym)
                 ind2(j) = modulo(is, mkxyz(j))
               enddo ! j
 

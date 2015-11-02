@@ -323,7 +323,7 @@ module CalculationData_mod
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use TEST_lcutoff_mod, only: num_untruncated, num_truncated, num_truncated2
+    use TEST_lcutoff_mod, only: num_truncated
     ! deprecated interfaces
     use RefCluster_mod, only: createLatticeVectors
     use RefCluster_mod, only: createRefCluster              
@@ -366,11 +366,11 @@ module CalculationData_mod
       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
       write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
       write(*,*) "On node 0: "
-      write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
-      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
-      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
+      write(*,*) "Num. atoms treated with full lmax: ", num_truncated(0)
+      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated(1)
+      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated(2)
     endif ! master
-    CHECKASSERT( num_truncated + num_untruncated + num_truncated2 == dims%naez )
+    CHECKASSERT( sum(num_truncated) == dims%naez )
 
     call createMadelungCalculator(self%madelung_calc, dims%lmaxd, params%alat, params%rmax, params%gmax, arrays%bravais)
 
@@ -421,7 +421,7 @@ module CalculationData_mod
     use DimParams_mod, only: DimParams
     use Main2Arrays_mod, only: Main2Arrays
     use InitialGuess_mod, only: iguess_init ! deprecated exceptional naming with underscore
-    use TEST_lcutoff_mod, only: num_untruncated
+    use TEST_lcutoff_mod, only: num_truncated
      
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
@@ -431,7 +431,7 @@ module CalculationData_mod
     integer :: ii, blocksize, ns
 
     ! TODO: This is overdimensioned when l-cutoff is used!!!
-    if (num_untruncated /= dims%naez) &
+    if (num_truncated(0) /= dims%naez) & ! num_truncated(0) == former num_untruncated
       warn(6, "The memory proportions for iGuess are overdimensioned when l-dependent truncation is applied!")
     ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
     blocksize = self%trunc_zone%naez_trc * self%num_local_atoms * dims%lmmaxd**2

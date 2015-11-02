@@ -71,15 +71,15 @@ module vbrmv_mat_mod
     double complex, parameter :: CONE  = (1.d0, 0.d0)
 
     leaddim_b = size(b, 1)
+    ncols = size(b, 2)
     leaddim_buffer = size(buffer, 1)
 
-    ncols = size(b, 2)
 
     b = 0.d0
 
 !     can parallelise this loop
 
-!$OMP PARALLEL PRIVATE(i, istart, istop,num_rows,rowbuf, sum_nrowbuf,j,jlow,jhigh, startrow,nrowbuf,icols,buffer,k)
+!$OMP PARALLEL PRIVATE(i,istart,istop,num_rows,rowbuf,sum_nrowbuf,j,jlow,jhigh,startrow,nrowbuf,icols,buffer,k)
 !$OMP DO
     do i = 1, blk_nrows
       istart = kvstr(i)
@@ -99,17 +99,15 @@ module vbrmv_mat_mod
 
 !IBM* ASSERT(ITERCNT(16))
         do icols = 1, ncols
-          !call ZCOPY(nrowbuf, x(startrow, icols), 1, buffer(rowbuf,   icols), 1)
-          buffer(rowbuf:(rowbuf + nrowbuf -1), icols) = x(startrow:(startrow + nrowbuf - 1), icols)
+          !call ZCOPY(nrowbuf, x(startrow, icols), 1, buffer(rowbuf,icols), 1)
+          buffer(rowbuf:rowbuf+nrowbuf-1,icols) = x(startrow:startrow+nrowbuf-1,icols)
         enddo ! icols
 
         sum_nrowbuf = sum_nrowbuf + nrowbuf
         rowbuf = rowbuf + nrowbuf
       enddo ! j
 
-      !k = ka(ia(i))
-
-      call ZGEMM('N','N',num_rows,ncols,sum_nrowbuf, CONE,a(k),num_rows, buffer,leaddim_buffer, CZERO,b(istart,1),leaddim_b)
+      call ZGEMM('N','N',num_rows,ncols,sum_nrowbuf,CONE,a(k),num_rows,buffer,leaddim_buffer,CZERO,b(istart,1),leaddim_b)
 
     enddo ! i
 !$OMP endDO

@@ -19,14 +19,14 @@ C     .. Parameters ..
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION A,B,QC,RMAX,Z,EBOT
-      INTEGER IP,IPR,IRMD,IS,NCORE,NR,NSPIN,NSRA
+      INTEGER IP,IPR,IRMD,IS,NCORE,NR,NSPIN,NSRA,atom_id
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DRDI(*),ECORE(*),RHOC(*),V(*)
       INTEGER LCORE(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION E,E1,E2,EDIFF,EI,SLOPE,SUM,TOL,VALUE,WGT
+      DOUBLE PRECISION E,E1,E2,EDIFF,EI,SLOPE,SM,TOL,VALUE,WGT
       INTEGER IC,IN,INUC,IR,L,LMP1,LMXC,LP1,NC,NMAX,NN,NRE
       LOGICAL VLNC
 C     ..
@@ -89,11 +89,11 @@ c
             NC = NC + 1
             INUC = INUC + IRNUMX
             E = ECORE(NC)
-            EI = ECORE(NC)
+            EI = E
             IF (IPR.NE.0) WRITE (6,FMT=9000) IN,TEXT(LP1),NN,SPN(IS),
      +          IP,E
 
-            CALL INTCOR(E1,E2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SUM,NRE,
+            CALL INTCOR(E1,E2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SM,NRE,
      +                    VLNC,A,B,Z,RMAX,NR,TOL,IRMD,IPR,NITMAX,NSRA)
 
         IF (E.GT.EBOT) THEN
@@ -104,12 +104,12 @@ c
         WRITE(6,*) 'The results are very probably wrong.'
         WRITE(6,*) 'The number of core states in the input potential'
         WRITE(6,*) 'should perhaps be decreased.'
-        WRITE(6,*) 'The program stops in subroutine corel.f.'
+        WRITE(6,*) 'The program stops in corel.f, atom_id=',IP
         STOP 'Error 1 in corel.f'
         END IF
             EDIFF = E - EI
             ECORE(NC) = E
-            WGT = REAL(L+L+1)/SUM*2.D0/REAL(NSPIN)
+            WGT = (L+L+1)*2.D0/(SM*NSPIN)
             IF (IPR.NE.0) WRITE (6,FMT=9010) EI,EDIFF,E
    40       CONTINUE
 c
@@ -131,11 +131,11 @@ C     start energy: E(n_max, l) / 10.
             IN = NMAX+1
             NN = IN - LP1
             E = ECORE(NC)/10.
-            EI = ECORE(NC)/10.
+            EI = E
             IF (IPR.NE.0) WRITE (6,FMT=9000) IN,TEXT(LP1),NN,SPN(IS),
      +          IP,E
 
-            CALL INTCOR(E1,E2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SUM,NRE,
+            CALL INTCOR(E1,E2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SM,NRE,
      +                    VLNC,A,B,Z,RMAX,NR,TOL,IRMD,IPR,NITMAX,NSRA)
 
         IF (E.LT.EBOT) THEN
@@ -147,7 +147,7 @@ C     start energy: E(n_max, l) / 10.
         WRITE(6,*) 'The results are very probably wrong.'
         WRITE(6,*) 'Lower the bottom of the contour or increase the'
         WRITE(6,*) 'number of core states in the input potential.'
-        WRITE(6,*) 'The program stops in subroutine corel.f.'
+        WRITE(6,*) 'The program stops in corel.f, atom_id=',IP
         STOP 'Error 2 in corel.f'
         END IF
         END IF

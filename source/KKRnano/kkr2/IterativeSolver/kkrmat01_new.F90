@@ -214,7 +214,7 @@ module kkrmat_new_mod
         GS(:,:,isym,ii) = GS(:,:,isym,ii) + k_point_weight * G_diag(:,:,ii)
       enddo ! isym
     enddo ! ii
-    
+
   endsubroutine ! greenKSummation
 
   !------------------------------------------------------------------------------
@@ -348,10 +348,10 @@ module kkrmat_new_mod
       TESTARRAYLOG(3, full)
       call solveFull(full, ms%mat_B, ms%mat_X)
     endif ! cutoffmode == 4
-    
+
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
     call iguess_save(iguess_data, ms%mat_X)
-    
+
     TESTARRAYLOG(3, ms%mat_X)
     
     ! RESULT: mat_X
