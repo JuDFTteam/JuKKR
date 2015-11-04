@@ -23,7 +23,7 @@ module PotentialData_mod
     integer :: irmd
     integer :: irnsd
     integer :: lmpot
-  endtype
+  endtype ! PotentialData
 
   interface create
     module procedure createPotentialData
@@ -36,13 +36,12 @@ module PotentialData_mod
   interface represent
     module procedure repr_PotentialData
   endinterface
-
   
   contains
 
   !----------------------------------------------------------------------------
   subroutine createPotentialData(potential, lpot, nspin, irmind, irmd)
-    type (PotentialData), intent(inout) :: potential
+    type(PotentialData), intent(inout) :: potential
     integer, intent(in) :: lpot
     integer, intent(in) :: nspin
     integer, intent(in) :: irmind  !< start of non-spherical region
@@ -72,10 +71,9 @@ module PotentialData_mod
 
   endsubroutine ! create
 
-
   !----------------------------------------------------------------------------
   subroutine destroyPotentialData(potential)
-    type (PotentialData), intent(inout) :: potential
+    type(PotentialData), intent(inout) :: potential
 
     deallocate(potential%VINS)
     deallocate(potential%VISP)
@@ -84,9 +82,9 @@ module PotentialData_mod
 
   !----------------------------------------------------------------------------
   !> Return the actual number of potential values.
-  integer function getNumPotentialValues(potential)
-    type (PotentialData), intent(in) :: potential
-    getNumPotentialValues = (potential%irmd+(potential%irnsd+1) * (potential%lmpot-1)) * potential%nspin
+  integer elemental function getNumPotentialValues(self)
+    type(PotentialData), intent(in) :: self
+    getNumPotentialValues = (self%irmd+(self%irnsd+1) * (self%lmpot-1)) * self%nspin
   endfunction ! get
 
   !----------------------------------------------------------------------------
@@ -170,4 +168,4 @@ module PotentialData_mod
     
   endsubroutine ! represent
 
-endmodule PotentialData_mod
+endmodule ! PotentialData_mod

@@ -51,7 +51,6 @@ implicit none
     use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
     
     use kloopz1_mod, only: kloopz1_new
-    use RefCluster_mod, only: RefCluster, LatticeVectors
     use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
 
     use wrappers_mod, only: calctmat_wrapper, calcdtmat_wrapper

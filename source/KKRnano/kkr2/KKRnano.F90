@@ -13,12 +13,12 @@ program KKRnano
 
   use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup
   use KKRnanoParallel_mod, only: getMyWorldRank, getMyAtomRank, getMyActiveCommunicator, getMySEcommunicator 
-  use KKRnanoParallel_mod, only: createKKRnanoParallel, destroyKKRnanoParallel
-  
+  use KKRnanoParallel_mod, only: createKKRnanoParallel, destroy
+
   use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
   use main2_aux_mod, only: printDoubleLineSep, is_abort_by_rank0, writeIterationTimings
-  use EnergyMesh_mod, only: EnergyMesh, createEnergyMesh, destroyEnergyMesh
+  use EnergyMesh_mod, only: EnergyMesh, createEnergyMesh, destroy
   use EnergyMesh_mod, only: readEnergyMesh, broadcastEnergyMesh_com, updateEnergyMesh, writeEnergyMesh
   use EnergyMesh_mod, only: readEnergyMeshSemi, updateEnergyMeshSemi, writeEnergyMeshSemi
 
@@ -26,19 +26,19 @@ program KKRnano
   use LDAUData_mod, only: LDAUData
 
   use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outtime
-  use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroyEBalanceHandler
+  use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroy
 
   use wrappers_mod, only: rhocore_wrapper
 
-  use DimParams_mod, only: DimParams, createDimParams, destroyDimParams
+  use DimParams_mod, only: DimParams, createDimParams, destroy
   use InputParams_mod, only: InputParams, readInputParamsFromFile
-  use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, readMain2Arrays, destroyMain2Arrays
+  use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, readMain2Arrays, destroy
 
   use ScatteringCalculation_mod, only: energyloop
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
-  use CalculationData_mod, only: CalculationData, createCalculationData, prepareMadelung
-  use CalculationData_mod, only: getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal, destroyCalculationData
+  use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
+  use CalculationData_mod, only: getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal
   
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
@@ -106,14 +106,16 @@ program KKRnano
 #ifdef NO_LOCKS_MPI
     write(*,*) "NO_LOCKS_MPI defined: Not using MPI RMA locks. Does not scale well."
 #endif
+
 #ifdef IDENTICAL_REF
     write(*,*) "IDENTICAL_REF defined: assuming identical reference clusters."
 #endif
+
 #ifdef DEBUG_NO_ELECTROSTATICS
     write(*,*) "DEBUG_NO_ELECTROSTATICS: no electrostatics - results are wrong."
 #endif
-  endif
-
+  endif ! is master
+  
 !------------------------------------------------------------------------------
 
   if (getMyWorldRank(my_mpi) < 128) then ! max. 128 logfiles
@@ -153,17 +155,16 @@ program KKRnano
 ! ... and wait after SC-ITER loop
 !=====================================================================
 
-  ! This if closes much later!
   if (isActiveRank(my_mpi)) then
 
-!+++++++++++ pre self-consistency preparation
+!+++++++++++ pre self-consistency preparations
 
     !--------------------------------------------------------------------------
-    call createCalculationData(calc_data, dims, params, arrays, my_mpi)
+    call create(calc_data, dims, params, arrays, my_mpi)
     num_local_atoms = getNumLocalAtoms(calc_data)
     !--------------------------------------------------------------------------
 
-    call createEnergyMesh(emesh, dims%iemxd) !!!!
+    call createEnergyMesh(emesh, dims%iemxd)
 
     ! TO DO: Getting rid of the many if-clauses used for semicore contour!
     if(params%use_semicore == 1) then
@@ -295,7 +296,7 @@ program KKRnano
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
 
-      endif ! master
+      endif ! is master
 
       if (is_abort_by_rank0(flag, getMyActiveCommunicator(my_mpi))) exit
 
@@ -307,32 +308,27 @@ program KKRnano
 ! ######################################################################
 ! ######################################################################
 
-    ! write forces if requested, master-group only
-    if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) then
+    if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) & ! write forces if requested, master-group only
       call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
-    endif ! foces
 
     if (isMasterRank(my_mpi)) close(2) ! time-info
 
-    call destroyEBalanceHandler(ebalance_handler)
-    call destroyEnergyMesh(emesh)
-    call destroyCalculationData(calc_data)
+    call destroy(ebalance_handler)
+    call destroy(emesh)
+    call destroy(calc_data)
 
   endif ! active Ranks
 
   CLOSELOG
 
-!------------------------------------------------------------------------------
-  call destroyMain2Arrays(arrays)
-  call destroyDimParams(dims)
-!------------------------------------------------------------------------------
+  call destroy(arrays)
+  call destroy(dims)
 
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID do nothing ...
 ! ... and wait here
 !=====================================================================
-! Free KKRnano mpi resources
 
-  call destroyKKRnanoParallel(my_mpi)
+  call destroy(my_mpi) ! Free KKRnano mpi resources
   
-endprogram KKRnano
+endprogram ! KKRnano

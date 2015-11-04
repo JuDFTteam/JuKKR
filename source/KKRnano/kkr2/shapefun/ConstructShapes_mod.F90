@@ -11,7 +11,7 @@ module ConstructShapes_mod
   implicit none
   private
   public :: InterstitialMesh
-  public :: destroyInterstitialMesh
+  public :: destroy
   public :: createShape
   public :: write_shapefun_file
 
@@ -22,6 +22,10 @@ module ConstructShapes_mod
     double precision, allocatable :: xrn(:) !< radial mesh points r(i)
     double precision, allocatable :: drn(:) !< integration weights dr/di (i)
   endtype
+  
+  interface destroy
+    module procedure destroyInterstitialMesh
+  endinterface
 
   contains
 
@@ -62,8 +66,8 @@ module ConstructShapes_mod
   subroutine createShape(self, inter_mesh, rbasis, bravais, center_ind, &
                       rcluster, lmax_shape, npoints_min, nmin_panel, &
                       num_MT_points, new_MT_radius, MT_scale, atom_id)
-    use RefCluster_mod, only: LatticeVectors, RefCluster
-    use RefCluster_mod, only: createLatticeVectors, createRefCluster, destroyLatticeVectors, destroyRefCluster
+    use LatticeVectors_mod, only: LatticeVectors, create, destroy
+    use RefCluster_mod, only: RefCluster, create, destroy
     use ShapefunData_mod, only: ShapefunData
 
     ! Output (shape-functions and interstitial mesh):
@@ -88,8 +92,8 @@ module ConstructShapes_mod
     double precision, allocatable :: weights(:)
     integer :: ist
 
-    call createLatticeVectors(lattice_vectors, bravais)
-    call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcluster, center_ind)
+    call create(lattice_vectors, bravais)
+    call create(ref_cluster, lattice_vectors%rr, rbasis, rcluster, center_ind)
 
     allocate(weights(size(ref_cluster%rcls, 2)))
     weights = 1.d0 ! all weights are the same, so their differences are zero 
@@ -111,8 +115,8 @@ module ConstructShapes_mod
                               lmax_shape, npoints_min, nmin_panel, &
                               num_MT_points, new_MT_radius, MT_scale, atom_id)
 
-    call destroyLatticeVectors(lattice_vectors)
-    call destroyRefCluster(ref_cluster)
+    call destroy(lattice_vectors)
+    call destroy(ref_cluster)
     
     deallocate(weights, stat=ist)
 
@@ -245,7 +249,7 @@ module ConstructShapes_mod
 
   endsubroutine ! destroy
 
-  !******************************************************************************
+  !------------------------------------------------------------------------------
   subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius, atom_id)
     use Constants_mod, only: pi
     ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.

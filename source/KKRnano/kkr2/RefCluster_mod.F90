@@ -4,8 +4,6 @@
 !>             periodic boundary conditions are taken into account:
 !>             mirror images of atoms can be included in the cluster
 !>
-!> LatticeVectors: linear combinations of Bravais vectors with integer coefficients
-!>
 !> Note: if N (=number of atoms) reference clusters are created, then this algorithm scales as O(N**2)
 ! #define DEBUG
 
@@ -13,13 +11,8 @@ module RefCluster_mod
   implicit none
   private
   
-  public :: RefCluster, LatticeVectors, create, destroy
-  public :: createLatticeVectors, destroyLatticeVectors, createRefCluster, destroyRefCluster
-
-  type LatticeVectors
-    integer :: nrd
-    double precision, allocatable :: rr(:,:) !< dim(3,0:nrd)
-  endtype
+  public :: RefCluster, create, destroy
+  public :: createRefCluster, destroyRefCluster ! deprecated
 
   type RefCluster
     integer :: numn0 !< number of inequivalent cluster atoms
@@ -33,46 +26,14 @@ module RefCluster_mod
   endtype
 
   interface create
-    module procedure createLatticeVectors, createRefCluster
+    module procedure createRefCluster
   endinterface
   
   interface destroy
-    module procedure destroyLatticeVectors, destroyRefCluster
+    module procedure destroyRefCluster
   endinterface
   
   contains
-
-  !------------------------------------------------------------------------------
-  !> Creates a table of lattice vectors.
-  !>
-  !> Before any reference clusters can be created, a table of
-  !> lattice vectors has to be created.
-  !> Several different reference clusters can (and should) share
-  !> the same lattice vectors.
-  subroutine createLatticeVectors(lattice_vectors, bravais, rmax)
-    type(LatticeVectors), intent(inout) :: lattice_vectors
-    double precision, intent(in) :: bravais(3,3)
-    double precision, intent(in), optional :: rmax
-    
-    double precision :: rmx
-    rmx = 5.d0; if (present(rmax)) rmx = rmax
-     
-    call rrgen(bravais, rmx, lattice_vectors%rr, lattice_vectors%nrd)
-#ifdef DEBUG  
-    write(*,*) "Num. real space vectors: ", lattice_vectors%nrd
-#endif
-  endsubroutine
-
-  !------------------------------------------------------------------------------
-  !> Destroys table of lattice vectors.
-  !>
-  subroutine destroyLatticeVectors(lattice_vectors)
-    type(LatticeVectors), intent(inout) :: lattice_vectors
-
-    integer :: ist
-    deallocate(lattice_vectors%rr, stat=ist)
-    lattice_vectors%nrd = 0
-  endsubroutine
 
   !------------------------------------------------------------------------------
   !> Creates reference cluster.
@@ -90,17 +51,14 @@ module RefCluster_mod
   subroutine createRefCluster(self, lattice_vectors, rbasis, rcut, center_ind)
     type(RefCluster), intent(inout) :: self
 
-    type(LatticeVectors), intent(in) :: lattice_vectors
+    double precision, intent(in) :: lattice_vectors(:,0:) !< dim(3,0:nrd)
     double precision, intent(in) :: rbasis(:,:) !< dim(3,naez) all atomic positions
     double precision, intent(in) :: rcut
-    integer, intent(in) :: center_ind
-
-    integer :: naez
-    naez = size(rbasis, 2)
+    integer, intent(in) :: center_ind !< global atom index
 
     self%atom_index = center_ind
 
-    call clsgen99(center_ind, rcut, lattice_vectors%nrd, lattice_vectors%rr, naez, rbasis, self%nacls, self%rcls, self%atom, self%ezoa, self%indn0, self%numn0)
+    call clsgen99(center_ind, rcut, size(lattice_vectors, 2), lattice_vectors, size(rbasis, 2), rbasis, self%nacls, self%rcls, self%atom, self%ezoa, self%indn0, self%numn0)
 #ifdef DEBUG
     write(*,*)  "Number of atoms in cluster:            ", self%nacls
     write(*,*)  "Number of inequivalent cluster atoms: :", self%numn0
@@ -109,10 +67,10 @@ module RefCluster_mod
 
   !------------------------------------------------------------------------------
   !> Destroys reference cluster.
-  subroutine destroyRefCluster(self)
+  elemental subroutine destroyRefCluster(self)
     type(RefCluster), intent(inout) :: self
 
-    integer :: ist
+    integer :: ist ! ignore status
     deallocate(self%atom, self%ezoa, self%indn0, self%rcls, stat=ist)
     self%nacls = 0
     self%numn0 = 0
@@ -140,7 +98,7 @@ module RefCluster_mod
     integer, intent(in) :: naez                 !< number of atoms in ez
     double precision, intent(in) :: rbasis(:,:) !< dim(3,naez) pos. of basis atoms in ez
     integer, intent(in) :: nr                 !< number of lattice vectors rr
-    double precision, intent(in) :: rr(:,0:)  !< dim(3,0:nr) set of lattice vectors
+    double precision, intent(in) :: rr(:,0:)  !< dim(3,0:nr-1) set of lattice vectors
 
     integer, intent(out) :: nacls
     double precision, allocatable, intent(out) :: rcls(:,:) !< dim(3,nacls) real space position of atom in cluster
@@ -168,7 +126,7 @@ module RefCluster_mod
     rcutxy2 = (rcutxy + epsshl)**2
 #endif
     
-    macls = naez*(nr+1)
+    macls = naez*nr
     allocate(rsort(macls), rg(3,macls), iatom(macls), iezoa(macls), isort(macls), indni(naez), stat=ist)
     if (ist /= 0) stop 'RefCluster: gen: allocation of [rsort, rg, iatom, iezoa, isort, indni] failed!'
     
@@ -177,7 +135,7 @@ module RefCluster_mod
     do iat = 1, naez  ! loop in all atoms
       couplmat = .false.
       
-      do n = 0, nr ! loop in all selected periodic images
+      do n = 0, nr-1 ! loop in all selected periodic images
         tmp(1:3) = rr(1:3,n) + rbasis(1:3,iat) - rbasis(1:3,jatom)
         
 #ifdef ZYLINDRICAL_CLUSTERS
@@ -235,134 +193,18 @@ module RefCluster_mod
     ! todo: display some statistics
   endsubroutine ! clsgen99
 
-
-
-  !------------------------------------------------------------------------------
-  subroutine rrgen(bv, rmax, rr, nr)
-    !> generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms in routine CLSGEN99
-    use Sorting_mod, only: dsort
-    
-    double precision, intent(in) :: bv(3,3) ! bravais vectors or matrix
-    double precision, intent(in) :: rmax ! radius
-    double precision, allocatable, intent(out) :: rr(:,:) ! (3,0:nr)
-    integer, intent(out) :: nr
-    
-    !    .. Locals
-    double precision :: r, rr2, rs
-    integer :: i, i1, i2, i3, nn(1:3), iprint, mr
-    double precision :: v(3)
-    double precision, allocatable :: rabs2(:), rr1(:,:) 
-    integer, allocatable :: ind(:)!(nr) ! permutation for sorting
-    double precision, parameter :: epsshl = 1.d-5
-#ifdef DEBUG
-    character(len=*), parameter :: F8='(10x,i6,3f24.12,f15.4)' ! DEBUG
-    iprint = 1
-#else
-    character(len=*), parameter :: F8='(10x,i6,3f12.3,f15.4)'
-    iprint = 0
-#endif
-    ! write (6,'(5X,A,/)') '< RRGEN > : generation of real space mesh RR(NR)'
-
-    
-
-    do i = 1, 3 
-      v(i) = sum(bv(1:3,i)**2)
-    enddo ! i
-    v(1:3) = sqrt(v(1:3))
-    
-    r = 1.5d0*rmax + sqrt(sum(v(1:3)**2)) + epsshl
-    rs = r*r
-    
-    nn = min(max(2, nint(r/v)), 12)
-    
-    mr = product(nn+1+nn) ! preliminary and about a factor 2 too large
-
-    if (iprint > 0) then
-      write(6, fmt="(10x,'Radius R        : ',f15.6,' (ALAT    units)')") r
-      write(6, fmt="(10x,'       R**2     : ',f15.6,' (ALAT**2 units)')") rs
-      write(6, fmt="(10x,'mesh divisions  : ',3i5)") nn
-#ifdef DEBUG
-      write(6, fmt="(10x,'max N vectors   : ',3i10)") mr
-#endif
-    endif ! output
-
-    allocate(rabs2(mr), rr1(3,mr))
-
-    nr = 0
-    do i1 = -nn(1), nn(1)
-      do i2 = -nn(2), nn(2)
-        do i3 = -nn(3), nn(3)
-          v(1:3) = i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3)
-          rr2 = sum(v(1:3)*v(1:3))
-                  
-          ! todo: verify that v(1:3) == i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3) 
-          !       ... and then get rid of the vector-subroutines vmul, vadd, veq
-        
-          if ((rr2 <= rs .or. abs(i1)+abs(i2)+abs(i3) <= 6) .and. rr2 > epsshl) then
-            nr = nr + 1
-            rr1(1:3,nr) = v(1:3)
-            rabs2(nr) = rr2
-          endif
-        enddo ! i3
-      enddo ! i2
-    enddo ! i1
-
-#ifdef DEBUG
-    write(6, fmt="(10x,'found N vectors : ',3i10)") nr
-#endif
-    
-    deallocate(rr, stat=i) ! ignore status
-    allocate(rr(1:3,0:nr), ind(nr))
-    
-    rr = 0.d0 ! init
-    rr(1:3,0) = 0.d0 ! init
-
-    !!! for an OpenMP implementation, one could not treat the origin separatly, i.e. we can skip the (rr2 > epsshl) condition
-    !!! and simply create a list of all nrd vectors (we also do need to increase nr automically since we can compute nr from nn and [i1,i2,i3]
-    !!! so the vector setup region could be thread-parallel, furthermore, the sorting and reordering also can be threaded
-    
-    if (iprint > 0) then
-      write(6, fmt="(/,10x,60('+'),/,18x,'generated real-space mesh-points (ALAT units)',/,10x,60('+'))")
-      write(6, fmt="(13x,'index      x           y           z          distance  ',/,10x,60('-'))")
-      write(6, fmt=F8) 0, rr(1:3,0), 0.d0
-    endif
-
-    call dsort(rabs2, ind, nr)
-! #ifdef DEBUG
-!     write(6, fmt='(1(a,i0),a,9999(" ",i0))'  ) __FILE__,__LINE__,' ind(:) =', ind
-!     write(6, fmt='(1(a,i0),a,9999(" ",f0.3))') __FILE__,__LINE__,' rr2(:) =',rabs2(ind)
-! #endif
-    
-    do i = 1, nr
-      rr(1:3,i) = rr1(1:3,ind(i)) ! store
-      if (iprint > 0 .and. (iprint > 1 .or. 9 > i .or. i > nr-9)) &
-      write(6, fmt=F8) i, rr(1:3,i), sqrt(rabs2(ind(i)))
-    enddo ! i
-
-    deallocate(ind, rr1, rabs2, stat=i) ! ignore status
-    
-    if (iprint > 0)  write(6, fmt="(10x,60('+'))")
-    
-  endsubroutine ! rrgen
-
 endmodule ! RefCluster_mod
 
 #ifdef TEST_CLUSTERS__
 program test_clusters
-  use RefCluster_mod, only: RefCluster, LatticeVectors!, create, destroy
-  use RefCluster_mod, only: createLatticeVectors, destroyLatticeVectors ! deprecated
-  use RefCluster_mod, only: createRefCluster, destroyRefCluster ! deprecated
+  use LatticeVectors_mod, only: LatticeVectors, create, destroy
+  use RefCluster_mod, only: RefCluster, create, destroy
 
-  double precision bravais(3,3)
-  double precision rbasis(3,4)
+  double precision :: bravais(3,3), rbasis(3,4), dist, rcut = 1.5
+  integer :: ii, center_ind = 4
 
   type(RefCluster) :: ref_cluster
-  type(LatticeVectors), target :: lattice_vectors
-
-  integer ii
-  double precision :: rcut = 1.5
-  integer :: center_ind = 4
-  double precision :: dist
+  type(LatticeVectors) :: lattice_vectors
 
   bravais = reshape([ 1., 0., 0., &
                       0., 1., 0., &
@@ -373,33 +215,27 @@ program test_clusters
                      .5, .0, .5, &
                      .0, .5, .5  ], [3, 4])
 
-  call createLatticeVectors(lattice_vectors, bravais)
-  call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcut, center_ind)
+  call create(lattice_vectors, bravais)
+  call create(ref_cluster, lattice_vectors%rr, rbasis, rcut, center_ind)
 
-  write(*,*)  "Number of lattice vectors:             ", ref_cluster%lattice_vectors%nrd
-  write(*,*)  "Number of atoms in cluster:            ", ref_cluster%nacls
-  write(*,*)  "Number of inequivalent cluster atoms: :", ref_cluster%numn0
+  write(*,*) "Number of lattice vectors:             ", ref_cluster%lattice_vectors%nrd
+  write(*,*) "Number of atoms in cluster:            ", ref_cluster%nacls
+  write(*,*) "Number of inequivalent cluster atoms: :", ref_cluster%numn0
 
   do ii = 1, ref_cluster%nacls
     dist = sqrt(ref_cluster%rcls(1,ii)**2 + ref_cluster%rcls(2,ii)**2 + ref_cluster%rcls(3,ii)**2)
     write(*,"(79('-'))")
-    write(*, 92000) "Cluster atom", ii
-    write(*, 91000) "Basis atom / dist. ", ref_cluster%atom(ii), dist
-    write(*, 90000) "Lattice vector", ref_cluster%lattice_vectors%rr(:, ref_cluster%ezoa(ii))
-    write(*, 90000) "Position in basis", rbasis(:, ref_cluster%atom(ii))
-    write(*, 90000) "Position from center", ref_cluster%rcls(:, ii)
-    if (dist > rcut) then
-      write(*,*) "ERROR in cluster generation."
-      STOP
-    endif
-  enddo
+    write(*, '(a20,x,i7)')         "Cluster atom", ii
+    write(*, '(a20,x,i7,x,f13.6)') "Basis atom / dist. ", ref_cluster%atom(ii), dist
+    write(*, '(a20,x,3(f13.6,x))') "Lattice vector", ref_cluster%lattice_vectors%rr(:, ref_cluster%ezoa(ii))
+    write(*, '(a20,x,3(f13.6,x))') "Position in basis", rbasis(:, ref_cluster%atom(ii))
+    write(*, '(a20,x,3(f13.6,x))') "Position from center", ref_cluster%rcls(:, ii)
+    if (dist > rcut) stop "ERROR in cluster generation."
+  enddo ! ii
 
-  call destroyLatticeVectors(lattice_vectors)
-  call destroyRefCluster(ref_cluster)
+  call destroy(lattice_vectors)
+  call destroy(ref_cluster)
 
-90000 format (A20, X, 3(F13.6, X))
-91000 format (A20, X, I7, X, F13.6)
-92000 format (A20, X, I7)
-endprogram
+endprogram ! test
 #endif
 

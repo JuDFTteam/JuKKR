@@ -7,7 +7,7 @@ module CalculationData_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 
   use MadelungCalculator_mod, only: MadelungCalculator, create, destroy
-  use MadelungCalculator_mod, only: MadelungLatticeSum, create, destroy
+  use MadelungCalculator_mod, only: MadelungLatticeSum, create, destroy ! todo: two types hosted in one module
   use RadialMeshData_mod, only: RadialMeshData, create, destroy
   use CellData_mod, only: CellData, create, destroy
   use BasisAtom_mod, only: BasisAtom, create, destroy
@@ -23,13 +23,12 @@ module CalculationData_mod
   use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients, create, destroy
   use TruncationZone_mod, only: TruncationZone, create, destroy
   use InitialGuess_mod, only: InitialGuess, create, destroy
-  use RefCluster_mod, only: LatticeVectors, create, destroy
+  use LatticeVectors_mod, only: LatticeVectors, create, destroy
   
   implicit none
   private
 
   public :: CalculationData, create, destroy, represent
-  public :: createCalculationData, destroyCalculationData ! deprecated
   
   public :: getBroydenDim, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getKKR
   public :: getDensities, getEnergies, getLDAUData
@@ -38,7 +37,6 @@ module CalculationData_mod
   public :: prepareMadelung         
   
 ! public :: constructTruncationZones, constructStorage, constructClusters ! not yet used
-
 
   type CalculationData
 
@@ -55,8 +53,7 @@ module CalculationData_mod
     type(DensityResults), pointer     :: densities_a(:)    => null()
     type(EnergyResults), pointer      :: energies_a(:)     => null()
     type(LDAUData), pointer           :: ldau_data_a(:)    => null()
-    type(JijData), pointer                :: jij_data_a(:) => null()
-    
+    type(JijData), pointer            :: jij_data_a(:)     => null()
     type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
 
@@ -68,11 +65,8 @@ module CalculationData_mod
     type(TruncationZone)                :: trunc_zone
     type(ClusterInfo)                   :: clusters
     type(BroydenData)                   :: broyden
-
-    ! storage for initial guess
-    type(InitialGuess)                  :: iguess_data
-
-  endtype
+    type(InitialGuess)                  :: iguess_data ! storage for initial guess
+  endtype ! CalculationData
   
   interface create
     module procedure createCalculationData
@@ -168,52 +162,31 @@ module CalculationData_mod
   endsubroutine ! prepare Madelung
 
   !----------------------------------------------------------------------------
-  subroutine destroyCalculationData(self) ! todo: text-replace self by self in this routine
-    ! deprecated interfaces
-    use RefCluster_mod, only: destroyRefCluster
-    use MadelungCalculator_mod, only: destroyMadelungLatticeSum
-    use BasisAtom_mod, only: destroyBasisAtom
-    use CellData_mod, only: destroyCellData
-    use RadialMeshData_mod, only: destroyRadialMeshData
-    use LDAUData_mod, only: destroyLDAUData
-    use JijData_mod, only: destroyJijData
-    use DensityResults_mod, only: destroyDensityResults
-    use KKRresults_mod, only: destroyKKRresults
-    use EnergyResults_mod, only: destroyEnergyResults
-    use RefCluster_mod, only: destroyLatticeVectors
-    use MadelungCalculator_mod, only: destroyMadelungCalculator
-    use GauntCoefficients_mod, only: destroyGauntCoefficients
-    use ShapeGauntCoefficients_mod, only: destroyShapeGauntCoefficients
-    use BroydenData_mod, only: destroyBroydenData
-    use InitialGuess_mod, only: iguess_destroy ! deprecated exceptional naming!
-    
+  subroutine destroyCalculationData(self)
     type(CalculationData), intent(inout) :: self
 
-    integer :: ila, atom_id
-
+    integer :: ila
     do ila = 1, self%num_local_atoms
 
-      atom_id = self%atom_ids(ila)
-
-      call destroyRefCluster(self%ref_cluster_a(ila))
-      call destroyMadelungLatticeSum(self%madelung_sum_a(ila))
-      call destroyBasisAtom(self%atomdata_a(ila))
-      call destroyCellData(self%cell_a(ila))
-      call destroyRadialMeshData(self%mesh_a(ila))
-      call destroyLDAUData(self%ldau_data_a(ila))
-      call destroyJijData(self%jij_data_a(ila))
-      call destroyDensityResults(self%densities_a(ila))
-      call destroyKKRresults(self%kkr_a(ila))
-      call destroyEnergyResults(self%energies_a(ila))
+      call destroy(self%ref_cluster_a(ila))
+      call destroy(self%madelung_sum_a(ila))
+      call destroy(self%atomdata_a(ila))
+      call destroy(self%cell_a(ila))
+      call destroy(self%mesh_a(ila))
+      call destroy(self%ldau_data_a(ila))
+      call destroy(self%jij_data_a(ila))
+      call destroy(self%densities_a(ila))
+      call destroy(self%kkr_a(ila))
+      call destroy(self%energies_a(ila))
 
     enddo ! ila
 
-    call destroyLatticeVectors(self%lattice_vectors)
-    call destroyMadelungCalculator(self%madelung_calc)
-    call destroyGauntCoefficients(self%gaunts)
-    call destroyShapeGauntCoefficients(self%shgaunts)
-    call destroyBroydenData(self%broyden)
-    call iguess_destroy(self%iguess_data)
+    call destroy(self%lattice_vectors)
+    call destroy(self%madelung_calc)
+    call destroy(self%gaunts)
+    call destroy(self%shgaunts)
+    call destroy(self%broyden)
+    call destroy(self%iguess_data)
 
     deallocate(self%mesh_a)
     deallocate(self%cell_a)
@@ -226,6 +199,7 @@ module CalculationData_mod
     deallocate(self%ldau_data_a)
     deallocate(self%jij_data_a)
     deallocate(self%atom_ids)
+    
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -233,7 +207,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: self
 
     getNumLocalAtoms = self%num_local_atoms
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   integer function getAtomIndexOfLocal(self, ila)
@@ -241,7 +215,7 @@ module CalculationData_mod
     integer, intent(in) :: ila
 
     getAtomIndexOfLocal = self%atom_ids(ila)
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns reference to atomdata for atom with LOCAL atom index
@@ -252,7 +226,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getAtomData => self%atomdata_a(local_atom_index)
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns reference to kkr(results) for atom with LOCAL atom index
@@ -263,7 +237,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getKKR => self%kkr_a(local_atom_index)
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns reference to density results for atom with LOCAL atom index
@@ -274,7 +248,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getDensities => self%densities_a(local_atom_index)
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns reference to energy results for atom with LOCAL atom index
@@ -285,7 +259,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getEnergies => self%energies_a(local_atom_index)
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns reference to LDA+U data for atom with LOCAL atom index
@@ -296,7 +270,7 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getLDAUData => self%ldau_data_a(local_atom_index)
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
@@ -304,7 +278,7 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: self
 
     getMaxReclenMeshes = self%max_reclen_meshes
-  endfunction
+  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns record length needed for 'meshes' file.
@@ -312,9 +286,8 @@ module CalculationData_mod
     type(CalculationData), intent(in) :: self
 
     getMaxReclenPotential = self%max_reclen_potential
-  endfunction
+  endfunction ! get
 
-! ==================== Helper routines ========================================
 
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
@@ -325,10 +298,10 @@ module CalculationData_mod
     use Main2Arrays_mod, only: Main2Arrays
     use TEST_lcutoff_mod, only: num_truncated
     ! deprecated interfaces
-    use RefCluster_mod, only: createLatticeVectors
+    use LatticeVectors_mod, only: createLatticeVectors
     use RefCluster_mod, only: createRefCluster              
     use TEST_lcutoff_mod, only: initLcutoffNew                
-    use ClusterInfo_mod, only: createClusterInfo_com         
+    use ClusterInfo_mod, only: createClusterInfo         
     use MadelungCalculator_mod, only: createMadelungCalculator
     use DensityResults_mod, only: createDensityResults          
     use EnergyResults_mod, only: createEnergyResults           
@@ -353,14 +326,14 @@ module CalculationData_mod
     ! create cluster for each local atom
     !$omp parallel do private(ila)
     do ila = 1, self%num_local_atoms
-      call createRefCluster(self%ref_cluster_a(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
+      call createRefCluster(self%ref_cluster_a(ila), self%lattice_vectors%rr, arrays%rbasis, params%rclust, self%atom_ids(ila))
 !     write(*,*) "Atoms in ref. cluster: ", self%ref_cluster_a(ila)%nacls
-    enddo
+    enddo ! ila
     !$omp endparallel do
 
     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays) ! setup the truncation zone
 
-    call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
+    call createClusterInfo(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
 
     if (isMasterRank(my_mpi)) then
       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
@@ -420,42 +393,41 @@ module CalculationData_mod
   subroutine setup_iguess(self, dims, arrays)
     use DimParams_mod, only: DimParams
     use Main2Arrays_mod, only: Main2Arrays
-    use InitialGuess_mod, only: iguess_init ! deprecated exceptional naming with underscore
+    use InitialGuess_mod, only: create ! deprecated exceptional naming with underscore
     use TEST_lcutoff_mod, only: num_truncated
-     
+
     type(CalculationData), intent(inout) :: self
-    type(DimParams), intent(in)  :: dims
-    type(Main2Arrays), intent(in):: arrays
+    type(DimParams), intent(in) :: dims
+    type(Main2Arrays), intent(in) :: arrays
 
     integer, allocatable :: num_k_points(:)
-    integer :: ii, blocksize, ns
+    integer :: ie, blocksize, ns
 
     ! TODO: This is overdimensioned when l-cutoff is used!!!
     if (num_truncated(0) /= dims%naez) & ! num_truncated(0) == former num_untruncated
       warn(6, "The memory proportions for iGuess are overdimensioned when l-dependent truncation is applied!")
+      
     ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
     blocksize = self%trunc_zone%naez_trc * self%num_local_atoms * dims%lmmaxd**2
 
     allocate(num_k_points(dims%iemxd))
-    do ii = 1, dims%iemxd
-      num_k_points(ii) = arrays%nofks(arrays%kmesh(ii))
-    enddo ! ii
+    do ie = 1, dims%iemxd
+      num_k_points(ie) = arrays%nofks(arrays%kmesh(ie))
+    enddo ! ie
 
     ns = 1; if (dims%smpid == 1 .and. dims%nspind == 2) ns = 2 ! no spin parallelisation choosen, processes must store both spin-directions
-    call iguess_init(self%iguess_data, num_k_points, ns, blocksize, dims%iguessd) ! setup storage for iguess
+    call create(self%iguess_data, num_k_points, ns, blocksize, dims%iguessd) ! setup storage for iguess
 
   endsubroutine ! setup_iguess
 
-!------------------------------------------------------------------------------
-!> Generates basis atom information, radial mesh, shape-function and
-!> interpolates starting potential if necessary
+  !------------------------------------------------------------------------------
+  !> Generates basis atom information, radial mesh, shape-function and
+  !> interpolates starting potential if necessary
   subroutine generateAtomsShapesMeshes(self, dims, params, arrays)
     use DimParams_mod, only: DimParams
     use InterpolateBasisAtom_mod, only: interpolateBasisAtom
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use BasisAtom_mod, only: destroyBasisAtom
-    use RadialMeshData_mod, only: destroyRadialMeshData
     
     use CellData_mod, only: createCellData
     use BasisAtom_mod, only: createBasisAtomFromFile
@@ -463,11 +435,11 @@ module CalculationData_mod
     use BasisAtom_mod, only: associateBasisAtomMesh, associateBasisAtomCell
     
     type(CalculationData), intent(inout) :: self
-    type(DimParams), intent(in)  :: dims
-    type(InputParams), intent(in):: params
-    type(Main2Arrays), intent(in):: arrays
+    type(DimParams), intent(in)   :: dims
+    type(InputParams), intent(in) :: params
+    type(Main2Arrays), intent(in) :: arrays
 
-    integer :: ila, atom_id
+    integer :: ila, atom_id, ist
     type(BasisAtom), allocatable      :: old_atom_a(:)
     type(RadialMeshData), allocatable :: old_mesh_a(:)
     double precision, allocatable     :: new_MT_radii(:)
@@ -524,23 +496,21 @@ module CalculationData_mod
       CHECKASSERT( dims%IRMIND == self%mesh_a(ila)%IRMIN ) ! check mesh
       CHECKASSERT( self%atomdata_a(ila)%atom_index == atom_id )
 
-      call destroyBasisAtom(old_atom_a(ila))
-      call destroyRadialMeshData(old_mesh_a(ila))
+      call destroy(old_atom_a(ila))
+      call destroy(old_mesh_a(ila))
     enddo ! ila
 
-    deallocate(new_MT_radii, old_atom_a, old_mesh_a)
-
+    deallocate(new_MT_radii, old_atom_a, old_mesh_a, stat=ist)
   endsubroutine ! generateAtomsShapesMeshes
 
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
   subroutine generateShapesTEST(self, dims, params, arrays, new_MT_radii, MT_scale)
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use ConstructShapes_mod, only: createShape, InterstitialMesh, destroyInterstitialMesh, write_shapefun_file
-    use ShapefunData_mod, only: ShapefunData
+    use ConstructShapes_mod, only: createShape, InterstitialMesh, destroy, write_shapefun_file
+    use ShapefunData_mod, only: ShapefunData, destroy
     use RadialMeshData_mod, only: createRadialMeshData, initRadialMesh
-    use ShapefunData_mod, only: destroyShapefunData
 
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
@@ -584,8 +554,8 @@ module CalculationData_mod
       ! optional output of shape functions
       if (params%write_shapes == 1) call write_shapefun_file(shdata, inter_mesh, atom_id)
 
-      call destroyShapefunData(shdata)
-      call destroyInterstitialMesh(inter_mesh)
+      call destroy(shdata)
+      call destroy(inter_mesh)
 
     enddo ! ila
 
@@ -622,7 +592,7 @@ module CalculationData_mod
     self%max_reclen_potential = recvbuf(1)
     self%max_reclen_meshes    = recvbuf(2)
 
-  endsubroutine
+  endsubroutine ! recordLengths
 
   !----------------------------------------------------------------------------
   !> Write potential index file.
@@ -689,25 +659,19 @@ module CalculationData_mod
   !> Returns the number of potential values of ALL LOCAL atoms.
   !> This is needed for dimensioning the Broyden mixing work arrays.
   integer function getBroydenDim(self) result(ndof)
-    use PotentialData_mod, only: getNumPotentialValues ! todo: make it an elemental function
-    
+    use PotentialData_mod, only: getNumPotentialValues ! an elemental function
     type(CalculationData), intent(in) :: self
 
-    integer :: ila
-
-    ndof = 0
-    do ila = 1, self%num_local_atoms
-      ndof = ndof + getNumPotentialValues(self%atomdata_a(ila)%potential)
-    enddo ! ila
+    ndof = sum(getNumPotentialValues(self%atomdata_a(1:self%num_local_atoms)%potential))
     
   endfunction ! getBroydenDim
 
   !----------------------------------------------------------------------------
-  ! Print some debugging info
+  !> Print some debugging info
   subroutine repr_CalculationData(self)
-    use RadialMeshData_mod, only: repr_RadialMeshData
-    use ShapefunData_mod, only: repr_ShapefunData
-    use PotentialData_mod, only: repr_PotentialData
+    use RadialMeshData_mod, only: represent
+    use ShapefunData_mod, only: represent
+    use PotentialData_mod, only: represent
 
     type(CalculationData), intent(in) :: self
 
@@ -715,17 +679,22 @@ module CalculationData_mod
     character(len=:), allocatable :: str
 
     do ila = 1, self%num_local_atoms
-      call repr_RadialMeshData(self%mesh_a(ila), str)
+      call represent(self%mesh_a(ila), str)
       write(*, '(A)') str
-      call repr_PotentialData(self%atomdata_a(ila)%potential, str)
+      call represent(self%atomdata_a(ila)%potential, str)
       write(*, '(A)') str
-      call repr_ShapefunData(self%cell_a(ila)%shdata, str)
+      call represent(self%cell_a(ila)%shdata, str)
       write(*, '(A)') str
     enddo ! ila
-    
+
   endsubroutine ! represent
 
-  
+endmodule ! CalculationData_mod
+
+
+
+
+
 #if 0  
 !==============================================================================
 !=             WORK in PROGRESS - not used yet                                =
@@ -780,7 +749,7 @@ module CalculationData_mod
       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-    endif
+    endif ! is master
     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == naez)
     
   endsubroutine ! constructTruncationZones
@@ -816,4 +785,3 @@ module CalculationData_mod
   endsubroutine ! constructStorage
 #endif
 
-endmodule CalculationData_mod

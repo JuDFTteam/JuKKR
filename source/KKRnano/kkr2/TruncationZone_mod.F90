@@ -17,13 +17,12 @@ module TruncationZone_mod
   public :: TruncationZone, create, destroy
   public :: createTruncationZone!, destroyTruncationZone ! deprecated
   public :: translateInd
-! public :: translate
 
   type TruncationZone
     integer :: naez_trc = 0 !< number of atoms in truncation zone
+    integer :: naez_all = 0 !< number of all atoms
     integer, allocatable :: index_map(:) !> map atom index to truncation zone atom index (-1 = not in trunc. zone = OUTSIDE)
     integer, allocatable :: trunc2atom_index(:) !> map truncation zone atom index to atom index ("inverse" of index_map)
-!   integer :: naclsd !< not used
   endtype
 
   interface create
@@ -44,14 +43,14 @@ module TruncationZone_mod
     type(TruncationZone), intent(inout) :: self
     integer, intent(in) :: mask(:)
 
-    integer :: num_atoms, ii, ind, naez_trc, memory_stat
+    integer :: naez_all, ii, ind, naez_trc, memory_stat
 
-    num_atoms = size(mask)
+    naez_all = size(mask)
 
-    ALLOCATECHECK(self%index_map(num_atoms))
+    ALLOCATECHECK(self%index_map(naez_all))
 
     ind = 0
-    do ii = 1, num_atoms
+    do ii = 1, naez_all
       if (mask(ii) > 0) then
         ind = ind + 1
         self%index_map(ii) = ind
@@ -65,7 +64,7 @@ module TruncationZone_mod
     ALLOCATECHECK(self%trunc2atom_index(naez_trc))
     
     ind = 0
-    do ii = 1, num_atoms
+    do ii = 1, naez_all
       if (self%index_map(ii) > 0) then
         ind = ind + 1
         self%trunc2atom_index(ind) = ii
@@ -75,6 +74,7 @@ module TruncationZone_mod
     ! inverse means that all(self%index_map(self%trunc2atom_index(:)) == [1, 2, 3, ..., naez_trc])
     
     self%naez_trc = naez_trc
+    self%naez_all = naez_all
 
   endsubroutine ! create
 
@@ -101,9 +101,30 @@ module TruncationZone_mod
     if (ind > 0) translateInd = self%index_map(ind)
   endfunction ! translateInd
 
+endmodule ! TruncationZone_mod
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 #if 0
 !!! not used
-
 
   !----------------------------------------------------------------------------
   !> Translate atom indices in 'array' to new atom indices using 'index_map'
@@ -172,6 +193,5 @@ module TruncationZone_mod
       endif
     enddo ! ii
   endsubroutine ! filter2d2
-#endif  
+#endif
 
-endmodule ! TruncationZone_mod

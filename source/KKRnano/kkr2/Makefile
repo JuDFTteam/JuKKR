@@ -244,10 +244,10 @@ ShapeStandardMesh_mod.o: Exceptions_mod.o Constants_mod.o
 wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o
 DensityResults_mod.o: DimParams_mod.o
 BCPOperator_mod.o: OperatorT_mod.o ClusterInfo_mod.o
-CalculationData_mod.o: Exceptions_mod.o TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o KKRnanoParallel_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
+CalculationData_mod.o: Exceptions_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o KKRnanoParallel_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
 NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
 ShapeIntegrationHelpers_mod.o: Constants_mod.o
-ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o
+ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o LatticeVectors_mod.o
 EnergyMesh_mod.o: KKRnanoParallel_mod.o EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o Exceptions_mod.o
@@ -326,6 +326,7 @@ KKRnanoParallel_mod.o: Exceptions_mod.o
 MadelungCalculator_mod.o: Exceptions_mod.o
 PositionReader_mod.o: Exceptions_mod.o
 RefCluster_mod.o: Sorting_mod.o
+LatticeVectors_mod.o: Sorting_mod.o
 jij_calc_mod.o: Symmetry_mod.o
 Harmonics_mod.o: Constants_mod.o
 kkrmat01_new.o: Exceptions_mod.o

@@ -11,9 +11,8 @@ module EBalanceHandler_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: EBalanceHandler
-  public :: createEBalanceHandler, destroyEBalanceHandler
-  public :: startEBalanceTiming, stopEBalanceTiming
+  public :: EBalanceHandler, destroy !, destroyEBalanceHandler
+  public :: createEBalanceHandler, startEBalanceTiming, stopEBalanceTiming
   public :: initEBalanceHandler, updateEBalance_com, setEqualDistribution
   
   type EBalanceHandler
@@ -26,6 +25,18 @@ module EBalanceHandler_mod
     real :: TIME_EX
     logical :: equal_distribution
   endtype
+  
+!   interface create
+!     module procedure createEBalanceHandler
+!   endinterface
+!
+!   interface init
+!     module procedure initEBalanceHandler
+!   endinterface
+ 
+  interface destroy
+    module procedure destroyEBalanceHandler
+  endinterface
 
   contains
 
@@ -50,13 +61,12 @@ module EBalanceHandler_mod
     balance%num_eprocs_empid = 0
     balance%equal_distribution = .false.
 
-  endsubroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Initialises EBalanceHandler.
   subroutine initEBalanceHandler(balance, my_mpi)
-    use KKRnanoParallel_mod
-    implicit none
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getNumEnergyRanks, getMyWorldRank
     type(EBalanceHandler), intent(inout) :: balance
     type(KKRnanoParallel), intent(in) :: my_mpi
 
@@ -100,7 +110,7 @@ module EBalanceHandler_mod
 
     balance%eproc_old = balance%eproc
 
-  endsubroutine
+  endsubroutine ! init
 
   !----------------------------------------------------------------------------
   !> Sets option for equal work distribution.
@@ -112,7 +122,7 @@ module EBalanceHandler_mod
 
     balance%equal_distribution = flag
 
-  endsubroutine
+  endsubroutine ! set
 
   !----------------------------------------------------------------------------
   !> (Re)Starts measurement for dynamical load balancing
@@ -156,11 +166,11 @@ module EBalanceHandler_mod
     type(EBalanceHandler), intent(inout) :: balance
     type(KKRnanoParallel), intent(in) :: my_mpi
 
-    integer :: NPNT1, ierr
+    integer :: npnt1, ierr
 
     real MTIME(balance%ierlast)
 
-    NPNT1 = 1; if (balance%equal_distribution) NPNT1 = 0
+    npnt1 = 1; if (balance%equal_distribution) npnt1 = 0
 
     ! TODO: extract allreduce -> reduce
     ! TODO: let only master rank calculate
@@ -176,7 +186,7 @@ module EBalanceHandler_mod
 
       ! only Masterrank calculates new work distribution
       if (getMyWorldRank(my_mpi) == 0) then
-        call EBALANCE2(balance%ierlast,NPNT1, getMyWorldRank(my_mpi), &
+        call EBALANCE2(balance%ierlast,npnt1, getMyWorldRank(my_mpi), &
         getMyActiveCommunicator(my_mpi), &
         MTIME,balance%EPROC,balance%EPROC_old, &
         balance%num_eprocs_empid, balance%ierlast)
@@ -226,7 +236,7 @@ module EBalanceHandler_mod
 
     COMMCHECK(IERR)
 
-  endsubroutine
+  endsubroutine ! bcast
 
   !---------------------------------------------------------------------------
   !> Reads header of opened ebalance file and returns number of points
@@ -241,7 +251,7 @@ module EBalanceHandler_mod
     read(filehandle, *)
     read(filehandle, *)
     read(filehandle, *) npoints, nprocs
-  endsubroutine
+  endsubroutine ! read
 
   !---------------------------------------------------------------------------
   !> Reads body of opened ebalance file and returns energy group distribution
@@ -258,7 +268,7 @@ module EBalanceHandler_mod
       read(filehandle, *) idummy, eproc(ie), rdummy
     enddo ! ie
     
-  endsubroutine
+  endsubroutine ! read
 
 !------------------------------------------------------------------------------
 !                                                optional: equal
@@ -354,7 +364,7 @@ subroutine ebalance1(ierlast, eproc, eproco, empid, iemxd, equal)
   !=======================================================================
   ! >>> 1st guess
   !=======================================================================
-endsubroutine
+endsubroutine ! ebalance1
 
 !==============================================================================
 
@@ -493,7 +503,7 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco,
     endif
 !   endif
 
-endsubroutine
+endsubroutine ! ebalance2
 
 
-endmodule
+endmodule ! EBalanceHandler_mod

@@ -565,10 +565,10 @@ module kkrmat_new_mod
     
     integer :: i, j, lm1, lm2, iacls, ni, ind, lmmax1, lmmax2, is
 
+    i = site_index
     do iacls = 1, nacls
       j = atom(iacls)
       if (j < 1) cycle
-      i = site_index
 
       do ni = 1, numn0(i)
         ind = indn0(i,ni)

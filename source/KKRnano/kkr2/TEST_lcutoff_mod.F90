@@ -86,33 +86,116 @@ module TEST_lcutoff_mod
       lmarray_full = max(lmarray_full, lmarray_temp) ! reduction: merge truncation zones of local atoms
     enddo ! ilocal
 
-    ! TODO: a bit confusing, is never deallocated
-    call createTruncationZone(trunc_zone, lmarray_full)
-
     num_truncated(:) = 0
     num_truncated(0) = count(lmarray_full == lmmaxd)
     do irad = 1, nrad
       num_truncated(irad) = count(lmarray_full == lm_low(irad))
     enddo ! irad
+    
+    ! TODO: a bit confusing, is never deallocated
+    call createTruncationZone(trunc_zone, mask=lmarray_full)
 
-    num = count(lmarray_full > 0)
-    allocate(lmarray(num)) ! never deallocated - who cares
+!     num = count(lmarray_full > 0)
+!     allocate(lmarray(num)) ! never deallocated - who cares
+! 
+!     ind = 0
+!     do ii = 1, size(lmarray_full)
+!       if (lmarray_full(ii) > 0) then
+!         ind = ind + 1
+!         lmarray(ind) = lmarray_full(ii)
+!         CHECKASSERT( trunc_zone%index_map(ii) == ind ) ! TODO
+!         CHECKASSERT( trunc_zone%trunc2atom_index(ind) == ii ) ! TODO
+!       endif
+!     enddo ! ii
 
-    ind = 0
-    do ii = 1, size(lmarray_full)
-      if (lmarray_full(ii) > 0) then
-        ind = ind + 1
-        lmarray(ind) = lmarray_full(ii)
-        CHECKASSERT(trunc_zone%index_map(ii) == ind) ! TODO
-      endif
-    enddo ! ii
+    allocate(lmarray(trunc_zone%naez_trc)) ! lmarray is never deallocated - who cares
+    lmarray(:) = lmarray_full(trunc_zone%trunc2atom_index(:))
 
     deallocate(lmarray_temp, lmarray_full, stat=ist)
   endsubroutine ! initLcutoffNew
 
   
+  !----------------------------------------------------------------------------
+  !> Modifies the array 'cutoffarray' on positions that correspond to sites that
+  !> are further away from 'center' than 'dist_cut'. The value 'lm_low' is written
+  !> at the modified positions.
+  !>
+  !> If merging = .true.: change the lm value only when it is larger than the
+  !> original value -> this merges the truncation zones
+  subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
+    integer, intent(inout) :: cutoffarray(:)
+    double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
+    double precision, intent(in) :: center(3)
+    double precision, intent(in) :: bravais(3,3)
+    double precision, intent(in) :: dist_cut
+    integer, intent(in) :: lm_low
+
+    integer :: ii
+    
+    do ii = 1, size(rbasis, 2)
+      if (distance2_pbc(rbasis(1:3,ii), center(1:3), bravais) > dist_cut*dist_cut) cutoffarray(ii) = lm_low
+    enddo ! ii
+
+  endsubroutine ! calc
+  
+  !> Calculate distance of two points taking into account the
+  !> periodic boundary conditions
+  !> Assume that points are in same unit cell
+  !> Is this a valid assumption???
+  double precision function distance2_pbc(point1, point2, bravais) result(dist_sq)
+    double precision, intent(in) :: point1(3), point2(3)
+    double precision, intent(in) :: bravais(3,3)
+
+    double precision :: vec(3), vt(3)
+    integer :: nx, ny, nz
+
+    vec(1:3) = point2(1:3) - point1(1:3)
+
+    dist_sq = vec(1)**2 + vec(2)**2 + vec(3)**2
+
+    ! brute force distance checking
+    do nx = -1, 1
+      do ny = -1, 1
+        do nz = -1, 1
+          vt(:) = vec(:) + nx*bravais(:,1) + ny*bravais(:,2) + nz*bravais(:,3)
+          dist_sq = min(dist_sq, vt(1)*vt(1) + vt(2)*vt(2) + vt(3)*vt(3))
+        enddo ! nz
+      enddo ! ny
+    enddo ! nx
+
+  endfunction ! distance squared
+
+endmodule ! TEST_lcutoff_mod
+
+
+
+
+  
 #if 0
 !!!! never used !!
+
+!! never used 
+  subroutine getLMarray(lmarray, rbasis, center, bravais, dist_cut, lm_high, lm_low)
+    integer, intent(out) :: lmarray(:)
+    double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
+    double precision, intent(in) :: center(3)
+    double precision, intent(in) :: bravais(3,3)
+    double precision, intent(in) :: dist_cut
+    integer, intent(in):: lm_high, lm_low
+
+    integer :: ii
+    double precision :: dist2
+
+    do ii = 1, size(rbasis, 2)
+      dist2 = distance2_pbc(rbasis(1:3,ii), center, bravais)
+      if (dist2 > dist_cut*dist_cut) then
+        lmarray(ii) = lm_low
+      else
+        lmarray(ii) = lm_high
+      endif
+    enddo ! ii
+
+  endsubroutine ! get
 
   !----------------------------------------------------------------------------
   !> Set all entries in gllh to zero which are out of range due to truncation
@@ -223,78 +306,4 @@ module TEST_lcutoff_mod
 
 #endif  
   
-  !----------------------------------------------------------------------------
-  !> Modifies the array 'cutoffarray' on positions that correspond to sites that
-  !> are further away from 'center' than 'dist_cut'. The value 'lm_low' is written
-  !> at the modified positions.
-  !>
-  !> If merging = .true.: change the lm value only when it is larger than the
-  !> original value -> this merges the truncation zones
-  subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
-    integer, intent(inout) :: cutoffarray(:)
-    double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
-    double precision, intent(in) :: center(3)
-    double precision, intent(in) :: bravais(3,3)
-    double precision, intent(in) :: dist_cut
-    integer, intent(in) :: lm_low
 
-    integer :: ii
-    
-    do ii = 1, size(rbasis, 2)
-      if (distance2_pbc(rbasis(1:3,ii), center(1:3), bravais) > dist_cut*dist_cut) cutoffarray(ii) = lm_low
-    enddo ! ii
-
-  endsubroutine ! calc
-  
-  !> Calculate distance of two points taking into account the
-  !> periodic boundary conditions
-  !> Assume that points are in same unit cell
-  !> Is this a valid assumption???
-  double precision function distance2_pbc(point1, point2, bravais) result(dist_sq)
-    double precision, intent(in) :: point1(3), point2(3)
-    double precision, intent(in) :: bravais(3,3)
-
-    double precision :: vec(3), vt(3)
-    integer :: nx, ny, nz
-
-    vec(1:3) = point2(1:3) - point1(1:3)
-
-    dist_sq = vec(1)**2 + vec(2)**2 + vec(3)**2
-
-    ! brute force distance checking
-    do nx = -1, 1
-      do ny = -1, 1
-        do nz = -1, 1
-          vt(:) = vec(:) + nx*bravais(:,1) + ny*bravais(:,2) + nz*bravais(:,3)
-          dist_sq = min(dist_sq, vt(1)*vt(1) + vt(2)*vt(2) + vt(3)*vt(3))
-        enddo ! nz
-      enddo ! ny
-    enddo ! nx
-
-  endfunction ! distance squared
-
-  
-!!! never used 
-!   subroutine getLMarray(lmarray, rbasis, center, bravais, dist_cut, lm_high, lm_low)
-!     integer, intent(out) :: lmarray(:)
-!     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
-!     double precision, intent(in) :: center(3)
-!     double precision, intent(in) :: bravais(3,3)
-!     double precision, intent(in) :: dist_cut
-!     integer, intent(in):: lm_high, lm_low
-! 
-!     integer :: ii
-!     double precision :: dist2
-! 
-!     do ii = 1, size(rbasis, 2)
-!       dist2 = distance2_pbc(rbasis(1:3,ii), center, bravais)
-!       if (dist2 > dist_cut*dist_cut) then
-!         lmarray(ii) = lm_low
-!       else
-!         lmarray(ii) = lm_high
-!       endif
-!     enddo ! ii
-! 
-!   endsubroutine ! get
-  
-endmodule ! TEST_lcutoff_mod
