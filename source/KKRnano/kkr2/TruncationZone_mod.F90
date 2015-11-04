@@ -16,7 +16,7 @@ module TruncationZone_mod
   private
   public :: TruncationZone, create, destroy
   public :: createTruncationZone!, destroyTruncationZone ! deprecated
-  public :: translateInd
+! public :: translateInd
 
   type TruncationZone
     integer :: naez_trc = 0 !< number of atoms in truncation zone
@@ -47,8 +47,10 @@ module TruncationZone_mod
 
     naez_all = size(mask)
 
-    ALLOCATECHECK(self%index_map(naez_all))
+    ALLOCATECHECK(self%index_map(OUTSIDE:naez_all))
 
+    self%index_map(OUTSIDE:0) = OUTSIDE
+    
     ind = 0
     do ii = 1, naez_all
       if (mask(ii) > 0) then
@@ -89,17 +91,6 @@ module TruncationZone_mod
     
   endsubroutine ! destroy
 
-  !----------------------------------------------------------------------------
-  !> Translate atom index 'ind' to new atom index and return value
-  elemental integer function translateInd(self, ind)
-    type(TruncationZone), intent(in) :: self
-    integer, intent(in) :: ind
-
-    translateInd = OUTSIDE
-!   if (ind > ubound(self%index_map, 1)) stop 'TruncationZone: translateInd: ind too large!' ! stop not allowed in a pure function
-
-    if (ind > 0) translateInd = self%index_map(ind)
-  endfunction ! translateInd
 
 endmodule ! TruncationZone_mod
   
@@ -125,6 +116,20 @@ endmodule ! TruncationZone_mod
   
 #if 0
 !!! not used
+
+  !----------------------------------------------------------------------------
+  !> Translate atom index 'ind' to new atom index and return value
+  elemental integer function translateInd(self, ind)
+    type(TruncationZone), intent(in) :: self
+    integer, intent(in) :: ind
+
+!     translateInd = OUTSIDE
+! !   if (ind > ubound(self%index_map, 1)) stop 'TruncationZone: translateInd: ind too large!' ! stop not allowed in a pure function
+! 
+!     if (ind > 0) &
+      translateInd = self%index_map(ind)
+  endfunction ! translateInd
+
 
   !----------------------------------------------------------------------------
   !> Translate atom indices in 'array' to new atom indices using 'index_map'

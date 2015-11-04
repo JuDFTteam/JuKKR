@@ -116,16 +116,16 @@ module RefCluster_mod
     integer(kind=4), allocatable :: indni(:) ! dim(naez)
     double precision, allocatable :: rsort(:), rg(:,:) ! dim(macls) and dim(3,macls)
     integer, allocatable :: iatom(:), iezoa(:), isort(:) ! dim(macls)
-#ifdef ZYLINDRICAL_CLUSTERS
+#ifdef CYLINDRICAL_CLUSTERS
     double precision :: rcutxy2, rcutxy, rxy2
 #endif
 
     rcut2 = (rcut + epsshl)**2
-#ifdef ZYLINDRICAL_CLUSTERS
+#ifdef CYLINDRICAL_CLUSTERS
     rcutxy = rcut ! with this configuration, rcutxy == rcut, the cluster becomes spherical anyway
     rcutxy2 = (rcutxy + epsshl)**2
 #endif
-    
+
     macls = naez*nr
     allocate(rsort(macls), rg(3,macls), iatom(macls), iezoa(macls), isort(macls), indni(naez), stat=ist)
     if (ist /= 0) stop 'RefCluster: gen: allocation of [rsort, rg, iatom, iezoa, isort, indni] failed!'
@@ -138,7 +138,7 @@ module RefCluster_mod
       do n = 0, nr-1 ! loop in all selected periodic images
         tmp(1:3) = rr(1:3,n) + rbasis(1:3,iat) - rbasis(1:3,jatom)
         
-#ifdef ZYLINDRICAL_CLUSTERS
+#ifdef CYLINDRICAL_CLUSTERS
         rxy2 = tmp(1)*tmp(1) + tmp(2)*tmp(2) ! prepare for a cylindrical cluster construction with the cylinder in z-direction
         r2   = tmp(3)*tmp(3) + rxy2
         if (rxy2 <= rcutxy2 .and. r2 <= rcut2) then
@@ -159,7 +159,7 @@ module RefCluster_mod
         numn0 = numn0 + 1
         indni(numn0) = iat ! indn0 is an array of ordered global atom indices
         ! write(6,*) 'jatom,numn0,indn0',jatom,numn0(jatom),iat
-      endif
+      endif ! couplmat
       
     enddo ! iat loop in naez
     

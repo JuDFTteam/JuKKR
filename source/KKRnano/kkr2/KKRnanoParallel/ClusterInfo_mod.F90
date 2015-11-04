@@ -42,7 +42,6 @@ module ClusterInfo_mod
   interface destroy
     module procedure destroyClusterInfo
   endinterface
-
   
   integer, parameter, private :: MAGIC = 385306
   
@@ -58,7 +57,7 @@ module ClusterInfo_mod
   !> @param ref_clusters    all the local ref. clusters
   subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator)
     use RefCluster_mod, only: RefCluster
-    use TruncationZone_mod, only: TruncationZone, translateInd
+    use TruncationZone_mod, only: TruncationZone!, translateInd
     use one_sided_commI_mod, only: copyFromI_com
 
     include 'mpif.h'
@@ -108,32 +107,29 @@ module ClusterInfo_mod
       nacls = ref_clusters(ii)%nacls
       numn0 = ref_clusters(ii)%numn0
       CHECKASSERT( nacls <= naclsd )
-!!!!  send_buf(:,:) = -1 ! introducing this line leads to an error -- suspicious
       send_buf(1,ii) = ref_clusters(ii)%atom_index ! global atom index
       send_buf(2,ii) = ref_clusters(ii)%nacls
       send_buf(3,ii) = ref_clusters(ii)%numn0
-      send_buf(0*naclsd+3+1:0*naclsd+3+numn0,ii) = ref_clusters(ii)%indn0 ! indn0 is dim(numn0) now, however, numn0 <= nacls holds
-      send_buf(1*naclsd+3+1:1*naclsd+3+nacls,ii) = ref_clusters(ii)%atom
-      send_buf(2*naclsd+3+1:2*naclsd+3+nacls,ii) = ref_clusters(ii)%ezoa
+      send_buf(0*naclsd+3+1:0*naclsd+3+numn0,ii) = ref_clusters(ii)%indn0(:) ! indn0 is dim(numn0) now, however, numn0 <= nacls holds
+      send_buf(1*naclsd+3+1:1*naclsd+3+nacls,ii) = ref_clusters(ii)%atom(:)
+      send_buf(2*naclsd+3+1:2*naclsd+3+nacls,ii) = ref_clusters(ii)%ezoa(:)
       send_buf(3*naclsd+3+1,ii) = MAGIC
     enddo ! ii
 
     ALLOCATECHECK(recv_buf(blocksize,naez_trc))
-    
+
     call copyFromI_com(recv_buf, send_buf, trunc_zone%trunc2atom_index, blocksize, num_local_atoms, communicator)
 
-#ifdef AS_FUNCTION    
-    call constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
-#else
     do ii = 1, naez_trc
-      ! check if send_buf from right atom was received
-      CHECKASSERT( recv_buf(1,ii) == trunc_zone%trunc2atom_index(ii) )
+      CHECKASSERT( recv_buf(1,ii) == trunc_zone%trunc2atom_index(ii) ) ! check if send_buf from right atom was received
 
+      numn0 = recv_buf(3,ii)
       ! indn0 and atom have to be transformed to 'truncation-zone-indices'
       cnt = 0
-      do jj = 1, naclsd
+      do jj = 1, numn0
 ! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(3+jj,ii)   
-        ind = translateInd(trunc_zone, recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
+!       ind = translateInd(trunc_zone, recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
+        ind = trunc_zone%index_map(recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
 
         ! ind = -1 means that this atom is outside of truncation zone
         if (ind > 0) then
@@ -142,100 +138,43 @@ module ClusterInfo_mod
         endif ! ind > 0
       enddo ! jj
 
+      CHECKASSERT( 0 < cnt .and. cnt <= naclsd )
       self%numn0_trc(ii) = cnt
 
+      nacls = recv_buf(2,ii)
       cnt = 0
-      do jj = 1, naclsd
+      do jj = 1, nacls
 ! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(naclsd+3+jj,ii)
-        ind = translateInd(trunc_zone, recv_buf(1*naclsd+3+jj,ii)) ! atom received
-        
+!       ind = translateInd(trunc_zone, recv_buf(1*naclsd+3+jj,ii)) ! atom received
+        ind = trunc_zone%index_map(recv_buf(1*naclsd+3+jj,ii)) ! atom received
+
         if (ind > 0) then
           cnt = cnt + 1
           self%atom_trc(cnt,ii) = ind
         endif ! ind > 0
       enddo ! jj
 
+      CHECKASSERT( 0 < cnt .and. cnt <= naclsd )
       self%nacls_trc(ii) = cnt
-      
+
 ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' naclsd=',naclsd
-      CHECKASSERT( self%nacls_trc(ii) <= naclsd .and. self%nacls_trc(ii) > 0 )
-      CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
 
       self%ezoa_trc(:,ii) = recv_buf(2*naclsd+4:3*naclsd+3,ii)
 
       CHECKASSERT( recv_buf(3*naclsd+4,ii) == MAGIC ) ! check if end of send_buf is correct
     enddo ! ii
-#endif
 
     DEALLOCATECHECK(recv_buf)
     DEALLOCATECHECK(send_buf)
   endsubroutine ! create
-
   
   subroutine destroyClusterInfo(self)
     type(ClusterInfo), intent(inout) :: self
 
     integer :: ist ! ignore status
-    
+    deallocate(self%nacls_trc, self%numn0_trc, self%indn0_trc, self%atom_trc, self%ezoa_trc, stat=ist)
     self%naclsd = 0
     self%naez_trc = 0
-    deallocate(self%nacls_trc, self%numn0_trc, self%indn0_trc, self%atom_trc, self%ezoa_trc, stat=ist)
-
   endsubroutine ! destroy
-
-  !----------------------------------------------------------------------------
-  !> Helper routine.
-  subroutine constructIndices(self, trunc_zone, naez_trc, recv_buf, naclsd)
-    use TruncationZone_mod, only: TruncationZone, translateInd
-
-    type(ClusterInfo), intent(inout) :: self
-    type(TruncationZone), intent(in) :: trunc_zone
-    integer, intent(in) :: naez_trc
-    integer, intent(in) :: recv_buf(:,:)
-    integer, intent(in) :: naclsd
-
-    integer :: ii, jj, cnt, ind
-
-    do ii = 1, naez_trc
-      ! check if send_buf from right atom was received
-      CHECKASSERT( recv_buf(1,ii) == trunc_zone%trunc2atom_index(ii) )
-
-      ! indn0 and atom have to be transformed to 'truncation-zone-indices'
-      cnt = 0
-      do jj = 1, naclsd
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(3+jj,ii)   
-        ind = translateInd(trunc_zone, recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
-
-        ! ind = -1 means that this atom is outside of truncation zone
-        if (ind > 0) then
-          cnt = cnt + 1
-          self%indn0_trc(ii,cnt) = ind
-        endif ! ind > 0
-      enddo ! jj
-
-      self%numn0_trc(ii) = cnt
-
-      cnt = 0
-      do jj = 1, naclsd
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(naclsd+3+jj,ii)
-        ind = translateInd(trunc_zone, recv_buf(1*naclsd+3+jj,ii)) ! atom received
-        
-        if (ind > 0) then
-          cnt = cnt + 1
-          self%atom_trc(cnt,ii) = ind
-        endif ! ind > 0
-      enddo ! jj
-
-      self%nacls_trc(ii) = cnt
-      
-! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' naclsd=',naclsd
-      CHECKASSERT( self%nacls_trc(ii) <= naclsd .and. self%nacls_trc(ii) > 0 )
-      CHECKASSERT( self%numn0_trc(ii) <= naclsd .and. self%numn0_trc(ii) > 0 )
-
-      self%ezoa_trc(:,ii) = recv_buf(2*naclsd+4:3*naclsd+3,ii)
-
-      CHECKASSERT( recv_buf(3*naclsd+4,ii) == MAGIC ) ! check if end of send_buf is correct
-    enddo ! ii
-  endsubroutine ! constructIndices
 
 endmodule ! ClusterInfo_mod

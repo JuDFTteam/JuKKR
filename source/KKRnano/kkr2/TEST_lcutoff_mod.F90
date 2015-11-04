@@ -30,7 +30,7 @@ module TEST_lcutoff_mod
     type(Main2Arrays), intent(in) :: arrays
     integer, intent(in) :: atom_ids(:) ! list of global atom IDs
 
-    integer :: lmmaxd, atomindex, ilocal, ii, ind, ios, num_local_atoms, num, ist, nrad, irad
+    integer :: lmmaxd, atomindex, ilocal, ios, num_local_atoms, ist, nrad, irad!, num, ii, ind
     integer, allocatable :: lmarray_temp(:), lmarray_full(:)
 
     lmmaxd = arrays%lmmaxd

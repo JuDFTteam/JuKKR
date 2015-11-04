@@ -30,13 +30,10 @@ module CalculationData_mod
 
   public :: CalculationData, create, destroy, represent
   
+  public :: prepareMadelung         
   public :: getBroydenDim, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getKKR
   public :: getDensities, getEnergies, getLDAUData
   public :: getMaxReclenMeshes, getMaxReclenPotential      
-  
-  public :: prepareMadelung         
-  
-! public :: constructTruncationZones, constructStorage, constructClusters ! not yet used
 
   type CalculationData
 
@@ -784,4 +781,3 @@ endmodule ! CalculationData_mod
     
   endsubroutine ! constructStorage
 #endif
-

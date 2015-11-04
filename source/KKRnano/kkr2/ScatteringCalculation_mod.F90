@@ -38,7 +38,7 @@ implicit none
     use Main2Arrays_mod, only: Main2Arrays
 
     use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData, getNumLocalAtoms, getAtomIndexOfLocal
-      
+
     use KKRresults_mod, only: KKRresults
     use BasisAtom_mod, only: BasisAtom
     use JijData_mod, only: JijData
@@ -47,9 +47,9 @@ implicit none
     
     use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyEnergyId, getMySEcommunicator, isWorkingSpinRank, getMyAtomRank, isInMasterGroup
     use KKRnano_Comm_mod, only: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess_com
-    
+
     use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
-    
+
     use kloopz1_mod, only: kloopz1_new
     use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
 
@@ -471,7 +471,6 @@ implicit none
 
   !----------------------------------------------------------------------------
   !> Print info about Energy-Point currently treated.
-  !>
   subroutine printEnergyPoint(ez_point, ie, ispin, nmesh)
     double complex, intent(in) :: ez_point
     integer, intent(in) :: ie, ispin, nmesh
@@ -506,30 +505,30 @@ implicit none
 
   endsubroutine ! subtract
 
-    !------------------------------------------------------------------------------
-    !> Rescale and symmetrise T-matrix.
-    subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
-      use Constants_mod, only: pi
-      double complex, intent(inout) :: tsst_local(lmmaxd,lmmaxd)
-      integer, intent(in) :: lmmaxd
-      double precision, intent(in) :: alat
+  !------------------------------------------------------------------------------
+  !> Rescale and symmetrise T-matrix.
+  subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
+    use Constants_mod, only: pi
+    double complex, intent(inout) :: tsst_local(lmmaxd,lmmaxd)
+    integer, intent(in) :: lmmaxd
+    double precision, intent(in) :: alat
 
-      integer :: lm1, lm2
-      double precision :: rfctori
+    integer :: lm1, lm2
+    double precision :: rfctori
 
-      rfctori = pi/alat ! = 0.5*(alat/(2*pi))^(-1)
+    rfctori = pi/alat ! = 0.5*(alat/(2*pi))^(-1)
 
-  ! --> convert inverted delta_t-matrices to p.u.
-  !     also a symmetrisation of the matrix is performed
+    ! convert inverted delta_t-matrices to p.u.
+    ! also a symmetrisation of the matrix is performed
 
-      do lm2 = 1, lmmaxd
-        do lm1 = 1, lm2
-          tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
-          tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
-        enddo ! lm1
-      enddo ! lm2
-      
-    endsubroutine ! rescale
+    do lm2 = 1, lmmaxd
+      do lm1 = 1, lm2
+        tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
+        tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
+      enddo ! lm1
+    enddo ! lm2
+    
+  endsubroutine ! rescale
 
   !------------------------------------------------------------------------------
   !> Gather all tref-matrices of reference cluster.
@@ -553,7 +552,7 @@ implicit none
     ASSERT (size(Tref_local, 2) == size(TrefLL, 2))
     ASSERT (size(TrefLL, 3) >= ref_cluster%nacls)
 
-    TrefLL = (0.d0, 0.d0)
+    TrefLL = dcmplx(0.d0, 0.d0)
 
     call copyFromZ_com(TrefLL, Tref_local, ref_cluster%atom, chunk_size, num_local_atoms, communicator)
 
@@ -581,9 +580,9 @@ implicit none
     num_local_atoms = getNumLocalAtoms(calc)
     lmmaxd = size(tmatll, 1)
 
-    allocate(tsst_local(lmmaxd, lmmaxd, num_local_atoms))
+    allocate(tsst_local(lmmaxd,lmmaxd,num_local_atoms))
 
-    chunk_size = size(tsst_local, 1) * size(tsst_local, 2)
+    chunk_size = size(tsst_local, 1)*size(tsst_local, 2)
 
     do ilocal = 1, num_local_atoms
       kkr => getKKR(calc, ilocal)
@@ -593,7 +592,6 @@ implicit none
     call copyFromZ_com(tmatll, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 
     deallocate(tsst_local)
-
   endsubroutine ! gather
 
 endmodule ! ScatteringCalculation_mod

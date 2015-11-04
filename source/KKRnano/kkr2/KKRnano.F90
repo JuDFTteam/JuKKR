@@ -25,7 +25,7 @@ program KKRnano
   use BasisAtom_mod, only: BasisAtom
   use LDAUData_mod, only: LDAUData
 
-  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outtime
+  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outTime
   use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroy
 
   use wrappers_mod, only: rhocore_wrapper
@@ -63,7 +63,6 @@ program KKRnano
   type(LDAUData), pointer       :: ldau_data
   
   external :: MPI_Init
-  !----------------------------------------------------------------------------
   character(len=16)              :: arg
   integer                        :: ios, ilen
   
@@ -93,11 +92,11 @@ program KKRnano
   case default
     ! start the former kkr2.exe    
   endselect ! arg
-  !----------------------------------------------------------------------------
 
+  ! from here the former kkr2.exe actions are performed
+  
   call createDimParams(dims, 'inp0.unf') ! read dim. parameters from file 'inp0.unf'
 
-! -----------------------------------------------------------------------------
   call createKKRnanoParallel(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
   call printKKRnanoInfo(my_mpi, dims%nthrds)
@@ -116,7 +115,6 @@ program KKRnano
 #endif
   endif ! is master
   
-!------------------------------------------------------------------------------
 
   if (getMyWorldRank(my_mpi) < 128) then ! max. 128 logfiles
     OPENLOG(getMyWorldRank(my_mpi), 3)
@@ -124,45 +122,30 @@ program KKRnano
     OPENLOG(getMyWorldRank(my_mpi), 0)
   endif
 
-! ========= TIMING =========================================================
-    call resetTimer(program_timer)
-    if (isMasterRank(my_mpi)) then
-      open(2, file='time-info', form='formatted', action='write')
-    endif
-!========= TIMING END ======================================================
+  call resetTimer(program_timer)
+  if (isMasterRank(my_mpi)) open(2, file='time-info', form='formatted', action='write')
 
-!-----------------------------------------------------------------------------
-! Array allocations BEGIN
-!-----------------------------------------------------------------------------
   call createMain2Arrays(arrays, dims)
   call readMain2Arrays(arrays, 'arrays.unf') ! every process does this!
-!-----------------------------------------------------------------------------
-! Array allocations END
-!-----------------------------------------------------------------------------
 
   flag = readInputParamsFromFile(params, 'input.unf')
+  ! done reading variables
 
- ! ======================================================================
- ! =                     End read in variables                          =
- ! ======================================================================
 
   if (params%JIJ .and. dims%nspind /= 2) die_here("Jij calculation not possible for spin-unpolarized calc.")
 
   if (dims%LLY /= 0) die_here("Lloyds formula not supported in this version. Set lly=0")
 
-!=====================================================================
-!     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
-! ... and wait after SC-ITER loop
-!=====================================================================
+  !=====================================================================
+  ! processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ... and wait after SC-ITER loop
+  !=====================================================================
 
   if (isActiveRank(my_mpi)) then
 
-!+++++++++++ pre self-consistency preparations
+    ! pre self-consistency preparations
 
-    !--------------------------------------------------------------------------
     call create(calc_data, dims, params, arrays, my_mpi)
     num_local_atoms = getNumLocalAtoms(calc_data)
-    !--------------------------------------------------------------------------
 
     call createEnergyMesh(emesh, dims%iemxd)
 
@@ -173,7 +156,7 @@ program KKRnano
       call readEnergyMesh(emesh)  !every process does this!  !!!!
     endif
 
-    call OUTTIME(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
+    call outTime(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
 
 #ifdef DEBUG_NO_ELECTROSTATICS
     warn(6, "preprocessor define has switched off electrostatics for debugging")
@@ -181,23 +164,19 @@ program KKRnano
     call prepareMadelung(calc_data, arrays)
 #endif
 
-    call OUTTIME(isMasterRank(my_mpi),'Madelung sums calc...', getElapsedTime(program_timer), 0)
+    call outTime(isMasterRank(my_mpi),'Madelung sums calc...', getElapsedTime(program_timer), 0)
 
     call createEBalanceHandler(ebalance_handler, emesh%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
 
-! ######################################################################
-! ######################################################################
     do ITER = 1, params%SCFSTEPS
-! ######################################################################
-! ######################################################################
 
       call resetTimer(iteration_timer)
 
       if (isMasterRank(my_mpi)) then
         call printDoubleLineSep(unit_number = 2)
-        call OUTTIME(isMasterRank(my_mpi),'started at ..........', getElapsedTime(program_timer),ITER)
+        call outTime(isMasterRank(my_mpi),'started at ..........', getElapsedTime(program_timer),ITER)
         call printDoubleLineSep(unit_number = 2)
       endif ! master
 
@@ -250,18 +229,15 @@ program KKRnano
       endif ! ldau
 ! LDA+U
 
-      call OUTTIME(isMasterRank(my_mpi),'initialized .........', getElapsedTime(program_timer),ITER)
+      call outTime(isMasterRank(my_mpi),'initialized .........', getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
       ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
       call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my_mpi, arrays)
 
-      call OUTTIME(isMasterRank(my_mpi),'G obtained ..........', getElapsedTime(program_timer),ITER)
+      call outTime(isMasterRank(my_mpi),'G obtained ..........', getElapsedTime(program_timer),ITER)
 
-!----------------------------------------------------------------------
-! BEGIN only processes in master-group are working
-!----------------------------------------------------------------------
       flag = 0
       if (isInMasterGroup(my_mpi)) then
         ! output: (some contained as references in calc_data)
@@ -270,9 +246,6 @@ program KKRnano
         flag = processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, program_timer)
 
       endif ! in master group
-!----------------------------------------------------------------------
-! END only processes in master-group are working
-!----------------------------------------------------------------------
 
       if (isMasterRank(my_mpi)) then
         ! only MASTERRANK updates, other ranks get it broadcasted later
@@ -302,11 +275,7 @@ program KKRnano
 
       call broadcastEnergyMesh_com(my_mpi, emesh)
 
-! ######################################################################
-! ######################################################################
     enddo ! ITER ! SC ITERATION LOOP ITER=1, SCFSTEPS
-! ######################################################################
-! ######################################################################
 
     if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) & ! write forces if requested, master-group only
       call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
@@ -317,6 +286,10 @@ program KKRnano
     call destroy(emesh)
     call destroy(calc_data)
 
+  else  ! active Ranks
+    !=====================================================================
+    ! processors not fitting in NAEZ*LMPID do nothing ... and wait here
+    !=====================================================================
   endif ! active Ranks
 
   CLOSELOG
@@ -324,10 +297,6 @@ program KKRnano
   call destroy(arrays)
   call destroy(dims)
 
-!=====================================================================
-!     processors not fitting in NAEZ*LMPID do nothing ...
-! ... and wait here
-!=====================================================================
 
   call destroy(my_mpi) ! Free KKRnano mpi resources
   
