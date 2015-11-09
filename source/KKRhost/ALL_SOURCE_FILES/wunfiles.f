@@ -100,7 +100,7 @@ C     .. Array arguments
       DOUBLE PRECISION SOCSCL(LMAXD1,NATYPD),CSCL(LMAXD1,NATYPD)
       DOUBLE PRECISION RBASIS(3,NEMBD2),RR(3,0:NRD),CONC(NATYPD)
       DOUBLE PRECISION RROT(48,3,NSHELD),RATOM(3,NSHELD)
-      DOUBLE PRECISION A(NATYPD),B(NATYPD),THETAS(IRID,NFUND,NCELLD)
+      DOUBLE PRECISION A(NATYPD),B(NATYPD) !,THETAS(IRID,NFUND,NCELLD)
       DOUBLE PRECISION RMT(NATYPD),RMTNEW(NATYPD),RWS(NATYPD),GSH(NGSHD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
 !       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
@@ -130,13 +130,16 @@ C     ..
       INTEGER NTOTD,NCHEBD,NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),
      +        NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
-     &                 RNEW(NTOTD*(NCHEBD+1),NATYPD),
-     &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
+     &                 RNEW(NTOTD*(NCHEBD+1),NATYPD)!,
+!      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
       CHARACTER*24 TXC(4)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP
+      ! allocatable
+      double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
+      
 C     ..
 C     .. Arrays in common
       CHARACTER*8 TESTC(32),OPTC(32)
@@ -155,6 +158,9 @@ C                                    some data in this file might change
 
 
 !       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+!     allocate shapefun arrays:
+      ALLOCATE(THETAS(IRID,NFUND,NCELLD), 
+     &         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD))
 C
       ITMPDIR=0
       ILTMP=0
@@ -365,6 +371,8 @@ C                                  meant for simpler passing of basic parameter 
       if(TEST('wrtgotr ').or.TEST('llyfiles')) 
      &                    t_lloyd%g0tr_to_file = .true.
 
+      
+      deallocate(thetas, thetasnew)
       
 C ======================================================================
       END subroutine

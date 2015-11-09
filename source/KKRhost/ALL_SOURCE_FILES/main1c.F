@@ -105,8 +105,9 @@ C for new spin-orbit solver
       LOGICAL LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NRMAXD,NATYPD),
-     +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD),
-     +                 THETASNEW(NRMAXD,NFUND,NCELLD)
+     +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)!,
+!      +                 THETASNEW(NRMAXD,NFUND,NCELLD)
+      double precision, allocatable :: THETASNEW(:,:,:)
 !       DOUBLE PRECISION R_LOG
 !       DOUBLE PRECISION, allocatable :: THETA(:),PHI(:)
 !       DOUBLE PRECISION, allocatable :: RPAN_INTERVALL(:,:),RNEW(:,:),
@@ -162,9 +163,10 @@ C ----------------------------------------------------------------------
 !      +                 RHO2NS(:,:,:,:),RHOC(:,:),RHO2N1(:,:,:),
 !      +                 RHO2N2(:,:,:),RHO2M1(:,:,:),RHO2M2(:,:,:)
       DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
-     +                 THETAS(IRID,NFUND,NCELLD),
+!      +                 THETAS(IRID,NFUND,NCELLD),
      +                 ZAT(NATYPD),CONC(NATYPD),
      &                 SOCSCALE(NATYPD)
+      double precision, allocatable :: THETAS(:,:,:)
 !       DOUBLE PRECISION, allocatable :: VINS(:,:,:),VISP(:,:),
 !      +                 THETAS(:,:,:),ZAT(:),CONC(:),SOCSCALE(:)
 C----------------------------------- orbital magnetic moment
@@ -246,6 +248,9 @@ C     .. Data statements ..
       DATA LDORHOEF/.TRUE./
       DATA IHOST / 1 /          ! this is the host program
       
+      
+      !allocations
+      allocate(THETASNEW(NRMAXD,NFUND,NCELLD),THETAS(IRID,NFUND,NCELLD))
       
 !       ALLOCATE(DEN1(0:LMAXD1,IEMXD,2),
 !      + WEZNORM(IEMXD),CDOSAT0(IEMXD),CDOSAT1(IEMXD),CDOS0(IEMXD),
@@ -691,44 +696,48 @@ C ================================================================ NATYP
       
       
 #ifdef CPP_MPI
-      !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
-      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
-     &         NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,NMVECMAX,
-     &                     NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
-     &                denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief)
-     
-
+! test qdos qriteout:
       !move writeout of lmdo and qdos file here
-      if(myrank==master) then
-       DO I1=1,NATYP
-      IF (OPT('qdos    ')) THEN
+      DO I1=1,NATYP
+       IF (OPT('qdos    ')) THEN
       
-       DO ISPIN = 1,NSPIN
-          IPOT = (I1-1) * NSPINPOT + ISPIN
+        DO ISPIN = 1,NSPIN
+         IPOT = (I1-1) * NSPINPOT + ISPIN
        
-      if(NATYP.ge.100) then
-         OPEN(30,
-     +   FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
-     +   char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
-      else
-         OPEN(30,
-     +   FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
-     +   char(48+ISPIN)//".dat")   ! lm-dos
-      end if
-      WRITE (30,*) ' '   ! lm-dos
-      WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
- 8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
-      if(NATYP.ge.100) then
-         OPEN(31,
-     +   FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
-     +   char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
-      else
-         OPEN(31,
-     +   FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
-     +   char(48+ISPIN)//".dat")   ! lm-dos
-      end if
-         DO IE=1,IELAST
-            DO IQ=1,NQDOS
+         if(NATYP.ge.100) then
+          OPEN(30,
+     +    FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+     +    char(48+mod(I1,10))//"."//char(48+ISPIN)//
+     +    ".dat_myrank="//char(48+myrank/100)//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+         else
+          OPEN(30,
+     +    FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
+     +    ".dat_myrank="//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+         end if
+         WRITE (30,*) ' '   ! lm-dos
+         WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
+ 8600    FORMAT (a8,I3,a4,I5)  ! lm-dos
+         if(NATYP.ge.100) then
+          OPEN(31,
+     +    FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+     +    char(48+mod(I1,10))//"."//char(48+ISPIN)//
+     +    ".dat_myrank="//char(48+myrank/100)//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+         else
+          OPEN(31,
+     +    FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
+     +    char(48+ISPIN)//
+     +    ".dat_myrank="//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+          end if
+          
+          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+          DO ie_num=1,ie_end
+           IE = ie_start+ie_num
+           DO IQ=1,NQDOS
             DENTOT = DCMPLX(0.D0,0.D0)
             DO L = 0,LMAXD1
                DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)
@@ -737,35 +746,100 @@ C ================================================================ NATYP
      &  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! lmdos
             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
      &  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! lmdos
-            END DO ! IQ=1,NQDOS
-         END DO ! IE=1,IELAST
-         END DO !ISPIN=1,NSPIN
-         close(31)
- 9000  FORMAT(5F10.6,40E16.8)
+           END DO ! IQ=1,NQDOS
+          END DO ! IE=1,IELAST
+        END DO !ISPIN=1,NSPIN
+        close(31)
+       ENDIF
+      ENDDO !I1
+ 9000 FORMAT(5F10.6,40E16.8)
  
-      ELSE
-             DO ISPIN = 1,NSPIN
-          IPOT = (I1-1) * NSPINPOT + ISPIN
-       if(NATYP.ge.100) then
-      OPEN(30,   ! lm-dos
-     +FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
-     +char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
-      else
-      OPEN(30,   ! lm-dos
-     +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +char(48+ISPIN)//".dat")   ! lm-dos
-      end if
-      WRITE (30,*) ' '   ! lm-dos
-      WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
+      !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
+      NQDOS=1
+! test qdos qriteout
+      
+      !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
+      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
+     &         NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,NMVECMAX,
+     &                     NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
+     &                denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief)
+     
+
+! test qdos qriteout:
+      !move writeout of lmdo and qdos file here
+!       if(myrank==master) then
+!        DO I1=1,NATYP
+!       IF (OPT('qdos    ')) THEN
+!       
+!        DO ISPIN = 1,NSPIN
+!           IPOT = (I1-1) * NSPINPOT + ISPIN
+!        
+!       if(NATYP.ge.100) then
+!          OPEN(30,
+!      +   FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+!      +   char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+!       else
+!          OPEN(30,
+!      +   FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
+!      +   char(48+ISPIN)//".dat")   ! lm-dos
+!       end if
+!       WRITE (30,*) ' '   ! lm-dos
+!       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
+!  8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
+!       if(NATYP.ge.100) then
+!          OPEN(31,
+!      +   FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+!      +   char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+!       else
+!          OPEN(31,
+!      +   FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
+!      +   char(48+ISPIN)//".dat")   ! lm-dos
+!       end if
+!          DO IE=1,IELAST
+!             DO IQ=1,NQDOS
+!             DENTOT = DCMPLX(0.D0,0.D0)
+!             DO L = 0,LMAXD1
+!                DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)
+!             ENDDO
+!             WRITE(30,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
+!      &  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! lmdos
+!             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
+!      &  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! lmdos
+!             END DO ! IQ=1,NQDOS
+!          END DO ! IE=1,IELAST
+!          END DO !ISPIN=1,NSPIN
+!          close(31)
+!  9000  FORMAT(5F10.6,40E16.8)
+! test qdos qriteout
+ 
+!       ELSE ! not qdos option
+      if(myrank==master) then
+      DO I1=1,NATYP
+
+       IF (.not.OPT('qdos    ')) THEN
+
+        DO ISPIN = 1,NSPIN
+         IPOT = (I1-1) * NSPINPOT + ISPIN
+         if(NATYP.ge.100) then
+          OPEN(30,   ! lm-dos
+     +    FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+     +    char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
+         else
+          OPEN(30,   ! lm-dos
+     +    FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+     +    char(48+ISPIN)//".dat")   ! lm-dos
+         end if
+         WRITE (30,*) ' '   ! lm-dos
+         WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
          DO IE=1,IELAST
-            WRITE(30,9001) DREAL(EZ(IE)),
-     &                   (-DIMAG(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)
-         END DO
-         END DO
- 9001    FORMAT(30E12.4)
-      ENDIF  ! not qdos option
-         close(30)
-       END DO
+          WRITE(30,9001) DREAL(EZ(IE)),
+     &             (-DIMAG(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)
+         END DO ! IE
+        END DO ! ISPIN
+ 9001   FORMAT(30E12.4)
+       ENDIF  ! not qdos option
+       close(30)
+      END DO !I1
       end if ! myrank==master
 #endif
 
@@ -871,16 +945,8 @@ c rewrite new theta and phi to nonco_angle.dat
        CLOSE(10,status='delete')
        OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
        OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
-       LCHECKANGLES = .FALSE.
        DO I1=1,NATYP
         READ(11,*) THETA(I1),PHI(I1)
-        ! philipp 20.08.2015: ind code_LLOYD the following part does not
-        ! exist but has to be there!? ask long!!!
-        THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
-        PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
-        IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
-           LCHECKANGLES=.TRUE.
-        ENDIF
         WRITE(13,*) THETA(I1),PHI(I1)
        ENDDO
        CLOSE(11,status='delete')
@@ -1082,6 +1148,7 @@ C
       
       deallocate(den,denlm)
       
+      deallocate(thetasnew, thetas)
       
 !       DEALLOCATE(DEN1,WEZNORM,CDOSAT0,CDOSAT1,CDOS0,
 !      + CDOS_LLY,CDOS1,CDOS2,cdos_dum,A,B,CHARGE,CLEB,DRDI,RMESH,DOSTOT,

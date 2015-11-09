@@ -261,8 +261,8 @@ C     .. Local Scalars ..
      +        NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
       INTEGER NS,LM1,LM2
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
-     +                 RNEW(NTOTD*(NCHEBD+1),NATYPD),
-     +                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
+     +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)!,
+!      +                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       INTEGER IESEMICORE,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IDOSEMICORE
       DOUBLE PRECISION FSEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
@@ -293,7 +293,8 @@ C     .. Local Arrays ..
      +                 RMTREF(NREFD),RMTREFAT(NAEZD+NEMBD),RR(3,0:NRD),
      +                 RROT(48,3,NSHELD),RS(IRMD,0:LMAXD,NATYPD),
      +                 RSYMAT(64,3,3),RWS(NATYPD),S(0:LMAXD,NATYPD),
-     +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
+!      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
+     +                 TLEFT(3,NEMBD1),
      +                 TRIGHT(3,NEMBD1),VBC(2),
      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
      +                 VREF(NREFD),WG(LASSLD),
@@ -425,6 +426,10 @@ C
 C ruess: IVSHIFT test option
       INTEGER IVSHIFT
       
+      !allocations:
+      double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
+
+      
 C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -448,6 +453,8 @@ C     ..
 
 
       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+      allocate(THETAS(IRID,NFUND,NCELLD), 
+     +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD))
 !       ALLOCATE(DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD),
 !      +               DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
 !      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
@@ -1127,6 +1134,7 @@ C
  
  
       DEALLOCATE(ULDAU)
+      deallocate(thetas, thetasnew)
 !       DEALLOCATE(DEZ,EZ,WEZ,DSYMLL,DSYMLL1,LEFTTINVLL,
 !      +           RIGHTTINVLL,A,B,BRAVAIS,CLEB,CMOMHOST,DRDI,
 !      +           DROR,ECORE,MTFAC,R,RATOM,RBASIS,RCLS,

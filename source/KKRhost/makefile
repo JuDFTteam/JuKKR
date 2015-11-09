@@ -106,6 +106,8 @@ mpi:      CPP = -D CPP_MPI
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
 FFLAGS       =  -O2 -r8 -traceback -mcmodel=medium -shared-intel #-traceback -CB -check all -g
+#FFLAGS       =  -O2 -r8 -traceback -mcmodel=large -shared-intel -heap-arrays #-traceback -CB -check all -g
+
 ## mac:
 ##FFLAGS      +=  -mmacosx-version-min=10.5
 # Change to if flag is matched:

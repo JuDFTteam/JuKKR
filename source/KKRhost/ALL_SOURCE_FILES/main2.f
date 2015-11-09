@@ -115,7 +115,10 @@ C ----------------------------------------------------------------------
       DOUBLE PRECISION A(NATYPD),B(NATYPD),DRDI(IRMD,NATYPD)
       DOUBLE PRECISION RMT(NATYPD),RMTNEW(NATYPD),RWS(NATYPD)
       DOUBLE PRECISION R(IRMD,NATYPD),ECORE(20,NPOTD)
-      DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD),ZAT(NATYPD)
+!       DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD),ZAT(NATYPD)
+      DOUBLE PRECISION ZAT(NATYPD)
+      !allocatables:
+      double precision, allocatable :: THETAS(:,:,:)
 C     .. Dummy variables needed only in IMPURITY program 
       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD),VSPSMDUM(IRMD,NPOTD)
 !       DOUBLE PRECISION, allocatable :: ECOU(:,:),EPOTIN(:),ESPC(:,:),
@@ -263,6 +266,9 @@ C     ..
 !      + DENEFAT(NATYPD),FLM(-1:1,NATYPD),FLMC(-1:1,NATYPD),QMGAM(NAEZD),
 !      + FACT(0:100),MVGAM(NATYPD,NMVECMAX),MVPHI(NATYPD,NMVECMAX),
 !      + MVTET(NATYPD,NMVECMAX))
+
+! allocations:
+      allocate(THETAS(IRID,NFUND,NCELLD))
 
 C     ..................................................................
 Consistency check
@@ -1135,7 +1141,7 @@ C ======================================================================
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
  
- 
+      deallocate(thetas)
  
 !       DEALLOCATE(VINS,VISP,VONS,ECOU,EPOTIN,ESPC,ESPV,EXC,A,B,DRDI,RMT,
 !      + RMTNEW,RWS,R,ECORE,THETAS,ZAT,THESME,VSPSMDUM,R2NEF,RHO2NS,RHOC,

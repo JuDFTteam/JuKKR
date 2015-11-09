@@ -582,21 +582,15 @@ c get orbital moment
       ENDDO
       
 #ifdef CPP_MPI
-      call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
-     &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
-     &                            den,denlm,gflle,rho2nsc,r2nefc,
-     &                            rho2int,espv,muorb,denorbmom,
-     &                            denorbmomsp,denorbmomlm,denorbmomns)
-      
-      !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
-      if(myrank==master) then
-#endif
 
-! omp: moved write-out of dos files out of parallel energy loop
-c Write out qdos and lm-dos:                                            ! lm-dos
-       DO IE=1,IELAST                                                   ! lm-dos
+!        DO IE=1,IELAST                                                   ! lm-dos
+          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+          DO ie_num=1,ie_end
+           IE = ie_start+ie_num
        DO IQ=1,NQDOS                                                    ! lm-dos
-       IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                                ! lm-dos
+!        IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                                ! lm-dos
+       IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                                ! lm-dos
            if(t_inc%NATYP.ge.100) then
              OPEN(29,   ! lm-dos
      +       FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
@@ -619,21 +613,42 @@ c Write out qdos and lm-dos:                                            ! lm-dos
        ENDIF                                                            ! lm-dos
 
        IF (OPT('qdos    ')) THEN                                        ! qdos ruess
-         IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                              ! qdos ruess
+!          IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                              ! qdos ruess
+         IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                              ! qdos ruess
            if(t_inc%NATYP.ge.100) then
-             OPEN(31,   ! lm-dos
-     +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
-     +       char(48+mod(I1,10))//"."//char(48+1)//".dat")   ! lm-dos
-             OPEN(32,   ! lm-dos
-     +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
-     +       char(48+mod(I1,10))//"."//char(48+2)//".dat")   ! lm-dos
+!              OPEN(31,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+!      +       char(48+mod(I1,10))//"."//char(48+1)//".dat")   ! lm-dos
+!              OPEN(32,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+!      +       char(48+mod(I1,10))//"."//char(48+2)//".dat")   ! lm-dos
+          OPEN(31,
+     +    FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+     +    char(48+mod(I1,10))//"."//char(48+1)//
+     +    ".dat_myrank="//char(48+myrank/100)//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+          OPEN(32,
+     +    FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
+     +    char(48+mod(I1,10))//"."//char(48+2)//
+     +    ".dat_myrank="//char(48+myrank/100)//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
            else
-             OPEN(31,   ! lm-dos
-     +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +       char(48+1)//".dat")   ! lm-dos
-             OPEN(32,   ! lm-dos
-     +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +       char(48+2)//".dat")   ! lm-dos
+!              OPEN(31,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+!      +       char(48+1)//".dat")   ! lm-dos
+!              OPEN(32,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+!      +       char(48+2)//".dat")   ! lm-dos
+          OPEN(31,
+     +    FILE="qdos."//char(48+mod(I1/10,10))//
+     +    char(48+mod(I1,10))//"."//char(48+1)//
+     +    ".dat_myrank="//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+          OPEN(32,
+     +    FILE="qdos."//char(48+mod(I1/10,10))//
+     +    char(48+mod(I1,10))//"."//char(48+2)//
+     +    ".dat_myrank="//
+     +    char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
            end if
             WRITE (31,*) ' '                                            ! qdos ruess
             WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
@@ -672,6 +687,100 @@ c    and lmdos.nn.s.dat                                                 ! qdos r
  9000      FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
        ENDDO !IQ
        ENDDO !IE
+       
+       NQDOS=1
+
+
+      call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
+     &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
+     &                            den,denlm,gflle,rho2nsc,r2nefc,
+     &                            rho2int,espv,muorb,denorbmom,
+     &                            denorbmomsp,denorbmomlm,denorbmomns)
+      
+      !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
+      if(myrank==master) then
+#endif
+
+! ! omp: moved write-out of dos files out of parallel energy loop
+! c Write out qdos and lm-dos:                                            ! lm-dos
+!        DO IE=1,IELAST                                                   ! lm-dos
+!        DO IQ=1,NQDOS                                                    ! lm-dos
+!        IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                                ! lm-dos
+!            if(t_inc%NATYP.ge.100) then
+!              OPEN(29,   ! lm-dos
+!      +       FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+!      +       char(48+mod(I1,10))//"."//char(48+1)//".dat")   ! lm-dos
+!              OPEN(30,   ! lm-dos
+!      +       FILE="lmdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+!      +       char(48+mod(I1,10))//"."//char(48+2)//".dat")   ! lm-dos
+!            else
+!              OPEN(29,   ! lm-dos
+!      +       FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+!      +       char(48+1)//".dat")   ! lm-dos
+!              OPEN(30,   ! lm-dos
+!      +       FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+!      +       char(48+2)//".dat")   ! lm-dos
+!            end if
+!            WRITE (29,*) ' '                                             ! lm-dos
+!            WRITE (29,8600) '# ISPIN=',1,' I1=',I1                       ! lm-dos
+!            WRITE (30,*) ' '                                             ! lm-dos
+!            WRITE (30,8600) '# ISPIN=',2,' I1=',I1                       ! lm-dos
+!        ENDIF                                                            ! lm-dos
+! 
+!        IF (OPT('qdos    ')) THEN                                        ! qdos ruess
+!          IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                              ! qdos ruess
+!            if(t_inc%NATYP.ge.100) then
+!              OPEN(31,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+!      +       char(48+mod(I1,10))//"."//char(48+1)//".dat")   ! lm-dos
+!              OPEN(32,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
+!      +       char(48+mod(I1,10))//"."//char(48+2)//".dat")   ! lm-dos
+!            else
+!              OPEN(31,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+!      +       char(48+1)//".dat")   ! lm-dos
+!              OPEN(32,   ! lm-dos
+!      +       FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
+!      +       char(48+2)//".dat")   ! lm-dos
+!            end if
+!             WRITE (31,*) ' '                                            ! qdos ruess
+!             WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
+!             WRITE(31,'(7(A,3X))') '#   Re(E)','Im(E)','k_x','k_y','k_z',! qdos
+!      &                      'DEN_tot','DEN_s,p,...'                     ! qdos
+!             WRITE (32,*) ' '                                            ! qdos ruess
+!             WRITE (32,8600) '# ISPIN=',2,' I1=',I1                      ! qdos ruess
+!             WRITE(32,'(7A)') '#   Re(E)','Im(E)','k_x','k_y','k_z',     ! qdos
+!      &                      'DEN_tot','DEN_s,p,...'                     ! qdos
+! 
+!  8600 FORMAT (a8,I3,a4,I5)                                              ! qdos ruess
+!          ENDIF   ! IQ.EQ.1                                              ! qdos ruess
+!             DO JSPIN =1,2                                               ! qdos ruess
+!               DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                         ! qdos ruess
+!               DO L1 = 0,LMAXD1                                          ! qdos ruess
+!                 DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)     ! qdos ruess
+!               ENDDO                                                     ! qdos ruess
+!             ENDDO                                                       ! qdos ruess
+! c    write qdos.nn.s.dat                                                ! qdos ruess
+! c    and lmdos.nn.s.dat                                                 ! qdos ruess
+!             WRITE(29,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
+!      &               (-DIMAG(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)         ! qdos ruess
+!             WRITE(30,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
+!      &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)         ! qdos ruess
+!             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
+!      &     -DIMAG(DENTOT(1))/PI,(-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)! qdos ruess
+!             WRITE(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),     ! qdos ruess
+!      &     -DIMAG(DENTOT(2))/PI,(-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)! qdos ruess
+!        ELSE                                                             ! lm-dos
+!             WRITE(29,9001) EZ(IE),                                      ! lm-dos
+!      &               (-DIMAG(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)         ! lm-dos
+!             WRITE(30,9001) EZ(IE),                                      ! lm-dos
+!      &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)         ! lm-dos
+!  9001       FORMAT(30E12.4)                                             ! lm-dos
+!        ENDIF      ! OPT('qdos    ')                                     ! qdos ruess
+!  9000      FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
+!        ENDDO !IQ
+!        ENDDO !IE
 
 c write
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
@@ -779,9 +888,12 @@ c          PHINEW=DATAN2(MOMENT(2),MOMENT(1))
 !         WRITE(6,*) 'moment',MOMENT(1),MOMENT(2),MOMENT(3)
         WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
 c        WRITE(6,*) 'total moment',TOTMOMENT,TOTXYMOMENT
-        WRITE(1337,*) THETANEW,PHINEW
-        WRITE(11,*) THETANEW,PHINEW
-        WRITE(12,*) THETANEW,PHINEW
+        WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &             PHINEW/(2.0D0*PI)*360.0D0
+        WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &             PHINEW/(2.0D0*PI)*360.0D0
+        WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &             PHINEW/(2.0D0*PI)*360.0D0
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,
      +                    THETA,PHI,IRMD)
         CALL ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOTD,THETANEW,PHINEW,
