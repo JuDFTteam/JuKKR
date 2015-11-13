@@ -70,16 +70,19 @@ C     .. Local Scalars ..
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD),TOLRDIF
       LOGICAL          LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
-     +                 RNEW(NRMAXD,NATYPD),
-     +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
+     +                 RNEW(NRMAXD,NATYPD)!,
+!      +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
+      double precision, allocatable :: vinsnew(:,:,:)
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX EZ(IEMXD)
       DOUBLE PRECISION DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),ZAT(NATYPD),
      +                 RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NREFD),
-     +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+     +                 VISP(IRMD,NPOTD),
      +                 CLEB(NCLEB,2)
+      double precision, allocatable :: vins(:,:,:)
 !       DOUBLE PRECISION, allocatable :: DRDI(:,:),RMESH(:,:),ZAT(:),
 !      +                 RCLS(:,:,:),RMTREF(:),VREF(:),
 !      +                 VINS(:,:,:),VISP(:,:),
@@ -155,6 +158,8 @@ C     ..
 C
 
       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+      allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),
+     &         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
 !       ALLOCATE(WLDAU(MMAXD,MMAXD,NSPIND,NATYPD),PHILDAU(IRMD,NATYPD))
 !       ALLOCATE(        DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),ZAT(NATYPD),
 !      +                 RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NREFD),
@@ -543,6 +548,7 @@ C
 
 
       DEALLOCATE( ULDAU )
+      deallocate(vins, vinsnew)
 !       DEALLOCATE(WLDAU,PHILDAU)
 !       DEALLOCATE(DRDI,RMESH,ZAT,RCLS,RMTREF,VREF,VINS,VISP,CLEB)
 !       DEALLOCATE(SOCSCL,SOCSCALE,CSCL,VTREL,

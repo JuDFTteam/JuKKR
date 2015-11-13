@@ -19,8 +19,9 @@
        DOUBLE PRECISION FAC
        PARAMETER (FAC=2d0)
        DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD),
-     +   THETASIN(IRID,NFUND,NCELLD),
+!      +   THETASIN(IRID,NFUND,NCELLD),
      +   THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
+       double precision, allocatable :: THETASIN(:,:,:)
        INTEGER NTCELL(NATYPD)
        INTEGER I1,IPOT,IPOTM,IR,ISPIN,IR2,IP,ICELL,
      +         ISHIFT,ILOGPANSHIFT,ILINPANSHIFT,NPAN_LOGTEMP,
@@ -31,6 +32,8 @@
        INTEGER IPAN_INTERVALL(0:NTOTD,NATYPD)
 
 
+! allocations
+       allocate(THETASIN(IRID,NFUND,NCELLD))
 
        THETASNEW=0d0
        IPOTM=0
@@ -118,6 +121,9 @@ c save THETAS to THETASIN
          ENDDO
         ENDDO
        ENDDO ! I1
+       
+       deallocate(thetasin)
+       
        END 
 
 c-----------------------------------------------

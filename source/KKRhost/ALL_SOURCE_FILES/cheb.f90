@@ -282,7 +282,8 @@ integer :: ncheb
 double precision    :: fn(0:ncheb)
 double precision    :: dfndr(0:ncheb)
 double precision :: CLambdaCinv(0:Ncheb,0:Ncheb)
-real(8), external :: matvec_dmdm
+double precision, external :: matvec_dmdm
+! real(8), external :: matvec_dmdm
 
 !needs to be checked!!!!!!1
 call getCLambdaCinv(Ncheb,CLambdaCinv(0:ncheb,0:ncheb))
@@ -293,8 +294,10 @@ end subroutine
 
       function matvec_dmdm(mat1,vec1)
       implicit none
-      real(8), intent(in) :: mat1(:,:),vec1(:)
-      real(8)             :: matvec_dmdm(size(mat1,1))
+      double precision, intent(in) :: mat1(:,:),vec1(:)
+      double precision             :: matvec_dmdm(size(mat1,1))
+!       real(8), intent(in) :: mat1(:,:),vec1(:)
+!       real(8)             :: matvec_dmdm(size(mat1,1))
       integer             :: n,m
       m = size(mat1,1)
       n = size(mat1,2)

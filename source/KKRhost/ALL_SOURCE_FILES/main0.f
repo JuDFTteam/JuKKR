@@ -205,7 +205,7 @@ C                                       : with respect no NREL
 C  ZREL(NATYPD)                         : atomic number (cast integer)
 C 
 C Note: IRMD-dimension depends on KREL to save space
-C ======================================================================
+C ======================================================================VINS()
 
       use mod_types
 
@@ -277,9 +277,11 @@ C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
-     +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
-     +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-     +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
+     +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD)!,
+!      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+!      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
+      double complex, allocatable :: LEFTTINVLL(:,:,:,:,:), 
+     +                               RIGHTTINVLL(:,:,:,:,:)
 !       DOUBLE COMPLEX, allocatable :: DEZ(:),EZ(:),WEZ(:)
 !       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),DSYMLL1(:,:,:),
 !      +               LEFTTINVLL(:,:,:,:,:),RIGHTTINVLL(:,:,:,:,:)
@@ -296,10 +298,12 @@ C     .. Local Arrays ..
 !      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
      +                 TLEFT(3,NEMBD1),
      +                 TRIGHT(3,NEMBD1),VBC(2),
-     +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
+     +                 VISP(IRMD,NPOTD),
      +                 VREF(NREFD),WG(LASSLD),
      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3)
+      double precision, allocatable :: vins(:,:,:)
 !       DOUBLE PRECISION, allocatable :: A(:),B(:),BRAVAIS(:,:),
 !      +                 CLEB(:,:),CMOMHOST(:,:),DRDI(:,:),
 !      +                 DROR(:,:),ECORE(:,:),
@@ -362,7 +366,7 @@ C
 C=======================================================================
 C
 C     changes for impurity 20/02/2004 -- v.popescu according to 
-C                                        n.papanikolaou 
+C                                        n.papanikolaou VINS()
 C
       INTEGER HOSTIMP(0:NATYPD)
       DOUBLE PRECISION CPATOL,CONC(NATYPD)
@@ -383,7 +387,8 @@ C-----------------------------------------------------------------------
       INTEGER ISVATOM,NVATOM
       DOUBLE PRECISION ZATTEMP
 C     .. Dummy variables needed only in IMPURITY program 
-      DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
+!       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
+      DOUBLE PRECISION, allocatable :: THESME(:,:,:)
 
 C
 C-----------------------------------------------------------------------
@@ -453,8 +458,12 @@ C     ..
 
 
       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
-      allocate(THETAS(IRID,NFUND,NCELLD), 
-     +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD))
+      allocate(THETAS(IRID,NFUND,NCELLD),THESME(IRID,NFUND,NCELLD),
+     +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD),
+     +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
+      allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+     +         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
+
 !       ALLOCATE(DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD),
 !      +               DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
 !      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
@@ -478,86 +487,8 @@ C     ..
 !      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3))
       
    
-! 0!:
-!       write(*,*) 'kkr0:', 16.d0/1024.d0/1024.d0/1024.d0*(
-!      +               (LMMAXD*LMMAXD*NSYMAXD)*2+
-!      +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2)
-!       write(*,*) 'kkr0:', 8.d0/1024.d0/1024.d0/1024.d0*( 
-!      +                 (LMPOTD*NEMBD1)+(IRMD*NATYPD)+
-!      +                 (IRMD*NATYPD)+(20*NPOTD)+
-!      +                 (IRMD*NATYPD)+
-!      +                 (3*NACLSD*NCLSD)+
-!      +                 (NAEZD+NEMBD)+(3*(1+NRD))+
-!      +                 (48*3*NSHELD)+(IRMD*(1+LMAXD)*NATYPD)+
-!      +                 (64*3*3)+(LMAXD+1)+NATYPD+
-!      +                 (IRID*NFUND*NCELLD)+
-!      +                 (3*NEMBD1)*2+
-!      +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
-!      +                 (LASSLD*(LASSLD+1)*(LASSLD+1))+
-!      +                 (NSHELD*NOFGIJD)+(NSHELD*NOFGIJD))
-! !1a:     
-!       write(*,*) 'kkr1a:', 16.d0/1024.d0/1024.d0/1024.d0*( 
-!      +                 (MMAXD*MMAXD*NSPIND*NATYPD)+
-!      +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
-!      +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5+
-!      +                 (IRMD*NATYPD)+(IRMD*NATYPD)+(NATYPD)+
-!      +                 (3*NACLSD*NCLSD)+(NREFD)+(NREFD)+
-!      +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
-!      +                 (NCLEB*2) +
-!      +                 ((NTOTD+1)*NATYPD)+
-!      +                 (NTOTD*(NCHEBD+1)*NATYPD)+
-!      +                 (NTOTD*(NCHEBD+1)*LMPOTD*NSPOTD))
-!      
-!      
-!      
-! !1b:     
-!       write(*,*) 'kkr1b:', 16.d0/1024.d0/1024.d0/1024.d0*( 
-!      +               (LMMAXD*LMMAXD*NATYPD)+
-!      +               (LMMAXD*LMMAXD*NREFD)*2+
-!      &               (LMMAXD*LMMAXD*NAEZD)+
-!      &               (IEMXD*NSPIND)+
-!      &               (IEMXD)+
-!      &               (IEMXD*NSPIND)+
-!      &               (IEMXD*NSPIND)+
-!      &               (LMAXD*NREFD)+(LMAXD*NREFD)+
-!      &               (IEMXD)+
-!      &               (IEMXD*NSPIND)+(IEMXD)+
-!      +               (LMMAXD*LMMAXD*NATYPD)+
-!      +               (LMMAXD*LMMAXD*NEMBD1*NSPINDD*IEMXD)*2+
-!      +               (LMGF0D*LMGF0D)*2+
-!      +               (LMMAXD*LMMAXD*NSYMAXD)+
-!      +               (LMMAXD*LMMAXD)*8)
-! 
-! 
-! !1c:     
-!       write(*,*) 'kkr1c:', 8.d0/1024.d0/1024.d0/1024.d0*( 
-!      +                 (IRMD*LMPOTD*NATYPD*2)*2+(IRMD*NPOTD)+
-!      +                 (IRMD*LMPOTD*NPOTD)*2+
-!      +                 (IRMD*LMPOTD*4)*2+
-!      +                 ((IRMD-IRMIND)*LMPOTD*NSPOTD)+(IRMD*NPOTD)+
-!      +                 (IRID*NFUND*NCELLD)+
-!      +                 (NATYPD)+(NATYPD)+
-!      &                 (NATYPD)+
-!      +                 ((KREL*LMAXD+1)*(KREL*NATYPD+(1-KREL)))*2+
-!      +                 ((IRMD*KREL+(1-KREL))*NATYPD)*5)
-! 
-! 
-! !2:     
-!       write(*,*) 'kkr2:', 8.d0/1024.d0/1024.d0/1024.d0*( 
-!      +                 (LPOTD*NATYPD)+(NATYPD)+
-!      +                 (4*NPOTD)+(LMAXD*NPOTD)+
-!      +                 (LPOTD*NATYPD)+
-!      +                 (IRMD*NATYPD)+
-!      +                 (NATYPD)*5+
-!      +                 (IRMD*NATYPD)+(20*NPOTD)+
-!      +                 2*(IRID*NFUND*NCELLD)+
-!      +                 (IRMD*NPOTD))
-! 
-! !          stop
-     
-     
 Consistency check
-      WRITE(*,*) 'This is the KKR code version 2015_10_30.'
+      WRITE(*,*) 'This is the KKR code version 2015_11_09.'
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 
@@ -710,7 +641,8 @@ C
             WRITE (1337,FMT=9080)
          END IF
       END IF
-C
+C     +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
+
       IF ( DABS(E2IN-E2).GT.1D-10 .AND. NPOL.NE.0 ) E2 = E2IN
 C ----------------------------------------------------------------------
       IF (OPT('GENPOT  ')) THEN
@@ -1134,13 +1066,8 @@ C
  
  
       DEALLOCATE(ULDAU)
-      deallocate(thetas, thetasnew)
-!       DEALLOCATE(DEZ,EZ,WEZ,DSYMLL,DSYMLL1,LEFTTINVLL,
-!      +           RIGHTTINVLL,A,B,BRAVAIS,CLEB,CMOMHOST,DRDI,
-!      +           DROR,ECORE,MTFAC,R,RATOM,RBASIS,RCLS,
-!      +           RCLSIMP,RECBV,RMT,RMTNEW,FPRADIUS,RMTREF,RMTREFAT,RR,
-!      +           RROT,RS,RSYMAT,RWS,S,THETAS,TLEFT,TRIGHT,VBC,
-!      +           VINS,VISP,VREF,WG,YRG,ZAT,ZPERIGHT,ZPERLEFT)
+      deallocate(thetas, thetasnew, thesme)
+      deallocate(vins,LEFTTINVLL,RIGHTTINVLL)
 
       END SUBROUTINE !MAIN0
       

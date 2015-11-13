@@ -92,13 +92,13 @@ C     ITERMDIR variables
 C ----------------------------------------------------------------------
       DOUBLE PRECISION VBC(2)
 C     .. input potential (spherical VISP, nonspherical VINS)
-      DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,NSPOTD),       
-     +                 VISP(IRMD,NPOTD)
+!       DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,NSPOTD),       
+      DOUBLE PRECISION VISP(IRMD,NPOTD)
 C     .. output potential (nonspherical VONS)
-      DOUBLE PRECISION VONS(IRMD,LMPOTD,NPOTD)
-!       DOUBLE PRECISION, allocatable :: VINS(:,:,:),VISP(:,:)
+!       DOUBLE PRECISION VONS(IRMD,LMPOTD,NPOTD)
+      DOUBLE PRECISION, allocatable :: VINS(:,:,:)
 ! C     .. output potential (nonspherical VONS)
-!       DOUBLE PRECISION, allocatable :: VONS(:,:,:)
+      DOUBLE PRECISION, allocatable :: VONS(:,:,:)
 C     ..
 C ----------------------------------------------------------------------
 C   ECOU(0:LPOTD,NATYPD)    ! Coulomb energy                    
@@ -118,9 +118,10 @@ C ----------------------------------------------------------------------
 !       DOUBLE PRECISION THETAS(IRID,NFUND,NCELLD),ZAT(NATYPD)
       DOUBLE PRECISION ZAT(NATYPD)
       !allocatables:
-      double precision, allocatable :: THETAS(:,:,:)
+      double precision, allocatable :: THETAS(:,:,:), thesme(:,:,:)
 C     .. Dummy variables needed only in IMPURITY program 
-      DOUBLE PRECISION THESME(IRID,NFUND,NCELLD),VSPSMDUM(IRMD,NPOTD)
+!       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD),VSPSMDUM(IRMD,NPOTD)
+      DOUBLE PRECISION VSPSMDUM(IRMD,NPOTD)
 !       DOUBLE PRECISION, allocatable :: ECOU(:,:),EPOTIN(:),ESPC(:,:),
 !      +  ESPV(:,:),EXC(:,:),A(:),B(:),DRDI(:,:),RMT(:),RMTNEW(:),RWS(:),
 !      +  R(:,:),ECORE(:,:),THETAS(:,:,:),ZAT(:),THESME(:,:,:),
@@ -133,9 +134,11 @@ C   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
 C                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
 C  RHOC(IRMD,NPOTD)              ! core charge density
 C ----------------------------------------------------------------------
-      DOUBLE PRECISION R2NEF(IRMD,LMPOTD,NATYPD,2),
-     +                 RHO2NS(IRMD,LMPOTD,NATYPD,2),
+      DOUBLE PRECISION !R2NEF(IRMD,LMPOTD,NATYPD,2),
+!      +                 RHO2NS(IRMD,LMPOTD,NATYPD,2),
      +                 RHOC(IRMD,NPOTD)
+      double precision, allocatable :: R2NEF(:,:,:,:),
+     +                                 RHO2NS(:,:,:,:)
 C     ..
       DOUBLE PRECISION GSH(NGSHD)
       DOUBLE PRECISION RHOORB(IRMD*KREL + (1-KREL),NATYPD)
@@ -190,8 +193,10 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 ! Scale magn. part of xc-potential:
       DOUBLE PRECISION LAMBDA_XC, EXCDIFF   
       DOUBLE PRECISION EXCNM(0:LPOTD,NATYPD)
-      DOUBLE PRECISION VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD)      
-      DOUBLE PRECISION RHO2NSNM(IRMD,LMPOTD,NATYPD,2)
+!       DOUBLE PRECISION VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD)      
+      DOUBLE PRECISION, allocatable :: VXCM(:,:,:),VXCNM(:,:,:),
+     +                                 RHO2NSNM(:,:,:,:)   
+!       DOUBLE PRECISION RHO2NSNM(IRMD,LMPOTD,NATYPD,2)
 !------------ 
 
 
@@ -245,6 +250,11 @@ c New variables for fixed Fermi energy calculations; noted as fxf
       REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
 C     ..
 
+      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD))
+      allocate(VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD))
+      allocate(R2NEF(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2))
 
 !       ALLOCATE(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
 !      + VONS(IRMD,LMPOTD,NPOTD),ECOU(0:LPOTD,NATYPD),EPOTIN(NATYPD),
@@ -268,7 +278,7 @@ C     ..
 !      + MVTET(NATYPD,NMVECMAX))
 
 ! allocations:
-      allocate(THETAS(IRID,NFUND,NCELLD))
+      allocate(THETAS(IRID,NFUND,NCELLD), THESME(IRID,NFUND,NCELLD))
 
 C     ..................................................................
 Consistency check
@@ -1141,7 +1151,10 @@ C ======================================================================
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
  
-      deallocate(thetas)
+      deallocate(thetas, thesme)
+      deallocate(vins, vons)
+      deallocate(vxcm, vxcnm)
+      deallocate(R2NEF,RHO2NS,RHO2NSNM)
  
 !       DEALLOCATE(VINS,VISP,VONS,ECOU,EPOTIN,ESPC,ESPV,EXC,A,B,DRDI,RMT,
 !      + RMTNEW,RWS,R,ECORE,THETAS,ZAT,THESME,VSPSMDUM,R2NEF,RHO2NS,RHOC,
@@ -1171,6 +1184,7 @@ c Input
      &     ,LMSP(NATYPD,LMXSPD),IRMIN(NATYPD)
       REAL*8 GSH(NGSHD),THETAS(IRID,NFUND,NCELLD),RFPI
      &     ,RMESH(IRMD,NATYPD)
+!       REAL*8 THESME(IRID,NFUND,NCELLD)
       REAL*8 THESME(IRID,NFUND,NCELLD)
       REAL*8 VSHIFT
 

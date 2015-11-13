@@ -82,7 +82,7 @@
 #ifdef CPP_OMP
       nth = omp_get_num_threads()
 #endif
-      !write(*,*) 'nth =',nth
+      write(1337,*) 'nth =',nth
 !$omp end single
 !$omp end parallel
 
@@ -164,15 +164,15 @@ c energy loop
        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 !$omp parallel do default(none) 
-!$omp& private(eryd,ie,i1,ir,irec,nvec,lm1,lm2,gmatprefactor) 
+!$omp& private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor) 
 !$omp& private(jlk_index,tmatll,ith,irec, ie_num) 
 !$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
 !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth) 
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
-!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,tmat_out)
-!$omp& shared(tmatsph)
-!$omp& shared(lly,deltae,dtmat_out,tral_out)
+!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll) !,tmat_out)
+!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
+!$omp& shared(lly,deltae,i1) !,dtmat_out,tral_out)
 !$omp& private(tralpha,alpha0,alphall,tmat0,alphasph,dtmatll,dalphall) 
 !$omp& private(aux,ideriv,ipiv) 
        DO IE=1,IELAST
@@ -201,7 +201,9 @@ c         ERYD = EZ(IE)
          ERYD = EZ(IE)+DFLOAT(SIGNDE)*DELTAE/2.D0 ! LLY
 !$omp critical
         WRITE(1337,*) 'energy:',IE,'',ERYD
-        !write(*,*) 'nested omp?',omp_get_nested()
+#ifdef CPP_OMP        
+        if(ie==1) write(1337,*) 'nested omp?',omp_get_nested()
+#endif
 !$omp end critical
 
 c contruct the spin-orbit coupling hamiltonian and add to potential

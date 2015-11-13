@@ -550,32 +550,4 @@ C
 
 
 C
-C Test qdos/gflle
-!       IF (OPT('qdos    ')) THEN
-!        DO IQ = 1,NQDOS                                                    ! qdos
-!         DO IE=1,IELAST                                                    ! qdos
-!          IF ((IQ.EQ.1).AND.(IE.EQ.1)) THEN                                ! qdos
-!             OPEN(33,                                                      ! qdos
-!      +        FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//         ! qdos
-!      +        "."//char(48+ISPIN)//".dat")                                ! qdos
-!             WRITE (33,*) ' '                                              ! qdos
-!             WRITE (33,8600) '# ISPIN=',ISPIN,' I1=',I1                    ! qdos
-!          ENDIF   ! IQ.EQ.1                                                ! qdos
-!             DENTOT2(ISPIN) = DCMPLX(0.D0,0.D0)                            ! qdos
-!             DENTMP2(:,ISPIN) = DCMPLX(0.D0,0.D0)                          ! qdos
-!               DO L1 = 0,LMAXD                                             ! qdos
-!                 DO M1 = -L1,L1                                            ! qdos
-!                   LM1 = L1*(L1+1)+M1+1                                    ! qdos
-!                     DENTMP2(L1,ISPIN) = DENTMP2(L1,ISPIN) +               ! qdos
-!      &              GFLLE(LM1+LMSHIFT1(ISPIN),LM1+LMSHIFT2(ISPIN),IE,IQ)  ! qdos
-!                 ENDDO                                                     ! qdos
-!                 DENTOT2(ISPIN) = DENTOT2(ISPIN) + DENTMP2(L1,ISPIN)       ! qdos
-!               ENDDO                                                       ! qdos
-! c    write qdos.nn.s.dat                                                  ! qdos
-!             WRITE(33,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),       ! qdos
-!      &       -DIMAG(DENTOT2(ISPIN))/PI,(-DIMAG(GFLLE(LM1+LMSHIFT1(ISPIN)
-!      &                     ,LM1+LMSHIFT2(ISPIN),IE,IQ))/PI,LM1=1,LMMAXD)  ! qdos
-!         ENDDO ! IE
-!        ENDDO ! IQ
-!       ENDIF ! qdos
       END

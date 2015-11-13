@@ -1,5 +1,11 @@
- *.mod
- *.x
- *~
- */*~
- *.o
+*.mod
+*.x
+*~
+*/*~
+*.o
+ALL_SOURCE_FILES/inc.p
+*.png
+all_incp_incudes.txt
+/doc/
+/test/
+*.py

@@ -42,8 +42,6 @@ INCP = ./inc.p
 INCR = ./sprkkr_rmesh.dim
 
 
-#mod_opt_test.o  : $(COM)/mod_opt_test.F90                 ; \
-#                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_opt_test.F90 -c -o $@
 mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_mympi.F90 -c -o $@
 mod_types.o  : $(COM)/mod_types.F90                 ; \
@@ -51,7 +49,7 @@ mod_types.o  : $(COM)/mod_types.F90                 ; \
 mod_timing.o  : $(COM)/mod_timing.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_timing.F90 -c -o $@
 
-FILENAME0 = kkr.x  #kkr0.exe
+FILENAME0 = kkr.x
 include makefile0
 OBJECTS0 = $(PROGOBJS0)
 
@@ -102,16 +100,10 @@ mpi:      CPP = -D CPP_MPI
 # Compiler flags                                   #
 ####################################################
 # Default:
-# use -mcmodel=medium -shared-intel if you get the error message 
-# '...relocation truncated to fit...' when trying to compile, 
-# this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O2 -r8 -traceback -mcmodel=medium -shared-intel #-traceback -CB -check all -g
-#FFLAGS       =  -O2 -r8 -traceback -mcmodel=large -shared-intel -heap-arrays #-traceback -CB -check all -g
+FFLAGS       =  -O2 -r8 -traceback 
 
-## mac:
-##FFLAGS      +=  -mmacosx-version-min=10.5
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 -r8 
+openmp:   FFLAGS = -O2 -r8  
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -CB -check all -traceback -mcmodel=medium
 

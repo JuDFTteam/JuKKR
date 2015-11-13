@@ -172,6 +172,8 @@ CF90--------------------------------------------------------------------
                      IF ( NLIN.GT.NGCLUS*NGCLUS ) 
      &                    STOP "<ROTGLL>: NLIN.GT.(NATOMIMP*LMMAXD)**2"
                      GCLUST(NLIN) = GLL(LM1,LM2,IQ,JQ)
+                     !test
+                     WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
                   END DO
                END DO
             END DO
