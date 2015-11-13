@@ -19,14 +19,15 @@
 # specify the compiler which is going to be used   #
 ####################################################
 # default value
-#FC =  ifort
+FC =  ifort
 # on Aachen cluster:
 # $(FC) points to standard compiler in environment
 #
 
 # change default value if a flag is matched
-#mpi:        FC = mpiifort
-mpi:        FC = $(MPIFC)
+mpi:        FC = mpiifort
+# Aachen cluster:
+#mpi:        FC = $(MPIFC)
 mpitrace:  FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
 gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
@@ -56,17 +57,19 @@ OBJECTS2 = $(OBJECTS_TYPE) $(OBJECTS_MATH) $(OBJECTS_DIRAC2) $(OBJECTS_LDAU) $(O
 ####################################################
 
 # standart libs
-#LLIBS = -llapack_ifort -lblas_ifort  -L/usr/local/intel/lib/intel64 -lifcore -limf  -Wl,-rpath,/usr/local/intel/lib/intel64
+LLIBS = -llapack_ifort -lblas_ifort  -L/usr/local/intel/lib/intel64 -lifcore -limf  -Wl,-rpath,/usr/local/intel/lib/intel64
 # Aachen cluster
-#LLIBS =-L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 ### for sequential libraries (no hybrid parallelisation) use this
-LLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+#LLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 # openmp libs
-#LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+# Aachen cluster
+#LLIBSOPENMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 
+
 ### link parallel omp libraries for hybrid parallelisation
-LLIBSOPENMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 
 LLIBSOPENMP+=  -lmkl_intel_thread -liomp5
+
 
 # Special libraries for gfortran:
 LLIBSGFORT = -L/usr/local/nag/lib -lnag -llapack_ifort -lblas_ifort  -L/usr/local/intel/current/lib/intel64 -lifcore -liomp5 -lintlc -limf -lirc -lpthread -Wl,-rpath,/usr/local/intel/current/lib/intel64
