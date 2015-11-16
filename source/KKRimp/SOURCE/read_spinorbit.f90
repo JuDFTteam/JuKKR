@@ -10,15 +10,16 @@ subroutine read_spinorbit(natom,cellnew,myrank)
 ! local variables
 integer                                  :: iatom,ios,ival
 
-
 open(unit=1000001, file='kkrflex_spinorbitperatom', status='old', iostat=ios)
 if (ios/=0) then
    write(1337,*) '[read_spinorbit] no kkrflex_spinorbitperatom exists'
-   write(1337,*) '[read_spinorbit] setting cellnew(1:natom)%use_spinorbit=1 for all atoms'
-   cellnew(1:natom)%use_spinorbit=1
    if (myrank==0) then
      write(*,*) '[read_spinorbit] no kkrflex_spinorbitperatom exists'
    end if
+!set default value
+do iatom = 1, natom
+    cellnew(iatom)%use_spinorbit=1
+enddo
 else 
   if (myrank==0) then
     print *, 'Using kkrflex_spinorbitperatom '
