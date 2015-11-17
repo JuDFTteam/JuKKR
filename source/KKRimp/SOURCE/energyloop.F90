@@ -663,13 +663,13 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
              end if
           end if
 
-          write(*,*) 'entering rhovalnew iatom',iatom
+          !write(*,*) 'entering rhovalnew iatom',iatom
           call rhoval_new(ez(ie),ie,wez(ie),cellnew(iatom),wavefunction(iatom,ispin), &                  
                cell(iatom),gmatonsite(iatom,ispin)%gmat,iatom,ispin,nspin,SHAPEFUN(iatom), &
                GAUNTCOEFF(lmaxatom(iatom)), ZATOM(iatom), DENSITY(iatom), &
                LMAXATOM(iatom),(LMAXATOM(iatom)+1)**2,config,lmaxd,energyparts,config%kspinorbit,use_fullgmat,nspinden,efermi, &
                ldau(iatom))        ! lda+u
-          write(*,*) 'exited rhovalnew iatom',iatom
+          !write(*,*) 'exited rhovalnew iatom',iatom
 
 
           if ( wavefunction(iatom,ispin)%deallocate==1 ) then 
