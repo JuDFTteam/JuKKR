@@ -77,54 +77,57 @@ do while (ios/=-1)
    if (string1(1:1) == "!" .or. string1(1:1) == "#") cycle
    if (len(trim(string1)) == 0) cycle
 
-   read(string1,*) keyword2
-   keyword1=trim(keyword2)
+   string1 = eq2blanc(string1)            ! getting rid of '=' signs in string                               ! Benedikt 2014/12
+   read(string1,*) keyword2               ! detach keyword from rest of string (i.e. values and/or comments) ! Benedikt 2014/12
+!   read(string1,*) keyword2
+   keyword1=trim(get_uppercase(keyword2)) ! force keyword to be uppercase and get rid of blancs (' ')        ! Benedikt 2014/12
+!   keyword1=trim(keyword2) 
    select case (keyword1)
-      case ('NSPIN=')
+      case ('NSPIN')
          read(string1,*,iostat=ios2) keyword1, config%nspin
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('INS=')
+      case ('INS')
          read(string1,*,iostat=ios2) keyword1, config%INS
          config%kshape=config%INS
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('WAVEFUNC_RECALC_THRESHHOLD=')
+      case ('WAVEFUNC_RECALC_THRESHHOLD')
          read(string1,*,iostat=ios2) keyword1, config%wavefunc_recalc_threshhold
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('XC=')
+      case ('XC')
          read(string1,*,iostat=ios2) keyword1, config%modeexcorr
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('ICST=')
+      case ('ICST')
          read(string1,*,iostat=ios2) keyword1, config%icst
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('HFIELD=')
+      case ('HFIELD')
          read(string1,*,iostat=ios2) keyword1, config%hfield, config%hfield_apply_niter
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('HFIELD2=')
+      case ('HFIELD2')
          read(string1,*,iostat=ios2) keyword1, config%hfield2(1),config%hfield2(2), config%hfield_apply_niter2
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
 
-      case ('KVREL=')
+      case ('KVREL')
          read(string1,*,iostat=ios2) keyword1, config%kvrel
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
@@ -141,139 +144,139 @@ do while (ios/=-1)
          else
            stop'[config] error KVREL=?'
          end if
-      case ('MIXFAC=')
+      case ('MIXFAC')
          read(string1,*,iostat=ios2) keyword1, config%mixfac
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('CALCFORCE=')
+      case ('CALCFORCE')
          read(string1,*,iostat=ios2) keyword1, config%calcforce
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('CALCJIJMAT=')
+      case ('CALCJIJMAT')
          read(string1,*,iostat=ios2) keyword1, config%calcJijmat
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('FCM=')
+      case ('FCM')
          read(string1,*,iostat=ios2) keyword1, config%fcm
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('QBOUND=')
+      case ('QBOUND')
          read(string1,*,iostat=ios2) keyword1, config%qbound
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('IMIX=')
+      case ('IMIX')
          read(string1,*,iostat=ios2) keyword1, config%IMIX
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('NSIMPLEMIXFIRST=')
+      case ('NSIMPLEMIXFIRST')
          read(string1,*,iostat=ios2) keyword1, config%NSIMPLEMIXFIRST
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('IMIXSPIN=')
+      case ('IMIXSPIN')
          read(string1,*,iostat=ios2) keyword1, config%IMIXSPIN
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('SPINMIXFAC=')
+      case ('SPINMIXFAC')
          read(string1,*,iostat=ios2) keyword1, config%SPINMIXFAC
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('SPINMIXBOUND=')
+      case ('SPINMIXBOUND')
          read(string1,*,iostat=ios2) keyword1, config%spinmixbound
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('CALCORBITALMOMENT=')
+      case ('CALCORBITALMOMENT')
          read(string1,*,iostat=ios2) keyword1, config%calcorbitalmoment
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('ITDBRY=')
+      case ('ITDBRY')
          read(string1,*,iostat=ios2) keyword1, config%ITDBRY
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('LATTICE_RELAX=')
+      case ('LATTICE_RELAX')
          read(string1,*,iostat=ios2) keyword1, config%LATTICE_RELAX
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('SCFSTEPS=')
+      case ('SCFSTEPS')
          read(string1,*,iostat=ios2) keyword1, config%SCFSTEPS
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('SPINORBIT=')
+      case ('SPINORBIT')
          read(string1,*,iostat=ios2) keyword1, config%kspinorbit
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('NCOLL=')
+      case ('NCOLL')
          read(string1,*,iostat=ios2) keyword1, config%ncoll
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('NPAN_LOG=')
+      case ('NPAN_LOG')
          read(string1,*,iostat=ios2) keyword1, config%NPAN_LOG
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('NPAN_EQ=')
+      case ('NPAN_EQ')
          read(string1,*,iostat=ios2) keyword1, config%NPAN_EQ
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('NCHEB=')
+      case ('NCHEB')
          read(string1,*,iostat=ios2) keyword1, config%NCHEB
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('NPAN_LOGPANELFAC=')
+      case ('NPAN_LOGPANELFAC')
          read(string1,*,iostat=ios2) keyword1, config%npan_logfac
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('RADIUS_LOGPANELS=')
+      case ('RADIUS_LOGPANELS')
          read(string1,*,iostat=ios2) keyword1, config%RLOGPAN
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('RADIUS_MIN=')
+      case ('RADIUS_MIN')
          read(string1,*,iostat=ios2) keyword1, config%RMIN
          if (ios2 /= 0) then
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('TESTFLAG=')
+      case ('TESTFLAG')
          string2=' x x x x x x x x x x x x x x x x x x x x'
          string1=trim(string1)//string2
          read(string1,*,iostat=ios2) keyword,testflag
@@ -281,7 +284,7 @@ do while (ios/=-1)
             write(*,*) 'error in config ', keyword1
             stop
          end if
-      case ('RUNFLAG=')
+      case ('RUNFLAG')
          string2=' x x x x x x x x x x x x x x x x x x x x'
          string1=trim(string1)//string2
          read(string1,*,iostat=ios2) keyword,runflag
@@ -378,23 +381,93 @@ function config_testflag(ctestflag) result(istestflag)
 
 istestflag=.false.
 do itemp=1,dim_flags
-    if (trim(ctestflag)==trim(testflag(itemp))) istestflag=.true.
+!    if (trim(ctestflag)==trim(testflag(itemp))) istestflag=.true.
+    if (trim(get_uppercase(ctestflag))==trim(get_uppercase(testflag(itemp)))) istestflag=.true. ! now comparison is case-insensitive ! provided by Benedikt, December 2014
 end do 
 end function config_testflag
 
-function config_runflag(crunflag) result(istestflag)
+function config_runflag(crunflag) result(isrunflag)
   use type_config, only: runflag,dim_flags
   implicit none
 !interface variables
   character(len=*),intent(in)      :: crunflag
-  logical                          :: istestflag
+  logical                          :: isrunflag
 !local variables
   integer                :: itemp
 
-istestflag=.false.
+isrunflag=.false.
 do itemp=1,dim_flags
-  if (trim(crunflag)==trim(runflag(itemp))) istestflag=.true.
+!    if (trim(crunflag)==trim(runflag(itemp))) isrunflag=.true.
+    if (trim(get_uppercase(crunflag))==trim(get_uppercase(runflag(itemp)))) isrunflag=.true. ! now comparison is case-insensitive ! provided by Benedikt, December 2014
 end do 
 end function config_runflag
+
+    !!!!!!!! following functions get_uppercase and eq2blanc provided by Benedikt !!!!!!!!!!!
+    !!!!!!!!                          (December 2014)                            !!!!!!!!!!!
+
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+
+  function get_uppercase(strIn) result (strOut)
+      ! added by Benedikt 2014/07
+      ! Adapted from http://www.star.le.ac.uk/~cgp/fortran.html (25 May 2012)
+
+      implicit none
+
+      !
+      character(len=*), intent(in) :: strIn
+      character(len=len(strIn))    :: strOut
+      !
+      integer           :: i,j
+
+      if (iachar("a")-32 .ne. iachar("A") ) stop'[function get_uppercase] Alphabetical order in character list is not ASCII format.'
+
+      do i = 1, len(strIn)
+           j = iachar(strIn(i:i))
+           if (j>= iachar("a") .and. j<=iachar("z") ) then
+                strOut(i:i) = achar(iachar(strIn(i:i))-32)
+           else
+                strOut(i:i) = strIn(i:i)
+           end if
+      end do
+
+  end function get_uppercase
+
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+
+  function eq2blanc(strIn) result (strOut)
+      ! added by Benedikt 2013/07
+      !
+      ! Equal signs ('=') in incoming string  are replaced in outgoing string by blancs (' ')
+
+      implicit none
+
+      !
+      character(len=*), intent(in) :: strIn
+      character(len=len(strIn))    :: strOut
+      !
+      integer           :: i,j
+
+      do i = 1, len(strIn)
+           j = iachar(strIn(i:i))
+           if ( j == iachar("=") ) then
+                strOut(i:i) = " "
+           else
+                strOut(i:i) = strIn(i:i)
+           end if
+      end do
+
+  end function eq2blanc
+
+
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
+    ! --------------------------------------------------------------------------------------
 
 end module mod_config
