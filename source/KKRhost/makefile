@@ -130,7 +130,7 @@ SOURCEDIR = .
 .PHONY: getversion
 
 getversion:
-	python $(COM)/getversion.py
+	$(COM)/getversion.py
 
 mkdirobj:
 	@if test ! -d $(OBJ); \

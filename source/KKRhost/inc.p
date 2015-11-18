@@ -88,7 +88,7 @@ C     general settings
       PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 16)
+      PARAMETER ( NAEZD = 1 )
       PARAMETER ( NATYPD = NAEZD )
 !      PARAMETER ( NSHELD = NATYPD + 155)
       PARAMETER ( NSHELD = NATYPD + 300)
