@@ -107,25 +107,40 @@ mpidebug: FFLAGS = -CB -check all -traceback -g
 FILENAME = kkrflex.exe
 SOURCEDIR = .
 
-cbg:   $(OBJECTS)
+.PHONY: cbg
+.PHONY: hybrid
+.PHONY: openmp
+.PHONY: debug
+.PHONY: pg
+.PHONY: gfort
+.PHONY: mpi
+.PHONY: mpitrace
+.PHONY: mpidebug
+.PHONY: mac
+.PHONY: getversion
+
+getversion:
+	$(SOURCEDIR)/getversion.sh
+
+cbg:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-hybrid:   $(OBJECTS)
+hybrid:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSOPENMP)
-openmp:   $(OBJECTS)
+openmp:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSOPENMP)
-debug:   $(OBJECTS)
+debug:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-pg:   $(OBJECTS)
+pg:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-gfort: $(OBJECTS)
+gfort: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSGFORT)
-mpi:   $(OBJECTS)
+mpi:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-mpitrace: $(OBJECTS)
+mpitrace: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-mpidebug: $(OBJECTS)
+mpidebug: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-mac:   $(OBJECTS)
+mac:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSMAC)
 
 %.o: $(SOURCEDIR)/%.f90
