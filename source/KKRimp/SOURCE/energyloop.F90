@@ -106,6 +106,7 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
      double complex      ::   orbitalmom_temp3(2,3) !,ez(iemxd), &
      integer            :: idotime 
      double precision,allocatable   :: testpotdummy(:,:)
+     logical            ::   calcleft
 #ifdef MPI
        INCLUDE "mpif.h"
 #endif
@@ -520,11 +521,17 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
 
            if ( .not. config_testflag('calctmatfirstIter') .or.  itscf==1 ) then
+              !determine if left solution is calculated or not:
+              if (iatom > config%wavefunc_recalc_threshhold) then
+                 calcleft=.false. ! calculate left solution if WF is stored
+              else
+                 calcleft=.true.  ! calculate only right solution of WF is not stored
+              end if
 ! Pass  array wldaumat into subroutine, to be added to vpotll in the subroutine ! lda+u
               call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                    cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                    use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
-                   ie,ldau(iatom))        ! lda+u
+                   ie,ldau(iatom),calcleft)    ! lda+u
 
 
               if ( iatom > config%wavefunc_recalc_threshhold ) then
@@ -532,7 +539,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
                     call wavefunctodisc_write(wavefunction(iatom,ispin),cellnew(iatom),iatom,ispin,my_rank)
                  else
                     deallocate(wavefunction(iatom,ispin)%rll,     wavefunction(iatom,ispin)%sll)
-                    if (config%kspinorbit==1) then
+                    if ((config%kspinorbit==1).and.calcleft) then
                        deallocate(wavefunction(iatom,ispin)%rllleft, wavefunction(iatom,ispin)%sllleft)
                     end if
                  end if
@@ -658,7 +665,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
                 call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                      cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                      use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
-                     ie,ldau(iatom))        ! lda+u
+                     ie,ldau(iatom),.true.)        ! lda+u
 
              end if
           end if
