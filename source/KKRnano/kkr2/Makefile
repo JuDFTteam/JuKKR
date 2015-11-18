@@ -18,7 +18,7 @@ FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FCFLAGS += -gen-interfaces -warn interfaces -DUSE_MTRADII -DPRINT_MTRADII -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS = -O3
@@ -42,6 +42,24 @@ LDFLAGS =
 # set run paths to look for shared libraries (-Wl means pass to linker)
 LDFLAGS +=  -llapack_ifort -lblas_ifort
 LDFLAGS += -lfftw3
+endif
+
+# ========= IFF003 Cluster ============
+ifeq ($(PLATFORM),iff003)
+FC = mpiifort -warn
+FC90 = mpiifort -warn
+# -module <path> specifies where to put .mod files
+FCFLAGS = -openmp -mkl -module $(BUILDDIR)
+FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FC90FLAGS =
+FCFLAGS += -I $(BUILDDIR)
+LDFLAGS = -O3
+ifeq ($(TYPE),debug)
+FCFLAGS += -g
+endif
+# set run paths to look for shared libraries (-Wl means pass to linker)
+LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
+LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 endif
 
 # ================== JURECA ======================

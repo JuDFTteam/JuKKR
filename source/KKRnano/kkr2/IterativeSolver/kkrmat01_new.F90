@@ -304,6 +304,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   double complex :: TRACEK
   double complex :: GTDPDE
   integer :: NAEZ
+  integer :: nacls
   logical :: initial_zero
   type (ClusterInfo), pointer :: cluster_info
   double complex, allocatable :: MSSQ (:,:)  
@@ -330,6 +331,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   lmmaxd = ms%lmmaxd
   naez = ms%naez
   cluster_info => ms%cluster_info
+  nacls = cluster_info%naclsd
 
 !  double complex :: b(size(ms%GLLH))
 !  integer :: ib(size(ms%sparse%ia))
@@ -392,16 +394,16 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 
 
       if (.not. allocated(GLLKE_X)) then
-      allocate(GLLKE_X(size(ms%mat_B,1), size(ms%mat_B,1)))
+      allocate(GLLKE_X(NAEZ*LMMAXD, NACLS*LMMAXD))
     end if
         if (.not. allocated(DGDE)) then
-      allocate(DGDE(size(ms%mat_B,1), size(ms%mat_B,1)))
+      allocate(DGDE(NAEZ*LMMAXD, NACLS*LMMAXD))
     end if
          if (.not. allocated(GLLKE_X_T)) then
-      allocate(GLLKE_X_T(size(ms%mat_B,1), size(ms%mat_B,1)))
+      allocate(GLLKE_X_T(NACLS*LMMAXD, NAEZ*LMMAXD))
     end if
          if (.not. allocated(DGDE_T)) then
-      allocate(DGDE_T(size(ms%mat_B,1), size(ms%mat_B,1)))
+      allocate(DGDE_T(NACLS*LMMAXD, NAEZ*LMMAXD))
     end if
     if (.not. allocated(GLLKE_X2)) then
       allocate(GLLKE_X2(NAEZ*LMMAXD,LMMAXD))
@@ -522,8 +524,8 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
     if (.not. allocated(full)) then
       allocate(full(size(ms%mat_B,1), size(ms%mat_B,1)))
     end if
-!    call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
-!                                   ms%sparse%kvstr, ms%sparse%kvstr, full)
+    call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
+                                   ms%sparse%kvstr, ms%sparse%kvstr, full)
 
 !call vbrcsr(ib, jb, ib, ms%sparse%blk_nrows, ms%sparse%kvstr, ms%sparse%kvstr, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%GLLH, size(ms%GLLH), ierr)
 !call csrdns(nrow,ncol,a,ja,ia,dns,ndns,ierr)

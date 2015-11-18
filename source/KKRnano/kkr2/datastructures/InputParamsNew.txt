@@ -1,3 +1,4 @@
+i fred 1
 i icst 4
 i kpre 0
 dv  bravais_b 3

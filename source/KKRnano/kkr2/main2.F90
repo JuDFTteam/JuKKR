@@ -48,6 +48,8 @@ program MAIN2
   integer :: ilocal
   integer :: num_local_atoms
 
+  character(len=7) :: num
+
   type(KKRnanoParallel) :: my_mpi
 
   integer :: flag
@@ -79,6 +81,21 @@ program MAIN2
 #ifdef DEBUG_NO_ELECTROSTATICS
     write(*,*) "DEBUG_NO_ELECTROSTATICS: no electrostatics - results are wrong."
 #endif
+#ifdef DEBUG_NO_VINS
+      write(*,*) 'WARNING: DEBUG_NO_VINS enabled; non-spherical part of potential is set to zero!!!'
+#endif
+#ifdef PRINT_MTRADII
+      write(*,*) 'PRINT_MTRADII enabled; rmtref (0.995 * max_muffin_tin by default) and &
+       radius_muffin_tin (0.98 * max_muffin_tin by default) are printed &
+       consecutively to files &
+       mtradii_out'
+#endif
+#ifdef USE_MTRADII
+      write(*,*) 'USE_MTRADII enabled; rmtref (0.995 * max_muffin_tin by default) and &
+       radius_muffin_tin (0.98 * max_muffin_tin by default) are taken from files mtradii_in'
+#endif
+ 
+
   endif
 
 !------------------------------------------------------------------------------
@@ -158,6 +175,47 @@ program MAIN2
     call createEBalanceHandler(ebalance_handler, emesh%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
     call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
+
+#ifdef DEBUG_NO_VINS
+      do ilocal = 1, num_local_atoms
+        atomdata => getAtomdata(calc_data, ilocal)
+        atomdata%potential%VINS=0.0   
+      end do
+#endif
+!#ifdef PRINT_MTRADII
+!      open (20, file='mtradii',form='formatted')
+!      do ilocal = 1, num_local_atoms
+!          atomdata => getAtomdata(calc_data, ilocal)
+!          write(20,*) atomdata%rmtref
+!          write(20,*) atomdata%radius_muffin_tin
+!      end do
+!      endfile (20)      
+!      close (20)
+!#endif
+#ifdef PRINT_MTRADII
+   do ilocal = 1, num_local_atoms
+          atomdata => getAtomdata(calc_data, ilocal)
+          I1=getAtomIndexOfLocal(calc_data, ilocal)
+          write(num, '(I7.7)') I1
+          open(20, file="mtradii_out." // num, form='formatted')
+          write(20,*) atomdata%rmtref
+          write(20,*) atomdata%radius_muffin_tin
+          endfile (20)
+          close (20)
+    end do
+#endif
+#ifdef USE_MTRADII
+   do ilocal = 1, num_local_atoms
+          atomdata => getAtomdata(calc_data, ilocal)
+          I1=getAtomIndexOfLocal(calc_data, ilocal)
+          write(num, '(I7.7)') I1
+          open(20, file="mtradii_in." // num, form='formatted')
+          read(20,*) atomdata%rmtref
+          read(20,*) atomdata%radius_muffin_tin
+          endfile (20)
+          close (20)
+    end do
+#endif
 
 ! ######################################################################
 ! ######################################################################

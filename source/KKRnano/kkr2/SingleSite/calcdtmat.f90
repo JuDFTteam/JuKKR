@@ -1,6 +1,6 @@
 subroutine CALCDTMAT &
 (LDAU,NLDAU,ICST, &
-NSRA,EZ,DZ, &
+NSRA,FRED,EZ,DZ, &
 DRDI,R,VINS, &
 VISP,ZAT,IPAN, &
 IRCUT,CLEB,LOFLM,ICLEB,IEND, &
@@ -23,7 +23,7 @@ ncleb, ipand, irmd, irnsd)
   !                                = (2*LMAX+1)**2)
   !      PARAMETER          (IRMIND=IRMD-IRNSD)
 
-  integer            LMAX,LM1,LM2,IEND
+  integer            LMAX,LM1,LM2,IEND,FRED
   !     ..
 
   double complex     DZ
@@ -67,7 +67,7 @@ ncleb, ipand, irmd, irnsd)
   EZ2 = EZ - DZ
 
   call CALCTMAT(LDAU,NLDAU,ICST, &
-  NSRA,EZ1, &
+  NSRA,FRED,EZ1, &
   DRDI,R,VINS, &
   VISP,ZAT,IPAN, &
   IRCUT,CLEB,LOFLM,ICLEB,IEND, &
@@ -76,7 +76,7 @@ ncleb, ipand, irmd, irnsd)
   ncleb, ipand, irmd, irnsd)
 
   call CALCTMAT(LDAU,NLDAU,ICST, &
-  NSRA,EZ2, &
+  NSRA,FRED,EZ2, &
   DRDI,R,VINS, &
   VISP,ZAT,IPAN, &
   IRCUT,CLEB,LOFLM,ICLEB,IEND, &

@@ -10,6 +10,7 @@
 
 module InputParams_mod
 type InputParams
+  integer :: fred
   integer :: icst
   integer :: kpre
   double precision :: bravais_b (3)
@@ -80,6 +81,17 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
   end if
 
 
+  call getValueInteger(conf, "fred", confvalues%fred, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%fred = 1
+    write(*,*) "WARNING: Bad/no value given for fred. Set to fred = 1"
+    ierror = 0
+  end if
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for fred."
+    call destroyConfigReader(conf)
+    return
+  end if
   call getValueInteger(conf, "icst", confvalues%icst, ierror)
   if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
     confvalues%icst = 4
@@ -516,6 +528,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
 
   ierror = 0
   open(FILEHANDLE, file=filename, form="unformatted")
+  read(FILEHANDLE) confvalues%fred
   read(FILEHANDLE) confvalues%icst
   read(FILEHANDLE) confvalues%kpre
   read(FILEHANDLE) confvalues%bravais_b
@@ -576,6 +589,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
 
   ierror = 0
   open(FILEHANDLE, file=filename, form="unformatted")
+  write(FILEHANDLE) confvalues%fred
   write(FILEHANDLE) confvalues%icst
   write(FILEHANDLE) confvalues%kpre
   write(FILEHANDLE) confvalues%bravais_b

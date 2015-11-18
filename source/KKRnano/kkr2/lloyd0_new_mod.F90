@@ -7,7 +7,7 @@ contains
 !----------------------------------------------------------------------------
 !> Lloyd's formula.
 !> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
-subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data)
+subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, FRED, GMATN, gaunts, ldau_data)
   use BasisAtom_mod
   use RadialMeshData_mod
   use CellData_mod
@@ -20,6 +20,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
   integer, intent(in) :: LLY  !< use Lloyd 0/1
   integer, intent(in) :: ICST !< num. Born iterations
   integer, intent(in) :: NSRA !< flag scalar relativistic
+  integer, intent(in) :: FRED !< flag Fredholm/Volterra
   double complex, intent(in) :: LLY_GRDT(:,:) ! in
 
   double complex, intent(in) :: GMATN(:,:,:,:) !in
@@ -64,7 +65,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
     call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
                     atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
                     cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
-                    gaunts%JEND,gaunts%LOFLM,ICST,ielast,gaunts%IEND,NSPIND,NSRA, &
+                    gaunts%JEND,gaunts%LOFLM,ICST,ielast,gaunts%IEND,NSPIND,NSRA,FRED, &
                     emesh%WEZRN,RNORM, &
                     GMATN, &
                     LLY_GRDT, &
@@ -93,7 +94,7 @@ end subroutine
 subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   VINS,VISP,THETAS,ZAT,ICLEB, &
                   IFUNM1,IPAN,IRCUT,LMSP1,JEND,LOFLM,ICST, &
-                  IELAST,IEND,NSPIN,NSRA, &
+                  IELAST,IEND,NSPIN,NSRA,FRED, &
                   WEZRN,RNORM, &                                     ! <
                   GMATN, &                                           ! >
                   LLY_GRDT, &                                        ! >
@@ -140,6 +141,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer::IEND
   integer::NSPIN !in
   integer::NSRA  !in
+  integer::FRED  !in
   double complex :: WEZRN(IEMXD,2)  ! out
   double precision::RNORM(IEMXD,2)  !out
   double complex :: GMATN((LMAX+1)**2, (LMAX+1)**2, IEMXD, NSPIN) ! inout?
@@ -250,7 +252,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
       do ISPIN = 1,NSPIN
 
-        call RHOVAL(.false.,ICST,IELAST,NSRA, &
+        call RHOVAL(.false.,ICST,IELAST,NSRA,FRED, &
                     ISPIN,NSPIN, &
                     EZ,WEZ,DRDI,R,IRMIN, &
                     VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &

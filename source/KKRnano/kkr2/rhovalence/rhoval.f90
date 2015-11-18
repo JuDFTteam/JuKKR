@@ -1,4 +1,4 @@
-subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
+subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA,FRED, &
                   ISPIN,NSPIN, &
                   EZ,WEZ,DRDI,R,IRMIN, &
                   VINS,VISP,ZAT,IPAN,IRCUT, &
@@ -31,7 +31,7 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
   !     .. Scalar Arguments ..
   double precision ::   ZAT
   integer ::            ICST,IELAST,IEND,IPAN,ISPIN,NSPIN,NSRA, &
-  IRMIN,NLDAU
+  IRMIN,NLDAU,FRED
   logical ::            LDORHOEF,LDAU
   !     ..
   !     .. Array Arguments ..
@@ -253,7 +253,7 @@ subroutine RHOVAL(LDORHOEF,ICST,IELAST,NSRA, &
     ! non-spherical
     
     call PNSQNS(AR,CR,DR,DRDI,EK,ICST,PZ,QZ,FZ,SZ, &
-                PNS,QNS,NSRA,VINS,IPAN,IRCUT, &
+                PNS,QNS,NSRA,FRED,VINS,IPAN,IRCUT, &
                 CLEB,ICLEB,IEND,LOFLM,LMAXD,ISPIN, &
                 LDAU,NLDAU,LLDAU, &
                 WMLDAU,WMLDAUAV,LDAUCUT, &

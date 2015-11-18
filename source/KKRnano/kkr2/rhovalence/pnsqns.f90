@@ -1,4 +1,4 @@
-subroutine pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz,pns,qns,nsra, &
+subroutine pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz,pns,qns,nsra,fred, &
 vins,ipan,ircut,cleb,icleb,iend,loflm,lkonv, &
 ispin,ldau,nldau,lldau, &
 wmldau,wmldauav,ldaucut, &
@@ -15,7 +15,7 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
   !     ..
   !     .. Scalar Arguments ..
   double complex     ek
-  integer            icst,iend,ipan,lkonv,nsra,nldau,ispin
+  integer            icst,iend,ipan,lkonv,nsra,nldau,ispin,fred
   logical            ldau
   !     ..
   !     .. Array Arguments ..
@@ -164,7 +164,7 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
   !
   call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, &
   pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, &
-  pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
+  pns(1,1,irmind,2),dmat,nsra,fred,irmind,irmd,ipand,lmmaxd)
   !
 
   return

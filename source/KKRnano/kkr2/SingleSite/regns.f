@@ -1,6 +1,6 @@
       SUBROUTINE REGNS(AR,BR,EFAC,PNS,VNSPLL,ICST,IPAN,IRCUT,PZLM,
      +                   QZLM,PZEKDR,QZEKDR,EK,ADER,AMAT,BDER,BMAT,NSRA,
-     +                   IRMIND,IRMD,IPAND,LMMAXD)
+     +                   FRED,IRMIND,IRMD,IPAND,LMMAXD)
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     determines the regular non spherical wavefunctions , the
@@ -52,7 +52,7 @@ c           false -> volterra equation
 c-----------------------------------------------------------------------
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX EK
-      INTEGER ICST,IPAN,IPAND,IRMD,IRMIND,LMMAXD,NSRA
+      INTEGER ICST,IPAN,IPAND,IRMD,IRMIND,LMMAXD,NSRA,FRED
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX ADER(LMMAXD,LMMAXD,IRMIND:IRMD),
@@ -84,8 +84,6 @@ C     .. Parameters ..
       DOUBLE COMPLEX CONE,CZERO
       PARAMETER (CONE= (1.0D0,0.0D0), CZERO= (0.D0,0.D0))
 C     ..
-      LOGICAL FRED
-      DATA FRED/.false./
 C     ..
 c      do 777 ir=360,422
 c 777  write(*,*)ir,dreal(pzlm(1,ir,1)),dreal(qzlm(1,ir,1))
@@ -104,7 +102,7 @@ c 4          CONTINUE
 c 3        CONTINUE
 c 2      CONTINUE
 c 1    CONTINUE
-      IF(FRED)THEN
+      IF(FRED==1)THEN
       DO 70 I = 0,ICST
 c---> set up integrands for i-th born approximation
         IF (I.EQ.0) THEN
@@ -149,10 +147,10 @@ c check convergence
  270  ERR=MAX(ERR,ABS(PNS1(LM1,LM2,IRC1)))
 
       ! convergence check
-      IF(I.EQ.ICST.AND.ERR.GT.1D-3) THEN
-      WRITE(*,*)'regns.f: Fredholm equation does not converge'
-      STOP 'Error 1 in regns.f'
-      ENDIF
+c      IF(I.EQ.ICST.AND.ERR.GT.1D-3) THEN
+c      WRITE(*,*)'regns.f: Fredholm equation does not converge'
+c      STOP 'Error 1 in regns.f'
+c      ENDIF
 
       DO 280 J = 1,NSRA
       DO 280 IR = IRMIND,IRC1

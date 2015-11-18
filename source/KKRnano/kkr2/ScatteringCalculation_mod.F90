@@ -286,13 +286,13 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 !------------------------------------------------------------------------------
 
             call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                            params%NSRA, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
+                            params%NSRA, params%fred, gaunts, kkr%TMATN, kkr%TR_ALPH, ldau_data)
 
             jij_data%DTIXIJ(:,:,ISPIN) = kkr%TMATN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
             if(dims%LLY==1) then  ! calculate derivative of t-matrix for Lloyd's formula
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                            params%NSRA, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
+                            params%NSRA, params%fred, gaunts, kkr%DTDE, kkr%TR_ALPH, ldau_data)
             end if
 
             ! t_ref-matrix of central cluster atom has index 1

@@ -426,6 +426,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   double complex, parameter      :: CZERO = (0.0d0, 0.0d0)
   logical :: LdoRhoEF
   integer :: I1
+  integer :: I2
   double precision :: denEf !< charge density at Fermi level
   double precision :: chrgNt !< charge neutrality
   double precision :: denEf_local
@@ -450,6 +451,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
   cell         => null()
 
   I1 = 0
+  I2 = 0
   CHRGSEMICORE=0.0d0 !< Initialize semicore charge to zero
 
   if (dims%LLY /= 0 .and. num_local_atoms > 1) then
@@ -457,11 +459,31 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 !    STOP
   endif
 
+  if (isMasterRank(my_mpi)) then
+  write(*,*) "PRINTING LLY_GRDT FROM MPI PROCESS ", getMyWorldRank(my_mpi)
+  do I2=1,arrays%IEMXD
+        write (*,*) kkr%LLY_GRDT(I2,1)
+  enddo
+  endif
   ! out: emesh, RNORM
   call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
                           emesh, densities%RNORM, &
-                          dims%LLY, params%ICST, params%NSRA, &
+                          dims%LLY, params%ICST, params%NSRA, params%FRED, &
                           kkr%GMATN, gaunts, ldau_data)
+
+  if (isMasterRank(my_mpi)) then
+  write(*,*) "PRINTING WEZRN FROM MPI PROCESS ", getMyWorldRank(my_mpi)
+  do  I2=1,arrays%IEMXD
+        write (*,*) emesh%WEZRN(I2,1)
+  enddo
+  endif 
+  
+  if (isMasterRank(my_mpi)) then
+  write(*,*) "PRINTING RNORM FROM MPI PROCESS ", getMyWorldRank(my_mpi)
+  do I2=1,arrays%IEMXD
+        write (*,*) densities%RNORM(I2,1)
+  enddo
+  endif 
 
   if (dims%LLY == 1) then
     TESTARRAYLOG(3, emesh%WEZRN)
@@ -493,7 +515,7 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
     densities%DEN = CZERO
 
     ! calculate valence charge density and band energies
-    call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
+    call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, params%FRED, &
                         densities%RHO2NS, densities%R2NEF, &
                         densities%DEN, energies%ESPV, kkr%GMATN, &
                         gaunts, emesh, ldau_data)

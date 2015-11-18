@@ -1,5 +1,5 @@
 subroutine CALCTMAT(LDAU,NLDAU,ICST, &
-NSRA,EZ, &
+NSRA,FRED,EZ, &
 DRDI,R,VINS,VISP,ZAT,IPAN, &
 IRCUT,CLEB,LOFLM,ICLEB,IEND, &
 TMATN,TR_ALPH,LMAX, &
@@ -30,6 +30,7 @@ ncleb, ipand, irmd, irnsd)
   !     .. Scalar Arguments ..
   double precision   ZAT
   integer            ICST,IEND,IPAN,NSRA,LMAX,NLDAU
+  integer            FRED
   double complex     TR_ALPH,EZ
   logical            LDAU
   !     ..
@@ -169,7 +170,7 @@ ncleb, ipand, irmd, irnsd)
   !-----------------------------------------------------------------------
   call PNSTMAT(DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS, &
   TMATN, &
-  VINS,IPAN,IRCUT,NSRA,CLEB,ICLEB,IEND,LOFLM, &
+  VINS,IPAN,IRCUT,NSRA,FRED,CLEB,ICLEB,IEND,LOFLM, &
   TMAT,DET,LMAX, &
   LDAU,NLDAU,LLDAU, &
   WMLDAU_ISPIN,WMLDAUAV,LDAUCUT, &

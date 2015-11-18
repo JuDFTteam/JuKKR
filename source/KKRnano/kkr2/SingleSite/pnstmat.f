@@ -1,6 +1,7 @@
 C>    Construct the t-matrix from radial solutions and potential
       SUBROUTINE PNSTMAT(DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS,TMATLL,VINS,
-     +                   IPAN,IRCUT,NSRA,CLEB,ICLEB,IEND,LOFLM,TMAT,
+     +                   IPAN,IRCUT,NSRA,FRED,CLEB,ICLEB,IEND,LOFLM,
+     +                   TMAT,
      +                   DET,LKONV,
      >                   LDAU,NLDAU,LLDAU,
      >                   WMLDAU_ISPIN,WMLDAUAV,LDAUCUT,
@@ -30,7 +31,7 @@ C     ..
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX     EK,DET
       INTEGER            ICST,IEND,IPAN,LKONV,NSRA,
-     +                   NLDAU
+     +                   NLDAU,FRED
       LOGICAL            LDAU
 C     ..
 C     .. Array Arguments ..
@@ -179,7 +180,8 @@ c---> determine the regular non sph. wavefunction
 c
       CALL REGNS(AR,TMATLL,EFAC,PNS,VNSPLL,ICST,IPAN,IRCUT,PZLM,QZLM,
      +             PZEKDR,QZEKDR,EK,PNS(1,1,IRMIND,1),CMAT,
-     +             PNS(1,1,IRMIND,2),DMAT,NSRA,IRMIND,IRMD,IPAND,LMMAXD)
+     +             PNS(1,1,IRMIND,2),DMAT,NSRA,FRED,IRMIND,IRMD,
+     +             IPAND,LMMAXD)
 
 c
 
