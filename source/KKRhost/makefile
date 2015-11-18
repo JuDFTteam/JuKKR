@@ -21,7 +21,7 @@ FC =  ifort
 # change default value if a flag is matched
 mpi:       FC =  mpiifort
 # mac:
-#mpi:       FC =  /usr/local/impi/bin/mpif90  
+mpi:       FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
 
 ####################################################
@@ -76,15 +76,17 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 # serial:
 #LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # openmp:
-LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac libs:
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LLIBS = -mkl
 
 # openmp libs
-LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+#LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac:
 #LLIBSOPENMP = -L${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LLIBSOPENMP = -mkl
 
 ####################################################
 # C preprocessor options                           #
@@ -115,29 +117,42 @@ openmp: OPENMPFLAGS = -openmp
 
 SOURCEDIR = .
 
+.PHONY: mkdirobj
+.PHONY: copyinc
+.PHONY: clean
+.PHONY: clear
+.PHONY: serial
+.PHONY: debug
+.PHONY: openmp
+.PHONY: mpi
+.PHONY: mpidebug
+.PHONY: install
+.PHONY: getversion
+
+getversion:
+	python $(COM)/getversion.py
+
 mkdirobj:
 	@if test ! -d $(OBJ); \
 	then mkdir $(OBJ); fi
 
 copyinc:
 	cp -p inc.p   $(SRA)/inc.p; \
-	cp -p inc.p   $(COM)/inc.p; \
-	cp -p inc.p   $(VXC)/inc.p; \
 	cp -p sprkkr_rmesh.dim   $(REL)/sprkkr_rmesh.dim
 clean:
-	rm -rf *.mod *.o OBJ/
+	rm -rf *.mod *.o OBJ/ *__genmod.*
 clear:
-	rm -rf *.mod *.o OBJ/
+	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-serial:   mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+serial:   mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-debug:    mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+debug:    mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-openmp:   mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+openmp:   mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpi:      mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+mpi:      mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpidebug: mkdirobj copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+mpidebug: mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
 	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 install: clean serial

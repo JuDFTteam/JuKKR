@@ -211,6 +211,7 @@ C ======================================================================VINS()
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
+      INCLUDE 'version.f90'
 C     .. Parameters ..
 C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       INTEGER NEMBD1
@@ -488,7 +489,7 @@ C     ..
       
    
 Consistency check
-      WRITE(*,*) 'This is the KKR code version 2015_11_09.'
+      WRITE(*,'(A,A)') 'This is the KKR code version ',trim(version)
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 

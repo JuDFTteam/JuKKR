@@ -9,3 +9,4 @@ all_incp_incudes.txt
 /doc/
 /test/
 *.py
+!getversion.py

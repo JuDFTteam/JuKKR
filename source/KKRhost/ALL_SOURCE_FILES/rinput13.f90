@@ -27,6 +27,7 @@
       IMPLICIT NONE
 !     ..
 !     .. Parameters
+      INCLUDE 'version.f90'
       DOUBLE PRECISION CVLIGHT
       PARAMETER (CVLIGHT=274.0720442D0)
 !     ..
@@ -144,12 +145,12 @@
       INTEGER IMANSOC(NATYPD),NASOC,ISP(NATYPD)
       LOGICAL MANSOC,MANCTL
 !
-      CHARACTER*8 TESTC(32),OPTC(32),VERSION
+      CHARACTER*8 TESTC(32),OPTC(32)!,VERSION ! version in version.f90
       COMMON /TESTC/TESTC
       COMMON /OPTC/OPTC
 !     ..
 !     .. Data statements ..
-      DATA VERSION /'May 2015'/
+      !DATA VERSION /'May 2015'/
 !       DATA VERSION /'Feb 2005'/
       DATA TSPIN/'non-','    ','    '/
       DATA TSHAPE/' exact cell treatment (shape correction)  '/
