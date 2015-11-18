@@ -57,7 +57,7 @@ program kkrflex
 
   use mod_mathtools
   implicit none 
-  include version.f90 ! track version of code
+  include 'version' ! track version of code
 
 !***********************************
 ! main variables

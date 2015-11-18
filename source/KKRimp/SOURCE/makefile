@@ -75,7 +75,7 @@ LLIBSOPENMP+=  -lmkl_intel_thread -liomp5
 LLIBSGFORT = -L/usr/local/nag/lib -lnag -llapack_ifort -lblas_ifort  -L/usr/local/intel/current/lib/intel64 -lifcore -liomp5 -lintlc -limf -lirc -lpthread -Wl,-rpath,/usr/local/intel/current/lib/intel64
 
 # MacOSX libraries:
-LLIBSMAC  =  -L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries/32 -lmkl_intel \
+LLIBSMAC  =  -mkl #-L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries/32 -lmkl_intel \
               -lmkl_intel_thread -lmkl_core -lguide -lpthread -i_dynamic
 
 ####################################################
