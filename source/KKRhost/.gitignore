@@ -10,3 +10,4 @@ all_incp_incudes.txt
 /test/
 *.py
 !getversion.py
+version

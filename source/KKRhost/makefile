@@ -80,13 +80,13 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 # mac libs:
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-LLIBS = -mkl
+LLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 
 # openmp libs
 #LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac:
 #LLIBSOPENMP = -L${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-LLIBSOPENMP = -mkl
+LLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 
 ####################################################
 # C preprocessor options                           #
@@ -105,7 +105,7 @@ mpi:      CPP = -D CPP_MPI
 FFLAGS       =  -O2 -r8 -traceback 
 
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 -r8  
+openmp:   FFLAGS = -O2 -r8 -traceback  
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -CB -check all -traceback -mcmodel=medium
 
@@ -130,7 +130,7 @@ SOURCEDIR = .
 .PHONY: getversion
 
 getversion:
-	python $(COM)/getversion.py
+	$(COM)/getversion.sh
 
 mkdirobj:
 	@if test ! -d $(OBJ); \

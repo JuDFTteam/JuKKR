@@ -27,7 +27,7 @@
       IMPLICIT NONE
 !     ..
 !     .. Parameters
-      INCLUDE 'version.f90'
+      INCLUDE 'version'
       DOUBLE PRECISION CVLIGHT
       PARAMETER (CVLIGHT=274.0720442D0)
 !     ..

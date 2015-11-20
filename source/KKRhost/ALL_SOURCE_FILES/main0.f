@@ -211,7 +211,7 @@ C ======================================================================VINS()
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
-      INCLUDE 'version.f90'
+      INCLUDE 'version'
 C     .. Parameters ..
 C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       INTEGER NEMBD1

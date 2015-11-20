@@ -75,12 +75,12 @@ C =====================================================================
 C ---------------------------------------------------------------------
 C     general settings
       PARAMETER ( KREL = 0 )
-      PARAMETER ( KORBIT = 0 ) 
+      PARAMETER ( KORBIT = 1 ) 
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
       PARAMETER ( LMAXD = 2 )
-      PARAMETER ( IEMXD = 201) 
+      PARAMETER ( IEMXD = 50 ) 
       PARAMETER ( IRMD = 900, IRNSD = 890 )
       !PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
       PARAMETER ( NRD = 20000, KPOIBZ = 700000 )
@@ -90,8 +90,8 @@ C ---------------------------------------------------------------------
 C     structure-dependent
       PARAMETER ( NAEZD = 16)
       PARAMETER ( NATYPD = NAEZD )
-!      PARAMETER ( NSHELD = NATYPD + 155)
-      PARAMETER ( NSHELD = NATYPD + 300)
+      PARAMETER ( NSHELD = NATYPD + 155)
+!     PARAMETER ( NSHELD = NATYPD + 300)
 !      PARAMETER ( NSHELD = NATYPD +1000)
       PARAMETER ( NATOMIMPD = 100)
       PARAMETER ( NREFD = NAEZD )
@@ -101,7 +101,8 @@ C ---------------------------------------------------------------------
 C     non-spherical potential 
       PARAMETER ( NCELLD = NAEZD, IPAND = 20 )
       PARAMETER ( NTOTD = IPAND+30, NCHEBD = 10 )
-      PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 60000) ! 13079
+      PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 13079)
+      !PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 60000) ! 13079
 C ---------------------------------------------------------------------
 !     I/O
       PARAMETER (WLENGTH = 1)
@@ -140,7 +141,7 @@ C ======================================================================
       INTEGER NCLSD, NACLSD
 C
       PARAMETER ( NCLSD = NAEZD + NEMBD )
-      !PARAMETER ( NACLSD = 260  )
-      PARAMETER ( NACLSD = 1500  )
+      PARAMETER ( NACLSD = 260  )
+      !PARAMETER ( NACLSD = 1500  )
 C ======================================================================
 
