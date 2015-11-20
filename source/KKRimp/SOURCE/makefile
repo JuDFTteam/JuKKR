@@ -34,6 +34,16 @@ gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
 pg:         FC = pgf90 
 hybrid:     FC= $(MPIFC)
 
+
+# default
+COMPVER = 'serial'
+mpi:       COMPVER = 'mpi'
+mpidebug:  COMPVER = 'mpidebug'
+openmp:    COMPVER = 'openmp'
+gfort:     COMPVER = 'gfort'
+pg:        COMPVER = 'pg'
+hybrid:    COMPVER = 'hybrid'
+
 ####################################################
 # Objects to compile                               #
 ####################################################
@@ -120,7 +130,9 @@ SOURCEDIR = .
 .PHONY: getversion
 
 getversion:
+	@echo $(COMPVER)>compver; \
 	$(SOURCEDIR)/getversion.sh
+
 
 cbg:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)

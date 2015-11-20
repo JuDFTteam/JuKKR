@@ -3,4 +3,7 @@
 *.mod
 *.exe
 *.swp
-version.f90
+version
+/test/
+*.png
+out_*.txt
