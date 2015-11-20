@@ -11,3 +11,4 @@ all_incp_incudes.txt
 *.py
 !getversion.py
 version
+compver

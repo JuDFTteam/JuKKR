@@ -24,6 +24,16 @@ mpi:       FC =  mpiifort
 mpi:       FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
 
+
+# information for version-tracking in executable:
+# default
+COMPVER = 'serial'
+debug:     COMPVER = 'debug'
+mpi:       COMPVER = 'mpi'
+mpidebug:  COMPVER = 'mpidebug'
+openmp:    COMPVER = 'openmp'
+
+
 ####################################################
 # Objects to compile                               #
 ####################################################
@@ -42,11 +52,11 @@ INCP = ./inc.p
 INCR = ./sprkkr_rmesh.dim
 
 
-mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
+$(OBJ)/mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_mympi.F90 -c -o $@
-mod_types.o  : $(COM)/mod_types.F90                 ; \
+$(OBJ)/mod_types.o  : $(COM)/mod_types.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_types.F90 -c -o $@
-mod_timing.o  : $(COM)/mod_timing.F90                 ; \
+$(OBJ)/mod_timing.o  : $(COM)/mod_timing.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_timing.F90 -c -o $@
 
 FILENAME0 = kkr.x
@@ -102,15 +112,16 @@ mpi:      CPP = -D CPP_MPI
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -r8 -traceback 
+FFLAGS       =  -O2 -r8 -traceback -module $(OBJ) 
 
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 -r8 -traceback  
+openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -CB -check all -traceback -mcmodel=medium
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
+
 ####################################################
 # Linking                                          #
 ####################################################
@@ -130,6 +141,7 @@ SOURCEDIR = .
 .PHONY: getversion
 
 getversion:
+	@echo $(COMPVER)>compver; \
 	$(COM)/getversion.sh
 
 mkdirobj:
@@ -144,16 +156,16 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-serial:   mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-debug:    mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-openmp:   mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpi:      mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpidebug: mkdirobj getversion copyinc mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) mod_mympi.o mod_types.o mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+serial:   mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+debug:    mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+openmp:   mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
+mpi:      mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
+mpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 install: clean serial
 
