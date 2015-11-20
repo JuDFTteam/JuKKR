@@ -1,1 +1,0 @@
-      character(len=*), parameter :: version='v1.4-2-g7e0f6fa'
