@@ -57,6 +57,7 @@ program kkrflex
 
   use mod_mathtools
   implicit none 
+  include 'version' ! track version of code
 
 !***********************************
 ! main variables
@@ -190,6 +191,7 @@ if (my_rank==0) then
   write(*,*) ' **************************************************************************'
   write(*,*) ' **************************************************************************'
   write(*,*) '                               KKR FLEX IMPURITY CODE'
+  write(*,'(2A)') '               Version: ',version
   write(*,*) ' **************************************************************************'
   write(*,*) ' **************************************************************************'
 end if
@@ -213,6 +215,7 @@ write(*,*) 'check all matrix inversions. There might be an error due: Hermitian'
 ! ********************************************************** 
 write(ctemp,'(I03.3)') my_rank
 open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
+write(1337,'(2A)') '               Version: ',version
 
 ! ********************************************************** 
 ! first all parameters are read in from the config

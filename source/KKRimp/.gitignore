@@ -2,3 +2,5 @@
 *.*~
 *.mod
 *.exe
+*.swp
+version.f90
