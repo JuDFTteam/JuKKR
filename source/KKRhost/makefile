@@ -27,11 +27,18 @@ mpidebug:   FC = mpiifort
 
 # information for version-tracking in executable:
 # default
-COMPVER = 'serial'
-debug:     COMPVER = 'debug'
-mpi:       COMPVER = 'mpi'
-mpidebug:  COMPVER = 'mpidebug'
-openmp:    COMPVER = 'openmp'
+COMPVER ='serial'
+debug:     COMPVER ='debug'
+mpi:       COMPVER ='mpi'
+mpidebug:  COMPVER ='mpidebug'
+openmp:    COMPVER ='openmp'
+mac:       COMPVER ='serial-mac'
+macmpi:    COMPVER ='mpi-mac'
+macomp:    COMPVER ='openmp-mac'
+rwth:      COMPVER ='serial-rwth'
+rwthmpi:   COMPVER ='mpi-rwth'
+rwthomp:   COMPVER ='openmp-rwth'
+
 
 
 ####################################################
@@ -84,19 +91,29 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 
 # standart libs
 # serial:
-#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # openmp:
 #LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac libs:
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-LLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+
+mac:    LLIBS=$(MACLLIBS)
+macmpi: LLIBS=$(MACLLIBS)
+macomp: LLIBS=$(MACLLIBS)
 
 # openmp libs
-#LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac:
 #LLIBSOPENMP = -L${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-LLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+MACLLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+
+mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
+macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
+macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
+
+openmp: LLIBS=$(LLIBSOPENMP)
 
 ####################################################
 # C preprocessor options                           #
@@ -141,8 +158,12 @@ SOURCEDIR = .
 .PHONY: getversion
 
 getversion:
-	@echo $(COMPVER)>compver; \
+	@echo "Wrinting Version file: "; git describe;\
+	echo $(COMPVER)>compver; \
+	echo $(FFLAGS) $(OPENMPFLAGS)>compflag; \
+	echo $(LLIBS) >complib; \
 	$(COM)/getversion.sh
+
 
 mkdirobj:
 	@if test ! -d $(OBJ); \
@@ -156,18 +177,23 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-serial:   mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-debug:    mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-openmp:   mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpi:      mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBSOPENMP)
-mpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	  $(FC)     -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+
+serial:   compile
+debug:    compile
+openmp:   compile
+mpi:      compile
+mpidebug: compile
 
 install: clean serial
+
+mac:    serial
+macmpi: mpi
+macomp: openmp
+rwth:    serial
+rwthmpi: mpi
+rwthomp: openmp
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<
