@@ -38,15 +38,18 @@ C                 taken. Could also be a logical variable.
 C==========================================================================
       implicit none
       integer MAXK1,MAXK2,MAXK3,NSYMAXD
-      PARAMETER (MAXK1=100,MAXK2=100,MAXK3=70,NSYMAXD=48)
+      PARAMETER (MAXK1=500,MAXK2=500,MAXK3=100,NSYMAXD=48)
       !PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
 C i/o
-      integer nkp,nkxyz(3),ibk(0:MAXK1,0:MAXK2,0:MAXK3),kpoibz,nsymat
+      ! made local ibk array allocatable to not take too much memory
+      !integer nkp,nkxyz(3),ibk(0:MAXK1,0:MAXK2,0:MAXK3),kpoibz,nsymat
+      integer nkp,nkxyz(3),kpoibz,nsymat
       INTEGER ISYMINDEX(*),nkxyz1(3),krel
       double precision kp(3,*),wtkp(*),volbz,CF(3)
       double precision recbv(3,3),bravais(3,3),RSYMAT(64,3,3)
       logical irr
 C local
+      integer, allocatable :: ibk(:,:,:)
       REAL*8 BGINV(3,3),BGMAT(3,3),BGP(3,3),BV(3)
       INTEGER NBGP(3,3,48),ISYM
       INTEGER IKTAB(3),IND2(3),IPRINT
@@ -59,6 +62,8 @@ C local
 
       DOUBLE PRECISION DDET33,DDOT
       EXTERNAL DDET33,DDOT
+
+      allocate(ibk(0:MAXK1,0:MAXK2,0:MAXK3))
 
 C
 Check if we are in surface mode
@@ -262,6 +267,9 @@ C========================================================================
          WTKP(I) = WTKP(I)*V1/DBLE(NSYM)
          VOLBZ = VOLBZ + WTKP(I)*DBLE(NSYM)
       END DO    
+
+      deallocate(ibk)
+
       RETURN
 
 99004 FORMAT (5X,'rotated GQ  for IROT=',I3)

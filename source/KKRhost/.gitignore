@@ -12,3 +12,4 @@ all_incp_incudes.txt
 !getversion.py
 version
 compver
+/benchmark/
