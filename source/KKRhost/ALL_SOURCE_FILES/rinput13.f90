@@ -27,7 +27,6 @@
       IMPLICIT NONE
 !     ..
 !     .. Parameters
-      INCLUDE 'version.f90'
       DOUBLE PRECISION CVLIGHT
       PARAMETER (CVLIGHT=274.0720442D0)
 !     ..
@@ -145,7 +144,7 @@
       INTEGER IMANSOC(NATYPD),NASOC,ISP(NATYPD)
       LOGICAL MANSOC,MANCTL
 !
-      CHARACTER*8 TESTC(32),OPTC(32)!,VERSION ! version in version.f90
+      CHARACTER*8 TESTC(32),OPTC(32)
       COMMON /TESTC/TESTC
       COMMON /OPTC/OPTC
 !     ..
@@ -181,7 +180,6 @@
       TXC(4) = ' GGA PW91               '
 
       IPRINT = 0
-      WRITE (1337,2004) VERSION
 
       OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
 
@@ -2047,15 +2045,6 @@
 ! *********************************************Input-End ********
  1029 FORMAT((F4.0,I4,4x,4I1,3I4,F8.4,I4,I5,1x,f8.5))
 ! ------------------------------------------------------------------------
- 2004 FORMAT( /79(1H*)/&
-     &     '*',77X,'*'/&
-     &     '*',10X,'Screened Korringa-Kohn-Rostoker ',&
-     &             'Electronic Structure Code',10X,'*'/&
-     &     '*',27X,'for Bulk and Interfaces',27X,'*'/&
-     &     '*',77X,'*'/&
-     &     '*',4X,'Juelich-Munich 2001 - 2015',25X,&
-     &     'Version : ',A8,4X,'*'/&
-     &     '*',77X,'*'/79(1H*))
  2010 FORMAT(' NSPIN '/I4)
  2011 FORMAT(' NSTEPS'/I4)
  2013 FORMAT('      M2    MMIN    MMAX    SINN',&

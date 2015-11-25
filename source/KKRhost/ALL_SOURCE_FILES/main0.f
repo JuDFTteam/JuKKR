@@ -211,7 +211,7 @@ C ======================================================================VINS()
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
-      INCLUDE 'version.f90'
+      INCLUDE 'version'
 C     .. Parameters ..
 C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       INTEGER NEMBD1
@@ -487,9 +487,16 @@ C     ..
 !      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
 !      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3))
       
-   
-Consistency check
-      WRITE(*,'(A,A)') 'This is the KKR code version ',trim(version)
+!Write version info:
+      WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
+     &              'Electronic Structure Code',
+     &              'for Bulk and Interfaces',
+     &              'Juelich-Munich 2001 - 2015',
+     &             ' Code version: ',trim(version(1)),
+     &             ' Compile options:',(trim(version(i)),i=2,4)
+ 2004 FORMAT(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/)
+
+!Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
       IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) 

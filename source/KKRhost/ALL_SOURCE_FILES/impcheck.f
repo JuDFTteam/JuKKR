@@ -28,12 +28,16 @@ C     .. Local arrays
       INTEGER AIN(NATOMIMP),NBR(3)
       DOUBLE PRECISION RCLSNEW(3,NATOMIMP),VEC1(3),VEC2(3)
       LOGICAL LATOM(NATOMIMP),LPOS(NATOMIMP),LABSCORD
+      DOUBLE PRECISION DIFFMIN(NATOMIMP)
 C     ..
 C     .. External subroutine
       EXTERNAL GETCLUSNXYZ
 C     ..
 C
 C ----------------------------------------------------------------------
+!     initialize diffmin array with high value
+      DIFFMIN(:) = 1D+5
+
 C
 C     LABSCORD - cluster coordinates are absolute atomic positions 
 C
@@ -78,6 +82,7 @@ C
       DO I = 1,3
          NBR(I) = 0
       END DO
+      RMAXCLUS = 1.5*RMAXCLUS
       CALL GETCLUSNXYZ(RMAXCLUS,BRAVAIS,NDIM,DIFF,NBR)
       NMAX = MAX(NBR(1),NBR(2),NBR(3))
       NMAXZ = NMAX 
@@ -121,6 +126,9 @@ C
                         LPOS(I) = .TRUE.
                         GOTO 100
                      END IF
+
+                     IF (DIFF.LE.DIFFMIN(I)) DIFFMIN(I)=DIFF
+
                   END DO
 C-----------------------------------------------------------------------
                END DO
@@ -145,6 +153,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
          ELSE
             WRITE (STRPOS,'(A6)') 'neq BL'
             IPOSOK = IPOSOK + 1
+            WRITE(*,*) 'minimal difference for atom',I,'=',DIFFMIN(I)
          END IF
          WRITE (STRAT,'(I3,A3)') ATOMIMP(I),' <?'
          IF ( .NOT.LATOM(I) ) THEN
