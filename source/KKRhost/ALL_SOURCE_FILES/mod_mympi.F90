@@ -81,20 +81,22 @@ contains
 #ifdef CPP_MPI
   subroutine find_dims_2d(nranks,ntot1,ntot2,dims)
     !find dimensions to create cartesian communicator
+    !input:  nranks, ntot1 is N_atom, ntot2 is N_E
+    !output: dims(2), dims(1) is N_atomranks, dims(2) is N_Eranks
     implicit none
     integer, intent(in)  :: nranks,ntot1,ntot2
     integer, intent(out) :: dims(2)
     
-
     if(nranks.le.ntot2) then
        dims(1) = 1
        dims(2) = nranks
     else
        ! rest not implemented!!!
-       stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
+!        stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
        dims(1) = nranks/ntot2
        dims(2) = ntot2
-!        if(mod(float(nranks)/float(ntot1),1.).ne.0) stop 'ERROR in find_dims_2d'
+       ! for test purposes, now consider only cartesian grid!
+       if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
     end if
     
 !     write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
@@ -126,7 +128,9 @@ contains
   
 !   if(nranks>(t_inc%natyp*t_inc%ielast)) stop 'you can only use less or equal number of processors that energypoints*atoms'
   
-  if((ne*nat)<nranks .and. (ne>1 .and. nat>1)) then
+  ! consider only cartesian grids for now
+  if(.false.) then
+!   if((ne*nat)<nranks .and. (ne>1 .and. nat>1)) then
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
     if(myrank==0) write(1337,*) 'rest:',rest
@@ -337,12 +341,13 @@ contains
 #ifdef CPP_MPI
   subroutine mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,  &
                              & LMOMVEC,NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,denef,denefat,  &
-                             & rhoorb,muorb,mvevi,mvevil,mvevief)
+                             & rhoorb,muorb,mvevi,mvevil,mvevief,mympi_comm)
 
     use mpi
     implicit none
     integer, intent(in) :: irmd,lmpotd,natypd,lmaxd,lmmaxd,iemxd,mmaxd,idoldau,natyp,krel,nmvecmax,npotd,lmaxd1,nqdos
     logical, intent(in) :: lmomvec
+    integer, intent(in) :: mympi_comm
     double precision, intent(inout) :: RHO2NS(IRMD,LMPOTD,NATYPD,2), R2NEF(IRMD,LMPOTD,NATYPD,2),    &
                                      & ESPV(0:LMAXD1,NPOTD), DENEF, DENEFAT(NATYPD), RHOORB(IRMD*KREL + (1-KREL),NATYPD),   &
                                      & MUORB(0:LMAXD1+1,3,NATYPD) 
@@ -355,64 +360,64 @@ contains
         allocate(work(IRMD,LMPOTD,NATYPD,2),stat=ierr)
         if(ierr.ne.0) stop 'problem allocating work array in mympi_main1c_comm'
     
-    
+        !RHO2NS needs MPI_COMM_WORLD here
         IDIM = IRMD*LMPOTD*NATYPD*2
         CALL MPI_ALLREDUCE(RHO2NS,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
         CALL DCOPY(IDIM,WORK,1,RHO2NS,1)
         
         IDIM = IRMD*LMPOTD*NATYPD*2
-        CALL MPI_ALLREDUCE(R2NEF,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL MPI_ALLREDUCE(R2NEF,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
         CALL DCOPY(IDIM,WORK,1,R2NEF,1)
         
-        
+        !ESPV needs integration over atoms and energies -> MPI_COMM_WORLD
         IDIM = (LMAXD+2)*NPOTD
         CALL MPI_ALLREDUCE(ESPV,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
         CALL DCOPY(IDIM,WORK,1,ESPV,1)
 
         IDIM = IEMXD*(LMAXD+2)*NPOTD*NQDOS
-        CALL MPI_ALLREDUCE(DEN,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL MPI_ALLREDUCE(DEN,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
         CALL ZCOPY(IDIM,WORK,1,DEN,1)
         
         IDIM = IEMXD*(LMMAXD)*NPOTD*NQDOS
-        CALL MPI_ALLREDUCE(DENLM,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL MPI_ALLREDUCE(DENLM,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
         CALL ZCOPY(IDIM,WORK,1,DENLM,1)
 
         IF (IDOLDAU.EQ.1) THEN 
            IDIM = MMAXD*MMAXD*NPOTD
-           CALL MPI_ALLREDUCE(DENMATC,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+           CALL MPI_ALLREDUCE(DENMATC,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
            CALL ZCOPY(IDIM,WORK,1,DENMATC,1)
         END IF
         
        
         IDIM = 1
-        CALL MPI_ALLREDUCE(DENEF,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL MPI_ALLREDUCE(DENEF,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
         CALL DCOPY(IDIM,WORK,1,DENEF,1)
 
         IDIM = NATYP
-        CALL MPI_ALLREDUCE(DENEFAT,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL MPI_ALLREDUCE(DENEFAT,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
         CALL DCOPY(IDIM,WORK,1,DENEFAT,1)
                 
 
         IF (KREL.EQ.1) THEN 
           IDIM = IRMD*NATYPD
-          CALL MPI_ALLREDUCE(RHOORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+          CALL MPI_ALLREDUCE(RHOORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
           CALL DCOPY(IDIM,WORK,1,RHOORB,1)
 
           IDIM = (LMAXD+3)*NATYPD*3
-          CALL MPI_ALLREDUCE(MUORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+          CALL MPI_ALLREDUCE(MUORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
           CALL DCOPY(IDIM,WORK,1,MUORB,1)
 
           IF (LMOMVEC) THEN
              IDIM = NATYPD*3*NMVECMAX
-             CALL MPI_ALLREDUCE(MVEVI,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+             CALL MPI_ALLREDUCE(MVEVI,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
              CALL ZCOPY(IDIM,WORK,1,MVEVI,1)
 
              IDIM = (LMAXD+1)*NATYPD*3*NMVECMAX
-             CALL MPI_ALLREDUCE(MVEVIL,WORK,IDIM, MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+             CALL MPI_ALLREDUCE(MVEVIL,WORK,IDIM, MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
              CALL ZCOPY(IDIM,WORK,1,MVEVIL,1)
 
              IDIM = NATYPD*3*NMVECMAX
-             CALL MPI_ALLREDUCE(MVEVIEF,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+             CALL MPI_ALLREDUCE(MVEVIEF,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
              CALL ZCOPY(IDIM,WORK,1,MVEVIEF,1)
              
           END IF   ! LMOMVEC
@@ -426,13 +431,15 @@ contains
 #ifdef CPP_MPI
   subroutine mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,LMMAXD,  &
      &                                LMMAXSO,IEMXD,IELAST,NQDOS,            &
-     &                                den,denlm,gflle,rho2nsc,r2nefc,   &
-     &                                rho2int,espv,muorb,denorbmom,    &
-     &                                denorbmomsp,denorbmomlm,denorbmomns)
+     &                                den,denlm,gflle,rho2nsc,r2nefc,        &
+     &                                rho2int,espv,muorb,denorbmom,          &
+     &                                denorbmomsp,denorbmomlm,denorbmomns,   &
+     &                                mympi_comm)
      
      use mpi
      implicit none
      integer, intent(in) :: IRMDNEW, LMPOTD, LMAXD, LMAXD1, LMMAXD, LMMAXSO, IEMXD, IELAST, NQDOS
+     integer, intent(in) :: mympi_comm
      double complex, intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IEMXD,NQDOS,2), DENLM(LMMAXD,IEMXD,NQDOS,2), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS)
      double precision, intent(inout) :: ESPV(0:LMAXD1,2), MUORB(0:LMAXD1+1,3), DENORBMOM(3), DENORBMOMSP(2,4), DENORBMOMLM(0:LMAXD,3), DENORBMOMNS(3)
      
@@ -444,63 +451,64 @@ contains
 
      !double complex arrays
      IDIM = IRMDNEW*LMPOTD*4
-     CALL MPI_ALLREDUCE(r2nefc,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(r2nefc,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,r2nefc,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for r2nefc'
      
      IDIM = IRMDNEW*LMPOTD*4
-     CALL MPI_ALLREDUCE(RHO2NSC,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(RHO2NSC,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,RHO2NSC,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for rho2nsc'
      
      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
-     CALL MPI_ALLREDUCE(DEN,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(DEN,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,DEN,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for den'
      
      IDIM = LMMAXD*IEMXD*2*NQDOS
-     CALL MPI_ALLREDUCE(DENLM,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(DENLM,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENLM,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for denlm'
      
      IDIM = 4
-     CALL MPI_ALLREDUCE(RHO2INT,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(RHO2INT,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,RHO2INT,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for rho2int'
      
      IDIM = LMMAXSO*LMMAXSO*IELAST*NQDOS
-     CALL MPI_ALLREDUCE(GFLLE,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(GFLLE,WORK,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,GFLLE,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for gflle'
      
      !double precision arrays
      IDIM = (LMAXD1+1)*2
-     CALL MPI_ALLREDUCE(ESPV,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+!      CALL MPI_ALLREDUCE(ESPV,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(ESPV,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,ESPV,1)
-!      if (myrank==master) write(*,*) 'mpireduce done for espv'
+!      if (myrank==master) write(*,*) 'espv after comm:',espv
      
      IDIM = (LMAXD1+2)*3
-     CALL MPI_ALLREDUCE(MUORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(MUORB,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,MUORB,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for muorb'
      
      IDIM = 3
-     CALL MPI_ALLREDUCE(DENORBMOM,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(DENORBMOM,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOM,1)     
 !      if (myrank==master) write(*,*) 'mpireduce done for denorbmom'
      
      IDIM = 2*4
-     CALL MPI_ALLREDUCE(DENORBMOMSP,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(DENORBMOMSP,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOMSP,1)  
 !      if (myrank==master) write(*,*) 'mpireduce done for denorbmomsp'
      
      IDIM = 3
-     CALL MPI_ALLREDUCE(DENORBMOMNS,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(DENORBMOMNS,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOMNS,1)     
 !      if (myrank==master) write(*,*) 'mpireduce done for denorbmomns'
      
      IDIM = (LMAXD+1)*3
-     CALL MPI_ALLREDUCE(DENORBMOMLM,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+     CALL MPI_ALLREDUCE(DENORBMOMLM,WORK,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORK,1,DENORBMOMLM,1)
 !      if (myrank==master) write(*,*) 'mpireduce done for denorbmomlm'
      

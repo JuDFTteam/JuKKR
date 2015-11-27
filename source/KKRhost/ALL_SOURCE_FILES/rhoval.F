@@ -337,24 +337,24 @@ C        Read BZ path for qdos calculation:
        DO ie_num=1,ie_end
          IE = ie_start+ie_num
 #else
-! omp: start parallel region here
-!$omp parallel do default(none)
-!$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
-!$omp& private(jlk_index,tmatll,ith)
-!$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
-!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
-!$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
-!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
-!$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-!$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
-!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
-!$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
-!$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
-!$omp& shared(t_tgmat)
-!$omp& private(alphasph,alphall)
+! ! omp: start parallel region here
+! !$omp parallel do default(none)
+! !$omp& private(eryd,ie,ir,irec,lm1,lm2)
+! !$omp& private(jlk_index,tmatll,ith)
+! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
+! !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
+! !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
+! !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
+! !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
+! !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
+! !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
+! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
+! !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+! !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
+! !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
+! !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+! !$omp& shared(t_tgmat)
+! !$omp& private(alphasph,alphall)
        DO IE=1,IELAST
          ie_num = ie
          ie_end = ielast

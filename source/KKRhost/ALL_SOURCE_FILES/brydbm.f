@@ -325,6 +325,8 @@ c
       
       REWIND IOBROY + 2
       WRITE (IOBROY+2) (SM1(IJ),IJ=1,IMAP), (FM1(IJ),IJ=1,IMAP)
+      
+      deallocate(AM,BM,FM,FM1,G,SM,SM1,VI3,WIT,UI2,UI3,VI2)
 
       RETURN
 
@@ -332,9 +334,6 @@ c  190   CALL RCSTOP('broy10  ')
 c  200   CALL RCSTOP('broy11  ')
 c  210   CALL RCSTOP('broy12  ')
 c  220   CALL RCSTOP('broy13  ')
-
-
-      deallocate(AM,BM,FM,FM1,G,SM,SM1,VI3,WIT,UI2,UI3,VI2)
 
 
       END

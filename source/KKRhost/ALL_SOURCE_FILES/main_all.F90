@@ -165,10 +165,14 @@ program kkrcode
     call main1c()
     call timing_stop('main1c')
     
+!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+    
     ! calculate do DFT stuff (potential from density, exc-potential, calculate total energy, ...)
     call timing_start('main2')
     if (myrank==master) call main2()
     call timing_stop('main2')
+    
+!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
     
 #ifdef CPP_MPI
     ! update i_iteration:
@@ -180,12 +184,22 @@ program kkrcode
 
     if (myrank==master) call print_time_and_date('Iteration finished')
     
+    write(*,*) myrank, t_inc%i_iteration, t_inc%N_iteration
+    
   end do ! scf-iteration
   
   
 #ifdef CPP_MPI
+   ! call MPI_Barrier(MPI_COMM_WORLD, ierr)
+   ! write(*,*) myrank,'ierr barrier',ierr
+   ! call MPI_COMM_FREE(t_mpi_c_grid%mympi_comm_ie, ierr)
+   ! write(*,*) myrank,'free ie',ierr
+   ! call MPI_COMM_FREE(t_mpi_c_grid%mympi_comm_at, ierr)
+   ! write(*,*) myrank,'free at',ierr
+   ! write(*,*) myrank, 'finalizing'
   ! finalize MPI  
   call MPI_Finalize(ierr)
+    write(*,*) myrank,'finalize',ierr
 #endif
 
 

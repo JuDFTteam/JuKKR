@@ -21,7 +21,7 @@ FC =  ifort
 # change default value if a flag is matched
 mpi:       FC =  mpiifort
 # mac:
-mpi:       FC =  /usr/local/impi/bin/mpif90  
+macmpi:       FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
 
 
@@ -132,9 +132,9 @@ mpi:      CPP = -D CPP_MPI
 FFLAGS       =  -O2 -r8 -traceback -module $(OBJ) 
 
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
+openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -g 
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
-mpidebug: FFLAGS = -CB -check all -traceback -mcmodel=medium
+mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp

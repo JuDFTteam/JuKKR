@@ -499,20 +499,12 @@ contains
     
 
     !Gather tmat so that all processors the full matrix for their part of the energy contour
-    if(t_mpi_c_grid%ntot1>1) then
-!        write(*,*) myrank,'gather_tmat',mytot,ntot_pT,ioff_pT
-!        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-!        ihelp      = t_inc%LMMAXD*t_inc%LMMAXD
-!        recvcounts = ntot_pT*ihelp
-!        displs     = ioff_pT*ihelp
-!        call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-!                           & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-!                           & mympi_comm, ierr )
+    if(t_mpi_c_grid%dims(1)>1) then
        nspin = t_inc%NSPIN
        if(t_inc%NEWSOSOL) nspin = 1
       
-       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
-       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP),stat=ierr)
+       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%dims(2)*nspin*t_inc%NATYP
+       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%dims(2)*nspin*t_inc%NATYP),stat=ierr)
        if(ierr.ne.0) stop 'problem allocating work array in mympi_main1c_comm'
        CALL MPI_ALLREDUCE(t_tgmat%tmat,WORK,ihelp,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,ierr)
        CALL DCOPY(ihelp,WORK,1,t_tgmat%tmat,1)
@@ -542,7 +534,7 @@ contains
     integer :: ierr
         
     !Gather gref so that all processors have the full matrix for their part of the energy countour
-    if(t_mpi_c_grid%ntot1>1) then
+    if(t_mpi_c_grid%dims(1)>1) then
        ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD
 !        GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
 !       t_inc%LMGF0D = (LMAXD+1)**2  ! see main1b
@@ -577,11 +569,13 @@ contains
 
     !Gather Pkk' so that all processors have the full matrix
     ihelp      = t_inc%LMMAXD*t_inc%LMMAXD*t_inc%NQDOS!*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
-    recvcounts = ntot_pT*ihelp
-    displs     = ioff_pT*ihelp
-    call MPI_Allgatherv( t_tgmat%gmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                       & t_tgmat%gmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-                       & MPI_COMM_WORLD, ierr )
+    if(t_mpi_c_grid%dims(1)>1) then
+       recvcounts = ntot_pT*ihelp
+       displs     = ioff_pT*ihelp
+       call MPI_Allgatherv( t_tgmat%gmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+                          & t_tgmat%gmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+                          & MPI_COMM_WORLD, ierr )
+    end if
    end subroutine gather_gmat
 #endif
 

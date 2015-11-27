@@ -654,7 +654,10 @@ c    write qdos.nn.s.dat                                                  ! qdos
      &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
-     &                            denorbmomsp,denorbmomlm,denorbmomns)
+     &                            denorbmomsp,denorbmomlm,denorbmomns,
+! use this until atom loop is parallelised
+!      &                            MPI_COMM_WORLD)
+     &                            t_mpi_c_grid%myMPI_comm_at)
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
       if(myrank==master) then
@@ -814,7 +817,8 @@ C
       ! communicate den_out to all processors
       IDIM = (LMAXD+2)*IEMXD*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
-     &               MPI_COMM_WORLD, ierr)
+     &               t_mpi_c_grid%mympi_comm_at, ierr)
+!      &               MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
 #endif
 

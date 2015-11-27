@@ -79,32 +79,32 @@ C     general settings
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
-      PARAMETER ( LMAXD = 3 )
-      PARAMETER ( IEMXD = 1 )
+      PARAMETER ( LMAXD = 2 )
+      PARAMETER ( IEMXD = 101 )
       PARAMETER ( IRMD = 900, IRNSD = 890 )
-      !PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
-      PARAMETER ( NRD = 20000, KPOIBZ = 250000)
+      PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
+!      PARAMETER ( NRD = 20000, KPOIBZ = 250000)
       PARAMETER ( NMAXD = 2000000, ISHLD= 200000 )
       PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 40)
+      PARAMETER ( NAEZD = 16)
       PARAMETER ( NATYPD = NAEZD )
-!      PARAMETER ( NSHELD = NATYPD + 155)
+      PARAMETER ( NSHELD = NATYPD + 155)
 !     PARAMETER ( NSHELD = NATYPD + 300)
-      PARAMETER ( NSHELD = NATYPD +1000)
+!      PARAMETER ( NSHELD = NATYPD +1000)
       PARAMETER ( NATOMIMPD = 150)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD =  10)
+      PARAMETER ( NPRINCD =  2 )
       PARAMETER ( NEMBD = 20)
 C ---------------------------------------------------------------------
 C     non-spherical potential 
       PARAMETER ( NCELLD = NAEZD, IPAND = 50 )
       PARAMETER ( NTOTD = IPAND+30, NCHEBD = 15 )
       PARAMETER ( NFUND = 289, IRID = 350, NGSHD = 60000)
-      !PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 60000) ! 13079
+!      PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 60000) ! 13079
 C ---------------------------------------------------------------------
-!     I/O
+C     I/O
       PARAMETER (WLENGTH = 1)
       
 C
@@ -142,6 +142,6 @@ C ======================================================================
 C
       PARAMETER ( NCLSD = NAEZD + NEMBD )
       PARAMETER ( NACLSD = 500  )
-      !PARAMETER ( NACLSD = 1500  )
+!      PARAMETER ( NACLSD = 1500  )
 C ======================================================================
 

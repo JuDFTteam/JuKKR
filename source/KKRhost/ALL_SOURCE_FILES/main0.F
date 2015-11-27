@@ -208,6 +208,13 @@ C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================VINS()
 
       use mod_types
+#ifdef CPP_OMP
+      use omp_lib        ! necessary for omp functions
+#endif
+#ifdef CPP_MPI
+      use mpi
+      use mod_mympi, only: nranks
+#endif
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -434,6 +441,11 @@ C ruess: IVSHIFT test option
       
       !allocations:
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
+      
+#ifdef CPP_OMP
+!     .. OMP ..
+      integer nth, ith          ! total number of threads, thread number
+#endif
 
       
 C     ..
@@ -494,7 +506,24 @@ C     ..
      &              'Juelich-Munich 2001 - 2015',
      &             ' Code version: ',trim(version(1)),
      &             ' Compile options:',(trim(version(i)),i=2,4)
- 2004 FORMAT(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/)
+ 2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/ )
+!  9090    FORMAT(D20.12)                                               ! fxf
+
+#ifdef CPP_OMP
+!$omp parallel shared(nth,ith)
+!$omp single
+      nth = omp_get_num_threads()
+      ith = omp_get_thread_num()
+      if(ith==1) then
+       WRITE(*,'(1X,A,I5/79(1H*)/)')'Number of OpenMP threads used:',nth
+      endif
+!$omp end single
+!$omp end parallel
+#endif
+#ifdef CPP_MPI
+      WRITE(*,'(1X,A,I5/79(1H*)/)') 'Number of MPI ranks used:',nranks
+#endif
+!End write version info
 
 !Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )

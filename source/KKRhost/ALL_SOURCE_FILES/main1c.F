@@ -752,9 +752,11 @@ C ================================================================ NATYP
       
       !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
       call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
-     &         NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,NMVECMAX,
-     &                     NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
-     &                denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief)
+     &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
+     &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
+     &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
+     &              MPI_COMM_WORLD)
+!      &              t_mpi_c_grid%mympi_comm_at)
 
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
