@@ -107,11 +107,11 @@ C     ..
 C
 C ======================================================================
 #ifdef CPP_MPI
-        write(1337,*) myrank, 'start tbref e-loop'
 !        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !        ie_end = t_mpi_c_grid%ntot2
        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
        ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+!        write(1337,*) myrank, 'start tbref e-loop',ie_start,ie_end
 
        DO ie_num=1,ie_end
        
@@ -148,7 +148,7 @@ C
             IF (IC.EQ.0) STOP 'Error in CLS(*) array in tbref'
             IF (TEST('flow    ')) WRITE (1337,FMT=*) 'CLUSTER ',ICLS,
      +           ' at ATOM ',IC
-C     
+C      
             CALL GLL13(ERYD,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
      +                 ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      &                 TOLRDIF,

@@ -1,6 +1,9 @@
       module MOD_MAIN0 
       
       use mod_wunfiles
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       implicit none
       
@@ -291,8 +294,7 @@ C     .. Local Arrays ..
       double complex, allocatable :: LEFTTINVLL(:,:,:,:,:), 
      +                               RIGHTTINVLL(:,:,:,:,:)
 !       DOUBLE COMPLEX, allocatable :: DEZ(:),EZ(:),WEZ(:)
-!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),DSYMLL1(:,:,:),
-!      +               LEFTTINVLL(:,:,:,:,:),RIGHTTINVLL(:,:,:,:,:)
+!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),DSYMLL1(:,:,:)
       DOUBLE PRECISION A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
@@ -470,7 +472,7 @@ C     .. Common blocks ..
 C     ..
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+!       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       allocate(THETAS(IRID,NFUND,NCELLD),THESME(IRID,NFUND,NCELLD),
      +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD),
      +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
@@ -521,7 +523,7 @@ C     ..
 !$omp end parallel
 #endif
 #ifdef CPP_MPI
-      WRITE(*,'(1X,A,I5/79(1H*)/)') 'Number of MPI ranks used:',nranks
+      WRITE(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
 #endif
 !End write version info
 
@@ -695,6 +697,7 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C -->  deal with the potential in the RELATIVISTIC CASE
 C
       PARA = .TRUE.
+      write(*,*) 'krel,korbit',krel,korbit
       IF (KREL+KORBIT.EQ.1) THEN
 c      IF (KREL.EQ.1) THEN
 C---------------------------------------------------------------
@@ -768,7 +771,8 @@ C --> finally, convert input potential to the internal relativistic
 C     form VTREL,BTREL. Set up auxiliary arrays (needed in the REL 
 C     routines) ZREL, JWSREL, RMREL, DRDIREL, R2DRDIREL, IRSHIFT
 C
-         CALL RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,
+         IF(KREL.eq.1) ! call this only if relativisitic solver is used
+     &   CALL RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,
      &        VTREL,BTREL,ZREL,RMREL,JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,
      &        IPAND,IRMD,NPOTD,NATYPD)
       END IF
@@ -1008,10 +1012,12 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
-      IF (OPT('LDA+U   ')) 
-     &     CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
+      IF (OPT('LDA+U   ')) then
+           ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+           CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
+      END IF
 C
 C LDA+U
 C ======================================================================
@@ -1102,7 +1108,7 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-      DEALLOCATE(ULDAU)
+      IF (OPT('LDA+U   ')) DEALLOCATE(ULDAU)
       deallocate(thetas, thetasnew, thesme)
       deallocate(vins,LEFTTINVLL,RIGHTTINVLL)
 

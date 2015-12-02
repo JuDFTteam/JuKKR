@@ -12,6 +12,9 @@
 #ifdef CPP_MPI
       use mpi
 #endif
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
@@ -23,7 +26,7 @@
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
-     &                     mympi_main1c_comm
+     &                     mympi_main1c_comm,mympi_main1c_comm_newsosol2
 #endif
 
       INCLUDE 'inc.p'
@@ -222,11 +225,21 @@ C     .. qdos and lmlm-dos ..
       DOUBLE PRECISION, allocatable :: QVEC(:,:)
       INTEGER IREC,LM1,LM2
 #ifdef CPP_MPI
-      integer :: i1_start, i1_end
+      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
+     &           myrank_at, myrank_ie, nranks_at,nranks_ie
+      integer :: ntot1, dims(2), mytot, ii
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
+     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
       integer :: ihelp
 #endif
+! #ifdef CPP_MPI
+      integer :: i1_start, i1_end
+!       integer :: ihelp
+! #endif
       integer :: ie_start, ie_end
       integer :: ie_num
+      
+      double precision :: angles_new(NATYPD,2)
 C     ..
 C     .. Arrays in Common ..
       CHARACTER*8 OPTC(32),TESTC(32)
@@ -259,6 +272,16 @@ C     .. Data statements ..
      +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
       allocate(RHO2N1(IRMD,LMPOTD,NPOTD),RHO2NS(IRMD,LMPOTD,NATYPD,2),
      +         RHO2N2(IRMD,LMPOTD,NPOTD),R2NEF(IRMD,LMPOTD,NATYPD,2))
+
+      !initialze to zero
+      THETASNEW = 0.0d0
+      THETAS = 0.0d0
+      VINSNEW = 0.0d0
+      VINS = 0.0d0
+      RHO2N1 = 0.0d0
+      RHO2N2 = 0.0d0
+      RHO2NS = 0.0d0
+      R2NEF = 0.0d0
       
 !       ALLOCATE(DEN1(0:LMAXD1,IEMXD,2),
 !      + WEZNORM(IEMXD),CDOSAT0(IEMXD),CDOSAT1(IEMXD),CDOS0(IEMXD),
@@ -593,17 +616,27 @@ C
 C ================================================================ NATYP
 
 #ifdef CPP_MPI
-!       i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_at)+1
-!       i1_end = t_mpi_c_grid%ntot1
-      
-      i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+
-     &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+        ntot1 = t_inc%NATYP
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-      DO i1 = i1_start,i1_end
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+     &            allocated(t_mpi_c_grid%ioff_pT1))) 
+     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
+     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
 #else
-      DO I1 = 1,NATYP
+      i1_start = 1
+      i1_end   = NATYP
 #endif
+
+      DO I1=i1_start,i1_end
 C ----------------------------------------------------------------- SPIN
          IQ = IQAT(I1)
          DO ISPIN = 1,NSPIN
@@ -611,6 +644,9 @@ C ----------------------------------------------------------------- SPIN
             IPOT = (I1-1) * NSPINPOT + ISPIN
             IPOT1 = (I1-1) * NSPINPOT + 1
 
+#ifdef CPP_TIMING
+            call timing_start('main1c - rhoval')
+#endif
             CALL RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,
      &           NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ,WEZ,
      &           DRDI(1,I1),RMESH(1,I1),
@@ -630,6 +666,9 @@ C ----------------------------------------------------------------- SPIN
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),
      &           DENMATC(1,1,IPOT),
      &           LLY,NATYP,NQDOS)              ! LLY Lloyd
+#ifdef CPP_TIMING
+            call timing_pause('main1c - rhoval')
+#endif
          END DO
 C ----------------------------------------------------------------- SPIN
 C
@@ -697,6 +736,9 @@ C
 C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
+#ifdef CPP_TIMING
+            call timing_stop('main1c - rhoval')
+#endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
       CLOSE (30) !close lmdos file if no mpi is used
@@ -751,12 +793,18 @@ C ================================================================ NATYP
       NQDOS=1
       
       !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
+#ifdef CPP_TIMING
+      call timing_start('main1c - communication')
+#endif
       call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
      &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
      &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
      &              MPI_COMM_WORLD)
 !      &              t_mpi_c_grid%mympi_comm_at)
+#ifdef CPP_TIMING
+      call timing_stop('main1c - communication')
+#endif
 
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
@@ -826,10 +874,36 @@ c interpolate potential
      +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                        VINSNEW)
 
-      DO I1 = 1,NATYP
+#ifdef CPP_MPI
+        ntot1 = t_inc%NATYP
+        
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+     &            allocated(t_mpi_c_grid%ioff_pT1))) 
+     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
+     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
+#else
+      i1_start = 1
+      i1_end   = NATYP
+#endif
+      DO I1 = i1_start,i1_end
+      write(*,*) 'rhovalnew',myrank,i1
+! 
        ICELL = NTCELL(I1)
        IPOT = (I1-1) * NSPIN + 1
        
+#ifdef CPP_TIMING
+        call timing_start('main1c - rhovalnew')
+#endif
         CALL RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
      &           ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,
      &           IFUNM1(1,ICELL),LMSP1(1,ICELL),
@@ -837,7 +911,12 @@ c interpolate potential
      &           NPAN_EQ(I1),RMESH(1,I1),IRWS(I1),RPAN_INTERVALL(0,I1),
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
-     &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1))
+     &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
+     &           angles_new)
+        write(*,*) 'after rhovalnew',myrank,i1,ipot,den1(0,1:5,1)
+#ifdef CPP_TIMING
+        call timing_pause('main1c - rhovalnew')
+#endif
 
         DO L = 0,LMAXD1
          ESPV(L,IPOT)=ESPV1(L,1)
@@ -880,8 +959,27 @@ c interpolate potential
         ENDDO
        ENDDO
       END DO !I1
+      
+      !i1 = 54874321+myrank
+      !write(i1,*) rho2ns
+#ifdef CPP_MPI
+      call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
+     &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
+     &                                 den, denlm, muorb, espv, r2nef,    &
+     &                                 rho2ns, denefat, denef,            &
+     &                                 t_mpi_c_grid%mympi_comm_ie)
+!      &                                 MPI_COMM_WORLD)
+#endif
+      !i1 = 54874331+myrank
+      !write(i1,*) rho2ns
+      
+#ifdef CPP_TIMING
+      call timing_stop('main1c - rhovalnew')
+!       call timing_stop('main1c - communication')
+#endif
       CLOSE(10)
-      CLOSE(11)
+!       CLOSE(11)
+!       CLOSE(12)
 
       CLOSE (69)
       
@@ -891,13 +989,14 @@ c rewrite new theta and phi to nonco_angle.dat
       IF (.NOT.TEST('FIXMOM  ')) THEN
        OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
        CLOSE(10,status='delete')
-       OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
+!        OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
        OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
        DO I1=1,NATYP
-        READ(11,*) THETA(I1),PHI(I1)
-        WRITE(13,*) THETA(I1),PHI(I1)
+!         READ(11,*) THETA(I1),PHI(I1)
+!         WRITE(13,*) THETA(I1),PHI(I1)
+        WRITE(13,*) angles_new(I1,1),angles_new(I1,2)
        ENDDO
-       CLOSE(11,status='delete')
+!        CLOSE(11,status='delete')
        CLOSE(13)
       ENDIF
       end if !(myrank==master)
@@ -912,6 +1011,9 @@ c rewrite new theta and phi to nonco_angle.dat
 
 #ifdef CPP_MPI
       if(myrank==master) then
+#endif
+#ifdef CPP_TIMING
+      call timing_start('main1c - serial part')
 #endif
 
 ! In case of Lloyds formula renormalize valence charge                   ! LLY Lloyd
@@ -1090,6 +1192,9 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       WRITE (1337,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
      
+#ifdef CPP_TIMING
+      call timing_stop('main1c - serial part')
+#endif
 #ifdef CPP_MPI
       end if !myrank==master
 #endif

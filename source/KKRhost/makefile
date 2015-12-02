@@ -32,6 +32,7 @@ debug:     COMPVER ='debug'
 mpi:       COMPVER ='mpi'
 mpidebug:  COMPVER ='mpidebug'
 openmp:    COMPVER ='openmp'
+ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
 macmpi:    COMPVER ='mpi-mac'
 macomp:    COMPVER ='openmp-mac'
@@ -114,16 +115,18 @@ macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
+ompdebug: LLIBS=$(LLIBSOPENMP)
 
 ####################################################
 # C preprocessor options                           #
 ####################################################
 # Default option
-CPP=
+CPP= -D CPP_TIMING
 # change to if flag is matched
 openmp:   CPP = -D CPP_OMP
+ompdebug:   CPP = -D CPP_OMP
 mpidebug: CPP = -D CPP_MPI
-mpi:      CPP = -D CPP_MPI
+mpi:      CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
@@ -132,12 +135,14 @@ mpi:      CPP = -D CPP_MPI
 FFLAGS       =  -O2 -r8 -traceback -module $(OBJ) 
 
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -g 
+openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
+ompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g 
 debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
+ompdebug: OPENMPFLAGS = -openmp
 
 ####################################################
 # Linking                                          #
@@ -183,6 +188,7 @@ compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OB
 serial:   compile
 debug:    compile
 openmp:   compile
+ompdebug: compile
 mpi:      compile
 mpidebug: compile
 

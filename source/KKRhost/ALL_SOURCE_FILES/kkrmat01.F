@@ -37,11 +37,20 @@
 ! *     is not satisfied --> force it by R, -R                         *
 ! *                                                                    *
 ! **********************************************************************
+#ifdef CPP_MPI
+      use mpi
+      
+      use mod_types, only: t_tgmat, t_inc, t_lloyd,
+     &                      t_mpi_c_grid
+#endif
+      use mod_mympi, only: myrank, nranks, master 
+#ifdef CPP_MPI
+     &                     ,distribute_linear_on_tasks
+#endif
       IMPLICIT NONE
 !     ..
 !     .. Parameters ..
       include 'inc.p'
-!OMPI include 'mpif.h'
       INTEGER LMAX,NSYMAXD
       PARAMETER (LMAX=LMAXD,NSYMAXD=48)
       INTEGER LMGF0D
@@ -122,6 +131,14 @@
       DOUBLE COMPLEX ETAIKR(NSYMAXD,NSHELD),G(LMMAXD,LMMAXD)
       DOUBLE PRECISION BZKPK(6),KP(3)
       INTEGER NDIM
+#ifdef CPP_MPI
+      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
+     &           myrank_at, myrank_ie, nranks_at,nranks_ie
+      integer :: ntot1, mytot, ii
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
+     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      integer :: i1_start, i1_end
+#endif
 
 
       LOGICAL TEST,OPT
@@ -132,10 +149,8 @@
 !     .. Intrinsic functions ..
       INTRINSIC ATAN,EXP
 !     ..
-!OMPI INTEGER MYRANK,NROFNODES
-!OMPI COMMON /MPI/MYRANK,NROFNODES
-!OMPI DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
-!OMPI INTEGER IERR,IWORK,MAPBLOCK
+      DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
+      INTEGER IERR,IWORK
 !     ..
 
 !      NDIM=LMGF0D*NAEZ
@@ -172,10 +187,30 @@
 !-----------------------------------------------------------------------
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
+#ifdef CPP_MPI
+! MPI:     
+      ntot1 = NOFKS
+
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                           master,ntot1,ntot_pT,ioff_pT,.true.)
+
+      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &           ntot_pT(t_mpi_c_grid%myrank_ie)
+      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+      t_mpi_c_grid%ntot_pT1 = ntot_pT
+      t_mpi_c_grid%ioff_pT1 = ioff_pT
+!       
+!       write(*,*) 'kloop',myrank,ntot1,i1_start, i1_end
+      
+      DO KPT = i1_start,i1_end
+#else
       DO KPT = 1,NOFKS 
+#endif
          GLLKE(:,:) = CZERO
          IF (LLY.NE.0) DGLLKE(:,:) = CZERO
-!OMPI   IF(MYRANK.EQ.MAPBLOCK(K,1,NOFKS,1,0,NROFNODES-1)) THEN
          KP(1:3) = BZKP(1:3,KPT)
  
          ETAIKR(1:NSYMAT,1:NSHELL) = VOLCUB(KPT)
@@ -529,8 +564,6 @@ c            DEALLOCATE(GLLKE0)
          
 
 
-!OMPI END IF
-
       END DO ! KPT = 1,NOFKS   end K-points loop
 
       TRACET = CZERO
@@ -560,13 +593,15 @@ c            DEALLOCATE(GLLKE0)
       IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate GREFLLKE'   ! LLY Lloyd
 !-----------------------------------------------------------------------
 ! 
-!OMPI   DO NS = 1,NSHELL
-!OMPI     IWORK = LMMAXD*LMMAXD*NSYMAXD
-!OMPI     CALL MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,
-!OMPI+                       MPI_DOUBLE_COMPLEX,MPI_SUM,
-!OMPI+                       MPI_COMM_WORLD,IERR)
-!OMPI     CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
-!OMPI   END DO
+#ifdef CPP_MPI
+        DO NS = 1,NSHELL
+          IWORK = LMMAXD*LMMAXD*NSYMAXD
+          CALL MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,
+     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
+          CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
+        END DO
+#endif
 
       IF ( TEST('flow    ') ) WRITE(1337,*) '<<< KKRMAT1'
 

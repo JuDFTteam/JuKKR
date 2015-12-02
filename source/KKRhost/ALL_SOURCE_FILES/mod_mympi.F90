@@ -6,7 +6,7 @@ implicit none
   private
   public :: myrank, nranks, master, mympi_init
 #ifdef CPP_MPI
-  public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol
+  public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol, mympi_main1c_comm_newsosol2
 #endif
 
   integer, save :: myrank = -1
@@ -87,17 +87,29 @@ contains
     integer, intent(in)  :: nranks,ntot1,ntot2
     integer, intent(out) :: dims(2)
     
-    if(nranks.le.ntot2) then
-       dims(1) = 1
-       dims(2) = nranks
+    if(nranks.le.ntot1) then
+       dims(2) = 1
+       dims(1) = nranks
     else
        ! rest not implemented!!!
 !        stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
-       dims(1) = nranks/ntot2
-       dims(2) = ntot2
+       dims(2) = nranks/ntot1
+       dims(1) = ntot1
        ! for test purposes, now consider only cartesian grid!
        if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
     end if
+!     
+!     if(nranks.le.ntot2) then
+!        dims(1) = 1
+!        dims(2) = nranks
+!     else
+!        ! rest not implemented!!!
+! !        stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
+!        dims(1) = nranks/ntot2
+!        dims(2) = ntot2
+!        ! for test purposes, now consider only cartesian grid!
+!        if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
+!     end if
     
 !     write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
     
@@ -274,7 +286,7 @@ contains
     nranks_at = ne    
     myrank_at = myg-1
     
-  elseif((ne*nat)==nranks .and. (ne>1 .and. nat>1)) then
+  elseif((ne*nat)==nranks) then ! .and. (ne>1 .and. nat>1)) then
   
     rest = 0
 
@@ -295,14 +307,25 @@ contains
   else
   
     rest = 0
+! 
+!     mympi_comm_at = MPI_COMM_WORLD
+!     write(1337,*) 'comm_test',myMPI_comm_at==MPI_COMM_WORLD
+!     myrank_at     = myrank
+!     nranks_at     = nranks
+!     mympi_comm_ie = MPI_COMM_SELF
+!     myrank_ie     = 0
+!     nranks_ie     = 1
+!     
+!     myrank_atcomm = myrank_at
+!     nranks_atcomm = nranks_at
 
-    mympi_comm_at = MPI_COMM_WORLD
-    write(1337,*) 'comm_test',myMPI_comm_at==MPI_COMM_WORLD
-    myrank_at     = myrank
-    nranks_at     = nranks
-    mympi_comm_ie = MPI_COMM_SELF
-    myrank_ie     = 0
-    nranks_ie     = 1
+    mympi_comm_ie = MPI_COMM_WORLD
+    write(1337,*) 'comm_test',myMPI_comm_ie==MPI_COMM_WORLD
+    myrank_ie     = myrank
+    nranks_ie     = nranks
+    mympi_comm_at = MPI_COMM_SELF
+    myrank_at     = 0
+    nranks_at     = 1
     
     myrank_atcomm = myrank_at
     nranks_atcomm = nranks_at
@@ -515,6 +538,53 @@ contains
      deallocate(work)
         
   end subroutine mympi_main1c_comm_newsosol
+#endif
+
+#ifdef CPP_MPI
+  subroutine mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,      &
+     &                                   NPOTD,NATYPD,LMPOTD,IRMD,       &
+     &                                   den, denlm, muorb, espv, r2nef, &
+     &                                   rho2ns, denefat, denef,         &
+     &                                   mympi_comm)
+     
+     use mpi
+     implicit none
+     integer, intent(in) :: LMAXD1,IEMXD,NQDOS,NPOTD,NATYPD,LMPOTD,IRMD,LMMAXD
+     integer, intent(in) :: mympi_comm
+     double complex, intent(inout)   :: den(0:LMAXD1,IEMXD,NQDOS,NPOTD), denlm(LMMAXD,IEMXD,NQDOS,NPOTD)
+     double precision, intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef
+     
+     integer :: ierr, idim
+     double complex, allocatable :: work(:,:,:,:)
+     double precision, allocatable :: work2(:,:,:,:)
+     
+     !double complex arrays
+     IDIM = (1+LMAXD1)*IEMXD*NQDOS*NPOTD
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,den,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     
+     IDIM = LMMAXD*IEMXD*NQDOS*NPOTD
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,denlm,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     
+     !double precision arrays
+     IDIM = (LMAXD1+2)*3*NATYPD
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,muorb,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+
+     IDIM = (LMAXD1+1)*NPOTD
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,ESPV,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+
+     IDIM = IRMD*LMPOTD*NATYPD*2
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,r2nef,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+
+     IDIM = IRMD*LMPOTD*NATYPD*2
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,RHO2NS,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+
+     IDIM = NATYPD
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,denefat,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+
+     IDIM = 1
+     CALL MPI_ALLREDUCE(MPI_IN_PLACE,denef,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+        
+  end subroutine mympi_main1c_comm_newsosol2
 #endif
 
 
