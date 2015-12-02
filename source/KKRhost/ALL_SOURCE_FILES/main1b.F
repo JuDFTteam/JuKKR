@@ -12,6 +12,9 @@
 #ifdef CPP_MPI
       use mpi
 #endif
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
@@ -491,14 +494,9 @@ C
          NCPAFAIL = 0
 C
 #ifdef CPP_MPI
-!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-!          ie_end = t_mpi_c_grid%ntot2
-         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
          
-!          write(*,*) 'start e-loop',myrank,ie_start, ie_end
-
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
 #else
@@ -526,6 +524,9 @@ C
 C ********************************************************** I1 = 1,NREF
 C -> calculate t(ll') of the reference system (on clusters)
 C
+#ifdef CPP_TIMING
+        call timing_start('main1b - calctref13')
+#endif
             IF ( KREL.EQ.0 ) THEN
                DO I1 = 1,NREF
                   CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
@@ -552,6 +553,9 @@ C------------------------------------------------------------
      &                           LMMAXD,RC,CREL,RREL,'TREFLL',0)
                END DO
             END IF
+#ifdef CPP_TIMING
+        call timing_pause('main1b - calctref13')
+#endif
 C
 C **********************************************************************
             TRALPHA(IE,ISPIN) = CZERO                                    ! LLY
@@ -645,6 +649,9 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
             DO 200 IQ = 1,NQDOS                               ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 C
+#ifdef CPP_TIMING
+        call timing_start('main1b - kloopz')
+#endif
             CALL KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,
      &                 NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),
      &           VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,RR,RBASIS,EZOA,ATOM,
@@ -659,6 +666,9 @@ C
      &                 ISPIN,NSPINDD,
      &                 TQDOS,IQDOSRUN,                         ! qdos
      &    DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,ISPIN),TRACET(IE,ISPIN),LLY) ! LLY Lloyd
+#ifdef CPP_TIMING
+        call timing_pause('main1b - kloopz')
+#endif
 C
 C           Skip this part if first part of the qdos is running
             IF ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) ) THEN
@@ -759,9 +769,6 @@ C
      &                 + TRALPHAREF(IE)        ! LLY Lloyd
      &                 - LLY_GRTR(IE,ISPIN) / VOLBZ(1) +  LLY_G0TR(IE)    ! LLY Lloyd
                ENDIF                                                      ! LLY Lloyd
-               
-!           write(*,*) myrank,ie,TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN),
-!      &                VOLBZ(1),LLY_G0TR(IE),lly,TRALPHAREF(IE)
 
                IF (ISPIN.EQ.1)                                            ! LLY Lloyd
      &              CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)       ! LLY Lloyd
@@ -779,6 +786,10 @@ C
 c ------------------------------------------------------------------------
 
  360     CONTINUE               ! IE = 1,IELAST
+#ifdef CPP_TIMING
+        call timing_stop('main1b - calctref13')
+        call timing_stop('main1b - kloopz')
+#endif
 
          IF( NCPAFAIL .NE. 0 ) THEN
             WRITE(1337,*)
@@ -835,6 +846,9 @@ c read in Green function of reference system
      &                ' KMESH = ', NMESH
 
 c construct t matrix for reference system (now is always double matrix)
+#ifdef CPP_TIMING
+       call timing_start('main1b - calctref13')
+#endif
        DO I1 = 1,NREF
         CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
      +                WN1,WN2,                                ! LLY
@@ -847,6 +861,9 @@ c construct t matrix for reference system (now is always double matrix)
          DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
         ENDDO
        ENDDO ! I1
+#ifdef CPP_TIMING
+       call timing_pause('main1b - calctref13')
+#endif
        TRALPHA(IE,NSPINDD)=CZERO
        TRALPHAREF(IE)=CZERO
 c read in t matrix
@@ -872,6 +889,7 @@ c read in theta and phi for noncolinear
           ENDIF
 
 c read in t-matrix from file
+!         write(*,*) 'main1b tmatread',myrank,i1,ie,ielast
         IREC = IE + IELAST*(I1-1)
         if (t_tgmat%tmat_to_file) then
            READ (69,REC=IREC) TMAT
@@ -963,6 +981,9 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
             DO 220 IQ = 1,NQDOS                               ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 
+#ifdef CPP_TIMING
+            call timing_start('main1b - kloopz')
+#endif
             CALL KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,
      &              NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),
      &           VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,RR,RBASIS,EZOA,ATOM,
@@ -977,6 +998,9 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
      &              1,NSPINDD,
      &              TQDOS,IQDOSRUN,     ! qdos
      &    DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1),TRACET(IE,1),LLY) ! LLY Lloyd
+#ifdef CPP_TIMING
+            call timing_pause('main1b - kloopz')
+#endif
           
 !           Skip this part if first part of the qdos is running
             IF ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) ) THEN
@@ -1037,8 +1061,12 @@ c       STOP
             ENDIF                                                   ! LLY 
 
  460  CONTINUE                  ! IE=1,IELAST
+#ifdef CPP_TIMING
+        call timing_stop('main1b - calctref13')
+        call timing_stop('main1b - kloopz')
+#endif
       
-      ENDIF
+      ENDIF ! NEWSOSOL
 
 
 C

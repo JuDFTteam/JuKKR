@@ -118,61 +118,26 @@ program kkrcode
     ! calculate tmat and gref
     call timing_start('main1a')
     call main1a()
-#ifdef CPP_MPI
-    call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
-#endif
     call timing_stop('main1a')
     
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
     
-! !     if(myrank==0) write() t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP)
-!     if(myrank==0) write(*,*) ' tmat_myrank0:',t_tgmat%tmat(1,1,:)
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!     if(myrank==1) write(*,*) ' tmat_myrank1:',t_tgmat%tmat(1,1,:)
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!     if(myrank==2) write(*,*) ' tmat_myrank2:',t_tgmat%tmat(1,1,:)
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!     if(myrank==3) write(*,*) ' tmat_myrank3:',t_tgmat%tmat(1,1,:)
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!     if(myrank==4) write(*,*) ' tmat_myrank4:',t_tgmat%tmat(1,1,:)
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-    
-!     STOP
-
     ! calculate gmat
     call timing_start('main1b')
        call main1b()
     call timing_stop('main1b')
-!         allocate(ntot_pT(0:nranks-1),ioff_pT(0:nranks-1))
-!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_col, &
-!      &                                 t_mpi_c_grid%myrank_col,master,&
-!      &                                 t_inc%IELAST,ntot_pT,ioff_pT,.true.)
-!         ie_start = ioff_pT(t_mpi_c_grid%myrank_col)
-!         ie_end   = ntot_pT(t_mpi_c_grid%myrank_col)
-! 
-!         t_mpi_c_grid%ntot2  = ie_end  !t_mpi_c_grid%nranks_col
-!         if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .and. &
-!      &            allocated(t_mpi_c_grid%ioff_pT2))) &
-!      &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_col-1),&
-!      &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_col-1))
-!         t_mpi_c_grid%ntot_pT2 = ntot_pT !(t_mpi_c_grid%myrank_col)
-!         t_mpi_c_grid%ioff_pT2 = ioff_pT !(t_mpi_c_grid%myrank_col)
-!         ! now initialize arrays for tmat, gmat, and gref
-!         call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+   
    
     ! calculate density
     call timing_start('main1c')
     call main1c()
     call timing_stop('main1c')
     
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
     
     ! calculate do DFT stuff (potential from density, exc-potential, calculate total energy, ...)
     call timing_start('main2')
     if (myrank==master) call main2()
     call timing_stop('main2')
     
-!     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
     
 #ifdef CPP_MPI
     ! update i_iteration:
@@ -184,22 +149,12 @@ program kkrcode
 
     if (myrank==master) call print_time_and_date('Iteration finished')
     
-    write(*,*) myrank, t_inc%i_iteration, t_inc%N_iteration
-    
   end do ! scf-iteration
   
   
 #ifdef CPP_MPI
-   ! call MPI_Barrier(MPI_COMM_WORLD, ierr)
-   ! write(*,*) myrank,'ierr barrier',ierr
-   ! call MPI_COMM_FREE(t_mpi_c_grid%mympi_comm_ie, ierr)
-   ! write(*,*) myrank,'free ie',ierr
-   ! call MPI_COMM_FREE(t_mpi_c_grid%mympi_comm_at, ierr)
-   ! write(*,*) myrank,'free at',ierr
-   ! write(*,*) myrank, 'finalizing'
   ! finalize MPI  
   call MPI_Finalize(ierr)
-    write(*,*) myrank,'finalize',ierr
 #endif
 
 

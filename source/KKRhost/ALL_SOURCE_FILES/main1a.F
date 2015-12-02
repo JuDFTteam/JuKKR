@@ -10,6 +10,9 @@
 #ifdef CPP_MPI
       use mpi
 #endif
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
@@ -295,15 +298,13 @@ C
       i1_start = 1
       i1_end   = NATYP
 #endif
-!        DO IPOT = i1_start,i1_end
         DO I1 = i1_start,i1_end
        DO ISPIN = 1,NSPIN
          IPOT=NSPIN*(I1-1)+ispin
-!          ISPIN = MOD(IPOT+1,NSPIN) + 1
-!          I1 = (IPOT-ISPIN)/NSPIN + 1
 C
          CALL CALCTMAT(ICST,INS,IELAST,
-     +                 NSRA,ISPIN,NSPIN,I1,EZ,
+     +                 NSRA,ISPIN,NSPIN,
+     +                 I1,EZ,
      +                 DRDI(1,I1),RMESH(1,I1),
      +                 VINS(IRMIND,1,KNOSPH*IPOT+(1-KNOSPH)),
      +                 VISP(1,IPOT),ZAT(I1),IRMIN(I1),IPAN(I1),   ! Added IRMIN 1.7.2014
@@ -337,7 +338,7 @@ C
             ENDIF
           ENDDO
           IF(LCHECKANGLES) write(1337,*) 'WARNING: Check if your
-     & nonco_angels file is correct! Found only values that are
+     & nonco_angels file is correct!ll Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
      & angles are given in degree (0...360)'
        ENDIF
@@ -422,13 +423,17 @@ C
 #ifdef CPP_MPI
       if(t_mpi_c_grid%myrank_ie==0) then
 #endif
+#ifdef CPP_TIMING
         call timing_start('main1a - tbref')
+#endif
         IF ( LREFSYS ) CALL TBREF(EZ,IELAST,ALAT,VREF,IEND,LMAX,NCLS,
      &                            NINEQ,NREF,CLEB,RCLS,ATOM,CLS,ICLEB,
      &                            LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,
      &                            TMPDIR,ITMPDIR,ILTMP,
      &                            NAEZ,LLY) ! LLY Lloyd
+#ifdef CPP_TIMING
         call timing_stop('main1a - tbref')
+#endif
 
 #ifdef CPP_MPI
       end if !(t_mpi_c_grid%myrank_at==0)

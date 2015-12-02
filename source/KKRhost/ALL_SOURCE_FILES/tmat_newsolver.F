@@ -60,7 +60,8 @@
      +                DALPHALL(LMMAXSO,LMMAXSO), ! LLY
      +                ALPHA0(LMMAXSO,LMMAXSO), ! LLY
      +                AUX(LMMAXSO,LMMAXSO)         ! LLY
-       DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:)!,DTMAT_OUT(:,:,:), ! LLY
+     +               ,ALPHASPH(2*(LMAX+1)) ! LLY
+!        DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:)!,DTMAT_OUT(:,:,:), ! LLY
 !      +                                TRAL_OUT(:) ! LLY
          
        INTEGER JLK_INDEX(2*LMMAXSO)
@@ -122,7 +123,7 @@ c initial allocate
        ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
 !        ALLOCATE(TMAT_OUT(LMMAXSO,LMMAXSO,IELAST))
-       ALLOCATE(ALPHASPH(2*(LMAX+1))) ! LLY
+!        ALLOCATE(ALPHASPH(2*(LMAX+1))) ! LLY
 !        ALLOCATE(DTMAT_OUT(LMMAXSO,LMMAXSO,IELAST)) ! LLY
 !        ALLOCATE(TRAL_OUT(IELAST)) ! LLY
           
@@ -157,6 +158,9 @@ c energy loop
        
          IE = ie_start+ie_num
 #else
+       if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
+     &           allocated(t_mpi_c_grid%ioff_pT2))) 
+     & allocate(t_mpi_c_grid%ntot_pT2(1),t_mpi_c_grid%ioff_pT2(1))
        t_mpi_c_grid%ntot2=IELAST
        t_mpi_c_grid%ntot_pT2 = IELAST 
        t_mpi_c_grid%ioff_pT2 = 0      
@@ -173,7 +177,14 @@ c energy loop
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll) !,tmat_out)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
 !$omp& shared(lly,deltae,i1) !,dtmat_out,tral_out)
-!$omp& private(tralpha,alpha0,alphall,tmat0,alphasph,dtmatll,dalphall) 
+! !$omp& private(tralpha,alpha0,alphall,tmat0,alphasph,dtmatll,dalphall) 
+!$omp& private(tralpha) 
+!$omp& private(alpha0)
+!$omp& private(alphall)
+!$omp& private(tmat0) 
+!$omp& private(alphasph) 
+!$omp& private(dtmatll) 
+!$omp& private(dalphall) 
 !$omp& private(aux,ideriv,ipiv) 
        DO IE=1,IELAST
          ie_end = IELAST
@@ -337,8 +348,14 @@ c         STOP
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
+!             WRITE(696969,*) TMATLL(:,:)
          else
+#ifdef CPP_MPI
+            irec = ie_num +
+     +       ie_end*(I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
+#else
             irec = ie_num + ie_end * (i1-1)
+#endif
             t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
          end if
          IF (LLY.NE.0) THEN
@@ -374,6 +391,6 @@ c         STOP
        DEALLOCATE(TMATSPH)
        DEALLOCATE(RLL)
        DEALLOCATE(SLL)
-       DEALLOCATE(ALPHASPH)!,DTMAT_OUT,TRAL_OUT) ! LLY
+!        DEALLOCATE(ALPHASPH)!,DTMAT_OUT,TRAL_OUT) ! LLY
        END 
 

@@ -111,8 +111,8 @@ $(OBJ)/vintras.o      : $(SRA)/vintras.f $(INCP)            ; \
 
 ##################### sources in COMMON directory ##########
 
-$(OBJ)/main2.o        : $(COM)/main2.f   $(INCP)  ; \
-                         $(FC) $(FFLAGS) $(COM)/main2.f -c -o $@
+$(OBJ)/main2.o        : $(COM)/main2.F   $(INCP)  ; \
+                         $(FC) $(FFLAGS) $(CPP) $(COM)/main2.F -c -o $@
 
 $(OBJ)/vmadelblk.o    : $(COM)/vmadelblk.f $(INCP)          ; \
                          $(FC) $(FFLAGS) $(COM)/vmadelblk.f -c -o $@

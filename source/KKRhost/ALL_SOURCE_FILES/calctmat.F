@@ -178,9 +178,9 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
        
          IE = ie_start+ie_num
 #else
-      t_mpi_c_grid%ntot2=IELAST
-      t_mpi_c_grid%ntot_pT2 = IELAST
-      t_mpi_c_grid%ioff_pT2 = 0
+      !t_mpi_c_grid%ntot2=IELAST
+      !t_mpi_c_grid%ntot_pT2 = IELAST
+      !t_mpi_c_grid%ioff_pT2 = 0
       ! now initialize arrays for tmat, gmat, and gref
       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
@@ -341,7 +341,12 @@ C
          if (t_tgmat%tmat_to_file) then
             WRITE(69,REC=IREC) TMAT0
          else
-            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+#ifdef CPP_MPI
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*
+     *             (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
+#else
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*I1
+#endif
             t_tgmat%tmat(:,:,irec) = tmat0
          end if
          IF (LLY.NE.0) THEN                                          ! LLY

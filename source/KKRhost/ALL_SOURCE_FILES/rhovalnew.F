@@ -3,13 +3,15 @@
      +                      NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,
      +                      RPAN_INTERVALL,IPAN_INTERVALL,
      +                      RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,
-     +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB)
+     +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB,angles_new)
 #ifdef CPP_OMP
        use omp_lib
-#endif
-       
+#endif 
 #ifdef CPP_MPI
       use mpi
+#endif
+#ifdef CPP_TIMING
+      use mod_timing
 #endif
       
       use mod_types, only: t_tgmat, t_inc
@@ -105,6 +107,7 @@
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_start,ie_end, ie_num
+      double precision :: angles_new(NATYPD,2)
 ! determine if omp is used
 !$omp parallel shared(nth,ith)
 !$omp single
@@ -243,6 +246,8 @@ c energy loop
          
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+         
+         write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
 
        DO ie_num=1,ie_end
          IE = ie_start+ie_num
@@ -284,7 +289,7 @@ c energy loop
         IF (NSRA.EQ.2) EK = SQRT( ERYD + ERYD*ERYD/(CVLIGHT*CVLIGHT) ) *
      &                          ( 1d0 + ERYD/(CVLIGHT*CVLIGHT) )
 !$omp critical
-        WRITE(1337,*) 'energy:',IE,'',ERYD
+        WRITE(1337,'(A,I4,2E14.7,A,I4)') 'energy:',IE,ERYD,' atom',i1
 !$omp end critical
 ! 
 !         IREC=IE+IELAST*(I1-1)
@@ -650,17 +655,26 @@ c    write qdos.nn.s.dat                                                  ! qdos
        ! reset NQDOS to avoid endless communication
        NQDOS=1
 
+#ifdef CPP_TIMING
+!        call timing_start('main1c - communication')
+#endif
        call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
      &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
      &                            denorbmomsp,denorbmomlm,denorbmomns,
-! use this until atom loop is parallelised
 !      &                            MPI_COMM_WORLD)
      &                            t_mpi_c_grid%myMPI_comm_at)
-      
+#ifdef CPP_TIMING
+!        call timing_pause('main1c - communication')
+#endif
+
+              write(*,*) 'in rhovalnew2',myrank,i1,
+     &      t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie!,den(0,1:5,1,1)
+
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
-      if(myrank==master) then
+!       if(myrank==master) then
+      if(t_mpi_c_grid%myrank_at==master) then
 #endif
 
 ! omp: moved write-out of dos files out of parallel energy loop
@@ -697,8 +711,8 @@ c Write out lm-dos:                                                      ! lm-do
 
 c      write gflle to file                                               ! lmlm-dos
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
-       write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
-       WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
+         write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
+         WRITE(91,REC=I1) GFLLE                                          ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
        
        ALLOCATE(RHOTEMP(IRMDNEW,LMPOTD))
@@ -779,10 +793,12 @@ c          PHINEW=DATAN2(MOMENT(2),MOMENT(1))
 c        WRITE(6,*) 'total moment',TOTMOMENT,TOTXYMOMENT
         WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
      &             PHINEW/(2.0D0*PI)*360.0D0
-        WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
-        WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
+!         WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
+!      &             PHINEW/(2.0D0*PI)*360.0D0
+!         WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
+!      &             PHINEW/(2.0D0*PI)*360.0D0
+        angles_new(i1,1) = THETANEW/(2.0D0*PI)*360.0D0
+        angles_new(i1,2) = PHINEW/(2.0D0*PI)*360.0D0
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,
      +                    THETA,PHI,IRMD)
         CALL ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOTD,THETANEW,PHINEW,
@@ -814,10 +830,10 @@ C
 #ifdef CPP_MPI
       endif !(myrank==master)
       
-      ! communicate den_out to all processors
+      ! communicate den_out to all processors with the same atom number
       IDIM = (LMAXD+2)*IEMXD*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
-     &               t_mpi_c_grid%mympi_comm_at, ierr)
+     &               t_mpi_c_grid%myMPI_comm_at, ierr)
 !      &               MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
 #endif

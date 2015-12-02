@@ -492,24 +492,31 @@ contains
     integer, intent(in) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), mytot, mympi_comm
 
     integer :: ihelp
-!     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
+    integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: nspin
     double complex, allocatable :: work(:,:,:)
     integer :: ierr
     
-
+    
     !Gather tmat so that all processors the full matrix for their part of the energy contour
+    if(myrank==master) write(*,*) 'communicate tmat?',t_mpi_c_grid%dims(1),t_mpi_c_grid%dims(1)>1
     if(t_mpi_c_grid%dims(1)>1) then
        nspin = t_inc%NSPIN
        if(t_inc%NEWSOSOL) nspin = 1
       
-       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%dims(2)*nspin*t_inc%NATYP
-       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%dims(2)*nspin*t_inc%NATYP),stat=ierr)
-       if(ierr.ne.0) stop 'problem allocating work array in mympi_main1c_comm'
-       CALL MPI_ALLREDUCE(t_tgmat%tmat,WORK,ihelp,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,ierr)
-       CALL DCOPY(ihelp,WORK,1,t_tgmat%tmat,1)
-       deallocate(work)
+       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin!*t_inc%NATYP/mytot
+       recvcounts = ntot_pT*ihelp
+       displs     = ioff_pT*ihelp
+       
+!        write(*,*) myrank, shape(t_tgmat%tmat),ihelp,mytot,recvcounts,displs
+       
+       call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+                          & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+                          & mympi_comm, ierr )
     end if
+!        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+!        if (myrank==master) write(*,*) 'tmatgather:',t_tgmat%tmat
+!        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
                           
    end subroutine gather_tmat
 #endif
@@ -542,7 +549,6 @@ contains
 !       t_inc%NACLSD = NACLSMAX
 !        recvcounts = ntot_pT*ihelp
 !        displs     = ioff_pT*ihelp
-       write(1337,*) myrank,'gather_ref',mytot,ntot_pT,ioff_pT,ihelp
        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
        call MPI_Bcast( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX, 0 , &
                           & mympi_comm, ierr )

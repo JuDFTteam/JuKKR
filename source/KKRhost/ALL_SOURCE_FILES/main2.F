@@ -10,6 +10,9 @@
       subroutine main2()
       
       use mod_types, only: t_inc
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       implicit none
       

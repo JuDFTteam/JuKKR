@@ -67,8 +67,8 @@ $(OBJ)/kloopz1.o  : $(COM)/kloopz1.F  $(INCP)  ; \
 $(OBJ)/mssinit.o  : $(COM)/mssinit.f                  ; \
                     $(FC) $(FFLAGS)  $(COM)/mssinit.f -c -o $@
 
-$(OBJ)/kkrmat01.o : $(COM)/kkrmat01.f $(INCP)  ; \
-                    $(FC) $(FFLAGS)  $(COM)/kkrmat01.f -c -o $@
+$(OBJ)/kkrmat01.o : $(COM)/kkrmat01.F $(INCP)  ; \
+                    $(FC) $(FFLAGS) $(CPP)  $(COM)/kkrmat01.F -c -o $@
 
 $(OBJ)/decimate.o     : $(COM)/decimate.f $(INCP)  ; \
                        $(FC) $(FFLAGS)  $(COM)/decimate.f -c -o $@
