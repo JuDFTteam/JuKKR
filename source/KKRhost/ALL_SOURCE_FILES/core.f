@@ -591,8 +591,8 @@ C ----------------------- parameters 3 and 4 = 0 for paramagnetic case !
 C           IF( ABS(VAR(IV)) .EQ. 0.0D0 ) THEN
                         IF ( (ABS(VAR(IV))+ABS(VAR(IV))).LT.1.0D-30 )
      &                       THEN
-                           IF ( FERRO ) WRITE (1337,'(A,I3,A)') ' VAR ',IV,
-     &                          ' = 0 ??????!!!!!'
+                           IF ( FERRO ) WRITE (1337,'(A,I3,A)') ' VAR ',
+     &                          IV,' = 0 ??????!!!!!'
                         ELSE IF ( ABS(DV(IV)/VAR(IV)).GT.TOLVAR ) THEN
                            GOTO 70
                         END IF

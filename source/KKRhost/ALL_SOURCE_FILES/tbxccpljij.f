@@ -514,7 +514,8 @@ C
      &                       DIMAG(JXCIJINT(IT,JT,NS))*1D3,JT
                         write(1337,*) ns+nsmax,' shell'
                      ELSE
-                        WRITE (1337,99008) DIMAG(JXCIJINT(IT,JT,NS))*1D3,JT
+                        WRITE (1337,99008) 
+     &                       DIMAG(JXCIJINT(IT,JT,NS))*1D3,JT
                         write(1337,*) ns+nsmax,' shell'
                      END IF
                      IF ( LM2.EQ.LM1 ) WRITE (1337,*)

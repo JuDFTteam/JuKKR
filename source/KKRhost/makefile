@@ -23,6 +23,10 @@ mpi:       FC =  mpiifort
 # mac:
 macmpi:       FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
+#rwth cluster
+rwthmpi: FC=$(MPIFC)
+rwthmpidebug: FC=marmotf90   
+# $(MPIFC)
 
 
 # information for version-tracking in executable:
@@ -38,6 +42,7 @@ macomp:    COMPVER ='openmp-mac'
 rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
+rwthmpidebug: COMPVER='mpidebug-rwth'
 
 
 
@@ -98,20 +103,35 @@ LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -l
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+# RWTH cluster:
+RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
 macomp: LLIBS=$(MACLLIBS)
 
+rwth:          LLIBS=$(RWTHLLIBS)
+rwthmpi:       LLIBS=$(RWTHLLIBS)
+rwthmpidebug:  LLIBS=$(RWTHLLIBS)
+rwthomp:       LLIBS=$(RWTHLLIBS)
+
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac:
 #LLIBSOPENMP = -L${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-MACLLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+MACLLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000 -lmkl_intel_thread -liomp5
+# RWTH cluster:
+RWTHLLIBSOMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_intel_thread -liomp5
+
 
 mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
 macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
+
+rwth:          LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthmpi:       LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthmpidebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthomp:       LLIBSOPENMP=$(RWTHLLIBSOMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
 
@@ -185,15 +205,18 @@ debug:    compile
 openmp:   compile
 mpi:      compile
 mpidebug: compile
+rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	$(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+
 
 install: clean serial
 
-mac:    serial
-macmpi: mpi
-macomp: openmp
-rwth:    serial
-rwthmpi: mpi
-rwthomp: openmp
+mac:    compile
+macmpi: compile
+macomp: compile
+rwth:    compile
+rwthmpi: compile
+rwthomp: compile
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<
