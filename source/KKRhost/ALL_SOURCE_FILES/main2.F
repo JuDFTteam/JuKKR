@@ -252,6 +252,9 @@ c New variables for fixed Fermi energy calculations; noted as fxf
 
       REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
 C     ..
+! for SIMULASA:
+      INTEGER*4 IPOS,ILMP,IAS
+C     ..
 
       allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD))
       allocate(VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD))
@@ -591,6 +594,15 @@ cfivos     IF ( .NOT.TEST('NoMadel ').AND. ( SCFSTEPS.GT.1 )
 cfivos     &     .OR. (ICC .GT. 0 ) )THEN
 C ---------------------------------------------------------------------
          IF ( LINTERFACE ) THEN  
+         write(321654,*) 'cmom',CMOM,'cminst',CMINST,'lpot',LPOT,
+     &  'nspin',NSPIN,'naez',NAEZ,
+     &  'natyp',NATYP,'vons',VONS,'zat',ZAT,'r',R,'irws',IRWS,
+     &  'ircut',IRCUT,'ipan',IPAN,'kshape',KSHAPE,
+     &  'noq',NOQ,'kaoez',KAOEZ,'iqat',IQAT,'conc',CONC,
+     &  'chrgatom',CHRGATOM(1,1),
+     &  'icc',ICC,'hostmimp',HOSTIMP,'nlbasis',NLBASIS,'nleft',NLEFT,
+     &  'nrbasis',NRBASIS,'nright',NRIGHT,
+     &  'cmomhost',CMOMHOST,'chrgnt',CHRGNT,'vinters',VINTERS
             CALL VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NAEZ,
      &                      NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
      &                      NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),
@@ -600,6 +612,14 @@ C ---------------------------------------------------------------------
          ELSE
 C ---------------------------------------------------------------------
 !             WRITE(*,*) 'CALL VMADELBLK'
+      write(321654,*) 'cmom',CMOM,'cminst',CMINST,'lpot',LPOT,
+     &  'nspin',NSPIN,'naez',NAEZ,
+     &  'natyp',NATYP,'vons',VONS,'zat',ZAT,'r',R,'irws',IRWS,
+     &  'ircut',IRCUT,'ipan',IPAN,'kshape',KSHAPE,
+     &  'noq',NOQ,'kaoez',KAOEZ,'iqat',IQAT,'conc',CONC,
+     &  'chrgatom',CHRGATOM(1,1),
+     &  'icc',ICC,'hostmimp',HOSTIMP,'ielast',IELAST,'atomimp',ATOMIMP,
+     &  'natomimp',NATOMIMP,'alat',ALAT,'vbc',VBC,'vinters',VINTERS
             CALL VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,
      &                     NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
      &                     NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),
@@ -931,7 +951,18 @@ C ..................
           close(54633563)
         end if ! config_testflag('write_gmatonsite')
 
-
+! for simulasa:
+      if(opt('simulasa')) then
+         DO IAS = 1, NPOTD
+          DO ILMP = 1, LMPOTD
+            DO IPOS = 1, IRMD
+              IF (ILMP .NE. 1) THEN
+                VONS(IPOS, ILMP, IAS) = 0.D0
+              ENDIF
+            ENDDO
+          ENDDO
+         ENDDO
+      endif
 
 C ---------------------------------------------------------------------
 C

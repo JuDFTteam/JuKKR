@@ -109,11 +109,11 @@ C
 C make ewald sumation in plane and inverse space 
 C sum if rz<>0 (out of plane)
 C
-            !WRITE(99,*) 'Layer pair:',IQ1,IQ2
+            WRITE(99,*) 'Layer pair:',IQ1,IQ2
             CALL EWALD2D(LPOT,ALAT,RBASIS(1,IQ1),RBASIS(1,IQ2),IQ1,IQ2,
      &                   RM2,NRMAX,NSHLR,NSR,GN2,
      &                   NGMAX,NSHLG,NSG,SUM,VOL,LASSLD,LMXSPD)
-            !WRITE(99,*) 'SUM: ',SUM
+            WRITE(99,*) 'SUM: ',SUM
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
             IF ( IPRINT.GE.2 ) THEN

@@ -631,6 +631,8 @@ C ================================================================ NATYP
      &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
+        
+      if (myrank==master) write(*,*) 'main1c atom loop',i1_start,i1_end
 #else
       i1_start = 1
       i1_end   = NATYP
@@ -896,7 +898,7 @@ c interpolate potential
       i1_end   = NATYP
 #endif
       DO I1 = i1_start,i1_end
-      write(*,*) 'rhovalnew',myrank,i1
+      !write(*,*) 'rhovalnew',myrank,i1
 ! 
        ICELL = NTCELL(I1)
        IPOT = (I1-1) * NSPIN + 1
@@ -913,7 +915,7 @@ c interpolate potential
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
      &           angles_new)
-        write(*,*) 'after rhovalnew',myrank,i1,ipot,den1(0,1:5,1)
+        !write(*,*) 'after rhovalnew',myrank,i1,ipot,den1(0,1:5,1)
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
@@ -960,8 +962,6 @@ c interpolate potential
        ENDDO
       END DO !I1
       
-      !i1 = 54874321+myrank
-      !write(i1,*) rho2ns
 #ifdef CPP_MPI
       call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
      &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
@@ -970,8 +970,6 @@ c interpolate potential
      &                                 t_mpi_c_grid%mympi_comm_ie)
 !      &                                 MPI_COMM_WORLD)
 #endif
-      !i1 = 54874331+myrank
-      !write(i1,*) rho2ns
       
 #ifdef CPP_TIMING
       call timing_stop('main1c - rhovalnew')

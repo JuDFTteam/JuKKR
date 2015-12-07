@@ -247,7 +247,7 @@ c energy loop
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
          
-         write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
+         !write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
 
        DO ie_num=1,ie_end
          IE = ie_start+ie_num
@@ -669,8 +669,8 @@ c    write qdos.nn.s.dat                                                  ! qdos
 !        call timing_pause('main1c - communication')
 #endif
 
-              write(*,*) 'in rhovalnew2',myrank,i1,
-     &      t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie!,den(0,1:5,1,1)
+!               write(*,*) 'in rhovalnew2',myrank,i1,
+!      &      t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie!,den(0,1:5,1,1)
 
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
 !       if(myrank==master) then
