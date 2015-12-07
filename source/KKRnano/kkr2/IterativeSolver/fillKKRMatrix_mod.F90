@@ -238,34 +238,27 @@ module fillKKRMatrix_mod
     integer, intent(in) :: kvstc(:)
     double complex, intent(out) :: full(:,:)
 
-    integer :: iblockrow, iblockcol
-    integer :: irow, icol, nrows, ind, ind_ia
-    integer :: istartcol, istartrow, istopcol, istoprow
+    integer :: ibrow, ibcol, irow, icol, nrows, ind, ind_ia
 
     full = ZERO
 
     nrows = size(ia) - 1
 
-    do iblockrow = 1, nrows
-      ind = ka(ia(iblockrow))
-      do ind_ia = ia(iblockrow), ia(iblockrow+1) - 1
+    do ibrow = 1, nrows
+      ind = ka(ia(ibrow))
+      do ind_ia = ia(ibrow), ia(ibrow+1) - 1
 
-        iblockcol = ja(ind_ia)
+        ibcol = ja(ind_ia)
 
-        istartcol = kvstc(iblockcol)
-        istopcol  = kvstc(iblockcol+1) - 1
-        istartrow = kvstr(iblockrow)
-        istoprow  = kvstr(iblockrow+1) - 1
-
-        do icol = istartcol, istopcol
-          do irow = istartrow, istoprow
+        do icol = kvstc(ibcol), kvstc(ibcol+1) - 1
+          do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
             full(irow,icol) = smat(ind)
             ind = ind + 1
           enddo ! irow
         enddo ! icol
 
       enddo ! ind_ia
-    enddo ! iblockrow
+    enddo ! ibrow
 
   endsubroutine ! convertToFullMatrix
 
@@ -273,6 +266,7 @@ module fillKKRMatrix_mod
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B, mat_X)
+    use TruncationZone_mod, only: clear_non_existing_entries
     double complex, intent(inout) :: full(:,:)
     double complex, intent(in)  :: mat_B(:,:)
     double complex, intent(out) :: mat_X(:,:)
@@ -286,10 +280,12 @@ module fillKKRMatrix_mod
     num_rhs = size(mat_B, 2)
     mat_X(:,:) = mat_B(:,:)
     
-    CALL ZGETRF(ndim,ndim,full,ndim,IPVT,info)
-    CALL ZGETRS('N',ndim,num_rhs,full,ndim,IPVT,mat_X,ndim,info)
+    call zgetrf(ndim,ndim,full,ndim,ipvt,info)
+    call zgetrs('n',ndim,num_rhs,full,ndim,ipvt,mat_x,ndim,info)
 
     deallocate(ipvt, stat=info)
+    
+    call clear_non_existing_entries(mat_X) ! make up for treating more than one atom with truncation
   endsubroutine ! solveFull
 
 

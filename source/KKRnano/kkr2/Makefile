@@ -15,14 +15,15 @@ EXTRA_FLAGS =
 # ========= IFF Workstations ============
 
 ifeq ($(PLATFORM),ifort)
-FC = mpif77 -warn all
-FC90 = mpif90 -warn all
+#### module load intel impi mkl
+FC = mpiifort -warn all
+FC90 = mpiifort -warn all
 # -module <path> specifies where to put .mod files
-FCFLAGS  = -mkl
+FCFLAGS  = 
 FCFLAGS += -module $(BUILDDIR)
 FCFLAGS += -I $(BUILDDIR)
 # FCFLAGS += -openmp
-FCFLAGS += -gen-interfaces -warn interfaces
+# FCFLAGS += -gen-interfaces -warn interfaces
 # FCFLAGS += -D TASKLOCAL_FILES
 # FCFLAGS += -D DEBUGSHAPEFUNCTIONS
 FCFLAGS += -D USE_VOROWEIGHTS
@@ -35,7 +36,7 @@ FCFLAGS += -O3  -g
 LDFLAGS  = -O3  -g
 
 FCFLAGS += -pg
-LDFLAGS += -pg
+LDFLAGS += -pg  -mkl
 
 ### interprocedural optimization at link-time 
 ###   (add -ipo also to compiler flags to prepare the objects)

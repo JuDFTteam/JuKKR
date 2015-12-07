@@ -31,12 +31,13 @@ module TEST_lcutoff_mod
     integer, intent(in) :: atom_ids(:) ! list of global atom IDs
 
     integer :: lmmaxd, atomindex, ilocal, ios, num_local_atoms, ist, nrad, irad!, num, ii, ind
-    integer, allocatable :: lmarray_temp(:), lmarray_full(:)
+    integer(kind=1), allocatable :: lmarray_atom(:,:), lmarray_full(:)
 
     lmmaxd = arrays%lmmaxd
+    num_local_atoms = size(atom_ids)
 
     allocate(lmarray_full(size(arrays%rbasis, 2)))
-    allocate(lmarray_temp(size(arrays%rbasis, 2)))
+    allocate(lmarray_atom(size(arrays%rbasis, 2),num_local_atoms))
 
     nrad = 0
     cutoff_radius(:) = 9.d9 ! effectively infinity
@@ -65,8 +66,9 @@ module TEST_lcutoff_mod
       write(6,*) 'No file "lcutoff" found, use defaults.' ! todo: convert to warning
     endif
 
+    if(any(lm_low > 121)) stop 'integer(kind=1) not sufficient for LMARRAYs in TEST_lcutoff_mod.F90!' ! a natural limit is lmax=10, numbers can take up to 127
+
     lmarray_full = 0 ! init
-    num_local_atoms = size(atom_ids)
     
     if (num_local_atoms > 1 .and. nrad > 0) &
       warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
@@ -74,16 +76,16 @@ module TEST_lcutoff_mod
     do ilocal = 1, num_local_atoms
       atomindex = atom_ids(ilocal) ! global atom index
 
-      lmarray_temp(:) = lmmaxd ! init with the maximum
+      lmarray_atom(:,ilocal) = lmmaxd ! init with the maximum
 
       do irad = 1, nrad
       
         ! truncation zones
-        call calcCutoffarray(lmarray_temp, arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, cutoff_radius(irad), lm_low(irad))
+        call calcCutoffarray(lmarray_atom(:,ilocal), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, cutoff_radius(irad), lm_low(irad))
 
       enddo ! irad
-        
-      lmarray_full = max(lmarray_full, lmarray_temp) ! reduction: merge truncation zones of local atoms
+
+      lmarray_full = max(lmarray_full, lmarray_atom(:,ilocal)) ! reduction: merge truncation zones of local atoms
     enddo ! ilocal
 
     num_truncated(:) = 0
@@ -93,25 +95,12 @@ module TEST_lcutoff_mod
     enddo ! irad
     
     ! TODO: a bit confusing, is never deallocated
-    call createTruncationZone(trunc_zone, mask=lmarray_full)
-
-!     num = count(lmarray_full > 0)
-!     allocate(lmarray(num)) ! never deallocated - who cares
-! 
-!     ind = 0
-!     do ii = 1, size(lmarray_full)
-!       if (lmarray_full(ii) > 0) then
-!         ind = ind + 1
-!         lmarray(ind) = lmarray_full(ii)
-!         CHECKASSERT( trunc_zone%index_map(ii) == ind ) ! TODO
-!         CHECKASSERT( trunc_zone%trunc2atom_index(ind) == ii ) ! TODO
-!       endif
-!     enddo ! ii
+    call createTruncationZone(trunc_zone, mask=lmarray_full, masks=lmarray_atom)
 
     allocate(lmarray(trunc_zone%naez_trc)) ! lmarray is never deallocated - who cares
-    lmarray(:) = lmarray_full(trunc_zone%trunc2atom_index(:))
+    lmarray(:) = lmarray_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only
 
-    deallocate(lmarray_temp, lmarray_full, stat=ist)
+    deallocate(lmarray_atom, lmarray_full, stat=ist)
   endsubroutine ! initLcutoffNew
 
   
@@ -123,7 +112,7 @@ module TEST_lcutoff_mod
   !> If merging = .true.: change the lm value only when it is larger than the
   !> original value -> this merges the truncation zones
   subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
-    integer, intent(inout) :: cutoffarray(:)
+    integer(kind=1), intent(inout) :: cutoffarray(:)
     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
     double precision, intent(in) :: center(3)
     double precision, intent(in) :: bravais(3,3)

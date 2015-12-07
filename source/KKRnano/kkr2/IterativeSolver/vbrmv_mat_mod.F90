@@ -10,6 +10,8 @@
 
 
 module vbrmv_mat_mod
+  use TruncationZone_mod, only: clear_non_existing_entries
+#define CLEAR_NON_EXISTING_ENTRIES(B, N) call clear_non_existing_entries(B, N)
   implicit none
   private
   public :: multiply_vbr
@@ -56,26 +58,21 @@ module vbrmv_mat_mod
 
     !-----------------------------------------------------------------------
     !-----local variables
-    integer :: i, j, k, istart, istop
-    integer :: ncols
-    integer :: icols
 
 !IBM* ALIGN(32, buffer)
-    double complex :: buffer(max_blockdim*max_blocks_per_row, size(x,2))
+    double complex :: buffer(max_blockdim*max_blocks_per_row,size(x, 2))
 
-    integer :: nrowbuf, rowbuf, sum_nrowbuf
+    integer :: i, j, k, istart, istop, ncols, icols
+    integer :: nrowbuf, rowbuf, sum_nrowbuf, jlow, jhigh
     integer :: startrow, leaddim_b, num_rows, leaddim_buffer
-    integer :: jlow, jhigh
 
-    double complex, parameter :: CZERO = (0.d0, 0.d0)
-    double complex, parameter :: CONE  = (1.d0, 0.d0)
+    double complex, parameter :: CZERO = (0.d0, 0.d0), CONE  = (1.d0, 0.d0)
 
     leaddim_b = size(b, 1)
     ncols = size(b, 2)
-    leaddim_buffer = size(buffer, 1)
+    leaddim_buffer = max_blockdim*max_blocks_per_row
 
-
-    b = 0.d0
+    b = CZERO
 
 !     can parallelise this loop
 
@@ -113,6 +110,8 @@ module vbrmv_mat_mod
 !$OMP endDO
 !$OMP endPARALLEL
 
+    CLEAR_NON_EXISTING_ENTRIES(b, max_blockdim)
+    
   endsubroutine ! vbrmv_mat
 
 endmodule ! vbrmv_mat_mod
