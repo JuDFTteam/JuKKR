@@ -25,7 +25,7 @@ macmpi:       FC =  /usr/local/impi/bin/mpif90
 mpidebug:   FC = mpiifort
 #rwth cluster
 rwthmpi: FC=$(MPIFC)
-rwthmpidebug: FC=marmotf90   
+rwthmpidebug: FC=$(MPIFC)  # marmotf90   
 # $(MPIFC)
 
 
@@ -115,6 +115,7 @@ rwth:          LLIBS=$(RWTHLLIBS)
 rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
 rwthomp:       LLIBS=$(RWTHLLIBS)
+rwthompdebug:  LLIBS=$(RWTHLLIBS)
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -133,6 +134,7 @@ rwth:          LLIBSOPENMP=$(RWTHLLIBSOMP)
 rwthmpi:       LLIBSOPENMP=$(RWTHLLIBSOMP)
 rwthmpidebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 rwthomp:       LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
@@ -144,9 +146,14 @@ ompdebug: LLIBS=$(LLIBSOPENMP)
 CPP= -D CPP_TIMING
 # change to if flag is matched
 openmp:   CPP = -D CPP_OMP
-ompdebug:   CPP = -D CPP_OMP
+ompdebug: CPP = -D CPP_OMP
 mpidebug: CPP = -D CPP_MPI
 mpi:      CPP = -D CPP_MPI -D CPP_TIMING
+macmpi:   CPP = -D CPP_MPI -D CPP_TIMING
+macomp:   CPP = -D CPP_OMP -D CPP_TIMING
+rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
+rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
+rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
@@ -163,6 +170,16 @@ mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
 ompdebug: OPENMPFLAGS = -openmp
+
+macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
+macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
+rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
+rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
+
+rwthomp: OPENMPFLAGS = -openmp
+rwthompdebug: OPENMPFLAGS = -openmp
+
+
 
 ####################################################
 # Linking                                          #
@@ -223,6 +240,8 @@ macomp: compile
 rwth:    compile
 rwthmpi: compile
 rwthomp: compile
+rwthmpidebug: compile
+rwthompdebug: compile
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<

@@ -495,7 +495,7 @@ contains
     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: nspin
     double complex, allocatable :: work(:,:,:)
-    integer :: ierr
+    integer :: ierr,idim
     
     
     !Gather tmat so that all processors the full matrix for their part of the energy contour
@@ -510,9 +510,18 @@ contains
        
 !        write(*,*) myrank, shape(t_tgmat%tmat),ihelp,mytot,recvcounts,displs
        
+       !call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+       !                   & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+       !                   & mympi_comm, ierr )
+       !call MPI_Allgatherv( MPI_IN_PLACE, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP))
        call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                          & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+                          & work, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
                           & mympi_comm, ierr )
+       idim = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
+       call zcopy(idim,work,1,t_tgmat%tmat,1)
+     !CALL ZCOPY(IDIM,WORK,1,RHO2NSC,1)
+       deallocate(work)
     end if
 !        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 !        if (myrank==master) write(*,*) 'tmatgather:',t_tgmat%tmat
