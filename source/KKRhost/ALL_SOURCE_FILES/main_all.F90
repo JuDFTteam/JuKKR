@@ -94,9 +94,10 @@ program kkrcode
   call timing_stop('MPI 1')
 #endif
 
-! bug found: for serial and openmp run with SOC old files have to be written out, otherwise something goes wrong
+! bug found: for openmp run with SOC old files have to be written out, otherwise something goes wrong
 ! thus - for now - this is enforced here:
-#ifndef CPP_MPI
+!#ifndef CPP_MPI
+#ifdef CPP_OMP
   t_tgmat%tmat_to_file = .true.
   t_tgmat%gref_to_file = .true.
   t_tgmat%gmat_to_file = .true.
