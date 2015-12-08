@@ -7,7 +7,10 @@
       use mod_types, only: t_tgmat, t_lloyd
 #ifdef CPP_MPI
      &                    ,t_mpi_c_grid
-      use mpi
+      use mpi      
+      use mod_mympi, only: myrank, nranks, master
+     &                     ,find_dims_2d,
+     &                     distribute_linear_on_tasks
 #endif
       
       IMPLICIT NONE
@@ -52,9 +55,6 @@ C     .. Local Scalars ..
       DOUBLE COMPLEX ERYD
       INTEGER I1,IC,ICLS,IE,LM1,LM2,LRECGF1,NACLSMAX
       DOUBLE COMPLEX   LLY_G0TR_IE ! LLY
-CMPI  INTEGER MAPBLOCK
-CMPI  INTEGER MYRANK,NROFNODES
-CMPI  COMMON /MPI/MYRANK,NROFNODES
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D,NREFD),
@@ -67,7 +67,14 @@ C     .. Local Arrays ..
 C     ..
 C     .. MPI ..
       integer :: IE_START, IE_END
+      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
+     &           myrank_at, myrank_ie, nranks_at,nranks_ie
+      integer :: ntot1, dims(2), mytot, idim, ierr
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
+     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      double complex, allocatable :: work(:,:,:)
 #endif
+      integer :: i1_start, i1_end
       integer :: ie_num
 C     ..
 C     .. External Functions ..
@@ -89,6 +96,9 @@ C     ..
 
       ALLOCATE (  GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
       ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
+      
+      ginp = (0.0d0, 0.0d0)
+      dginp = (0.0d0, 0.0d0)
 
 
 !       CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
@@ -107,11 +117,11 @@ C     ..
 C
 C ======================================================================
 #ifdef CPP_MPI
+        write(1337,*) myrank, 'start tbref e-loop'
 !        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !        ie_end = t_mpi_c_grid%ntot2
        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
        ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-!        write(1337,*) myrank, 'start tbref e-loop',ie_start,ie_end
 
        DO ie_num=1,ie_end
        
@@ -137,7 +147,28 @@ C
 C
          IF (TEST('flow    ')) WRITE (1337,FMT=*) 't-mat(Ref) o.k.', IE
 C ----------------------------------------------------------------------
-         DO ICLS = 1,NCLS
+#ifdef CPP_MPI
+         ntot1 = NCLS
+
+         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+         i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+         i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+         t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+         t_mpi_c_grid%ntot_pT1 = ntot_pT
+         t_mpi_c_grid%ioff_pT1 = ioff_pT
+        
+!          write(*,*) 'tbref icls loop:',myrank,t_mpi_c_grid%nranks_ie,
+!      &   t_mpi_c_grid%myrank_ie, ntot1, i1_start, i1_end
+#else
+         i1_start = 1
+         i1_end   = NCLS
+#endif
+         DO ICLS=i1_start,i1_end
+!          DO ICLS = 1,NCLS
             I1 = 1
             IC = 0
             DO WHILE (IC.EQ.0 .AND. I1.LE.NINEQ)
@@ -148,14 +179,45 @@ C
             IF (IC.EQ.0) STOP 'Error in CLS(*) array in tbref'
             IF (TEST('flow    ')) WRITE (1337,FMT=*) 'CLUSTER ',ICLS,
      +           ' at ATOM ',IC
-C      
+C     
             CALL GLL13(ERYD,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
      +                 ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      &                 TOLRDIF,
      +                 ALATC,0,GINP(1,1,ICLS),
      &                 DGINP(1,1,ICLS),NACLSMAX,LLY_G0TR(IE,ICLS),LLY)
          END DO
-
+#ifdef CPP_MPI
+         !gather results of ginp, dginp and lly_g0tr from above parallel loop
+         IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
+!          CALL MPI_ALLREDUCE(MPI_IN_PLACE,GINP,IDIM,MPI_DOUBLE_COMPLEX,
+         allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
+         CALL MPI_ALLREDUCE(GINP,work,IDIM,MPI_DOUBLE_COMPLEX,
+     &                      MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
+         call ZCOPY(idim,work,1,ginp,1)
+         deallocate(work)
+         IF(LLY.NE.0) THEN
+            IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
+!             CALL MPI_ALLREDUCE(MPI_IN_PLACE,DGINP,IDIM,
+            allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
+            CALL MPI_ALLREDUCE(DGINP,work,IDIM,
+     &       MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
+            call ZCOPY(idim,work,1,dginp,1)
+            deallocate(work)
+            IDIM = NCLS
+!             CALL MPI_ALLREDUCE(MPI_IN_PLACE,LLY_G0TR(IE,:),IDIM,
+            allocate(work(NCLSD,1,1))
+            CALL MPI_ALLREDUCE(LLY_G0TR(IE,:),work,IDIM,
+     &       MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
+            call ZCOPY(idim,work,1,lly_g0tr(ie,:),1)
+            deallocate(work)
+         ENDIF
+         
+         ! comment this out, then gather_gref in main1a is obsolete
+         ! since all 
+!          !writeout only in master of energy group
+!          if(t_mpi_c_grid%myrank_ie==master) then
+#endif
+         
          IF (LLY.NE.0) THEN                                    ! LLY Lloyd
             LLY_G0TR_IE = CZERO                                ! LLY Lloyd
             DO I1 = 1,NAEZ                                     ! LLY Lloyd
@@ -165,8 +227,15 @@ C
          ENDIF                                                 ! LLY Lloyd
 C ----------------------------------------------------------------------
          if (t_tgmat%gref_to_file) then
+#ifdef CPP_MPI
+           !make sure only one processor writes for one energy point
+           if(t_mpi_c_grid%myrank_ie==0) then
+#endif
             WRITE (68,REC=IE) GINP                 ! Gref
 !             write(686868,*) ginp
+#ifdef CPP_MPI
+           end if !if(t_mpi_c_grid%myrank_ie==0) then
+#endif
          else
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
          end if
@@ -185,7 +254,9 @@ C ----------------------------------------------------------------------
 C
          IF (TEST('flow    ')) WRITE (1337,FMT=*) 
      &                               'G(n,lm,n,lm) (Ref) o.k.'
-
+! #ifdef CPP_MPI
+!          endif !if(t_mpi_c_grid%myrank_ie==master)
+! #endif
       END DO
 C ======================================================================
       if (t_tgmat%gref_to_file) then

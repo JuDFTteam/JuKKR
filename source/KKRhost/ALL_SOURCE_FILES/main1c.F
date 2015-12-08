@@ -121,7 +121,7 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C     ..
 C     .. Local Arrays ..
 #ifdef CPP_MPI
-      DOUBLE COMPLEX WORK(IRMD,LMPOTD,NATYPD,2)
+      DOUBLE COMPLEX,   allocatable :: WORK(:,:)
       integer ierr,idim
 #endif
 !       DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
@@ -522,8 +522,13 @@ c calculate contribution from free space
 #ifdef CPP_MPI            
             ! MPI gather cdos_lly on all processors
             ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
+!             CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
+            allocate(work(iemxd,nspind))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
      &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+            call zcopy(idim,work,1,cdos_lly,1)
+            deallocate(work)
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)
                                                                            ! LLY Lloyd
@@ -581,8 +586,13 @@ c calculate contribution from free space
 #ifdef CPP_MPI            
             ! MPI gather cdos_lly on all processors
             ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
+!             CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
+            allocate(work(iemxd,nspind))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
      &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+            call zcopy(idim,work,1,cdos_lly,1)
+            deallocate(work)
 #endif
           end if  !(t_lloyd%cdos_diff_lly_to_file)
           
@@ -804,6 +814,7 @@ C ================================================================ NATYP
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
      &              MPI_COMM_WORLD)
 !      &              t_mpi_c_grid%mympi_comm_at)
+      if(myrank==master) write(789546,*) rho2ns
 #ifdef CPP_TIMING
       call timing_stop('main1c - communication')
 #endif

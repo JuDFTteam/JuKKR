@@ -164,7 +164,7 @@ FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
 ompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g 
-debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
+debug:    FFLAGS = -r8 -CB -check all -traceback -g # -fpe0 -warn -debug extended #v-mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 

@@ -420,9 +420,9 @@ C
 #endif
 
 
-#ifdef CPP_MPI
-      if(t_mpi_c_grid%myrank_ie==0) then
-#endif
+! #ifdef CPP_MPI
+!       if(t_mpi_c_grid%myrank_ie==0) then
+! #endif
 #ifdef CPP_TIMING
         call timing_start('main1a - tbref')
 #endif
@@ -435,21 +435,22 @@ C
         call timing_stop('main1a - tbref')
 #endif
 
-#ifdef CPP_MPI
-      end if !(t_mpi_c_grid%myrank_at==0)
-      
-      call MPI_BARRIER(MPI_COMM_WORLD,ii)
-      
-      if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>1) then
-         do ii=0,t_mpi_c_grid%nranks_ie-1
-          ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
-          ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
-         end do
-          mytot = t_mpi_c_grid%ntot2 !t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
-         call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
-     &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
-        end if
-#endif
+! not needed any more, already done in tbref
+! #ifdef CPP_MPI
+!       end if !(t_mpi_c_grid%myrank_at==0)
+!       
+!       call MPI_BARRIER(MPI_COMM_WORLD,ii)
+!       
+!       if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>1) then
+!          do ii=0,t_mpi_c_grid%nranks_ie-1
+!           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
+!           ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
+!          end do
+!           mytot = t_mpi_c_grid%ntot2 !t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+!          call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
+!      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
+!         end if
+! #endif
 
 
       WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
