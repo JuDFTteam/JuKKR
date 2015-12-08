@@ -113,7 +113,7 @@ module mminvmod_oop_mod
     ! INITIALIZATION
     !=======================================================================
 
-    EPSILON_DP = epsilon(0.d0)
+    EPSILON_DP = tiny(0.d0)
     tfqmr_status = 0
     converged_at = 0
 
