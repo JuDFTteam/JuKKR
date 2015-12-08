@@ -25,7 +25,6 @@ module NearField_calc_mod
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
     use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
-!   use MadelungCalculator_mod, only: MadelungCalculator
     use NearField_com_mod, only: calc_nf_correction
     
     type(CalculationData), intent(inout) :: calc_data
@@ -42,13 +41,10 @@ module NearField_calc_mod
     type(BasisAtom), pointer :: atomdata
     type(RadialMeshData), pointer :: mesh
     type(DensityResults), pointer :: densities
-!   type(MadelungCalculator), pointer :: madelung_calc
 
     num_local_atoms  = getNumLocalAtoms(calc_data)
     allocate(local_cell(num_local_atoms))
     allocate(nf_correction(num_local_atoms))
-
-!   madelung_calc => getMadelungCalculator(calc_data)
 
     do ilocal = 1, num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)
@@ -76,9 +72,7 @@ module NearField_calc_mod
 
     enddo ! ilocal
 
-    call calc_nf_correction(nf_correction, local_cell, &
-         calc_data%madelung_calc%clebsch, &
-                            getMySEcommunicator(my_mpi))
+    call calc_nf_correction(nf_correction, local_cell, calc_data%madelung_calc%clebsch, getMySEcommunicator(my_mpi))
 
     do ilocal = 1, num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)
@@ -86,7 +80,7 @@ module NearField_calc_mod
       ! nf correction has to be added to each spin channel
       do ispin = 1, atomdata%potential%nspin
         atomdata%potential%vons(:,:,ispin) = atomdata%potential%vons(:,:,ispin) &
-                                         + nf_correction(ilocal)%delta_potential
+                                           + nf_correction(ilocal)%delta_potential
       enddo ! ispin
     enddo ! ilocal
 
@@ -163,10 +157,9 @@ module NearField_calc_mod
     
     double precision, intent(in) :: point1(3), point2(3), bravais(3,3)
     integer, intent(in) :: nx, ny, nz
-    !----------------
 
     dv(1:3) = point2(1:3) - point1(1:3) + nx*bravais(:,1) + ny*bravais(:,2) + nz*bravais(:,3)
 
-  endfunction distance_vec
+  endfunction ! distance_vec
 
-endmodule NearField_calc_mod
+endmodule ! NearField_calc_mod

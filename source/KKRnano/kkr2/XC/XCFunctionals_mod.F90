@@ -2,6 +2,7 @@
 
 module XCFunctionals_mod
   implicit none
+  private
 
   public :: mkxcpe_pw91
   public :: mkxcpe_pbe
@@ -59,10 +60,11 @@ DOUBLE PRECISION :: agr,agrd,agru,cedg,cedl,chg,cosx,dagrf,dagrfd,  &
     ddrr,ddrrd,ddrru,df1,df2,drr,drrd,drru,dt1,dt2,  &
     dtf,dzdfs,dzdr,dzdtr,etot0,etota0,g2r,g2rd,g2ru,  &
     gggr,gggrd,gggru,grf,grfd,grfu,grgrd,grgru,grr,  &
-    grrd,grru,grt,grtd,grtu,gzgr,rdspr,ro,rod,rou,  &
+    grrd,grru,grt,grtd,grtu,gzgr,ro,rod,rou,  &
     rv2,rv3,rvsin1,rvsin2,ry2,rylm,sint1,sint2,smag,  &
     spi,tant1,vcg1,vcg2,vcl1,vcl2,vtot1,vtot2,vtota1,  &
     vtota2,vxg1,vxg2,vxl1,vxl2,xedg,xedl,zta
+DOUBLE PRECISION, parameter :: rdspr = 9.d0
 INTEGER :: idspr,im,ip,l1,ll,llmax,lm,lmax,nn,nn1
 !     ..
 !     .. Local Arrays ..
@@ -79,12 +81,6 @@ EXTERNAL gxcpt
 !     ..
 !     .. Intrinsic Functions ..
 INTRINSIC ABS,COS,MAX,MIN,SIGN,SIN,SQRT,TAN
-!     ..
-!     .. Data statements ..
-DATA rdspr/9.0D0/
-!     ..
-
-
 
 llmax = l1max*l1max
 lmax = l1max - 1

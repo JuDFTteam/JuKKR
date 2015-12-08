@@ -46,10 +46,9 @@ module NearField_com_mod
 !     module procedure createNearFieldCorrection, createLocalCellInfo
 !   endinterface
 !   
-!   interface destroy
-!     module procedure destroyNearFieldCorrection, destroyLocalCellInfo
-!   endinterface
-  
+  interface destroy
+    module procedure destroyNearFieldCorrection, destroyLocalCellInfo
+  endinterface
   
   contains
   
@@ -231,16 +230,15 @@ module NearField_com_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyLocalCellInfo(self)
+  elemental subroutine destroyLocalCellInfo(self)
     class (LocalCellInfo), intent(inout) :: self
+    integer :: ist
+    deallocate(self%charge_moments, stat=ist)
+    deallocate(self%v_intra, stat=ist)
+    deallocate(self%radial_points, stat=ist)
 
-    deallocate(self%charge_moments)
-    deallocate(self%v_intra)
-    deallocate(self%radial_points)
-
-    if (allocated(self%near_cell_indices)) deallocate(self%near_cell_indices)
-    if (allocated(self%near_cell_dist_vec)) deallocate(self%near_cell_dist_vec)
-
+    if (allocated(self%near_cell_indices)) deallocate(self%near_cell_indices, stat=ist)
+    if (allocated(self%near_cell_dist_vec)) deallocate(self%near_cell_dist_vec, stat=ist)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -253,10 +251,10 @@ module NearField_com_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyNearFieldCorrection(self)
+  elemental subroutine destroyNearFieldCorrection(self)
     class (NearFieldCorrection), intent(inout) :: self
-
-    deallocate(self%delta_potential)
+    integer :: ist
+    deallocate(self%delta_potential, stat=ist)
   endsubroutine ! destroy
   
 endmodule

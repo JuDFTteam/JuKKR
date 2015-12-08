@@ -31,7 +31,7 @@ module MadelungPotential_mod
          rank, atoms_per_proc, &
          communicator)
 #undef mc
-  endsubroutine
+  endsubroutine ! add
 
   ! **********************************************************************
   !
@@ -280,4 +280,4 @@ module MadelungPotential_mod
 
   endsubroutine ! sum
 
-endmodule MadelungPotential_mod
+endmodule ! MadelungPotential_mod

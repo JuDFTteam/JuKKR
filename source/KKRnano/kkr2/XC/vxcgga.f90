@@ -1,4 +1,4 @@
-SUBROUTINE vxcgga(exc,kte,lpot,nspin,rho2ns,v,r,drdi,a, &
+subroutine vxcgga(exc,kte,lpot,nspin,rho2ns,v,r,drdi,a, &
         irws,ircut,ipan,gsh,ilm,imaxsh,  &
         ifunm,thetas,wtyr,ijend,lmsp,thet,ylm,dylmt1, &
         dylmt2,dylmf1,dylmf2,dylmtf, &
@@ -33,87 +33,78 @@ SUBROUTINE vxcgga(exc,kte,lpot,nspin,rho2ns,v,r,drdi,a, &
 
 !     modified for shape functions
 !                                       b. drittler oct. 1989
-!     simplified and modified for Paragon X/PS
-!                                       R. Zeller Nov. 1993
+!     simplified and modified for paragon x/ps
+!                                       r. zeller nov. 1993
 !-----------------------------------------------------------------------
 
-  use XCFunctionals_mod ! todo: fill only-list
-  use Quadrature_mod, only: simpson
+  use xcfunctionals_mod ! todo: fill only-list
+  use quadrature_mod, only: simpson
 
-IMPLICIT NONE
+implicit none
 
-DOUBLE PRECISION, INTENT(OUT)            :: exc(0:(lpot+1)**2)
-INTEGER, INTENT(IN)                      :: kte
-INTEGER, INTENT(IN)                      :: lpot
-INTEGER, INTENT(IN)                      :: nspin
-DOUBLE PRECISION, INTENT(IN)             :: rho2ns(irmd,(lpot+1)**2,2)
-DOUBLE PRECISION, INTENT(OUT)            :: v(irmd,(lpot+1)**2,2)
-DOUBLE PRECISION, INTENT(IN)             :: r(irmd)
-DOUBLE PRECISION, INTENT(IN OUT)         :: drdi(irmd)
-DOUBLE PRECISION, INTENT(IN)             :: a
-INTEGER, INTENT(IN)                      :: irws
-INTEGER, INTENT(IN)                      :: ircut(0:ipand)
-INTEGER, INTENT(IN)                      :: ipan
-DOUBLE PRECISION, INTENT(IN)             :: gsh(*)
-INTEGER, INTENT(IN)                      :: ilm(ngshd,3)
-INTEGER, INTENT(IN)                      :: imaxsh(0:(lpot+1)**2)
-INTEGER, INTENT(IN)                      :: ifunm((2*lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: thetas(irid,nfund)
-DOUBLE PRECISION, INTENT(IN)             :: wtyr(ijend,*)
-INTEGER, INTENT(IN OUT)                  :: ijend
-INTEGER, INTENT(IN)                      :: lmsp((2*lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: thet(ijend)
-DOUBLE PRECISION, INTENT(IN OUT)         :: ylm(ijend,(lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: dylmt1(ijend,(lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: dylmt2(ijend,(lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: dylmf1(ijend,(lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: dylmf2(ijend,(lpot+1)**2)
-DOUBLE PRECISION, INTENT(IN OUT)         :: dylmtf(ijend,(lpot+1)**2)
-INTEGER, INTENT(IN)                      :: kxc
-
+double precision, intent(out)            :: exc(0:(lpot+1)**2)
+integer, intent(in)                      :: kte
+integer, intent(in)                      :: lpot
+integer, intent(in)                      :: nspin
+double precision, intent(in)             :: rho2ns(irmd,(lpot+1)**2,2)
+double precision, intent(out)            :: v(irmd,(lpot+1)**2,2)
+double precision, intent(in)             :: r(irmd)
+double precision, intent(in)             :: drdi(irmd)
+double precision, intent(in)             :: a
+integer, intent(in)                      :: irws
+integer, intent(in)                      :: ircut(0:ipand)
+integer, intent(in)                      :: ipan
+double precision, intent(in)             :: gsh(*)
+integer, intent(in)                      :: ilm(ngshd,3)
+integer, intent(in)                      :: imaxsh(0:(lpot+1)**2)
+integer, intent(in)                      :: ifunm((2*lpot+1)**2)
+double precision, intent(in)             :: thetas(irid,nfund)
+double precision, intent(in)             :: wtyr(ijend,*)
+integer, intent(in)                      :: ijend
+integer, intent(in)                      :: lmsp((2*lpot+1)**2)
+double precision, intent(in out)         :: thet(ijend)
+double precision, intent(in out)         :: ylm(ijend,(lpot+1)**2)
+double precision, intent(in out)         :: dylmt1(ijend,(lpot+1)**2)
+double precision, intent(in out)         :: dylmt2(ijend,(lpot+1)**2)
+double precision, intent(in out)         :: dylmf1(ijend,(lpot+1)**2)
+double precision, intent(in out)         :: dylmf2(ijend,(lpot+1)**2)
+double precision, intent(in out)         :: dylmtf(ijend,(lpot+1)**2)
+integer, intent(in)                      :: kxc
 
 !     ..
-!     .. Local Scalars ..
-DOUBLE PRECISION :: chgden,dx,elmxc,fpi,r1,r2,rpoint,spiden,vlmxc,  &
-    vxc1,vxc2,vxc3,zero,zero1,ddot
-INTEGER :: ifun,ipan1,ipot,ir,irc0,irc1,irh,irs1,ispin,j,l,l1max,lm,  &
+!     .. local scalars ..
+double precision :: chgden,dx,elmxc,fpi,r1,r2,rpoint,spiden,vlmxc,  &
+    vxc1,vxc2,vxc3
+integer :: ifun,ipan1,ipot,ir,irc0,irc1,irh,irs1,ispin,j,l,l1max,lm,  &
     lm2,lmmax,m,mesh,nspin2,irmd,irid,nfund,ngshd,ipand
 !     ..
-!     .. Local Arrays ..
+!     .. local arrays ..
 
-DOUBLE PRECISION :: ddrrl(irmd,(lpot+1)**2)
-DOUBLE PRECISION :: ddrrul(irmd,(lpot+1)**2)
-DOUBLE PRECISION :: drrl(irmd,(lpot+1)**2)
-DOUBLE PRECISION :: drrul(irmd,(lpot+1)**2)
-DOUBLE PRECISION :: er(irmd,0:(lpot+1)**2)
-DOUBLE PRECISION :: estor(irmd,(lpot+1)**2)
-DOUBLE PRECISION :: excij(ijend)
-DOUBLE PRECISION :: rhol(irmd,2,(lpot+1)**2)
-DOUBLE PRECISION :: rholm((lpot+1)**2,2)
-DOUBLE PRECISION :: vxc(ijend,2)
-DOUBLE PRECISION :: vxcr(2:3,2)
+double precision :: ddrrl(irmd,(lpot+1)**2)
+double precision :: ddrrul(irmd,(lpot+1)**2)
+double precision :: drrl(irmd,(lpot+1)**2)
+double precision :: drrul(irmd,(lpot+1)**2)
+double precision :: er(irmd,0:(lpot+1)**2)
+double precision :: estor(irmd,(lpot+1)**2)
+double precision :: excij(ijend)
+double precision :: rhol(irmd,2,(lpot+1)**2)
+double precision :: rholm((lpot+1)**2,2)
+double precision :: vxc(ijend,2)
+double precision :: vxcr(2:3,2)
 !     ..
 
-!     .. External Functions ..
-EXTERNAL ddot
-!     ..
-!     .. External Subroutines ..
-EXTERNAL gradrl,mkxcpe
+double precision, external :: ddot
+external :: gradrl, mkxcpe
 
-!     .. Intrinsic Functions ..
-INTRINSIC ABS,ATAN,MOD
-!     ..
+double precision, parameter :: zero = 0.d0, zero1 = 1.d-12
 
-!     .. Data statements ..
-DATA zero,zero1/0.d0,1.d-12/
-
-INTEGER :: lmpotd
+integer :: lmpotd
 
 lmpotd= (lpot+1)**2
 
 !     ..
-WRITE (6,FMT=*) ' GGA CALCULATION '
-fpi = 16.0D0*ATAN(1.0D0)
+write (6,fmt=*) ' GGA CALCULATION '
+fpi = 16.d0*atan(1.d0)
 lmmax = (lpot+1)* (lpot+1)
 
 !---> loop over given representive atoms
@@ -123,113 +114,113 @@ irc1 = ircut(ipan)
 irs1 = ircut(1)
 irc0 = 2
 
-DO  ispin = 1,nspin
-  vxcr(2,ispin) = 0.0D0
-  vxcr(3,ispin) = 0.0D0
-END DO
+do ispin = 1,nspin
+  vxcr(2,ispin) = 0.d0
+  vxcr(3,ispin) = 0.d0
+enddo
 
 !---> initialize for ex.-cor. energy
 
-IF (kte == 1) THEN
-  DO  l = 0,lpot
-    exc(l) = 0.0D0
-    DO  ir = 1,irc1
-      er(ir,l) = 0.0D0
-    END DO
-  END DO
+if (kte == 1) then
+  do l = 0,lpot
+    exc(l) = 0.d0
+    do ir = 1,irc1
+      er(ir,l) = 0.d0
+    enddo
+  enddo
   
-  DO  lm = 1,lmmax
-    DO  ir = 1,irc1
-      estor(ir,lm) = 0.0D0
-    END DO
-  END DO
-END IF
+  do lm = 1,lmmax
+    do ir = 1,irc1
+      estor(ir,lm) = 0.d0
+    enddo
+  enddo
+endif
 
 l1max = lpot + 1
 mesh = irws
 dx = a
 
-IF (nspin == 2) THEN
-  DO  lm = 1,lmmax
-    DO  ir = 2,mesh
+if (nspin == 2) then
+  do lm = 1,lmmax
+    do ir = 2,mesh
       r1 = r(ir)
       r2 = r1*r1
       chgden = rho2ns(ir,lm,1)/r2
       spiden = rho2ns(ir,lm,2)/r2
-      IF (ABS(chgden) <= zero1) chgden = zero
-      IF (ABS(spiden) <= zero1) spiden = zero
+      if (abs(chgden) <= zero1) chgden = zero
+      if (abs(spiden) <= zero1) spiden = zero
       rhol(ir,2,lm) = (chgden+spiden)/2.d0
       rhol(ir,1,lm) = (chgden-spiden)/2.d0
-    END DO
+    enddo
     
 !       extrapolate
     
     rhol(1,1,lm) = rhol(2,1,lm)
     rhol(1,2,lm) = rhol(2,2,lm)
-  END DO
+  enddo
   
-ELSE
+else
   
-  DO  lm = 1,lmmax
-    DO  ir = 2,mesh
+  do lm = 1,lmmax
+    do ir = 2,mesh
       r1 = r(ir)
       r2 = r1*r1
       
       chgden = rho2ns(ir,lm,1)/r2
-      IF (ABS(chgden) <= zero1) chgden = zero
+      if (abs(chgden) <= zero1) chgden = zero
       rhol(ir,1,lm) = chgden/2.d0
       rhol(ir,2,lm) = chgden/2.d0
-    END DO
+    enddo
     
 !       extrapolate
     rhol(1,1,lm) = rhol(2,1,lm)
     rhol(1,2,lm) = rhol(2,2,lm)
-  END DO
-END IF
+  enddo
+endif
 
 
-CALL gradrl(nspin,mesh,l1max,dx,rhol,r,drdi,ipan1,ipand,ircut,  &
+call gradrl(nspin,mesh,l1max,dx,rhol,r,drdi,ipan1,ipand,ircut,  &
     drrl,ddrrl,drrul,ddrrul,irmd,lmpotd)
 
 
 !---> loop over radial mesh
 
 
-DO  ir = irc0,irc1
+do ir = irc0,irc1
   rpoint = r(ir)
   
 !---> calculate the ex.-cor. potential
   
   nspin2 = 2
   
-  DO  ispin = 1,nspin2
-    DO  lm = 1,lmmax
+  do ispin = 1,nspin2
+    do lm = 1,lmmax
       rholm(lm,ispin) = rhol(ir,ispin,lm)
-    END DO
-  END DO
+    enddo
+  enddo
   
 !    only for spin-polarized
   
 !        write(6,*) ' before mkxcpe '
-IF (kxc==3) THEN
-!  WRITE(*,*) 'kxc=3: Using GGA functional PW91'  
-  CALL mkxcpe_pw91(nspin2,ir,ijend,l1max,rpoint,rholm,vxc,excij,thet,  &
+if (kxc==3) then
+!  write(*,*) 'kxc=3: using gga functional pw91'  
+  call mkxcpe_pw91(nspin2,ir,ijend,l1max,rpoint,rholm,vxc,excij,thet,  &
       ylm,dylmt1,dylmt2,dylmf1,dylmf2,dylmtf,drrl,ddrrl, drrul,ddrrul,irmd,lmpotd)
-ELSE IF (kxc==4) THEN
-!  WRITE(*,*) 'kxc=4: Using GGA functional PBE'
-  CALL mkxcpe_pbe(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1,  &
-               DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,  &
-               IRMD,LMPOTD,LMMAX,.false.)
-ELSE IF (kxc==5) THEN
-!  WRITE(*,*) 'kxc=5: Using GGA functional PBEsol'
-  CALL mkxcpe_pbe(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1,  &
-               DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,  &
-               IRMD,LMPOTD,LMMAX,.true.)
-ELSE
-WRITE(*,*) 'Error in vxcgga: In order to use GGA set kxc=3 (PW91), kxc=4 (PBE) &
-or kxc=5 (PBEsol). LDA is used for kxc<3)'
-STOP
-END IF 
+else if (kxc==4) then
+!  write(*,*) 'kxc=4: using gga functional pbe'
+  call mkxcpe_pbe(ir,ijend,rpoint,rholm,vxc,excij,ylm,dylmt1,  &
+               dylmf1,dylmf2,dylmtf,drrl,ddrrl,drrul,ddrrul,  &
+               irmd,lmpotd,lmmax,.false.)
+else if (kxc==5) then
+!  write(*,*) 'kxc=5: using gga functional pbesol'
+  call mkxcpe_pbe(ir,ijend,rpoint,rholm,vxc,excij,ylm,dylmt1,  &
+               dylmf1,dylmf2,dylmtf,drrl,ddrrl,drrul,ddrrul,  &
+               irmd,lmpotd,lmmax,.true.)
+else
+write(*,*) 'error in vxcgga: in order to use gga set kxc=3 (pw91), kxc=4 (pbe) &
+or kxc=5 (pbesol). lda is used for kxc<3)'
+stop
+endif 
   
   
   
@@ -237,30 +228,30 @@ END IF
 !---> expand the ex.-cor. potential into spherical harmonics ,
 !       using the orthogonality
   
-  DO  ispin = 1,nspin
+  do ispin = 1,nspin
     
 !---> determine the corresponding potential number
     
     ipot = ispin
-    DO  lm = 1,lmmax
+    do lm = 1,lmmax
       vlmxc = ddot(ijend,vxc(1,ispin),1,wtyr(1,lm),1)
       v(ir,lm,ipot) = v(ir,lm,ipot) + vlmxc
       
 !---> store the ex.-c. potential of ir=2 and =3 for the extrapolation
       
-      IF (lm == 1 .AND. (ir == 2.OR.ir == 3)) vxcr(ir, ispin) = vlmxc
-    END DO
-  END DO
+      if (lm == 1 .and. (ir == 2.or.ir == 3)) vxcr(ir, ispin) = vlmxc
+    enddo
+  enddo
   
 !---> file er in case of total energies
   
-  IF (kte == 1) THEN
+  if (kte == 1) then
     
 !---> expand ex.-cor. energy into spherical harmonics
 !       using the orthogonality
     
-    DO  l = 0,lpot
-      DO  m = -l,l
+    do l = 0,lpot
+      do m = -l,l
         lm = l*l + l + m + 1
         elmxc = ddot(ijend,excij,1,wtyr(1,lm),1)
         
@@ -268,53 +259,53 @@ END IF
 !     lm-component of the charge density times r**2 and sum over lm
 !     this corresponds to a integration over the angular .
         
-        IF (ir > irs1) THEN
+        if (ir > irs1) then
           estor(ir,lm) = elmxc
           
-        ELSE
+        else
           
           er(ir,l) = er(ir,l) + rho2ns(ir,lm,1)*elmxc
-        END IF
+        endif
         
-      END DO
+      enddo
       
-    END DO
+    enddo
     
-  END IF
+  endif
   
-END DO
+enddo
 
 !---> integrate er in case of total energies to get exc
 
-IF (kte == 1) THEN
+if (kte == 1) then
   
-  DO  l = 0,lpot
-    DO  m = -l,l
+  do l = 0,lpot
+    do m = -l,l
       lm = l*l + l + m + 1
       
 !---> convolute with shape function
       
-      DO  j = imaxsh(lm-1) + 1,imaxsh(lm)
+      do j = imaxsh(lm-1) + 1,imaxsh(lm)
         lm2 = ilm(j,2)
-        IF (lmsp(ilm(j,3)) > 0) THEN
+        if (lmsp(ilm(j,3)) > 0) then
           ifun = ifunm(ilm(j,3))
-          DO  ir = irs1 + 1,irc1
+          do ir = irs1 + 1,irc1
             irh = ir - irs1
             er(ir,l) = er(ir,l) + rho2ns(ir,lm,1)*gsh(j)*  &
                 thetas(irh,ifun)*estor(ir,lm2)
-          END DO
-        END IF
-      END DO
-    END DO
-!   CALL simpk(er(1,l),exc(l),ipan1,ircut,drdi)
+          enddo
+        endif
+      enddo
+    enddo
+!   call simpk(er(1,l),exc(l),ipan1,ircut,drdi)
     exc(l) = simpson(er(1:,l), ipan1, ircut, drdi)
-  END DO
+  enddo
   
-END IF
+endif
 
 !---> extrapolate ex.-cor potential to the origin only for lm=1
 
-DO  ispin = 1,nspin
+do ispin = 1,nspin
   ipot = ispin
   
   vxc2 = vxcr(2,ispin)
@@ -322,6 +313,6 @@ DO  ispin = 1,nspin
   vxc1 = vxc2 - r(2)* (vxc3-vxc2)/ (r(3)-r(2))
   
   v(1,1,ipot) = v(1,1,ipot) + vxc1
-END DO
+enddo
 
-END SUBROUTINE vxcgga
+end subroutine vxcgga

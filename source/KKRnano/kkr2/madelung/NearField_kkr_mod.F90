@@ -14,7 +14,7 @@ module NearField_kkr_mod
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
-  public :: IntracellPotential
+  public :: IntracellPotential, create, destroy
   
   !----------------------------------------------------------------------------
   !> Usage:
@@ -50,6 +50,13 @@ module NearField_kkr_mod
   
   double precision, parameter, private :: PI = 3.1415926535897932d0
 
+  interface create
+    module procedure createIntracellPot
+  endinterface
+  
+  interface destroy
+    module procedure destroyIntracellPotential
+  endinterface
   
   contains
   
@@ -186,14 +193,15 @@ module NearField_kkr_mod
   endsubroutine ! init
   
   !----------------------------------------------------------------------------
-  subroutine destroyIntracellPotential(self)
+  elemental subroutine destroyIntracellPotential(self)
     class(IntracellPotential), intent(inout) :: self
-    deallocate(self%charge_moments)
-    deallocate(self%radial_points)
-    deallocate(self%v_intra_values)
-    deallocate(self%xarray)
-    deallocate(self%yarray)
-    deallocate(self%y2ndder)
+    integer :: ist
+    deallocate(self%charge_moments, stat=ist)
+    deallocate(self%radial_points, stat=ist)
+    deallocate(self%v_intra_values, stat=ist)
+    deallocate(self%xarray, stat=ist)
+    deallocate(self%yarray, stat=ist)
+    deallocate(self%y2ndder, stat=ist)
   endsubroutine ! destroy
   
-endmodule
+endmodule ! NearField_kkr_mod

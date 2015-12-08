@@ -241,12 +241,12 @@ module ConstructShapes_mod
   endsubroutine ! construct
 
   !------------------------------------------------------------------------------
-  subroutine destroyInterstitialMesh(inter_mesh)
+  elemental subroutine destroyInterstitialMesh(inter_mesh)
     type(InterstitialMesh), intent(inout) :: inter_mesh
-
-    deallocate(inter_mesh%xrn, inter_mesh%drn, inter_mesh%nm)
+    integer :: ist
+    
+    deallocate(inter_mesh%xrn, inter_mesh%drn, inter_mesh%nm, stat=ist)
     inter_mesh%npan = 0
-
   endsubroutine ! destroy
 
   !------------------------------------------------------------------------------

@@ -1,103 +1,94 @@
-      SUBROUTINE VXCDRV_NEW(EXC,KTE,KXC,LPOT,NSPIN,RHO2NS,VONS,
-     +                  R,DRDI,A,IRWS,IRCUT,IPAN,GSH,ILM,
-     +                  IMAXSH,IFUNM,THETAS,LMSP,
-C                       new input parameters after inc.p removal
+      subroutine vxcdrv_new(exc,kte,kxc,lpot,nspin,rho2ns,vons,
+     +                  r,drdi,a,irws,ircut,ipan,gsh,ilm,
+     +                  imaxsh,ifunm,thetas,lmsp,
      &                  irmd, irid, nfund, ngshd, ipand)
-      IMPLICIT NONE
+      implicit none
 
-      INTEGER irmd
-      INTEGER irid
-      INTEGER nfund
-      INTEGER ngshd
-      INTEGER ipand
+      integer, intent(in) :: irmd, irid, nfund, ngshd, ipand
 
-C     .. Parameters ..
-      INTEGER IJD
-C     INTEGER LMPOTD,LMXSPD
-C     PARAMETER (LMPOTD= (LPOTD+1)**2,LMXSPD= (2*LPOTD+1)**2)
 
-C     FIX: hardcoded
-      PARAMETER (IJD = 434)
-C     ..
-C     .. Scalar Arguments ..
-      INTEGER KTE,KXC,LPOT,NSPIN
-C     ..
-C     .. Array Arguments ..
-C     DOUBLE PRECISION A(NAEZD),DRDI(IRMD,*),EXC(0:LPOTD),GSH(*),
-C    +                 R(IRMD,*),RHO2NS(IRMD,LMPOTD,2),
-C    +                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,2)
-C     INTEGER IFUNM(*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
-C    +        IRCUT(0:IPAND,*),IRWS(*),LMSP(*)
+c     fix: hardcoded
+      integer, parameter :: ijd = 434
+c     ..
+c     .. scalar arguments ..
+      integer, intent(in) :: kte, kxc, lpot, nspin
+c     ..
+c     .. array arguments ..
+c     double precision :: a(naezd),drdi(irmd,*),exc(0:lpotd),gsh(*),
+c    +                 r(irmd,*),rho2ns(irmd,lmpotd,2),
+c    +                 thetas(irid,nfund,*),vons(irmd,lmpotd,2)
+c     integer ifunm(*),ilm(ngshd,3),imaxsh(0:lmpotd),ipan(*),
+c    +        ircut(0:ipand,*),irws(*),lmsp(*)
 
-      DOUBLE PRECISION A
-      DOUBLE PRECISION DRDI(IRMD)
-      DOUBLE PRECISION EXC(0:LPOT)
-      DOUBLE PRECISION GSH(*)
-      DOUBLE PRECISION R(IRMD)
-      DOUBLE PRECISION RHO2NS(IRMD,(LPOT+1)**2,2)
-      DOUBLE PRECISION THETAS(IRID,NFUND)
-      DOUBLE PRECISION VONS(IRMD,(LPOT+1)**2,2)
-      INTEGER IFUNM(*)
-      INTEGER ILM(NGSHD,3)
-      INTEGER IMAXSH(0:(LPOT+1)**2)
-      INTEGER IPAN
-      INTEGER IRCUT(0:IPAND)
-      INTEGER IRWS
-      INTEGER LMSP(*)
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL DCOPY,SPHERE_GGA,SPHERE_NOGGA,VXCGGA,VXCLM
-C     ..
-C     .. Local Arrays .. Fortran 90 automatic arrays
-C     DOUBLE PRECISION DYLMF1(IJD,LMPOTD),DYLMF2(IJD,LMPOTD),
-C    +                 DYLMT1(IJD,LMPOTD),DYLMT2(IJD,LMPOTD),
-C    +                 DYLMTF(IJD,LMPOTD),
-C    +                 RIJ(IJD,3),THET(IJD),WTYR(IJD,LMPOTD),
-C    +                 YLM(IJD,LMPOTD),YR(IJD,LMPOTD)
-C     INTEGER IFUNMIAT(LMXSPD)
+      double precision :: a
+      double precision :: drdi(irmd)
+      double precision :: exc(0:lpot)
+      double precision :: gsh(*)
+      double precision :: r(irmd)
+      double precision :: rho2ns(irmd,(lpot+1)**2,2)
+      double precision :: thetas(irid,nfund)
+      double precision :: vons(irmd,(lpot+1)**2,2)
+      integer ifunm(*)
+      integer ilm(ngshd,3)
+      integer imaxsh(0:(lpot+1)**2)
+      integer ipan
+      integer ircut(0:ipand)
+      integer irws
+      integer lmsp(*)
+c     ..
+c     .. external subroutines ..
+      external :: sphere_gga, sphere_nogga, vxcgga, vxclm
+c     ..
+c     .. local arrays .. fortran 90 automatic arrays
+c     double precision :: dylmf1(ijd,lmpotd),dylmf2(ijd,lmpotd),
+c    +                 dylmt1(ijd,lmpotd),dylmt2(ijd,lmpotd),
+c    +                 dylmtf(ijd,lmpotd),
+c    +                 rij(ijd,3),thet(ijd),wtyr(ijd,lmpotd),
+c    +                 ylm(ijd,lmpotd),yr(ijd,lmpotd)
+c     integer ifunmiat(lmxspd)
 
-      DOUBLE PRECISION DYLMF1(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION DYLMF2(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION DYLMT1(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION DYLMT2(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION DYLMTF(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION RIJ(IJD,3)
-      DOUBLE PRECISION THET(IJD)
-      DOUBLE PRECISION WTYR(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION YLM(IJD,(LPOT+1)**2)
-      DOUBLE PRECISION YR(IJD,(LPOT+1)**2)
-C     ..
-C     .. Local Scalars ..
+      double precision :: dylmf1(ijd,(lpot+1)**2)
+      double precision :: dylmf2(ijd,(lpot+1)**2)
+      double precision :: dylmt1(ijd,(lpot+1)**2)
+      double precision :: dylmt2(ijd,(lpot+1)**2)
+      double precision :: dylmtf(ijd,(lpot+1)**2)
+      double precision :: rij(ijd,3)
+      double precision :: thet(ijd)
+      double precision :: wtyr(ijd,(lpot+1)**2)
+      double precision :: ylm(ijd,(lpot+1)**2)
+      double precision :: yr(ijd,(lpot+1)**2)
+c     ..
+c     .. local scalars ..
 
-      INTEGER LMPOTD
+      integer lmpotd
 
-      LMPOTD = (LPOT+1)**2
-C     ..
-      IF (KXC.LT.3) THEN
-        CALL SPHERE_NOGGA(LPOT,YR,WTYR,RIJ,IJD)
-      ELSE
-        CALL SPHERE_GGA(LPOT,YR,WTYR,RIJ,IJD,LMPOTD,THET,YLM,DYLMT1,
-     +                  DYLMT2,DYLMF1,DYLMF2,DYLMTF)
-      END IF
+      lmpotd = (lpot+1)**2
+c     ..
+      if (kxc.lt.3) then
+        call sphere_nogga(lpot,yr,wtyr,rij,ijd)
+      else
+        call sphere_gga(lpot,yr,wtyr,rij,ijd,lmpotd,thet,ylm,dylmt1,
+     +                  dylmt2,dylmf1,dylmf2,dylmtf)
+      end if
 
-        IF (KXC.LT.3) THEN
+        if (kxc.lt.3) then
 
-          CALL VXCLM(EXC,KTE,KXC,LPOT,NSPIN,RHO2NS,
-     +               VONS,R,DRDI,
-     +               IRCUT,IPAN,
-     +               GSH,ILM,IMAXSH,IFUNM,THETAS,
-     +               YR,WTYR,IJD,LMSP,
+          call vxclm(exc,kte,kxc,lpot,nspin,rho2ns,
+     +               vons,r,drdi,
+     +               ircut,ipan,
+     +               gsh,ilm,imaxsh,ifunm,thetas,
+     +               yr,wtyr,ijd,lmsp,
      &               irmd, irid, nfund, ngshd, ipand)
-        ELSE
+        else
 c
-c GGA EX-COR POTENTIAL
+c gga ex-cor potential
 c
-          CALL VXCGGA(EXC,KTE,LPOT,NSPIN,RHO2NS,
-     +                VONS,R,DRDI,A,
-     +                IRWS,IRCUT,IPAN,
-     +                GSH,ILM,IMAXSH,IFUNM,THETAS,
-     +                WTYR,IJD,LMSP,THET,YLM,DYLMT1,DYLMT2,
-     +                DYLMF1,DYLMF2,DYLMTF,
+          call vxcgga(exc,kte,lpot,nspin,rho2ns,
+     +                vons,r,drdi,a,
+     +                irws,ircut,ipan,
+     +                gsh,ilm,imaxsh,ifunm,thetas,
+     +                wtyr,ijd,lmsp,thet,ylm,dylmt1,dylmt2,
+     +                dylmf1,dylmf2,dylmtf,
      &                irmd, irid, nfund, ngshd, ipand, kxc)
-        END IF
-      END
+        end if
+      end

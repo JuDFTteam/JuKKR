@@ -13,9 +13,9 @@ module MadelungCalculator_mod
   private
 
   public :: MadelungCalculator, MadelungClebschData, MadelungLatticeSum, create, destroy
-  public :: calculateMadelungLatticeSum, createDfac ! deprecated
-  public :: createMadelungLatticeSum, destroyMadelungLatticeSum ! deprecated
-  public :: createMadelungCalculator, destroyMadelungCalculator ! deprecated
+  public :: calculateMadelungLatticeSum, createDfac
+  public :: createMadelungLatticeSum!, destroyMadelungLatticeSum ! deprecated
+  public :: createMadelungCalculator!, destroyMadelungCalculator ! deprecated
   
   public :: testdimlat ! public for then --check functionality
 
@@ -676,9 +676,9 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
 
     double complex, parameter :: CI=(0.d0,1.d0)
     double precision, parameter :: BOUND=1.d-8
-    double precision :: alpha, lamda, kappa!, beta
+    double precision :: alpha, lamda, kappa
     double precision :: dq(3), ga, vr(3), ra, ga2
-    double precision :: dqdotg!, expbsq
+    double precision :: dqdotg
     double precision :: fpi, rfac, sqrtPiInv, sqrtPi
     integer :: i, i2, i01, ist
     integer :: l, m, lm
@@ -845,9 +845,9 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
   !! determinant of a 3 by 3 matrix
   double precision function determinant3x3_r(a) result(det)
     double precision, intent(in) :: a(3,3)
-    det = a(1,1)*(a(2,2)*a(3,3)-a(3,2)*a(2,3)) &
-        + a(2,1)*(a(3,2)*a(1,3)-a(1,2)*a(3,3)) &
-        + a(3,1)*(a(1,2)*a(2,3)-a(2,2)*a(1,3))
+    det = a(1,1)*(a(2,2)*a(3,3) - a(3,2)*a(2,3)) &
+        + a(2,1)*(a(3,2)*a(1,3) - a(1,2)*a(3,3)) &
+        + a(3,1)*(a(1,2)*a(2,3) - a(2,2)*a(1,3))
   endfunction ! determinant3x3
 
   !! inverts a 3 by 3 matrix, if the determinant is non-zero
@@ -864,17 +864,17 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
       return
     endif ! det == 0
     invdet = 1./det
-    inverse(1,1) = (a(2,2)*a(3,3)-a(2,3)*a(3,2))*invdet
-    inverse(2,1) = (a(2,3)*a(3,1)-a(2,1)*a(3,3))*invdet
-    inverse(3,1) = (a(2,1)*a(3,2)-a(2,2)*a(3,1))*invdet
+    inverse(1,1) = (a(2,2)*a(3,3) - a(2,3)*a(3,2))*invdet
+    inverse(2,1) = (a(2,3)*a(3,1) - a(2,1)*a(3,3))*invdet
+    inverse(3,1) = (a(2,1)*a(3,2) - a(2,2)*a(3,1))*invdet
 
-    inverse(1,2) = (a(3,2)*a(1,3)-a(3,3)*a(1,2))*invdet
-    inverse(2,2) = (a(3,3)*a(1,1)-a(3,1)*a(1,3))*invdet
-    inverse(3,2) = (a(3,1)*a(1,2)-a(3,2)*a(1,1))*invdet
+    inverse(1,2) = (a(3,2)*a(1,3) - a(3,3)*a(1,2))*invdet
+    inverse(2,2) = (a(3,3)*a(1,1) - a(3,1)*a(1,3))*invdet
+    inverse(3,2) = (a(3,1)*a(1,2) - a(3,2)*a(1,1))*invdet
 
-    inverse(1,3) = (a(1,2)*a(2,3)-a(1,3)*a(2,2))*invdet
-    inverse(2,3) = (a(1,3)*a(2,1)-a(1,1)*a(2,3))*invdet
-    inverse(3,3) = (a(1,1)*a(2,2)-a(1,2)*a(2,1))*invdet
+    inverse(1,3) = (a(1,2)*a(2,3) - a(1,3)*a(2,2))*invdet
+    inverse(2,3) = (a(1,3)*a(2,1) - a(1,1)*a(2,3))*invdet
+    inverse(3,3) = (a(1,1)*a(2,2) - a(1,2)*a(2,1))*invdet
   endfunction ! invert3x3
   
   

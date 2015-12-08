@@ -299,11 +299,11 @@ module CalculationData_mod
     use RefCluster_mod, only: createRefCluster              
     use TEST_lcutoff_mod, only: initLcutoffNew                
     use ClusterInfo_mod, only: createClusterInfo         
-    use MadelungCalculator_mod, only: createMadelungCalculator
     use DensityResults_mod, only: createDensityResults          
     use EnergyResults_mod, only: createEnergyResults           
     use LDAUData_mod, only: createLDAUData                
     use JijData_mod, only: createJijData                 
+    use MadelungCalculator_mod, only: createMadelungCalculator
     use MadelungCalculator_mod, only: createMadelungLatticeSum      
     use GauntCoefficients_mod, only: createGauntCoefficients       
     use ShapeGauntCoefficients_mod, only: createShapeGauntCoefficients  
@@ -342,7 +342,7 @@ module CalculationData_mod
     endif ! master
     CHECKASSERT( sum(num_truncated) == dims%naez )
 
-    call createMadelungCalculator(self%madelung_calc, dims%lmaxd, params%alat, params%rmax, params%gmax, arrays%bravais)
+    call create(self%madelung_calc, dims%lmaxd, params%alat, params%rmax, params%gmax, arrays%bravais)
 
     call generateAtomsShapesMeshes(self, dims, params, arrays) ! a very crucial routine
 

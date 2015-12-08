@@ -2,7 +2,8 @@
 !> Storage for polygon face data and additional information on vertices
 module PolygonFaces_mod
   implicit none
-  public
+  private
+  public :: TetrahedronAngles, PolygonFace, destroy
 
   type TetrahedronAngles
     double precision :: rd !< distances pyramid footpoint to edge
@@ -22,7 +23,6 @@ module PolygonFaces_mod
   interface destroy
     module procedure destroyPolygonFace, destroyTetrahedronAngles
   endinterface  
-  
   
   contains
   

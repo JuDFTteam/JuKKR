@@ -62,7 +62,7 @@ module kkrmat_new_mod
 
     ! locals
     double complex, allocatable :: G_diag(:,:,:)
-    integer :: site_lm_size, iat, num_local_atoms, naclsd, naez, k_point_index
+    integer :: site_lm_size, ilocal, num_local_atoms, naclsd, naez, k_point_index
     type(SolverStats) :: total_stats
 
 #define ms kkr_op%ms
@@ -125,16 +125,16 @@ module kkrmat_new_mod
                     ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
 
-      do iat = 1, num_local_atoms
-        TESTARRAYLOG(3, GS(:,:,:,iat))
-      enddo ! iat
+      do ilocal = 1, num_local_atoms
+        TESTARRAYLOG(3, GS(:,:,:,ilocal))
+      enddo ! ilocal
 
     !==============================================================================
     enddo ! k_point_index = 1, NOFKS
     !==============================================================================
 
     
-    deallocate(G_diag, stat=iat) ! Cleanup
+    deallocate(G_diag, stat=ilocal) ! Cleanup
 
     total_stats = solver%get_total_stats()
 
@@ -320,7 +320,7 @@ module kkrmat_new_mod
 
     if (cutoffmode == 3 .or. cutoffmode == 0) then
 
-      call solve(solver, ms%mat_X, ms%mat_B) ! use interative solver
+      call solve(solver, ms%mat_X, ms%mat_B) ! use iterative solver
 
       if (DEBUG_dump_matrix) then
         call dump(ms%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription

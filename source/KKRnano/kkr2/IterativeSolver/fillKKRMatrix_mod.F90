@@ -26,13 +26,13 @@ module fillKKRMatrix_mod
   !> Setup of the sparsity pattern of the KKR-Matrix.
   subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    
+
     integer, intent(in) :: lmmaxd_array(:) !< block size of each row, dim(nrows)
     integer, intent(in) :: numn0(:) !< dim(nrows)
     integer, intent(in) :: indn0(:,:) !< dim(nrows,maxval(numn0))
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    integer :: nnz_blocks, nrows, ii, irow, icol, start_address
+    integer :: nnzb, nrows, ij, irow, icol, start_address
 
     nrows = size(lmmaxd_array)
 
@@ -44,46 +44,45 @@ module fillKKRMatrix_mod
     sparse%ia = 0
     sparse%ja = 0
     sparse%ka = 0
-    sparse%kvstr = 0
+    sparse%kvstr = 0 ! init block start indices
 
-    nnz_blocks = 0
-    do ii = 1, nrows
-      nnz_blocks = nnz_blocks + numn0(ii)
-    enddo ! ii
+    nnzb = sum(numn0(1:nrows)) ! number of non-zero blocks
 
-    ASSERT(nnz_blocks <= size(sparse%ja))
-    ASSERT(nnz_blocks + 1 <= size(sparse%ka))
+    ASSERT(nnzb <= size(sparse%ja))
+    ASSERT(nnzb + 1 <= size(sparse%ka))
 
     sparse%kvstr(1) = 1
-    do ii = 2, nrows + 1
-      sparse%kvstr(ii) = sparse%kvstr(ii-1) + lmmaxd_array(ii-1)
-    enddo ! ii
+    do ij = 1, nrows
+      sparse%kvstr(ij+1) = sparse%kvstr(ij) + lmmaxd_array(ij)
+    enddo ! ij
 
-    ii = 1
+    ij = 1
     do irow = 1, nrows
-      sparse%ia(irow) = ii
+      sparse%ia(irow) = ij
       do icol = 1, numn0(irow) ! square matrix
+      
         ASSERT(icol <= size(indn0, 2))
-        ASSERT(ii <= nnz_blocks)
-        sparse%ja(ii) = indn0(irow,icol)
-        ii = ii + 1
+        ASSERT(ij <= nnzb)
+        
+        sparse%ja(ij) = indn0(irow,icol)
+        ij = ij + 1
       enddo ! icol
     enddo ! irow
-    sparse%ia(nrows+1) = ii
+    sparse%ia(nrows+1) = ij ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
 
     start_address = 1
-    ii = 1
+    ij = 1
     do irow = 1, nrows
       do icol = 1, numn0(irow)
-        sparse%ka(ii) = start_address
+        sparse%ka(ij) = start_address
 
         ASSERT( 1 <= indn0(irow,icol) .and. indn0(irow,icol) <= nrows )
 
         start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(indn0(irow,icol))
-        ii = ii + 1
+        ij = ij + 1
       enddo ! icol
     enddo ! irow
-    sparse%ka(ii) = start_address
+    sparse%ka(ij) = start_address
 
     sparse%max_blockdim = maxval(lmmaxd_array)
     sparse%max_blocks_per_row = maxval(numn0)
@@ -211,7 +210,7 @@ module fillKKRMatrix_mod
         if (present(tmatLL)) then
           do lm1 = 1, lmmax1
             ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-            mat_B(start+lm1,lm2+lmmax2*(ii-1)) = - tmatLL(lm1,lm2,atom_index)
+            mat_B(start+lm1,lm2+lmmax2*(ii-1)) = -tmatLL(lm1,lm2,atom_index)
           enddo ! lm1
         else
           mat_B(start+lm2,lm2+lmmax2*(ii-1)) = -CONE

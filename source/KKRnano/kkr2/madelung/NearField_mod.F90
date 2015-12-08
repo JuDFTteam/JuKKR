@@ -266,7 +266,7 @@ module NearField_mod
 
   endsubroutine ! get
 
-endmodule NearField_mod
+endmodule ! NearField_mod
 
 !  program test_it
 !    use NearField_mod, only: ...

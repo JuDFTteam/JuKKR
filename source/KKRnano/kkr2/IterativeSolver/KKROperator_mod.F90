@@ -14,7 +14,6 @@ module KKROperator_mod
   implicit none
   private
   public :: KKROperator, create, destroy, apply
-! public :: create_KKROperator, destroy_KKROperator ! deprecated
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type, extends(OperatorT) :: KKROperator
