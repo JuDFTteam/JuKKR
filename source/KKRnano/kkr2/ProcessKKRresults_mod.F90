@@ -417,7 +417,7 @@ module ProcessKKRresults_mod
     call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
                             emesh, densities%RNORM, &
                             dims%LLY, params%ICST, params%NSRA, &
-                            kkr%GMATN, calc%gaunts, ldau_data)
+                            kkr%GMATN, calc%gaunts, ldau_data, params%Volterra)
 
     if (dims%LLY == 1) then
       TESTARRAYLOG(3, emesh%WEZRN)
@@ -450,7 +450,7 @@ module ProcessKKRresults_mod
       call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                           densities%RHO2NS, densities%R2NEF, &
                           densities%DEN, energies%ESPV, kkr%GMATN, &
-                          calc%gaunts, emesh, ldau_data)
+                          calc%gaunts, emesh, ldau_data, params%Volterra)
 
       ! LDAU
       if (ldau_data%LDAU .and. ldau_data%NLDAU >= 1) then

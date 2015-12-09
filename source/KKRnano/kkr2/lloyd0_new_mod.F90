@@ -10,7 +10,7 @@ implicit none
 !----------------------------------------------------------------------------
 !> Lloyd's formula.
 !> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
-subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data)
+subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data, method)
   use BasisAtom_mod, only: BasisAtom
   use GauntCoefficients_mod, only: GauntCoefficients
   use EnergyMesh_mod, only: EnergyMesh
@@ -30,6 +30,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
   type(LDAUData), intent(inout) :: ldau_data ! inout?
   double precision, intent(inout) :: RNORM(:,:)  !out
   type(KKRnanoParallel), intent(in) :: my_mpi
+  integer, intent(in) :: method !< single site method
 
   integer :: nspind, irmind, irnsd, lmaxd, ielast, ie
 
@@ -61,7 +62,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
                     ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
                     getMySEcommunicator(my_mpi), &
                     lmaxd, mesh%irmd, irnsd, ielast, &
-                    cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb)
+                    cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb, method)
 
   else ! no Lloyd
 
@@ -93,7 +94,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   DMATLDAU, &                                        ! <
                   communicator, &                         ! >
                   lmax, irmd, irnsd, iemxd, &
-                  irid, nfund, ipand, ncleb)
+                  irid, nfund, ipand, ncleb, method)
   use ValenceDensity_mod, only: RHOVAL, RHOVAL0
 
   !USE_ARRAYTEST_MOD
@@ -147,6 +148,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   !------------------------------------------------------------------
 
   integer, intent(in) :: communicator
+  integer, intent(in) :: method
 
 !---------------- Local variables -----------------------------------
 
@@ -254,7 +256,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                     LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
                     DMATLDAU, &
                     iemxd, &
-                    lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+                    lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb, method)
 
         ! result: DEN0
 

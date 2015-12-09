@@ -16,60 +16,61 @@ module InputParams_mod
   public :: readInputParamsFromFile
   public :: writeInputParamsToFile
 
-type InputParams
-  integer :: icst
-  integer :: kpre
-  double precision :: bravais_a (3)
-  double precision :: bravais_b (3)
-  double precision :: bravais_c (3)
-  double precision :: gmax
-  double precision :: rmax
-  double precision :: qmrbound
-  integer :: nsra
-  integer :: kxc
-  double precision :: tempr
-  double precision :: alat
-  double precision :: rclust
-  double precision :: mixing
-  double precision :: fcm
-  integer :: scfsteps
-  integer :: kforce
-  double precision :: emin
-  double precision :: emax
-  logical :: jij
-  logical :: ldau
-  logical :: cartesian
-  double precision :: rcutjij
-  integer :: kte
-  integer :: imix
-  integer :: bzdivide (3)
-  integer :: npol
-  integer :: npnt1
-  integer :: npnt2
-  integer :: npnt3
-  double precision :: rclust_voronoi
-  integer :: nmin_panel
-  integer :: num_MT_points
-  double precision :: MT_scale
-  double precision :: RMT_ref_scale
-  integer :: use_semicore
-  double precision :: ebotsemi
-  double precision :: emusemi
-  integer :: n1semi
-  integer :: n2semi
-  integer :: n3semi
-  double precision :: fsemicore
-  double precision :: target_rms
-  integer :: near_field
-  integer :: write_shapes
-  double precision :: mt_zero_shift
-  integer :: DEBUG_morgan_electrostatics
-endtype ! InputParams
+  type InputParams
+    integer :: icst
+    integer :: kpre
+    double precision :: bravais_a (3)
+    double precision :: bravais_b (3)
+    double precision :: bravais_c (3)
+    double precision :: gmax
+    double precision :: rmax
+    double precision :: qmrbound
+    integer :: nsra
+    integer :: kxc
+    double precision :: tempr
+    double precision :: alat
+    double precision :: rclust
+    double precision :: mixing
+    double precision :: fcm
+    integer :: scfsteps
+    integer :: kforce
+    double precision :: emin
+    double precision :: emax
+    logical :: jij
+    logical :: ldau
+    logical :: cartesian
+    double precision :: rcutjij
+    integer :: kte
+    integer :: imix
+    integer :: bzdivide (3)
+    integer :: npol
+    integer :: npnt1
+    integer :: npnt2
+    integer :: npnt3
+    double precision :: rclust_voronoi
+    integer :: nmin_panel
+    integer :: num_MT_points
+    double precision :: MT_scale
+    double precision :: RMT_ref_scale
+    integer :: use_semicore
+    double precision :: ebotsemi
+    double precision :: emusemi
+    integer :: n1semi
+    integer :: n2semi
+    integer :: n3semi
+    double precision :: fsemicore
+    integer :: volterra
+    double precision :: target_rms
+    integer :: near_field
+    integer :: write_shapes
+    double precision :: mt_zero_shift
+    integer :: DEBUG_morgan_electrostatics
+  endtype ! InputParams
 
   contains
 !-------------------------------------------------------------------------------
 integer function getInputParamsValues(filename, values) result(ierror)
-  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroyConfigReader
+  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroy
   use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND
   use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE
   use ConfigReader_mod, only: getValue, parseFile
@@ -82,7 +83,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
   ierror = 0
   write(*,*) "Reading information from input.conf..."
   call createConfigReader(cr)
-#define destroy_and_return   call destroyConfigReader(cr) ; return
+#define destroy_and_return   call destroy(cr) ; return
   ierror = parseFile(cr, filename)
   if (ierror /= 0) then
     write(*,*) "Error reading configfile ", trim(filename)
@@ -423,6 +424,15 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "volterra", values%volterra , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for volterra. Set to volterra = 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for volterra."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "target_rms", values%target_rms , def=1.0D-8)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for target_rms. Set to target_rms = 1.0D-8"
@@ -524,6 +534,7 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%n2semi
   read(fu) values%n3semi
   read(fu) values%fsemicore
+  read(fu) values%volterra
   read(fu) values%target_rms
   read(fu) values%near_field
   read(fu) values%write_shapes
@@ -583,6 +594,7 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%n2semi
   write(fu) values%n3semi
   write(fu) values%fsemicore
+  write(fu) values%volterra
   write(fu) values%target_rms
   write(fu) values%near_field
   write(fu) values%write_shapes

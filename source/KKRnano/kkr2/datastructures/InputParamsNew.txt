@@ -43,6 +43,7 @@ i n1semi 0
 i n2semi 0
 i n3semi 0
 d fsemicore 1.0
+i volterra 0
 ### other
 d target_rms 1.0D-8
 ### near field corrections (default = 0)

@@ -10,7 +10,7 @@ module SingleSite_mod
 
   contains
   
-  subroutine calcdtmat(ldau,nldau,icst, nsra,ez,dz, drdi,r,vins, visp,zat,ipan, ircut,cleb,loflm,icleb,iend, dtde,tr_alph,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd)
+  subroutine calcdtmat(ldau,nldau,icst, nsra,ez,dz, drdi,r,vins, visp,zat,ipan, ircut,cleb,loflm,icleb,iend, dtde,tr_alph,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd, method)
     integer, intent(in) :: ncleb, ipand, irmd, irnsd, lmax,iend
     double complex, intent(in) :: dz
     double complex, intent(in) :: ez
@@ -26,6 +26,7 @@ module SingleSite_mod
     integer, intent(in) :: icleb(ncleb,3),loflm((2*lmax+1)**2)
     integer, intent(in) :: icst,nsra
     logical, intent(in) :: ldau
+    integer, intent(in) :: method
     
     double complex :: tmatn1((lmax+1)**2,(lmax+1)**2), tmatn2((lmax+1)**2,(lmax+1)**2)
     double complex :: tr_alph1, tr_alph2
@@ -35,8 +36,8 @@ module SingleSite_mod
     ez1 = ez + dz !.. perpendicular to the contour
     ez2 = ez - dz !.. parallel to the contour
 
-    call calctmat(ldau,nldau,icst, nsra,ez1, drdi,r,vins, visp,zat,ipan, ircut,cleb,loflm,icleb,iend, tmatn1,tr_alph1,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd)
-    call calctmat(ldau,nldau,icst, nsra,ez2, drdi,r,vins, visp,zat,ipan, ircut,cleb,loflm,icleb,iend, tmatn2,tr_alph2,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd)
+    call calctmat(ldau,nldau,icst, nsra,ez1, drdi,r,vins, visp,zat,ipan, ircut,cleb,loflm,icleb,iend, tmatn1,tr_alph1,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd, method)
+    call calctmat(ldau,nldau,icst, nsra,ez2, drdi,r,vins, visp,zat,ipan, ircut,cleb,loflm,icleb,iend, tmatn2,tr_alph2,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd, method)
 
     ! dt(e)
     ! -----
@@ -68,7 +69,7 @@ module SingleSite_mod
   endsubroutine calcdtmat_deltaez
 
 
-  subroutine calctmat(ldau,nldau,icst, nsra,ez, drdi,r,vins,visp,zat,ipan, ircut,cleb,loflm,icleb,iend, tmatn,tr_alph,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd)
+  subroutine calctmat(ldau,nldau,icst, nsra,ez, drdi,r,vins,visp,zat,ipan, ircut,cleb,loflm,icleb,iend, tmatn,tr_alph,lmax, lldau,wmldau_ispin, ncleb, ipand, irmd, irnsd, method)
     use SingleSiteHelpers_mod, only: wfmesh, cradwf
     integer, intent(in) :: ncleb, ipand, irmd, irnsd, icst, iend, ipan, nsra, lmax, nldau
     double precision, intent(in) :: zat
@@ -83,6 +84,7 @@ module SingleSite_mod
     integer, intent(in) :: icleb(ncleb,3), ircut(0:ipand)
     integer, intent(in) :: loflm((2*lmax+1)**2)
     integer, intent(in) :: lldau(lmax+1)
+    integer, intent(in) :: method
 
     double precision, parameter :: cvlight = 274.0720442d0
     double complex   :: eryd, ek, det
@@ -151,7 +153,8 @@ module SingleSite_mod
 
     call cradwf(eryd,ek,nsra,alpha,ipan,ircut,cvlight,rs,s, pz,fz,qz,sz,tmat,visp,drdi,r,zat, ldau,nldau,lldau,wmldauav,ldaucut, lmax, irmd, ipand)
 
-    call pnstmat(drdi,ek,icst,pz,qz,fz,sz,pns, tmatn, vins,ipan,ircut,nsra,cleb,icleb,iend,loflm, tmat,det,lmax, ldau,nldau,lldau, wmldau_ispin,wmldauav,ldaucut, lmax, irmd, irnsd, ipand, ncleb)
+    call pnstmat(drdi,ek,icst,pz,qz,fz,sz,pns, tmatn, vins,ipan,ircut,nsra,cleb,icleb,iend,loflm, tmat,det,lmax, & 
+         ldau,nldau,lldau, wmldau_ispin,wmldauav,ldaucut, lmax, irmd, irnsd, ipand, ncleb, method)
 
     tr_alph = log(det)
     do l = 0, lmax
@@ -168,7 +171,7 @@ module SingleSite_mod
       
 !>    construct the t-matrix from radial solutions and potential
   subroutine pnstmat(drdi,ek,icst,pz,qz,fz,sz,pns,tmatll,vins, ipan,ircut,nsra,cleb,icleb,iend,loflm,tmat, &
-                    det,lkonv, ldau,nldau,lldau, wmldau_ispin,wmldauav,ldaucut, lmaxd, irmd, irnsd, ipand, ncleb)
+                    det,lkonv, ldau,nldau,lldau, wmldau_ispin,wmldauav,ldaucut, lmaxd, irmd, irnsd, ipand, ncleb, method)
     use SingleSiteHelpers_mod, only: vllns, wftsca
     integer, intent(in) :: lmaxd, irmd, irnsd, ipand, ncleb
     double complex, intent(in) :: ek
@@ -189,6 +192,7 @@ module SingleSite_mod
     double precision, intent(in) :: ldaucut(irmd)
     double precision, intent(in) :: wmldauav(lmaxd+1)
     integer, intent(in) :: icleb(ncleb,3), ircut(0:ipand), loflm(*), lldau(lmaxd+1)
+    integer, intent(in) :: method !< method for single site solver, Volterra or Fredholm
     
     external :: zgetrf ! from BLAS
     double complex  :: ar((lmaxd+1)**2,(lmaxd+1)**2)
@@ -274,7 +278,7 @@ module SingleSite_mod
 !
 !---> determine the regular non sph. wavefunction
 !
-    call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
+    call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd, method)
 
     do lm1 = 1, lmmkonv
       tmatll(lm1,lm1) = tmatll(lm1,lm1) + tmat(loflm(lm1))
@@ -339,7 +343,7 @@ module SingleSite_mod
 !-----------------------------------------------------------------------
   subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm,  &
                   qzlm, pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra,  &
-                  irmind, irmd, ipand, lmmaxd)
+                  irmind, irmd, ipand, lmmaxd, method)
     use SingleSiteHelpers_mod, only: csinwd, csout, wfint, wfint0, zgeinv1
     double complex, intent(in) :: ek
     integer, intent(in) ::  icst,ipan,ipand,irmd,irmind,lmmaxd,nsra
@@ -357,13 +361,16 @@ module SingleSite_mod
     double complex, intent(in) :: qzlm(lmmaxd,irmind:irmd,2)
     double precision, intent(in) ::  vnspll(lmmaxd,lmmaxd,irmind:irmd)
     integer, intent(in) :: ircut(0:ipand)
+    integer, intent(in) :: method !< 0: Fredholm (default), 1: Volterra
 
     external :: zgemm ! from BLAS
     double precision :: err
     integer :: i, ir, irc1, j, lm
     double complex :: pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd)
     integer :: ipiv(lmmaxd)
-    logical, parameter :: Volterra = .false. ! false ==> Fredholm equation
+    logical :: Volterra ! false ==> Fredholm equation, true ==> Volterra equation
+    
+    Volterra = (method /= 0)
     
     irc1 = ircut(ipan)
   

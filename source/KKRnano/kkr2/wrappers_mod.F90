@@ -20,7 +20,7 @@ module wrappers_mod
   
   !----------------------------------------------------------------------------
   !> Calculate valence electron density.
-  subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, espv, gmatn, gaunts, emesh, ldau_data)
+  subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, espv, gmatn, gaunts, emesh, ldau_data, method)
     use BasisAtom_mod, only: BasisAtom
     use GauntCoefficients_mod, only: GauntCoefficients
     use EnergyMesh_mod, only: EnergyMesh
@@ -40,6 +40,7 @@ module wrappers_mod
     type(GauntCoefficients), intent(in) :: gaunts
     type(EnergyMesh), intent(inout) :: emesh !inout or in?
     type(LDAUData), intent(inout) :: ldau_data ! inout?
+    integer, intent(in) :: method !< method for solving the single site problem, Volterra or Fredholm
 
     integer :: ispin, nspind, irmind, irnsd, lmaxd
 
@@ -68,13 +69,13 @@ module wrappers_mod
                   ldau_data%ldau, ldau_data%nldau, ldau_data%lldau, ldau_data%phildau, ldau_data%wmldau, &
                   ldau_data%dmatldau, &
                   emesh%ielast, &
-                  lmaxd, mesh%irmd, irnsd, cell%shdata%irid, mesh%ipand, cell%shdata%nfund, gaunts%ncleb)
+                  lmaxd, mesh%irmd, irnsd, cell%shdata%irid, mesh%ipand, cell%shdata%nfund, gaunts%ncleb, method)
 
     enddo ! ispin
   endsubroutine
 
   !------------------------------------------------------------------------------
-  subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, tmatn, tr_alph, ldau_data)
+  subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, tmatn, tr_alph, ldau_data, method)
     use BasisAtom_mod, only: BasisAtom
     use EnergyMesh_mod, only: EnergyMesh
     use LDAUData_mod, only: LDAUData
@@ -92,6 +93,7 @@ module wrappers_mod
     integer :: nsra
     double complex, intent(inout) :: tmatn(:,:,:)
     double complex, intent(inout) :: tr_alph(:)
+    integer, intent(in) :: method
 
     integer :: nspind, irmind, irnsd, lmaxd, lmmaxd
 
@@ -117,11 +119,11 @@ module wrappers_mod
                   mesh%ircut, gaunts%cleb, gaunts%loflm, gaunts%icleb, gaunts%iend, &
                   tmatn(:,:,ispin), tr_alph(ispin), lmaxd, &
                   ldau_data%lldau, ldau_data%wmldau(:,:,:,ispin), &
-                  gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd)
+                  gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd, method)
   endsubroutine
 
   !------------------------------------------------------------------------------
-  subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, dtde, tr_alph, ldau_data)
+  subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, dtde, tr_alph, ldau_data, method)
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
     use EnergyMesh_mod, only: EnergyMesh
@@ -139,6 +141,7 @@ module wrappers_mod
     integer :: nsra
     double complex, intent(inout) :: dtde(:,:,:)
     double complex, intent(inout) :: tr_alph(:)
+    integer, intent(in) :: method
 
     double complex :: delta_e_z
     integer :: nspind, irmind, irnsd, lmaxd, lmmaxd
@@ -167,7 +170,7 @@ module wrappers_mod
                   mesh%ircut, gaunts%cleb, gaunts%loflm, gaunts%icleb, gaunts%iend, &
                   dtde(:,:,ispin), tr_alph(ispin), lmaxd, &
                   ldau_data%lldau, ldau_data%wmldau(:,:,:,ispin), &
-                  gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd)
+                  gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd, method)
   endsubroutine
 
   !------------------------------------------------------------------------------

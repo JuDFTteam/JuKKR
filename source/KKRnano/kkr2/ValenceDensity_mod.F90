@@ -119,7 +119,7 @@ module ValenceDensity_mod
   
 subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
   vins, ipan, ircut, cleb, icleb, iend, loflm, lkonv, ispin, ldau, nldau, lldau, &
-  wmldau, wmldauav, ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb)
+  wmldau, wmldauav, ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb, method)
   use singlesite_mod, only: regns
   use SingleSiteHelpers_mod, only: vllns, wftsca
 
@@ -144,6 +144,7 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
 
   integer, intent(in) :: icleb(ncleb,3), ircut(0:ipand), loflm(*)
   integer, intent(in) :: lldau(lmaxd+1)
+  integer, intent(in) :: method
 
   integer            ir,irc1,lm1,lm2,lmmkonv,m1,m2, lmlo,lmhi,ildau
   double complex     cmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
@@ -234,7 +235,7 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
   !
   !---> determine the regular non sph. wavefunction
   !
-  call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
+  call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd, method)
 
 endsubroutine pnsqns
 
@@ -731,7 +732,7 @@ endsubroutine rhoout
                     gmatn, &                                 ! input
                     ldau,nldau,lldau,phildau,wmldau, &       ! input
                     dmatldau, &                              ! output
-                    iemxd, lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
+                    iemxd, lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb, method)
     use SingleSiteHelpers_mod, only: cradwf, wfmesh
 
     integer, intent(in) :: iemxd, lmaxd, irmd, ncleb, irnsd, irid, ipand, nfund
@@ -764,6 +765,7 @@ endsubroutine rhoout
     integer, intent(in) :: lmsp((4*lmaxd+1)**2)
     integer, intent(in) :: loflm((2*lmaxd+1)**2)
     integer, intent(in) :: lldau(lmaxd+1)
+    integer, intent(in) :: method
 
     external :: daxpy, dscal ! from blas
     
@@ -886,7 +888,7 @@ endsubroutine rhoout
       
       call pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz, pns,qns,nsra,vins,ipan,ircut, &
                   cleb,icleb,iend,loflm,lmaxd,ispin, ldau,nldau,lldau, &
-                  wmldau,wmldauav,ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb)
+                  wmldau,wmldauav,ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb, method)
 
       do l = 0, lmaxd
         ekl(l) = ek*dble(2*l+1)

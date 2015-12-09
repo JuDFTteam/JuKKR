@@ -233,13 +233,13 @@ implicit none
               I1 = getAtomIndexOfLocal(calc, ilocal)
 
               call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                              params%NSRA, calc%gaunts, kkr%TmatN, kkr%TR_ALPH, ldau_data)
+                              params%NSRA, calc%gaunts, kkr%TmatN, kkr%TR_ALPH, ldau_data, params%Volterra)
 
               jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
               if (dims%LLY == 1) then  ! calculate derivative of t-matrix for Lloyd's formula
                 call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                              params%NSRA, calc%gaunts, kkr%dTdE, kkr%TR_ALPH, ldau_data)
+                              params%NSRA, calc%gaunts, kkr%dTdE, kkr%TR_ALPH, ldau_data, params%Volterra)
               endif
 
               ! t_ref-matrix of central cluster atom has index 1
