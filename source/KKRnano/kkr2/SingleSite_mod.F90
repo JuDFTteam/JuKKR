@@ -363,7 +363,7 @@ module SingleSite_mod
     integer :: i, ir, irc1, j, lm
     double complex :: pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd)
     integer :: ipiv(lmmaxd)
-    logical, parameter :: Volterra = .true. ! false ==> Fredholm equation
+    logical, parameter :: Volterra = .false. ! false ==> Fredholm equation
     
     irc1 = ircut(ipan)
   
