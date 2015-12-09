@@ -166,6 +166,8 @@ C ----------------------------------------------------------------------
 #else
          i1_start = 1
          i1_end   = NCLS
+         
+         !write(*,*) 'tbref icls loop:',i1_start,i1_end,ncls,ie_num
 #endif
          DO ICLS=i1_start,i1_end
 !          DO ICLS = 1,NCLS
@@ -180,12 +182,17 @@ C
             IF (TEST('flow    ')) WRITE (1337,FMT=*) 'CLUSTER ',ICLS,
      +           ' at ATOM ',IC
 C     
+            !write(*,*) 'gll start for ',ie_num,icls
             CALL GLL13(ERYD,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
      +                 ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      &                 TOLRDIF,
      +                 ALATC,0,GINP(1,1,ICLS),
      &                 DGINP(1,1,ICLS),NACLSMAX,LLY_G0TR(IE,ICLS),LLY)
+            !write(*,*) 'gll done for ',ie_num,icls
          END DO
+         
+         !write(*,*) 'after gll13',ie_num
+         
 #ifdef CPP_MPI
          !gather results of ginp, dginp and lly_g0tr from above parallel loop
          IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS

@@ -114,6 +114,7 @@ contains
     
       if (.not. allocated(t_tgmat%tmat)) then
          if (.not. t_tgmat%tmat_to_file) then
+            !write(*,*) myrank,nranks,t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP,t_inc%IELAST,nspin,t_inc%NATYP
             if(nranks.eq.1) then
                !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
                allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)

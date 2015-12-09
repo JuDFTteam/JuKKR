@@ -319,6 +319,8 @@ C
 C
        END DO
        END DO
+       
+       !write(*,*) 'done calctmat'
      
       ELSE
        

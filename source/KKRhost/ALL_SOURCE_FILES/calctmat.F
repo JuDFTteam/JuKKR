@@ -178,7 +178,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
        
          IE = ie_start+ie_num
 #else
-      !t_mpi_c_grid%ntot2=IELAST
+      t_mpi_c_grid%ntot2=IELAST
       !t_mpi_c_grid%ntot_pT2 = IELAST
       !t_mpi_c_grid%ioff_pT2 = 0
       ! now initialize arrays for tmat, gmat, and gref
@@ -345,7 +345,8 @@ C
             IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*
      *             (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
 #else
-            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*I1
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*(I1-1)
+            !write(*,*) 'write tmat',ie_num,ie_end,ispin,nspin,i1,irec
 #endif
             t_tgmat%tmat(:,:,irec) = tmat0
          end if

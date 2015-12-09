@@ -822,6 +822,7 @@ C
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
 #else
+      ie_end = IELAST
       DO 460 IE=1,IELAST
          ie_num = ie
 #endif
