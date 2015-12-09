@@ -197,7 +197,7 @@ implicit none
         enddo ! ilocal
 
   !------------------------------------------------------------------------------
-        !$omp parallel do private(ilocal, kkr, ref_cluster)
+        !$omp parallel do private(ilocal, kkr)
         do ilocal = 1, num_local_atoms
           kkr => getKKR(calc, ilocal)
 
