@@ -74,7 +74,7 @@ module SingleSiteHelpers_mod
       endif
     enddo ! l
 
-  endsubroutine beshan
+  endsubroutine ! beshan
     
   subroutine bessel(jl, nl, hl, z, lmx)
 !**********************************************************************
@@ -91,7 +91,7 @@ module SingleSiteHelpers_mod
     call beshan(hl, jl, nl, z, lmx)
     hl(0:lmx) = -ci*hl(0:lmx) ! scale with -i
 
-  endsubroutine bessel
+  endsubroutine ! bessel
   
   
   subroutine cradwf(e,ek,nsra,alpha,ipan,ircut,cvlight,rs,s,pz,fz,qz,sz,tmat,vm2z,drdi,r,z,ldau,nldau,lldau,wmldauav,ldaucut, lmaxd, irmd, ipand)
@@ -213,7 +213,7 @@ module SingleSiteHelpers_mod
       endif ! nsra
     enddo ! l 
 
-  endsubroutine cradwf
+  endsubroutine ! cradwf
 
   
     
@@ -391,7 +391,7 @@ module SingleSiteHelpers_mod
     call zgetrf(n,n,aux,n,ipiv,info)
     call zgetrs('n',n,n,aux,n,ipiv,u,n,info)
     
-  endsubroutine
+  endsubroutine ! zgeinv1
       
       
 #define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
@@ -695,7 +695,7 @@ module SingleSiteHelpers_mod
      
     enddo ! L ! end loop over L
 
-  endsubroutine regsol
+  endsubroutine ! regsol
  
  
  
@@ -1019,7 +1019,7 @@ module SingleSiteHelpers_mod
 
     enddo ! ir
 #endif
-  endsubroutine wfint
+  endsubroutine ! wfint
 
       
   subroutine wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra, irmind,irmd,lmmaxd)
@@ -1057,7 +1057,7 @@ module SingleSiteHelpers_mod
       enddo ! ir
     endif
       
-  endsubroutine wfint0
+  endsubroutine ! wfint0
       
       
   subroutine wfmesh(e, ek, cvlight, nsra, z, r, s, rs, irm, irmd, lmaxd)
@@ -1097,7 +1097,7 @@ module SingleSiteHelpers_mod
 
     enddo ! l
     
-  endsubroutine wfmesh
+  endsubroutine ! wfmesh
       
       
       
@@ -1170,6 +1170,6 @@ module SingleSiteHelpers_mod
   
     enddo ! lm1
 
-  endsubroutine wftsca
+  endsubroutine ! wftsca
 
-endmodule SingleSiteHelpers_mod
+endmodule ! SingleSiteHelpers_mod
