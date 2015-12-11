@@ -1,12 +1,12 @@
 module mod_read_spinorbit
 contains
-subroutine read_spinorbit(natom,cellnew,myrank)
+subroutine read_spinorbit(natom,cellorbit,myrank)
   use nrtype
-  use type_cellnew
+  use type_cellorbit
   implicit none
   integer                           ::  natom
-  type(cell_typenew)                 ::  cellnew(natom)
   integer                           ::  myrank
+  type(cell_typeorbit)              ::  cellorbit
 ! local variables
 integer                                  :: iatom,ios,ival
 
@@ -18,7 +18,7 @@ if (ios/=0) then
    end if
 !set default value
 do iatom = 1, natom
-    cellnew(iatom)%use_spinorbit=1
+   cellorbit%use_spinorbit(iatom)=1
 enddo
 else 
   if (myrank==0) then
@@ -30,9 +30,9 @@ else
     if (ival/=1 .and. ival/= 0) then
       print *, '[read_spinorbit] kkrflex_spinorbitperatom inconsistent'
     end if
-    cellnew(iatom)%use_spinorbit=ival
+    cellorbit%use_spinorbit(iatom)=ival
     if (myrank==0) then
-      write(*,*) 'Atom ',iatom, ' : ',cellnew(iatom)%use_spinorbit
+      write(*,*) 'Atom ',iatom, ' : ',cellorbit%use_spinorbit(iatom)
     end if
   end do
 end if

@@ -2,13 +2,14 @@ module mod_calctmat_bauernew
 contains
 subroutine calctmat_bauernew(cell,tmat,lmaxatom,eryd_in,ZATOM,cellnew,wavefunction, &
                              ispin,nspin,kspinorbit,use_fullgmat,theta,phi,ncoll,nsra,config,idotime, &
-                             ie,ldau)        ! lda+u
+                             ie,ldau,iatom,cellorbit)        ! lda+u
 
 use mod_gauntharmonics, only: gauntcoeff
 use mod_timing
 use type_tmat
 use type_cell
 use type_cellnew
+use type_cellorbit
 use type_wavefunction
 use type_config
 use type_ldau                                   ! lda+u
@@ -36,6 +37,8 @@ integer                                   :: lmaxatom
 double complex                            :: eryd_in
 double precision                          :: zatom
 type(cell_typenew)                        :: cellnew
+type(cell_typeorbit)                      :: cellorbit
+integer                                   :: iatom
 type(wavefunction_type)                   :: wavefunction
 integer                                   :: ispin,nspin
 integer                                   :: kspinorbit,use_fullgmat
@@ -189,7 +192,8 @@ if (kspinorbit==1) then
   allocate(Vpotll2(lmsize,lmsize,cellnew%nrmaxnew))
   Vpotll2=Vpotll
 
-  if (cellnew%use_spinorbit==1) then
+ write(1337,*) 'spinorbit index','','atom',iatom,cellorbit%use_spinorbit(iatom)
+  if (cellorbit%use_spinorbit(iatom)==1) then
 
     call spinorbit(lmaxatom,zatom,       eryd,cellnew,cellnew%nrmaxnew,nspin,Vpotll,theta,phi,ncoll,'1')
 

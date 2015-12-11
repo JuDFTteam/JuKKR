@@ -1,3 +1,7 @@
+2015.12.10
+
+Small debug for switching on and off SOC per atom by Long.
+
 2014.10.01
 
 Further corrections for running with lower lmax than given in
