@@ -31,9 +31,7 @@ HEADER = ("""
 !------------------------------------------------------------------------------
 ! Automatically generated source file. Do not edit by hand.
 ! To add/remove/modify input parameters:
-""" +
-"! Edit " +  deffilename + " and run \n! 'inputgenerator.py " + configname + " " + deffilename + " > source.F90'" +
-"""
+""" + "! Edit " +  deffilename + " and run \n! 'inputgenerator.py " + configname + " " + deffilename + " > "+configname+"_mod.F90'" + """
 ! to generate source code.
 !------------------------------------------------------------------------------
 

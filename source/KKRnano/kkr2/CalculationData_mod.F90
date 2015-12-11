@@ -328,17 +328,17 @@ module CalculationData_mod
     enddo ! ila
     !$omp endparallel do
 
-    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays) ! setup the truncation zone
+    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays, params%lcutoff_radii, params%solver) ! setup the truncation zone
 
     call createClusterInfo(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
 
     if (isMasterRank(my_mpi)) then
-      write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
-      write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
+      write(*,*) "Number of lattice vectors created     :", self%lattice_vectors%nrd
+      write(*,*) "Max. number of reference cluster atoms:", self%clusters%naclsd
       write(*,*) "On node 0: "
-      write(*,*) "Num. atoms treated with full lmax: ", num_truncated(0)
-      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated(1)
-      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated(2)
+      write(*,*) "Num. atoms treated with full lmax:        ", num_truncated(dims%lmaxd)
+      write(*,*) "Num. atoms outside of the truncation zone:", num_truncated(-1)
+      write(*,*) "Num. atoms with l-dependent truncation:   ", sum(num_truncated) - num_truncated(-1) - num_truncated(dims%lmaxd)
     endif ! master
     CHECKASSERT( sum(num_truncated) == dims%naez )
 
@@ -401,7 +401,7 @@ module CalculationData_mod
     integer :: ie, blocksize, ns
 
     ! TODO: This is overdimensioned when l-cutoff is used!!!
-    if (num_truncated(0) /= dims%naez) & ! num_truncated(0) == former num_untruncated
+    if (num_truncated(dims%lmaxd) /= dims%naez) &
       warn(6, "The memory proportions for iGuess are overdimensioned when l-dependent truncation is applied!")
       
     ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
@@ -691,93 +691,92 @@ endmodule ! CalculationData_mod
 
 
 
-
-#if 0  
-!==============================================================================
-!=             WORK in PROGRESS - not used yet                                =
-!==============================================================================
-
-  ! Factored out some routines from 'constructEverything'
-
-  subroutine constructClusters(self, params, arrays)
-    use InputParams_mod, only: InputParams
-    use Main2Arrays_mod, only: Main2Arrays
-    use RefCluster_mod, only: createRefCluster, createLatticeVectors
-    
-    type(CalculationData), intent(inout) :: self
-    type(InputParams), intent(in):: params
-    type(Main2Arrays), intent(in):: arrays
-
-    integer :: ila
-
-    call createLatticeVectors(self%lattice_vectors, arrays%bravais)
-
-    ! create cluster for each local atom
-    !$omp parallel do private(ila)
-    do ila = 1, self%num_local_atoms
-      call createRefCluster(self%ref_cluster_a(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
-    enddo ! ila
-    !$omp endparallel do
-
-  endsubroutine ! constructClusters
-
-  subroutine constructTruncationZones(self, arrays, my_mpi, naez)
-    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
-    use Main2Arrays_mod, only: Main2Arrays
-    use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integers
-    use TEST_lcutoff_mod, only: initLcutoffNew
-    use ClusterInfo_mod, only: createClusterInfo_com
-
-    type(CalculationData), intent(inout) :: self
-    type(Main2Arrays), intent(in):: arrays
-    type(KKRnanoParallel), intent(in) :: my_mpi
-    integer, intent(in) :: naez
-
-    ! setup the truncation zone
-    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
-
-    ! get information about all the reference clusters of atoms in truncation zone
-    call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
-
-    if (isMasterRank(my_mpi)) then
-      write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
-      write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
-      write(*,*) "On node 0: "
-      write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
-      write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
-      write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-    endif ! is master
-    CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == naez)
-    
-  endsubroutine ! constructTruncationZones
-
-  subroutine constructStorage(self, dims, params)
-    use DimParams_mod, only: DimParams
-    use InputParams_mod, only: InputParams
-    use KKRresults_mod, only: createKKRresults
-    use DensityResults_mod, only: createDensityResults
-    use EnergyResults_mod, only: createEnergyResults
-    use LDAUData_mod, only: createLDAUData
-    use JijData_mod, only: createJijData
-    use MadelungCalculator_mod, only: createMadelungLatticeSum
-    
-    type(CalculationData), intent(inout) :: self
-    type(DimParams), intent(in)  :: dims
-    type(InputParams), intent(in):: params
-
-    integer :: atom_id, ila, irmd
-
-    do ila = 1, self%num_local_atoms
-      atom_id = self%atom_ids(ila)
-      irmd = self%mesh_a(ila)%irmd ! abbrev.
-
-      call createKKRresults(self%kkr_a(ila), dims, self%clusters%naclsd)
-      call createDensityResults(self%densities_a(ila), dims, irmd)
-      call createEnergyResults(self%energies_a(ila), dims%nspind, dims%lmaxd)
-      call createLDAUData(self%ldau_data_a(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
-      call createJijData(self%jij_data_a(ila), params%jij, params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
-      call createMadelungLatticeSum(self%madelung_sum_a(ila), self%madelung_calc, dims%naez)
-    enddo ! ila
-    
-  endsubroutine ! constructStorage
+#if 0
+! !==============================================================================
+! !=             WORK in PROGRESS - not used yet                                =
+! !==============================================================================
+! 
+!   ! Factored out some routines from 'constructEverything'
+! 
+!   subroutine constructClusters(self, params, arrays)
+!     use InputParams_mod, only: InputParams
+!     use Main2Arrays_mod, only: Main2Arrays
+!     use RefCluster_mod, only: createRefCluster, createLatticeVectors
+!     
+!     type(CalculationData), intent(inout) :: self
+!     type(InputParams), intent(in):: params
+!     type(Main2Arrays), intent(in):: arrays
+! 
+!     integer :: ila
+! 
+!     call createLatticeVectors(self%lattice_vectors, arrays%bravais)
+! 
+!     ! create cluster for each local atom
+!     !$omp parallel do private(ila)
+!     do ila = 1, self%num_local_atoms
+!       call createRefCluster(self%ref_cluster_a(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
+!     enddo ! ila
+!     !$omp endparallel do
+! 
+!   endsubroutine ! constructClusters
+! 
+!   subroutine constructTruncationZones(self, arrays, my_mpi, naez)
+!     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
+!     use Main2Arrays_mod, only: Main2Arrays
+!     use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integers
+!     use TEST_lcutoff_mod, only: initLcutoffNew
+!     use ClusterInfo_mod, only: createClusterInfo_com
+! 
+!     type(CalculationData), intent(inout) :: self
+!     type(Main2Arrays), intent(in):: arrays
+!     type(KKRnanoParallel), intent(in) :: my_mpi
+!     integer, intent(in) :: naez
+! 
+!     ! setup the truncation zone
+!     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
+! 
+!     ! get information about all the reference clusters of atoms in truncation zone
+!     call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
+! 
+!     if (isMasterRank(my_mpi)) then
+!       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
+!       write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
+!       write(*,*) "On node 0: "
+!       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
+!       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
+!       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
+!     endif ! is master
+!     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == naez)
+!     
+!   endsubroutine ! constructTruncationZones
+! 
+!   subroutine constructStorage(self, dims, params)
+!     use DimParams_mod, only: DimParams
+!     use InputParams_mod, only: InputParams
+!     use KKRresults_mod, only: createKKRresults
+!     use DensityResults_mod, only: createDensityResults
+!     use EnergyResults_mod, only: createEnergyResults
+!     use LDAUData_mod, only: createLDAUData
+!     use JijData_mod, only: createJijData
+!     use MadelungCalculator_mod, only: createMadelungLatticeSum
+!     
+!     type(CalculationData), intent(inout) :: self
+!     type(DimParams), intent(in)  :: dims
+!     type(InputParams), intent(in):: params
+! 
+!     integer :: atom_id, ila, irmd
+! 
+!     do ila = 1, self%num_local_atoms
+!       atom_id = self%atom_ids(ila)
+!       irmd = self%mesh_a(ila)%irmd ! abbrev.
+! 
+!       call createKKRresults(self%kkr_a(ila), dims, self%clusters%naclsd)
+!       call createDensityResults(self%densities_a(ila), dims, irmd)
+!       call createEnergyResults(self%energies_a(ila), dims%nspind, dims%lmaxd)
+!       call createLDAUData(self%ldau_data_a(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
+!       call createJijData(self%jij_data_a(ila), params%jij, params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
+!       call createMadelungLatticeSum(self%madelung_sum_a(ila), self%madelung_calc, dims%naez)
+!     enddo ! ila
+!     
+!   endsubroutine ! constructStorage
 #endif

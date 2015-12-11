@@ -10,119 +10,111 @@ module TEST_lcutoff_mod
 
   public :: initLcutoffNew
   
-  integer, parameter, public :: N_radii = 4
-
-  integer,                protected, public :: lm_low(0:N_radii)
-  double precision,       protected, public :: cutoff_radius(N_radii)
-  integer, allocatable,   protected, public :: lmarray(:)
-  integer,                protected, public :: cutoffmode
-  logical,                protected, public :: DEBUG_dump_matrix = .false.
-  integer,                protected, public :: num_truncated(0:N_radii)
+  integer(kind=1), allocatable, protected, public :: lmax_array(:)
+  integer(kind=2), allocatable, protected, public :: lmarray(:)
+  
+  logical, protected, public :: DEBUG_dump_matrix = .false.
+  integer, protected, public :: num_truncated(-1:8)
+  integer, protected, public :: cutoffmode = 0
 
   contains
 
   !----------------------------------------------------------------------------
-  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays)
+  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radius, solver_type)
     use Main2Arrays_mod, only: Main2Arrays
     use TruncationZone_mod, only: TruncationZone, createTruncationZone
 
     type(TruncationZone), intent(inout) :: trunc_zone
     type(Main2Arrays), intent(in) :: arrays
-    integer, intent(in) :: atom_ids(:) ! list of global atom IDs
+    integer, intent(in) :: atom_ids(:) !< list of global atom IDs
+    double precision, intent(in) :: lcutoff_radius(0:) !< 
+    integer, intent(in) :: solver_type !<
+    
+    integer :: naez, lmax, atomindex, ilocal, num_local_atoms, ist, lmax_radii, l
+    integer(kind=1), allocatable :: lmax_atom(:,:), lmax_full(:)
 
-    integer :: lmmaxd, atomindex, ilocal, ios, num_local_atoms, ist, nrad, irad!, num, ii, ind
-    integer(kind=1), allocatable :: lmarray_atom(:,:), lmarray_full(:)
+    
+    cutoffmode = solver_type
 
-    lmmaxd = arrays%lmmaxd
+    lmax = 0; do while ((lmax + 1)**2 < arrays%lmmaxd); lmax = lmax + 1; enddo ! find back global lmax
+    
     num_local_atoms = size(atom_ids)
-
-    allocate(lmarray_full(size(arrays%rbasis, 2)))
-    allocate(lmarray_atom(size(arrays%rbasis, 2),num_local_atoms))
-
-    nrad = 0
-    cutoff_radius(:) = 9.d9 ! effectively infinity
-    lm_low(0) = lmmaxd
-    lm_low(1:) = 0
-    cutoffmode = 4 ! 3:iterative solver, 4:full solver
+    lmax_radii = min(8, min(ubound(lcutoff_radius, 1), lmax))
+    naez = size(arrays%rbasis, 2)
+    allocate(lmax_full(naez), lmax_atom(naez,num_local_atoms))
     
-    open(91, file='lcutoff', form='formatted', action='read', status='old', iostat=ios)
-    if (ios == 0) then ! opening was successful
-      nrad = 1
-      read(91,*) cutoff_radius(nrad)
-      read(91,*) lm_low(nrad)
-      read(91,*) cutoffmode
-
-      lm_low(nrad+1:) = -1
-      cutoff_radius(nrad+1:) = 0.d0
-      do while (cutoffmode > 4)
-        cutoffmode = cutoffmode - 2
-        ! cutoff-mode 5: iterative solver with 2 cutoffs,
-        !             6: direct solver with 2 cutoffs
-        nrad = nrad+1
-        read(91,*) cutoff_radius(nrad)
-        read(91,*) lm_low(nrad)
-      enddo ! while
-      close(91)
-    else
-      write(6,*) 'No file "lcutoff" found, use defaults.' ! todo: convert to warning
-    endif
-
-    if(any(lm_low > 121)) stop 'integer(kind=1) not sufficient for LMARRAYs in TEST_lcutoff_mod.F90!' ! a natural limit is lmax=10, numbers can take up to 127
-
-    lmarray_full = 0 ! init
-    
-    if (num_local_atoms > 1 .and. nrad > 0) &
-      warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
+    lmax_full = -1 ! init as truncated
 
     do ilocal = 1, num_local_atoms
       atomindex = atom_ids(ilocal) ! global atom index
 
-      lmarray_atom(:,ilocal) = lmmaxd ! init with the maximum
+      lmax_atom(:,ilocal) = -1 ! init as truncated
 
-      do irad = 1, nrad
+      ! compute truncation zones
+      call calcCutoffarray(lmax_atom(:,ilocal), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, lmax_radii, radii=lcutoff_radius(0:lmax_radii))
+      lmax_atom(:,ilocal) = min(lmax_atom(:,ilocal), lmax)
+      lmax_atom(atomindex,ilocal) = lmax ! diagonal element is full always
       
-        ! truncation zones
-        call calcCutoffarray(lmarray_atom(:,ilocal), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, cutoff_radius(irad), lm_low(irad))
+! #ifdef DEBUG_me
+!       num_truncated(:) = 0
+!       do l = -1, lmax_radii
+!         num_truncated(l) = count(lmax_atom(:,ilocal) == l)
+!       enddo ! l
+!       write(*,'(a,2(i0,a),9(" ",i0))') "atom #",atomindex,':  ',num_truncated(-1),' outside and inside s,p,d,f,... :',num_truncated(0:)
+! #endif
 
-      enddo ! irad
-
-      lmarray_full = max(lmarray_full, lmarray_atom(:,ilocal)) ! reduction: merge truncation zones of local atoms
+      lmax_full(:) = max(lmax_full(:), lmax_atom(:,ilocal)) ! reduction: merge truncation zones of local atoms
     enddo ! ilocal
 
     num_truncated(:) = 0
-    do irad = 0, nrad
-      num_truncated(irad) = count(lmarray_full == lm_low(irad))
-    enddo ! irad
+    do l = -1, lmax_radii
+      num_truncated(l) = count(lmax_full == l)
+    enddo ! l
+    
+    if (num_local_atoms > 1 .and. num_truncated(lmax) /= naez) &
+      warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
     
     ! TODO: a bit confusing, is never deallocated
-    call createTruncationZone(trunc_zone, mask=lmarray_full, masks=lmarray_atom)
+    call createTruncationZone(trunc_zone, mask=lmax_full, masks=lmax_atom)
 
-    allocate(lmarray(trunc_zone%naez_trc)) ! lmarray is never deallocated - who cares
-    lmarray(:) = lmarray_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only
-
-    deallocate(lmarray_atom, lmarray_full, stat=ist)
+    allocate(lmarray(trunc_zone%naez_trc), lmax_array(trunc_zone%naez_trc)) ! lmarray is never deallocated - who cares
+    lmax_array(:) = lmax_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only
+    lmarray(:) = (lmax_array(:) + 1)**2
+    
+    deallocate(lmax_atom, lmax_full, stat=ist)
   endsubroutine ! initLcutoffNew
 
   
   !----------------------------------------------------------------------------
-  !> Modifies the array 'cutoffarray' on positions that correspond to sites that
+  !> Modifies the array 'lmax_atom' on positions that correspond to sites that
   !> are further away from 'center' than 'dist_cut'. The value 'lm_low' is written
   !> at the modified positions.
   !>
   !> If merging = .true.: change the lm value only when it is larger than the
   !> original value -> this merges the truncation zones
-  subroutine calcCutoffarray(cutoffarray, rbasis, center, bravais, dist_cut, lm_low)
-    integer(kind=1), intent(inout) :: cutoffarray(:)
+  subroutine calcCutoffarray(lmax_atom, rbasis, center, bravais, lmax_radii, radii)
+    integer(kind=1), intent(inout) :: lmax_atom(:)
     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
     double precision, intent(in) :: center(3)
     double precision, intent(in) :: bravais(3,3)
-    double precision, intent(in) :: dist_cut
-    integer, intent(in) :: lm_low
+    integer, intent(in) :: lmax_radii
+    double precision, intent(in) :: radii(0:lmax_radii)
 
-    integer :: ii
+    integer :: ii, l
+    double precision :: d2
+    logical :: use_radii(0:lmax_radii)
+    
+    !! warning, this operation is N^2 in the total number of atoms !!
+    use_radii = (radii > 1.d-6)
     
     do ii = 1, size(rbasis, 2)
-      if (distance2_pbc(rbasis(1:3,ii), center(1:3), bravais) > dist_cut*dist_cut) cutoffarray(ii) = lm_low
+      d2 = distance2_pbc(rbasis(1:3,ii), center(1:3), bravais)
+      do l = lmax_radii, 0, -1
+        if (use_radii(l) .and. d2 <= radii(l)**2) then
+!!DEBUG   if(l > lmax_atom(ii)) write(*,'(2(a,i0),9(a,f0.3))') 'extend target #',ii,' to l=',l,' rad(l)=',radii(l),' distance=',sqrt(d2),' alat'
+          lmax_atom(ii) = max(lmax_atom(ii), l)
+        endif
+      enddo ! l
     enddo ! ii
 
   endsubroutine ! calc
@@ -142,7 +134,7 @@ module TEST_lcutoff_mod
 
     dist_sq = vec(1)**2 + vec(2)**2 + vec(3)**2
 
-    ! brute force distance checking
+    ! brute force distance checking in a periodic arrangement of cells
     do nx = -1, 1
       do ny = -1, 1
         do nz = -1, 1

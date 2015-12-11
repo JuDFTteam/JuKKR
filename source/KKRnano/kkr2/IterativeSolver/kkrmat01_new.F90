@@ -226,9 +226,9 @@ module kkrmat_new_mod
   !> ms%atom_indices(:)
   subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, trunc2atom_index, communicator, iguess_data)
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
-    use fillKKRMatrix_mod, only: dump!DenseMatrix, dumpDenseMatrixFormatted, dumpSparseMatrixData, dumpSparseMatrixDataFormatted
+    use fillKKRMatrix_mod, only: dump
     use TFQMRSolver_mod, only: TFQMRSolver, solve
-    use SparseMatrixDescription_mod, only: dump!SparseMatrixDescription
+    use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
     use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
     use KKROperator_mod, only: KKROperator

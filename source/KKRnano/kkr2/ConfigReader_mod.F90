@@ -555,7 +555,7 @@ module ConfigReader_mod
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
     double precision, intent(inout) :: value(:)
-    double precision, intent(in), optional :: def(:)
+    double precision, intent(in), optional :: def
 
     character(len=MAX_LINE_LENGTH) :: value_string
     double precision :: vector_read(size(value))
@@ -567,6 +567,7 @@ module ConfigReader_mod
     ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
+      if (present(def)) vector_read(:) = def
       read(unit=value_string, fmt=*, iostat=ios) vector_read(:)
       ! test if read was successful
       if (ios == 0) then
@@ -581,7 +582,6 @@ module ConfigReader_mod
     endif
 
     if (ierror /= 0 .and. present(def)) then
-      if (size(def) /= size(value)) stop 'DoubleVector: lengths of arguments VALUE and DEF do not match!'
       value = def
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
@@ -601,7 +601,7 @@ module ConfigReader_mod
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
     integer, intent(inout) :: value(:)
-    double precision, intent(in), optional :: def(:)
+    double precision, intent(in), optional :: def
 
     character(len=MAX_LINE_LENGTH) :: value_string
     integer :: vector_read(size(value))
@@ -613,6 +613,7 @@ module ConfigReader_mod
     ierror = getValueString(this, variable, value_string)
 
     if (ierror == 0) then
+      if (present(def)) vector_read(:) = def
       read(unit=value_string, fmt=*, iostat=ios) vector_read(:)
       ! test if read was successful
       if (ios == 0) then
@@ -627,7 +628,6 @@ module ConfigReader_mod
     endif
 
     if (ierror /= 0 .and. present(def)) then
-      if (size(def) /= size(value)) stop 'IntVector: lengths of arguments VALUE and DEF do not match!'
       value = def
       ierror = CONFIG_READER_USE_DEFAULT_VALUE
     endif
