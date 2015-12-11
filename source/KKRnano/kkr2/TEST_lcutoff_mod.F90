@@ -12,7 +12,7 @@ module TEST_lcutoff_mod
   
   integer, parameter, public :: N_radii = 4
 
-  integer,                protected, public :: lm_low(N_radii)
+  integer,                protected, public :: lm_low(0:N_radii)
   double precision,       protected, public :: cutoff_radius(N_radii)
   integer, allocatable,   protected, public :: lmarray(:)
   integer,                protected, public :: cutoffmode
@@ -89,8 +89,7 @@ module TEST_lcutoff_mod
     enddo ! ilocal
 
     num_truncated(:) = 0
-    num_truncated(0) = count(lmarray_full == lmmaxd)
-    do irad = 1, nrad
+    do irad = 0, nrad
       num_truncated(irad) = count(lmarray_full == lm_low(irad))
     enddo ! irad
     
