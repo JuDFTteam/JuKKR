@@ -12,7 +12,7 @@ module TEST_lcutoff_mod
   
   integer, parameter, public :: N_radii = 4
 
-  integer,                protected, public :: lm_low(N_radii)
+  integer,                protected, public :: lm_low(0:N_radii)
   double precision,       protected, public :: cutoff_radius(N_radii)
   integer, allocatable,   protected, public :: lmarray(:)
   integer,                protected, public :: cutoffmode
@@ -41,7 +41,8 @@ module TEST_lcutoff_mod
 
     nrad = 0
     cutoff_radius(:) = 9.d9 ! effectively infinity
-    lm_low(:) = lmmaxd
+    lm_low(0) = lmmaxd
+    lm_low(1:) = 0
     cutoffmode = 4 ! 3:iterative solver, 4:full solver
     
     open(91, file='lcutoff', form='formatted', action='read', status='old', iostat=ios)
@@ -89,8 +90,7 @@ module TEST_lcutoff_mod
     enddo ! ilocal
 
     num_truncated(:) = 0
-    num_truncated(0) = count(lmarray_full == lmmaxd)
-    do irad = 1, nrad
+    do irad = 0, nrad
       num_truncated(irad) = count(lmarray_full == lm_low(irad))
     enddo ! irad
     
