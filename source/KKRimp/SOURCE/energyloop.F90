@@ -9,6 +9,7 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       use mod_rhovalfull
       use type_cell
       use type_cellnew
+      use type_cellorbit
       use type_density
       use type_tmat
       use type_gmat
@@ -42,7 +43,8 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       implicit none
       integer                         :: ITSCF
       type(cell_type)                 ::  cell(natom)
-      type(cell_typenew)                 ::  cellnew(natom)
+      type(cell_typenew)              ::  cellnew(natom)
+      type(cell_typeorbit),save       ::  cellorbit
       type(wavefunction_type),allocatable   ::  wavefunction(:,:)
       real(kind=dp)                   ::  vpot(:,:,:,:)
       type(shapefun_type)             ::  shapefun(natom)
@@ -380,9 +382,18 @@ if (ITSCF==1) then
 end if
 #endif
 
+if (.not.allocated(cellorbit%use_spinorbit)) then
+allocate(cellorbit%use_spinorbit(natom))
+endif
 if (ITSCF==1 .and. config%kspinorbit==1) then 
-  call read_spinorbit(natom,cellnew,my_rank)
+  call read_spinorbit(natom,cellorbit,my_rank)
 end if
+if (my_rank==0) then
+ write(*,*) 'spinorbit index'
+ do iatom=1,natom
+  write(*,*) 'Atom',iatom,cellorbit%use_spinorbit(iatom)
+ enddo
+endif
 
 !####################################################################
 !####################################################################
@@ -524,7 +535,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
               call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                    cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                    use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
-                   ie,ldau(iatom))        ! lda+u
+                   ie,ldau(iatom),iatom,cellorbit)        ! lda+u
 
 
               if ( iatom > config%wavefunc_recalc_threshhold ) then
@@ -658,7 +669,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
                 call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                      cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                      use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
-                     ie,ldau(iatom))        ! lda+u
+                     ie,ldau(iatom),iatom,cellorbit)        ! lda+u
 
              end if
           end if

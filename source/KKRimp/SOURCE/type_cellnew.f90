@@ -8,7 +8,7 @@ use nrtype
  real(kind=dp),allocatable        ::  shapefun(:,:)        ! shape function for Cheb. mesh
  integer,allocatable              ::  shapefun_lm2index(:) ! shape function : lm value -> array index
  !integer                          :: use_spinorbit=1       ! spin-orbit coupling used for the 0->no, 1->yes
- integer                          :: use_spinorbit         ! spin-orbit coupling used for the 0->no, 1->yes
+! integer                          :: use_spinorbit         ! spin-orbit coupling used for the 0->no, 1->yes
  integer                          :: ncheb                 ! maximum number of Chebyshev expansion fn used
  real(kind=dp),allocatable        :: rpan_intervall(:)     ! larger boundary value for panel m 
                                                            ! rpan_intervall(0) smaller boundary value for 1st panel

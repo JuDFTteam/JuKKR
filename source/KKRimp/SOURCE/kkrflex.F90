@@ -1055,9 +1055,8 @@ end do ! selfconsistency
 ! ********************************************************** 
 ! delete the kkrflex_greennew file
 if (my_rank==0) then
-!  write(*,*) 'Deleting file kkrflex_greennew, processor',my_rank
-!  close(3434560,status='delete')
-!  For some reason this was giving an error. The file was opened in energyloop.F90.
+  write(*,*) 'Deleting file kkrflex_greennew, processor',my_rank
+  close(3434560,status='delete')
 end if
 ! ********************************************************** 
 

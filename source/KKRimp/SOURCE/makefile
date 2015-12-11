@@ -47,7 +47,7 @@ hybrid:    COMPVER = 'hybrid'
 ####################################################
 # Objects to compile                               #
 ####################################################
-OBJECTS_TYPE  =   nrtype.o  type_gmatbulk.o type_tmat.o type_gmat.o type_gmatonsite.o type_gauntshape.o type_gauntcoeff.o type_corestate.o type_gref.o type_tbcluster.o type_density.o type_shapefun.o type_cell.o type_cellnew.o type_config.o type_energyparts.o type_wavefunction.o type_ldau.o
+OBJECTS_TYPE  =   nrtype.o  type_gmatbulk.o type_tmat.o type_gmat.o type_gmatonsite.o type_gauntshape.o type_gauntcoeff.o type_corestate.o type_gref.o type_tbcluster.o type_density.o type_shapefun.o type_cell.o type_cellnew.o type_config.o type_energyparts.o type_wavefunction.o type_ldau.o type_cellorbit.o
 
 OBJECTS_MATH =  physic_params.o checknan.o log.o mathtools.o config.o beshank.o wrapper.o simp3.o simpk.o regsol.o soutk.o
 
