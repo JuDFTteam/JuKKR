@@ -52,6 +52,7 @@ module InputParams_mod
     integer :: num_MT_points
     double precision :: MT_scale
     double precision :: RMT_ref_scale
+    double precision :: cutoff_radius
     double precision :: lcutoff_radii (9)
     integer :: solver
     integer :: use_semicore
@@ -363,6 +364,15 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "cutoff_radius", values%cutoff_radius , def=-1.d0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for cutoff_radius. Set to cutoff_radius = -1.d0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for cutoff_radius."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "lcutoff_radii", values%lcutoff_radii , def=0.d0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for lcutoff_radii. Set to lcutoff_radii = 0.d0"
@@ -547,6 +557,7 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%num_MT_points
   read(fu) values%MT_scale
   read(fu) values%RMT_ref_scale
+  read(fu) values%cutoff_radius
   read(fu) values%lcutoff_radii
   read(fu) values%solver
   read(fu) values%use_semicore
@@ -609,6 +620,7 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%num_MT_points
   write(fu) values%MT_scale
   write(fu) values%RMT_ref_scale
+  write(fu) values%cutoff_radius
   write(fu) values%lcutoff_radii
   write(fu) values%solver
   write(fu) values%use_semicore

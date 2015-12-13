@@ -35,7 +35,9 @@ i nmin_panel 7
 i num_MT_points 10
 d MT_scale 0.98
 d RMT_ref_scale 0.995
-### l-dependent truncation is expressed as radii for s,p,d,f,g,h (alat units)
+### distance truncation is expressed as radius for lmax (in alat units)
+d cutoff_radius -1.d0
+### l-dependent distance truncation is expressed as radii for s,p,d,f,g,h (alat units)
 dv lcutoff_radii 9 0.d0
 ### solver mode: 3=iterative(default), 4=direct
 i solver 3

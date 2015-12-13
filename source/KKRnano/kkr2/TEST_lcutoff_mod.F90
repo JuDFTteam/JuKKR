@@ -20,26 +20,48 @@ module TEST_lcutoff_mod
   contains
 
   !----------------------------------------------------------------------------
-  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radius, solver_type)
+  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radii, cutoff_radius, solver_type)
     use Main2Arrays_mod, only: Main2Arrays
     use TruncationZone_mod, only: TruncationZone, createTruncationZone
 
     type(TruncationZone), intent(inout) :: trunc_zone
     type(Main2Arrays), intent(in) :: arrays
     integer, intent(in) :: atom_ids(:) !< list of global atom IDs
-    double precision, intent(in) :: lcutoff_radius(0:) !< 
+    double precision, intent(in) :: lcutoff_radii(0:) !< 
+    double precision, intent(in) :: cutoff_radius !< 
     integer, intent(in) :: solver_type !<
     
-    integer :: naez, lmax, atomindex, ilocal, num_local_atoms, ist, lmax_radii, l
+    integer :: naez, lmax, atomindex, ilocal, num_local_atoms, ist, nradii, l
     integer(kind=1), allocatable :: lmax_atom(:,:), lmax_full(:)
-
-    
+    integer(kind=1) :: l_lim(9)
+    double precision :: r2lim(9), r2   
+    double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
+ 
     cutoffmode = solver_type
 
     lmax = 0; do while ((lmax + 1)**2 < arrays%lmmaxd); lmax = lmax + 1; enddo ! find back global lmax
-    
+  
+    l_lim = -1
+    nradii = 0 ! 0:no truncation
+    if (cutoff_radius > R_active) then ! a single cutoff radius is active
+      ! this is equivalent to lcutoff_radii=[0 ... 0 cutoff_radius 0 ... 0] at position lmax 
+      nradii = 1
+      l_lim(nradii) = lmax
+      r2lim(nradii) = cutoff_radius**2
+      if (any(lcutoff_radii > R_active)) &
+        warn(6, "l-dependent truncation (lcutoff_radii) is deactivated by cutoff_radius for l="-lmax) 
+    else
+      ! now we check if the lcutoff_radii option has been specified in the input file
+      do l = min(ubound(lcutoff_radii, 1), lmax, 8), 0, -1
+        if (lcutoff_radii(l) > R_active) then
+          nradii = nradii + 1 
+          l_lim(nradii) = l
+          r2lim(nradii) = lcutoff_radii(l)**2
+        endif 
+      enddo ! l
+    endif 
+
     num_local_atoms = size(atom_ids)
-    lmax_radii = min(8, min(ubound(lcutoff_radius, 1), lmax))
     naez = size(arrays%rbasis, 2)
     allocate(lmax_full(naez), lmax_atom(naez,num_local_atoms))
     
@@ -48,26 +70,32 @@ module TEST_lcutoff_mod
     do ilocal = 1, num_local_atoms
       atomindex = atom_ids(ilocal) ! global atom index
 
-      lmax_atom(:,ilocal) = -1 ! init as truncated
+      if (nradii > 0) then
+        lmax_atom(:,ilocal) = -1 ! init as truncated
 
-      ! compute truncation zones
-      call calcCutoffarray(lmax_atom(:,ilocal), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, lmax_radii, radii=lcutoff_radius(0:lmax_radii))
-      lmax_atom(:,ilocal) = min(lmax_atom(:,ilocal), lmax)
-      lmax_atom(atomindex,ilocal) = lmax ! diagonal element is full always
-      
-! #ifdef DEBUG_me
-!       num_truncated(:) = 0
-!       do l = -1, lmax_radii
-!         num_truncated(l) = count(lmax_atom(:,ilocal) == l)
-!       enddo ! l
-!       write(*,'(a,2(i0,a),9(" ",i0))') "atom #",atomindex,':  ',num_truncated(-1),' outside and inside s,p,d,f,... :',num_truncated(0:)
-! #endif
+        ! compute truncation zones
+        call calcCutoffarray(lmax_atom(:,ilocal), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, &
+                             nradii, l_lim, r2lim)
+        lmax_atom(:,ilocal) = min(lmax_atom(:,ilocal), lmax)
+        lmax_atom(atomindex,ilocal) = lmax ! diagonal element is full always
+      else
+        lmax_atom(:,ilocal) = lmax ! init as full interaction, no truncation
+      endif
+ 
+!! #define DEBUG_me      
+#ifdef  DEBUG_me
+      num_truncated(:) = 0
+      do l = -1, lmax
+        num_truncated(l) = count(lmax_atom(:,ilocal) == l)
+      enddo ! l
+      write(*,'(a,2(i0,a),9(" ",i0))') "atom #",atomindex,':  ',num_truncated(-1),' outside and inside s,p,d,f,... :',num_truncated(0:)
+#endif
 
       lmax_full(:) = max(lmax_full(:), lmax_atom(:,ilocal)) ! reduction: merge truncation zones of local atoms
     enddo ! ilocal
 
     num_truncated(:) = 0
-    do l = -1, lmax_radii
+    do l = -1, lmax
       num_truncated(l) = count(lmax_full == l)
     enddo ! l
     
@@ -92,29 +120,31 @@ module TEST_lcutoff_mod
   !>
   !> If merging = .true.: change the lm value only when it is larger than the
   !> original value -> this merges the truncation zones
-  subroutine calcCutoffarray(lmax_atom, rbasis, center, bravais, lmax_radii, radii)
+  subroutine calcCutoffarray(lmax_atom, rbasis, center, bravais, nradii, l_lim, radii2)
     integer(kind=1), intent(inout) :: lmax_atom(:)
     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
     double precision, intent(in) :: center(3)
     double precision, intent(in) :: bravais(3,3)
-    integer, intent(in) :: lmax_radii
-    double precision, intent(in) :: radii(0:lmax_radii)
+    integer, intent(in) :: nradii
+    integer(kind=1), intent(in) :: l_lim(nradii)
+    double precision, intent(in) :: radii2(nradii)
 
-    integer :: ii, l
+    integer :: ii, il
     double precision :: d2
-    logical :: use_radii(0:lmax_radii)
     
     !! warning, this operation is N^2 in the total number of atoms !!
-    use_radii = (radii > 1.d-6)
-    
-    do ii = 1, size(rbasis, 2)
+
+    do ii = 1, size(rbasis, 2) ! loop over all atoms
       d2 = distance2_pbc(rbasis(1:3,ii), center(1:3), bravais)
-      do l = lmax_radii, 0, -1
-        if (use_radii(l) .and. d2 <= radii(l)**2) then
-!!DEBUG   if(l > lmax_atom(ii)) write(*,'(2(a,i0),9(a,f0.3))') 'extend target #',ii,' to l=',l,' rad(l)=',radii(l),' distance=',sqrt(d2),' alat'
-          lmax_atom(ii) = max(lmax_atom(ii), l)
+
+      !! we initialize lmax_atom with -1 and assume that there is at least one positive radius:
+      do il = 1, nradii
+        if (d2 <= radii2(il)) then
+!!DEBUG     if(l_lim(il) > lmax_atom(ii)) write(*,'(2(a,i0),9(a,f0.3))') 'extend target #',ii,' to l=',l_lim(il),' rad(l)=',sqrt(radii2(il)),' distance=',sqrt(d2),' alat'
+          lmax_atom(ii) = max(lmax_atom(ii), l_lim(il))
         endif
       enddo ! l
+
     enddo ! ii
 
   endsubroutine ! calc
