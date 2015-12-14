@@ -110,7 +110,8 @@ C
       IF (LSURF) NDIM = 2
 C     
 C **********************************************************************
-       NATOMIMP=0
+C      NATOMIMP=0   ! BUG: This initialization breaks the shell generation for
+C                   ! ICC=-1, which is set by option XCPL.  B. Zimmermann
        IF (ICC.LT.0) THEN
 C
 C --->  ICC.LT.1 all shells are (should be) prepared

@@ -25,6 +25,8 @@
      &                     distribute_linear_on_tasks
 #endif
       
+      use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
+
       INCLUDE 'inc.p'
 C
 C *********************************************************************
@@ -1103,18 +1105,15 @@ C
 C
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
+        IF(NQDOS/=1) stop 'QDOS option not compatible with XCPL'
 !       open(23,FILE='energies.dat',STATUS='unknown',FORM='formatted')
-         DO IE = 1,IELAST
-            ERYD = EZ(IE)
-            DF = WEZ(IE)/DBLE(NSPIN)
-!          write(23,*)ERYD
-            CALL TBXCCPLJIJ(69,IE,IELAST,ERYD,DF,NCPA,NAEZ,NATYP,NOQ,
+!        DO IE = 1,IELAST  <---- for MPI-parallel version: moved energy loop into TBXCCPLJIJ
+            CALL TBXCCPLJIJ(69,IELAST,EZ,WEZ,NSPIN,NCPA,NAEZ,NATYP,NOQ,
      &                      ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,
      &                      DSYMLL,IPRINT,NATYPD,NAEZD,NSHELD,LMMAXD)
-         END DO
-!         close (23)
+!        END DO!IE
       END IF
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C

@@ -507,6 +507,7 @@ C
       EFERMI = 0.0d0
       CALL RINIT(NAEZD,QMGAM)
       ITSCF = 0  ! initialise SCF
+      NATOMIMP = 0
       IDOLDAU = 0
       NOFGIJ = 0
       OPTC(1:32) =  '        '

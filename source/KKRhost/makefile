@@ -21,8 +21,12 @@ FC =  ifort
 # change default value if a flag is matched
 mpi:       FC =  mpiifort
 # mac:
-mpi:       FC =  /usr/local/impi/bin/mpif90  
+macmpi:       FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
+#rwth cluster
+rwthmpi: FC=$(MPIFC)
+rwthmpidebug: FC=$(MPIFC)  # marmotf90   
+# $(MPIFC)
 
 
 # information for version-tracking in executable:
@@ -32,12 +36,14 @@ debug:     COMPVER ='debug'
 mpi:       COMPVER ='mpi'
 mpidebug:  COMPVER ='mpidebug'
 openmp:    COMPVER ='openmp'
+ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
 macmpi:    COMPVER ='mpi-mac'
 macomp:    COMPVER ='openmp-mac'
 rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
+rwthmpidebug: COMPVER='mpidebug-rwth'
 
 
 
@@ -98,32 +104,56 @@ LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -l
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+# RWTH cluster:
+RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
 macomp: LLIBS=$(MACLLIBS)
 
+rwth:          LLIBS=$(RWTHLLIBS)
+rwthmpi:       LLIBS=$(RWTHLLIBS)
+rwthmpidebug:  LLIBS=$(RWTHLLIBS)
+rwthomp:       LLIBS=$(RWTHLLIBS)
+rwthompdebug:  LLIBS=$(RWTHLLIBS)
+
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac:
 #LLIBSOPENMP = -L${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
-MACLLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+MACLLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000 -lmkl_intel_thread -liomp5
+# RWTH cluster:
+RWTHLLIBSOMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_intel_thread -liomp5
+
 
 mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
 macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
 
+rwth:          LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthmpi:       LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthmpidebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthomp:       LLIBSOPENMP=$(RWTHLLIBSOMP)
+rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
+
 openmp: LLIBS=$(LLIBSOPENMP)
+ompdebug: LLIBS=$(LLIBSOPENMP)
 
 ####################################################
 # C preprocessor options                           #
 ####################################################
 # Default option
-CPP=
+CPP= -D CPP_TIMING
 # change to if flag is matched
 openmp:   CPP = -D CPP_OMP
+ompdebug: CPP = -D CPP_OMP
 mpidebug: CPP = -D CPP_MPI
-mpi:      CPP = -D CPP_MPI
+mpi:      CPP = -D CPP_MPI -D CPP_TIMING
+macmpi:   CPP = -D CPP_MPI -D CPP_TIMING
+macomp:   CPP = -D CPP_OMP -D CPP_TIMING
+rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
+rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
+rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
@@ -133,11 +163,23 @@ FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
 
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
-debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
-mpidebug: FFLAGS = -CB -check all -traceback -mcmodel=medium
+ompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g -openmp
+debug:    FFLAGS = -r8 -CB -check all -traceback -g # -fpe0 -warn -debug extended #v-mcmodel=medium -shared-intel
+mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
+ompdebug: OPENMPFLAGS = -openmp
+
+macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
+macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
+rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
+rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
+
+rwthomp: OPENMPFLAGS = -openmp
+rwthompdebug: OPENMPFLAGS = -openmp
+
+
 
 ####################################################
 # Linking                                          #
@@ -183,17 +225,23 @@ compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OB
 serial:   compile
 debug:    compile
 openmp:   compile
+ompdebug: compile
 mpi:      compile
 mpidebug: compile
+rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+	$(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+
 
 install: clean serial
 
-mac:    serial
-macmpi: mpi
-macomp: openmp
-rwth:    serial
-rwthmpi: mpi
-rwthomp: openmp
+mac:    compile
+macmpi: compile
+macomp: compile
+rwth:    compile
+rwthmpi: compile
+rwthomp: compile
+rwthmpidebug: compile
+rwthompdebug: compile
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<
