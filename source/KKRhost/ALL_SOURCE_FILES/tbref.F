@@ -120,8 +120,12 @@ C ======================================================================
         write(1337,*) myrank, 'start tbref e-loop'
 !        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !        ie_end = t_mpi_c_grid%ntot2
+!        write(*,*) myrank,t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie,
+!      +  shape(t_mpi_c_grid%ioff_pT2),shape(t_mpi_c_grid%ntot_pT2)
        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
        ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+       
+!        write(*,*) 'tbref eloop',myrank,ie_start,ie_end
 
        DO ie_num=1,ie_end
        
@@ -194,6 +198,7 @@ C
          !write(*,*) 'after gll13',ie_num
          
 #ifdef CPP_MPI
+         if(t_mpi_c_grid%nranks_ie>1) then
          !gather results of ginp, dginp and lly_g0tr from above parallel loop
          IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
 !          CALL MPI_ALLREDUCE(MPI_IN_PLACE,GINP,IDIM,MPI_DOUBLE_COMPLEX,
@@ -223,6 +228,7 @@ C
          ! since all 
 !          !writeout only in master of energy group
 !          if(t_mpi_c_grid%myrank_ie==master) then
+         endif!t_mpi_c_grid%nranks_ie>1
 #endif
          
          IF (LLY.NE.0) THEN                                    ! LLY Lloyd
@@ -239,7 +245,7 @@ C ----------------------------------------------------------------------
            if(t_mpi_c_grid%myrank_ie==0) then
 #endif
             WRITE (68,REC=IE) GINP                 ! Gref
-!             write(686868,*) ginp
+            write(686868,*) ginp
 #ifdef CPP_MPI
            end if !if(t_mpi_c_grid%myrank_ie==0) then
 #endif

@@ -122,7 +122,7 @@ C     ..
 C     .. Local Arrays ..
 #ifdef CPP_MPI
       DOUBLE COMPLEX,   allocatable :: WORK(:,:)
-      integer ierr,idim
+      integer ierr,idim, nranks_local, myrank_ie_tmp
 #endif
 !       DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
 !       DOUBLE COMPLEX DENLM(0:LMMAXD1,IEMXD,NPOTD)
@@ -278,8 +278,6 @@ C     .. Data statements ..
       THETAS = 0.0d0
       VINSNEW = 0.0d0
       VINS = 0.0d0
-      RHO2N1 = 0.0d0
-      RHO2N2 = 0.0d0
       RHO2NS = 0.0d0
       R2NEF = 0.0d0
       
@@ -642,7 +640,8 @@ C ================================================================ NATYP
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
         
-      if (myrank==master) write(*,*) 'main1c atom loop',i1_start,i1_end
+!       write(*,*) 'main1c atom loop',myrank,
+!      +                    i1_start,i1_end
 #else
       i1_start = 1
       i1_end   = NATYP
@@ -749,7 +748,7 @@ C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
 #ifdef CPP_TIMING
-            call timing_stop('main1c - rhoval')
+      if(ie_end>=ie_start) call timing_stop('main1c - rhoval')
 #endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
@@ -808,12 +807,19 @@ C ================================================================ NATYP
 #ifdef CPP_TIMING
       call timing_start('main1c - communication')
 #endif
+      if(myrank==master) write(789547,*) rho2ns
       call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
      &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
      &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
-     &              MPI_COMM_WORLD)
-!      &              t_mpi_c_grid%mympi_comm_at)
+!      &              MPI_COMM_WORLD)
+     &              t_mpi_c_grid%mympi_comm_ie)
+      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
+     &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
+     &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
+     &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
+!      &              MPI_COMM_WORLD)
+     &              t_mpi_c_grid%mympi_comm_at)
       if(myrank==master) write(789546,*) rho2ns
 #ifdef CPP_TIMING
       call timing_stop('main1c - communication')
@@ -890,13 +896,38 @@ c interpolate potential
 #ifdef CPP_MPI
         ntot1 = t_inc%NATYP
         
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+!         if(t_mpi_c_grid%dims(1)==1 .and. t_mpi_c_grid%nranks_ie>1) 
+!      &                   t_mpi_c_grid%nranks_ie = 1
+        
+!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+        if(t_mpi_c_grid%dims(1)>1) then
+           nranks_local = t_mpi_c_grid%nranks_ie
+!            write(*,*) 'nranks_loc',myrank,nranks_local,t_mpi_c_grid%dims
+           if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1)) 
+     &              nranks_local = t_mpi_c_grid%dims(1)
+!            write(*,*) 'nranks_loc2',myrank,nranks_local
+        else
+           nranks_local = 1
+        endif
+        call distribute_linear_on_tasks(nranks_local, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
-        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &             ntot_pT(t_mpi_c_grid%myrank_ie)
-        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
+     &                             .true.)
+        if(t_mpi_c_grid%nranks_ie<=t_mpi_c_grid%dims(1)) then
+           i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+           i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                ntot_pT(t_mpi_c_grid%myrank_ie)
+           t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+        else
+           myrank_ie_tmp = t_mpi_c_grid%myrank_ie
+           if(t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1))
+!      &                            myrank_ie_tmp = myrank_ie_tmp - 1
+     &       myrank_ie_tmp = myrank_ie_tmp - t_mpi_c_grid%myrank_ie
+     +                          + (t_mpi_c_grid%dims(1)-1)
+           i1_start = ioff_pT(myrank_ie_tmp)+1
+           i1_end   = ioff_pT(myrank_ie_tmp)+ntot_pT(myrank_ie_tmp)
+           t_mpi_c_grid%ntot1  = ntot_pT(myrank_ie_tmp)
+        endif
 
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
@@ -908,6 +939,10 @@ c interpolate potential
       i1_start = 1
       i1_end   = NATYP
 #endif
+
+      write(*,*) 'main1c atom loop',myrank,
+     +  i1_start,i1_end, t_mpi_c_grid%nranks_at, t_mpi_c_grid%nranks_ie
+
       DO I1 = i1_start,i1_end
       !write(*,*) 'rhovalnew',myrank,i1
 ! 
@@ -926,10 +961,12 @@ c interpolate potential
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
      &           angles_new)
-        !write(*,*) 'after rhovalnew',myrank,i1,ipot,den1(0,1:5,1)
+!         write(*,*) 'after rhovalnew',myrank,i1,ipot,den1(0,1:5,1)
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
+
+!         write(*,*) 'set den', myrank, ipot, i1
 
         DO L = 0,LMAXD1
          ESPV(L,IPOT)=ESPV1(L,1)
@@ -974,12 +1011,27 @@ c interpolate potential
       END DO !I1
       
 #ifdef CPP_MPI
+!       write(*,*) 'mympi_main1c_comm_newsosol2',myrank
+!       write(746432654,*) rho2ns
+!       if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1)) then
+!          den = 0.d0
+!          denlm = 0.d0
+!          muorb = 0.d0
+!          espv = 0.d0
+!          r2nef = 0.d0
+!          rho2ns = 0.d0
+!          denefat = 0.d0
+!          denef = 0.d0
+!       endif
+
       call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
      &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
      &                                 den, denlm, muorb, espv, r2nef,    &
      &                                 rho2ns, denefat, denef,            &
+!      &                                 t_mpi_c_grid%mympi_comm_at)
      &                                 t_mpi_c_grid%mympi_comm_ie)
 !      &                                 MPI_COMM_WORLD)
+!       write(746432655,*) rho2ns
 #endif
       
 #ifdef CPP_TIMING

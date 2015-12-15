@@ -36,13 +36,14 @@ contains
   end subroutine mympi_init
 
 #ifdef CPP_MPI
-  subroutine distribute_linear_on_tasks(nranks, myrank, master, ntot, ntot_pT, ioff_pT, output)
+  subroutine distribute_linear_on_tasks(nranks, myrank, master, ntot, ntot_pT, ioff_pT, output, fill_rest)
     !distributes 'ntot' points on 'nranks' tasks and returns the number of points per task, ntot_pT, and the offsets of the tasks, ioff_pT.
 
     implicit none
 
     integer, intent(in)  :: nranks, myrank, master, ntot
     logical, intent(in)  :: output
+    logical, intent(in), optional :: fill_rest
     integer, intent(out) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 
     integer :: irest, irank
@@ -65,6 +66,18 @@ contains
       end do!irank
 
     end if!irest>0
+    
+    if(present(fill_rest)) then
+    if(fill_rest) then
+    if(ntot<nranks) then
+       write(*,*) 'set rest',myrank,ntot,nranks
+       do irank=ntot,nranks-1
+          ioff_pT(irank) = ioff_pT(irank-1)
+          ntot_pT(irank) = ntot_pT(irank-1)
+       end do ! irank
+    endif!ntot<nranks
+    endif!fill_rest
+    endif!present(fill_rest)
 
     if(myrank==master .and. output) then
       write(1337,*) '==== DISTRIBUTION OF POINTS ON TASKS: ===='
@@ -83,9 +96,12 @@ contains
     !find dimensions to create cartesian communicator
     !input:  nranks, ntot1 is N_atom, ntot2 is N_E
     !output: dims(2), dims(1) is N_atomranks, dims(2) is N_Eranks
+    use mpi
     implicit none
     integer, intent(in)  :: nranks,ntot1,ntot2
     integer, intent(out) :: dims(2)
+    
+    integer ierr
     
 !    if(nranks.le.ntot1) then
 !       dims(2) = 1
@@ -108,8 +124,15 @@ contains
        dims(1) = nranks/ntot2
        dims(2) = ntot2
        ! for test purposes, now consider only cartesian grid!
-       if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
+!        if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
     end if
+    
+    if(nranks>(ntot1*(ntot2+1)-1)) then
+       if(myrank==master) write(*,'(A,I3,A,I3,A,I5)') 'Error for',ntot1,'atoms and',ntot2,'energy points you use too many processors. Nranks=',nranks
+       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+       stop 'Error: too many ranks'
+       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+    endif
     
 !     write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
     
@@ -135,17 +158,25 @@ contains
   integer, allocatable :: groups(:,:), mygroup(:)
   integer :: mympi_group_ie, mympi_group_world, myMPI_comm_grid
   
+  rest = 0
+  qmin = -1
   if(myrank==0) write(1337,*) 'create_newcomms_group_ie input:',nranks,ne,nat
   
   
 !   if(nranks>(t_inc%natyp*t_inc%ielast)) stop 'you can only use less or equal number of processors that energypoints*atoms'
   
   ! consider only cartesian grids for now
-  if(.false.) then
-!   if((ne*nat)<nranks .and. (ne>1 .and. nat>1)) then
+!   if(.false.) then
+
+  if(myrank==master) write(*,*) ne,nat,nranks
+  call MPI_BARRIER(MPI_COMM_WORLD,ik)
+
+  if((ne*nat)<nranks .and. (ne>1)) then ! .and. nat>1)) then
+  
+    if(nkmesh<=1) stop 'no load imbalance, please use regular grid'
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
-    if(myrank==0) write(1337,*) 'rest:',rest
+    if(myrank==0) write(1337,*) 'rest:',rest,ne,nat,nranks
    
     !find fraction of k:l:m
     do ik=1,nkmesh-1
@@ -174,9 +205,8 @@ contains
     !                          ( )      |
     !                          ( )      v
     if(rest>0) then
-    
+
     if(nkmesh==4) then
-     qmin = -1
      ktake(:) = 0
      do i1=1,rest
       do i2=0,rest-i1
@@ -195,7 +225,6 @@ contains
       enddo
      enddo
     elseif(nkmesh==3) then
-     qmin = -1
      ktake(:) = 0
      do i1=1,rest
         i2 = rest-i1
@@ -285,7 +314,9 @@ contains
     
     nranks_at = ne    
     myrank_at = myg-1
-    
+!     myrank_at = myrank_atcomm
+!     nranks_at = nranks_atcomm
+
   elseif((ne*nat)==nranks) then ! .and. (ne>1 .and. nat>1)) then
   
     rest = 0
@@ -332,6 +363,8 @@ contains
 
   end if
   
+!       write(*,'(A,100I3)') 'my_newcomm_props:,myrank,nranks,nranks_ie,myrank_ie,myrank_at,nranks_at,nranks_atcomm,myrank_atcomm'
+!       write(*,'(A,100I3)') 'my_newcomm_props:',myrank,nranks,nranks_ie,myrank_ie,myrank_at,nranks_at,nranks_atcomm,myrank_atcomm
       write(1337,'(A,100I3)') 'my_newcomm_props:',myrank,nranks,nranks_ie,myrank_ie,myrank_at,nranks_at,nranks_atcomm,myrank_atcomm
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 !       write(*,*) 'newcomm_at:',myMPI_comm_at==MPI_COMM_WORLD,myMPI_comm_at==MPI_COMM_NULL,myMPI_comm_at==MPI_COMM_SELF
@@ -341,21 +374,22 @@ contains
   if(myrank==0) then
     write(1337,'(A)') '=================================================='  
     write(1337,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
-    !write(1337,'(AI3AI5A)') '    devide these onto Ne=',ne,' energy points and ',nat,' atoms'
-    write(1337,'(A,I3,A,I4,A,I3)') '    create processor array of size',nat,' x',ne,' with rest',rest
-    write(1337,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
+    write(1337,'(A,I3,A,I4)') '    create processor array of size',nat,' x',ne
+    if(rest>0) write(1337,'(A,I3)') '                                   with rest',rest
+    if(rest>0) write(1337,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
     write(1337,'(A)') '                N_E'
     write(1337,'(A)') '         <--------------->'
     write(1337,'(A)') '       ^ ( | | | | | | | )'
     write(1337,'(A)') '       | ( | | | | | | | )'
     write(1337,'(A)') '  N_at | ( | | | | | | | )'
     write(1337,'(A)') '       | ( | | | | | | | )'
-    write(1337,'(A)') '       v ( | | | | | | | )'
-    write(1337,'(A)') '              ^    ( | | ) m  ^'
-    write(1337,'(A)') '            l |      ( | )    |'
-    write(1337,'(A)') '              v      ( | )    | k'
-    write(1337,'(A)') '                       ( )    |'
-    write(1337,'(A)') '                       ( )    v'
+    if(rest==0) write(1337,'(A)')'       v ( | | | | | | | )'
+    if(rest>0) write(1337,'(A)') '       v ( | | | | | | | )....'
+    if(rest>0) write(1337,'(A)') '              ^    ( | | ) m  ^'
+    if(rest>0) write(1337,'(A)') '            l |      ( | )    |'
+    if(rest>0) write(1337,'(A)') '              v......( | )    | k'
+    if(rest>0) write(1337,'(A)') '                       ( )    |'
+    if(rest>0) write(1337,'(A)') '                       ( )....v'
   end if
 
   end subroutine create_newcomms_group_ie
@@ -403,7 +437,7 @@ contains
         work2 = 0.d0
         IDIM = (LMAXD+2)*NPOTD
 !         CALL MPI_ALLREDUCE(MPI_IN_PLACE,ESPV,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
-        CALL MPI_ALLREDUCE(ESPV,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+        CALL MPI_ALLREDUCE(ESPV,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
         CALL DCOPY(IDIM,WORK2,1,ESPV,1)
         deallocate(work2)
 
@@ -522,7 +556,6 @@ contains
      IDIM = IRMDNEW*LMPOTD*4
      allocate(workc(IRMDNEW,LMPOTD,4,1))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,r2nefc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(r2nefc,workc(:,:,:,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,R2NEFC,1)
      deallocate(workc)
@@ -537,7 +570,6 @@ contains
      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
      allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,DEN,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DEN,1)
      deallocate(workc)
@@ -545,7 +577,6 @@ contains
      IDIM = LMMAXD*IEMXD*2*NQDOS
      allocate(workc(LMMAXD,IEMXD,2,NQDOS))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,DENLM,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(DENLM,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
      deallocate(workc)
@@ -553,7 +584,6 @@ contains
      IDIM = 4
      allocate(workc(4,1,1,1))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,RHO2INT,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(RHO2INT,workc(:,1,1,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,RHO2INT,1)
      deallocate(workc)
@@ -561,7 +591,6 @@ contains
      IDIM = LMMAXSO*LMMAXSO*IELAST*NQDOS
      allocate(workc(LMMAXSO,LMMAXSO,IELAST,NQDOS))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,GFLLE,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(GFLLE,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,GFLLE,1)
      deallocate(workc)
@@ -570,7 +599,6 @@ contains
      IDIM = (LMAXD1+1)*2
      allocate(work(0:LMAXD1,2,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,ESPV,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(ESPV,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,ESPV,1)
      deallocate(work)
@@ -578,7 +606,6 @@ contains
      IDIM = (LMAXD1+2)*3
      allocate(work(0:LMAXD1+1,3,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,MUORB,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(MUORB,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,MUORB,1)
      deallocate(work)
@@ -586,7 +613,6 @@ contains
      IDIM = 3
      allocate(work(3,1,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,DENORBMOM,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(DENORBMOM,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENORBMOM,1)
      deallocate(work)
@@ -594,7 +620,6 @@ contains
      IDIM = 2*4
      allocate(work(2,4,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,DENORBMOMSP,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(DENORBMOMSP,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENORBMOMSP,1)
      deallocate(work)
@@ -602,7 +627,6 @@ contains
      IDIM = 3
      allocate(work(3,1,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,DENORBMOMNS,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(DENORBMOMNS,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENORBMOMNS,1)
      deallocate(work)
@@ -610,7 +634,6 @@ contains
      IDIM = (LMAXD+1)*3
      allocate(work(0:LMAXD1,3,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,DENORBMOMLM,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(DENORBMOMLM,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENORBMOMLM,1)
      deallocate(work)
@@ -640,7 +663,6 @@ contains
      IDIM = (1+LMAXD1)*IEMXD*NQDOS*NPOTD
      allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,den,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(den,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DEN,1)
      deallocate(workc)
@@ -648,7 +670,6 @@ contains
      IDIM = LMMAXD*IEMXD*NQDOS*NPOTD
      allocate(workc(LMMAXD,IEMXD,NQDOS,NPOTD))
      workc = (0.d0, 0.d0)
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,denlm,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(denlm,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
      deallocate(workc)
@@ -657,7 +678,6 @@ contains
      IDIM = (LMAXD1+2)*3*NATYPD
      allocate(work(0:LMAXD1+1,3,NATYPD,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,muorb,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(muorb,work(:,:,:,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,MUORB,1)
      deallocate(work)
@@ -665,7 +685,6 @@ contains
      IDIM = (LMAXD1+1)*NPOTD
      allocate(work(0:LMAXD1,NPOTD,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,ESPV,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(ESPV,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,ESPV,1)
      deallocate(work)
@@ -673,7 +692,6 @@ contains
      IDIM = IRMD*LMPOTD*NATYPD*2
      allocate(work(IRMD,LMPOTD,NATYPD,2))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,r2nef,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(r2nef,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,R2NEF,1)
      deallocate(work)
@@ -681,7 +699,6 @@ contains
      IDIM = IRMD*LMPOTD*NATYPD*2
      allocate(work(IRMD,LMPOTD,NATYPD,2))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,RHO2NS,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(RHO2NS,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,RHO2NS,1)
      deallocate(work)
@@ -689,7 +706,6 @@ contains
      IDIM = NATYPD
      allocate(work(NATYPD,1,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,denefat,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(denefat,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENEFAT,1)
      deallocate(work)
@@ -697,7 +713,6 @@ contains
      IDIM = 1
      allocate(work(1,1,1,1))
      work = 0.d0
-!      CALL MPI_ALLREDUCE(MPI_IN_PLACE,denef,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL MPI_ALLREDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENEF,1)
      deallocate(work)

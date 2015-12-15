@@ -280,13 +280,29 @@ C
       IF (.NOT.OPT('NEWSOSOL')) THEN
       
 #ifdef CPP_MPI
+!        write(*,*) 'distr:',ntot1,t_mpi_c_grid%nranks_ie
+
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
-        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &             ntot_pT(t_mpi_c_grid%myrank_ie)
-        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
+     + .true.)
+
+!            write(*,*) 'red myrank_at',myrank,ntot_pT,ioff_PT
+!         if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(2)) then
+!            i1_start = ioff_pT(t_mpi_c_grid%myrank_ie
+!      &               -(t_mpi_c_grid%nranks_ie-t_mpi_c_grid%dims(2)))+1
+!            i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie
+!      &               -(t_mpi_c_grid%nranks_ie-t_mpi_c_grid%dims(2)))+
+!      &                ntot_pT(t_mpi_c_grid%myrank_ie)
+!            t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie
+!      &               -(t_mpi_c_grid%nranks_ie-t_mpi_c_grid%dims(2)))
+!         else
+           i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+           i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                ntot_pT(t_mpi_c_grid%myrank_ie)
+           t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+!         endif
+       
 
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
@@ -298,6 +314,10 @@ C
       i1_start = 1
       i1_end   = NATYP
 #endif
+
+
+!        write(*,*) 'i1 loop', myrank, i1_start, i1_end
+
         DO I1 = i1_start,i1_end
        DO ISPIN = 1,NSPIN
          IPOT=NSPIN*(I1-1)+ispin
@@ -320,7 +340,7 @@ C
        END DO
        END DO
        
-       !write(*,*) 'done calctmat'
+!        write(*,*) 'done calctmat'
      
       ELSE
        
@@ -357,7 +377,8 @@ c interpolate potential
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
 !      &                   t_mpi_c_grid%myrank_ie,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
+     &  .true.)
         i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
         i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &             ntot_pT(t_mpi_c_grid%myrank_ie)
@@ -372,9 +393,12 @@ c interpolate potential
         t_mpi_c_grid%ioff_pT1 = ioff_pT
             
 #else
-      i1_start = 1
-      i1_end   = NATYP
+       i1_start = 1
+       i1_end   = NATYP
 #endif
+
+!        write(*,*) 'i1 loop', myrank, i1_start, i1_end
+
        DO I1=i1_start,i1_end
 
 c read from file theta and phi
@@ -407,8 +431,8 @@ C
 
 
 #ifdef CPP_MPI
-!       if(.not.t_tgmat%tmat_to_file .and. t_mpi_c_grid%dims(1)>1) then
-      if(.not.t_tgmat%tmat_to_file) then
+      if(.not.t_tgmat%tmat_to_file) then ! .and. t_mpi_c_grid%dims(1)>1) then
+!       if(.not.t_tgmat%tmat_to_file) then
       
          do ii=0,t_mpi_c_grid%nranks_ie-1
           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)

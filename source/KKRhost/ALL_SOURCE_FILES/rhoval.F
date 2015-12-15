@@ -333,6 +333,9 @@ C        Read BZ path for qdos calculation:
 #ifdef CPP_MPI
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+         
+!             write(*,*) 'rhoval ie loop',myrank,ie_start,ie_end
+
 
        DO ie_num=1,ie_end
          IE = ie_start+ie_num

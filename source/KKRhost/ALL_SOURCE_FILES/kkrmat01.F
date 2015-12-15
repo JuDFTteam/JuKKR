@@ -203,7 +203,9 @@
       t_mpi_c_grid%ntot_pT1 = ntot_pT
       t_mpi_c_grid%ioff_pT1 = ioff_pT
 !       
-!       write(*,*) 'kloop',myrank,ntot1,i1_start, i1_end
+!       write(*,*) 'kloop',myrank,!t_mpi_c_grid%nranks_ie,
+!      + t_mpi_c_grid%nranks_at,
+!      + ntot1,i1_start, i1_end
       
       DO KPT = i1_start,i1_end
 #else

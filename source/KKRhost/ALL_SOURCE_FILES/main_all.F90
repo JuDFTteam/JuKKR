@@ -82,6 +82,9 @@ program kkrcode
   
   ! create_subcomms_2d:
   call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims)
+  !save in dims
+  t_mpi_c_grid%dims = dims
+    
 !   write(*,*) 'find dims:', dims
   
   ! create communicator for atom/energy matrix
@@ -98,9 +101,9 @@ program kkrcode
 ! thus - for now - this is enforced here:
 !#ifndef CPP_MPI
 #ifdef CPP_OMP
-  t_tgmat%tmat_to_file = .true.
-  t_tgmat%gref_to_file = .true.
-  t_tgmat%gmat_to_file = .true.
+  !t_tgmat%tmat_to_file = .true.
+  !t_tgmat%gref_to_file = .true.
+  !t_tgmat%gmat_to_file = .true.
 #endif
   
   

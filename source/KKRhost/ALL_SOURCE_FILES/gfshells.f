@@ -110,7 +110,7 @@ C
       IF (LSURF) NDIM = 2
 C     
 C **********************************************************************
-       NATOMIMP=0
+       !NATOMIMP=0
        IF (ICC.LT.0) THEN
 C
 C --->  ICC.LT.1 all shells are (should be) prepared

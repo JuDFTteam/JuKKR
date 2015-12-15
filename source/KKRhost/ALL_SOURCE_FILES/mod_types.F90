@@ -114,7 +114,6 @@ contains
     
       if (.not. allocated(t_tgmat%tmat)) then
          if (.not. t_tgmat%tmat_to_file) then
-            !write(*,*) myrank,nranks,t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP,t_inc%IELAST,nspin,t_inc%NATYP
             if(nranks.eq.1) then
                !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
                allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
@@ -500,8 +499,9 @@ contains
     
     
     !Gather tmat so that all processors the full matrix for their part of the energy contour
-    if(myrank==master) write(*,*) 'communicate tmat?',t_mpi_c_grid%dims(1),t_mpi_c_grid%dims(1)>1
-    if(t_mpi_c_grid%dims(1)>1) then
+!     if(myrank==master) write(*,*) 'communicate tmat?',t_mpi_c_grid%dims(1),t_mpi_c_grid%dims(1)>1
+!     if(t_mpi_c_grid%dims(1)>1) then
+    if(t_mpi_c_grid%nranks_ie>1) then
        nspin = t_inc%NSPIN
        if(t_inc%NEWSOSOL) nspin = 1
       
@@ -515,13 +515,13 @@ contains
        !                   & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
        !                   & mympi_comm, ierr )
        !call MPI_Allgatherv( MPI_IN_PLACE, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+!        write(*,*) 'gather tmat', mytot, ihelp, recvcounts, displs
        allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP))
        call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
                           & work, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
                           & mympi_comm, ierr )
        idim = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
        call zcopy(idim,work,1,t_tgmat%tmat,1)
-     !CALL ZCOPY(IDIM,WORK,1,RHO2NSC,1)
        deallocate(work)
     end if
 !        call MPI_BARRIER(MPI_COMM_WORLD,ierr)

@@ -497,6 +497,8 @@ C
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
          
+!          write(*,*) 'e loop main1b',myrank,ie_start,ie_end
+         
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
 #else
@@ -1011,7 +1013,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
-!                      write(707070,*) gmat0
+                     write(707070,*) gmat0
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &                    ie_end * (I1-1)

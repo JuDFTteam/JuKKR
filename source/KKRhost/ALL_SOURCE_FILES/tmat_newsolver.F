@@ -128,7 +128,7 @@ c initial allocate
 !        ALLOCATE(TRAL_OUT(IELAST)) ! LLY
           
 c energy loop
-       if(myrank==master) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
+!        if(myrank==master) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
 
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
@@ -151,6 +151,9 @@ c energy loop
 
 !         write(*,*) 'db_lin ener:',myrank,t_mpi_c_grid%nranks_at,
 !      &  t_mpi_c_grid%myrank_at,ielast, ie_start,ie_end
+
+!        write(*,'(A,100I3)') 'calctmat ie loop', myrank, 
+!      +    ie_start, ie_end
      
 
 !        DO IE=ie_start,ie_end
@@ -177,7 +180,6 @@ c energy loop
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll) !,tmat_out)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
 !$omp& shared(lly,deltae,i1) !,dtmat_out,tral_out)
-! !$omp& private(tralpha,alpha0,alphall,tmat0,alphasph,dtmatll,dalphall) 
 !$omp& private(tralpha) 
 !$omp& private(alpha0)
 !$omp& private(alphall)
@@ -198,7 +200,30 @@ c energy loop
          else
             ith = 0
          endif
+!          write(*,*) 'nthreads',nth,ith,ipot
 c         ERYD = EZ(IE)
+
+
+         eryd = 0
+         ir = 0
+         nvec = 0
+         lm1 = 0
+         lm2 = 0
+         gmatprefactor = 0
+         jlk_index = 0
+         tmatll = 0
+         irec = 0
+         tralpha = 0
+         alpha0 = 0
+         alphall = 0
+         tmat0 = 0
+         alphasph = 0
+         dtmatll  = 0
+         dalphall = 0
+         aux = 0
+         ideriv = 0
+         ipiv = 0
+
 
 ! In case of Lloyds formula the derivative of t is needed. 
 ! Then calculate t at E+dE, E-dE and average for t, subtract for dt/dE
@@ -270,13 +295,12 @@ cc right solutions
      +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
-!     &              ,ith) ! test fivos
-        IF (NSRA.EQ.2) THEN
+!         IF (NSRA.EQ.2) THEN
 c         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
 c     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
 c         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
 c     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
-        ENDIF
+!         ENDIF
 
 
 c add spherical contribution of tmatrix
@@ -314,7 +338,6 @@ c add spherical contribution of tmatrix
           ENDDO
          ENDIF
         ENDDO ! SIGNDE=-IDERIV,IDERIV,2 ! LLY
-c         STOP
 
 ! average values of t-matrix and alpha at e+de and e-de
         DO LM1=1,LMMAXSO        
@@ -335,7 +358,6 @@ c         STOP
         CALL ZGEINV1(ALPHALL,ALPHA0,AUX,IPIV,LMMAXSO)
         CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,ALPHA0,LMMAXSO,
      +             DALPHALL,LMMAXSO,CZERO,AUX,LMMAXSO) ! LLY
-
 ! Trace of AUX 
         TRALPHA=CZERO ! LLY
         DO LM1=1,LMMAXSO 
@@ -346,9 +368,10 @@ c         STOP
          ! writeout
 !$omp critical
          if (t_tgmat%tmat_to_file) then
+!             write(*,*) 'write tmat', ie, i1, ielast
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,*) TMATLL(:,:)
+            WRITE(696969,*) TMATLL(:,:)
          else
 #ifdef CPP_MPI
             irec = ie_num +

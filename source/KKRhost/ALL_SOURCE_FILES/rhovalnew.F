@@ -241,13 +241,10 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
 c energy loop
        if(myrank==master) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
-!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-!          ie_end = t_mpi_c_grid%ntot2     
-         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
          
-         !write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
+!          write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
 
        DO ie_num=1,ie_end
          IE = ie_start+ie_num
@@ -442,6 +439,7 @@ c read in gf
            IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &            ie_end * (I1-1)
 !     &            t_mpi_c_grid%ntot2 * (I1-1)
+           write(*,*) 'irec gmat', myrank, irec, i1, ie_num
            GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
         end if
         !$omp end critical
@@ -658,13 +656,35 @@ c    write qdos.nn.s.dat                                                  ! qdos
 #ifdef CPP_TIMING
 !        call timing_start('main1c - communication')
 #endif
+!        write(*,*) 'mympi_main1c_comm_newsosol',myrank
+!      &     ,t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie
+!      &     ,t_mpi_c_grid%nranks_at,t_mpi_c_grid%nranks_ie
+!        write(66666,*) den
+      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
+         den = 0.d0
+         denlm = 0.d0
+         gflle = 0.d0
+         muorb = 0.d0
+         espv = 0.d0
+         r2nefc = 0.d0
+         rho2nsc = 0.d0
+         rho2int = 0.d0
+         denorbmom = 0.d0
+         denorbmomsp = 0.d0
+         denorbmomlm = 0.d0
+         denorbmomns = 0.d0
+      endif
        call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
      &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
      &                            denorbmomsp,denorbmomlm,denorbmomns,
 !      &                            MPI_COMM_WORLD)
+!      &                            t_mpi_c_grid%myMPI_comm_ie)
      &                            t_mpi_c_grid%myMPI_comm_at)
+      !endif
+!        write(66667,*) den
 #ifdef CPP_TIMING
 !        call timing_pause('main1c - communication')
 #endif
@@ -830,9 +850,10 @@ C
 #ifdef CPP_MPI
       endif !(myrank==master)
       
-      ! communicate den_out to all processors with the same atom number
+      !communicate den_out to all processors with the same atom number
       IDIM = (LMAXD+2)*IEMXD*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
+!      &               t_mpi_c_grid%myMPI_comm_ie, ierr)
      &               t_mpi_c_grid%myMPI_comm_at, ierr)
 !      &               MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
