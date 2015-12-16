@@ -18,11 +18,11 @@ module EnergyMesh_mod
 
     ! valence contour parameters
     double precision :: e1, e2, eFermi, tK
-    integer :: npnt1, npnt2, npnt3, npol, ielast
+    integer :: npnt123(3), npol, ielast
 
     ! semicore contour parameters
     double precision :: ebotsemi, emusemi, fsemicore
-    integer :: iesemicore, n1semi, n2semi, n3semi
+    integer :: iesemicore, npntsemi(3)
 
     double complex, allocatable :: ez(:), wez(:), wezrn(:,:)
     integer, allocatable :: kmesh(:) ! mapping to the Brillouin zone sampling TODO, use this instead of that in Main2Arrays
@@ -60,26 +60,26 @@ module EnergyMesh_mod
   contains
 
   
-  integer function getEnergyMeshSize(npol, n1val, n2val, n3val, n1sem, n2sem, n3sem) result(iemxd)
-    integer, intent(in) :: npol, n1val, n2val, n3val, n1sem, n2sem, n3sem
+  integer function getEnergyMeshSize(npol, n123val, n123sem) result(iemxd)
+    integer, intent(in) :: npol, n123val(3), n123sem(3)
   
     ! Calculate number of energy points
-    if (n1sem > 0 .or. n2sem > 0 .or. n3sem > 0) then ! semicore contour is used
+    if (any(n123sem > 0)) then ! semicore contour is used
 
       write(*,*) "WARNING: Using semicore contour, please check your results"
       
       if (npol /= 0) then
-        iemxd = npol + n1val + n2val + n3val + n1sem + n2sem + n3sem
+        iemxd = npol + sum(n123val) + sum(n123sem)
       else ! dos-calculation
-        iemxd = n2val + n2sem
+        iemxd = n123val(2) + n123sem(2)
       endif
 
     else ! semicore contour is not used
 
       if (npol /= 0) then
-        iemxd = npol + n1val + n2val + n3val
+        iemxd = npol + sum(n123val)
       else ! dos-calculation
-        iemxd = n2val
+        iemxd = n123val(2)
       endif
 
     endif ! semicore
@@ -87,12 +87,12 @@ module EnergyMesh_mod
   endfunction ! get
 
   
-  subroutine initEnergyMesh(self, eFermi, emin, emax, tK, npol, npnt1, npnt2, npnt3, ebotsemi, emusemi, n1semi, n2semi, n3semi, fsemicore)
+  subroutine initEnergyMesh(self, eFermi, emin, emax, tK, npol, npnt123, ebotsemi, emusemi, npntsemi, fsemicore)
     type(EnergyMesh), intent(inout) :: self
     double precision, intent(in) :: eFermi, emin, emax, tK
-    integer, intent(in) :: npol, npnt1, npnt2, npnt3
+    integer, intent(in) :: npol, npnt123(3)
     double precision, intent(in) :: ebotsemi, emusemi
-    integer, intent(in) :: n1semi, n2semi, n3semi
+    integer, intent(in) :: npntsemi(3)
     double precision, intent(in) :: fsemicore
 
     self%eFermi = eFermi
@@ -100,10 +100,10 @@ module EnergyMesh_mod
     self%e1 = emin
     self%e2 = emax
     self%npol = npol
-    self%npnt1 = npnt1; self%npnt2 = npnt2; self%npnt3 = npnt3
+    self%npnt123 = npnt123
     self%ebotsemi = ebotsemi
     self%emusemi = emusemi
-    self%n1semi = n1semi; self%n2semi = n2semi; self%n3semi = n3semi
+    self%npntsemi = npntsemi
     self%fsemicore = fsemicore
 
   endsubroutine ! init
@@ -154,10 +154,9 @@ module EnergyMesh_mod
     character(len=*), intent(in) :: filename ! usually 'energy_mesh'
 
     call load(self%e1, self%e2, self%eFermi, self%ez, &
-              self%IELAST, self%NPNT1, self%NPNT2, self%NPNT3, &
+              self%IELAST, self%npnt123, &
               self%NPOL, self%tK, self%wez, self%ebotsemi, self%emusemi, &
-              self%fsemicore, self%iesemicore, self%n1semi, self%n2semi, &
-              self%n3semi, self%kmesh, filename)
+              self%fsemicore, self%iesemicore, self%npntsemi, self%kmesh, filename)
 
   endsubroutine ! read
 
@@ -170,10 +169,9 @@ module EnergyMesh_mod
     character(len=*), intent(in) :: filename ! 'energy_mesh.0' or 'energy_mesh'
 
     call store(self%e1, self%e2, self%eFermi, self%ez, &
-              self%IELAST, self%NPNT1, self%NPNT2, self%NPNT3, &
+              self%IELAST, self%npnt123, &
               self%NPOL, self%tK, self%wez, self%ebotsemi, self%emusemi, &
-              self%fsemicore, self%iesemicore, self%n1semi, self%n2semi, &
-              self%n3semi, self%kmesh, filename)
+              self%fsemicore, self%iesemicore, self%npntsemi, self%kmesh, filename)
 
   endsubroutine ! write
 
@@ -185,11 +183,9 @@ module EnergyMesh_mod
     type(EnergyMesh), intent(inout) :: self
 
     call update(self%ez, self%wez, self%IELAST, &
-              self%e1, self%e2, self%tK, self%NPOL, &
-              self%NPNT1, self%NPNT2, self%NPNT3, &
-              self%ebotsemi, self%emusemi, self%iesemicore, self%fsemicore, &
-              self%n1semi, self%n2semi, self%n3semi)
+              self%e1, self%e2, self%tK, self%NPOL, self%npnt123, &
+              self%ebotsemi, self%emusemi, self%iesemicore, self%fsemicore, self%npntsemi)
 
   endsubroutine ! update
 
-endmodule EnergyMesh_mod
+endmodule ! EnergyMesh_mod

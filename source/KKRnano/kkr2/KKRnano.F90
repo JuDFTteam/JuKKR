@@ -177,7 +177,7 @@ program KKRnano
 
     call createEBalanceHandler(ebalance_handler, emesh%ielast)
     call initEBalanceHandler(ebalance_handler, my_mpi)
-    call setEqualDistribution(ebalance_handler, (emesh%NPNT1 == 0))
+    call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
 #ifdef DEBUG_NO_VINS
     do ilocal = 1, num_local_atoms
@@ -238,7 +238,7 @@ program KKRnano
         !!!$omp parallel do private(ilocal, atomdata)
         do ilocal = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ilocal)
-          if (params%use_semicore == 1) then
+          if (any(params%npntsemi > 0)) then
             call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
           else
             call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)

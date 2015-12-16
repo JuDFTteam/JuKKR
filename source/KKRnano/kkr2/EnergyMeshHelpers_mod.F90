@@ -28,13 +28,13 @@ module EnergyMeshHelpers_mod
   ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
   !> read energy mesh data from file
-  subroutine readEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt1, npnt2, npnt3, npol, &
-               tk, wez, ebotsemi, emusemi, fsemicore, iesemicore, n1semi, n2semi, n3semi, kmesh, filename)
+  subroutine readEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt123, npol, &
+               tk, wez, ebotsemi, emusemi, fsemicore, iesemicore, npntsemi, kmesh, filename)
     ! valence contour parameters
     double precision, intent(out) :: e1, e2, efermi
     double complex, intent(out) :: ez(:)
     integer, intent(out) :: ielast
-    integer, intent(out) :: npnt1, npnt2, npnt3
+    integer, intent(out) :: npnt123(3)
     integer, intent(out) :: npol
     double precision, intent(out) :: tk
     double complex, intent(out) :: wez(:)
@@ -42,17 +42,17 @@ module EnergyMeshHelpers_mod
     ! semicore contour parameters
     double precision, intent(out) :: ebotsemi, emusemi, fsemicore
     integer, intent(out) :: iesemicore
-    integer, intent(out) :: n1semi, n2semi, n3semi
+    integer, intent(out) :: npntsemi(3)
     integer, intent(out) :: kmesh(:) !< dim(iemxd)
     character(len=*), intent(in) :: filename
 
     open (67, file=filename, form='unformatted', action='read', status='old')
     read (67) ielast,ez,wez,e1,e2
-    read (67) npol,tk,npnt1,npnt2,npnt3
+    read (67) npol,tk,npnt123
     read (67) efermi
     read (67) iesemicore,fsemicore,ebotsemi
     read (67) emusemi
-    read (67) n1semi,n2semi,n3semi
+    read (67) npntsemi
     read (67) kmesh
     close(67)
     
@@ -60,13 +60,13 @@ module EnergyMeshHelpers_mod
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
-  subroutine writeEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt1, npnt2, npnt3, npol, &
-         tk, wez, ebotsemi, emusemi, fsemicore, iesemicore, n1semi, n2semi, n3semi, kmesh, filename)
+  subroutine writeEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt123, npol, &
+         tk, wez, ebotsemi, emusemi, fsemicore, iesemicore, npntsemi, kmesh, filename)
     ! valence contour parameters
     double precision, intent(in) :: e1, e2, efermi
     double complex, intent(in) :: ez(:)
     integer, intent(in) :: ielast
-    integer, intent(in) :: npnt1, npnt2, npnt3
+    integer, intent(in) :: npnt123(3)
     integer, intent(in) :: npol
     double precision, intent(in) :: tk
     double complex, intent(in) :: wez(:)
@@ -74,17 +74,17 @@ module EnergyMeshHelpers_mod
     ! semicore contour parameters
     double precision, intent(in) :: ebotsemi, emusemi, fsemicore
     integer, intent(in) :: iesemicore
-    integer, intent(in) :: n1semi, n2semi, n3semi
+    integer, intent(in) :: npntsemi(3)
     integer, intent(in) :: kmesh(:) !< dim(iemxd)
     character(len=*), intent(in) :: filename
 
     open (67, file=filename, form='unformatted', action='write')
     write(67) ielast,ez,wez,e1,e2
-    write(67) npol,tk,npnt1,npnt2,npnt3
+    write(67) npol,tk,npnt123
     write(67) efermi
     write(67) iesemicore,fsemicore,ebotsemi
     write(67) emusemi
-    write(67) n1semi,n2semi,n3semi
+    write(67) npntsemi
     write(67) kmesh
     close(67)
 
@@ -92,26 +92,25 @@ module EnergyMeshHelpers_mod
 
   !------------------------------------------------------------------------------
   !> Update Energy mesh. Essentially a wrapper for EPATHTB
-  subroutine updateEnergyMeshImpl(ez, wez, ielast, e1, e2, tk, npol, npnt1, npnt2, npnt3, &
-                        ebotsemi, emusemi, iesemicore, fsemicore, n1semi, n2semi, n3semi)
+  subroutine updateEnergyMeshImpl(ez, wez, ielast, e1, e2, tk, npol, npnt123v, &
+                        ebotsemi, emusemi, iesemicore, fsemicore, npntsemi)
     use Constants_mod, only: pi
     double complex, intent(out) :: ez(:), wez(:)
     integer, intent(inout) :: ielast
     double precision, intent(in) :: e1, e2, tk
-    ! valence contour parameters
-    integer, intent(in) :: npol, npnt1, npnt2, npnt3
+    integer, intent(in) :: npol, npnt123v(3) !< valence contour parameters
     
     ! semicore contour parameters
     double precision, intent(in) :: ebotsemi, emusemi, fsemicore
-    integer, intent(in) :: n1semi, n2semi, n3semi
+    integer, intent(in) :: npntsemi(3)
     integer, intent(out) :: iesemicore !
 
     integer :: iemxd
 
     iemxd = ielast
     ! --> update energy contour for both, semicore contour (if present) and valence
-    call epathtb(ez, wez, e2, ielast, iesemicore, e1, e2, tk, npol, npnt1, npnt2, npnt3, &
-                                       ebotsemi, emusemi, tk, npol, n1semi, n2semi, n3semi, iemxd)
+    call epathtb(ez, wez, e2, ielast, iesemicore, e1, e2, tk, npol, npnt123v(1), npnt123v(2), npnt123v(3), &
+                                       ebotsemi, emusemi, tk, npol, npntsemi(1), npntsemi(2), npntsemi(3), iemxd)
 
     wez(1:ielast) = -2.d0/pi*wez(1:ielast)
     wez(1:iesemicore) = wez(1:iesemicore)*fsemicore ! scale the weights for the semicore contour only

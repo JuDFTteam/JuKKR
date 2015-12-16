@@ -161,7 +161,7 @@ module wrappers_mod
     CHECKASSERT( size(dtde, 1) == lmmaxd )
     CHECKASSERT( size(dtde, 2) == lmmaxd )
 
-    call calcdtmat_deltaez(delta_e_z, ie, emesh%npnt1, emesh%npnt2, emesh%npnt3, emesh%tk)
+    call calcdtmat_deltaez(delta_e_z, ie, emesh%npnt123(1), emesh%npnt123(2), emesh%npnt123(3), emesh%tk)
 
     call calcdtmat(ldau_data%ldau, ldau_data%nldau, icst, &
                   nsra, emesh%ez(ie), delta_e_z, &

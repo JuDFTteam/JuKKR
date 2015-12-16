@@ -488,17 +488,15 @@ module ProcessKKRresults_mod
       ! CHARGE -> written to result file
 
       ! Semicore contour included
-      if (params%use_semicore == 1) then
+      if (any(params%npntsemi > 0)) then
 
         call calcChargesLresSemi(densities%CHARGE, densities%CHRGSEMICORE_per_atom, densities%DEN, emesh%ielast, &
-                            emesh%IESEMICORE, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
-                            densities%IEMXD)
+                            emesh%IESEMICORE, densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
 
       else
         ! Only valence contour
-        call calcChargesLres(densities%CHARGE, densities%DEN, emesh%ielast, &
-                            densities%LMAXD+1, densities%NSPIND, emesh%WEZ, &
-                            densities%IEMXD)
+        call calcChargesLres(    densities%CHARGE, densities%DEN, emesh%ielast, &
+                            densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
 
       endif
 
@@ -507,7 +505,7 @@ module ProcessKKRresults_mod
       CHRGNT = CHRGNT + CHRGNT_local
 
       ! Add semicore charge for current atom
-      CHRGSEMICORE = CHRGSEMICORE+densities%CHRGSEMICORE_per_atom
+      CHRGSEMICORE = CHRGSEMICORE + densities%CHRGSEMICORE_per_atom
 
   !------------------------------------------------------------------------------
     enddo ! ila
@@ -582,12 +580,12 @@ module ProcessKKRresults_mod
     !!!$omp endparallel do
   !------------------------------------------------------------------------------
 
-    if (params%use_semicore==1) then
+    if (any(params%npntsemi > 0)) then
       ! --> Sum up semicore charges from different MPI ranks
       call sumChargeSemi_com(CHRGSEMICORE, getMySEcommunicator(my_mpi))
       ! --> Recalculate the semicore contour factor FSEMICORE
       if (isMasterRank(my_mpi)) then
-      call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, getMySEcommunicator(my_mpi))
+        call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, getMySEcommunicator(my_mpi))
       endif
     endif
 

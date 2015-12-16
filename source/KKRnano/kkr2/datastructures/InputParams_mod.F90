@@ -55,19 +55,17 @@ module InputParams_mod
     double precision :: cutoff_radius
     double precision :: lcutoff_radii (9)
     integer :: solver
-    integer :: use_semicore
     double precision :: ebotsemi
     double precision :: emusemi
-    integer :: n1semi
-    integer :: n2semi
-    integer :: n3semi
     double precision :: fsemicore
+    integer :: npntsemi (3)
     integer :: volterra
     double precision :: target_rms
     integer :: near_field
     integer :: write_shapes
     double precision :: mt_zero_shift
     integer :: DEBUG_morgan_electrostatics
+    double precision :: vref
   endtype ! InputParams
 
   contains
@@ -292,8 +290,11 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "bzdivide", values%bzdivide)
-  if (ierror /= 0) then
+  ierror = getValue(cr, "bzdivide", values%bzdivide , def=8)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for bzdivide. Set to bzdivide = 8"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for bzdivide."
     destroy_and_return
   endif
@@ -391,15 +392,6 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "use_semicore", values%use_semicore , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for use_semicore. Set to use_semicore = 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for use_semicore."
-    destroy_and_return
-  endif
-
   ierror = getValue(cr, "ebotsemi", values%ebotsemi , def=0.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for ebotsemi. Set to ebotsemi = 0.0"
@@ -418,39 +410,21 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "n1semi", values%n1semi , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for n1semi. Set to n1semi = 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for n1semi."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "n2semi", values%n2semi , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for n2semi. Set to n2semi = 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for n2semi."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "n3semi", values%n3semi , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for n3semi. Set to n3semi = 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for n3semi."
-    destroy_and_return
-  endif
-
   ierror = getValue(cr, "fsemicore", values%fsemicore , def=1.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for fsemicore. Set to fsemicore = 1.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for fsemicore."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "npntsemi", values%npntsemi , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for npntsemi. Set to npntsemi = 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for npntsemi."
     destroy_and_return
   endif
 
@@ -508,6 +482,15 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "vref", values%vref , def=8.d0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for vref. Set to vref = 8.d0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for vref."
+    destroy_and_return
+  endif
+
   write(*,*) "Finished reading information from input.conf"
   destroy_and_return
 #undef destroy_and_return
@@ -560,19 +543,17 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%cutoff_radius
   read(fu) values%lcutoff_radii
   read(fu) values%solver
-  read(fu) values%use_semicore
   read(fu) values%ebotsemi
   read(fu) values%emusemi
-  read(fu) values%n1semi
-  read(fu) values%n2semi
-  read(fu) values%n3semi
   read(fu) values%fsemicore
+  read(fu) values%npntsemi
   read(fu) values%volterra
   read(fu) values%target_rms
   read(fu) values%near_field
   read(fu) values%write_shapes
   read(fu) values%mt_zero_shift
   read(fu) values%DEBUG_morgan_electrostatics
+  read(fu) values%vref
   close(fu)
 endfunction ! readFromFile
 
@@ -623,19 +604,17 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%cutoff_radius
   write(fu) values%lcutoff_radii
   write(fu) values%solver
-  write(fu) values%use_semicore
   write(fu) values%ebotsemi
   write(fu) values%emusemi
-  write(fu) values%n1semi
-  write(fu) values%n2semi
-  write(fu) values%n3semi
   write(fu) values%fsemicore
+  write(fu) values%npntsemi
   write(fu) values%volterra
   write(fu) values%target_rms
   write(fu) values%near_field
   write(fu) values%write_shapes
   write(fu) values%mt_zero_shift
   write(fu) values%DEBUG_morgan_electrostatics
+  write(fu) values%vref
   close(fu)
 endfunction ! writeToFile
 

@@ -121,18 +121,13 @@ module KKRzero_mod
 
 !     .. energy mesh ..
     double precision :: efermi
-    integer :: ielast
-    integer :: iesemicore
-!     double complex, allocatable :: ez(:)
-!     double complex, allocatable :: wez(:)
 
     double precision :: recbv(3,3), volume0
 
     double precision, allocatable :: radius_muffin_tin(:)!, pos(:,:)
 
 !     .. auxillary variables, not passed to kkr2
-    integer :: ie, ist!, natoms
-    double complex, allocatable :: dez(:) ! needed for emesht
+    integer :: ist!, natoms
     integer, parameter :: KREL = 0
     logical :: startpot_exists
     type(DimParams)      :: dims
@@ -151,7 +146,7 @@ module KKRzero_mod
     if (ist /= 0) die_here('failed to read "input.conf"!')
 
 
-    dims%iemxd = getEnergyMeshSize(params%npol, params%npnt1, params%npnt2, params%npnt3, params%n1semi, params%n2semi, params%n3semi)
+    dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
     
     call createMain2Arrays(arrays, dims) ! important: determine IEMXD before creating arrays
@@ -187,14 +182,12 @@ module KKRzero_mod
 ! ----------------------------------------------------------------------
 ! update fermi energy, adjust energy window according to running options
 
-    ielast = dims%iemxd
-
 ! for non-dos calculation upper energy bound corresponds to fermi energy
 ! bad: params%emax is changed
     if (params%npol /= 0) params%emax = efermi
 
-    call init(emesh, efermi, params%emin, params%emax, params%tempr, params%npol, params%npnt1, params%npnt2, params%npnt3, &
-                    params%ebotsemi, params%emusemi, params%n1semi, params%n2semi, params%n3semi, params%fsemicore)
+    call init(emesh, efermi, params%emin, params%emax, params%tempr, params%npol, [params%npnt1, params%npnt2, params%npnt3], &
+                    params%ebotsemi, params%emusemi, params%npntsemi, params%fsemicore)
     call update(emesh)
 
 ! ================================================ deal with the lattice

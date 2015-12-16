@@ -601,7 +601,7 @@ module ConfigReader_mod
     type(ConfigReader), intent(inout) :: this
     character(len=*), intent(in) :: variable
     integer, intent(inout) :: value(:)
-    double precision, intent(in), optional :: def
+    integer, intent(in), optional :: def
 
     character(len=MAX_LINE_LENGTH) :: value_string
     integer :: vector_read(size(value))
