@@ -623,7 +623,7 @@ module ProcessKKRresults_mod
     USE_ARRAYLOG_MOD
 
     use CalculationData_mod, only: CalculationData
-    use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyAtomRank, getMySECommunicator, getMasterRank, getNumAtomRanks
+    use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyAtomRank, getMySECommunicator, getNumAtomRanks
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -663,7 +663,7 @@ module ProcessKKRresults_mod
     double precision :: VAV0, VOL0
     double precision :: VAV0_local, VOL0_local
     double precision :: VBC_new(2)
-    integer :: ila
+    integer :: ila, ist
     integer :: num_local_atoms
     logical :: calc_force
     double precision :: force_flmc(-1:1)
@@ -864,11 +864,11 @@ module ProcessKKRresults_mod
 
     call OUTTIME(isMasterRank(my_mpi), 'calculated pot ......', getElapsedTime(program_timer), ITER)
 
-    call sum_total_energy_com(new_total_energy_all, new_total_energy, getMasterRank(my_mpi), getMySECommunicator(my_mpi))
+    call sum_total_energy_com(new_total_energy_all, new_total_energy, 0, getMySECommunicator(my_mpi))
 
     if (isMasterRank(my_mpi)) call printTotalEnergies(new_total_energy_all)
 
-    deallocate(vons_temp)
+    deallocate(vons_temp, stat=ist)
 
     contains
 

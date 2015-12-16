@@ -51,7 +51,7 @@ implicit none
   private
   public :: KKRnanoParallel, create, destroy
   public :: createKKRnanoParallel, destroyKKRnanoParallel ! deprecated
-  public :: getMyWorldRank, getMyAtomRank, getMasterRank 
+  public :: getMyWorldRank, getMyAtomRank 
   public :: getMySEId, getMyAtomId, getMySpinId, getMyEnergyId, getResponsibleSpinId    
   public :: getNumAtomRanks, getNumSpinRanks, getNumEnergyRanks, getNumSERanks, getNumWorldRanks
   public :: getMySEcommunicator, getMyActiveCommunicator        
@@ -266,13 +266,6 @@ implicit none
   integer function getNumWorldRanks(self)
     type(KKRnanoParallel), intent(in) :: self
     getNumWorldRanks = self%num_all_ranks
-  endfunction
-
-  !--------------------------------------------------------------
-  !> Returns rank number of MasterRank in MPI_COMM_WORLD.
-  integer function getMasterRank(self) ! independent of self
-    type(KKRnanoParallel), intent(in) :: self
-    getMasterRank = 0
   endfunction
 
   !--------------------------------------------------------------

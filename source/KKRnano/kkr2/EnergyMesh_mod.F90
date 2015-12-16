@@ -148,31 +148,32 @@ module EnergyMesh_mod
 
   !----------------------------------------------------------------------------
   !> read energy mesh data from file 'energy_mesh'
-  subroutine readEnergyMesh(self)
+  subroutine readEnergyMesh(self, filename)
     use EnergyMeshHelpers_mod, only: load
-
     type(EnergyMesh), intent(inout) :: self
+    character(len=*), intent(in) :: filename ! usually 'energy_mesh'
 
     call load(self%e1, self%e2, self%eFermi, self%ez, &
               self%IELAST, self%NPNT1, self%NPNT2, self%NPNT3, &
               self%NPOL, self%tK, self%wez, self%ebotsemi, self%emusemi, &
               self%fsemicore, self%iesemicore, self%n1semi, self%n2semi, &
-              self%n3semi, self%kmesh, filename='energy_mesh.0')
+              self%n3semi, self%kmesh, filename)
 
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
-  subroutine writeEnergyMesh(self)
+  subroutine writeEnergyMesh(self, filename)
     use EnergyMeshHelpers_mod, only: store
 
     type(EnergyMesh), intent(in) :: self
+    character(len=*), intent(in) :: filename ! 'energy_mesh.0' or 'energy_mesh'
 
     call store(self%e1, self%e2, self%eFermi, self%ez, &
               self%IELAST, self%NPNT1, self%NPNT2, self%NPNT3, &
               self%NPOL, self%tK, self%wez, self%ebotsemi, self%emusemi, &
               self%fsemicore, self%iesemicore, self%n1semi, self%n2semi, &
-              self%n3semi, self%kmesh, filename='energy_mesh')
+              self%n3semi, self%kmesh, filename)
 
   endsubroutine ! write
 

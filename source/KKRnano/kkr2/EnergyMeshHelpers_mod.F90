@@ -58,7 +58,6 @@ module EnergyMeshHelpers_mod
     
   endsubroutine ! read
 
-  ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
   subroutine writeEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt1, npnt2, npnt3, npol, &
@@ -91,7 +90,6 @@ module EnergyMeshHelpers_mod
 
   endsubroutine ! write
 
-  ! VALENCE AND SEMICORE CONTOUR!
   !------------------------------------------------------------------------------
   !> Update Energy mesh. Essentially a wrapper for EPATHTB
   subroutine updateEnergyMeshImpl(ez, wez, ielast, e1, e2, tk, npol, npnt1, npnt2, npnt3, &
@@ -113,15 +111,13 @@ module EnergyMeshHelpers_mod
     iemxd = ielast
     ! --> update energy contour for both, semicore contour (if present) and valence
     call epathtb(ez, wez, e2, ielast, iesemicore, e1, e2, tk, npol, npnt1, npnt2, npnt3, &
-                                     ebotsemi, emusemi, tk, npol, n1semi, n2semi, n3semi, iemxd)
+                                       ebotsemi, emusemi, tk, npol, n1semi, n2semi, n3semi, iemxd)
 
     wez(1:ielast) = -2.d0/pi*wez(1:ielast)
-    wez(1:iesemicore) = wez(1:iesemicore)*fsemicore
+    wez(1:iesemicore) = wez(1:iesemicore)*fsemicore ! scale the weights for the semicore contour only
 
   endsubroutine ! update
 
-
-  ! VALENCE AND SEMICORE CONTOUR!
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from rank 'BCRANK' to all other ranks
   subroutine broadcastEnergyMeshImpl_com(comm, e1, e2, e3, e4, iemxd, ez, wez)
@@ -141,6 +137,52 @@ module EnergyMeshHelpers_mod
     e1 = es(1); e2 = es(2); e3 = es(3); e4 = es(4)
 #endif
   endsubroutine ! broadcast
+
+  
+  subroutine epathtb(ez, df, efermi, ieboth, iesemicore, &
+                    ebotval, emuval, tkval, npolval, n1val, n2val, n3val, &
+                    ebotsem, emusem, tksem, npolsem, n1sem, n2sem, n3sem, &
+                    iemxd)
+! **********************************************************************
+! * Generating the energy mesh.                                        *
+! *                                                                    *
+! * Calls the routine EMESHT once for the valence contour and once for *
+! * the semicore contour.                                              *
+! * In the semicore range, -NPOLSEM is used to create a rectangular    *
+! * contour.                                                           *
+! *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
+! **********************************************************************
+    integer, intent(in) :: iemxd
+    double complex, intent(out) :: ez(iemxd), df(iemxd)
+    double precision, intent(in) :: efermi
+    double precision, intent(in) :: ebotsem, emusem, tksem
+    integer, intent(in) :: npolsem, n1sem, n2sem, n3sem
+    double precision, intent(in) :: ebotval, emuval, tkval
+    integer, intent(in) :: npolval, n1val, n2val, n3val
+    integer, intent(out) :: iesemicore, ieboth
+    
+    integer :: ievalence
+    character(len=*), parameter :: F99001="(7x,'* ',a,/,7x,20(1h-),/)"
+
+    assert(max(0, npolval) + n1val + n2val + n3val + n1sem + n2sem + n3sem <= iemxd)
+    
+    if (.false.) then
+      write(6,'(/,79(1h=))')
+      write(6,'(20x,a)') 'EPATHTB: generates a complex E contour'
+      write(6,'(79(1h=),/)')
+    endif
+
+    iesemicore = 0 
+    if (n1sem + n2sem + n3sem > 0) then
+      write(6, fmt=F99001) 'semi-core contour'
+      call emesht(ez, df, iesemicore, ebotsem, emusem, efermi, tksem, -npolsem, n1sem, n2sem, n3sem, iemxd)
+      write(6, fmt=F99001) 'valence contour'
+    endif ! semi
+    call emesht(ez(iesemicore+1:), df(iesemicore+1:), ievalence, ebotval, emuval, efermi, tkval, npolval, n1val, n2val, n3val, iemxd-iesemicore)
+
+    ieboth = iesemicore + ievalence
+
+  endsubroutine ! epathtb
 
   
 ! 06.10.09 *************************************************************
@@ -396,48 +438,5 @@ module EnergyMeshHelpers_mod
     endselect ! npol
     write(6, *) ! empty line
   endsubroutine ! emesht
-  
-  subroutine epathtb(ez, df, efermi, ieboth, iesemicore, &
-                    ebotval, emuval, tkval, npolval, n1val, n2val, n3val, &
-                    ebotsem, emusem, tksem, npolsem, n1sem, n2sem, n3sem, &
-                    iemxd)
-! **********************************************************************
-! * Generating the energy mesh.                                        *
-! *                                                                    *
-! * Calls the routine EMESHT once for the valence contour and once for *
-! * the semicore contour.                                              *
-! * In the semicore range, -NPOLSEM is used to create a rectangular    *
-! * contour.                                                           *
-! *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
-! **********************************************************************
-    integer, intent(in) :: iemxd
-    double complex, intent(out) :: ez(iemxd), df(iemxd)
-    double precision, intent(in) :: efermi
-    double precision, intent(in) :: ebotsem, emusem, tksem
-    integer, intent(in) :: npolsem, n1sem, n2sem, n3sem
-    double precision, intent(in) :: ebotval, emuval, tkval
-    integer, intent(in) :: npolval, n1val, n2val, n3val
-    integer, intent(out) :: iesemicore, ieboth
-    
-    integer :: ievalence
-    character(len=*), parameter :: F99001="(7x,'* ',a,/,7x,20(1h-),/)"
-
-    assert(max(0, npolval) + n1val + n2val + n3val + n1sem + n2sem + n3sem <= iemxd)
-    
-    write(6,'(/,79(1h=))')
-    write(6,'(20x,a)') 'EPATHTB: generates a complex E contour'
-    write(6,'(79(1h=),/)')
-
-    iesemicore = 0 
-    if (n1sem + n2sem + n3sem > 0) then
-      write(6, fmt=F99001) 'semi-core contour'
-      call emesht(ez, df, iesemicore, ebotsem, emusem, efermi, tksem, -npolsem, n1sem, n2sem, n3sem, iemxd)
-      write(6, fmt=F99001) 'valence contour'
-    endif ! semi
-    call emesht(ez(iesemicore+1:), df(iesemicore+1:), ievalence, ebotval, emuval, efermi, tkval, npolval, n1val, n2val, n3val, iemxd-iesemicore)
-
-    ieboth = iesemicore + ievalence
-
-  endsubroutine ! epathtb
   
 endmodule ! EnergyMeshHelpers_mod

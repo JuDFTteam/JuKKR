@@ -163,7 +163,7 @@ program KKRnano
     num_local_atoms = getNumLocalAtoms(calc_data)
 
     call create(emesh, dims%iemxd) ! createEnergyMesh
-    call load(emesh) ! every process does this!!!
+    call load(emesh, filename='energy_mesh.0') ! every process does this!!!
 
     call outTime(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
 
@@ -298,7 +298,7 @@ program KKRnano
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
-        call store(emesh)
+        call store(emesh, filename='energy_mesh')
 
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))

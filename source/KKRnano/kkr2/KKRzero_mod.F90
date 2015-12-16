@@ -196,26 +196,6 @@ module KKRzero_mod
     call init(emesh, efermi, params%emin, params%emax, params%tempr, params%npol, params%npnt1, params%npnt2, params%npnt3, &
                     params%ebotsemi, params%emusemi, params%n1semi, params%n2semi, params%n3semi, params%fsemicore)
     call update(emesh)
-!       write(67) ielast, ez, wez, params%emin, params%emax
-!       write(67) params%npol, params%tempr, params%npnt1, params%npnt2, params%npnt3
-!       write(67) efermi
-!       write(67) iesemicore, params%fsemicore, params%ebotsemi
-!       write(67) params%emusemi
-!       write(67) params%n1semi, params%n2semi, params%n3semi
-    
-! --> set up energy contour
-!     iesemicore = 0
-    ! epathtb calls emesht both for the semicore contour and the valence contour
-!     call epathtb(ez,dez,efermi,ielast,iesemicore, &
-!                 params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
-!                 params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
-!                 dims%iemxd)
-!     do ie = 1, ielast
-!       wez(ie) = -2.d0/pi*dez(ie)
-!       if (ie <= iesemicore) wez(ie) = wez(ie)*params%fsemicore
-!     enddo ! ie
-
-
 
 ! ================================================ deal with the lattice
 
@@ -253,7 +233,7 @@ module KKRzero_mod
       ist = writeInputParamsToFile(params, 'input.unf')
       call writeMain2Arrays(arrays, 'arrays.unf')
 
-      call store(emesh)
+      call store(emesh, filename='energy_mesh.0')
         
     else  ! checkmode == 0
       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
