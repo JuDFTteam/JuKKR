@@ -104,7 +104,6 @@ module BrillouinZone_mod
     logical :: newkp, oldkp
     double precision :: wxyz(0:3), volbz, newvolbz
     double precision, allocatable :: kwxyz(:,:) !< dim(0:3,product(nbxyz(1:3)))
-!   logical, external :: test
 
 ! --> set number of different k-meshes 
     maxmesh = 1
@@ -120,10 +119,7 @@ module BrillouinZone_mod
       kmesh(1:2) = maxmesh
     endif ! variable mesh
 
-    if (maxmesh > maxmshd) then
-      write(6, fmt='(a,i0,9a)') 'Dimension ERROR: Please increase hard limit MAXMSHD to ',maxmesh,' in ',__FILE__
-      stop __FILE__
-    endif
+    if (maxmesh > maxmshd) die_here("Dimension ERROR: Please increase hard limit MAXMSHD to"+maxmesh)
 
     write(6,'(79(1h=))')
     write(6, fmt="(12x,' BZKMESH : creating k-mesh,',' write to file kpoints')")

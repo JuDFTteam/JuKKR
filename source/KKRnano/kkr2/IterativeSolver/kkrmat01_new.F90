@@ -26,7 +26,7 @@ module kkrmat_new_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, NOFKS, VOLCUB, GS, tmatLL, alat, nsymat, RR, &
+  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, nofks, volcub, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, trunc2atom_index, communicator, iguess_data)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -46,8 +46,8 @@ module kkrmat_new_mod
     class(BCPOperator), intent(inout) :: preconditioner
     
     double precision, intent(in) :: Bzkp(:,:) !< list of k-points
-    integer, intent(in) :: NOFKS !< number of k-points
-    double precision, intent(in) :: VOLCUB(:) !< k-point weights
+    integer, intent(in) :: nofks !< number of k-points
+    double precision, intent(in) :: volcub(:) !< k-point weights
 
     double complex, intent(out) ::  GS(:,:,:,:) ! (lmmaxd,lmmaxd,nsymat,num_local_atoms)
     double complex, intent(inout) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
@@ -96,7 +96,7 @@ module kkrmat_new_mod
     call solver%reset_stats()
 
     !==============================================================================
-    do k_point_index = 1, NOFKS ! K-POINT-LOOP
+    do k_point_index = 1, nofks ! K-POINT-LOOP
     !==============================================================================
 
       WRITELOG(4, *) "k-point ", k_point_index
@@ -115,12 +115,12 @@ module kkrmat_new_mod
 
       ! ----------- Integrate Scattering Path operator over k-points --> GS -----
       ! Note: here k-integration only in irreducible wedge
-      call greenKSummation(G_diag, GS, VOLCUB(k_point_index), num_local_atoms, nsymat, lmmaxd)
+      call greenKSummation(G_diag, GS, volcub(k_point_index), num_local_atoms, nsymat, lmmaxd)
       ! -------------------------------------------------------------------------
 
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
-        call KKRJIJ(Bzkp(:,k_point_index), VOLCUB(k_point_index), nsymat, naez, ms%atom_indices(1), &
+        call KKRJIJ(Bzkp(:,k_point_index), volcub(k_point_index), nsymat, naez, ms%atom_indices(1), &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
                     ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
@@ -130,7 +130,7 @@ module kkrmat_new_mod
       enddo ! ilocal
 
     !==============================================================================
-    enddo ! k_point_index = 1, NOFKS
+    enddo ! k_point_index = 1, nofks
     !==============================================================================
 
     

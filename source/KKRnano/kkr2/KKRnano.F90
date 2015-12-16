@@ -39,6 +39,7 @@ program KKRnano
 
   use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
   use CalculationData_mod, only: getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal
+  use BrillouinZoneMesh_mod, only: BrillouinZoneMesh
   
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
@@ -50,21 +51,22 @@ program KKRnano
   type(TimerMpi) :: iteration_timer
   type(EBalanceHandler) :: ebalance_handler
 
-  integer :: ITER, I1, ilocal, num_local_atoms, flag
+  integer :: ITER, I1, ilocal, num_local_atoms, flag, ios, ilen
 
   type(KKRnanoParallel) :: my_mpi
 
-  type(EnergyMesh), target     :: emesh
-  type(Main2Arrays), target    :: arrays
-  type(DimParams), target      :: dims
-  type(InputParams)            :: params
+  type(EnergyMesh)  :: emesh
+  type(Main2Arrays) :: arrays
+  type(DimParams)   :: dims
+  type(InputParams) :: params
 
-  type(BasisAtom), pointer      :: atomdata
-  type(LDAUData), pointer       :: ldau_data
+  type(BasisAtom), pointer :: atomdata
+  type(LDAUData), pointer  :: ldau_data
+  
+  type(BrillouinZoneMesh) :: kmesh(8)
   
   external :: MPI_Init
   character(len=16)              :: arg
-  integer                        :: ios, ilen
   
   call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
