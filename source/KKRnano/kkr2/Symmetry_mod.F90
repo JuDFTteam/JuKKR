@@ -42,9 +42,7 @@ module Symmetry_mod
     
     double precision :: r(3,4), rotrbas(3,naezd), bravais1(3,3)
     integer :: i, j, isym, i0, ia
-!   double precision :: mdotmp, mvecq(3,naezd), mvecqp(3,naezd)
     double precision :: mrotr(3,3), symdet, summdotmp
-!   double precision :: stet
     character(len=10) :: name(64)
     logical :: llatbas, lbulk
 
@@ -53,17 +51,16 @@ module Symmetry_mod
     nsym = 0
     bravais1(1:3,1:3) = bravais(1:3,1:3)
     
-!     check for surface mode. if so, set bravais1(3,3) very large, so
-!     that only the in-plane symmetries are found. not checked, be careful of z--> -z!
+!   check for surface mode. if so, set bravais1(3,3) very large, so that only the in-plane symmetries are found. not checked, be careful of z--> -z!
     lbulk = .true.
-!     now check the bravais vectors if they have a z component 
+!   now check the bravais vectors if they have a z component 
     if (all(bravais(1:3,3) == 0.d0)) lbulk = .false.
-!     
+
     do isym = 1, 64
 !
-!--------------------------------- store rotation matrix
+!--------------------------------- load rotation matrix
 !
-      mrotr(1:3,1:3) = rotmat(1:3,1:3,isym)
+      mrotr(:,:) = rotmat(1:3,1:3,isym)
       summdotmp = 0.d0
       symdet = ddet33(mrotr)
 !
@@ -75,7 +72,7 @@ module Symmetry_mod
       if (lbulk .or. rotmat(3,3,isym) == 1.d0) then 
 !     do rotation only in case bulk or if slab and z axis is restored..  
           
-        do i = 1, 3            ! loop on bravais vectors
+        do i = 1, 3           ! loop on bravais vectors
           do j = 1, 3         ! loop on coordinates
             r(j,i) = rotmat(j,1,isym)*bravais1(1,i) + rotmat(j,2,isym)*bravais1(2,i) + rotmat(j,3,isym)*bravais1(3,i)
           enddo ! j
@@ -87,7 +84,7 @@ module Symmetry_mod
 !     if r.q = integer (q reciprocal lattice vector)
 !     
         llatbas = .true.
-        do ia = 1, nbasis      ! loop on basis atoms
+        do ia = 1, nbasis     ! loop on basis atoms
           do j = 1, 3         ! loop on coordinates
             rotrbas(j,ia) = rotmat(j,1,isym)*rbasis(1,ia) + rotmat(j,2,isym)*rbasis(2,ia) + rotmat(j,3,isym)*rbasis(3,ia)
             rotrbas(j,ia) = rotrbas(j,ia) - rbasis(j,ia)
@@ -113,6 +110,7 @@ module Symmetry_mod
           isymindex(nsym) = isym
         endif ! llatbas
       endif ! (lbulk .or. (rotmat(3,3,isym) == 1))
+      
     enddo ! isym = 1, nmatd
 !     nsym symmetries were found
 !     the isymindex array has the numbers of the symmetries found
@@ -133,8 +131,8 @@ module Symmetry_mod
       write(6, fmt="(8x,5(a10,2x))") (name(j),j=(i-1)*5+1,(i-1)*5+isym)
     enddo ! i
     write(6, fmt="(8x,60(1h-),/)")
-    
-  endsubroutine findgroup
+
+  endsubroutine ! findgroup
   
   
   
@@ -415,7 +413,7 @@ module Symmetry_mod
 
     call taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint)
 
-  endsubroutine symtaumat
+  endsubroutine ! symtaumat
   
   subroutine taustruct(drot, nsym, nkm, nq, nqmax, nkmmax, iprint)
 !   ********************************************************************
@@ -504,7 +502,7 @@ module Symmetry_mod
       warn(6, "complex TAU weights found, this may occur for rotated magnetic moments (relevant only for tetrahedron BZ-integration).")
     endif ! imweight nonzero
 
-  endsubroutine taustruct
+  endsubroutine ! taustruct
  
   
   
@@ -714,7 +712,7 @@ module Symmetry_mod
       rotname(56+is) = 'I'//rotname(48+is) 
     enddo ! is
       
-  endsubroutine pointgrp
+  endsubroutine ! pointgrp
   
   
   
@@ -809,7 +807,7 @@ module Symmetry_mod
       off = off + nmue
     enddo ! k
 
-  endsubroutine calcrotmat
+  endsubroutine ! calcrotmat
 
   
   subroutine errortrap(routine, k, istop)
@@ -848,7 +846,7 @@ module Symmetry_mod
       warn(6, " in subroutine"+routine-", message=''"-text-"''.")
     endif
 
-  endsubroutine errortrap
+  endsubroutine ! errortrap
   
   
   logical function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
@@ -893,7 +891,7 @@ module Symmetry_mod
     elseif (j == 3) then
       checkrmat = equal(rmat(3,3), co2)
     endif
-  endfunction checkrmat
+  endfunction ! checkrmat
   
   
   logical function latvec(n, qlat, vec) 
@@ -923,6 +921,6 @@ module Symmetry_mod
       enddo ! m
     enddo ! i
     latvec = .true.
-  endfunction latvec
+  endfunction ! latvec
   
-endmodule Symmetry_mod      
+endmodule ! Symmetry_mod      

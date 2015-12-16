@@ -20,33 +20,34 @@ module Main2Arrays_mod
   implicit none
   private
   public :: Main2Arrays, create, destroy
-  public :: createMain2Arrays, destroyMain2Arrays ! deprecated
+  public :: createMain2Arrays!, destroyMain2Arrays ! deprecated
   public :: readMain2Arrays, writeMain2Arrays
 
   type Main2Arrays
     integer :: nsymat
-    integer :: maxmesh
-    integer :: iemxd
     integer :: lmmaxd
-    integer :: naez
-    integer :: kpoibz
-    integer :: maxmshd
-    double precision :: bravais(3,3)
     integer :: isymindex(48)
-    double complex, allocatable :: dsymll(:,:,:)  !< tau symmetry matrices
-    double precision, allocatable :: rbasis(:,:)  !< basis atom positions
+    double complex,   allocatable :: dsymll(:,:,:)  !< tau symmetry matrices
     
+    integer :: naez
+    double precision :: bravais(3,3)
+    double precision, allocatable :: rbasis(:,:)  !< basis atom positions
+    double precision, allocatable :: zat(:)  !< atomic numbers
+    
+    integer :: kpoibz
+    integer :: maxmesh
+    integer :: maxmshd
     double precision, allocatable :: bzkp(:,:,:)  !< kpoints for each mesh
     double precision, allocatable :: volcub(:,:)  !< kpoint weights
     double precision, allocatable :: volbz(:)     !< bz volume?
-    integer, allocatable :: nofks(:) !< number of k points for each mesh
+    integer,          allocatable :: nofks(:)     !< number of k points for each mesh
     
-    integer, allocatable :: kmesh(:) !< mapping e-point to k-mesh
-    
-    double precision, allocatable :: zat(:)  !< atomic numbers
+    integer :: iemxd
+    integer, allocatable :: kmesh(:) !< mapping of e-points to k-meshes
+
     double precision :: vref !< repulsive screening pot. strength
   endtype ! Main2Arrays
-  
+
   interface create
     module procedure createMain2Arrays
   endinterface
@@ -101,14 +102,15 @@ module Main2Arrays_mod
     self%maxmshd = maxmshd
 
     ALLOCATECHECK(self%dsymll(lmmaxd,lmmaxd,48))
-    ALLOCATECHECK(self%rbasis(3,naez))
     ALLOCATECHECK(self%bzkp(3,kpoibz,maxmshd))
     ALLOCATECHECK(self%volcub(kpoibz,maxmshd))
     ALLOCATECHECK(self%volbz(maxmshd))
     ALLOCATECHECK(self%kmesh(iemxd))
     ALLOCATECHECK(self%nofks(maxmshd))
-    ALLOCATECHECK(self%zat(naez))
 
+    ALLOCATECHECK(self%rbasis(3,naez))
+    ALLOCATECHECK(self%zat(naez))
+    
     nan = ieee_value(nan, ieee_signaling_nan)
     self%dsymll = nan
     self%rbasis = nan

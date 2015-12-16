@@ -8,9 +8,9 @@ module DimParams_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: DimParams, create, destroy
-  public :: createDimParams, destroyDimParams ! deprecated
-  public :: writeDimParams, createDimParamsFromFile
+  public :: DimParams, parse, load, store, destroy
+! public :: createDimParams!, destroyDimParams ! deprecated
+! public :: writeDimParams, createDimParamsFromFile
 
   type DimParams
     integer :: nsymaxd
@@ -51,8 +51,16 @@ module DimParams_mod
   endtype ! DimParams
 
   
-  interface create
-    module procedure createDimParams
+  interface load
+    module procedure createDimParamsFromDisk
+  endinterface
+
+  interface parse
+    module procedure createDimParamsFromFile
+  endinterface
+
+  interface store
+    module procedure writeDimParams
   endinterface
   
   interface destroy
@@ -80,30 +88,31 @@ module DimParams_mod
     self%EKMD = 0
 
     call createConfigReader(cr)
-    if (parseFile(cr, filename) /= 0) die_here("parsing file"+filename+"failed!")
-
-    ! these parameters are not optional (so far)
-    if (getValue(cr, "NAEZD",   self%naez) /= 0)      die_here("did not find in NAEZD file"+filename)
-    if (getValue(cr, "IRNSD",   self%irnsd) /= 0)     die_here("did not find in IRNSD file"+filename)
-    if (getValue(cr, "IRMD",    self%irmd) /= 0)      die_here("did not find in IRMD file"+filename)
-    if (getValue(cr, "IRID",    self%irid) /= 0)      die_here("did not find in IRID file"+filename)
-    ! optionals
-    if (getValue(cr, "ITDBRYD", self%itdbryd, def=30) > 0)  die_here("did not find in ITDBRYD file"+filename) ! this can be moved to input params
-    if (getValue(cr, "IGUESSD", self%iguessd, def=0) > 0)   die_here("did not find in IGUESSD file"+filename) ! this var has acutally become a switch (0 or 1)
     
-    if (getValue(cr, "KPOIBZ",  self%kpoibz, def=1024) > 0) die_here("did not find in KPOIBZ file"+filename) ! todo: switch to dynamic allocation for kpoints
-    if (getValue(cr, "NXIJD",   self%nxijd, def=1) > 0)     die_here("did not find in NXIJD file"+filename) ! todo: switch to dynamic allocation in Jij module
-    if (getValue(cr, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("did not find in LMAXD file"+filename)
-    if (getValue(cr, "NSPIND",  self%nspind, def=1) > 0)    die_here("did not find in NSPIND file"+filename)
-    if (getValue(cr, "LLY",     self%lly, def=0) > 0)       die_here("did not find in LLY file"+filename)
-    if (getValue(cr, "SMPID",   self%smpid, def=1) > 0)     die_here("did not find in SMPID file"+filename)
-    if (getValue(cr, "EMPID",   self%empid, def=1) > 0)     die_here("did not find in EMPID file"+filename)
-    if (getValue(cr, "NTHRDS",  self%nthrds, def=0) > 0)    die_here("did not find in NTHRDS file"+filename) ! 0:automatically use environment variable OMP_NUM_THREADS
-    if (getValue(cr, "BCPD",    self%bcpd, def=0) > 0)      die_here("did not find in BCPD file"+filename)
-    if (getValue(cr, "NATBLD",  self%natbld, def=4) > 0)    die_here("did not find in NATBLD file"+filename)
-    if (getValue(cr, "XDIM",    self%xdim, def=1) > 0)      die_here("did not find in XDIM file"+filename)
-    if (getValue(cr, "YDIM",    self%ydim, def=1) > 0)      die_here("did not find in YDIM file"+filename)
-    if (getValue(cr, "ZDIM",    self%zdim, def=1) > 0)      die_here("did not find in ZDIM file"+filename)
+    if (parseFile(cr, filename) /= 0) warn(6, "parsing file"+filename+"failed, assume default values!")
+
+    ! all parameters are optional, getValue will return positive if an error occured
+    if (getValue(cr, "NAEZD",   self%naez, def=0) > 0)      die_here("unable to read NAEZD in file"+filename) ! 0:auto
+    if (getValue(cr, "IRNSD",   self%irnsd, def=208) > 0)   die_here("unable to read IRNSD in file"+filename)
+    if (getValue(cr, "IRMD",    self%irmd, def=484) > 0)    die_here("unable to read IRMD in file"+filename)
+    if (getValue(cr, "IRID",    self%irid, def=135) > 0)    die_here("unable to read IRID in file"+filename)
+
+    if (getValue(cr, "ITDBRYD", self%itdbryd, def=30) > 0)  die_here("unable to read ITDBRYD in file"+filename) ! this can be moved to input params
+    if (getValue(cr, "IGUESSD", self%iguessd, def=0) > 0)   die_here("unable to read IGUESSD in file"+filename) ! this var has acutally become a switch (0 or 1)
+    
+    if (getValue(cr, "KPOIBZ",  self%kpoibz, def=1024) > 0) die_here("unable to read KPOIBZ in file"+filename) ! todo: switch to dynamic allocation for kpoints
+    if (getValue(cr, "NXIJD",   self%nxijd, def=1) > 0)     die_here("unable to read NXIJD in file"+filename) ! todo: switch to dynamic allocation in Jij module
+    if (getValue(cr, "LMAXD",   self%lmaxd, def=3) > 0)     die_here("unable to read LMAXD in file"+filename)
+    if (getValue(cr, "NSPIND",  self%nspind, def=1) > 0)    die_here("unable to read NSPIND in file"+filename)
+    if (getValue(cr, "LLY",     self%lly, def=0) > 0)       die_here("unable to read LLY in file"+filename)
+    if (getValue(cr, "SMPID",   self%smpid, def=1) > 0)     die_here("unable to read SMPID in file"+filename)
+    if (getValue(cr, "EMPID",   self%empid, def=1) > 0)     die_here("unable to read EMPID in file"+filename)
+    if (getValue(cr, "NTHRDS",  self%nthrds, def=0) > 0)    die_here("unable to read NTHRDS in file"+filename) ! 0:automatically use environment variable OMP_NUM_THREADS
+    if (getValue(cr, "BCPD",    self%bcpd, def=0) > 0)      die_here("unable to read BCPD in file"+filename)
+    if (getValue(cr, "NATBLD",  self%natbld, def=4) > 0)    die_here("unable to read NATBLD in file"+filename)
+    if (getValue(cr, "XDIM",    self%xdim, def=1) > 0)      die_here("unable to read XDIM in file"+filename)
+    if (getValue(cr, "YDIM",    self%ydim, def=1) > 0)      die_here("unable to read YDIM in file"+filename)
+    if (getValue(cr, "ZDIM",    self%zdim, def=1) > 0)      die_here("unable to read ZDIM in file"+filename)
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
     if (getValue(cr, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename) ! 0:auto
@@ -123,7 +132,7 @@ module DimParams_mod
   !-----------------------------------------------------------------------------
   !> Constructs a DimParams object from UNFORMATTED inp0.unf file
   !> @param[in,out] self    The DimParams object to construct.
-  subroutine createDimParams(self, filename)
+  subroutine createDimParamsFromDisk(self, filename)
     type(DimParams), intent(inout) :: self
     character(len=*), intent(in) :: filename ! usually 'inp0.unf' binary file
 
@@ -202,7 +211,7 @@ module DimParams_mod
   !-----------------------------------------------------------------------------
   !> Destroys a DimParams object.
   !> @param[in,out] self    The DimParams object to destroy.
-  subroutine destroyDimParams(self)
+  elemental subroutine destroyDimParams(self)
     type(DimParams), intent(inout) :: self
     ! Nothing to do.
   endsubroutine ! destroy
@@ -242,8 +251,6 @@ module DimParams_mod
   !----------------------------------------------------------------------------
   subroutine consistencyCheck01(iemxd, lmaxd, nspind, smpid) ! todo: remove iemxd
     integer, intent(in) :: iemxd, lmaxd, nspind, smpid
-
-!   if (iemxd < 1) stop "main2: IEMXD must be >= 1"
 
     if (lmaxd < 0) stop "main2: LMAXD must be >= 0"
 

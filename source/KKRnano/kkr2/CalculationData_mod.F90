@@ -126,7 +126,6 @@ module CalculationData_mod
     ! FOR USE OF TRUNCATION THESE atoms have to be close together!!!
 
     ASSERT( size(self%atom_ids) == num_local_atoms )
-    ASSERT( mod(dims%naez, atoms_per_proc) == 0 )
 
     do ila = 1, num_local_atoms
       self%atom_ids(ila) = atom_rank * atoms_per_proc + ila

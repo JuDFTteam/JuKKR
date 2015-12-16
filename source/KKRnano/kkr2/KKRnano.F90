@@ -30,7 +30,7 @@ program KKRnano
 
   use wrappers_mod, only: rhocore_wrapper
 
-  use DimParams_mod, only: DimParams, createDimParams, destroy
+  use DimParams_mod, only: DimParams, load, destroy
   use InputParams_mod, only: InputParams, readInputParamsFromFile
   use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, readMain2Arrays, destroy
 
@@ -97,7 +97,7 @@ program KKRnano
 
   ! from here the former kkr2.exe actions are performed
   
-  call createDimParams(dims, 'inp0.unf') ! read dim. parameters from file 'inp0.unf'
+  call load(dims, 'inp0.unf') ! read dimension parameters from file 'inp0.unf'
 
   call createKKRnanoParallel(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
@@ -160,7 +160,8 @@ program KKRnano
 
     ! pre self-consistency preparations
 
-    call create(calc_data, dims, params, arrays, my_mpi)
+    assert(dims%naez > 0) 
+    call create(calc_data, dims, params, arrays, my_mpi) ! createCalculationData
     num_local_atoms = getNumLocalAtoms(calc_data)
 
     call createEnergyMesh(emesh, dims%iemxd)

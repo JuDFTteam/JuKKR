@@ -5,38 +5,16 @@ module BrillouinZone_mod
   private
   
   public :: bzkint0
-
-!   type BrillouinZoneMesh
-!     double precision, allocatable :: kwxyz(:,:) ! (0:3,kpoibz)
-!   endtype
-!   
-!   interface create
-!     module procedure createBrillouinZoneMesh
-!   endinterface
-!   
-!   interface destroy
-!     module procedure destroyBrillouinZoneMesh
-!   endinterface
-  
-!   subroutine createBrillouinZoneMesh(self)
-!     type(BrillouinZoneMesh), intent(inout) :: self
-!   
-!   endsubroutine
-!   
-!   elemental subroutine destroyBrillouinZoneMesh(self)
-!     type(BrillouinZoneMesh), intent(inout) :: self
-!     integer :: ist
-!     deallocate(self%kp, stat=ist) ! ignore status
-!   endsubroutine
   
   integer, parameter :: maxmshd = 8
   
   contains
+
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
                      dsymll, intervxyz, ielast, ez, kmesh, maxmesh, lmax, iemxd, krel, ekmd, nowrite)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat      
-                     
+
     integer, parameter :: nsymaxd=48
 
     integer, intent(out) :: ekmd
@@ -49,7 +27,7 @@ module BrillouinZone_mod
     integer, intent(out) :: isymindex(nsymaxd)
     integer, intent(out) :: kmesh(iemxd)
     logical, intent(in) :: nowrite
-    
+
 !!  logical, external :: test
 #define test(STRING) .false.
     
@@ -69,34 +47,29 @@ module BrillouinZone_mod
     lirr = .true.
     iprint = 0 ; if (test('TAUSTRUC')) iprint = 2
 
-! --> test: full bz integration
+! --> test: full Brillouin zone integration
     if (test('fullBZ  ')) then
-      nsymat = 1
+      nsymat = 1 ! limit the number of applied symmetries to the 1st one (which is always unity)
       lirr = .false.
       write(6,'(8x,2a,/)') 'Test option < fullBZ > : overriding NSYMAT,', ' generate full BZ k-mesh'
-    endif ! full BZ
+    endif ! full Brillouin zone
 
-! --> generate bz k-mesh
+! --> generate Brillouin zone k-meshes
     call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite)
 
     call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
 
 !   now dsymll hold nsymat symmetrization matrices
   endsubroutine ! bzkint0
-  
-  
-      
-
       
       
   subroutine bzkmesh(nbxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite)
-    integer, intent(in) :: iemxd
-    integer, intent(in) :: nbxyz(3), nsymat, iprint, ielast
+    integer, intent(in) :: iemxd, nbxyz(3), nsymat, iprint, ielast
     logical, intent(in) :: lirr, nowrite
     double precision, intent(in) :: bravais(3,3), recbv(3,3), rsymat(64,3,3)
     integer, intent(in) :: isymindex(:) !< dim(nsymaxd)
     double complex, intent(in) :: ez(iemxd) !< energy contour points
-    
+
     integer, intent(out) :: maxmesh, ekmd
     integer, intent(out) :: kmesh(iemxd) !< mapping of k-meshes and energy contour points
 
@@ -246,7 +219,7 @@ module BrillouinZone_mod
     integer, intent(out) :: nkp
     double precision, intent(out) :: volbz, kwxyz(0:,1:) ! (0:3,1:max...)
     
-    external :: dgemv
+    external :: dgemv ! BLAS
     double precision :: bginv(3,3), bgmat(3,3), bgp(3,3), bv(3), cf(3), u(3,3,48), gq(3,3), v1
     integer :: nbgp(3,3,48), mkxyz(3), ind1(3), ind2(3)
     integer :: i, j, jx, jy, jz, nsym, iws, iwt, is, nk, n, ndim, isym
@@ -401,34 +374,34 @@ module BrillouinZone_mod
     double precision, intent(inout) ::  a(M,M)
     double precision, intent(out) :: ainv(M,M)
 
-    integer :: icol, l, ll
+    integer :: ic, l, ll
     double precision :: t, t1
 
     ainv(1,1) = 0.d0
-    do icol = 1, n ! scan columns
-      t1 = 1.d0/a(icol,icol) ! make a(icol,icol) = 1
-      do l = icol+1, n
-        a(icol,l) = a(icol,l)*t1
+    do ic = 1, n ! scan columns
+      t1 = 1.d0/a(ic,ic) ! make a(ic,ic) = 1
+      do l = ic+1, n
+        a(ic,l) = a(ic,l)*t1
       enddo ! l
 
-      do l = 1, icol-1
-        ainv(icol,l) = ainv(icol,l)*t1
+      do l = 1, ic-1
+        ainv(ic,l) = ainv(ic,l)*t1
       enddo ! l
-      ainv(icol,icol) = t1
+      ainv(ic,ic) = t1
                                 
-      do ll = 1, n ! make a(ll,icol) = 0 for ll /= icol
-        if (ll /= icol) then
-          t = a(ll,icol)
-          do l = icol+1, n
-            a(ll,l) = a(ll,l) - a(icol,l)*t
+      do ll = 1, n ! make a(ll,ic) = 0 for ll /= ic
+        if (ll /= ic) then
+          t = a(ll,ic)
+          do l = ic+1, n
+            a(ll,l) = a(ll,l) - a(ic,l)*t
           enddo ! l
-          do l = 1, icol-1
-            ainv(ll,l) = ainv(ll,l) - ainv(icol,l)*t
+          do l = 1, ic-1
+            ainv(ll,l) = ainv(ll,l) - ainv(ic,l)*t
           enddo ! l
-          ainv(ll,icol) = -t1*t
-        endif ! ll /= icol
+          ainv(ll,ic) = -t1*t
+        endif ! ll /= ic
       enddo ! ll
-    enddo ! icol
+    enddo ! ic
 
   endsubroutine ! rinvgj
   

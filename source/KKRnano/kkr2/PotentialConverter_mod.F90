@@ -13,7 +13,7 @@ module PotentialConverter_mod
   contains
   
   subroutine kkrvform()
-    use DimParams_mod, only: DimParams, createDimParams, destroyDimParams
+    use DimParams_mod, only: DimParams, load, destroy
     use BasisAtom_mod, only: BasisAtom, createBasisAtomFromFile, associateBasisAtomMesh, destroyBasisAtom
     use RadialMeshData_mod, only: RadialMeshData, createRadialMeshDataFromFile, repr_RadialMeshData, destroyRadialMeshData
     use PotentialData_mod, only: repr_PotentialData
@@ -31,7 +31,7 @@ module PotentialConverter_mod
     efermi = getFermiEnergy()
     call getStuffFromInputCard(alat, kxc)
 
-    call createDimParams(dims, 'inp0.unf') ! read dim. parameters from 'inp0.unf'
+    call load(dims, 'inp0.unf') ! read dim. parameters from 'inp0.unf'
 
     do iatom = 1, dims%naez
 
@@ -56,9 +56,9 @@ module PotentialConverter_mod
       call destroyRadialMeshData(mesh)
     enddo ! iatom
 
-    call destroyDimParams(dims)
+    call destroy(dims)
 
-  endsubroutine kkrvform
+  endsubroutine ! kkrvform
 
 
   !------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ module PotentialConverter_mod
               atomdata%core%ECORE,atomdata%core%LCORE(:,1:NSPIND),atomdata%core%NCORE(1:NSPIND),atomdata%Z_nuclear,atomdata%core%ITITLE(:,1:NSPIND), &
               atomdata%atom_index, mesh%irmd, irnsd)
 #undef mesh
-  endsubroutine
+  endsubroutine ! write
 
   !----------------------------------------------------------------------------
   !> get Fermi energy from file 'energy_mesh'

@@ -24,7 +24,7 @@ l cartesian .TRUE.
 d rcutjij 2.30
 i kte 1
 i imix 0
-iv bzdivide 3
+iv bzdivide 3 8
 i npol
 i npnt1
 i npnt2
@@ -42,13 +42,11 @@ dv lcutoff_radii 9 0.d0
 ### solver mode: 3=iterative(default), 4=direct
 i solver 3
 ### semicore contour
-i use_semicore 0
 d ebotsemi 0.0
-d emusemi 0.0
-i n1semi 0
-i n2semi 0
-i n3semi 0
+d emusemi  0.0
 d fsemicore 1.0
+iv npntsemi 3 0
+### single site solver
 i volterra 0
 ### other
 d target_rms 1.0D-8
@@ -60,3 +58,5 @@ i write_shapes 0
 d mt_zero_shift 0.0
 ### DEBUG: replace calculated charge densities with Morgan test charge density
 i DEBUG_morgan_electrostatics 0
+### repulsive reference potential
+d vref 8.d0

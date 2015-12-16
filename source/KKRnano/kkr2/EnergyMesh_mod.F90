@@ -13,36 +13,22 @@ module EnergyMesh_mod
   implicit none
   private
   public :: EnergyMesh, create, destroy
-  public :: createEnergyMesh, destroyEnergyMesh ! deprecated
+  public :: createEnergyMesh!, destroyEnergyMesh ! deprecated
   public :: readEnergyMesh, readEnergyMeshSemi, writeEnergyMesh, writeEnergyMeshSemi
   public :: broadcastEnergyMesh_com, updateEnergyMesh, updateEnergyMeshSemi
   
   type EnergyMesh
 
     ! valence contour parameters
-    double precision :: E1
-    double precision :: E2
-    double precision :: EFERMI
-    double complex, allocatable :: EZ(:)
-    integer :: npnt1
-    integer :: npnt2
-    integer :: npnt3
-    integer :: npol
-    double precision :: TK
-    double complex, allocatable :: WEZ(:)
-    double complex, allocatable :: WEZRN(:,:)
-    integer :: ielast
+    double precision :: E1, E2, EFERMI, TK
+    double complex, allocatable :: EZ(:), WEZ(:), WEZRN(:,:)
+    integer :: npnt1, npnt2, npnt3, npol, ielast
 
     ! semicore contour parameters
-    double precision :: EBOTSEMI
-    double precision :: EMUSEMI
-    double precision :: FSEMICORE
-    integer :: IESEMICORE
-    integer :: N1SEMI
-    integer :: N2SEMI
-    integer :: N3SEMI
+    double precision :: EBOTSEMI, EMUSEMI, FSEMICORE
+    integer :: IESEMICORE, N1SEMI, N2SEMI, N3SEMI
 
-  endtype EnergyMesh
+  endtype
   
   interface create
     module procedure createEnergyMesh
@@ -59,7 +45,7 @@ module EnergyMesh_mod
   !> @param[inout] self    The EnergyMesh object to construct.
   !> @param[in]    ielast
   subroutine createEnergyMesh(self, ielast)
-    type (EnergyMesh), intent(inout) :: self
+    type(EnergyMesh), intent(inout) :: self
     integer, intent(in) ::  ielast
 
     integer :: memory_stat
@@ -74,8 +60,8 @@ module EnergyMesh_mod
   !-----------------------------------------------------------------------------
   !> Destroys a EnergyMesh object.
   !> @param[inout] self    The EnergyMesh object to destroy.
-  subroutine destroyEnergyMesh(self)
-    type (EnergyMesh), intent(inout) :: self
+  subroutine destroyEnergyMesh(self) ! cannot be elemental when using IO in allocatecheck
+    type(EnergyMesh), intent(inout) :: self
 
     integer :: memory_stat
 
@@ -89,7 +75,7 @@ module EnergyMesh_mod
   subroutine readEnergyMesh(emesh)
     use EnergyMeshHelpers_mod, only: readEnergyMeshImpl
 
-    type (EnergyMesh), intent(inout) :: emesh
+    type(EnergyMesh), intent(inout) :: emesh
 
     call readEnergyMeshImpl(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
@@ -102,7 +88,7 @@ module EnergyMesh_mod
   subroutine writeEnergyMesh(emesh)
     use EnergyMeshHelpers_mod, only: writeEnergyMeshImpl
 
-    type (EnergyMesh), intent(in) :: emesh
+    type(EnergyMesh), intent(in) :: emesh
 
     call writeEnergyMeshImpl(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
                              emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
@@ -115,7 +101,7 @@ module EnergyMesh_mod
   subroutine updateEnergyMesh(emesh)
     use EnergyMeshHelpers_mod, only: updateEnergyMeshImpl
 
-    type (EnergyMesh), intent(inout) :: emesh
+    type(EnergyMesh), intent(inout) :: emesh
 
     call updateEnergyMeshImpl(emesh%EZ,emesh%WEZ,emesh%IELAST, &
                               emesh%E1,emesh%E2,emesh%TK,emesh%NPOL, &
@@ -129,8 +115,8 @@ module EnergyMesh_mod
     use EnergyMeshHelpers_mod, only: broadcastEnergyMeshImpl_com
     use KKRnanoParallel_mod, only: KKRnanoParallel, getMyActiveCommunicator, getMasterRank
 
-    type (EnergyMesh), intent(inout) :: emesh
-    type (KKRnanoParallel), intent(in) :: my_mpi
+    type(EnergyMesh), intent(inout) :: emesh
+    type(KKRnanoParallel), intent(in) :: my_mpi
 
     call broadcastEnergyMeshImpl_com(getMyActiveCommunicator(my_mpi), getMasterRank(my_mpi), &
          emesh%E1, emesh%E2, emesh%EZ, emesh%IELAST, emesh%WEZ)
@@ -149,7 +135,7 @@ module EnergyMesh_mod
   subroutine readEnergyMeshSemi(emesh)
     use EnergyMeshHelpers_mod, only: readEnergyMeshImplSemi
 
-    type (EnergyMesh), intent(inout) :: emesh
+    type(EnergyMesh), intent(inout) :: emesh
 
     call readEnergyMeshImplSemi(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
                             emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
@@ -165,7 +151,7 @@ module EnergyMesh_mod
   subroutine writeEnergyMeshSemi(emesh)
     use EnergyMeshHelpers_mod, only: writeEnergyMeshImplSemi
 
-    type (EnergyMesh), intent(in) :: emesh
+    type(EnergyMesh), intent(in) :: emesh
 
     call writeEnergyMeshImplSemi(emesh%E1, emesh%E2, emesh%EFERMI, emesh%EZ, &
                              emesh%IELAST, emesh%NPNT1, emesh%NPNT2, emesh%NPNT3, &
@@ -181,7 +167,7 @@ module EnergyMesh_mod
   subroutine updateEnergyMeshSemi(emesh)
     use EnergyMeshHelpers_mod, only: updateEnergyMeshImplSemi
 
-    type (EnergyMesh), intent(inout) :: emesh
+    type(EnergyMesh), intent(inout) :: emesh
 
     call updateEnergyMeshImplSemi(emesh%EZ,emesh%WEZ,emesh%IELAST, &
                               emesh%E1,emesh%E2,emesh%TK,emesh%NPOL, &

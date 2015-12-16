@@ -101,7 +101,7 @@ module KKRzero_mod
 ! ----------------------------------------------------------------------
 
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
-    use DimParams_mod, only: DimParams, createDimParamsFromFile, writeDimParams
+    use DimParams_mod, only: DimParams, parse, store
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
     use BrillouinZone_mod, only: bzkint0
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
@@ -130,7 +130,7 @@ module KKRzero_mod
     double precision, allocatable :: radius_muffin_tin(:), pos(:,:)
 
 !     .. auxillary variables, not passed to kkr2
-    integer :: ie, ierror, iemxd, natoms
+    integer :: ie, ist, iemxd, natoms
     double complex, allocatable :: dez(:) ! needed for emesht
     integer, parameter :: KREL = 0
     logical :: startpot_exists
@@ -140,14 +140,14 @@ module KKRzero_mod
 
 
     if (checkmode /= 0) then 
-!       ierror = getAtomData('pos.xyz', natoms, pos, comm=0)
-!       if (ierror /= 0) warn(6, "getAtomData failed!")
+!       ist = getAtomData('pos.xyz', natoms, pos, comm=0)
+!       if (ist /= 0) warn(6, "getAtomData failed!")
     endif ! checks
     
-    call createDimParamsFromFile(dims, "global.conf")
+    call parse(dims, "global.conf")
 
-    ierror = getInputParamsValues("input.conf", params)
-    if (ierror /= 0) die_here('failed to read "input.conf"!')
+    ist = getInputParamsValues("input.conf", params)
+    if (ist /= 0) die_here('failed to read "input.conf"!')
 
     ! Calculate number of energy points
     if (params%use_semicore == 1) then ! semicore contour is used
@@ -173,21 +173,14 @@ module KKRzero_mod
 
 
     dims%iemxd = iemxd
+    call createMain2Arrays(arrays, dims) ! important: determine IEMXD before creating arrays
 
-    ! important: determine IEMXD before creating arrays
-    call createMain2Arrays(arrays, dims)
-
-!-----------------------------------------------------------------------------
-! Array allocations BEGIN
-!-----------------------------------------------------------------------------
+    call rinputnew99(arrays%rbasis, arrays%zat, dims%naez) ! will modify naez if naez == 0 (auto mode)
+    arrays%naez = dims%naez ! store corrected number of all atoms also in arrays%
+    
     allocate(radius_muffin_tin(dims%naez))
-!-----------------------------------------------------------------------------
-! Array allocations END
-!-----------------------------------------------------------------------------
-
-    call rinputnew99(arrays%rbasis, arrays%naez)
-
-!     in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
+    
+!   in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) then
       call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
     endif ! ldau calculation
@@ -216,7 +209,7 @@ module KKRzero_mod
 ! update fermi energy, adjust energy window according to running options
 
     ielast = iemxd
-    allocate(ez(iemxd), wez(iemxd), dez(iemxd), stat=ierror) ! energy mesh, dez is aux.
+    allocate(ez(iemxd), wez(iemxd), dez(iemxd), stat=ist) ! energy mesh, dez is aux.
 
 ! for non-dos calculation upper energy bound corresponds to fermi energy
 ! bad: params%emax is changed
@@ -275,8 +268,8 @@ module KKRzero_mod
     if (checkmode == 0) then 
       ! write binary files that are needed in the main program
     
-      call writeDimParams(dims, 'inp0.unf')
-      ierror = writeInputParamsToFile(params, 'input.unf')
+      call store(dims, 'inp0.unf')
+      ist = writeInputParamsToFile(params, 'input.unf')
       call writeMain2Arrays(arrays, 'arrays.unf')
 
       ! write start energy mesh
@@ -292,15 +285,13 @@ module KKRzero_mod
         close(67)
         
     else  ! checkmode == 0
-    
       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
     endif ! checkmode == 0
 
-    deallocate(ez, wez, stat=ierror) ! energy mesh
-    deallocate(dez, radius_muffin_tin, stat=ierror) !   auxillary
+    deallocate(dez, ez, wez, stat=ist) ! energy mesh
+    deallocate(radius_muffin_tin, stat=ist) ! auxillary
 
-    if (get_number_of_warnings() > 0) &
-      ierror = show_warning_lines(unit=6)
+    if (get_number_of_warnings() > 0) ist = show_warning_lines(unit=6)
     
   endsubroutine ! main0
 
@@ -335,12 +326,14 @@ module KKRzero_mod
 
   
 !>    Reads atominfo and rbasis files.
-  subroutine rinputnew99(rbasis, naez)
-    double precision, intent(out) :: rbasis(3,*)
-    integer, intent(in) :: naez
+  subroutine rinputnew99(rbasis, zat, naez)
+    double precision, allocatable, intent(inout) :: zat(:) ! (naez)
+    double precision, allocatable, intent(inout) :: rbasis(:,:) ! (3,naez)
+    integer, intent(inout) :: naez !< if naez==0 (auto) it will be modified to the number of atoms
     
-    character(len=9), parameter :: version = "Oct  2015"
-    integer :: i
+    character(len=9), parameter :: version = "Dez  2015"
+    integer :: i, ist
+    double precision :: rdummy(3)
 
 !------------ array set up and definition of input parameter -----------
 
@@ -353,7 +346,7 @@ module KKRzero_mod
 ! | established Juelich 2008                          Version : Jun 2013         |
 ! |                                                                              |
 ! ================================================================================
-      
+
     write(6, fmt="(/80(1h=))") 
     write(6, fmt="('|',78x,'|')") 
     write(6, fmt="('| KKRnano',70x,'|')") 
@@ -363,8 +356,23 @@ module KKRzero_mod
     write(6, fmt="('| established Juelich 2008',26x,'Version : ',a9,8x,'|')") version
     write(6, fmt="('|',78x,'|')") 
     write(6, fmt="(80(1h=))") 
-      
+    
     open(77, file='rbasis', form='formatted', action='read', status='old') ! open input file containing the atomic positions
+    !+ auto modus
+    if (naez < 1) then
+      naez = 0
+        read(unit=77, fmt=*, iostat=ist) rdummy(1:3) ! read  1st line
+      do while (ist == 0)
+        naez = naez + 1
+        read(unit=77, fmt=*, iostat=ist) rdummy(1:3) ! read next line
+      enddo ! while
+      warn(6, "Number of atoms has been determined automatically from 'rbasis' file, NAEZ ="+naez)
+      deallocate(zat, rbasis, stat=ist)
+      allocate(zat(naez), rbasis(3,naez), stat=ist)
+      zat = 0.d0; rbasis = 0.d0
+      rewind(77, iostat=ist) ! set read pointer to the file beginning again
+    endif
+    !- auto modus
     do i = 1, naez
       read(unit=77, fmt=*) rbasis(1:3,i) ! reading atomic positions
     enddo ! i
@@ -499,7 +507,7 @@ module KKRzero_mod
     ! from now on after < scalevec > rbasis are the basis vectors
     ! in units of au/alat in (xyz) reference
     !**********************************************************************
-  endsubroutine scalevec
+  endsubroutine ! scalevec
   
   
 endmodule ! kkr0_mod

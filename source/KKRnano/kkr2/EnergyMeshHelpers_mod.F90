@@ -30,7 +30,7 @@ module EnergyMeshHelpers_mod
     open (67, file='energy_mesh.0', form='unformatted', action='read', status='old')
     read (67) ielast,ez,wez,e1,e2
     read (67) npol,tk,npnt1,npnt2,npnt3
-    ! if (npol == 0) read(67) efermi
+    ! if (npol == 0) &
     read (67) efermi
     close(67)
   endsubroutine ! read
@@ -51,11 +51,11 @@ module EnergyMeshHelpers_mod
     double precision, intent(in) :: tk
     double complex, intent(in) :: wez(:)
 
-    open  (67, file='energy_mesh', form='unformatted', action='write')
+    open (67, file='energy_mesh', form='unformatted', action='write')
     write(67) ielast,ez,wez,e1,e2
     write(67) npol,tk,npnt1,npnt2,npnt3
     write(67) efermi
-    close (67)
+    close(67)
     
   endsubroutine ! write
 
@@ -95,8 +95,8 @@ module EnergyMeshHelpers_mod
   ! VALENCE CONTOUR ONLY!
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from rank 'BCRANK' to all other ranks
-  subroutine broadcastEnergyMeshImpl_com(actvcomm, bcrank, e1, e2, ez, iemxd, wez)
-    integer, intent(in) :: actvcomm
+  subroutine broadcastEnergyMeshImpl_com(comm, bcrank, e1, e2, ez, iemxd, wez)
+    integer, intent(in) :: comm
     integer, intent(in) :: bcrank
     double precision, intent(inout) :: e1
     double precision, intent(inout) :: e2
@@ -107,10 +107,10 @@ module EnergyMeshHelpers_mod
     include 'mpif.h'
     integer :: ierr
 
-    call MPI_Bcast(ez,iemxd,mpi_double_complex, bcrank,actvcomm,ierr)
-    call MPI_Bcast(wez,iemxd,mpi_double_complex, bcrank,actvcomm,ierr)
-    call MPI_Bcast(e1,1,mpi_double_precision, bcrank,actvcomm,ierr)
-    call MPI_Bcast(e2,1,mpi_double_precision, bcrank,actvcomm,ierr)
+    call MPI_Bcast(ez,iemxd,mpi_double_complex, bcrank,comm,ierr)
+    call MPI_Bcast(wez,iemxd,mpi_double_complex, bcrank,comm,ierr)
+    call MPI_Bcast(e1,1,mpi_double_precision, bcrank,comm,ierr)
+    call MPI_Bcast(e2,1,mpi_double_precision, bcrank,comm,ierr)
   endsubroutine ! broadcast
 
 
@@ -146,7 +146,7 @@ module EnergyMeshHelpers_mod
     integer, intent(out) :: n2semi
     integer, intent(out) :: n3semi
 
-    open (67,file='energy_mesh.0',form='unformatted', action='read', status='old')
+    open (67, file='energy_mesh.0', form='unformatted', action='read', status='old')
     read (67) ielast,ez,wez,e1,e2
     read (67) npol,tk,npnt1,npnt2,npnt3
     read (67) efermi
@@ -184,14 +184,14 @@ module EnergyMeshHelpers_mod
     integer, intent(in) :: n2semi
     integer, intent(in) :: n3semi
 
-    open  (67,file='energy_mesh',form='unformatted', action='write')
+    open (67, file='energy_mesh', form='unformatted', action='write')
     write(67) ielast,ez,wez,e1,e2
     write(67) npol,tk,npnt1,npnt2,npnt3
     write(67) efermi
     write(67) iesemicore,fsemicore,ebotsemi
     write(67) emusemi
     write(67) n1semi,n2semi,n3semi
-    close (67)
+    close(67)
     
   endsubroutine ! write
 
@@ -243,9 +243,9 @@ module EnergyMeshHelpers_mod
   ! VALENCE AND SEMICORE CONTOUR!
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from rank 'BCRANK' to all other ranks
-  subroutine broadcastEnergyMeshImplSemi_com(actvcomm, bcrank, e1, e2, ez, iemxd, wez, ebotsemi, emusemi)
+  subroutine broadcastEnergyMeshImplSemi_com(comm, bcrank, e1, e2, ez, iemxd, wez, ebotsemi, emusemi)
     ! valence contour parameters
-    integer, intent(in) :: actvcomm
+    integer, intent(in) :: comm
     integer, intent(in) :: bcrank
     double precision, intent(inout) :: e1
     double precision, intent(inout) :: e2
@@ -260,12 +260,12 @@ module EnergyMeshHelpers_mod
     include 'mpif.h'
     integer :: ierr
 
-    call MPI_Bcast(ez,iemxd,mpi_double_complex, bcrank,actvcomm,ierr)
-    call MPI_Bcast(wez,iemxd,mpi_double_complex, bcrank,actvcomm,ierr)
-    call MPI_Bcast(e1,1,mpi_double_precision, bcrank,actvcomm,ierr)
-    call MPI_Bcast(e2,1,mpi_double_precision, bcrank,actvcomm,ierr)
-    call MPI_Bcast(ebotsemi,1,mpi_double_precision, bcrank,actvcomm,ierr)
-    call MPI_Bcast(emusemi,1,mpi_double_precision, bcrank,actvcomm,ierr)
+    call MPI_Bcast(ez,iemxd,mpi_double_complex, bcrank,comm,ierr)
+    call MPI_Bcast(wez,iemxd,mpi_double_complex, bcrank,comm,ierr)
+    call MPI_Bcast(e1,1,mpi_double_precision, bcrank,comm,ierr)
+    call MPI_Bcast(e2,1,mpi_double_precision, bcrank,comm,ierr)
+    call MPI_Bcast(ebotsemi,1,mpi_double_precision, bcrank,comm,ierr)
+    call MPI_Bcast(emusemi,1,mpi_double_precision, bcrank,comm,ierr)
     
   endsubroutine ! broadcast
 
@@ -587,4 +587,4 @@ module EnergyMeshHelpers_mod
 
   endsubroutine ! epathtb
   
-endmodule EnergyMeshHelpers_mod
+endmodule ! EnergyMeshHelpers_mod
