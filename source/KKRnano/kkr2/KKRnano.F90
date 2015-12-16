@@ -18,9 +18,7 @@ program KKRnano
   use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
   use main2_aux_mod, only: printDoubleLineSep, is_abort_by_rank0, writeIterationTimings
-  use EnergyMesh_mod, only: EnergyMesh, createEnergyMesh, destroy
-  use EnergyMesh_mod, only: readEnergyMesh, broadcastEnergyMesh_com, updateEnergyMesh, writeEnergyMesh
-  use EnergyMesh_mod, only: readEnergyMeshSemi, updateEnergyMeshSemi, writeEnergyMeshSemi
+  use EnergyMesh_mod, only: EnergyMesh, create, destroy, load, store, update, broadcast
 
   use BasisAtom_mod, only: BasisAtom
   use LDAUData_mod, only: LDAUData
@@ -164,14 +162,8 @@ program KKRnano
     call create(calc_data, dims, params, arrays, my_mpi) ! createCalculationData
     num_local_atoms = getNumLocalAtoms(calc_data)
 
-    call createEnergyMesh(emesh, dims%iemxd)
-
-    ! TO DO: Getting rid of the many if-clauses used for semicore contour!
-    if(params%use_semicore == 1) then
-      call readEnergyMeshSemi(emesh) !every process does this!  !!!!
-    else
-      call readEnergyMesh(emesh)  !every process does this!  !!!!
-    endif
+    call create(emesh, dims%iemxd) ! createEnergyMesh
+    call load(emesh) ! every process does this!!!
 
     call outTime(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
 
@@ -301,20 +293,12 @@ program KKRnano
         ! only MASTERRANK updates, other ranks get it broadcasted later
         ! (although other processes could update themselves)
 
-        if (params%use_semicore == 1) then
-          call updateEnergyMeshSemi(emesh)
-        else
-          call updateEnergyMesh(emesh)
-        endif
+        call update(emesh)
 
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
-        if (params%use_semicore == 1) then
-          call writeEnergyMeshSemi(emesh)
-        else
-          call writeEnergyMesh(emesh)
-        endif
+        call store(emesh)
 
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
@@ -323,7 +307,7 @@ program KKRnano
 
       if (is_abort_by_rank0(flag, getMyActiveCommunicator(my_mpi))) exit
 
-      call broadcastEnergyMesh_com(my_mpi, emesh)
+      call broadcast(emesh, getMyActiveCommunicator(my_mpi))
 
     enddo ! ITER ! SC ITERATION LOOP ITER=1, SCFSTEPS
 
@@ -333,8 +317,8 @@ program KKRnano
     if (isMasterRank(my_mpi)) close(2) ! time-info
 
     call destroy(ebalance_handler)
-    call destroy(emesh)
     call destroy(calc_data)
+    call destroy(emesh)
 
   else  ! active Ranks
     !=====================================================================
@@ -346,8 +330,6 @@ program KKRnano
 
   call destroy(arrays)
   call destroy(dims)
-
-
   call destroy(my_mpi) ! Free KKRnano mpi resources
   
 endprogram ! KKRnano

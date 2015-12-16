@@ -12,7 +12,7 @@ module BrillouinZone_mod
 
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
-                     dsymll, intervxyz, ielast, ez, kmesh, maxmesh, lmax, iemxd, krel, ekmd, nowrite)
+                     dsymll, intervxyz, ielast, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, nowrite)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat      
 
     integer, parameter :: nsymaxd=48

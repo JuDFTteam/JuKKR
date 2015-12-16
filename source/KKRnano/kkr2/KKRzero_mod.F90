@@ -108,7 +108,8 @@ module KKRzero_mod
     use Lattice_mod, only: lattix99
     use Constants_mod, only: pi
     use MadelungCalculator_mod, only: testdimlat
-    use EnergyMeshHelpers_mod, only: emesht, epathtb
+!     use EnergyMeshHelpers_mod, only: epathtb
+    use EnergyMesh_mod, only: getEnergyMeshSize, EnergyMesh, create, init, update, store, destroy
     use Startb1_mod, only: startb1_wrapper_new
     
     use PositionReader_mod, only: getAtomData  
@@ -122,22 +123,22 @@ module KKRzero_mod
     double precision :: efermi
     integer :: ielast
     integer :: iesemicore
-    double complex, allocatable :: ez(:)
-    double complex, allocatable :: wez(:)
+!     double complex, allocatable :: ez(:)
+!     double complex, allocatable :: wez(:)
 
     double precision :: recbv(3,3), volume0
 
-    double precision, allocatable :: radius_muffin_tin(:), pos(:,:)
+    double precision, allocatable :: radius_muffin_tin(:)!, pos(:,:)
 
 !     .. auxillary variables, not passed to kkr2
-    integer :: ie, ist, iemxd, natoms
+    integer :: ie, ist!, natoms
     double complex, allocatable :: dez(:) ! needed for emesht
     integer, parameter :: KREL = 0
     logical :: startpot_exists
     type(DimParams)      :: dims
     type(InputParams)    :: params
     type(Main2Arrays)    :: arrays
-
+    type(EnergyMesh)     :: emesh
 
     if (checkmode /= 0) then 
 !       ist = getAtomData('pos.xyz', natoms, pos, comm=0)
@@ -149,41 +150,17 @@ module KKRzero_mod
     ist = getInputParamsValues("input.conf", params)
     if (ist /= 0) die_here('failed to read "input.conf"!')
 
-    ! Calculate number of energy points
-    if (params%use_semicore == 1) then ! semicore contour is used
 
-      write(*,*) "WARNING: Using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing"
-      warn(6, "using semicore contour because use_semicore=1 in input.conf. This feature is still subject to beta testing")
-      
-      if (params%npol /= 0) then
-        iemxd = params%npol + params%npnt1 + params%npnt2 + params%npnt3 + params%n1semi + params%n2semi + params%n3semi
-      else ! dos-calculation
-        iemxd = params%npnt2 + params%n2semi
-      endif
+    dims%iemxd = getEnergyMeshSize(params%npol, params%npnt1, params%npnt2, params%npnt3, params%n1semi, params%n2semi, params%n3semi)
+    call create(emesh, dims%iemxd)
     
-    else ! semicore contour is not used
-
-      if (params%npol /= 0) then
-        iemxd = params%npol + params%npnt1 + params%npnt2 + params%npnt3
-      else ! dos-calculation
-        iemxd = params%npnt2
-      endif
-
-    endif ! semicore
-
-
-    dims%iemxd = iemxd
     call createMain2Arrays(arrays, dims) ! important: determine IEMXD before creating arrays
 
     call rinputnew99(arrays%rbasis, arrays%zat, dims%naez) ! will modify naez if naez == 0 (auto mode)
     arrays%naez = dims%naez ! store corrected number of all atoms also in arrays%
     
-    allocate(radius_muffin_tin(dims%naez))
-    
 !   in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
-    if (params%LDAU) then
-      call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
-    endif ! ldau calculation
+    if (params%LDAU) call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
 
 !===================================================================
 
@@ -193,7 +170,9 @@ module KKRzero_mod
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
+      allocate(radius_muffin_tin(dims%naez))
       call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, radius_muffin_tin, dims%naez, nowrite=(checkmode /= 0))
+      deallocate(radius_muffin_tin, stat=ist) ! auxillary
 
     else
       ! no formatted potential provided
@@ -208,39 +187,41 @@ module KKRzero_mod
 ! ----------------------------------------------------------------------
 ! update fermi energy, adjust energy window according to running options
 
-    ielast = iemxd
-    allocate(ez(iemxd), wez(iemxd), dez(iemxd), stat=ist) ! energy mesh, dez is aux.
+    ielast = dims%iemxd
 
 ! for non-dos calculation upper energy bound corresponds to fermi energy
 ! bad: params%emax is changed
     if (params%npol /= 0) params%emax = efermi
 
+    call init(emesh, efermi, params%emin, params%emax, params%tempr, params%npol, params%npnt1, params%npnt2, params%npnt3, &
+                    params%ebotsemi, params%emusemi, params%n1semi, params%n2semi, params%n3semi, params%fsemicore)
+    call update(emesh)
+!       write(67) ielast, ez, wez, params%emin, params%emax
+!       write(67) params%npol, params%tempr, params%npnt1, params%npnt2, params%npnt3
+!       write(67) efermi
+!       write(67) iesemicore, params%fsemicore, params%ebotsemi
+!       write(67) params%emusemi
+!       write(67) params%n1semi, params%n2semi, params%n3semi
+    
 ! --> set up energy contour
-! --> set up semicore energy contour if use_semicore == 1
-    iesemicore = 0
-    if (params%use_semicore == 1) then
-! epathtb calls emesht both for the semicore contour and the valence contour
-      call epathtb(ez,dez,efermi,ielast,iesemicore,params%use_semicore, &
-                  params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
-                  params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
-                  iemxd)
-    else
-! call emesth for valence contour only (can be included in epathtb when semicore contour feature is stable)
-      call emesht(ez,dez,ielast,params%emin,params%emax,efermi,params%tempr, &
-                  params%npol,params%npnt1,params%npnt2,params%npnt3,iemxd)
-    endif
- 
-    do ie = 1, ielast
-      wez(ie) = -2.d0/pi*dez(ie)
-      if (ie <= iesemicore) wez(ie) = wez(ie)*params%fsemicore
-    enddo ! ie
+!     iesemicore = 0
+    ! epathtb calls emesht both for the semicore contour and the valence contour
+!     call epathtb(ez,dez,efermi,ielast,iesemicore, &
+!                 params%emin,params%emax,params%tempr,params%npol,params%npnt1,params%npnt2,params%npnt3, &
+!                 params%ebotsemi,params%emusemi,params%tempr,params%npol,params%n1semi,params%n2semi,params%n3semi, &
+!                 dims%iemxd)
+!     do ie = 1, ielast
+!       wez(ie) = -2.d0/pi*dez(ie)
+!       if (ie <= iesemicore) wez(ie) = wez(ie)*params%fsemicore
+!     enddo ! ie
+
 
 
 ! ================================================ deal with the lattice
 
-    arrays%bravais(:,1) = params%bravais_a
-    arrays%bravais(:,2) = params%bravais_b
-    arrays%bravais(:,3) = params%bravais_c
+    arrays%bravais(:,1) = params%bravais_a(1:3)
+    arrays%bravais(:,2) = params%bravais_b(1:3)
+    arrays%bravais(:,3) = params%bravais_c(1:3)
 
     ! only for informative purposes - prints info about lattice
     call lattix99(params%alat, arrays%bravais, recbv, volume0, .true.)
@@ -253,8 +234,8 @@ module KKRzero_mod
 ! ======================================================================
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
-                 arrays%dsymll, params%bzdivide, ielast, ez, arrays%kmesh, arrays%maxmesh, &
-                 dims%lmaxd, iemxd, krel, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
+                 arrays%dsymll, params%bzdivide, emesh%ielast, emesh%ez, dims%iemxd, arrays%kmesh, arrays%maxmesh, &
+                 dims%lmaxd, krel, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
     call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
@@ -272,26 +253,15 @@ module KKRzero_mod
       ist = writeInputParamsToFile(params, 'input.unf')
       call writeMain2Arrays(arrays, 'arrays.unf')
 
-      ! write start energy mesh
-        open (67, file='energy_mesh.0', form='unformatted', action='write')
-        write(67) ielast, ez, wez, params%emin, params%emax
-        write(67) params%npol, params%tempr, params%npnt1, params%npnt2, params%npnt3
-        write(67) efermi
-      if (params%use_semicore == 1) then
-        write(67) iesemicore, params% fsemicore, params%ebotsemi
-        write(67) params%emusemi
-        write(67) params%n1semi, params%n2semi, params%n3semi
-      endif ! semicore
-        close(67)
+      call store(emesh)
         
     else  ! checkmode == 0
       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
     endif ! checkmode == 0
 
-    deallocate(dez, ez, wez, stat=ist) ! energy mesh
-    deallocate(radius_muffin_tin, stat=ist) ! auxillary
-
     if (get_number_of_warnings() > 0) ist = show_warning_lines(unit=6)
+    
+    call destroy(emesh)
     
   endsubroutine ! main0
 
