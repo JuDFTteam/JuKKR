@@ -7,10 +7,10 @@ $(OBJ)/dlke0.o        $(OBJ)/dlke1.o        $(OBJ)/inversion.o    \
 $(OBJ)/invslab.o      $(OBJ)/invsupercell.o $(OBJ)/surfgf.o       
 
 COMOBJS1b = \
-          $(OBJ)/main1b.o   \
+          $(OBJ)/cmatmul.o    $(OBJ)/initabjij.o	$(OBJ)/tbxccpljij.o	$(OBJ)/main1b.o   \
           $(OBJ)/kloopz1.o  $(OBJ)/mssinit.o  $(OBJ)/kkrmat01.o \
-          $(OBJ)/decimate.o $(OBJ)/rotgll.o   $(OBJ)/tbxccpljij.o \
-          $(OBJ)/cmatmul.o    $(OBJ)/initabjij.o  $(OBJ)/setfactl.o   \
+          $(OBJ)/decimate.o $(OBJ)/rotgll.o    \
+          $(OBJ)/setfactl.o   \
           $(OBJ)/gijdmat.o    $(OBJ)/symetrmat.o  $(OBJ)/projtau.o    \
           $(OBJ)/cpamillsx.o  $(OBJ)/rotate.o     $(OBJ)/getdmat.o    
 
@@ -58,6 +58,9 @@ $(OBJ)/surfgf.o       : $(SRA)/surfgf.f $(INCP)           ; \
 
 ##################### sources in COMMON directory ##########
 
+$(OBJ)/tbxccpljij.o : $(COM)/tbxccpljij.F               ; \
+                    $(FC) $(FFLAGS) $(CPP) $(COM)/tbxccpljij.F -c -o $@
+
 $(OBJ)/main1b.o   : $(COM)/main1b.F  $(INCP) ; \
 	            $(FC) $(FFLAGS) $(CPP) $(COM)/main1b.F -c -o $@
 
@@ -75,9 +78,6 @@ $(OBJ)/decimate.o     : $(COM)/decimate.f $(INCP)  ; \
 
 $(OBJ)/rotgll.o       : $(COM)/rotgll.F                    ; \
                        $(FC) $(FFLAGS) $(CPP) $(COM)/rotgll.F -c -o $@
-
-$(OBJ)/tbxccpljij.o : $(COM)/tbxccpljij.f               ; \
-                    $(FC) $(FFLAGS)   $(COM)/tbxccpljij.f -c -o $@
 
 $(OBJ)/cmatmul.o    : $(COM)/cmatmul.f                  ; \
                     $(FC) $(FFLAGS)   $(COM)/cmatmul.f -c -o $@
