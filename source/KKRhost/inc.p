@@ -75,28 +75,28 @@ C =====================================================================
 C ---------------------------------------------------------------------
 C     general settings
       PARAMETER ( KREL = 0 )
-      PARAMETER ( KORBIT = 1 )
+      PARAMETER ( KORBIT = 0 )
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
       PARAMETER ( LMAXD = 3 )
-      PARAMETER ( IEMXD = 1 )
-      PARAMETER ( IRMD = 900, IRNSD = 890 )
+      PARAMETER ( IEMXD = 80 )
+      PARAMETER ( IRMD = 484, IRNSD = 208 )
       !PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
-      PARAMETER ( NRD = 20000, KPOIBZ = 250000)
+      PARAMETER ( NRD = 20000, KPOIBZ = 512000)
       PARAMETER ( NMAXD = 2000000, ISHLD= 200000 )
       PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 40)
+      PARAMETER ( NAEZD = 24)
       PARAMETER ( NATYPD = NAEZD )
 !      PARAMETER ( NSHELD = NATYPD + 155)
 !     PARAMETER ( NSHELD = NATYPD + 300)
       PARAMETER ( NSHELD = NATYPD +1000)
       PARAMETER ( NATOMIMPD = 150)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD =  10)
-      PARAMETER ( NEMBD = 20)
+      PARAMETER ( NPRINCD =  2)
+      PARAMETER ( NEMBD = 2)
 C ---------------------------------------------------------------------
 C     non-spherical potential 
       PARAMETER ( NCELLD = NAEZD, IPAND = 50 )

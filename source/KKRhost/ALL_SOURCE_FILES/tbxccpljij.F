@@ -1,4 +1,14 @@
-      SUBROUTINE TBXCCPLJIJ(IFTMAT,IE,IELAST,ERYD,WGTE,NCPA,NAEZ,NATYP,
+      MODULE MOD_TBXCCPLJIJ
+
+      implicit none
+
+       private
+       public TBXCCPLJIJ
+
+      contains
+
+
+      SUBROUTINE TBXCCPLJIJ(IFTMAT,IELAST,EZ,WEZ,NSPIN,NCPA,NAEZ, NATYP,
      &                      NOQ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,DSYMLL,IPRINT,
@@ -10,9 +20,16 @@ C   *  according to  Lichtenstein et al. JMMM 67, 65 (1987)            *
 C   *                                                                  *
 C   *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
 C   *                                                                  *
+C   *  for mpi-parallel version: moved energy loop from main1b into    *
+C   *   here.                                B. Zimmermann, Dez 2015   *
+C   *                                                                  *
 C   ********************************************************************
 C
+#ifdef CPP_MPI
+      use mpi
+#endif
       use mod_types, only: t_tgmat, t_mpi_c_grid
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
 C     ..
 C     .. Parameters
@@ -23,9 +40,9 @@ C     .. Parameters
       PARAMETER ( NIJMAX = 200 )
 C     ..
 C     .. Scalar arguments
-      INTEGER IE,IELAST,IFTMAT,IPRINT,LMMAXD,NAEZ,NAEZD,NATOMIMP,NATYP,
-     &        NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD
-      DOUBLE COMPLEX WGTE,ERYD
+      INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NAEZD,NATOMIMP,
+     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD
+      DOUBLE COMPLEX EZ(*), WEZ(*)
 C     ..
 C     .. Array arguments
       INTEGER ATOMIMP(*),IJTABCALC(*),IJTABSH(*),IJTABSYM(*),
@@ -36,8 +53,9 @@ C     .. Array arguments
 C     ..
 C     .. Local scalars
       INTEGER I1,IA,IFGMAT,IFMCPA,IQ,IREC,ISPIN,ISYM,IT,J1,JA,
-     &        JQ,JT,L1,LM1,LM2,LSTR,NS,NSEFF,NSHCALC,NSMAX,NTCALC
-      DOUBLE COMPLEX CSUM
+     &        JQ,JT,L1,LM1,LM2,LSTR,NS,NSEFF,NSHCALC,NSMAX,NTCALC,
+     &        IE, ie_end, ie_num, ie_start, IERR
+      DOUBLE COMPLEX CSUM, WGTEMP, XINTEGDTMP
       CHARACTER*8 FMT1
       CHARACTER*22 FMT2
       CHARACTER*8 JFBAS
@@ -49,8 +67,10 @@ C     ..
 C     .. Local arrays
 CF90-------------------------------------------------------------
       INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-      DOUBLE COMPLEX JXCIJINT(:,:,:),XINTEGD(:,:,:)
-      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT,XINTEGD
+      DOUBLE COMPLEX JXCIJINT(:,:,:),XINTEGD(:,:,:),
+     &               csum_store(:,:,:,:), csum_store2(:,:,:,:)
+      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT,XINTEGD,csum_store,
+     &            csum_store2
 CF90-------------------------------------------------------------
 CF77CF77-------------------------------------------------------------
 CF77      INTEGER NTLOC,NSHLOC
@@ -71,13 +91,13 @@ CF90CF90-------------------------------------------------------------
      &               TSST(LMMAXD,LMMAXD,NATYP,2),W1(LMMAXD,LMMAXD),
      &               W2(LMMAXD,LMMAXD),W3(LMMAXD,LMMAXD)
       DOUBLE PRECISION RSH(NSHELD),PI
-      INTEGER JTAUX(NATYP), ie_end
+      INTEGER JTAUX(NATYP)
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC MAX,SQRT
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL CINIT,CMATMUL,INITABJIJ,ZCOPY
+C     EXTERNAL CINIT,CMATMUL,INITABJIJ,ZCOPY
 C     ..
 C     .. Save statement
       SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,XINTEGD,KIJSH,NIJCALC
@@ -89,17 +109,21 @@ c,JFINTEG/'integ.atom'/
       DATA PI /3.14159265358979312D0/
 C     ..
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-C ==>                   IE.EQ.1 -- initialisation step --            <==
+C ==>                   -- initialisation step --                    <==
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 c          open(22,STATUS='unknown',FILE='integrand1.dat',
 c     &                         FORM='formatted')
 c           open(44,STATUS='unknown',FILE='integrand2.dat',
 c     &                         FORM='formatted')
 c      write(*,*) 'test brahim 2'
-      IF ( IE.EQ.1 ) THEN
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
          WRITE(1337,99000)
+#ifdef CPP_MPI
+      ie_end = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+      ie_end = ielast
+#endif
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 c         open(22,STATUS='unknown',FILE='integrand.dat',
@@ -125,23 +149,57 @@ CF90----------------------------------------------------------------
             WRITE(6,99001) 'JIJDONE/NIJCALC'
             STOP
          END IF
-         ALLOCATE (JXCIJINT(NATYP,NATYP,NSHELL(0)),STAT=LM1)
+
+c        The array CSUM_STORE could become quite large -> store to MPI-IO-file in future????
+c        Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
+#ifdef CPP_MPI
+         ALLOCATE (csum_store(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
+         IF ( LM1.NE.0 ) THEN
+            WRITE(6,99001) 'csum_store'
+            STOP
+         END IF
+#else
+c        ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
          ALLOCATE (XINTEGD(NATYP,NATYP,NSHELL(0)),STAT=LM1)
-c         ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
+         IF ( LM1.NE.0 ) THEN
+            WRITE(6,99001) 'XINTEGD'
+            STOP
+         END IF
+#endif
+         ALLOCATE (JXCIJINT(NATYP,NATYP,NSHELL(0)),STAT=LM1)
          IF ( LM1.NE.0 ) THEN
             WRITE(6,99001) 'JXCIJINT'
             STOP
          END IF
+
 CF90----------------------------------------------------------------
 C..................
+#ifdef CPP_MPI
+         DO IE=1,IELAST
+          DO NS = 1,NSHELL(0)
+            DO JT = 1,NATYP
+               DO IT = 1,NATYP
+                  csum_store(IT,JT,NS,IE)= CZERO
+               END DO
+            END DO
+          END DO
+         END DO!IE
+#else
+         DO NS = 1,NSHELL(0)
+            DO JT = 1,NATYP
+               DO IT = 1,NATYP
+                  XINTEGD(IT,JT,NS)= CZERO
+c                  XINTEGD1(IT,JT,IE)= CZERO
+               END DO
+            END DO
+         END DO
+#endif
          DO NS = 1,NSHELL(0)
             NIJCALC(NS) = 0
             DO JT = 1,NATYP
                DO IT = 1,NATYP
                   JIJDONE(IT,JT,NS) = 0
                   JXCIJINT(IT,JT,NS) = CZERO
-                  XINTEGD(IT,JT,NS)= CZERO
-c                  XINTEGD1(IT,JT,IE)= CZERO
                END DO
             END DO
          END DO
@@ -188,7 +246,6 @@ Cccc               WRITE (6,99012) IT,(JTAUX(JT),JT=1,MIN(25,NATYP))
          END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
-      END IF
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 C ==>                   INITIALISATION END                           <==
 C IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
@@ -206,17 +263,29 @@ C     with a/b the atom of type a/b sitting on site i/j
 C     for an atom having occupancy 1, DMAT/DTIL = unit matrix
 C
 C
+C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
+#ifdef CPP_MPI
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+
+      DO ie_num=1,ie_end
+         IE = ie_start+ie_num
+#else
+      DO IE = 1,IELAST
+         ie_num = ie
+         ie_end = ielast
+#endif
 C SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SPIN
       DO ISPIN = 1,2
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
          DO IT = 1,NATYP
 c            write(*,*) 'test brahim 3'
-            IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(IT-1)
             if (t_tgmat%tmat_to_file) then
+               IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(IT-1)
                READ (IFTMAT,REC=IREC) W1               
             else
                ie_end = t_mpi_c_grid%ntot2
-               IREC = IE + ie_end*(ISPIN-1) + ie_end*2*(IT-1)
+               IREC = ie_num + ie_end*(ISPIN-1) + ie_end*2*(IT-1)
                W1(:,:) = t_tgmat%tmat(:,:,irec)
             end if
             DO J1 = 1,LMMAXD
@@ -297,9 +366,15 @@ C      using the appropiate rotation (similar to ROTGLL routine)
 C      step one: read in GS for the representative shell
 C ======================================================================
          DO ISPIN = 1,2
+          if (t_tgmat%gmat_to_file) then
             IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(NS-1)
             READ (IFGMAT,REC=IREC) W1
-            CALL ZCOPY(LMMAXD*LMMAXD,W1,1,GS(1,1,ISPIN),1)
+          else
+            ie_end = t_mpi_c_grid%ntot2
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*2*(NS-1)
+            W1(:,:) = t_tgmat%gmat(:,:,irec) 
+          end if
+          CALL ZCOPY(LMMAXD*LMMAXD,W1,1,GS(1,1,ISPIN),1)
          END DO
 C ======================================================================
 C      step two: scan all I,J pairs needed out of this shell 
@@ -393,16 +468,23 @@ C
                   DO LM1 = 1,LMMAXD
                      CSUM = CSUM + W1(LM1,LM1)
                   END DO
-C
-                                      
+
+#ifdef CPP_MPI
+!BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!BZ! to ensure the correct order of energy points, the csum=values !!
+!BZ! are stored for the MPI version, and the evaluation of JXCIJINT!!
+!BZ! and XINTEGD is performed later                                !!
+!BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                  csum_store(IT,JT,NSEFF,IE)=CSUM
+#else
+ 
                   JXCIJINT(IT,JT,NSEFF) = JXCIJINT(IT,JT,NSEFF)
-     &               - WGTE*CSUM
+     &               - WEZ(IE)*CSUM/DBLE(NSPIN)
                  
-              XINTEGD(IT,JT,NSEFF)= CSUM/(PI*4.D0)
-               
+                  XINTEGD(IT,JT,NSEFF)= CSUM/(PI*4.D0)
 
 C                  -------> perform substraction instead of addition 
-C                           because WGTE ~ -1/pi
+C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                   ! Write out energy-resorved integrand and integral
                   ! Phivos Mavropoulos 24.10.2012
                   FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
@@ -419,12 +501,12 @@ C                           because WGTE ~ -1/pi
                    OPEN (499,FILE=JFNAM2,STATUS='OLD',POSITION='APPEND')
                   ENDIF
                   WRITE (499,FMT='(6E12.4)')
-     &            ERYD,XINTEGD(IT,JT,NSEFF),JXCIJINT(IT,JT,NSEFF)/4.D0
+     &            EZ(IE),XINTEGD(IT,JT,NSEFF),JXCIJINT(IT,JT,NSEFF)/4.D0
                   CLOSE(499)
-
+#endif
                   
-               END DO
-            END DO   !loop over occupants
+               END DO !I1
+            END DO   !J1, loop over occupants
 C ----------------------------------------------------------------------
          END DO   !L1 = 1,NIJCALC(NS)
             
@@ -434,25 +516,114 @@ C **********************************************************************
 c       write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))
 c       write(44,*)DIMAG(XINTEGD(2,2,1)),DIMAG(XINTEGD(2,3,1))
      
-         IF ( IE.NE.IELAST ) RETURN
-c        open(22,STATUS='unknown',FILE='integrand1.dat',
-c     &                         FORM='formatted')        
+      END DO!IE
+C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
         
 
-c       do IE=1,IELAST
-c      write(22,99015)DIMAG(XINTEGD(2,2,IE))
+C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communication
+#ifdef CPP_MPI
+        if(myrank==master)then
+          !allocate
+          ALLOCATE (csum_store2(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
+          IF ( LM1.NE.0 ) THEN
+             WRITE(6,99001) 'csum_store2'
+             STOP
+          END IF
 
-c       end do 
-c       close(22)
-c       close(44)
+          !initialize with zero
+          DO IE=1,IELAST
+           DO NS = 1,NSHELL(0)
+            DO JT = 1,NATYP
+               DO IT = 1,NATYP
+                  csum_store2(IT,JT,NS,IE)= CZERO
+               END DO
+            END DO
+           END DO
+          END DO!IE
+        end if!myrank==master
 
+        !perform communication and collect resutls in csum_store2
+        LM1 = NATYP*NATYP*NSHELL(0)*IELAST
+        call MPI_REDUCE(csum_store,csum_store2,LM1,MPI_DOUBLE_COMPLEX,
+     &                  MPI_SUM,master,MPI_COMM_WORLD,IERR)
+        if(IERR/=MPI_SUCCESS)then
+           write(*,*) 'Problem in MPI_REDUCE(csum_store)'
+           stop 'TBXCCPLJIJ'
+        end if
+
+        !copy array back to original one
+        if(myrank==master)then
+          DO IE=1,IELAST
+           DO NS = 1,NSHELL(0)
+            DO JT = 1,NATYP
+               DO IT = 1,NATYP
+                  csum_store(IT,JT,NS,IE)= csum_store2(IT,JT,NS,IE)
+               END DO
+            END DO
+           END DO
+          END DO!IE
+
+          DEALLOCATE(csum_store2)
+        end if!myrank==master
+
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+!~~~~~~~ NEW WRITEOUT: integrand and energy-resolved integral ~~~~~~~~~~
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      if(myrank==master)then
+      DO NS = NSMAX + 1,NSHELL(0)
+         NSEFF = NS - NSMAX
+         DO L1 = 1,NIJCALC(NS)
+            IA = ISH(NS,KIJSH(L1,NS))
+            JA = JSH(NS,KIJSH(L1,NS))
+            IQ = ATOMIMP(IA)
+            JQ = ATOMIMP(JA)
+            DO J1 = 1,NOQ(JQ)
+               JT = ITOQ(J1,JQ)
+               DO I1 = 1,NOQ(IQ)
+                  IT = ITOQ(I1,IQ)
+C                  -------> perform substraction instead of addition 
+C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
+                  ! Write out energy-resorved integrand and integral
+                  ! Phivos Mavropoulos 24.10.2012
+                  FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                  WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
+                  OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
+                  WRITE(499,FMT='(A)')
+     &                 '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                  WRITE(499,FMT='(3(A,I5))')
+     &                 '# IT=',IT,' JT=',JT,' SHELL=',NS
+                  WRITE(499,FMT='(A,I6)')
+     &                 '#ENERGIES: ',IELAST
+
+                 DO IE=1,IELAST
+                  JXCIJINT(IT,JT,NSEFF) = JXCIJINT(IT,JT,NSEFF)
+     &               - WEZ(IE)*csum_store(IT,JT,NSEFF,IE)/DBLE(NSPIN)
+                  XINTEGDTMP= 
+     &                csum_store(IT,JT,NSEFF,IE)/(PI*4.D0)
+                   WRITE (499,FMT='(6E12.4)')
+     &            EZ(IE),XINTEGDTMP,JXCIJINT(IT,JT,NSEFF)/4.D0
+
+                 END DO!IE
+
+                 close(499)
+
+               END DO !I1
+            END DO   !J1, loop over occupants
+         END DO   !L1 = 1,NIJCALC(NS)
+        END DO  !NS, loop over shells
+      end if!myrank==master
+#endif
+
+       if(myrank==master)then
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-       WGTE = CONE/4D0
+       WGTEMP = CONE/4D0
 C     -------> here factor 1/pi omitted since it is included in WGTE
       DO NS = 1,NSHCALC
          DO JT = 1,NATYP
             DO IT = 1,NATYP
-               JXCIJINT(IT,JT,NS) = WGTE*JXCIJINT(IT,JT,NS)
+               JXCIJINT(IT,JT,NS) = WGTEMP*JXCIJINT(IT,JT,NS)
             END DO
          END DO
          NSEFF = NS + NSMAX
@@ -585,6 +756,7 @@ c         Close(22)
       WRITE (1337,99011) 
 C ----------------------------------------------------------------------
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+      endif!myrank==master
 C
 CF90----------------------------------------------------------------
       DEALLOCATE (KIJSH,NIJCALC,JIJDONE,JXCIJINT,STAT=LM1)
@@ -617,4 +789,6 @@ CF90----------------------------------------------------------------
      &     "#      J_IT,JT       JT",/,
      &     "#        ( Ry )",/,"#      ")    
 99015 format(F12.8)      
-              END
+              END SUBROUTINE TBXCCPLJIJ
+
+        END MODULE MOD_TBXCCPLJIJ
