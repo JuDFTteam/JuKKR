@@ -207,7 +207,7 @@ module KKRzero_mod
 ! ======================================================================
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
-                 arrays%dsymll, params%bzdivide, emesh%ielast, emesh%ez, dims%iemxd, arrays%kmesh, arrays%maxmesh, &
+                 arrays%dsymll, params%bzdivide, emesh%ielast, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
                  dims%lmaxd, krel, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh

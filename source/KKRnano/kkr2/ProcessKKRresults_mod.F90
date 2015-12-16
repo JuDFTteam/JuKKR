@@ -13,7 +13,6 @@ module ProcessKKRresults_mod
   public :: processKKRresults, output_forces
 
   integer, private, parameter :: MAX_MADELUNG_RADIUS_INDEX=101
-  integer, private :: ForceFileUnit=91  
   
   contains
 
@@ -165,7 +164,7 @@ module ProcessKKRresults_mod
       params%ALAT,atomdata%core%ITITLE(:,1:dims%NSPIND), &
       densities%total_charge_neutrality, &
       arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
-      arrays%iemxd)
+      dims%iemxd)
 
       call OUTTIME(isMasterRank(my_mpi),'results......', getElapsedTime(program_timer), iter)
 
@@ -295,7 +294,7 @@ module ProcessKKRresults_mod
     type(CalculationData), intent(in) :: calc
     integer, intent(in) :: master, rank, comm
 
-    integer :: ila, atom_id, num_local_atoms, nranks, ierr, max_local_atoms
+    integer :: ila, atom_id, num_local_atoms, nranks, ierr, max_local_atoms, ffu
     double precision, allocatable :: force_buffer(:,:), local_buffer(:,:)
 
     num_local_atoms = getNumLocalAtoms(calc) ! must be the same for all ranks, therefore get the maximum
@@ -319,11 +318,11 @@ module ProcessKKRresults_mod
                     master, comm, ierr)
 
     if (rank == master) then
-      call openForceFile()
+      ffu = openForceFile()
       do atom_id = 1, max_local_atoms*nranks ! todo: limit to naez
-        call writeForces(force_buffer(:,atom_id), atom_id)
+        call writeForces(ffu, force_buffer(:,atom_id), atom_id)
       enddo ! atom_id
-      call closeForceFile()
+      close(ffu)
     endif
 
     deallocate(force_buffer, local_buffer, stat=ierr)
@@ -390,7 +389,7 @@ module ProcessKKRresults_mod
     double precision :: chrgNt_local
     double precision :: new_fermi
     double precision :: CHRGSEMICORE !< total semicore charge over all atoms
-    integer :: ila
+    integer :: ila, r1fu
     integer :: num_local_atoms
 
     double complex, allocatable :: prefactors(:)  ! for Morgan charge test only
@@ -518,19 +517,19 @@ module ProcessKKRresults_mod
     ! necessary for density of states calculation, otherwise
     ! only for informative reasons
     if (params%KTE >= 0) then
-      call openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
+      r1fu = openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
 
       do ila = 1, num_local_atoms
         atomdata  => getAtomData(calc, ila)
         densities => getDensities(calc, ila)
         atom_id = getAtomIndexOfLocal(calc, ila)
 
-        call writeResults1File(densities%CATOM, densities%CHARGE, densities%DEN, &
+        call writeResults1File(r1fu, densities%CATOM, densities%CHARGE, densities%DEN, &
                               atomdata%core%ECORE, atom_id, emesh%NPOL, &
                               atomdata%core%QC_corecharge)
       enddo
 
-      call closeResults1File()
+      close(r1fu)
     endif
 
     call OUTTIME(isMasterRank(my_mpi), 'density calculated ..', getElapsedTime(program_timer), ITER)
@@ -661,7 +660,7 @@ module ProcessKKRresults_mod
     double precision :: VAV0, VOL0
     double precision :: VAV0_local, VOL0_local
     double precision :: VBC_new(2)
-    integer :: ila, ist
+    integer :: ila, ist, r2fu
     integer :: num_local_atoms
     logical :: calc_force
     double precision :: force_flmc(-1:1)
@@ -739,7 +738,7 @@ module ProcessKKRresults_mod
     VAV0 = 0.d0
     VOL0 = 0.d0
 
-    if (params%KTE >= 0) call openResults2File(dims%LRECRES2)
+    if (params%KTE >= 0) r2fu = openResults2File(dims%LRECRES2)
 
   !------------------------------------------------------------------------------
     !!!$omp parallel do reduction(+: VAV0, VOL0) &
@@ -801,7 +800,7 @@ module ProcessKKRresults_mod
       ! writes some results (mostly energies) to direct access file 'results2',
       ! those are read in again in routine 'RESULTS'
       if (params%KTE >= 0) then
-        call writeResults2File(densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
+        call writeResults2File(r2fu, densities%CATOM, energies%ECOU, ldau_data%EDCLDAU, &
                               energies%EPOTIN, energies%ESPC, energies%ESPV, ldau_data%EULDAU, &
                               energies%EXC, atom_id, LCOREMAX, energies%VMAD)
       endif
@@ -818,7 +817,7 @@ module ProcessKKRresults_mod
     !!!$omp endparallel do
   !------------------------------------------------------------------------------
 
-    if (params%KTE >= 0) call closeResults2File()
+    if (params%KTE >= 0) close(r2fu)
 
     call OUTTIME(isMasterRank(my_mpi), 'before CONVOL.....', getElapsedTime(program_timer), ITER)
 
@@ -939,37 +938,36 @@ module ProcessKKRresults_mod
   endsubroutine
 
   !------------------------------------------------------------------------------
-  subroutine openForceFile()
+  integer function openForceFile() result(fu)
     integer :: reclen
     double precision :: dummy(-1:1)
 
     inquire(iolength=reclen) dummy ! get reclen for 3 doubles
-    open(unit=ForceFileUnit, access='direct', file='forces', recl=reclen, form='unformatted', action='write')
-  endsubroutine
+    fu = 91
+    open(unit=fu, access='direct', file='forces', recl=reclen, form='unformatted', action='write')
+  endfunction
 
   !------------------------------------------------------------------------------
-  subroutine writeForces(forces_flm, recnr)
+  subroutine writeForces(fu, forces_flm, recnr)
+    integer, intent(in) :: fu !< file unit
     double precision, intent(in) :: forces_flm(-1:1)
     integer, intent(in) :: recnr
 
-    write(unit=ForceFileUnit, rec=recnr) forces_flm
-  endsubroutine
-
-  !------------------------------------------------------------------------------
-  subroutine closeForceFile()
-    close(unit=ForceFileUnit)
+    write(unit=fu, rec=recnr) forces_flm
   endsubroutine
 
   !----------------------------------------------------------------------------
   !> Open Results2 File
-  subroutine openResults2File(lrecres2)
+  integer function openResults2File(lrecres2) result(fu)
     integer, intent(in) :: lrecres2
-    open(72, access='direct', recl=lrecres2, file='results2', form='unformatted', action='write')
-  endsubroutine
+    fu = 72
+    open(unit=fu, access='direct', recl=lrecres2, file='results2', form='unformatted', action='write')
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Write calculated stuff into historical 'results2' file
-  subroutine writeResults2File(catom, ecou, edcldau, epotin, espc, espv, euldau, exc, i1, lcoremax, vmad)
+  subroutine writeResults2File(fu, catom, ecou, edcldau, epotin, espc, espv, euldau, exc, i1, lcoremax, vmad)
+    integer, intent(in) :: fu !< file unit
     double precision, intent(in) :: catom(:)
     double precision, intent(in) :: ecou(:)
     double precision, intent(in) :: edcldau
@@ -982,18 +980,12 @@ module ProcessKKRresults_mod
     integer, intent(in) :: lcoremax
     double precision, intent(in) :: vmad
 
-    write(72, rec=i1) catom,vmad,ecou,epotin,espc,espv,exc,lcoremax,euldau,edcldau
-  endsubroutine
-
-  !----------------------------------------------------------------------------
-  !> Close the file 'results2'
-  subroutine closeResults2File()
-    close(72)
+    write(unit=fu, rec=i1) catom,vmad,ecou,epotin,espc,espv,exc,lcoremax,euldau,edcldau
   endsubroutine
 
   !----------------------------------------------------------------------------
   !> Open the file 'results1'
-  subroutine openResults1File(iemxd, lmaxd, npol)
+  integer function openResults1File(iemxd, lmaxd, npol) result(fu)
     integer, intent(in) :: iemxd, lmaxd, npol
 
     integer :: lrecres1
@@ -1001,12 +993,14 @@ module ProcessKKRresults_mod
     lrecres1 = 8*43 + 16*(lmaxd+2)
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmaxd+2)*iemxd
 
-    open(71, access='direct', recl=lrecres1, file='results1', form='unformatted', action='write')
-  endsubroutine
+    fu = 71
+    open(unit=fu, access='direct', recl=lrecres1, file='results1', form='unformatted', action='write')
+  endfunction
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
-  subroutine writeResults1File(catom, charge, den, ecore, i1, npol, qc)
+  subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc)
+    integer, intent(in) :: fu !< file unit
     double precision, intent(in) :: catom(:)
     double precision, intent(in) :: charge(:,:)
     double complex, intent(in) :: den(:,:,:)
@@ -1016,16 +1010,10 @@ module ProcessKKRresults_mod
     double precision, intent(in) :: qc
 
     if (npol == 0) then
-      write(71, rec=i1) qc,catom,charge,ecore,den  ! write density of states (den) only when certain options set
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,den  ! write density of states (den) only when certain options set
     else
-      write(71, rec=i1) qc,catom,charge,ecore
+      write(unit=fu, rec=i1) qc,catom,charge,ecore
     endif
-  endsubroutine
-
-  !---------------------------------------------------------------------------
-  !> Closes the file 'results1'
-  subroutine closeResults1File()
-    close(71)
   endsubroutine
 
   !----------------------------------------------------------------------------

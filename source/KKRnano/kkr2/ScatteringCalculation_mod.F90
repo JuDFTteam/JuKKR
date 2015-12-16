@@ -177,7 +177,7 @@ implicit none
         do ilocal = 1, num_local_atoms
           atomdata => getAtomData(calc, ilocal)
 
-          call TREF(emesh%EZ(IE), arrays%VREF, dims%LMAXD, atomdata%RMTref, &
+          call TREF(emesh%EZ(IE), params%vref, dims%LMAXD, atomdata%RMTref, &
                     Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), dims%LLY)
 
         enddo  ! ilocal
@@ -261,7 +261,7 @@ implicit none
             !$omp endparallel do
   !------------------------------------------------------------------------------
 
-            NMESH = arrays%KMESH(IE)
+            nmesh = emesh%kmesh(IE)
 
             call stopTimer(single_site_timer)
             call resumeTimer(mult_scattering_timer)
@@ -284,8 +284,8 @@ implicit none
 
   !------------------------------------------------------------------------------
             call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
-                    arrays%NOFKS(NMESH), arrays%VOLBZ(NMESH), &
-                    arrays%BZKP(:,:,NMESH), arrays%VOLCUB(:,NMESH), &
+                    arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), &
+                    arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
                     lattice_vectors%RR, &
                     GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
                     tmatll, arrays%lmmaxd, &
@@ -395,7 +395,7 @@ implicit none
 
           call redistributeInitialGuess_com(my_mpi, calc%iguess_data%PRSC(:,:,PRSPIN), &
               ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
-              arrays%KMESH, arrays%NofKs)
+              emesh%kmesh, arrays%NofKs)
 
         endif ! isWorkingSpinRank
       enddo ! ISPIN

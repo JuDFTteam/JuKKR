@@ -103,7 +103,7 @@ module EnergyMeshHelpers_mod
     ! semicore contour parameters
     double precision, intent(in) :: ebotsemi, emusemi, fsemicore
     integer, intent(in) :: npntsemi(3)
-    integer, intent(out) :: iesemicore !
+    integer, intent(out) :: iesemicore !< points #1 through #iesemicore belong to the semicore contour
 
     integer :: iemxd
 

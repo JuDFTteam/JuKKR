@@ -380,21 +380,20 @@ module CalculationData_mod
     call createBroydenData(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing)  ! getBroydenDim replaces former NTIRD
 
 !   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
-    call setup_iguess(self, dims, arrays) ! setup storage for iguess
+    call setup_iguess(self, dims, arrays%nofks) ! setup storage for iguess
 
   endsubroutine ! constructEverything
 
   !----------------------------------------------------------------------------
   !> Initialise iguess datastructure.
-  subroutine setup_iguess(self, dims, arrays)
+  subroutine setup_iguess(self, dims, nofks)!, kmesh)
     use DimParams_mod, only: DimParams
-    use Main2Arrays_mod, only: Main2Arrays
     use InitialGuess_mod, only: create ! deprecated exceptional naming with underscore
     use TEST_lcutoff_mod, only: num_truncated
 
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in) :: dims
-    type(Main2Arrays), intent(in) :: arrays
+    integer, intent(in) :: nofks(:)!, kmesh(:)
 
     integer, allocatable :: num_k_points(:)
     integer :: ie, blocksize, ns
@@ -408,7 +407,7 @@ module CalculationData_mod
 
     allocate(num_k_points(dims%iemxd))
     do ie = 1, dims%iemxd
-      num_k_points(ie) = arrays%nofks(arrays%kmesh(ie))
+      num_k_points(ie) = nofks(1) ! nofks(kmesh(ie)) !! cannot easily access emesh%kmesh, use the largest
     enddo ! ie
 
     ns = 1; if (dims%smpid == 1 .and. dims%nspind == 2) ns = 2 ! no spin parallelisation choosen, processes must store both spin-directions

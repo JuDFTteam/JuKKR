@@ -42,10 +42,9 @@ module Main2Arrays_mod
     double precision, allocatable :: volbz(:)     !< bz volume?
     integer,          allocatable :: nofks(:)     !< number of k points for each mesh
     
-    integer :: iemxd
-    integer, allocatable :: kmesh(:) !< mapping of e-points to k-meshes
+!     integer :: iemxd
+!     integer, allocatable :: kmesh(:) !< mapping of e-points to k-meshes
 
-    double precision :: vref !< repulsive screening pot. strength
   endtype ! Main2Arrays
 
   interface create
@@ -67,7 +66,9 @@ module Main2Arrays_mod
     type(Main2Arrays), intent(inout) :: self
     type(DimParams), intent(in) :: dims
 
-    call createMain2ArraysImpl(self, dims%iemxd, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)    
+    call createMain2ArraysImpl(self, &
+!     dims%iemxd, &
+    dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)    
     
   endsubroutine ! create
 
@@ -79,12 +80,15 @@ module Main2Arrays_mod
   !> @param[in]    naez
   !> @param[in]    kpoibz
   !> @param[in]    maxmshd
-  subroutine createMain2ArraysImpl(self, iemxd, lmmaxd, naez, kpoibz, maxmshd)
+  subroutine createMain2ArraysImpl(self, &
+!   iemxd, &
+  lmmaxd, naez, kpoibz, maxmshd)
     use, intrinsic :: ieee_features
     use, intrinsic :: ieee_arithmetic
     
     type(Main2Arrays), intent(inout) :: self
-    integer, intent(in) :: iemxd, lmmaxd, naez, kpoibz, maxmshd
+!     integer, intent(in) :: iemxd
+    integer, intent(in) :: lmmaxd, naez, kpoibz, maxmshd
     
     integer :: memory_stat
     double precision :: nan
@@ -92,10 +96,7 @@ module Main2Arrays_mod
     self%nsymat = 0
     self%maxmesh = 0
 
-!    repulsive reference potential, TODO in future: move as parameter to inputfile
-    self%vref = 8.d0
-
-    self%iemxd = iemxd
+!     self%iemxd = iemxd
     self%lmmaxd = lmmaxd
     self%naez = naez
     self%kpoibz = kpoibz
@@ -105,7 +106,7 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%bzkp(3,kpoibz,maxmshd))
     ALLOCATECHECK(self%volcub(kpoibz,maxmshd))
     ALLOCATECHECK(self%volbz(maxmshd))
-    ALLOCATECHECK(self%kmesh(iemxd))
+!     ALLOCATECHECK(self%kmesh(iemxd))
     ALLOCATECHECK(self%nofks(maxmshd))
 
     ALLOCATECHECK(self%rbasis(3,naez))
@@ -117,7 +118,7 @@ module Main2Arrays_mod
     self%bzkp = nan
     self%volcub = nan
     self%volbz = nan
-    self%kmesh = -99
+!     self%kmesh = -99
     self%nofks = -99
     self%zat = nan
 
@@ -136,7 +137,7 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%bzkp)
     DEALLOCATECHECK(self%volcub)
     DEALLOCATECHECK(self%volbz)
-    DEALLOCATECHECK(self%kmesh)
+!     DEALLOCATECHECK(self%kmesh)
     DEALLOCATECHECK(self%nofks)
     DEALLOCATECHECK(self%zat)
 
@@ -159,10 +160,9 @@ module Main2Arrays_mod
               self%bzkp, &
               self%volcub, &
               self%volbz, &
-              self%kmesh, &
+!               self%kmesh, &
               self%nofks, &
               self%zat, &
-              self%vref, &
               self%nsymat, &  ! write some scalars too
               self%maxmesh
     close(fu)
@@ -186,10 +186,9 @@ module Main2Arrays_mod
               self%bzkp, &
               self%volcub, &
               self%volbz, &
-              self%kmesh, &
+!               self%kmesh, &
               self%nofks, &
               self%zat, &
-              self%vref, &
               self%nsymat, & ! write some scalars too
               self%maxmesh
     close(fu)
