@@ -50,7 +50,6 @@ module KKRnanoParallel_mod
 implicit none
   private
   public :: KKRnanoParallel, create, destroy
-  public :: createKKRnanoParallel, destroyKKRnanoParallel ! deprecated
   public :: getMyWorldRank, getMyAtomRank 
   public :: getMySEId, getMyAtomId, getMySpinId, getMyEnergyId, getResponsibleSpinId    
   public :: getNumAtomRanks, getNumSpinRanks, getNumEnergyRanks, getNumSERanks, getNumWorldRanks
@@ -169,7 +168,7 @@ implicit none
     if (self%active == 1 .and. self%my_atom_rank /= self%my_atom_id-1) die_here("Inconsistency in KKRnano atom rank!")
     if (self%active == 1 .and. self%active_rank /= self%my_world_rank) die_here("Active rank not equal to world rank!")
 
-  endsubroutine
+  endsubroutine ! create
 
   !--------------------------------------------------------------
   subroutine destroyKKRnanoParallel(self)
@@ -182,7 +181,7 @@ implicit none
       call MPI_Comm_free(self%my_SE_communicator, ierr)
     call MPI_Comm_free(self%my_active_communicator, ierr)
     call MPI_Finalize(ierr)
-  endsubroutine
+  endsubroutine ! destroy
 
   !================== Getter routines =======================
 
@@ -352,5 +351,5 @@ implicit none
     mapToWorldRankSE = (SE_id - 1) * self%num_atom_ranks + atom_id - 1
   endfunction
 
-endmodule
+endmodule ! KKRnanoParallel_mod
 

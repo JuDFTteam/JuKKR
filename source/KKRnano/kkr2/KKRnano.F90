@@ -13,7 +13,7 @@ program KKRnano
 
   use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup
   use KKRnanoParallel_mod, only: getMyWorldRank, getMyAtomRank, getMyActiveCommunicator, getMySEcommunicator 
-  use KKRnanoParallel_mod, only: createKKRnanoParallel, destroy
+  use KKRnanoParallel_mod, only: create, destroy
 
   use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
@@ -42,6 +42,7 @@ program KKRnano
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
   
+  use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, store, destroy
   implicit none
 
   type(CalculationData) :: calc_data
@@ -62,7 +63,7 @@ program KKRnano
   type(LDAUData), pointer  :: ldau_data
   
   type(BrillouinZoneMesh) :: kmesh(8)
-  
+
   external :: MPI_Init
   character(len=16)              :: arg
   
@@ -70,16 +71,16 @@ program KKRnano
   
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
-  case ('--prepare')
+  case ('--prepare', '-p')
     call main0(checkmode=0) ! call former kkr0.exe
     stop
-  case ('--check')
+  case ('--check', '-c')
     call main0(checkmode=1) ! former kkr0.exe without overwriting the binary files *.unf
     stop
   case ('--convert')
     call kkrvform()
     stop
-  case ('--help')
+  case ('--help', '-h')
     call get_command_argument(0, arg, ilen, ios)
     write(*,'(9A)') 'usage: ',trim(arg),' [options]'
     write(*,'(A)') '  options:', &
@@ -97,7 +98,7 @@ program KKRnano
   
   call load(dims, 'inp0.unf') ! read dimension parameters from file 'inp0.unf'
 
-  call createKKRnanoParallel(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
+  call create(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
   call printKKRnanoInfo(my_mpi, dims%nthrds)
 
@@ -266,7 +267,7 @@ program KKRnano
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &
                       ldau_data%PHILDAU,ldau_data%UMLDAU,ldau_data%WMLDAU, &
                       ldau_data%lmaxd, mesh%irmd, mesh%ipand)
-#undef mesh                      
+#undef mesh
 
       endif ! ldau
 ! LDA+U

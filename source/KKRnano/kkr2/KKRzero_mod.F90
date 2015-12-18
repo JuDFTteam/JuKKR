@@ -103,7 +103,8 @@ module KKRzero_mod
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
     use DimParams_mod, only: DimParams, parse, store
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
-    use BrillouinZone_mod, only: bzkint0
+    use BrillouinZone_mod, only: bzkint0, readKpointsFile
+    use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, store, destroy
     use Warnings_mod, only: get_number_of_warnings, show_warning_lines
     use Lattice_mod, only: lattix99
     use Constants_mod, only: pi
@@ -134,6 +135,7 @@ module KKRzero_mod
     type(InputParams)    :: params
     type(Main2Arrays)    :: arrays
     type(EnergyMesh)     :: emesh
+    type(BrillouinZoneMesh) :: kmeshes(8)
 
     if (checkmode /= 0) then 
 !       ist = getAtomData('pos.xyz', natoms, pos, comm=0)
@@ -208,7 +210,7 @@ module KKRzero_mod
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
                  arrays%dsymll, params%bzdivide, emesh%ielast, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
-                 dims%lmaxd, krel, dims%ekmd, nowrite=(checkmode /= 0)) ! after return from bzkint0, ekmd contains the right value
+                 dims%lmaxd, krel, dims%ekmd, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
 
     ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
     call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
@@ -238,34 +240,6 @@ module KKRzero_mod
     
   endsubroutine ! main0
 
-  !------------------------------------------------------------------------
-  ! Read k-mesh file
-  subroutine readKpointsFile(maxmesh, nofks, bzkp, volcub, volbz)
-    integer, intent(in) :: maxmesh
-    integer, intent(out) :: nofks(:)
-    double precision, intent(out) :: bzkp(:,:,:), volcub(:,:), volbz(:)
-
-    integer, parameter :: fu = 52 ! file unit
-    integer :: i, l, ios
-
-    open (fu, file='new.kpoints', form='formatted', status='old', action='read', iostat=ios)
-    if (ios /= 0) then ! default to the old kpoint file name
-      open (fu, file='kpoints', form='formatted', status='old', action='read')
-    else ! file new.kpoints exists - use those kpoints
-      write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
-      warn(6, "rejecting file kpoints - using file new.kpoints instead.")
-    endif
-
-    rewind (fu)
-    do l = 1, maxmesh
-      read (fu,fmt='(i8,f15.10)') nofks(l), volbz(l)
-      do i = 1, nofks(l)
-        read (fu,fmt=*) bzkp(1:3,i,l), volcub(i,l)
-      enddo ! i
-    enddo ! l
-    close (fu)
-    
-  endsubroutine ! readKpointsFile
 
   
 !>    Reads atominfo and rbasis files.

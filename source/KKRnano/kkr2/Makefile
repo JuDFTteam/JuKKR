@@ -29,11 +29,11 @@ FCFLAGS += -I $(BUILDDIR)
 FCFLAGS += -D USE_VOROWEIGHTS
 # FCFLAGS += -D DEBUG1
 FC90FLAGS =
-#FCFLAGS += -C -traceback -CB
-#FCFLAGS += -O0 -g
-#LDFLAGS  = -O0 -g
-FCFLAGS += -O3  -g
-LDFLAGS  = -O3  -g
+FCFLAGS += -C -traceback -CB
+FCFLAGS += -O0 -g
+LDFLAGS  = -O0 -g
+# FCFLAGS += -O3  -g
+# LDFLAGS  = -O3  -g
 
 FCFLAGS += -pg
 LDFLAGS += -pg
@@ -281,7 +281,7 @@ TEST_lcutoff_mod.o: Exceptions_mod.o TruncationZone_mod.o Main2Arrays_mod.o
 MultScatData_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
-KKRzero_mod.o: Exceptions_mod.o PositionReader_mod.o MadelungCalculator_mod.o Startb1_mod.o EnergyMeshHelpers_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o ldauinfo_read.o ldaustart.o
+KKRzero_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o PositionReader_mod.o MadelungCalculator_mod.o Startb1_mod.o EnergyMeshHelpers_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o CellData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o ldauinfo_read.o ldaustart.o
 SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 ValenceDensity_mod.o: Quadrature_mod.o SingleSite_mod.o SingleSiteHelpers_mod.o
@@ -323,7 +323,7 @@ one_sided_commD_mod.o: ChunkIndex_mod.o
 ClusterInfo_mod.o: one_sided_commI_mod.o
 RadialMeshData_mod.o: Exceptions_mod.o
 read_formatted_mod.o: Exceptions_mod.o
-BrillouinZone_mod.o: Exceptions_mod.o
+BrillouinZone_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o 
 KKRnanoParallel_mod.o: Exceptions_mod.o
 MadelungCalculator_mod.o: Exceptions_mod.o
 PositionReader_mod.o: Exceptions_mod.o
