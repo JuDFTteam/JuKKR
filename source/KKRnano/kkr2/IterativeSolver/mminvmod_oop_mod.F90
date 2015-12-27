@@ -114,7 +114,7 @@ contains
     ! INITIALIZATION
     !=======================================================================
 
-    EPSILON_DP = epsilon(0.0d0)
+    EPSILON_DP = tiny(0.0d0)
     tfqmr_status = 0
     converged_at = 0
 
