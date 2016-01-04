@@ -39,7 +39,8 @@ module mminvmod_oop_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, nlen, initial_zero, stats, precond, use_precond, VECS, temp)
+  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, nlen, initial_zero, precond, use_precond, VECS, temp, &
+                          iterations_needed, largest_residual) ! optional args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
     use OperatorT_mod, only: OperatorT
@@ -52,16 +53,17 @@ module mminvmod_oop_mod
     double complex, intent(in)    :: mat_B(NLEN,num_columns)
 
     logical, intent(in) :: initial_zero
-    type(SolverStats), intent(inout) :: stats
     class(OperatorT) :: precond
     logical, intent(in) :: use_precond
     double complex, intent(inout) :: VECS(:,:,:) ! workspace
     double complex, intent(inout) :: temp(:,:) ! workspace only used when use_precond is true
-
+    ! optional args
+    integer, intent(out), optional :: iterations_needed
+    double precision, intent(out), optional :: largest_residual
+    
     !----------------- local variables --------------------------------------------
 
-    double complex, parameter :: CONE  = (1.d0, 0.d0)
-    double complex, parameter :: CZERO = (0.d0, 0.d0)
+    double complex, parameter :: CONE=(1.d0, 0.d0), ZERO=(0.d0, 0.d0)
 
     integer :: NLIM
 
@@ -132,7 +134,7 @@ module mminvmod_oop_mod
       VECS(:,:,FIVE) = mat_B
 
       ! set x0 to 0
-      mat_X = CZERO
+      mat_X = ZERO
 
     else
 
@@ -168,12 +170,12 @@ module mminvmod_oop_mod
     RESN = 1.d0
     RHO  = CONE
     VAR  = 0.d0
-    ETA  = CZERO
+    ETA  = ZERO
     TAU  = R0 * R0
 
-    VECS(:,:,EIGHT) = CZERO
-    VECS(:,:,FOUR) = CZERO
-    VECS(:,:,SIX) = CZERO
+    VECS(:,:,EIGHT) = ZERO
+    VECS(:,:,FOUR) = ZERO
+    VECS(:,:,SIX) = ZERO
 
     PROBE= 1
 
@@ -189,8 +191,8 @@ module mminvmod_oop_mod
 
       where (abs(ZTMP) < EPSILON_DP .or. abs(RHO) < EPSILON_DP)
         ! severe breakdown
-        BETA = CZERO
-        RHO = CZERO
+        BETA = ZERO
+        RHO = ZERO
         tfqmr_status = -1
       elsewhere
         BETA = ZTMP / RHO
@@ -227,8 +229,8 @@ module mminvmod_oop_mod
         ZTMP = VAR * ETA / ALPHA
       elsewhere
         ! severe breakdown
-        ALPHA = CZERO
-        ZTMP = CZERO
+        ALPHA = ZERO
+        ZTMP = ZERO
         tfqmr_status = -1
       endwhere
 
@@ -249,8 +251,8 @@ module mminvmod_oop_mod
         ZTMP = VAR * COSI
       elsewhere
         ! early convergence or breakdown(stagnation)
-        COSI = CZERO
-        VAR = CZERO
+        COSI = ZERO
+        VAR = ZERO
         ZTMP = CONE
         tfqmr_status = -2
       endwhere
@@ -259,7 +261,7 @@ module mminvmod_oop_mod
 
       ! do not modify brokedown components
       where (tfqmr_status < 0)
-        ETA = CZERO
+        ETA = ZERO
       endwhere
 
       ! v1 = v1 + eta*v7
@@ -302,8 +304,8 @@ module mminvmod_oop_mod
         COSI  = 1.d0 / ( 1.d0 + VAR )
       elsewhere
         ! early convergence or breakdown
-        VAR = CZERO
-        COSI = CZERO
+        VAR = ZERO
+        COSI = ZERO
         tfqmr_status = -2
       endwhere
       TAU  = DTMP * COSI
@@ -311,7 +313,7 @@ module mminvmod_oop_mod
 
       ! do not modify brokedown components
       where (tfqmr_status < 0)
-        ETA = CZERO
+        ETA = ZERO
       endwhere
 
       ! v1 = v1 + eta*v7
@@ -435,8 +437,8 @@ module mminvmod_oop_mod
    WRITELOG(3,*) "number of iterations:             ", IT
    WRITELOG(3,*) "max. residual:             ", max_residual
 
-   stats%iterations = IT
-   stats%max_residual = max_residual
+   if (present(iterations_needed)) iterations_needed = IT
+   if (present(largest_residual)) largest_residual = max_residual
 
    do ind = 1, num_columns
      if (converged_at(ind) == 0) then

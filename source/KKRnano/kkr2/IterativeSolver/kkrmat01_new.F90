@@ -35,7 +35,7 @@ module kkrmat_new_mod
     USE_ARRAYLOG_MOD
     use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
     use jij_calc_mod, only: global_jij_data, kkrjij
-    use SolverStats_mod, only: SolverStats, reset_stats
+    use SolverStats_mod, only: SolverStats, reset
     use TFQMRSolver_mod, only: TFQMRSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
@@ -63,7 +63,7 @@ module kkrmat_new_mod
     ! locals
     double complex, allocatable :: G_diag(:,:,:)
     integer :: site_lm_size, ilocal, num_local_atoms, naclsd, naez, k_point_index
-    type(SolverStats) :: total_stats
+    type(SolverStats) :: stats
 
 #define ms kkr_op%ms
 #define cluster_info ms%cluster_info
@@ -93,7 +93,7 @@ module kkrmat_new_mod
 
     if (global_jij_data%do_jij_calculation) global_jij_data%GSXIJ = zero
 
-    call reset_stats(total_stats)
+    call solver%reset_stats()
 
     !==============================================================================
     do k_point_index = 1, NOFKS ! K-POINT-LOOP
@@ -136,13 +136,11 @@ module kkrmat_new_mod
     
     deallocate(G_diag, stat=ilocal) ! Cleanup
 
-    total_stats = solver%get_total_stats()
+    stats = solver%get_stats()
 
-    WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", total_stats%max_residual
-    WRITELOG(3, *) "Max. num iterations for this E-point: ", total_stats%max_iterations
-    WRITELOG(3, *) "Sum of iterations for this E-point:   ", total_stats%sum_iterations
-
-    call solver%reset_total_stats()
+    WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", stats%max_residual
+    WRITELOG(3, *) "Max. num iterations for this E-point: ", stats%max_iterations
+    WRITELOG(3, *) "Sum of iterations for this E-point:   ", stats%sum_iterations
 
 #undef cluster_info
 #undef ms

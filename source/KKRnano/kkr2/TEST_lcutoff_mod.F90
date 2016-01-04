@@ -31,11 +31,11 @@ module TEST_lcutoff_mod
     double precision, intent(in) :: cutoff_radius !< 
     integer, intent(in) :: solver_type !<
     
+    double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
     integer :: naez, lmax, atomindex, ilocal, num_local_atoms, ist, nradii, l
     integer(kind=1), allocatable :: lmax_atom(:,:), lmax_full(:)
     integer(kind=1) :: l_lim(9)
-    double precision :: r2lim(9), r2   
-    double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
+    double precision :: r2lim(9)   
  
     cutoffmode = solver_type
 
@@ -57,7 +57,7 @@ module TEST_lcutoff_mod
           nradii = nradii + 1 
           l_lim(nradii) = l
           r2lim(nradii) = lcutoff_radii(l)**2
-        endif 
+        endif
       enddo ! l
     endif 
 

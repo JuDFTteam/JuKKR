@@ -95,7 +95,7 @@ module TruncationZone_mod
       if (iz /= SELF nzero_list(il)) stop __FILE__ ! fatal error
     enddo ! il
     
-    write(*,'(A,999(" ",i0))') 'Truncation zone created, Zero-List: ',SELF nzero_list
+!   write(*,'(A,999(" ",i0))') 'Truncation zone created, Zero-List: ',SELF nzero_list
 #undef SELF
   endsubroutine ! create
   

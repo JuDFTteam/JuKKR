@@ -158,6 +158,7 @@ implicit none
     ! it is good to do these allocations outside of energy loop
     call setup_solver(solv, kkr_op, precond, dims, clusters, lmmaxd, params%qmrbound, atom_indices)
 
+    
   ! IE ====================================================================
   !     BEGIN do loop over energies (EMPID-parallel)
   ! IE ====================================================================
@@ -262,9 +263,6 @@ implicit none
 
             NMESH = arrays%KMESH(IE)
 
-            if (getMyAtomRank(my_mpi) == 0 .and. params%KTE >= 0) &
-              call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH)
-
             call stopTimer(single_site_timer)
             call resumeTimer(mult_scattering_timer)
 
@@ -294,7 +292,10 @@ implicit none
                     trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
                     calc%iguess_data)
   !------------------------------------------------------------------------------
-
+  
+            if (getMyAtomRank(my_mpi) == 0 .and. params%KTE >= 0) &
+              call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH, solv%represent_stats())
+  
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ilocal) N(ilocal)
             do ilocal = 1, num_local_atoms
               kkr => getKKR(calc, ilocal)
@@ -346,6 +347,10 @@ implicit none
 
     call stopTimer(single_site_timer)
 
+!     if (isMasterRank(my_mpi)) &
+!       write(6, fmt='(A,I4,9A)') 'iter:',ITER,'  solver stats: ',trim(solv%represent_total_stats())
+    
+    
   !=======================================================================
     ! communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
     do ilocal = 1, num_local_atoms
@@ -471,10 +476,11 @@ implicit none
 
   !----------------------------------------------------------------------------
   !> Print info about Energy-Point currently treated.
-  subroutine printEnergyPoint(ez_point, ie, ispin, nmesh)
+  subroutine printEnergyPoint(ez_point, ie, ispin, nmesh, solver_stats)
     double complex, intent(in) :: ez_point
     integer, intent(in) :: ie, ispin, nmesh
-    write(6, fmt='(A,I3,A,2(1X,F10.6),A,I3,A,I3)') ' ** IE = ',ie,' ENERGY =',ez_point,' KMESH = ',nmesh,' ISPIN = ',ispin
+    character(len=*), intent(in) :: solver_stats
+    write(6, fmt='(A,I4,A,2(1X,F10.6),A,I4,A,I4,9A)') ' ** IE =',ie,' ENERGY =',ez_point,' KMESH =',nmesh,' ISPIN =',ispin,'  ',trim(solver_stats)
   endsubroutine ! print
 
   !----------------------------------------------------------------------------

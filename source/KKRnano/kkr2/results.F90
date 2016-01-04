@@ -66,7 +66,7 @@ subroutine RESULTS(LRECRES2,IELAST,ITSCF,LMAX,NAEZ,NPOL,NSPIN, &
       else
         read(71, rec=I1) QC,CATOM,CHARGE,ECORE
       endif
-      call WRMOMS(NAEZ,NSPIN,CHARGE,I1,LMAX,LMAX+1)
+      call WRMOMS(NSPIN, CHARGE, I1, LMAX, LMAX+1, I1 == 1, I1 == NAEZ)! first=(I1 == 1), last=(I1 == NAEZ))
     enddo ! I1
 
 

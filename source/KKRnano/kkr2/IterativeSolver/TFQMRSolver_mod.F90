@@ -27,7 +27,6 @@ module TFQMRSolver_mod
     double complex, allocatable :: temp(:,:)
 
     type(SolverStats) :: stats
-    type(SolverStats) :: total_stats
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
     double precision :: qmrbound = 1.d-6
@@ -39,8 +38,8 @@ module TFQMRSolver_mod
       procedure :: set_qmrbound
       procedure :: set_initial_zero
       procedure :: get_stats
-      procedure :: get_total_stats
-      procedure :: reset_total_stats
+      procedure :: reset_stats
+      procedure :: represent_stats
 !     procedure :: destroy => destroy_solver
   endtype
   
@@ -76,12 +75,13 @@ module TFQMRSolver_mod
   !> Deallocate with call TFQMRSolver%destroy
   subroutine solve_with_solver(self, mat_X, mat_B)
     use mminvmod_oop_mod, only: mminvmod_oop
-    use SolverStats_mod, only: sum_stats
+    use SolverStats_mod, only: reduce
     class(TFQMRSolver) :: self
     double complex, intent(inout) :: mat_X(:,:)
     double complex, intent(in)    :: mat_B(:,:)
 
-    integer :: nlen, num_columns
+    integer :: nlen, num_columns, iterations_needed
+    double precision :: largest_residual
 
     nlen = size(mat_B, 1)
     num_columns = size(mat_B, 2)
@@ -103,10 +103,10 @@ module TFQMRSolver_mod
     endif
 
     call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, num_columns, nlen, &
-                      .true., self%stats, self%precond, self%use_precond, &
-                      self%vecs, self%temp)
+                      .true., self%precond, self%use_precond, &
+                      self%vecs, self%temp, iterations_needed, largest_residual)
 
-    call sum_stats(self%stats, self%total_stats)
+    call reduce(self%stats, iterations_needed, largest_residual)
 
   endsubroutine ! solve
 
@@ -145,22 +145,21 @@ module TFQMRSolver_mod
   endfunction
 
   !----------------------------------------------------------------------------
-  !> Get accumulated statistics of all solver runs.
-  function get_total_stats(self)
+  !> Reset accumulated statistics.
+  subroutine reset_stats(self)
+    use SolverStats_mod, only: reset
     class(TFQMRSolver) :: self
-    type(SolverStats) :: get_total_stats
 
-    get_total_stats = self%total_stats
-  endfunction
+    call reset(self%stats)
+  endsubroutine
 
   !----------------------------------------------------------------------------
-  !> Reset accumulated statistics.
-  subroutine reset_total_stats(self)
-    use SolverStats_mod, only: reset_stats
+  character(len=64) function represent_stats(self) result(string)
+    use SolverStats_mod, only: represent
     class(TFQMRSolver) :: self
-
-    call reset_stats(self%total_stats)
-  endsubroutine
+    string = represent(self%stats)
+  endfunction
+  
   
 endmodule ! TFQMRSolver_mod
 
