@@ -294,7 +294,7 @@ implicit none
   !------------------------------------------------------------------------------
   
             if (getMyAtomRank(my_mpi) == 0 .and. params%KTE >= 0) &
-              call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, NMESH, solv%represent_stats())
+              call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), solv%represent_stats())
   
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ilocal) N(ilocal)
             do ilocal = 1, num_local_atoms
@@ -480,7 +480,7 @@ implicit none
     double complex, intent(in) :: ez_point
     integer, intent(in) :: ie, ispin, nmesh
     character(len=*), intent(in) :: solver_stats
-    write(6, fmt='(A,I4,A,2(1X,F10.6),A,I4,A,I4,9A)') ' ** IE =',ie,' ENERGY =',ez_point,' KMESH =',nmesh,' ISPIN =',ispin,'  ',trim(solver_stats)
+    write(6, fmt='(A,I4,A,2(1X,F10.6),A,I4,A,I4,9A)') ' ** IE =',ie,' ENERGY =',ez_point,' NofKs =',nmesh,' ISPIN =',ispin,'  ',trim(solver_stats)
   endsubroutine ! print
 
   !----------------------------------------------------------------------------
