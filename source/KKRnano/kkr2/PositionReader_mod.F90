@@ -37,7 +37,7 @@ module PositionReader_mod
     MODIFIED_CONF_DEFAULT = 3,  & ! use default values for elements which have been adjusted in the input file
     MODIFIED_SAME_DEFAULT = 4,  & ! values given in the .xyz file have the same value as the MODIFIED_CONF_DEFAULT level
     MODIFIED_SPECIALIZED  = 5     ! use values given in the .xyz file
-  character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic', 'element', 'configured', 'same', 'specialized']
+  character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized','automatic  ','element    ','configured ','same       ','specialized']
   
   
   contains
@@ -53,8 +53,8 @@ module PositionReader_mod
     integer, intent(in) :: comm ! MPI communicator
 
     integer,          parameter :: nKeys=6, nDoF=12
-    character(len=*), parameter :: keywords(nKeys) = ['Z=','Vw=','rMT=','Mag=','core=','start='] ! all strings need to tail with '='
-    integer         , parameter :: ikeypos(nKeys)  = [ 0,    4,     5,     6,      7,      11  ] ! position in params(0:)
+    character(len=*), parameter :: keywords(nKeys) = ['Z=    ','Vw=   ','rMT=  ','Mag=  ','core= ','start='] ! all strings need to tail with '='
+    integer         , parameter :: ikeypos(nKeys)  = [ 0,        4,        5,       6,        7,       11  ] ! position in params(0:)
     double precision :: z_defaults(0:nDoF-1,-1:116)
     integer(kind=1)  :: z_modified(0:nDoF-1,-1:116)
     integer :: iZ
