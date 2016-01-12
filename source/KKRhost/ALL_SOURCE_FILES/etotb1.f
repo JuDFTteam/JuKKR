@@ -18,6 +18,7 @@ C                               p.zahn       oct. 95
 C
 C     adopted for more atoms per site (CPA) v.popescu feb. 02
 C-----------------------------------------------------------------------
+      use mod_types, only: t_inc
       IMPLICIT NONE
       INCLUDE 'inc.p'
 C
@@ -73,13 +74,15 @@ C
       BANDESUM = 0.0D0
       ETOTLDAU = 0.0D0
 C
-      IF ( KPRE.EQ.1 ) WRITE (1337,FMT=99001)
+      IF ( KPRE.EQ.1 .and. (t_inc%i_write>0)) 
+     &                        WRITE (1337,FMT=99001)
 C
 C---> loop over host atoms
 C
       DO IATYP = 1,NATYP
 C
-         IF ( KPRE.EQ.1 ) WRITE (1337,FMT=99002) IATYP
+         IF ( KPRE.EQ.1 .and. (t_inc%i_write>0)) 
+     &                        WRITE (1337,FMT=99002) IATYP
 C
          EDC = 0.0D0
          ET = 0.0D0
@@ -93,7 +96,7 @@ C
             IS = IS + 1
             IPOT = (IATYP-1)*NSPIN + ISPIN
 C
-            IF ( KPRE.EQ.1 ) THEN
+            IF ( KPRE.EQ.1 .and. (t_inc%i_write>0)) THEN
                WRITE (1337,FMT=99003) TEXTS(IS)
                WRITE (1337,FMT=99004) (TEXTL(L),ESPC(L,IPOT),L=0,
      &                             LCOREMAX(IATYP))
@@ -117,7 +120,8 @@ C -> LDA+U
 C
          ET = ET + EU(IATYP)
          BANDET = BANDET + EU(IATYP)
-         IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
+         IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 
+     &       .and. (t_inc%i_write>0))
      &        WRITE(1337,99019) EU(IATYP)
 C
 C --->  sum up Coulomb and Ex.-Corel. contribution
@@ -127,7 +131,7 @@ C
             EXCS = EXCS + EXC(L,IATYP)
          END DO
 C
-         IF ( KPRE.EQ.1 ) THEN
+         IF ( KPRE.EQ.1 .and. (t_inc%i_write>0)) THEN
             WRITE (1337,FMT=99007) ET
             WRITE (1337,FMT=99008) BANDET
             WRITE (1337,FMT=99009) (L,ECOU(L,IATYP),L=0,LPOT)
@@ -147,7 +151,7 @@ C
             ET = ET + EPOTIN(IATYP) - EDCLDAU(IATYP)
             EDC = EDC + EPOTIN(IATYP) - EDCLDAU(IATYP)
 C
-            IF ( KPRE.EQ.1 ) THEN
+            IF ( KPRE.EQ.1 .and. (t_inc%i_write>0)) THEN
                IF ( IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
      &              WRITE(1337,99020) -EDCLDAU(IATYP)
                WRITE (1337,FMT=99016) EDC
@@ -156,8 +160,9 @@ C
          END IF
 C
          IF ( NATYP.GT.1 .OR. NSHELL(IATYP).GT.1 ) THEN
-            WRITE (1337,FMT=99012) IATYP,ET
-            IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 )
+            if(t_inc%i_write>0) WRITE (1337,FMT=99012) IATYP,ET
+            IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATYP).GE.0 
+     &          .and. (t_inc%i_write>0))
      &           WRITE(1337,99021) EU(IATYP) - EDCLDAU(IATYP)
             WRITE (1337,FMT=99022)
          END IF
@@ -167,8 +172,8 @@ C
 C
       END DO                        ! IATYP = 1,NATYP
 C
-      WRITE (1337,FMT=99013) BANDESUM
-      WRITE (1337,FMT=99014) ETOT,ETOT/EFCTOR
+      if(t_inc%i_write>0) WRITE (1337,FMT=99013) BANDESUM
+      if(t_inc%i_write>0) WRITE (1337,FMT=99014) ETOT,ETOT/EFCTOR
       WRITE (*,FMT=99024) ETOT
 C
 C

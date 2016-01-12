@@ -7,6 +7,8 @@ C     coded by T.Asada. Feb.1994.
 C.....-----------------------------------------------------------------
 C.....-----------------------------------------------------------------
 c.....------------------------------------------------------------------
+      use mod_types, only: t_inc
+      IMPLICIT NONE
 C     .. Scalar Arguments ..
       DOUBLE PRECISION DX
       INTEGER IRMD,IST1,MESH,NSPIN
@@ -144,7 +146,7 @@ c.....six point formula for the 2nd deriv.
 C     ..
 
 c.....-----------------------------------------------------------------
-      IF (IWR.EQ.1) WRITE (1337,FMT=
+      IF ((IWR.EQ.1).and.(t_inc%i_write>0)) WRITE (1337,FMT=
      +'(/''  igl,igh,imj,ihb,ica,icg,ivn,ipw,ipg,'',            ''ivg,ip
      +9,igd,ixlf,iex,xlf='',14i2,f10.4)') IGL,IGH,IMJ,IHB,ICA,ICG,IVN,
      +    IPW,IPG,IVG,IP9,IGD,IXLF,IEX,XLF

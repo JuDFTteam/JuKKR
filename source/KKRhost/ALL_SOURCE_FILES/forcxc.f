@@ -1,5 +1,6 @@
       SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,NSTART,NEND,RHOC,V,R,ALAT,
      +                  DRDI,IRWS,NATREF)
+      use mod_types, only: t_inc
       IMPLICIT NONE
 c>>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless      
 c     SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,NSTART,NEND,RHOC,V,R,ALAT,
@@ -54,16 +55,16 @@ C     ..
  
       END IF
 c
-      WRITE (1337,FMT=9200)
-      WRITE (1337,FMT=9100)
-      WRITE (1337,FMT=9200)
+      if(t_inc%i_write>0) WRITE (1337,FMT=9200)
+      if(t_inc%i_write>0) WRITE (1337,FMT=9100)
+      if(t_inc%i_write>0) WRITE (1337,FMT=9200)
 c
       IREP = 1
       DO 10 IATYP = NSTART,NEND
 c
          IPER = IATYP - NATREF
          P(IPER) = 0.0D0
-         WRITE (1337,FMT=9400) IPER
+         if(t_inc%i_write>0) WRITE (1337,FMT=9400) IPER
 c
          IRWS1 = IRWS(IATYP)
          RWS = R(IRWS1,IATYP)
@@ -128,12 +129,14 @@ c
  
    20    CONTINUE
 c
+         if(t_inc%i_write>0) then
          WRITE (1337,FMT=9600) FLMH(1,IATYP),FLMC(1,IATYP),
      +     FLMXC(1,IATYP),FLM(1,IATYP)
          WRITE (1337,FMT=9601) FLMH(-1,IATYP),FLMC(-1,IATYP),
      +     FLMXC(-1,IATYP),FLM(-1,IATYP)
          WRITE (1337,FMT=9602) FLMH(0,IATYP),FLMC(0,IATYP),
      +     FLMXC(0,IATYP),FLM(0,IATYP)
+         endif
 c
          F(1,IATYP) = FLM(1,IATYP)
          F(2,IATYP) = FLM(-1,IATYP)
@@ -154,13 +157,15 @@ c
 c
 c     DVOL = TRP/ (3.0D0*VOL)
 c
-      WRITE (1337,FMT=9200)
-c     WRITE (6,FMT=9101)
-c     WRITE (6,FMT=9200)
-c     WRITE (6,FMT=9800) DVOL
-c     WRITE (6,FMT=9200)
-      WRITE (1337,FMT=9102)
-      WRITE (1337,FMT=9200)
+      if(t_inc%i_write>0) then
+        WRITE (1337,FMT=9200)
+c       WRITE (6,FMT=9101)
+c       WRITE (6,FMT=9200)
+c       WRITE (6,FMT=9800) DVOL
+c       WRITE (6,FMT=9200)
+        WRITE (1337,FMT=9102)
+        WRITE (1337,FMT=9200)
+      endif
 c
  9000 FORMAT (13x,'error stop in subroutine force :',
      +       ' the charge density has to contain non spherical',

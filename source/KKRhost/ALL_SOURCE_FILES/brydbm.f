@@ -91,8 +91,6 @@ C     ..
      +         FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),
      +         VI3(NTIRD),WIT(2:200),UI2(NTIRD),UI3(NTIRD),VI2(NTIRD))
 
-!       READ(28,FMT='(I5)') MIT
-!       REWIND 28
       MIT = t_inc%mit_bry
       
       IF (ITDEPT.GT.ITDTHD .OR. ITDTHD.GT.200) CALL RCSTOP('ITDBRY  ')
@@ -320,7 +318,6 @@ c
 c
       END IF
       MIT = MIT + 1
-      !WRITE(28,FMT='(I5)') MIT
       t_inc%mit_bry = MIT
       
       REWIND IOBROY + 2
@@ -329,11 +326,6 @@ c
       deallocate(AM,BM,FM,FM1,G,SM,SM1,VI3,WIT,UI2,UI3,VI2)
 
       RETURN
-
-c  190   CALL RCSTOP('broy10  ')
-c  200   CALL RCSTOP('broy11  ')
-c  210   CALL RCSTOP('broy12  ')
-c  220   CALL RCSTOP('broy13  ')
 
 
       END

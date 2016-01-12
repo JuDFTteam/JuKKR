@@ -61,8 +61,6 @@
      +                ALPHA0(LMMAXSO,LMMAXSO), ! LLY
      +                AUX(LMMAXSO,LMMAXSO)         ! LLY
      +               ,ALPHASPH(2*(LMAX+1)) ! LLY
-!        DOUBLE COMPLEX, ALLOCATABLE :: ALPHASPH(:)!,DTMAT_OUT(:,:,:), ! LLY
-!      +                                TRAL_OUT(:) ! LLY
          
        INTEGER JLK_INDEX(2*LMMAXSO)
       ! LLoyd:
@@ -83,7 +81,7 @@
 #ifdef CPP_OMP
       nth = omp_get_num_threads()
 #endif
-      write(1337,*) 'nth =',nth
+      if(t_inc%i_write>0) write(1337,*) 'nth =',nth
 !$omp end single
 !$omp end parallel
 
@@ -122,13 +120,10 @@ c initial allocate
        ALLOCATE(TMATSPH(2*(LMAX+1),0:nth-1))
        ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
-!        ALLOCATE(TMAT_OUT(LMMAXSO,LMMAXSO,IELAST))
-!        ALLOCATE(ALPHASPH(2*(LMAX+1))) ! LLY
-!        ALLOCATE(DTMAT_OUT(LMMAXSO,LMMAXSO,IELAST)) ! LLY
-!        ALLOCATE(TRAL_OUT(IELAST)) ! LLY
           
 c energy loop
-!        if(myrank==master) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
+       if(myrank==master.and.(t_inc%i_write>0)) 
+     &        WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
 
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
@@ -179,7 +174,7 @@ c energy loop
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll) !,tmat_out)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
-!$omp& shared(lly,deltae,i1) !,dtmat_out,tral_out)
+!$omp& shared(lly,deltae,i1)!,dtmat_out,tral_out)
 !$omp& private(tralpha) 
 !$omp& private(alpha0)
 !$omp& private(alphall)
@@ -187,7 +182,6 @@ c energy loop
 !$omp& private(alphasph) 
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
-!$omp& private(aux,ideriv,ipiv) 
        DO IE=1,IELAST
          ie_end = IELAST
          ie_num = ie
@@ -202,7 +196,6 @@ c energy loop
          endif
 !          write(*,*) 'nthreads',nth,ith,ipot
 c         ERYD = EZ(IE)
-
 
          eryd = 0
          ir = 0
@@ -236,9 +229,10 @@ c         ERYD = EZ(IE)
         DO SIGNDE=-IDERIV,IDERIV,2
          ERYD = EZ(IE)+DFLOAT(SIGNDE)*DELTAE/2.D0 ! LLY
 !$omp critical
-        WRITE(1337,*) 'energy:',IE,'',ERYD
+        if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 #ifdef CPP_OMP        
-        if(ie==1) write(1337,*) 'nested omp?',omp_get_nested()
+        if(ie==1.and.(t_inc%i_write>0)) 
+     &      write(1337,*) 'nested omp?',omp_get_nested()
 #endif
 !$omp end critical
 
@@ -414,6 +408,6 @@ c add spherical contribution of tmatrix
        DEALLOCATE(TMATSPH)
        DEALLOCATE(RLL)
        DEALLOCATE(SLL)
-!        DEALLOCATE(ALPHASPH)!,DTMAT_OUT,TRAL_OUT) ! LLY
+
        END 
 

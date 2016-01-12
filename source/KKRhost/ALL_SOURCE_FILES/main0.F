@@ -698,7 +698,6 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C -->  deal with the potential in the RELATIVISTIC CASE
 C
       PARA = .TRUE.
-      write(*,*) 'krel,korbit',krel,korbit
       IF (KREL+KORBIT.EQ.1) THEN
 c      IF (KREL.EQ.1) THEN
 C---------------------------------------------------------------
@@ -814,8 +813,7 @@ C ----------------------------------------------------------------------
 C --> calculate Madelung constants (needed only for SCF calculations)
 C ----------------------------------------------------------------------
 cfivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-      OPEN(99,FILE='madelinfo.txt')
-
+      !OPEN(99,FILE='madelinfo.txt')
       IF ( LINTERFACE ) THEN
 C -------------------------------------------------------------- 2D case
          CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
@@ -832,7 +830,7 @@ C -------------------------------------------------------------- 3D case
      &                      NMAXD,ISHLD,NEMBD,WLENGTH)
       END IF
 
-      CLOSE(99)
+      !CLOSE(99)
 C ----------------------------------------------------------------------
 cfivos      END IF
 C ======================================================================

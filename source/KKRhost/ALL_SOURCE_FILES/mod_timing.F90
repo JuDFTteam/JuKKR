@@ -4,15 +4,6 @@ module mod_timing
 
 implicit none
 
-
-!   type :: type_timing
-! 
-!     integer :: times(10) = 0
-!     
-!   end type type_timing
-!    
-!   type (type_timing), save :: t_time
-
    
 
   integer,parameter      :: nkeys=20
@@ -28,12 +19,13 @@ implicit none
 contains 
 
 subroutine timing_init(my_rank)
+  use mod_types, only: t_inc
   implicit none
   integer  :: my_rank
   character(len=3) :: ctemp
   if (init/=0) stop '[mod_timing] timing already initilized'
   write(ctemp,'(I03.3)') my_rank
-  open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
+  if(t_inc%i_time>0) open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
   init=1
 end subroutine timing_init
 
@@ -92,6 +84,7 @@ subroutine timing_pause(mykey2)
 end subroutine timing_pause
 
 subroutine timing_stop(mykey2,cmode)
+  use mod_types, only: t_inc
   implicit none
   integer time_array_1(8)
   integer    :: stop_time
@@ -113,7 +106,7 @@ subroutine timing_stop(mykey2,cmode)
 
   call timing_delkey(mykey)
 
-  write(43234059,*)  mykey,'  ',timing
+  if(t_inc%i_time>0) write(43234059,*)  mykey,'  ',timing
 
   ispaused(ikey)=0
 
@@ -177,6 +170,7 @@ end subroutine timing_delkey
 
 
 subroutine print_time_and_date(message)
+    ! helper routine that print 'message' with a time stamp to screen
     implicit none
     character(len=*), intent(in) :: message
     integer,dimension(8) :: values

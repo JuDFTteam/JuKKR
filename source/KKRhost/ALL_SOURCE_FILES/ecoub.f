@@ -48,6 +48,8 @@ c
 c                 modified for band structure code
 c                               b.drittler   jan. 1990
 c-----------------------------------------------------------------------
+      use mod_types, only: t_inc
+      IMPLICIT NONE
 C     .. Parameters ..
       include 'inc.p'
 C     ..
@@ -206,8 +208,8 @@ c
 c         atom nr. iatyp is the iatyp-th atom on the potential cards
 c         e. g., in binary alloys iatyp=1 and iatyp=2 refer to host
 c
-          WRITE (1337,FMT=9010) IATYP,VMAD
-          WRITE (1337,FMT=9000) IATYP,VM
+          if(t_inc%i_write>0) WRITE (1337,FMT=9010) IATYP,VMAD
+          if(t_inc%i_write>0) WRITE (1337,FMT=9000) IATYP,VM
         END IF                      ! (KVMAD.EQ.1)
 
   100 CONTINUE                      ! IATYP = 1,NATYP

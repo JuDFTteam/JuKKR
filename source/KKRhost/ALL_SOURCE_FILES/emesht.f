@@ -64,6 +64,8 @@ C *  The total number of integration points is given by:               *
 C *              NPNT=NPNT1+NPNT2+NPNT3                                *
 C *                                                                    *
 C **********************************************************************
+      use mod_types, only: t_inc
+      IMPLICIT NONE
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION EBOT,EMU,TK,EFERMI
@@ -94,11 +96,13 @@ C     .. Data statements ..
 C     ..
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+      if(t_inc%i_write>0) then
       WRITE (1337,'(5X,A,F12.6," (Ry)",8X,A,F12.6," (Ry)")')
      &     'E min = ',EBOT,'Fermi energy = ',EFERMI
       WRITE (1337,
      &       '(5X,A,F12.6," (Ry)",8X,A,F12.6," (K )",/,5X,62(1H-))') 
      &     'E max = ',EMU,'Temperature  = ',TK
+      endif
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       ETK = PI*KB*TK
@@ -123,7 +127,7 @@ C ======================================================================
             EZ(NPNT) = DCMPLX(ER,ETK)
             DF(NPNT) = DE
  10      CONTINUE
-         WRITE (1337,FMT=9000) NPNT,ETK,ETK*RYD
+         if(t_inc%i_write>0) WRITE (1337,FMT=9000) NPNT,ETK,ETK*RYD
 C ------------------------------------------------------------- NPOL > 0
       ELSE IF (NPOL.GT.0) THEN
          CALL GAULEG(XI,WI,NPNT1)
@@ -177,7 +181,8 @@ C ------------------------------------------------------------- NPOL > 0
             EZ(NPNT) = EMU + (2*I-1)*DCMPLX(0.0D0,ETK)
             DF(NPNT) = -2*DCMPLX(0.0D0,ETK)
  50      CONTINUE
-         WRITE(1337,9090) NPNT,NPOL,NPNT1,NPNT2,NPNT3
+         if(t_inc%i_write>0) 
+     &          WRITE(1337,9090) NPNT,NPOL,NPNT1,NPNT2,NPNT3
 C ------------------------------------------------------------- NPOL < 0
       ELSE
          IF (NPNT1.GT.0) CALL GAULEG(XI,WI,NPNT1)
@@ -221,10 +226,11 @@ C ------------------------------------------------------------- NPOL < 0
             EZ(NPNT) = XI(I)*DE + DE + EMU
             DF(NPNT) = -WI(I)*DE
  80      CONTINUE
-         WRITE(1337,9091) NPNT,-NPOL,NPNT1,NPNT2,NPNT3
+         if(t_inc%i_write>0) 
+     &         WRITE(1337,9091) NPNT,-NPOL,NPNT1,NPNT2,NPNT3
        END IF
 C ======================================================================
-       WRITE(1337,*)
+       if(t_inc%i_write>0) WRITE(1337,*)
 c*****************************************************************
 c************Correction Factor for the weight in the integration
 c*********according to Phivos Idea******************************

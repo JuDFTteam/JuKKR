@@ -4,13 +4,14 @@
      &                 NAEZ,LLY) ! LLY Lloyd
      
       use mod_mympi, only: myrank, nranks, master
-      use mod_types, only: t_tgmat, t_lloyd
+      use mod_types, only: t_tgmat, t_lloyd, t_inc
 #ifdef CPP_MPI
      &                    ,t_mpi_c_grid
-      use mpi      
+      use mpi
       use mod_mympi, only: myrank, nranks, master
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks
+
 #endif
       
       IMPLICIT NONE
@@ -117,7 +118,7 @@ C     ..
 C
 C ======================================================================
 #ifdef CPP_MPI
-        write(1337,*) myrank, 'start tbref e-loop'
+        if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
 !        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
 !        ie_end = t_mpi_c_grid%ntot2
 !        write(*,*) myrank,t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie,
@@ -134,7 +135,7 @@ C ======================================================================
       DO IE = 1,IELAST
          ie_num = ie
 #endif
-         WRITE(1337,FMT='(A23,I5,2F14.8)') 
+         if(t_inc%i_write>0) WRITE(1337,FMT='(A23,I5,2F14.8)') 
      &                         'TBREF: GREF for energy:',IE,EZ(IE)
 C
 CMPI      IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
@@ -145,11 +146,12 @@ C
      &                    TREFLL(1,1,I1),DTREFLL(1,1,I1),                   ! LLY Lloyd
      &                    ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)    ! LLY Lloyd
 
-            IF (TEST('flow    ')) WRITE (1337,FMT=*) 
-     &                           'tll(ref),  i1 = ',I1
+            IF (TEST('flow    ').and.(t_inc%i_write>0)) 
+     &         WRITE (1337,FMT=*) 'tll(ref),  i1 = ',I1
          END DO
 C
-         IF (TEST('flow    ')) WRITE (1337,FMT=*) 't-mat(Ref) o.k.', IE
+         IF (TEST('flow    ') .and. (t_inc%i_write>0)) 
+     &         WRITE (1337,FMT=*) 't-mat(Ref) o.k.', IE
 C ----------------------------------------------------------------------
 #ifdef CPP_MPI
          ntot1 = NCLS
@@ -183,8 +185,8 @@ C ----------------------------------------------------------------------
             END DO
 C     
             IF (IC.EQ.0) STOP 'Error in CLS(*) array in tbref'
-            IF (TEST('flow    ')) WRITE (1337,FMT=*) 'CLUSTER ',ICLS,
-     +           ' at ATOM ',IC
+            IF (TEST('flow    ').and.(t_inc%i_write>0)) 
+     &           WRITE (1337,FMT=*) 'CLUSTER ',ICLS,' at ATOM ',IC
 C     
             !write(*,*) 'gll start for ',ie_num,icls
             CALL GLL13(ERYD,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
@@ -194,9 +196,7 @@ C
      &                 DGINP(1,1,ICLS),NACLSMAX,LLY_G0TR(IE,ICLS),LLY)
             !write(*,*) 'gll done for ',ie_num,icls
          END DO
-         
-         !write(*,*) 'after gll13',ie_num
-         
+
 #ifdef CPP_MPI
          if(t_mpi_c_grid%nranks_ie>1) then
          !gather results of ginp, dginp and lly_g0tr from above parallel loop
@@ -230,7 +230,6 @@ C
 !          if(t_mpi_c_grid%myrank_ie==master) then
          endif!t_mpi_c_grid%nranks_ie>1
 #endif
-         
          IF (LLY.NE.0) THEN                                    ! LLY Lloyd
             LLY_G0TR_IE = CZERO                                ! LLY Lloyd
             DO I1 = 1,NAEZ                                     ! LLY Lloyd
@@ -245,10 +244,11 @@ C ----------------------------------------------------------------------
            if(t_mpi_c_grid%myrank_ie==0) then
 #endif
             WRITE (68,REC=IE) GINP                 ! Gref
-            write(686868,*) ginp
+!             write(686868,*) ginp
 #ifdef CPP_MPI
            end if !if(t_mpi_c_grid%myrank_ie==0) then
 #endif
+
          else
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
          end if
@@ -265,7 +265,7 @@ C ----------------------------------------------------------------------
             end if                                         ! LLY Lloyd
          END IF ! LLY.NE.0                                 ! LLY Lloyd
 C
-         IF (TEST('flow    ')) WRITE (1337,FMT=*) 
+         IF (TEST('flow    ').and.(t_inc%i_write>0)) WRITE (1337,FMT=*) 
      &                               'G(n,lm,n,lm) (Ref) o.k.'
 ! #ifdef CPP_MPI
 !          endif !if(t_mpi_c_grid%myrank_ie==master)

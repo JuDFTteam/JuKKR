@@ -1,11 +1,10 @@
       MODULE MOD_MAIN1B
       
-            
-      !use modulename, only rountine1
-      
       implicit none
       
       contains
+      
+      
       
       subroutine main1b()
       
@@ -14,8 +13,7 @@
 #endif
 #ifdef CPP_TIMING
       use mod_timing
-#endif
-      
+#endif 
       use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
@@ -27,6 +25,8 @@
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks
 #endif
+      use mod_wunfiles
+      use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
       
       use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
 
@@ -91,7 +91,7 @@ C     .. Local Scalars ..
       DOUBLE COMPLEX TREAD ! qdos ruess
 C     RFCTOR=A/(2*PI) conversion factor to p.u.
       DOUBLE PRECISION CPATOL,ALAT,RFCTOR,THETA,PHI
-      DOUBLE PRECISION PI
+      DOUBLE PRECISION PI,THETAS(NATYPD),PHIS(NATYPD)
       DOUBLE COMPLEX DF,ERYD,EK,CFCTOR,CFCTORINV
       LOGICAL OPT,TEST,LCPAIJ,LREAD
       CHARACTER*80 TMPDIR
@@ -115,7 +115,6 @@ C     .. GINP   = cluster GF (ref. syst.)
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX
      +     GMATLL(LMMAXD,LMMAXD,NSHELD),GMAT0(LMMAXD,LMMAXD)
-!      DOUBLE COMPLEX, allocatable :: GMATLL(:,:,:),GMAT0(:,:)
       DOUBLE COMPLEX,ALLOCATABLE:: 
      &     GINP(:,:,:), ! cluster GF (ref syst.)              ! GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
      &     DGINP(:,:,:) ! LLY Lloyd Energy derivative of GINP ! DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
@@ -130,34 +129,18 @@ C     .. GINP   = cluster GF (ref. syst.)
      &               ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD), ! LLY Lloyd Alpha matrix and deriv.
      &               TRALPHAREF(IEMXD),                                ! LLY Lloyd  
      &               CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD)         ! LLY Lloyd
-! C     .. effective (site-dependent) Delta_t^(-1) matrix ..
-!       DOUBLE COMPLEX, allocatable :: TMAT(:,:),TSST(:,:,:),
-!      +               TREFLL(:,:,:),DTREFLL(:,:,:),DTMATLL(:,:,:),
-!      &               LLY_GRTR(:,:),LLY_G0TR(:),TRALPHA(:,:),
-!      &               TRACET(:,:),ALPHAREF(:,:),DALPHAREF(:,:),
-!      &               TRALPHAREF(:),CDOS_LLY(:,:),CDOSREF_LLY(:)
-!       DOUBLE COMPLEX TRALPHA1
 C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX WN2(LMGF0D,LMGF0D)                  ! LLY
       DOUBLE COMPLEX MSST(LMMAXD,LMMAXD,NATYPD)
-!       DOUBLE COMPLEX LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      &               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
       double complex, allocatable :: LEFTTINVLL(:,:,:,:,:),
      +                               RIGHTTINVLL(:,:,:,:,:)
       DOUBLE COMPLEX W1(LMMAXD,LMMAXD),WN1(LMGF0D,LMGF0D)
       DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
       DOUBLE COMPLEX FACTL(LMMAXD,LMMAXD)
-!       DOUBLE COMPLEX, allocatable :: WN2(:,:),MSST(:,:,:)
-!       DOUBLE COMPLEX, allocatable :: LEFTTINVLL(:,:,:,:,:),
-!      &                               RIGHTTINVLL(:,:,:,:,:)
-!       DOUBLE COMPLEX, allocatable :: W1(:,:),WN1(:,:)
-!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),FACTL(:,:)
       DOUBLE PRECISION RATOM(3,NSHELD),RROT(48,3,NSHELD)
       INTEGER NSH1(NSHELD),NSH2(NSHELD)
       INTEGER IJTABCALC(NOFGIJD),ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
       INTEGER IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),IQCALC(NAEZD)
-!       DOUBLE COMPLEX, allocatable :: CREL(:,:),RC(:,:),
-!      &               RREL(:,:),SRREL(:,:,:)
       DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
      &               RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD)
       INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD)
@@ -175,7 +158,6 @@ C     .. rotation matrices, unitary/antiunitary symmetry flag
 C     ..
       LOGICAL VACFLAG(2)
       INTEGER KMESH(IEMXD),NOFKS(MAXMSHD)
-!       DOUBLE PRECISION BZKP(3,KPOIBZ,MAXMSHD)
       DOUBLE PRECISION, allocatable :: BZKP(:,:,:)
       DOUBLE PRECISION VOLCUB(KPOIBZ,MAXMSHD),VOLBZ(MAXMSHD)
       DOUBLE COMPLEX TR1(IEMXD,NATYPD)
@@ -219,23 +201,6 @@ C
      &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
       allocate(BZKP(3,KPOIBZ,MAXMSHD))
 
-!       ALLOCATE(TMAT(LMMAXD,LMMAXD),TSST(LMMAXD,LMMAXD,NATYPD),
-!      &        TREFLL(LMMAXD,LMMAXD,NREFD),DTREFLL(LMMAXD,LMMAXD,NREFD),
-!      &        DTMATLL(LMMAXD,LMMAXD,NAEZD),LLY_GRTR(IEMXD,NSPIND),
-!      &        LLY_G0TR(IEMXD),TRALPHA(IEMXD,NSPIND),
-!      &        TRACET(IEMXD,NSPIND),
-!      &        ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD),
-!      &        TRALPHAREF(IEMXD),
-!      &        CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD),
-!      &        WN2(LMGF0D,LMGF0D),MSST(LMMAXD,LMMAXD,NATYPD),
-!      &        LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      &        RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      &        W1(LMMAXD,LMMAXD),WN1(LMGF0D,LMGF0D),
-!      &        DSYMLL(LMMAXD,LMMAXD,NSYMAXD),FACTL(LMMAXD,LMMAXD),
-!      &        CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
-!      &        RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD),
-!      &        GMATLL(LMMAXD,LMMAXD,NSHELD),GMAT0(LMMAXD,LMMAXD))
-
 Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
      &     STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
@@ -249,75 +214,23 @@ C =             read in variables from unformatted files               =
 C ======================================================================
 C
 C -------------------------------------------------------------- input1b
-C
-      OPEN (67,FILE='input1b.unformatted',FORM='unformatted')
-      READ (67) NSRA,INS,NATYP,NAEZ,NSPIN,LMAX,NREF,ICC,IGF,
-     &          NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL
-C ......................................................................
-Consistency check 
-C
-      IF ( (KREL.EQ.1) .AND. (INS.NE.0) ) THEN
-         WRITE(6,*)
-     &        ' FULL-POTENTIAL RELATIVISTIC mode not implemented '
-         STOP ' set INS = 0 in the input'
-      END IF
-C     
-      IF ( NSRA.LE.2 ) THEN
-         IF ( KREL.EQ.1 ) STOP
-     &        ' KVREL <= 1 in input, but relativistic program used'
-      ELSE
-         IF ( KREL.EQ.0 ) STOP
-     &        ' KVREL > 1 in input, but non-relativistic program used'
-      END IF
-      IDECI = 0
-C ......................................................................
-      READ (67) ALAT,RBASIS,REFPOT,RMTREF,VREF,RCLS,RR,
-     &          ATOM,CLS,NCLS,EZOA,NACLS,NSHELL,KMROT,KAOEZ,IQAT,NOQ,
-     &          CONC,KMESH,MAXMESH,TESTC,OPTC,LLY
-      READ (67) NSYMAT,NATOMIMP,NOFGIJ,NQCALC,RATOM,RROT,NSH1,NSH2,DROTQ
-      READ (67) IJTABCALC
-      READ(67) ((ISH(I,L),L=1,NOFGIJ),I=1,NSHELL(0))
-      READ(67) ((JSH(I,L),L=1,NOFGIJ),I=1,NSHELL(0))
-      READ (67) IJTABSYM,IJTABSH,IQCALC
-      READ (67) DSYMLL,INVMOD,ICHECK,ATOMIMP,SYMUNITARY
-      READ (67) TMPDIR,ITMPDIR,ILTMP
-      IF ( KREL.EQ.1 ) READ (67) RC,CREL,RREL,SRREL,NRREL,IRREL
-      IF ( OPT('DECIMATE') ) THEN
-         READ (67) LEFTTINVLL,RIGHTTINVLL,VACFLAG
-         IDECI = 1
-      END IF
-      CLOSE (67)
-C ------------------------------------------------------------- k-points
-C
-      OPEN (52,FILE='kpoints',FORM='formatted')
-      REWIND (52)
-      DO L = 1,MAXMESH
-         READ (52,FMT='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-         DO I=1,NOFKS(L)
-            READ (52,FMT=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-         END DO
-      END DO
-      CLOSE (52)
-C ---------------------------------------------------------- energy_mesh
-C
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='energy_mesh',FORM='unformatted')
-      else
-        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      end if
-      READ (67) IELAST,EZ,WEZ
-      CLOSE (67)
-      IF (TEST('gmatasci')) 
+      call get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
+     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,OPTC,
+     &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
+     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,TESTC,
+     &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
+     &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
+     &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
+     &       NOQ,IQAT,NOFGIJD,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,
+     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABSYM,IJTABSH,IQCALC,
+     &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
+     &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
+     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD)
+     
+     
+      IF (TEST('gmatasci'))
      &           OPEN(298347,FILE='gmat.ascii',FORM='formatted')
-C -------------------------------------------------------------- itermdir
-C
-      IF (OPT('ITERMDIR')) THEN
-         OPEN(67,FILE='itermdir.unformatted',FORM='unformatted')
-         READ (67)
-         READ (67) DROTQ
-         CLOSE(67)
-         IF ( KMROT.EQ.0 ) KMROT = 1
-      END IF
+
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -354,12 +267,7 @@ C     Reset GMATLL for calculation in second run
          open(37, file='decifile', form='formatted', position='append') ! ruess: needed in case of deci-out option to prepare decifile
       end if
          
-C
-CT3E  CALL SYSTEM_CLOCK(MEND)
-CT3E  TIME1 = (MEND-MSTART)
-CT3E  TIME2 = 0.0D0
-CT3E  CALL SYSTEM_CLOCK(MSTART)
-C
+         
       DO I=1,NAEZ
          DO L=1,NOQ(I)
             ITOQ(L,I) = KAOEZ(L,I)
@@ -371,7 +279,7 @@ C
 
       CALL SETFACTL(FACTL,LMAX,KREL,LMMAXD)
 C     
-      WRITE(1337,2100) INVALG(INVMOD)
+      if(t_inc%i_write>0) WRITE(1337,2100) INVALG(INVMOD)
 C
 
 
@@ -495,11 +403,9 @@ C
 C
          NCPAFAIL = 0
 C
-#ifdef CPP_MPI
+#ifdef CPP_MPI         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-         
-!          write(*,*) 'e loop main1b',myrank,ie_start,ie_end
          
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
@@ -522,7 +428,7 @@ C
 
             ERYD = EZ(IE)
             NMESH = KMESH(IE)
-            WRITE (1337,'(A,I3,A,2(1X,F10.6),A,I3)') 
+            if(t_inc%i_write>0) WRITE (1337,'(A,I3,A,2(1X,F10.6),A,I3)') 
      &             ' ************ IE = ',IE,' ENERGY =',EZ(IE),
      &                ' KMESH = ', NMESH
 C ********************************************************** I1 = 1,NREF
@@ -559,7 +465,7 @@ C------------------------------------------------------------
             END IF
 #ifdef CPP_TIMING
         call timing_pause('main1b - calctref13')
-#endif
+#endif    
 C
 C **********************************************************************
             TRALPHA(IE,ISPIN) = CZERO                                    ! LLY
@@ -628,8 +534,6 @@ C
      &                   LMMAXD**2*naez*(ie-1)+
      &                   LMMAXD**2*ielast*naez*(ispin-1)
                   read(37,rec=irec) tread
-!                   write(*,'(A,7I5,2F15.8)') 'irec_read',myrank,irec,
-!      &             lm1,lm2,isite,ie,ispin, tread
                   IF ( (LM1+LM2).NE.0 ) THEN                  ! qdos ruess
                      TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
                   END IF                                      ! qdos ruess
@@ -689,19 +593,14 @@ C           Skip this part if first part of the qdos is running
                      GMAT0(LM1,LM2)=GMATLL(LM1,LM2,I1)
                   ENDDO
                 ENDDO
-C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- before introducing qdos
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
-!                 if(myrank==master) write(*,*) 'test_gmat',irec,iq,ie,
-!      &                     ispin,i1,gmat0(2,5)
                 if (t_tgmat%gmat_to_file) then
                    WRITE (70,REC=IREC) GMAT0
                 else
                    IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &                    ie_end * (ISPIN-1) + 
      &                    NQDOS * ie_end * NSPIN * (I1-1)
-!     &                    t_mpi_c_grid%ntot2 * (ISPIN-1) + 
-!     &                    NQDOS * t_mpi_c_grid%ntot2 * NSPIN * (I1-1)
                    t_tgmat%gmat(:,:,irec) = gmat0
                 end if
               ENDDO
@@ -720,11 +619,7 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
 
             IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
                 I1=ATOMIMP(1)
-! #ifdef CPP_MPI
                 irec = ielast*(ispin-1)+ ie+1
-! #else
-!                 irec = t_mpi_c_grid%ntot2*(ispin-1)+ ie_num+1
-! #endif
                 ILM=0
                 GIMP=(0.e0,0.e0) !complex*8
                 DO LM2=1,LMMAXD
@@ -734,7 +629,6 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
                     ENDDO
                 ENDDO
                 irec = ielast*(ispin-1)+ ie+1
-!                 write(*,*) 'write gimp',myrank,ie_num,ie,ispin,irec
                 WRITE(888,REC=irec) GIMP
                 IF ( ( OPT('GPLAIN  ') ) ) THEN
                   WRITE(8888,'(50000E)') GIMP
@@ -749,12 +643,7 @@ C               IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1) ! <-- befor
                         W1(LM1,LM2)    = MSST(LM1,LM2,I1)
                      END DO
                   END DO
-! #ifdef CPP_MPI
                   IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1)
-! #else
-!                   irec = ie_num + t_mpi_c_grid%ntot2*(ispin-1) + 
-!      &                   t_mpi_c_grid%ntot2*nspin*(i1-1)
-! #endif
                   WRITE (71,REC=IREC) GMAT0,W1
                END DO
               END IF  ! ( LCPAIJ )
@@ -796,6 +685,7 @@ c ------------------------------------------------------------------------
 #endif
 
          IF( NCPAFAIL .NE. 0 ) THEN
+            if(t_inc%i_write>0) then
             WRITE(1337,*)
             WRITE(1337,'(1X,79(''*''),/)')
             WRITE(1337,99019) CPATOL, NCPAFAIL,
@@ -803,11 +693,14 @@ c ------------------------------------------------------------------------
      &           IE=1,NCPAFAIL)
             WRITE(1337,'(1X,79(''*''),/)')
             WRITE(1337,*)
+            endif
          ELSE
             IF( NCPA .NE. 0 ) THEN
+               if(t_inc%i_write>0) then
                WRITE(1337,*)
                WRITE(1337,99020)
                WRITE(1337,*)
+               endif
             END IF
          END IF
 C         
@@ -817,9 +710,6 @@ C
       ELSE ! NEW SOC SOLVER 
 
 #ifdef CPP_MPI
-!       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-!       ie_end = t_mpi_c_grid%ntot2
-      
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
@@ -846,7 +736,7 @@ c read in Green function of reference system
        endif
        ERYD = EZ(IE)
        NMESH = KMESH(IE)
-            WRITE (1337,'(A,I3,A,2(1X,F10.6),A,I3)') 
+       if(t_inc%i_write>0) WRITE (1337,'(A,I3,A,2(1X,F10.6),A,I3)') 
      &             ' ************ IE = ',IE,' ENERGY =',EZ(IE),
      &                ' KMESH = ', NMESH
 
@@ -873,25 +763,15 @@ c construct t matrix for reference system (now is always double matrix)
        TRALPHAREF(IE)=CZERO
 c read in t matrix
 
-       LREAD = .FALSE.
-       INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
-       IF (LREAD) OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
-       THETA = 0.D0
-       PHI = 0.D0
+      ! nonco angles
+      call read_angles(t_params,NATYP,THETAS,PHIS)
 
 
        DO I1 = 1,NATYPD
 
-c read in theta and phi for noncolinear
-        IF (LREAD) READ(10,*) THETA,PHI
-          THETA=THETA*(2.0D0*PI/360.0D0)
-          PHI=PHI*(2.0D0*PI/360.0D0)
-          IF(ABS(THETA).GE.PI .OR. ABS(PHI).GE.2*PI) THEN
-             write(1337,*) 'WARNING: Check if your
-     & nonco_angels file is correct! Found only values that are
-     & smaller than pi for theta and 2pi for phi, respectively. But
-     & angles are given in degree (0...360)'
-          ENDIF
+! c read in theta and phi for noncolinear
+        THETA = THETAS(I1)
+        PHI   = PHIS(I1)
 
 c read in t-matrix from file
 !         write(*,*) 'main1b tmatread',myrank,i1,ie,ielast
@@ -954,7 +834,6 @@ c rotate t-matrix from local to global frame
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
-!               if(myrank==master) then
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -1015,11 +894,11 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
-                     write(707070,*) gmat0
+!                      write(707070,*) gmat0
+
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &                    ie_end * (I1-1)
-!     &                    t_mpi_c_grid%ntot2 * (I1-1)
                      t_tgmat%gmat(:,:,irec) = gmat0
                   end if
                ENDDO
@@ -1049,7 +928,6 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   WRITE(888,REC=IREC) GIMP
                ENDIF
 
-c       STOP
             ENDIF               ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  220     CONTINUE               ! IQ = 1,NQ                                         ! qdos ruess
 
@@ -1070,7 +948,7 @@ c       STOP
         call timing_stop('main1b - calctref13')
         call timing_stop('main1b - kloopz')
 #endif
-      
+
       ENDIF ! NEWSOSOL
 
 
@@ -1086,11 +964,7 @@ C
          if(t_lloyd%cdos_diff_lly_to_file) then
             OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
          end if
-!          OPEN (702,FILE='cdosref_lly.dat',FORM='FORMATTED')              ! LLY Lloyd
-!          DO IE = 1,IELAST                                                ! LLY
-!            WRITE(702,FMT='(10E25.16)') DREAL(EZ(IE)),CDOSREF_LLY(IE),    ! LLY
-!      &                TRALPHAREF(IE),LLY_G0TR(IE)
-!          ENDDO                                                           ! LLY
+         
          IF (.NOT.OPT('NEWSOSOL')) THEN
           DO ISPIN = 1,NSPIN                                             ! LLY
 #ifdef CPP_MPI
@@ -1131,20 +1005,16 @@ C
           ENDDO                                                          ! LLY
          ENDIF ! .NOT.OPT('NEWSOSOL')                                    ! LLY
          if(t_lloyd%cdos_diff_lly_to_file) CLOSE(701)                    ! LLY
-!          CLOSE(702)                                                      ! LLY
       ENDIF                                                              ! LLY
 C
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
-        IF(NQDOS/=1) stop 'QDOS option not compatible with XCPL'
-!       open(23,FILE='energies.dat',STATUS='unknown',FORM='formatted')
-!        DO IE = 1,IELAST  <---- for MPI-parallel version: moved energy loop into TBXCCPLJIJ
+         IF(NQDOS/=1) stop 'QDOS option not compatible with XCPL'
             CALL TBXCCPLJIJ(69,IELAST,EZ,WEZ,NSPIN,NCPA,NAEZ,NATYP,NOQ,
      &                      ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,
      &                      DSYMLL,IPRINT,NATYPD,NAEZD,NSHELD,LMMAXD)
-!        END DO!IE
       END IF
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C
@@ -1162,9 +1032,10 @@ C     kpoint (defined in qvec.dat)
       if(t_lloyd%dtmat_to_file)   CLOSE(691)
       if(t_lloyd%tralpha_to_file) CLOSE(692)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
-C ----------------------------------------------------------------------C
-      !STOP
-      WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
+C ----------------------------------------------------------------------
+C
+      if(t_inc%i_write>0) 
+     &   WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
 
  2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
      &     79(1H=),/)
@@ -1177,10 +1048,6 @@ C ----------------------------------------------------------------------C
 
 
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP)
-!       DEALLOCATE(TMAT,TSST,TREFLL,DTREFLL,DTMATLL,LLY_GRTR,
-!      &        LLY_G0TR,TRALPHA,TRACET,ALPHAREF,DALPHAREF,TRALPHAREF,
-!      &        CDOS_LLY,CDOSREF_LLY,WN2,MSST,LEFTTINVLL,RIGHTTINVLL,
-!      &        W1,WN1,DSYMLL,FACTL,CREL,RC,RREL,SRREL)
 
 
       END SUBROUTINE !main1b

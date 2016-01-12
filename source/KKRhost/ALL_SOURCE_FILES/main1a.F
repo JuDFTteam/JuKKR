@@ -25,7 +25,10 @@
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks
 #endif
+#ifdef CPP_TIMING
       use mod_timing
+#endif
+      use mod_wunfiles
      
       INCLUDE 'inc.p'
 C
@@ -82,7 +85,6 @@ C     .. Local Arrays ..
       DOUBLE COMPLEX EZ(IEMXD)
       DOUBLE PRECISION DRDI(IRMD,NATYPD),RMESH(IRMD,NATYPD),ZAT(NATYPD),
      +                 RCLS(3,NACLSD,NCLSD),RMTREF(NREFD),VREF(NREFD),
-!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
      +                 VISP(IRMD,NPOTD),
      +                 CLEB(NCLEB,2)
       double precision, allocatable :: vins(:,:,:)
@@ -111,7 +113,6 @@ C LDA+U
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-!       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
@@ -143,7 +144,6 @@ C     .. Intrinsic Functions ..
 C     ..
       DATA TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       DATA LLY /0/
-!      DATA DELTAE /(1.D-3,0.D0)/
 C
 
       allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),
@@ -158,64 +158,22 @@ C
 C
 C ======================================================================
 C =             read in variables from unformatted files               =
+C               > instead of unformatted files take parameters from 
+C                 type defined in wunfiles.f
 C ======================================================================
 C
-C -------------------------------------------------------------- input1a
+      call get_params_1a(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
+     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,LM2D,NSRA,INS,NAEZ,NATYP,
+     &       NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,NREF,IDOLDAU,LLY,
+     &       KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,
+     &       IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,
+     &       RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,
+     &       SOLVER,TMPDIR,DELTAE,TESTC,OPTC,tolrdif,NPAN_LOG,NPAN_EQ,
+     &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
+     &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
+     &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
+     &       ITSCF)
 C
-      OPEN (67,FILE='input1a.unformatted',FORM='unformatted')
-      READ (67) NSRA,INS,NAEZ,NATYP,NSPIN,ICST,IPAN,IRCUT,    ! LLY added NAEZ
-     &          LMAX,NCLS,NINEQ,NREF,IDOLDAU,LLY
-C ......................................................................
-Consistency check 
-C
-      IF ( (KREL.EQ.1) .AND. (INS.NE.0) ) THEN
-         WRITE(6,*)
-     &        ' FULL-POTENTIAL RELATIVISTIC mode not implemented '
-         STOP ' set INS = 0 in the input'
-      END IF
-C     
-      IF ( NSRA.LE.2 ) THEN
-         IF ( KREL.EQ.1 ) STOP
-     &        ' KVREL <= 1 in input, but relativistic program used'
-      ELSE
-         IF ( KREL.EQ.0 ) STOP
-     &        ' KVREL > 1 in input, but non-relativistic program used'
-      END IF
-C ......................................................................
-      READ (67) ALAT,ZAT,DRDI,RMESH,RMTREF,VREF,IEND,CLEB,RCLS,
-     &          ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,TESTC,OPTC,
-     &          IRWS,IRMIN,TOLRDIF,DELTAE,SOCSCALE
-      READ (67) TMPDIR,ITMPDIR,ILTMP
-      READ (67) NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,NPAN_TOT
-      READ (67) RNEW,RPAN_INTERVALL,IPAN_INTERVALL
-      IF (KREL.EQ.1) READ(67) SOLVER,SOCSCL,CSCL
-      IF ( IDOLDAU.EQ.1 ) READ(67) NTLDAU,ITLDAU,LOPT,UEFF,JEFF,EREFLDAU
-      CLOSE (67)
-C ---------------------------------------------------------- energy_mesh
-C
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='energy_mesh',FORM='unformatted')
-      else
-        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      end if
-      READ (67) IELAST,EZ
-      CLOSE (67)
-C ------------------------------------------------------ input_potential
-C
-!       OPEN (67,FILE='input_potential',FORM='unformatted')
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
-      else
-        OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
-      end if
-      READ (67) VINS,VISP
-      IF (KREL.EQ.1) THEN
-         READ (67) RMREL,DRDIREL,R2DRDIREL
-         READ (67) ZREL,JWSREL
-         READ (67) VTREL,BTREL
-      END IF
-      READ (67) ITSCF
-      CLOSE (67)
       IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       
       if(IDOLDAU==1) ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
@@ -250,7 +208,6 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #ifdef CPP_MPI
 ! MPI:     
       ntot1 = t_inc%NATYP
-!
 #endif
 C     
 C -> no need to recalculate the reference system in SCF decimation case
@@ -302,7 +259,6 @@ C
      &                ntot_pT(t_mpi_c_grid%myrank_ie)
            t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 !         endif
-       
 
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
@@ -314,10 +270,6 @@ C
       i1_start = 1
       i1_end   = NATYP
 #endif
-
-
-!        write(*,*) 'i1 loop', myrank, i1_start, i1_end
-
         DO I1 = i1_start,i1_end
        DO ISPIN = 1,NSPIN
          IPOT=NSPIN*(I1-1)+ispin
@@ -344,26 +296,8 @@ C
      
       ELSE
        
-       THETA(:) = 0.D0
-       PHI(:) = 0.D0
-       LREAD = .FALSE.
-       LCHECKANGLES = .TRUE.
-       INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
-       IF (LREAD) THEN
-          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
-          DO I1 = 1,NATYP
-             READ(10,*) THETA(I1),PHI(I1)
-            THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
-            PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
-            IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
-               LCHECKANGLES = .FALSE.
-            ENDIF
-          ENDDO
-          IF(LCHECKANGLES) write(1337,*) 'WARNING: Check if your
-     & nonco_angels file is correct!ll Found only values that are
-     & smaller than pi for theta and 2pi for phi, respectively. But
-     & angles are given in degree (0...360)'
-       ENDIF
+      ! nonco angles: defined in mod_wunfiles
+      call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
 
@@ -376,13 +310,12 @@ c interpolate potential
 
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-!      &                   t_mpi_c_grid%myrank_ie,
      &                             master,ntot1,ntot_pT,ioff_pT,.true.,
      &  .true.)
+
         i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
         i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &             ntot_pT(t_mpi_c_grid%myrank_ie)
-!         t_mpi_c_grid%ntot1  = ntot1
         t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
@@ -391,17 +324,14 @@ c interpolate potential
      &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
-            
 #else
-       i1_start = 1
-       i1_end   = NATYP
+        i1_start = 1
+        i1_end   = NATYP
 #endif
 
 !        write(*,*) 'i1 loop', myrank, i1_start, i1_end
 
        DO I1=i1_start,i1_end
-
-c read from file theta and phi
 
         IPOT=NSPIN*(I1-1)+1
         CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,RMESH(1,I1),ZAT(I1),
@@ -438,6 +368,7 @@ C
           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
           ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
          end do
+         
           mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
 !      
          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
@@ -465,9 +396,8 @@ C
 ! #ifdef CPP_MPI
 !       end if !(t_mpi_c_grid%myrank_at==0)
 !       
-!       call MPI_BARRIER(MPI_COMM_WORLD,ii)
-!       
 !       if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>1) then
+!       
 !          do ii=0,t_mpi_c_grid%nranks_ie-1
 !           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
 !           ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
@@ -479,7 +409,8 @@ C
 ! #endif
 
 
-      WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
+      if(t_inc%i_write>0)
+     &  WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
 
 
       if(IDOLDAU==1) DEALLOCATE( ULDAU )

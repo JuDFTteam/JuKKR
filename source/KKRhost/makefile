@@ -43,7 +43,7 @@ macomp:    COMPVER ='openmp-mac'
 rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
-rwthmpidebug: COMPVER='mpidebug-rwth'
+rwthmpidebug: COMPVER ='mpidebug-rwth'
 
 
 
@@ -139,6 +139,7 @@ rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 openmp: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
 
+
 ####################################################
 # C preprocessor options                           #
 ####################################################
@@ -228,9 +229,8 @@ openmp:   compile
 ompdebug: compile
 mpi:      compile
 mpidebug: compile
-rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
+rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all
 	$(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
-
 
 install: clean serial
 
