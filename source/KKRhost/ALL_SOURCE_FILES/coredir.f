@@ -15,6 +15,7 @@ C   *                                                                  *
 C   *                                                                  *
 C   ********************************************************************
 C
+      use mod_types, only: t_inc
       IMPLICIT NONE
 C
 C
@@ -226,8 +227,8 @@ C
                GOTO 40
 C
  20         END DO
-            WRITE (1337,99001) KAP1,N,RC(N),DIFFA,DIFFB,IT,L,INT(2*MJ),
-     &                      ' IN'
+            if(t_inc%i_write>0) WRITE (1337,99001) KAP1,N,RC(N),DIFFA,
+     &                     DIFFB,IT,L,INT(2*MJ),' IN'
 C
 C                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 C
@@ -495,8 +496,8 @@ C
             GOTO 100
 C
  50      END DO
-         WRITE (1337,99001) KAP1,N,RC(N),DIFFA,DIFFB,IT,L,INT(2*MJ),
-     &                      'OUT'
+         if(t_inc%i_write>0) WRITE (1337,99001) KAP1,N,RC(N),DIFFA,
+     &                      DIFFB,IT,L,INT(2*MJ),'OUT'
 C
 C                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 C

@@ -22,6 +22,7 @@ C   *                                                                  *
 C   *  26/07/95  HE                                                    *
 C   ********************************************************************
 C
+      use mod_types, only: t_inc
       IMPLICIT NONE
 C
 C*** Start of declarations rewritten by SPAG
@@ -223,10 +224,10 @@ C
       END DO
       IF ( IT.EQ.1 .AND. L.EQ.2 .AND. MJ.GT.L .AND. NMESH.LT.0 ) THEN
          DO I = 1,NMESH,30
-            WRITE (1337,'(a,3i4,2e12.5)') 'dirac A:',L,IKM(1),I,
-     &                                 AP(1,1,I),AQ(1,1,I)
+            if(t_inc%i_write>0) WRITE (1337,'(a,3i4,2e12.5)') 
+     &              'dirac A:',L,IKM(1),I,AP(1,1,I),AQ(1,1,I)
          END DO
-         WRITE (1337,*) ' '
+         if(t_inc%i_write>0) WRITE (1337,*) ' '
       END IF
 C
       DO IP = 1,NABM
@@ -430,7 +431,8 @@ C
 C
  50      END DO
 C
-         WRITE (1337,99001) KAP1,N,R(N),DIFFA,DIFFB,IT,L,INT(2*MJ),'REG'
+         if(t_inc%i_write>0) WRITE (1337,99001) KAP1,N,R(N),DIFFA,
+     &                      DIFFB,IT,L,INT(2*MJ),'REG'
 C
 C                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 C
@@ -729,7 +731,8 @@ C
 C
  150     END DO
 C
-         WRITE (1337,99001) KAP1,N,R(N),DIFFA,DIFFB,IT,L,INT(2*MJ),'IRR'
+         if(t_inc%i_write>0) WRITE (1337,99001) KAP1,N,R(N),DIFFA,
+     &                        DIFFB,IT,L,INT(2*MJ),'IRR'
 C
 C                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 C

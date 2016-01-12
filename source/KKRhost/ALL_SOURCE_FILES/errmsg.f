@@ -8,6 +8,7 @@
 !r   if severity level greater or equal than error tolerance            
 !r   program will stop.                                                 
 ! ----------------------------------------------------------------------
+      use mod_types, only: t_inc
       implicit none 
 ! Passed parameters:                                                    
       integer isev 
@@ -37,10 +38,12 @@
       ipos(nline)=l 
                                                                         
       nunit=1 
-      if (nunit.eq.1) write(1337,*) 
-      do iline=1,nline 
-         write(1337,300)c(iisev),messg(ipos(iline-1)+1:ipos(iline)-1) 
-      enddo 
+      if ((nunit.eq.1).and.(t_inc%i_write>0)) write(1337,*) 
+      if(t_inc%i_write>0) then
+        do iline=1,nline 
+           write(1337,300)c(iisev),messg(ipos(iline-1)+1:ipos(iline)-1) 
+        enddo 
+      endif
                                                                         
       if (iabs(isev).ge.3) stop
                                                                         

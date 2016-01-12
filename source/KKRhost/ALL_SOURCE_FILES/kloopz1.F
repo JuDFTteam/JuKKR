@@ -382,17 +382,20 @@ C
                END DO
             ENDIF
 C
-            IF ( IPRINT.GE.1 ) WRITE (1337,99004) CPAERR,CPACORR,CPACHNG
+            IF ( IPRINT.GE.1 .and. (t_inc%i_write>0)) 
+     &         WRITE (1337,99004) CPAERR,CPACORR,CPACHNG
 C
             IF ( CPAERR.LE.CPATOL ) THEN
-               IF ( IPRINT.GT.0 ) WRITE (1337,99001) ITCPA,CPAERR,
-     &                                            CPACORR,CPACHNG
-            ELSE IF ( ITCPA.GT.ITCPAMAX ) THEN
-               WRITE (1337,99002) ITCPA,CPAERR,CPACORR,CPACHNG
+               IF ( IPRINT.GT.0 .and. (t_inc%i_write>0)) 
+     &           WRITE (1337,99001) ITCPA,CPAERR,CPACORR,CPACHNG
+            ELSE IF ( ITCPA.GT.ITCPAMAX) THEN
+               if(t_inc%i_write>0) WRITE (1337,99002) ITCPA,
+     &                     CPAERR,CPACORR,CPACHNG
                ICPAFLAG = 1
             ELSE IF ( CPAERR.GT.20*CPAERRL ) THEN
-               WRITE (1337,99003) ITCPA
-               WRITE (1337,99004) CPAERR,CPACORR,CPACHNG
+               if(t_inc%i_write>0) WRITE (1337,99003) ITCPA
+               if(t_inc%i_write>0) WRITE (1337,99004) CPAERR,
+     &                     CPACORR,CPACHNG
                ICPAFLAG = 2
             ELSE
 C
@@ -518,7 +521,8 @@ C    system-matrix (1..NSMAX) and with MSSQ on the rest of the elements
 C
 C ----------------------------------------------------------------------
 C
-      IF ( TEST('Gmat    ') ) WRITE (1337,'(/,4X,70(1H-),/,4X,A,I4)')
+      IF ( TEST('Gmat    ') .and. (t_inc%i_write>0)) 
+     &      WRITE (1337,'(/,4X,70(1H-),/,4X,A,I4)')
      &                   'system G_ii matrix for i = 1,',NSMAX
       DO NS = 1,NSHELL(0)
 C
@@ -600,7 +604,8 @@ C
         END IF
       END DO
 C ----------------------------------------------------------------------
-      IF ( TEST('Gmat    ') ) WRITE (1337,'(/,4X,70(1H-))')
+      IF ( TEST('Gmat    ') .and. (t_inc%i_write>0)) 
+     &     WRITE (1337,'(/,4X,70(1H-))')
 C ----------------------------------------------------------------------
 C --> it calculates the rest of the G n n' matrix from the
 C     knowledge of the representative pairs (shells) using the
@@ -655,7 +660,8 @@ C
          END DO
       END IF
 C ----------------------------------------------------------------------
-      IF ( TEST('flow    ') ) WRITE (1337,*) '<<< KLOOPZ1'
+      IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 
+     &     WRITE (1337,*) '<<< KLOOPZ1'
 
 CF90-------------------------------------------------------------
       DEALLOCATE (TAUDELQ,TAUDELT,STAT=LM1)

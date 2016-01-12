@@ -9,6 +9,8 @@ c     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
 c                                      krypton core: 4430=4s,4p,3d
 c                                      xenon core: 5540=5s,5p,4d
 c-----------------------------------------------------------------------
+      use mod_types, only: t_inc
+      IMPLICIT NONE
 C     .. Parameters ..
       INTEGER NITMAX,IRNUMX
       PARAMETER (NITMAX=40,IRNUMX=10)
@@ -88,14 +90,15 @@ c
             INUC = INUC + IRNUMX
             E = ECORE(NC)
             EI = ECORE(NC)
-            IF (IPR.NE.0) WRITE (1337,FMT=9000) IN,TEXT(LP1),NN,SPN(IS),
-     +          IP,E
+            if((t_inc%i_write>0).and.(IPR.NE.0)) 
+     +           WRITE (1337,FMT=9000) IN,TEXT(LP1),NN,SPN(IS),IP,E
             CALL INTCOR(E1,E2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SUM,NRE,
      +                    VLNC,A,B,Z,RMAX,NR,TOL,IRMD,IPR,NITMAX,NSRA)
             EDIFF = E - EI
             ECORE(NC) = E
             WGT = REAL(L+L+1)/SUM*2.D0/REAL(NSPIN)
-            IF (IPR.NE.0) WRITE (1337,FMT=9010) EI,EDIFF,E
+            if((t_inc%i_write>0).and.(IPR.NE.0)) 
+     +           WRITE (1337,FMT=9010) EI,EDIFF,E
    40       CONTINUE
 c
 c---> sum up contributions to total core charge

@@ -3,6 +3,7 @@
      &                   IELAST,EZ,KMESH,IPRINT,KREL,KPOIBZ,MAXMSHD)
      
       use mod_types, only: t_inc
+      use mod_wunfiles, only: t_params
       IMPLICIT NONE
 C     ..
 C     .. Scalar Arguments ..
@@ -69,17 +70,20 @@ C ---------------------------------------------------------------------
       NBX = NBXIN
       NBY = NBYIN
       NBZ = NBZIN
-
-      OPEN (52,FILE='kpoints',FORM='formatted')
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       WRITE (1337,99000)
       WRITE (1337,99001) MAXMESH,NSYMAT
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
-      !save maxmesh and allocate kmesh for later use in t_inc
+      !save maxmesh and allocate kmesh for later use in t_inc and t_params
       t_inc%nkmesh = maxmesh
+      t_params%KPOIBZ = KPOIBZ
+      t_params%MAXMESH = MAXMESH
       allocate(t_inc%kmesh(maxmesh))
+      allocate(t_params%BZKP(3,KPOIBZ,MAXMESH),
+     &         t_params%VOLCUB(KPOIBZ,MAXMESH),
+     &         t_params%VOLBZ(MAXMESH),t_params%NOFKS(MAXMESH))
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       DO L = 1,MAXMESH
          IF (L.GT.1) THEN
@@ -103,8 +107,14 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
          IF ( L.EQ.MAXMESH ) WRITE(1337,99003)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
-         WRITE (52,FMT='(I8,F15.10,/,(3F12.8,D20.10))') 
-     +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
+         t_params%NOFKS(L) = NOFKS
+         t_params%VOLBZ(L) = VOLBZ
+         DO I=1,NOFKS
+            DO ID=1,3
+               t_params%BZKP(ID,I,L) = BZKP(ID,I)
+            ENDDO
+            t_params%VOLCUB(I,L) = VOLCUB(I)
+         ENDDO
          ! save nofks for this mesh in t_inc
          t_inc%kmesh(L) = nofks
 C ---------------------------------------------------------------------
@@ -119,7 +129,7 @@ C
 C ---------------------------------------------------------------------
       END DO
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-      CLOSE (52)
+!       CLOSE (52)
  9000 FORMAT (3F12.5,F15.8)
 99000 FORMAT (5X,'< BZKMESH > : creating k-mesh,',
      &        ' write to file kpoints',/)

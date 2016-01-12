@@ -10,6 +10,7 @@
       subroutine main2()
       
       use mod_types, only: t_inc
+      use mod_wunfiles
 #ifdef CPP_TIMING
       use mod_timing
 #endif
@@ -137,9 +138,7 @@ C   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
 C                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
 C  RHOC(IRMD,NPOTD)              ! core charge density
 C ----------------------------------------------------------------------
-      DOUBLE PRECISION !R2NEF(IRMD,LMPOTD,NATYPD,2),
-!      +                 RHO2NS(IRMD,LMPOTD,NATYPD,2),
-     +                 RHOC(IRMD,NPOTD)
+      DOUBLE PRECISION RHOC(IRMD,NPOTD)
       double precision, allocatable :: R2NEF(:,:,:,:),
      +                                 RHO2NS(:,:,:,:)
 C     ..
@@ -298,72 +297,25 @@ C =             read in variables from unformatted files               =
 C ======================================================================
 C
 C --------------------------------------------------------------- input2
-C
-      OPEN (67,FILE='input2.unformatted',FORM='unformatted')
-      READ (67) NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,NTCELL,
-     &          LMAX,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,LINTERFACE
-      READ (67) ATOMIMP,NATOMIMP
-
-C ......................................................................
-Consistency check 
-C
-      IF ( (KREL.EQ.1) .AND. (INS.NE.0) ) THEN
-         WRITE(6,*)
-     &        ' FULL-POTENTIAL RELATIVISTIC mode not implemented '
-         STOP ' set INS = 0 in the input'
-      END IF
-      IF ( NSRA.LE.2 ) THEN
-         IF ( KREL.EQ.1 ) STOP
-     &        ' KVREL <= 1 in input, but relativistic program used'
-      ELSE
-         IF ( KREL.EQ.0 ) STOP
-     &        ' KVREL > 1 in input, but non-relativistic program used'
-      END IF
-C ......................................................................
-      READ (67) IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,
-     &          KVMAD,KXC,LAMBDA_XC,TXC,ICC,ISHIFT,IXIPOL,LRHOSYM,KFORCE
-      READ (67) A,B,DRDI,R,THETAS,ZAT,IFUNM,LMSP,RMT,RMTNEW,RWS,IMT,IRC,
-     &          IRMIN,IRWS,ITITLE,LLMSP,NFU,HOSTIMP
-      READ (67) ALAT,KAOEZ,IQAT,NOQ,CONC,GSH,ILM,IMAXSH,TESTC,OPTC,LLY
-      CLOSE (67)
-C ---------------------------------------------------------- energy_mesh
-C
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='energy_mesh',FORM='unformatted')
-      else
-        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      end if
-      READ (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSOLD
-      READ (67) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
-     &          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
-      CLOSE (67)
-C ------------------------------------------------------ input_potential
-C
-      IF(t_inc%i_iteration.eq.0) then
-!       OPEN (67,FILE='input_potential',FORM='unformatted')
-      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
-      else 
-!       OPEN (67,FILE='output_potential',FORM='unformatted')
-      OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
-      end if
-      
-      READ (67) VINS,VISP,ECORE,VBC
-      IF (KREL.EQ.1) THEN
-         READ (67) RMREL,DRDIREL,R2DRDIREL
-         READ (67) ZREL,JWSREL,IRSHIFT
-         READ (67)
-      END IF
-      READ (67) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
-      CLOSE (67)
-      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
+      call get_params_2(t_params,KREL,NATYPD,IPAND,NPOTD,NATOMIMPD
+     &    ,LMXSPD,NFUND,LMPOTD,NCELLD,IRMD,NEMBD1,NEMBD,
+     &     IRMIND,NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,LMAX,
+     &     NTCELL,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,
+     &     ATOMIMP,IMIX,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC
+     &    ,ICC,ISHIFT,IXIPOL,KFORCE,IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,
+     &     ITITLE,NFU,HOSTIMP,ILM,IMAXSH,IELAST,NPOL,NPNT1,NPNT2,NPNT3,
+     &     ITSCF,SCFSTEPS,IESEMICORE,KAOEZ,IQAT,NOQ,LLY,NPOLSEMI,N1SEMI,
+     &     N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,THETAS
+     &    ,DRDI,R,ZAT,RMT,RMTNEW,RWS,E1,E2,TK,ALAT,EFOLD,CHRGOLD,
+     &     CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,
+     &     DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TESTC,OPTC,TXC,
+     &     LINTERFACE,LRHOSYM,NGSHD,NAEZD,IRID,NSPOTD,IEMXD)
 C -------------------------------------------------------------- density
 C
-      OPEN (67,FILE='density',FORM='unformatted')
-      READ (67) RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,
-     &          IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
-      IF (KREL.EQ.1) READ(67) RHOORB,ECOREREL,NKCORE,KAPCORE
-      CLOSE (67)
-!       write(*,*) 'test fivos scfsteps,qbound',scfsteps,qbound
+      call read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,
+     &                  ESPV,ECORE,IDOLDAU,LOPT,EU,EDC,
+     &                  CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,
+     &                  KREL,NATYPD,NPOTD,IRMD,LMPOTD,LMAXD1)
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -400,8 +352,12 @@ C
      &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
       WRITE(1337,'(79(1H*),/)')
 C
-!       STIME0 = DCLOCK()
-      OPEN (IOBROY,FORM='unformatted',STATUS='unknown')
+      IF (IMIX.GE.3) THEN
+         OPEN (IOBROY,FILE='broy_io.unformatted',FORM='unformatted',
+     &         STATUS='unknown')
+         OPEN (IOBROY+2,FILE='broy_io2.unformatted',FORM='unformatted',
+     &         STATUS='unknown')
+      ENDIF  
 C ----------------------------------------------------------------------
 C
 C the next four lines may not always work
@@ -519,11 +475,8 @@ C SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM ITERMDIR
 C
       IF ((KREL.EQ.1).AND.(OPT('ITERMDIR'))) THEN
-         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
-         READ (67) 
-         READ (67) 
-         READ (67) MVEVI,MVEVIEF
-         CLOSE(67)
+         MVEVI   = t_params%MVEVI
+         MVEVIEF = t_params%MVEVIEF
 C     
          CALL RINIT(NAEZD,QMGAM)
          DO I1 = 1,NAEZ
@@ -557,8 +510,8 @@ C
          CALL SCFITERANG(ITSCF,ITOQ,FACT,
      &                   MVPHI,MVTET,MVGAM,QMPHI,QMTET,QMGAM,
      &                   NAEZ,NK,ERRAVANG,NAEZD,NATYPD,NMVECMAX,LMMAXD)
-         WRITE (67) MVEVI,MVEVIEF
-         CLOSE(67)
+         t_params%MVEVI   = MVEVI
+         t_params%MVEVIEF = MVEVIEF
       END IF
 C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 C
@@ -1157,23 +1110,16 @@ C ======================================================================
 C
 C ------------------------------------------------------ new_energy_mesh
 C
-      OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      WRITE (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE
-      WRITE (67) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
-     &           NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
-      CLOSE (67)
+      call save_emesh(IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE,NPOL,TK,
+     &                NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
+     &                NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IEMXD,t_params) 
 C ----------------------------------------------------- output_potential
 C
-!       OPEN (67,FILE='output_potential',FORM='unformatted')
-      OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
-      WRITE (67) VINS,VISP,ECORE,VBC
-      IF (KREL.EQ.1) THEN
-         WRITE (67) RMREL,DRDIREL,R2DRDIREL
-         WRITE (67) ZREL,JWSREL,IRSHIFT
-         WRITE (67) VTREL,BTREL
-      END IF
-      WRITE (67) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
-      CLOSE (67)
+      call save_scfinfo(t_params,VINS,VISP,ECORE,VBC,RMREL,DRDIREL
+     &                 ,R2DRDIREL,ZREL,JWSREL,IRSHIFT,VTREL,BTREL,
+     &                  ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST,KREL
+     &                 ,IRMIND,IRMD,LMPOTD,NSPOTD,NATYPD,NPOTD,
+     &                  NEMBD1)
 C ======================================================================
       !STOP
  9020 FORMAT ('                old',
@@ -1197,6 +1143,8 @@ C ======================================================================
 !      + DENEFAT,FLM,FLMC,QMGAM,FACT,MVGAM,MVPHI,MVTET)
  
       END SUBROUTINE !main2
+
+
 
 
 c********************************************************************

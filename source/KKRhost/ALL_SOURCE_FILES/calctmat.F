@@ -154,7 +154,7 @@ C
 C ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-      if(myrank==master) WRITE(1337,*) 'atom: ',I1
+      if((myrank==master).and.(t_inc%i_write>0))WRITE(1337,*)'atom: ',I1
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
@@ -183,9 +183,9 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
        
          IE = ie_start+ie_num
 #else
-      !t_mpi_c_grid%ntot2=IELAST
-      !t_mpi_c_grid%ntot_pT2 = IELAST
-      !t_mpi_c_grid%ioff_pT2 = 0
+!       t_mpi_c_grid%ntot2=IELAST
+!       t_mpi_c_grid%ntot_pT2 = IELAST
+!       t_mpi_c_grid%ioff_pT2 = 0
       ! now initialize arrays for tmat, gmat, and gref
       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
@@ -194,7 +194,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
          ie_num = IE
          ie_end = IELAST
 #endif
-         WRITE(1337,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
+         if(t_inc%i_write>0) WRITE(1337,*)'CALCTMAT: IE=',IE,' ATOM:',I1
 
          TMATLL(1:LMMAXD,1:LMMAXD) = CZERO
 !          TMATLL(1:LMMAXD,1:LMMAXD,IE) = CZERO
@@ -218,7 +218,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
             ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
 
             ERYD = EZ(IE) + SIGNDE * DELTAE / 2.D0 ! LLY
-            WRITE(1337,*) 'energy:',IE,'',ERYD
+            if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 C
 C=======================================================================
 C non/scalar-relativistic OR relativistic
@@ -350,11 +350,8 @@ C
 #ifdef CPP_MPI
             IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*
      *             (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
-!             write(*,*) 'write tmat',ie_num,ie_end,ispin,nspin,i1,
-!      +       t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
 #else
             IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*I1
-!             write(*,*) 'write tmat',ie_num,ie_end,ispin,nspin,i1
 #endif
             t_tgmat%tmat(:,:,irec) = tmat0
          end if
@@ -375,7 +372,7 @@ C
             end if
          ENDIF                                                       ! LLY
 C ----------------------------------------------------------------------
-         IF ( TEST('tmat    ') ) THEN
+         IF ( TEST('tmat    ') .and. (t_inc%i_write>0)) THEN
             WRITE (1337,*)
             WRITE (1337,99001) '-----> t matrix for atom: ',I1
             IF ( KREL.EQ.0 ) WRITE (1337,99002) TXTS(ISPIN)

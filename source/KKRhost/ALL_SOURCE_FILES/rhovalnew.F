@@ -6,13 +6,14 @@
      +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB,angles_new)
 #ifdef CPP_OMP
        use omp_lib
-#endif 
+#endif
 #ifdef CPP_MPI
       use mpi
 #endif
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+
       
       use mod_types, only: t_tgmat, t_inc
 #ifdef CPP_MPI
@@ -115,7 +116,7 @@
        nth = 1
 #ifdef CPP_OMP
        nth = omp_get_num_threads()
-       write(1337,*) 'nth =',nth
+       if(t_inc%i_write>0) write(1337,*) 'nth =',nth
 #endif
 !$omp end single
 !$omp end parallel
@@ -221,7 +222,6 @@ C        Read BZ path for qdos calculation:                             ! qdos r
          CLOSE(67)                                                      ! qdos ruess
 C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos ruess
          DEALLOCATE(GFLLE,DEN,DENLM)                                    ! qdos ruess
-!          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS))                  ! qdos ruess
          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS))                  ! qdos ruess
          ALLOCATE(DEN(0:LMAXD1,IEMXD,NQDOS,2),
      +            DENLM(LMMAXD,IEMXD,NQDOS,2))
@@ -239,7 +239,7 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
         DEN=CZERO
         DENLM=CZERO
 c energy loop
-       if(myrank==master) WRITE(1337,*) 'atom: ',I1
+       if(myrank==master.and.t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -286,20 +286,8 @@ c energy loop
         IF (NSRA.EQ.2) EK = SQRT( ERYD + ERYD*ERYD/(CVLIGHT*CVLIGHT) ) *
      &                          ( 1d0 + ERYD/(CVLIGHT*CVLIGHT) )
 !$omp critical
-        WRITE(1337,'(A,I4,2E14.7,A,I4)') 'energy:',IE,ERYD,' atom',i1
+        if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 !$omp end critical
-! 
-!         IREC=IE+IELAST*(I1-1)
-!         READ(69,REC=IREC) GMAT0
-! 
-! c rotate gmat from global frame to local frame
-!         CALL ROTATEMATRIX(GMAT0,THETA,PHI,LMMAXD,1)
-! 
-!         DO LM1=1,LMMAXSO
-!          DO LM2=1,LMMAXSO
-!           GMATLL(LM1,LM2,IE)=GMAT0(LM1,LM2)
-!          ENDDO
-!         ENDDO
 
 c recalculate wavefuntions, also include left solution
 c contruct the spin-orbit coupling hamiltonian and add to potential
@@ -438,8 +426,6 @@ c read in gf
         else
            IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &            ie_end * (I1-1)
-!     &            t_mpi_c_grid%ntot2 * (I1-1)
-           write(*,*) 'irec gmat', myrank, irec, i1, ie_num
            GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
         end if
         !$omp end critical
@@ -652,6 +638,24 @@ c    write qdos.nn.s.dat                                                  ! qdos
 #ifdef CPP_MPI
        ! reset NQDOS to avoid endless communication
        NQDOS=1
+#ifdef CPP_TIMING
+!        call timing_start('main1c - communication')
+#endif
+      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
+         den = 0.d0
+         denlm = 0.d0
+         gflle = 0.d0
+         muorb = 0.d0
+         espv = 0.d0
+         r2nefc = 0.d0
+         rho2nsc = 0.d0
+         rho2int = 0.d0
+         denorbmom = 0.d0
+         denorbmomsp = 0.d0
+         denorbmomlm = 0.d0
+         denorbmomns = 0.d0
+      endif
 
 #ifdef CPP_TIMING
 !        call timing_start('main1c - communication')
@@ -680,20 +684,13 @@ c    write qdos.nn.s.dat                                                  ! qdos
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
      &                            denorbmomsp,denorbmomlm,denorbmomns,
-!      &                            MPI_COMM_WORLD)
-!      &                            t_mpi_c_grid%myMPI_comm_ie)
      &                            t_mpi_c_grid%myMPI_comm_at)
-      !endif
-!        write(66667,*) den
 #ifdef CPP_TIMING
 !        call timing_pause('main1c - communication')
 #endif
 
-!               write(*,*) 'in rhovalnew2',myrank,i1,
-!      &      t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie!,den(0,1:5,1,1)
-
+      
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
-!       if(myrank==master) then
       if(t_mpi_c_grid%myrank_at==master) then
 #endif
 
@@ -731,8 +728,9 @@ c Write out lm-dos:                                                      ! lm-do
 
 c      write gflle to file                                               ! lmlm-dos
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
-         write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
-         WRITE(91,REC=I1) GFLLE                                          ! lmlm-dos
+       if(t_inc%i_write>0) 
+     &   write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
+       WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
        
        ALLOCATE(RHOTEMP(IRMDNEW,LMPOTD))
@@ -806,17 +804,16 @@ c calculate new THETA and PHI for non-colinear
           PHINEW=DATAN2(MOMENT(2),MOMENT(1))
          ENDIF
         ENDIF
-c          THETANEW=ACOS(MOMENT(3)/TOTMOMENT)
-c          PHINEW=DATAN2(MOMENT(2),MOMENT(1))
-!         WRITE(6,*) 'moment',MOMENT(1),MOMENT(2),MOMENT(3)
+        
+       if(t_inc%i_write>0) then
         WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
-c        WRITE(6,*) 'total moment',TOTMOMENT,TOTXYMOMENT
         WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
      &             PHINEW/(2.0D0*PI)*360.0D0
-!         WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
-!      &             PHINEW/(2.0D0*PI)*360.0D0
-!         WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
-!      &             PHINEW/(2.0D0*PI)*360.0D0
+        WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &             PHINEW/(2.0D0*PI)*360.0D0
+        WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &             PHINEW/(2.0D0*PI)*360.0D0
+        endif
         angles_new(i1,1) = THETANEW/(2.0D0*PI)*360.0D0
         angles_new(i1,2) = PHINEW/(2.0D0*PI)*360.0D0
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,
@@ -850,7 +847,7 @@ C
 #ifdef CPP_MPI
       endif !(myrank==master)
       
-      !communicate den_out to all processors with the same atom number
+      ! communicate den_out to all processors with the same atom number
       IDIM = (LMAXD+2)*IEMXD*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
 !      &               t_mpi_c_grid%myMPI_comm_ie, ierr)

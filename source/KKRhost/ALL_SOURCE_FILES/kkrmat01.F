@@ -40,9 +40,10 @@
 #ifdef CPP_MPI
       use mpi
       
-      use mod_types, only: t_tgmat, t_inc, t_lloyd,
+      use mod_types, only: t_tgmat, t_lloyd,
      &                      t_mpi_c_grid
 #endif
+      use mod_types, only: t_inc
       use mod_mympi, only: myrank, nranks, master 
 #ifdef CPP_MPI
      &                     ,distribute_linear_on_tasks
@@ -156,7 +157,7 @@
 !      NDIM=LMGF0D*NAEZ
       NDIM=LMMAXD*NAEZ
 
-      IF ( TEST('flow     ') )
+      IF ( TEST('flow     ') .and. (t_inc%i_write>0))
      +     WRITE(1337,*) '>>> kkrmat1: loop over k-points'
 !
       CITPI = CMI*8.D0*ATAN(1.D0)    ! = -i*2*PI 
@@ -605,8 +606,8 @@ c            DEALLOCATE(GLLKE0)
         END DO
 #endif
 
-      IF ( TEST('flow    ') ) WRITE(1337,*) '<<< KKRMAT1'
-
+      IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 
+     &       WRITE(1337,*) '<<< KKRMAT1'
 
       END
 !-----------------------------------------------------------------------

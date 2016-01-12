@@ -280,8 +280,8 @@ $(OBJ)/madelout.o    : $(COM)/madelout.f       ; \
 $(OBJ)/idreals.o     : $(COM)/idreals.f       ; \
                          $(FC) $(FFLAGS) $(COM)/idreals.f -c -o $@
 
-$(OBJ)/wunfiles.o     : $(COM)/wunfiles.f       ; \
-                         $(FC) $(FFLAGS) $(COM)/wunfiles.f -c -o $@
+$(OBJ)/wunfiles.o     : $(COM)/wunfiles.F       ; \
+                     $(FC) $(FFLAGS) $(CPP) $(COM)/wunfiles.F -c -o $@
 
 $(OBJ)/deciopt.o      : $(COM)/deciopt.f       ; \
                          $(FC) $(FFLAGS) $(COM)/deciopt.f -c -o $@
