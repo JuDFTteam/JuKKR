@@ -168,8 +168,8 @@ contains
   ! consider only cartesian grids for now
 !   if(.false.) then
 
-  if(myrank==master) write(*,*) ne,nat,nranks
-  call MPI_BARRIER(MPI_COMM_WORLD,ik)
+!   if(myrank==master) write(*,*) ne,nat,nranks
+!   call MPI_BARRIER(MPI_COMM_WORLD,ik)
 
   if((ne*nat)<nranks .and. (ne>1)) then ! .and. nat>1)) then
   

@@ -1752,25 +1752,37 @@ C ......................................................................
       END IF
 C ------------------------------------------------------------- k-points
 C
-!       OPEN (52,FILE='kpoints',FORM='formatted')
-!       REWIND (52)
+      IF(TEST('kptsfile')) THEN
+      OPEN (52,FILE='kpoints',FORM='formatted')
+      REWIND (52)
+      write(1337,*) 'kpoints read from kpoints file due to test option 
+     &              "kptsfile"'
+      ENDIF
       DO L = 1,MAXMESH
-!          READ (52,FMT='(I8,f15.10)') NOFKS(L),VOLBZ(L)
-!          write(*,*) 'kpts:',NOFKS(L),VOLBZ(L),t_params%NOFKS(L),
-!      & t_params%VOLBZ(L)
-         NOFKS(L) = t_params%NOFKS(L)
-         VOLBZ(L) = t_params%VOLBZ(L)
+         IF(TEST('kptsfile')) THEN 
+            READ (52,FMT='(I8,f15.10)') NOFKS(L),VOLBZ(L)
+            write(1337,*) 'kpts:',NOFKS(L),VOLBZ(L),t_params%NOFKS(L),
+     &                 t_params%VOLBZ(L)
+         ELSE
+            NOFKS(L) = t_params%NOFKS(L)
+            VOLBZ(L) = t_params%VOLBZ(L)
+         ENDIF
          DO I=1,NOFKS(L)
-!             READ (52,FMT=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
-            DO ID=1,3
-!                write(*,*)'bzkp', BZKP(ID,I,L), t_params%BZKP(ID,I,L)
-               BZKP(ID,I,L) = t_params%BZKP(ID,I,L)
-            ENDDO
-!             write(*,*)'volcub', VOLCUB(I,L), t_params%VOLCUB(I,L)
-            VOLCUB(I,L) = t_params%VOLCUB(I,L)
+            IF(TEST('kptsfile')) THEN 
+               READ (52,FMT=*) (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L)
+            ELSE
+               DO ID=1,3
+!                   write(*,*)'bzkp', BZKP(ID,I,L), t_params%BZKP(ID,I,L)
+                  BZKP(ID,I,L) = t_params%BZKP(ID,I,L)
+               ENDDO
+!                write(*,*)'volcub', VOLCUB(I,L), t_params%VOLCUB(I,L)
+               VOLCUB(I,L) = t_params%VOLCUB(I,L)
+            ENDIF
+!             write(*,'(A,4F21.17,I5,F21.17)') 'bzkmesh input:',
+!      &             (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L),NOFKS(L),VOLBZ(L)
          END DO
       END DO
-!       CLOSE (52)
+      IF(TEST('kptsfile')) CLOSE (52)
 C ---------------------------------------------------------- energy_mesh
 C
       IELAST = t_params%IELAST

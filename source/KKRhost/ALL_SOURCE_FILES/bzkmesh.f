@@ -70,6 +70,10 @@ C ---------------------------------------------------------------------
       NBX = NBXIN
       NBY = NBYIN
       NBZ = NBZIN
+      
+      IF(TEST('kptsfile')) OPEN (52,FILE='kpoints',FORM='formatted')
+!       OPEN (52,FILE='kpoints',FORM='formatted')
+
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       WRITE (1337,99000)
@@ -107,6 +111,10 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
          IF ( L.EQ.MAXMESH ) WRITE(1337,99003)
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
+      IF(TEST('kptsfile')) WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
+     +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
+!       WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
+!      +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
          t_params%NOFKS(L) = NOFKS
          t_params%VOLBZ(L) = VOLBZ
          DO I=1,NOFKS
@@ -129,6 +137,7 @@ C
 C ---------------------------------------------------------------------
       END DO
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+      IF(TEST('kptsfile')) CLOSE (52)
 !       CLOSE (52)
  9000 FORMAT (3F12.5,F15.8)
 99000 FORMAT (5X,'< BZKMESH > : creating k-mesh,',

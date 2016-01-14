@@ -54,7 +54,7 @@ program kkrcode
      write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
   end if
   write(ctemp,'(I03.3)') myrank
-  open(1337, file='output.'//trim(ctemp)//'.txt')
+  if(myrank==master) open(1337, file='output.'//trim(ctemp)//'.txt')
   
   ! run main0 only serially, then communicate everything that is in here
   if(myrank==master) call main0()
@@ -107,7 +107,7 @@ program kkrcode
   ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
     if (t_inc%i_write<2) then
        if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
-       close(1337, status='delete')
+       if(myrank==master) close(1337, status='delete')
        if(t_inc%i_write>0) open(1337, file='output.'//trim(ctemp)//'.txt')
     endif
   
