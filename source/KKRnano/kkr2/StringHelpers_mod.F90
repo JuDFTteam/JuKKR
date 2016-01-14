@@ -129,8 +129,10 @@ implicit none
   status_t function test()
     write(*,'(A)',iostat=test) "s"+"s" , "i"+1, "i"+0.123d0
     write(*,'(A)',iostat=test) "s"-"s"!, "i"-1, "i"-0.123d0
-    write(*,'(9A)',iostat=test) 'replace_underscore("_a_Bc_DeF_gHiJ_kLmNo_PqR...") = "',trim(replace_underscore("_a_Bc_DeF_gHiJ_kLmNo_PqR...")),'"'
-    write(*,'(9A)',iostat=test) 'replace_underscore("a_Bc_DeF_gHiJ_kLmNo_PqR...") = "',trim(replace_underscore("a_Bc_DeF_gHiJ_kLmNo_PqR...")),'"'
+    write(*,'(9A)',iostat=test) 'replace_underscore("_a_Bc_DeF_gHiJ_kLmNo_PqR...") = "',&
+                            trim(replace_underscore("_a_Bc_DeF_gHiJ_kLmNo_PqR...")),'"'
+    write(*,'(9A)',iostat=test) 'replace_underscore("a_Bc_DeF_gHiJ_kLmNo_PqR...") = "',&
+                            trim(replace_underscore("a_Bc_DeF_gHiJ_kLmNo_PqR...")),'"'
   endfunction ! test
 
 endmodule ! StringHelpers_mod

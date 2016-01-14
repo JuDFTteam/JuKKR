@@ -29,11 +29,11 @@ FCFLAGS += -I $(BUILDDIR)
 FCFLAGS += -D USE_VOROWEIGHTS
 # FCFLAGS += -D DEBUG1
 FC90FLAGS =
-FCFLAGS += -C -traceback -CB
-FCFLAGS += -O0 -g
-LDFLAGS  = -O0 -g
-# FCFLAGS += -O3  -g
-# LDFLAGS  = -O3  -g
+# FCFLAGS += -C -traceback -CB
+# FCFLAGS += -O0 -g
+# LDFLAGS  = -O0 -g
+FCFLAGS += -O3  -g
+LDFLAGS  = -O3  -g
 
 FCFLAGS += -pg
 LDFLAGS += -pg

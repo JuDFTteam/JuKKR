@@ -3,8 +3,9 @@ module PositionReader_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  
-  public :: getAtomData !, readXYZfile, PSE, atomic_number_by_symbol
+
+  public :: getAtomData
+  public :: PSE, atomic_number_by_symbol
 
   ! element symbols
   character(len=2), parameter :: PSE(-1:120) = [ & !! element symbol from the periodic tabel of elements
@@ -29,7 +30,7 @@ module PositionReader_mod
   'Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn', &   ! 6d
   'ut','Fl','up','Lv','us','uo', &                       ! 7p
   'un','ud']                                             ! 8s
-  
+
   integer(kind=1), parameter :: & ! enum-replacement
     MODIFIED_INITIALIZED  = 0,  & ! set to zero
     MODIFIED_AUTO_DEFAULT = 1,  & ! use hard coded default values for elements
@@ -38,11 +39,10 @@ module PositionReader_mod
     MODIFIED_SAME_DEFAULT = 4,  & ! values given in the .xyz file have the same value as the MODIFIED_CONF_DEFAULT level
     MODIFIED_SPECIALIZED  = 5     ! use values given in the .xyz file
   character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized','automatic  ','element    ','configured ','same       ','specialized']
-  
-  
+
+
   contains
-  
-  
+
 #define MPI_master(COMM) .true.
 
   integer function getAtomData(filename, natoms, pos, comm) result(ist)
@@ -54,39 +54,40 @@ module PositionReader_mod
 
     integer,          parameter :: nKeys=6, nDoF=12
     character(len=*), parameter :: keywords(nKeys) = ['Z=    ','Vw=   ','rMT=  ','Mag=  ','core= ','start='] ! all strings need to tail with '='
-    integer         , parameter :: ikeypos(nKeys)  = [ 0,        4,        5,       6,        7,       11  ] ! position in params(0:)
+    integer         , parameter :: i_keypos(nKeys) = [ 0,        4,        5,       6,        7,       11  ] ! position in params(0:)
     double precision :: z_defaults(0:nDoF-1,-1:116)
     integer(kind=1)  :: z_modified(0:nDoF-1,-1:116)
     integer :: iZ
-    
+
 !   type(ConfigReader) :: cr
     character(len=16)  :: element_keyword
     character(len=256) :: configuration_line, elem_file
 
     z_defaults(:,:) = 0.d0; z_modified(:,:) = MODIFIED_INITIALIZED
-    
+
     elem_file = 'elem' ! try to find the element configurations in the .xyz-file
-    
+
 !     call create(cr)
 !     if (parseFile(cr, elem_file) /= 0) die_here('parsing file "'-elem_file-'" failed!')
-    
+
     do iZ = -1, 116
-      z_defaults(0,:) = dble(iZ); z_modified(0,:) = MODIFIED_AUTO_DEFAULT
+      z_defaults(0,iZ) = dble(iZ); z_modified(0,iZ) = MODIFIED_AUTO_DEFAULT
       ! add more default functions of iZ here
       ! ...
       write(unit=element_keyword, fmt='(9a)') 'element-',PSE(iZ)
       configuration_line = '' ! init since getValue is intent(inout)
 !     ist = getValue(cr, element_keyword, configuration_line, def='')
+      ist = 0
       if (ist == 0) then
-        ist = parseParams(configuration_line, z_defaults(0:,iZ), z_modified(0:,iZ), keywords, ikeypos, &
+        ist = parseParams(configuration_line, z_defaults(0:,iZ), z_modified(0:,iZ), keywords, i_keypos, &
                            linenumber=0, filename=elem_file, modify_states=[MODIFIED_ELEM_DEFAULT, MODIFIED_CONF_DEFAULT])
       endif
     enddo ! iZ
 
 !     call destroy(cr)
-    
+
     ist = readXYZfile(filename, natoms, pos, keywords, ikeypos, z_defaults, z_modified, comm)
-    
+
   endfunction ! getAtomData
 
 
@@ -100,7 +101,7 @@ module PositionReader_mod
 
     character(len=*), intent(in) :: keywords(:) ! e.g. ['Z=','Vw=','rMT=','Mag=','core=','start='] ! all strings need to tail with '='
     integer         , intent(in) :: ikeypos(:)  ! e.g. [ 0,    4,     5,     6,      7,      11  ] ! position in params(0:)
-    
+
     integer, parameter :: FU=23
     integer, parameter :: L=128
     character(len=L) :: line
@@ -111,43 +112,43 @@ module PositionReader_mod
     logical, parameter :: checks = .true.
     integer(kind=1), allocatable :: modified(:,:) ! (0:ndof-1,natoms)
     double precision, parameter :: IMPOSSIBLE_VALUE = -(2.d0**17)
-    
+
     n_warn_line_truncated = 0
     n_warn_ignored_param = 0
-    
+
     deallocate(pos, stat=ist) ! ignore status
-    
+
     if (MPI_master(comm)) then
       open(unit=FU, file=filename, status='old', action='read', iostat=ios(1))
       if (ios(1) /= 0) die_here('failed to open "'-filename-'"!')
-      
+
       ! read number of atoms (first line in an .xyz file)
       read(unit=FU, fmt='(a)', iostat=ios(2)) line
       if (ios(2) /= 0) die_here('failed to read the first line in "'-filename-'"!')
-      
+
       read(unit=line, fmt=*, iostat=ios(3)) natoms
       write(*,'(9(a,i0))') 'nAtoms = ',natoms
       if (ios(3) /= 0) die_here('failed to find the number of atoms in the first line of "'-filename-'", line reads "'-line-'"!')
-      
+
       read(unit=FU, fmt='(a)', iostat=ios(4)) line ! second line in an .xyz file
       write(*,'(9a)') 'comment = "',trim(line),'"' ! echo comment line
       if (ios(4) /= 0) warn(6, 'unable to read a comment in line #2 of file "'-filename-'"!')
-      
+
     endif ! master
 
     ndof = size(z_defaults, 1)
-      
+
     ! broadcast ios(1:4)
     ! broadcast natoms
     ! broadcast ndof
-    
+
     if (any(ios(1:3) /= 0) .or. natoms < 1) return
-    
+
     allocate(pos(0:ndof-1,natoms), modified(0:ndof-1,natoms), stat=ist)
     if (ist /= 0) die_here('failed allocate position array with'+natoms+'x'+ndof+'entries (reading file "'-filename-'")!')
-    
+
     if (MPI_master(comm)) then
-      
+
       allocate(modified(0:ndof-1,natoms), stat=ist)
       pos(:,:) = 0.d0; modified(:,:) = MODIFIED_INITIALIZED
 
@@ -158,10 +159,10 @@ module PositionReader_mod
 
         line = adjustl(longline) ! possible data loss due to string truncation here
         if (line /= adjustl(longline)) then
-          write(0,'(a,i0,9a)') 'Warning: line #',ia+2,' in file "',trim(filename),'" was truncated!' ! DEBUG
+          write(0, '(a,i0,9a)') 'Warning: line #',ia+2,' in file "',trim(filename),'" was truncated!' ! DEBUG
           n_warn_line_truncated = n_warn_line_truncated + 1
         endif
-        
+
         symbol = ''
         xyz = 0.d0
         read(unit=line, fmt=*, iostat=ist) symbol, xyz(1:3)
@@ -169,35 +170,35 @@ module PositionReader_mod
           warn(6, 'expected a chemical symbol and 3 positions in line #'-(ia+2)+'of file "'-filename-'"!')
           return ! error
         endif
-        
+
 !       write(*,'(9(a,i0,2x))') 'atom #',ia,  ' ist=',ist ! status will be -1 if no configuration string is shown
 !       write(*,'(a,3F16.9,2x,a)') symbol, xyz(1:3)
-        
+
         iZ = atomic_number_by_symbol(symbol)
         if (iZ < -1) die_here('cannot read chemical symbol "'-symbol-'" in line #'-(ia+2)+'of file "'-filename-'"!')
-        
+
         if (iZ > ubound(z_defaults, 2)) then
           pos(0,ia) = dble(iZ)           ; modified(0,ia) = MODIFIED_AUTO_DEFAULT
           die_here('chemical symbol "'-symbol-'" in line #'-(ia+2)+'of file "'-filename-'" is higher than defaults are given!')
         else
           pos(0:,ia) = z_defaults(0:,iZ) ; modified(0:,ia) = z_modified(0:,iZ)
         endif
-        
+
         ist = parseParams(line, pos(0:,ia), modified(0:,ia), keywords, ikeypos, linenumber=ia+2, filename=filename, n_warn_ignored=n_warn_ignored_param)
         if (ist /= 0) then
           warn(6, 'parsing of additional atom data in line #'-(ia+2)+'of file "'-filename-'"!')
           return ! error
         endif
-        
+
         pos(1:3,ia) = xyz(1:3); modified(1:3,ia) = MODIFIED_SPECIALIZED ! set Cartesian positions
 
 !       write(*, '(i0,99("  ",f0.2))') ia, pos(:,ia) ! show all params  
-        
+
       enddo ! ia
 
       if (n_warn_line_truncated > 0) warn(6, 'in file "'-filename-'",'+n_warn_line_truncated+'lines have been truncated!')
       if (n_warn_ignored_param  > 0) warn(6, 'in file "'-filename-'",'+n_warn_ignored_param+'expressions have been ignored!')
-      
+
       if (checks) then
         nadd = 0
         ia = natoms
@@ -208,26 +209,26 @@ module PositionReader_mod
         enddo ! ia
         if (nadd > 0) warn(6, 'at least'+nadd+'additional lines in file "'-filename-'" seem to be valid atom entries!')
       endif ! checks
-      
+
       close(FU, iostat=ist) ! ignore status
       write(*,'(9a)') 'file "',trim(filename),'" has been read in.' ! success message, todo suppress according to verbosity level
-      
+
       ! do some statistics on modified before its deallocation
       do im = MODIFIED_INITIALIZED, MODIFIED_SPECIALIZED
         write(*,'(9(3a,i9))') 'in file "',trim(filename),'"',count(modified == im),' atom data items are at level "',trim(MODIFY_STRING(im)),'".'
       enddo ! im
       deallocate(modified, stat=ist)
-      
+
     else
       pos = IMPOSSIBLE_VALUE ! DEBUG
     endif ! master
-    
+
     ! todo: broadcast positions here
-    
+
     ! DEBUG: assert( all(pos /= IMPOSSIBLE_VALUE) )
-    
+
   endfunction ! read
-  
+
   integer function parseParams(line, params, modi, keyw, ikey, linenumber, filename, n_warn_ignored, modify_states) result(ist)
     character(len=*),     intent(in) :: line
     double precision,  intent(inout) :: params(0:)
@@ -244,12 +245,12 @@ module PositionReader_mod
     integer :: ieq(size(keyw)), ii, ik, jc, nk
     integer(kind=1) :: ms(1:2)
 
-    ms(1:2) = [4, 5]; if (present(modify_states)) ms = modify_states
-    
+    ms(1:2) = [MODIFIED_SAME_DEFAULT, MODIFIED_SPECIALIZED]; if (present(modify_states)) ms = modify_states
+
     nk = size(keyw)
     assert( nk == size(ikey) ) ! the same number has to be passed
     if (any(ikey(1:nk) > ubound(params, 1))) die_here('invalid entries for iKey could lead to array-out-of-bounds! iKey='+ikey)
-    
+
     ist = 0
     ieq(:) = 0
     do ik = 1, nk
@@ -267,8 +268,11 @@ module PositionReader_mod
           return ! if error was treated as soft error
         endif
 !!!     write(*, fmt='(a,f0.3)') trim(keyw(ik)), value ! show found values
-        modi(ikey(ik)) = ms(2)
-        if (params(ikey(ik)) == value) modi(ikey(ik)) = ms(1)
+        if (params(ikey(ik)) == value) then
+          modi(ikey(ik)) = ms(1)
+        else
+          modi(ikey(ik)) = ms(2)
+        endif
         params(ikey(ik)) = value ! store
 !!!     write(*,*) mk, line(ieq(ik):ieq(ik)) ! confirm that ieq(ik) is the position of an equality char
         ieq(ik) = ii - 1 ! store the position of the equality char in line
@@ -291,9 +295,9 @@ module PositionReader_mod
     enddo ! ii
 
 !   write(*, fmt='(99(2a,f0.3))') ('  ',trim(keyw(ik)),params(ikey(ik)), ik=1,nk) ! echo
-    
+
   endfunction ! parse
-  
+
   integer(kind=1) function atomic_number_by_symbol(Sym) result(Z)
   !! retrieves the atomic number from an element symbol of length 3
   !! valid input are all chemical symbols of the periodic table
@@ -307,7 +311,7 @@ module PositionReader_mod
     integer                         :: ios
     character                       :: y ! 2nd character of Sym
     integer(kind=1)                 :: t(0:15)
-   
+
     read(unit=Sym, fmt=*, iostat=ios) Z ! try integer reading
     if (ios == 0) then ! an integer number could be read
       if (Z < -1 .or. Z > 116) Z = Z_ERROR
@@ -353,26 +357,31 @@ module PositionReader_mod
     endselect ! S
 
   endfunction ! atomic_number_by_symbol
-  
+
 endmodule PositionReader_mod
 
 #ifdef __MAIN__
 program test_PositionsReader_mod
-  use PositionReader_mod, only: readXYZfile, PSE, atomic_number_by_symbol
+  use PositionReader_mod, only: getAtomData, PSE, atomic_number_by_symbol
   implicit none
 
-  integer :: ios, na, iZ, jZ
+  integer :: ios, na, iZ, jZ, ia
   double precision, allocatable :: apos(:,:)
   character(len=3) :: sym
-  
+
   do iZ = lbound(PSE, 1), ubound(PSE, 1)
     sym = PSE(iZ)
     jZ = atomic_number_by_symbol(sym)
     if (iZ /= jZ) write(0,*) iZ,jZ,sym, '  differ!'
   enddo ! iZ
-  
-  !! ios = readXYZfile('pos.xyz', na, apos, comm=0) ! interface has changed
-  
+
+  ios = getAtomData('pos.xyz', na, apos, comm=0) ! interface has changed
+
+  write(*,'(/,2a,/)') __FILE__,' found'
+  do ia = 1, na
+    write(*,'(F6.1,3F16.6,"    ",9("  ",f0.1))') apos(:,ia)
+  enddo ! ia
+
 endprogram
 #endif
 
@@ -381,34 +390,34 @@ endprogram
 !     character(len=*), intent(in) :: line
 !     double precision, intent(out) :: params(:)
 !     integer, intent(in), optional :: startatword
-!     
+!
 !     integer, parameter :: ErrorKey=-2
 !     integer, parameter :: NumberKey=-1
 !     integer, parameter :: IgnoreKey=0
 !     integer, parameter :: NK = 4
-!      
+!
 !     character(len=*), parameter :: keyword(-2:NK) = ['???','<f>','___','vw','rmt','mag','core']
 !     integer(kind=1),  parameter :: expects( 1:NK) =                   [  1,   1,    3,    4   ]
-!     
+!
 !     integer :: ik, ic, iw, is
 !     character(len=len(line)) :: copy
 !     character(len=16) :: wrd(2*NK)
 !     integer           :: key(2*NK)
 !     double precision  :: val(2*NK)
-!     
+!
 !     is = 1; if (present(startatword)) is = max(1, startatword)
-!     
+!
 !     do ic = 1, len(line)
 !       copy(ic:ic) = line(ic:ic)
 !       if (line(ic:ic) == '=') copy(ic:ic) = ' ' ! replace '=' by blank
 !     enddo ! ic
-!     
+!
 !     wrd = ''
 !     read(unit=copy, fmt=*, iostat=ist) wrd
-!     
+!
 !     key(:) = IgnoreKey ! init
 !     val(:) = 0.d0 ! init
-!     
+!
 !     do iw = is, 2*NK
 !       do ik = 1, NK
 !         if (wrd(iw) == '') then
@@ -428,7 +437,7 @@ endprogram
 !         endif
 !       enddo ! ik
 !     enddo ! iw
-! 
+!
 !     if (any(key == ErrorKey)) then
 !       write(*, fmt='(99a)') 'string: "',trim(line),'"'
 !       write(*, fmt='(99a)') 'detected sequence: ',(trim(keyword(key(iw))),' ',iw=1,2*NK), &
@@ -436,8 +445,8 @@ endprogram
 !       stop 'Error parsing!'
 !     endif
 !     write(*,'(99(a,1x))') 'string:', (trim(wrd(iw)), iw=1,2*NK)
-!     
+!
 !     ist = 0
-! 
+!
 !   endfunction ! parse
 ! #endif
