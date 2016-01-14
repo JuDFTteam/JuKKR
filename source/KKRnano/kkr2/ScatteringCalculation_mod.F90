@@ -480,7 +480,7 @@ implicit none
     double complex, intent(in) :: ez_point
     integer, intent(in) :: ie, ispin, nmesh
     character(len=*), intent(in) :: solver_stats
-    write(6, fmt='(A,I4,A,2(1X,F10.6),A,I4,A,I4,9A)') ' ** IE =',ie,' ENERGY =',ez_point,' NofKs =',nmesh,' ISPIN =',ispin,'  ',trim(solver_stats)
+    write(6, fmt='(A,I4,A,2F11.6,A,I0,A,I0,9A)') ' ** IE =',ie,' ENERGY =',ez_point,' ispin = ',ispin,' NofKs = ',nmesh,'  ',trim(solver_stats)
   endsubroutine ! print
 
   !----------------------------------------------------------------------------

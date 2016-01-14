@@ -86,7 +86,7 @@ module PositionReader_mod
 
 !     call destroy(cr)
 
-    ist = readXYZfile(filename, natoms, pos, keywords, ikeypos, z_defaults, z_modified, comm)
+    ist = readXYZfile(filename, natoms, pos, keywords, i_keypos, z_defaults, z_modified, comm)
 
   endfunction ! getAtomData
 
@@ -94,7 +94,7 @@ module PositionReader_mod
   integer function readXYZfile(filename, natoms, pos, keywords, ikeypos, z_defaults, z_modified, comm) result(ist)
     character(len=*), intent(in) :: filename
     integer, intent(out) :: natoms
-    double precision, allocatable, intent(out) :: pos(:,:) ! pos(0:3,natoms)
+    double precision, allocatable, intent(out) :: pos(:,:) ! pos(0:3+,natoms)
     double precision, intent(in) :: z_defaults(0:,-1:)
     integer(kind=1),  intent(in) :: z_modified(0:,-1:)
     integer, intent(in) :: comm ! MPI communicator

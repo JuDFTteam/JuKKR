@@ -20,17 +20,23 @@ module BrillouinZone_mod
 
     integer, parameter :: fu = 52 ! file unit
     integer :: i, l, ios, maxm
+    character(len=*), parameter :: defname='kpoints', altname='new.kpoints'
 
-    open (fu, file='new.kpoints', form='formatted', status='old', action='read', iostat=ios)
-    if (ios /= 0) then ! default to the old kpoint file name
-      open (fu, file='kpoints', form='formatted', status='old', action='read')
+    open (fu, file=altname, form='formatted', status='old', action='read', iostat=ios)
+    if (ios /= 0) then ! default to reading the old kpoint file
+      open (fu, file=defname, form='formatted', status='old', action='read', iostat=ios)
+      if (ios /= 0) then ! failed to read the old kpoint file
+        write(*,*) 'ERROR: file "',defname,'" not found, nor file "'-altname-'".'
+        die_here('file "'-defname-'" not found!')
+      endif
     else ! file new.kpoints exists - use those kpoints
-      write(*,*) "WARNING: rejecting file kpoints - using file new.kpoints instead."
-      warn(6, "rejecting file kpoints - using file new.kpoints instead.")
+      write(*,*) 'WARNING: rejecting file "',defname,'" - using file "',altname,'" instead.'
+      warn(6, 'rejecting file "'-defname-'" - use file "'-altname-'" instead.')
     endif
 
-    rewind (fu)
-    read (fu, fmt=*) maxm
+    rewind (fu) ! rewind the files to the beginning (probably legacy code)
+    
+    read (fu, fmt=*) maxm ! read the maximum number of k-meshes given in that file
     do l = 1, min(maxmesh, maxm)
       read (fu, fmt='(i8,f15.10)') nofks(l), volbz(l)
       do i = 1, nofks(l)
@@ -117,13 +123,16 @@ module BrillouinZone_mod
     maxmesh = 1
     if (test('fix mesh')) then
       kmesh(1:ielast) = 1
+      warn(6, "kmesh fixed to"+nbxyz)
     else
       do ie = 1, ielast
         n = int(1.001d0 + log(dimag(ez(ie))/dimag(ez(ielast)))/log(2.d0))
         kmesh(ie) = max(1, n)
         maxmesh = max(maxmesh, kmesh(ie))
+!       write(*, '(a,f16.6,f12.6,9(a,i0))') 'renormalized energy:',ez(ie)/dimag(ez(ielast)),'  n=',n,'  kmesh(',ie,')=',kmesh(ie),'  max=',maxmesh
       enddo ! ie
-      kmesh(1:2) = maxmesh
+      kmesh(1:2) = maxmesh ! why is this done?
+      warn(6, "kmesh(1:2) is set to mesh #"-maxmesh)
     endif ! variable mesh
 
     if (maxmesh > maxmshd) die_here("Dimension ERROR: Please increase hard limit MAXMSHD to"+maxmesh)

@@ -211,9 +211,6 @@ module KKRzero_mod
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
                  arrays%dsymll, params%bzdivide, emesh%ielast, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
                  dims%lmaxd, krel, dims%ekmd, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
-
-    ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
-    call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
     
 !   Conversion of rmax and gmax to atomic units
     params%rmax = params%rmax*params%alat
@@ -223,7 +220,10 @@ module KKRzero_mod
     
     if (checkmode == 0) then 
       ! write binary files that are needed in the main program
-    
+
+      ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
+      call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
+      
       call store(dims, 'inp0.unf')
       ist = writeInputParamsToFile(params, 'input.unf')
       call writeMain2Arrays(arrays, 'arrays.unf')
