@@ -789,7 +789,7 @@ C ======================================================================
      &          MPI_DOUBLE_COMPLEX,master,MPI_COMM_WORLD,ierr)
       
       !DOUBLE PRECISION
-      call MPI_Bcast(t_params%VINS,((t_params%IRMD-t_params%IRMIND)*
+      call MPI_Bcast(t_params%VINS,((t_params%IRMD-t_params%IRMIND+1)*
      &               t_params%LMPOTD*t_params%NSPOTD),
      &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%VISP,(t_params%IRMD*t_params%NPOTD),

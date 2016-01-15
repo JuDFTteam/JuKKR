@@ -134,7 +134,7 @@ program kkrcode
   
     !reset files for t_inc%i_write>1
     if (t_inc%i_write<2) then
-       close(1337, status='delete')
+       if(t_inc%i_write>0) close(1337, status='delete')
        if(t_inc%i_write>0) open(1337, file='output.'//trim(ctemp)//'.txt')
     endif
  
