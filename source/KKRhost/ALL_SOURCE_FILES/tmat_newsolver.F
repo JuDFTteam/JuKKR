@@ -365,7 +365,7 @@ c add spherical contribution of tmatrix
 !             write(*,*) 'write tmat', ie, i1, ielast
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-            WRITE(696969,*) TMATLL(:,:)
+!             WRITE(696969,*) TMATLL(:,:)
          else
 #ifdef CPP_MPI
             irec = ie_num +
