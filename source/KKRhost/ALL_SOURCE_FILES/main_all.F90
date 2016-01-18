@@ -39,30 +39,36 @@ program kkrcode
 #endif
   ! set variables master, myrank and nranks for serial (myrank=master=0, nranks=1) as well as parallel execution
   call mympi_init()
+  ! save myrank in ctemp, needed to open output unit 1337
+  write(ctemp,'(I03.3)') myrank
 
-  ! initialize timing
-  call timing_init(myrank)
-    
-  ! start KKR program, first do main0, where everything is read in and initialized
-  call timing_start('main0')
-  
-  ! open output files
+  ! do all this only on master (read in parameters etc. in main0)
   if(myrank==master) then
+
+     ! initialize timing
+     call timing_init(myrank)
+
+     ! start KKR program, first do main0, where everything is read in and initialized
+     call timing_start('main0')
+
+     ! open output files
      write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
      write(*,*) '!!! Most output written to output.myrank.txt files !!!'
      write(*,*) '!!! please check these files as well               !!!'
      write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  end if
-  write(ctemp,'(I03.3)') myrank
-  if(myrank==master) open(1337, file='output.'//trim(ctemp)//'.txt')
-  
-  ! run main0 only serially, then communicate everything that is in here
-  if(myrank==master) call main0()
-  call timing_stop('main0')
-  
+     open(1337, file='output.'//trim(ctemp)//'.txt')
+     ! default value on master (needed for writeout in main0)
+     t_inc%i_write = 1
+
+     ! run main0 only serially, then communicate everything that is in here
+     call main0()
+     call timing_stop('main0')
+
+  end if ! myrank ==master
+
 #ifdef CPP_MPI
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
-  call timing_start('MPI 1')
+  if(myrank==master) call timing_start('MPI 1')
   call bcast_t_inc_tgmat(t_inc,t_tgmat)
   ! also communicate logicals from t_lloyd
   call bcast_t_lly_1(t_inc,t_lloyd)
@@ -88,7 +94,7 @@ program kkrcode
                                  & myrank_ie,nranks_ie,mympi_comm_at,myrank_at,nranks_at, myrank_atcomm,nranks_atcomm)
   ! save grid info in type 't_mpi_c_grid'
   call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
-  call timing_stop('MPI 1')
+  if(myrank==master) call timing_stop('MPI 1')
 #endif
 
   ! set verbosity levels for each rank set i_write and i_time to 0 or 1,2, depending on verbosity level specified in inputcard and rank
@@ -100,8 +106,8 @@ program kkrcode
      t_inc%i_time = 0                          ! all ranks do not write timings but only the master
      if(myrank==master) t_inc%i_time = 2       ! master write all timings of all iterations
   endif !t_inc%i_time==1
-  ! delete unused timing files
-  if(t_inc%i_time==0) close(43234059, status='delete')
+  ! initialize timing files
+  if(myrank.ne.master .and. t_inc%i_time>0) call timing_init(myrank)
   
   ! set if(t_inc%i_write>0) in front of every write(1337) and in mod_timing for timing_stop writeout (if(t_inc%i_time>0))
   ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
@@ -110,6 +116,7 @@ program kkrcode
        if(myrank==master) close(1337, status='delete')
        if(t_inc%i_write>0) open(1337, file='output.'//trim(ctemp)//'.txt')
     endif
+    if(t_inc%i_write>0 .and. myrank.ne.master) open(1337, file='output.'//trim(ctemp)//'.txt')
   
 ! bug found: for serial and openmp run with SOC old files have to be written out, otherwise something goes wrong
 ! thus - for now - this is enforced here:
@@ -129,15 +136,11 @@ program kkrcode
      call print_time_and_date('started')
   end if
   do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.-1) )
-  
-  
-  
-    !reset files for t_inc%i_write>1
-    if (t_inc%i_write<2) then
-       if(t_inc%i_write>0) close(1337, status='delete')
-       if(t_inc%i_write>0) open(1337, file='output.'//trim(ctemp)//'.txt')
-    endif
- 
+
+    ! reset files for t_inc%i_write<2
+    if (t_inc%i_write<2 .and. t_inc%i_write>0) rewind(1337)
+    ! reset timing files if t_inc%i_time<2
+    if (t_inc%i_time<2 .and. t_inc%i_time>0) rewind(43234059) 
   
     call timing_start('Time in Iteration')
   

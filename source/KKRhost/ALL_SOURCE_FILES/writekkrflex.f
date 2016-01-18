@@ -3,11 +3,14 @@
      +                  CONC,CMOM,CMINST,VINTERS)
      
       use mod_types, only: t_tgmat
+      use mod_wunfiles, only: t_params, read_angles
      
       implicit none
       include 'inc.p'
       INTEGER LMPOTD
       PARAMETER (LMPOTD=(LPOTD+1)**2)
+      INTEGER LMGF0D
+      PARAMETER (LMGF0D= (LMAXD+1)**2)
 !interface
       integer          :: natomimp
       integer          :: nspin
@@ -29,6 +32,7 @@
 !local
       integer :: ispin,ie,i1,iatom,irec,i,lm
       DOUBLE COMPLEX TMAT0(LMMAXD,LMMAXD)
+      DOUBLE PRECISION THETA(NATYPD), PHI(NATYPD)
 C     .. External Functions ..
       LOGICAL OPT
       EXTERNAL OPT
@@ -42,6 +46,9 @@ C     .. External Functions ..
            OPEN (69,ACCESS='direct',RECL=WLENGTH*4*LMMAXD*LMMAXD,
      &             FILE='tmat',  FORM='unformatted')
         end if
+
+        !read in non-collinear angles
+        call read_angles(t_params,NATYP,THETA,PHI)
 
         DO IATOM = 1,NATOMIMP
           I1=ATOMIMP(IATOM)
@@ -73,6 +80,9 @@ C     .. External Functions ..
           IF (I1<=NATYP) THEN
            IREC=IE+IELAST*(I1-1)
             READ(69,REC=IREC) TMAT0
+            !perform here a transformation from the local to the global
+            !spin-frame of reference
+            CALL ROTATEMATRIX(TMAT0,THETA(I1),PHI(I1),LMGF0D,0)
           ELSE
            TMAT0=(0d0,0d0)
           ENDIF
