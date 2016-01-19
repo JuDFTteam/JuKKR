@@ -8,6 +8,8 @@
       include 'inc.p'
       INTEGER LMPOTD
       PARAMETER (LMPOTD=(LPOTD+1)**2)
+      INTEGER LMGF0D
+      PARAMETER (LMGF0D= (LMAXD+1)**2)
 !interface
       integer          :: natomimp
       integer          :: nspin
@@ -29,12 +31,17 @@
 !local
       integer :: ispin,ie,i1,iatom,irec,i,lm
       DOUBLE COMPLEX TMAT0(LMMAXD,LMMAXD)
+      DOUBLE PRECISION THETA(NATYPD), PHI(NATYPD), PI, THETATMP, PHITMP
+      LOGICAL LREAD
 C     .. External Functions ..
       LOGICAL OPT
       EXTERNAL OPT
 
       write(1337,*) 'KKRFLEX WRITEOUT'
       writE(1337,*) OPT('KKRFLEX ')
+
+      PI = 4D0*ATAN(1D0)
+
       IF ( OPT('KKRFLEX ') ) THEN
         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
         write(6699,*) '#',NATOMIMP,NSPIN,IELAST,LMMAXD,KORBIT
@@ -42,6 +49,22 @@ C     .. External Functions ..
            OPEN (69,ACCESS='direct',RECL=WLENGTH*4*LMMAXD*LMMAXD,
      &             FILE='tmat',  FORM='unformatted')
         end if
+
+        !read in non-collinear angles from file
+        LREAD = .FALSE.
+        INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
+        IF (LREAD) THEN
+           OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
+           DO I1=1,NATYPD
+             READ(10,*) THETATMP, PHIMTP
+             THETA(I1) = THETATMP*PI/180D0
+             PHI(I1)   = PHITMP*PI/180D0
+           END DO
+        ELSE
+          THETA(:) = 0.D0
+          PHI(:) = 0.D0
+        END IF!LREAD
+
 
         DO IATOM = 1,NATOMIMP
           I1=ATOMIMP(IATOM)
@@ -73,6 +96,7 @@ C     .. External Functions ..
           IF (I1<=NATYP) THEN
            IREC=IE+IELAST*(I1-1)
             READ(69,REC=IREC) TMAT0
+            CALL ROTATEMATRIX(TMAT0,THETA(I1),PHI(I1),LMGF0D,0)
           ELSE
            TMAT0=(0d0,0d0)
           ENDIF
