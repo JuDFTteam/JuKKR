@@ -107,7 +107,7 @@ program kkrcode
      if(myrank==master) t_inc%i_time = 2       ! master write all timings of all iterations
   endif !t_inc%i_time==1
   ! initialize timing files
-  if(myrank.ne.master .and. t_inc%i_time>0) call timing_init(myrank)
+  if(myrank.ne.master) call timing_init(myrank)
   
   ! set if(t_inc%i_write>0) in front of every write(1337) and in mod_timing for timing_stop writeout (if(t_inc%i_time>0))
   ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file

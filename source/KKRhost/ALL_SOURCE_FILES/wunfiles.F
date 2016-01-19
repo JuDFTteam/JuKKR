@@ -334,12 +334,12 @@ C                                  meant for simpler passing of basic parameter 
      &                    t_lloyd%g0tr_to_file = .true.
      
       ! set verbosity level in t_inc%i_write = 0,1,2 for default, verbose1, verbose2
-      if(TEST('verbose0')) t_inc%i_write = 0 !default: write only output.000.txt and reset file after each iteration
+      t_inc%i_write = 0 !default: write only output.000.txt and reset file after each iteration
       if(TEST('verbose1')) t_inc%i_write = 1 !write on all processors but only the latest iteration
       if(TEST('verbose2')) t_inc%i_write = 2 !write everything
       ! and t_inc_i_time for timing writeout
+      t_inc%i_time = 1  !default: only timings from master, all iterations
       if(TEST('timings0')) t_inc%i_time = 0  !only timings from master, only the last iteration
-      if(TEST('timings1')) t_inc%i_time = 1  !default: only timings from master, all iterations
       if(TEST('timings2')) t_inc%i_time = 2  !all timing files, all iterations
       
       
