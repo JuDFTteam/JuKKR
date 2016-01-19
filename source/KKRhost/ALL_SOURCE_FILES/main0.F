@@ -693,6 +693,29 @@ C ----------------------------------------------------------------------
      +         LCORE,NCORE,LMPOTD,IRMD,IRMIND)
           CLOSE(3)
       END IF
+C ----------------------------------------------------------------------
+!     from startb1 moved here
+      IF (KHFELD.EQ.1) THEN
+c
+c---> maybe apply a magnetic field
+c
+         call BSHIFT_NS(VISP,VINS,NATYP,NSPIN,
+     +   IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,
+     +   THETAS,THESME,R,KSHAPE,HFIELD,INIPOL)
+      END IF
+      if ( TEST('vpotout ') ) then !ruess
+        open(unit=54633163,file='test_vpotout_bshift')
+        do i1=1,natyp*nspin
+            write(54633163,*) '# visp of atom ',i1
+            write(54633163,'(50000E)') visp(:,i1)
+        end do !iatom
+        do i1=1,natyp*nspin
+            write(54633163,*) '# vins of atom ',i1
+            write(54633163,'(50000E)') vins(:,:,i1)
+        end do !iatom
+        close(54633163)
+      end if
+C ----------------------------------------------------------------------
 C
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C -->  deal with the potential in the RELATIVISTIC CASE
@@ -726,7 +749,7 @@ C
                END DO
             END DO
 C---------------------------------------------------------------
-         ELSE
+         ELSE !NSPIN.EQ.1
 C---------------------------------------------------------------
 C --> check whether, although NSPIN=2 at input, the system is
 C     paramagnetic (useful for symmetry cosiderations)
@@ -742,29 +765,8 @@ C
                   CALL DCOPY(IRMD,VISP(1,I),1,VISP(1,I+1),1)
                END DO
             END IF
-!           from startb1 moved here
-            IF (KHFELD.EQ.1) THEN
-c
-c--->       maybe apply a magnetic field
-c
-               call BSHIFT_NS(VISP,VINS,NATYP,NSPIN,
-     +         IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,
-     +         THETAS,THESME,R,KSHAPE,HFIELD,INIPOL)
-            END IF
-        if ( TEST('vpotout ') ) then !ruess
-          open(unit=54633163,file='test_vpotout_bshift')
-          do i1=1,natyp*nspin
-              write(54633163,*) '# visp of atom ',i1
-              write(54633163,'(50000E)') visp(:,i1)
-          end do !iatom
-          do i1=1,natyp*nspin
-              write(54633163,*) '# vins of atom ',i1
-              write(54633163,'(50000E)') vins(:,:,i1)
-          end do !iatom
-          close(54633163)
-        end if
             
-         END IF
+         END IF !NSPIN.EQ.1
 C---------------------------------------------------------------
 C
 C --> finally, convert input potential to the internal relativistic

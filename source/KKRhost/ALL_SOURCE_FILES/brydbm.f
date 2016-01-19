@@ -325,7 +325,6 @@ c
       
       deallocate(AM,BM,FM,FM1,G,SM,SM1,VI3,WIT,UI2,UI3,VI2)
 
-      RETURN
 
 
       END

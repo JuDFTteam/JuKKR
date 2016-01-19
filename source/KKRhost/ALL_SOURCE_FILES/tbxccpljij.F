@@ -749,7 +749,7 @@ c             end do
             END DO
 c            end do
             IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (49,*) '&'
-            IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (22,*) '&'
+c           IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (22,*) '&'
          END DO !l1=1,natyp
          CLOSE (49)
 c         Close(22)
