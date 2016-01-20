@@ -56,7 +56,7 @@ C     .. External Functions ..
         IF (LREAD) THEN
            OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
            DO I1=1,NATYPD
-             READ(10,*) THETATMP, PHIMTP
+             READ(10,*) THETATMP, PHITMP
              THETA(I1) = THETATMP*PI/180D0
              PHI(I1)   = PHITMP*PI/180D0
            END DO
