@@ -26,6 +26,8 @@ mpidebug:   FC = mpiifort
 #rwth cluster
 rwthmpi: FC=$(MPIFC)
 rwthmpidebug: FC=$(MPIFC)  # marmotf90   
+#jureca
+jureca: FC = mpif90
 # $(MPIFC)
 
 
@@ -44,6 +46,7 @@ rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
 rwthmpidebug: COMPVER='mpidebug-rwth'
+jureca   : COMPVER='jureca'
 
 
 
@@ -106,6 +109,8 @@ LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -l
 MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 # RWTH cluster:
 RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+# JURECA:
+JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
@@ -116,6 +121,8 @@ rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
 rwthomp:       LLIBS=$(RWTHLLIBS)
 rwthompdebug:  LLIBS=$(RWTHLLIBS)
+
+jureca: LLIBS=$(JURECALIBS)
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -154,6 +161,7 @@ macomp:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
+jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
@@ -242,6 +250,7 @@ rwthmpi: compile
 rwthomp: compile
 rwthmpidebug: compile
 rwthompdebug: compile
+jureca: compile
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<
