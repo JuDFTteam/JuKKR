@@ -1,0 +1,58 @@
+! number of positions in unitcell
+      integer naezd
+      parameter (NAEZD = 200) !200
+! number of impurities
+      integer nimpd
+      parameter (NIMPD = 500)
+! parameter nembd for number of basis atoms in embeding positions around the real atomic pos.
+      integer nembd
+      parameter (NEMBD = 50 )
+! parameter nlembd for number of layers for embeding positions around the real atomic pos.
+      integer NLEMBD
+      parameter (NLEMBD = 100)
+! total number of sites incl. impurity sites
+      integer ntotd
+      parameter (NTOTD = NAEZD + NIMPD + NEMBD)
+! number of different types of atoms
+      integer NATYPD
+      parameter (NATYPD = NTOTD)
+! number of inequivalent shape functions
+      integer NSHAPED
+      parameter (NSHAPED = NAEZD+NIMPD) ! 1000
+! number of faces and vertices
+      integer NFACED,NVERTD
+      parameter (NFACED = 100 , NVERTD = 100)
+! highest valence orbital quantum number     
+      integer lmaxd  
+      parameter (LMAXD = 4)
+! highest quantum number for shape functions
+      integer LMAXD1
+      parameter (LMAXD1 = 4*LMAXD )
+! number of spin directions (nspind= 1 non-spin-polarized
+!                                    2  spin-polarized    )
+      integer nspind
+      parameter (NSPIND = 2)
+! highest potential orbital quantum number     
+      integer lpotd
+      parameter (LPOTD = 2*LMAXD)
+! number of r points in (0 , rws)
+      integer irmd
+      parameter (IRMD = 1400) ! 484
+!     ..   
+      integer nfund,irid
+      parameter (NFUND =100,IRID = 2*IRMD/3)
+! number of r points in ( rmt,rws)
+      integer irnsd
+      parameter (IRNSD = IRMD - 1)   ! 208 
+! ..  number of cells (shapes), panels in non-spherical part
+      integer ncelld,ipand,npand
+      parameter (NCELLD = 64,IPAND =65,NPAND=180)
+! constants for ordering the symmetry operations
+      integer nrd
+      parameter (NRD = 20000)
+! maximum number of atoms in cluster
+      integer naclsd
+      parameter (NACLSD =1000)
+! maximum number of cluster
+      integer nclsd
+      parameter (NCLSD = NSHAPED)
