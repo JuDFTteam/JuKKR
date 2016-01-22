@@ -21,6 +21,7 @@ module BrillouinZone_mod
     integer, parameter :: fu = 52 ! file unit
     integer :: i, l, ios, maxm
     character(len=*), parameter :: defname='kpoints', altname='new.kpoints'
+    character(len=32) :: comment
 
     open (fu, file=altname, form='formatted', status='old', action='read', iostat=ios)
     if (ios /= 0) then ! default to reading the old kpoint file
@@ -37,8 +38,10 @@ module BrillouinZone_mod
     rewind (fu) ! rewind the files to the beginning (probably legacy code)
     
     read (fu, fmt=*) maxm ! read the maximum number of k-meshes given in that file
+    read (fu, fmt='(a)') comment
     do l = 1, min(maxmesh, maxm)
       read (fu, fmt='(i8,f15.10)') nofks(l), volbz(l)
+      read (fu, fmt='(a)') comment
       do i = 1, nofks(l)
         read (fu, fmt=*) bzkp(1:3,i,l), volcub(i,l)
       enddo ! i
@@ -126,12 +129,12 @@ module BrillouinZone_mod
       warn(6, "kmesh fixed to"+nbxyz)
     else
       do ie = 1, ielast
-        n = int(1.001d0 + log(dimag(ez(ie))/dimag(ez(ielast)))/log(2.d0))
+        n = int(1.001d0 + log(dimag(ez(ie))/dimag(ez(ielast)))/log(2.d0)) ! ToDo: there is a more accurate formula
         kmesh(ie) = max(1, n)
         maxmesh = max(maxmesh, kmesh(ie))
 !       write(*, '(a,f16.6,f12.6,9(a,i0))') 'renormalized energy:',ez(ie)/dimag(ez(ielast)),'  n=',n,'  kmesh(',ie,')=',kmesh(ie),'  max=',maxmesh
       enddo ! ie
-      kmesh(1:2) = maxmesh ! why is this done?
+      kmesh(1:2) = maxmesh ! this is done to have the low number of k-points at the valence band bottom, needs fixing, ToDo 
       warn(6, "kmesh(1:2) is set to mesh #"-maxmesh)
     endif ! variable mesh
 
@@ -156,7 +159,8 @@ module BrillouinZone_mod
     else
       fu = 54
       open(unit=fu, file='kpoints', action='write') ! create or overwrite existing file with the same name
-      write(unit=fu, fmt='(9(a,i0))') ' ',maxmesh,'   =NumberOfMeshes'
+      write(unit=fu, fmt='(9(a,i0))') ' ',maxmesh
+      write(unit=fu, fmt='(9(a,i0))') '# ',maxmesh,' Brillouin zone meshes will follow' ! comment line
     endif
 
     nb(1:3) = nbxyz(1:3)
@@ -170,7 +174,7 @@ module BrillouinZone_mod
       
       write(6, fmt="(8x,2i6,3i5,f8.4)") im, nofks(im), nxyz(1:3), volBz
       
-      call create(kpms(im), kwxyz(:,1:nofks(im)), volBz)
+      call create(kpms(im), kwxyz(:,1:nofks(im)), volBz, nks=nxyz(1:3))
 
 !     if (fu > 0) write(unit=fu, fmt='(i8,f15.10,/,(3f12.8,d20.10))') nofks(im), volBz, (kwxyz(1:3,ik), kwxyz(0,ik), ik=1,nofks(im))
       if (fu > 0) call store(kpms(im), fu)

@@ -8,6 +8,7 @@ module BrillouinZoneMesh_mod
 
   type BrillouinZoneMesh
     integer :: nofks = 0 !< number of kpoints in this mesh
+    integer :: nks(3) = 0 !< numbers of kpoint in the mesh before symmetry reduction
     double precision :: volBz = 0.d0 !< volume of the Brillouin zone
     double precision, allocatable :: kwxyz(:,:) ! (0:3,nofks), 0: weight (prev. VOLCUB)
   endtype
@@ -30,10 +31,11 @@ module BrillouinZoneMesh_mod
 
   contains
   
-  subroutine createBrillouinZoneMesh_n(self, nofks, volBz)
+  subroutine createBrillouinZoneMesh_n(self, nofks, volBz, nks)
     type(BrillouinZoneMesh), intent(inout) :: self
     integer, intent(in) :: nofks
     double precision, intent(in), optional :: volBz !<
+    integer, intent(in), optional :: nks(3)
 
     integer :: ist
     
@@ -47,20 +49,23 @@ module BrillouinZoneMesh_mod
     
     if (present(volBz)) self%volBz = volBz
     if (self%volBz < 1e-6) warn(6, "volume of the Brillouin zone seems small, found"+self%volBz)
+    if (present(nks)) self%nks = nks
     
   endsubroutine ! create
 
   
-  subroutine createBrillouinZoneMesh_k(self, kwxyz, volBz)
+  subroutine createBrillouinZoneMesh_k(self, kwxyz, volBz, nks)
     type(BrillouinZoneMesh), intent(inout) :: self
     double precision, intent(in) :: kwxyz(0:,:) !< dim(0:3,nofks)
     double precision, intent(in), optional :: volBz !<
+    integer, intent(in), optional :: nks(3)
 
     call create(self, size(kwxyz, 2), volBz)
     
     assert(ubound(kwxyz, 1) == 3)
     assert(size(kwxyz, 2) == size(self%kwxyz, 2))
     self%kwxyz = kwxyz ! copy
+    if (present(nks)) self%nks = nks
     
   endsubroutine ! create
   
@@ -77,7 +82,7 @@ module BrillouinZoneMesh_mod
     
     if (rank == 0) then
       
-      line = ""; read(unit=fu, fmt='(A)', iostat=ist) line
+      line = ""; read(unit=fu, fmt='(a)', iostat=ist) line
       nk = 0; vol = 0.d0
       read(unit=line, fmt=*, iostat=ist) nk, vol
       if (ist /= 0) warn(6, "unable to read a Brillouin zone mesh from file unit"+fu-", expected int double but found <"-line-">")
@@ -96,9 +101,11 @@ module BrillouinZoneMesh_mod
 
     if (rank == 0) then
 
+      line = ""; read(unit=fu, fmt='(a)', iostat=ist) line ! read comment line
+    
       jk = 0
       do ik = 1, nk
-        line = ""; read(unit=fu, fmt='(A)', iostat=ist) line
+        line = ""; read(unit=fu, fmt='(a)', iostat=ist) line
         if (ist == 0) then
           read(unit=line, fmt=*, iostat=ist) xyzw
           if (ist == 0) then
@@ -132,6 +139,7 @@ module BrillouinZoneMesh_mod
     include 'mpif.h'
     integer, parameter :: fu = 654 !< file unit
     integer :: i, rank, n
+    character(len=16) :: comment
     call MPI_Comm_rank(comm, rank, ios)
     if (rank == 0) open(unit=fu, file=filename, action='read', status='old', iostat=ios)
     call MPI_Bcast(ios, 1, MPI_INTEGER, 0, comm, ios)
@@ -139,6 +147,7 @@ module BrillouinZoneMesh_mod
     n = 0
     if (rank == 0) read(unit=fu, iostat=ios) n ! 1st line of the file must contain the number of meshes
     call MPI_Bcast(n, 1, MPI_INTEGER, 0, comm, ios)
+    if (rank == 0) read(unit=fu, iostat=ios) comment
     do i = 1, min(size(self, 1), n)
       call load(self(i), fu, comm, rank)
     enddo ! i
@@ -152,6 +161,8 @@ module BrillouinZoneMesh_mod
     integer :: ist, ik
     if (self%nofks < 1 .or. size(self%kwxyz, 2) < 1) return
     write(unit=fu, fmt='(i8,f15.10)', iostat=ist) self%nofks, self%volBz
+    write(unit=fu, fmt='(9(a,i0))', iostat=ist) '# ',self%nks(1),'x',self%nks(2),'x',self%nks(3),' k-mesh, ', &
+                                                     self%nofks,' irreducible points' ! comment line
     write(unit=fu, fmt='(3f12.8,d20.10)', iostat=ist) (self%kwxyz(1:3,ik), self%kwxyz(0,ik), ik=1,self%nofks)
   endsubroutine ! store
 

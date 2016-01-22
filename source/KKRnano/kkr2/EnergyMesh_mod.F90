@@ -7,7 +7,6 @@
 #define CHECKALLOC(STAT) if ((STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
 #define CHECKDEALLOC(STAT) if ((STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module EnergyMesh_mod
   implicit none
@@ -60,29 +59,17 @@ module EnergyMesh_mod
   contains
 
   
+  !! Calculate number of energy points
   integer function getEnergyMeshSize(npol, n123val, n123sem) result(iemxd)
     integer, intent(in) :: npol, n123val(3), n123sem(3)
   
-    ! Calculate number of energy points
-    if (any(n123sem > 0)) then ! semicore contour is used
+    if (any(n123sem > 0)) write(*,*) "WARNING: Using semicore contour, please check your results"
 
-      write(*,*) "WARNING: Using semicore contour, please check your results"
-      
-      if (npol /= 0) then
-        iemxd = npol + sum(n123val) + sum(n123sem)
-      else ! dos-calculation
-        iemxd = n123val(2) + n123sem(2)
-      endif
-
-    else ! semicore contour is not used
-
-      if (npol /= 0) then
-        iemxd = npol + sum(n123val)
-      else ! dos-calculation
-        iemxd = n123val(2)
-      endif
-
-    endif ! semicore
+    if (npol /= 0) then
+      iemxd = max(0, npol) + sum(max(0, n123val)) + sum(max(0, n123sem))
+    else ! dos-calculation
+      iemxd = max(0, n123val(2)) + max(0, n123sem(2))
+    endif
 
   endfunction ! get
 
@@ -131,7 +118,7 @@ module EnergyMesh_mod
   !> @param[inout] self    The EnergyMesh object to destroy.
   elemental subroutine destroyEnergyMesh(self) ! cannot be elemental when using IO in allocatecheck
     type(EnergyMesh), intent(inout) :: self
-    integer :: ist
+    integer :: ist ! ignore status
     deallocate(self%ez, self%wez, self%wezrn, self%kmesh, stat=ist)
   endsubroutine ! destroy
 
