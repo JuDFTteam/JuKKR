@@ -1,4 +1,4 @@
-module rhoq
+module mod_rhoq
 
 #ifdef CPP_MPI
 use mpi
@@ -9,9 +9,9 @@ implicit none
 type type_rhoq
 
   ! number of scalars in this type, needed for MPI communication
-  integer, parameter :: Nscalars = 7
+  integer :: Nscalars = 7
   ! number of arrays in this type, needed for MPI communication
-  integer, parameter :: Narrays = 11
+  integer :: Narrays = 11
   
   ! impurity cluster
   integer :: Nscoef ! number of impurities in impurity cluster
@@ -27,14 +27,14 @@ type type_rhoq
   ! geometry etc.
   integer :: mu_0 ! layer index of probe position
   integer :: natyp ! number of atoms in host system
-  double precision, allocatable :: rbasis(:,:) ! (3,natyp), real space positions of all atoms in host system
+  double precision, allocatable :: r_basis(:,:) ! (3,natyp), real space positions of all atoms in host system
   double precision, allocatable :: L_i(:,:) ! (3,Nscoef+1), lattice vectors for all atoms in impurity cluster and the probe layer
   integer :: lmsize ! size in l,m(,s) (if SOC calculation) subblocks
   
   ! Green functions etc.
   logical :: Ghost_k_memsave ! logical switch which determines if Ghost_k is stored in a file or kept in memory
   double complex, allocatable :: Ghost(:,:,:) ! (Nlayer,lmsize,lmsize), 
-  double complex, allocatable :: Ghost_k(:,:) ! (Nlayer,nkpt,lmsize,lmsize), 
+  double complex, allocatable :: Ghost_k(:,:,:,:) ! (Nlayer,nkpt,lmsize,lmsize), 
   double complex, allocatable :: Dt(:,:) ! (Nscoef,Nscoef,lmsize,lmsize), 
   double complex, allocatable :: Gimp(:,:) ! (Nscoef,Nscoef,lmsize,lmsize), 
   double complex, allocatable :: tau(:,:) ! (Nscoef,Nscoef,lmsize,lmsize), 
@@ -175,7 +175,7 @@ subroutine init_t_rhoq(t_rhoq)
   if(ierr/=0) stop '[init_t_rhoq] error allocating volbz in rhoq'
   if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq%kpt(3,t_rhoq%nkpt), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating kpt in rhoq'
-  if(.not.allocated(t_rhoq%r_basis)) allocate(t_rhoq%rbasis(3,t_rhoq%natyp), stat=ierr)
+  if(.not.allocated(t_rhoq%r_basis)) allocate(t_rhoq%r_basis(3,t_rhoq%natyp), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating r_basis in rhoq'
   if(.not.allocated(t_rhoq%L_i)) allocate(t_rhoq%L_i(3,t_rhoq%Nscoef+1), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
@@ -201,9 +201,9 @@ subroutine read_scoef_rhoq(t_rhoq)
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   !local variables
-  integer natomimp, iatom
-  double precision, allocatable :: ratomimp(:)
-  integer, allocatable :: atomimp(:,:)
+  integer natomimp, iatom, ierr
+  double precision, allocatable :: ratomimp(:,:)
+  integer, allocatable :: atomimp(:)
 
   open(unit=32452345,file='scoef',iostat=ierr)
   if (ierr/=0) stop '[read_scoef_rhoq] file not found'
@@ -240,10 +240,10 @@ end subroutine read_scoef_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine read_input_rhoq(t_rhoq)
+subroutine read_input_rhoq(t_rhoq, uio)
   ! read input such as proble layer mu_0, and parameters such as lmsize etc.
   implicit none
-  type(type_rhoq), intent(in) :: t_rhoq
+  type(type_rhoq), intent(inout) :: t_rhoq
   character*256, intent(in) :: uio ! unit in which to find inputcard
   ! local
   integer :: ier
@@ -283,7 +283,7 @@ end subroutine read_input_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt)
+subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt,volbz)
   ! save kmesh information in t_rhoq
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
@@ -295,10 +295,10 @@ subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt)
   
   t_rhoq%nkpt = nkpt
   ierr = 0
-  if(.not.allocated(t_rhoq%volbz)) allocate(t_rhoq(volbz(nkpt), stat=ierr)
+  if(.not.allocated(t_rhoq%volbz)) allocate(t_rhoq%volbz(nkpt), stat=ierr)
   if(ierr/=0) stop '[save_kmesh_rhoq] error allocating volbz in rhoq'
   t_rhoq%volbz = volbz
-  if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq(kpt(3,nkpt), stat=ierr)
+  if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq%kpt(3,nkpt), stat=ierr)
   if(ierr/=0) stop '[save_kmesh_rhoq] error allocating kpt in rhoq'
   t_rhoq%kpt = kpt
   
@@ -308,24 +308,24 @@ end subroutine save_kmesh_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine save_geometry_rhoq(t_rhoq,rbasis,lmsize,natyp)
+subroutine save_geometry_rhoq(t_rhoq,r_basis,lmsize,natyp)
   ! save geometry information
   ! Attention: t_rhoq has to contain mu_0 etc from inputcard (done with read_input_rhoq)
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
-  double precision, intent(in)   :: rbasis(3,natyp) ! real space positions of all atoms in host system
-  integer, intent(in)            :: lmsize ! size in l,m(,s) (if SOC calculation) subblocks
+  double precision, intent(in)   :: r_basis(3,natyp) ! real space positions of all atoms in host system
+  integer, intent(in)            :: natyp, lmsize ! number of atoms in impcluster, size in l,m(,s) (if SOC calculation) subblocks
+  !local
+  integer :: ierr
   
-!   double precision, allocatable :: L_i(:,:) ! (3,Nscoef+1), lattice vectors for all atoms in impurity cluster and the probe layer
-
   ! save lmsize (needed later)
   t_rhoq%lmsize = lmsize
 
   ! allocate and save r_basis
   ierr = 0
-  if(.not.allocated(t_rhoq%r_basis)) allocate(t_rhoq%rbasis(3,t_rhoq%natyp), stat=ierr)
+  if(.not.allocated(t_rhoq%r_basis)) allocate(t_rhoq%r_basis(3,t_rhoq%natyp), stat=ierr)
   if(ierr/=0) stop '[save_geometry_rhoq] error allocating r_basis in rhoq'
-  t_rhoq%r_basis = rbasis
+  t_rhoq%r_basis = r_basis
   
   ! calculate lattice vectors needed later in calc_rhoq
   ! x = R^mu_n + r with R^mu_n = X_mu + L_i where L_i is the lattice vector that appears in the Fourier transform
@@ -346,14 +346,14 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   integer :: mu_0, mu_cls, mu_orig ! layer indices for probe position, cluster center and origin position, respectively
   double precision :: R_mu(3), R_cls(3) ! position in host system according to mu_orig and mu_cls
   double precision, allocatable :: rcls_i(:,:) ! size=(3,Nscoef), positions inside the impurity cluster
-  double precision, allocatable :: rbasis(:,:) ! size=(3,natyp), positions in host system
+  double precision, allocatable :: r_basis(:,:) ! size=(3,natyp), positions in host system
   double precision, allocatable :: L_i(:,:) ! size=(3,Nscoef), lattice vectors
   integer :: ilayer, irun ! loop parameter
   double precision, parameter :: eps = 1.0D-6 ! small epsilon -> threashold
   
   ! allocations etc.
-  allocate(rcls_i(3,t_rhoq%Nscoef), rbasis(3,t_rhoq%natyp), L_i(3,t_rhoq%Nscoef))
-  rbasis = t_rhoq%rbasis
+  allocate(rcls_i(3,t_rhoq%Nscoef), r_basis(3,t_rhoq%natyp), L_i(3,t_rhoq%Nscoef))
+  r_basis = t_rhoq%r_basis
   rcls_i = t_rhoq%r_scoef
     
   ! find mu_orig
@@ -361,7 +361,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   irun = 1
   do while(irun==1)
     ilayer = ilayer+1
-    if(dsqrt(sum(rbasis(:,ilayer)**2))<eps) irun = 0
+    if(dsqrt(sum(r_basis(:,ilayer)**2))<eps) irun = 0
   end do
   mu_orig = ilayer
   
@@ -372,11 +372,11 @@ subroutine get_L_vecs_rhoq(t_rhoq)
     ilayer = ilayer+1
     if(dsqrt(sum(rcls_i(:,ilayer)**2))<eps) irun = 0
   end do
-  mu_cls = t_rhoq%ilayer_scoef(ilayer)
+  mu_cls = t_rhoq%ilay_scoef(ilayer)
   
   ! set R_mu and R_cls from mu_orig and mu_cls
-  R_mu(:) = rbasis(:,mu_orig)
-  R_cls(:) = rbasis(:,mu_cls)
+  R_mu(:) = r_basis(:,mu_orig)
+  R_cls(:) = r_basis(:,mu_cls)
   
   ! L_i = R_mu - R_cls - r^cls_i
   do ilayer=1,t_rhoq%Nscoef
@@ -385,7 +385,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   
   ! save result and exit
   t_rhoq%L_i(:,:) = L_i(:,:)
-  deallocate(rcls_i, rbasis, L_i)
+  deallocate(rcls_i, r_basis, L_i)
 
 end subroutine get_L_vecs_rhoq
 
@@ -397,11 +397,12 @@ subroutine save_Ghost_rhoq(t_rhoq, Ghost, lmsize, Nlayer)
   ! save structural GF  in t_rhoq
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
+  integer, intent(in) :: Nlayer, lmsize
   double complex, intent(in) :: Ghost(lmsize,lmsize,Nlayer)
   
   ! some checks
-  if(.not.allocated(t_rhoq%Ghost)) stop '[save_Ghost_rhoq] error: Ghost not allocated in rhoq'
-  if(shape(t_rhoq%Ghost)/=shape(Ghost)) stop '[save_Ghost_rhoq] error: input Ghost and allocated Ghost in rhoq do not match in shape'
+  if( .not.allocated(t_rhoq%Ghost) ) stop '[save_Ghost_rhoq] error: Ghost not allocated in rhoq'
+  if( any( shape(t_rhoq%Ghost)/=shape(Ghost) ) ) stop '[save_Ghost_rhoq] error: input Ghost and allocated Ghost in rhoq do not match in shape'
   
   t_rhoq%Ghost(:,:,:) = Ghost(:,:,:)
   
@@ -411,20 +412,20 @@ end subroutine save_Ghost_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine calc_Ghost_k_rhoq(t_rhoq,alat,cls,nacls,rr,ezoa,atom,bzkp,rcls,lmax,naez,ncls,kpoibz,nr,nemb)
+subroutine calc_Ghost_k_rhoq(t_rhoq,alat,cls,nacls,rr,ezoa,atom,bzkp,rcls,lmax,naez,ncls,kpoibz,nr,nemb,naclsmax)
   ! calculate Ghost(k;E) from Ghost(E) and kmesh information by fourier transform
-  use mod_wunfiles, only t_params
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   ! parameters
   integer, intent(in) :: lmax,naez,ncls,kpoibz,nr,nemb
   ! scalars
-  double precision, intent(in) :: alat
+  double precision, intent(in) :: alat, naclsmax
   ! arrays
   double precision, intent(in) :: bzkp(3,kpoibz),rcls(3,ncls,ncls),rr(3,0:nr)
-  integer, intent(in)          :: atom(nacls,naez+nemb),cls(naez+nemb),ezoa(nacls,naez+nemb),nacls(ncls)
+  integer, intent(in)          :: atom(ncls,naez+nemb),cls(naez+nemb),ezoa(ncls,naez+nemb),nacls(ncls)
   ! local
-  integer :: ierr
+  double complex, allocatable :: Ghost_k_tmp(:,:,:)
+  integer :: ierr, ik
 
 
   ! allocations etc.
@@ -455,14 +456,11 @@ subroutine read_Dt_Gimp_rhoq(t_rhoq, lmmaxso, ncls)
   ! read in DTMTRX and GMATLL_GES, provided by zulapi code
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
-
-!   double complex, allocatable :: Dt(:,:,:) ! (Nscoef,lmsize,lmsize), 
-!   double complex, allocatable :: Gimp(:,:,:,:) ! (Nscoef,Nscoef,lmsize,lmsize), 
+  integer, intent(in) :: lmmaxso, ncls
 
   ! read in 
   call read_DTMTRX( t_rhoq%Dt, lmmaxso, ncls)
   call read_green_ll(ncls, lmmaxso, t_rhoq%Gimp)
-
 
 end subroutine read_Dt_Gimp_rhoq
 
@@ -473,14 +471,12 @@ end subroutine read_Dt_Gimp_rhoq
 ! needed to read in DTMTRX and GMATLL_GES files
 
 subroutine read_DTMTRX( tmat, lmmaxso, ncls)
-
   implicit none
-
   ! .... Arguments ....
-  integer,           intent(in)  :: lmmaxso
+  integer,           intent(in)  :: lmmaxso, ncls
   double complex,    intent(out) :: tmat(ncls*lmmaxso,ncls*lmmaxso) ! tmat file actually too large? not vector but diagonal matrix is stored???
   ! local
-  integer :: ierr, icls1, icls2, lm1, lm2, idummy1, idummy2, nClustertest
+  integer :: ierr, icls, icls2, lm1, lm2, idummy1, idummy2, nClustertest
   double precision :: Rclstest(3), Zatom, Rdist
   double complex :: deltamat_dummy
   !parameter
@@ -497,9 +493,9 @@ subroutine read_DTMTRX( tmat, lmmaxso, ncls)
   if( nClustertest/=t_rhoq%Nscoef ) stop 'Error: cluster information from DTMTRX and scoef file do not match, different number of atoms!'
   
   !read in the position of the atoms in the impurity cluster and compare to scoef file info
-  do icls1=1,nClustertest
+  do icls=1,nClustertest
     read(562, fmt=*) RClstest(:)
-    if( any( abs(Rclstest(:)-t_rhoq%rcls_i(:,icls))>eps ) ) stop 'Error: cluster information from DTMTRX and scoef file do not match!'
+    if( any( abs(Rclstest(:)-t_rhoq%r_scoef(:,icls))>eps ) ) stop 'Error: cluster information from DTMTRX and scoef file do not match!'
   end do!icls
 
   !read in the t-matrix
@@ -604,41 +600,45 @@ end subroutine calc_tau_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine calc_Q_mu_rhoq(t_rhoq, Rll, Rllleft, Gauntcoeff, theta)
+subroutine calc_Q_mu_rhoq(t_rhoq, lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
+  & nsra, lmmaxso, Rll, Rllleft, rpan_intervall, ipan_intervall, ncleb,            &
+  & lm2d, lmaxd, iend, cleb, icleb, loflm, nfund, lmxsp, ifunm,    &
+  & nrmaxd, thetasnew, irmdnew, q_mu )
   ! calculate prefactor needed in rhoq calculation:
   ! Q^mu_Lambda,Lamabda' = Int d^3r Tr[ R^mu_Lmabda(\vec{r}) R^left,mu_Lmabda'(\vec{r}) ] where R^left denotes the left solution
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq
-  integer, intent(in) :: nsra, lmmaxso,irmdnew ! left/right solutions (wave functions)
-  double complex, allocatable :: Rll(NSRA*LMMAXSO,LMMAXSO,IRMDNEW), Rllleft(NSRA*LMMAXSO,LMMAXSO,IRMDNEW) ! wave functions in new mesh
+  integer, intent(in) :: nsra, lmmaxso, irmdnew ! left/right solutions (wave functions)
+  double complex, intent(in) :: Rll(nsra*lmmaxso,lmmaxso,irmdnew), Rllleft(nsra*lmmaxso,lmmaxso,irmdnew) ! wave functions in new mesh
   double precision, intent(in) :: rpan_intervall(0:ntotd)
   integer, intent(in) :: ipan_intervall(0:ntotd)
-  integer, intent(in) :: ncleb, lm2d, lmaxd, lmpotd, iend ! Gaunt coefficients
-  double precision, intent(in) :: cleb(ncleb,4) ! Gaunt coefficients
-  integer, intent(in) :: icleb(lmpotd,0:lmaxd,0:lmaxd), loflm(lm2d) ! Gaunt coefficients
-  integer, intent(in) :: nfund, ncelld, lmxsp, ifunm(lmxsp) ! shape functions
-  double precision, intent(in) :: thetasnew(nrmaxd,nfund,ncelld) ! shape functions in Chebychev mesh (new mesh)
+  integer, intent(in) :: ncleb, lm2d, lmaxd, iend ! Gaunt coefficients
+  double precision, intent(in) :: cleb(ncleb) ! Gaunt coefficients
+  integer, intent(in) :: icleb(0:lmaxd,0:lmaxd), loflm(lm2d) ! Gaunt coefficients
+  integer, intent(in) :: nfund, lmxsp, ifunm(lmxsp), nrmaxd ! shape functions
+  double precision, intent(in) :: thetasnew(nrmaxd,nfund) ! shape functions in Chebychev mesh (new mesh)
+  double complex, intent(out) :: q_mu(lmmaxso,lmmaxso)
   
   double precision, parameter :: c0ll = 1.0d0/sqrt(16.0d0*datan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
   
   ! local
-  integer :: irmdnew, imt1, l1, m1, lm1, lm2, lm3, ir, ifun, j
-
+  integer :: imt1, lm1, lm2, lm3, ir, ifun, j, lm01, lm02
+  double complex :: q_of_r(nrmaxd,lmmaxso,lmmaxso)
+  
 
   ! get indices of imt and irmd in new mesh -> boundaries for ir loops
-  irmdnew= npan_tot*(ncheb+1)
   imt1=ipan_intervall(npan_log+npan_eq)+1
 
   ! first treat spherical block (diagonal in lm, lm' -> only lm'==lm)
   do lm01 = 1,lmmaxso
     ! fill diagonal
     do ir = 1,irmdnew
-      q_of_r(ir, lm01, lm01) = q_of_r(ir) + rll(ir, lm01, lm01) * rllleft(ir, lm01, lm01) ! note: diagonal in lm01!!!
+      q_of_r(ir, lm01, lm01) = q_of_r(ir, lm01, lm01) + rll(ir, lm01, lm01) * rllleft(ir, lm01, lm01) ! note: diagonal in lm01!!!
     enddo ! ir
     ! add shapefunction to points with r> R_MT
     do ir=imt1+1,irmdnew
-      q_of_r(ir) = q_of_r(ir)*thetasnew(ir,1)*c0ll ! add shapefunction on diagonal for last points outside of MT radius
+      q_of_r(ir, lm01, lm01) = q_of_r(ir, lm01, lm01)*thetasnew(ir,1)*c0ll ! add shapefunction on diagonal for last points outside of MT radius
     enddo ! ir
   enddo ! lm01
 
@@ -659,7 +659,7 @@ subroutine calc_Q_mu_rhoq(t_rhoq, Rll, Rllleft, Gauntcoeff, theta)
       enddo ! j -> sum of Gaunt coefficients
       
       ! do radial integration
-      call intcheb_cell(q_of_r(lm02,lm01),q_mu(lm02,lm01),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
+      call intcheb_cell(q_of_r(:,lm02,lm01),q_mu(lm02,lm01),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
     end do ! lm02
   end do ! lm01
 
@@ -675,7 +675,7 @@ subroutine calc_rhoq(t_rhoq)
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
 
-
+  
 
 end subroutine calc_rhoq
 
@@ -683,4 +683,16 @@ end subroutine calc_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-end module rhoq
+end module mod_rhoq
+
+! for testing only, comment out when ready
+!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!
+program test
+
+  use mod_rhoq
+  
+  
+  call calc_rhoq(t_rhoq) 
+
+end program test
+!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!
