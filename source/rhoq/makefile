@@ -52,8 +52,10 @@ clean:
 clear:
 	rm -rf *.mod *.o *__genmod.f90 *.i90
 
-serial:  mod_mympi.o mod_types.o ioinput.o dlke0.o dlke1.o intcheb_cell.o mod_rhoq.o 
-	  $(FC) $(LLIBS)    -o $(FILENAME0) mod_rhoq.o $
+SRCS = opt.o test.o cinit.o mod_mympi.o mod_types.o ioinput.o dlke0.o dlke1.o intcheb_cell.o mod_rhoq.o
+
+serial:  $(SRCS) 
+	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
 debug:   mod_rhoq.o 
 	  $(FC) $(LLIBS)    -o $(FILENAME0) mod_rhoq.o $
 install: clean serial
