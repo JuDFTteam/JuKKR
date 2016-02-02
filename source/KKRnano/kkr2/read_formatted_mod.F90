@@ -217,7 +217,7 @@ module read_formatted_mod
     call destroy_NonSphericalBlocks(pe%nsblocks)
   endsubroutine ! destroy
 
-endmodule read_formatted_mod
+endmodule ! read_formatted_mod
 
 #ifdef TEST_READ_FORMATTED_MOD
 program test_read_formatted

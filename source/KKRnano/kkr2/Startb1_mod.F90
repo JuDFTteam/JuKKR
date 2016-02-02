@@ -42,7 +42,7 @@ module Startb1_mod
 
     call destroy_ShapefunFile(sfile)
 
-  endsubroutine startb1_wrapper_new
+  endsubroutine ! startb1_wrapper_new
 
 !------------------------------------------------------------------------------
 !> Write the 'atoms' file (= binary analogue to atominfo - used for parallel reading in kkr2)
@@ -65,20 +65,18 @@ module Startb1_mod
     integer, intent(out) :: max_reclen_mesh
     logical, intent(in) :: nowrite
 
-    integer :: iatom
-    integer :: ispin
-    integer :: lpot_atom
-    integer :: reclen
+    integer :: iatom, ispin, nbackfold
+    integer :: reclen, lpot_atom
     type(PotentialEntry) :: pe(2)
     type(BasisAtom) :: atom
     type(RadialMeshData) :: mesh
     integer, parameter :: fu = 13
-    integer :: cell_index
-    integer :: n_warn_alat_differs
+    integer :: cell_index, n_warn_alat_differs
 
     max_reclen = 0
     max_reclen_mesh = 0
     reclen = 0
+    nbackfold = 0
     
     n_warn_alat_differs = 0
 
@@ -151,11 +149,13 @@ module Startb1_mod
 
       if (.not. nowrite) call writeBasisAtomDA(atom, 37, iatom)
 
+      cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
+      if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
+      
+      call createRadialMeshData(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1)
+      
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
-      cell_index = ntcell(iatom)
-      CHECKASSERT( 1 <= cell_index .and. cell_index <= sfile%ncell )
-      call createRadialMeshData(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1)
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
       
       ! cleanup
@@ -173,13 +173,16 @@ module Startb1_mod
     if (n_warn_alat_differs > 0) &
       warn(6, "In"+n_warn_alat_differs/nspin+"potential files ALAT is not the same as in the input!")
 
+    if (nbackfold > 0) &
+      warn(6, "In"+nbackfold+"cases the shapfun index has been backfolded into [1,"+sfile%ncell-"]!")
+      
   endsubroutine ! write_atoms_file
 
   integer function lmpot_to_lpot(lmpot)
     integer, intent(in) :: lmpot
 
     lmpot_to_lpot = int( sqrt(dble(lmpot)) - 1.d0 + 0.01d0)
-  endfunction
+  endfunction ! lmpot_to_lpot
 
 
   subroutine write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
@@ -216,7 +219,7 @@ module Startb1_mod
         call create_read_PotentialEntry(pe(ispin), fu, iatom)
       enddo ! spin
 
-      cell_index = ntcell(iatom)
+      cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1 ! backfold
 
       lpot = lmpot_to_lpot(pe(1)%sblock%lmpot)
       irmd = pe(1)%sblock%irt1p
@@ -280,6 +283,6 @@ module Startb1_mod
 #endif
     endif ! not nowrite
 
-  endsubroutine write_binary_potential
+  endsubroutine ! write_binary_potential
 
-endmodule ! 
+endmodule ! Startb1_mod
