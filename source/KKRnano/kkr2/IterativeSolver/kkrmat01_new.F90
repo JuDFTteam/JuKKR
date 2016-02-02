@@ -279,8 +279,9 @@ module kkrmat_new_mod
 
   ! if the following macro is defined, don't use MPI RMA locks
   ! not using locks does not scale well
-
-    call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
+  
+  
+    call referenceFourier_COM(ms%GLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              rr, cluster%ezoa_trc, Ginp, trunc2atom_index, communicator)
 
@@ -414,13 +415,21 @@ module kkrmat_new_mod
     type(ChunkIndex) :: chunk_inds(1)
     integer :: win, nranks, ierr
     integer :: naez_max
+    
+    num_local_atoms = size(Ginp, 4)
+    
+    if (num_local_atoms == 1) then
+      ! this version using point-to-point MPI communication is so far only implemented for 1 atom per process
+      call referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
+                indn0, rr, ezoa, Ginp, trunc2atom_index, communicator)
+      return
+    endif
 
     naez = size(nacls)
     ASSERT(naez == size(trunc2atom_index))
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
     naclsd = size(Ginp, 3)
-    num_local_atoms = size(Ginp, 4)
     
     allocate(eikrm(naclsd), eikrp(naclsd))
 
@@ -491,19 +500,119 @@ module kkrmat_new_mod
 
   endsubroutine ! referenceFourier_com
 
-!     >> Input parameters
-!>    @param     alat    lattice constant a
-!>    @param     nacls   number of atoms in cluster
-!>    @param     RR      array of real space vectors
-!>    @param     EZOA
-!>    @param     Bzkp
-!>    @param     nrd     There are nrd+1 real space vectors in RR
-!>    @param     naclsd. maximal number of atoms in cluster
 
-!     << Output parameters
-!>    @param     eikrm   Fourier exponential factor with minus sign
-!>    @param     eikrp   Fourier exponential factor with plus sign
+  
+  
+  
+  subroutine referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
+                indn0, rr, ezoa, Ginp, trunc2atom_index, comm)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    include 'mpif.h'
+    double complex, intent(out) :: GLLh(:)
+    type(SparseMatrixDescription), intent(in) :: sparse
+    double precision, intent(in) :: kpoint(3)
+    double precision, intent(in) :: alat
+    integer, intent(in) :: nacls(:)
+    integer, intent(in) :: atom(:,:)
+    integer, intent(in) :: numn0(:)
+    integer, intent(in) :: indn0(:,:)
+    double precision, intent(in) :: rr(:,0:)
+    integer, intent(in) :: ezoa(:,:)
+    double complex, intent(in) :: Ginp(:,:,:,:)
+    integer, intent(in) :: trunc2atom_index(:) !> mapping trunc. index -> atom index
+    integer, intent(in) :: comm
 
+    ! locals
+    integer :: site_index, naez, naclsd, lmmaxd, ist
+    integer :: num_local_atoms, atom_requested
+    double complex, allocatable :: Gref_buffer(:,:,:,:), eikrm(:), eikrp(:) ! dim: naclsd
+    integer :: rank, tag, myrank, nranks, ierr, ncount
+    integer, allocatable :: reqs(:,:), stats(:,:,:)
+
+    naez = size(nacls)
+    ASSERT(naez == size(trunc2atom_index))
+    lmmaxd = size(Ginp, 1)
+    ASSERT(lmmaxd == size(Ginp, 2))
+    naclsd = size(Ginp, 3)
+    num_local_atoms = size(Ginp, 4)
+    
+    ASSERT(num_local_atoms == 1) ! only 1 atom per MPI process
+    
+    allocate(eikrm(naclsd), eikrp(naclsd))
+    
+    call MPI_Comm_size(comm, nranks, ierr)
+    call MPI_Comm_rank(comm, myrank, ierr)
+
+    GLLh = zero ! init
+    
+#ifndef IDENTICAL_REF
+
+    ! Note: some MPI implementations might need the use of MPI_Alloc_mem
+    allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,naez))
+    allocate(reqs(2,naez), stats(MPI_STATUS_SIZE,2,naez))
+    reqs(:,:) = MPI_REQUEST_NULL
+    
+    ncount = lmmaxd*lmmaxd*naclsd
+
+    ! loop up to naez sending the information
+    do site_index = 1, naez
+      atom_requested = trunc2atom_index(site_index) ! get the global atom id
+
+      rank = atom_requested - 1
+      
+      if (rank /= myrank) then
+      
+        tag  = modulo(myrank, 2**15)
+        call MPI_Isend(Ginp(:,:,:,1),                 ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(1,site_index), ierr)
+      
+        tag = modulo(atom_requested - 1, 2**15)
+        call MPI_Irecv(Gref_buffer(:,:,:,site_index), ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(2,site_index), ierr)
+
+      else
+        reqs(:,site_index) = MPI_REQUEST_NULL
+        Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! use this if all Grefs are the same
+      endif ! distant rank
+      
+    enddo ! site_index
+
+    call MPI_Waitall(2*naez, reqs, stats, ierr) ! wait until all receives have finished
+    
+#endif
+
+    do site_index = 1, naez
+    
+      call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+
+      call dlke0_smat(site_index, GLLh, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+                        nacls(site_index), atom(:,site_index), numn0, indn0, &
+#ifndef IDENTICAL_REF
+                        Gref_buffer(:,:,:,site_index), &
+#else
+                        Ginp(:,:,:,1), &
+#endif
+                        naez, lmmaxd)
+
+    enddo ! site_index
+    
+    deallocate(Gref_buffer, eikrm, eikrp, stat=ist)
+
+  endsubroutine ! referenceFourier_mpi
+  
+  
+  
+  
+  !     >> Input parameters
+  !>    @param     alat    lattice constant a
+  !>    @param     nacls   number of atoms in cluster
+  !>    @param     RR      array of real space vectors
+  !>    @param     EZOA
+  !>    @param     Bzkp
+  !>    @param     nrd     There are nrd+1 real space vectors in RR
+  !>    @param     naclsd. maximal number of atoms in cluster
+
+  !     << Output parameters
+  !>    @param     eikrm   Fourier exponential factor with minus sign
+  !>    @param     eikrp   Fourier exponential factor with plus sign
   subroutine dlke1(alat, nacls, rr, ezoa, Bzkp, eikrm, eikrp)
     ! ----------------------------------------------------------------------
     !     Fourier transformation of the cluster Greens function
@@ -512,9 +621,9 @@ module kkrmat_new_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls !< number of vectors in the cluster
     integer, intent(in) :: ezoa(1:) !< index list of ...
-    double complex, intent(out) :: eikrp(:), eikrm(:)
     double precision, intent(in) :: Bzkp(1:3) !< k-point (vector in the Brillouin zone)
     double precision, intent(in) :: rr(1:,0:) !< dim(1:3,0:nrd) real space cluster vectors
+    double complex, intent(out) :: eikrp(:), eikrm(:)
     
     double complex, parameter :: ci=(0.d0,1.d0)
     double precision :: convpuh, tpi
@@ -547,8 +656,8 @@ module kkrmat_new_mod
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(site_index, smat, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp, naez, lmmaxd)
-    integer, intent(in) :: site_index
+  subroutine dlke0_smat(ind, smat, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp, naez, lmmaxd)
+    integer, intent(in) :: ind !> site_index
     double complex, intent(inout) :: smat(:)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ka(:)
@@ -561,51 +670,50 @@ module kkrmat_new_mod
     
     double complex, intent(in) :: Ginp(lmmaxd,lmmaxd,nacls)
     
-    integer :: i, j, lm1, lm2, iacls, ni, ind, lmmax1, lmmax2, is
+    integer :: jat, lm1, lm2, iacls, ni, jnd, lmmax1, lmmax2, is
 
-    i = site_index
     do iacls = 1, nacls
-      j = atom(iacls)
-      if (j < 1) cycle
+      jat = atom(iacls)
+      if (jat < 1) cycle
 
-      do ni = 1, numn0(i)
-        ind = indn0(i,ni)
-        if (j == ind) then
+      do ni = 1, numn0(ind)
+        jnd = indn0(ind,ni)
+        if (jat == jnd) then
 
-          lmmax1 = kvstr(i+1) - kvstr(i)
-          lmmax2 = kvstr(ind+1) - kvstr(ind)
+          lmmax1 = kvstr(ind+1) - kvstr(ind)
+          lmmax2 = kvstr(jnd+1) - kvstr(jnd)
 
           do lm2 = 1, lmmax2
             do lm1 = 1, lmmax1
 
-              is = ka(ia(i) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
+              is = ka(ia(ind) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
 
               smat(is) = smat(is) + eikrm(iacls) * Ginp(lm2,lm1,iacls)
 
             enddo ! lm1
           enddo ! lm2
 
-        endif ! j == ind
+        endif ! jat == jnd
       enddo ! ni
 
-      do ni = 1, numn0(j)
-        ind = indn0(j,ni)
-        if (i == ind) then
+      do ni = 1, numn0(jat)
+        jnd = indn0(jat,ni)
+        if (ind == jnd) then
 
-          lmmax1 = kvstr(j+1) - kvstr(j)
-          lmmax2 = kvstr(ind+1) - kvstr(ind)
+          lmmax1 = kvstr(jat+1) - kvstr(jat)
+          lmmax2 = kvstr(jnd+1) - kvstr(jnd)
 
           do lm2 = 1, lmmax2
             do lm1 = 1, lmmax1
 
-              is = ka(ia(j) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
+              is = ka(ia(jat) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
 
               smat(is) = smat(is) + eikrp(iacls) * Ginp(lm1,lm2,iacls)
 
             enddo ! lm1
           enddo ! lm2
 
-        endif ! i == ind
+        endif ! ind == jnd
       enddo ! ni
 
     enddo ! iacls

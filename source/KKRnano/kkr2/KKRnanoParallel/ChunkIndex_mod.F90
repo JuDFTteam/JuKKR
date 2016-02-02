@@ -42,6 +42,7 @@ module ChunkIndex_mod
   private
   
   public :: ChunkIndex, getOwner, getLocalInd, getChunkIndex
+  
   type ChunkIndex
     integer :: owner
     integer :: local_ind
@@ -49,48 +50,48 @@ module ChunkIndex_mod
 
   contains
 
-!------------------------------------------------------------------------------
-!> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
-!> @param num Total number of chunks/atoms/matrices
-!> @param nranks total number of ranks
-integer function getOwner(ind, num, nranks)
-  integer, intent(in) :: ind, num, nranks
+  !------------------------------------------------------------------------------
+  !> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
+  !> @param num Total number of chunks/atoms/matrices
+  !> @param nranks total number of ranks
+  integer function getOwner(ind, num, nranks)
+    integer, intent(in) :: ind, num, nranks
 
-  integer :: atoms_per_proc  
+    integer :: atoms_per_proc  
 
-  atoms_per_proc = num / nranks  
-  getOwner = (ind - 1) / atoms_per_proc
-  ! 0 ... nranks-1  
-endfunction getOwner
+    atoms_per_proc = num / nranks  
+    getOwner = (ind - 1) / atoms_per_proc
+    ! 0 ... nranks-1  
+  endfunction ! get
 
-!------------------------------------------------------------------------------
-!> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
-!> @param num Total number of chunks/atoms/matrices
-integer function getLocalInd(ind, num, nranks)
-  integer, intent(in) :: ind, num, nranks
+  !------------------------------------------------------------------------------
+  !> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
+  !> @param num Total number of chunks/atoms/matrices
+  integer function getLocalInd(ind, num, nranks)
+    integer, intent(in) :: ind, num, nranks
 
-  integer :: atoms_per_proc  
+    integer :: atoms_per_proc  
 
-  atoms_per_proc = num / nranks
-  getLocalInd = mod((ind - 1), atoms_per_proc) + 1
+    atoms_per_proc = num / nranks
+    getLocalInd = mod((ind - 1), atoms_per_proc) + 1
 
-  ! 1 ... atoms_per_proc
-  
-endfunction getLocalInd
+    ! 1 ... atoms_per_proc
+    
+  endfunction ! get
 
-!------------------------------------------------------------------------------
-!> Returns chunk index of atom/matrix/chunk with index 'ind'.
-!> @param ind    "atom"-index
-!> @param num    Total number of chunks/atoms/matrices
-!> @param nranks number of ranks
-function getChunkIndex(ind, num, nranks)
-  type (ChunkIndex) :: getChunkIndex
-  integer, intent(in) :: ind, num, nranks
+  !------------------------------------------------------------------------------
+  !> Returns chunk index of atom/matrix/chunk with index 'ind'.
+  !> @param ind    "atom"-index
+  !> @param num    Total number of chunks/atoms/matrices
+  !> @param nranks number of ranks
+  function getChunkIndex(ind, num, nranks)
+    type(ChunkIndex) :: getChunkIndex
+    integer, intent(in) :: ind, num, nranks
 
-  getChunkIndex%owner = getOwner(ind, num, nranks)
-  getChunkIndex%local_ind = getLocalInd(ind, num, nranks)
+    getChunkIndex%owner = getOwner(ind, num, nranks)
+    getChunkIndex%local_ind = getLocalInd(ind, num, nranks)
 
-endfunction getChunkIndex
+  endfunction ! get
 
 endmodule ! ChunkIndex_mod
  
