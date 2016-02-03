@@ -33,7 +33,7 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 #-r8 #-mcmodel=medium -shared-intel #-traceback -CB -check all -g
+FFLAGS       =  -O3 -traceback -CB -check all #-g
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 #–Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
 debug:    FFLAGS = -g -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended #-mcmodel=medium -shared-intel

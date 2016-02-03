@@ -1,3 +1,4 @@
 *.o
 *.mod
 rhoq.x
+test_system/*
