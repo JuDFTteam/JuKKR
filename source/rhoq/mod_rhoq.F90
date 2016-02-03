@@ -626,7 +626,7 @@ end subroutine calc_tau_rhoq
 subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
   & nsra, lmmaxso, Rll, Rllleft, rpan_intervall, ipan_intervall, ncleb,            &
   & lm2d, lmaxd, iend, cleb, icleb, loflm, nfund, lmxsp, ifunm,    &
-  & nrmaxd, thetasnew, irmdnew, q_mu )
+  & nrmaxd, thetasnew, lmsp, irmdnew, q_mu )
   ! calculate prefactor needed in rhoq calculation:
   ! Q^mu_Lambda,Lamabda' = Int d^3r Tr[ R^mu_Lmabda(\vec{r}) R^left,mu_Lmabda'(\vec{r}) ] where R^left denotes the left solution
   implicit none
@@ -638,7 +638,7 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
   integer, intent(in) :: ncleb, lm2d, lmaxd, iend ! Gaunt coefficients
   double precision, intent(in) :: cleb(ncleb) ! Gaunt coefficients
   integer, intent(in) :: icleb(ncleb,4), loflm(lm2d) ! Gaunt coefficients
-  integer, intent(in) :: nfund, lmxsp, ifunm(lmxsp), nrmaxd ! shape functions
+  integer, intent(in) :: nfund, lmxsp, ifunm(lmxsp), nrmaxd, lmsp(lmxsp) ! shape functions
   double precision, intent(in) :: thetasnew(nrmaxd,nfund) ! shape functions in Chebychev mesh (new mesh)
   double complex, intent(out) :: q_mu(lmmaxso,lmmaxso)
   
@@ -679,15 +679,22 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
 !         write(*,*) lm1, lm2, lm3, j, lm01, lm02
         ! get shape function index for lm3
         ifun = ifunm(lm3)
-        write(*,*) j, ifun, lm3
+        !write(*,*) j, ifun,lm1,lm2,lm3
         ! do loop over non-spherical points here
-        do ir=imt1+1,irmdnew
-          q_of_r(ir, lm02, lm01) = q_of_r(ir, lm02, lm01) + cleb(j) * rll(lm01, lm1, ir) * rllleft(lm02, lm2, ir) * thetasnew(ir,ifun) ! ifun gives lm3 component
-        enddo ! ir
+        if(lmsp(lm3)/=0) then
+          !write(*,*) 'q_of_r',lm1, lm2, lm3, ifun, thetasnew(1,ifun)
+          do ir=imt1+1,irmdnew
+            q_of_r(ir, lm02, lm01) = q_of_r(ir, lm02, lm01)                                                                    &
+            &                      + cleb(j) * rll(lm01, lm1, ir) * rllleft(lm02, lm2, ir) * thetasnew(ir,ifun)                &! big and small component -> do trace here
+            &                      + cleb(j) * rll(lm01+lmmaxso, lm1, ir) * rllleft(lm02+lmmaxso, lm2, ir) * thetasnew(ir,ifun) ! ifun gives lm3 component
+          enddo ! ir
+        end if ! lmsp(ifun)/=0
       enddo ! j -> sum of Gaunt coefficients
       
       ! do radial integration
       call intcheb_cell(q_of_r(:,lm02,lm01),q_mu(lm02,lm01),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
+      write(456456,'(2E16.7)') q_mu(lm02,lm01)
+      write(123123,'(2E16.7)') q_of_r(:,lm02,lm01)
     end do ! lm02
   end do ! lm01
 
@@ -740,11 +747,11 @@ program test
   integer, allocatable          :: ipan_intervall(:)
   double precision, allocatable :: cleb(:) ! Gaunt coefficients
   integer, allocatable          :: icleb(:,:), loflm(:) ! Gaunt coefficients
-  integer, allocatable          :: ifunm(:) ! shape functions
+  integer, allocatable          :: ifunm(:), lmsp(:) ! shape functions
   double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
   double complex, allocatable   :: q_mu(:,:)
   
-  integer :: lm1, lm2, N, i, j
+  integer :: lm1, lm2, N, i, j, ir
   
   ! read in scalars
   uio = 'inputcard'
@@ -780,9 +787,13 @@ program test
            allocate( Rll(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew),          &
      &               Rllleft(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew) ,     &
      &               rpan_intervall(0:ntotd),ipan_intervall(0:ntotd) )
-           do lm1=1,irmdnew
-             read(9999,'(20000E16.7)') Rll(1:nsra*lmmaxso,1:lmmaxso,lm1)      
-             read(9999,'(20000E16.7)') Rllleft(1:nsra*lmmaxso,1:lmmaxso,lm1)
+           do ir=1,irmdnew
+             do lm1=1,nsra*lmmaxso
+               do lm2=1,lmmaxso
+                  read(9999,'(20000E16.7)') Rll(lm1, lm2, ir) 
+                  read(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir)
+               end do
+             end do
            enddo
            do lm1=0,ntotd
              read(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
@@ -791,20 +802,30 @@ program test
   
   
   open(9999, file='cleb_shapefun.txt')
+  read(9999,*)
   read(9999,*) ncleb, lm2d, lmaxd, iend, nfund, lmxsp, nrmaxd
   allocate( icleb(ncleb,4), loflm(lm2d), cleb(ncleb) )
   allocate( ifunm(lmxsp) , thetasnew(nrmaxd,nfund), q_mu(lmmaxso,lmmaxso) )
+  read(9999,*)
   do lm1=1,ncleb
     read(9999,'(E16.7,4I9)') cleb(lm1), icleb(lm1,1:4)
   end do
+  read(9999,*)
   do lm1=1,lm2d
     read(9999,'(I9)') loflm(lm1)
     write(*,*) 'loflm',loflm(lm1)
   end do
+  read(9999,*)
   do lm1=1,lmxsp
     read(9999,'(I9)') ifunm(lm1)
     write(*,*) 'ifunm',ifunm(lm1)
   end do
+  allocate( lmsp(lmxsp) )
+  read(9999,*)
+  do lm1=1,lmxsp
+    read(9999,'(I9)') lmsp(lm1)
+  end do
+  read(9999,*)
   do lm1=1,nrmaxd
     do lm2=1,nfund
       read(9999,'(E16.7)') thetasnew(lm1,lm2)
@@ -858,12 +879,12 @@ program test
 !   end do
       
       
-!   write(*,*) 'calc Q'
-!     write(*,*) icleb
-!   call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
-!        & nsra, lmmaxso, Rll, Rllleft, rpan_intervall, ipan_intervall, ncleb,   &
-!        & lm2d, lmaxd, iend, cleb, icleb, loflm, nfund, lmxsp, ifunm,           &
-!        & nrmaxd, thetasnew, irmdnew, q_mu )
+   write(*,*) 'calc Q'
+     write(*,*) icleb
+   call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
+        & nsra, lmmaxso, Rll, Rllleft, rpan_intervall, ipan_intervall, ncleb,   &
+        & lm2d, lmaxd, iend, cleb, icleb, loflm, nfund, lmxsp, ifunm,           &
+        & nrmaxd, thetasnew, lmsp, irmdnew, q_mu )
 !     
 !   call calc_rhoq(t_rhoq) 
 
