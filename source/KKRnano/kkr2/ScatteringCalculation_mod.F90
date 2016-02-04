@@ -178,7 +178,7 @@ implicit none
           atomdata => getAtomData(calc, ilocal)
 
           call TREF(emesh%EZ(IE), params%vref, dims%LMAXD, atomdata%RMTref, &
-                    Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), dims%LLY)
+                    Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), derive=(dims%LLY > 0))
 
         enddo  ! ilocal
         !$omp endparallel do
