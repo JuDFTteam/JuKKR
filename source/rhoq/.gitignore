@@ -2,3 +2,5 @@
 *.mod
 rhoq.x
 test_system/*
+*.exe
+*~

@@ -764,11 +764,19 @@ program test
 
   write(*,*) 'params', lmmaxso, natyp, naez, ncls, nr, nemb, lmax, alat, naclsmax
   
-  open(9999, file='kpoints.txt')
-  read(9999,*) nkpt
-  allocate( kpt(3,nkpt) )
-  read(9999,*) volbz, kpt(1:3,1:nkpt)
-  close(9999)
+!   open(9999, file='kpoints.txt')
+!   read(9999,*) nkpt
+!   allocate( kpt(3,nkpt) )
+!   read(9999,*) volbz, kpt(1:3,1:nkpt)
+!   close(9999)
+           open(9999, file='kpts.txt', form='formatted')
+           read(9999,'(I9)') nkpt
+           read(9999,'(E16.7)') volbz
+           allocate(kpt(3,nkpt)
+           do i=1,nofks
+             read(99999,'(3E16.7)') (kpt(j,K), j=1,3)
+           end do
+           close(9999)
 
   write(*,*) 'kpoints', nkpt, volbz
   
