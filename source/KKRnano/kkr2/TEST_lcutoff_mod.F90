@@ -9,9 +9,14 @@ module TEST_lcutoff_mod
   private
 
   public :: initLcutoffNew
-  
-  integer(kind=1), allocatable, protected, public :: lmax_array(:)
-  integer(kind=2), allocatable, protected, public :: lmarray(:)
+
+  ! union of the truncation zones over all local atoms
+  integer(kind=1), allocatable, protected, public :: lmax_array(:) ! ell_max
+  integer(kind=2), allocatable, protected, public :: lm_array(:)   ! (ell_max + 1)^2
+
+  ! for each local atom, the truncation zone is different
+  integer(kind=1), allocatable, protected, public :: lmax_a_array(:,:) ! ell_max
+  integer(kind=2), allocatable, protected, public :: lm_a_array(:,:)   ! (ell_max + 1)^2
   
   logical, protected, public :: DEBUG_dump_matrix = .false.
   integer, protected, public :: num_truncated(-1:8)
@@ -32,7 +37,7 @@ module TEST_lcutoff_mod
     integer, intent(in) :: solver_type !<
     
     double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
-    integer :: naez, lmax, atomindex, ilocal, num_local_atoms, ist, nradii, l
+    integer :: naez, lmax, atomindex, ila, num_local_atoms, ist, nradii, l
     integer(kind=1), allocatable :: lmax_atom(:,:), lmax_full(:)
     integer(kind=1) :: l_lim(9)
     double precision :: r2lim(9)   
@@ -67,32 +72,32 @@ module TEST_lcutoff_mod
     
     lmax_full = -1 ! init as truncated
 
-    do ilocal = 1, num_local_atoms
-      atomindex = atom_ids(ilocal) ! global atom index
+    do ila = 1, num_local_atoms
+      atomindex = atom_ids(ila) ! global atom index
 
       if (nradii > 0) then
-        lmax_atom(:,ilocal) = -1 ! init as truncated
+        lmax_atom(:,ila) = -1 ! init as truncated
 
         ! compute truncation zones
-        call calcCutoffarray(lmax_atom(:,ilocal), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, &
+        call calcCutoffarray(lmax_atom(:,ila), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, &
                              nradii, l_lim, r2lim)
-        lmax_atom(:,ilocal) = min(lmax_atom(:,ilocal), lmax)
-        lmax_atom(atomindex,ilocal) = lmax ! diagonal element is full always
+        lmax_atom(:,ila) = min(lmax_atom(:,ila), lmax)
+        lmax_atom(atomindex,ila) = lmax ! diagonal element is full always
       else
-        lmax_atom(:,ilocal) = lmax ! init as full interaction, no truncation
+        lmax_atom(:,ila) = lmax ! init as full interaction, no truncation
       endif
  
 !! #define DEBUG_me      
 #ifdef  DEBUG_me
       num_truncated(:) = 0
       do l = -1, lmax
-        num_truncated(l) = count(lmax_atom(:,ilocal) == l)
+        num_truncated(l) = count(lmax_atom(:,ila) == l)
       enddo ! l
       write(*,'(a,2(i0,a),9(" ",i0))') "atom #",atomindex,':  ',num_truncated(-1),' outside and inside s,p,d,f,... :',num_truncated(0:)
 #endif
 
-      lmax_full(:) = max(lmax_full(:), lmax_atom(:,ilocal)) ! reduction: merge truncation zones of local atoms
-    enddo ! ilocal
+      lmax_full(:) = max(lmax_full(:), lmax_atom(:,ila)) ! reduction: merge truncation zones of local atoms
+    enddo ! ila
 
     num_truncated(:) = 0
     do l = -1, lmax
@@ -105,10 +110,17 @@ module TEST_lcutoff_mod
     ! TODO: a bit confusing, is never deallocated
     call createTruncationZone(trunc_zone, mask=lmax_full, masks=lmax_atom)
 
-    allocate(lmarray(trunc_zone%naez_trc), lmax_array(trunc_zone%naez_trc)) ! lmarray is never deallocated - who cares
+    allocate(lm_array(trunc_zone%naez_trc), lmax_array(trunc_zone%naez_trc)) ! lm_array is never deallocated - who cares
     lmax_array(:) = lmax_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only
-    lmarray(:) = (lmax_array(:) + 1)**2
-    
+    lm_array(:) = (lmax_array(:) + 1)**2
+
+    ! also store the information for each local atom in module vars
+    allocate(lm_a_array(trunc_zone%naez_trc,num_local_atoms), lmax_a_array(trunc_zone%naez_trc,num_local_atoms)) ! todo: deallocate somewhen
+    do ila = 1, num_local_atoms
+      lmax_a_array(:,ila) = lmax_atom(trunc_zone%trunc2atom_index(:),ila) ! compression to cluster atoms only
+      lm_a_array(:,ila) = (lmax_a_array(:,ila) + 1)**2
+    enddo ! ila
+
     deallocate(lmax_atom, lmax_full, stat=ist)
   endsubroutine ! initLcutoffNew
 
@@ -186,8 +198,8 @@ endmodule ! TEST_lcutoff_mod
 !!!! never used !!
 
 !! never used 
-  subroutine getLMarray(lmarray, rbasis, center, bravais, dist_cut, lm_high, lm_low)
-    integer, intent(out) :: lmarray(:)
+  subroutine getLMarray(lm_array, rbasis, center, bravais, dist_cut, lm_high, lm_low)
+    integer, intent(out) :: lm_array(:)
     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
     double precision, intent(in) :: center(3)
     double precision, intent(in) :: bravais(3,3)
@@ -200,9 +212,9 @@ endmodule ! TEST_lcutoff_mod
     do ii = 1, size(rbasis, 2)
       dist2 = distance2_pbc(rbasis(1:3,ii), center, bravais)
       if (dist2 > dist_cut*dist_cut) then
-        lmarray(ii) = lm_low
+        lm_array(ii) = lm_low
       else
-        lmarray(ii) = lm_high
+        lm_array(ii) = lm_high
       endif
     enddo ! ii
 
@@ -210,12 +222,12 @@ endmodule ! TEST_lcutoff_mod
 
   !----------------------------------------------------------------------------
   !> Set all entries in gllh to zero which are out of range due to truncation
-  subroutine cropGLLH(gllh, lmmaxd, naclsd, naezd, lmarray, numn0, indn0)
+  subroutine cropGLLH(gllh, lmmaxd, naclsd, naezd, lm_array, numn0, indn0)
     double complex, intent(inout) :: gllh(lmmaxd,lmmaxd*naclsd,naezd)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd
     integer, intent(in) :: naezd
-    integer, intent(in) :: lmarray(naezd)
+    integer, intent(in) :: lm_array(naezd)
     integer, intent(in) :: numn0(naezd)
     integer, intent(in) :: indn0(naezd,naclsd)
 
@@ -225,8 +237,8 @@ endmodule ! TEST_lcutoff_mod
     do ii = 1, naezd
       do jj = 1, numn0(ii)
 
-        lmmax1 = lmarray(ii)
-        lmmax2 = lmarray(indn0(ii,jj))
+        lmmax1 = lm_array(ii)
+        lmmax2 = lm_array(indn0(ii,jj))
 
         do lm2 = 1, lmmaxd
           do lm1 = 1, lmmaxd
@@ -248,7 +260,7 @@ endmodule ! TEST_lcutoff_mod
   !> Generates matrix (\Delta T G_ref - 1) BUT PERFORMS L-CUTOFF BY TRUNCATING
   !> T-MATRIX
   !> on input: gllh contains G_ref, on output: gllh contains coefficient matrix
-  subroutine generateCoeffMatrixCROPPED(gllh, numn0, indn0, tmatll, naez, lmmaxd, naclsd, lmarray)
+  subroutine generateCoeffMatrixCROPPED(gllh, numn0, indn0, tmatll, naez, lmmaxd, naclsd, lm_array)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: naclsd
     integer, intent(in) :: naez
@@ -256,7 +268,7 @@ endmodule ! TEST_lcutoff_mod
     integer, intent(in) :: indn0(naez,naclsd)
     integer, intent(in) :: numn0(naez)
     double complex, intent(in) :: tmatll(lmmaxd,lmmaxd,naez)
-    integer, intent(in) :: lmarray(:)
+    integer, intent(in) :: lm_array(:)
 
     double complex, parameter :: CONE = (1.d0,0.d0), ZERO = (0.d0,0.d0)
     double complex :: tgh(lmmaxd) ! temporary
@@ -281,8 +293,8 @@ endmodule ! TEST_lcutoff_mod
       il1b = lmmaxd*(site_index-1) ! offset
       do cluster_site_index = 1, numn0(site_index)
 
-        lmmax2 = lmarray(indn0(site_index,cluster_site_index))
-        lmmax1 = lmarray(site_index)
+        lmmax2 = lm_array(indn0(site_index,cluster_site_index))
+        lmmax1 = lm_array(site_index)
         lmmax3 = lmmax1
         il2b = lmmaxd*(indn0(site_index,cluster_site_index)-1) ! offset
 

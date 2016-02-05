@@ -46,7 +46,7 @@ module TruncationZone_mod
     integer(kind=1), intent(in) :: mask(:)
     integer(kind=1), intent(in), optional :: masks(:,:) !> one mask per local atom, dim(naez_all,num_local_atoms)
 
-    integer :: ii, ind, num_local_atoms, il, iz, memory_stat
+    integer :: ii, ind, num_local_atoms, ila, iz, memory_stat
 
     self%naez_all = size(mask)
     self%naez_trc = count(mask > 0)
@@ -67,8 +67,8 @@ module TruncationZone_mod
         self%index_map(ii) = OUTSIDE ! atom not in truncation cluster
       endif
     enddo ! ii
-    
-    if (ind >= 2**15) stop 'integer(kind=2) not sufficient in TruncationZone_mod.F90!' ! this is needed if
+
+    if (ind >= 2**15) stop 'integer(kind=2) not sufficient in TruncationZone_mod.F90!' ! value range exceeded 
 
     if (.not. present(masks)) return
     
@@ -77,24 +77,24 @@ module TruncationZone_mod
 #define SELF    
     num_local_atoms = size(masks, 2) ! number of local atoms
     allocate(SELF nzero_list(num_local_atoms))
-    do il = 1, num_local_atoms
-      SELF nzero_list(il) = count(masks(self%trunc2atom_index(:),il) <= 0)
-    enddo ! il
+    do ila = 1, num_local_atoms
+      SELF nzero_list(ila) = count(masks(self%trunc2atom_index(:),ila) <= 0)
+    enddo ! ila
     
     allocate(SELF izero_list(maxval(SELF nzero_list),num_local_atoms))
 
-    do il = 1, num_local_atoms
+    do ila = 1, num_local_atoms
       iz = 0
       do ind = 1, self%naez_trc
         ii = self%trunc2atom_index(ind)
-        if (masks(ii,il) <= 0) then
+        if (masks(ii,ila) <= 0) then
           iz = iz + 1
-          SELF izero_list(iz,il) = ind
+          SELF izero_list(iz,ila) = ind
         endif
       enddo ! ind
-      if (iz /= SELF nzero_list(il)) stop __FILE__ ! fatal error
-    enddo ! il
-    
+      if (iz /= SELF nzero_list(ila)) stop __FILE__ ! fatal error
+    enddo ! ila
+
 !   write(*,'(A,999(" ",i0))') 'Truncation zone created, Zero-List: ',SELF nzero_list
 #undef SELF
   endsubroutine ! create
@@ -102,7 +102,7 @@ module TruncationZone_mod
   subroutine clear_non_existing_entries(vec, N)
     double complex, intent(inout) :: vec(1:,1:)
     integer, intent(in), optional :: N !> block size
-    integer :: il, iz, ic, BS
+    integer :: ila, iz, ic, BS
     
     if( .not. allocated(nzero_list)) return
     
@@ -111,15 +111,15 @@ module TruncationZone_mod
 !!!!!!! WORKAROUND for truncation and num_local_atoms > 1, works only if all blocks have size N
     ! set elements in b to zero which only exist because some other of the local atoms is non-zero there
     ! shape(b) = [leaddim_b, ncols], ncols = N*num_local_atoms
-    do il = 1, size(nzero_list) ! == num_local_atoms
-      do iz = 1, nzero_list(il)
-        ic = izero_list(iz,il)
-        vec(ic*BS-BS+1:BS*ic,il*BS-BS+1:BS*il) = 0.d0
+    do ila = 1, size(nzero_list) ! == num_local_atoms
+      do iz = 1, nzero_list(ila)
+        ic = izero_list(iz,ila)
+        vec(ic*BS-BS+1:BS*ic,ila*BS-BS+1:BS*ila) = 0.d0
       enddo ! iz
-    enddo ! il
+    enddo ! ila
 !!!!!!! WORKAROUND
   endsubroutine
-  
+
   
   !----------------------------------------------------------------------------
   elemental subroutine destroyTruncationZone(self)
