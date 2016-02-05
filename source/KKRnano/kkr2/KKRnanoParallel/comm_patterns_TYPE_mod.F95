@@ -60,8 +60,8 @@ module comm_patterns_TYPE_mod
   
   contains
 
-!--------------------------------------------------------------------------
-!> Communicates distributed array-parts to receiver.
+  !--------------------------------------------------------------------------
+  !> Communicates distributed array-parts to receiver.
   subroutine comm_gather_TYPE(my_world_rank, array, blocksize, owning_ranks, receiver)
     integer, intent(in) :: my_world_rank
     NUMBER_TYPE, intent(inout) :: array(*)
@@ -84,147 +84,147 @@ module comm_patterns_TYPE_mod
 
   endsubroutine comm_gather_TYPE
 
-!--------------------------------------------------------------------------
-!> Redistributes array-parts among groups of ranks.
-subroutine comm_redistribute_TYPE(my_world_rank, array, blocksize, old_owners, new_owners)
-  integer, intent(in) :: my_world_rank
-  NUMBER_TYPE, intent(inout) :: array(*)
-  integer, intent(in) :: blocksize
-  integer, intent(in) :: old_owners(:)
-  integer, intent(in) :: new_owners(:)
+  !--------------------------------------------------------------------------
+  !> Redistributes array-parts among groups of ranks.
+  subroutine comm_redistribute_TYPE(my_world_rank, array, blocksize, old_owners, new_owners)
+    integer, intent(in) :: my_world_rank
+    NUMBER_TYPE, intent(inout) :: array(*)
+    integer, intent(in) :: blocksize
+    integer, intent(in) :: old_owners(:)
+    integer, intent(in) :: new_owners(:)
 
-  integer :: rank_index
-  integer :: start
-  integer :: sender
-  integer :: receiver
+    integer :: rank_index
+    integer :: start
+    integer :: sender
+    integer :: receiver
 
-  do rank_index = 1, size(old_owners)
-    sender = old_owners(rank_index)
-    receiver = new_owners(rank_index)
+    do rank_index = 1, size(old_owners)
+      sender = old_owners(rank_index)
+      receiver = new_owners(rank_index)
 
-    start = (rank_index - 1) * blocksize + 1
+      start = (rank_index - 1) * blocksize + 1
 
-    call send_array_TYPE(my_world_rank, array(start), blocksize, sender, receiver)
+      call send_array_TYPE(my_world_rank, array(start), blocksize, sender, receiver)
 
-  enddo ! rank_index
+    enddo ! rank_index
 
-endsubroutine comm_redistribute_TYPE
+  endsubroutine comm_redistribute_TYPE
 
-!--------------------------------------------------------------------------
-!> Redistributes array-parts of different sizes (given by array 'blocksizes'
-!> among groups of ranks.
-!> Note: each process needs a buffer that is large enough to hold ALL parts.
-subroutine comm_redistributeV_TYPE(my_world_rank, array, blocksizes, old_owners, new_owners)
-  integer, intent(in) :: my_world_rank
-  NUMBER_TYPE, intent(inout) :: array(*)
-  integer, intent(in) :: blocksizes(:)
-  integer, intent(in) :: old_owners(:)
-  integer, intent(in) :: new_owners(:)
+  !--------------------------------------------------------------------------
+  !> Redistributes array-parts of different sizes (given by array 'blocksizes'
+  !> among groups of ranks.
+  !> Note: each process needs a buffer that is large enough to hold ALL parts.
+  subroutine comm_redistributeV_TYPE(my_world_rank, array, blocksizes, old_owners, new_owners)
+    integer, intent(in) :: my_world_rank
+    NUMBER_TYPE, intent(inout) :: array(*)
+    integer, intent(in) :: blocksizes(:)
+    integer, intent(in) :: old_owners(:)
+    integer, intent(in) :: new_owners(:)
 
-  integer :: rank_index
-  integer :: start
-  integer :: sender
-  integer :: receiver
+    integer :: rank_index
+    integer :: start
+    integer :: sender
+    integer :: receiver
 
-  start = 1
-  do rank_index = 1, size(old_owners)
-    sender = old_owners(rank_index)
-    receiver = new_owners(rank_index)
+    start = 1
+    do rank_index = 1, size(old_owners)
+      sender = old_owners(rank_index)
+      receiver = new_owners(rank_index)
 
-    call send_array_TYPE(my_world_rank, array(start), blocksizes(rank_index), sender, receiver)
-    start = start + blocksizes(rank_index)
+      call send_array_TYPE(my_world_rank, array(start), blocksizes(rank_index), sender, receiver)
+      start = start + blocksizes(rank_index)
 
-  enddo ! rank_index
+    enddo ! rank_index
 
-endsubroutine comm_redistributeV_TYPE
+  endsubroutine comm_redistributeV_TYPE
 
-!-------------------------------------------------------------------
-!> communicate 'array' starting from 'owner' to all the ranks
-!> in 'ranks' in a round-robin-fashion
-!> owner --> 1 --> 2 --> 3 --> 4
-!> Also accepts single entry in ranks
-!> It is no problem if the owner is the first entry in 'ranks'
-!> Also accepts duplicate entries - but: unnecessary communication
-subroutine comm_bcast_TYPE(my_world_rank, array, length, ranks, owner)
-  integer, intent(in) :: my_world_rank
-  NUMBER_TYPE, intent(inout) :: array(*)
-  integer, intent(in) :: length
-  integer, intent(in) :: ranks(:)
-  integer, intent(in) :: owner
+  !-------------------------------------------------------------------
+  !> communicate 'array' starting from 'owner' to all the ranks
+  !> in 'ranks' in a round-robin-fashion
+  !> owner --> 1 --> 2 --> 3 --> 4
+  !> Also accepts single entry in ranks
+  !> It is no problem if the owner is the first entry in 'ranks'
+  !> Also accepts duplicate entries - but: unnecessary communication
+  subroutine comm_bcast_TYPE(my_world_rank, array, length, ranks, owner)
+    integer, intent(in) :: my_world_rank
+    NUMBER_TYPE, intent(inout) :: array(*)
+    integer, intent(in) :: length
+    integer, intent(in) :: ranks(:)
+    integer, intent(in) :: owner
 
-  integer :: rank_index
-  integer :: sender, receiver
+    integer :: rank_index
+    integer :: sender, receiver
 
-  sender = owner
-  receiver = ranks(1)
-
-  call send_array_TYPE(my_world_rank, array, length, sender, receiver)
-
-  do rank_index = 1, size(ranks)-1
-    sender = ranks(rank_index)
-    receiver = ranks(rank_index+1)
+    sender = owner
+    receiver = ranks(1)
 
     call send_array_TYPE(my_world_rank, array, length, sender, receiver)
 
-  enddo ! rank_index
+    do rank_index = 1, size(ranks)-1
+      sender = ranks(rank_index)
+      receiver = ranks(rank_index+1)
 
-endsubroutine comm_bcast_TYPE
+      call send_array_TYPE(my_world_rank, array, length, sender, receiver)
 
-!-------------------------------------------------------------------
-!> communicate 'array' starting from the first entry in 'ranks'
-!> to all ranks in 'ranks' in a round-robin-fashion
-!> 1 --> 2 --> 3 --> 4
-!> Also accepts single entry in ranks
-!> Also accepts duplicate entries - but: unnecessary communication
-subroutine comm_bcast2_TYPE(my_world_rank, array, length, ranks)
-  integer, intent(in) :: my_world_rank
-  NUMBER_TYPE, intent(inout) :: array(*)
-  integer, intent(in) :: length
-  integer, intent(in) :: ranks(:)
+    enddo ! rank_index
 
-  integer :: rank_index
-  integer :: sender, receiver
+  endsubroutine comm_bcast_TYPE
 
-  do rank_index = 1, size(ranks)-1
-    sender = ranks(rank_index)
-    receiver = ranks(rank_index+1)
+  !-------------------------------------------------------------------
+  !> communicate 'array' starting from the first entry in 'ranks'
+  !> to all ranks in 'ranks' in a round-robin-fashion
+  !> 1 --> 2 --> 3 --> 4
+  !> Also accepts single entry in ranks
+  !> Also accepts duplicate entries - but: unnecessary communication
+  subroutine comm_bcast2_TYPE(my_world_rank, array, length, ranks)
+    integer, intent(in) :: my_world_rank
+    NUMBER_TYPE, intent(inout) :: array(*)
+    integer, intent(in) :: length
+    integer, intent(in) :: ranks(:)
 
-    call send_array_TYPE(my_world_rank, array, length, sender, receiver)
+    integer :: rank_index
+    integer :: sender, receiver
 
-  enddo ! rank_index
+    do rank_index = 1, size(ranks)-1
+      sender = ranks(rank_index)
+      receiver = ranks(rank_index+1)
 
-endsubroutine comm_bcast2_TYPE
+      call send_array_TYPE(my_world_rank, array, length, sender, receiver)
 
-!-----------------------------------------------------------------
-!> Helper routine. Sends 'length' entries of 'array' from sender to
-!> receiver (ranks in MPI_COMM_WORLD).
-subroutine send_array_TYPE(my_world_rank, array, length, sender, receiver)
-  integer, intent(in) :: my_world_rank
-  NUMBER_TYPE, intent(inout) :: array(*)
-  integer, intent(in) :: length
-  integer, intent(in) :: sender
-  integer, intent(in) :: receiver
+    enddo ! rank_index
 
-  integer :: ierr
-  integer :: tag
-  integer :: status(MPI_STATUS_SIZE)
+  endsubroutine comm_bcast2_TYPE
 
-  tag = sender
+  !-----------------------------------------------------------------
+  !> Helper routine. Sends 'length' entries of 'array' from sender to
+  !> receiver (ranks in MPI_COMM_WORLD).
+  subroutine send_array_TYPE(my_world_rank, array, length, sender, receiver)
+    integer, intent(in) :: my_world_rank
+    NUMBER_TYPE, intent(inout) :: array(*)
+    integer, intent(in) :: length
+    integer, intent(in) :: sender
+    integer, intent(in) :: receiver
 
-  if (sender /= receiver) then
+    integer :: ierr
+    integer :: tag
+    integer :: status(MPI_STATUS_SIZE)
 
-    if (my_world_rank == sender) then
-      call MPI_Send(array, length, NUMBERMPI_TYPE, receiver, tag, MPI_COMM_WORLD, ierr)
-      COMMCHECK(ierr)
+    tag = sender
+
+    if (sender /= receiver) then
+
+      if (my_world_rank == sender) then
+        call MPI_Send(array, length, NUMBERMPI_TYPE, receiver, tag, MPI_COMM_WORLD, ierr)
+        COMMCHECK(ierr)
+      endif
+
+      if (my_world_rank == receiver) then
+        call MPI_Recv(array, length, NUMBERMPI_TYPE, sender, tag, MPI_COMM_WORLD, status, ierr)
+        COMMCHECK(ierr)
+      endif
+
     endif
 
-    if (my_world_rank == receiver) then
-      call MPI_Recv(array, length, NUMBERMPI_TYPE, sender, tag, MPI_COMM_WORLD, status, ierr)
-      COMMCHECK(ierr)
-    endif
-
-  endif
-
-endsubroutine send_array_TYPE
+  endsubroutine send_array_TYPE
 
 endmodule comm_patterns_TYPE_mod

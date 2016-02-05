@@ -61,10 +61,10 @@ module BasisAtom_mod
   use AtomicCoreData_mod, only: AtomicCoreData
   use RadialMeshData_mod, only: RadialMeshData
   implicit none
-  
+
   public :: BasisAtom, create, destroy
   public :: getMinReclenBasisAtomPotential, getCellIndex
-  public :: createBasisAtom, destroyBasisAtom, createBasisAtomFromFile ! deprecated
+! public :: createBasisAtom, destroyBasisAtom, createBasisAtomFromFile ! deprecated
   public :: associateBasisAtomCell, associateBasisAtomMesh, resetPotentials, readBasisAtomPotentialHeader
   ! direct access file routines
   public :: openBasisAtomDAFile, writeBasisAtomDA, readBasisAtomDA, closeBasisAtomDAFile
@@ -76,7 +76,7 @@ module BasisAtom_mod
     integer :: cell_index
     double precision :: Z_nuclear
     integer :: nspin
-    double precision :: RMTref !< radius of repulsive reference potential
+    double precision :: rMTref !< radius of repulsive reference potential
     double precision :: radius_muffin_tin !< user-specified muffin-tin radius
     type(PotentialData) :: potential
     type(AtomicCoreData) :: core
@@ -109,7 +109,7 @@ module BasisAtom_mod
     atom%nspin = nspin
     atom%cell_index = -1
     atom%Z_nuclear = 1.d9
-    atom%RMTref = 1.d9
+    atom%rMTref = 1.d9
     atom%radius_muffin_tin = 1.d9
 
     call createPotentialData(atom%potential, lpot, nspin, irmind, irmd)
@@ -131,8 +131,7 @@ module BasisAtom_mod
     
     atom%cell_ptr => cell
 
-    if (atom%cell_index /= cell%cell_index) &
-      die_here("Mismatch in cell indices for atom"+atom%atom_index)
+    if (atom%cell_index /= cell%cell_index) die_here("Mismatch in cell indices for atom"+atom%atom_index)
 
   endsubroutine ! associate
 
@@ -173,7 +172,7 @@ module BasisAtom_mod
     type(BasisAtom), intent(in) :: atom
 
     getCellIndex = atom%cell_index
-  endfunction getCellIndex
+  endfunction ! get
 
 !=========================== I / O ============================================
 
@@ -206,7 +205,7 @@ module BasisAtom_mod
     call readBasisAtomPotentialDA(atom, FU, recnr)
     call closeBasisAtomPotentialDAFile(FU)
 
-  endsubroutine
+  endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Write basis atom data to direct access file 'fileunit' at record 'recnr'.
@@ -220,7 +219,7 @@ module BasisAtom_mod
                                 atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%radius_muffin_tin, &
-                                atom%RMTref, &
+                                atom%rMTref, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
@@ -233,21 +232,21 @@ module BasisAtom_mod
     type(BasisAtom), intent(inout) :: atom
     integer, intent(in) :: fileunit, recnr
 
-    integer :: magic, magic2
+    integer :: magic(2)
 
-    read  (fileunit, rec=recnr) magic, &
+    read  (fileunit, rec=recnr) magic(1), &
                                 atom%atom_index, &
                                 atom%cell_index, &
                                 atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%radius_muffin_tin, &
-                                atom%RMTref, &
+                                atom%rMTref, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
-                                magic2
+                                magic(2)
 
-    if (magic /= MAGIC_NUMBER .or. magic2 /= MAGIC_NUMBER) die_here("Invalid basis atom data read.")
+    if (any(magic /= MAGIC_NUMBER)) die_here("Invalid basis atom data read.")
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
@@ -265,7 +264,7 @@ module BasisAtom_mod
                                 atom%nspin, &
                                 atom%Z_nuclear, &
                                 atom%radius_muffin_tin, &
-                                atom%RMTref, &
+                                atom%rMTref, &
                                 atom%core%NCORE, &
                                 atom%core%LCORE, &
                                 atom%core%ITITLE, &
@@ -282,7 +281,7 @@ module BasisAtom_mod
 
     close(fileunit)
     
-  endsubroutine
+  endsubroutine ! close
 
 
   !----------------------------------------------------------------------------
@@ -514,11 +513,10 @@ module BasisAtom_mod
     ! copy output potential to input potential for new iteration
     ! note: nonspherical part for indices < irmin1 is thrown away!
     do ispin = 1, nspin
-
-      call dcopy(irc1,vons(1,1,ispin),1,visp(1,ispin),1)
-
+      visp(1:irc1,ispin) = vons(1:irc1,1,ispin)
       if (lmpotd > 1) vins(irmin1:irc1,2:lmpotd,ispin) = vons(irmin1:irc1,2:lmpotd,ispin)
-    enddo
+    enddo ! ispin
+    
   endsubroutine ! resetPotentialsImpl
 
-endmodule BasisAtom_mod
+endmodule ! BasisAtom_mod

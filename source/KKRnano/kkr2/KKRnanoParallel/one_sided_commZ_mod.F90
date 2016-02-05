@@ -55,7 +55,8 @@
 #endif
 
 module one_sided_commZ_mod
-  use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
+! use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
+  use ChunkIndex_mod, only: getRankAndLocalIndex!, getOwner, getLocalInd
   implicit none
   private
   
@@ -70,154 +71,157 @@ module one_sided_commZ_mod
 
   contains
 
-!------------------------------------------------------------------------------
-!> Routine for exchanging data within certain atoms only.
-!>
-!> Convenience function
-!>
-!> size of local buffer  :  chunk_size*num_local_atoms
-!> size of receive buffer:  chunk_size*size(atom_indices)
-!> Uses MPI-RMA
-subroutine copyFromZ_com(receive_buf, local_buf, atom_indices, chunk_size, num_local_atoms, communicator)
-  NUMBERZ, intent(inout) :: receive_buf(*)    ! receive
-  NUMBERZ, intent(inout) :: local_buf(*) ! send
-  integer, intent(in) :: atom_indices(:)
-  integer, intent(in) :: chunk_size
-  integer, intent(in) :: num_local_atoms
-  integer, intent(in) :: communicator
+  !------------------------------------------------------------------------------
+  !> Routine for exchanging data within certain atoms only.
+  !>
+  !> Convenience function
+  !>
+  !> size of local buffer  :  chunk_size*num_local_atoms
+  !> size of receive buffer:  chunk_size*size(atom_indices)
+  !> Uses MPI-RMA
+  subroutine copyFromZ_com(receive_buf, local_buf, atom_indices, chunk_size, num_local_atoms, comm)
+    NUMBERZ, intent(inout) :: receive_buf(*)    ! receive
+    NUMBERZ, intent(inout) :: local_buf(*) ! send
+    integer, intent(in) :: atom_indices(:)
+    integer, intent(in) :: chunk_size
+    integer, intent(in) :: num_local_atoms
+    integer, intent(in) :: comm
 
-  type(ChunkIndex), allocatable :: chunk_inds(:)
-  integer :: ii
-  integer :: ierr
-  integer :: naez_trc ! size(atomindices)
-  integer :: naez
-  integer :: nranks
-  integer :: atom_requested
-  integer :: win
+!     type(ChunkIndex), allocatable :: chunk_inds(:)
+    integer(kind=4), allocatable :: chunk_inds(:,:)
+    integer :: ii, ierr, nranks, atom_requested
+    integer :: naez, naez_trc ! size(atomindices)
+    integer :: win
 
-  naez_trc = size(atom_indices)
+    naez_trc = size(atom_indices)
 
-  call MPI_Comm_size(communicator, nranks, ierr)
+    call MPI_Comm_size(comm, nranks, ierr)
 
-  naez = num_local_atoms*nranks
+    naez = num_local_atoms*nranks
 
-  allocate(chunk_inds(naez_trc))
+    allocate(chunk_inds(2,naez_trc))
 
-  do ii = 1, naez_trc
-    ! get 'real' atom index
-    atom_requested = atom_indices(ii)
-    chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
-    chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
-  enddo
+    do ii = 1, naez_trc
+      ! get 'real' atom index
+      atom_requested = atom_indices(ii)
+!       chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
+!       chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
 
-  call exposeBufferZ(win, local_buf, chunk_size*num_local_atoms, chunk_size, communicator)
-  call copyChunksZ(receive_buf, win, chunk_inds, chunk_size)
-  call hideBufferZ(win)
+!       chunk_inds(1,ii) = getOwner(atom_requested, naez, nranks)
+!       chunk_inds(2,ii) = getLocalInd(atom_requested, naez, nranks)
+      chunk_inds(:,ii) = getRankAndLocalIndex(atom_requested, naez, nranks)
 
-  deallocate(chunk_inds)
+      ! direct
+!       chunk_inds(1,ii) = (atom_requested - 1)/num_local_atoms ! owner rank
+!       chunk_inds(2,ii) = atom_requested - num_local_atoms*chunk_inds(1,ii) ! local index
+    enddo ! ii
 
-endsubroutine copyFromZ_com
+    call exposeBufferZ(win, local_buf, chunk_size*num_local_atoms, chunk_size, comm)
+    call copyChunksZ(receive_buf, win, chunk_inds, chunk_size)
+    call hideBufferZ(win)
+
+    deallocate(chunk_inds)
+
+  endsubroutine copyFromZ_com
 
 
 
-subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
-  integer, intent(inout) :: win 
-  NUMBERZ, intent(in) :: buffer(*)
-  integer, intent(in) :: bsize
-  integer, intent(in) :: chunk_size 
-  integer, intent(in) :: communicator
+  subroutine exposeBufferZ(win, buffer, bsize, chunk_size, comm)
+    integer, intent(inout) :: win 
+    NUMBERZ, intent(in) :: buffer(*)
+    integer, intent(in) :: bsize
+    integer, intent(in) :: chunk_size 
+    integer, intent(in) :: comm
 
-  integer :: ierr
+    integer :: ierr
 
-  integer(kind=MPI_ADDRESS_KIND) :: typesize, lowerbound
-  integer :: disp_unit
+    integer(kind=MPI_ADDRESS_KIND) :: typesize, lowerbound
+    integer :: disp_unit
 
-  call MPI_Type_get_extent(NUMBERMPIZ, lowerbound, typesize, ierr)
-  COMMCHECK(ierr)
+    call MPI_Type_get_extent(NUMBERMPIZ, lowerbound, typesize, ierr)
+    COMMCHECK(ierr)
 
-  disp_unit = typesize * chunk_size ! has to be plain integer!!
+    disp_unit = typesize * chunk_size ! has to be plain integer!!
 
-  ! Measure in units of chunks here disp_unit = CHUNKSIZE
-  call MPI_Win_create(buffer, typesize*bsize, disp_unit, MPI_INFO_NULL, communicator, win, ierr)
-  COMMCHECK(ierr)
-  
-endsubroutine exposeBufferZ
+    ! Measure in units of chunks here disp_unit = CHUNKSIZE
+    call MPI_Win_create(buffer, typesize*bsize, disp_unit, MPI_INFO_NULL, comm, win, ierr)
+    COMMCHECK(ierr)
+    
+  endsubroutine exposeBufferZ
 
-!------------------------------------------------------------------------------
-!> Copy chunks of size 'chunk_size' located at 
-!> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
-!> On output dest_buffer contains chunks in 
-!> the order as specified in 'chunk_inds' 
-subroutine copyChunksZ(dest_buffer, win, chunk_inds, chunk_size)
-  NUMBERZ, intent(out) :: dest_buffer(*)
-  integer, intent(inout) :: win
-  type(ChunkIndex), intent(in) :: chunk_inds(:)
-  integer, intent(in) :: chunk_size
+  !------------------------------------------------------------------------------
+  !> Copy chunks of size 'chunk_size' located at 
+  !> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
+  !> On output dest_buffer contains chunks in 
+  !> the order as specified in 'chunk_inds' 
+  subroutine copyChunksZ(dest_buffer, win, chunk_inds, chunk_size)
+    NUMBERZ, intent(out) :: dest_buffer(*)
+    integer, intent(inout) :: win
+!     type(ChunkIndex), intent(in) :: chunk_inds(:)
+    integer(kind=4), intent(in) :: chunk_inds(:,:) ! (2,*)
+    integer, intent(in) :: chunk_size
 
-  call fenceZ(win)
-  call copyChunksNoSyncZ(dest_buffer, win, chunk_inds, chunk_size)
-  ! ensure that Get has completed and dest_buffer is valid
-  call fenceZ(win)
+    call fenceZ(win)
+    call copyChunksNoSyncZ(dest_buffer, win, chunk_inds, chunk_size)
+    ! ensure that Get has completed and dest_buffer is valid
+    call fenceZ(win)
 
-endsubroutine copyChunksZ
+  endsubroutine copyChunksZ
 
-!------------------------------------------------------------------------------
-!> Copy chunks of size 'chunk_size' located at
-!> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
-!> On output dest_buffer contains chunks in
-!> the order as specified in 'chunk_inds' - NO FENCE CALLS
-!>
-!> NOTE: MUST do fence calls before and after one or many calls to this routine.
-subroutine copyChunksNoSyncZ(dest_buffer, win, chunk_inds, chunk_size)
-  NUMBERZ, intent(out) :: dest_buffer(*)
-  integer, intent(inout) :: win
-  type(ChunkIndex), intent(in) :: chunk_inds(:)
-  integer, intent(in) :: chunk_size
+  !------------------------------------------------------------------------------
+  !> Copy chunks of size 'chunk_size' located at
+  !> (rank/local index) locations given in 'chunk_inds' into 'dest_buffer'.
+  !> On output dest_buffer contains chunks in
+  !> the order as specified in 'chunk_inds' - NO FENCE CALLS
+  !>
+  !> NOTE: MUST do fence calls before and after one or many calls to this routine.
+  subroutine copyChunksNoSyncZ(dest_buffer, win, chunk_inds, chunk_size)
+    NUMBERZ, intent(out) :: dest_buffer(*)
+    integer, intent(inout) :: win
+!     type(ChunkIndex), intent(in) :: chunk_inds(:)
+    integer(kind=4), intent(in) :: chunk_inds(:,:) ! (2,*)
+    integer, intent(in) :: chunk_size
 
-  integer :: owner_rank
-  integer :: local_ind
-  integer :: ii
-  integer :: ierr
+!     integer :: owner_rank, local_ind
+    integer :: ii, ierr
+    integer(kind=MPI_ADDRESS_KIND) :: disp
 
-  integer(kind=MPI_ADDRESS_KIND) :: disp
+    do ii = 1, size(chunk_inds, 2)
+!     do ii = 1, size(chunk_inds)
+!       owner_rank = chunk_inds(ii)%owner
+!       local_ind  = chunk_inds(ii)%local_ind
 
-  disp = 0
+      disp = chunk_inds(2,ii) - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
 
-  do ii = 1, size(chunk_inds)
-    owner_rank = chunk_inds(ii)%owner
-    local_ind  = chunk_inds(ii)%local_ind
+      call MPI_Get(dest_buffer((ii-1)*chunk_size+1), chunk_size, NUMBERMPIZ, &
+                        chunk_inds(1,ii), disp, chunk_size, NUMBERMPIZ, win, ierr)
 
-    disp = local_ind - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
+    enddo ! ii
 
-    call MPI_Get(dest_buffer((ii-1)*chunk_size+1), chunk_size, NUMBERMPIZ, &
-                       owner_rank, disp, chunk_size, NUMBERMPIZ, win, ierr)
+  endsubroutine copyChunksNoSyncZ
 
-  enddo ! ii
+  !------------------------------------------------------------------------------
+  !> Wrapper for fence call.
+  subroutine fenceZ(win)
+    integer, intent(inout) :: win
 
-endsubroutine copyChunksNoSyncZ
+    integer :: ierr
+    call MPI_Win_fence(0, win, ierr)
 
-!------------------------------------------------------------------------------
-!> Wrapper for fence call.
-subroutine fenceZ(win)
-  integer, intent(inout) :: win
+    COMMCHECK(ierr)
+  endsubroutine fenceZ
 
-  integer :: ierr
-  call MPI_Win_fence(0, win, ierr)
+  !------------------------------------------------------------------------------
+  !> Hide buffer after completing one-sided communication.
+  subroutine hideBufferZ(win)
+    integer, intent(inout) :: win
 
-  COMMCHECK(ierr)
-endsubroutine fenceZ
+    integer :: ierr
 
-!------------------------------------------------------------------------------
-!> Hide buffer after completing one-sided communication.
-subroutine hideBufferZ(win)
-  integer, intent(inout) :: win
+    call MPI_Win_free(win, ierr)
+    COMMCHECK(ierr)
 
-  integer :: ierr
-
-  call MPI_Win_free(win, ierr)
-  COMMCHECK(ierr)
-
-endsubroutine hideBufferZ
+  endsubroutine hideBufferZ
 
 endmodule one_sided_commZ_mod
 
@@ -234,14 +238,13 @@ program test
   integer :: nchunks_total
   integer :: partner_rank
 
-  integer, parameter :: CHUNKSIZE = 6
-  integer, parameter :: CHUNKSPERPROC = 3
-  integer, parameter :: NUMREQUESTED = 7
+  integer, parameter :: CHUNKSIZE=6, CHUNKSPERPROC=3, NUMREQUESTED=7
 
   NUMBERZ :: buffer(CHUNKSIZE,CHUNKSPERPROC)
   NUMBERZ :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
   integer :: chunks_req(NUMREQUESTED)
-  type(ChunkIndex) :: chunk_inds(NUMREQUESTED)
+!   type(ChunkIndex) :: chunk_inds(NUMREQUESTED)
+  integer(kind=4) :: chunk_inds(2,NUMREQUESTED)
   integer :: win
   integer :: ierr
   integer :: ii 
@@ -268,8 +271,11 @@ program test
 
   do ii = 1, NUMREQUESTED
     chunks_req(ii) = mod((myrank + 1) * CHUNKSPERPROC + ii - 1, CHUNKSPERPROC*num_ranks) + 1
-    chunk_inds(ii)%owner      = getOwner(chunks_req(ii), nchunks_total, num_ranks)
-    chunk_inds(ii)%local_ind  = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
+!     chunk_inds(ii)%owner      = getOwner(chunks_req(ii), nchunks_total, num_ranks)
+!     chunk_inds(ii)%local_ind  = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
+!     chunk_inds(1,ii) = getOwner(chunks_req(ii), nchunks_total, num_ranks)
+!     chunk_inds(2,ii) = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
+    chunk_inds(:,ii) = getRankAndLocalIndex(chunks_req(ii), nchunks_total, num_ranks)
   enddo ! ii
 
   call exposeBufferZ(win, buffer, size(buffer), CHUNKSIZE, MPI_COMM_WORLD)

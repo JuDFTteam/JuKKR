@@ -8,13 +8,13 @@ module kloopz1_mod
   
   contains
 
-  subroutine kloopz1_new(Gmatn, solv, kkr_op, precond, alat, nofks, volBZ, Bzkp, volcub, rr, Ginp_local, &
+  subroutine kloopz1_new(Gmatn, solv, kkr_op, precond, alat, NofKs, volBZ, Bzkp, volcub, rr, Ginp_local, &
                          nsymat, dsymll, tmatLL, lmmaxd, trunc2atom_index, communicator, iguess_data)
 
 ! only part of arrays for corresponding spin direction is passed
 ! (Gmatn, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
 !
-! nofks .. number of k-points, integer
+! NofKs .. number of k-points, integer
 ! volBZ .. brillouin zone volume, double
 ! Bzkp ... k-points of used k-mesh ... dimension (3, kpoibz)
 ! volcub . array of brillouin zone integration weights for each k-point ... dimension (kpoibz)
@@ -51,13 +51,13 @@ module kloopz1_mod
     double complex, intent(inout) :: Ginp_local(:,:,:,:) !< reference green function
     double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
-    integer, intent(in) :: nofks
+    integer, intent(in) :: NofKs
     double precision, intent(in) :: Bzkp(:,:) ! dim (3,kpoibz)
     double precision, intent(in) :: volcub(:) ! dim kpoibz
  
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
-    double complex :: tauvBZ
+    double complex :: tauvBZ ! could be real but it enters a zBLAS call
     double precision :: mrfctori
     integer :: ist, info ! status for LAPACK calls
     integer :: ispin, isym
@@ -110,7 +110,7 @@ module kloopz1_mod
     endif
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
-    call kkrmat01_new(solv, kkr_op, precond, Bzkp, nofks, volcub, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data)
+    call kkrmat01_new(solv, kkr_op, precond, Bzkp, NofKs, volcub, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data)
 !-------------------------------------------------------- SYMMETRISE gll
 
 !      kkrmat01 returns GS (local) which contains nsymat -copies- (!)

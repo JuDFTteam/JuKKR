@@ -26,7 +26,7 @@ module kkrmat_new_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, nofks, volcub, GS, tmatLL, alat, nsymat, RR, &
+  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, NofKs, volcub, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, trunc2atom_index, communicator, iguess_data)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -39,14 +39,13 @@ module kkrmat_new_mod
     use TFQMRSolver_mod, only: TFQMRSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
-    use ChunkIndex_mod, only: ChunkIndex
 
     class(TFQMRSolver), intent(inout) :: solver
     class(KKROperator), intent(inout) :: kkr_op
     class(BCPOperator), intent(inout) :: preconditioner
     
     double precision, intent(in) :: Bzkp(:,:) !< list of k-points
-    integer, intent(in) :: nofks !< number of k-points
+    integer, intent(in) :: NofKs !< number of k-points
     double precision, intent(in) :: volcub(:) !< k-point weights
 
     double complex, intent(out) ::  GS(:,:,:,:) ! (lmmaxd,lmmaxd,nsymat,num_local_atoms)
@@ -96,7 +95,7 @@ module kkrmat_new_mod
     call solver%reset_stats()
 
     !==============================================================================
-    do k_point_index = 1, nofks ! K-POINT-LOOP
+    do k_point_index = 1, NofKs ! K-POINT-LOOP
     !==============================================================================
 
       WRITELOG(4, *) "k-point ", k_point_index
@@ -130,7 +129,7 @@ module kkrmat_new_mod
       enddo ! ilocal
 
     !==============================================================================
-    enddo ! k_point_index = 1, nofks
+    enddo ! k_point_index = 1, NofKs
     !==============================================================================
 
     
@@ -172,13 +171,13 @@ module kkrmat_new_mod
 
       atom_index = atom_indices(ii)
 
-      start = kvstr(atom_index)-1
+      start  = kvstr(atom_index) - 1
       lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
 
       ASSERT(lmmax1 == size(G_diag, 1))
       ASSERT(lmmax1 == size(G_diag, 2))
 
-      G_diag(1:lmmax1,:,ii) = mat_X(start+1:start+lmmax1,(ii-1)*lmmax1+1:ii*lmmax1)
+      G_diag(1:lmmax1,1:lmmax1,ii) = mat_X(start+ 1:lmmax1 +start,(ii-1)*lmmax1+1:ii*lmmax1)
 
     enddo ! ii
 
@@ -193,25 +192,19 @@ module kkrmat_new_mod
   !> in: gllke1
   !> inout: GS (set to 0 before first call)
   subroutine greenKSummation(G_diag, GS, k_point_weight, natoms, nsymat, lmmaxd)
-    integer, parameter :: nsymaxd = 48
-
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: natoms
-
     double complex, intent(in) :: G_diag(lmmaxd,lmmaxd,natoms)
     double complex, intent(inout) :: GS(lmmaxd,lmmaxd,nsymat,natoms)
-
-    integer, intent(in) :: nsymat
     double precision, intent(in) :: k_point_weight
+    integer, intent(in) :: lmmaxd, natoms, nsymat
 
-    integer :: isym, ii !< local atom index
+    integer :: isym, ila !< local atom index
 
-    do ii = 1, natoms
-      ! perform the k-space integration for diagonal elements of Green's function
+    do ila = 1, natoms
+      ! perform the Brillouin-zone integration for diagonal block entries of the Green's function
       do isym = 1, nsymat
-        GS(:,:,isym,ii) = GS(:,:,isym,ii) + k_point_weight * G_diag(:,:,ii)
+        GS(:,:,isym,ila) = GS(:,:,isym,ila) + k_point_weight*G_diag(:,:,ila)
       enddo ! isym
-    enddo ! ii
+    enddo ! ila
 
   endsubroutine ! greenKSummation
 
@@ -240,7 +233,7 @@ module kkrmat_new_mod
     class(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
     double complex, intent(in) :: tmatLL(:,:,:)
-    double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd)
+    double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd) independent of the kpoint, ToDo: try not to communicate it again for every kpoint
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
     integer, intent(in) :: trunc2atom_index(:)
@@ -388,7 +381,8 @@ module kkrmat_new_mod
   subroutine referenceFourier_com(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
                 indn0, rr, ezoa, Ginp, trunc2atom_index, communicator)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
+!   use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
+    use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 #ifdef NO_LOCKS_MPI
     use one_sided_commZ_mod, only: fenceZ
@@ -405,14 +399,15 @@ module kkrmat_new_mod
     double precision, intent(in) :: rr(:,0:)
     integer, intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Ginp(:,:,:,:)
-    integer, intent(in) :: trunc2atom_index(:) !> mapping trunc. index -> atom index
+    integer, intent(in) :: trunc2atom_index(:) !> mapping trunc. index -> global atom index
     integer, intent(in) :: communicator
 
     ! locals
     integer :: site_index, naez, naclsd, lmmaxd, ist
     integer :: num_local_atoms, atom_requested
     double complex, allocatable :: Gref_buffer(:,:,:), eikrm(:), eikrp(:) ! dim: naclsd
-    type(ChunkIndex) :: chunk_inds(1)
+!     type(ChunkIndex) :: chunk_inds(1)
+    integer(kind=4) :: chunk_inds(2,1)
     integer :: win, nranks, ierr
     integer :: naez_max
     
@@ -462,8 +457,9 @@ module kkrmat_new_mod
         ! get Ginp(:,:,:)[trunc2atom_index(site_index)]
 
         atom_requested = trunc2atom_index(site_index)
-        chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms*nranks, nranks)
-        chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms*nranks, nranks)
+!         chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms*nranks, nranks)
+!         chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms*nranks, nranks)
+        chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
 
 #ifdef NO_LOCKS_MPI
         call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
@@ -477,12 +473,14 @@ module kkrmat_new_mod
 #ifdef IDENTICAL_REF
       Gref_buffer(:,:,:) = Ginp(:,:,:,1) ! use this if all Grefs are the same
 #else
-      call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
+!       call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1)%owner, 0, win, ierr)
+      call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1,1), 0, win, ierr)
       CHECKASSERT(ierr == 0)
 
       call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*naclsd)
 
-      call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
+!       call MPI_Win_Unlock(chunk_inds(1)%owner, win, ierr)
+      call MPI_Win_Unlock(chunk_inds(1,1), win, ierr)
       CHECKASSERT(ierr == 0)
 #endif
 
@@ -546,39 +544,36 @@ module kkrmat_new_mod
     GLLh = zero ! init
     
 #ifndef IDENTICAL_REF
-
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,naez))
     allocate(reqs(2,naez), stats(MPI_STATUS_SIZE,2,naez))
     reqs(:,:) = MPI_REQUEST_NULL
-    
+
     ncount = lmmaxd*lmmaxd*naclsd
 
     ! loop up to naez sending the information
     do site_index = 1, naez
       atom_requested = trunc2atom_index(site_index) ! get the global atom id
 
-      rank = atom_requested - 1
-      
+      rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
+
       if (rank /= myrank) then
-      
+
         tag  = modulo(myrank, 2**15)
         call MPI_Isend(Ginp(:,:,:,1),                 ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(1,site_index), ierr)
-      
+
         tag = modulo(atom_requested - 1, 2**15)
         call MPI_Irecv(Gref_buffer(:,:,:,site_index), ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(2,site_index), ierr)
 
       else
         reqs(:,site_index) = MPI_REQUEST_NULL
-        Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! use this if all Grefs are the same
+        Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! copy locally
       endif ! distant rank
-      
+
     enddo ! site_index
 
-    call MPI_Waitall(2*naez, reqs, stats, ierr) ! wait until all receives have finished
-    
+    call MPI_Waitall(2*naez, reqs, stats, ierr) ! wait until all sends and all receives have finished
 #endif
-
     do site_index = 1, naez
     
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
@@ -614,6 +609,7 @@ module kkrmat_new_mod
   !>    @param     eikrm   Fourier exponential factor with minus sign
   !>    @param     eikrp   Fourier exponential factor with plus sign
   subroutine dlke1(alat, nacls, rr, ezoa, Bzkp, eikrm, eikrp)
+  use Constants_mod, only: pi
     ! ----------------------------------------------------------------------
     !     Fourier transformation of the cluster Greens function
     !     Prepares the calculation (calculates Fourier factors) for dlke0
@@ -627,10 +623,10 @@ module kkrmat_new_mod
     
     double complex, parameter :: ci=(0.d0,1.d0)
     double precision :: convpuh, tpi
-    integer :: iacls
     double complex :: tt, exparg
+    integer :: iacls
 
-    tpi = 8.d0*atan(1.d0)         
+    tpi = 2.d0*pi
     convpuh = alat/tpi * 0.5d0
 
     do iacls = 1, nacls
@@ -643,7 +639,6 @@ module kkrmat_new_mod
   !  Be careful about the minus sign included here. RR is not
   !  symmetric around each atom. The minus comes from the fact that
   !  the repulsive potential GF is calculated for 0n and not n0!                   
-  !  and that is why we need a minus sign extra!
   
       tt = -ci*tpi*dot_product(Bzkp(1:3), rr(1:3,ezoa(iacls))) ! purely imaginary number
 

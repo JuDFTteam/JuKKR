@@ -116,7 +116,6 @@ implicit none
     allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms))
-
     allocate(atom_indices(num_local_atoms))
 
     if (params%jij  .and. num_local_atoms > 1) stop "Jij and num_local_atoms > 1 not supported."
@@ -155,7 +154,7 @@ implicit none
     enddo ! ilocal
 
     ! setup the solver + bcp preconditioner, allocates a lot of memory
-    ! it is good to do these allocations outside of energy loop
+    ! it is good to do these allocations outside of energy loop: ToDo
     call setup_solver(solv, kkr_op, precond, dims, clusters, lmmaxd, params%qmrbound, atom_indices)
 
     
@@ -259,8 +258,6 @@ implicit none
             !$omp endparallel do
   !------------------------------------------------------------------------------
 
-            nmesh = emesh%kmesh(IE)
-
             call stopTimer(single_site_timer)
             call resumeTimer(mult_scattering_timer)
 
@@ -279,6 +276,8 @@ implicit none
   !          WRITE(*,'(14i5)') getMyWorldRank(my_mpi),getMyAtomRank(my_mpi),getMyAtomId(my_mpi),getMySpinId(my_mpi),
   !            getMyEnergyId(my_mpi),getMySEId(my_mpi),getNumAtomRanks(my_mpi),getNumSpinRanks(my_mpi),getNumEnergyRanks(my_mpi),
   !            getNumSERanks(my_mpi),getNumWorldRanks(my_mpi),0,isMasterRank(my_mpi),isInMasterGroup(my_mpi)
+
+            nmesh = emesh%kmesh(IE)
 
   !------------------------------------------------------------------------------
             call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
@@ -392,8 +391,7 @@ implicit none
           WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
           call redistributeInitialGuess_com(my_mpi, calc%iguess_data%PRSC(:,:,PRSPIN), &
-              ebalance_handler%EPROC, ebalance_handler%EPROC_old, &
-              emesh%kmesh, arrays%NofKs)
+              ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
 
         endif ! isWorkingSpinRank
       enddo ! ISPIN
@@ -402,9 +400,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatll)
-    deallocate(atom_indices)
-    deallocate(GrefN_buffer)
+    deallocate(tmatLL, atom_indices, GrefN_buffer)
     deallocate(GmatN_buffer)
     deallocate(dTref_local)
     deallocate(Tref_local)
@@ -549,7 +545,7 @@ implicit none
 
     integer :: chunk_size, num_local_atoms
 
-    chunk_size = size(Tref_local, 1) * size(Tref_local, 2)
+    chunk_size = size(Tref_local, 1)*size(Tref_local, 2)
     num_local_atoms = size(Tref_local, 3)
 
     ASSERT (size(Tref_local, 1) == size(TrefLL, 1))

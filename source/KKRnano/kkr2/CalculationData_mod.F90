@@ -479,10 +479,10 @@ module CalculationData_mod
       self%atomdata_a(ila)%radius_muffin_tin = self%mesh_a(ila)%rmt
 
       ! set radius of repulsive reference potential
-      if (params%RMT_ref_scale > 0.d0) then
-        self%atomdata_a(ila)%RMTref = self%cell_a(ila)%shdata%max_muffin_tin * params%alat * params%RMT_ref_scale
+      if (params%rMT_ref_scale > 0.d0) then
+        self%atomdata_a(ila)%rMTref = self%cell_a(ila)%shdata%max_muffin_tin * params%alat * params%rMT_ref_scale
       else
-        self%atomdata_a(ila)%RMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
+        self%atomdata_a(ila)%rMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
       endif
 
       self%cell_a(ila)%cell_index = self%atomdata_a(ila)%cell_index

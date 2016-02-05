@@ -10,7 +10,7 @@ module BrillouinZoneMesh_mod
     integer :: nofks = 0 !< number of kpoints in this mesh
     integer :: nks(3) = 0 !< numbers of kpoint in the mesh before symmetry reduction
     double precision :: volBz = 0.d0 !< volume of the Brillouin zone
-    double precision, allocatable :: kwxyz(:,:) ! (0:3,nofks), 0: weight (prev. VOLCUB)
+    double precision, allocatable :: kwxyz(:,:) ! (0:3,nofks), 0: weight (prev. called VOLCUB)
   endtype
 
   interface create
@@ -30,7 +30,7 @@ module BrillouinZoneMesh_mod
   endinterface
 
   contains
-  
+
   subroutine createBrillouinZoneMesh_n(self, nofks, volBz, nks)
     type(BrillouinZoneMesh), intent(inout) :: self
     integer, intent(in) :: nofks
@@ -79,30 +79,30 @@ module BrillouinZoneMesh_mod
     double precision, allocatable :: wxyz(:,:)
     character(len=96) :: line
     double precision :: vol, xyzw(1:4)
-    
+
     if (rank == 0) then
-      
+
       line = ""; read(unit=fu, fmt='(a)', iostat=ist) line
       nk = 0; vol = 0.d0
       read(unit=line, fmt=*, iostat=ist) nk, vol
       if (ist /= 0) warn(6, "unable to read a Brillouin zone mesh from file unit"+fu-", expected int double but found <"-line-">")
-      
+
     endif ! root     
 
     call MPI_Bcast(nk, 1, MPI_INTEGER, 0, comm, ist)
-    
+
     if (nk < 1) then
       call create(self, nofks=0, volBz=0.d0)
       warn(6, "create an empty k-point mesh")
       return
     endif
-    
+
     allocate(wxyz(0:3,1:nk), stat=ist)
 
     if (rank == 0) then
 
       line = ""; read(unit=fu, fmt='(a)', iostat=ist) line ! read comment line
-    
+
       jk = 0
       do ik = 1, nk
         line = ""; read(unit=fu, fmt='(a)', iostat=ist) line
@@ -119,7 +119,7 @@ module BrillouinZoneMesh_mod
         endif
       enddo ! ik
       if (jk /= nk) die_here("unable to read find"+nk+"valid k-points in file unit"+fu-", found only"+jk)
-      
+
     endif ! root
     
     call MPI_Bcast(wxyz, 4*nk, MPI_DOUBLE_PRECISION, 0, comm, ist)
@@ -135,7 +135,7 @@ module BrillouinZoneMesh_mod
     type(BrillouinZoneMesh), intent(inout) :: self(1:)
     character(len=*), intent(in) :: filename
     integer, intent(in) :: comm
-    
+
     include 'mpif.h'
     integer, parameter :: fu = 654 !< file unit
     integer :: i, rank, n

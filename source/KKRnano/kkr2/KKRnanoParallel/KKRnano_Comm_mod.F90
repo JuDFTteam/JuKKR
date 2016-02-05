@@ -33,8 +33,7 @@ module KKRnano_Comm_mod
     type(KKRnanoParallel), intent(in) :: my_mpi
     integer, intent(in) :: nthrds ! requested number of threads
 
-    integer :: natoms, nspin, nenergy
-    integer :: nthrds_requested, num_threads ! actual number of threads
+    integer :: natoms, nspin, nenergy, nthrds_requested, num_threads ! actual number of threads
     !$ integer, external :: omp_get_num_threads
     !$ integer, external :: omp_get_max_threads
 
@@ -66,7 +65,7 @@ module KKRnano_Comm_mod
       write(*,*) '  total no. of tasks      = ',natoms*nspin*nenergy*num_threads
       write(*,'(79("="))')
 
-    endif
+    endif ! is master
 
   endsubroutine ! print
 
@@ -76,7 +75,7 @@ module KKRnano_Comm_mod
     integer, intent(in) :: nthrds
     if (nthrds > 0) then
       !$ call OMP_SET_NUM_THREADS(NTHRDS)
-    endif
+    endif ! nthrds > 0
   endsubroutine ! set
 
   !----------------------------------------------------------------------------
@@ -88,28 +87,11 @@ module KKRnano_Comm_mod
     use comm_patternsZ_mod, only: comm_gatherZ
 
     type(KKRnanoParallel), intent(in) :: my_mpi
-
-    double complex, intent(inout) :: GMATN_ALL(:,:,:,:)
-    double complex, intent(inout) :: LLY_GRDT_ALL(:,:)
+    double complex, intent(inout) :: GMATN_ALL(:,:,:,:), LLY_GRDT_ALL(:,:)
     integer, intent(in) :: EPROC(:)
 
-    !-------------------------
-    integer :: memory_stat
-
-    integer :: iemxd
-    integer :: num_spin_ranks
-    integer :: lmmaxd
-
-    integer :: ie
-    integer :: spin_id
-    integer :: ispin
-    integer :: nspind
-
-    integer :: my_atom_id
-    integer :: my_world_rank
-
+    integer :: memory_stat, iemxd, num_spin_ranks, lmmaxd, ie, spin_id, ispin, nspind, my_atom_id, my_world_rank, receiver
     integer, allocatable :: owning_ranks(:)
-    integer :: receiver
 
     lmmaxd = size(GMATN_ALL,1)
     iemxd = size(GMATN_ALL,3)
@@ -131,10 +113,9 @@ module KKRnano_Comm_mod
     my_atom_id = getMyAtomId(my_mpi)
 
     do ispin = 1, nspind
-
       spin_id = getResponsibleSpinId(my_mpi, ispin)
       do ie = 1, iemxd
-        owning_ranks( (ispin-1)*iemxd + ie ) = mapToWorldRank(my_mpi, my_atom_id, spin_id, EPROC(ie))
+        owning_ranks((ispin-1)*iemxd + ie) = mapToWorldRank(my_mpi, my_atom_id, spin_id, EPROC(ie))
       enddo ! ie
     enddo ! ispin
 
@@ -158,23 +139,12 @@ module KKRnano_Comm_mod
 
     type(KKRnanoParallel), intent(in) :: my_mpi
     complex, intent(inout) :: PRSC(:,:)
-    integer, intent(in) :: EPROC(:)
-    integer, intent(in) :: EPROCO(:)
-    integer, intent(in) :: KMESH(:)
-    integer, intent(in) :: NofKs(:)
+    integer, intent(in) :: EPROC(:), EPROCO(:), KMESH(:), NofKs(:)
 
-    !--------
-    integer :: memory_stat
-    integer, allocatable :: blocksizes(:)
-    integer, allocatable :: old_owners(:)
-    integer, allocatable :: new_owners(:)
+    integer, allocatable :: blocksizes(:), old_owners(:), new_owners(:)
 
-    integer :: my_world_rank
-    integer :: my_atom_id
-    integer :: my_spin_id
-    integer :: single_block_size
-    integer :: num_energy_iemxd
-    integer :: ie
+    integer :: memory_stat, my_world_rank, my_atom_id, my_spin_id
+    integer :: single_block_size, num_energy_iemxd, ie
 
     my_atom_id = getMyAtomId(my_mpi)
     my_world_rank = getMyWorldRank(my_mpi)
@@ -216,14 +186,8 @@ module KKRnano_Comm_mod
     double precision, intent(inout) :: VISP(:,:)
     double precision, intent(inout) :: ECORE(20,2)
 
-    !----------
-    integer :: memory_stat
     integer, allocatable :: ranks(:)
-    integer :: my_world_rank
-    integer :: my_atom_id
-    integer :: owner
-    integer :: num_SE_ranks
-    integer :: ind
+    integer :: memory_stat, my_world_rank, my_atom_id, owner, num_SE_ranks, ind
 
     num_SE_ranks = getNumSERanks(my_mpi)
     my_world_rank = getMyWorldRank(my_mpi)
@@ -258,14 +222,8 @@ module KKRnano_Comm_mod
     double complex, intent(inout) :: GMATXIJ(:,:,:,:)
     double complex, intent(inout) :: DTIXIJ(:,:,:)
 
-    integer :: blocksize
-    integer :: my_world_rank
-    integer :: my_atom_id
-    integer :: my_energy_id
-    integer :: ranks(2)
-    integer :: receiver
-    integer :: spin_id
-    integer :: num_spin_ranks
+    integer :: blocksize, my_world_rank, my_atom_id, my_energy_id
+    integer :: ranks(2), receiver, spin_id, num_spin_ranks
 
     my_world_rank = getMyWorldRank(my_mpi)
     my_atom_id = getMyAtomId(my_mpi)
@@ -309,8 +267,8 @@ module KKRnano_Comm_mod
 
     if (getMySpinId(my_mpi) /= 1) then
       ! invalidate results for other ranks to be able to detect errors
-      GMATXIJ = dcmplx(1.d9, 1.d9)
-      DTIXIJ  = dcmplx(1.d9, 1.d9)
+      GMATXIJ = dcmplx(1d9, 1d9)
+      DTIXIJ  = dcmplx(1d9, 1d9)
     endif
 
   endsubroutine ! jij
@@ -336,10 +294,8 @@ module KKRnano_Comm_mod
     double complex :: JXCIJINT(:)
 
     logical :: ERESJIJ
-    integer :: I1
-    integer :: IER
+    integer :: I1, IER, naez, lmmaxd, nxijd, nspind
     integer :: communicator
-    integer :: naez, lmmaxd, nxijd, nspind
 
     ERESJIJ = .false.  ! not supported
     I1 = 0             ! just a dummy value
@@ -362,13 +318,11 @@ module KKRnano_Comm_mod
     ASSERT(NXIJ <= nxijd)
 
     ! Only ranks with Spin-Id=1 work!!!
-
     if (getMySpinId(my_mpi) == 1) then
-      call XCCPLJIJ_START(I1,IER,energy_weight,RXIJ,NXIJ,IXCP,RXCCLS,GMATXIJ,DTIXIJ, &
-                          communicator, JXCIJINT,ERESJIJ, naez, lmmaxd, nxijd, nspind)
+      call XCCPLJIJ_START(I1, IER, energy_weight, RXIJ, NXIJ, IXCP, RXCCLS, GMATXIJ, DTIXIJ, &
+                          communicator, JXCIJINT, ERESJIJ, naez, lmmaxd, nxijd, nspind)
     else
-    ! invalidate results for other ranks to be able to detect errors
-      JXCIJINT = dcmplx(1d9,1d9)
+      JXCIJINT = dcmplx(1d9, 1d9) ! invalidate results for other ranks to be able to detect errors
     endif
 
   endsubroutine ! jij
@@ -384,22 +338,12 @@ module KKRnano_Comm_mod
     type(KKRnanoParallel), intent(in) :: my_mpi
     double complex, intent(inout) :: JXCIJINT(:)
 
-    !-----------
-    integer :: memory_stat
     double complex, parameter :: CZERO = (0.0d0, 0.0d0)
-    double complex, allocatable :: sendrecv(:)
-    double complex, allocatable :: summed(:)
-    integer :: length
-
-    integer :: my_world_rank
-    integer :: my_atom_id
-    integer :: my_spin_id
-    integer :: my_energy_id
-    integer :: num_eranks
-    integer :: ind
-
-    integer :: receiver
-    integer :: sender
+    double complex, allocatable :: sendrecv(:), summed(:)
+    integer :: memory_stat, length
+    integer :: my_atom_id, my_spin_id, my_energy_id
+    integer :: num_eranks, my_world_rank
+    integer :: ind, receiver, sender
 
     my_world_rank = getMyWorldRank(my_mpi)
     my_atom_id = getMyAtomId(my_mpi)
@@ -436,10 +380,8 @@ module KKRnano_Comm_mod
 
       JXCIJINT = summed
 
-      if (my_energy_id /= 1) then
-        ! invalidate results for other ranks to be able to detect errors
-        JXCIJINT = dcmplx(1d9,1d9)
-      endif
+      if (my_energy_id /= 1) &
+        JXCIJINT = dcmplx(1d9, 1d9) ! invalidate results for other ranks to be able to detect errors
 
       DEALLOCATECHECK(sendrecv)
       DEALLOCATECHECK(summed)

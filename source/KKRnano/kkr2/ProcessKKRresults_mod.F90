@@ -13,7 +13,7 @@ module ProcessKKRresults_mod
   public :: processKKRresults, output_forces
 
   integer, private, parameter :: MAX_MADELUNG_RADIUS_INDEX=101
-  
+
   contains
 
   !------------------------------------------------------------------------------
@@ -176,7 +176,7 @@ module ProcessKKRresults_mod
   ! END: only MASTERRANK is working here
   ! -----------------------------------------------------------------
 
-  endfunction
+  endfunction ! processKKRresults
 
 
   !------------------------------------------------------------------------------
@@ -212,12 +212,9 @@ module ProcessKKRresults_mod
 
     type(BasisAtom) , pointer             :: atomdata
     type(RadialMeshData), pointer         :: mesh
-    double precision :: RMSAVQ ! rms error charge dens. (contribution of all local sites)
-    double precision :: RMSAVM ! rms error mag. density (contribution of all local sites)
-    double precision :: RMSAVQ_single
-    double precision :: RMSAVM_single
-    integer :: ila
-    integer :: num_local_atoms
+    double precision :: RMSAVQ, RMSAVM ! rms error charge dens. and mag. density (contribution of all local sites)
+    double precision :: RMSAVQ_single, RMSAVM_single
+    integer :: ila, num_local_atoms
 
     mix_potential = 0
 
@@ -242,7 +239,7 @@ module ProcessKKRresults_mod
     !$omp endparallel do
 
     ! summation and output of RMS error
-    call RMSOUT_com(RMSAVQ,RMSAVM,ITER,dims%NSPIND,dims%NAEZ, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
+    call RMSOUT_com(RMSAVQ, RMSAVM, ITER, dims%NSPIND, dims%NAEZ, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
 
     ! check if target rms error has been reached and set abort flag
     if (rmsavq <= params%target_rms) then
@@ -281,7 +278,7 @@ module ProcessKKRresults_mod
       call mix_broyden2_com(calc, iter, getMySEcommunicator(my_mpi))
     endif
 
-  endfunction
+  endfunction ! mix_potential
 
   !------------------------------------------------------------------------------
   !> Write forces to file 'forces'.
@@ -304,7 +301,7 @@ module ProcessKKRresults_mod
       call MPI_Comm_size(comm, nranks, ierr)
       allocate(force_buffer(3,max_local_atoms*nranks)) ! this could be large
     else
-      allocate(force_buffer(1,1))
+      allocate(force_buffer(1,1)) ! dummy allocation
     endif
 
     allocate(local_buffer(3,max_local_atoms))
@@ -327,7 +324,7 @@ module ProcessKKRresults_mod
 
     deallocate(force_buffer, local_buffer, stat=ierr)
 
-  endsubroutine
+  endsubroutine ! output_forces
 
   !==============================================================================
 
@@ -429,7 +426,7 @@ module ProcessKKRresults_mod
     DENEF = 0.d0
     CHRGNT = 0.d0
 
-    LDORHOEF = emesh%NPOL/=0  ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
+    LDORHOEF = (emesh%NPOL /= 0) ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
   !------------------------------------------------------------------------------
     !$omp parallel do reduction(+: chrgnt,denef) private(ila,atomdata,densities,energies,kkr,ldau_data,denef_local,chrgnt_local)
@@ -494,13 +491,12 @@ module ProcessKKRresults_mod
 
       else
         ! Only valence contour
-        call calcChargesLres(    densities%CHARGE, densities%DEN, emesh%ielast, &
+        call calcChargesLres(densities%CHARGE, densities%DEN, emesh%ielast, &
                             densities%LMAXD+1, densities%NSPIND, emesh%WEZ, densities%IEMXD)
 
       endif
 
-
-      DENEF = DENEF + DENEF_local
+      DENEF  = DENEF  + DENEF_local
       CHRGNT = CHRGNT + CHRGNT_local
 
       ! Add semicore charge for current atom
@@ -562,8 +558,8 @@ module ProcessKKRresults_mod
       new_fermi = emesh%E2
 
       ! allow only a maximal Fermi Energy shift of 0.03 Ry
-      call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi) .and. (ila == 1), arrays%naez, &
-                                  0.03d0, CHRGNT, DENEF, densities%R2NEF, &
+      call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi) .and. (ila == 1), & ! show only once
+                                  arrays%naez, 0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                   energies%ESPV, densities%RHO2NS, new_fermi)
 
       ! calculate multipole moments
@@ -606,7 +602,7 @@ module ProcessKKRresults_mod
     enddo ! ila
 #endif
 
-  endsubroutine
+  endsubroutine ! calculateDensities
 
 
   !------------------------------------------------------------------------------
@@ -921,8 +917,7 @@ module ProcessKKRresults_mod
       energies%e_total = energies%e_total + sum(sum(energies%ESPV, 2))
 
       ! part of double counting energy that stems from V_XC (Weinert only)
-      energies%e_vxc = - 2.d0 * energy_electrostatic_wrapper(vons_temp, &
-                                0.d0, densities%RHO2NS, calc%shgaunts, atomdata)
+      energies%e_vxc = -2.d0 * energy_electrostatic_wrapper(vons_temp, 0.d0, densities%RHO2NS, calc%shgaunts, atomdata)
 
       energies%e_total(2) = energies%e_total(2) + energies%e_vxc
 
@@ -933,9 +928,9 @@ module ProcessKKRresults_mod
       energies%e_total = energies%e_total + ldau_data%EULDAU - ldau_data%EDCLDAU
 
       ! missing contributions to energies%e_total(2), Weinert only: muffin-tin shift energy
-    endsubroutine
+    endsubroutine ! calculatePotentials_energies
 
-  endsubroutine
+  endsubroutine ! calculatePotentials
 
   !------------------------------------------------------------------------------
   integer function openForceFile() result(fu)
@@ -945,7 +940,7 @@ module ProcessKKRresults_mod
     inquire(iolength=reclen) dummy ! get reclen for 3 doubles
     fu = 91
     open(unit=fu, access='direct', file='forces', recl=reclen, form='unformatted', action='write')
-  endfunction
+  endfunction ! open
 
   !------------------------------------------------------------------------------
   subroutine writeForces(fu, forces_flm, recnr)
@@ -954,7 +949,7 @@ module ProcessKKRresults_mod
     integer, intent(in) :: recnr
 
     write(unit=fu, rec=recnr) forces_flm
-  endsubroutine
+  endsubroutine ! write
 
   !----------------------------------------------------------------------------
   !> Open Results2 File
@@ -962,26 +957,18 @@ module ProcessKKRresults_mod
     integer, intent(in) :: lrecres2
     fu = 72
     open(unit=fu, access='direct', recl=lrecres2, file='results2', form='unformatted', action='write')
-  endfunction
+  endfunction ! open
 
   !----------------------------------------------------------------------------
   !> Write calculated stuff into historical 'results2' file
   subroutine writeResults2File(fu, catom, ecou, edcldau, epotin, espc, espv, euldau, exc, i1, lcoremax, vmad)
     integer, intent(in) :: fu !< file unit
-    double precision, intent(in) :: catom(:)
-    double precision, intent(in) :: ecou(:)
-    double precision, intent(in) :: edcldau
-    double precision, intent(in) :: epotin
-    double precision, intent(in) :: espc(:,:)
-    double precision, intent(in) :: espv(:,:)
-    double precision, intent(in) :: euldau
-    double precision, intent(in) :: exc(:)
-    integer, intent(in) :: i1
-    integer, intent(in) :: lcoremax
+    double precision, intent(in) :: catom(:), ecou(:), edcldau, epotin, espc(:,:), espv(:,:), euldau, exc(:)
+    integer, intent(in) :: i1, lcoremax
     double precision, intent(in) :: vmad
 
     write(unit=fu, rec=i1) catom,vmad,ecou,epotin,espc,espv,exc,lcoremax,euldau,edcldau
-  endsubroutine
+  endsubroutine ! write
 
   !----------------------------------------------------------------------------
   !> Open the file 'results1'
@@ -995,18 +982,16 @@ module ProcessKKRresults_mod
 
     fu = 71
     open(unit=fu, access='direct', recl=lrecres1, file='results1', form='unformatted', action='write')
-  endfunction
+  endfunction ! open
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
   subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc)
     integer, intent(in) :: fu !< file unit
-    double precision, intent(in) :: catom(:)
-    double precision, intent(in) :: charge(:,:)
+    double precision, intent(in) :: catom(:), charge(:,:)
     double complex, intent(in) :: den(:,:,:)
     double precision, intent(in) :: ecore(20,2)
-    integer, intent(in) :: i1
-    integer, intent(in) :: npol
+    integer, intent(in) :: i1, npol
     double precision, intent(in) :: qc
 
     if (npol == 0) then
@@ -1014,31 +999,26 @@ module ProcessKKRresults_mod
     else
       write(unit=fu, rec=i1) qc,catom,charge,ecore
     endif
-  endsubroutine
+  endsubroutine ! write
 
   !----------------------------------------------------------------------------
   !> Communicate and sum up contributions for charge neutrality and
   !> density of states at Fermi level.
   subroutine sumNeutralityDOSFermi_com(chrgnt, denef, communicator)
     include 'mpif.h'
-    double precision, intent(inout) :: chrgnt
-    double precision, intent(inout) :: denef
+    double precision, intent(inout) :: chrgnt, denef
     integer, intent(in) :: communicator
-    !----------------------------------
 
-    double precision :: work1(2)
-    double precision :: work2(2)
+    double precision :: work1(2), work2(2)
     integer :: ierr
 
-    work1(1) = chrgnt
-    work1(2) = denef
+    work1(1:2) = [chrgnt, denef]
 
     call MPI_Allreduce(work1,work2,2,MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
-    chrgnt = work2(1)
-    denef  = work2(2)
+    chrgnt = work2(1); denef  = work2(2)
 
-  endsubroutine
+  endsubroutine ! sum
 
   !----------------------------------------------------------------------------
   !> Communicate and sum up contributions to semicore charge
@@ -1055,7 +1035,7 @@ module ProcessKKRresults_mod
 
     chrgsemicore = buff
 
-  endsubroutine
+  endsubroutine ! sum
 
   !----------------------------------------------------------------------------
   !> Extracts the DOS at the Fermi level and stores result in DENEF
@@ -1075,11 +1055,11 @@ module ProcessKKRresults_mod
     denef = 0.d0
     do ispin = 1, nspin
       do l = 0, lmaxd1
-        denef = denef - 2.d0*dimag(den(l,ielast,ispin))/pi/dble(nspin)
+        denef = denef - 2.d0*dimag(den(l,ielast,ispin))/(pi*dble(nspin))
       enddo ! l
     enddo ! ispin
 
-  endfunction calcDOSatFermi
+  endfunction ! calcDOSatFermi
 
   !----------------------------------------------------------------------------
   !> Calculates the l-resolved charges.
@@ -1105,7 +1085,7 @@ module ProcessKKRresults_mod
       enddo ! l
     enddo ! ispin
     
-  endsubroutine calcChargesLres
+  endsubroutine ! calcChargesLres
 
    !----------------------------------------------------------------------------
   !> Calculates the l-resolved charges including the semicore charge.
@@ -1139,7 +1119,7 @@ module ProcessKKRresults_mod
       enddo ! l
     enddo ! ispin
     
-  endsubroutine calcChargesLresSemi
+  endsubroutine ! calcChargesLresSemi
 
   !----------------------------------------------------------------------------
   !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
@@ -1149,13 +1129,12 @@ module ProcessKKRresults_mod
     double precision, intent(inout) :: fsemicore    ! semicore factor to be updated
     integer, intent(in) :: communicator             ! communicator not used any more
     
-    integer :: i1 ! auxiliary parameter, number of semicore bands
+    integer :: nsb !> number of semicore bands
 
     if (chrgsemicore < 1d-10) chrgsemicore = 1d-10
 
-    i1 = nint(chrgsemicore)
-
-    fsemicore = dble(i1)/chrgsemicore*fsemicore
+    nsb = nint(chrgsemicore)
+    fsemicore = dble(nsb)/chrgsemicore*fsemicore
 
     write(6,'(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)') chrgsemicore, fsemicore
   endsubroutine ! calcFactorSemi
@@ -1196,7 +1175,7 @@ module ProcessKKRresults_mod
     if (output) call printFermiEnergy(denef/dble(naez), e2, e2shift, efold)
 
     espv(0,1:nspind) = espv(0,1:nspind) - efold*chrgnt/dble(nspind*naez) ! get correct density and valence band energies
-    df = 2.d0/pi*e2shift/dble(nspind)
+    df = 2.d0*e2shift/(pi*dble(nspind))
     rho2ns(1:mesh%irc,1:lmpotd,1:nspind) = rho2ns(1:mesh%irc,1:lmpotd,1:nspind) + df * r2nef(1:mesh%irc,1:lmpotd,1:nspind)
 
 !    ! old code
@@ -1208,7 +1187,7 @@ module ProcessKKRresults_mod
 !       enddo ! lm
 !    enddo ! ispin
 #undef  mesh
-  endsubroutine
+  endsubroutine ! doFermiEnergyCorrection
 
   !---------------------------------------------------------------------------
   !> Checks for file 'STOP' in current working directory, returns 1 if it
@@ -1221,7 +1200,7 @@ module ProcessKKRresults_mod
     
     inquire(file='STOP', exist=stopfile_exists)
     stopfile_flag = 0; if (stopfile_exists) stopfile_flag = 1
-  endfunction
+  endfunction ! stopfile_flag
 
   !----------------------------------------------------------------------------
   !> Print Fermi-Energy information to screen.
@@ -1232,7 +1211,7 @@ module ProcessKKRresults_mod
     ! --> divided by naez because the weight of each atom has been already taken into account in 1c
     write(6,fmt="('                new E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") e2,denef
     write(6,'(79(1h+),/)')
-  endsubroutine
+  endsubroutine ! print
 
   !----------------------------------------------------------------------------
   !> Sums up the total energies of all processes - returns result in 'total' on master, 0.d0 on
@@ -1250,7 +1229,7 @@ module ProcessKKRresults_mod
     total = 0.d0
     call MPI_Reduce(total_energies, total, ND, MPI_DOUBLE_PRECISION, MPI_SUM, master, communicator, ierr)
 
-  endsubroutine
+  endsubroutine ! sum
 
   !----------------------------------------------------------------------------
   !> Print total energy to screen (both methods: Harris and Weinert).
@@ -1262,7 +1241,7 @@ module ProcessKKRresults_mod
 
     99014 format (/,3x,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))
     99015 format (/,3x,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))
-  endsubroutine
+  endsubroutine ! print
 
 !=============== DEBUG: Morgan charge distribution test =======================
 
@@ -1275,7 +1254,7 @@ module ProcessKKRresults_mod
     write(*,*) "= Results of calculation are wrong.                           ="
     write(*,*) "==============================================================="
     warn(6, "MORGAN charge distribution test activated")
-  endsubroutine
+  endsubroutine ! print
 
   !----------------------------------------------------------------------------
   !> Write results of potential in direction 'dir' to a file.
@@ -1293,13 +1272,13 @@ module ProcessKKRresults_mod
     open(unit=fu, form='formatted', file='morgan_potential_dir.txt', action='write')
     do ii = 1, size(mesh_points)
       vec = norm_dir * mesh_points(ii)
-      if (norm2(vec) == 0.d0) vec(1) = 1.d-6
+      if (norm2(vec) == 0.d0) vec(1) = 1d-6
       val = eval_expansion(vons(ii,:), vec)
       write(unit=fu, fmt=*) mesh_points(ii), val
     enddo ! ii
     close(unit=fu)
 
-  endsubroutine
+  endsubroutine ! write
 
   !----------------------------------------------------------------------------
   !> Stores generalised Morgan test charge distribution into rho2ns_density.
@@ -1331,18 +1310,18 @@ module ProcessKKRresults_mod
       call calc_gen_morgan_rho_expansion(coeffs, reciprocals, prefactors, rbasis, center, mesh_points(ii), lpot)
 
       ! since we are using real spherical harmonics, one can just take the real part of the expansion coeffs
-      rho2ns_density(ii,:,1) = real(coeffs)
+      rho2ns_density(ii,:,1) = dreal(coeffs)
     enddo ! ii
 
     ! multiply with r**2 (mesh_points = r)
     do ii = 1, size(rho2ns_density, 2)
-      rho2ns_density(:, ii, 1) = rho2ns_density(:,ii,1) * mesh_points * mesh_points
+      rho2ns_density(:,ii,1) = rho2ns_density(:,ii,1) * mesh_points * mesh_points
     enddo ! ii
 
     if (size(rho2ns_density, 3) > 1) rho2ns_density(:,:,2:) = 0.d0
 
     deallocate(reciprocals, coeffs, stat=ii)
-  endsubroutine
+  endsubroutine ! overwrite
 
   !----------------------------------------------------------------------------
   !> Read file 'morgan_prefactors.dat'.
@@ -1366,7 +1345,7 @@ module ProcessKKRresults_mod
       prefactors(ii) = dcmplx(re, im)
     enddo ! ii
     close(unit=fu)
-  endsubroutine
+  endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> Read file a direction vector from file 'directions.dat'.
@@ -1378,7 +1357,7 @@ module ProcessKKRresults_mod
     open(unit=fu, form='formatted', file='directions.dat', action='read', status='old')
     read(unit=fu, fmt=*) dir(1:3)
     close(unit=fu)
-  endfunction
+  endfunction ! read
 
   !----------------------------------------------------------------------------
   !> Write analytical values of generalised morgan potential in direction 'dir' to a file.
@@ -1411,7 +1390,7 @@ module ProcessKKRresults_mod
     enddo ! ii
     close(unit=fu)
 
-  endsubroutine
+  endsubroutine ! write
 
-endmodule ProcessKKRresults_mod
+endmodule ! ProcessKKRresults_mod
 
