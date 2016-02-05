@@ -50,7 +50,7 @@ module kkrmat_new_mod
     double precision, intent(in) :: volcub(:) !< k-point weights
 
     double complex, intent(out) ::  GS(:,:,:,:) ! (lmmaxd,lmmaxd,nsymat,num_local_atoms)
-    double complex, intent(inout) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
+    double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat
     double precision, intent(in) :: RR(:,0:)
@@ -239,8 +239,8 @@ module kkrmat_new_mod
     class(KKROperator), intent(inout) :: kkr_op
     class(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
-    double complex, intent(inout) :: tmatLL(:,:,:) ! todo: check intent
-    double complex, intent(inout) :: Ginp(:,:,:,:) ! todo: check intent ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+    double complex, intent(in) :: tmatLL(:,:,:)
+    double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd)
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
     integer, intent(in) :: trunc2atom_index(:)
@@ -281,7 +281,7 @@ module kkrmat_new_mod
   ! not using locks does not scale well
   
   
-    call referenceFourier_COM(ms%GLLh, ms%sparse, kpoint, alat, &
+    call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              rr, cluster%ezoa_trc, Ginp, trunc2atom_index, communicator)
 

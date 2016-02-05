@@ -170,26 +170,26 @@ implicit none
 
         WRITELOG(2, *) "Working on energy point ", IE
 
-        Tref_local = ZERO
+         Tref_local = ZERO
         dTref_local = ZERO
   !------------------------------------------------------------------------------
         !$omp parallel do private(ilocal, atomdata)
         do ilocal = 1, num_local_atoms
           atomdata => getAtomData(calc, ilocal)
 
-          call TREF(emesh%EZ(IE), params%vref, dims%LMAXD, atomdata%RMTref, &
+          call TREF(emesh%EZ(IE), params%vref, dims%LMAXD, atomdata%rMTref, &
                     Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), derive=(dims%LLY > 0))
 
         enddo  ! ilocal
         !$omp endparallel do
   !------------------------------------------------------------------------------
 
-        ! Note: ref. system has to be recalculated at each iteration
-        ! since energy mesh changes
+        ! Note: ref. system has to be recalculated at each iteration since energy mesh changes
         ! Note: TrefLL is diagonal - however full matrix is stored
         ! Note: Gref is calculated in real space - usually only a few shells
 
         ! Exchange the reference t-matrices within reference clusters
+        ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
         do ilocal = 1, num_local_atoms
           kkr => getKKR(calc, ilocal)
 
@@ -201,7 +201,7 @@ implicit none
         !$omp parallel do private(ilocal, kkr)
         do ilocal = 1, num_local_atoms
           kkr => getKKR(calc, ilocal)
-
+          
           call GREF(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ilocal)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ilocal)%NACLS, &
@@ -238,10 +238,8 @@ implicit none
 
               jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
-              if (dims%LLY == 1) then  ! calculate derivative of t-matrix for Lloyd's formula
-                call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                              params%NSRA, calc%gaunts, kkr%dTdE, kkr%TR_ALPH, ldau_data, params%Volterra)
-              endif
+              if (dims%LLY == 1) &  ! calculate derivative of t-matrix for Lloyd's formula
+              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%dTdE, kkr%TR_ALPH, ldau_data, params%Volterra)
 
               ! t_ref-matrix of central cluster atom has index 1
               call substractReferenceTmatrix(kkr%TmatN(:,:,ISPIN), kkr%TrefLL(:,:,1), kkr%lmmaxd)
@@ -295,7 +293,7 @@ implicit none
   
             if (getMyAtomRank(my_mpi) == 0 .and. params%KTE >= 0) &
               call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), solv%represent_stats())
-  
+
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ilocal) N(ilocal)
             do ilocal = 1, num_local_atoms
               kkr => getKKR(calc, ilocal)

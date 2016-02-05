@@ -36,6 +36,6 @@ module Constants_mod
   !> maximal number of Gauss-Legendre integration points, used in PINTG
 !   integer, parameter :: NDIM = 1000
   
-endmodule Constants_mod
+endmodule ! Constants_mod
 
 

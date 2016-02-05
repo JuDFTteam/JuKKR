@@ -49,7 +49,7 @@ module kloopz1_mod
     double complex, intent(in) :: dsymll(N,N,nsymat) !<
     double complex, intent(out) :: Gmatn(:,:,:) !< (N,N,num_local_atoms)
     double complex, intent(inout) :: Ginp_local(:,:,:,:) !< reference green function
-    double complex, intent(inout) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,
+    double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: nofks
     double precision, intent(in) :: Bzkp(:,:) ! dim (3,kpoibz)

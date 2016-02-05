@@ -5,7 +5,7 @@ module SingleSiteRef_mod
   private
   public :: gll95, gref, tref
 
-  double complex, parameter :: cone=(1.d0,0.d0), zero=(0.d0,0.d0), ci=(0.d0,1.d0)
+  double complex, parameter :: cone=(1.d0,0.d0), zero=(0.d0,0.d0), ci=(0.d0,1.d0), cmone=(-1.d0,0.d0)
 
   contains
 
@@ -27,7 +27,7 @@ module SingleSiteRef_mod
 !> @param naclsd dimension array: maximal number of atoms in reference clusters
 !> @param ncleb number of gaunt coefficients in cleb
 !> @param Lly do lloyd's formula calculations 1=yes/0=no
-  subroutine gll95(e,cleb,icleb,loflm,iend,trefLL,dtrefLL, ratom,natom,alat,gref0,dgdeout, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+  subroutine gll95(e, cleb, icleb, loflm, iend, trefLL, dtrefLL, ratom, natom, alat, gref0, dgdeout, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
   ! **********************************************************************
   !
   !     solution of the dyson equation for a cluster of potentials
@@ -40,8 +40,8 @@ module SingleSiteRef_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: natom
     double complex, intent(inout) :: gref0(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
-    double complex, intent(in) :: trefLL((lmaxd+1)**2,(lmaxd+1)**2, naclsd)
-    double complex, intent(in) :: dtrefLL((lmaxd+1)**2,(lmaxd+1)**2, naclsd)
+    double complex, intent(in) :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+    double complex, intent(in) :: dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
     double complex, intent(out) :: dgdeout(Lly*(naclsd*(lmaxd+1)**2-1)+1,(lmaxd+1)**2)
     double precision, intent(in) :: cleb(ncleb)
     integer, intent(in) :: icleb(ncleb,3)
@@ -49,7 +49,7 @@ module SingleSiteRef_mod
     integer, intent(in) :: iend
     double precision, intent(in) :: ratom(3,*)  ! first dim: 3
 
-    external :: zcopy, zgemm ! from BLAS
+    external :: zcopy, zgemm, zgetrs ! from BLAS
     integer :: info
     integer :: ipvt(naclsd*(lmaxd+1)**2)
     integer :: n2, ndim, site_lm_index2
@@ -78,91 +78,91 @@ module SingleSiteRef_mod
       !allocate(dgtde(ngd,lmmaxd), stat=memory_stat) ; memory_fail = memory_fail + memory_stat**2 ! wrong: need to allocate in any case because it has to be passed to grefsy
       allocate(dgtde0(ngd,ngd), stat=memory_stat) ; memory_fail = memory_fail + memory_stat**2
       allocate(dgde(ngd,ngd), stat=memory_stat) ; memory_fail = memory_fail + memory_stat**2
-    end if
+    endif
 
     if (memory_fail /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
 
     ndim = lmmaxd*natom ! ndim can be smaller than ngd=lmmaxd*naclsd
-    call calcFreeGreens(gref, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derivative=.false.)
+    call calcFreeGreens(gref, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
 
-    if (Lly == 1) then
-      call calcFreeGreens(dgde, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derivative=.true.)
-    endif ! Lly == 1
+    if (Lly == 1) &
+    call calcFreeGreens(dgde, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.true.)
 
   ! construct right hand side of linear equation system for grefsy
   ! the first lmmaxd columns of gref are copied into gref0
   ! gref0 then contains g0^{(1)n'}_{ll'}, the free space structural
   ! green's function for the central cluster atom (e.r.)
   ! --------------------------------------------------------------
-    call zcopy(ngd*lmmaxd,gref,1,gref0,1)
+    call zcopy(ngd*lmmaxd,gref,1,gref0,1) ! gref0(:,:) = gref(:,:)
   ! --------------------------------------------------------------
 
     if (Lly == 1) then
       do n2 = 1, natom
-        site_lm_index2 = (n2-1)*lmmaxd + 1
+        site_lm_index2 = (n2 - 1)*lmmaxd + 1
         ! -dg_0/de * \delta t_ref    -- stored in gtref
-        call zgemm('n','n',ndim,lmmaxd,lmmaxd,-cone,dgde(1,site_lm_index2),ngd,trefLL(1,1,n2), lmmaxd,zero,gtref,ngd)
+        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,dgde(1,site_lm_index2),ngd, trefLL(1,1,n2),lmmaxd,zero,gtref,ngd)
         !   - g_0 * d(\delta t_ref)/de + gtref  -- stored again in gtref
         ! = -dg_0/de * \delta t_ref - g_0 * d(\delta t_ref)/de
-        call zgemm('n','n',ndim,lmmaxd,lmmaxd,-cone,gref(1,site_lm_index2),ngd,dtrefLL(1,1,n2), lmmaxd,cone,gtref,ngd)
+        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2),ngd,dtrefLL(1,1,n2),lmmaxd,cone,gtref,ngd)
         ! copy gtref to dgtde0 - gtref is reused
-        call zcopy(ngd*lmmaxd,gtref,1,dgtde0(1,site_lm_index2),1)
+        call zcopy(ngd*lmmaxd,gtref,1,dgtde0(1,site_lm_index2),1) ! dgtde0(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
       enddo ! n2
     endif ! (Lly==1)
 
     do n2 = 1, natom
-      site_lm_index2 = (n2-1)*lmmaxd + 1
+      site_lm_index2 = (n2 - 1)*lmmaxd + 1
       ! -g_ref * \delta t_ref  -- stored in gtref
-      call zgemm('n','n',ndim,lmmaxd,lmmaxd,-cone,gref(1,site_lm_index2),ngd,trefLL(1,1,n2), lmmaxd,zero,gtref,ngd)
-      call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2),1)
+      call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2),ngd,trefLL(1,1,n2),lmmaxd,zero,gtref,ngd)
+      call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2),1) ! gref(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
     enddo ! n2
 
-    if (Lly == 1) then
-      dgtde(1:ngd,1:lmmaxd) = dgtde0(1:ngd,1:lmmaxd)
-    endif ! Lly == 1
-      
-    ! solve dyson-equation for reference system
+    if (Lly == 1) dgtde(:ngd,:lmmaxd) = dgtde0(:ngd,:lmmaxd) ! copy
+
+    ! solve Dyson-equation for the reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
     Lly_g0tr = zero
-    call grefsy(gref,gref0,ipvt,ndim,dgtde,Lly_g0tr,naclsd, lmmaxd, Lly)
+    call grefsy(gref, gref0, ipvt, ndim, dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
 
     if (Lly == 1) then
-      call zgemm('n','n',ndim,lmmaxd,ndim,-cone,dgtde0,ngd,gref0,ngd,cone,dgde,ngd)
+      call zgemm('n','n',ndim,lmmaxd,ndim,cmone,dgtde0,ngd,gref0,ngd,cone,dgde,ngd)
       call zgetrs('n',ndim,lmmaxd,gref,ngd,ipvt,dgde,ngd,info)
-      dgdeout(1:ngd,1:lmmaxd) = dgde(1:ngd,1:lmmaxd)
+      dgdeout(:ngd,:lmmaxd) = dgde(:ngd,:lmmaxd) ! copy
     endif ! Lly == 1
 
     deallocate(gref, gtref, dgtde)
     if (Lly == 1) deallocate(dgtde0, dgde)
 
-  endsubroutine gll95
+  endsubroutine ! gll95
 
  !> calculates the free-space green-function or the derivative of the free-space green-function
  !> @param[out] greenfree   the free space green-function
  !> @param      natom       number of atoms in reference cluster
  !> @param[in]  derivative  .false. = calculate free-space-greens function
  !>                         .true.  = calculate derivative of free-space-greens function
-  subroutine calcFreeGreens(greenfree, energy, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derivative)
+  subroutine calcFreeGreens(greenfree, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive)
     use kkr_helpers_mod, only: lmmaxtolmax
     double complex, intent(out) :: greenfree(:,:)
     integer, intent(in) :: ncleb
     double precision, intent(in) :: alat
     double precision, intent(in) :: cleb(:)
-    double complex, intent(in) :: energy
+    double complex, intent(in) :: e
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: loflm(:)
     integer, intent(in) :: natom, iend
     double precision, intent(in) :: ratom(3,*)
-    logical, intent(in) :: derivative
+    logical, intent(in) :: derive
 
     ! local
     double precision :: rdiff(3)
-    integer :: lm1, lm2, lmaxd
+    integer :: lm1, lm2, lmaxd, n1, n2, site_lm_index1, site_lm_index2
     double complex :: gll(lmmaxd,lmmaxd) ! automatic array
-    integer :: n1, n2, site_lm_index1, site_lm_index2
 
     lmaxd = lmmaxtolmax(lmmaxd)
+    
+    assert(size(greenfree, 1) >= natom*lmmaxd)
+    assert(size(greenfree, 2) >= natom*lmmaxd)
+    
     !
     ! ---> construct free green's function
     ! the free space structural green's function g0 is a matrix of dimension lmmaxd x lmmaxd
@@ -175,13 +175,11 @@ module SingleSiteRef_mod
     ! (e.r.)
     do n1 = 1, natom
       do n2 = 1, natom
-        !            rdiff(i) = (ratom(i,n1) - ratom(i,n2))*alat
-        !           changed p.z. 4.7.97
-        rdiff(1:3) = (ratom(1:3,n2) - ratom(1:3,n1))*alat
-
+      
         if (n1 /= n2) then
+          rdiff(1:3) = (ratom(1:3,n2) - ratom(1:3,n1))*alat ! difference vector
 
-          call gfree(rdiff,energy,gll,cleb,icleb,loflm,iend, lmaxd, ncleb, derivative) ! fills gll with the Green function or the derivative of the Green function 
+          call gfree(rdiff, e, gll, cleb, icleb, loflm, iend, lmaxd, ncleb, derive) ! fills gll with the Green function or the derivative of the Green function 
           
         else  ! n1 /= n2
         
@@ -189,20 +187,18 @@ module SingleSiteRef_mod
         
         endif ! n1 /= n2
 
-        do lm2 = 1, lmmaxd
-          site_lm_index2 = (n2-1)*lmmaxd + lm2
-          do lm1 = 1, lmmaxd
-            site_lm_index1 = (n1-1)*lmmaxd + lm1
+        do lm2 = 1, lmmaxd   ; site_lm_index2 = (n2 - 1)*lmmaxd + lm2
+          do lm1 = 1, lmmaxd ; site_lm_index1 = (n1 - 1)*lmmaxd + lm1
             
             greenfree(site_lm_index1,site_lm_index2) = gll(lm1,lm2)
             
           enddo ! lm1
         enddo ! lm2
-        
+
       enddo ! n2
     enddo ! n1
     
-  endsubroutine calcFreeGreens
+  endsubroutine ! calcFreeGreens
 
   
   
@@ -330,7 +326,7 @@ module SingleSiteRef_mod
 
 
 !------------------------------------------------------------------------------
-  subroutine gref(e,alatc,iend, cleb,rcls,icleb,loflm,nacls, trefLL,dtrefLL,grefn,dgrefn, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+  subroutine gref(e, alatc, iend, cleb, rcls, icleb, loflm, nacls, trefLL, dtrefLL, grefn, dgrefn, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
     integer, intent(in) :: lmaxd, naclsd, ncleb, Lly
     double complex, intent(in) :: e
     double precision, intent(in) :: alatc
@@ -340,28 +336,25 @@ module SingleSiteRef_mod
     integer, intent(in) :: loflm((2*lmaxd+1)**2)
     integer, intent(in) :: nacls
     double complex, intent(out) :: Lly_g0tr
-    double complex, intent(in) :: trefLL((lmaxd+1)**2,(lmaxd+1)**2, naclsd), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2, naclsd)
-    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd), grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+    double complex, intent(in)  :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd),   grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
     
-    integer :: ig, ig1, lm, lm2, lmgf0d, lmmaxd
+    integer :: ig, ig1, lm1, lm2, lmmaxd
     double complex ::  ginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
     double complex :: dginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
 
+    call gll95(e, cleb(1,2), icleb, loflm, iend, trefLL, dtrefLL, rcls, nacls, alatc, ginp, dginp, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+
     lmmaxd = (lmaxd+1)**2
-    lmgf0d = (lmaxd+1)**2
-
-    ! attention in this subroutine i3 labels the fixed atom - i1 is a variable !
-
-    call gll95(e,cleb(1,2),icleb,loflm,iend,trefLL,dtrefLL, rcls,nacls,alatc,ginp,dginp, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
 
     do ig = 1, naclsd
-      do lm = 1, lmgf0d
-        do lm2 = 1, lmgf0d
-          ig1 = (ig-1)*lmgf0d+lm2
-           grefn(lm2,lm,ig) =  ginp(ig1,lm)
-          dgrefn(lm2,lm,ig) = dginp(ig1,lm)
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
+          ig1 = (ig - 1)*lmmaxd + lm2
+           grefn(lm2,lm1,ig) =  ginp(ig1,lm1)
+          dgrefn(lm2,lm1,ig) = dginp(ig1,lm1)
         enddo ! lm2
-      enddo ! lm
+      enddo ! lm1
     enddo ! ig
 
   endsubroutine ! gref
@@ -444,38 +437,40 @@ module SingleSiteRef_mod
   
   
   
-  subroutine gfree(rdiff,e0,gmll,cleb,icleb,loflm,iend,lmax, ncleb, derivative)
+  subroutine gfree(rdiff, e, gmll, cleb, icleb, loflm, iend, lmax, ncleb, derive)
+    use Constants_mod, only: Pi
     use SingleSiteHelpers_mod, only: beshan
     use Harmonics_mod, only: ymy
-    
+
+    double precision, intent(in) :: rdiff(3)
     integer, intent(in) :: lmax, ncleb, iend
-    double complex, intent(in) :: e0
+    double complex, intent(in) :: e
     double complex, intent(inout) :: gmll((lmax+1)**2,(lmax+1)**2)
-    double precision, intent(in) :: cleb(ncleb), rdiff(3)
+    double precision, intent(in) :: cleb(ncleb)
     integer, intent(in) :: icleb(ncleb,3), loflm(*)
-    logical, intent(in) :: derivative
+    logical, intent(in) :: derive
     
-    double precision fpi,pi,rfpi
-    integer ifac,j,lm1,lm2,lm3,lp1
-    double complex bl(lmax*2+1),hl(lmax*2+1)
-    double complex hyl((lmax*2+1)**2),nl(lmax*2+1)
+    double precision :: fpi, rfpi
+    integer :: ifac, j, lm1, lm2, lm3, lp1
+    double complex :: bl(lmax*2+1), hl(lmax*2+1), sqE
+    double complex :: hyl((lmax*2+1)**2), nl(lmax*2+1)
     double complex :: dhl(lmax*2+1) ! only used for the derivative
     double precision :: yl((lmax*2+1)**2), rabs
     integer :: lmgf0d, lmx2sq
 
-    lmgf0d = (lmax+1)**2
-    lmx2sq = (lmax*2+1)**2
+    lmgf0d = (lmax + 1)**2
+    lmx2sq = (2*lmax + 1)**2
 
-    pi = 4.d0*atan(1.d0)
     fpi = 4.d0*pi
     rfpi = sqrt(fpi)
+    sqE = sqrt(e)
 !
-!---- calculation of free electron green's function :  g(m)ll'(e0)
+!---- calculation of free electron green's function :  g(m)ll'(e)
 !
-    call ymy(rdiff(1),rdiff(2),rdiff(3),rabs,yl,lmax*2)
-    call beshan(hl,bl,nl,sqrt(e0)*rabs,lmax*2)
+    call ymy(rdiff(1), rdiff(2), rdiff(3), rabs, yl, 2*lmax)
+    call beshan(hl, bl, nl, sqE*rabs, 2*lmax)
     
-    if (derivative) then
+    if (derive) then
 !-----------------------------------------------------------------------
 !---- derivative of free electron green function matrix elements
 !
@@ -486,30 +481,30 @@ module SingleSiteRef_mod
 !     --  h (x) = h   (x) - --- h (x)   
 !     dx   l       l-1       x   l
 !
-!     which for x = sqrt(e0)*r leads to
+!     which for x = sqrt(e)*r leads to
 !
 !      d                       r           rl
-!     --- ( sqrt(e0) h (x) ) = - h   (x) - -- h (x) )
-!     de0             l        2  l-1      2x  l
+!     --- ( sqrt(e) h (x) ) = - h   (x) - -- h (x) )
+!     de             l        2  l-1      2x  l
 !
 !-----------------------------------------------------------------------
     
       dhl(1) = 0.5d0*ci*rabs*hl(1) ! start recursion here
-      do lp1 = 2, lmax*2+1
-        dhl(lp1) = 0.5d0*(rabs*hl(lp1-1)-(lp1-1)*hl(lp1)/sqrt(e0))
+      do lp1 = 2, 2*lmax + 1
+        dhl(lp1) = 0.5d0*(rabs*hl(lp1-1)-(lp1-1)*hl(lp1)/sqE)
       enddo ! lp1
       
       do lm1 = 1, lmx2sq
         hyl(lm1) = -fpi*ci*yl(lm1)*dhl(loflm(lm1)+1)
       enddo ! lm1
       
-    else  ! derivative
+    else  ! derive
     
       do lm1 = 1, lmx2sq
-        hyl(lm1) = -fpi*ci*sqrt(e0)*yl(lm1)*hl(loflm(lm1)+1)
+        hyl(lm1) = -fpi*ci*sqE*yl(lm1)*hl(loflm(lm1)+1)
       enddo ! lm1
-    
-    endif ! derivative
+
+    endif ! derive
     
     do lm1 = 1, lmgf0d
       gmll(lm1,lm1) = hyl(1)/rfpi
@@ -517,21 +512,21 @@ module SingleSiteRef_mod
         gmll(lm1,lm2) = zero
       enddo ! lm2
     enddo ! lm1
-    
+
     do j = 1, iend
       lm1 = icleb(j,1)
       lm2 = icleb(j,2)
       lm3 = icleb(j,3)
       gmll(lm1,lm2) = gmll(lm1,lm2) + cleb(j)*hyl(lm3)
     enddo ! j
-  
+
     do lm1 = 1, lmgf0d
-      do lm2 = 1, lm1-1
-        ifac = (-1)**(loflm(lm1)+loflm(lm2))
+      do lm2 = 1, lm1 - 1
+        ifac = (-1)**(loflm(lm1) + loflm(lm2))
         gmll(lm2,lm1) = ifac*gmll(lm1,lm2)
       enddo ! lm2
     enddo ! lm1
     
-  endsubroutine gfree
+  endsubroutine !  gfree
 
-endmodule SingleSiteRef_mod
+endmodule ! SingleSiteRef_mod

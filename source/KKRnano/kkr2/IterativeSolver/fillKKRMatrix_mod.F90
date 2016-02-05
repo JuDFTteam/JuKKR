@@ -158,11 +158,7 @@ module fillKKRMatrix_mod
           
           if (block_row == block_col) temp(lm2) = temp(lm2) + CONE ! add 1.0 on the diagonal
 
-          do lm1 = 1, lmmax1
-
-            smat(start+lm1+lmmax1*(lm2-1)) = temp(lm1)
-            
-          enddo ! lm1
+          smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1)) = temp(:)
         enddo ! lm2
 
         start = start + lmmax2*lmmax1
