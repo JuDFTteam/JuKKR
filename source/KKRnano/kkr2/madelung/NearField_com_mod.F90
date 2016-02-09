@@ -56,7 +56,6 @@ module NearField_com_mod
   subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
     use NearField_kkr_mod, only: IntracellPotential
     use MadelungCalculator_mod, only: MadelungClebschData
-!     use ChunkIndex_mod, only: ChunkIndex, getChunkIndex
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commD_mod, only: exposeBufferD, hideBufferD, copyChunksNoSyncD
   
@@ -68,7 +67,6 @@ module NearField_com_mod
     include 'mpif.h'
     
     type(IntracellPotential) :: intra_pot
-!    type(ChunkIndex) :: chunk(1)
     integer(kind=4) :: chunk(2,1)
     integer :: npoints, lmpotd
     integer :: num_local_atoms
@@ -124,7 +122,6 @@ module NearField_com_mod
       nf_correction(ilocal)%delta_potential = 0.0d0
       do icell = 1, size(local_cells(ilocal)%near_cell_indices)
       
-!       chunk(1) = getChunkIndex(local_cells(ilocal)%near_cell_indices(icell), nranks*num_local_atoms, nranks)
         chunk(:,1) = getRankAndLocalIndex(local_cells(ilocal)%near_cell_indices(icell), nranks*num_local_atoms, nranks)
         
 !         call MPI_Win_Lock(MPI_LOCK_SHARED, chunk(1)%owner, 0, win, ierr)

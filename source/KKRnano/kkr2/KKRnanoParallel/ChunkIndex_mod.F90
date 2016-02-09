@@ -41,15 +41,8 @@ module ChunkIndex_mod
   implicit none
   private
   
-! public :: ChunkIndex, getChunkIndex
-! public :: getOwner, getLocalInd
   public :: getRankAndLocalIndex
   
-  type ChunkIndex
-    integer :: owner
-    integer :: local_ind
-  endtype
-
   contains
 
   function getRankAndLocalIndex(ind, num, nranks) result(rank_loc)
@@ -88,19 +81,5 @@ module ChunkIndex_mod
     
   endfunction ! get
 
-  !------------------------------------------------------------------------------
-  !> Returns chunk index of atom/matrix/chunk with index 'ind'.
-  !> @param ind    "atom"-index
-  !> @param num    Total number of chunks/atoms/matrices
-  !> @param nranks number of ranks
-  function getChunkIndex(ind, num, nranks)
-    type(ChunkIndex) :: getChunkIndex
-    integer, intent(in) :: ind, num, nranks
-
-    getChunkIndex%owner = getOwner(ind, num, nranks)
-    getChunkIndex%local_ind = getLocalInd(ind, num, nranks)
-
-  endfunction ! get
-
 endmodule ! ChunkIndex_mod
- 
+

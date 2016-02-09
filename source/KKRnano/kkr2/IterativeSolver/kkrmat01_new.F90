@@ -381,7 +381,6 @@ module kkrmat_new_mod
   subroutine referenceFourier_com(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
                 indn0, rr, ezoa, Ginp, trunc2atom_index, communicator)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-!   use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 #ifdef NO_LOCKS_MPI
@@ -406,7 +405,6 @@ module kkrmat_new_mod
     integer :: site_index, naez, naclsd, lmmaxd, ist
     integer :: num_local_atoms, atom_requested
     double complex, allocatable :: Gref_buffer(:,:,:), eikrm(:), eikrp(:) ! dim: naclsd
-!     type(ChunkIndex) :: chunk_inds(1)
     integer(kind=4) :: chunk_inds(2,1)
     integer :: win, nranks, ierr
     integer :: naez_max

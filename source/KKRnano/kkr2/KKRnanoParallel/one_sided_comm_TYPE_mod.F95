@@ -20,7 +20,7 @@
 !> Each chunk has an "owner"-index (MPI-rank starting at 0)
 !> and a local index (starting at 1 !)
 !>
-!> ChunkIndex = (rank, local index)
+!> chunk index = (rank, local index)
 !>
 !>  ___________|_____ _____|
 !> |     |     |     |     |
@@ -32,7 +32,7 @@
 !>
 !> To access the chunks by a continuous index (called 'atom index')
 !> one can use the routines getOwner and getLocalInd
-!> to convert to a 'ChunkIndex'
+!> to convert to a chunk index
 !>
 !> \endverbatim
 
@@ -55,8 +55,7 @@
 #endif
 
 module one_sided_comm_TYPE_mod
-! use ChunkIndex_mod, only: ChunkIndex, getOwner, getLocalInd, getChunkIndex
-  use ChunkIndex_mod, only: getRankAndLocalIndex!, getOwner, getLocalInd
+  use ChunkIndex_mod, only: getRankAndLocalIndex
   implicit none
   private
   
@@ -87,7 +86,6 @@ module one_sided_comm_TYPE_mod
     integer, intent(in) :: num_local_atoms
     integer, intent(in) :: comm
 
-!     type(ChunkIndex), allocatable :: chunk_inds(:)
     integer(kind=4), allocatable :: chunk_inds(:,:)
     integer :: ii, ierr, nranks, atom_requested
     integer :: naez, naez_trc ! size(atomindices)
@@ -104,16 +102,9 @@ module one_sided_comm_TYPE_mod
     do ii = 1, naez_trc
       ! get 'real' atom index
       atom_requested = atom_ids(ii)
-!       chunk_inds(ii)%owner = getOwner(atom_requested, naez, nranks)
-!       chunk_inds(ii)%local_ind = getLocalInd(atom_requested, naez, nranks)
 
-!       chunk_inds(1,ii) = getOwner(atom_requested, naez, nranks)
-!       chunk_inds(2,ii) = getLocalInd(atom_requested, naez, nranks)
       chunk_inds(:,ii) = getRankAndLocalIndex(atom_requested, naez, nranks)
 
-      ! direct
-!       chunk_inds(1,ii) = (atom_requested - 1)/num_local_atoms ! owner rank
-!       chunk_inds(2,ii) = atom_requested - num_local_atoms*chunk_inds(1,ii) ! local index
     enddo ! ii
 
     call exposeBuffer_TYPE(win, local_buf, chunk_size*num_local_atoms, chunk_size, comm)
@@ -157,7 +148,6 @@ module one_sided_comm_TYPE_mod
   subroutine copyChunks_TYPE(dest_buffer, win, chunk_inds, chunk_size)
     NUMBER_TYPE, intent(out) :: dest_buffer(*)
     integer, intent(inout) :: win
-!     type(ChunkIndex), intent(in) :: chunk_inds(:)
     integer(kind=4), intent(in) :: chunk_inds(:,:) ! (2,*)
     integer, intent(in) :: chunk_size
 
@@ -178,23 +168,21 @@ module one_sided_comm_TYPE_mod
   subroutine copyChunksNoSync_TYPE(dest_buffer, win, chunk_inds, chunk_size)
     NUMBER_TYPE, intent(out) :: dest_buffer(*)
     integer, intent(inout) :: win
-!     type(ChunkIndex), intent(in) :: chunk_inds(:)
     integer(kind=4), intent(in) :: chunk_inds(:,:) ! (2,*)
     integer, intent(in) :: chunk_size
 
-!     integer :: owner_rank, local_ind
+    integer :: owner_rank, local_ind
     integer :: ii, ierr
     integer(kind=MPI_ADDRESS_KIND) :: disp
 
     do ii = 1, size(chunk_inds, 2)
-!     do ii = 1, size(chunk_inds)
-!       owner_rank = chunk_inds(ii)%owner
-!       local_ind  = chunk_inds(ii)%local_ind
+      owner_rank = chunk_inds(1,ii)
+      local_ind  = chunk_inds(2,ii)
 
-      disp = chunk_inds(2,ii) - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
+      disp = local_ind - 1 ! Measure in units of chunks here disp_unit = CHUNKSIZE
 
       call MPI_Get(dest_buffer((ii-1)*chunk_size+1), chunk_size, NUMBERMPI_TYPE, &
-                        chunk_inds(1,ii), disp, chunk_size, NUMBERMPI_TYPE, win, ierr)
+                        owner_rank, disp, chunk_size, NUMBERMPI_TYPE, win, ierr)
 
     enddo ! ii
 
@@ -243,7 +231,6 @@ program test
   NUMBER_TYPE :: buffer(CHUNKSIZE,CHUNKSPERPROC)
   NUMBER_TYPE :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
   integer :: chunks_req(NUMREQUESTED)
-!   type(ChunkIndex) :: chunk_inds(NUMREQUESTED)
   integer(kind=4) :: chunk_inds(2,NUMREQUESTED)
   integer :: win
   integer :: ierr
@@ -271,10 +258,6 @@ program test
 
   do ii = 1, NUMREQUESTED
     chunks_req(ii) = mod((myrank + 1) * CHUNKSPERPROC + ii - 1, CHUNKSPERPROC*num_ranks) + 1
-!     chunk_inds(ii)%owner      = getOwner(chunks_req(ii), nchunks_total, num_ranks)
-!     chunk_inds(ii)%local_ind  = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
-!     chunk_inds(1,ii) = getOwner(chunks_req(ii), nchunks_total, num_ranks)
-!     chunk_inds(2,ii) = getLocalInd(chunks_req(ii), nchunks_total, num_ranks)
     chunk_inds(:,ii) = getRankAndLocalIndex(chunks_req(ii), nchunks_total, num_ranks)
   enddo ! ii
 
