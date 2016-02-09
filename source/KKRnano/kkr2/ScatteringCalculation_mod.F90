@@ -24,7 +24,7 @@ implicit none
   !>         *) Logfiles (if requested)
   !>         *) JIJ-Files (if requested)
   !>         *) matrix dump (if requested)
-  subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, my_mpi, arrays)
+  subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, mp, arrays)
 
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
@@ -45,7 +45,7 @@ implicit none
     use LDAUData_mod, only: LDAUData
     use EnergyMesh_mod, only: EnergyMesh
     
-    use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyEnergyId, getMySEcommunicator, isWorkingSpinRank, getMyAtomRank, isInMasterGroup
+    use KKRnanoParallel_mod, only: KKRnanoParallel, isWorkingSpinRank
     use KKRnano_Comm_mod, only: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess_com
 
     use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
@@ -64,7 +64,7 @@ implicit none
     
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
-    type(KKRnanoParallel), intent(in)    :: my_mpi
+    type(KKRnanoParallel), intent(in)    :: mp
     type(EBalanceHandler), intent(inout) :: ebalance_handler
     type(EnergyMesh), intent(in)         :: emesh
     type(Main2Arrays), intent(in)        :: arrays
@@ -163,7 +163,7 @@ implicit none
   ! IE ====================================================================
     do IE = 1, emesh%ielast
   ! IE ====================================================================
-      if (getMyEnergyId(my_mpi) == ebalance_handler%EPROC(IE)) then
+      if (mp%myEnergyId == ebalance_handler%EPROC(IE)) then
   ! IE ====================================================================
         call startEBalanceTiming(ebalance_handler, IE)
 
@@ -192,8 +192,8 @@ implicit none
         do ilocal = 1, num_local_atoms
           kkr => getKKR(calc, ilocal)
 
-          call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, calc%ref_cluster_a(ilocal), getMySEcommunicator(my_mpi))
-          call gatherTrefMatrices_com(dTref_local, kkr%dTrefLL, calc%ref_cluster_a(ilocal), getMySEcommunicator(my_mpi))
+          call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, calc%ref_cluster_a(ilocal), mp%mySEComm)
+          call gatherTrefMatrices_com(dTref_local, kkr%dTrefLL, calc%ref_cluster_a(ilocal), mp%mySEComm)
         enddo ! ilocal
 
   !------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ implicit none
   !     beginning of SMPID-parallel section
   !------------------------------------------------------------------------------
         spinloop: do ISPIN = 1, dims%NSPIND
-          if (isWorkingSpinRank(my_mpi, ispin)) then
+          if (isWorkingSpinRank(mp, ispin)) then
 
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
@@ -263,7 +263,7 @@ implicit none
   ! <<>> Multiple scattering part
 
             ! gather t-matrices from own truncation zone
-            call gatherTmatrices_com(calc, tmatLL, ispin, getMySEcommunicator(my_mpi))
+            call gatherTmatrices_com(calc, tmatLL, ispin, mp%mySEComm)
 
             TESTARRAYLOG(3, tmatLL)
 
@@ -272,9 +272,9 @@ implicit none
 
             jij_data%active_spin = ispin
 
-  !          WRITE(*,'(14i5)') getMyWorldRank(my_mpi),getMyAtomRank(my_mpi),getMyAtomId(my_mpi),getMySpinId(my_mpi),
-  !            getMyEnergyId(my_mpi),getMySEId(my_mpi),getNumAtomRanks(my_mpi),getNumSpinRanks(my_mpi),getNumEnergyRanks(my_mpi),
-  !            getNumSERanks(my_mpi),getNumWorldRanks(my_mpi),0,isMasterRank(my_mpi),isInMasterGroup(my_mpi)
+  !          WRITE(*,'(14i5)') getMyWorldRank(mp),mp%myAtomRank,getMyAtomId(mp),getMySpinId(mp),
+  !            mp%myEnergyId,getMySEId(mp),getNumAtomRanks(mp),getNumSpinRanks(mp),getNumEnergyRanks(mp),
+  !            getNumSERanks(mp),getNumWorldRanks(mp),0,mp%isMasterRank,mp%isInMasterGroup
 
             nmesh = emesh%kmesh(IE)
 
@@ -285,11 +285,11 @@ implicit none
                     lattice_vectors%RR, & ! periodic images
                     GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
-                    trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
+                    trunc_zone%trunc2atom_index, mp%mySEComm, &
                     calc%iguess_data)
   !------------------------------------------------------------------------------
   
-            if (getMyAtomRank(my_mpi) == 0 .and. params%KTE >= 0) &
+            if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
               call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), solv%represent_stats())
 
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ilocal) N(ilocal)
@@ -314,14 +314,14 @@ implicit none
   ! xccpl
 
         if (XCCPL) then
-          call jijSpinCommunication_com(my_mpi, jij_data%GMATXIJ, jij_data%DTIXIJ)
+          call jijSpinCommunication_com(mp, jij_data%GMATXIJ, jij_data%DTIXIJ)
 
           ! calculate DTIXIJ = T_down - T_up
           call calcDeltaTupTdown(jij_data%DTIXIJ)
 
           JSCAL = emesh%WEZ(IE)/DBLE(jij_data%NSPIND)
 
-          call jijLocalEnergyIntegration(my_mpi, JSCAL, jij_data%GMATXIJ, &
+          call jijLocalEnergyIntegration(mp, JSCAL, jij_data%GMATXIJ, &
                                           jij_data%DTIXIJ(:,:,1), jij_data%RXIJ,&
                                           jij_data%NXIJ, jij_data%IXCP, &
                                           jij_data%RXCCLS, jij_data%JXCIJINT)
@@ -334,7 +334,7 @@ implicit none
         call stopEBalanceTiming(ebalance_handler, ie)
 
   ! IE ====================================================================
-      endif ! getMyEnergyId(my_mpi) == ebalance_handler%EPROC(IE)
+      endif ! mp%myEnergyId == ebalance_handler%EPROC(IE)
   ! IE ====================================================================
     enddo ! IE = 1,IELAST
   ! IE ====================================================================
@@ -343,7 +343,7 @@ implicit none
 
     call stopTimer(single_site_timer)
 
-!     if (isMasterRank(my_mpi)) &
+!     if (mp%isMasterRank) &
 !       write(6, fmt='(A,I4,9A)') 'iter:',ITER,'  solver stats: ',trim(solv%represent_total_stats())
     
     
@@ -351,21 +351,21 @@ implicit none
     ! communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
     do ilocal = 1, num_local_atoms
       kkr => getKKR(calc, ilocal)
-      call collectMSResults_com(my_mpi, kkr%GmatN, kkr%LLY_GRDT, ebalance_handler%EPROC)
+      call collectMSResults_com(mp, kkr%GmatN, kkr%LLY_GRDT, ebalance_handler%EPROC)
     enddo ! ilocal
   !=======================================================================
 
   ! TIME
-    call OUTTIME(isMasterRank(my_mpi), 'Single Site took.....', getElapsedTime(single_site_timer), ITER)
-    call OUTTIME(isMasterRank(my_mpi), 'Mult. Scat. took.....', getElapsedTime(mult_scattering_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'Single Site took.....', getElapsedTime(single_site_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'Mult. Scat. took.....', getElapsedTime(mult_scattering_timer), ITER)
 
   !=======================================================================
   !     output of Jij's
   !=======================================================================
     if (XCCPL) then
-      call jijReduceIntResults_com(my_mpi, jij_data%JXCIJINT)
+      call jijReduceIntResults_com(mp, jij_data%JXCIJINT)
 
-      if (isInMasterGroup(my_mpi)) &
+      if (mp%isInMasterGroup) &
         call writeJiJs(i1, jij_data%RXIJ, jij_data%NXIJ, jij_data%IXCP, jij_data%RXCCLS, jij_data%JXCIJINT, jij_data%nxijd)
     endif
 
@@ -373,7 +373,7 @@ implicit none
   !     on the basis of new timings determine now new distribution of
   !     work to 1 .. EMPID processors - all processes SYNCED
   !=======================================================================
-    call updateEBalance_com(ebalance_handler, my_mpi)
+    call updateEBalance_com(ebalance_handler, mp)
 
   !=======================================================================
   !     in case of IGUESS and EMPID > 1 initial guess arrays might
@@ -382,14 +382,14 @@ implicit none
     if (dims%IGUESSD == 1 .and. dims%EMPID > 1) then
 
       do ISPIN = 1,dims%NSPIND
-        if (isWorkingSpinRank(my_mpi, ispin)) then
+        if (isWorkingSpinRank(mp, ispin)) then
 
           PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
           WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
           WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
-          call redistributeInitialGuess_com(my_mpi, calc%iguess_data%PRSC(:,:,PRSPIN), &
+          call redistributeInitialGuess_com(mp, calc%iguess_data%PRSC(:,:,PRSPIN), &
               ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
 
         endif ! isWorkingSpinRank

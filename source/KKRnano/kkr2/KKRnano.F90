@@ -11,9 +11,7 @@ program KKRnano
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   USE_LOGGING_MOD
 
-  use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, isActiveRank, isInMasterGroup
-  use KKRnanoParallel_mod, only: getMyWorldRank, getMyAtomRank, getMyActiveCommunicator, getMySEcommunicator 
-  use KKRnanoParallel_mod, only: create, destroy
+  use KKRnanoParallel_mod, only: KKRnanoParallel, create, destroy
 
   use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
@@ -52,7 +50,7 @@ program KKRnano
 
   integer :: ITER, I1, ilocal, num_local_atoms, flag, ios, ilen
 
-  type(KKRnanoParallel) :: my_mpi
+  type(KKRnanoParallel) :: mp
 
   type(EnergyMesh)  :: emesh
   type(Main2Arrays) :: arrays
@@ -98,11 +96,11 @@ program KKRnano
   
   call load(dims, 'inp0.unf') ! read dimension parameters from file 'inp0.unf'
 
-  call create(my_mpi, dims%num_atom_procs, dims%SMPID, dims%EMPID)
+  call create(mp, dims%num_atom_procs, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
-  call printKKRnanoInfo(my_mpi, dims%nthrds)
+  call printKKRnanoInfo(mp, dims%nthrds)
 
-  if (isMasterRank(my_mpi)) then
+  if (mp%isMasterRank) then
 #ifdef NO_LOCKS_MPI
     write(*,*) "NO_LOCKS_MPI defined: Not using MPI RMA locks. Does not scale well."
 #endif
@@ -131,14 +129,14 @@ program KKRnano
   endif ! is master
   
 
-  if (getMyWorldRank(my_mpi) < 128) then ! max. 128 logfiles
-    OPENLOG(getMyWorldRank(my_mpi), 3)
+  if (mp%myWorldRank < 128) then ! max. 128 logfiles
+    OPENLOG(mp%myWorldRank, 3)
   else
-    OPENLOG(getMyWorldRank(my_mpi), 0)
+    OPENLOG(mp%myWorldRank, 0)
   endif
 
   call resetTimer(program_timer)
-  if (isMasterRank(my_mpi)) open(2, file='time-info', form='formatted', action='write')
+  if (mp%isMasterRank) open(2, file='time-info', form='formatted', action='write')
 
   call createMain2Arrays(arrays, dims)
   call readMain2Arrays(arrays, 'arrays.unf') ! every process does this!
@@ -155,18 +153,18 @@ program KKRnano
   ! processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ... and wait after SC-ITER loop
   !=====================================================================
 
-  if (isActiveRank(my_mpi)) then
+  if (mp%isActiveRank) then
 
     ! pre self-consistency preparations
 
     assert(dims%naez > 0) 
-    call create(calc_data, dims, params, arrays, my_mpi) ! createCalculationData
+    call create(calc_data, dims, params, arrays, mp) ! createCalculationData
     num_local_atoms = getNumLocalAtoms(calc_data)
 
     call create(emesh, dims%iemxd) ! createEnergyMesh
     call load(emesh, filename='energy_mesh.0') ! every process does this!!!
 
-    call outTime(isMasterRank(my_mpi),'input files read.....', getElapsedTime(program_timer), 0)
+    call outTime(mp%isMasterRank,'input files read.....', getElapsedTime(program_timer), 0)
 
 #ifdef DEBUG_NO_ELECTROSTATICS
     warn(6, "preprocessor define has switched off electrostatics for debugging")
@@ -174,10 +172,10 @@ program KKRnano
     call prepareMadelung(calc_data, arrays)
 #endif
 
-    call outTime(isMasterRank(my_mpi),'Madelung sums calc...', getElapsedTime(program_timer), 0)
+    call outTime(mp%isMasterRank,'Madelung sums calc...', getElapsedTime(program_timer), 0)
 
     call createEBalanceHandler(ebalance_handler, emesh%ielast)
-    call initEBalanceHandler(ebalance_handler, my_mpi)
+    call initEBalanceHandler(ebalance_handler, mp)
     call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
 #ifdef DEBUG_NO_VINS
@@ -217,24 +215,24 @@ program KKRnano
 
       call resetTimer(iteration_timer)
 
-      if (isMasterRank(my_mpi)) then
+      if (mp%isMasterRank) then
         call printDoubleLineSep(unit_number = 2)
-        call outTime(isMasterRank(my_mpi),'started at ..........', getElapsedTime(program_timer),ITER)
+        call outTime(mp%isMasterRank,'started at ..........', getElapsedTime(program_timer),ITER)
         call printDoubleLineSep(unit_number = 2)
       endif ! master
 
-      WRITELOG(2, *) "Iteration atom-rank ", ITER, getMyAtomRank(my_mpi)
+      WRITELOG(2, *) "Iteration atom-rank ", ITER, mp%myAtomRank
 
       ! New: instead of reading potential every time, communicate it
       ! between energy and spin processes of same atom
       do ilocal = 1, num_local_atoms
         atomdata => getAtomdata(calc_data, ilocal)
-        call communicatePotential(my_mpi, atomdata%potential%VISP, &
+        call communicatePotential(mp, atomdata%potential%VISP, &
                                   atomdata%potential%VINS, atomdata%core%ECORE)
       enddo ! ilocal
 
       ! Core relaxation - only mastergroup needs results
-      if (isInMasterGroup(my_mpi)) then
+      if (mp%isInMasterGroup) then
         ! Not threadsafe: intcor, intin, intout have a save statement
         !!!$omp parallel do private(ilocal, atomdata)
         do ilocal = 1, num_local_atoms
@@ -272,25 +270,25 @@ program KKRnano
       endif ! ldau
 ! LDA+U
 
-      call outTime(isMasterRank(my_mpi),'initialized .........', getElapsedTime(program_timer),ITER)
+      call outTime(mp%isMasterRank,'initialized .........', getElapsedTime(program_timer),ITER)
 
       ! Scattering calculations - that is what KKR is all about
       ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
-      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, my_mpi, arrays)
+      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, mp, arrays)
 
-      call outTime(isMasterRank(my_mpi),'G obtained ..........', getElapsedTime(program_timer),ITER)
+      call outTime(mp%isMasterRank,'G obtained ..........', getElapsedTime(program_timer),ITER)
 
       flag = 0
-      if (isInMasterGroup(my_mpi)) then
+      if (mp%isInMasterGroup) then
         ! output: (some contained as references in calc_data)
         ! atomdata, densities, broyden, ldau_data,
         ! emesh (only correct for master)
-        flag = processKKRresults(iter, calc_data, my_mpi, emesh, dims, params, arrays, program_timer)
+        flag = processKKRresults(iter, calc_data, mp, emesh, dims, params, arrays, program_timer)
 
       endif ! in master group
 
-      if (isMasterRank(my_mpi)) then
+      if (mp%isMasterRank) then
         ! only MASTERRANK updates, other ranks get it broadcasted later
         ! (although other processes could update themselves)
 
@@ -306,16 +304,16 @@ program KKRnano
 
       endif ! is master
 
-      if (is_abort_by_rank0(flag, getMyActiveCommunicator(my_mpi))) exit
+      if (is_abort_by_rank0(flag, mp%myActiveComm)) exit
 
-      call broadcast(emesh, getMyActiveCommunicator(my_mpi))
+      call broadcast(emesh, mp%myActiveComm)
 
     enddo ! ITER ! SC ITERATION LOOP ITER=1, SCFSTEPS
 
-    if (params%kforce == 1 .and. isInMasterGroup(my_mpi)) & ! write forces if requested, master-group only
-      call output_forces(calc_data, 0, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
+    if (params%kforce == 1 .and. mp%isInMasterGroup) & ! write forces if requested, master-group only
+      call output_forces(calc_data, 0, mp%myAtomRank, mp%mySEComm)
 
-    if (isMasterRank(my_mpi)) close(2) ! time-info
+    if (mp%isMasterRank) close(2) ! time-info
 
     call destroy(ebalance_handler)
     call destroy(calc_data)
@@ -331,6 +329,6 @@ program KKRnano
 
   call destroy(arrays)
   call destroy(dims)
-  call destroy(my_mpi) ! Free KKRnano mpi resources
+  call destroy(mp) ! Free KKRnano mpi resources
   
 endprogram ! KKRnano

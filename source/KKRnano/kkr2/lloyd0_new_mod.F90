@@ -3,20 +3,18 @@
 module lloyd0_new_mod
 implicit none
   private
-  public :: lloyd0_wrapper_com!, LLOYD0_NEW, lloyd_calcRenormalisation, lloyd_communicate
+  public :: lloyd0_wrapper_com
 
   contains
 
 !----------------------------------------------------------------------------
 !> Lloyd's formula.
 !> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
-subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data, method)
+subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data, method)
   use BasisAtom_mod, only: BasisAtom
   use GauntCoefficients_mod, only: GauntCoefficients
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
-  use KKRnanoParallel_mod, only: KKRnanoParallel
-  use KKRnanoParallel_mod, only: getMySEcommunicator
 
   integer, intent(in) :: LLY  !< use Lloyd 0/1
   integer, intent(in) :: ICST !< num. Born iterations
@@ -29,7 +27,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
   type(EnergyMesh), intent(inout) :: emesh !inout or in?
   type(LDAUData), intent(inout) :: ldau_data ! inout?
   double precision, intent(inout) :: RNORM(:,:)  !out
-  type(KKRnanoParallel), intent(in) :: my_mpi
+  integer, intent(in) :: mpi_comm
   integer, intent(in) :: method !< single site method
 
   integer :: nspind, irmind, irnsd, lmaxd, ielast, ie
@@ -60,7 +58,7 @@ subroutine lloyd0_wrapper_com(atomdata, my_mpi, LLY_GRDT, emesh, RNORM, LLY, ICS
                     GMATN, &
                     LLY_GRDT, &
                     ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
-                    getMySEcommunicator(my_mpi), &
+                    mpi_comm, &
                     lmaxd, mesh%irmd, irnsd, ielast, &
                     cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb, method)
 

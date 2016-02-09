@@ -65,16 +65,16 @@ module EBalanceHandler_mod
 
   !----------------------------------------------------------------------------
   !> Initialises EBalanceHandler.
-  subroutine initEBalanceHandler(balance, my_mpi)
-    use KKRnanoParallel_mod, only: KKRnanoParallel, getNumEnergyRanks, getMyWorldRank
+  subroutine initEBalanceHandler(balance, mp)
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     type(EBalanceHandler), intent(inout) :: balance
-    type(KKRnanoParallel), intent(in) :: my_mpi
+    type(KKRnanoParallel), intent(in) :: mp
 
     integer :: file_points, file_procs, ios
     integer, parameter :: FILEHANDLE = 50
     character(len=*), parameter :: filename = 'ebalance'
 
-    balance%num_eprocs_empid = getNumEnergyRanks(my_mpi)
+    balance%num_eprocs_empid = mp%numEnergyRanks
 
     if (balance%num_eprocs_empid == 1) then
       balance%eproc = 1
@@ -82,7 +82,7 @@ module EBalanceHandler_mod
       return
     endif
 
-    if (getMyWorldRank(my_mpi) == 0) then
+    if (mp%myWorldRank == 0) then
       ! TODO: check and read ebalance file
 
       call EBALANCE1(balance%ierlast, balance%eproc, balance%eproc_old, &
@@ -106,7 +106,7 @@ module EBalanceHandler_mod
     endif
 
     ! bcast ebalance distribution
-    call bcastEBalance_com(balance, my_mpi)
+    call bcastEBalance_com(balance, mp)
 
     balance%eproc_old = balance%eproc
 
@@ -127,8 +127,6 @@ module EBalanceHandler_mod
   !----------------------------------------------------------------------------
   !> (Re)Starts measurement for dynamical load balancing
   subroutine startEBalanceTiming(balance, ie)
-    use KKRnanoParallel_mod
-
     type(EBalanceHandler), intent(inout) :: balance
     integer, intent(in) :: ie
 
@@ -142,8 +140,6 @@ module EBalanceHandler_mod
   !----------------------------------------------------------------------------
   !> Finishes time measurement for energy-point ie
   subroutine stopEBalanceTiming(balance, ie)
-    use KKRnanoParallel_mod
-    
     type(EBalanceHandler), intent(inout) :: balance
     integer, intent(in) :: ie
 
@@ -157,14 +153,13 @@ module EBalanceHandler_mod
 
   !----------------------------------------------------------------------------
   !> Gathers all timings and redistributes energy processes.
-  subroutine updateEBalance_com(balance, my_mpi)
-    use KKRnanoParallel_mod
+  subroutine updateEBalance_com(balance, mp)
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     implicit none
-
     include 'mpif.h'
 
     type(EBalanceHandler), intent(inout) :: balance
-    type(KKRnanoParallel), intent(in) :: my_mpi
+    type(KKRnanoParallel), intent(in) :: mp
 
     integer :: npnt1, ierr
 
@@ -177,7 +172,7 @@ module EBalanceHandler_mod
     ! TODO: broadcast
     if (balance%num_eprocs_empid > 1) then
 
-      call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, getMyActiveCommunicator(my_mpi),IERR)
+      call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, mp%myActiveComm,IERR)
 
       COMMCHECK(IERR)
 
@@ -185,14 +180,11 @@ module EBalanceHandler_mod
       balance%eproc_old = balance%eproc
 
       ! only Masterrank calculates new work distribution
-      if (getMyWorldRank(my_mpi) == 0) then
-        call EBALANCE2(balance%ierlast,npnt1, getMyWorldRank(my_mpi), &
-        getMyActiveCommunicator(my_mpi), &
-        MTIME,balance%EPROC,balance%EPROC_old, &
-        balance%num_eprocs_empid, balance%ierlast)
+      if (mp%myWorldRank == 0) then
+        call EBALANCE2(balance%ierlast,npnt1, mp%myWorldRank, mp%myActiveComm, MTIME,balance%EPROC,balance%EPROC_old, balance%num_eprocs_empid, balance%ierlast)
       endif
 
-      call bcastEBalance_com(balance, my_mpi)
+      call bcastEBalance_com(balance, mp)
 
    endif
 
@@ -202,7 +194,6 @@ module EBalanceHandler_mod
   !> Destroys EBalanceHandler.
   !> Call initEBalanceHandler before use
   subroutine destroyEBalanceHandler(balance)
-    use KKRnanoParallel_mod
     type(EBalanceHandler), intent(inout) :: balance
 
     integer :: memory_stat
@@ -210,7 +201,6 @@ module EBalanceHandler_mod
     DEALLOCATECHECK(balance%eproc)
     DEALLOCATECHECK(balance%eproc_old)
     DEALLOCATECHECK(balance%etime)
-
   endsubroutine
 
 
@@ -220,19 +210,19 @@ module EBalanceHandler_mod
 
   !----------------------------------------------------------------------------
   !> Broadcast ebalance information from rank 0 to all ranks.
-  subroutine bcastEBalance_com(balance, my_mpi)
-    use KKRnanoParallel_mod
+  subroutine bcastEBalance_com(balance, mp)
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     include 'mpif.h'
 
     type(EBalanceHandler), intent(inout) :: balance
-    type(KKRnanoParallel), intent(in) :: my_mpi
+    type(KKRnanoParallel), intent(in) :: mp
 
     integer :: ierr
 
     ! save old ebalance information WRONG!!!! already done
     ! balance%eproc_old = balance%eproc
 
-    call MPI_BCAST(balance%eproc,balance%ierlast,MPI_INTEGER, 0, getMyActiveCommunicator(my_mpi), ierr)
+    call MPI_BCAST(balance%eproc, balance%ierlast, MPI_INTEGER, 0, mp%myActiveComm, ierr)
 
     COMMCHECK(IERR)
 
@@ -291,7 +281,6 @@ subroutine ebalance1(ierlast, eproc, eproco, empid, iemxd, equal)
   logical, intent(in), optional :: equal
 
   integer :: ier,ieri
-  ! logical, external :: test
   logical :: flag
 
   if (present(equal)) then
@@ -368,7 +357,7 @@ endsubroutine ! ebalance1
 
 !==============================================================================
 
-subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco, empid, iemxd)
+subroutine ebalance2(ierlast, npnt1, myactvrank, activecomm, mtime, eproc, eproco, empid, iemxd)
   ! ======================================================================
   !                       build mpi_groups
   ! ======================================================================
@@ -384,13 +373,13 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, actvcomm, mtime, eproc, eproco,
   integer empi,ier,ieri
 
   real           proctm(empid), mtime(iemxd)
-  integer        myactvrank,actvcomm!,ierr
+  integer        myactvrank, activecomm
 
   !=======================================================================
   ! use timing of iter-1 >>>
   !=======================================================================
   !     gather on all processors all timings
-  !call mpi_allreduce(etime,mtime,iemxd,mpi_real,mpi_max, actvcomm,ierr)
+  !call mpi_allreduce(etime,mtime,iemxd,mpi_real,mpi_max, activecomm,ierr)
 
 
   !----------------------------------------------------------------------

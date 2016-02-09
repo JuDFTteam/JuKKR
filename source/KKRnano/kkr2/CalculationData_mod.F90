@@ -82,9 +82,8 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   ! TODO: atoms_per_procs * num_procs MUST BE = naez, 
   !       rank = 0,1,..., num_atom_ranks-1
-  subroutine createCalculationData(self, dims, params, arrays, my_mpi)
+  subroutine createCalculationData(self, dims, params, arrays, mp)
     use KKRnanoParallel_mod, only: KKRnanoParallel
-    use KKRnanoParallel_mod, only: getMyAtomRank, getNumAtomRanks
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
@@ -93,12 +92,12 @@ module CalculationData_mod
     type(DimParams), intent(in)   :: dims
     type(InputParams), intent(in) :: params
     type(Main2Arrays), intent(in) :: arrays
-    type(KKRnanoParallel), intent(in) :: my_mpi
+    type(KKRnanoParallel), intent(in) :: mp
 
-    integer :: atoms_per_proc, num_local_atoms, ila, atom_rank
+    integer :: atoms_per_proc, num_local_atoms, ila
 
-    atoms_per_proc = dims%naez / getNumAtomRanks(my_mpi)
-    ASSERT( getNumAtomRanks(my_mpi) * atoms_per_proc == dims%naez )
+    atoms_per_proc = dims%naez / mp%numAtomRanks
+    ASSERT( mp%numAtomRanks * atoms_per_proc == dims%naez )
     num_local_atoms = atoms_per_proc !TODO
 
     self%num_local_atoms = num_local_atoms
@@ -114,12 +113,10 @@ module CalculationData_mod
     allocate(self%madelung_sum_a(num_local_atoms))
     allocate(self%ldau_data_a(num_local_atoms))
     allocate(self%jij_data_a(num_local_atoms))
-
-    atom_rank = getMyAtomRank(my_mpi)
     
     allocate(self%atom_ids(num_local_atoms))
 
-    ! assign atom ids to processes with atom rank 'atom_rank'
+    ! assign atom ids to processes with atom rank 'mp%myAtomRank'
     ! E.g. for 2 atoms per proc:
     ! process 1 treats atoms 1,2
     ! process 2 treats atoms 3,4 and so on
@@ -128,12 +125,12 @@ module CalculationData_mod
     ASSERT( size(self%atom_ids) == num_local_atoms )
 
     do ila = 1, num_local_atoms
-      self%atom_ids(ila) = atom_rank * atoms_per_proc + ila
+      self%atom_ids(ila) = mp%myAtomRank * atoms_per_proc + ila
       ASSERT( self%atom_ids(ila) <= dims%naez )
     enddo ! ila
 
     ! Now construct all datastructures and calculate initial data
-    call constructEverything(self, dims, params, arrays, my_mpi)
+    call constructEverything(self, dims, params, arrays, mp)
 
     ! call repr_CalculationData(self)
   endsubroutine ! create
@@ -287,8 +284,8 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
-  subroutine constructEverything(self, dims, params, arrays, my_mpi)
-    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank, isInMasterGroup
+  subroutine constructEverything(self, dims, params, arrays, mp)
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
@@ -313,7 +310,7 @@ module CalculationData_mod
     type(DimParams), intent(in)  :: dims
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
-    type(KKRnanoParallel), intent(in) :: my_mpi
+    type(KKRnanoParallel), intent(in) :: mp
 
     integer :: atom_id, ila, irmd
 
@@ -329,9 +326,9 @@ module CalculationData_mod
 
     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays, params%lcutoff_radii, params%cutoff_radius, params%solver) ! setup the truncation zone
 
-    call createClusterInfo(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
+    call createClusterInfo(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm)
 
-    if (isMasterRank(my_mpi)) then
+    if (mp%isMasterRank) then
       write(*,*) "Number of lattice vectors created     :", self%lattice_vectors%nrd
       write(*,*) "Max. number of reference cluster atoms:", self%clusters%naclsd
       write(*,*) "On node 0: "
@@ -345,9 +342,9 @@ module CalculationData_mod
 
     call generateAtomsShapesMeshes(self, dims, params, arrays) ! a very crucial routine
 
-    call recordLengths_com(self, my_mpi)
+    call recordLengths_com(self, mp)
 
-    if (isInMasterGroup(my_mpi)) then
+    if (mp%isInMasterGroup) then
 #ifndef TASKLOCAL_FILES
       call writePotentialIndexFile(self)
 #endif
@@ -558,14 +555,14 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   !> Communicate and set record lengths.
-  subroutine recordLengths_com(self, my_mpi)
-    use KKRnanoParallel_mod, only: KKRnanoParallel, getMySECommunicator, getMyAtomRank
+  subroutine recordLengths_com(self, mp)
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     use RadialMeshData_mod, only: getMinReclenMesh
     use BasisAtom_mod, only: getMinReclenBasisAtomPotential
     include 'mpif.h'
 
     type(CalculationData), intent(inout) :: self
-    type(KKRnanoParallel), intent(in) :: my_mpi
+    type(KKRnanoParallel), intent(in) :: mp
 
     integer, parameter :: ND=2
     integer :: ierr, ila, sendbuf(ND), recvbuf(ND)
@@ -577,9 +574,9 @@ module CalculationData_mod
       sendbuf(2) = max(sendbuf(2), getMinReclenMesh(self%mesh_a(ila)))
     enddo ! ila
 
-    call MPI_Allreduce(sendbuf, recvbuf, ND, MPI_INTEGER, MPI_MAX, getMySECommunicator(my_mpi), ierr)
+    call MPI_Allreduce(sendbuf, recvbuf, ND, MPI_INTEGER, MPI_MAX, mp%mySEComm, ierr)
 
-    if (getMyAtomRank(my_mpi) == 0) then
+    if (mp%myAtomRank == 0) then
       write(*,*) "Record length 'vpotnew' file: ", recvbuf(1)
       write(*,*) "Record length 'meshes'  file: ", recvbuf(2)
     endif
@@ -718,8 +715,8 @@ endmodule ! CalculationData_mod
 ! 
 !   endsubroutine ! constructClusters
 ! 
-!   subroutine constructTruncationZones(self, arrays, my_mpi, naez)
-!     use KKRnanoParallel_mod, only: KKRnanoParallel, getMySEcommunicator, isMasterRank   
+!   subroutine constructTruncationZones(self, arrays, mp, naez)
+!     use KKRnanoParallel_mod, only: KKRnanoParallel
 !     use Main2Arrays_mod, only: Main2Arrays
 !     use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integers
 !     use TEST_lcutoff_mod, only: initLcutoffNew
@@ -727,16 +724,16 @@ endmodule ! CalculationData_mod
 ! 
 !     type(CalculationData), intent(inout) :: self
 !     type(Main2Arrays), intent(in):: arrays
-!     type(KKRnanoParallel), intent(in) :: my_mpi
+!     type(KKRnanoParallel), intent(in) :: mp
 !     integer, intent(in) :: naez
 ! 
 !     ! setup the truncation zone
 !     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
 ! 
 !     ! get information about all the reference clusters of atoms in truncation zone
-!     call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, getMySEcommunicator(my_mpi))
+!     call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm)
 ! 
-!     if (isMasterRank(my_mpi)) then
+!     if (mp%isMasterRank) then
 !       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
 !       write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
 !       write(*,*) "On node 0: "

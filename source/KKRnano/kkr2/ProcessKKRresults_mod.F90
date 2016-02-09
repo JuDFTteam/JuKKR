@@ -19,12 +19,12 @@ module ProcessKKRresults_mod
   !------------------------------------------------------------------------------
   !> Returns 1 when target rms error has been reached,
   !> master rank adds 2 if STOP-file present.
-  integer function processKKRresults(iter, calc, my_mpi, emesh, dims, params, arrays, program_timer)
+  integer function processKKRresults(iter, calc, mp, emesh, dims, params, arrays, program_timer)
 
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
 
-    use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMySECommunicator
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData
     use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
@@ -43,7 +43,7 @@ module ProcessKKRresults_mod
 
     integer, intent(in)                                 :: iter
     type(CalculationData), intent(inout)                :: calc
-    type(KKRnanoParallel), intent(in)                   :: my_mpi
+    type(KKRnanoParallel), intent(in)                   :: mp
     type(EnergyMesh), intent(inout)                     :: emesh
     type(Main2Arrays), intent(in)                       :: arrays
     type(DimParams), intent(in)                         :: dims
@@ -68,14 +68,14 @@ module ProcessKKRresults_mod
     !  |
     !  v
 
-    call calculateDensities(iter, calc, my_mpi, dims, params, program_timer, arrays, emesh)
+    call calculateDensities(iter, calc, mp, dims, params, program_timer, arrays, emesh)
 
     ! |
     ! v
     ! modified: densities, emesh, energies (ESPV only)
     ! |
     ! v
-    call calculatePotentials(iter, calc, my_mpi, dims, params, program_timer, arrays)
+    call calculatePotentials(iter, calc, mp, dims, params, program_timer, arrays)
     ! |
     ! v
     ! modified: atomdata, energies
@@ -87,7 +87,7 @@ module ProcessKKRresults_mod
 
     ! ATTENTION: the spherical part of the potential is divided by sqrt(4*pi) here
     ! this is definitely not the optimal place to do this
-    processKKRresults = mix_potential(calc, iter, params, dims, my_mpi)
+    processKKRresults = mix_potential(calc, iter, params, dims, mp)
 
     ! |
     ! v
@@ -122,15 +122,15 @@ module ProcessKKRresults_mod
 
     call closeBasisAtomPotentialDAFile(37)
 
-    call OUTTIME(isMasterRank(my_mpi), 'potential written .. ', getElapsedTime(program_timer), iter)
+    call OUTTIME(mp%isMasterRank, 'potential written .. ', getElapsedTime(program_timer), iter)
 
   ! Wait here in order to guarantee regular and non-errorneous output
   ! in RESULTS
-    call OUTTIME(isMasterRank(my_mpi), 'barrier begin.. ', getElapsedTime(program_timer), iter)
+    call OUTTIME(mp%isMasterRank, 'barrier begin.. ', getElapsedTime(program_timer), iter)
 
-    call MPI_BARRIER(getMySEcommunicator(my_mpi),IERR)
+    call MPI_BARRIER(mp%mySEComm,IERR)
 
-    call OUTTIME(isMasterRank(my_mpi), 'barrier end... ', getElapsedTime(program_timer), iter)
+    call OUTTIME(mp%isMasterRank, 'barrier end... ', getElapsedTime(program_timer), iter)
 
     ! output of local density of states (task-local files)
     if (params%NPOL == 0) then
@@ -148,7 +148,7 @@ module ProcessKKRresults_mod
   ! -----------------------------------------------------------------
   ! BEGIN: only MASTERRANK is working here
   ! -----------------------------------------------------------------
-    if (isMasterRank(my_mpi)) then
+    if (mp%isMasterRank) then
 
       ! DOS was written to file 'results1' and read out here just
       ! to be written in routine wrldos (new: file complex.dos only)
@@ -166,7 +166,7 @@ module ProcessKKRresults_mod
       arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
       dims%iemxd)
 
-      call OUTTIME(isMasterRank(my_mpi),'results......', getElapsedTime(program_timer), iter)
+      call OUTTIME(mp%isMasterRank,'results......', getElapsedTime(program_timer), iter)
 
       ! manual exit possible by creation of file 'STOP' in home directory
       processKKRresults = processKKRresults + 2*stopfile_flag()
@@ -191,9 +191,9 @@ module ProcessKKRresults_mod
   !> imix = 4     Broyden's 2nd method
   !> imix = 5     generalised Anderson
   !> imix = 6     Broyden's 2nd method with support for num_local_atoms > 1
-  integer function mix_potential(calc, iter, params, dims, my_mpi)
+  integer function mix_potential(calc, iter, params, dims, mp)
 
-    use KKRnanoParallel_mod, only: KKRnanoParallel, getMyAtomRank, getMySEcommunicator, isMasterRank
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -206,7 +206,7 @@ module ProcessKKRresults_mod
 
     integer, intent(in)                   :: iter
     type(CalculationData), intent(inout)  :: calc
-    type(KKRnanoParallel), intent(in)     :: my_mpi
+    type(KKRnanoParallel), intent(in)     :: mp
     type(DimParams), intent(in)           :: dims
     type(InputParams), intent(in)         :: params
 
@@ -239,12 +239,12 @@ module ProcessKKRresults_mod
     !$omp endparallel do
 
     ! summation and output of RMS error
-    call RMSOUT_com(RMSAVQ, RMSAVM, ITER, dims%NSPIND, dims%NAEZ, getMyAtomRank(my_mpi), getMySEcommunicator(my_mpi))
+    call RMSOUT_com(RMSAVQ, RMSAVM, ITER, dims%NSPIND, dims%NAEZ, mp%myAtomRank, mp%mySEComm)
 
     ! check if target rms error has been reached and set abort flag
     if (rmsavq <= params%target_rms) then
       mix_potential = 1
-      if (isMasterRank(my_mpi)) write(*,*) "TARGET RMS ERROR REACHED..."
+      if (mp%isMasterRank) write(*,*) "TARGET RMS ERROR REACHED..."
     endif
 
     ! straight mixing is called in any case before
@@ -266,8 +266,8 @@ module ProcessKKRresults_mod
       mesh%IRC,mesh%IRMIN,atomdata%potential%NSPIN, &
       broyden%IMIX,ITER, &
       broyden%UI2,broyden%VI2,broyden%WIT,broyden%SM1S,broyden%FM1S, &
-      getMyAtomRank(my_mpi), &
-      getMySEcommunicator(my_mpi), &
+      mp%myAtomRank, &
+      mp%mySEComm, &
       broyden%itdbryd, mesh%irmd, atomdata%potential%irnsd, &
       atomdata%potential%nspin)
 #undef broyden
@@ -275,7 +275,7 @@ module ProcessKKRresults_mod
     ! this method supports num_local_atoms > 1
     else if (params%imix == 6) then
       ! use Broyden mixing that supports num_local_atoms > 1
-      call mix_broyden2_com(calc, iter, getMySEcommunicator(my_mpi))
+      call mix_broyden2_com(calc, iter, mp%mySEComm)
     endif
 
   endfunction ! mix_potential
@@ -333,12 +333,12 @@ module ProcessKKRresults_mod
   !>
   !> output: emesh (Fermi-energy updated, renormalized weights), densities, ldau_data?
   !> files written: 'results1'
-  subroutine calculateDensities(iter, calc, my_mpi, dims, params, program_timer, arrays, emesh)
+  subroutine calculateDensities(iter, calc, mp, dims, params, program_timer, arrays, emesh)
 
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
 
-    use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMySECommunicator
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getDensities, getAtomData
     use CalculationData_mod, only: getLDAUData, getKKR, getEnergies, getAtomIndexOfLocal
@@ -361,7 +361,7 @@ module ProcessKKRresults_mod
 
     integer, intent(in)                       :: iter
     type(CalculationData), intent(inout)      :: calc
-    type(KKRnanoParallel), intent(in)         :: my_mpi
+    type(KKRnanoParallel), intent(in)         :: mp
     type(EnergyMesh), intent(inout)           :: emesh
     type(Main2Arrays), intent(in)             :: arrays
     type(DimParams), intent(in)               :: dims
@@ -405,12 +405,12 @@ module ProcessKKRresults_mod
     CHRGSEMICORE = 0.d0 !< Initialize semicore charge to zero
 
     if (dims%LLY /= 0 .and. num_local_atoms > 1) then
-      if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
+      if (mp%isMasterRank) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
       STOP
     endif
 
     ! out: emesh, RNORM
-    call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
+    call lloyd0_wrapper_com(atomdata, mp%mySEComm, kkr%LLY_GRDT, &
                             emesh, densities%RNORM, &
                             dims%LLY, params%ICST, params%NSRA, &
                             kkr%GMATN, calc%gaunts, ldau_data, params%Volterra)
@@ -418,7 +418,7 @@ module ProcessKKRresults_mod
     if (dims%LLY == 1) then
       TESTARRAYLOG(3, emesh%WEZRN)
       TESTARRAYLOG(3, densities%RNORM)
-      call OUTTIME(isMasterRank(my_mpi), 'Lloyd processed......', getElapsedTime(program_timer), ITER)
+      call OUTTIME(mp%isMasterRank, 'Lloyd processed......', getElapsedTime(program_timer), ITER)
     endif
 
     ! now WEZRN stores the weights for E-integration
@@ -507,7 +507,7 @@ module ProcessKKRresults_mod
     !$omp endparallel do
   !------------------------------------------------------------------------------
 
-    call sumNeutralityDOSFermi_com(CHRGNT, DENEF, getMySEcommunicator(my_mpi))
+    call sumNeutralityDOSFermi_com(CHRGNT, DENEF, mp%mySEComm)
 
     ! write to 'results1' - only to be read in in results.f
     ! necessary for density of states calculation, otherwise
@@ -528,7 +528,7 @@ module ProcessKKRresults_mod
       close(r1fu)
     endif
 
-    call OUTTIME(isMasterRank(my_mpi), 'density calculated ..', getElapsedTime(program_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'density calculated ..', getElapsedTime(program_timer), ITER)
 
   !------------------------------------------------------------------------------
     ! OMP had problems here, should be corrected now but not tested - therefore commented out
@@ -543,7 +543,7 @@ module ProcessKKRresults_mod
 
   !=============== DEBUG: Morgan charge distribution test =======================
       if (params%DEBUG_morgan_electrostatics == 1) then
-        if (isMasterRank(my_mpi)) call print_morgan_message()
+        if (mp%isMasterRank) call print_morgan_message()
         allocate(prefactors(size(arrays%rbasis,2)))
         call read_morgan_prefactors(prefactors)
         call overwrite_densities_gen_morgan(densities%RHO2NS, mesh%R, 2*dims%LMAXD, &
@@ -558,7 +558,7 @@ module ProcessKKRresults_mod
       new_fermi = emesh%E2
 
       ! allow only a maximal Fermi Energy shift of 0.03 Ry
-      call doFermiEnergyCorrection(atomdata, isMasterRank(my_mpi) .and. (ila == 1), & ! show only once
+      call doFermiEnergyCorrection(atomdata, mp%isMasterRank .and. (ila == 1), & ! show only once
                                   arrays%naez, 0.03d0, CHRGNT, DENEF, densities%R2NEF, &
                                   energies%ESPV, densities%RHO2NS, new_fermi)
 
@@ -577,17 +577,17 @@ module ProcessKKRresults_mod
 
     if (any(params%npntsemi > 0)) then
       ! --> Sum up semicore charges from different MPI ranks
-      call sumChargeSemi_com(CHRGSEMICORE, getMySEcommunicator(my_mpi))
+      call sumChargeSemi_com(CHRGSEMICORE, mp%mySEComm)
       ! --> Recalculate the semicore contour factor FSEMICORE
-      if (isMasterRank(my_mpi)) then
-        call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, getMySEcommunicator(my_mpi))
+      if (mp%isMasterRank) then
+        call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, mp%mySEComm)
       endif
     endif
 
     emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
                           ! was calculated !!!
 
-    call OUTTIME(isMasterRank(my_mpi), 'RHOMOM ......', getElapsedTime(program_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'RHOMOM ......', getElapsedTime(program_timer), ITER)
 
 #ifndef NOLOGGING
     ! log some results
@@ -610,13 +610,13 @@ module ProcessKKRresults_mod
   !>
   !> Output: atomdata, ldau_data
   !> Files written: 'results2'
-  subroutine calculatePotentials(iter, calc, my_mpi, dims, params, program_timer, arrays)
+  subroutine calculatePotentials(iter, calc, mp, dims, params, program_timer, arrays)
 
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
 
     use CalculationData_mod, only: CalculationData
-    use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank, getMyAtomRank, getMySECommunicator, getNumAtomRanks
+    use KKRnanoParallel_mod, only: KKRnanoParallel
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -638,7 +638,7 @@ module ProcessKKRresults_mod
     
     integer, intent(in)                        :: iter
     type(CalculationData), intent(inout)      :: calc
-    type(KKRnanoParallel), intent(in)         :: my_mpi
+    type(KKRnanoParallel), intent(in)         :: mp
     type(Main2Arrays), intent(in)             :: arrays
     type(DimParams), intent(in)               :: dims
     type(InputParams), intent(in)             :: params
@@ -698,26 +698,24 @@ module ProcessKKRresults_mod
     !!!$omp endparallel do
   !------------------------------------------------------------------------------
 
-    call OUTTIME(isMasterRank(my_mpi), 'VINTRAS ......', getElapsedTime(program_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'VINTRAS ......', getElapsedTime(program_timer), ITER)
 
     ! perform near field correction for ALL local atoms
     if (params%near_field > 0) then
-      call add_near_field_corr(calc, arrays, params%alat, my_mpi)
-      call OUTTIME(isMasterRank(my_mpi),'near field....', getElapsedTime(program_timer),ITER)
+      call add_near_field_corr(calc, arrays, params%alat, mp%mySEComm)
+      call OUTTIME(mp%isMasterRank,'near field....', getElapsedTime(program_timer),ITER)
     endif
 
 #ifndef DEBUG_NO_ELECTROSTATICS
     ! output: VONS (changed), VMAD
     ! operation on all atoms! O(N**2)
-    call addMadelungPotentialnew_com(calc, arrays%ZAT, getMyAtomRank(my_mpi), &
-                                  dims%naez/getNumAtomRanks(my_mpi), &
-                                  getMySEcommunicator(my_mpi))
+    call addMadelungPotentialnew_com(calc, arrays%ZAT, mp%myAtomRank, dims%naez/mp%numAtomRanks, mp%mySEComm)
 
-    call OUTTIME(isMasterRank(my_mpi), 'VMADELBLK ......', getElapsedTime(program_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'VMADELBLK ......', getElapsedTime(program_timer), ITER)
 #endif
 
   !=============== DEBUG: Morgan charge distribution test =======================
-      if (params%DEBUG_morgan_electrostatics > 0 .and. isMasterRank(my_mpi)) then
+      if (params%DEBUG_morgan_electrostatics > 0 .and. mp%isMasterRank) then
         atomdata  => getAtomData(calc, 1)
         mesh => atomdata%mesh_ptr
         atom_id = getAtomIndexOfLocal(calc, 1)
@@ -815,11 +813,11 @@ module ProcessKKRresults_mod
 
     if (params%KTE >= 0) close(r2fu)
 
-    call OUTTIME(isMasterRank(my_mpi), 'before CONVOL.....', getElapsedTime(program_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'before CONVOL.....', getElapsedTime(program_timer), ITER)
 
-    call allreduceMuffinTinShift_com(getMySEcommunicator(my_mpi), VAV0, VBC_new, VOL0)
+    call allreduceMuffinTinShift_com(mp%mySEComm, VAV0, VBC_new, VOL0)
 
-    if (isMasterRank(my_mpi)) call printMuffinTinShift(VAV0, VBC_new, VOL0)
+    if (mp%isMasterRank) call printMuffinTinShift(VAV0, VBC_new, VOL0)
 
     !------------------------------------------------------------------------------
     !$omp parallel do private(ila, atomdata, energies, densities) reduction(+:new_total_energy)
@@ -855,11 +853,11 @@ module ProcessKKRresults_mod
     !$omp endparallel do
     !------------------------------------------------------------------------------
 
-    call OUTTIME(isMasterRank(my_mpi), 'calculated pot ......', getElapsedTime(program_timer), ITER)
+    call OUTTIME(mp%isMasterRank, 'calculated pot ......', getElapsedTime(program_timer), ITER)
 
-    call sum_total_energy_com(new_total_energy_all, new_total_energy, 0, getMySECommunicator(my_mpi))
+    call sum_total_energy_com(new_total_energy_all, new_total_energy, 0, mp%mySEComm)
 
-    if (isMasterRank(my_mpi)) call printTotalEnergies(new_total_energy_all)
+    if (mp%isMasterRank) call printTotalEnergies(new_total_energy_all)
 
     deallocate(vons_temp, stat=ist)
 
