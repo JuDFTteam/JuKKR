@@ -24,17 +24,17 @@ module fillKKRMatrix_mod
 
   !------------------------------------------------------------------------------
   !> Setup of the sparsity pattern of the KKR-Matrix.
-  subroutine getKKRMatrixStructure(lmmaxd_array, numn0, indn0, sparse)
+  subroutine getKKRMatrixStructure(lmax_array, numn0, indn0, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
-    integer(kind=2), intent(in) :: lmmaxd_array(:) !< block size of each row, dim(nrows)
+    integer(kind=1), intent(in) :: lmax_array(:) !< block size of each row, dim(nrows)
     integer, intent(in) :: numn0(:) !< dim(nrows)
     integer, intent(in) :: indn0(:,:) !< dim(nrows,maxval(numn0))
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    integer :: nnzb, nrows, ij, irow, icol, start_address
+    integer :: nnzb, nrows, ij, irow, icol, start_address, lm_max
 
-    nrows = size(lmmaxd_array)
+    nrows = size(lmax_array)
 
     ASSERT(size(numn0) == nrows)
     ASSERT(size(indn0, 1) == nrows)
@@ -53,7 +53,8 @@ module fillKKRMatrix_mod
 
     sparse%kvstr(1) = 1
     do ij = 1, nrows
-      sparse%kvstr(ij+1) = sparse%kvstr(ij) + lmmaxd_array(ij)
+      lm_max = (lmax_array(ij) + 1)**2
+      sparse%kvstr(ij+1) = sparse%kvstr(ij) + lm_max
     enddo ! ij
 
     ij = 1
@@ -73,18 +74,19 @@ module fillKKRMatrix_mod
     start_address = 1
     ij = 1
     do irow = 1, nrows
+      lm_max = (lmax_array(irow) + 1)**2
       do icol = 1, numn0(irow)
         sparse%ka(ij) = start_address
 
         ASSERT( 1 <= indn0(irow,icol) .and. indn0(irow,icol) <= nrows )
 
-        start_address = start_address + lmmaxd_array(irow)*lmmaxd_array(indn0(irow,icol))
+        start_address = start_address + lm_max*(lmax_array(indn0(irow,icol)) + 1)**2
         ij = ij + 1
       enddo ! icol
     enddo ! irow
     sparse%ka(ij) = start_address
 
-    sparse%max_blockdim = maxval(lmmaxd_array)
+    sparse%max_blockdim = (maxval(lmax_array) + 1)**2
     sparse%max_blocks_per_row = maxval(numn0)
 
   endsubroutine ! getKKRMatrixStructure

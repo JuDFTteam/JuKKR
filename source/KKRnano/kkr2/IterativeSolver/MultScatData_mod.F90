@@ -31,7 +31,7 @@ module MultScatData_mod
   !------------------------------------------------------------------------------
   !> Create workspace for multiple scattering calculation.
   subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
-    use TEST_lcutoff_mod, only: lm_array
+    use TEST_lcutoff_mod, only: lmax_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure
     use SparseMatrixDescription_mod, only: create, getNNZ, getNrows
 
@@ -54,7 +54,7 @@ module MultScatData_mod
 
     call create(ms%sparse, naez, sum_cluster)
 
-    call getKKRMatrixStructure(lm_array, cluster_info%numn0_trc, cluster_info%indn0_trc, ms%sparse)
+    call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, ms%sparse)
 
     nRows = getNrows(ms%sparse, naez)
     nCols = lmmaxd*size(atom_indices)

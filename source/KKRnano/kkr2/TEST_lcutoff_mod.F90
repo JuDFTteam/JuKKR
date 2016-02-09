@@ -12,11 +12,7 @@ module TEST_lcutoff_mod
 
   ! union of the truncation zones over all local atoms
   integer(kind=1), allocatable, protected, public :: lmax_array(:) ! ell_max
-  integer(kind=2), allocatable, protected, public :: lm_array(:)   ! (ell_max + 1)^2
-
-  ! for each local atom, the truncation zone is different
-  integer(kind=1), allocatable, protected, public :: lmax_a_array(:,:) ! ell_max
-  integer(kind=2), allocatable, protected, public :: lm_a_array(:,:)   ! (ell_max + 1)^2
+  integer(kind=1), allocatable, protected, public :: lmax_a_array(:,:) ! ell_max for each atom-atom pair
   
   logical, protected, public :: DEBUG_dump_matrix = .false.
   integer, protected, public :: num_truncated(-1:8)
@@ -73,14 +69,13 @@ module TEST_lcutoff_mod
     lmax_full = -1 ! init as truncated
 
     do ila = 1, num_local_atoms
-      atomindex = atom_ids(ila) ! global atom index
+      atomindex = atom_ids(ila) ! atom index into rbasis
 
       if (nradii > 0) then
         lmax_atom(:,ila) = -1 ! init as truncated
 
         ! compute truncation zones
-        call calcCutoffarray(lmax_atom(:,ila), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, &
-                             nradii, l_lim, r2lim)
+        call calcCutoffarray(lmax_atom(:,ila), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, nradii, l_lim, r2lim)
         lmax_atom(:,ila) = min(lmax_atom(:,ila), lmax)
         lmax_atom(atomindex,ila) = lmax ! diagonal element is full always
       else
@@ -103,22 +98,20 @@ module TEST_lcutoff_mod
     do l = -1, lmax
       num_truncated(l) = count(lmax_full == l)
     enddo ! l
-    
+
     if (num_local_atoms > 1 .and. num_truncated(lmax) /= naez) &
       warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
-    
+
     ! TODO: a bit confusing, is never deallocated
     call createTruncationZone(trunc_zone, mask=lmax_full, masks=lmax_atom)
 
-    allocate(lm_array(trunc_zone%naez_trc), lmax_array(trunc_zone%naez_trc)) ! lm_array is never deallocated - who cares
+    allocate(lmax_array(trunc_zone%naez_trc)) ! lmax_array is never deallocated - who cares
     lmax_array(:) = lmax_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only
-    lm_array(:) = (lmax_array(:) + 1)**2
 
     ! also store the information for each local atom in module vars
-    allocate(lm_a_array(trunc_zone%naez_trc,num_local_atoms), lmax_a_array(trunc_zone%naez_trc,num_local_atoms)) ! todo: deallocate somewhen
+    allocate(lmax_a_array(trunc_zone%naez_trc,num_local_atoms)) ! todo: deallocate somewhen
     do ila = 1, num_local_atoms
       lmax_a_array(:,ila) = lmax_atom(trunc_zone%trunc2atom_index(:),ila) ! compression to cluster atoms only
-      lm_a_array(:,ila) = (lmax_a_array(:,ila) + 1)**2
     enddo ! ila
 
     deallocate(lmax_atom, lmax_full, stat=ist)
@@ -189,144 +182,3 @@ module TEST_lcutoff_mod
   endfunction ! distance squared
 
 endmodule ! TEST_lcutoff_mod
-
-
-
-
-  
-#if 0
-!!!! never used !!
-
-!! never used 
-  subroutine getLMarray(lm_array, rbasis, center, bravais, dist_cut, lm_high, lm_low)
-    integer, intent(out) :: lm_array(:)
-    double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
-    double precision, intent(in) :: center(3)
-    double precision, intent(in) :: bravais(3,3)
-    double precision, intent(in) :: dist_cut
-    integer, intent(in):: lm_high, lm_low
-
-    integer :: ii
-    double precision :: dist2
-
-    do ii = 1, size(rbasis, 2)
-      dist2 = distance2_pbc(rbasis(1:3,ii), center, bravais)
-      if (dist2 > dist_cut*dist_cut) then
-        lm_array(ii) = lm_low
-      else
-        lm_array(ii) = lm_high
-      endif
-    enddo ! ii
-
-  endsubroutine ! get
-
-  !----------------------------------------------------------------------------
-  !> Set all entries in gllh to zero which are out of range due to truncation
-  subroutine cropGLLH(gllh, lmmaxd, naclsd, naezd, lm_array, numn0, indn0)
-    double complex, intent(inout) :: gllh(lmmaxd,lmmaxd*naclsd,naezd)
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: naclsd
-    integer, intent(in) :: naezd
-    integer, intent(in) :: lm_array(naezd)
-    integer, intent(in) :: numn0(naezd)
-    integer, intent(in) :: indn0(naezd,naclsd)
-
-    integer ii, jj, lmmax1, lmmax2, lm1, lm2, clustersitelm
-    double complex, parameter :: ZERO = (0.d0, 0.d0)
-
-    do ii = 1, naezd
-      do jj = 1, numn0(ii)
-
-        lmmax1 = lm_array(ii)
-        lmmax2 = lm_array(indn0(ii,jj))
-
-        do lm2 = 1, lmmaxd
-          do lm1 = 1, lmmaxd
-
-            clustersitelm = lm2 + lmmaxd*(jj-1)
-
-            if (lm1 > lmmax1 .or. lm2 > lmmax2)  gllh(lm1,clustersitelm,ii) = ZERO
-
-          enddo ! lm1
-        enddo ! lm2
-        
-      enddo ! jj
-    enddo ! ii
-    
-  endsubroutine ! crop
-
-
-  !------------------------------------------------------------------------------
-  !> Generates matrix (\Delta T G_ref - 1) BUT PERFORMS L-CUTOFF BY TRUNCATING
-  !> T-MATRIX
-  !> on input: gllh contains G_ref, on output: gllh contains coefficient matrix
-  subroutine generateCoeffMatrixCROPPED(gllh, numn0, indn0, tmatll, naez, lmmaxd, naclsd, lm_array)
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: naclsd
-    integer, intent(in) :: naez
-    double complex, intent(inout) :: gllh(lmmaxd,lmmaxd*naclsd,naez)
-    integer, intent(in) :: indn0(naez,naclsd)
-    integer, intent(in) :: numn0(naez)
-    double complex, intent(in) :: tmatll(lmmaxd,lmmaxd,naez)
-    integer, intent(in) :: lm_array(:)
-
-    double complex, parameter :: CONE = (1.d0,0.d0), ZERO = (0.d0,0.d0)
-    double complex :: tgh(lmmaxd) ! temporary
-    integer :: il1b, il2b
-    integer :: lm1, lm2, lm3
-    integer :: lmmax1, lmmax2, lmmax3
-    integer :: site_index
-    integer :: site_lm_index
-    integer :: cluster_site_index
-    integer :: cluster_site_lm_index
-
-    ! -------------- Calculation of (Delta_t * G_ref - 1) ---------------
-    !
-    ! NUMN0(site_index) is the number of atoms in the reference cluster
-    ! of atom/site 'site_index' (inequivalent atoms only!)
-    ! INDN0 stores the index of the atom in the basis corresponding to
-    ! the reference cluster atom (inequivalent atoms only!)
-    ! -------------------------------------------------------------------
-
-    !$omp parallel do private(site_index, site_lm_index, cluster_site_index, cluster_site_lm_index, il1b, il2b, lm1, lm2, lm3, tgh)
-    do site_index = 1, naez
-      il1b = lmmaxd*(site_index-1) ! offset
-      do cluster_site_index = 1, numn0(site_index)
-
-        lmmax2 = lm_array(indn0(site_index,cluster_site_index))
-        lmmax1 = lm_array(site_index)
-        lmmax3 = lmmax1
-        il2b = lmmaxd*(indn0(site_index,cluster_site_index)-1) ! offset
-
-        do lm2 = 1, lmmaxd
-          cluster_site_lm_index = lm2 + lmmaxd*(cluster_site_index-1)
-
-          tgh(:) = ZERO
-          do lm3 = 1, lmmax3
-            do lm1 = 1, lmmax1
-              tgh(lm1) = tgh(lm1) + tmatll(lm1,lm3,site_index)*gllh(lm3,cluster_site_lm_index,site_index)
-            enddo ! lm1
-          enddo ! lm3
-
-          do lm1 = 1, lmmaxd
-            site_lm_index = il1b + lm1
-            gllh(lm1,cluster_site_lm_index,site_index) = tgh(lm1)
-
-            if (site_lm_index == il2b + lm2) then
-              ! substract 1 only at the 'diagonal'
-              gllh(lm1,cluster_site_lm_index,site_index) = gllh(lm1,cluster_site_lm_index,site_index) - CONE
-            endif
-
-            if (lm1 > lmmax1 .or. lm2 > lmmax2) gllh(lm1,cluster_site_lm_index,site_index) = ZERO
-
-          enddo ! lm1
-        enddo ! lm2
-
-      enddo ! cluster_site_index
-    enddo ! site_index
-    !$omp endparallel do
-  endsubroutine ! generateCoeffMatrixCROPPED
-
-#endif  
-  
-

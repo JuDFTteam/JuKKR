@@ -86,20 +86,20 @@ implicit none
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer, allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh
-    integer :: I1, ilocal, num_local_atoms
+    integer :: i1, ilocal, num_local_atoms
     integer :: lmmaxd
     logical :: xccpl
 
     double complex, allocatable :: Tref_local(:,:,:)  !< local tref-matrices
     double complex, allocatable :: dTref_local(:,:,:) !< local deriv. tref-matrices
-    double complex, allocatable :: tmatll(:,:,:) !< all t-matrices
+    double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
     double complex, allocatable :: GrefN_buffer(:,:,:,:) !< GrefN for all local atoms
 
     lmmaxd = (dims%lmaxd+1)**2
 
     atomdata  => getAtomData(calc, 1)
-    I1 = atomdata%atom_index
+    i1 = atomdata%atom_index
     kkr       => null()
     ldau_data => getLDAUData(calc, 1)
 #define clusters calc%clusters
@@ -111,7 +111,7 @@ implicit none
     num_local_atoms = getNumLocalAtoms(calc)
 
     
-    allocate(tmatll(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for t-matrices
+    allocate(tmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for t-matrices
     allocate(Tref_local(lmmaxd,lmmaxd,num_local_atoms)) ! allocate buffers for reference t-matrices
     allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
@@ -136,7 +136,7 @@ implicit none
     if (XCCPL) then
       jij_data%do_jij_calculation = .true. ! Trigger jij-calculation
 
-      call CLSJIJ(I1, dims%NAEZ, lattice_vectors%RR, lattice_vectors%nrd, arrays%RBASIS, &
+      call CLSJIJ(i1, dims%NAEZ, lattice_vectors%RR, lattice_vectors%nrd, arrays%RBASIS, &
                   jij_data%RCUTJIJ, arrays%NSYMAT, arrays%ISYMINDEX, &
                   jij_data%IXCP, jij_data%NXCP, jij_data%NXIJ, jij_data%RXIJ, &
                   jij_data%RXCCLS, jij_data%ZKRXIJ, &
@@ -225,15 +225,14 @@ implicit none
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
   !------------------------------------------------------------------------------
-            !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, I1)
+            !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, i1)
             do ilocal = 1, num_local_atoms
               kkr => getKKR(calc, ilocal)
               atomdata => getAtomData(calc, ilocal)
               ldau_data => getLDAUData(calc, ilocal)
-              I1 = getAtomIndexOfLocal(calc, ilocal)
+              i1 = getAtomIndexOfLocal(calc, ilocal)
 
-              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, &
-                              params%NSRA, calc%gaunts, kkr%TmatN, kkr%TR_ALPH, ldau_data, params%Volterra)
+              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%TR_ALPH, ldau_data, params%Volterra)
 
               jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
@@ -264,9 +263,9 @@ implicit none
   ! <<>> Multiple scattering part
 
             ! gather t-matrices from own truncation zone
-            call gatherTmatrices_com(calc, tmatll, ispin, getMySEcommunicator(my_mpi))
+            call gatherTmatrices_com(calc, tmatLL, ispin, getMySEcommunicator(my_mpi))
 
-            TESTARRAYLOG(3, tmatll)
+            TESTARRAYLOG(3, tmatLL)
 
             call iguess_set_energy_ind(calc%iguess_data, ie)
             call iguess_set_spin_ind(calc%iguess_data, PRSPIN)
@@ -283,9 +282,9 @@ implicit none
             call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
                     arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), &
                     arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
-                    lattice_vectors%RR, &
+                    lattice_vectors%RR, & ! periodic images
                     GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
-                    tmatll, arrays%lmmaxd, &
+                    tmatLL, arrays%lmmaxd, &
                     trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), &
                     calc%iguess_data)
   !------------------------------------------------------------------------------
@@ -367,7 +366,7 @@ implicit none
       call jijReduceIntResults_com(my_mpi, jij_data%JXCIJINT)
 
       if (isInMasterGroup(my_mpi)) &
-        call writeJiJs(I1, jij_data%RXIJ, jij_data%NXIJ, jij_data%IXCP, jij_data%RXCCLS, jij_data%JXCIJINT, jij_data%nxijd)
+        call writeJiJs(i1, jij_data%RXIJ, jij_data%NXIJ, jij_data%IXCP, jij_data%RXCCLS, jij_data%JXCIJINT, jij_data%nxijd)
     endif
 
   !=======================================================================
@@ -562,13 +561,13 @@ implicit none
   !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
   !>
   !> Uses MPI-RMA
-  subroutine gatherTmatrices_com(calc, tmatll, ispin, communicator)
+  subroutine gatherTmatrices_com(calc, tmatLL, ispin, communicator)
     use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getKKR
     use KKRresults_mod, only: KKRresults
     use one_sided_commZ_mod, only: copyFromZ_com
 
     type(CalculationData), intent(in) :: calc
-    double complex, intent(inout) :: tmatll(:,:,:)
+    double complex, intent(inout) :: tmatLL(:,:,:)
     integer, intent(in) :: ispin
     integer, intent(in) :: communicator
 
@@ -578,7 +577,7 @@ implicit none
     double complex, allocatable :: tsst_local(:,:,:)
 
     num_local_atoms = getNumLocalAtoms(calc)
-    lmmaxd = size(tmatll, 1)
+    lmmaxd = size(tmatLL, 1)
 
     allocate(tsst_local(lmmaxd,lmmaxd,num_local_atoms))
 
@@ -589,7 +588,7 @@ implicit none
       tsst_local(:,:,ilocal) = kkr%TmatN(:,:,ispin)
     enddo ! ilocal
 
-    call copyFromZ_com(tmatll, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
+    call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 
     deallocate(tsst_local)
   endsubroutine ! gather
