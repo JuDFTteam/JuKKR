@@ -169,6 +169,9 @@ implicit none
 
         WRITELOG(2, *) "Working on energy point ", IE
 
+        ! if we had rMTref given for all atoms inside the reference cluster radius
+        !   we could compute the Tref on the fly
+        
          Tref_local = ZERO
         dTref_local = ZERO
   !------------------------------------------------------------------------------
@@ -177,7 +180,7 @@ implicit none
           atomdata => getAtomData(calc, ilocal)
 
           call TREF(emesh%EZ(IE), params%vref, dims%LMAXD, atomdata%rMTref, &
-                    Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), derive=(dims%LLY > 0))
+                    Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), derive=(dims%Lly > 0))
 
         enddo  ! ilocal
         !$omp endparallel do
@@ -187,7 +190,7 @@ implicit none
         ! Note: TrefLL is diagonal - however full matrix is stored
         ! Note: Gref is calculated in real space - usually only a few shells
 
-        ! Exchange the reference t-matrices within reference clusters
+        ! Exchange the reference t-matrices within the reference clusters
         ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
         do ilocal = 1, num_local_atoms
           kkr => getKKR(calc, ilocal)
@@ -205,9 +208,9 @@ implicit none
                     calc%gaunts%CLEB, calc%ref_cluster_a(ilocal)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ilocal)%NACLS, &
                     kkr%TrefLL, kkr%dTrefLL, GrefN_buffer(:,:,:,ilocal), &
-                    kkr%dGrefN, kkr%LLY_G0TR(IE), &
+                    kkr%dGrefN, kkr%Lly_G0Tr(IE), &
                     dims%lmaxd, kkr%naclsd, calc%gaunts%ncleb, &
-                    dims%LLY)
+                    dims%Lly)
 
         enddo  ! ilocal
         !$omp endparallel do
@@ -232,12 +235,12 @@ implicit none
               ldau_data => getLDAUData(calc, ilocal)
               i1 = getAtomIndexOfLocal(calc, ilocal)
 
-              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%TR_ALPH, ldau_data, params%Volterra)
+              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%Tr_alph, ldau_data, params%Volterra)
 
               jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
 
-              if (dims%LLY == 1) &  ! calculate derivative of t-matrix for Lloyd's formula
-              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%dTdE, kkr%TR_ALPH, ldau_data, params%Volterra)
+              if (dims%Lly == 1) &  ! calculate derivative of t-matrix for Lloyd's formula
+              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%dTdE, kkr%Tr_alph, ldau_data, params%Volterra)
 
               ! t_ref-matrix of central cluster atom has index 1
               call substractReferenceTmatrix(kkr%TmatN(:,:,ISPIN), kkr%TrefLL(:,:,1), kkr%lmmaxd)
@@ -248,8 +251,8 @@ implicit none
               ! TmatN now contains Delta t = t - t_ref !!!
               ! dTdE now contains Delta dt !!!
 
-              ! renormalize TR_ALPH
-              kkr%TR_ALPH(ISPIN) = kkr%TR_ALPH(ISPIN) - kkr%LLY_G0TR(IE)
+              ! renormalize Tr_alph
+              kkr%Tr_alph(ISPIN) = kkr%Tr_alph(ISPIN) - kkr%Lly_G0Tr(IE)
 
               call rescaleTmatrix(kkr%TmatN(:,:,ISPIN), kkr%lmmaxd, params%alat)
 

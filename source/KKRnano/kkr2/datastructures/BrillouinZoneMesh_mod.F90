@@ -131,14 +131,14 @@ module BrillouinZoneMesh_mod
   endsubroutine ! load
 
   
-  integer function loadBrillouinZoneMeshes(self, filename, comm) result(ios)
+  subroutine loadBrillouinZoneMeshes(self, filename, comm)
     type(BrillouinZoneMesh), intent(inout) :: self(1:)
     character(len=*), intent(in) :: filename
     integer, intent(in) :: comm
 
     include 'mpif.h'
     integer, parameter :: fu = 654 !< file unit
-    integer :: i, rank, n
+    integer :: i, rank, n, ios
     character(len=16) :: comment
     call MPI_Comm_rank(comm, rank, ios)
     if (rank == 0) open(unit=fu, file=filename, action='read', status='old', iostat=ios)
@@ -152,7 +152,7 @@ module BrillouinZoneMesh_mod
       call load(self(i), fu, comm, rank)
     enddo ! i
     if (rank == 0) close(unit=fu, iostat=ios)
-  endfunction ! load
+  endsubroutine ! load
   
   
   subroutine storeBrillouinZoneMesh(self, fu)
