@@ -4,3 +4,4 @@ rhoq.x
 test_system/*
 *.exe
 *~
+*tmp

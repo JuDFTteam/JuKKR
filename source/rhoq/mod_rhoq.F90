@@ -11,7 +11,7 @@ type type_rhoq
   ! number of scalars in this type, needed for MPI communication
   integer :: Nscalars = 7
   ! number of arrays in this type, needed for MPI communication
-  integer :: Narrays = 11
+  integer :: Narrays = 12
   
   ! impurity cluster
   integer :: Nscoef ! number of impurities in impurity cluster
@@ -23,6 +23,7 @@ type type_rhoq
   integer :: nkpt ! total number of kpoints
   double precision :: volbz ! Brillouin zone volume -> integration weight
   double precision, allocatable :: kpt(:,:) ! (3,nkpt), coordinates of kpoints
+  double precision, allocatable :: volcub(:) ! (nkpt), volume of cube associated with kpoint
   
   ! geometry etc.
   integer :: mu_0 ! layer index of probe position
@@ -112,13 +113,14 @@ subroutine bcast_arrays_rhoq(t_rhoq)
   call MPI_Get_address(t_rhoq%r_scoef,    disp1(2), ierr)
   call MPI_Get_address(t_rhoq%volbz,      disp1(3), ierr)
   call MPI_Get_address(t_rhoq%kpt,        disp1(4), ierr)
-  call MPI_Get_address(t_rhoq%r_basis,    disp1(5), ierr)
-  call MPI_Get_address(t_rhoq%L_i,        disp1(6), ierr)
-  call MPI_Get_address(t_rhoq%Ghost,      disp1(7), ierr)
-  call MPI_Get_address(t_rhoq%Ghost_k,    disp1(8), ierr)
-  call MPI_Get_address(t_rhoq%Dt,         disp1(9), ierr)
-  call MPI_Get_address(t_rhoq%Gimp,      disp1(10), ierr)
-  call MPI_Get_address(t_rhoq%tau,       disp1(11), ierr)
+  call MPI_Get_address(t_rhoq%volcub,     disp1(5), ierr)
+  call MPI_Get_address(t_rhoq%r_basis,    disp1(6), ierr)
+  call MPI_Get_address(t_rhoq%L_i,        disp1(7), ierr)
+  call MPI_Get_address(t_rhoq%Ghost,      disp1(8), ierr)
+  call MPI_Get_address(t_rhoq%Ghost_k,    disp1(9), ierr)
+  call MPI_Get_address(t_rhoq%Dt,        disp1(10), ierr)
+  call MPI_Get_address(t_rhoq%Gimp,      disp1(11), ierr)
+  call MPI_Get_address(t_rhoq%tau,       disp1(12), ierr)
 
   base  = disp1(1)
   disp1 = disp1 - base
@@ -127,16 +129,17 @@ subroutine bcast_arrays_rhoq(t_rhoq)
   blocklen1(2)  = 3*t_rhoq%Nscoef
   blocklen1(3)  = 1
   blocklen1(4)  = 3*t_rhoq%nkpt
-  blocklen1(5)  = 3*t_rhoq%natyp
-  blocklen1(6)  = 3*(t_rhoq%Nscoef+1)
-  blocklen1(7)  = t_rhoq%Nlayer*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(8)  = t_rhoq%Nlayer*t_rhoq%nkpt*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(9)  = t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(10) = t_rhoq%Nscoef*t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
+  blocklen1(4)  = t_rhoq%nkpt
+  blocklen1(6)  = 3*t_rhoq%natyp
+  blocklen1(7)  = 3*(t_rhoq%Nscoef+1)
+  blocklen1(8)  = t_rhoq%Nlayer*t_rhoq%lmmaxso*t_rhoq%lmmaxso
+  blocklen1(9)  = t_rhoq%Nlayer*t_rhoq%nkpt*t_rhoq%lmmaxso*t_rhoq%lmmaxso
+  blocklen1(10) = t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
   blocklen1(11) = t_rhoq%Nscoef*t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
+  blocklen1(12) = t_rhoq%Nscoef*t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
 
   etype1(1)    = MPI_INTEGER
-  etype1(2:6)  = MPI_DOUBLE_PRECISION
+  etype1(2:7)  = MPI_DOUBLE_PRECISION
   etype1(7:11) = MPI_DOUBLE_COMPLEX
 
   call MPI_Type_create_struct(t_rhoq%Narrays, blocklen1, disp1, etype1, myMPItype1, ierr)
@@ -173,6 +176,8 @@ subroutine init_t_rhoq(t_rhoq)
   if(ierr/=0) stop '[init_t_rhoq] error allocating r_scoef in rhoq'
   if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq%kpt(3,t_rhoq%nkpt), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating kpt in rhoq'
+  if(.not.allocated(t_rhoq%volcub)) allocate(t_rhoq%volcub(t_rhoq%nkpt), stat=ierr)
+  if(ierr/=0) stop '[init_t_rhoq] error allocating volcub in rhoq'
   if(.not.allocated(t_rhoq%r_basis)) allocate(t_rhoq%r_basis(3,t_rhoq%natyp), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating r_basis in rhoq'
   if(.not.allocated(t_rhoq%L_i)) allocate(t_rhoq%L_i(3,t_rhoq%Nscoef+1), stat=ierr)
@@ -229,14 +234,17 @@ subroutine read_scoef_rhoq(t_rhoq)
   t_rhoq%r_scoef    = ratomimp
   
   ! find parameter Nlayer
-  Nlayer = 0
-  tmp = 0
-  do iatom=1,natomimp
-    if(tmp/=atomimp(iatom)) then 
-      tmp = atomimp(iatom)
-      Nlayer = Nlayer + 1
-    end if
-  end do
+!   Nlayer = 0
+!   tmp = 0
+!   do iatom=1,natomimp
+!     if(tmp/=atomimp(iatom)) then 
+!       tmp = atomimp(iatom)
+!       Nlayer = Nlayer + 1
+!     end if
+!   end do
+  open(9999, file='mu0', form='formatted')
+  read(9999,*) tmp, Nlayer
+  close(9999)
   
   t_rhoq%Nlayer = Nlayer
   
@@ -293,13 +301,14 @@ end subroutine read_input_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt,volbz)
+subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz)
   ! save kmesh information in t_rhoq
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: nkpt ! total number of kpoints
   double precision, intent(in) :: volbz ! Brillouin zone volume -> integration weight
   double precision, intent(in) :: kpt(3,nkpt) ! coordinates in reciprocal space of the kpoints
+  double precision, intent(in) :: volcub(nkpt) ! volume of kpoint cube
   !local
   integer :: ierr
   
@@ -309,6 +318,9 @@ subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt,volbz)
   if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq%kpt(3,nkpt), stat=ierr)
   if(ierr/=0) stop '[save_kmesh_rhoq] error allocating kpt in rhoq'
   t_rhoq%kpt = kpt
+  if(.not.allocated(t_rhoq%volcub)) allocate(t_rhoq%volcub(nkpt), stat=ierr)
+  if(ierr/=0) stop '[save_kmesh_rhoq] error allocating volcub in rhoq'
+  t_rhoq%volcub = volcub
   
 end subroutine save_kmesh_rhoq
 
@@ -646,55 +658,65 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
   
   ! local
   integer :: imt1, lm1, lm2, lm3, ir, ifun, j, lm01, lm02
-  double complex :: q_of_r(nrmaxd,lmmaxso,lmmaxso)
+  double complex :: q_of_r(nrmaxd,lmmaxso,lmmaxso), tmpR(lmmaxso,lmmaxso), tmpRl(lmmaxso,lmmaxso), RdotRl(lmmaxso,lmmaxso,irmdnew)
+  double complex, parameter :: C0=( 0.0d0, 0.0d0 ), C1=( 1.0d0, 0.0d0 )
+  
+  q_of_r = C0
+  q_mu = C0
   
 
   ! get indices of imt and irmd in new mesh -> boundaries for ir loops
   imt1=ipan_intervall(npan_log+npan_eq)+1
+  
+  ! compute matrix mutiplication of R.R^left, do trace in big/small component here
+  RdotRl = C0
+  do ir=1,irmdnew
+    ! big component
+    tmpR(1:lmmaxso,1:lmmaxso)  = Rll(1:lmmaxso,1:lmmaxso,ir)
+    tmpRl(1:lmmaxso,1:lmmaxso) = Rllleft(1:lmmaxso,1:lmmaxso,ir)
+    call ZGEMM('n','n',lmmaxso,lmmaxso,lmmaxso,C1,tmpR,lmmaxso,tmpRl,lmmaxso,C0,RdotRl(:,:,ir),lmmaxso) ! RdotRl  = Rll_big*Rllleft_big
+    ! small component
+    tmpR(1:lmmaxso,1:lmmaxso)  = Rll(1+lmmaxso:2*lmmaxso,1:lmmaxso,ir)
+    tmpRl(1:lmmaxso,1:lmmaxso) = Rllleft(1+lmmaxso:2*lmmaxso,1:lmmaxso,ir)
+    call ZGEMM('n','n',lmmaxso,lmmaxso,lmmaxso,C1,tmpR,lmmaxso,tmpRl,lmmaxso,C1,RdotRl(:,:,ir),lmmaxso) ! RdotRl = RdotRl + Rll_small*Rllleft_small
+  end do
+  
 
   ! first treat spherical block (diagonal in lm, lm' -> only lm'==lm)
   do lm01 = 1,lmmaxso
     ! fill diagonal
     do ir = 1,irmdnew
-      q_of_r(ir, lm01, lm01) = q_of_r(ir, lm01, lm01) + rll(lm01, lm01, ir) * rllleft(lm01, lm01, ir) ! note: diagonal in lm01!!!
+      q_of_r(ir, lm01, lm01) = q_of_r(ir, lm01, lm01) + RdotRl(lm01, lm01, ir) ! note: diagonal in lm01!!!
     enddo ! ir
     ! add shapefunction to points with r> R_MT
     do ir=imt1+1,irmdnew
       q_of_r(ir, lm01, lm01) = q_of_r(ir, lm01, lm01)*thetasnew(ir,1)*c0ll ! add shapefunction on diagonal for last points outside of MT radius
     enddo ! ir
   enddo ! lm01
-
-!   write(*,*) 'iend',iend
-!   write(*,*) 'cleb',cleb
-!   write(*,*) 'icleb',icleb
+  
   
   ! treat non-spherical components -> off-diagonal blocks in lm, lm' matrices
-  do lm01 = 1, lmmaxso ! loop ofer outer lm-component
-    do lm02 = 1, lmmaxso ! loop ofer outer lm-component
-      do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
-        ! set lm indices for Gaunt coefficients
-        lm1 = icleb(j,1)
-        lm2 = icleb(j,2)
-        lm3 = icleb(j,3)
-!         write(*,*) lm1, lm2, lm3, j, lm01, lm02
-        ! get shape function index for lm3
-        ifun = ifunm(lm3)
-        !write(*,*) j, ifun,lm1,lm2,lm3
-        ! do loop over non-spherical points here
-        if(lmsp(lm3)/=0) then
-          !write(*,*) 'q_of_r',lm1, lm2, lm3, ifun, thetasnew(1,ifun)
-          do ir=imt1+1,irmdnew
-            q_of_r(ir, lm02, lm01) = q_of_r(ir, lm02, lm01)                                                                    &
-            &                      + cleb(j) * rll(lm01, lm1, ir) * rllleft(lm02, lm2, ir) * thetasnew(ir,ifun)                &! big and small component -> do trace here
-            &                      + cleb(j) * rll(lm01+lmmaxso, lm1, ir) * rllleft(lm02+lmmaxso, lm2, ir) * thetasnew(ir,ifun) ! ifun gives lm3 component
-          enddo ! ir
-        end if ! lmsp(ifun)/=0
-      enddo ! j -> sum of Gaunt coefficients
+  do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
+    ! set lm indices for Gaunt coefficients
+    lm1 = icleb(j,1)
+    lm2 = icleb(j,2)
+    lm3 = icleb(j,3)
+    ! get shape function index for lm3
+    ifun = ifunm(lm3)
+    ! do loop over non-spherical points here
+    if(lmsp(lm3)/=0) then
+      do ir=imt1+1,irmdnew
+        q_of_r(ir, lm1, lm2) = q_of_r(ir, lm1, lm2) + cleb(j) * RdotRl(lm1, lm2, ir) * thetasnew(ir,ifun)
+      enddo ! ir
+    end if ! lmsp(ifun)/=0
+  enddo ! j -> sum of Gaunt coefficients
       
-      ! do radial integration
+    ! do radial integration
+  do lm01 = 1, lmmaxso ! loop over outer lm-component
+    do lm02 = 1, lmmaxso ! loop over outer lm-component
       call intcheb_cell(q_of_r(:,lm02,lm01),q_mu(lm02,lm01),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
-      write(456456,'(2E16.7)') q_mu(lm02,lm01)
-      write(123123,'(2E16.7)') q_of_r(:,lm02,lm01)
+!       write(456456,'(2I5,2E16.7)') lm02, lm01, q_mu(lm02,lm01)
+!       write(123123,'(2I5,20000E16.7)') lm02, lm01, q_of_r(:,lm02,lm01)
     end do ! lm02
   end do ! lm01
 
@@ -704,15 +726,278 @@ end subroutine calc_Q_mu_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine calc_rhoq(t_rhoq)
+subroutine calc_G0_k(tau0_k, tinv, G0_k, mu_i, mu_j, N)
+  ! Calculate G0 from tau_0 and t
+  ! G0^mu,mu_i (k) = -t_mu^-1 delta(mu-mu_i) + t_mu^-1 tau0^mu,mu_i(k) t_mu_i^-1
+  ! 
+  ! This comes from 
+  ! $G^0_{i,i'} = -t_i^{-1} \delta_{i,i'} + t_i^{-1} \tau^0_{i,i'} t_{i'}^{-1}$
+  ! and the definition of the fourier transform
+  ! $\tau^0_{i,i'} = \frac{1}{\Omega_{BZ}}\int d^2k \tau^0_{mu_i,mu_{i'}}(\vec{k}) e^{-i\vec{k}\cdot(\vec{L_i}-\vec{L_{i'}})}$.
+  ! Then this gives
+  ! $G^0_{mu_i,mu_{i'}}(\vec{k}) = -t_{mu_i}^{-1} \delta_{mu_i,mu_{i'}} + t_{mu_i}^{-1} \tau^0_{mu_i,mu_{i'}}(\vec{k}) t_{mu_{i'}}^{-1}$,
+  ! where $t_{mu_i}\equiv t_{i}$.
+  !                                       -> expfac
+  ! finally construct G0^mu,mu_i (k) * exp(-i k*L_i)
+  implicit none
+  integer, intent(in) :: N, mu_i, mu_j
+  double complex, intent(in)  :: tinv(N,N), tau0_k(N,N)
+  double complex, intent(out) :: G0_k(N,N)
+  ! local
+  double complex :: temp(N,N)
+  double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
+  
+  ! initialize G0_k
+  G0_k = C0
+  
+  ! treat diagonal element from first term:
+  if(mu_i==mu_j) G0_k = -tinv
+  
+  !treat second term
+  !temp = tau0_k*tinv
+  call ZGEMM('n','n',N,N,N,C1,tau0_k,N,tinv,N,C0,temp,N)
+  !G0_k = G0_k + tinv*tau0_k*tinv = G0_k + tinv*temp
+  call ZGEMM('n','n',N,N,N,C1,tinv,N,temp,N,C1,G0_k,N)
+ 
+end subroutine calc_G0_k
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
   ! calculate Delta rho^mu(q) = Int{ Delta rho(q, X_mu+r), dr }
   !                           = -1/(2*pi*i) Tr[ Q^mu Int{ Ghost(k) tau Ghost(k+q),dk } - Q^mu,* Int{ Ghost^*(k) tau^* Ghost^*(k-q),dk }]
+  use omp_lib
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
+  integer, intent(in) :: lmmaxso, Nkp
+  double complex, intent(in) :: q_mu(lmmaxso,lmmaxso)
+  double complex, intent(out) :: rhoq(Nkp)
+  ! local
+  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads
+  integer, allocatable :: ipvt(:)
+  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpG02(:,:), tll(:,:), tmp(:,:), tmpsum1(:,:), tmpsum2(:,:)
+  double complex :: expfac, tr_tmpsum1, tr_tmpsum2, kweight
+  double precision, allocatable :: kpt(:,:), L_i(:,:)
+  double precision :: kdotL
+  double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
+  
+  N = t_rhoq%lmmaxso
+  if(N/=lmmaxso) stop '[calc_rhoq] lmmaxso input does not match value in t_rhoq'
+  if(Nkp/=t_rhoq%nkpt) stop '[calc_rhoq] Nkp input does not match value in t_rhoq'
+  allocate(kpt(3,Nkp), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating kpt'
+  kpt = t_rhoq%kpt
+  allocate(L_i(3,T_rhoq%Nscoef), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating L_i'
+  L_i = t_rhoq%L_i
+  
+  allocate(tll(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tll'
+  allocate(ipvt(N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating ipvt'
+  allocate(tinv(N,N,t_rhoq%Nscoef), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tinv'
+  allocate(tau0_k(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tau0_k'
+  allocate(G0ij_k(N,N,t_rhoq%Nscoef,Nkp), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating G0ij_k'
+  allocate(G0ji_k(N,N,t_rhoq%Nscoef,Nkp), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating G0ji_k'
+  
+  tll = C0
+  tinv = C0
+  tau0_k = C0
+  G0ij_k = C0
+  G0ji_k = C0
+  rhoq = C0
+  
+  write(*,*) 'done allocating'
+  
+  ! read tmat and compute tinv = tmat^-1
+  lrec = 4*N**2
+  open(9999, file='tmat', access='direct', recl=lrec, form='unformatted')
+  do i=1,t_rhoq%Nscoef
+    irec = t_rhoq%ilay_scoef(i) ! layer index 
+    read(9999,rec=irec) tll(1:N,1:N)
+!     tinv(1:N,1:N,i) = 1.0d0/tinv(1:N,1:N,i)
+    tinv(1:N,1:N,i)=C0
+
+    do lm1=1,lmmaxso
+      tinv(lm1,lm1,i)=C1
+    enddo
+    ! LU decomposition to invert tll
+    call zgetrf(lmmaxso,lmmaxso,tll,lmmaxso,ipvt,ierr)
+    call zgetrs('n',lmmaxso,lmmaxso,tll,lmmaxso,ipvt,tinv(:,:,i),lmmaxso,ierr)
+!     write(147,'(2ES15.7)') tll(:,:)
+!     write(148,'(2ES15.7)') tinv(:,:,i)
+  end do ! i
+  close(9999)
+  
+  deallocate(tll, ipvt, stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error deallocating tll etc.'
   
   
+  ! open tau0_k file, written in writegreen of zulapi code
+  lrec = 4*N**2
+  open(9999, file='tau0_k', access='direct', form='unformatted', recl=lrec)
+  
+  allocate(tmp(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmp'
+  allocate(tmpG0(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpG0'
+  allocate(tmpG02(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpG02'
+  
+  do k=1,Nkp
+    ! find exG0_i(k) vector of lm-blocks (i is one component)
+    do i=1,t_rhoq%Nscoef
+    
+!       write(*,*) 'in first kpt loop', k,i
+    
+      ! set mu, mu_i to calculate G0ij_k
+      mu = t_rhoq%mu_0
+      mu_i = t_rhoq%ilay_scoef(i)
+      
+      ! read in tau0(k0) from file
+      ie = 1 ! maybe interpolation to real axis?
+      irec = (t_rhoq%Nlayer*2)*(k-1) + (t_rhoq%Nlayer*2)*Nkp*(ie-1)
+      ix = mu_i - mu + 1
+      ! first mu,mu_i element
+      irec = irec + ix
+!       irec = irec + mu_i
+      read(9999,rec=irec) tau0_k(1:N,1:N)
+      ! find G0ij_k from tau0_k and tinv
+      call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tmpG0(1:N,1:N), mu, mu_i, N)
+      
+      ! expfac = exp(-i k*L_i)
+      kdotL = kpt(1,k)*L_i(1,i)
+      expfac = exp(-Ci*kdotL)
+      ! G0ij_k = exG0ij(k) = expfac*G0ij(k)
+      G0ij_k(1:N,1:N,i,k) = expfac*tmpG0(1:N,1:N)
+      
+      
+      ! now mu_i,mu element
+      irec = (t_rhoq%Nlayer*2)*(k-1) + (t_rhoq%Nlayer*2)*Nkp*(ie-1)
+      ix = mu_i - mu + 1
+!       irec = irec + mu_i + t_rhoq%Nlayer
+      irec = irec + ix + t_rhoq%Nlayer
+      write(*,'(8I9)') ie,k,mu_i,ix,irec,t_rhoq%Nlayer,Nkp
+      read(9999,rec=irec) tau0_k(1:N,1:N)
+      ! find G0ji_k from tau0_k and tinv
+      call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tmpG02(1:N,1:N), mu_i, mu, N)
+      
+      ! expfac = exp(-i k*L_i)
+      kdotL = kpt(1,k)*L_i(1,i)
+      expfac = exp(Ci*kdotL) ! different sign here!
+      ! G0ji_k = exG0ji(k) = expfac*G0ji(k)
+      G0ji_k(1:N,1:N,i,k) = expfac*tmpG02(1:N,1:N)
+      
+!       write(*,'(A,2I5,10E17.9)') 'tau0_k to G0',i,k,tau0_k(1,1),G0ij_k(1,1,i,k),G0ji_k(1,1,i,k)
+      
+!       write(257,'(2ES15.7)') tau0_k(:,:)
+!       write(258,'(2ES15.7)') G0ij_k(:,:,i,k)
+!       write(259,'(2ES15.7)') G0ji_k(:,:,i,k)
+      
+    end do ! i
+  end do ! k
+  
+  close(9999)
+  deallocate(tmp, tmpG0, tmpG02)
+  
+  ! take tau from t_rhoq and reshape it 
+  allocate( tau(lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tau imp'
+  tau(:,:,:,:) = reshape( t_rhoq%tau(:,:), (/lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef/) )
+  
+  !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads)
+  allocate(tmpsum1(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1'
+  allocate(tmpsum2(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum2'
+  allocate(tmp(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmp'
+  
+  mythread = omp_get_thread_num()
+  nthreads = omp_get_num_threads()
+  
+  ! calculate rho(q)
+  !$omp do 
+  do q=1,Nkp !q-loop
+  
+     !$omp critical
+     write(*,'(A,I5,A,I9,A,I5)') 'thread ',myrank,' is doing q point ',q,', nthreads=',nthreads
+     !$omp end critical
+   
+     tmpsum1 = C0
+     tmpsum2 = C0
+     
+     do k=1,Nkp !k-loop integration
+       ! find k +q index
+       kpq = k+q-1-(Nkp)/2
+       if(kpq.gt.Nkp) kpq = kpq-Nkp
+       if(kpq.lt.1)   kpq = kpq+Nkp
+!        write(*,*) q,k,kpq
+       ! read kweight from memory
+       kweight = dcmplx(1.0d0/t_rhoq%volcub(k), 0.0d0)
+       
+       ! Sum( Int( exG0_i(k) tau_i,j exG0_j(k+q); dk ); i,j)
+       do i=1,t_rhoq%Nscoef
+         do j=1,t_rhoq%Nscoef
+           
+           ! tmp = tau*exG0_k(k+q), note that exG0_i(k) is the host green function of layer mu_i multiplied with the exponential factor exp(-i k*L_i)
+           tmp = C0
+           call ZGEMM('n','n',N,N,N,C1,tau(:,:,i,j),N,G0ij_k(:,:,j,kpq),N,C0,tmp,N)
+           ! tmpsum1 = G0_k(k)*tmp*kweight
+           call ZGEMM('n','n',N,N,N,kweight,G0ji_k(:,:,i,k),N,tmp,N,C0,tmp,N)
+         
+           ! Int( exG0(k)^*.tau^*.exG0(k-q)^*, dk ) = Int( exG0(k+q)^*.tau^*.exG0(k)^*, dk )
+           ! tmp = dconjg(tau)*dconjg(exG0_k(k))
+           tmp = C0
+           call ZGEMM('n','n',N,N,N,C1,dconjg(tau(:,:,i,j)),N,dconjg(G0ij_k(:,:,j,k)),N,C0,tmp,N)
+           ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k+q))*tmp*kweight
+           call ZGEMM('n','n',N,N,N,kweight,dconjg(G0ji_k(:,:,i,kpq)),N,tmp,N,C1,tmpsum2,N)
+                      
+           end do !j
+       end do ! i
+       
+     end do ! k-loop
+     
+     
+     ! calculate trace of Q^mu times k-kpoint integral
+     tr_tmpsum1 = C0
+     tr_tmpsum2 = C0
+     ! tmpsum1 = Tr{ q_mu Int(G0.tau.G0.exp(...), dk) } = Tr{ q_mu*tmpsum1 }
+     tmp = tmpsum1
+     call ZGEMM('n','n',N,N,N,C1,q_mu,N,tmp,N,C0,tmpsum1,N)
+     tmp = tmpsum2
+     call ZGEMM('n','n',N,N,N,C1,dconjg(q_mu),N,tmp,N,C0,tmpsum2,N)
+     ! take trace
+     do i=1,t_rhoq%lmmaxso
+       tr_tmpsum1 = tr_tmpsum1 + tmpsum1(i,i)
+       tr_tmpsum2 = tr_tmpsum2 + tmpsum2(i,i)
+     end do
+     
+     rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
+!      write(*,'(I5,20ES25.16)') q,dreal(rhoq(q)), dimag(rhoq(q)), dreal(tr_tmpsum1), dimag(tr_tmpsum1), dreal(tr_tmpsum2), dimag(tr_tmpsum2)
+      
+  end do !q
+  !$omp end do
+  
+  deallocate(tmpsum1, tmpsum2, tmp)
+  
+  !$omp end parallel
   
   
+  do q=1,Nkp
+     write(*,*) q,rhoq(q)
+  end do
+  
+  
+  deallocate(tau)
+  deallocate(tau0_k)
+    
 end subroutine calc_rhoq
 
 
@@ -737,7 +1022,7 @@ program test
   double precision :: alat, naclsmax
   double precision :: volbz ! Brillouin zone volume -> integration weight
   
-  double precision, allocatable :: kpt(:,:) ! coordinates in reciprocal space of the kpoints
+  double precision, allocatable :: kpt(:,:), volcub(:) ! coordinates in reciprocal space of the kpoints and volume of kpoint cube
   double precision, allocatable :: r_basis(:,:) ! real space positions of all atoms in host system
   double complex, allocatable   :: Ghost(:,:,:)
   double precision, allocatable :: rcls(:,:,:),rr(:,:)
@@ -749,7 +1034,7 @@ program test
   integer, allocatable          :: icleb(:,:), loflm(:) ! Gaunt coefficients
   integer, allocatable          :: ifunm(:), lmsp(:) ! shape functions
   double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
-  double complex, allocatable   :: q_mu(:,:)
+  double complex, allocatable   :: q_mu(:,:), rhoq(:)
   
   integer :: lm1, lm2, N, i, j, ir
   
@@ -762,23 +1047,19 @@ program test
   read(9999,*) alat, naclsmax
   close(9999)
 
-  write(*,*) 'params', lmmaxso, natyp, naez, ncls, nr, nemb, lmax, alat, naclsmax
+!   write(*,*) 'params', lmmaxso, natyp, naez, ncls, nr, nemb, lmax, alat, naclsmax
   
-!   open(9999, file='kpoints.txt')
-!   read(9999,*) nkpt
-!   allocate( kpt(3,nkpt) )
-!   read(9999,*) volbz, kpt(1:3,1:nkpt)
-!   close(9999)
-           open(9999, file='kpts.txt', form='formatted')
-           read(9999,'(I9)') nkpt
-           read(9999,'(E16.7)') volbz
-           allocate(kpt(3,nkpt)
-           do i=1,nofks
-             read(99999,'(3E16.7)') (kpt(j,K), j=1,3)
-           end do
-           close(9999)
 
-  write(*,*) 'kpoints', nkpt, volbz
+  open(9999, file='kpts.txt', form='formatted')
+  read(9999,'(I9)') nkpt
+  read(9999,'(E16.7)') volbz
+  allocate( kpt(3,nkpt), volcub(nkpt) )
+  do i=1,nkpt
+    read(9999,'(4E16.7)') (kpt(j,i), j=1,3), volcub(i)
+  end do
+  close(9999)
+
+!   write(*,*) 'kpoints', nkpt, volbz
   
   open(9999, file='host.txt')
   allocate( r_basis(3,natyp), Ghost(lmmaxso,lmmaxso,t_rhoq%Nlayer) )
@@ -789,26 +1070,25 @@ program test
   read(9999,*) cls(1:naez+nemb), ezoa(1:ncls,1:naez+nemb), nacls(1:ncls)
   close(9999)
   
-           open(9999, file='wavefunctions.txt')
-           read(9999,'(100I9)') ntotd, npan_tot, ncheb, npan_log, npan_eq, nsra, irmdnew
+  open(9999, file='wavefunctions.txt')
+  read(9999,'(100I9)') ntotd, npan_tot, ncheb, npan_log, npan_eq, nsra, irmdnew
 
-           allocate( Rll(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew),          &
-     &               Rllleft(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew) ,     &
-     &               rpan_intervall(0:ntotd),ipan_intervall(0:ntotd) )
-           do ir=1,irmdnew
-             do lm1=1,nsra*lmmaxso
-               do lm2=1,lmmaxso
-                  read(9999,'(20000E16.7)') Rll(lm1, lm2, ir) 
-                  read(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir)
-               end do
-             end do
-           enddo
-           do lm1=0,ntotd
-             read(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
-           enddo
-           close(9999)
-  
-  
+  allocate( Rll(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew),          &
+ &          Rllleft(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew) ,     &
+ &          rpan_intervall(0:ntotd),ipan_intervall(0:ntotd) )
+  do ir=1,irmdnew
+    do lm1=1,nsra*lmmaxso
+      do lm2=1,lmmaxso
+        read(9999,'(20000E16.7)') Rll(lm1, lm2, ir) 
+        read(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir)
+      end do
+    end do
+  enddo
+  do lm1=0,ntotd
+    read(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
+  enddo
+  close(9999)
+    
   open(9999, file='cleb_shapefun.txt')
   read(9999,*)
   read(9999,*) ncleb, lm2d, lmaxd, iend, nfund, lmxsp, nrmaxd
@@ -821,12 +1101,12 @@ program test
   read(9999,*)
   do lm1=1,lm2d
     read(9999,'(I9)') loflm(lm1)
-    write(*,*) 'loflm',loflm(lm1)
+!     write(*,*) 'loflm',loflm(lm1)
   end do
   read(9999,*)
   do lm1=1,lmxsp
     read(9999,'(I9)') ifunm(lm1)
-    write(*,*) 'ifunm',ifunm(lm1)
+!     write(*,*) 'ifunm',ifunm(lm1)
   end do
   allocate( lmsp(lmxsp) )
   read(9999,*)
@@ -846,7 +1126,7 @@ program test
 
   call read_input_rhoq(t_rhoq, uio)
 
-  call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volbz)
+  call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz)
 
   call save_geometry_rhoq(t_rhoq,r_basis,lmmaxso,natyp)
   
@@ -867,34 +1147,20 @@ program test
 !   write(*,*) 'shape Gimp,Dt',shape(t_rhoq%Dt), shape(t_rhoq%Gimp)
   call read_Dt_Gimp_rhoq(t_rhoq, lmmaxso, t_rhoq%Nscoef)
   
+  ! calculate impurity scattering path operator
   call calc_tau_rhoq(t_rhoq)
   
-!   N = t_rhoq%Nscoef*t_rhoq%lmmaxso
-!   do i=1,N
-!     do j=1,N
-!       write(425,'(2E16.7)') t_rhoq%Dt(i,j)
-!     end do
-!   end do
-!   do i=1,N
-!     do j=1,N
-!       write(426,'(2E16.7)') t_rhoq%Gimp(i,j)
-!     end do
-!   end do
-!   do i=1,N
-!     do j=1,N
-!       write(427,'(2E16.7)') t_rhoq%tau(i,j)
-!     end do
-!   end do
-      
-      
-   write(*,*) 'calc Q'
-     write(*,*) icleb
-   call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
+  ! calculate prefactor Q^{\mu}_{LL'} = Tr{ \int{ R_{L}(\vec{r})*Rleft_{L'}(\vec{r}) d\vec{r} }
+  call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
         & nsra, lmmaxso, Rll, Rllleft, rpan_intervall, ipan_intervall, ncleb,   &
         & lm2d, lmaxd, iend, cleb, icleb, loflm, nfund, lmxsp, ifunm,           &
         & nrmaxd, thetasnew, lmsp, irmdnew, q_mu )
-!     
-!   call calc_rhoq(t_rhoq) 
+
+  ! calculate Fourier transform: \rho(\vec{q}) = \int \Delta\rho(\vec{q};\Chi_\mu+\vec{r}) d\vec{r}
+  allocate(rhoq(t_rhoq%Nkpt), stat=ierr)
+  if(ierr/=0) stop '[test] Error allocating rhoq'
+  call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, q_mu, rhoq)
+
 
 end program test
 !TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!

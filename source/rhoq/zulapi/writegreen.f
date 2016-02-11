@@ -5,6 +5,7 @@
      +                    LPOT,YR,WTYR,RIJ,IJEND,IATCONDL,IATCONDR,
      +                    NCONDPAIR,INTERF,INS,GINP,TMATLL,NATOMIMP,
      +                    ATOMIMP,RCLSIMP,IHOST)
+!       use omp_lib
       IMPLICIT NONE
      
 c-----------------------------------------------------------------
@@ -62,7 +63,8 @@ c-----------------------------------------------------------------
       
       DOUBLE COMPLEX,ALLOCATABLE :: GLL(:,:,:,:),GIMP(:,:)
       
-      integer :: irec, mu, nscoef
+!       integer :: thrid, nthrd
+      integer :: irec, mu, nscoef, ix, jx
       integer, allocatable :: iatomimp(:)
 
       WRITE(6,*) 'in writegreen'
@@ -190,12 +192,7 @@ c calculate green function for the host
        INVMOD=0 ! for FS calculation, we inverse a full matrix anyway
 
        IF (OPT('NO-BREAK')) THEN
-        ALLOCATE(GLLKE(ALMSO,ALMSO))
-        ALLOCATE(GLLKE0(LMMAXSO,LMMAXSO))
-        ALLOCATE(GLLKE1(ALM,LMAXSQ))
-        ALLOCATE(GLLKE2(ALM,ALM))
-
-
+       
         open(8888,file='mu0',form='formatted')
         read(8888,*) mu, nscoef
         allocate(iatomimp(nscoef))
@@ -205,16 +202,38 @@ c calculate green function for the host
         close(8888)
         
         if(test('rhoqtest')) then 
-           open(9999, access='direct', file='tau_k', 
-     &     form='unformatted', recl=(LMMAXSO*LMMAXSO)*4) ! lm blocks and 2 integer (i,j indices)
+           open(9999, access='direct', file='tau0_k', 
+     &     form='unformatted', recl=(LMMAXSO*LMMAXSO)*4) ! lm blocks
+     
+!            write(*,*) 'reading kpts from file'
+!            open(8888, file='kpt_in.txt')
+!            read(8888,*) nofks
+!            write(*,*) nofks
+!            do k=1,nofks
+!              read(8888,*) (bzkp(ns,k), ns=1,3), volcub(k)
+!            end do
+!            close(8888)
         end if
 !         write(*,*) 'open tau_k unform',LMMAXSO, LMMAXSO*LMMAXSO
+
+! !$omp parallel default(shared) private(ns,i,j,isym,carg,lm1,lm2)
+! !$omp& private(etaikr,ic,fac,m,im,jn,gllke,gllke0,gllke1,gllke2)
+! !$omp& private(ioff1,ioff2,joff1,joff2,il1,il2,i1,icheck,gs)    
+! !$omp& private(irec,ix,jx, nthrd, thrid)
+        ALLOCATE(GLLKE(ALMSO,ALMSO))
+        ALLOCATE(GLLKE0(LMMAXSO,LMMAXSO))
+        ALLOCATE(GLLKE1(ALM,LMAXSQ))
+        ALLOCATE(GLLKE2(ALM,ALM))
+
+!         nthrd = omp_get_num_threads()
+!         thrid = omp_get_thread_num()
 
         !print header of statusbar
         write(6,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
      &      0, 20, 40, 60, 80, 100
         write(6,FMT=190) !beginning of statusbar
 c start kpoints loop
+!         !$omp do
         DO K=1,NOFKS
 
 c create e^(-ikr)
@@ -304,19 +323,52 @@ c  for spin-orbit coupling G_LL'(k) double size
 !      &        (I==mu) , (J==mu) , any(I==iatomimp) ,any(J==iatomimp), 
 !      &              ((I==mu) .or. (J==mu) .or. 
 !      &            any(I==iatomimp) .or. any(J==iatomimp))
-             if((k==1).and.(NS==1)) irec = (nscoef+1)*(K-1) + 
-     +                                 (nscoef+1)*NOFKS*(IE-1)
-             if( (I==mu) .or. (J==mu) .or. 
-     &            any(I==iatomimp) .or. any(J==iatomimp) ) then
-               irec = irec+1
+             irec = (nscoef*2)*(K-1) + (nscoef*2)*NOFKS*(IE-1)
+             if( ((I==mu) .and. any(J==iatomimp)) .or. ((J==mu) .and. 
+     &            any(I==iatomimp)) ) then
+               ix=0
+               lm1 = 1
+               do while (ix==0)
+                 if(iatomimp(lm1)==i) ix = lm1
+                 lm1 = lm1 + 1
+               end do
+               jx=0
+               lm1 = 1
+               do while(jx==0)
+                 if(iatomimp(lm1)==j) jx = lm1
+                 lm1 = lm1 + 1
+               end do
+               if(j==mu) then
+                 irec = irec + nscoef + ix
+               else
+                 irec = irec + jx
+               endif
+!                if (k==1 .and. ns==1) write(*,*) ix,jx,nscoef,irec,k,
+!                write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
+!      &                                          nofks,nscoef
                write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
-             end if
-           end if
+             end if ! i==mu ...
+           end if ! test('rhoqtest')
           ENDDO ! NS
 
       !update statusbar
          if(mod(K,NOFKS/50)==0) write(6,FMT=200)
+!          if(thrid==0.and.mod(K,NOFKS/50/nthrd)==0) write(6,FMT=200)
          ENDDO ! K loop
+!          !$omp end do
+         
+190      FORMAT('                 |'$)   ! status bar
+200      FORMAT('|'$)                    ! status bar
+         write(6,*)                      ! status bar
+!          if(thrid==0) write(6,*)                      ! status bar
+         DEALLOCATE(GLLKE)
+         DEALLOCATE(GLLKE0)
+         DEALLOCATE(GLLKE1)
+         DEALLOCATE(GLLKE2)
+         WRITE(6,*) 'After k-points integration'
+!          if(thrid==0) WRITE(6,*) 'After k-points integration'
+!          !$omp end parallel
+         
          if(test('rhoqtest')) then
            ! close tau_k file
            close(9999)
@@ -326,7 +378,7 @@ c  for spin-orbit coupling G_LL'(k) double size
            CALL GETVOLBZ(RECBV,BRAVAIS,VOLBZ)
            write(8888,'(E16.7)') VOLBZ
            do k=1,nofks
-             write(8888,'(3E16.7)') (BZKP(i1,K), i1=1,3)
+             write(8888,'(4E16.7)') (BZKP(i1,K), i1=1,3), VOLCUB(K)
            end do
            close(8888)
            ! save shell info
@@ -337,14 +389,6 @@ c  for spin-orbit coupling G_LL'(k) double size
            close(8888)
          end if
 
-190      FORMAT('                 |'$)   ! status bar
-200      FORMAT('|'$)                    ! status bar
-         write(6,*)                      ! status bar
-        DEALLOCATE(GLLKE)
-        DEALLOCATE(GLLKE0)
-        DEALLOCATE(GLLKE1)
-        DEALLOCATE(GLLKE2)
-        WRITE(6,*) 'After k-points integration'
        ELSE ! OPT('NO-BREAK')
         IF (OPT('BREAK-1 ')) THEN
          ! write to files

@@ -1,12 +1,12 @@
 c number of different atoms in unitcell
       integer natypd
-      parameter (NATYPD =14)
+      parameter (NATYPD =26)
 c number of atoms in unitcell
       integer naezd
       parameter (NAEZD =NATYPD)
 c highest valence orbital quantum number     
       integer lmaxd  
-      parameter (LMAXD = 3)
+      parameter (LMAXD = 2)
 c maximum number of reference potentials
       integer nrefd
       parameter (NREFD = 1)
@@ -41,7 +41,7 @@ c modified number of potentials for storing non-sph. potentials
       parameter (NSPOTD = NSPIND*NSATYPD)
 c number of shells (for storing GF in GS (*,*,*,nsheld))
       integer nsheld
-      parameter (NSHELD = 816)
+      parameter (NSHELD = 1500)
 c number of symmetries of the system optimizing reduces 
 c memory size significantly
        integer NSYMD
@@ -58,25 +58,26 @@ c number of points in complex energy plane for integration
 c number of r points in (0  , rmt (? rws))
       integer irmd
 c      parameter (IRMD = 353)
-      parameter (IRMD = 700)
+      parameter (IRMD = 600)
 c number of r points in ( rmt,rws)
       integer irnsd
 c      parameter (IRNSD =1)
-      parameter (IRNSD =600)    
+      parameter (IRNSD =500)    
 c     ..
       integer ijd
       parameter(ijd=434)
 c     ..   
       integer nfund,irid,ngshd,ngfd
-      parameter (NFUND = 35,IRID = 200,NGSHD = 3000,NGFD= 1)
-c      parameter (NFUND = 35,IRID = 145,NGSHD = 3000,NGFD= 1)
+c     parameter (NFUND = 35,IRID = 200,NGSHD = 3000,NGFD= 1)
+      parameter (NFUND = 35,IRID = 145,NGSHD = 1500,NGFD= 1)
 c      parameter (NFUND = 49,IRID = 135,NGSHD = 3500,NGFD= 1)
 c ..  number of cells (shapes), panels in non-spherical part
       integer ncelld,ipand
       parameter (NCELLD = 24,IPAND = 24)
 c number of real space and reciprocal space vectors
       integer nrd,kpoibz
-      parameter (NRD = 10000,KPOIBZ =3000000)
+c      parameter (NRD = 10000,KPOIBZ =3000000)
+      parameter (NRD = 10000,KPOIBZ =300000)
 c
 c number of principal layers for SPARSE matrix inversion
 c now put to naezd, Better NOT change this
@@ -95,5 +96,5 @@ c parameter nembd for embeding positions around the real atomic pos.
       parameter (NEMBD = 20 )
 c Parameter for Impurity Calculations
       integer natomimpd
-      PARAMETER (NATOMIMPD=65)
+      PARAMETER (NATOMIMPD=300)
 
