@@ -167,11 +167,11 @@ module BrillouinZoneMesh_mod
   endsubroutine ! store
 
   
-  integer function storeBrillouinZoneMeshes(self, filename) result(ios)
+  subroutine storeBrillouinZoneMeshes(self, filename)
     type(BrillouinZoneMesh), intent(in) :: self(1:)
     character(len=*), intent(in) :: filename
     integer, parameter :: fu = 654 !< file unit
-    integer :: i
+    integer :: i, ios
     open(unit=fu, file=filename, action='write', iostat=ios)
     if (ios /= 0) return
     write(unit=fu, fmt='(9(a,i0))', iostat=ios) ' ',size(self, 1),'   =NumberOfMeshes'
@@ -179,7 +179,7 @@ module BrillouinZoneMesh_mod
       call store(self(i), fu)
     enddo ! i
     close(unit=fu, iostat=ios)
-  endfunction ! store
+  endsubroutine ! store
   
   elemental subroutine destroyBrillouinZoneMesh(self)
     type(BrillouinZoneMesh), intent(inout) :: self

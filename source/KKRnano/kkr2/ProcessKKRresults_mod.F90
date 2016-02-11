@@ -722,9 +722,9 @@ module ProcessKKRresults_mod
         allocate(prefactors(size(arrays%rbasis, 2)))
         call read_morgan_prefactors(prefactors)
         direction = read_direction()
-        call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R, direction)
-        call write_gen_morgan_potential_dir_analytical(mesh%R, arrays%rbasis, arrays%rbasis(:,atom_id), &
-                                                      arrays%bravais, prefactors, direction)
+!        call write_morgan_potential_dir(atomdata%potential%vons(:,:,1), mesh%R, direction)
+!        call write_gen_morgan_potential_dir_analytical(mesh%R, arrays%rbasis, arrays%rbasis(:,atom_id), &
+!                                                      arrays%bravais, prefactors, direction)
         deallocate(prefactors)
       endif
   !==============================================================================
@@ -1256,27 +1256,27 @@ module ProcessKKRresults_mod
 
   !----------------------------------------------------------------------------
   !> Write results of potential in direction 'dir' to a file.
-  subroutine write_morgan_potential_dir(vons, mesh_points, dir)
-    use debug_morgan_mod, only: eval_expansion
-    
-    double precision, intent(in) :: vons(:,:), mesh_points(:), dir(3)
-    integer, parameter :: fu = 99
-
-    double precision :: vec(3), norm_dir(3), val
-    integer :: ii
-
-    norm_dir = dir/norm2(dir)
-
-    open(unit=fu, form='formatted', file='morgan_potential_dir.txt', action='write')
-    do ii = 1, size(mesh_points)
-      vec = norm_dir * mesh_points(ii)
-      if (norm2(vec) == 0.d0) vec(1) = 1d-6
-      val = eval_expansion(vons(ii,:), vec)
-      write(unit=fu, fmt=*) mesh_points(ii), val
-    enddo ! ii
-    close(unit=fu)
-
-  endsubroutine ! write
+!  subroutine write_morgan_potential_dir(vons, mesh_points, dir)
+!    use debug_morgan_mod, only: eval_expansion
+!    
+!    double precision, intent(in) :: vons(:,:), mesh_points(:), dir(3)
+!    integer, parameter :: fu = 99
+!
+!    double precision :: vec(3), norm_dir(3), val
+!    integer :: ii
+!
+!    norm_dir = dir/norm2(dir)
+!
+!    open(unit=fu, form='formatted', file='morgan_potential_dir.txt', action='write')
+!    do ii = 1, size(mesh_points)
+!      vec = norm_dir * mesh_points(ii)
+!      if (norm2(vec) == 0.d0) vec(1) = 1d-6
+!      val = eval_expansion(vons(ii,:), vec)
+!      write(unit=fu, fmt=*) mesh_points(ii), val
+!    enddo ! ii
+!    close(unit=fu)
+!
+!  endsubroutine ! write
 
   !----------------------------------------------------------------------------
   !> Stores generalised Morgan test charge distribution into rho2ns_density.
@@ -1359,36 +1359,36 @@ module ProcessKKRresults_mod
 
   !----------------------------------------------------------------------------
   !> Write analytical values of generalised morgan potential in direction 'dir' to a file.
-  subroutine write_gen_morgan_potential_dir_analytical(mesh_points, rbasis, center, bravais, prefactors, dir)
-    use debug_morgan_mod, only: eval_gen_morgan_potential, calc_reciprocal_basis, calc_reciprocal_first_shell
-    
-    double precision, intent(in) :: mesh_points(:)
-    double precision, intent(in) :: rbasis(:,:)
-    double precision, intent(in) :: center(3)
-    double precision, intent(in) :: bravais(3, 3)
-    double complex, intent(in) :: prefactors(:)
-    double precision, intent(in) :: dir(3)
-
-    integer, parameter :: fu=99
-    integer :: ii
-    double precision :: vec(3), norm_dir(3), val, rec_basis(3,3)
-    double precision, allocatable :: reciprocals(:,:)
-
-    call calc_reciprocal_basis(rec_basis, bravais)
-    call calc_reciprocal_first_shell(reciprocals, rec_basis) ! reciprocals gets allocated here
-
-    norm_dir = dir/norm2(dir)
-
-    ! also write the analytical solution
-    open(unit=fu, form='formatted', file='gen_morgan_potential_dir_analytical.txt', action='write')
-    do ii = 1, size(mesh_points)
-      vec = norm_dir * mesh_points(ii)
-      val = real(eval_gen_morgan_potential(reciprocals, vec, prefactors, rbasis, center))
-      write(unit=fu, fmt=*) mesh_points(ii), val
-    enddo ! ii
-    close(unit=fu)
-
-  endsubroutine ! write
+!  subroutine write_gen_morgan_potential_dir_analytical(mesh_points, rbasis, center, bravais, prefactors, dir)
+!    use debug_morgan_mod, only: eval_gen_morgan_potential, calc_reciprocal_basis, calc_reciprocal_first_shell
+!    
+!    double precision, intent(in) :: mesh_points(:)
+!    double precision, intent(in) :: rbasis(:,:)
+!    double precision, intent(in) :: center(3)
+!    double precision, intent(in) :: bravais(3, 3)
+!    double complex, intent(in) :: prefactors(:)
+!    double precision, intent(in) :: dir(3)
+!
+!    integer, parameter :: fu=99
+!    integer :: ii
+!    double precision :: vec(3), norm_dir(3), val, rec_basis(3,3)
+!    double precision, allocatable :: reciprocals(:,:)
+!
+!    call calc_reciprocal_basis(rec_basis, bravais)
+!    call calc_reciprocal_first_shell(reciprocals, rec_basis) ! reciprocals gets allocated here
+!
+!    norm_dir = dir/norm2(dir)
+!
+!    ! also write the analytical solution
+!    open(unit=fu, form='formatted', file='gen_morgan_potential_dir_analytical.txt', action='write')
+!    do ii = 1, size(mesh_points)
+!      vec = norm_dir * mesh_points(ii)
+!      val = real(eval_gen_morgan_potential(reciprocals, vec, prefactors, rbasis, center))
+!      write(unit=fu, fmt=*) mesh_points(ii), val
+!    enddo ! ii
+!    close(unit=fu)
+!
+!  endsubroutine ! write
 
 endmodule ! ProcessKKRresults_mod
 

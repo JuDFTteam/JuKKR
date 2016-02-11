@@ -38,13 +38,15 @@ module TruncationZone_mod
   integer, parameter, private :: OUTSIDE = 0 ! should be -1 in C-language
   
   contains
+  
+#ifndef ell_int_t
+#define ell_int_t integer(kind=1)
+#endif
 
-  !----------------------------------------------------------------------------
-  ! TODO: FIXME
   subroutine createTruncationZone(self, mask, masks)
     type(TruncationZone), intent(inout) :: self
-    integer(kind=1), intent(in) :: mask(:)
-    integer(kind=1), intent(in), optional :: masks(:,:) !> one mask per local atom, dim(naez_all,num_local_atoms)
+    ell_int_t, intent(in) :: mask(:)
+    ell_int_t, intent(in), optional :: masks(:,:) !> one mask per local atom, dim(naez_all,num_local_atoms)
 
     integer :: ii, ind, num_local_atoms, ila, iz, memory_stat
 
@@ -119,9 +121,7 @@ module TruncationZone_mod
     enddo ! ila
 !!!!!!! WORKAROUND
   endsubroutine
-
   
-  !----------------------------------------------------------------------------
   elemental subroutine destroyTruncationZone(self)
     type(TruncationZone), intent(inout) :: self
 
@@ -130,112 +130,4 @@ module TruncationZone_mod
     self%naez_trc = 0
   endsubroutine ! destroy
 
-
 endmodule ! TruncationZone_mod
-  
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-#if 0
-!!! not used
-
-  !----------------------------------------------------------------------------
-  !> Translate atom index 'ind' to new atom index and return value
-  elemental integer function translateInd(self, ind)
-    type(TruncationZone), intent(in) :: self
-    integer, intent(in) :: ind
-
-!     translateInd = OUTSIDE
-! !   if (ind > ubound(self%index_map, 1)) stop 'TruncationZone: translateInd: ind too large!' ! stop not allowed in a pure function
-! 
-!     if (ind > 0) &
-      translateInd = self%index_map(ind)
-  endfunction ! translateInd
-
-
-  !----------------------------------------------------------------------------
-  !> Translate atom indices in 'array' to new atom indices using 'index_map'
-  subroutine translate(index_map, array)
-    integer, intent(in) :: index_map(:)
-    integer, intent(inout) :: array(:)
-
-    where(array > 0)
-      array = index_map(array)
-    endwhere
-    
-!     integer :: ii
-! 
-!     do ii = 1, size(array)
-!       if (array(ii) > 0) array(ii) = index_map(array(ii))
-!     enddo ! ii
-  endsubroutine ! translate
-  
-  !----------------------------------------------------------------------------
-  subroutine filter1d(mask, array, new_array)
-    integer, intent(in) :: mask(:)
-    integer, intent(in) :: array(:)
-    integer, intent(inout) :: new_array(:)
-
-    integer :: ii, ind
-
-    ind = 0
-    do ii = 1, size(mask)
-      if (mask(ii) > 0) then
-        ind = ind + 1
-        new_array(ind) = array(ii)
-      endif
-    enddo ! ii
-  endsubroutine ! filter1d
-
-  !----------------------------------------------------------------------------
-  subroutine filter2d1(mask, array, new_array)
-    integer, intent(in) :: mask(:) 
-    integer, intent(in) :: array(:,:)
-    integer, intent(inout) :: new_array(:,:)
-
-    integer :: ii, ind
-
-    ind = 0
-    do ii = 1, size(mask)
-      if (mask(ii) > 0) then
-        ind = ind + 1
-        new_array(ind,:) = array(ii,:)
-      endif
-    enddo ! ii
-  endsubroutine ! filter2d1
-
-  !----------------------------------------------------------------------------
-  subroutine filter2d2(mask, array, new_array)
-    integer, intent(in) :: mask(:)
-    integer, intent(in) :: array(:,:)
-    integer, intent(inout) :: new_array(:,:)
-
-    integer :: ii, ind
-
-    ind = 0
-    do ii = 1, size(mask)
-      if (mask(ii) > 0) then
-        ind = ind + 1
-        new_array(:,ind) = array(:,ii)
-      endif
-    enddo ! ii
-  endsubroutine ! filter2d2
-#endif
-

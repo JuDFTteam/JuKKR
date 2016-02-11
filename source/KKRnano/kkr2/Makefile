@@ -60,7 +60,7 @@ FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -D USE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS = -O3
@@ -95,7 +95,7 @@ ifeq ($(PLATFORM),rwth)
 FC = $(MPIF77) -warn
 FC90 = $(MPIFC) -warn
 # -module <path> specifies where to put .mod files
-FCFLAGS = $(FLAGS_OPENMP) -module $(BUILDDIR) -DUSE_VOROWEIGHTS
+FCFLAGS = $(FLAGS_OPENMP) -module $(BUILDDIR) -D USE_VOROWEIGHTS
 FCFLAGS += -gen-interfaces -warn interfaces
 FC90FLAGS =
 FCFLAGS += -I$(BUILDDIR) -DTASKLOCAL_FILES
@@ -110,7 +110,7 @@ FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DUSE_VOROWEIGHTS
+FCFLAGS += -gen-interfaces -warn interfaces -D USE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS =
@@ -137,8 +137,9 @@ endif
 FC += mpixlf77_r
 FC90 += mpixlf90_r
 #FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-DUSE_VOROWEIGHTS
+FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
+FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-D USE_VOROWEIGHTS
+FCFLAGS += -D ell_int_t=integer
 #LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
 LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 #-lfftw3

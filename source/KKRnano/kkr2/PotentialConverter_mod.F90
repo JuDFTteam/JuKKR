@@ -185,7 +185,7 @@ module PotentialConverter_mod
     integer :: ic, ir, irmin, is, lm, lmnr, lmpot, nr
     integer, parameter :: isave = 1, inew = 1
     double precision, parameter :: qbound = 1.d-10
-    character(len=24), parameter :: txc(0:3) = [' Morruzi,Janak,Williams', ' von Barth,Hedin', ' Vosko,Wilk,Nusair', ' GGA PW91']
+    character(len=24), parameter :: txc(0:3) = [' Morruzi,Janak,Williams', ' von Barth,Hedin       ', ' Vosko,Wilk,Nusair     ', ' GGA PW91              ']
     character(len=*), parameter :: F9000 = "(7a4,6x,'  exc:',a24,3x,a10)", &
       F9010 = "(3f12.8)", F9020 = "(f10.5,/,f10.5,2f15.10)", F9030 = "(i3,/,2d15.8,/,2i2)", &
       F9040 = "(i5,1p,d20.11)", F9060 = "(10i5)", F9070 = "(1p,4d20.13)"

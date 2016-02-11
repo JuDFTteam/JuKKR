@@ -108,7 +108,7 @@ module fillKKRMatrix_mod
     type(SparseMatrixDescription), intent(in) :: sparse
 
     double complex :: temp(lmmaxd)
-    integer :: block_row, block_col, start, lm1, lm2, lm3, lmmax1, lmmax2, lmmax3
+    integer :: block_row, block_col, start, lm2, lm3, lmmax1, lmmax2, lmmax3
     integer :: istart_row, istop_row, istart_col, istop_col, ind_ia
 
     start = 0

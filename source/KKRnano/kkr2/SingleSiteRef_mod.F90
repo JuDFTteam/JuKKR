@@ -68,7 +68,7 @@ module SingleSiteRef_mod
 
     !     allocate arrays
     memory_stat = 0
-    memory_fail = .false.
+    memory_fail = 0
 
     allocate(gref(ngd,ngd), stat=memory_stat) ; memory_fail = memory_fail + memory_stat**2
     allocate(gtref(ngd,lmmaxd), stat=memory_stat) ; memory_fail = memory_fail + memory_stat**2

@@ -10,9 +10,13 @@ module TEST_lcutoff_mod
 
   public :: initLcutoffNew
 
+#ifndef ell_int_t
+#define ell_int_t integer(kind=1)
+#endif
+  
   ! union of the truncation zones over all local atoms
-  integer(kind=1), allocatable, protected, public :: lmax_array(:) ! ell_max
-  integer(kind=1), allocatable, protected, public :: lmax_a_array(:,:) ! ell_max for each atom-atom pair
+  ell_int_t, allocatable, protected, public :: lmax_array(:) ! ell_max
+  ell_int_t, allocatable, protected, public :: lmax_a_array(:,:) ! ell_max for each atom-atom pair
   
   logical, protected, public :: DEBUG_dump_matrix = .false.
   integer, protected, public :: num_truncated(-1:8)
@@ -34,8 +38,8 @@ module TEST_lcutoff_mod
     
     double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
     integer :: naez, lmax, atomindex, ila, num_local_atoms, ist, nradii, l
-    integer(kind=1), allocatable :: lmax_atom(:,:), lmax_full(:)
-    integer(kind=1) :: l_lim(9)
+    ell_int_t, allocatable :: lmax_atom(:,:), lmax_full(:)
+    ell_int_t :: l_lim(9)
     double precision :: r2lim(9)   
  
     cutoffmode = solver_type
@@ -126,12 +130,12 @@ module TEST_lcutoff_mod
   !> If merging = .true.: change the lm value only when it is larger than the
   !> original value -> this merges the truncation zones
   subroutine calcCutoffarray(lmax_atom, rbasis, center, bravais, nradii, l_lim, radii2)
-    integer(kind=1), intent(inout) :: lmax_atom(:)
+    ell_int_t, intent(inout) :: lmax_atom(:)
     double precision, intent(in) :: rbasis(:,:) ! assumed(1:3,*)
     double precision, intent(in) :: center(3)
     double precision, intent(in) :: bravais(3,3)
     integer, intent(in) :: nradii
-    integer(kind=1), intent(in) :: l_lim(nradii)
+    ell_int_t, intent(in) :: l_lim(nradii)
     double precision, intent(in) :: radii2(nradii)
 
     integer :: ii, il
