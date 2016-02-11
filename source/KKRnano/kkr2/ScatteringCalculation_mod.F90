@@ -86,7 +86,7 @@ implicit none
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer, allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh
-    integer :: i1, ilocal, num_local_atoms
+    integer :: i1, ila, num_local_atoms, jla
     integer :: lmmaxd
     logical :: xccpl
 
@@ -148,10 +148,10 @@ implicit none
 
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
-    do ilocal = 1, num_local_atoms
-      atom_indices(ilocal) = trunc_zone%index_map(getAtomIndexOfLocal(calc, ilocal))
-      CHECKASSERT(atom_indices(ilocal) > 0)
-    enddo ! ilocal
+    do ila = 1, num_local_atoms
+      atom_indices(ila) = trunc_zone%index_map(getAtomIndexOfLocal(calc, ila))
+      CHECKASSERT(atom_indices(ila) > 0)
+    enddo ! ila
 
     ! setup the solver + bcp preconditioner, allocates a lot of memory
     ! it is good to do these allocations outside of energy loop: ToDo
@@ -171,18 +171,19 @@ implicit none
 
         ! if we had rMTref given for all atoms inside the reference cluster radius
         !   we could compute the Tref on the fly
-        
+! #define COMPUTE_tref_LOCALLY
+#ifndef COMPUTE_tref_LOCALLY       
          Tref_local = ZERO
         dTref_local = ZERO
   !------------------------------------------------------------------------------
-        !$omp parallel do private(ilocal, atomdata)
-        do ilocal = 1, num_local_atoms
-          atomdata => getAtomData(calc, ilocal)
+        !$omp parallel do private(ila, atomdata)
+        do ila = 1, num_local_atoms
+          atomdata => getAtomData(calc, ila)
 
-          call TREF(emesh%EZ(IE), params%vref, dims%LMAXD, atomdata%rMTref, &
-                    Tref_local(:,:,ilocal), dTref_local(:,:,ilocal), derive=(dims%Lly > 0))
+          call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, atomdata%rMTref, &
+                    Tref_local(:,:,ila), dTref_local(:,:,ila), derive=(dims%Lly > 0))
 
-        enddo  ! ilocal
+        enddo  ! ila
         !$omp endparallel do
   !------------------------------------------------------------------------------
 
@@ -192,27 +193,36 @@ implicit none
 
         ! Exchange the reference t-matrices within the reference clusters
         ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
-        do ilocal = 1, num_local_atoms
-          kkr => getKKR(calc, ilocal)
+        do ila = 1, num_local_atoms
+          kkr => getKKR(calc, ila)
 
-          call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, calc%ref_cluster_a(ilocal), mp%mySEComm)
-          call gatherTrefMatrices_com(dTref_local, kkr%dTrefLL, calc%ref_cluster_a(ilocal), mp%mySEComm)
-        enddo ! ilocal
-
+          call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
+          call gatherTrefMatrices_com(dTref_local, kkr%dTrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
+        enddo ! ila
+#else
+        !$omp parallel do private(ila, atomdata)
+        do ila = 1, num_local_atoms
+          kkr => getKKR(calc, ila)
+          do jla = 1, kkr%naclsd         
+            call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr%rMTref(jla), &
+                      kkr%TrefLL(:,:,jla), kkr%dTrefLL(:,:,jla), derive=(dims%Lly > 0))
+          enddo ! jla
+        enddo ! ila
+#endif
   !------------------------------------------------------------------------------
-        !$omp parallel do private(ilocal, kkr)
-        do ilocal = 1, num_local_atoms
-          kkr => getKKR(calc, ilocal)
+        !$omp parallel do private(ila, kkr)
+        do ila = 1, num_local_atoms
+          kkr => getKKR(calc, ila)
           
           call GREF(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
-                    calc%gaunts%CLEB, calc%ref_cluster_a(ilocal)%RCLS, calc%gaunts%ICLEB, &
-                    calc%gaunts%LOFLM, calc%ref_cluster_a(ilocal)%NACLS, &
-                    kkr%TrefLL, kkr%dTrefLL, GrefN_buffer(:,:,:,ilocal), &
+                    calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
+                    calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%NACLS, &
+                    kkr%TrefLL, kkr%dTrefLL, GrefN_buffer(:,:,:,ila), &
                     kkr%dGrefN, kkr%Lly_G0Tr(IE), &
                     dims%lmaxd, kkr%naclsd, calc%gaunts%ncleb, &
                     dims%Lly)
 
-        enddo  ! ilocal
+        enddo  ! ila
         !$omp endparallel do
   !------------------------------------------------------------------------------
 
@@ -228,12 +238,12 @@ implicit none
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
   !------------------------------------------------------------------------------
-            !$omp parallel do private(ilocal, kkr, atomdata, ldau_data, i1)
-            do ilocal = 1, num_local_atoms
-              kkr => getKKR(calc, ilocal)
-              atomdata => getAtomData(calc, ilocal)
-              ldau_data => getLDAUData(calc, ilocal)
-              i1 = getAtomIndexOfLocal(calc, ilocal)
+            !$omp parallel do private(ila, kkr, atomdata, ldau_data, i1)
+            do ila = 1, num_local_atoms
+              kkr => getKKR(calc, ila)
+              atomdata => getAtomData(calc, ila)
+              ldau_data => getLDAUData(calc, ila)
+              i1 = getAtomIndexOfLocal(calc, ila)
 
               call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%Tr_alph, ldau_data, params%Volterra)
 
@@ -256,7 +266,7 @@ implicit none
 
               call rescaleTmatrix(kkr%TmatN(:,:,ISPIN), kkr%lmmaxd, params%alat)
 
-            enddo ! ilocal
+            enddo ! ila
             !$omp endparallel do
   !------------------------------------------------------------------------------
 
@@ -295,11 +305,11 @@ implicit none
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
               call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), solv%represent_stats())
 
-            ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ilocal) N(ilocal)
-            do ilocal = 1, num_local_atoms
-              kkr => getKKR(calc, ilocal)
-              kkr%GmatN(:,:,ie,ispin) = GmatN_buffer(:,:,ilocal)
-            enddo ! ilocal
+            ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ila) N(ila)
+            do ila = 1, num_local_atoms
+              kkr => getKKR(calc, ila)
+              kkr%GmatN(:,:,ie,ispin) = GmatN_buffer(:,:,ila)
+            enddo ! ila
 
             call stopTimer(mult_scattering_timer)
             call resumeTimer(single_site_timer)
@@ -352,10 +362,10 @@ implicit none
     
   !=======================================================================
     ! communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
-    do ilocal = 1, num_local_atoms
-      kkr => getKKR(calc, ilocal)
+    do ila = 1, num_local_atoms
+      kkr => getKKR(calc, ila)
       call collectMSResults_com(mp, kkr%GmatN, kkr%LLY_GRDT, ebalance_handler%EPROC)
-    enddo ! ilocal
+    enddo ! ila
   !=======================================================================
 
   ! TIME
@@ -576,7 +586,7 @@ implicit none
 
     type(KKRresults), pointer :: kkr
 
-    integer :: ilocal, num_local_atoms, lmmaxd, chunk_size
+    integer :: ila, num_local_atoms, lmmaxd, chunk_size
     double complex, allocatable :: tsst_local(:,:,:)
 
     num_local_atoms = getNumLocalAtoms(calc)
@@ -586,10 +596,10 @@ implicit none
 
     chunk_size = size(tsst_local, 1)*size(tsst_local, 2)
 
-    do ilocal = 1, num_local_atoms
-      kkr => getKKR(calc, ilocal)
-      tsst_local(:,:,ilocal) = kkr%TmatN(:,:,ispin)
-    enddo ! ilocal
+    do ila = 1, num_local_atoms
+      kkr => getKKR(calc, ila)
+      tsst_local(:,:,ila) = kkr%TmatN(:,:,ispin)
+    enddo ! ila
 
     call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 
