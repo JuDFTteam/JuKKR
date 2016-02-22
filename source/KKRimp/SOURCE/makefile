@@ -32,12 +32,22 @@ mpitrace:  FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
 gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
 pg:         FC = pgf90 
-hybrid:     FC= $(MPIFC)
+hybrid:     FC= mpiifort -traceback 
+
+
+# default
+COMPVER = 'serial'
+mpi:       COMPVER = 'mpi'
+mpidebug:  COMPVER = 'mpidebug'
+openmp:    COMPVER = 'openmp'
+gfort:     COMPVER = 'gfort'
+pg:        COMPVER = 'pg'
+hybrid:    COMPVER = 'hybrid'
 
 ####################################################
 # Objects to compile                               #
 ####################################################
-OBJECTS_TYPE  =   nrtype.o  type_gmatbulk.o type_tmat.o type_gmat.o type_gmatonsite.o type_gauntshape.o type_gauntcoeff.o type_corestate.o type_gref.o type_tbcluster.o type_density.o type_shapefun.o type_cell.o type_cellnew.o type_config.o type_energyparts.o type_wavefunction.o type_ldau.o
+OBJECTS_TYPE  =   nrtype.o  type_gmatbulk.o type_tmat.o type_gmat.o type_gmatonsite.o type_gauntshape.o type_gauntcoeff.o type_corestate.o type_gref.o type_tbcluster.o type_density.o type_shapefun.o type_cell.o type_cellnew.o type_config.o type_energyparts.o type_wavefunction.o type_ldau.o type_cellorbit.o
 
 OBJECTS_MATH =  physic_params.o checknan.o log.o mathtools.o config.o beshank.o wrapper.o simp3.o simpk.o regsol.o soutk.o
 
@@ -75,7 +85,7 @@ LLIBSOPENMP+=  -lmkl_intel_thread -liomp5
 LLIBSGFORT = -L/usr/local/nag/lib -lnag -llapack_ifort -lblas_ifort  -L/usr/local/intel/current/lib/intel64 -lifcore -liomp5 -lintlc -limf -lirc -lpthread -Wl,-rpath,/usr/local/intel/current/lib/intel64
 
 # MacOSX libraries:
-LLIBSMAC  =  -L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries/32 -lmkl_intel \
+LLIBSMAC  =  -mkl #-L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries/32 -lmkl_intel \
               -lmkl_intel_thread -lmkl_core -lguide -lpthread -i_dynamic
 
 ####################################################
@@ -101,31 +111,49 @@ pg:       FFLAGS = -C
 debug:    FFLAGS = -CB -check all -traceback -g
 #debug:    FFLAGS = -debug all -fno-omit-frame-pointer -ftrapuv -check all -traceback  -O0
 mpidebug: FFLAGS = -CB -check all -traceback -g
+hybrid:   FFLAGS = -O2 -openmp
 ####################################################
 # Linking                                          #
 ####################################################
 FILENAME = kkrflex.exe
 SOURCEDIR = .
 
-cbg:   $(OBJECTS)
+.PHONY: cbg
+.PHONY: hybrid
+.PHONY: openmp
+.PHONY: debug
+.PHONY: pg
+.PHONY: gfort
+.PHONY: mpi
+.PHONY: mpitrace
+.PHONY: mpidebug
+.PHONY: mac
+.PHONY: getversion
+
+getversion:
+	@echo $(COMPVER)>compver; \
+	$(SOURCEDIR)/getversion.sh
+
+
+cbg:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-hybrid:   $(OBJECTS)
+hybrid:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSOPENMP)
-openmp:   $(OBJECTS)
+openmp:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSOPENMP)
-debug:   $(OBJECTS)
+debug:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-pg:   $(OBJECTS)
+pg:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-gfort: $(OBJECTS)
+gfort: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSGFORT)
-mpi:   $(OBJECTS)
+mpi:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-mpitrace: $(OBJECTS)
+mpitrace: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-mpidebug: $(OBJECTS)
+mpidebug: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
-mac:   $(OBJECTS)
+mac:   getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBSMAC)
 
 %.o: $(SOURCEDIR)/%.f90
