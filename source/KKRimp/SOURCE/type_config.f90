@@ -23,7 +23,11 @@ TYPE                              ::  CONFIG_TYPE
   integer                      ::  kshape   = 1
   integer                      ::  kspinorbit = 0
   integer                      ::  ncoll = 0
-  integer                      ::  wavefunc_recalc_threshhold=0
+  ! changed default value to save the first 20 wavefunctions. This needs up to
+  ! 1GB of additional memory, which should usually be available. By using the
+  ! keyword 'WAVEFUNC_RECALC_THRESHHOLD' in the inputcard this can be modified. 
+  !integer                      ::  wavefunc_recalc_threshhold=0
+  integer                      ::  wavefunc_recalc_threshhold=20
 ! -------------------------
 !
 ! -------------------------

@@ -2,7 +2,7 @@ module mod_calctmat_bauernew
 contains
 subroutine calctmat_bauernew(cell,tmat,lmaxatom,eryd_in,ZATOM,cellnew,wavefunction, &
                              ispin,nspin,kspinorbit,use_fullgmat,theta,phi,ncoll,nsra,config,idotime, &
-                             ie,ldau,iatom,cellorbit)        ! lda+u
+                             ie,ldau,iatom,cellorbit,calcleft)        ! lda+u
 
 use mod_gauntharmonics, only: gauntcoeff
 use mod_timing
@@ -48,6 +48,7 @@ integer                                   :: nsra
 type(config_type)                         :: config
 integer                                   :: ie                         ! lda+u
 type(ldau_type)                           :: ldau                       ! lda+u variables
+logical                                   :: calcleft
 !local
 double complex,allocatable                ::  vll2ddr(:,:)
 double complex,allocatable                ::  vll2ddr2(:,:)
@@ -414,7 +415,7 @@ end if
 ! If spin-orbit coupling is used the left solution of the
 ! Hamiltonian is non-trivial and needs to be calculated explicitly
 !#######################################################
-if (kspinorbit==1) then
+if ((kspinorbit==1).and.calcleft) then
 
   if (.not. allocated(wavefunction%SLLleft)) then
     allocate (wavefunction%SLLleft(lmsize2,lmsize,cellnew%nrmaxnew,1),&

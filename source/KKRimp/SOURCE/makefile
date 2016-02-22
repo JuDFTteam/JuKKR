@@ -32,7 +32,17 @@ mpitrace:  FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
 gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
 pg:         FC = pgf90 
-hybrid:     FC= $(MPIFC)
+hybrid:     FC= mpiifort -traceback 
+
+
+# default
+COMPVER = 'serial'
+mpi:       COMPVER = 'mpi'
+mpidebug:  COMPVER = 'mpidebug'
+openmp:    COMPVER = 'openmp'
+gfort:     COMPVER = 'gfort'
+pg:        COMPVER = 'pg'
+hybrid:    COMPVER = 'hybrid'
 
 
 # default
@@ -111,6 +121,7 @@ pg:       FFLAGS = -C
 debug:    FFLAGS = -CB -check all -traceback -g
 #debug:    FFLAGS = -debug all -fno-omit-frame-pointer -ftrapuv -check all -traceback  -O0
 mpidebug: FFLAGS = -CB -check all -traceback -g
+hybrid:   FFLAGS = -O2 -openmp
 ####################################################
 # Linking                                          #
 ####################################################
