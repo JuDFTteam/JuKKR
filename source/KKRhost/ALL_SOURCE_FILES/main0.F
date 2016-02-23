@@ -1110,8 +1110,12 @@ C
  
  
       IF (OPT('LDA+U   ')) DEALLOCATE(ULDAU)
-      deallocate(thetas, thetasnew, thesme)
-      deallocate(vins,LEFTTINVLL,RIGHTTINVLL)
+      if(allocated(thetas)     ) deallocate(thetas)
+      if(allocated(thetasnew)  ) deallocate(thetasnew)
+      if(allocated(thesme)     ) deallocate(thesme)
+      if(allocated(vins)       ) deallocate(vins)
+      if(allocated(LEFTTINVLL) ) deallocate(LEFTTINVLL)
+      if(allocated(RIGHTTINVLL)) deallocate(RIGHTTINVLL)
 
       END SUBROUTINE !MAIN0
       

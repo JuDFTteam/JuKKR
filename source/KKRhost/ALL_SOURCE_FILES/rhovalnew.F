@@ -110,16 +110,16 @@
       integer :: ie_start,ie_end, ie_num
       double precision :: angles_new(NATYPD,2)
 ! determine if omp is used
-!$omp parallel shared(nth,ith)
-!$omp single
        ith = 0
        nth = 1
 #ifdef CPP_OMP
+!$omp parallel shared(nth,ith)
+!$omp single
        nth = omp_get_num_threads()
        if(t_inc%i_write>0) write(1337,*) 'nth =',nth
-#endif
 !$omp end single
 !$omp end parallel
+#endif
 
 
        PI=4d0*DATAN(1d0)
@@ -235,20 +235,22 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
  3001 IF (IERR.NE.0) STOP 'ERROR CREATING ''gflle'''                    ! lmlm-dos ruess
       ENDIF                                                             ! lmlm-dos ruess
 
-        ! initialize to zero
-        DEN=CZERO
-        DENLM=CZERO
+      ! initialize to zero
+      DEN=CZERO
+      DENLM=CZERO
 c energy loop
-       if(myrank==master.and.t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
+      if(myrank==master.and.t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
          
-!          write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
-
-       DO ie_num=1,ie_end
-         IE = ie_start+ie_num
+!     write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
 #else
+      ie_start = 0 ! offset
+      ie_end   = IELAST
+#endif
+
+#ifdef CPP_OMP
 ! omp: start parallel region here
 !$omp parallel do default(none)
 !$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
@@ -267,27 +269,28 @@ c energy loop
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 !$omp& shared(t_tgmat,ie_end)
 !$omp& private(alphasph,alphall,ie_num)
-       DO IE=1,IELAST
-         ie_num = ie
-         ie_end = ielast
 #endif
+       DO ie_num=1,ie_end
+        IE = ie_start+ie_num
        
-         if (nth>=1) then
 #ifdef CPP_OMP
-            ith = omp_get_thread_num()
+        ith = omp_get_thread_num()
+#else
+        ith = 0
 #endif
-         else
-            ith = 0
-         endif
 
         ERYD=EZ(IE)
         EK=SQRT(ERYD)
         DF=WEZ(IE)/DBLE(NSPIN)
         IF (NSRA.EQ.2) EK = SQRT( ERYD + ERYD*ERYD/(CVLIGHT*CVLIGHT) ) *
      &                          ( 1d0 + ERYD/(CVLIGHT*CVLIGHT) )
+#ifdef CPP_OMP
 !$omp critical
+#endif
         if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
+#ifdef CPP_OMP
 !$omp end critical
+#endif
 
 c recalculate wavefuntions, also include left solution
 c contruct the spin-orbit coupling hamiltonian and add to potential
@@ -420,7 +423,9 @@ c notice that exchange the order of left and right hankel/bessel functions
         DO 200 IQ = 1,NQDOS                                       ! qdos
 c read in gf
         IREC = IQ + NQDOS * (IE-1) +  NQDOS * IELAST * (I1-1)     ! qdos
+#ifdef CPP_OMP
         !$omp critical
+#endif
         if (t_tgmat%gmat_to_file) then
            READ(69,REC=IREC) GMAT0 
         else
@@ -428,7 +433,9 @@ c read in gf
      &            ie_end * (I1-1)
            GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
         end if
+#ifdef CPP_OMP
         !$omp end critical
+#endif
 
 c rotate gmat from global frame to local frame
         CALL ROTATEMATRIX(GMAT0,THETA,PHI,LMMAXD,1)
@@ -552,7 +559,9 @@ c get orbital moment
         ENDDO ! IORB
         
        ENDDO ! IE loop 
+#ifdef CPP_OMP
 !$omp end parallel do
+#endif
 
 ! omp: move sum from rhooutnew here after parallel calculation
       DO IR=1,IRMDNEW

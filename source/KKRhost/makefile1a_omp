@@ -179,8 +179,8 @@ $(OBJ)/rllsllsourceterms.o  : $(COM)/rllsllsourceterms.f90 $(INCP)        ; \
 $(OBJ)/calcsph.o  : $(COM)/calcsph.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(OPENMPFLAGS) $(COM)/calcsph.f -c -o $@
 
-$(OBJ)/rllsll.o  : $(COM)/rllsll.f90 $(INCP)        ; \
-                    $(FC) $(FFLAGS) $(OPENMPFLAGS) $(COM)/rllsll.f90 -c -o $@
+$(OBJ)/rllsll.o  : $(COM)/rllsll.F90 $(INCP)        ; \
+                    $(FC) $(FFLAGS) $(CPP) $(OPENMPFLAGS) $(COM)/rllsll.F90 -c -o $@
 
 $(OBJ)/chebint.o  : $(COM)/chebint.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/chebint.f -c -o $@

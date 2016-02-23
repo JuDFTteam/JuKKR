@@ -69,21 +69,23 @@
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
-      integer :: ie_start, mytot
+      integer :: mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_end, ie_num
+      integer :: ie_end, ie_num, ie_start
+
+#ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
 !$omp parallel shared(nth,ith) 
 !$omp single 
-      nth = 1
-      ith = 0
-#ifdef CPP_OMP
       nth = omp_get_num_threads()
-#endif
       if(t_inc%i_write>0) write(1337,*) 'nth =',nth
 !$omp end single
 !$omp end parallel
+#else
+      nth = 1
+      ith = 0
+#endif
 
        IRMDNEW= NPAN_TOT*(NCHEB+1)
        ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN))
@@ -149,12 +151,6 @@ c energy loop
 
 !        write(*,'(A,100I3)') 'calctmat ie loop', myrank, 
 !      +    ie_start, ie_end
-     
-
-!        DO IE=ie_start,ie_end
-       DO ie_num=1,ie_end
-       
-         IE = ie_start+ie_num
 #else
        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
      &           allocated(t_mpi_c_grid%ioff_pT2))) 
@@ -165,6 +161,11 @@ c energy loop
        ! now initialize arrays for tmat, gmat, and gref
        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+
+       ie_start = 0
+       ie_end = IELAST
+#endif
+#ifdef CPP_OMP
 !$omp parallel do default(none) 
 !$omp& private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor) 
 !$omp& private(jlk_index,tmatll,ith,irec, ie_num) 
@@ -182,10 +183,11 @@ c energy loop
 !$omp& private(alphasph) 
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
-       DO IE=1,IELAST
-         ie_end = IELAST
-         ie_num = ie
 #endif
+       DO ie_num=1,ie_end
+       
+         IE = ie_start+ie_num
+
          ! get current thread
          if (nth>=1) then
 #ifdef CPP_OMP
@@ -228,13 +230,15 @@ c         ERYD = EZ(IE)
         IF (LLY.NE.0) IDERIV=1
         DO SIGNDE=-IDERIV,IDERIV,2
          ERYD = EZ(IE)+DFLOAT(SIGNDE)*DELTAE/2.D0 ! LLY
+#ifdef CPP_OMP
 !$omp critical
+#endif
         if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 #ifdef CPP_OMP        
         if(ie==1.and.(t_inc%i_write>0)) 
      &      write(1337,*) 'nested omp?',omp_get_nested()
-#endif
 !$omp end critical
+#endif
 
 c contruct the spin-orbit coupling hamiltonian and add to potential
         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
@@ -360,7 +364,9 @@ c add spherical contribution of tmatrix
         ENDIF ! LLY
          
          ! writeout
+#ifdef CPP_OMP        
 !$omp critical
+#endif
          if (t_tgmat%tmat_to_file) then
 !             write(*,*) 'write tmat', ie, i1, ielast
             IREC = IE + IELAST*(I1-1)
@@ -391,10 +397,13 @@ c add spherical contribution of tmatrix
              t_lloyd%tralpha(irec) = TRALPHA
            end if
          ENDIF
+#ifdef CPP_OMP
 !$omp end critical         
-         
+#endif
        ENDDO ! IE loop 
+#ifdef CPP_OMP
 !$omp end parallel do
+#endif
 
 
        DEALLOCATE(VINS)

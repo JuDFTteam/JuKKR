@@ -26,6 +26,7 @@ mpidebug:   FC = mpiifort
 #rwth cluster
 rwthmpi: FC=$(MPIFC)
 rwthmpidebug: FC=$(MPIFC)  # marmotf90   
+rwthhybrid: FC=$(MPIFC)
 # $(MPIFC)
 
 
@@ -44,6 +45,7 @@ rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
 rwthmpidebug: COMPVER ='mpidebug-rwth'
+rwthhybrid:   COMPVER ='hybrid-rwth'
 
 
 
@@ -114,8 +116,6 @@ macomp: LLIBS=$(MACLLIBS)
 rwth:          LLIBS=$(RWTHLLIBS)
 rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
-rwthomp:       LLIBS=$(RWTHLLIBS)
-rwthompdebug:  LLIBS=$(RWTHLLIBS)
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -140,6 +140,7 @@ openmp: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
 rwthomp: LLIBS=$(RWTHLLIBSOMP)
 rwthompdebug: LLIBS=$(RWTHLLIBSOMP)
+rwthhybrid: LLIBS=$(RWTHLLIBSOMP)
 
 ####################################################
 # C preprocessor options                           #
@@ -156,6 +157,7 @@ macomp:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
+rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
 
 ####################################################
 # Compiler flags                                   #
@@ -182,6 +184,8 @@ rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g
 rwthomp: OPENMPFLAGS = -openmp
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -openmp
 rwthompdebug: OPENMPFLAGS = -openmp
+rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
+rwthhybrid: OPENMPFLAGS = -openmp
 
 
 
@@ -246,6 +250,7 @@ rwthmpi: compile
 rwthomp: compile
 rwthmpidebug: compile
 rwthompdebug: compile
+rwthhybrid:   compile
 
 %.o: $(SOURCEDIR)/%.f90
 	$(FC) -c $(FFLAGS)  $<

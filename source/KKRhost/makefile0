@@ -248,7 +248,8 @@ $(OBJ)/regsol.o   : $(SRA)/regsol.f                   ; \
 ##################### sources in COMMON directory ##########
 
 $(OBJ)/main0.o       : $(COM)/main0.F   $(INCP) ; \
-                        $(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) $(COM)/main0.F -c -o $@
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/main0.F -c -o $@
+#                        $(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) $(COM)/main0.F -c -o $@
 
 $(OBJ)/gaunt.o       : $(COM)/gaunt.f                   ; \
                         $(FC) $(FFLAGS) $(COM)/gaunt.f -c -o $@
