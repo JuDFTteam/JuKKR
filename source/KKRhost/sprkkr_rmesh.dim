@@ -12,9 +12,9 @@ C ======= SPR-KKR and TB-KKR common parameters =========================
 
       PARAMETER ( ITMAX=50 )
       PARAMETER ( NTMAXLOC=2 )
-      PARAMETER ( NRMAXLOC=750 )
+      PARAMETER ( NRMAXLOC=900 )
 c radial mesh points
-      PARAMETER ( NRMAX=750 )
+      PARAMETER ( NRMAX=900 )
       PARAMETER ( NCFMAX=8 )
 
 

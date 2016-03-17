@@ -1047,6 +1047,29 @@ C
      &         '  CPA-cycle ',/,1X,79('*'),/)
 
 
+      if( test('rhoqtest') .and. (myrank==master) ) then
+        open(9999, file='params.txt')
+        write(9999,*) 2*LMMAXD, t_params%natyp
+        write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
+     &                t_params%nembd1, t_params%lmax
+        write(9999,*) t_params%alat, naclsmax
+        close(9999)
+
+        open(9999, file='host.txt')
+        write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
+        write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,
+     &                              1:t_params%nclsd), 
+     &                t_params%rr(1:3,0:t_params%nrd), 
+     &                t_params%atom(1:t_params%nclsd,
+     &                              1:t_params%naez+t_params%nembd1)
+        write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1), 
+     &                t_params%ezoa(1:t_params%nclsd,
+     &                              1:t_params%naez+t_params%nembd1), 
+     &                t_params%nacls(1:t_params%nclsd)
+        close(9999)
+      endif
+
+
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP)
 
 

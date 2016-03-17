@@ -221,6 +221,9 @@ c first calculate the spherical symmetric contribution
            CDENNS(IR,JSPIN) = CDENNS(IR,JSPIN)+
      +           CLEB(J)*WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR)*
      +           THETASNEW(IR,IFUN)
+          if(jspin==1) write(123456789,'(4I5,E15.7,I5,20000E15.7)') 
+     &                    j,lm1,lm2,lm3,cleb(j),ifun,thetasnew(ir,ifun),
+     &          RLL(LM1+LMMAXSO,LM2,IR),RLLleft(LM2,mod(LM3,lmmaxso),IR)
           ENDDO
          ENDIF
         ENDDO ! JSPIN

@@ -485,6 +485,7 @@ C=======================================================================
      &                  I1,QVEC,NQDOS)            ! qdos
 C
             DO L = 0,LMAXD1
+               write(*,*) L,IE,IQ,shape(ESPV),shape(DEN)
                ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE,IQ)*DF)
                ESPV(L,2) = ESPV(L,2) + DIMAG(ERYD*DEN(L,IE+IEMXD,IQ)*DF)
             END DO

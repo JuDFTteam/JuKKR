@@ -93,8 +93,6 @@
      +                                RHOTEMP(:,:),RHONEWTEMP(:,:)
        INTEGER JLK_INDEX(2*LMMAXSO)
        LOGICAL LDORHOEF
-       LOGICAL TEST,OPT
-       EXTERNAL TEST,OPT
        DOUBLE PRECISION QVEC(:,:)       ! qdos ruess: q-vectors for qdos
        ALLOCATABLE QVEC                 ! qdos ruess
        DOUBLE COMPLEX DENTOT(2),DENTMP(0:LMAXD1,2) ! qdos ruess
@@ -109,6 +107,19 @@
 #endif
       integer :: ie_start,ie_end, ie_num
       double precision :: angles_new(NATYPD,2)
+C     ..
+C     .. Arrays in Common ..
+      CHARACTER*8 OPTC(32),TESTC(32)
+C     ..
+C     .. Common blocks ..
+      COMMON /OPTC/OPTC
+      COMMON /TESTC/TESTC
+C     ..
+       LOGICAL TEST,OPT
+       EXTERNAL TEST,OPT
+      ! test
+      integer :: mu0
+      ! test
 ! determine if omp is used
        ith = 0
        nth = 1
@@ -454,6 +465,34 @@ c calculate density
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
      +                GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
+
+       !write(*,*) myrank,testc, optc
+       if( test('rhoqtest')) then
+         open(9999,file='mu0')
+         read(9999,*) mu0
+         close(9999)
+!          write(*,*) myrank,i1,mu0
+         if(i1.eq.mu0) then
+           open(9999, file='wavefunctions.txt')
+           write(9999,'(100I9)') ntotd, npan_tot, ncheb, npan_log,
+     &                           npan_eq, nsra, irmdnew
+           do ir=1,irmdnew
+             do lm1=1,nsra*lmmaxso
+               do lm2=1,lmmaxso
+                  write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith) 
+                  write(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir, ith)
+               end do
+             end do
+           enddo
+           write(987321,*) rll
+           write(987322,*) rllleft
+           do lm1=0,ntotd
+             write(9999,'(E16.7,I9)') rpan_intervall(lm1),
+     &                                ipan_intervall(lm1)
+           enddo
+           close(9999)
+         end if ! i1.eq.mu0
+       end if ! test('rhoqtest')
 
        DO JSPIN=1,4
 
