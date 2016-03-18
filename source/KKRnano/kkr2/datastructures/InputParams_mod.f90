@@ -58,6 +58,7 @@ type InputParams
   integer :: write_shapes
   double precision :: mt_zero_shift
   integer :: DEBUG_morgan_electrostatics
+  logical :: fullbz
 end type InputParams
 
 CONTAINS
@@ -514,6 +515,17 @@ integer function getInputParamsValues(filename, confvalues) result(ierror)
     call destroyConfigReader(conf)
     return
   end if
+  call getValueLogical(conf, "fullbz", confvalues%fullbz, ierror)
+  if (ierror == CONFIG_READER_ERR_VAR_NOT_FOUND) then
+    confvalues%fullbz = .TRUE.
+    write(*,*) "WARNING: Bad/no value given for fullbz. Set to fullbz = .TRUE."
+    ierror = 0
+  end if
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for fullbz."
+    call destroyConfigReader(conf)
+    return
+  end if
   call destroyConfigReader(conf)
 write(*,*) "Finished reading information from input.conf"
 end function
@@ -576,6 +588,7 @@ integer function readInputParamsFromFile(filename, confvalues) result(ierror)
   read(FILEHANDLE) confvalues%write_shapes
   read(FILEHANDLE) confvalues%mt_zero_shift
   read(FILEHANDLE) confvalues%DEBUG_morgan_electrostatics
+  read(FILEHANDLE) confvalues%fullbz
   close(FILEHANDLE)
 end function
 
@@ -637,6 +650,7 @@ integer function writeInputParamsToFile(filename, confvalues) result(ierror)
   write(FILEHANDLE) confvalues%write_shapes
   write(FILEHANDLE) confvalues%mt_zero_shift
   write(FILEHANDLE) confvalues%DEBUG_morgan_electrostatics
+  write(FILEHANDLE) confvalues%fullbz
   close(FILEHANDLE)
 end function
 

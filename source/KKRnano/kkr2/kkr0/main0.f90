@@ -284,7 +284,7 @@
                  arrays%DSYMLL, &
                  params%bzdivide(1),params%bzdivide(2),params%bzdivide(3), &
                  IELAST,EZ,arrays%KMESH,arrays%MAXMESH,MAXMSHD, &
-                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD)
+                 dims%LMAXD, IEMXD, KREL, arrays%KPOIBZ, EKMD, params%fullbz)
 
     ! after return from bzkint0, EKMD contains the right value
     dims%EKMD = EKMD

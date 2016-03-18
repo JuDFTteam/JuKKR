@@ -7,7 +7,7 @@
 C                        new after inc.p replacement
      &                   LMAX, IEMXD, KREL, KPOIBZ,
 C                        output: (required EKMD value)
-     &                   EKMD)
+     &                   EKMD, FULLBZ)
 C
       IMPLICIT NONE
 
@@ -17,6 +17,7 @@ C     new after inc.p replace
       INTEGER KREL
       INTEGER KPOIBZ
       INTEGER EKMD
+      LOGICAL FULLBZ
 
       INTEGER NSYMAXD
       PARAMETER (NSYMAXD=48)
@@ -76,7 +77,7 @@ C
 C
 C --> test: full BZ integration
 C
-      IF ( TEST('fullBZ  ') ) THEN
+      IF (fullBZ) THEN
          NSYMAT = 1
          LIRR = .FALSE.
          WRITE(6,'(8X,2A,/)') 
