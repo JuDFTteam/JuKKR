@@ -38,7 +38,8 @@ C     .. External Functions ..
       EXTERNAL OPT
 
       write(1337,*) 'KKRFLEX WRITEOUT'
-      writE(1337,*) OPT('KKRFLEX ')
+      write(1337,*) OPT('KKRFLEX ')
+
       IF ( OPT('KKRFLEX ') ) THEN
         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
         write(6699,*) '#',NATOMIMP,NSPIN,IELAST,LMMAXD,KORBIT

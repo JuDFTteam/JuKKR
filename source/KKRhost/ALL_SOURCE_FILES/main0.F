@@ -648,6 +648,7 @@ C ----------------------------------------------------------------------
           CLOSE(3)
       END IF
 C ----------------------------------------------------------------------
+C --> Apply external magnetic field
 !     from startb1 moved here
       IF (KHFELD.EQ.1) THEN
 c
@@ -730,7 +731,7 @@ C
      &   CALL RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,
      &        VTREL,BTREL,ZREL,RMREL,JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,
      &        IPAND,IRMD,NPOTD,NATYPD)
-      END IF
+      END IF !KREL+KORBIT.EQ.1
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 C
 C --> set up energy contour
