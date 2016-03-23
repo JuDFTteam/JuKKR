@@ -162,7 +162,6 @@ contains
             else
                !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
                allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-!                write(*,*) myrank, 'allocating gref with',t_mpi_c_grid%ntot2
                if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
             end if
          else
@@ -370,7 +369,7 @@ contains
                allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
             else
-               allocate(t_lloyd%cdos(t_mpi_c_grid%ntot2,t_inc%NSPIN), STAT=ierr)
+               allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
             end if
          else
@@ -466,8 +465,6 @@ contains
       do i2=1,N2
          i3 = i2+N2*(i1-1)
          ntot_all(i3) = ntot_pT1(i1)*ntot_pT2(i2)
-!          if(ioff_pT1(i1).eq.0) ioff_pT1(i1) = 1
-!          ioff_all(i3) = ioff_pT1(i1)*ntot_pT2(i2)+ioff_pT2(i2)
          if (i3==1) then
             ioff_all(i3) = 0
          else
@@ -500,8 +497,6 @@ contains
     
     
     !Gather tmat so that all processors the full matrix for their part of the energy contour
-!     if(myrank==master) write(*,*) 'communicate tmat?',t_mpi_c_grid%dims(1),t_mpi_c_grid%dims(1)>1
-!     if(t_mpi_c_grid%dims(1)>1) then
     if(t_mpi_c_grid%nranks_ie>1) then
        nspin = t_inc%NSPIN
        if(t_inc%NEWSOSOL) nspin = 1
@@ -510,13 +505,6 @@ contains
        recvcounts = ntot_pT*ihelp
        displs     = ioff_pT*ihelp
        
-!        write(*,*) myrank, shape(t_tgmat%tmat),ihelp,mytot,recvcounts,displs
-       
-       !call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-       !                   & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-       !                   & mympi_comm, ierr )
-       !call MPI_Allgatherv( MPI_IN_PLACE, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-!        write(*,*) 'gather tmat', mytot, ihelp, recvcounts, displs
        allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP))
        call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
                           & work, recvcounts, displs, MPI_DOUBLE_COMPLEX, &

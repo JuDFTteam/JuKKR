@@ -512,6 +512,7 @@ C **********************************************************************
 
             END DO  !i1 = 1,natyp
             
+            
             if(t_lloyd%g0tr_to_file) then
                IF (LLY.NE.0.AND.ISPIN.EQ.1)                         ! LLY
      &                      READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
@@ -574,6 +575,7 @@ C
      &                 ISPIN,NSPINDD,
      &                 TQDOS,IQDOSRUN,                         ! qdos
      &    DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,ISPIN),TRACET(IE,ISPIN),LLY) ! LLY Lloyd
+     
 #ifdef CPP_TIMING
         call timing_pause('main1b - kloopz')
 #endif
@@ -675,6 +677,10 @@ C
                CDOS_LLY(IE,ISPIN) = CDOS_LLY(IE,ISPIN) / PI               ! LLY Lloyd
 
             ENDIF                                                         ! LLY Lloyd
+            
+         
+!          write(*,'(2I5,10ES15.7)') ie,myrank,TRALPHA(IE,1),
+!      &        LLY_GRTR(IE,1),TRALPHAREF(IE),CDOS_LLY(IE,1)
 
 c ------------------------------------------------------------------------
 
@@ -726,7 +732,6 @@ c read in Green function of reference system
        if (t_tgmat%gref_to_file) then
           READ (68,REC=IE) GINP
        else
-          !write(*,*) ie_num,shape(ginp),shape(t_tgmat%gref)
           ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
        end if
        if(t_lloyd%dgref_to_file) then
@@ -774,7 +779,6 @@ c read in t matrix
         PHI   = PHIS(I1)
 
 c read in t-matrix from file
-!         write(*,*) 'main1b tmatread',myrank,i1,ie,ielast
         IREC = IE + IELAST*(I1-1)
         if (t_tgmat%tmat_to_file) then
            READ (69,REC=IREC) TMAT
@@ -881,7 +885,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
      &              CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,
      &              1,NSPINDD,
      &              TQDOS,IQDOSRUN,     ! qdos
-     &    DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1),TRACET(IE,1),LLY) ! LLY Lloyd
+     &    DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1),TRACET(IE,1),LLY) ! LLY Lloyd     
 #ifdef CPP_TIMING
             call timing_pause('main1b - kloopz')
 #endif
@@ -942,6 +946,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
 
             ENDIF                                                   ! LLY 
+         
 
  460  CONTINUE                  ! IE=1,IELAST
 #ifdef CPP_TIMING
@@ -968,8 +973,8 @@ C
          IF (.NOT.OPT('NEWSOSOL')) THEN
           DO ISPIN = 1,NSPIN                                             ! LLY
 #ifdef CPP_MPI
-           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-           ie_end = t_mpi_c_grid%ntot2
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
            DO ie_num=1,ie_end
             IE = ie_start+ie_num
 #else
@@ -977,7 +982,7 @@ C
             ie_num = ie
 #endif
             if(t_lloyd%cdos_diff_lly_to_file) then
-               WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),
+               WRITE(701,FMT='(10E25.16)') EZ(IE),
      &          CDOS_LLY(IE,ISPIN),
      &          TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                     ! LLY
             else
@@ -987,8 +992,8 @@ C
           ENDDO                                                          ! LLY
          ELSE                         
 #ifdef CPP_MPI
-           ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-           ie_end = t_mpi_c_grid%ntot2
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
            DO ie_num=1,ie_end
             IE = ie_start+ie_num
 #else
@@ -996,7 +1001,7 @@ C
             ie_num = ie
 #endif
             if(t_lloyd%cdos_diff_lly_to_file) then
-              WRITE(701,FMT='(10E25.16)') DREAL(EZ(IE)),CDOS_LLY(IE,1),     
+              WRITE(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),     
      &                                    TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
             else
                t_lloyd%cdos(ie_num,1) = CDOS_LLY(IE,1)

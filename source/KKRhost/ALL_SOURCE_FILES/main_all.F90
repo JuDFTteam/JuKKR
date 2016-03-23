@@ -118,14 +118,14 @@ program kkrcode
     endif
     if(t_inc%i_write>0 .and. myrank.ne.master) open(1337, file='output.'//trim(ctemp)//'.txt')
   
-! bug found: for serial and openmp run with SOC old files have to be written out, otherwise something goes wrong
-! thus - for now - this is enforced here:
-! #ifndef CPP_MPI
-#ifdef CPP_OMP
-!   t_tgmat%tmat_to_file = .true.
-!   t_tgmat%gref_to_file = .true.
-!   t_tgmat%gmat_to_file = .true.
-#endif
+! ! bug found: for serial and openmp run with SOC old files have to be written out, otherwise something goes wrong
+! ! thus - for now - this is enforced here:
+! ! #ifndef CPP_MPI
+! ! #ifdef CPP_OMP
+! !   t_tgmat%tmat_to_file = .true.
+! !   t_tgmat%gref_to_file = .true.
+! !   t_tgmat%gmat_to_file = .true.
+! ! #endif
   
   
   ! Now start scf iterations and do all steps of the KKR formalism until convergence

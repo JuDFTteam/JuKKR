@@ -289,12 +289,8 @@ C     .. Local Arrays ..
       DOUBLE COMPLEX DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD)!,
-!      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
       double complex, allocatable :: LEFTTINVLL(:,:,:,:,:), 
      +                               RIGHTTINVLL(:,:,:,:,:)
-!       DOUBLE COMPLEX, allocatable :: DEZ(:),EZ(:),WEZ(:)
-!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),DSYMLL1(:,:,:)
       DOUBLE PRECISION A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
@@ -305,31 +301,13 @@ C     .. Local Arrays ..
      +                 RMTREF(NREFD),RMTREFAT(NAEZD+NEMBD),RR(3,0:NRD),
      +                 RROT(48,3,NSHELD),RS(IRMD,0:LMAXD,NATYPD),
      +                 RSYMAT(64,3,3),RWS(NATYPD),S(0:LMAXD,NATYPD),
-!      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
      +                 TLEFT(3,NEMBD1),
      +                 TRIGHT(3,NEMBD1),VBC(2),
-!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
      +                 VISP(IRMD,NPOTD),
      +                 VREF(NREFD),WG(LASSLD),
      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3)
       double precision, allocatable :: vins(:,:,:)
-!       DOUBLE PRECISION, allocatable :: A(:),B(:),BRAVAIS(:,:),
-!      +                 CLEB(:,:),CMOMHOST(:,:),DRDI(:,:),
-!      +                 DROR(:,:),ECORE(:,:),
-!      +                 MTFAC(:),R(:,:),RATOM(:,:),
-!      +                 RBASIS(:,:),RCLS(:,:,:),
-!      +                 RCLSIMP(:,:),RECBV(:,:),
-!      +                 RMT(:),RMTNEW(:),FPRADIUS(:),
-!      +                 RMTREF(:),RMTREFAT(:),RR(:,:),
-!      +                 RROT(:,:,:),RS(:,:,:),
-!      +                 RSYMAT(:,:,:),RWS(:),S(:,:),
-!      +                 THETAS(:,:,:),TLEFT(:,:),
-!      +                 TRIGHT(:,:),VBC(:),
-!      +                 VINS(:,:,:),VISP(:,:),
-!      +                 VREF(:),WG(:),
-!      +                 YRG(:,:,:),
-!      +                 ZAT(:),ZPERIGHT(:),ZPERLEFT(:)
       INTEGER ATOM(NACLSD,NAEZD+NEMBD),ATOMIMP(NATOMIMPD),
      &        CLS(NAEZD+NEMBD),EZOA(NACLSD,NAEZD+NEMBD),
      +        ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD),
@@ -397,7 +375,6 @@ C-----------------------------------------------------------------------
       INTEGER ISVATOM,NVATOM
       DOUBLE PRECISION ZATTEMP
 C     .. Dummy variables needed only in IMPURITY program 
-!       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
       DOUBLE PRECISION, allocatable :: THESME(:,:,:)
 
 C
@@ -472,34 +449,12 @@ C     .. Common blocks ..
 C     ..
 
 
-!       ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       allocate(THETAS(IRID,NFUND,NCELLD),THESME(IRID,NFUND,NCELLD),
      +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD),
      +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      +         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
 
-!       ALLOCATE(DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD),
-!      +               DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
-!      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
-!      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
-!       ALLOCATE(A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
-!      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
-!      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
-!      +                 MTFAC(NATYPD),R(IRMD,NATYPD),RATOM(3,NSHELD),
-!      +                 RBASIS(3,NAEZD+NEMBD),RCLS(3,NACLSD,NCLSD),
-!      +                 RCLSIMP(3,NATOMIMPD),RECBV(3,3),
-!      +                 RMT(NATYPD),RMTNEW(NATYPD),FPRADIUS(NATYPD),
-!      +                 RMTREF(NREFD),RMTREFAT(NAEZD+NEMBD),RR(3,0:NRD),
-!      +                 RROT(48,3,NSHELD),RS(IRMD,0:LMAXD,NATYPD),
-!      +                 RSYMAT(64,3,3),RWS(NATYPD),S(0:LMAXD,NATYPD),
-!      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
-!      +                 TRIGHT(3,NEMBD1),VBC(2),
-!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
-!      +                 VREF(NREFD),WG(LASSLD),
-!      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
-!      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3))
       
 !Write version info:
       WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
@@ -681,7 +636,6 @@ C
             WRITE (1337,FMT=9080)
          END IF
       END IF
-C     +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
 
       IF ( DABS(E2IN-E2).GT.1D-10 .AND. NPOL.NE.0 ) E2 = E2IN
 C ----------------------------------------------------------------------
@@ -722,7 +676,6 @@ C -->  deal with the potential in the RELATIVISTIC CASE
 C
       PARA = .TRUE.
       IF (KREL+KORBIT.EQ.1) THEN
-c      IF (KREL.EQ.1) THEN
 C---------------------------------------------------------------
          IF (NSPIN.EQ.1) THEN
 C
@@ -804,7 +757,7 @@ C
 C --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
-      write(1337,*) 'test call shape, ntcell=',ntcell
+!       write(1337,*) 'test call shape, ntcell=',ntcell
       IF (KSHAPE.NE.0) 
      +     CALL SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,
      +                LASSLD,LMPOTD,NATYPD,NGSHD)
@@ -1013,8 +966,9 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
+      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       IF (OPT('LDA+U   ')) then
-           ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+           !ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
            CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
@@ -1109,7 +1063,8 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-      IF (OPT('LDA+U   ')) DEALLOCATE(ULDAU)
+      DEALLOCATE(ULDAU)
+      !IF (OPT('LDA+U   ')) DEALLOCATE(ULDAU)
       if(allocated(thetas)     ) deallocate(thetas)
       if(allocated(thetasnew)  ) deallocate(thetasnew)
       if(allocated(thesme)     ) deallocate(thesme)
@@ -1136,27 +1091,19 @@ c Parameters:
      &     ,LMXSPD= (2*LPOTD+1)**2,IRMIND=IRMD-IRNSD)
 c Input
       INTEGER KSHAPE,LMPOT,NATYP,NSPIN
-!       INTEGER, allocatable :: IRCUT,IRC,NTCELL
-!      &     ,IMAXSH,ILM,IFUNM
-!      &     ,LMSP,IRMIN,INIPOL
-!       DOUBLE PRECISION, allocatable :: GSH,THETAS
-!      &     ,RMESH
       INTEGER IRCUT(0:IPAND,NATYPD),IRC(NATYPD),NTCELL(NATYPD)
      &     ,IMAXSH(0:LMPOTD),ILM(NGSHD,3),IFUNM(NATYPD,LMXSPD)
      &     ,LMSP(NATYPD,LMXSPD),IRMIN(NATYPD),INIPOL(NATYPD)
       DOUBLE PRECISION GSH(NGSHD),THETAS(IRID,NFUND,NCELLD)
      &     ,RMESH(IRMD,NATYPD)
-!       DOUBLE PRECISION, allocatable :: THESME
       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
       DOUBLE PRECISION VSHIFT,HFIELD
 
 
 c Input/Output:
-!       DOUBLE PRECISION, allocatable :: VISP,VINS
       DOUBLE PRECISION VISP(IRMD,NPOTD),VINS(IRMIND:IRMD,LMPOTD,NSPOTD)
 
 c Inside
-!       DOUBLE PRECISION, allocatable :: PSHIFTLMR,PSHIFTR
       DOUBLE PRECISION PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
       INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
       INTEGER IER

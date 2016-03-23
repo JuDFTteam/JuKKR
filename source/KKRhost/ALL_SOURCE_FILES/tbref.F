@@ -32,7 +32,6 @@ C
       INTEGER LM2D
       PARAMETER (LM2D= (2*LMAXD+1)**2)
       INTEGER LRECGRF,LRECGRF1
-!       PARAMETER (LRECGRF=4*NACLSD*LMGF0D*LMGF0D*NCLSD)
       PARAMETER (LRECGRF=WLENGTH*4*NACLSD*LMGF0D*LMGF0D*NCLSD) 
       DOUBLE COMPLEX CZERO
       PARAMETER (CZERO=(0.D0,0.D0))
@@ -102,7 +101,6 @@ C     ..
       dginp = (0.0d0, 0.0d0)
 
 
-!       CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
       if (t_tgmat%gref_to_file) then
          CALL OPENDAFILE(68,'gref',4,LRECGRF1,TMPDIR,ITMPDIR,ILTMP)
       end if
@@ -118,17 +116,11 @@ C     ..
 C
 C ======================================================================
 #ifdef CPP_MPI
-        if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
-!        ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-!        ie_end = t_mpi_c_grid%ntot2
-!        write(*,*) myrank,t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie,
-!      +  shape(t_mpi_c_grid%ioff_pT2),shape(t_mpi_c_grid%ntot_pT2)
-       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+      if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
        
-!        write(*,*) 'tbref eloop',myrank,ie_start,ie_end
-
-       DO ie_num=1,ie_end
+      DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
 #else
@@ -137,8 +129,6 @@ C ======================================================================
 #endif
          if(t_inc%i_write>0) WRITE(1337,FMT='(A23,I5,2F14.8)') 
      &                         'TBREF: GREF for energy:',IE,EZ(IE)
-C
-CMPI      IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
 C
          ERYD = EZ(IE)
          DO I1 = 1,NREF
@@ -167,16 +157,12 @@ C ----------------------------------------------------------------------
          t_mpi_c_grid%ntot_pT1 = ntot_pT
          t_mpi_c_grid%ioff_pT1 = ioff_pT
         
-!          write(*,*) 'tbref icls loop:',myrank,t_mpi_c_grid%nranks_ie,
-!      &   t_mpi_c_grid%myrank_ie, ntot1, i1_start, i1_end
 #else
          i1_start = 1
          i1_end   = NCLS
          
-         !write(*,*) 'tbref icls loop:',i1_start,i1_end,ncls,ie_num
 #endif
          DO ICLS=i1_start,i1_end
-!          DO ICLS = 1,NCLS
             I1 = 1
             IC = 0
             DO WHILE (IC.EQ.0 .AND. I1.LE.NINEQ)
@@ -188,46 +174,36 @@ C
             IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &           WRITE (1337,FMT=*) 'CLUSTER ',ICLS,' at ATOM ',IC
 C     
-            !write(*,*) 'gll start for ',ie_num,icls
             CALL GLL13(ERYD,CLEB(1,2),ICLEB,LOFLM,IEND,TREFLL,DTREFLL,
      +                 ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      &                 TOLRDIF,
      +                 ALATC,0,GINP(1,1,ICLS),
      &                 DGINP(1,1,ICLS),NACLSMAX,LLY_G0TR(IE,ICLS),LLY)
-            !write(*,*) 'gll done for ',ie_num,icls
          END DO
 
 #ifdef CPP_MPI
          if(t_mpi_c_grid%nranks_ie>1) then
-         !gather results of ginp, dginp and lly_g0tr from above parallel loop
-         IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
-!          CALL MPI_ALLREDUCE(MPI_IN_PLACE,GINP,IDIM,MPI_DOUBLE_COMPLEX,
-         allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
-         CALL MPI_ALLREDUCE(GINP,work,IDIM,MPI_DOUBLE_COMPLEX,
-     &                      MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
-         call ZCOPY(idim,work,1,ginp,1)
-         deallocate(work)
-         IF(LLY.NE.0) THEN
-            IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
-!             CALL MPI_ALLREDUCE(MPI_IN_PLACE,DGINP,IDIM,
-            allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
-            CALL MPI_ALLREDUCE(DGINP,work,IDIM,
-     &       MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
-            call ZCOPY(idim,work,1,dginp,1)
-            deallocate(work)
-            IDIM = NCLS
-!             CALL MPI_ALLREDUCE(MPI_IN_PLACE,LLY_G0TR(IE,:),IDIM,
-            allocate(work(NCLSD,1,1))
-            CALL MPI_ALLREDUCE(LLY_G0TR(IE,:),work,IDIM,
-     &       MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
-            call ZCOPY(idim,work,1,lly_g0tr(ie,:),1)
-            deallocate(work)
-         ENDIF
-         
-         ! comment this out, then gather_gref in main1a is obsolete
-         ! since all 
-!          !writeout only in master of energy group
-!          if(t_mpi_c_grid%myrank_ie==master) then
+           !gather results of ginp, dginp and lly_g0tr from above parallel loop
+           IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
+           allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
+           CALL MPI_ALLREDUCE(GINP,work,IDIM,MPI_DOUBLE_COMPLEX,
+     &                        MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
+           call ZCOPY(idim,work,1,ginp,1)
+           deallocate(work)
+           IF(LLY.NE.0) THEN
+             IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
+             allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
+             CALL MPI_ALLREDUCE(DGINP,work,IDIM,
+     &    MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
+             call ZCOPY(idim,work,1,dginp,1)
+             deallocate(work)
+             IDIM = NCLS
+             allocate(work(NCLSD,1,1))
+             CALL MPI_ALLREDUCE(LLY_G0TR(IE,:),work,IDIM,
+     &    MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%mympi_comm_ie,IERR)
+             call ZCOPY(idim,work,1,lly_g0tr(ie,:),1)
+             deallocate(work)
+           ENDIF
          endif!t_mpi_c_grid%nranks_ie>1
 #endif
          IF (LLY.NE.0) THEN                                    ! LLY Lloyd
@@ -267,9 +243,6 @@ C ----------------------------------------------------------------------
 C
          IF (TEST('flow    ').and.(t_inc%i_write>0)) WRITE (1337,FMT=*) 
      &                               'G(n,lm,n,lm) (Ref) o.k.'
-! #ifdef CPP_MPI
-!          endif !if(t_mpi_c_grid%myrank_ie==master)
-! #endif
       END DO
 C ======================================================================
       if (t_tgmat%gref_to_file) then

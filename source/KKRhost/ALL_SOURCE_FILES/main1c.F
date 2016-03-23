@@ -193,12 +193,8 @@ C     .. qdos and lmlm-dos ..
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
       integer :: ihelp
 #endif
-! #ifdef CPP_MPI
       integer :: i1_start, i1_end
-!       integer :: ihelp
-! #endif
-      integer :: ie_start, ie_end
-      integer :: ie_num
+      integer :: ie_start, ie_end, ie_num
       
       double precision :: angles_new(NATYPD,2)
 C     ..
@@ -383,33 +379,37 @@ c calculate contribution from free space
          else   !(t_lloyd%cdos_diff_lly_to_file)
             DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-               ie_end = t_mpi_c_grid%ntot2
+               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-               ie_start = 1
+               ie_start = 0
                ie_end = IELAST
 #endif
                DO ie_num=1,ie_end
                   IE = ie_start+ie_num
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
-               ENDDO                                                          ! LLY Lloyd
-            ENDDO                                                             ! LLY Lloyd
+               ENDDO  !ie_num                                                 ! LLY Lloyd
+            ENDDO    !ispin     
 #ifdef CPP_MPI            
             ! MPI gather cdos_lly on all processors
-            ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            allocate(work(iemxd,nspind))
+            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            allocate(work(ielast,nspin))
             work = (0.d0, 0.d0)
             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
-     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
-            call zcopy(idim,work,1,cdos_lly,1)
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+!             work = (0.d0, 0.d0)
+!             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+!      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_ie,ierr)
+!             call zcopy(ihelp,work,1,cdos_lly,1)
             deallocate(work)
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)
                                                                            ! LLY Lloyd
          ! Add free-space contribution cdos0                               ! LLY Lloyd
          DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-            CDOS_LLY(1:IEMXD,ISPIN) = CDOS_LLY(1:IEMXD,ISPIN) +            ! LLY Lloyd
-     &                                CDOS0(1:IEMXD)                       ! LLY Lloyd
+            CDOS_LLY(1:IELAST,ISPIN) = CDOS_LLY(1:IELAST,ISPIN) +          ! LLY Lloyd
+     &                                CDOS0(1:IELAST)                      ! LLY Lloyd
          ENDDO                                                             ! LLY Lloyd
                                                                            ! LLY Lloyd
          CHARGE_LLY(1:NSPIND) = 0.D0                                       ! LLY Lloyd
@@ -447,11 +447,11 @@ c calculate contribution from free space
             CLOSE(701)                                                     ! LLY
           else  !(t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI
-            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-            ie_end = t_mpi_c_grid%ntot2
+               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-            ie_start = 1
-            ie_end = IELAST
+               ie_start = 0
+               ie_end = IELAST
 #endif
             DO ie_num=1,ie_end
                IE = ie_start+ie_num
@@ -463,8 +463,8 @@ c calculate contribution from free space
             allocate(work(iemxd,nspind))
             work = (0.d0, 0.d0)
             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
-     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
-            call zcopy(idim,work,1,cdos_lly,1)
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
             deallocate(work)
 #endif
           end if  !(t_lloyd%cdos_diff_lly_to_file)
@@ -681,20 +681,16 @@ C ================================================================ NATYP
 #ifdef CPP_TIMING
       call timing_start('main1c - communication')
 #endif
-      if(myrank==master) write(789547,*) rho2ns
       call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
      &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
      &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
-!      &              MPI_COMM_WORLD)
      &              t_mpi_c_grid%mympi_comm_ie)
       call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
      &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
      &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
-!      &              MPI_COMM_WORLD)
      &              t_mpi_c_grid%mympi_comm_at)
-!       if(myrank==master) write(789546,*) rho2ns
 #ifdef CPP_TIMING
       call timing_stop('main1c - communication')
 #endif
@@ -751,16 +747,12 @@ c interpolate potential
 #ifdef CPP_MPI
         ntot1 = t_inc%NATYP
         
-!         if(t_mpi_c_grid%dims(1)==1 .and. t_mpi_c_grid%nranks_ie>1) 
-!      &                   t_mpi_c_grid%nranks_ie = 1
         
 !         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
         if(t_mpi_c_grid%dims(1)>1) then
            nranks_local = t_mpi_c_grid%nranks_ie
-!            write(*,*) 'nranks_loc',myrank,nranks_local,t_mpi_c_grid%dims
            if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1)) 
      &              nranks_local = t_mpi_c_grid%dims(1)
-!            write(*,*) 'nranks_loc2',myrank,nranks_local
         else
            nranks_local = 1
         endif
@@ -776,7 +768,6 @@ c interpolate potential
         else
            myrank_ie_tmp = t_mpi_c_grid%myrank_ie
            if(t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1))
-!      &                            myrank_ie_tmp = myrank_ie_tmp - 1
      &       myrank_ie_tmp = myrank_ie_tmp - t_mpi_c_grid%myrank_ie
      +                          + (t_mpi_c_grid%dims(1)-1)
            i1_start = ioff_pT(myrank_ie_tmp)+1
@@ -795,12 +786,8 @@ c interpolate potential
       i1_end   = NATYP
 #endif
 
-!       write(*,*) 'main1c atom loop',myrank,
-!      +  i1_start,i1_end, t_mpi_c_grid%nranks_at, t_mpi_c_grid%nranks_ie
-
       DO I1 = i1_start,i1_end
-      !write(*,*) 'rhovalnew',myrank,i1
-! 
+      
        ICELL = NTCELL(I1)
        IPOT = (I1-1) * NSPIN + 1
 
@@ -808,7 +795,6 @@ c interpolate potential
         call timing_start('main1c - rhovalnew')
 #endif
 
-!         write(*,*) 'start rhovalnew', icell
         CALL RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
      &           ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,
      &           IFUNM1(1,ICELL),LMSP1(1,ICELL),
@@ -818,7 +804,6 @@ c interpolate potential
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
      &           angles_new)
-!         write(*,*) 'after rhovalnew',myrank,i1,ipot,den1(0,1:5,1)
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
@@ -870,17 +855,12 @@ c interpolate potential
      &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
      &                                 den, denlm, muorb, espv, r2nef,    &
      &                                 rho2ns, denefat, denef,            &
-!      &                                 t_mpi_c_grid%mympi_comm_at)
      &                                 t_mpi_c_grid%mympi_comm_ie)
-!      &                                 MPI_COMM_WORLD)
 #endif
       
 #ifdef CPP_TIMING
       call timing_stop('main1c - rhovalnew')
-!       call timing_stop('main1c - communication')
 #endif
-!       CLOSE(11)
-!       CLOSE(12)
 
       CLOSE (69)
       
@@ -891,14 +871,10 @@ c rewrite new theta and phi to nonco_angle.dat
 !             call save_angles(t_params,NATYP,THETA,PHI)
        OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
        CLOSE(10,status='delete')
-!        OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
        OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
        DO I1=1,NATYP
-!         READ(11,*) THETA(I1),PHI(I1)
-!         WRITE(13,*) THETA(I1),PHI(I1)
         WRITE(13,*) angles_new(I1,1),angles_new(I1,2)
        ENDDO
-!        CLOSE(11,status='delete')
        CLOSE(13)
 
         ENDIF
@@ -1119,7 +1095,6 @@ C
         read(8888,*) i1
         close(8888)
         ICELL = NTCELL(I1)
-!         write(*,*) 'icell=',icell,i1
         write(9999,*) 'ifunm'
         do lm1=1,lmxspd
           write(9999,'(I9)') ifunm1(lm1,icell)

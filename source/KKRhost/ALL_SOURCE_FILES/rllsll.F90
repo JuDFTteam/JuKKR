@@ -91,7 +91,6 @@
 ! NVEC       - number of LMSIZE*LMSIZE blocks in J (LMSIZE2=NVEC*LMSIZE)
 ! ************************************************************************
 #if(.not.hostcode)
-use mod_timing                            ! timing routine
 use mod_beshank                           ! calculates bessel and hankel func.
 use mod_chebint                           ! chebyshev integration routines
 use mod_config, only: config_testflag     ! reads if testflags are present
@@ -100,6 +99,7 @@ use mod_physic_params,only: cvlight       ! speed of light
 use sourceterms                           
 use mod_chebyshev
 #endif
+use mod_timing                            ! timing routine
 #ifdef CPP_hybrid
 use omp_lib ! omp functions
 #endif

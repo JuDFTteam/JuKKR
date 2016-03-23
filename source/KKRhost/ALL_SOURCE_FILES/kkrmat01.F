@@ -115,19 +115,6 @@
 
       DOUBLE COMPLEX GLLKE0(:,:),GLLKE0M(:,:)
       ALLOCATABLE GLLKE,GLLKEM,GLLKEN,GLLKE0,GLLKE0M
-!----------------------------------------------------------------
-!F77!F77-------------------------------------------------------------
-!F77      DOUBLE COMPLEX GLLKE(ALM,ALM),GLLKEM(ALM,ALM)
-!F77      DOUBLE COMPLEX GLLKE0(KREL*ALMGF0+(1-KREL),
-!F77     &                      KREL*ALMGF0+(1-KREL))
-!F77      DOUBLE COMPLEX GLLKE0M(KREL*ALMGF0+(1-KREL),
-!F77     &                       KREL*ALMGF0+(1-KREL))
-!F77!F77-------------------------------------------------------------
-!---!----------------------------------------------------------------
-!---      DOUBLE COMPLEX GLLKE(:,:),GLLKEM(:,:)
-!---      DOUBLE COMPLEX GLLKE0(:,:),GLLKE0M(:,:)
-!---      ALLOCATABLE GLLKE,GLLKEM,GLLKE0,GLLKE0M
-!---!----------------------------------------------------------------
  
       DOUBLE COMPLEX ETAIKR(NSYMAXD,NSHELD),G(LMMAXD,LMMAXD)
       DOUBLE PRECISION BZKPK(6),KP(3)
@@ -203,10 +190,6 @@
 
       t_mpi_c_grid%ntot_pT1 = ntot_pT
       t_mpi_c_grid%ioff_pT1 = ioff_pT
-!       
-!       write(*,*) 'kloop',myrank,!t_mpi_c_grid%nranks_ie,
-!      + t_mpi_c_grid%nranks_at,
-!      + ntot1,i1_start, i1_end
       
       DO KPT = i1_start,i1_end
 #else
@@ -604,6 +587,24 @@ c            DEALLOCATE(GLLKE0)
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
           CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
         END DO
+          
+          IF (LLY.NE.0) then
+          IWORK = 1
+          CALL MPI_ALLREDUCE(LLY_GRTR,WORK,IWORK,
+     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
+!      +                       t_mpi_c_grid%mympi_comm_at,IERR)
+          CALL ZCOPY(IWORK,WORK,1,LLY_GRTR,1)
+          endif
+          
+          if(lly.eq.2) then
+          IWORK = 1
+          CALL MPI_ALLREDUCE(TRACET,WORK,IWORK,
+     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
+!      +                       t_mpi_c_grid%mympi_comm_at,IERR)
+          CALL ZCOPY(IWORK,WORK,1,TRACET,1)
+          endif
 #endif
 
       IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 

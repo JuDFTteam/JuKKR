@@ -40,8 +40,6 @@
      +                   RPAN_INTERVALL(0:NTOTD),
      +                   VINSNEW(NRMAXD,LMPOTD,NSPOTD)
        INTEGER           IPAN_INTERVALL(0:NTOTD)
-!        DOUBLE COMPLEX  
-!      +   TMATLL(LMMAXSO,LMMAXSO,ielast) 
        DOUBLE COMPLEX  TMATLL(LMMAXSO,LMMAXSO) 
 
    
@@ -54,7 +52,7 @@
        DOUBLE COMPLEX, ALLOCATABLE :: HLK(:,:,:),JLK(:,:,:),
      +                                HLK2(:,:,:),JLK2(:,:,:)
        DOUBLE COMPLEX, ALLOCATABLE :: RLL(:,:,:,:),SLL(:,:,:,:)
-       DOUBLE COMPLEX, ALLOCATABLE :: TMATSPH(:,:)!, TMAT_OUT(:,:,:)   !tmat_out necessary for parallel ie loop
+       DOUBLE COMPLEX, ALLOCATABLE :: TMATSPH(:,:)
        DOUBLE COMPLEX DTMATLL(LMMAXSO,LMMAXSO),TMAT0(LMMAXSO,LMMAXSO) ! LLY
        DOUBLE COMPLEX ALPHALL(LMMAXSO,LMMAXSO), ! LLY
      +                DALPHALL(LMMAXSO,LMMAXSO), ! LLY
@@ -128,29 +126,23 @@ c energy loop
      &        WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
 
 #ifdef CPP_MPI
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
-     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,IELAST,ntot_pT,ioff_pT,.true.)
+       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
+     &                  t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                  master,IELAST,ntot_pT,ioff_pT,.true.)
      
-        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
-        ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
+       ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
+       ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
 
-        t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
-        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
-     &            allocated(t_mpi_c_grid%ioff_pT2))) 
-     &     allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
-     &              t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
-        t_mpi_c_grid%ntot_pT2 = ntot_pT
-        t_mpi_c_grid%ioff_pT2 = ioff_pT
-        ! now initialize arrays for tmat, gmat, and gref
-        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-
-!         write(*,*) 'db_lin ener:',myrank,t_mpi_c_grid%nranks_at,
-!      &  t_mpi_c_grid%myrank_at,ielast, ie_start,ie_end
-
-!        write(*,'(A,100I3)') 'calctmat ie loop', myrank, 
-!      +    ie_start, ie_end
+       t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
+       if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
+     &           allocated(t_mpi_c_grid%ioff_pT2))) 
+     &    allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
+     &             t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
+       t_mpi_c_grid%ntot_pT2 = ntot_pT
+       t_mpi_c_grid%ioff_pT2 = ioff_pT
+       ! now initialize arrays for tmat, gmat, and gref
+       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 #else
        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
      &           allocated(t_mpi_c_grid%ioff_pT2))) 
@@ -196,8 +188,6 @@ c energy loop
          else
             ith = 0
          endif
-!          write(*,*) 'nthreads',nth,ith,ipot
-c         ERYD = EZ(IE)
 
          eryd = 0
          ir = 0
@@ -316,7 +306,6 @@ c add spherical contribution of tmatrix
          ENDIF
           DO LM1=1,LMMAXSO
            DO LM2=1,LMMAXSO
-!             TMATLL(LM1,LM2,IE)=TMATLL(LM1,LM2,IE)+TMAT0(LM1,LM2)
             TMATLL(LM1,LM2)=TMATLL(LM1,LM2)+TMAT0(LM1,LM2)
            ENDDO
           ENDDO          
@@ -368,7 +357,6 @@ c add spherical contribution of tmatrix
 !$omp critical
 #endif
          if (t_tgmat%tmat_to_file) then
-!             write(*,*) 'write tmat', ie, i1, ielast
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
 !             WRITE(696969,*) TMATLL(:,:)

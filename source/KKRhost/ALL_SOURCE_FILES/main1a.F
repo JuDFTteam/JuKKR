@@ -124,6 +124,9 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       integer :: ntot1, dims(2), mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      ! communication of dtmat in case of lloyd
+      integer :: iwork, ierr
+      DOUBLE COMPLEX, allocatable :: work_lly(:,:,:)
 #endif
       integer :: i1_start, i1_end
 
@@ -237,28 +240,15 @@ C
       IF (.NOT.OPT('NEWSOSOL')) THEN
       
 #ifdef CPP_MPI
-!        write(*,*) 'distr:',ntot1,t_mpi_c_grid%nranks_ie
-
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                             master,ntot1,ntot_pT,ioff_pT,.true.,
      + .true.)
 
-!            write(*,*) 'red myrank_at',myrank,ntot_pT,ioff_PT
-!         if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(2)) then
-!            i1_start = ioff_pT(t_mpi_c_grid%myrank_ie
-!      &               -(t_mpi_c_grid%nranks_ie-t_mpi_c_grid%dims(2)))+1
-!            i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie
-!      &               -(t_mpi_c_grid%nranks_ie-t_mpi_c_grid%dims(2)))+
-!      &                ntot_pT(t_mpi_c_grid%myrank_ie)
-!            t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie
-!      &               -(t_mpi_c_grid%nranks_ie-t_mpi_c_grid%dims(2)))
-!         else
            i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
            i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &                ntot_pT(t_mpi_c_grid%myrank_ie)
            t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-!         endif
 
         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
@@ -267,14 +257,14 @@ C
         t_mpi_c_grid%ntot_pT1 = ntot_pT
         t_mpi_c_grid%ioff_pT1 = ioff_pT
 #else
-      i1_start = 1
-      i1_end   = NATYP
+        i1_start = 1
+        i1_end   = NATYP
 #endif
         DO I1 = i1_start,i1_end
-       DO ISPIN = 1,NSPIN
-         IPOT=NSPIN*(I1-1)+ispin
+          DO ISPIN = 1,NSPIN
+            IPOT=NSPIN*(I1-1)+ispin
 C
-         CALL CALCTMAT(ICST,INS,IELAST,
+            CALL CALCTMAT(ICST,INS,IELAST,
      +                 NSRA,ISPIN,NSPIN,
      +                 I1,EZ,
      +                 DRDI(1,I1),RMESH(1,I1),
@@ -289,10 +279,9 @@ C
      +                 IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1),
      &                 LLY,DELTAE) ! LLY
 C
-       END DO
-       END DO
+          END DO
+        END DO
        
-!        write(*,*) 'done calctmat'
      
       ELSE
        
@@ -329,7 +318,6 @@ c interpolate potential
         i1_end   = NATYP
 #endif
 
-!        write(*,*) 'i1 loop', myrank, i1_start, i1_end
 
        DO I1=i1_start,i1_end
 
@@ -374,12 +362,43 @@ C
          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
       end if
+      
+      if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
+      
+         !take care of cases when nranks_ie>natyp (set tralpha and dtmat to zero so that sum over ranks is correct)
+         if(t_mpi_c_grid%nranks_ie>natyp .and. 
+     &      t_mpi_c_grid%myrank_ie>=natyp ) t_lloyd%dtmat = 0
+         if(t_mpi_c_grid%nranks_ie>natyp .and. 
+     &      t_mpi_c_grid%myrank_ie>=natyp ) t_lloyd%tralpha = 0
+      
+         !communicate dtmatll
+         IWORK = product(shape(t_lloyd%dtmat)) !LMMAXD*LMMAXD*t_mpi_c_grid%ntot2*nspin*NATYP
+         allocate(work_lly(LMMAXD,LMMAXD,iwork/LMMAXD**2),stat=ierr)
+!        if(ierr/=0)
+!      &    stop 
+!      & 'Error allocating work in calctmat for communication of dtmatll'
+         CALL MPI_ALLREDUCE(t_lloyd%dtmat,WORK_lly,IWORK,
+     &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                      t_mpi_c_grid%mympi_comm_ie,IERR)
+         CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%dtmat,1)
+         deallocate(work_lly)
+               
+         !communicate tralpha
+         IWORK = product(shape(t_lloyd%tralpha))
+         allocate(work_lly(iwork,1,1),stat=ierr)
+!        if(ierr/=0)
+!      &    stop 
+!      & 'Error allocating work in calctmat for communication of dtmatll'
+         CALL MPI_ALLREDUCE(t_lloyd%tralpha,WORK_lly,IWORK,
+     &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                      t_mpi_c_grid%mympi_comm_ie,IERR)
+         CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%tralpha,1)
+         deallocate(work_lly)
+               
+      endif
 #endif
 
 
-! #ifdef CPP_MPI
-!       if(t_mpi_c_grid%myrank_ie==0) then
-! #endif
 #ifdef CPP_TIMING
         call timing_start('main1a - tbref')
 #endif
@@ -391,22 +410,6 @@ C
 #ifdef CPP_TIMING
         call timing_stop('main1a - tbref')
 #endif
-
-! not needed any more, already done in tbref
-! #ifdef CPP_MPI
-!       end if !(t_mpi_c_grid%myrank_at==0)
-!       
-!       if(.not.t_tgmat%gref_to_file .and. t_mpi_c_grid%dims(1)>1) then
-!       
-!          do ii=0,t_mpi_c_grid%nranks_ie-1
-!           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
-!           ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
-!          end do
-!           mytot = t_mpi_c_grid%ntot2 !t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
-!          call gather_gref(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
-!      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
-!         end if
-! #endif
 
 
       if(t_inc%i_write>0)
