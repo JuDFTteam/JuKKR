@@ -678,10 +678,6 @@ C
 
             ENDIF                                                         ! LLY Lloyd
             
-         
-!          write(*,'(2I5,10ES15.7)') ie,myrank,TRALPHA(IE,1),
-!      &        LLY_GRTR(IE,1),TRALPHAREF(IE),CDOS_LLY(IE,1)
-
 c ------------------------------------------------------------------------
 
  360     CONTINUE               ! IE = 1,IELAST

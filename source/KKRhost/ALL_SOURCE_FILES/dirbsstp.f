@@ -105,5 +105,4 @@ C
 C
       
       RETURN
-c     STOP
       END 

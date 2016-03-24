@@ -65,25 +65,11 @@ C     .. Local scalars
       CHARACTER*80 STRBAR,STRTMP
 C     ..
 C     .. Local arrays
-CF90-------------------------------------------------------------
       INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
       DOUBLE COMPLEX JXCIJINT(:,:,:),XINTEGD(:,:,:),
      &               csum_store(:,:,:,:), csum_store2(:,:,:,:)
       ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT,XINTEGD,csum_store,
      &            csum_store2
-CF90-------------------------------------------------------------
-CF77CF77-------------------------------------------------------------
-CF77      INTEGER NTLOC,NSHLOC
-CF77      PARAMETER (NTLOC = 5, NSHLOC = 40 )
-CF77      INTEGER NIJCALC(NSHLOC),KIJSH(NIJMAX,NSHLOC)
-CF77      INTEGER JIJDONE(NTLOC,NTLOC,NSHLOC)
-CF77      DOUBLE COMPLEX JXCIJINT(NTLOC,NTLOC,NSHLOC)
-CF77CF77-------------------------------------------------------------
-CF90CF90-------------------------------------------------------------
-CF90      INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-CF90      DOUBLE COMPLEX JXCIJINT(:,:,:)
-CF90      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT
-CF90CF90-------------------------------------------------------------
       DOUBLE COMPLEX DELTSST(LMMAXD,LMMAXD,NATYP),
      &               DMATTS(LMMAXD,LMMAXD,NATYP,2),
      &               DTILTS(LMMAXD,LMMAXD,NATYP,2),GMIJ(LMMAXD,LMMAXD),
@@ -132,12 +118,9 @@ c     &                         FORM='formatted')
          IFMCPA = IFGMAT + 1
          NSMAX = MAX(NAEZ,NATYP)
          NSHCALC = NSHELL(0) - NSMAX
-CF77----------------------------------------------------------------
 Cccc         IF ( NSHLOC.LT.NSHELD) STOP ' NSHLOC'
 Cccc         IF ( NTLOC.LT.NATYP) STOP ' NTLOC'
-CF77----------------------------------------------------------------
 C
-CF90----------------------------------------------------------------
          ALLOCATE (KIJSH(NIJMAX,NSHELL(0)),STAT=LM1)
          IF ( LM1.NE.0 ) THEN
             WRITE(6,99001) 'KIJSH'
@@ -171,8 +154,6 @@ c        ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
             WRITE(6,99001) 'JXCIJINT'
             STOP
          END IF
-
-CF90----------------------------------------------------------------
 C..................
 #ifdef CPP_MPI
          DO IE=1,IELAST

@@ -448,6 +448,9 @@ C
 C=======================================================================
          ELSE ! ( KREL.EQ.0 )
 C=======================================================================
+
+            IQ = 1 ! reset IQ to zero, problem with qdos!!!
+
             CALL DRVRHO_QDOS(LDORHOEF,RHO2NS,R2NEF,DEN,DMUORB,RHOORB,
      &                  IE,ERYD,DF,LASTEZ,
      &                  GMATLL,VTREL,BTREL,RMREL,DRDIREL,
@@ -457,13 +460,13 @@ C=======================================================================
      &                  I1,QVEC,NQDOS)            ! qdos
 C
             DO L = 0,LMAXD1
-               write(*,*) L,IE,IQ,shape(ESPV),shape(DEN)
                ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE,IQ)*DF)
                ESPV(L,2) = ESPV(L,2) + DIMAG(ERYD*DEN(L,IE+IEMXD,IQ)*DF)
             END DO
 C
             DO IR = 1,3
                DO L = 0,LMAXD
+                  write(1337,*) DF
                   MUORB(L,IR) = MUORB(L,IR) + DIMAG(DMUORB(L,IR)*DF)
                END DO
             END DO

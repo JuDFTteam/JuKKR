@@ -374,9 +374,8 @@ C
          !communicate dtmatll
          IWORK = product(shape(t_lloyd%dtmat)) !LMMAXD*LMMAXD*t_mpi_c_grid%ntot2*nspin*NATYP
          allocate(work_lly(LMMAXD,LMMAXD,iwork/LMMAXD**2),stat=ierr)
-!        if(ierr/=0)
-!      &    stop 
-!      & 'Error allocating work in calctmat for communication of dtmatll'
+       if(ierr/=0) stop 
+     & 'Error allocating work in calctmat for communication of dtmatll'
          CALL MPI_ALLREDUCE(t_lloyd%dtmat,WORK_lly,IWORK,
      &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
      &                      t_mpi_c_grid%mympi_comm_ie,IERR)
@@ -386,9 +385,8 @@ C
          !communicate tralpha
          IWORK = product(shape(t_lloyd%tralpha))
          allocate(work_lly(iwork,1,1),stat=ierr)
-!        if(ierr/=0)
-!      &    stop 
-!      & 'Error allocating work in calctmat for communication of dtmatll'
+       if(ierr/=0) stop 
+     & 'Error allocating work in calctmat for communication of tralpha'
          CALL MPI_ALLREDUCE(t_lloyd%tralpha,WORK_lly,IWORK,
      &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
      &                      t_mpi_c_grid%mympi_comm_ie,IERR)

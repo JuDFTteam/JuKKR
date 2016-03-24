@@ -45,16 +45,6 @@ C     .. Local arrays
       DOUBLE COMPLEX GLL(:,:,:,:),TPG(:,:)
       COMPLEX*8 GCLUST(:)
       ALLOCATABLE GLL,TPG,GCLUST
-CF77--------------------------------------------------------------------
-Cccc      DOUBLE COMPLEX GLL(LMMAXD,LMMAXD,NATOMIMP,NATOMIMP),
-Cccc     &               TPG(LMMAXD,LMMAXD)
-Cccc      COMPLEX*8 GCLUST(NGCLUSD*NGCLUSD)
-CF77--------------------------------------------------------------------
-CF90--------------------------------------------------------------------
-Cccc      DOUBLE COMPLEX GLL(:,:,:,:),TPG(:,:)
-Cccc      COMPLEX*8 GCLUST(:)
-Cccc      ALLOCATABLE GLL,TPG,GCLUST
-CF90--------------------------------------------------------------------
 C     ..
 C     .. Local scalars
       INTEGER ILIN,IQ,ICALL,ISH,ISYM,JQ
@@ -76,7 +66,6 @@ C     ..
 C     .. Save statement
       SAVE ICALL
 C     ..
-CF90--------------------------------------------------------------------
       ALLOCATE (GLL(LMMAXD,LMMAXD,NATOMIMP,NATOMIMP),
      &          TPG(LMMAXD,LMMAXD),STAT=LM1)
       IF ( LM1.NE.0 ) THEN
@@ -84,7 +73,6 @@ CF90--------------------------------------------------------------------
          STOP '           < ROTGLL > '
       END IF
 99001 FORMAT(6X,"ERROR: failed to allocate array(s) :",A,/)
-CF90--------------------------------------------------------------------
 C **********************************************************************
       IF ( ICALL.EQ.1) THEN
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
@@ -157,13 +145,11 @@ C
          ICALL = ICALL + 1
          NLIN = 0
 C
-CF90--------------------------------------------------------------------
          ALLOCATE (GCLUST(NGCLUS*NGCLUS),STAT=LM1)
          IF ( LM1.NE.0 ) THEN
             WRITE(6,99001) ' GCLUST'
             STOP '           < ROTGLL > '
          END IF
-CF90--------------------------------------------------------------------
          DO  JQ=1,NATOMIMP
             DO LM2=1,LMMAXD
                DO  IQ=1,NATOMIMP
@@ -179,13 +165,6 @@ CF90--------------------------------------------------------------------
             END DO
          END DO
 C
-!           write(*,*) 'icall ',icall
-!          IF (ICALL==2) then
-!           DO LM2=0,NATOMIMP*LMMAXD-1
-!             WRITE(8888,'(50000F)') GCLUST(LM2*NATOMIMP*LMMAXD+1:
-!      &                          (LM2+1)*NATOMIMP*LMMAXD)
-!           END DO !LM2=0,NATOMIMP*LMMAXD-1
-!          END IF !ICALL=1 then
 
 
 
@@ -205,13 +184,9 @@ C
            WRITE(88,REC=ICALL) GCLUST
          END IF
 
-CF90--------------------------------------------------------------------
          DEALLOCATE (GCLUST)
-CF90--------------------------------------------------------------------
       ENDIF
 C***********************************************************************
-CF90--------------------------------------------------------------------
       DEALLOCATE (GLL,TPG)
-CF90--------------------------------------------------------------------
       RETURN
       END                       ! SUBROUTINE ROTGLL

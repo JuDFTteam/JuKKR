@@ -187,8 +187,6 @@ c
 c
 c--->   add to ecou
 c
-!         write(*,*) 'test',VM2Z(IRS1,1,IPOT),CMOM(1,IATYP),R(IRS1,IATYP)
-!           write(*,*) 'test',ECOU(0,IATYP) , Z(IATYP),VMAD,2.0D0
         ECOU(0,IATYP) = ECOU(0,IATYP) - Z(IATYP)*VMAD/2.0D0
 c
 c--->   option to calculate full generalized madelung potential

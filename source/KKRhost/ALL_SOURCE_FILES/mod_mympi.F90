@@ -101,18 +101,6 @@ contains
     integer, intent(out) :: dims(2)
     integer ierr
     
-!    if(nranks.le.ntot1) then
-!       dims(2) = 1
-!       dims(1) = nranks
-!    else
-!       ! rest not implemented!!!
-!!        stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
-!       dims(2) = nranks/ntot1
-!       dims(1) = ntot1
-!       ! for test purposes, now consider only cartesian grid!
-!       if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
-!    end if
-
     if(nranks.le.ntot2) then
        dims(1) = 1
        dims(2) = nranks
@@ -131,10 +119,7 @@ contains
        stop 'Error: too many ranks'
        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
     endif
-    
-!     write(*,*) 'find_dims',myrank,nranks,ntot1,ntot2,dims
-
-    
+        
   end subroutine find_dims_2d
 #endif
 
@@ -145,7 +130,6 @@ contains
   !takes vector kmesh with mesh/timing information and finds number of rest procs that are devided in fractions given in ktake for optimal division of work
   
   use mpi
-!   use mod_types, only: t_inc
   implicit none
   
   integer, intent(in) :: nranks,myrank,ne,nat,nkmesh
@@ -162,14 +146,6 @@ contains
   if(myrank==0) write(1337,*) 'create_newcomms_group_ie input:',nranks,ne,nat
   
   ktake(:) = 0
-
-!   if(nranks>(t_inc%natyp*t_inc%ielast)) stop 'you can only use less or equal number of processors that energypoints*atoms'
-  
-  ! consider only cartesian grids for now
-!   if(.false.) then
-
-!   if(myrank==master) write(*,*) ne,nat,nranks
-!   call MPI_BARRIER(MPI_COMM_WORLD,ik)
 
   if((ne*nat)<nranks .and. (ne>1)) then ! .and. nat>1)) then
   
@@ -295,8 +271,7 @@ contains
       mygroup(ie) = iat
     end do
 
-!     write(1337,'(A,I3,A,I3,A,I3,A,100I3)') 'rank ',myrank ,' found group: ',myg,' of size',groups(myg,1),' with group members:',mygroup
- 
+
     !create new communicator from group
     call MPI_COMM_GROUP(MPI_COMM_WORLD,mympi_group_world,ierr)
     call MPI_GROUP_INCL(mympi_group_world,groups(myg,1),mygroup,mympi_group_ie,ierr)

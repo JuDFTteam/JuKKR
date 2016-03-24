@@ -254,8 +254,6 @@ c energy loop
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-         
-!     write(*,*) 'in rhovalnew',myrank,ie_start,ie_end
 #else
       ie_start = 0 ! offset
       ie_end   = IELAST
@@ -466,12 +464,10 @@ c calculate density
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
      +                GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
 
-       !write(*,*) myrank,testc, optc
        if( test('rhoqtest')) then
          open(9999,file='mu0')
          read(9999,*) mu0
          close(9999)
-!          write(*,*) myrank,i1,mu0
          if(i1.eq.mu0) then
            open(9999, file='wavefunctions.txt')
            write(9999,'(100I9)') ntotd, npan_tot, ncheb, npan_log,
@@ -706,12 +702,8 @@ c    write qdos.nn.s.dat                                                  ! qdos
       endif
 
 #ifdef CPP_TIMING
-!        call timing_start('main1c - communication')
+       call timing_start('main1c - communication')
 #endif
-!        write(*,*) 'mympi_main1c_comm_newsosol',myrank
-!      &     ,t_mpi_c_grid%myrank_at,t_mpi_c_grid%myrank_ie
-!      &     ,t_mpi_c_grid%nranks_at,t_mpi_c_grid%nranks_ie
-!        write(66666,*) den
       if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
          den = 0.d0
@@ -734,7 +726,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
      &                            denorbmomsp,denorbmomlm,denorbmomns,
      &                            t_mpi_c_grid%myMPI_comm_at)
 #ifdef CPP_TIMING
-!        call timing_pause('main1c - communication')
+       call timing_pause('main1c - communication')
 #endif
 
       
@@ -898,9 +890,7 @@ C
       ! communicate den_out to all processors with the same atom number
       IDIM = (LMAXD+2)*IEMXD*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
-!      &               t_mpi_c_grid%myMPI_comm_ie, ierr)
      &               t_mpi_c_grid%myMPI_comm_at, ierr)
-!      &               MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
 #endif
 

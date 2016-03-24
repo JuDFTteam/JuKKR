@@ -41,8 +41,6 @@ elseif (mode==1) then !'glob->loc'
 else
   stop '[rotatematrix] mode not known'
 end if
-!  writE(324,'(5000F)') tmat
-! stop
 
 end subroutine rotatematrix
 

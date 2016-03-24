@@ -135,11 +135,11 @@ c     +                    DIMAG((CDOS_LOC(IE,1)+CDOS_LOC(IE,2))*WEZ(IE))
           ENDIF
  
 c add term from sum from l>lmax to infinity
-           DO I1=1,NATYPD
-            DO ISPIN=1,NSPIN
+!            DO I1=1,NATYPD
+!             DO ISPIN=1,NSPIN
 c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
-            ENDDO
-           ENDDO
+!             ENDDO
+!            ENDDO
 
       IF (NSPIN.EQ.1.OR.OPT('NEWSOSOL')) CREN(:,2) = CREN(:,1) 
 

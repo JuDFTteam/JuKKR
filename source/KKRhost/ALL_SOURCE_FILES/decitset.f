@@ -71,7 +71,6 @@ C     .. Local arrays
       CHARACTER*9 TXTS(2)
 C     ..
 C     .. Allocatable local arrays 
-CF90--------------------------------------------------------------------
       INTEGER NTMAX
       DOUBLE PRECISION ZAT(:),RWS(:),RMT(:),CONC(:)
       DOUBLE PRECISION RR(:,:),DRDI(:,:),VISP(:,:),DROR(:,:)
@@ -88,27 +87,6 @@ CF90--------------------------------------------------------------------
       ALLOCATABLE IRWS,IPAN,IQAT,IRCUT,LOFLM,ZREL
       ALLOCATABLE TREFLL,TMATLL,DHMAT,WN1
       ALLOCATABLE DTREFLL,ALPHAREF,DALPHAREF ! LLY
-CF90--------------------------------------------------------------------
-Comment previous lines and uncomment the following ones for F77 
-CF77--------------------------------------------------------------------
-CF77      INTEGER NTMAX
-CF77      PARAMETER ( NTMAX = 8 )
-CF77      DOUBLE PRECISION ZAT(NTMAX),RWS(NTMAX),RMT(NTMAX),CONC(NTMAX)
-CF77      DOUBLE PRECISION RR(IRMD,NTMAX),DRDI(IRMD,NTMAX),
-CF77     &                 VISP(IRMD,NTMAX*NSPIND),DROR(IRMD,NTMAX)
-CF77      INTEGER IRWS(NTMAX),IPAN(NTMAX),IQAT(NEMBD1,NTMAX),
-CF77     &        IRCUT(0:IPAND,NTMAX)
-CF77      INTEGER LOFLM(LM2D)
-CF77      DOUBLE COMPLEX TREFLL(LMMAXD,LMMAXD,NTMAX)
-CF77      DOUBLE COMPLEX WN1(KREL*LMGF0D+1-KREL,KREL*LMGF0D+1-KREL)
-CF77      DOUBLE COMPLEX TMATLL(LMMAXD,LMMAXD),DHMAT(LMMAXD,LMMAXD,2)
-CF77      DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NTMAX+(1-KREL))
-CF77      DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NTMAX+(1-KREL))
-CF77      DOUBLE PRECISION VTREL(IRMD*KREL+(1-KREL),NTMAX)
-CF77      DOUBLE PRECISION BTREL(IRMD*KREL+(1-KREL),NTMAX)
-CF77      DOUBLE PRECISION R2DRDIREL(IRMD*KREL+(1-KREL),NTMAX)
-CF77      INTEGER ZREL(NTMAX)
-CF77----------------------------------------------------------------
 C     .. 
 C     .. External subroutines
       EXTERNAL CALCTREF13,CHANGEREP,CINIT,CMATSTR,DECIPOTBAS,
@@ -122,13 +100,6 @@ C     .. Data statements
       DATA TXTS /'spin   UP','spin DOWN'/
 C ......................................................................
 C
-CF77--------------------------------------------------------------------
-Cccc      IF ( NREF.GT.NTMAX ) THEN
-Cccc         WRITE(6,99001) 'local','NTMAX',NREF
-Cccc         STOP
-Cccc      END IF
-CF77--------------------------------------------------------------------
-CF90--------------------------------------------------------------------
       CFCTOR = ALAT/(8.D0*ATAN(1.0D0))           ! = ALAT/(2*PI)
 C
       IDOLDAU = 0
@@ -136,7 +107,6 @@ C
       WLDAUAV = 0D0
       ALLOCATE(LOFLM(LM2D),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate LOFLM'
-CF90--------------------------------------------------------------------
       WRITE (6,'(5X,A,/,8X,65(1H-))')
      &           'Reading in host potentials'
       VACFLAG(1) = .FALSE.
@@ -178,14 +148,6 @@ C
          END IF
 C
 C
-CF77--------------------------------------------------------------------
-Cccc         IF ( NTLEFT+NTRIGHT.GT.NTMAX ) THEN
-Cccc            WRITE(6,99001) 'local','NTMAX',NT
-Cccc            STOP
-Cccc99001    FORMAT (6X,'Dimension ERROR: please increase the ',A
-Cccc     &        ,' parameter',/,6X,A,' to a value >=',I5,/)
-Cccc         END IF
-CF77--------------------------------------------------------------------
       END DO
 C
       IF ( NTLEFT+NTRIGHT.LE.0 ) THEN
@@ -194,7 +156,6 @@ C
          RETURN
       END IF
 C
-CF90--------------------------------------------------------------------
       NTMAX = NTLEFT+NTRIGHT
       ALLOCATE(ZAT(NTMAX),RWS(NTMAX),RMT(NTMAX),CONC(NTMAX),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate ZAT/RWS/RMT/CONC'
@@ -214,7 +175,6 @@ CF90--------------------------------------------------------------------
       IF ( I1.NE.0 ) STOP '    Allocate VTREL'
       ALLOCATE(BTREL(IRMD*KREL+(1-KREL),NTMAX),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate BTREL'
-CF90--------------------------------------------------------------------
 C
 C :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
       DO IHOST = 1,2
@@ -251,15 +211,12 @@ C
       END DO
 C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C
-CF90--------------------------------------------------------------------
       ALLOCATE(DROR(IRMD,NTMAX),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate DROR'
-CF90--------------------------------------------------------------------
       ALLOCATE(R2DRDIREL(IRMD*KREL+(1-KREL),NTMAX),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate R2DRDIREL'
       ALLOCATE(ZREL(NTMAX),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate ZREL'
-CF90--------------------------------------------------------------------
 C
       WRITE (6,'(/,5X,A,/)') 'Calculating host (Delta_t)^(-1) matrices'
       IF ( KREL.EQ.0 ) THEN
@@ -280,7 +237,6 @@ C
       END IF
 C
 C ******************************************************* energy loop IE
-CF90--------------------------------------------------------------------
       ALLOCATE(TREFLL(LMMAXD,LMMAXD,NREF),STAT=I1)
       IF ( I1.NE.0 ) STOP '    Allocate TREFLL'
       ALLOCATE(DTREFLL(LMMAXD,LMMAXD,NREF),STAT=I1)     ! LLY
@@ -290,7 +246,6 @@ CF90--------------------------------------------------------------------
       ALLOCATE( ALPHAREF(0:LMAXD,NREF),DALPHAREF(0:LMAXD,NREF) ,STAT=I1) ! LLY Lloyd Alpha matrix and deriv.
       IF ( I1.NE.0 ) STOP '    Allocate ALPHAREF/DALPHAREF'
 
-CF90--------------------------------------------------------------------
       DO IE = 1,IELAST
          ERYD = EZ(IE)
 
@@ -306,10 +261,8 @@ C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
      &                   ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)
             END DO
 !          ELSE
-! CF90--------------------------------------------------------------------
 !             ALLOCATE(WN1(LMGF0D,LMGF0D),STAT=I1)
 !             IF ( I1.NE.0 ) STOP '    Allocate WN1'
-! CF90--------------------------------------------------------------------
 !             DO I1 = 1,NREF
 !                CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAXD,IH,
 !      &                       WN1,DTREFLL(1,1,I1),LMAXD+1,LMGF0D)
@@ -326,10 +279,8 @@ C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 !                CALL CHANGEREP(TMATLL,'RLM>REL',TREFLL(1,1,I1),LMMAXD,
 !      &                        LMMAXD,RC,CREL,RREL,'TREFLL',0)
 !             END DO
-! CF90--------------------------------------------------------------------
 !             DEALLOCATE(WN1,STAT=I1)
 !             IF ( I1.NE.0 ) STOP '    Deallocate WN1'
-! CF90--------------------------------------------------------------------
          END IF
 C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 C
@@ -447,7 +398,6 @@ C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       END DO
 C **********************************************************************
-CF90--------------------------------------------------------------------
       DEALLOCATE(ZAT,RWS,RMT,CONC,RR,DRDI,VISP,STAT=I1)
       IF ( I1.NE.0 ) STOP '   Deallocate ZAT/RWS/RMT/.../VISP'
       DEALLOCATE(IRWS,IPAN,IQAT,IRCUT,LOFLM,STAT=I1)
@@ -465,7 +415,6 @@ CF90--------------------------------------------------------------------
          DEALLOCATE(R2DRDIREL,ZREL,STAT=I1)
          IF ( I1.NE.0 ) STOP '   Deallocate R2DRDIREL/ZREL'
       END IF
-CF90--------------------------------------------------------------------
 99002 FORMAT (A,I3,$)
 99003 FORMAT (', ',A,$)
 99004 FORMAT (A,2F10.6)

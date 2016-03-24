@@ -272,8 +272,7 @@ C     .. Local Scalars ..
      +        NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
       INTEGER NS,LM1,LM2
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
-     +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)!,
-!      +                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
+     +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       INTEGER IESEMICORE,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IDOSEMICORE
       DOUBLE PRECISION FSEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
@@ -288,7 +287,7 @@ C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
-     +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD)!,
+     +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD)
       double complex, allocatable :: LEFTTINVLL(:,:,:,:,:), 
      +                               RIGHTTINVLL(:,:,:,:,:)
       DOUBLE PRECISION A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
@@ -460,7 +459,7 @@ C     ..
       WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
-     &              'Juelich-Munich 2001 - 2015',
+     &              'Juelich-Munich 2001 - 2016',
      &             ' Code version: ',trim(version(1)),
      &             ' Compile options:',(trim(version(i)),i=2,4)
  2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/ )
@@ -758,7 +757,6 @@ C
 C --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
-!       write(1337,*) 'test call shape, ntcell=',ntcell
       IF (KSHAPE.NE.0) 
      +     CALL SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,
      +                LASSLD,LMPOTD,NATYPD,NGSHD)
@@ -1064,8 +1062,7 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-      DEALLOCATE(ULDAU)
-      !IF (OPT('LDA+U   ')) DEALLOCATE(ULDAU)
+      if(allocated(ULDAU)      ) deallocate(ULDAU)
       if(allocated(thetas)     ) deallocate(thetas)
       if(allocated(thetasnew)  ) deallocate(thetasnew)
       if(allocated(thesme)     ) deallocate(thesme)

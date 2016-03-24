@@ -58,9 +58,6 @@ C     .. External Functions ..
             DO IE=1,IELAST
               IF (I1<=NATYP) THEN 
                   IREC = IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) 
-!                  write(*,*) irec
-!                 READ (69,REC=IREC) TMAT
-!                 IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (IATOM-1) 
                   if (t_tgmat%tmat_to_file) then
                      READ (69,REC=IREC) TMAT0
                   else
@@ -71,7 +68,6 @@ C     .. External Functions ..
               ELSE
                  TMAT0=(0.0D0,0.0D0)
               END IF 
-!                   write(6699,*) IREC,IE,ISPIN,IATOM,I1
               WRITE(6699,'(4I,50000E)') IATOM,ISPIN,IE,0,TMAT0
           END DO !IE=1,IELAST
         END DO !ISPIN=1,NSPIN
@@ -101,13 +97,10 @@ C     .. External Functions ..
         WRITE(91,*) '# lmpot',lmpot
         WRITE(91,*) '# KSHAPE',KSHAPE
         WRITE(91,*) '# NATOMIMP, lmpot, ALAT VBC(1), VBC(2)'
-!         WRITE(91,*) HOSTIMP(0),LMMAX
         WRITE(91,'(2I,10F)') NATOMIMP,lmpot,ALAT,VBC(1),VBC(2)
         DO IATOM = 1,NATOMIMP      ! Bauer 2011-10-11
           I=ATOMIMP(IATOM)         !
-!         DO I=1,HOSTIMP(0)
          write(1337,*) 'ac2',I,HOSTIMP(I),lmpot,
-!      +                (VINTERS(LM,HOSTIMP(I)),LM=1,lmpot)
      +                (VINTERS(LM,I),LM=1,lmpot)
           WRITE(91,'(5000G)') (VINTERS(LM,I),LM=1,lmpot)
         END DO
@@ -125,8 +118,6 @@ C     .. External Functions ..
         DO IATOM = 1,NATOMIMP
           I=ATOMIMP(IATOM)
           I1=KAOEZ(1,I)
-!         DO IATOM=1,HOSTIMP(0)
-!           I=HOSTIMP(IATOM)
           WRITE(1337,*) 'NOQ',I,NOQ(I)
           IF (NOQ(I)/=1 .and. NOQ(I)/=0) 
      +      stop '[vmadelblk] VIRATOMS: NOQ/=1'

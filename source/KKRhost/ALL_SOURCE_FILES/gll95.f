@@ -48,14 +48,6 @@ C     .. Local Arrays ..
       LOGICAL LDERIV  ! LLY calculate or not DTGLL and LLY_G0TR
       INTEGER LLY     ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
       ALLOCATABLE GREF,GLL,GTREF,DGLLDE,DGTDE,DGTDE0,DGDE,IPVT
-CF77--------------------------------------------------------------------
-Cccc      DOUBLE COMPLEX GLL(LMGF0D,LMGF0D),GREF(NGD,NGD)
-Cccc      DOUBLE COMPLEX GTREF(NGD,LMGF0D)
-CF77--------------------------------------------------------------------
-CF90--------------------------------------------------------------------
-Cccc      DOUBLE COMPLEX GREF(:,:),GLL(:,:),GTREF(:,:)
-Cccc      ALLOCATABLE GREF,GLL,GTREF
-CF90--------------------------------------------------------------------
 C     ..
 C     .. External Subroutines ..
       EXTERNAL GFREE13,GREFSY13,ZCOPY,ZGEMM
@@ -67,7 +59,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,DBLE
 C     ..
-CF90--------------------------------------------------------------------
       NGD1 = NACLSMAX*LMGF0D
       ALLOCATE(GREF(NGD1,NGD1),GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D),
      &        GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D),IPVT(NGD1),STAT=LM1)
@@ -91,7 +82,6 @@ CF90--------------------------------------------------------------------
          DGTDE(:,:) = CZERO
       ENDIF
 99001 FORMAT(6X,"ERROR: failed to allocate array(s) :",A,/)
-CF90--------------------------------------------------------------------
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &    WRITE (1337,FMT=*) '>>> GLL95'
 
@@ -219,8 +209,6 @@ c ----------------------------------------------------------------------
      &      WRITE (1337,FMT=*) 'GREFSY o.k.'
 
       IF (OUT_WR.GT.0) WRITE (OUT_WR) ((GREF0(N,M),M=1,LMGF0D),N=1,NGD1)
-CF90--------------------------------------------------------------------
       DEALLOCATE (GREF,GLL,GTREF,DGTDE,IPVT)
       IF (LLY.NE.0) DEALLOCATE (DGTDE0,DGDE)
-CF90--------------------------------------------------------------------
       END

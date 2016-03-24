@@ -37,7 +37,6 @@ C ======================================================================
 C
 C   --> set up the Delta_t^-1 matrix (MSST) in the LOCAL frame
 C
-!           write(*,*) 'natyp',natyp
 
 
 
@@ -176,15 +175,6 @@ C
           WRITE (1337,*)
         END IF
 C
-!            open(23234,file='test1')
-!            do lm1=1,LMMAXD
-!              write(23234,'(50000F)') TREFLL(lm1,:,RF)
-!            end do !lm1=1,alm
-!            close(23234)
-!            write(*,*) NCPA
-!            write(*,*) 'stop'
-!               stop
-
 
       END DO
 C ----------------------------------------------------------------------
@@ -202,15 +192,6 @@ C
 C
 C ---> inversion 
 C
-
-!            open(23234,file='test1')
-!            do lm1=1,LMMAXD
-!              write(23234,'(50000F)') MSSQ(lm1,:,1)
-!            end do !lm1=1,alm
-!            close(23234)
-!            write(*,*) NCPA
-!            write(*,*) 'stop'
-! !            stop
 
       IF ( .not. OPT('VIRATOMS') ) THEN
         IF (.not.TEST('testgmat')) THEN
@@ -235,15 +216,6 @@ c     &              LMMAXD*LMMAXD,INFO)
         ENDDO
        END IF !( .not. TEST('testgmat') ) THEN
       END IF !( .not. OPT('VIRATOMS') ) THEN
-
-!            open(23234,file='test2')
-!            do lm1=1,LMMAXD
-!              write(23234,'(50000F)') MSSQ(lm1,:,IQ)
-!            end do !lm1=1,alm
-!            close(23234)
-!            write(*,*) NCPA
-!            write(*,*) 'stop'
-!            stop
 
 C
       END DO                    ! IQ = 1,NAEZ

@@ -346,9 +346,6 @@ C
             end if
          ENDIF                                                       ! LLY
          
-!          if(ie==ielast) write(*,'(I5,10ES15.7)') 
-!      &          myrank,DTMATLL(1,1),TRALPHA
-         
 C ----------------------------------------------------------------------
          IF ( TEST('tmat    ') .and. (t_inc%i_write>0)) THEN
             WRITE (1337,*)

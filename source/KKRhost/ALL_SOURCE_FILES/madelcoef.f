@@ -32,17 +32,8 @@ C     .. Save statements
 !      SAVE ICALL_madelcoef,LMPOT,PI,FPI
 !      SAVE LMPOT,PI,FPI
 C     ..................................................................
-
-       !write(*,*) 'madelcoef',icall_madelcoef,lmpot,lpot
-       !stop
-
-       !ICALL_madelcoef = ICALL_madelcoef + 1
 C
-       !IF ( ICALL_madelcoef.EQ.1 ) THEN
-       !  PI = 4.0D0*ATAN(1.0D0)
-       !  FPI = 4.0D0*PI
-         LMPOT = (LPOT+1)**2
-       !END IF
+      LMPOT = (LPOT+1)**2
 C
       I = 1
 C

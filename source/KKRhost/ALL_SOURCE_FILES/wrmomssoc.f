@@ -160,7 +160,6 @@ C
      &                        ,MUSPIN(IT,LMAXD1+1),
      &                         ORMOMENT(1,4,IT)+ORMOMENT(2,4,IT),
      &                         (ORMOMENT(ISPIN,4,IT),ISPIN=1,NSPIN)
-c            WRITE (1337,'(25X,F12.8,12X,F8.4)') CHTOT(IT),MUTOT(IT)
          ELSE
             IF (NSPIN.EQ.2) THEN
                WRITE (1337,'(17(1H-))')

@@ -398,10 +398,6 @@ c calculate contribution from free space
             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
             call zcopy(ihelp,work,1,cdos_lly,1)
-!             work = (0.d0, 0.d0)
-!             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
-!      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_ie,ierr)
-!             call zcopy(ihelp,work,1,cdos_lly,1)
             deallocate(work)
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)

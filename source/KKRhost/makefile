@@ -12,7 +12,7 @@
 # make clean     -    removes all *.o files
 # make openmp    -    uses openmp
 #
-default: serial
+default: install
 ####################################################
 # specify the compiler which is going to be used   #
 ####################################################
@@ -248,7 +248,7 @@ rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o 
 	$(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 
-install: clean serial
+install: clean mpi
 
 mac:    compile
 macmpi: compile
