@@ -107,26 +107,12 @@ C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX XC(LMMAXD,LMMAXD),W1(LMMAXD,LMMAXD),
      &               W2(LMMAXD,LMMAXD)
 C     .. 
-CF90-------------------------------------------------------------
       DOUBLE COMPLEX GS(:,:,:,:),TAUDELQ(:,:,:),TAUDELT(:,:,:)
       DOUBLE COMPLEX DMSSQ(:,:,:)
       ALLOCATABLE GS,TAUDELQ,TAUDELT,DMSSQ
-CF90-------------------------------------------------------------
 #ifdef CPP_MPI
       INTEGER :: irec0
 #endif
-C
-CF90CF90-------------------------------------------------------------
-CF90      DOUBLE COMPLEX GS(:,:,:,:),TAUDELQ(:,:,:),TAUDELT(:,:,:)
-CF90      DOUBLE COMPLEX DMSSQ(:,:,:)
-CF90      ALLOCATABLE GS,TAUDELQ,TAUDELT,DMSSQ
-CF90CF90-------------------------------------------------------------
-CF77CF77-------------------------------------------------------------
-CF77      DOUBLE COMPLEX GS(LMMAXD,LMMAXD,NSYMAXD,NSHELD)
-CF77      DOUBLE COMPLEX TAUDELQ(LMMAXD,LMMAXD,NSHELD)
-CF77      DOUBLE COMPLEX TAUDELT(LMMAXD,LMMAXD,NSHELD)
-CF77      DOUBLE COMPLEX DMSSQ(LMMAXD,LMMAXD,NAEZD)
-CF77CF77-------------------------------------------------------------
 C     ..
 C     .. External Functions/Subroutines ..
       LOGICAL TEST,OPT
@@ -227,11 +213,9 @@ C
       EZ = ERYD
 C
       IF ( NCPA.NE.0 ) THEN
-CF90-------------------------------------------------------------
          ALLOCATE (DMSSQ(LMMAXD,LMMAXD,NAEZD),STAT=LM1)
          IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate DMSSQ'
          DMSSQ(:,:,:) = (0.d0,0.d0)
-CF90-------------------------------------------------------------
          CALL CINIT(LMMAXD*LMMAXD*NAEZD,DMSSQ)
       END IF
 C
@@ -293,20 +277,16 @@ C
       EZ = EZ*CFCTOR*CFCTOR
       NSDIA = MAX(NAEZ,NATYP)
 C
-CF90-------------------------------------------------------------
       ALLOCATE (TAUDELQ(LMMAXD,LMMAXD,NSHELL(0)),STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate TAUDELQ'
       TAUDELQ(:,:,:) = (0.d0,0.d0)
-CF90-------------------------------------------------------------
 C
  100  CONTINUE
       ITCPA = ITCPA + 1
 C
-CF90-------------------------------------------------------------
       ALLOCATE (GS(LMMAXD,LMMAXD,NSYMAXD,NSHELL(0)),STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate GS'
       GS(:,:,:,:) = (0.d0,0.d0)
-CF90-------------------------------------------------------------
 C
 C     copy read-in cpa t-matrix but only after fort.37 was created in first run !qdos ruess
       IF (OPT('readcpa ').OR.(OPT('qdos    ').AND.                              !qdos ruess
@@ -346,10 +326,8 @@ C
          TAUDELQ(1:LMMAXD,1:LMMAXD,IQTAU) = -GLL(1:LMMAXD,1:LMMAXD)
       END DO
 C=========================================================== NS=1,NSMAX
-CF90-------------------------------------------------------------
       DEALLOCATE (GS,STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> deallocate GS'
-CF90-------------------------------------------------------------
 
 C=== CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       IF ( NCPA.GT.0 ) THEN
@@ -382,17 +360,20 @@ C
                END DO
             ENDIF
 C
-            IF ( IPRINT.GE.1 ) WRITE (1337,99004) CPAERR,CPACORR,CPACHNG
+            IF ( IPRINT.GE.1 .and. (t_inc%i_write>0)) 
+     &         WRITE (1337,99004) CPAERR,CPACORR,CPACHNG
 C
             IF ( CPAERR.LE.CPATOL ) THEN
-               IF ( IPRINT.GT.0 ) WRITE (1337,99001) ITCPA,CPAERR,
-     &                                            CPACORR,CPACHNG
-            ELSE IF ( ITCPA.GT.ITCPAMAX ) THEN
-               WRITE (1337,99002) ITCPA,CPAERR,CPACORR,CPACHNG
+               IF ( IPRINT.GT.0 .and. (t_inc%i_write>0)) 
+     &           WRITE (1337,99001) ITCPA,CPAERR,CPACORR,CPACHNG
+            ELSE IF ( ITCPA.GT.ITCPAMAX) THEN
+               if(t_inc%i_write>0) WRITE (1337,99002) ITCPA,
+     &                     CPAERR,CPACORR,CPACHNG
                ICPAFLAG = 1
             ELSE IF ( CPAERR.GT.20*CPAERRL ) THEN
-               WRITE (1337,99003) ITCPA
-               WRITE (1337,99004) CPAERR,CPACORR,CPACHNG
+               if(t_inc%i_write>0) WRITE (1337,99003) ITCPA
+               if(t_inc%i_write>0) WRITE (1337,99004) CPAERR,
+     &                     CPACORR,CPACHNG
                ICPAFLAG = 2
             ELSE
 C
@@ -402,10 +383,8 @@ C
                GOTO 100
             END IF              !   ( CPAERR.LE.CPATOL )
          END IF                 !  (OPT('readcpa ').OR.OPT('qdos    ')) 
-CF90-------------------------------------------------------------
          DEALLOCATE (DMSSQ,STAT=LM1)
          IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> deallocate DMSSQ'
-CF90-------------------------------------------------------------
 C
       END IF
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -476,11 +455,9 @@ C       reference
 C     - they are NSMAX site-diagonal elements projected on atomic types 
 C       in the array TAUDELT(1..NSMAX) in the LOCAL frame of reference
 C
-CF90-------------------------------------------------------------
       ALLOCATE (TAUDELT(LMMAXD,LMMAXD,NSHELL(0)),STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> allocate TAUDELT'
       TAUDELT(:,:,:) = (0.d0,0.d0)
-CF90-------------------------------------------------------------
       IF ( NCPA.GT.0) THEN
          NSMAX = NATYP
          CALL PROJTAU(ICPAFLAG,CPACHNG,KMROT,.FALSE.,.FALSE.,9,CZERO,
@@ -518,7 +495,8 @@ C    system-matrix (1..NSMAX) and with MSSQ on the rest of the elements
 C
 C ----------------------------------------------------------------------
 C
-      IF ( TEST('Gmat    ') ) WRITE (1337,'(/,4X,70(1H-),/,4X,A,I4)')
+      IF ( TEST('Gmat    ') .and. (t_inc%i_write>0)) 
+     &      WRITE (1337,'(/,4X,70(1H-),/,4X,A,I4)')
      &                   'system G_ii matrix for i = 1,',NSMAX
       DO NS = 1,NSHELL(0)
 C
@@ -600,7 +578,8 @@ C
         END IF
       END DO
 C ----------------------------------------------------------------------
-      IF ( TEST('Gmat    ') ) WRITE (1337,'(/,4X,70(1H-))')
+      IF ( TEST('Gmat    ') .and. (t_inc%i_write>0)) 
+     &     WRITE (1337,'(/,4X,70(1H-))')
 C ----------------------------------------------------------------------
 C --> it calculates the rest of the G n n' matrix from the
 C     knowledge of the representative pairs (shells) using the
@@ -655,12 +634,11 @@ C
          END DO
       END IF
 C ----------------------------------------------------------------------
-      IF ( TEST('flow    ') ) WRITE (1337,*) '<<< KLOOPZ1'
+      IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 
+     &     WRITE (1337,*) '<<< KLOOPZ1'
 
-CF90-------------------------------------------------------------
       DEALLOCATE (TAUDELQ,TAUDELT,STAT=LM1)
       IF ( LM1.NE.0 ) STOP '      ERROR: <kloopz1> deallocate TAUs'
-CF90-------------------------------------------------------------
 C
       RETURN
 

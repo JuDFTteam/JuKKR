@@ -10,6 +10,10 @@
       subroutine main2()
       
       use mod_types, only: t_inc
+      use mod_wunfiles
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       implicit none
       
@@ -120,12 +124,7 @@ C ----------------------------------------------------------------------
       !allocatables:
       double precision, allocatable :: THETAS(:,:,:), thesme(:,:,:)
 C     .. Dummy variables needed only in IMPURITY program 
-!       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD),VSPSMDUM(IRMD,NPOTD)
       DOUBLE PRECISION VSPSMDUM(IRMD,NPOTD)
-!       DOUBLE PRECISION, allocatable :: ECOU(:,:),EPOTIN(:),ESPC(:,:),
-!      +  ESPV(:,:),EXC(:,:),A(:),B(:),DRDI(:,:),RMT(:),RMTNEW(:),RWS(:),
-!      +  R(:,:),ECORE(:,:),THETAS(:,:,:),ZAT(:),THESME(:,:,:),
-!      +  VSPSMDUM(:,:)
 C ----------------------------------------------------------------------
 C  R2NEF (IRMD,LMPOTD,NATYPD,2)  ! rho at FERMI energy
 C  RHO2NS(IRMD,LMPOTD,NATYPD,2)  ! radial density
@@ -134,9 +133,7 @@ C   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
 C                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
 C  RHOC(IRMD,NPOTD)              ! core charge density
 C ----------------------------------------------------------------------
-      DOUBLE PRECISION !R2NEF(IRMD,LMPOTD,NATYPD,2),
-!      +                 RHO2NS(IRMD,LMPOTD,NATYPD,2),
-     +                 RHOC(IRMD,NPOTD)
+      DOUBLE PRECISION RHOC(IRMD,NPOTD)
       double precision, allocatable :: R2NEF(:,:,:,:),
      +                                 RHO2NS(:,:,:,:)
 C     ..
@@ -149,10 +146,6 @@ C     ..
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
       DOUBLE PRECISION QMTET(NAEZD),QMPHI(NAEZD)
       DOUBLE PRECISION ECOREREL(KREL*20+(1-KREL),NPOTD) 
-!       DOUBLE PRECISION, allocatable :: R2NEF(:,:,:,:),RHO2NS(:,:,:,:),
-!      +                 RHOC(:,:),GSH(:),RHOORB(:,:),VTREL(:,:),
-!      +                 BTREL(:,:),DRDIREL(:,:),R2DRDIREL(:,:),
-!      +                 RMREL(:,:),QMTET(:),QMPHI(:),ECOREREL(:,:)
 C ----------------------------------------------------------------------
 C  CMINST(LMPOTD,NATYPD)            ! charge moment of interstitial
 C  CMOM(LMPOTD,NATYPD)              ! LM moment of total charge
@@ -172,16 +165,6 @@ C     ITERMDIR variables
       DOUBLE PRECISION FACT(0:100)
       DOUBLE PRECISION MVGAM(NATYPD,NMVECMAX),MVPHI(NATYPD,NMVECMAX),
      &                 MVTET(NATYPD,NMVECMAX)
-!       DOUBLE PRECISION, allocatable :: CMINST(:,:),CMOM(:,:),
-!      +         CHRGATOM(:,:),C00(:),CMOMHOST(:,:),CONC(:),DENEFAT(:)
-! C     .. FORCES
-!       DOUBLE PRECISION, allocatable :: FLM(:,:),FLMC(:,:)
-! C ----------------------------------------------------------------------
-! C     ITERMDIR variables
-!       DOUBLE PRECISION, allocatable :: QMGAM(:),FACT(:),MVGAM(:,:),
-!      +                                 MVPHI(:,:),MVTET(:,:)
-C     ITERMDIR variables
-C ----------------------------------------------------------------------
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U
       INTEGER IDOLDAU,LOPT(NATYPD)
@@ -192,11 +175,9 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !--------------
 ! Scale magn. part of xc-potential:
       DOUBLE PRECISION LAMBDA_XC, EXCDIFF   
-      DOUBLE PRECISION EXCNM(0:LPOTD,NATYPD)
-!       DOUBLE PRECISION VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD)      
+      DOUBLE PRECISION EXCNM(0:LPOTD,NATYPD)   
       DOUBLE PRECISION, allocatable :: VXCM(:,:,:),VXCNM(:,:,:),
      +                                 RHO2NSNM(:,:,:,:)   
-!       DOUBLE PRECISION RHO2NSNM(IRMD,LMPOTD,NATYPD,2)
 !------------ 
 
 
@@ -237,9 +218,6 @@ c
 C     .. Intrinsic Functions ..
       INTRINSIC DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
 C     ..
-! C     .. External Functions ..
-!        DOUBLE PRECISION DCLOCK
-!        EXTERNAL DCLOCK
 C declarations needed:
        DOUBLE PRECISION  AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
        INTEGER LRECABMAD,I2,IREC
@@ -249,6 +227,9 @@ c New variables for fixed Fermi energy calculations; noted as fxf
 
       REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
 C     ..
+! for SIMULASA:
+      INTEGER*4 IPOS,ILMP,IAS
+C     ..
 
       allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD))
       allocate(VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD))
@@ -256,26 +237,6 @@ C     ..
      &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
      &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2))
 
-!       ALLOCATE(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
-!      + VONS(IRMD,LMPOTD,NPOTD),ECOU(0:LPOTD,NATYPD),EPOTIN(NATYPD),
-!      + ESPC(0:3,NPOTD),ESPV(0:LMAXD1,NPOTD),EXC(0:LPOTD,NATYPD),
-!      + A(NATYPD),B(NATYPD),DRDI(IRMD,NATYPD),RMT(NATYPD),RMTNEW(NATYPD),
-!      + RWS(NATYPD),R(IRMD,NATYPD),ECORE(20,NPOTD),
-!      + THETAS(IRID,NFUND,NCELLD),ZAT(NATYPD),THESME(IRID,NFUND,NCELLD),
-!      + VSPSMDUM(IRMD,NPOTD),R2NEF(IRMD,LMPOTD,NATYPD,2),
-!      + RHO2NS(IRMD,LMPOTD,NATYPD,2),RHOC(IRMD,NPOTD),GSH(NGSHD),
-!      + RHOORB(IRMD*KREL + (1-KREL),NATYPD),
-!      + VTREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + BTREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + RMREL(IRMD*KREL+(1-KREL),NATYPD),QMTET(NAEZD),QMPHI(NAEZD),
-!      + ECOREREL(KREL*20+(1-KREL),NPOTD),CMINST(LMPOTD,NATYPD),
-!      + CMOM(LMPOTD,NATYPD),CHRGATOM(NATYPD,2*KREL+(1-KREL)*NSPIND),
-!      + C00(LMPOTD),CMOMHOST(LMPOTD,NEMBD1),CONC(NATYPD),
-!      + DENEFAT(NATYPD),FLM(-1:1,NATYPD),FLMC(-1:1,NATYPD),QMGAM(NAEZD),
-!      + FACT(0:100),MVGAM(NATYPD,NMVECMAX),MVPHI(NATYPD,NMVECMAX),
-!      + MVTET(NATYPD,NMVECMAX))
 
 ! allocations:
       allocate(THETAS(IRID,NFUND,NCELLD), THESME(IRID,NFUND,NCELLD))
@@ -292,72 +253,25 @@ C =             read in variables from unformatted files               =
 C ======================================================================
 C
 C --------------------------------------------------------------- input2
-C
-      OPEN (67,FILE='input2.unformatted',FORM='unformatted')
-      READ (67) NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,NTCELL,
-     &          LMAX,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,LINTERFACE
-      READ (67) ATOMIMP,NATOMIMP
-
-C ......................................................................
-Consistency check 
-C
-      IF ( (KREL.EQ.1) .AND. (INS.NE.0) ) THEN
-         WRITE(6,*)
-     &        ' FULL-POTENTIAL RELATIVISTIC mode not implemented '
-         STOP ' set INS = 0 in the input'
-      END IF
-      IF ( NSRA.LE.2 ) THEN
-         IF ( KREL.EQ.1 ) STOP
-     &        ' KVREL <= 1 in input, but relativistic program used'
-      ELSE
-         IF ( KREL.EQ.0 ) STOP
-     &        ' KVREL > 1 in input, but non-relativistic program used'
-      END IF
-C ......................................................................
-      READ (67) IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,
-     &          KVMAD,KXC,LAMBDA_XC,TXC,ICC,ISHIFT,IXIPOL,LRHOSYM,KFORCE
-      READ (67) A,B,DRDI,R,THETAS,ZAT,IFUNM,LMSP,RMT,RMTNEW,RWS,IMT,IRC,
-     &          IRMIN,IRWS,ITITLE,LLMSP,NFU,HOSTIMP
-      READ (67) ALAT,KAOEZ,IQAT,NOQ,CONC,GSH,ILM,IMAXSH,TESTC,OPTC,LLY
-      CLOSE (67)
-C ---------------------------------------------------------- energy_mesh
-C
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='energy_mesh',FORM='unformatted')
-      else
-        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      end if
-      READ (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSOLD
-      READ (67) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
-     &          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
-      CLOSE (67)
-C ------------------------------------------------------ input_potential
-C
-      IF(t_inc%i_iteration.eq.0) then
-!       OPEN (67,FILE='input_potential',FORM='unformatted')
-      OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
-      else 
-!       OPEN (67,FILE='output_potential',FORM='unformatted')
-      OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
-      end if
-      
-      READ (67) VINS,VISP,ECORE,VBC
-      IF (KREL.EQ.1) THEN
-         READ (67) RMREL,DRDIREL,R2DRDIREL
-         READ (67) ZREL,JWSREL,IRSHIFT
-         READ (67)
-      END IF
-      READ (67) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
-      CLOSE (67)
-      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
+      call get_params_2(t_params,KREL,NATYPD,IPAND,NPOTD,NATOMIMPD
+     &    ,LMXSPD,NFUND,LMPOTD,NCELLD,IRMD,NEMBD1,NEMBD,
+     &     IRMIND,NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,LMAX,
+     &     NTCELL,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,
+     &     ATOMIMP,IMIX,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC
+     &    ,ICC,ISHIFT,IXIPOL,KFORCE,IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,
+     &     ITITLE,NFU,HOSTIMP,ILM,IMAXSH,IELAST,NPOL,NPNT1,NPNT2,NPNT3,
+     &     ITSCF,SCFSTEPS,IESEMICORE,KAOEZ,IQAT,NOQ,LLY,NPOLSEMI,N1SEMI,
+     &     N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,THETAS
+     &    ,DRDI,R,ZAT,RMT,RMTNEW,RWS,E1,E2,TK,ALAT,EFOLD,CHRGOLD,
+     &     CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,
+     &     DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TESTC,OPTC,TXC,
+     &     LINTERFACE,LRHOSYM,NGSHD,NAEZD,IRID,NSPOTD,IEMXD)
 C -------------------------------------------------------------- density
 C
-      OPEN (67,FILE='density',FORM='unformatted')
-      READ (67) RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,
-     &          IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
-      IF (KREL.EQ.1) READ(67) RHOORB,ECOREREL,NKCORE,KAPCORE
-      CLOSE (67)
-!       write(*,*) 'test fivos scfsteps,qbound',scfsteps,qbound
+      call read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,
+     &                  ESPV,ECORE,IDOLDAU,LOPT,EU,EDC,
+     &                  CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,
+     &                  KREL,NATYPD,NPOTD,IRMD,LMPOTD,LMAXD1)
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -384,18 +298,18 @@ C **********************************************************************
 C
       ITSCF = ITSCF + 1         ! initialised to 0 in main0
       t_inc%i_iteration = ITSCF
-C      
-!      WRITE(6,'(/,79(1H*))')
-!      WRITE(6,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
-!     &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
-!      WRITE(6,'(79(1H*),/)')      
+C          
       WRITE(1337,'(/,79(1H*))')
       WRITE(1337,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',
      &                             ITSCF,' OUT OF ',SCFSTEPS,' ******'
       WRITE(1337,'(79(1H*),/)')
 C
-!       STIME0 = DCLOCK()
-      OPEN (IOBROY,FORM='unformatted',STATUS='unknown')
+      IF (IMIX.GE.3) THEN
+         OPEN (IOBROY,FILE='broy_io.unformatted',FORM='unformatted',
+     &         STATUS='unknown')
+         OPEN (IOBROY+2,FILE='broy_io2.unformatted',FORM='unformatted',
+     &         STATUS='unknown')
+      ENDIF  
 C ----------------------------------------------------------------------
 C
 C the next four lines may not always work
@@ -424,8 +338,6 @@ C
           IF (NSPIN==2) write(324234,'(50000F)') RHO2NS(:,:,I1,2)
         END DO
       END IF
-
-
 
 
 C ----------------------------------------------------------------------
@@ -513,11 +425,8 @@ C SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM ITERMDIR
 C
       IF ((KREL.EQ.1).AND.(OPT('ITERMDIR'))) THEN
-         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
-         READ (67) 
-         READ (67) 
-         READ (67) MVEVI,MVEVIEF
-         CLOSE(67)
+         MVEVI   = t_params%MVEVI
+         MVEVIEF = t_params%MVEVIEF
 C     
          CALL RINIT(NAEZD,QMGAM)
          DO I1 = 1,NAEZ
@@ -551,8 +460,8 @@ C
          CALL SCFITERANG(ITSCF,ITOQ,FACT,
      &                   MVPHI,MVTET,MVGAM,QMPHI,QMTET,QMGAM,
      &                   NAEZ,NK,ERRAVANG,NAEZD,NATYPD,NMVECMAX,LMMAXD)
-         WRITE (67) MVEVI,MVEVIEF
-         CLOSE(67)
+         t_params%MVEVI   = MVEVI
+         t_params%MVEVIEF = MVEVIEF
       END IF
 C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 C
@@ -596,7 +505,6 @@ C ---------------------------------------------------------------------
 C ---------------------------------------------------------------------
          ELSE
 C ---------------------------------------------------------------------
-!             WRITE(*,*) 'CALL VMADELBLK'
             CALL VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,
      &                     NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
      &                     NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),
@@ -928,7 +836,18 @@ C ..................
           close(54633563)
         end if ! config_testflag('write_gmatonsite')
 
-
+! for simulasa:
+      if(opt('simulasa')) then
+         DO IAS = 1, NPOTD
+          DO ILMP = 1, LMPOTD
+            DO IPOS = 1, IRMD
+              IF (ILMP .NE. 1) THEN
+                VONS(IPOS, ILMP, IAS) = 0.D0
+              ENDIF
+            ENDDO
+          ENDDO
+         ENDDO
+      endif
 
 C ---------------------------------------------------------------------
 C
@@ -956,20 +875,9 @@ C ======================================================================
 C
       WRITE(1337,FMT=9160) MIX
       WRITE(1337,'(79(1H=),/)')
-!       OPEN(28,FILE='not.converged',FORM='formatted',
-!      &        STATUS='old',IOSTAT=I1)
-!       IF ( I1.NE.0 ) THEN 
-!          I1 = 1 
-!          OPEN(28,FILE='not.converged',FORM='formatted',STATUS='new')
-!          WRITE(28,'(I5,/)') I1
-!          WRITE(6,'(6X,"WARNING : ",A,/)') 
-!      &        'Could not find file ''not.converged''. Initialised now'
-!          REWIND(28)
-!       END IF
 C
 C ======================================================================
       IF (MAX(RMSAVQ,RMSAVM).LT.QBOUND) THEN
-!          CLOSE(28,STATUS='delete')
          t_inc%i_iteration = t_inc%N_iteration
       ELSE
 C ----------------------------------------------------------------------
@@ -1013,7 +921,6 @@ C
             END IF
          END DO
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!          CLOSE(28)
       END IF
 C ======================================================================
 C
@@ -1052,11 +959,6 @@ C
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC CONVERGENCY TESTS
 C
       IF ( OPT('SEARCHEF') .AND. (DABS(E2SHIFT).LT.1D-8)) THEN
-!          OPEN(28,FILE='not.converged',FORM='formatted')
-!          CLOSE(28,STATUS='delete')
-!          WRITE(6,'(12X,A)')
-!      &        '++++++ SEARCHEF option: E_F CONVERGED +++++'
-!          WRITE(6,'(79(1H*))')
          t_inc%i_iteration = t_inc%N_iteration
          ICONT = 0
          GOTO 260
@@ -1077,8 +979,6 @@ C ----------------------------------------------------------------------
          END IF
 C ----------------------------------------------------------------------
          IF (ITSCF.GE.SCFSTEPS) THEN
-!             OPEN(28,FILE='not.converged',FORM='formatted')
-!             CLOSE(28,STATUS='delete')
          t_inc%i_iteration = t_inc%N_iteration
             WRITE(6,'(12X,A)')
      &           '++++++ NUMBER OF SCF STEPS EXHAUSTED ++++++'
@@ -1123,25 +1023,17 @@ C ======================================================================
 C
 C ------------------------------------------------------ new_energy_mesh
 C
-      OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      WRITE (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE
-      WRITE (67) NPOL,TK,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
-     &           NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
-      CLOSE (67)
+      call save_emesh(IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE,NPOL,TK,
+     &                NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,
+     &                NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IEMXD,t_params) 
 C ----------------------------------------------------- output_potential
 C
-!       OPEN (67,FILE='output_potential',FORM='unformatted')
-      OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
-      WRITE (67) VINS,VISP,ECORE,VBC
-      IF (KREL.EQ.1) THEN
-         WRITE (67) RMREL,DRDIREL,R2DRDIREL
-         WRITE (67) ZREL,JWSREL,IRSHIFT
-         WRITE (67) VTREL,BTREL
-      END IF
-      WRITE (67) ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST
-      CLOSE (67)
+      call save_scfinfo(t_params,VINS,VISP,ECORE,VBC,RMREL,DRDIREL
+     &                 ,R2DRDIREL,ZREL,JWSREL,IRSHIFT,VTREL,BTREL,
+     &                  ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST,KREL
+     &                 ,IRMIND,IRMD,LMPOTD,NSPOTD,NATYPD,NPOTD,
+     &                  NEMBD1)
 C ======================================================================
-      !STOP
  9020 FORMAT ('                old',
      &     ' E Fermi ',F14.10,' Delta E_F = ',E16.8)
  9030 FORMAT ('                new',
@@ -1156,13 +1048,10 @@ C ======================================================================
       deallocate(vxcm, vxcnm)
       deallocate(R2NEF,RHO2NS,RHO2NSNM)
  
-!       DEALLOCATE(VINS,VISP,VONS,ECOU,EPOTIN,ESPC,ESPV,EXC,A,B,DRDI,RMT,
-!      + RMTNEW,RWS,R,ECORE,THETAS,ZAT,THESME,VSPSMDUM,R2NEF,RHO2NS,RHOC,
-!      + GSH,RHOORB,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,QMTET,QMPHI,
-!      + ECOREREL,CMINST,CMOM,CHRGATOM,C00,CMOMHOST,CONC,
-!      + DENEFAT,FLM,FLMC,QMGAM,FACT,MVGAM,MVPHI,MVTET)
  
       END SUBROUTINE !main2
+
+
 
 
 c********************************************************************
@@ -1184,7 +1073,6 @@ c Input
      &     ,LMSP(NATYPD,LMXSPD),IRMIN(NATYPD)
       REAL*8 GSH(NGSHD),THETAS(IRID,NFUND,NCELLD),RFPI
      &     ,RMESH(IRMD,NATYPD)
-!       REAL*8 THESME(IRID,NFUND,NCELLD)
       REAL*8 THESME(IRID,NFUND,NCELLD)
       REAL*8 VSHIFT
 

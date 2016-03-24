@@ -20,7 +20,7 @@ C
 C PARAMETER definitions
 C
       INTEGER NRMAX
-      PARAMETER ( NRMAX=750 )
+      PARAMETER ( NRMAX=900 )
       INTEGER NLAMAX,NQMAX,NTMAX,NMMAX
       PARAMETER (NLAMAX=1,NQMAX=1,NTMAX=1,NMMAX=1)
       INTEGER NLMAX,NKMMAX,NMUEMAX,NKMPMAX,NKMAX,LINMAX
@@ -383,19 +383,20 @@ C
       DEN(NL,IECURR) = CZERO
 c
 c Write out qdos
-      DENTOT1 = DCMPLX(0.D0,0.D0)                                         ! qdos ruess 
-      DENTOT2 = DCMPLX(0.D0,0.D0)                                         ! qdos ruess 
-      DO IL = 0,NL                                                        ! qdos ruess 
-         DENTOT1 = DENTOT1 + DEN(IL,IECURR)                               ! qdos ruess 
-         DENTOT2 = DENTOT2 + DEN(IL,IECURR+IEMXD)                         ! qdos ruess 
-      ENDDO                                                               ! qdos ruess 
-      WRITE(31,9000) ERYD,QVEC(1,IPOINT),QVEC(2,IPOINT),QVEC(3,IPOINT),   ! qdos ruess 
-     &     -DIMAG(DENTOT1)/PI,(-DIMAG(DEN(IL,IECURR))/PI,IL=0,LMAXD+1),   ! qdos ruess 
-     &     -DREAL(DENTOT1)/PI,(-DREAL(DEN(IL,IECURR))/PI,IL=0,LMAXD+1)    ! qdos ruess 
-      WRITE(32,9000) ERYD,QVEC(1,IPOINT),QVEC(2,IPOINT),QVEC(3,IPOINT),   ! qdos ruess 
-     &-DIMAG(DENTOT2)/PI,(-DIMAG(DEN(IL,IECURR+IEMXD))/PI,IL=0,LMAXD+1),  ! qdos ruess 
-     &-DREAL(DENTOT2)/PI,(-DREAL(DEN(IL,IECURR+IEMXD))/PI,IL=0,LMAXD+1)   ! qdos ruess 
- 9000 FORMAT(5F10.6,40E16.8)
+! this gives segmentation fault ?!
+!      DENTOT1 = DCMPLX(0.D0,0.D0)                                         ! qdos ruess 
+!      DENTOT2 = DCMPLX(0.D0,0.D0)                                         ! qdos ruess 
+!      DO IL = 0,NL                                                        ! qdos ruess 
+!         DENTOT1 = DENTOT1 + DEN(IL,IECURR)                               ! qdos ruess 
+!         DENTOT2 = DENTOT2 + DEN(IL,IECURR+IEMXD)                         ! qdos ruess 
+!      ENDDO                                                               ! qdos ruess 
+!      WRITE(31,9000) ERYD,QVEC(1,IPOINT),QVEC(2,IPOINT),QVEC(3,IPOINT),   ! qdos ruess 
+!     &     -DIMAG(DENTOT1)/PI,(-DIMAG(DEN(IL,IECURR))/PI,IL=0,LMAXD+1),   ! qdos ruess 
+!     &     -DREAL(DENTOT1)/PI,(-DREAL(DEN(IL,IECURR))/PI,IL=0,LMAXD+1)    ! qdos ruess 
+!      WRITE(32,9000) ERYD,QVEC(1,IPOINT),QVEC(2,IPOINT),QVEC(3,IPOINT),   ! qdos ruess 
+!     &-DIMAG(DENTOT2)/PI,(-DIMAG(DEN(IL,IECURR+IEMXD))/PI,IL=0,LMAXD+1),  ! qdos ruess 
+!     &-DREAL(DENTOT2)/PI,(-DREAL(DEN(IL,IECURR+IEMXD))/PI,IL=0,LMAXD+1)   ! qdos ruess 
+! 9000 FORMAT(5F10.6,40E16.8)
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C      ITERMDIR

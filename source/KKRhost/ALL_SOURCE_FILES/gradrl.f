@@ -8,6 +8,8 @@ c     drrl=d(rl)/dr, ddrrl=d(drrl)/dr, drrul=d(rl-up)/dr,
 c     ztal: zeta for each l-component necessary to get down-components.
 c.....------------------------------------------------------------------
 c.....------------------------------------------------------------------
+      use mod_types, only: t_inc
+      IMPLICIT NONE
 C     .. Parameters ..
       DOUBLE PRECISION ZERO,ZERO1
       PARAMETER (ZERO=0.D0,ZERO1=1.D-12)
@@ -43,7 +45,7 @@ c
       DO 30 IP = 1,IPAN
         IST = IRCUT(IP-1) + 1
         IEN = IRCUT(IP)
-        WRITE (1337,FMT=9010) IP,IST,IEN
+        if(t_inc%i_write>0) WRITE (1337,FMT=9010) IP,IST,IEN
         IF (IP.EQ.1) THEN
           DO 10 IR = IST,IEN
             DRDI2(IR) = DX

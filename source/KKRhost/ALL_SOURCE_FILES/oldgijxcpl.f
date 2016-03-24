@@ -41,22 +41,9 @@ C                in the array IVECI2J(2/3/4/5,I)
 C     IREF(1..NVECI2J(I),I) points to the NVECI2J(I) identical vectors 
 C     in the array IVECI2J (one site is kept only once)
 C.......................................................................
-CF90----------------------------------------------------------------
       INTEGER NB3MAX
       INTEGER IVECI2J(:,:),NVECI2J(:),IREF(:,:)
       ALLOCATABLE IVECI2J,NVECI2J,IREF
-CF90----------------------------------------------------------------
-CF77CF77----------------------------------------------------------------
-CF77      INTEGER NBMAX,NB3MAX
-CF77      PARAMETER ( NBMAX = 4, NB3MAX = NBMAX**3 )
-CF77      INTEGER IVECI2J(5,NAEZ*NB3MAX),NVECI2J(NAEZ*NB3MAX)
-CF77      INTEGER IREF(NAEZ*NB3MAX,NAEZ*NB3MAX)
-CF77CF77----------------------------------------------------------------
-CF90CF90----------------------------------------------------------------
-CF90      INTEGER NB3MAX
-CF90      INTEGER IVECI2J(:,:),NVECI2J(:),IREF(:,:)
-CF90      ALLOCATABLE IVECI2J,NVECI2J,IREF
-CF90CF90----------------------------------------------------------------
       DOUBLE PRECISION CLURAD,CLURADSQ,DQ(3),DR(3),DRSQ,TOL,TOLSQ
       DOUBLE PRECISION CLURADXY,CLURADXYSQ,DRXYSQ
       LOGICAL LSPHER
@@ -188,19 +175,11 @@ C ----------------------------------------------------------------------
 C **********************************************************************
       END DO
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-CF77----------------------------------------------------------------
-Cccc      IF ( NN.GT.NAEZ*NB3MAX ) THEN
-Cccc         WRITE (6,99007) 'local','NBMAX',NBMAX + 1
-Cccc         STOP
-Cccc      END IF
-CF77----------------------------------------------------------------
 C
-CF90----------------------------------------------------------------
       NB3MAX = NN 
       ALLOCATE(IVECI2J(5,NB3MAX),NVECI2J(NB3MAX),
      &     IREF(NB3MAX,NB3MAX),STAT = IQ)
       IF ( IQ.NE.0 ) STOP '    Allocate IVECI2J/NVECI2J/IREF'
-CF90----------------------------------------------------------------
       
 C
 C --> set the first NAEZ vectors (inside the unit-cell at [0,0,0])
@@ -394,10 +373,8 @@ C ----------------------------------------------------------------------
 C ======================================================================
       IDO = 1
  100  CONTINUE
-CF90----------------------------------------------------------------
       DEALLOCATE(IVECI2J,NVECI2J,IREF,STAT = IQ)
       IF ( IQ.NE.0 ) STOP '    Deallocate IVECI2J/NVECI2J/IREF'
-CF90----------------------------------------------------------------
 C ..
 99000 FORMAT (5X,'< GIJXCPL > : Exchange coupling constants calculation'
      &        ,/)

@@ -25,7 +25,7 @@ implicit none
 
    type :: type_inc
    
-      integer :: Nparams = 16   ! number of parameters in type_inc, excluding allocatable array KMESH
+      integer :: Nparams = 18   ! number of parameters in type_inc, excluding allocatable array KMESH
       integer :: LMMAXD  = -1
       integer :: NSPIN   = -1
       integer :: IELAST  = -1
@@ -39,8 +39,10 @@ implicit none
       integer :: mit_bry = 1
       integer :: NSHELL0 = -1
       integer :: NKMESH = -1
-      logical :: NEWSOSOL = .false.
-      logical :: deci_out = .false.
+      logical :: NEWSOSOL = .false.  ! use new solver for SOC
+      logical :: deci_out = .false.  ! use deci_out case
+      integer :: i_write = 0 ! switch to control if things are written out or not (verbosity levels 0,1,2)
+      integer :: i_time  = 1 ! switch to control if timing files are written (verbosity levels 0,1,2)
       integer, allocatable :: KMESH(:)
          
    end type type_inc
@@ -160,7 +162,6 @@ contains
             else
                !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
                allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-               write(1337,*) myrank, 'allocating gref with',t_mpi_c_grid%ntot2
                if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
             end if
          else
@@ -210,12 +211,14 @@ contains
     call MPI_Get_address(t_inc%NKMESH,       disp1(14), ierr)
     call MPI_Get_address(t_inc%NEWSOSOL,     disp1(15), ierr)
     call MPI_Get_address(t_inc%deci_out,     disp1(16), ierr)
+    call MPI_Get_address(t_inc%i_write,      disp1(17), ierr)
+    call MPI_Get_address(t_inc%i_time,       disp1(18), ierr)
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:16)=1
+    blocklen1(1:18)=1
 
-    etype1(1:14) = MPI_INTEGER
+    etype1(1:18) = MPI_INTEGER
     etype1(15:16) = MPI_LOGICAL
 
     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
@@ -366,7 +369,7 @@ contains
                allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
             else
-               allocate(t_lloyd%cdos(t_mpi_c_grid%ntot2,t_inc%NSPIN), STAT=ierr)
+               allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
             end if
          else
@@ -462,8 +465,6 @@ contains
       do i2=1,N2
          i3 = i2+N2*(i1-1)
          ntot_all(i3) = ntot_pT1(i1)*ntot_pT2(i2)
-!          if(ioff_pT1(i1).eq.0) ioff_pT1(i1) = 1
-!          ioff_all(i3) = ioff_pT1(i1)*ntot_pT2(i2)+ioff_pT2(i2)
          if (i3==1) then
             ioff_all(i3) = 0
          else
@@ -471,9 +472,7 @@ contains
          end if
       end do
    end do 
-   
-!    write(*,*) 'in get_ntot_pT_ioff_pT_2D',   ntot_pT1,'ioff_pT1',ioff_pT1,'ntot_pT2',ntot_pT2,'ioff_pT2',ioff_pT2,'N1/2',N1,N2,'ntot_all',ntot_all,'ioff_all',ioff_all
-   
+      
    end subroutine get_ntot_pT_ioff_pT_2D
 #endif
 
@@ -492,30 +491,26 @@ contains
     integer, intent(in) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), mytot, mympi_comm
 
     integer :: ihelp
-!     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
-    integer :: nspin
+    integer :: nspin, recvcounts(nranks), displs(nranks)
     double complex, allocatable :: work(:,:,:)
-    integer :: ierr
+    integer :: ierr,idim
     
-
+    
     !Gather tmat so that all processors the full matrix for their part of the energy contour
-    if(t_mpi_c_grid%ntot1>1) then
-!        write(*,*) myrank,'gather_tmat',mytot,ntot_pT,ioff_pT
-!        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-!        ihelp      = t_inc%LMMAXD*t_inc%LMMAXD
-!        recvcounts = ntot_pT*ihelp
-!        displs     = ioff_pT*ihelp
-!        call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-!                           & t_tgmat%tmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-!                           & mympi_comm, ierr )
+    if(t_mpi_c_grid%nranks_ie>1) then
        nspin = t_inc%NSPIN
        if(t_inc%NEWSOSOL) nspin = 1
       
-       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
-       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP),stat=ierr)
-       if(ierr.ne.0) stop 'problem allocating work array in mympi_main1c_comm'
-       CALL MPI_ALLREDUCE(t_tgmat%tmat,WORK,ihelp,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,ierr)
-       CALL DCOPY(ihelp,WORK,1,t_tgmat%tmat,1)
+       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin!*t_inc%NATYP/mytot
+       recvcounts = ntot_pT*ihelp
+       displs     = ioff_pT*ihelp
+       
+       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP))
+       call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+                          & work, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+                          & mympi_comm, ierr )
+       idim = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
+       call zcopy(idim,work,1,t_tgmat%tmat,1)
        deallocate(work)
     end if
                           
@@ -537,20 +532,11 @@ contains
     integer, intent(in) :: ntot_pT(0:t_mpi_c_grid%nranks_ie-1), ioff_pT(0:t_mpi_c_grid%nranks_ie-1), mytot, mympi_comm
 
     integer :: ihelp
-!     integer :: recvcounts(0:t_mpi_c_grid%nranks_ie-1), displs(0:t_mpi_c_grid%nranks_ie-1)
-!     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: ierr
         
     !Gather gref so that all processors have the full matrix for their part of the energy countour
-    if(t_mpi_c_grid%ntot1>1) then
+    if(t_mpi_c_grid%dims(1)>1) then
        ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD
-!        GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
-!       t_inc%LMGF0D = (LMAXD+1)**2  ! see main1b
-!       t_inc%NCLSD  = NCLS
-!       t_inc%NACLSD = NACLSMAX
-!        recvcounts = ntot_pT*ihelp
-!        displs     = ioff_pT*ihelp
-       write(1337,*) myrank,'gather_ref',mytot,ntot_pT,ioff_pT,ihelp
        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
        call MPI_Bcast( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX, 0 , &
                           & mympi_comm, ierr )
@@ -577,11 +563,14 @@ contains
 
     !Gather Pkk' so that all processors have the full matrix
     ihelp      = t_inc%LMMAXD*t_inc%LMMAXD*t_inc%NQDOS!*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
-    recvcounts = ntot_pT*ihelp
-    displs     = ioff_pT*ihelp
-    call MPI_Allgatherv( t_tgmat%gmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                       & t_tgmat%gmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
-                       & MPI_COMM_WORLD, ierr )
+    if(t_mpi_c_grid%dims(1)>1) then
+       recvcounts = ntot_pT*ihelp
+       displs     = ioff_pT*ihelp
+       call MPI_Allgatherv( t_tgmat%gmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
+                          & t_tgmat%gmat, recvcounts, displs, MPI_DOUBLE_COMPLEX, &
+                          & MPI_COMM_WORLD, ierr )
+    end if
+
    end subroutine gather_gmat
 #endif
 

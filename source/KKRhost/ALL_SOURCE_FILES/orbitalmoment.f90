@@ -28,7 +28,7 @@ if (lmsize/=lmmax) then
   Loperator(lmmax+1:lmsize,lmmax+1:lmsize,:) = Loperator(:lmmax,:lmmax,:)
 end if
 
-if (first==1) then
+! if (first==1) then
 !  open(unit=423492157,file='out_Lx')
 !  open(unit=423492158,file='out_Ly')
 !  open(unit=423492159,file='out_Lz')
@@ -38,7 +38,7 @@ if (first==1) then
 !    write(423492159,'(5000F)'),Loperator(ilm,:,3)
 !  end do
 !  close(423492157);close(423492158);close(423492159)
-end if
+! end if
 
 first=0
 end subroutine calc_orbitalmoment

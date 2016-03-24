@@ -13,6 +13,7 @@ C   *  USED TO CALCULATE DOS ...                                       *
 C   *                                                                  *
 C   ********************************************************************
 C
+      use mod_types, only: t_inc
       IMPLICIT NONE
 C
 C
@@ -50,6 +51,8 @@ C
       END DO
 C
       IF ( IPRINT.LT.2 ) RETURN
+      if(t_inc%i_write>0) then
       WRITE (1337,FMT='('' INT='',I3,''  IKM=('',I3,'','',I3,'')'')')
      &       (I,IKM1LIN(I),IKM2LIN(I),I=1,LIN)
+      endif
       END

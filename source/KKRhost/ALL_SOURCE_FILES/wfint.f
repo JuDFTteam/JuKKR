@@ -1,6 +1,6 @@
       SUBROUTINE WFINT(QNS,CDER,DDER,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
      +                   IRMD,LMMAXD,IRMIN,IRMAX)                          ! Added IRMIN,IRMAX 1.7.2014
-c     Implicit None
+      Implicit None
 c-----------------------------------------------------------------------
 c      determines the integrands CDER, DDER or ADER, BDER in the
 c        integral equations for the non-spherical wavefunctions from

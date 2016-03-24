@@ -197,7 +197,6 @@ c
 c
 c    only for spin-polarized
 c
-c        write(6,*) ' before mkxcpe '
         CALL MKXCPE(NSPIN2,IR,IJEND,L1MAX,RPOINT,RHOLM,VXC,EXCIJ,THET,
      +              YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,
      +              DRRUL,DDRRUL,IRMD,LMPOTD)

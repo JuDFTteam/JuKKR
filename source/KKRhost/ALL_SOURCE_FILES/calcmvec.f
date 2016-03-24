@@ -10,6 +10,7 @@ C   ********************************************************************
 C   *                                                                  *
 C   *                                                                  *
 C   ********************************************************************
+      use mod_types, only: t_inc
       IMPLICIT COMPLEX*16(A-H,O-Z)
 C
 C PARAMETER definitions
@@ -140,7 +141,8 @@ C
             NSOLCB(IKM) = NSOL
             IF ( IT.NE.ITI ) STOP ' IT(INI) <> IT  in <MENABIRR>'
             IF ( STR3.NE.'IRR' ) STOP 'WFT(INI) <> IRR in <MENABIRR>'
-            IF ( IPRINT.GT.3 ) WRITE (1337,*) ITI,LI,MJ,NSOL,STR3,KAPCB
+            IF ( IPRINT.GT.3 .and. (t_inc%i_write>0)) 
+     &               WRITE (1337,*) ITI,LI,MJ,NSOL,STR3,KAPCB
          END DO
 C
 
@@ -246,7 +248,7 @@ C
                DO J = IKMLLIM1(I),IKMLLIM2(I)
                   SUM = ABS(MEZZ(I,J,IT,1)) + ABS(MEZJ(I,J,IT,1))
                   SUM = SUM + ABS(MEREG(I,J,3,1)) + ABS(MEIRR(I,J,3,1))
-                  IF ( SUM.GT.1D-8 ) THEN
+                  IF ( SUM.GT.1D-8 .and. (t_inc%i_write>0)) THEN
                      WRITE (1337,*) ' spin '
                      WRITE (1337,'(2i3,2e17.8,2x,2e17.8)') I,J,
      &                      MEZZ(I,J,IT,2),MEZJ(I,J,IT,2)

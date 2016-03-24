@@ -165,10 +165,6 @@ C     .. External Functions ..
       LOGICAL OPT,TEST                          ! qdos
       EXTERNAL OPT,TEST                         ! qdos
 
-CMPI  INTEGER MYRANK,NROFNODES
-CMPI  INTEGER MAPBLOCK
-CMPI  EXTERNAL MAPBLOCK
-CMPI  COMMON /MPI/MYRANK,NROFNODES
 
       PI = 4.D0 * DATAN(1.D0)                   ! qdos
 
@@ -319,58 +315,37 @@ C        Read BZ path for qdos calculation:
       ALLOCATE(DUM_GFLLE(LMMAXD,LMMAXD))
 
       if(myrank==master) WRITE(1337,*) 'atom',I1
-! #ifdef CPP_MPI
-!       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-!       ie_end = t_mpi_c_grid%ntot2
-! !       write(*,*) myrank,ie_start,ie_end
-! 
-!       DO ie_num=1,ie_end
-!        
-!          IE = ie_start+ie_num
-! #else
-!       DO IE = 1,IELAST
-! #endif
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
-       DO ie_num=1,ie_end
+      DO ie_num=1,ie_end
          IE = ie_start+ie_num
 #else
-! omp: start parallel region here
-!$omp parallel do default(none)
-!$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
-!$omp& private(jlk_index,tmatll,ith)
-!$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
-!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
-!$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
-!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
-!$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-!$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
-!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
-!$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
-!$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
-!$omp& shared(t_tgmat)
-!$omp& private(alphasph,alphall)
-       DO IE=1,IELAST
+! ! omp: start parallel region here
+! !$omp parallel do default(none)
+! !$omp& private(eryd,ie,ir,irec,lm1,lm2)
+! !$omp& private(jlk_index,tmatll,ith)
+! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
+! !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
+! !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
+! !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
+! !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
+! !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
+! !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
+! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
+! !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+! !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
+! !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
+! !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+! !$omp& shared(t_tgmat)
+! !$omp& private(alphasph,alphall)
+      DO IE=1,IELAST
          ie_num = ie
          ie_end = ielast
 #endif
-         WRITE(1337,*) 'energy',IE,EZ(IE)
-CMPI     IF(MYRANK.EQ.MAPBLOCK(IE,1,IELAST,1,0,NROFNODES-1)) THEN
-C
-!          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
-!          READ(69,REC=IREC) GMAT0
-! C
-!          DO LM2 = 1,LMMAXD
-!             DO LM1 = 1,LMMAXD
-!                GMATLL(LM1,LM2,IE) = GMAT0(LM1,LM2)
-!             END DO
-!          END DO
-C
+         if(t_inc%i_write>0) WRITE(1337,*) 'energy',IE,EZ(IE)
+
          ERYD = EZ(IE)
          DF = WEZ(IE)/DBLE(NSPINPOT)
 C
@@ -473,6 +448,9 @@ C
 C=======================================================================
          ELSE ! ( KREL.EQ.0 )
 C=======================================================================
+
+            IQ = 1 ! reset IQ to zero, problem with qdos!!!
+
             CALL DRVRHO_QDOS(LDORHOEF,RHO2NS,R2NEF,DEN,DMUORB,RHOORB,
      &                  IE,ERYD,DF,LASTEZ,
      &                  GMATLL,VTREL,BTREL,RMREL,DRDIREL,
@@ -488,6 +466,7 @@ C
 C
             DO IR = 1,3
                DO L = 0,LMAXD
+                  write(1337,*) DF
                   MUORB(L,IR) = MUORB(L,IR) + DIMAG(DMUORB(L,IR)*DF)
                END DO
             END DO
@@ -506,7 +485,6 @@ C LDA+U calculation
 C
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C
-CMPI     END IF
 
 
 

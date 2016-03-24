@@ -33,8 +33,6 @@ C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
       INTEGER IUNIT,LBASENAME,LREC,ITMPDIR,ILTMP
-!      CHARACTER*80 BASENAME(80),TMPDIR
-
       character(len=ILTMP) :: TMPDIR
       character(len=LBASENAME) :: BASENAME
 

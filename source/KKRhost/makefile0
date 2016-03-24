@@ -247,8 +247,9 @@ $(OBJ)/regsol.o   : $(SRA)/regsol.f                   ; \
 
 ##################### sources in COMMON directory ##########
 
-$(OBJ)/main0.o       : $(COM)/main0.f   $(INCP) ; \
-                        $(FC) $(FFLAGS) $(COM)/main0.f -c -o $@
+$(OBJ)/main0.o       : $(COM)/main0.F   $(INCP) ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/main0.F -c -o $@
+#                        $(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) $(COM)/main0.F -c -o $@
 
 $(OBJ)/gaunt.o       : $(COM)/gaunt.f                   ; \
                         $(FC) $(FFLAGS) $(COM)/gaunt.f -c -o $@
@@ -280,8 +281,8 @@ $(OBJ)/madelout.o    : $(COM)/madelout.f       ; \
 $(OBJ)/idreals.o     : $(COM)/idreals.f       ; \
                          $(FC) $(FFLAGS) $(COM)/idreals.f -c -o $@
 
-$(OBJ)/wunfiles.o     : $(COM)/wunfiles.f       ; \
-                         $(FC) $(FFLAGS) $(COM)/wunfiles.f -c -o $@
+$(OBJ)/wunfiles.o     : $(COM)/wunfiles.F       ; \
+                     $(FC) $(FFLAGS) $(CPP) $(COM)/wunfiles.F -c -o $@
 
 $(OBJ)/deciopt.o      : $(COM)/deciopt.f       ; \
                          $(FC) $(FFLAGS) $(COM)/deciopt.f -c -o $@

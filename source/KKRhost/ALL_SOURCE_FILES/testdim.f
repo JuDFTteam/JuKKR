@@ -15,7 +15,7 @@ C
 c
 c ---> dimension tests
 c
-      write(6,2050) 
+      write(1337,2050) 
 c
       stop_mark=0
 C------------ although NSPIND is fixed to 1 in REL mode,
@@ -197,8 +197,8 @@ c
 c --->  constants for O(N) algorithm for matrix inversion
 c
         NLAYER=NAEZ/NPRINCD
-        WRITE(6,2020) NPRINCD,NLAYER
-        WRITE(6,2112)
+        WRITE(1337,2020) NPRINCD,NLAYER
+        WRITE(1337,2112)
         IF (NLAYER*NPRINCD.NE.NAEZ) THEN
           write(6,*) 'NLAYER*NPRINCD ( = ',NLAYER*NPRINCD,
      +         ').NE.NAEZ ( = ',NAEZ,')'

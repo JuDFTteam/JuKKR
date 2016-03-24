@@ -12,7 +12,7 @@
 # make clean     -    removes all *.o files
 # make openmp    -    uses openmp
 #
-default: serial
+default: install
 ####################################################
 # specify the compiler which is going to be used   #
 ####################################################
@@ -26,6 +26,7 @@ mpidebug:   FC = mpiifort
 #rwth cluster
 rwthmpi: FC=$(MPIFC)
 rwthmpidebug: FC=$(MPIFC)  # marmotf90   
+rwthhybrid: FC=$(MPIFC)
 #jureca
 jureca: FC = mpif90
 # $(MPIFC)
@@ -45,7 +46,8 @@ macomp:    COMPVER ='openmp-mac'
 rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
-rwthmpidebug: COMPVER='mpidebug-rwth'
+rwthmpidebug: COMPVER ='mpidebug-rwth'
+rwthhybrid:   COMPVER ='hybrid-rwth'
 jureca   : COMPVER='jureca'
 
 
@@ -100,9 +102,9 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 
 # standart libs
 # serial:
-LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # openmp:
-#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac libs:
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -119,8 +121,6 @@ macomp: LLIBS=$(MACLLIBS)
 rwth:          LLIBS=$(RWTHLLIBS)
 rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
-rwthomp:       LLIBS=$(RWTHLLIBS)
-rwthompdebug:  LLIBS=$(RWTHLLIBS)
 
 jureca: LLIBS=$(JURECALIBS)
 
@@ -145,6 +145,9 @@ rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
+rwthomp: LLIBS=$(RWTHLLIBSOMP)
+rwthompdebug: LLIBS=$(RWTHLLIBSOMP)
+rwthhybrid: LLIBS=$(RWTHLLIBSOMP)
 
 ####################################################
 # C preprocessor options                           #
@@ -161,6 +164,7 @@ macomp:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
+rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
@@ -171,8 +175,8 @@ FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
 
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
-ompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g -openmp
-debug:    FFLAGS = -r8 -CB -check all -traceback -g # -fpe0 -warn -debug extended #v-mcmodel=medium -shared-intel
+ompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g 
+debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
@@ -182,10 +186,14 @@ ompdebug: OPENMPFLAGS = -openmp
 macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
 rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
-rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
+rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g
+#rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
 
 rwthomp: OPENMPFLAGS = -openmp
+rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -openmp
 rwthompdebug: OPENMPFLAGS = -openmp
+rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
+rwthhybrid: OPENMPFLAGS = -openmp
 
 
 
@@ -240,7 +248,7 @@ rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o 
 	$(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 
-install: clean serial
+install: clean mpi
 
 mac:    compile
 macmpi: compile
@@ -250,6 +258,7 @@ rwthmpi: compile
 rwthomp: compile
 rwthmpidebug: compile
 rwthompdebug: compile
+rwthhybrid:   compile
 jureca: compile
 
 %.o: $(SOURCEDIR)/%.f90

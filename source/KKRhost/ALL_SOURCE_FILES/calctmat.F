@@ -67,8 +67,6 @@ C     .. Array Arguments ..
      +               TMAT0(LMMAXD,LMMAXD),
      +               TMATLL(LMMAXD,LMMAXD),
      &               DTMATLL(LMMAXD,LMMAXD) ! LLY t-matrix derivative
-!      +               TMATLL(LMMAXD,LMMAXD,IEMXD),
-!      &               DTMATLL(LMMAXD,LMMAXD,IEMXD) ! LLY t-matrix derivative
       DOUBLE PRECISION CLEB(NCLEB,2),DRDI(IRMD),RMESH(IRMD),
      +                 VINS(IRMIND:IRMD,LMPOTD),
      +                 VISP(IRMD)
@@ -117,11 +115,6 @@ C     ..
 C     .. External Subroutines ..
       EXTERNAL CRADWF,PNSTMAT,WFMESH,CMATSTR,DRVRELTMAT,ZGEINV1,ZGEMM
 C     ..
-CMPI  INTEGER MYRANK,NROFNODES
-CMPI  INTEGER MAPBLOCK
-CMPI  EXTERNAL MAPBLOCK
-CMPI  COMMON /MPI/MYRANK,NROFNODES
-C     ..
 C     .. Data Statements
       DATA TXTS /'spin   UP','spin DOWN'/
 C     ..................................................................
@@ -154,7 +147,7 @@ C
 C ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-      if(myrank==master) WRITE(1337,*) 'atom: ',I1
+      if(myrank==master .and. t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
@@ -173,14 +166,15 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
         ! now initialize arrays for tmat, gmat, and gref
         call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
         if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+        
+!         write(*,*) 'calctmatloop',myrank,i1,ie,
+!      &      t_mpi_c_grid%myrank_ie,t_mpi_c_grid%myrank_at
+
 
        DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
 #else
-      t_mpi_c_grid%ntot2=IELAST
-      t_mpi_c_grid%ntot_pT2 = IELAST
-      t_mpi_c_grid%ioff_pT2 = 0
       ! now initialize arrays for tmat, gmat, and gref
       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
@@ -189,12 +183,10 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
          ie_num = IE
          ie_end = IELAST
 #endif
-         WRITE(1337,*) 'CALCTMAT: IE=',IE,' ATOM:',I1
+         if(t_inc%i_write>0) WRITE(1337,*)'CALCTMAT: IE=',IE,' ATOM:',I1
 
          TMATLL(1:LMMAXD,1:LMMAXD) = CZERO
-!          TMATLL(1:LMMAXD,1:LMMAXD,IE) = CZERO
          DTMATLL(1:LMMAXD,1:LMMAXD) = CZERO
-!          DTMATLL(1:LMMAXD,1:LMMAXD,IE) = CZERO
 
          ALPHALL(1:LMMAXD,1:LMMAXD) = CZERO
          DALPHALL(1:LMMAXD,1:LMMAXD) = CZERO
@@ -213,7 +205,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
             ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
 
             ERYD = EZ(IE) + SIGNDE * DELTAE / 2.D0 ! LLY
-            WRITE(1337,*) 'energy:',IE,'',ERYD
+            if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 C
 C=======================================================================
 C non/scalar-relativistic OR relativistic
@@ -248,11 +240,11 @@ C=======================================================================
 !commented this out because compiling with debug options did not work
 !due to an erro in the interface to drvreltmat > talk to long,
 !philipp 20_08_2015
-!             ELSE
+             ELSE
 ! C=======================================================================
-!                CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
-!      &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
-!      &                      CTL,LMMAXD,LMAXD,IRMD)
+               CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
+     &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
+     &                      CTL,LMMAXD,LMAXD,IRMD)
             END IF
 C
 C non/scalar-relativistic OR relativistic
@@ -262,15 +254,11 @@ C
             ! of the two energies and calculate the difference
             TMATLL(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD)   ! LLY
      &                                   + TMAT0(1:LMMAXD,1:LMMAXD)       ! LLY
-!             TMATLL(1:LMMAXD,1:LMMAXD,IE) = TMATLL(1:LMMAXD,1:LMMAXD,IE)   ! LLY
-!      &                                   + TMAT0(1:LMMAXD,1:LMMAXD)       ! LLY
             ALPHALL(1:LMMAXD,1:LMMAXD) =  ALPHALL(1:LMMAXD,1:LMMAXD)      ! LLY
      &                                   + ALPHA0(1:LMMAXD,1:LMMAXD)      ! LLY
             IF (LLY.NE.0) THEN
             DTMATLL(1:LMMAXD,1:LMMAXD) =DTMATLL(1:LMMAXD,1:LMMAXD)  ! LLY
      &                              + SIGNDE * TMAT0(1:LMMAXD,1:LMMAXD)   ! LLY
-!             DTMATLL(1:LMMAXD,1:LMMAXD,IE) =DTMATLL(1:LMMAXD,1:LMMAXD,IE)  ! LLY
-!      &                              + SIGNDE * TMAT0(1:LMMAXD,1:LMMAXD)   ! LLY
             DALPHALL(1:LMMAXD,1:LMMAXD) = DALPHALL(1:LMMAXD,1:LMMAXD)     ! LLY
      &                              + SIGNDE * ALPHA0(1:LMMAXD,1:LMMAXD)  ! LLY
             ENDIF
@@ -280,8 +268,6 @@ C
          ! Average values of t-matrix and alpha at E+DE and E-DE
          TMATLL(1:LMMAXD,1:LMMAXD) = 
      &        TMATLL(1:LMMAXD,1:LMMAXD) / DFLOAT(1+IDERIV)  !/ 1 or 2 (IDERIV=1 or 2)! LLY
-!          TMATLL(1:LMMAXD,1:LMMAXD,IE) = 
-!      &        TMATLL(1:LMMAXD,1:LMMAXD,IE) / DFLOAT(1+IDERIV)  !/ 1 or 2 (IDERIV=1 or 2)! LLY
          ALPHALL(1:LMMAXD,1:LMMAXD) = 
      &        ALPHALL(1:LMMAXD,1:LMMAXD) / DFLOAT(1+IDERIV)    !/ 1 or 2 ! LLY
 
@@ -289,8 +275,6 @@ C
             ! Construct derivative of t-matrix and aplha
             DTMATLL(1:LMMAXD,1:LMMAXD) = 
      &           DTMATLL(1:LMMAXD,1:LMMAXD) / DELTAE
-!             DTMATLL(1:LMMAXD,1:LMMAXD,IE) = 
-!      &           DTMATLL(1:LMMAXD,1:LMMAXD,IE) / DELTAE
             DALPHALL(1:LMMAXD,1:LMMAXD) = 
      &           DALPHALL(1:LMMAXD,1:LMMAXD) / DELTAE
             ! LLY Calculate Trace [alpha^-1 * d alpha/dE] for Lloyd's formula
@@ -309,7 +293,6 @@ C
 
             IF (LLY.EQ.-1) THEN ! Calculate Tr(t^-1 dt/dE) instead of Tr(alpha^-1 * d alpha/dE)
                ALPHA0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD)
-!                ALPHA0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD,IE)
                TMAT0(1:LMMAXD,1:LMMAXD) = CZERO
                AUX(1:LMMAXD,1:LMMAXD) = CZERO
                ! ALPHA0 = TMATLL^-1
@@ -320,14 +303,12 @@ C
                   DO LM2 = 1,LMMAXD
                      TRALPHA1 = TRALPHA1 + 
      &                          TMAT0(LM1,LM2) * DTMATLL(LM2,LM1)
-!      &                          TMAT0(LM1,LM2) * DTMATLL(LM2,LM1,IE)
                   ENDDO
                ENDDO
                TRALPHA1 = CZERO
                do lm1 = 1,lmmaxd
                   TRALPHA1 = TRALPHA1 + 
      &                       dtmatll(lm1,lm1)/tmatll(lm1,lm1)
-!      &                       dtmatll(lm1,lm1,ie)/tmatll(lm1,lm1,ie)
                enddo
 
             ENDIF
@@ -336,12 +317,16 @@ C
 
 
          TMAT0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD)
-!          TMAT0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD,IE)
          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
          if (t_tgmat%tmat_to_file) then
             WRITE(69,REC=IREC) TMAT0
          else
-            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+#ifdef CPP_MPI
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*
+     *             (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
+#else
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*I1
+#endif
             t_tgmat%tmat(:,:,irec) = tmat0
          end if
          IF (LLY.NE.0) THEN                                          ! LLY
@@ -351,7 +336,7 @@ C
             else
                irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
                t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)
-            end if
+            end if ! t_lloyd%dtmat_to_file
             if(t_lloyd%tralpha_to_file) then
                IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
                WRITE(692,REC=IREC) TRALPHA                              ! LLY
@@ -360,8 +345,9 @@ C
                t_lloyd%tralpha(irec) = TRALPHA
             end if
          ENDIF                                                       ! LLY
+         
 C ----------------------------------------------------------------------
-         IF ( TEST('tmat    ') ) THEN
+         IF ( TEST('tmat    ') .and. (t_inc%i_write>0)) THEN
             WRITE (1337,*)
             WRITE (1337,99001) '-----> t matrix for atom: ',I1
             IF ( KREL.EQ.0 ) WRITE (1337,99002) TXTS(ISPIN)
@@ -371,7 +357,6 @@ C ----------------------------------------------------------------------
             WRITE (1337,*)
          END IF
 C ----------------------------------------------------------------------
-CMPI     END IF
       END DO ! IE = 1,IELAST
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C

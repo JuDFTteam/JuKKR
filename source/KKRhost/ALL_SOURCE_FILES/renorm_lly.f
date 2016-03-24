@@ -35,8 +35,9 @@
 ! Internal:
       INTEGER LL,IE,I1,ISPIN,IPOT,SPINDEGEN,IRC1,SIGNSP,IDIM
       DOUBLE PRECISION RENORM_AT(NATYPD,2)                   ! 1: charge renormalization per atom (energy-integrated)
-                                                   ! 2: same for spin moment
-      DOUBLE COMPLEX CDOS_LOC(IEMXD,NSPIND),CDOS_LOCVC(IEMXD,NSPIND)   ! Density from local summation and from Lloyd's formula
+                                                             ! 2: same for spin moment
+      DOUBLE COMPLEX CDOS_LOC(IEMXD,(1+KREL)*NSPIND)     !  Density from local summation
+      DOUBLE COMPLEX CDOS_LOCVC(IEMXD,(1+KREL)*NSPIND)   !      and from Lloyd's formula
       DOUBLE PRECISION CREN(IEMXD,2)                     ! Renormalization constant for charge and spin density
       DOUBLE PRECISION CHARGE(NATYPD,2),CHARGE_LLY(NATYPD,2) ! Atomic charge per spin (local summation and renormalized)
       DOUBLE COMPLEX CHADD(IEMXD,NATYPD,NSPIND),CDOS_ADD     ! Integration step for charge/atom/spin
@@ -134,11 +135,11 @@ c     +                    DIMAG((CDOS_LOC(IE,1)+CDOS_LOC(IE,2))*WEZ(IE))
           ENDIF
  
 c add term from sum from l>lmax to infinity
-           DO I1=1,NATYPD
-            DO ISPIN=1,NSPIN
+!            DO I1=1,NATYPD
+!             DO ISPIN=1,NSPIN
 c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
-            ENDDO
-           ENDDO
+!             ENDDO
+!            ENDDO
 
       IF (NSPIN.EQ.1.OR.OPT('NEWSOSOL')) CREN(:,2) = CREN(:,1) 
 

@@ -63,15 +63,6 @@ C     .. Local arrays
       INTEGER NSH1I(:),NSH2I(:),NSHELLI(:)
       DOUBLE PRECISION RATOMI(:,:)
       ALLOCATABLE NSH1I,NSH2I,NSHELLI,RATOMI
-CF77CF77-------------------------------------------------------------
-CF77      INTEGER NSH1I(NSHELL0),NSH2I(NSHELL0),NSHELLI(NSHELL0)
-CF77      DOUBLE PRECISION RATOMI(3,NSHELL0)
-CF77CF77-------------------------------------------------------------
-CF90CF90-------------------------------------------------------------
-CF90      INTEGER NSH1I(:),NSH2I(:),NSHELLI(:)
-CF90      DOUBLE PRECISION RATOMI(:,:)
-CF90      ALLOCATABLE NSH1I,NSH2I,NSHELLI,RATOMI
-CF90CF90-------------------------------------------------------------
 C     ..
 C     .. Data statements
       DATA SMALL /  1.0D-10/
@@ -94,13 +85,11 @@ C
           ICC = 0 ! Bauer Long 2011-10-11
          RETURN
       END IF
-CF90--------------------------------------------------------------------
       ALLOCATE(NSH1I(NSHELL0),NSH2I(NSHELL0),
      &         NSHELLI(NSHELL0),STAT=NS)
       IF ( NS.NE.0 ) STOP '   < shellgen2k > allocate NSHELLI arrays'
       ALLOCATE(RATOMI(3,NSHELL0),STAT=NS)
       IF ( NS.NE.0 ) STOP '   < shellgen2k > allocate RATOMI array'
-CF90--------------------------------------------------------------------
 C ======================================================================
 C
 C --> initialise number of shells found for this cluster, setup the
@@ -236,10 +225,8 @@ C
       END DO
 C
       NSHELL(0) = NSHELL(0) + NSNEW
-CF90--------------------------------------------------------------------
       DEALLOCATE(NSH1I,NSH2I,NSHELLI,RATOMI,STAT=NS)
       IF ( NS.NE.0 ) STOP '   < shellgen2k > deallocate arrays'
-CF90--------------------------------------------------------------------
 C
 C **********************************************************************
 C

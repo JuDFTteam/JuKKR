@@ -43,22 +43,12 @@ C ..  Local scalars ..
 C ..
 C ..  Local arrays ..
       DOUBLE PRECISION CUTOFF(IRMD)
-CF90--------------------------------------------------------------------
       DOUBLE PRECISION RS(:,:),S(:)
       DOUBLE COMPLEX BESSJW(:),BESSYW(:),HANKWS(:),DLOGDP(:)
       DOUBLE COMPLEX TMAT(:),MASS(:),HAMF(:,:),FZ(:,:),PZ(:,:)
       ALLOCATABLE RS,S
       ALLOCATABLE BESSJW,BESSYW,HANKWS,DLOGDP
       ALLOCATABLE TMAT,MASS,HAMF,FZ,PZ
-CF90--------------------------------------------------------------------
-Comment previous lines and uncomment the following ones for F77 
-CF77--------------------------------------------------------------------
-CF77      DOUBLE PRECISION RS(IRMD,0:LMAXD),S(0:LMAXD)
-CF77      DOUBLE COMPLEX BESSJW(0:LMAXDP1),BESSYW(0:LMAXDP1),
-CF77     &               HANKWS(0:LMAXDP1),DLOGDP(0:LMAXD)
-CF77      DOUBLE COMPLEX TMAT(0:LMAXD),HAMF(IRMD,0:LMAXD),MASS(IRMD),
-CF77     &               FZ(IRMD,0:LMAXD),PZ(IRMD,0:LMAXD)
-CF77--------------------------------------------------------------------
 C ..
 C ..  External subroutines ..
       EXTERNAL BESHAN,CINIT,REGSOL,WFMESH
@@ -66,7 +56,6 @@ C ..
       CALL CINIT(LMMAXD*LMMAXD,TMATLL)
 C ================================================================= KREL
       IF ( KREL.EQ.0 ) THEN
-CF90--------------------------------------------------------------------
          ALLOCATE (BESSJW(0:LMAXDP1),BESSYW(0:LMAXDP1),STAT=LM1)
          IF ( LM1.NE.0 ) STOP '    Allocate BESSJW/BESSYW'
          ALLOCATE (HANKWS(0:LMAXDP1),DLOGDP(0:LMAXD),STAT=LM1)
@@ -79,7 +68,6 @@ CF90--------------------------------------------------------------------
          IF ( LM1.NE.0 ) STOP '    Allocate PZ'
          ALLOCATE (RS(IRMD,0:LMAXD),S(0:LMAXD),STAT=LM1)
          IF ( LM1.NE.0 ) STOP '    Allocate RS/S'
-CF90--------------------------------------------------------------------
          RIRC1 = 1D0/RIRC
          CALL WFMESH(ERYD,EK,CVLIGHT,NSRA,ZAT,RR,S,RS,IRCUT(IPAN),
      &               IRMD,LMAXD)
@@ -121,14 +109,12 @@ C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
             STOP ' not implemented'
 C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
          END IF
-CF90--------------------------------------------------------------------
          DEALLOCATE (BESSJW,BESSYW,HANKWS,DLOGDP,STAT=LM1)
          IF ( LM1.NE.0 ) STOP '    Deallocate'
          DEALLOCATE (TMAT,MASS,HAMF,FZ,PZ,STAT=LM1)
          IF ( LM1.NE.0 ) STOP '    Deallocate'
          DEALLOCATE (RS,S,STAT=LM1)
          IF ( LM1.NE.0 ) STOP '    Deallocate'
-CF90--------------------------------------------------------------------
 C ----------------------------------------------------------------------
       ELSE                      ! KREL
          CALL DRVRELTMAT(ERYD,TMATLL,VTREL,BTREL,RR,

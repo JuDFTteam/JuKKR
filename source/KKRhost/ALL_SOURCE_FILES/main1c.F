@@ -1,18 +1,18 @@
       MODULE MOD_MAIN1C
-
-      
-      !use modulename, only rountine1
       
       implicit none
       
       contains
+      
       
       subroutine main1c()
 
 #ifdef CPP_MPI
       use mpi
 #endif
-      
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
@@ -23,8 +23,9 @@
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
-     &                     mympi_main1c_comm
+     &                     mympi_main1c_comm,mympi_main1c_comm_newsosol2
 #endif
+      use mod_wunfiles
 
       INCLUDE 'inc.p'
 C
@@ -93,47 +94,30 @@ C LDA+U
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE PRECISION WLDAUOLD(MMAXD,MMAXD,NSPIND,NATYPD)
-!       DOUBLE PRECISION, allocatable :: EREFLDAU(:),UEFF(:),JEFF(:),
-!      &                 EDC(:),EU(:),ULDAU(:,:,:,:,:) 
-!       DOUBLE PRECISION, allocatable :: WLDAU(:,:,:,:),WLDAUOLD(:,:,:,:)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
       DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
-!       DOUBLE COMPLEX, allocatable :: PHILDAU(:,:),DENMATC(:,:,:)
 C for new spin-orbit solver
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD)
       LOGICAL LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
-     +                 RNEW(NRMAXD,NATYPD)!,
-!      +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)!,
-!      +                 THETASNEW(NRMAXD,NFUND,NCELLD)
+     +                 RNEW(NRMAXD,NATYPD)
       double precision, allocatable :: THETASNEW(:,:,:), vinsnew(:,:,:)
-!       DOUBLE PRECISION R_LOG
-!       DOUBLE PRECISION, allocatable :: THETA(:),PHI(:)
-!       DOUBLE PRECISION, allocatable :: RPAN_INTERVALL(:,:),RNEW(:,:),
-!      +                                 VINSNEW(:,:,:),THETASNEW(:,:,:)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C     ..
 C     .. Local Arrays ..
 #ifdef CPP_MPI
-      DOUBLE COMPLEX WORK(IRMD,LMPOTD,NATYPD,2)
-      integer ierr,idim
+      DOUBLE COMPLEX,   allocatable :: WORK(:,:)
+      integer ierr,idim, nranks_local, myrank_ie_tmp
 #endif
-!       DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD,NPOTD),EZ(IEMXD),WEZ(IEMXD)
-!       DOUBLE COMPLEX DENLM(0:LMMAXD1,IEMXD,NPOTD)
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX, allocatable :: den(:,:,:,:), denlm(:,:,:,:) ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS),DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
       DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2),WEZNORM(IEMXD)
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
       DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
      +               CDOS2(NATYPD),cdos_dum(IEMXD,NSPIND)                     ! LLY Lloyd
-!       DOUBLE COMPLEX, allocatable :: DEN1(:,:,:),WEZNORM(:)
-!       DOUBLE COMPLEX CSUM                       ! LLY Lloyd
-!       DOUBLE COMPLEX, allocatable :: CDOSAT0(:),CDOSAT1(:)
-!       DOUBLE COMPLEX, allocatable :: CDOS0(:),CDOS_LLY(:,:),CDOS1(:),
-!      +                               CDOS2(:),cdos_dum(:,:)                     ! LLY Lloyd
       DOUBLE PRECISION CHARGE_LLY(NSPIND)  ! LLY
       DOUBLE COMPLEX EREAD                  !LLY
       DOUBLE PRECISION A(NATYPD),B(NATYPD),CHARGE(0:LMAXD1,NATYPD,2),
@@ -141,10 +125,6 @@ C     .. Local Arrays ..
      +                 DOSTOT(0:LMAXD1,2),ECORE(20,NPOTD),
      +                 ESPV(0:LMAXD1,NPOTD),DENEFAT(NATYPD)
       DOUBLE PRECISION ESPV1(0:LMAXD1,2)
-!       DOUBLE PRECISION, allocatable :: A(:),B(:),CHARGE(:,:,:),
-!      +                 CLEB(:,:),DRDI(:,:),RMESH(:,:),
-!      +                 DOSTOT(:,:),ECORE(:,:),
-!      +                 ESPV(:,:),DENEFAT(:),ESPV1(:,:)
 C ----------------------------------------------------------------------
 C  R2NEF (IRMD,LMPOTD,NATYPD,2)  ! rho at FERMI energy
 C  RHO2NS(IRMD,LMPOTD,NATYPD,2)  ! radial density
@@ -153,32 +133,20 @@ C   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
 C                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
 C  RHOC(IRMD,NPOTD)              ! core charge density
 C ----------------------------------------------------------------------
-      DOUBLE PRECISION !R2NEF(IRMD,LMPOTD,NATYPD,2),
-     +                 RHOC(IRMD,NPOTD),
-!      +                 RHO2NS(IRMD,LMPOTD,NATYPD,2),RHOC(IRMD,NPOTD),
-!      +                 RHO2N1(IRMD,LMPOTD,NPOTD),
-!      +                 RHO2N2(IRMD,LMPOTD,NPOTD),
+      DOUBLE PRECISION RHOC(IRMD,NPOTD),
      +                 RHO2M1(IRMD,LMPOTD,4),
      +                 RHO2M2(IRMD,LMPOTD,4)
       double precision, allocatable :: rho2n1(:,:,:), rho2n2(:,:,:),
      +                                 rho2ns(:,:,:,:), r2nef(:,:,:,:)
-!       DOUBLE PRECISION, allocatable :: R2NEF(:,:,:,:),
-!      +                 RHO2NS(:,:,:,:),RHOC(:,:),RHO2N1(:,:,:),
-!      +                 RHO2N2(:,:,:),RHO2M1(:,:,:),RHO2M2(:,:,:)
-!       DOUBLE PRECISION VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
       DOUBLE PRECISION VISP(IRMD,NPOTD),
-!      +                 THETAS(IRID,NFUND,NCELLD),
      +                 ZAT(NATYPD),CONC(NATYPD),
      &                 SOCSCALE(NATYPD)
       double precision, allocatable :: THETAS(:,:,:), VINS(:,:,:)
-!       DOUBLE PRECISION, allocatable :: VINS(:,:,:),VISP(:,:),
-!      +                 THETAS(:,:,:),ZAT(:),CONC(:),SOCSCALE(:)
 C----------------------------------- orbital magnetic moment
 C     attention: muorb second index means both spins and total
 C----------------------------------- orbital density
       DOUBLE PRECISION  MUORB(0:LMAXD1+1,3,NATYPD)
       DOUBLE PRECISION  RHOORB(IRMD*KREL + (1-KREL),NATYPD)
-!       DOUBLE PRECISION, allocatable ::  MUORB(:,:,:),RHOORB(:,:)
 C---------------------------------------------------------------      
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
@@ -187,8 +155,6 @@ C---------------------------------------------------------------
       DOUBLE PRECISION DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
      &                 R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
-!       DOUBLE PRECISION, allocatable :: SOCSCL(:,:),CSCL(:,:),
-!      &    VTREL(:,:),BTREL(:,:),DRDIREL(:,:),R2DRDIREL(:,:),RMREL(:,:)
       INTEGER JWSREL(NATYPD),ZREL(NATYPD),IRSHIFT(NATYPD)
 C ===================================================================
 C   RELATIVISTIC TREATMENT OF CORE ELECTRONS   July/2002
@@ -213,8 +179,6 @@ C     .. itermdir variables
       DOUBLE COMPLEX MVEVIEF(NATYPD,3,NMVECMAX)        ! OUTPUT
       DOUBLE COMPLEX MVEVIL1(0:LMAXD,3,NMVECMAX)
       DOUBLE COMPLEX MVEVIL2(0:LMAXD,3,NMVECMAX) ! WORK ARRAYS
-!       DOUBLE COMPLEX, allocatable :: MVEVI(:,:,:),MVEVIL(:,:,:,:),
-!      &               MVEVIEF(:,:,:),MVEVIL1(:,:,:),MVEVIL2(:,:,:)
 C     .. qdos and lmlm-dos ..
       CHARACTER*8 QDOSOPT
       DOUBLE COMPLEX DF(IEMXD)!,GFLLE(LMMAXSO,LMMAXSO,IEMXD,100)
@@ -222,11 +186,17 @@ C     .. qdos and lmlm-dos ..
       DOUBLE PRECISION, allocatable :: QVEC(:,:)
       INTEGER IREC,LM1,LM2
 #ifdef CPP_MPI
-      integer :: i1_start, i1_end
+      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
+     &           myrank_at, myrank_ie, nranks_at,nranks_ie
+      integer :: ntot1, dims(2), mytot, ii
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
+     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
       integer :: ihelp
 #endif
-      integer :: ie_start, ie_end
-      integer :: ie_num
+      integer :: i1_start, i1_end
+      integer :: ie_start, ie_end, ie_num
+      
+      double precision :: angles_new(NATYPD,2)
 C     ..
 C     .. Arrays in Common ..
       CHARACTER*8 OPTC(32),TESTC(32)
@@ -259,33 +229,16 @@ C     .. Data statements ..
      +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
       allocate(RHO2N1(IRMD,LMPOTD,NPOTD),RHO2NS(IRMD,LMPOTD,NATYPD,2),
      +         RHO2N2(IRMD,LMPOTD,NPOTD),R2NEF(IRMD,LMPOTD,NATYPD,2))
+
+
+      !initialze to zero
+      THETASNEW = 0.0d0
+      THETAS = 0.0d0
+      VINSNEW = 0.0d0
+      VINS = 0.0d0
+      RHO2NS = 0.0d0
+      R2NEF = 0.0d0
       
-!       ALLOCATE(DEN1(0:LMAXD1,IEMXD,2),
-!      + WEZNORM(IEMXD),CDOSAT0(IEMXD),CDOSAT1(IEMXD),CDOS0(IEMXD),
-!      + CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),CDOS2(NATYPD),
-!      + cdos_dum(IEMXD,NSPIND),A(NATYPD),B(NATYPD),
-!      + CHARGE(0:LMAXD1,NATYPD,2),CLEB(NCLEB,2),DRDI(IRMD,NATYPD),
-!      + RMESH(IRMD,NATYPD),DOSTOT(0:LMAXD1,2),ECORE(20,NPOTD),
-!      + ESPV(0:LMAXD1,NPOTD),DENEFAT(NATYPD),ESPV1(0:LMAXD1,2),
-!      + R2NEF(IRMD,LMPOTD,NATYPD,2),RHO2NS(IRMD,LMPOTD,NATYPD,2),
-!      + RHOC(IRMD,NPOTD),RHO2N1(IRMD,LMPOTD,NPOTD),
-!      + RHO2N2(IRMD,LMPOTD,NPOTD),RHO2M1(IRMD,LMPOTD,4),
-!      + RHO2M2(IRMD,LMPOTD,4),VINS(IRMIND:IRMD,LMPOTD,NSPOTD),
-!      + VISP(IRMD,NPOTD),THETAS(IRID,NFUND,NCELLD),
-!      + ZAT(NATYPD),CONC(NATYPD),SOCSCALE(NATYPD),
-!      + MUORB(0:LMAXD1+1,3,NATYPD),RHOORB(IRMD*KREL + (1-KREL),NATYPD),
-!      + SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)),
-!      + CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)),
-!      + VTREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + BTREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),
-!      + RMREL(IRMD*KREL+(1-KREL),NATYPD),MVEVI(NATYPD,3,NMVECMAX),
-!      + MVEVIL(0:LMAXD,NATYPD,3,NMVECMAX),MVEVIEF(NATYPD,3,NMVECMAX),
-!      + MVEVIL1(0:LMAXD,3,NMVECMAX),MVEVIL2(0:LMAXD,3,NMVECMAX),
-!      + THETA(NATYPD),PHI(NATYPD),RPAN_INTERVALL(0:NTOTD,NATYPD),
-!      + RNEW(NRMAXD,NATYPD),VINSNEW(NRMAXD,LMPOTD,NSPOTD),
-!      + THETASNEW(NRMAXD,NFUND,NCELLD))
 C     ..
 C
 Consistency check
@@ -299,78 +252,20 @@ C =             read in variables from unformatted files               =
 C ======================================================================
 C
 C -------------------------------------------------------------- input1c
-C
-      OPEN (67,FILE='input1c.unformatted',FORM='unformatted')
-      READ (67) NSRA,INS,NATYP,NAEZ,NSPIN,ICST,IPAN,IRCUT,KMROT,IQAT,
-     &          CONC,QMTET,QMPHI,IDOLDAU,LMAX,IRWS
-C ......................................................................
-Consistency check 
-C
-      IF ( ( KREL.EQ.1 ) .AND. ( INS.NE.0 ) ) THEN
-         WRITE(6,*)
-     &        ' FULL-POTENTIAL RELATIVISTIC mode not implemented '
-         STOP ' set INS = 0 in the input'
-      END IF
-C     
-      IF ( NSRA.LE.2 ) THEN
-         IF ( KREL.EQ.1 ) STOP
-     &        ' KVREL <= 1 in input, but relativistic program used'
-      ELSE
-         IF ( KREL.EQ.0 ) STOP
-     &        ' KVREL > 1 in input, but non-relativistic program used'
-      END IF
-C ......................................................................
-      READ (67) ALAT,ZAT,DRDI,RMESH,A,B,IEND,CLEB,ICLEB,LOFLM,JEND,
-     &    THETAS,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,
-     &          INTERVX,INTERVY,INTERVZ,NACLS1,TESTC,OPTC,LLY,SOCSCALE
-      READ (67) TMPDIR,ITMPDIR,ILTMP
-      READ (67) NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,NPAN_TOT
-      READ (67) RNEW,RPAN_INTERVALL,IPAN_INTERVALL,THETASNEW
-      IF (KREL.EQ.1) READ (67) SOLVER,SOCSCL,CSCL
-      IF ( IDOLDAU.EQ.1 ) READ(67) NTLDAU,ITLDAU,LOPT,UEFF,JEFF,EREFLDAU
-      CLOSE (67)
-C ---------------------------------------------------------- energy_mesh
-C
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='energy_mesh',FORM='unformatted')
-      else
-        OPEN (67,FILE='new_energy_mesh',FORM='unformatted')
-      end if
-      READ (67) IELAST,EZ,WEZ,E1,E2,IESEMICORE
-      READ (67) NPOL,TK
-      IF ( NPOL.EQ.0 ) READ(67) EFERMI
-      CLOSE (67)
-C ------------------------------------------------------ input_potential
-C
-!       OPEN (67,FILE='input_potential',FORM='unformatted')
-      IF (t_inc%i_iteration.eq.0) then
-        OPEN (67,FILE='input_scf.unformatted',FORM='unformatted')
-      else
-        OPEN (67,FILE='output_scf.unformatted',FORM='unformatted')
-      end if
-      READ (67) VINS,VISP,ECORE
-      IF (KREL.EQ.1) THEN
-         READ (67) RMREL,DRDIREL,R2DRDIREL
-         READ (67) ZREL,JWSREL,IRSHIFT
-         READ (67) VTREL,BTREL
-      END IF
-      CLOSE (67)
-      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
-C ------------------------------------------------------------- itermdir
-C
-      IF ( OPT('ITERMDIR') ) THEN
-         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
-         READ (67) QMTET,QMPHI
-         CLOSE (67)
-      END IF
-C ---------------------------------------------------------------- lda+u   
-C
-      IF ( IDOLDAU.EQ.1 ) THEN
-         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
-         READ (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
-         CLOSE(67)
-      END IF
-      
+      call get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,
+     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,
+     &          NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1,
+     &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB, 
+     &          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,
+     &          IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,ITMPDIR,
+     &          ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NCHEB,NPAN_TOT,
+     &          NTLDAU,LOPT,ITLDAU,IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL
+     &         ,ZREL,ITRUNLDAU,QMTET,QMPHI,CONC,ALAT,ZAT,DRDI,RMESH,A,B,
+     &          CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,
+     &          THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,E1,E2,TK,VINS,VISP,
+     &          ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ
+     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,OPTC,TESTC,NSPIND,NSPOTD,
+     &          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! initialization needed due to merging to one executable
       ESPV(:,:) = 0.d0
       RHO2N1(:,:,:) = 0.d0
@@ -483,31 +378,34 @@ c calculate contribution from free space
             CLOSE(701)                                                        ! LLY Lloyd
          else   !(t_lloyd%cdos_diff_lly_to_file)
             DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-!                DO IE = 1,IELAST                                               ! LLY Lloyd
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-               ie_end = t_mpi_c_grid%ntot2
+               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-               ie_start = 1
+               ie_start = 0
                ie_end = IELAST
 #endif
                DO ie_num=1,ie_end
                   IE = ie_start+ie_num
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
-               ENDDO                                                          ! LLY Lloyd
-            ENDDO                                                             ! LLY Lloyd
+               ENDDO  !ie_num                                                 ! LLY Lloyd
+            ENDDO    !ispin     
 #ifdef CPP_MPI            
             ! MPI gather cdos_lly on all processors
-            ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
-     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            allocate(work(ielast,nspin))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+            deallocate(work)
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)
                                                                            ! LLY Lloyd
          ! Add free-space contribution cdos0                               ! LLY Lloyd
          DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-            CDOS_LLY(1:IEMXD,ISPIN) = CDOS_LLY(1:IEMXD,ISPIN) +            ! LLY Lloyd
-     &                                CDOS0(1:IEMXD)                       ! LLY Lloyd
+            CDOS_LLY(1:IELAST,ISPIN) = CDOS_LLY(1:IELAST,ISPIN) +          ! LLY Lloyd
+     &                                CDOS0(1:IELAST)                      ! LLY Lloyd
          ENDDO                                                             ! LLY Lloyd
                                                                            ! LLY Lloyd
          CHARGE_LLY(1:NSPIND) = 0.D0                                       ! LLY Lloyd
@@ -530,7 +428,8 @@ c calculate contribution from free space
          CLOSE(701)                                                        ! LLY Lloyd
          WRITE(*,*) 'Valence charge from Lloyds formula:',                 ! LLY Lloyd
      &        (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                            ! LLY Lloyd
-         WRITE(1337,*) 'Valence charge from Lloyds formula:',                 ! LLY Lloyd
+         if(t_inc%i_write>0)                                               ! LLY Lloyd
+     &      WRITE(1337,*) 'Valence charge from Lloyds formula:',           ! LLY Lloyd
      &        (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                            ! LLY Lloyd
          end if ! myrank==master
          
@@ -543,13 +442,12 @@ c calculate contribution from free space
             ENDDO                                                          ! LLY
             CLOSE(701)                                                     ! LLY
           else  !(t_lloyd%cdos_diff_lly_to_file)
-!             DO IE = 1,IELAST
 #ifdef CPP_MPI
-            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-            ie_end = t_mpi_c_grid%ntot2
+               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-            ie_start = 1
-            ie_end = IELAST
+               ie_start = 0
+               ie_end = IELAST
 #endif
             DO ie_num=1,ie_end
                IE = ie_start+ie_num
@@ -558,8 +456,12 @@ c calculate contribution from free space
 #ifdef CPP_MPI            
             ! MPI gather cdos_lly on all processors
             ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            CALL MPI_ALLREDUCE(MPI_IN_PLACE,cdos_lly,ihelp,
-     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,ierr)
+            allocate(work(iemxd,nspind))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+            deallocate(work)
 #endif
           end if  !(t_lloyd%cdos_diff_lly_to_file)
           
@@ -578,7 +480,8 @@ c Add free-space contribution cdos0                                     ! LLY
           CLOSE(701)                                                    ! LLY 
           WRITE(*,*) 'Valence charge from Lloyds formula:',
      &        (CHARGE_LLY(1))                                          ! LLY 
-          WRITE(1337,*) 'Valence charge from Lloyds formula:',
+          if(t_inc%i_write>0) 
+     &       WRITE(1337,*) 'Valence charge from Lloyds formula:',
      &        (CHARGE_LLY(1))                                          ! LLY 
           end if ! myrank==master
           
@@ -593,24 +496,35 @@ C
 C ================================================================ NATYP
 
 #ifdef CPP_MPI
-!       i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_at)+1
-!       i1_end = t_mpi_c_grid%ntot1
-      
-      i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+
-     &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+        ntot1 = t_inc%NATYP
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-      DO i1 = i1_start,i1_end
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+     &            allocated(t_mpi_c_grid%ioff_pT1))) 
+     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
+     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
 #else
-      DO I1 = 1,NATYP
+      i1_start = 1
+      i1_end   = NATYP
 #endif
+      DO I1=i1_start, i1_end
 C ----------------------------------------------------------------- SPIN
          IQ = IQAT(I1)
          DO ISPIN = 1,NSPIN
             ICELL = NTCELL(I1)
             IPOT = (I1-1) * NSPINPOT + ISPIN
             IPOT1 = (I1-1) * NSPINPOT + 1
-
+#ifdef CPP_TIMING
+            call timing_start('main1c - rhoval')
+#endif
             CALL RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,
      &           NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ,WEZ,
      &           DRDI(1,I1),RMESH(1,I1),
@@ -630,6 +544,9 @@ C ----------------------------------------------------------------- SPIN
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),
      &           DENMATC(1,1,IPOT),
      &           LLY,NATYP,NQDOS)              ! LLY Lloyd
+#ifdef CPP_TIMING
+            call timing_pause('main1c - rhoval')
+#endif
          END DO
 C ----------------------------------------------------------------- SPIN
 C
@@ -697,6 +614,9 @@ C
 C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
+#ifdef CPP_TIMING
+      if(ie_end>=ie_start) call timing_stop('main1c - rhoval')
+#endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
       CLOSE (30) !close lmdos file if no mpi is used
@@ -750,11 +670,26 @@ C ================================================================ NATYP
       !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
       NQDOS=1
       
+#ifdef CPP_TIMING
+      call timing_start('main1c - communication')
+#endif
       !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
+#ifdef CPP_TIMING
+      call timing_start('main1c - communication')
+#endif
       call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
-     &         NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,NMVECMAX,
-     &                     NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
-     &                denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief)
+     &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
+     &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
+     &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
+     &              t_mpi_c_grid%mympi_comm_ie)
+      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
+     &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
+     &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
+     &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
+     &              t_mpi_c_grid%mympi_comm_at)
+#ifdef CPP_TIMING
+      call timing_stop('main1c - communication')
+#endif
 
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
@@ -791,26 +726,8 @@ C ================================================================ NATYP
 
       ELSE ! new spin-orbit solver
 
-      THETA(:) = 0.D0
-      PHI(:) = 0.D0
-      LREAD = .FALSE.
-      LCHECKANGLES = .FALSE.
-      INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
-      IF (LREAD) THEN 
-         OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
-         DO I1 = 1,NATYP
-            READ(10,*) THETA(I1),PHI(I1)
-            THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
-            PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
-            IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
-               LCHECKANGLES=.TRUE.
-            ENDIF
-         ENDDO
-         IF(LCHECKANGLES) write(1337,*) 'WARNING: Check if your
-     & nonco_angels file is correct! Found only values that are
-     & smaller than pi for theta and 2pi for phi, respectively. But
-     & angles are given in degree (0...360)'
-      ENDIF
+      ! nonco angles
+      call read_angles(t_params,NATYP,THETA,PHI)
 
       IF (.NOT.TEST('FIXMOM  ')) THEN
        OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
@@ -823,11 +740,57 @@ c interpolate potential
      +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
      +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                        VINSNEW)
+#ifdef CPP_MPI
+        ntot1 = t_inc%NATYP
+        
+        
+!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+        if(t_mpi_c_grid%dims(1)>1) then
+           nranks_local = t_mpi_c_grid%nranks_ie
+           if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1)) 
+     &              nranks_local = t_mpi_c_grid%dims(1)
+        else
+           nranks_local = 1
+        endif
+        call distribute_linear_on_tasks(nranks_local, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
+     &                             .true.)
+        if(t_mpi_c_grid%nranks_ie<=t_mpi_c_grid%dims(1)) then
+           i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+           i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                ntot_pT(t_mpi_c_grid%myrank_ie)
+           t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+        else
+           myrank_ie_tmp = t_mpi_c_grid%myrank_ie
+           if(t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1))
+     &       myrank_ie_tmp = myrank_ie_tmp - t_mpi_c_grid%myrank_ie
+     +                          + (t_mpi_c_grid%dims(1)-1)
+           i1_start = ioff_pT(myrank_ie_tmp)+1
+           i1_end   = ioff_pT(myrank_ie_tmp)+ntot_pT(myrank_ie_tmp)
+           t_mpi_c_grid%ntot1  = ntot_pT(myrank_ie_tmp)
+        endif
 
-      DO I1 = 1,NATYP
+        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+     &            allocated(t_mpi_c_grid%ioff_pT1))) 
+     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
+     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
+#else
+      i1_start = 1
+      i1_end   = NATYP
+#endif
+
+      DO I1 = i1_start,i1_end
+      
        ICELL = NTCELL(I1)
        IPOT = (I1-1) * NSPIN + 1
-       
+
+#ifdef CPP_TIMING
+        call timing_start('main1c - rhovalnew')
+#endif
+
         CALL RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,
      &           ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,
      &           IFUNM1(1,ICELL),LMSP1(1,ICELL),
@@ -835,7 +798,11 @@ c interpolate potential
      &           NPAN_EQ(I1),RMESH(1,I1),IRWS(I1),RPAN_INTERVALL(0,I1),
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
-     &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1))
+     &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
+     &           angles_new)
+#ifdef CPP_TIMING
+        call timing_pause('main1c - rhovalnew')
+#endif
 
         DO L = 0,LMAXD1
          ESPV(L,IPOT)=ESPV1(L,1)
@@ -878,26 +845,35 @@ c interpolate potential
         ENDDO
        ENDDO
       END DO !I1
-      CLOSE(10)
-      CLOSE(11)
+      
+#ifdef CPP_MPI
+      call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
+     &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
+     &                                 den, denlm, muorb, espv, r2nef,    &
+     &                                 rho2ns, denefat, denef,            &
+     &                                 t_mpi_c_grid%mympi_comm_ie)
+#endif
+      
+#ifdef CPP_TIMING
+      call timing_stop('main1c - rhovalnew')
+#endif
 
       CLOSE (69)
       
       
       if(myrank==master) then
 c rewrite new theta and phi to nonco_angle.dat
-      IF (.NOT.TEST('FIXMOM  ')) THEN
+        IF (.NOT.TEST('FIXMOM  ')) THEN
+!             call save_angles(t_params,NATYP,THETA,PHI)
        OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
        CLOSE(10,status='delete')
-       OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
        OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
        DO I1=1,NATYP
-        READ(11,*) THETA(I1),PHI(I1)
-        WRITE(13,*) THETA(I1),PHI(I1)
+        WRITE(13,*) angles_new(I1,1),angles_new(I1,2)
        ENDDO
-       CLOSE(11,status='delete')
        CLOSE(13)
-      ENDIF
+
+        ENDIF
       end if !(myrank==master)
 
       CLOSE (29) !close lmdos file
@@ -910,6 +886,9 @@ c rewrite new theta and phi to nonco_angle.dat
 
 #ifdef CPP_MPI
       if(myrank==master) then
+#endif
+#ifdef CPP_TIMING
+      call timing_start('main1c - serial part')
 #endif
 
 ! In case of Lloyds formula renormalize valence charge                   ! LLY Lloyd
@@ -1022,10 +1001,12 @@ C ---------------------------------------------------------- CORE STATES
 C   RHO_core is calculated only if also RHO_valence was
 C
       IF (NPOL.NE.0) THEN 
+         if(t_inc%i_write>0) then
          WRITE (1337,*)
          WRITE (1337,'(78(1H#))')
          WRITE (1337,'(33X,A)') 'CORE  STATES'
          WRITE (1337,'(78(1H#))')
+         endif
          DO I1 = 1,NATYP
             DO ISPIN = 1,NSPIN
                IPOT = (I1-1) * NSPINPOT + ISPIN
@@ -1045,18 +1026,19 @@ C
 C
             END DO
          END DO
+         if(t_inc%i_write>0) then
          WRITE (1337,*)
          WRITE (1337,'(78(1H#))')
          WRITE (1337,*)
+         endif
       END IF
 C
 C ---------------------------------------------------------- CORE STATES
 C
-      OPEN (67,FILE='density',FORM='unformatted')
-      WRITE (67) RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,
-     &           IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE
-      IF (KREL.EQ.1) WRITE(67) RHOORB,ECOREREL,NKCORE,KAPCORE
-      CLOSE (67)
+      call save_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,
+     &                  ESPV,ECORE,IDOLDAU,LOPT,EU,EDC,
+     &                  CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,
+     &                  KREL,NATYPD,NPOTD,IRMD,LMPOTD,LMAXD1)
       
       IF (TEST('den-asci')) THEN
          OPEN (67,FILE='densitydn.ascii',FORM='formatted')
@@ -1075,19 +1057,60 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C      ITERMDIR
 C
       IF (ITERMVDIR) THEN
-         OPEN (67,FILE='itermdir.unformatted',FORM='unformatted')
-         READ (67) 
-         READ (67) 
-         WRITE (67) MVEVI,MVEVIEF
-         CLOSE (67) 
+         t_params%MVEVI   = MVEVI
+         t_params%MVEVIEF = MVEVIEF
       END IF
 C
 C      ITERMDIR
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 
 
 C
-      WRITE (1337,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
+      if(t_inc%i_write>0) 
+     &   WRITE (1337,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
      
+#ifdef CPP_TIMING
+      call timing_stop('main1c - serial part')
+#endif
+      if(test('rhoqtest')) then
+
+        open(9999, file='cleb_shapefun.txt')
+        write(9999,*) 'params'
+        write(9999,*) t_params%ncleb, t_params%lm2d, t_params%lmaxd,
+     &                t_params%iend, t_params%nfund, t_params%lmxspd,
+     &                nrmaxd
+        write(9999,*) 'cleb'
+        do lm1=1,t_params%ncleb
+          write(9999,'(E16.7,4I9)') t_params%cleb(lm1,1), 
+     &                              t_params%icleb(lm1,1:4)
+        end do
+        write(9999,*) 'loflm'
+        do lm1=1,t_params%lm2d
+          write(9999,'(I9)') t_params%loflm(lm1)
+        end do
+        open(8888, file='mu0')
+        read(8888,*) i1
+        close(8888)
+        ICELL = NTCELL(I1)
+        write(9999,*) 'ifunm'
+        do lm1=1,lmxspd
+          write(9999,'(I9)') ifunm1(lm1,icell)
+        end do
+        write(9999,*) 'lmsp'
+        do lm1=1,lmxspd
+          write(9999,'(I9)') LMSP1(LM1,icell)
+        end do
+        write(9999,*) 'thetasnew',nrmaxd,nfund
+        do lm1=1,nrmaxd
+          do lm2=1,nfund
+            write(9999,'(E16.7)') thetasnew(lm1,lm2,icell)
+          end do
+        end do
+        close(9999)
+        open(987987, file='shapefun_test')
+        write(987987,*) thetasnew
+        close(987987)
+
+      endif
 #ifdef CPP_MPI
       end if !myrank==master
 #endif
@@ -1097,13 +1120,6 @@ C
       deallocate(thetasnew, thetas)
       deallocate(vins, vinsnew)
       deallocate(RHO2N1,RHO2NS,RHO2N2,R2NEF)
-      
-!       DEALLOCATE(DEN1,WEZNORM,CDOSAT0,CDOSAT1,CDOS0,
-!      + CDOS_LLY,CDOS1,CDOS2,cdos_dum,A,B,CHARGE,CLEB,DRDI,RMESH,DOSTOT,
-!      + ESPV,DENEFAT,ESPV1,ECORE,R2NEF,RHO2NS,RHOC,RHO2N1,RHO2N2,RHO2M1,
-!      + RHO2M2,VINS,VISP,THETAS,ZAT,CONC,SOCSCALE,MUORB,RHOORB,
-!      + SOCSCL,CSCL,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,MVEVI,
-!      + MVEVIL,MVEVIEF,MVEVIL1,MVEVIL2)
       
       
       END SUBROUTINE !MAIN1c

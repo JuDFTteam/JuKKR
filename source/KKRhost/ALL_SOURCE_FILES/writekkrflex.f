@@ -3,6 +3,7 @@
      +                  CONC,CMOM,CMINST,VINTERS)
      
       use mod_types, only: t_tgmat
+      use mod_wunfiles, only: t_params, read_angles
      
       implicit none
       include 'inc.p'
@@ -31,16 +32,13 @@
 !local
       integer :: ispin,ie,i1,iatom,irec,i,lm
       DOUBLE COMPLEX TMAT0(LMMAXD,LMMAXD)
-      DOUBLE PRECISION THETA(NATYPD), PHI(NATYPD), PI, THETATMP, PHITMP
-      LOGICAL LREAD
+      DOUBLE PRECISION THETA(NATYPD), PHI(NATYPD)
 C     .. External Functions ..
       LOGICAL OPT
       EXTERNAL OPT
 
       write(1337,*) 'KKRFLEX WRITEOUT'
-      writE(1337,*) OPT('KKRFLEX ')
-
-      PI = 4D0*ATAN(1D0)
+      write(1337,*) OPT('KKRFLEX ')
 
       IF ( OPT('KKRFLEX ') ) THEN
         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
@@ -50,21 +48,8 @@ C     .. External Functions ..
      &             FILE='tmat',  FORM='unformatted')
         end if
 
-        !read in non-collinear angles from file
-        LREAD = .FALSE.
-        INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
-        IF (LREAD) THEN
-           OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
-           DO I1=1,NATYPD
-             READ(10,*) THETATMP, PHITMP
-             THETA(I1) = THETATMP*PI/180D0
-             PHI(I1)   = PHITMP*PI/180D0
-           END DO
-        ELSE
-          THETA(:) = 0.D0
-          PHI(:) = 0.D0
-        END IF!LREAD
-
+        !read in non-collinear angles
+        call read_angles(t_params,NATYP,THETA,PHI)
 
         DO IATOM = 1,NATOMIMP
           I1=ATOMIMP(IATOM)
@@ -73,9 +58,6 @@ C     .. External Functions ..
             DO IE=1,IELAST
               IF (I1<=NATYP) THEN 
                   IREC = IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) 
-!                  write(*,*) irec
-!                 READ (69,REC=IREC) TMAT
-!                 IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (IATOM-1) 
                   if (t_tgmat%tmat_to_file) then
                      READ (69,REC=IREC) TMAT0
                   else
@@ -86,7 +68,6 @@ C     .. External Functions ..
               ELSE
                  TMAT0=(0.0D0,0.0D0)
               END IF 
-!                   write(6699,*) IREC,IE,ISPIN,IATOM,I1
               WRITE(6699,'(4I,50000E)') IATOM,ISPIN,IE,0,TMAT0
           END DO !IE=1,IELAST
         END DO !ISPIN=1,NSPIN
@@ -96,6 +77,8 @@ C     .. External Functions ..
           IF (I1<=NATYP) THEN
            IREC=IE+IELAST*(I1-1)
             READ(69,REC=IREC) TMAT0
+            !perform here a transformation from the local to the global
+            !spin-frame of reference
             CALL ROTATEMATRIX(TMAT0,THETA(I1),PHI(I1),LMGF0D,0)
           ELSE
            TMAT0=(0d0,0d0)
@@ -114,13 +97,10 @@ C     .. External Functions ..
         WRITE(91,*) '# lmpot',lmpot
         WRITE(91,*) '# KSHAPE',KSHAPE
         WRITE(91,*) '# NATOMIMP, lmpot, ALAT VBC(1), VBC(2)'
-!         WRITE(91,*) HOSTIMP(0),LMMAX
         WRITE(91,'(2I,10F)') NATOMIMP,lmpot,ALAT,VBC(1),VBC(2)
         DO IATOM = 1,NATOMIMP      ! Bauer 2011-10-11
           I=ATOMIMP(IATOM)         !
-!         DO I=1,HOSTIMP(0)
          write(1337,*) 'ac2',I,HOSTIMP(I),lmpot,
-!      +                (VINTERS(LM,HOSTIMP(I)),LM=1,lmpot)
      +                (VINTERS(LM,I),LM=1,lmpot)
           WRITE(91,'(5000G)') (VINTERS(LM,I),LM=1,lmpot)
         END DO
@@ -138,8 +118,6 @@ C     .. External Functions ..
         DO IATOM = 1,NATOMIMP
           I=ATOMIMP(IATOM)
           I1=KAOEZ(1,I)
-!         DO IATOM=1,HOSTIMP(0)
-!           I=HOSTIMP(IATOM)
           WRITE(1337,*) 'NOQ',I,NOQ(I)
           IF (NOQ(I)/=1 .and. NOQ(I)/=0) 
      +      stop '[vmadelblk] VIRATOMS: NOQ/=1'

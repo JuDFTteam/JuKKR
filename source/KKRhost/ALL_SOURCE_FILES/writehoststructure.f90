@@ -1,6 +1,5 @@
 subroutine writehoststructure(bravais,nrbasis,rbasis,NAEZD,NEMBD)
 implicit none
-! INCLUDE 'inc.p'
 !interface
 double precision     :: bravais(3,3)
 integer              :: nrbasis

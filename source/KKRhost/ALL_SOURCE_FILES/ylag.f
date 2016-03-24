@@ -33,7 +33,6 @@ C
       IF ( IND.GT.0 ) GOTO 200
       DO J = 1,IMAX
          IF ( ABS(XI-X(J)).LT.1.0D-12 ) GOTO 600
-C      IF( ABS(XI-X(J)).LT.1.0e-06) GO TO 130
          IF ( XI.LT.X(J) ) GOTO 100
          IF ( XI.EQ.X(J) ) GOTO 600
       END DO

@@ -1,6 +1,9 @@
       module MOD_MAIN0 
       
       use mod_wunfiles
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       implicit none
       
@@ -208,6 +211,13 @@ C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================VINS()
 
       use mod_types
+#ifdef CPP_OMP
+      use omp_lib        ! necessary for omp functions
+#endif
+#ifdef CPP_MPI
+      use mpi
+      use mod_mympi, only: nranks
+#endif
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -262,8 +272,7 @@ C     .. Local Scalars ..
      +        NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
       INTEGER NS,LM1,LM2
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
-     +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)!,
-!      +                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
+     +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       INTEGER IESEMICORE,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IDOSEMICORE
       DOUBLE PRECISION FSEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
@@ -278,14 +287,9 @@ C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
-     +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD)!,
-!      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
+     +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD)
       double complex, allocatable :: LEFTTINVLL(:,:,:,:,:), 
      +                               RIGHTTINVLL(:,:,:,:,:)
-!       DOUBLE COMPLEX, allocatable :: DEZ(:),EZ(:),WEZ(:)
-!       DOUBLE COMPLEX, allocatable :: DSYMLL(:,:,:),DSYMLL1(:,:,:),
-!      +               LEFTTINVLL(:,:,:,:,:),RIGHTTINVLL(:,:,:,:,:)
       DOUBLE PRECISION A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
@@ -296,31 +300,13 @@ C     .. Local Arrays ..
      +                 RMTREF(NREFD),RMTREFAT(NAEZD+NEMBD),RR(3,0:NRD),
      +                 RROT(48,3,NSHELD),RS(IRMD,0:LMAXD,NATYPD),
      +                 RSYMAT(64,3,3),RWS(NATYPD),S(0:LMAXD,NATYPD),
-!      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
      +                 TLEFT(3,NEMBD1),
      +                 TRIGHT(3,NEMBD1),VBC(2),
-!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
      +                 VISP(IRMD,NPOTD),
      +                 VREF(NREFD),WG(LASSLD),
      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3)
       double precision, allocatable :: vins(:,:,:)
-!       DOUBLE PRECISION, allocatable :: A(:),B(:),BRAVAIS(:,:),
-!      +                 CLEB(:,:),CMOMHOST(:,:),DRDI(:,:),
-!      +                 DROR(:,:),ECORE(:,:),
-!      +                 MTFAC(:),R(:,:),RATOM(:,:),
-!      +                 RBASIS(:,:),RCLS(:,:,:),
-!      +                 RCLSIMP(:,:),RECBV(:,:),
-!      +                 RMT(:),RMTNEW(:),FPRADIUS(:),
-!      +                 RMTREF(:),RMTREFAT(:),RR(:,:),
-!      +                 RROT(:,:,:),RS(:,:,:),
-!      +                 RSYMAT(:,:,:),RWS(:),S(:,:),
-!      +                 THETAS(:,:,:),TLEFT(:,:),
-!      +                 TRIGHT(:,:),VBC(:),
-!      +                 VINS(:,:,:),VISP(:,:),
-!      +                 VREF(:),WG(:),
-!      +                 YRG(:,:,:),
-!      +                 ZAT(:),ZPERIGHT(:),ZPERLEFT(:)
       INTEGER ATOM(NACLSD,NAEZD+NEMBD),ATOMIMP(NATOMIMPD),
      &        CLS(NAEZD+NEMBD),EZOA(NACLSD,NAEZD+NEMBD),
      +        ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD),
@@ -388,7 +374,6 @@ C-----------------------------------------------------------------------
       INTEGER ISVATOM,NVATOM
       DOUBLE PRECISION ZATTEMP
 C     .. Dummy variables needed only in IMPURITY program 
-!       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
       DOUBLE PRECISION, allocatable :: THESME(:,:,:)
 
 C
@@ -434,6 +419,11 @@ C ruess: IVSHIFT test option
       
       !allocations:
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
+      
+#ifdef CPP_OMP
+!     .. OMP ..
+      integer nth, ith          ! total number of threads, thread number
+#endif
 
       
 C     ..
@@ -458,43 +448,38 @@ C     .. Common blocks ..
 C     ..
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       allocate(THETAS(IRID,NFUND,NCELLD),THESME(IRID,NFUND,NCELLD),
      +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD),
      +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      +         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
 
-!       ALLOCATE(DEZ(IEMXD),EZ(IEMXD),WEZ(IEMXD),
-!      +               DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
-!      +               DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),
-!      +               LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-!      +               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
-!       ALLOCATE(A(NATYPD),B(NATYPD),BRAVAIS(3,3),CLEB(NCLEB,2),
-!      +                 CMOMHOST(LMPOTD,NEMBD1),DRDI(IRMD,NATYPD),
-!      +                 DROR(IRMD,NATYPD),ECORE(20,NPOTD),
-!      +                 MTFAC(NATYPD),R(IRMD,NATYPD),RATOM(3,NSHELD),
-!      +                 RBASIS(3,NAEZD+NEMBD),RCLS(3,NACLSD,NCLSD),
-!      +                 RCLSIMP(3,NATOMIMPD),RECBV(3,3),
-!      +                 RMT(NATYPD),RMTNEW(NATYPD),FPRADIUS(NATYPD),
-!      +                 RMTREF(NREFD),RMTREFAT(NAEZD+NEMBD),RR(3,0:NRD),
-!      +                 RROT(48,3,NSHELD),RS(IRMD,0:LMAXD,NATYPD),
-!      +                 RSYMAT(64,3,3),RWS(NATYPD),S(0:LMAXD,NATYPD),
-!      +                 THETAS(IRID,NFUND,NCELLD),TLEFT(3,NEMBD1),
-!      +                 TRIGHT(3,NEMBD1),VBC(2),
-!      +                 VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VISP(IRMD,NPOTD),
-!      +                 VREF(NREFD),WG(LASSLD),
-!      +                 YRG(LASSLD,0:LASSLD,0:LASSLD),
-!      +                 ZAT(NATYPD),ZPERIGHT(3),ZPERLEFT(3))
       
 !Write version info:
       WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
-     &              'Juelich-Munich 2001 - 2015',
+     &              'Juelich-Munich 2001 - 2016',
      &             ' Code version: ',trim(version(1)),
      &             ' Compile options:',(trim(version(i)),i=2,4)
- 2004 FORMAT(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/)
+ 2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/ )
+!  9090    FORMAT(D20.12)                                               ! fxf
+
+#ifdef CPP_OMP
+!$omp parallel shared(nth,ith)
+!$omp single
+      nth = omp_get_num_threads()
+      ith = omp_get_thread_num()
+      if(ith==1) then
+       WRITE(*,'(1X,A,I5/79(1H*)/)')'Number of OpenMP threads used:',nth
+      endif
+!$omp end single
+!$omp end parallel
+#endif
+#ifdef CPP_MPI
+      WRITE(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
+#endif
+!End write version info
 
 !Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -650,7 +635,6 @@ C
             WRITE (1337,FMT=9080)
          END IF
       END IF
-C     +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
 
       IF ( DABS(E2IN-E2).GT.1D-10 .AND. NPOL.NE.0 ) E2 = E2IN
 C ----------------------------------------------------------------------
@@ -664,27 +648,27 @@ C ----------------------------------------------------------------------
       END IF
 C ----------------------------------------------------------------------
 C --> Apply external magnetic field
-!           from startb1 moved here
-            IF (KHFELD.EQ.1) THEN
+!     from startb1 moved here
+      IF (KHFELD.EQ.1) THEN
 c
-c--->       maybe apply a magnetic field
+c---> maybe apply a magnetic field
 c
-               call BSHIFT_NS(VISP,VINS,NATYP,NSPIN,
-     +         IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,
-     +         THETAS,THESME,R,KSHAPE,HFIELD,INIPOL)
-            END IF
-        if ( TEST('vpotout ') ) then !ruess
-          open(unit=54633163,file='test_vpotout_bshift')
-          do i1=1,natyp*nspin
-              write(54633163,*) '# visp of atom ',i1
-              write(54633163,'(50000E)') visp(:,i1)
-          end do !iatom
-          do i1=1,natyp*nspin
-              write(54633163,*) '# vins of atom ',i1
-              write(54633163,'(50000E)') vins(:,:,i1)
-          end do !iatom
-          close(54633163)
-        end if
+         call BSHIFT_NS(VISP,VINS,NATYP,NSPIN,
+     +   IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,
+     +   THETAS,THESME,R,KSHAPE,HFIELD,INIPOL)
+      END IF
+      if ( TEST('vpotout ') ) then !ruess
+        open(unit=54633163,file='test_vpotout_bshift')
+        do i1=1,natyp*nspin
+            write(54633163,*) '# visp of atom ',i1
+            write(54633163,'(50000E)') visp(:,i1)
+        end do !iatom
+        do i1=1,natyp*nspin
+            write(54633163,*) '# vins of atom ',i1
+            write(54633163,'(50000E)') vins(:,:,i1)
+        end do !iatom
+        close(54633163)
+      end if
 C ----------------------------------------------------------------------
 C
 C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -692,7 +676,6 @@ C -->  deal with the potential in the RELATIVISTIC CASE
 C
       PARA = .TRUE.
       IF (KREL+KORBIT.EQ.1) THEN
-c      IF (KREL.EQ.1) THEN
 C---------------------------------------------------------------
          IF (NSPIN.EQ.1) THEN
 C
@@ -735,7 +718,7 @@ C
                   CALL DCOPY(IRMD,VISP(1,I),1,VISP(1,I+1),1)
                END DO
             END IF
-C---------------------------------------------------------------
+            
          END IF !NSPIN.EQ.1
 C---------------------------------------------------------------
 C
@@ -743,7 +726,8 @@ C --> finally, convert input potential to the internal relativistic
 C     form VTREL,BTREL. Set up auxiliary arrays (needed in the REL 
 C     routines) ZREL, JWSREL, RMREL, DRDIREL, R2DRDIREL, IRSHIFT
 C
-         CALL RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,
+         IF(KREL.eq.1) ! call this only if relativisitic solver is used
+     &   CALL RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,
      &        VTREL,BTREL,ZREL,RMREL,JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,
      &        IPAND,IRMD,NPOTD,NATYPD)
       END IF !KREL+KORBIT.EQ.1
@@ -773,7 +757,6 @@ C
 C --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all 
 C     nonvanishing (l'',m'')-components of the shape functions THETAS
 C
-      write(1337,*) 'test call shape, ntcell=',ntcell
       IF (KSHAPE.NE.0) 
      +     CALL SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,
      +                LASSLD,LMPOTD,NATYPD,NGSHD)
@@ -785,7 +768,6 @@ C --> calculate Madelung constants (needed only for SCF calculations)
 C ----------------------------------------------------------------------
 cfivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
       !OPEN(99,FILE='madelinfo.txt')
-
       IF ( LINTERFACE ) THEN
 C -------------------------------------------------------------- 2D case
          CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
@@ -983,10 +965,13 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
-      IF (OPT('LDA+U   ')) 
-     &     CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
+      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+      IF (OPT('LDA+U   ')) then
+           !ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+           CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
+      END IF
 C
 C LDA+U
 C ======================================================================
@@ -1077,9 +1062,13 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-      DEALLOCATE(ULDAU)
-      deallocate(thetas, thetasnew, thesme)
-      deallocate(vins,LEFTTINVLL,RIGHTTINVLL)
+      if(allocated(ULDAU)      ) deallocate(ULDAU)
+      if(allocated(thetas)     ) deallocate(thetas)
+      if(allocated(thetasnew)  ) deallocate(thetasnew)
+      if(allocated(thesme)     ) deallocate(thesme)
+      if(allocated(vins)       ) deallocate(vins)
+      if(allocated(LEFTTINVLL) ) deallocate(LEFTTINVLL)
+      if(allocated(RIGHTTINVLL)) deallocate(RIGHTTINVLL)
 
       END SUBROUTINE !MAIN0
       
@@ -1100,27 +1089,19 @@ c Parameters:
      &     ,LMXSPD= (2*LPOTD+1)**2,IRMIND=IRMD-IRNSD)
 c Input
       INTEGER KSHAPE,LMPOT,NATYP,NSPIN
-!       INTEGER, allocatable :: IRCUT,IRC,NTCELL
-!      &     ,IMAXSH,ILM,IFUNM
-!      &     ,LMSP,IRMIN,INIPOL
-!       DOUBLE PRECISION, allocatable :: GSH,THETAS
-!      &     ,RMESH
       INTEGER IRCUT(0:IPAND,NATYPD),IRC(NATYPD),NTCELL(NATYPD)
      &     ,IMAXSH(0:LMPOTD),ILM(NGSHD,3),IFUNM(NATYPD,LMXSPD)
      &     ,LMSP(NATYPD,LMXSPD),IRMIN(NATYPD),INIPOL(NATYPD)
       DOUBLE PRECISION GSH(NGSHD),THETAS(IRID,NFUND,NCELLD)
      &     ,RMESH(IRMD,NATYPD)
-!       DOUBLE PRECISION, allocatable :: THESME
       DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
       DOUBLE PRECISION VSHIFT,HFIELD
 
 
 c Input/Output:
-!       DOUBLE PRECISION, allocatable :: VISP,VINS
       DOUBLE PRECISION VISP(IRMD,NPOTD),VINS(IRMIND:IRMD,LMPOTD,NSPOTD)
 
 c Inside
-!       DOUBLE PRECISION, allocatable :: PSHIFTLMR,PSHIFTR
       DOUBLE PRECISION PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
       INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
       INTEGER IER

@@ -18,6 +18,7 @@ C   *   its moment on different but equivalent sites  IQ               *
 C   *                                                                  *
 C   * 15/12/03                                                         *
 C   ********************************************************************
+      use mod_types, only: t_inc
       IMPLICIT COMPLEX*16(A-H,O-Z)
 C
 C PARAMETER definitions
@@ -191,7 +192,9 @@ C
                DO I = 1,N
                   CSUM = CSUM + MSSQ(I,I,IQ)
                END DO
-               WRITE (1337,99001) IQ,CPAERR,CPACORR,CSUM
+               if(t_inc%i_write>0) then
+                  WRITE (1337,99001) IQ,CPAERR,CPACORR,CSUM
+               endif
             END IF
 C-----------------------------------------------------------------------
             IF ( CHECK ) THEN

@@ -149,8 +149,6 @@
       COMMON /OPTC/OPTC
 !     ..
 !     .. Data statements ..
-      !DATA VERSION /'May 2015'/
-!       DATA VERSION /'Feb 2005'/
       DATA TSPIN/'non-','    ','    '/
       DATA TSHAPE/' exact cell treatment (shape correction)  '/
       DATA TVREL/&

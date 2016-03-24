@@ -1,6 +1,8 @@
 c 01.06.99 *************************************************************
       SUBROUTINE DLKE1(GLLKE,ALAT,NACLS,NACLSMAX,RR,EZOA,
      +                 ATOM,BZKP,IC,GINP,RCLS)
+     
+      use mod_types, only: t_inc
       implicit none
 c **********************************************************************
 c
@@ -61,7 +63,8 @@ C     ..
 C
       II = 3
       IF (OPT('COMPLEX ')) II = 6
-      IF (TEST('BZKP    ')) write(1337,FMT='(6f12.6)') (bzkp(i),i=1,ii)
+      IF (TEST('BZKP    ').and.(t_inc%i_write>0)) 
+     &      write(1337,FMT='(6f12.6)') (bzkp(i),i=1,ii)
 c
       TPI = 8.0D0*ATAN(1.0D0)                 ! = 2*PI
       CONVPU = ALAT/TPI

@@ -13,6 +13,7 @@ C * contour.                                                           *
 C *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
 C *                                                                    *
 C **********************************************************************
+      use mod_types, only: t_inc
       IMPLICIT NONE
       INTEGER IEMXD
       DOUBLE COMPLEX EZ(*),DF(*),EZSEMI(IEMXD),DFSEMI(IEMXD)
@@ -26,20 +27,22 @@ C **********************************************************************
 
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+      if(t_inc%i_write>0) then
       WRITE (1337,*)
       WRITE (1337,'(79(1H=))')
       WRITE (1337,'(20X,A)') 'EPATHTB: generates a complex E contour'
       WRITE (1337,'(79(1H=))')
       WRITE (1337,*)
+      endif
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
       IESEMICORE = 0 
       IF ( IDOSEMICORE.EQ.1 ) THEN
-         WRITE(1337,99001) 'semi-core contour'
+         if(t_inc%i_write>0) WRITE(1337,99001) 'semi-core contour'
          CALL EMESHT(EZSEMI,DFSEMI,NPNTSEMI,EBOTSEM,EMUSEM,EFERMI,
      &               TKSEM,-NPOLSEM,N1SEM,N2SEM,N3SEM,IEMXD)
          IESEMICORE = NPNTSEMI
-         WRITE(1337,99001) 'valence contour'
+         if(t_inc%i_write>0) WRITE(1337,99001) 'valence contour'
       ENDIF
       CALL EMESHT(EZVAL,DFVAL,NPNTVAL,EBOTVAL,EMUVAL,EFERMI,TKVAL,
      &            NPOLVAL,N1VAL,N2VAL,N3VAL,IEMXD)

@@ -14,6 +14,7 @@ C   *         no step size adjusted in case of no convergency > STOP   *
 C   *                                                                  *
 C   ********************************************************************
 C
+      use mod_types, only: t_inc
       IMPLICIT NONE
 
       INCLUDE 'sprkkr_rmesh.dim'
@@ -82,23 +83,26 @@ C
       IF ( ERRMAX.LT.1000D0 ) THEN
           X = X + H
           CALL DIRBSRAD(X,Y,DYDX,DRDI,B,V,R,NMESH)
+          if(t_inc%i_write>0) then
           WRITE (1337,*) '<DIRBSSTP>  not converged after ',ISEQMAX,
      &         ' refinements'
           WRITE (1337,*) 'step size will not be adjusted !!!!!!'
           WRITE (1337,*) 'max. relative error : ',ERRMAX*EPS
           WRITE (1337,*) 'tolerance             ',EPS
           WRITE (1337,*) 'grid position  X      ',X
+          endif
       ELSE 
+          if(t_inc%i_write>0) then
           WRITE (6,*) '<DIRBSSTP>  not converged after ',ISEQMAX,
      &         ' refinements'
           WRITE (6,*) 'step size will not be adjusted !!!!!!'
           WRITE (6,*) 'max. relative error : ',ERRMAX*EPS
           WRITE (6,*) 'tolerance             ',EPS
           WRITE (6,*) 'grid position  X      ',X
+          endif
           STOP 
       END IF
 C
       
       RETURN
-c     STOP
       END 

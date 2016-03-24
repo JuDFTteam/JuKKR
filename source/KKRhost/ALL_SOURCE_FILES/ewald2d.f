@@ -220,8 +220,8 @@ C
                                       ! (see sub. fplaneg) are below is 1E-27, considered negligible.
          ENDDO
          NGMAX1 = I
-         WRITE(99,FMT='(A7,I8,2E10.2)') 'NGMAX1:',NGMAX1,
-     &                EXP(-EXPONENT**2),ERFC(EXPONENT)
+!          WRITE(99,FMT='(A7,I8,2E10.2)') 'NGMAX1:',NGMAX1,
+!      &                EXP(-EXPONENT**2),ERFC(EXPONENT)
 
          IF (NGMAX1.GT.NGMAX) STOP 'ewald2d: 1: NGMAX1.GT.NGMAX' ! should never occur
 C ======================================================================
@@ -341,7 +341,7 @@ C
          ENDDO
          NGMAX1 = I
          IF (NGMAX1.GT.NGMAX) STOP 'ewald2d: 2: NGMAX1.GT.NGMAX' ! should never occur
-         WRITE(99,FMT='(A7,I8,2E10.2)') 'NGMAX1:',NGMAX1,EXP(-EXPONENT)
+!          WRITE(99,FMT='(A7,I8,2E10.2)') 'NGMAX1:',NGMAX1,EXP(-EXPONENT)
 C ======================================================================
          DO I = 2,NGMAX1
 C

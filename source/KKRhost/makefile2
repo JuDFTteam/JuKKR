@@ -1,16 +1,3 @@
-
-# SRAOBJS2 = \
-#           $(OBJ)/brydbm.o      $(OBJ)/brysh1.o     $(OBJ)/brysh2.o \
-#           $(OBJ)/brysh3.o      $(OBJ)/convol.o     $(OBJ)/dclock.o \
-#           $(OBJ)/ecoub.o       $(OBJ)/epotinb.o    $(OBJ)/espcb.o  \
-#           $(OBJ)/force.o       $(OBJ)/forceh.o     $(OBJ)/forcxc.o \
-#           $(OBJ)/gaufd.o       $(OBJ)/gauleg.o     $(OBJ)/emesht.o \
-#           $(OBJ)/mixstr.o      $(OBJ)/mtzero.o     $(OBJ)/erfcex.o \
-#           $(OBJ)/opt.o         $(OBJ)/rcstop.o     $(OBJ)/reg2.o   \
-#           $(OBJ)/rhosymm.o     $(OBJ)/rinit.o      $(OBJ)/rites.o  \
-#           $(OBJ)/simp3.o       $(OBJ)/simpk.o      $(OBJ)/sinwk.o  \
-#           $(OBJ)/soutk.o       $(OBJ)/vintras.o    $(OBJ)/ymy.o    \
-#           $(OBJ)/ssum.o        $(OBJ)/test.o       
           
 SRAOBJS2 = \
           $(OBJ)/brydbm.o      $(OBJ)/brysh1.o     $(OBJ)/brysh2.o \
@@ -35,18 +22,13 @@ VXCOBJS2 = $(OBJ)/corlsd.o      $(OBJ)/cpw91.o      $(OBJ)/cylm02.o \
 
 COMOBJS2 = $(OBJ)/main2.o       \
           $(OBJ)/vmadelblk.o   $(OBJ)/vinterface.o $(OBJ)/etotb1.o \
-          $(OBJ)/rhototb.o     
-          
-
-# DRVOBJS2 = $(OBJ)/relpotcvt.o
+          $(OBJ)/rhototb.o
 
 RELOBJS2 = $(OBJ)/mdirnewang.o  $(OBJ)/scfiterang.o
 
 VIROBJS2 = $(OBJ)/writekkrflex.o 
 
 PROGOBJS2 = $(COMOBJS2) $(SRAOBJS2) $(VXCOBJS2) $(RELOBJS2) $(VIROBJS2)
-# PROGOBJS2 = $(COMOBJS2) $(SRAOBJS2) $(VXCOBJS2) $(RELOBJS2) $(DRVOBJS2) $(VIROBJS2)
-                  
 
 ###################################################################
 # rules expressing dependencies on Fortran include files
@@ -111,8 +93,8 @@ $(OBJ)/vintras.o      : $(SRA)/vintras.f $(INCP)            ; \
 
 ##################### sources in COMMON directory ##########
 
-$(OBJ)/main2.o        : $(COM)/main2.f   $(INCP)  ; \
-                         $(FC) $(FFLAGS) $(COM)/main2.f -c -o $@
+$(OBJ)/main2.o        : $(COM)/main2.F   $(INCP)  ; \
+                         $(FC) $(FFLAGS) $(CPP) $(COM)/main2.F -c -o $@
 
 $(OBJ)/vmadelblk.o    : $(COM)/vmadelblk.f $(INCP)          ; \
                          $(FC) $(FFLAGS) $(COM)/vmadelblk.f -c -o $@

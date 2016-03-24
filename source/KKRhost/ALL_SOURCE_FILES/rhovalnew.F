@@ -3,14 +3,17 @@
      +                      NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,
      +                      RPAN_INTERVALL,IPAN_INTERVALL,
      +                      RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,
-     +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB)
+     +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB,angles_new)
 #ifdef CPP_OMP
        use omp_lib
 #endif
-       
 #ifdef CPP_MPI
       use mpi
 #endif
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
+
       
       use mod_types, only: t_tgmat, t_inc
 #ifdef CPP_MPI
@@ -90,8 +93,6 @@
      +                                RHOTEMP(:,:),RHONEWTEMP(:,:)
        INTEGER JLK_INDEX(2*LMMAXSO)
        LOGICAL LDORHOEF
-       LOGICAL TEST,OPT
-       EXTERNAL TEST,OPT
        DOUBLE PRECISION QVEC(:,:)       ! qdos ruess: q-vectors for qdos
        ALLOCATABLE QVEC                 ! qdos ruess
        DOUBLE COMPLEX DENTOT(2),DENTMP(0:LMAXD1,2) ! qdos ruess
@@ -105,17 +106,31 @@
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_start,ie_end, ie_num
+      double precision :: angles_new(NATYPD,2)
+C     ..
+C     .. Arrays in Common ..
+      CHARACTER*8 OPTC(32),TESTC(32)
+C     ..
+C     .. Common blocks ..
+      COMMON /OPTC/OPTC
+      COMMON /TESTC/TESTC
+C     ..
+       LOGICAL TEST,OPT
+       EXTERNAL TEST,OPT
+      ! test
+      integer :: mu0
+      ! test
 ! determine if omp is used
-!$omp parallel shared(nth,ith)
-!$omp single
        ith = 0
        nth = 1
 #ifdef CPP_OMP
+!$omp parallel shared(nth,ith)
+!$omp single
        nth = omp_get_num_threads()
-       write(1337,*) 'nth =',nth
-#endif
+       if(t_inc%i_write>0) write(1337,*) 'nth =',nth
 !$omp end single
 !$omp end parallel
+#endif
 
 
        PI=4d0*DATAN(1d0)
@@ -218,7 +233,6 @@ C        Read BZ path for qdos calculation:                             ! qdos r
          CLOSE(67)                                                      ! qdos ruess
 C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos ruess
          DEALLOCATE(GFLLE,DEN,DENLM)                                    ! qdos ruess
-!          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IEMXD,NQDOS))                  ! qdos ruess
          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS))                  ! qdos ruess
          ALLOCATE(DEN(0:LMAXD1,IEMXD,NQDOS,2),
      +            DENLM(LMMAXD,IEMXD,NQDOS,2))
@@ -232,21 +246,20 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
  3001 IF (IERR.NE.0) STOP 'ERROR CREATING ''gflle'''                    ! lmlm-dos ruess
       ENDIF                                                             ! lmlm-dos ruess
 
-        ! initialize to zero
-        DEN=CZERO
-        DENLM=CZERO
+      ! initialize to zero
+      DEN=CZERO
+      DENLM=CZERO
 c energy loop
-       if(myrank==master) WRITE(1337,*) 'atom: ',I1
+      if(myrank==master.and.t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
-!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_ie)
-!          ie_end = t_mpi_c_grid%ntot2     
-         
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-
-       DO ie_num=1,ie_end
-         IE = ie_start+ie_num
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
+      ie_start = 0 ! offset
+      ie_end   = IELAST
+#endif
+
+#ifdef CPP_OMP
 ! omp: start parallel region here
 !$omp parallel do default(none)
 !$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
@@ -265,39 +278,28 @@ c energy loop
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 !$omp& shared(t_tgmat,ie_end)
 !$omp& private(alphasph,alphall,ie_num)
-       DO IE=1,IELAST
-         ie_num = ie
-         ie_end = ielast
 #endif
+       DO ie_num=1,ie_end
+        IE = ie_start+ie_num
        
-         if (nth>=1) then
 #ifdef CPP_OMP
-            ith = omp_get_thread_num()
+        ith = omp_get_thread_num()
+#else
+        ith = 0
 #endif
-         else
-            ith = 0
-         endif
 
         ERYD=EZ(IE)
         EK=SQRT(ERYD)
         DF=WEZ(IE)/DBLE(NSPIN)
         IF (NSRA.EQ.2) EK = SQRT( ERYD + ERYD*ERYD/(CVLIGHT*CVLIGHT) ) *
      &                          ( 1d0 + ERYD/(CVLIGHT*CVLIGHT) )
+#ifdef CPP_OMP
 !$omp critical
-        WRITE(1337,*) 'energy:',IE,'',ERYD
+#endif
+        if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
+#ifdef CPP_OMP
 !$omp end critical
-! 
-!         IREC=IE+IELAST*(I1-1)
-!         READ(69,REC=IREC) GMAT0
-! 
-! c rotate gmat from global frame to local frame
-!         CALL ROTATEMATRIX(GMAT0,THETA,PHI,LMMAXD,1)
-! 
-!         DO LM1=1,LMMAXSO
-!          DO LM2=1,LMMAXSO
-!           GMATLL(LM1,LM2,IE)=GMAT0(LM1,LM2)
-!          ENDDO
-!         ENDDO
+#endif
 
 c recalculate wavefuntions, also include left solution
 c contruct the spin-orbit coupling hamiltonian and add to potential
@@ -430,16 +432,19 @@ c notice that exchange the order of left and right hankel/bessel functions
         DO 200 IQ = 1,NQDOS                                       ! qdos
 c read in gf
         IREC = IQ + NQDOS * (IE-1) +  NQDOS * IELAST * (I1-1)     ! qdos
+#ifdef CPP_OMP
         !$omp critical
+#endif
         if (t_tgmat%gmat_to_file) then
            READ(69,REC=IREC) GMAT0 
         else
            IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &            ie_end * (I1-1)
-!     &            t_mpi_c_grid%ntot2 * (I1-1)
            GMAT0(:,:) = t_tgmat%gmat(:,:,irec)
         end if
+#ifdef CPP_OMP
         !$omp end critical
+#endif
 
 c rotate gmat from global frame to local frame
         CALL ROTATEMATRIX(GMAT0,THETA,PHI,LMMAXD,1)
@@ -458,6 +463,32 @@ c calculate density
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
      +                GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
+
+       if( test('rhoqtest')) then
+         open(9999,file='mu0')
+         read(9999,*) mu0
+         close(9999)
+         if(i1.eq.mu0) then
+           open(9999, file='wavefunctions.txt')
+           write(9999,'(100I9)') ntotd, npan_tot, ncheb, npan_log,
+     &                           npan_eq, nsra, irmdnew
+           do ir=1,irmdnew
+             do lm1=1,nsra*lmmaxso
+               do lm2=1,lmmaxso
+                  write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith) 
+                  write(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir, ith)
+               end do
+             end do
+           enddo
+           write(987321,*) rll
+           write(987322,*) rllleft
+           do lm1=0,ntotd
+             write(9999,'(E16.7,I9)') rpan_intervall(lm1),
+     &                                ipan_intervall(lm1)
+           enddo
+           close(9999)
+         end if ! i1.eq.mu0
+       end if ! test('rhoqtest')
 
        DO JSPIN=1,4
 
@@ -563,7 +594,9 @@ c get orbital moment
         ENDDO ! IORB
         
        ENDDO ! IE loop 
+#ifdef CPP_OMP
 !$omp end parallel do
+#endif
 
 ! omp: move sum from rhooutnew here after parallel calculation
       DO IR=1,IRMDNEW
@@ -649,15 +682,56 @@ c    write qdos.nn.s.dat                                                  ! qdos
 #ifdef CPP_MPI
        ! reset NQDOS to avoid endless communication
        NQDOS=1
+#ifdef CPP_TIMING
+!        call timing_start('main1c - communication')
+#endif
+      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
+         den = 0.d0
+         denlm = 0.d0
+         gflle = 0.d0
+         muorb = 0.d0
+         espv = 0.d0
+         r2nefc = 0.d0
+         rho2nsc = 0.d0
+         rho2int = 0.d0
+         denorbmom = 0.d0
+         denorbmomsp = 0.d0
+         denorbmomlm = 0.d0
+         denorbmomns = 0.d0
+      endif
 
+#ifdef CPP_TIMING
+       call timing_start('main1c - communication')
+#endif
+      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
+         den = 0.d0
+         denlm = 0.d0
+         gflle = 0.d0
+         muorb = 0.d0
+         espv = 0.d0
+         r2nefc = 0.d0
+         rho2nsc = 0.d0
+         rho2int = 0.d0
+         denorbmom = 0.d0
+         denorbmomsp = 0.d0
+         denorbmomlm = 0.d0
+         denorbmomns = 0.d0
+      endif
        call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
      &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
-     &                            denorbmomsp,denorbmomlm,denorbmomns)
+     &                            denorbmomsp,denorbmomlm,denorbmomns,
+     &                            t_mpi_c_grid%myMPI_comm_at)
+#ifdef CPP_TIMING
+       call timing_pause('main1c - communication')
+#endif
+
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
-      if(myrank==master) then
+      if(t_mpi_c_grid%myrank_at==master) then
 #endif
 
 ! omp: moved write-out of dos files out of parallel energy loop
@@ -694,7 +768,8 @@ c Write out lm-dos:                                                      ! lm-do
 
 c      write gflle to file                                               ! lmlm-dos
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
-       write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
+       if(t_inc%i_write>0) 
+     &   write(1337,*) 'gflle:',shape(gflle),shape(gflle_part),LRECGFLLE
        WRITE(91,REC=I1) GFLLE                                            ! lmlm-dos
        ENDIF                                                             ! lmlm-dos
        
@@ -769,17 +844,18 @@ c calculate new THETA and PHI for non-colinear
           PHINEW=DATAN2(MOMENT(2),MOMENT(1))
          ENDIF
         ENDIF
-c          THETANEW=ACOS(MOMENT(3)/TOTMOMENT)
-c          PHINEW=DATAN2(MOMENT(2),MOMENT(1))
-!         WRITE(6,*) 'moment',MOMENT(1),MOMENT(2),MOMENT(3)
+        
+       if(t_inc%i_write>0) then
         WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
-c        WRITE(6,*) 'total moment',TOTMOMENT,TOTXYMOMENT
         WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
      &             PHINEW/(2.0D0*PI)*360.0D0
         WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
      &             PHINEW/(2.0D0*PI)*360.0D0
         WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
      &             PHINEW/(2.0D0*PI)*360.0D0
+        endif
+        angles_new(i1,1) = THETANEW/(2.0D0*PI)*360.0D0
+        angles_new(i1,2) = PHINEW/(2.0D0*PI)*360.0D0
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,
      +                    THETA,PHI,IRMD)
         CALL ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOTD,THETANEW,PHINEW,
@@ -811,10 +887,10 @@ C
 #ifdef CPP_MPI
       endif !(myrank==master)
       
-      ! communicate den_out to all processors
+      ! communicate den_out to all processors with the same atom number
       IDIM = (LMAXD+2)*IEMXD*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
-     &               MPI_COMM_WORLD, ierr)
+     &               t_mpi_c_grid%myMPI_comm_at, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
 #endif
 

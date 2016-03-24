@@ -1,6 +1,7 @@
       SUBROUTINE REGNS(AR,BR,EFAC,PNS,VNSPLL,ICST,IPAN,IRCUT,PZLM,
      +                   QZLM,PZEKDR,QZEKDR,EK,ADER,AMAT,BDER,BMAT,NSRA,
      +                   IRMIND,IRMD,IPAND,LMMAXD)
+      use mod_types, only: t_inc
       IMPLICIT NONE
 c-----------------------------------------------------------------------
 c     determines the regular non spherical wavefunctions , the
@@ -145,7 +146,7 @@ c check convergence
       DO 270 LM1=1,LMMAXD
       DO 270 LM2=1,LMMAXD
  270  ERR=MAX(ERR,ABS(PNS1(LM1,LM2,IRC1)))
-      WRITE(1337,*) 'Born_Fred',I,ERR
+      if(t_inc%i_write>0) WRITE(1337,*) 'Born_Fred',I,ERR
 c      IF(I.EQ.ICST.AND.ERR.GT.1D-3)WRITE(*,*)'NOT CONVERGENT',ERR
       DO 280 J = 1,NSRA
       DO 280 IR = IRMIND,IRC1
@@ -204,7 +205,7 @@ c check convergence
        DO 300 LM1=1,LMMAXD
        DO 300 LM2=1,LMMAXD
   300  ERR=MAX(ERR,ABS(PNS1(LM1,LM2,IRC1)))
-       WRITE(1337,*) 'Born',I,ERR 
+       if(t_inc%i_write>0) WRITE(1337,*) 'Born',I,ERR 
 c      IF(I.EQ.ICST.AND.ERR.GT.1D-3)WRITE(*,*)'NOT CONVERGENT',ERR
        DO 310 J = 1,NSRA
        DO 310 IR = IRMIND,IRC1
