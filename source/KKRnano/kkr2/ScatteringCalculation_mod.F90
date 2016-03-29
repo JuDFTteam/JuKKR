@@ -297,11 +297,11 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
 
             ! t_ref-matrix of central cluster atom has index 1
             call substractReferenceTmatrix(kkr%TMATN(:,:,ISPIN), &
-                                           kkr%TREFLL(:,:,1), kkr%LMMAXD)
+                                           kkr%TREFLL(:,:,1), kkr%LMMAXD, arrays%NSYMAT, arrays%DSYMLL)
 
             ! do the same for derivative of T-matrix
             call substractReferenceTmatrix(kkr%DTDE(:,:,ISPIN), &
-                                           kkr%DTREFLL(:,:,1), kkr%LMMAXD)
+                                           kkr%DTREFLL(:,:,1), kkr%LMMAXD, arrays%NSYMAT, arrays%DSYMLL)
 
             ! TMATN now contains Delta t = t - t_ref !!!
             ! DTDE now contains Delta dt !!!
@@ -595,22 +595,57 @@ subroutine calcDeltaTupTdown(DTIXIJ)
 
 end subroutine
 
+
 !----------------------------------------------------------------------------
 !> Substract diagonal reference T matrix of certain spin channel
 !> from real system's T matrix.
-subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD)
+subroutine substractReferenceTmatrix(TMATN, TREFLL, LMMAXD, NSYMAT, DSYMLL)
   implicit none
   integer :: LM1
+  integer :: LM2
   integer :: LMMAXD
+  integer :: IU
+  integer :: NSYMAT
   double complex :: TMATN(:,:)
   double complex :: TREFLL(:,:)
+  double complex :: DSYMLL(:,:,:)
+  double complex :: MSSQ(LMMAXD,LMMAXD)
+  double complex :: TPG(LMMAXD,LMMAXD)
+  double complex :: CONE
+  double complex :: CZERO
 
+  CZERO = (0.0D0,0.0D0)
+  CONE = (1.0D0,0.0D0)
   ! Note: TREFLL is diagonal! - spherical reference potential
   do LM1 = 1,LMMAXD
     TMATN(LM1,LM1) =  TMATN(LM1,LM1) - TREFLL(LM1,LM1)
   end do
+!
+!------------------------------------------------- SYMMETRISE TMATN
+!
+         do IU = 1,NSYMAT
+!
+            if ( IU.eq.1 ) then
+               CALL ZCOPY(LMMAXD*LMMAXD,TMATN,1,MSSQ,1)
+            else
+               CALL ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,CONE, &
+                          DSYMLL(1,1,IU),LMMAXD,TMATN,LMMAXD, &
+                          CZERO,TPG,LMMAXD)
+               CALL ZGEMM('N','C',LMMAXD,LMMAXD,LMMAXD,CONE,TPG,LMMAXD, &
+                          DSYMLL(1,1,IU),LMMAXD,CONE,MSSQ,LMMAXD)
+            end if
+!
+         end do
+         do LM1 = 1,LMMAXD
+            do LM2 = 1,LMMAXD
+               TMATN(LM1,LM2) = MSSQ(LM1,LM2)/DBLE(NSYMAT)
+            end do
+         end do
+!------------------------------------------------- SYMMETRISE TMATN
 
 end subroutine
+
+
 
 !------------------------------------------------------------------------------
 !> Rescale and symmetrise T-matrix.
