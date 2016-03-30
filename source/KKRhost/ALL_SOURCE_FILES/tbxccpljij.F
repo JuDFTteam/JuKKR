@@ -106,6 +106,11 @@ C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       if(IPRINT>0)  WRITE(1337,99000)
 #ifdef CPP_MPI
+      ! this part of the code does not take much time, thus only the energy 
+      ! loop is parallel and not the second level over atoms, only the master 
+      ! in every energy loop does the calculation of the Jijs
+      if(t_mpi_c_grid%myrank_ie==0) then
+
       ie_end = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
       ie_end = ielast
@@ -526,11 +531,12 @@ C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communic
         !perform communication and collect resutls in csum_store2
         LM1 = NATYP*NATYP*NSHELL(0)*IELAST
         call MPI_REDUCE(csum_store,csum_store2,LM1,MPI_DOUBLE_COMPLEX,
-     &                  MPI_SUM,master,MPI_COMM_WORLD,IERR)
+     &                  MPI_SUM,master,t_mpi_c_grid%myMPI_comm_at,IERR)
+!     &                  MPI_SUM,master,MPI_COMM_WORLD,IERR)
         if(IERR/=MPI_SUCCESS)then
            write(*,*) 'Problem in MPI_REDUCE(csum_store)'
            stop 'TBXCCPLJIJ'
-        end if
+        end if ! IERR/=MPI_SUCCESS
 
         !copy array back to original one
         if(myrank==master)then
@@ -739,10 +745,11 @@ c         Close(22)
 C ----------------------------------------------------------------------
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
       endif!myrank==master
+#ifdef CPP_MPI
+      end if ! t_mpi_c_grid%myrank_ie==0
+#endif
 C
-CF90----------------------------------------------------------------
       DEALLOCATE (KIJSH,NIJCALC,JIJDONE,JXCIJINT,STAT=LM1)
-CF90----------------------------------------------------------------
 99000 FORMAT(79(1H=),/,10X,
      &     "TBXCCPLJIJ : Off-diagonal exchange coupling",
      &     " constants J_ij",/,79(1H=),/)
