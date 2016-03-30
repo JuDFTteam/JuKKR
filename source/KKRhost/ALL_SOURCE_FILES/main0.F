@@ -854,7 +854,7 @@ C
          write(1337,*) 'Writing out shells (also in shells.dat):' ! fivos
          write(1337,*) 'itype,jtype,iat,jat,r(iat),r(jat)' ! fivos
          write(1337,*) NSHELL(0), 'NSHELL(0)' ! fivos
-         write(78,*) NSHELL(0), 'NSHELL(0)' ! fivos
+         write(58,*) NSHELL(0), 'NSHELL(0)' ! fivos
          do i1 = 1,NSHELL(0)    ! fivos
             write(1337,*) i1,NSHELL(i1), 
      &                 'No. of shell, No. of atoms in shell' ! fivos

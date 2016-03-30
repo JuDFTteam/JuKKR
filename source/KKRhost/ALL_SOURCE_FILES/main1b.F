@@ -27,8 +27,6 @@
 #endif
       use mod_wunfiles
       use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
-      
-      use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
 
       INCLUDE 'inc.p'
 C
@@ -193,9 +191,10 @@ C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
      &             'BANDED MATRIX (slab)               ',
      &             'BANDED + CORNERS MATRIX (supercell)' /
-      DATA IPRINT / 1 /
+      DATA IPRINT / 0 /
 C     ..
 C
+      if(t_inc%i_write>0) IPRINT=1
 
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
@@ -339,8 +338,12 @@ C
      &                   FILE='kkrflex_green',FORM='unformatted')
           END IF
 
-          OPEN (88,ACCESS='direct',RECL=LRECGREEN,
-     &             FILE='green',FORM='unformatted')
+C==== the following write-out has been disabled, because it was assumed to be    !no-green
+C====  obsolete with the implementation of the MPI-communicated arrays. If I am  !no-green
+C====  wrong and the write-out is needed in subsequent parts, construct a        !no-green
+C====  test-option around it so that it is only written out in this case.        !no-green
+C         OPEN (88,ACCESS='direct',RECL=LRECGREEN,                               !no-green
+C    &             FILE='green',FORM='unformatted')                              !no-green
           IREC=1
 
           IF ( ( OPT('KKRFLEX ') ) ) THEN
@@ -353,11 +356,11 @@ C
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
             END IF
           END IF
-          IF ( (.not. OPT('KKRFLEX ') ) ) THEN
-            WRITE(88,REC=IREC) IELAST,NSPIN,
-     &         (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST),
-     &         NATOMIMPD*LMMAXD
-          END IF
+c         IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
+c           WRITE(88,REC=IREC) IELAST,NSPIN,                  !no-green
+c    &         (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST),    !no-green
+c    &         NATOMIMPD*LMMAXD                               !no-green
+c         END IF                                              !no-green
       END IF
 
 C Value of NQDOS changes to a read-in value if option qdos is applied, otherwise:
@@ -959,7 +962,7 @@ C    |           END of do loop over spins and energies             |
 C    ----------------------------------------------------------------
 C
       CLOSE (68)
-      IF ( IGF.NE.0 ) CLOSE (88)
+c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
 
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
          if(t_lloyd%cdos_diff_lly_to_file) then
