@@ -104,7 +104,7 @@ c     &                         FORM='formatted')
 c      write(*,*) 'test brahim 2'
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-         WRITE(1337,99000)
+      if(IPRINT>0)  WRITE(1337,99000)
 #ifdef CPP_MPI
       ie_end = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else

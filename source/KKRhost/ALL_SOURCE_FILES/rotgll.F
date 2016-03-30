@@ -180,9 +180,13 @@ C
            END IF
          END IF
 
-         IF ( .not. OPT('KKRFLEX ') ) THEN
-           WRITE(88,REC=ICALL) GCLUST
-         END IF
+C==== the following write-out has been disabled, because it was assumed to be     !no-green
+C====  obsolete with the implementation of the MPI-communicated arrays. If I am   !no-green
+C====  wrong and the write-out is needed in subsequent parts, construct a         !no-green
+C====  test-option around it so that it is only written out in this case.         !no-green
+c        IF ( .not. OPT('KKRFLEX ') ) THEN                                        !no-green
+c          WRITE(88,REC=ICALL) GCLUST                                             !no-green
+c        END IF                                                                   !no-green
 
          DEALLOCATE (GCLUST)
       ENDIF
