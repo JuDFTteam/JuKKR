@@ -280,13 +280,13 @@ C
      +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +     char(48+ISPIN)//".dat")   ! lm-dos
          end if
-      ENDIF
       OPEN(30,   ! lm-dos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +char(48+ISPIN)//".dat")   ! lm-dos
       WRITE (30,*) ' '   ! lm-dos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
  8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
+      ENDIF
 #endif
 
 c set LMSHIFT value which is need to construct dentmp

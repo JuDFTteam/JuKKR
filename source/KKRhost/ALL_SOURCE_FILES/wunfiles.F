@@ -229,7 +229,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(4)
+      CHARACTER*24 TXC(5)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
 C     ..
@@ -546,7 +546,7 @@ C ======================================================================
       ALLOCATE(t_params%SYMUNITARY(t_params%NSYMAXD), !LOGICALS
      &         t_params%VACFLAG(2))
      
-      ALLOCATE(t_params%TXC(4)) !CHARACTER*24
+      ALLOCATE(t_params%TXC(5)) !CHARACTER*24
       
       ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
       
@@ -1046,7 +1046,7 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,4,
+      call MPI_Bcast(t_params%TXC,5,
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
       call MPI_Bcast(t_params%TESTC,32,
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
@@ -1317,7 +1317,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(4)  
+      CHARACTER*24 TXC(5)  
       CHARACTER*8  TESTC(32),OPTC(32)
 C     ..
       !fill arrays:
@@ -2037,7 +2037,7 @@ C
 
       double complex, intent(inout) :: EZ(IEMXD),WEZ(IEMXD)
       character*8,  intent(inout) :: TESTC(32),OPTC(32)
-      character*24, intent(inout) :: TXC(4)
+      character*24, intent(inout) :: TXC(5)
       logical, intent(inout) :: LINTERFACE,LRHOSYM
 C     .. External Functions ..
       LOGICAL OPT,TEST

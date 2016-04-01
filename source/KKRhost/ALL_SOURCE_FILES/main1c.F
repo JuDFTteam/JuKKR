@@ -693,7 +693,8 @@ C ================================================================ NATYP
 
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
-        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
+c        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
+        IF (OPT('lmdos    ')) THEN                                   ! lm-dos
           DO I1=1,NATYP                                                  ! lm-dos
             DO ISPIN = 1,NSPIN                                           ! lm-dos
               IPOT = (I1-1) * NSPINPOT + ISPIN                           ! lm-dos

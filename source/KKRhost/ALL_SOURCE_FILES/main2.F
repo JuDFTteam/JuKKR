@@ -84,7 +84,7 @@ C     .. semicore ..
       DOUBLE PRECISION FSOLD,CHRGSEMICORE
 C     ..
       LOGICAL LRHOSYM,OPT,TEST,LINTERFACE
-      CHARACTER*24 TXC(4)
+      CHARACTER*24 TXC(5)
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX EZ(IEMXD),DEZ(IEMXD),WEZ(IEMXD)
@@ -391,6 +391,7 @@ C --> divided by NAEZ because the weight of each atom has been already
 C     taken into account in 1c
 C
       WRITE (1337,FMT=9030) E2,DENEF/DBLE(NAEZ) 
+      WRITE (6,FMT=9030) E2,DENEF/DBLE(NAEZ) 
       WRITE(1337,'(79(1H+),/)')
 C ----------------------------------------------------------------------
       DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIN)

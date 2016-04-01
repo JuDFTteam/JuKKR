@@ -736,6 +736,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
 
 ! omp: moved write-out of dos files out of parallel energy loop
 c Write out lm-dos:                                                      ! lm-dos
+       IF (OPT('lmdos    ')) THEN                                          ! qdos ruess
        DO IE=1,IELAST                                                    ! lm-dos
          IQ=1
          IF (IE.EQ.1) THEN                                               ! lm-dos
@@ -765,7 +766,7 @@ c Write out lm-dos:                                                      ! lm-do
      &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)          ! lm-dos
  9001    FORMAT(30E12.4)                                                 ! lm-dos
        ENDDO !IE
-
+       ENDIF
 c      write gflle to file                                               ! lmlm-dos
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
        if(t_inc%i_write>0) 
