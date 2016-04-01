@@ -14,7 +14,8 @@
       use mod_timing
 #endif
       
-      use mod_types, only: t_tgmat, t_inc, t_lloyd
+      use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,
+     &                     init_t_dtmatJij
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -29,6 +30,7 @@
       use mod_timing
 #endif
       use mod_wunfiles
+      use mod_jijhelp, only: set_Jijcalc_flags
      
       INCLUDE 'inc.p'
 C
@@ -118,6 +120,7 @@ C LDA+U
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+      INTEGER NATOMIMP, ATOMIMP(NATOMIMPD), IQAT(NATYPD)
 #ifdef CPP_MPI
       integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
      &           myrank_at, myrank_ie, nranks_at,nranks_ie
@@ -175,7 +178,7 @@ C
      &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
      &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
      &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
-     &       ITSCF)
+     &       ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
 C
       IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       
@@ -237,29 +240,30 @@ C
         end if
       ENDIF
 C
-      IF (.NOT.OPT('NEWSOSOL')) THEN
       
 #ifdef CPP_MPI
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                           master,ntot1,ntot_pT,ioff_pT,.true.,
      + .true.)
 
-           i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-           i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &                ntot_pT(t_mpi_c_grid%myrank_ie)
-           t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+      if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
      &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
      &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
-        t_mpi_c_grid%ntot_pT1 = ntot_pT
-        t_mpi_c_grid%ioff_pT1 = ioff_pT
+      t_mpi_c_grid%ntot_pT1 = ntot_pT
+      t_mpi_c_grid%ioff_pT1 = ioff_pT
 #else
-        i1_start = 1
-        i1_end   = NATYP
+      i1_start = 1
+      i1_end   = NATYP
 #endif
+
+      IF (.NOT.OPT('NEWSOSOL')) THEN
         DO I1 = i1_start,i1_end
           DO ISPIN = 1,NSPIN
             IPOT=NSPIN*(I1-1)+ispin
@@ -285,8 +289,16 @@ C
      
       ELSE
        
-      ! nonco angles: defined in mod_wunfiles
-      call read_angles(t_params,NATYP,THETA,PHI)
+       !for calculation of Jij-tensor: create array for additional t-matrices and
+       !set atom-dependent flags which indicate if t-matrix is needed
+       call init_t_dtmatJij(t_inc,t_mpi_c_grid,t_dtmatJij) 
+       IF(OPT('XCPL    '))THEN
+        call set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,
+     +    ATOMIMP,IQAT) 
+       END IF!OPT('XCPL')
+
+       ! nonco angles: defined in mod_wunfiles
+       call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
 
@@ -294,29 +306,6 @@ c interpolate potential
      +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
      +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                        VINSNEW)
-
-#ifdef CPP_MPI
-
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
-     &  .true.)
-
-        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &             ntot_pT(t_mpi_c_grid%myrank_ie)
-        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-
-        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
-     &            allocated(t_mpi_c_grid%ioff_pT1))) 
-     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
-     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
-        t_mpi_c_grid%ntot_pT1 = ntot_pT
-        t_mpi_c_grid%ioff_pT1 = ioff_pT
-#else
-        i1_start = 1
-        i1_end   = NATYP
-#endif
 
 
        DO I1=i1_start,i1_end
@@ -327,7 +316,7 @@ c interpolate potential
      &                      NCHEB,NPAN_TOT(I1),
      +                      RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),
      +                      RNEW(1,I1),VINSNEW,THETA(I1),PHI(I1),I1,IPOT
-     &                     ,LLY,DELTAE) ! LLY
+     &                     ,LLY,DELTAE,t_dtmatJij(I1)) ! LLY
 
        ENDDO !I1, atom loop
        CLOSE(10)

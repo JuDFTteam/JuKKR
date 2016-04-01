@@ -2,7 +2,7 @@
      +                        EZ,NSRA,CLEB,ICLEB,IEND,NCHEB,NPAN_TOT,
      +                        RPAN_INTERVALL,IPAN_INTERVALL,
      +                        RNEW,VINSNEW,THETA,PHI,I1,IPOT,
-     &                        LLY,DELTAE)
+     &                        LLY,DELTAE,t_dtmatJij_at)
 #ifdef CPP_OMP
        use omp_lib        ! necessary for omp functions
 #endif
@@ -14,7 +14,8 @@
      &                      ,distribute_linear_on_tasks
 #endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
-     &                     t_lloyd,init_tlloyd 
+     &                     t_lloyd,init_tlloyd, type_dtmatJijDij,
+     &                     init_t_dtmatJij_at
 
        IMPLICIT NONE
        include 'inc.p'
@@ -41,6 +42,7 @@
      +                   VINSNEW(NRMAXD,LMPOTD,NSPOTD)
        INTEGER           IPAN_INTERVALL(0:NTOTD)
        DOUBLE COMPLEX  TMATLL(LMMAXSO,LMMAXSO) 
+       type(type_dtmatJijDij) t_dtmatJij_at
 
    
        INTEGER I1,IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW
@@ -52,6 +54,7 @@
        DOUBLE COMPLEX, ALLOCATABLE :: HLK(:,:,:),JLK(:,:,:),
      +                                HLK2(:,:,:),JLK2(:,:,:)
        DOUBLE COMPLEX, ALLOCATABLE :: RLL(:,:,:,:),SLL(:,:,:,:)
+       DOUBLE COMPLEX, ALLOCATABLE :: RLLLEFT(:,:,:,:),SLLLEFT(:,:,:,:)
        DOUBLE COMPLEX, ALLOCATABLE :: TMATSPH(:,:)
        DOUBLE COMPLEX DTMATLL(LMMAXSO,LMMAXSO),TMAT0(LMMAXSO,LMMAXSO) ! LLY
        DOUBLE COMPLEX ALPHALL(LMMAXSO,LMMAXSO), ! LLY
@@ -84,6 +87,9 @@
       nth = 1
       ith = 0
 #endif
+
+       !for Jij-tensor calculation: allocate array to hold additional t-matrices
+       call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
 
        IRMDNEW= NPAN_TOT*(NCHEB+1)
        ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN))
@@ -120,6 +126,9 @@ c initial allocate
        ALLOCATE(TMATSPH(2*(LMAX+1),0:nth-1))
        ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
+       ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1)) !maybe left solutions need to be calculated,
+       ALLOCATE(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1)) ! to be derermined below. Allocate them here
+                                                               ! in any case for omp parallelization.
           
 c energy loop
        if(myrank==master.and.(t_inc%i_write>0)) 
@@ -165,7 +174,7 @@ c energy loop
 !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth) 
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
-!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll) !,tmat_out)
+!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft) !,tmat_out)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
 !$omp& shared(lly,deltae,i1)!,dtmat_out,tral_out)
 !$omp& private(tralpha) 
@@ -257,7 +266,7 @@ cc these are spherical hankel and bessel functions
         HLK2(:,:,ith)=CZERO
         JLK2(:,:,ith)=CZERO
         GMATPREFACTOR=CZERO
-        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+        CALL RLLSLLSOURCETERM S(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
      +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
      +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
      +                         GMATPREFACTOR)
@@ -283,12 +292,12 @@ cc right solutions
      +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
-!         IF (NSRA.EQ.2) THEN
-c         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
-c     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
-c         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
-c     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
-!         ENDIF
+        IF (NSRA.EQ.2) THEN
+          RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
+          SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
+        ENDIF
 
 
 c add spherical contribution of tmatrix
@@ -351,6 +360,81 @@ c add spherical contribution of tmatrix
          TRALPHA=TRALPHA+AUX(LM1,LM1) ! LLY
         ENDDO
         ENDIF ! LLY
+
+
+! Calculate additional t-matrices for Jij-tensor calculation
+        if(t_dtmatJij_at%calculate) then
+c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c       contruct the spin-orbit coupling hamiltonian and add to potential
+         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
+     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
+     +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
+     +                     NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,
+     +                     VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),
+     +                     'transpose')
+
+cc       extend matrix for the SRA treatment
+         VNSPLL(:,:,:,ith)=CZERO
+         IF (NSRA.EQ.2) THEN
+          IF (USE_SRATRICK.EQ.0) THEN
+           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +        LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+          ELSEIF (USE_SRATRICK.EQ.1) THEN
+           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +        LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+          ENDIF
+         ELSE
+          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
+         ENDIF
+
+cc       calculate the source terms in the Lippmann-Schwinger equation
+cc       these are spherical hankel and bessel functions
+         HLK(:,:,ith)=CZERO
+         JLK(:,:,ith)=CZERO
+         HLK2(:,:,ith)=CZERO
+         JLK2(:,:,ith)=CZERO
+         GMATPREFACTOR=CZERO
+         jlk_index = 0
+         CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+     +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
+     +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
+     +                         GMATPREFACTOR)
+
+cc       using spherical potential as reference
+c        notice that exchange the order of left and right hankel/bessel functions
+         IF (USE_SRATRICK.EQ.1) THEN
+          TMATSPH(:,ith)=CZERO
+          CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
+     +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
+     +               JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith),
+     +               JLK(:,:,ith),GMATPREFACTOR,ALPHASPH,TMATSPH(:,ith),
+     +               USE_SRATRICK)
+         ENDIF
+         
+cc       calculate the tmat and wavefunctions
+         RLLLEFT(:,:,:,ith)=CZERO
+         SLLLEFT(:,:,:,ith)=CZERO
+
+cc       left solutions
+c        notice that exchange the order of left and right hankel/bessel functions
+         TMAT0=CZERO
+         ALPHA0=CZERO ! LLY
+         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMAT0,NCHEB,
+     +             NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
+     +             NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
+     +             HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
+     +             '1','1','0',USE_SRATRICK,ALPHA0)
+         IF (NSRA.EQ.2) THEN
+          RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
+          SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
+         ENDIF
+c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+        end if!t_dtmatJij_at%calculate
          
          ! writeout
 #ifdef CPP_OMP        
@@ -405,6 +489,8 @@ c add spherical contribution of tmatrix
        DEALLOCATE(TMATSPH)
        DEALLOCATE(RLL)
        DEALLOCATE(SLL)
+       DEALLOCATE(RLLLEFT)
+       DEALLOCATE(SLLLEFT)
 
        END 
 

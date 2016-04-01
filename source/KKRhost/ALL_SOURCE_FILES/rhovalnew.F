@@ -346,8 +346,8 @@ c using spherical potential as reference
         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLLLEFT(:,:,:,ith)=CZERO
-        SLLLEFT(:,:,:,ith)=CZERO
+        RLL(:,:,:,ith)=CZERO
+        SLL(:,:,:,ith)=CZERO
 
 cc right solutions
         TMATLL=CZERO

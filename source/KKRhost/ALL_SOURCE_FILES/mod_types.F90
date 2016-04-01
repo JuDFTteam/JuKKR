@@ -16,11 +16,19 @@ implicit none
       double complex, allocatable :: tmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
       double complex, allocatable :: gmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IQDOS+NQDOS*(IE-1)+NQDOS*IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
       double complex, allocatable :: gref(:,:,:,:)       !GINP(NACLSD*LMGF0D,LMGF0D,NCLSD) IREC=IE=1,...,IELAST
-   
 
    end type type_tgmatices
    
 
+
+   !data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
+   type :: type_dtmatJijDij
+     
+      integer :: Nelements = 3
+      logical :: calculate = .false.
+      double complex, allocatable :: dtmat_xyz(:,:,:,:) !dimensions= LMMAXD, LMMAXD, 3, IELAST;  3={x,y,z}
+
+   end type type_dtmatJijDij
 
 
    type :: type_inc
@@ -95,7 +103,7 @@ implicit none
    type (type_tgmatices), save :: t_tgmat
    type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
    type (type_lloyd), save :: t_lloyd
-
+   type (type_dtmatJijDij), allocatable, save :: t_dtmatJij(:) !dimensions I1=1,...,NATYP 
 
 contains
 
@@ -174,8 +182,65 @@ contains
 
    end subroutine init_tgmat
    
+
+   subroutine init_t_dtmatJij(t_inc,t_mpi_c_grid,t_dtmatJij)
+
+      implicit none
+
+      type(type_inc), intent(in) :: t_inc
+      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
+      type(type_dtmatJijDij), intent(inout), allocatable :: t_dtmatJij(:)
+
+      integer :: ierr
+     
+      if(.not.t_inc%NEWSOSOL) stop 'in init_t_dtmatJij: should only be called with NEWSOSOL'
+
+      if (.not. allocated(t_dtmatJij)) then
+        allocate(t_dtmatJij(t_inc%NATYP),STAT=ierr)
+        if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat(NATYP)'
+      endif
+
+   end subroutine init_t_dtmatJij
+
    
+   subroutine init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
+
+      use mod_mympi, only: myrank, master, nranks
+
+      implicit none
+
+      type(type_inc), intent(in) :: t_inc
+      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
+      type(type_dtmatJijDij), intent(inout) :: t_dtmatJij_at
+
+      integer :: ierr
+
+      if(.not.t_inc%NEWSOSOL) stop 'in init_t_dtmatJij_single: should only be called with NEWSOSOL'
+
+      if (.not. allocated(t_dtmatJij_at%dtmat_xyz) .and. t_dtmatJij_at%calculate) then
+!        if (.not. t_dtmatJij%dtmat_to_file) then
+            if(nranks.eq.1) then
+               !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=ielast
+               allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_inc%IELAST), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
+            else
+               !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=iemax_local
+               allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
+               if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat for mpi'
+            end if
+!        else
+!           allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
+!           if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
+!        end if
+      
+         t_dtmatJij_at%dtmat_xyz(:,:,:,:) = (0.d0, 0.d0)
+      endif
+
+   end subroutine init_t_dtmatJij_at
    
+
+
+
 #ifdef CPP_MPI
    subroutine bcast_t_inc_tgmat(t_inc,t_tgmat)
     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann

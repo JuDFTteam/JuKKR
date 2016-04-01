@@ -35,7 +35,13 @@ contains
 
 
 
+  subroutine calc_dtmatJij(rllleft,rll,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW,NTOTD)
 
+    implicit none
+    INTEGER, intent(in) :: NPAN_TOT,NCHEB,NTOTD,IPAN_INTERVALL(0:NTOTD)
+    DOUBLE PRECISION, intent(in) :: RPAN_INTERVALL(0:NTOTD)
+
+  end subroutine calc_dtmatJij()
 
 
 end module mod_jijhelp

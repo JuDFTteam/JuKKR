@@ -1454,7 +1454,7 @@ C     ..
      &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
      &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
      &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
-     &       ITSCF)
+     &       ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       ! get relevant parameters from t_params
 !     ..
       use mod_types, only: t_inc
@@ -1462,7 +1462,7 @@ C     ..
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: IPAND,NATYPD,IRMD,NACLSD,NCLSD,NREFD,KREL,
      &                        NCLEB,NEMBD,NAEZD,LM2D,LMAXD,NTOTD,NRMAXD,
-     &                        IEMXD,IRMIND,LMPOTD,NSPOTD,NPOTD
+     &                        IEMXD,IRMIND,LMPOTD,NSPOTD,NPOTD,NATOMIMPD
       integer, intent(inout) :: NSRA,NAEZ,NATYP,NSPIN,ICST,
      &         IRCUT(0:IPAND,NATYPD),LMAX,NCLS,NINEQ,NREF,LLY,
      &         INS,ATOM(NACLSD,NAEZD+NEMBD),CLS(NAEZD+NEMBD),
@@ -1471,7 +1471,8 @@ C     ..
      &         IRWS(NATYPD),IRMIN(NATYPD),ITMPDIR,ILTMP,IDOLDAU,
      &         NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD),
      &         IPAN_INTERVALL(0:NTOTD,NATYPD),NTLDAU,ITLDAU(NATYPD),
-     &         JWSREL(NATYPD),ZREL(NATYPD),ITSCF
+     &         JWSREL(NATYPD),ZREL(NATYPD),ITSCF,NATOMIMP,
+     &         ATOMIMP(NATOMIMPD),IQAT(NATYPD)
       double precision, intent(inout) :: ALAT,DRDI(IRMD,NATYPD),
      &         RMESH(IRMD,NATYPD),ZAT(NATYPD),RCLS(3,NACLSD,NCLSD),
      &         RMTREF(NREFD),VREF(NREFD),CLEB(NCLEB,2),
@@ -1586,6 +1587,10 @@ C ------------------------------------------------------ input_potential
          BTREL     = t_params%BTREL    
       END IF
       ITSCF    = t_params%ITSCF   
+C ------------------------------------------------------ cluster atoms
+      NATOMIMP   = t_params%NATOMIMP
+      ATOMIMP    = t_params%ATOMIMP
+      IQAT       = t_params%IQAT
 
       end subroutine get_params_1a
 
