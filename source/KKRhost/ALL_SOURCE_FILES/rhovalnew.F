@@ -106,14 +106,7 @@
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_start,ie_end, ie_num
-      double precision :: angles_new(NATYPD,2)
-C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
+      double precision :: angles_new(2)
 C     ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
@@ -346,8 +339,8 @@ c using spherical potential as reference
         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLLLEFT(:,:,:,ith)=CZERO
-        SLLLEFT(:,:,:,ith)=CZERO
+        RLL(:,:,:,ith)=CZERO
+        SLL(:,:,:,ith)=CZERO
 
 cc right solutions
         TMATLL=CZERO
@@ -679,31 +672,12 @@ c    write qdos.nn.s.dat                                                  ! qdos
          ENDDO !IE                                                        ! qdos
        ENDIF      ! OPT('qdos    ')                                       ! qdos ruess
        
-#ifdef CPP_MPI
-       ! reset NQDOS to avoid endless communication
-       NQDOS=1
-#ifdef CPP_TIMING
-!        call timing_start('main1c - communication')
-#endif
-      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
-     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
-         den = 0.d0
-         denlm = 0.d0
-         gflle = 0.d0
-         muorb = 0.d0
-         espv = 0.d0
-         r2nefc = 0.d0
-         rho2nsc = 0.d0
-         rho2int = 0.d0
-         denorbmom = 0.d0
-         denorbmomsp = 0.d0
-         denorbmomlm = 0.d0
-         denorbmomns = 0.d0
-      endif
-
+#ifdef CPP_MPI ! do communication only when compiled with MPI
 #ifdef CPP_TIMING
        call timing_start('main1c - communication')
 #endif
+       ! reset NQDOS to avoid endless communication
+       NQDOS=1
       if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
          den = 0.d0
@@ -732,7 +706,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
       if(t_mpi_c_grid%myrank_at==master) then
-#endif
+#endif ! CPP_MPI
 
 ! omp: moved write-out of dos files out of parallel energy loop
 c Write out lm-dos:                                                      ! lm-dos
@@ -845,17 +819,14 @@ c calculate new THETA and PHI for non-colinear
          ENDIF
         ENDIF
         
-       if(t_inc%i_write>0) then
-        WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
-        WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
-        WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
-        WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
+        if(t_inc%i_write>0) then
+          WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
+          WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &                  PHINEW/(2.0D0*PI)*360.0D0
         endif
-        angles_new(i1,1) = THETANEW/(2.0D0*PI)*360.0D0
-        angles_new(i1,2) = PHINEW/(2.0D0*PI)*360.0D0
+        !only on master different from zero:
+        angles_new(1) = THETANEW
+        angles_new(2) = PHINEW
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,
      +                    THETA,PHI,IRMD)
         CALL ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOTD,THETANEW,PHINEW,
@@ -892,6 +863,10 @@ C
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
      &               t_mpi_c_grid%myMPI_comm_at, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
+      IDIM = 2
+      call MPI_Bcast(angles_new, idim, MPI_DOUBLE_PRECISION, master, 
+     &               t_mpi_c_grid%myMPI_comm_at, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error bcast angles_new in rhovalnew'
 #endif
 
        DEALLOCATE(VINS)

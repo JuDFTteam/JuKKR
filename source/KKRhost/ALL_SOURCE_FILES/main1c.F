@@ -99,7 +99,6 @@ C LDA+U
 C for new spin-orbit solver
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD)
-      LOGICAL LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NRMAXD,NATYPD)
       double precision, allocatable :: THETASNEW(:,:,:), vinsnew(:,:,:)
@@ -196,14 +195,7 @@ C     .. qdos and lmlm-dos ..
       integer :: i1_start, i1_end
       integer :: ie_start, ie_end, ie_num
       
-      double precision :: angles_new(NATYPD,2)
-C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
+      double precision :: angles_new(2,NATYPD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL CINIT,RHOCORE,RHOVAL,WMATLDAU,WRLDAUPOT,WRLDOS,WRMOMS
@@ -264,7 +256,7 @@ C -------------------------------------------------------------- input1c
      &          CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,
      &          THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,E1,E2,TK,VINS,VISP,
      &          ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ
-     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,OPTC,TESTC,NSPIND,NSPOTD,
+     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,NSPIND,NSPOTD,
      &          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! initialization needed due to merging to one executable
       ESPV(:,:) = 0.d0
@@ -729,10 +721,6 @@ C ================================================================ NATYP
       ! nonco angles
       call read_angles(t_params,NATYP,THETA,PHI)
 
-      IF (.NOT.TEST('FIXMOM  ')) THEN
-       OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
-       OPEN(UNIT=12,file='nonco_angle_out.dat',form='formatted')
-      ENDIF
 
 c interpolate potential
 
@@ -782,6 +770,9 @@ c interpolate potential
       i1_end   = NATYP
 #endif
 
+      !initialize output nonco angles
+      angles_new = 0.0d0
+
       DO I1 = i1_start,i1_end
       
        ICELL = NTCELL(I1)
@@ -799,7 +790,7 @@ c interpolate potential
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
-     &           angles_new)
+     &           angles_new(:,i1))
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
@@ -850,7 +841,7 @@ c interpolate potential
       call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
      &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
      &                                 den, denlm, muorb, espv, r2nef,    &
-     &                                 rho2ns, denefat, denef,            &
+     &                                 rho2ns,denefat,denef,angles_new,   &
      &                                 t_mpi_c_grid%mympi_comm_ie)
 #endif
       
@@ -862,18 +853,20 @@ c interpolate potential
       
       
       if(myrank==master) then
-c rewrite new theta and phi to nonco_angle.dat
+c rewrite new theta and phi to nonco_angle_out.dat, noncao_angle.dat is the input
         IF (.NOT.TEST('FIXMOM  ')) THEN
-!             call save_angles(t_params,NATYP,THETA,PHI)
-       OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
-       CLOSE(10,status='delete')
-       OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
-       DO I1=1,NATYP
-        WRITE(13,*) angles_new(I1,1),angles_new(I1,2)
-       ENDDO
-       CLOSE(13)
+          OPEN(UNIT=13,file='nonco_angle_out.dat',form='formatted')
+          DO I1=1,NATYP
+            ! save to file in converted units (degrees)
+            WRITE(13,*) angles_new(1,I1)/(2.0D0*PI)*360.0D0,
+     &                  angles_new(2,I1)/(2.0D0*PI)*360.0D0
+            ! use internal units here
+            t_params%THETA(I1) = angles_new(1,I1)
+            t_params%PHI(I1)   = angles_new(2,I1)
+          ENDDO
+         CLOSE(13)
 
-        ENDIF
+        ENDIF ! .not.test('FIXMOM  ')
       end if !(myrank==master)
 
       CLOSE (29) !close lmdos file

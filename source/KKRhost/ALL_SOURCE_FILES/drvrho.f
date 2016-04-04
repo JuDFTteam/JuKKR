@@ -100,10 +100,6 @@ C     qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
       INTEGER NQDOS,IREC,IPOINT                          !qdos ruess 
       DOUBLE PRECISION QVEC(3,NQDOS)                     !qdos ruess 
       COMPLEX*16 DENTOT1,DENTOT2          !dummy arrays  !qdos ruess 
-C     .. Arrays in Common ..                             !qdos ruess 
-      CHARACTER*8 OPTC(32)                                !qdos ruess 
-C     .. Common blocks ..                                !qdos ruess 
-      COMMON /OPTC/OPTC                                  !qdos ruess 
 C     qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
       INTRINSIC ATAN,SQRT
 

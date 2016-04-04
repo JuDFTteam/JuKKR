@@ -155,12 +155,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,DIMAG,SQRT
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)             ! qdos
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC                         ! qdos
-      COMMON /TESTC/TESTC                       ! qdos
 C     .. External Functions ..
       LOGICAL OPT,TEST                          ! qdos
       EXTERNAL OPT,TEST                         ! qdos
