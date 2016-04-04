@@ -201,13 +201,7 @@ C     ..
       INTEGER HOSTIMP(0:NATYPD)
       DOUBLE PRECISION VINTERS(LMPOTD,NAEZD)
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
       INTEGER LLY ! LLY <> 0 : apply Lloyd's formula
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
 C     ..
 C     .. External Subroutines ..
       EXTERNAL BRYDBM,CONVOL,DAXPY,DCOPY,ECOUB,EPATHTB,EPOTINB,ESPCB,
@@ -264,7 +258,7 @@ C --------------------------------------------------------------- input2
      &     N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,THETAS
      &    ,DRDI,R,ZAT,RMT,RMTNEW,RWS,E1,E2,TK,ALAT,EFOLD,CHRGOLD,
      &     CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,
-     &     DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TESTC,OPTC,TXC,
+     &     DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TXC,
      &     LINTERFACE,LRHOSYM,NGSHD,NAEZD,IRID,NSPOTD,IEMXD)
 C -------------------------------------------------------------- density
 C

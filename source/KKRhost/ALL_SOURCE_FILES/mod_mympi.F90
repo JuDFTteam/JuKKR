@@ -586,14 +586,14 @@ contains
      &                                   NPOTD,NATYPD,LMPOTD,IRMD,       &
      &                                   den, denlm, muorb, espv, r2nef, &
      &                                   rho2ns, denefat, denef,         &
-     &                                   mympi_comm)
+     &                                   angles_new, mympi_comm)
      
      use mpi
      implicit none
      integer, intent(in) :: LMAXD1,IEMXD,NQDOS,NPOTD,NATYPD,LMPOTD,IRMD,LMMAXD
      integer, intent(in) :: mympi_comm
      double complex, intent(inout)   :: den(0:LMAXD1,IEMXD,NQDOS,NPOTD), denlm(LMMAXD,IEMXD,NQDOS,NPOTD)
-     double precision, intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef
+     double precision, intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef, angles_new(NATYPD,2)
      
      integer :: ierr, idim
      double precision, allocatable :: work(:,:,:,:)
@@ -655,6 +655,13 @@ contains
      work = 0.d0
      CALL MPI_ALLREDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENEF,1)
+     deallocate(work)
+
+     IDIM = 2*NATYPD
+     allocate(work(2,NATYPD,1,1))
+     work = 0.d0
+     CALL MPI_ALLREDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL DCOPY(IDIM,WORK,1,angles_new,1)
      deallocate(work)
          
   end subroutine mympi_main1c_comm_newsosol2

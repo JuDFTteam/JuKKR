@@ -159,8 +159,8 @@ program kkrcode
 #ifdef CPP_MPI
     ! update i_iteration after check for convergence in main2:
     call MPI_Bcast(t_inc%i_iteration, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting i_iteration in main_all'
-    
+    if(ierr/=MPI_SUCCESS) stop 'error broadcasting i_iteration in main_all'
+    ! broadcast parameter arrays from master (e.g. update nonco angles etc.)
     call bcast_t_params_scalars(t_params)
     call bcast_t_params_arrays(t_params)
 #endif
