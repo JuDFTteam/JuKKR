@@ -124,7 +124,7 @@ end if
 !#######################################################
 IF (NSRA<=2) then ! non-relativistic case
   allocate(Vpotll(lmsize,lmsize,cellnew%nrmaxnew))
-  if ( .not. config_testflag('sph') .or. nsra==5 ) then ! set up VLL by omitting the spherical
+  if ( config_testflag('nosph') .or. nsra==5 ) then ! set up VLL by omitting the spherical
                                                         ! potential
     call VLLMAT(Vpotll,cellnew%Vpotnew(:,:,:),LMAXATOM,(LMAXATOM+1)**2,LMPOT,1, &
                 cellnew%nrmaxnew,gauntcoeff(lmaxatom),zatom,cellnew%rmeshnew,lmsize,use_fullgmat,NSPIN,ISPIN,'NS')
@@ -222,7 +222,7 @@ end if
 
 if (nsra==2) then
 
-  if ( .not. config_testflag('sph') .or. nsra==5 ) then
+  if ( config_testflag('nosph') .or. nsra==5 ) then
     call vllmatsra(Vpotll,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=0')
   else
     call vllmatsra(Vpotll,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=Vsph')
@@ -230,7 +230,7 @@ if (nsra==2) then
 
   if (kspinorbit==1) then    ! do the same with the potential matrix
                              ! used for the left solution
-    if ( .not. config_testflag('sph') .or. nsra==5 ) then
+    if ( config_testflag('nosph') .or. nsra==5 ) then
       call vllmatsra(Vpotll2,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=0')
     else
       call vllmatsra(Vpotll2,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=Vsph')
@@ -303,13 +303,13 @@ if ( config_testflag('conjgtest')) then
 end if
 
 !#######################################################
-! if the option 'sph' is set then the wave functions of the 
+! if the option 'nosph' is not set then the wave functions of the 
 ! spherical part of the potential is used as a reference
 ! function. The solutions of a sperical potential are calculated by using
 ! bessel and hanel functions and are stored in the same array:
 !#######################################################
 
-if ( config_testflag('sph') .and. nsra/=5 ) then
+if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
       call calcsph(nsra,cellnew,zatom,use_fullgmat,nspin,ispin,lmaxatom,eryd, &
                    jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR,gauntcoeff(lmaxatom) ,tmatsph ,idotime)
 end if
@@ -401,11 +401,11 @@ end if
 
 
 !#######################################################
-! In case the option 'sph' is set. The output t-matrix
+! In case the option 'nosph' is not set. The output t-matrix
 ! just contains the non-sph part of the t-matrix. Thus,
 ! the sperical needs to be added
 !#######################################################
-if ( config_testflag('sph') .or. nsra==5 ) then
+if ( .not. config_testflag('nosph') .or. nsra==5 ) then
   do lm1=1,lmsize
     tmat%tmat(lm1,lm1)=tmat%tmat(lm1,lm1)+tmatsph(jlk_index(lm1))
   end do
@@ -428,7 +428,7 @@ if ((kspinorbit==1).and.calcleft) then
   deallocate(jlk_index,hlk,jlk,hlk2,jlk2)
   call rllsllsourceterms(nsra,wavefunction%nvec,(eryd),cellnew%rmeshnew,cellnew%nrmaxnew,lmaxatom,lmsize,use_fullgmat,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR)
   
-  if ( config_testflag('sph') .and. nsra/=5 ) then
+  if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
       call calcsph(nsra,cellnew,zatom,use_fullgmat,nspin,ispin,lmaxatom,(eryd), &
                    jlk_index,hlk2,jlk2,hlk,jlk,GMATPREFACTOR,gauntcoeff(lmaxatom) ,tmatsph ,idotime)
   end if
