@@ -1,11 +1,24 @@
-      MODULE MOD_RLLSLL
-      USE omp_lib      
+! preprocessor options:
+! change this definition if used in host/impurity code
+! this is commented out, since then the logical hostcode is not defined
+! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
+! #define hostcode ! this is commented out to use the impurity code interface
 
+! choose between interface for impurity and host code (different calling lists)
+#ifndef hostcode
+      MODULE MOD_RLLSLL
         CONTAINS
       SUBROUTINE RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
                         NCHEB,NPAN,LMSIZE,LMSIZE2,NRMAX, &
                         nvec,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR, &
                         cmoderll,cmodesll,cmodetest,idotime)
+#else
+      SUBROUTINE RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
+                        NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
+                        NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
+                        CMODERLL,CMODESLL,CMODETEST,USE_SRATRICK1,      &
+                        ALPHAGET) ! LLY
+#endif
 ! ************************************************************************
 ! radial wave functions by the integral equation method of
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -79,7 +92,7 @@
 ! NRMAX      - total number of radial points (NPAN*(NCHEB+1))
 ! NVEC       - number of LMSIZE*LMSIZE blocks in J (LMSIZE2=NVEC*LMSIZE)
 ! ************************************************************************
-use mod_timing                            ! timing routine
+#ifndef hostcode
 use mod_beshank                           ! calculates bessel and hankel func.
 use mod_chebint                           ! chebyshev integration routines
 use mod_config, only: config_testflag     ! reads if testflags are present
@@ -87,6 +100,11 @@ use mod_rllslltools, only: inverse        ! inverse matrix routine
 use mod_physic_params,only: cvlight       ! speed of light
 use sourceterms                           
 use mod_chebyshev
+#endif
+use mod_timing                            ! timing routine
+#ifdef CPP_hybrid
+use omp_lib ! omp functions
+#endif
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: npan                                ! number of panels
@@ -95,6 +113,9 @@ implicit none
       integer :: nvec                                ! spinor integer
                                                      ! nvec=1 non-rel, nvec=2 for sra and dirac
       integer :: nrmax                               ! total number of rad. mesh points
+#ifdef hostcode
+      integer :: nrmaxd, LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
+#endif
 
       double complex,parameter:: ci= (0.0d0,1.0d0), &! complex i
                                  cone=(1.0d0,0.0d0),&!         1
@@ -107,14 +128,25 @@ implicit none
       ! source terms
       double complex :: gmatprefactor               ! prefactor of green function
                                                     ! non-rel: = kappa = sqrt e
+#ifndef hostcode
       double complex :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
                         hlk2(:,:), jlk2(:,:)        ! left sol. source terms
                                                     ! (tipically bessel and hankel fn)
+#else
+      DOUBLE COMPLEX :: HLK(LBESSEL,NRMAX), &
+                        JLK(LBESSEL,NRMAX), &
+                        HLK2(LBESSEL,NRMAX), &
+                        JLK2(LBESSEL,NRMAX) 
+#endif
 
+#ifndef hostcode
       integer jlk_index(:)                          ! mapping array l = jlk_index(lm)
                                                     ! in: lm-index
                                                     ! corresponding l-index used hlk,..
                                                     ! hlk(l) = jlk_index(lm)
+#else
+      INTEGER JLK_INDEX(2*LMSIZE)
+#endif
 
       character(len=1) :: cmoderll,cmodesll,cmodetest  ! These define the op(V(r)) in the eqs. above
                                                        ! (comment in the beginning of this subroutine)
@@ -127,62 +159,35 @@ implicit none
                          tllp(lmsize,lmsize), &        ! t-matrix
                          vll(lmsize*nvec,lmsize*nvec,nrmax) ! potential term in 5.7 
                                                        ! bauer, phd
-!       double complex,allocatable ::  ull(:,:,:)        ! reg. volterra sol.
-! 
-!       double complex,allocatable ::  &
-!                      work(:,:), &
-!                      work2(:,:), &
-!                      allp(:,:,:),bllp(:,:,:), &                  ! eq. 5.9, 5.10 for reg. sol
-!                      cllp(:,:,:),dllp(:,:,:), &                  ! same for the irr. sol
-!                      slv(:,:,:,:),srv(:,:,:,:), &                ! a in eq 5.68
-!                      slv1(:,:,:,:),srv1(:,:,:,:), &              !****************
-!                      slv2(:,:,:,:),srv2(:,:,:,:), &              ! used for sra trick
-!                      slv3(:,:,:,:),srv3(:,:,:,:), &              !****************
-!                      mrnvy(:,:,:),mrnvz(:,:,:), &                ! ***************
-!                      mrjvy(:,:,:),mrjvz(:,:,:), &                !    eq. 5.19-5.22
-!                      mihvy(:,:,:),mihvz(:,:,:), &                !
-!                      mijvy(:,:,:),mijvz(:,:,:), &                ! ***************
-!                      yill(:,:,:),zill(:,:,:), &                  ! source terms  (i:irreg., r: regular)
-!                      yrll(:,:,:),zrll(:,:,:),yrlltmp(:,:,:), &   ! 
-!                      yill1(:,:,:),zill1(:,:,:), &                ! source terms in case of sratrick
-!                      yrll1(:,:,:),zrll1(:,:,:), &
-!                      yill2(:,:,:),zill2(:,:,:), &
-!                      yrll2(:,:,:),zrll2(:,:,:), &
-!                      vhlr(:,:,:), &                               ! vhlr = h * v (regular sol.) 
-!                      vjlr(:,:,:), &                               ! vjlr = j * v (regular sol.)
-!                      vhli(:,:,:), &                               ! vhli = h * v (irregular sol.)
-!                      vjli(:,:,:)                                  ! vjli = j * v (irregular sol.)
-!       double complex,allocatable :: yif(:,:,:,:), &               ! source terms (different array
-!                      yrf(:,:,:,:), &                              !               ordering)
-!                      zif(:,:,:,:), &
-!                      zrf(:,:,:,:)
-double complex ull(lmsize2,lmsize,nrmax)
+      double complex,allocatable ::  ull(:,:,:)        ! reg. volterra sol.
 
-double complex slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) 
-  double complex work2((ncheb+1)*lmsize,(ncheb+1)*lmsize)
-  double complex slv1(0:ncheb,lmsize,0:ncheb,lmsize),srv1(0:ncheb,lmsize,0:ncheb,lmsize), &
-            slv2(0:ncheb,lmsize,0:ncheb,lmsize),srv2(0:ncheb,lmsize,0:ncheb,lmsize), &
-            slv3(0:ncheb,lmsize,0:ncheb,lmsize),srv3(0:ncheb,lmsize,0:ncheb,lmsize) 
-  double complex yill1(0:ncheb,lmsize,lmsize),zill1(0:ncheb,lmsize,lmsize), &
-            yrll1(0:ncheb,lmsize,lmsize),zrll1(0:ncheb,lmsize,lmsize), &
-            yill2(0:ncheb,lmsize,lmsize),zill2(0:ncheb,lmsize,lmsize), &
-            yrll2(0:ncheb,lmsize,lmsize),zrll2(0:ncheb,lmsize,lmsize),&
-            yrlltmp(0:ncheb,lmsize,lmsize)  
-double complex work(lmsize,lmsize),&
-          allp(lmsize,lmsize,0:npan),bllp(lmsize,lmsize,0:npan),&
-          cllp(lmsize,lmsize,0:npan),dllp(lmsize,lmsize,0:npan),&
-          mrnvy(lmsize,lmsize,npan),mrnvz(lmsize,lmsize,npan),&
-          mrjvy(lmsize,lmsize,npan),mrjvz(lmsize,lmsize,npan),&
-          mihvy(lmsize,lmsize,npan),mihvz(lmsize,lmsize,npan),&
-          mijvy(lmsize,lmsize,npan),mijvz(lmsize,lmsize,npan),&
-          yill(0:ncheb,lmsize2,lmsize),zill(0:ncheb,lmsize2,lmsize),&
-          yrll(0:ncheb,lmsize2,lmsize),zrll(0:ncheb,lmsize2,lmsize),&
-          vjlr(lmsize,lmsize2,0:ncheb),vhlr(lmsize,lmsize2,0:ncheb),&
-          vjli(lmsize,lmsize2,0:ncheb),vhli(lmsize,lmsize2,0:ncheb)
-double complex yif(lmsize2,lmsize,0:ncheb,npan),&
-          yrf(lmsize2,lmsize,0:ncheb,npan),&
-          zif(lmsize2,lmsize,0:ncheb,npan),&
-          zrf(lmsize2,lmsize,0:ncheb,npan) 
+      double complex,allocatable ::  &
+                     work(:,:), &
+                     work2(:,:), &
+                     allp(:,:,:),bllp(:,:,:), &                  ! eq. 5.9, 5.10 for reg. sol
+                     cllp(:,:,:),dllp(:,:,:), &                  ! same for the irr. sol
+                     slv(:,:,:,:),srv(:,:,:,:), &                ! a in eq 5.68
+                     slv1(:,:,:,:),srv1(:,:,:,:), &              !****************
+                     slv2(:,:,:,:),srv2(:,:,:,:), &              ! used for sra trick
+                     slv3(:,:,:,:),srv3(:,:,:,:), &              !****************
+                     mrnvy(:,:,:),mrnvz(:,:,:), &                ! ***************
+                     mrjvy(:,:,:),mrjvz(:,:,:), &                !    eq. 5.19-5.22
+                     mihvy(:,:,:),mihvz(:,:,:), &                !
+                     mijvy(:,:,:),mijvz(:,:,:), &                ! ***************
+                     yill(:,:,:),zill(:,:,:), &                  ! source terms  (i:irreg., r: regular)
+                     yrll(:,:,:),zrll(:,:,:),yrlltmp(:,:,:), &   ! 
+                     yill1(:,:,:),zill1(:,:,:), &                ! source terms in case of sratrick
+                     yrll1(:,:,:),zrll1(:,:,:), &
+                     yill2(:,:,:),zill2(:,:,:), &
+                     yrll2(:,:,:),zrll2(:,:,:), &
+                     vhlr(:,:,:), &                               ! vhlr = h * v (regular sol.) 
+                     vjlr(:,:,:), &                               ! vjlr = j * v (regular sol.)
+                     vhli(:,:,:), &                               ! vhli = h * v (irregular sol.)
+                     vjli(:,:,:)                                  ! vjli = j * v (irregular sol.)
+      double complex,allocatable :: yif(:,:,:,:), &               ! source terms (different array
+                     yrf(:,:,:,:), &                              !               ordering)
+                     zif(:,:,:,:), &
+                     zrf(:,:,:,:)
       ! chebyshev arrays
       double complex zslc1sum(0:ncheb)
       double precision c1(0:ncheb,0:ncheb),rpanbound(0:npan)
@@ -191,18 +196,23 @@ double complex yif(lmsize2,lmsize,0:ncheb,npan),&
                        tau(0:ncheb,0:npan), &    ! Radial mesh point
                        slc1sum(0:ncheb),rmesh(nrmax)
 
-      integer ipiv(0:ncheb,lmsize2), ipiv2((ncheb+1)*lmsize)
-!       integer,allocatable :: ipiv2(:)
+      integer ipiv(0:ncheb,lmsize2)
+      integer,allocatable :: ipiv2(:)
       logical test
       integer :: ierror,use_sratrick
       integer :: idotime
       integer,parameter  :: directsolv=1
+#ifdef hostcode
+      DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
+#endif
+
+#ifdef CPP_hybrid
+!     openMP variable --sacin 23/04/2015
+      integer :: thread_id, number_of_openmp_threads,number_of_processor
+#endif
 
       external zgetrf,zgetrs
       intrinsic abs,atan,cos,dimag,exp,max,min,sin,sqrt
-
-!     openMP variable --sacin 23/04/2015
-      integer :: thread_id, number_of_openmp_threads,number_of_processor
 
 ! ***********************************************************************
 !                                  SRA trick
@@ -228,56 +238,68 @@ double complex yif(lmsize2,lmsize,0:ncheb,npan),&
 ! implemented which should lead to an additional speed-up.
 ! ***********************************************************************
 
-if ( .not. config_testflag('sph') .or. lmsize==1 ) then
+#ifndef hostcode
+if ( config_testflag('nosph') .or. lmsize==1 ) then
   use_sratrick=0
-elseif ( config_testflag('sph') ) then
+elseif ( .not. config_testflag('nosph') ) then
   use_sratrick=1
 else
   stop '[rllsll] use_sratrick error'
 end if
+#else
+if ( lmsize==1 ) then
+  use_sratrick=0
+else
+  use_sratrick=use_sratrick1
+end if
+#endif
 
+#ifdef hostcode
+! turn timing output off if in the host code
+idotime = 0
+#endif
 if (idotime==1) call timing_start('rllsll')
 
 
-! allocate ( ull(lmsize2,lmsize,nrmax) )
+allocate ( ull(lmsize2,lmsize,nrmax) )
 
 if ( use_sratrick==0 ) then
-!   allocate (slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
+  allocate (slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
 elseif ( use_sratrick==1 ) then
-!   allocate (work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize))
-!   allocate (slv1(0:ncheb,lmsize,0:ncheb,lmsize),srv1(0:ncheb,lmsize,0:ncheb,lmsize), &
-!             slv2(0:ncheb,lmsize,0:ncheb,lmsize),srv2(0:ncheb,lmsize,0:ncheb,lmsize), &
-!             slv3(0:ncheb,lmsize,0:ncheb,lmsize),srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
-!   allocate (yill1(0:ncheb,lmsize,lmsize),zill1(0:ncheb,lmsize,lmsize), &
-!             yrll1(0:ncheb,lmsize,lmsize),zrll1(0:ncheb,lmsize,lmsize), &
-!             yill2(0:ncheb,lmsize,lmsize),zill2(0:ncheb,lmsize,lmsize), &
-!             yrll2(0:ncheb,lmsize,lmsize),zrll2(0:ncheb,lmsize,lmsize),&
-!             yrlltmp(0:ncheb,lmsize,lmsize)  )
+  allocate (work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize))
+  allocate (slv1(0:ncheb,lmsize,0:ncheb,lmsize),srv1(0:ncheb,lmsize,0:ncheb,lmsize), &
+            slv2(0:ncheb,lmsize,0:ncheb,lmsize),srv2(0:ncheb,lmsize,0:ncheb,lmsize), &
+            slv3(0:ncheb,lmsize,0:ncheb,lmsize),srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate (yill1(0:ncheb,lmsize,lmsize),zill1(0:ncheb,lmsize,lmsize), &
+            yrll1(0:ncheb,lmsize,lmsize),zrll1(0:ncheb,lmsize,lmsize), &
+            yill2(0:ncheb,lmsize,lmsize),zill2(0:ncheb,lmsize,lmsize), &
+            yrll2(0:ncheb,lmsize,lmsize),zrll2(0:ncheb,lmsize,lmsize),&
+            yrlltmp(0:ncheb,lmsize,lmsize)  )
 else
   stop '[rllsll] error with testflag sph'
 end if
 
-! allocate( work(lmsize,lmsize),&
-!           allp(lmsize,lmsize,0:npan),bllp(lmsize,lmsize,0:npan),&
-!           cllp(lmsize,lmsize,0:npan),dllp(lmsize,lmsize,0:npan),&
-!           mrnvy(lmsize,lmsize,npan),mrnvz(lmsize,lmsize,npan),&
-!           mrjvy(lmsize,lmsize,npan),mrjvz(lmsize,lmsize,npan),&
-!           mihvy(lmsize,lmsize,npan),mihvz(lmsize,lmsize,npan),&
-!           mijvy(lmsize,lmsize,npan),mijvz(lmsize,lmsize,npan),&
-!           yill(0:ncheb,lmsize2,lmsize),zill(0:ncheb,lmsize2,lmsize),&
-!           yrll(0:ncheb,lmsize2,lmsize),zrll(0:ncheb,lmsize2,lmsize),&
-!           vjlr(lmsize,lmsize2,0:ncheb),vhlr(lmsize,lmsize2,0:ncheb),&
-!           vjli(lmsize,lmsize2,0:ncheb),vhli(lmsize,lmsize2,0:ncheb))
+allocate( work(lmsize,lmsize),&
+          allp(lmsize,lmsize,0:npan),bllp(lmsize,lmsize,0:npan),&
+          cllp(lmsize,lmsize,0:npan),dllp(lmsize,lmsize,0:npan),&
+          mrnvy(lmsize,lmsize,npan),mrnvz(lmsize,lmsize,npan),&
+          mrjvy(lmsize,lmsize,npan),mrjvz(lmsize,lmsize,npan),&
+          mihvy(lmsize,lmsize,npan),mihvz(lmsize,lmsize,npan),&
+          mijvy(lmsize,lmsize,npan),mijvz(lmsize,lmsize,npan),&
+          yill(0:ncheb,lmsize2,lmsize),zill(0:ncheb,lmsize2,lmsize),&
+          yrll(0:ncheb,lmsize2,lmsize),zrll(0:ncheb,lmsize2,lmsize),&
+          vjlr(lmsize,lmsize2,0:ncheb),vhlr(lmsize,lmsize2,0:ncheb),&
+          vjli(lmsize,lmsize2,0:ncheb),vhli(lmsize,lmsize2,0:ncheb))
 
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 
-! allocate( yif(lmsize2,lmsize,0:ncheb,npan),&
-!           yrf(lmsize2,lmsize,0:ncheb,npan),&
-!           zif(lmsize2,lmsize,0:ncheb,npan),&
-!           zrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yif(lmsize2,lmsize,0:ncheb,npan),&
+          yrf(lmsize2,lmsize,0:ncheb,npan),&
+          zif(lmsize2,lmsize,0:ncheb,npan),&
+          zrf(lmsize2,lmsize,0:ncheb,npan) )
 
 do ipan = 1,npan
   do icheb = 0,ncheb
@@ -289,27 +311,20 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 if (idotime==1) call timing_start('local')
-! openMP pragmas added sachin 
 
-! write(*,*) ncheb, npan, ipan, nvec,shape(tau),shape(vll),shape(vhlr)
+! loop over subintervals
+#ifdef CPP_hybrid
+! openMP pragmas added sachin 
 !$OMP PARALLEL DO DEFAULT(PRIVATE)  &
-!$OMP&            SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
-!$OMP&            zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
-!$OMP&            cmoderll,cmodesll,cmodetest,use_sratrick)
+!$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
+!$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
+!$OMP&  cmoderll,cmodesll,cmodetest,use_sratrick)
+#endif
 do ipan = 1,npan
 
-		number_of_openmp_threads=OMP_GET_NUM_THREADS()
-                thread_id=OMP_GET_THREAD_NUM()
-!                 !$OMP CRITICAL
-! !                 if(thread_id==0) then
-! !                 write(*,*) 'My ipan Number is, =', ipan  ! added by Sachin
-! !                 write(*,*) "Hello World, my thread id is",  thread_id
-! !                 write(*,*) npan, ncheb
-! !                 endif
-!                 !$OMP END CRITICAL
-
-
   if (idotime==1) call timing_start('local1')
+
+  ! initialization
   
   vhlr=czero
   vjlr=czero
@@ -349,8 +364,6 @@ do ipan = 1,npan
 !
 ! i.e. prepare terms kappa*J*DV, kappa*H*DV appearing in 5.11, 5.12.
 
-! write(*,*) ncheb, npan, ipan, nvec,shape(tau),shape(vll),shape(vhlr)
-
   do icheb = 0,ncheb
     mn = ipan*ncheb + ipan - icheb
     if     (cmoderll=='1') then
@@ -359,7 +372,6 @@ do ipan = 1,npan
           do ivec=1,nvec
             do lm1 = 1,lmsize
               l1 = jlk_index( lm1+lmsize*(ivec-1) )
-!                 write(*,*) 'ipanetc:',ipan,icheb,ivec2,lm2,ivec,lm1,l1
               vjlr(lm1,lm2+lmsize*(ivec2-1),icheb) = vjlr(lm1,lm2+lmsize*(ivec2-1),icheb) + &
                   gmatprefactor*tau(icheb,ipan)*jlk2(l1,mn)*vll(lm1+lmsize*(ivec-1),lm2+lmsize*(ivec2-1),mn)
               vhlr(lm1,lm2+lmsize*(ivec2-1),icheb) = vhlr(lm1,lm2+lmsize*(ivec2-1),icheb) + &
@@ -689,9 +701,10 @@ do ipan = 1,npan
   if (idotime==1) call timing_pause('local3')
 
 end do !ipan
-! end the big loop over the subintervals
-
+#ifdef CPP_hybrid
 !$OMP END PARALLEL DO ! added by sachin (17/4/2015)
+#endif
+! end the big loop over the subintervals
 
 
 
@@ -782,6 +795,14 @@ if (idotime==1) call timing_start('endstuff')
 
 call zgetrf(lmsize,lmsize,allp(1,1,npan),lmsize,ipiv,info)                     !invert alpha
 call zgetri(lmsize,allp(1,1,npan),lmsize,ipiv,work,lmsize*lmsize,info)         !invert alpha -> transformation matrix rll=alpha^-1*rll
+#ifdef hostcode
+! get alpha matrix
+      DO LM1=1,LMSIZE                          ! LLY
+       DO LM2=1,LMSIZE                         ! LLY
+        ALPHAGET(LM1,LM2)=ALLP(LM1,LM2,NPAN)   ! LLY
+       ENDDO                                   ! LLY
+      ENDDO                                    ! LLY
+#endif
 ! calculation of the t-matrix 
 call zgemm('n','n',lmsize,lmsize,lmsize,cone/gmatprefactor,bllp(1,1,npan), &   ! calc t-matrix tll = bll*alpha^-1 
             lmsize,allp(1,1,npan),lmsize,czero,tllp,lmsize)
@@ -794,27 +815,46 @@ end do
 if (idotime==1) call timing_stop('endstuff')
 if (idotime==1) call timing_start('checknan')
 if (idotime==1) call timing_stop('checknan')
-!if (idotime==1) call timing_stop('local1') ! comented by sachin 13/1/16
-!if (idotime==1) call timing_stop('local2') ! comented by sachin 13/1/16
-!if (idotime==1) call timing_stop('local3') ! comented by sachin 13/1/16
-!if (idotime==1) call timing_stop('rllsll') ! comented by sachin 13/1/16
+if (idotime==1) call timing_stop('local1')
+if (idotime==1) call timing_stop('local2')
+if (idotime==1) call timing_stop('local3')
+if (idotime==1) call timing_stop('rllsll')
+
+      DEALLOCATE(ULL)
+      IF (USE_SRATRICK.EQ.0) THEN
+       DEALLOCATE(SRV,SLV)
+      ELSE
+       DEALLOCATE(WORK2,IPIV2)
+       DEALLOCATE(SLV1,SRV1,SLV2,SRV2,SLV3,SRV3)
+       DEALLOCATE(YILL1,ZILL1,YRLL1,ZRLL1,YILL2,ZILL2,YRLL2,ZRLL2,YRLLTMP)
+      ENDIF
+      DEALLOCATE(WORK,ALLP,BLLP,CLLP,DLLP,MRNVY,MRNVZ,MRJVY,MRJVZ, &
+                 MIHVY,MIHVZ,MIJVY,MIJVZ,YILL,ZILL,YRLL,ZRLL,&
+                 VJLR,VHLR,VJLI,VHLI)
+      DEALLOCATE(YIF,YRF,ZIF,ZRF)
 
 end subroutine
 
-! subroutine inverse(nmat,mat)
-! !interface
-! integer        :: nmat
-! double complex :: mat(nmat,nmat)
-! double complex :: work3(nmat,nmat)
-! !local
-! integer        :: IPIV3(nmat)
-! integer        :: info
 
-! call ZGETRF( nmat, nmat, mat, nmat, IPIV3, INFO )
-! if (info/=0) stop '[inverse] error INFO' 
-! call ZGETRI( nmat, mat, nmat, IPIV3, WORK3, nmat*nmat, INFO )
-! if (info/=0) stop '[inverse] error INFO' 
-! end subroutine inverse
+
+#ifdef hostcode
+!define this routine here only for host since mod_rllsllutils does not exsist in
+!host code
+subroutine inverse(nmat,mat)
+!interface
+integer        :: nmat
+double complex :: mat(nmat,nmat)
+double complex :: work(nmat,nmat)
+!local
+integer        :: IPIV(nmat)
+integer        :: info
+
+call ZGETRF( nmat, nmat, mat, nmat, IPIV, INFO )
+if (info/=0) stop '[inverse] error INFO' 
+call ZGETRI( nmat, mat, nmat, IPIV, WORK, nmat*nmat, INFO )
+if (info/=0) stop '[inverse] error INFO' 
+end subroutine inverse
+#endif
 
 
 subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
@@ -837,7 +877,7 @@ CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
 end subroutine iterativesol
 
 
-
+#ifndef hostcode
 END MODULE MOD_RLLSLL
-
+#endif
 
