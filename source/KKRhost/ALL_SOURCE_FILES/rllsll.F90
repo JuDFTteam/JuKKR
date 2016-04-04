@@ -1,9 +1,11 @@
 ! preprocessor options:
 ! change this definition if used in host/impurity code
-#define hostcode .true.
+! this is commented out, since then the logical hostcode is not defined
+! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
+#define hostcode ! comment this out to use the impurity code interface
 
 ! choose between interface for impurity and host code (different calling lists)
-#if(.not.hostcode)
+#ifndef hostcode
       MODULE MOD_RLLSLL
         CONTAINS
       SUBROUTINE RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
@@ -90,7 +92,7 @@
 ! NRMAX      - total number of radial points (NPAN*(NCHEB+1))
 ! NVEC       - number of LMSIZE*LMSIZE blocks in J (LMSIZE2=NVEC*LMSIZE)
 ! ************************************************************************
-#if(.not.hostcode)
+#ifndef hostcode
 use mod_beshank                           ! calculates bessel and hankel func.
 use mod_chebint                           ! chebyshev integration routines
 use mod_config, only: config_testflag     ! reads if testflags are present
@@ -111,7 +113,7 @@ implicit none
       integer :: nvec                                ! spinor integer
                                                      ! nvec=1 non-rel, nvec=2 for sra and dirac
       integer :: nrmax                               ! total number of rad. mesh points
-#if(hostcode)
+#ifdef hostcode
       integer :: nrmaxd, LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
@@ -126,7 +128,7 @@ implicit none
       ! source terms
       double complex :: gmatprefactor               ! prefactor of green function
                                                     ! non-rel: = kappa = sqrt e
-#if(.not.hostcode)
+#ifndef hostcode
       double complex :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
                         hlk2(:,:), jlk2(:,:)        ! left sol. source terms
                                                     ! (tipically bessel and hankel fn)
@@ -137,7 +139,7 @@ implicit none
                         JLK2(LBESSEL,NRMAX) 
 #endif
 
-#if(.not.hostcode)
+#ifndef hostcode
       integer jlk_index(:)                          ! mapping array l = jlk_index(lm)
                                                     ! in: lm-index
                                                     ! corresponding l-index used hlk,..
@@ -200,7 +202,7 @@ implicit none
       integer :: ierror,use_sratrick
       integer :: idotime
       integer,parameter  :: directsolv=1
-#if(hostcode)
+#ifdef hostcode
       DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
@@ -236,10 +238,10 @@ implicit none
 ! implemented which should lead to an additional speed-up.
 ! ***********************************************************************
 
-#if(.not.hostcode)
-if ( .not. config_testflag('sph') .or. lmsize==1 ) then
+#ifndef hostcode
+if ( config_testflag('nosph') .or. lmsize==1 ) then
   use_sratrick=0
-elseif ( config_testflag('sph') ) then
+elseif ( .not. config_testflag('nosph') ) then
   use_sratrick=1
 else
   stop '[rllsll] use_sratrick error'
@@ -252,7 +254,7 @@ else
 end if
 #endif
 
-#if(hostcode)
+#ifdef hostcode
 ! turn timing output off if in the host code
 idotime = 0
 #endif
@@ -752,7 +754,6 @@ end do !ipan
 #ifdef CPP_hybrid
 !$OMP END DO
 !$OMP END PARALLEL
-! !$OMP END PARALLEL DO ! added by sachin (17/4/2015)
 #endif
 ! end the big loop over the subintervals
 
@@ -845,7 +846,7 @@ if (idotime==1) call timing_start('endstuff')
 
 call zgetrf(lmsize,lmsize,allp(1,1,npan),lmsize,ipiv,info)                     !invert alpha
 call zgetri(lmsize,allp(1,1,npan),lmsize,ipiv,work,lmsize*lmsize,info)         !invert alpha -> transformation matrix rll=alpha^-1*rll
-#if(hostcode)
+#ifdef hostcode
 ! get alpha matrix
       DO LM1=1,LMSIZE                          ! LLY
        DO LM2=1,LMSIZE                         ! LLY
@@ -905,7 +906,7 @@ end subroutine
 
 
 
-#if(hostcode)
+#ifdef hostcode
 !define this routine here only for host since mod_rllsllutils does not exsist in
 !host code
 subroutine inverse(nmat,mat)
@@ -945,7 +946,7 @@ CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
 end subroutine iterativesol
 
 
-#if(.not.hostcode)
+#ifndef hostcode
 END MODULE MOD_RLLSLL
 #endif
 
