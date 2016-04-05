@@ -281,8 +281,6 @@ C
       call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
-
-
        CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
      +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,

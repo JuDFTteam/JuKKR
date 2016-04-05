@@ -149,9 +149,12 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       if(myrank==master .and. t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
+!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
+!      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+!      &                             master,IELAST,ntot_pT,ioff_pT,.true.)
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
-     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,IELAST,ntot_pT,ioff_pT,.true.)
+     &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master
+     &                  master,IELAST,ntot_pT,ioff_pT,.true.)
      
         ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
         ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
