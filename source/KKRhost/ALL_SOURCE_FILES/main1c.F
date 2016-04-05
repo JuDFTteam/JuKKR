@@ -110,6 +110,7 @@ C     .. Local Arrays ..
 #ifdef CPP_MPI
       DOUBLE COMPLEX,   allocatable :: WORK(:,:)
       integer ierr,idim, nranks_local, myrank_ie_tmp
+      double complex, allocatable :: workc(:,:,:,:)
 #endif
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX, allocatable :: den(:,:,:,:), denlm(:,:,:,:) ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS),DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
@@ -619,30 +620,41 @@ C ================================================================ NATYP
       
 #ifdef CPP_MPI
       !move writeout of qdos file here
-      DO I1=1,NATYP
-       IF (OPT('qdos    ')) THEN
+      IF (OPT('qdos    ')) THEN
+       ! first communicate den array to write out qdos files
+       IDIM = (LMAXD1+1)*IEMXD*NQDOS*NPOTD
+       allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))
+       workc = (0.d0, 0.d0)
+       
+!        if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+!      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
+!          den = 0.d0
+!        endif
+       
+       CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                    MPI_COMM_WORLD,IERR)
+       CALL ZCOPY(IDIM,WORKC,1,DEN,1)
+       deallocate(workc)
+         
+       if(myrank==master) then
+       
+       DO I1=1,NATYP
       
         DO ISPIN = 1,NSPIN
-         IPOT = (I1-1) * NSPINPOT + ISPIN
-       
+        
          if(NATYP.ge.100) then
            OPEN(31,
      +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
-     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//
-     +     ".dat_myrank="//char(48+myrank/100)//
-     +     char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")
          else
            OPEN(31,
      +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
-     +     char(48+ISPIN)//
-     +     ".dat_myrank="//
-     +     char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+     +     char(48+ISPIN)//".dat")
          end if
-          
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-         DO ie_num=1,ie_end
-           IE = ie_start+ie_num
+         
+         IPOT = (I1-1) * NSPINPOT + ISPIN
+
+         DO IE=1,IELAST
            DO IQ=1,NQDOS
              DENTOT = DCMPLX(0.D0,0.D0)
              DO L = 0,LMAXD1
@@ -650,13 +662,14 @@ C ================================================================ NATYP
              ENDDO
             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
      &                    -DIMAG(DENTOT)/PI,
-     &                   (-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! qdos
+     &                   (-DIMAG(DEN(L,IE,IQ,IPOT))/PI,L=0,LMAXD1)      ! qdos
            END DO ! IQ=1,NQDOS
          END DO ! IE=1,IELAST
+         close(31)
         END DO !ISPIN=1,NSPIN
-        close(31)
-       ENDIF
-      ENDDO !I1
+       ENDDO !I1
+       end if ! myrank_at==master
+      ENDIF ! OPT('qdos    ')
  9000 FORMAT(5F10.6,40E16.8)
  
       !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
@@ -838,6 +851,8 @@ c interpolate potential
       END DO !I1
       
 #ifdef CPP_MPI
+      !reset NQDOS to 1 to avoid endless communication
+      NQDOS = 1
       call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
      &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
      &                                 den, denlm, muorb, espv, r2nef,    &

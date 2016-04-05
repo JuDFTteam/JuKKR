@@ -102,17 +102,19 @@
        ! OMP - number of threads, thread id
        integer nth,ith
 #ifdef CPP_MPI
-      integer :: mytot
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+       integer :: mytot
+       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+       ! communication
+       double complex, allocatable :: workc(:,:,:,:)
 #endif
-      integer :: ie_start,ie_end, ie_num
-      double precision :: angles_new(2)
-C     ..
+       integer :: ie_start,ie_end, ie_num
+       double precision :: angles_new(2)
+C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
-      ! test
-      integer :: mu0
-      ! test
+       ! test
+       integer :: mu0
+       ! test
 ! determine if omp is used
        ith = 0
        nth = 1
@@ -608,13 +610,23 @@ c get orbital moment
       ENDDO
       
        IF (OPT('qdos    ')) THEN                                          ! qdos ruess
-#ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-#else
+         ! first communicate den array to write out qdos files
+         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
+         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
+         workc = (0.d0, 0.d0)
+         CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                      t_mpi_c_grid%myMPI_comm_at,IERR)
+         CALL ZCOPY(IDIM,WORKC,1,DEN,1)
+         deallocate(workc)
+         
+         if(t_mpi_c_grid%myrank_at==master) then
+! #ifdef CPP_MPI
+!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)         ! qdos
+!          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)         ! qdos
+! #else
          ie_start = 0
          ie_end   = IELAST
-#endif
+! #endif
          DO ie_num=1,ie_end                                               ! qdos
            IE = ie_start+ie_num                                           ! qdos
            DO IQ=1,NQDOS                                                  ! qdos
@@ -622,25 +634,17 @@ c get orbital moment
               if(t_inc%NATYP.ge.100) then                                 ! qdos
                 OPEN(31,                                                  ! qdos
      +          FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+1)//                    ! qdos
-     +          ".dat_myrank="//char(48+myrank/100)//                     ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+1)//".dat")             ! qdos
                 OPEN(32,                                                  ! qdos
      +          FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+2)//                    ! qdos
-     +          ".dat_myrank="//char(48+myrank/100)//                     ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               else                                                        ! qdos
                 OPEN(31,                                                  ! qdos
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+1)//                    ! qdos
-     +          ".dat_myrank="//                                          ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+1)//".dat")             ! qdos
                 OPEN(32,                                                  ! qdos
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+2)//                    ! qdos
-     +          ".dat_myrank="//                                          ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               end if                                                      ! qdos
               WRITE (31,*) ' '                                            ! qdos ruess
               WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
@@ -670,6 +674,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
  9000        FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
            ENDDO !IQ                                                      ! qdos
          ENDDO !IE                                                        ! qdos
+         end if !myrank_at==master
        ENDIF      ! OPT('qdos    ')                                       ! qdos ruess
        
 #ifdef CPP_MPI ! do communication only when compiled with MPI
@@ -678,7 +683,8 @@ c    write qdos.nn.s.dat                                                  ! qdos
 #endif
        ! reset NQDOS to avoid endless communication
        NQDOS=1
-      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+       ! set these arrays to zero to avoid double counting in cases where extra ranks are used
+       if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
          den = 0.d0
          denlm = 0.d0
