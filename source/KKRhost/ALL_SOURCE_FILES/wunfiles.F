@@ -1329,12 +1329,12 @@ C     ..
       t_params%VINS           = VINS           
       t_params%VISP           = VISP           
       t_params%VBC            = VBC                                   
-      t_params%VTREL          = VTREL          
-      t_params%BTREL          = BTREL          
+      if(t_params%KREL.gt.0) t_params%VTREL          = VTREL          
+      if(t_params%KREL.gt.0) t_params%BTREL          = BTREL          
       t_params%SOCSCALE       = SOCSCALE       
-      t_params%DRDIREL        = DRDIREL        
-      t_params%R2DRDIREL      = R2DRDIREL      
-      t_params%RMREL          = RMREL          
+      if(t_params%KREL.gt.0) t_params%DRDIREL        = DRDIREL        
+      if(t_params%KREL.gt.0) t_params%R2DRDIREL      = R2DRDIREL      
+      if(t_params%KREL.gt.0) t_params%RMREL          = RMREL          
       t_params%CMOMHOST       = CMOMHOST            
       t_params%ECORE          = ECORE          
       t_params%QMTET          = QMTET          

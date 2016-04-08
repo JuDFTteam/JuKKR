@@ -271,8 +271,9 @@ c energy loop
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
-!$omp& shared(t_tgmat,ie_end)
+!$omp& shared(t_tgmat,ie_end, ie_start)
 !$omp& private(alphasph,alphall,ie_num)
+!$omp& firstprivate(t_inc)
 #endif
        DO ie_num=1,ie_end
         IE = ie_start+ie_num
@@ -459,6 +460,7 @@ c calculate density
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
      +                GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
 
+#ifndef CPP_OMP
        if( test('rhoqtest')) then
          open(9999,file='mu0')
          read(9999,*) mu0
@@ -484,6 +486,7 @@ c calculate density
            close(9999)
          end if ! i1.eq.mu0
        end if ! test('rhoqtest')
+#endif
 
        DO JSPIN=1,4
 
@@ -608,7 +611,8 @@ c get orbital moment
       DO ith=0,nth-1
          R2NEFC(:,:,:) = R2NEFC(:,:,:) + R2NEFC_loop(:,:,:,ith)
       ENDDO
-      
+
+#ifdef CPP_MPI
        IF (OPT('qdos    ')) THEN                                          ! qdos ruess
          ! first communicate den array to write out qdos files
          IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
@@ -656,7 +660,6 @@ c get orbital moment
                 WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! qdos
      &                         'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'  ! qdos
               end if                                                      ! qdos
- 8600         FORMAT (a8,I3,a4,I5)                                        ! qdos ruess
              ENDIF   ! IQ.EQ.1                                            ! qdos ruess
              DO JSPIN =1,2                                                ! qdos ruess
                DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! qdos ruess
@@ -676,6 +679,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
          ENDDO !IE                                                        ! qdos
          end if !myrank_at==master
        ENDIF      ! OPT('qdos    ')                                       ! qdos ruess
+#endif
        
 #ifdef CPP_MPI ! do communication only when compiled with MPI
 #ifdef CPP_TIMING
@@ -714,6 +718,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
       if(t_mpi_c_grid%myrank_at==master) then
 #endif ! CPP_MPI
 
+       if(.not.OPT('qdos    ')) then
 ! omp: moved write-out of dos files out of parallel energy loop
 c Write out lm-dos:                                                      ! lm-dos
        DO IE=1,IELAST                                                    ! lm-dos
@@ -744,7 +749,9 @@ c Write out lm-dos:                                                      ! lm-do
          WRITE(30,9001) EZ(IE),                                          ! lm-dos
      &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)          ! lm-dos
  9001    FORMAT(30E12.4)                                                 ! lm-dos
+ 8600    FORMAT (a8,I3,a4,I5)                                            ! lm-dos/qdos ruess
        ENDDO !IE
+       end if ! .not. OPT('qdos    ')
 
 c      write gflle to file                                               ! lmlm-dos
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos

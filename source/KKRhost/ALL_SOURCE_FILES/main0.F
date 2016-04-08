@@ -460,13 +460,13 @@ C     ..
 
 #ifdef CPP_OMP
 !$omp parallel shared(nth,ith)
-!$omp single
+!$omp critical
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
-      if(ith==1) then
-       WRITE(*,'(1X,A,I5/79(1H*)/)')'Number of OpenMP threads used:',nth
+      if(ith==0) then
+      WRITE(*,'(1X,A,I5//79(1H*)/)')'Number of OpenMP threads used:',nth
       endif
-!$omp end single
+!$omp end critical
 !$omp end parallel
 #endif
 #ifdef CPP_MPI

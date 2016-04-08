@@ -71,10 +71,6 @@ C     .. Save statement ..
       SAVE MIT,ZERO,ONE,WIT
 C     ..
 C     .. Local Arrays ..
-!       DOUBLE PRECISION AM(2:ITDTHD-1),BM(2:ITDTHD-1),FM(NTIRD),
-!      +                 FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),
-!      +                 VI3(NTIRD),WIT(2:200)
-!       DOUBLE PRECISION UI2(NTIRD),UI3(NTIRD),VI2(NTIRD)
       DOUBLE PRECISION, allocatable :: AM(:),BM(:),FM(:),
      +                 FM1(:),G(:),SM(:),SM1(:),
      +                 VI3(:),WIT(:),UI2(:),UI3(:),VI2(:)
