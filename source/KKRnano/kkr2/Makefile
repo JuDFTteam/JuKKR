@@ -33,8 +33,8 @@ FC90FLAGS =
 # FCFLAGS += -C -traceback -CB
 # FCFLAGS += -O0 -g
 # LDFLAGS  = -O0 -g
-FCFLAGS += -O3  -g
-LDFLAGS  = -O3  -g
+FCFLAGS += -O0  -g
+LDFLAGS  = -O0  -g
 
 FCFLAGS += -pg
 LDFLAGS += -pg
@@ -46,7 +46,7 @@ LDFLAGS += -mkl
 # LDFLAGS += -ipo
 
 ifeq ($(TYPE),debug)
-FCFLAGS += -g
+FCFLAGS += -g -ggdb
 else
 FCFLAGS += -D NOLOGGING
 endif
