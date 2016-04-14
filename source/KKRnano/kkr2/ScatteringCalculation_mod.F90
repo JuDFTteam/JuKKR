@@ -86,7 +86,7 @@ implicit none
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer, allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh
-    integer :: i1, ila, num_local_atoms, jla
+    integer :: i1, ila, num_local_atoms, iacls
     integer :: lmmaxd
     logical :: xccpl
 
@@ -171,7 +171,7 @@ implicit none
 
         ! if we had rMTref given for all atoms inside the reference cluster radius
         !   we could compute the Tref on the fly
-! #define COMPUTE_tref_LOCALLY
+#define COMPUTE_tref_LOCALLY
 #ifndef COMPUTE_tref_LOCALLY       
          Tref_local = ZERO
         dTref_local = ZERO
@@ -203,10 +203,10 @@ implicit none
         !$omp parallel do private(ila, atomdata)
         do ila = 1, num_local_atoms
           kkr => getKKR(calc, ila)
-          do jla = 1, kkr%naclsd         
-            call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr%rMTref(jla), &
-                      kkr%TrefLL(:,:,jla), kkr%dTrefLL(:,:,jla), derive=(dims%Lly > 0))
-          enddo ! jla
+          do iacls = 1, kkr%naclsd         
+            call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr%rMTref(iacls), &
+                      kkr%TrefLL(:,:,iacls), kkr%dTrefLL(:,:,iacls), derive=(dims%Lly > 0))
+          enddo ! iacls
         enddo ! ila
 #endif
   !------------------------------------------------------------------------------

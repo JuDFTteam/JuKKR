@@ -49,6 +49,7 @@ program KKRnano
   type(EBalanceHandler) :: ebalance_handler
 
   integer :: ITER, I1, ila, num_local_atoms, flag, ios, ilen
+  double precision  :: ebot 
 
   type(KKRnanoParallel) :: mp
 
@@ -60,7 +61,7 @@ program KKRnano
   type(BasisAtom), pointer :: atomdata
   type(LDAUData), pointer  :: ldau_data
   
-  type(BrillouinZoneMesh) :: kmesh(8)
+! type(BrillouinZoneMesh) :: kmesh(8)
 
   external :: MPI_Init
   character(len=16)              :: arg
@@ -178,41 +179,30 @@ program KKRnano
     call initEBalanceHandler(ebalance_handler, mp)
     call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
-#ifdef DEBUG_NO_VINS
+    ! here, we comunicate the rMTref values early, so we can compute tref and dtrefdE locally for each atom inside the reference cluster 
     do ila = 1, num_local_atoms
       atomdata => getAtomdata(calc_data, ila)
+#ifdef DEBUG_NO_VINS
       atomdata%potential%VINS = 0.0   
-    enddo ! ila
 #endif
-
-#ifdef PRINT_MTRADII
-   do ila = 1, num_local_atoms
-      atomdata => getAtomdata(calc_data, ila)
       I1 = getAtomIndexOfLocal(calc_data, ila)
+#ifdef PRINT_MTRADII
       write(num, '(A,I7.7)') "mtradii_out.",I1
       open(20, file=num, form='formatted')
       write(20,*) atomdata%rmtref
       write(20,*) atomdata%radius_muffin_tin
       endfile (20)
       close (20)
-    enddo ! ila
 #endif
-
 #ifdef USE_MTRADII
-   do ila = 1, num_local_atoms
-      atomdata => getAtomdata(calc_data, ila)
-      I1 = getAtomIndexOfLocal(calc_data, ila)
       write(num, '(A,I7.7)') "mtradii_in.",I1
       open(20, file=num, form='formatted')
       read(20,*) atomdata%rmtref
       read(20,*) atomdata%radius_muffin_tin
       endfile (20)
       close (20)
-    enddo ! ila
 #endif
 
-    ! here, we comunicate the rMTref values early, so we can compute tref and dtrefdE locally for each atom inside the reference cluster 
-    do ila = 1, num_local_atoms
       call gatherrMTref_com(rMTref_local=calc_data%atomdata_a(:)%rMTref, rMTref=calc_data%kkr_a(ila)%rMTref(:), &
                             ref_cluster=calc_data%ref_cluster_a(ila), communicator=mp%mySEComm)
     enddo ! ila
@@ -222,9 +212,9 @@ program KKRnano
       call resetTimer(iteration_timer)
 
       if (mp%isMasterRank) then
-        call printDoubleLineSep(unit_number = 2)
+        call printDoubleLineSep(unit_number=2)
         call outTime(mp%isMasterRank,'started at ..........', getElapsedTime(program_timer),ITER)
-        call printDoubleLineSep(unit_number = 2)
+        call printDoubleLineSep(unit_number=2)
       endif ! master
 
       WRITELOG(2, *) "Iteration atom-rank ", ITER, mp%myAtomRank
@@ -233,26 +223,22 @@ program KKRnano
       ! between energy and spin processes of same atom
       do ila = 1, num_local_atoms
         atomdata => getAtomdata(calc_data, ila)
-        call communicatePotential(mp, atomdata%potential%VISP, &
-                                  atomdata%potential%VINS, atomdata%core%ECORE)
+        call communicatePotential(mp, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
       enddo ! ila
 
       ! Core relaxation - only mastergroup needs results
       if (mp%isInMasterGroup) then
         ! Not threadsafe: intcor, intin, intout have a save statement
+        ebot = emesh%E1; if (any(params%npntsemi > 0)) ebot = emesh%EBOTSEMI
         !!!$omp parallel do private(ila, atomdata)
         do ila = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ila)
-          if (any(params%npntsemi > 0)) then
-            call RHOCORE_wrapper(emesh%EBOTSEMI, params%NSRA, atomdata)
-          else
-            call RHOCORE_wrapper(emesh%E1, params%NSRA, atomdata)
-          endif
+          call RHOCORE_wrapper(ebot, params%NSRA, atomdata)
         enddo ! ila
         !!!$omp end parallel do
       endif ! in master group
 
-! LDA+U ! TODO: doesn't work for num_local_atoms > 1
+! LDA+U ! TODO: does not work for num_local_atoms > 1
       if (params%LDAU) then
         ! For now only 1 atom per process is supported (1 local atom)
         CHECKASSERT(num_local_atoms == 1)
@@ -356,13 +342,13 @@ program KKRnano
 
       allocate(rMTref_all(1,1,size(rMTref, 1)), rMTref_loc(1,1,size(rMTref_local, 1)))
       
-      rMTref_all = 0d0
+      rMTref_all = 0.d0
       
-      rMTref_loc(1,1,:) = rMTref_local ! in
+      rMTref_loc(1,1,:) = rMTref_local(:) ! in
       
       call copyFromD_com(rMTref_all, rMTref_loc, ref_cluster%atom, 1, size(rMTref_local, 1), communicator)
       
-      rMTref = rMTref_all(1,1,:) ! out
+      rMTref(:) = rMTref_all(1,1,:) ! out
 
       deallocate(rMTref_all, rMTref_loc)
     endsubroutine ! gather

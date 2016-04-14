@@ -799,8 +799,8 @@ endsubroutine rhoout
     integer :: lmmaxd, lmaxd1, nspind, lmpotd
 
     lmpotd = (2*lmaxd+1)**2
-    lmmaxd= (lmaxd+1)**2
-    lmaxd1= lmaxd+1
+    lmmaxd = (lmaxd+1)**2
+    lmaxd1 = lmaxd+1
     nspind = nspin
 
     allocate(pns(lmmaxd,lmmaxd,irmd-irnsd:irmd,2), qns(lmmaxd,lmmaxd,irmd-irnsd:irmd,2), stat=memory_stat)
@@ -885,7 +885,7 @@ endsubroutine rhoout
                   ldau,nldau,lldau,wmldauav,ldaucut, lmaxd, irmd, ipand)
       !-----------------------------------------------------------------------
       ! non-spherical
-      
+
       call pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz, pns,qns,nsra,vins,ipan,ircut, &
                   cleb,icleb,iend,loflm,lmaxd,ispin, ldau,nldau,lldau, &
                   wmldau,wmldauav,ldaucut, lmaxd, nspind, irmd, irnsd, ipand, ncleb, method)
@@ -902,13 +902,13 @@ endsubroutine rhoout
       do l = 0, lmaxd1
         espv(l,1) = espv(l,1) + dimag(eryd*den(l,ie)*df)
       enddo ! l
-      
+
       ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       !     get the charge at the fermi energy (ielast)
       !     call with the energy weight cone --> not overwrite df
       !          with the dummy dendum       --> not overwrite den
       
-      if ( (ie == ielast) .and. (ldorhoef) ) then
+      if (ie == ielast .and. ldorhoef) then
         call rhons(dendum,cone,drdi,gmatll,ek, r2nef(1,1,ispin),ipan,ircut,thetas,ifunm,lmsp, nsra,qns,pns,ar,cr,pz,fz,qz,sz, & 
                    cleb(1,1),icleb, jend,iend,ekl, lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb)
       endif
@@ -935,7 +935,7 @@ endsubroutine rhoout
     endif ! ispin == 2
 
     deallocate(pns, qns)
-    
+
   endsubroutine rhoval
   
 

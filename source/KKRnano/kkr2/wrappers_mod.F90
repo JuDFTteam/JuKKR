@@ -410,10 +410,9 @@ module wrappers_mod
     type(CellData), intent(in) :: cell
     type(RadialMeshData), intent(in) :: mesh
     type(ShapeGauntCoefficients), intent(in) :: shgaunts
-
-    double precision :: cminst(:)
-    double precision :: cmom(:)
-    double precision :: rho2ns(:,:)
+    double precision, intent(out) :: cminst(:)
+    double precision, intent(out) :: cmom(:)
+    double precision, intent(in)  :: rho2ns(:,:)
 
     integer :: lpot
 
