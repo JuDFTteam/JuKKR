@@ -26,11 +26,10 @@ c    attention : it is supposed that irmin + 3 is less than imt !
 c
 c
 c                                     b. drittler july 1989
-c    modified by m. ogura, june 2015
 c-----------------------------------------------------------------------
 C     .. Parameters ..
-      DOUBLE PRECISION A1,A2,A3
-      PARAMETER (A1=5.D0/12.D0,A2=8.D0/12.D0,A3=-1.D0/12.D0)
+      DOUBLE PRECISION A1,A2
+      PARAMETER (A1=1.D0/3.D0,A2=4.D0/3.D0)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER IPAN,IRMD,IRMIND,LMMSQD
@@ -53,29 +52,29 @@ c
         IF (IP.EQ.IPAN) THEN
           DO 10 LL = 1,LMMSQD
             FINT(LL,IST) = 0.0D0
+c---> integrate fint(ist-1) with a 4 point lagrangian
+            FINT(LL,IST-1) = (F(LL,IST-3)-5.0D0*F(LL,IST-2)+
+     +                       19.0D0*F(LL,IST-1)+9.0D0*F(LL,IST))/24.0D0
    10     CONTINUE
 
         ELSE
           DO 20 LL = 1,LMMSQD
             FINT(LL,IST) = FINT(LL,IST+1)
+c---> integrate fint(ist-1) with a 4 point lagrangian
+            FINT(LL,IST-1) = FINT(LL,IST+1) +
+     +                       (F(LL,IST-3)-5.0D0*F(LL,IST-2)+
+     +                       19.0D0*F(LL,IST-1)+9.0D0*F(LL,IST))/24.0D0
    20     CONTINUE
         END IF
 c
 c---> calculate fint with an extended 3-point-simpson
 c
-        DO 40 I = IST,IEN+2,-2
-           DO 30 LL = 1,LMMSQD
-              FINT(LL,I-1)=FINT(LL,I)
-     +                    +F(LL,I)*A1+F(LL,I-1)*A2+F(LL,I-2)*A3
-              FINT(LL,I-2)=FINT(LL,I-1)
-     +                    +F(LL,I)*A3+F(LL,I-1)*A2+F(LL,I-2)*A1
- 30        CONTINUE
- 40     CONTINUE
-        IF(MOD(IST-IEN,2).EQ.1)THEN
-           DO 60 LL=1,LMMSQD
- 60           FINT(LL,IEN)=FINT(LL,IEN+1)
-     +                    +F(LL,IEN)*A1+F(LL,IEN+1)*A2+F(LL,IEN+2)*A3
-           ENDIF
- 50     CONTINUE
-c     
+        DO 40 I = IST - 2,IEN,-1
+          DO 30 LL = 1,LMMSQD
+            FINT(LL,I) = ((FINT(LL,I+2)+F(LL,I+2)*A1)+F(LL,I+1)*A2) +
+     +                   F(LL,I)*A1
+   30     CONTINUE
+   40   CONTINUE
+   50 CONTINUE
+c
       END
