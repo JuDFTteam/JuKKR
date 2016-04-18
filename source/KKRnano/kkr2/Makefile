@@ -233,7 +233,7 @@ depend:
 	
 #======================== Module dependencies ========================================
 
-KKRnano.o: Logging_mod.o KKRzero_mod.o BrillouinZoneMesh_mod.o PotentialConverter_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o wrappers_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
+KKRnano.o: Logging_mod.o KKRzero_mod.o BrillouinZoneMesh_mod.o PotentialConverter_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o AtomicCore_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
 kkrmat01_new.o: arraytest2_mod.o Logging_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o TFQMRSolver_mod.o MultScatData_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
 tbref.o: SingleSiteRef_mod.o
@@ -245,7 +245,7 @@ InputParams_mod.o: ConfigReader_mod.o
 PolygonFaces_mod.o: Constants_mod.o
 ShapeGeometryHelpers_mod.o: Exceptions_mod.o Constants_mod.o
 ShapeStandardMesh_mod.o: Exceptions_mod.o Constants_mod.o
-wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o
+wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o ##AtomicCore_mod.o
 DensityResults_mod.o: DimParams_mod.o
 BCPOperator_mod.o: OperatorT_mod.o ClusterInfo_mod.o
 CalculationData_mod.o: Exceptions_mod.o KKRnanoParallel_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
@@ -335,5 +335,7 @@ jij_calc_mod.o: Symmetry_mod.o
 Harmonics_mod.o: Constants_mod.o
 kkrmat01_new.o: Exceptions_mod.o
 BrillouinZoneMesh_mod.o: Exceptions_mod.o
+AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o
+
 
 # DO NOT DELETE

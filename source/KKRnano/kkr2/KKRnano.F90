@@ -24,7 +24,7 @@ program KKRnano
   use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outTime
   use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroy
 
-  use wrappers_mod, only: rhocore_wrapper
+  use AtomicCore_mod, only: rhocore
 
   use DimParams_mod, only: DimParams, load, destroy
   use InputParams_mod, only: InputParams, readInputParamsFromFile
@@ -233,7 +233,14 @@ program KKRnano
         !!!$omp parallel do private(ila, atomdata)
         do ila = 1, num_local_atoms
           atomdata => getAtomdata(calc_data, ila)
-          call RHOCORE_wrapper(ebot, params%NSRA, atomdata)
+!         call RHOCORE_wrapper(ebot, params%NSRA, atomdata)
+#define mesh atomdata%mesh_ptr
+          atomdata%core%qc_corecharge = rhocore(ebot, params%nsra, atomdata%nspin, atomdata%atom_index, &  ! atom_index is used only for debugging output
+                        mesh%drdi, mesh%r, atomdata%potential%visp(:,:), &
+                        mesh%a, mesh%b, atomdata%z_nuclear, &
+                        mesh%ircut, atomdata%core%rhocat, &
+                        atomdata%core%ecore(:,:), atomdata%core%ncore(:), atomdata%core%lcore(:,:), &
+                        mesh%irmd)
         enddo ! ila
         !!!$omp end parallel do
       endif ! in master group
@@ -250,7 +257,6 @@ program KKRnano
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48    ! ???
 
-#define mesh atomdata%mesh_ptr
         call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU, &
                       ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
                       atomdata%potential%VISP,ldau_data%NSPIND,mesh%R,mesh%DRDI, &
