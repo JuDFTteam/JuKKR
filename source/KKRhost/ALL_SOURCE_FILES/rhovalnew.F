@@ -113,24 +113,19 @@
        ! OMP - number of threads, thread id
        integer nth,ith
 #ifdef CPP_MPI
-      integer :: mytot
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+       integer :: mytot
+       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+       ! communication
+       double complex, allocatable :: workc(:,:,:,:)
 #endif
-      integer :: ie_start,ie_end, ie_num
-      double precision :: angles_new(NATYPD,2)
-C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
-C     ..
+       integer :: ie_start,ie_end, ie_num
+       double precision :: angles_new(2)
+C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
-      ! test
-      integer :: mu0
-      ! test
+       ! test
+       integer :: mu0
+       ! test
 ! determine if omp is used
        ith = 0
        nth = 1
@@ -310,8 +305,9 @@ c energy loop
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
-!$omp& shared(t_tgmat,ie_end)
+!$omp& shared(t_tgmat,ie_end, ie_start)
 !$omp& private(alphasph,alphall,ie_num)
+!$omp& firstprivate(t_inc)
 #endif
        DO ie_num=1,ie_end
         IE = ie_start+ie_num
@@ -380,8 +376,8 @@ c using spherical potential as reference
         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLLLEFT(:,:,:,ith)=CZERO
-        SLLLEFT(:,:,:,ith)=CZERO
+        RLL(:,:,:,ith)=CZERO
+        SLL(:,:,:,ith)=CZERO
 
 cc right solutions
         TMATLL=CZERO
@@ -497,6 +493,8 @@ c calculate density
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
      +                GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
+
+#ifndef CPP_OMP
        if( test('rhoqtest')) then
          open(9999,file='mu0')
          read(9999,*) mu0
@@ -522,6 +520,7 @@ c calculate density
            close(9999)
          end if ! i1.eq.mu0
        end if ! test('rhoqtest')
+#endif
 
        DO JSPIN=1,4
 
@@ -646,15 +645,26 @@ c get orbital moment
       DO ith=0,nth-1
          R2NEFC(:,:,:) = R2NEFC(:,:,:) + R2NEFC_loop(:,:,:,ith)
       ENDDO
-      
-       IF (OPT('qdos    ')) THEN                                          ! qdos ruess
+
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-#else
+       IF (OPT('qdos    ')) THEN                                          ! qdos ruess
+         ! first communicate den array to write out qdos files
+         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
+         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
+         workc = (0.d0, 0.d0)
+         CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                      t_mpi_c_grid%myMPI_comm_at,IERR)
+         CALL ZCOPY(IDIM,WORKC,1,DEN,1)
+         deallocate(workc)
+         
+         if(t_mpi_c_grid%myrank_at==master) then
+! #ifdef CPP_MPI
+!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)         ! qdos
+!          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)         ! qdos
+! #else
          ie_start = 0
          ie_end   = IELAST
-#endif
+! #endif
          DO ie_num=1,ie_end                                               ! qdos
            IE = ie_start+ie_num                                           ! qdos
            DO IQ=1,NQDOS                                                  ! qdos
@@ -662,25 +672,17 @@ c get orbital moment
               if(t_inc%NATYP.ge.100) then                                 ! qdos
                 OPEN(31,                                                  ! qdos
      +          FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+1)//                    ! qdos
-     +          ".dat_myrank="//char(48+myrank/100)//                     ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+1)//".dat")             ! qdos
                 OPEN(32,                                                  ! qdos
      +          FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+2)//                    ! qdos
-     +          ".dat_myrank="//char(48+myrank/100)//                     ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               else                                                        ! qdos
                 OPEN(31,                                                  ! qdos
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+1)//                    ! qdos
-     +          ".dat_myrank="//                                          ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+1)//".dat")             ! qdos
                 OPEN(32,                                                  ! qdos
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
-     +          char(48+mod(I1,10))//"."//char(48+2)//                    ! qdos
-     +          ".dat_myrank="//                                          ! qdos
-     +          char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))      ! qdos
+     +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               end if                                                      ! qdos
               WRITE (31,*) ' '                                            ! qdos ruess
               WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
@@ -692,7 +694,6 @@ c get orbital moment
                 WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! qdos
      &                         'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'  ! qdos
               end if                                                      ! qdos
- 8600         FORMAT (a8,I3,a4,I5)                                        ! qdos ruess
              ENDIF   ! IQ.EQ.1                                            ! qdos ruess
              DO JSPIN =1,2                                                ! qdos ruess
                DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! qdos ruess
@@ -710,34 +711,18 @@ c    write qdos.nn.s.dat                                                  ! qdos
  9000        FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
            ENDDO !IQ                                                      ! qdos
          ENDDO !IE                                                        ! qdos
+         end if !myrank_at==master
        ENDIF      ! OPT('qdos    ')                                       ! qdos ruess
-       
-#ifdef CPP_MPI
-       ! reset NQDOS to avoid endless communication
-       NQDOS=1
-#ifdef CPP_TIMING
-!        call timing_start('main1c - communication')
 #endif
-      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
-     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
-         den = 0.d0
-         denlm = 0.d0
-         gflle = 0.d0
-         muorb = 0.d0
-         espv = 0.d0
-         r2nefc = 0.d0
-         rho2nsc = 0.d0
-         rho2int = 0.d0
-         denorbmom = 0.d0
-         denorbmomsp = 0.d0
-         denorbmomlm = 0.d0
-         denorbmomns = 0.d0
-      endif
-
+       
+#ifdef CPP_MPI ! do communication only when compiled with MPI
 #ifdef CPP_TIMING
        call timing_start('main1c - communication')
 #endif
-      if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+       ! reset NQDOS to avoid endless communication
+       NQDOS=1
+       ! set these arrays to zero to avoid double counting in cases where extra ranks are used
+       if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
          den = 0.d0
          denlm = 0.d0
@@ -765,7 +750,7 @@ c    write qdos.nn.s.dat                                                  ! qdos
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
       if(t_mpi_c_grid%myrank_at==master) then
-#endif
+#endif ! CPP_MPI
 
 ! LDAU
       IF (IDOLDAU.EQ.1) THEN
@@ -795,6 +780,8 @@ c    write qdos.nn.s.dat                                                  ! qdos
        ENDDO
 
       ENDIF ! LDAU
+
+       if(.not.OPT('qdos    ')) then
 ! omp: moved write-out of dos files out of parallel energy loop
 c Write out lm-dos:                                                      ! lm-dos
        IF (OPT('lmdos    ')) THEN                                          ! qdos ruess
@@ -826,8 +813,11 @@ c Write out lm-dos:                                                      ! lm-do
          WRITE(30,9001) EZ(IE),                                          ! lm-dos
      &               (-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)          ! lm-dos
  9001    FORMAT(30E12.4)                                                 ! lm-dos
+ 8600    FORMAT (a8,I3,a4,I5)                                            ! lm-dos/qdos ruess
        ENDDO !IE
        ENDIF
+       end if ! .not. OPT('qdos    ')
+
 c      write gflle to file                                               ! lmlm-dos
        IF (OPT('lmlm-dos')) THEN                                         ! lmlm-dos
        if(t_inc%i_write>0) 
@@ -907,17 +897,14 @@ c calculate new THETA and PHI for non-colinear
          ENDIF
         ENDIF
         
-       if(t_inc%i_write>0) then
-        WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
-        WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
-        WRITE(11,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
-        WRITE(12,*) THETANEW/(2.0D0*PI)*360.0D0,
-     &             PHINEW/(2.0D0*PI)*360.0D0
+        if(t_inc%i_write>0) then
+          WRITE(1337,*) 'moment',myrank,MOMENT(1),MOMENT(2),MOMENT(3)
+          WRITE(1337,*) THETANEW/(2.0D0*PI)*360.0D0,
+     &                  PHINEW/(2.0D0*PI)*360.0D0
         endif
-        angles_new(i1,1) = THETANEW/(2.0D0*PI)*360.0D0
-        angles_new(i1,2) = PHINEW/(2.0D0*PI)*360.0D0
+        !only on master different from zero:
+        angles_new(1) = THETANEW
+        angles_new(2) = PHINEW
         CALL ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,
      +                    THETA,PHI,IRMD)
         CALL ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOTD,THETANEW,PHINEW,
@@ -954,6 +941,10 @@ C
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
      &               t_mpi_c_grid%myMPI_comm_at, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
+      IDIM = 2
+      call MPI_Bcast(angles_new, idim, MPI_DOUBLE_PRECISION, master, 
+     &               t_mpi_c_grid%myMPI_comm_at, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error bcast angles_new in rhovalnew'
 #endif
 
        DEALLOCATE(VINS)

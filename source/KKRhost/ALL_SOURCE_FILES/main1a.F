@@ -74,7 +74,6 @@ C     .. Local Scalars ..
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD),TOLRDIF
-      LOGICAL          LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NRMAXD,NATYPD)!,
 !      +                 VINSNEW(NRMAXD,LMPOTD,NSPOTD)
@@ -107,7 +106,7 @@ C
       INTEGER JWSREL(NATYPD),ZREL(NATYPD)
       INTEGER ITMPDIR,ILTMP
       CHARACTER*80 TMPDIR
-      LOGICAL LREFSYS,OPT,TEST,LREAD
+      LOGICAL LREFSYS,OPT,TEST
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
@@ -132,13 +131,6 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       integer :: i1_start, i1_end
 
 C-----------------------------------------------------------------------
-C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
 C     ..
 C     .. External Subroutines ..
       EXTERNAL TBREF,CALCTMAT,OPT      
@@ -172,7 +164,7 @@ C
      &       KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,
      &       IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,
      &       RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,
-     &       SOLVER,TMPDIR,DELTAE,TESTC,OPTC,tolrdif,NPAN_LOG,NPAN_EQ,
+     &       SOLVER,TMPDIR,DELTAE,tolrdif,NPAN_LOG,NPAN_EQ,
      &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
      &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
      &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
@@ -290,7 +282,6 @@ C
       call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
-
        CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
      +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
@@ -319,10 +310,10 @@ c interpolate potential
         i1_end   = NATYP
 #endif
 
-
        DO I1=i1_start,i1_end
 
         IPOT=NSPIN*(I1-1)+1
+
         CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,RMESH(1,I1),ZAT(I1),
      +                      SOCSCALE(I1),EZ,NSRA,CLEB(1,1),ICLEB,IEND,
      &                      NCHEB,NPAN_TOT(I1),
@@ -332,7 +323,6 @@ c interpolate potential
      &                      IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1)) ! LDAU
 
        ENDDO !I1, atom loop
-       CLOSE(10)
 
       ENDIF !NEWSOSOL
 C

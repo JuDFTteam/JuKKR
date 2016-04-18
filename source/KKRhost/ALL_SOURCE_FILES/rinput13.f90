@@ -24,6 +24,7 @@
      &           IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,&
      &           TOLRDIF,LLY,DELTAE,&
      &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
+      use mod_wunfiles, only: t_params
       IMPLICIT NONE
 !     ..
 !     .. Parameters
@@ -143,10 +144,6 @@
       DOUBLE PRECISION SOSCALE,CTLSCALE
       INTEGER IMANSOC(NATYPD),NASOC,ISP(NATYPD)
       LOGICAL MANSOC,MANCTL
-!
-      CHARACTER*8 TESTC(32),OPTC(32)
-      COMMON /TESTC/TESTC
-      COMMON /OPTC/OPTC
 !     ..
 !     .. Data statements ..
       DATA TSPIN/'non-','    ','    '/
@@ -194,9 +191,9 @@
       IF (IER.NE.0) THEN 
          WRITE(111,*) 'RUNOPT not found'
       ELSE
-         READ (UNIT=UIO,FMT=980)(OPTC(I),I=1,8)
+         READ (UNIT=UIO,FMT=980)(t_params%OPTC(I),I=1,8)
          WRITE(111,FMT='(A6)') 'RUNOPT'
-         WRITE(111,FMT=980)  (OPTC(I),I=1,8)
+         WRITE(111,FMT=980)  (t_params%OPTC(I),I=1,8)
       ENDIF
 !
 ! read TEST options
@@ -205,12 +202,12 @@
       IF (IER.NE.0) THEN 
          WRITE(111,*) 'TESTOPT not found'
       ELSE
-         READ(UNIT=UIO,FMT=980)(TESTC(i),i=1,8)
+         READ(UNIT=UIO,FMT=980)(t_params%TESTC(i),i=1,8)
          CALL IoInput('TESTOPT         ',UIO,2,7,IER)
-         READ(UNIT=UIO,FMT=980)(TESTC(8+i),i=1,8)
+         READ(UNIT=UIO,FMT=980)(t_params%TESTC(8+i),i=1,8)
          WRITE(111,FMT='(A7)') 'TESTOPT'
-         WRITE(111,FMT=980)(TESTC(i),i=1,8)
-         WRITE(111,FMT=980)(TESTC(8+i),i=1,8)
+         WRITE(111,FMT=980)(t_params%TESTC(i),i=1,8)
+         WRITE(111,FMT=980)(t_params%TESTC(8+i),i=1,8)
       ENDIF
 
 
@@ -830,7 +827,7 @@
             WRITE (1337,*) ' Running option LDA+U will be ignored'
             WRITE (1337,*)
             DO I=1,32
-               IF (OPTC(I)(1:8).EQ.'LDA+U   ') OPTC(I)='        '
+               IF (t_params%OPTC(I)(1:8).EQ.'LDA+U   ') t_params%OPTC(I)='        '
             END DO
          END IF
 
@@ -883,7 +880,11 @@
       CALL IoInput('HFIELD          ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
          READ (UNIT=UIO,FMT=*) HFIELD
-         IF (HFIELD.NE.0.D0) KHFIELD = 1
+         IF (HFIELD.NE.0.D0) then
+            KHFIELD = 1
+            write(*,*) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
+            write(1337,*) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
+         end if
          WRITE(111,*) 'HFIELD= ',HFIELD
       ELSE
          WRITE(111,*) 'Default HFIELD= ',HFIELD
@@ -1126,7 +1127,7 @@
      &           ' with incomplete/incorrect contour description'
             WRITE (111,*) ' Running option SEMICORE will be ignored'
             DO I=1,32
-               IF (OPTC(I)(1:8).EQ.'SEMICORE') OPTC(I)='        '
+               IF (t_params%OPTC(I)(1:8).EQ.'SEMICORE') t_params%OPTC(I)='        '
             END DO
          END IF
       END IF
@@ -1869,7 +1870,7 @@
          WRITE (1337,*) ' Running option ITERMDIR will be ignored'
          WRITE (1337,*)
          DO I=1,32
-            IF (OPTC(I)(1:8).EQ.'ITERMDIR') OPTC(I)='        '
+            IF (t_params%OPTC(I)(1:8).EQ.'ITERMDIR') t_params%OPTC(I)='        '
          END DO
       END IF
 
@@ -1887,14 +1888,14 @@
          WRITE (1337,*) ' Running option XCPL will be ignored'
          WRITE (1337,*)
          DO I=1,32
-            IF (OPTC(I)(1:8).EQ.'XCPL    ') OPTC(I)='        '
+            IF (t_params%OPTC(I)(1:8).EQ.'XCPL    ') t_params%OPTC(I)='        '
          END DO
       END IF
 
 
-      WRITE(1337,62) (OPTC(I),I=1,8)                                              
+      WRITE(1337,62) (t_params%OPTC(I),I=1,8)
  62   FORMAT(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
-      WRITE(1337,52) (TESTC(I),I=1,16)                                    
+      WRITE(1337,52) (t_params%TESTC(I),I=1,16)
  52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
  980  FORMAT(8A8)
 
@@ -2163,6 +2164,7 @@
 !---------------------------------------------------------------------
 
 SUBROUTINE ADDOPT(STRING)
+use mod_wunfiles, only: t_params
 IMPLICIT NONE
 INTEGER NOPTD
 PARAMETER (NOPTD=32)
@@ -2171,7 +2173,6 @@ CHARACTER*8 OPTC(NOPTD)
 INTEGER II
 LOGICAL OPT,LADDED
 EXTERNAL OPT
-COMMON /OPTC/OPTC
 
 IF (.NOT.OPT('        ')) THEN
    WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
@@ -2181,8 +2182,8 @@ ENDIF
 IF (.NOT.OPT(STRING)) THEN
    II = 1
    DO WHILE (II.LE.NOPTD)
-      IF (OPTC(II).EQ.'        ') THEN
-         OPTC(II) = STRING
+      IF (t_params%OPTC(II).EQ.'        ') THEN
+         t_params%OPTC(II) = STRING
          II = NOPTD + 1
       ENDIF
       II = II + 1

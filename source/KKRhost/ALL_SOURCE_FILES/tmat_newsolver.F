@@ -149,7 +149,7 @@ c energy loop
 
 #ifdef CPP_MPI
        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
-     &                  t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master
      &                  master,IELAST,ntot_pT,ioff_pT,.true.)
      
        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
@@ -188,15 +188,16 @@ c energy loop
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll) !,tmat_out)
-!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
+!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start)
 !$omp& shared(lly,deltae,i1)!,dtmat_out,tral_out)
-!$omp& private(tralpha) 
+!$omp& private(tralpha, aux, ideriv, ipiv) 
 !$omp& private(alpha0)
 !$omp& private(alphall)
 !$omp& private(tmat0) 
 !$omp& private(alphasph) 
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
+!$omp& firstprivate(t_inc)
 #endif
        DO ie_num=1,ie_end
        

@@ -20,8 +20,9 @@ default: install
 FC =  ifort
 # change default value if a flag is matched
 mpi:       FC =  mpiifort
+hybrid:    FC =  mpiifort
 # mac:
-macmpi:       FC =  /usr/local/impi/bin/mpif90  
+macmpi:     FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
 #rwth cluster
 rwthmpi: FC=$(MPIFC)
@@ -38,6 +39,7 @@ COMPVER ='serial'
 debug:     COMPVER ='debug'
 mpi:       COMPVER ='mpi'
 mpidebug:  COMPVER ='mpidebug'
+hybrid:    COMPVER ='hybrid'
 openmp:    COMPVER ='openmp'
 ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
@@ -102,9 +104,9 @@ $(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
 
 # standart libs
 # serial:
-#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-# openmp:
-LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
+LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+# # openmp:
+# LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # mac libs:
 #libfolder = /usr/local/intel-12.1.3/compiler/lib/intel64
 #LLIBS=-L${libfolder} -lifcore -limf -Wl,-rpath,${libfolder} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -144,6 +146,7 @@ rwthomp:       LLIBSOPENMP=$(RWTHLLIBSOMP)
 rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
+hybrid: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
 rwthomp: LLIBS=$(RWTHLLIBSOMP)
 rwthompdebug: LLIBS=$(RWTHLLIBSOMP)
@@ -165,6 +168,7 @@ rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
 rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
+hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
@@ -180,6 +184,7 @@ debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcm
 mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
+hybrid: OPENMPFLAGS = -openmp
 openmp: OPENMPFLAGS = -openmp
 ompdebug: OPENMPFLAGS = -openmp
 
@@ -214,6 +219,18 @@ SOURCEDIR = .
 .PHONY: mpidebug
 .PHONY: install
 .PHONY: getversion
+.PHONY: compile
+.PHONY: hybrid
+.PHONY: mac
+.PHONY: macmpi
+.PHONY: macomp
+.PHONY: rwth
+.PHONY: rwthmpi
+.PHONY: rwthomp
+.PHONY: rwthmpidebug
+.PHONY: rwthompdebug
+.PHONY: rwthhybrid
+.PHONY: jureca
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -243,9 +260,9 @@ debug:    compile
 openmp:   compile
 ompdebug: compile
 mpi:      compile
+hybrid:   compile
 mpidebug: compile
-rwthmpidebug: mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o
-	$(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+rwthmpidebug: compile
 
 
 install: clean mpi

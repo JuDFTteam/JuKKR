@@ -425,7 +425,6 @@ C ruess: IVSHIFT test option
       integer nth, ith          ! total number of threads, thread number
 #endif
 
-      
 C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -439,12 +438,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
 C     ..
 
 
@@ -467,13 +460,13 @@ C     ..
 
 #ifdef CPP_OMP
 !$omp parallel shared(nth,ith)
-!$omp single
+!$omp critical
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
-      if(ith==1) then
-       WRITE(*,'(1X,A,I5/79(1H*)/)')'Number of OpenMP threads used:',nth
+      if(ith==0) then
+      WRITE(*,'(1X,A,I5//79(1H*)/)')'Number of OpenMP threads used:',nth
       endif
-!$omp end single
+!$omp end critical
 !$omp end parallel
 #endif
 #ifdef CPP_MPI
@@ -495,8 +488,10 @@ C
       NATOMIMP = 0
       IDOLDAU = 0
       NOFGIJ = 0
-      OPTC(1:32) =  '        '
-      TESTC(1:32) = '        '
+      ! allocate and initialize testc and optc in t_params for run and test options
+      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+      t_params%OPTC(1:32) =  '        '
+      t_params%TESTC(1:32) = '        '
 C
       CALL RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      +              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
@@ -598,8 +593,7 @@ C
      +             DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,
      +             IRWS,INIPOL,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
-     
-     
+
 
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,', 
@@ -854,7 +848,7 @@ C
          write(1337,*) 'Writing out shells (also in shells.dat):' ! fivos
          write(1337,*) 'itype,jtype,iat,jat,r(iat),r(jat)' ! fivos
          write(1337,*) NSHELL(0), 'NSHELL(0)' ! fivos
-         write(78,*) NSHELL(0), 'NSHELL(0)' ! fivos
+         write(58,*) NSHELL(0), 'NSHELL(0)' ! fivos
          do i1 = 1,NSHELL(0)    ! fivos
             write(1337,*) i1,NSHELL(i1), 
      &                 'No. of shell, No. of atoms in shell' ! fivos

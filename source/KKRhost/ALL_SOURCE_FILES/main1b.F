@@ -27,8 +27,6 @@
 #endif
       use mod_wunfiles
       use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
-      
-      use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
 
       INCLUDE 'inc.p'
 C
@@ -169,9 +167,6 @@ C     ..
 #endif
       integer :: ie_num, ie_end
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     for conductivity calculation
 C     INTEGER NCPAIRD
@@ -185,17 +180,14 @@ C     ..
 C     .. External Subroutines ..
       EXTERNAL CALCTREF13,CHANGEREP,KLOOPZ1_QDOS,OPT,CINIT
 C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
-C     ..
 C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
      &             'BANDED MATRIX (slab)               ',
      &             'BANDED + CORNERS MATRIX (supercell)' /
-      DATA IPRINT / 1 /
+      DATA IPRINT / 0 /
 C     ..
 C
+      if(t_inc%i_write>0) IPRINT=1
 
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
@@ -215,9 +207,9 @@ C ======================================================================
 C
 C -------------------------------------------------------------- input1b
       call get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
-     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,OPTC,
+     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
-     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,TESTC,
+     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
      &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
@@ -339,8 +331,12 @@ C
      &                   FILE='kkrflex_green',FORM='unformatted')
           END IF
 
-          OPEN (88,ACCESS='direct',RECL=LRECGREEN,
-     &             FILE='green',FORM='unformatted')
+C==== the following write-out has been disabled, because it was assumed to be    !no-green
+C====  obsolete with the implementation of the MPI-communicated arrays. If I am  !no-green
+C====  wrong and the write-out is needed in subsequent parts, construct a        !no-green
+C====  test-option around it so that it is only written out in this case.        !no-green
+C         OPEN (88,ACCESS='direct',RECL=LRECGREEN,                               !no-green
+C    &             FILE='green',FORM='unformatted')                              !no-green
           IREC=1
 
           IF ( ( OPT('KKRFLEX ') ) ) THEN
@@ -353,11 +349,11 @@ C
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
             END IF
           END IF
-          IF ( (.not. OPT('KKRFLEX ') ) ) THEN
-            WRITE(88,REC=IREC) IELAST,NSPIN,
-     &         (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST),
-     &         NATOMIMPD*LMMAXD
-          END IF
+c         IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
+c           WRITE(88,REC=IREC) IELAST,NSPIN,                  !no-green
+c    &         (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST),    !no-green
+c    &         NATOMIMPD*LMMAXD                               !no-green
+c         END IF                                              !no-green
       END IF
 
 C Value of NQDOS changes to a read-in value if option qdos is applied, otherwise:
@@ -711,6 +707,9 @@ C
 
       ELSE ! NEW SOC SOLVER 
 
+      ! nonco angles
+      call read_angles(t_params,NATYP,THETAS,PHIS)
+
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -763,10 +762,6 @@ c construct t matrix for reference system (now is always double matrix)
        TRALPHA(IE,NSPINDD)=CZERO
        TRALPHAREF(IE)=CZERO
 c read in t matrix
-
-      ! nonco angles
-      call read_angles(t_params,NATYP,THETAS,PHIS)
-
 
        DO I1 = 1,NATYPD
 
@@ -824,7 +819,6 @@ c rotate t-matrix from local to global frame
           TRALPHAREF(IE)=TRALPHAREF(IE)+TRALPHA1 ! LLY
        ENDIF ! LLY
        ENDDO ! I1
-       CLOSE(10)
        if(t_lloyd%g0tr_to_file) then
           IF (LLY.NE.0) READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
        else
@@ -959,7 +953,7 @@ C    |           END of do loop over spins and energies             |
 C    ----------------------------------------------------------------
 C
       CLOSE (68)
-      IF ( IGF.NE.0 ) CLOSE (88)
+c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
 
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
          if(t_lloyd%cdos_diff_lly_to_file) then

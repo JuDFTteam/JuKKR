@@ -89,11 +89,6 @@ C     .. Local Arrays ..
      +              ,CDENLM(IRMD,LMMAXD),CWR(IRMD,LMMAXD,LMMAXD)  ! lm-dos
      +              ,GFLLE_PART(LMMAXD,LMMAXD)
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32)            ! qdos
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC                         ! qdos
 C     .. External Functions ..
       LOGICAL OPT                          ! qdos
       EXTERNAL OPT                         ! qdos
