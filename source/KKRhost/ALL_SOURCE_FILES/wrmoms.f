@@ -34,6 +34,7 @@ C
       
       WRITE (1337,*)
       WRITE (1337,99003)
+      WRITE (6,99030)
       DO IT = 1,NATYP
          MUSPIN(IT,LMAXD1+1) = 0D0
          SUMCH(IT,1) = 0D0
@@ -59,14 +60,19 @@ C
       DO ISPIN = 1,NSPIN
          IS = IS + 1
          WRITE (1337,99004) TEXTS(IS)
+         WRITE (6,99004) TEXTS(IS)
       END DO
 C
       IF (KREL.EQ.1) THEN
          WRITE (1337,99005)
+         WRITE (6,99005)
          WRITE (1337,99006)
+         WRITE (6,99006)
       ELSE
          IF (NSPIN.EQ.2) WRITE(1337,99005)
+         IF (NSPIN.EQ.2) WRITE(6,99005)
          WRITE(1337,*)
+         WRITE(6,*)
       END IF
 C
       WRITE (1337,'(3X,26(1H=),$)')
@@ -152,16 +158,22 @@ C
             WRITE (1337,FMT=FMT2) ' TOT',(SUMCH(IT,ISPIN),ISPIN=1,NSPIN)
      &                        ,MUSPIN(IT,LMAXD1+1),MUORB(LMAXD1+1,3,IT),
      &                         (MUORB(LMAXD1+1,ISPIN,IT),ISPIN=1,NSPIN)
+            WRITE (6,FMT=FMT2) ' TOT',(SUMCH(IT,ISPIN),ISPIN=1,NSPIN)
+     &                        ,MUSPIN(IT,LMAXD1+1),MUORB(LMAXD1+1,3,IT),
+     &                         (MUORB(LMAXD1+1,ISPIN,IT),ISPIN=1,NSPIN)
             WRITE (1337,'(25X,F12.8,12X,F8.4)') CHTOT(IT),MUTOT(IT)
          ELSE
             IF (NSPIN.EQ.2) THEN
                WRITE (1337,'(17(1H-))')
                WRITE (1337,FMT=FMT2) ' TOT',
      &              (SUMCH(IT,ISPIN),ISPIN=1,NSPIN),MUSPIN(IT,LMAXD1+1)
+               WRITE (6,FMT=FMT2) ' TOT',
+     &              (SUMCH(IT,ISPIN),ISPIN=1,NSPIN),MUSPIN(IT,LMAXD1+1)
                WRITE (1337,'(25X,F12.8)') CHTOT(IT)
             ELSE
                WRITE (1337,*)
                WRITE (1337,FMT=FMT2) ' TOT',SUMCH(IT,1)
+               WRITE (6,FMT=FMT2) ' TOT',SUMCH(IT,1)
             END IF
          END IF
 C
@@ -196,6 +208,7 @@ C
 99001 FORMAT (15X,'l-decomposed valence charges and magnetic moments')
 99002 FORMAT (8X,'l-decomposed valence charges')
 99003 FORMAT (3X,'ATOM      ',$)
+99030 FORMAT (3X,'          ',$)
 99004 FORMAT (2X,'Ne ',A7,$)
 99005 FORMAT ('    m_spin',$)
 99006 FORMAT ('    m_orb   spin dn  spin up')

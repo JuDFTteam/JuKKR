@@ -86,7 +86,6 @@ c contruct prefactor of spin-orbit hamiltonian
 
       HSOFAC=0d0
       IF (TEST('NOSOC   ').OR.Z.LT.1D-6) THEN
-      WRITE(1337,*) 'test nosoc option',SOCSCALE
        DO IR=1,IRMDNEW
         DO LM1=1,2*LMMAXD
          DO LM2=1,2*LMMAXD

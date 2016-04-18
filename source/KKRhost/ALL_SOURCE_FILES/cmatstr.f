@@ -66,7 +66,7 @@ C
          IQ = IJQ/1000
          JQ = IJQ - IQ*1000
          IF ( IQ*N.GT.M .OR. IQ*N.GT.M ) THEN
-            WRITE (6,99002) IJQ,IQ,JQ,IQ*N,JQ*N,N,M
+            WRITE (1337,99002) IJQ,IQ,JQ,IQ*N,JQ*N,N,M
             RETURN
          END IF
       ELSE

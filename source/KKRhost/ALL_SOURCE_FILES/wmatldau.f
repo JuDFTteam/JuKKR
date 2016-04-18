@@ -19,6 +19,7 @@ C * - Sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s}                       *
 C * - [Ueff (dentot-1/2) - Jeff (n_s - 1/2)] delta_{ss'} delta_{m1,m2} *
 C *                                                                    *
 C *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
+C *                  n.long, Xmas Juelich 2015                         *
 C **********************************************************************
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -32,10 +33,10 @@ C Dummy arguments
 C
       INTEGER NTLDAU,NSPIN,MMAXD,NPOTD
       INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
-      DOUBLE PRECISION !ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD),
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD),
      &                 UEFF(NATYPD),JEFF(NATYPD),EDC(NATYPD),EU(NATYPD),
      &                 WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+c      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
 C
 C Local variables
@@ -53,7 +54,7 @@ C     ..
 C    ..
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
       WRITE (1337,'(/,79(1H#),/,16X,A,/,79(1H#))') 
      &     'LDA+U: Calculating interaction potential VLDAU'
@@ -77,7 +78,7 @@ C ----------------------------------------------------------------------
                IF ( IPRINT.GT.1 ) THEN
                   WRITE (STR15,'(4X,"> ",A,I1)') 'ISPIN = ',IS
                   CALL CMATSTR(STR15,15,DENMATC(1,1,IPOT),
-     &                                        MMAXD,MMAX,0,0,0,1d-8,6)
+     &                                     MMAXD,MMAX,0,0,0,1d-8,1337)
                END IF
 C
 C -> Convert DENMATC and DENMAT to complex spherical harmonics.
@@ -94,14 +95,16 @@ C ----------------------------------------------------------------------
                IF ( IPRINT.GT.1 ) THEN
                   WRITE (STR15,'(4X,"> ",A,I1)') 'ISPIN = ',IS
                   CALL CMATSTR(STR15,15,DENMATC(1,1,IPOT),
-     &                                        MMAXD,MMAX,0,0,0,1d-8,6)
+     &                                      MMAXD,MMAX,0,0,0,1d-8,1337)
                END IF
 C
 C -> DENMAT is real: (imag(denmatc))
 C
                DO M2 = 1,MMAX
                   DO M1 = 1,MMAX
-                     DENMAT(M1,M2,IS) = DIMAG(DENMATC(M1,M2,IPOT))
+C                     DENMAT(M1,M2,IS) = DIMAG(DENMATC(M1,M2,IPOT))
+! in the new medthod, taking imaginary part included
+                     DENMAT(M1,M2,IS) = (DENMATC(M1,M2,IPOT))
                   END DO
                END DO
 C
@@ -113,6 +116,7 @@ C
                   DENTOTS(IS) = DENTOTS(IS) + DENMAT(MM,MM,IS)
                END DO
                DENTOT = DENTOT + DENTOTS(IS)
+               DENTOTS(IS) = DENTOTS(IS)/DFLOAT(3-NSPIN)
             END DO
 C ----------------------------------------------------------------------
             IF ( IPRINT.GT.0 ) THEN
@@ -161,7 +165,8 @@ C
                      DO M4 = 1,MMAX
                         DO M3 = 1,MMAX
                            CSUM = CSUM 
-     &                          - ULDAU(M1,M4,M3,M2,I1)*DENMAT(M3,M4,IS)
+     &                          - ULDAU(M1,M4,M3,M2,I1)*
+     &                            DENMAT(M3,M4,IS)/DFLOAT(3-NSPIN)
                         END DO
                      END DO
                      VLDAU(M1,M2,IS) = VLDAU(M1,M2,IS) + CSUM
@@ -175,13 +180,16 @@ C
      &                          - UEFF(I1)*(DENTOT-0.5D0*FACTOR)
      &                          + JEFF(I1)*(DENTOTS(IS)-0.5D0*FACTOR   )
                END DO
+
+
+            END DO
 C
 C 4. Calculate total-energy corrections EU and EDC (double-counting).
 C Then the correction is EU - EDC.
+C L[LDA+U]=E[LDA]+E[U]-E[DC]
 C Note: EU,EDC initialised outside the routine
-C
-C Here VLDAU is assumed spin-diagonal (contrary to the spin-orbit case).
-C
+
+! Here VLDAU is assumed spin-diagonal (contrary to the spin-orbit case).
 c              DO M2 = 1,MMAX
 c                 DO M1 = 1,MMAX
 c                    EU(I1) = EU(I1) + 
@@ -189,38 +197,46 @@ c    &                    DENMAT(M1,M2,IS) * DREAL(VLDAU(M1,M2,IS))
 c                 END DO
 c              END DO
 
+! Relativistic case, see the paper H. Ebert et al., Sol. Stat. Comm. 127 (2003) 443
 
-        EDC(I1) = EDC(I1) + JEFF(I1)*DENTOTS(IS)*(DENTOTS(IS)-FACTOR)
-            END DO
+! Calculate EDC
+            DO IS=1,NSPIN
+             EDC(I1) = EDC(I1) + 
+     &                   JEFF(I1)*DENTOTS(IS)*(DENTOTS(IS)-FACTOR)
+            ENDDO
 
-            do is = 1,nspin
-            do js = 1,nspin
-            do m4 = 1,mmax
-            do m3 = 1,mmax
-            do m2 = 1,mmax
-            do m1 = 1,mmax
-               eu(i1) = eu(i1)
-     &        + denmat(m1,m2,is)*uldau(m1,m2,m3,m4,i1)*denmat(m3,m4,js)
-            enddo
-            enddo
-            enddo
-            enddo
-            enddo
-            enddo
+            EDC(I1) = 0.5D0*(UEFF(I1)*DENTOT*(DENTOT-1.D0)-EDC(I1))
 
-            do is = 1,nspin
-            do m4 = 1,mmax
-            do m3 = 1,mmax
-            do m2 = 1,mmax
-            do m1 = 1,mmax
-               eu(i1) = eu(i1)
-     &        - denmat(m1,m2,is)*uldau(m1,m4,m3,m2,i1)*denmat(m3,m4,is)
+! Calculate EU
+            DO IS = 1,NSPIN
+             DO JS = 1,NSPIN
+              DO M4 = 1,MMAX
+               DO M3 = 1,MMAX
+                DO M2 = 1,MMAX
+                 DO M1 = 1,MMAX
+                  EU(I1) = EU(I1) + DENMAT(M1,M2,IS)*
+     &                            ULDAU(M1,M2,M3,M4,I1)*DENMAT(M3,M4,JS)
+                 ENDDO
+                ENDDO
+               ENDDO
+              ENDDO
+             ENDDO
+            ENDDO
 
-            enddo
-            enddo
-            enddo
-            enddo
-            enddo
+            DO IS = 1,NSPIN
+             DO M4 = 1,MMAX
+              DO M3 = 1,MMAX
+               DO M2 = 1,MMAX
+                DO M1 = 1,MMAX
+                 EU(I1) = EU(I1) - DENMAT(M1,M2,IS)*
+     &                           ULDAU(M1,M4,M3,M2,I1)*DENMAT(M3,M4,IS)
+                ENDDO
+               ENDDO
+              ENDDO
+             ENDDO
+            ENDDO
+
+            EU(I1) = 0.5D0*EU(I1)
 
 
 
@@ -232,7 +248,7 @@ C ----------------------------------------------------------------------
                IF ( IPRINT.GT.0 ) THEN
                   WRITE (STR15,'(4X,"> ",A,I1)') 'ISPIN = ',IS
                   CALL CMATSTR(STR15,15,VLDAU(1,1,IS),
-     &                         MMAXD,MMAX,0,0,0,1d-8,6)
+     &                         MMAXD,MMAX,0,0,0,1d-8,1337)
                END IF
 C
 C 5.  Transform VLDAU into real spherical harmonics basis
@@ -257,7 +273,7 @@ C ----------------------------------------------------------------------
                DO IS = 1,NSPIN
                   WRITE (STR15,'(4X,"> ",A,I1)') 'ISPIN = ',IS
                   CALL CMATSTR(STR15,15,VLDAU(1,1,IS),
-     &                 MMAXD,MMAX,0,0,0,1d-8,6)
+     &                 MMAXD,MMAX,0,0,0,1d-8,1337)
                END DO
             END IF
 C ----------------------------------------------------------------------
@@ -271,8 +287,6 @@ C ----------------------------------------------------------------------
 C
 C Corrections in total energy:
 C
-            EU(I1) = 0.5D0*EU(I1)
-            EDC(I1) = 0.5D0*(UEFF(I1)*DENTOT*(DENTOT-1.D0)-EDC(I1))
 C
 C -> Write out corrections on energy:
 C    E[LDA+U] = E[LDA] + EU - EDC

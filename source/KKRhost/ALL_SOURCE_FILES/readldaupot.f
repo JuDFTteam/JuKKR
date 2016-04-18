@@ -1,5 +1,5 @@
       SUBROUTINE READLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,
-     &                       EREFLDAU,NATYP,WLDAU,ULDAU,PHILDAU,
+     &                       EREFLDAU,NATYP,WLDAU,ULDAU,PHILDAU,IRWS,
      &                       NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
 C **********************************************************************
 C *                                                                    *
@@ -8,14 +8,15 @@ C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
 C     ..
-      INTEGER IRMD,MMAXD,NATYPD,NSPIND
+      INTEGER IRMD,MMAXD,NATYPD,NSPIND,IRWS(NATYPD)
 C     ..
 C     .. Arguments ..
       INTEGER ITRUNLDAU,NATYP,NTLDAU
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION UEFF(NATYPD),JEFF(NATYPD),EREFLDAU(NATYPD)
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD)
+C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD)
 C     ..
 C     ..  Locals 
@@ -27,7 +28,7 @@ C
 C ======================================================================
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+!      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
       OPEN (67,FILE='ldaupot',FORM='FORMATTED',STATUS='OLD',IOSTAT=IOS)
       IF ( IOS.GT.0 ) THEN
@@ -162,7 +163,7 @@ c     DO IT = 1,NTLDAU
             ITRUNLDAU = 0
             RETURN
          END IF
-         READ(67,'(5E16.8)',IOSTAT=IOS) (PHILDAU(I1,I2),I1=1,IRMD)
+         READ(67,'(5E16.8)',IOSTAT=IOS) (PHILDAU(I1,I2),I1=1,IRWS(I2))
          IF ( IOS.NE.0 ) THEN
             WRITE(6,99001) 'Corrupted PHILDAU array in LDA+U file '
             CLOSE(67)

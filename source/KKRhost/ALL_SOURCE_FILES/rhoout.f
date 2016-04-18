@@ -78,6 +78,7 @@ C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
       DATA CONE/ (1.0D0,0.0D0)/
+      LOGICAL OPT
 C     ..
 c
 C     C0LL = 1/sqrt(4*pi)
@@ -160,6 +161,10 @@ c
                CDENLM(I,LM1) = CDENLM(I,LM1)*THETAS(I-IMT1,1)*C0LL           ! lm-dos
                DO LM2 = 1,LMMAXD                                             ! lmlm-dos
                   CWR(I,LM1,LM2) = CWR(I,LM1,LM2)*THETAS(I-IMT1,1)*C0LL      ! lmlm-dos
+! if LDAU, integrate up to MT
+                IF (OPT('LDA+U   ')) THEN         ! LDAU
+                 CWR(I,LM1,LM2) = CZERO           ! LDAU
+                ENDIF                             ! LDAU
                ENDDO                                                         ! lmlm-dos
             ENDDO                                                            ! lm-dos
 

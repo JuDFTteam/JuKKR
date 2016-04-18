@@ -143,7 +143,8 @@ c
 
       DO 40 LM1 = 1,LMMAXD  ! lm-dos
         CALL CSIMPK(CDENLM(1,LM1),DENLM(LM1),IPAN,IRCUT,DRDI)  ! lm-dos
-        IF (OPT('lmlm-dos').OR.(OPT('qdos    '))) THEN       ! lmlm-dos
+        IF (OPT('lmlm-dos').OR.OPT('qdos    ').OR.           ! lmlm-dos
+     +      OPT('LDA+U   ')) THEN                            ! LDAU
           DO 41 LM2 = 1,LMMAXD                               ! lmlm-dos
             CALL CSIMPK(CWR(1,LM1,LM2),GFLLE_PART(LM1,LM2),  ! lmlm-dos
      +                  IPAN,IRCUT,DRDI)                     ! lmlm-dos
