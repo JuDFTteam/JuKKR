@@ -63,8 +63,8 @@ module AtomicCore_mod
 
 !     .. locals ..
       integer, parameter :: nitmax=40, irnumx=10
-      double precision :: e,e1,e2,ediff,ei,slope,sm,tol,value,wgt
-      integer :: ic,in,inuc,ir,l,nc,nn,nre
+      double precision :: e,e1,e2,ediff,ei,slope,charge,tol,value,wgt
+      integer :: ic,in,inuc,ir,l,nc,nn,irend
       logical :: vlnc
       double precision :: f(irmd), g(irmd), rho(irmd)
       integer :: kfg(0:3)
@@ -99,11 +99,10 @@ module AtomicCore_mod
           nn = in - l - 1
           nc = nc + 1
           inuc = inuc + irnumx
-          e = ecore(nc)
-          ei = e
-          if (ipr /= 0) write(6,fmt=F9) in,text(l),nn,spn(is),atom_id,e
+          ei = ecore(nc)
+          if (ipr /= 0) write(6,fmt=F9) in,text(l),nn,spn(is),atom_id,ei
 
-          sm = intcor(e1,e2,rho,g,f,v,value,slope,l,nn,e,nre,vlnc,a,b,z,rmax,nr,tol,irmd,ipr,nitmax,nsra)
+          e = intcor(e1,e2,rho,g,f,v,value,slope,l,nn,ei,vlnc,a,b,z,rmax,nr,tol,irmd,ipr,nitmax,nsra, charge, irend)
 
           if (e > ebot) then
             write(6,'(''Error for L='',I1)') l
@@ -117,11 +116,11 @@ module AtomicCore_mod
 
           ediff = e - ei
           ecore(nc) = e
-          wgt = (l+1+l)*2.d0/(sm*nspin)
+          wgt = (l+1+l)*2.d0/(charge*nspin)
           if (ipr /= 0) write(6,fmt="(1x,'  einput =',1p,d16.8,'   eout - ein =',1p,d16.8,'   eoutput = ',1p,d16.8)") ei,ediff,e
 
           ! sum up contributions to total core charge
-          do ir = 2, nre
+          do ir = 2, irend
             rhoc(ir) = rhoc(ir) + rho(ir)*wgt
             rho(ir) = 0.d0
           enddo ! ir
@@ -136,11 +135,10 @@ module AtomicCore_mod
         if (kfg(l) > 0) then
           in = kfg(l) + 1
           nn = in - l - 1
-          e = ecore(nc)*0.1
-          ei = e
-          if (ipr /= 0) write(6,fmt=F9) in,text(l),nn,spn(is),atom_id,e
+          ei = ecore(nc)*0.1
+          if (ipr /= 0) write(6,fmt=F9) in,text(l),nn,spn(is),atom_id,ei
 
-          sm = intcor(e1,e2,rho,g,f,v,value,slope,l,nn,e,nre,vlnc,a,b,z,rmax,nr,tol,irmd,ipr,nitmax,nsra)
+          e = intcor(e1,e2,rho,g,f,v,value,slope,l,nn,ei,vlnc,a,b,z,rmax,nr,tol,irmd,ipr,nitmax,nsra, charge, irend)
 
           if (e < ebot) then
             write(6,'(''Error for L='',I1)') l
@@ -162,31 +160,31 @@ module AtomicCore_mod
     endfunction ! core_electrons
 
 
-    double precision function intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, nre, vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra) result(sm)
+    double precision function intcor(f1, f2, rho, g, f, v, value, slope, l, nn, ei, vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra, charge, irend) result(e)
       use Constants_mod, only: pi
     
-      double precision, intent(in) :: a, b, f1, f2, rn, slope, tol, value, z
-      double precision, intent(inout) :: e
+      double precision, intent(in) :: a, b, f1, f2, rn, slope, tol, value, z, v(:), ei
       integer, intent(in) :: ipr, irm, l, nitmax, nn, nr, nsra
-      integer, intent(out) :: nre
       logical, intent(in) :: vlnc
-      double precision, intent(in) :: v(:)
-      double precision, intent(out) :: f(:), g(:), rho(:)
+      double precision, intent(out) :: f(:), g(:), rho(:), charge
+      integer, intent(out) :: irend
 
 !     .. locals ..
-      double precision :: cvlight, de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea
+      double precision :: v_light, de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea
       double precision :: gkc2, pkc1, pkc2, psi1, psi2, q, qkc1, qkc2, ratio
       double precision :: re, rkc, rpb, slop, tsrme, valu, vme, xxx
-      integer :: k, k2, kc, iiter, nne, run
+      integer :: ir, k2, kc, iiter, run, nne, nne_in, nne_out
       double complex :: arg, cappai, dofe, hl(6)
 
       character(len=*), parameter :: F9020="(2i3, 2i4, 1p, 3d16.8, 1x, 2d9.2)", &
       F9000="(' l=', i3, '  nn=', i2, '  nr=', i4, '  f1/e/f2=', 3f10.3, /, ' tol=', 1p, d12.3, '  value/slope=', 2d12.3)", &
       F9030="(/, ' **** int: 0-pressure bcs not real')", F9050="(' *** int: stop after', i4, ' iterations')", &
       F9010="(13x, '  no boundary condition had to be used')", &
-      F9040="(' state', i2, ', ', i1, ':', i4, 'x, ', i5, '/', i3, ',  bc=', 1p, 2d12.3, /, 14x, 'e=', d14.6, '   de=', d11.2, '   sm=', d12.4)"
+      F9040="(' state', i2, ', ', i1, ':', i4, 'x, ', i5, '/', i3, ',  bc=', 1p, 2d12.3, /, 14x, 'e=', d14.6, '   de=', d11.2, '   charge=', d12.4)"
 
-      cvlight = light_speed(nsra)
+      e = ei
+      
+      v_light = light_speed(nsra)
       ea = exp(a)
       iiter = 0
       e1 = f1
@@ -208,23 +206,23 @@ module AtomicCore_mod
         f(1:irm) = 0.d0
 
         if (e <= e1 .or. e >= e2) e = 0.5d0*(e1 + e2)
-        nre = nr
+        irend = nr
   !     write(6, *) e, e1, e2
         if (e > -1.d-8) return
 
         tsrme = 2.d0*sqrt(-e)
         re = (log(-tsrme*e/1.d-8)/tsrme - (z+z)/e)*2.d0
 
-        nre = log(re/b + 1.d0)/a + 1.d0
-        nre = (nre/2)*2 + 1
-        nre = min0(nre, nr)
-        nre = max0(nre, 35)
+        irend = log(re/b + 1.d0)/a + 1.d0
+        irend = (irend/2)*2 + 1
+        irend = min0(irend, nr)
+        irend = max0(irend, 35)
 
         xxx = 1.d0
         valu = 1.d-1
         slop = -1.d-1
-        if (nre < nr .and. iiter == 1 .and. ipr /= 0) write(6, fmt=F9010)
-        if (nre >= nr) then
+        if (irend < nr .and. iiter == 1 .and. ipr /= 0) write(6, fmt=F9010)
+        if (irend >= nr) then
           valu = value
           slop = slope
           if (.not. vlnc) then
@@ -233,7 +231,7 @@ module AtomicCore_mod
             if (nsra == 1) then
               cappai = dcmplx(0.d0, dsqrt(vme))
             else
-              cappai = dcmplx(0.d0, dsqrt((1.d0 - vme/cvlight/cvlight)*vme))
+              cappai = dcmplx(0.d0, dsqrt((1.d0 - vme/v_light/v_light)*vme))
             endif
             arg = cappai*rn
             hl = hankel_core(l+2, arg)
@@ -245,10 +243,9 @@ module AtomicCore_mod
           endif
 
         endif
-        k2 = 30; if (nn == 0) k2 = nre/3
-        nne = 0 ! init the number of nodes
+        k2 = 30; if (nn == 0) k2 = irend/3
 
-        dg2 = intin(g, f, v, e, l, nne, valu, slop, nre, k2, kc, a, b, z, nsra)
+        nne_in = intin(g, f, v, e, l, valu, slop, irend, k2, a, b, z, nsra, kc=kc, dg=dg2)
 
         rkc = b*exp(a*kc - a) - b
         drdikc = a*(rkc + b)
@@ -258,7 +255,9 @@ module AtomicCore_mod
         qkc2 = psi2*psi2 + dpsi2*dpsi2*rkc*rkc
         pkc2 = 0.5d0 - atan(rkc*dpsi2/psi2)/pi
 
-        dg1 = intout(g, f, v, e, l, nne, kc, a, b, z, nsra)
+        nne_out = intout(g, f, v, e, l, kc, a, b, z, nsra, dg=dg1)
+        
+        nne = nne_in + nne_out ! add number of nodes
 
         psi1 = g(kc)
         dpsi1 = dg1/drdikc
@@ -266,40 +265,37 @@ module AtomicCore_mod
         pkc1 = 0.5d0 - atan(rkc*dpsi1/psi1)/pi
         if (nne == 9) nne = 0 ! why?
         if (nne == nn) then
-  !         ratio1 = gkc2/g(kc)
-  !         ratio = sqrt(qkc2/qkc1)
-  !         if (ratio1 < 0.d0) ratio = -ratio
           ratio = sign(sqrt(qkc2/qkc1), gkc2*g(kc))
           g(1:kc) = g(1:kc)*ratio
           if (nsra == 1) then
-            f(1:nre) = 0.d0
+            f(1:irend) = 0.d0
           else
             f(1:kc) = f(1:kc)*ratio
           endif
-          sm = 0.d0
+          charge = 0.d0
           rpb = b/ea
           q = ea*ea
-          do k = 2, nre - 1, 2
+          do ir = 2, irend - 1, 2
             rpb = rpb*q
-            sm = sm + rpb*(g(k)*g(k) + f(k)*f(k))
-          enddo ! k
+            charge = charge + rpb*(g(ir)*g(ir) + f(ir)*f(ir))
+          enddo ! ir
           rpb = b
-          sm = sm + sm
-          do k = 3, nre - 2, 2
+          charge = charge + charge
+          do ir = 3, irend - 2, 2
             rpb = rpb*q
-            sm = sm + rpb*(g(k)*g(k) + f(k)*f(k))
-          enddo ! k
-          sm = 2.d0*sm + rpb*q*(g(nre)*g(nre) + f(nre)*f(nre))
-          sm = a*sm/3.d0
-          de = pi*qkc2*(pkc2 - pkc1)/sm/rkc
-          if (iiter >= nitmax-10 .or. ipr == 2) write(6, fmt=F9020) iiter, nne, nre, kc, e1, e, e2, de
+            charge = charge + rpb*(g(ir)*g(ir) + f(ir)*f(ir))
+          enddo ! ir
+          charge = 2.d0*charge + rpb*q*(g(irend)*g(irend) + f(irend)*f(irend))
+          charge = a*charge/3.d0
+          de = pi*qkc2*(pkc2 - pkc1)/charge/rkc
+          if (iiter >= nitmax-10 .or. ipr == 2) write(6, fmt=F9020) iiter, nne, irend, kc, e1, e, e2, de
           if (de > 0.d0) e1 = e
           if (de < 0.d0) e2 = e
           e = e + de
           if (abs(de) <= tol .or. iiter >= nitmax) run = 0 ! converged
 
         else
-          if (iiter >= nitmax-10 .or. ipr == 2) write(6, fmt=F9020) iiter, nne, nre, kc, e1, e, e2
+          if (iiter >= nitmax-10 .or. ipr == 2) write(6, fmt=F9020) iiter, nne, irend, kc, e1, e, e2
           if (nne > nn) e2 = e
           if (nne < nn) e1 = e
           e = 0.5d0*(e1 + e2)
@@ -308,51 +304,51 @@ module AtomicCore_mod
       enddo ! while(run > 0)
 
       e = e - de
-      do k = 1, nre
-        rho(k) = g(k)*g(k) + f(k)*f(k)
-      enddo ! k
+      do ir = 1, irend
+        rho(ir) = g(ir)*g(ir) + f(ir)*f(ir)
+      enddo ! ir
       if (xxx <= 0.d0) write(6, fmt=F9030)
       if (iiter >= nitmax-10 .or. ipr >= 1 .or. xxx <= 0.d0) &
-        write(6, fmt=F9040) l, nn, iiter, kc, nre, valu, slop, e, de, sm
+        write(6, fmt=F9040) l, nn, iiter, kc, irend, valu, slop, e, de, charge
     endfunction intcor
-      
-      
-    double precision function intin(g, f, v, e, l, nne, valu, slop, k1, k2, kc, a, b, z, nsra) result(dg)
-      integer, intent(in) :: k1, k2, l, nsra
-      integer, intent(inout) :: nne
+
+
+    integer function intin(g, f, v, e, l, valu, slop, irstart, irstop, a, b, z, nsra, dg, kc) result(nne)
+      integer, intent(in) :: irstart, irstop, l, nsra
+      double precision, intent(in) :: a, b, e, slop, valu, z, v(:)
+      double precision, intent(out) :: f(:),  g(:), dg
       integer, intent(out) :: kc
-      double precision, intent(in) :: a, b, e, slop, valu, z
-      double precision, intent(in) :: v(:)
-      double precision, intent(out) :: f(:),  g(:)
 
 !     .. locals ..
-      double precision :: af1, af2, af3, ag1, ag2, ag3, b1, b2, cvlight, phiwgt, det, df1
+      double precision :: af1, af2, af3, ag1, ag2, ag3, b1, b2, v_light, phiwgt, det, df1
       double precision :: df2, df3, dg1, dg2, dg3, dr, ea, ff, fllp1, gg, phi, q
-      double precision :: r, rpb, sdg3, sg, sgp1, u, vb, x, y, zz
+      double precision :: r, rpb, u, vb, x, y, zz
       double precision, parameter :: h83=-8.d0/3.d0 ! negative!!
       integer :: i, ir, jr, run
       double precision :: d(2,3)
 
       zz = z + z
-      cvlight = light_speed(nsra); phiwgt = nsra - 1.d0
+      v_light = light_speed(nsra); phiwgt = nsra - 1.d0
       fllp1 = l*(l + 1.d0)
       
+      nne = 0 ! init node counter
+      
       ea = exp(a)
-      rpb = b*exp(a*k1 - a)
+      rpb = b*exp(a*irstart - a)
       r = rpb - b
       dr = a*rpb
-      phi = (e + zz/r - v(k1))*dr/cvlight
-      u = dr*cvlight + phi*phiwgt
+      phi = (e + zz/r - v(irstart))*dr/v_light
+      u = dr*v_light + phi*phiwgt
       x = -dr/r
       y = -fllp1*x*x/u + phi
-      g(k1) = valu
-      f(k1) = (slop*dr + x*valu)/u
+      g(irstart) = valu
+      f(irstart) = (slop*dr + x*valu)/u
       q = 1.d0/sqrt(ea)
       ag1 = slop*dr
-      af1 = x*f(k1) - y*g(k1)
-      ir = k1
+      af1 = x*f(irstart) - y*g(irstart)
+      ir = irstart
       dg3 = ag1
-      if (k2 /= k1) then
+      if (irstop /= irstart) then
         do i = 1, 3
           jr = ir
           ir = ir - 1
@@ -362,8 +358,8 @@ module AtomicCore_mod
           gg = g(jr) - 0.5d0*ag1
           ff = f(jr) - 0.5d0*af1
           vb = (3.d0*v(jr) + 6.d0*v(ir) - v(ir-1))*.125d0
-          phi = (e + zz/r - vb)*dr/cvlight
-          u = dr*cvlight + phi*phiwgt
+          phi = (e + zz/r - vb)*dr/v_light
+          u = dr*v_light + phi*phiwgt
           x = -dr/r
           y = -fllp1*x*x/u + phi
           ag2 = u*ff - x*gg
@@ -375,29 +371,27 @@ module AtomicCore_mod
           rpb = rpb*q
           dr = a*rpb
           r = rpb - b
-          phi = (e + zz/r - v(ir))*dr/cvlight
-          u = dr*cvlight + phi
+          phi = (e + zz/r - v(ir))*dr/v_light
+          u = dr*v_light + phi
           if (nsra == 1) u = dr
           x = -dr/r
           y = -fllp1*x*x/u + phi
           gg = g(jr) - ag3
           ff = f(jr) - af3
-          g(ir) = g(jr) - (ag1 + 2.d0*(ag2 + ag3) + u*ff - x*gg)/6.d0
-          f(ir) = f(jr) - (af1 + 2.d0*(af2 + af3) + x*ff - y*gg)/6.d0
-          sg   = dsign(1.d0,g(ir))
-          sgp1 = dsign(1.d0,g(jr))
-          if (sg*sgp1 < 0.d0) nne = nne + 1
+          g(ir) = g(jr) - (ag1 + 2.d0*ag2 + 2.d0*ag3 + u*ff - x*gg)/6.d0
+          f(ir) = f(jr) - (af1 + 2.d0*af2 + 2.d0*af3 + x*ff - y*gg)/6.d0
+          if (g(ir)*g(jr) < 0.d0) nne = nne + 1
           ag1 = u*f(ir) - x*g(ir)
           af1 = x*f(ir) - y*g(ir)
-          if (ir == k2) then
+          if (ir == irstop) then
             kc = ir
             dg = dg3
             return
-          else
-            d(1,i) = ag1
-            d(2,i) = af1
           endif
-        enddo
+          d(1,i) = ag1
+          d(2,i) = af1
+        enddo ! i = 1..3
+        
         q = 1.d0/ea
         dg1 = d(1,1)
         dg2 = d(1,2)
@@ -413,8 +407,8 @@ module AtomicCore_mod
           rpb = rpb*q
           dr = a*rpb
           r = rpb - b
-          phi = (e + zz/r - v(ir))*dr/cvlight
-          u = dr*cvlight + phi*phiwgt
+          phi = (e + zz/r - v(ir))*dr/v_light
+          u = dr*v_light + phi*phiwgt
           x = -dr/r
           y = -fllp1*x*x/u + phi
           det = r83sq - x*x + u*y
@@ -422,17 +416,14 @@ module AtomicCore_mod
           b2 = f(jr)*h83 + r1*df1 + r2*df2 + r3*df3
           g(ir) = (b1*(h83 - x) + b2*u)/det
           f(ir) = (b2*(h83 + x) - b1*y)/det
-          sg   = dsign(1.d0,g(ir))
-          sgp1 = dsign(1.d0,g(jr))
-          if (sg*sgp1 < 0.d0) nne = nne + 1
+          if (g(ir)*g(jr) < 0.d0) nne = nne + 1
           dg1 = dg2
           df1 = df2
           dg2 = dg3
           df2 = df3
           dg3 = u*f(ir) - x*g(ir)
           df3 = x*f(ir) - y*g(ir)
-          sdg3 = dsign(1.d0,dg3)
-          if (ir <= k2 .or. sg*sdg3 >= 0.d0) run = 0 ! stop
+          if (ir <= irstop .or. g(ir)*dg3 >= 0.d0) run = 0 ! stop
         enddo ! while
       endif
       kc = ir
@@ -440,29 +431,31 @@ module AtomicCore_mod
     endfunction intin
       
       
-    double precision function intout(g, f, v, e, l, nne, k2, a, b, z, nsra) result(dg)
+    integer function intout(g, f, v, e, l, irstop, a, b, z, nsra, dg) result(nne)
       double precision, intent(in) :: a, b, e, z
-      integer, intent(in) :: k2, l, nsra
-      integer, intent(inout) :: nne
+      integer, intent(in) :: irstop, l, nsra
       double precision, intent(in) :: v(:)
-      double precision, intent(out) :: f(:), g(:)
+      double precision, intent(out) :: f(:), g(:), dg
 
 !     .. locals ..
-      double precision :: aa,alfa,b1,b2,bb,beta,cvlight, phiwgt, det,df1,df2,df3
+      double precision :: aa,alfa,b1,b2,bb,beta,v_light, phiwgt, det,df1,df2,df3
       double precision :: dg1,dg2,dg3,dr,ea,fllp1,p12,p21,phi,pp,qq,r
-      double precision :: rpb,s,sg,sgm1,u,x,y,zz
+      double precision :: rpb,s,u,x,y,zz
       double precision, parameter :: h83=8.d0/3.d0 ! positive!!
-      integer :: i,i1,k,km1,n
+      integer :: i,i1,k,km1,n,ir
       double precision :: d(2,3), px(12), qx(12)
 
       zz = z + z
-      cvlight = light_speed(nsra); phiwgt = nsra - 1.d0
+      v_light = light_speed(nsra); phiwgt = nsra - 1.d0
       ea = exp(a)
       fllp1 = l*(l + 1.d0)
-      aa = -zz/cvlight
+      
+      nne = 0 ! init node counter
+      
+      aa = -zz/v_light
       bb = fllp1 - aa*aa
-      p21 = (v(1) - e)/cvlight
-      p12 = cvlight - p21
+      p21 = (v(1) - e)/v_light
+      p12 = v_light - p21
       px(1) = 0.d0
       qx(1) = 0.d0
       if (z <= 20.d0 .or. nsra == 1) then
@@ -474,7 +467,7 @@ module AtomicCore_mod
           px(k+2) = ((v(1) - e)*px(k) - zz*px(k+1))/(k + 2.d0*l)/(k - 1.d0)
         enddo ! k
         do k = 2, 10
-          qx(k) = px(k+1)*(l + k - 2.d0)/cvlight
+          qx(k) = px(k+1)*(l + k - 2.d0)/v_light
         enddo ! k
 
       else
@@ -497,12 +490,12 @@ module AtomicCore_mod
       g(1) = 0.d0
       f(1) = 0.d0
       rpb = b
-      do k = 2, 4
+      do ir = 2, 4
         rpb = rpb*ea
         r = rpb - b
         dr = a*rpb
-        phi = (e + zz/r - v(k))*dr/cvlight
-        u = dr*cvlight + phi*phiwgt
+        phi = (e + zz/r - v(ir))*dr/v_light
+        u = dr*v_light + phi*phiwgt
         x = -dr/r
         y = -fllp1*x*x/u + phi
         pp = px(10)
@@ -512,44 +505,40 @@ module AtomicCore_mod
           pp = pp*r + px(i)
           qq = qq*r + qx(i)
         enddo ! i1
-        g(k) = (r**s)*pp
-        f(k) = (r**s)*qq
-        sg   = dsign(1.d0,g(k))
-        sgm1 = dsign(1.d0,g(k-1))
-        if (sg*sgm1 < 0.d0) nne = nne + 1
-        d(1,k-1) = u*f(k) - x*g(k)
-        d(2,k-1) = x*f(k) - y*g(k)
-      enddo ! k
+        g(ir) = (r**s)*pp
+        f(ir) = (r**s)*qq
+        if (g(ir)*g(ir-1) < 0.d0) nne = nne + 1
+        d(1,ir-1) = u*f(ir) - x*g(ir)
+        d(2,ir-1) = x*f(ir) - y*g(ir)
+      enddo ! ir
       dg1 = d(1,1)
       dg2 = d(1,2)
       dg3 = d(1,3)
       df1 = d(2,1)
       df2 = d(2,2)
       df3 = d(2,3)
-      do k = 5, k2
-        km1 = k - 1
+      do ir = 5, irstop
+        km1 = ir - 1
         rpb = rpb*ea
         r = rpb - b
         dr = a*rpb
-        phi = (e + zz/r - v(k))*dr/cvlight
-        u = dr*cvlight + phi*phiwgt
+        phi = (e + zz/r - v(ir))*dr/v_light
+        u = dr*v_light + phi*phiwgt
         x = -dr/r
         y = -fllp1*x*x/u + phi
         det = r83sq - x*x + u*y
         b1 = g(km1)*h83 + r1*dg1 + r2*dg2 + r3*dg3
         b2 = f(km1)*h83 + r1*df1 + r2*df2 + r3*df3
-        g(k) = (b1*(h83 - x) + b2*u)/det
-        f(k) = (b2*(h83 + x) - b1*y)/det
-        sg   = dsign(1.d0,g(k))
-        sgm1 = dsign(1.d0,g(km1))
-        if (sg*sgm1 < 0.d0) nne = nne + 1
+        g(ir) = (b1*(h83 - x) + b2*u)/det
+        f(ir) = (b2*(h83 + x) - b1*y)/det
+        if (g(ir)*g(km1) < 0.d0) nne = nne + 1
         dg1 = dg2
         dg2 = dg3
-        dg3 = u*f(k) - x*g(k)
+        dg3 = u*f(ir) - x*g(ir)
         df1 = df2
         df2 = df3
-        df3 = x*f(k) - y*g(k)
-      enddo ! k
+        df3 = x*f(ir) - y*g(ir)
+      enddo ! ir
       dg = dg3
     endfunction intout
 
