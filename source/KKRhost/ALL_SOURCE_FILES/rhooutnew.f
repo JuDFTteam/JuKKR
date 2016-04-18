@@ -23,7 +23,8 @@
      +                RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW),
      +                SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW)
        DOUBLE COMPLEX, ALLOCATABLE :: WR(:,:,:),QNSI(:,:),PNSI(:,:),
-     +                CWR(:)                                        ! lmlm-dos
+     +                CWR(:),                                        ! lmlm-dos
+     +                WR1(:,:,:)                                     ! LDAU
        INTEGER LMSHIFT1(4),LMSHIFT2(4)
        DOUBLE COMPLEX CDEN(IRMDNEW,0:LMAX,4),
      +                CDENLM(IRMDNEW,LMMAXD,4),
@@ -35,6 +36,7 @@
        EXTERNAL TEST,OPT
        ALLOCATE(WR(LMMAXSO,LMMAXSO,IRMDNEW))
        ALLOCATE(CWR(IRMDNEW))
+       ALLOCATE(WR1(LMMAXSO,LMMAXSO,IRMDNEW))
        ALLOCATE(QNSI(LMMAXSO,LMMAXSO))
        ALLOCATE(PNSI(LMMAXSO,LMMAXSO))
        WR=CZERO
@@ -114,6 +116,16 @@ c for orbital moment
          ENDDO
         ENDDO
         ENDIF
+        DO LM1=1,LMMAXSO
+         DO LM2=1,LMMAXSO
+          WR1(LM1,LM2,IR)=WR(LM1,LM2,IR)
+         ENDDO
+        ENDDO
+        DO LM1=1,LMMAXSO
+         DO LM2=1,LM1-1
+          WR1(LM1,LM2,IR)=WR1(LM1,LM2,IR)+WR1(LM2,LM1,IR)
+         ENDDO
+        ENDDO
  
         DO JSPIN = 1,4
          DO LM1 = 1,LMMAXD
@@ -130,26 +142,32 @@ c for orbital moment
 
 
 
-       IF (OPT('lmlm-dos')) THEN                                                          ! lmlm-dos
+! IF lmdos or LDAU 
+       IF (OPT('lmlm-dos').OR.OPT('LDA+U   ')) THEN         ! lmlm-dos
 c Integrate only up to muffin-tin radius.                                                 ! lmlm-dos
-       GFLLE_PART = CZERO                                                                 ! lmlm-dos
-       DO LM2 = 1,LMMAXSO                                                                 ! lmlm-dos
-         DO LM1 = 1,LMMAXSO                                                               ! lmlm-dos
+       GFLLE_PART = CZERO                                   ! lmlm-dos
+       DO LM2 = 1,LMMAXSO                                   ! lmlm-dos
+         DO LM1 = 1,LMMAXSO                                 ! lmlm-dos
 c For integration up to MT radius do this:                                                ! lmlm-dos
 !              CWR(1:IMT1) = WR(LM1,LM2,1:IMT1)                                             ! lmlm-dos
 !              CWR(IMT1+1:IRMDNEW) = CZERO                                                  ! lmlm-dos
 !              CALL INTCHEB_CELL(CWR,GFLLE_PART(LM1,LM2),RPAN_INTERVALL,                    ! lmlm-dos
 !      +                            IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)                  ! lmlm-dos
 c For full cell integration replace loop content with this:                               ! lmlm-dos
-            CWR(1:IRMDNEW) = WR(LM1,LM2,1:IRMDNEW)                                        ! lmlm-dos
-               DO IR=IMT1+1,IRMDNEW                                                       ! lmlm-dos
-                  CWR(IR) = CWR(IR)*THETASNEW(IR,1)*C0LL                                  ! lmlm-dos
-               ENDDO                                                                      ! lmlm-dos
-             CALL INTCHEB_CELL(CWR,GFLLE_PART(LM1,LM2),RPAN_INTERVALL,                    ! lmlm-dos
-     +                            IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)                  ! lmlm-dos
-          ENDDO                                                                           ! lmlm-dos
-       ENDDO                                                                              ! lmlm-dos
-       ENDIF  ! OPT('lmlm-dos')
+            CWR(1:IRMDNEW) = WR1(LM1,LM2,1:IRMDNEW)   ! lmlm-dos
+! If LDAU, integrate only up to MT
+               DO IR=IMT1+1,IRMDNEW                   
+                IF (OPT('LDA+U   ')) THEN
+                 CWR(IR)=CZERO                        ! LDAU
+                ELSE
+                 CWR(IR) = CWR(IR)*THETASNEW(IR,1)*C0LL ! lmlm-dos
+                ENDIF
+               ENDDO                             
+             CALL INTCHEB_CELL(CWR,GFLLE_PART(LM1,LM2),RPAN_INTERVALL, 
+     +                            IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)
+          ENDDO                                                         
+       ENDDO                                                            
+       ENDIF  ! OPT('lmlm-dos').OR.OPT('LDA+U   ')
 
 
 !      DO IR = 1,IRMDNEW
@@ -227,7 +245,7 @@ c first calculate the spherical symmetric contribution
        ENDDO ! J   
 
 
-       DEALLOCATE(WR)
+       DEALLOCATE(WR,WR1)
        DEALLOCATE(CWR)
        DEALLOCATE(QNSI) 
        DEALLOCATE(PNSI) 

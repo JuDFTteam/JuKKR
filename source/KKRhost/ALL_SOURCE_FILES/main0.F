@@ -327,7 +327,7 @@ C     .. Local Arrays ..
       INTEGER KMESH(IEMXD)
       INTEGER ITSCF,SCFSTEPS,KFORCE
       LOGICAL VACFLAG(2)
-      CHARACTER*24 TXC(4)
+      CHARACTER*24 TXC(5)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD)
       DOUBLE PRECISION GSH(NGSHD)
       DOUBLE PRECISION TOLRDIF
@@ -403,8 +403,8 @@ C
 C     ..
 C     .. distinguish between spin-dependent and spin-independent
 C     .. quantities
-!       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
+!      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD) ! Spin-Dependent
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U LDA+U LDA+U
@@ -959,11 +959,11 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       IF (OPT('LDA+U   ')) then
            !ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
            CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
-     &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,
+     &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
       END IF
 C
@@ -1056,7 +1056,7 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-      if(allocated(ULDAU)      ) deallocate(ULDAU)
+c      if(allocated(ULDAU)      ) deallocate(ULDAU)
       if(allocated(thetas)     ) deallocate(thetas)
       if(allocated(thetasnew)  ) deallocate(thetasnew)
       if(allocated(thesme)     ) deallocate(thesme)

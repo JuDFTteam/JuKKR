@@ -96,6 +96,7 @@ C LDA+U
       DOUBLE PRECISION WLDAUOLD(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
       DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
+      DOUBLE COMPLEX DENMATN(MMAXD,MMAXD,2,2,NATYPD)
 C for new spin-orbit solver
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD)
@@ -248,7 +249,7 @@ C -------------------------------------------------------------- input1c
       call get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,
      &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,
      &          NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1,
-     &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB, 
+     &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB,
      &          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,
      &          IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,ITMPDIR,
      &          ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NCHEB,NPAN_TOT,
@@ -267,6 +268,13 @@ C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
 C
+      IF ( IDOLDAU.EQ.1 ) THEN 
+C
+         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+         READ (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
+         CLOSE(67)
+      ENDIF
+
       NQDOS=1
       IF (OPT('qdos    ')) THEN                         ! qdos
 C        Read BZ path for qdos calculation:
@@ -698,7 +706,8 @@ C ================================================================ NATYP
 
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
-        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
+c        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
+        IF (OPT('lmdos    ')) THEN                                   ! lm-dos
           DO I1=1,NATYP                                                  ! lm-dos
             DO ISPIN = 1,NSPIN                                           ! lm-dos
               IPOT = (I1-1) * NSPINPOT + ISPIN                           ! lm-dos
@@ -736,6 +745,8 @@ C ================================================================ NATYP
 
 
 c interpolate potential
+      IF ( IDOLDAU.EQ.1 ) 
+     +           CALL CINIT(MMAXD*MMAXD*4*NATYPD,DENMATN(1,1,1,1,1))
 
        CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
@@ -803,7 +814,9 @@ c interpolate potential
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
-     &           angles_new(:,i1))
+     &           angles_new(:,i1),
+     &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),   ! LDAU
+     &           DENMATN(1,1,1,1,I1))                              ! LDAU
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
@@ -854,10 +867,10 @@ c interpolate potential
       !reset NQDOS to 1 to avoid endless communication
       NQDOS = 1
       call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
-     &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
+     &                                 NPOTD,NATYPD,LMPOTD,IRMD,MMAXD,    &
      &                                 den, denlm, muorb, espv, r2nef,    &
-     &                                 rho2ns,denefat,denef,angles_new,   &
-     &                                 t_mpi_c_grid%mympi_comm_ie)
+     &                                 rho2ns, denefat, denef,denmatn,    &
+     &                            angles_new,t_mpi_c_grid%mympi_comm_ie)
 #endif
       
 #ifdef CPP_TIMING
@@ -957,8 +970,13 @@ C -> Save old LDA+U interaction matrix for mixing
 C
 C -> Construct LDA+U interaction matrix for next iteration
 C
+        IF (.NOT.OPT('NEWSOSOL')) THEN
          CALL WMATLDAU(NTLDAU,ITLDAU,NSPINPOT,DENMATC,LOPT,
      &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+        ELSE
+         CALL WMATLDAUSOC(NTLDAU,ITLDAU,NSPINPOT,DENMATN,LOPT,
+     &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+        ENDIF
 C -> Mix old and new LDA+U interaction matrices
          CALL MIXLDAU(
      >        MMAXD,NSPIND,NATYPD,NATYP,NSPIN,LOPT,WLDAUOLD,
@@ -974,7 +992,7 @@ C
 C -> write full lda+u information in ascii file ldaupot_new
 C
          CALL WRLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,EREFLDAU,NATYP,WLDAU,
-     &                  ULDAU,PHILDAU,IRMD,NATYPD,NSPIND,MMAXD)
+     &                  ULDAU,PHILDAU,IRMD,NATYPD,NSPIND,MMAXD,IRWS)
       END IF
 C
 C LDA+U

@@ -3,7 +3,8 @@
      +                      NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,
      +                      RPAN_INTERVALL,IPAN_INTERVALL,
      +                      RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,
-     +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB,angles_new)
+     +                      DEN_out,ESPV,RHO2NS,R2NEF,MUORB,angles_new,
+     +                      IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATN)
 #ifdef CPP_OMP
        use omp_lib
 #endif
@@ -41,10 +42,15 @@
        PARAMETER (LMPOTD= (LPOTD+1)**2)
        INTEGER LMXSPD
        PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+       INTEGER MMAXD
+       PARAMETER (MMAXD= 2*LMAXD+1)
+       INTEGER NPOTD
+       PARAMETER (NPOTD= (2*(KREL+KORBIT) + 
+     +           (1-(KREL+KORBIT))*NSPIND)*NATYPD)
        DOUBLE PRECISION CVLIGHT
        PARAMETER (CVLIGHT=274.0720442D0)
-       DOUBLE COMPLEX CZERO,CONE
-       PARAMETER (CZERO=(0d0,0d0),CONE=(1d0,0d0))
+       DOUBLE COMPLEX CZERO,CONE,CI
+       PARAMETER (CZERO=(0d0,0d0),CONE=(1d0,0d0),CI=(0d0,1d0))
        INTEGER NRMAXD
        PARAMETER (NRMAXD=NTOTD*(NCHEBD+1))
        DOUBLE PRECISION ZAT,RMESH(IRMD)
@@ -99,6 +105,11 @@
        INTEGER IQ,NQDOS ! qdos ruess: number of qdos points
        INTEGER IX,M1,LMSHIFT1(4),LMSHIFT2(4)       ! qdos ruess
        INTEGER LRECGFLLE,IERR                           ! lmlm-dos
+       INTEGER IDOLDAU,LOPT                                     ! LDAU
+       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND),PHILDAU(IRMD) ! LDAU
+       DOUBLE COMPLEX DENMATN(MMAXD,MMAXD,2,2)                  ! LDAU
+       INTEGER LMLO,LMHI,MMAX,M2,IS,JS                          ! LDAU
+       DOUBLE COMPLEX GLDAU(LMMAXSO,LMMAXSO)                    ! LDAU
        ! OMP - number of threads, thread id
        integer nth,ith
 #ifdef CPP_MPI
@@ -141,12 +152,34 @@ C      ..
        ENDDO
 
 cc set up the non-spherical ll' matrix for potential VLL'
-       USE_SRATRICK=1
+       IF (NSRA.EQ.2) THEN
+        USE_SRATRICK=1
+       ELSE
+        USE_SRATRICK=0
+       ENDIF
        ALLOCATE(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW))
        ALLOCATE(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        VNSPLL0=CZERO
        CALL VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,
      +                    CLEB,ICLEB,IEND,NSPIN,ZAT,RNEW,USE_SRATRICK)
+! LDAU
+       IF (IDOLDAU.EQ.1) THEN
+        LMLO=LOPT**2+1
+        LMHI=(LOPT+1)**2
+         DO IR=1,IRMDNEW
+          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=
+     +                           VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+
+     +                           WLDAU(1:MMAX,1:MMAX,1)
+         ENDDO
+        LMLO=LMLO+LMMAXD
+        LMHI=LMHI+LMMAXD
+         DO IR=1,IRMDNEW
+          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=
+     +                           VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+
+     +                           WLDAU(1:MMAX,1:MMAX,2)
+         ENDDO
+       ENDIF
+! LDAU
 
 c initial allocate
        IF (NSRA.EQ.2) THEN
@@ -200,6 +233,7 @@ c initial allocate
        PHINEW=0d0
        GFLLE_PART=CZERO
        GFLLE=CZERO
+       GLDAU=CZERO
 c LM shifts for correct density summation
        LMSHIFT1(1)=0                                                   ! qdos ruess
        LMSHIFT1(2)=LMMAXD                                              ! qdos ruess
@@ -718,9 +752,39 @@ c    write qdos.nn.s.dat                                                  ! qdos
       if(t_mpi_c_grid%myrank_at==master) then
 #endif ! CPP_MPI
 
+! LDAU
+      IF (IDOLDAU.EQ.1) THEN
+! calculate WLDAU
+       DO IE=1,IELAST
+        DO LM1=1,LMMAXSO
+         DO LM2=1,LMMAXSO
+          GLDAU(LM1,LM2)=GLDAU(LM1,LM2)+GFLLE(LM1,LM2,IE,1)*
+     +                                  WEZ(IE)/DBLE(NSPIN)
+         ENDDO
+        ENDDO
+       ENDDO
+! calculate occupation matrix
+       MMAX=2*LOPT+1
+       DO IS=1,2
+        DO JS=1,2
+         LMLO=LOPT**2+1+(IS-1)*LMMAXD
+         LMHI=(LOPT+1)**2+(JS-1)*LMMAXD
+         LM2=LOPT**2+1+(JS-1)*LMMAXD
+         DO M1=1,MMAX
+          LM1=LMLO-1+M1
+          DENMATN(1:MMAX,M1,JS,IS)=(1.0/(2.0*CI))*
+     +                       (GLDAU(LM2:LMHI,LM1)-
+     +                        DCONJG(GLDAU(LM1,LM2:LMHI)))
+         ENDDO
+        ENDDO
+       ENDDO
+
+      ENDIF ! LDAU
+
        if(.not.OPT('qdos    ')) then
 ! omp: moved write-out of dos files out of parallel energy loop
 c Write out lm-dos:                                                      ! lm-dos
+       IF (OPT('lmdos    ')) THEN                                          ! qdos ruess
        DO IE=1,IELAST                                                    ! lm-dos
          IQ=1
          IF (IE.EQ.1) THEN                                               ! lm-dos
@@ -751,6 +815,7 @@ c Write out lm-dos:                                                      ! lm-do
  9001    FORMAT(30E12.4)                                                 ! lm-dos
  8600    FORMAT (a8,I3,a4,I5)                                            ! lm-dos/qdos ruess
        ENDDO !IE
+       ENDIF
        end if ! .not. OPT('qdos    ')
 
 c      write gflle to file                                               ! lmlm-dos

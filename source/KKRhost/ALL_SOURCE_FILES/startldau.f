@@ -1,5 +1,5 @@
       SUBROUTINE STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
-     &                     EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,
+     &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,
      &                     NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
 C **********************************************************************
 C *                                                                    *
@@ -8,15 +8,15 @@ C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
 C     ..
-      INTEGER IRMD,MMAXD,NATYPD,NSPIND
+      INTEGER IRMD,MMAXD,NATYPD,NSPIND,IRWS(NATYPD)
 C     ..
 C     .. Arguments ..
       INTEGER ITRUNLDAU,IDOLDAU,KREADLDAU,NATYP,NSPIN,NTLDAU
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION UEFF(NATYPD),JEFF(NATYPD),EREFLDAU(NATYPD)
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
-!       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD)
+c      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD)
 C     .. 
 C     .. Locals ..
@@ -25,7 +25,7 @@ C     ..
 C ----------------------------------------------------------------------
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+!      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
       ITRUNLDAU = 0
       IDOLDAU = 1
@@ -54,10 +54,11 @@ C
 C -> read in LDA+U from file if available (KREADLDAU=1)
 C
       CALL RINIT(MMAXD*MMAXD*NSPIND*NATYPD,WLDAU)
+      CALL CINIT(IRMD*NATYPD,PHILDAU)
       IF ( KREADLDAU.EQ.1 ) THEN
          WRITE(1337,99005)
          CALL READLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,
-     &                    EREFLDAU,NATYP,WLDAU,ULDAU,PHILDAU,
+     &                    EREFLDAU,NATYP,WLDAU,ULDAU,PHILDAU,IRWS,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
       ELSE
          WRITE(1337,99006)
@@ -99,6 +100,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
          CALL CINIT(IRMD*NATYPD,PHILDAU)
       END IF
       WRITE(1337,*)
+
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
 99001 FORMAT(6X,'Number of atoms ','  in the u.c. :',I4,/,

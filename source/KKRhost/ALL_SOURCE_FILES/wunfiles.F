@@ -199,7 +199,8 @@ C     .. Array arguments
       DOUBLE PRECISION A(NATYPD),B(NATYPD) ,THETAS(IRID,NFUND,NCELLD)
       DOUBLE PRECISION RMT(NATYPD),RMTNEW(NATYPD),RWS(NATYPD),GSH(NGSHD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C     ..
@@ -229,7 +230,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(4)
+      CHARACTER*24 TXC(5)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
 C     ..
@@ -540,7 +541,7 @@ C ======================================================================
       ALLOCATE(t_params%SYMUNITARY(t_params%NSYMAXD), !LOGICALS
      &         t_params%VACFLAG(2))
      
-      ALLOCATE(t_params%TXC(4)) !CHARACTER*24
+      ALLOCATE(t_params%TXC(5)) !CHARACTER*24
       
       if(.not.allocated(t_params%TESTC)) then
         ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
@@ -1042,7 +1043,7 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,4*24, !4 entries of length 24
+      call MPI_Bcast(t_params%TXC,5*24, !5 entries of length 24
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
       call MPI_Bcast(t_params%TESTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
@@ -1312,7 +1313,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(4)  
+      CHARACTER*24 TXC(5)  
 C     ..
       !fill arrays:
       t_params%EZ             = EZ             
@@ -2019,7 +2020,7 @@ C
      &     R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),ECORE(20,NPOTD)
 
       double complex, intent(inout) :: EZ(IEMXD),WEZ(IEMXD)
-      character*24, intent(inout) :: TXC(4)
+      character*24, intent(inout) :: TXC(5)
       logical, intent(inout) :: LINTERFACE,LRHOSYM
 C     .. External Functions ..
       LOGICAL OPT,TEST

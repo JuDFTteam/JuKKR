@@ -112,7 +112,8 @@ C LDA+U
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U
@@ -171,7 +172,7 @@ C
 C
       IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       
-      if(IDOLDAU==1) ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+C      if(IDOLDAU==1) ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
 C ======================================================================
 C =                     End read in variables                          =
@@ -318,7 +319,8 @@ c interpolate potential
      &                      NCHEB,NPAN_TOT(I1),
      +                      RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),
      +                      RNEW(1,I1),VINSNEW,THETA(I1),PHI(I1),I1,IPOT
-     &                     ,LLY,DELTAE) ! LLY
+     &                      ,LLY,DELTAE, ! LLY
+     &                      IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1)) ! LDAU
 
        ENDDO !I1, atom loop
 
@@ -404,7 +406,7 @@ C
      &  WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
 
 
-      if(IDOLDAU==1) DEALLOCATE( ULDAU )
+C      if(IDOLDAU==1) DEALLOCATE( ULDAU )
       deallocate(vins, vinsnew)
 
 

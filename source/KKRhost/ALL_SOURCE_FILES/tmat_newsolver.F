@@ -2,7 +2,7 @@
      +                        EZ,NSRA,CLEB,ICLEB,IEND,NCHEB,NPAN_TOT,
      +                        RPAN_INTERVALL,IPAN_INTERVALL,
      +                        RNEW,VINSNEW,THETA,PHI,I1,IPOT,
-     &                        LLY,DELTAE)
+     &                        LLY,DELTAE,IDOLDAU,LOPT,WLDAU)
 #ifdef CPP_OMP
        use omp_lib        ! necessary for omp functions
 #endif
@@ -25,6 +25,8 @@
        PARAMETER (LMMAXSO=2*LMMAXD)
        INTEGER LMPOTD
        PARAMETER (LMPOTD= (LPOTD+1)**2)
+       INTEGER MMAXD
+       PARAMETER (MMAXD=2*LMAXD+1)
        DOUBLE PRECISION CVLIGHT
        PARAMETER (CVLIGHT=274.0720442D0)
        DOUBLE COMPLEX CZERO,CONE,CI
@@ -64,6 +66,8 @@
       ! LLoyd:
       INTEGER LLY,IDERIV,SIGNDE        ! LLY
       DOUBLE COMPLEX DELTAE,TRALPHA,IPIV(LMMAXSO)            ! LLY
+      DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)             ! LDAU
+      INTEGER IDOLDAU,LOPT,LMLO,LMHI,MMAX                    ! LDAU
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
@@ -105,6 +109,24 @@ cc set up the non-spherical ll' matrix for potential VLL'
        VNSPLL0=CZERO
        CALL VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,
      +                    CLEB,ICLEB,IEND,NSPIN,ZAT,RNEW,USE_SRATRICK)
+! LDAU
+       IF (IDOLDAU.EQ.1) THEN
+        LMLO=LOPT**2+1
+        LMHI=(LOPT+1)**2
+         DO IR=1,IRMDNEW
+          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=
+     +                           VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+
+     +                           WLDAU(1:MMAX,1:MMAX,1)
+         ENDDO
+        LMLO=LMLO+LMMAXD
+        LMHI=LMHI+LMMAXD
+         DO IR=1,IRMDNEW
+          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=
+     +                           VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+
+     +                           WLDAU(1:MMAX,1:MMAX,2)
+         ENDDO
+       ENDIF
+! LDAU
 
 c initial allocate
        IF (NSRA.EQ.2) THEN

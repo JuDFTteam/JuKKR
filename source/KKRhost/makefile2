@@ -16,7 +16,7 @@ VXCOBJS2 = $(OBJ)/corlsd.o      $(OBJ)/cpw91.o      $(OBJ)/cylm02.o \
           $(OBJ)/spher.o       $(OBJ)/sphere_gga.o $(OBJ)/sphere_nogga.o \
           $(OBJ)/trarea.o      $(OBJ)/vosko.o      $(OBJ)/vxcdrv.o \
           $(OBJ)/vxcgga.o      $(OBJ)/vxclm.o      $(OBJ)/vxcspo.o \
-          $(OBJ)/lebedev.o
+          $(OBJ)/lebedev.o     $(OBJ)/mkxcpe2.o
           
 
 
@@ -168,6 +168,9 @@ $(OBJ)/vxcspo.o       : $(VXC)/vxcspo.f                      ; \
 
 $(OBJ)/lebedev.o  : $(VXC)/lebedev.f                         ; \
                         $(FC) $(FFLAGS) $(VXC)/lebedev.f -c -o $@
+
+$(OBJ)/mkxcpe2.o  : $(VXC)/mkxcpe2.f                         ; \
+                        $(FC) $(FFLAGS) $(VXC)/mkxcpe2.f -c -o $@
 ############################################################
 
 ##################### sources in REL directory ##########

@@ -39,7 +39,8 @@ $(OBJ)/rhocore.o        $(OBJ)/wrldos.o         $(OBJ)/wrmoms.o         \
 $(OBJ)/wrmomssoc.o      $(OBJ)/densitymat.o     $(OBJ)/wrldaupot.o      \
 $(OBJ)/overlap.o        $(OBJ)/wmatldau.o       $(OBJ)/mixldau.o        \
 $(OBJ)/rclm.o           $(OBJ)/rhovalnew.o      $(OBJ)/rhooutnew.o      \
-$(OBJ)/intcheb_cell.o   $(OBJ)/cheb2oldgrid.o   $(OBJ)/orbitalmoment.o  
+$(OBJ)/intcheb_cell.o   $(OBJ)/cheb2oldgrid.o   $(OBJ)/orbitalmoment.o  \
+$(OBJ)/wmatldausoc.o 
 
 
 #COMNONMPI1c = $(OBJ)/main1c.o     $(OBJ)/rhoval.o
@@ -173,6 +174,9 @@ $(OBJ)/cheb2oldgrid.o  : $(COM)/cheb2oldgrid.f90 $(INCP)        ; \
 
 $(OBJ)/orbitalmoment.o  : $(COM)/orbitalmoment.f90 $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/orbitalmoment.f90 -c -o $@
+
+$(OBJ)/wmatldausoc.o   : $(COM)/wmatldausoc.f $(INCP)        ;\
+                     $(FC) $(FFLAGS) $(COM)/wmatldausoc.f  -c -o $@
 ############################################################
 
 ##################### sources in DRV directory ##########
