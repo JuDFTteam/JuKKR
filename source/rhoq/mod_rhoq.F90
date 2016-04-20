@@ -211,6 +211,7 @@ subroutine read_scoef_rhoq(t_rhoq)
   open(unit=32452345,file='scoef',iostat=ierr)
   if (ierr/=0) stop '[read_scoef_rhoq] file not found'
   read(32452345,*) natomimp
+  natomimp = natomimp-1
   write(*,*) 'natomimp',natomimp
   allocate(ratomimp(3,natomimp))
   allocate(atomimp(natomimp))
@@ -266,9 +267,6 @@ subroutine read_input_rhoq(t_rhoq, uio)
   ! local
   integer :: ier
   
-!   open(32452345, file='inputcard', status='old', iostat=ier)
-!   if(ier/=0) stop '[read_input_rhoq] error inputcard not found'
-  
   call ioinput('mu0_rhoq        ',uio,1,7,ier)
   if (ier.eq.0) then
     read (unit=uio,fmt=*) t_rhoq%mu_0
@@ -293,8 +291,6 @@ subroutine read_input_rhoq(t_rhoq, uio)
     stop '[read_input_rhoq] error "Ghost_k_memsave" not found in inputcard'
   endif
   
-!   close(32452345)
-
 end subroutine read_input_rhoq
 
 
@@ -404,11 +400,15 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   R_mu(:) = r_basis(:,mu_orig)
   R_cls(:) = r_basis(:,mu_cls)
   
-  ! L_i = R_mu - R_cls - r^cls_i
+  ! L_i = r^cls_i - \Chi^{\mu_i} + \Chi^{\mu_{cls}} - 
   do ilayer=1,t_rhoq%Nscoef
-    L_i(:,ilayer) = R_mu(:) - R_cls(:) - rcls_i(:,ilayer)
+!     L_i(:,ilayer) = -R_mu(:) + R_cls(:) + rcls_i(:,ilayer)
+    L_i(:,ilayer) = rcls_i(:,ilayer)-r_basis(:,t_rhoq%ilay_scoef(ilayer))+R_cls(:)-R_mu(:)
     write(*,*) 'L_i', L_I(:,ilayer)
   end do
+  write(*,*) R_mu
+  write(*,*) R_cls
+!   stop
   
   ! save result and exit
   ierr = 0
@@ -531,9 +531,7 @@ subroutine read_DTMTRX( tmat, lmmaxso, ncls)
   !read in the t-matrix
   do lm1=1,ncls*lmmaxso
     do lm2=1,ncls*lmmaxso
-!       write(*,*) lm1,lm2, ncls, lmmaxso, ncls*lmmaxso
       read(562,"(2I5,4e17.9)") idummy1, idummy2, tmat(lm2,lm1), deltamat_dummy
-!       write(*,*) idummy1, idummy2
     end do!lm2
   end do!lm1
   
@@ -652,7 +650,7 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
   integer, intent(in) :: icleb(ncleb,4), loflm(lm2d) ! Gaunt coefficients
   integer, intent(in) :: nfund, lmxsp, ifunm(lmxsp), nrmaxd, lmsp(lmxsp) ! shape functions
   double precision, intent(in) :: thetasnew(nrmaxd,nfund) ! shape functions in Chebychev mesh (new mesh)
-  double complex, intent(out) :: q_mu(lmmaxso,lmmaxso)
+!   double complex, intent(out) :: q_mu(lmmaxso,lmmaxso)
   
   double precision, parameter :: c0ll = 1.0d0/sqrt(16.0d0*datan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
   
@@ -662,7 +660,7 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
   double complex, parameter :: C0=( 0.0d0, 0.0d0 ), C1=( 1.0d0, 0.0d0 )
   
   q_of_r = C0
-  q_mu = C0
+!   q_mu = C0
   
 
   ! get indices of imt and irmd in new mesh -> boundaries for ir loops
@@ -711,14 +709,12 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, ncheb, npan_log, npan_eq, &
     end if ! lmsp(ifun)/=0
   enddo ! j -> sum of Gaunt coefficients
       
-    ! do radial integration
-  do lm01 = 1, lmmaxso ! loop over outer lm-component
-    do lm02 = 1, lmmaxso ! loop over outer lm-component
-      call intcheb_cell(q_of_r(:,lm02,lm01),q_mu(lm02,lm01),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
-!       write(456456,'(2I5,2E16.7)') lm02, lm01, q_mu(lm02,lm01)
-!       write(123123,'(2I5,20000E16.7)') lm02, lm01, q_of_r(:,lm02,lm01)
-    end do ! lm02
-  end do ! lm01
+!     ! do radial integration
+!   do lm01 = 1, lmmaxso ! loop over outer lm-component
+!     do lm02 = 1, lmmaxso ! loop over outer lm-component
+!       call intcheb_cell(q_of_r(:,lm02,lm01),q_mu(lm02,lm01),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
+!     end do ! lm02
+!   end do ! lm01
 
 end subroutine calc_Q_mu_rhoq
 
@@ -765,7 +761,72 @@ end subroutine calc_G0_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
+subroutine red_Q(t_rhoq, rb, qvec, iq)
+  ! folding Q back into Brillouin zone, i.e. find q such that Q=G+q with a reciprocal lattice vector G
+  ! this is done with 
+  implicit none
+  type(type_rhoq), intent(inout) :: t_rhoq
+  double precision, intent(in) :: qvec(2), rb(2,2)
+  integer, intent(out) :: iq
+  ! local
+  double precision :: rbt(2,2), irbt(2,2), rq(2), kpt(2), det, qv(2)
+  integer :: i, j
+  double precision, parameter :: eps=1.0d-04
+  
+  ! compute inverse of transpose of reciprocal Bravais matrix
+  ! note that transpose is needed because vectors are stored in rows and not in columns in the code
+  ! fill transpose
+  do i=1,2
+    rbt(i,i)=rb(i,i)
+    do j=1,2
+      if(j/=i) rbt(i,j) = rb(j,i)
+    end do
+  end do
+  ! compute 2x2 inverse
+  det = 1.0d0/(rbt(1,1)*rbt(2,2) - rbt(1,2)*rbt(2,1))
+  irbt(1,1) = det*rbt(2,2)
+  irbt(1,2) = -det*rbt(1,2)
+  irbt(2,1) = -det*rbt(2,1)
+  irbt(2,2) = det*rbt(1,1)
+  
+  ! compute rq = (RB^T)^-1.Q
+  ! this gives coordinates in multiples of the reciprocal lattice vectors
+  do i=1,2
+    rq(i) = irbt(1,i)*qvec(1) + irbt(2,i)*qvec(2)
+  end do
+  
+  ! take modulus rq = mod(rq,1)
+  do i=1,2
+    rq(i) = rq(i)+100-int(rq(i)+100.0d0)
+    if(1-rq(i)<eps) rq(i) = 0.0d0
+  end do
+  
+  ! convert coordinates back
+  ! qv = RB^T.rq
+  do i=1,2
+    qv(i) = rb(i,1)*rq(1) + rb(i,2)*rq(2)
+  end do
+  
+  ! find iq from projection
+  iq = -1
+  do i=1,t_rhoq%Nkpt
+    kpt(:) = t_rhoq%kpt(:,i)
+    if(dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))<eps) then
+      iq=i
+    end if
+  end do
+  
+  !check if iq was found
+  if(iq<1) stop '[red_Q] Error: no iq found'
+  
+  
+end subroutine red_Q
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq, recbv)
   ! calculate Delta rho^mu(q) = Int{ Delta rho(q, X_mu+r), dr }
   !                           = -1/(2*pi*i) Tr[ Q^mu Int{ Ghost(k) tau Ghost(k+q),dk } - Q^mu,* Int{ Ghost^*(k) tau^* Ghost^*(k-q),dk }]
   use omp_lib
@@ -773,15 +834,17 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: lmmaxso, Nkp
   double complex, intent(in) :: q_mu(lmmaxso,lmmaxso)
-  double complex, intent(out) :: rhoq(Nkp)
+  double precision, intent(in) :: recbv(3,3)
+  double complex, allocatable, intent(out) :: rhoq(:)
   ! local
-  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads
+  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads, Ni, Nj, Nqpt, ixyz, iq
   integer, allocatable :: ipvt(:)
-  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpG02(:,:), tll(:,:), tmp(:,:), tmpsum1(:,:), tmpsum2(:,:)
+  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpG02(:,:), tll(:,:), tmp(:,:), tmpsum1(:,:), tmpsum2(:,:), exG0_tmp(:,:)
   double complex :: expfac, tr_tmpsum1, tr_tmpsum2, kweight
-  double precision, allocatable :: kpt(:,:), L_i(:,:)
-  double precision :: kdotL
+  double precision, allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:)
+  double precision :: kdotL, QdotL, tmpk(3), tmpr(3)
   double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
+  double precision, parameter :: pi = 4.0d0*datan(1.0d0) ! pi/4 = arctan(1)
   
   N = t_rhoq%lmmaxso
   if(N/=lmmaxso) stop '[calc_rhoq] lmmaxso input does not match value in t_rhoq'
@@ -811,7 +874,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
   tau0_k = C0
   G0ij_k = C0
   G0ji_k = C0
-  rhoq = C0
   
   write(*,*) 'done allocating'
   
@@ -820,8 +882,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
   open(9999, file='tmat', access='direct', recl=lrec, form='unformatted')
   do i=1,t_rhoq%Nscoef
     irec = t_rhoq%ilay_scoef(i) ! layer index 
+    write(*,*) 'read tmat', irec
     read(9999,rec=irec) tll(1:N,1:N)
-!     tinv(1:N,1:N,i) = 1.0d0/tinv(1:N,1:N,i)
     tinv(1:N,1:N,i)=C0
 
     do lm1=1,lmmaxso
@@ -830,8 +892,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
     ! LU decomposition to invert tll
     call zgetrf(lmmaxso,lmmaxso,tll,lmmaxso,ipvt,ierr)
     call zgetrs('n',lmmaxso,lmmaxso,tll,lmmaxso,ipvt,tinv(:,:,i),lmmaxso,ierr)
-!     write(147,'(2ES15.7)') tll(:,:)
-!     write(148,'(2ES15.7)') tinv(:,:,i)
   end do ! i
   close(9999)
   
@@ -849,12 +909,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmpG0'
   allocate(tmpG02(N,N), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmpG02'
+  allocate(tmpsum1(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1'
+  allocate(tmpsum2(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum2'
+  tmpsum1 = C0
+  tmpsum2 = C0
   
   do k=1,Nkp
     ! find exG0_i(k) vector of lm-blocks (i is one component)
     do i=1,t_rhoq%Nscoef
-    
-!       write(*,*) 'in first kpt loop', k,i
     
       ! set mu, mu_i to calculate G0ij_k
       mu = t_rhoq%mu_0
@@ -872,30 +936,43 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
       call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tmpG0(1:N,1:N), mu, mu_i, N)
       
       ! expfac = exp(-i k*L_i)
-      kdotL = kpt(1,k)*L_i(1,i)
-      expfac = exp(-Ci*kdotL)
+!       kdotL = kpt(1,k)*L_i(1,i)
+!       expfac = exp(-Ci*kdotL)
       ! G0ij_k = exG0ij(k) = expfac*G0ij(k)
-      G0ij_k(1:N,1:N,i,k) = expfac*tmpG0(1:N,1:N)
+!       G0ij_k(1:N,1:N,i,k) = expfac*tmpG0(1:N,1:N)
+      G0ij_k(1:N,1:N,i,k) = tmpG0(1:N,1:N)
+      
+      
+      write(256,'(2ES15.7)') tau0_k(:,:)
       
       
       ! now mu_i,mu element
       irec = (t_rhoq%Nlayer*2)*(k-1) + (t_rhoq%Nlayer*2)*Nkp*(ie-1)
       ix = mu_i - mu + 1
-!       irec = irec + mu_i + t_rhoq%Nlayer
       irec = irec + ix + t_rhoq%Nlayer
-      write(*,'(8I9)') ie,k,mu_i,ix,irec,t_rhoq%Nlayer,Nkp
       read(9999,rec=irec) tau0_k(1:N,1:N)
       ! find G0ji_k from tau0_k and tinv
       call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tmpG02(1:N,1:N), mu_i, mu, N)
       
       ! expfac = exp(-i k*L_i)
-      kdotL = kpt(1,k)*L_i(1,i)
-      expfac = exp(Ci*kdotL) ! different sign here!
+!       kdotL = kpt(1,k)*L_i(1,i)
+!       expfac = exp(Ci*kdotL) ! different sign here!
       ! G0ji_k = exG0ji(k) = expfac*G0ji(k)
-      G0ji_k(1:N,1:N,i,k) = expfac*tmpG02(1:N,1:N)
+!       G0ji_k(1:N,1:N,i,k) = expfac*tmpG02(1:N,1:N)
+      G0ji_k(1:N,1:N,i,k) = tmpG02(1:N,1:N)
       
-!       write(*,'(A,2I5,10E17.9)') 'tau0_k to G0',i,k,tau0_k(1,1),G0ij_k(1,1,i,k),G0ji_k(1,1,i,k)
-      
+      kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
+      tmpsum1 = tmpsum1 + tmpG0  * kweight * exp(-2.0d0*pi*Ci*   &
+   &                      ( kpt(1,k) * ( t_rhoq%r_basis(1,t_rhoq%ilay_scoef(i))-t_rhoq%r_basis(1,t_rhoq%mu_0) ) +  &
+   &                        kpt(2,k) * ( t_rhoq%r_basis(2,t_rhoq%ilay_scoef(i))-t_rhoq%r_basis(2,t_rhoq%mu_0) ) +  &
+   &                        kpt(3,k) * ( t_rhoq%r_basis(3,t_rhoq%ilay_scoef(i))-t_rhoq%r_basis(3,t_rhoq%mu_0) )    &
+   &                       )                     )
+      tmpsum2 = tmpsum2 + tmpG02 * kweight * exp(-2.0d0*pi*Ci*   &
+   &                      ( kpt(1,k) * ( t_rhoq%r_basis(1,t_rhoq%ilay_scoef(i))-t_rhoq%r_basis(1,t_rhoq%mu_0) ) +  &
+   &                        kpt(2,k) * ( t_rhoq%r_basis(2,t_rhoq%ilay_scoef(i))-t_rhoq%r_basis(2,t_rhoq%mu_0) ) +  &
+   &                        kpt(3,k) * ( t_rhoq%r_basis(3,t_rhoq%ilay_scoef(i))-t_rhoq%r_basis(3,t_rhoq%mu_0) )    &
+   &                       )                     ) 
+            
 !       write(257,'(2ES15.7)') tau0_k(:,:)
 !       write(258,'(2ES15.7)') G0ij_k(:,:,i,k)
 !       write(259,'(2ES15.7)') G0ji_k(:,:,i,k)
@@ -903,61 +980,139 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
     end do ! i
   end do ! k
   
+!   write(943943,'(2E15.7)') tmpsum1
+!   write(943944,'(2E15.7)') tmpsum2
+  
   close(9999)
   deallocate(tmp, tmpG0, tmpG02)
+  deallocate(tmpsum1, tmpsum2)
   
   ! take tau from t_rhoq and reshape it 
   allocate( tau(lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tau imp'
   tau(:,:,:,:) = reshape( t_rhoq%tau(:,:), (/lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef/) )
+!   write(*,*) 'saving tau',shape(tau)
+!   write(753951,'(2ES15.7)') tau(:,:,:,:)
   
-  !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads)
+  ! parameters for bigger q mesh
+!   Ni = 1
+!   Nj = 1
+  Ni = 4
+  Nj = 4
+  Nqpt = Ni*Nj*Nkp
+  allocate(Qvec(3,Nqpt))
+  allocate(rhoq(Nqpt), stat=ierr)
+  rhoq = C0
+  if(ierr/=0) stop '[calc_rhoq] Error allocating rhoq'
+  
+  !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads, irec, ixyz, iq, exG0_tmp, QdotL, tmpk, tmpr)
   allocate(tmpsum1(N,N), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1'
   allocate(tmpsum2(N,N), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum2'
   allocate(tmp(N,N), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmp'
+  allocate(exG0_tmp(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating exG0_tmp'
   
   mythread = omp_get_thread_num()
   nthreads = omp_get_num_threads()
   
+  ! find qvecs based on kpts from integration
+  !$omp do
+  do k=1,Nkp
+    do i=1,Ni
+      do j=1,Nj
+        irec = k + Nkp*(i-1) + Nkp*Ni*(j-1)
+        do ixyz=1,3
+          Qvec(ixyz,irec) = kpt(ixyz,k) + (i-Ni+1)*recbv(ixyz,1) + (j-Nj+1)*recbv(ixyz,2)
+        end do !ixyz
+      end do !j=1,Nj
+    end do !i=1,Ni
+  end do !k=1,Nkp
+  !$omp end do
+  
+  ! make sure no race conditions appear
+  !$omp barrier
+  
   ! calculate rho(q)
   !$omp do 
-  do q=1,Nkp !q-loop
-  
-     !$omp critical
-     write(*,'(A,I5,A,I9,A,I5)') 'thread ',myrank,' is doing q point ',q,', nthreads=',nthreads
-     !$omp end critical
+  do q=1,Nqpt !q-loop     
    
+     ! initialize kpt integration
      tmpsum1 = C0
      tmpsum2 = C0
      
      do k=1,Nkp !k-loop integration
-       ! find k +q index
-       kpq = k+q-1-(Nkp)/2
-       if(kpq.gt.Nkp) kpq = kpq-Nkp
-       if(kpq.lt.1)   kpq = kpq+Nkp
-!        write(*,*) q,k,kpq
+       ! new: find kpq index from kvec+Qvec, compared with kpts in BZ
+       ! find q from Q(q)
+       call red_Q(t_rhoq, recbv(1:2,1:2), Qvec(1:2,q)+kpt(1:2,k), kpq)
+     
        ! read kweight from memory
-       kweight = dcmplx(1.0d0/t_rhoq%volcub(k), 0.0d0)
+       kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
        
-       ! Sum( Int( exG0_i(k) tau_i,j exG0_j(k+q); dk ); i,j)
+       ! kweight = kweight * exp(i q*L_i)
+       
        do i=1,t_rhoq%Nscoef
          do j=1,t_rhoq%Nscoef
+       
+           ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
+           ! tmp = tau*exG0_k(k)
            
-           ! tmp = tau*exG0_k(k+q), note that exG0_i(k) is the host green function of layer mu_i multiplied with the exponential factor exp(-i k*L_i)
+           ! collect phase factors
            tmp = C0
-           call ZGEMM('n','n',N,N,N,C1,tau(:,:,i,j),N,G0ij_k(:,:,j,kpq),N,C0,tmp,N)
-           ! tmpsum1 = G0_k(k)*tmp*kweight
-           call ZGEMM('n','n',N,N,N,kweight,G0ji_k(:,:,i,k),N,tmp,N,C0,tmp,N)
+           ! exG0 = G0*exp(-i(k+q)*L_i)
+           tmpk(:) = Qvec(:,q)+kpt(:,k)
+           tmpr(:) = L_i(:,i)
+           QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+           ! exG0 = exG0*exp(+ik*L_j) -> G0tauG0*exp(-[(k+q)*L_i - k*L_j])
+           tmpk(:) = kpt(:,k)
+           tmpr(:) = L_i(:,j)
+           QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+           ! exG0 = exG0*exp(-i(k+q)*(X^mu-X^mu_i))
+           tmpk(:) = Qvec(:,q)+kpt(:,k)
+           tmpr(:) = t_rhoq%r_basis(:,t_rhoq%mu_0)-t_rhoq%r_basis(:,t_rhoq%ilay_scoef(i))
+           QdotL = QdotL + (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+           ! exG0 = exG0*exp(+i(k)*(X^mu-X^mu_j))
+           tmpk(:) = kpt(:,k)
+           tmpr(:) = t_rhoq%r_basis(:,t_rhoq%mu_0)-t_rhoq%r_basis(:,t_rhoq%ilay_scoef(j))
+           QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+           ! multiply with phase
+           exG0_tmp = G0ji_k(:,:,j,k)*exp(-2.0d0*pi*Ci*QdotL)
+           call ZGEMM('n','n',N,N,N,C1,tau(:,:,i,j),N,exG0_tmp,N,C0,tmp,N)
+           ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
+           call ZGEMM('n','n',N,N,N,kweight,G0ij_k(:,:,i,kpq),N,tmp,N,C1,tmpsum1,N)
          
-           ! Int( exG0(k)^*.tau^*.exG0(k-q)^*, dk ) = Int( exG0(k+q)^*.tau^*.exG0(k)^*, dk )
-           ! tmp = dconjg(tau)*dconjg(exG0_k(k))
+         
+           ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
+           ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
            tmp = C0
-           call ZGEMM('n','n',N,N,N,C1,dconjg(tau(:,:,i,j)),N,dconjg(G0ij_k(:,:,j,k)),N,C0,tmp,N)
-           ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k+q))*tmp*kweight
-           call ZGEMM('n','n',N,N,N,kweight,dconjg(G0ji_k(:,:,i,kpq)),N,tmp,N,C1,tmpsum2,N)
+           call ZGEMM('n','n',N,N,N,C1,dconjg(tau(:,:,j,i)),N,dconjg(G0ji_k(:,:,i,kpq)),N,C0,tmp,N)
+           
+           ! collect phase factors
+           ! exG0 = G0*exp(-i(k+q)*L_j)
+           tmpk(:) = Qvec(:,q)+kpt(:,k)
+           tmpr(:) = L_i(:,j)
+           QdotL = tmpr(1)*tmpk(2)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+           ! exG0 = exG0*exp(+i(k+q)*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
+           tmpk(:) = kpt(:,k)
+           tmpr(:) = L_i(:,j)
+           QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+           ! exG0 = exG0*exp(+ik*(X^mu-X^mu_i))
+           tmpk(:) = kpt(:,k)
+           tmpr(:) = t_rhoq%r_basis(:,t_rhoq%mu_0)-t_rhoq%r_basis(:,t_rhoq%ilay_scoef(i))
+           QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+           ! exG0 = exG0*exp(-i(k+q)*(X^mu-X^mu_j))
+           tmpk(:) = Qvec(:,q)+kpt(:,k)
+           tmpr(:) = t_rhoq%r_basis(:,t_rhoq%mu_0)-t_rhoq%r_basis(:,t_rhoq%ilay_scoef(j))
+           QdotL = QdotL + (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+           !$omp critical
+           write(*,'(4I9,70E15.7)') i,j,k,q,tmpk, tmpr, QdotL,exp(-2.0d0*pi*Ci*QdotL)
+           !$omp end critical
+           ! multiply with phase
+           exG0_tmp = dconjg(G0ij_k(:,:,j,k))*exp(-2.0d0*pi*Ci*QdotL)
+           ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
+           call ZGEMM('n','n',N,N,N,kweight,exG0_tmp,N,tmp,N,C1,tmpsum2,N)
                       
            end do !j
        end do ! i
@@ -968,19 +1123,23 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
      ! calculate trace of Q^mu times k-kpoint integral
      tr_tmpsum1 = C0
      tr_tmpsum2 = C0
-     ! tmpsum1 = Tr{ q_mu Int(G0.tau.G0.exp(...), dk) } = Tr{ q_mu*tmpsum1 }
+     ! tmpsum1 = Tr{ q_mu Int(G0.tau.G0.exp(...), dk) } = Tr{ q_mu.tmpsum1 }
      tmp = tmpsum1
      call ZGEMM('n','n',N,N,N,C1,q_mu,N,tmp,N,C0,tmpsum1,N)
+     ! tmpsum2 = Tr{ q_mu^* Int(G0^*.tau^*.G0^*.exp(...), dk) } = Tr{ q_mu^*.tmpsum2 }
      tmp = tmpsum2
      call ZGEMM('n','n',N,N,N,C1,dconjg(q_mu),N,tmp,N,C0,tmpsum2,N)
+           
      ! take trace
      do i=1,t_rhoq%lmmaxso
        tr_tmpsum1 = tr_tmpsum1 + tmpsum1(i,i)
        tr_tmpsum2 = tr_tmpsum2 + tmpsum2(i,i)
      end do
      
+     !$omp critical
      rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
-!      write(*,'(I5,20ES25.16)') q,dreal(rhoq(q)), dimag(rhoq(q)), dreal(tr_tmpsum1), dimag(tr_tmpsum1), dreal(tr_tmpsum2), dimag(tr_tmpsum2)
+     write(*,'(3I9,2E21.9)') q,Nqpt,kpq,rhoq(q)
+     !$omp end critical
       
   end do !q
   !$omp end do
@@ -989,10 +1148,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, q_mu, rhoq)
   
   !$omp end parallel
   
-  
-  do q=1,Nkp
-     write(*,*) q,rhoq(q)
+  ! write out result
+  open(9999, file='out_rhoq.txt', form='formatted')
+  do q=1,Nqpt
+     write(9999,'(5E15.7)') Qvec(:,q),rhoq(q)
   end do
+  close(9999)
   
   
   deallocate(tau)
@@ -1005,6 +1166,7 @@ end subroutine calc_rhoq
 
 
 end module mod_rhoq
+
 
 ! for testing only, comment out when ready
 !TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!
@@ -1035,6 +1197,7 @@ program test
   integer, allocatable          :: ifunm(:), lmsp(:) ! shape functions
   double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
   double complex, allocatable   :: q_mu(:,:), rhoq(:)
+  double precision, allocatable :: recbv(:,:), bravais(:,:) ! lattice information > Bravais matrix in real and reciprocal space
   
   integer :: lm1, lm2, N, i, j, ir
   
@@ -1057,6 +1220,8 @@ program test
   do i=1,nkpt
     read(9999,'(4E16.7)') (kpt(j,i), j=1,3), volcub(i)
   end do
+  allocate(recbv(3,3), bravais(3,3))
+  read(9999,'(100E16.7)') recbv(1:3,1:3),bravais(1:3,1:3)
   close(9999)
 
 !   write(*,*) 'kpoints', nkpt, volbz
@@ -1157,9 +1322,9 @@ program test
         & nrmaxd, thetasnew, lmsp, irmdnew, q_mu )
 
   ! calculate Fourier transform: \rho(\vec{q}) = \int \Delta\rho(\vec{q};\Chi_\mu+\vec{r}) d\vec{r}
-  allocate(rhoq(t_rhoq%Nkpt), stat=ierr)
-  if(ierr/=0) stop '[test] Error allocating rhoq'
-  call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, q_mu, rhoq)
+!   allocate(rhoq(t_rhoq%Nkpt), stat=ierr)
+!   if(ierr/=0) stop '[test] Error allocating rhoq'
+  call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, q_mu, rhoq, recbv)
 
 
 end program test

@@ -195,6 +195,7 @@ c calculate green function for the host
        
         open(8888,file='mu0',form='formatted')
         read(8888,*) mu, nscoef
+        nscoef = nscoef-1
         allocate(iatomimp(nscoef))
         do i1=1,nscoef
           read(8888,*) iatomimp(i1)
@@ -210,7 +211,8 @@ c calculate green function for the host
 !            read(8888,*) nofks
 !            write(*,*) nofks
 !            do k=1,nofks
-!              read(8888,*) (bzkp(ns,k), ns=1,3), volcub(k)
+!              read(8888,*) (bzkp(ns,k), ns=1,3)
+!              volcub(k) = 1.0d0
 !            end do
 !            close(8888)
         end if
@@ -319,7 +321,7 @@ c  for spin-orbit coupling G_LL'(k) double size
            ENDDO
            if(test('rhoqtest')) then 
 !              write(*,*) 'writing gllke',shape(gllke0),ns,nshell(0),K
-!              if(k==1) write(*,*) '',i,j, mu, iatomimp, 
+             if(k==1) write(*,*) '',i,j, mu, iatomimp
 !      &        (I==mu) , (J==mu) , any(I==iatomimp) ,any(J==iatomimp), 
 !      &              ((I==mu) .or. (J==mu) .or. 
 !      &            any(I==iatomimp) .or. any(J==iatomimp))
@@ -344,9 +346,12 @@ c  for spin-orbit coupling G_LL'(k) double size
                  irec = irec + jx
                endif
 !                if (k==1 .and. ns==1) write(*,*) ix,jx,nscoef,irec,k,
-!                write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
-!      &                                          nofks,nscoef
+               write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
+     &                                          nofks,nscoef
                write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
+               write(99991,'(4000E15.7)') BZKP(1:2,k),
+     &              RROT(1,1:2,NS),RBASIS(1:2,J),RBASIS(1:2,I),
+     &                   ETAIKR(1,NS),GLLKE0(1:LMMAXSO,1:LMMAXSO)
              end if ! i==mu ...
            end if ! test('rhoqtest')
           ENDDO ! NS
@@ -380,6 +385,7 @@ c  for spin-orbit coupling G_LL'(k) double size
            do k=1,nofks
              write(8888,'(4E16.7)') (BZKP(i1,K), i1=1,3), VOLCUB(K)
            end do
+           write(8888,'(100E16.7)') RECBV(1:3,1:3),BRAVAIS(1:3,1:3)
            close(8888)
            ! save shell info
            open(8888, file='shellinfo.txt')
