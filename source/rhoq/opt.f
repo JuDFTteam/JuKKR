@@ -1,5 +1,6 @@
 C ***********************************************************************
-      LOGICAL FUNCTION OPT(STRING)                                    
+      LOGICAL FUNCTION OPT(STRING)   
+      implicit none
 C ***********************************************************************
 C                                                                      
 C     OPT = 'STRING  ' IS CONTAINED IN /OPTC/.                        
@@ -9,7 +10,8 @@ C
       COMMON/OPTC/  OPTC(32)                                           
       save  /optc/
 C                                                                    
-      character*8      STRING   ,OPTC                               
+      character*8      STRING   ,OPTC      
+      integer i
 C                                                                  
 C                                                                      
       OPT=.FALSE.                                                     

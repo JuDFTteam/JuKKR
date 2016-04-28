@@ -21,7 +21,7 @@ contains
     use mpi
 #endif
 
-    integer :: ierr
+!     integer :: ierr
 
     master = 0
 

@@ -12,7 +12,7 @@ integer           :: ncheb,npan_tot,irmdnew
 integer           :: ipan_intervall(0:npan_tot)
 double precision  :: rpan_intervall(0:npan_tot)
 double complex    :: cden(irmdnew),den
-integer           :: ir,irstart,irstop,ipan
+integer           :: irstart,irstop,ipan
 double precision  :: widthfac
 double complex    :: int1
 

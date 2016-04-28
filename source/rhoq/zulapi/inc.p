@@ -69,7 +69,8 @@ c     ..
 c     ..   
       integer nfund,irid,ngshd,ngfd
 c     parameter (NFUND = 35,IRID = 200,NGSHD = 3000,NGFD= 1)
-      parameter (NFUND = 35,IRID = 145,NGSHD = 1500,NGFD= 1)
+!      parameter (NFUND = 35,IRID = 145,NGSHD = 1500,NGFD= 1)
+      parameter (NFUND = 100,IRID = 200,NGSHD = 1500,NGFD= 1)
 c      parameter (NFUND = 49,IRID = 135,NGSHD = 3500,NGFD= 1)
 c ..  number of cells (shapes), panels in non-spherical part
       integer ncelld,ipand

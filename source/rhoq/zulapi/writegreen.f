@@ -216,7 +216,7 @@ c calculate green function for the host
 !            end do
 !            close(8888)
         end if
-!         write(*,*) 'open tau_k unform',LMMAXSO, LMMAXSO*LMMAXSO
+        write(*,*) 'open tau_k unform',LMMAXSO, LMMAXSO*LMMAXSO*4
 
 ! !$omp parallel default(shared) private(ns,i,j,isym,carg,lm1,lm2)
 ! !$omp& private(etaikr,ic,fac,m,im,jn,gllke,gllke0,gllke1,gllke2)
@@ -326,25 +326,36 @@ c  for spin-orbit coupling G_LL'(k) double size
 !      &              ((I==mu) .or. (J==mu) .or. 
 !      &            any(I==iatomimp) .or. any(J==iatomimp))
              irec = (nscoef*2)*(K-1) + (nscoef*2)*NOFKS*(IE-1)
-             if( ((I==mu) .and. any(J==iatomimp)) .or. ((J==mu) .and. 
-     &            any(I==iatomimp)) ) then
+!              if( ((I==mu) .and. any(J==iatomimp)) .or. ((J==mu) .and. 
+!      &            any(I==iatomimp)) ) then
+             if( ((I==mu) .and. any(J==iatomimp)) ) then
                ix=0
+               jx=0
                lm1 = 1
                do while (ix==0)
-                 if(iatomimp(lm1)==i) ix = lm1
+                 if(iatomimp(lm1)==j) ix = lm1
                  lm1 = lm1 + 1
                end do
+               irec = irec + nscoef + ix
+               write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
+               write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
+     &                                          nofks,nscoef
+             end if
+             
+             if( ((J==mu) .and. any(I==iatomimp)) ) then
+               ix=0
                jx=0
                lm1 = 1
                do while(jx==0)
-                 if(iatomimp(lm1)==j) jx = lm1
+                 if(iatomimp(lm1)==i) jx = lm1
                  lm1 = lm1 + 1
                end do
-               if(j==mu) then
-                 irec = irec + nscoef + ix
-               else
-                 irec = irec + jx
-               endif
+               irec = irec + jx
+!                if(j==mu) then
+!                  irec = irec + nscoef + ix
+!                else
+!                  irec = irec + jx
+!                endif
 !                if (k==1 .and. ns==1) write(*,*) ix,jx,nscoef,irec,k,
                write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
      &                                          nofks,nscoef
@@ -356,8 +367,8 @@ c  for spin-orbit coupling G_LL'(k) double size
            end if ! test('rhoqtest')
           ENDDO ! NS
 
-      !update statusbar
-         if(mod(K,NOFKS/50)==0) write(6,FMT=200)
+!       !update statusbar
+!          if(mod(K,NOFKS/50)==0) write(6,FMT=200)
 !          if(thrid==0.and.mod(K,NOFKS/50/nthrd)==0) write(6,FMT=200)
          ENDDO ! K loop
 !          !$omp end do

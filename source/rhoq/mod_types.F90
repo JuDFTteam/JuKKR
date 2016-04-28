@@ -187,7 +187,8 @@ contains
 
    subroutine init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
    
-      use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: nranks
+!       use mod_mympi, only: myrank, master, nranks
    
       implicit none
    
@@ -402,7 +403,8 @@ contains
 
    subroutine init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
    
-      use mod_mympi, only: myrank, master, nranks
+!       use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: nranks
    
       implicit none
    

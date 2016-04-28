@@ -11,7 +11,8 @@ FILENAME0 = rhoq.x
 ####################################################
 
 # standart libs
-LLIBS  = -mkl -lmkl_intel_thread -lmkl_core -lpthread -liomp5
+LLIBS  = -mkl #-lmkl_intel_thread -lmkl_core -lpthread -liomp5
+#LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -33,10 +34,10 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 -openmp -traceback -CB -check all -check noarg_temp_created -g
+FFLAGS       =  -O3 -openmp -traceback -g #-CB -check all -check noarg_temp_created -g
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 #–Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
-debug:    FFLAGS = -g -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended #-mcmodel=medium -shared-intel
+debug:    FFLAGS = -O0 -g # -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended #-mcmodel=medium -shared-intel
 mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback #-mcmodel=medium
 
 OPENMPFLAGS = 
@@ -52,12 +53,12 @@ clean:
 clear:
 	rm -rf *.mod *.o *__genmod.f90 *.i90
 
-SRCS = opt.o test.o cinit.o mod_mympi.o mod_types.o ioinput.o dlke0.o dlke1.o intcheb_cell.o mod_rhoq.o
+SRCS = ioinput.o splint_real.o spline_real.o interpolspline.o gaunt_new.o gaunt2.o grule.o rcstop.o cspher.o calc_jlk.o opt.o test.o cinit.o mod_mympi.o mod_types.o intcheb_cell.o interpol_shape.o read_shape.o mod_rhoq.o
 
 serial:  $(SRCS) 
 	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
-debug:   mod_rhoq.o 
-	  $(FC) $(LLIBS)    -o $(FILENAME0) mod_rhoq.o $
+debug:   $(SRCS) 
+	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
 install: clean serial
 
 %.o: %.f90

@@ -9,7 +9,7 @@
 # LD = $(FC)
 # FFLAGS = -O2 -check all -r8 
 # FFLAGS = -O2 -r8 
- FFLAGS = -O3 -r8 -mcmodel=medium -i-dynamic -traceback -CB -check all -g
+ FFLAGS = -O3 -r8 -traceback #-mcmodel=medium -i-dynamic -CB -check all -g
 # LLIBS = -L /usr/local/intel/mkl/current/lib/32 -lmkl -lguide -lpthread -i_dynamic -L /work/iff_th3/fmavrop/LIB/fxdr -lfxdropt -Wl,-rpath=/usr/local/intel/mkl/current/lib/32 -Wl,-rpath=/usr/local/intel/fc/current/lib
  LLIBS = -mkl -liomp5 #-L /usr/local/intel/mkl/lib/ia32 -lmkl -lguide -lpthread -i_dynamic -L /work/iff_th3/fmavrop/LIB/fxdr -lfxdropt -Wl,-rpath=/usr/local/intel/mkl/lib/ia32 -Wl,-rpath=/usr/local/intel/fc/current/lib
 ##################################################################
