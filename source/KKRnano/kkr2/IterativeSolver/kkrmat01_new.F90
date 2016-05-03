@@ -321,7 +321,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   integer :: matrix_index
   integer, allocatable :: IPVT (:)
   double complex, allocatable :: W1 (:,:)
-  double complex :: mat_XT (64,16)
+  double complex, allocatable :: mat_XT (:,:)
  
   TPI = 8.D0*ATAN(1.D0)    ! = 2*PI
   CFCTORINV = (CONE*TPI)/ALAT
@@ -332,6 +332,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   naez = ms%naez
   cluster_info => ms%cluster_info
   nacls = cluster_info%naclsd
+
 
 !  double complex :: b(size(ms%GLLH))
 !  integer :: ib(size(ms%sparse%ia))
@@ -560,6 +561,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
       !CALL cgemm('N', 'N', LMMAXD, LMMAXD, NAEZ*LMMAXD, 1.0, ms%mat_X, LMMAXD, TMATLL2, NAEZ*LMMAXD, 0.0, mat_XT, LMMAXD)
  
       TRACEK=CZERO
+      allocate(mat_XT(NAEZ*LMMAXD,LMMAXD))
       mat_XT=CZERO
 
       DO LM1=1,LMMAXD

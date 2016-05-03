@@ -23,7 +23,7 @@ FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
 LDFLAGS = -O3
 ifeq ($(TYPE),debug)
-FCFLAGS += -g
+FCFLAGS += -g -check bounds
 endif
 # set run paths to look for shared libraries (-Wl means pass to linker)
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
