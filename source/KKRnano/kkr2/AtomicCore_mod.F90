@@ -55,6 +55,7 @@ module AtomicCore_mod
 !                                      xenon core: 5540=5s,5p,4d
 !-----------------------------------------------------------------------
       use quadrature_mod, only: simpson
+      include "mpif.h"
 
       double precision, intent(in) :: a,b,rmax,z,ebot,drdi(:),v(:)
       integer, intent(in) :: atom_id,ipr,irmd,is,ncore,nr,nspin,nsra,lcore(:)
@@ -62,6 +63,7 @@ module AtomicCore_mod
       double precision, intent(out) :: rhoc(:)
 
 !     .. locals ..
+      integer :: ierror
       integer, parameter :: nitmax=40, irnumx=10
       double precision :: e,e1,e2,ediff,ei,slope,charge,tol,value,wgt
       integer :: ic,in,inuc,ir,l,nc,nn,irend
@@ -112,6 +114,7 @@ module AtomicCore_mod
             write(6,*) 'The number of core states in the input potential should perhaps be decreased.'
             write(6,*) 'The program stops in corel.F90, atom_id=',atom_id
             stop 'Error 1 in corel.F90'
+            call MPI_Abort(MPI_COMM_WORLD, ierror)
           endif
 
           ediff = e - ei
@@ -149,6 +152,7 @@ module AtomicCore_mod
             write(6,*) 'Lower the bottom of the contour or increase the number of core states in the input potential.'
             write(6,*) 'The program stops in corel.F90, atom_id=',atom_id
             stop 'Error 2 in corel.F90'
+            call MPI_Abort(MPI_COMM_WORLD, ierror)
           endif
         endif
 
