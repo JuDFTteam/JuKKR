@@ -29,7 +29,7 @@ module TFQMRSolver_mod
     type(SolverStats) :: stats
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
-    double precision :: qmrbound = 1.d-6
+    double precision :: qmrbound = 1.d-9
 
     contains
       procedure :: init => init_solver
