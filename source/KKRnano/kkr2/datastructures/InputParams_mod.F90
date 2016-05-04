@@ -65,6 +65,7 @@ module InputParams_mod
     integer :: write_shapes
     double precision :: mt_zero_shift
     integer :: DEBUG_morgan_electrostatics
+    logical :: fullbz
     double precision :: vref
   endtype ! InputParams
 
@@ -482,6 +483,15 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "fullbz", values%fullbz , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for fullbz. Set to fullbz = .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for fullbz."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "vref", values%vref , def=8.d0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for vref. Set to vref = 8.d0"
@@ -553,6 +563,7 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%write_shapes
   read(fu) values%mt_zero_shift
   read(fu) values%DEBUG_morgan_electrostatics
+  read(fu) values%fullbz
   read(fu) values%vref
   close(fu)
 endfunction ! readFromFile
@@ -614,6 +625,7 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%write_shapes
   write(fu) values%mt_zero_shift
   write(fu) values%DEBUG_morgan_electrostatics
+  write(fu) values%fullbz
   write(fu) values%vref
   close(fu)
 endfunction ! writeToFile
