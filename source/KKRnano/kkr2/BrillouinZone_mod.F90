@@ -52,13 +52,14 @@ module BrillouinZone_mod
   
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
-                     dsymll, intervxyz, ielast, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, nowrite, kpms)
+                     dsymll, intervxyz, ielast, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, fullbz, nowrite, kpms)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh!, create, load, store, destroy
 
     integer, parameter :: nsymaxd=48
 
     integer, intent(out) :: ekmd
+    logical, intent(in)  :: fullbz
     integer, intent(in)  :: naez, krel, lmax, iemxd
     integer, intent(out) :: nsymat, maxmesh
     integer, intent(in)  :: intervxyz(3), ielast
@@ -90,7 +91,7 @@ module BrillouinZone_mod
     iprint = 0 ; if (test('TAUSTRUC')) iprint = 2
 
     ! test: full Brillouin zone integration
-    if (test('fullBZ  ')) then
+    if (fullbz) then
       nsymat = 1 ! limit the number of applied symmetries to the 1st one (which is always unity)
       lirr = .false.
       write(6,'(8x,2a,/)') 'Test option < fullBZ > : overriding NSYMAT,', ' generate full BZ k-mesh'
