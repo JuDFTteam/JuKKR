@@ -16,81 +16,31 @@ EXTRA_FLAGS =
 
 ifeq ($(PLATFORM),ifort)
 #### module load intel impi mkl
-FC = mpiifort -warn all
-FC90 = mpiifort -warn all
-# -module <path> specifies where to put .mod files
-FCFLAGS  = 
-FCFLAGS += -module $(BUILDDIR)
-FCFLAGS += -I $(BUILDDIR)
-# FCFLAGS += -openmp
-# FCFLAGS += -gen-interfaces -warn interfaces
-# FCFLAGS += -D TASKLOCAL_FILES
-# FCFLAGS += -D DEBUGSHAPEFUNCTIONS
-# FCFLAGS += -D NO_LOCKS_MPI
-FCFLAGS += -D USE_VOROWEIGHTS
-# FCFLAGS += -D DEBUG1
-FC90FLAGS =
-# FCFLAGS += -C -traceback -CB
-# FCFLAGS += -O0 -g
-# LDFLAGS  = -O0 -g
-FCFLAGS += -O0  -g
-LDFLAGS  = -O0  -g
+  FC = mpiifort -warn all
+  FC90 = mpiifort -warn all
+  # -module <path> specifies where to put .mod files
+  FCFLAGS  = 
+  FCFLAGS += -module $(BUILDDIR)
+  FCFLAGS += -I $(BUILDDIR)
+  FCFLAGS += -D USE_VOROWEIGHTS
+  FC90FLAGS =
 
-FCFLAGS += -pg
-LDFLAGS += -pg
-LDFLAGS += -mkl
+  LDFLAGS += -mkl
 
-### interprocedural optimization at link-time 
-###   (add -ipo also to compiler flags to prepare the objects)
-# FCFLAGS += -ipo
-# LDFLAGS += -ipo
-
-ifeq ($(TYPE),debug)
-FCFLAGS += -g -ggdb
-else
-FCFLAGS += -D NOLOGGING
-endif
-# set run paths to look for shared libraries (-Wl means pass to linker)
-# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
-# LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
-endif
-
-ifeq ($(PLATFORM),ifort_IFF)
-FC = mpif77 -warn
-FC90 = mpif90 -warn
-# -module <path> specifies where to put .mod files
-FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -D USE_VOROWEIGHTS
-FC90FLAGS =
-FCFLAGS += -I $(BUILDDIR)
-LDFLAGS = -O3
-ifeq ($(TYPE),debug)
-FCFLAGS += -g
-endif
-# set run paths to look for shared libraries (-Wl means pass to linker)
-LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
-LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
-endif
-
-
-ifeq ($(PLATFORM),ifort_IFF_NOOMP)
-FC = mpif90 -warn
-FC90 = mpif90 -warn
-# -module <path> specifies where to put .mod files
-FCFLAGS = -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces
-FC90FLAGS =
-FCFLAGS += -I $(BUILDDIR)
-LDFLAGS =
-# set run paths to look for shared libraries (-Wl means pass to linker)
-LDFLAGS +=  -llapack_ifort -lblas_ifort
-LDFLAGS += -lfftw3
+  ifeq ($(TYPE),debug_light)
+  FCFLAGS += -O0 -g
+  else ifeq ($(TYPE),debug)
+  FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+  else
+  FCFLAGS += -O3 -D NOLOGGING
+  endif
 endif
 
 # ================== JURECA ======================
 
 
 # ========= HPC Cluster - RWTH Aachen ============
+# MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),rwth)
 FC = $(MPIF77) -warn
 FC90 = $(MPIFC) -warn
@@ -103,26 +53,8 @@ LDFLAGS = -O3 $(FLAGS_MATH_LINKER)
 # -lpthread
 endif
 
-
-# ========= MAC ============ no openmp
-ifeq ($(PLATFORM),MAC)
-FC = mpif77 -warn
-FC90 = mpif90 -warn
-# -module <path> specifies where to put .mod files
-FCFLAGS = -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -D USE_VOROWEIGHTS
-FC90FLAGS =
-FCFLAGS += -I $(BUILDDIR)
-LDFLAGS =
-# set run paths to look for shared libraries (-Wl means pass to linker)
-#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/'
-#LDFLAGS +=  -Wl,-rpath '/usr/local/intel/compiler/lib/intel64'
-LDFLAGS = -L/usr/local/lib -llapack -lblas
-LDFLAGS += -lfftw3
-endif
-
-
 # ============================= JUQUEEN========================================
+# MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),JUQUEEN)
 
 ifeq ($(USETOOL),scalasca)
