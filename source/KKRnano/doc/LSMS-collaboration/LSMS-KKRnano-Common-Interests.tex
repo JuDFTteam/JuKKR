@@ -1,0 +1,242 @@
+\documentclass{llncs}
+
+\usepackage{fancyhdr}
+\renewcommand{\headrulewidth}{0pt}
+\fancypagestyle{firstpage}{
+  \fancyhf{}
+  \fancyhead[C]{\normalsize{ORNL-FZJ -- Internal Draft Version -- Do NOT Distribute!}} 
+}
+
+\usepackage{todonotes}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{units}
+%\usepackage[svgpath=figs/]{svg}
+
+\newcommand{\ttt}[1]{\texttt{#1}}
+\newcommand{\um}[1]{_{\mathrm{#1}}}
+\newcommand{\ket}[1]{ \left| #1 \right\rangle }
+\newcommand{\ellmax}{\ell_{\mathrm{max}}}
+ 
+
+\def\KKRnano{{KKRnano}}
+\def\LSMS{{LSMS}}
+
+\begin{document}
+
+\title{Collaboration on Multiple Scattering Methods}
+
+\author{ 
+  Paul F.~Baumeister\inst{3} 
+  \and
+  Rudolf Zeller\inst{2}
+  \and
+  Markus Eisenbach\inst{1}
+  \and
+  Od ??\inst{1}
+}
+
+\institute{ 
+  Oak Ridge National Laboratory, Tennessee, US
+  \and
+  Peter-Gr\"unberg-Institut, Forschungszentrum J\"ulich, 52425 J\"ulich, Germany
+  J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, 52425 J\"ulich, Germany
+  \and
+%   \and
+%   IBM Deutschland Research \& Development GmbH, 71032 B\"{o}blingen, Germany 
+%   \and 
+%   IBM T.J.~Watson Research Center, Yorktown Heights, NY 10598, US
+}
+
+\maketitle
+\thispagestyle{firstpage}
+
+% ==================================================================================================
+\begin{abstract}
+  ABSTRACT TO BE WRITTEN LAST
+\end{abstract}
+% ==================================================================================================
+
+% ==================================================================================================
+\section{Introduction} \label{section:intro}
+% ==================================================================================================
+This document describes the framework of a newly-established strong collaboration
+between the Oak Ridge National Laboratory (ORNL) represented by Dr. Markus Eisenbach
+and Forschungszentrum J\"ulich GmbH (FZJ) represented by Dr. Rudolf Zeller.
+A Memorandum of Understanding between the two research facilities has been set in place 20?? 
+that fosters such direct collaborations on a scientific level.
+The aim of the collaboration is to promote the development of multiple scattering methods
+for scalable high performance calculations in the framework of density functional theory
+and related approaches towards the electronics and magentic structure of materials.
+This collaboration will be strongly focussed onto the mutual long-term benefit of both research institutions, 
+ORNL and FZJ, by sharing common experiences in the following three subtopics
+\begin{itemize}
+ \item Mathematical approaches towards specific physical problems  
+ \item Stable numerical algorithms suitable for fast solutions
+ \item Technical issues of porting the applications to current and future HPC platforms
+\end{itemize}
+Both sides are willing to reveal their knowledge on these topics in order to
+contribute to fruitful discussions.
+
+
+%% structure
+In the following section \ref{section:apps}, a short description of the code packages is given as they are today.
+Then common features and mayor differences between the two implementations are pointed out in section \ref{section:differ}.
+We identify common goals for the future of the two applications in section \ref{section:common}
+and highlight selected technical challenges that have to be overcome for reaching these goals in section \ref{section:tech}.
+Finally, we summarize the aim of this collaboration in section \ref{section:summary}.
+
+% ==================================================================================================
+\section{Applications} \label{section:apps}
+% ==================================================================================================
+
+Both research institutions contribute experiences that are gained during the development
+of their main applications in the field of multiple scattering method.
+These implementations, the \LSMS{} code and \KKRnano{} from ORNL and FZJ, respectively, are described here.
+
+% ..................................................................................................
+\subsection{KKRnano} \label{section:kkrnano}
+% ..................................................................................................
+\KKRnano{} is an implementation of the Korringa-Kohn-Rostoker multiple scattering method \cite{korringa, kohn-rostoker}
+that allows to solve for the Green function of a system consisting of many atoms.
+The decomposition of the simulation volumen into Voronoi cells has shown to be a good
+approach for a precise description of relevant phyical quantities on radial grids.
+Each Voronoi cell features a radial grid that originates at the cell center
+which coincides with the position of the atomic nucleus unless we treat a vacuum cell.
+Vacuum cells are added to calculations to improve the convergence with respect to the truncation of
+the angular momenta, $\ellmax$, for various quantities, so that a calculation may involve more cells than atoms.
+%% difficulty: how to find the best position of vacuum cells in an unordered geometry
+The code performs self-consistency (SCF) iterations in order to converge the electron density
+where in each SCF iteration, the new density is found as the imaginary part of the Green function.
+The necessary energy integration is performed in a contour integration scheme that
+samples points in the complex plane.
+The energy-dependent Green function is found as the solution of the Dyson equation
+that arises from the difference of the scattering at the actual potential and the potential 
+of a reference system. As a reference system, \KKRnano{} uses a piece-wise constant potential
+function that represents repulsive spheres located at the atoms sides.
+This choice of reference system allows for a strong localization of the reference cluster
+which is equivalent to a sparse, banded matrix. 
+This allows for a linear scaling of the compute time for the application of the scattering operator
+onto a trial vector that stands for one column of the Green function. 
+The length of the trial vector and the number of columns that have be solved, however, scale with
+the number of visible atoms.
+Range truncation allows to reduce the number of visible atoms to a fix number 
+of atoms inside a given radius that defines the interaction zone. This reduces the computation
+complexity for the solution of the Dyson equation from quadratic to linear.
+Parallel processing is implemented for distributed memory (MPI) and on a thread level (OpenMP).
+Both paradigms may be activated at the same time so that huge levels of concurrency 
+(> 1M) can be exploited to reduce the time-to-solution.
+
+% ..................................................................................................
+\subsection{LSMS} \label{section:lsms}
+% ..................................................................................................
+\todo[inline]{to be written}
+
+
+% ==================================================================================================
+\section{Mayor Differences} \label{section:differ}
+% ==================================================================================================
+
+\paragraph{Radial grid representation}
+While both codes use a representation on radial grids inside each of the Voronoi cells.
+Logarithmic radial grids allow to accurately represent cores states and other radial functions
+close to the nucleus. \KKRnano{} stops the logarithmic grid at the muffin tin radius,
+a radius chosen to touch the Voronoi cell hull from inside or even slightly smaller, and 
+continues with a set of panels each hosting a uniform grid. This allows for a very accurate
+description of the shape functions. \LSMS{}, in contrast, continous the logarithmic grid
+to the outermost point of the cell with the advantage is a much simpler implementation.
+
+\paragraph{Non-collinear spin treatment}
+\LSMS{} can treat the direction of the magnetisation completely unconstrained
+while \KKRnano{} only features a collinear treatment of spins, i.e. $\uparrow$ and $\downarrow$, 
+or non-magentic calculations. MPI Parallelization over the two spins is possible.
+
+%% scalar-relativistic single site (and core) solver vs. Dirac, SOC?
+\paragraph{Core solver physics}
+\KKRnano{} offers to chose between a scalar-relativistic and a non-relativistic solution for the core states 
+and for the radial functions entering the single site expressions. 
+The implementation of Spin-Orbit-Coupling (SOC) is work in progress.
+\LSMS{}, in contrast, provides access to the fully relativistic solution of the Dirac equation.
+%
+\todo[inline]{how about the other theory levels in LSMS? SOC? SRA?}
+
+%% direct vs. iterative inversion of the screened interaction
+\paragraph{Direct vs.~iterative Dyson solvers}
+The most time consuming part of \LSMS{} is a LU-decomposition necessary 
+for the inversion that solves the Dyson equation.
+%
+\todo[inline]{need more detail here}
+%
+\KKRnano{} constructs a screened KKR operator that features a short range and, hence, a small number
+of non-zero block-bands in the matrix representation. This enfavors the usage of an iterative
+inversion scheme. The transpose-free quasi-minimal-residual method (TFQMR) has been chosen here.
+
+%% programming model: Fortran2008, F77, C++ on the outer layer
+\paragraph{Programming model}
+\KKRnano{} is written in modern Fortran (F2008) with some legacy parts in old F77 style.
+\LSMS{} makes use of C++ for the outer skeleton and Fortran routines for the inner work kernel
+%
+\todo[inline]{do you use CUDA Fortran or CUDA-C for the GPU kernels? or are there GPU-libraries}
+
+%% GPU acceleration in LSMS
+\paragraph{GPU acceleration}
+\LSMS{} leverages the compute power of GPUs as shown on Titan, where a $8.6\times$ shorter
+time-to-solution and $7.3\times$ lower energy-to-solution can be achieved.
+A first GPU version for the Dyson solver of \KKRnano{} is currently work in progress.
+
+%% parallelization levels
+\paragraph{Parallelization levels}
+\KKRnano{} allows to distribute cells, collinear spins and energy points over MPI processes,
+while the latter is only efficient to a limited degree due to the strong imbalance of the 
+Matsubara poles compared to other energy points.
+
+% ==================================================================================================
+\section{Common Goals} \label{section:common}
+% ==================================================================================================
+
+%% high entropy alloys
+%% huge systems with disorder
+%% defects
+%% full functional systems (transistors)
+%% magnetic materials, e.g. Skyrmions
+%% structural materials, e.g. metallic glasses
+
+%% accuracy
+%% reliablity
+%% efficiency
+%% robustness
+%% visibility/impact in the community
+
+% ==================================================================================================
+\section{Technical Challenges} \label{section:tech}
+% ==================================================================================================
+
+% ..................................................................................................
+\subsection{Fast Poisson solver for distributed charges} %\label{section:}
+% ..................................................................................................
+
+% ..................................................................................................
+\subsection{Placement of empty cells in structural relaxation} %\label{section:}
+% ..................................................................................................
+
+% ..................................................................................................
+\subsection{Self-consistency convergence acceleration} %\label{section:}
+% ..................................................................................................
+
+
+% ==================================================================================================
+\section{Conclusions}\label{section:summary}
+% ==================================================================================================
+
+%   ==================================================================================================
+\section*{Acknowledgments}
+% ==================================================================================================
+We thank Jack Wells and Tjerk Straatsma from ORNL and Dirk Pleiter and Stefan Bl\"ugel from FZJ 
+for their efforts making this collaboration possible.
+
+% ==================================================================================================
+\bibliographystyle{plain} \bibliography{KKR} %% KKR.bib file
+% ==================================================================================================
+\end{document}

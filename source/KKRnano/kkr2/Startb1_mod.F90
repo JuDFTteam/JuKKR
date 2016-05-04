@@ -15,14 +15,13 @@ module Startb1_mod
   contains
 
 ! determine the record length
-  subroutine startb1_wrapper_new(alat, nspin, EFERMI, Zat, radius_muffin_tin, naez, nowrite)
+  subroutine startb1_wrapper_new(alat, nspin, EFERMI, Zat, naez, nowrite)
     use read_formatted_shapefun_mod, only: ShapefunFile, create_read_ShapefunFile, destroy_ShapefunFile
     double precision, intent(in) :: alat
     integer, intent(in) :: naez
     double precision, intent(out) :: EFERMI
     integer, intent(in) :: nspin
     double precision, intent(out):: Zat(:)
-    double precision, intent(inout) :: radius_muffin_tin(naez)
     logical, intent(in) :: nowrite
 
     integer :: ntcell(naez)
@@ -35,7 +34,7 @@ module Startb1_mod
     close(91)
 
     ! write atoms file and get maximum record lengths for vpotnew file and meshes file
-    call write_atoms_file(alat, nspin, ntcell, Zat, radius_muffin_tin, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
+    call write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
 
     ! routine to write binary potential and binary meshes
     call write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
@@ -47,7 +46,7 @@ module Startb1_mod
 !------------------------------------------------------------------------------
 !> Write the 'atoms' file (= binary analogue to atominfo - used for parallel reading in kkr2)
 !> and determine the record length ('max_reclen') for the binary direct access potential file.
-  subroutine write_atoms_file(alat, nspin, ntcell, Zat, radius_muffin_tin, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
+  subroutine write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
 
     use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
     use read_formatted_shapefun_mod, only: ShapefunFile
@@ -56,7 +55,6 @@ module Startb1_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
     double precision, intent(out) :: Zat(:)
-    double precision, intent(inout) :: radius_muffin_tin(naez)
     integer, intent(in) :: naez
     integer, intent(out) :: ntcell(:)
     type(ShapefunFile), intent(in) :: sfile
@@ -72,6 +70,7 @@ module Startb1_mod
     type(RadialMeshData) :: mesh
     integer, parameter :: fu = 13
     integer :: cell_index, n_warn_alat_differs
+    double precision :: radius_muffin_tin
 
     max_reclen = 0
     max_reclen_mesh = 0
@@ -81,7 +80,7 @@ module Startb1_mod
     n_warn_alat_differs = 0
 
     call openBasisAtomDAFile(atom, 37, 'atoms')
-
+    
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naez
 
@@ -102,7 +101,7 @@ module Startb1_mod
   !        The muffin-tin radius (formerly RMT in atominfo) is set to the value of RMT in the 'potential' file,
   !        'atominfo' is no longer needed
 
-        radius_muffin_tin(iatom) = pe(ispin)%header%RMT
+        radius_muffin_tin = pe(ispin)%header%RMT
 
   !        ! do some consistency checks
   !        if (abs(Zat(iatom) - pe(ispin)%header%Z_nuclear) > 1.d-8) then
@@ -135,7 +134,7 @@ module Startb1_mod
       atom%cell_index = ntcell(iatom)
       atom%Z_nuclear = Zat(iatom)
 
-      atom%radius_muffin_tin = radius_muffin_tin(iatom)
+      atom%radius_muffin_tin = radius_muffin_tin
 
       atom%core%NCORE = 0
       atom%core%LCORE = 0

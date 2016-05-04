@@ -11,7 +11,7 @@ module wrappers_mod
   
   public :: RHOVAL_wrapper, CALCTMAT_wrapper, CALCDTMAT_wrapper, MIXSTR_wrapper, VINTRAS_wrapper
   public :: RHOTOTB_wrapper, ESPCB_wrapper, EPOTINB_wrapper, VXCDRV_wrapper, MTZERO_wrapper
-  public :: CONVOL_wrapper, RHOCORE_wrapper, RHOMOM_NEW_wrapper    
+  public :: CONVOL_wrapper, RHOMOM_NEW_wrapper!, RHOCORE_wrapper
 
   contains
 
@@ -367,35 +367,27 @@ module wrappers_mod
   endsubroutine
 
 
-  !------------------------------------------------------------------------------
-  !> Do core relaxation for all spin directions.
-  !>
-  !> @param[in]      E1       bottom energy of valence energy contour
-  !> @param[in]     NSRA      flag for scalar relativistic calculation
-  !> @param[in, out] atomdata  basis atom - changed on output
-  subroutine RHOCORE_wrapper(e1, nsra, atomdata)
-    use BasisAtom_mod, only: BasisAtom
-
-    double precision, intent(in)    :: e1
-    integer, intent(in)             :: nsra
-    type(BasisAtom), intent(inout) :: atomdata
-
-    integer :: ispin, nspind
-
-    nspind = atomdata%nspin
-
-    do ispin = 1, nspind
-
-      ! output: ecore, ncore, lcore, rhocat?, qc
-      call rhocore(e1, nsra, ispin, nspind, atomdata%atom_index, &  ! atom_index is used only for debugging output
-                  mesh%drdi, mesh%r, atomdata%potential%visp(:,ispin), &
-                  mesh%a, mesh%b, atomdata%z_nuclear, &
-                  mesh%ircut, atomdata%core%rhocat, atomdata%core%qc_corecharge, &
-                  atomdata%core%ecore(:,ispin), atomdata%core%ncore(ispin), atomdata%core%lcore(:,ispin), &
-                  mesh%irmd, mesh%ipand)
-    enddo ! ispin
-
-  endsubroutine
+!   !------------------------------------------------------------------------------
+!   !> Do core relaxation for all spin directions.
+!   !>
+!   !> @param[in]      E1       bottom energy of valence energy contour
+!   !> @param[in]     NSRA      flag for scalar relativistic calculation
+!   !> @param[in, out] atomdata  basis atom - changed on output
+!   subroutine RHOCORE_wrapper(e1, nsra, atomdata)
+!     use BasisAtom_mod, only: BasisAtom
+!     use AtomicCore_mod, only: rhocore
+! 
+!     double precision, intent(in)    :: e1
+!     integer, intent(in)             :: nsra
+!     type(BasisAtom), intent(inout)  :: atomdata
+! 
+!     atomdata%core%qc_corecharge = rhocore(e1, nsra, atomdata%nspin, atomdata%atom_index, &  ! atom_index is used only for debugging output
+!                   mesh%drdi, mesh%r, atomdata%potential%visp(:,:), &
+!                   mesh%a, mesh%b, atomdata%z_nuclear, &
+!                   mesh%ircut, atomdata%core%rhocat, &
+!                   atomdata%core%ecore(:,:), atomdata%core%ncore(:), atomdata%core%lcore(:,:), &
+!                   mesh%irmd)
+!   endsubroutine
 
 #undef  cell
 #undef  mesh
@@ -410,10 +402,9 @@ module wrappers_mod
     type(CellData), intent(in) :: cell
     type(RadialMeshData), intent(in) :: mesh
     type(ShapeGauntCoefficients), intent(in) :: shgaunts
-
-    double precision :: cminst(:)
-    double precision :: cmom(:)
-    double precision :: rho2ns(:,:)
+    double precision, intent(out) :: cminst(:)
+    double precision, intent(out) :: cmom(:)
+    double precision, intent(in)  :: rho2ns(:,:)
 
     integer :: lpot
 

@@ -579,9 +579,7 @@ module ProcessKKRresults_mod
       ! --> Sum up semicore charges from different MPI ranks
       call sumChargeSemi_com(CHRGSEMICORE, mp%mySEComm)
       ! --> Recalculate the semicore contour factor FSEMICORE
-      if (mp%isMasterRank) then
-        call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, mp%mySEComm)
-      endif
+      if (mp%isMasterRank) call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE)
     endif
 
     emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
@@ -1122,10 +1120,9 @@ module ProcessKKRresults_mod
   !----------------------------------------------------------------------------
   !> Calculates the normalization factor for the semicore contour (FSEMICORE) analogously to the JM-Code
 
-  subroutine calcFactorSemi(chrgsemicore, fsemicore, communicator) ! todo: delete communicator from interface
+  subroutine calcFactorSemi(chrgsemicore, fsemicore)
     double precision, intent(inout) :: chrgsemicore ! semicore charge
     double precision, intent(inout) :: fsemicore    ! semicore factor to be updated
-    integer, intent(in) :: communicator             ! communicator not used any more
     
     integer :: nsb !> number of semicore bands
 

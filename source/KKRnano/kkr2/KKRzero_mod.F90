@@ -118,30 +118,24 @@ module KKRzero_mod
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     
-    integer, parameter :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
+    integer, parameter  :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
+    integer, parameter  :: KREL=0
 
-!     .. energy mesh ..
-    double precision :: efermi
-
-    double precision :: recbv(3,3), volume0
-
-    double precision, allocatable :: radius_muffin_tin(:)!, pos(:,:)
-
-!     .. auxillary variables, not passed to kkr2
-    integer :: ist!, natoms
-    integer, parameter :: KREL = 0
-    logical :: startpot_exists
-    type(DimParams)      :: dims
-    type(InputParams)    :: params
-    type(Main2Arrays)    :: arrays
-    type(EnergyMesh)     :: emesh
+    double precision    :: efermi, recbv(3,3), volume0
+    integer             :: ist
+    logical             :: startpot_exists
+    
+    type(DimParams)     :: dims
+    type(InputParams)   :: params
+    type(Main2Arrays)   :: arrays
+    type(EnergyMesh)    :: emesh
     type(BrillouinZoneMesh) :: kmeshes(8)
 
     if (checkmode /= 0) then 
 !       ist = getAtomData('pos.xyz', natoms, pos, comm=0)
 !       if (ist /= 0) warn(6, "getAtomData failed!")
     endif ! checks
-    
+
     call parse(dims, "global.conf")
 
     ist = getInputParamsValues("input.conf", params)
@@ -162,14 +156,11 @@ module KKRzero_mod
 !===================================================================
 
     ! read starting potential and shapefunctions
-    startpot_exists = .false.
-    inquire(file='potential', exist=startpot_exists)
+    startpot_exists = .false.; inquire(file='potential', exist=startpot_exists)
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
-      allocate(radius_muffin_tin(dims%naez))
-      call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, radius_muffin_tin, dims%naez, nowrite=(checkmode /= 0))
-      deallocate(radius_muffin_tin, stat=ist) ! auxillary
+      call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, dims%naez, nowrite=(checkmode /= 0))
 
     else
       ! no formatted potential provided
@@ -177,7 +168,7 @@ module KKRzero_mod
       warn(6, "file 'potential' not found... skipping start potential generation.")
       write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
       open (67, file='EFERMI', form='formatted', action='read', status='old')
-      read (67, *) efermi
+      read (67,*) efermi
       close(67)
     endif
 
@@ -246,7 +237,7 @@ module KKRzero_mod
   subroutine rinputnew99(rbasis, zat, naez)
     double precision, allocatable, intent(inout) :: zat(:) ! (naez)
     double precision, allocatable, intent(inout) :: rbasis(:,:) ! (3,naez)
-    integer, intent(inout) :: naez !< if naez==0 (auto) it will be modified to the number of atoms
+    integer, intent(inout) :: naez !< if naez < 1 (auto) it will be modified to the number of atoms on exit
     
     character(len=9), parameter :: version = "Dez  2015"
     integer :: i, ist
@@ -275,7 +266,7 @@ module KKRzero_mod
     write(6, fmt="(80(1h=))") 
     
     open(77, file='rbasis', form='formatted', action='read', status='old') ! open input file containing the atomic positions
-    !+ auto modus
+    !+ auto modus for the number of atoms
     if (naez < 1) then
       naez = 0
         read(unit=77, fmt=*, iostat=ist) rdummy(1:3) ! read  1st line

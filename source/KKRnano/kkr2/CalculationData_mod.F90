@@ -329,8 +329,8 @@ module CalculationData_mod
     call createClusterInfo(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm)
 
     if (mp%isMasterRank) then
-      write(*,*) "Number of lattice vectors created     :", self%lattice_vectors%nrd
-      write(*,*) "Max. number of reference cluster atoms:", self%clusters%naclsd
+      write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
+      write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
       write(*,*) "On node 0: "
       write(*,*) "Num. atoms treated with full lmax:        ", num_truncated(dims%lmaxd)
       write(*,*) "Num. atoms outside of the truncation zone:", num_truncated(-1)
