@@ -75,7 +75,7 @@ ORNL and FZJ, by sharing common experiences in the following three subtopics
 \begin{itemize}
  \item Mathematical approaches towards specific physical problems  
  \item Stable numerical algorithms suitable for fast solutions
- \item Technical issues of porting the applications to current and future HPC platforms
+ \item Technical issues of porting the applications to current/future HPC platforms
 \end{itemize}
 Both sides are willing to reveal their knowledge on these topics in order to
 contribute to fruitful discussions.
@@ -196,39 +196,111 @@ Matsubara poles compared to other energy points.
 \section{Common Goals} \label{section:common}
 % ==================================================================================================
 
-%% high entropy alloys
-%% huge systems with disorder
-%% defects
-%% full functional systems (transistors)
-%% magnetic materials, e.g. Skyrmions
-%% structural materials, e.g. metallic glasses
+\todo[inline]{check for consistency and add missing topics}
+The two teams identified the following problems in physics as target systems to which \LSMS{} and \KKRnano{}
+are good candidate to be applied to
+\begin{itemize}
+ \item high entropy alloys
+ \item huge systems with disorder
+ \item defects in ordered structures
+ \item full functional systems (e.g.~transistors)
+ \item magnetic materials (e.g.~Skyrmions)
+ \item structural materials (e.g.~metallic glasses)
+\end{itemize}
 
-%% accuracy
-%% reliablity
-%% efficiency
-%% robustness
-%% visibility/impact in the community
+In order to describe the physics correctly, \KKRnano{} is missing an implementation of non-collinear magnetism.
+
+
+The following requirements on the results are essential to a successful calculator that gains visibility and impact in the community
+\begin{itemize}
+ \item accuracy
+ \item reliablity
+\end{itemize}
+whereas the requirement onto the implementations are
+\begin{itemize}
+ \item robustness
+ \item efficiency
+ \item resource utilization 
+\end{itemize}
+The latter two usually are addressed together when efforts are made to port the application to a new compute platform.
+Often, the porting proceeds in two steps: Get the code functionality correct first, then, increase it's efficiency of 
+the given architecture. Here, experiences of the \LSMS{} group could be transferred to the \KKRnano{} group who just
+started to experiment with a GPU-accelerated solver kernel.
 
 % ==================================================================================================
 \section{Technical Challenges} \label{section:tech}
 % ==================================================================================================
 
+Here, a list of challenges is given that the developer teams of both application , \LSMS{} and \KKRnano{}, are
+facing. The aim of collecting these items is to given an overview of what needs to be done in the future
+and to align efforts so that solutions found in one team may be propagated into the other one.
+\todo[inline]{add missing callenges}
+
 % ..................................................................................................
 \subsection{Fast Poisson solver for distributed charges} %\label{section:}
 % ..................................................................................................
+In each self-consistency iteration the Poisson equation needs to be solved for finding the
+electrostatic potential contribution. The charge density distribution (right hand side of the Poisson equation)
+is given as a multi-center expansion on radial grids. The density is limited in its spatial extent
+by the Voronoi-cell construction that enters the expressions as so-called \emph{shape functions}.
+\KKRnano{} employs a Ewald summation technique to separate the long-range and short-range parts of the electrostatic interaction.
+The long range parts are treated with a small number of lattice vectors in reciprocal space. The short ranged parts
+are found by summation over periodic images in real space.
+The scaling of this solver qudratic \todo[inline]{check again} and, hence, the algorithm is not suitable
+for the treatment of huge systems where linear scaling is required in all components of the method.
+
+The requirements for a Poisson solver are stability, accuracy, complexity and speed.
+Since these requirements are fullfilled by the Fast Multipole Method (FMM), 
+an investigation of how FMM the could be applied to the
+electrostatic problem in KKR codes would shine light into this issue.
+In particular it remains to be if the delocalized charges require a more
+sopfisticated approach than FMM for point charges.
 
 % ..................................................................................................
 \subsection{Placement of empty cells in structural relaxation} %\label{section:}
 % ..................................................................................................
 
+Investigations of defect structures are often related to irregular
+shapes of the Voronoi cell. Therefore, vacuum/empty cells are inserted that do not carry an atomic nucles
+but an exapansion center for a radial grid.
+The exact position of the empty cell's center is in principle arbitrary, however, the quality of results
+depends on the quality of description of densities and potentials inside the cells. Therefore,
+a stronlgy irregular Voronoi is not likely to describe these quantities well with a truncated $\ell$-expansion.
+In particular during structural relaxation, the reconstruction of the geometry
+asks for an automated method for the placement of empty cell.
+
+
+
 % ..................................................................................................
 \subsection{Self-consistency convergence acceleration} %\label{section:}
 % ..................................................................................................
+
+The simulation of larger and larger systems has shown that the usual recipe for the
+convergence of the self-consistency cycles are no longer feasable without accepting a critical
+slowing down with growing system size. 
+This, however, contradicts the principles of an $\mathcal O(N)$-method.
+New ways have to be identified in order to accelerate the SCF convergence, especially in systems
+that feature electronics states close to the Fermi energy level, and, hence, suffer from charge sloshing.
 
 
 % ==================================================================================================
 \section{Conclusions}\label{section:summary}
 % ==================================================================================================
+
+The two KKR-based DFT applications \LSMS{} and \KKRnano{} identified common aims and similar target problems
+A list of potential challenges in which a close collaboration could lead to benefits on both sides has been assembled. 
+Among algorithmical issues, three items have been highlighted in particular: 
+\begin{itemize}
+ \item Acceleration of the self-consistency loop,
+ \item placement of empty cells and
+ \item a scalable Poisson solver.
+\end{itemize}
+Furthermore, the collaboration between the developer teams of 
+\LSMS{} from ORNL 
+and
+\KKRnano{} from FZJ
+is meant to provide a platform for fast exchange of expericenes on
+bringing the applications to suitable computer architectures and running them in high parallelism.
 
 %   ==================================================================================================
 \section*{Acknowledgments}
@@ -237,6 +309,6 @@ We thank Jack Wells and Tjerk Straatsma from ORNL and Dirk Pleiter and Stefan Bl
 for their efforts making this collaboration possible.
 
 % ==================================================================================================
-\bibliographystyle{plain} \bibliography{KKR} %% KKR.bib file
+% \bibliographystyle{plain} \bibliography{KKR} %% KKR.bib file
 % ==================================================================================================
 \end{document}
