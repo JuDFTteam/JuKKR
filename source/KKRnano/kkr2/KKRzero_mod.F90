@@ -117,12 +117,15 @@ module KKRzero_mod
    
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
+    integer, intent(in) :: voronano  ! 0: usual kkr0,  1: returns before reading potential and shapefunctions
     
     integer, parameter  :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
     integer, parameter  :: KREL=0
 
     double precision    :: efermi, recbv(3,3), volume0
-    integer             :: ist
+    double complex, allocatable :: ez(:)
+    double complex, allocatable :: wez(:)
+    integer             :: ielast, ist, iesemicore, ierror
     logical             :: startpot_exists
     
     type(DimParams)     :: dims
@@ -152,6 +155,20 @@ module KKRzero_mod
     
 !   in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
+
+    if(voronano == 1) then
+      ! Conversion of rmax and gmax to atomic units
+      params%rmax = params%rmax*params%alat
+      params%gmax = params%gmax/params%alat
+      call store(dims, 'inp0.unf')
+      ierror = writeInputParamsToFile(params, 'input.unf')
+      arrays%bravais(:,1) = params%bravais_a
+      arrays%bravais(:,2) = params%bravais_b
+      arrays%bravais(:,3) = params%bravais_c
+      call writeMain2Arrays(arrays, 'arrays.unf')
+     write(*,*) 'voronano ==1: Starting potential and shapefunctions are not read in kkr0'
+     return
+   endif
 
 !===================================================================
 
@@ -235,12 +252,17 @@ module KKRzero_mod
   
 !>    Reads atominfo and rbasis files.
   subroutine rinputnew99(rbasis, zat, naez)
+
+    use PositionReader_mod, only: getAtomData
+    include 'mpif.h'
+
     double precision, allocatable, intent(inout) :: zat(:) ! (naez)
     double precision, allocatable, intent(inout) :: rbasis(:,:) ! (3,naez)
     integer, intent(inout) :: naez !< if naez < 1 (auto) it will be modified to the number of atoms on exit
     
+    double precision, allocatable  :: pos(:,:)
     character(len=9), parameter :: version = "Dez  2015"
-    integer :: i, ist
+    integer :: i, ist, naez_xyz
     double precision :: rdummy(3)
 
 !------------ array set up and definition of input parameter -----------
@@ -264,27 +286,15 @@ module KKRzero_mod
     write(6, fmt="('| established Juelich 2008',26x,'Version : ',a9,8x,'|')") version
     write(6, fmt="('|',78x,'|')") 
     write(6, fmt="(80(1h=))") 
-    
-    open(77, file='rbasis', form='formatted', action='read', status='old') ! open input file containing the atomic positions
-    !+ auto modus for the number of atoms
-    if (naez < 1) then
-      naez = 0
-        read(unit=77, fmt=*, iostat=ist) rdummy(1:3) ! read  1st line
-      do while (ist == 0)
-        naez = naez + 1
-        read(unit=77, fmt=*, iostat=ist) rdummy(1:3) ! read next line
-      enddo ! while
-      warn(6, "Number of atoms has been determined automatically from 'rbasis' file, NAEZ ="+naez)
-      deallocate(zat, rbasis, stat=ist)
-      allocate(zat(naez), rbasis(3,naez), stat=ist)
-      zat = 0.d0; rbasis = 0.d0
-      rewind(77, iostat=ist) ! set read pointer to the file beginning again
-    endif
-    !- auto modus
-    do i = 1, naez
-      read(unit=77, fmt=*) rbasis(1:3,i) ! reading atomic positions
-    enddo ! i
-    close(77)
+
+! read data from .xyz-file 'rbasis.xyz'
+    ist=getAtomData('rbasis.xyz', naez_xyz, pos, MPI_COMM_WORLD)
+! check if number of atoms from 'global.conf' equals number of atoms from .xyz-file 
+    if (naez_xyz /= naez) die_here('number of atoms in global.conf does not equal number of atoms in rbasis.xyz!')
+! assign nuclear charge and rbasis
+    zat(:)=pos(0,:)
+    rbasis(1:3,1:naez)=pos(1:3,:naez_xyz)
+    !TODO: check whether read-in was successful    
 
     write(6, fmt="(3(7(1h-),1h+) ,55(1h-))")
     write(6, fmt="(10(3(1h-),1h+) ,39(1h-))")
