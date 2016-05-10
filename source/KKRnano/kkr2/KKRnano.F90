@@ -89,6 +89,7 @@ program KKRnano
     '    --help                This command line help function', &
     '    --check               Check input files for errors', &
     '    --convert             Converter to and from ASCII files', &
+    '    --voronano            Produces Voronoi output necessary to start a calculation with KKRnano', &
     ''
     stop
   case default
