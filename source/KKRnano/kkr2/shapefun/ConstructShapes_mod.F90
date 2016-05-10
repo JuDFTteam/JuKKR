@@ -65,7 +65,7 @@ module ConstructShapes_mod
   !> MT_scale > 0.0 overrides new_MT_radius!!!
   subroutine createShape(self, inter_mesh, rbasis, bravais, center_ind, &
                       rcluster, lmax_shape, npoints_min, nmin_panel, &
-                      num_MT_points, new_MT_radius, MT_scale, atom_id)
+                      num_MT_points, new_MT_radius, MT_scale, atom_id, num_atoms)
     use LatticeVectors_mod, only: LatticeVectors, create, destroy
     use RefCluster_mod, only: RefCluster, create, destroy
     use ShapefunData_mod, only: ShapefunData
@@ -86,6 +86,7 @@ module ConstructShapes_mod
     double precision, intent(in) :: new_MT_radius
     double precision, intent(in) :: MT_scale
     integer, intent(in) :: atom_id
+    integer, intent(in) :: num_atoms
 
     type(LatticeVectors) :: lattice_vectors
     type(RefCluster) :: ref_cluster
@@ -113,7 +114,7 @@ module ConstructShapes_mod
 
     call constructFromCluster(self, inter_mesh, ref_cluster%rcls(:,2:), weights, &
                               lmax_shape, npoints_min, nmin_panel, &
-                              num_MT_points, new_MT_radius, MT_scale, atom_id)
+                              num_MT_points, new_MT_radius, MT_scale, atom_id, num_atoms)
 
     call destroy(lattice_vectors)
     call destroy(ref_cluster)
@@ -132,7 +133,7 @@ module ConstructShapes_mod
   !> @param weights weights for weighted Voronoi diagram (power diagram)
   subroutine constructFromCluster(self, inter_mesh, rvec, weights, &
                                   lmax_shape, npoints_min, nmin, &
-                                  num_MT_points, new_MT_radius, MT_scale, atom_id)
+                                  num_MT_points, new_MT_radius, MT_scale, atom_id, num_atoms)
     use ShapefunData_mod, only: ShapefunData, createShapefunData
     use Voronoi_mod, only: Voronoi_construction
     use ShapeFunctions_mod, only: shapef
@@ -149,6 +150,7 @@ module ConstructShapes_mod
     double precision, intent(in) :: new_MT_radius
     double precision, intent(in) :: MT_scale
     integer, intent(in) :: atom_id
+    integer, intent(in) :: num_atoms
     
     integer, parameter :: nvertmax = 32 ! hoping for at most 32 vertices for each face
     
@@ -210,7 +212,7 @@ module ConstructShapes_mod
     if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, lmifun_s, radius, atom_id)
 
     ! Construct shape-fun datastructure
-    call createShapefunData(self, meshn, ibmaxd, nfun)
+    call createShapefunData(self, meshn, ibmaxd, nfun, num_atoms)
 
     self%theta = thetas_s(1:meshn,1:nfun) ! store the shape functions
     

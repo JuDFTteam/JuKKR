@@ -40,12 +40,14 @@ module ShapefunData_mod
   contains
 
   !----------------------------------------------------------------------------
-  subroutine createShapefunData(shdata, irid, lmmax_shape, nfund)
+  subroutine createShapefunData(shdata, irid, lmmax_shape, nfund, natoms)
     type(ShapeFunData), intent(inout) :: shdata
     integer, intent(in) :: irid
     integer, intent(in) :: lmmax_shape
     integer, intent(in) :: nfund
+    integer, intent(in) :: natoms
 
+    shdata%natoms = natoms
     shdata%irid = irid
     shdata%nfund = nfund
     shdata%lmmax_shape = lmmax_shape
