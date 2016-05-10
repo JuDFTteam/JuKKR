@@ -1,0 +1,22 @@
+===============================================================================
+   total no. of MPI ranks  =            1
+   OMP max. threads        =            4
+   OMP num. threads        =            4
+   groups of processes created
+   NMPI                    =            1
+   SMPI                    =            1
+   EMPI                    =            1
+   NTHRDS                  =            4
+   MPI-processes (active)  =            1
+   total no. of tasks      =            4
+===============================================================================
+WARNING! cannot handle more than one local atom correctly with truncation, but found 4 --- launched at TEST_lcutoff_mod.F90:74
+Truncation zone created, Zero-List:  0 0 0 0 
+ Number of lattice vectors created     :         3286
+ Max. number of reference cluster atoms:           43
+ On node 0: 
+ Num. atoms treated with full lmax:            4
+ Num. atoms in truncation zone 1  :            4
+ Num. atoms in truncation zone 2  :            0
+ ERROR: Check sum(num_truncated) == dims%naez failed. CalculationData_mod.F90
+         343

@@ -119,7 +119,7 @@ all:	$(PROGRAM)
 $(PROGRAM): $(OBJS)
 	$(FC90) $(FCFLAGS) $(FC90FLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
-ifeq ($(PLATFORM),ifort_IFF)
+ifeq ($(PLATFORM),ifort)
 EXTRA_FLAGS = -heap-arrays
 # these files need stack allocated automatic arrays
 vbrmv_mat_mod.o: EXTRA_FLAGS =
