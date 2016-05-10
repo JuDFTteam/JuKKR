@@ -1,0 +1,23 @@
+ITER:   0  input files read.....              5.83 sec =   0 h  0 min  5.83 sec
+ITER:   0  Madelung sums calc...              5.91 sec =   0 h  0 min  5.91 sec
+===============================================================================
+ITER:   1  started at ..........              5.91 sec =   0 h  0 min  5.91 sec
+===============================================================================
+ITER:   1  initialized .........              5.92 sec =   0 h  0 min  5.92 sec
+ITER:   1  Single Site took.....              2.68 sec =   0 h  0 min  2.68 sec
+ITER:   1  Mult. Scat. took.....              0.04 sec =   0 h  0 min  0.04 sec
+ITER:   1  G obtained ..........              8.64 sec =   0 h  0 min  8.64 sec
+ITER:   1  density calculated ..             10.13 sec =   0 h  0 min 10.13 sec
+ITER:   1  RHOMOM ......                     10.13 sec =   0 h  0 min 10.13 sec
+ITER:   1  VINTRAS ......                    10.13 sec =   0 h  0 min 10.13 sec
+ITER:   1  VMADELBLK ......                  10.14 sec =   0 h  0 min 10.14 sec
+ITER:   1  before CONVOL.....                10.32 sec =   0 h  0 min 10.32 sec
+ITER:   1  calculated pot ......             10.32 sec =   0 h  0 min 10.32 sec
+ITER:   1  potential written ..              10.47 sec =   0 h  0 min 10.47 sec
+ITER:   1  barrier begin..                   10.47 sec =   0 h  0 min 10.47 sec
+ITER:   1  barrier end ...                   10.47 sec =   0 h  0 min 10.47 sec
+ITER:   1  results......                     10.48 sec =   0 h  0 min 10.48 sec
+ITER:   1  end .................             10.49 sec =   0 h  0 min 10.49 sec
+===============================================================================
+ITER:   1  finished in .........              4.58 sec =   0 h  0 min  4.58 sec
+===============================================================================

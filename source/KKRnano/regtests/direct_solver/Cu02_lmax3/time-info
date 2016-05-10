@@ -1,0 +1,23 @@
+iter:   0  input files read.....              3.85 sec =   0 h  0 min  3.85 sec
+iter:   0  Madelung sums calc...              3.92 sec =   0 h  0 min  3.92 sec
+===============================================================================
+iter:   1  started at ..........              3.92 sec =   0 h  0 min  3.92 sec
+===============================================================================
+iter:   1  initialized .........              3.92 sec =   0 h  0 min  3.92 sec
+iter:   1  Single Site took.....              1.82 sec =   0 h  0 min  1.82 sec
+iter:   1  Mult. Scat. took.....              0.01 sec =   0 h  0 min  0.01 sec
+iter:   1  G obtained ..........              5.76 sec =   0 h  0 min  5.76 sec
+iter:   1  density calculated ..              6.49 sec =   0 h  0 min  6.49 sec
+iter:   1  RHOMOM ......                      6.50 sec =   0 h  0 min  6.50 sec
+iter:   1  VINTRAS ......                     6.50 sec =   0 h  0 min  6.50 sec
+iter:   1  VMADELBLK ......                   6.50 sec =   0 h  0 min  6.50 sec
+iter:   1  before CONVOL.....                 6.67 sec =   0 h  0 min  6.67 sec
+iter:   1  calculated pot ......              6.67 sec =   0 h  0 min  6.67 sec
+iter:   1  potential written ..               7.36 sec =   0 h  0 min  7.36 sec
+iter:   1  barrier begin..                    7.36 sec =   0 h  0 min  7.36 sec
+iter:   1  barrier end...                     7.36 sec =   0 h  0 min  7.36 sec
+iter:   1  results......                      7.38 sec =   0 h  0 min  7.38 sec
+iter:   1  end .................              7.42 sec =   0 h  0 min  7.42 sec
+===============================================================================
+iter:   1  finished in .........              3.50 sec =   0 h  0 min  3.50 sec
+===============================================================================
