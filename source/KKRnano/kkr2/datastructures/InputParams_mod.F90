@@ -457,8 +457,11 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "voronano", values%voronano)
-  if (ierror /= 0) then
+  ierror = getValue(cr, "voronano", values%voronano , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for voronano. Set to voronano = 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for voronano."
     destroy_and_return
   endif
