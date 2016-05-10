@@ -34,7 +34,7 @@ module CellData_mod
     integer, intent(in) :: nfund
 
     cell%cell_index = -1
-    call create(cell%shdata, irid, lmmax_shape, nfund)
+    call create(cell%shdata, irid, lmmax_shape, nfund, 1) ! 1=num_atoms (dummy argument, should not be trusted)
 
   endsubroutine ! create
 
