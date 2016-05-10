@@ -5,3 +5,4 @@ test_system/*
 *.exe
 *~
 *tmp
+*__genmod.f90

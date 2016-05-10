@@ -209,10 +209,11 @@ subroutine read_scoef_rhoq(t_rhoq)
   integer, allocatable :: atomimp(:)
 
   open(unit=32452345,file='scoef',iostat=ierr)
-  if (ierr/=0) stop '[read_scoef_rhoq] file not found'
+  if (ierr/=0) stop '[read_scoef_rhoq] file "scoef" not found'
   read(32452345,*) natomimp
   ! exclude probe layer:
   natomimp = natomimp-1
+  if(natomimp==0) stop '[read_scoef_rhoq] Error only a single line found in scoef file! Did you include the probe layer?'
   write(*,*) 'natomimp',natomimp
   allocate(ratomimp(3,natomimp))
   allocate(atomimp(natomimp))
@@ -339,9 +340,10 @@ subroutine save_geometry_rhoq(t_rhoq,r_basis,lmmaxso,natyp)
   t_rhoq%lmmaxso = lmmaxso
 
   ! allocate and save r_basis
-  ierr = 0
+  write(*,*) 'natyp',t_rhoq%natyp
   if(.not.allocated(t_rhoq%r_basis)) allocate(t_rhoq%r_basis(3,t_rhoq%natyp), stat=ierr)
   if(ierr/=0) stop '[save_geometry_rhoq] error allocating r_basis in rhoq'
+  write(*,*) shape(r_basis),shape(t_rhoq%r_basis)
   t_rhoq%r_basis = r_basis
   
   ! calculate lattice vectors needed later in calc_rhoq
@@ -370,6 +372,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   integer :: ierr
   
   ! allocations etc.
+  write(*,*) t_rhoq%Nscoef, t_rhoq%natyp
   allocate(rcls_i(3,t_rhoq%Nscoef), r_basis(3,t_rhoq%natyp), L_i(3,t_rhoq%Nscoef))
   r_basis = t_rhoq%r_basis
   rcls_i = t_rhoq%r_scoef
@@ -438,46 +441,6 @@ subroutine save_Ghost_rhoq(t_rhoq, Ghost, lmmaxso, Nlayer)
   t_rhoq%Ghost(:,:,:) = Ghost(:,:,:)
   
 end subroutine save_Ghost_rhoq
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-! subroutine calc_Ghost_k_rhoq(t_rhoq,alat,cls,nacls,rr,ezoa,atom,rcls,naez,ncls,nr,nemb,naclsmax)
-!   ! calculate Ghost(k;E) from Ghost(E) and kmesh information by fourier transform
-!   implicit none
-!   type(type_rhoq), intent(inout) :: t_rhoq
-!   ! parameters
-!   integer, intent(in) :: naez,ncls,nr,nemb
-!   ! scalars
-!   double precision, intent(in) :: alat, naclsmax
-!   ! arrays
-!   double precision, intent(in) :: rcls(3,ncls,ncls),rr(3,0:nr)
-!   integer, intent(in)          :: atom(ncls,naez+nemb),cls(naez+nemb),ezoa(ncls,naez+nemb),nacls(ncls)
-!   ! local
-!   double complex, allocatable :: Ghost_k_tmp(:,:,:)
-!   integer :: ierr, ik
-! 
-! 
-!   ! allocations etc.
-!   if(t_rhoq%Ghost_k_memsave) then
-!     ierr = 0
-!     if(.not.allocated(t_rhoq%Ghost_k)) allocate(t_rhoq%Ghost_k(t_rhoq%lmmaxso,t_rhoq%lmmaxso,t_rhoq%Nlayer,t_rhoq%nkpt), stat=ierr)
-!     if(ierr/=0) stop '[calc_Ghost_k_rhoq] error in allocating Ghost_k in rhoq'
-!   end if ! t_rhoq%Ghost_k_memsave
-!   allocate(Ghost_k_tmp(t_rhoq%lmmaxso,t_rhoq%lmmaxso,t_rhoq%Nlayer), stat=ierr)
-!   if(ierr/=0) stop '[calc_Ghost_k_rhoq] error in allocating Ghost_k_tmp'
-!   
-!   ! do fourier transform of Ghost
-!   do ik=1,t_rhoq%nkpt
-!     call dlke0(Ghost_k_tmp,alat,t_rhoq%natyp,cls,nacls,naclsmax,rr,ezoa,atom,t_rhoq%kpt,rcls,t_rhoq%Ghost)
-!     if(t_rhoq%Ghost_k_memsave) t_rhoq%Ghost_k(:,:,:,ik) = Ghost_k_tmp(:,:,:)
-!   end do
-!   
-!   
-!   deallocate(Ghost_k_tmp)
-! 
-! end subroutine calc_Ghost_k_rhoq
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -645,7 +608,7 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_log, npan_eq, &
 !   integer, intent(in) :: nsra, lmmaxso, irmdnew ! left/right solutions (wave functions)
   double complex, intent(in) :: Rll(nsra*lmmaxso,lmmaxso,irmdnew), Rllleft(nsra*lmmaxso,lmmaxso,irmdnew) ! wave functions in new mesh
   integer, intent(in) :: ipan_intervall(0:ntotd)
-  double complex, intent(out) :: trq_of_r(lmmaxso,lmmaxso, lmmaxso*4, irmdnew)
+  double complex, intent(out) :: trq_of_r(lmmaxso,lmmaxso, 725, irmdnew)
   
   double precision, parameter :: c0ll = 1.0d0/sqrt(16.0d0*datan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
   
@@ -749,8 +712,6 @@ subroutine calc_G0_k(tau0_k, tinv_i, tinv_j, G0_k, mu_i, mu_j, N)
   double complex :: temp(N,N)
   double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
   
-!   write(*,*) 'call calc_G0_k',N,shape(G0_k),shape(tinv_i),shape(tinv_j),shape(tau0_k),mu_i,mu_j
-  
   ! initialize G0_k
   G0_k = C0
   temp = C0
@@ -845,7 +806,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   type(type_rhoq), intent(inout) :: t_rhoq
 !   integer, intent(inout) :: lmmaxso, Nkp, irmdnew, lmax
   integer, intent(in) :: lmmaxso, Nkp, irmdnew, lmax
-  double complex, intent(inout) :: trq_of_r(lmmaxso,lmmaxso, lmmaxso*4, irmdnew)
+  double complex, intent(inout) :: trq_of_r(lmmaxso,lmmaxso, 725, irmdnew)
   double precision, intent(in) :: recbv(3,3)
   double complex, allocatable, intent(out) :: rhoq(:)
   
@@ -859,10 +820,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 !   integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads, Ni, Nj, Nqpt, ixyz, l1, m1, imt1, ifun
   integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads, Ni, Nj, Nqpt, ixyz, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun
   integer, allocatable :: ipvt(:)
-  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpG02(:,:), tll(:,:), tmp(:,:), tmpsum1(:,:), tmpsum2(:,:), exG0_tmp(:,:), qint(:,:,:), eiqr_lm(:,:), jl(:), tmp_sum_new(:,:), q_mu(:,:), cYlm(:)
+  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpG02(:,:), tll(:,:), tmp(:,:), tmpsum1(:,:), tmpsum2(:,:), exG0_tmp(:,:), qint(:,:,:), eiqr_lm(:,:), jl(:), q_mu(:,:), cYlm(:)
   double complex :: tr_tmpsum1, tr_tmpsum2, kweight, Z
-  double precision, allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:), Ylm(:), Ylm2(:,:), rnew(:), yr_int(:)
-  double precision :: QdotL, tmpk(3), tmpr(3), Rq, Rq2, R0(3,30), costheta, phi
+  double precision, allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:), Ylm(:), rnew(:)
+  double precision :: QdotL, tmpk(3), tmpr(3), Rq, costheta, phi
   integer, allocatable :: ifunm(:), lmsp(:), ntcell(:) ! shape functions
   double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
 
@@ -949,9 +910,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   ! LU decomposition to invert tll
   call zgetrf(lmmaxso,lmmaxso,tll,lmmaxso,ipvt,ierr)
   call zgetrs('n',lmmaxso,lmmaxso,tll,lmmaxso,ipvt,tinv(:,:,i),lmmaxso,ierr)
-    
-!   write(198,'(2ES15.7)') tll(:,:)
-!   write(199,'(2ES15.7)') tinv(:,:,t_rhoq%Nscoef+1)
 
   ! close file 'tmat'
   close(9999)
@@ -996,40 +954,22 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
       ix = mu_i - mu + 1
       ! first mu,mu_i element
       irec = irec + ix
-      write(*,'(A,100I9)') 'reading tau0_k ',lrec,N,irec,k,ix,mu,mu_i,t_rhoq%Nscoef,t_rhoq%ilay_scoef(1:t_rhoq%Nscoef)
       read(9999,rec=irec) tau0_k(1:N,1:N)
       ! find G0ij_k from tau0_k and tinv
       call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
       G0ij_k(1:N,1:N,i,k) = tmpG0(1:N,1:N)
-      write(76419830,'(2I9,2000ES15.7)') i,k,kpt(1:3,k),dreal(tau0_k(:,:)),dimag(tau0_k(:,:))
-      write(76419831,'(2I9,2000ES15.7)') i,k,kpt(1:3,k),dreal(tmpG0(:,:)),dimag(tmpG0(:,:))
-      write(76419832,'(2I9,2000ES15.7)') i,k,kpt(1:3,k),dreal(tinv(:,:,i)),dimag(tinv(:,:,i))
-      write(76419833,'(2I9,2000ES15.7)') i,k,kpt(1:3,k),dreal(tinv(:,:,t_rhoq%Nscoef+1)),dimag(tinv(:,:,t_rhoq%Nscoef+1))
-      
-      write(256,'(2I9,2000ES15.7)') i,k,kpt(1:3,k),dreal(tau0_k(:,:)),dimag(tau0_k(:,:))
       
       ! now mu_i,mu element
       irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1)
       ix = mu_i - mu + 1
       irec = irec + ix + (t_rhoq%Nlayer-1)
-      write(*,'(A,100I9)') 'reading tau0_k2',lrec,N,irec,k,ix,mu,mu_i,t_rhoq%Nscoef,t_rhoq%ilay_scoef(1:t_rhoq%Nscoef)
       read(9999,rec=irec) tau0_k(1:N,1:N)
       ! find G0ji_k from tau0_k and tinv
       call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG02(1:N,1:N), mu_i, t_rhoq%mu_0, N)
       G0ji_k(1:N,1:N,i,k) = tmpG02(1:N,1:N)
-            
-!       write(257,'(2ES15.7)') dreal(tau0_k(lm1,lm2)), dimag(tau0_k(lm1,lm2))
-!       write(257,'(2I9,2000ES15.7)') i,k,kpt(1:3,k),dreal(tau0_k(:,:)),dimag(tau0_k(:,:))
-      
-      if(i==1.and.k==1) write(*,*) shape(G0ij_k)
-      write(258,'(2I9,1000ES15.7)') i,k,kpt(1:3,k),dreal(G0ij_k(:,:,i,k)),dimag(G0ij_k(:,:,i,k))
-!       write(259,'(2I9,1000ES15.7)') i,k,kpt(1:3,k),dreal(G0ji_k(:,:,i,k)),dimag(G0ji_k(:,:,i,k))
       
     end do ! i
   end do ! k
-  
-!   write(943943,'(2E15.7)') tmpsum1
-!   write(943944,'(2E15.7)') tmpsum2
   
   close(9999)
   deallocate(tmp, tmpG0, tmpG02)
@@ -1039,84 +979,21 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate( tau(lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tau imp'
   tau(:,:,:,:) = reshape( t_rhoq%tau(:,:), (/lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef/) )
-!   write(*,*) 'saving tau',shape(tau)
-!   do i=1,t_rhoq%Nscoef
-!     do k=1,t_rhoq%Nscoef
-!       do j=1,t_rhoq%lmmaxso
-!       do ixyz=1,t_rhoq%lmmaxso
-!       write(753951,'(2ES15.7)') dreal(tau(j,ixyz,i,k)),dimag(tau(j,ixyz,i,k))
-!       end do
-!       end do
-!     end do
-!   end do
 
   ! done calculating tau
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !find q-mesh from k-kpoints
-  
-  ! parameters for bigger q mesh
-!   Ni = 1
-!   Nj = 1
-!   Ni = 2
-!   Nj = 2
-  Ni = 3
-  Nj = 3
-!   Ni = 4
-!   Nj = 4
-  Nqpt = Ni*Nj*Nkp
-  allocate(Qvec(3,Nqpt))
-  allocate(rhoq(Nqpt), stat=ierr)
-  rhoq = C0
-  if(ierr/=0) stop '[calc_rhoq] Error allocating rhoq'
-  
-  !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads, irec, ixyz, exG0_tmp, QdotL, tmpk, tmpr)
-  allocate(tmpsum1(N,N), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1'
-  allocate(tmpsum2(N,N), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum2'
-  allocate(tmp(N,N), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating tmp'
-  allocate(exG0_tmp(N,N), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating exG0_tmp'
-  
-  mythread = omp_get_thread_num()
-  nthreads = omp_get_num_threads()
-  
-  ! find qvecs based on kpts from integration
-  !$omp do
-  do k=1,Nkp
-    do i=1,Ni
-      do j=1,Nj
-        irec = k + Nkp*(i-1) + Nkp*Ni*(j-1)
-        do ixyz=1,3
-          Qvec(ixyz,irec) = kpt(ixyz,k) + (i-Ni+1)*recbv(ixyz,1) + (j-Nj+1)*recbv(ixyz,2)
-        end do !ixyz
-      end do !j=1,Nj
-    end do !i=1,Ni
-  end do !k=1,Nkp
-  !$omp end do
     
-  ! done finding q-mesh
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
-  
-  ! make sure no race conditions appear
-  !$omp barrier
-  
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! find second set of gaunt coefficients for sum_LL'L" [exp(-iqr)_L * Tr(R*Rleft)_L' * Theta)L" * C_LL'L"] which is then integrated radially
   
   NCLEB =   ((lmax*2+1)**2 * (lmax+1)**2 )*100
   LMAX_1 = 6
-  LMAX_2 = 6!12!18
+  LMAX_2 = 18
   LPOT_2 = 2*(LMAX_1+LMAX_2)
   
   allocate( WG(4*LMAX_2), stat=ierr)
-  if(ierr/=0) write(*,*) 4*LMAX_2+((4*LMAX_2)*(4*LMAX_2+1)*(4*LMAX_2+1))+NCLEB
   if(ierr/=0) stop '[calc_rhoq] Error allocating wg '
   allocate( YRG(4*LMAX_2,0:4*LMAX_2,0:4*LMAX_2), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] Error allocating yrg'
@@ -1125,63 +1002,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate( ICLEB(NCLEB,3), JEND((LPOT_2+1)**2,0:LMAX_1,0:LMAX_2), LOFLM((2*LPOT_2+1)**2), stat=ierr )
   if(ierr/=0) stop '[calc_rhoq] Error allocating icleb_2 etc for gaunt'
   
-!   ! testing
-!   lmax_2 = 100
-!   deallocate(wg,yrg)
-!   allocate( WG(4*LMAX_2), stat=ierr)
-!   if(ierr/=0) stop '[calc_rhoq] Error allocating wg '
-!   allocate( YRG(4*LMAX_2,0:4*LMAX_2,0:4*LMAX_2), stat=ierr)
-!   write(*,*) shape(wg),shape(yrg)
-!   CALL GAUNT2( WG, YRG, 4*LMAX_2) !LMAX_2 )
-!   allocate(yr_int((lmax_2+1)**2))
-!   yr_int = 0.0d0
-!   do lm2 = 0,lmax_2
-!   do lm3 = -lm2, lm2
-!      lm01 =Lm2* (Lm2+1) + lm3 + 1
-!   Do lm1=1,4*LMAX_2
-!   write(*,*) lm1,4*lmax_2
-! !   DO L = 0,LOMAX
-! !             A = RF*SQRT((2*L+1)/FPI)
-! !             CD = 1.D0
-! !             YR(K,L,0) = A*P(L,0)
-! ! C
-! !             DO M = 1,L
-!      yr_int(lm01) = yr_int(lm01) + wg(lm1)*yrg(lm1,lm2,abs(lm3))
-! !      if(lm01==1) then 
-! !         write(1113,'(3ES11.3)') yr_int(lm01), wg(lm1), yrg(lm1,lm2,abs(lm3))
-! !      end if
-! !      if(lm01==3) then 
-! !         write(1113,'(3ES11.3)') yr_int(lm01), wg(lm1), yrg(lm1,lm2,abs(lm3))
-! !      end if
-! !      if(lm01==7) then 
-! !         write(1113,'(3ES11.3)') yr_int(lm01), wg(lm1), yrg(lm1,lm2,abs(lm3))
-! !      end if
-!      if(lm01<=13) then 
-!         write(1113,'(3ES11.3)') yr_int(lm01), wg(lm1), yrg(lm1,lm2,abs(lm3))
-!         if(lm01==13.and.lm1==4*lmax_2) stop
-!      end if
-!   end do
-!   end do
-!   end do
-! !   write(*,'(ES11.3)') yr_int(1)
-!   stop
-!   ! testing
-  
-  
   !          ( > |  > |     <    )
-  CALL GAUNT2( WG, YRG, 4*LMAX_2) !LMAX_2 )
+  CALL GAUNT2( WG, YRG, 4*LMAX_2)
   
-  
-!   write(987412365,*) 'wg',WG, 'yrg', YRG
-!   write(987412365,'(A)') 'wg'!,WG, 'yrg', YRG
-!   write(987412365,'(E15.7)')  WG!, 'yrg', YRG
-!   write(987412365,'(A)')  'yrg'!, YRG
-!   write(987412365,'(E15.7)')  YRG
   !             (    <  |    <  |   <   | < |  < |  >  |  >   |   >  |  >  |  >  |  >   |   <   |     <         )
-  CALL GAUNT_new( LMAX_1, LMAX_2, LPOT_2, WG, YRG, CLEB, LOFLM, ICLEB, IEND, JEND, NCLEB, LMAX_2  , (LPOT_2+1)**2 ) !LMAX_2, (LPOT_2+1)**2 )
-  
-  
-  
+  CALL GAUNT_new( LMAX_1, LMAX_2, LPOT_2, WG, YRG, CLEB, LOFLM, ICLEB, IEND, JEND, NCLEB, LMAX_2  , (LPOT_2+1)**2 )
   
   ! done finding Gaunts for larger lmax values
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1195,8 +1020,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   irmd = 900
   ipand = 50
   nfund = 500
-  
-!   irmdnew = NTOTD*(NCHEB+1)
   
   allocate( ifunm( (2*lpot_2+1)**2 ), lmsp( (2*lpot_2+1)**2 ) ) ! shape functions
   allocate( thetasnew(NTOTD*(NCHEB+1),nfund) ) ! shape functions in Chebychev mesh (new mesh)
@@ -1231,10 +1054,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   ! read shapefunction for atom mu_0 from file shapefun (Note: this file needs to be )
   call read_shape(thetas, lmsp, ifunm, irid, irmd, nfund, lpot_2, t_rhoq%mu_0, ipan, ntcell, t_rhoq%natyp)
-  
-!      write(987987,*) thetas
-!      
-!      write(*,*) irmin,irws,ipan,ircut(:),r_log,npan_log,npan_eq,ncheb
 
     thetasnew = 0.0d0
      
@@ -1242,32 +1061,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   call interpol_shape(R,irmin,irws,ipan,ircut,r_log,npan_log,npan_eq,ncheb,           &
      &                npan_tot,rnew,rpan_intervall,ipan_intervall,thetas,thetasnew,     &
      &                nfund, npan_lognew, npan_eqnew)
-    
-!      write(*,*) NPAN_TOT,NCHEB, shape(thetasnew(1:NPAN_TOT*(NCHEB+1),:10)), npan_lognew, npan_eqnew
-! !      write(987988,*) thetasnew(1:NPAN_TOT*(NCHEB+1),:10)
-!      
-!   write(*,*) r_log,npan_log,npan_eq,ncheb,           &
-!      &                npan_tot,rpan_intervall,ipan_intervall,ipan_intervall(npan_log+npan_eq)+1
-!   open(9999, file='oldmesh.txt', form='formatted')
-!   do ir=1,irws
-!     if(ir<irmin) then
-!       write(9999,'(2E22.15,I3)') R(ir), 0.0, 0
-!     else
-!       write(9999,'(2E22.15,I3)') R(ir), thetas(ir-irmin+1,1), 1
-!     end if
-!   end do
-!   close(9999)
-!   open(9999, file='newmesh.txt', form='formatted')
-!   do ir=1,irmdnew
-!     if(ir<ipan_intervall(npan_log+npan_eq)+1) then
-!       write(9999,'(2E22.15,I3)') rnew(ir), 0.0, 0
-!     else
-!       write(9999,'(2E22.15,I3)') rnew(ir), thetasnew(ir,1), 1 !-ipan_intervall(npan_log+npan_eq),1), 1
-!     end if
-!   end do
-!   close(9999)
-!   
-!   stop
      
   ! deallocate arrays in old mesh, from here on only the new (chebychev) mesh is used
   deallocate( R, ircut, thetas, ntcell )
@@ -1276,9 +1069,66 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
-! ! testing
-!    lmmaxso = 2
-!    N = lmmaxso
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !find q-mesh from k-kpoints
+  
+  ! parameters for bigger q mesh
+!   Ni = 1
+!   Nj = 1
+!   Ni = 2
+!   Nj = 2
+  Ni = 3
+  Nj = 3
+!   Ni = 4
+!   Nj = 4
+  Nqpt = Ni*Nj*Nkp
+  allocate(Qvec(3,Nqpt))
+  allocate(rhoq(Nqpt), stat=ierr)
+  rhoq = C0
+  if(ierr/=0) stop '[calc_rhoq] Error allocating rhoq'
+  
+  
+  !print header of statusbar
+190      FORMAT('                 |'$)   ! status bar
+200      FORMAT('|'$)                    ! status bar
+  write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+  write(*,FMT=190) !beginning of statusbar
+  
+  !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads, irec, ixyz, exG0_tmp, QdotL, tmpk, tmpr, q_mu, ifun, lm1, lm2, lm3, ir, qint, l1, m1, lm01, lm02, lm0, Z, Ylm, cYlm, phi, costheta, Rq, eiqr_lm, jl)
+  allocate(tmpsum1(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1'
+  allocate(tmpsum2(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum2'
+  allocate(tmp(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating tmp'
+  allocate(exG0_tmp(N,N), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating exG0_tmp'
+  
+  mythread = omp_get_thread_num()
+  nthreads = omp_get_num_threads()
+  
+  ! find qvecs based on kpts from integration
+  !$omp do
+  do k=1,Nkp
+    do i=1,Ni
+      do j=1,Nj
+        irec = k + Nkp*(i-1) + Nkp*Ni*(j-1)
+        do ixyz=1,3
+          Qvec(ixyz,irec) = kpt(ixyz,k) + (i-Ni+1)*recbv(ixyz,1) + (j-Nj+1)*recbv(ixyz,2)
+        end do !ixyz
+      end do !j=1,Nj
+    end do !i=1,Ni
+  end do !k=1,Nkp
+  !$omp end do
+    
+  ! done finding q-mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+  
+  ! make sure no race conditions appear
+  !$omp barrier
+  
   
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1286,10 +1136,18 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     
   ! get indices of imt and irmd in new mesh -> boundaries for ir loops
   imt1=ipan_intervall(npan_log+npan_eq)+1
-  allocate( qint(irmdnew, lmmaxso, lmmaxso), eiqr_lm((LMAX_2+1)**2, irmdnew), jl(0:lmax_2), Ylm((LMAX_2+1)**2), cYlm((LMAX_2+1)**2), stat=ierr)
-  allocate( tmp_sum_new(irmdnew,30), Ylm2((LMAX_2+1)**2,30), stat=ierr)
+  allocate( qint(irmdnew, lmmaxso, lmmaxso), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating qint'
+  allocate( eiqr_lm((LMAX_2+1)**2, irmdnew), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating eiqr_lm'
+  allocate( jl(0:lmax_2), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating jl'
+  allocate( Ylm((LMAX_2+1)**2), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating Ylm'
+  allocate( cYlm((LMAX_2+1)**2), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating cYlm'
   allocate( q_mu(lmmaxso,lmmaxso), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating qint etc.'
+  if(ierr/=0) stop '[calc_rhoq] error allocating q_mu'
   
   !$omp do 
   do q=1,Nqpt !q-loop     
@@ -1356,25 +1214,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      end do ! k-loop
      
      
+     
   !eiqr_lm generation: exp(-iq*r) = j_l(qr)*Y_L(-q)
-  
-!   R0 = 0.0d0
-!   do m1=1,30
-!     R0(1,m1) = RAND() 
-!     R0(2,m1) = RAND() 
-!     Rq2 = dsqrt(R0(1,m1)**2+R0(2,m1)**2)
-!     R0(1,m1) = R0(1,m1)/Rq2
-!     R0(2,m1) = R0(2,m1)/Rq2
-! !     write(*,*) R0(1,m1),R0(2,m1)
-!   end do
-  
   if(dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)>=eps) then
      Ylm = 0.0d0
      cYlm = C0
-     Ylm2 = 0.0d0
      Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
-!      write(*,'(A,4ES15.7,I9)') 'qvec',qvec(1:3,q), Rq, Lmax_2
-!      call YMY(-Qvec(1,q)/Rq, -Qvec(2,q)/Rq, -Qvec(3,q)/Rq, Rq2, Ylm, LMAX_2)
      costheta = -Qvec(3,q)/Rq ! =cos(theta)
      phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
      do l1=0,LMAX_2
@@ -1383,7 +1228,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
        do m1=-l1,l1
          lm01 = l1* (l1+1) + m1 + 1
          cYlm(lm01) = cYlm(lm01) * exp(Ci*m1*phi)
-!          cYlm(lm01) =  exp(Ci*m1*phi)
        end do ! m1
      end do ! l1
      
@@ -1404,76 +1248,30 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
        end do
      end do
      
-!      do ir=1,10
-!        call YMY(0.0d0, 0.10d0*ir, 0.0d0, Rq2, Ylm, LMAX_2)
-!        write(*,'(I9,4000ES15.7)') ir,Rq,Ylm
-!      end do
-!      stop
-     
-!      do lm02=1,30
-!        call YMY(R0(1,lm02), R0(2,lm02), R0(3,lm02), Rq2, Ylm2(:,lm02), LMAX_2)
-!      end do
+     ! construct exp(-i q.r)_L
      do ir=1,irmdnew
-!        tmp_sum_new(ir,:) = C0
-       
-!        if(ir==1.and.q==1) then
-!          do l1=1,10000
-!          Z = dcmplx(150.0d0/10000.0d0*(l1-1), 0.0d0)
-!          call CALC_JLK(jl, Z, LMAX_2)
-!          write(998877,'(1000ES15.7)') z,jl
-!          end do
-!          
-!          stop
-!        end if
-       
        Z = dcmplx(Rq*rnew(ir), 0.0d0)
        call CALC_JLK(jl, Z, LMAX_2)
        do l1=0,lmax_2
          do m1=-l1, l1
            lm01 = L1* (L1+1) + M1 + 1
            eiqr_lm(lm01, ir) = jl(l1) * Ylm(lm01) * (Ci**l1)/c0ll/c0ll
-!            if(q==1.or.q==100.or.q==200) write(9988776,'(4ES15.7,I9,4000ES15.7)') qvec(1:3,q), Rq, lm01, Ylm(lm01)
-!            eiqr_lm(lm01, ir) = Ylm(lm01) * (Ci**l1)/c0ll/c0ll
-           
-!            do lm02=1,30
-!              tmp_sum_new(ir,lm02) = tmp_sum_new(ir,lm02) + eiqr_lm(lm01,ir)!*Ylm2(lm01,lm02)
-!            end do
-!        write(*,'(2I9,1000ES11.3)') ir, lm01, dreal(z), Rq,rnew(ir),   tmp_sum_new(ir), exp(-Ci* (Qvec(1,q)*1.0d0/dsqrt(2.0d0)+Qvec(2,q)*1.0d0/dsqrt(2.0d0))*rnew(ir) ),eiqr_lm(lm01,ir)*Ylm2(lm01),jl(l1), Ylm(lm01),Ylm2(lm01)
-!        write(*,'(2I9,1000ES15.7)') ir, lm01, tmp_sum_new(ir),eiqr_lm(lm01,ir),-dimag(Ci* (Qvec(1,q)*1.0d0+Qvec(2,q)*1.0d0)*rnew(ir)), exp(-Ci* (Qvec(1,q)*1.0d0+Qvec(2,q)*1.0d0)*rnew(ir) ), jl(l1), Ylm(lm01), Ylm2(lm01),  jl(l1)*Ylm(lm01)*Ylm2(lm01)
-!            
-!   !$omp critical
-!        write(112,'(3I5,1000E21.9)') lmax,lm01,l1,jl(1) , Ylm(1), Rq, rnew(ir), Rq*rnew(ir),eiqr_lm(lm01, ir)
-!        write(113,'(1000E21.9)') jl(1:20)
-!        write(113,'(1000E21.9)') Ylm(1:20)
-! !        stop
-!   !$omp end critical
          end do ! m1
        end do ! l1
-       
-!        do lm02=1,30
-! !          tmp_sum_new(ir,lm02) = tmp_sum_new(ir,lm02)  - exp(-Ci* (Qvec(1,q)*R0(1,lm02)+Qvec(2,q)*R0(2,lm02))*rnew(ir) )
-!          tmp_sum_new(ir,lm02) = tmp_sum_new(ir,lm02)! - exp(-Ci* (Qvec(1,q)*R0(1,lm02)+Qvec(2,q)*R0(2,lm02))*rnew(ir) )
-! !          if(lm02==1) write(11222,'(3I9,1000ES15.7)') lm02,q, ir, dreal(Z), rnew(ir),dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2),tmp_sum_new(ir,lm02) !,exp(-Ci* (Qvec(1,q)*1.0d0+Qvec(2,q)*1.0d0)*rnew(ir) ), tmp_sum_new(ir)  - exp(-Ci* (Qvec(1,q)*1.0d0+Qvec(2,q)*1.0d0)*rnew(ir) )
-!        end do
-       
      end do ! ir
-!      stop
-!        ir=100
-!        write(753159852,'(1000ES11.3)') qvec(:,q), rnew(ir), Rq, (dreal(eiqr_lm(lm01,ir)), dimag(eiqr_lm(lm01,ir)), lm01=1,lmmaxso/2)
+     
   else
+  
      eiqr_lm(:,:) = dcmplx(0.0d0, 0.0d0)
+     
   end if
      
-  ! testing
-  trq_of_r = C0
-  do lm01=1,lmmaxso
-  trq_of_r(lm01,lm01,:,:) = C1
-  end do
-  ! testing
-
-!   do m1=1,30
-!   
-!      tmp_sum_new(:,m1) = abs(tmp_sum_new(:,m1))
+!   ! testing
+!   trq_of_r = C0
+!   do lm01=1,lmmaxso
+!   trq_of_r(lm01,lm01,:,:) = C1
+!   end do
+!   ! testing
   
   
   ! initialize qint
@@ -1489,22 +1287,15 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
         lm1 = l1 * (l1+1) + m1 + 1
         ! fill diagonal
         do ir = 1,irmdnew
-!           write(*,'(4I7, 1000E11.3)') ir, lm1, lm01, lm02, qint(ir, lm01, lm02), trq_of_r(lm01, lm02, lm1, ir), eiqr_lm(lm1, ir)
           qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
-!           qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + tmp_sum_new(ir,m1)
-!           qint(ir, lm01, lm02) = eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
         enddo ! ir
         ! add shapefunction to points with r> R_MT
         do ir=imt1+1,irmdnew
           qint(ir, lm01, lm02) = qint(ir, lm01, lm02)*thetasnew(ir,1)*c0ll ! add shapefunction on diagonal for last points outside of MT radius, c0ll comes from gaunt coefficients
-!         if(lm1==lmmaxso/2/2) write(111,'(3I9,1000E15.7)') q,ir,lm01,lm02,qint(ir, lm01, lm02),thetasnew(ir,1),eiqr_lm(lm1, ir)
         enddo ! ir
       enddo ! lm1
     enddo ! lm02
   enddo ! lm01
-  
-!   end do
-!   stop
   
   
   
@@ -1529,29 +1320,14 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   enddo ! j -> sum of Gaunt coefficients
       
     ! do radial integration
-!   open(9456,file='qint.txt')
   do lm01 = 1, lmmaxso ! loop over outer lm-component
     do lm02 = 1, lmmaxso ! loop over outer lm-component
-!       do ir=1,irmdnew
-!         write(9456,'(2I9,1000ES15.7)') lm01,lm02,rnew(ir), qint(ir,lm01,lm02), trq_of_r(lm01, lm02, :, ir)
-!       end do
       call intcheb_cell(qint(:,lm01,lm02),q_mu(lm01,lm02),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
-!       write(889,'(1000ES11.3)') qvec(:,q),q_mu(:,:)
     end do ! lm02
   end do ! lm01
-!   close(9456)
-!   stop
-
-!      q_mu(:,:) = (0.0d0, 0.0d0)
-!      do i=1,9!N/2
-!        q_mu(i,i) = Ylm(i)
-! !        q_mu(i+N/2,i+N/2) = Ylm(i)
-! !        q_mu(i,i) = (1.0d0, 0.0d0)!*cYlm(i)
-! !        q_mu(i+N/2,i+N/2) = (1.0d0, 0.0d0)!*cYlm(i)
-!      end do
      
      
-!      ! calculate trace of Q^mu times k-kpoint integral
+     ! calculate trace of Q^mu times k-kpoint integral
      tr_tmpsum1 = C0
      tr_tmpsum2 = C0
      ! tmpsum1 = Tr{ q_mu Int(G0.tau.G0.exp(...), dk) } = Tr{ q_mu.tmpsum1 }
@@ -1567,21 +1343,20 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 
            
      ! take trace
-!      tmpsum1 = C0
-!      tmpsum2 = C0
      do i=1,t_rhoq%lmmaxso
-!        tmpsum1(i,i) = q_mu(i,i)
-!        tmpsum2(i,i) = C0!q_mu(i,i)
        tr_tmpsum1 = tr_tmpsum1 + tmpsum1(i,i)
        tr_tmpsum2 = tr_tmpsum2 + tmpsum2(i,i)
      end do
      
      !$omp critical
      rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
-!      write(*,'(3I9,6E21.9)') q,Nqpt,kpq,rhoq(q), tr_tmpsum1, tr_tmpsum2
-!      write(*,'(3I9,6000E17.4)') q,Nqpt,kpq, (dreal(q_mu(i,i)), i=1,9) !N)
-     write(*,'(3I9,6000E21.9)') q,Nqpt,kpq,rhoq(q) !(tmpsum1(i,i), i=1,N)
-
+!      write(*,'(3I9,6000E21.9)') q,Nqpt,kpq,rhoq(q) !(tmpsum1(i,i), i=1,N)
+     !$omp end critical
+     
+     !update statusbar
+     !$omp critical
+     if(mod(q,Nqpt/50)==0) write(*,FMT=200)
+!      if(thrid==0.and.mod(K,Nqpt/500/nthrd)==0) write(6,FMT=200)
      !$omp end critical
       
   end do !q
@@ -1595,6 +1370,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   ! write out result
+  write(*,*) '' ! finish statusbar
+  write(*,*) 'saving rhoq(q) to out_rhoq.txt'
   open(9999, file='out_rhoq.txt', form='formatted')
   do q=1,Nqpt
      write(9999,'(5E15.7)') Qvec(:,q),rhoq(q)
@@ -1641,6 +1418,9 @@ program test
   double precision, allocatable :: recbv(:,:), bravais(:,:) ! lattice information > Bravais matrix in real and reciprocal space
   double precision, allocatable :: rnew(:)  ! r mesh
   
+  double precision, parameter :: pi = 4.0d0*datan(1.0d0) ! pi/4 = arctan(1)
+
+  
   integer :: lm1, lm2, i, j, ir
   
   ! read in scalars
@@ -1667,8 +1447,8 @@ program test
   close(9999)
   
   ! convert from alat units to a.u. units (used in the remainder of the code)
-  recbv = recbv * alat !2*pi! * alat
-  kpt = kpt * alat !2*pi! * alat
+  recbv = recbv * (2.0d0*pi)/alat  !* alat !2*pi! * alat
+  kpt = kpt * (2.0d0*pi)/alat      !* alat !2*pi! * alat
 
 !   write(*,*) 'kpoints', nkpt, volbz
   
@@ -1686,7 +1466,7 @@ program test
   allocate( rnew(irmdnew) )
   read(9999,'(1000E26.17)') rnew
   
-  allocate( trq_of_r(lmmaxso,lmmaxso, lmmaxso*4, irmdnew) )
+  allocate( trq_of_r(lmmaxso,lmmaxso, 725, irmdnew) )
 
 
   allocate( Rll(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew),          &

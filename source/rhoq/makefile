@@ -37,7 +37,7 @@ mpi:      CPP = -D CPP_MPI
 FFLAGS       =  -O3 -openmp -traceback -g #-CB -check all -check noarg_temp_created -g
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 #–Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
-debug:    FFLAGS = -O0 -g # -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended #-mcmodel=medium -shared-intel
+debug:    FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -openmp #-mcmodel=medium -shared-intel -openmp
 mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback #-mcmodel=medium
 
 OPENMPFLAGS = 

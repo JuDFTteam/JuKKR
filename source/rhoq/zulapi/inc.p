@@ -1,15 +1,15 @@
 c number of different atoms in unitcell
       integer natypd
-      parameter (NATYPD =26)
+      parameter (NATYPD =72)
 c number of atoms in unitcell
       integer naezd
       parameter (NAEZD =NATYPD)
 c highest valence orbital quantum number     
       integer lmaxd  
-      parameter (LMAXD = 2)
+      parameter (LMAXD = 3)
 c maximum number of reference potentials
       integer nrefd
-      parameter (NREFD = 1)
+      parameter (NREFD = 4)
 c number of spin directions (nspind= 1 non-spin-polarized
 c                                    2  spin-polarized    )
       integer NSPIND
@@ -41,7 +41,7 @@ c modified number of potentials for storing non-sph. potentials
       parameter (NSPOTD = NSPIND*NSATYPD)
 c number of shells (for storing GF in GS (*,*,*,nsheld))
       integer nsheld
-      parameter (NSHELD = 1500)
+      parameter (NSHELD = 3000)
 c number of symmetries of the system optimizing reduces 
 c memory size significantly
        integer NSYMD
@@ -70,7 +70,7 @@ c     ..
       integer nfund,irid,ngshd,ngfd
 c     parameter (NFUND = 35,IRID = 200,NGSHD = 3000,NGFD= 1)
 !      parameter (NFUND = 35,IRID = 145,NGSHD = 1500,NGFD= 1)
-      parameter (NFUND = 100,IRID = 200,NGSHD = 1500,NGFD= 1)
+      parameter (NFUND = 100,IRID = 200,NGSHD = 3500,NGFD= 1)
 c      parameter (NFUND = 49,IRID = 135,NGSHD = 3500,NGFD= 1)
 c ..  number of cells (shapes), panels in non-spherical part
       integer ncelld,ipand

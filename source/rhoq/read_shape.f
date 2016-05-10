@@ -63,7 +63,7 @@ C     .. Local Arrays ..
 C     ..
 c-----------------------------------------------------------------------
 
-      OPEN (19,FILE='shapefun',STATUS='old',FORM='formatted')
+      OPEN (19,FILE='shapefun_mu0',STATUS='old',FORM='formatted')
 c
 c---> read radial mesh information of the shape functions and
 c     shape functions THETAS in the first iteration - if needed
