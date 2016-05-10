@@ -164,11 +164,11 @@ program KKRnano
     selectcase (arg)
     case ('--voronano')
       params%voronano = 1
-      call create(calc_data, dims, params, arrays, my_mpi)! calls 'createCalculationData'
+      call create(calc_data, dims, params, arrays, mp)! calls 'createCalculationData'
       stop ! Voronoi work is done in 'create'
     case default
       ! do not do Voronoi work
-      call create(calc_data, dims, params, arrays, my_mpi) ! calls 'createCalculationData'
+      call create(calc_data, dims, params, arrays, mp) ! calls 'createCalculationData'
     endselect ! arg
     
     num_local_atoms = getNumLocalAtoms(calc_data)

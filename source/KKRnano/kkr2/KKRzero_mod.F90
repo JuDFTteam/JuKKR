@@ -14,7 +14,7 @@ module KKRzero_mod
   
   contains
   
-  subroutine main0(checkmode)
+  subroutine main0(checkmode,voronano)
 
 ! Explanation of most variables follows below
 
@@ -123,9 +123,7 @@ module KKRzero_mod
     integer, parameter  :: KREL=0
 
     double precision    :: efermi, recbv(3,3), volume0
-    double complex, allocatable :: ez(:)
-    double complex, allocatable :: wez(:)
-    integer             :: ielast, ist, iesemicore, ierror
+    integer             :: ist, ierror
     logical             :: startpot_exists
     
     type(DimParams)     :: dims
@@ -262,8 +260,7 @@ module KKRzero_mod
     
     double precision, allocatable  :: pos(:,:)
     character(len=9), parameter :: version = "Dez  2015"
-    integer :: i, ist, naez_xyz
-    double precision :: rdummy(3)
+    integer :: ist, naez_xyz
 
 !------------ array set up and definition of input parameter -----------
 
