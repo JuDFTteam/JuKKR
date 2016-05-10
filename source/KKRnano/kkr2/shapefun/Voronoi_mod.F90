@@ -721,40 +721,37 @@ INTEGER :: npotd,lmpotd,irmind,inslpd,lmxspd,irmdjj
 
 !     ..
 !     .. Scalar Arguments ..
-REAL*8           alat,c,efermi,hfield,vconst
-INTEGER :: iinfo, ipe,ipf,ipfe, khfeld,kshape,kvrel,kws,  &
-    lmax
+REAL*8           efermi
+INTEGER :: kshape
 !     ..
 !     .. Array Arguments ..
 
-INTEGER :: ititle(20), lcore(20),ncore
+INTEGER :: lcore(20),ncore
 !     ..
 !     .. Local Scalars ..
-REAL*8           a1,b1,ea,efnew,s1,z1,dummy,rmax,rmtnw1,rmt1,  &
-    vbc(2),vcon,ecore1(20),maxa,aout,bout,rmtout,  &
-    parsum,parsumderiv,r0,dist,dr,rmaxout,rmtnew
+REAL*8           ea,s1,z1,  &
+    vbc(2),ecore1(20),maxa,aout,bout,rmtout,  &
+    parsum,parsumderiv,r0,rmaxout,rmtnew
 REAL*8           rws0,br,za,zvali,einf,ar,amsh
-INTEGER :: i,ia,icell,icore,ifun,ih,imt1,inew,io,ipan1,ir,irc1,iri,  &
-    irminm,irminp,irns1p,irt1p,irws1,isave,ispin,isum,  &
-    j, ipot,irnstot, meshn0,id, l,lm,lm1,lmpot,lmpotp,irnsout,irmtout,irwsout,  &
-    n,ncell,nfun,nr,iat,irns1,ncore1,lcore1(20),irc,nz,  &
+INTEGER :: i,ir,iri,  &
+    ispin,  &
+    ipot,id,lm,lm1,irnsout,irmtout,irwsout,  &
+    nr,iat,ncore1,lcore1(20),irc,nz,  &
     irs1,nsec,nzvali,nc,ii,i1,i2
-LOGICAL :: test
 LOGICAL, allocatable :: potlm(:)
 !     ..
 !     .. Local Arrays ..
 REAL*8, allocatable  ::    u(:),drdi(:),ecore(:),  &
-                           rmesh(:),rws,vins(:,:),  &
+                           rmesh(:),vins(:,:),  &
                            vm2z(:),vinsout(:,:),  &
                            vm2zout(:),vm2zb(:),rout(:), vinsb(:,:),drdiout(:),  &
                            work(:,:),ra(:)
-CHARACTER (LEN=40) :: baner,text
-CHARACTER (LEN=4) :: elem_name,aaaa,tran,exte
+CHARACTER (LEN=40) :: baner
+CHARACTER (LEN=4) :: aaaa,tran
 
 CHARACTER (LEN=4) :: elem_file(0:113)
 CHARACTER (LEN=26) :: atompot
 CHARACTER (LEN=2) :: txtc(20)
-CHARACTER (LEN=20) :: data1i
 character(len=17) :: filename
 
 DATA elem_file/'Vac0',  &
@@ -989,7 +986,7 @@ DO iat = 1,natoms
     END IF
     
     CALL ritesone12(19,ispin,z1,alatnew,rmtout,rmtnew,rmaxout,  &
-        ititle,rout,drdiout,vm2zout,irwsout,aout,bout,ins,irnsout,  &
+        rout,drdiout,vm2zout,irwsout,aout,bout,ins,irnsout,  &
         vinsout,qbound,irwsout,kshape,efermi,vbc,  &
         ecore1,lcore1,ncore1,elem_file(nz),nspin,dims)
     
@@ -1041,7 +1038,7 @@ END SUBROUTINE jellstart12
 
 
 SUBROUTINE ritesone12(ifile,is,z,alat,rmt,rmtnew,rws,  &
-        ititle,r,drdi,vm2z,irws,a,b,ins,irns,  &
+        r,drdi,vm2z,irws,a,b,ins,irns,  &
         vins,qbound,irc,kshape,efermi,vbc,ecore,  &
         lcore,ncore,elem_name,nspin,dims)
  
@@ -1077,7 +1074,6 @@ REAL*8, INTENT(IN)                       :: alat
 REAL*8, INTENT(IN)                       :: rmt
 REAL*8, INTENT(IN)                       :: rmtnew
 REAL*8, INTENT(IN)                       :: rws
-INTEGER, INTENT(IN OUT)                  :: ititle(20)
 REAL*8, INTENT(IN)                       :: r(:)
 REAL*8, INTENT(IN)                       :: drdi(:)
 REAL*8, INTENT(IN)                       :: vm2z(:)
@@ -1099,24 +1095,10 @@ INTEGER, INTENT(IN)                      :: nspin
 type(DimParams), intent(in)              :: dims
 REAL*8, INTENT(IN)                       :: vins((dims%irmd-dims%irnsd):dims%irmd,(dims%lpot+1)**2)
 
-
-! Parameters that are no longer taken from 'inc.geometry' but depend on dims
-INTEGER :: lmpotd,irmind
-
-!     ..
-!     .. Scalar Arguments ..
-
-INTEGER :: natps,natyp
-!     ..
-!     .. Array Arguments ..
-
-
-
-
 !     ..
 !     .. Local Scalars ..
-REAL*8           a1,b1,rmax,rmt1,rmtnw1,rv,SIGN,sum,z1
-INTEGER :: i,icore,ih,inew,ip,ir,irmin,irns1, isave,j,lm,lmnr,lmpot, &
+REAL*8           a1,b1,rmax,rmt1,rmtnw1,rv,sum,z1
+INTEGER :: icore,inew,ir,irmin,irns1,isave,j,lm,lmnr,lmpot, &
 ncore1,nr,lpot
 !     ..
 !     .. Local Arrays ..

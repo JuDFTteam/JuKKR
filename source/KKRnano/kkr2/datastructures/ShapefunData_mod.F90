@@ -8,6 +8,7 @@ module ShapefunData_mod
 
   type ShapefunData
     ! dimension params
+    integer :: natoms
     integer :: irid
     integer :: nfund
     integer :: lmmax_shape !< former name LMXSPD
