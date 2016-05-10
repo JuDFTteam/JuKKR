@@ -305,6 +305,7 @@ module CalculationData_mod
     use ShapeGauntCoefficients_mod, only: createShapeGauntCoefficients  
     use BroydenData_mod, only: createBroydenData             
     use KKRresults_mod, only: createKKRresults
+    include 'mpif.h'
     
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
@@ -340,8 +341,12 @@ module CalculationData_mod
 
     call create(self%madelung_calc, dims%lmaxd, params%alat, params%rmax, params%gmax, arrays%bravais)
 
-    call generateAtomsShapesMeshes(self, dims, params, arrays) ! a very crucial routine
-
+    call generateAtomsShapesMeshes(self, dims, params, arrays, my_mpi) ! a very crucial routine
+    
+    if (params%voronano == 1) then ! VORONANO
+      call jellstart12_wrapper(self, arrays, params, dims, my_mpi)
+    endif
+   
     call recordLengths_com(self, mp)
 
     if (mp%isInMasterGroup) then
@@ -415,7 +420,7 @@ module CalculationData_mod
   !------------------------------------------------------------------------------
   !> Generates basis atom information, radial mesh, shape-function and
   !> interpolates starting potential if necessary
-  subroutine generateAtomsShapesMeshes(self, dims, params, arrays)
+  subroutine generateAtomsShapesMeshes(self, dims, params, arrays, my_mpi)
     use DimParams_mod, only: DimParams
     use InterpolateBasisAtom_mod, only: interpolateBasisAtom
     use InputParams_mod, only: InputParams
@@ -463,7 +468,7 @@ module CalculationData_mod
     enddo ! ila
 
     ! generate shapes and meshes
-    call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale)
+    call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale, my_mpi)
 
     ! interpolate to new mesh
     do ila = 1, self%num_local_atoms
@@ -496,7 +501,7 @@ module CalculationData_mod
   endsubroutine ! generateAtomsShapesMeshes
 
   !------------------------------------------------------------------------------
-  subroutine generateShapesTEST(self, dims, params, arrays, new_MT_radii, MT_scale)
+  subroutine generateShapesTEST(self, dims, params, arrays, new_MT_radii, MT_scale, my_mpi)
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
@@ -526,7 +531,7 @@ module CalculationData_mod
       call createShape(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
                      params%rclust_voronoi, 4*dims%lmaxd, &
                      dims%irid - num_MT_points, &
-                     params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id)
+                     params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id, dims%naez)
 
       ! use it
       self%cell_a(ila)%shdata = shdata ! possible in Fortran 2003
@@ -544,14 +549,97 @@ module CalculationData_mod
                           inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
 
       ! optional output of shape functions
-      if (params%write_shapes == 1) call write_shapefun_file(shdata, inter_mesh, atom_id)
+      if (params%write_shapes == 1 .OR. params%voronano == 1) call write_shapefun_file(shdata, inter_mesh, atom_id)
 
       call destroy(shdata)
       call destroy(inter_mesh)
 
     enddo ! ila
 
+    ! optional output of shapefunctions in single file (VORONANO)
+    if (params%voronano == 1) then
+      call MPI_BARRIER(MPI_COMM_WORLD, ierror)
+      if(isMasterRank(my_mpi)) then
+        open(15, file='shapefun.header', form="formatted", status='replace', action='READWRITE')
+        write(15,FMT='(I5)') dims%naez
+        do i = 1,dims%naez,4 ! write old-style scaling factor, not used any more
+          write(15,FMT='(4E20.12)') 1.D0,1.D0,1.D0,1.D0
+        enddo
+        close(15)
+        call EXECUTE_COMMAND_LINE("cat shapefun.header shape.* > shapefun.voronano")
+        call EXECUTE_COMMAND_LINE("rm shape.*")
+        call EXECUTE_COMMAND_LINE("rm shapefun.header")
+      endif
+    endif !VORONANO
+
   endsubroutine ! generateShapesTEST
+
+
+  !----------------------------------------------------------------------------
+  !> Wrapper for jellstart12
+
+   subroutine jellstart12_wrapper(calc_data, arrays, params, dims, my_mpi)
+
+   use InputParams_mod, only: InputParams
+   use Main2Arrays_mod, only: Main2Arrays
+   use DimParams_mod,   only: DimParams
+   use KKRnanoParallel_mod, only: KKRnanoParallel, isMasterRank
+   use Voronoi_mod, only: jellstart12
+   include 'mpif.h'
+
+   type(CalculationData), intent(in) :: calc_data
+   type(Main2Arrays),     intent(in) :: arrays
+   type(InputParams),     intent(in) :: params
+   type(DimParams),       intent(in) :: dims
+   type(KKRnanoParallel), intent(in) :: my_mpi
+
+   integer :: atom_id, ila, irmd, ist, ins, meshn(1), ifile, naez, idshape(1), &
+              irws(1), irns(1), nspin, xrn_drn_max_dimension, ierror
+   double precision :: rwscl(1), rmtcl(1), qbound, z(1), alatnew
+   double precision, allocatable :: xrn_2(:,:)
+   double precision, allocatable :: drn_2(:,:)
+
+    xrn_drn_max_dimension=1
+    do ila = 1, calc_data%num_local_atoms
+      xrn_drn_max_dimension = max(size(calc_data%mesh_a(ila)%r), xrn_drn_max_dimension)
+    enddo ! ila
+
+    allocate(xrn_2(xrn_drn_max_dimension,1))
+    allocate(drn_2(xrn_drn_max_dimension,1))
+
+    !$omp parallel do private(ila)
+    do ila = 1, calc_data%num_local_atoms
+
+      ins         = 1                              ! use non-spherical parts
+      naez        = 1                              ! 'jellstart' is called for each atom
+      z(1)        = arrays%zat(calc_data%atom_ids(ila)) ! nuclear charge
+      idshape(1)  = 1                              ! one shape per atom
+      meshn(1)    = calc_data%cell_a(ila)%shdata%irid   ! number of interstitial mesh points 
+      rmtcl(1)    = (calc_data%mesh_a(ila)%rmt)         ! MT radius
+      irws(1)     = calc_data%mesh_a(ila)%irws          ! index of max. radius 
+      xrn_2(1:meshn(1),1)      = (calc_data%mesh_a(ila)%r((irws(1)-meshn(1)):irws(1)))/params%alat    ! radial mesh points
+      drn_2(1:meshn(1),1)      = (calc_data%mesh_a(ila)%drdi((irws(1)-meshn(1)):irws(1)))/params%alat ! integration weight corresponding to radial mesh point
+      rwscl(1)    = xrn_2(xrn_drn_max_dimension,1) ! Wigner-Seitz radius
+      irns(1)     = calc_data%mesh_a(ila)%irns
+      qbound      = 1.D-07
+
+      call jellstart12(dims%nspind,ins,naez,z,idshape,  &
+            rwscl,rmtcl,meshn,xrn_2,drn_2,  &
+            irws,irns,  &
+            params%alat,qbound,dims,calc_data%atom_ids(ila))
+    enddo ! ila
+    !$omp endparallel do
+
+    ! output of potential in single file
+    call MPI_BARRIER(MPI_COMM_WORLD, ierror)
+    if(isMasterRank(my_mpi)) then
+        call EXECUTE_COMMAND_LINE("cat potential.0* > potential.voronano")
+        call EXECUTE_COMMAND_LINE("rm potential.0*")
+    endif
+    return
+
+  end subroutine ! jellstart12_wrapper
+   
 
   !----------------------------------------------------------------------------
   !> Communicate and set record lengths.
