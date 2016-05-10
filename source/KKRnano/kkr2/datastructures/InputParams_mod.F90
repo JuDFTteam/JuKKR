@@ -62,6 +62,7 @@ module InputParams_mod
     integer :: volterra
     double precision :: target_rms
     integer :: near_field
+    integer :: voronano
     integer :: write_shapes
     double precision :: mt_zero_shift
     integer :: DEBUG_morgan_electrostatics
@@ -456,6 +457,12 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "voronano", values%voronano)
+  if (ierror /= 0) then
+    write(*,*) "Bad/no value given for voronano."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "write_shapes", values%write_shapes , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for write_shapes. Set to write_shapes = 0"
@@ -560,6 +567,7 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%volterra
   read(fu) values%target_rms
   read(fu) values%near_field
+  read(fu) values%voronano
   read(fu) values%write_shapes
   read(fu) values%mt_zero_shift
   read(fu) values%DEBUG_morgan_electrostatics
@@ -622,6 +630,7 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%volterra
   write(fu) values%target_rms
   write(fu) values%near_field
+  write(fu) values%voronano
   write(fu) values%write_shapes
   write(fu) values%mt_zero_shift
   write(fu) values%DEBUG_morgan_electrostatics
