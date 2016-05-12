@@ -15,7 +15,7 @@
 #endif
       
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,
-     &                     init_t_dtmatJij
+     &                     init_t_dtmatJij,init_t_dtmatJij_at
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -129,7 +129,7 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
       ! communication of dtmat in case of lloyd
       integer :: iwork, ierr
-      DOUBLE COMPLEX, allocatable :: work_lly(:,:,:)
+      DOUBLE COMPLEX, allocatable :: work_lly(:,:,:), work_jij(:,:,:,:)
 #endif
       integer :: i1_start, i1_end, ie_start, ie_num, ie_end
 
@@ -294,7 +294,7 @@ C
        call init_t_dtmatJij(t_inc,t_mpi_c_grid,t_dtmatJij) 
        IF(OPT('XCPL    '))THEN
         call set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,
-     +    ATOMIMP,IQAT) 
+     +    ATOMIMP,IQAT)
        END IF!OPT('XCPL')
 
        ! nonco angles: defined in mod_wunfiles
@@ -388,7 +388,7 @@ C
          !communicate dtmatll
          IWORK = product(shape(t_lloyd%dtmat)) !LMMAXD*LMMAXD*t_mpi_c_grid%ntot2*nspin*NATYP
          allocate(work_lly(LMMAXD,LMMAXD,iwork/LMMAXD**2),stat=ierr)
-       if(ierr/=0) stop 
+         if(ierr/=0) stop 
      & 'Error allocating work in calctmat for communication of dtmatll'
          CALL MPI_ALLREDUCE(t_lloyd%dtmat,WORK_lly,IWORK,
      &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
@@ -399,15 +399,65 @@ C
          !communicate tralpha
          IWORK = product(shape(t_lloyd%tralpha))
          allocate(work_lly(iwork,1,1),stat=ierr)
-       if(ierr/=0) stop 
+         if(ierr/=0) stop 
      & 'Error allocating work in calctmat for communication of tralpha'
          CALL MPI_ALLREDUCE(t_lloyd%tralpha,WORK_lly,IWORK,
      &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
      &                      t_mpi_c_grid%mympi_comm_ie,IERR)
          CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%tralpha,1)
          deallocate(work_lly)
-               
       endif
+               
+      !for calculation of Jij-tensor
+      if(OPT('XCPL    ').and.OPT('NEWSOSOL'))then
+        DO I1=1,t_inc%NATYP
+          !initialize t_dtmatJij on other tasks
+          !   t_dtmatJij was already allocated for certain atoms within the atom loop
+          !   (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
+          !   because the division of the enegry loop (done in there) influences t_dtmatJij.
+          call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij(I1))
+
+          !communicate
+          if(t_dtmatJij(I1)%calculate)then
+            iwork = product(shape(t_dtmatJij(I1)%dtmat_xyz))
+            allocate(work_jij(iwork,1,1,1),STAT=ierr)
+            if(ierr/=0) stop 
+     & 'Error allocating work in main1a for communication of dtmat_xyz'
+            call MPI_ALLREDUCE(t_dtmatJij(I1)%dtmat_xyz,work_jij,
+     &                         iwork,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                         t_mpi_c_grid%mympi_comm_ie,IERR)
+            if(ierr/=MPI_SUCCESS) stop 'error communicating t_dtmatJij'
+            CALL ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
+            deallocate(work_jij)
+          end if!t_dtmatJij(I1)%calculate
+
+        END DO!I1=1,t_inc%NATYP
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+c      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
+!      DO I1=1,t_inc%NATYP
+!       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+!       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+!       DO ie_num=1,ie_end
+!        IE = ie_start+ie_num
+!        DO II=1,3
+!       write(filename,'(A,I3.3,A,I3.3,A,I1,A,I2)') 'test_dtmat_iat=',I1
+!    +                                                  ,'_ie=',IE,
+!    +                                                  'xyz=',II,
+!    +                                               'myrank=',myrank
+!       write(*,*) 'writing testfile:', trim(filename)
+!       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
+!       open(unit=13626,file=trim(filename), action='write',
+!    +       form='formatted')
+!      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
+!       close(13626)
+!       end if
+!        ENDDO!II
+!       ENDDO!IE
+!      ENDDO !I1, atom loop
+!      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+      end if!OPT('XCPL    ').and.OPT('NEWSOSOL')
 #endif
 
 
