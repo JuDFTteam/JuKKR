@@ -16,6 +16,7 @@
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd, type_dtmatJijDij,
      &                     init_t_dtmatJij_at
+      use mod_jijhelp, only: calc_dtmatJij
 
        IMPLICIT NONE
        include 'inc.p'
@@ -74,6 +75,7 @@
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_end, ie_num, ie_start
+      character(len=80) :: filename
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -87,9 +89,6 @@
       nth = 1
       ith = 0
 #endif
-
-       !for Jij-tensor calculation: allocate array to hold additional t-matrices
-       call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
 
        IRMDNEW= NPAN_TOT*(NCHEB+1)
        ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN))
@@ -128,7 +127,7 @@ c initial allocate
        ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
        ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1)) !maybe left solutions need to be calculated,
        ALLOCATE(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1)) ! to be derermined below. Allocate them here
-                                                               ! in any case for omp parallelization.
+                                                               ! in any case.
           
 c energy loop
        if(myrank==master.and.(t_inc%i_write>0)) 
@@ -166,6 +165,10 @@ c energy loop
        ie_start = 0
        ie_end = IELAST
 #endif
+
+       !for Jij-tensor calculation: allocate array to hold additional t-matrices
+       call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
+
 #ifdef CPP_OMP
 !$omp parallel do default(none) 
 !$omp& private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor) 
@@ -266,7 +269,7 @@ cc these are spherical hankel and bessel functions
         HLK2(:,:,ith)=CZERO
         JLK2(:,:,ith)=CZERO
         GMATPREFACTOR=CZERO
-        CALL RLLSLLSOURCETERM S(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
      +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
      +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
      +                         GMATPREFACTOR)
@@ -294,9 +297,9 @@ cc right solutions
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
         IF (NSRA.EQ.2) THEN
           RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
-     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
+     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
           SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
-     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
+     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
         ENDIF
 
 
@@ -364,6 +367,7 @@ c add spherical contribution of tmatrix
 
 ! Calculate additional t-matrices for Jij-tensor calculation
         if(t_dtmatJij_at%calculate) then
+          write(*,*) 'enter for atom', I1
 c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c       contruct the spin-orbit coupling hamiltonian and add to potential
@@ -434,6 +438,39 @@ c        notice that exchange the order of left and right hankel/bessel function
          ENDIF
 c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
+!       write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
+!       open(65161,file=trim(filename),action='write',form='formatted')
+!       write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
+!    +                       LMPOTD,NTOTD,NRMAXD,
+!    +                       NSRA,IRMDNEW,NSPIN,
+!    +                       NPAN_TOT,NCHEB,IEND,
+!    +                       NCLEB
+!       write(65161,'(A)')         'VINS -next' 
+!       write(65161,'(10ES25.16)')  VINS
+!       write(65161,'(A)')         'RLLLEFT -next' 
+!       write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
+!       write(65161,'(A)')         'RLL -next' 
+!       write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
+!       write(65161,'(A)')         'RPAN_INTERVALL -next' 
+!       write(65161,'(10ES25.16)')  RPAN_INTERVALL
+!       write(65161,'(A)')         'IPAN_INTERVALL -next' 
+!       write(65161,'(10I8)')       IPAN_INTERVALL
+!       write(65161,'(A)')         'ICLEB -next' 
+!       write(65161,'(10I8)')       ICLEB
+!       write(65161,'(A)')         'RNEW -next' 
+!       write(65161,'(10ES25.16)')  RNEW
+!       close(65161)
+
+!       write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
+!    +             shape(t_dtmatJij_at%dtmat_xyz)
+
+        call calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,
+     +        NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),
+     +        RPAN_INTERVALL,
+     +        IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,
+     +        t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
+
         end if!t_dtmatJij_at%calculate
          
          ! writeout

@@ -862,15 +862,23 @@ C
      &                 'No. of shell, No. of atoms in shell' ! fivos
             do lm = 1,NSHELL(i1) ! fivos
                write(1337,*) 'ish(i1,lm)',ish(i1,lm)
-               write(1337,8614) NSH1(i1),NSH2(i1) ! fivos
+               if(ISH(i1,lm)>0 .and. JSH(i1,lm)>0) then   !fix bernd
+                 write(1337,8614) NSH1(i1),NSH2(i1) ! fivos
      &              ,ISH(i1,lm),JSH(i1,lm) ! fivos
      &              ,(RCLSIMP(i,ISH(i1,lm)),i=1,3) ! fivos
      &              ,(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
-               write(58,8614) NSH1(i1),NSH2(i1) ! fivos
+                 write(58,8614) NSH1(i1),NSH2(i1) ! fivos
      &              ,ISH(i1,lm),JSH(i1,lm) ! fivos
      &              ,(RCLSIMP(i,ISH(i1,lm)),i=1,3) ! fivos
      &              ,(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
+               else!fix bernd
+                 write(1337,8615) NSH1(i1),NSH2(i1) ! fix bernd
+     &              ,ISH(i1,lm),JSH(i1,lm)          ! fix bernd
+                 write(58,8615) NSH1(i1),NSH2(i1)   ! fix bernd
+     &              ,ISH(i1,lm),JSH(i1,lm)          ! fix bernd
+               end if!fix bernd
  8614          format(4i5,6f16.6) ! fivos
+ 8615          format(4i5) ! fix bernd
             enddo               ! fivos
          enddo                  ! fivos
          write(1337,*) '###################'

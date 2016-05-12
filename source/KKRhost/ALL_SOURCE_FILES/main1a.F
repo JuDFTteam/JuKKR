@@ -71,7 +71,7 @@ C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,PI
       PARAMETER  (PI=4.d0*datan(1.d0))
       INTEGER I1,ICST,IELAST,IEND,INS,IPOT,ISPIN,ITSCF,LMAX,NATYP,NAEZ, ! LLY added NAEZ
-     +        NCLS,NINEQ,NREF,NSPIN,NSRA,LM1,IR
+     +        NCLS,NINEQ,NREF,NSPIN,NSRA,LM1,IR,IE
       INTEGER LLY ! LLY <> 0: apply Lloyds formula
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
@@ -108,7 +108,7 @@ C
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
       INTEGER JWSREL(NATYPD),ZREL(NATYPD)
       INTEGER ITMPDIR,ILTMP
-      CHARACTER*80 TMPDIR
+      CHARACTER*80 TMPDIR, filename
       LOGICAL LREFSYS,OPT,TEST,LREAD
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U
@@ -131,7 +131,7 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       integer :: iwork, ierr
       DOUBLE COMPLEX, allocatable :: work_lly(:,:,:)
 #endif
-      integer :: i1_start, i1_end
+      integer :: i1_start, i1_end, ie_start, ie_num, ie_end
 
 C-----------------------------------------------------------------------
 C     ..
@@ -320,6 +320,31 @@ c interpolate potential
 
        ENDDO !I1, atom loop
        CLOSE(10)
+
+
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+c      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
+!      DO I1=i1_start,i1_end
+!       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+!       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+!       DO ie_num=1,ie_end
+!        IE = ie_start+ie_num
+!        DO II=1,3
+!       write(filename,'(A,I3.3,A,I3.3,A,I1,A)') 'test_dtmat_iat=',I1,
+!    +                                                  '_ie=',IE,
+!    +                                                  'xyz=',II
+!       write(*,*) 'writing testfile:', trim(filename)
+!       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
+!       open(unit=13626,file=trim(filename), action='write',
+!    +       form='formatted')
+!      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
+!       close(13626)
+!       end if
+!        ENDDO!II
+!       ENDDO!IE
+!      ENDDO !I1, atom loop
+!      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
       ENDIF !NEWSOSOL
 C
