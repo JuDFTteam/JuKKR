@@ -206,7 +206,7 @@ SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 SingleSiteHelpers_mod.o: Constants_mod.o
 ValenceDensity_mod.o: Quadrature_mod.o SingleSite_mod.o SingleSiteHelpers_mod.o
-Voronoi_mod.o: Exceptions_mod.o Sorting_mod.o
+Voronoi_mod.o: Exceptions_mod.o Sorting_mod.o DimParams_mod.o ## can we get rid of the dep to DimParams_mod here?
 Exceptions_mod.o: Errors_mod.o Warnings_mod.o StringHelpers_mod.o
 Errors_mod.o: Warnings_mod.o
 ldauovrlp.o: Quadrature_mod.o

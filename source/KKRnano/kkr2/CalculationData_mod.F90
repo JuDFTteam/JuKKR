@@ -571,9 +571,13 @@ module CalculationData_mod
           write(15,FMT='(4E20.12)') 1.D0,1.D0,1.D0,1.D0
         enddo
         close(15)
+#ifdef HAS_EXECUTE_COMMAND_LINE       
         call EXECUTE_COMMAND_LINE("cat shapefun.header shape.* > shapefun.voronano")
         call EXECUTE_COMMAND_LINE("rm shape.*")
         call EXECUTE_COMMAND_LINE("rm shapefun.header")
+#else
+        warn(6, "cannot invoke shell for command ""cat shapefun.header shape.* > shapefun.voronano && rm shape.* shapefun.header""")
+#endif        
       endif
     endif !VORONANO
 
@@ -638,8 +642,12 @@ module CalculationData_mod
     ! output of potential in single file
     call MPI_BARRIER(MPI_COMM_WORLD, ierror)
     if(my_mpi%isMasterRank) then
+#ifdef HAS_EXECUTE_COMMAND_LINE       
         call EXECUTE_COMMAND_LINE("cat potential.0* > potential.voronano")
         call EXECUTE_COMMAND_LINE("rm potential.0*")
+#else
+        warn(6, "cannot invoke shell for command ""cat potential.0* > potential.voronano && rm potential.0*""")
+#endif       
     endif
     return
 

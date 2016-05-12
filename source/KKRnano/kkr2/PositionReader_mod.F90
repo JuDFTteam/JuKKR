@@ -39,7 +39,12 @@ module PositionReader_mod
     MODIFIED_SPECIALIZED  = 5     ! use values given in the .xyz file
   character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic', 'element', 'configured', 'same', 'specialized']
   
-  
+#ifdef DEBUG
+  integer, parameter, private :: o = 6
+#else
+  integer, parameter, private :: o = 0
+#endif
+
   contains
   
   
@@ -126,11 +131,11 @@ module PositionReader_mod
       if (ios(2) /= 0) die_here('failed to read the first line in "'-filename-'"!')
       
       read(unit=line, fmt=*, iostat=ios(3)) natoms
-      write(*,'(9(a,i0))') 'nAtoms = ',natoms
+      if(o>0) write(o,'(9(a,i0))') 'nAtoms = ',natoms
       if (ios(3) /= 0) die_here('failed to find the number of atoms in the first line of "'-filename-'", line reads "'-line-'"!')
       
       read(unit=FU, fmt='(a)', iostat=ios(4)) line ! second line in an .xyz file
-      write(*,'(9a)') 'comment = "',trim(line),'"' ! echo comment line
+      if(o>0) write(o,'(9a)') 'comment = "',trim(line),'"' ! echo comment line
       if (ios(4) /= 0) warn(6, 'unable to read a comment in line #2 of file "'-filename-'"!')
       
     endif ! master
@@ -210,12 +215,14 @@ module PositionReader_mod
       endif ! checks
       
       close(FU, iostat=ist) ! ignore status
-      write(*,'(9a)') 'file "',trim(filename),'" has been read in.' ! success message, todo suppress according to verbosity level
+      if(o>0) write(o,'(9a)') 'file "',trim(filename),'" has been read in.' ! success message, todo suppress according to verbosity level
       
-      ! do some statistics on modified before its deallocation
-      do im = MODIFIED_INITIALIZED, MODIFIED_SPECIALIZED
-        write(*,'(9(3a,i9))') 'in file "',trim(filename),'"',count(modified == im),' atom data items are at level "',trim(MODIFY_STRING(im)),'".'
-      enddo ! im
+      if (o > 0) then 
+        ! do some statistics on modified before its deallocation
+        do im = MODIFIED_INITIALIZED, MODIFIED_SPECIALIZED
+          write(o,'(9(3a,i9))') 'in file "',trim(filename),'"',count(modified == im),' atom data items are at level "',trim(MODIFY_STRING(im)),'".'
+        enddo ! im
+      endif ! output
       deallocate(modified, stat=ist)
       
     else
@@ -376,68 +383,3 @@ program test_PositionsReader_mod
 endprogram
 #endif
 
-! #if 0
-!   integer function parseOptionalParams(line, params, startatword) result(ist)
-!     character(len=*), intent(in) :: line
-!     double precision, intent(out) :: params(:)
-!     integer, intent(in), optional :: startatword
-!     
-!     integer, parameter :: ErrorKey=-2
-!     integer, parameter :: NumberKey=-1
-!     integer, parameter :: IgnoreKey=0
-!     integer, parameter :: NK = 4
-!      
-!     character(len=*), parameter :: keyword(-2:NK) = ['???','<f>','___','vw','rmt','mag','core']
-!     integer(kind=1),  parameter :: expects( 1:NK) =                   [  1,   1,    3,    4   ]
-!     
-!     integer :: ik, ic, iw, is
-!     character(len=len(line)) :: copy
-!     character(len=16) :: wrd(2*NK)
-!     integer           :: key(2*NK)
-!     double precision  :: val(2*NK)
-!     
-!     is = 1; if (present(startatword)) is = max(1, startatword)
-!     
-!     do ic = 1, len(line)
-!       copy(ic:ic) = line(ic:ic)
-!       if (line(ic:ic) == '=') copy(ic:ic) = ' ' ! replace '=' by blank
-!     enddo ! ic
-!     
-!     wrd = ''
-!     read(unit=copy, fmt=*, iostat=ist) wrd
-!     
-!     key(:) = IgnoreKey ! init
-!     val(:) = 0.d0 ! init
-!     
-!     do iw = is, 2*NK
-!       do ik = 1, NK
-!         if (wrd(iw) == '') then
-!           key(iw) = IgnoreKey
-!         elseif (wrd(iw) == keyword(ik)) then
-!           key(iw) = ik
-!           write(unit=wrd(iw), fmt='(9a)') trim(keyword(ik)),'=' ! reformat
-!         else
-!           read(unit=wrd(iw), fmt=*, iostat=ist) val(iw)
-!           if (ist /= 0) then
-!             key = ErrorKey ! cannot be interpreted
-!             wrd(iw) = keyword(ErrorKey)
-!           else
-!             key = NumberKey
-!             write(unit=wrd(iw), fmt='(f16.6)') val(iw) ! reformat
-!           endif
-!         endif
-!       enddo ! ik
-!     enddo ! iw
-! 
-!     if (any(key == ErrorKey)) then
-!       write(*, fmt='(99a)') 'string: "',trim(line),'"'
-!       write(*, fmt='(99a)') 'detected sequence: ',(trim(keyword(key(iw))),' ',iw=1,2*NK), &
-!                             ' where ',trim(keyword(NumberKey)),' is of numeric type'
-!       stop 'Error parsing!'
-!     endif
-!     write(*,'(99(a,1x))') 'string:', (trim(wrd(iw)), iw=1,2*NK)
-!     
-!     ist = 0
-! 
-!   endfunction ! parse
-! #endif
