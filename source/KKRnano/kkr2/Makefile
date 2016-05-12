@@ -166,7 +166,7 @@ ShapeStandardMesh_mod.o: Exceptions_mod.o Constants_mod.o
 wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o CellData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o ##AtomicCore_mod.o
 DensityResults_mod.o: DimParams_mod.o
 BCPOperator_mod.o: OperatorT_mod.o ClusterInfo_mod.o
-CalculationData_mod.o: Exceptions_mod.o KKRnanoParallel_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
+CalculationData_mod.o: Exceptions_mod.o KKRnanoParallel_mod.o JelliumPotentials_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o TEST_lcutoff_mod.o
 NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
 ShapeIntegrationHelpers_mod.o: Constants_mod.o
 ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o LatticeVectors_mod.o
@@ -206,7 +206,7 @@ SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 SingleSiteHelpers_mod.o: Constants_mod.o
 ValenceDensity_mod.o: Quadrature_mod.o SingleSite_mod.o SingleSiteHelpers_mod.o
-Voronoi_mod.o: Exceptions_mod.o Sorting_mod.o DimParams_mod.o ## can we get rid of the dep to DimParams_mod here?
+Voronoi_mod.o: Exceptions_mod.o Sorting_mod.o
 Exceptions_mod.o: Errors_mod.o Warnings_mod.o StringHelpers_mod.o
 Errors_mod.o: Warnings_mod.o
 ldauovrlp.o: Quadrature_mod.o
@@ -253,6 +253,6 @@ Harmonics_mod.o: Constants_mod.o
 kkrmat01_new.o: Exceptions_mod.o
 BrillouinZoneMesh_mod.o: Exceptions_mod.o
 AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o Constants_mod.o
-
+JelliumPotentials_mod.o: Exceptions_mod.o DimParams_mod.o 
 
 # DO NOT DELETE

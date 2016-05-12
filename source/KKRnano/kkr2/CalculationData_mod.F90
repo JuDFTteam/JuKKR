@@ -593,8 +593,8 @@ module CalculationData_mod
    use Main2Arrays_mod, only: Main2Arrays
    use DimParams_mod,   only: DimParams
    use KKRnanoParallel_mod, only: KKRnanoParallel
-   use Voronoi_mod, only: jellstart12
-   include 'mpif.h'
+   use JelliumPotentials_mod, only: jellstart12
+   include 'mpif.h' ! imports only MPI_COMM_WORLD, maybe removed
 
    type(CalculationData), intent(in) :: calc_data
    type(Main2Arrays),     intent(in) :: arrays
@@ -602,13 +602,12 @@ module CalculationData_mod
    type(DimParams),       intent(in) :: dims
    type(KKRnanoParallel), intent(in) :: my_mpi
 
-   integer :: ila, ins, meshn(1), naez, idshape(1), &
-              irws(1), irns(1), xrn_drn_max_dimension, ierror
+   integer :: ila, ins, meshn(1), naez, idshape(1), irws(1), irns(1), xrn_drn_max_dimension, ierror
    double precision :: rwscl(1), rmtcl(1), qbound, z(1)
    double precision, allocatable :: xrn_2(:,:)
    double precision, allocatable :: drn_2(:,:)
 
-    xrn_drn_max_dimension=1
+    xrn_drn_max_dimension = 1
     do ila = 1, calc_data%num_local_atoms
       xrn_drn_max_dimension = max(size(calc_data%mesh_a(ila)%r), xrn_drn_max_dimension)
     enddo ! ila
@@ -616,7 +615,7 @@ module CalculationData_mod
     allocate(xrn_2(xrn_drn_max_dimension,1))
     allocate(drn_2(xrn_drn_max_dimension,1))
 
-    !$omp parallel do private(ila)
+    !$omp parallel do private(ila) !! check if enough variables are declared parallel !!
     do ila = 1, calc_data%num_local_atoms
 
       ins         = 1                              ! use non-spherical parts
@@ -649,9 +648,8 @@ module CalculationData_mod
         warn(6, "cannot invoke shell for command ""cat potential.0* > potential.voronano && rm potential.0*""")
 #endif       
     endif
-    return
 
-  end subroutine ! jellstart12_wrapper
+  endsubroutine ! jellstart12_wrapper
    
 
   !----------------------------------------------------------------------------
