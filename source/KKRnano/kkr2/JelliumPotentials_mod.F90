@@ -31,8 +31,8 @@ module JelliumPotentials_mod
   double precision, intent(in)    :: rwscl(*)
   double precision, intent(in)    :: rmtcl(*)
   integer, intent(in)             :: meshn(:)
-  double precision, intent(in)    :: xrn(:, :)
-  double precision, intent(in)    :: drn(:, :)
+  double precision, intent(in)    :: xrn(:,:)
+  double precision, intent(in)    :: drn(:,:)
   integer, intent(in)             :: irws(:)
   integer, intent(in)             :: irns(:)
   double precision, intent(in)    :: alatnew
@@ -41,22 +41,15 @@ module JelliumPotentials_mod
   integer, intent(in)             :: atom_index ! ==atom_id?
   character(len=*), intent(in)    :: elementdatabasepath
 
-
   ! parameters that are no longer taken from 'inc.geometry' but depend on dims
   integer :: npotd, lmpotd, irmind, inslpd, lmxspd, irmdjj
 
-  double precision :: efermi
-  integer :: kshape
-  integer :: lcore(20), ncore
-  double precision           ea, s1, z1,  &
-      vbc(2), ecore1(20), maxa, aout, bout, rmtout,  &
-      parsum, parsumderiv, r0, rmaxout, rmtnew
-  double precision           rws0, br, za, zvali, einf, ar, amsh
-  integer :: i, ir, iri, ispin, ipot, id, lm1, irnsout, irmtout, irwsout, nr, iat, ncore1, lcore1(20), irc, nz, irs1, nsec, nzvali, nc, ios
+  double precision :: efermi, rws0, br, za, zvali, einf, ar, amsh
+  integer :: kshape, lcore(20), ncore
+  double precision :: ea, s1, z1, vbc(2), ecore1(20), maxa, aout, bout, rmtout, r0, rmaxout, rmtnew
+  integer :: i, ir, iri, ispin, ipot, id, lm1, irnsout, irmtout, irwsout, nr, iat, lcore1(20), irc, nz, irs1, nsec, nzvali, nc, ios
   logical, allocatable :: potlm(:)
-  !     ..
-  !     .. local arrays ..
-  double precision, allocatable :: u(:), drdi(:), ecore(:), rmesh(:), vins(:, :), vm2z(:), vinsout(:, :), vm2zout(:), vm2zb(:), rout(:), vinsb(:, :), drdiout(:), work(:, :), ra(:)
+  double precision, allocatable :: u(:), drdi(:), ecore(:), rmesh(:), vins(:,:), vm2z(:), vinsout(:,:), vm2zout(:), vm2zb(:), rout(:), vinsb(:,:), drdiout(:), work(:,:), ra(:)
   character(len=40) :: baner
   character(len=4) :: aaaa, tran
   character(len=2) :: txtc(20), suffix
@@ -102,14 +95,14 @@ module JelliumPotentials_mod
   !     --------------------------------------------------------------
   character(len=*), parameter :: F142="(7x,f8.4,7x,f8.4,7x,i5,7x,f8.4)"
 
-  ! set parameters depending on 'dims' and 'num_local_atoms'
+  ! set parameters depending on 'dims'
   npotd = dims%nspind*natoms
   lmpotd = (dims%lpot+1)**2
   irmind = dims%irmd-dims%irnsd
   inslpd = (dims%irnsd+1)*lmpotd
   lmxspd = (2*dims%lpot+1)**2
   irmdjj = 1501
-  kshape = 2  ! always full-pot calculations
+  kshape = 2 ! always full-pot calculations
   write(*, *) 'dims%irmd', dims%irmd
 
   ! allocate arrays
@@ -128,7 +121,6 @@ module JelliumPotentials_mod
   allocate(work(dims%irmd, lmpotd))
   allocate(ra(dims%irmd))
   allocate(potlm(lmpotd))
-
 
   write(6, *) ' ****  READING  POTENTIAL  **** '
 
@@ -217,9 +209,9 @@ module JelliumPotentials_mod
           warn(6, "unable to convert '"-txtc(i)-"' into an ell-quantum number!")
         endselect ! txtc(i)
       enddo ! i
-      ncore1 = ncore
-      lcore1(1:ncore1) = lcore(1:ncore1)
-      ecore1(1:ncore1) = ecore(1:ncore1)
+      ncore = ncore
+      lcore1(1:ncore) = lcore(1:ncore)
+      ecore1(1:ncore) = ecore(1:ncore)
       write(6, fmt="('All other states are above :',f8.4,' Ry in Energy')") einf
       write(6, *) '**********************************************'
       
@@ -294,8 +286,7 @@ module JelliumPotentials_mod
       vm2zout(1) = vm2z(1)
       do ir = 2, irwsout
         r0 = rout(ir)
-        call splint(rmesh, vm2z, vm2zb, nr, r0, parsum, parsumderiv)
-        vm2zout(ir) = parsum
+        vm2zout(ir) = splint(rmesh, vm2z, vm2zb, nr, r0)
       enddo ! ir
       
       if (ins > 0) then
@@ -310,7 +301,7 @@ module JelliumPotentials_mod
       call ritesone12(19, ispin, z1, alatnew, rmtout, rmtnew, rmaxout,  &
           rout, drdiout, vm2zout, irwsout, aout, bout, ins, irnsout,  &
           vinsout, qbound, irwsout, kshape, efermi, vbc,  &
-          ecore1, lcore1, ncore1, elem_file(nz), nspin, dims)
+          ecore1, lcore1, ncore, elem_file(nz), nspin, dims%lpot, dims%irmd, dims%irnsd)
 
   ! next atom or next spin
       
@@ -322,7 +313,8 @@ module JelliumPotentials_mod
 
 
 
-  subroutine ritesone12(ifile, is, z, alat, rmt, rmtnew, rws, r, drdi, vm2z, irws, a, b, ins, irns, vins, qbound, irc, kshape, efermi, vbc, ecore, lcore, ncore, elem_name, nspin, dims)
+  subroutine ritesone12(ifile, is, z, alat, rmt, rmtnew, rws, r, drdi, vm2z, irws, a, b, ins, irns, vins, &
+               qbound, irc, kshape, efermi, vbc, ecore, lcore, ncore, elem_name, nspin, lpot, irmd, irnsd)
   
   ! Code converted using TO_F90 by Alan Miller
   ! Date: 2016-01-21  Time: 16:59:42
@@ -343,10 +335,6 @@ module JelliumPotentials_mod
   !                            modified by b. drittler  aug. 1988
   !-----------------------------------------------------------------------
   !     .. Parameters ..
-
-
-  use DimParams_mod, only: DimParams
-
   integer, intent(in)             :: ifile
   integer, intent(in)             :: is
   double precision, intent(in)    :: z
@@ -371,131 +359,79 @@ module JelliumPotentials_mod
   integer, intent(in)             :: lcore(20)
   integer, intent(in)             :: ncore
   character(len=4), intent(in)    :: elem_name
-  integer, intent(in)             :: nspin
-  type(DimParams), intent(in)     :: dims
-  double precision, intent(in)    :: vins((dims%irmd-dims%irnsd):dims%irmd, (dims%lpot+1)**2)
+  integer, intent(in)             :: nspin, lpot, irmd, irnsd
+  double precision, intent(in)    :: vins(irmd-irnsd:irmd,(lpot+1)**2)
 
   !     .. locals ..
-  double precision :: a1, b1, rmax, rmt1, rmtnw1, rv, sm, z1
-  integer :: icore, inew, ir, irmin, irns1, isave, j, lm, lmnr, lmpot, ncore1, nr, lpot
-  double precision, allocatable :: dradi(:), ecore1(:), ra(:), vm2za(:)
-  integer :: lcore1(20)
+  double precision :: rv, sm
+  integer :: ic, ir, irmin, lm, lmnr, lmpot, nr
+  integer, parameter :: inew=1, isave=1
 
   character(len=*), parameter :: F9060="(10i5)", F9070="(1p,4d20.13)"
+  character(len=4) :: spin, updn  
+
+  lmpot = (lpot+1)**2
+
+  nr = irc ; if (kshape == 0) nr = irws
+
+  irmin = nr - irns
+
+  spin = ''; updn = ''
+  if (nspin > 1) then
+    spin = 'SPIN'
+    updn = 'UP'; if (is == 1) updn = 'DOWN'
+  endif ! spin
+  write(ifile, fmt="(a4,' POTENTIAL ',a4,' ',a4,10x,'  exc:',a24)") elem_name, spin, updn, ''
   
-  allocate(dradi(dims%irmd))
-  allocate(ecore1(20))
-  allocate(ra(dims%irmd))
-  allocate(vm2za(dims%irmd))
+  !     write(ifile, fmt="(7a4,6x,'  exc:',a24,3x,a10)") ititle(1:7), txc(kxc+1)
+  write(ifile, fmt="(3f12.8)") rmt, alat, rmtnew
+  write(ifile, fmt="(f10.5)") z
+  write(ifile, fmt="(f10.5,2f15.10)") rws, efermi, vbc(is)
+  write(ifile, fmt="(i0)") nr
+  write(ifile, fmt="(2d15.8)") a, b
+  write(ifile, fmt="(2i2)") ncore, inew
+  do ic = 1, ncore
+    write(ifile, fmt="(i5,1p,d20.11)") lcore(ic), ecore(ic)
+  enddo ! ic
 
-  lpot = dims%lpot
-  isave = 1
-  inew = 1
-
-  lmpot = (lpot+1)*(lpot+1)
-
-  rmt1 = rmt
-  rmtnw1 = rmtnew
-  z1 = z
-  rmax = rws
-  if (kshape == 0) then
-    nr = irws
-  else
-    nr = irc
-  endif
-
-  irns1 = irns
-  irmin = nr - irns1
-  a1 = a
-  b1 = b
-  ncore1 = ncore
-
-  do  j = 1, nr
-    ra(j) = r(j)
-    dradi(j) = drdi(j)
-    
-  !--->       store only lm=1 component of the potential
-    
-    vm2za(j) = vm2z(j)
-  enddo
-
-  if (ncore1 >= 1) then
-    
-    do  j = 1, ncore1
-      lcore1(j) = lcore(j)
-      ecore1(j) = ecore(j)
-    enddo
-  endif
-
-
-  if (nspin == 1) then
-      write(ifile, fmt="(a4, ' POTENTIAL ', 19x, '  exc:', a24)") elem_name, ''
-  else
-    if (is == 1) then
-      write(ifile, fmt="(a4, ' POTENTIAL SPIN DOWN', 10x, '  exc:', a24)") elem_name, ''
-    else
-      write(ifile, fmt="(a4, ' POTENTIAL SPIN UP  ', 10x, '  exc:', a24)") elem_name, ''
-    endif
-  endif
-  !     write(ifile, fmt="(7a4, 6x, '  exc:', a24, 3x, a10)") ititle(1:7), txc(kxc+1)
-  write(ifile, fmt="(3f12.8)") rmt1, alat, rmtnw1
-  write(ifile, fmt="(f10.5,/,f10.5,2f15.10)") z1, rmax, efermi, vbc(is)
-  if (nr <= 999) then
-    write(ifile, fmt="(i3,/,2d15.8,/,2i2)") nr, a1, b1, ncore1, inew
-  else
-    write(ifile, fmt="(i4,/,2d15.8,/,2i2)") nr, a1, b1, ncore1, inew
-  endif
-  if (ncore1 >= 1) write(ifile, fmt="(i5,1p,d20.11)") (lcore1(icore), ecore1(icore), icore=1, ncore1)
-
-  if (ins == 0 ) then
-    
+  if (ins == 0) then
   !--->       store only the spherically averaged potential
   !           (in mt or as - case)
   !           this is done always for the host
-    
     if (inew == 0) then
-      write(ifile, fmt="(1p,2d15.6,1p,d15.8)") (ra(ir), dradi(ir), vm2za(ir), ir=1, nr)
-    else
-      write(ifile, fmt="(1p,4d20.12)") (vm2za(ir), ir=1, nr)
-    endif
-    
-  else
+      write(ifile, fmt="(1p,2d15.6,1p,d15.8)") (r(ir), drdi(ir), vm2z(ir), ir=1,nr)
+    else  ! inew
+      write(ifile, fmt="(1p,4d20.12)") vm2z(1:nr)
+    endif ! inew
+
+  else  ! ins
     
   !--->     store the full potential , but the non spherical contribution
   !         only from irns1 up to irws1 ;
   !         remember that the lm = 1 contribution is multiplied
   !         by a factor 1/sqrt(4 pi)
     
-    write(ifile, fmt=F9060) nr, irns1, lmpot, isave
-    write(ifile, fmt=F9070) (vm2za(ir), ir=1, nr)
+    write(ifile, fmt=F9060) nr, irns, lmpot, isave
+    write(ifile, fmt=F9070) vm2z(1:nr)
     if (lpot > 0) then
       lmnr = 1
-      do  lm = 2, lmpot
-        sm = 0.0d0
-        do  ir = irmin, nr
-          rv = vins(ir, lm)*ra(ir)
-          sm = sm + rv*rv*dradi(ir)
-        enddo
-        
-        if (sqrt(sm) > qbound) then
+      do lm = 2, lmpot
+        sm = 0.d0
+        do ir = irmin, nr
+          rv = vins(ir,lm)*r(ir)
+          sm = sm + rv*rv*drdi(ir)
+        enddo ! ir
+        if (sm > qbound**2) then
           lmnr = lmnr + 1
           write(ifile, fmt=F9060) lm
-          write(ifile, fmt=F9070) (vins(ir, lm), ir=irmin, nr)
+          write(ifile, fmt=F9070) vins(irmin:nr,lm)
         endif
-        
-      enddo
-      
-  !--->         write a one to mark the end
-      
-      if (lmnr < lmpot) write(ifile, fmt=F9060) isave
+      enddo ! lm
+      if (lmnr < lmpot) write(ifile, fmt=F9060) isave ! write a one to mark the end
     endif
     
-  endif
+  endif ! ins
   
-  !write(6, *) ' potential finished go on'
-!   50   continue !! ??
-!   60 continue !! ??
-
   endsubroutine ! ritesone12
 
 
@@ -505,7 +441,6 @@ module JelliumPotentials_mod
   ! Date: 2016-01-12  Time: 14:48:44
 
   subroutine spline(nmax, x, y, n, yp1, ypn, y2)
-
     integer, intent(in)             :: nmax
     double precision, intent(in)    :: x(nmax)
     double precision, intent(in)    :: y(nmax)
@@ -528,7 +463,7 @@ module JelliumPotentials_mod
     integer :: i, k
     double precision :: p, qn, sig, un, u(nmax)
 
-    if (n > nmax) stop 'spline: n > nmax.'
+    if (n > nmax) die_here("spline: impossible "+n+"= n > nmax ="+nmax)
     if (yp1 > 0.99d30) then
     ! the lower boundary condition is set either to be "natural"
       y2(1) = 0.d0
@@ -545,7 +480,7 @@ module JelliumPotentials_mod
       sig = (x(i) - x(i-1))/(x(i+1) - x(i-1))
       p = sig*y2(i-1) + 2.d0
       y2(i) = (sig - 1.d0)/p
-      u(i)=(6.d0*((y(i+1) - y(i))/(x(i+1) - x(i)) - (y(i) - y(i-1))/(x(i) - x(i-1)))/(x(i+1) - x(i-1)) - sig*u(i-1))/p
+      u(i) = (6.d0*((y(i+1) - y(i))/(x(i+1) - x(i)) - (y(i) - y(i-1))/(x(i) - x(i-1)))/(x(i+1) - x(i-1)) - sig*u(i-1))/p
     enddo ! i
 
     if (ypn > 0.99d30) then
@@ -571,15 +506,13 @@ module JelliumPotentials_mod
   ! Code converted using TO_F90 by Alan Miller
   ! Date: 2016-01-12  Time: 14:48:43
 
-  subroutine splint(xa, ya, y2a, n, x, y, yderiv)
-
+  double precision function splint(xa, ya, y2a, n, x, yderiv) result(y)
     double precision, intent(in)    :: xa(*)
     double precision, intent(in)    :: ya(*)
-    double precision, intent(inout) :: y2a(*)
+    double precision, intent(in)    :: y2a(*)
     integer, intent(in)             :: n
     double precision, intent(in)    :: x
-    double precision, intent(out)   :: y
-    double precision, intent(out)   :: yderiv
+    double precision, intent(out), optional :: yderiv
 
     ! Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
     ! function (with the xai's in order), and given the array y2a(1:n), which
@@ -607,14 +540,14 @@ module JelliumPotentials_mod
     ! klo and khi now bracket the input value of x.
     h = xa(khi) - xa(klo)
     ! the xa's must be distinct.
-    if (h == 0.d0) stop 'bad xa input in splint'
+    if (h == 0.d0) die_here("bad xa input in splint")
     ! cubic spline polynomial is now evaluated.
     a = (xa(khi) - x)/h
     b = (x - xa(klo))/h
     y = a*ya(klo) + b*ya(khi) + ((a*(a*a - 1.d0))*y2a(klo) + (b*(b*b - 1.d0))*y2a(khi))*(h*h)/6.d0
+    if (present(yderiv)) &
     yderiv = (ya(khi) - ya(klo))/h - ((3.d0*a*a - 1.d0)*y2a(klo) - (3.d0*b*b - 1.d0)*y2a(khi))*h/6.d0
 
-  endsubroutine ! splint
-
+  endfunction ! splint
 
 endmodule ! JelliumPotentials_mod

@@ -78,15 +78,18 @@ module read_formatted_mod
 
 !---  >read muffin-tin radius , lattice constant and new muffin radius
 !      (not used)
-    read(unit, fmt="(3f12.8)", iostat=iostat) header%rmt, header%alat, header%rmtnew
+    read(unit, fmt=*, iostat=iostat) header%rmt, header%alat, header%rmtnew
     if (iostat /= 0) die_here("failed to read   rMT, alat, rMTnew! Atom#"-atom_id)
 
 !---> read nuclear charge
 !     wigner seitz radius (not used), fermi energy and energy difference
 !     between electrostatic zero and muffin tin zero (not used)
 
-    read(unit, fmt="(f10.5,/,f10.5,2f15.10)", iostat=iostat) header%z_nuclear, header%rws, header%efermi, header%vbc
-    if (iostat /= 0) die_here("failed to read   Z, rWS, EFermi, vbc! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=iostat) header%z_nuclear
+    if (iostat /= 0) die_here("failed to read   Z! Atom#"-atom_id)
+
+    read(unit, fmt=*, iostat=iostat) header%rws, header%efermi, header%vbc
+    if (iostat /= 0) die_here("failed to read   rWS, EFermi, vbc! Atom#"-atom_id)
 
 !---> read : number of radial mesh points
 !     (in case of ws input-potential: last mesh point corresponds
@@ -98,9 +101,12 @@ module read_formatted_mod
 !     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 !     the no. of different core states and some other stuff
 
-    read(unit, fmt="(i3,/,2d15.8)", iostat=iostat) header%irws, header%a_log_mesh, header%b_log_mesh
-    if (iostat /= 0) die_here("failed to read   irws, a, b! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=iostat) header%irws
+    if (iostat /= 0) die_here("failed to read   irws! Atom#"-atom_id)
 
+    read(unit, fmt=*, iostat=iostat) header%a_log_mesh, header%b_log_mesh
+    if (iostat /= 0) die_here("failed to read   a, b! Atom#"-atom_id)
+    
   endsubroutine
 
   !----------------------------------------------------------------------------
@@ -111,7 +117,7 @@ module read_formatted_mod
 
     integer :: icore, iostat
 
-    read(unit, fmt="(2i2)", iostat=iostat) block%ncore, block%inew
+    read(unit, fmt=*, iostat=iostat) block%ncore, block%inew
     if (iostat /= 0) die_here("failed to read   ncore, inew! Atom#"-atom_id)
 
 ! read the different core states : l and energy
@@ -122,7 +128,7 @@ module read_formatted_mod
     block%ecore(:) = 9999.0d0
 
     do icore = 1, block%ncore
-      read(unit, fmt="(i5,1p,d20.11)", iostat=iostat) block%lcore(icore), block%ecore(icore)
+      read(unit, fmt=*, iostat=iostat) block%lcore(icore), block%ecore(icore)
       if (iostat /= 0) die_here("failed to read   lcore, Ecore for core state #"-icore+" for Atom#"-atom_id)
     enddo ! icore
 
@@ -138,6 +144,7 @@ module read_formatted_mod
     
     read(unit, fmt="(10i5)", iostat=iostat) block%irt1p, block%irns, block%lmpot, block%isave
     if (iostat /= 0) die_here("failed to read   irt1p, irns, lmpot, isave! Atom#"-atom_id)
+    
     allocate(block%visp(block%irt1p))
     read(unit, fmt="(1p,4d20.13)", iostat=iostat) block%visp(1:block%irt1p)
     if (iostat /= 0) die_here("failed to read spherical potential array VISP! Atom#"-atom_id)
@@ -228,7 +235,7 @@ program test_read_formatted
   integer, parameter :: fu=42
   integer :: lm
 
-  open(fu, form='formatted', file='potential')
+  open(fu, form='formatted', file='potential', action='read')
   call create_read_PotentialEntry(pe, fu, atom_id=0)
 
   write(*, fmt="(' <#',20a4)") pe%header%ITITLE
