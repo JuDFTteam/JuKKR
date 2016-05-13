@@ -11,7 +11,7 @@ module JelliumPotentials_mod
 
   !---------- Routines for creation of Jellium potentials -----------
 
-  subroutine jellstart12(nspin, ins, natoms, z, idshape, rwscl, rmtcl, meshn, xrn, drn, irws, irns, alatnew, qbound, dims, atom_index)
+  subroutine jellstart12(nspin, ins, natoms, z, idshape, rwscl, rmtcl, meshn, xrn, drn, irws, irns, alatnew, qbound, dims, atom_index, elementdatabasepath)
   
   ! Code converted using TO_F90 by Alan Miller
   ! Date: 2016-01-21  Time: 16:35:08
@@ -39,6 +39,7 @@ module JelliumPotentials_mod
   double precision, intent(inout) :: qbound
   type(DimParams), intent(in)     :: dims
   integer, intent(in)             :: atom_index ! ==atom_id?
+  character(len=*), intent(in)    :: elementdatabasepath
 
 
   ! parameters that are no longer taken from 'inc.geometry' but depend on dims
@@ -58,9 +59,9 @@ module JelliumPotentials_mod
   double precision, allocatable :: u(:), drdi(:), ecore(:), rmesh(:), vins(:, :), vm2z(:), vinsout(:, :), vm2zout(:), vm2zb(:), rout(:), vinsb(:, :), drdiout(:), work(:, :), ra(:)
   character(len=40) :: baner
   character(len=4) :: aaaa, tran
-  character(len=26) :: atompot
   character(len=2) :: txtc(20), suffix
-  character(len=17) :: filename
+  character(len=256) :: atompot
+  character(len=32) :: filename
 
   character(len=4), parameter :: elem_file(0:113) = [ &
       'Vac0', 'H_01', 'He02', 'Li03', 'Be04', 'B_05', 'C_06', 'N_07', 'O_08', 'F_09', &
@@ -148,14 +149,14 @@ module JelliumPotentials_mod
       
       nz = z(iat)
       suffix = '  ' ; if (((nz >= 24 .and. nz <= 28) .or. (nz >= 57 .and. nz <= 70)) .and. ispin == 2) suffix = 's2'
-      atompot = 'ElementDataBase/'-elem_file(nz)-'.pot'-suffix
-      write(6, *) 'Using database ....: ', atompot
+      atompot = elementdatabasepath-'/'-elem_file(nz)-'.pot'-suffix
+      write(6, "(9a)") ' Using database ....: ',atompot
       open(21, file=atompot, status='old', iostat=ios)
       if (ios /= 0) then
         write(6, *) ' Error in JELLSTART '
         write(6, *) ' Potential.............', elem_file(nz)
         write(6, *) ' Does not exist in the database'
-        die_here("Unable to find"+elem_file(nz)+" in the database!")
+        die_here("Unable to find"+elem_file(nz)+"in the database!")
       endif
       
   !           irws1 = nr
@@ -177,6 +178,7 @@ module JelliumPotentials_mod
       nc = nz - nzvali
       ncore = 0
       selectcase (nc)
+      case ( 0); ncore = 0 ! vacuum
       case ( 2); ncore = 1 ! 1s
       case ( 4); ncore = 2 ! 1s2s
       case (10); ncore = 3 ! 1s2s2p

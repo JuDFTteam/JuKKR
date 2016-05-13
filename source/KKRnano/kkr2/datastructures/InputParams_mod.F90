@@ -1,6 +1,6 @@
 
 !------------------------------------------------------------------------------
-! Automatically generated source file. Do not edit by hand.
+! Automatically generated source file. Do not edit manually!
 ! To add/remove/modify input parameters:
 ! Edit InputParamsNew.txt and run 
 ! 'inputgenerator.py InputParams InputParamsNew.txt > InputParams_mod.F90'
@@ -63,6 +63,7 @@ module InputParams_mod
     double precision :: target_rms
     integer :: near_field
     integer :: voronano
+    character(len=96) :: elementdatabasepath
     integer :: write_shapes
     double precision :: mt_zero_shift
     integer :: DEBUG_morgan_electrostatics
@@ -96,7 +97,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "icst", values%icst , def=4)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for icst. Set to icst = 4"
+    write(*,*) "WARNING: Bad/no value given for icst. Set icst to 4"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for icst."
@@ -105,7 +106,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "kpre", values%kpre , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for kpre. Set to kpre = 0"
+    write(*,*) "WARNING: Bad/no value given for kpre. Set kpre to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for kpre."
@@ -144,7 +145,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "qmrbound", values%qmrbound , def=1.0D-6)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for qmrbound. Set to qmrbound = 1.0D-6"
+    write(*,*) "WARNING: Bad/no value given for qmrbound. Set qmrbound to 1.0D-6"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for qmrbound."
@@ -153,7 +154,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "nsra", values%nsra , def=2)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for nsra. Set to nsra = 2"
+    write(*,*) "WARNING: Bad/no value given for nsra. Set nsra to 2"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for nsra."
@@ -162,7 +163,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "kxc", values%kxc , def=2)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for kxc. Set to kxc = 2"
+    write(*,*) "WARNING: Bad/no value given for kxc. Set kxc to 2"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for kxc."
@@ -171,7 +172,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "tempr", values%tempr , def=800.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for tempr. Set to tempr = 800.0"
+    write(*,*) "WARNING: Bad/no value given for tempr. Set tempr to 800.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for tempr."
@@ -180,7 +181,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "alat", values%alat , def=1.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for alat. Set to alat = 1.0"
+    write(*,*) "WARNING: Bad/no value given for alat. Set alat to 1.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for alat."
@@ -189,7 +190,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "rclust", values%rclust , def=1.5)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for rclust. Set to rclust = 1.5"
+    write(*,*) "WARNING: Bad/no value given for rclust. Set rclust to 1.5"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for rclust."
@@ -204,7 +205,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "fcm", values%fcm , def=20.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for fcm. Set to fcm = 20.0"
+    write(*,*) "WARNING: Bad/no value given for fcm. Set fcm to 20.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for fcm."
@@ -219,7 +220,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "kforce", values%kforce , def=1)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for kforce. Set to kforce = 1"
+    write(*,*) "WARNING: Bad/no value given for kforce. Set kforce to 1"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for kforce."
@@ -240,7 +241,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "jij", values%jij , def=.FALSE.)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for jij. Set to jij = .FALSE."
+    write(*,*) "WARNING: Bad/no value given for jij. Set jij to .FALSE."
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for jij."
@@ -249,7 +250,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "ldau", values%ldau , def=.FALSE.)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for ldau. Set to ldau = .FALSE."
+    write(*,*) "WARNING: Bad/no value given for ldau. Set ldau to .FALSE."
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for ldau."
@@ -258,7 +259,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "cartesian", values%cartesian , def=.TRUE.)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for cartesian. Set to cartesian = .TRUE."
+    write(*,*) "WARNING: Bad/no value given for cartesian. Set cartesian to .TRUE."
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for cartesian."
@@ -267,7 +268,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "rcutjij", values%rcutjij , def=2.30)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for rcutjij. Set to rcutjij = 2.30"
+    write(*,*) "WARNING: Bad/no value given for rcutjij. Set rcutjij to 2.30"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for rcutjij."
@@ -276,7 +277,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "kte", values%kte , def=1)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for kte. Set to kte = 1"
+    write(*,*) "WARNING: Bad/no value given for kte. Set kte to 1"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for kte."
@@ -285,7 +286,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "imix", values%imix , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for imix. Set to imix = 0"
+    write(*,*) "WARNING: Bad/no value given for imix. Set imix to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for imix."
@@ -294,7 +295,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "bzdivide", values%bzdivide , def=8)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for bzdivide. Set to bzdivide = 8"
+    write(*,*) "WARNING: Bad/no value given for bzdivide. Set bzdivide to 8"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for bzdivide."
@@ -333,7 +334,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "nmin_panel", values%nmin_panel , def=7)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for nmin_panel. Set to nmin_panel = 7"
+    write(*,*) "WARNING: Bad/no value given for nmin_panel. Set nmin_panel to 7"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for nmin_panel."
@@ -342,7 +343,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "num_MT_points", values%num_MT_points , def=10)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for num_MT_points. Set to num_MT_points = 10"
+    write(*,*) "WARNING: Bad/no value given for num_MT_points. Set num_MT_points to 10"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for num_MT_points."
@@ -351,7 +352,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "MT_scale", values%MT_scale , def=0.98)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for MT_scale. Set to MT_scale = 0.98"
+    write(*,*) "WARNING: Bad/no value given for MT_scale. Set MT_scale to 0.98"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for MT_scale."
@@ -360,7 +361,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "RMT_ref_scale", values%RMT_ref_scale , def=0.995)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for RMT_ref_scale. Set to RMT_ref_scale = 0.995"
+    write(*,*) "WARNING: Bad/no value given for RMT_ref_scale. Set RMT_ref_scale to 0.995"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for RMT_ref_scale."
@@ -369,7 +370,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "cutoff_radius", values%cutoff_radius , def=-1.d0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for cutoff_radius. Set to cutoff_radius = -1.d0"
+    write(*,*) "WARNING: Bad/no value given for cutoff_radius. Set cutoff_radius to -1.d0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for cutoff_radius."
@@ -378,7 +379,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "lcutoff_radii", values%lcutoff_radii , def=0.d0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for lcutoff_radii. Set to lcutoff_radii = 0.d0"
+    write(*,*) "WARNING: Bad/no value given for lcutoff_radii. Set lcutoff_radii to 0.d0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for lcutoff_radii."
@@ -387,7 +388,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "solver", values%solver , def=3)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for solver. Set to solver = 3"
+    write(*,*) "WARNING: Bad/no value given for solver. Set solver to 3"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for solver."
@@ -396,7 +397,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "ebotsemi", values%ebotsemi , def=0.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for ebotsemi. Set to ebotsemi = 0.0"
+    write(*,*) "WARNING: Bad/no value given for ebotsemi. Set ebotsemi to 0.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for ebotsemi."
@@ -405,7 +406,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "emusemi", values%emusemi , def=0.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for emusemi. Set to emusemi = 0.0"
+    write(*,*) "WARNING: Bad/no value given for emusemi. Set emusemi to 0.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for emusemi."
@@ -414,7 +415,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "fsemicore", values%fsemicore , def=1.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for fsemicore. Set to fsemicore = 1.0"
+    write(*,*) "WARNING: Bad/no value given for fsemicore. Set fsemicore to 1.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for fsemicore."
@@ -423,7 +424,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "npntsemi", values%npntsemi , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for npntsemi. Set to npntsemi = 0"
+    write(*,*) "WARNING: Bad/no value given for npntsemi. Set npntsemi to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for npntsemi."
@@ -432,7 +433,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "volterra", values%volterra , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for volterra. Set to volterra = 0"
+    write(*,*) "WARNING: Bad/no value given for volterra. Set volterra to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for volterra."
@@ -441,7 +442,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "target_rms", values%target_rms , def=1.0D-8)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for target_rms. Set to target_rms = 1.0D-8"
+    write(*,*) "WARNING: Bad/no value given for target_rms. Set target_rms to 1.0D-8"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for target_rms."
@@ -450,7 +451,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "near_field", values%near_field , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for near_field. Set to near_field = 0"
+    write(*,*) "WARNING: Bad/no value given for near_field. Set near_field to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for near_field."
@@ -459,16 +460,25 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "voronano", values%voronano , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for voronano. Set to voronano = 0"
+    write(*,*) "WARNING: Bad/no value given for voronano. Set voronano to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for voronano."
     destroy_and_return
   endif
 
+  ierror = getValue(cr, "elementdatabasepath", values%elementdatabasepath , def='~/KKR/ElementDataBase')
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for elementdatabasepath. Set elementdatabasepath to '~/KKR/ElementDataBase'"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for elementdatabasepath."
+    destroy_and_return
+  endif
+
   ierror = getValue(cr, "write_shapes", values%write_shapes , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for write_shapes. Set to write_shapes = 0"
+    write(*,*) "WARNING: Bad/no value given for write_shapes. Set write_shapes to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for write_shapes."
@@ -477,7 +487,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "mt_zero_shift", values%mt_zero_shift , def=0.0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for mt_zero_shift. Set to mt_zero_shift = 0.0"
+    write(*,*) "WARNING: Bad/no value given for mt_zero_shift. Set mt_zero_shift to 0.0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for mt_zero_shift."
@@ -486,7 +496,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "DEBUG_morgan_electrostatics", values%DEBUG_morgan_electrostatics , def=0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for DEBUG_morgan_electrostatics. Set to DEBUG_morgan_electrostatics = 0"
+    write(*,*) "WARNING: Bad/no value given for DEBUG_morgan_electrostatics. Set DEBUG_morgan_electrostatics to 0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for DEBUG_morgan_electrostatics."
@@ -495,7 +505,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "fullbz", values%fullbz , def=.FALSE.)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for fullbz. Set to fullbz = .FALSE."
+    write(*,*) "WARNING: Bad/no value given for fullbz. Set fullbz to .FALSE."
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for fullbz."
@@ -504,7 +514,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = getValue(cr, "vref", values%vref , def=8.d0)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for vref. Set to vref = 8.d0"
+    write(*,*) "WARNING: Bad/no value given for vref. Set vref to 8.d0"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for vref."
@@ -571,6 +581,7 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%target_rms
   read(fu) values%near_field
   read(fu) values%voronano
+  read(fu) values%elementdatabasepath
   read(fu) values%write_shapes
   read(fu) values%mt_zero_shift
   read(fu) values%DEBUG_morgan_electrostatics
@@ -634,6 +645,7 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%target_rms
   write(fu) values%near_field
   write(fu) values%voronano
+  write(fu) values%elementdatabasepath
   write(fu) values%write_shapes
   write(fu) values%mt_zero_shift
   write(fu) values%DEBUG_morgan_electrostatics

@@ -8,7 +8,7 @@ Author: Elias Rabel, 2013
 import sys
 
 # Some constants
-CONFIG_READER_DICT_VALUE_LENGTH = 192
+CONFIG_READER_DICT_VALUE_LENGTH = 96
 FILE_UNIT = 67
 
 configname = sys.argv[1]
@@ -29,9 +29,9 @@ vectors = ('dv', 'iv')
 
 HEADER = ("""
 !------------------------------------------------------------------------------
-! Automatically generated source file. Do not edit by hand.
+! Automatically generated source file. Do not edit manually!
 ! To add/remove/modify input parameters:
-""" + "! Edit " +  deffilename + " and run \n! 'inputgenerator.py " + configname + " " + deffilename + " > "+configname+"_mod.F90'" + """
+""" + "! Edit " + deffilename + " and run \n! 'inputgenerator.py " + configname + " " + deffilename + " > " + configname + "_mod.F90'" + """
 ! to generate source code.
 !------------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ for line in deffile:
     if line[0] == '#': continue  #skip comment
     splitted_line = line.split()
 
-    gettername = 'getValue' #getterNamesdict[splitted_line[0]]
+    gettername = 'getValue'
     default_value = None
 
     if (splitted_line[0] in vectors):
@@ -112,29 +112,12 @@ for line in deffile:
     else:
       if len(splitted_line) > 2:
           default_value = splitted_line[2]             
-          
-    #print '  ierror = ' + gettername + '(cr, "' + splitted_line[1] + '", values%' + splitted_line[1],
-
-    #if default_value is not None:
-        #print ', def=' + default_value + ')'
-        #print '  if (ierror == use_default) then'
-        #print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + '. Set to ' + splitted_line[1] + ' = ' + default_value + '"' 
-        #print '    ierror = 0'
-        #print '  endif'
-    #else:
-        #print ')'
-    #print '  if (ierror /= 0) then'
-    #print '    write(*,*) "Bad/no value given for ' + splitted_line[1] + '."'
-    #print '    destroy_and_return' # program will die
-    #print '  endif'
-    #print
-
 
     if default_value is not None:
         print '  ierror = ' + gettername + '(cr, "' + splitted_line[1] + '", values%' + splitted_line[1],
         print ', def=' + default_value + ')'
         print '  if (ierror == use_default) then'
-        print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + '. Set to ' + splitted_line[1] + ' = ' + default_value + '"' 
+        print '    write(*,*) "WARNING: Bad/no value given for ' + splitted_line[1] + '. Set ' + splitted_line[1] + ' to ' + default_value + '"' 
         print '    ierror = 0 ! ok, no error'
         print '  elseif (ierror /= 0) then'
     else:
