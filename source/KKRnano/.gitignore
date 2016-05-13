@@ -1,3 +1,10 @@
 *.exe
 *.o
+*.aux
+*.bbl
+*.blg
+*.log
+*.pdf
+*.tex.backup
+
 
