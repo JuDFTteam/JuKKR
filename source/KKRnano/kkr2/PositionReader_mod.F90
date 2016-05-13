@@ -352,6 +352,7 @@ module PositionReader_mod
     case('X'); if (y == 'e') Z =  54 ! Xenon
                if (y == ' ') Z = 115 ! custom element X (jmol style)
     case('_'); if (y == '_') Z =   0 ! "__" vacuum
+    case('0'); if (y == ' ') Z =   0 ! "0" vacuum
     case('e'); if (y == ' ') Z =  -1 ! electron
     case('U'); if (y == ' ') Z =  92 ! Uranium
     ! for these elements the full Symbol should read "Uu"-y
