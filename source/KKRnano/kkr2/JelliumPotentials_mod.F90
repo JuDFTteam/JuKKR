@@ -27,7 +27,7 @@ module JelliumPotentials_mod
   integer, intent(in)             :: ins
   integer, intent(in)             :: natoms
   double precision, intent(in)    :: z(:)
-  integer, intent(in)             :: idshape(*)
+  integer, intent(in)             :: idshape(*) ! translates atom indices into shape indices
   double precision, intent(in)    :: rwscl(*)
   double precision, intent(in)    :: rmtcl(*)
   integer, intent(in)             :: meshn(:)
@@ -46,7 +46,7 @@ module JelliumPotentials_mod
 
   double precision :: efermi, rws0, br, za, zvali, einf, ar, amsh
   integer :: kshape, lcore(20), ncore
-  double precision :: ea, s1, z1, vbc(2), ecore1(20), maxa, aout, bout, rmtout, r0, rmaxout, rmtnew
+  double precision :: ea, s1, vbc(2), ecore1(20), bout, rmtout, r0, rmaxout, rmtnew
   integer :: i, ir, iri, ispin, ipot, id, lm1, irnsout, irmtout, irwsout, nr, iat, lcore1(20), irc, nz, irs1, nsec, nzvali, nc, ios
   logical, allocatable :: potlm(:)
   double precision, allocatable :: u(:), drdi(:), ecore(:), rmesh(:), vins(:,:), vm2z(:), vinsout(:,:), vm2zout(:), vm2zb(:), rout(:), vinsb(:,:), drdiout(:), work(:,:), ra(:)
@@ -55,6 +55,7 @@ module JelliumPotentials_mod
   character(len=2) :: txtc(20), suffix
   character(len=256) :: atompot
   character(len=32) :: filename
+  double precision, parameter :: maxa = 1.d35, aout = 0.025d0
 
   character(len=4), parameter :: elem_file(0:113) = [ &
       'Vac0', 'H_01', 'He02', 'Li03', 'Be04', 'B_05', 'C_06', 'N_07', 'O_08', 'F_09', &
@@ -139,7 +140,7 @@ module JelliumPotentials_mod
       
   ! find out what atom is needed
       
-      nz = z(iat)
+      nz = int(z(iat))
       suffix = '  ' ; if (((nz >= 24 .and. nz <= 28) .or. (nz >= 57 .and. nz <= 70)) .and. ispin == 2) suffix = 's2'
       atompot = elementdatabasepath-'/'-elem_file(nz)-'.pot'-suffix
       write(6, "(9a)") ' Using database ....: ',atompot
@@ -156,17 +157,16 @@ module JelliumPotentials_mod
   ! --------------------------------------------------------------------
       
       efermi = .409241d+00 ! why?
-      vbc(1) = .500d0
-      vbc(2) = .500d0
+      vbc(1:2) = .5d0
   !           read potential from jellium
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-      read(21, fmt="(3x,a40,3x,a4,3x,a4)") baner, aaaa, aaaa
+      read(21, fmt="(3x,a40,3x,a4,3x,a4)") baner, aaaa, tran
       read(21, fmt=F142) rws0, s1, irs1, br
-      read(21, fmt=F142) za, zvali, nsec, einf
+      read(21, fmt=F142) za, zvali, nsec, einf ! nsec is not used here
   !     calculate number of core states
-      nz = za             ! make integer
-      nzvali = zvali      ! make integer
+      nz = int(za)
+      nzvali = int(zvali) ! integer number of valence states
       nc = nz - nzvali
       ncore = 0
       selectcase (nc)
@@ -231,15 +231,14 @@ module JelliumPotentials_mod
       enddo ! i
       write(6, *) 'Jellium Potential Read In ',irs1,' points'
       nr = irs1
-      z1 = za
       
   ! --------------------------------------------------------------------
       
   !     the input mesh has been constructed. now construct the output mesh.
       
-      id = idshape(iat)
+      id = idshape(iat) ! translate atom index into shape index
       rout(1) = 0.d0
-      aout = 0.025d0
+      
       rmaxout = rwscl(id)
       rmtout  = rmtcl(id)
       irwsout = irws(iat)
@@ -278,7 +277,6 @@ module JelliumPotentials_mod
       
   !  ok now interpolate
       
-      maxa = 1.d35
       call spline(irmdjj, rmesh, vm2z, nr, maxa, maxa, vm2zb)
       
   ! ok with spline
@@ -298,13 +296,11 @@ module JelliumPotentials_mod
         enddo ! lm
       endif
       
-      call ritesone12(19, ispin, z1, alatnew, rmtout, rmtnew, rmaxout,  &
+      call ritesone12(19, ispin, za, alatnew, rmtout, rmtnew, rmaxout,  &
           rout, drdiout, vm2zout, irwsout, aout, bout, ins, irnsout,  &
           vinsout, qbound, irwsout, kshape, efermi, vbc,  &
           ecore1, lcore1, ncore, elem_file(nz), nspin, dims%lpot, dims%irmd, dims%irnsd)
 
-  ! next atom or next spin
-      
     enddo ! ispin
   enddo ! iat
 
@@ -315,6 +311,7 @@ module JelliumPotentials_mod
 
   subroutine ritesone12(ifile, is, z, alat, rmt, rmtnew, rws, r, drdi, vm2z, irws, a, b, ins, irns, vins, &
                qbound, irc, kshape, efermi, vbc, ecore, lcore, ncore, elem_name, nspin, lpot, irmd, irnsd)
+  ! compare routine rites in PotentialConverter_mod
   
   ! Code converted using TO_F90 by Alan Miller
   ! Date: 2016-01-21  Time: 16:59:42
@@ -322,19 +319,15 @@ module JelliumPotentials_mod
   ! ************************************************************************
   !      this subroutine stores in 'ifile' the necessary results
   !      (potentials e.t.c.) to start self-consistency iterations
-
   !      modified for the full potential case - if ins .gt. 0 there
   !       is written a different potential card
   !       if the sum of absolute values of an lm component of vins (non
   !       spher. potential) is less than the given rms error qbound this
   !       component will not be stored .
-
   !        (see to subroutine start , where most of the arrays are
   !         described)
-
   !                            modified by b. drittler  aug. 1988
   !-----------------------------------------------------------------------
-  !     .. Parameters ..
   integer, intent(in)             :: ifile
   integer, intent(in)             :: is
   double precision, intent(in)    :: z
@@ -366,7 +359,6 @@ module JelliumPotentials_mod
   double precision :: rv, sm
   integer :: ic, ir, irmin, lm, lmnr, lmpot, nr
   integer, parameter :: inew=1, isave=1
-
   character(len=*), parameter :: F9060="(10i5)", F9070="(1p,4d20.13)"
   character(len=4) :: spin, updn  
 
