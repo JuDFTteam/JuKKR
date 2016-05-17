@@ -14,41 +14,35 @@ module KKRzero_mod
   
   contains
   
-  subroutine main0(checkmode,voronano)
+  subroutine main0(checkmode, voronano)
 
 ! Explanation of most variables follows below
 
 !     ALAT                     : lattice constant (in a.u.)
 !     ABASIS,BBASIS,CBASIS,    : scaling factors for rbasis
 !     E1,E2,                   : energies needed in EMESHT
-!     HFIELD                   : external magnetic field, for
-!                              : initial potential shift in
-!                              : spin polarised case
+!     HFIELD                   : external magnetic field, for initial potential shift in spin polarised case
 !     TK,                      : temperature
 !     VCONST,                  : potential shift
 !     BRAVAIS(3,3),            : bravais lattice vectors
 !     RECBV(3,3),              : reciprocal basis vectors
 !     RMTREF(NREFD),           : muffin-tin radius of reference system
-!     RBASIS(3,NAEZD),         : position of atoms in the unit cell
-!                              : in units of bravais vectors
+!     RBASIS(3,NAEZD),         : position of atoms in the unit cell in units of bravais vectors
 !     RCLS(3,NACLSD,NCLSD),    : real space position of atom in cluster
 !     RR(3,0:NRD)              : set of real space vectors (in a.u.)
 !     VBC(2),                  : potential constants
 !     WG(LASSLD),              : integr. weights for Legendre polynomials
 !     YRG(LASSLD,0:LASSLD)     : spherical harmonics (GAUNT2)
 !     ZAT(NAEZD)               : nuclear charge
-!     INTERVX,INTERVY,INTERVZ, : number of intervals in x,y,z-direction
-!                              : for k-net in IB of the BZ
+!     INTERVX,INTERVY,INTERVZ, : number of intervals in x,y,z-direction for k-net in IB of the BZ
 !     ICST,                    : number of Born approximation
 !     IEND,                    : number of nonzero gaunt coeffizients
 !     IFILE,                   : unit specifier for potential card
 !     IPE,IPF,IPFE,            : not real used, IPFE should be 0
 !     KHFELD,                  : 0,1: no / yes external magnetic field
 !     KVREL,                   : 0,1 : non / scalar relat. calculation
-!     LMAX,                    : maximum l component in
-!                              : wave function expansion
-!     LPOT,                    : maximum l component in
-!                              : potential expansion
+!     LMAX,                    : maximum l component in wave function expansion
+!     LPOT,                    : maximum l component in potential expansion
 !     NAEZ,                    : number of atoms in unit cell
 !     NCLS,                    : number of reference clusters
 !     NPNT1,NPNT2,NPNT3,       : number of E points (EMESHT)
@@ -56,12 +50,9 @@ module KKRzero_mod
 !     NR,                      : number of real space vectors rr
 !     NREF,                    : number of diff. ref. potentials
 !     NSPIN,                   : counter for spin directions
-!     IGUESS                   : 0,1 : no / yes (sc) initial guess, set
-!                              : IGUESSD to 1 in inc.p if needed
-!     BCP                      : 0,1 : no / yes bc-preconditioning, set
-!                              : BCPD to 1 in inc.p if needed
-!     QBOUND                   : exit condition for self-consistent
-!                              : iteration
+!     IGUESS                   : 0,1 : no / yes (sc) initial guess, set IGUESSD to 1 in inc.p if needed
+!     BCP                      : 0,1 : no / yes bc-preconditioning, set BCPD to 1 in inc.p if needed
+!     QBOUND                   : exit condition for self-consistency iterations
 !     QMRBOUND                 : exit condition for QMR iterations
 !     SCFSTEPS                 : number of scf iterations
 !     INIPOL(NAEZD),           : initial spin polarisation
@@ -73,8 +64,7 @@ module KKRzero_mod
 !     RMT(NAEZD)               : muffin-tin radius of true system
 !     RMTNEW(NAEZD)            : adapted muffin-tin radius
 !     RWS(NAEZD)               : Wigner Seitz radius
-!     ICST                     : the regular non spherical wavefunctions, the
-!                              : alpha matrix and the t-matrix in the ICST-th. born approx
+!     ICST                     : the regular non spherical wavefunctions, the alpha matrix and the t-matrix in the ICST-th. born approx
 !     IMT(NAEZD),              : r point at MT radius
 !     IPAN(NAEZD),             : number of panels in non-MT-region
 !     IRC(NAEZD),              : r point for potential cutting
@@ -82,20 +72,14 @@ module KKRzero_mod
 !     IRMIN(NAEZD),            : max r for spherical treatment
 !     IRNS(NAEZD)              : number r points for non spher. treatm.
 !     IRWS(NAEZD),             : r point at WS radius
-!     LMSP(NAEZD,LMXSPD)       : 0,1 : non/-vanishing lm=(l,m) component
-!                              : of non-spherical potential
-!     LLMSP(NAEZD,NFUND)       : lm=(l,m) of 'nfund'th nonvanishing
-!                              : component of non-spherical pot.
+!     LMSP(NAEZD,LMXSPD)       : 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+!     LLMSP(NAEZD,NFUND)       : lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
 !     NTCELL(NAEZD),           : index for WS cell
 
 !     A(NAEZD),B(NAEZD)        : contants for exponential r mesh
 !     R(IRMD,NAEZD)            : radial mesh (in units a Bohr)
 !     DRDI(IRMD,NAEZD)         : derivative dr/di
-!     THETAS(IRID,NFUND,NCELLD): shape function
-!                              :         (0 outer space
-!                              : THETA = (
-!                              :         (1 inside WS cell
-!                              : in spherical harmonics expansion
+!     THETAS(IRID,NFUND,NCELLD): shape function: THETA = (0 outer space and 1 inside WS cell) in spherical harmonics expansion
 !     LCORE(20,NPOTD)          : angular momentum of core states
 !     NCORE(NPOTD)             : number of core states
 ! ----------------------------------------------------------------------
@@ -109,12 +93,8 @@ module KKRzero_mod
     use Lattice_mod, only: lattix99
     use Constants_mod, only: pi
     use MadelungCalculator_mod, only: testdimlat
-!     use EnergyMeshHelpers_mod, only: epathtb
     use EnergyMesh_mod, only: getEnergyMeshSize, EnergyMesh, create, init, update, store, destroy
     use Startb1_mod, only: startb1_wrapper_new
-    
-    use PositionReader_mod, only: getAtomData  
-   
 
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     integer, intent(in) :: voronano  ! 0: usual kkr0,  1: returns before reading potential and shapefunctions
@@ -131,11 +111,6 @@ module KKRzero_mod
     type(Main2Arrays)   :: arrays
     type(EnergyMesh)    :: emesh
     type(BrillouinZoneMesh) :: kmeshes(8)
-
-    if (checkmode /= 0) then 
-!       ist = getAtomData('pos.xyz', natoms, pos, comm=0)
-!       if (ist /= 0) warn(6, "getAtomData failed!")
-    endif ! checks
 
     call parse(dims, "global.conf")
 
@@ -154,7 +129,7 @@ module KKRzero_mod
 !   in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
 
-    if(voronano == 1) then
+    if (voronano == 1) then
       ! Conversion of rmax and gmax to atomic units
       params%rmax = params%rmax*params%alat
       params%gmax = params%gmax/params%alat
@@ -164,9 +139,9 @@ module KKRzero_mod
       arrays%bravais(:,2) = params%bravais_b
       arrays%bravais(:,3) = params%bravais_c
       call writeMain2Arrays(arrays, 'arrays.unf')
-     write(*,*) 'voronano ==1: Starting potential and shapefunctions are not read in kkr0'
-     return
-   endif
+      write(*,*) 'voronano == 1: Starting potential and shapefunctions are not read in by kkr0'
+      return
+    endif
 
 !===================================================================
 
@@ -250,7 +225,6 @@ module KKRzero_mod
   
 !>    Reads atominfo and rbasis files.
   subroutine rinputnew99(rbasis, zat, naez)
-
     use PositionReader_mod, only: getAtomData
     include 'mpif.h'
 
@@ -287,89 +261,23 @@ module KKRzero_mod
 ! read data from .xyz-file 'rbasis.xyz'
     ist = getAtomData('rbasis.xyz', naez_xyz, pos, MPI_COMM_WORLD)
 ! check if number of atoms from 'global.conf' equals number of atoms from .xyz-file 
-    if (naez_xyz /= naez) die_here('number of atoms in global.conf ('-naez-') differ from that in rbasis.xyz ('-naez_xyz-')!')
+    if (naez < 1) then ! automatic mode: naez is determined here
+      naez = naez_xyz
+      write(6, fmt="(9(a,i0))") "found ",naez," atoms in rbasis.xyz"
+      ! reshape the arrays
+      deallocate(zat, rbasis, stat=ist)
+      allocate(zat(naez), rbasis(3,naez), stat=ist) ; assert(ist == 0)
+    else
+      if (naez_xyz /= naez) die_here('number of atoms in global.conf ('-naez-') differ from that in rbasis.xyz ('-naez_xyz-')!')
+    endif
 ! assign nuclear charge and rbasis
-    zat(:) = pos(0,:)
-    rbasis(1:3,1:naez) = pos(1:3,:naez_xyz)
+    zat(1:naez)        = pos( 0 ,1:naez)
+    rbasis(1:3,1:naez) = pos(1:3,1:naez)
     !TODO: check whether read-in was successful    
 
     write(6, fmt="(3(7(1h-),1h+) ,55(1h-))")
     write(6, fmt="(10(3(1h-),1h+) ,39(1h-))")
      
-#if 0     
-!      the file 'atominfo' is no longer needed in kkrnano 
-!      (z and rmt are read from 'potential' and ntcell is read from 'shapefun')
-
-!      open(77, file='atominfo', form='formatted')
-!      do i = 1, naez
-!        read (unit=77,fmt=*) z(i), lmxcdummy, kfgdummy(1:4), cls, refpot, ntcell(i), mtfacdummy, irns_dummy, temp
-!        radius_muffin_tin(i) = temp
-!      enddo ! i
-!      close(77)
-
-!
-!     No cleanup of Format statements due to nostalgic reasons.
-!
- 2010 FORMAT(' NSPIN '/I4)
- 2011 FORMAT(' NSTEPS'/I4)
- 2014 FORMAT('          ALAT = ',F15.8)
- 2015 FORMAT('   INTERVX   INTERVY   INTERVZ'/3I10)
- 2016 FORMAT('    NCLS    NREF   '/,2I8)
- 2018 FORMAT(' RBASIS'/,'SITE                BASIS VECTORS                 ')
- 2019 FORMAT('         ABASIS         BBASIS         CBASIS'/3F15.8)
- 2025 FORMAT((i4,3F15.8))
- 2028 FORMAT(' NAEZ ',/,I8)
-! ------------------------------------------------------------------------
- 2100 FORMAT(79(1H-))
- 2101 format(  3(1H-),1H+  , 3(14(1H-),1H+),  30(1H-))
- 2102 format(3(9(1H-),1H+) ,49(1H-))
- 2103 FORMAT(10(3(1H-),1H+) ,39(1H-))
- 2104 format(  3(1H-),1H+  ,75(1H-))
- 2107 format(3(14(1H-),1H+),34(1H-))
- 2110 format(3(7(1H-),1H+) ,55(1H-))
- 9000 FORMAT (I2,3X,4I5)
- 9010 FORMAT (1X,I1,1X,4I1)
- 9020 FORMAT (/,33x,'check of dimension-data consistency',/,33x,35('-'),/,40x,'lmax   : (',i6,',',i6,')',/,40x,'NAEZ  : (',i6,',',i6,')',/,40x,'irm    : (',i6,',',i6,')',/,40x,'nspin  : (',i6,',',i6,')',/)
- 9030 FORMAT (1x,10 ('*'),' external magnetic field applied hfield=',f8.5)
- 9040 FORMAT (3f12.7)
- 9050 FORMAT (20x,a4,'spin polarized calculation')
- 9060 FORMAT (8i4)
- 9070 FORMAT (1x,20x,' calculation with',a8,'-potential')
- 9080 FORMAT (1x,79 ('*'))
- 9090 FORMAT (' mixing factor used           :',f15.6,/,' convergence quality required :',1p,d15.2)
- 9100 FORMAT (1x,20x,a24,'exchange-correlation potential')
- 9110 FORMAT (/,20x,'broyden"s method # :',i3,' is used up to iteration-      ',/,20x,'depth :',i3,'  then jacobian is fixed and potential      ',/,20x,'is updated using that jacobian')
- 9120 FORMAT (13x,' in case of calculating non - spherical wavefcts the parameter lmaxd has to be set equal lmax ')
- 9130 FORMAT (/)
- 9140 FORMAT (20x,'full potential calculation - cut off of non spherical potential',/,' >',/)
- 9150 FORMAT (31x,'representive atom no.',i3,' irns :',i5,' irnsd :',i5)
- 9160 FORMAT (21x,a43,/,21x,' using',i3,'-th. born approximation ')
- 9170 FORMAT (21x,a43)
- 9180 FORMAT (2i5)
- 9190 FORMAT (3f12.7,/,4i4)
- 9200 FORMAT (3i4,1f12.7)
- 9210 FORMAT (' lmax'/,i4)
- 9220 FORMAT ('          E1          E2          TK'/,3f12.6)
- 9230 FORMAT ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
- 9250 FORMAT ('  IFILE    IPE ISHIFT'/,3i7)
- 9260 FORMAT (' KSHAPE    IRM    ICST'/,3i7)
- 9270 FORMAT ('   KCOR  KVREL    KWS   KHFELD    KXC'/,5i7)
- 9280 FORMAT (' external magnetic hfield     :',f15.4/,' VCONST                       :',f15.6)
- 9290 FORMAT ('   IMIX   '/,i7)
- 9300 FORMAT (' ITDBRY'/,i7)
- 9310 FORMAT ('      STRMIX        FCM       QBOUND'/,3f12.6)
- 9320 FORMAT ('      BRYMIX'/,f12.6)
- 9330 FORMAT ('    KTE   KPRE   KVMAD'/,3i7)
- 9301 format(  3(1H-),1H+  ,75(1H-))
- 9302 format(3(11(1H-),1H+),43(1H-))
- 9303 format(3(6(1H-),1H+) ,58(1H-))
- 9304 format(4(6(1H-),1H+) ,51(1H-))
- 9305 format(3(6(1H-),1H+),11(1H-),1H+ ,46(1H-))
- 9306 format(6(6(1H-),1H+) ,37(1H-))
- 9307 format(6(1H-),1H+,72(1H-))
- 9308 format(11(1H-),1H+,67(1H-))
- 9309 format(5(6(1H-),1H+) ,44(1H-))
-#endif
   endsubroutine ! rinputnew99
   
   subroutine scalevec(rbasis, naez, bravais, lcartesian)
@@ -426,4 +334,3 @@ module KKRzero_mod
   
   
 endmodule ! kkr0_mod
-
