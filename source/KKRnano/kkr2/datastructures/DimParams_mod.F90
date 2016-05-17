@@ -9,11 +9,8 @@ module DimParams_mod
   implicit none
   private
   public :: DimParams, parse, load, store, destroy
-! public :: createDimParams!, destroyDimParams ! deprecated
-! public :: writeDimParams, createDimParamsFromFile
 
   type DimParams
-    integer :: nsymaxd
     integer :: naez
     integer :: lmaxd
     integer :: irid
@@ -224,7 +221,6 @@ module DimParams_mod
 
     ! derived parameters
     self%maxmshd = 8
-    self%nsymaxd = 48
     self%lpot = 2*self%lmaxd
 
     ! derived dimension parameters
