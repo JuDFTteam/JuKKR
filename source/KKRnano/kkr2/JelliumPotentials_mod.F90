@@ -11,7 +11,10 @@ module JelliumPotentials_mod
 
   !---------- Routines for creation of Jellium potentials -----------
 
-  subroutine jellstart12(nspin, ins, natoms, z, idshape, rwscl, rmtcl, meshn, xrn, drn, irws, irns, alatnew, qbound, dims, atom_index, elementdatabasepath)
+  subroutine jellstart12(nspin, ins, natoms, z, idshape, rwscl, rmtcl, &
+                         meshn, xrn, drn, irws, irns, alatnew, qbound, &
+                         lpot, irmd, irnsd, nspind, &
+                         atom_index, elementdatabasepath)
   
   ! Code converted using TO_F90 by Alan Miller
   ! Date: 2016-01-21  Time: 16:35:08
@@ -21,7 +24,7 @@ module JelliumPotentials_mod
   ! * file. and interpolates to the new mesh
   ! ******************************************************
 
-  use DimParams_mod, only: DimParams
+!   use DimParams_mod, only: DimParams
 
   integer, intent(in)             :: nspin
   integer, intent(in)             :: ins
@@ -37,7 +40,7 @@ module JelliumPotentials_mod
   integer, intent(in)             :: irns(:)
   double precision, intent(in)    :: alatnew
   double precision, intent(inout) :: qbound
-  type(DimParams), intent(in)     :: dims
+  integer, intent(in)             :: lpot, irmd, irnsd, nspind ! former members of 
   integer, intent(in)             :: atom_index ! ==atom_id?
   character(len=*), intent(in)    :: elementdatabasepath
 
@@ -96,36 +99,34 @@ module JelliumPotentials_mod
   !     --------------------------------------------------------------
   character(len=*), parameter :: F142="(7x,f8.4,7x,f8.4,7x,i5,7x,f8.4)"
 
-  ! set parameters depending on 'dims'
-  npotd = dims%nspind*natoms
-  lmpotd = (dims%lpot+1)**2
-  irmind = dims%irmd-dims%irnsd
-  inslpd = (dims%irnsd+1)*lmpotd
-  lmxspd = (2*dims%lpot+1)**2
+  npotd = nspind*natoms
+  lmpotd = (lpot+1)**2
+  irmind = irmd - irnsd
+  inslpd = (irnsd+1)*lmpotd
+  lmxspd = (2*lpot+1)**2
   irmdjj = 1501
   kshape = 2 ! always full-pot calculations
-  write(*, *) 'dims%irmd', dims%irmd
+  write(*, *) 'irmd', irmd
 
   ! allocate arrays
-  allocate(u(dims%irmd))
+  allocate(u(irmd))
   allocate(drdi(irmdjj))
   allocate(ecore(20))
   allocate(rmesh(irmdjj))
-  allocate(vins(irmind:dims%irmd, lmpotd))
+  allocate(vins(irmind:irmd, lmpotd))
   allocate(vm2z(irmdjj))
-  allocate(vinsout(irmind:dims%irmd, lmpotd))
-  allocate(vm2zout(dims%irmd))
+  allocate(vinsout(irmind:irmd, lmpotd))
+  allocate(vm2zout(irmd))
   allocate(vm2zb(irmdjj))
-  allocate(rout(dims%irmd))
-  allocate(vinsb(dims%irmd, lmpotd))
-  allocate(drdiout(dims%irmd))
-  allocate(work(dims%irmd, lmpotd))
-  allocate(ra(dims%irmd))
+  allocate(rout(irmd))
+  allocate(vinsb(irmd, lmpotd))
+  allocate(drdiout(irmd))
+  allocate(work(irmd, lmpotd))
+  allocate(ra(irmd))
   allocate(potlm(lmpotd))
 
   write(6, *) ' ****  READING  POTENTIAL  **** '
 
-  !open(19, status='unknown', file='output.pot')
   write(filename, fmt="(a,i7.7)") "potential.", atom_index
   open(19, file=filename, form="formatted", action='write', iostat=ios) ; assert(ios == 0)
 
@@ -168,7 +169,6 @@ module JelliumPotentials_mod
       nz = int(za)
       nzvali = int(zvali) ! integer number of valence states
       nc = nz - nzvali
-      ncore = 0
       selectcase (nc)
       case ( 0); ncore = 0 ! vacuum
       case ( 2); ncore = 1 ! 1s
@@ -187,6 +187,7 @@ module JelliumPotentials_mod
       case (80); ncore = 14 ! 1s2s2p3s3p3d4s4p4d4s4p4f5d6s
       case (86); ncore = 15 ! 1s2s2p3s3p3d4s4p4d4s4p4f5d6s4p
       case default ! ToDo: error handling: what if nc is not in the list?
+        ncore = 0
         warn(6, "no matching number of core electrons found! nc ="+nc)
       endselect ! nc
       write(6, *) '*************************************'
@@ -247,10 +248,10 @@ module JelliumPotentials_mod
       
       
       if (ins == 0) then
-        bout = rmaxout/(exp(aout*(irwsout - 1.d0)) - 1.0d0)
+        bout = rmaxout/(exp(aout*(irwsout - 1.d0)) - 1.d0)
         do ir = 2, irwsout
           ea = exp(aout*(ir - 1.d0))
-          rout(ir) = bout*(ea - 1.0d0)
+          rout(ir) = bout*(ea - 1.d0)
           drdiout(ir) = aout*bout*ea
         enddo ! ir
         do i = 1, irwsout
@@ -260,15 +261,15 @@ module JelliumPotentials_mod
         rmtnew = rout(irmtout)
         rmaxout = rout(irwsout)
       else
-        bout = rmtout/(exp(aout*(irmtout - 1.d0)) - 1.0d0)
+        bout = rmtout/(exp(aout*(irmtout - 1.d0)) - 1.d0)
         do ir = 2, irmtout
           ea = exp(aout*(ir - 1.d0))
-          rout(ir) = bout*(ea - 1.0d0)
+          rout(ir) = bout*(ea - 1.d0)
           drdiout(ir) = aout*bout*ea
         enddo ! ir
         do iri = 1, meshn(id)
           ir = iri + irmtout
-          rout(ir) = alatnew*xrn(iri, id) ! scaling is always 1.0d0
+          rout(ir) = alatnew*xrn(iri, id) ! scaling is always 1.d0
           drdiout(ir) = alatnew*drn(iri, id)
         enddo ! iri
         rmtnew = rout(irmtout)
@@ -299,7 +300,7 @@ module JelliumPotentials_mod
       call ritesone12(19, ispin, za, alatnew, rmtout, rmtnew, rmaxout,  &
           rout, drdiout, vm2zout, irwsout, aout, bout, ins, irnsout,  &
           vinsout, qbound, irwsout, kshape, efermi, vbc,  &
-          ecore1, lcore1, ncore, elem_file(nz), nspin, dims%lpot, dims%irmd, dims%irnsd)
+          ecore1, lcore1, ncore, elem_file(nz), nspin, lpot, irmd, irnsd)
 
     enddo ! ispin
   enddo ! iat
@@ -454,9 +455,10 @@ module JelliumPotentials_mod
     ! Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
     integer :: i, k
     double precision :: p, qn, sig, un, u(nmax)
+    double precision, parameter :: boundary = 0.99d30
 
     if (n > nmax) die_here("spline: impossible "+n+"= n > nmax ="+nmax)
-    if (yp1 > 0.99d30) then
+    if (yp1 > boundary) then
     ! the lower boundary condition is set either to be "natural"
       y2(1) = 0.d0
       u(1) = 0.d0
@@ -475,12 +477,12 @@ module JelliumPotentials_mod
       u(i) = (6.d0*((y(i+1) - y(i))/(x(i+1) - x(i)) - (y(i) - y(i-1))/(x(i) - x(i-1)))/(x(i+1) - x(i-1)) - sig*u(i-1))/p
     enddo ! i
 
-    if (ypn > 0.99d30) then
+    if (ypn > boundary) then
     ! the upper boundary condition is set either to be "natural"
       qn = 0.d0
       un = 0.d0
     else
-    ! or else to have a specified 1rst derivative.
+    ! or else to have a specified first derivative.
       qn = 0.5d0
       un = (3.d0/(x(n) - x(n-1)))*(ypn - (y(n) - y(n-1))/(x(n) - x(n-1)))
     endif

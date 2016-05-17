@@ -253,6 +253,6 @@ Harmonics_mod.o: Constants_mod.o
 kkrmat01_new.o: Exceptions_mod.o
 BrillouinZoneMesh_mod.o: Exceptions_mod.o
 AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o Constants_mod.o
-JelliumPotentials_mod.o: Exceptions_mod.o DimParams_mod.o 
+JelliumPotentials_mod.o: Exceptions_mod.o
 
 # DO NOT DELETE

@@ -634,7 +634,9 @@ module CalculationData_mod
       call jellstart12(dims%nspind,ins,naez,z,idshape,  &
             rwscl,rmtcl,meshn,xrn_2,drn_2,  &
             irws,irns,  &
-            params%alat,qbound,dims,calc_data%atom_ids(ila), &
+            params%alat,qbound, &
+            dims%lpot, dims%irmd, dims%irnsd, dims%nspind, &
+            calc_data%atom_ids(ila), &
             params%elementdatabasepath)
     enddo ! ila
     !$omp endparallel do
