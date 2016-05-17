@@ -9,8 +9,7 @@ TESTDIR  = os.getcwd()
 DECIMALS = 6
 
 def run_it(cmd):
-    """Run cmd, suppressing output.
-       Returns output from stdout and exit code"""
+    """Run cmd, suppressing output. Returns output from stdout and exit code"""
     proc = sp.Popen(cmd, stdout=sp.PIPE, close_fds=True, preexec_fn=os.setsid, shell=True)
     out, err = proc.communicate()
     return out, proc.returncode
@@ -64,8 +63,8 @@ class Test_copper(unittest.TestCase):
         """Test with high lmax. Works only with -heap-arrays on ifort"""
         energy = run_kkr("Cu02_lmax6")
         self.assertAlmostEqual(energy, -13224.24988827, DECIMALS)
-class Test_alloys(unittest.TestCase):
 
+class Test_semiconductors(unittest.TestCase):
      def test_GaN(self):
         energy = run_kkr("GaN")
         self.assertAlmostEqual(energy, -13219.39043115, DECIMALS)
@@ -74,14 +73,13 @@ class Test_alloys(unittest.TestCase):
         energy = run_kkr("ZnO")
         self.assertAlmostEqual(energy, -13219.39043115, DECIMALS)
 
-#     def test_Fe8Co8(self):
-#        energy = run_kkr("Fe8Co8")
-#        self.assertAlmostEqual(energy, -13219.39043115, DECIMALS)
-class Test_Silicon(unittest.TestCase):
-
      def test_Si(self):
         energy = run_kkr("Si")
         self.assertAlmostEqual(energy, -13219.39043115, DECIMALS)
 
+class Test_alloys(unittest.TestCase):
+    def test_Fe8Co8(self):
+       energy = run_kkr("Fe8Co8")
+       self.assertAlmostEqual(energy, -13219.39043115, DECIMALS)
 
 unittest.main()

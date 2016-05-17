@@ -285,12 +285,12 @@ module KKRzero_mod
     write(6, fmt="(80(1h=))") 
 
 ! read data from .xyz-file 'rbasis.xyz'
-    ist=getAtomData('rbasis.xyz', naez_xyz, pos, MPI_COMM_WORLD)
+    ist = getAtomData('rbasis.xyz', naez_xyz, pos, MPI_COMM_WORLD)
 ! check if number of atoms from 'global.conf' equals number of atoms from .xyz-file 
-    if (naez_xyz /= naez) die_here('number of atoms in global.conf does not equal number of atoms in rbasis.xyz!')
+    if (naez_xyz /= naez) die_here('number of atoms in global.conf ('-naez-') differ from that in rbasis.xyz ('-naez_xyz-')!')
 ! assign nuclear charge and rbasis
-    zat(:)=pos(0,:)
-    rbasis(1:3,1:naez)=pos(1:3,:naez_xyz)
+    zat(:) = pos(0,:)
+    rbasis(1:3,1:naez) = pos(1:3,:naez_xyz)
     !TODO: check whether read-in was successful    
 
     write(6, fmt="(3(7(1h-),1h+) ,55(1h-))")
