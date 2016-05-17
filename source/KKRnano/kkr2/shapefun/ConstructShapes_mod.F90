@@ -32,27 +32,31 @@ module ConstructShapes_mod
   !------------------------------------------------------------------------------
   !> Reads Voronoi weights from file 'voro_weights'
   !> this is kind of a hack and does not scale well.
-  subroutine read_voro_weights(weights, ATOM, num_atoms)
+  subroutine read_voro_weights(weights, atom_index, num_atoms)
     double precision, intent(inout) :: weights(:)
-    integer, intent(in) :: ATOM(:) ! index table
+    integer, intent(in) :: atom_index(:) ! index table
     integer, intent(in) :: num_atoms
 
-    integer :: ii
-    double precision, allocatable :: weight_table(:)
+    integer :: ii, ios
+    double precision :: weight_table(num_atoms)
+ 
+    open(32, file='voro_weights', form='formatted', action='read', status='old', iostat=ios)
+    if (ios /= 0) then
+      write(0,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
+      write(*,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
+      weights(:) = 1.d0
+      return
+    endif
 
-    allocate(weight_table(num_atoms))
-
-    open(32, file='voro_weights', form='formatted')
     do ii = 1, num_atoms
       read(32, *) weight_table(ii)
     enddo ! ii
-    close(32)
+    close(32, iostat=ios)
 
-    do ii = 1, size(ATOM)
-      weights(ii) = weight_table(ATOM(ii))
+    do ii = 1, size(atom_index)
+      weights(ii) = weight_table(atom_index(ii))
     enddo ! ii
     
-    deallocate(weight_table, stat=ii)
   endsubroutine ! read_voro_weights
 
   !------------------------------------------------------------------------------

@@ -79,7 +79,7 @@ module Startb1_mod
     
     n_warn_alat_differs = 0
 
-    call openBasisAtomDAFile(atom, 37, 'atoms')
+    if (.not. nowrite) call openBasisAtomDAFile(atom, 37, 'atoms')
     
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naez
@@ -167,14 +167,14 @@ module Startb1_mod
     enddo ! iatom ! end loop over atoms
     close(fu)
     
-    call closeBasisAtomDAFile(37)
+    if (.not. nowrite) call closeBasisAtomDAFile(37)
     
     if (n_warn_alat_differs > 0) &
       warn(6, "In"+n_warn_alat_differs/nspin+"potential files ALAT is not the same as in the input!")
 
     if (nbackfold > 0) &
       warn(6, "In"+nbackfold+"cases the shapfun index has been backfolded into [1,"+sfile%ncell-"]!")
-      
+
   endsubroutine ! write_atoms_file
 
   integer function lmpot_to_lpot(lmpot)

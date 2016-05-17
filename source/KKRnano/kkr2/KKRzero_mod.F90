@@ -99,8 +99,7 @@ module KKRzero_mod
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     integer, intent(in) :: voronano  ! 0: usual kkr0,  1: returns before reading potential and shapefunctions
     
-    integer, parameter  :: nsymaxd=48 ! maximal number of Brillouin zone symmetries, 48 is largest possible number
-    integer, parameter  :: KREL=0
+    integer, parameter  :: krel=0
 
     double precision    :: efermi, recbv(3,3), volume0
     integer             :: ist, ierror

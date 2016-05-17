@@ -43,8 +43,9 @@ module TimerMpi_mod
       seconds = rest - real(iminutes)*60
 
       ! output of the results to unit 2 and unit 6
-      write(2,fmt=F8000) iter,name,time_i,ihours,iminutes,seconds ! write to "time-info" unit
-      write(6,fmt=F80)   iter,name,time_i ! skip hours,minutes,seconds display here
+!     write(2, fmt=F8000) iter,name,time_i,ihours,iminutes,seconds ! write to "time-info" unit
+      write(2, fmt=F80)   iter,name,time_i ! write the seconds to "time-info" unit
+!     write(6, fmt=F80)   iter,name,time_i ! skip hours,minutes,seconds display here
     endif ! output
   endsubroutine ! outTime
   
@@ -55,7 +56,7 @@ module TimerMpi_mod
 
     timer%initial_time = wall_clock_time()
     timer%intermediate_time = timer%initial_time
-    timer%elapsed_time = 0.0d0
+    timer%elapsed_time = 0.d0
     timer%stopped = .false.
   endsubroutine ! reset
 

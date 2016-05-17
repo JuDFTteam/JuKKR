@@ -1,31 +1,31 @@
 #!/bin/sh
-rm atominfo
-rm rbasis
-rm global.conf
-rm input.conf
-rm lcutoff
-rm potential
-rm voro_weights
-rm shapefun
-rm *.unf
-rm vpotnew*
-rm meshes.*
-rm pot.*
-rm energy_mesh*
-rm forces
-rm DOS.*
-rm Jij.*
-rm log.*
-rm mesh.*
-rm atoms
-rm results1 results2
-rm time-info
-rm kpoints
-rm out
-rm ebalance
-rm complex.dos
-rm gmon.out
-rm kpoints_full
-rm meshes
-rm rbasis.xyz
-rm OUT
+rm -f  atominfo
+rm -f  rbasis
+rm -f  global.conf
+rm -f  input.conf
+rm -f  lcutoff
+rm -f  potential
+rm -f  voro_weights
+rm -f  shapefun
+rm -f  *.unf
+rm -f  vpotnew*
+rm -f  meshes.*
+rm -f  pot.*
+rm -f  energy_mesh*
+rm -f  forces
+rm -f  DOS.*
+rm -f  Jij.*
+rm -f  log.*
+rm -f  mesh.*
+rm -f  atoms
+rm -f  results1 results2
+rm -f  time-info
+rm -f  kpoints
+rm -f  out
+rm -f  ebalance
+rm -f  complex.dos
+rm -f  gmon.out
+rm -f  kpoints_full
+rm -f  meshes
+rm -f  rbasis.xyz
+rm -f  OUT
