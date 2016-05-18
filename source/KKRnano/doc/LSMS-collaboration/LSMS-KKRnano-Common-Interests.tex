@@ -251,7 +251,8 @@ by the Voronoi-cell construction that enters the expressions as so-called \emph{
 \KKRnano{} employs an Ewald summation technique to separate the long-range and short-range parts of the electrostatic interaction.
 The long range parts are treated with a small number of lattice vectors in reciprocal space. The short-range parts
 are found by summation over periodic images in real space.
-The scaling of this solver quadratic \todo[inline]{check again} and, hence, the algorithm is not suitable
+The scaling of this solver quadratic %\todo[inline]{check again} 
+and, hence, the algorithm is not suitable
 for the treatment of huge systems where linear scaling is required in all components of the method.
 
 The requirements for a Poisson solver are stability, accuracy, complexity and speed.
