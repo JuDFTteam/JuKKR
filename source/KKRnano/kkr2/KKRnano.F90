@@ -71,13 +71,13 @@ program KKRnano
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
   case ('--prepare', '-p')
-    call main0(checkmode=0,voronano=0) ! call former kkr0.exe
+    call main0(checkmode=0, voronano=0) ! call former kkr0.exe
     stop
   case ('--check', '-c')
-    call main0(checkmode=1,voronano=0) ! former kkr0.exe without overwriting the binary files *.unf
+    call main0(checkmode=1, voronano=0) ! former kkr0.exe without overwriting the binary files *.unf
     stop
   case ('--voronano')
-    call main0(checkmode=0,voronano=1) ! former kkr0.exe without reading of potential and shapefunctions
+    call main0(checkmode=0, voronano=1) ! former kkr0.exe without reading of potential and shapefunctions
   case ('--convert')
     call kkrvform()
     stop
@@ -162,16 +162,12 @@ program KKRnano
     ! pre self-consistency preparations
 
     assert(dims%naez > 0) 
-    selectcase (arg)
-    case ('--voronano')
-      params%voronano = 1
-      call create(calc_data, dims, params, arrays, mp)! calls 'createCalculationData'
-      stop ! Voronoi work is done in 'create'
-    case default
-      ! do not do Voronoi work
-      call create(calc_data, dims, params, arrays, mp) ! calls 'createCalculationData'
-    endselect ! arg
+    if (arg == '--voronano') params%voronano = 1
+
+    call create(calc_data, dims, params, arrays, mp) ! calls 'createCalculationData'
     
+    if (params%voronano == 1) stop ! Voronoi work is done in 'create'
+
     num_local_atoms = getNumLocalAtoms(calc_data)
 
     call create(emesh, dims%iemxd) ! createEnergyMesh

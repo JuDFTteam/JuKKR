@@ -80,6 +80,7 @@ module DimParams_mod
     type(ConfigReader) :: cr
     character(len=40) :: variable
     integer :: next_ptr
+    integer, parameter :: AUTO = 0 ! will be derived from other quantities
 
     ! these two parameters have to be determined later
     self%IEMXD = 0
@@ -99,7 +100,7 @@ module DimParams_mod
     endif
 
     ! all parameters are optional, getValue will return positive if an error occured
-    if (getValue(cr, "NAEZD",   self%naez, def=0) > 0)      die_here("unable to read NAEZD in file"+filename) ! 0:auto
+    if (getValue(cr, "NAEZD",   self%naez, def=AUTO) > 0)      die_here("unable to read NAEZD in file"+filename)
     if (getValue(cr, "IRNSD",   self%irnsd, def=208) > 0)   die_here("unable to read IRNSD in file"+filename)
     if (getValue(cr, "IRMD",    self%irmd, def=484) > 0)    die_here("unable to read IRMD in file"+filename)
     if (getValue(cr, "IRID",    self%irid, def=135) > 0)    die_here("unable to read IRID in file"+filename)
@@ -114,7 +115,7 @@ module DimParams_mod
     if (getValue(cr, "LLY",     self%lly, def=0) > 0)       die_here("unable to read LLY in file"+filename)
     if (getValue(cr, "SMPID",   self%smpid, def=1) > 0)     die_here("unable to read SMPID in file"+filename)
     if (getValue(cr, "EMPID",   self%empid, def=1) > 0)     die_here("unable to read EMPID in file"+filename)
-    if (getValue(cr, "NTHRDS",  self%nthrds, def=0) > 0)    die_here("unable to read NTHRDS in file"+filename) ! 0:automatically use environment variable OMP_NUM_THREADS
+    if (getValue(cr, "NTHRDS",  self%nthrds, def=AUTO) > 0)    die_here("unable to read NTHRDS in file"+filename) ! AUTO: use environment variable OMP_NUM_THREADS
     if (getValue(cr, "BCPD",    self%bcpd, def=0) > 0)      die_here("unable to read BCPD in file"+filename)
     if (getValue(cr, "NATBLD",  self%natbld, def=4) > 0)    die_here("unable to read NATBLD in file"+filename)
     if (getValue(cr, "XDIM",    self%xdim, def=1) > 0)      die_here("unable to read XDIM in file"+filename)
@@ -122,7 +123,7 @@ module DimParams_mod
     if (getValue(cr, "ZDIM",    self%zdim, def=1) > 0)      die_here("unable to read ZDIM in file"+filename)
 
     ! new default 0: automatically adopt to the number of currently running MPI processes
-    if (getValue(cr, "num_atom_procs", self%num_atom_procs, def=0) > 0) die_here("num_atom_procs could not be parsed in file"+filename) ! 0:auto
+    if (getValue(cr, "num_atom_procs", self%num_atom_procs, def=AUTO) > 0) die_here("num_atom_procs could not be parsed in file"+filename)
 
     write(*,'(9a)') " The following variables have not been read from ",trim(filename),":"
     next_ptr = 1
