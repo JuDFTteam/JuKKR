@@ -42,7 +42,6 @@ module ConstructShapes_mod
  
     open(32, file='voro_weights', form='formatted', action='read', status='old', iostat=ios)
     if (ios /= 0) then
-      write(0,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
       write(*,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
       weights(:) = 1.d0
       return

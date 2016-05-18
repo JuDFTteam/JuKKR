@@ -7,9 +7,10 @@ import glob
 import shutil
 import re
 
-TESTDIR = os.getcwd()
-decimals = 6
-DEFAULT_LMAX = 3
+TESTDIR = os.getcwd() ### perform the calculation in the current working directory
+DECIMALS = 6 ### 8=all digits, 6 should be enough
+DEFAULT_lmax = 3
+DEFAULT_solver = 3 ## solver=3 is iterative while solver=4 is direct
 
 def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
@@ -28,41 +29,63 @@ def get_energy(string):
     else:
           raise ArgumentError
 
-def KKR_total_energy(dir, nranks=1, nthreads=1, method="direct", LMAX=DEFAULT_LMAX):
-    """Run KKR-calculation with input from 'dir' and returns the total energy"""
-    setup_calc(dir, LMAX)
-    run_it("./kkr.exe --prepare")
+def KKR_total_energy(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax=DEFAULT_lmax):
+    """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
+    #print "start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks
+    run_it("./clearfiles.sh")
+    
+    for file in glob.glob(os.path.join(inputdir, '*')):
+        shutil.copy(file, TESTDIR) ### copy all files from the input directory
+        
+    if lmax != DEFAULT_lmax:
+        with open("input.conf", "a") as myfile: ## append to file
+            myfile.write("LMAXD = {0}\n".format(int(lmax)))
+            #print "lmax = {0}".format(int(lmax))
+    if solver != DEFAULT_solver:
+        with open("input.conf", "a") as myfile: ## append to file
+            myfile.write("solver = {0}\n".format(int(solver)))
+            #print "solver = {0}".format(int(solver))
+
+    run_it("./kkr.exe --prepare") ### start from JM-formatted potential file
+    ## execute the code
     out, err = run_it("OMP_STACKSIZE=20M OMP_NUM_THREADS={0} mpirun -np {1} kkr.exe".format(int(nthreads), int(nranks)))
+    ### grep the result
     total_energy = get_energy(out)
+    print "KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, ", nranks=",nranks, " gives", total_energy, "Ryd"
     return total_energy
 
-def setup_calc(inputdir, LMAX):
-    run_it("./clearfiles.sh")
-    for file in glob.glob(os.path.join(inputdir, '*')):
-        shutil.copy(file, TESTDIR)
-
-class Test_semiconductors(unittest.TestCase):
-     def test_ZnO(self):
-        self.assertAlmostEqual(KKR_total_energy("ZnO"), -7405.77074351, decimals)
-
-     def test_Si(self):
-        self.assertAlmostEqual(KKR_total_energy("Si"), -1155.68952256, decimals)
-
-     def test_GaN(self):
-        self.assertAlmostEqual(KKR_total_energy("GaN"), -3990.85150060, decimals)
+class Test_alloys(unittest.TestCase):
+    def test_Fe8Co8(self):
+       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4), -42561.32515698, DECIMALS)
 
 class Test_copper(unittest.TestCase):
      def test_Cu4_lmax(self):
         """Test with high lmax. Works only with -heap-arrays on ifort"""
-        self.assertAlmostEqual(KKR_total_energy("Cu02_lmax3", LMAX=3), -13219.36206406, decimals)
-        self.assertAlmostEqual(KKR_total_energy("Cu02_lmax4", LMAX=4), -13224.71616303, decimals)
-        self.assertAlmostEqual(KKR_total_energy("Cu02_lmax5", LMAX=5), -13224.60162033, decimals)
-        self.assertAlmostEqual(KKR_total_energy("Cu02_lmax6", LMAX=6), -13224.56030377, decimals)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=3), -13219.36206406, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=4), -13219.71616303, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=5), -13219.60162033, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=6), -13219.56030377, DECIMALS)
 
-class Test_alloys(unittest.TestCase):
-    def test_Fe8Co8(self):
-       self.assertAlmostEqual(KKR_total_energy("Fe8Co8"), -42561.32515698, decimals)
+class Test_semiconductors(unittest.TestCase):
+     def test_GaN(self):
+        self.assertAlmostEqual(KKR_total_energy("GaN"), -3990.85150060, DECIMALS)
+        
+     def test_Si(self):
+        self.assertAlmostEqual(KKR_total_energy("Si"), -1155.68952256, DECIMALS)
+        
+     def test_ZnO(self):
+        Etot = -7405.77074357
+        self.assertAlmostEqual(KKR_total_energy("ZnO"),           Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=2), Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=4), Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=8), Etot, DECIMALS)
 
+        Etot = -7405.77074351
+        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4),           Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=2), Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=4), Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=8), Etot, DECIMALS)
 
 
 unittest.main()
+run_it("./clearfiles.sh")

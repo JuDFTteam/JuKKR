@@ -69,12 +69,13 @@ module DimParams_mod
   !-----------------------------------------------------------------------------
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
-  subroutine createDimParamsFromFile(self, filename)
+  subroutine createDimParamsFromFile(self, filename, altfile)
     use ConfigReader_mod, only: ConfigReader, getValue, getUnreadVariable, parseFile
     use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated, new: destroy, create
     
     type(DimParams), intent(inout) :: self
-    character(len=*), intent(in) :: filename ! usually 'global.conf'
+    character(len=*), intent(in) :: filename          ! usually 'global.conf' and 'input.conf' as alternative
+    character(len=*), intent(in), optional :: altfile ! usually 'global.conf' and 'input.conf' as alternative
 
     type(ConfigReader) :: cr
     character(len=40) :: variable
@@ -86,7 +87,16 @@ module DimParams_mod
 
     call createConfigReader(cr)
     
-    if (parseFile(cr, filename) /= 0) warn(6, "parsing file"+filename+"failed, assume default values!")
+    if (parseFile(cr, filename) /= 0) then
+      if (present(altfile)) then
+        warn(6, "parsing file"+filename+"failed, try to parse"+altfile+"!")
+        if (parseFile(cr, altfile) /= 0) then
+          warn(6, "parsing file"+altfile+"failed as well, assume default values!")
+        endif
+      else  ! present altfile
+        warn(6, "parsing file"+filename+"failed, assume default values!")
+      endif ! present altfile
+    endif
 
     ! all parameters are optional, getValue will return positive if an error occured
     if (getValue(cr, "NAEZD",   self%naez, def=0) > 0)      die_here("unable to read NAEZD in file"+filename) ! 0:auto

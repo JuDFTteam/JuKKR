@@ -111,7 +111,7 @@ module KKRzero_mod
     type(EnergyMesh)    :: emesh
     type(BrillouinZoneMesh) :: kmeshes(8)
 
-    call parse(dims, "global.conf")
+    call parse(dims, "global.conf", altfile="input.conf")
 
     ist = getInputParamsValues("input.conf", params)
     if (ist /= 0) die_here('failed to read "input.conf"!')
