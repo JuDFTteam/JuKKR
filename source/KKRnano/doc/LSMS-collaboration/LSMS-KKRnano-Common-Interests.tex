@@ -33,6 +33,10 @@
   \and
   Rudolf Zeller\inst{2}
   \and
+  Marcel Bornemann\inst{2}
+  \and
+  Roman Kovacik\inst{2}
+  \and
   Markus Eisenbach\inst{1}
   \and
   Od ??\inst{1}
@@ -83,7 +87,7 @@ contribute to fruitful discussions.
 
 %% structure
 In the following section \ref{section:apps}, a short description of the code packages is given as they are today.
-Then common features and mayor differences between the two implementations are pointed out in section \ref{section:differ}.
+Then common features and major differences between the two implementations are pointed out in section \ref{section:differ}.
 We identify common goals for the future of the two applications in section \ref{section:common}
 and highlight selected technical challenges that have to be overcome for reaching these goals in section \ref{section:tech}.
 Finally, we summarize the aim of this collaboration in section \ref{section:summary}.
@@ -102,7 +106,7 @@ These implementations, the \LSMS{} code and \KKRnano{} from ORNL and FZJ, respec
 \KKRnano{} is an implementation of the Korringa-Kohn-Rostoker multiple scattering method \cite{korringa, kohn-rostoker}
 that allows to solve for the Green function of a system consisting of many atoms.
 The decomposition of the simulation volume into Voronoi cells has shown to be a good
-approach for a precise description of relevant phyical quantities on radial grids.
+approach for a precise description of relevant physical quantities on radial grids within each cell.
 Each Voronoi cell features a radial grid that originates at the cell center
 which coincides with the position of the atomic nucleus unless we treat a vacuum cell.
 If necessary, vacuum cells are added to calculations to improve the convergence with respect to the truncation of
@@ -115,7 +119,7 @@ samples points in the complex plane.
 The energy-dependent Green function is found as the solution of the Dyson equation
 that arises from the difference of the scattering at the actual potential and the potential 
 of a reference system. As a reference system, \KKRnano{} uses a piece-wise constant potential
-function that represents repulsive spheres located at the atoms sides.
+function that represents repulsive spheres located at the atoms sites.
 This choice of reference system allows for a strong localization of the reference cluster
 which is equivalent to a sparse, banded matrix. 
 This allows for a linear scaling of the compute time for the application of the scattering operator
@@ -136,7 +140,7 @@ Both paradigms may be activated at the same time so that huge levels of concurre
 
 
 % ==================================================================================================
-\section{Mayor Differences} \label{section:differ}
+\section{Major Differences} \label{section:differ}
 % ==================================================================================================
 
 \paragraph{Radial grid representation}
@@ -171,7 +175,7 @@ for the inversion that solves the Dyson equation.
 \todo[inline]{need more detail here}
 %
 \KKRnano{} constructs a screened KKR operator that features a short range and, hence, a small number
-of non-zero block-bands in the matrix representation. This enfavors the usage of an iterative
+of non-zero block-bands in the matrix representation. This favors the usage of an iterative
 inversion scheme. The transpose-free quasi-minimal-residual method (TFQMR) has been chosen here.
 
 %% programming model: Fortran2008, F77, C++ on the outer layer
@@ -212,7 +216,7 @@ are good candidates to be applied to
 In order to describe the physics correctly, \KKRnano{} is missing an implementation of non-collinear magnetism.
 
 
-The following requirements on the results are essential to a successful calculator that gains visibility and impact in the community
+The following requirements on the results are essential to a successful application that gains visibility and impact in the community
 \begin{itemize}
  \item accuracy
  \item reliability
@@ -224,7 +228,7 @@ whereas the requirement onto the implementations are
  \item resource utilization 
 \end{itemize}
 The latter two usually are addressed together when efforts are made to port the application to a new compute platform.
-Often, the porting proceeds in two steps: Get the code functionality correct first, then, increase its efficiency of 
+Often, the porting proceeds in two steps: Get the code functionality correct first, then, increase its efficiency on
 the given architecture. Here, experiences of the \LSMS{} group could be transferred to the \KKRnano{} group who just
 started to experiment with a GPU-accelerated solver kernel.
 
@@ -240,12 +244,12 @@ and to align efforts so that solutions found in one team may be propagated into 
 % ..................................................................................................
 \subsection{Fast Poisson solver for distributed charges} %\label{section:}
 % ..................................................................................................
-In each self-consistency iteration the Poisson equation needs to be solved for finding the
+In each self-consistency iteration the Poisson equation needs to be solved to find the
 electrostatic potential contribution. The charge density distribution (right hand side of the Poisson equation)
 is given as a multi-center expansion on radial grids. The density is limited in its spatial extent
 by the Voronoi-cell construction that enters the expressions as so-called \emph{shape functions}.
-\KKRnano{} employs a Ewald summation technique to separate the long-range and short-range parts of the electrostatic interaction.
-The long range parts are treated with a small number of lattice vectors in reciprocal space. The short-ranged parts
+\KKRnano{} employs an Ewald summation technique to separate the long-range and short-range parts of the electrostatic interaction.
+The long range parts are treated with a small number of lattice vectors in reciprocal space. The short-range parts
 are found by summation over periodic images in real space.
 The scaling of this solver quadratic \todo[inline]{check again} and, hence, the algorithm is not suitable
 for the treatment of huge systems where linear scaling is required in all components of the method.
@@ -263,10 +267,10 @@ sophisticated treatment than usual FMM for point charges.
 
 Investigations of defect structures are often related to irregular
 shapes of the Voronoi cell. Therefore, vacuum/empty cells are inserted that do not carry an atomic nucleus
-but an exapansion center for a radial grid.
+but an expansion center for a radial grid.
 The exact position of the empty cell's center is in principle arbitrary, however, the quality of results
 depends on the quality of description of densities and potentials inside the cells. Therefore,
-a stronlgy irregular Voronoi is not likely to describe these quantities well with a truncated $\ell$-expansion.
+a strongly irregular Voronoi cell is not likely to describe these quantities well with a truncated $\ell$-expansion.
 In particular during structural relaxation, the reconstruction of the geometry
 asks for an automated method for the placement of empty cells.
 
@@ -280,7 +284,7 @@ convergence of the self-consistency cycles are no longer feasable without accept
 slowing down with growing system size. 
 This, however, contradicts the principles of an $\mathcal O(N)$-method.
 New ways have to be identified in order to accelerate the SCF convergence, especially in systems
-that feature electronic states close to the Fermi energy level, and, hence, suffer from charge sloshing.
+that feature electronic states close to the Fermi level, and, hence, suffer from charge sloshing.
 
 
 % ==================================================================================================
@@ -299,7 +303,7 @@ Furthermore, the collaboration between the developer teams of
 \LSMS{} from ORNL 
 and
 \KKRnano{} from FZJ
-is meant to provide a platform for fast exchange of expericenes on
+is meant to provide a platform for fast exchange of experiences on
 bringing the applications to suitable computer architectures and running them in high parallelism.
 
 %   ==================================================================================================
