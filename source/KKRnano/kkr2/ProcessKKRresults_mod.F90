@@ -96,7 +96,7 @@ module ProcessKKRresults_mod
 
     ! use any atomdata to open file - use reclen stored in calc
     atomdata => getAtomData(calc, 1)
-    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", getMaxReclenPotential(calc))
+    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", getMaxReclenPotential(calc), action='write')
 
     do ila = 1, num_local_atoms ! no OpenMP
       atomdata => getAtomData(calc, ila)

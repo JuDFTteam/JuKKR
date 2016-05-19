@@ -11,7 +11,7 @@
 !>
 !>   call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
 !>   call openCellDataDAFile(cell, 37 , "cells")
-!>   call readCellDataDA(cell, 37, getCellIndex(atomdata))
+!>   call readCellDataDA(cell, 37, atomdata%cell_index)
 !>   call closeCellDataDAFile(37)
 !>
 !>   call associateBasisAtomCell(atomdata, cell)
@@ -63,8 +63,7 @@ module BasisAtom_mod
   implicit none
 
   public :: BasisAtom, create, destroy
-  public :: getMinReclenBasisAtomPotential, getCellIndex
-! public :: createBasisAtom, destroyBasisAtom, createBasisAtomFromFile ! deprecated
+  public :: getMinReclenBasisAtomPotential
   public :: associateBasisAtomCell, associateBasisAtomMesh, resetPotentials, readBasisAtomPotentialHeader
   ! direct access file routines
   public :: openBasisAtomDAFile, writeBasisAtomDA, readBasisAtomDA, closeBasisAtomDAFile
@@ -166,121 +165,112 @@ module BasisAtom_mod
     call destroyAtomicCoreData(atom%core)
   endsubroutine ! destroy
 
-  !----------------------------------------------------------------------------
-  !> Returns index of corresponding cell.
-  pure integer function getCellIndex(atom)
-    type(BasisAtom), intent(in) :: atom
-
-    getCellIndex = atom%cell_index
-  endfunction ! get
 
 !=========================== I / O ============================================
 
   !----------------------------------------------------------------------------
-  !> creates basis atom AND potential from record 'recnr' from files
+  !> creates basis atom AND potential from record 'atom_id' from files
   !> <filename>, <filenamepot>, <filenamepot>.idx
   !> Note: One has to still deal with the mesh!
 
-  !> recnr = atom_index
-  subroutine createBasisAtomFromFile(atom, filename, filenamepot, recnr)
+  !> atom_id = atom_index
+  subroutine createBasisAtomFromFile(atom, filename, filenamepot, atom_id)
     type(BasisAtom), intent(inout) :: atom
     character(len=*), intent(in) :: filename, filenamepot
-    integer, intent(in) :: recnr
+    integer, intent(in) :: atom_id
     
     integer :: irmd, lpot, nspin, irmind, max_reclen
     integer, parameter :: FU=42
 
     ! index file has extension .idx
-    call openBasisAtomPotentialIndexDAFile(atom, FU, filenamepot-".idx")
-    call readBasisAtomPotentialIndexDA(atom, FU, recnr, lpot, nspin, irmind, irmd, max_reclen)
+    call openBasisAtomPotentialIndexDAFile(atom, FU, filenamepot-".idx", action='read')
+    call readBasisAtomPotentialIndexDA(atom, FU, atom_id, lpot, nspin, irmind, irmd, max_reclen)
     call closeBasisAtomPotentialDAFile(FU)
 
-    call createBasisAtom(atom, recnr, lpot, nspin, irmind, irmd)
+    call createBasisAtom(atom, atom_id, lpot, nspin, irmind, irmd)
 
-    call openBasisAtomDAFile(atom, FU, filename)
-    call readBasisAtomDA(atom, FU, recnr)
+    call openBasisAtomDAFile(atom, FU, filename, action='read')
+    call readBasisAtomDA(atom, FU, atom_id)
     call closeBasisAtomDAFile(FU)
 
-    call openBasisAtomPotentialDAFile(atom, FU, filenamepot, max_reclen)
-    call readBasisAtomPotentialDA(atom, FU, recnr)
+    call openBasisAtomPotentialDAFile(atom, FU, filenamepot, max_reclen, action='read')
+    call readBasisAtomPotentialDA(atom, FU, atom_id)
     call closeBasisAtomPotentialDAFile(FU)
 
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  !> Write basis atom data to direct access file 'fileunit' at record 'recnr'.
-  subroutine writeBasisAtomDA(atom, fileunit, recnr)
+  !> Write basis atom data to direct access file 'fu' at record 'atom_id'.
+  subroutine writeBasisAtomDA(atom, fu, atom_id)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit, recnr
+    integer, intent(in) :: fu, atom_id
 
-    write (fileunit, rec=recnr) MAGIC_NUMBER, &
-                                atom%atom_index, &
-                                atom%cell_index, &
-                                atom%nspin, &
-                                atom%Z_nuclear, &
-                                atom%radius_muffin_tin, &
-                                atom%rMTref, &
-                                atom%core%NCORE, &
-                                atom%core%LCORE, &
-                                atom%core%ITITLE, &
-                                MAGIC_NUMBER
+    write(fu, rec=atom_id) MAGIC_NUMBER, &
+                           atom%atom_index, &
+                           atom%cell_index, &
+                           atom%nspin, &
+                           atom%Z_nuclear, &
+                           atom%radius_muffin_tin, &
+                           atom%rMTref, &
+                           atom%core%NCORE, &
+                           atom%core%LCORE, &
+                           atom%core%ITITLE, &
+                           MAGIC_NUMBER
   endsubroutine ! write
 
   !----------------------------------------------------------------------------
-  !> Read basis atom data from direct access file 'fileunit' at record 'recnr'.
-  subroutine readBasisAtomDA(atom, fileunit, recnr)
+  !> Read basis atom data from direct access file 'fu' at record 'atom_id'.
+  subroutine readBasisAtomDA(atom, fu, atom_id)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit, recnr
+    integer, intent(in) :: fu, atom_id
 
     integer :: magic(2)
 
-    read  (fileunit, rec=recnr) magic(1), &
-                                atom%atom_index, &
-                                atom%cell_index, &
-                                atom%nspin, &
-                                atom%Z_nuclear, &
-                                atom%radius_muffin_tin, &
-                                atom%rMTref, &
-                                atom%core%NCORE, &
-                                atom%core%LCORE, &
-                                atom%core%ITITLE, &
-                                magic(2)
+    read(fu, rec=atom_id)  magic(1), &
+                           atom%atom_index, &
+                           atom%cell_index, &
+                           atom%nspin, &
+                           atom%Z_nuclear, &
+                           atom%radius_muffin_tin, &
+                           atom%rMTref, &
+                           atom%core%NCORE, &
+                           atom%core%LCORE, &
+                           atom%core%ITITLE, &
+                           magic(2)
 
     if (any(magic /= MAGIC_NUMBER)) die_here("Invalid basis atom data read.")
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> Opens BasisAtom direct access file.
-  subroutine openBasisAtomDAFile(atom, fileunit, filename)
+  subroutine openBasisAtomDAFile(atom, fu, filename, action)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit
-    character(len=*), intent(in) :: filename
+    integer, intent(in) :: fu
+    character(len=*), intent(in) :: filename, action
 
-    integer :: reclen
+    integer :: rlen
 
-    inquire (iolength=reclen) MAGIC_NUMBER, &
-                                atom%atom_index, &
-                                atom%cell_index, &
-                                atom%nspin, &
-                                atom%Z_nuclear, &
-                                atom%radius_muffin_tin, &
-                                atom%rMTref, &
-                                atom%core%NCORE, &
-                                atom%core%LCORE, &
-                                atom%core%ITITLE, &
-                                MAGIC_NUMBER
+    inquire(iolength=rlen) MAGIC_NUMBER, &
+                           atom%atom_index, &
+                           atom%cell_index, &
+                           atom%nspin, &
+                           atom%Z_nuclear, &
+                           atom%radius_muffin_tin, &
+                           atom%rMTref, &
+                           atom%core%NCORE, &
+                           atom%core%LCORE, &
+                           atom%core%ITITLE, &
+                           MAGIC_NUMBER
 
-    open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
-
+    open(fu, access='direct', file=filename, recl=rlen, form='unformatted', action=action)
   endsubroutine ! open
 
   !----------------------------------------------------------------------------
   !> Closes BasisAtom direct access file.
-  subroutine closeBasisAtomDAFile(fileunit)
-    integer, intent(in) :: fileunit
+  subroutine closeBasisAtomDAFile(fu)
+    integer, intent(in) :: fu
 
-    close(fileunit)
-    
+    close(fu)
   endsubroutine ! close
 
 
@@ -288,26 +278,25 @@ module BasisAtom_mod
   !> Write to unformatted direct-access (DA) file.
   !>
   !> The format is compatible to the 'vpotnew' file
-  !> A record number has to be specified - argument 'recnr'
+  !> A record number has to be specified - argument 'atom_id'
   !> File has to be opened and closed by user. No checks
-  subroutine writeBasisAtomPotentialDA(atom, fileunit, recnr)
+  subroutine writeBasisAtomPotentialDA(atom, fu, atom_id)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit, recnr
+    integer, intent(in) :: fu, atom_id
 
 #ifdef TASKLOCAL_FILES
-    character(len=16) :: num
-    write(unit=num, fmt='(A,I7.7)') "pot.",recnr
-    open(fileunit, file=num, form='unformatted', action='write')
+    character(len=16) :: filename
+    write(unit=filename, fmt='(A,I7.7)') "pot.",atom_id
+    open(fu, file=filename, form='unformatted', action='write')
 
-    call writeBasisAtomPotentialIndexDA(atom, FILEUNIT, recnr, 0)
+    call writeBasisAtomPotentialIndexDA(atom, fu, atom_id, 0)
 #endif
 
-    FILEWRITE (fileunit, rec=recnr) atom%potential%VINS, &
-                                    atom%potential%VISP, &
-                                    atom%core%ECORE
-
+    FILEWRITE(fu, rec=atom_id) atom%potential%VINS, &
+                               atom%potential%VISP, &
+                               atom%core%ECORE
 #ifdef TASKLOCAL_FILES
-    close(fileunit)
+    close(fu)
 #endif
   endsubroutine ! write
 
@@ -317,22 +306,22 @@ module BasisAtom_mod
   !> The format is compatible to the 'vpotnew' file
   !> WARNING: If number of mesh points is different for each atom, specify
   !> the (otherwise optional) parameter max_reclen !!!
-  subroutine openBasisAtomPotentialDAFile(atom, fileunit, filename, max_reclen)
+  subroutine openBasisAtomPotentialDAFile(atom, fu, filename, max_reclen, action)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit
-    character(len=*), intent(in) :: filename
+    integer, intent(in) :: fu
+    character(len=*), intent(in) :: filename, action
     integer, intent(in), optional :: max_reclen
 
 #ifndef TASKLOCAL_FILES
-    integer :: reclen
+    integer :: rlen
     
     if (present(max_reclen)) then
-      reclen = max_reclen
+      rlen = max_reclen
     else
-      reclen = getMinReclenBasisAtomPotential(atom)
+      rlen = getMinReclenBasisAtomPotential(atom)
     endif
 
-    open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+    open(fu, access='direct', file=filename, recl=rlen, form='unformatted', action=action)
 #endif
   endsubroutine ! open
 
@@ -341,10 +330,10 @@ module BasisAtom_mod
   !>
   !> Note: for a file containing potentials of several atoms, the maximum
   !> of all their record lengths has to be determined
-  integer function getMinReclenBasisAtomPotential(atom) result(reclen)
+  integer function getMinReclenBasisAtomPotential(atom) result(rlen)
     type(BasisAtom), intent(in) :: atom
 
-    inquire (iolength=reclen) atom%potential%VINS, &
+    inquire (iolength=rlen) atom%potential%VINS, &
                               atom%potential%VISP, &
                               atom%core%ECORE
   endfunction ! get
@@ -353,29 +342,28 @@ module BasisAtom_mod
   !> Reads from unformatted direct-access (DA) file.
   !>
   !> The format is compatible to the 'vpotnew' file
-  !> A record number has to be specified - argument 'recnr'
+  !> A record number has to be specified - argument 'atom_id'
   !> File has to be opened and closed by user. No checks
-  subroutine readBasisAtomPotentialDA(atom, fileunit, recnr)
+  subroutine readBasisAtomPotentialDA(atom, fu, atom_id)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit, recnr
+    integer, intent(in) :: fu, atom_id
 
 #ifdef TASKLOCAL_FILES
-    character(len=16) :: num
+    character(len=16) :: filename
     integer :: lpot, nspin, irmind, irmd, max_reclen
 
-    write(unit=num, fmt='(A,I7.7)') 'pot.',recnr
-    open(fileunit, file=num, form='unformatted', action="read", status="old")
+    write(unit=filename, fmt='(A,I7.7)') 'pot.',atom_id
+    open(fu, file=filename, form='unformatted', action="read", status="old")
 
     !  skip header at beginning of file
-    call readBasisAtomPotentialHeader(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
+    call readBasisAtomPotentialHeader(atom, fu, atom_id, lpot, nspin, irmind, irmd, max_reclen)
 #endif
 
-    FILEREAD (fileunit, rec=recnr) atom%potential%VINS, &
-                                   atom%potential%VISP, &
-                                   atom%core%ECORE
-
+    FILEREAD(fu, rec=atom_id)  atom%potential%VINS, &
+                               atom%potential%VISP, &
+                               atom%core%ECORE
 #ifdef TASKLOCAL_FILES
-    close(fileunit)
+    close(fu)
 #endif
   endsubroutine ! read
 
@@ -383,84 +371,84 @@ module BasisAtom_mod
   !> Closes unformatted direct-access (DA) potential-file.
   !>
   !> The format is compatible to the 'vpotnew' file
-  subroutine closeBasisAtomPotentialDAFile(fileunit)
-    integer, intent(in) :: fileunit
+  subroutine closeBasisAtomPotentialDAFile(fu)
+    integer, intent(in) :: fu
 
 #ifndef TASKLOCAL_FILES
-    close(fileunit)
+    close(fu)
 #endif
   endsubroutine ! close
 
   !===========  Index file ======================================================
 
   !----------------------------------------------------------------------------
-  !> Write potential dimension data to direct access file 'fileunit' at record 'recnr'
-  subroutine writeBasisAtomPotentialIndexDA(atom, fileunit, recnr, max_reclen)
+  !> Write potential dimension data to direct access file 'fu' at record 'atom_id'
+  subroutine writeBasisAtomPotentialIndexDA(atom, fu, atom_id, max_reclen)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit, recnr, max_reclen
+    integer, intent(in) :: fu, atom_id, max_reclen
 
-    FILEWRITE (fileunit, rec=recnr) atom%potential%lpot, &
-                                    atom%potential%nspin, &
-                                    atom%potential%irmind, &
-                                    atom%potential%irmd, &
-                                    max_reclen, &
-                                    MAGIC_NUMBER + recnr
+    FILEWRITE(fu, rec=atom_id) atom%potential%lpot, &
+                               atom%potential%nspin, &
+                               atom%potential%irmind, &
+                               atom%potential%irmd, &
+                               max_reclen, &
+                               MAGIC_NUMBER + atom_id
 
   endsubroutine ! write
 
   !----------------------------------------------------------------------------
-  !> Read potential dimension data from direct access file 'fileunit' at record 'recnr'
+  !> Read potential dimension data from direct access file 'fu' at record 'atom_id'
   !>
   !> Returns dimensions irmd and ipand
-  subroutine readBasisAtomPotentialIndexDA(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
+  subroutine readBasisAtomPotentialIndexDA(atom, fu, atom_id, lpot, nspin, irmind, irmd, max_reclen)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit, recnr
+    integer, intent(in) :: fu, atom_id
     integer, intent(out) :: lpot, nspin, irmind, irmd, max_reclen
     
 #ifdef TASKLOCAL_FILES
-    character(len=16) :: num
+    character(len=16) :: filename
 
-    write(unit=num, fmt='(A,I7.7)') "pot.",recnr
-    open(fileunit, file=num, form='unformatted', action='read', status="old")
+    write(unit=filename, fmt='(A,I7.7)') "pot.",atom_id
+    open(fu, file=filename, form='unformatted', action='read', status="old")
 #endif
 
-    call readBasisAtomPotentialHeader(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
+    call readBasisAtomPotentialHeader(atom, fu, atom_id, lpot, nspin, irmind, irmd, max_reclen)
 
 #ifdef TASKLOCAL_FILES
-    close(fileunit)
+    close(fu)
 #endif
 
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> Opens BasisAtomPotential index file.
-  subroutine openBasisAtomPotentialIndexDAFile(atom, fileunit, filename)
+  subroutine openBasisAtomPotentialIndexDAFile(atom, fu, filename, action)
     type(BasisAtom), intent(in) :: atom
-    integer, intent(in) :: fileunit
-    character(len=*), intent(in) :: filename
+    integer, intent(in) :: fu
+    character(len=*), intent(in) :: filename, action
 
 #ifndef TASKLOCAL_FILES
-    integer :: reclen, max_reclen
+    integer :: rlen, max_reclen
     
     max_reclen = 0
-    inquire (iolength=reclen) atom%potential%lpot, &
-                              atom%potential%nspin, &
-                              atom%potential%irmind, &
-                              atom%potential%irmd, &
-                              max_reclen, &
-                              MAGIC_NUMBER
+    inquire(iolength=rlen) atom%potential%lpot, &
+                           atom%potential%nspin, &
+                           atom%potential%irmind, &
+                           atom%potential%irmd, &
+                           max_reclen, &
+                           MAGIC_NUMBER
 
-    open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
+    open(fu, access='direct', file=filename, recl=rlen, form='unformatted', action=action)
 #endif
   endsubroutine ! open
 
   !----------------------------------------------------------------------------
   !> Closes BasisAtomPotential index file.
-  subroutine closeBasisAtomPotentialIndexDAFile(fileunit)
-    integer, intent(in) :: fileunit
+  subroutine closeBasisAtomPotentialIndexDAFile(fu)
+    integer, intent(in) :: fu
 
 #ifndef TASKLOCAL_FILES
-    close(fileunit)
+    close(fu)
 #endif
   endsubroutine ! close
 
@@ -479,16 +467,16 @@ module BasisAtom_mod
 
 !================ Private helper functions ====================================
 
-  subroutine readBasisAtomPotentialHeader(atom, fileunit, recnr, lpot, nspin, irmind, irmd, max_reclen)
+  subroutine readBasisAtomPotentialHeader(atom, fu, atom_id, lpot, nspin, irmind, irmd, max_reclen)
     type(BasisAtom), intent(inout) :: atom
-    integer, intent(in) :: fileunit, recnr
+    integer, intent(in) :: fu, atom_id
     integer, intent(out) :: lpot, nspin, irmind, irmd, max_reclen
 
     integer :: magic, checkmagic
 
-    checkmagic = MAGIC_NUMBER + recnr
+    checkmagic = MAGIC_NUMBER + atom_id
 
-    FILEREAD  (fileunit, rec=recnr) lpot, nspin, irmind, irmd, max_reclen, magic
+    FILEREAD(fu, rec=atom_id)  lpot, nspin, irmind, irmd, max_reclen, magic
 
     if (magic /= checkmagic) die_here("Invalid mesh index data read.")
 
@@ -503,7 +491,7 @@ module BasisAtom_mod
     double precision, intent(inout) :: vons(irmd,lmpotd,2)
 
     integer :: ispin
-    
+
     if (irmin1 < irmind) die_here("resetpotentials:"+irmin1+"= irmin1 < irmind ="+irmind) ! debug
     if (irc1 > irmd) die_here("resetpotentials:"+irc1+"= irc1 > irmd ="+irmd) ! debug
 

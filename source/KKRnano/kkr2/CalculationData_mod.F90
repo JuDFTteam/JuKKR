@@ -699,7 +699,7 @@ module CalculationData_mod
     max_reclen = getMaxReclenPotential(self)
 
     ! the opening routine requires any instance of type BasisAtom
-    call openBasisAtomPotentialIndexDAFile(self%atomdata_a(1), 37, 'vpotnew.idx')
+    call openBasisAtomPotentialIndexDAFile(self%atomdata_a(1), 37, 'vpotnew.idx', action='write')
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)

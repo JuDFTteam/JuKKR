@@ -379,7 +379,7 @@ module MadelungCalculator_mod
       vec=rm, rad=rmr, nvecs=nrmax, nshells=nshlr, nsh=nsr, & ! outputs
       tol_origin=1.d-6, tol_newshell=1.d-6, space='r') ! config
     
-    if (nshlr <= 1) die_here("cut-off radius RMAX too small!")
+    if (nshlr < 2) die_here("cut-off radius RMAX too small!")
     
     ! **********************************************************************
     !                 generate lattice vectors of reciprocal space
@@ -388,7 +388,7 @@ module MadelungCalculator_mod
       vec=gn, rad=gnr, nvecs=ngmax, nshells=nshlg, nsh=nsg, & ! outputs
       tol_origin=1.d-6, tol_newshell=1.d-7, space='g') ! config
     
-    if (nshlg <= 1) die_here("cut-off radius GMAX too small!")
+    if (nshlg < 2) die_here("cut-off radius GMAX too small!")
 
     if (print_info > 0) then
       write(6, fmt=F92)
@@ -440,7 +440,7 @@ module MadelungCalculator_mod
     double precision, intent(in) :: tol_origin, tol_newshell
     character, intent(in) :: space ! for debug: 'r' or 'g'
     
-    integer :: i, i1, i2, i3, ivmin, i01, ish!, num(3) 
+    integer :: i, i1, i2, i3, ivmin, i01, ish
     double precision :: dmax2, v2, da, db, vx(3), vxy(3), vxyz(3)
     double precision, allocatable :: cv(:,:), d2(:)
     integer, allocatable :: perm(:), nvis(:) ! tmp for nsh, nvis=number_of_vectors_in_shell
@@ -569,7 +569,7 @@ module MadelungCalculator_mod
     ! --> set up of the gaunt coefficients with an index field
     !     recognize that they are needed here only for l3=l1+l2
     !
-    if (2*lpot > lassld) die_here("madelgaunt 2*lpot ="+(2*lpot)+">"+lassld)
+    if (2*lpot > lassld) die_here("madelgaunt 2*lpot ="+2*lpot+">"+lassld)
     
     mclebd = min(size(cleb, 1), size(icleb, 1))
 
@@ -577,25 +577,22 @@ module MadelungCalculator_mod
     do l1 = 0, lpot
       do l2 = 0, lpot
         l3 = l1 + l2
-        do m1 = -l1, l1
-          do m2 = -l2, l2
-            do m3 = -l3, l3
-              m1s = sign(1,m1)
-              m2s = sign(1,m2)
-              m3s = sign(1,m3)
+        do m1 = -l1, l1     ; m1s = sign(1, m1)
+          do m2 = -l2, l2   ; m2s = sign(1, m2)
+            do m3 = -l3, l3 ; m3s = sign(1, m3)
               if (m1s*m2s*m3s >= 0) then
                 m1a = abs(m1)
                 m2a = abs(m2)
                 m3a = abs(m3)
                 factor = 0.d0
-                if (m1a+m2a == m3a) factor = factor + 0.125d0*(3*m3s+sign(1,-m3))
-                if (m1a-m2a == m3a) factor = factor + 0.25d0*m1s
-                if (m2a-m1a == m3a) factor = factor + 0.25d0*m2s
+                if (m1a + m2a == m3a) factor = factor + 0.125d0*(3*m3s + sign(1, -m3))
+                if (m1a - m2a == m3a) factor = factor + 0.25d0*m1s
+                if (m2a - m1a == m3a) factor = factor + 0.25d0*m2s
                 if (factor /= 0.d0) then
                   if (m1s*m2s /= 1 .or. m2s*m3s /= 1 .or. m1s*m3s /= 1) factor = -factor
                   !
                   s = 0.d0
-                  do j = 1,lassld
+                  do j = 1, lassld
                     s = s + wg(j)*yrg(j,l1,m1a)*yrg(j,l2,m2a)*yrg(j,l3,m3a)
                   enddo ! j
                   !
@@ -621,7 +618,7 @@ module MadelungCalculator_mod
     if (iend > mclebd .and. mclebd > 1) & ! if the arrays are dimensioned 1, this is intentional for counting
       warn(6, "coefficients in MadelungGaunt have been truncated: arrays store only"+mclebd+"of"+iend) 
     
-  endfunction madelgaunt
+  endfunction ! madelgaunt
   
   
   ! **********************************************************************
@@ -655,9 +652,9 @@ module MadelungCalculator_mod
 
 ! OpenMP parallelised, needs threadsafe erfcex, gamfc and ymy E.R.
 
-subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv, vol, i1, smat)
-  use Harmonics_mod, only: ymy
-  use Constants_mod, only: pi
+  subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv, vol, i1, smat)
+    use Harmonics_mod, only: ymy
+    use Constants_mod, only: pi
 
     double precision, intent(in) :: alat
     double precision, intent(in) :: vol
@@ -801,7 +798,7 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
 
     if (precompute_Ymy_g) deallocate(Ymy_g, stat=ist)
     
-  endsubroutine strmat
+  endsubroutine ! strmat
   
   
   
@@ -982,4 +979,4 @@ subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv
 
   endfunction ! erfcex
   
-endmodule MadelungCalculator_mod
+endmodule ! MadelungCalculator_mod

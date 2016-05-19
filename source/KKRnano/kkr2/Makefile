@@ -23,7 +23,8 @@ ifeq ($(PLATFORM),ifort)
   FCFLAGS += -module $(BUILDDIR)
   FCFLAGS += -I $(BUILDDIR)
   FCFLAGS += -D USE_VOROWEIGHTS
-  FC90FLAGS =
+  FCFLAGS += -D TASKLOCAL_FILES
+  FC90FLAGS = -g
 
   LDFLAGS += -mkl
 

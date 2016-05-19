@@ -79,7 +79,7 @@ module Startb1_mod
     
     n_warn_alat_differs = 0
 
-    if (.not. nowrite) call openBasisAtomDAFile(atom, 37, 'atoms')
+    if (.not. nowrite) call openBasisAtomDAFile(atom, 37, 'atoms', action='write')
     
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naez
@@ -123,9 +123,9 @@ module Startb1_mod
 
       call createBasisAtom(atom, 1, lpot_atom, nspin, pe(1)%sblock%IRT1P - pe(1)%sblock%IRNS, pe(1)%sblock%IRT1P)  ! create dummy basis atom
 
-      inquire (iolength = reclen) atom%potential%VINS, &
-                                  atom%potential%VISP, &
-                                  atom%core%ECORE
+      inquire (iolength = reclen) atom%potential%vins, &
+                                  atom%potential%visp, &
+                                  atom%core%ecore
 
       max_reclen = max(max_reclen, reclen)
 
@@ -232,9 +232,9 @@ module Startb1_mod
 
       ! set potential
       do ispin = 1, nspin
-        atom%potential%VINS(:,:,ispin) = pe(ispin)%nsblocks%VINS
-        atom%potential%VISP(:,ispin) = pe(ispin)%sblock%VISP
-        atom%core%ECORE(:,ispin) = pe(ispin)%csblock%ECORE
+        atom%potential%vins(:,:,ispin) = pe(ispin)%nsblocks%vins
+        atom%potential%visp(:,ispin) = pe(ispin)%sblock%visp
+        atom%core%ecore(:,ispin) = pe(ispin)%csblock%ecore
       enddo ! ispin
 
       ! initialise radial mesh
@@ -244,13 +244,13 @@ module Startb1_mod
       
         if (iatom == 1) then
 #ifndef TASKLOCAL_FILES
-          call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx')
+          call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx', action='write')
           call openRadialMeshDataIndexDAFile(meshdata, 93, "meshes.0.idx")
 #endif
-          call openBasisAtomPotentialDAFile(atom, 39, 'vpotnew.0', max_reclen)
-          call openRadialMeshDataDAFile(meshdata, 94 , "meshes.0", max_reclen_mesh)
+          call openBasisAtomPotentialDAFile(atom, 39, 'vpotnew.0', max_reclen, action='write')
+          call openRadialMeshDataDAFile(meshdata, 94, "meshes.0", max_reclen_mesh)
         endif ! iatom == 1
-      
+
         call writeBasisAtomPotentialDA(atom, 39, iatom)
         call writeRadialMeshDataDA(meshdata, 94, iatom)
 
