@@ -89,7 +89,7 @@ module KKRzero_mod
     use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
     use BrillouinZone_mod, only: bzkint0, readKpointsFile
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, store, destroy
-    use Warnings_mod, only: get_number_of_warnings, show_warning_lines
+    use Warnings_mod, only: show_warning_lines
     use Lattice_mod, only: lattix99
     use Constants_mod, only: pi
     use MadelungCalculator_mod, only: testdimlat
@@ -214,7 +214,7 @@ module KKRzero_mod
       write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
     endif ! checkmode == 0
 
-    if (get_number_of_warnings() > 0) ist = show_warning_lines(unit=6)
+    ist = show_warning_lines(unit=6)
     
     call destroy(emesh)
     

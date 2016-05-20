@@ -7,6 +7,7 @@
 program KKRnano
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+  use Warnings_mod, only: show_warning_lines
 
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   USE_LOGGING_MOD
@@ -48,7 +49,7 @@ program KKRnano
   type(TimerMpi) :: iteration_timer
   type(EBalanceHandler) :: ebalance_handler
 
-  integer :: ITER, I1, ila, num_local_atoms, flag, ios, ilen
+  integer :: ITER, I1, ila, num_local_atoms, flag, ios, ilen, voronano
   double precision  :: ebot 
 
   type(KKRnanoParallel) :: mp
@@ -68,16 +69,18 @@ program KKRnano
   
   call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
+  voronano = 0
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
   case ('--prepare', '-p')
-    call main0(checkmode=0, voronano=0) ! call former kkr0.exe
+    call main0(checkmode=0, voronano=voronano) ! call former kkr0.exe
     stop
   case ('--check', '-c')
-    call main0(checkmode=1, voronano=0) ! former kkr0.exe without overwriting the binary files *.unf
+    call main0(checkmode=1, voronano=voronano) ! former kkr0.exe without overwriting the binary files *.unf
     stop
   case ('--voronano')
-    call main0(checkmode=0, voronano=1) ! former kkr0.exe without reading of potential and shapefunctions
+    voronano = 1
+    call main0(checkmode=0, voronano=voronano) ! former kkr0.exe without reading of potential and shapefunctions
   case ('--convert')
     call kkrvform()
     stop
@@ -162,11 +165,13 @@ program KKRnano
     ! pre self-consistency preparations
 
     assert(dims%naez > 0) 
-    if (arg == '--voronano') params%voronano = 1
 
-    call create(calc_data, dims, params, arrays, mp) ! calls 'createCalculationData'
+    call create(calc_data, dims, params, arrays, mp, voronano) ! calls 'createCalculationData'
     
-    if (params%voronano == 1) stop ! Voronoi work is done in 'create'
+    if (voronano == 1) then
+      ios = show_warning_lines(unit=6)
+      stop ! Voronoi work is done in 'create'
+    endif
 
     num_local_atoms = getNumLocalAtoms(calc_data)
 
@@ -335,8 +340,12 @@ program KKRnano
 
   call destroy(arrays)
   call destroy(dims)
+  
+  if (mp%isMasterRank) ios = show_warning_lines(unit=6)
+  
   call destroy(mp) ! Free KKRnano mpi resources
-
+  
+  
   contains
   
     !------------------------------------------------------------------------------

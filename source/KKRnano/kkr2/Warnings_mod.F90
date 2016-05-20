@@ -6,8 +6,8 @@ implicit none
   private ! default visibility
 
   public :: launch_warning
-  public :: get_number_of_warnings
   public :: show_warning_lines
+! public :: get_number_of_warnings
   public :: test
 
   character(len=*), parameter :: WARNING = 'WARNING! ' !< the constant string WARNING!

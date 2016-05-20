@@ -62,7 +62,6 @@ module InputParams_mod
     integer :: volterra
     double precision :: target_rms
     integer :: near_field
-    integer :: voronano
     character(len=96) :: elementdatabasepath
     integer :: write_shapes
     double precision :: mt_zero_shift
@@ -458,15 +457,6 @@ integer function getInputParamsValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "voronano", values%voronano , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for voronano. Set voronano to 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for voronano."
-    destroy_and_return
-  endif
-
   ierror = getValue(cr, "elementdatabasepath", values%elementdatabasepath , def='~/KKR/ElementDataBase')
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for elementdatabasepath. Set elementdatabasepath to '~/KKR/ElementDataBase'"
@@ -580,7 +570,6 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%volterra
   read(fu) values%target_rms
   read(fu) values%near_field
-  read(fu) values%voronano
   read(fu) values%elementdatabasepath
   read(fu) values%write_shapes
   read(fu) values%mt_zero_shift
@@ -644,7 +633,6 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%volterra
   write(fu) values%target_rms
   write(fu) values%near_field
-  write(fu) values%voronano
   write(fu) values%elementdatabasepath
   write(fu) values%write_shapes
   write(fu) values%mt_zero_shift
