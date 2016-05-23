@@ -42,9 +42,7 @@ module DimParams_mod
     integer :: empid
     integer :: nthrds
     integer :: maxmshd
-
     integer :: num_atom_procs !< atom-parallelisation number of mpi-procs
-
   endtype ! DimParams
 
   
@@ -70,8 +68,8 @@ module DimParams_mod
   !> Constructs a DimParams object from FORMATTED global.conf file
   !> @param[in,out] self    The DimParams object to construct.
   subroutine createDimParamsFromFile(self, filename, altfile)
-    use ConfigReader_mod, only: ConfigReader, getValue, getUnreadVariable, parseFile
-    use ConfigReader_mod, only: createConfigReader, destroyConfigReader ! deprecated, new: destroy, create
+    use ConfigReader_mod, only: ConfigReader, create, destroy
+    use ConfigReader_mod, only: getValue, getUnreadVariable, parseFile
     
     type(DimParams), intent(inout) :: self
     character(len=*), intent(in) :: filename          ! usually 'global.conf' and 'input.conf' as alternative
@@ -86,11 +84,11 @@ module DimParams_mod
     self%IEMXD = 0
     self%EKMD = 0
 
-    call createConfigReader(cr)
+    call create(cr)
     
     if (parseFile(cr, filename) /= 0) then
       if (present(altfile)) then
-        warn(6, "parsing file"+filename+"failed, try to parse"+altfile+"!")
+        warn(6, "parsing file"+filename+"failed, try to parse"+altfile-"!")
         if (parseFile(cr, altfile) /= 0) then
           warn(6, "parsing file"+altfile+"failed as well, assume default values!")
         endif
@@ -100,7 +98,7 @@ module DimParams_mod
     endif
 
     ! all parameters are optional, getValue will return positive if an error occured
-    if (getValue(cr, "NAEZD",   self%naez, def=AUTO) > 0)      die_here("unable to read NAEZD in file"+filename)
+    if (getValue(cr, "NAEZD",   self%naez, def=AUTO) > 0)   die_here("unable to read NAEZD in file"+filename)
     if (getValue(cr, "IRNSD",   self%irnsd, def=208) > 0)   die_here("unable to read IRNSD in file"+filename)
     if (getValue(cr, "IRMD",    self%irmd, def=484) > 0)    die_here("unable to read IRMD in file"+filename)
     if (getValue(cr, "IRID",    self%irid, def=135) > 0)    die_here("unable to read IRID in file"+filename)
@@ -115,7 +113,7 @@ module DimParams_mod
     if (getValue(cr, "LLY",     self%lly, def=0) > 0)       die_here("unable to read LLY in file"+filename)
     if (getValue(cr, "SMPID",   self%smpid, def=1) > 0)     die_here("unable to read SMPID in file"+filename)
     if (getValue(cr, "EMPID",   self%empid, def=1) > 0)     die_here("unable to read EMPID in file"+filename)
-    if (getValue(cr, "NTHRDS",  self%nthrds, def=AUTO) > 0)    die_here("unable to read NTHRDS in file"+filename) ! AUTO: use environment variable OMP_NUM_THREADS
+    if (getValue(cr, "NTHRDS",  self%nthrds, def=AUTO) > 0) die_here("unable to read NTHRDS in file"+filename) ! AUTO: use environment variable OMP_NUM_THREADS
     if (getValue(cr, "BCPD",    self%bcpd, def=0) > 0)      die_here("unable to read BCPD in file"+filename)
     if (getValue(cr, "NATBLD",  self%natbld, def=4) > 0)    die_here("unable to read NATBLD in file"+filename)
     if (getValue(cr, "XDIM",    self%xdim, def=1) > 0)      die_here("unable to read XDIM in file"+filename)
@@ -131,7 +129,7 @@ module DimParams_mod
       write(*,*) trim(variable)
     enddo ! while
     
-    call destroyConfigReader(cr)
+    call destroy(cr)
     call calculateDerivedParameters(self) ! deal with derived parameters
 
   endsubroutine ! create
@@ -269,4 +267,4 @@ module DimParams_mod
     
   endsubroutine ! check
 
-endmodule DimParams_mod
+endmodule ! DimParams_mod

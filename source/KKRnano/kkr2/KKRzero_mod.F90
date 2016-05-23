@@ -134,9 +134,9 @@ module KKRzero_mod
       params%gmax = params%gmax/params%alat
       call store(dims, 'inp0.unf')
       ierror = writeInputParamsToFile(params, 'input.unf')
-      arrays%bravais(:,1) = params%bravais_a
-      arrays%bravais(:,2) = params%bravais_b
-      arrays%bravais(:,3) = params%bravais_c
+      arrays%bravais(:,1) = params%bravais_a(1:3)
+      arrays%bravais(:,2) = params%bravais_b(1:3)
+      arrays%bravais(:,3) = params%bravais_c(1:3)
       call writeMain2Arrays(arrays, 'arrays.unf')
       write(*,*) 'voronano == 1: Starting potential and shapefunctions are not read in by kkr0'
       return

@@ -65,7 +65,7 @@ program KKRnano
 ! type(BrillouinZoneMesh) :: kmesh(8)
 
   external :: MPI_Init
-  character(len=16)              :: arg
+  character(len=16) :: arg
   
   call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
@@ -125,25 +125,23 @@ program KKRnano
 #endif
 
 #ifdef PRINT_MTRADII
-      write(*,*) 'PRINT_MTRADII enabled; rmtref (0.995 * max_muffin_tin by default) and ', &
+      write(*,*) 'PRINT_MTRADII enabled; rMTref (0.995 * max_muffin_tin by default) and ', &
       'radius_muffin_tin (0.98 * max_muffin_tin by default) are printed consecutively to files mtradii_out'
 #endif
 
 #ifdef USE_MTRADII
-      write(*,*) 'USE_MTRADII enabled; rmtref (0.995 * max_muffin_tin by default) and ', &
+      write(*,*) 'USE_MTRADII enabled; rMTref (0.995 * max_muffin_tin by default) and ', &
         'radius_muffin_tin (0.98 * max_muffin_tin by default) are taken from files mtradii_in'
 #endif
   endif ! is master
   
-
-  if (mp%myWorldRank < 128) then ! max. 128 logfiles
-    OPENLOG(mp%myWorldRank, 3)
-  else
-    OPENLOG(mp%myWorldRank, 0)
-  endif
+  OPENLOG(mp%myWorldRank, 3*theta(mp%myWorldRank < 128)) ! max. 128 logfiles
 
   call resetTimer(program_timer)
-  if (mp%isMasterRank) open(2, file='time-info', form='formatted', action='write')
+  if (mp%isMasterRank) then
+    open(2, file='time-info', action='write', iostat=ios)
+    if (ios /= 0) warn(6, "unable to create time-info file!") ! but the output will be redirected to fort.2
+  endif ! master
 
   call createMain2Arrays(arrays, dims)
   call readMain2Arrays(arrays, 'arrays.unf') ! every process does this!
@@ -201,36 +199,33 @@ program KKRnano
       I1 = getAtomIndexOfLocal(calc_data, ila)
 #ifdef PRINT_MTRADII
       write(num, '(A,I7.7)') "mtradii_out.",I1
-      open(20, file=num, form='formatted')
-      write(20,*) atomdata%rmtref
+      open(20, file=num)
+      write(20,*) atomdata%rMTref
       write(20,*) atomdata%radius_muffin_tin
-      endfile (20)
-      close (20)
+      endfile(20)
+      close(20)
 #endif
 #ifdef USE_MTRADII
       write(num, '(A,I7.7)') "mtradii_in.",I1
-      open(20, file=num, form='formatted')
-      read(20,*) atomdata%rmtref
+      open(20, file=num)
+      read(20,*) atomdata%rMTref
       read(20,*) atomdata%radius_muffin_tin
-      endfile (20)
-      close (20)
+      endfile(20)
+      close(20)
 #endif
 
       call gatherrMTref_com(rMTref_local=calc_data%atomdata_a(:)%rMTref, rMTref=calc_data%kkr_a(ila)%rMTref(:), &
                             ref_cluster=calc_data%ref_cluster_a(ila), communicator=mp%mySEComm)
     enddo ! ila
 
+    ! start self-consistency loop   
     do ITER = 1, params%SCFSTEPS
 
       call resetTimer(iteration_timer)
 
-      if (mp%isMasterRank) then
-        call printDoubleLineSep(unit_number=2)
-        call outTime(mp%isMasterRank,'started at ..........', getElapsedTime(program_timer),ITER)
-        call printDoubleLineSep(unit_number=2)
-      endif ! master
+      if (mp%isMasterRank) call outTime(mp%isMasterRank,'started at ..........', getElapsedTime(program_timer),ITER)
 
-      WRITELOG(2, *) "Iteration atom-rank ", ITER, mp%myAtomRank
+      WRITELOG(2, *) "Iteration atom-rank ", ITER, mp%myAtomRank ! write logg message into time-info file
 
       ! New: instead of reading potential every time, communicate it
       ! between energy and spin processes of same atom
@@ -263,12 +258,12 @@ program KKRnano
         ! For now only 1 atom per process is supported (1 local atom)
         CHECKASSERT(num_local_atoms == 1)
 
-        atomdata      => getAtomData(calc_data, 1)
-        ldau_data     => getLDAUData(calc_data, 1)
+        atomdata  => getAtomData(calc_data, 1)
+        ldau_data => getLDAUData(calc_data, 1)
         I1 = getAtomIndexOfLocal(calc_data, 1)
 
         ldau_data%EREFLDAU = emesh%EFERMI
-        ldau_data%EREFLDAU = 0.48    ! ???
+        ldau_data%EREFLDAU = 0.48 ! ???
 
         call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU, &
                       ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
@@ -306,14 +301,14 @@ program KKRnano
         call update(emesh)
 
         ! write file 'energy_mesh'
-        if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2  ! if not a DOS-calculation E2 coincides with Fermi-Energy
+        if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2 ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
         call store(emesh, filename='energy_mesh')
 
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))
 
-      endif ! is master
+      endif ! master
 
       if (is_abort_by_rank0(flag, mp%myActiveComm)) exit
 
@@ -376,4 +371,9 @@ program KKRnano
       deallocate(rMTref_all, rMTref_loc)
     endsubroutine ! gather
 
+    integer function theta(condition) result(oneiftrue)
+      logical, intent(in) :: condition
+      oneiftrue = 0 ; if (condition) oneiftrue = 1
+    endfunction ! theta
+    
 endprogram ! KKRnano
