@@ -92,7 +92,7 @@ module BasisAtom_mod
   endinterface
   
   integer, parameter, private :: MAGIC_NUMBER = 385306
-  
+
   contains
 
   !----------------------------------------------------------------------------
@@ -180,22 +180,22 @@ module BasisAtom_mod
     integer, intent(in) :: atom_id
     
     integer :: irmd, lpot, nspin, irmind, max_reclen
-    integer, parameter :: FU=42
+    integer, parameter :: fu=42
 
     ! index file has extension .idx
-    call openBasisAtomPotentialIndexDAFile(atom, FU, filenamepot-".idx", action='read')
-    call readBasisAtomPotentialIndexDA(atom, FU, atom_id, lpot, nspin, irmind, irmd, max_reclen)
-    call closeBasisAtomPotentialDAFile(FU)
+    call openBasisAtomPotentialIndexDAFile(atom, fu, filenamepot-".idx", action='read')
+    call readBasisAtomPotentialIndexDA(atom, fu, atom_id, lpot, nspin, irmind, irmd, max_reclen)
+    call closeBasisAtomPotentialDAFile(fu)
 
     call createBasisAtom(atom, atom_id, lpot, nspin, irmind, irmd)
 
-    call openBasisAtomDAFile(atom, FU, filename, action='read')
-    call readBasisAtomDA(atom, FU, atom_id)
-    call closeBasisAtomDAFile(FU)
+    call openBasisAtomDAFile(atom, fu, filename, action='read')
+    call readBasisAtomDA(atom, fu, atom_id)
+    call closeBasisAtomDAFile(fu)
 
-    call openBasisAtomPotentialDAFile(atom, FU, filenamepot, max_reclen, action='read')
-    call readBasisAtomPotentialDA(atom, FU, atom_id)
-    call closeBasisAtomPotentialDAFile(FU)
+    call openBasisAtomPotentialDAFile(atom, fu, filenamepot, max_reclen, action='read')
+    call readBasisAtomPotentialDA(atom, fu, atom_id)
+    call closeBasisAtomPotentialDAFile(fu)
 
   endsubroutine ! create
 
