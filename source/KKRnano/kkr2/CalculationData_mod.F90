@@ -31,7 +31,7 @@ module CalculationData_mod
   public :: CalculationData, create, destroy, represent
   
   public :: prepareMadelung         
-  public :: getBroydenDim, getAtomIndexOfLocal, getAtomData, getKKR
+  public :: getBroydenDim, getAtomData, getKKR
   public :: getDensities, getEnergies, getLDAUData
 
   type CalculationData
@@ -195,13 +195,6 @@ module CalculationData_mod
     
   endsubroutine ! destroy
 
-  !----------------------------------------------------------------------------
-  integer function getAtomIndexOfLocal(self, ila)
-    type(CalculationData), intent(in) :: self
-    integer, intent(in) :: ila
-
-    getAtomIndexOfLocal = self%atom_ids(ila)
-  endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns reference to atomdata for atom with LOCAL atom index

@@ -20,7 +20,7 @@ module NearField_calc_mod
   subroutine add_near_field_corr(calc_data, arrays, alat, mpi_comm)
     use Main2Arrays_mod, only: Main2Arrays
     use DensityResults_mod, only: DensityResults
-    use CalculationData_mod, only: CalculationData, getAtomData, getDensities, getAtomIndexOfLocal!, getMadelungCalculator
+    use CalculationData_mod, only: CalculationData, getAtomData, getDensities
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
     use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
@@ -36,7 +36,7 @@ module NearField_calc_mod
     integer :: num_local_atoms
     integer :: ilocal
     integer :: ispin
-    integer :: atom_ind
+    integer :: atom_id
     type(BasisAtom), pointer :: atomdata
     type(RadialMeshData), pointer :: mesh
     type(DensityResults), pointer :: densities
@@ -49,7 +49,7 @@ module NearField_calc_mod
       atomdata => getAtomData(calc_data, ilocal)
       mesh => atomdata%mesh_ptr
       densities => getDensities(calc_data, ilocal)
-      atom_ind = getAtomIndexOfLocal(calc_data, ilocal)
+      atom_id = calc_data%atom_ids(ilocal)
 
       call nf_correction(ilocal)%create(mesh%irmd, atomdata%potential%lmpot)
 
@@ -64,7 +64,7 @@ module NearField_calc_mod
       call find_near_cells(local_cell(ilocal)%near_cell_indices, &
                            local_cell(ilocal)%near_cell_dist_vec, &
                            arrays%rbasis, arrays%bravais, &
-                           atom_ind, mesh%rws / alat)
+                           atom_id, mesh%rws / alat)
 
       ! VERY IMPORTANT: convert distance vectors to units of alat!
       local_cell(ilocal)%near_cell_dist_vec = local_cell(ilocal)%near_cell_dist_vec * alat

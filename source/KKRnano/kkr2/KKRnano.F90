@@ -35,7 +35,7 @@ program KKRnano
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
   use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
-  use CalculationData_mod, only: getAtomData, getLDAUData, getAtomIndexOfLocal
+  use CalculationData_mod, only: getAtomData, getLDAUData
   use BrillouinZoneMesh_mod, only: BrillouinZoneMesh
   
   use KKRzero_mod, only: main0
@@ -196,7 +196,7 @@ program KKRnano
 #ifdef DEBUG_NO_VINS
       atomdata%potential%VINS = 0.0   
 #endif
-      I1 = getAtomIndexOfLocal(calc_data, ila)
+      I1 = calc_data%atom_ids(ila) ! get global atom_id from local index
 #ifdef PRINT_MTRADII
       write(num, '(A,I7.7)') "mtradii_out.",I1
       open(20, file=num)
@@ -260,7 +260,7 @@ program KKRnano
 
         atomdata  => getAtomData(calc_data, 1)
         ldau_data => getLDAUData(calc_data, 1)
-        I1 = getAtomIndexOfLocal(calc_data, 1)
+        I1 =  calc_data%atom_ids(1) ! get global atom_id from local index
 
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48 ! ???

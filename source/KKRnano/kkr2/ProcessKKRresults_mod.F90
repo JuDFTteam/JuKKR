@@ -37,7 +37,7 @@ module ProcessKKRresults_mod
     use DensityResults_mod, only: DensityResults
     use EnergyResults_mod, only: EnergyResults
 
-    use CalculationData_mod, only: getDensities, getEnergies, getAtomData, getAtomIndexOfLocal
+    use CalculationData_mod, only: getDensities, getEnergies, getAtomData
     
     include 'mpif.h'
 
@@ -102,7 +102,7 @@ module ProcessKKRresults_mod
       atomdata => getAtomData(calc, ila)
       energies => getEnergies(calc, ila)
       mesh => atomdata%mesh_ptr
-      atom_id = getAtomIndexOfLocal(calc, ila)
+      atom_id = calc%atom_ids(ila) ! get global atom_id from local index
 
       TESTARRAYLOG(3, atomdata%potential%VINS)
       TESTARRAYLOG(3, atomdata%potential%VISP)
@@ -137,7 +137,7 @@ module ProcessKKRresults_mod
       do ila = 1, num_local_atoms
         densities => getDensities(calc, ila)
         atomdata  => getAtomData(calc, ila)
-        atom_id = getAtomIndexOfLocal(calc, ila)
+        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
 
         ! TODO: Fermi energy written to DOS files is just a dummy value (99.99)
         call write_LDOS(densities%DEN,emesh%EZ,densities%lmaxd+1,emesh%IELAST,atomdata%core%ITITLE(:,1:dims%NSPIND), 99.99d0, &
@@ -341,7 +341,7 @@ module ProcessKKRresults_mod
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData, getDensities, getAtomData
-    use CalculationData_mod, only: getLDAUData, getKKR, getEnergies, getAtomIndexOfLocal
+    use CalculationData_mod, only: getLDAUData, getKKR, getEnergies
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
@@ -518,7 +518,7 @@ module ProcessKKRresults_mod
       do ila = 1, num_local_atoms
         atomdata  => getAtomData(calc, ila)
         densities => getDensities(calc, ila)
-        atom_id = getAtomIndexOfLocal(calc, ila)
+        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
 
         call writeResults1File(r1fu, densities%CATOM, densities%CHARGE, densities%DEN, &
                               atomdata%core%ECORE, atom_id, emesh%NPOL, &
@@ -539,7 +539,7 @@ module ProcessKKRresults_mod
       energies  => getEnergies(calc, ila)
       mesh      => atomdata%mesh_ptr
       cell      => atomdata%cell_ptr
-      atom_id = getAtomIndexOfLocal(calc, ila)
+      atom_id = calc%atom_ids(ila) ! get global atom_id from local index
 
   !=============== DEBUG: Morgan charge distribution test =======================
       if (params%DEBUG_morgan_electrostatics == 1) then
@@ -626,7 +626,7 @@ module ProcessKKRresults_mod
     use EnergyResults_mod, only: EnergyResults
     use RadialMeshData_mod, only: RadialMeshData
     
-    use CalculationData_mod, only: getDensities, getAtomData, getLDAUData, getEnergies, getDensities, getAtomIndexOfLocal
+    use CalculationData_mod, only: getDensities, getAtomData, getLDAUData, getEnergies, getDensities
     
     use NearField_calc_mod, only: add_near_field_corr
     use total_energy_mod, only: madelung_energy, madelung_ref_radius_correction, energy_electrostatic_wrapper
@@ -716,7 +716,7 @@ module ProcessKKRresults_mod
       if (params%DEBUG_morgan_electrostatics > 0 .and. mp%isMasterRank) then
         atomdata  => getAtomData(calc, 1)
         mesh => atomdata%mesh_ptr
-        atom_id = getAtomIndexOfLocal(calc, 1)
+        atom_id = calc%atom_ids(1) ! get global atom_id from local index
         allocate(prefactors(size(arrays%rbasis, 2)))
         call read_morgan_prefactors(prefactors)
         direction = read_direction()
@@ -742,7 +742,7 @@ module ProcessKKRresults_mod
       energies     => getEnergies(calc, ila)
       ldau_data    => getLDAUData(calc, ila)
       mesh => atomdata%mesh_ptr
-      atom_id = getAtomIndexOfLocal(calc, ila)
+      atom_id = calc%atom_ids(ila) ! get global atom_id from local index
   !------------------------------------------------------------------------------
 
   ! FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  FORCES

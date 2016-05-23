@@ -65,7 +65,7 @@ module MadelungPotential_mod
   subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
     lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, mylrank, atoms_per_proc, communicator)
 
-    use CalculationData_mod, only: CalculationData, getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getAtomData
+    use CalculationData_mod, only: CalculationData, getEnergies, getDensities, getEnergies, getAtomData
     use EnergyResults_mod, only: EnergyResults
     use DensityResults_mod, only: DensityResults
     use BasisAtom_mod, only: BasisAtom
@@ -125,7 +125,7 @@ module MadelungPotential_mod
 
       if (MYLRANK == root) then
 
-        CHECKASSERT(I2 == getAtomIndexOfLocal(calc_data, ilocal2))
+        CHECKASSERT(I2 == calc_data%atom_ids(ilocal2))
 
         densities => getDensities(calc_data, ilocal2)
 

@@ -37,7 +37,7 @@ implicit none
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
 
-    use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData, getAtomIndexOfLocal
+    use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData
 
     use KKRresults_mod, only: KKRresults
     use BasisAtom_mod, only: BasisAtom
@@ -149,7 +149,7 @@ implicit none
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
-      atom_indices(ila) = trunc_zone%index_map(getAtomIndexOfLocal(calc, ila))
+      atom_indices(ila) = trunc_zone%index_map(calc%atom_ids(ila)) ! get global atom_id from local index)
       CHECKASSERT(atom_indices(ila) > 0)
     enddo ! ila
 
@@ -243,7 +243,7 @@ implicit none
               kkr => getKKR(calc, ila)
               atomdata => getAtomData(calc, ila)
               ldau_data => getLDAUData(calc, ila)
-              i1 = getAtomIndexOfLocal(calc, ila)
+              i1 = calc%atom_ids(ila) ! get global atom_id from local index
 
               call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%Tr_alph, ldau_data, params%Volterra)
 
