@@ -31,7 +31,7 @@ module CalculationData_mod
   public :: CalculationData, create, destroy, represent
   
   public :: prepareMadelung, getBroydenDim
-  public :: getDensities, getEnergies, getLDAUData, getAtomData, getKKR
+  public :: getDensities, getEnergies, getLDAUData, getAtomData
 
   type CalculationData
 
@@ -44,10 +44,10 @@ module CalculationData_mod
     type(RadialMeshData), pointer     :: mesh_a(:)         => null()
     type(CellData), pointer           :: cell_a(:)         => null()
     type(BasisAtom), pointer          :: atomdata_a(:)     => null()
-    type(KKRresults), pointer         :: kkr_a(:)          => null()
     type(DensityResults), pointer     :: densities_a(:)    => null()
     type(EnergyResults), pointer      :: energies_a(:)     => null()
     type(LDAUData), pointer           :: ldau_data_a(:)    => null()
+    type(KKRresults),         allocatable :: kkr_a(:)
     type(JijData),            allocatable :: jij_data_a(:)
     type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
@@ -205,17 +205,6 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getAtomData => self%atomdata_a(local_atom_index)
-  endfunction ! get
-
-  !----------------------------------------------------------------------------
-  !> Returns reference to kkr(results) for atom with LOCAL atom index
-  !> 'local_atom_index'.
-  function getKKR(self, local_atom_index)
-    type(KKRresults), pointer :: getKKR ! return value
-    type(CalculationData), intent(in) :: self
-    integer, intent(in) :: local_atom_index
-
-    getKKR => self%kkr_a(local_atom_index)
   endfunction ! get
 
   !----------------------------------------------------------------------------

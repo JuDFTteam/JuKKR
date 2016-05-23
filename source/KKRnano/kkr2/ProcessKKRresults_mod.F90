@@ -341,7 +341,7 @@ module ProcessKKRresults_mod
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData, getDensities, getAtomData
-    use CalculationData_mod, only: getLDAUData, getKKR, getEnergies
+    use CalculationData_mod, only: getLDAUData, getEnergies
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
@@ -371,7 +371,6 @@ module ProcessKKRresults_mod
     ! locals
     type(BasisAtom), pointer                  :: atomdata  ! not const
     type(LDAUData), pointer                   :: ldau_data ! not const
-    type(KKRresults), pointer                 :: kkr       ! const ref
     type(DensityResults), pointer             :: densities ! not const
     type(EnergyResults), pointer              :: energies  ! not const
     type(RadialMeshData), pointer             :: mesh
@@ -395,7 +394,7 @@ module ProcessKKRresults_mod
 
     atomdata  => getAtomData(calc, 1)
     ldau_data => getLDAUData(calc, 1)
-    kkr       => getKKR(calc, 1)
+!   kkr       => calc%kkr_a(1)
     densities => getDensities(calc, 1)
     energies  => null()
     mesh      => null()
@@ -410,10 +409,10 @@ module ProcessKKRresults_mod
     endif
 
     ! out: emesh, RNORM
-    call lloyd0_wrapper_com(atomdata, mp%mySEComm, kkr%LLY_GRDT, &
+    call lloyd0_wrapper_com(atomdata, mp%mySEComm, calc%kkr_a(1)%LLY_GRDT, &
                             emesh, densities%RNORM, &
                             dims%LLY, params%ICST, params%NSRA, &
-                            kkr%GMATN, calc%gaunts, ldau_data, params%Volterra)
+                            calc%kkr_a(1)%GMATN, calc%gaunts, ldau_data, params%Volterra)
 
     if (dims%LLY == 1) then
       TESTARRAYLOG(3, emesh%WEZRN)
@@ -429,12 +428,11 @@ module ProcessKKRresults_mod
     LDORHOEF = (emesh%NPOL /= 0) ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
   !------------------------------------------------------------------------------
-    !$omp parallel do reduction(+: chrgnt,denef) private(ila,atomdata,densities,energies,kkr,ldau_data,denef_local,chrgnt_local)
+    !$omp parallel do reduction(+: chrgnt,denef) private(ila,atomdata,densities,energies,ldau_data,denef_local,chrgnt_local)
     do ila = 1, num_local_atoms
       atomdata  => getAtomData(calc, ila)
       densities => getDensities(calc, ila)
       energies  => getEnergies(calc, ila)
-      kkr       => getKKR(calc, ila)
       ldau_data => getLDAUData(calc, ila)
   !------------------------------------------------------------------------------
 
@@ -445,7 +443,7 @@ module ProcessKKRresults_mod
       ! calculate valence charge density and band energies
       call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                           densities%RHO2NS, densities%R2NEF, &
-                          densities%DEN, energies%ESPV, kkr%GMATN, &
+                          densities%DEN, energies%ESPV, calc%kkr_a(ila)%GMATN, &
                           calc%gaunts, emesh, ldau_data, params%Volterra)
 
       ! LDAU
@@ -591,9 +589,7 @@ module ProcessKKRresults_mod
     ! log some results
     do ila = 1, num_local_atoms
       densities => getDensities(calc, ila)
-      kkr => getKKR(calc, ila)
-
-      TESTARRAYLOG(3, kkr%GMATN)
+      TESTARRAYLOG(3, calc%kkr_a(ila)%GMATN)
       TESTARRAYLOG(3, densities%CMOM)
       TESTARRAYLOG(3, densities%CMINST)
       TESTARRAYLOG(3, densities%RHO2NS)

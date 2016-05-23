@@ -37,7 +37,7 @@ implicit none
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
 
-    use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData
+    use CalculationData_mod, only: CalculationData, getAtomData, getLDAUData
 
     use KKRresults_mod, only: KKRresults
     use BasisAtom_mod, only: BasisAtom
@@ -74,7 +74,6 @@ implicit none
     ! locals
 
     type(BasisAtom), pointer             :: atomdata  ! referenced data does not change
-    type(KKRresults), pointer            :: kkr       ! changes
     type(LDAUData), pointer              :: ldau_data ! changes
 
     type(TFQMRSolver), target :: solv
@@ -100,13 +99,13 @@ implicit none
 
     atomdata  => getAtomData(calc, 1)
     i1 = atomdata%atom_index
-    kkr       => null()
     ldau_data => getLDAUData(calc, 1)
 #define clusters calc%clusters
 #define lattice_vectors calc%lattice_vectors
 #define trunc_zone calc%trunc_zone
     ! global name jij_data, jij works only with max. 1 local atom
 #define jij_data calc%jij_data_a(1)
+#define kkr(ila) calc%kkr_a(ila)
 
     num_local_atoms = calc%num_local_atoms
 
@@ -194,32 +193,28 @@ implicit none
         ! Exchange the reference t-matrices within the reference clusters
         ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
         do ila = 1, num_local_atoms
-          kkr => getKKR(calc, ila)
-
-          call gatherTrefMatrices_com( Tref_local,  kkr%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
-          call gatherTrefMatrices_com(dTref_local, kkr%dTrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
+          call gatherTrefMatrices_com( Tref_local,  kkr(ila)%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
+          call gatherTrefMatrices_com(dTref_local, kkr(ila)%dTrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
         enddo ! ila
 #else
         !$omp parallel do private(ila, atomdata)
         do ila = 1, num_local_atoms
-          kkr => getKKR(calc, ila)
-          do iacls = 1, kkr%naclsd         
-            call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr%rMTref(iacls), &
-                      kkr%TrefLL(:,:,iacls), kkr%dTrefLL(:,:,iacls), derive=(dims%Lly > 0))
+          do iacls = 1, kkr(ila)%naclsd         
+            call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
+                      kkr(ila)%TrefLL(:,:,iacls), kkr(ila)%dTrefLL(:,:,iacls), derive=(dims%Lly > 0))
           enddo ! iacls
         enddo ! ila
 #endif
   !------------------------------------------------------------------------------
         !$omp parallel do private(ila, kkr)
         do ila = 1, num_local_atoms
-          kkr => getKKR(calc, ila)
           
           call GREF(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%NACLS, &
-                    kkr%TrefLL, kkr%dTrefLL, GrefN_buffer(:,:,:,ila), &
-                    kkr%dGrefN, kkr%Lly_G0Tr(IE), &
-                    dims%lmaxd, kkr%naclsd, calc%gaunts%ncleb, &
+                    kkr(ila)%TrefLL, kkr(ila)%dTrefLL, GrefN_buffer(:,:,:,ila), &
+                    kkr(ila)%dGrefN, kkr(ila)%Lly_G0Tr(IE), &
+                    dims%lmaxd, kkr(ila)%naclsd, calc%gaunts%ncleb, &
                     dims%Lly)
 
         enddo  ! ila
@@ -238,33 +233,32 @@ implicit none
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
 
   !------------------------------------------------------------------------------
-            !$omp parallel do private(ila, kkr, atomdata, ldau_data, i1)
+            !$omp parallel do private(ila, atomdata, ldau_data, i1)
             do ila = 1, num_local_atoms
-              kkr => getKKR(calc, ila)
               atomdata => getAtomData(calc, ila)
               ldau_data => getLDAUData(calc, ila)
               i1 = calc%atom_ids(ila) ! get global atom_id from local index
 
-              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%Tr_alph, ldau_data, params%Volterra)
+              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%TmatN, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
 
-              jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN) ! save t-matrix for Jij-calc.
+              jij_data%DTIXIJ(:,:,ISPIN) = kkr(ila)%TmatN(:,:,ISPIN) ! save t-matrix for Jij-calc.
 
               if (dims%Lly == 1) &  ! calculate derivative of t-matrix for Lloyd's formula
-              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%dTdE, kkr%Tr_alph, ldau_data, params%Volterra)
+              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTdE, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
 
               ! t_ref-matrix of central cluster atom has index 1
-              call substractReferenceTmatrix(kkr%TmatN(:,:,ISPIN), kkr%TrefLL(:,:,1), kkr%lmmaxd)
+              call substractReferenceTmatrix(kkr(ila)%TmatN(:,:,ISPIN), kkr(ila)%TrefLL(:,:,1), kkr(ila)%lmmaxd)
 
               ! do the same for derivative of T-matrix
-              call substractReferenceTmatrix(kkr%dTdE(:,:,ISPIN), kkr%dTrefLL(:,:,1), kkr%lmmaxd)
+              call substractReferenceTmatrix(kkr(ila)%dTdE(:,:,ISPIN), kkr(ila)%dTrefLL(:,:,1), kkr(ila)%lmmaxd)
 
               ! TmatN now contains Delta t = t - t_ref !!!
               ! dTdE now contains Delta dt !!!
 
               ! renormalize Tr_alph
-              kkr%Tr_alph(ISPIN) = kkr%Tr_alph(ISPIN) - kkr%Lly_G0Tr(IE)
+              kkr(ila)%Tr_alph(ISPIN) = kkr(ila)%Tr_alph(ISPIN) - kkr(ila)%Lly_G0Tr(IE)
 
-              call rescaleTmatrix(kkr%TmatN(:,:,ISPIN), kkr%lmmaxd, params%alat)
+              call rescaleTmatrix(kkr(ila)%TmatN(:,:,ISPIN), kkr(ila)%lmmaxd, params%alat)
 
             enddo ! ila
             !$omp endparallel do
@@ -307,8 +301,7 @@ implicit none
 
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ila) N(ila)
             do ila = 1, num_local_atoms
-              kkr => getKKR(calc, ila)
-              kkr%GmatN(:,:,ie,ispin) = GmatN_buffer(:,:,ila)
+              kkr(ila)%GmatN(:,:,ie,ispin) = GmatN_buffer(:,:,ila)
             enddo ! ila
 
             call stopTimer(mult_scattering_timer)
@@ -363,8 +356,7 @@ implicit none
   !=======================================================================
     ! communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
     do ila = 1, num_local_atoms
-      kkr => getKKR(calc, ila)
-      call collectMSResults_com(mp, kkr%GmatN, kkr%LLY_GRDT, ebalance_handler%EPROC)
+      call collectMSResults_com(mp, kkr(ila)%GmatN, kkr(ila)%LLY_GRDT, ebalance_handler%EPROC)
     enddo ! ila
   !=======================================================================
 
@@ -394,7 +386,7 @@ implicit none
   !=======================================================================
     if (dims%IGUESSD == 1 .and. dims%EMPID > 1) then
 
-      do ISPIN = 1,dims%NSPIND
+      do ISPIN = 1, dims%NSPIND
         if (isWorkingSpinRank(mp, ispin)) then
 
           PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
@@ -575,7 +567,7 @@ implicit none
   !>
   !> Uses MPI-RMA
   subroutine gatherTmatrices_com(calc, tmatLL, ispin, communicator)
-    use CalculationData_mod, only: CalculationData, getKKR
+    use CalculationData_mod, only: CalculationData
     use KKRresults_mod, only: KKRresults
     use one_sided_commZ_mod, only: copyFromZ_com
 
@@ -583,8 +575,6 @@ implicit none
     double complex, intent(inout) :: tmatLL(:,:,:)
     integer, intent(in) :: ispin
     integer, intent(in) :: communicator
-
-    type(KKRresults), pointer :: kkr
 
     integer :: ila, num_local_atoms, lmmaxd, chunk_size
     double complex, allocatable :: tsst_local(:,:,:)
@@ -597,8 +587,7 @@ implicit none
     chunk_size = size(tsst_local, 1)*size(tsst_local, 2)
 
     do ila = 1, num_local_atoms
-      kkr => getKKR(calc, ila)
-      tsst_local(:,:,ila) = kkr%TmatN(:,:,ispin)
+      tsst_local(:,:,ila) = kkr(ila)%TmatN(:,:,ispin)
     enddo ! ila
 
     call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
