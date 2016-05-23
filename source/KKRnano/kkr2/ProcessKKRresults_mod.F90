@@ -37,7 +37,7 @@ module ProcessKKRresults_mod
     use DensityResults_mod, only: DensityResults
     use EnergyResults_mod, only: EnergyResults
 
-    use CalculationData_mod, only: getNumLocalAtoms, getDensities, getEnergies, getAtomData, getMaxReclenPotential, getAtomIndexOfLocal
+    use CalculationData_mod, only: getDensities, getEnergies, getAtomData, getMaxReclenPotential, getAtomIndexOfLocal
     
     include 'mpif.h'
 
@@ -59,7 +59,7 @@ module ProcessKKRresults_mod
     integer :: atom_id, ila, num_local_atoms, ierr
 
     processKKRresults = 0
-    num_local_atoms = getNumLocalAtoms(calc)
+    num_local_atoms = calc%num_local_atoms
 
     densities => getDensities(calc, 1)
     energies  => getEnergies(calc, 1)
@@ -194,7 +194,7 @@ module ProcessKKRresults_mod
   integer function mix_potential(calc, iter, params, dims, mp)
 
     use KKRnanoParallel_mod, only: KKRnanoParallel
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use CalculationData_mod, only: CalculationData, getAtomData
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     
@@ -218,7 +218,7 @@ module ProcessKKRresults_mod
 
     mix_potential = 0
 
-    num_local_atoms = getNumLocalAtoms(calc)
+    num_local_atoms = calc%num_local_atoms
 
     ! -->   calculation of RMS and final construction of the potentials (straight mixing)
     RMSAVQ = 0.d0
@@ -286,7 +286,7 @@ module ProcessKKRresults_mod
   !> Gather all forces at rank 'master', only this rank writes the file.
   !> Since the amount of data for forces is low this is a reasonable approach.
   subroutine output_forces(calc, master, rank, comm)
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms
+    use CalculationData_mod, only: CalculationData
     include 'mpif.h'
     type(CalculationData), intent(in) :: calc
     integer, intent(in) :: master, rank, comm
@@ -294,7 +294,7 @@ module ProcessKKRresults_mod
     integer :: ila, atom_id, num_local_atoms, nranks, ierr, max_local_atoms, ffu
     double precision, allocatable :: force_buffer(:,:), local_buffer(:,:)
 
-    num_local_atoms = getNumLocalAtoms(calc) ! must be the same for all ranks, therefore get the maximum
+    num_local_atoms = calc%num_local_atoms ! must be the same for all ranks, therefore get the maximum
     call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, comm, ierr)
 
     if (rank == master) then
@@ -340,7 +340,7 @@ module ProcessKKRresults_mod
 
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use EnergyMesh_mod, only: EnergyMesh
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getDensities, getAtomData
+    use CalculationData_mod, only: CalculationData, getDensities, getAtomData
     use CalculationData_mod, only: getLDAUData, getKKR, getEnergies, getAtomIndexOfLocal
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
@@ -391,7 +391,7 @@ module ProcessKKRresults_mod
 
     double complex, allocatable :: prefactors(:)  ! for Morgan charge test only
 
-    num_local_atoms = getNumLocalAtoms(calc)
+    num_local_atoms = calc%num_local_atoms
 
     atomdata  => getAtomData(calc, 1)
     ldau_data => getLDAUData(calc, 1)
@@ -626,7 +626,7 @@ module ProcessKKRresults_mod
     use EnergyResults_mod, only: EnergyResults
     use RadialMeshData_mod, only: RadialMeshData
     
-    use CalculationData_mod, only: getNumLocalAtoms, getDensities, getAtomData, getLDAUData, getEnergies, getDensities, getAtomIndexOfLocal
+    use CalculationData_mod, only: getDensities, getAtomData, getLDAUData, getEnergies, getDensities, getAtomIndexOfLocal
     
     use NearField_calc_mod, only: add_near_field_corr
     use total_energy_mod, only: madelung_energy, madelung_ref_radius_correction, energy_electrostatic_wrapper
@@ -665,7 +665,7 @@ module ProcessKKRresults_mod
     double complex, allocatable :: prefactors(:) ! for Morgan charge test only
     double precision :: direction(3)             ! for Morgan charge test only
 
-    num_local_atoms = getNumLocalAtoms(calc)
+    num_local_atoms = calc%num_local_atoms
 
     atomdata     => getAtomData(calc, 1)
     ldau_data    => getLDAUData(calc, 1)

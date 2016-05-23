@@ -37,7 +37,7 @@ implicit none
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
 
-    use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData, getNumLocalAtoms, getAtomIndexOfLocal
+    use CalculationData_mod, only: CalculationData, getKKR, getAtomData, getLDAUData, getAtomIndexOfLocal
 
     use KKRresults_mod, only: KKRresults
     use BasisAtom_mod, only: BasisAtom
@@ -108,7 +108,7 @@ implicit none
 
     jij_data => calc%jij_data_a(1) ! global, jij works only with max. 1 local atom
 
-    num_local_atoms = getNumLocalAtoms(calc)
+    num_local_atoms = calc%num_local_atoms
 
     
     allocate(tmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for t-matrices
@@ -575,7 +575,7 @@ implicit none
   !>
   !> Uses MPI-RMA
   subroutine gatherTmatrices_com(calc, tmatLL, ispin, communicator)
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getKKR
+    use CalculationData_mod, only: CalculationData, getKKR
     use KKRresults_mod, only: KKRresults
     use one_sided_commZ_mod, only: copyFromZ_com
 
@@ -589,7 +589,7 @@ implicit none
     integer :: ila, num_local_atoms, lmmaxd, chunk_size
     double complex, allocatable :: tsst_local(:,:,:)
 
-    num_local_atoms = getNumLocalAtoms(calc)
+    num_local_atoms = calc%num_local_atoms
     lmmaxd = size(tmatLL, 1)
 
     allocate(tsst_local(lmmaxd,lmmaxd,num_local_atoms))

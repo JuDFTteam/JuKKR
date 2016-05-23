@@ -31,7 +31,7 @@ module CalculationData_mod
   public :: CalculationData, create, destroy, represent
   
   public :: prepareMadelung         
-  public :: getBroydenDim, getNumLocalAtoms, getAtomIndexOfLocal, getAtomData, getKKR
+  public :: getBroydenDim, getAtomIndexOfLocal, getAtomData, getKKR
   public :: getDensities, getEnergies, getLDAUData
   public :: getMaxReclenMeshes, getMaxReclenPotential      
 
@@ -195,13 +195,6 @@ module CalculationData_mod
     deallocate(self%atom_ids)
     
   endsubroutine ! destroy
-
-  !----------------------------------------------------------------------------
-  integer function getNumLocalAtoms(self)
-    type(CalculationData), intent(in) :: self
-
-    getNumLocalAtoms = self%num_local_atoms
-  endfunction ! get
 
   !----------------------------------------------------------------------------
   integer function getAtomIndexOfLocal(self, ila)

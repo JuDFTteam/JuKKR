@@ -35,7 +35,7 @@ program KKRnano
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
   use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
-  use CalculationData_mod, only: getNumLocalAtoms, getAtomData, getLDAUData, getAtomIndexOfLocal
+  use CalculationData_mod, only: getAtomData, getLDAUData, getAtomIndexOfLocal
   use BrillouinZoneMesh_mod, only: BrillouinZoneMesh
   
   use KKRzero_mod, only: main0
@@ -171,7 +171,7 @@ program KKRnano
       stop ! Voronoi work is done in 'create'
     endif
 
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
 
     call create(emesh, dims%iemxd) ! createEnergyMesh
     call load(emesh, filename='energy_mesh.0') ! every process does this!!!

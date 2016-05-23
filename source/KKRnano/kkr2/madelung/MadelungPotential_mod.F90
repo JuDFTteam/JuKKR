@@ -65,8 +65,7 @@ module MadelungPotential_mod
   subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
     lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, mylrank, atoms_per_proc, communicator)
 
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, &
-      getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getAtomData
+    use CalculationData_mod, only: CalculationData, getEnergies, getAtomIndexOfLocal, getDensities, getEnergies, getAtomData
     use EnergyResults_mod, only: EnergyResults
     use DensityResults_mod, only: DensityResults
     use BasisAtom_mod, only: BasisAtom
@@ -104,7 +103,7 @@ module MadelungPotential_mod
     
     lmpotd = (lpot+1)**2
 
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
 
     do ilocal = 1, num_local_atoms
       energies => getEnergies(calc_data, ilocal)

@@ -69,7 +69,7 @@ module broyden_kkr_mod
   !> Collapse all local input potentials into one array
   subroutine collapse_input_potentials(calc_data, array)
     use brydbm_new_com_mod, only: BRYSH3_new
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use CalculationData_mod, only: CalculationData, getAtomData
     use BasisAtom_mod, only: BasisAtom
   
     type(CalculationData), intent(in) :: calc_data
@@ -80,7 +80,7 @@ module broyden_kkr_mod
     integer imap, imap_new
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
 
     imap = 0
     do ilocal = 1, num_local_atoms
@@ -99,7 +99,7 @@ module broyden_kkr_mod
   !> Collapse all local output potentials into one array
   subroutine collapse_output_potentials(calc_data, array)
     use brydbm_new_com_mod, only: BRYSH1_new
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use CalculationData_mod, only: CalculationData, getAtomData
     use BasisAtom_mod, only: BasisAtom
   
     type(CalculationData), intent(in) :: calc_data
@@ -110,7 +110,7 @@ module broyden_kkr_mod
     integer imap, imap_new
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
 
     imap = 0
     do ilocal = 1, num_local_atoms
@@ -129,7 +129,7 @@ module broyden_kkr_mod
   !> overwrite potentials in their respective datastructures (VONS)
   subroutine extract_mixed_potentials(array, calc_data)
     use brydbm_new_com_mod, only: BRYSH2_new
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use CalculationData_mod, only: CalculationData, getAtomData
     use BasisAtom_mod, only: BasisAtom
     use PotentialData_mod, only: getNumPotentialValues
   
@@ -141,7 +141,7 @@ module broyden_kkr_mod
     integer :: ind, num
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
 
     ind = 1
     num = 0
@@ -161,7 +161,7 @@ module broyden_kkr_mod
 
   !----------------------------------------------------------------------------
   subroutine calc_all_metrics(calc_data, g_metric_all)
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData
+    use CalculationData_mod, only: CalculationData, getAtomData
     use BasisAtom_mod, only: BasisAtom
     use PotentialData_mod, only: getNumPotentialValues
   
@@ -173,7 +173,7 @@ module broyden_kkr_mod
     integer ind, num
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
 
     ind = 1
     num = 0

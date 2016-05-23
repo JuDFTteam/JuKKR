@@ -20,7 +20,7 @@ module NearField_calc_mod
   subroutine add_near_field_corr(calc_data, arrays, alat, mpi_comm)
     use Main2Arrays_mod, only: Main2Arrays
     use DensityResults_mod, only: DensityResults
-    use CalculationData_mod, only: CalculationData, getNumLocalAtoms, getAtomData, getDensities, getAtomIndexOfLocal!, getMadelungCalculator
+    use CalculationData_mod, only: CalculationData, getAtomData, getDensities, getAtomIndexOfLocal!, getMadelungCalculator
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
     use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
@@ -41,7 +41,7 @@ module NearField_calc_mod
     type(RadialMeshData), pointer :: mesh
     type(DensityResults), pointer :: densities
 
-    num_local_atoms  = getNumLocalAtoms(calc_data)
+    num_local_atoms = calc_data%num_local_atoms
     allocate(local_cell(num_local_atoms))
     allocate(nf_correction(num_local_atoms))
 
