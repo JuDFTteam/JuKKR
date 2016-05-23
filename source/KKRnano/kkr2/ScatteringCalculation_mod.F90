@@ -105,8 +105,8 @@ implicit none
 #define clusters calc%clusters
 #define lattice_vectors calc%lattice_vectors
 #define trunc_zone calc%trunc_zone
-
-    jij_data => calc%jij_data_a(1) ! global, jij works only with max. 1 local atom
+    ! global name jij_data, jij works only with max. 1 local atom
+#define jij_data calc%jij_data_a(1)
 
     num_local_atoms = calc%num_local_atoms
 
@@ -247,7 +247,7 @@ implicit none
 
               call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%TmatN, kkr%Tr_alph, ldau_data, params%Volterra)
 
-              jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN)  ! save t-matrix for Jij-calc.
+              jij_data%DTIXIJ(:,:,ISPIN) = kkr%TmatN(:,:,ISPIN) ! save t-matrix for Jij-calc.
 
               if (dims%Lly == 1) &  ! calculate derivative of t-matrix for Lloyd's formula
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr%dTdE, kkr%Tr_alph, ldau_data, params%Volterra)

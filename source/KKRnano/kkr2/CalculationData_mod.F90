@@ -30,9 +30,8 @@ module CalculationData_mod
 
   public :: CalculationData, create, destroy, represent
   
-  public :: prepareMadelung         
-  public :: getBroydenDim, getAtomData, getKKR
-  public :: getDensities, getEnergies, getLDAUData
+  public :: prepareMadelung, getBroydenDim
+  public :: getDensities, getEnergies, getLDAUData, getAtomData, getKKR
 
   type CalculationData
 
@@ -49,7 +48,7 @@ module CalculationData_mod
     type(DensityResults), pointer     :: densities_a(:)    => null()
     type(EnergyResults), pointer      :: energies_a(:)     => null()
     type(LDAUData), pointer           :: ldau_data_a(:)    => null()
-    type(JijData), pointer            :: jij_data_a(:)     => null()
+    type(JijData),            allocatable :: jij_data_a(:)
     type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
 
@@ -103,16 +102,16 @@ module CalculationData_mod
     self%num_local_atoms = num_local_atoms
 
     ! one datastructure for each local atom
-    allocate(self%mesh_a(num_local_atoms))
-    allocate(self%cell_a(num_local_atoms))
+    allocate(self%mesh_a(num_local_atoms)) ! only used inside this module
+    allocate(self%cell_a(num_local_atoms)) ! only used inside this module
+    allocate(self%ref_cluster_a(num_local_atoms)) ! only visible to this module and ScatteringCalculation_mod.F90
     allocate(self%atomdata_a(num_local_atoms))
-    allocate(self%ref_cluster_a(num_local_atoms))
     allocate(self%kkr_a(num_local_atoms))
     allocate(self%densities_a(num_local_atoms))
     allocate(self%energies_a(num_local_atoms))
-    allocate(self%madelung_sum_a(num_local_atoms))
     allocate(self%ldau_data_a(num_local_atoms))
-    allocate(self%jij_data_a(num_local_atoms))
+    allocate(self%madelung_sum_a(num_local_atoms)) ! only visible to this module and MadelungPotential_mod.F90
+    allocate(self%jij_data_a(num_local_atoms)) ; if(num_local_atoms > 1) warn(6, "Jij work with max. 1 atom so far!") 
     
     allocate(self%atom_ids(num_local_atoms))
 
@@ -159,6 +158,7 @@ module CalculationData_mod
     type(CalculationData), intent(inout) :: self
 
     integer :: ila
+    
     do ila = 1, self%num_local_atoms
 
       call destroy(self%ref_cluster_a(ila))
