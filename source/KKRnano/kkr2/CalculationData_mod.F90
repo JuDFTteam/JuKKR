@@ -33,7 +33,6 @@ module CalculationData_mod
   public :: prepareMadelung         
   public :: getBroydenDim, getAtomIndexOfLocal, getAtomData, getKKR
   public :: getDensities, getEnergies, getLDAUData
-  public :: getMaxReclenMeshes, getMaxReclenPotential      
 
   type CalculationData
 
@@ -257,22 +256,6 @@ module CalculationData_mod
     integer, intent(in) :: local_atom_index
 
     getLDAUData => self%ldau_data_a(local_atom_index)
-  endfunction ! get
-
-  !----------------------------------------------------------------------------
-  !> Returns record length needed for 'meshes' file.
-  integer function getMaxReclenMeshes(self)
-    type(CalculationData), intent(in) :: self
-
-    getMaxReclenMeshes = self%max_reclen_meshes
-  endfunction ! get
-
-  !----------------------------------------------------------------------------
-  !> Returns record length needed for 'meshes' file.
-  integer function getMaxReclenPotential(self)
-    type(CalculationData), intent(in) :: self
-
-    getMaxReclenPotential = self%max_reclen_potential
   endfunction ! get
 
 
@@ -690,7 +673,7 @@ module CalculationData_mod
 
     integer :: ila, atom_id, max_reclen
 
-    max_reclen = getMaxReclenPotential(self)
+    max_reclen = self%max_reclen_potential
 
     ! the opening routine requires any instance of type BasisAtom
     call openBasisAtomPotentialIndexDAFile(self%atomdata_a(1), 37, 'vpotnew.idx', action='write')
@@ -718,7 +701,7 @@ module CalculationData_mod
 
     integer :: ila, atom_id, max_reclen
 
-    max_reclen = getMaxReclenMeshes(self)
+    max_reclen = self%max_reclen_meshes
 
     ! the opening routines require any instance of type RadialMeshData
 #ifndef TASKLOCAL_FILES

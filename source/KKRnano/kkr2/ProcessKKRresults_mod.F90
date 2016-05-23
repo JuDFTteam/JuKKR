@@ -37,7 +37,7 @@ module ProcessKKRresults_mod
     use DensityResults_mod, only: DensityResults
     use EnergyResults_mod, only: EnergyResults
 
-    use CalculationData_mod, only: getDensities, getEnergies, getAtomData, getMaxReclenPotential, getAtomIndexOfLocal
+    use CalculationData_mod, only: getDensities, getEnergies, getAtomData, getAtomIndexOfLocal
     
     include 'mpif.h'
 
@@ -96,7 +96,7 @@ module ProcessKKRresults_mod
 
     ! use any atomdata to open file - use reclen stored in calc
     atomdata => getAtomData(calc, 1)
-    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", getMaxReclenPotential(calc), action='write')
+    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", calc%max_reclen_potential, action='write')
 
     do ila = 1, num_local_atoms ! no OpenMP
       atomdata => getAtomData(calc, ila)
