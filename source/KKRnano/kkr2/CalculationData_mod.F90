@@ -48,7 +48,7 @@ module CalculationData_mod
     type(EnergyResults), pointer      :: energies_a(:)     => null()
     type(LDAUData), pointer           :: ldau_data_a(:)    => null()
     type(KKRresults),         allocatable :: kkr_a(:)
-    type(JijData),            allocatable :: jij_data_a(:)
+    type(JijData),            pointer     :: jij_data_a(:) => null()
     type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
 

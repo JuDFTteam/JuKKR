@@ -103,8 +103,7 @@ implicit none
 #define clusters calc%clusters
 #define lattice_vectors calc%lattice_vectors
 #define trunc_zone calc%trunc_zone
-    ! global name jij_data, jij works only with max. 1 local atom
-#define jij_data calc%jij_data_a(1)
+    jij_data => calc%jij_data_a(1) ! global name jij_data, jij works only with max. 1 local atom
 #define kkr(ila) calc%kkr_a(ila)
 
     num_local_atoms = calc%num_local_atoms
