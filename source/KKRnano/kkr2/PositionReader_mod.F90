@@ -67,6 +67,7 @@ module PositionReader_mod
 !   type(ConfigReader) :: cr
     character(len=16)  :: element_keyword
     character(len=256) :: configuration_line, elem_file
+    integer(kind=1), parameter :: mdst(2) = [MODIFIED_ELEM_DEFAULT, MODIFIED_CONF_DEFAULT]
 
     z_defaults(:,:) = 0.d0; z_modified(:,:) = MODIFIED_INITIALIZED
     
@@ -81,10 +82,10 @@ module PositionReader_mod
       ! ...
       write(unit=element_keyword, fmt='(9a)') 'element-',PSE(iZ)
       configuration_line = '' ! init since getValue is intent(inout)
-!     ist = getValue(cr, element_keyword, configuration_line, def='')
+      ist = 0 ! getValue(cr, element_keyword, configuration_line, def='')
       if (ist == 0) then
         ist = parseParams(configuration_line, z_defaults(0:,iZ), z_modified(0:,iZ), keywords, ikeypos, &
-                           linenumber=0, filename=elem_file, modify_states=[MODIFIED_ELEM_DEFAULT, MODIFIED_CONF_DEFAULT])
+                           linenumber=0, filename=elem_file, modify_states=mdst)
       endif
     enddo ! iZ
 
