@@ -171,7 +171,7 @@ module ShapeCriticalPoints_mod
     !-----------------------------------------------------------------------
     use Constants_mod, only: pi
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
-    use shapegeometryhelpers_mod, only: perp, nrm2, operator(.dot.)
+    use ShapeGeometryHelpers_mod, only: perp, nrm2, operator(.dot.)
 
     integer, intent(in) :: nvert
     type(PolygonFace), intent(inout) :: face
@@ -182,8 +182,8 @@ module ShapeCriticalPoints_mod
     double precision, intent(inout) :: crt(:)
     integer, intent(in) :: face_index ! is only needed for verbose output since we pass the face descriptor to this routine
     
-    integer :: iv, ivert, ivertp, jv, npand
-    double precision :: arg, a1, a2, a3, cf1, cf2, cf3, co, crrt, dd, down, d1, d2, ff, f1, f2, f3, omega, rdd, s, sf1, sf2, sf3, up, xj, yj, zmod2
+    integer :: iv, ivert, ivxp1, jvert, npand
+    double precision :: arg, a1, a2, a3, cf1, cf2, cf3, co, crrt, dd, down, d1, d2, ff, f1, f2, f3, omega, rdd, s, sf1, sf2, sf3, up, xj, yj, zmod2, vmz(3)
 
     logical(kind=1), allocatable :: in(:) ! (nvertd)
     double precision, allocatable :: vz(:,:) ! (3,nvertd)
@@ -197,7 +197,7 @@ module ShapeCriticalPoints_mod
     
     npand = size(crt)
     
-    allocate(in(nvert), vz(3,nvert), stat=ist)
+    allocate(in(nvert), vz(1:3,nvert), stat=ist)
 
 
     if (verbosity > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") face_index,z(1:3)
@@ -211,7 +211,8 @@ module ShapeCriticalPoints_mod
 
     z = z/zmod2
 
-    iv = 1; if (nrm2(v(1:3,1) - z) < tol_small**2) iv = 2 ! if the norm of the first vector is too small, use the second one
+    vmz = v(1:3,1) - z(1:3)
+    iv = 1; if (nrm2(vmz) < tol_small*tol_small) iv = 2 ! if the norm of the first vector is too small, use the second one
     face%euler = euler_angles(z, v(:,iv), toleuler) ! get euler angles directly
 
     if (verbosity > 0) write(6, fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
@@ -246,11 +247,11 @@ module ShapeCriticalPoints_mod
         endif
       endif ! new
 
-      ivertp = modulo(ivert, nvert) + 1
+      ivxp1 = modulo(ivert, nvert) + 1
 
       !____distances__of__edges__from__center
 
-      call perp(origin, vz(1:3,ivert), vz(1:3,ivertp), tolvdist, rdv, inside)
+      call perp(origin, vz(1:3,ivert), vz(1:3,ivxp1), tolvdist, rdv, inside)
 
       rdd = sqrt(nrm2(rdv)) ! footpoint of line origin-to-edge
 
@@ -270,9 +271,9 @@ module ShapeCriticalPoints_mod
         
       endif ! inside
       
-      a1 = sqrt(vz(1,ivert)**2 + vz(2,ivert )**2)
-      a2 = sqrt(vz(1,ivertp)**2 + vz(2,ivertp)**2)
-      up = vz(1,ivert)*vz(1,ivertp) + vz(2,ivert)*vz(2,ivertp)
+      a1 = sqrt(vz(1,ivert)**2 + vz(2,ivert)**2)
+      a2 = sqrt(vz(1,ivxp1)**2 + vz(2,ivxp1)**2)
+      up = vz(1,ivert)*vz(1,ivxp1) + vz(2,ivert)*vz(2,ivxp1)
       down = a1*a2
 
       if (down > tol_small) then ! true if not a corner
@@ -289,16 +290,16 @@ module ShapeCriticalPoints_mod
           
           ivtot = ivtot + 1 ! can be removed when we do not try to have the verbose output compatible with older versions
           if (verbosity > 0) then
-            write(6, fmt="(i5,'       vz(',i2,')  =  (',3f10.4,' )')") ivtot,ivert, vz(1:3,ivert)
-            write(6, fmt="(5x,'       vz(',i2,')  =  (',3f10.4,' )')")       ivertp,vz(1:3,ivertp)
+            write(6, fmt="(i5,'       vz(',i2,')  =  (',3f10.4,' )')") ivtot, ivert, vz(1:3,ivert)
+            write(6, fmt="(5x,'       vz(',i2,')  =  (',3f10.4,' )')")        ivxp1, vz(1:3,ivxp1)
           endif
 
           a3 = sqrt(rdv(1)*rdv(1) + rdv(2)*rdv(2))
           
-          cf1 = vz(1,ivert )/a1
-          cf2 = vz(1,ivertp)/a2
-          sf1 = vz(2,ivert )/a1
-          sf2 = vz(2,ivertp)/a2
+          cf1 = vz(1,ivert)/a1
+          cf2 = vz(1,ivxp1)/a2
+          sf1 = vz(2,ivert)/a1
+          sf2 = vz(2,ivxp1)/a2
           cf3 = rdv(1)/a3
           sf3 = rdv(2)/a3
 
@@ -356,41 +357,41 @@ module ShapeCriticalPoints_mod
       
     else  ! s < tol_small .or. corner
     
-      do jv = 1, nvert
-        in(jv) = .false.
-        do iv = 1, nvert
+      do jvert = 1, nvert
+        in(jvert) = .false.
+        do ivert = 1, nvert
         
-          ivertp = modulo(iv, nvert) + 1
+          ivxp1 = modulo(ivert, nvert) + 1
 
-          if (iv /= jv .and. ivertp /= jv) then
+          if (ivert /= jvert .and. ivxp1 /= jvert) then
           
-            down = vz(2,jv)*(vz(1,ivertp) - vz(1,iv)) - vz(1,jv)*(vz(2,ivertp) - vz(2,iv))
+            down = vz(2,jvert)*(vz(1,ivxp1) - vz(1,ivert)) - vz(1,jvert)*(vz(2,ivxp1) - vz(2,ivert))
 
             if (abs(down) > tol_small) then
 
-              up  = vz(1,jv)*(vz(2,iv)*(vz(1,ivertp) + vz(1,iv)) - vz(1,iv)*(vz(2,ivertp) + vz(2,iv)))
+              up  = vz(1,jvert)*(vz(2,ivert)*(vz(1,ivxp1) + vz(1,ivert)) - vz(1,ivert)*(vz(2,ivxp1) + vz(2,ivert)))
               xj = up/down
-              yj = xj*vz(2,jv)/vz(1,jv)
-              dd = (vz(1,ivertp) - vz(1,iv))**2 + (vz(2,ivertp) - vz(2,iv))**2
-              d1 = (xj - vz(1,iv ))**2 + (yj - vz(2,iv ))**2
-              d2 = (xj - vz(1,ivertp))**2 + (yj - vz(2,ivertp))**2
+              yj = xj*vz(2,jvert)/vz(1,jvert)
+              dd = (vz(1,ivxp1) - vz(1,ivert))**2 + (vz(2,ivxp1) - vz(2,ivert))**2
+              d1 = (xj - vz(1,ivert))**2 + (yj - vz(2,ivert))**2
+              d2 = (xj - vz(1,ivxp1))**2 + (yj - vz(2,ivxp1))**2
 
               co = dd - max(d1, d2)
 
               if (co > tol_small) then
-                in(jv) = .true.
-                exit ! iv loop (inner loop)
+                in(jvert) = .true.
+                exit ! ivert loop (inner loop)
               endif
 
             endif ! abs(down) > tol_small
           endif
   
-        enddo ! iv
-      enddo ! jv
+        enddo ! ivert
+      enddo ! jvert
       
       do ivert = 1, nvert
-        ivertp = modulo(ivert, nvert) + 1
-        if (.not. in(ivert) .and. .not. in(ivertp)) then
+        ivxp1 = modulo(ivert, nvert) + 1
+        if (.not. in(ivert) .and. .not. in(ivxp1)) then
           if (ivert > face%ntt) then
             die_here("a sign could not be stored! the face has"+face%ntt+"tetrahedra, but we try to access #"-ivert)
           else
@@ -414,7 +415,7 @@ module ShapeCriticalPoints_mod
   !-----------------------------------------------------------------------
   function euler_angles(zz, xx, toleuler) result(alpha_beta_gamma)
     use Constants_mod, only: pi
-!     use ShapeGeometryHelpers, only: nrm2, operator(.dot.) ! todo
+    use ShapeGeometryHelpers_mod, only: nrm2, operator(.dot.) ! TODO: operator(.cross.)
 
     double precision, intent(in) :: xx(3)
     double precision, intent(in) :: zz(3)
@@ -422,24 +423,23 @@ module ShapeCriticalPoints_mod
     ! earlier, 1.d-5 was hard-coded at the places in this subr. where tol is used data toleuler /1.d-10/
     double precision :: alpha_beta_gamma(3) ! result
 
-    double precision :: rx,rz,s,p,rzp,sa,ca,sg,cg
-    double precision :: x(3), y(3), z(3)
+    double precision :: rx, rz, s, p, rzp, sa, ca, sg, cg, x(3), y(3), z(3)
     double precision, parameter :: tolerance = 1.d-6
 
     !-----------------------------------------------------------------------
     z = zz
     x = xx - z
-    rx = sqrt(x(1)*x(1) + x(2)*x(2) + x(3)*x(3)) ! sqrt(nrm2(x))
-    rz = sqrt(z(1)*z(1) + z(2)*z(2) + z(3)*z(3)) ! sqrt(nrm2(z))
-    s = x(1)*z(1) + x(2)*z(2) + x(3)*z(3) ! x .dot. z
+    rx = sqrt(nrm2(x))
+    rz = sqrt(nrm2(z))
+    s = x .dot. z
 
     if (rx < tolerance .or. rz < tolerance .or. s > tolerance) &
       die_here("Euler_angles: illegal vectors x ="+x+" z ="+z)
 
     p = sqrt(z(1)*z(1) + z(2)*z(2))
 
-    x = x/rx
-    z = z/rz
+    x = x/rx ! normalize
+    z = z/rz ! normalize
 
     alpha_beta_gamma(2) = acos(z(3)) ! beta
 
@@ -454,7 +454,7 @@ module ShapeCriticalPoints_mod
     else  ! p < toleuler
 
       rzp = rz/p
-      ! y = z .cross. x or x .cross. z?
+      ! y = z .cross. x or x .cross. z? TODO
       y(1) = z(2)*x(3) - z(3)*x(2)
       y(2) = z(3)*x(1) - z(1)*x(3)
       y(3) = z(1)*x(2) - z(2)*x(1)
@@ -522,4 +522,4 @@ module ShapeCriticalPoints_mod
     
   endsubroutine ! rotate
 
-endmodule ShapeCriticalPoints_mod
+endmodule ! ShapeCriticalPoints_mod
