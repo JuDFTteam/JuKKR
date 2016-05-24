@@ -56,15 +56,16 @@
 module BasisAtom_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
-  use CellData_mod, only: CellData
-  use PotentialData_mod, only: PotentialData
-  use AtomicCoreData_mod, only: AtomicCoreData
-  use RadialMeshData_mod, only: RadialMeshData
+  use CellData_mod, only: CellData, create, destroy
+  use PotentialData_mod, only: PotentialData, create, destroy
+  use AtomicCoreData_mod, only: AtomicCoreData, create, destroy
+  use RadialMeshData_mod, only: RadialMeshData, create, destroy
   implicit none
 
-  public :: BasisAtom, create, destroy
+  public :: BasisAtom, create, destroy, load
   public :: getMinReclenBasisAtomPotential
   public :: associateBasisAtomCell, associateBasisAtomMesh, resetPotentials, readBasisAtomPotentialHeader
+  
   ! direct access file routines
   public :: openBasisAtomDAFile, writeBasisAtomDA, readBasisAtomDA, closeBasisAtomDAFile
   public :: openBasisAtomPotentialDAFile, writeBasisAtomPotentialDA, readBasisAtomPotentialDA, closeBasisAtomPotentialDAFile  
@@ -84,7 +85,11 @@ module BasisAtom_mod
   endtype
 
   interface create
-    module procedure createBasisAtom, createBasisAtomFromFile
+    module procedure createBasisAtom
+  endinterface
+  
+  interface load
+    module procedure createBasisAtomFromFile
   endinterface
   
   interface destroy
@@ -97,9 +102,6 @@ module BasisAtom_mod
 
   !----------------------------------------------------------------------------
   subroutine createBasisAtom(atom, atom_index, lpot, nspin, irmind, irmd)
-    use PotentialData_mod, only: createPotentialData
-    use AtomicCoreData_mod, only: createAtomicCoreData
-
     type(BasisAtom), intent(inout) :: atom
     integer, intent(in) :: lpot, nspin, irmind, irmd  !< number of mesh points
     integer, intent(in) :: atom_index
@@ -111,10 +113,10 @@ module BasisAtom_mod
     atom%rMTref = 1.d9
     atom%radius_muffin_tin = 1.d9
 
-    call createPotentialData(atom%potential, lpot, nspin, irmind, irmd)
+    call create(atom%potential, lpot, nspin, irmind, irmd) ! createPotentialData
 
     ! does irmd have to be the same?
-    call createAtomicCoreData(atom%core, irmd)
+    call create(atom%core, irmd) ! createAtomicCoreData
 
   endsubroutine ! create
 
@@ -124,10 +126,9 @@ module BasisAtom_mod
   !> This is done that way because different atoms can share the same
   !> cell data.
   subroutine associateBasisAtomCell(atom, cell)
-    use CellData_mod, only: CellData
     type(BasisAtom), intent(inout) :: atom
     type(CellData), target, intent(in) :: cell
-    
+
     atom%cell_ptr => cell
 
     if (atom%cell_index /= cell%cell_index) die_here("Mismatch in cell indices for atom"+atom%atom_index)
@@ -154,15 +155,12 @@ module BasisAtom_mod
 
   !----------------------------------------------------------------------------
   subroutine destroyBasisAtom(atom)
-    use PotentialData_mod, only: destroyPotentialData
-    use AtomicCoreData_mod, only: destroyAtomicCoreData
-
     type(BasisAtom), intent(inout) :: atom
 
     nullify(atom%cell_ptr)
 
-    call destroyPotentialData(atom%potential)
-    call destroyAtomicCoreData(atom%core)
+    call destroy(atom%potential)
+    call destroy(atom%core)
   endsubroutine ! destroy
 
 

@@ -16,7 +16,6 @@ module KKRresults_mod
   implicit none
   private
   public :: KKRresults, create, destroy
-  public :: createKKRresults, destroyKKRresults ! deprecated
 
   type KKRresults
     double precision, allocatable :: rMTref(:)

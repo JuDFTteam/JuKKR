@@ -4,7 +4,6 @@ module ShapefunData_mod
   implicit none
   private
   public :: ShapeFunData, create, destroy, represent
-  public :: createShapefunData, destroyShapefunData, repr_ShapefunData ! deprecated
 
   type ShapefunData
     ! dimension params
@@ -70,13 +69,10 @@ module ShapefunData_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyShapefunData(shdata)
+  elemental subroutine destroyShapefunData(shdata)
     type(ShapeFunData), intent(inout) :: shdata
-
-    deallocate(shdata%THETA)
-    deallocate(shdata%LLMSP)
-    deallocate(shdata%IFUNM)
-    deallocate(shdata%LMSP)
+    integer :: ist
+    deallocate(shdata%THETA, shdata%LLMSP, shdata%IFUNM, shdata%LMSP, stat=ist)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -134,4 +130,4 @@ module ShapefunData_mod
 
   endsubroutine ! represent
 
-endmodule ShapefunData_mod
+endmodule ! ShapefunData_mod

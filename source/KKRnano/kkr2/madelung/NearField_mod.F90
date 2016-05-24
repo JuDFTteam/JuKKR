@@ -6,8 +6,7 @@ module NearField_mod
   use Constants_mod, only: pi
   implicit none
   private
-  public :: Potential
-  public :: calc_near_field, calc_wrong_contribution_coeff
+  public :: Potential, calculate
   
   !> Objects of types derived from 'Potential' have to be passed to 'calc_near_field'.
   !>
@@ -40,13 +39,17 @@ module NearField_mod
     contains
     procedure :: get_pot => get_const_monopole
   endtype
+  
+  interface calculate
+    module procedure calc_near_field, calc_wrong_contribution_coeff
+  endinterface
 
   contains
 
   !----------------------------------------------------------------------------
   !> V_(lm)(r) = ac_wrong(lm) * (-r)**l
   subroutine calc_wrong_contribution_coeff(ac_wrong, dist_vec, charge_mom_total, Gaunt)
-    use MadelungCalculator_mod, only: MadelungClebschData, createDfac
+    use MadelungCalculator_mod, only: MadelungClebschData, calculate!createDfac
     use Harmonics_mod, only: ymy
     double precision, intent(inout) :: ac_wrong(:)
     double precision, intent(in)    :: dist_vec(3)
@@ -68,7 +71,7 @@ module NearField_mod
 
     allocate(ylm(lmmaxd_prime), smat(lmmaxd_prime), avmad(lmmaxd,lmmaxd))
 
-    call createDfac(dfac, lmx) ! calculate complicated prefactor, will be allocated here
+    call calculate(dfac, lmx) ! createDfac: calculate complicated prefactor, will be allocated here
 
     call ymy(dist_vec(1), dist_vec(2), dist_vec(3), r, ylm, lmx_prime)
 

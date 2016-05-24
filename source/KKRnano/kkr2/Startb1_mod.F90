@@ -16,7 +16,7 @@ module Startb1_mod
 
 ! determine the record length
   subroutine startb1_wrapper_new(alat, nspin, EFERMI, Zat, naez, nowrite)
-    use read_formatted_shapefun_mod, only: ShapefunFile, create_read_ShapefunFile, destroy_ShapefunFile
+    use read_formatted_shapefun_mod, only: ShapefunFile, create, destroy
     double precision, intent(in) :: alat
     integer, intent(in) :: naez
     double precision, intent(out) :: EFERMI
@@ -30,7 +30,7 @@ module Startb1_mod
 
     ! read the complete shapefun file to -> sfile
     open (91, file='shapefun', form='formatted', status='old', action='read')
-    call create_read_ShapefunFile(sfile, 91)
+    call create(sfile, 91) ! create_read_ShapefunFile
     close(91)
 
     ! write atoms file and get maximum record lengths for vpotnew file and meshes file
@@ -39,7 +39,7 @@ module Startb1_mod
     ! routine to write binary potential and binary meshes
     call write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
 
-    call destroy_ShapefunFile(sfile)
+    call destroy(sfile)
 
   endsubroutine ! startb1_wrapper_new
 
@@ -48,10 +48,10 @@ module Startb1_mod
 !> and determine the record length ('max_reclen') for the binary direct access potential file.
   subroutine write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
 
-    use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
+    use read_formatted_mod, only: PotentialEntry, create, destroy
     use read_formatted_shapefun_mod, only: ShapefunFile
-    use BasisAtom_mod, only: BasisAtom, createBasisAtom, openBasisAtomDAFile, writeBasisAtomDA, closeBasisAtomDAFile, destroyBasisAtom
-    use RadialMeshData_mod, only: RadialMeshData, getMinReclenMesh, createRadialMeshData, destroyRadialMeshData
+    use BasisAtom_mod, only: BasisAtom, createBasisAtom, openBasisAtomDAFile, writeBasisAtomDA, closeBasisAtomDAFile, destroy
+    use RadialMeshData_mod, only: RadialMeshData, getMinReclenMesh, create, destroy
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
     double precision, intent(out) :: Zat(:)
@@ -85,7 +85,7 @@ module Startb1_mod
     do iatom = 1, naez
 
       do ispin = 1, nspin
-        call create_read_PotentialEntry(pe(ispin), fu, iatom)
+        call create(pe(ispin), fu, iatom) ! create_read_PotentialEntry
 
         if (iatom == 1 .and. ispin == 1) EFERMI = pe(ispin)%header%EFERMI ! take approximate Fermi energy from 1st potential entry
 
@@ -151,17 +151,17 @@ module Startb1_mod
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
       if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
       
-      call createRadialMeshData(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1)
+      call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1) ! createRadialMeshData
       
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
       
       ! cleanup
-      call destroyRadialMeshData(mesh)
-      call destroyBasisAtom(atom)
+      call destroy(mesh)
+      call destroy(atom)
       do ispin = 1, nspin
-        call destroy_PotentialEntry(pe(ispin))
+        call destroy(pe(ispin))
       enddo ! ispin
 
     enddo ! iatom ! end loop over atoms
@@ -185,15 +185,15 @@ module Startb1_mod
 
 
   subroutine write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
-    use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
+    use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy
     use read_formatted_shapefun_mod, only: ShapefunFile
-    use BasisAtom_mod, only: BasisAtom, createBasisAtom, destroyBasisAtom
+    use BasisAtom_mod, only: BasisAtom, create, destroy
     use BasisAtom_mod, only: openBasisAtomPotentialDAFile, writeBasisAtomPotentialDA, closeBasisAtomPotentialDAFile
 #ifndef TASKLOCAL_FILES
     use BasisAtom_mod, only: openBasisAtomPotentialIndexDAFile, writeBasisAtomPotentialIndexDA, closeBasisAtomPotentialIndexDAFile
     use RadialMeshData_mod, only: openRadialMeshDataIndexDAFile, writeRadialMeshDataIndexDA, closeRadialMeshDataIndexDAFile
 #endif
-    use RadialMeshData_mod, only: RadialMeshData, initRadialMesh, createRadialMeshData, destroyRadialMeshData
+    use RadialMeshData_mod, only: RadialMeshData, initRadialMesh, create, destroy
     use RadialMeshData_mod, only: openRadialMeshDataDAFile, writeRadialMeshDataDA, closeRadialMeshDataDAFile
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
@@ -227,8 +227,8 @@ module Startb1_mod
       ipand = sfile%mesh(cell_index)%npan+1
       irid = sfile%mesh(cell_index)%meshn
 
-      call createBasisAtom(atom, iatom, lpot, nspin, irmind, irmd)
-      call createRadialMeshData(meshdata, irmd, ipand)
+      call create(atom, iatom, lpot, nspin, irmind, irmd) ! createBasisAtom
+      call create(meshdata, irmd, ipand) ! createRadialMeshData
 
       ! set potential
       do ispin = 1, nspin
@@ -261,10 +261,10 @@ module Startb1_mod
       endif ! not nowrite
 
       ! cleanup
-      call destroyBasisAtom(atom)
-      call destroyRadialMeshData(meshdata)
+      call destroy(atom)
+      call destroy(meshdata)
       do ispin = 1, nspin
-        call destroy_PotentialEntry(pe(ispin))
+        call destroy(pe(ispin))
       enddo
 
     enddo ! endloop over atoms

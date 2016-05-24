@@ -11,8 +11,6 @@ module BroydenData_mod
   implicit none
   private
   public :: BroydenData, create, destroy
-  public :: createBroydenData, destroyBroydenData ! deprecated
-  
 
   type BroydenData
     double precision, allocatable :: sm1s(:)

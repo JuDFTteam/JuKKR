@@ -29,7 +29,7 @@ program KKRnano
 
   use DimParams_mod, only: DimParams, load, destroy
   use InputParams_mod, only: InputParams, readInputParamsFromFile
-  use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, readMain2Arrays, destroy
+  use Main2Arrays_mod, only: Main2Arrays, create, load, destroy
 
   use ScatteringCalculation_mod, only: energyloop
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
@@ -143,8 +143,8 @@ program KKRnano
     if (ios /= 0) warn(6, "unable to create time-info file!") ! but the output will be redirected to fort.2
   endif ! master
 
-  call createMain2Arrays(arrays, dims)
-  call readMain2Arrays(arrays, 'arrays.unf') ! every process does this!
+  call create(arrays, dims)
+  call load(arrays, 'arrays.unf') ! every process does this!
 
   flag = readInputParamsFromFile(params, 'input.unf')
   ! done reading variables

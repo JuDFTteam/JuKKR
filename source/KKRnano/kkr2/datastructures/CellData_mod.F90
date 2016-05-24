@@ -8,12 +8,11 @@ module CellData_mod
   implicit none
   private
   public :: CellData, create, destroy
-  public :: createCellData, destroyCellData ! deprecated
 
   type CellData
     integer :: cell_index
-    type(ShapefunData)   :: shdata
-  endtype
+    type(ShapefunData) :: shdata
+  endtype ! CellData
 
   interface create
     module procedure createCellData
@@ -23,7 +22,7 @@ module CellData_mod
     module procedure destroyCellData
   endinterface
   
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   subroutine createCellData(cell, irid, lmmax_shape, nfund)
@@ -39,7 +38,7 @@ module CellData_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyCellData(cell)
+  elemental subroutine destroyCellData(cell)
     use ShapefunData_mod, only: destroy
     type(CellData), intent(inout) :: cell
 
@@ -47,4 +46,4 @@ module CellData_mod
 
   endsubroutine ! destroy
 
-endmodule CellData_mod
+endmodule ! CellData_mod

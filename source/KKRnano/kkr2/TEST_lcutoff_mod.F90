@@ -27,7 +27,7 @@ module TEST_lcutoff_mod
   !----------------------------------------------------------------------------
   subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radii, cutoff_radius, solver_type)
     use Main2Arrays_mod, only: Main2Arrays
-    use TruncationZone_mod, only: TruncationZone, createTruncationZone
+    use TruncationZone_mod, only: TruncationZone, create
 
     type(TruncationZone), intent(inout) :: trunc_zone
     type(Main2Arrays), intent(in) :: arrays
@@ -107,7 +107,7 @@ module TEST_lcutoff_mod
       warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
 
     ! TODO: a bit confusing, is never deallocated
-    call createTruncationZone(trunc_zone, mask=lmax_full, masks=lmax_atom)
+    call create(trunc_zone, mask=lmax_full, masks=lmax_atom)
 
     allocate(lmax_array(trunc_zone%naez_trc)) ! lmax_array is never deallocated - who cares
     lmax_array(:) = lmax_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only

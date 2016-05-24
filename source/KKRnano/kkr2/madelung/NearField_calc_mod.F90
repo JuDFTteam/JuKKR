@@ -23,8 +23,7 @@ module NearField_calc_mod
     use CalculationData_mod, only: CalculationData, getAtomData, getDensities
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
-    use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection
-    use NearField_com_mod, only: calc_nf_correction
+    use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection, calculate
     
     type(CalculationData), intent(inout) :: calc_data
     type(Main2Arrays), intent(in) :: arrays
@@ -71,7 +70,7 @@ module NearField_calc_mod
 
     enddo ! ilocal
 
-    call calc_nf_correction(nf_correction, local_cell, calc_data%madelung_calc%clebsch, mpi_comm)
+    call calculate(nf_correction, local_cell, calc_data%madelung_calc%clebsch, mpi_comm) ! calc_nf_correction
 
     do ilocal = 1, num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)

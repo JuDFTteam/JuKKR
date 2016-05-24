@@ -20,7 +20,6 @@ module ShapeGauntCoefficients_mod
   implicit none
   private
   public :: ShapeGauntCoefficients, create, destroy
-  public :: createShapeGauntCoefficients, destroyShapeGauntCoefficients ! deprecated
 
   type ShapeGauntCoefficients
     double precision, allocatable :: GSH(:)

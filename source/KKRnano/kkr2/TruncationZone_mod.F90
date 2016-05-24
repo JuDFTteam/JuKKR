@@ -14,8 +14,6 @@ module TruncationZone_mod
   implicit none
   private
   public :: TruncationZone, create, destroy
-  public :: createTruncationZone!, destroyTruncationZone ! deprecated
-! public :: translateInd
 
   type TruncationZone
     integer :: naez_trc = 0 !> number of atoms in truncation zone

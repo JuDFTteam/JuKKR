@@ -220,7 +220,7 @@ module kkrmat_new_mod
     use fillKKRMatrix_mod, only: dump
     use TFQMRSolver_mod, only: TFQMRSolver, solve
     use SparseMatrixDescription_mod, only: dump
-    use InitialGuess_mod, only: InitialGuess, iguess_load, iguess_save
+    use InitialGuess_mod, only: InitialGuess, load, store
     use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
     use KKROperator_mod, only: KKROperator
     use BCPOperator_mod, only: BCPOperator, calc
@@ -303,7 +303,7 @@ module kkrmat_new_mod
     initial_zero = .true.
     if (iguess_data%iguess == 1) then
       initial_zero = .false.
-      call iguess_load(iguess_data, ms%mat_X)
+      call load(iguess_data, ms%mat_X)
     endif
 
     call solver%set_initial_zero(initial_zero)
@@ -342,7 +342,7 @@ module kkrmat_new_mod
     endif ! cutoffmode == 4
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
-    call iguess_save(iguess_data, ms%mat_X)
+    call store(iguess_data, ms%mat_X)
 
     TESTARRAYLOG(3, ms%mat_X)
     

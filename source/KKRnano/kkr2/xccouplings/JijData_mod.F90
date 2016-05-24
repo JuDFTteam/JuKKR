@@ -11,7 +11,6 @@ module JijData_mod
   implicit none
   private
   public :: JijData, create, destroy
-  public :: createJijData, destroyJijData ! deprecated
   
   type JijData
 

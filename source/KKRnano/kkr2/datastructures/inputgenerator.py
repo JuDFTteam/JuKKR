@@ -75,7 +75,7 @@ print '  contains'
 #----------- Generate code for retrieving config values -
 print '!'+'-'*79
 print 'integer function get' + configname + 'Values(filename, values) result(ierror)'
-print '  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroy'
+print '  use ConfigReader_mod, only: ConfigReader, create, destroy'
 print '  use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND'
 print '  use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE'
 print '  use ConfigReader_mod, only: getValue, parseFile'
@@ -88,7 +88,7 @@ print '  type(ConfigReader) :: cr'
 print
 print """  ierror = 0
   write(*,*) "Reading information from input.conf..."
-  call createConfigReader(cr)
+  call create(cr) ! createConfigReader
 #define destroy_and_return   call destroy(cr) ; return
   ierror = parseFile(cr, filename)
   if (ierror /= 0) then

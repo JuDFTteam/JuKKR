@@ -47,7 +47,6 @@ module NearField_kkr_mod
     procedure :: get_pot => get_intracell
   endtype
   
-  
   double precision, parameter, private :: PI = 3.1415926535897932d0
 
   interface create

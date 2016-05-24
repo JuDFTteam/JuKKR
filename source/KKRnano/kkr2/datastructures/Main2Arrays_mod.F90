@@ -19,9 +19,7 @@
 module Main2Arrays_mod
   implicit none
   private
-  public :: Main2Arrays, create, destroy
-  public :: createMain2Arrays!, destroyMain2Arrays ! deprecated
-  public :: readMain2Arrays, writeMain2Arrays
+  public :: Main2Arrays, create, destroy, load, store
 
   type Main2Arrays
     integer :: nsymat
@@ -52,6 +50,14 @@ module Main2Arrays_mod
     module procedure destroyMain2Arrays
   endinterface
 
+  interface load
+    module procedure readMain2Arrays
+  endinterface
+  
+  interface store
+    module procedure writeMain2Arrays
+  endinterface
+  
   contains
 
   !-----------------------------------------------------------------------------

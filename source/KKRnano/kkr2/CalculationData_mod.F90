@@ -111,7 +111,8 @@ module CalculationData_mod
     allocate(self%energies_a(num_local_atoms))
     allocate(self%ldau_data_a(num_local_atoms))
     allocate(self%madelung_sum_a(num_local_atoms)) ! only visible to this module and MadelungPotential_mod.F90
-    allocate(self%jij_data_a(num_local_atoms)) ; if(num_local_atoms > 1) warn(6, "Jij work with max. 1 atom so far!") 
+    allocate(self%jij_data_a(num_local_atoms)) 
+    if(num_local_atoms > 1 .and. params%Jij) warn(6, "Jij work with max. 1 atom so far!") 
     
     allocate(self%atom_ids(num_local_atoms))
 
@@ -138,7 +139,7 @@ module CalculationData_mod
   !> Calculate Madelung Lattice sums for all local atoms.
   subroutine prepareMadelung(self, arrays)
     use Main2Arrays_mod, only: Main2Arrays
-    use MadelungCalculator_mod, only: calculateMadelungLatticeSum
+    use MadelungCalculator_mod, only: calculate
 
     type(CalculationData), intent(inout) :: self
     type(Main2Arrays), intent(in):: arrays
@@ -147,7 +148,7 @@ module CalculationData_mod
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
-      call calculateMadelungLatticeSum(self%madelung_sum_a(ila), self%madelung_calc, atom_id, arrays%rbasis)
+      call calculate(self%madelung_sum_a(ila), self%madelung_calc, atom_id, arrays%rbasis)
     enddo ! ila
 
 !   stop 'DEBUG: stop after calculateMadelungLatticeSum in CalculationData_mod.F90:166'    
@@ -248,23 +249,7 @@ module CalculationData_mod
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use TEST_lcutoff_mod, only: num_truncated
-    ! deprecated interfaces
-    use LatticeVectors_mod, only: createLatticeVectors
-    use RefCluster_mod, only: createRefCluster              
-    use TEST_lcutoff_mod, only: initLcutoffNew                
-    use ClusterInfo_mod, only: createClusterInfo         
-    use DensityResults_mod, only: createDensityResults          
-    use EnergyResults_mod, only: createEnergyResults           
-    use LDAUData_mod, only: createLDAUData                
-    use JijData_mod, only: createJijData                 
-    use MadelungCalculator_mod, only: createMadelungCalculator
-    use MadelungCalculator_mod, only: createMadelungLatticeSum      
-    use GauntCoefficients_mod, only: createGauntCoefficients       
-    use ShapeGauntCoefficients_mod, only: createShapeGauntCoefficients  
-    use BroydenData_mod, only: createBroydenData             
-    use KKRresults_mod, only: createKKRresults
-!   include 'mpif.h'
+    use TEST_lcutoff_mod, only: num_truncated, initLcutoffNew                
     
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
@@ -275,19 +260,19 @@ module CalculationData_mod
 
     integer :: atom_id, ila, irmd
 
-    call createLatticeVectors(self%lattice_vectors, arrays%bravais)
+    call create(self%lattice_vectors, arrays%bravais) ! createLatticeVectors
 
     ! create cluster for each local atom
     !$omp parallel do private(ila)
     do ila = 1, self%num_local_atoms
-      call createRefCluster(self%ref_cluster_a(ila), self%lattice_vectors%rr, arrays%rbasis, params%rclust, self%atom_ids(ila))
+      call create(self%ref_cluster_a(ila), self%lattice_vectors%rr, arrays%rbasis, params%rclust, self%atom_ids(ila)) ! createRefCluster
 !     write(*,*) "Atoms in ref. cluster: ", self%ref_cluster_a(ila)%nacls
     enddo ! ila
     !$omp endparallel do
 
     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays, params%lcutoff_radii, params%cutoff_radius, params%solver) ! setup the truncation zone
 
-    call createClusterInfo(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm)
+    call create(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm) ! createClusterInfo
 
     if (mp%isMasterRank) then
       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
@@ -319,25 +304,25 @@ module CalculationData_mod
       atom_id = self%atom_ids(ila)
       irmd = self%mesh_a(ila)%irmd
 
-      call createKKRresults(self%kkr_a(ila), dims, self%clusters%naclsd)
-      call createDensityResults(self%densities_a(ila), dims, irmd)
-      call createEnergyResults(self%energies_a(ila), dims%nspind, dims%lmaxd)
+      call create(self%kkr_a(ila), dims, self%clusters%naclsd) ! createKKRresults
+      call create(self%densities_a(ila), dims%lmpotd, dims%lmaxd, dims%iemxd, dims%nspind, irmd) ! createDensityResults
+      call create(self%energies_a(ila), dims%nspind, dims%lmaxd) ! createEnergyResults
 
-      call createLDAUData(self%ldau_data_a(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
-      call createJijData(self%jij_data_a(ila), .false., params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
+      call create(self%ldau_data_a(ila), params%ldau, irmd, dims%lmaxd, dims%nspind) ! createLDAUData
+      call create(self%jij_data_a(ila), .false., params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind) ! createJijData
 
-      call createMadelungLatticeSum(self%madelung_sum_a(ila), self%madelung_calc%lmxspd, dims%naez) 
+      call create(self%madelung_sum_a(ila), self%madelung_calc%lmxspd, dims%naez) ! createMadelungLatticeSum
 
       ! ASSERT( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
 
     enddo ! ila
 
     ! calculate Gaunt coefficients
-    call createGauntCoefficients(self%gaunts, dims%lmaxd)
-    call createShapeGauntCoefficients(self%shgaunts, dims%lmaxd)
+    call create(self%gaunts, dims%lmaxd) ! createGauntCoefficients
+    call create(self%shgaunts, dims%lmaxd) ! createShapeGauntCoefficients
     
 !   write(*,*) __FILE__,__LINE__," createBroydenData deavtivated for DEBUG!"
-    call createBroydenData(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing)  ! getBroydenDim replaces former NTIRD
+    call create(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing) ! createBroydenData ! getBroydenDim replaces former NTIRD
 
 !   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
     call setup_iguess(self, dims, arrays%nofks) ! setup storage for iguess
@@ -348,7 +333,7 @@ module CalculationData_mod
   !> Initialise iguess datastructure.
   subroutine setup_iguess(self, dims, nofks)!, kmesh)
     use DimParams_mod, only: DimParams
-    use InitialGuess_mod, only: create ! deprecated exceptional naming with underscore
+    use InitialGuess_mod, only: create
     use TEST_lcutoff_mod, only: num_truncated
 
     type(CalculationData), intent(inout) :: self
@@ -384,10 +369,9 @@ module CalculationData_mod
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     
-    use CellData_mod, only: createCellData
-    use BasisAtom_mod, only: createBasisAtomFromFile
-    use RadialMeshData_mod, only: createRadialMeshDataFromFile
-    use BasisAtom_mod, only: associateBasisAtomMesh, associateBasisAtomCell
+    use CellData_mod, only: create
+    use BasisAtom_mod, only: load, associateBasisAtomMesh, associateBasisAtomCell
+    use RadialMeshData_mod, only: load
     use KKRnanoParallel_mod, only: KKRnanoParallel
      
     type(CalculationData), intent(inout) :: self
@@ -408,7 +392,7 @@ module CalculationData_mod
 
     ! generate storage for cell information + shape-functions
     do ila = 1, self%num_local_atoms
-      call createCellData(self%cell_a(ila), dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
+      call create(self%cell_a(ila), dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
     enddo ! ila
 
     do ila = 1, self%num_local_atoms
@@ -419,9 +403,9 @@ module CalculationData_mod
       ! Then interpolate potential to the new mesh
 
       ! load the input data
-      call createBasisAtomFromFile(old_atom_a(ila), "atoms", "vpotnew.0", atom_id)
+      call load(old_atom_a(ila), "atoms", "vpotnew.0", atom_id)
 
-      call createRadialMeshDataFromFile(old_mesh_a(ila), "meshes.0", atom_id)
+      call load(old_mesh_a(ila), "meshes.0", atom_id)
 
       call associateBasisAtomMesh(old_atom_a(ila), old_mesh_a(ila))
 
@@ -466,9 +450,9 @@ module CalculationData_mod
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use ConstructShapes_mod, only: createShape, InterstitialMesh, destroy, write_shapefun_file
+    use ConstructShapes_mod, only: create, InterstitialMesh, destroy, store
     use ShapefunData_mod, only: ShapefunData, destroy
-    use RadialMeshData_mod, only: createRadialMeshData, initRadialMesh
+    use RadialMeshData_mod, only: create, initRadialMesh
     use KKRnanoParallel_mod, only: KKRnanoParallel
     include 'mpif.h'
 
@@ -493,10 +477,10 @@ module CalculationData_mod
       new_MT_radius = new_MT_radii(ila)
       num_MT_points = params%num_MT_points
 
-      call createShape(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
-                     params%rclust_voronoi, 4*dims%lmaxd, &
-                     dims%irid-num_MT_points, &
-                     params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id, dims%naez)
+      call create(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
+                  params%rclust_voronoi, 4*dims%lmaxd, &
+                  dims%irid-num_MT_points, &
+                  params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id, dims%naez)
 
       ! use it
       self%cell_a(ila)%shdata = shdata ! possible in Fortran 2003
@@ -508,13 +492,13 @@ module CalculationData_mod
 
       ASSERT( inter_mesh%xrn(1) /= 0.d0 ) ! write(*,*) irmd, irid, ipand, irnsd
 
-      call createRadialMeshData(self%mesh_a(ila), irmd, ipand)
+      call create(self%mesh_a(ila), irmd, ipand)
 
       call initRadialMesh(self%mesh_a(ila), params%alat, inter_mesh%xrn, &
                           inter_mesh%drn, inter_mesh%nm, irmd-irid, irnsd)
 
       ! optional output of shape functions
-      if (params%write_shapes == 1 .or. voronano == 1) call write_shapefun_file(shdata, inter_mesh, atom_id)
+      if (params%write_shapes == 1 .or. voronano == 1) call store(shdata, inter_mesh, atom_id)
 
       call destroy(shdata)
       call destroy(inter_mesh)

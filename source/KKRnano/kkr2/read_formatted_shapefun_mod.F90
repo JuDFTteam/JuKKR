@@ -10,7 +10,6 @@ module read_formatted_shapefun_mod
   
   ! use the following 2 routines to read a shape function file.
   public :: ShapefunFile, create, destroy
-  public :: create_read_ShapefunFile, destroy_ShapefunFile ! deprecated
 
   type Intermesh
     integer :: npan

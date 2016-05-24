@@ -12,11 +12,8 @@ module MadelungCalculator_mod
   implicit none
   private
 
-  public :: MadelungCalculator, MadelungClebschData, MadelungLatticeSum, create, destroy
-  public :: calculateMadelungLatticeSum, createDfac
-  public :: createMadelungLatticeSum!, destroyMadelungLatticeSum ! deprecated
-  public :: createMadelungCalculator!, destroyMadelungCalculator ! deprecated
-  
+  public :: MadelungCalculator, MadelungClebschData, MadelungLatticeSum
+  public :: create, calculate, destroy
   public :: testdimlat ! public for then --check functionality
 
   !----------------------------------------------------------------------------
@@ -64,13 +61,19 @@ module MadelungCalculator_mod
 
   
   interface create
-    module procedure createMadelungCalculator, createMadelungClebschData, createMadelungLatticeSum, createDfac
+    module procedure createMadelungCalculator, createMadelungClebschData, createMadelungLatticeSum
+  endinterface
+  
+  interface calculate
+    module procedure calculateMadelungLatticeSum, createDfac
   endinterface
   
   interface destroy
-    module procedure destroyMadelungCalculator, destroyMadelungClebschData, destroyMadelungLatticeSum, &
-                     destroyMadelungHarmonics, destroyMadelungLatticeData
+    module procedure destroyMadelungCalculator, destroyMadelungClebschData, &
+      destroyMadelungLatticeSum, destroyMadelungHarmonics, destroyMadelungLatticeData
   endinterface
+  
+  
   
   contains
 

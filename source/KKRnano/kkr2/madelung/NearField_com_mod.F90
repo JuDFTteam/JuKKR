@@ -15,9 +15,7 @@ module NearField_com_mod
   private
   public :: LocalCellInfo!, create, destroy
   public :: NearFieldCorrection!, create, destroy
-!   public :: createNearFieldCorrection, destroyNearFieldCorrection ! deprecated
-!   public :: createLocalCellInfo, destroyLocalCellInfo ! deprecated
-  public :: calc_nf_correction
+  public :: calculate
   
   type LocalCellInfo
     double precision, allocatable :: charge_moments(:)
@@ -45,7 +43,11 @@ module NearField_com_mod
 !   interface create
 !     module procedure createNearFieldCorrection, createLocalCellInfo
 !   endinterface
-!   
+
+  interface calculate
+    module procedure calc_nf_correction
+  endinterface
+   
   interface destroy
     module procedure destroyNearFieldCorrection, destroyLocalCellInfo
   endinterface
@@ -179,7 +181,7 @@ module NearField_com_mod
   subroutine add_potential_correction(delta_potential, intra_pot, radial_points, dist_vec, gaunt, critical_index)
     use NearField_kkr_mod, only: IntracellPotential
     use MadelungCalculator_mod, only: MadelungClebschData
-    use NearField_mod, only: calc_near_field, calc_wrong_contribution_coeff
+    use NearField_mod, only: calculate
     
     double precision, intent(inout) :: delta_potential(:,:)
     type(IntracellPotential), intent(inout) :: intra_pot
@@ -193,7 +195,7 @@ module NearField_com_mod
     
     allocate(coeffs(size(delta_potential, 2)))
     
-    call calc_wrong_contribution_coeff(coeffs, dist_vec, intra_pot%charge_moments, gaunt)
+    call calculate(coeffs, dist_vec, intra_pot%charge_moments, gaunt) ! calc_wrong_contribution_coeff
     
     ! substract wrong potential
     L = 0
@@ -211,7 +213,7 @@ module NearField_com_mod
     
     ! add correct contribution
     do ii = critical_index, size(radial_points)
-      call calc_near_field(coeffs, radial_points(ii), dist_vec, intra_pot)
+      call calculate(coeffs, radial_points(ii), dist_vec, intra_pot) ! calc_near_field
       delta_potential(ii, :) = delta_potential(ii, :) + coeffs
     enddo ! ii
 

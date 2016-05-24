@@ -10,11 +10,8 @@
 module ConstructShapes_mod
   implicit none
   private
-  public :: InterstitialMesh
-  public :: destroy
-  public :: createShape
-  public :: write_shapefun_file
-
+  public :: InterstitialMesh, destroy, create, store
+  
   !> A datastructure containing the corresponding interstitial mesh.
   type InterstitialMesh
     integer :: npan !< number of panels
@@ -27,6 +24,14 @@ module ConstructShapes_mod
     module procedure destroyInterstitialMesh
   endinterface
 
+  interface create
+    module procedure createShape
+  endinterface
+  
+  interface store
+    module procedure write_shapefun_file
+  endinterface
+  
   contains
 
   !------------------------------------------------------------------------------
@@ -137,7 +142,7 @@ module ConstructShapes_mod
   subroutine constructFromCluster(self, inter_mesh, rvec, weights, &
                                   lmax_shape, npoints_min, nmin, &
                                   num_MT_points, new_MT_radius, MT_scale, atom_id, num_atoms)
-    use ShapefunData_mod, only: ShapefunData, createShapefunData
+    use ShapefunData_mod, only: ShapefunData, create
     use Voronoi_mod, only: Voronoi_construction
     use ShapeFunctions_mod, only: shapef
 
@@ -215,7 +220,7 @@ module ConstructShapes_mod
     if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, lmifun_s, radius, atom_id)
 
     ! Construct shape-fun datastructure
-    call createShapefunData(self, meshn, ibmaxd, nfun, num_atoms)
+    call create(self, meshn, ibmaxd, nfun, num_atoms)
 
     self%theta = thetas_s(1:meshn,1:nfun) ! store the shape functions
     

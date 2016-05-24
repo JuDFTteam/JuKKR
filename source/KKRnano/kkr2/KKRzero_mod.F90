@@ -86,7 +86,7 @@ module KKRzero_mod
 
     use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
     use DimParams_mod, only: DimParams, parse, store
-    use Main2Arrays_mod, only: Main2Arrays, createMain2Arrays, writeMain2Arrays
+    use Main2Arrays_mod, only: Main2Arrays, create, store
     use BrillouinZone_mod, only: bzkint0, readKpointsFile
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, store, destroy
     use Warnings_mod, only: show_warning_lines
@@ -120,7 +120,7 @@ module KKRzero_mod
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
     
-    call createMain2Arrays(arrays, dims) ! important: determine IEMXD before creating arrays
+    call create(arrays, dims) ! important: determine IEMXD before creating arrays
 
     call rinputnew99(arrays%rbasis, arrays%zat, dims%naez) ! will modify naez if naez == 0 (auto mode)
     arrays%naez = dims%naez ! store corrected number of all atoms also in arrays%
@@ -137,7 +137,7 @@ module KKRzero_mod
       arrays%bravais(:,1) = params%bravais_a(1:3)
       arrays%bravais(:,2) = params%bravais_b(1:3)
       arrays%bravais(:,3) = params%bravais_c(1:3)
-      call writeMain2Arrays(arrays, 'arrays.unf')
+      call store(arrays, 'arrays.unf')
       write(*,*) 'voronano == 1: Starting potential and shapefunctions are not read in by kkr0'
       return
     endif
@@ -206,7 +206,7 @@ module KKRzero_mod
       
       call store(dims, 'inp0.unf')
       ist = writeInputParamsToFile(params, 'input.unf')
-      call writeMain2Arrays(arrays, 'arrays.unf')
+      call store(arrays, 'arrays.unf')
 
       call store(emesh, filename='energy_mesh.0')
         

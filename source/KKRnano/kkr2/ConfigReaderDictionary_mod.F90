@@ -10,7 +10,6 @@ module ConfigReaderDictionary_mod
   implicit none
   private
   public :: Dictionary, create, destroy
-  public :: createDictionary, destroyDictionary ! deprecated
   public :: pushBackDictionary, getDictionaryValue, getTaggedVariable
   
   ! Status flags and error codes

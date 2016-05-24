@@ -11,23 +11,22 @@ module DensityResults_mod
 implicit none
   private
   public :: DensityResults, create, destroy
-  public :: createDensityResults, destroyDensityResults ! deprecated
 
   !> Contains densities and integrated densities (charges)
   !> for one specific atom.
   type DensityResults
 
     double precision  :: total_charge_neutrality     !< excess charge in system
-    double precision, allocatable :: R2NEF(:,:,:)    !< density of states at Fermi energy
-    double precision, allocatable :: RHO2NS(:,:,:)   !< l-expanded density times radius**2
-    double precision, allocatable :: CHARGE(:,:)     !< CHARGE(:,1) l-resolved charge, CHARGE(:,2) l-resolved mag. moment
-    double precision :: CHRGSEMICORE_per_atom        !< semicore charge per atom
-    double precision, allocatable  :: CMINST(:)      !< charge moments in interstitial
-    double precision, allocatable  :: CMOM(:)        !< charge moments in muffin-tin sphere
-    double precision, allocatable :: CATOM(:)        !< CATOM(1) = total charge in cell, CATOM(2) = total mag. moment in cell
-    double complex, allocatable :: DEN(:,:,:)        !< complex density of states
+    double precision, allocatable :: r2nef(:,:,:)    !< density of states at fermi energy
+    double precision, allocatable :: rho2ns(:,:,:)   !< l-expanded density times radius**2
+    double precision, allocatable :: charge(:,:)     !< charge(:,1) l-resolved charge, charge(:,2) l-resolved mag. moment
+    double precision :: chrgsemicore_per_atom        !< semicore charge per atom
+    double precision, allocatable  :: cminst(:)      !< charge moments in interstitial
+    double precision, allocatable  :: cmom(:)        !< charge moments in muffin-tin sphere
+    double precision, allocatable :: catom(:)        !< catom(1) = total charge in cell, catom(2) = total mag. moment in cell
+    double complex, allocatable :: den(:,:,:)        !< complex density of states
     double precision :: force_flm(-1:1)
-    double precision, allocatable :: RNORM(:,:)      !> Renormalisation factors LLoyd - leave here?
+    double precision, allocatable :: rnorm(:,:)      !> renormalisation factors lloyd - leave here?
 
     integer :: irmd
     integer :: lmpotd
@@ -50,32 +49,18 @@ implicit none
   !-----------------------------------------------------------------------------
   !> Constructs a DensityResults object.
   !> @param[in,out] self    The DensityResults object to construct.
-  !> @param[in]     dims
-  subroutine createDensityResults(self, dims, num_radial_irmd)
-    use DimParams_mod, only: DimParams
-    type (DensityResults), intent(inout) :: self
-    type (DimParams), intent(in) :: dims
-    integer, intent(in) :: num_radial_irmd
-
-    call createDensityResultsImpl(self, num_radial_irmd, dims%lmpotd, dims%lmaxd, dims%iemxd, dims%nspind)
-
-  endsubroutine ! create
-
-  !-----------------------------------------------------------------------------
-  !> Constructs a DensityResults object.
-  !> @param[in,out] self    The DensityResults object to construct.
   !> @param[in]     irmd
   !> @param[in]     lmpotd
   !> @param[in]     lmaxd
   !> @param[in]     iemxd
   !> @param[in]     nspind
-  subroutine createDensityResultsImpl(self, irmd,lmpotd,lmaxd,iemxd,nspind)
-    type (DensityResults), intent(inout) :: self
-    integer, intent(in) ::  irmd
+  subroutine createDensityResults(self, lmpotd, lmaxd, iemxd, nspind, irmd)
+    type(DensityResults), intent(inout) :: self
     integer, intent(in) ::  lmpotd
     integer, intent(in) ::  lmaxd
     integer, intent(in) ::  iemxd
     integer, intent(in) ::  nspind
+    integer, intent(in) ::  irmd
 
     integer :: memory_stat
 
@@ -85,18 +70,18 @@ implicit none
     self%iemxd = iemxd
     self%nspind = nspind
 
-    ALLOCATECHECK(self%R2NEF(irmd,lmpotd,2))
-    ALLOCATECHECK(self%RHO2NS(irmd,lmpotd,2))
-    ALLOCATECHECK(self%CHARGE(0:lmaxd+1,2))
-    ALLOCATECHECK(self%CMINST(lmpotd))
-    ALLOCATECHECK(self%CMOM(lmpotd))
-    ALLOCATECHECK(self%CATOM(nspind))
-    ALLOCATECHECK(self%DEN(0:lmaxd+1,iemxd,nspind))
-    ALLOCATECHECK(self%RNORM(IEMXD,2))
+    ALLOCATECHECK(self%r2nef(irmd,lmpotd,2))
+    ALLOCATECHECK(self%rho2ns(irmd,lmpotd,2))
+    ALLOCATECHECK(self%charge(0:lmaxd+1,2))
+    ALLOCATECHECK(self%cminst(lmpotd))
+    ALLOCATECHECK(self%cmom(lmpotd))
+    ALLOCATECHECK(self%catom(nspind))
+    ALLOCATECHECK(self%den(0:lmaxd+1,iemxd,nspind))
+    ALLOCATECHECK(self%rnorm(iemxd,2))
 
     !initialise to be safe
-    self%RHO2NS = 0.0d0
-    self%R2NEF = 0.0d0
+    self%rho2ns = 0.0d0
+    self%r2nef = 0.0d0
     self%force_flm = 9999.9d0
   endsubroutine ! create
 
@@ -104,18 +89,18 @@ implicit none
   !> Destroys a DensityResults object.
   !> @param[in,out] self    The DensityResults object to destroy.
   subroutine destroyDensityResults(self)
-    type (DensityResults), intent(inout) :: self
+    type(DensityResults), intent(inout) :: self
 
     integer :: memory_stat
 
-    DEALLOCATECHECK(self%R2NEF)
-    DEALLOCATECHECK(self%RHO2NS)
-    DEALLOCATECHECK(self%CHARGE)
-    DEALLOCATECHECK(self%CMINST)
-    DEALLOCATECHECK(self%CMOM)
-    DEALLOCATECHECK(self%CATOM)
-    DEALLOCATECHECK(self%DEN)
-    DEALLOCATECHECK(self%RNORM)
+    DEALLOCATECHECK(self%r2nef)
+    DEALLOCATECHECK(self%rho2ns)
+    DEALLOCATECHECK(self%charge)
+    DEALLOCATECHECK(self%cminst)
+    DEALLOCATECHECK(self%cmom)
+    DEALLOCATECHECK(self%catom)
+    DEALLOCATECHECK(self%den)
+    DEALLOCATECHECK(self%rnorm)
   endsubroutine ! destroy
 
 endmodule ! DensityResults_mod

@@ -16,8 +16,7 @@ module InterpolateBasisAtom_mod
   ! new_atom gets allocated
   ! old_atom unmodified
   subroutine interpolateBasisAtom(new_atom, old_atom, new_mesh, lpot_new)
-    use BasisAtom_mod, only: BasisAtom, associateBasisAtomMesh
-    use BasisAtom_mod, only: createBasisAtom ! deprecated
+    use BasisAtom_mod, only: BasisAtom, create, associateBasisAtomMesh
     use RadialMeshData_mod, only: RadialMeshData
     type(BasisAtom), intent(inout) :: new_atom
     type(BasisAtom), intent(in) :: old_atom
@@ -38,8 +37,7 @@ module InterpolateBasisAtom_mod
     nspin = old_atom%nspin
     old_mesh => old_atom%mesh_ptr
 
-    call createBasisAtom(new_atom, old_atom%atom_index, lpot_new, nspin, &
-                         new_mesh%irmin, new_mesh%irmd)
+    call create(new_atom, old_atom%atom_index, lpot_new, nspin, new_mesh%irmin, new_mesh%irmd) ! createBasisAtom
 
     lmpot_min = min(old_atom%potential%lmpot, new_atom%potential%lmpot)
 
@@ -111,7 +109,7 @@ module InterpolateBasisAtom_mod
       new_atom%potential = old_atom%potential
 
     endif
-  endsubroutine interpolateBasisAtom
+  endsubroutine ! interpolate
 
 
   !----------------------------------------------------------------------------
@@ -164,6 +162,6 @@ module InterpolateBasisAtom_mod
 
     enddo ! ii
 
-  endsubroutine interpolate
+  endsubroutine ! interpolate
   
-endmodule InterpolateBasisAtom_mod
+endmodule ! InterpolateBasisAtom_mod

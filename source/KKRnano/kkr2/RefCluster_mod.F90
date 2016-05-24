@@ -12,7 +12,6 @@ module RefCluster_mod
   private
   
   public :: RefCluster, create, destroy
-  public :: createRefCluster, destroyRefCluster ! deprecated
 
   type RefCluster
     integer :: numn0 !< number of inequivalent cluster atoms

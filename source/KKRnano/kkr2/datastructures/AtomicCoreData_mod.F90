@@ -1,8 +1,7 @@
 module AtomicCoreData_mod
   implicit none
   private
-  public :: AtomicCoreData, create, destroy 
-  public :: createAtomicCoreData, destroyAtomicCoreData ! deprecated
+  public :: AtomicCoreData, create, destroy
 
   !> Structure that contains information about core states
   type AtomicCoreData
@@ -15,7 +14,7 @@ module AtomicCoreData_mod
     ! data used for calculation - not written to disk
     double precision :: QC_corecharge !< total charge of core electrons
     double precision, allocatable :: RHOCAT(:,:) !< radial charge density of core
-  endtype
+  endtype ! AtomicCoreData
 
   interface create
     module procedure createAtomicCoreData
@@ -28,31 +27,32 @@ module AtomicCoreData_mod
   contains
 
   !----------------------------------------------------------------------------
-  subroutine createAtomicCoreData(core, irmd)
-    type(AtomicCoreData), intent(inout) :: core
+  subroutine createAtomicCoreData(self, irmd)
+    type(AtomicCoreData), intent(inout) :: self
     integer, intent(in) :: irmd
 
-    core%irmd = irmd
+    self%irmd = irmd
 
     ! initialise with garbage values
-    core%LCORE = -1
-    core%NCORE = -1
-    core%ECORE = 1.d9 ! much to high to be reasonable
-    core%ITITLE = 0
-    core%QC_corecharge = 0.d0
+    self%LCORE = -1
+    self%NCORE = -1
+    self%ECORE = 1.d9 ! much to high to be reasonable
+    self%ITITLE = 0
+    self%QC_corecharge = 0.d0
 
-    allocate(core%RHOCAT(irmd, 2)) ! allocate for both spin directions
-    core%RHOCAT = 0.d0
+    allocate(self%RHOCAT(irmd, 2)) ! allocate for both spin directions
+    self%RHOCAT = 0.d0
 
   endsubroutine ! create
 
 
   !----------------------------------------------------------------------------
-  subroutine destroyAtomicCoreData(core)
-    type(AtomicCoreData), intent(inout) :: core
-
-    deallocate(core%RHOCAT)
+  elemental subroutine destroyAtomicCoreData(self)
+    type(AtomicCoreData), intent(inout) :: self
+    
+    integer :: ist
+    deallocate(self%RHOCAT, stat=ist)
 
   endsubroutine ! destroy
 
-endmodule AtomicCoreData_mod
+endmodule ! AtomicCoreData_mod

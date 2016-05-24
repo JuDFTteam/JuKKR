@@ -73,7 +73,7 @@ module InputParams_mod
   contains
 !-------------------------------------------------------------------------------
 integer function getInputParamsValues(filename, values) result(ierror)
-  use ConfigReader_mod, only: ConfigReader, createConfigReader, destroy
+  use ConfigReader_mod, only: ConfigReader, create, destroy
   use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND
   use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE
   use ConfigReader_mod, only: getValue, parseFile
@@ -85,7 +85,7 @@ integer function getInputParamsValues(filename, values) result(ierror)
 
   ierror = 0
   write(*,*) "Reading information from input.conf..."
-  call createConfigReader(cr)
+  call create(cr) ! createConfigReader
 #define destroy_and_return   call destroy(cr) ; return
   ierror = parseFile(cr, filename)
   if (ierror /= 0) then

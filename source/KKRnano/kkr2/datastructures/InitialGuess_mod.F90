@@ -5,9 +5,8 @@
 module InitialGuess_mod
   implicit none
   private
-  public :: InitialGuess, create, destroy
-  public :: update_ekm, iguess_set_energy_ind, iguess_set_spin_ind, iguess_set_k_ind, iguess_load, iguess_save
-  public :: createInitialGuess, destroyInitialGuess ! deprecated
+  public :: InitialGuess, create, destroy, load, store
+  public :: update_ekm, iguess_set_energy_ind, iguess_set_spin_ind, iguess_set_k_ind
 
   type InitialGuess
     !PRIVATE
@@ -18,7 +17,7 @@ module InitialGuess_mod
     integer :: iguess
     complex, allocatable :: PRSC(:,:,:)
     integer, allocatable :: ek_indices(:)
-  endtype
+  endtype ! InitialGuess
 
   interface create
     module procedure createInitialGuess
@@ -28,6 +27,15 @@ module InitialGuess_mod
     module procedure destroyInitialGuess
   endinterface
 
+  interface load
+    module procedure iguess_load
+  endinterface
+
+  interface store
+    module procedure iguess_save
+  endinterface
+
+  
   contains
 
   !------------------------------------------------------------------------------
@@ -221,7 +229,7 @@ program test
         call iguess_set_energy_ind(ig, e)
         call iguess_set_k_ind(ig, k)
         call iguess_set_spin_ind(ig, spin) 
-        call iguess_save(ig, block)
+        call load(ig, block)
       enddo ! spin
       ekm = ekm + 1
     enddo ! k
@@ -234,7 +242,7 @@ program test
         call iguess_set_energy_ind(ig, e)
         call iguess_set_k_ind(ig, k)
         call iguess_set_spin_ind(ig, spin)
-        call iguess_load(ig, block_read)
+        call load(ig, block_read)
         write(*,*) block_read
         write(*,*) "-----------------------------"
       enddo ! spin

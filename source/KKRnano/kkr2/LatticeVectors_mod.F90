@@ -10,7 +10,6 @@ module LatticeVectors_mod
   private
   
   public :: LatticeVectors, create, destroy
-  public :: createLatticeVectors, destroyLatticeVectors ! deprecated
 
   type LatticeVectors
     integer :: nrd

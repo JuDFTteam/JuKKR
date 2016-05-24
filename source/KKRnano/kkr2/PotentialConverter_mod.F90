@@ -14,9 +14,9 @@ module PotentialConverter_mod
   
   subroutine kkrvform()
     use DimParams_mod, only: DimParams, load, destroy
-    use BasisAtom_mod, only: BasisAtom, createBasisAtomFromFile, associateBasisAtomMesh, destroyBasisAtom
-    use RadialMeshData_mod, only: RadialMeshData, createRadialMeshDataFromFile, repr_RadialMeshData, destroyRadialMeshData
-    use PotentialData_mod, only: repr_PotentialData
+    use BasisAtom_mod, only: BasisAtom, load, associateBasisAtomMesh, destroy
+    use RadialMeshData_mod, only: RadialMeshData, load, represent, destroy
+    use PotentialData_mod, only: represent
 
     type(DimParams)      :: dims
     type(RadialMeshData) :: mesh
@@ -37,23 +37,23 @@ module PotentialConverter_mod
 
       write(*,*) "Writing potential ", iatom
 
-      call createBasisAtomFromFile(atomdata, "atoms", "vpotnew", iatom)
+      call load(atomdata, "atoms", "vpotnew", iatom)
       CHECKASSERT( atomdata%atom_index == iatom )
 
-      call createRadialMeshDataFromFile(mesh, "meshes", iatom)
+      call load(mesh, "meshes", iatom)
 
       call associateBasisAtomMesh(atomdata, mesh)
 
       ! show data on stdout
-      call repr_RadialMeshData(mesh, str)
+      call represent(mesh, str)
       write(*, '(A)') str
-      call repr_PotentialData(atomdata%potential, str)
+      call represent(atomdata%potential, str)
       write(*, '(A)') str
 
       call writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
 
-      call destroyBasisAtom(atomdata)
-      call destroyRadialMeshData(mesh)
+      call destroy(atomdata)
+      call destroy(mesh)
     enddo ! iatom
 
     call destroy(dims)

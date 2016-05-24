@@ -5,11 +5,9 @@ module ConfigReader_mod
   implicit none
   private
   public :: ConfigReader, create, destroy
-  public :: createConfigReader, destroyConfigReader ! deprecated
   public :: parseFile
   public :: getUnreadVariable
   public :: getValue ! (interfaced)
-!   public :: getValueDouble, getValueDoubleVector, getValueInteger, getValueIntVector, getValueLogical, getValueString  
   
   ! Public constants, error codes
   !  Parse errors
@@ -68,7 +66,7 @@ module ConfigReader_mod
 
 !---------------------------------------------------------------------
   subroutine createConfigReader(this)
-    use ConfigReaderDictionary_mod, only: createDictionary, CONFIG_READER_DICT_VALUE_LENGTH
+    use ConfigReaderDictionary_mod, only: create, CONFIG_READER_DICT_VALUE_LENGTH
     type(ConfigReader), intent(inout) :: this
 
     if (CONFIG_READER_DICT_VALUE_LENGTH < MAX_LINE_LENGTH) then
@@ -77,17 +75,17 @@ module ConfigReader_mod
       stop
     endif
 
-    call createDictionary(this%parse_dict)
+    call create(this%parse_dict) ! createDictionary
 
   endsubroutine ! create
 
 
 !---------------------------------------------------------------------
   subroutine destroyConfigReader(this)
-    use ConfigReaderDictionary_mod, only: destroyDictionary
+    use ConfigReaderDictionary_mod, only: destroy
     type(ConfigReader), intent(inout) :: this
 
-    call destroyDictionary(this%parse_dict)
+    call destroy(this%parse_dict)
 
   endsubroutine ! destroy
 

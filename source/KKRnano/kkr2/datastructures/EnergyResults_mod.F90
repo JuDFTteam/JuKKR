@@ -12,17 +12,16 @@ module EnergyResults_mod
   implicit none
   private
   public :: EnergyResults, create, destroy
-  public :: createEnergyResults, destroyEnergyResults ! deprecated
 
   type EnergyResults
-    double precision   :: VBC(2) !< new muffin-tin zero ???
-    double precision , allocatable :: ECOU(:) !< Coulomb energies
-    double precision , allocatable :: ESPC(:,:) !< core energies
-    double precision , allocatable :: ESPV(:,:) !< E valence bands
-    double precision , allocatable :: EXC(:) !< XC-energy
-    double precision  :: EPOTIN !< kinetic energy minus sum of single particle energies
-    double precision  :: VMAD !< Madelung potential - not used anymore?
-    double precision , allocatable :: AC_madelung(:) !< TODO: should not be field of this structure
+    double precision :: vbc(2) !< new muffin-tin zero ???
+    double precision :: epotin !< kinetic energy minus sum of single particle energies
+    double precision :: vmad !< Madelung potential - not used anymore?
+    double precision, allocatable :: ecou(:) !< Coulomb energies
+    double precision, allocatable :: espc(:,:) !< core energies
+    double precision, allocatable :: espv(:,:) !< E valence bands
+    double precision, allocatable :: exc(:) !< XC-energy
+    double precision, allocatable :: ac_madelung(:) !< TODO: should not be field of this structure
 
     double precision :: e_vxc   !< XC-part of the double counting energy
     double precision :: e_shift !< energy change due to constant potential shift ("MT-shift")
@@ -50,25 +49,25 @@ module EnergyResults_mod
   !> @param[in,out] self    The EnergyResults object to construct.
   !> @param[in]     nspind
   !> @param[in]     lmaxd
-  subroutine createEnergyResults(self, nspind,lmaxd)
+  subroutine createEnergyResults(self, nspind, lmaxd)
     type(EnergyResults), intent(inout) :: self
-    integer, intent(in) ::  nspind
-    integer, intent(in) ::  lmaxd
+    integer, intent(in) :: nspind
+    integer, intent(in) :: lmaxd
 
     integer :: memory_stat
 
     self%lpot = 2 * lmaxd
     self%nspind = nspind
     self%lmaxd = lmaxd
-    self%EPOTIN = 0.d0
-    self%VBC = 0.d0
-    self%VMAD = 0.d0
+    self%epotin = 0.d0
+    self%vbc = 0.d0
+    self%vmad = 0.d0
 
-    ALLOCATECHECK(self%ECOU(0:self%lpot))
-    ALLOCATECHECK(self%ESPC(0:3,nspind))
-    ALLOCATECHECK(self%ESPV(0:lmaxd+1,nspind))
-    ALLOCATECHECK(self%EXC(0:self%lpot))
-    ALLOCATECHECK(self%AC_madelung((self%lpot+1)**2))
+    ALLOCATECHECK(self%ecou(0:self%lpot))
+    ALLOCATECHECK(self%espc(0:3,nspind))
+    ALLOCATECHECK(self%espv(0:lmaxd+1,nspind))
+    ALLOCATECHECK(self%exc(0:self%lpot))
+    ALLOCATECHECK(self%ac_madelung((self%lpot+1)**2))
 
     self%ecou = 0.d0
     self%espc = 0.d0
@@ -90,11 +89,11 @@ module EnergyResults_mod
 
     integer :: memory_stat
 
-    DEALLOCATECHECK(self%ECOU)
-    DEALLOCATECHECK(self%ESPC)
-    DEALLOCATECHECK(self%ESPV)
-    DEALLOCATECHECK(self%EXC)
-    DEALLOCATECHECK(self%AC_madelung)
+    DEALLOCATECHECK(self%ecou)
+    DEALLOCATECHECK(self%espc)
+    DEALLOCATECHECK(self%espv)
+    DEALLOCATECHECK(self%exc)
+    DEALLOCATECHECK(self%ac_madelung)
   endsubroutine ! destroy
 
 endmodule

@@ -13,7 +13,6 @@ module LDAUData_mod
   implicit none
   private
   public :: LDAUData, create, destroy
-  public :: createLDAUData, destroyLDAUData ! deprecated
 
   type LDAUData
     double precision :: EULDAU
