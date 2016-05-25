@@ -402,14 +402,19 @@ module CalculationData_mod
       ! Therefore read 'potential' and 'meshes' data into temporary data structures
       ! Then interpolate potential to the new mesh
 
-      ! load the input data
-      call load(old_atom_a(ila), "atoms", "vpotnew.0", atom_id)
+      ! load the input data unless it is a voronano run
+      if(.NOT. voronano) then
+        call load(old_atom_a(ila), "atoms", "vpotnew.0", atom_id)
 
-      call load(old_mesh_a(ila), "meshes.0", atom_id)
+        call load(old_mesh_a(ila), "meshes.0", atom_id)
 
-      call associateBasisAtomMesh(old_atom_a(ila), old_mesh_a(ila))
+        call associateBasisAtomMesh(old_atom_a(ila), old_mesh_a(ila))
 
-      new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
+        new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
+      else
+        new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
+      endif !voronano
+
     enddo ! ila
 
     ! generate shapes and meshes
