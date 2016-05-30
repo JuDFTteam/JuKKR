@@ -2,8 +2,8 @@
 
 # default values
 PLATFORM = ifort
-TYPE = nodebug
-# TYPE = debug
+TYPE ?= nodebug
+### the user may specify TYPE=debug as a command line argument to make
 
 PROGRAM = kkr.exe
 

@@ -7,7 +7,7 @@ module ShapeGeometryHelpers_mod
   implicit none
   private
 
-  public :: polchk, perp, nrm2, operator(.dot.)
+  public :: polchk, perp, nrm2, operator(.dot.), dist2
   
   interface operator(.dot.)
     module procedure inner_product_v3
@@ -17,6 +17,9 @@ module ShapeGeometryHelpers_mod
     module procedure norm2_squared_v3
   endinterface
   
+  interface dist2
+    module procedure distance_square_v3
+  endinterface
 
   contains
 !---------------------------------------------------------------------
@@ -83,9 +86,9 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
         new = .true.
         do ivrt = 1, nvrt
 #ifndef SAVE_MEMORY
-          if (nrm2(vrt0 - vrt(1:3,ivrt)) < tolvdist) new = .false. ! 0:drop this vertex
+          if (dist2(vrt0, vrt(1:3,ivrt)) < tolvdist) new = .false. ! 0:drop this vertex
 #else
-          if (nrm2(vrt0 - vert(1:3,irt(2,ivrt),irt(3,ivrt))) < tolvdist) new = .false. ! 0:drop this vertex
+          if (dist2(vrt0, vert(1:3,irt(2,ivrt),irt(3,ivrt))) < tolvdist) new = .false. ! 0:drop this vertex
 #endif
           if (.not. new) exit
         enddo ! ivrt
@@ -105,7 +108,7 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
         ivertm = ivert-1; if (ivert == 1) ivertm = nvert        !!! alternative: ivertm = modulo(ivert-1-1, nvert)+1
         vrtm = vert(1:3,ivertm,iface) ! check if the  consecutive vertices define a polygon
 
-        down = sqrt(nrm2(vrtp - vrt0)*nrm2(vrtm - vrt0))
+        down = sqrt(dist2(vrtp, vrt0)*dist2(vrtm, vrt0))
         up = (vrtp - vrt0) .dot. (vrtm - vrt0)
         
         if (down < tolvdist) die_here("identical consecutive vertices, down ="+down)
@@ -119,16 +122,16 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
         new = .true. ! 1:save all different edges
         do iedge = 1, nedge
 #ifndef SAVE_MEMORY
-          if     (nrm2(vrt0 - v1(1:3,iedge)) < tolvdist) then
-            if   (nrm2(vrtp - v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
-          elseif (nrm2(vrt0 - v2(1:3,iedge)) < tolvdist) then
-            if   (nrm2(vrtp - v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          if     (dist2(vrt0, v1(1:3,iedge)) < tolvdist) then
+            if   (dist2(vrtp, v2(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
+          elseif (dist2(vrt0, v2(1:3,iedge)) < tolvdist) then
+            if   (dist2(vrtp, v1(1:3,iedge)) < tolvdist) new = .false. ! 0:do not save
           endif
 #else
-          if     (nrm2(vrt0 - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) then
-            if   (nrm2(vrtp - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) new = .false. ! 0:do not save
-          elseif (nrm2(vrt0 - vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
-            if   (nrm2(vrtp - vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
+          if     (dist2(vrt0, vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) then
+            if   (dist2(vrtp, vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) new = .false. ! 0:do not save
+          elseif (dist2(vrt0, vert(1:3,i2(2,iedge),i2(3,iedge))) < tolvdist) then
+            if   (dist2(vrtp, vert(1:3,i1(2,iedge),i1(3,iedge))) < tolvdist) new = .false. ! 0:do not save
           endif
 #endif
           if (.not. new) exit
@@ -194,17 +197,24 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
     dabc(3) = s*dxyz(3) + dxyz(1)*(r1(3)*r2(1) - r1(1)*r2(3)) + dxyz(2)*(r1(3)*r2(2) - r1(2)*r2(3))
     rd(1:3) = dabc/d
 
-    inside = (d - max(nrm2(rd - r1), nrm2(rd - r2)) > tolvdist)
+    inside = (d - max(dist2(rd, r1), dist2(rd, r2)) > tolvdist)
   endsubroutine ! perp
   
   double precision function inner_product_v3(v, w) result(vxw)
-    double precision, intent(in) :: v(3), w(3)
+    double precision, intent(in) :: v(:), w(:) ! size of both vectors must be 3
     vxw = v(1)*w(1) + v(2)*w(2) + v(3)*w(3)
   endfunction ! .dot.
   
   double precision function norm2_squared_v3(v) result(vxv)
-    double precision, intent(in) :: v(3)
+    double precision, intent(in) :: v(:) ! size of the vector must be 3
     vxv = v(1)*v(1) + v(2)*v(2) + v(3)*v(3)
   endfunction ! nrm2
 
-endmodule ShapeGeometryHelpers_mod
+  double precision function distance_square_v3(v, w) result(vmw2)
+    double precision, intent(in) :: v(:), w(:) ! size of both vectors must be 3
+    vmw2 = (v(1) - w(1))*(v(1) - w(1)) &
+         + (v(2) - w(2))*(v(2) - w(2)) &
+         + (v(3) - w(3))*(v(3) - w(3))
+  endfunction ! dist2
+  
+endmodule ! ShapeGeometryHelpers_mod
