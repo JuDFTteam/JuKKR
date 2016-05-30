@@ -288,8 +288,10 @@ module CalculationData_mod
 
     call generateAtomsShapesMeshes(self, dims, params, arrays, mp, voronano) ! a very crucial routine
     
-    if (voronano == 1) call jellstart12_wrapper(self, arrays, params, dims, mp)
-   
+    if (voronano == 1) then
+      call jellstart12_wrapper(self, arrays, params, dims, mp)
+      return      
+    endif
     call recordLengths_com(self, mp)
 
     if (mp%isInMasterGroup) then
@@ -386,6 +388,8 @@ module CalculationData_mod
     type(RadialMeshData), allocatable :: old_mesh_a(:)
     double precision, allocatable     :: new_MT_radii(:)
 
+    double precision, parameter :: tolvdist = 1.d-12
+
     allocate(old_atom_a(self%num_local_atoms))
     allocate(old_mesh_a(self%num_local_atoms))
     allocate(new_MT_radii(self%num_local_atoms))
@@ -412,7 +416,10 @@ module CalculationData_mod
 
         new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
       else
-        new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
+        if(params%MT_scale < tolvdist) then
+          write(*,*) 'Warning: MT_scale in input.conf is set to 0.0d0 -> MT radius is automatically set to 2.37'
+        endif
+        new_MT_radii(ila) = 2.37
       endif !voronano
 
     enddo ! ila
@@ -421,12 +428,13 @@ module CalculationData_mod
     call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale, mp, voronano)
 
     ! interpolate to new mesh
+    if (.NOT. voronano) then
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
 
       ! Geometry might have changed - interpolate to new mesh
-      call interpolateBasisAtom(self%atomdata_a(ila), old_atom_a(ila), self%mesh_a(ila), dims%lpot)
-
+        call interpolateBasisAtom(self%atomdata_a(ila), old_atom_a(ila), self%mesh_a(ila), dims%lpot)
+      
       ! set new MT radius
       self%atomdata_a(ila)%radius_muffin_tin = self%mesh_a(ila)%rmt
 
@@ -446,6 +454,7 @@ module CalculationData_mod
       call destroy(old_atom_a(ila))
       call destroy(old_mesh_a(ila))
     enddo ! ila
+    endif
 
     deallocate(new_MT_radii, old_atom_a, old_mesh_a, stat=ist)
   endsubroutine ! generateAtomsShapesMeshes
