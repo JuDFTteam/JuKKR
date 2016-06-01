@@ -2350,7 +2350,8 @@ C
       
       logical :: lread, lcheckangles
       integer :: i1
-      double precision, parameter :: PI=4.d0*datan(1.d0)
+      double precision :: th1, ph1
+      double precision, parameter :: PI=4.d0*datan(1.d0), eps=1d-5
       
       ! if executed first in wunfiles theta is not allocated, thus read angles from file
       if(.not.allocated(t_params%theta)) then
@@ -2363,12 +2364,12 @@ C
        IF (LREAD) THEN
          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
          DO I1 = 1,NATYP
-            READ(10,*) THETA(I1),PHI(I1)
-           THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
-           PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
-           IF(ABS(THETA(I1)).LT.PI .OR. ABS(PHI(I1)).LT.2*PI) THEN
-              LCHECKANGLES = .true.
-           ENDIF
+           READ(10,*) th1, ph1
+           IF((ABS(th1).LT.(PI+eps)   .AND. ABS(th1).GT.eps).OR.
+     +        (ABS(ph1).LT.(2*PI+eps) .AND. ABS(ph1).GT.eps))
+     &          LCHECKANGLES = .true.
+           THETA(I1)=th1*(PI/180.0D0)
+           PHI(I1)  =ph1*(PI/180.0D0)
          ENDDO
          CLOSE(10)
          IF ( LCHECKANGLES.and.((t_inc%i_write>0).or.(myrank==master)) )
@@ -2376,9 +2377,10 @@ C
      & nonco_angels file is correct! Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
      & angles are given in degree (0...360)'
-       write(1337,*) 'I1, THETA[rad], PHI[rad]'
+       write(1337,'(A)') '      I1  THETA[deg]  PHI[deg]'
        do i1=1,NATYP
-        write(1337,'(I8,2ES25.16)') i1, THETA(I1), PHI(I1)
+         write(1337,'(I8,2F12.6)') i1,THETA(I1)*180D0/PI,
+     +                                 PHI(I1)*180D0/PI
        end do!i1
        ENDIF ! LREAD
        
