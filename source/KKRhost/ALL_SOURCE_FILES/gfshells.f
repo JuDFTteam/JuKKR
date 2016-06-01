@@ -175,7 +175,8 @@ C
      +                 NOFGIJ,IOFGIJ,JOFGIJ,
      +                 NSYMAT,RSYMAT,ISYMINDEX,ROTNAME,
      +                 NSHELL,RATOM(1,1),NSH1,NSH2,ISH,JSH,
-     +                 IJTABSYM,IJTABSH,IJTABCALC,IPRINT,NSHELD)
+     +                 IJTABSYM,IJTABSH,IJTABCALC,2,NSHELD)
+C    +                 IJTABSYM,IJTABSH,IJTABCALC,IPRINT,NSHELD)
 C
 C **********************************************************************
 C

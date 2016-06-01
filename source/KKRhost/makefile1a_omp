@@ -32,12 +32,13 @@ SRAOBJS1a = \
           $(OBJ)/chebint.o \
 
 COMOBJS1a = \
+	$(OBJ)/mod_jijhelp.o \
         $(OBJ)/main1a.o             $(OBJ)/calctmat.o        $(OBJ)/initldau.o \
         $(OBJ)/phicalc.o            $(OBJ)/tmat_newsolver.o  $(OBJ)/cheb.o  \
         $(OBJ)/interpolate_poten.o  $(OBJ)/vllmat.o          $(OBJ)/rotatespinframe.o  \
         $(OBJ)/spinorbit_ham.o      $(OBJ)/spin_orbit.o      $(OBJ)/spin_orbit_compl.o  \
         $(OBJ)/vllmatsra.o          $(OBJ)/beshank.o         $(OBJ)/rllsllsourceterms.o  \
-        $(OBJ)/calcsph.o            $(OBJ)/rllsll.o          $(OBJ)/chebint.o 
+        $(OBJ)/calcsph.o            $(OBJ)/rllsll.o          $(OBJ)/chebint.o
 
 #DRVOBJS1a = $(OBJ)/drvreltmat.o  
 
@@ -184,5 +185,8 @@ $(OBJ)/rllsll.o  : $(COM)/rllsll.F90 $(INCP)        ; \
 
 $(OBJ)/chebint.o  : $(COM)/chebint.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/chebint.f -c -o $@
+
+$(OBJ)/mod_jijhelp.o  : $(COM)/mod_jijhelp.f90 ;\
+                    $(FC) $(FFLAGS) $(COM)/mod_jijhelp.f90 -c -o $@
 
 ############################################################

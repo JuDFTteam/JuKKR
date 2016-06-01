@@ -12,7 +12,7 @@
      &                      NOQ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,DSYMLL,IPRINT,
-     &                      NATYPD,NAEZD,NSHELD,LMMAXD)
+     &                      NATYPD,NAEZD,NSHELD,LMMAXD,KORBIT)
 C   ********************************************************************
 C   *                                                                  *
 C   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -28,7 +28,7 @@ C
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_types, only: t_tgmat, t_mpi_c_grid
+      use mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
       use mod_mympi, only: myrank, master
       IMPLICIT NONE
 C     ..
@@ -41,7 +41,7 @@ C     .. Parameters
 C     ..
 C     .. Scalar arguments
       INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NAEZD,NATOMIMP,
-     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD
+     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD, KORBIT
       DOUBLE COMPLEX EZ(*), WEZ(*)
 C     ..
 C     .. Array arguments
@@ -71,9 +71,10 @@ C     .. Local arrays
       ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT,XINTEGD,csum_store,
      &            csum_store2
       DOUBLE COMPLEX DELTSST(LMMAXD,LMMAXD,NATYP),
-     &               DMATTS(LMMAXD,LMMAXD,NATYP,2),
-     &               DTILTS(LMMAXD,LMMAXD,NATYP,2),GMIJ(LMMAXD,LMMAXD),
-     &               GMJI(LMMAXD,LMMAXD),GS(LMMAXD,LMMAXD,2),
+     &               DMATTS(LMMAXD,LMMAXD,NATYP,NSPIN),
+     &               DTILTS(LMMAXD,LMMAXD,NATYP,NSPIN),
+     &               GMIJ(LMMAXD,LMMAXD),
+     &               GMJI(LMMAXD,LMMAXD),GS(LMMAXD,LMMAXD,NSPIN),
      &               TSST(LMMAXD,LMMAXD,NATYP,2),W1(LMMAXD,LMMAXD),
      &               W2(LMMAXD,LMMAXD),W3(LMMAXD,LMMAXD)
       DOUBLE PRECISION RSH(NSHELD),PI
@@ -262,7 +263,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
          ie_end = ielast
 #endif
 C SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SPIN
-      DO ISPIN = 1,2
+      DO ISPIN = 1,NSPIN
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
          DO IT = 1,NATYP
 c            write(*,*) 'test brahim 3'
@@ -294,7 +295,10 @@ C ----------------------------------------------------------------------
                END DO
                CALL ZCOPY(LMMAXD*LMMAXD,DMATTS(1,1,IT,ISPIN),1,
      &                    DTILTS(1,1,IT,ISPIN),1)
-            ELSE
+            ELSE!NCPA.EQ.0
+             if(t_cpa%dmatproj_to_file)then
+               write(*,*) 'test read proj'
+               IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(IT-1)
                READ (IFMCPA,REC=IREC) W1,W2
                DO J1 = 1,LMMAXD
                   DO I1 = 1,LMMAXD
@@ -302,7 +306,13 @@ C ----------------------------------------------------------------------
                      DTILTS(I1,J1,IT,ISPIN) = W2(I1,J1)
                   END DO
                END DO
-            END IF
+             else!t_cpa%dmatproj_to_file
+               irec = ie_num + ie_end*(ISPIN-1)
+               DMATTS(:,:,IT,ISPIN) = t_cpa%dmatts(:,:,IT,irec)
+               DTILTS(:,:,IT,ISPIN) = t_cpa%dtilts(:,:,IT,irec)
+
+             end if!t_cpa%dmatproj_to_file
+            END IF!NCPA.EQ.0
 C ----------------------------------------------------------------------
          END DO
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
@@ -314,13 +324,15 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
          WRITE(1337,'(8X,60(1H-),/,10X,
      &        "Single-site and projection matrices read in",
      &        " for IT=1,",I3,/)') NATYP
-         DO ISPIN = 1,2
+         DO ISPIN = 1,NSPIN
             WRITE(1337,'(8X,60(1H+),/,30X,
      &           " ISPIN = ",I1,/,8X,60(1H+),/)') ISPIN
             DO IT = 1,NATYP
                WRITE(1337,'(12X," IE = ",I2," IT =",I3)') IE,IT
-               CALL CMATSTR(' T MAT ',7,TSST(1,1,IT,ISPIN),
-     &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
+               IF(KORBIT==0) THEN
+                 CALL CMATSTR(' T MAT ',7,TSST(1,1,IT,ISPIN),
+     &                LMMAXD,LMMAXD,0,0,0,1D-8,6)
+               END IF
                CALL CMATSTR(' D MAT ',7,DMATTS(1,1,IT,ISPIN),
      &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
                CALL CMATSTR(' D~ MAT',7,DTILTS(1,1,IT,ISPIN),
@@ -329,15 +341,19 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             END DO
             WRITE(1337,'(8X,60(1H+),/)')
          END DO
-         WRITE(1337,'(8X,60(1H-),/,10X,
+         IF(KORBIT==0) THEN
+           WRITE(1337,'(8X,60(1H-),/,10X,
      &        "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,",
      &        I3,/)') NATYP
-         DO IT = 1,NATYP
+           DO IT = 1,NATYP
             WRITE(1337,'(12X," IE = ",I2," IT =",I3)') IE,IT
             CALL CMATSTR(' DEL T ',7,DELTSST(1,1,IT),
      &           LMMAXD,LMMAXD,0,0,0,1D-8,6)
             IF ( IT.NE.NATYP) WRITE(1337,'(8X,60(1H-),/)')
-         END DO
+           END DO
+         ELSE
+                  !implement write-out of dt-matriced
+         END IF
          WRITE(1337,'(8X,60(1H-),/)')
       END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
@@ -351,13 +367,13 @@ C ==>  get the off-diagonal Green function matrix Gij(UP) and Gji(DOWN)
 C      using the appropiate rotation (similar to ROTGLL routine)
 C      step one: read in GS for the representative shell
 C ======================================================================
-         DO ISPIN = 1,2
+         DO ISPIN = 1,NSPIN
           if (t_tgmat%gmat_to_file) then
-            IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(NS-1)
+            IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(NS-1)
             READ (IFGMAT,REC=IREC) W1
           else
             ie_end = t_mpi_c_grid%ntot2
-            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*2*(NS-1)
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*(NS-1)
             W1(:,:) = t_tgmat%gmat(:,:,irec) 
           end if
           CALL ZCOPY(LMMAXD*LMMAXD,W1,1,GS(1,1,ISPIN),1)
@@ -376,7 +392,7 @@ C
             LM1 = (IA-1)*NATOMIMP + JA
             ISYM = IJTABSYM(LM1)
 C ----------------------------------------------------------------------
-            DO ISPIN = 1,2
+            DO ISPIN = 1,NSPIN
                CALL ZGEMM('C','N',LMMAXD,LMMAXD,LMMAXD,
      +                    CONE,DSYMLL(1,1,ISYM),LMMAXD,
      +                    GS(1,1,ISPIN),LMMAXD,CZERO,W2,LMMAXD)   
@@ -508,9 +524,9 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communication
 #ifdef CPP_MPI
-        if(myrank==master)then
+        !if(myrank==master)then
           !allocate
-          ALLOCATE (csum_store2(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
+          ALLOCATE(csum_store2(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
           IF ( LM1.NE.0 ) THEN
              WRITE(6,99001) 'csum_store2'
              STOP
@@ -526,7 +542,7 @@ C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communic
             END DO
            END DO
           END DO!IE
-        end if!myrank==master
+        !end if!myrank==master
 
         !perform communication and collect resutls in csum_store2
         LM1 = NATYP*NATYP*NSHELL(0)*IELAST

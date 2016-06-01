@@ -14,7 +14,7 @@
 #ifdef CPP_TIMING
       use mod_timing
 #endif 
-      use mod_types, only: t_tgmat, t_inc, t_lloyd
+      use mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -26,7 +26,8 @@
      &                     distribute_linear_on_tasks
 #endif
       use mod_wunfiles
-      use MOD_TBXCCPLJIJ, only: TBXCCPLJIJ
+      use mod_tbxccpljij, only: tbxccpljij
+      use mod_tbxccpljijdij, only: tbxccpljijdij
 
       INCLUDE 'inc.p'
 C
@@ -90,6 +91,7 @@ C     .. Local Scalars ..
 C     RFCTOR=A/(2*PI) conversion factor to p.u.
       DOUBLE PRECISION CPATOL,ALAT,RFCTOR,THETA,PHI
       DOUBLE PRECISION PI,THETAS(NATYPD),PHIS(NATYPD)
+      DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
       DOUBLE COMPLEX DF,ERYD,EK,CFCTOR,CFCTORINV
       LOGICAL OPT,TEST,LCPAIJ,LREAD
       CHARACTER*80 TMPDIR
@@ -217,7 +219,8 @@ C -------------------------------------------------------------- input1b
      &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABSYM,IJTABSH,IQCALC,
      &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
-     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD)
+     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
+     &       RCLSIMP)
      
      
       IF (TEST('gmatasci'))
@@ -315,9 +318,14 @@ C
       LCPAIJ = .FALSE.
       IF ( ( NCPA.NE.0 ).AND.( NSHELL(0).GT.NATYP ) ) LCPAIJ = .TRUE.
 C
-      IF ( LCPAIJ ) 
-     +     OPEN (71,ACCESS='direct',RECL=2*LRECTMT,
+      IF ( LCPAIJ ) THEN
+       if(t_cpa%dmatproj_to_file) then
+           OPEN (71,ACCESS='direct',RECL=2*LRECTMT,
      +           FILE='dmatproj.unformatted',FORM='unformatted')
+       else
+           call init_t_cpa(t_inc,t_cpa,t_mpi_c_grid)
+       end if!t_cpa%dmatproj_to_file
+      END IF!LCPAIJ
 C
       IF ( IGF.NE.0 ) THEN
 
@@ -385,6 +393,7 @@ C Call the k loop just once with one k point to write out the tmat.qdos file
          VOLCUB(1,1) = VOLBZ(1)                         ! qdos ruess
       END IF                                            ! qdos ruess
 
+      NCPAFAIL = 0
 
 ! Initialize trace for Lloyd formula                    ! LLY Lloyd
       LLY_GRTR(:,:) = CZERO ! 1:IEMXD,1:NSPIND          ! LLY Lloyd
@@ -397,7 +406,6 @@ C    ----------------------------------------------------------------
 C
       DO 370 ISPIN = 1,NSPIN
 C
-         NCPAFAIL = 0
 C
 #ifdef CPP_MPI         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
@@ -634,6 +642,7 @@ C           Skip this part if first part of the qdos is running
             END IF
 
             IF ( LCPAIJ ) THEN
+             if(t_cpa%dmatproj_to_file) then
                DO I1 = 1,NATYP
                   DO LM2=1,LMMAXD
                      DO LM1=1,LMMAXD
@@ -641,10 +650,15 @@ C           Skip this part if first part of the qdos is running
                         W1(LM1,LM2)    = MSST(LM1,LM2,I1)
                      END DO
                   END DO
-                  IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1)
+                  IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
                   WRITE (71,REC=IREC) GMAT0,W1
                END DO
-              END IF  ! ( LCPAIJ )
+             else!t_cpa%dmatproj_to_file
+               irec = ie_num + ie_end*(ISPIN-1)
+               t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
+               t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
+             end if!t_cpa%dmatproj_to_file
+            END IF  ! ( LCPAIJ )
 C
             ENDIF    ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  200        CONTINUE ! IQ = 1,NQDOS                                       ! qdos ruess
@@ -882,6 +896,13 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
           
 !           Skip this part if first part of the qdos is running
             IF ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) ) THEN
+               IF (NCPA.NE.0) THEN
+                IF (ICPAFLAG .NE. 0) THEN
+                   NCPAFAIL = NCPAFAIL + 1
+                   IECPAFAIL(NCPAFAIL)= IE
+                 END IF
+               END IF  ! (NCPA.NE.0)
+
                DO I1 = 1,NSHELL(0)
                   GMAT0(1:LMMAXD,1:LMMAXD) =GMATLL(1:LMMAXD,1:LMMAXD,I1)
                   !IREC = IE + IELAST*(I1-1)     ! <-- before introducing qdos
@@ -922,6 +943,25 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   WRITE(888,REC=IREC) GIMP
                ENDIF
 
+               IF ( LCPAIJ ) THEN
+                if(t_cpa%dmatproj_to_file) then
+                  DO I1 = 1,NATYP
+                     DO LM2=1,LMMAXD
+                        DO LM1=1,LMMAXD
+                           GMAT0(LM1,LM2) = TSST(LM1,LM2,I1)
+                           W1(LM1,LM2)    = MSST(LM1,LM2,I1)
+                        END DO
+                     END DO
+                     IREC = IE + IELAST*(I1-1)
+                     WRITE (71,REC=IREC) GMAT0,W1
+                  END DO!I1
+                else!t_cpa%dmatproj_to_file
+                  irec = ie_num
+                  t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
+                  t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
+                end if!t_cpa%dmatproj_to_file
+               END IF  ! ( LCPAIJ )
+
             ENDIF               ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  220     CONTINUE               ! IQ = 1,NQ                                         ! qdos ruess
 
@@ -943,6 +983,26 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
         call timing_stop('main1b - calctref13')
         call timing_stop('main1b - kloopz')
 #endif
+
+         IF( NCPAFAIL .NE. 0 ) THEN
+            if(t_inc%i_write>0) then
+            WRITE(1337,*)
+            WRITE(1337,'(1X,79(''*''),/)')
+            WRITE(1337,99019) CPATOL, NCPAFAIL,
+     &           (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),
+     &           IE=1,NCPAFAIL)
+            WRITE(1337,'(1X,79(''*''),/)')
+            WRITE(1337,*)
+            endif
+         ELSE
+            IF( NCPA .NE. 0 ) THEN
+               if(t_inc%i_write>0) then
+               WRITE(1337,*)
+               WRITE(1337,99020)
+               WRITE(1337,*)
+               endif
+            END IF
+         END IF
 
       ENDIF ! NEWSOSOL
 
@@ -1003,19 +1063,57 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
       ENDIF                                                              ! LLY
 C
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+c           write(15860,*) 'next- IPRINT',  IPRINT
+c           write(15860,*) 'next- NOFGIJ',  NOFGIJ
+c           write(15860,*) 'next- IELAST',  IELAST
+c           write(15860,*) 'next- NSPIN',   NSPIN
+c           write(15860,*) 'next- NCPA',    NCPA
+c           write(15860,*) 'next- LMMAXD,NSYMAXD', LMMAXD, NSYMAXD
+c           write(15860,*) 'next- NAEZ, NATYP', NAEZ, NATYP
+c           write(15860,*) 'next- NSHELD',  NSHELD
+c           write(15860,*) 'next- NSHELL', NSHELL
+c           write(15860,*) 'next- NOQ', NOQ
+c           write(15860,*) 'next- ITOQ', ITOQ
+c           write(15860,*) 'next- IQAT', IQAT
+c           write(15860,*) 'next- NATOMIMP', NATOMIMP 
+c           write(15860,*) 'next- ATOMIMP', ATOMIMP
+c           write(15860,*) 'next- RATOM', RATOM
+c           write(15860,*) 'next- FACTL', FACTL
+c           write(15860,*) 'next- NQCALC',  NQCALC
+c           write(15860,*) 'next- IQCALC',  IQCALC
+c           write(15860,*) 'next- IJTABCALC',  IJTABCALC
+c           write(15860,*) 'next- IJTABSYM',  IJTABSYM
+c           write(15860,*) 'next- IJTABSH',  IJTABSH
+c           write(15860,*) 'next- ISH',  ISH
+c           write(15860,*) 'next- JSH',  JSH
+c           write(15860,*) 'next- DSYMLL',  DSYMLL
+c           write(15860,*) 'next- EZ', EZ
+c           write(15860,*) 'next- WEZ', WEZ
+C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
          IF(NQDOS/=1) stop 'QDOS option not compatible with XCPL'
-            CALL TBXCCPLJIJ(69,IELAST,EZ,WEZ,NSPIN,NCPA,NAEZ,NATYP,NOQ,
-     &                      ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
+         IF (.NOT.OPT('NEWSOSOL')) THEN
+            CALL TBXCCPLJIJ(69,IELAST,EZ,WEZ,NSPINDD,NCPA,NAEZ,NATYP,NOQ
+     &                     ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,
-     &                      DSYMLL,IPRINT,NATYPD,NAEZD,NSHELD,LMMAXD)
+     &                      DSYMLL,IPRINT,NATYPD,NAEZD,NSHELD,LMMAXD,
+     &                      KORBIT)
+         ELSE !.NOT.OPT('NEWSOSOL'))
+           CALL TBXCCPLJIJDIJ(naezd,natypd,lmmaxd,lmgf0d,natomimpd,
+     &                        nsymaxd,iemxd,thetas,phis,
+     &                nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,
+     &                nshelD,nshell,ijtabcalc,ijtabsh,ijtabsym,
+     &                ielast,ez,wez,dsymll,noq,itoq,ncpa)
+         END IF
       END IF
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C
       CLOSE (69)
       CLOSE (70)
-      IF ( LCPAIJ ) CLOSE (71)
+      IF ( LCPAIJ .and. t_cpa%dmatproj_to_file ) CLOSE (71)
 
       CLOSE(37)                                    ! qdos ruess
 C     Finished first qdos run. Now re-run the whole kkr1b program to 

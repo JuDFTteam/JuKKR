@@ -4,6 +4,7 @@
      +                  NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,VNSPLL,VNSPLL1,
      &                  MODE)
 
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE 
 
       INTEGER LMAX,LMMAXD,NSPIN,NSRA,NPAN_TOT,NCHEB,IRMDNEW,NRMAXD
@@ -27,6 +28,7 @@
       CHARACTER(LEN=*) :: MODE
       LOGICAL TEST,OPT
       EXTERNAL TEST,OPT
+
 
       VNSPLL1=(0d0,0d0)
       VR=0d0

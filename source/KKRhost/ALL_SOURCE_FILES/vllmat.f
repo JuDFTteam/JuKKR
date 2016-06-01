@@ -65,8 +65,10 @@ c
 c set vnspll as twice as large
 
        VNSPLL0(1:LMMAX,1:LMMAX,IRMIN:IRC)=
-     +    VNSPLL(1:LMMAX,1:LMMAX,IRMIN:IRC,1)
+     +    cmplx(VNSPLL(1:LMMAX,1:LMMAX,IRMIN:IRC,1),0d0)
 
-       VNSPLL0(LMMAX+1:LMMAXSO,LMMAX+1:LMMAXSO,IRMIN:IRC)=
-     +    VNSPLL(1:LMMAX,1:LMMAX,IRMIN:IRC,NSPIN)
+       if(NSPIN==2)then! hack to make routine work for Bxc-field
+         VNSPLL0(LMMAX+1:LMMAXSO,LMMAX+1:LMMAXSO,IRMIN:IRC)=
+     +     cmplx(VNSPLL(1:LMMAX,1:LMMAX,IRMIN:IRC,NSPIN),0d0)
+       end if
       END
