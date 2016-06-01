@@ -367,7 +367,6 @@ c add spherical contribution of tmatrix
 
 ! Calculate additional t-matrices for Jij-tensor calculation
         if(t_dtmatJij_at%calculate) then
-          write(*,*) 'enter for atom', I1
 c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c       contruct the spin-orbit coupling hamiltonian and add to potential
@@ -469,7 +468,7 @@ c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
      +        NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),
      +        RPAN_INTERVALL,
      +        IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,
-     +        t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
+     +        THETA,PHI,t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
 
         end if!t_dtmatJij_at%calculate
          

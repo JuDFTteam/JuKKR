@@ -64,7 +64,7 @@
      &                 THETASNEW(:,:,:),MVEVI(:,:,:),MVEVIEF(:,:,:),     &
      &                 RHO2NS(:,:,:,:),R2NEF(:,:,:,:),RHOC(:,:),
      &                 DENEFAT(:),ESPV(:,:),EDC(:),EU(:),RHOORB(:,:),
-     &                 ECOREREL(:,:),theta(:),phi(:)
+     &                 ECOREREL(:,:),theta(:),phi(:),RCLSIMP(:,:)
       INTEGER, allocatable :: LOPT(:),ITLDAU(:),                         &
      &        IRSHIFT(:),JWSREL(:),ZREL(:),                              &
      &        LCORE(:,:),NCORE(:),IPAN(:),                               &
@@ -138,7 +138,7 @@
      &                    NGSHD,KREL,NTOTD,NCHEBD,NPAN_LOG,NPAN_EQ,
      &                    NCHEB,R_LOG,NPAN_TOT,RNEW,RPAN_INTERVALL,
      &                    IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,
-     &                    TOLRDIF,LLY,DELTAE)
+     &                    TOLRDIF,LLY,DELTAE,RCLSIMP)
 C **********************************************************************
 C *                                                                    *
 C *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -149,7 +149,7 @@ C *  v.popescu, munich 2004                                            *
 C *                                                                    *
 C **********************************************************************
 
-      use mod_types, only: t_inc, t_tgmat, t_lloyd
+      use mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
 
       IMPLICIT NONE
 C     ..
@@ -201,6 +201,7 @@ C     .. Array arguments
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
       DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
+      DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C     ..
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
@@ -316,6 +317,8 @@ C                                  meant for simpler passing of basic parameter 
       if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.
       if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
       if(TEST('greffile')) t_tgmat%gref_to_file = .true.
+      if(TEST('projfile')) t_cpa%dmatproj_to_file = .true.
+
       !some special run options:
       if(OPT('KKRFLEX '))  t_tgmat%tmat_to_file = .true.  ! for KKRFLEX option tmat must be written to file 
       if(OPT('qdos    '))  t_tgmat%gmat_to_file = .true.  ! for qdos write gmat to file since it scales with NQDOS and can become huge
@@ -384,7 +387,7 @@ C                                  meant for simpler passing of basic parameter 
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
      &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
-     &       TESTC,OPTC)    
+     &       TESTC,OPTC,RCLSIMP)
      
       ! save information about the energy mesh
       call save_emesh(IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE,NPOL,TK,
@@ -482,7 +485,8 @@ C ======================================================================
      &t_params%RHOORB(t_params%IRMD*t_params%KREL+(1-t_params%KREL),
      &                t_params%NATYPD),
      &t_params%ECOREREL(t_params%KREL*20+(1-t_params%KREL),
-     &                  t_params%NPOTD))    !DOUBLE PRECISION
+     &                  t_params%NPOTD),
+     &t_params%RCLSIMP(3,t_params%NATOMIMPD))    !DOUBLE PRECISION
      
       ALLOCATE(t_params%LOPT(t_params%NATYPD),
      &t_params%ITLDAU(t_params%NATYPD),
@@ -917,6 +921,8 @@ C ======================================================================
      &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%phi,t_params%natyp,
      &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
+      call MPI_Bcast(t_params%RCLSIMP,3*t_params%NATOMIMPD,
+     &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
      
       !INTEGERS
       call MPI_Bcast(t_params%LOPT,(t_params%NATYPD),
@@ -1048,9 +1054,9 @@ C ======================================================================
       !CHARACTER
       call MPI_Bcast(t_params%TXC,4,
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
-      call MPI_Bcast(t_params%TESTC,32,
+      call MPI_Bcast(t_params%TESTC,32*8,
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
-      call MPI_Bcast(t_params%OPTC,32,
+      call MPI_Bcast(t_params%OPTC,32*8,
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
      
       ! kpoints
@@ -1251,7 +1257,7 @@ C     ..
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
      &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
-     &       TESTC,OPTC)   
+     &       TESTC,OPTC,RCLSIMP)   
       ! fill arrays after they have been allocated in init_t_params
 C     ..
       IMPLICIT NONE
@@ -1289,6 +1295,7 @@ C     .. Array arguments
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
+      DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C     ..
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
@@ -1374,6 +1381,7 @@ C     ..
       t_params%JEFF           = JEFF           
       if(t_params%IDOLDAU==1) t_params%ULDAU          = ULDAU             
       t_params%WLDAU          = WLDAU          
+      t_params%RCLSIMP        = RCLSIMP
       t_params%RPAN_INTERVALL = RPAN_INTERVALL 
       t_params%RNEW           = RNEW                        
       t_params%THETASNEW      = THETASNEW      
@@ -1606,7 +1614,8 @@ C ------------------------------------------------------ cluster atoms
      &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABSYM,IJTABSH,IQCALC,
      &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
-     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD)
+     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
+     &       RCLSIMP)
       ! get relevant parameters from t_params
 !     ..
       use mod_types, only: t_inc
@@ -1639,7 +1648,9 @@ C ------------------------------------------------------ cluster atoms
      &         RROT(48,3,NSHELD),
      &         CONC(NATYPD),
      &         RBASIS(3,NAEZD+NEMBD),
-     &         BZKP(3,KPOIBZ,MAXMSHD),VOLCUB(KPOIBZ,MAXMSHD)
+     &         BZKP(3,KPOIBZ,MAXMSHD),
+     &         VOLCUB(KPOIBZ,MAXMSHD),
+     &         RCLSIMP(3,NATOMIMPD)
 
       double complex, intent(inout) :: EZ(IEMXD),
      &         DROTQ(LMMAXD,LMMAXD,NAEZD),DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
@@ -1740,6 +1751,7 @@ C ......................................................................
       TMPDIR     = t_params%TMPDIR    
       ITMPDIR    = t_params%ITMPDIR   
       ILTMP      = t_params%ILTMP     
+      RCLSIMP    = t_params%RCLSIMP
       IF ( KREL.EQ.1 ) then
          RC    = t_params%RC   
          CREL  = t_params%CREL 
@@ -2380,6 +2392,10 @@ C
      & nonco_angels file is correct! Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
      & angles are given in degree (0...360)'
+       write(1337,*) 'I1, THETA[rad], PHI[rad]'
+       do i1=1,NATYP
+        write(1337,'(I8,2ES25.16)') i1, THETA(I1), PHI(I1)
+       end do!i1
        ENDIF ! LREAD
        
        !now save this also to t_params

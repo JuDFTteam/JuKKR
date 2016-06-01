@@ -384,6 +384,7 @@ C ----------------------------------------------------------------------
 c                  IF ( IVECI2J(1,IREF(I,JQ)).EQ.1.AND.
 c     +               IVECI2J(2,IREF(I,JQ)).EQ.1 ) THEN
                       IJTABCALC(NN+JQ) = 1
+                      IJTABCALC((JQ-1)*NATOMIMP+IQ) = 1   !Jijtensor
                       NOUT = NOUT + 1
 c                  END IF
                    END IF

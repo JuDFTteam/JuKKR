@@ -20,6 +20,17 @@ implicit none
    end type type_tgmatices
    
 
+   type :: type_cpa
+
+       ! logical switches to control if matrices are stored in memory or written to files
+      logical :: dmatproj_to_file = .false.
+
+      integer :: Nelements = 3 ! 2 array in this type, for mpi bcast
+      
+      ! allocatable arrays for tmat, gmat and gref
+      double complex, allocatable :: dmatts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
+      double complex, allocatable :: dtilts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
+   end type type_cpa
 
    !data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
    type :: type_dtmatJijDij
@@ -104,6 +115,7 @@ implicit none
    type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
    type (type_lloyd), save :: t_lloyd
    type (type_dtmatJijDij), allocatable, save :: t_dtmatJij(:) !dimensions I1=1,...,NATYP 
+   type (type_cpa), save :: t_cpa
 
 contains
 
@@ -183,6 +195,56 @@ contains
    end subroutine init_tgmat
    
 
+   subroutine init_t_cpa(t_inc,t_cpa,t_mpi_c_grid)
+   
+      use mod_mympi, only: myrank, master, nranks
+   
+      implicit none
+   
+      type(type_inc), intent(in) :: t_inc
+      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
+      type(type_cpa), intent(inout) :: t_cpa
+      
+      integer :: ierr, nspin, nenergy
+      
+      nspin = t_inc%NSPIN
+      if(t_inc%NEWSOSOL) nspin = 1
+
+      if(nranks==1)then
+        nenergy=t_inc%IELAST
+      else
+        nenergy=t_mpi_c_grid%ntot2
+      end if
+    
+      if (.not. allocated(t_cpa%dmatts)) then
+         if (.not. t_cpa%dmatproj_to_file) then
+           !allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
+           allocate(t_cpa%dmatts(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NATYP,nenergy*nspin), STAT=ierr)
+           if(ierr/=0) stop 'Problem allocating t_cpa%dmatts'
+         else
+            allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_cpa%dmatts'
+         end if
+      
+         t_cpa%dmatts(:,:,:,:) = (0.d0, 0.d0)
+      endif
+
+      if (.not. allocated(t_cpa%dtilts)) then
+         if (.not. t_cpa%dmatproj_to_file) then
+           !allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
+           allocate(t_cpa%dtilts(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NATYP,nenergy*nspin), STAT=ierr)
+           if(ierr/=0) stop 'Problem allocating t_cpa%dtilts'
+         else
+            allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating dummy t_cpa%dtilts'
+         end if
+      
+         t_cpa%dtilts(:,:,:,:) = (0.d0, 0.d0)
+      endif
+
+   end subroutine init_t_cpa 
+
+
    subroutine init_t_dtmatJij(t_inc,t_mpi_c_grid,t_dtmatJij)
 
       implicit none
@@ -242,7 +304,7 @@ contains
 
 
 #ifdef CPP_MPI
-   subroutine bcast_t_inc_tgmat(t_inc,t_tgmat)
+   subroutine bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa)
     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
 
     use mpi
@@ -251,12 +313,13 @@ contains
 
     type(type_inc), intent(inout) :: t_inc
     type(type_tgmatices), intent(inout) :: t_tgmat
+    type(type_cpa), intent(inout) :: t_cpa
 
     integer :: blocklen1(t_inc%Nparams), etype1(t_inc%Nparams), myMPItype1 ! for parameter from t_inc
     integer :: blocklen2(t_tgmat%Nelements), etype2(t_tgmat%Nelements), myMPItype2 ! for logicals in t_tgmat
     integer :: blocklen3(t_tgmat%Nelements), etype3(t_tgmat%Nelements), myMPItype3 ! for allocatable arrays in t_tgmat
     integer :: ierr
-    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_inc%Nparams), disp2(t_tgmat%Nelements), disp3(t_tgmat%Nelements), base
+    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_inc%Nparams), disp2(t_tgmat%Nelements), disp3(t_cpa%Nelements), base
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !broadcast parameters from t_inc
@@ -329,6 +392,9 @@ contains
     if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
 
     call MPI_Type_free(myMPItype2, ierr)
+
+    call MPI_Bcast(t_cpa%dmatproj_to_file,1,MPI_LOGICAL,master,MPI_COMM_WORLD,ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_cpa'
 
    end subroutine bcast_t_inc_tgmat
 #endif

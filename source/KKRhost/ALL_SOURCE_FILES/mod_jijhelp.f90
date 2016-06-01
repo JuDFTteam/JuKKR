@@ -35,7 +35,7 @@ contains
 
 
 
-  subroutine calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
+  subroutine calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,THETA,PHI,dtmat)
 ! subroutine calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
 
     implicit none
@@ -52,7 +52,7 @@ contains
     integer, intent(in) :: LMAXD,LMMAXD,LMMAXSO,LMPOTD,NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD    !integer arguments that only define array sizes
 !   integer, intent(in) :: NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD    !integer arguments that only define array sizes
     INTEGER, intent(in) :: NPAN_TOT,NCHEB,IPAN_INTERVALL(0:NTOTD), ICLEB(NCLEB,4) !integer arguments
-    DOUBLE PRECISION, intent(in) :: RPAN_INTERVALL(0:NTOTD), VINS(IRMDNEW,LMPOTD,NSPIN), CLEB(*), RNEW(NRMAXD)
+    DOUBLE PRECISION, intent(in) :: RPAN_INTERVALL(0:NTOTD), VINS(IRMDNEW,LMPOTD,NSPIN), CLEB(*), RNEW(NRMAXD), THETA, PHI
     DOUBLE COMPLEX,   intent(in) :: RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW),&
                                   & RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW)
     DOUBLE COMPLEX, intent(out) :: dtmat(LMMAXSO,LMMAXSO,3)
@@ -70,21 +70,19 @@ contains
 !   BINS(:,:,1) = (VINS(:,:,2)-VINS(:,:,1))/2 !Bxc-field  !CLEANUP: how to choose the sign here????
     BINS(:,:,1) = (VINS(:,:,1)-VINS(:,:,2))/2 !Bxc-field
 
-!   write(65161,'(2ES25.16)') VINS
 
     !convert B_L into B_LL' by using the Gaunt coefficients
     BNSPLL0 = CZERO
     CALL VLLMAT( 1,NRMAXD,IRMDNEW,LMMAXD,LMMAXD,BNSPLL0,BINS, &
                & CLEB,ICLEB,IEND,1,0d0,RNEW,0   )
 
-!   write(65162,'(2ES25.16)')  BNSPLL0
     !get the pauli spin matrices
-    call calc_sigma(sigma)
-!   write(65163,'(2ES25.16)') sigma
+    call calc_sigma(sigma) !use this to perform automatically infinitesimal rotations
+!   call calclambda(sigma,theta,phi) !this is a test (for comparison with impurity code
 
 
     !loop over sigma_{x,y,z}
-    do jspin=1,3!x,y,z
+    do jspin=1,2!x,y,z
      do ir=1,IRMDNEW
 
       !construct sigma*B_LL'(r) = VNSPLL0
@@ -98,9 +96,7 @@ contains
       end do!ispin1
 
      PNSIR(:,:)=RLL(1:LMMAXSO,:,ir)
-!    if(jspin==1) write(65164,'(2ES25.16)') PNSIR
      PNSIL(:,:)=RLLLEFT(1:LMMAXSO,:,ir)
-!    if(jspin==1) write(65165,'(2ES25.16)') PNSIL
 
      !calculate [Rleft * VNSPLL0 *Rright](r)
      CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,VNSPLL0,&
@@ -122,9 +118,23 @@ contains
 
     end do!jspin
 
-!   stop 'test-stop'
-
   end subroutine calc_dtmatJij
+
+
+subroutine calclambda(lambda,theta,phi)
+implicit none
+double complex :: lambda(2,2,3)
+double precision :: theta, phi
+double complex :: sigmatemp(2,2,3),sigma(2,2,3)
+integer        :: ispin
+call calc_sigma(sigma)
+sigmatemp=sigma
+do ispin=1,3
+  call rotatematrix(sigmatemp(:,:,ispin),theta, phi,1,1)
+  lambda(:,:,ispin) = sigmatemp(:,:,ispin) !test
+end do !ispin
+end subroutine calclambda
+
 
 
 

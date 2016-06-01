@@ -1034,8 +1034,7 @@ C new solver for full-potential, spin-orbit, initialise
      &              NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,
      &              NCHEBD,NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,
      &              RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,
-     &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE)
-
+     &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf

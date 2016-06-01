@@ -22,7 +22,7 @@ SRAOBJS0 = $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o \
           $(OBJ)/fplaneg.o    $(OBJ)/fplaner.o    $(OBJ)/shape.o \
           $(OBJ)/wfmesh.o     $(OBJ)/regsol.o     $(OBJ)/beshan.o 
 
-COMOBJS0 =$(OBJ)/wunfiles.o    $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
+COMOBJS0 =$(OBJ)/wunfiles.o    $(OBJ)/gaunt.o       $(OBJ)/main0.o	\
           $(OBJ)/rinput13.o    $(OBJ)/symtaumat.o   $(OBJ)/taustruc.o \
           $(OBJ)/bzkint0.o     $(OBJ)/findgroup.o   $(OBJ)/calcrotmat.o \
           $(OBJ)/errortrap.o   $(OBJ)/bzkmesh.o     $(OBJ)/bzirr3d.o  \
@@ -36,7 +36,6 @@ COMOBJS0 =$(OBJ)/wunfiles.o    $(OBJ)/main0.o       $(OBJ)/gaunt.o      \
           $(OBJ)/startldau.o   $(OBJ)/readldaupot.o $(OBJ)/epathtb.o \
           $(OBJ)/addvirtual14.o  $(OBJ)/create_newmesh.o \
           $(OBJ)/interpolspline.o $(OBJ)/spline_real.o $(OBJ)/splint_real.o \
-          
 
 
 DRVOBJS0 = $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o
@@ -355,6 +354,7 @@ $(OBJ)/splint_real.o  : $(COM)/splint_real.f $(INCP)        ; \
 
 $(OBJ)/create_newmesh.o  : $(COM)/create_newmesh.f $(INCP)        ; \
                     $(FC) $(FFLAGS) $(COM)/create_newmesh.f -c -o $@
+
 ############################################################
 
 #################### sources in COM directory stemming ########
