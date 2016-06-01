@@ -1,6 +1,6 @@
       SUBROUTINE WRLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,
      &                     EREFLDAU,NATYP,WLDAU,ULDAU,PHILDAU,
-     &                     IRMD,NATYPD,NSPIND,MMAXD)
+     &                     IRMD,NATYPD,NSPIND,MMAXD,IRWS)
 C **********************************************************************
 C *                                                                    *
 C * Writes out LDA+U arrays into formatted file 'ldaupot'              *
@@ -8,14 +8,15 @@ C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
 C     ..
-      INTEGER IRMD,MMAXD,NATYPD,NSPIND
+      INTEGER IRMD,MMAXD,NATYPD,NSPIND,IRWS(NATYPD)
 C     ..
 C     .. Arguments ..
       INTEGER ITRUNLDAU,NATYP
       INTEGER LOPT(NATYPD)
       DOUBLE PRECISION UEFF(NATYPD),JEFF(NATYPD),EREFLDAU(NATYPD)
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD)
 C     ..
 C     ..  Locals 
@@ -24,7 +25,7 @@ C
 C ======================================================================
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       
       
       OPEN (67,FILE='ldaupot_new',FORM='FORMATTED')
@@ -50,7 +51,7 @@ C ======================================================================
             WRITE (67,99007) ((((ULDAU(M1,M2,M3,M4,IT),M4=1,MMAXD),
      &           M3=1,MMAXD),M2=1,MMAXD),M1=1,MMAXD)
             WRITE(67,99002) IT,'    PHILDAU'
-            WRITE (67,99007) (PHILDAU(IR,IT),IR=1,IRMD)
+            WRITE (67,99007) (PHILDAU(IR,IT),IR=1,IRWS(IT))
          END IF
       END DO
       CLOSE (67)

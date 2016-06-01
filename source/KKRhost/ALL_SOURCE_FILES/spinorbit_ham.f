@@ -87,22 +87,27 @@ c roate LS matrix
 c contruct prefactor of spin-orbit hamiltonian
 
       HSOFAC=0d0
-      DO IR=1,IRMDNEW
-       RMASS(IR)=0.5d0-0.5d0/C**2*((VR(IR)-REAL(E))-2d0*Z/RNEW(IR))
-       IF (TEST('NOSOC   ').OR.Z.LT.1D-6) THEN
-        HSOFAC(IR)=0d0
-       ELSE
-        HSOFAC(IR)=SOCSCALE/(2d0*RMASS(IR)**2*C**2*RNEW(IR))*DVDR(IR)
-       ENDIF
-
-c add to potential
-       
-       DO LM1=1,2*LMMAXD
-        DO LM2=1,2*LMMAXD
-         VNSPLL1(LM1,LM2,IR)=VNSPLL(LM1,LM2,IR)+HSOFAC(IR)*LSMH(LM1,LM2)
+      IF (TEST('NOSOC   ').OR.Z.LT.1D-6) THEN
+       DO IR=1,IRMDNEW
+        DO LM1=1,2*LMMAXD
+         DO LM2=1,2*LMMAXD
+         VNSPLL1(LM1,LM2,IR)=VNSPLL(LM1,LM2,IR)
+         ENDDO
         ENDDO
        ENDDO
-      END DO
+      ELSE
+       DO IR=1,IRMDNEW
+        RMASS(IR)=0.5d0-0.5d0/C**2*((VR(IR)-REAL(E))-2d0*Z/RNEW(IR))
+        HSOFAC(IR)=SOCSCALE/(2d0*RMASS(IR)**2*C**2*RNEW(IR))*DVDR(IR)
+
+c add to potential
+        DO LM1=1,2*LMMAXD
+         DO LM2=1,2*LMMAXD
+         VNSPLL1(LM1,LM2,IR)=VNSPLL(LM1,LM2,IR)+HSOFAC(IR)*LSMH(LM1,LM2)
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDIF
       END SUBROUTINE SPINORBIT_HAM
 
 

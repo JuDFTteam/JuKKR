@@ -62,11 +62,6 @@ C     .. Local scalars
       CHARACTER*40 FILELEFT,FILERIGHT
       CHARACTER*256 UIO ! NCOLIO=256
 C     ..                                  ! ruess: for NEWSOSOL running option
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
 C     .. External Functions ..
       LOGICAL OPT
       EXTERNAL OPT

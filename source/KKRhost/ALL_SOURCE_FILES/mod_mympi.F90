@@ -583,21 +583,22 @@ contains
 
 #ifdef CPP_MPI
   subroutine mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,      &
-     &                                   NPOTD,NATYPD,LMPOTD,IRMD,       &
+     &                                   NPOTD,NATYPD,LMPOTD,IRMD,MMAXD, &
      &                                   den, denlm, muorb, espv, r2nef, &
-     &                                   rho2ns, denefat, denef,         &
-     &                                   mympi_comm)
+     &                                   rho2ns, denefat, denef,denmatn, &
+     &                                   angles_new, mympi_comm)
      
      use mpi
      implicit none
-     integer, intent(in) :: LMAXD1,IEMXD,NQDOS,NPOTD,NATYPD,LMPOTD,IRMD,LMMAXD
+     integer, intent(in) :: LMAXD1,IEMXD,NQDOS,NPOTD,NATYPD,LMPOTD,IRMD,LMMAXD,MMAXD
      integer, intent(in) :: mympi_comm
-     double complex, intent(inout)   :: den(0:LMAXD1,IEMXD,NQDOS,NPOTD), denlm(LMMAXD,IEMXD,NQDOS,NPOTD)
-     double precision, intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef
+     double complex, intent(inout)   :: den(0:LMAXD1,IEMXD,NQDOS,NPOTD), denlm(LMMAXD,IEMXD,NQDOS,NPOTD),denmatn(MMAXD,MMAXD,2,2,NATYPD)
+     double precision, intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef, angles_new(NATYPD,2)
      
      integer :: ierr, idim
      double precision, allocatable :: work(:,:,:,:)
      double complex, allocatable :: workc(:,:,:,:)
+     double complex, allocatable :: workc1(:,:,:,:,:)
      
      !double complex arrays
      IDIM = (1+LMAXD1)*IEMXD*NQDOS*NPOTD
@@ -613,6 +614,13 @@ contains
      CALL MPI_ALLREDUCE(denlm,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
      deallocate(workc)
+
+     IDIM = MMAXD*MMAXD*NPOTD
+     allocate(workc1(MMAXD,MMAXD,2,2,NATYPD))
+     workc1 = (0.d0, 0.d0)
+     CALL MPI_ALLREDUCE(denmatn,workc1(:,:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL ZCOPY(IDIM,WORKC1,1,DENMATN,1)
+     deallocate(workc1)
 
      !double precision arrays
      IDIM = (LMAXD1+2)*3*NATYPD
@@ -655,6 +663,13 @@ contains
      work = 0.d0
      CALL MPI_ALLREDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
      CALL DCOPY(IDIM,WORK,1,DENEF,1)
+     deallocate(work)
+
+     IDIM = 2*NATYPD
+     allocate(work(2,NATYPD,1,1))
+     work = 0.d0
+     CALL MPI_ALLREDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL DCOPY(IDIM,WORK,1,angles_new,1)
      deallocate(work)
          
   end subroutine mympi_main1c_comm_newsosol2

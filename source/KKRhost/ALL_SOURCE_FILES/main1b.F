@@ -169,9 +169,6 @@ C     ..
 #endif
       integer :: ie_num, ie_end
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     for conductivity calculation
 C     INTEGER NCPAIRD
@@ -184,10 +181,6 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. External Subroutines ..
       EXTERNAL CALCTREF13,CHANGEREP,KLOOPZ1_QDOS,OPT,CINIT
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
 C     ..
 C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
@@ -216,9 +209,9 @@ C ======================================================================
 C
 C -------------------------------------------------------------- input1b
       call get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
-     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,OPTC,
+     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
-     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,TESTC,
+     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
      &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
@@ -728,6 +721,9 @@ C
 
       ELSE ! NEW SOC SOLVER 
 
+      ! nonco angles
+      call read_angles(t_params,NATYP,THETAS,PHIS)
+
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -780,10 +776,6 @@ c construct t matrix for reference system (now is always double matrix)
        TRALPHA(IE,NSPINDD)=CZERO
        TRALPHAREF(IE)=CZERO
 c read in t matrix
-
-      ! nonco angles
-      call read_angles(t_params,NATYP,THETAS,PHIS)
-
 
        DO I1 = 1,NATYPD
 
@@ -841,7 +833,6 @@ c rotate t-matrix from local to global frame
           TRALPHAREF(IE)=TRALPHAREF(IE)+TRALPHA1 ! LLY
        ENDIF ! LLY
        ENDDO ! I1
-       CLOSE(10)
        if(t_lloyd%g0tr_to_file) then
           IF (LLY.NE.0) READ(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
        else

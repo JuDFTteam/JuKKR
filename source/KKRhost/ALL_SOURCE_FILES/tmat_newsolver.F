@@ -2,7 +2,8 @@
      +                        EZ,NSRA,CLEB,ICLEB,IEND,NCHEB,NPAN_TOT,
      +                        RPAN_INTERVALL,IPAN_INTERVALL,
      +                        RNEW,VINSNEW,THETA,PHI,I1,IPOT,
-     &                        LLY,DELTAE,t_dtmatJij_at)
+     &                        LLY,DELTAE,IDOLDAU,LOPT,WLDAU,
+     &                        t_dtmatJij_at)
 #ifdef CPP_OMP
        use omp_lib        ! necessary for omp functions
 #endif
@@ -27,6 +28,8 @@
        PARAMETER (LMMAXSO=2*LMMAXD)
        INTEGER LMPOTD
        PARAMETER (LMPOTD= (LPOTD+1)**2)
+       INTEGER MMAXD
+       PARAMETER (MMAXD=2*LMAXD+1)
        DOUBLE PRECISION CVLIGHT
        PARAMETER (CVLIGHT=274.0720442D0)
        DOUBLE COMPLEX CZERO,CONE,CI
@@ -68,6 +71,8 @@
       ! LLoyd:
       INTEGER LLY,IDERIV,SIGNDE        ! LLY
       DOUBLE COMPLEX DELTAE,TRALPHA,IPIV(LMMAXSO)            ! LLY
+      DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)             ! LDAU
+      INTEGER IDOLDAU,LOPT,LMLO,LMHI,MMAX                    ! LDAU
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
@@ -110,6 +115,24 @@ cc set up the non-spherical ll' matrix for potential VLL'
        VNSPLL0=CZERO
        CALL VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,
      +                    CLEB,ICLEB,IEND,NSPIN,ZAT,RNEW,USE_SRATRICK)
+! LDAU
+       IF (IDOLDAU.EQ.1) THEN
+        LMLO=LOPT**2+1
+        LMHI=(LOPT+1)**2
+         DO IR=1,IRMDNEW
+          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=
+     +                           VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+
+     +                           WLDAU(1:MMAX,1:MMAX,1)
+         ENDDO
+        LMLO=LMLO+LMMAXD
+        LMHI=LMHI+LMMAXD
+         DO IR=1,IRMDNEW
+          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=
+     +                           VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+
+     +                           WLDAU(1:MMAX,1:MMAX,2)
+         ENDDO
+       ENDIF
+! LDAU
 
 c initial allocate
        IF (NSRA.EQ.2) THEN
@@ -135,7 +158,7 @@ c energy loop
 
 #ifdef CPP_MPI
        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
-     &                  t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master
      &                  master,IELAST,ntot_pT,ioff_pT,.true.)
      
        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
@@ -178,15 +201,16 @@ c energy loop
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft) !,tmat_out)
-!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd)
+!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start)
 !$omp& shared(lly,deltae,i1)!,dtmat_out,tral_out)
-!$omp& private(tralpha) 
+!$omp& private(tralpha, aux, ideriv, ipiv) 
 !$omp& private(alpha0)
 !$omp& private(alphall)
 !$omp& private(tmat0) 
 !$omp& private(alphasph) 
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
+!$omp& firstprivate(t_inc)
 #endif
        DO ie_num=1,ie_end
        

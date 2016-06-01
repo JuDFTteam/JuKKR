@@ -13,6 +13,7 @@ C   *  But wait up, they're coming...    Munich, Feb.2004, Phivos     *
 C   *                                                                 *
 C   *******************************************************************
 C
+      use mod_types, only: t_inc
       IMPLICIT NONE
       INCLUDE 'inc.p'
 C
@@ -27,8 +28,8 @@ C
       INTEGER NTLDAU,NSPIN,NSRA
       DOUBLE PRECISION DRDI(IRMD,NATYPD),R(IRMD,NATYPD),
      &                 VISP(IRMD,NPOTD),Z(NATYPD)
-!      &                ,ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD)
+c      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE COMPLEX PHI(IRMD,NATYPD)
       INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
       INTEGER IPAN(NATYPD),IRCUT(0:IPAND,NATYPD)
@@ -49,14 +50,15 @@ C
 C     ..
 
 
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+c      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
       PI = 4.D0*ATAN(1.0D0)
       FACT(0) = 1.0D0
       DO I1 = 1,100
          FACT(I1) = FACT(I1-1)*DBLE(I1) ! factorial
       END DO
-      WRITE (1337,'(/,79(1H=),/,22X,A,/,79(1H=))') 
+      if(t_inc%i_write>0)
+     &    WRITE (1337,'(/,79(1H=),/,22X,A,/,79(1H=))') 
      &                            'LDA+U:  INITIALISE Coulomb matrix U'
 C
 C -> Calculate test functions Phi. Phi is already normalised to
@@ -72,7 +74,8 @@ C                                         which need LDA+U ( LOPT >= 0 )
      &                EREFLDAU(I1),PHI(1,I1),NSPIN,NSRA)
       ENDDO
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-      WRITE (1337,'(6X,43(1H-),/,6X,A,/,6X,43(1H-))')
+      if(t_inc%i_write>0)
+     &  WRITE (1337,'(6X,43(1H-),/,6X,A,/,6X,43(1H-))')
      &     'Slater integrals F^n'
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
       DO IT = 1,NTLDAU
@@ -213,6 +216,7 @@ C
 C UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+      if(t_inc%i_write>0) then
          WRITE (1337,'(/,8X,A,I3,/)') 'ATOM: ',I1
          WRITE (1337,'(12X,A,F8.4,A)') 'LDA+U reference energy :',
      &        EREFLDAU(I1),' Ry'
@@ -225,12 +229,14 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
      &           LF,FCLMB(LF)/SCL,FCLMB(LF)
          END DO
          IF ( IT.LT.NTLDAU ) WRITE(1337,'(8X,58(1H~))')
+       endif
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
       END DO
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 C
-      WRITE (1337,'(/,6X,60(1H-),/,6X,A,/,6X,60(1H-))')
+      if(t_inc%i_write>0) then
+       WRITE (1337,'(/,6X,60(1H-),/,6X,A,/,6X,60(1H-))')
      &     'Coulomb matrix U(m1,m1,m3,m3)'
       DO IT = 1,NTLDAU
          I1 = ITLDAU(IT)
@@ -247,6 +253,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 C
       END DO
       WRITE (1337,'(/,6X,60(1H-),/)')
+      endif
 99001 FORMAT(6X,7F10.6)
       END
 C

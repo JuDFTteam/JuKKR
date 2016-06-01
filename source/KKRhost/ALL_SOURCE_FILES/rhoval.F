@@ -58,8 +58,8 @@ C     .. Parameters ..
       PARAMETER (LM2D= (2*LMAXD+1)**2)
       DOUBLE PRECISION CVLIGHT
       PARAMETER (CVLIGHT=274.0720442D0)
-      DOUBLE COMPLEX CONE 
-      PARAMETER ( CONE=(1D0,0D0) )
+      DOUBLE COMPLEX CONE,CZERO,CI 
+      PARAMETER ( CONE=(1D0,0D0),CZERO=(0d0,0d0),CI=(0d0,1d0) )
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION ZAT
@@ -140,6 +140,7 @@ C     .. Local Arrays ..
       DOUBLE PRECISION CUTOFF(IRMD)
       DOUBLE COMPLEX DENDUM(0:LMAXD1),GFLLE(:,:,:,:),DENTOT2(2),
      +               DENTMP2(LMAXD,2),DUM_GFLLE(:,:)
+      DOUBLE COMPLEX, ALLOCATABLE :: GLDAU(:,:)
       DOUBLE PRECISION QVEC(:,:)       ! qdos, q-vectors for qdos
       ALLOCATABLE QVEC,GFLLE,DUM_GFLLE      ! qdos, lmlm-dos
 #ifdef CPP_MPI
@@ -155,12 +156,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,DIMAG,SQRT
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)             ! qdos
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC                         ! qdos
-      COMMON /TESTC/TESTC                       ! qdos
 C     .. External Functions ..
       LOGICAL OPT,TEST                          ! qdos
       EXTERNAL OPT,TEST                         ! qdos
@@ -280,13 +275,13 @@ C
      +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +     char(48+ISPIN)//".dat")   ! lm-dos
          end if
-      ENDIF
       OPEN(30,   ! lm-dos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +char(48+ISPIN)//".dat")   ! lm-dos
       WRITE (30,*) ' '   ! lm-dos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
  8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
+      ENDIF
 #endif
 
 c set LMSHIFT value which is need to construct dentmp
@@ -310,9 +305,13 @@ C        Read BZ path for qdos calculation:
          ENDDO                                          ! qdos
          CLOSE(67)                                      ! qdos
       END IF
-
+      
       ALLOCATE(GFLLE(LMMAXD,LMMAXD,IELAST,NQDOS))
       ALLOCATE(DUM_GFLLE(LMMAXD,LMMAXD))
+      IF (IDOLDAU.EQ.1) THEN
+       ALLOCATE(GLDAU(LMMAXD,LMMAXD))
+       GLDAU=CZERO
+      ENDIF
 
       if(myrank==master) WRITE(1337,*) 'atom',I1
 #ifdef CPP_MPI
@@ -401,7 +400,16 @@ C
      +              NSRA,QNS,PNS,AR,CR,PZ,FZ,QZ,SZ,CLEB(1,1),ICLEB,
      +              JEND,IEND,EKL,DENLM(1,IE,IQ),GFLLE(:,:,IE,IQ))
             END IF
-
+c LDA+U
+            IF (IDOLDAU.EQ.1) THEN
+             DO LM1=1,LMMAXD
+              DO LM2=1,LMMAXD
+               GLDAU(LM1,LM2)=GLDAU(LM1,LM2)+
+     +                             DF*GFLLE(LM1,LM2,IE,IQ)
+              ENDDO
+             ENDDO
+            ENDIF
+           
 
 #ifndef CPP_MPI
 c Write out qdos:
@@ -477,11 +485,11 @@ C=======================================================================
 C
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U calculation 
-         IF ( ( IDOLDAU.EQ.1 ).AND.( LOPT.GE.0 ) ) 
-     &        CALL DENSITYMAT(DF,PZ,QZ,PNS,QNS,AR,CR,DR,GMATLL(1,1,IE),
-     &                        IPAN,IRCUT,DRDI,EK,
-     &                        IRMIN,LOPT,MMAX,LMLO,LMHI,PHILDAU,DENMATC
-     &        ,den,ie) ! test fivos 19.9.08
+C         IF ( ( IDOLDAU.EQ.1 ).AND.( LOPT.GE.0 ) ) 
+C     &        CALL DENSITYMAT(DF,PZ,QZ,PNS,QNS,AR,CR,DR,GMATLL(1,1,IE),
+C     &                        IPAN,IRCUT,DRDI,EK,
+C     &                        IRMIN,LOPT,MMAX,LMLO,LMHI,PHILDAU,DENMATC
+C     &        ,den,ie) ! test fivos 19.9.08
 C
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C
@@ -490,6 +498,16 @@ C
 
 
       END DO                    ! IE = 1,IELAST
+
+C LDA+U
+      IF (IDOLDAU.EQ.1) THEN
+        DO M1=1,MMAX
+         LM1=LMLO-1+M1
+         DENMATC(1:MMAX,M1)=(1.0/(2.0*CI))*
+     +                       (GLDAU(LMLO:LMHI,LM1)-
+     +                        DCONJG(GLDAU(LM1,LMLO:LMHI)))
+        ENDDO
+      ENDIF
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
 c Write out gflle
@@ -506,6 +524,7 @@ c Write out gflle
 
 
       DEALLOCATE( GFLLE, DUM_GFLLE )
+      IF (IDOLDAU.EQ.1) DEALLOCATE(GLDAU)
 
 C        
       IF ( IHOST.NE.1) RETURN

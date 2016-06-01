@@ -327,7 +327,7 @@ C     .. Local Arrays ..
       INTEGER KMESH(IEMXD)
       INTEGER ITSCF,SCFSTEPS,KFORCE
       LOGICAL VACFLAG(2)
-      CHARACTER*24 TXC(4)
+      CHARACTER*24 TXC(5)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD)
       DOUBLE PRECISION GSH(NGSHD)
       DOUBLE PRECISION TOLRDIF
@@ -403,8 +403,8 @@ C
 C     ..
 C     .. distinguish between spin-dependent and spin-independent
 C     .. quantities
-!       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
+!      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD) ! Spin-Dependent
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U LDA+U LDA+U
@@ -425,7 +425,6 @@ C ruess: IVSHIFT test option
       integer nth, ith          ! total number of threads, thread number
 #endif
 
-      
 C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -439,12 +438,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT
 C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
 C     ..
 
 
@@ -467,13 +460,13 @@ C     ..
 
 #ifdef CPP_OMP
 !$omp parallel shared(nth,ith)
-!$omp single
+!$omp critical
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
-      if(ith==1) then
-       WRITE(*,'(1X,A,I5/79(1H*)/)')'Number of OpenMP threads used:',nth
+      if(ith==0) then
+      WRITE(*,'(1X,A,I5//79(1H*)/)')'Number of OpenMP threads used:',nth
       endif
-!$omp end single
+!$omp end critical
 !$omp end parallel
 #endif
 #ifdef CPP_MPI
@@ -495,8 +488,10 @@ C
       NATOMIMP = 0
       IDOLDAU = 0
       NOFGIJ = 0
-      OPTC(1:32) =  '        '
-      TESTC(1:32) = '        '
+      ! allocate and initialize testc and optc in t_params for run and test options
+      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+      t_params%OPTC(1:32) =  '        '
+      t_params%TESTC(1:32) = '        '
 C
       CALL RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      +              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
@@ -598,8 +593,7 @@ C
      +             DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,
      +             IRWS,INIPOL,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
-     
-     
+
 
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,', 
@@ -973,11 +967,11 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
-      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
+C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       IF (OPT('LDA+U   ')) then
            !ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
            CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
-     &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,
+     &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
       END IF
 C
@@ -1069,7 +1063,7 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-      if(allocated(ULDAU)      ) deallocate(ULDAU)
+c      if(allocated(ULDAU)      ) deallocate(ULDAU)
       if(allocated(thetas)     ) deallocate(thetas)
       if(allocated(thetasnew)  ) deallocate(thetasnew)
       if(allocated(thesme)     ) deallocate(thesme)

@@ -96,10 +96,10 @@ C LDA+U
       DOUBLE PRECISION WLDAUOLD(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
       DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
+      DOUBLE COMPLEX DENMATN(MMAXD,MMAXD,2,2,NATYPD)
 C for new spin-orbit solver
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
       DOUBLE PRECISION R_LOG,THETA(NATYPD),PHI(NATYPD)
-      LOGICAL LCHECKANGLES
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NRMAXD,NATYPD)
       double precision, allocatable :: THETASNEW(:,:,:), vinsnew(:,:,:)
@@ -111,6 +111,7 @@ C     .. Local Arrays ..
 #ifdef CPP_MPI
       DOUBLE COMPLEX,   allocatable :: WORK(:,:)
       integer ierr,idim, nranks_local, myrank_ie_tmp
+      double complex, allocatable :: workc(:,:,:,:)
 #endif
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX, allocatable :: den(:,:,:,:), denlm(:,:,:,:) ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS),DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
@@ -196,14 +197,7 @@ C     .. qdos and lmlm-dos ..
       integer :: i1_start, i1_end
       integer :: ie_start, ie_end, ie_num
       
-      double precision :: angles_new(NATYPD,2)
-C     ..
-C     .. Arrays in Common ..
-      CHARACTER*8 OPTC(32),TESTC(32)
-C     ..
-C     .. Common blocks ..
-      COMMON /OPTC/OPTC
-      COMMON /TESTC/TESTC
+      double precision :: angles_new(2,NATYPD)
 C     ..
 C     .. External Subroutines ..
       EXTERNAL CINIT,RHOCORE,RHOVAL,WMATLDAU,WRLDAUPOT,WRLDOS,WRMOMS
@@ -255,7 +249,7 @@ C -------------------------------------------------------------- input1c
       call get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,
      &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,
      &          NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1,
-     &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB, 
+     &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB,
      &          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,
      &          IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,ITMPDIR,
      &          ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NCHEB,NPAN_TOT,
@@ -264,7 +258,7 @@ C -------------------------------------------------------------- input1c
      &          CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,
      &          THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,E1,E2,TK,VINS,VISP,
      &          ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ
-     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,OPTC,TESTC,NSPIND,NSPOTD,
+     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,NSPIND,NSPOTD,
      &          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! initialization needed due to merging to one executable
       ESPV(:,:) = 0.d0
@@ -274,6 +268,13 @@ C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
 C
+      IF ( IDOLDAU.EQ.1 ) THEN 
+C
+         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
+         READ (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
+         CLOSE(67)
+      ENDIF
+
       NQDOS=1
       IF (OPT('qdos    ')) THEN                         ! qdos
 C        Read BZ path for qdos calculation:
@@ -627,30 +628,41 @@ C ================================================================ NATYP
       
 #ifdef CPP_MPI
       !move writeout of qdos file here
-      DO I1=1,NATYP
-       IF (OPT('qdos    ')) THEN
+      IF (OPT('qdos    ')) THEN
+       ! first communicate den array to write out qdos files
+       IDIM = (LMAXD1+1)*IEMXD*NQDOS*NPOTD
+       allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))
+       workc = (0.d0, 0.d0)
+       
+!        if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
+!      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
+!          den = 0.d0
+!        endif
+       
+       CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                    MPI_COMM_WORLD,IERR)
+       CALL ZCOPY(IDIM,WORKC,1,DEN,1)
+       deallocate(workc)
+         
+       if(myrank==master) then
+       
+       DO I1=1,NATYP
       
         DO ISPIN = 1,NSPIN
-         IPOT = (I1-1) * NSPINPOT + ISPIN
-       
+        
          if(NATYP.ge.100) then
            OPEN(31,
      +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
-     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//
-     +     ".dat_myrank="//char(48+myrank/100)//
-     +     char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")
          else
            OPEN(31,
      +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
-     +     char(48+ISPIN)//
-     +     ".dat_myrank="//
-     +     char(48+mod(myrank/10,10))//char(48+mod(myrank,10)))   ! lm-dos
+     +     char(48+ISPIN)//".dat")
          end if
-          
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-         DO ie_num=1,ie_end
-           IE = ie_start+ie_num
+         
+         IPOT = (I1-1) * NSPINPOT + ISPIN
+
+         DO IE=1,IELAST
            DO IQ=1,NQDOS
              DENTOT = DCMPLX(0.D0,0.D0)
              DO L = 0,LMAXD1
@@ -658,13 +670,14 @@ C ================================================================ NATYP
              ENDDO
             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
      &                    -DIMAG(DENTOT)/PI,
-     &                   (-DIMAG(DENLM(L,IE,IQ,IPOT))/PI,L=1,LMMAXD)      ! qdos
+     &                   (-DIMAG(DEN(L,IE,IQ,IPOT))/PI,L=0,LMAXD1)      ! qdos
            END DO ! IQ=1,NQDOS
          END DO ! IE=1,IELAST
+         close(31)
         END DO !ISPIN=1,NSPIN
-        close(31)
-       ENDIF
-      ENDDO !I1
+       ENDDO !I1
+       end if ! myrank_at==master
+      ENDIF ! OPT('qdos    ')
  9000 FORMAT(5F10.6,40E16.8)
  
       !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
@@ -693,7 +706,8 @@ C ================================================================ NATYP
 
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
-        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
+c        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
+        IF (OPT('lmdos    ')) THEN                                   ! lm-dos
           DO I1=1,NATYP                                                  ! lm-dos
             DO ISPIN = 1,NSPIN                                           ! lm-dos
               IPOT = (I1-1) * NSPINPOT + ISPIN                           ! lm-dos
@@ -729,12 +743,10 @@ C ================================================================ NATYP
       ! nonco angles
       call read_angles(t_params,NATYP,THETA,PHI)
 
-      IF (.NOT.TEST('FIXMOM  ')) THEN
-       OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
-       OPEN(UNIT=12,file='nonco_angle_out.dat',form='formatted')
-      ENDIF
 
 c interpolate potential
+      IF ( IDOLDAU.EQ.1 ) 
+     +           CALL CINIT(MMAXD*MMAXD*4*NATYPD,DENMATN(1,1,1,1,1))
 
        CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
@@ -782,6 +794,9 @@ c interpolate potential
       i1_end   = NATYP
 #endif
 
+      !initialize output nonco angles
+      angles_new = 0.0d0
+
       DO I1 = i1_start,i1_end
       
        ICELL = NTCELL(I1)
@@ -799,7 +814,9 @@ c interpolate potential
      &           IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,
      &           THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,
      &           DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),
-     &           angles_new)
+     &           angles_new(:,i1),
+     &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),   ! LDAU
+     &           DENMATN(1,1,1,1,I1))                              ! LDAU
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
@@ -847,11 +864,13 @@ c interpolate potential
       END DO !I1
       
 #ifdef CPP_MPI
+      !reset NQDOS to 1 to avoid endless communication
+      NQDOS = 1
       call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
-     &                                 NPOTD,NATYPD,LMPOTD,IRMD,          &
+     &                                 NPOTD,NATYPD,LMPOTD,IRMD,MMAXD,    &
      &                                 den, denlm, muorb, espv, r2nef,    &
-     &                                 rho2ns, denefat, denef,            &
-     &                                 t_mpi_c_grid%mympi_comm_ie)
+     &                                 rho2ns, denefat, denef,denmatn,    &
+     &                            angles_new,t_mpi_c_grid%mympi_comm_ie)
 #endif
       
 #ifdef CPP_TIMING
@@ -862,18 +881,20 @@ c interpolate potential
       
       
       if(myrank==master) then
-c rewrite new theta and phi to nonco_angle.dat
+c rewrite new theta and phi to nonco_angle_out.dat, noncao_angle.dat is the input
         IF (.NOT.TEST('FIXMOM  ')) THEN
-!             call save_angles(t_params,NATYP,THETA,PHI)
-       OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
-       CLOSE(10,status='delete')
-       OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
-       DO I1=1,NATYP
-        WRITE(13,*) angles_new(I1,1),angles_new(I1,2)
-       ENDDO
-       CLOSE(13)
+          OPEN(UNIT=13,file='nonco_angle_out.dat',form='formatted')
+          DO I1=1,NATYP
+            ! save to file in converted units (degrees)
+            WRITE(13,*) angles_new(1,I1)/(2.0D0*PI)*360.0D0,
+     &                  angles_new(2,I1)/(2.0D0*PI)*360.0D0
+            ! use internal units here
+            t_params%THETA(I1) = angles_new(1,I1)
+            t_params%PHI(I1)   = angles_new(2,I1)
+          ENDDO
+         CLOSE(13)
 
-        ENDIF
+        ENDIF ! .not.test('FIXMOM  ')
       end if !(myrank==master)
 
       CLOSE (29) !close lmdos file
@@ -949,8 +970,13 @@ C -> Save old LDA+U interaction matrix for mixing
 C
 C -> Construct LDA+U interaction matrix for next iteration
 C
+        IF (.NOT.OPT('NEWSOSOL')) THEN
          CALL WMATLDAU(NTLDAU,ITLDAU,NSPINPOT,DENMATC,LOPT,
      &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+        ELSE
+         CALL WMATLDAUSOC(NTLDAU,ITLDAU,NSPINPOT,DENMATN,LOPT,
+     &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+        ENDIF
 C -> Mix old and new LDA+U interaction matrices
          CALL MIXLDAU(
      >        MMAXD,NSPIND,NATYPD,NATYP,NSPIN,LOPT,WLDAUOLD,
@@ -966,7 +992,7 @@ C
 C -> write full lda+u information in ascii file ldaupot_new
 C
          CALL WRLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,EREFLDAU,NATYP,WLDAU,
-     &                  ULDAU,PHILDAU,IRMD,NATYPD,NSPIND,MMAXD)
+     &                  ULDAU,PHILDAU,IRMD,NATYPD,NSPIND,MMAXD,IRWS)
       END IF
 C
 C LDA+U

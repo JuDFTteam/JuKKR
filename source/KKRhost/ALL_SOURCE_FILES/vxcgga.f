@@ -78,7 +78,7 @@ C     .. External Functions ..
       EXTERNAL DDOT
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL GRADRL,MKXCPE,SIMP3,SIMPK
+      EXTERNAL GRADRL,MKXCPE,SIMP3,SIMPK,MKXCPE2
 C     ..
 
 
@@ -197,9 +197,18 @@ c
 c
 c    only for spin-polarized
 c
-        CALL MKXCPE(NSPIN2,IR,IJEND,L1MAX,RPOINT,RHOLM,VXC,EXCIJ,THET,
-     +              YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,
-     +              DRRUL,DDRRUL,IRMD,LMPOTD)
+        IF(KXC.EQ.3)THEN
+           CALL MKXCPE(NSPIN2,IR,IJEND,L1MAX,RPOINT,RHOLM,VXC,EXCIJ,
+     +                 THET,YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,DRRL,
+     +                 DDRRL,DRRUL,DDRRUL,IRMD,LMPOTD)
+        ELSEIF(KXC.EQ.4)THEN
+           CALL MKXCPE2(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1,
+     +                  DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,
+     +                  IRMD,LMPOTD,LMMAX)
+        ELSE
+           WRITE(1337,*) ' KXC ???'
+           STOP
+        ENDIF
 c
 c
 c

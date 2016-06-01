@@ -199,7 +199,8 @@ C     .. Array arguments
       DOUBLE PRECISION A(NATYPD),B(NATYPD) ,THETAS(IRID,NFUND,NCELLD)
       DOUBLE PRECISION RMT(NATYPD),RMTNEW(NATYPD),RWS(NATYPD),GSH(NGSHD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+      DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
@@ -230,14 +231,9 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(4)
+      CHARACTER*24 TXC(5)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
-C     ..
-C     .. Arrays in common
-      CHARACTER*8 TESTC(32),OPTC(32)
-      COMMON /TESTC/TESTC
-      COMMON /OPTC/OPTC
 C     ..
 C     .. Local scalars
       INTEGER I1,I2
@@ -387,7 +383,7 @@ C                                  meant for simpler passing of basic parameter 
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
      &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
-     &       TESTC,OPTC,RCLSIMP)
+     &       RCLSIMP)
      
       ! save information about the energy mesh
       call save_emesh(IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE,NPOL,TK,
@@ -550,9 +546,11 @@ C ======================================================================
       ALLOCATE(t_params%SYMUNITARY(t_params%NSYMAXD), !LOGICALS
      &         t_params%VACFLAG(2))
      
-      ALLOCATE(t_params%TXC(4)) !CHARACTER*24
+      ALLOCATE(t_params%TXC(5)) !CHARACTER*24
       
-      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+      if(.not.allocated(t_params%TESTC)) then
+        ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+      end if
       
       if (.not.allocated(t_params%nofks)) then
         allocate(t_params%BZKP(3,t_params%KPOIBZ,t_params%MAXMESH), ! double precision
@@ -1052,11 +1050,11 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,4,
+      call MPI_Bcast(t_params%TXC,5*24, !5 entries of length 24
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
-      call MPI_Bcast(t_params%TESTC,32*8,
+      call MPI_Bcast(t_params%TESTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
-      call MPI_Bcast(t_params%OPTC,32*8,
+      call MPI_Bcast(t_params%OPTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
      
       ! kpoints
@@ -1257,7 +1255,7 @@ C     ..
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
      &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
-     &       TESTC,OPTC,RCLSIMP)   
+     &       RCLSIMP)   
       ! fill arrays after they have been allocated in init_t_params
 C     ..
       IMPLICIT NONE
@@ -1324,8 +1322,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(4)  
-      CHARACTER*8  TESTC(32),OPTC(32)
+      CHARACTER*24 TXC(5)  
 C     ..
       !fill arrays:
       t_params%EZ             = EZ             
@@ -1342,12 +1339,12 @@ C     ..
       t_params%VINS           = VINS           
       t_params%VISP           = VISP           
       t_params%VBC            = VBC                                   
-      t_params%VTREL          = VTREL          
-      t_params%BTREL          = BTREL          
+      if(t_params%KREL.gt.0) t_params%VTREL          = VTREL          
+      if(t_params%KREL.gt.0) t_params%BTREL          = BTREL          
       t_params%SOCSCALE       = SOCSCALE       
-      t_params%DRDIREL        = DRDIREL        
-      t_params%R2DRDIREL      = R2DRDIREL      
-      t_params%RMREL          = RMREL          
+      if(t_params%KREL.gt.0) t_params%DRDIREL        = DRDIREL        
+      if(t_params%KREL.gt.0) t_params%R2DRDIREL      = R2DRDIREL      
+      if(t_params%KREL.gt.0) t_params%RMREL          = RMREL          
       t_params%CMOMHOST       = CMOMHOST            
       t_params%ECORE          = ECORE          
       t_params%QMTET          = QMTET          
@@ -1444,8 +1441,6 @@ C     ..
       t_params%SYMUNITARY     = SYMUNITARY     
       t_params%VACFLAG        = VACFLAG        
       t_params%TXC            = TXC   
-      t_params%TESTC          = TESTC
-      t_params%OPTC           = OPTC   
       t_params%NTOTD          = NTOTD          
       
       end subroutine fill_t_params_arrays
@@ -1458,7 +1453,7 @@ C     ..
      &       KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,
      &       IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,
      &       RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,
-     &       SOLVER,TMPDIR,DELTAE,TESTC,OPTC,tolrdif,NPAN_LOG,NPAN_EQ,
+     &       SOLVER,TMPDIR,DELTAE,tolrdif,NPAN_LOG,NPAN_EQ,
      &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
      &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
      &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
@@ -1498,7 +1493,6 @@ C     ..
       double complex, intent(inout) :: DELTAE,EZ(IEMXD)
       character*10, intent(inout) :: SOLVER
       character*80, intent(inout) :: TMPDIR
-      character*8,  intent(inout) :: OPTC(32),TESTC(32)
       
       NSRA    = t_params%NSRA   
       INS     = t_params%INS    
@@ -1546,8 +1540,6 @@ C ......................................................................
       LOFLM          = t_params%LOFLM         
       NACLS          = t_params%NACLS         
       REFPOT         = t_params%REFPOT        
-      TESTC          = t_params%TESTC         
-      OPTC           = t_params%OPTC          
       IRWS           = t_params%IRWS          
       IRMIN          = t_params%IRMIN         
       TOLRDIF        = t_params%TOLRDIF       
@@ -1604,9 +1596,9 @@ C ------------------------------------------------------ cluster atoms
 
 
       subroutine get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
-     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,OPTC,
+     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
-     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,TESTC,
+     &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
      &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
@@ -1659,7 +1651,6 @@ C ------------------------------------------------------ cluster atoms
      &         LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
      &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD)
       character*80, intent(inout) :: TMPDIR
-      character*8,  intent(inout) :: OPTC(32),TESTC(32)
       logical, intent(inout) :: SYMUNITARY(NSYMAXD),VACFLAG(2)
       
       integer :: i,j,l,id
@@ -1721,8 +1712,6 @@ C ......................................................................
       CONC      = t_params%CONC     
       KMESH     = t_params%KMESH    
       MAXMESH   = t_params%MAXMESH  
-      TESTC     = t_params%TESTC    
-      OPTC      = t_params%OPTC     
       LLY       = t_params%LLY      
       NSYMAT    = t_params%NSYMAT   
       NATOMIMP  = t_params%NATOMIMP 
@@ -1826,7 +1815,7 @@ C
      &          CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,
      &          THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,E1,E2,TK,VINS,VISP,
      &          ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ
-     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,OPTC,TESTC,NSPIND,NSPOTD,
+     &         ,WEZ,PHILDAU,TMPDIR,SOLVER,NSPIND,NSPOTD,
      &          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! get relevant parameters from t_params
 !     ..
@@ -1866,7 +1855,6 @@ C
      &          PHILDAU(IRMD,NATYPD)
       character*80, intent(inout) :: TMPDIR
       character*10, intent(inout) :: SOLVER
-      character*8,  intent(inout) :: OPTC(32),TESTC(32)
 C     .. External Functions ..
       LOGICAL OPT,TEST
       EXTERNAL OPT,TEST
@@ -1930,8 +1918,6 @@ C ......................................................................
       INTERVY        = t_params%INTERVY       
       INTERVZ        = t_params%INTERVZ       
       NACLS1         = t_params%NACLS(1)        
-      TESTC          = t_params%TESTC         
-      OPTC           = t_params%OPTC          
       LLY            = t_params%LLY           
       SOCSCALE       = t_params%SOCSCALE      
       TMPDIR         = t_params%TMPDIR        
@@ -2016,7 +2002,7 @@ C
      &     N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,THETAS
      &    ,DRDI,R,ZAT,RMT,RMTNEW,RWS,E1,E2,TK,ALAT,EFOLD,CHRGOLD,
      &     CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,
-     &     DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TESTC,OPTC,TXC,
+     &     DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TXC,
      &     LINTERFACE,LRHOSYM,NGSHD,NAEZD,IRID,NSPOTD,IEMXD)
       ! get relevant parameters from t_params
 !     ..
@@ -2053,8 +2039,7 @@ C
      &     R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),ECORE(20,NPOTD)
 
       double complex, intent(inout) :: EZ(IEMXD),WEZ(IEMXD)
-      character*8,  intent(inout) :: TESTC(32),OPTC(32)
-      character*24, intent(inout) :: TXC(4)
+      character*24, intent(inout) :: TXC(5)
       logical, intent(inout) :: LINTERFACE,LRHOSYM
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -2142,8 +2127,6 @@ C ......................................................................
       GSH       = t_params%GSH      
       ILM       = t_params%ILM      
       IMAXSH    = t_params%IMAXSH   
-      TESTC     = t_params%TESTC    
-      OPTC      = t_params%OPTC     
       LLY       = t_params%LLY      
 C ---------------------------------------------------------- energy_mesh
 C
@@ -2375,7 +2358,7 @@ C
        THETA(:) = 0.D0
        PHI(:) = 0.D0
        LREAD = .FALSE.
-       LCHECKANGLES = .TRUE.
+       LCHECKANGLES = .false.
        INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
        IF (LREAD) THEN
          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
@@ -2383,10 +2366,11 @@ C
             READ(10,*) THETA(I1),PHI(I1)
            THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
            PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
-           IF(ABS(THETA(I1)).GE.PI .OR. ABS(PHI(I1)).GE.2*PI) THEN
-              LCHECKANGLES = .FALSE.
+           IF(ABS(THETA(I1)).LT.PI .OR. ABS(PHI(I1)).LT.2*PI) THEN
+              LCHECKANGLES = .true.
            ENDIF
          ENDDO
+         CLOSE(10)
          IF ( LCHECKANGLES.and.((t_inc%i_write>0).or.(myrank==master)) )
      & write(1337,*) 'WARNING: Check if your
      & nonco_angels file is correct! Found only values that are
@@ -2411,34 +2395,6 @@ C
       endif
       
       end subroutine read_angles
-      
-      
-      
-      subroutine save_angles(t_params,NATYP,THETA,PHI)
-      ! save nonco_angles in t_params and file to be used in later iterations
-      IMPLICIT NONE
-      type(type_params), intent(inout) :: t_params
-      integer, intent(in) :: NATYP
-      double precision, intent(out) :: theta(natyp),phi(natyp)
-      
-      integer :: i1
-      
-      OPEN(UNIT=10,file='nonco_angle.dat',form='formatted')
-      CLOSE(10,status='delete')
-      OPEN(UNIT=11,file='nonco_angle_new.dat',form='formatted')
-      OPEN(UNIT=13,file='nonco_angle.dat',form='formatted')
-      DO I1=1,NATYP
-        READ(11,*) THETA(I1),PHI(I1)
-        WRITE(13,*) THETA(I1),PHI(I1)
-        !now save this also to t_params
-        t_params%THETA(I1) = THETA(I1)
-        t_params%PHI(I1)   = PHI(I1)
-      ENDDO
-      CLOSE(11,status='delete')
-      CLOSE(13)
-      
-      end subroutine save_angles
-      
   
 
       end module

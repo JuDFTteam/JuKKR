@@ -65,6 +65,18 @@ program kkrcode
      call timing_stop('main0')
 
   end if ! myrank ==master
+  
+  
+
+! without MPI (serial or openMP) something goes wrong if if files are not written out
+! this seems to be only the case with the old solver
+#ifndef CPP_MPI
+  if(.not.t_inc%NEWSOSOL) then
+    t_tgmat%tmat_to_file = .true.
+    t_tgmat%gmat_to_file = .true.
+    t_tgmat%gref_to_file = .true.
+  end if
+#endif
 
 #ifdef CPP_MPI
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
@@ -118,6 +130,7 @@ program kkrcode
     endif
     if(t_inc%i_write>0 .and. myrank.ne.master) open(1337, file='output.'//trim(ctemp)//'.txt')
 
+
   
   ! Now start scf iterations and do all steps of the KKR formalism until convergence
   if(myrank==master) then
@@ -129,8 +142,11 @@ program kkrcode
   do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.-1) )
 
     ! reset files for t_inc%i_write<2
+    ! first copy lat output to output.2.txt so that all information of the precious iteration can be accessed while the next iteration runs
+    if (t_inc%i_write<2 .and. t_inc%i_write>0 .and. myrank==master) call SYSTEM('cp output.000.txt output.2.txt')
+    ! rewind output.xxx.txt
     if (t_inc%i_write<2 .and. t_inc%i_write>0) rewind(1337)
-    ! reset timing files if t_inc%i_time<2
+    ! rewind timing files if t_inc%i_time<2
     if (t_inc%i_time<2 .and. t_inc%i_time>0) rewind(43234059) 
   
     call timing_start('Time in Iteration')
@@ -159,8 +175,8 @@ program kkrcode
 #ifdef CPP_MPI
     ! update i_iteration after check for convergence in main2:
     call MPI_Bcast(t_inc%i_iteration, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting i_iteration in main_all'
-    
+    if(ierr/=MPI_SUCCESS) stop 'error broadcasting i_iteration in main_all'
+    ! broadcast parameter arrays from master (e.g. update nonco angles etc.)
     call bcast_t_params_scalars(t_params)
     call bcast_t_params_arrays(t_params)
 #endif
