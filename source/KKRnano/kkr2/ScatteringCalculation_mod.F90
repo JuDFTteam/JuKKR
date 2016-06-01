@@ -246,10 +246,10 @@ implicit none
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTdE, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
 
               ! t_ref-matrix of central cluster atom has index 1
-              call substractReferenceTmatrix(kkr(ila)%TmatN(:,:,ISPIN), kkr(ila)%TrefLL(:,:,1), kkr(ila)%lmmaxd)
+              call substractReferenceTmatrix(kkr(ila)%TmatN(:,:,ISPIN), kkr(ila)%TrefLL(:,:,1), kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL)
 
               ! do the same for derivative of T-matrix
-              call substractReferenceTmatrix(kkr(ila)%dTdE(:,:,ISPIN), kkr(ila)%dTrefLL(:,:,1), kkr(ila)%lmmaxd)
+              call substractReferenceTmatrix(kkr(ila)%dTdE(:,:,ISPIN), kkr(ila)%dTrefLL(:,:,1), kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL)
 
               ! TmatN now contains Delta t = t - t_ref !!!
               ! dTdE now contains Delta dt !!!
@@ -495,16 +495,49 @@ implicit none
   !----------------------------------------------------------------------------
   !> Substract diagonal reference T matrix of certain spin channel
   !> from real system's T matrix.
-  subroutine substractReferenceTmatrix(TmatN, TrefLL, lmmaxd)
+  subroutine substractReferenceTmatrix(TmatN, TrefLL, lmmaxd, nsymat, dsymll)
     integer, intent(in) :: lmmaxd
     double complex, intent(inout) :: TmatN(:,:)
     double complex, intent(in) :: TrefLL(:,:)
+    integer, intent(in) :: nsymat
+    double complex, intent(in) :: dsymll(:,:,:)
+    
+    double complex :: mssq(lmmaxd,lmmaxd)
+    double complex :: tpg(lmmaxd,lmmaxd)
+    integer :: iu,lm1,lm2
+   
+    double complex :: CONE
+    double complex :: CZERO
 
-    integer :: lm1
+    CZERO = (0.0D0,0.0D0)
+    CONE = (1.0D0,0.0D0)
+ 
     ! note: TrefLL is diagonal due to a spherical reference potential
     do lm1 = 1, lmmaxd
       TmatN(lm1,lm1) = TmatN(lm1,lm1) - TrefLL(lm1,lm1)
     enddo ! lm1
+
+   !------------------------------------------------- SYMMETRISE TMATN
+
+         do iu = 1,nsymat
+
+            if ( iu.eq.1 ) then
+               call zcopy(lmmaxd*lmmaxd,TmatN,1,mssq,1)
+            else
+               call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone, &
+                          dsymll(1,1,iu),lmmaxd,tmatn,lmmaxd, &
+                          czero,tpg,lmmaxd)
+               call zgemm('n','c',lmmaxd,lmmaxd,lmmaxd,cone,tpg,lmmaxd, &
+                          dsymll(1,1,iu),lmmaxd,cone,mssq,lmmaxd)
+            end if
+
+         end do
+         do lm1 = 1,lmmaxd
+            do lm2 = 1,lmmaxd
+               tmatn(lm1,lm2) = mssq(lm1,lm2)/dble(nsymat)
+            end do
+         end do
+   !------------------------------------------------- SYMMETRISE TMATN
 
   endsubroutine ! subtract
 
