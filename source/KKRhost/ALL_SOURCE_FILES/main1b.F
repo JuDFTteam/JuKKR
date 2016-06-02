@@ -139,7 +139,8 @@ C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX FACTL(LMMAXD,LMMAXD)
       DOUBLE PRECISION RATOM(3,NSHELD),RROT(48,3,NSHELD)
       INTEGER NSH1(NSHELD),NSH2(NSHELD)
-      INTEGER IJTABCALC(NOFGIJD),ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
+      INTEGER IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),
+     &        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
       INTEGER IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),IQCALC(NAEZD)
       DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
      &               RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD)
@@ -216,7 +217,8 @@ C -------------------------------------------------------------- input1b
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
      &       NOQ,IQAT,NOFGIJD,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,
-     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABSYM,IJTABSH,IQCALC,
+     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABCALC_I,IJTABSYM,
+     &       IJTABSH,IQCALC,
      &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
      &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
@@ -1082,6 +1084,7 @@ c           write(15860,*) 'next- FACTL', FACTL
 c           write(15860,*) 'next- NQCALC',  NQCALC
 c           write(15860,*) 'next- IQCALC',  IQCALC
 c           write(15860,*) 'next- IJTABCALC',  IJTABCALC
+c           write(1500+myrank,*) 'next- IJTABCALC_I',  IJTABCALC_I
 c           write(15860,*) 'next- IJTABSYM',  IJTABSYM
 c           write(15860,*) 'next- IJTABSH',  IJTABSH
 c           write(15860,*) 'next- ISH',  ISH
@@ -1093,6 +1096,9 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
+#ifdef CPP_TIMING
+            call timing_start('main1b - tbxccpl')
+#endif
          IF(NQDOS/=1) stop 'QDOS option not compatible with XCPL'
          IF (.NOT.OPT('NEWSOSOL')) THEN
             CALL TBXCCPLJIJ(69,IELAST,EZ,WEZ,NSPINDD,NCPA,NAEZ,NATYP,NOQ
@@ -1105,9 +1111,13 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
            CALL TBXCCPLJIJDIJ(naezd,natypd,lmmaxd,lmgf0d,natomimpd,
      &                        nsymaxd,iemxd,thetas,phis,
      &                nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,
-     &                nshelD,nshell,ijtabcalc,ijtabsh,ijtabsym,
+     &                nshelD,nshell,ijtabcalc,ijtabcalc_I,ijtabsh,
+     &                ijtabsym,
      &                ielast,ez,wez,dsymll,noq,itoq,ncpa)
          END IF
+#ifdef CPP_TIMING
+            call timing_stop('main1b - tbxccpl')
+#endif
       END IF
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C

@@ -329,10 +329,8 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
      &           " ISPIN = ",I1,/,8X,60(1H+),/)') ISPIN
             DO IT = 1,NATYP
                WRITE(1337,'(12X," IE = ",I2," IT =",I3)') IE,IT
-               IF(KORBIT==0) THEN
-                 CALL CMATSTR(' T MAT ',7,TSST(1,1,IT,ISPIN),
-     &                LMMAXD,LMMAXD,0,0,0,1D-8,6)
-               END IF
+               CALL CMATSTR(' T MAT ',7,TSST(1,1,IT,ISPIN),
+     &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
                CALL CMATSTR(' D MAT ',7,DMATTS(1,1,IT,ISPIN),
      &              LMMAXD,LMMAXD,0,0,0,1D-8,6)
                CALL CMATSTR(' D~ MAT',7,DTILTS(1,1,IT,ISPIN),
@@ -341,19 +339,15 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             END DO
             WRITE(1337,'(8X,60(1H+),/)')
          END DO
-         IF(KORBIT==0) THEN
-           WRITE(1337,'(8X,60(1H-),/,10X,
+         WRITE(1337,'(8X,60(1H-),/,10X,
      &        "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,",
      &        I3,/)') NATYP
-           DO IT = 1,NATYP
+         DO IT = 1,NATYP
             WRITE(1337,'(12X," IE = ",I2," IT =",I3)') IE,IT
             CALL CMATSTR(' DEL T ',7,DELTSST(1,1,IT),
      &           LMMAXD,LMMAXD,0,0,0,1D-8,6)
             IF ( IT.NE.NATYP) WRITE(1337,'(8X,60(1H-),/)')
-           END DO
-         ELSE
-                  !implement write-out of dt-matriced
-         END IF
+         END DO
          WRITE(1337,'(8X,60(1H-),/)')
       END IF
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
@@ -524,7 +518,6 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communication
 #ifdef CPP_MPI
-        !if(myrank==master)then
           !allocate
           ALLOCATE(csum_store2(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
           IF ( LM1.NE.0 ) THEN
@@ -542,13 +535,11 @@ C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communic
             END DO
            END DO
           END DO!IE
-        !end if!myrank==master
 
         !perform communication and collect resutls in csum_store2
         LM1 = NATYP*NATYP*NSHELL(0)*IELAST
         call MPI_REDUCE(csum_store,csum_store2,LM1,MPI_DOUBLE_COMPLEX,
      &                  MPI_SUM,master,t_mpi_c_grid%myMPI_comm_at,IERR)
-!     &                  MPI_SUM,master,MPI_COMM_WORLD,IERR)
         if(IERR/=MPI_SUCCESS)then
            write(*,*) 'Problem in MPI_REDUCE(csum_store)'
            stop 'TBXCCPLJIJ'

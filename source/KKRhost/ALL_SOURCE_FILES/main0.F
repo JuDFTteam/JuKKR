@@ -322,7 +322,7 @@ C     .. Local Arrays ..
      +        NSH1(NSHELD),NSH2(NSHELD),NSHELL(0:NSHELD),
      +        NTCELL(NATYPD),NTCELLR(NREFD),REFPOT(NAEZD+NEMBD)
       INTEGER IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),
-     +        IOFGIJ(NOFGIJD),JOFGIJ(NOFGIJD),
+     +        IOFGIJ(NOFGIJD),JOFGIJ(NOFGIJD),IJTABCALC_I(NOFGIJD),
      +        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
       INTEGER KMESH(IEMXD)
       INTEGER ITSCF,SCFSTEPS,KFORCE
@@ -790,7 +790,7 @@ C
      &     CALL SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,
      &                    NATOMIMP,ATOMIMP,RCLSIMP,
      &                    NOFGIJ,IJTABCALC,IOFGIJ,JOFGIJ,NQCALC,IQCALC,
-     &                    NAEZD,NATOMIMPD)
+     &                    NAEZD,NATOMIMPD,IJTABCALC_I)
 C
 C ======================================================================
 C
@@ -1006,8 +1006,8 @@ C new solver for full-potential, spin-orbit, initialise
      &              ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,
      &              ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,
      &              CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,
-     &              IJTABCALC,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,
-     &              NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
+     &              IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,
+     &              NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
      &              KMESH,MAXMESH,NSYMAT,SYMUNITARY,RROT,
      &              DSYMLL,INVMOD,ICHECK,
      &              NATOMIMP,RATOM,ATOMIMP,
