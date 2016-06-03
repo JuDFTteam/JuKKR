@@ -24,7 +24,6 @@ module TFQMRSolver_mod
     class(OperatorT), pointer :: precond => null()
 
     double complex, allocatable :: vecs(:,:,:)
-    double complex, allocatable :: temp(:,:)
 
     type(SolverStats) :: stats
     logical :: use_precond = .false.
@@ -80,15 +79,15 @@ module TFQMRSolver_mod
     double complex, intent(inout) :: mat_X(:,:)
     double complex, intent(in)    :: mat_B(:,:)
 
-    integer :: nlen, num_columns, iterations_needed
+    integer :: nlen, num_columns, iterations_needed, nvecs
     double precision :: largest_residual
 
     nlen = size(mat_B, 1)
     num_columns = size(mat_B, 2)
 
     if (.not. allocated(self%vecs)) then
-      allocate(self%vecs(nlen,num_columns,7))
-      allocate(self%temp(nlen,num_columns))
+      nvecs = 7; if(self%use_precond) nvecs = nvecs+1
+      allocate(self%vecs(nlen,num_columns,nvecs)) ! need only 7 without preconditioning
     else
       if (size(self%vecs, 1) /= nlen .or. size(self%vecs, 2) /= num_columns) then
         ! when problem size has changed, one should destroy the solver and create a new one
@@ -104,7 +103,7 @@ module TFQMRSolver_mod
 
     call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, num_columns, nlen, &
                       .true., self%precond, self%use_precond, &
-                      self%vecs, self%temp, iterations_needed, largest_residual)
+                      self%vecs, iterations_needed, largest_residual)
 
     call reduce(self%stats, iterations_needed, largest_residual)
 
@@ -116,7 +115,7 @@ module TFQMRSolver_mod
     
     integer :: ist ! ignore status
 
-    deallocate(self%vecs, self%temp, stat=ist)
+    deallocate(self%vecs, stat=ist)
     nullify(self%op)
     nullify(self%precond)
   endsubroutine ! destroy
@@ -137,9 +136,8 @@ module TFQMRSolver_mod
 
   !----------------------------------------------------------------------------
   !> Get statistics of last solver run.
-  function get_stats(self)
+  type(SolverStats) function get_stats(self)
     class(TFQMRSolver) :: self
-    type(SolverStats) :: get_stats
 
     get_stats = self%stats
   endfunction

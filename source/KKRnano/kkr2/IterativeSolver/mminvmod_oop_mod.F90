@@ -31,6 +31,7 @@ module mminvmod_oop_mod
 #define SEVEN 5
 #define EIGHT 6
 #define NINE 7
+#define TEN 8
 
   !***********************************************************************
   ! v1 = mat_X
@@ -39,7 +40,7 @@ module mminvmod_oop_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param num_columns    number of right-hand sides = number of columns of B
   !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, nlen, initial_zero, precond, use_precond, VECS, temp, &
+  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, nlen, initial_zero, precond, use_precond, VECS, &
                           iterations_needed, largest_residual) ! optional args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
@@ -56,7 +57,6 @@ module mminvmod_oop_mod
     class(OperatorT) :: precond
     logical, intent(in) :: use_precond
     double complex, intent(inout) :: VECS(:,:,:) ! workspace
-    double complex, intent(inout) :: temp(:,:) ! workspace only used when use_precond is true
     ! optional args
     integer, intent(out), optional :: iterations_needed
     double precision, intent(out), optional :: largest_residual
@@ -142,7 +142,7 @@ module mminvmod_oop_mod
       ! V9 = A*V1
       !==============================================================================
 
-      call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), temp, use_precond)
+      call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), VECS(:,:,TEN), use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
@@ -210,7 +210,7 @@ module mminvmod_oop_mod
       ! V9 = A*V6
       !====================================================================
 
-      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,NINE), temp, use_precond)
+      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,NINE), VECS(:,:,TEN), use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
@@ -284,7 +284,7 @@ module mminvmod_oop_mod
       ! V8 = A*V6
       !=========================================
 
-      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,EIGHT), temp, use_precond)
+      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,EIGHT), VECS(:,:,TEN), use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
@@ -361,7 +361,7 @@ module mminvmod_oop_mod
         ! V9 = A*V1
         !=========================================
 
-        call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), temp, use_precond)
+        call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), VECS(:,:,TEN), use_precond)
 
         sparse_mult_count = sparse_mult_count + 1
 
@@ -424,8 +424,8 @@ module mminvmod_oop_mod
       ! has to be performed ..
 
    if (use_precond) then
-     call precond%apply(mat_X, temp)
-     mat_X = temp
+     call precond%apply(mat_X, VECS(:,:,TEN))
+     mat_X = VECS(:,:,TEN)
    endif
 
     ! ================================================================

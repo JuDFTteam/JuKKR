@@ -32,7 +32,7 @@ def get_energy(string):
 def KKR_total_energy(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax=DEFAULT_lmax):
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
     #print "start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks
-    run_it("./clearfiles.sh")
+    out, err = run_it("./clearfiles.sh")
     
     for file in glob.glob(os.path.join(inputdir, '*')):
         shutil.copy(file, TESTDIR) ### copy all files from the input directory
@@ -46,7 +46,7 @@ def KKR_total_energy(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax
             myfile.write("solver = {0}\n".format(int(solver)))
             #print "solver = {0}".format(int(solver))
 
-    run_it("./kkr.exe --prepare") ### start from JM-formatted potential file
+    out, err = run_it("./kkr.exe --prepare") ### start from JM-formatted potential file
     ## execute the code
     out, err = run_it("OMP_STACKSIZE=20M OMP_NUM_THREADS={0} mpirun -np {1} kkr.exe".format(int(nthreads), int(nranks)))
     ### grep the result
@@ -88,4 +88,4 @@ class Test_semiconductors(unittest.TestCase):
 
 
 unittest.main()
-run_it("./clearfiles.sh")
+out, err = run_it("./clearfiles.sh")
