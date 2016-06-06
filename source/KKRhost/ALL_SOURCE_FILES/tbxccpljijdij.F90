@@ -11,7 +11,7 @@ contains
   subroutine tbxccpljijdij( naezd,natypd,lmmaxd,lmgf0d,natomimpd,nsymaxd,iemxd, & !dimensions
                           & thetas, phis,&
                           & nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,& !imp-cluser
-                          & nshelD,nshell,ijtabcalc,ijtabsh,ijtabsym,  & !shells
+                          & nshelD,nshell,ijtabcalc,ijtabcalc_I,ijtabsh,ijtabsym,  & !shells
                           & ielast,ez,wez, & !energies
                           & dsymll, & !symmetries
                           & noq,itoq, ncpa) !CPA
@@ -52,8 +52,9 @@ contains
 !                          nsh2(nshelD),    &
 !                          ish(nshelD,nofgijD), &
 !                          jsh(nshelD,nofgijD)
-    integer, intent(in) :: ijtabcalc(nofgijD),&
-                         & ijtabsh(nofgijD),  &
+    integer, intent(in) :: ijtabcalc(nofgijD),  &
+                         & ijtabcalc_I(nofgijD),&
+                         & ijtabsh(nofgijD),    &
                          & ijtabsym(nofgijD)
 
     !symmetries
@@ -109,7 +110,7 @@ contains
       do i1=1,natomimp
        nn = (i1-1)*natomimp+i2 !key for the pair (i,j)
        kk = (i2-1)*natomimp+i1 !key for the pair (j,i)
-       if(ijtabcalc(nn)==1 .and. i1/=i2)then
+       if(ijtabcalc_I(nn)==1 .and. i1/=i2)then
         !cross-check if also the block g(ji) was calculated 
         if(ijtabcalc(kk)/=1) then
            write(1337,'(A,I0,",",I0)') 'Gji not calculated for (i,j)=(',i1,i2,') calculated'
@@ -162,7 +163,7 @@ contains
        kk = (i2-1)*natomimp+i1 !key for the pair (j,i)
 
        !check if block g(ij) was calculated
-       if(ijtabcalc(nn)==1 .and. i1/=i2)then
+       if(ijtabcalc_I(nn)==1 .and. i1/=i2)then
 
         !=================================================================!
         ! read in the g(ij) block and transform with appropriate symmetry !
@@ -274,10 +275,6 @@ contains
                 end do!lalpha
               end do!kalpha
 
-!             write(13530,'(A)') '#==========================='
-!             write(13530,'(A,I0,A,2I3,A,I0,A)') '# istore=', istore,' i1,i2=',i1,i2,' ie=', ie
-!             write(13530,'(2ES16.5)') dimag(Jijmat(:,:,istore,ie))
-
            end do!iI1
         end do!iJ1
        end if!ijtabcalc(nn)==1
@@ -322,7 +319,7 @@ contains
       do i1=1,natomimp
        nn = (i1-1)*natomimp+i2 !key for the pair (i,j)
        kk = (i2-1)*natomimp+i1 !key for the pair (j,i)
-       if(ijtabcalc(nn)==1 .and. i1/=i2)then
+       if(ijtabcalc_I(nn)==1 .and. i1/=i2)then
 
         iq = atomimp(i1)
         jq = atomimp(i2)
@@ -349,8 +346,8 @@ contains
              write(499,fmt='(a)') &
      &            '# Energy Re,Im ; j(E) Re,Im ; J(E) Re,Im ;&
                                   & d(E) Re,Im ; D(E) Re,Im ;&
-                                  & s1(E) Re,Im ; S1(E) Re,Im ;&
-                                  & s2(E) Re,Im ; S2(E) Re,Im '
+                                  & s(E) Re,Im ; S(E) Re,Im ;&
+                                  & a(E) Re,Im ; A(E) Re,Im '
              write(499,fmt='(4(a,i5))') &
      &            '# IT=',IT,' JT=',JT,' ISITE=',i1,' JSITE=',i2
              write(499,fmt='(a,i6)') '#ENERGIES: ',ielast
@@ -366,7 +363,8 @@ contains
                   jtmp(4) = (Jijmat(2,1,istore,ie)+Jijmat(1,2,istore,ie))/2d0
 
                   jxcijint(:,istore) = jxcijint(:,istore) - wez(ie)*jtmp/4d0
-!factor 2 for NSPIN, another factor of 2 to be consistent with old defini
+                                                      !factor 2 for NSPIN, another factor of 2 to be consistent
+                                                      !with definition in tbxccpljij (different from impurity program)
                   write (499,fmt='(18e12.4)') &
                 & ez(ie),jtmp(1)/fpi,jxcijint(1,istore),&
                 &        jtmp(2)/fpi,jxcijint(2,istore),&
@@ -392,9 +390,16 @@ contains
 
      do lm1=1,natypd
        if(count(indxarr(1,:)==lm1)>0)then
+         loop: do lm3=1,nstore
+          if(indxarr(1,lm3)==lm1)then
+            i1 = indxarr(3,lm3)
+            exit loop
+          end if
+         end do loop!lm3
+
          write(jfnam,'(A,I5.5)') 'Jij.atom', lm1
          open(49,file=jfnam,form='formatted',action='write')
-         WRITE (49,99009) lm1,IQAT(lm1)
+         WRITE (49,99009) lm1,IQAT(lm1),i1
 
          do lm2=1,natypd
 
@@ -424,16 +429,17 @@ contains
               istore = istoretmp(isort(lm3))
               i1 = indxarr(3,istore)
               i2 = indxarr(4,istore)
+
               rdiff = rclsimp(:,i2)-rclsimp(:,i1)
               rsh   = sqrt(sum(rdiff**2))
               write(49,99010) rsh, dimag(jxcijint(1,istore)),&
                                  & dimag(jxcijint(2,istore)),&
                                  & dimag(jxcijint(3,istore)),&
-                                 & dimag(jxcijint(2,istore)),&
-                              & rdiff, lm2
+                                 & dimag(jxcijint(4,istore)),&
+                                 & rdiff, lm2, i2
             end do
 
-            if(lm2/=natypd) write(49,*) '&'
+            if(lm2/=natypd) write(49,'(A)') '#&'
           end if
          end do!lm2
 
@@ -450,10 +456,10 @@ contains
   call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
 99009 FORMAT("# off-diagonal exchange coupling constants ",/,&
-     &     "# for atom IT = ",I3," on site IQ = ",I3,/,&
-     &     "# R_IQ,JQ      J_IT,JT     D_IT,JT   Rvec    JT",/,&
+     &     "# for atom IT = ",I5," on site IQ = ",I5," impurity site = ",I5,/,&
+     &     "# R_IQ,JQ      J_IT,JT     D_IT,JT   S_IT,JT     A_IT,JT       Rvec    JT",/,&
      &     "# ( ALAT )       ( Ry )",/,"#      ")
-99010 FORMAT(F12.8,4E16.8,2X,3F12.8,2X,I3)
+99010 FORMAT(F12.8,4E16.8,2X,3F12.8,2X,2I5)
 
 ! stop 'test stop'
   end subroutine tbxccpljijdij

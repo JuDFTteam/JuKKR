@@ -75,7 +75,7 @@
      &        KAOEZ(:,:),IQAT(:),                                        &
      &        ICPA(:),NOQ(:),KMESH(:),                                   &
      &        NSHELL(:),NSH1(:),NSH2(:),                                 &
-     &        IJTABCALC(:),IJTABSYM(:),IJTABSH(:),                       &
+     &        IJTABCALC(:),IJTABCALC_I(:),IJTABSYM(:),IJTABSH(:),        &
      &        ISH(:,:),JSH(:,:),IQCALC(:),                               &
      &        ICHECK(:,:),ATOMIMP(:),REFPOT(:),                          &
      &        IRREL(:,:,:),NRREL(:,:),IFUNM1(:,:),                       &
@@ -114,8 +114,8 @@
      &                    ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,
      &                    ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,
      &                    CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,
-     &                    IJTABCALC,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,
-     &                    NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
+     &                   IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,
+     &                   NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
      &                    KMESH,MAXMESH,NSYMAT,SYMUNITARY,RROT,
      &                    DSYMLL,INVMOD,ICHECK,
      &                    NATOMIMP,RATOM,ATOMIMP,
@@ -215,7 +215,8 @@ C     ..
      &        KAOEZ(NATYPD,NEMBD2),IQAT(NATYPD),
      &        ICPA(NAEZD),NOQ(NAEZD),KMESH(IEMXD)
       INTEGER NSHELL(0:NSHELD),NSH1(NSHELD),NSH2(NSHELD),
-     &        IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD)
+     &        IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),IJTABSYM(NOFGIJD),
+     &        IJTABSH(NOFGIJD)
       INTEGER ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
       INTEGER ICHECK(NAEZDPD,NAEZDPD),ATOMIMP(NATOMIMPD),REFPOT(NEMBD2)
       INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD),IFUNM1(LMXSPD,NATYPD),
@@ -379,6 +380,7 @@ C                                  meant for simpler passing of basic parameter 
      &       RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,
      &       ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM
      &      ,EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,IJTABCALC,
+     &       IJTABCALC_I,
      &       IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
@@ -509,6 +511,7 @@ C ======================================================================
      &t_params%NSH1(t_params%NSHELD),
      &t_params%NSH2(t_params%NSHELD),
      &t_params%IJTABCALC(t_params%NOFGIJD),
+     &t_params%IJTABCALC_I(t_params%NOFGIJD),
      &t_params%IJTABSYM(t_params%NOFGIJD),
      &t_params%IJTABSH(t_params%NOFGIJD),
      &t_params%ISH(t_params%NSHELD,t_params%NOFGIJD),
@@ -974,6 +977,8 @@ C ======================================================================
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IJTABCALC,(t_params%NOFGIJD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+      call MPI_Bcast(t_params%IJTABCALC_I,(t_params%NOFGIJD),
+     &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IJTABSYM,(t_params%NOFGIJD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IJTABSH,(t_params%NOFGIJD),
@@ -1251,6 +1256,7 @@ C     ..
      &       RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,
      &       ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM
      &      ,EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,IJTABCALC,
+     &       IJTABCALC_I,
      &       IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
@@ -1306,7 +1312,8 @@ C     ..
      &        KAOEZ(NATYPD,NEMBD2),IQAT(NATYPD),
      &        ICPA(NAEZD),NOQ(NAEZD),KMESH(IEMXD)
       INTEGER NSHELL(0:NSHELD),NSH1(NSHELD),NSH2(NSHELD),
-     &        IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD)
+     &        IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),IJTABSYM(NOFGIJD),
+     &        IJTABSH(NOFGIJD)
       INTEGER ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
       INTEGER ICHECK(NAEZDPD,NAEZDPD),ATOMIMP(NATOMIMPD),REFPOT(NEMBD2)
       INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD),IFUNM1(LMXSPD,NATYPD),
@@ -1407,6 +1414,7 @@ C     ..
       t_params%NSH1           = NSH1           
       t_params%NSH2           = NSH2           
       t_params%IJTABCALC      = IJTABCALC      
+      t_params%IJTABCALC_I    = IJTABCALC_I    
       t_params%IJTABSYM       = IJTABSYM       
       t_params%IJTABSH        = IJTABSH        
       t_params%ISH            = ISH            
@@ -1603,7 +1611,8 @@ C ------------------------------------------------------ cluster atoms
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
      &       NOQ,IQAT,NOFGIJD,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,
-     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABSYM,IJTABSH,IQCALC,
+     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABCALC_I,IJTABSYM,
+     &       IJTABSH,IQCALC,
      &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
      &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
@@ -1628,7 +1637,8 @@ C ------------------------------------------------------ cluster atoms
      &         NSHELL(0:NSHELD),KMROT,KAOEZ(NATYPD,NAEZD+NEMBD),
      &         NOQ(NAEZD),IQAT(NATYPD),ISH(NSHELD,NOFGIJD),NOFGIJ,
      &         JSH(NSHELD,NOFGIJD),NSH1(NSHELD),NSH2(NSHELD),
-     &         KMESH(IEMXD),IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),
+     &         KMESH(IEMXD),IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),
+     &         IJTABSYM(NOFGIJD),
      &         IJTABSH(NOFGIJD),IQCALC(NAEZD),NOFKS(MAXMSHD),
      &         ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD),IRREL(2,2,LMMAXD),
      &         NRREL(2,LMMAXD)
@@ -1723,6 +1733,7 @@ C ......................................................................
       NSH2      = t_params%NSH2     
       DROTQ     = t_params%DROTQ    
       IJTABCALC = t_params%IJTABCALC
+      IJTABCALC_I = t_params%IJTABCALC_I
       do I=1,NSHELL(0)
          do L=1,NOFGIJ
             ISH(I,L) = t_params%ISH(I,L)

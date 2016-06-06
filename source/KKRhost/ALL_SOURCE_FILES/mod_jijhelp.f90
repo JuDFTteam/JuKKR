@@ -95,15 +95,29 @@ contains
         end do!ispin2
       end do!ispin1
 
-     PNSIR(:,:)=RLL(1:LMMAXSO,:,ir)
-     PNSIL(:,:)=RLLLEFT(1:LMMAXSO,:,ir)
+      PNSIR(:,:)=RLL(1:LMMAXSO,:,ir)
+      PNSIL(:,:)=RLLLEFT(1:LMMAXSO,:,ir)
 
-     !calculate [Rleft * VNSPLL0 *Rright](r)
-     CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,VNSPLL0,&
-     &             LMMAXSO,PNSIR,LMMAXSO,CZERO,CMATTMP,LMMAXSO)
+      !calculate [Rleft * VNSPLL0 *Rright](r)
+      CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,VNSPLL0,&
+      &             LMMAXSO,PNSIR,LMMAXSO,CZERO,CMATTMP,LMMAXSO)
 
-     CALL ZGEMM('T','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,PNSIL,&
-     &             LMMAXSO,CMATTMP,LMMAXSO,CZERO,WR(:,:,IR),LMMAXSO)
+      CALL ZGEMM('T','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,PNSIL,&
+      &             LMMAXSO,CMATTMP,LMMAXSO,CZERO,WR(:,:,IR),LMMAXSO)
+
+      !add small component
+      if(NSRA==2)then
+       PNSIR(:,:)= RLL(LMMAXSO+1:2*LMMAXSO,:,ir)
+       PNSIL(:,:)=-RLLLEFT(LMMAXSO+1:2*LMMAXSO,:,ir)
+
+       !calculate [Rleft_small * VNSPLL0 *Rright_small](r) and add to large
+       !component
+       CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,VNSPLL0,&
+       &             LMMAXSO,PNSIR,LMMAXSO,CZERO,CMATTMP,LMMAXSO)
+ 
+       CALL ZGEMM('T','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,PNSIL,&
+       &             LMMAXSO,CMATTMP,LMMAXSO,CONE,WR(:,:,IR),LMMAXSO)
+      end if!NSRA
 
      end do!ir
 
