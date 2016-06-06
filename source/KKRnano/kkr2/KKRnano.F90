@@ -66,7 +66,8 @@ program KKRnano
 
   external :: MPI_Init
   character(len=16) :: arg
-  
+  character(len=40) :: num 
+ 
   call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
   voronano = 0

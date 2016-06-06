@@ -33,6 +33,10 @@ ifeq ($(PLATFORM),ifort)
   FCFLAGS += -O0 -g
   else ifeq ($(TYPE),debug)
   FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+  else ifeq ($(TYPE),mtradii)
+  FCFLAGS += -O3 -D NOLOGGING -D USE_MTRADII 
+  else ifeq ($(TYPE),debug_mtradii)
+  FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -D USE_MTRADII
   else
   FCFLAGS += -O3 -D NOLOGGING
   endif
