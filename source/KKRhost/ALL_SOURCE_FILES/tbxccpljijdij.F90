@@ -390,9 +390,16 @@ contains
 
      do lm1=1,natypd
        if(count(indxarr(1,:)==lm1)>0)then
+         loop: do lm3=1,nstore
+          if(indxarr(1,lm3)==lm1)then
+            i1 = indxarr(3,lm3)
+            exit loop
+          end if
+         end do loop!lm3
+
          write(jfnam,'(A,I5.5)') 'Jij.atom', lm1
          open(49,file=jfnam,form='formatted',action='write')
-         WRITE (49,99009) lm1,IQAT(lm1)
+         WRITE (49,99009) lm1,IQAT(lm1),i1
 
          do lm2=1,natypd
 
@@ -429,7 +436,7 @@ contains
                                  & dimag(jxcijint(2,istore)),&
                                  & dimag(jxcijint(3,istore)),&
                                  & dimag(jxcijint(4,istore)),&
-                                 & rdiff, lm2
+                                 & rdiff, lm2, i2
             end do
 
             if(lm2/=natypd) write(49,'(A)') '#&'
@@ -449,10 +456,10 @@ contains
   call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
 99009 FORMAT("# off-diagonal exchange coupling constants ",/,&
-     &     "# for atom IT = ",I3," on site IQ = ",I3,/,&
+     &     "# for atom IT = ",I5," on site IQ = ",I5," impurity site = ",I5,/,&
      &     "# R_IQ,JQ      J_IT,JT     D_IT,JT   S_IT,JT     A_IT,JT       Rvec    JT",/,&
      &     "# ( ALAT )       ( Ry )",/,"#      ")
-99010 FORMAT(F12.8,4E16.8,2X,3F12.8,2X,1I3)
+99010 FORMAT(F12.8,4E16.8,2X,3F12.8,2X,2I5)
 
 ! stop 'test stop'
   end subroutine tbxccpljijdij
