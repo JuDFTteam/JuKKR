@@ -97,15 +97,15 @@ module AtomicCore_mod
 
         e = intcor(e1, e2, rho, g, f, v, value, slope, l, nn, ei, .false., a, b, z, rmax, nr, tol, irmd, ipr, nitmax, nsra, charge, irend)
 
-!        if (e > ebot) then
-!          write(6, '(3(a,i0),9(a,f0.3))') 'Error for l=',l,' n=',in,' atom_id=',atom_id,' Z=',z
-!          write(6,*) 'E > EBOT',e,ebot
-!          write(6, '(a)') '', &
-!          'The program found a core state above the bottom of the valence-band energy contour.', &
-!          'This state was specified in the input potential. The results are very probably wrong.', &
-!          'The number of core states in the input potential should perhaps be decreased.'
-!          die_here('Found the'+in-ellchar(l)-'-core state for Z='+z+'above the valence-band bottom! atom_id='+atom_id)
-!        endif
+        if (e > ebot) then
+          write(6, '(3(a,i0),9(a,f0.3))') 'Error for l=',l,' n=',in,' atom_id=',atom_id,' Z=',z
+          write(6,*) 'E > EBOT',e,ebot
+          write(6, '(a)') '', &
+          'The program found a core state above the bottom of the valence-band energy contour.', &
+          'This state was specified in the input potential. The results are very probably wrong.', &
+          'The number of core states in the input potential should perhaps be decreased.'
+          die_here('Found the'+in-ellchar(l)-'-core state for Z='+z+'above the valence-band bottom! atom_id='+atom_id)
+        endif
 
         ediff = e - ei
         ecore(nc) = e
