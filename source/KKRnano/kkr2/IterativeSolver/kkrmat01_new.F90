@@ -26,11 +26,11 @@ module kkrmat_new_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, NofKs, volcub, GS, tmatLL, alat, nsymat, RR, &
-                          Ginp, lmmaxd, trunc2atom_index, communicator, iguess_data)
+  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, NofKs, k_point_weight, GS, tmatLL, alat, nsymat, RR, &
+                          Ginp, lmmaxd, global_atom_id, communicator, iguess_data)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
-    !   Greens function of the real system -> GS(*,*,*,*),
+    !   Greens function of the real system -> GS(*,*,*),
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
     use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
@@ -46,22 +46,22 @@ module kkrmat_new_mod
     
     double precision, intent(in) :: Bzkp(:,:) !< list of k-points
     integer, intent(in) :: NofKs !< number of k-points
-    double precision, intent(in) :: volcub(:) !< k-point weights
+    double precision, intent(in) :: k_point_weight(:) !< k-point weights
 
-    double complex, intent(out) ::  GS(:,:,:,:) ! (lmmaxd,lmmaxd,nsymat,num_local_atoms)
+    double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms)
     double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: alat
-    integer, intent(in) :: nsymat
+    integer, intent(in) :: nsymat ! needed only for Jij-calculation
     double precision, intent(in) :: RR(:,0:)
     double complex, intent(inout) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
     integer, intent(in) :: lmmaxd
-    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
 
     ! locals
-    double complex, allocatable :: G_diag(:,:,:)
-    integer :: site_lm_size, ilocal, num_local_atoms, naclsd, naez, k_point_index
+    double complex :: G_diag(LMMAXD,LMMAXD)
+    integer :: site_lm_size, num_local_atoms, naclsd, naez, k_point_index, ila
     type(SolverStats) :: stats
 
 #define ms kkr_op%ms
@@ -74,12 +74,6 @@ module kkrmat_new_mod
     site_lm_size = naez*LMMAXD
 
     num_local_atoms = size(ms%atom_indices)
-
-    !-----------------------------------------------------------------------
-    ! Allocate arrays
-    !-----------------------------------------------------------------------
-
-    allocate(G_diag(lmmaxd,lmmaxd,num_local_atoms))
 
     ! WARNING: Symmetry assumptions might have been used that are
     ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
@@ -103,38 +97,35 @@ module kkrmat_new_mod
       ! select right slot for storing initial guess
       call iguess_set_k_ind(iguess_data, k_point_index)
 
-      ! Get the scattering path operator for k-point Bzkp(:, k_point_index)
+      ! Get the scattering path operator for k-point Bzkp(:,k_point_index)
       ! output: ms%mat_X
+      call kloopbody(solver, kkr_op, preconditioner, Bzkp(:,k_point_index), tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
 
-      call kloopbody(solver, kkr_op, preconditioner, Bzkp(:,k_point_index), tmatLL, Ginp, alat, RR, trunc2atom_index, communicator, iguess_data)
+      do ila = 1, num_local_atoms
+        call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
 
-      call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
-
+        ! ----------- Integrate Scattering Path operator over k-points --> GS -----
+        ! Note: here k-integration only in irreducible wedge
+        GS(:,:,ila) = GS(:,:,ila) + k_point_weight(k_point_index)*G_diag(:,:) 
+        ! -------------------------------------------------------------------------
+      enddo ! ila
+      
       ! TODO: use mat_X to calculate Jij
-
-      ! ----------- Integrate Scattering Path operator over k-points --> GS -----
-      ! Note: here k-integration only in irreducible wedge
-      call greenKSummation(G_diag, GS, volcub(k_point_index), num_local_atoms, nsymat, lmmaxd)
-      ! -------------------------------------------------------------------------
-
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
-        call KKRJIJ(Bzkp(:,k_point_index), volcub(k_point_index), nsymat, naez, ms%atom_indices(1), &
+        call KKRJIJ(Bzkp(:,k_point_index), k_point_weight(k_point_index), nsymat, naez, ms%atom_indices(1), &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
                     ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
-
-      do ilocal = 1, num_local_atoms
-        TESTARRAYLOG(3, GS(:,:,:,ilocal))
-      enddo ! ilocal
 
     !==============================================================================
     enddo ! k_point_index = 1, NofKs
     !==============================================================================
 
+    do ila = 1, num_local_atoms
+      TESTARRAYLOG(3, GS(:,:,ila))
+    enddo ! ila
     
-    deallocate(G_diag, stat=ilocal) ! Cleanup
-
     stats = solver%get_stats()
 
     WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", stats%max_residual
@@ -150,63 +141,32 @@ module kkrmat_new_mod
   !------------------------------------------------------------------------------
   !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
   !> dependent on (k,E) into matrix G_diag
-  subroutine getGreenDiag(G_diag, mat_X, atom_indices, kvstr)
-    double complex, intent(out) :: G_diag(:,:,:) ! dim lmmaxd*lmmaxd*num_local_atoms
+  subroutine getGreenDiag(G_diag, mat_X, atom_index, kvstr, local_atom_index)
+    double complex, intent(out) :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
     double complex, intent(in) :: mat_X(:,:)
-    integer, intent(in) :: atom_indices(:)
+    integer, intent(in) :: atom_index 
     integer, intent(in) :: kvstr(:)
+    integer, intent(in) :: local_atom_index 
 
-    integer :: atom_index, lmmax1, start, ii !< local atom index
+    integer :: lmmax1, start, ila !< local atom index
 
     !                                      nn
     !         Copy the diagonal elements G_LL' of the Green's-function,
     !         dependent on (k,E) into matrix G_diag
     !         (n = n' = atom_index)
 
-    ASSERT(size(atom_indices) == size(G_diag, 3))
-
+    ila = local_atom_index
     G_diag = zero
 
-    do ii = 1, size(atom_indices)
+    start  = kvstr(atom_index) - 1
+    lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
 
-      atom_index = atom_indices(ii)
+    ASSERT(lmmax1 == size(G_diag, 1))
+    ASSERT(lmmax1 == size(G_diag, 2))
 
-      start  = kvstr(atom_index) - 1
-      lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
-
-      ASSERT(lmmax1 == size(G_diag, 1))
-      ASSERT(lmmax1 == size(G_diag, 2))
-
-      G_diag(1:lmmax1,1:lmmax1,ii) = mat_X(start+ 1:lmmax1 +start,(ii-1)*lmmax1+1:ii*lmmax1)
-
-    enddo ! ii
-
+    G_diag(1:lmmax1,1:lmmax1) = mat_X(start+ 1:lmmax1 +start,(ila-1)*lmmax1+1:ila*lmmax1)
+    
   endsubroutine ! getGreenDiag
-
-
-  !------------------------------------------------------------------------------
-  !> Summation of Green's function over k-points. Has to be called for every k-point
-  !> TODO: it would be better to do the k-space-symmetry treatment separately ???
-  !> this routine creates nsymat copies of the same solution
-  !> set GS to 0 before first call
-  !> in: gllke1
-  !> inout: GS (set to 0 before first call)
-  subroutine greenKSummation(G_diag, GS, k_point_weight, natoms, nsymat, lmmaxd)
-    double complex, intent(in) :: G_diag(lmmaxd,lmmaxd,natoms)
-    double complex, intent(inout) :: GS(lmmaxd,lmmaxd,nsymat,natoms)
-    double precision, intent(in) :: k_point_weight
-    integer, intent(in) :: lmmaxd, natoms, nsymat
-
-    integer :: isym, ila !< local atom index
-
-    do ila = 1, natoms
-      ! perform the Brillouin-zone integration for diagonal block entries of the Green's function
-      do isym = 1, nsymat
-        GS(:,:,isym,ila) = GS(:,:,isym,ila) + k_point_weight*G_diag(:,:,ila)
-      enddo ! isym
-    enddo ! ila
-
-  endsubroutine ! greenKSummation
 
   !------------------------------------------------------------------------------
   !> Calculate scattering path operator for 'kpoint'.
@@ -215,7 +175,7 @@ module kkrmat_new_mod
   !> Solution is stored in ms%mat_X.
   !> Scattering path operator is calculated for atoms given in
   !> ms%atom_indices(:)
-  subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, trunc2atom_index, communicator, iguess_data)
+  subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
     use TFQMRSolver_mod, only: TFQMRSolver, solve
@@ -236,7 +196,7 @@ module kkrmat_new_mod
     double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd) independent of the kpoint, ToDo: try not to communicate it again for every kpoint
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
-    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
 
@@ -276,7 +236,7 @@ module kkrmat_new_mod
   
     call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
-             rr, cluster%ezoa_trc, Ginp, trunc2atom_index, communicator)
+             rr, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
 
     TESTARRAYLOG(3, ms%GLLh)
 
@@ -330,11 +290,11 @@ module kkrmat_new_mod
 
     ! ALTERNATIVE: direct solution with LAPACK
     if (cutoffmode == 4) then
-      n = size(ms%mat_B,1)
+      n = size(ms%mat_B, 1)
       if (any(shape(full) /= [n,n])) then
-        deallocate(full, stat=ist)
+        deallocate(full, stat=ist) ! ignore status
         allocate(full(n,n), stat=ist)
-        if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*n*.5**16)+"MiByte!")
+        if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
       call convertToFullMatrix(ms%GLLh, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%sparse%kvstr, ms%sparse%kvstr, full)
       TESTARRAYLOG(3, full)
@@ -379,7 +339,7 @@ module kkrmat_new_mod
   !> Uses fence calls instead of locks.
   !> Might not perform and scale as well as referenceFourier_com
   subroutine referenceFourier_com(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
-                indn0, rr, ezoa, Ginp, trunc2atom_index, communicator)
+                indn0, rr, ezoa, Ginp, global_atom_id, communicator)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
@@ -398,7 +358,7 @@ module kkrmat_new_mod
     double precision, intent(in) :: rr(:,0:)
     integer, intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Ginp(:,:,:,:)
-    integer, intent(in) :: trunc2atom_index(:) !> mapping trunc. index -> global atom index
+    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
     integer, intent(in) :: communicator
 
     ! locals
@@ -414,12 +374,12 @@ module kkrmat_new_mod
     if (num_local_atoms == 1) then
       ! this version using point-to-point MPI communication is so far only implemented for 1 atom per process
       call referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
-                indn0, rr, ezoa, Ginp, trunc2atom_index, communicator)
+                indn0, rr, ezoa, Ginp, global_atom_id, communicator)
       return
     endif
 
     naez = size(nacls)
-    ASSERT(naez == size(trunc2atom_index))
+    ASSERT(naez == size(global_atom_id))
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
     naclsd = size(Ginp, 3)
@@ -452,9 +412,9 @@ module kkrmat_new_mod
 #endif
         call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-        ! get Ginp(:,:,:)[trunc2atom_index(site_index)]
+        ! get Ginp(:,:,:)[global_atom_id(site_index)]
 
-        atom_requested = trunc2atom_index(site_index)
+        atom_requested = global_atom_id(site_index)
 !         chunk_inds(1)%owner = getOwner(atom_requested, num_local_atoms*nranks, nranks)
 !         chunk_inds(1)%local_ind = getLocalInd(atom_requested, num_local_atoms*nranks, nranks)
         chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
@@ -501,7 +461,7 @@ module kkrmat_new_mod
   
   
   subroutine referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
-                indn0, rr, ezoa, Ginp, trunc2atom_index, comm)
+                indn0, rr, ezoa, Ginp, global_atom_id, comm)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     include 'mpif.h'
     double complex, intent(out) :: GLLh(:)
@@ -515,7 +475,7 @@ module kkrmat_new_mod
     double precision, intent(in) :: rr(:,0:)
     integer, intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Ginp(:,:,:,:)
-    integer, intent(in) :: trunc2atom_index(:) !> mapping trunc. index -> atom index
+    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
     integer, intent(in) :: comm
 
     ! locals
@@ -526,7 +486,7 @@ module kkrmat_new_mod
     integer, allocatable :: reqs(:,:), stats(:,:,:)
 
     naez = size(nacls)
-    ASSERT(naez == size(trunc2atom_index))
+    ASSERT(naez == size(global_atom_id))
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
     naclsd = size(Ginp, 3)
@@ -551,7 +511,7 @@ module kkrmat_new_mod
 
     ! loop up to naez sending the information
     do site_index = 1, naez
-      atom_requested = trunc2atom_index(site_index) ! get the global atom id
+      atom_requested = global_atom_id(site_index) ! get the global atom id
 
       rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
 
@@ -656,7 +616,8 @@ module kkrmat_new_mod
     integer, intent(in) :: ka(:)
     integer, intent(in) :: kvstr(:)
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls)
-    integer, intent(in) :: nacls, atom(nacls) 
+    integer, intent(in) :: nacls
+    integer, intent(in) :: atom(nacls) 
     integer, intent(in) :: numn0(naez)
     integer, intent(in) :: indn0(naez,nacls)
     integer, intent(in) :: naez, lmmaxd

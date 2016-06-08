@@ -29,16 +29,16 @@ module Main2Arrays_mod
     
     integer :: naez
     double precision :: bravais(3,3)
-    double precision, allocatable :: rbasis(:,:)  !< basis atom positions rbasis(3,naez)
-    double precision, allocatable :: zat(:)  !< atomic numbers zat(naez)
+    double precision, allocatable :: rbasis(:,:)    !< basis atom positions rbasis(3,naez)
+    double precision, allocatable :: zat(:)         !< atomic numbers zat(naez)
 
     integer :: kpoibz
     integer :: maxmesh
     integer :: maxmshd
-    double precision, allocatable :: bzkp(:,:,:)  !< kpoints for each mesh
-    double precision, allocatable :: volcub(:,:)  !< kpoint weights
-    double precision, allocatable :: volbz(:)     !< bz volume?
-    integer,          allocatable :: nofks(:)     !< number of k points for each mesh
+    double precision, allocatable :: bzkp(:,:,:)    !< kpoints for each mesh
+    double precision, allocatable :: volcub(:,:)    !< kpoint weights
+    double precision, allocatable :: volbz(:)       !< bz volume?
+    integer,          allocatable :: nofks(:)       !< number of k points for each mesh
 
   endtype ! Main2Arrays
 
@@ -82,14 +82,10 @@ module Main2Arrays_mod
   !> @param[in]    kpoibz
   !> @param[in]    maxmshd
   subroutine createMain2ArraysImpl(self, lmmaxd, naez, kpoibz, maxmshd)
-    use, intrinsic :: ieee_features
-    use, intrinsic :: ieee_arithmetic
-    
     type(Main2Arrays), intent(inout) :: self
     integer, intent(in) :: lmmaxd, naez, kpoibz, maxmshd
     
     integer :: memory_stat
-    double precision :: nan
 
     self%nsymat = 0
     self%maxmesh = 0
@@ -108,14 +104,13 @@ module Main2Arrays_mod
     ALLOCATECHECK(self%rbasis(3,naez))
     ALLOCATECHECK(self%zat(naez))
     
-    nan = ieee_value(nan, ieee_signaling_nan)
-    self%dsymll = nan
-    self%rbasis = nan
-    self%bzkp = nan
-    self%volcub = nan
-    self%volbz = nan
-    self%nofks = -99
-    self%zat = nan
+    self%dsymll = 0
+    self%rbasis = 0
+    self%bzkp = 0
+    self%volcub = 0
+    self%volbz = 0
+    self%nofks = 0
+    self%zat = 0
     
   endsubroutine ! create
 
@@ -160,7 +155,7 @@ module Main2Arrays_mod
               self%maxmesh
     close(fu)
 
-  endsubroutine ! write
+  endsubroutine ! store
 
   !-----------------------------------------------------------------------------
   !> Reads Main2Arrays data from file.
@@ -185,6 +180,6 @@ module Main2Arrays_mod
               self%maxmesh
     close(fu)
 
-  endsubroutine ! read
+  endsubroutine ! load
 
 endmodule ! Main2Arrays_mod

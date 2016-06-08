@@ -2,101 +2,85 @@
 
 #include "../DebugHelpers/logging_macros.h"
 
-#define DOTPRODUCT(VDOTW, V, W) call col_dots(VDOTW, V, W)
-
-#define COLUMNNORMS(NORMS, VECTORS) call col_norms(NORMS, VECTORS)
-
-! YVECTOR = YVECTOR + FACTORS*XVECTOR
-#define COLUMN_AXPY(FACTORS, XVECTOR, YVECTOR) call col_axpy(FACTORS, XVECTOR, YVECTOR)
-
-! YVECTOR = YVECTOR -FACTORS*XVECTOR
-#define COLUMN_MAXPY(FACTORS, XVECTOR, YVECTOR) call col_maxpy(FACTORS, XVECTOR, YVECTOR)
-
-! YVECTOR = XVECTOR + FACTORS*YVECTOR
-#define COLUMN_XPAY(FACTORS, XVECTOR, YVECTOR) call col_xpay(FACTORS, XVECTOR, YVECTOR)
-
 module mminvmod_oop_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   implicit none
   private
   public :: mminvmod_oop
 
+  double complex, parameter, private :: CONE = (1.d0, 0.d0), ZERO=(0.d0, 0.d0)
+  
   contains
-
-  ! :-)
-#define THREE 1
-#define FOUR 2
-#define FIVE 3
-#define SIX 4
-#define SEVEN 5
-#define EIGHT 6
-#define NINE 7
-#define TEN 8
 
   !***********************************************************************
   ! v1 = mat_X
   ! v2 = mat_B
   !> @param op             coefficient matrix/operator
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
-  !> @param num_columns    number of right-hand sides = number of columns of B
-  !> @param NLEN           number of row elements of matrices mat_X, mat_B
-  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, num_columns, nlen, initial_zero, precond, use_precond, VECS, &
-                          iterations_needed, largest_residual) ! optional args
+  !> @param ncol           number of right-hand sides = number of columns of B
+  !> @param nrow           number of row elements of matrices mat_X, mat_B
+  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, ncol, nrow, initial_zero, precond, use_precond, vecs, &
+                          iterations_needed, largest_residual) ! optional output args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
     use OperatorT_mod, only: OperatorT
 
     class(OperatorT), intent(in) :: op
     double precision, intent(in) :: TOL
-    integer, intent(in) :: num_columns
-    integer, intent(in) :: nlen
-    double complex, intent(inout) :: mat_X(NLEN,num_columns)
-    double complex, intent(in)    :: mat_B(NLEN,num_columns)
+    integer, intent(in) :: ncol
+    integer, intent(in) :: nrow
+    double complex, intent(inout) :: mat_X(nrow,ncol)
+    double complex, intent(in)    :: mat_B(nrow,ncol)
 
     logical, intent(in) :: initial_zero
     class(OperatorT) :: precond
     logical, intent(in) :: use_precond
-    double complex, intent(inout) :: VECS(:,:,:) ! workspace
+    double complex, intent(inout) :: vecs(:,:,3:) ! workspace
+#define v3 vecs(:,:,3)
+#define v4 vecs(:,:,4)
+#define v5 vecs(:,:,5)
+#define v6 vecs(:,:,6)
+#define v7 vecs(:,:,7)
+#define v8 vecs(:,:,8)
+#define v9 vecs(:,:,9)
+#define vP vecs(:,:,10)
+    !!  vP is only accessed when preconditioning is active
+
     ! optional args
     integer, intent(out), optional :: iterations_needed
     double precision, intent(out), optional :: largest_residual
     
     !----------------- local variables --------------------------------------------
 
-    double complex, parameter :: CONE=(1.d0, 0.d0), ZERO=(0.d0, 0.d0)
-
-    integer :: NLIM
-
-    integer :: IT
-    integer :: PROBE
-    integer :: ind
+    integer, parameter :: MaxIterations = 2000 ! limit of max. 2000 iterations
+    integer :: iteration, probe, icol
 
     ! local arrays ..
 
-    !     small, local arrays with dimension num_columns
-    double complex   :: ZTMP(num_columns)
-    double precision :: DTMP(num_columns)
+    !     small, local arrays with dimension ncol
+    double complex   :: ZTMP(ncol)
+    double precision :: DTMP(ncol)
 
-    double complex :: RHO(num_columns)
-    double complex :: ETA(num_columns)
-    double complex :: BETA(num_columns)
-    double complex :: ALPHA(num_columns)
+    double complex :: RHO(ncol)
+    double complex :: ETA(ncol)
+    double complex :: BETA(ncol)
+    double complex :: mALPHA(ncol) ! -alpha
 
-    double precision :: R0(num_columns)
-    double precision :: N2B(num_columns)  ! norm of right-hand side
-    double precision :: RESN(num_columns)
-    double precision :: VAR(num_columns)
-    double precision :: TAU(num_columns)
-    double precision :: COSI(num_columns)
-    double precision :: residual_upper_bound(num_columns)
+    double precision :: R0(ncol)
+    double precision :: N2B(ncol)  ! norm of right-hand side
+    double precision :: RESN(ncol)
+    double precision :: VAR(ncol)
+    double precision :: TAU(ncol)
+    double precision :: COSI(ncol)
+    double precision :: residual_upper_bound(ncol)
 
     ! 0 = not converged, negative = breakdown
     ! 1 = converged
-    integer :: tfqmr_status(num_columns)
+    integer :: tfqmr_status(ncol)
 
     ! stores iteration where calculation converged
     ! 0 = never converged
-    integer :: converged_at(num_columns)
+    integer :: converged_at(ncol)
 
     logical :: isDone
 
@@ -123,49 +107,44 @@ module mminvmod_oop_mod
 
     isDone = .false.
 
-    NLIM = 2000  ! limit of max. 2000 iterations
-
     sparse_mult_count = 0
     res_probe_count = 0
 
     if (initial_zero) then
 
-      ! v5 = v2   r0 = B - AX0 = B
-      VECS(:,:,FIVE) = mat_B
-
       ! set x0 to 0
       mat_X = ZERO
+   
+      ! v5 = v2 ; r0 = B - A*x0 = B ! no need to multiply A here
+      v5 = mat_B
 
     else
 
-      !==============================================================================
-      ! V9 = A*V1
-      !==============================================================================
-
-      call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), VECS(:,:,TEN), use_precond)
+      ! v9 = A*v1
+      call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
-      !r0 = b - Ax0 = v2 - v9
-      VECS(:,:,FIVE) = mat_B - VECS(:,:,NINE)
+      ! v5 = v2 - v9 ; r0 = b - A*x0
+      v5 = mat_B - v9
 
     endif
 
     ! R0 = norm(v5)
-    COLUMNNORMS(R0, VECS(:,:,FIVE))
+    call col_norms(R0, v5)
 
     ! use norm of B for convergence criterion - use it for residual normalisation
     ! instead of B-AX0 contrary to original TFQMR
 
     ! N2B = norm(v2)
-    COLUMNNORMS(N2B, mat_B)
+    call col_norms(N2B, mat_B)
 
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
     ! Supply auxiliary start vector r*
-    call ZRANDN (NLEN*num_columns,VECS(:,:,THREE),1)
+    call ZRANDN(nrow*ncol, v3, 1)
 
-    !     Initialize the variables.
+    ! Initialize the variables.
 
     RESN = 1.d0
     RHO  = CONE
@@ -173,21 +152,16 @@ module mminvmod_oop_mod
     ETA  = ZERO
     TAU  = R0 * R0
 
-    VECS(:,:,EIGHT) = ZERO
-    VECS(:,:,FOUR) = ZERO
-    VECS(:,:,SIX) = ZERO
+    v8 = ZERO
+    v4 = ZERO
+    v6 = ZERO
 
-    PROBE= 1
+    probe = 1
 
-    !============================================================================
-    !============================================================================
-    ! ITERATION
-    do IT=1, NLIM
-      !============================================================================
-      !============================================================================
+    do iteration = 1, MaxIterations
 
       ! ZTMP = v3*v5
-      DOTPRODUCT(ZTMP, VECS(:,:,THREE), VECS(:,:,FIVE))
+      call col_dots(ZTMP, v3, v5)
 
       where (abs(ZTMP) < EPSILON_DP .or. abs(RHO) < EPSILON_DP)
         ! severe breakdown
@@ -200,48 +174,41 @@ module mminvmod_oop_mod
       endwhere
 
       ! v4 = beta*v4 + v8
-      COLUMN_XPAY(BETA, VECS(:,:,EIGHT), VECS(:,:,FOUR))
+      call col_xpay(BETA, v8, v4)
 
       ! v6 = beta*v6 + v5
-      COLUMN_XPAY(BETA, VECS(:,:,FIVE), VECS(:,:,SIX))
+      call col_xpay(BETA, v5, v6)
 
 
-      !====================================================================
-      ! V9 = A*V6
-      !====================================================================
-
-      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,NINE), VECS(:,:,TEN), use_precond)
+      ! v9 = A*v6
+      call apply_precond_and_matrix(op, precond, v6, v9, vP, use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
-      !     VECS(:,:,6) input vector to be multiplied by A = smat
-      !     VECS(:,:,9) result
-
-
       ! v4 = beta*v4 + v9
-      COLUMN_XPAY(BETA, VECS(:,:,NINE), VECS(:,:,FOUR))
+      call col_xpay(BETA, v9, v4)
 
       ! ZTMP = v3*v4
-      DOTPRODUCT(ZTMP, VECS(:,:,THREE), VECS(:,:,FOUR))
+      call col_dots(ZTMP, v3, v4)
 
       where (abs(ZTMP) > EPSILON_DP .and. abs(RHO) > EPSILON_DP)
-        ALPHA = RHO / ZTMP
-        ZTMP = VAR * ETA / ALPHA
+        mALPHA = -RHO / ZTMP
+        ZTMP = VAR * ETA / (-mALPHA)
       elsewhere
         ! severe breakdown
-        ALPHA = ZERO
+        mALPHA = ZERO
         ZTMP = ZERO
         tfqmr_status = -1
       endwhere
 
       ! v7 = ZTMP*v7 + v6
-      COLUMN_XPAY(ZTMP, VECS(:,:,SIX), VECS(:,:,SEVEN))
+      call col_xpay(ZTMP, v6, v7)
 
       ! v5 = v5 - alpha*v9
-      COLUMN_MAXPY(ALPHA, VECS(:,:,NINE), VECS(:,:,FIVE))
+      call col_axpy(mALPHA, v9, v5)
 
       ! DTMP = norm(v5)
-      COLUMNNORMS(DTMP, VECS(:,:,FIVE))
+      call col_norms(DTMP, v5)
 
 
       DTMP = DTMP * DTMP
@@ -257,7 +224,7 @@ module mminvmod_oop_mod
         tfqmr_status = -2
       endwhere
       TAU  = DTMP * COSI
-      ETA  = ALPHA * COSI
+      ETA  = -mALPHA * COSI
 
       ! do not modify brokedown components
       where (tfqmr_status < 0)
@@ -265,38 +232,31 @@ module mminvmod_oop_mod
       endwhere
 
       ! v1 = v1 + eta*v7
-      COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
+      call col_axpy(ETA, v7, mat_X)
 
       ! v6 = v6 - alpha*v4
-      COLUMN_MAXPY(ALPHA, VECS(:,:,FOUR), VECS(:,:,SIX))
+      call col_axpy(mALPHA, v4, v6)
 
       !ZTMP = VAR*COSI ! moved!
 
       ! v7 = ZTMP*v7 + v6
-      COLUMN_XPAY(ZTMP, VECS(:,:,SIX), VECS(:,:,SEVEN))
+      call col_xpay(ZTMP, v6, v7)
 
 
       !=============================================================
       ! 2nd half-step
       !=============================================================
 
-      !=========================================
-      ! V8 = A*V6
-      !=========================================
-
-      call apply_precond_and_matrix(op, precond, VECS(:,:,SIX), VECS(:,:,EIGHT), VECS(:,:,TEN), use_precond)
+      ! v8 = A*v6
+      call apply_precond_and_matrix(op, precond, v6, v8, vP, use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
-      !     VECS(:,:,6) input vector to be multiplied by A = GLLH1
-      !     VECS(:,:,8) result
-
-
       ! v5 = v5 - alpha*v8
-      COLUMN_MAXPY(ALPHA, VECS(:,:,EIGHT), VECS(:,:,FIVE))
+      call col_axpy(mALPHA, v8, v5)
 
       ! DTMP = norm(v5)
-      COLUMNNORMS(DTMP, VECS(:,:,FIVE))
+      call col_norms(DTMP, v5)
 
       DTMP = DTMP * DTMP
       where (abs(TAU) > EPSILON_DP)
@@ -309,7 +269,7 @@ module mminvmod_oop_mod
         tfqmr_status = -2
       endwhere
       TAU  = DTMP * COSI
-      ETA  = ALPHA * COSI
+      ETA  = -mALPHA * COSI
 
       ! do not modify brokedown components
       where (tfqmr_status < 0)
@@ -317,27 +277,25 @@ module mminvmod_oop_mod
       endwhere
 
       ! v1 = v1 + eta*v7
-      COLUMN_AXPY(ETA, VECS(:,:,SEVEN), mat_X)
+      call col_axpy(ETA, v7, mat_X)
 
       ! Residual upper bound calculation
-      residual_upper_bound = sqrt( (2*IT + 1) * TAU) / N2B
+      residual_upper_bound = sqrt( (2*iteration + 1) * TAU) / N2B
 
       max_upper_bound = maxval(residual_upper_bound)
 
       if (max_upper_bound <= target_upper_bound) then
-        PROBE = IT ! probe residual
+        probe = iteration ! probe residual
       else
-        PROBE = IT+1 ! don't probe residual
+        probe = iteration + 1 ! do not probe residual
       endif
 
-      if (IT == NLIM) then
-        PROBE = IT
-      endif
+      if (iteration == MaxIterations) probe = iteration ! probe residual
 
       !check for complete breakdown
       isDone = .true.
-      do ind=1,num_columns
-        if (tfqmr_status(ind) /= -1) then
+      do icol = 1, ncol
+        if (tfqmr_status(icol) /= -1) then
           isDone = .false.
         endif
       enddo
@@ -345,8 +303,7 @@ module mminvmod_oop_mod
       if (isDone) exit ! exit iteration loop
 
 
-      ! >>>>>>>>>>>
-      if (MOD(IT,PROBE) == 0) then
+      if (MOD(iteration, probe) == 0) then
 
         res_probe_count = res_probe_count + 1
 
@@ -354,40 +311,32 @@ module mminvmod_oop_mod
         !                  -1
         !         r = A * M  * y - b      otherwise   r = A * y - b
         !                  2
-        ! >>>>>>>>>>>
-        ! has to be performed ..
+        ! has to be performed.
 
-        !=========================================
-        ! V9 = A*V1
-        !=========================================
-
-        call apply_precond_and_matrix(op, precond, mat_X, VECS(:,:,NINE), VECS(:,:,TEN), use_precond)
+        ! v9 = A*v1
+        call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond)
 
         sparse_mult_count = sparse_mult_count + 1
 
-        !     VECS(:,:,1) input vector to be multiplied by A = GLLH1
-        !     VECS(:,:,9) result
-        !--------------
-
         ! v9 = v2 - v9
-        VECS(:,:,NINE) = mat_B - VECS(:,:,NINE)
+        v9 = mat_B - v9
 
         ! RESN = norm(v9)
-        COLUMNNORMS(RESN, VECS(:,:,NINE))
+        call col_norms(RESN, v9)
 
         RESN = RESN / N2B
 
         isDone = .true.
-        do ind=1,num_columns
-          if (RESN(ind) > TOL) then
-            if (tfqmr_status(ind) == 0) then
+        do icol = 1, ncol
+          if (RESN(icol) > TOL) then
+            if (tfqmr_status(icol) == 0) then
               ! if no breakdown has occured continue converging
               isDone = .false.
             endif
           else
-            if (tfqmr_status(ind) <= 0) then
-              tfqmr_status(ind) = 1
-              converged_at(ind) = IT ! component converged
+            if (tfqmr_status(icol) <= 0) then
+              tfqmr_status(icol) = 1
+              converged_at(icol) = iteration ! component converged
             endif
           endif
         enddo
@@ -397,172 +346,146 @@ module mminvmod_oop_mod
         target_upper_bound = (max_upper_bound / max_residual) * TOL
 
 #ifdef DIAGNOSTICMMINVMOD
-        write(*,*) IT, minval(RESN), max_residual, max_upper_bound
+        write(*,*) iteration, minval(RESN), max_residual, max_upper_bound
 #endif
 
         if (isDone) exit ! exit iteration loop
 
-      ! <<<<<<<<<<<<
-      endif
-    ! <<<<<<<<<<<<
+      endif ! iteration % probe == 0
 
-    !============================================================================
-    !============================================================================
-    enddo
-   ! ITERATION
-   !============================================================================
-   !============================================================================
+    enddo ! iteration
 
-      !     Done.
-
-      ! >>>>>>>>>>>
-
+    if (use_precond) then
       ! in case of right-preconditioning
       !              -1
       !         x = M  * y
       !              2
-      ! has to be performed ..
-
-   if (use_precond) then
-     call precond%apply(mat_X, VECS(:,:,TEN))
-     mat_X = VECS(:,:,TEN)
-   endif
+      ! has to be performed.
+      call precond%apply(mat_X, vP)
+      mat_X = vP
+    endif
 
     ! ================================================================
     ! solution is in mat_X
     ! ================================================================
 
-   WRITELOG(3,*) "number of sparse matrix multipl.: ", sparse_mult_count
-   WRITELOG(3,*) "number of residual probes:        ", res_probe_count
-   WRITELOG(3,*) "number of iterations:             ", IT
-   WRITELOG(3,*) "max. residual:             ", max_residual
+    WRITELOG(3,*) "number of sparse matrix multipl.: ", sparse_mult_count
+    WRITELOG(3,*) "number of residual probes:        ", res_probe_count
+    WRITELOG(3,*) "number of iterations:             ", iteration
+    WRITELOG(3,*) "max. residual:             ", max_residual
 
-   if (present(iterations_needed)) iterations_needed = IT
-   if (present(largest_residual)) largest_residual = max_residual
+    if (present(iterations_needed)) iterations_needed = iteration
+    if (present(largest_residual)) largest_residual = max_residual
 
-   do ind = 1, num_columns
-     if (converged_at(ind) == 0) then
-       select case (tfqmr_status(ind))
-         case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", ind
-         case (-2)    ; WRITELOG(3,*) "Component not converged (stagnated): ", ind
-         case default ; WRITELOG(3,*) "Component not converged: ", ind
-       endselect
-     endif
-   enddo ! ind
+    do icol = 1, ncol
+      if (converged_at(icol) == 0) then
+        select case (tfqmr_status(icol))
+          case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", icol
+          case (-2)    ; WRITELOG(3,*) "Component not converged (stagnated): ", icol
+          case default ; WRITELOG(3,*) "Component not converged: ", icol
+        endselect
+      endif
+    enddo ! icol
 
-   WRITELOG(3,*) tfqmr_status
-   WRITELOG(3,*) converged_at
-   WRITELOG(3,*) RESN
+    WRITELOG(3,*) tfqmr_status
+    WRITELOG(3,*) converged_at
+    WRITELOG(3,*) RESN
 
- endsubroutine ! mminvmod_oop
+  endsubroutine ! mminvmod_oop
 
- !------------------------------------------------------------------------------
- !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
- !> into 'mat_out'.
- !>
- !> mat_out = A P mat_in
- !> preconditioner is used only when use_precond=.true.
- subroutine apply_precond_and_matrix(op, precond, mat, mat_out, temp, use_precond)
-   use OperatorT_mod, only: OperatorT
-   class(OperatorT), intent(in) :: op, precond
-   double complex, intent(in)   :: mat(:,:)
-   double complex, intent(out)  :: mat_out(:,:)
-   double complex, intent(out)  :: temp(:,:)
-   logical, intent(in) :: use_precond
+  !------------------------------------------------------------------------------
+  !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
+  !> into 'mat_out'.
+  !>
+  !> mat_out = A P mat_in
+  !> preconditioner is used only when use_precond=.true.
+  subroutine apply_precond_and_matrix(op, precond, mat, mat_out, temp, use_precond)
+    use OperatorT_mod, only: OperatorT
+    class(OperatorT), intent(in) :: op, precond
+    double complex, intent(in)   :: mat(:,:)
+    double complex, intent(out)  :: mat_out(:,:)
+    double complex, intent(out)  :: temp(:,:)
+    logical, intent(in) :: use_precond
 
-   if (use_precond) then
-     call precond%apply(mat, temp)
-     call op%apply(temp, mat_out)
-   else
-     call op%apply(mat, mat_out)
-   endif
+    if (use_precond) then
+      call precond%apply(mat, temp)
+      call op%apply(temp, mat_out)
+    else
+      call op%apply(mat, mat_out)
+    endif
 
- endsubroutine ! apply
+  endsubroutine ! apply
 
- !------------------------------------------------------------------------------
- subroutine col_AXPY(factors, xvector, yvector)
-   double complex, intent(in) :: factors(:)
-   double complex, intent(in) :: xvector(:,:)
-   double complex, intent(inout) :: yvector(:,:)
+  !------------------------------------------------------------------------------
+  subroutine col_norms(norms, vectors)
+    double precision, intent(out) :: norms(:)
+    double complex, intent(in) :: vectors(:,:)
 
-   integer :: col, ncol, NLEN
-   double complex, parameter :: CONE = (1.d0, 0.d0)
+    integer :: col, ncol, nrow
+    double precision, external :: DZNRM2 ! BLAS
 
-   ncol = size(factors)
-   NLEN = size(xvector,1)
+    ncol = size(norms)
+    nrow = size(vectors, 1)
 
-   do col = 1, ncol
-     call zaxpby(NLEN, yvector(:,col), factors(col), xvector(:,col), CONE, yvector(:,col))
-   enddo ! col
- endsubroutine ! axpy
+    do col = 1, ncol
+      norms(col) = DZNRM2(nrow, vectors(:,col), 1)
+    enddo ! col
+    
+  endsubroutine ! norms
 
- !------------------------------------------------------------------------------
- subroutine col_MAXPY(factors, xvector, yvector)
-   double complex, intent(in) :: factors(:) 
-   double complex, intent(in) :: xvector(:,:)
-   double complex, intent(inout) :: yvector(:,:)
+  !------------------------------------------------------------------------------
+  subroutine col_dots(dots, vectorsv, vectorsw)
+    double complex, intent(out) :: dots(:)
+    double complex, intent(in) :: vectorsv(:,:)
+    double complex, intent(in) :: vectorsw(:,:)
 
-   integer :: col, ncol, NLEN
-   double complex, parameter :: CONE = (1.d0, 0.d0)
+    integer :: col, ncol, nrow
+    double complex, external :: ZDOTU ! BLAS
 
-   ncol = size(factors)
-   NLEN = size(xvector,1)
+    ncol = size(vectorsv, 2)
+    nrow = size(vectorsv, 1)
 
-   do col = 1, ncol
-     call zaxpby(NLEN, yvector(:,col), -factors(col), xvector(:,col), CONE, yvector(:,col))
-   enddo ! col
- endsubroutine ! maxpy
+    do col = 1, ncol
+      dots(col) = ZDOTU(nrow, vectorsv(:,col), 1, vectorsw(:,col), 1)
+    enddo ! col
+    
+  endsubroutine ! dots
 
- !------------------------------------------------------------------------------
- subroutine col_XPAY(factors, xvector, yvector)
-   double complex, intent(in) :: factors(:)
-   double complex, intent(in) :: xvector(:,:)
-   double complex, intent(inout) :: yvector(:,:)
 
-   integer :: col, ncol, NLEN
-   double complex, parameter :: CONE = (1.d0, 0.d0)
+  !------------------------------------------------------------------------------
+  subroutine col_axpy(factors, xvector, yvector)
+    double complex, intent(in) :: factors(:)
+    double complex, intent(in) :: xvector(:,:)
+    double complex, intent(inout) :: yvector(:,:)
 
-   ncol = size(factors)
-   NLEN = size(xvector,1)
+    integer :: col, ncol, nrow
 
-   do col = 1, ncol
-     call zaxpby(NLEN, yvector(:,col), CONE, xvector(:,col), factors(col), yvector(:,col))
-   enddo ! col
- endsubroutine ! xpay
+    ncol = size(factors)
+    nrow = size(xvector, 1)
 
- !------------------------------------------------------------------------------
- subroutine col_norms(norms, vectors)
-   double precision, intent(out) :: norms(:)
-   double complex, intent(in) :: vectors(:,:)
+    do col = 1, ncol
+      call zaxpby(nrow, factors(col), xvector(:,col), CONE, yvector(:,col))
+    enddo ! col
+    
+  endsubroutine ! y := a*x+y
 
-   integer :: col, ncol, NLEN
-   double precision, external :: DZNRM2
+  !------------------------------------------------------------------------------
+  subroutine col_xpay(factors, xvector, yvector)
+    double complex, intent(in) :: factors(:)
+    double complex, intent(in) :: xvector(:,:)
+    double complex, intent(inout) :: yvector(:,:)
 
-   ncol = size(norms)
-   NLEN = size(vectors,1)
+    integer :: col, ncol, nrow
 
-   do col = 1, ncol
-     norms(col) = DZNRM2(NLEN,vectors(:,col),1)
-   enddo ! col
- endsubroutine ! norms
+    ncol = size(factors)
+    nrow = size(xvector, 1)
 
- !------------------------------------------------------------------------------
- subroutine col_dots(dots, vectorsv, vectorsw)
-   double complex, intent(out) :: dots(:)
-   double complex, intent(in) :: vectorsv(:,:)
-   double complex, intent(in) :: vectorsw(:,:)
-
-   integer :: col, ncol, NLEN
-   double complex, external :: ZDOTU
-
-   ncol = size(vectorsv,2)
-   NLEN = size(vectorsv,1)
-
-   do col = 1, ncol
-     dots(col) = ZDOTU(NLEN, vectorsv(:,col), 1, vectorsw(:,col), 1)
-   enddo ! col
- endsubroutine ! dots
-
+    do col = 1, ncol
+      call zaxpby(nrow, CONE, xvector(:,col), factors(col), yvector(:,col))
+    enddo ! col
+    
+  endsubroutine ! y := x+a*y
+ 
  
 !**********************************************************************
 !
@@ -574,8 +497,9 @@ module mminvmod_oop_mod
 !
 !     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE COPYRIGHT NOTICE
 !**********************************************************************
-  subroutine zaxpby (n,zz,za,zx,zb,zy)
-!
+  subroutine zaxpby(n, za, zx, zb, zyz) ! merged two args zz and zy into one arg zyz with intent(inout)
+#define zz zyz
+#define zy zyz
 !     purpose:
 !     this subroutine computes zz = za * zx + zb * zy.  several special
 !     cases are handled separately:
@@ -610,9 +534,8 @@ module mminvmod_oop_mod
 !
 !**********************************************************************
     integer, intent(in) :: n
-    double complex, intent(in) :: za, zb, zx(n), zy(n)
-    double complex, intent(out) :: zz(n)
-
+    double complex, intent(in) :: za, zx(n), zb
+    double complex, intent(inout) :: zyz(n)
     double precision :: dai, dar, dbi, dbr
 
     if (n < 1) return
@@ -678,6 +601,8 @@ module mminvmod_oop_mod
         zz(1:n) = za * zx(1:n) + zb * zy(1:n)
       endif
     endif
+#undef zy
+#undef zz
   endsubroutine
  
 endmodule ! mminvmod_oop_mod
