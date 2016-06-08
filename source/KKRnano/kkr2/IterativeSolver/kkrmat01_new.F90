@@ -8,6 +8,9 @@
 #include "../DebugHelpers/test_array_log.h"
 #include "../DebugHelpers/test_macros.h"
 
+
+#define SPLIT_REFERENCE_FOURIER_COM
+
 module kkrmat_new_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   use arraytest2_mod, only: !import no name here, just mention it for the module dependency
@@ -63,13 +66,16 @@ module kkrmat_new_mod
     double complex :: G_diag(LMMAXD,LMMAXD)
     integer :: site_lm_size, num_local_atoms, naclsd, naez, k_point_index, ila
     type(SolverStats) :: stats
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+    double complex, allocatable :: Gref_buffer(:,:,:,:)
+#endif
 
 #define ms kkr_op%ms
-#define cluster_info ms%cluster_info
+#define cluster ms%cluster_info
 
     ! array dimensions
-    naez = cluster_info%naez_trc
-    naclsd = cluster_info%naclsd
+    naez = cluster%naez_trc
+    naclsd = cluster%naclsd
 
     site_lm_size = naez*LMMAXD
 
@@ -88,6 +94,12 @@ module kkrmat_new_mod
 
     call solver%reset_stats()
 
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+    ! get the required reference Green functions from the other MPI processes
+    call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+#define Ginp Gref_buffer
+#endif
+    
     !==============================================================================
     do k_point_index = 1, NofKs ! K-POINT-LOOP
     !==============================================================================
@@ -99,7 +111,7 @@ module kkrmat_new_mod
 
       ! Get the scattering path operator for k-point Bzkp(:,k_point_index)
       ! output: ms%mat_X
-      call kloopbody(solver, kkr_op, preconditioner, Bzkp(:,k_point_index), tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
+      call kloopbody(solver, kkr_op, preconditioner, Bzkp(1:3,k_point_index), tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
@@ -113,7 +125,7 @@ module kkrmat_new_mod
       ! TODO: use mat_X to calculate Jij
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
-        call KKRJIJ(Bzkp(:,k_point_index), k_point_weight(k_point_index), nsymat, naez, ms%atom_indices(1), &
+        call KKRJIJ(Bzkp(1:3,k_point_index), k_point_weight(k_point_index), nsymat, naez, ms%atom_indices(1), &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
                     ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
@@ -122,6 +134,11 @@ module kkrmat_new_mod
     enddo ! k_point_index = 1, NofKs
     !==============================================================================
 
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+#undef Ginp
+    deallocate(Gref_buffer, stat=ila) ! ignore status
+#endif    
+    
     do ila = 1, num_local_atoms
       TESTARRAYLOG(3, GS(:,:,ila))
     enddo ! ila
@@ -132,7 +149,7 @@ module kkrmat_new_mod
     WRITELOG(3, *) "Max. num iterations for this E-point: ", stats%max_iterations
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", stats%sum_iterations
 
-#undef cluster_info
+#undef cluster
 #undef ms
   endsubroutine ! kkrmat01_new
 
@@ -196,8 +213,8 @@ module kkrmat_new_mod
     double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd) independent of the kpoint, ToDo: try not to communicate it again for every kpoint
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
-    integer, intent(in) :: global_atom_id(:)
-    integer, intent(in) :: communicator
+    integer, intent(in) :: global_atom_id(:) ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
+    integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     type(InitialGuess), intent(inout) :: iguess_data
 
     integer :: naez, lmmaxd, n, ist
@@ -227,16 +244,20 @@ module kkrmat_new_mod
     ! The same calculation as with Lloyds formula is done all over again ???
     ! - NO! eikrm and eikrp are SWAPPED in call to DLKE0 !!!!
 
-    !TODO: use an alternative referenceFourier to work around a bug on BGQ
-    !call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
 
-  ! if the following macro is defined, don't use MPI RMA locks
-  ! not using locks does not scale well
+    ! if the following macro is defined, don't use MPI RMA locks
+    ! not using locks does not scale well
   
-  
+#ifndef SPLIT_REFERENCE_FOURIER_COM
     call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              rr, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
+#else
+    call referenceFourier_com_part2(ms%GLLh, ms%sparse, kpoint, alat, &
+             cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
+             rr, cluster%ezoa_trc, Ginp)
+#endif
+
 
     TESTARRAYLOG(3, ms%GLLh)
 
@@ -311,6 +332,8 @@ module kkrmat_new_mod
 #undef ms
   endsubroutine ! kloopbody
 
+
+#ifndef SPLIT_REFERENCE_FOURIER_COM
 
   !------------------------------------------------------------------------------
   !> See H. Hoehler
@@ -410,7 +433,6 @@ module kkrmat_new_mod
       call fenceZ(win)
       if (site_index <= naez) then
 #endif
-        call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
         ! get Ginp(:,:,:)[global_atom_id(site_index)]
 
@@ -444,8 +466,10 @@ module kkrmat_new_mod
 
       if (.true.) then
 #endif
-        call dlke0_smat(site_index, GLLh, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
-                        nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer, naez, lmmaxd)
+        call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+        
+        call dlke0_smat(GLLh, site_index, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+                        nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer)!, naez, lmmaxd)
       endif ! site_index in bounds
       
     enddo ! site_index
@@ -456,14 +480,155 @@ module kkrmat_new_mod
 
   endsubroutine ! referenceFourier_com
 
+#endif
+  
+  
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+  
+  subroutine referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+    !! distributes the Ginp
+    use ChunkIndex_mod, only: getRankAndLocalIndex
+    use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
+#ifdef NO_LOCKS_MPI
+    use one_sided_commZ_mod, only: fenceZ
+#endif
+    include 'mpif.h'
+    double complex, allocatable, intent(out) :: Gref_buffer(:,:,:,:)
+    integer, intent(in) :: naez ! = size(nacls)
+    double complex, intent(in) :: Ginp(:,:,:,:)
+    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
+    integer, intent(in) :: communicator
 
+    ! locals
+    integer :: site_index, naclsd, lmmaxd, ist
+    integer :: num_local_atoms, atom_requested
+    integer(kind=4) :: chunk_inds(2,1)
+    integer :: win, nranks, ierr
+    integer :: naez_max
+    
+    num_local_atoms = size(Ginp, 4)
+    ASSERT(naez == size(global_atom_id))
+    lmmaxd = size(Ginp, 1)
+    ASSERT(lmmaxd == size(Ginp, 2))
+    naclsd = size(Ginp, 3)
+
+    ! Note: some MPI implementations might need the use of MPI_Alloc_mem
+    if (any(shape(Gref_buffer) /= [lmmaxd,lmmaxd,naclsd,naez])) deallocate(Gref_buffer, stat=ist)
+    
+    ! Note: some MPI implementations might need the use of MPI_Alloc_mem
+    allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,naez), stat=ist)
+    if (ist /= 0) stop 'failed to allocate Gref_buffer in referenceFourier_com_part1!'
+    
+    if (num_local_atoms == 1) then
+      ! this version using point-to-point MPI communication is so far only implemented for 1 atom per process
+      call referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+      return
+    endif
+    
+    call MPI_Comm_size(communicator, nranks, ierr)
+
+#ifdef NO_LOCKS_MPI
+    ! get maximum number of atoms of all truncation zones
+    call MPI_Allreduce(naez, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+#else
+    naez_max = naez
+#endif
+
+    ! share Ginp with all other processes in 'communicator'
+    call exposeBufferZ(win, Ginp, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
+
+    ! loop up to naez_max to ensure that each rank does the same amount of fence calls
+    do site_index = 1, naez_max
+
+#ifdef NO_LOCKS_MPI
+      call fenceZ(win)
+      if (site_index <= naez) then
+#endif
+
+        atom_requested = global_atom_id(site_index)
+        chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
+
+#ifdef NO_LOCKS_MPI
+        call copyChunksNoSyncZ(Gref_buffer(:,:,:,site_index), win, chunk_inds, lmmaxd*lmmaxd*naclsd)
+      endif ! site_index <= naez
+      
+      call fenceZ(win) ! ensures that data has arrived in Gref_buffer
+#else
+
+#ifdef IDENTICAL_REF
+      Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! use this if all Grefs are the same
+#else
+      call MPI_Win_Lock(MPI_LOCK_SHARED, chunk_inds(1,1), 0, win, ierr)
+      CHECKASSERT(ierr == 0)
+
+      call copyChunksNoSyncZ(Gref_buffer(:,:,:,site_index), win, chunk_inds, lmmaxd*lmmaxd*naclsd)
+
+      call MPI_Win_Unlock(chunk_inds(1,1), win, ierr)
+      CHECKASSERT(ierr == 0)
+#endif
+
+#endif
+    enddo ! site_index
+
+    call hideBufferZ(win)
+
+  endsubroutine ! referenceFourier_com_part1
+
+  subroutine referenceFourier_com_part2(GLLh, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, Gref_buffer)
+    !! this operation will be performed for every k-point and does not include MPI communication
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    double complex, intent(out) :: GLLh(:)
+    type(SparseMatrixDescription), intent(in) :: sparse
+    double precision, intent(in) :: kpoint(3)
+    double precision, intent(in) :: alat
+    integer, intent(in) :: nacls(:)
+    integer, intent(in) :: atom(:,:)
+    integer, intent(in) :: numn0(:)
+    integer, intent(in) :: indn0(:,:)
+    double precision, intent(in) :: rr(:,0:)
+    integer, intent(in) :: ezoa(:,:)
+    double complex, intent(in) :: Gref_buffer(:,:,:,:)
+
+    ! locals
+    integer :: site_index, naez, lmmaxd, naclsd, ist
+    double complex, allocatable :: eikrm(:), eikrp(:)
+
+    naez = size(nacls)
+    lmmaxd = size(Gref_buffer, 1)
+    ASSERT ( size(Gref_buffer, 2) == lmmaxd )
+
+    naclsd = maxval(nacls)
+    ASSERT ( size(Gref_buffer, 3) >= naclsd )
+
+    allocate(eikrm(naclsd), eikrp(naclsd))
+
+    GLLh = zero ! init
+
+    ! loop up to naez_max to ensure that each rank does the same amount of fence calls
+    do site_index = 1, naez
+
+      call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+
+      call dlke0_smat(GLLh, site_index, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+                      nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,site_index))!, naez, lmmaxd)
+
+    enddo ! site_index
+
+    deallocate(eikrm, eikrp, stat=ist)
+
+  endsubroutine ! referenceFourier_com_part2
+  
+#endif  
   
   
+  
+  
+  
+#ifndef SPLIT_REFERENCE_FOURIER_COM
   
   subroutine referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
                 indn0, rr, ezoa, Ginp, global_atom_id, comm)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    include 'mpif.h'
     double complex, intent(out) :: GLLh(:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
@@ -484,6 +649,8 @@ module kkrmat_new_mod
     double complex, allocatable :: Gref_buffer(:,:,:,:), eikrm(:), eikrp(:) ! dim: naclsd
     integer :: rank, tag, myrank, nranks, ierr, ncount
     integer, allocatable :: reqs(:,:), stats(:,:,:)
+    integer, parameter :: TAGMOD = 2**15
+    include 'mpif.h'
 
     naez = size(nacls)
     ASSERT(naez == size(global_atom_id))
@@ -494,22 +661,24 @@ module kkrmat_new_mod
     
     ASSERT(num_local_atoms == 1) ! only 1 atom per MPI process
     
-    allocate(eikrm(naclsd), eikrp(naclsd))
     
     call MPI_Comm_size(comm, nranks, ierr)
     call MPI_Comm_rank(comm, myrank, ierr)
 
-    GLLh = zero ! init
-    
 #ifndef IDENTICAL_REF
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,naez))
+    
     allocate(reqs(2,naez), stats(MPI_STATUS_SIZE,2,naez))
     reqs(:,:) = MPI_REQUEST_NULL
 
     ncount = lmmaxd*lmmaxd*naclsd
 
-    ! loop up to naez sending the information
+    ! ===============================================================================
+    ! part 1: exchange the Ginp arrays between the MPI processes 
+    ! ===============================================================================
+    
+    ! loop over the sites sending the information
     do site_index = 1, naez
       atom_requested = global_atom_id(site_index) ! get the global atom id
 
@@ -517,43 +686,121 @@ module kkrmat_new_mod
 
       if (rank /= myrank) then
 
-        tag  = modulo(myrank, 2**15)
+        tag  = modulo(myrank, TAGMOD)
         call MPI_Isend(Ginp(:,:,:,1),                 ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(1,site_index), ierr)
 
-        tag = modulo(atom_requested - 1, 2**15)
+        tag = modulo(atom_requested - 1, TAGMOD)
         call MPI_Irecv(Gref_buffer(:,:,:,site_index), ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(2,site_index), ierr)
 
       else
+      
         reqs(:,site_index) = MPI_REQUEST_NULL
         Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! copy locally
+        
       endif ! distant rank
 
     enddo ! site_index
 
     call MPI_Waitall(2*naez, reqs, stats, ierr) ! wait until all sends and all receives have finished
+#else
+    allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,1))
+    Gref_buffer(:,:,:,1) = Ginp(:,:,:,1)
+#define SITE_INDEX 1
 #endif
+
+    ! ===============================================================================
+    ! part 2: perform the fourier transformation and prepare the entries of GLLh
+    ! ===============================================================================
+    GLLh = zero ! init
+    allocate(eikrm(naclsd), eikrp(naclsd))
+
     do site_index = 1, naez
     
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-      call dlke0_smat(site_index, GLLh, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+      call dlke0_smat(GLLh, site_index, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
                         nacls(site_index), atom(:,site_index), numn0, indn0, &
-#ifndef IDENTICAL_REF
-                        Gref_buffer(:,:,:,site_index), &
-#else
-                        Ginp(:,:,:,1), &
-#endif
-                        naez, lmmaxd)
+                        Gref_buffer(:,:,:,SITE_INDEX))!, naez, lmmaxd)
 
     enddo ! site_index
     
     deallocate(Gref_buffer, eikrm, eikrp, stat=ist)
 
   endsubroutine ! referenceFourier_mpi
-  
-  
-  
-  
+
+#endif
+
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+
+  subroutine referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, comm)
+    double complex, intent(out) :: Gref_buffer(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,naez)
+    integer, intent(in) :: naez
+    double complex, intent(in) :: Ginp(:,:,:,:)
+    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
+    integer, intent(in) :: comm
+
+    ! locals
+    integer :: site_index, naclsd, lmmaxd, ist
+    integer :: num_local_atoms, atom_requested
+    integer :: rank, tag, myrank, nranks, ierr, ncount
+    integer, allocatable :: reqs(:,:), stats(:,:,:)
+    integer, parameter :: TAGMOD = 2**15
+    include 'mpif.h'
+
+    ASSERT(naez == size(global_atom_id))
+    lmmaxd = size(Ginp, 1)
+    ASSERT(lmmaxd == size(Ginp, 2))
+    naclsd = size(Ginp, 3)
+    num_local_atoms = size(Ginp, 4)
+    
+    ASSERT(num_local_atoms == 1) ! only 1 atom per MPI process
+    
+    call MPI_Comm_size(comm, nranks, ierr)
+    call MPI_Comm_rank(comm, myrank, ierr)
+
+#ifdef IDENTICAL_REF
+    Gref_buffer(:,:,:,1) = Ginp(:,:,:,1)
+#else
+    allocate(reqs(2,naez), stats(MPI_STATUS_SIZE,2,naez), stat=ist)
+    reqs(:,:) = MPI_REQUEST_NULL
+
+    ncount = lmmaxd*lmmaxd*naclsd
+
+    ! ===============================================================================
+    ! part 1: exchange the Ginp arrays between the MPI processes 
+    ! ===============================================================================
+    
+    ! loop over the sites sending the information
+    do site_index = 1, naez
+      atom_requested = global_atom_id(site_index) ! get the global atom id
+
+      rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
+
+      if (rank /= myrank) then
+
+        tag = modulo(myrank, TAGMOD)
+        call MPI_Isend(Ginp(:,:,:,1),                 ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(1,site_index), ierr)
+
+        tag = modulo(atom_requested - 1, TAGMOD)
+        call MPI_Irecv(Gref_buffer(:,:,:,site_index), ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(2,site_index), ierr)
+
+      else
+
+        reqs(:,site_index) = MPI_REQUEST_NULL
+        Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! copy locally
+        
+      endif ! distant rank
+
+    enddo ! site_index
+
+    call MPI_Waitall(2*naez, reqs, stats, ierr) ! wait until all sends and all receives have finished
+#endif
+  endsubroutine ! referenceFourier_mpi_part1
+
+  ! referenceFourier_mpi_part2 is the same as referenceFourier_com_part2
+#endif
+
+
   !     >> Input parameters
   !>    @param     alat    lattice constant a
   !>    @param     nacls   number of atoms in cluster
@@ -609,20 +856,19 @@ module kkrmat_new_mod
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(ind, smat, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp, naez, lmmaxd)
-    integer, intent(in) :: ind !> site_index
+  subroutine dlke0_smat(smat, ind, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)!, naez, lmmaxd)
     double complex, intent(inout) :: smat(:)
+    integer, intent(in) :: ind !> site_index
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ka(:)
     integer, intent(in) :: kvstr(:)
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls)
     integer, intent(in) :: nacls
-    integer, intent(in) :: atom(nacls) 
-    integer, intent(in) :: numn0(naez)
-    integer, intent(in) :: indn0(naez,nacls)
-    integer, intent(in) :: naez, lmmaxd
-    
-    double complex, intent(in) :: Ginp(lmmaxd,lmmaxd,nacls)
+    integer, intent(in) :: atom(:) ! (nacls) 
+    integer, intent(in) :: numn0(:) ! (naez)
+    integer, intent(in) :: indn0(:,:) ! (naez,nacls)
+!   integer, intent(in) :: lmmaxd, naez
+    double complex, intent(in) :: Ginp(:,:,:) ! (lmmaxd,lmmaxd,nacls)
     
     integer :: jat, lm1, lm2, iacls, ni, jnd, lmmax1, lmmax2, is
 
