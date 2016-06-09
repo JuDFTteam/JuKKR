@@ -15,6 +15,7 @@
 #endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd 
+      use mod_wunfiles, only: t_params
 
        IMPLICIT NONE
        include 'inc.p'
@@ -75,6 +76,14 @@
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_end, ie_num, ie_start
+      
+      !rhoqtest
+      logical, external :: test
+      integer :: mu0, ierr, nscoef, ifinished, lmgf0d
+      double complex, allocatable :: rllleft(:,:,:,:),sllleft(:,:,:,:)
+      
+      ! initialize inifished
+      ifinished = 0
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -306,12 +315,152 @@ cc right solutions
      +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
-!         IF (NSRA.EQ.2) THEN
-c         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
-c     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
-c         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
-c     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/C
-!         ENDIF
+        ! devide small component by cvlight so that it actually is small
+        IF (NSRA.EQ.2) THEN
+         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
+         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
+        ENDIF
+
+
+! compute left solutions if needed
+        if(test('rhoqtest') .and. ie==2) then
+       
+        ! read in mu0 atom index
+        open(9999,file='mu0')
+        read(9999,*) mu0, nscoef
+        close(9999)
+        
+        ! compute left solution for writeout if i1==mu0
+        if(i1==mu0) then
+        
+c left solutions
+c contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
+        CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
+     +                     CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,THETA,PHI,
+     +                     IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,
+     +                     IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),
+     +                     'transpose')
+
+cc extend matrix for the SRA treatment
+        VNSPLL(:,:,:,ith)=CZERO
+        IF (NSRA.EQ.2) THEN
+         IF (USE_SRATRICK.EQ.0) THEN
+          CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +               LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+         ELSEIF (USE_SRATRICK.EQ.1) THEN
+          CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +            LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+         ENDIF
+        ELSE
+         VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
+        ENDIF
+
+cc calculate the source terms in the Lippmann-Schwinger equation
+cc these are spherical hankel and bessel functions
+        HLK(:,:,ith)=CZERO
+        JLK(:,:,ith)=CZERO
+        HLK2(:,:,ith)=CZERO
+        JLK2(:,:,ith)=CZERO
+        GMATPREFACTOR=CZERO
+        JLK_INDEX=0
+        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+     +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
+     +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
+     +                         GMATPREFACTOR)
+
+cc using spherical potential as reference
+c notice that exchange the order of left and right hankel/bessel functions
+        IF (USE_SRATRICK.EQ.1) THEN
+         CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
+     +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
+     +                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
+     +                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
+     +                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
+        ENDIF
+
+cc calculate the tmat and wavefunctions
+        ALLOCATE(RLLleft(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
+        ALLOCATE(SLLleft(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
+        RLLLEFT(:,:,:,ith)=CZERO
+        SLLLEFT(:,:,:,ith)=CZERO
+
+cc left solutions
+c notice that exchange the order of left and right hankel/bessel functions
+        TMAT0=CZERO
+        CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMAT0,
+     +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
+     +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
+     +              HLK(:,:,ith),JLK(:,:,ith),
+     +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
+        IF (NSRA.EQ.2) THEN
+         RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
+         SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+     +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
+        ENDIF
+        
+        
+      
+         open(9999, file='params.txt')
+         write(9999,*) lmmaxso, t_params%natyp
+         write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
+     &                 t_params%nembd1, t_params%lmax
+         write(9999,*) t_params%alat
+         close(9999)
+
+         open(9999, file='host.txt')
+         write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
+         write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,
+     &                               1:t_params%nclsd), 
+     &                 t_params%rr(1:3,0:t_params%nrd), 
+     &                 t_params%atom(1:t_params%nclsd,
+     &                               1:t_params%naez+t_params%nembd1)
+         write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1), 
+     &                 t_params%ezoa(1:t_params%nclsd,
+     &                               1:t_params%naez+t_params%nembd1), 
+     &                 t_params%nacls(1:t_params%nclsd)
+         close(9999)
+        
+         open(9999, file='wavefunctions.txt')
+         write(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
+         write(9999,'(1000E26.17)') rnew(1:irmdnew)
+         write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso, ie
+         do ir=1,irmdnew
+           do lm1=1,nsra*lmmaxso
+             do lm2=1,lmmaxso
+                write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith) 
+                write(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir, ith)
+             end do
+           end do
+         enddo
+         do lm1=0,ntotd
+           write(9999,'(E16.7,I9)') rpan_intervall(lm1),
+     &                              ipan_intervall(lm1)
+         enddo
+         close(9999)
+           
+
+#ifdef CPP_MPI
+       ! finalize MPI and exit program
+!        call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!        write(*,*) 'finished with rhoq output'
+!        call MPI_abort(MPI_COMM_WORLD,0,ierr)
+#endif
+
+       ifinished = 1
+           
+       end if ! i1.eq.mu0
+        
+       end if ! test('rhoqtest').and.ie==2
+!        
+!        if(test('rhoqtest')) then
+!           call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!           if(ifinished) 
+!      &              stop 'finished with rhoq output'
+!        end if
 
 
 c add spherical contribution of tmatrix
@@ -381,6 +530,14 @@ c add spherical contribution of tmatrix
 #endif
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
+                write(*,*) 'writing tmat', irec, lmmaxso
+                
+!                 if(test('rhoqtest')) then
+!                 write(*,*) 'rotating with', theta, phi
+!             LMGF0D= (LMAXD+1)**2
+!             CALL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
+!                 end if
+                
             WRITE(69,REC=IREC) TMATLL(:,:)
 !             WRITE(696969,*) TMATLL(:,:)
          else

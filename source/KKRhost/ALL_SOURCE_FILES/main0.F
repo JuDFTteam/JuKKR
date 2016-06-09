@@ -595,6 +595,27 @@ C
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
 
 
+      IF(TEST('rhoqtest')) THEN
+         !read mu_0
+         open(9999, file='mu0', form='formatted')
+         read(9999,*) i1
+         close(9999)
+         ! write out corresponding mesh information
+         open(9999, file='rmesh_mu0.txt', form='formatted')
+         write(9999,'(A)') '# mu_0, IRMIN, IRWS, IPAN'
+         write(9999,'(4I9)') i1,IRMIN(i1), IRWS(i1), IPAN(i1)
+         write(9999,'(A)') '# R(1:IRWS)'
+         write(9999,'(1000E22.15)') R(1:IRWS(i1),i1)
+         write(9999,'(A)') '# NTCELL(1:NATYP)'
+         write(9999,'(1000I9)') NTCELL(1:NATYP)
+         write(9999,'(A)') '# IRCUT(1:IPAN)'
+         write(9999,'(1000I9)') IRCUT(1:IPAN(i1),i1)
+         write(9999,'(A)') '# R_LOG, NPAN_LOG, NPAN_EQ'
+         write(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
+         close(9999)            
+      ENDIF
+
+
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,', 
      &        'keeping only spherical component of potential.' 
@@ -976,12 +997,41 @@ C ======================================================================
 C
 C new solver for full-potential, spin-orbit, initialise
        IF (OPT('NEWSOSOL')) THEN
+       
+!        
+!         write(*,*) irmin(2),irws(2),ipan(2),ircut(:,2),
+!      &     r_log,npan_log,npan_eq,ncheb
 
         CALL CREATE_NEWMESH(NSPIN,R,IRMIN,IRWS,IPAN,IRCUT,
      +                      R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,
      +                      NPAN_LOGNEW,NPAN_EQNEW,
      +                      NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                      NTCELL,THETAS,THETASNEW)
+     
+!           write(987997,*) thetas(:,:,1)
+!           write(*,*) NPAN_TOT, NCHEB
+!           write(987998,*) thetasnew(:NPAN_TOT(2)*(NCHEB+1),:10,1)
+! 
+!      
+!        open(9999, file='oldmesh_kkr.txt', form='formatted')
+! !        write(*,*) shape(thetas),shape(thetasnew)
+!        do i=1,irws(2)
+!          if(i<irmin(2)) then
+!            write(9999,'(2E22.15,I3)') R(i,2), 0.0, 0
+!          else
+!            write(9999,'(2E22.15,I3)') R(i,2), thetas(i-irmin+1,1,1), 1
+!          end if
+!        end do
+!        close(9999)
+!        open(9999, file='newmesh_kkr.txt', form='formatted')
+!        do i=1,NPAN_TOT(2)*(NCHEB+1)
+!          if(i<ipan_intervall(npan_log+npan_eq,2)+1) then
+!            write(9999,'(2E22.15,I3)') rnew(i,2), 0.0, 0
+!          else
+!            write(9999,'(2E22.15,I3)') rnew(i,2), thetasnew(i,1,1), 1 !-ipan_intervall(npan_log+npan_eq),1), 1
+!          end if
+!        end do
+!        close(9999)
 
       ENDIF
 

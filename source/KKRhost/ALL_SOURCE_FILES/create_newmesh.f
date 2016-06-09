@@ -91,6 +91,8 @@ c equivalent panel
 c intersection zone
        DO IP=1,NPAN_INST
          RPAN_INTERVALL(NPAN_LOG+NPAN_EQ+IP,I1)=R(IRCUT(IP+1,I1),I1)
+!          write(*,* ) i1,ip,ircut(ip,i1),ircut(ip+1,i1),
+!      &    R(IRCUT(IP+1,I1),I1)
          IPAN_INTERVALL(NPAN_LOG+NPAN_EQ+IP,I1)=(NPAN_LOG+NPAN_EQ+IP)*
      +           (NCHEB+1)
        ENDDO ! NPAN_INST

@@ -636,8 +636,14 @@ do ipan = 1,npan
     end if
   elseif ( use_sratrick==1 ) then
     nplm = (ncheb+1)*lmsize
+
+#ifndef hostcode
     call inverse(nplm,slv1,work2,ipiv2)
     call inverse(nplm,srv1,work2,ipiv2)
+#else
+    call inverse(nplm,slv1)
+    call inverse(nplm,srv1)
+#endif
 
     call zgemm('n','n',nplm,lmsize,nplm,cone,slv1, &
                nplm,yrll1,nplm,czero,yrlltmp,nplm)

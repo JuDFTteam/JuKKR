@@ -191,6 +191,10 @@
       t_mpi_c_grid%ntot_pT1 = ntot_pT
       t_mpi_c_grid%ioff_pT1 = ioff_pT
       
+      i1_start = 1
+      i1_end = NOFKS
+      
+      
       DO KPT = i1_start,i1_end
 #else
       DO KPT = 1,NOFKS 
@@ -533,6 +537,12 @@ c            DEALLOCATE(GLLKE0)
             DO LM = 1,LMMAXD
                CALL ZCOPY(LMMAXD,GLLKE(ILM,JLM+LM),1,G(1,LM),1)
             END DO
+!             if(i==7 .and. j==7) then
+!                if(kpt==1) open(9999, file='kkr_tau0')
+!                write(9999,'(200000ES15.7)') kp(1:3),G!(ILM:ILM+LMMAXD,JLM:JLM+LMMAXD)
+!                if(kpt==NOFKS) close(9999)
+!                if(kpt==NOFKS) stop
+!             end if
             ! ----------------------------------------------------------------------
             DO ISYM = 1,NSYMAT
                DO LM2=1,LMMAXD

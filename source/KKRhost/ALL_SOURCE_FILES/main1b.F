@@ -402,14 +402,13 @@ C
 #ifdef CPP_MPI         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+         ie_start = 1
+         ie_end = ielast
+#endif
          
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
-#else
-         DO 360 IE = 1,IELAST
-            ie_num = ie
-            ie_end = ielast
-#endif
 C
             if (t_tgmat%gref_to_file) then
                READ (68,REC=IE) GINP
@@ -459,6 +458,7 @@ C------------------------------------------------------------
      &                           LMMAXD,RC,CREL,RREL,'TREFLL',0)
                END DO
             END IF
+            
 #ifdef CPP_TIMING
         call timing_pause('main1b - calctref13')
 #endif    
@@ -713,16 +713,20 @@ C
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+      ie_start = 0
+      ie_end = IELAST
+#endif
+
+      if(test('rhoqtest')) then
+         ie_start = 1
+         ie_end = 1
+      end if
+         
 
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
-#else
-      ie_end = IELAST
-      DO 460 IE=1,IELAST
-         ie_num = ie
-#endif
 
-       
 c read in Green function of reference system
        if (t_tgmat%gref_to_file) then
           READ (68,REC=IE) GINP
@@ -755,6 +759,32 @@ c construct t matrix for reference system (now is always double matrix)
          DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
          DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
         ENDDO
+        
+!             
+            if(test('rhoqtest')) then
+              if(i1==1) then
+              open(9999, file='refinfo')
+              write(9999,'(2I9)') NREF, NATYP
+              write(9999, '(1000I9)') refpot(1:NATYP)
+              close(9999)
+              write(*,*) myrank, 'opening tref', WLENGTH*4*lmmaxd**2
+              open(9999, file='tref', access='direct', 
+     &             recl=WLENGTH*4*lmmaxd**2, form='unformatted')
+              end if
+              irec = ie + ielast*(i1-1)
+              write(*,*) 'writeing tref', myrank, i1, ie, irec
+              write(9999, rec=irec) trefll(:,:,i1)
+              
+              write(999,'(2ES15.7)') trefll(:,:,i1)
+              
+              if(i1==nref) then
+                call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+                close(9999)
+                stop 'finished with rhoq output'
+              end if
+            end if ! rhoqtest
+!             
+        
        ENDDO ! I1
 #ifdef CPP_TIMING
        call timing_pause('main1b - calctref13')
@@ -1041,28 +1071,6 @@ C
 99020 FORMAT (/,1X,79('*'),/,25X,'no problems with',
      &         '  CPA-cycle ',/,1X,79('*'),/)
 
-
-      if( test('rhoqtest') .and. (myrank==master) ) then
-        open(9999, file='params.txt')
-        write(9999,*) 2*LMMAXD, t_params%natyp
-        write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
-     &                t_params%nembd1, t_params%lmax
-        write(9999,*) t_params%alat, naclsmax
-        close(9999)
-
-        open(9999, file='host.txt')
-        write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
-        write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,
-     &                              1:t_params%nclsd), 
-     &                t_params%rr(1:3,0:t_params%nrd), 
-     &                t_params%atom(1:t_params%nclsd,
-     &                              1:t_params%naez+t_params%nembd1)
-        write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1), 
-     &                t_params%ezoa(1:t_params%nclsd,
-     &                              1:t_params%naez+t_params%nembd1), 
-     &                t_params%nacls(1:t_params%nclsd)
-        close(9999)
-      endif
 
 
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP)

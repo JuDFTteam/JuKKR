@@ -218,6 +218,7 @@ c ITSCF is initialised to 0 in main0
 C
         
       if (t_tgmat%tmat_to_file) then
+         write(*,*) 'lrec tmat', lrectmt
          CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
       end if
       
@@ -354,6 +355,13 @@ C
          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
       end if
+      
+      
+       if(test('rhoqtest')) then
+!           call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!           stop 'finished with rhoq output'
+          LREFSYS=0
+       end if
       
       if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
       
