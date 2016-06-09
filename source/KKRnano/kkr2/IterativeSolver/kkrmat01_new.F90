@@ -67,7 +67,7 @@ module kkrmat_new_mod
     integer :: site_lm_size, num_local_atoms, naclsd, naez, k_point_index, ila
     type(SolverStats) :: stats
 #ifdef SPLIT_REFERENCE_FOURIER_COM
-    double complex, allocatable :: Gref_buffer(:,:,:,:)
+    double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
 #endif
 
 #define ms kkr_op%ms
@@ -251,15 +251,16 @@ module kkrmat_new_mod
 #ifndef SPLIT_REFERENCE_FOURIER_COM
     call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
-             rr, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
+             RR, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
 #else
-    call referenceFourier_com_part2(ms%GLLh, ms%sparse, kpoint, alat, &
+    call referenceFourier_part2(ms%GLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
-             rr, cluster%ezoa_trc, Ginp)
+             RR, cluster%ezoa_trc, Ginp)
 #endif
 
-
     TESTARRAYLOG(3, ms%GLLh)
+    
+    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
     call buildKKRCoeffMatrix(ms%GLLh, tmatLL, ms%lmmaxd, naez, ms%sparse)
@@ -278,7 +279,7 @@ module kkrmat_new_mod
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
 
-    ! call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
+!   call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
     call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr) ! construct RHS as negative unity
 
     initial_zero = .true.
@@ -289,7 +290,7 @@ module kkrmat_new_mod
 
     call solver%set_initial_zero(initial_zero)
 
-    call calc(preconditioner, ms%GLLh) ! calculate preconditioner from sparse matrix data
+    call calc(preconditioner, ms%GLLh) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
     if (cutoffmode == 3 .or. cutoffmode == 0) then
 
@@ -574,7 +575,7 @@ module kkrmat_new_mod
 
   endsubroutine ! referenceFourier_com_part1
 
-  subroutine referenceFourier_com_part2(GLLh, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, Gref_buffer)
+  subroutine referenceFourier_part2(GLLh, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, Gref_buffer)
     !! this operation will be performed for every k-point and does not include MPI communication
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     double complex, intent(out) :: GLLh(:)
@@ -616,7 +617,7 @@ module kkrmat_new_mod
 
     deallocate(eikrm, eikrp, stat=ist)
 
-  endsubroutine ! referenceFourier_com_part2
+  endsubroutine ! referenceFourier_part2
   
 #endif  
   
@@ -797,7 +798,6 @@ module kkrmat_new_mod
 #endif
   endsubroutine ! referenceFourier_mpi_part1
 
-  ! referenceFourier_mpi_part2 is the same as referenceFourier_com_part2
 #endif
 
 

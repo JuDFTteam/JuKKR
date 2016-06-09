@@ -19,7 +19,6 @@ module GauntCoefficients_mod
   implicit none
   private
   public :: GauntCoefficients, create, destroy
-  public :: createGauntCoefficients, destroyGauntCoefficients ! deprecated
 
   type GauntCoefficients
     !> contains the gaunt coefficients
