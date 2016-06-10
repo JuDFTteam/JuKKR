@@ -23,7 +23,6 @@ module ClusterInfo_mod
   implicit none
   private
   public :: ClusterInfo, create, destroy
-  public :: createClusterInfo!, destroyClusterInfo
 
   type ClusterInfo
     integer :: naclsd !< maximal number of cluster atoms
@@ -57,7 +56,7 @@ module ClusterInfo_mod
   !> @param ref_clusters    all the local ref. clusters
   subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator)
     use RefCluster_mod, only: RefCluster
-    use TruncationZone_mod, only: TruncationZone!, translateInd
+    use TruncationZone_mod, only: TruncationZone
     use one_sided_commI_mod, only: copyFromI_com
 
     include 'mpif.h'
@@ -68,15 +67,10 @@ module ClusterInfo_mod
     integer, intent(in)                 :: communicator
 
     integer :: ii, jj, cnt, ind
+    integer :: nacls, numn0, naclsd, naez_trc, num_local_atoms, blocksize
+    integer :: memory_stat ! needed in allocatecheck
     integer :: ierr
-    integer :: nacls, numn0
-    integer :: naclsd
-    integer :: naez_trc
-    integer :: num_local_atoms
-    integer :: blocksize
-    integer :: memory_stat
     integer, allocatable :: send_buf(:,:), recv_buf(:,:)
-
 
     num_local_atoms = size(ref_clusters)
 
@@ -168,7 +162,7 @@ module ClusterInfo_mod
     DEALLOCATECHECK(send_buf)
   endsubroutine ! create
   
-  subroutine destroyClusterInfo(self)
+  elemental subroutine destroyClusterInfo(self)
     type(ClusterInfo), intent(inout) :: self
 
     integer :: ist ! ignore status

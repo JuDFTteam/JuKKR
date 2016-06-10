@@ -263,7 +263,7 @@ module fillKKRMatrix_mod
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B, mat_X)
-    use TruncationZone_mod, only: clear_non_existing_entries
+!   use TruncationZone_mod, only: clear_non_existing_entries
     double complex, intent(inout) :: full(:,:)
     double complex, intent(in)  :: mat_B(:,:)
     double complex, intent(out) :: mat_X(:,:)
@@ -282,7 +282,7 @@ module fillKKRMatrix_mod
 
     deallocate(ipvt, stat=info)
     
-    call clear_non_existing_entries(mat_X) ! make up for treating more than one atom with truncation
+!   call clear_non_existing_entries(mat_X) ! make up for treating more than one atom with truncation
   endsubroutine ! solveFull
 
 

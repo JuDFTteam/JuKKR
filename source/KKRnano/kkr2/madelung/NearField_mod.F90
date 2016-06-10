@@ -278,7 +278,7 @@ endmodule ! NearField_mod
 !    integer, parameter :: LMAX = 4
 !    integer, parameter :: LMMAXD = (LMAX+1)**2
 !    integer, parameter :: NPOINTS = 100
-!    double precision v_near(LMMAXD)
+!    double precision :: v_near(LMMAXD)
 !    
 !    type(TestPotentialConstMulti) :: pot
 !    type(IntracellPotential) :: intra_pot

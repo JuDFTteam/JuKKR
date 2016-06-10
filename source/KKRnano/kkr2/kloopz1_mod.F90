@@ -44,7 +44,6 @@ module kloopz1_mod
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
     double precision, intent(in) :: alat
-    double precision, intent(in) :: volBZ
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(N,N,nsymat) !<
     double complex, intent(out) :: Gmatn(:,:,:) !< (N,N,num_local_atoms)
@@ -52,11 +51,13 @@ module kloopz1_mod
     double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
+    double precision, intent(in) :: volBZ
     double precision, intent(in) :: Bzkp(:,:) ! dim (3,kpoibz)
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
  
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
+    ! locals
     double complex :: tauvBZ ! could be real but it enters a zBLAS call
     double precision :: mrfctori, tauvBZr
     integer :: ist, info ! status for LAPACK calls

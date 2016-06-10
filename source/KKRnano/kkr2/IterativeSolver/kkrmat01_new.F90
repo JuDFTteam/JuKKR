@@ -29,7 +29,7 @@ module kkrmat_new_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01_new(solver, kkr_op, preconditioner, Bzkp, NofKs, k_point_weight, GS, tmatLL, alat, nsymat, RR, &
+  subroutine kkrmat01_new(solver, kkr_op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -47,9 +47,9 @@ module kkrmat_new_mod
     class(KKROperator), intent(inout) :: kkr_op
     class(BCPOperator), intent(inout) :: preconditioner
     
-    double precision, intent(in) :: Bzkp(:,:) !< list of k-points
-    integer, intent(in) :: NofKs !< number of k-points
-    double precision, intent(in) :: k_point_weight(:) !< k-point weights
+    integer, intent(in) :: nkpoints !< number of k-points
+    double precision, intent(in) :: kpoints(:,:) !< list of k-points dim(3,nkpoints)
+    double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
     double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms)
     double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
@@ -64,7 +64,7 @@ module kkrmat_new_mod
 
     ! locals
     double complex :: G_diag(LMMAXD,LMMAXD)
-    integer :: site_lm_size, num_local_atoms, naclsd, naez, k_point_index, ila
+    integer :: site_lm_size, num_local_atoms, naclsd, naez, ikpoint, ila
     type(SolverStats) :: stats
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
@@ -101,37 +101,37 @@ module kkrmat_new_mod
 #endif
     
     !==============================================================================
-    do k_point_index = 1, NofKs ! K-POINT-LOOP
+    do ikpoint = 1, nkpoints ! K-POINT-LOOP
     !==============================================================================
 
-      WRITELOG(4, *) "k-point ", k_point_index
+      WRITELOG(4, *) "k-point ", ikpoint
 
       ! select right slot for storing initial guess
-      call iguess_set_k_ind(iguess_data, k_point_index)
+      call iguess_set_k_ind(iguess_data, ikpoint)
 
-      ! Get the scattering path operator for k-point Bzkp(:,k_point_index)
+      ! Get the scattering path operator for k-point kpoints(:,ikpoint)
       ! output: ms%mat_X
-      call kloopbody(solver, kkr_op, preconditioner, Bzkp(1:3,k_point_index), tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
+      call kloopbody(solver, kkr_op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
-        GS(:,:,ila) = GS(:,:,ila) + k_point_weight(k_point_index)*G_diag(:,:) 
+        GS(:,:,ila) = GS(:,:,ila) + kpointweight(ikpoint)*G_diag(:,:) 
         ! -------------------------------------------------------------------------
       enddo ! ila
       
       ! TODO: use mat_X to calculate Jij
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
-        call KKRJIJ(Bzkp(1:3,k_point_index), k_point_weight(k_point_index), nsymat, naez, ms%atom_indices(1), &
+        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, ms%atom_indices(1), &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
                     ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
 
     !==============================================================================
-    enddo ! k_point_index = 1, NofKs
+    enddo ! ikpoint = 1, nkpoints
     !==============================================================================
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
@@ -789,7 +789,7 @@ module kkrmat_new_mod
 
         reqs(:,site_index) = MPI_REQUEST_NULL
         Gref_buffer(:,:,:,site_index) = Ginp(:,:,:,1) ! copy locally
-        
+
       endif ! distant rank
 
     enddo ! site_index
@@ -804,16 +804,15 @@ module kkrmat_new_mod
   !     >> Input parameters
   !>    @param     alat    lattice constant a
   !>    @param     nacls   number of atoms in cluster
-  !>    @param     RR      array of real space vectors
-  !>    @param     EZOA
-  !>    @param     Bzkp
-  !>    @param     nrd     There are nrd+1 real space vectors in RR
+  !>    @param     RR      periodic image vectors
+  !>    @param     ezoa
+  !>    @param     kpoint
   !>    @param     naclsd. maximal number of atoms in cluster
 
   !     << Output parameters
   !>    @param     eikrm   Fourier exponential factor with minus sign
   !>    @param     eikrp   Fourier exponential factor with plus sign
-  subroutine dlke1(alat, nacls, rr, ezoa, Bzkp, eikrm, eikrp)
+  subroutine dlke1(alat, nacls, RR, ezoa, kpoint, eikrm, eikrp)
   use Constants_mod, only: pi
     ! ----------------------------------------------------------------------
     !     Fourier transformation of the cluster Greens function
@@ -822,11 +821,11 @@ module kkrmat_new_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls !< number of vectors in the cluster
     integer, intent(in) :: ezoa(1:) !< index list of ...
-    double precision, intent(in) :: Bzkp(1:3) !< k-point (vector in the Brillouin zone)
-    double precision, intent(in) :: rr(1:,0:) !< dim(1:3,0:nrd) real space cluster vectors
-    double complex, intent(out) :: eikrp(:), eikrm(:)
+    double precision, intent(in) :: kpoint(1:3) !< k-point (vector in the Brillouin zone)
+    double precision, intent(in) :: RR(1:,0:) !< dim(1:3,0:) periodic image vectors
+    double complex, intent(out) :: eikrp(:), eikrm(:) !< dim(nacls)
     
-    double complex, parameter :: ci=(0.d0,1.d0)
+    double complex, parameter :: ci=(0.d0, 1.d0)
     double precision :: convpuh, tpi
     double complex :: tt, exparg
     integer :: iacls
@@ -836,40 +835,47 @@ module kkrmat_new_mod
 
     do iacls = 1, nacls
        
-  !     Here we do   --                  nn'
-  !                  \                   ii'          ii'
-  !                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
-  !                  --          n'  n   LL'          LL'
-  !                  n'
-  !  Be careful about the minus sign included here. RR is not
-  !  symmetric around each atom. The minus comes from the fact that
-  !  the repulsive potential GF is calculated for 0n and not n0!                   
-  
-      tt = -ci*tpi*dot_product(Bzkp(1:3), rr(1:3,ezoa(iacls))) ! purely imaginary number
+      ! Here we do       --                  nn'
+      !                  \                   ii'          ii'
+      !                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
+      !                  --          n'  n   LL'          LL'
+      !                  n'
+      ! Be careful about the minus sign included here. RR is not
+      ! symmetric around each atom. The minus comes from the fact that
+      ! the repulsive potential GF is calculated for 0n and not n0!
 
-  !  convert to p.u. and multiply with 1/2 (done above)
-      exparg = exp(tt)
-      eikrp(iacls) =       exparg  * convpuh
-      eikrm(iacls) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
+      if (ezoa(iacls) == 0) then
+        ! the periodic image vector is (0,0,0)
+        ASSERT( all(RR(1:3,ezoa(iacls)) == 0.d0) )
+        eikrp(iacls) = convpuh*cone
+        eikrm(iacls) = convpuh*cone
+      else
+  
+        tt = -ci*tpi*dot_product(kpoint(1:3), RR(1:3,ezoa(iacls))) ! purely imaginary number
+
+        ! convert to p.u. and multiply with 1/2 (done above)
+        exparg = exp(tt)
+        eikrp(iacls) =       exparg  * convpuh
+        eikrm(iacls) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
+      endif
     enddo ! iacls
   
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(smat, ind, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)!, naez, lmmaxd)
+  subroutine dlke0_smat(smat, ind, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
     double complex, intent(inout) :: smat(:)
     integer, intent(in) :: ind !> site_index
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ka(:)
     integer, intent(in) :: kvstr(:)
-    double complex, intent(in) :: eikrm(nacls), eikrp(nacls)
+    double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are CONE
     integer, intent(in) :: nacls
-    integer, intent(in) :: atom(:) ! (nacls) 
-    integer, intent(in) :: numn0(:) ! (naez)
-    integer, intent(in) :: indn0(:,:) ! (naez,nacls)
-!   integer, intent(in) :: lmmaxd, naez
-    double complex, intent(in) :: Ginp(:,:,:) ! (lmmaxd,lmmaxd,nacls)
-    
+    integer, intent(in) :: atom(:) !< dim(nacls) 
+    integer, intent(in) :: numn0(:) !< dim(naez)
+    integer, intent(in) :: indn0(:,:) !< dims(naez,nacls)
+    double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
+
     integer :: jat, lm1, lm2, iacls, ni, jnd, lmmax1, lmmax2, is
 
     do iacls = 1, nacls

@@ -42,22 +42,22 @@ module RefCluster_mod
   !> type(RefCluster) :: ref_cluster
   !> ! ...
   !> call createLatticeVectors(lattice_vectors, bravais)
-  !> call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcut, center_ind)
+  !> call createRefCluster(ref_cluster, lattice_vectors, rbasis, rcut, global_atom_id)
   !> ! ... some code
   !> call destroyRefCluster(ref_cluster)
   !> call destroyLatticeVectors(lattice_vectors)
   !
-  subroutine createRefCluster(self, lattice_vectors, rbasis, rcut, center_ind)
+  subroutine createRefCluster(self, lattice_vectors, rbasis, rcut, global_atom_id)
     type(RefCluster), intent(inout) :: self
 
     double precision, intent(in) :: lattice_vectors(:,0:) !< dim(3,0:nrd)
     double precision, intent(in) :: rbasis(:,:) !< dim(3,naez) all atomic positions
     double precision, intent(in) :: rcut
-    integer, intent(in) :: center_ind !< global atom index
+    integer, intent(in) :: global_atom_id !< global atom index
 
-    self%atom_index = center_ind
+    self%atom_index = global_atom_id
 
-    call clsgen99(center_ind, rcut, size(lattice_vectors, 2), lattice_vectors, size(rbasis, 2), rbasis, self%nacls, self%rcls, self%atom, self%ezoa, self%indn0, self%numn0)
+    call clsgen99(global_atom_id, rcut, lattice_vectors, rbasis, self%nacls, self%rcls, self%atom, self%ezoa, self%indn0, self%numn0)
 #ifdef DEBUG
     write(*,*)  "Number of atoms in cluster:            ", self%nacls
     write(*,*)  "Number of inequivalent cluster atoms: :", self%numn0
@@ -78,7 +78,7 @@ module RefCluster_mod
 
 
   !------------------------------------------------------------------------------
-  subroutine clsgen99(jatom, rcut, nr, rr, naez, rbasis, nacls, rcls, atom, ezoa, indn0, numn0)
+  subroutine clsgen99(jatom, rcut, rr, rbasis, nacls, rcls, atom, ezoa, indn0, numn0)
     use Sorting_mod, only: dsort
     
     ! this subroutine is used to create the clusters around each atom 
@@ -92,11 +92,9 @@ module RefCluster_mod
     ! a new cluster is found then check dimensions and continue for the new
     ! atom.  
     !
-    integer, intent(in) :: jatom  !< central atom index atom
+    integer, intent(in) :: jatom !< central atom index atom into rbasis(1:3,:)
     double precision, intent(in) :: rcut
-    integer, intent(in) :: naez                 !< number of atoms in ez
     double precision, intent(in) :: rbasis(:,:) !< dim(3,naez) pos. of basis atoms in ez
-    integer, intent(in) :: nr                 !< number of lattice vectors rr
     double precision, intent(in) :: rr(:,0:)  !< dim(3,0:nr-1) set of lattice vectors
 
     integer, intent(out) :: nacls
@@ -111,6 +109,8 @@ module RefCluster_mod
     integer :: ia, ib, iat, n, ist, macls ! macls==naez*(nr+1)
     logical :: couplmat
     double precision :: r2, tmp(3), rcut2
+    integer :: naez  !< number of atoms in ez
+    integer :: nr    !< number of lattice vectors rr
     
     integer(kind=4), allocatable :: indni(:) ! dim(naez)
     double precision, allocatable :: rsort(:), rg(:,:) ! dim(macls) and dim(3,macls)
@@ -118,6 +118,9 @@ module RefCluster_mod
 #ifdef CYLINDRICAL_CLUSTERS
     double precision :: rcutxy2, rcutxy, rxy2
 #endif
+
+    naez = size(rbasis, 2)
+    nr = size(rr, 2)
 
     rcut2 = (rcut + epsshl)**2
 #ifdef CYLINDRICAL_CLUSTERS
@@ -200,7 +203,7 @@ program test_clusters
   use RefCluster_mod, only: RefCluster, create, destroy
 
   double precision :: bravais(3,3), rbasis(3,4), dist, rcut = 1.5
-  integer :: ii, center_ind = 4
+  integer :: ii, global_atom_id = 4
 
   type(RefCluster) :: ref_cluster
   type(LatticeVectors) :: lattice_vectors
@@ -215,7 +218,7 @@ program test_clusters
                      .0, .5, .5  ], [3, 4])
 
   call create(lattice_vectors, bravais)
-  call create(ref_cluster, lattice_vectors%rr, rbasis, rcut, center_ind)
+  call create(ref_cluster, lattice_vectors%rr, rbasis, rcut, global_atom_id)
 
   write(*,*) "Number of lattice vectors:             ", ref_cluster%lattice_vectors%nrd
   write(*,*) "Number of atoms in cluster:            ", ref_cluster%nacls
