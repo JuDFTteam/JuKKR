@@ -191,8 +191,10 @@
       t_mpi_c_grid%ntot_pT1 = ntot_pT
       t_mpi_c_grid%ioff_pT1 = ioff_pT
       
-      i1_start = 1
-      i1_end = NOFKS
+      if(test('rhoqtest')) then
+         i1_start = 1
+         i1_end = NOFKS
+      end if
       
       
       DO KPT = i1_start,i1_end
