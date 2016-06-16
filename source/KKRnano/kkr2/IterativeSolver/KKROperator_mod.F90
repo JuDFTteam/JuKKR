@@ -33,12 +33,11 @@ module KKROperator_mod
   interface apply
     module procedure apply_KKROperator
   endinterface
-  
+
   contains
 
   subroutine create_KKROperator(self)
     class(KKROperator) :: self
-
   endsubroutine ! create
 
   subroutine destroy_KKROperator(self)
@@ -51,16 +50,25 @@ module KKROperator_mod
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
   subroutine apply_KKROperator(self, mat_X, mat_AX)
-    use vbrmv_mat_mod, only: multiply_vbr
     class(KKROperator) :: self
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 
-    double complex, parameter :: ZERO = (0.d0, 0.d0)
-    mat_AX = ZERO
-
     ! perform sparse VBR matrix * dense matrix
     call multiply_vbr(self%ms%GLLH, mat_X, mat_AX, self%ms%sparse)
-  endsubroutine
+  endsubroutine ! apply
 
-endmodule
+  subroutine multiply_vbr(A, x, Ax, sparse)
+    use vbrmv_mat_mod, only: vbrmv_mat
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    double complex, intent(in)  :: A(:), x(:,:)
+    double complex, intent(out) :: Ax(:,:)
+    type(SparseMatrixDescription), intent(in) :: sparse
+
+    call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, &
+                   A, sparse%kvstr, sparse%kvstr, x, Ax, &
+                   sparse%max_blockdim, sparse%max_blocks_per_row)
+
+  endsubroutine ! multiply_vbr
+
+endmodule ! KKROperator_mod

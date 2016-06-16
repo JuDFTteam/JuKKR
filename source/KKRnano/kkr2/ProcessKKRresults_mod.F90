@@ -1383,5 +1383,109 @@ module ProcessKKRresults_mod
 !
 !  endsubroutine ! write
 
+
+! process with MYLRANK(LMPIC) == 0 and LMPIC == 1 writes results
+
+  subroutine results(lrecres2, ielast, itscf, lmax, naez, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, wez, ldau, iemxd)
+  use Constants_mod, only: pi
+    integer, intent(in) :: iemxd
+    integer, intent(in) :: ielast, itscf, lmax, naez, npol, nspin
+    integer, intent(in) :: kpre
+    integer, intent(in) :: compute_total_energy ! former kte
+    double precision, intent(in) :: e1, e2, tk, efermi
+    double precision, intent(in) :: chrgnt, alat
+    logical, intent(in) :: ldau
+    double complex, intent(in) :: ez(iemxd), wez(iemxd)
+    double precision, intent(in) :: zat(naez)
+    integer, intent(in) :: ititle(20,*)
+    
+!   logical, external :: TEST
+#define TEST(STRING) .false.
+
+    !     .. locals ..
+    double complex :: den(0:lmax+1,iemxd,nspin)
+    double precision :: dostot(0:lmax+1,2)
+    double precision :: ecou(0:lpot), epotin, euldau, edcldau, espc(0:3,nspin), espv(0:lmax+1,nspin), exc(0:lpot)
+    double precision :: ecore(20,2)
+    double precision :: charge(0:lmax+1,2)
+    double precision :: catom(nspin), qc
+    double precision :: vmad, totsmom
+    integer :: lrecres1, lrecres2
+    integer :: lcoremax, i1, ispin, lpot
+    character(len=*), parameter :: &
+    F90="('  Atom ',I4,' charge in Wigner Seitz cell =',f10.6)", &
+    F91="(7X,'spin moment in Wigner Seitz cell =',f10.6)", &
+    F92="('      ITERATION',I4,' charge neutrality in unit cell = ',f12.6)", &
+    F93="('                    TOTAL mag. moment in unit cell = ',f12.6)", &
+    F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
+    
+    integer :: npotd
+    npotd = nspin*naez
+
+    lrecres1 = 8*43 + 16*(lmax+2)
+
+    if (npol == 0) lrecres1 = lrecres1 + 32*(lmax+2)*iemxd ! dos calc.
+
+    if (compute_total_energy >= 0) then
+      open(71, access='direct', recl=lrecres1, file='results1', form='unformatted', action='read', status='old')
+
+      ! moments output
+      do i1 = 1, naez
+        if (npol == 0) then
+          read(71, rec=i1) qc, catom, charge, ecore, den
+        else
+          read(71, rec=i1) qc, catom, charge, ecore
+        endif
+        call wrmoms(nspin, charge, i1, lmax, lmax+1, i1 == 1, i1 == naez)! first=(i1 == 1), last=(i1 == naez))
+      enddo ! i1
+
+      ! density of states output
+      if (npol == 0) then
+        do i1 = 1, naez
+          read(71, rec=i1) qc, catom, charge, ecore, den
+          call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, naez, ielast, i1, dostot)
+        enddo ! i1
+      endif
+
+
+      totsmom = 0.d0
+      do i1 = 1, naez
+        if (npol == 0) then
+          read(71, rec=i1) qc, catom, charge, ecore, den
+        else
+          read(71, rec=i1) qc, catom, charge, ecore
+        endif
+        do ispin = 1, nspin
+          if (ispin /= 1) then
+            write(6, fmt=F91) catom(ispin)                  ! spin moments
+          else
+            write(6, fmt=F90) i1, catom(ispin)              ! atom charge
+          endif
+        enddo ! ispin
+        write(6, fmt=F94) zat(i1), qc                        ! nuclear charge, total charge
+        if (nspin == 2) totsmom = totsmom + catom(nspin)
+      enddo ! i1
+      write(6, '(79(1h+))')
+      write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
+      if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
+      write(6, '(79(1h+))')
+
+      close(71)
+    endif
+
+    if (compute_total_energy == 1) then
+      open (72, access='direct', recl=lrecres2, file='results2', form='unformatted', action='read', status='old')
+      do i1 = 1, naez
+        read(72, rec=i1) catom, vmad, ecou, epotin, espc, espv, exc, lcoremax, euldau, edcldau
+        ! output unfortunately integrated into etotb1
+        ! etotb1 depends on 'saved' variables !!!
+        call etotb1(ecou, epotin, espc, espv, exc, euldau, edcldau, ldau, kpre, lmax, lpot, lcoremax, nspin, i1, naez)
+      enddo ! i1
+      close(72)
+    endif
+
+  endsubroutine ! results
+ 
+
 endmodule ! ProcessKKRresults_mod
 

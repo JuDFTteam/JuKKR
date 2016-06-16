@@ -1,75 +1,141 @@
-!! this module is a dummy that test how the GPU solver has to be brought into KKRnano
+!! this module is a dummy that tests how the GPU solver has to be brought into KKRnano
 module BlockSparseRow_mod
 !! format according to http://docs.nvidia.com/cuda/cusparse/#block-compressed-sparse-row-format-bsr
   implicit none
   private
 
-  public :: BlockSparseRow, create, destroy
+  public :: BlockSparseRow, create, destroy, multiply
 
-#define BSRX
+! #define BSRX
+#define complex_data_t double complex
 
   type BlockSparseRow
     integer :: blockDim = 0 !< == (lmax+1)^2
     integer :: mb = 0 !< number of block rows
     integer :: nb = 0 !< number of block columns !! not in use...
     integer :: nnzb = 0 !< number of non-zero blocks
-    double complex, pointer :: bsrValA(:,:,:) !< dim(blockDim,blockDim,nnzb)
+    complex_data_t, pointer :: bsrValA(:,:,:) !< dim(blockDim,blockDim,nnzb)
     integer, allocatable :: bsrColIndA(:) !< dim(nnzb)
     integer, allocatable :: bsrRowPtrA(:) !< dim(mb+1)
 #ifdef BSRX
 !!! in the extended Block Compressed Sparse Row Format (BSRX), the
-!!! last value of iList in a row is given by bsrEndPtrA(iRow)
+!!! last value of Aind in a row is given by bsrEndPtrA(iRow)
     integer, allocatable :: bsrEndPtrA(:) !< dim(mb)
-#define  A_bsrEndPtrA(i)  A%bsrEndPtrA(i)
+#define  _bsrEndPtrA(i)  %bsrEndPtrA(i)
 #else
 !!! in the default Block Compressed Sparse Row Format (BSR), the
-!!! last value of iList in a row is given by bsrRowPtrA(iRow+1)-1
-#define  A_bsrEndPtrA(i)  A%bsrRowPtrA(i+1)-1
+!!! last value of Aind in a row is given by bsrRowPtrA(iRow+1)-1
+#define  _bsrEndPtrA(i)  %bsrRowPtrA(i+1)-1
 #endif
   endtype ! BlockSparseRow
 
   interface create
-    module procedure createBSR_from_VBSR
+    module procedure createBSR_from_VBSR, createBSR_from_full
   endinterface
   
   interface destroy
     module procedure destroyBlockSparseRow
   endinterface
+
+  interface multiply
+    module procedure multiplyBSR_to_Bvec, multiplyBSR_to_BSR
+  endinterface
   
   contains
 
-  subroutine multiply(A, vec, Avec)
+  subroutine multiplyBSR_to_Bvec(A, vec, Avec)
+    !! multiply a blocks sparse operator to a (dense) block vectors
+    !! can be used for a single atom per MPI process
     type(BlockSparseRow), intent(in) :: A
-#define N A%blockDim    
-    double complex, intent(in)  ::  vec(N,N,*)
-    double complex, intent(out) :: Avec(N,N,*)
+#define N A%blockDim
+    complex_data_t, intent(in)  ::  vec(N,N,*) ! block vector
+    complex_data_t, intent(out) :: Avec(N,N,*) ! block vector
 
-    double complex :: beta
-    double complex, parameter :: one = (1.d0, 0.d0), zero = (0.d0, 0.d0)
-    integer :: iRow, iCol, iList
+    complex_data_t :: beta
+    complex_data_t, parameter :: one = (1.d0, 0.d0), zero = (0.d0, 0.d0)
+    integer :: iRow, jCol, Aind
 
-    !$omp parallel do private(iRow, iList, iCol, beta)
+    !$omp parallel do private(iRow, jCol, Aind, beta)
     do iRow = 1, A%mb
       beta = zero ! instead of an initialization of Avec to zero
-      do iList = A%bsrRowPtrA(iRow), A_bsrEndPtrA(iRow)
-        iCol = A%bsrColIndA(iList) ! indirection
+      do Aind = A%bsrRowPtrA(iRow), A _bsrEndPtrA(iRow)
+        jCol = A%bsrColIndA(Aind) ! indirection
 
-        ! now: Avec(:,:,iRow) = beta*Avec(:,:,iRow) + matmul(A%bsrValA(:,:,iList), vec(:,:,iCol))
-
-        call zgemm('n', 'n', N, N, N, one, A%bsrValA(:,1,iList), N, vec(:,1,iCol), N, beta, Avec(:,1,iRow), N)
-
+        ! now: Avec(:,:,iRow) = beta*Avec(:,:,iRow) + A%bsrValA(:,:,Aind) .times. vec(:,:,jCol)
+        call zgemm('n', 'n', N, N, N, one, vec(:,1,jCol), N, A%bsrValA(:,1,Aind), N, beta, Avec(:,1,iRow), N)
+        
         beta = one ! simply add all further contributions in this row
-      enddo ! iList
+      enddo ! Aind
     enddo ! iRow
     !$omp end parallel do
 
 #undef N
   endsubroutine ! multiply
 
+  
+  subroutine multiplyBSR_to_BSR(A, G, Gval, Rval, GiFlop)
+    type(BlockSparseRow), intent(in) :: A !< Matrix to be inverted
+    type(BlockSparseRow), intent(in) :: G !< Green function: Gval is used instead of G%bsrValA
+#define N A%blockDim
+    complex_data_t, intent(in)  :: Gval(N,N,*) ! input  block vector
+    complex_data_t, intent(out) :: Rval(N,N,*) ! result block vector, assume R to have the same structure as G
+#define R G
+    real, intent(out), optional :: GiFlop
+
+    complex_data_t, parameter :: one = (1.d0, 0.d0), zero = (0.d0, 0.d0)
+    integer :: iRow, jCol, kCol, Aind, Rind, Gind, indG
+    integer(kind=8) :: nBlockOps
+    
+    nBlockOps = 0
+
+    !$omp parallel
+    
+    !$omp workshare
+    Rval(:,:,:R%nnzb) = zero ! initialization to zero
+    !$omp end workshare
+    
+    !$omp do private(iRow, jCol, kCol, Aind, Rind, Gind, indG) reduction(+:nBlockOps)
+    do iRow = 1, A%mb
+      do Aind = A%bsrRowPtrA(iRow), A _bsrEndPtrA(iRow)
+        jCol = A%bsrColIndA(Aind) ! indirection
+        ! for each matrix block element A_full(jCol,iRow)
+        do Rind = R%bsrRowPtrA(iRow), R _bsrEndPtrA(iRow)
+          kCol = R%bsrColIndA(Rind) ! indirection
+          ! update matrix block element R_full(kCol,iRow)
+
+#define   jRow jCol
+          ! find out, if G_full(jRow,kCol) exists
+          indG = -1 ! init as invalid index
+          do Gind = G%bsrRowPtrA(jRow), G _bsrEndPtrA(jRow) ! search
+            if (G%bsrColIndA(Gind) == kCol) indG = Gind
+          enddo ! Gind
+          if (indG > -1) then ! yes
+
+            ! now: Rval(:,:,Rind) = one*Rval(:,:,Rind) + A%bsrValA(:,:,Aind) .times. Gval(:,:,indG)
+            call zgemm('n', 'n', N, N, N, one, Gval(:,1,indG), N, A%bsrValA(:,1,Aind), N, one, Rval(:,1,Rind), N)
+            nBlockOps = nBlockOps + 1
+
+          endif ! G(jRow,kCol) exists
+#undef    jRow
+
+        enddo ! Rind
+      enddo ! Aind
+    enddo ! iRow
+    !$omp end do
+    
+    !$omp end parallel
+    
+#undef R
+    if(present(GiFlop)) GiFlop = nBlockOps*(N*.5d0**10)**3*8. ! assume a complex data_t, so each FMA has 8 Flop
+#undef N
+  endsubroutine ! multiply
+
+  
   subroutine createBSR_from_VBSR(self, lmax, mb, values, ia, ja)
+    !! get the data from a variable block row format
     type(BlockSparseRow), intent(inout) :: self
     integer, intent(in) :: lmax, mb
-    double complex, intent(in) :: values(:) !< dim(N*N*nnzb)
+    complex_data_t, intent(in) :: values(:) !< dim(N*N*nnzb)
     integer, intent(in) :: ia(:) !< dim(mb+1)
     integer, intent(in) :: ja(:) !< dim(nnzb)
     
@@ -91,11 +157,54 @@ module BlockSparseRow_mod
     self%bsrColIndA(:) = ja(:)
     
 #ifdef BSRX
-    allocate(self%bsrEndPtrA(mb), stat=ist)
+    allocate(self%bsrEndPtrA(self%mb), stat=ist)
     self%bsrEndPtrA(:) = self%bsrRowPtrA(2:) - 1
 #endif
   endsubroutine ! create
 
+  
+  subroutine createBSR_from_full(self, values)
+    !! get the data from a dense block-matrix
+    type(BlockSparseRow), intent(inout) :: self
+    complex_data_t, intent(in) :: values(:,:,:,:) !< dim(N,N,nb,mb)
+    
+    integer :: ist, iRow, Aind, jCol
+    logical(kind=1), allocatable :: nnz(:,:)
+    
+    self%blockDim = size(values, 1)
+    if (self%blockDim /= size(values, 2)) stop 'createBSR_from_full: requested shape values(blockDim,blockDim,mb,*)'
+    self%nb = size(values, 3) !! number of columns self%nb is not in use
+    self%mb = size(values, 4) !! number of rows
+    allocate(nnz(self%nb,self%mb))
+    nnz(:,:) = any(any(values /= 0.d0, dim=1), dim=1)
+    self%nnzb = count(nnz)
+    
+    allocate(self%bsrValA(self%blockDim,self%blockDim,self%nnzb), &
+      self%bsrColIndA(self%nnzb), self%bsrRowPtrA(self%mb+1), stat=ist)
+
+    Aind = 0
+    self%bsrRowPtrA(1) = 1
+    do iRow = 1, self%mb
+      do jCol = 1, self%nb
+        if (nnz(jCol,iRow)) then
+          Aind = Aind + 1
+          ! copy data in
+          self%bsrValA(:,:,Aind) = values(:,:,jCol,iRow)
+          ! create index lists
+          self%bsrColIndA(Aind) = jCol
+          self%bsrRowPtrA(iRow+1) = Aind + 1
+        endif ! non-zero
+      enddo ! jCol     
+    enddo ! iRow
+    if (Aind /= self%nnzb) stop 'createBSR_from_full: fatal counting error!'
+
+#ifdef BSRX
+    allocate(self%bsrEndPtrA(self%mb), stat=ist)
+    self%bsrEndPtrA(:) = self%bsrRowPtrA(2:) - 1
+#endif
+  endsubroutine ! create
+  
+  
   elemental subroutine destroyBlockSparseRow(self)
     type(BlockSparseRow), intent(inout) :: self
     integer :: ist
@@ -107,8 +216,108 @@ module BlockSparseRow_mod
 #ifdef BSRX
     deallocate(self%bsrEndPtrA, stat=ist)
 #endif
-    deallocate(self%bsrValA, stat=ist)
-  
+    deallocate(self%bsrValA, stat=ist) ! pointer might not be allocated
+
   endsubroutine ! destroy
 
 endmodule ! BlockSparseRow_mod
+
+
+#ifdef TESTMAIN_BlockSparseRow
+!+ TESTMAIN_BlockSparseRow
+
+!!!
+!!!>  ifort -warn -check -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 1024 64
+!!!
+program test_bsr
+  use BlockSparseRow_mod !, only:
+implicit none
+  character(len=8) :: CLarg(0:3)
+  integer, parameter :: ShowR=0, ShowG=0, ShowH=0, Hfill=16, N = 1 ! BlockSize
+  integer :: ilen, ios, iarg, Nrows, Mcols, iRow, jCol, Rind, kCol, ip, nerror(19)=0
+  double precision, parameter :: Gfill=0.5, point=.5d0**10
+  double precision :: col, elem
+#define real_data_t double precision
+#define gemm DGEMM
+  external :: gemm ! BLAS matrix matrix multiplication
+  real_data_t, parameter :: one = 1.0, sero = 0.0
+  real_data_t, allocatable :: Hfull(:,:), Gfull(:,:), Rfull(:,:)
+  complex_data_t, allocatable :: Rval(:,:,:)
+  type(BlockSparseRow) :: H, G ! operators
+  real :: GiFlop
+
+  do iarg = 0, ubound(CLarg, 1)
+    call get_command_argument(iarg, CLarg(iarg), ilen, ios)
+  enddo ! iarg
+  read(unit=CLarg(1), fmt=*) Nrows
+  read(unit=CLarg(2), fmt=*) Mcols
+
+  allocate(Rfull(Mcols,Nrows), Gfull(Mcols,Nrows), Hfull(Nrows,Nrows)) ! R:=G*H
+  Hfull = sero ; Gfull = sero ; Rfull = sero
+  
+  do iRow = 1, Nrows
+    ! fill H
+    do while(count(Hfull(:,iRow) /= 0) < min(Hfill, Nrows))
+      call random_number(col) ; jCol = ceiling(col*Nrows)
+!     if(ShowH) write(*, fmt="(A,9I6)") 'rand H',jCol,iRow
+      Hfull(jCol,iRow) = jCol + point * iRow 
+    enddo ! while
+    if(ShowH) write(*, fmt="(A,I4,99F9.4)") 'H',jCol,Hfull(1:min(Nrows, 8),jCol)
+    ! fill G
+    do while(count(Gfull(:,iRow) /= 0) < Gfill*Mcols)
+      call random_number(col) ; jCol = ceiling(col*Mcols)
+!     if(ShowG) write(*, fmt="(A,9I6)") 'rand G',jCol,iRow
+      Gfull(jCol,iRow) = jCol + point * iRow 
+    enddo ! while
+    if(ShowG) write(*, fmt="(A,I4,99F9.4)") 'G',kCol,Gfull(1:min(Nrows, 8),kCol)
+  enddo ! iCol
+
+  ! create reference A an m x k matrix, B a k x n matrix and C an m x n matrix
+  !                   M      N      K           A             B                   C
+  call gemm('n', 'n', Mcols, Nrows, Nrows, one, Gfull, Mcols, Hfull, Nrows, sero, Rfull, Mcols) ! BLAS routine
+  !!! do j = 1, n ;  do l = 1, k ;  do i = 1, m ;   c(i,j) = c(i,j) + b(l,j)*a(i,l)   ; enddo ; enddo ; enddo
+  ! do j = 1, Nrows ;  do l = 1, Nrows ;  do i = 1, Mcols ; Rfull(i,j) = Rfull(i,j) + Hfull(l,j)*Gfull(i,l) ; enddo ; enddo ; enddo
+
+  nerror = 0
+  do iRow = 1, Nrows
+    if(ShowR) write(*, fmt="(A,I4,99F9.4)") 'R',iRow,Rfull(1:min(Mcols, 8),iRow)/Nrows
+    do kCol = 1, Mcols
+      elem = dot_product(Hfull(:,iRow), Gfull(kCol,:)) ! simple evaluation of a single element of a matrix-matrix product
+      do ip = 1, ubound(nerror, 1)
+        if (abs(elem - Rfull(kCol,iRow)) > .1d0**ip) nerror(ip) = nerror(ip) + 1  
+      enddo ! ip
+    enddo ! kCol
+  enddo ! iRow
+  write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(Mcols*.01*Nrows)
+
+  call create(G, dcmplx(reshape(Gfull, [1,1,Mcols,Nrows])))
+  call create(H, dcmplx(reshape(Hfull, [1,1,Nrows,Nrows])))
+
+  !! use the sparse structure of G for R
+#define R G
+  allocate(Rval(1,1,R%nnzb))
+
+  call multiply(H, G, G%bsrValA, Rval, GiFlop=GiFlop)
+  write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop'
+
+  nerror = 0
+  do iRow = 1, R%mb
+    do Rind = R%bsrRowPtrA(iRow), R _bsrEndPtrA(iRow)
+      kCol = R%bsrColIndA(Rind) ! indirection
+      elem = dreal(Rval(1,1,Rind)) ! take only the real part
+      do ip = 1, ubound(nerror, 1)
+        if (abs(elem - Rfull(kCol,iRow)) > .1d0**ip) nerror(ip) = nerror(ip) + 1  
+      enddo ! ip
+    enddo ! Rind
+  enddo ! iRow
+  write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(Mcols*.01*Nrows)
+
+  deallocate(Rval)
+#undef R  
+  call destroy(H)
+  call destroy(G)
+
+endprogram ! test
+
+!- TESTMAIN_BlockSparseRow
+#endif

@@ -286,8 +286,7 @@ implicit none
 
   !------------------------------------------------------------------------------
             call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
-                    arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), &
-                    arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
+                    arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
                     lattice_vectors%RR, & ! periodic images
                     GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
@@ -439,7 +438,7 @@ implicit none
     double precision, intent(in) :: qmrbound
     integer, intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
-    call create(kkr_op)
+    call create(kkr_op) ! does nothing
 
     call solv%init(kkr_op) ! register sparse matrix and preconditioner at solver
 

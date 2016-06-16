@@ -40,13 +40,13 @@ module MultScatData_mod
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: atom_indices(:)
 
-    integer :: sum_cluster, naez, naclsd, nCols, nRows
+    integer :: sum_cluster, naez, nCols, nRows!, naclsd
 
     ms%cluster_info => cluster_info
 
     sum_cluster = sum(cluster_info%numn0_trc)
     naez   = size(cluster_info%indn0_trc, 1)
-    naclsd = size(cluster_info%indn0_trc, 2) ! not used
+!   naclsd = size(cluster_info%indn0_trc, 2) ! not used
     ms%lmmaxd = lmmaxd
     ms%naez = naez
 

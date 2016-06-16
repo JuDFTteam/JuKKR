@@ -10,26 +10,11 @@
 
 
 module vbrmv_mat_mod
-!   use TruncationZone_mod, only: clear_non_existing_entries
-! #define CLEAR_NON_EXISTING_ENTRIES(Ax, N) call clear_non_existing_entries(Ax, N)
-#define CLEAR_NON_EXISTING_ENTRIES(Ax, N)
   implicit none
   private
-  public :: multiply_vbr
+  public :: vbrmv_mat
   
   contains
-
-  subroutine multiply_vbr(a, x, Ax, sparse)
-    use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    double complex, intent(in)  :: a(:), x(:,:)
-    double complex, intent(out) :: Ax(:,:)
-    type(SparseMatrixDescription), intent(in) :: sparse
-
-    call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, &
-                   a, sparse%kvstr, sparse%kvstr, x, Ax, &
-                   sparse%max_blockdim, sparse%max_blocks_per_row)
-
-  endsubroutine ! multiply_vbr
 
   !> Heavily modified routine from SPARSKIT
   subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, kvstr, kvstc, x, Ax, max_blockdim, max_blocks_per_row)
@@ -102,8 +87,6 @@ module vbrmv_mat_mod
 !$OMP endDO
 !$OMP endPARALLEL
 
-    CLEAR_NON_EXISTING_ENTRIES(Ax, max_blockdim)
-    
   endsubroutine ! vbrmv_mat
 
 endmodule ! vbrmv_mat_mod

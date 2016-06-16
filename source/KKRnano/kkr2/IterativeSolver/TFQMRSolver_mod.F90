@@ -24,7 +24,6 @@ module TFQMRSolver_mod
     class(OperatorT), pointer :: precond => null()
 
     double complex, allocatable :: vecs(:,:,:)
-    double complex, allocatable :: temp(:,:)
 
     type(SolverStats) :: stats
     logical :: use_precond = .false.
@@ -32,15 +31,14 @@ module TFQMRSolver_mod
     double precision :: qmrbound = 1.d-9
 
     contains
+      procedure :: solve => solve_with_solver
       procedure :: init => init_solver
       procedure :: init_precond => init_precond_solver
-      procedure :: solve => solve_with_solver
       procedure :: set_qmrbound
       procedure :: set_initial_zero
       procedure :: get_stats
       procedure :: reset_stats
       procedure :: represent_stats
-!     procedure :: destroy => destroy_solver
   endtype
   
   interface solve
@@ -80,31 +78,39 @@ module TFQMRSolver_mod
     double complex, intent(inout) :: mat_X(:,:)
     double complex, intent(in)    :: mat_B(:,:)
 
-    integer :: nlen, num_columns, iterations_needed
+    integer :: nrow, ncol, iterations_needed, nvecs, ist
     double precision :: largest_residual
 
-    nlen = size(mat_B, 1)
-    num_columns = size(mat_B, 2)
+    nrow = size(mat_B, 1)
+    ncol = size(mat_B, 2)
 
-    if (.not. allocated(self%vecs)) then
-      allocate(self%vecs(nlen,num_columns,7))
-      allocate(self%temp(nlen,num_columns))
+    nvecs = 7; if(self%use_precond) nvecs = nvecs+1 ! need only 7 without preconditioning
+    if (size(self%vecs, 2) /= nvecs) then
+      deallocate(self%vecs, stat=ist) ! ignore status
+      
+      allocate(self%vecs(nrow,ncol,nvecs), stat=ist)
+      
+      if (ist /= 0) then
+        write(*,*) "TFQMRSolver error: Allocation of workspace failed! requested ",(nrow/1024.)*(ncol/1024.)*(nvecs/64.)," GiByte" ! 16 Byte per dp-complex
+        stop
+      endif
+      
     else
-      if (size(self%vecs, 1) /= nlen .or. size(self%vecs, 2) /= num_columns) then
+      if (size(self%vecs, 1) /= nrow .or. size(self%vecs, 2) /= ncol) then
         ! when problem size has changed, one should destroy the solver and create a new one
         write(*,*) "TFQMRSolver error: Problem size has changed. Cannot reuse solver."
-        STOP
+        stop
       endif
     endif
 
     if (.not. associated(self%op)) then
       write(*,*) "TFQMRSolver error: No matrix/operator set."
-      STOP
+      stop
     endif
 
-    call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, num_columns, nlen, &
+    call mminvmod_oop(self%op, mat_X, mat_B, self%qmrbound, ncol, nrow, &
                       .true., self%precond, self%use_precond, &
-                      self%vecs, self%temp, iterations_needed, largest_residual)
+                      self%vecs, iterations_needed, largest_residual)
 
     call reduce(self%stats, iterations_needed, largest_residual)
 
@@ -116,7 +122,7 @@ module TFQMRSolver_mod
     
     integer :: ist ! ignore status
 
-    deallocate(self%vecs, self%temp, stat=ist)
+    deallocate(self%vecs, stat=ist)
     nullify(self%op)
     nullify(self%precond)
   endsubroutine ! destroy
@@ -137,9 +143,8 @@ module TFQMRSolver_mod
 
   !----------------------------------------------------------------------------
   !> Get statistics of last solver run.
-  function get_stats(self)
+  type(SolverStats) function get_stats(self)
     class(TFQMRSolver) :: self
-    type(SolverStats) :: get_stats
 
     get_stats = self%stats
   endfunction

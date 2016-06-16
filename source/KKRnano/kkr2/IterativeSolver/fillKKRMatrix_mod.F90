@@ -160,7 +160,7 @@ module fillKKRMatrix_mod
           
           if (block_row == block_col) temp(lm2) = temp(lm2) + CONE ! add 1.0 on the diagonal
 
-          smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1)) = temp(:)
+          smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1)) = temp(1:lmmax1)
         enddo ! lm2
 
         start = start + lmmax2*lmmax1
@@ -263,7 +263,7 @@ module fillKKRMatrix_mod
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B, mat_X)
-    use TruncationZone_mod, only: clear_non_existing_entries
+!   use TruncationZone_mod, only: clear_non_existing_entries
     double complex, intent(inout) :: full(:,:)
     double complex, intent(in)  :: mat_B(:,:)
     double complex, intent(out) :: mat_X(:,:)
@@ -277,12 +277,12 @@ module fillKKRMatrix_mod
     num_rhs = size(mat_B, 2)
     mat_X(:,:) = mat_B(:,:)
     
-    call zgetrf(ndim,ndim,full,ndim,ipvt,info)
-    call zgetrs('n',ndim,num_rhs,full,ndim,ipvt,mat_x,ndim,info)
+    call zgetrf(ndim, ndim, full, ndim, ipvt, info)
+    call zgetrs('n', ndim, num_rhs, full, ndim, ipvt, mat_x, ndim, info)
 
     deallocate(ipvt, stat=info)
     
-    call clear_non_existing_entries(mat_X) ! make up for treating more than one atom with truncation
+!   call clear_non_existing_entries(mat_X) ! make up for treating more than one atom with truncation
   endsubroutine ! solveFull
 
 
