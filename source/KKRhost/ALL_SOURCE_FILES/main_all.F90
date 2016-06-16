@@ -31,7 +31,8 @@ program kkrcode
   integer :: ie,irec,i1,ispin
   character(len=3) :: ctemp
 
- 
+  logical :: test
+  external :: test
     
 #ifdef CPP_MPI
   ! initialize MPI
@@ -160,6 +161,12 @@ program kkrcode
     call timing_start('main1b')
     call main1b()
     call timing_stop('main1b')
+    if(test('STOP1B  '))then
+#ifdef CPP_MPI
+      call MPI_Finalize(ierr)
+      stop 'Stop after main1b'
+#endif
+    end if!test
 
     ! calculate density
     call timing_start('main1c')
@@ -192,6 +199,5 @@ program kkrcode
   ! finalize MPI  
   call MPI_Finalize(ierr)
 #endif
-
 
 end program
