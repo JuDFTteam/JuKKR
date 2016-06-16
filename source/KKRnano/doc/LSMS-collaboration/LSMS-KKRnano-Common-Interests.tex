@@ -39,15 +39,19 @@
   \and
   Markus Eisenbach\inst{1}
   \and
-  Od ??\inst{1}
+  Khorgolkhuu Odbadrakh\inst{4}
 }
 
 \institute{ 
-  Oak Ridge National Laboratory, Tennessee, US
+  Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA
   \and
-  Peter-Gr\"unberg-Institut, Forschungszentrum J\"ulich, 52425 J\"ulich, Germany
+  Peter-Gr\"unberg-Institut, Forschungszentrum J\"ulich, 52425
+  J\"ulich, Germany
+\and
   J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, 52425 J\"ulich, Germany
   \and
+Joint Institute for Computational Sciences, University of Tennessee,
+Oak Ridge, Tennessee 37831, USA
 %   \and
 %   IBM Deutschland Research \& Development GmbH, 71032 B\"{o}blingen, Germany 
 %   \and 
@@ -136,8 +140,43 @@ Both paradigms may be activated at the same time so that huge levels of concurre
 % ..................................................................................................
 \subsection{LSMS} \label{section:lsms}
 % ..................................................................................................
-\todo[inline]{to be written}
+%\todo[inline]{to be written}
 
+\LSMS{}\cite{Wang1995}, like \KKRnano{} implements the multiple
+scattering KKR formalism in real space to calculate the Green's
+function of condensed matter systems and it follows the same
+fundamental decomposition of space into atomic cells and empty cells
+as needed. The Dyson equation in \LSMS{} is solved with respect to the
+free space reference system, which results in dense matrices for the
+calculation of the scattering path matrix, which limits the size of
+the local interaction zone to $O(100)$ scattering sites.
+
+In addition of non relativistic and scalar relativistic
+calculations,\LSMS{} allows the solution of the fully relativistic
+Dirac equation for electron scattering. Thus all relativistic effects
+including spin-orbit interactions are accounted for, which allows the
+calculation of magnetocrystaline anisotropy energies and
+Dzyaloshinskii-Moriya antisymmetric exchange interactions. The
+energies for arbitrary non-collinear magnetic spin configurations can
+be calculated using selfconsistently determined Lagrange multipliers
+that constrain the local magnetic order. 
+
+The implementation utilizes multiple levels of parallelism: We employ
+distributed memory parallelism via MPI to parallelize over the atoms
+in the system utilizing the natural real space domain decomposition
+and minimal communication requirements in the multiple scattering part
+of the calculation. On node, shared memory, parallelism is achieved
+for both parallelization over atoms as well as over energy points on
+the integration contour. Finally, the calculation of the multiple
+scattering matrix uses GPU acceleration when available.  
+
+An additional level of parallelism is provided by the capability to
+perform Wang-Landau Monte-Carlo sampling of magnetic and chemical
+order. This allows the first principles statistical physics
+calculation of magnetic and ordering phase transitions. The current
+implementation uses a master-slave approach of a single Monte-Carlo
+process driving multiple \LSMS{} instances, thus extending the
+scalability of this method by multiple orders of magnitude.
 
 % ==================================================================================================
 \section{Major Differences} \label{section:differ}
@@ -163,16 +202,22 @@ MPI Parallelization over the collinear spins is possible.
 \paragraph{Core solver physics}
 \KKRnano{} offers to choose between a scalar-relativistic and a non-relativistic solution for the core states 
 and for the radial functions entering the single site expressions. 
-\LSMS{}, in contrast, provides access to the fully relativistic solution of the Dirac equation.
+\LSMS{}, in contrast, provides access to the fully relativistic
+solution of the Dirac equation in addition to the non-relativistic and
+scalar relativistic solutions for the single site scattering
+solutions, thus naturally including spin-orbit interactions.
 %
-\todo[inline]{how about the other theory levels in LSMS? SOC? SRA?}
+%\todo[inline]{how about the other theory levels in LSMS? SOC? SRA?}
 
 %% direct vs. iterative inversion of the screened interaction
 \paragraph{Direct vs.~iterative Dyson solvers}
 The most time consuming part of \LSMS{} is a LU-decomposition necessary 
-for the inversion that solves the Dyson equation.
+for the inversion that solves the Dyson equation. The LU-inversion in
+\LSMS{} recursively applies the Schur complement of subblocks to
+reduce the number of opperations needed to obtain the diagonal block
+of the inverse.\cite{Eisenbach2016} 
 %
-\todo[inline]{need more detail here}
+% \todo[inline]{need more detail here}
 %
 \KKRnano{} constructs a screened KKR operator that features a short range and, hence, a small number
 of non-zero block-bands in the matrix representation. This favors the usage of an iterative
@@ -181,9 +226,12 @@ inversion scheme. The transpose-free quasi-minimal-residual method (TFQMR) has b
 %% programming model: Fortran2008, F77, C++ on the outer layer
 \paragraph{Programming model}
 \KKRnano{} is written in modern Fortran (F2008) with some legacy parts in old F77 style.
-\LSMS{} makes use of C++ for the outer skeleton and Fortran routines for the inner work kernel
+\LSMS{} makes use of C++ (C++11) for the outer skeleton and Fortran routines
+for the inner work kernel.
+The GPU implementation of \LSMS{} utilizes both standard CUDA
+libraries (cuBLAS) as well as CUDA-C implementations of individual kernels. 
 %
-\todo[inline]{do you use CUDA Fortran or CUDA-C for the GPU kernels? or are there GPU-libraries}
+%\todo[inline]{do you use CUDA Fortran or CUDA-C for the GPU kernels? or are there GPU-libraries}
 
 %% GPU acceleration in LSMS
 \paragraph{GPU acceleration}
@@ -195,13 +243,16 @@ A first GPU version for the Dyson solver of \KKRnano{} is currently work in prog
 \paragraph{Parallelization levels}
 \KKRnano{} allows to distribute cells, collinear spins and energy points over MPI processes,
 while the latter is only efficient to a limited degree due to the strong imbalance of the 
-Matsubara poles compared to other energy points.
+Matsubara poles compared to other energy points. \LSMS{} only
+parallelizes over atomic cells at the MPI level and over cells and
+energy points at the OpenMP level. The focus on non-collinear
+magnetism and relativity prevents a simple parallelization over spin channels.
 
 % ==================================================================================================
 \section{Common Goals} \label{section:common}
 % ==================================================================================================
 
-\todo[inline]{check for consistency and add missing topics}
+%\todo[inline]{check for consistency and add missing topics}
 The two teams identified the following problems in physics as target systems to which \LSMS{} and \KKRnano{}
 are good candidates to be applied to
 \begin{itemize}
@@ -239,7 +290,7 @@ started to experiment with a GPU-accelerated solver kernel.
 Here, a list of challenges is given that the developer teams of both applications, \LSMS{} and \KKRnano{}, are
 facing. The aim of collecting these items is to give an overview of what needs to be done in the future
 and to align efforts so that solutions found in one team may be propagated into the other one.
-\todo[inline]{add missing callenges}
+%\todo[inline]{add missing callenges}
 
 % ..................................................................................................
 \subsection{Fast Poisson solver for distributed charges} %\label{section:}
@@ -275,6 +326,17 @@ a strongly irregular Voronoi cell is not likely to describe these quantities wel
 In particular during structural relaxation, the reconstruction of the geometry
 asks for an automated method for the placement of empty cells.
 
+% ..................................................................................................
+\subsection{Reliable calculations of interatomic forces} %\label{section:}
+% ..................................................................................................
+
+The calculation of reliable forces in a full potential scheme is
+required for structural relaxation of atomic positions and the
+calculation of phononic properties. To achieve this goal, the robust  accuracy
+of a number of different algorithms needs to be ensured. In
+particular, energy variations due to changes in core state  boudary
+conditions and errors due to chnging atomic cell boundary
+volumes need to be addressed when atomc positions change.
 
 % ..................................................................................................
 \subsection{Self-consistency convergence acceleration} %\label{section:}
