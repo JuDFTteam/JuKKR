@@ -23,7 +23,7 @@ ifeq ($(PLATFORM),ifort)
 FC = ifort
 FC90 = ifort
 # -module <path> specifies where to put .mod files
-FCFLAGS = -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR) -DTASKLOCAL_FILES
+FCFLAGS = -g -O0 -warn -debug -traceback -gen-interfaces -warn interfaces -module $(BUILDDIR) -DTASKLOCAL_FILES
 FC90FLAGS = -warn
 FCFLAGS += -I $(BUILDDIR) 
 LDFLAGS =-L/ -llapack_ifort -lblas_ifort
