@@ -162,9 +162,9 @@ lmaxd, nspind, irmd, irnsd, ipand, ncleb)
   !
   !---> determine the regular non sph. wavefunction
   !
-  call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, &
+  call regns_old(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm, &
   pzekdr,qzekdr,ek,pns(1,1,irmind,1),cmat, &
-  pns(1,1,irmind,2),dmat,nsra,fred,irmind,irmd,ipand,lmmaxd)
+  pns(1,1,irmind,2),dmat,nsra,irmind,irmd,ipand,lmmaxd)
   !
 
   return

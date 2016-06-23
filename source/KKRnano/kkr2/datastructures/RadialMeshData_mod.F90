@@ -31,21 +31,27 @@ module RadialMeshData_mod
     integer :: IRNS
     integer :: IRWS   !< index of max. radius
     integer :: IRMIN
+    integer :: meshn    !< number of interstitial mesh points 
+    integer :: nfu    !< number of non-zero shape function components 
 
     ! arrays
     double precision, dimension(:), allocatable :: R
     double precision, dimension(:), allocatable :: DRDI
     integer, dimension(:), allocatable :: IRCUT  !< panel locations
+    integer, dimension(:), allocatable :: llmsp  !<  LM index of non-zero shape function component
+    double precision, dimension(:,:), allocatable :: THETAS !< radial values of shape function component \Theta_L MESHN values
   end type
 
   CONTAINS
 
   !----------------------------------------------------------------------------
-  subroutine createRadialMeshData(meshdata, irmd, ipand)
+  subroutine createRadialMeshData(meshdata, irmd, ipand, meshn, nfu)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: irmd
     integer, intent(in) :: ipand
+    integer, intent(in) :: meshn
+    integer, intent(in) :: nfu
 
     meshdata%irmd = irmd
     meshdata%ipand = ipand
@@ -53,10 +59,14 @@ module RadialMeshData_mod
     allocate(meshdata%R(irmd))
     allocate(meshdata%DRDI(irmd))
     allocate(meshdata%IRCUT(0:ipand))
+    allocate(meshdata%LLMSP(nfu))
+    allocate(meshdata%THETAS(meshn,nfu))
 
     meshdata%R = 0.0d0
     meshdata%DRDI = 0.0d0
     meshdata%IRCUT = 0
+    meshdata%LLMSP = 0.0d0
+    meshdata%THETAS = 0.0d0
 
     meshdata%A = 0.0d0
     meshdata%B = 0.0d0
@@ -82,11 +92,13 @@ module RadialMeshData_mod
     deallocate(meshdata%R)
     deallocate(meshdata%DRDI)
     deallocate(meshdata%IRCUT)
+    deallocate(meshdata%LLMSP)
+    deallocate(meshdata%THETAS)
 
   end subroutine
 
   !----------------------------------------------------------------------------
-  subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
+  subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns, nfu, llmsp, thetas)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
@@ -95,8 +107,11 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
+    integer, intent(in) :: nfu
+    integer, intent(in) :: llmsp (:)
+    double precision, intent(in) :: thetas(:,:)
 
-    call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
+    call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, nfu, llmsp, thetas)
     ! note radius_mt = xrn(1) * alat
     call initMuffinTinMesh(meshdata, imt, xrn(1)*alat)
 
@@ -129,7 +144,7 @@ module RadialMeshData_mod
 
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat
-  subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns)
+  subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, nfu, llmsp, thetas)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
@@ -138,6 +153,9 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
+    integer, intent(in) :: nfu
+    integer, intent(in) :: llmsp (:)
+    double precision, intent(in) :: thetas(:,:)
 
     integer :: isum, ii
     integer :: ipan
@@ -145,6 +163,7 @@ module RadialMeshData_mod
     ipan = size(nm) + 1 ! +1 for muffin-tin region 1..imt
     meshdata%ipan = ipan
     meshdata%imt = imt
+    meshdata%nfu = nfu
 
     ! ircut(0) has to be 0, integrations start at ircut(i)+1
     meshdata%ircut(0) = 0
@@ -171,6 +190,8 @@ module RadialMeshData_mod
     meshdata%irmin = meshdata%irws - irns
     meshdata%irns = irns
     meshdata%rws  = meshdata%r(meshdata%irws)
+    meshdata%llmsp = llmsp
+    meshdata%thetas = thetas
 
   end subroutine
 
@@ -190,17 +211,17 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
 
     integer :: FILEUNIT = 37
-    integer :: irmd, ipand, max_reclen
+    integer :: irmd, ipand, max_reclen, meshn, nfu
 
     ! index file has extension .idx
 
     call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, &
                                        filename // ".idx") !ignored for task-local files
     call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, &
-                                       irmd, ipand, max_reclen)
+                                       irmd, ipand, meshn, nfu, max_reclen)
     call closeRadialMeshDataIndexDAFile(FILEUNIT)
 
-    call createRadialMeshData(meshdata, irmd, ipand)
+    call createRadialMeshData(meshdata, irmd, ipand, meshn, nfu)
 
     call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
     call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
@@ -241,6 +262,8 @@ module RadialMeshData_mod
                                 meshdata%R, &
                                 meshdata%DRDI, &
                                 meshdata%IRCUT, &
+                                meshdata%LLMSP, &
+                                meshdata%THETAS, &
                                 MAGIC_NUMBER + recnr
 
 #ifdef TASKLOCAL_FILES
@@ -264,13 +287,13 @@ module RadialMeshData_mod
 
 #ifdef TASKLOCAL_FILES
     character(len=7) :: num
-    integer :: ipand, irmd, max_reclen    
+    integer :: ipand, irmd, max_reclen, meshn, nfu    
 
     write(num, '(I7.7)') recnr
     open(fileunit, file="mesh." // num, form='unformatted')
 
     ! read header at beginning of file
-    call readRadialMeshDataHeader(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen)
+    call readRadialMeshDataHeader(meshdata, FILEUNIT, recnr, irmd, ipand, meshn, nfu, max_reclen)
 #endif
 
     checkmagic = MAGIC_NUMBER + recnr
@@ -289,6 +312,8 @@ module RadialMeshData_mod
                                 meshdata%R, &
                                 meshdata%DRDI, &
                                 meshdata%IRCUT, &
+                                meshdata%LLMSP, &
+                                meshdata%THETAS, &
                                 magic2
 #ifdef TASKLOCAL_FILES
     close(fileunit)
@@ -330,6 +355,8 @@ module RadialMeshData_mod
                                 meshdata%R, &
                                 meshdata%DRDI, &
                                 meshdata%IRCUT, &
+                                meshdata%LLMSP, &
+                                meshdata%THETAS, &
                                 MAGIC_NUMBER
 
   end function
@@ -384,6 +411,8 @@ module RadialMeshData_mod
 
     FILEWRITE (fileunit, rec=recnr) meshdata%irmd, &
                                 meshdata%ipand, &
+                                meshdata%meshn, &
+                                meshdata%NFU, &
                                 max_reclen, &
                                 MAGIC_NUMBER + recnr
 
@@ -394,7 +423,7 @@ module RadialMeshData_mod
   !>
   !> Returns dimensions irmd and ipand
   subroutine readRadialMeshDataIndexDA(meshdata, fileunit, recnr, &
-                                       irmd, ipand, max_reclen)
+                                       irmd, ipand, meshn, nfu, max_reclen)
     implicit none
 
     type (RadialMeshData), intent(inout) :: meshdata
@@ -402,6 +431,8 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
     integer, intent(out) :: irmd
     integer, intent(out) :: ipand
+    integer, intent(out) :: meshn
+    integer, intent(out) :: nfu
     integer, intent(out) :: max_reclen
 
 #ifdef TASKLOCAL_FILES
@@ -412,7 +443,7 @@ module RadialMeshData_mod
 #endif
 
     call readRadialMeshDataHeader(meshdata, fileunit, recnr, &
-                                       irmd, ipand, max_reclen)
+                                       irmd, ipand, meshn, nfu, max_reclen)
 
 #ifdef TASKLOCAL_FILES
     close(fileunit)
@@ -437,6 +468,8 @@ module RadialMeshData_mod
     max_reclen = 0
     inquire (iolength = reclen) meshdata%irmd, &
                                 meshdata%ipand, &
+                                meshdata%meshn, &
+                                meshdata%NFU, &
                                 max_reclen, &
                                 MAGIC_NUMBER
 
@@ -524,7 +557,7 @@ module RadialMeshData_mod
 
 !================= private helper functions ===================================
   subroutine readRadialMeshDataHeader(meshdata, fileunit, recnr, &
-                                       irmd, ipand, max_reclen)
+                                       irmd, ipand, meshn, nfu, max_reclen)
     implicit none
 
     type (RadialMeshData), intent(inout) :: meshdata
@@ -532,6 +565,8 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
     integer, intent(out) :: irmd
     integer, intent(out) :: ipand
+    integer, intent(out) :: meshn
+    integer, intent(out) :: nfu
     integer, intent(out) :: max_reclen
 
     integer, parameter :: MAGIC_NUMBER = -889271554
@@ -542,6 +577,8 @@ module RadialMeshData_mod
 
     FILEREAD  (fileunit, rec=recnr) irmd, &
                                 ipand, &
+                                meshn, &
+                                nfu, &
                                 max_reclen, &
                                 magic
 

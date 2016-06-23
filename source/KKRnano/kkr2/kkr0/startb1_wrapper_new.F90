@@ -165,7 +165,7 @@ subroutine write_atoms_file(alat, NSPIN, &
       ! this is a bit of a hack
       cell_index = NTCELL(iatom)
       CHECKASSERT (cell_index <= sfile%NCELL .and. cell_index > 0)
-      call createRadialMeshData(mesh, entry(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan + 1)
+      call createRadialMeshData(mesh, entry(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan + 1, sfile%mesh(cell_index)%meshn, sfile%shapes(iatom)%nfu)
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
       ! cleanup
       call destroyRadialMeshData(mesh)
@@ -241,7 +241,7 @@ subroutine write_binary_potential(alat, NSPIN, &
       irid = sfile%mesh(cell_index)%meshn
 
       call createBasisAtom(atom, iatom, lpot, nspin, irmind, irmd)
-      call createRadialMeshData(meshdata, irmd, ipand)
+      call createRadialMeshData(meshdata, irmd, ipand, irid, sfile%shapes(cell_index)%nfu)
 
       ! set potential
       do ispin = 1, nspin
@@ -251,7 +251,8 @@ subroutine write_binary_potential(alat, NSPIN, &
       enddo
 
       ! initialise radial mesh
-      call initRadialMesh(meshdata, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, sfile%mesh(cell_index)%nm, irmd - irid, irns)
+      call initRadialMesh(meshdata, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, sfile%mesh(cell_index)%nm, irmd - irid, irns, &
+                          sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, sfile%shapes(cell_index)%thetas)
 
       if (iatom == 1) then
 #ifndef TASKLOCAL_FILES

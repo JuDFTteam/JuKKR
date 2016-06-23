@@ -18,13 +18,13 @@ FC = mpif77 -warn
 FC90 = mpif90 -warn
 # -module <path> specifies where to put .mod files
 FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -g -gen-interfaces -warn interfaces -DUSE_MTRADII -DPRINT_MTRADII -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FCFLAGS += -g -O0 -traceback -gen-interfaces -warn interfaces -DUSE_OLD_MESH -DUSE_MTRADII -DPRINT_MTRADII -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
 FC90FLAGS =
 FCFLAGS += -I $(BUILDDIR)
-LDFLAGS = -O0
-ifeq ($(TYPE),debug)
-FCFLAGS += -g -check bounds
-endif
+LDFLAGS =
+#ifeq ($(TYPE),debug)
+#FCFLAGS += -g -check bounds
+#endif
 # set run paths to look for shared libraries (-Wl means pass to linker)
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
 LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
