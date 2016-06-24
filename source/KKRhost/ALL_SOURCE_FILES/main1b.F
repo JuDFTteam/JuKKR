@@ -77,7 +77,7 @@ C     ..
 C     ..
 C     .. Local Scalars ..
       INTEGER NLBASIS,NRBASIS                     
-      INTEGER IELAST,INS,LMAX,NATYP,NREF,NSPIN,NSRA
+      INTEGER IELAST,NPOL,INS,LMAX,NATYP,NREF,NSPIN,NSRA
       INTEGER KMROT,INVMOD,ICC,IGF,IPRINT,IDECI
       INTEGER MAXMESH,NAEZ,I,ISPIN,I1,IE,IREC,L,LM1,LM2,L1
       INTEGER NATOMIMP,NSYMAT,NCPA,NCPAFAIL,ICPAFLAG,ITCPAMAX
@@ -209,7 +209,7 @@ C =             read in variables from unformatted files               =
 C ======================================================================
 C
 C -------------------------------------------------------------- input1b
-      call get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
+      call get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,NPOL,
      &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
      &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
@@ -1106,14 +1106,14 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,
      &                      DSYMLL,IPRINT,NATYPD,NAEZD,NSHELD,LMMAXD,
-     &                      KORBIT)
+     &                      NPOL)
          ELSE !.NOT.OPT('NEWSOSOL'))
            CALL TBXCCPLJIJDIJ(naezd,natypd,lmmaxd,lmgf0d,natomimpd,
      &                        nsymaxd,iemxd,thetas,phis,
      &                nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,
      &                nshelD,nshell,ijtabcalc,ijtabcalc_I,ijtabsh,
      &                ijtabsym,
-     &                ielast,ez,wez,dsymll,noq,itoq,ncpa)
+     &                ielast,ez,wez,NPOL,dsymll,noq,itoq,ncpa)
          END IF
 #ifdef CPP_TIMING
             call timing_stop('main1b - tbxccpl')

@@ -1604,7 +1604,7 @@ C ------------------------------------------------------ cluster atoms
 
 
       subroutine get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
-     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
+     &       NPOL,NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
      &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
      &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
@@ -1630,7 +1630,7 @@ C ------------------------------------------------------ cluster atoms
      &         LMAX,NCLS,NREF,LLY,NSYMAT,
      &         INS,ATOM(NACLSD,NAEZD+NEMBD),CLS(NAEZD+NEMBD),NQCALC,
      &         NATOMIMP,ATOMIMP(NATOMIMPD),
-     &         NACLS(NCLSD),REFPOT(NAEZD+NEMBD),IELAST,
+     &         NACLS(NCLSD),REFPOT(NAEZD+NEMBD),IELAST,NPOL,
      &         ITMPDIR,ILTMP,INVMOD,
      &         ICC,IGF,NLBASIS,NRBASIS
      &        ,NCPA,ICPA(NAEZD),ITCPAMAX,IDECI,EZOA(NACLSD,NAEZD+NEMBD),
@@ -1804,6 +1804,7 @@ C
       IELAST = t_params%IELAST
       EZ     = t_params%EZ
       WEZ    = t_params%WEZ
+      NPOL   = t_params%NPOL      
 C -------------------------------------------------------------- itermdir
 C
       IF (OPT('ITERMDIR')) THEN
