@@ -12,7 +12,7 @@
      &                      NOQ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
      &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,DSYMLL,IPRINT,
-     &                      NATYPD,NAEZD,NSHELD,LMMAXD,KORBIT)
+     &                      NATYPD,NAEZD,NSHELD,LMMAXD,NPOL)
 C   ********************************************************************
 C   *                                                                  *
 C   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -41,7 +41,7 @@ C     .. Parameters
 C     ..
 C     .. Scalar arguments
       INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NAEZD,NATOMIMP,
-     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD, KORBIT
+     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD,NPOL
       DOUBLE COMPLEX EZ(*), WEZ(*)
 C     ..
 C     .. Array arguments
@@ -85,6 +85,8 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. External Subroutines ..
 C     EXTERNAL CINIT,CMATMUL,INITABJIJ,ZCOPY
+      LOGICAL TEST
+      EXTERNAL TEST
 C     ..
 C     .. Save statement
       SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,XINTEGD,KIJSH,NIJCALC
@@ -483,22 +485,26 @@ C                  -------> perform substraction instead of addition
 C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                   ! Write out energy-resorved integrand and integral
                   ! Phivos Mavropoulos 24.10.2012
-                  FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
-                  WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
-                  IF (IE.EQ.1) THEN
-                     OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
-                     WRITE(499,FMT='(A)')
-     &                    '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
-                     WRITE(499,FMT='(3(A,I5))')
-     &                    '# IT=',IT,' JT=',JT,' SHELL=',NS
-                     WRITE(499,FMT='(A,I6)')
-     &                    '#ENERGIES: ',IELAST
-                  ELSE
-                   OPEN (499,FILE=JFNAM2,STATUS='OLD',POSITION='APPEND')
-                  ENDIF
-                  WRITE (499,FMT='(6E12.4)')
-     &            EZ(IE),XINTEGD(IT,JT,NSEFF),JXCIJINT(IT,JT,NSEFF)/4.D0
-                  CLOSE(499)
+                  IF(NPOL==0 .OR. TEST('Jijenerg'))then
+                    FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                    WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
+                    IF (IE.EQ.1) THEN
+                       OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
+                       WRITE(499,FMT='(A)')
+     &                      '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                       WRITE(499,FMT='(3(A,I5))')
+     &                      '# IT=',IT,' JT=',JT,' SHELL=',NS
+                       WRITE(499,FMT='(A,I6)')
+     &                      '#ENERGIES: ',IELAST
+                    ELSE
+                      OPEN (499,FILE=JFNAM2,STATUS='OLD',
+     &                          POSITION='APPEND')
+                    ENDIF
+                    WRITE (499,FMT='(6E12.4)')
+     &                EZ(IE),XINTEGD(IT,JT,NSEFF),
+     &                JXCIJINT(IT,JT,NSEFF)/4.D0
+                    CLOSE(499)
+                  ENDIF!(npol==0 .or. test('Jijenerg'))
 #endif
                   
                END DO !I1
@@ -581,27 +587,31 @@ C                  -------> perform substraction instead of addition
 C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                   ! Write out energy-resorved integrand and integral
                   ! Phivos Mavropoulos 24.10.2012
-                  FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
-                  WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
-                  OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
-                  WRITE(499,FMT='(A)')
-     &                 '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
-                  WRITE(499,FMT='(3(A,I5))')
-     &                 '# IT=',IT,' JT=',JT,' SHELL=',NS
-                  WRITE(499,FMT='(A,I6)')
-     &                 '#ENERGIES: ',IELAST
+                  IF(NPOL==0 .OR. TEST('Jijenerg'))then
+                    FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                    WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
+                    OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
+                    WRITE(499,FMT='(A)')
+     &                   '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                    WRITE(499,FMT='(3(A,I5))')
+     &                   '# IT=',IT,' JT=',JT,' SHELL=',NS
+                    WRITE(499,FMT='(A,I6)')
+     &                   '#ENERGIES: ',IELAST
+                  ENDIF!(NPOL==0 .OR. TEST('Jijenerg'))then
 
-                 DO IE=1,IELAST
-                  JXCIJINT(IT,JT,NSEFF) = JXCIJINT(IT,JT,NSEFF)
+                  DO IE=1,IELAST
+                    JXCIJINT(IT,JT,NSEFF) = JXCIJINT(IT,JT,NSEFF)
      &               - WEZ(IE)*csum_store(IT,JT,NSEFF,IE)/DBLE(NSPIN)
-                  XINTEGDTMP= 
+                    XINTEGDTMP= 
      &                csum_store(IT,JT,NSEFF,IE)/(PI*4.D0)
-                   WRITE (499,FMT='(6E12.4)')
-     &            EZ(IE),XINTEGDTMP,JXCIJINT(IT,JT,NSEFF)/4.D0
-
+                    IF(NPOL==0 .OR. TEST('Jijenerg'))then
+                      WRITE (499,FMT='(6E12.4)')
+     &                    EZ(IE),XINTEGDTMP,JXCIJINT(IT,JT,NSEFF)/4.D0
+                    ENDIF!(NPOL==0 .OR. TEST('Jijenerg'))then
+                   
                  END DO!IE
 
-                 close(499)
+                 IF(NPOL==0 .OR. TEST('Jijenerg')) close(499)
 
                END DO !I1
             END DO   !J1, loop over occupants

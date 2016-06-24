@@ -12,7 +12,7 @@ contains
                           & thetas, phis,&
                           & nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,& !imp-cluser
                           & nshelD,nshell,ijtabcalc,ijtabcalc_I,ijtabsh,ijtabsym,  & !shells
-                          & ielast,ez,wez, & !energies
+                          & ielast,ez,wez,npol, & !energies
                           & dsymll, & !symmetries
                           & noq,itoq, ncpa) !CPA
 !   ********************************************************************
@@ -37,7 +37,7 @@ contains
     double precision, intent(in) :: thetas(natypd),phis(natypd)
 
     !energy contour
-    integer,        intent(in) :: ielast, iemxd
+    integer,        intent(in) :: ielast, iemxd, npol
     double complex, intent(in) :: ez(iemxd), wez(iemxd)
     integer :: ie, ie_start, ie_end, ie_num
 
@@ -88,6 +88,9 @@ contains
     character(len=22) :: fmt2
     character(len=13) :: jfnam
     character(len=35) :: jfnam2
+
+    logical :: test
+    external :: test
 
     allocate( w1(lmmaxd,lmmaxd),        &
             & w2(lmmaxd,lmmaxd),        &
@@ -340,17 +343,19 @@ contains
 !                     because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
              ! Write out energy-resorved integrand and integral
              ! Phivos Mavropoulos 24.10.2012
-             fmt2 = '(4(A,I5.5))'
-             write (jfnam2,fmt2) 'Jij_enrg.',it,'.',jt,'.',i1,'.',i2
-             open (499,file=jfnam2,status='unknown')
-             write(499,fmt='(a)') &
-     &            '# Energy Re,Im ; j(E) Re,Im ; J(E) Re,Im ;&
-                                  & d(E) Re,Im ; D(E) Re,Im ;&
-                                  & s(E) Re,Im ; S(E) Re,Im ;&
-                                  & a(E) Re,Im ; A(E) Re,Im '
-             write(499,fmt='(4(a,i5))') &
-     &            '# IT=',IT,' JT=',JT,' ISITE=',i1,' JSITE=',i2
-             write(499,fmt='(a,i6)') '#ENERGIES: ',ielast
+             if(npol==0 .or. test('Jijenerg'))then
+               fmt2 = '(4(A,I5.5))'
+               write (jfnam2,fmt2) 'Jij_enrg.',it,'.',jt,'.',i1,'.',i2
+               open (499,file=jfnam2,status='unknown')
+               write(499,fmt='(a)') &
+                    & '# Energy Re,Im ; j(E) Re,Im ; J(E) Re,Im ;&
+                                      & d(E) Re,Im ; D(E) Re,Im ;&
+                                      & s(E) Re,Im ; S(E) Re,Im ;&
+                                      & a(E) Re,Im ; A(E) Re,Im '
+               write(499,fmt='(4(a,i5))') &
+                    &  '# IT=',IT,' JT=',JT,' ISITE=',i1,' JSITE=',i2
+               write(499,fmt='(a,i6)') '#ENERGIES: ',ielast
+             endif!test('Jijenerg')
 
 !            Jijmat_real = 0d0
              do ie=1,ielast
@@ -365,15 +370,17 @@ contains
                   jxcijint(:,istore) = jxcijint(:,istore) - wez(ie)*jtmp/4d0
                                                       !factor 2 for NSPIN, another factor of 2 to be consistent
                                                       !with definition in tbxccpljij (different from impurity program)
-                  write (499,fmt='(18e12.4)') &
-                & ez(ie),jtmp(1)/fpi,jxcijint(1,istore),&
-                &        jtmp(2)/fpi,jxcijint(2,istore),&
-                &        jtmp(3)/fpi,jxcijint(3,istore),&
-                &        jtmp(4)/fpi,jxcijint(4,istore)
+                  if(npol==0 .or. test('Jijenerg'))then
+                    write (499,fmt='(18e12.4)') &
+                          & ez(ie),jtmp(1)/fpi,jxcijint(1,istore),&
+                          &        jtmp(2)/fpi,jxcijint(2,istore),&
+                          &        jtmp(3)/fpi,jxcijint(3,istore),&
+                          &        jtmp(4)/fpi,jxcijint(4,istore)
+                  endif!test('Jijenerg')
 
              end do!ie
 
-             close(499)
+             if(npol==0 .or. test('Jijenerg')) close(499)
 
 !            write(34536254,'(A,2I3)') '# coupling between',i1, i2
 !            write(34536254,'(A)') '# gen. Jij matrix is'
