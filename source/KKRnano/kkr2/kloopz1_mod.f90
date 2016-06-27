@@ -11,7 +11,7 @@ CONTAINS
     NSYMAT,DSYMLL, &
     TMATLL, DTDE, TR_ALPH, LLY_GRDT, lmmaxd,  &
     nrd, trunc2atom_index, communicator, my_mpi,  &
-    iguess_data)
+    iguess_data, lly)
 
 ! **********************************************************************
 
@@ -20,7 +20,7 @@ CONTAINS
 !
 ! NOFKS .. number of k-points, integer
 ! VOLBZ .. Brillouin zone volume, double
-! BZKP ... k-points of used k-mesh ... dimension (3, KPOIBZ)
+! BZKP ... k-points of used k-mesh ... imension (3, KPOIBZ)
 ! VOLCUB . array of Brillouin zone integration weights for each k-point ... dimension (KPOIBZ)
 
 ! GINP_LOCAL ... reference Green's function
@@ -45,6 +45,7 @@ CONTAINS
     class (KKROperator) :: kkr_op
     class (BCPOperator) :: precond
 
+    integer, intent(in) :: lly !< LLY=1/0, turns Lloyd's formula on/off
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: nrd
     !> mapping trunc. index -> atom index
@@ -174,7 +175,7 @@ CONTAINS
       call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,MSSQ,DTDE, TR_ALPH, LLY_GRDT, & !Lloyd's formula only working for 1 atom per MPI process
       ALAT, NSYMAT, RR, GINP_LOCAL, DGINP, &
       lmmaxd, trunc2atom_index, communicator, my_mpi, &
-      iguess_data)
+      iguess_data, lly)
     else
       write(*,*) "0 < cutoffmode < 3 not supported."
       STOP

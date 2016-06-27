@@ -65,7 +65,7 @@ subroutine referenceFourier_com(GLLH, sparse, kpoint, alat, nacls, atom, numn0, 
 
   double precision, intent(in) :: rr(:,:)
   integer, intent(in) :: ezoa(:,:)
-  double complex, intent(inout) :: GINP(:,:,:,:)
+  double complex, intent(in) :: GINP(:,:,:,:)
 
   ! work arrays
   double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd
@@ -252,7 +252,8 @@ end subroutine
 subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
                      TMATLL, MSSQ, DTDE, GINP, DGINP, ALAT, VOLCUB, &
                      RR, &
-                     trunc2atom_index, site_lm_size, communicator, my_mpi, iguess_data, k_point_index)
+                     trunc2atom_index, site_lm_size, communicator, &
+                     my_mpi, iguess_data, k_point_index, LLY)
 
   use fillKKRMatrix_mod
   use TFQMRSolver_mod
@@ -275,35 +276,31 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   class(KKROperator) :: kkr_op
   class(BCPOperator) :: precond
 
+  double precision, intent(in) :: kpoint(3)
+  double complex, intent(out)  :: BZTR2
+  double complex, intent(in)   :: TMATLL(:,:,:)
+  double complex, intent(in)   :: MSSQ (:,:,:)    !< inverted T-matrix
+  double complex, intent(in)   :: DTDE(:,:,:)     !< energy derivative of T-matrix
+  double complex, intent(in)   :: GINP(:,:,:,:)   !< G_ref, dim: lmmaxd, lmmaxd, naclsd, nclsd
+  double complex, intent(in)   :: DGINP(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
+  double precision, intent(in) :: ALAT
+  double precision, intent(in) :: VOLCUB (:)
+  double precision, intent(in) :: RR(:,0:)
+  integer, intent(in) :: trunc2atom_index(:)
   integer, intent(in) ::  site_lm_size
-  integer, intent(in), dimension(:) :: trunc2atom_index
   integer, intent(in) :: communicator
   type (KKRnanoParallel), intent(in) :: my_mpi
   type(InitialGuess), intent(inout) :: iguess_data
   integer, intent(in) :: k_point_index
-  double precision :: ALAT
-  double precision :: kpoint(3)
-  double complex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
-  double complex :: DGINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd 
+  integer, intent(in) :: lly !< LLY=1/0, turns Lloyd's formula on/off
 
-  double precision :: RR(:,0:)
-  double complex, intent(in) :: TMATLL(:,:,:)
-  double complex, intent(in) :: MSSQ (:,:,:)    !< inverted T-matrix
-  double complex :: TMATLL2(16,16)
-  double complex :: DTDE(:,:,:)
-  double precision :: VOLCUB (:)
-
-  double complex :: BZTR2
   !-------- local ---------
   type (MultScatData), pointer :: ms
 
   double complex, parameter :: CONE = ( 1.0D0,0.0D0)
   double complex, parameter :: CZERO= ( 0.0D0,0.0D0)
-  double complex, allocatable :: DPDE_LOCAL(:,:)
   double precision :: TPI
   double complex :: CFCTORINV
-  double complex :: TRACEK
-  double complex :: GTDPDE
   integer :: NAEZ
   integer :: nacls
   logical :: initial_zero
@@ -319,10 +316,18 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   integer :: ALM
   integer :: info
   integer :: matrix_index
-  integer, allocatable :: IPVT (:)
-  double complex, allocatable :: W1 (:,:)
-  double complex, allocatable :: mat_XT (:,:)
- 
+
+  ! Lloyd's formula parameters
+  double complex, allocatable :: DPDE_LOCAL(:,:)
+  double complex, allocatable :: GLLKE_X(:,:)
+  double complex, allocatable :: DGDE(:,:)
+  double complex, allocatable :: GLLKE_X_T(:,:)
+  double complex, allocatable :: DGDE_T(:,:)
+  double complex, allocatable :: GLLKE_X2(:,:)
+  double complex, allocatable :: DGDE2(:,:)
+  double complex :: TRACEK
+  double complex :: GTDPDE
+
   TPI = 8.D0*ATAN(1.D0)    ! = 2*PI
   CFCTORINV = (CONE*TPI)/ALAT
 
@@ -333,12 +338,6 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   cluster_info => ms%cluster_info
   nacls = cluster_info%naclsd
 
-
-!  double complex :: b(size(ms%GLLH))
-!  integer :: ib(size(ms%sparse%ia))
-!  integer :: jb(size(ms%sparse%ia))  
-!  integer :: kb(size(ms%sparse%ia))
- 
  !=======================================================================
   ! ---> fourier transformation
   !
@@ -378,9 +377,10 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 
   TESTARRAYLOG(3, ms%GLLH)
 
-! The Fourier transformed of G_ref from REF_FOURIER (ms%GLLH) is stored
+!---------------------- LLY -----------------------------------------
+if (LLY == 1) then
+! The Fourier transformed of dG_ref/dE from REF_FOURIER (ms%GLLH) is stored
 ! in gllke_x for later use in Lloyd's formula
-!  gllke_x=ms%GLLH
   call REF_FOURIER (ms%DGLLH, ms%sparse, kpoint, alat, &
                             cluster_info%nacls_trc, cluster_info%atom_trc, &
                             cluster_info%numn0_trc, cluster_info%indn0_trc, &
@@ -412,23 +412,18 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
     if (.not. allocated(DGDE2)) then
       allocate(DGDE2(NAEZ*LMMAXD,LMMAXD))
     end if
-   if (.not. allocated(DPDE_LOCAL)) then
+    if (.not. allocated(DPDE_LOCAL)) then
       allocate(DPDE_LOCAL(NAEZ*LMMAXD,LMMAXD))
     end if
-    if (.not. allocated(IPVT)) then
-    allocate(IPVT(LMMAXD))
-    end if  
-    if (.not. allocated(W1)) then
-      allocate(W1(LMMAXD,LMMAXD))
-    end if
 
-   ALM=NAEZ*LMMAXD
 
   call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
                            ms%sparse%kvstr, ms%sparse%kvstr, GLLKE_X)
   call convertToFullMatrix(ms%DGLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
                            ms%sparse%kvstr, ms%sparse%kvstr, DGDE) 
-
+endif                           
+!--------------------------------------------------------------------------------
+                           
   !----------------------------------------------------------------------------
   call buildKKRCoeffMatrix(ms%GLLH, TMATLL, ms%lmmaxd, naez, ms%sparse)
   !----------------------------------------------------------------------------
@@ -454,37 +449,30 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 
   call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
 
+!---------------------- LLY -----------------------------------------
+  if (LLY == 1) then
+    ALM=NAEZ*LMMAXD
   
-!  do i=1,NAEZ
-!        do l1=1,LMMAXD               
-!                do l2=1,LMMAXD
-!               GLLKE_X(i*LMMAXD,l1
-                
-!                 enddo
-!        enddo
-!  enddo
+    matrix_index=(getmyAtomId(my_mpi)-1)*LMMAXD+1
 
-  matrix_index=(getmyAtomId(my_mpi)-1)*LMMAXD+1
+    GLLKE_X_T=TRANSPOSE(GLLKE_X)
+    DGDE_T=TRANSPOSE(DGDE)
 
+    GLLKE_X2=GLLKE_X_T(:, matrix_index:matrix_index+LMMAXD)
+    DGDE2=DGDE_T(:, matrix_index:matrix_index+LMMAXD)
 
-  GLLKE_X_T=TRANSPOSE(GLLKE_X)
-  DGDE_T=TRANSPOSE(DGDE)
-  !DGDE_T=DGDE
-  !GLLKE_X_T=GLLKE_X
+    CALL CINIT(NAEZ*LMMAXD*LMMAXD,DPDE_LOCAL)
 
-  GLLKE_X2=GLLKE_X_T(:, matrix_index:matrix_index+LMMAXD)
-  DGDE2=DGDE_T(:, matrix_index:matrix_index+LMMAXD)
-
-       CALL CINIT(NAEZ*LMMAXD*LMMAXD,DPDE_LOCAL)
-
-       CALL ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CONE,&
+    CALL ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CONE,&
                   DGDE2,ALM,&
                   TMATLL(1,1,getMyatomId(my_mpi)),LMMAXD,CZERO,&
                   DPDE_LOCAL,ALM)
 
-       CALL ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CFCTORINV,&
+    CALL ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CFCTORINV,&
                   GLLKE_X2,ALM,&
                   DTDE(:,:,1),LMMAXD,CONE,DPDE_LOCAL,ALM)
+  endif
+!---------------------------------------------------------------------                  
 
   initial_zero = .true.
   if (iguess_data%iguess == 1) then
@@ -524,9 +512,6 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
     end if
     call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
                                    ms%sparse%kvstr, ms%sparse%kvstr, full)
-
-!call vbrcsr(ib, jb, ib, ms%sparse%blk_nrows, ms%sparse%kvstr, ms%sparse%kvstr, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%GLLH, size(ms%GLLH), ierr)
-!call csrdns(nrow,ncol,a,ja,ia,dns,ndns,ierr)
  
    TESTARRAYLOG(3, full)
     call solveFull(full, ms%mat_B)
@@ -545,27 +530,14 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 ! calculate  Tr  | M   * ---- | 
 !                \        dE  /
 !===================================================================
-!
-!    TMATLL2=TMATLL(:,:,getmyAtomId(my_mpi))
-!    MSSQ=TMATLL(:,:,getmyAtomId(my_mpi))
+   if (LLY == 1) then
 
-!        CALL ZGETRF(LMMAXD,LMMAXD,MSSQ,LMMAXD,IPVT,INFO)
-!        CALL ZGETRI(LMMAXD,MSSQ,LMMAXD,IPVT,W1, &
-!                  LMMAXD*LMMAXD,INFO)
-
-
-     
-      !CALL cgemm('N', 'N', LMMAXD, LMMAXD, NAEZ*LMMAXD, 1.0, ms%mat_X, LMMAXD, TMATLL2, NAEZ*LMMAXD, 0.0, mat_XT, LMMAXD)
- 
       TRACEK=CZERO
-!      allocate(mat_XT(NAEZ*LMMAXD,LMMAXD))
-!      mat_XT=CZERO
 
       DO LM1=1,LMMAXD
         DO LM2=1,LMMAXD
           GTDPDE = CZERO
           DO IL1 = 1,NAEZ*LMMAXD
-!            mat_XT(IL1,LM2)=mat_XT(IL1,LM2)+ms%mat_X(IL1,LM2)*TMATLL2(LM1,LM2)
             GTDPDE = GTDPDE + ms%mat_X(IL1,LM2)*DPDE_LOCAL(IL1,LM1)
           ENDDO
           TRACEK = TRACEK + MSSQ(LM1,LM2,1)*GTDPDE
@@ -574,7 +546,8 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 
           BZTR2 = BZTR2 + TRACEK*VOLCUB(k_point_index)
 
-!        ENDIF
+   endif
+
 !#######################################################################
 ! LLOYD .
 !#######################################################################
@@ -586,7 +559,7 @@ end subroutine
 !> Returns diagonal k-integrated part of Green's function in GS.
 subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, VOLBZ, &
 TMATLL, MSSQ, DTDE, TR_ALPH, LLY_GRDT, ALAT,NSYMAT,RR, &
-GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data)
+GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data, lly)
 
 
   USE_LOGGING_MOD
@@ -626,6 +599,7 @@ GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data)
 
   integer, intent(in) :: NOFKS
   integer, intent(in) :: NSYMAT
+  integer, intent(in) :: LLY
 
   !double complex :: TMATLL(lmmaxd,lmmaxd,naez)
   double complex, intent(in) :: TMATLL(:,:,:) !< T-matrix in Dyson equation
@@ -713,7 +687,8 @@ GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data)
 
     call kloopbody(solv, kkr_op, precond, BZKP(:, k_point_index), BZTR2, &
                    TMATLL, MSSQ, DTDE, GINP, DGINP, ALAT, VOLCUB, &
-                   RR, trunc2atom_index, site_lm_size, communicator, my_mpi, iguess_data, k_point_index)
+                   RR, trunc2atom_index, site_lm_size, communicator, &
+                   my_mpi, iguess_data, k_point_index, lly)
 
     call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
 
@@ -792,7 +767,7 @@ subroutine referenceFourier_com_fenced(GLLH, sparse, kpoint, alat, nacls, atom, 
 
   double precision, intent(in) :: rr(:,:)
   integer, intent(in) :: ezoa(:,:)
-  double complex, intent(inout) :: GINP(:,:,:,:)
+  double complex, intent(in) :: GINP(:,:,:,:)
 
   ! work arrays
   double complex, intent(inout) :: EIKRM(:)   ! dim: naclsd

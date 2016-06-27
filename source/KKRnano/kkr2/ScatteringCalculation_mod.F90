@@ -352,7 +352,7 @@ subroutine energyLoop(iter, calc_data, emesh, params, dims, &
           GrefN_buffer, DGrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
           TMATLL, kkr%DTDE, kkr%TR_ALPH, LLY_GRDT(IE,ISPIN), arrays%lmmaxd, lattice_vectors%nrd, &
           trunc_zone%trunc2atom_index, getMySEcommunicator(my_mpi), my_mpi,  &
-          iguess_data)
+          iguess_data, dims%lly)
 !------------------------------------------------------------------------------
 
           ! copy results from buffer: G_LL'^NN (E, spin) =

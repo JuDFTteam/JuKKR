@@ -164,7 +164,7 @@ subroutine exposeBufferZ(win, buffer, bsize, chunk_size, communicator)
   include 'mpif.h' 
 
   integer, intent(inout) :: win 
-  NUMBERZ, dimension(*), intent(inout) :: buffer
+  NUMBERZ, dimension(*), intent(in) :: buffer
   integer, intent(in) :: bsize
   integer, intent(in) :: communicator
   integer, intent(in) :: chunk_size 
