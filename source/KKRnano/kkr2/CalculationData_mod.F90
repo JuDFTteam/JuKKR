@@ -645,7 +645,7 @@ module CalculationData_mod
     type (InputParams), intent(in):: params
     type (Main2Arrays), intent(in):: arrays
 
-    integer ilocal, I1
+    integer ilocal, I1, ii
     type (BasisAtom), pointer :: atomdata
     type (CellData), pointer :: cell
     type (RadialMeshData), pointer :: mesh
@@ -696,18 +696,6 @@ module CalculationData_mod
     end do
     !--------------------------------------------------------------------------
 
-   ! #ifndef USE_OLD_MESH
-    ! generate shapes and meshes
-    !call generateShapesTEST(calc_data, dims, params, arrays, &
-    !                        new_MT_radii, params%MT_scale)
-   ! #endif
-    ! read the complete shapefun file to -> sfile
-    !open (91, file='shapefun', status='old', form='formatted')
-    !call create_read_shapefunfile(sfile, 91)
-    !close (91)
-    
-    ! interpolate to new mesh
-
     !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms
     !--------------------------------------------------------------------------
@@ -718,14 +706,21 @@ module CalculationData_mod
       old_atom  => old_atom_array(ilocal)
       old_mesh  => old_mesh_array(ilocal)
 
-      !#ifndef USE_OLD_MESH
-      ! Geometry might have changed - interpolate to new mesh
-      !call interpolateBasisAtom(atomdata, old_atom, mesh, dims%lpot)
-      !#else
+      ! >>> use old mesh>>> 
       mesh     = old_mesh
       atomdata = old_atom
       call associateBasisAtomMesh(atomdata, mesh)
-      !#endif
+      do ii = 1, mesh%nfu
+         cell%shdata%llmsp(ii) = old_mesh%llmsp(ii)
+         cell%shdata%lmsp(old_mesh%llmsp(ii)) = 1
+         cell%shdata%ifunm(old_mesh%llmsp(ii)) = ii
+      end do
+      cell%shdata%nfu = mesh%nfu
+      cell%shdata%theta = old_mesh%thetas(1:old_mesh%meshn,1:old_mesh%nfu)
+      ! set maximum possible muffin-tin radius (ALAT units)
+      cell%shdata%max_muffin_tin = mesh%rmt
+      cell%shdata%num_faces = 9999 ! not needed
+      ! <<< use old mesh<<<
 
       ! set new MT radius
       atomdata%radius_muffin_tin = mesh%rmt
@@ -743,11 +738,12 @@ module CalculationData_mod
 
       CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
       CHECKASSERT( atomdata%atom_index == I1 )
-
+     
+      
       !#ifndef USE_OLD_MESH
       !call destroyBasisAtom(old_atom)
       !call destroyRadialMeshData(old_mesh)
-      #endif
+      ! #endif
     end do
 
     deallocate(new_MT_radii)

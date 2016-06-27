@@ -77,6 +77,8 @@ module RadialMeshData_mod
     meshdata%IRNS = 0
     meshdata%IRWS = 0
     meshdata%IRMIN = 0
+    meshdata%MESHN = 0
+    meshdata%NFU = 0
 
     meshdata%RWS = 0.0d0
     meshdata%RMT = 0.0d0
@@ -98,7 +100,7 @@ module RadialMeshData_mod
   end subroutine
 
   !----------------------------------------------------------------------------
-  subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns, nfu, llmsp, thetas)
+  subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
@@ -107,11 +109,12 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
+    integer, intent(in) :: meshn
     integer, intent(in) :: nfu
     integer, intent(in) :: llmsp (:)
     double precision, intent(in) :: thetas(:,:)
 
-    call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, nfu, llmsp, thetas)
+    call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     ! note radius_mt = xrn(1) * alat
     call initMuffinTinMesh(meshdata, imt, xrn(1)*alat)
 
@@ -144,7 +147,7 @@ module RadialMeshData_mod
 
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat
-  subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, nfu, llmsp, thetas)
+  subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     double precision, intent(in) :: alat
@@ -153,6 +156,7 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
+    integer, intent(in) :: meshn
     integer, intent(in) :: nfu
     integer, intent(in) :: llmsp (:)
     double precision, intent(in) :: thetas(:,:)
@@ -163,6 +167,7 @@ module RadialMeshData_mod
     ipan = size(nm) + 1 ! +1 for muffin-tin region 1..imt
     meshdata%ipan = ipan
     meshdata%imt = imt
+    meshdata%meshn = meshn
     meshdata%nfu = nfu
 
     ! ircut(0) has to be 0, integrations start at ircut(i)+1
@@ -223,6 +228,9 @@ module RadialMeshData_mod
 
     call createRadialMeshData(meshdata, irmd, ipand, meshn, nfu)
 
+    meshdata%meshn = meshn
+    meshdata%nfu   = nfu
+    
     call openRadialMeshDataDAFile(meshdata, FILEUNIT, filename, max_reclen)
     call readRadialMeshDataDA(meshdata, FILEUNIT, recnr)
     call closeRadialMeshDataDAFile(FILEUNIT)

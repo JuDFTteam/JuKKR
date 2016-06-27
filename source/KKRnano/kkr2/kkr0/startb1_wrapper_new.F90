@@ -252,7 +252,7 @@ subroutine write_binary_potential(alat, NSPIN, &
 
       ! initialise radial mesh
       call initRadialMesh(meshdata, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, sfile%mesh(cell_index)%nm, irmd - irid, irns, &
-                          sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, sfile%shapes(cell_index)%thetas)
+                          irid, sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, sfile%shapes(cell_index)%thetas)
 
       if (iatom == 1) then
 #ifndef TASKLOCAL_FILES
