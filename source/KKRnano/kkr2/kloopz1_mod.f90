@@ -79,7 +79,7 @@ CONTAINS
     double precision::RR(3,0:NRD)
     double precision::BZKP(:,:)
     double precision::VOLCUB(:) ! dim kpoibz
-    double complex :: LLY_GRDT
+    double complex, intent(out) :: LLY_GRDT
     !     .. Local Scalars ..
     !     ..
     double complex :: TAUVBZ
@@ -171,7 +171,7 @@ CONTAINS
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2 .or. cutoffmode == 0) then
-      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,DTDE, TR_ALPH, LLY_GRDT, &
+      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,MSSQ,DTDE, TR_ALPH, LLY_GRDT, & !Lloyd's formula only working for 1 atom per MPI process
       ALAT, NSYMAT, RR, GINP_LOCAL, DGINP, &
       lmmaxd, trunc2atom_index, communicator, my_mpi, &
       iguess_data)
@@ -179,6 +179,12 @@ CONTAINS
       write(*,*) "0 < cutoffmode < 3 not supported."
       STOP
     endif
+
+!---------------------- LLY ---------------------------------------------------    
+
+!    call
+!    calcderivativeP(naezd*lmmaxd,lmmaxd,lmmaxd,alat,dpde_local,ginp_local,dginp,dtde,
+!------------------------------------------------------------------------------    
 !-------------------------------------------------------- SYMMETRISE GLL
 
 
@@ -245,10 +251,10 @@ CONTAINS
     !            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
 
 
-!       call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,-CONE,XC,LMMAXD, &
-!       MSSQ(:,:,ilocal),LMMAXD,-CONE,GLL,LMMAXD)
+       call ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,-CONE,XC,LMMAXD, &
+       MSSQ(:,:,ilocal),LMMAXD,-CONE,GLL,LMMAXD)
 
-        GLL = - XC - GLL
+!        GLL = - XC - GLL
 
     ! --->  GMATN = GMATLL = GLL/RFCTOR...............rescaled and copied into output array
 

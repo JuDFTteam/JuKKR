@@ -235,8 +235,7 @@ contains
       do lm2 = 1, lmmax2
         do lm1 = 1, lmmax1
                       ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-!         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
-        if(lm1==lm2)  mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - CONE
+         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
         end do
       end do
 

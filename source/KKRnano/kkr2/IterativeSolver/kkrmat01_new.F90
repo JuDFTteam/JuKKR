@@ -250,7 +250,7 @@ end subroutine
 !> Scattering path operator is calculated for atoms given in
 !> ms%atom_indices(:)
 subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
-                     TMATLL, DTDE, GINP, DGINP, ALAT, VOLCUB, &
+                     TMATLL, MSSQ, DTDE, GINP, DGINP, ALAT, VOLCUB, &
                      RR, &
                      trunc2atom_index, site_lm_size, communicator, my_mpi, iguess_data, k_point_index)
 
@@ -283,11 +283,12 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   integer, intent(in) :: k_point_index
   double precision :: ALAT
   double precision :: kpoint(3)
-  doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
-  doublecomplex :: DGINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd 
+  double complex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
+  double complex :: DGINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd 
 
   double precision :: RR(:,0:)
-  doublecomplex :: TMATLL(:,:,:)
+  double complex, intent(in) :: TMATLL(:,:,:)
+  double complex, intent(in) :: MSSQ (:,:,:)    !< inverted T-matrix
   double complex :: TMATLL2(16,16)
   double complex :: DTDE(:,:,:)
   double precision :: VOLCUB (:)
@@ -307,7 +308,6 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
   integer :: nacls
   logical :: initial_zero
   type (ClusterInfo), pointer :: cluster_info
-  double complex, allocatable :: MSSQ (:,:)  
 
   integer :: lmmaxd
   integer :: il1
@@ -421,9 +421,6 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
     if (.not. allocated(W1)) then
       allocate(W1(LMMAXD,LMMAXD))
     end if
-    if (.not. allocated(MSSQ)) then
-      allocate(MSSQ(LMMAXD,LMMAXD))
-    end if
 
    ALM=NAEZ*LMMAXD
 
@@ -482,7 +479,7 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 
        CALL ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CONE,&
                   DGDE2,ALM,&
-                  TMATLL(1,1,getmyAtomId(my_mpi)),LMMAXD,CZERO,&
+                  TMATLL(1,1,getMyatomId(my_mpi)),LMMAXD,CZERO,&
                   DPDE_LOCAL,ALM)
 
        CALL ZGEMM('N','N',ALM,LMMAXD,LMMAXD,CFCTORINV,&
@@ -549,29 +546,29 @@ subroutine kloopbody(solv, kkr_op, precond, kpoint, BZTR2, &
 !                \        dE  /
 !===================================================================
 !
-    TMATLL2=TMATLL(:,:,getmyAtomId(my_mpi))
-    MSSQ=TMATLL(:,:,getmyAtomId(my_mpi))
+!    TMATLL2=TMATLL(:,:,getmyAtomId(my_mpi))
+!    MSSQ=TMATLL(:,:,getmyAtomId(my_mpi))
 
-        CALL ZGETRF(LMMAXD,LMMAXD,MSSQ,LMMAXD,IPVT,INFO)
-        CALL ZGETRI(LMMAXD,MSSQ,LMMAXD,IPVT,W1, &
-                  LMMAXD*LMMAXD,INFO)
+!        CALL ZGETRF(LMMAXD,LMMAXD,MSSQ,LMMAXD,IPVT,INFO)
+!        CALL ZGETRI(LMMAXD,MSSQ,LMMAXD,IPVT,W1, &
+!                  LMMAXD*LMMAXD,INFO)
 
 
      
       !CALL cgemm('N', 'N', LMMAXD, LMMAXD, NAEZ*LMMAXD, 1.0, ms%mat_X, LMMAXD, TMATLL2, NAEZ*LMMAXD, 0.0, mat_XT, LMMAXD)
  
       TRACEK=CZERO
-      allocate(mat_XT(NAEZ*LMMAXD,LMMAXD))
-      mat_XT=CZERO
+!      allocate(mat_XT(NAEZ*LMMAXD,LMMAXD))
+!      mat_XT=CZERO
 
       DO LM1=1,LMMAXD
         DO LM2=1,LMMAXD
           GTDPDE = CZERO
           DO IL1 = 1,NAEZ*LMMAXD
-            mat_XT(IL1,LM2)=mat_XT(IL1,LM2)+ms%mat_X(IL1,LM2)*TMATLL2(LM1,LM2)
-            GTDPDE = GTDPDE + mat_XT(IL1,LM2)*DPDE_LOCAL(IL1,LM1)
+!            mat_XT(IL1,LM2)=mat_XT(IL1,LM2)+ms%mat_X(IL1,LM2)*TMATLL2(LM1,LM2)
+            GTDPDE = GTDPDE + ms%mat_X(IL1,LM2)*DPDE_LOCAL(IL1,LM1)
           ENDDO
-          TRACEK = TRACEK + MSSQ(LM1,LM2)*GTDPDE
+          TRACEK = TRACEK + MSSQ(LM1,LM2,1)*GTDPDE
         ENDDO
       ENDDO
 
@@ -588,7 +585,7 @@ end subroutine
 !>
 !> Returns diagonal k-integrated part of Green's function in GS.
 subroutine KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB, VOLBZ, &
-TMATLL, DTDE, TR_ALPH, LLY_GRDT, ALAT,NSYMAT,RR, &
+TMATLL, MSSQ, DTDE, TR_ALPH, LLY_GRDT, ALAT,NSYMAT,RR, &
 GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data)
 
 
@@ -623,15 +620,16 @@ GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data)
   type (KKRnanoParallel), intent(in) :: my_mpi
   type (InitialGuess), intent(inout) :: iguess_data
 
-  double precision:: ALAT
-  double precision :: VOLBZ
+  double precision, intent(in) :: ALAT
+  double precision, intent(in) :: VOLBZ
   double complex :: LLY_GRDT
 
-  integer::NOFKS
-  integer::NSYMAT
+  integer, intent(in) :: NOFKS
+  integer, intent(in) :: NSYMAT
 
   !double complex :: TMATLL(lmmaxd,lmmaxd,naez)
-  double complex :: TMATLL(:,:,:)
+  double complex, intent(in) :: TMATLL(:,:,:) !< T-matrix in Dyson equation
+  double complex, intent(in) :: MSSQ (:,:,:)    !< inverted T-matrix
 
   doublecomplex :: GINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
   doublecomplex :: DGINP(:,:,:,:) ! dim: lmmaxd, lmmaxd, naclsd, nclsd
@@ -714,7 +712,7 @@ GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data)
     ! output: ms%mat_X
 
     call kloopbody(solv, kkr_op, precond, BZKP(:, k_point_index), BZTR2, &
-                   TMATLL, DTDE, GINP, DGINP, ALAT, VOLCUB, &
+                   TMATLL, MSSQ, DTDE, GINP, DGINP, ALAT, VOLCUB, &
                    RR, trunc2atom_index, site_lm_size, communicator, my_mpi, iguess_data, k_point_index)
 
     call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices, ms%sparse%kvstr)
