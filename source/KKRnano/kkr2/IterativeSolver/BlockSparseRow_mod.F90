@@ -54,10 +54,11 @@ module BlockSparseRow_mod
     !! can be used for a single atom per MPI process
     !! could call cuSPARSE GPU kernel
     type(BlockSparseRow), intent(in) :: A
-#define N A%blockDim
 #define M A%blockDim
-    complex_data_t, intent(in)  :: Aval(N,N,*) ! block list of operator A
-    complex_data_t, intent(in)  ::  vec(M,N,*) ! block vector input
+#define N A%blockDim
+#define K A%blockDim
+    complex_data_t, intent(in)  :: Aval(K,N,*) ! block list of operator A
+    complex_data_t, intent(in)  ::  vec(M,K,*) ! block vector input
     complex_data_t, intent(out) :: Avec(M,N,*) ! block vector result
 
     ! .. locals ..
@@ -72,16 +73,17 @@ module BlockSparseRow_mod
         jCol = A%bsrColInd(Aind) ! indirection
 
         ! now: Avec(:,:,iRow) = beta*Avec(:,:,iRow) + Aval(:,:,Aind) .times. vec(:,:,jCol)
-        ! use gemm('N', 'N', M, N, K, 1.,  A(1:M,1:K),    M, B(1:K,1:N),     K, 1.,   C(1:M,1:N),     M) ! K=N
-        call zgemm('n', 'n', M, N, N, one, vec(:,1,jCol), M, Aval(:,1,Aind), N, beta, Avec(:,1,iRow), M)
-        
+        ! use gemm('n', 'n', M, N, K, 1.,  A(1:M,1:K),    M, B(1:K,1:N),     K, 1.,   C(1:M,1:N),     M)
+        call zgemm('n', 'n', M, N, K, one, vec(:,1,jCol), M, Aval(:,1,Aind), K, beta, Avec(:,1,iRow), M)
+
         beta = one ! simply add all further contributions in this row
       enddo ! Aind
     enddo ! iRow
     !$omp end parallel do
 
-#undef M
+#undef K
 #undef N
+#undef M
   endsubroutine ! multiply
 
   
@@ -90,10 +92,11 @@ module BlockSparseRow_mod
     type(BlockSparseRow), intent(in) :: G !< Green function
 !!! type(BlockSparseRow), intent(in) :: R !< Result operator (argument is not needed since the structure of R is that of G)
 #define R G
-#define N A%blockDim
 #define M G%blockDim
-    complex_data_t, intent(in)  :: Aval(N,N,*) ! input  block list of (square) operator A
-    complex_data_t, intent(in)  :: Gval(M,N,*) ! input  block list 
+#define N A%blockDim
+#define K A%blockDim
+    complex_data_t, intent(in)  :: Aval(K,N,*) ! input  block list of (square) operator A
+    complex_data_t, intent(in)  :: Gval(M,K,*) ! input  block list 
     complex_data_t, intent(out) :: Rval(M,N,*) ! result block list, assume R to have the same structure as G
     real, intent(out), optional :: GiFlop
 
@@ -128,8 +131,9 @@ module BlockSparseRow_mod
           if (indG > -1) then ! yes
 
             ! now: Rval(:,:,Rind) = one*Rval(:,:,Rind) + Aval(:,:,Aind) .times. Gval(:,:,indG)
-            ! use gemm('N', 'N', M, N, K, 1.,  A(1:M,1:K),     M, B(1:K,1:N),     K, 1.,  C(1:M,1:N),     M) ! K=N
-            call zgemm('n', 'n', M, N, N, one, Gval(:,1,indG), M, Aval(:,1,Aind), N, one, Rval(:,1,Rind), M)
+            ! use gemm('n', 'n', M, N, K, 1.,  A(1:M,1:K),     M, B(1:K,1:N),     K, 1.,  C(1:M,1:N),     M)
+            call zgemm('n', 'n', M, N, K, one, Gval(:,1,indG), M, Aval(:,1,Aind), K, one, Rval(:,1,Rind), M)
+
             nBlockOps = nBlockOps + 1
 
           endif ! G(jRow,kCol) exists
@@ -142,10 +146,11 @@ module BlockSparseRow_mod
     
     !$omp end parallel
     
-#undef R
-    if(present(GiFlop)) GiFlop = nBlockOps*(N*.5d0**10)**3*8. ! assume a complex data_t, so each FMA has 8 Flop
+    if(present(GiFlop)) GiFlop = nBlockOps*(M*8.*N*.5d0**30*K) ! assume a complex data_t, so each FMA has 8 Flop
+#undef K
 #undef M
 #undef N
+#undef R
   endsubroutine ! multiply
 
   
@@ -253,8 +258,8 @@ endmodule ! BlockSparseRow_mod
 !+ TESTMAIN_BlockSparseRow
 
 !!!
-!!!>  ifort -warn -check -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 1024 64
-!!!>  gfortran -ffree-line-length-0 -g -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90 -lblas && ./a.out 1024 64
+!!!>  ifort -warn -check all -O0 -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 1024 123
+!!!>  gfortran -ffree-line-length-0 -g -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90 -lblas && ./a.out 1024 123
 !!!
 program test_bsr
   use BlockSparseRow_mod !, only:
@@ -279,29 +284,30 @@ implicit none
   read(unit=CLarg(1), fmt=*) Nrows
   read(unit=CLarg(2), fmt=*) Mcols
 
-  allocate(Rfull(Mcols,Nrows), Gfull(Mcols,Nrows), Hfull(Nrows,Nrows)) ! R:=G*H
+#define Krows Nrows
+  allocate(Rfull(Mcols,Nrows), Gfull(Mcols,Krows), Hfull(Krows,Nrows)) ! R:=G*H
   Hfull = sero ; Gfull = sero ; Rfull = sero
   
   do iRow = 1, Nrows
     ! fill H
     do while(count(Hfull(:,iRow) /= 0) < min(Hfill, Nrows))
-      call random_number(col) ; jCol = ceiling(col*Nrows)
+      call random_number(col) ; jCol = ceiling(col*Krows)
 !     if(ShowH>0) write(*, fmt="(A,9I6)") 'rand H',jCol,iRow
       Hfull(jCol,iRow) = jCol + point * iRow 
     enddo ! while
-    if(ShowH>0) write(*, fmt="(A,I4,99F9.4)") 'H',jCol,Hfull(1:min(Nrows, 8),jCol)
+    if(ShowH>0) write(*, fmt="(A,I4,99F9.4)") 'H',jCol,Hfull(1:min(Krows, 8),jCol)
     ! fill G
     do while(count(Gfull(:,iRow) /= 0) < Gfill*Mcols)
       call random_number(col) ; jCol = ceiling(col*Mcols)
 !     if(ShowG>0) write(*, fmt="(A,9I6)") 'rand G',jCol,iRow
       Gfull(jCol,iRow) = jCol + point * iRow 
     enddo ! while
-    if(ShowG>0) write(*, fmt="(A,I4,99F9.4)") 'G',kCol,Gfull(1:min(Nrows, 8),kCol)
+    if(ShowG>0) write(*, fmt="(A,I4,99F9.4)") 'G',iRow,Gfull(1:min(Mcols, 8),iRow)
   enddo ! iCol
 
   ! create reference A an m x k matrix, B a k x n matrix and C an m x n matrix
   !                   M      N      K           A             B                   C
-  call gemm('n', 'n', Mcols, Nrows, Nrows, one, Gfull, Mcols, Hfull, Nrows, sero, Rfull, Mcols) ! BLAS routine
+  call gemm('n', 'n', Mcols, Nrows, Krows, one, Gfull, Mcols, Hfull, Krows, sero, Rfull, Mcols) ! BLAS routine
   !!! do j = 1, n ;  do l = 1, k ;  do i = 1, m ;   c(i,j) = c(i,j) + b(l,j)*a(i,l)   ; enddo ; enddo ; enddo
   ! do j = 1, Nrows ;  do l = 1, Nrows ;  do i = 1, Mcols ; Rfull(i,j) = Rfull(i,j) + Hfull(l,j)*Gfull(i,l) ; enddo ; enddo ; enddo
 
@@ -317,8 +323,8 @@ implicit none
   enddo ! iRow
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(Mcols*.01*Nrows)
 
-  call create(G, dcmplx(reshape(Gfull, [1,1,Mcols,Nrows])), bsrVal=Gval)
-  call create(H, dcmplx(reshape(Hfull, [1,1,Nrows,Nrows])), bsrVal=Hval)
+  call create(G, dcmplx(reshape(Gfull, [1,1,Mcols,Krows])), bsrVal=Gval)
+  call create(H, dcmplx(reshape(Hfull, [1,1,Krows,Nrows])), bsrVal=Hval)
 
   !! use the sparse structure of G for R
 #define R G
@@ -344,7 +350,7 @@ implicit none
 #undef R  
   call destroy(H)
   call destroy(G)
-
+#undef Krows
 endprogram ! test
 
 !- TESTMAIN_BlockSparseRow
