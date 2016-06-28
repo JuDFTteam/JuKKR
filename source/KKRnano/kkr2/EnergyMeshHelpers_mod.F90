@@ -163,7 +163,7 @@ module EnergyMeshHelpers_mod
     integer :: ievalence
     character(len=*), parameter :: F99001="(7x,'* ',a,/,7x,20(1h-),/)"
 
-    assert(max(0, npolval) + n1val + n2val + n3val + n1sem + n2sem + n3sem <= iemxd)
+!    assert(max(0, npolval) + n1val + n2val + n3val + n1sem + n2sem + n3sem <= iemxd)
     
     if (.false.) then
       write(6,'(/,79(1h=))')
