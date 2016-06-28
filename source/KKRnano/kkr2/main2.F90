@@ -133,11 +133,6 @@ program MAIN2
     stop
   end if
 
-  if (dims%LLY /= 0) then
-    write(*,*) "WARNING: Lloyds formula not supported in this version. Set LLY=0"
-!    stop
-  end if
-
 !=====================================================================
 !     processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ...
 ! ... and wait after SC-ITER loop
@@ -153,6 +148,10 @@ program MAIN2
     num_local_atoms = getNumLocalAtoms(calc_data)
     !--------------------------------------------------------------------------
 
+    if (dims%LLY /= 0 .AND. num_local_atoms > 1) then
+      if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
+      stop !should be replaced by an MPI_ABORT 
+    end if
     call createEnergyMesh(emesh, dims%iemxd) !!!!
 
     ! TO DO: Getting rid of the many if-clauses used for semicore contour!

@@ -45,13 +45,14 @@ module RadialMeshData_mod
   CONTAINS
 
   !----------------------------------------------------------------------------
+  ! meshn and nfu are optional!
   subroutine createRadialMeshData(meshdata, irmd, ipand, meshn, nfu)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: irmd
     integer, intent(in) :: ipand
-    integer, intent(in) :: meshn
-    integer, intent(in) :: nfu
+    integer, intent(in), optional :: meshn
+    integer, intent(in), optional :: nfu
 
     meshdata%irmd = irmd
     meshdata%ipand = ipand
@@ -59,14 +60,18 @@ module RadialMeshData_mod
     allocate(meshdata%R(irmd))
     allocate(meshdata%DRDI(irmd))
     allocate(meshdata%IRCUT(0:ipand))
-    allocate(meshdata%LLMSP(nfu))
-    allocate(meshdata%THETAS(meshn,nfu))
+    if(present(meshn) .AND. present(nfu)) then
+      allocate(meshdata%LLMSP(nfu))
+      allocate(meshdata%THETAS(meshn,nfu))
+    endif
 
     meshdata%R = 0.0d0
     meshdata%DRDI = 0.0d0
     meshdata%IRCUT = 0
-    meshdata%LLMSP = 0.0d0
-    meshdata%THETAS = 0.0d0
+    if(present(meshn) .AND. present(nfu)) then
+      meshdata%LLMSP = 0.0d0
+      meshdata%THETAS = 0.0d0
+    endif
 
     meshdata%A = 0.0d0
     meshdata%B = 0.0d0
@@ -77,8 +82,10 @@ module RadialMeshData_mod
     meshdata%IRNS = 0
     meshdata%IRWS = 0
     meshdata%IRMIN = 0
-    meshdata%MESHN = 0
-    meshdata%NFU = 0
+    if(present(meshn) .AND. present(nfu)) then
+      meshdata%MESHN = 0
+      meshdata%NFU = 0
+    endif
 
     meshdata%RWS = 0.0d0
     meshdata%RMT = 0.0d0
@@ -100,6 +107,7 @@ module RadialMeshData_mod
   end subroutine
 
   !----------------------------------------------------------------------------
+  ! meshn, nfu, llmsp and thetas are optional!
   subroutine initRadialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
@@ -109,10 +117,10 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
-    integer, intent(in) :: meshn
-    integer, intent(in) :: nfu
-    integer, intent(in) :: llmsp (:)
-    double precision, intent(in) :: thetas(:,:)
+    integer, intent(in), optional :: meshn
+    integer, intent(in), optional :: nfu
+    integer, intent(in), optional :: llmsp (:)
+    double precision, intent(in), optional :: thetas(:,:)
 
     call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     ! note radius_mt = xrn(1) * alat
@@ -147,6 +155,7 @@ module RadialMeshData_mod
 
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat
+  ! meshn, nfu, llmsp and thetas are optional!
   subroutine initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     implicit none
     type (RadialMeshData), intent(inout) :: meshdata
@@ -156,10 +165,10 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
-    integer, intent(in) :: meshn
-    integer, intent(in) :: nfu
-    integer, intent(in) :: llmsp (:)
-    double precision, intent(in) :: thetas(:,:)
+    integer, intent(in), optional :: meshn
+    integer, intent(in), optional :: nfu
+    integer, intent(in), optional :: llmsp (:)
+    double precision, intent(in), optional :: thetas(:,:)
 
     integer :: isum, ii
     integer :: ipan
@@ -167,8 +176,10 @@ module RadialMeshData_mod
     ipan = size(nm) + 1 ! +1 for muffin-tin region 1..imt
     meshdata%ipan = ipan
     meshdata%imt = imt
-    meshdata%meshn = meshn
-    meshdata%nfu = nfu
+    if(present(meshn) .AND. present(nfu)) then
+      meshdata%meshn = meshn
+      meshdata%nfu = nfu
+    endif
 
     ! ircut(0) has to be 0, integrations start at ircut(i)+1
     meshdata%ircut(0) = 0
@@ -195,9 +206,10 @@ module RadialMeshData_mod
     meshdata%irmin = meshdata%irws - irns
     meshdata%irns = irns
     meshdata%rws  = meshdata%r(meshdata%irws)
-    meshdata%llmsp = llmsp
-    meshdata%thetas = thetas
-
+    if(present(llmsp) .AND. present(thetas)) then
+      meshdata%llmsp = llmsp
+      meshdata%thetas = thetas
+    endif
   end subroutine
 
 !==============================================================================

@@ -29,7 +29,7 @@ module CalculationData_mod
   public :: destroyCalculationData
   private :: constructEverything
   private :: generateAtomsShapesMeshes
-!  private :: generateShapesTEST
+  private :: generateShapesTEST
   private :: recordLengths_com
   private :: writePotentialIndexFile
 
@@ -695,7 +695,14 @@ module CalculationData_mod
     !--------------------------------------------------------------------------
     end do
     !--------------------------------------------------------------------------
+    
+#ifndef USE_OLD_MESH
+    ! generate shapes and meshes
+    call generateShapesTEST(calc_data, dims, params, arrays, &
+                            new_MT_radii, params%MT_scale)
+#endif
 
+    ! interpolate to new mesh
     !--------------------------------------------------------------------------
     do ilocal = 1, calc_data%num_local_atoms
     !--------------------------------------------------------------------------
@@ -706,6 +713,12 @@ module CalculationData_mod
       old_atom  => old_atom_array(ilocal)
       old_mesh  => old_mesh_array(ilocal)
 
+#ifndef USE_OLD_MESH
+      ! Geometry might have changed - interpolate to new mesh
+      call interpolateBasisAtom(atomdata, old_atom, mesh, dims%lpot)
+#endif
+
+#ifdef USE_OLD_MESH
       ! >>> use old mesh>>> 
       mesh     = old_mesh
       atomdata = old_atom
@@ -721,6 +734,7 @@ module CalculationData_mod
       cell%shdata%max_muffin_tin = mesh%rmt
       cell%shdata%num_faces = 9999 ! not needed
       ! <<< use old mesh<<<
+#endif
 
       ! set new MT radius
       atomdata%radius_muffin_tin = mesh%rmt
@@ -739,103 +753,107 @@ module CalculationData_mod
       CHECKASSERT(dims%IRMIND == mesh%IRMIN) !check mesh
       CHECKASSERT( atomdata%atom_index == I1 )
      
-      
-      !#ifndef USE_OLD_MESH
-      !call destroyBasisAtom(old_atom)
-      !call destroyRadialMeshData(old_mesh)
-      ! #endif
+#ifndef USE_OLD_MESH
+        call destroyBasisAtom(old_atom)
+        call destroyRadialMeshData(old_mesh)
+#endif
     end do
 
     deallocate(new_MT_radii)
-    !#ifndef USE_OLD_MESH
-    !deallocate(old_atom_array)
-    !deallocate(old_mesh_array)
-    !#endif
+#ifndef USE_OLD_MESH
+      deallocate(old_atom_array)
+      deallocate(old_mesh_array)
+#endif
 
   end subroutine
 
 !------------------------------------------------------------------------------
-!  subroutine generateShapesTEST(calc_data, dims, params, arrays, &
-!                                new_MT_radii, MT_scale)
-!    use KKRnanoParallel_mod
-!    use DimParams_mod
-!    use InputParams_mod
-!    use Main2Arrays_mod
-!    use ConstructShapes_mod, only: construct, InterstitialMesh, &
-    !                               destroyInterstitialMesh, write_shapefun_file
-!    use ShapefunData_mod
-!    implicit none
-!
-!    type (CalculationData), intent(inout) :: calc_data
-!    type (DimParams), intent(in)  :: dims
-!    type (InputParams), intent(in):: params
-!    type (Main2Arrays), intent(in):: arrays
-!    double precision, intent(in) :: new_MT_radii(:)
-!    double precision, intent(in) :: MT_scale
-    !-----------------
+  subroutine generateShapesTEST(calc_data, dims, params, arrays, &
+                                new_MT_radii, MT_scale)
+    use KKRnanoParallel_mod
+    use DimParams_mod
+    use InputParams_mod
+    use Main2Arrays_mod
+    use ConstructShapes_mod, only: construct, InterstitialMesh, &
+                                  destroyInterstitialMesh, write_shapefun_file
+    use ShapefunData_mod
+    implicit none
 
-!    integer :: I1, ilocal, nfun, ii
-!    integer :: irmd, irid, ipand, irnsd
-!    type (InterstitialMesh) :: inter_mesh
-!    type (ShapefunData) :: shdata ! temporary shape-fun data
-!    double precision :: new_MT_radius
-!    integer :: num_MT_points
-!    type (RadialMeshData), pointer :: mesh
+    type (CalculationData), intent(inout) :: calc_data
+    type (DimParams), intent(in)  :: dims
+    type (InputParams), intent(in):: params
+    type (Main2Arrays), intent(in):: arrays
+    double precision, intent(in) :: new_MT_radii(:)
+    double precision, intent(in) :: MT_scale
+   !-----------------
 
-    !integer flag
+    integer :: I1, ilocal, nfun, ii
+    integer :: irmd, irid, ipand, irnsd
+    type (InterstitialMesh) :: inter_mesh
+    type (ShapefunData) :: shdata ! temporary shape-fun data
+    double precision :: new_MT_radius
+    integer :: num_MT_points
+    type (RadialMeshData), pointer :: mesh
 
-    ! loop over all LOCAL atoms
-    !--------------------------------------------------------------------------
-!    do ilocal = 1, calc_data%num_local_atoms
-    !--------------------------------------------------------------------------
-!      I1 = calc_data%atom_ids(ilocal)
-!      mesh => calc_data%mesh_array(ilocal)
+    integer flag
 
-!      new_MT_radius = new_MT_radii(ilocal)
-!      num_MT_points = params%num_MT_points
+    ! The following parameters are important when using the old mesh from
+    ! 'potential' and 'shapefun' instead of creating a new one on the fly as it is
+    ! done here -> use dummy values
+    integer, parameter :: meshn = 1
+    integer, parameter :: nfu   = 1
 
-!      flag = 0  ! DEBUG
-!  99  continue
-!      if (flag == 0 .and. I1 /= 1) then
-!        call sleep(1)
-!        goto 99
-!      end if
-!
-!      write(*,*) "ATOM ACTIVE ", I1
+   ! loop over all LOCAL atoms
+   !--------------------------------------------------------------------------
+    do ilocal = 1, calc_data%num_local_atoms
+   !--------------------------------------------------------------------------
+      I1 = calc_data%atom_ids(ilocal)
+      mesh => calc_data%mesh_array(ilocal)
 
-!      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
-!                     params%rclust_voronoi, 4*dims%lmaxd, &
-!                     dims%irid - num_MT_points, &
-!                     params%nmin_panel, num_MT_points, new_MT_radius, MT_scale)
+      new_MT_radius = new_MT_radii(ilocal)
+      num_MT_points = params%num_MT_points
+
+      flag = 0  ! DEBUG
+  99  continue
+      if (flag == 0 .and. I1 /= 1) then
+        call sleep(1)
+        goto 99
+      end if
+
+      write(*,*) "ATOM ACTIVE ", I1
+
+      call construct(shdata, inter_mesh, arrays%rbasis, arrays%bravais, I1, &
+                     params%rclust_voronoi, 4*dims%lmaxd, &
+                     dims%irid - num_MT_points, &
+                     params%nmin_panel, num_MT_points, new_MT_radius, MT_scale)
 
 
-      ! use it
-!      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
+     ! use it
+      calc_data%cell_array(ilocal)%shdata = shdata ! possible in Fortran 2003
 
-!      irmd = dims%irmd - dims%irid + size(inter_mesh%xrn)
-!      irid = size(inter_mesh%xrn)
-!      ipand = size(inter_mesh%nm) + 1
-!      irnsd = irmd - (dims%irmd - dims%irnsd)
+      irmd = dims%irmd - dims%irid + size(inter_mesh%xrn)
+      irid = size(inter_mesh%xrn)
+      ipand = size(inter_mesh%nm) + 1
+      irnsd = irmd - (dims%irmd - dims%irnsd)
 
-!      ASSERT(inter_mesh%xrn(1) /= 0.0d0)
-      !write(*,*) irmd, irid, ipand, irnsd
+      ASSERT(inter_mesh%xrn(1) /= 0.0d0)
 
-!      call createRadialMeshData(mesh, irmd, ipand, meshn)
+      call createRadialMeshData(mesh, irmd, ipand)
 
-!      call initRadialMesh(mesh, params%alat, inter_mesh%xrn, &
-!                          inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
+      call initRadialMesh(mesh, params%alat, inter_mesh%xrn, &
+                          inter_mesh%drn, inter_mesh%nm, irmd - irid, irnsd)
 
-      ! optional output of shape functions
-!      if (params%write_shapes == 1) then
-!        call write_shapefun_file(shdata, inter_mesh, I1)
-!      end if
+     ! optional output of shape functions
+      if (params%write_shapes == 1) then
+        call write_shapefun_file(shdata, inter_mesh, I1)
+      end if
 
-!      call destroyShapefunData(shdata)
-!      call destroyInterstitialMesh(inter_mesh)
+      call destroyShapefunData(shdata)
+      call destroyInterstitialMesh(inter_mesh)
 
-!    end do
+    end do
 
-!  end subroutine
+  end subroutine
 
   !----------------------------------------------------------------------------
   !> Communicate and set record lengths.

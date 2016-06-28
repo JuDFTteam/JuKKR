@@ -172,7 +172,7 @@ CONTAINS
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     if (cutoffmode > 2 .or. cutoffmode == 0) then
-      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,MSSQ,DTDE, TR_ALPH, LLY_GRDT, & !Lloyd's formula only working for 1 atom per MPI process
+      call KKRMAT01_new(solv, kkr_op, precond, BZKP,NOFKS,GS,VOLCUB,VOLBZ,TMATLL,MSSQ,DTDE, TR_ALPH, LLY_GRDT, &
       ALAT, NSYMAT, RR, GINP_LOCAL, DGINP, &
       lmmaxd, trunc2atom_index, communicator, my_mpi, &
       iguess_data, lly)
@@ -181,11 +181,6 @@ CONTAINS
       STOP
     endif
 
-!---------------------- LLY ---------------------------------------------------    
-
-!    call
-!    calcderivativeP(naezd*lmmaxd,lmmaxd,lmmaxd,alat,dpde_local,ginp_local,dginp,dtde,
-!------------------------------------------------------------------------------    
 !-------------------------------------------------------- SYMMETRISE GLL
 
 

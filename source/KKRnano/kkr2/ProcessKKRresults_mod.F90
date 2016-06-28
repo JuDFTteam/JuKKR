@@ -456,34 +456,14 @@ subroutine calculateDensities(iter, calc_data, my_mpi, dims, params, &
 
   if (dims%LLY /= 0 .and. num_local_atoms > 1) then
     if (isMasterRank(my_mpi)) write(*,*) "Lloyd's formula and num_local_atoms > 1 not supported."
-!    STOP
+    STOP
   endif
 
-  if (isMasterRank(my_mpi)) then
-  write(*,*) "PRINTING LLY_GRDT FROM MPI PROCESS ", getMyWorldRank(my_mpi)
-  do I2=1,arrays%IEMXD
-        write (*,*) kkr%LLY_GRDT(I2,1)
-  enddo
-  endif
   ! out: emesh, RNORM
   call lloyd0_wrapper_com(atomdata, my_mpi, kkr%LLY_GRDT, &
                           emesh, densities%RNORM, &
                           dims%LLY, params%ICST, params%NSRA, params%FRED, &
                           kkr%GMATN, gaunts, ldau_data)
-
-  if (isMasterRank(my_mpi)) then
-  write(*,*) "PRINTING WEZRN FROM MPI PROCESS ", getMyWorldRank(my_mpi)
-  do  I2=1,arrays%IEMXD
-        write (*,*) emesh%WEZRN(I2,1)
-  enddo
-  endif 
-  
-  if (isMasterRank(my_mpi)) then
-  write(*,*) "PRINTING RNORM FROM MPI PROCESS ", getMyWorldRank(my_mpi)
-  do I2=1,arrays%IEMXD
-        write (*,*) densities%RNORM(I2,1)
-  enddo
-  endif 
 
   if (dims%LLY == 1) then
     TESTARRAYLOG(3, emesh%WEZRN)
