@@ -430,12 +430,6 @@ endif
 
   TESTARRAYLOG(3, ms%GLLH)
 
-! Now we calculate dP/dE for Lloyd's formula
-
-!  call calcDerivativeP(site_lm_size, lmmaxd, alat, &
-!                       DPDE_LOCAL, GLLKE_X, DGDE, DTmatDE_LOCAL, Tmat_local)
-
-
   ! ==> now GLLH holds (1 - Delta_t * G_ref)
 
   ! Now solve the linear matrix equation A*X = b (b is also a matrix),
@@ -450,6 +444,9 @@ endif
   call buildRightHandSide(ms%mat_B, TMATLL, lmmaxd, ms%atom_indices, ms%sparse%kvstr)
 
 !---------------------- LLY -----------------------------------------
+! dP(E,k)   dG(E,k)                   dT(E)
+! ------- = ------- * T(E) + G(E,k) * -----
+!   dE        dE                       dE
   if (LLY == 1) then
     ALM=NAEZ*LMMAXD
   
