@@ -629,7 +629,6 @@ GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data, lly)
   integer :: num_local_atoms
   integer :: naclsd
   integer :: naez
-  integer :: LLYALM
 
   type (SolverStats) :: total_stats
 
@@ -639,11 +638,9 @@ GINP, DGINP, lmmaxd, trunc2atom_index, communicator, my_mpi, iguess_data, lly)
   cluster_info => ms%cluster_info
 
   naez = cluster_info%naez_trc
-!  naezzd = cluster_info%naezd
   naclsd = cluster_info%naclsd
 
   site_lm_size = NAEZ*LMMAXD
-!  LLYALM = 
 
   num_local_atoms = size(ms%atom_indices)
 
