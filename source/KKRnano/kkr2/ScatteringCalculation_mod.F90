@@ -144,6 +144,7 @@ implicit none
       jij_data%GMATXIJ = ZERO
     endif
 
+<<<<<<< HEAD
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
@@ -293,13 +294,14 @@ implicit none
                     trunc_zone%trunc2atom_index, mp%mySEComm, &
                     calc%iguess_data)
   !------------------------------------------------------------------------------
-  
+
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
               call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), solv%represent_stats())
 
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ila) N(ila)
             do ila = 1, num_local_atoms
               kkr(ila)%GmatN(:,:,ie,ispin) = GmatN_buffer(:,:,ila)
+              kkr(ila)%lly_grdt(ie,ispin)=lly_grdt(ie,ispin)
             enddo ! ila
 
             call stopTimer(mult_scattering_timer)

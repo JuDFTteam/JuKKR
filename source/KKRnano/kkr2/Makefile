@@ -14,7 +14,6 @@ BUILDDIR = $(HOME)/build
 EXTRA_FLAGS =
 
 # ========= IFF Workstations ============
-
 ifeq ($(PLATFORM),ifort)
 #### module load intel impi mkl
   FC = mpiifort -warn all
@@ -40,6 +39,24 @@ ifeq ($(PLATFORM),ifort)
   else
   FCFLAGS += -O3 -D NOLOGGING
   endif
+endif
+
+# ========= IFF003 Cluster ============
+ifeq ($(PLATFORM),iff003)
+FC = mpiifort -warn
+FC90 = mpiifort -warn
+# -module <path> specifies where to put .mod files
+FCFLAGS = -openmp -mkl -module $(BUILDDIR)
+FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+FC90FLAGS =
+FCFLAGS += -I $(BUILDDIR)
+LDFLAGS = -O3
+ifeq ($(TYPE),debug)
+FCFLAGS += -g
+endif
+# set run paths to look for shared libraries (-Wl means pass to linker)
+LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
+LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
 endif
 
 # ================== JURECA ======================
@@ -93,6 +110,29 @@ endif
 ifeq ($(USETOOL),scalasca)
 FCFLAGS += -g
 endif
+
+endif
+
+# ============================= JUQUEENgfort ========================================
+ifeq ($(PLATFORM),JUQUEENgfort)
+
+ifeq ($(USETOOL),scalasca)
+FC = scalasca -instrument -user #end of line
+FC90 = scalasca -instrument -user #end of line
+TYPE = nodebug
+else
+FC =
+FC90 = 
+endif
+
+FC += mpigfortran
+FC90 += mpigfortran
+#FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
+FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
+FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-DUSE_VOROWEIGHTS
+#LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
+LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
+#-lfftw3
 
 endif
 

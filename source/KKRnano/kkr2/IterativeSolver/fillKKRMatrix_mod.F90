@@ -176,7 +176,7 @@ module fillKKRMatrix_mod
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: atom_indices(:)
     integer, intent(in) :: kvstr(:)
-    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*)
+    double complex, intent(in) :: tmatLL(lmmaxd,lmmaxd,*)
 
     integer :: start, ii, num_atoms, atom_index, lm1, lm2, lmmax1, lmmax2 
 
@@ -205,15 +205,11 @@ module fillKKRMatrix_mod
 
       start = kvstr(atom_index) - 1
       do lm2 = 1, lmmax2
-        if (present(tmatLL)) then
-          do lm1 = 1, lmmax1
-            ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-            mat_B(start+lm1,lm2+lmmax2*(ii-1)) = -tmatLL(lm1,lm2,atom_index)
-          enddo ! lm1
-        else
-          mat_B(start+lm2,lm2+lmmax2*(ii-1)) = -CONE
-        endif
-      enddo ! lm2
+        do lm1 = 1, lmmax1
+                      ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
+         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
+        end do
+      end do
 
     enddo ! ii
 

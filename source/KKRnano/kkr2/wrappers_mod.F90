@@ -15,6 +15,7 @@ module wrappers_mod
 
   contains
 
+<<<<<<< HEAD
 #define mesh atomdata%mesh_ptr
 #define cell atomdata%cell_ptr
   

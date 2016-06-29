@@ -422,19 +422,41 @@ module CalculationData_mod
         new_MT_radii(ila) = 2.37
       endif !voronano
 
+<<<<<<< HEAD
     enddo ! ila
-
+#ifndef USE_OLD_MESH
     ! generate shapes and meshes
     call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale, mp, voronano)
+#endif
 
     ! interpolate to new mesh
     if (.NOT. voronano) then
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
 
+#ifndef USE_OLD_MESH
       ! Geometry might have changed - interpolate to new mesh
         call interpolateBasisAtom(self%atomdata_a(ila), old_atom_a(ila), self%mesh_a(ila), dims%lpot)
-      
+#endif
+
+#ifdef USE_OLD_MESH
+      ! >>> use old mesh>>> 
+      mesh     = old_mesh
+      atomdata = old_atom
+      call associateBasisAtomMesh(atomdata, mesh)
+      do ii = 1, mesh%nfu
+         cell%shdata%llmsp(ii) = old_mesh%llmsp(ii)
+         cell%shdata%lmsp(old_mesh%llmsp(ii)) = 1
+         cell%shdata%ifunm(old_mesh%llmsp(ii)) = ii
+      end do
+      cell%shdata%nfu = mesh%nfu
+      cell%shdata%theta = old_mesh%thetas(1:old_mesh%meshn,1:old_mesh%nfu)
+      ! set maximum possible muffin-tin radius (ALAT units)
+      cell%shdata%max_muffin_tin = mesh%rmt
+      cell%shdata%num_faces = 9999 ! not needed
+      ! <<< use old mesh<<<
+#endif
+
       ! set new MT radius
       self%atomdata_a(ila)%radius_muffin_tin = self%mesh_a(ila)%rmt
 
@@ -445,18 +467,23 @@ module CalculationData_mod
         self%atomdata_a(ila)%rMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
       endif
 
+<<<<<<< HEAD
       self%cell_a(ila)%cell_index = self%atomdata_a(ila)%cell_index
       call associateBasisAtomCell(self%atomdata_a(ila), self%cell_a(ila))
 
       CHECKASSERT( dims%IRMIND == self%mesh_a(ila)%IRMIN ) ! check mesh
       CHECKASSERT( self%atomdata_a(ila)%atom_index == atom_id )
 
+#ifndef USE_OLD_MESH
       call destroy(old_atom_a(ila))
       call destroy(old_mesh_a(ila))
+#endif
     enddo ! ila
     endif
 
+#ifndef USE_OLD_MESH
     deallocate(new_MT_radii, old_atom_a, old_mesh_a, stat=ist)
+#endif
   endsubroutine ! generateAtomsShapesMeshes
 
   !------------------------------------------------------------------------------
@@ -484,6 +511,7 @@ module CalculationData_mod
     type(ShapefunData) :: shdata ! temporary shape-fun data
     double precision :: new_MT_radius
     integer :: num_MT_points
+
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)

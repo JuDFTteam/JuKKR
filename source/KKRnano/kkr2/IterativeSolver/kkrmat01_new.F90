@@ -30,7 +30,8 @@ module kkrmat_new_mod
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01_new(solver, kkr_op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
-                          Ginp, lmmaxd, global_atom_id, communicator, iguess_data)
+                          Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
+                          mssq, dginp, dtde, tr_alph, lly_grdt, lly) !LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -61,6 +62,14 @@ module kkrmat_new_mod
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
+
+    !LLY
+    double complex, intent(in)  :: mssq (:,:,:)    !< inverted T-matrix
+    double complex, intent(in)  :: dginp(:,:,:,:)  !< dG_ref/dE,  dim: lmmaxd, lmmaxd, naclsd, nclsd
+    double complex, intent(in)  :: dtde(:,:,:)     !< dT/dE
+    double complex, intent(in)  :: tr_alph(:) 
+    double complex, intent(out) :: lly_grdt
+
 
     ! locals
     double complex :: G_diag(LMMAXD,LMMAXD)
@@ -111,7 +120,9 @@ module kkrmat_new_mod
 
       ! Get the scattering path operator for k-point kpoints(:,ikpoint)
       ! output: ms%mat_X
-      call kloopbody(solver, kkr_op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
+      call kloopbody(solver, kkr_op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
+                     alat, RR, global_atom_id, communicator, iguess_data, &
+                     mssq, dtde, dginp, bztr2) !LLY
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
@@ -133,6 +144,17 @@ module kkrmat_new_mod
     !==============================================================================
     enddo ! ikpoint = 1, nkpoints
     !==============================================================================
+
+    !--------------------- LLY ----------------------------------------------------
+    if (lly == 1) then   
+       bztr2 = bztr2*nsymat/volbz + tr_alph(1)
+       trace=czero
+       CALL MPI_ALLREDUCE(bztr2,trace,1, &
+                         MPI_DOUBLE_COMPLEX,MPI_SUM, &
+                         MPI_COMM_WORLD,ierr)
+       lly_grdt = trace
+    endif    
+    !------------------------------------------------------------------------------
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
@@ -192,7 +214,9 @@ module kkrmat_new_mod
   !> Solution is stored in ms%mat_X.
   !> Scattering path operator is calculated for atoms given in
   !> ms%atom_indices(:)
-  subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data)
+  subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp,&
+                       alat, RR, global_atom_id, communicator, iguess_data, &
+                       mssq, dtde, dginp, bztr2) !LLY
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
     use TFQMRSolver_mod, only: TFQMRSolver, solve
@@ -217,13 +241,58 @@ module kkrmat_new_mod
     integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     type(InitialGuess), intent(inout) :: iguess_data
 
-    integer :: naez, lmmaxd, n, ist
+    ! LLY
+    double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
+    double complex, intent(in)   :: dtde(:,:,:)     !< energy derivative of T-matrix
+    double complex, intent(in)   :: dginp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
+    double complex, intent(out)  :: bztr2
+
+    ! Local LLY
+    double complex, allocatable :: dpde_local(:,:)
+    double complex, allocatable :: gllke_x(:,:)
+    double complex, allocatable :: dgde(:,:)
+    double complex, allocatable :: gllke_x_t(:,:)
+    double complex, allocatable :: dgde_t(:,:)
+    double complex, allocatable :: gllke_x2(:,:)
+    double complex, allocatable :: dgde2(:,:)
+    double complex :: tracek
+    double complex :: gtdpde
+    
+
+    integer :: naez, nacls, alm, lmmaxd, n, ist
     logical :: initial_zero
+
+    
 
 #define ms kkr_op%ms
 #define cluster ms%cluster_info
     lmmaxd = ms%lmmaxd
     naez = ms%naez
+    nacls = cluster_info%naclsd
+    alm = naez*lmmaxd
+
+    ! Allocate additional arrays for Lloyd's formula    
+    if (.not. allocated(gllke_x)) then
+      allocate(gllke_x(naez*lmmaxd, nacls*lmmaxd))
+    end if
+    if (.not. allocated(dgde)) then
+      allocate(dgde(naez*lmmaxd, nacls*lmmaxd))
+    end if
+    if (.not. allocated(gllke_x_t)) then
+      allocate(gllke_x_t(nacls*lmmaxd, naez*lmmaxd))
+    end if
+    if (.not. allocated(dgde_t)) then
+      allocate(dgde_t(nacls*lmmaxd, naez*lmmaxd))
+    end if
+    if (.not. allocated(gllke_x2)) then
+      allocate(gllke_x2(naez*lmmaxd,lmmaxd))
+    end if
+    if (.not. allocated(dgde2)) then
+      allocate(dgde2(naez*lmmaxd,lmmaxd))
+    end if
+    if (.not. allocated(dpde_local)) then
+      allocate(dpde_local(naez*lmmaxd,lmmaxd))
+    end if
 
     !=======================================================================
     ! ---> fourier transformation
@@ -259,8 +328,53 @@ module kkrmat_new_mod
 #endif
 
     TESTARRAYLOG(3, ms%GLLh)
-    
-    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
+
+   ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
+
+   if (lly == 1) then ! LLY
+#ifndef SPLIT_REFERENCE_FOURIER_COM
+      call referenceFourier_com(ms%DGLLh, ms%sparse, kpoint, alat, &
+             cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
+             RR, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
+#else
+      call referenceFourier_part2(ms%DGLLh, ms%sparse, kpoint, alat, &
+             cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
+             RR, cluster%ezoa_trc, DGinp)
+#endif
+
+      TESTARRAYLOG(3, ms%DGLLh)
+
+      call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
+                           ms%sparse%kvstr, ms%sparse%kvstr, GLLKE_X)
+      call convertToFullMatrix(ms%DGLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
+                           ms%sparse%kvstr, ms%sparse%kvstr, DGDE) 
+
+      !--------------------------------------------------------
+      ! dP(E,k)   dG(E,k)                   dT(E)
+      ! ------- = ------- * T(E) + G(E,k) * -----
+      !   dE        dE                       dE
+  
+      matrix_index=(getmyatomid(my_mpi)-1)*lmmaxd+1
+
+      gllke_x_t=transpose(gllke_x)
+      dgde_t=transpose(dgde)
+
+      gllke_x2=gllke_x_t(:, matrix_index:matrix_index+lmmaxd)
+      dgde2=dgde_t(:, matrix_index:matrix_index+lmmaxd)
+
+      call cinit(naez*lmmaxd*lmmaxd,dpde_local)
+
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone,&
+                  dgde2,alm,&
+                  tmatll(1,1,getmyatomid(my_mpi)),lmmaxd,czero,&
+                  dpde_local,alm)
+
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv,&
+                  gllke_x2,alm,&
+                  dtde(:,:,1),lmmaxd,cone,dpde_local,alm)
+      !--------------------------------------------------------
+ 
+   endif ! LLY
 
     !----------------------------------------------------------------------------
     call buildKKRCoeffMatrix(ms%GLLh, tmatLL, ms%lmmaxd, naez, ms%sparse)
@@ -278,9 +392,9 @@ module kkrmat_new_mod
     ! 3) solve linear set of equations by iterative TFQMR scheme
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
-
-!   call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
-    call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr) ! construct RHS as negative unity
+ 
+    call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
+    !call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr) ! construct RHS as negative unity
 
     initial_zero = .true.
     if (iguess_data%iguess == 1) then
@@ -329,6 +443,30 @@ module kkrmat_new_mod
     TESTARRAYLOG(3, ms%mat_X)
     
     ! RESULT: mat_X
+
+
+    if (lly == 1) then ! LLY
+    !--------------------------------------------------------
+    !                /  -1    dM  \
+    ! calculate  Tr  | M   * ---- | 
+    !                \        dE  /
+   
+    tracek=czero
+
+    do lm1=1,lmmaxd
+      do lm2=1,lmmaxd
+        gtdpde = czero
+        do il1 = 1,naez*lmmaxd
+          gtdpde = gtdpde + ms%mat_x(il1,lm2)*dpde_local(il1,lm1)
+        enddo
+        tracek = tracek + mssq(lm1,lm2,1)*gtdpde
+      enddo
+    enddo
+
+    bztr2 = bztr2 + tracek*volcub(k_point_index)
+    !--------------------------------------------------------
+    endif ! LLY
+
 #undef cluster
 #undef ms
   endsubroutine ! kloopbody
