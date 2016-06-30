@@ -23,15 +23,15 @@ module NearField_calc_mod
     use CalculationData_mod, only: CalculationData, getAtomData, getDensities
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
-    use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection, calculate
+    use NearField_com_mod, only: LocalCellInfo, NearFieldCorrection, calculate, create, destroy
     
     type(CalculationData), intent(inout) :: calc_data
     type(Main2Arrays), intent(in) :: arrays
     double precision, intent(in) :: alat
     integer, intent(in) :: mpi_comm
 
-    type (LocalCellInfo), allocatable :: local_cell(:)
-    type (NearFieldCorrection), allocatable :: nf_correction(:)
+    type(LocalCellInfo), allocatable :: local_cell(:)
+    type(NearFieldCorrection), allocatable :: nf_correction(:)
     integer :: num_local_atoms
     integer :: ilocal
     integer :: ispin
@@ -50,11 +50,11 @@ module NearField_calc_mod
       densities => getDensities(calc_data, ilocal)
       atom_id = calc_data%atom_ids(ilocal)
 
-      call nf_correction(ilocal)%create(mesh%irmd, atomdata%potential%lmpot)
+      call create(nf_correction(ilocal), mesh%irmd, atomdata%potential%lmpot)
 
       ! setup information on local cells
       ! calculate near-field corrections for each radial point
-      call local_cell(ilocal)%create(mesh%irmd, atomdata%potential%lmpot, 1)
+      call create(local_cell(ilocal), mesh%irmd, atomdata%potential%lmpot, 1)
 
       local_cell(ilocal)%charge_moments = densities%cmom + densities%cminst
       local_cell(ilocal)%v_intra = atomdata%potential%vons(:,:,1)
@@ -81,6 +81,9 @@ module NearField_calc_mod
                                            + nf_correction(ilocal)%delta_potential
       enddo ! ispin
     enddo ! ilocal
+
+    call destroy(nf_correction)
+    call destroy(local_cell)
 
   endsubroutine
 

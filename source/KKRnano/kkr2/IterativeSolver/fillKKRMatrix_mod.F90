@@ -19,7 +19,7 @@ module fillKKRMatrix_mod
   interface dump
     module procedure dumpDenseMatrix, dumpSparseMatrixData
   endinterface
-  
+
   contains
 
   !------------------------------------------------------------------------------
@@ -259,13 +259,13 @@ module fillKKRMatrix_mod
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
   subroutine solveFull(full, mat_B, mat_X)
-!   use TruncationZone_mod, only: clear_non_existing_entries
     double complex, intent(inout) :: full(:,:)
     double complex, intent(in)  :: mat_B(:,:)
     double complex, intent(out) :: mat_X(:,:)
 
     integer, allocatable :: ipvt(:)
     integer :: ndim, num_rhs, info
+    external :: zgetrf, zgetrs ! LAPACK
 
     ndim = size(full, 1)
     allocate(ipvt(ndim))
@@ -277,10 +277,11 @@ module fillKKRMatrix_mod
     call zgetrs('n', ndim, num_rhs, full, ndim, ipvt, mat_x, ndim, info)
 
     deallocate(ipvt, stat=info)
-    
-!   call clear_non_existing_entries(mat_X) ! make up for treating more than one atom with truncation
   endsubroutine ! solveFull
 
+
+#if 0
+!+never
 
   !------------------------------------------------------------------------------
   !> Convert solution with l-cutoff to format of solution without l-cutoff.
@@ -310,7 +311,9 @@ module fillKKRMatrix_mod
     enddo ! atom_index
 
   endsubroutine ! toOldSolutionFormat
-  
+
+!-never
+#endif 
   
   
   
@@ -326,7 +329,6 @@ module fillKKRMatrix_mod
     else
       call dumpSparseMatrixDataBinary(smat, filename)
     endif
-    
   endsubroutine ! dump
   
   !----------------------------------------------------------------------------
@@ -341,10 +343,7 @@ module fillKKRMatrix_mod
     else
       call dumpDenseMatrixBinary(mat, filename)
     endif
-    
   endsubroutine ! dump
-  
-  
 
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to unformatted file
@@ -467,4 +466,4 @@ module fillKKRMatrix_mod
     close(fu)
   endsubroutine ! dump
 
-endmodule
+endmodule ! fillKKRMatrix_mod

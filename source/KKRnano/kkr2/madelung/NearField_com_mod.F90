@@ -13,9 +13,8 @@ module NearField_com_mod
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
-  public :: LocalCellInfo!, create, destroy
-  public :: NearFieldCorrection!, create, destroy
-  public :: calculate
+  public :: LocalCellInfo, NearFieldCorrection
+  public :: calculate, create, destroy
   
   type LocalCellInfo
     double precision, allocatable :: charge_moments(:)
@@ -25,24 +24,15 @@ module NearField_com_mod
     integer, allocatable :: near_cell_indices(:)
     !> vectors pointing from near cell center to local cell
     double precision, allocatable :: near_cell_dist_vec(:,:)
-
-    contains
-    procedure :: create => createLocalCellInfo
-    procedure :: destroy => destroyLocalCellInfo
-
   endtype
   
   type NearFieldCorrection
     double precision, allocatable :: delta_potential(:,:)
-
-    contains
-    procedure :: create => createNearFieldCorrection
-    procedure :: destroy => destroyNearFieldCorrection
   endtype
   
-!   interface create
-!     module procedure createNearFieldCorrection, createLocalCellInfo
-!   endinterface
+  interface create
+    module procedure createNearFieldCorrection, createLocalCellInfo
+  endinterface
 
   interface calculate
     module procedure calc_nf_correction
@@ -56,7 +46,7 @@ module NearField_com_mod
   
   !----------------------------------------------------------------------------
   subroutine calc_nf_correction(nf_correction, local_cells, gaunt, communicator)
-    use NearField_kkr_mod, only: IntracellPotential
+    use NearField_kkr_mod, only: IntracellPotential, create, init, destroy
     use MadelungCalculator_mod, only: MadelungClebschData
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commD_mod, only: exposeBufferD, hideBufferD, copyChunksNoSyncD
@@ -140,19 +130,19 @@ module NearField_com_mod
 
         WRITELOG(2,*) "cell, irmd(icell) ", local_cells(ilocal)%near_cell_indices(icell), irmd
 
-        call intra_pot%create(lmpotd, irmd)
+        call create(intra_pot, lmpotd, irmd)
         intra_pot%v_intra_values = recv_buffer(1:irmd, 1:lmpotd)
         intra_pot%charge_moments = recv_buffer(max_npoints+1, 1:lmpotd)
         intra_pot%radial_points = recv_buffer(1:irmd, lmpotd+1)
 
-        call intra_pot%init() ! setup intra-cell pot. interpolation
+        call init(intra_pot) ! setup intra-cell pot. interpolation
 
         call add_potential_correction(nf_correction(ilocal)%delta_potential, intra_pot, &
                                        local_cells(ilocal)%radial_points, &
                                        local_cells(ilocal)%near_cell_dist_vec(:,icell), gaunt, &
                                        local_cells(ilocal)%critical_index)
         
-        call intra_pot%destroy()
+        call destroy(intra_pot)
       enddo ! icell
 
       WRITELOG(2,*) "Near field corrections for local atom ", ilocal

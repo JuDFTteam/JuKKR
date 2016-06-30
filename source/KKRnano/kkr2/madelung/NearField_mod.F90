@@ -6,39 +6,7 @@ module NearField_mod
   use Constants_mod, only: pi
   implicit none
   private
-  public :: Potential, calculate
-  
-  !> Objects of types derived from 'Potential' have to be passed to 'calc_near_field'.
-  !>
-  !> This allows to pass arbitrary (intra-cell) potentials
-  !> Classes that inherit from/extendthis type have to override 'get_pot' using a subroutine
-  !> with an interface as specified by 'potential_func'
-  type, abstract :: Potential
-    contains
-    procedure (potential_func), deferred :: get_pot
-  endtype
-
-  !> The methods 'get_pot' of any type derived from 'Potential' have to conform to this interface
-  abstract interface
-    subroutine potential_func(self, v_intra, radius)
-    import Potential
-    class(Potential), intent(inout) :: self
-    double precision, intent(out) :: v_intra(:)
-    double precision, intent(in) :: radius
-    endsubroutine
-  endinterface
-
-  !> Some test potentials - educational and testing purposes
-  type, extends(Potential) :: TestPotentialConstMulti
-    contains
-    procedure :: get_pot => get_const_multipole
-  endtype
-  
-  !> Potential of a monopole (= point charge)
-  type, extends(Potential) :: TestPotentialMonopole
-    contains
-    procedure :: get_pot => get_const_monopole
-  endtype
+  public :: calculate
   
   interface calculate
     module procedure calc_near_field, calc_wrong_contribution_coeff
@@ -109,11 +77,12 @@ module NearField_mod
   !----------------------------------------------------------------------------
   !> this is a general routine for shifting sph. harm. expansions
   subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)
+    use NearField_kkr_mod, only: IntracellPotential, get_pot
     use Harmonics_mod, only: ymy
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
     double precision, intent(in) :: dist_vec(3)
-    class(Potential), intent(inout) :: pot
+    type(IntracellPotential), intent(inout) :: pot
     integer, intent(in), optional :: lmax_prime
 
     integer :: lmmaxd, lmax, lmmaxd_prime
@@ -163,7 +132,12 @@ module NearField_mod
         sph_harm(1) = 1.d0/sqrt(four_pi)
       endif
 
-      call pot%get_pot(v_intra, norm_vec) ! get intracell potential at radius 'norm_vec'
+#ifdef TEST_POTENTIALS
+!     call get_const_monopole(v_intra, norm_vec)
+      call get_const_multipole(v_intra, norm_vec)
+#else
+      call get_pot(pot, v_intra, norm_vec) ! get intracell potential at radius 'norm_vec'
+#endif
 
       integrand(ij,1) = dot_product(sph_harm, v_intra) ! perform summation over L'
     enddo ! ij
@@ -227,15 +201,19 @@ module NearField_mod
     eval_expansion = dot_product(coeffs, ylm)
   endfunction ! eval
 
+
+#ifdef TEST_POTENTIALS
+!+never
+
 !------------------------------------------------------------------------------
-! Some test potentials follow
+! Some test potentials that replace 
 !------------------------------------------------------------------------------
+
 
   !----------------------------------------------------------------------------
   !> A test potential: constant multipole moments
-  subroutine get_const_multipole(self, v_intra, radius)
+  subroutine get_const_multipole(v_intra, radius)
     ! Test potential: assume multipoles Q_L = 1.d0
-    class(TestPotentialConstMulti), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
@@ -259,16 +237,16 @@ module NearField_mod
 
   !----------------------------------------------------------------------------
   !> A test potential: potential of a (unit) monopole
-  subroutine get_const_monopole(self, v_intra, radius)
-    class(TestPotentialMonopole), intent(inout) :: self
+  subroutine get_const_monopole(v_intra, radius)
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
     v_intra = 0.d0
     v_intra(1) = 4.d0*sqrt(pi)/radius
-
   endsubroutine ! get
 
+!-never
+#endif
 endmodule ! NearField_mod
 
 !  program test_it

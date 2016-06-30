@@ -12,7 +12,7 @@ module BCPOperator_mod
   use ClusterInfo_mod, only: ClusterInfo
   implicit none
   private
-  public :: BCPOperator, destroy, create, calc, apply
+  public :: BCPOperator, destroy, create, calc, multiply
   
   !> Represents the Block-Circulant preconditioning matrix
   type, extends(OperatorT) :: BCPOperator
@@ -24,7 +24,7 @@ module BCPOperator_mod
     type(ClusterInfo), pointer :: cluster_info
     integer :: lmmaxd
     contains
-      procedure :: apply => apply_BCPOperator
+      procedure :: apply => multiply_BCPOperator
   endtype
 
   interface create
@@ -35,8 +35,8 @@ module BCPOperator_mod
     module procedure calc_BCPOperator
   endinterface
 
-  interface apply
-    module procedure apply_BCPOperator
+  interface multiply
+    module procedure multiply_BCPOperator
   endinterface
   
   interface destroy
@@ -100,7 +100,7 @@ module BCPOperator_mod
 
   !----------------------------------------------------------------------------
   !> Applies Preconditioner/Operator on mat_X and returns result in mat_AX.
-  subroutine apply_BCPOperator(self, mat_X, mat_AX)
+  subroutine multiply_BCPOperator(self, mat_X, mat_AX)
     class(BCPOperator) :: self
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)

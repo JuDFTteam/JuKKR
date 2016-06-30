@@ -9,22 +9,15 @@ module MultScatData_mod
   public :: MultScatData, create, destroy
 
   type MultScatData
-    type (SparseMatrixDescription) :: sparse
-
-    double complex, dimension(:,:), allocatable :: mat_B
-    double complex, dimension(:,:), allocatable :: mat_X
-    double complex, allocatable :: EIKRP(:)
-    double complex, allocatable :: EIKRM(:)
-    double complex, allocatable, dimension(:) :: GLLH
-    double complex, allocatable, dimension(:) :: DGLLH
-
-    integer, allocatable :: atom_indices(:)
-    integer :: lmmaxd
-    integer :: naez
-    type (ClusterInfo), pointer :: cluster_info
-
-  end type
-
+    type(SparseMatrixDescription) :: sparse
+    double complex, allocatable :: GLLh(:)
+    double complex, allocatable :: dGLLh(:)
+    double complex, allocatable :: mat_B(:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
+    double complex, allocatable :: mat_X(:,:)
+    integer, allocatable :: atom_indices(:) !< a copy of the atom indices
+    type(ClusterInfo), pointer :: cluster_info
+  endtype
+  
   interface create
     module procedure createMultScatData
   endinterface

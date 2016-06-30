@@ -86,7 +86,7 @@ module SparseMatrixDescription_mod
     integer, intent(in), optional :: naez
 
     if (present(naez)) then
-      getNrows = self%kvstr(naez + 1) - 1
+      getNrows = self%kvstr(naez + 1) - 1 ! never happens, ToDo: remove
     else
       getNrows = self%kvstr(self%blk_nrows + 1) - 1
     endif

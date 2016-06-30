@@ -10,11 +10,11 @@
 !>
 !> @author Elias Rabel
 module NearField_kkr_mod
-  use NearField_mod, only: Potential
+! use NearField_mod, only: Potential
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
-  public :: IntracellPotential, create, destroy
+  public :: IntracellPotential, create, destroy, init, get_pot
   
   !----------------------------------------------------------------------------
   !> Usage:
@@ -26,7 +26,8 @@ module NearField_kkr_mod
   !> call pot%init()
   !> ...  ! now use it
   !> call pot%destroy()
-  type, extends(Potential) :: IntracellPotential
+! type, extends(Potential) :: IntracellPotential
+  type :: IntracellPotential
 
     double precision, allocatable :: charge_moments(:)
     double precision, allocatable :: radial_points(:)
@@ -39,18 +40,26 @@ module NearField_kkr_mod
     double precision :: rws_bounding
     integer :: counter_spline
     
-    contains
-    
-    procedure :: create => createIntracellPot
-    procedure :: init => initIntracellPotential
-    procedure :: destroy => destroyIntracellPotential
-    procedure :: get_pot => get_intracell
+!     contains
+!     
+!     procedure :: create => createIntracellPot
+!     procedure :: init => initIntracellPotential
+!     procedure :: destroy => destroyIntracellPotential
+!     procedure :: get_pot => get_intracell
   endtype
   
   double precision, parameter, private :: PI = 3.1415926535897932d0
 
   interface create
     module procedure createIntracellPot
+  endinterface
+
+  interface get_pot
+    module procedure get_intracell
+  endinterface
+
+  interface init
+    module procedure initIntracellPotential
   endinterface
   
   interface destroy
@@ -61,7 +70,7 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine get_intracell(self, v_intra, radius)
-    class(IntracellPotential), intent(inout) :: self
+    type(IntracellPotential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
     
@@ -102,7 +111,7 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine createIntracellPot(self, lmpotd, irmd)
-    class(IntracellPotential), intent(inout) :: self
+    type(IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
     double precision :: nan
@@ -126,7 +135,7 @@ module NearField_kkr_mod
   
     !----------------------------------------------------------------------------
   subroutine createIntracellPotential(self, lmpotd, irmd)
-    class(IntracellPotential), intent(inout) :: self
+    type(IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
     allocate(self%charge_moments(lmpotd))
@@ -141,7 +150,7 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine initIntracellPotential(self)
-    class(IntracellPotential), intent(inout) :: self
+    type(IntracellPotential), intent(inout) :: self
     
     integer :: lmpotd
     integer :: irmd
@@ -193,7 +202,7 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   elemental subroutine destroyIntracellPotential(self)
-    class(IntracellPotential), intent(inout) :: self
+    type(IntracellPotential), intent(inout) :: self
     integer :: ist
     deallocate(self%charge_moments, stat=ist)
     deallocate(self%radial_points, stat=ist)

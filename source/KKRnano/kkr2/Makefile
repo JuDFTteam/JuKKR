@@ -205,7 +205,7 @@ TruncationZone_mod.o: Main2Arrays_mod.o
 kkrmat01_new.o: arraytest2_mod.o Logging_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o TFQMRSolver_mod.o MultScatData_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
 ProcessKKRresults_mod.o: arraytest2_mod.o KKRnanoParallel_mod.o Logging_mod.o lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o CellData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o CalculationData_mod.o
-NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o Constants_mod.o
+NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o Constants_mod.o NearField_kkr_mod.o
 KKRnano_Comm_mod.o: KKRnanoParallel_mod.o  jij_calc_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o
 InputParams_mod.o: ConfigReader_mod.o
 PolygonFaces_mod.o: Constants_mod.o
@@ -234,7 +234,6 @@ fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o TruncationZone_mod.o
 Main2Arrays_mod.o: DimParams_mod.o
 CellData_mod.o: ShapefunData_mod.o
 main2_aux_mod.o: TimerMpi_mod.o
-NearField_kkr_mod.o: NearField_mod.o
 jij_calc_mod.o: JijData_mod.o
 broyden_kkr_mod.o: brydbm_new_com_mod.o broyden_second_mod.o BroydenData_mod.o CalculationData_mod.o
 ShapeFunctions_mod.o: PolygonFaces_mod.o  ShapeCriticalPoints_mod.o Constants_mod.o ShapeIntegration_mod.o ShapeStandardMesh_mod.o
