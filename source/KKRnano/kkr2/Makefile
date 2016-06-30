@@ -31,7 +31,7 @@ ifeq ($(PLATFORM),ifort)
   ifeq ($(TYPE),debug_light)
   FCFLAGS += -O0 -g
   else ifeq ($(TYPE),debug)
-  FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe3
+  FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe0
   else ifeq ($(TYPE),mtradii)
   FCFLAGS += -O3 -D NOLOGGING -D USE_MTRADII 
   else ifeq ($(TYPE),debug_mtradii)
