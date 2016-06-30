@@ -27,7 +27,7 @@ module fillKKRMatrix_mod
   subroutine getKKRMatrixStructure(lmax_array, numn0, indn0, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
-    integer(kind=1), intent(in) :: lmax_array(:) !< block size of each row, dim(nrows)
+    integer(kind=1), intent(in) :: lmax_array(:) !< lmax each row, dim(nrows)
     integer, intent(in) :: numn0(:) !< dim(nrows)
     integer, intent(in) :: indn0(:,:) !< dim(nrows,maxval(numn0))
     type(SparseMatrixDescription), intent(inout) :: sparse

@@ -255,7 +255,6 @@ module kkrmat_new_mod
     integer, intent(in) :: global_atom_id(:) ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     type(InitialGuess), intent(inout) :: iguess_data
-
     ! LLY
     double complex, intent(in)         :: mssq (:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
@@ -286,7 +285,6 @@ module kkrmat_new_mod
 
 #define ms kkr_op%ms
 #define cluster ms%cluster_info
-    lmmaxd = ms%lmmaxd
     naez = ms%naez
     nacls = cluster%naclsd
     alm = naez*lmmaxd
@@ -412,7 +410,7 @@ module kkrmat_new_mod
     ! 3) solve linear set of equations by iterative TFQMR scheme
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
- 
+
     call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
     !call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr) ! construct RHS as negative unity
 

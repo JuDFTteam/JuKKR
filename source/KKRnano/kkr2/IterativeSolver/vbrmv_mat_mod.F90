@@ -17,9 +17,9 @@ module vbrmv_mat_mod
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, kvstr, kvstc, x, Ax, max_blockdim, max_blocks_per_row)
+  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, kvstr, x, Ax, max_blockdim, max_blocks_per_row)
                        
-    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(:), kvstc(:)
+    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(:)
     integer, intent(in) :: max_blockdim, max_blocks_per_row
     double complex, intent(in)  :: A(:), x(:,:)
     double complex, intent(out) :: Ax(:,:)
@@ -29,7 +29,7 @@ module vbrmv_mat_mod
     !     On entry:
     !--------------
     !     blk_nrows      = number of block rows in matrix A
-    !     ia,ja,ka,A,kvstr,kvstc = matrix A in variable block row format
+    !     ia,ja,ka,A,kvstr = matrix A in variable block row format, kvstc==kvstr since square operator
     !     x       = multiplier vector in full format
 
     !     nRHSs = number of columns of matrix A
@@ -69,8 +69,8 @@ module vbrmv_mat_mod
       k = ka(ia(ibr))
       do j = ia(ibr), ia(ibr+1)-1
         ibc  = ja(j)
-        isc  = kvstc(ibc)
-        nblk = kvstc(ibc+1) - isc
+        isc  = kvstr(ibc)
+        nblk = kvstr(ibc+1) - isc
 
 !IBM* ASSERT(ITERCNT(16))
         do iRHSs = 1, nRHSs

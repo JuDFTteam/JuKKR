@@ -13,7 +13,7 @@ module KKROperator_mod
   use OperatorT_mod, only: OperatorT
   implicit none
   private
-  public :: KKROperator, create, destroy, apply
+  public :: KKROperator, create, destroy!, apply
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type, extends(OperatorT) :: KKROperator
@@ -66,7 +66,7 @@ module KKROperator_mod
     type(SparseMatrixDescription), intent(in) :: sparse
 
     call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, &
-                   A, sparse%kvstr, sparse%kvstr, x, Ax, &
+                   A, sparse%kvstr, x, Ax, &
                    sparse%max_blockdim, sparse%max_blocks_per_row)
 
   endsubroutine ! multiply_vbr

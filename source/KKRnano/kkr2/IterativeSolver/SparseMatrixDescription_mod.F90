@@ -83,9 +83,13 @@ module SparseMatrixDescription_mod
   !> Returns number of non-zero elements (only if properly setup!).
   integer function getNrows(self, naez)
     type(SparseMatrixDescription), intent(in) :: self
-    integer, intent(in) :: naez
+    integer, intent(in), optional :: naez
 
-    getNrows = self%kvstr(naez+1) - 1
+    if (present(naez)) then
+      getNrows = self%kvstr(naez + 1) - 1
+    else
+      getNrows = self%kvstr(self%blk_nrows + 1) - 1
+    endif
     
   endfunction ! get
   
@@ -95,10 +99,7 @@ module SparseMatrixDescription_mod
     type(SparseMatrixDescription), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%ia, stat=ist)
-    deallocate(self%kvstr, stat=ist)
-    deallocate(self%ja, stat=ist)
-    deallocate(self%ka, stat=ist)
+    deallocate(self%ia, self%kvstr, self%ja, self%ka, stat=ist)
 
     self%blk_nrows = 0
     self%max_blockdim = 0

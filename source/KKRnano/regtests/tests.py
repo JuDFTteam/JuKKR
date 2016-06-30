@@ -73,10 +73,10 @@ class Test_copper(unittest.TestCase):
 
 class Test_semiconductors(unittest.TestCase):
      def test_GaN(self):
-        self.assertAlmostEqual(KKR_total_energy("GaN"), -3990.85150060, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("GaN", solver=4), -3990.85150060, DECIMALS)
         
      def test_Si(self):
-        self.assertAlmostEqual(KKR_total_energy("Si"), -1155.68952256, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Si", solver=4), -1155.68952256, DECIMALS)
         
      def test_ZnO(self):
         Etot = -7405.77074357
