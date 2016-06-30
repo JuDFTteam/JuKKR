@@ -16,18 +16,17 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
   use EnergyMesh_mod, only: EnergyMesh
   use LDAUData_mod, only: LDAUData
 
-  integer, intent(in) :: LLY  !< use Lloyd 0/1
-  integer, intent(in) :: ICST !< num. Born iterations
-  integer, intent(in) :: NSRA !< flag scalar relativistic
-  integer, intent(in) :: FRED !< flag Fredholm/Volterra
-  double complex, intent(in) :: LLY_GRDT(:,:) ! in
+  integer, intent(in) :: lly  !< use lloyd 0/1
+  integer, intent(in) :: icst !< num. born iterations
+  integer, intent(in) :: nsra !< flag scalar relativistic
+  double complex, intent(in) :: lly_grdt(:,:) ! in
 
-  double complex, intent(in) :: GMATN(:,:,:,:) !in
-  type(BasisAtom), intent(inout) :: atomdata !in or inout?
-  type(GauntCoefficients), intent(in) :: gaunts
-  type(EnergyMesh), intent(inout) :: emesh !inout or in?
-  type(LDAUData), intent(inout) :: ldau_data ! inout?
-  double precision, intent(inout) :: RNORM(:,:)  !out
+  double complex, intent(in) :: gmatn(:,:,:,:) !in
+  type(basisatom), intent(inout) :: atomdata !in or inout?
+  type(gauntcoefficients), intent(in) :: gaunts
+  type(energymesh), intent(inout) :: emesh !inout or in?
+  type(ldaudata), intent(inout) :: ldau_data ! inout?
+  double precision, intent(inout) :: rnorm(:,:)  !out
   integer, intent(in) :: mpi_comm
   integer, intent(in) :: method !< single site method
 
@@ -47,27 +46,27 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
 
   ielast = emesh%ielast
 
-  if (LLY==1) then
-    ! get WEZRN and RNORM, the important input from previous
-    ! calculations is LLY_GRDT_ALL
+  if (lly==1) then
+    ! get wezrn and rnorm, the important input from previous
+    ! calculations is lly_grdt_all
 
-    call LLOYD0_NEW(emesh%EZ,emesh%WEZ,gaunts%CLEB,mesh%DRDI,mesh%R,mesh%IRMIN, &
-                    atomdata%potential%VINS,atomdata%potential%VISP,cell%shdata%THETA,atomdata%Z_nuclear,gaunts%ICLEB, &
-                    cell%shdata%IFUNM,mesh%IPAN,mesh%IRCUT,cell%shdata%LMSP, &
-                    gaunts%JEND,gaunts%LOFLM,ICST,ielast,gaunts%IEND,NSPIND,NSRA,FRED, &
-                    emesh%WEZRN,RNORM, &
-                    GMATN, &
-                    LLY_GRDT, &
-                    ldau_data%LDAU,ldau_data%NLDAU,ldau_data%LLDAU,ldau_data%PHILDAU,ldau_data%WMLDAU,ldau_data%DMATLDAU, &
+    call lloyd0_new(emesh%ez,emesh%wez,gaunts%cleb,mesh%drdi,mesh%r,mesh%irmin, &
+                    atomdata%potential%vins,atomdata%potential%visp,cell%shdata%theta,atomdata%z_nuclear,gaunts%icleb, &
+                    cell%shdata%ifunm,mesh%ipan,mesh%ircut,cell%shdata%lmsp, &
+                    gaunts%jend,gaunts%loflm,icst,ielast,gaunts%iend,nspind,nsra, &
+                    emesh%wezrn,rnorm, &
+                    gmatn, &
+                    lly_grdt, &
+                    ldau_data%ldau,ldau_data%nldau,ldau_data%lldau,ldau_data%phildau,ldau_data%wmldau,ldau_data%dmatldau, &
                     mpi_comm, &
                     lmaxd, mesh%irmd, irnsd, ielast, &
                     cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb, method)
 
-  else ! no Lloyd
+  else ! no lloyd
 
-    do IE=1,IELAST
-      emesh%WEZRN(IE,1) = emesh%WEZ(IE)
-      emesh%WEZRN(IE,2) = emesh%WEZ(IE)
+    do ie=1,ielast
+      emesh%wezrn(ie,1) = emesh%wez(ie)
+      emesh%wezrn(ie,2) = emesh%wez(ie)
     enddo
   endif
 
@@ -85,7 +84,7 @@ endsubroutine
 subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
                   VINS,VISP,THETAS,ZAT,ICLEB, &
                   IFUNM1,IPAN,IRCUT,LMSP1,JEND,LOFLM,ICST, &
-                  IELAST,IEND,NSPIN,NSRA,FRED, &
+                  IELAST,IEND,NSPIN,NSRA, &
                   WEZRN,RNORM, &                                     ! <
                   GMATN, &                                           ! >
                   LLY_GRDT, &                                        ! >
@@ -243,7 +242,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
 
       do ISPIN = 1,NSPIN
 
-        call RHOVAL(.false.,ICST,IELAST,NSRA,FRED, &
+        call RHOVAL(.false.,ICST,IELAST,NSRA, &
                     ISPIN,NSPIN, &
                     EZ,WEZ,DRDI,R,IRMIN, &
                     VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &

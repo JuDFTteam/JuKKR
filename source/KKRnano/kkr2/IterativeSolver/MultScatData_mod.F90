@@ -1,7 +1,8 @@
 !> Workspace for solution of the Dyson equation
 
 module MultScatData_mod
-  use SparseMatrixDescription_mod, only: SparseMatrixDescription
+  use SparseMatrixDescription_mod, only: SparseMatrixDescription, getNNZ, &
+  create, destroy
   use ClusterInfo_mod, only: ClusterInfo
   implicit none
   private
@@ -24,13 +25,22 @@ module MultScatData_mod
 
   end type
 
+  interface create
+    module procedure createMultScatData
+  endinterface
+  
+  interface destroy
+    module procedure destroyMultScatData
+  endinterface
+
 CONTAINS
 
 !------------------------------------------------------------------------------
 !> Create workspace for multiple scattering calculation.
 subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
-  use TEST_lcutoff_mod, only: lmarray
+  use TEST_lcutoff_mod, only: lmax_array
   use fillKKRMatrix_mod, only: getKKRMatrixStructure
+  
   implicit none
   type (MultScatData), intent(inout) :: ms
   type (ClusterInfo), target  :: cluster_info
@@ -51,9 +61,9 @@ subroutine createMultScatData(ms, cluster_info, lmmaxd, atom_indices)
 
   allocate(ms%atom_indices, source=atom_indices)
 
-  call createSparseMatrixDescription(ms%sparse, naez, sum_cluster)
+  call create(ms%sparse, naez, sum_cluster)
 
-  call getKKRMatrixStructure(lmarray, cluster_info%numn0_trc, &
+  call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, &
                              cluster_info%indn0_trc, ms%sparse)
 
   allocate(ms%mat_B(ms%sparse%kvstr(naez+1)-1,LMMAXD * size(atom_indices)))
@@ -80,7 +90,7 @@ subroutine destroyMultScatData(ms)
   deallocate(ms%mat_X)
   deallocate(ms%mat_B)
 
-  call destroySparseMatrixDescription(ms%sparse)
+  call destroy(ms%sparse)
 
   deallocate(ms%atom_indices)
 end subroutine

@@ -422,7 +422,6 @@ module CalculationData_mod
         new_MT_radii(ila) = 2.37
       endif !voronano
 
-<<<<<<< HEAD
     enddo ! ila
 #ifndef USE_OLD_MESH
     ! generate shapes and meshes
@@ -467,7 +466,6 @@ module CalculationData_mod
         self%atomdata_a(ila)%rMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
       endif
 
-<<<<<<< HEAD
       self%cell_a(ila)%cell_index = self%atomdata_a(ila)%cell_index
       call associateBasisAtomCell(self%atomdata_a(ila), self%cell_a(ila))
 

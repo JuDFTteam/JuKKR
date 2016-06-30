@@ -92,8 +92,10 @@ implicit none
     double complex, allocatable :: Tref_local(:,:,:)  !< local tref-matrices
     double complex, allocatable :: dTref_local(:,:,:) !< local deriv. tref-matrices
     double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices
+    double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
     double complex, allocatable :: GrefN_buffer(:,:,:,:) !< GrefN for all local atoms
+    double complex, allocatable :: DGrefN_buffer(:,:,:,:) !< DGrefN for all local atoms, LLY
 
     lmmaxd = (dims%lmaxd+1)**2
 
@@ -110,10 +112,12 @@ implicit none
 
     
     allocate(tmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for t-matrices
+    allocate(dtmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
     allocate(Tref_local(lmmaxd,lmmaxd,num_local_atoms)) ! allocate buffers for reference t-matrices
     allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms))
+    allocate(DGrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms)) ! LLY
     allocate(atom_indices(num_local_atoms))
 
     if (params%jij  .and. num_local_atoms > 1) stop "Jij and num_local_atoms > 1 not supported."
@@ -144,7 +148,6 @@ implicit none
       jij_data%GMATXIJ = ZERO
     endif
 
-<<<<<<< HEAD
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
@@ -170,7 +173,7 @@ implicit none
 
         ! if we had rMTref given for all atoms inside the reference cluster radius
         !   we could compute the Tref on the fly
-#define COMPUTE_tref_LOCALLY
+!#define COMPUTE_tref_LOCALLY
 #ifndef COMPUTE_tref_LOCALLY       
          Tref_local = ZERO
         dTref_local = ZERO
@@ -213,7 +216,7 @@ implicit none
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%NACLS, &
                     kkr(ila)%TrefLL, kkr(ila)%dTrefLL, GrefN_buffer(:,:,:,ila), &
-                    kkr(ila)%dGrefN, kkr(ila)%Lly_G0Tr(IE), &
+                    DGrefN_buffer(:,:,:,ila), kkr(ila)%Lly_G0Tr(IE), &
                     dims%lmaxd, kkr(ila)%naclsd, calc%gaunts%ncleb, &
                     dims%Lly)
 
@@ -270,7 +273,7 @@ implicit none
   ! <<>> Multiple scattering part
 
             ! gather t-matrices from own truncation zone
-            call gatherTmatrices_com(calc, tmatLL, ispin, mp%mySEComm)
+            call gatherTmatrices_com(calc, tmatLL, dtmatLL, ispin, mp%mySEComm)
 
             TESTARRAYLOG(3, tmatLL)
 
@@ -292,7 +295,9 @@ implicit none
                     GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
                     trunc_zone%trunc2atom_index, mp%mySEComm, &
-                    calc%iguess_data)
+                    calc%iguess_data, &
+                    DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
+                   
   !------------------------------------------------------------------------------
 
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
@@ -301,7 +306,6 @@ implicit none
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ila) N(ila)
             do ila = 1, num_local_atoms
               kkr(ila)%GmatN(:,:,ie,ispin) = GmatN_buffer(:,:,ila)
-              kkr(ila)%lly_grdt(ie,ispin)=lly_grdt(ie,ispin)
             enddo ! ila
 
             call stopTimer(mult_scattering_timer)
@@ -405,6 +409,7 @@ implicit none
     call cleanup_solver(solv, kkr_op, precond)
 
     deallocate(tmatLL, atom_indices, GrefN_buffer)
+    deallocate(DGrefN_buffer) ! LLY
     deallocate(GmatN_buffer)
     deallocate(dTref_local)
     deallocate(Tref_local)
@@ -599,33 +604,39 @@ implicit none
   !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
   !>
   !> Uses MPI-RMA
-  subroutine gatherTmatrices_com(calc, tmatLL, ispin, communicator)
+  subroutine gatherTmatrices_com(calc, tmatLL, dtde, ispin, communicator)
     use CalculationData_mod, only: CalculationData
     use KKRresults_mod, only: KKRresults
     use one_sided_commZ_mod, only: copyFromZ_com
 
     type(CalculationData), intent(in) :: calc
     double complex, intent(inout) :: tmatLL(:,:,:)
+    double complex, intent(inout) :: dtde(:,:,:) ! LLY
     integer, intent(in) :: ispin
     integer, intent(in) :: communicator
 
     integer :: ila, num_local_atoms, lmmaxd, chunk_size
     double complex, allocatable :: tsst_local(:,:,:)
+    double complex, allocatable :: dtsst_local(:,:,:) ! LLY
 
     num_local_atoms = calc%num_local_atoms
     lmmaxd = size(tmatLL, 1)
 
     allocate(tsst_local(lmmaxd,lmmaxd,num_local_atoms))
+    allocate(dtsst_local(lmmaxd,lmmaxd,num_local_atoms)) ! LLY
 
     chunk_size = size(tsst_local, 1)*size(tsst_local, 2)
 
     do ila = 1, num_local_atoms
       tsst_local(:,:,ila) = kkr(ila)%TmatN(:,:,ispin)
+      dtsst_local(:,:,ila) = kkr(ila)%dtde(:,:,ispin) ! LLY
     enddo ! ila
 
     call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
+    call copyFromZ_com(dtde, dtsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
 
     deallocate(tsst_local)
+    deallocate(dtsst_local)
   endsubroutine ! gather
 
 endmodule ! ScatteringCalculation_mod

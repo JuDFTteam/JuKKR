@@ -31,7 +31,7 @@ module kkrmat_new_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01_new(solver, kkr_op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, lly) !LLY
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, lly) !LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -43,6 +43,7 @@ module kkrmat_new_mod
     use TFQMRSolver_mod, only: TFQMRSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
+    use mpi
 
     class(TFQMRSolver), intent(inout) :: solver
     class(KKROperator), intent(inout) :: kkr_op
@@ -57,23 +58,26 @@ module kkrmat_new_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation
     double precision, intent(in) :: RR(:,0:)
-    double complex, intent(inout) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
+    double complex, intent(in) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
 
     !LLY
-    double complex, intent(in)  :: mssq (:,:,:)    !< inverted T-matrix
-    double complex, intent(in)  :: dginp(:,:,:,:)  !< dG_ref/dE,  dim: lmmaxd, lmmaxd, naclsd, nclsd
-    double complex, intent(in)  :: dtde(:,:,:)     !< dT/dE
-    double complex, intent(in)  :: tr_alph(:) 
-    double complex, intent(out) :: lly_grdt
-
+    double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
+    double complex, intent(in)   :: dginp(:,:,:,:)  !< dG_ref/dE,  dim: lmmaxd, lmmaxd, naclsd, nclsd
+    double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
+    double complex, intent(in)   :: tr_alph(:) 
+    double complex, intent(out)  :: lly_grdt
+    double precision, intent(in) :: volcub (:)
+    double precision, intent(in) :: volbz
+    integer, intent(in)          :: lly
 
     ! locals
     double complex :: G_diag(LMMAXD,LMMAXD)
-    integer :: site_lm_size, num_local_atoms, naclsd, naez, ikpoint, ila
+    double complex :: bztr2, trace ! LLY
+    integer :: site_lm_size, num_local_atoms, naclsd, naez, ikpoint, ila, ierr
     type(SolverStats) :: stats
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
@@ -122,7 +126,7 @@ module kkrmat_new_mod
       ! output: ms%mat_X
       call kloopbody(solver, kkr_op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, &
-                     mssq, dtde, dginp, bztr2) !LLY
+                     mssq, dtde, dginp, bztr2, volcub, ikpoint, lly) !LLY
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
@@ -148,7 +152,7 @@ module kkrmat_new_mod
     !--------------------- LLY ----------------------------------------------------
     if (lly == 1) then   
        bztr2 = bztr2*nsymat/volbz + tr_alph(1)
-       trace=czero
+       trace = zero
        CALL MPI_ALLREDUCE(bztr2,trace,1, &
                          MPI_DOUBLE_COMPLEX,MPI_SUM, &
                          MPI_COMM_WORLD,ierr)
@@ -216,7 +220,7 @@ module kkrmat_new_mod
   !> ms%atom_indices(:)
   subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp,&
                        alat, RR, global_atom_id, communicator, iguess_data, &
-                       mssq, dtde, dginp, bztr2) !LLY
+                       mssq, dtde, dginp, bztr2, volcub, ikpoint, lly) !LLY
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
     use TFQMRSolver_mod, only: TFQMRSolver, solve
@@ -242,10 +246,13 @@ module kkrmat_new_mod
     type(InitialGuess), intent(inout) :: iguess_data
 
     ! LLY
-    double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
-    double complex, intent(in)   :: dtde(:,:,:)     !< energy derivative of T-matrix
-    double complex, intent(in)   :: dginp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
-    double complex, intent(out)  :: bztr2
+    double complex, intent(in)         :: mssq (:,:,:)    !< inverted T-matrix
+    double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
+    double complex, intent(in)         :: dginp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
+    double complex, intent(out)        :: bztr2
+    double precision, intent(in)       :: volcub (:)
+    integer, intent(in)                :: ikpoint 
+    integer, intent(in)                :: lly             !< LLY=1/0, turns Lloyd's formula on/off
 
     ! Local LLY
     double complex, allocatable :: dpde_local(:,:)
@@ -259,16 +266,17 @@ module kkrmat_new_mod
     double complex :: gtdpde
     
 
-    integer :: naez, nacls, alm, lmmaxd, n, ist
+    integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, il1
     logical :: initial_zero
+    double complex :: cfctorinv
 
-    
+    cfctorinv = (cone*8.d0*atan(1.d0))/alat
 
 #define ms kkr_op%ms
 #define cluster ms%cluster_info
     lmmaxd = ms%lmmaxd
     naez = ms%naez
-    nacls = cluster_info%naclsd
+    nacls = cluster%naclsd
     alm = naez*lmmaxd
 
     ! Allocate additional arrays for Lloyd's formula    
@@ -354,7 +362,7 @@ module kkrmat_new_mod
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
   
-      matrix_index=(getmyatomid(my_mpi)-1)*lmmaxd+1
+      matrix_index=(global_atom_id(1)-1)*lmmaxd+1
 
       gllke_x_t=transpose(gllke_x)
       dgde_t=transpose(dgde)
@@ -366,7 +374,7 @@ module kkrmat_new_mod
 
       call zgemm('n','n',alm,lmmaxd,lmmaxd,cone,&
                   dgde2,alm,&
-                  tmatll(1,1,getmyatomid(my_mpi)),lmmaxd,czero,&
+                  tmatll(1,1,global_atom_id(1)),lmmaxd,zero,&
                   dpde_local,alm)
 
       call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv,&
@@ -451,11 +459,11 @@ module kkrmat_new_mod
     ! calculate  Tr  | M   * ---- | 
     !                \        dE  /
    
-    tracek=czero
+    tracek=zero
 
     do lm1=1,lmmaxd
       do lm2=1,lmmaxd
-        gtdpde = czero
+        gtdpde = zero
         do il1 = 1,naez*lmmaxd
           gtdpde = gtdpde + ms%mat_x(il1,lm2)*dpde_local(il1,lm1)
         enddo
@@ -463,7 +471,7 @@ module kkrmat_new_mod
       enddo
     enddo
 
-    bztr2 = bztr2 + tracek*volcub(k_point_index)
+    bztr2 = bztr2 + tracek*volcub(ikpoint)
     !--------------------------------------------------------
     endif ! LLY
 

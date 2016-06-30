@@ -51,6 +51,24 @@ module RadialMeshData_mod
 #endif
   end type
 
+  interface create
+    module procedure createRadialMeshData
+  endinterface
+
+  interface load
+    module procedure createRadialMeshDataFromFile
+  endinterface
+  
+  interface destroy
+    module procedure destroyRadialMeshData
+  endinterface
+  
+  interface represent
+    module procedure repr_RadialMeshData
+  endinterface
+
+  integer, parameter :: MAGIC_NUMBER = -889271554
+
   CONTAINS
 
   !----------------------------------------------------------------------------
@@ -102,14 +120,11 @@ module RadialMeshData_mod
     meshdata%RWS = 0.0d0
     meshdata%RMT = 0.0d0
 
-    self%RWS = 0.d0
-    self%RMT = 0.d0
-
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyRadialMeshData(self)
-    type(RadialMeshData), intent(inout) :: self
+  subroutine destroyRadialMeshData(meshdata)
+    type(RadialMeshData), intent(inout) :: meshdata
 
     deallocate(meshdata%R)
     deallocate(meshdata%DRDI)
@@ -137,31 +152,31 @@ module RadialMeshData_mod
 
     call initInterstitialMesh(meshdata, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     ! note radius_mt = xrn(1) * alat
-    call initMuffinTinMesh(self, imt, xrn(1)*alat)
+    call initMuffinTinMesh(meshdata, imt, xrn(1)*alat)
 
-    call test_mesh_consistency(self)
+    call test_mesh_consistency(meshdata)
 
   endsubroutine ! init
 
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat - in units of Bohr
-  subroutine initMuffinTinMesh(self, imt, radius_mt)
-    type(RadialMeshData), intent(inout) :: self
+  subroutine initMuffinTinMesh(meshdata, imt, radius_mt)
+    type(RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: imt
     double precision, intent(in) :: radius_mt
 
     double precision, parameter :: A = 0.025d0
     integer :: ii
 
-    self%A = A
-    self%B = radius_mt / (exp(A * (imt - 1)) - 1.d0)
+    meshdata%A = A
+    meshdata%B = radius_mt / (exp(A * (imt - 1)) - 1.d0)
 
     do ii = 1, imt
-      self%r(ii)    = self%B * (exp(A * (ii - 1)) - 1.d0)
-      self%drdi(ii) = A * self%B * exp(A * (ii - 1))
+      meshdata%r(ii)    = meshdata%B * (exp(A * (ii - 1)) - 1.d0)
+      meshdata%drdi(ii) = A * meshdata%B * exp(A * (ii - 1))
     enddo ! ii
 
-    self%rmt = radius_MT
+    meshdata%rmt = radius_MT
 
   endsubroutine ! init
 
@@ -193,19 +208,19 @@ module RadialMeshData_mod
     endif
 #endif
     ! ircut(0) has to be 0, integrations start at ircut(i)+1
-    self%ircut(0) = 0
-    self%ircut(1) = imt
+    meshdata%ircut(0) = 0
+    meshdata%ircut(1) = imt
 
     isum = imt
     do ii = 2, ipan
       isum = isum + nm(ii - 1)
-      self%ircut(ii) = isum
+      meshdata%ircut(ii) = isum
     enddo ! ii
-    self%irc = self%ircut(ipan)
+    meshdata%irc = meshdata%ircut(ipan)
 
-    self%irws = isum
-    if (isum > self%irmd) &
-      die_here("Error creating mesh, irmd too small, isum ="+isum-", self%irmd ="+self%irmd)
+    meshdata%irws = isum
+    if (isum > meshdata%irmd) &
+      die_here("Error creating mesh, irmd too small, isum ="+isum-", meshdata%irmd ="+meshdata%irmd)
 
     meshdata%irmin = meshdata%irws - irns
     meshdata%irns = irns
@@ -227,25 +242,25 @@ module RadialMeshData_mod
   !>
   !> The index file with extension .idx is necessary because different
   !> atoms can have a different number of radial mesh points
-  subroutine createRadialMeshDataFromFile(self, filename, recnr)
-    type(RadialMeshData), intent(inout) :: self
+  subroutine createRadialMeshDataFromFile(meshdata, filename, recnr)
+    type(RadialMeshData), intent(inout) :: meshdata
     character(len=*), intent(in) :: filename
     integer, intent(in) :: recnr
 
-    integer :: FILEUNIT = 37
+    integer :: fu = 37
     integer :: irmd, ipand, max_reclen, meshn, nfu
 
     ! index file has extension .idx
 
-    call openRadialMeshDataIndexDAFile(meshdata, FILEUNIT, &
+    call openRadialMeshDataIndexDAFile(meshdata, fu, &
                                        filename // ".idx") !ignored for task-local files
-    call readRadialMeshDataIndexDA(meshdata, FILEUNIT, recnr, &
+    call readRadialMeshDataIndexDA(meshdata, fu, recnr, &
                                        irmd, ipand, max_reclen &
 #ifdef USE_OLD_MESH    
                                        ,meshn, nfu &
 #endif
                                        )
-    call closeRadialMeshDataIndexDAFile(FILEUNIT)
+    call closeRadialMeshDataIndexDAFile(fu)
 
     call createRadialMeshData(meshdata, irmd, ipand &
 #ifdef USE_OLD_MESH    
@@ -258,16 +273,16 @@ module RadialMeshData_mod
     meshdata%nfu   = nfu
 #endif
 
-    call openRadialMeshDataDAFile(self, fu, filename, max_reclen)
-    call readRadialMeshDataDA(self, fu, recnr)
+    call openRadialMeshDataDAFile(meshdata, fu, filename, max_reclen)
+    call readRadialMeshDataDA(meshdata, fu, recnr)
     call closeRadialMeshDataDAFile(fu)
 
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
   !> Write mesh data to direct access file 'fileunit' at record 'recnr'
-  subroutine writeRadialMeshDataDA(self, fileunit, recnr)
-    type(RadialMeshData), intent(in) :: self
+  subroutine writeRadialMeshDataDA(meshdata, fileunit, recnr)
+    type(RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
 
@@ -276,7 +291,7 @@ module RadialMeshData_mod
     write(unit=num, fmt='(a,i7.7)') "mesh.",recnr
     open(fileunit, file=num, form='unformatted', action='write')
 
-    call writeRadialMeshDataIndexDA(self, fileunit, recnr, 0)
+    call writeRadialMeshDataIndexDA(meshdata, fileunit, recnr, 0)
 #endif
 
     FILEWRITE (fileunit, rec=recnr) MAGIC_NUMBER + recnr, &
@@ -306,8 +321,8 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Read mesh data from direct access file 'fileunit' at record 'recnr'
-  subroutine readRadialMeshDataDA(self, fileunit, recnr)
-    type(RadialMeshData), intent(inout) :: self
+  subroutine readRadialMeshDataDA(meshdata, fileunit, recnr)
+    type(RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: fileunit, recnr
 
     integer :: magic, magic2, checkmagic
@@ -320,7 +335,7 @@ module RadialMeshData_mod
     open(fileunit, file=num, form='unformatted', action='read', status='old')
 
     ! read header at beginning of file
-    call readRadialMeshDataHeader(meshdata, FILEUNIT, recnr, irmd, ipand, max_reclen &
+    call readRadialMeshDataHeader(meshdata, fu, recnr, irmd, ipand, max_reclen &
 #ifdef USE_OLD_MESH
                                   , meshn, nfu &
 #endif
@@ -354,7 +369,7 @@ module RadialMeshData_mod
 
     if (magic /= checkmagic .or. magic2 /= checkmagic) die_here("Invalid mesh data read.")
 
-    call test_mesh_consistency(self)
+    call test_mesh_consistency(meshdata)
 
   endsubroutine ! read
 
@@ -363,7 +378,6 @@ module RadialMeshData_mod
   !>
   !> Note: for a file containing meshes of several atoms, the maximum
   !> of all their record lengths has to be determined
-  endfunction ! get
   integer function getMinReclenMesh(meshdata) result(reclen)
     implicit none
 
@@ -396,8 +410,8 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Opens RadialMeshData direct access file.
-  subroutine openRadialMeshDataDAFile(self, fileunit, filename, max_reclen)
-    type(RadialMeshData), intent(in) :: self
+  subroutine openRadialMeshDataDAFile(meshdata, fileunit, filename, max_reclen)
+    type(RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
     integer, intent(in), optional :: max_reclen
@@ -408,7 +422,7 @@ module RadialMeshData_mod
     if (present(max_reclen)) then
       reclen = max_reclen
     else
-      reclen = getMinReclenMesh(self)
+      reclen = getMinReclenMesh(meshdata)
     endif
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
@@ -428,8 +442,8 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Write mesh dimension data to direct access file 'fileunit' at record 'recnr'
-  subroutine writeRadialMeshDataIndexDA(self, fileunit, recnr, max_reclen)
-    type(RadialMeshData), intent(in) :: self
+  subroutine writeRadialMeshDataIndexDA(meshdata, fileunit, recnr, max_reclen)
+    type(RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     integer, intent(in) :: recnr
     integer, intent(in) :: max_reclen
@@ -485,8 +499,8 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Opens RadialMeshData index file.
-  subroutine openRadialMeshDataIndexDAFile(self, fileunit, filename)
-    type(RadialMeshData), intent(in) :: self
+  subroutine openRadialMeshDataIndexDAFile(meshdata, fileunit, filename)
+    type(RadialMeshData), intent(in) :: meshdata
     integer, intent(in) :: fileunit
     character(len=*), intent(in) :: filename
 
@@ -527,8 +541,8 @@ module RadialMeshData_mod
   !>
   !>    call repr_RadialMeshData(old_mesh, str)
   !>    write(*,'(A)') str  ! format (A) necessary to avoid messy output
-  subroutine repr_RadialMeshData(self, str)
-    class(RadialMeshData), intent(in) :: self
+  subroutine repr_RadialMeshData(meshdata, str)
+    class(RadialMeshData), intent(in) :: meshdata
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl
@@ -538,37 +552,37 @@ module RadialMeshData_mod
     nl = new_line(' ')
 
     str = ''
-    write(buffer, *) "irmd  = ", self%irmd   !< number of mesh points
+    write(buffer, *) "irmd  = ", meshdata%irmd   !< number of mesh points
     str = str // trim(buffer) // nl
-    write(buffer, *) "ipand = ", self%ipand  !< dimension variable panels for historical reasons
+    write(buffer, *) "ipand = ", meshdata%ipand  !< dimension variable panels for historical reasons
     str = str // trim(buffer) // nl
-    write(buffer, *) "A     = ", self%A    !< logarithmic mesh parameter A
+    write(buffer, *) "A     = ", meshdata%A    !< logarithmic mesh parameter A
     str = str // trim(buffer) // nl
-    write(buffer, *) "B     = ", self%B    !< logarithmic mesh parameter A
+    write(buffer, *) "B     = ", meshdata%B    !< logarithmic mesh parameter A
     str = str // trim(buffer) // nl
-    write(buffer, *) "RWS   = ", self%RWS  !< maximal radius
+    write(buffer, *) "RWS   = ", meshdata%RWS  !< maximal radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "RMT   = ", self%RMT !< muffin-tin radius
+    write(buffer, *) "RMT   = ", meshdata%RMT !< muffin-tin radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "IPAN  = ", self%IPAN !< number of mesh panels
+    write(buffer, *) "IPAN  = ", meshdata%IPAN !< number of mesh panels
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRC   = ", self%IRC
+    write(buffer, *) "IRC   = ", meshdata%IRC
     str = str // trim(buffer) // nl
-    write(buffer, *) "IMT   = ", self%IMT    !< endof muffin-tin region
+    write(buffer, *) "IMT   = ", meshdata%IMT    !< endof muffin-tin region
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRNS  = ", self%IRNS
+    write(buffer, *) "IRNS  = ", meshdata%IRNS
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRWS  = ", self%IRWS  !< index of max. radius
+    write(buffer, *) "IRWS  = ", meshdata%IRWS  !< index of max. radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRMIN = ", self%IRMIN
+    write(buffer, *) "IRMIN = ", meshdata%IRMIN
     str = str // trim(buffer) // nl // nl
     write(buffer, *) "nr.    R                          DRDI"
     str = str // trim(buffer) // nl
     write(buffer, '(79("="))')
     str = str // trim(buffer) // nl
 
-    do ind = 1, size(self%R)
-      write(buffer, '(I5, 2X, E23.16,2X,E23.16)') ind, self%R(ind), self%DRDI(ind)
+    do ind = 1, size(meshdata%R)
+      write(buffer, '(I5, 2X, E23.16,2X,E23.16)') ind, meshdata%R(ind), meshdata%DRDI(ind)
       str = str // trim(buffer) // nl
     enddo ! ind
     str = str // nl
@@ -576,8 +590,8 @@ module RadialMeshData_mod
     write(buffer, *) "IRCUT = "
     str = str // trim(buffer) // nl
 
-    do ind = 0, size(self%IRCUT) - 1
-      write(buffer, *) self%IRCUT(ind)
+    do ind = 0, size(meshdata%IRCUT) - 1
+      write(buffer, *) meshdata%IRCUT(ind)
       str = str // trim(buffer) // nl
     enddo ! ind
     
@@ -620,37 +634,37 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Test consistency of mesh parameters.
-  subroutine test_mesh_consistency(self)
-    class(RadialMeshData), intent(in) :: self
+  subroutine test_mesh_consistency(meshdata)
+    class(RadialMeshData), intent(in) :: meshdata
 
     double precision :: rmt_test
     double precision, parameter :: TOLERANCE = 1.d-8
 
-    rmt_test = self%B * (exp(self%A * (self%IMT - 1)) - 1.0d0)
+    rmt_test = meshdata%B * (exp(meshdata%A * (meshdata%IMT - 1)) - 1.0d0)
 
-    if (abs(rmt_test - self%rmt) > TOLERANCE) &
-      die_here("Mesh parameters A, B, IMT inconsistent with Rmt, rmt ="+rmt_test+"but self%rmt ="+self%rmt)
+    if (abs(rmt_test - meshdata%rmt) > TOLERANCE) &
+      die_here("Mesh parameters A, B, IMT inconsistent with Rmt, rmt ="+rmt_test+"but meshdata%rmt ="+meshdata%rmt)
 
-    if (abs(self%r(self%IMT) - self%rmt) > TOLERANCE) &
-      die_here("radial value at self%imt not consistent with Rmt, r(imt) ="+self%r(self%IMT)+"but rmt ="+self%rmt)
+    if (abs(meshdata%r(meshdata%IMT) - meshdata%rmt) > TOLERANCE) &
+      die_here("radial value at meshdata%imt not consistent with Rmt, r(imt) ="+meshdata%r(meshdata%IMT)+"but rmt ="+meshdata%rmt)
 
-    if (self%irc /= self%irmd) &
-      die_here("self%irc ="+self%irc+"not equal to self%irmd ="+self%irmd)
+    if (meshdata%irc /= meshdata%irmd) &
+      die_here("meshdata%irc ="+meshdata%irc+"not equal to meshdata%irmd ="+meshdata%irmd)
 
-    if (self%irws /= self%irmd) &
-      die_here("self%irws ="+self%irws+"not equal to self%irmd ="+self%irmd)
+    if (meshdata%irws /= meshdata%irmd) &
+      die_here("meshdata%irws ="+meshdata%irws+"not equal to meshdata%irmd ="+meshdata%irmd)
 
-    if (abs(self%r(self%IRWS) - self%rws) > TOLERANCE) &
-      die_here("radial value at self%irws ="+self%r(self%IRWS)+"not consistent with rWS ="+self%rws)
+    if (abs(meshdata%r(meshdata%IRWS) - meshdata%rws) > TOLERANCE) &
+      die_here("radial value at meshdata%irws ="+meshdata%r(meshdata%IRWS)+"not consistent with rWS ="+meshdata%rws)
 
-    if (self%ircut(0) /= 0) &
-      die_here("self%ircut(0) ="+self%ircut(0)+"is not 0.")
+    if (meshdata%ircut(0) /= 0) &
+      die_here("meshdata%ircut(0) ="+meshdata%ircut(0)+"is not 0.")
 
-    if (self%ircut(1) /= self%imt) &
-      die_here("self%ircut(1) ="+self%ircut(1)+" is not equal to self%imt ="+self%imt)
+    if (meshdata%ircut(1) /= meshdata%imt) &
+      die_here("meshdata%ircut(1) ="+meshdata%ircut(1)+" is not equal to meshdata%imt ="+meshdata%imt)
 
-    if (self%ircut(self%ipan) /= self%irmd) &
-      die_here("self%ircut(self%ipan) ="+self%ircut(self%ipan)+"is not equal to self%irmd ="+self%irmd)
+    if (meshdata%ircut(meshdata%ipan) /= meshdata%irmd) &
+      die_here("meshdata%ircut(meshdata%ipan) ="+meshdata%ircut(meshdata%ipan)+"is not equal to meshdata%irmd ="+meshdata%irmd)
 
   endsubroutine ! test
 

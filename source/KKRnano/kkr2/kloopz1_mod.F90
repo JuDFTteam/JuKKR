@@ -9,7 +9,8 @@ module kloopz1_mod
   contains
 
   subroutine kloopz1_new(Gmatn, solv, kkr_op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
-                         nsymat, dsymll, tmatLL, lmmaxd, trunc2atom_index, communicator, iguess_data)
+                         nsymat, dsymll, tmatLL, lmmaxd, trunc2atom_index, communicator, iguess_data, &
+                         DGinp_local, dtde, tr_alph, lly_grdt, lly) ! LLY 
 
 ! only part of arrays for corresponding spin direction is passed
 ! (Gmatn, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
@@ -47,7 +48,7 @@ module kloopz1_mod
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(N,N,nsymat) !<
     double complex, intent(out) :: Gmatn(:,:,:) !< (N,N,num_local_atoms)
-    double complex, intent(inout) :: Ginp_local(:,:,:,:) !< reference green function
+    double complex, intent(in) :: Ginp_local(:,:,:,:) !< reference green function
     double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
@@ -55,6 +56,13 @@ module kloopz1_mod
     double precision, intent(in) :: Bzkp(:,:) ! dim (3,kpoibz)
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
  
+    ! LLY
+    double complex, intent(in)   :: DGinp_local(:,:,:,:) !< energy derivative of reference green function
+    double complex, intent(in)   :: tr_alph(:)
+    double complex, intent(in)   :: dtde(:,:,:) 
+    double complex, intent(out)  :: lly_grdt
+    integer       , intent(in)   :: lly
+
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
     ! locals
@@ -108,7 +116,8 @@ module kloopz1_mod
     endif
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
-    call kkrmat01_new(solv, kkr_op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data)
+    call kkrmat01_new(solv, kkr_op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
+                      mssq, DGinp_local, dtde, tr_alph, lly_grdt, k_point_weights, volBZ, lly) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 
 !      kkrmat01 returns GS (local) which contains the scattering path operator
