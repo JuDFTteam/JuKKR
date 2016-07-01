@@ -22,9 +22,6 @@ module TruncationZone_mod
     integer(kind=4), allocatable :: trunc2atom_index(:) !> map truncation zone atom index to atom index ("inverse" of index_map)
   endtype
 
-!   public :: clear_non_existing_entries
-!   integer(kind=2), allocatable :: nzero_list(:), izero_list(:,:) !> NEW FEATURE: store
-  
   interface create
     module procedure createTruncationZone
   endinterface
@@ -33,8 +30,8 @@ module TruncationZone_mod
     module procedure destroyTruncationZone
   endinterface
 
-  integer, parameter, private :: OUTSIDE = 0 ! should be -1 in C-language
-  
+  integer, parameter, private :: OUTSIDE = -1 ! should be -1 in C-language
+
   contains
   
 #ifndef ell_int_t
@@ -47,10 +44,9 @@ module TruncationZone_mod
     ell_int_t, intent(in), optional :: masks(:,:) !> one mask per local atom, dim(naez_all,num_local_atoms)
 
     integer :: ii, ind, memory_stat
-!   integer :: num_local_atoms, ila, iz
     
     self%naez_all = size(mask)
-    self%naez_trc = count(mask > 0)
+    self%naez_trc = count(mask >= 0)
 
     ! setup index map from global indices to a process local view
     ALLOCATECHECK(self%index_map(OUTSIDE:self%naez_all))
@@ -60,7 +56,7 @@ module TruncationZone_mod
     
     ind = 0
     do ii = 1, self%naez_all
-      if (mask(ii) > 0) then
+      if (mask(ii) >= 0) then
         ind = ind + 1
         self%index_map(ii) = ind
         self%trunc2atom_index(ind) = ii ! inverse means that all(self%index_map(self%trunc2atom_index(:)) == [1, 2, 3, ..., naez_trc])
@@ -73,59 +69,18 @@ module TruncationZone_mod
 
     if (.not. present(masks)) return
     
-    ! this must hold: (mask(:) > 0) == any(masks > 0, dim=2)
-    
-! #define SELF    
-!     num_local_atoms = size(masks, 2) ! number of local atoms
-!     allocate(SELF nzero_list(num_local_atoms))
-!     do ila = 1, num_local_atoms
-!       SELF nzero_list(ila) = count(masks(self%trunc2atom_index(:),ila) <= 0)
-!     enddo ! ila
-!     
-!     allocate(SELF izero_list(maxval(SELF nzero_list),num_local_atoms))
-! 
-!     do ila = 1, num_local_atoms
-!       iz = 0
-!       do ind = 1, self%naez_trc
-!         ii = self%trunc2atom_index(ind)
-!         if (masks(ii,ila) <= 0) then
-!           iz = iz + 1
-!           SELF izero_list(iz,ila) = ind
-!         endif
-!       enddo ! ind
-!       if (iz /= SELF nzero_list(ila)) stop __FILE__ ! fatal error
-!     enddo ! ila
-! 
-! !   write(*,'(A,999(" ",i0))') 'Truncation zone created, Zero-List: ',SELF nzero_list
-! #undef SELF
+    ! this must hold: (mask(:) >= 0) .eqv. any(masks >= 0, dim=2)
+    !
+    ! ToDo: use masks to determine more
+
   endsubroutine ! create
-  
-!   subroutine clear_non_existing_entries(vec, N)
-!     double complex, intent(inout) :: vec(1:,1:)
-!     integer, intent(in), optional :: N !> block size
-!     integer :: ila, iz, ic, BS
-!     
-!     if( .not. allocated(nzero_list)) return
-!     
-!     BS = (size(vec, 2) - 1)/size(nzero_list) + 1
-!     if (present(N)) BS = N
-! !!!!!!! WORKAROUND for truncation and num_local_atoms > 1, works only if all blocks have size N
-!     ! set elements in b to zero which only exist because some other of the local atoms is non-zero there
-!     ! shape(b) = [leaddim_b, ncols], ncols = N*num_local_atoms
-!     do ila = 1, size(nzero_list) ! == num_local_atoms
-!       do iz = 1, nzero_list(ila)
-!         ic = izero_list(iz,ila)
-!         vec(ic*BS-BS+1:BS*ic,ila*BS-BS+1:BS*ila) = 0.d0
-!       enddo ! iz
-!     enddo ! ila
-! !!!!!!! WORKAROUND
-!   endsubroutine
   
   elemental subroutine destroyTruncationZone(self)
     type(TruncationZone), intent(inout) :: self
 
     integer :: ist ! ignore status
     deallocate(self%index_map, self%trunc2atom_index, stat=ist)
+    self%naez_all = 0
     self%naez_trc = 0
   endsubroutine ! destroy
 
