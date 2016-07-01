@@ -77,7 +77,7 @@ module NearField_mod
   !----------------------------------------------------------------------------
   !> this is a general routine for shifting sph. harm. expansions
   subroutine calc_near_field(v_near, radius, dist_vec, pot, lmax_prime)
-    use NearField_kkr_mod, only: IntracellPotential, get_pot
+    use NearField_kkr_mod, only: IntracellPotential, get
     use Harmonics_mod, only: ymy
     double precision, intent(out) :: v_near(:)  !indices (lm)
     double precision, intent(in) :: radius
@@ -136,7 +136,7 @@ module NearField_mod
 !     call get_const_monopole(v_intra, norm_vec)
       call get_const_multipole(v_intra, norm_vec)
 #else
-      call get_pot(pot, v_intra, norm_vec) ! get intracell potential at radius 'norm_vec'
+      call get(pot, v_intra, norm_vec) ! get intracell potential at radius 'norm_vec'
 #endif
 
       integrand(ij,1) = dot_product(sph_harm, v_intra) ! perform summation over L'
@@ -311,7 +311,7 @@ endmodule ! NearField_mod
 !    
 !    do ii = 1, NPOINTS
 !      intra_pot%radial_points(ii) = (ii) * 1.d0 / (NPOINTS)
-!      call pot%get_pot(v_near, intra_pot%radial_points(ii))
+!      call pot%get(v_near, intra_pot%radial_points(ii))
 !      intra_pot%v_intra_values(ii, :) = v_near
 !    enddo
 !    
@@ -322,15 +322,15 @@ endmodule ! NearField_mod
 !    write(*,*) eval_expansion(v_near, vec)
 ! 
 ! !    do ii = 1, NPOINTS
-! !      call pot%get_pot(v_near, intra_pot%radial_points(ii))
+! !      call pot%get(v_near, intra_pot%radial_points(ii))
 ! !      write(*,*) v_near(1)
-! !      call intra_pot%get_pot(v_near, intra_pot%radial_points(ii))
+! !      call intra_pot%get(v_near, intra_pot%radial_points(ii))
 ! !      write(*,*) v_near(1)
 ! !    enddo
 !    
 !    !do ii = 1, NPOINTS * 4
 !    !  r_temp = (ii) * 2.d0 / (NPOINTS*4) + 1.d0
-!    !  call intra_pot%get_pot(v_near, r_temp)
+!    !  call intra_pot%get(v_near, r_temp)
 !    !  write(*,*) r_temp, v_near(7), v_near(15)
 !    !enddo
 !    !call calc_near_field(v_near, radius, d , intra_pot, LMAX)

@@ -14,21 +14,19 @@ module NearField_kkr_mod
   use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
-  public :: IntracellPotential, create, destroy, init, get_pot
+  public :: IntracellPotential, create, destroy, init, get
   
   !----------------------------------------------------------------------------
   !> Usage:
   !> type(IntracellPotential) :: pot
-  !> call pot%create(lmpot, irmd)
+  !> call create(pot, lmpot, irmd)
   !> pot%charge_moments = ... ! set charge moments
   !> pot%radial_points = ...
   !> pot%v_intra_values = ...
-  !> call pot%init()
+  !> call init(pot)
   !> ...  ! now use it
-  !> call pot%destroy()
-! type, extends(Potential) :: IntracellPotential
+  !> call destroy(pot)
   type :: IntracellPotential
-
     double precision, allocatable :: charge_moments(:)
     double precision, allocatable :: radial_points(:)
     double precision, allocatable :: v_intra_values(:, :)
@@ -39,23 +37,16 @@ module NearField_kkr_mod
     double precision, allocatable :: y2ndder(:,:)
     double precision :: rws_bounding
     integer :: counter_spline
-    
-!     contains
-!     
-!     procedure :: create => createIntracellPot
-!     procedure :: init => initIntracellPotential
-!     procedure :: destroy => destroyIntracellPotential
-!     procedure :: get_pot => get_intracell
   endtype
   
   double precision, parameter, private :: PI = 3.1415926535897932d0
 
   interface create
-    module procedure createIntracellPot
+    module procedure createIntracellPotential
   endinterface
 
-  interface get_pot
-    module procedure get_intracell
+  interface get
+    module procedure getIntracellPotential
   endinterface
 
   interface init
@@ -69,7 +60,7 @@ module NearField_kkr_mod
   contains
   
   !----------------------------------------------------------------------------
-  subroutine get_intracell(self, v_intra, radius)
+  subroutine getIntracellPotential(self, v_intra, radius)
     type(IntracellPotential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
@@ -110,7 +101,7 @@ module NearField_kkr_mod
   endsubroutine ! get
   
   !----------------------------------------------------------------------------
-  subroutine createIntracellPot(self, lmpotd, irmd)
+  subroutine createIntracellPotential(self, lmpotd, irmd)
     type(IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
@@ -120,10 +111,10 @@ module NearField_kkr_mod
     
     allocate(self%charge_moments(lmpotd))
     allocate(self%radial_points(irmd))
-    allocate(self%v_intra_values(irmd, lmpotd))
+    allocate(self%v_intra_values(irmd,lmpotd))
     allocate(self%xarray(irmd))
-    allocate(self%yarray(irmd, lmpotd))
-    allocate(self%y2ndder(irmd, lmpotd))
+    allocate(self%yarray(irmd,lmpotd))
+    allocate(self%y2ndder(irmd,lmpotd))
     
     self%charge_moments = nan
     self%radial_points = nan
@@ -131,21 +122,6 @@ module NearField_kkr_mod
     self%xarray = nan
     self%yarray = nan
     self%y2ndder = nan
-  endsubroutine ! create
-  
-    !----------------------------------------------------------------------------
-  subroutine createIntracellPotential(self, lmpotd, irmd)
-    type(IntracellPotential), intent(inout) :: self
-    integer, intent(in) :: lmpotd
-    integer, intent(in) :: irmd
-    allocate(self%charge_moments(lmpotd))
-    allocate(self%radial_points(irmd))
-    allocate(self%v_intra_values(irmd, lmpotd))
-    
-    ! allocate arrays for spline interpolation
-    allocate(self%xarray(irmd))
-    allocate(self%yarray(irmd, lmpotd))
-    allocate(self%y2ndder(irmd, lmpotd))
   endsubroutine ! create
   
   !----------------------------------------------------------------------------
@@ -204,12 +180,9 @@ module NearField_kkr_mod
   elemental subroutine destroyIntracellPotential(self)
     type(IntracellPotential), intent(inout) :: self
     integer :: ist
-    deallocate(self%charge_moments, stat=ist)
-    deallocate(self%radial_points, stat=ist)
-    deallocate(self%v_intra_values, stat=ist)
-    deallocate(self%xarray, stat=ist)
-    deallocate(self%yarray, stat=ist)
-    deallocate(self%y2ndder, stat=ist)
+    deallocate(self%charge_moments, self%radial_points, &
+               self%v_intra_values, self%xarray, &
+               self%yarray, self%y2ndder, stat=ist)
   endsubroutine ! destroy
   
 endmodule ! NearField_kkr_mod
