@@ -20,14 +20,12 @@
 !     local variables.
 !
       integer :: i, j
-      double precision imagx, realx
+      double precision :: imagx, realx
 !
 !     local variables that are saved from one call to the next.
 !
       double precision, save :: dmax
       integer, save :: im=0, imax, is
-      
-      intrinsic :: dble, dcmplx, iabs, mod
 !
 !     initialize the generator data.
 !
@@ -41,13 +39,13 @@
  10      continue
  20      imax = (im-1) * 2 + 1
          dmax = dble(imax)
-         do 30 i = 1, mod(j,3)
+         do i = 1, mod(j, 3)
             j = j - 1
             im = im / 2
- 30      continue
+         enddo ! i
          im = im + 5
-         is = iabs(mod(im*30107,imax))
-      end if
+         is = iabs(mod(im*30107, imax))
+      endif
 !
 !     check whether there is a new seed.
 !
@@ -55,12 +53,12 @@
 !
 !     here goes the rest.
 !
-      do 40 i = 1, n
+      do i = 1, n
          realx = dble(is) / dmax
-         is    = iabs(mod(im*is,imax))
+         is    = iabs(mod(im*is, imax))
          imagx = dble(is) / dmax
-         is    = iabs(mod(im*is,imax))
+         is    = iabs(mod(im*is, imax))
          zx(i) = dcmplx(realx, imagx)
- 40   continue
+      enddo ! i
 
       endsubroutine ! zrandn

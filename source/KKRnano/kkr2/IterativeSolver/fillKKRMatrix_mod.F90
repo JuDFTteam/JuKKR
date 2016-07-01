@@ -66,6 +66,7 @@ module fillKKRMatrix_mod
         ASSERT(ij <= nnzb)
         
         sparse%ja(ij) = indn0(irow,icol)
+        
         ij = ij + 1
       enddo ! icol
     enddo ! irow
@@ -81,6 +82,7 @@ module fillKKRMatrix_mod
         ASSERT( 1 <= indn0(irow,icol) .and. indn0(irow,icol) <= nrows )
 
         start_address = start_address + lm_max*(lmax_array(indn0(irow,icol)) + 1)**2
+        
         ij = ij + 1
       enddo ! icol
     enddo ! irow
@@ -245,7 +247,9 @@ module fillKKRMatrix_mod
 
         do icol = kvstc(ibcol), kvstc(ibcol+1) - 1
           do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
+          
             full(irow,icol) = smat(ind)
+            
             ind = ind + 1
           enddo ! irow
         enddo ! icol

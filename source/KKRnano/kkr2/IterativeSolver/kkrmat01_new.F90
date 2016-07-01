@@ -29,7 +29,7 @@ module kkrmat_new_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01_new(solver, kkr_op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
+  subroutine kkrmat01_new(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
                           mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, lly) !LLY
     !   performs k-space integration,
@@ -46,7 +46,7 @@ module kkrmat_new_mod
     use mpi
 
     type(IterativeSolver), intent(inout) :: solver
-    type(KKROperator), intent(inout) :: kkr_op
+    type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: preconditioner
     
     integer, intent(in) :: nkpoints !< number of k-points
@@ -85,8 +85,7 @@ module kkrmat_new_mod
 !    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
 #endif
 
-#define ms kkr_op%ms
-#define cluster ms%cluster_info
+#define cluster op%cluster_info
 
     ! array dimensions
     naez = cluster%naez_trc
@@ -94,7 +93,7 @@ module kkrmat_new_mod
 
     site_lm_size = naez*LMMAXD
 
-    num_local_atoms = size(ms%atom_indices)
+    num_local_atoms = size(op%atom_indices)
 
     ! WARNING: Symmetry assumptions might have been used that are
     ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
@@ -131,13 +130,13 @@ module kkrmat_new_mod
 
       ! Get the scattering path operator for k-point kpoints(:,ikpoint)
       ! output: ms%mat_X
-      call kloopbody(solver, kkr_op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
+      call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, &
                      mssq, dtde, dginp, bztr2, volcub, ikpoint, &
                      global_atom_idx_lly ,lly) !LLY
 
       do ila = 1, num_local_atoms
-        call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
+        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%kvstr, ila) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
@@ -148,9 +147,9 @@ module kkrmat_new_mod
       ! TODO: use mat_X to calculate Jij
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
-        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, ms%atom_indices(1), &
+        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, op%atom_indices(1), &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
-                    ms%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
+                    op%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
 
     !==============================================================================
@@ -223,13 +222,13 @@ module kkrmat_new_mod
   !> Calculate scattering path operator for 'kpoint'.
   !>
   !> Input are the \Delta T and the realspace G_ref (Ginp).
-  !> Solution is stored in ms%mat_X.
+  !> Solution is stored in op%mat_X.
   !> Scattering path operator is calculated for atoms given in
-  !> ms%atom_indices(:)
-  subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp,&
-                       alat, RR, global_atom_id, communicator, iguess_data, &
+  !> op%atom_indices(:)
+  subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, &
                        mssq, dtde, dginp, bztr2, volcub, ikpoint, &
                        global_atom_idx_lly ,lly) !LLY
+
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
     use IterativeSolver_mod, only: IterativeSolver, solve
@@ -243,7 +242,7 @@ module kkrmat_new_mod
     USE_LOGGING_MOD
 
     type(IterativeSolver), intent(inout) :: solver
-    type(KKROperator), intent(inout) :: kkr_op
+    type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
     double complex, intent(in) :: tmatLL(:,:,:)
@@ -279,10 +278,10 @@ module kkrmat_new_mod
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
+    
+#define cluster op%cluster_info
 
-#define ms kkr_op%ms
-#define cluster ms%cluster_info
-    naez = ms%naez
+    naez = op%naez
     nacls = cluster%naclsd
     alm = naez*lmmaxd
 
@@ -308,6 +307,8 @@ module kkrmat_new_mod
     if (.not. allocated(dpde_local)) then
       allocate(dpde_local(naez*lmmaxd,lmmaxd))
     end if
+    
+    
 
     !=======================================================================
     ! ---> fourier transformation
@@ -333,16 +334,16 @@ module kkrmat_new_mod
     ! not using locks does not scale well
   
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-    call referenceFourier_com(ms%GLLh, ms%sparse, kpoint, alat, &
+    call referenceFourier_com(op%GLLh, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
 #else
-    call referenceFourier_part2(ms%GLLh, ms%sparse, kpoint, alat, &
+    call referenceFourier_part2(op%GLLh, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, Ginp)
 #endif
 
-    TESTARRAYLOG(3, ms%GLLh)
+    TESTARRAYLOG(3, op%GLLh)
 
    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
@@ -390,12 +391,14 @@ module kkrmat_new_mod
       !--------------------------------------------------------
  
    endif ! LLY
+    
+    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
-    call buildKKRCoeffMatrix(ms%GLLh, tmatLL, ms%lmmaxd, naez, ms%sparse)
+    call buildKKRCoeffMatrix(op%GLLh, tmatLL, op%lmmaxd, naez, op%sparse)
     !----------------------------------------------------------------------------
 
-    TESTARRAYLOG(3, ms%GLLh)
+    TESTARRAYLOG(3, op%GLLh)
 
     ! ==> now GLLh holds (1 - Delta_t * G_ref)
 
@@ -413,48 +416,48 @@ module kkrmat_new_mod
 
     if (iguess_data%iguess == 1) then
       solver%initial_zero = .false.
-      call load(iguess_data, ms%mat_X)
+      call load(iguess_data, op%mat_X)
     else
       solver%initial_zero = .true.
     endif
 
-    call calc(preconditioner, ms%GLLh) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
+    call calc(preconditioner, op%GLLh) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
     if (cutoffmode == 3 .or. cutoffmode == 0) then
 
-      call solve(solver, ms%mat_X, ms%mat_B) ! use iterative solver
+      call solve(solver, op%mat_X, op%mat_B) ! use iterative solver
 
       if (DEBUG_dump_matrix) then
-        call dump(ms%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
-        call dump(ms%GLLh,  "matrix.unf", formatted=.false.)
-        call dump(ms%GLLh,  "matrix_form.dat", formatted=.true.)
-        call dump(ms%mat_X, "solution.unf", formatted=.false.)
-        call dump(ms%mat_X, "solution_form.dat", formatted=.true.)
-        call dump(ms%mat_B, "rhs.unf", formatted=.false.)
-        call dump(ms%mat_B, "rhs_form.dat", formatted=.true.)
+        call dump(op%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
+        call dump(op%GLLh,  "matrix.unf", formatted=.false.)
+        call dump(op%GLLh,  "matrix_form.dat", formatted=.true.)
+        call dump(op%mat_X, "solution.unf", formatted=.false.)
+        call dump(op%mat_X, "solution_form.dat", formatted=.true.)
+        call dump(op%mat_B, "rhs.unf", formatted=.false.)
+        call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
       endif ! DEBUG_dump_matrix
       
     endif ! cutoffmode in {0,3}
 
-    TESTARRAYLOG(3, ms%mat_B)
+    TESTARRAYLOG(3, op%mat_B)
 
     ! ALTERNATIVE: direct solution with LAPACK
     if (cutoffmode == 4) then
-      n = size(ms%mat_B, 1)
+      n = size(op%mat_B, 1)
       if (any(shape(full) /= [n,n])) then
         deallocate(full, stat=ist) ! ignore status
         allocate(full(n,n), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertToFullMatrix(ms%GLLh, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, ms%sparse%kvstr, ms%sparse%kvstr, full)
+      call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, full)
       TESTARRAYLOG(3, full)
-      call solveFull(full, ms%mat_B, ms%mat_X)
+      call solveFull(full, op%mat_B, op%mat_X)
     endif ! cutoffmode == 4
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
-    call store(iguess_data, ms%mat_X)
+    call store(iguess_data, op%mat_X)
 
-    TESTARRAYLOG(3, ms%mat_X)
+    TESTARRAYLOG(3, op%mat_X)
     
     ! RESULT: mat_X
 

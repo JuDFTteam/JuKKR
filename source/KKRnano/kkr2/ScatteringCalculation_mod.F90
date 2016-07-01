@@ -85,7 +85,7 @@ implicit none
     type(TimerMpi) :: mult_scattering_timer, single_site_timer
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer, allocatable :: atom_indices(:)
-    integer :: ie, ispin, prspin, nmesh
+    integer :: ie, ispin, prspin, nmesh, ist
     integer :: i1, ila, num_local_atoms, iacls
     integer :: lmmaxd
     logical :: xccpl
@@ -103,21 +103,19 @@ implicit none
     atomdata  => getAtomData(calc, 1)
     i1 = atomdata%atom_index
     ldau_data => getLDAUData(calc, 1)
-#define clusters calc%clusters
-#define lattice_vectors calc%lattice_vectors
-#define trunc_zone calc%trunc_zone
     jij_data => calc%jij_data_a(1) ! global name jij_data, jij works only with max. 1 local atom
+    
 #define kkr(ila) calc%kkr_a(ila)
 
     num_local_atoms = calc%num_local_atoms
 
     
-    allocate(tmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for t-matrices
+    allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for t-matrices
     allocate(dtmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
     allocate(Tref_local(lmmaxd,lmmaxd,num_local_atoms)) ! allocate buffers for reference t-matrices
     allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
-    allocate(GrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms))
+    allocate(GrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms))
     allocate(DGrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms)) ! LLY
     allocate(atom_indices(num_local_atoms))
 
@@ -139,11 +137,11 @@ implicit none
     if (XCCPL) then
       jij_data%do_jij_calculation = .true. ! Trigger jij-calculation
 
-      call CLSJIJ(i1, dims%NAEZ, lattice_vectors%RR, lattice_vectors%nrd, arrays%RBASIS, &
+      call CLSJIJ(i1, dims%NAEZ, calc%lattice_vectors%RR, calc%lattice_vectors%nrd, arrays%RBASIS, &
                   jij_data%RCUTJIJ, arrays%NSYMAT, arrays%ISYMINDEX, &
                   jij_data%IXCP, jij_data%NXCP, jij_data%NXIJ, jij_data%RXIJ, &
                   jij_data%RXCCLS, jij_data%ZKRXIJ, &
-                  lattice_vectors%nrd, jij_data%nxijd)
+                  calc%lattice_vectors%nrd, jij_data%nxijd)
 
       jij_data%JXCIJINT = ZERO
       jij_data%GMATXIJ = ZERO
@@ -152,13 +150,13 @@ implicit none
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
-      atom_indices(ila) = trunc_zone%index_map(calc%atom_ids(ila)) ! get global atom_id from local index)
+      atom_indices(ila) = calc%trunc_zone%index_map(calc%atom_ids(ila)) ! get global atom_id from local index)
       CHECKASSERT(atom_indices(ila) > 0)
     enddo ! ila
 
     ! setup the solver + bcp preconditioner, allocates a lot of memory
     ! it is good to do these allocations outside of energy loop: ToDo
-    call setup_solver(solv, kkr_op, precond, dims, clusters, lmmaxd, params%qmrbound, atom_indices)
+    call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmmaxd, params%qmrbound, atom_indices)
 
     
   ! IE ====================================================================
@@ -194,7 +192,7 @@ implicit none
         ! Note: TrefLL is diagonal - however full matrix is stored
         ! Note: Gref is calculated in real space - usually only a few shells
 
-        ! Exchange the reference t-matrices within the reference clusters
+        ! Exchange the reference t-matrices within the reference calc%clusters
         ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
         do ila = 1, num_local_atoms
           call gatherTrefMatrices_com( Tref_local,  kkr(ila)%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
@@ -292,10 +290,10 @@ implicit none
   !------------------------------------------------------------------------------
             call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
                     arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
-                    lattice_vectors%RR, & ! periodic images
+                    calc%lattice_vectors%RR, & ! periodic images
                     GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
-                    trunc_zone%trunc2atom_index, mp%mySEComm, &
+                    calc%trunc_zone%trunc2atom_index, mp%mySEComm, &
                     calc%iguess_data, &
                     DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
                    
@@ -409,14 +407,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, atom_indices, GrefN_buffer)
-    deallocate(DGrefN_buffer) ! LLY
-    deallocate(GmatN_buffer)
-    deallocate(dTref_local)
-    deallocate(Tref_local)
-#undef clusters
-#undef lattice_vectors
-#undef trunc_zone
+    deallocate(tmatLL, atom_indices, DGrefN_buffer, GrefN_buffer, GmatN_buffer, dTref_local, Tref_local, stat=ist)
 
   endsubroutine ! energyLoop
 
@@ -435,7 +426,6 @@ implicit none
     use BCPOperator_mod, only: BCPOperator, create
     use DimParams_mod, only: DimParams
     use ClusterInfo_mod, only: ClusterInfo
-    use MultScatData_mod, only: MultScatData, create
 
     type(IterativeSolver), intent(inout) :: solv
     type(KKROperator), intent(inout) :: kkr_op
@@ -446,7 +436,7 @@ implicit none
     double precision, intent(in) :: qmrbound
     integer, intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
-    call create(kkr_op) ! does nothing
+    call create(kkr_op, cluster_info, lmmaxd, atom_indices)
 
     if (dims%bcpd == 1) then
       ! set the solver options for BCP preconditioner
@@ -455,8 +445,6 @@ implicit none
     else
       call init(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
     endif
-
-    call create(kkr_op%ms, cluster_info, lmmaxd, atom_indices)
 
   endsubroutine ! setup_solver
 
@@ -637,5 +625,5 @@ implicit none
     deallocate(tsst_local)
     deallocate(dtsst_local)
   endsubroutine ! gather
-
+#undef kkr
 endmodule ! ScatteringCalculation_mod

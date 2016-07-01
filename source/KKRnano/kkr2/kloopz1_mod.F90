@@ -8,7 +8,7 @@ module kloopz1_mod
   
   contains
 
-  subroutine kloopz1_new(Gmatn, solv, kkr_op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
+  subroutine kloopz1_new(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                          nsymat, dsymll, tmatLL, lmmaxd, trunc2atom_index, communicator, iguess_data, &
                          DGinp_local, dtde, tr_alph, lly_grdt, &
                          global_atom_idx_lly, lly) ! LLY 
@@ -36,7 +36,7 @@ module kloopz1_mod
     integer, parameter :: nsymaxd = 48
 
     type(IterativeSolver), intent(inout) :: solv
-    type(KKROperator), intent(inout) :: kkr_op
+    type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: precond
 
     integer, intent(in) :: lmmaxd
@@ -80,10 +80,9 @@ module kloopz1_mod
     double complex :: tpg(N,N)
     double complex :: xc(N,N) ! to store temporary matrix-matrix mult. result
 
-#define ms kkr_op%ms
-#define cluster_info ms%cluster_info
+#define cluster_info op%cluster_info
 
-    num_local_atoms = size(ms%atom_indices)
+    num_local_atoms = size(op%atom_indices)
 
     allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), stat=ist)
     if (ist /= 0) then
@@ -97,7 +96,7 @@ module kloopz1_mod
 
     do ila = 1, num_local_atoms
 
-      mssq(:,:,ila) = tmatLL(1:N,1:N,ms%atom_indices(ila))
+      mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila))
 
       ! inversion:
       !     The (local) Delta_t matrix is inverted and stored in mssq
@@ -119,7 +118,7 @@ module kloopz1_mod
     endif
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
-    call kkrmat01_new(solv, kkr_op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
+    call kkrmat01_new(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
                       mssq, DGinp_local, dtde, tr_alph, lly_grdt, k_point_weights, volBZ, global_atom_idx_lly, lly) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 

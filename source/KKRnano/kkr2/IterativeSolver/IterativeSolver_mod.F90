@@ -1,13 +1,5 @@
-!> TFQMR solver.
+!> Iterative solver.
 !>
-!> *) Set coefficent matrix with 'init'.
-!> *) Set preconditioner with 'init_precond'
-!> *) Use 'set_qmrbound' and
-!> 'set_initial_zero' (true: start with zero vector, false: start with vector passed to solve)
-!> *) use 'solve' to solve for right hand side mat_B (memory is allocated at first use)
-!> *) call 'destroy' after last use
-!>
-!> @author Elias Rabel
 
 module IterativeSolver_mod
   use KKROperator_mod, only: KKROperator
@@ -22,7 +14,7 @@ module IterativeSolver_mod
     type(KKROperator), pointer :: op => null()
     type(BCPOperator), pointer :: precond => null()
 
-    double complex, allocatable :: vecs(:,:,:)
+    double complex, allocatable :: vecs(:,:,:) ! workspace
 
     type(SolverStats) :: stats
     logical :: use_precond = .false.
@@ -113,7 +105,7 @@ module IterativeSolver_mod
     endif
 
     call solve(self%op, mat_X, mat_B, self%qmrbound, ncol, nrow, &
-               .true., self%precond, self%use_precond, &
+               self%initial_zero, self%precond, self%use_precond, &
                self%vecs, iterations_needed, largest_residual)
 
     call reduce(self%stats, iterations_needed, largest_residual)

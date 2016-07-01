@@ -19,7 +19,7 @@ module TFQMR_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine solve(op, mat_X, mat_B, TOL, ncol, nrow, initial_zero, precond, use_precond, vecs, &
+  subroutine solve(op, mat_X, mat_B, tolerance, ncol, nrow, initial_zero, precond, use_precond, vecs, &
                    iterations_needed, largest_residual) ! optional output args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
@@ -27,9 +27,8 @@ module TFQMR_mod
     use BCPOperator_mod, only: BCPOperator, multiply
 
     type(KKROperator), intent(in) :: op
-    double precision, intent(in) :: TOL
-    integer, intent(in) :: ncol
-    integer, intent(in) :: nrow
+    double precision, intent(in) :: tolerance
+    integer, intent(in) :: nrow, ncol
     double complex, intent(inout) :: mat_X(nrow,ncol)
     double complex, intent(in)    :: mat_B(nrow,ncol)
 
@@ -104,7 +103,7 @@ module TFQMR_mod
     tfqmr_status = 0
     converged_at = 0
 
-    target_upper_bound = TOL * TEST_FACTOR
+    target_upper_bound = tolerance * TEST_FACTOR
 
     isDone = .false.
 
@@ -329,7 +328,7 @@ module TFQMR_mod
 
         isDone = .true.
         do icol = 1, ncol
-          if (RESN(icol) > TOL) then
+          if (RESN(icol) > tolerance) then
             if (tfqmr_status(icol) == 0) then
               ! if no breakdown has occured continue converging
               isDone = .false.
@@ -344,7 +343,7 @@ module TFQMR_mod
 
         max_residual = maxval(RESN)
 
-        target_upper_bound = (max_upper_bound / max_residual) * TOL
+        target_upper_bound = (max_upper_bound / max_residual) * tolerance
 
 #ifdef DIAGNOSTICMMINVMOD
         write(*,*) iteration, minval(RESN), max_residual, max_upper_bound

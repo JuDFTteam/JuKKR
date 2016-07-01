@@ -9,14 +9,22 @@
 !>    'apply'
 
 module KKROperator_mod
-  use MultScatData_mod, only: MultScatData
+  use SparseMatrixDescription_mod, only: SparseMatrixDescription
+  use ClusterInfo_mod, only: ClusterInfo
   implicit none
   private
   public :: KKROperator, create, destroy, multiply
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type :: KKROperator
-    type(MultScatData) :: ms
+    integer :: lmmaxd
+    integer :: naez
+    type(SparseMatrixDescription) :: sparse
+    double complex, allocatable :: GLLh(:)
+    double complex, allocatable :: mat_B(:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
+    double complex, allocatable :: mat_X(:,:)
+    integer, allocatable :: atom_indices(:) !< a copy of the atom indices
+    type(ClusterInfo), pointer :: cluster_info
   endtype
 
   interface create
@@ -33,15 +41,55 @@ module KKROperator_mod
 
   contains
 
-  subroutine create_KKROperator(self)
-    type(KKROperator) :: self
+  subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices)
+    use TEST_lcutoff_mod, only: lmax_array
+    use fillKKRMatrix_mod, only: getKKRMatrixStructure
+    use SparseMatrixDescription_mod, only: create, getNNZ, getNrows
+
+    type(KKROperator), intent(inout) :: self
+    type(ClusterInfo), target, intent(in) :: cluster_info
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: atom_indices(:)
+
+    integer :: sum_cluster, nCols, nRows
+
+    self%cluster_info => cluster_info
+
+    sum_cluster = sum(cluster_info%numn0_trc)
+    self%naez = size(cluster_info%indn0_trc, 1)
+!   naclsd = size(cluster_info%indn0_trc, 2) ! not used
+    self%lmmaxd = lmmaxd
+
+    allocate(self%atom_indices, source=atom_indices)
+
+    call create(self%sparse, self%naez, sum_cluster)
+
+    call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%sparse)
+
+    nRows = getNrows(self%sparse)!, self%naez)
+    nCols = lmmaxd*size(atom_indices)
+    
+    allocate(self%mat_B(nRows,nCols))
+    allocate(self%mat_X(nRows,nCols))
+    allocate(self%GLLh(getNNZ(self%sparse))) ! allocate memory for sparse matrix
+    
   endsubroutine ! create
 
-  subroutine destroy_KKROperator(self)
-    use MultScatData_mod, only: destroy
-    type(KKROperator) :: self
 
-    call destroy(self%ms)
+  subroutine destroy_KKROperator(self)
+    use SparseMatrixDescription_mod, only: destroy
+    type(KKROperator), intent(inout) :: self
+
+    integer :: ist ! ignore status
+    
+    deallocate(self%GLLh, stat=ist)
+    deallocate(self%mat_X, stat=ist)
+    deallocate(self%mat_B, stat=ist)
+
+    call destroy(self%sparse)
+
+    deallocate(self%atom_indices, stat=ist)
+    nullify(self%cluster_info)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -52,7 +100,7 @@ module KKROperator_mod
     double complex, intent(out) :: mat_AX(:,:)
 
     ! perform sparse VBR matrix * dense matrix
-    call multiply_vbr(self%ms%GLLH, mat_X, mat_AX, self%ms%sparse)
+    call multiply_vbr(self%GLLH, mat_X, mat_AX, self%sparse)
   endsubroutine ! apply
 
   subroutine multiply_vbr(A, x, Ax, sparse)
