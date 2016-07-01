@@ -222,6 +222,11 @@ module RadialMeshData_mod
     if (isum > meshdata%irmd) &
       die_here("Error creating mesh, irmd too small, isum ="+isum-", meshdata%irmd ="+meshdata%irmd)
 
+    do ii = 1, meshdata%irws - imt
+      meshdata%r(ii + imt) = xrn(ii) * alat
+      meshdata%drdi(ii + imt) = drn(ii) * alat
+    end do
+    
     meshdata%irmin = meshdata%irws - irns
     meshdata%irns = irns
     meshdata%rws  = meshdata%r(meshdata%irws)
