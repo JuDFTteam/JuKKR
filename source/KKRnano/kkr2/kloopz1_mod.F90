@@ -67,7 +67,7 @@ module kloopz1_mod
  
     ! locals
     double complex :: tauvBZ ! could be real but it enters a zBLAS call
-    double precision :: mrfctori, tauvBZr
+    double precision :: rfctori, tauvBZr
     integer :: ist, info ! status for LAPACK calls
     integer :: ispin, isym
     integer :: num_local_atoms, ila
@@ -90,7 +90,8 @@ module kloopz1_mod
     endif
 
 !     rfctor=A/(2*PI) conversion factor to p.u.
-    mrfctori = -(8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
+!    mrfctori = -(8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
+     rfctori = (8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
 
     do ila = 1, num_local_atoms
 
@@ -157,7 +158,7 @@ module kloopz1_mod
       enddo ! isym
 
 
-  !   xc = Delta_t^(-1) * gll
+!     xc = Delta_t^(-1) * gll
 
      call zgemm('n','n',N,N,N,CONE,mssq(:,:,ila),N,gll(:,:),N,ZERO,xc(:,:),N)
 
@@ -168,7 +169,7 @@ module kloopz1_mod
   !   gll = - Delta_t^(-1) - Delta_t^(-1) * gll * Delta_t^(-1)
 
   !       copy overwrite gll with content of mssq
-!       gll(:,:) = mssq(:,:,ila) ! call ZCOPY(N**2,mssq(:,:,ila),1,gll,1)
+       gll(:,:) = mssq(:,:,ila) ! call ZCOPY(N**2,mssq(:,:,ila),1,gll,1)
 
 
   !       gll = (-1) * xc                     *    mssq     + (-1) * gll
@@ -176,14 +177,14 @@ module kloopz1_mod
   !            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
 
 
-!       call zgemm('n','n',N,N,N,-CONE,xc,N, mssq(:,:,ila),N,-CONE,gll,N)
+       call zgemm('n','n',N,N,N,-CONE,xc,N, mssq(:,:,ila),N,-CONE,gll,N)
 
 !       gll(:,:) = - xc(:,:) - gll(:,:)
 
   !   Gmatn = GMATLL = gll/rfctor...............rescaled and copied into output array
 
-!       Gmatn(1:N,1:N,ila) = gll(1:N,1:N)*rfctori
-      Gmatn(1:N,1:N,ila) = (mssq(:,:,ila) + xc(:,:))*mrfctori
+       Gmatn(1:N,1:N,ila) = gll(1:N,1:N)*rfctori
+!      Gmatn(1:N,1:N,ila) = (mssq(:,:,ila) + xc(:,:))*mrfctori
 
     enddo ! ila
 
