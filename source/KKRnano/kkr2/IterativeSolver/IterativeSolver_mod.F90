@@ -8,7 +8,7 @@ module IterativeSolver_mod
   implicit none
   private
   
-  public :: IterativeSolver, create, init, solve, destroy
+  public :: IterativeSolver, create, solve, destroy
   
   type :: IterativeSolver
     type(KKROperator), pointer :: op => null()
@@ -16,18 +16,14 @@ module IterativeSolver_mod
 
     double complex, allocatable :: vecs(:,:,:) ! workspace
 
-    type(SolverStats) :: stats
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
     double precision :: qmrbound = 1.d-9
+    type(SolverStats) :: stats
   endtype
 
   interface create
     module procedure create_solver
-  endinterface
-  
-  interface init
-    module procedure init_solver
   endinterface
   
   interface solve
@@ -39,13 +35,8 @@ module IterativeSolver_mod
   endinterface
 
   contains
-  
-  subroutine create_solver(self)
-    type(IterativeSolver), intent(inout) :: self
-    ! ToDo
-  endsubroutine ! create
-  
-  subroutine init_solver(self, qmrbound, op, precond)
+ 
+  subroutine create_solver(self, qmrbound, op, precond)
     type(IterativeSolver), intent(inout) :: self
     double precision, intent(in) :: qmrbound
     type(KKROperator), intent(in), target :: op
@@ -59,7 +50,7 @@ module IterativeSolver_mod
     if (present(precond)) then
       self%precond => precond
       self%use_precond = .true.
-    endif
+    endif ! preconditioning
   endsubroutine ! init
 
   !----------------------------------------------------------------------------
@@ -109,7 +100,6 @@ module IterativeSolver_mod
                self%vecs, iterations_needed, largest_residual)
 
     call reduce(self%stats, iterations_needed, largest_residual)
-
   endsubroutine ! solve
   
   !----------------------------------------------------------------------------
@@ -117,7 +107,6 @@ module IterativeSolver_mod
     type(IterativeSolver), intent(inout) :: self
     
     integer :: ist ! ignore status
-
     deallocate(self%vecs, stat=ist)
     nullify(self%op)
     nullify(self%precond)

@@ -77,7 +77,7 @@ implicit none
     type(BasisAtom), pointer             :: atomdata  ! referenced data does not change
     type(LDAUData), pointer              :: ldau_data ! changes
 
-    type(IterativeSolver), target :: solv
+    type(IterativeSolver) :: solv
     type(KKROperator), target :: kkr_op
     type(BCPOperator), target :: precond
 
@@ -421,7 +421,7 @@ implicit none
   !> preconditioner not calculated yet
   !> Matrix setup happens later in kkrmat
   subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
-    use IterativeSolver_mod, only: IterativeSolver, init
+    use IterativeSolver_mod, only: IterativeSolver, create
     use KKROperator_mod, only: KKROperator, create
     use BCPOperator_mod, only: BCPOperator, create
     use DimParams_mod, only: DimParams
@@ -437,15 +437,16 @@ implicit none
     integer, intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
     call create(kkr_op, cluster_info, lmmaxd, atom_indices)
-
+    
     if (dims%bcpd == 1) then
       ! set the solver options for BCP preconditioner
       call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmmaxd)
-      call init(solv, qmrbound, kkr_op, precond)
+      call create(solv, qmrbound, kkr_op, precond)
     else
-      call init(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
+      call create(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
     endif
 
+    
   endsubroutine ! setup_solver
 
   !------------------------------------------------------------------------------
@@ -495,42 +496,25 @@ implicit none
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(:,:,:)
     
-    double complex :: mssq(lmmaxd,lmmaxd)
-    double complex :: tpg(lmmaxd,lmmaxd)
-    integer :: iu,lm1,lm2
+    double complex :: mssq(lmmaxd,lmmaxd), tpg(lmmaxd,lmmaxd)
+    integer :: iu, lm
    
-    double complex :: CONE
-    double complex :: CZERO
-
-    CZERO = (0.0D0,0.0D0)
-    CONE = (1.0D0,0.0D0)
+    double complex, parameter :: cone = (1.d0, 0.d0), zero = (0.d0, 0.d0)
  
     ! note: TrefLL is diagonal due to a spherical reference potential
-    do lm1 = 1, lmmaxd
-      TmatN(lm1,lm1) = TmatN(lm1,lm1) - TrefLL(lm1,lm1)
-    enddo ! lm1
+    do lm = 1, lmmaxd
+      TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(lm,lm)
+    enddo ! lm
 
-   !------------------------------------------------- SYMMETRISE TMATN
+    !------------------------------------------------- SYMMETRISE TMATN
+    mssq(:,:) = TmatN(:,:) ! copy, the 1st entry is the unity operation
+    do iu = 2, nsymat
+      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,iu), lmmaxd, tmatn, lmmaxd, zero, tpg, lmmaxd)
+      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, tpg, lmmaxd, dsymll(1,1,iu), lmmaxd, cone, mssq, lmmaxd)
+    enddo ! iu
 
-         do iu = 1,nsymat
-
-            if ( iu.eq.1 ) then
-               call zcopy(lmmaxd*lmmaxd,TmatN,1,mssq,1)
-            else
-               call zgemm('n','n',lmmaxd,lmmaxd,lmmaxd,cone, &
-                          dsymll(1,1,iu),lmmaxd,tmatn,lmmaxd, &
-                          czero,tpg,lmmaxd)
-               call zgemm('n','c',lmmaxd,lmmaxd,lmmaxd,cone,tpg,lmmaxd, &
-                          dsymll(1,1,iu),lmmaxd,cone,mssq,lmmaxd)
-            end if
-
-         end do
-         do lm1 = 1,lmmaxd
-            do lm2 = 1,lmmaxd
-               tmatn(lm1,lm2) = mssq(lm1,lm2)/dble(nsymat)
-            end do
-         end do
-   !------------------------------------------------- SYMMETRISE TMATN
+    tmatn(:,:) = mssq(:,:)/dble(nsymat) ! average
+    !------------------------------------------------- SYMMETRISE TMATN
 
   endsubroutine ! subtract
 
