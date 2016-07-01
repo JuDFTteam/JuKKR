@@ -16,10 +16,9 @@ module TFQMRSolver_mod
   implicit none
   private
   
-  public :: TFQMRSolver, solve, destroy
+  public :: TFQMRSolver, solve, destroy, init
   
   type, extends(Solver) :: TFQMRSolver
-    private
     class(OperatorT), pointer :: op => null()
     class(OperatorT), pointer :: precond => null()
 
@@ -30,16 +29,20 @@ module TFQMRSolver_mod
     logical :: initial_zero = .true.
     double precision :: qmrbound = 1.d-9
 
-    contains
-      procedure :: solve => solve_with_solver
-      procedure :: init => init_solver
-      procedure :: init_precond => init_precond_solver
-      procedure :: set_qmrbound
-      procedure :: set_initial_zero
-      procedure :: get_stats
-      procedure :: reset_stats
-      procedure :: represent_stats
+!     contains
+!       procedure :: solve => solve_with_solver
+!       procedure :: init => init_solver
+!       procedure :: init_precond => init_precond_solver
+!       procedure :: set_qmrbound
+!       procedure :: set_initial_zero
+!       procedure :: get_stats
+!       procedure :: reset_stats
+!       procedure :: represent_stats
   endtype
+  
+  interface init
+    module procedure init_solver
+  endinterface
   
   interface solve
     module procedure solve_with_solver
@@ -51,20 +54,20 @@ module TFQMRSolver_mod
 
   contains
 
-  subroutine init_solver(self, op)
-    class(TFQMRSolver) :: self
+  subroutine init_solver(self, qmrbound, op, precond)
+    type(TFQMRSolver), intent(inout) :: self
+    double precision, intent(in) :: qmrbound
     class(OperatorT), target :: op
+    class(OperatorT), target, optional :: precond
+    self%qmrbound = qmrbound
     self%op => op
     self%precond => op ! also init the pointer to precond with op, may be overwritten later
     self%use_precond = .false.
+    if (present(precond)) then
+      self%precond => precond
+      self%use_precond = .true.
+    endif
   endsubroutine ! init
-
-  subroutine init_precond_solver(self, precond)
-    class(TFQMRSolver) :: self
-    class(OperatorT), target :: precond
-    self%precond => precond
-    self%use_precond = .true.
-  endsubroutine ! init with preconditioner
 
   !----------------------------------------------------------------------------
   !> Solves problem for right hand side mat_B, solution in mat_X.
@@ -74,7 +77,7 @@ module TFQMRSolver_mod
   subroutine solve_with_solver(self, mat_X, mat_B)
     use mminvmod_oop_mod, only: mminvmod_oop
     use SolverStats_mod, only: reduce
-    class(TFQMRSolver) :: self
+    type(TFQMRSolver) :: self
     double complex, intent(inout) :: mat_X(:,:)
     double complex, intent(in)    :: mat_B(:,:)
 
@@ -115,10 +118,10 @@ module TFQMRSolver_mod
     call reduce(self%stats, iterations_needed, largest_residual)
 
   endsubroutine ! solve
-
+  
   !----------------------------------------------------------------------------
   elemental subroutine destroy_solver(self)
-    class(TFQMRSolver), intent(inout) :: self
+    type(TFQMRSolver), intent(inout) :: self
     
     integer :: ist ! ignore status
 
@@ -127,43 +130,49 @@ module TFQMRSolver_mod
     nullify(self%precond)
   endsubroutine ! destroy
 
-  !----------------------------------------------------------------------------
-  subroutine set_qmrbound(self, qmrbound)
-    class(TFQMRSolver) :: self
-    double precision, intent(in) :: qmrbound
-    self%qmrbound = qmrbound
-  endsubroutine
-
-  !----------------------------------------------------------------------------
-  subroutine set_initial_zero(self, initial_zero)
-    class(TFQMRSolver) :: self
-    logical, intent(in) :: initial_zero
-    self%initial_zero = initial_zero
-  endsubroutine
-
-  !----------------------------------------------------------------------------
-  !> Get statistics of last solver run.
-  type(SolverStats) function get_stats(self)
-    class(TFQMRSolver) :: self
-
-    get_stats = self%stats
-  endfunction
-
-  !----------------------------------------------------------------------------
-  !> Reset accumulated statistics.
-  subroutine reset_stats(self)
-    use SolverStats_mod, only: reset
-    class(TFQMRSolver) :: self
-
-    call reset(self%stats)
-  endsubroutine
-
-  !----------------------------------------------------------------------------
-  character(len=64) function represent_stats(self) result(string)
-    use SolverStats_mod, only: represent
-    class(TFQMRSolver) :: self
-    string = represent(self%stats)
-  endfunction
+! 
+!   subroutine init_precond_solver(self
+!     type(TFQMRSolver) :: self
+!     class(OperatorT), target :: precond
+!   endsubroutine ! init with preconditioner
+  
+!   !----------------------------------------------------------------------------
+!   subroutine set_qmrbound(self, qmrbound)
+!     type(TFQMRSolver) :: self
+!     double precision, intent(in) :: qmrbound
+!     self%qmrbound = qmrbound
+!   endsubroutine
+! 
+!   !----------------------------------------------------------------------------
+!   subroutine set_initial_zero(self, initial_zero)
+!     type(TFQMRSolver) :: self
+!     logical, intent(in) :: initial_zero
+!     self%initial_zero = initial_zero
+!   endsubroutine
+! 
+!   !----------------------------------------------------------------------------
+!   !> Get statistics of last solver run.
+!   type(SolverStats) function get_stats(self)
+!     type(TFQMRSolver) :: self
+! 
+!     get_stats = self%stats
+!   endfunction
+! 
+!   !----------------------------------------------------------------------------
+!   !> Reset accumulated statistics.
+!   subroutine reset_stats(self)
+!     use SolverStats_mod, only: reset
+!     type(TFQMRSolver) :: self
+! 
+!     call reset(self%stats)
+!   endsubroutine
+! 
+!   !----------------------------------------------------------------------------
+!   character(len=64) function represent_stats(self) result(string)
+!     use SolverStats_mod, only: represent
+!     type(TFQMRSolver) :: self
+!     string = represent(self%stats)
+!   endfunction
   
   
 endmodule ! TFQMRSolver_mod

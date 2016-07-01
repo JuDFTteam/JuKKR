@@ -57,6 +57,7 @@ implicit none
     use jij_calc_mod, only: clsjij, writejijs, jij_data => global_jij_data
 
     use TFQMRSolver_mod, only: TFQMRSolver
+    use SolverStats_mod, only: represent
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
 
@@ -301,7 +302,7 @@ implicit none
   !------------------------------------------------------------------------------
 
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
-              call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), solv%represent_stats())
+              call printEnergyPoint(emesh%EZ(IE), IE, ISPIN, arrays%NOFKS(NMESH), represent(solv%stats))
 
             ! copy results from buffer: G_LL'^NN (E, spin) = GmatN_buffer_LL'^N(ila) N(ila)
             do ila = 1, num_local_atoms
@@ -429,7 +430,7 @@ implicit none
   !> preconditioner not calculated yet
   !> Matrix setup happens later in kkrmat
   subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
-    use TFQMRSolver_mod, only: TFQMRSolver
+    use TFQMRSolver_mod, only: TFQMRSolver, init
     use KKROperator_mod, only: KKROperator, create
     use BCPOperator_mod, only: BCPOperator, create
     use DimParams_mod, only: DimParams
@@ -447,15 +448,13 @@ implicit none
 
     call create(kkr_op) ! does nothing
 
-    call solv%init(kkr_op) ! register sparse matrix and preconditioner at solver
-
     if (dims%bcpd == 1) then
       ! set the solver options for BCP preconditioner
       call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmmaxd)
-      call solv%init_precond(precond)
+      call init(solv, qmrbound, kkr_op, precond)
+    else
+      call init(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
     endif
-
-    call solv%set_qmrbound(qmrbound)
 
     call create(kkr_op%ms, cluster_info, lmmaxd, atom_indices)
 

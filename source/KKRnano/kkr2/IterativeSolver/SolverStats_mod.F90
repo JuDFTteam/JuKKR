@@ -17,7 +17,7 @@ module SolverStats_mod
   interface reset
     module procedure reset_stats
   endinterface
-  
+
   interface represent
     module procedure repr_stats
   endinterface

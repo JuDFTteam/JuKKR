@@ -10,8 +10,8 @@ module Solver_mod
   public :: Solver
 
   type, abstract :: Solver
-    contains
-      procedure(solve_interface), deferred :: solve
+!     contains
+!       procedure(solve_interface), deferred :: solve
   endtype
 
   interface

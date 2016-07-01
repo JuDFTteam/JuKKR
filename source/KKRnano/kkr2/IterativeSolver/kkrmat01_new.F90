@@ -108,7 +108,7 @@ module kkrmat_new_mod
 
     if (global_jij_data%do_jij_calculation) global_jij_data%GSXIJ = zero
 
-    call solver%reset_stats()
+    call reset(solver%stats)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     ! get the required reference Green functions from the other MPI processes
@@ -179,11 +179,9 @@ module kkrmat_new_mod
       TESTARRAYLOG(3, GS(:,:,ila))
     enddo ! ila
     
-    stats = solver%get_stats()
-
-    WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", stats%max_residual
-    WRITELOG(3, *) "Max. num iterations for this E-point: ", stats%max_iterations
-    WRITELOG(3, *) "Sum of iterations for this E-point:   ", stats%sum_iterations
+    WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", solver%stats%max_residual
+    WRITELOG(3, *) "Max. num iterations for this E-point: ", solver%stats%max_iterations
+    WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
 
 #undef cluster
 #undef ms
@@ -276,7 +274,6 @@ module kkrmat_new_mod
     double complex :: tracek
     double complex :: gtdpde
     
-
     integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, il1
     logical :: initial_zero
     double complex :: cfctorinv
@@ -414,13 +411,12 @@ module kkrmat_new_mod
     call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
     !call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr) ! construct RHS as negative unity
 
-    initial_zero = .true.
     if (iguess_data%iguess == 1) then
-      initial_zero = .false.
+      solver%initial_zero = .false.
       call load(iguess_data, ms%mat_X)
+    else
+      solver%initial_zero = .true.
     endif
-
-    call solver%set_initial_zero(initial_zero)
 
     call calc(preconditioner, ms%GLLh) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
