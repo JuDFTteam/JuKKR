@@ -40,14 +40,14 @@ module kkrmat_new_mod
     use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
     use jij_calc_mod, only: global_jij_data, kkrjij
     use SolverStats_mod, only: SolverStats, reset
-    use TFQMRSolver_mod, only: TFQMRSolver
+    use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
     use mpi
 
-    class(TFQMRSolver), intent(inout) :: solver
-    class(KKROperator), intent(inout) :: kkr_op
-    class(BCPOperator), intent(inout) :: preconditioner
+    type(IterativeSolver), intent(inout) :: solver
+    type(KKROperator), intent(inout) :: kkr_op
+    type(BCPOperator), intent(inout) :: preconditioner
     
     integer, intent(in) :: nkpoints !< number of k-points
     double precision, intent(in) :: kpoints(:,:) !< list of k-points dim(3,nkpoints)
@@ -232,7 +232,7 @@ module kkrmat_new_mod
                        global_atom_idx_lly ,lly) !LLY
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
-    use TFQMRSolver_mod, only: TFQMRSolver, solve
+    use IterativeSolver_mod, only: IterativeSolver, solve
     use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, load, store
     use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
@@ -242,9 +242,9 @@ module kkrmat_new_mod
     USE_ARRAYLOG_MOD
     USE_LOGGING_MOD
 
-    class(TFQMRSolver), intent(inout) :: solver
-    class(KKROperator), intent(inout) :: kkr_op
-    class(BCPOperator), intent(inout) :: preconditioner
+    type(IterativeSolver), intent(inout) :: solver
+    type(KKROperator), intent(inout) :: kkr_op
+    type(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
     double complex, intent(in) :: tmatLL(:,:,:)
     double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd) independent of the kpoint, ToDo: try not to communicate it again for every kpoint

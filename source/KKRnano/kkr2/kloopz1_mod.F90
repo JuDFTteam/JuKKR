@@ -29,15 +29,15 @@ module kloopz1_mod
     
     use TEST_lcutoff_mod, only: cutoffmode
     use InitialGuess_mod, only: InitialGuess
-    use TFQMRSolver_mod, only: TFQMRSolver
+    use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
     use jij_calc_mod, only: global_jij_data, symjij
     integer, parameter :: nsymaxd = 48
 
-    class(TFQMRSolver), intent(inout) :: solv
-    class(KKROperator), intent(inout) :: kkr_op
-    class(BCPOperator), intent(inout) :: precond
+    type(IterativeSolver), intent(inout) :: solv
+    type(KKROperator), intent(inout) :: kkr_op
+    type(BCPOperator), intent(inout) :: precond
 
     integer, intent(in) :: lmmaxd
 #define N lmmaxd

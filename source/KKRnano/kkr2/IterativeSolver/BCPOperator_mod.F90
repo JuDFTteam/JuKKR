@@ -8,14 +8,13 @@
 ! or amorphous structures
 
 module BCPOperator_mod
-  use OperatorT_mod, only: OperatorT
   use ClusterInfo_mod, only: ClusterInfo
   implicit none
   private
   public :: BCPOperator, destroy, create, calc, multiply
   
   !> Represents the Block-Circulant preconditioning matrix
-  type, extends(OperatorT) :: BCPOperator
+  type :: BCPOperator
     ! private
     double complex, allocatable :: GLLHBLCK(:,:)
     logical :: active = .false.
@@ -23,8 +22,6 @@ module BCPOperator_mod
     integer :: natbld = 1
     type(ClusterInfo), pointer :: cluster_info
     integer :: lmmaxd
-    contains
-      procedure :: apply => multiply_BCPOperator
   endtype
 
   interface create
@@ -48,7 +45,7 @@ module BCPOperator_mod
   !----------------------------------------------------------------------------
   !> Setup of BCP preconditioner
   subroutine create_BCPOperator(self, natbld, xyzdim, cluster_info, lmmaxd)
-    class(BCPOperator) :: self
+    type(BCPOperator) :: self
     integer, intent(in) :: natbld, xyzdim(3)
     type(ClusterInfo), target  :: cluster_info
     integer, intent(in) :: lmmaxd
@@ -81,7 +78,7 @@ module BCPOperator_mod
   !>
   !> uses bcpwupper
   subroutine calc_BCPOperator(self, GLLH)
-    class(BCPOperator) :: self
+    type(BCPOperator) :: self
     double complex, intent(in) :: GLLH(:)
 
     integer :: naezd, blocks_per_row
@@ -101,7 +98,7 @@ module BCPOperator_mod
   !----------------------------------------------------------------------------
   !> Applies Preconditioner/Operator on mat_X and returns result in mat_AX.
   subroutine multiply_BCPOperator(self, mat_X, mat_AX)
-    class(BCPOperator) :: self
+    type(BCPOperator) :: self
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 
@@ -121,7 +118,7 @@ module BCPOperator_mod
 
   !----------------------------------------------------------------------------
   elemental subroutine destroy_BCPOperator(self)
-    class(BCPOperator), intent(inout) :: self
+    type(BCPOperator), intent(inout) :: self
 
     if (allocated(self%GLLHBLCK)) deallocate(self%GLLHBLCK)
     nullify(self%cluster_info)

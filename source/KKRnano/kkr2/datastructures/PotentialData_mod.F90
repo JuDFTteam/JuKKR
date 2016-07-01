@@ -89,7 +89,7 @@ module PotentialData_mod
   !----------------------------------------------------------------------------
   !> Returns a string representation of PotentialData.
   subroutine repr_PotentialData(potential, str)
-    class(PotentialData), intent(in) :: potential
+    type(PotentialData), intent(in) :: potential
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl

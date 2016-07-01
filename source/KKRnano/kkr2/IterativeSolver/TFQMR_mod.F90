@@ -2,14 +2,14 @@
 
 #include "../DebugHelpers/logging_macros.h"
 
-module mminvmod_oop_mod
+module TFQMR_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   implicit none
   private
-  public :: mminvmod_oop
+  public :: solve
 
   double complex, parameter, private :: CONE = (1.d0, 0.d0), ZERO=(0.d0, 0.d0)
-  
+
   contains
 
   !***********************************************************************
@@ -19,13 +19,14 @@ module mminvmod_oop_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine mminvmod_oop(op, mat_X, mat_B, TOL, ncol, nrow, initial_zero, precond, use_precond, vecs, &
-                          iterations_needed, largest_residual) ! optional output args
+  subroutine solve(op, mat_X, mat_B, TOL, ncol, nrow, initial_zero, precond, use_precond, vecs, &
+                   iterations_needed, largest_residual) ! optional output args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
-    use OperatorT_mod, only: OperatorT
+    use KKROperator_mod, only: KKROperator
+    use BCPOperator_mod, only: BCPOperator, multiply
 
-    class(OperatorT), intent(in) :: op
+    type(KKROperator), intent(in) :: op
     double precision, intent(in) :: TOL
     integer, intent(in) :: ncol
     integer, intent(in) :: nrow
@@ -33,7 +34,7 @@ module mminvmod_oop_mod
     double complex, intent(in)    :: mat_B(nrow,ncol)
 
     logical, intent(in) :: initial_zero
-    class(OperatorT) :: precond
+    type(BCPOperator) :: precond
     logical, intent(in) :: use_precond
     double complex, intent(inout) :: vecs(:,:,3:) ! workspace
 #define v3 vecs(:,:,3)
@@ -361,7 +362,7 @@ module mminvmod_oop_mod
       !         x = M  * y
       !              2
       ! has to be performed.
-      call precond%apply(mat_X, vP)
+      call multiply(precond, mat_X, vP)
       mat_X = vP
     endif
 
@@ -391,7 +392,7 @@ module mminvmod_oop_mod
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
 
-  endsubroutine ! mminvmod_oop
+  endsubroutine ! tfqmr_solve
 
   !------------------------------------------------------------------------------
   !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
@@ -399,19 +400,23 @@ module mminvmod_oop_mod
   !>
   !> mat_out = A P mat_in
   !> preconditioner is used only when use_precond=.true.
-  subroutine apply_precond_and_matrix(op, precond, mat, mat_out, temp, use_precond)
-    use OperatorT_mod, only: OperatorT
-    class(OperatorT), intent(in) :: op, precond
-    double complex, intent(in)   :: mat(:,:)
-    double complex, intent(out)  :: mat_out(:,:)
-    double complex, intent(out)  :: temp(:,:)
+  subroutine apply_precond_and_matrix(op, precond, mat_in, mat_out, temp, use_precond)
+    use KKROperator_mod, only: KKROperator, multiply
+    use BCPOperator_mod, only: BCPOperator, multiply
+
+    type(KKROperator), intent(in) :: op
+    type(BCPOperator), intent(in) :: precond
+
+    double complex, intent(in)  :: mat_in(:,:)
+    double complex, intent(out) :: mat_out(:,:)
+    double complex, intent(out) :: temp(:,:)
     logical, intent(in) :: use_precond
 
     if (use_precond) then
-      call precond%apply(mat, temp)
-      call op%apply(temp, mat_out)
+      call multiply(precond, mat_in, temp)
+      call multiply(op, temp, mat_out)
     else
-      call op%apply(mat, mat_out)
+      call multiply(op, mat_in, mat_out)
     endif
 
   endsubroutine ! apply
@@ -605,4 +610,4 @@ module mminvmod_oop_mod
 #undef zz
   endsubroutine
  
-endmodule ! mminvmod_oop_mod
+endmodule ! TFQMR_mod

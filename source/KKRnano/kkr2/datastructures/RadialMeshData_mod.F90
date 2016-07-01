@@ -42,14 +42,14 @@ module RadialMeshData_mod
     integer :: nfu    !< number of non-zero shape function components 
 #endif
     ! arrays
-    double precision, dimension(:), allocatable :: R
-    double precision, dimension(:), allocatable :: DRDI
-    integer, dimension(:), allocatable :: IRCUT  !< panel locations
+    double precision, allocatable :: R(:)
+    double precision, allocatable :: DRDI(:)
+    integer, allocatable :: IRCUT(:)  !< panel locations
 #ifdef USE_OLD_MESH
-    integer, dimension(:), allocatable :: llmsp  !<  LM index of non-zero shape function component
-    double precision, dimension(:,:), allocatable :: THETAS !< radial values of shape function component \Theta_L MESHN values
+    integer, allocatable :: llmsp(:)  !<  LM index of non-zero shape function component
+    double precision, allocatable :: THETAS(:,:) !< radial values of shape function component \Theta_L MESHN values
 #endif
-  end type
+  endtype
 
   interface create
     module procedure createRadialMeshData
@@ -69,13 +69,13 @@ module RadialMeshData_mod
 
   integer, parameter :: MAGIC_NUMBER = -889271554
 
-  CONTAINS
+  contains
 
   !----------------------------------------------------------------------------
   ! meshn and nfu are optional!
   subroutine createRadialMeshData(meshdata, irmd, ipand, meshn, nfu)
     implicit none
-    type (RadialMeshData), intent(inout) :: meshdata
+    type(RadialMeshData), intent(inout) :: meshdata
     integer, intent(in) :: irmd
     integer, intent(in) :: ipand
     integer, intent(in), optional :: meshn
@@ -546,8 +546,8 @@ module RadialMeshData_mod
   !>
   !>    call repr_RadialMeshData(old_mesh, str)
   !>    write(*,'(A)') str  ! format (A) necessary to avoid messy output
-  subroutine repr_RadialMeshData(meshdata, str)
-    class(RadialMeshData), intent(in) :: meshdata
+  subroutine repr_RadialMeshData(self, str)
+    type(RadialMeshData), intent(in) :: self
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl
@@ -557,37 +557,37 @@ module RadialMeshData_mod
     nl = new_line(' ')
 
     str = ''
-    write(buffer, *) "irmd  = ", meshdata%irmd   !< number of mesh points
+    write(buffer, *) "irmd  = ", self%irmd   !< number of mesh points
     str = str // trim(buffer) // nl
-    write(buffer, *) "ipand = ", meshdata%ipand  !< dimension variable panels for historical reasons
+    write(buffer, *) "ipand = ", self%ipand  !< dimension variable panels for historical reasons
     str = str // trim(buffer) // nl
-    write(buffer, *) "A     = ", meshdata%A    !< logarithmic mesh parameter A
+    write(buffer, *) "A     = ", self%A    !< logarithmic mesh parameter A
     str = str // trim(buffer) // nl
-    write(buffer, *) "B     = ", meshdata%B    !< logarithmic mesh parameter A
+    write(buffer, *) "B     = ", self%B    !< logarithmic mesh parameter A
     str = str // trim(buffer) // nl
-    write(buffer, *) "RWS   = ", meshdata%RWS  !< maximal radius
+    write(buffer, *) "RWS   = ", self%RWS  !< maximal radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "RMT   = ", meshdata%RMT !< muffin-tin radius
+    write(buffer, *) "RMT   = ", self%RMT !< muffin-tin radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "IPAN  = ", meshdata%IPAN !< number of mesh panels
+    write(buffer, *) "IPAN  = ", self%IPAN !< number of mesh panels
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRC   = ", meshdata%IRC
+    write(buffer, *) "IRC   = ", self%IRC
     str = str // trim(buffer) // nl
-    write(buffer, *) "IMT   = ", meshdata%IMT    !< endof muffin-tin region
+    write(buffer, *) "IMT   = ", self%IMT    !< endof muffin-tin region
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRNS  = ", meshdata%IRNS
+    write(buffer, *) "IRNS  = ", self%IRNS
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRWS  = ", meshdata%IRWS  !< index of max. radius
+    write(buffer, *) "IRWS  = ", self%IRWS  !< index of max. radius
     str = str // trim(buffer) // nl
-    write(buffer, *) "IRMIN = ", meshdata%IRMIN
+    write(buffer, *) "IRMIN = ", self%IRMIN
     str = str // trim(buffer) // nl // nl
     write(buffer, *) "nr.    R                          DRDI"
     str = str // trim(buffer) // nl
     write(buffer, '(79("="))')
     str = str // trim(buffer) // nl
 
-    do ind = 1, size(meshdata%R)
-      write(buffer, '(I5, 2X, E23.16,2X,E23.16)') ind, meshdata%R(ind), meshdata%DRDI(ind)
+    do ind = 1, size(self%R)
+      write(buffer, '(I5, 2X, E23.16,2X,E23.16)') ind, self%R(ind), self%DRDI(ind)
       str = str // trim(buffer) // nl
     enddo ! ind
     str = str // nl
@@ -595,8 +595,8 @@ module RadialMeshData_mod
     write(buffer, *) "IRCUT = "
     str = str // trim(buffer) // nl
 
-    do ind = 0, size(meshdata%IRCUT) - 1
-      write(buffer, *) meshdata%IRCUT(ind)
+    do ind = 0, size(self%IRCUT) - 1
+      write(buffer, *) self%IRCUT(ind)
       str = str // trim(buffer) // nl
     enddo ! ind
     
@@ -639,37 +639,37 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   !> Test consistency of mesh parameters.
-  subroutine test_mesh_consistency(meshdata)
-    class(RadialMeshData), intent(in) :: meshdata
+  subroutine test_mesh_consistency(self)
+    type(RadialMeshData), intent(in) :: self
 
     double precision :: rmt_test
     double precision, parameter :: TOLERANCE = 1.d-8
 
-    rmt_test = meshdata%B * (exp(meshdata%A * (meshdata%IMT - 1)) - 1.0d0)
+    rmt_test = self%B * (exp(self%A * (self%IMT - 1)) - 1.0d0)
 
-    if (abs(rmt_test - meshdata%rmt) > TOLERANCE) &
-      die_here("Mesh parameters A, B, IMT inconsistent with Rmt, rmt ="+rmt_test+"but meshdata%rmt ="+meshdata%rmt)
+    if (abs(rmt_test - self%rmt) > TOLERANCE) &
+      die_here("Mesh parameters A, B, IMT inconsistent with Rmt, rmt ="+rmt_test+"but self%rmt ="+self%rmt)
 
-    if (abs(meshdata%r(meshdata%IMT) - meshdata%rmt) > TOLERANCE) &
-      die_here("radial value at meshdata%imt not consistent with Rmt, r(imt) ="+meshdata%r(meshdata%IMT)+"but rmt ="+meshdata%rmt)
+    if (abs(self%r(self%IMT) - self%rmt) > TOLERANCE) &
+      die_here("radial value at self%imt not consistent with Rmt, r(imt) ="+self%r(self%IMT)+"but rmt ="+self%rmt)
 
-    if (meshdata%irc /= meshdata%irmd) &
-      die_here("meshdata%irc ="+meshdata%irc+"not equal to meshdata%irmd ="+meshdata%irmd)
+    if (self%irc /= self%irmd) &
+      die_here("self%irc ="+self%irc+"not equal to self%irmd ="+self%irmd)
 
-    if (meshdata%irws /= meshdata%irmd) &
-      die_here("meshdata%irws ="+meshdata%irws+"not equal to meshdata%irmd ="+meshdata%irmd)
+    if (self%irws /= self%irmd) &
+      die_here("self%irws ="+self%irws+"not equal to self%irmd ="+self%irmd)
 
-    if (abs(meshdata%r(meshdata%IRWS) - meshdata%rws) > TOLERANCE) &
-      die_here("radial value at meshdata%irws ="+meshdata%r(meshdata%IRWS)+"not consistent with rWS ="+meshdata%rws)
+    if (abs(self%r(self%IRWS) - self%rws) > TOLERANCE) &
+      die_here("radial value at self%irws ="+self%r(self%IRWS)+"not consistent with rWS ="+self%rws)
 
-    if (meshdata%ircut(0) /= 0) &
-      die_here("meshdata%ircut(0) ="+meshdata%ircut(0)+"is not 0.")
+    if (self%ircut(0) /= 0) &
+      die_here("self%ircut(0) ="+self%ircut(0)+"is not 0.")
 
-    if (meshdata%ircut(1) /= meshdata%imt) &
-      die_here("meshdata%ircut(1) ="+meshdata%ircut(1)+" is not equal to meshdata%imt ="+meshdata%imt)
+    if (self%ircut(1) /= self%imt) &
+      die_here("self%ircut(1) ="+self%ircut(1)+" is not equal to self%imt ="+self%imt)
 
-    if (meshdata%ircut(meshdata%ipan) /= meshdata%irmd) &
-      die_here("meshdata%ircut(meshdata%ipan) ="+meshdata%ircut(meshdata%ipan)+"is not equal to meshdata%irmd ="+meshdata%irmd)
+    if (self%ircut(self%ipan) /= self%irmd) &
+      die_here("self%ircut(self%ipan) ="+self%ircut(self%ipan)+"is not equal to self%irmd ="+self%irmd)
 
   endsubroutine ! test
 

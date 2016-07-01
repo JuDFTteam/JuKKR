@@ -10,16 +10,13 @@
 
 module KKROperator_mod
   use MultScatData_mod, only: MultScatData
-  use OperatorT_mod, only: OperatorT
   implicit none
   private
   public :: KKROperator, create, destroy, multiply
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
-  type, extends(OperatorT) :: KKROperator
+  type :: KKROperator
     type(MultScatData) :: ms
-    contains
-      procedure :: apply => multiply_KKROperator
   endtype
 
   interface create
@@ -29,7 +26,7 @@ module KKROperator_mod
   interface destroy
     module procedure destroy_KKROperator
   endinterface
-  
+
   interface multiply
     module procedure multiply_KKROperator
   endinterface
@@ -37,12 +34,12 @@ module KKROperator_mod
   contains
 
   subroutine create_KKROperator(self)
-    class(KKROperator) :: self
+    type(KKROperator) :: self
   endsubroutine ! create
 
   subroutine destroy_KKROperator(self)
     use MultScatData_mod, only: destroy
-    class(KKROperator) :: self
+    type(KKROperator) :: self
 
     call destroy(self%ms)
   endsubroutine ! destroy
@@ -50,7 +47,7 @@ module KKROperator_mod
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
   subroutine multiply_KKROperator(self, mat_X, mat_AX)
-    class(KKROperator) :: self
+    type(KKROperator) :: self
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
 

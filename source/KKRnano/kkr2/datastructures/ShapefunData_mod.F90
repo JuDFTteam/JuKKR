@@ -78,7 +78,7 @@ module ShapefunData_mod
   !----------------------------------------------------------------------------
   !> Returns a string representation of ShapefunData.
   subroutine repr_ShapefunData(shdata, str)
-    class(ShapefunData), intent(in) :: shdata
+    type(ShapefunData), intent(in) :: shdata
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl

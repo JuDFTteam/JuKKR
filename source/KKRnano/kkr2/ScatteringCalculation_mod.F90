@@ -56,7 +56,7 @@ implicit none
     use wrappers_mod, only: calctmat_wrapper, calcdtmat_wrapper
     use jij_calc_mod, only: clsjij, writejijs, jij_data => global_jij_data
 
-    use TFQMRSolver_mod, only: TFQMRSolver
+    use IterativeSolver_mod, only: IterativeSolver
     use SolverStats_mod, only: represent
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
@@ -77,7 +77,7 @@ implicit none
     type(BasisAtom), pointer             :: atomdata  ! referenced data does not change
     type(LDAUData), pointer              :: ldau_data ! changes
 
-    type(TFQMRSolver), target :: solv
+    type(IterativeSolver), target :: solv
     type(KKROperator), target :: kkr_op
     type(BCPOperator), target :: precond
 
@@ -430,14 +430,14 @@ implicit none
   !> preconditioner not calculated yet
   !> Matrix setup happens later in kkrmat
   subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
-    use TFQMRSolver_mod, only: TFQMRSolver, init
+    use IterativeSolver_mod, only: IterativeSolver, init
     use KKROperator_mod, only: KKROperator, create
     use BCPOperator_mod, only: BCPOperator, create
     use DimParams_mod, only: DimParams
     use ClusterInfo_mod, only: ClusterInfo
     use MultScatData_mod, only: MultScatData, create
 
-    type(TFQMRSolver), intent(inout) :: solv
+    type(IterativeSolver), intent(inout) :: solv
     type(KKROperator), intent(inout) :: kkr_op
     type(BCPOperator), intent(inout) :: precond
     type(DimParams), intent(in) :: dims
@@ -462,11 +462,11 @@ implicit none
 
   !------------------------------------------------------------------------------
   subroutine cleanup_solver(solv, kkr_op, precond)
-    use TFQMRSolver_mod, only: TFQMRSolver, destroy
+    use IterativeSolver_mod, only: IterativeSolver, destroy
     use KKROperator_mod, only: KKROperator, destroy
     use BCPOperator_mod, only: BCPOperator, destroy
 
-    type(TFQMRSolver), intent(inout) :: solv
+    type(IterativeSolver), intent(inout) :: solv
     type(KKROperator), intent(inout) :: kkr_op
     type(BCPOperator), intent(inout) :: precond
 
