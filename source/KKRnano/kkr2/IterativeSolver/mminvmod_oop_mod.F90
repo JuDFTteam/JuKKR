@@ -372,10 +372,10 @@ module mminvmod_oop_mod
     WRITELOG(3,*) "number of sparse matrix multipl.: ", sparse_mult_count
     WRITELOG(3,*) "number of residual probes:        ", res_probe_count
     WRITELOG(3,*) "number of iterations:             ", iteration
-    WRITELOG(3,*) "max. residual:             ", max_residual
+ !   WRITELOG(3,*) "max. residual:             ", max_residual
 
     if (present(iterations_needed)) iterations_needed = iteration
-    if (present(largest_residual)) largest_residual = max_residual
+  !  if (present(largest_residual)) largest_residual = max_residual
 
     do icol = 1, ncol
       if (converged_at(icol) == 0) then
