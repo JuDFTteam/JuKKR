@@ -625,9 +625,8 @@ module kkrmat_new_mod
 #endif
         call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
         
-        call dlke0_smat(GLLh, site_index, sparse, &!%ia, sparse%ka, sparse%kvstr, 
-                        eikrm, eikrp, &
-                        nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer)!, naez, lmmaxd)
+        call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer)
+
       endif ! site_index in bounds
       
     enddo ! site_index
@@ -767,9 +766,7 @@ module kkrmat_new_mod
 
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-      call dlke0_smat(GLLh, site_index, sparse, &!%ia, sparse%ka, sparse%kvstr, 
-                      eikrm, eikrp, &
-                      nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,site_index))!, naez, lmmaxd)
+      call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,site_index))
 
     enddo ! site_index
 
@@ -877,10 +874,7 @@ module kkrmat_new_mod
     
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-      call dlke0_smat(GLLh, site_index, sparse, &!%ia, sparse%ka, sparse%kvstr, &
-                        eikrm, eikrp, &
-                        nacls(site_index), atom(:,site_index), numn0, indn0, &
-                        Gref_buffer(:,:,:,SITE_INDEX))!, naez, lmmaxd)
+      call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,SITE_INDEX))
 
     enddo ! site_index
     
@@ -1022,19 +1016,12 @@ module kkrmat_new_mod
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(smat, ind, &
-!                       ia, ka, kvstr, &
-                        sparse, &
-                        eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
+  subroutine dlke0_smat(smat, ind, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
   ! assume a variable block row sparse matrix description
     double complex, intent(inout) :: smat(:)
     integer, intent(in) :: ind !> site_index
     type(SparseMatrixDescription), intent(in) :: sparse
-!     integer, intent(in) :: ia(:)
-!     integer, intent(in) :: ka(:)
-!     integer, intent(in) :: kvstr(:)
-    
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are real
     integer, intent(in) :: nacls !< number of atoms in the cluster around site ind
     integer, intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
@@ -1042,15 +1029,11 @@ module kkrmat_new_mod
     integer, intent(in) :: indn0(:,:) !< dims(naez,nacls)
     double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
 
-! #define _INLINED_
-#ifdef  _INLINED_
-    integer :: lm1, lm2, lmmax1, lmmax2, is
-#endif    
     integer :: jat, iacls, ni, jnd, ist, gint_iacls
     double complex, allocatable :: GinT(:,:) ! (size(Ginp, 2),size(Ginp, 1)) !< dims(lmmaxd,lmmaxd)
 
     gint_iacls = -1
-    
+
     do iacls = 1, nacls
       jat = atom(iacls)
       if (jat < 1) cycle
@@ -1060,27 +1043,13 @@ module kkrmat_new_mod
         if (jat == jnd) then
 
           if (gint_iacls /= iacls) then
-            if (gint_iacls = -1) allocate(GinT(size(Ginp, 2),size(Ginp, 1)))
+            if (gint_iacls == -1) allocate(GinT(size(Ginp, 2),size(Ginp, 1)))
             GinT = transpose(Ginp(:,:,iacls))
             gint_iacls = iacls
           endif
 
-#ifdef  _INLINED_
-          lmmax1 = sparse% kvstr(ind+1) - sparse% kvstr(ind)
-          lmmax2 = sparse% kvstr(jnd+1) - sparse% kvstr(jnd)
-
-          do lm2 = 1, lmmax2
-            do lm1 = 1, lmmax1
-
-              is = sparse% ka(sparse% ia(ind) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
-
-              smat(is) = smat(is) + eikrm(iacls) * GinT(lm1,lm2) ! == Ginp(lm2,lm1,iacls)
-
-            enddo ! lm1
-          enddo ! lm2
-#else          
           ist = modify_smat(sparse, ind, jnd, ni, eikrm(iacls), GinT(:,:), smat)
-#endif
+
         endif ! jat == jnd
       enddo ! ni
 
@@ -1088,22 +1057,8 @@ module kkrmat_new_mod
         jnd = indn0(jat,ni)
         if (ind == jnd) then
 
-#ifdef  _INLINED_
-          lmmax1 = sparse% kvstr(jat+1) - sparse% kvstr(jat)
-          lmmax2 = sparse% kvstr(jnd+1) - sparse% kvstr(jnd)
-
-          do lm2 = 1, lmmax2
-            do lm1 = 1, lmmax1
-
-              is = sparse% ka(sparse% ia(jat) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
-
-              smat(is) = smat(is) + eikrp(iacls) * Ginp(lm1,lm2,iacls)
-
-            enddo ! lm1
-          enddo ! lm2
-#else          
           ist = modify_smat(sparse, jat, jnd, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
-#endif
+
         endif ! ind == jnd
       enddo ! ni
 
@@ -1111,7 +1066,6 @@ module kkrmat_new_mod
     
     deallocate(GinT, stat=ist) ! ignore status
   endsubroutine ! dlke0_smat
-
   
   
   integer function modify_smat(sparse, ind, jnd, ni, eikr, Gin, smat) result(nOps)
@@ -1123,19 +1077,16 @@ module kkrmat_new_mod
     double complex, intent(in) :: Gin(:,:) !< dims(lmmaxd,lmmaxd)
     double complex, intent(inout) :: smat(:)
 
-    integer :: lm1, lm2, lmmax1, lmmax2, is
+    integer :: lm2, lmmax1, lmmax2, is0
 
-    lmmax1 = sparse% kvstr(ind+1) - sparse% kvstr(ind)
-    lmmax2 = sparse% kvstr(jnd+1) - sparse% kvstr(jnd)
-
+    lmmax1 = sparse%kvstr(ind+1) - sparse%kvstr(ind)
+    lmmax2 = sparse%kvstr(jnd+1) - sparse%kvstr(jnd)
+    
     do lm2 = 1, lmmax2
-      do lm1 = 1, lmmax1
+      is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
+      
+      smat(is0 + 1:lmmax1 + is0) = smat(is0 + 1:lmmax1 + is0) + eikr * Gin(1:lmmax1,lm2)
 
-        is = sparse% ka(sparse% ia(ind) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
-
-        smat(is) = smat(is) + eikr * Gin(lm1,lm2)
-
-      enddo ! lm1
     enddo ! lm2
 
     nOps = lmmax1*lmmax2
