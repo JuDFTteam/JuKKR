@@ -48,7 +48,7 @@ module kloopz1_mod
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(N,N,nsymat) !<
     double complex, intent(out) :: Gmatn(:,:,:) !< (N,N,num_local_atoms)
-    double complex, intent(in) :: Ginp_local(:,:,:,:) !< reference green function
+    double complex, intent(inout) :: Ginp_local(:,:,:,:) !< reference green function
     double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
@@ -57,7 +57,7 @@ module kloopz1_mod
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
  
     ! LLY
-    double complex, intent(in)   :: DGinp_local(:,:,:,:) !< energy derivative of reference green function
+    double complex, intent(inout)   :: DGinp_local(:,:,:,:) !< energy derivative of reference green function
     double complex, intent(in)   :: tr_alph(:)
     double complex, intent(in)   :: dtde(:,:,:) 
     double complex, intent(out)  :: lly_grdt

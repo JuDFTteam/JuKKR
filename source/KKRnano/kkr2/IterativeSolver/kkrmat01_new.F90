@@ -9,7 +9,7 @@
 #include "../DebugHelpers/test_macros.h"
 
 
-#define SPLIT_REFERENCE_FOURIER_COM
+!#define SPLIT_REFERENCE_FOURIER_COM
 
 module kkrmat_new_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
@@ -58,7 +58,7 @@ module kkrmat_new_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation
     double precision, intent(in) :: RR(:,0:)
-    double complex, intent(in) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
+    double complex, intent(inout) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
@@ -66,7 +66,7 @@ module kkrmat_new_mod
 
     !LLY
     double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
-    double complex, intent(in)   :: dginp(:,:,:,:)  !< dG_ref/dE,  dim: lmmaxd, lmmaxd, naclsd, nclsd
+    double complex, intent(inout) :: dginp(:,:,:,:)  !< dG_ref/dE,  dim: lmmaxd, lmmaxd, naclsd, nclsd
     double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
@@ -81,7 +81,7 @@ module kkrmat_new_mod
     type(SolverStats) :: stats
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
-    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
+!    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
 #endif
 
 #define ms kkr_op%ms
@@ -112,11 +112,11 @@ module kkrmat_new_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
-    if (lly == 1) then ! LLY
-      call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
-    endif ! LLY
     #define Ginp Gref_buffer
-    #define dginp DGref_buffer
+!    if (lly == 1) then ! LLY
+!      call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
+!    endif ! LLY
+!    #define dginp DGref_buffer
 #endif
     
     !==============================================================================
@@ -168,8 +168,9 @@ module kkrmat_new_mod
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
+#undef dginp
     deallocate(Gref_buffer, stat=ila) ! ignore status
-    deallocate(DGref_buffer, stat=ila) ! LLY, ignore status
+!    deallocate(DGref_buffer, stat=ila) ! LLY, ignore status
 #endif    
     
     do ila = 1, num_local_atoms
@@ -565,7 +566,7 @@ module kkrmat_new_mod
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd))
-    allocate(DGref_buffer(lmmaxd,lmmaxd,naclsd))
+!    allocate(DGref_buffer(lmmaxd,lmmaxd,naclsd))
 
     call MPI_Comm_size(communicator, nranks, ierr)
 
