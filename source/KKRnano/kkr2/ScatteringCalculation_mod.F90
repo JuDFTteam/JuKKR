@@ -481,7 +481,6 @@ implicit none
     double complex, intent(inout) :: dtixij(:,:,:)
     
     integer :: lmmaxd
-
     lmmaxd = size(dtixij, 1)
     dtixij(1:lmmaxd,1:lmmaxd,1) = dtixij(1:lmmaxd,1:lmmaxd,2) - dtixij(1:lmmaxd,1:lmmaxd,1)
   endsubroutine ! calc
@@ -496,24 +495,25 @@ implicit none
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(:,:,:)
     
-    double complex :: mssq(lmmaxd,lmmaxd), tpg(lmmaxd,lmmaxd)
-    integer :: iu, lm
+    double complex :: mssq(lmmaxd,lmmaxd), tpg(lmmaxd,lmmaxd), denom
+    integer :: isy, lm
    
-    double complex, parameter :: cone = (1.d0, 0.d0), zero = (0.d0, 0.d0)
+    double complex, parameter :: cone=(1.d0, 0.d0), zero=(0.d0, 0.d0)
  
-    ! note: TrefLL is diagonal due to a spherical reference potential
+    ! note: TrefLL is diagonal due to a spherical reference potential, therfore, we only subtract the diagonal elements
     do lm = 1, lmmaxd
       TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(lm,lm)
     enddo ! lm
 
     !------------------------------------------------- SYMMETRISE TMATN
     mssq(:,:) = TmatN(:,:) ! copy, the 1st entry is the unity operation
-    do iu = 2, nsymat
-      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,iu), lmmaxd, tmatn, lmmaxd, zero, tpg, lmmaxd)
-      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, tpg, lmmaxd, dsymll(1,1,iu), lmmaxd, cone, mssq, lmmaxd)
-    enddo ! iu
+    do isy = 2, nsymat
+      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,isy), lmmaxd, tmatn, lmmaxd, zero, tpg, lmmaxd)
+      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, tpg, lmmaxd, dsymll(1,1,isy), lmmaxd, cone, mssq, lmmaxd)
+    enddo ! isy
 
-    tmatn(:,:) = mssq(:,:)/dble(nsymat) ! average
+    denom = 1.d0/dble(nsymat)
+    tmatn(:,:) = mssq(:,:)*denom ! average
     !------------------------------------------------- SYMMETRISE TMATN
 
   endsubroutine ! subtract
@@ -535,7 +535,7 @@ implicit none
     ! also a symmetrisation of the matrix is performed
 
     do lm2 = 1, lmmaxd
-      do lm1 = 1, lm2
+      do lm1 = 1, lm2 ! triangular loop including the diagonal
         tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
         tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
       enddo ! lm1
