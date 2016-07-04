@@ -100,6 +100,7 @@ module kkrmat_new_mod
     !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
 
     GS = zero ! init zero
+    bztr2 = zero ! init zero
 
     TESTARRAYLOG(3, Ginp)
 
@@ -343,7 +344,7 @@ module kkrmat_new_mod
 #ifndef SPLIT_REFERENCE_FOURIER_COM
       call referenceFourier_com(ms%DGLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
-             RR, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
+             RR, cluster%ezoa_trc, DGinp, global_atom_id, communicator)
 #else
       call referenceFourier_part2(ms%DGLLh, ms%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
