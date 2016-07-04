@@ -21,7 +21,7 @@ module kkrmat_new_mod
   public :: kkrmat01_new
 
   double complex, allocatable :: full(:,:)
-  double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
+  double complex, parameter :: zero=(0.d0, 0.d0)
 
   contains
 
@@ -625,7 +625,8 @@ module kkrmat_new_mod
 #endif
         call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
         
-        call dlke0_smat(GLLh, site_index, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+        call dlke0_smat(GLLh, site_index, sparse, &!%ia, sparse%ka, sparse%kvstr, 
+                        eikrm, eikrp, &
                         nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer)!, naez, lmmaxd)
       endif ! site_index in bounds
       
@@ -766,7 +767,8 @@ module kkrmat_new_mod
 
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-      call dlke0_smat(GLLh, site_index, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+      call dlke0_smat(GLLh, site_index, sparse, &!%ia, sparse%ka, sparse%kvstr, 
+                      eikrm, eikrp, &
                       nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,site_index))!, naez, lmmaxd)
 
     enddo ! site_index
@@ -875,7 +877,8 @@ module kkrmat_new_mod
     
       call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-      call dlke0_smat(GLLh, site_index, sparse%ia, sparse%ka, sparse%kvstr, eikrm, eikrp, &
+      call dlke0_smat(GLLh, site_index, sparse, &!%ia, sparse%ka, sparse%kvstr, &
+                        eikrm, eikrp, &
                         nacls(site_index), atom(:,site_index), numn0, indn0, &
                         Gref_buffer(:,:,:,SITE_INDEX))!, naez, lmmaxd)
 
@@ -976,11 +979,11 @@ module kkrmat_new_mod
     ! ----------------------------------------------------------------------
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls !< number of vectors in the cluster
-    integer, intent(in) :: ezoa(1:) !< index list of ...
+    integer, intent(in) :: ezoa(1:) !< index list of periodic image vector
     double precision, intent(in) :: kpoint(1:3) !< k-point (vector in the Brillouin zone)
     double precision, intent(in) :: RR(1:,0:) !< dim(1:3,0:) periodic image vectors
     double complex, intent(out) :: eikrp(:), eikrm(:) !< dim(nacls)
-    
+
     double complex, parameter :: ci=(0.d0, 1.d0)
     double precision :: convpuh, tpi
     double complex :: tt, exparg
@@ -1003,8 +1006,8 @@ module kkrmat_new_mod
       if (ezoa(iacls) == 0) then
         ! the periodic image vector is (0,0,0)
         ASSERT( all(RR(1:3,ezoa(iacls)) == 0.d0) )
-        eikrp(iacls) = convpuh*cone
-        eikrm(iacls) = convpuh*cone
+        eikrp(iacls) = dcmplx(convpuh, 0.d0)
+        eikrm(iacls) = dcmplx(convpuh, 0.d0)
       else
   
         tt = -ci*tpi*dot_product(kpoint(1:3), RR(1:3,ezoa(iacls))) ! purely imaginary number
@@ -1015,25 +1018,39 @@ module kkrmat_new_mod
         eikrm(iacls) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
       endif
     enddo ! iacls
-  
+
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(smat, ind, ia, ka, kvstr, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
+  subroutine dlke0_smat(smat, ind, &
+!                       ia, ka, kvstr, &
+                        sparse, &
+                        eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+  ! assume a variable block row sparse matrix description
     double complex, intent(inout) :: smat(:)
     integer, intent(in) :: ind !> site_index
-    integer, intent(in) :: ia(:)
-    integer, intent(in) :: ka(:)
-    integer, intent(in) :: kvstr(:)
-    double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are CONE
-    integer, intent(in) :: nacls
-    integer, intent(in) :: atom(:) !< dim(nacls) 
+    type(SparseMatrixDescription), intent(in) :: sparse
+!     integer, intent(in) :: ia(:)
+!     integer, intent(in) :: ka(:)
+!     integer, intent(in) :: kvstr(:)
+    
+    double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are real
+    integer, intent(in) :: nacls !< number of atoms in the cluster around site ind
+    integer, intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
     integer, intent(in) :: numn0(:) !< dim(naez)
     integer, intent(in) :: indn0(:,:) !< dims(naez,nacls)
     double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
 
-    integer :: jat, lm1, lm2, iacls, ni, jnd, lmmax1, lmmax2, is
+! #define _INLINED_
+#ifdef  _INLINED_
+    integer :: lm1, lm2, lmmax1, lmmax2, is
+#endif    
+    integer :: jat, iacls, ni, jnd, ist, gint_iacls
+    double complex, allocatable :: GinT(:,:) ! (size(Ginp, 2),size(Ginp, 1)) !< dims(lmmaxd,lmmaxd)
 
+    gint_iacls = -1
+    
     do iacls = 1, nacls
       jat = atom(iacls)
       if (jat < 1) cycle
@@ -1042,19 +1059,28 @@ module kkrmat_new_mod
         jnd = indn0(ind,ni)
         if (jat == jnd) then
 
-          lmmax1 = kvstr(ind+1) - kvstr(ind)
-          lmmax2 = kvstr(jnd+1) - kvstr(jnd)
+          if (gint_iacls /= iacls) then
+            if (gint_iacls = -1) allocate(GinT(size(Ginp, 2),size(Ginp, 1)))
+            GinT = transpose(Ginp(:,:,iacls))
+            gint_iacls = iacls
+          endif
+
+#ifdef  _INLINED_
+          lmmax1 = sparse% kvstr(ind+1) - sparse% kvstr(ind)
+          lmmax2 = sparse% kvstr(jnd+1) - sparse% kvstr(jnd)
 
           do lm2 = 1, lmmax2
             do lm1 = 1, lmmax1
 
-              is = ka(ia(ind) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
+              is = sparse% ka(sparse% ia(ind) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
 
-              smat(is) = smat(is) + eikrm(iacls) * Ginp(lm2,lm1,iacls)
+              smat(is) = smat(is) + eikrm(iacls) * GinT(lm1,lm2) ! == Ginp(lm2,lm1,iacls)
 
             enddo ! lm1
           enddo ! lm2
-
+#else          
+          ist = modify_smat(sparse, ind, jnd, ni, eikrm(iacls), GinT(:,:), smat)
+#endif
         endif ! jat == jnd
       enddo ! ni
 
@@ -1062,24 +1088,57 @@ module kkrmat_new_mod
         jnd = indn0(jat,ni)
         if (ind == jnd) then
 
-          lmmax1 = kvstr(jat+1) - kvstr(jat)
-          lmmax2 = kvstr(jnd+1) - kvstr(jnd)
+#ifdef  _INLINED_
+          lmmax1 = sparse% kvstr(jat+1) - sparse% kvstr(jat)
+          lmmax2 = sparse% kvstr(jnd+1) - sparse% kvstr(jnd)
 
           do lm2 = 1, lmmax2
             do lm1 = 1, lmmax1
 
-              is = ka(ia(jat) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
+              is = sparse% ka(sparse% ia(jat) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
 
               smat(is) = smat(is) + eikrp(iacls) * Ginp(lm1,lm2,iacls)
 
             enddo ! lm1
           enddo ! lm2
-
+#else          
+          ist = modify_smat(sparse, jat, jnd, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
+#endif
         endif ! ind == jnd
       enddo ! ni
 
     enddo ! iacls
-
+    
+    deallocate(GinT, stat=ist) ! ignore status
   endsubroutine ! dlke0_smat
 
+  
+  
+  integer function modify_smat(sparse, ind, jnd, ni, eikr, Gin, smat) result(nOps)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    ! assume a variable block row sparse matrix description
+    type(SparseMatrixDescription), intent(in) :: sparse
+    integer, intent(in) :: ind, jnd, ni !> source site_index, target site_index, ni
+    double complex, intent(in) :: eikr ! phase factor
+    double complex, intent(in) :: Gin(:,:) !< dims(lmmaxd,lmmaxd)
+    double complex, intent(inout) :: smat(:)
+
+    integer :: lm1, lm2, lmmax1, lmmax2, is
+
+    lmmax1 = sparse% kvstr(ind+1) - sparse% kvstr(ind)
+    lmmax2 = sparse% kvstr(jnd+1) - sparse% kvstr(jnd)
+
+    do lm2 = 1, lmmax2
+      do lm1 = 1, lmmax1
+
+        is = sparse% ka(sparse% ia(ind) + ni-1) + lmmax1*(lm2-1) + (lm1-1)
+
+        smat(is) = smat(is) + eikr * Gin(lm1,lm2)
+
+      enddo ! lm1
+    enddo ! lm2
+
+    nOps = lmmax1*lmmax2
+  endfunction ! modify_smat
+  
 endmodule ! kkrmat_new_mod
