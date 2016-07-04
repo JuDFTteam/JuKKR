@@ -81,6 +81,7 @@ module kkrmat_new_mod
     type(SolverStats) :: stats
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
+    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
 #endif
 
 #define ms kkr_op%ms
@@ -111,7 +112,11 @@ module kkrmat_new_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
-#define Ginp Gref_buffer
+    if (lly == 1) then ! LLY
+      call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
+    endif ! LLY
+    #define Ginp Gref_buffer
+    #define dginp DGref_buffer
 #endif
     
     !==============================================================================
@@ -164,6 +169,7 @@ module kkrmat_new_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
     deallocate(Gref_buffer, stat=ila) ! ignore status
+    deallocate(DGref_buffer, stat=ila) ! LLY, ignore status
 #endif    
     
     do ila = 1, num_local_atoms
@@ -559,6 +565,7 @@ module kkrmat_new_mod
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd))
+    allocate(DGref_buffer(lmmaxd,lmmaxd,naclsd))
 
     call MPI_Comm_size(communicator, nranks, ierr)
 
