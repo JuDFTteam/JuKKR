@@ -249,10 +249,10 @@ implicit none
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTdE, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
 
               ! t_ref-matrix of central cluster atom has index 1
-              call substractReferenceTmatrix(kkr(ila)%TmatN(:,:,ISPIN), kkr(ila)%TrefLL(:,:,1), kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL)
-
+              call substractReferenceTmatrix(kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%TrefLL(:,:,1), kkr(ila)%TmatN(:,:,ISPIN))
+              
               ! do the same for derivative of T-matrix
-              call substractReferenceTmatrix(kkr(ila)%dTdE(:,:,ISPIN), kkr(ila)%dTrefLL(:,:,1), kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL)
+              call substractReferenceTmatrix(kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%dTrefLL(:,:,1), kkr(ila)%dTdE(:,:,ISPIN))
 
               ! TmatN now contains Delta t = t - t_ref !!!
               ! dTdE now contains Delta dt !!!
@@ -488,32 +488,33 @@ implicit none
   !----------------------------------------------------------------------------
   !> Substract diagonal reference T matrix of certain spin channel
   !> from real system's T matrix.
-  subroutine substractReferenceTmatrix(TmatN, TrefLL, lmmaxd, nsymat, dsymll)
+  subroutine substractReferenceTmatrix(lmmaxd, nsymat, dsymll, TrefLL, TmatN)
     integer, intent(in) :: lmmaxd
-    double complex, intent(inout) :: TmatN(:,:)
-    double complex, intent(in) :: TrefLL(:,:)
     integer, intent(in) :: nsymat
-    double complex, intent(in) :: dsymll(:,:,:)
+    double complex, intent(in) :: dsymll(:,:,:) !> dim(lmmaxd,lmmaxd,nsymat)
+    double complex, intent(in) :: TrefLL(:,:) !> dim(lmmaxd,lmmaxd)
+    double complex, intent(inout) :: TmatN(:,:) !> dim(lmmaxd,lmmaxd)
     
-    double complex :: mssq(lmmaxd,lmmaxd), tpg(lmmaxd,lmmaxd), denom
-    integer :: isy, lm
+    double complex :: uTu_sum(lmmaxd,lmmaxd), uT(lmmaxd,lmmaxd)
+    double precision :: denom
+    integer :: isym, lm
    
     double complex, parameter :: cone=(1.d0, 0.d0), zero=(0.d0, 0.d0)
  
-    ! note: TrefLL is diagonal due to a spherical reference potential, therfore, we only subtract the diagonal elements
+    ! note: TrefLL is diagonal due to a spherical reference potential, therefore, we only subtract the diagonal elements
     do lm = 1, lmmaxd
       TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(lm,lm)
     enddo ! lm
 
     !------------------------------------------------- SYMMETRISE TMATN
-    mssq(:,:) = TmatN(:,:) ! copy, the 1st entry is the unity operation
-    do isy = 2, nsymat
-      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,isy), lmmaxd, tmatn, lmmaxd, zero, tpg, lmmaxd)
-      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, tpg, lmmaxd, dsymll(1,1,isy), lmmaxd, cone, mssq, lmmaxd)
-    enddo ! isy
+    uTu_sum(:,:) = TmatN(:,:) ! copy, the 1st entry is the unity operation
+    do isym = 2, nsymat
+      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,isym), lmmaxd, TmatN, lmmaxd, zero, uT, lmmaxd)
+      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, uT, lmmaxd, dsymll(1,1,isym), lmmaxd, cone, uTu_sum, lmmaxd)
+    enddo ! isym
 
     denom = 1.d0/dble(nsymat)
-    tmatn(:,:) = mssq(:,:)*denom ! average
+    TmatN(:,:) = uTu_sum(:,:)*denom ! average
     !------------------------------------------------- SYMMETRISE TMATN
 
   endsubroutine ! subtract

@@ -15,8 +15,8 @@ module BlockSparseRow_mod
     integer :: mb = 0 !< number of block rows
     integer :: nb = 0 !< number of block columns !! not in use...
     integer :: nnzb = 0 !< number of non-zero blocks
-    integer, allocatable :: bsrColInd(:) !< dim(nnzb)
     integer, allocatable :: bsrRowPtr(:) !< dim(mb+1)
+    integer, allocatable :: bsrColInd(:) !< dim(nnzb)
 #ifdef BSRX
 !!! in the extended Block Compressed Sparse Row Format (BSRX), the
 !!! last value of Bind in a row is given by bsrEndPtr(iRow)

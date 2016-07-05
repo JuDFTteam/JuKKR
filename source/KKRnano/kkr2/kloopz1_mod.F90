@@ -32,6 +32,7 @@ module kloopz1_mod
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
+    use Constants_mod, only: pi
     use jij_calc_mod, only: global_jij_data, symjij
     integer, parameter :: nsymaxd = 48
 
@@ -68,37 +69,20 @@ module kloopz1_mod
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
     ! locals
-    double complex :: tauvBZ ! could be real but it enters a zBLAS call
-    double precision :: rfctori, tauvBZr
-    integer :: ist, info ! status for LAPACK calls
+    double precision :: mrfctori, tauvBZ
+    integer :: ist ! status for LAPACK calls
     integer :: ispin, isym
     integer :: num_local_atoms, ila
-    double complex, allocatable :: mssq(:,:,:), GS(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
-    integer, allocatable :: ipvt(:) ! work array for LAPACK
+    double complex, allocatable :: GS(:,:,:)
+    integer, allocatable :: ipvt(:), info(:,:) ! work array for LAPACK
     double complex, allocatable :: temp(:,:) ! work array for LAPACK
-    double complex, allocatable :: gll(:,:), tpg(:,:), xc(:,:)
-
-#define cluster_info op%cluster_info
+    double complex, allocatable :: gll(:,:), tpg(:,:), xc(:,:), mssq(:,:) ! effective (site-dependent) delta_t^(-1) matrix
 
     num_local_atoms = size(op%atom_indices)
 
 
 !     rfctor=A/(2*PI) conversion factor to p.u.
-!    mrfctori = -(8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
-     rfctori = (8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
-
-    allocate(temp(N,N), ipvt(N), mssq(N,N,num_local_atoms), stat=ist)
-    do ila = 1, num_local_atoms
-
-      mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila))
-
-      ! inversion:
-      !     The (local) Delta_t matrix is inverted and stored in mssq
-      call zgetrf(N,N,mssq(:,:,ila),N,ipvt,info)
-      call zgetri(N,mssq(:,:,ila),N,ipvt,temp,N*N,info)
-
-    enddo ! ila
-    deallocate(temp, ipvt, stat=ist) ! ignore status
+    mrfctori = -(2.d0*pi)/alat ! = inverse of -alat/(2*PI)
 
 !=======================================================================
 !     Note: the actual k-loop is in kkrmat01 (it is not parallelized)
@@ -126,42 +110,41 @@ module kloopz1_mod
 !      All the symmetry operations are applied on GS and summed over
 !     - the result is stored in gll
 !      Note: the symmetry operations apply on the (LL')-space
-    tauvBZ  = CONE/volBZ
-    tauvBZr = 1.d0/volBZ
-    
-    allocate(gll(N,N), tpg(N,N), xc(N,N), stat=ist)
-    if (ist /= 0) stop "KLOOPZ1: FATAL Error2, failure to allocate memory, probably out of memory."
+    tauvBZ = 1.d0/volBZ
 
+    allocate(gll(N,N), tpg(N,N), xc(N,N), temp(N,N), ipvt(N), info(2,num_local_atoms), mssq(N,N), stat=ist)
+    if (ist /= 0) stop "KLOOPZ1: FATAL Error2, failure to allocate memory, probably out of memory."
+    
     do ila = 1, num_local_atoms
 
-      do isym = 1, nsymat
+      gll(:,:) = GS(1:N,1:N,ila) ! 1st symmetry matrix is the unity operation
+      do isym = 2, nsymat
 
     !     gll = sum(i=1,iumax)(tauvBZ * DLL(i) * GS * DLL(i)^H)
-
-        if (isym == 1) then
-
-        !     ull(1) is equal to unity matrix
-
-          gll(:,:) = tauvBZr*GS(1:N,1:N,ila)
-
-        else
+    !     ull(1) is equal to unity matrix
 
         !       tpg = tauvBZ * DLL * GS
 
-          call zgemm('n','n',N,N,N,tauvBZ,dsymll(:,:,isym),N,GS(:,:,ila),N,ZERO,tpg(:,:),N)
+        call zgemm('n','n',N,N,N,CONE,dsymll(:,:,isym),N,GS(:,:,ila),N,ZERO,tpg(:,:),N)
 
         !     gll = gll + tpg * DLL(i)^H
         !                           C  ! dsymll might be complex in REL case
 
-          call zgemm('n','c',N,N,N,CONE,tpg(:,:),N,dsymll(:,:,isym),N,CONE,gll(:,:),N)
-        endif ! isym == 1
+        call zgemm('n','c',N,N,N,CONE,tpg(:,:),N,dsymll(:,:,isym),N,CONE,gll(:,:),N)
 
       enddo ! isym
+      gll(:,:) = gll(:,:)*tauvBZ
 
+      mssq(:,:) = tmatLL(1:N,1:N,op%atom_indices(ila))
+
+      ! inversion:
+      !     The (local) Delta_t matrix is inverted and stored in mssq
+      call zgetrf(N,N,mssq(:,:),N,ipvt,info(1,ila))
+      call zgetri(N,mssq(:,:),N,ipvt,temp,N*N,info(2,ila))
 
 !     xc = Delta_t^(-1) * gll
 
-     call zgemm('n','n',N,N,N,CONE,mssq(:,:,ila),N,gll(:,:),N,ZERO,xc(:,:),N)
+      call zgemm('n','n',N,N,N,CONE,mssq(:,:),N,gll(:,:),N,ZERO,xc(:,:),N)
 
   !       gll is overwritten with the following expression:
   !       (for the in configuration space diagonal structural Green's
@@ -170,7 +153,7 @@ module kloopz1_mod
   !   gll = - Delta_t^(-1) - Delta_t^(-1) * gll * Delta_t^(-1)
 
   !       copy overwrite gll with content of mssq
-       gll(:,:) = mssq(:,:,ila) ! call ZCOPY(N**2,mssq(:,:,ila),1,gll,1)
+!       gll(:,:) = mssq(:,:,ila) ! call ZCOPY(N**2,mssq(:,:),1,gll,1)
 
 
   !       gll = (-1) * xc                     *    mssq     + (-1) * gll
@@ -178,14 +161,13 @@ module kloopz1_mod
   !            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
 
 
-       call zgemm('n','n',N,N,N,-CONE,xc,N, mssq(:,:,ila),N,-CONE,gll,N)
+!       call zgemm('n','n',N,N,N,-CONE,xc,N, mssq(:,:),N,-CONE,gll,N)
 
 !       gll(:,:) = - xc(:,:) - gll(:,:)
 
   !   Gmatn = GMATLL = gll/rfctor...............rescaled and copied into output array
 
-       Gmatn(1:N,1:N,ila) = gll(1:N,1:N)*rfctori
-!      Gmatn(1:N,1:N,ila) = (mssq(:,:,ila) + xc(:,:))*mrfctori
+      Gmatn(1:N,1:N,ila) = (mssq(:,:) + xc(:,:))*mrfctori
 
     enddo ! ila
 
@@ -195,13 +177,13 @@ module kloopz1_mod
 
       call SYMJIJ(alat, tauvBZ, nsymat, dsymll, global_jij_data%NXIJ, global_jij_data%IXCP, &
                   tmatLL, mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,ispin), &  ! Result
-                  cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
+                  op%cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
     endif ! jij
 
-    deallocate(GS, mssq, gll, tpg, xc, stat=ist)
+    if (any(info /= 0)) write(*, '(a,999("  f",i0," i",i0))') "zgetrf or zgetri returned an error:", info ! warn
 
-#undef cluster_info
-#undef ms
+    deallocate(GS, mssq, gll, tpg, xc, temp, ipvt, info, stat=ist)
+
   endsubroutine ! kloopz1_new
 
 endmodule ! kloopz1_mod
