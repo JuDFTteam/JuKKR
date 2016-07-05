@@ -10,6 +10,11 @@ module TFQMR_mod
 
   double complex, parameter, private :: CONE = (1.d0, 0.d0), ZERO=(0.d0, 0.d0)
 
+#define COUNT_zaxpby_CASES
+#ifdef  COUNT_zaxpby_CASES
+  integer(kind=8), private :: ncall(64)
+#endif
+
   contains
 
   !***********************************************************************
@@ -99,6 +104,11 @@ module TFQMR_mod
     ! INITIALIZATION
     !=======================================================================
 
+#ifdef  COUNT_zaxpby_CASES
+    ncall(:) = 0
+#endif
+    
+    
     EPSILON_DP = tiny(0.d0)
     tfqmr_status = 0
     converged_at = 0
@@ -116,33 +126,36 @@ module TFQMR_mod
       mat_X = ZERO
    
       ! v5 = v2 ; r0 = B - A*x0 = B ! no need to multiply A here
-      v5 = mat_B
+      v5 = -mat_B ! subtract RightHandSide
 
     else
 
-      ! v9 = A*v1
-      call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond)
+      ! v5 = A*v1
+      call apply_precond_and_matrix(op, precond, mat_X, v5, vP, use_precond)
 
       sparse_mult_count = sparse_mult_count + 1
 
-      ! v5 = v2 - v9 ; r0 = b - A*x0
-      v5 = mat_B - v9
+      ! v5 = v2 - v5 ; r0 = b - A*x0
+      v5 = v5 - mat_B ! subtract RightHandSide
 
     endif
 
+    v5 = -v5 ! correct for sign change at setup
+    
     ! R0 = norm(v5)
     call col_norms(R0, v5)
 
-    ! use norm of B for convergence criterion - use it for residual normalisation
-    ! instead of B-AX0 contrary to original TFQMR
+    ! use norm of B for convergence criterion - use it for residual normalisation instead of B-AX0 contrary to original TFQMR
 
     ! N2B = norm(v2)
-    call col_norms(N2B, mat_B)
+    v4 = ZERO
+    v4 = v4 - mat_B ! subtract RightHandSide
+    call col_norms(N2B, v4) ! col_norms(N2B, mat_B)
 
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
     ! Supply auxiliary start vector r*
-    call ZRANDN(nrow*ncol, v3, 1)
+    call ZRANDN(nrow*ncol, v3, 1) ! fill v3 with numbers in [0, 1]
 
     ! Initialize the variables.
 
@@ -174,10 +187,10 @@ module TFQMR_mod
       endwhere
 
       ! v4 = beta*v4 + v8
-      call col_xpay(BETA, v8, v4)
+      call col_xpay(v8, BETA, v4)
 
       ! v6 = beta*v6 + v5
-      call col_xpay(BETA, v5, v6)
+      call col_xpay(v5, BETA, v6)
 
 
       ! v9 = A*v6
@@ -186,7 +199,7 @@ module TFQMR_mod
       sparse_mult_count = sparse_mult_count + 1
 
       ! v4 = beta*v4 + v9
-      call col_xpay(BETA, v9, v4)
+      call col_xpay(v9, BETA, v4)
 
       ! ZTMP = v3*v4
       call col_dots(ZTMP, v3, v4)
@@ -202,7 +215,7 @@ module TFQMR_mod
       endwhere
 
       ! v7 = ZTMP*v7 + v6
-      call col_xpay(ZTMP, v6, v7)
+      call col_xpay(v6, ZTMP, v7)
 
       ! v5 = v5 - alpha*v9
       call col_axpy(mALPHA, v9, v5)
@@ -237,10 +250,8 @@ module TFQMR_mod
       ! v6 = v6 - alpha*v4
       call col_axpy(mALPHA, v4, v6)
 
-      !ZTMP = VAR*COSI ! moved!
-
       ! v7 = ZTMP*v7 + v6
-      call col_xpay(ZTMP, v6, v7)
+      call col_xpay(v6, ZTMP, v7)
 
 
       !=============================================================
@@ -319,7 +330,7 @@ module TFQMR_mod
         sparse_mult_count = sparse_mult_count + 1
 
         ! v9 = v2 - v9
-        v9 = mat_B - v9
+        v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide
 
         ! RESN = norm(v9)
         call col_norms(RESN, v9)
@@ -390,6 +401,10 @@ module TFQMR_mod
     WRITELOG(3,*) tfqmr_status
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
+    
+#ifdef  COUNT_zaxpby_CASES
+    write(*, '(i0,a,99(" ",i0))') iteration, ' zaxpby cases: '
+#endif
 
   endsubroutine ! tfqmr_solve
 
@@ -474,7 +489,7 @@ module TFQMR_mod
   endsubroutine ! y := a*x+y
 
   !------------------------------------------------------------------------------
-  subroutine col_xpay(factors, xvector, yvector)
+  subroutine col_xpay(xvector, factors, yvector)
     double complex, intent(in) :: factors(:)
     double complex, intent(in) :: xvector(:,:)
     double complex, intent(inout) :: yvector(:,:)
@@ -542,66 +557,71 @@ module TFQMR_mod
     double complex, intent(inout) :: zyz(n)
     double precision :: dai, dar, dbi, dbr
 
+#ifndef COUNT_zaxpby_CASES
+#define COUNT_CASE
+#else
+#define COUNT_CASE ncall((__LINE__) - LINE_OFFSET) = ncall((__LINE__) - LINE_OFFSET) + 1
+    integer, parameter :: LINE_OFFSET = __LINE__
+#endif
     if (n < 1) return
-
     dai = dimag(za)
     dar = dreal(za)
     dbi = dimag(zb)
     dbr = dreal(zb)
     if ((dar == 0.d0).and.(dai == 0.d0)) then
       if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        ! za = 0.0, zb = 0.0 => zz = 0.0.
+        COUNT_CASE ! za = 0.0, zb = 0.0 => zz = 0.0.
         zz(1:n) = (0.d0,0.d0)
       else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        ! za = 0.0, zb = 1.0 => zz = zy (this is copy).
+        COUNT_CASE ! za = 0.0, zb = 1.0 => zz = zy (this is copy).
         zz(1:n) = zy(1:n)
       else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        ! za = 0.0, zb = -1.0 => zz = -zy.
+        COUNT_CASE ! za = 0.0, zb = -1.0 => zz = -zy.
         zz(1:n) = -zy(1:n)
       else
-        ! za = 0.0, zb = zb => zz = zb * zy (this is scal).
+        COUNT_CASE ! za = 0.0, zb = zb => zz = zb * zy (this is scal).
         zz(1:n) = zb * zy(1:n)
       endif
     else if ((dar == 1.d0).and.(dai == 0.d0)) then
       if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        ! za = 1.0, zb = 0.0 => zz = zx (this is copy).
+        COUNT_CASE ! za = 1.0, zb = 0.0 => zz = zx (this is copy).
         zz(1:n) = zx(1:n)
       else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        ! za = 1.0, zb = 1.0 => zz = zx + zy.
+        COUNT_CASE ! za = 1.0, zb = 1.0 => zz = zx + zy.
         zz(1:n) = zx(1:n) + zy(1:n)
       else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        ! za = 1.0, zb = -1.0 => zz = zx - zy.
+        COUNT_CASE ! za = 1.0, zb = -1.0 => zz = zx - zy.
         zz(1:n) = zx(1:n) - zy(1:n)
       else
-        ! za = 1.0, zb = zb => zz = zx + zb * zy (this is axpy).
+        COUNT_CASE ! za = 1.0, zb = zb => zz = zx + zb * zy (this is axpy).
         zz(1:n) = zx(1:n) + zb * zy(1:n)
       endif
     else if ((dar == -1.d0).and.(dai == 0.d0)) then
       if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        ! za = -1.0, zb = 0.0 => zz = -zx
+        COUNT_CASE ! za = -1.0, zb = 0.0 => zz = -zx
         zz(1:n) = -zx(1:n)
       else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        ! za = -1.0, zb = 1.0 => zz = -zx + zy
+        COUNT_CASE ! za = -1.0, zb = 1.0 => zz = -zx + zy
         zz(1:n) = -zx(1:n) + zy(1:n)
       else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        ! za = -1.0, zb = -1.0 => zz = -zx - zy.
+        COUNT_CASE ! za = -1.0, zb = -1.0 => zz = -zx - zy.
         zz(1:n) = -zx(1:n) - zy(1:n)
       else
-        ! za = -1.0, zb = zb => zz = -zx + zb * zy
+        COUNT_CASE ! za = -1.0, zb = zb => zz = -zx + zb * zy
         zz(1:n) = -zx(1:n) + zb * zy(1:n)
       endif
     else
       if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        ! za = za, zb = 0.0 => zz = za * zx (this is scal).
+        COUNT_CASE ! za = za, zb = 0.0 => zz = za * zx (this is scal).
         zz(1:n) = za * zx(1:n)
       else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        ! za = za, zb = 1.0 => zz = za * zx + zy (this is axpy)
+        COUNT_CASE ! za = za, zb = 1.0 => zz = za * zx + zy (this is axpy)
         zz(1:n) = za * zx(1:n) + zy(1:n)
       else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        ! za = za, zb = -1.0 => zz = za * zx - zy.
+        COUNT_CASE ! za = za, zb = -1.0 => zz = za * zx - zy.
         zz(1:n) = za * zx(1:n) - zy(1:n)
       else
-        ! za = za, zb = zb => zz = za * zx + zb * zy.
+        COUNT_CASE ! za = za, zb = zb => zz = za * zx + zb * zy.
         zz(1:n) = za * zx(1:n) + zb * zy(1:n)
       endif
     endif
