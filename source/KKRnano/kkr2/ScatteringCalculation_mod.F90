@@ -169,7 +169,7 @@ implicit none
 
         ! if we had rMTref given for all atoms inside the reference cluster radius
         !   we could compute the Tref on the fly
-#define COMPUTE_tref_LOCALLY
+!#define COMPUTE_tref_LOCALLY
 #ifndef COMPUTE_tref_LOCALLY       
          Tref_local = ZERO
         dTref_local = ZERO
