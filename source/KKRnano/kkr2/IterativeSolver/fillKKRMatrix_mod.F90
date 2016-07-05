@@ -149,7 +149,7 @@ module fillKKRMatrix_mod
 
         !    T (square mat.)          lmmax2                   lmmax2
         !  |----|                  |----------|             |----------|
-        ! -|    |  lmmax1     *    | G_ref    | lmmax3  =   |  -T*G    |  lmmax1
+        !  |    |  lmmax1     *    | G_ref    | lmmax3  =   |   T*G    |  lmmax1
         !  |----|                  |----------| (==lmmax1)  |----------|
         !  lmmax3==lmmax1
 
@@ -157,10 +157,10 @@ module fillKKRMatrix_mod
 
           temp(:) = ZERO
           do lm3 = 1, lmmax3
-            temp(:) = temp(:) - tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1)) ! -T*G
+            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1)) !  T*G
           enddo ! lm3
           
-          if (block_row == block_col) temp(lm2) = temp(lm2) + CONE ! add 1.0 on the diagonal
+          if (block_row == block_col) temp(lm2) = temp(lm2) - CONE ! subtract 1.0 from the diagonal
 
           smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1)) = temp(1:lmmax1)
         enddo ! lm2
@@ -207,11 +207,15 @@ module fillKKRMatrix_mod
 
       start = kvstr(atom_index) - 1
       do lm2 = 1, lmmax2
-        do lm1 = 1, lmmax1
-                      ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-         mat_B( start + lm1, (ii - 1) * lmmax2 + lm2 ) = - TMATLL(lm1, lm2, atom_index)
-        end do
-      end do
+        if (present(tmatLL)) then
+          do lm1 = 1, lmmax1
+            ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
+            mat_B(start+lm1,lm2+lmmax2*(ii-1)) = tmatLL(lm1,lm2,atom_index)
+          enddo ! lm1
+        else
+          mat_B(start+lm2,lm2+lmmax2*(ii-1)) = CONE
+        endif
+      enddo ! lm2
 
     enddo ! ii
 

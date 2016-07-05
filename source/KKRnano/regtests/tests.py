@@ -76,8 +76,8 @@ class Test_copper(unittest.TestCase):
         self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=6), -13219.56030377, DECIMALS) # about a minute
 
 class Test_semiconductors(unittest.TestCase):
-     def test_GaN(self):
-        self.assertAlmostEqual(KKR_total_energy("GaN", solver=4), -3990.85150060, DECIMALS) # about 3.5 minutes
+     #def test_GaN(self):
+        #self.assertAlmostEqual(KKR_total_energy("GaN", solver=4), -3990.85150060, DECIMALS) # about 3.5 minutes
 
      def test_Si(self):
         self.assertAlmostEqual(KKR_total_energy("Si", solver=4), -1155.68952256, DECIMALS) # about a minute
