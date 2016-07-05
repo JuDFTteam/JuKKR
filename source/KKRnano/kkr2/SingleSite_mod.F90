@@ -365,32 +365,34 @@ module SingleSite_mod
 
     external :: zgemm ! from BLAS
     double precision :: err
-    integer :: i, ir, irc1, j, lm
-    double complex :: pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd)
-    integer :: ipiv(lmmaxd)
+    integer :: i, ir, irc1, j, lm, lmmsqd
+    double complex, allocatable :: pns0(:,:,:,:), pns1(:,:,:), arot(:,:)
     logical :: Volterra ! false ==> Fredholm equation, true ==> Volterra equation
+    
+    allocate(pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd), arot(lmmaxd,lmmaxd))
     
     Volterra = (method /= 0)
     
     irc1 = ircut(ipan)
-  
+    lmmsqd = lmmaxd*lmmaxd
+
     do i = 0, icst
     
 !---> set up integrands for i-th born approximation
       if (i == 0) then
-        call wfint0(ader,bder,pzlm,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
+        call wfint0(ader, bder, pzlm, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, lmmaxd)
       else  ! i
-        call wfint(pns,ader,bder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
+        call wfint(pns, ader, bder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, lmmaxd)
       endif ! i
 
 !---> call integration subroutines
       if (Volterra) then
-        call csout (ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
+        call csout(ader, amat, lmmsqd, irmind, irmd, ipan, ircut)
       else ! Fredholm equation
-        call csinwd(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
+        call csinwd(ader, amat, lmmsqd, irmind, irmd, ipan, ircut)
       endif
-      call csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-      
+      call csout(bder, bmat, lmmsqd, irmind, irmd, ipan, ircut)
+
       do ir = irmind, irc1
         if (Volterra) amat(:,:,ir) = -amat(:,:,ir)
         do lm = 1, lmmaxd
@@ -414,9 +416,9 @@ module SingleSite_mod
 !-----------------------------------------------------------------------
 ! check convergence of pns after the last iteration comparing to the previous iteration
     pns0(:,:,irmind:irc1,1:nsra) = pns0(:,:,irmind:irc1,1:nsra) - pns(:,:,irmind:irc1,1:nsra)
-      
+
     do j = 1, nsra
-      call csout(pns0(1,1,irmind,j), pns1, lmmaxd**2, irmind, irmd, ipan, ircut)
+      call csout(pns0(1,1,irmind,j), pns1, lmmsqd, irmind, irmd, ipan, ircut)
       err = maxval(abs(pns1(:,:,irc1)))
       ! convergence check
       if (err > 1d-3) then
@@ -432,18 +434,20 @@ module SingleSite_mod
     enddo ! j
 ! end convergence check      
 !-----------------------------------------------------------------------
-    
+
   
     if (Volterra) then
 !-----------------------------------------------------------------------
 ! only Volterra equation
       
-      call zgeinv1(amat(1,1,irc1), ar, br, ipiv, lmmaxd) ! invert the last amat
+      call zgeinv1(amat(:,:,irc1), arot, lmmaxd) ! invert the last amat
 
       do ir = irmind, irc1
       
-        call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,amat(1,1,ir),lmmaxd,ar,lmmaxd,zero,ader(1,1,ir),lmmaxd)
-        call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,bmat(1,1,ir),lmmaxd,ar,lmmaxd,zero,bder(1,1,ir),lmmaxd)
+        ! use gemm('n','n',M     ,N     ,K     ,1.  ,A(:M,:K)    ,M     ,B(:K,:N),K ,beta,C(:M,:N)    ,M)
+        call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,amat(1,1,ir),lmmaxd,arot,lmmaxd,zero,ader(1,1,ir),lmmaxd)
+        call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,bmat(1,1,ir),lmmaxd,arot,lmmaxd,zero,bder(1,1,ir),lmmaxd)
+        ! since the contraction index for these gemms is in the middle, we cannot group it into a larger gemm
 
         ! overwrite amat and bmat, keep the values in ader and bder (since these are intent(out)
         amat(:,:,ir) = ader(:,:,ir)
@@ -458,7 +462,7 @@ module SingleSite_mod
           enddo ! lm
         enddo ! ir
       enddo ! j
-      
+
 !-----------------------------------------------------------------------
     else  ! Volterra
     
@@ -470,16 +474,17 @@ module SingleSite_mod
           enddo ! lm
         enddo ! ir
       enddo ! j
-    
+
     endif ! Volterra
+    
+    deallocate(pns0, pns1, arot)
 
 !---> store alpha and t - matrix
     do lm = 1, lmmaxd
       ar(:,lm) = amat(:,lm,irmind)
       br(:,lm) = bmat(:,lm,irc1)*efac(1:lmmaxd)*efac(lm)/ek !---> t-matrix
     enddo ! lm
-      
 
   endsubroutine ! regns
 
-endmodule SingleSite_mod
+endmodule ! SingleSite_mod

@@ -19,7 +19,7 @@ ifeq ($(PLATFORM),ifort)
   FC = mpiifort -warn all
   FC90 = mpiifort -warn all
   # -module <path> specifies where to put .mod files
-  FCFLAGS  = 
+# FCFLAGS  = -openmp -openmp-report
   FCFLAGS += -module $(BUILDDIR)
   FCFLAGS += -I $(BUILDDIR)
   FCFLAGS += -D USE_VOROWEIGHTS

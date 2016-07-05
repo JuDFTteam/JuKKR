@@ -215,9 +215,7 @@ module SingleSiteHelpers_mod
 
   endsubroutine ! cradwf
 
-  
-    
-      
+
   subroutine csinwd(f, fint, lmmsqd, irmind, irmd, ipan, ircut)
 !-----------------------------------------------------------------------
 !     this subroutine does an inwards integration of llmax
@@ -280,12 +278,12 @@ module SingleSiteHelpers_mod
         fint(:,ie  ) = fint(:,ie+1) + f(:,ie)*a1 + f(:,ie+1)*a2 + f(:,ie+2)*a3
       endif
     enddo ! ip
-    
+
   endsubroutine ! csinwd
     
       
       
-  subroutine csout(f,fint,lmmsqd,irmind,irmd,ipan,ircut)
+  subroutine csout(f, fint, lmmsqd, irmind, irmd, ipan, ircut)
 !-----------------------------------------------------------------------
 !     this subroutine does an outwards integration of llmax
 !     functions f with an extended 3-point-Simpson :
@@ -316,8 +314,8 @@ module SingleSiteHelpers_mod
 !    modified by M. Ogura, june 2015
 !-----------------------------------------------------------------------
     integer, intent(in) :: ipan, irmd, irmind, lmmsqd
-    double complex, intent(in) ::  f(lmmsqd,irmind:irmd)
-    double complex, intent(inout) :: fint(lmmsqd,irmind:irmd)
+    double complex, intent(in) :: f(lmmsqd,irmind:irmd)
+    double complex, intent(out) :: fint(lmmsqd,irmind:irmd)
     integer, intent(in) :: ircut(0:ipan)
 
     double precision, parameter :: a1=5.d0/12.d0, a2=8.d0/12.d0, a3=-1.d0/12.d0
@@ -342,7 +340,6 @@ module SingleSiteHelpers_mod
         fint(:,i+1) = fint(:,i+0) + f(:,i)*a1 + f(:,i+1)*a2 + f(:,i+2)*a3
         fint(:,i+2) = fint(:,i+1) + f(:,i)*a3 + f(:,i+1)*a2 + f(:,i+2)*a1
       enddo ! i
-        
       if (mod(ien-ist, 2) == 1) then
         fint(:,ien) = fint(:,ien-1) + f(:,ien)*a1 + f(:,ien-1)*a2 + f(:,ien-2)*a3
       endif
@@ -351,7 +348,7 @@ module SingleSiteHelpers_mod
   endsubroutine ! csout
   
   
-  subroutine zgeinv1(a,u,aux,ipiv,n)
+  subroutine zgeinv1(a, u, n)
 ! ------------------------------------------------------------------------
 !   - inverts a general double complex matrix a,
 !   - the result is return in u,
@@ -362,21 +359,20 @@ module SingleSiteHelpers_mod
     integer, intent(in) :: n
     double complex, intent(in) :: a(n,n)
     double complex, intent(out) :: u(n,n)
-    double complex, intent(inout) :: aux(n,n)
-    integer, intent(inout) :: ipiv(:)
     
-    integer :: i, info
-    external :: zcopy, zgetrs, zgetrf ! from BLAS
+    double complex :: aux(n,n)
+    integer :: ipiv(n), i, info
+    external :: zgetrs, zgetrf ! from BLAS
 
     u(:,1:n) = zero
     do i = 1, n
       u(i,i) = cone
     enddo ! i
 
-    call zcopy(n*n,a,1,aux,1)
+    aux = a
     call zgetrf(n,n,aux,n,ipiv,info)
     call zgetrs('n',n,n,aux,n,ipiv,u,n,info)
-    
+
   endsubroutine ! zgeinv1
       
       
@@ -912,7 +908,7 @@ module SingleSiteHelpers_mod
     do ir = irmind, irmd
       do lm1 = 1, lmmaxd
         do lm2 = 1, lm1-1
-          vnspll(lm2,lm1,ir) = vnspll(lm1,lm2,ir) ! copy lower trinagular matrix
+          vnspll(lm2,lm1,ir) = vnspll(lm1,lm2,ir) ! copy lower triangular matrix
         enddo ! lm2
         vnspll(lm1,lm1,ir) = vnspll(lm1,lm1,ir) + vins(ir,1) ! add diagonal terms
       enddo ! lm1
@@ -920,10 +916,9 @@ module SingleSiteHelpers_mod
 
 ! todo: check if an out loop over ir for all ops is better (will depend on ratio between iend and #ir)    
   endsubroutine ! vllns
-  
-  
-  
-  subroutine wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
+
+
+  subroutine wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, lmmaxd)
 !-----------------------------------------------------------------------
 !      determines the integrands cder, dder or ader, bder in the
 !        integral equations for the non-spherical wavefunctions from
@@ -931,7 +926,7 @@ module SingleSiteHelpers_mod
 !
 !      R. Zeller      aug. 1994
 !-----------------------------------------------------------------------
-    integer, intent(in) :: irmd,irmind,lmmaxd,nsra
+    integer, intent(in) :: irmd, irmind, lmmaxd, nsra
     double complex, intent(out) :: cder(lmmaxd,lmmaxd,irmind:irmd)
     double complex, intent(out) :: dder(lmmaxd,lmmaxd,irmind:irmd)
     double complex, intent(in) :: pzekdr(lmmaxd,irmind:irmd,2)
@@ -951,7 +946,7 @@ module SingleSiteHelpers_mod
     
       qnsr =  dble(qns(:,:,ir,1))
       qnsi = dimag(qns(:,:,ir,1))
-      
+
       call dgemm('n','n',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),lmmaxd,qnsr,lmmaxd,0.d0,vtqnsr,lmmaxd)
       call dgemm('n','n',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),lmmaxd,qnsi,lmmaxd,0.d0,vtqnsi,lmmaxd)
       
@@ -1006,7 +1001,7 @@ module SingleSiteHelpers_mod
   endsubroutine ! wfint
 
       
-  subroutine wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra, irmind,irmd,lmmaxd)
+  subroutine wfint0(cder, dder, qzlm, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, lmmaxd)
 !-----------------------------------------------------------------------
 !      determines the integrands cder, dder or ader, bder in the
 !        integral equations for the non-spherical wavefunctions from

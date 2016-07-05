@@ -10,11 +10,6 @@ module TFQMR_mod
 
   double complex, parameter, private :: CONE = (1.d0, 0.d0), ZERO=(0.d0, 0.d0)
 
-#define COUNT_zaxpby_CASES
-#ifdef  COUNT_zaxpby_CASES
-  integer(kind=8), private :: ncall(64)
-#endif
-
   contains
 
   !***********************************************************************
@@ -103,11 +98,6 @@ module TFQMR_mod
     !=======================================================================
     ! INITIALIZATION
     !=======================================================================
-
-#ifdef  COUNT_zaxpby_CASES
-    ncall(:) = 0
-#endif
-    
     
     EPSILON_DP = tiny(0.d0)
     tfqmr_status = 0
@@ -119,7 +109,7 @@ module TFQMR_mod
 
     sparse_mult_count = 0
     res_probe_count = 0
-
+    
     if (initial_zero) then
 
       ! set x0 to 0
@@ -401,10 +391,6 @@ module TFQMR_mod
     WRITELOG(3,*) tfqmr_status
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
-    
-#ifdef  COUNT_zaxpby_CASES
-    write(*, '(i0,a,99(" ",i0))') iteration, ' zaxpby cases: '
-#endif
 
   endsubroutine ! tfqmr_solve
 
@@ -446,9 +432,11 @@ module TFQMR_mod
     ncol = size(norms)
     nrow = size(vectors, 1)
 
+    !$omp parallel do private(col)
     do col = 1, ncol
       norms(col) = DZNRM2(nrow, vectors(:,col), 1)
     enddo ! col
+    !$omp end parallel do
     
   endsubroutine ! norms
 
@@ -464,9 +452,11 @@ module TFQMR_mod
     ncol = size(vectorsv, 2)
     nrow = size(vectorsv, 1)
 
+    !$omp parallel do private(col)
     do col = 1, ncol
       dots(col) = ZDOTU(nrow, vectorsv(:,col), 1, vectorsw(:,col), 1)
     enddo ! col
+    !$omp end parallel do
     
   endsubroutine ! dots
 
@@ -482,10 +472,12 @@ module TFQMR_mod
     ncol = size(factors)
     nrow = size(xvector, 1)
 
+    !$omp parallel do private(col)
     do col = 1, ncol
-      call zaxpby(nrow, factors(col), xvector(:,col), CONE, yvector(:,col))
+      yvector(:,col) = factors(col) * xvector(:,col) + yvector(:,col)
     enddo ! col
-    
+    !$omp end parallel do
+
   endsubroutine ! y := a*x+y
 
   !------------------------------------------------------------------------------
@@ -499,134 +491,12 @@ module TFQMR_mod
     ncol = size(factors)
     nrow = size(xvector, 1)
 
+    !$omp parallel do private(col)
     do col = 1, ncol
-      call zaxpby(nrow, CONE, xvector(:,col), factors(col), yvector(:,col))
+      yvector(:,col) = xvector(:,col) + factors(col) * yvector(:,col)
     enddo ! col
+    !$omp end parallel do
     
   endsubroutine ! y := x+a*y
- 
- 
-!**********************************************************************
-!
-!     Copyright (C) 1992  Roland W. Freund and Noel M. Nachtigal
-!     All rights reserved.
-!
-!     This code is part of a copyrighted package.  For details, see the
-!     file `cpyrit.doc' in the top-level directory.
-!
-!     ANY USE OF  THIS CODE CONSTITUTES ACCEPTANCE OF  THE TERMS OF THE COPYRIGHT NOTICE
-!**********************************************************************
-  subroutine zaxpby(n, za, zx, zb, zyz) ! merged two args zz and zy into one arg zyz with intent(inout)
-#define zz zyz
-#define zy zyz
-!     purpose:
-!     this subroutine computes zz = za * zx + zb * zy.  several special
-!     cases are handled separately:
-!        za =  0.0, zb =  0.0 => zz = 0.0
-!        za =  0.0, zb =  1.0 => zz = zy  (this is copy)
-!        za =  0.0, zb = -1.0 => zz = -zy
-!        za =  0.0, zb =   zb => zz = zb * zy  (this is scal)
-!        za =  1.0, zb =  0.0 => zz = zx  (this is copy)
-!        za =  1.0, zb =  1.0 => zz = zx + zy
-!        za =  1.0, zb = -1.0 => zz = zx - zy
-!        za =  1.0, zb =   zb => zz = zx + zb * zy (this is axpy)
-!        za = -1.0, zb =  0.0 => zz = -zx
-!        za = -1.0, zb =  1.0 => zz = -zx + zy
-!        za = -1.0, zb = -1.0 => zz = -zx - zy
-!        za = -1.0, zb =   zb => zz = -zx + zb * zy
-!        za =   za, zb =  0.0 => zz = za * zx  (this is scal)
-!        za =   za, zb =  1.0 => zz = za * zx + zy  (this is axpy)
-!        za =   za, zb = -1.0 => zz = za * zx - zy
-!        za =   za, zb =   zb => zz = za * zx + zb * zy
-!     zz may be the same as zx or zy.
-!
-!     parameters:
-!     n  = the dimension of the vectors (input).
-!     zz = the vector result (output).
-!     za = scalar multiplier for zx (input).
-!     zx = one of the vectors (input).
-!     zb = scalar multiplier for zy (input).
-!     zy = the other vector (input).
-!
-!     noel m. nachtigal
-!     march 23, 1993
-!
-!**********************************************************************
-    integer, intent(in) :: n
-    double complex, intent(in) :: za, zx(n), zb
-    double complex, intent(inout) :: zyz(n)
-    double precision :: dai, dar, dbi, dbr
 
-#ifndef COUNT_zaxpby_CASES
-#define COUNT_CASE
-#else
-#define COUNT_CASE ncall((__LINE__) - LINE_OFFSET) = ncall((__LINE__) - LINE_OFFSET) + 1
-    integer, parameter :: LINE_OFFSET = __LINE__
-#endif
-    if (n < 1) return
-    dai = dimag(za)
-    dar = dreal(za)
-    dbi = dimag(zb)
-    dbr = dreal(zb)
-    if ((dar == 0.d0).and.(dai == 0.d0)) then
-      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = 0.0, zb = 0.0 => zz = 0.0.
-        zz(1:n) = (0.d0,0.d0)
-      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = 0.0, zb = 1.0 => zz = zy (this is copy).
-        zz(1:n) = zy(1:n)
-      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = 0.0, zb = -1.0 => zz = -zy.
-        zz(1:n) = -zy(1:n)
-      else
-        COUNT_CASE ! za = 0.0, zb = zb => zz = zb * zy (this is scal).
-        zz(1:n) = zb * zy(1:n)
-      endif
-    else if ((dar == 1.d0).and.(dai == 0.d0)) then
-      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = 1.0, zb = 0.0 => zz = zx (this is copy).
-        zz(1:n) = zx(1:n)
-      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = 1.0, zb = 1.0 => zz = zx + zy.
-        zz(1:n) = zx(1:n) + zy(1:n)
-      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = 1.0, zb = -1.0 => zz = zx - zy.
-        zz(1:n) = zx(1:n) - zy(1:n)
-      else
-        COUNT_CASE ! za = 1.0, zb = zb => zz = zx + zb * zy (this is axpy).
-        zz(1:n) = zx(1:n) + zb * zy(1:n)
-      endif
-    else if ((dar == -1.d0).and.(dai == 0.d0)) then
-      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = -1.0, zb = 0.0 => zz = -zx
-        zz(1:n) = -zx(1:n)
-      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = -1.0, zb = 1.0 => zz = -zx + zy
-        zz(1:n) = -zx(1:n) + zy(1:n)
-      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = -1.0, zb = -1.0 => zz = -zx - zy.
-        zz(1:n) = -zx(1:n) - zy(1:n)
-      else
-        COUNT_CASE ! za = -1.0, zb = zb => zz = -zx + zb * zy
-        zz(1:n) = -zx(1:n) + zb * zy(1:n)
-      endif
-    else
-      if ((dbr == 0.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = za, zb = 0.0 => zz = za * zx (this is scal).
-        zz(1:n) = za * zx(1:n)
-      else if ((dbr == 1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = za, zb = 1.0 => zz = za * zx + zy (this is axpy)
-        zz(1:n) = za * zx(1:n) + zy(1:n)
-      else if ((dbr == -1.d0).and.(dbi == 0.d0)) then
-        COUNT_CASE ! za = za, zb = -1.0 => zz = za * zx - zy.
-        zz(1:n) = za * zx(1:n) - zy(1:n)
-      else
-        COUNT_CASE ! za = za, zb = zb => zz = za * zx + zb * zy.
-        zz(1:n) = za * zx(1:n) + zb * zy(1:n)
-      endif
-    endif
-#undef zy
-#undef zz
-  endsubroutine
- 
 endmodule ! TFQMR_mod

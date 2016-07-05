@@ -84,8 +84,8 @@ module vbrmv_mat_mod
       call ZGEMM('N', 'N', nrows, nRHSs, nsum, ONE, A(k:), nrows, Buffer, leaddim_Buffer, ZERO, Ax(isr,1), leaddim_Ax)
 
     enddo ! ibr
-!$OMP endDO
-!$OMP endPARALLEL
+!$OMP END DO
+!$OMP END PARALLEL
 
   endsubroutine ! vbrmv_mat
 

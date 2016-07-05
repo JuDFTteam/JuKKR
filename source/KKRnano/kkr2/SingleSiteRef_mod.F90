@@ -39,10 +39,10 @@ module SingleSiteRef_mod
     double complex, intent(out) :: Lly_g0tr
     double precision, intent(in) :: alat
     integer, intent(in) :: natom
-    double complex, intent(inout) :: gref0(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
+    double complex, intent(out) :: gref0((lmaxd+1)**2*naclsd,(lmaxd+1)**2) !> dim(ngd,lmmaxd)
     double complex, intent(in) :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
     double complex, intent(in) :: dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
-    double complex, intent(out) :: dgdeout(Lly*(naclsd*(lmaxd+1)**2-1)+1,(lmaxd+1)**2)
+    double complex, intent(out) :: dgdeout(Lly*((lmaxd+1)**2*naclsd-1)+1,(lmaxd+1)**2)
     double precision, intent(in) :: cleb(ncleb)
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: loflm(:)
@@ -51,7 +51,7 @@ module SingleSiteRef_mod
 
     external :: zcopy, zgemm, zgetrs ! from BLAS
     integer :: info
-    integer :: ipvt(naclsd*(lmaxd+1)**2)
+    integer :: ipvt((lmaxd+1)**2*naclsd)
     integer :: n2, ndim, site_lm_index2
     integer :: memory_stat, memory_fail
   ! ---------------------------------------------------------------------
@@ -93,7 +93,7 @@ module SingleSiteRef_mod
   ! gref0 then contains g0^{(1)n'}_{ll'}, the free space structural
   ! green's function for the central cluster atom (e.r.)
   ! --------------------------------------------------------------
-    call zcopy(ngd*lmmaxd,gref,1,gref0,1) ! gref0(:,:) = gref(:,:)
+    call zcopy(ngd*lmmaxd,gref,1,gref0,1) ! should be equivalent to gref0(:,:) = gref(:,1:lmmaxd)
   ! --------------------------------------------------------------
 
     if (Lly == 1) then
@@ -389,7 +389,7 @@ module SingleSiteRef_mod
 !>
 !>    @author: ???, commented by E. Rabel, Nov 2011
 
-  subroutine grefsy(gtmat,gmat,ipvt,ndim,dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
+  subroutine grefsy(gtmat, gmat, ipvt, ndim, dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
 !
 !---> solve the dyson equation to get reference green function
 !
