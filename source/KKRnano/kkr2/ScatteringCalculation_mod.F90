@@ -50,7 +50,7 @@ implicit none
 
     use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
 
-    use kloopz1_mod, only: kloopz1_new
+    use kloopz1_mod, only: kloopz1
     use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
 
     use wrappers_mod, only: calctmat_wrapper, calcdtmat_wrapper
@@ -288,10 +288,10 @@ implicit none
             nmesh = emesh%kmesh(IE)
 
   !------------------------------------------------------------------------------
-            call kloopz1_new(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
+            call kloopz1(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
                     arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
                     calc%lattice_vectors%RR, & ! periodic images
-                    GrefN_buffer, arrays%NSYMAT,arrays%DSYMLL, &
+                    GrefN_buffer, arrays%NSYMAT, arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
                     calc%trunc_zone%trunc2atom_index, mp%mySEComm, &
                     calc%iguess_data, &

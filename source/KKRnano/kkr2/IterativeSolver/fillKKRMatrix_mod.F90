@@ -247,9 +247,9 @@ module fillKKRMatrix_mod
 
         do icol = kvstc(ibcol), kvstc(ibcol+1) - 1
           do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
-          
+
             full(irow,icol) = smat(ind)
-            
+
             ind = ind + 1
           enddo ! irow
         enddo ! icol
@@ -268,17 +268,19 @@ module fillKKRMatrix_mod
     double complex, intent(out) :: mat_X(:,:)
 
     integer, allocatable :: ipvt(:)
-    integer :: ndim, num_rhs, info
+    integer :: ndim, nrhs, info
     external :: zgetrf, zgetrs ! LAPACK
 
     ndim = size(full, 1)
     allocate(ipvt(ndim))
 
-    num_rhs = size(mat_B, 2)
+    nrhs = size(mat_B, 2)
     mat_X(:,:) = mat_B(:,:)
     
-    call zgetrf(ndim, ndim, full, ndim, ipvt, info)
-    call zgetrs('n', ndim, num_rhs, full, ndim, ipvt, mat_x, ndim, info)
+    call zgetrf(ndim, ndim, full, ndim, ipvt, info) ! LU-factorize
+!   if (info /= 0) ! ToDo: warn
+    call zgetrs('n', ndim, nrhs, full, ndim, ipvt, mat_x, ndim, info) ! solve the system of linear equations
+!   if (info /= 0) ! ToDo: warn
 
     deallocate(ipvt, stat=info)
   endsubroutine ! solveFull

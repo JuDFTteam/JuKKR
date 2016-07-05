@@ -221,7 +221,7 @@ EnergyMesh_mod.o: EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o Exceptions_mod.o
 IterativeSolver_mod.o:  TFQMR_mod.o SolverStats_mod.o
-kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o  kkrmat01_new.o jij_calc_mod.o TEST_lcutoff_mod.o IterativeSolver_mod.o  InitialGuess_mod.o Constants_mod.o
+kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o kkrmat01_new.o jij_calc_mod.o IterativeSolver_mod.o InitialGuess_mod.o Constants_mod.o
 ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o Exceptions_mod.o

@@ -11,14 +11,14 @@
 
 !#define SPLIT_REFERENCE_FOURIER_COM
 
-module kkrmat_new_mod
+module kkrmat_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   use arraytest2_mod, only: !import no name here, just mention it for the module dependency
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: kkrmat01_new
+  public :: kkrmat01
 
   double complex, allocatable :: full(:,:)
   double complex, parameter :: zero=(0.d0, 0.d0)
@@ -29,7 +29,7 @@ module kkrmat_new_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01_new(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
+  subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
                           mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, lly) !LLY
     !   performs k-space integration,
@@ -184,7 +184,7 @@ module kkrmat_new_mod
 
 #undef cluster
 #undef ms
-  endsubroutine ! kkrmat01_new
+  endsubroutine ! kkrmat01
 
 
 
@@ -1092,4 +1092,4 @@ module kkrmat_new_mod
     nOps = lmmax1*lmmax2
   endfunction ! modify_smat
   
-endmodule ! kkrmat_new_mod
+endmodule ! kkrmat_mod

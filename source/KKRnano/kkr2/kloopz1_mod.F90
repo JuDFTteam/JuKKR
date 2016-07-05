@@ -2,13 +2,13 @@
 module kloopz1_mod
   implicit none
   private
-  public :: kloopz1_new
+  public :: kloopz1
 
   double complex, parameter :: CONE=(1.d0,0.d0), ZERO=(0.d0,0.d0)
   
   contains
 
-  subroutine kloopz1_new(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
+  subroutine kloopz1(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                          nsymat, dsymll, tmatLL, lmmaxd, trunc2atom_index, communicator, iguess_data, &
                          DGinp_local, dtde, tr_alph, lly_grdt, &
                          global_atom_idx_lly, lly) ! LLY 
@@ -25,9 +25,8 @@ module kloopz1_mod
 ! dginp ...      derivative of reference green's function
 ! tsst_local ..  t-matrix
 
-    use kkrmat_new_mod, only: kkrmat01_new
+    use kkrmat_mod, only: kkrmat01
     
-    use TEST_lcutoff_mod, only: cutoffmode
     use InitialGuess_mod, only: InitialGuess
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
@@ -41,15 +40,14 @@ module kloopz1_mod
     type(BCPOperator), intent(inout) :: precond
 
     integer, intent(in) :: lmmaxd
-#define N lmmaxd
     !> mapping trunc. index -> atom index
     integer, intent(in) :: trunc2atom_index(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat
-    double complex, intent(in) :: dsymll(N,N,nsymat) !<
-    double complex, intent(out) :: Gmatn(:,:,:) !< (N,N,num_local_atoms)
+    double complex, intent(in) :: dsymll(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
+    double complex, intent(out) :: Gmatn(:,:,:) !< dim(lmmaxd,lmmaxd,num_local_atoms) ! result
     double complex, intent(inout) :: Ginp_local(:,:,:,:) !< reference green function
     double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
@@ -75,8 +73,10 @@ module kloopz1_mod
     integer :: num_local_atoms, ila
     double complex, allocatable :: GS(:,:,:)
     integer, allocatable :: ipvt(:), info(:,:) ! work array for LAPACK
-    double complex, allocatable :: temp(:,:) ! work array for LAPACK
-    double complex, allocatable :: gll(:,:), tpg(:,:), xc(:,:), mssq(:,:) ! effective (site-dependent) delta_t^(-1) matrix
+    double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:) ! effective (site-dependent) delta_t^(-1) matrix
+
+    integer :: N
+    N = lmmaxd ! abbrev.
 
     num_local_atoms = size(op%atom_indices)
 
@@ -87,11 +87,6 @@ module kloopz1_mod
 !=======================================================================
 !     Note: the actual k-loop is in kkrmat01 (it is not parallelized)
 !     The integration over k is also performed in kkrmat01
-
-    ! cutoffmode:
-    ! 0 no cutoff
-    ! 1 T-matrix cutoff, 2 full matrix cutoff (not supported anymore)
-    if (cutoffmode == 1 .or. cutoffmode == 2) stop "0 < cutoffmode < 3 not supported."
     
     allocate(GS(N,N,num_local_atoms), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
@@ -99,7 +94,7 @@ module kloopz1_mod
     
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
-    call kkrmat01_new(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
+    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
                       mssq, DGinp_local, dtde, tr_alph, lly_grdt, k_point_weights, volBZ, global_atom_idx_lly, lly) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 
@@ -112,7 +107,7 @@ module kloopz1_mod
 !      Note: the symmetry operations apply on the (LL')-space
     tauvBZ = 1.d0/volBZ
 
-    allocate(gll(N,N), tpg(N,N), xc(N,N), temp(N,N), ipvt(N), info(2,num_local_atoms), mssq(N,N), stat=ist)
+    allocate(gll(N,N), tpg(N,N), xc(N,N), temp(N*N), ipvt(N), info(2,num_local_atoms), mssq(N,N), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error2, failure to allocate memory, probably out of memory."
     
     do ila = 1, num_local_atoms
@@ -139,8 +134,8 @@ module kloopz1_mod
 
       ! inversion:
       !     The (local) Delta_t matrix is inverted and stored in mssq
-      call zgetrf(N,N,mssq(:,:),N,ipvt,info(1,ila))
-      call zgetri(N,mssq(:,:),N,ipvt,temp,N*N,info(2,ila))
+      call zgetrf(N,N,mssq(:,:),N,ipvt,info(1,ila)) ! LU-factorize
+      call zgetri(N,mssq(:,:),N,ipvt,temp,N*N,info(2,ila)) ! compute inverse
 
 !     xc = Delta_t^(-1) * gll
 
@@ -184,6 +179,6 @@ module kloopz1_mod
 
     deallocate(GS, mssq, gll, tpg, xc, temp, ipvt, info, stat=ist)
 
-  endsubroutine ! kloopz1_new
+  endsubroutine ! kloopz1
 
 endmodule ! kloopz1_mod
