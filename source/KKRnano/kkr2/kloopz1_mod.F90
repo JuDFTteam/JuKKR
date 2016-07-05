@@ -74,26 +74,20 @@ module kloopz1_mod
     integer :: ispin, isym
     integer :: num_local_atoms, ila
     double complex, allocatable :: mssq(:,:,:), GS(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
-    integer :: ipvt(N) ! work array for LAPACK
-    double complex :: gll(N,N)
-    double complex :: temp(N,N) ! work array for LAPACK zgetri
-    double complex :: tpg(N,N)
-    double complex :: xc(N,N) ! to store temporary matrix-matrix mult. result
+    integer, allocatable :: ipvt(:) ! work array for LAPACK
+    double complex, allocatable :: temp(:,:) ! work array for LAPACK
+    double complex, allocatable :: gll(:,:), tpg(:,:), xc(:,:)
 
 #define cluster_info op%cluster_info
 
     num_local_atoms = size(op%atom_indices)
 
-    allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), stat=ist)
-    if (ist /= 0) then
-      write(*,*) "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
-      stop
-    endif
 
 !     rfctor=A/(2*PI) conversion factor to p.u.
 !    mrfctori = -(8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
      rfctori = (8.d0*atan(1.0d0))/alat ! = inverse of -alat/(2*PI)
 
+    allocate(temp(N,N), ipvt(N), mssq(N,N,num_local_atoms), stat=ist)
     do ila = 1, num_local_atoms
 
       mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila))
@@ -104,6 +98,7 @@ module kloopz1_mod
       call zgetri(N,mssq(:,:,ila),N,ipvt,temp,N*N,info)
 
     enddo ! ila
+    deallocate(temp, ipvt, stat=ist) ! ignore status
 
 !=======================================================================
 !     Note: the actual k-loop is in kkrmat01 (it is not parallelized)
@@ -112,10 +107,12 @@ module kloopz1_mod
     ! cutoffmode:
     ! 0 no cutoff
     ! 1 T-matrix cutoff, 2 full matrix cutoff (not supported anymore)
-    if (cutoffmode == 1 .or. cutoffmode == 2) then
-      write(*,*) "0 < cutoffmode < 3 not supported."
-      stop
-    endif
+    if (cutoffmode == 1 .or. cutoffmode == 2) stop "0 < cutoffmode < 3 not supported."
+    
+    allocate(GS(N,N,num_local_atoms), stat=ist)
+    if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
+    
+    
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     call kkrmat01_new(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
@@ -131,6 +128,9 @@ module kloopz1_mod
 !      Note: the symmetry operations apply on the (LL')-space
     tauvBZ  = CONE/volBZ
     tauvBZr = 1.d0/volBZ
+    
+    allocate(gll(N,N), tpg(N,N), xc(N,N), stat=ist)
+    if (ist /= 0) stop "KLOOPZ1: FATAL Error2, failure to allocate memory, probably out of memory."
 
     do ila = 1, num_local_atoms
 
@@ -194,11 +194,11 @@ module kloopz1_mod
       ispin = global_jij_data%active_spin
 
       call SYMJIJ(alat, tauvBZ, nsymat, dsymll, global_jij_data%NXIJ, global_jij_data%IXCP, &
-                  tmatLL,mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,ispin), &  ! Result
+                  tmatLL, mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,ispin), &  ! Result
                   cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
     endif ! jij
 
-    deallocate(GS, mssq, stat=ist)
+    deallocate(GS, mssq, gll, tpg, xc, stat=ist)
 
 #undef cluster_info
 #undef ms

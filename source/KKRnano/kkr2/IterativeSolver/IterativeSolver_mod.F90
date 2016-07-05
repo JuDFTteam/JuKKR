@@ -35,7 +35,7 @@ module IterativeSolver_mod
   endinterface
 
   contains
- 
+
   subroutine create_solver(self, qmrbound, op, precond)
     type(IterativeSolver), intent(inout) :: self
     double precision, intent(in) :: qmrbound
