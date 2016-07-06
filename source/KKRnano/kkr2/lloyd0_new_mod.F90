@@ -60,7 +60,7 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
                     ldau_data%ldau,ldau_data%nldau,ldau_data%lldau,ldau_data%phildau,ldau_data%wmldau,ldau_data%dmatldau, &
                     mpi_comm, &
                     lmaxd, mesh%irmd, irnsd, ielast, &
-                    cell%shdata%irid, cell%shdata%nfund, mesh%ipand, gaunts%ncleb, method)
+                    cell%irid, cell%nfund, mesh%ipand, gaunts%ncleb, method)
 
   else ! no lloyd
 

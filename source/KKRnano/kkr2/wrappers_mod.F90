@@ -60,7 +60,7 @@ module wrappers_mod
                   mesh%drdi, mesh%r, mesh%irmin, &
                   atomdata%potential%vins(irmind,1,ispin), atomdata%potential%visp(1,ispin), &
                   atomdata%z_nuclear, mesh%ipan, mesh%ircut, &
-                  cell%shdata%theta, cell%shdata%ifunm, cell%shdata%lmsp, &
+                  cell%theta, cell%ifunm, cell%lmsp, &
                   rho2ns, r2nef, &
                   !den(0,1,ispin), espv(0,ispin), &
                   den(:,:,ispin), espv(:,ispin), &
@@ -69,7 +69,7 @@ module wrappers_mod
                   ldau_data%ldau, ldau_data%nldau, ldau_data%lldau, ldau_data%phildau, ldau_data%wmldau, &
                   ldau_data%dmatldau, &
                   emesh%ielast, &
-                  lmaxd, mesh%irmd, irnsd, cell%shdata%irid, mesh%ipand, cell%shdata%nfund, gaunts%ncleb, method)
+                  lmaxd, mesh%irmd, irnsd, cell%irid, mesh%ipand, cell%nfund, gaunts%ncleb, method)
 
     enddo ! ispin
   endsubroutine
@@ -213,9 +213,9 @@ module wrappers_mod
     !output: VONS
     call vintras_new(atomdata%potential%lpot, nspind, rho2ns, atomdata%potential%vons, &
     mesh%r, mesh%drdi, mesh%ircut, mesh%ipan, shgaunts%ilm, &
-    cell%shdata%ifunm, shgaunts%imaxsh, shgaunts%gsh, &
-    cell%shdata%theta, cell%shdata%lmsp, &
-    mesh%irmd, cell%shdata%irid, cell%shdata%nfund, shgaunts%ngshd, mesh%ipand)
+    cell%ifunm, shgaunts%imaxsh, shgaunts%gsh, &
+    cell%theta, cell%lmsp, &
+    mesh%irmd, cell%irid, cell%nfund, shgaunts%ngshd, mesh%ipand)
 
   endsubroutine
 
@@ -238,9 +238,9 @@ module wrappers_mod
 
     call rhototb_new(nspind, rho2ns, atomdata%core%rhocat, &
                     mesh%drdi, mesh%ircut, &
-                    atomdata%potential%lpot, cell%shdata%nfu, cell%shdata%llmsp, cell%shdata%theta, mesh%ipan, &
+                    atomdata%potential%lpot, cell%nfu, cell%llmsp, cell%theta, mesh%ipan, &
                     catom, &
-                    mesh%irmd, cell%shdata%irid, mesh%ipand, cell%shdata%nfund)
+                    mesh%irmd, cell%irid, mesh%ipand, cell%nfund)
 
   endsubroutine
 
@@ -311,9 +311,9 @@ module wrappers_mod
 
     call vxcdrv_new(exc, KTE, kxc, lpot, nspind, rho2ns, &
               vons_potential, mesh%r, mesh%drdi, mesh%a, &
-              mesh%irws, mesh%ircut, mesh%ipan, shgaunts%gsh, shgaunts%ilm, shgaunts%imaxsh, cell%shdata%ifunm, &
-              cell%shdata%theta, cell%shdata%lmsp, &
-              mesh%irmd, cell%shdata%irid, cell%shdata%nfund, shgaunts%ngshd, mesh%ipand)
+              mesh%irws, mesh%ircut, mesh%ipan, shgaunts%gsh, shgaunts%ilm, shgaunts%imaxsh, cell%ifunm, &
+              cell%theta, cell%lmsp, &
+              mesh%irmd, cell%irid, cell%nfund, shgaunts%ngshd, mesh%ipand)
 
   endsubroutine
 
@@ -334,9 +334,9 @@ module wrappers_mod
     !output: vav0, vol0
     call mtzero_new(atomdata%potential%lmpot, nspind, atomdata%potential%vons, &
                     atomdata%z_nuclear, mesh%r, mesh%drdi, mesh%imt, mesh%ircut, &
-                    mesh%ipan, cell%shdata%lmsp, cell%shdata%ifunm, &
-                    cell%shdata%theta, mesh%irws, vav0, vol0, &
-                    mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand)
+                    mesh%ipan, cell%lmsp, cell%ifunm, &
+                    cell%theta, mesh%irws, vav0, vol0, &
+                    mesh%irmd, cell%irid, cell%nfund, mesh%ipand)
   endsubroutine
 
 
@@ -359,10 +359,10 @@ module wrappers_mod
 
       !output: vons (changed)
       call convol_new(mesh%ircut(1), mesh%irc, &
-                      shgaunts%imaxsh(shgaunts%lmpotd), shgaunts%ilm, cell%shdata%ifunm, shgaunts%lmpotd, shgaunts%gsh, &
-                      cell%shdata%theta, atomdata%z_nuclear, &
-                      mesh%r, atomdata%potential%vons(1,1,ispin), cell%shdata%lmsp, &
-                      cell%shdata%irid, cell%shdata%nfund, mesh%irmd, shgaunts%ngshd)
+                      shgaunts%imaxsh(shgaunts%lmpotd), shgaunts%ilm, cell%ifunm, shgaunts%lmpotd, shgaunts%gsh, &
+                      cell%theta, atomdata%z_nuclear, &
+                      mesh%r, atomdata%potential%vons(1,1,ispin), cell%lmsp, &
+                      cell%irid, cell%nfund, mesh%irmd, shgaunts%ngshd)
     enddo ! ispin
   endsubroutine
 
@@ -395,11 +395,11 @@ module wrappers_mod
   !-------------------------------------------------------------------------------
   !> A wrapper for the subroutine RHOMOM_NEW.
   subroutine RHOMOM_NEW_wrapper(cmom, cminst, rho2ns, cell, mesh, shgaunts)
-    use CellData_mod, only: CellData
+    use ShapefunData_mod, only: ShapefunData
     use RadialMeshData_mod, only: RadialMeshData
     use ShapeGauntCoefficients_mod, only: ShapeGauntCoefficients
 
-    type(CellData), intent(in) :: cell
+    type(ShapefunData), intent(in) :: cell
     type(RadialMeshData), intent(in) :: mesh
     type(ShapeGauntCoefficients), intent(in) :: shgaunts
     double precision, intent(out) :: cminst(:)
@@ -414,16 +414,16 @@ module wrappers_mod
     CHECKASSERT( size(CMINST) == (LPOT+1)**2)
     CHECKASSERT( size(RHO2NS, 1) == mesh%irmd)
     CHECKASSERT( size(RHO2NS, 2) == (LPOT+1)**2)
-    CHECKASSERT( cell%shdata%lmmax_shape == (2*LPOT + 1) ** 2)
+    CHECKASSERT( cell%lmmax_shape == (2*LPOT + 1) ** 2)
 
     !call rhomom_new(cmom, cminst, lpot, rho2ns, r, drdi, ircut, ipan, ilm, ifunm, imaxsh, gsh, thetas, lmsp, irmd, irid, nfund, ipand, ngshd)
 
     !output: cmom, cminst
     call rhomom_new(cmom, cminst, lpot, rho2ns, &
               mesh%r, mesh%drdi, mesh%ircut, mesh%ipan, shgaunts%ilm, &
-              cell%shdata%ifunm, shgaunts%imaxsh, shgaunts%gsh, &
-              cell%shdata%theta, cell%shdata%lmsp, &
-              mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
+              cell%ifunm, shgaunts%imaxsh, shgaunts%gsh, &
+              cell%theta, cell%lmsp, &
+              mesh%irmd, cell%irid, cell%nfund, mesh%ipand, shgaunts%ngshd)
 
   endsubroutine
 

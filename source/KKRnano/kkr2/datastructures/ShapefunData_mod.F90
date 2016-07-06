@@ -3,26 +3,26 @@
 module ShapefunData_mod
   implicit none
   private
-  public :: ShapeFunData, create, destroy, represent
+  public :: ShapefunData, create, destroy, represent
 
   type ShapefunData
     ! dimension params
-    integer :: natoms
     integer :: irid
     integer :: nfund
     integer :: lmmax_shape !< former name LMXSPD
 
-    double precision, allocatable :: THETA(:,:)
-    integer, allocatable :: LLMSP(:)
-    integer, allocatable :: IFUNM(:)
-    integer, allocatable :: LMSP(:) !< =0 if shape-function component is zero, otherwise =1
-    integer :: NFU
+    double precision, allocatable :: theta(:,:)
+    integer, allocatable :: llmsp(:)
+    integer, allocatable :: ifunm(:)
+    integer, allocatable :: lmsp(:) !< =0 if shape-function component is zero, otherwise =1
+    integer :: nfu
 
     double precision :: max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
     integer :: num_faces !< number of faces of voronoi-cell
 
+    integer :: cell_index ! remainder from former type(CellData)
+    
   endtype
-
   
   interface create
     module procedure createShapefunData
@@ -33,52 +33,48 @@ module ShapefunData_mod
   endinterface
 
   interface represent
-    module procedure repr_ShapefunData
+    module procedure representShapefunData
   endinterface
-  
   
   contains
 
   !----------------------------------------------------------------------------
-  subroutine createShapefunData(shdata, irid, lmmax_shape, nfund, natoms)
-    type(ShapeFunData), intent(inout) :: shdata
+  subroutine createShapefunData(self, irid, lmmax_shape, nfund)
+    type(ShapefunData), intent(inout) :: self
     integer, intent(in) :: irid
     integer, intent(in) :: lmmax_shape
     integer, intent(in) :: nfund
-    integer, intent(in) :: natoms
 
-    shdata%natoms = natoms
-    shdata%irid = irid
-    shdata%nfund = nfund
-    shdata%lmmax_shape = lmmax_shape
+    self%irid = irid
+    self%nfund = nfund
+    self%lmmax_shape = lmmax_shape
 
-    allocate(shdata%THETA(irid, nfund))
-    allocate(shdata%LLMSP(nfund))
-    allocate(shdata%IFUNM(lmmax_shape))
-    allocate(shdata%LMSP(lmmax_shape))
+    allocate(self%theta(irid,nfund), self%llmsp(nfund), self%ifunm(lmmax_shape), self%lmsp(lmmax_shape))
 
-    shdata%THETA = 0.0d0
-    shdata%LLMSP = 0
-    shdata%IFUNM = 0
-    shdata%LMSP =  0
-    shdata%NFU = 0
-    shdata%max_muffin_tin = 0.0d0
-    shdata%num_faces = 0
+    self%theta = 0.d0
+    self%llmsp = 0
+    self%ifunm = 0
+    self%lmsp =  0
+    self%nfu = 0
+    self%max_muffin_tin = 0.d0
+    self%num_faces = 0
 
+    self%cell_index = -1 ! ??
+    
     ! TODO: check lmmax_shape <= nfund
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  elemental subroutine destroyShapefunData(shdata)
-    type(ShapeFunData), intent(inout) :: shdata
+  elemental subroutine destroyShapefunData(self)
+    type(ShapefunData), intent(inout) :: self
     integer :: ist
-    deallocate(shdata%THETA, shdata%LLMSP, shdata%IFUNM, shdata%LMSP, stat=ist)
+    deallocate(self%theta, self%llmsp, self%ifunm, self%lmsp, stat=ist)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   !> Returns a string representation of ShapefunData.
-  subroutine repr_ShapefunData(shdata, str)
-    type(ShapefunData), intent(in) :: shdata
+  subroutine representShapefunData(self, str)
+    type(ShapefunData), intent(in) :: self
     character(len=:), allocatable, intent(inout) :: str
 
     character :: nl
@@ -88,41 +84,41 @@ module ShapefunData_mod
     nl = new_line(' ')
 
     str = ''
-    write(buffer, *) "irid           = ", shdata%irid
+    write(buffer, *) "irid           = ", self%irid
     str = str // trim(buffer) // nl
-    write(buffer, *) "nfund          = ", shdata%nfund
+    write(buffer, *) "nfund          = ", self%nfund
     str = str // trim(buffer) // nl
-    write(buffer, *) "NFU            = ", shdata%NFU
+    write(buffer, *) "nfu            = ", self%nfu
     str = str // trim(buffer) // nl
-    write(buffer, *) "lmmax_shape    = ", shdata%lmmax_shape
+    write(buffer, *) "lmmax_shape    = ", self%lmmax_shape
     str = str // trim(buffer) // nl
-    write(buffer, *) "max_muffin_tin = ", shdata%max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
+    write(buffer, *) "max_muffin_tin = ", self%max_muffin_tin !< maximum muffin tin radius in units of ALAT!!!
     str = str // trim(buffer) // nl
-    write(buffer, *) "num_faces = ", shdata%num_faces
+    write(buffer, *) "num_faces = ", self%num_faces
     str = str // trim(buffer) // nl
 
-    write(buffer, *) "LLMSP = "
+    write(buffer, *) "llmsp = "
     str = str // trim(buffer) // nl
-    do ind = 1, size(shdata%llmsp)
-      write(buffer, *) shdata%llmsp(ind)
+    do ind = 1, size(self%llmsp)
+      write(buffer, *) self%llmsp(ind)
       str = str // trim(buffer) // nl
     enddo ! ind
 
-    write(buffer, '(A5, 2X, A5, 2X, A5)') "LM", "LMSP", "IFUNM"
+    write(buffer, '(A5, 2X, A5, 2X, A5)') "LM", "lmsp", "ifunm"
     str = str // trim(buffer) // nl
     write(buffer, '(79("="))')
     str = str // trim(buffer) // nl
-    do ind = 1, size(shdata%lmsp)
-      write(buffer, '(I5, 2X, I5, 2X, I5)') ind, shdata%lmsp(ind), shdata%ifunm(ind)
+    do ind = 1, size(self%lmsp)
+      write(buffer, '(I5, 2X, I5, 2X, I5)') ind, self%lmsp(ind), self%ifunm(ind)
       str = str // trim(buffer) // nl
     enddo ! ind
 
-    write(buffer, '(A5, 2X, A5, 2X, A5, 2X, A5)') "ind", "ifun", "LM", "THETA"
+    write(buffer, '(A5, 2X, A5, 2X, A5, 2X, A5)') "ind", "ifun", "LM", "theta"
     str = str // trim(buffer) // nl
-    do ifun = 1, size(shdata%theta, 2)
-      if (sum(abs(shdata%theta(:, ifun))) > 0.0) then
-        do ind = 1, size(shdata%theta, 1)
-          write(buffer, '(I5, 2X, I5, 2X, I5, 2X, E23.16)') ind, ifun, shdata%llmsp(ifun), shdata%THETA(ind, ifun)
+    do ifun = 1, size(self%theta, 2)
+      if (sum(abs(self%theta(:, ifun))) > 0.0) then
+        do ind = 1, size(self%theta, 1)
+          write(buffer, '(I5, 2X, I5, 2X, I5, 2X, E23.16)') ind, ifun, self%llmsp(ifun), self%theta(ind, ifun)
           str = str // trim(buffer) // nl
         enddo ! ind
       endif

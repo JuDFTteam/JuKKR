@@ -9,7 +9,7 @@ module CalculationData_mod
   use MadelungCalculator_mod, only: MadelungCalculator, create, destroy
   use MadelungCalculator_mod, only: MadelungLatticeSum, create, destroy ! todo: two types hosted in one module
   use RadialMeshData_mod, only: RadialMeshData, create, destroy
-  use CellData_mod, only: CellData, create, destroy
+  use ShapefunData_mod, only: ShapefunData, create, destroy
   use BasisAtom_mod, only: BasisAtom, create, destroy
   use KKRresults_mod, only: KKRresults, create, destroy
   use DensityResults_mod, only: DensityResults, create, destroy
@@ -46,7 +46,7 @@ module CalculationData_mod
     
     ! atom local data - different for each atom
     type(RadialMeshData), pointer     :: mesh_a(:)         => null()
-    type(CellData), pointer           :: cell_a(:)         => null()
+    type(ShapefunData), pointer       :: cell_a(:)         => null()
     type(BasisAtom), pointer          :: atomdata_a(:)     => null()
     type(DensityResults), pointer     :: densities_a(:)    => null()
     type(EnergyResults), pointer      :: energies_a(:)     => null()
@@ -381,7 +381,7 @@ module CalculationData_mod
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     
-    use CellData_mod, only: create
+    use ShapefunData_mod, only: create
     use BasisAtom_mod, only: load, associateBasisAtomMesh, associateBasisAtomCell
     use RadialMeshData_mod, only: load
     use KKRnanoParallel_mod, only: KKRnanoParallel
@@ -471,7 +471,7 @@ module CalculationData_mod
 
         ! set radius of repulsive reference potential
         if (params%rMT_ref_scale > 0.d0) then
-          self%atomdata_a(ila)%rMTref = self%cell_a(ila)%shdata%max_muffin_tin * params%alat * params%rMT_ref_scale
+          self%atomdata_a(ila)%rMTref = self%cell_a(ila)%max_muffin_tin * params%alat * params%rMT_ref_scale
         else
           self%atomdata_a(ila)%rMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
         endif
@@ -517,7 +517,6 @@ module CalculationData_mod
     
     integer :: i, atom_id, ila, irmd, irid, ipand, irnsd, ierror
     type(InterstitialMesh) :: inter_mesh
-    type(ShapefunData) :: shdata ! temporary shape-fun data
     double precision :: new_MT_radius
     integer :: num_MT_points
 
@@ -528,13 +527,10 @@ module CalculationData_mod
       new_MT_radius = new_MT_radii(ila)
       num_MT_points = params%num_MT_points
 
-      call create(shdata, inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
+      call create(self%cell_a(ila), inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
                   params%rclust_voronoi, 4*dims%lmaxd, &
                   dims%irid-num_MT_points, &
-                  params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id, dims%naez)
-
-      ! use it
-      self%cell_a(ila)%shdata = shdata ! possible in Fortran 2003
+                  params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id)
 
       irmd = dims%irmd - dims%irid + size(inter_mesh%xrn)
       irid = size(inter_mesh%xrn)
@@ -549,9 +545,8 @@ module CalculationData_mod
                           inter_mesh%drn, inter_mesh%nm, irmd-irid, irnsd)
 
       ! optional output of shape functions
-      if (params%write_shapes == 1 .or. voronano == 1) call store(shdata, inter_mesh, atom_id)
+      if (params%write_shapes == 1 .or. voronano == 1) call store(self%cell_a(ila), inter_mesh, atom_id)
 
-      call destroy(shdata)
       call destroy(inter_mesh)
 
     enddo ! ila
@@ -616,7 +611,7 @@ module CalculationData_mod
       naez        = 1                              ! 'jellstart' is called for each atom
       z(1)        = arrays%zat(calc_data%atom_ids(ila)) ! nuclear charge
       idshape(1)  = 1                              ! one shape per atom
-      meshn(1)    = calc_data%cell_a(ila)%shdata%irid   ! number of interstitial mesh points 
+      meshn(1)    = calc_data%cell_a(ila)%irid   ! number of interstitial mesh points 
       rmtcl(1)    = (calc_data%mesh_a(ila)%rmt)         ! MT radius
       irws(1)     = calc_data%mesh_a(ila)%irws          ! index of max. radius 
       xrn_2(1:meshn(1),1) = (calc_data%mesh_a(ila)%r((irws(1)-meshn(1)):irws(1)))/params%alat    ! radial mesh points
@@ -771,7 +766,7 @@ module CalculationData_mod
       write(*, '(A)') str
       call represent(self%atomdata_a(ila)%potential, str)
       write(*, '(A)') str
-      call represent(self%cell_a(ila)%shdata, str)
+      call represent(self%cell_a(ila), str)
       write(*, '(A)') str
     enddo ! ila
 

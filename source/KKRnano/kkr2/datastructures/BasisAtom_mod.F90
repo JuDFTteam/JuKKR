@@ -9,10 +9,10 @@
 !>   call readBasisAtomDA(atomdata, 37, I1)
 !>   call closeBasisAtomDAFile(37)
 !>
-!>   call createCellData(cell, irid, (2*LPOT+1)**2, nfund)
-!>   call openCellDataDAFile(cell, 37 , "cells")
-!>   call readCellDataDA(cell, 37, atomdata%cell_index)
-!>   call closeCellDataDAFile(37)
+!>   call createShapefunData(cell, irid, (2*LPOT+1)**2, nfund)
+!>   call openShapefunDataDAFile(cell, 37 , "cells")
+!>   call readShapefunDataDA(cell, 37, atomdata%cell_index)
+!>   call closeShapefunDataDAFile(37)
 !>
 !>   call associateBasisAtomCell(atomdata, cell)
 !>
@@ -56,7 +56,7 @@
 module BasisAtom_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
-  use CellData_mod, only: CellData, create, destroy
+  use ShapefunData_mod, only: ShapefunData, create, destroy
   use PotentialData_mod, only: PotentialData, create, destroy
   use AtomicCoreData_mod, only: AtomicCoreData, create, destroy
   use RadialMeshData_mod, only: RadialMeshData, create, destroy
@@ -80,7 +80,7 @@ module BasisAtom_mod
     double precision :: radius_muffin_tin !< user-specified muffin-tin radius
     type(PotentialData) :: potential
     type(AtomicCoreData) :: core
-    type(CellData), pointer :: cell_ptr => null()
+    type(ShapefunData), pointer :: cell_ptr => null()
     type(RadialMeshData), pointer :: mesh_ptr => null()
   endtype
 
@@ -127,7 +127,7 @@ module BasisAtom_mod
   !> cell data.
   subroutine associateBasisAtomCell(atom, cell)
     type(BasisAtom), intent(inout) :: atom
-    type(CellData), target, intent(in) :: cell
+    type(ShapefunData), target, intent(in) :: cell
 
     atom%cell_ptr => cell
 

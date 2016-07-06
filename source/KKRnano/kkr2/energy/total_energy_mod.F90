@@ -79,9 +79,9 @@ subroutine energy_electrostatic_L_resolved_wrapper(energy, v_potential, Z_nuclea
 
   call energy_electrostatic_L_resolved(energy, lpot, lmax_potential, &
                  nspind, rho2ns, v_potential, Z_nuclear, mesh%r, mesh%drdi, &
-                 mesh%ircut, mesh%ipan, shgaunts%imaxsh, cell%shdata%ifunm, shgaunts%ilm, &
-                 shgaunts%gsh, cell%shdata%theta, cell%shdata%lmsp, &
-                 mesh%irmd, cell%shdata%irid, cell%shdata%nfund, mesh%ipand, shgaunts%ngshd)
+                 mesh%ircut, mesh%ipan, shgaunts%imaxsh, cell%ifunm, shgaunts%ilm, &
+                 shgaunts%gsh, cell%theta, cell%lmsp, &
+                 mesh%irmd, cell%irid, cell%nfund, mesh%ipand, shgaunts%ngshd)
 #undef cell
 #undef mesh
 endsubroutine

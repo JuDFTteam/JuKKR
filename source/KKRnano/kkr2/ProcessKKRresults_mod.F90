@@ -348,7 +348,7 @@ module ProcessKKRresults_mod
     use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
     
     use RadialMeshData_mod, only: RadialMeshData
-    use CellData_mod, only: CellData
+    use ShapefunData_mod, only: ShapefunData
     use BasisAtom_mod, only: BasisAtom
     use LDAUData_mod, only: LDAUData
     use KKRresults_mod, only: KKRresults
@@ -374,7 +374,7 @@ module ProcessKKRresults_mod
     type(DensityResults), pointer             :: densities ! not const
     type(EnergyResults), pointer              :: energies  ! not const
     type(RadialMeshData), pointer             :: mesh
-    type(CellData), pointer                   :: cell
+    type(ShapefunData), pointer               :: cell
 
     double complex, parameter :: CZERO = (0.d0, 0.d0)
     logical :: LdoRhoEF
@@ -394,7 +394,6 @@ module ProcessKKRresults_mod
 
     atomdata  => getAtomData(calc, 1)
     ldau_data => getLDAUData(calc, 1)
-!   kkr       => calc%kkr_a(1)
     densities => getDensities(calc, 1)
     energies  => null()
     mesh      => null()
@@ -630,7 +629,7 @@ module ProcessKKRresults_mod
     use muffin_tin_zero_mod, only: allreduceMuffinTinShift_com, printMuffinTinShift
     use wrappers_mod, only: VINTRAS_wrapper, VXCDRV_wrapper, MTZERO_wrapper, CONVOL_wrapper
     
-    integer, intent(in)                        :: iter
+    integer, intent(in)                       :: iter
     type(CalculationData), intent(inout)      :: calc
     type(KKRnanoParallel), intent(in)         :: mp
     type(Main2Arrays), intent(in)             :: arrays
@@ -1128,7 +1127,7 @@ module ProcessKKRresults_mod
     nsb = nint(chrgsemicore)
     fsemicore = dble(nsb)/chrgsemicore*fsemicore_old
 
-    write(6,'(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)') chrgsemicore, fsemicore
+    write(6, '(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)') chrgsemicore, fsemicore
   endsubroutine ! calcFactorSemi
 
   !----------------------------------------------------------------------------
@@ -1199,9 +1198,9 @@ module ProcessKKRresults_mod
   subroutine printFermiEnergy(denef, e2, e2shift, efold)
     double precision, intent(in) :: denef, e2, e2shift, efold
 
-    write(6,fmt="('                old E FERMI ',F12.6,' Delta E_F = ',f12.6)") efold,e2shift
+    write(6,fmt="('                old E FERMI ',F12.6,' Delta E_F = ',f12.6)") efold, e2shift
     ! --> divided by naez because the weight of each atom has been already taken into account in 1c
-    write(6,fmt="('                new E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") e2,denef
+    write(6,fmt="('                new E FERMI ',F12.6,'  DOS(E_F) = ',f12.6)") e2, denef
     write(6,'(79(1h+),/)')
   endsubroutine ! print
 
@@ -1228,11 +1227,10 @@ module ProcessKKRresults_mod
   subroutine printTotalEnergies(total_energies)
     double precision, intent(in) :: total_energies(2)
 
-    write(*, 99014) total_energies(1), total_energies(1)*13.6058D0
-    write(*, 99015) total_energies(2), total_energies(2)*13.6058D0
-
-    99014 format (/,3x,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))
-    99015 format (/,3x,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))
+    write(*,"(/,3x,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',        f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))") &
+                  total_energies(1), total_energies(1)*13.6058D0
+    write(*,"(/,3x,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))") &
+                  total_energies(2), total_energies(2)*13.6058D0
   endsubroutine ! print
 
 !=============== DEBUG: Morgan charge distribution test =======================
@@ -1327,14 +1325,14 @@ module ProcessKKRresults_mod
     integer :: ii, ios
     integer, parameter :: fu=99
 
-    prefactors = dcmplx(1.d0, 0.d0)
+    prefactors = cmplx(1.d0, 0.d0)
 
     open(unit=fu, form='formatted', file='morgan_prefactors.dat', action='read', status='old', iostat=ios)
     if (ios /= 0) return ! (1.0, 0.0) for all prefactors
     
     do ii = 1, size(prefactors)
       read(unit=fu, fmt=*) re, im
-      prefactors(ii) = dcmplx(re, im)
+      prefactors(ii) = cmplx(re, im)
     enddo ! ii
     close(unit=fu)
   endsubroutine ! read
@@ -1387,17 +1385,17 @@ module ProcessKKRresults_mod
 
 ! process with MYLRANK(LMPIC) == 0 and LMPIC == 1 writes results
 
-  subroutine results(lrecres2, ielast, itscf, lmax, naez, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, wez, ldau, iemxd)
+  subroutine results(lrecres2, ielast, itscf, lmax, natoms, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, wez, ldau, iemxd)
   use Constants_mod, only: pi
     integer, intent(in) :: iemxd
-    integer, intent(in) :: ielast, itscf, lmax, naez, npol, nspin
+    integer, intent(in) :: ielast, itscf, lmax, natoms, npol, nspin
     integer, intent(in) :: kpre
     integer, intent(in) :: compute_total_energy ! former kte
     double precision, intent(in) :: e1, e2, tk, efermi
     double precision, intent(in) :: chrgnt, alat
     logical, intent(in) :: ldau
     double complex, intent(in) :: ez(iemxd), wez(iemxd)
-    double precision, intent(in) :: zat(naez)
+    double precision, intent(in) :: zat(natoms)
     integer, intent(in) :: ititle(20,*)
     
 !   logical, external :: TEST
@@ -1421,7 +1419,7 @@ module ProcessKKRresults_mod
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
-    npotd = nspin*naez
+    npotd = nspin*natoms
 
     lrecres1 = 8*43 + 16*(lmax+2)
 
@@ -1431,26 +1429,26 @@ module ProcessKKRresults_mod
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
 
       ! moments output
-      do i1 = 1, naez
+      do i1 = 1, natoms
         if (npol == 0) then
           read(71, rec=i1) qc, catom, charge, ecore, den
         else
           read(71, rec=i1) qc, catom, charge, ecore
         endif
-        call wrmoms(nspin, charge, i1, lmax, lmax+1, i1 == 1, i1 == naez)! first=(i1 == 1), last=(i1 == naez))
+        call wrmoms(nspin, charge, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
       enddo ! i1
 
       ! density of states output
       if (npol == 0) then
-        do i1 = 1, naez
+        do i1 = 1, natoms
           read(71, rec=i1) qc, catom, charge, ecore, den
-          call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, naez, ielast, i1, dostot)
+          call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
         enddo ! i1
       endif
 
 
       totsmom = 0.d0
-      do i1 = 1, naez
+      do i1 = 1, natoms
         if (npol == 0) then
           read(71, rec=i1) qc, catom, charge, ecore, den
         else
@@ -1476,11 +1474,11 @@ module ProcessKKRresults_mod
 
     if (compute_total_energy == 1) then
       open(72, access='direct', recl=lrecres2, file='bin.results2', form='unformatted', action='read', status='old')
-      do i1 = 1, naez
+      do i1 = 1, natoms
         read(72, rec=i1) catom, vmad, ecou, epotin, espc, espv, exc, lcoremax, euldau, edcldau
         ! output unfortunately integrated into etotb1
         ! etotb1 depends on 'saved' variables !!!
-        call etotb1(ecou, epotin, espc, espv, exc, euldau, edcldau, ldau, kpre, lmax, lpot, lcoremax, nspin, i1, naez)
+        call etotb1(ecou, epotin, espc, espv, exc, euldau, edcldau, ldau, kpre, lmax, lpot, lcoremax, nspin, i1, natoms)
       enddo ! i1
       close(72)
     endif
