@@ -31,7 +31,7 @@ module kkrmat_new_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01_new(solver, kkr_op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, lly) !LLY
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, lly) !LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -72,6 +72,7 @@ module kkrmat_new_mod
     double complex, intent(out)  :: lly_grdt
     double precision, intent(in) :: volcub (:)
     double precision, intent(in) :: volbz
+    integer, intent(in)          :: global_atom_idx_lly
     integer, intent(in)          :: lly
 
     ! locals
@@ -132,7 +133,8 @@ module kkrmat_new_mod
       ! output: ms%mat_X
       call kloopbody(solver, kkr_op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, &
-                     mssq, dtde, dginp, bztr2, volcub, ikpoint, lly) !LLY
+                     mssq, dtde, dginp, bztr2, volcub, ikpoint, &
+                     global_atom_idx_lly ,lly) !LLY
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, ms%mat_X, ms%atom_indices(ila), ms%sparse%kvstr, ila) ! extract solution
@@ -228,7 +230,8 @@ module kkrmat_new_mod
   !> ms%atom_indices(:)
   subroutine kloopbody(solver, kkr_op, preconditioner, kpoint, tmatLL, Ginp,&
                        alat, RR, global_atom_id, communicator, iguess_data, &
-                       mssq, dtde, dginp, bztr2, volcub, ikpoint, lly) !LLY
+                       mssq, dtde, dginp, bztr2, volcub, ikpoint, &
+                       global_atom_idx_lly ,lly) !LLY
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
     use TFQMRSolver_mod, only: TFQMRSolver, solve
@@ -260,6 +263,7 @@ module kkrmat_new_mod
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: ikpoint 
+    integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
     integer, intent(in)                :: lly             !< LLY=1/0, turns Lloyd's formula on/off
 
     ! Local LLY
@@ -370,7 +374,7 @@ module kkrmat_new_mod
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
   
-      matrix_index=(global_atom_id(1)-1)*lmmaxd+1
+      matrix_index=(global_atom_idx_lly-1)*lmmaxd+1
 
       gllke_x_t=transpose(gllke_x)
       dgde_t=transpose(dgde)
@@ -382,12 +386,12 @@ module kkrmat_new_mod
 
       call zgemm('n','n',alm,lmmaxd,lmmaxd,cone,&
                   dgde2,alm,&
-                  tmatll(1,1,global_atom_id(1)),lmmaxd,zero,&
+                  tmatll(1,1,global_atom_idx_lly),lmmaxd,zero,&
                   dpde_local,alm)
 
       call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv,&
                   gllke_x2,alm,&
-                  dtde(:,:,1),lmmaxd,cone,dpde_local,alm)
+                  dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dpde_local,alm)
       !--------------------------------------------------------
  
    endif ! LLY

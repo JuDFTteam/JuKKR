@@ -296,7 +296,7 @@ implicit none
                     tmatLL, arrays%lmmaxd, &
                     trunc_zone%trunc2atom_index, mp%mySEComm, &
                     calc%iguess_data, &
-                    DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
+                    DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
                    
   !------------------------------------------------------------------------------
 
