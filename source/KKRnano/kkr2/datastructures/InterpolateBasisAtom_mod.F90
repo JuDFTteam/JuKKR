@@ -10,16 +10,16 @@ module InterpolateBasisAtom_mod
   contains
 
   !----------------------------------------------------------------------------
-  ! Interpolate 'old_atom' to 'new_mesh' and return result in 'new_atom' using
-  ! lpot = lpot_new (can be different from that in old_atom).
+  ! Interpolate 'olda' to 'new_mesh' and return result in 'newa' using
+  ! lpot = lpot_new (can be different from that in olda).
   ! new mesh must be persistent
-  ! new_atom gets allocated
-  ! old_atom unmodified
-  subroutine interpolateBasisAtom(new_atom, old_atom, new_mesh, lpot_new)
+  ! newa gets allocated
+  ! olda unmodified
+  subroutine interpolateBasisAtom(newa, olda, new_mesh, lpot_new)
     use BasisAtom_mod, only: BasisAtom, create, associateBasisAtomMesh
     use RadialMeshData_mod, only: RadialMeshData
-    type(BasisAtom), intent(inout) :: new_atom
-    type(BasisAtom), intent(in) :: old_atom
+    type(BasisAtom), intent(inout) :: newa
+    type(BasisAtom), intent(in) :: olda
     type(RadialMeshData), intent(in) :: new_mesh
     integer, intent(in) :: lpot_new
 
@@ -34,25 +34,25 @@ module InterpolateBasisAtom_mod
 
     do_interpolation = .true.
 
-    nspin = old_atom%nspin
-    old_mesh => old_atom%mesh_ptr
+    nspin = olda%nspin
+    old_mesh => olda%mesh_ptr
 
-    call create(new_atom, old_atom%atom_index, lpot_new, nspin, new_mesh%irmin, new_mesh%irmd) ! createBasisAtom
+    call create(newa, olda%atom_index, lpot_new, nspin, new_mesh%irmin, new_mesh%irmd) ! createBasisAtom
 
-    lmpot_min = min(old_atom%potential%lmpot, new_atom%potential%lmpot)
+    lmpot_min = min(olda%potential%lmpot, newa%potential%lmpot)
 
-    new_atom%atom_index = old_atom%atom_index
-    new_atom%cell_index = old_atom%cell_index
-    new_atom%Z_nuclear = old_atom%Z_nuclear
-    new_atom%radius_muffin_tin = old_atom%radius_muffin_tin
-    new_atom%core%LCORE = old_atom%core%LCORE
-    new_atom%core%NCORE = old_atom%core%NCORE
-    new_atom%core%ECORE = old_atom%core%ECORE
-    new_atom%core%ITITLE = old_atom%core%ITITLE
+    newa%atom_index  = olda%atom_index
+    newa%cell_index  = olda%cell_index
+    newa%Z_nuclear   = olda%Z_nuclear
+    newa%radius_muffin_tin = olda%radius_muffin_tin
+    newa%core%LCORE  = olda%core%LCORE
+    newa%core%NCORE  = olda%core%NCORE
+    newa%core%ECORE  = olda%core%ECORE
+    newa%core%ITITLE = olda%core%ITITLE
 
-    new_atom%cell_ptr => old_atom%cell_ptr
+    newa%cell_ptr => olda%cell_ptr
 
-    call associateBasisAtomMesh(new_atom, new_mesh)
+    call associateBasisAtomMesh(newa, new_mesh)
 
     ! get old and new non-spherical mesh bounds
     irmin_old = old_mesh%irmin
@@ -67,7 +67,7 @@ module InterpolateBasisAtom_mod
 
     do_interpolation = .true.
     if (size(old_mesh%r) == size(new_mesh%r) .and. &
-        old_atom%potential%lmpot == new_atom%potential%lmpot) then
+        olda%potential%lmpot == newa%potential%lmpot) then
       if (sum(abs(old_mesh%r - new_mesh%r)) < TOL .and. &
           irmin_old == irmin_new .and. irws_old == irws_new) then
         ! mesh has not changed - do not interpolate
@@ -79,34 +79,34 @@ module InterpolateBasisAtom_mod
 
     if (do_interpolation) then
 
-      new_atom%potential%VINS = 0.d0
-      new_atom%potential%VISP = 0.d0
+      newa%potential%VINS = 0.d0
+      newa%potential%VISP = 0.d0
 
       ! TODO: scale?
       ! interpolate non-spherical potential - use only non-spherical part of mesh
       do ii = 1, nspin
         do lm = 1, lmpot_min
           call interpolate(old_mesh%r(irmin_old:irws_old), &
-                           old_atom%potential%VINS(irmin_old:irws_old,lm,ii), &
+                           olda%potential%VINS(irmin_old:irws_old,lm,ii), &
                            new_mesh%r(irmin_new:irws_new), &
-                           new_atom%potential%VINS(irmin_new:irws_new,lm,ii))
+                           newa%potential%VINS(irmin_new:irws_new,lm,ii))
         enddo ! lm
       enddo ! ii
 
       ! be careful when mesh partition has changed
       if (irmin_new < irmin_old) then
-        new_atom%potential%VINS(irmin_new:min(irmin_old, irws_new),:,:) = 0.d0
+        newa%potential%VINS(irmin_new:min(irmin_old, irws_new),:,:) = 0.d0
       endif
 
       ! interpolate spherical potential
       do ii = 1, nspin
-        call interpolate(old_mesh%r, old_atom%potential%VISP(:,ii), &
-                         new_mesh%r, new_atom%potential%VISP(:,ii))
+        call interpolate(old_mesh%r, olda%potential%VISP(:,ii), &
+                         new_mesh%r, newa%potential%VISP(:,ii))
       enddo ! ii
 
     else
       ! no interpolation - just copy
-      new_atom%potential = old_atom%potential
+      newa%potential = olda%potential
 
     endif
   endsubroutine ! interpolate

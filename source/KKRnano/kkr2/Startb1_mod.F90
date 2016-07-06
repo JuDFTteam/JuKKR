@@ -160,15 +160,13 @@ module Startb1_mod
       ! cleanup
       call destroy(mesh)
       call destroy(atom)
-      do ispin = 1, nspin
-        call destroy(pe(ispin))
-      enddo ! ispin
+      call destroy(pe)
 
     enddo ! iatom ! end loop over atoms
     close(fu)
     
     if (.not. nowrite) call closeBasisAtomDAFile(37)
-    
+
     if (n_warn_alat_differs > 0) &
       warn(6, "In"+n_warn_alat_differs/nspin+"potential files ALAT is not the same as in the input!")
 
@@ -206,7 +204,7 @@ module Startb1_mod
 
     type(BasisAtom) :: atom
     type(PotentialEntry) :: pe(2)
-    type(RadialMeshData) :: meshdata
+    type(RadialMeshData) :: mesh
     integer, parameter :: fu=13
     integer :: cell_index, lpot, irmd, irmind, ipand, irns, irid, iatom, ispin
 
@@ -248,24 +246,24 @@ module Startb1_mod
         if (iatom == 1) then
 #ifndef TASKLOCAL_FILES
           call openBasisAtomPotentialIndexDAFile(atom, 38, 'bin.vpotnew.0.idx', action='write')
-          call openRadialMeshDataIndexDAFile(meshdata, 93, "bin.meshes.0.idx")
+          call openRadialMeshDataIndexDAFile(mesh, 93, "bin.meshes.0.idx")
 #endif
           call openBasisAtomPotentialDAFile(atom, 39, 'bin.vpotnew.0', max_reclen, action='write')
-          call openRadialMeshDataDAFile(meshdata, 94, "bin.meshes.0", max_reclen_mesh)
+          call openRadialMeshDataDAFile(mesh, 94, "bin.meshes.0", max_reclen_mesh)
         endif ! iatom == 1
 
         call writeBasisAtomPotentialDA(atom, 39, iatom)
-        call writeRadialMeshDataDA(meshdata, 94, iatom)
+        call writeRadialMeshDataDA(mesh, 94, iatom)
 
 #ifndef TASKLOCAL_FILES
         call writeBasisAtomPotentialIndexDA(atom, 38, iatom, max_reclen)
-        call writeRadialMeshDataIndexDA(meshdata, 93, iatom, max_reclen_mesh)
+        call writeRadialMeshDataIndexDA(mesh, 93, iatom, max_reclen_mesh)
 #endif
       endif ! not nowrite
 
       ! cleanup
       call destroy(atom)
-      call destroy(meshdata)
+      call destroy(mesh)
       do ispin = 1, nspin
         call destroy(pe(ispin))
       enddo

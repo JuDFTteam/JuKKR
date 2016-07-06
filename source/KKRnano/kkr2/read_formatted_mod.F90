@@ -16,7 +16,7 @@ module read_formatted_mod
   integer, parameter :: max_number_core_states = 20
   
   type PotentialHeader
-    integer :: ititle(20)
+    integer          :: ititle(20)
     double precision :: rmt
     double precision :: alat
     double precision :: rmtnew
@@ -24,15 +24,15 @@ module read_formatted_mod
     double precision :: rws
     double precision :: efermi
     double precision :: vbc
-    integer :: irws
+    integer          :: irws
     double precision :: a_log_mesh
     double precision :: b_log_mesh
   endtype
 
   type CoreStatesBlock
-     integer :: ncore
-     integer :: inew
-     integer :: lcore(max_number_core_states)
+     integer          :: ncore
+     integer          :: inew
+     integer(kind=1)  :: lcore(max_number_core_states)
      double precision :: ecore(max_number_core_states)
   endtype
 
@@ -49,9 +49,9 @@ module read_formatted_mod
   endtype
 
   type PotentialEntry
-    type(PotentialHeader) :: header
-    type(CoreStatesBlock) :: csblock
-    type(SphericalBlock) :: sblock
+    type(PotentialHeader)    :: header
+    type(CoreStatesBlock)    :: csblock
+    type(SphericalBlock)     :: sblock
     type(NonSphericalBlocks) :: nsblocks
   endtype
   
@@ -71,25 +71,25 @@ module read_formatted_mod
     type(PotentialHeader), intent(out) :: header
     integer, intent(in) :: unit, atom_id
     
-    integer :: iostat
+    integer :: ios
 
-    read(unit, fmt="(20a4)", iostat=iostat) header%ititle(1:20)
-    if (iostat /= 0) die_here("failed to read   ititle! Atom#"-atom_id)
+    read(unit, fmt="(20a4)", iostat=ios) header%ititle(1:20)
+    if (ios /= 0) die_here("failed to read   ititle! Atom#"-atom_id)
 
 !---  >read muffin-tin radius , lattice constant and new muffin radius
 !      (not used)
-    read(unit, fmt=*, iostat=iostat) header%rmt, header%alat, header%rmtnew
-    if (iostat /= 0) die_here("failed to read   rMT, alat, rMTnew! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=ios) header%rmt, header%alat, header%rmtnew
+    if (ios /= 0) die_here("failed to read   rMT, alat, rMTnew! Atom#"-atom_id)
 
 !---> read nuclear charge
 !     wigner seitz radius (not used), fermi energy and energy difference
 !     between electrostatic zero and muffin tin zero (not used)
 
-    read(unit, fmt=*, iostat=iostat) header%z_nuclear
-    if (iostat /= 0) die_here("failed to read   Z! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=ios) header%z_nuclear
+    if (ios /= 0) die_here("failed to read   Z! Atom#"-atom_id)
 
-    read(unit, fmt=*, iostat=iostat) header%rws, header%efermi, header%vbc
-    if (iostat /= 0) die_here("failed to read   rWS, EFermi, vbc! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=ios) header%rws, header%efermi, header%vbc
+    if (ios /= 0) die_here("failed to read   rWS, EFermi, vbc! Atom#"-atom_id)
 
 !---> read : number of radial mesh points
 !     (in case of ws input-potential: last mesh point corresponds
@@ -101,11 +101,11 @@ module read_formatted_mod
 !     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 !     the no. of different core states and some other stuff
 
-    read(unit, fmt=*, iostat=iostat) header%irws
-    if (iostat /= 0) die_here("failed to read   irws! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=ios) header%irws
+    if (ios /= 0) die_here("failed to read   irws! Atom#"-atom_id)
 
-    read(unit, fmt=*, iostat=iostat) header%a_log_mesh, header%b_log_mesh
-    if (iostat /= 0) die_here("failed to read   a, b! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=ios) header%a_log_mesh, header%b_log_mesh
+    if (ios /= 0) die_here("failed to read   a, b! Atom#"-atom_id)
     
   endsubroutine
 
@@ -115,10 +115,10 @@ module read_formatted_mod
     type(CoreStatesBlock), intent(out) :: block
     integer, intent(in) :: unit, atom_id
 
-    integer :: icore, iostat
+    integer :: icore, ios
 
-    read(unit, fmt=*, iostat=iostat) block%ncore, block%inew
-    if (iostat /= 0) die_here("failed to read   ncore, inew! Atom#"-atom_id)
+    read(unit, fmt=*, iostat=ios) block%ncore, block%inew
+    if (ios /= 0) die_here("failed to read   ncore, inew! Atom#"-atom_id)
 
 ! read the different core states : l and energy
     if (block%ncore > max_number_core_states) &
@@ -128,8 +128,8 @@ module read_formatted_mod
     block%ecore(:) = 9999.0d0
 
     do icore = 1, block%ncore
-      read(unit, fmt=*, iostat=iostat) block%lcore(icore), block%ecore(icore)
-      if (iostat /= 0) die_here("failed to read   lcore, Ecore for core state #"-icore+" for Atom#"-atom_id)
+      read(unit, fmt=*, iostat=ios) block%lcore(icore), block%ecore(icore)
+      if (ios /= 0) die_here("failed to read   lcore, Ecore for core state #"-icore+" for Atom#"-atom_id)
     enddo ! icore
 
   endsubroutine
@@ -140,22 +140,23 @@ module read_formatted_mod
     type(SphericalBlock), intent(out) :: block
     integer, intent(in) :: unit, atom_id
 
-    integer :: iostat
+    integer :: ios
     
-    read(unit, fmt="(10i5)", iostat=iostat) block%irt1p, block%irns, block%lmpot, block%isave
-    if (iostat /= 0) die_here("failed to read   irt1p, irns, lmpot, isave! Atom#"-atom_id)
+    read(unit, fmt="(10i5)", iostat=ios) block%irt1p, block%irns, block%lmpot, block%isave
+    if (ios /= 0) die_here("failed to read   irt1p, irns, lmpot, isave! Atom#"-atom_id)
     
     allocate(block%visp(block%irt1p))
-    read(unit, fmt="(1p,4d20.13)", iostat=iostat) block%visp(1:block%irt1p)
-    if (iostat /= 0) die_here("failed to read spherical potential array VISP! Atom#"-atom_id)
+    read(unit, fmt="(1p,4d20.13)", iostat=ios) block%visp(1:block%irt1p)
+    if (ios /= 0) die_here("failed to read spherical potential array visp! Atom#"-atom_id)
 
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  !> Deallocate array for VISP data
-  subroutine destroy_SphericalBlock(block)
+  !> Deallocate array for visp data
+  elemental subroutine destroy_SphericalBlock(block)
     type(SphericalBlock), intent(inout) :: block
-    deallocate(block%VISP)
+    integer :: ist
+    deallocate(block%visp, stat=ist) ! ignore status
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -165,7 +166,7 @@ module read_formatted_mod
     type(SphericalBlock), intent(in) :: sb ! only integers members from the spherical block are read-accessed
     integer, intent(in) :: unit, atom_id
 
-    integer :: irmin, lm, lm1, iostat
+    integer :: irmin, lm, lm1, ios
 
     irmin = sb%irt1p - sb%irns
 
@@ -177,8 +178,8 @@ module read_formatted_mod
       if (lm1 /= 1) then
 
         if (sb%isave == 1) then
-          read(unit, fmt="(10i5)", iostat=iostat) lm1
-          if (iostat /= 0) die_here("failed to read   lm1 index, although isave == 1! Atom#"-atom_id)
+          read(unit, fmt="(10i5)", iostat=ios) lm1
+          if (ios /= 0) die_here("failed to read   lm1 index, although isave == 1! Atom#"-atom_id)
         else
           lm1 = lm
         endif
@@ -188,8 +189,8 @@ module read_formatted_mod
           if (lm1 < 1)        die_here("potential file is not formatted correctly, lm ="+lm1+"out of range! Atom#"-atom_id)
           if (lm1 > sb%lmpot) die_here("potential file is not formatted correctly, lm ="+lm1-", but lmpot ="+sb%lmpot+" for Atom#"-atom_id)
 
-          read(unit, fmt="(1p,4d20.13)", iostat=iostat) blocks%vins(irmin:sb%irt1p,lm1)
-          if (iostat /= 0) die_here("failed to read non-spherical potential array VINS(:,"-lm1-")! Atom#"-atom_id)
+          read(unit, fmt="(1p,4d20.13)", iostat=ios) blocks%vins(irmin:sb%irt1p,lm1)
+          if (ios /= 0) die_here("failed to read non-spherical potential array vins(:,"-lm1-")! Atom#"-atom_id)
         endif ! lm1 > 1
       endif ! lm1 /= 1
     enddo ! lm
@@ -197,10 +198,11 @@ module read_formatted_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  !> Deallocate array for VINS data.
-  subroutine destroy_NonSphericalBlocks(blocks)
+  !> Deallocate array for vins data.
+  elemental subroutine destroy_NonSphericalBlocks(blocks)
     type(NonSphericalBlocks), intent(inout) :: blocks
-    deallocate(blocks%VINS)
+    integer :: ist
+    deallocate(blocks%vins, stat=ist) ! ignore status
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
@@ -217,7 +219,7 @@ module read_formatted_mod
 
   !----------------------------------------------------------------------------
   !> Destroy a PotentialEntry.
-  subroutine destroy_PotentialEntry(pe)
+  elemental subroutine destroy_PotentialEntry(pe)
     type(PotentialEntry), intent(inout) :: pe
 
     call destroy_SphericalBlock(pe%sblock)
@@ -228,7 +230,7 @@ endmodule ! read_formatted_mod
 
 #ifdef TEST_READ_FORMATTED_MOD
 program test_read_formatted
-  use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy_PotentialEntry
+  use read_formatted_mod, only: PotentialEntry, create, destroy
   implicit none
 
   type(PotentialEntry) :: pe
@@ -236,22 +238,21 @@ program test_read_formatted
   integer :: lm
 
   open(fu, form='formatted', file='potential', action='read')
-  call create_read_PotentialEntry(pe, fu, atom_id=0)
+  call create(pe, fu, atom_id=0)
 
-  write(*, fmt="(' <#',20a4)") pe%header%ITITLE
-  write(*,*) pe%sblock%VISP
+  write(*, fmt="(' <#',20a4)") pe%header%ititle
+  write(*,*) pe%sblock%visp
   write(*,*) "---------------------------------------------------------------"
-  write(*,*) "Number of non-spherical components: ", pe%sblock%LMPOT
+  write(*,*) "Number of non-spherical components: ", pe%sblock%lmpot
 
-  do lm = 1, pe%sblock%LMPOT
+  do lm = 1, pe%sblock%lmpot
     write(*,*) "---------------------------------------------------------------"
     write(*,*) "LM = ", lm
     write(*,*) "---------------------------------------------------------------"
-    write(*,*) pe%nsblocks%VINS(:,lm)
+    write(*,*) pe%nsblocks%vins(:,lm)
   enddo ! lm
 
-  call destroy_PotentialEntry(pe)
+  call destroy(pe)
   close(fu)
 endprogram
 #endif
-

@@ -5,13 +5,14 @@ module BlockSparseRow_mod
   private
 
   public :: BlockSparseRow, create, destroy, multiply
-  public :: multBSRplan
+  public :: MultBSRplan
 
 ! #define BSRX
 #define complex_data_t double complex
 
   type BlockSparseRow
-    integer :: blockDim = 0 !< == (lmax+1)^2
+    integer :: fastBlockDim = 0 !< == (lmax+1)^2
+    integer :: slowBlockDim = 0 !< == (lmax+1)^2
     integer :: mb = 0 !< number of block rows
     integer :: nb = 0 !< number of block columns !! not in use...
     integer :: nnzb = 0 !< number of non-zero blocks
@@ -32,7 +33,7 @@ module BlockSparseRow_mod
 !!!       bsrColIndA: bsrColInd
 !!!       bsrRowPtrA: bsrRowPtr
 !!!       bsrEndPtrA: bsrEndPtr
-!!!  complex_data_t, pointer :: bsrValA(:,:,:) !< dim(blockDim,blockDim,nnzb)
+!!!  complex_data_t, pointer :: bsrValA(:,:,:) !< dim(fastBlockDim,slowBlockDim,nnzb)
 !!!       bsrValA:    Val       (is not included into the BlockSparseRow descriptor)
   endtype ! BlockSparseRow
 
@@ -45,10 +46,10 @@ module BlockSparseRow_mod
   endinterface
 
   interface destroy
-    module procedure destroyBlockSparseRow, destroy_multBRSplan
+    module procedure destroyBlockSparseRow, destroyMultBRSplan
   endinterface
 
-  type multBSRplan
+  type MultBSRplan
     integer :: N, M, K, nCij, nBlockOps
     integer(kind=4), allocatable :: CindNelemStart(:,:) ! dim(4,nCij)
     integer(kind=4), allocatable :: AindBind(:,:) ! dim(2,nBlockOps)
@@ -63,8 +64,8 @@ module BlockSparseRow_mod
     !! can be used for a single atom per MPI process
     !! could call cuSPARSE GPU kernel
     type(BlockSparseRow), intent(in) :: B
-#define N B%blockDim
-#define K B%blockDim
+#define K B%fastBlockDim
+#define N B%slowBlockDim
     complex_data_t, intent(in)  :: Bval(K,N,*) ! block list of block sparse operator B
     integer, intent(in) :: M
     complex_data_t, intent(in)  :: Avec(M,K,*) ! block vector input
@@ -99,9 +100,9 @@ module BlockSparseRow_mod
     type(BlockSparseRow), intent(in) :: B !< Matrix to be inverted
 !!! type(BlockSparseRow), intent(in) :: C !< Result operator (argument is not needed since the structure of C is that of A)
 #define C A
-#define M A%blockDim
-#define N B%blockDim
-#define K B%blockDim
+#define M A%fastBlockDim
+#define N B%fastBlockDim
+#define K B%fastBlockDim
     complex_data_t, intent(in)  :: Aval(M,K,*) ! input  block list 
     complex_data_t, intent(in)  :: Bval(K,N,*) ! input  block list of (square) operator B
     complex_data_t, intent(out) :: Cval(M,N,*) ! result block list, assume C to have the same structure as A
@@ -174,7 +175,7 @@ module BlockSparseRow_mod
 
   
   subroutine multiplyBSR_to_BSR_planned(p, Aval, Bval, Cval)
-    type(multBSRplan), intent(in) :: p !> plan
+    type(MultBSRplan), intent(in) :: p !> plan
     complex_data_t, intent(in)  :: Aval(p%M,p%K,*) ! input  block list 
     complex_data_t, intent(in)  :: Bval(p%K,p%N,*) ! input  block list of (square) operator B
     complex_data_t, intent(out) :: Cval(p%M,p%N,*) ! result block list
@@ -212,12 +213,62 @@ module BlockSparseRow_mod
     !$omp end parallel
     
   endsubroutine ! multiply
+
   
+  
+  
+  
+  
+  subroutine fusedMultiplyAdd_BSR(C, Cval, Aval, diag, Bval, GiFlop) ! C = A*diag + B 
+    type(BlockSparseRow), intent(in) :: C !< operator structure, same for A and B assumed
+    complex_data_t, intent(out) :: Cval(:,:,:) ! result block list dim(fastBlockDim,slowBlockDim,nnzb)
+    complex_data_t, intent(in)  :: Aval(:,:,:) ! input  block list dim(fastBlockDim,slowBlockDim,nnzb)
+    complex_data_t, intent(in)  :: diag(:,:)   ! diagonal matrix,  dim(fastBlockDim,nb)
+    complex_data_t, intent(in), optional :: Bval(:,:,:) ! input    dim(fastBlockDim,slowBlockDim,nnzb)
+    real, intent(out), optional :: GiFlop
+
+    ! .. locals ..
+    integer :: iRow, jCol, Cind, islow
+    complex_data_t :: bvec(C%fastBlockDim)
+
+      if (any(shape(Cval) /= [C%fastBlockDim, C%slowBlockDim, C%nnzb])) stop __LINE__
+    if (present(Bval)) then
+      if (any(shape(Cval) /= shape(Bval))) stop __LINE__
+    endif
+      if (any(shape(Cval) /= shape(Aval))) stop __LINE__
+ 
+      if (any(shape(diag) /= [C%fastBlockDim, C%nb]) stop __LINE__ 
+      ! there could also be other variants: C%slowBlockDim, C%mb, i.e. possible 4 combination
+      ! for those that use chack against C%nb and use jCol, we can flatten the loop into:
+      !     do Cind = 1, C _bsrEndPtr(C%mb) ; jCol = C%bsrColInd(Cind) ; doIt ; enddo
+      ! or  do Cind = 1, C%nnzb ; jCol = C%bsrColInd(Cind) ; doIt ; enddo
+
+    !$omp parallel
+
+    !$omp do private(iRow, jCol, Cind, islow, bvec)
+    do iRow = 1, C%mb
+      bvec(:) = 0
+      do Cind = C%bsrRowPtr(iRow), C _bsrEndPtr(iRow) ; jCol = C%bsrColInd(Cind)
+
+          do islow = 1, C%slowBlockDim
+            if (present(Bval)) bvec(:) = Bval(:,islow,Cind)
+            Cval(:,islow,Cind) = Aval(:,islow,Cind)*diag(:,jCol) + bvec(:)
+          enddo ! islow
+
+      enddo ! Cind
+    enddo ! iRow
+    !$omp end do
+    
+    !$omp end parallel
+    
+    if (present(GiFlop)) GiFlop = C%fastBlockDim*8.*C%slowBlockDim*.5d0**30*C%nnzb ! assume a complex data_t, so each FMA has 8 Flop
+  endsubroutine ! fusedMultiplyAdd
+ 
   
   
   
   subroutine create_multBRSplan(p, A, B, C, GiFlop)
-    type(multBSRplan), intent(inout) :: p !> plan
+    type(MultBSRplan), intent(inout) :: p !> plan
     type(BlockSparseRow), intent(in) :: A !< Green function
     type(BlockSparseRow), intent(in) :: B !< Matrix to be inverted 
     type(BlockSparseRow), intent(in) :: C !< Result operator
@@ -227,8 +278,8 @@ module BlockSparseRow_mod
     integer :: iRow, jCol, kCol, Bind, Cind, Aind, i01, ist, Nelem, nCij, Start
     integer(kind=8) :: nBlockOps
 
-    p%M = A%blockDim
-    p%N = B%blockDim
+    p%M = A%fastBlockDim
+    p%N = B%fastBlockDim
     p%K = p%N
 
     deallocate(p%CindNelemStart, stat=ist)
@@ -291,8 +342,9 @@ module BlockSparseRow_mod
     if (present(GiFlop)) GiFlop = nBlockOps*(p%M*8.*p%N*.5d0**30*p%K) ! assume a complex data_t, so each FMA has 8 Flop
   endsubroutine ! create
 
-  elemental subroutine destroy_multBRSplan(p)
-    type(multBSRplan), intent(inout) :: p !> plan
+  
+  elemental subroutine destroyMultBRSplan(p)
+    type(MultBSRplan), intent(inout) :: p !> plan
 
     integer :: ist
     deallocate(p%CindNelemStart, p%AindBind, stat=ist)
@@ -313,16 +365,16 @@ module BlockSparseRow_mod
     
     integer :: ist
     
-    self%blockDim = (lmax + 1)**2
+    self%fastBlockDim = (lmax + 1)**2
+    self%slowBlockDim = (lmax + 1)**2
     self%mb = mb
-    self%nb = 0 !! not in use
     self%nnzb = size(ja)
     
     if (present(bsrVal)) then
       deallocate(bsrVal, stat=ist)
-      allocate(bsrVal(self%blockDim,self%blockDim,self%nnzb), stat=ist)
+      allocate(bsrVal(self%fastBlockDim,self%fastBlockDim,self%nnzb), stat=ist)
       ! copy data in
-      bsrVal = reshape(values, [self%blockDim,self%blockDim,self%nnzb])
+      bsrVal = reshape(values, [self%fastBlockDim,self%fastBlockDim,self%nnzb])
     endif
 
     allocate(self%bsrColInd(self%nnzb), self%bsrRowPtr(mb+1), stat=ist)
@@ -330,6 +382,8 @@ module BlockSparseRow_mod
     ! copy index lists
     self%bsrRowPtr(:) = ia(:)
     self%bsrColInd(:) = ja(:)
+
+    self%nb = maxval(self%bsrColInd)
     
 #ifdef BSRX
     allocate(self%bsrEndPtr(self%mb), stat=ist)
@@ -341,23 +395,23 @@ module BlockSparseRow_mod
   subroutine createBSR_from_full(self, values, bsrVal)
     !! get the data from a dense block-matrix
     type(BlockSparseRow), intent(inout) :: self
-    complex_data_t, intent(in) :: values(:,:,:,:) !< dim(N,N,nb,mb)
-    complex_data_t, allocatable, intent(inout), optional :: bsrVal(:,:,:) !< dim(N,N,nnz) ! warning: allocation inside this routine
+    complex_data_t, intent(in) :: values(:,:,:,:) !< dim(N,nb,M,mb)
+    complex_data_t, allocatable, intent(inout), optional :: bsrVal(:,:,:) !< dim(N,M,nnz) ! warning: allocation inside this routine
     
     integer :: ist, iRow, Bind, jCol
     logical(kind=1), allocatable :: nz(:,:)
     
-    self%blockDim = size(values, 1)
-    if (self%blockDim /= size(values, 2)) stop 'createBSR_from_full: requested shape values(blockDim,blockDim,mb,*)'
-    self%nb = size(values, 3) !! number of columns self%nb is not in use
-    self%mb = size(values, 4) !! number of rows
+    self%fastBlockDim = size(values, 1)
+    self%nb           = size(values, 2) !! number of columns self%nb is not in use
+    self%slowBlockDim = size(values, 3)
+    self%mb           = size(values, 4) !! number of rows
     allocate(nz(self%nb,self%mb))
     nz(:,:) = any(any(values /= 0.d0, dim=1), dim=1)
     self%nnzb = count(nz)
-    
+
     if (present(bsrVal)) then
       deallocate(bsrVal, stat=ist)
-      allocate(bsrVal(self%blockDim,self%blockDim,self%nnzb), stat=ist)
+      allocate(bsrVal(self%fastBlockDim,self%fastBlockDim,self%nnzb), stat=ist)
     endif
     
     allocate(self%bsrColInd(self%nnzb), self%bsrRowPtr(self%mb+1), stat=ist)
@@ -369,7 +423,7 @@ module BlockSparseRow_mod
         if (nz(jCol,iRow)) then
           Bind = Bind + 1
           ! copy data in
-          if (present(bsrVal)) bsrVal(:,:,Bind) = values(:,:,jCol,iRow)
+          if (present(bsrVal)) bsrVal(:,:,Bind) = values(:,jCol,:,iRow) ! strided copy
           ! create index list
           self%bsrColInd(Bind) = jCol
           self%bsrRowPtr(iRow+1) = Bind + 1
@@ -388,7 +442,7 @@ module BlockSparseRow_mod
   elemental subroutine destroyBlockSparseRow(self)
     type(BlockSparseRow), intent(inout) :: self
     integer :: ist
-    self%blockDim = 0
+    self%fastBlockDim = 0
     self%mb = 0
     self%nb = 0
     self%nnzb = 0
@@ -426,7 +480,7 @@ implicit none
   type(BlockSparseRow) :: A, B!,C==A operators
   real :: GiFlop
   
-  type(multBSRplan) :: plan
+  type(MultBSRplan) :: plan
 
   do iarg = 0, ubound(CLarg, 1)
     call get_command_argument(iarg, CLarg(iarg), ilen, ios)
@@ -473,8 +527,8 @@ implicit none
   enddo ! iRow
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(Mcols*.01*Nrows)
 
-  call create(A, dcmplx(reshape(Afull, [1,1,Mcols,Krows])), bsrVal=Aval)
-  call create(B, dcmplx(reshape(Bfull, [1,1,Krows,Nrows])), bsrVal=Bval)
+  call create(A, dcmplx(reshape(Afull, [1,Mcols,1,Krows])), bsrVal=Aval)
+  call create(B, dcmplx(reshape(Bfull, [1,Krows,1,Nrows])), bsrVal=Bval)
 
   !! use the sparse structure of A for C
 #define C A
