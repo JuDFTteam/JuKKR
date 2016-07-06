@@ -8,19 +8,19 @@ module EnergyMeshHelpers_mod
   public :: epathtb!, emesht 
 
   interface load
-    module procedure readEnergyMeshImpl
+    module procedure readEnergyMesh
   endinterface
 
   interface store
-    module procedure writeEnergyMeshImpl
+    module procedure writeEnergyMesh
   endinterface
 
   interface update
-    module procedure updateEnergyMeshImpl
+    module procedure updateEnergyMesh
   endinterface
 
   interface broadcast
-    module procedure broadcastEnergyMeshImpl_com
+    module procedure broadcastEnergyMesh_com
   endinterface
 
   contains
@@ -28,7 +28,7 @@ module EnergyMeshHelpers_mod
   ! VALENCE AND SEMICORE CONTOUR!
   !----------------------------------------------------------------------------
   !> read energy mesh data from file
-  subroutine readEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt123, npol, &
+  subroutine readEnergyMesh(e1, e2, efermi, ez, ielast, npnt123, npol, &
                tk, wez, ebotsemi, emusemi, fsemicore, iesemicore, npntsemi, kmesh, filename)
     ! valence contour parameters
     double precision, intent(out) :: e1, e2, efermi
@@ -46,21 +46,21 @@ module EnergyMeshHelpers_mod
     integer, intent(out) :: kmesh(:) !< dim(iemxd)
     character(len=*), intent(in) :: filename
 
-    open (67, file=filename, form='unformatted', action='read', status='old')
-    read (67) ielast,ez,wez,e1,e2
-    read (67) npol,tk,npnt123
-    read (67) efermi
-    read (67) iesemicore,fsemicore,ebotsemi
-    read (67) emusemi
-    read (67) npntsemi
-    read (67) kmesh
+    open(67, file=filename, form='unformatted', action='read', status='old')
+    read(67) ielast,ez,wez,e1,e2
+    read(67) npol,tk,npnt123
+    read(67) efermi
+    read(67) iesemicore,fsemicore,ebotsemi
+    read(67) emusemi
+    read(67) npntsemi
+    read(67) kmesh
     close(67)
-    
+
   endsubroutine ! read
 
   !----------------------------------------------------------------------------
   !> write energy mesh data to file 'energy_mesh'
-  subroutine writeEnergyMeshImpl(e1, e2, efermi, ez, ielast, npnt123, npol, &
+  subroutine writeEnergyMesh(e1, e2, efermi, ez, ielast, npnt123, npol, &
          tk, wez, ebotsemi, emusemi, fsemicore, iesemicore, npntsemi, kmesh, filename)
     ! valence contour parameters
     double precision, intent(in) :: e1, e2, efermi
@@ -78,7 +78,7 @@ module EnergyMeshHelpers_mod
     integer, intent(in) :: kmesh(:) !< dim(iemxd)
     character(len=*), intent(in) :: filename
 
-    open (67, file=filename, form='unformatted', action='write')
+    open(67, file=filename, form='unformatted', action='write')
     write(67) ielast,ez,wez,e1,e2
     write(67) npol,tk,npnt123
     write(67) efermi
@@ -92,7 +92,7 @@ module EnergyMeshHelpers_mod
 
   !------------------------------------------------------------------------------
   !> Update Energy mesh. Essentially a wrapper for EPATHTB
-  subroutine updateEnergyMeshImpl(ez, wez, ielast, e1, e2, tk, npol, npnt123v, &
+  subroutine updateEnergyMesh(ez, wez, ielast, e1, e2, tk, npol, npnt123v, &
                         ebotsemi, emusemi, iesemicore, fsemicore, npntsemi)
     use Constants_mod, only: pi
     double complex, intent(out) :: ez(:), wez(:)
@@ -119,7 +119,7 @@ module EnergyMeshHelpers_mod
 
   !---------------------------------------------------------------------------------
   !> Distribute EnergyMesh from rank 'BCRANK' to all other ranks
-  subroutine broadcastEnergyMeshImpl_com(comm, e1, e2, e3, e4, iemxd, ez, wez)
+  subroutine broadcastEnergyMesh_com(comm, e1, e2, e3, e4, iemxd, ez, wez)
     integer, intent(in) :: comm
     double precision, intent(inout) :: e1, e2 !< valence contour parameters
     double precision, intent(inout) :: e3, e4 !< semicore contour parameters

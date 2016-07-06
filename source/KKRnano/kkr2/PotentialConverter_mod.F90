@@ -31,16 +31,16 @@ module PotentialConverter_mod
     efermi = getFermiEnergy()
     call getStuffFromInputCard(alat, kxc)
 
-    call load(dims, 'inp0.unf') ! read dim. parameters from 'inp0.unf'
+    call load(dims, 'bin.dims') ! read dim. parameters from 'bin.dims'
 
     do iatom = 1, dims%naez
 
       write(*,*) "Writing potential ", iatom
 
-      call load(atomdata, "atoms", "vpotnew", iatom)
+      call load(atomdata, "bin.atoms", "bin.vpotnew", iatom)
       CHECKASSERT( atomdata%atom_index == iatom )
 
-      call load(mesh, "meshes", iatom)
+      call load(mesh, "bin.meshes", iatom)
 
       call associateBasisAtomMesh(atomdata, mesh)
 
@@ -98,15 +98,15 @@ module PotentialConverter_mod
     integer :: ielast, npnt1, npnt2, npnt3, npol
     double complex, allocatable :: wez(:), ez(:)
 
-    open  (67, file='energy_mesh', form='unformatted', action='read', status='old')
-    read  (67) ielast
-    close (67)
+    open(67, file='bin.energy_mesh', form='unformatted', action='read', status='old')
+    read(67) ielast
+    close(67)
     allocate(wez(ielast), ez(ielast))
-    open  (67, file='energy_mesh', form='unformatted', action='read', status='old')
-    read  (67) ielast,ez,wez,e1,e2
-    read  (67) npol,tk,npnt1,npnt2,npnt3
-    read  (67) efermi
-    close (67)
+    open(67, file='bin.energy_mesh', form='unformatted', action='read', status='old')
+    read(67) ielast,ez,wez,e1,e2
+    read(67) npol,tk,npnt1,npnt2,npnt3
+    read(67) efermi
+    close(67)
   endfunction ! getFermiEnergy
 
   !---------------------------------------------------------------------------

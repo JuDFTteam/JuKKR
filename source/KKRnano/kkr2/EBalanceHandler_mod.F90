@@ -11,9 +11,8 @@ module EBalanceHandler_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: EBalanceHandler, destroy !, destroyEBalanceHandler
-  public :: createEBalanceHandler, startEBalanceTiming, stopEBalanceTiming
-  public :: initEBalanceHandler, updateEBalance_com, setEqualDistribution
+  public :: EBalanceHandler, create, init, update, destroy
+  public :: startEBalanceTiming, stopEBalanceTiming, setEqualDistribution
   
   type EBalanceHandler
     integer, allocatable :: eproc(:)
@@ -21,19 +20,23 @@ module EBalanceHandler_mod
     real, allocatable :: etime(:)
     integer :: ierlast
     integer :: num_eprocs_empid
-    real :: TIME_E
-    real :: TIME_EX
+    real :: time_E
+!   real :: time_EX
     logical :: equal_distribution
   endtype
   
-!   interface create
-!     module procedure createEBalanceHandler
-!   endinterface
-!
-!   interface init
-!     module procedure initEBalanceHandler
-!   endinterface
- 
+  interface create
+    module procedure createEBalanceHandler
+  endinterface
+
+  interface init
+    module procedure initEBalanceHandler
+  endinterface
+
+  interface update
+    module procedure updateEBalance_com
+  endinterface
+  
   interface destroy
     module procedure destroyEBalanceHandler
   endinterface
@@ -132,8 +135,8 @@ module EBalanceHandler_mod
 
     ! Start timing:
     ! save initial time of calculation
-    call CPU_TIME(balance%time_e)
-    balance%etime(ie) = 0.0d0
+    call CPU_TIME(balance%time_E)
+    balance%etime(ie) = 0.d0
 
   endsubroutine
 
@@ -147,7 +150,7 @@ module EBalanceHandler_mod
 
     call CPU_TIME(time_finish)
 
-    balance%etime(ie) = time_finish - balance%time_e
+    balance%etime(ie) = time_finish - balance%time_E
 
   endsubroutine
 
@@ -478,7 +481,7 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, activecomm, mtime, eproc, eproc
 !   inquire(file='stop', exist=stopit)
 !   if (iter == scfsteps) then
     if (myactvrank == 0) then
-      open (50, file='ebalance', form='formatted', status='replace', action='write')
+      open(50, file='ebalance', form='formatted', status='replace', action='write')
       write(50, *) "# Energy load-balancing file"
       write(50, *) "# 1st line: number of E-points, number of E-processes."
       write(50, *) "# point --- process --- timing used"

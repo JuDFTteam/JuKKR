@@ -284,7 +284,7 @@ module BasisAtom_mod
 
 #ifdef TASKLOCAL_FILES
     character(len=16) :: filename
-    write(unit=filename, fmt='(A,I7.7)') "pot.",atom_id
+    write(unit=filename, fmt='(A,I7.7)') "bin.pot.",atom_id
     open(fu, file=filename, form='unformatted', action='write')
 
     call writeBasisAtomPotentialIndexDA(atom, fu, atom_id, 0)
@@ -350,7 +350,7 @@ module BasisAtom_mod
     character(len=16) :: filename
     integer :: lpot, nspin, irmind, irmd, max_reclen
 
-    write(unit=filename, fmt='(A,I7.7)') 'pot.',atom_id
+    write(unit=filename, fmt='(A,I7.7)') 'bin.pot.',atom_id
     open(fu, file=filename, form='unformatted', action="read", status="old")
 
     !  skip header at beginning of file
@@ -406,7 +406,7 @@ module BasisAtom_mod
 #ifdef TASKLOCAL_FILES
     character(len=16) :: filename
 
-    write(unit=filename, fmt='(A,I7.7)') "pot.",atom_id
+    write(unit=filename, fmt='(A,I7.7)') "bin.pot.",atom_id
     open(fu, file=filename, form='unformatted', action='read', status="old")
 #endif
 

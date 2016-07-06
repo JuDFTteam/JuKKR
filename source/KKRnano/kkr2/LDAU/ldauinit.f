@@ -101,7 +101,7 @@ C
      +         + 8*2*LMAXD1                     ! ULDAU & JLDAU
      +         + 8*MMAXD*MMAXD*NSPIND*LMAXD1    ! WMLDAU
 c
-      OPEN (65,ACCESS='direct',RECL=LRECLDAU,FILE='wldau.unf',
+      open(65,ACCESS='direct',RECL=LRECLDAU,FILE='bin.wldau',
      +      FORM='unformatted')
       READ (65,REC=I1) NLDAU,LLDAU,ULDAU,JLDAU,WMLDAU
       CLOSE(65)

@@ -23,9 +23,9 @@ module BrillouinZone_mod
     character(len=*), parameter :: defname='kpoints', altname='new.kpoints'
     character(len=32) :: comment
 
-    open (fu, file=altname, form='formatted', status='old', action='read', iostat=ios)
+    open(fu, file=altname, form='formatted', status='old', action='read', iostat=ios)
     if (ios /= 0) then ! default to reading the old kpoint file
-      open (fu, file=defname, form='formatted', status='old', action='read', iostat=ios)
+      open(fu, file=defname, form='formatted', status='old', action='read', iostat=ios)
       if (ios /= 0) then ! failed to read the old kpoint file
         write(*,*) 'ERROR: file "',defname,'" not found, nor file "'-altname-'".'
         die_here('file "'-defname-'" not found!')

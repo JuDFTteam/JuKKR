@@ -528,8 +528,8 @@ subroutine writeJiJs(i1, rxij, nxij, ixcp, rxccls, jxcijint, nxijd)
   if (nxij > nxijd) stop "writeJijs: nxij > nxijd"
 
   ! write Jij's to file Jij.I1.dat
-  write(unit=filename, fmt="(a,i4.4,a)", iostat=ios) 'Jij.',I1,'.dat' 
-  open (73, file=filename, form='formatted', action='write', iostat=ios)
+  write(unit=filename, fmt="(a,i7.7,a)", iostat=ios) 'Jij.',I1,'.dat' 
+  open(73, file=filename, form='formatted', action='write', iostat=ios)
   write(73, fmt='(a)') "# off-diagonal exchange-coupling constants Jij "
   write(73, fmt='(a,i0)') "# for atom i = ",I1
   write(73, fmt='(a)') "# j    R_ij(ALAT)   J_ij(Ry)      RXCCLS                   IXCP"

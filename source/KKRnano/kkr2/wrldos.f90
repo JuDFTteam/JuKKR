@@ -51,7 +51,7 @@
 
       WRITE(UNIT=FNAME, FMT="(a,i4.4,a)") 'DOS.',I1,'.dat'
 
-      OPEN(48, FILE=FNAME, FORM='formatted', ACTION='WRITE')
+      open(48, FILE=FNAME, FORM='formatted', ACTION='WRITE')
 !
         DO ISPIN = 1,NSPIN
             IPOT = NSPIN * (I1-1) + ISPIN
@@ -140,7 +140,7 @@
 ! open file complex.dos - kept for correspondence to complexdos3.f
 !
       IF(I1 == 1) THEN
-      OPEN (49,FILE='complex.dos', FORM='formatted', ACTION='write')
+      open(49,FILE='complex.dos', FORM='formatted', ACTION='write')
       WRITE (49,*) NAEZ*NSPIN
       WRITE (49,*) IELAST
       WRITE (49,*) LMAXD1

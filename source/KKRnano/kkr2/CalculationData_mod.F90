@@ -408,9 +408,9 @@ module CalculationData_mod
 
       ! load the input data unless it is a voronano run
       if (voronano == 0) then
-        call load(old_atom_a(ila), "atoms", "vpotnew.0", atom_id)
+        call load(old_atom_a(ila), "bin.atoms", "bin.vpotnew.0", atom_id)
 
-        call load(old_mesh_a(ila), "meshes.0", atom_id)
+        call load(old_mesh_a(ila), "bin.meshes.0", atom_id)
 
         call associateBasisAtomMesh(old_atom_a(ila), old_mesh_a(ila))
 
@@ -663,8 +663,8 @@ module CalculationData_mod
     call MPI_Allreduce(sendbuf, recvbuf, ND, MPI_INTEGER, MPI_MAX, mp%mySEComm, ierr)
 
     if (mp%myAtomRank == 0) then
-      write(*,*) "Record length 'vpotnew' file: ", recvbuf(1)
-      write(*,*) "Record length 'meshes'  file: ", recvbuf(2)
+      write(*,*) "Record length 'bin.vpotnew' file: ", recvbuf(1)
+      write(*,*) "Record length 'bin.meshes'  file: ", recvbuf(2)
     endif
 
     self%max_reclen_potential = recvbuf(1)
@@ -683,7 +683,7 @@ module CalculationData_mod
     max_reclen = self%max_reclen_potential
 
     ! the opening routine requires any instance of type BasisAtom
-    call openBasisAtomPotentialIndexDAFile(self%atomdata_a(1), 37, 'vpotnew.idx', action='write')
+    call openBasisAtomPotentialIndexDAFile(self%atomdata_a(1), 37, 'bin.vpotnew.idx', action='write')
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
@@ -713,9 +713,9 @@ module CalculationData_mod
     ! the opening routines require any instance of type RadialMeshData
 #ifndef TASKLOCAL_FILES
     ! do not write index when using task-local files
-    call openRadialMeshDataIndexDAFile(self%mesh_a(1), 37, 'meshes.idx')
+    call openRadialMeshDataIndexDAFile(self%mesh_a(1), 37, 'bin.meshes.idx')
 #endif
-    call openRadialMeshDataDAFile(self%mesh_a(1), 38, 'meshes', max_reclen)
+    call openRadialMeshDataDAFile(self%mesh_a(1), 38, 'bin.meshes', max_reclen)
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
@@ -768,96 +768,3 @@ module CalculationData_mod
   endsubroutine ! represent
 
 endmodule ! CalculationData_mod
-
-
-
-
-#if 0
-! !==============================================================================
-! !=             WORK in PROGRESS - not used yet                                =
-! !==============================================================================
-! 
-!   ! Factored out some routines from 'constructEverything'
-! 
-!   subroutine constructClusters(self, params, arrays)
-!     use InputParams_mod, only: InputParams
-!     use Main2Arrays_mod, only: Main2Arrays
-!     use RefCluster_mod, only: createRefCluster, createLatticeVectors
-!     
-!     type(CalculationData), intent(inout) :: self
-!     type(InputParams), intent(in):: params
-!     type(Main2Arrays), intent(in):: arrays
-! 
-!     integer :: ila
-! 
-!     call createLatticeVectors(self%lattice_vectors, arrays%bravais)
-! 
-!     ! create cluster for each local atom
-!     !$omp parallel do private(ila)
-!     do ila = 1, self%num_local_atoms
-!       call createRefCluster(self%ref_cluster_a(ila), self%lattice_vectors, arrays%rbasis, params%rclust, self%atom_ids(ila))
-!     enddo ! ila
-!     !$omp endparallel do
-! 
-!   endsubroutine ! constructClusters
-! 
-!   subroutine constructTruncationZones(self, arrays, mp, naez)
-!     use KKRnanoParallel_mod, only: KKRnanoParallel
-!     use Main2Arrays_mod, only: Main2Arrays
-!     use TEST_lcutoff_mod, only: num_untruncated, num_truncated2, num_truncated ! integers
-!     use TEST_lcutoff_mod, only: initLcutoffNew
-!     use ClusterInfo_mod, only: createClusterInfo_com
-! 
-!     type(CalculationData), intent(inout) :: self
-!     type(Main2Arrays), intent(in):: arrays
-!     type(KKRnanoParallel), intent(in) :: mp
-!     integer, intent(in) :: naez
-! 
-!     ! setup the truncation zone
-!     call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays)
-! 
-!     ! get information about all the reference clusters of atoms in truncation zone
-!     call createClusterInfo_com(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm)
-! 
-!     if (mp%isMasterRank) then
-!       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
-!       write(*,*) "Max. number of reference cluster atoms: ", self%clusters%naclsd
-!       write(*,*) "On node 0: "
-!       write(*,*) "Num. atoms treated with full lmax: ", num_untruncated
-!       write(*,*) "Num. atoms in truncation zone 1  : ", num_truncated
-!       write(*,*) "Num. atoms in truncation zone 2  : ", num_truncated2
-!     endif ! is master
-!     CHECKASSERT(num_truncated+num_untruncated+num_truncated2 == naez)
-!     
-!   endsubroutine ! constructTruncationZones
-! 
-!   subroutine constructStorage(self, dims, params)
-!     use DimParams_mod, only: DimParams
-!     use InputParams_mod, only: InputParams
-!     use KKRresults_mod, only: createKKRresults
-!     use DensityResults_mod, only: createDensityResults
-!     use EnergyResults_mod, only: createEnergyResults
-!     use LDAUData_mod, only: createLDAUData
-!     use JijData_mod, only: createJijData
-!     use MadelungCalculator_mod, only: createMadelungLatticeSum
-!     
-!     type(CalculationData), intent(inout) :: self
-!     type(DimParams), intent(in)  :: dims
-!     type(InputParams), intent(in):: params
-! 
-!     integer :: atom_id, ila, irmd
-! 
-!     do ila = 1, self%num_local_atoms
-!       atom_id = self%atom_ids(ila)
-!       irmd = self%mesh_a(ila)%irmd ! abbrev.
-! 
-!       call createKKRresults(self%kkr_a(ila), dims, self%clusters%naclsd)
-!       call createDensityResults(self%densities_a(ila), dims, irmd)
-!       call createEnergyResults(self%energies_a(ila), dims%nspind, dims%lmaxd)
-!       call createLDAUData(self%ldau_data_a(ila), params%ldau, irmd, dims%lmaxd, dims%nspind)
-!       call createJijData(self%jij_data_a(ila), params%jij, params%rcutjij, dims%nxijd, dims%lmmaxd,dims%nspind)
-!       call createMadelungLatticeSum(self%madelung_sum_a(ila), self%madelung_calc, dims%naez)
-!     enddo ! ila
-!     
-!   endsubroutine ! constructStorage
-#endif

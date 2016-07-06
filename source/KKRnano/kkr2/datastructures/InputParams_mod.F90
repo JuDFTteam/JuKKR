@@ -11,10 +11,8 @@
 module InputParams_mod
   implicit none
   private
-  public :: InputParams
-  public :: getInputParamsValues
-  public :: readInputParamsFromFile
-  public :: writeInputParamsToFile
+  public :: InputParams, load, store, getValues
+
 
   type InputParams
     double precision :: alat
@@ -70,9 +68,18 @@ module InputParams_mod
     double precision :: vref
   endtype ! InputParams
 
+
+  interface load
+    module procedure readInputParamsFromFile
+  endinterface
+
+  interface store
+    module procedure writeInputParamsToFile
+  endinterface
+
   contains
 !-------------------------------------------------------------------------------
-integer function getInputParamsValues(filename, values) result(ierror)
+integer function getValues(filename, values) result(ierror)
   use ConfigReader_mod, only: ConfigReader, create, destroy
   use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND
   use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE
@@ -514,17 +521,17 @@ integer function getInputParamsValues(filename, values) result(ierror)
   write(*,*) "Finished reading information from input.conf"
   destroy_and_return
 #undef destroy_and_return
-endfunction !
+endfunction ! get
 
 !-------------------------------------------------------------------------------
-integer function readInputParamsFromFile(values, filename) result(ierror)
+integer function readInputParamsFromFile(values, filename) result(ios)
   type(InputParams), intent(inout) :: values
   character(len=*), intent(in) :: filename
 
   integer, parameter :: fu = 67
 
-  ierror = 0
-  open(fu, file=filename, form="unformatted", action="read", status="old")
+  open(fu, file=filename, form="unformatted", action="read", status="old", iostat=ios)
+  if (ios /= 0) return
   read(fu) values%alat
   read(fu) values%bravais_a
   read(fu) values%bravais_b
@@ -577,17 +584,17 @@ integer function readInputParamsFromFile(values, filename) result(ierror)
   read(fu) values%fullbz
   read(fu) values%vref
   close(fu)
-endfunction ! readFromFile
+endfunction ! load
 
 !-------------------------------------------------------------------------------
-integer function writeInputParamsToFile(values, filename) result(ierror)
+integer function writeInputParamsToFile(values, filename) result(ios)
   type(InputParams), intent(inout) :: values
   character(len=*), intent(in) :: filename
 
   integer, parameter :: fu = 67
 
-  ierror = 0
-  open(fu, file=filename, form="unformatted", action="write")
+  open(fu, file=filename, form="unformatted", action="write", iostat=ios)
+  if (ios /= 0) return
   write(fu) values%alat
   write(fu) values%bravais_a
   write(fu) values%bravais_b
@@ -640,6 +647,6 @@ integer function writeInputParamsToFile(values, filename) result(ierror)
   write(fu) values%fullbz
   write(fu) values%vref
   close(fu)
-endfunction ! writeToFile
+endfunction ! store
 
-endmodule !
+endmodule !InputParams

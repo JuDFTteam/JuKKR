@@ -84,7 +84,7 @@ module KKRzero_mod
 !     NCORE(NPOTD)             : number of core states
 ! ----------------------------------------------------------------------
 
-    use InputParams_mod, only: InputParams, getInputParamsValues, writeInputParamsToFile
+    use InputParams_mod, only: InputParams, getValues, store
     use DimParams_mod, only: DimParams, parse, store
     use Main2Arrays_mod, only: Main2Arrays, create, store
     use BrillouinZone_mod, only: bzkint0, readKpointsFile
@@ -113,9 +113,8 @@ module KKRzero_mod
 
     call parse(dims, "global.conf", altfile="input.conf")
 
-    ist = getInputParamsValues("input.conf", params)
+    ist = getValues("input.conf", params)
     if (ist /= 0) die_here('failed to read "input.conf"!')
-
 
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
@@ -132,12 +131,12 @@ module KKRzero_mod
       ! Conversion of rmax and gmax to atomic units
       params%rmax = params%rmax*params%alat
       params%gmax = params%gmax/params%alat
-      call store(dims, 'inp0.unf')
-      ierror = writeInputParamsToFile(params, 'input.unf')
+      call store(dims, 'bin.dims')
+      ierror = store(params, 'bin.input')
       arrays%bravais(:,1) = params%bravais_a(1:3)
       arrays%bravais(:,2) = params%bravais_b(1:3)
       arrays%bravais(:,3) = params%bravais_c(1:3)
-      call store(arrays, 'arrays.unf')
+      call store(arrays, 'bin.arrays')
       write(*,*) 'voronano == 1: Starting potential and shapefunctions are not read in by kkr0'
       return
     endif
@@ -155,9 +154,9 @@ module KKRzero_mod
       ! no formatted potential provided
       write(*,*) "WARNING: file 'potential' not found... skipping start potential generation."
       warn(6, "file 'potential' not found... skipping start potential generation.")
-      write(*,*) "Trying to read initial, approximate EFermi from EFERMI file..."
-      open (67, file='EFERMI', form='formatted', action='read', status='old')
-      read (67,*) efermi
+      write(*,*) "Trying to read initial, approximate Fermi energy from EFERMI file..."
+      open(67, file='EFERMI', form='formatted', action='read', status='old')
+      read(67,*) efermi
       close(67)
     endif
 
@@ -196,7 +195,7 @@ module KKRzero_mod
     params%rmax = params%rmax*params%alat
     params%gmax = params%gmax/params%alat
 
-    call testdimlat(params%alat, arrays%bravais, recbv, params%rmax, params%gmax)!, dims%NMAXD, dims%ISHLD) ! modifies NMAXD and ISHLD to the mimimum values
+    call testdimlat(params%alat, arrays%bravais, recbv, params%rmax, params%gmax) ! recommends mimimum values for NMAXD and ISHLD 
     
     if (checkmode == 0) then 
       ! write binary files that are needed in the main program
@@ -204,14 +203,14 @@ module KKRzero_mod
       ! bzkint0 wrote a file 'kpoints': read this file and use it as k-mesh
       call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
       
-      call store(dims, 'inp0.unf')
-      ist = writeInputParamsToFile(params, 'input.unf')
-      call store(arrays, 'arrays.unf')
+      call store(dims, 'bin.dims')
+      ist = store(params, 'bin.input')
+      call store(arrays, 'bin.arrays')
 
-      call store(emesh, filename='energy_mesh.0')
+      call store(emesh, filename='bin.energy_mesh.0')
         
     else  ! checkmode == 0
-      write(*,'(A)') "CheckMode: binary files 'inp0.unf', 'input.unf' and arrays.unf' are not created!" ! do we need a warning here?
+      write(*,'(A)') "CheckMode: binary files 'bin.dims', 'bin.input' and 'bin.arrays' are not created!" ! do we need a warning here?
     endif ! checkmode == 0
 
     ist = show_warning_lines(unit=6)

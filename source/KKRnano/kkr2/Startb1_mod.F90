@@ -29,7 +29,7 @@ module Startb1_mod
     type(ShapefunFile) :: sfile
 
     ! read the complete shapefun file to -> sfile
-    open (91, file='shapefun', form='formatted', status='old', action='read')
+    open(91, file='shapefun', form='formatted', status='old', action='read')
     call create(sfile, 91) ! create_read_ShapefunFile
     close(91)
 
@@ -79,7 +79,7 @@ module Startb1_mod
     
     n_warn_alat_differs = 0
 
-    if (.not. nowrite) call openBasisAtomDAFile(atom, 37, 'atoms', action='write')
+    if (.not. nowrite) call openBasisAtomDAFile(atom, 37, 'bin.atoms', action='write')
     
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naez
@@ -247,11 +247,11 @@ module Startb1_mod
       
         if (iatom == 1) then
 #ifndef TASKLOCAL_FILES
-          call openBasisAtomPotentialIndexDAFile(atom, 38, 'vpotnew.0.idx', action='write')
-          call openRadialMeshDataIndexDAFile(meshdata, 93, "meshes.0.idx")
+          call openBasisAtomPotentialIndexDAFile(atom, 38, 'bin.vpotnew.0.idx', action='write')
+          call openRadialMeshDataIndexDAFile(meshdata, 93, "bin.meshes.0.idx")
 #endif
-          call openBasisAtomPotentialDAFile(atom, 39, 'vpotnew.0', max_reclen, action='write')
-          call openRadialMeshDataDAFile(meshdata, 94, "meshes.0", max_reclen_mesh)
+          call openBasisAtomPotentialDAFile(atom, 39, 'bin.vpotnew.0', max_reclen, action='write')
+          call openRadialMeshDataDAFile(meshdata, 94, "bin.meshes.0", max_reclen_mesh)
         endif ! iatom == 1
 
         call writeBasisAtomPotentialDA(atom, 39, iatom)

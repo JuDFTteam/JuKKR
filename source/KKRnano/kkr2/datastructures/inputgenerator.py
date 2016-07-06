@@ -42,10 +42,8 @@ print HEADER
 print 'module ' + configname + '_mod'
 print '  implicit none'
 print '  private'
-print '  public :: ' + configname
-print '  public :: get' + configname + 'Values'
-print '  public :: read' + configname + 'FromFile'
-print '  public :: write' + configname + 'ToFile'
+print '  public :: ' + configname + ', load, store, getValues'
+print
 print
 
 #------------Generate type declaration -------------------
@@ -70,11 +68,20 @@ deffile.close()
 
 deffile = open(deffilename, 'r')
 
+print
+print '  interface load'
+print '    module procedure read' + configname + 'FromFile'
+print '  endinterface'
+print
+print '  interface store'
+print '    module procedure write' + configname + 'ToFile'
+print '  endinterface'
+print
 print '  contains'
 
 #----------- Generate code for retrieving config values -
 print '!'+'-'*79
-print 'integer function get' + configname + 'Values(filename, values) result(ierror)'
+print 'integer function getValues(filename, values) result(ierror)'
 print '  use ConfigReader_mod, only: ConfigReader, create, destroy'
 print '  use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND'
 print '  use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE'
@@ -133,19 +140,19 @@ deffile.close()
 print '  write(*,*) "Finished reading information from input.conf"'
 print '  destroy_and_return'
 print '#undef destroy_and_return'
-print 'endfunction !'
+print 'endfunction ! get'
 print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function read' + configname + 'FromFile(values, filename) result(ierror)'
+print 'integer function read' + configname + 'FromFile(values, filename) result(ios)'
 print '  type(' + configname + '), intent(inout) :: values'
 print '  character(len=*), intent(in) :: filename'
 print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
-print '  ierror = 0'
-print '  open(fu, file=filename, form="unformatted", action="read", status="old")'
+print '  open(fu, file=filename, form="unformatted", action="read", status="old", iostat=ios)'
+print '  if (ios /= 0) return'
 
 deffile = open(deffilename, 'r')
 
@@ -158,19 +165,19 @@ for line in deffile:
 deffile.close()
 
 print '  close(fu)'
-print 'endfunction ! readFromFile'
+print 'endfunction ! load'
 print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function write' + configname + 'ToFile(values, filename) result(ierror)'
+print 'integer function write' + configname + 'ToFile(values, filename) result(ios)'
 print '  type(' + configname + '), intent(inout) :: values'
 print '  character(len=*), intent(in) :: filename'
 print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
-print '  ierror = 0'
-print '  open(fu, file=filename, form="unformatted", action="write")'
+print '  open(fu, file=filename, form="unformatted", action="write", iostat=ios)'
+print '  if (ios /= 0) return'
 
 deffile = open(deffilename, 'r')
 
@@ -183,10 +190,10 @@ for line in deffile:
 deffile.close()
 
 print '  close(fu)'
-print 'endfunction ! writeToFile'
+print 'endfunction ! store'
 print
 
-print 'endmodule !'
+print 'endmodule !' + configname
 
 #------------ Assignment statements ------------------------------
 #deffile = open(deffilename, 'r')

@@ -23,12 +23,12 @@ program KKRnano
   use LDAUData_mod, only: LDAUData
 
   use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outTime
-  use EBalanceHandler_mod, only: EBalanceHandler, createEBalanceHandler, initEBalanceHandler, setEqualDistribution, destroy
+  use EBalanceHandler_mod, only: EBalanceHandler, create, init, setEqualDistribution, destroy
 
   use AtomicCore_mod, only: rhocore
 
   use DimParams_mod, only: DimParams, load, destroy
-  use InputParams_mod, only: InputParams, readInputParamsFromFile
+  use InputParams_mod, only: InputParams, load
   use Main2Arrays_mod, only: Main2Arrays, create, load, destroy
 
   use ScatteringCalculation_mod, only: energyloop
@@ -41,7 +41,7 @@ program KKRnano
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
   
-  use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, store, destroy
+  use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, destroy
   implicit none
 
   type(CalculationData) :: calc_data
@@ -77,7 +77,7 @@ program KKRnano
     call main0(checkmode=0, voronano=voronano) ! call former kkr0.exe
     stop
   case ('--check', '-c')
-    call main0(checkmode=1, voronano=voronano) ! former kkr0.exe without overwriting the binary files *.unf
+    call main0(checkmode=1, voronano=voronano) ! former kkr0.exe without overwriting the binary files bin.*
     stop
   case ('--voronano')
     voronano = 1
@@ -102,7 +102,7 @@ program KKRnano
 
   ! from here the former kkr2.exe actions are performed
   
-  call load(dims, 'inp0.unf') ! read dimension parameters from file 'inp0.unf'
+  call load(dims, 'bin.dims') ! read dimension parameters from file 'bin.dims'
 
   call create(mp, dims%num_atom_procs, dims%SMPID, dims%EMPID)
   call setKKRnanoNumThreads(dims%nthrds)
@@ -145,9 +145,9 @@ program KKRnano
   endif ! master
 
   call create(arrays, dims)
-  call load(arrays, 'arrays.unf') ! every process does this!
+  call load(arrays, 'bin.arrays') ! every process does this!
 
-  flag = readInputParamsFromFile(params, 'input.unf')
+  flag = load(params, 'bin.input')
   ! done reading variables
 
 
@@ -175,7 +175,7 @@ program KKRnano
     num_local_atoms = calc_data%num_local_atoms
 
     call create(emesh, dims%iemxd) ! createEnergyMesh
-    call load(emesh, filename='energy_mesh.0') ! every process does this!!!
+    call load(emesh, filename='bin.energy_mesh.0') ! every process does this!!!
 
     call outTime(mp%isMasterRank,'input files read.....', getElapsedTime(program_timer), 0)
 
@@ -187,8 +187,8 @@ program KKRnano
 
     call outTime(mp%isMasterRank,'Madelung sums calc...', getElapsedTime(program_timer), 0)
 
-    call createEBalanceHandler(ebalance_handler, emesh%ielast)
-    call initEBalanceHandler(ebalance_handler, mp)
+    call create(ebalance_handler, emesh%ielast)
+    call init(ebalance_handler, mp)
     call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
     ! here, we comunicate the rMTref values early, so we can compute tref and dtrefdE locally for each atom inside the reference cluster 
@@ -199,7 +199,7 @@ program KKRnano
 #endif
       I1 = calc_data%atom_ids(ila) ! get global atom_id from local index
 #ifdef PRINT_MTRADII
-      write(num, '(A,I7.7)') "mtradii_out.",I1
+      write(unit=num, '(A,I7.7)') "mtradii_out.",I1
       open(20, file=num)
       write(20,*) atomdata%rMTref
       write(20,*) atomdata%radius_muffin_tin
@@ -207,7 +207,7 @@ program KKRnano
       close(20)
 #endif
 #ifdef USE_MTRADII
-      write(num, '(A,I7.7)') "mtradii_in.",I1
+      write(unit=num, '(A,I7.7)') "mtradii_in.",I1
       open(20, file=num)
       read(20,*) atomdata%rMTref
       read(20,*) atomdata%radius_muffin_tin
@@ -304,7 +304,7 @@ program KKRnano
         ! write file 'energy_mesh'
         if (emesh%NPOL /= 0) emesh%EFERMI = emesh%E2 ! if not a DOS-calculation E2 coincides with Fermi-Energy
 
-        call store(emesh, filename='energy_mesh')
+        call store(emesh, filename='bin.energy_mesh')
 
         call printDoubleLineSep()
         call writeIterationTimings(ITER, getElapsedTime(program_timer), getElapsedTime(iteration_timer))

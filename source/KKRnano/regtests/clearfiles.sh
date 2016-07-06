@@ -29,3 +29,5 @@ rm -f  kpoints_full
 rm -f  meshes
 rm -f  rbasis.xyz
 rm -f  OUT
+
+rm -f  bin.* ## delete all binary files

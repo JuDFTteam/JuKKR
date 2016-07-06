@@ -70,7 +70,7 @@ module Main2Arrays_mod
     type(DimParams), intent(in) :: dims
 
     call createMain2ArraysImpl(self, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)    
-    
+
   endsubroutine ! create
 
   !-----------------------------------------------------------------------------
@@ -103,14 +103,14 @@ module Main2Arrays_mod
 
     ALLOCATECHECK(self%rbasis(3,naez))
     ALLOCATECHECK(self%zat(naez))
-    
-    self%dsymll = 0
-    self%rbasis = 0
-    self%bzkp = 0
-    self%volcub = 0
-    self%volbz = 0
+
+    self%dsymll = (0.d0, 0.d0)
+    self%rbasis = 0.d0
+    self%bzkp = 0.d0
+    self%volcub = 0.d0
+    self%volbz = 0.d0
     self%nofks = 0
-    self%zat = 0
+    self%zat = 0.d0
     
   endsubroutine ! create
 
@@ -141,7 +141,7 @@ module Main2Arrays_mod
 
     integer, parameter :: fu = 67
 
-    open (fu, file=filename, form='unformatted', action='write')
+    open(fu, file=filename, form='unformatted', action='write')
     write(fu) self%bravais, &
               self%isymindex, &
               self%dsymll, &
@@ -166,8 +166,8 @@ module Main2Arrays_mod
 
     integer, parameter :: fu = 67
 
-    open (fu, file=filename, form='unformatted', action='read')
-    read (fu) self%bravais, &
+    open(fu, file=filename, form='unformatted', action='read')
+    read(fu)  self%bravais, &
               self%isymindex, &
               self%dsymll, &
               self%rbasis, &

@@ -48,7 +48,7 @@ implicit none
     use KKRnanoParallel_mod, only: KKRnanoParallel, isWorkingSpinRank
     use KKRnano_Comm_mod, only: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess_com
 
-    use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, updateEBalance_com
+    use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, update
 
     use kloopz1_mod, only: kloopz1
     use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
@@ -86,7 +86,7 @@ implicit none
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer, allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
-    integer :: i1, ila, num_local_atoms, iacls
+    integer :: i1, ila, num_local_atoms
     integer :: lmmaxd
     logical :: xccpl
 
@@ -381,7 +381,7 @@ implicit none
   !     on the basis of new timings determine now new distribution of
   !     work to 1 .. EMPID processors - all processes SYNCED
   !=======================================================================
-    call updateEBalance_com(ebalance_handler, mp)
+    call update(ebalance_handler, mp)
 
   !=======================================================================
   !     in case of IGUESS and EMPID > 1 initial guess arrays might

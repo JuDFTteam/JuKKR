@@ -96,7 +96,7 @@ module ProcessKKRresults_mod
 
     ! use any atomdata to open file - use reclen stored in calc
     atomdata => getAtomData(calc, 1)
-    call openBasisAtomPotentialDAFile(atomdata, 37, "vpotnew", calc%max_reclen_potential, action='write')
+    call openBasisAtomPotentialDAFile(atomdata, 37, "bin.vpotnew", calc%max_reclen_potential, action='write')
 
     do ila = 1, num_local_atoms ! no OpenMP
       atomdata => getAtomData(calc, ila)
@@ -931,7 +931,7 @@ module ProcessKKRresults_mod
 
     inquire(iolength=reclen) dummy ! get reclen for 3 doubles
     fu = 91
-    open(unit=fu, access='direct', file='forces', recl=reclen, form='unformatted', action='write')
+    open(unit=fu, access='direct', file='bin.forces', recl=reclen, form='unformatted', action='write')
   endfunction ! open
 
   !------------------------------------------------------------------------------
@@ -948,7 +948,7 @@ module ProcessKKRresults_mod
   integer function openResults2File(lrecres2) result(fu)
     integer, intent(in) :: lrecres2
     fu = 72
-    open(unit=fu, access='direct', recl=lrecres2, file='results2', form='unformatted', action='write')
+    open(unit=fu, access='direct', recl=lrecres2, file='bin.results2', form='unformatted', action='write')
   endfunction ! open
 
   !----------------------------------------------------------------------------
@@ -973,7 +973,7 @@ module ProcessKKRresults_mod
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmaxd+2)*iemxd
 
     fu = 71
-    open(unit=fu, access='direct', recl=lrecres1, file='results1', form='unformatted', action='write')
+    open(unit=fu, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='write')
   endfunction ! open
 
   !----------------------------------------------------------------------------
@@ -1428,7 +1428,7 @@ module ProcessKKRresults_mod
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmax+2)*iemxd ! dos calc.
 
     if (compute_total_energy >= 0) then
-      open(71, access='direct', recl=lrecres1, file='results1', form='unformatted', action='read', status='old')
+      open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
 
       ! moments output
       do i1 = 1, naez
@@ -1475,7 +1475,7 @@ module ProcessKKRresults_mod
     endif
 
     if (compute_total_energy == 1) then
-      open (72, access='direct', recl=lrecres2, file='results2', form='unformatted', action='read', status='old')
+      open(72, access='direct', recl=lrecres2, file='bin.results2', form='unformatted', action='read', status='old')
       do i1 = 1, naez
         read(72, rec=i1) catom, vmad, ecou, epotin, espc, espv, exc, lcoremax, euldau, edcldau
         ! output unfortunately integrated into etotb1

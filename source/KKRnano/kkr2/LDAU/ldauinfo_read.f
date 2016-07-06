@@ -46,7 +46,7 @@ c
 c
 c open 'ldauinfo'
 c
-        OPEN(77,FILE='ldauinfo',FORM='formatted')
+        open(77,FILE='ldauinfo',FORM='formatted')
         WRITE(6,2100)
         WRITE(6,*) 'LDA:'
 c
@@ -64,7 +64,7 @@ c
      &           + 8*2*LMAXD1                     ! ULDAU & JLDAU
      &           + 8*MMAXD*MMAXD*NSPIND*LMAXD1    ! WMLDAU
 c
-        OPEN (65,ACCESS='direct',RECL=LRECLDAU,FILE='wldau.unf',
+        open(65,ACCESS='direct',RECL=LRECLDAU,FILE='bin.wldau',
      &        FORM='unformatted')
 c
 c
