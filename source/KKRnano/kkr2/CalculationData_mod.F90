@@ -33,13 +33,17 @@ module CalculationData_mod
   public :: prepareMadelung, getBroydenDim
   public :: getDensities, getEnergies, getLDAUData, getAtomData
 
+
   type CalculationData
 
     integer :: num_local_atoms !< atoms in this process
-    integer, allocatable :: atom_ids(:)
     integer :: max_reclen_meshes
     integer :: max_reclen_potential
 
+!     type(LocalAtomData), allocatable :: a(:) !> dim(num_local_atoms)
+    
+    integer(kind=4), allocatable :: atom_ids(:) ! to be replace by a(ila)%atom_id
+    
     ! atom local data - different for each atom
     type(RadialMeshData), pointer     :: mesh_a(:)         => null()
     type(CellData), pointer           :: cell_a(:)         => null()
@@ -101,6 +105,8 @@ module CalculationData_mod
 
     self%num_local_atoms = num_local_atoms
 
+!     allocate(self%a(num_local_atoms))
+    
     ! one datastructure for each local atom
     allocate(self%mesh_a(num_local_atoms)) ! only used inside this module
     allocate(self%cell_a(num_local_atoms)) ! only used inside this module
@@ -126,6 +132,7 @@ module CalculationData_mod
 
     do ila = 1, num_local_atoms
       self%atom_ids(ila) = mp%myAtomRank * atoms_per_proc + ila
+!       self%a(ila)%atom_id = mp%myAtomRank * atoms_per_proc + ila
       ASSERT( self%atom_ids(ila) <= dims%naez )
     enddo ! ila
 
@@ -147,6 +154,7 @@ module CalculationData_mod
     integer :: atom_id, ila
 
     do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
       atom_id = self%atom_ids(ila)
       call calculate(self%madelung_sum_a(ila), self%madelung_calc, atom_id, arrays%rbasis)
     enddo ! ila
@@ -174,7 +182,9 @@ module CalculationData_mod
       call destroy(self%energies_a(ila))
 
     enddo ! ila
-
+    
+!     deallocate(self%a)
+    
     call destroy(self%lattice_vectors)
     call destroy(self%madelung_calc)
     call destroy(self%gaunts)
@@ -420,7 +430,7 @@ module CalculationData_mod
           write(*,*) 'Warning: MT_scale in input.conf is set to 0.0d0 -> MT radius is automatically set to 2.37'
         endif
         new_MT_radii(ila) = 2.37
-      endif !voronano
+      endif ! voronano
 
     enddo ! ila
 #ifndef USE_OLD_MESH
@@ -430,8 +440,8 @@ module CalculationData_mod
 
     ! interpolate to new mesh
     if (voronano == 0) then
-    do ila = 1, self%num_local_atoms
-      atom_id = self%atom_ids(ila)
+      do ila = 1, self%num_local_atoms
+        atom_id = self%atom_ids(ila)
 
 #ifndef USE_OLD_MESH
       ! Geometry might have changed - interpolate to new mesh
@@ -439,44 +449,44 @@ module CalculationData_mod
 #endif
 
 #ifdef USE_OLD_MESH
-      ! >>> use old mesh>>> 
-      self%mesh_a(ila) = old_mesh_a(ila)
-      self%atomdata_a(ila) = old_atom_a(ila)
-      call associateBasisAtomMesh(self%atomdata_a(ila), self%mesh_a(ila))
-      do ii = 1, self%mesh_a(ila)%nfu
-         self%cell_a(ila)%shdata%llmsp(ii) = self%mesh_a(ila)%llmsp(ii)
-         self%cell_a(ila)%shdata%lmsp(self%mesh_a(ila)%llmsp(ii)) = 1
-         self%cell_a(ila)%shdata%ifunm(self%mesh_a(ila)%llmsp(ii)) = ii
-      end do
-      self%cell_a(ila)%shdata%nfu = self%mesh_a(ila)%nfu
-      self%cell_a(ila)%shdata%theta(1:self%mesh_a(ila)%meshn, 1:self%mesh_a(ila)%nfu) = self%mesh_a(ila)%thetas(1:self%mesh_a(ila)%meshn,1:self%mesh_a(ila)%nfu)
-      ! set maximum possible muffin-tin radius (ALAT units)
-      self%cell_a(ila)%shdata%max_muffin_tin = self%mesh_a(ila)%rmt/params%alat
-      self%cell_a(ila)%shdata%num_faces = 9999 ! not needed
-      ! <<< use old mesh<<<
+        ! >>> use old mesh>>> 
+        self%mesh_a(ila) = old_mesh_a(ila)
+        self%atomdata_a(ila) = old_atom_a(ila)
+        call associateBasisAtomMesh(self%atomdata_a(ila), self%mesh_a(ila))
+        do ii = 1, self%mesh_a(ila)%nfu
+          self%cell_a(ila)%shdata%llmsp(ii) = self%mesh_a(ila)%llmsp(ii)
+          self%cell_a(ila)%shdata%lmsp(self%mesh_a(ila)%llmsp(ii)) = 1
+          self%cell_a(ila)%shdata%ifunm(self%mesh_a(ila)%llmsp(ii)) = ii
+        end do
+        self%cell_a(ila)%shdata%nfu = self%mesh_a(ila)%nfu
+        self%cell_a(ila)%shdata%theta(1:self%mesh_a(ila)%meshn, 1:self%mesh_a(ila)%nfu) = self%mesh_a(ila)%thetas(1:self%mesh_a(ila)%meshn,1:self%mesh_a(ila)%nfu)
+        ! set maximum possible muffin-tin radius (ALAT units)
+        self%cell_a(ila)%shdata%max_muffin_tin = self%mesh_a(ila)%rmt/params%alat
+        self%cell_a(ila)%shdata%num_faces = 9999 ! not needed
+        ! <<< use old mesh<<<
 #endif
 
-      ! set new MT radius
-      self%atomdata_a(ila)%radius_muffin_tin = self%mesh_a(ila)%rmt
+        ! set new MT radius
+        self%atomdata_a(ila)%radius_muffin_tin = self%mesh_a(ila)%rmt
 
-      ! set radius of repulsive reference potential
-      if (params%rMT_ref_scale > 0.d0) then
-        self%atomdata_a(ila)%rMTref = self%cell_a(ila)%shdata%max_muffin_tin * params%alat * params%rMT_ref_scale
-      else
-        self%atomdata_a(ila)%rMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
-      endif
+        ! set radius of repulsive reference potential
+        if (params%rMT_ref_scale > 0.d0) then
+          self%atomdata_a(ila)%rMTref = self%cell_a(ila)%shdata%max_muffin_tin * params%alat * params%rMT_ref_scale
+        else
+          self%atomdata_a(ila)%rMTref = self%atomdata_a(ila)%radius_muffin_tin ! old behaviour=Mt-radius
+        endif
 
-      self%cell_a(ila)%cell_index = self%atomdata_a(ila)%cell_index
-      call associateBasisAtomCell(self%atomdata_a(ila), self%cell_a(ila))
+        self%cell_a(ila)%cell_index = self%atomdata_a(ila)%cell_index
+        call associateBasisAtomCell(self%atomdata_a(ila), self%cell_a(ila))
 
-      CHECKASSERT( dims%IRMIND == self%mesh_a(ila)%IRMIN ) ! check mesh
-      CHECKASSERT( self%atomdata_a(ila)%atom_index == atom_id )
+        CHECKASSERT( dims%IRMIND == self%mesh_a(ila)%IRMIN ) ! check mesh
+        CHECKASSERT( self%atomdata_a(ila)%atom_index == atom_id )
 
 #ifndef USE_OLD_MESH
-      call destroy(old_atom_a(ila))
-      call destroy(old_mesh_a(ila))
+        call destroy(old_atom_a(ila))
+        call destroy(old_mesh_a(ila))
 #endif
-    enddo ! ila
+      enddo ! ila
     endif
 
     deallocate(new_MT_radii)
