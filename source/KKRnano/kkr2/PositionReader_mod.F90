@@ -305,8 +305,8 @@ module PositionReader_mod
   integer(kind=1) function atomic_number_by_symbol(Sym) result(Z)
   !! retrieves the atomic number from an element symbol of length 3
   !! valid input are all chemical symbols of the periodic table
-  !! in correct case, i.e. first letter capitalized
-  !!  second letter (if any) lower case
+  !! in correct case, i.e. first letter upper case
+  !!             second letter (if any) lower case
   !! also accepts (integer) numbers in the range [0:121]
   !! errors: Z=-6
     character(len=3), intent(in)    :: Sym
@@ -318,7 +318,7 @@ module PositionReader_mod
    
     read(unit=Sym, fmt=*, iostat=ios) Z ! try integer reading
     if (ios == 0) then ! an integer number could be read
-      if (Z < -1 .or. Z > 116) Z = Z_ERROR
+      if (Z < -1 .or. Z > 120) Z = Z_ERROR
       return ! error
     endif ! ios == 0
 
@@ -354,33 +354,33 @@ module PositionReader_mod
                if (y == ' ') Z = 115 ! custom element X (jmol style)
     case('_'); if (y == '_') Z =   0 ! "__" vacuum
     case('0'); if (y == ' ') Z =   0 ! "0" vacuum
+    case('v'); if (y == 'a' .and. Sym(3:3) == 'c') Z = 0 ! "vac" vacuum
     case('e'); if (y == ' ') Z =  -1 ! electron
     case('U'); if (y == ' ') Z =  92 ! Uranium
-    ! for these elements the full Symbol should read "Uu"-y
+    ! for these elements the full Symbol should read "Uu"-m
                if (y == 'u') then; t(1:6) = [120,119,118,115,117,113]; Z = t(scan('dnopst', Sym(3:3))); endif
     case('u'); t(1:6) = [120,119,118,115,117,113]; Z = t(scan('dnopst', y))
     endselect ! S
 
   endfunction ! atomic_number_by_symbol
   
-endmodule PositionReader_mod
+endmodule ! PositionReader_mod
 
 #ifdef __MAIN__
-program test_PositionsReader_mod
-  use PositionReader_mod, only: readXYZfile, PSE, atomic_number_by_symbol
+program test_PositionsReader
+  use PositionReader_mod, only: PSE, atomic_number_by_symbol!, readXYZfile 
   implicit none
-
-  integer :: ios, na, iZ, jZ
-  double precision, allocatable :: apos(:,:)
+  integer :: ios, natoms, iZ, jZ
   character(len=3) :: sym
-  
+
+  !! double precision, allocatable :: apos(:,:)
+  !! ios = readXYZfile('pos.xyz', natoms, apos, comm=0) ! interface has changed
+
   do iZ = lbound(PSE, 1), ubound(PSE, 1)
     sym = PSE(iZ)
     jZ = atomic_number_by_symbol(sym)
     if (iZ /= jZ) write(0,*) iZ,jZ,sym, '  differ!'
   enddo ! iZ
-  
-  !! ios = readXYZfile('pos.xyz', na, apos, comm=0) ! interface has changed
-  
-endprogram
+
+endprogram ! module self test
 #endif
