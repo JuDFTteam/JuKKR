@@ -151,7 +151,7 @@ module Startb1_mod
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
       if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
       
-      call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1) ! createRadialMeshData
+      call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1, sfile%mesh(cell_index)%meshn, sfile%shapes(iatom)%nfu) ! createRadialMeshData
       
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
@@ -228,7 +228,7 @@ module Startb1_mod
       irid = sfile%mesh(cell_index)%meshn
 
       call create(atom, iatom, lpot, nspin, irmind, irmd) ! createBasisAtom
-      call create(meshdata, irmd, ipand) ! createRadialMeshData
+      call create(meshdata, irmd, ipand, irid, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
 
       ! set potential
       do ispin = 1, nspin
@@ -238,7 +238,10 @@ module Startb1_mod
       enddo ! ispin
 
       ! initialise radial mesh
-      call initRadialMesh(meshdata, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, sfile%mesh(cell_index)%nm, irmd-irid, irns)
+      call initRadialMesh(meshdata, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, &
+                          sfile%mesh(cell_index)%nm, irmd-irid, irns, &
+                          irid, sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, &
+                          sfile%shapes(cell_index)%thetas)
 
       if (.not. nowrite) then
       

@@ -383,7 +383,7 @@ module CalculationData_mod
     type(KKRnanoParallel), intent(in) :: mp
     integer, intent(in) :: voronano
     
-    integer :: ila, atom_id, ist
+    integer :: ila, atom_id, ist, ii
     type(BasisAtom), allocatable      :: old_atom_a(:)
     type(RadialMeshData), allocatable :: old_mesh_a(:)
     double precision, allocatable     :: new_MT_radii(:)
@@ -440,19 +440,19 @@ module CalculationData_mod
 
 #ifdef USE_OLD_MESH
       ! >>> use old mesh>>> 
-      mesh     = old_mesh
-      atomdata = old_atom
-      call associateBasisAtomMesh(atomdata, mesh)
-      do ii = 1, mesh%nfu
-         cell%shdata%llmsp(ii) = old_mesh%llmsp(ii)
-         cell%shdata%lmsp(old_mesh%llmsp(ii)) = 1
-         cell%shdata%ifunm(old_mesh%llmsp(ii)) = ii
+      self%mesh_a(ila) = old_mesh_a(ila)
+      self%atomdata_a(ila) = old_atom_a(ila)
+      call associateBasisAtomMesh(self%atomdata_a(ila), self%mesh_a(ila))
+      do ii = 1, self%mesh_a(ila)%nfu
+         self%cell_a(ila)%shdata%llmsp(ii) = self%mesh_a(ila)%llmsp(ii)
+         self%cell_a(ila)%shdata%lmsp(self%mesh_a(ila)%llmsp(ii)) = 1
+         self%cell_a(ila)%shdata%ifunm(self%mesh_a(ila)%llmsp(ii)) = ii
       end do
-      cell%shdata%nfu = mesh%nfu
-      cell%shdata%theta = old_mesh%thetas(1:old_mesh%meshn,1:old_mesh%nfu)
+      self%cell_a(ila)%shdata%nfu = self%mesh_a(ila)%nfu
+      self%cell_a(ila)%shdata%theta(1:self%mesh_a(ila)%meshn, 1:self%mesh_a(ila)%nfu) = self%mesh_a(ila)%thetas(1:self%mesh_a(ila)%meshn,1:self%mesh_a(ila)%nfu)
       ! set maximum possible muffin-tin radius (ALAT units)
-      cell%shdata%max_muffin_tin = mesh%rmt
-      cell%shdata%num_faces = 9999 ! not needed
+      self%cell_a(ila)%shdata%max_muffin_tin = self%mesh_a(ila)%rmt/params%alat
+      self%cell_a(ila)%shdata%num_faces = 9999 ! not needed
       ! <<< use old mesh<<<
 #endif
 
@@ -479,8 +479,9 @@ module CalculationData_mod
     enddo ! ila
     endif
 
+    deallocate(new_MT_radii)
 #ifndef USE_OLD_MESH
-    deallocate(new_MT_radii, old_atom_a, old_mesh_a, stat=ist)
+    deallocate(old_atom_a, old_mesh_a, stat=ist)
 #endif
   endsubroutine ! generateAtomsShapesMeshes
 

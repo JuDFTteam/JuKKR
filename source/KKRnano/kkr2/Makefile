@@ -36,6 +36,8 @@ ifeq ($(PLATFORM),ifort)
   FCFLAGS += -O3 -D NOLOGGING -D USE_MTRADII 
   else ifeq ($(TYPE),debug_mtradii)
   FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -D USE_MTRADII
+  else ifeq ($(TYPE),old_mesh)
+  FCFLAGS += -O3 -g -D NOLOGGING -D USE_OLD_MESH
   else
   FCFLAGS += -O3 -D NOLOGGING
   endif

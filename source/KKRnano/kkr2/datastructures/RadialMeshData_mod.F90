@@ -130,8 +130,8 @@ module RadialMeshData_mod
     deallocate(meshdata%DRDI)
     deallocate(meshdata%IRCUT)
 #ifdef USE_OLD_MESH
-    deallocate(meshdata%LLMSP)
-    deallocate(meshdata%THETAS)
+    if (allocated(meshdata%LLMSP))  deallocate(meshdata%LLMSP)
+    if (allocated(meshdata%THETAS)) deallocate(meshdata%THETAS)
 #endif
   end subroutine
 
