@@ -59,24 +59,24 @@ def KKR_total_energy(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax
     print "KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, ", nranks=",nranks, " gives", total_energy, "Ryd"
     return total_energy
 
-#class Test_alloys(unittest.TestCase):
-#    def test_Fe8Co8(self):
-#       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4), -42561.32515698, DECIMALS)
+class Test_alloys(unittest.TestCase):
+    def test_Fe8Co8(self):
+       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4), -42561.32515698, DECIMALS)
 
-#class Test_copper(unittest.TestCase):
-#     def test_Cu4_lmax(self):
-#        """Test with high lmax. Works only with -heap-arrays on ifort"""
-#        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=3), -13219.36206406, DECIMALS)
-#        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=4), -13219.71616303, DECIMALS)
-#        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=5), -13219.60162033, DECIMALS)
-#        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=6), -13219.56030377, DECIMALS)
+class Test_copper(unittest.TestCase):
+     def test_Cu4_lmax(self):
+        """Test with high lmax. Works only with -heap-arrays on ifort"""
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=3), -13219.36206406, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=4), -13219.71616303, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=5), -13219.60162033, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=6), -13219.56030377, DECIMALS)
 
 class Test_semiconductors(unittest.TestCase):
-#     def test_GaN(self):
-#        self.assertAlmostEqual(KKR_total_energy("GaN"), -3990.85150060, DECIMALS)
+     def test_GaN(self):
+        self.assertAlmostEqual(KKR_total_energy("GaN"), -3990.85150060, DECIMALS)
         
-#     def test_Si(self):
-#        self.assertAlmostEqual(KKR_total_energy("Si"), -1155.68952256, DECIMALS)
+     def test_Si(self):
+        self.assertAlmostEqual(KKR_total_energy("Si"), -1155.68952256, DECIMALS)
         
      def test_ZnO(self):
         Etot = -7405.77074357
