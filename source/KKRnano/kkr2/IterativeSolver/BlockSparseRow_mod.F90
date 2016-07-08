@@ -510,14 +510,14 @@ endmodule ! BlockSparseRow_mod
 !+ TESTMAIN_BlockSparseRow
 
 !!!
-!!!>  ifort -warn -openmp -openmp-report -check all -check-bounds -traceback -O0 -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 133 35
-!!!>  gfortran -ffree-line-length-0 -g -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90 -lblas && ./a.out 1024 123
+!!!>  ifort -warn -openmp -openmp-report -check all -check-bounds -traceback -O0 -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 133 35 4
+!!!>  gfortran -ffree-line-length-0 -g -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90 -lblas && ./a.out 1024 123 2
 !!!
 program test_bsr
   use BlockSparseRow_mod !, only:
 implicit none
   character(len=8) :: CLarg(0:3)
-  integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16, bs=16 ! BlockSize
+  integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16, bs=2 ! BlockSize
   integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, ii, jj, jb, ib, Rind, nerror(19)=0, fi, si
   double precision, parameter :: Gfill=0.5, point=.5d0**10
   double precision :: elem, eref
@@ -536,6 +536,7 @@ implicit none
   enddo ! iarg
   read(unit=CLarg(1), fmt=*) mb ! number of target blocks
   read(unit=CLarg(2), fmt=*) nb ! number of RHS blocks
+  read(unit=CLarg(3), fmt=*) bs ! block size
   
   kb = mb ! H is a square operator
   
