@@ -9,7 +9,7 @@ module BlockSparseRow_mod
   public :: BlockSparseRow, create, destroy, multiply
   public :: MultBSRplan
 
-  public :: bsr_shape
+  public :: bsr_shape, Wtime
 
 ! #define BSRX
 #define complex_data_t double complex
@@ -20,12 +20,12 @@ module BlockSparseRow_mod
     integer :: mb = 0 !< number of block rows, slow block dim
     integer :: nb = 0 !< number of block cols, fast block dim
     integer :: nnzb = 0 !< number of non-zero blocks
-    integer, allocatable :: bsrRowPtr(:) !< dim(mb+1)
-    integer, allocatable :: bsrColInd(:) !< dim(nnzb)
+    integer(kind=4), allocatable :: bsrRowPtr(:) !< dim(mb+1)
+    integer(kind=4), allocatable :: bsrColInd(:) !< dim(nnzb)
 #ifdef BSRX
 !!! in the extended Block Compressed Sparse Row Format (BSRX), the
 !!! last value of Bind in a row is given by bsrEndPtr(iRow)
-    integer, allocatable :: bsrEndPtr(:) !< dim(mb)
+    integer(kind=4), allocatable :: bsrEndPtr(:) !< dim(mb)
 #define  _bsrEndPtr(i)  %bsrEndPtr(i)
 #else
 !!! in the default Block Compressed Sparse Row Format (BSR), the
@@ -65,7 +65,7 @@ module BlockSparseRow_mod
 
   contains
 
-  subroutine multiplyBSR_to_Bmat(A, Aval, M, Bmat, Cmat)
+  subroutine multiplyBSR_to_Bmat(A, Aval, M, Bmat, Cmat)  ! NOT TESTED !
     !! multiply a blocks sparse operator to a (dense) block vectors
     !! can be used for a single atom per MPI process
     !! could call cuSPARSE GPU kernel
@@ -79,23 +79,23 @@ module BlockSparseRow_mod
 
     ! .. locals ..
     complex_data_t :: beta
-    integer :: iRow, jCol, Aind
+    integer :: aRow, aCol, Aind
 
 !   if (dim_error(A, Aval)) stop __LINE__ ! dim_error works only for assumed shape arrays
     
-    !$omp parallel do private(iRow, jCol, Aind, beta)
-    do iRow = 1, A%mb
+    !$omp parallel do private(aRow, aCol, Aind, beta)
+    do aRow = 1, A%mb
       beta = zero ! instead of an initialization of Avec to zero
-      do Aind = A%bsrRowPtr(iRow), A _bsrEndPtr(iRow)
-        jCol = A%bsrColInd(Aind)
+      do Aind = A%bsrRowPtr(aRow), A _bsrEndPtr(aRow)
+        aCol = A%bsrColInd(Aind)
 
         ! now: Cval[:,:,Cind] += Aval[:,:,Aind] .times. Bval[:,:,Bind] ! GEMM:  C(m,n) += A(m,k)*B(k,n)
         !                    M  N  K       A                  B                        C
-        call zgemm('n', 'n', M, N, K, one, Aval(:,1,jCol), M, Bmat(:,1,Aind), K, beta, Cmat(:,1,iRow), M)
+        call zgemm('n', 'n', M, N, K, one, Aval(:,1,Aind), M, Bmat(:,1,aCol), K, beta, Cmat(:,1,aRow), M)
 
         beta = one ! simply add all further contributions in this row
       enddo ! Aind
-    enddo ! iRow
+    enddo ! aRow
     !$omp end parallel do
 
 #undef K
@@ -318,7 +318,7 @@ module BlockSparseRow_mod
   
   
   
-  subroutine fusedMultiplyAdd_BSR(C, Cval, Aval, diag, Bval, GiFlop) ! C = A*diag + B 
+  subroutine fusedMultiplyAdd_BSR(C, Cval, Aval, diag, Bval, GiFlop) ! C = A*diag + B !! double check this
     type(BlockSparseRow), intent(in) :: C !< operator structure, same for A and B assumed
     complex_data_t, intent(out) :: Cval(:,:,:) ! result block list dim(fastBlockDim,slowBlockDim,nnzb)
     complex_data_t, intent(in)  :: Aval(:,:,:) ! input  block list dim(fastBlockDim,slowBlockDim,nnzb)
@@ -347,7 +347,7 @@ module BlockSparseRow_mod
       if (any(shape(diag) /= [C%slowBlockDim, C%nb])) stop __LINE__ ! multiply diag(::) to the fast dimensions
       
       bvec(:) = 0
-      !$omp do private(iRow, jCol, Cind, islow, bvec)
+      !$omp do private(jCol, Cind, islow, bvec)
       do Cind = 1, C _bsrEndPtr(C%mb) ; jCol = C%bsrColInd(Cind)
 #ifdef BSRX
 #warning   'Gaps in the BSRX format be ignored!'
@@ -376,7 +376,7 @@ module BlockSparseRow_mod
 ! 
 !       enddo ! Cind
 !     enddo ! iRow
-    !$omp end do
+!     !$omp end do
 
     !$omp end parallel
 
@@ -454,6 +454,7 @@ module BlockSparseRow_mod
     allocate(nz(self%mb,self%nb), stat=ist) ! ToDo: catch status
     nz(:,:) = any(any(values /= 0, dim=1), dim=2) ! inner any: reduce along the innermost dim = fast, outer any: reduce along the middle dim = slow dim
     self%nnzb = count(nz)
+    write(*, '(9(A,F0.3))') 'create BSR: filling factor ',self%nnzb/(.01*max(1, size(nz))),' %'
 
     if (present(bsrVal)) then
       deallocate(bsrVal, stat=ist)
@@ -503,6 +504,12 @@ module BlockSparseRow_mod
 
   endsubroutine ! destroy
 
+  double precision function Wtime() result(now)
+!$  double precision, external :: omp_get_wtime
+    now = 0.d0
+!$  now = omp_get_wtime()
+  endfunction
+  
 endmodule ! BlockSparseRow_mod
 
 
@@ -510,25 +517,24 @@ endmodule ! BlockSparseRow_mod
 !+ TESTMAIN_BlockSparseRow
 
 !!!
-!!!>  ifort -warn -openmp -openmp-report -check all -check-bounds -traceback -O0 -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 133 35 4
+!!!>  ifort -warn -openmp -openmp-report -check all -check-bounds -traceback -O0 -g -mkl -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && ./a.out 128 32 4
+!!!>  ifort -openmp -mkl  -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90  && time ./a.out 1024 64 16
 !!!>  gfortran -ffree-line-length-0 -g -D TESTMAIN_BlockSparseRow IterativeSolver/BlockSparseRow_mod.F90 -lblas && ./a.out 1024 123 2
 !!!
 program test_bsr
   use BlockSparseRow_mod !, only:
 implicit none
   character(len=8) :: CLarg(0:3)
-  integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16, bs=2 ! BlockSize
-  integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, ii, jj, jb, ib, Rind, nerror(19)=0, fi, si
-  double precision, parameter :: Gfill=0.5, point=.5d0**10
-  double precision :: elem, eref
-#define real_data_t double precision
-#define gemm DGEMM
-  external :: gemm ! BLAS matrix matrix multiplication
-  real_data_t, parameter :: one = 1.0, zero = 0.0
-  real_data_t,    allocatable :: Hfull(:,:),  Gfull(:,:),  Rfull(:,:),  Rfill(:,:)
+  integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16
+  integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, ii, jj, jb, ib, Rind, nerror(19)=0, fi, si, bs=2 ! BlockSize
+  double precision, parameter :: Gfill=0.5, pointG=.5d0**8, pointH=.5d0**11
+  double precision :: elem, tick, tock
+  external :: zgemm ! BLAS matrix matrix multiplication
+  complex_data_t, parameter :: one = 1.0, zero = 0.0
+  complex_data_t, allocatable :: Hfull(:,:),  Gfull(:,:),  Rfull(:,:),  Rfill(:,:)
   complex_data_t, allocatable :: Hval(:,:,:), Gval(:,:,:), Rval(:,:,:)
   type(BlockSparseRow) :: H, G!,R==G operators
-  real :: GiFlop
+  real :: GiFlop, GiByte
   type(MultBSRplan) :: plan
 
   do iarg = 0, ubound(CLarg, 1)
@@ -539,19 +545,23 @@ implicit none
   read(unit=CLarg(3), fmt=*) bs ! block size
   
   kb = mb ! H is a square operator
-  
+
   M = mb*bs
   N = nb*bs
   K = kb*bs
   
+  tick = Wtime() ! start time
+  
   allocate(Hfull(M,K), Gfull(K,N), Rfull(M,N)) ! H*G=R
   Hfull = zero ; Gfull = zero ; Rfull = zero
+  
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for allocation ',tock-tick,' sec' ; tick = tock
 
   do ii = 1, size(Hfull, 2) ! fill H (Hamiltonian)
     do while(count(Hfull(:,ii) /= 0) < min(Hfill, size(Hfull, 1)))
       call random_number(elem) ; jj = ceiling(elem*size(Hfull, 1))
-!     if(ShowH>0) write(*, fmt="(A,9I6)") 'rand H',ii,jj
-      Hfull(jj,ii) = jj + point * ii
+!     if(ShowH>0) write(*, fmt="(A,9I6)") 'rand H',ii,jj !!! DEBUG
+      Hfull(jj,ii) = dcmplx(jj + pointH*ii, jj*pointH*ii)
     enddo ! while
     if(ShowH>0) write(*, fmt="(A,I4,99F9.4)") 'H',ii,Hfull(1:min(size(Hfull, 1), 8),ii)
   enddo ! ii
@@ -559,18 +569,23 @@ implicit none
   do ii = 1, size(Gfull, 2) ! fill G (Green function)
     do while(count(Gfull(:,ii) /= 0) < Gfill*size(Gfull, 1))
       call random_number(elem) ; jj = ceiling(elem*size(Gfull, 1))
-!     if(ShowG>0) write(*, fmt="(A,9I6)") 'rand G',ii,jj
-      Gfull(jj,ii) = jj + point * ii
+!     if(ShowG>0) write(*, fmt="(A,9I6)") 'rand G',ii,jj !!! DEBUG
+      Gfull(jj,ii) = dcmplx(jj + pointG*ii, -ii*pointG*jj)
     enddo ! while
     if(ShowG>0) write(*, fmt="(A,I4,99F9.4)") 'G',ii,Gfull(1:min(size(Gfull, 1), 8),ii)
   enddo ! ii
 
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for array filling ',tock-tick,' sec' ; tick = tock
+  
+  GiByte = (M*16.*K + K*16.*N + M*16.*N)*.5d0**30
+  GiFlop = M*8.*K*.5d0**30*N
+  write(*,"(9(A,F0.6))") "Dense  matrix-matrix  multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
   ! create reference A an M x K matrix, B a K x N matrix and C an M x N matrix using the BLAS routine
-  !                   M  N  K       A         B               C         ! GEMM:  C(m,n) += A(m,k) * B(k,n) ! Fortran style
-  call gemm('n', 'n', M, N, K, one, Hfull, M, Gfull, K, zero, Rfull, M) ! here:  R(m,n) += H(m,k) * G(k,n) ! Fortran style
-  GiFlop = M*8.*K*.5d0**30*N                                            ! or:   R[n][m] += G[n][k] * H[k][m]  !  C - style
-  write(*,"(9(A,F0.6))") "Dense  matrix-matrix  multiply: ",GiFlop,' GiFlop (when complex)'
-
+  !                    M  N  K       A         B               C         ! GEMM:  C(m,n) += A(m,k) * B(k,n) ! Fortran style
+  call zgemm('n', 'n', M, N, K, one, Hfull, M, Gfull, K, zero, Rfull, M) ! here:  R(m,n) += H(m,k) * G(k,n) ! Fortran style
+                                                                         ! or:   R[n][m] += G[n][k] * H[k][m]  !  C - style
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for zgemm ',tock-tick,' sec' ; tick = tock
+  
 #ifdef FULL_DEBUG
 !+full_debug
 
@@ -579,56 +594,67 @@ implicit none
     if(ShowR>0) write(*, fmt="(A,I4,99F9.4)") 'R',ii,Rfull(1:min(size(Rfull, 1), 8),ii)/K
     do jj = 1, size(Rfull, 1)
       elem = dot_product(Hfull(jj,:), Gfull(:,ii)) ! simple evaluation of a single element of a matrix-matrix product, but VERY SLOW
-      eref = Rfull(jj,ii)
-      call compare
+      call compare(elem, Rfull(jj,ii), nerror)
     enddo ! jj
   enddo ! ii
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
+
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for dot_product ',tock-tick,' sec' ; tick = tock
   
 !-full_debug
 #endif 
 
-  call create(H, dcmplx(reshape(Hfull, [bs,mb,bs,kb])), bsrVal=Hval) ! reshape to dim(fast,nb=ncols,slow,mb=nrows)
+  call create(H, (reshape(Hfull, [bs,mb,bs,kb])), bsrVal=Hval) ! reshape to dim(fast,nb=ncols,slow,mb=nrows)
   write(*,"(A,9(' ',i0))") "BlockSparseRow H: ",bsr_shape(H)
-  call create(G, dcmplx(reshape(Gfull, [bs,kb,bs,nb])), bsrVal=Gval) ! reshape to dim(fast,nb=ncols,slow,mb=nrows)
+  call create(G, (reshape(Gfull, [bs,kb,bs,nb])), bsrVal=Gval) ! reshape to dim(fast,nb=ncols,slow,mb=nrows)
   write(*,"(A,9(' ',i0))") "BlockSparseRow G: ",bsr_shape(G)
 
   !! use the sparse structure of G for R
 #define R G
   allocate(Rval(bs,bs,R%nnzb)) ; Rval = 0
+  
+  GiByte = 16.*(size(Hval) + size(Gval) + size(Rval))*.5d0**30
 
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR creation ',tock-tick,' sec' ; tick = tock
+  
   ! API: multiply(A, Aval, B, Bval, C, Cval, GiFlop)
   call multiply(H, Hval, G, Gval, R, Rval, GiFlop=GiFlop)
-  write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop'
+  write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
 
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for spontaneous BSR x BSR ',tock-tick,' sec' ; tick = tock
+  
   nerror = 0
   do ib = 1, R%mb
     do Rind = R%bsrRowPtr(ib), R _bsrEndPtr(ib) ; jb = R%bsrColInd(Rind)
       do si = 1, bs ; do fi = 1, bs
-          elem = dreal(Rval(fi,si,Rind)) ! take only the real part
-          eref = Rfull(ib*bs+fi-bs,jb*bs-bs+si)
-          call compare
-        enddo ; enddo ! fi si
+          call compare(Rval(fi,si,Rind), Rfull(ib*bs+fi-bs,jb*bs-bs+si), nerror)
+      enddo ; enddo ! fi si
     enddo ! Rind
   enddo ! ib
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
   
   !============================
   Rval = 0
+
+  
+  tick = Wtime() ! start time
   
   ! API: multiply(p, A, B, C, GiFlop)
   call create(plan, H, G, R, GiFlop=GiFlop)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop (planned)'
+  
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planning ',tock-tick,' sec' ; tick = tock
+  
   ! API: multiply(p, Aval, Bval, Cval)
   call multiply(plan, Hval, Gval, Rval)
 
+  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planned ',tock-tick,' sec' ; tick = tock
+  
   nerror = 0
   do ib = 1, R%mb
     do Rind = R%bsrRowPtr(ib), R _bsrEndPtr(ib) ; jb = R%bsrColInd(Rind)
       do si = 1, bs ; do fi = 1, bs
-          elem = dreal(Rval(fi,si,Rind)) ! take only the real part
-          eref = Rfull(ib*bs-bs+fi,jb*bs-bs+si)
-          call compare
+          call compare(Rval(fi,si,Rind), Rfull(ib*bs-bs+fi,jb*bs-bs+si), nerror)
       enddo ; enddo ! fi si
     enddo ! Rind
   enddo ! ib
@@ -649,9 +675,11 @@ implicit none
   
   contains
 
-    subroutine compare()
+    subroutine compare(elem, eref, nerror)
+      double complex, intent(in) :: elem, eref
+      integer, intent(inout) :: nerror(:)
       integer :: ip
-      do ip = 1, ubound(nerror, 1)
+      do ip = lbound(nerror, 1), ubound(nerror, 1)
         if (abs(elem - eref) > .1d0**ip) nerror(ip) = nerror(ip) + 1  
       enddo ! ip
     endsubroutine
