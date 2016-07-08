@@ -13,7 +13,9 @@ DECIMALS = 6 ### 8=all digits, 6 should be enough
 DEFAULT_lmax = 3
 DEFAULT_solver = 3 ## solver=3 is iterative while solver=4 is direct
 DEFAULT_lly = 0 ## lly=0/1 deactivate/activate Lloyd's formula
-ShowMD5 = 1
+ShowMD5 = True
+AllMPIs = True
+HighLmax = True
 
 def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
@@ -41,10 +43,10 @@ def KKR_total_energy(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax
     out, err, tim = run_it("./clearfiles.sh")
     
     global ShowMD5
-    if ShowMD5 > 0:
+    if ShowMD5:
         out, err, tim = run_it("md5sum ./kkr.exe")
         print out
-        ShowMD5 = 0 ## do not show again
+        ShowMD5 = False ## do not show again
     
     for file in glob.glob(os.path.join(inputdir, '*')):
         shutil.copy(file, TESTDIR) ### copy all files from the input directory
@@ -74,56 +76,67 @@ def KKR_total_energy(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax
 class Test_alloys(unittest.TestCase):
     def test_Fe8Co8(self):
        """Test random alloy of 16 atoms"""
-       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4), -42561.32515698, DECIMALS) # about 30 seconds
-       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=2), -42561.32515698, DECIMALS)
-       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=4), -42561.32515698, DECIMALS)
-       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=8), -42561.32515698, DECIMALS)
-       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=16),-42561.32515698, DECIMALS)
+       Etot = -42561.32515698
+       self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4), Etot, DECIMALS) # about 30 seconds
+       if AllMPIs:
+           self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=2), Etot, DECIMALS)
+           self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=4), Etot, DECIMALS)
+           self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=8), Etot, DECIMALS)
+           self.assertAlmostEqual(KKR_total_energy("Fe8Co8", solver=4, nranks=16),Etot, DECIMALS)
 
 class Test_copper(unittest.TestCase):
-     def test_Cu4_lmax(self):
+    def test_Cu4_lmax(self):
         """Test with high lmax. Works only with -heap-arrays on ifort, 4 Cu atoms in the cubic unit cell"""
-        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=3), -13219.36206406, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=4), -13219.71616303, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=5), -13219.60162033, DECIMALS) # about 30 seconds
-        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=6), -13219.56030377, DECIMALS) # about 60 seconds
-        
-        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, nranks=2), -13219.36206406, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, nranks=4), -13219.36206406, DECIMALS)
+        Etot = -13219.36206406
+        self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4), Etot, DECIMALS)
+        if AllMPIs:
+            self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, nranks=2), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, nranks=4), Etot, DECIMALS)
+        if HighLmax:
+            self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=4), -13219.71616303, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=5), -13219.60162033, DECIMALS) # about 30 seconds
+            self.assertAlmostEqual(KKR_total_energy("Cu4", solver=4, lmax=6), -13219.56030377, DECIMALS) # about 60 seconds
 
-     def test_Cu1_lmax(self):
+    def test_Cu1_lmax(self):
         """Test with high lmax. Works only with -heap-arrays on ifort, 1 Cu atoms in the FCC unit cell"""
-        self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=3), -3308.14107181, DECIMALS) # about  2 seconds
-        self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=4), -3308.26072261, DECIMALS) # about  4 seconds
-        self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=5), -3308.22046659, DECIMALS) # about  8 seconds
-        self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=6), -3308.15010032, DECIMALS) # about 16 seconds
+        self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4), -3308.14107181, DECIMALS) # about  2 seconds
+        if HighLmax:
+            self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=4), -3308.26072261, DECIMALS) # about  4 seconds
+            self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=5), -3308.22046659, DECIMALS) # about  8 seconds
+            self.assertAlmostEqual(KKR_total_energy("Cu1", solver=4, lmax=6), -3308.15010032, DECIMALS) # about 16 seconds
 
 class Test_semiconductors(unittest.TestCase):
-     def test_GaN(self):
+    def test_GaN(self):
         """Test semiconductor in zincblende structure with 2 vacancy cells"""
-        self.assertAlmostEqual(KKR_total_energy("GaN", solver=4), -3990.85150060, DECIMALS) # about 3.5 minutes
-        self.assertAlmostEqual(KKR_total_energy("GaN", solver=4, nranks=2), -3990.85150060, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("GaN", solver=4, nranks=4), -3990.85150060, DECIMALS)
+        Etot = -3990.85150060
+        self.assertAlmostEqual(KKR_total_energy("GaN", solver=4, nranks=4), Etot, DECIMALS) # about 80 seconds
+        if AllMPIs:
+            self.assertAlmostEqual(KKR_total_energy("GaN", solver=4, nranks=2), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("GaN", solver=4, nranks=1), Etot, DECIMALS) # about 4 minutes
 
-     def test_Si(self):
+    def test_Si(self):
         """Test semiconductor in diamond structure with 2 vacancy cells"""
-        self.assertAlmostEqual(KKR_total_energy("Si", solver=4), -1155.68952256, DECIMALS) # about a minute
-        self.assertAlmostEqual(KKR_total_energy("Si", solver=4, nranks=2), -1155.68952256, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("Si", solver=4, nranks=4), -1155.68952256, DECIMALS)
+        Etot = -1155.68952256
+        self.assertAlmostEqual(KKR_total_energy("Si", solver=4), Etot, DECIMALS) # about a minute
+        if AllMPIs:
+            self.assertAlmostEqual(KKR_total_energy("Si", solver=4, nranks=2), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("Si", solver=4, nranks=4), Etot, DECIMALS)
 
-     def test_ZnO(self):
+    def test_ZnO(self):
         """Test semiconductor in wurzite structure with 4 vacancy cells and voro_weights"""
         Etot = -7405.77074357 ## test iterative solver (solver=3, default) without and with MPI
-        self.assertAlmostEqual(KKR_total_energy("ZnO"),           Etot, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=2), Etot, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=4), Etot, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=8), Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO"), Etot, DECIMALS)
+        if AllMPIs:
+            self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=2), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=4), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=8), Etot, DECIMALS)
 
         Etot = -7405.77074351
-        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4),           Etot, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=2), Etot, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=4), Etot, DECIMALS)
-        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=8), Etot, DECIMALS)
+        self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4), Etot, DECIMALS)
+        if AllMPIs:
+            self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=2), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=4), Etot, DECIMALS)
+            self.assertAlmostEqual(KKR_total_energy("ZnO", solver=4, nranks=8), Etot, DECIMALS)
 
         Etot = -7405.74826397
         self.assertAlmostEqual(KKR_total_energy("ZnO", nranks=8, lly=1), Etot, DECIMALS)

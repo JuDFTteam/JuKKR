@@ -13,8 +13,8 @@ module BlockSparseRow_mod
   type BlockSparseRow
     integer :: fastBlockDim = 0 !< == (lmax+1)^2
     integer :: slowBlockDim = 0 !< == (lmax+1)^2
-    integer :: mb = 0 !< number of block rows
-    integer :: nb = 0 !< number of block columns !! not in use...
+    integer :: mb = 0 !< number of block rows, slow block dim
+    integer :: nb = 0 !< number of block cols, fast block dim
     integer :: nnzb = 0 !< number of non-zero blocks
     integer, allocatable :: bsrRowPtr(:) !< dim(mb+1)
     integer, allocatable :: bsrColInd(:) !< dim(nnzb)
@@ -29,7 +29,9 @@ module BlockSparseRow_mod
 #define  _bsrEndPtr(i)  %bsrRowPtr(i+1)-1
 #endif
 
-!!! !!! naming in cuSPARSE
+!!! !!! WARNING: here, we use column-major data layout within the blocks!
+!!! !!! naming in cuSPARSE, 
+!!!       blockDim:   fastBlockDim
 !!!       bsrColIndA: bsrColInd
 !!!       bsrRowPtrA: bsrRowPtr
 !!!       bsrEndPtrA: bsrEndPtr
@@ -42,7 +44,7 @@ module BlockSparseRow_mod
   endinterface
   
   interface multiply
-    module procedure multiplyBSR_to_Bvec, multiplyBSR_to_BSR_truncate, multiplyBSR_to_BSR_planned
+    module procedure multiplyBSR_to_Bmat, multiplyBSR_to_BSR_truncate, multiplyBSR_to_BSR_planned
   endinterface
 
   interface destroy
@@ -50,7 +52,7 @@ module BlockSparseRow_mod
   endinterface
 
   type MultBSRplan
-    integer :: N, M, K, nCij, nBlockOps
+    integer :: N, M, K, nCij, nBlockOps, Annzb, BnnzB, Cnnzb
     integer(kind=4), allocatable :: CindNelemStart(:,:) ! dim(4,nCij)
     integer(kind=4), allocatable :: AindBind(:,:) ! dim(2,nBlockOps)
   endtype
@@ -59,34 +61,34 @@ module BlockSparseRow_mod
 
   contains
 
-  subroutine multiplyBSR_to_Bvec(B, Bval, M, Avec, Cvec)
+  subroutine multiplyBSR_to_Bmat(A, Aval, M, Bmat, Cmat)
     !! multiply a blocks sparse operator to a (dense) block vectors
     !! can be used for a single atom per MPI process
     !! could call cuSPARSE GPU kernel
-    type(BlockSparseRow), intent(in) :: B
-#define K B%fastBlockDim
-#define N B%slowBlockDim
-    complex_data_t, intent(in)  :: Bval(K,N,*) ! block list of block sparse operator B
+    type(BlockSparseRow), intent(in) :: A
+#define K A%slowBlockDim
+#define N A%fastBlockDim
+    complex_data_t, intent(in)  :: Aval(M,K,*) ! block list of block sparse operator A
     integer, intent(in) :: M
-    complex_data_t, intent(in)  :: Avec(M,K,*) ! block vector input
-    complex_data_t, intent(out) :: Cvec(M,N,*) ! block vector result
+    complex_data_t, intent(in)  :: Bmat(K,N,*) ! block vector input
+    complex_data_t, intent(out) :: Cmat(M,N,*) ! block vector result
 
     ! .. locals ..
     complex_data_t :: beta
-    integer :: iRow, jCol, Bind
+    integer :: iRow, jCol, Aind
 
-    !$omp parallel do private(iRow, jCol, Bind, beta)
-    do iRow = 1, B%mb
+    !$omp parallel do private(iRow, jCol, Aind, beta)
+    do iRow = 1, A%mb
       beta = zero ! instead of an initialization of Avec to zero
-      do Bind = B%bsrRowPtr(iRow), B _bsrEndPtr(iRow)
-        jCol = B%bsrColInd(Bind)
+      do Aind = A%bsrRowPtr(iRow), A _bsrEndPtr(iRow)
+        jCol = A%bsrColInd(Aind)
 
-        ! now: Cvec(:,:,iRow) = beta*Cvec(:,:,iRow) + Avec(:,:,jCol) .times. Aval(:,:,Bind) 
-        ! use gemm('n', 'n', M, N, K, 1.,  A(1:M,1:K),     M, B(1:K,1:N),     K, 1.,   C(1:M,1:N),     M)
-        call zgemm('n', 'n', M, N, K, one, Avec(:,1,jCol), M, Bval(:,1,Bind), K, beta, Cvec(:,1,iRow), M)
+        ! now: Cval[:,:,Cind] += Aval[:,:,Aind] .times. Bval[:,:,Bind] ! GEMM:  C(m,n) += A(m,k)*B(k,n)
+        !                    M  N  K       A                  B                        C
+        call zgemm('n', 'n', M, N, K, one, Aval(:,1,jCol), M, Bmat(:,1,Aind), K, beta, Cmat(:,1,iRow), M)
 
         beta = one ! simply add all further contributions in this row
-      enddo ! Bind
+      enddo ! Aind
     enddo ! iRow
     !$omp end parallel do
 
@@ -95,23 +97,24 @@ module BlockSparseRow_mod
   endsubroutine ! multiply
 
   
-  subroutine multiplyBSR_to_BSR_truncate(A, Aval, B, Bval, Cval, GiFlop)
-    type(BlockSparseRow), intent(in) :: A !< Green function
-    type(BlockSparseRow), intent(in) :: B !< Matrix to be inverted
-!!! type(BlockSparseRow), intent(in) :: C !< Result operator (argument is not needed since the structure of C is that of A)
-#define C A
-#define M A%fastBlockDim
-#define N B%fastBlockDim
+  subroutine multiplyBSR_to_BSR_truncate(A, Aval, B, Bval, C, Cval, GiFlop) ! unplanned
+    type(BlockSparseRow), intent(in) :: A !< Matrix to be inverted
+    type(BlockSparseRow), intent(in) :: B !< Green function
+    type(BlockSparseRow), intent(in) :: C !< Result operator
+#define M C%fastBlockDim
+#define N C%slowBlockDim
 #define K B%fastBlockDim
     complex_data_t, intent(in)  :: Aval(M,K,*) ! input  block list 
-    complex_data_t, intent(in)  :: Bval(K,N,*) ! input  block list of (square) operator B
-    complex_data_t, intent(out) :: Cval(M,N,*) ! result block list, assume C to have the same structure as A
+    complex_data_t, intent(in)  :: Bval(K,N,*) ! input  block list
+    complex_data_t, intent(out) :: Cval(M,N,*) ! result block list
     real, intent(out), optional :: GiFlop
 
     ! .. locals ..
     integer :: iRow, jCol, kCol, Aind, Bind, Cind
     integer(kind=8) :: nBlockOps
 
+    if (K /= A%slowBlockDim) stop __LINE__
+    
     nBlockOps = 0
 
     !$omp parallel
@@ -133,11 +136,11 @@ module BlockSparseRow_mod
 #endif
 
 #define   jRow jCol
-          Aind = exists(A, jRow, kCol) ! find out, if A_full(jRow,kCol) exists
+          Aind = exists(A, jRow, kCol) ! find out, if A_full[jRow,kCol] exists
           if (Aind > -1) then ! yes
 
-            ! now: Cval(:,:,Cind) = one*Cval(:,:,Cind) + Aval(:,:,Aind) .times. Aval(:,:,Bind) 
-            ! use gemm('n', 'n', M, N, K, 1.,  A(1:M,1:K),     M, B(1:K,1:N),     K, 1.,  C(1:M,1:N),     M)
+            ! now: Cval[:,:,Cind] += Aval[:,:,Aind] .times. Bval[:,:,Bind] ! GEMM:  C(m,n) += A(m,k)*B(k,n)
+            !                    M  N  K       A                  B                       C
             call zgemm('n', 'n', M, N, K, one, Aval(:,1,Aind), M, Bval(:,1,Bind), K, one, Cval(:,1,Cind), M)
 
             nBlockOps = nBlockOps + 1
@@ -157,7 +160,6 @@ module BlockSparseRow_mod
 #undef K
 #undef M
 #undef N
-#undef C
   endsubroutine ! multiply
 
   
@@ -176,18 +178,18 @@ module BlockSparseRow_mod
   
   subroutine multiplyBSR_to_BSR_planned(p, Aval, Bval, Cval)
     type(MultBSRplan), intent(in) :: p !> plan
-    complex_data_t, intent(in)  :: Aval(p%M,p%K,*) ! input  block list 
-    complex_data_t, intent(in)  :: Bval(p%K,p%N,*) ! input  block list of (square) operator B
-    complex_data_t, intent(out) :: Cval(p%M,p%N,*) ! result block list
+    complex_data_t, intent(in)  :: Aval(:,:,:) ! (p%M,p%K,*) ! input  block list 
+    complex_data_t, intent(in)  :: Bval(:,:,:) ! (p%K,p%N,*) ! input  block list of (square) operator B
+    complex_data_t, intent(out) :: Cval(:,:,:) ! (p%M,p%N,*) ! result block list
 
     ! .. locals ..
     complex_data_t :: beta
     integer :: iCij, start, ielem, Aind, Bind, Cind, Nelem
 
     ! these asserts work only with deferred shape arrays
-    ! assert(all(shape(Aval) == [p%M,p%K,A%nnzb]))
-    ! assert(all(shape(Bval) == [p%K,p%N,B%nnzb]))
-    ! assert(all(shape(Cval) == [p%M,p%N,C%nnzb]))
+    if(any(shape(Aval) /= [p%M,p%K,p%Annzb])) stop __LINE__
+    if(any(shape(Bval) /= [p%K,p%N,p%Bnnzb])) stop __LINE__
+    if(any(shape(Cval) /= [p%M,p%N,p%Cnnzb])) stop __LINE__
     
     !$omp parallel
     
@@ -201,8 +203,8 @@ module BlockSparseRow_mod
         Aind = p%AindBind(1,start + ielem)
         Bind = p%AindBind(2,start + ielem)
 
-        ! now: Cval(:,:,Cind) = one*Cval(:,:,Cind) + Aval(:,:,Aind) .times. Bval(:,:,Bind)
-        ! use gemm('n', 'n',   M,   N,   K,  1., A(1:M,1:K),       M, B(1:K,1:N),       K, beta, C(1:M,1:N),       M)
+        ! now: Cval[:,:,Cind] += Aval[:,:,Aind] .times. Bval[:,:,Bind] ! GEMM:  C(m,n) += A(m,k)*B(k,n)
+        !                      M    N    K       A                    B                          C
         call zgemm('n', 'n', p%M, p%N, p%K, one, Aval(:,1,Aind), p%M, Bval(:,1,Bind), p%K, beta, Cval(:,1,Cind), p%M)
 
         beta = one
@@ -223,12 +225,13 @@ module BlockSparseRow_mod
     type(BlockSparseRow), intent(in) :: C !< operator structure, same for A and B assumed
     complex_data_t, intent(out) :: Cval(:,:,:) ! result block list dim(fastBlockDim,slowBlockDim,nnzb)
     complex_data_t, intent(in)  :: Aval(:,:,:) ! input  block list dim(fastBlockDim,slowBlockDim,nnzb)
-    complex_data_t, intent(in)  :: diag(:,:)   ! diagonal matrix,  dim(fastBlockDim,nb)
+    complex_data_t, intent(in)  :: diag(:,:)   ! diagonal matrix,  dim(slowBlockDim,nb)
     complex_data_t, intent(in), optional :: Bval(:,:,:) ! input    dim(fastBlockDim,slowBlockDim,nnzb)
     real, intent(out), optional :: GiFlop
 
     ! .. locals ..
-    integer :: iRow, jCol, Cind, islow
+!   integer :: iRow
+    integer :: jCol, Cind, islow
     complex_data_t :: bvec(C%fastBlockDim)
 
       if (any(shape(Cval) /= [C%fastBlockDim, C%slowBlockDim, C%nnzb])) stop __LINE__
@@ -236,31 +239,50 @@ module BlockSparseRow_mod
       if (any(shape(Cval) /= shape(Bval))) stop __LINE__
     endif
       if (any(shape(Cval) /= shape(Aval))) stop __LINE__
- 
-      if (any(shape(diag) /= [C%fastBlockDim, C%nb]) stop __LINE__ 
+
       ! there could also be other variants: C%slowBlockDim, C%mb, i.e. possible 4 combination
       ! for those that use chack against C%nb and use jCol, we can flatten the loop into:
       !     do Cind = 1, C _bsrEndPtr(C%mb) ; jCol = C%bsrColInd(Cind) ; doIt ; enddo
       ! or  do Cind = 1, C%nnzb ; jCol = C%bsrColInd(Cind) ; doIt ; enddo
-
-    !$omp parallel
-
-    !$omp do private(iRow, jCol, Cind, islow, bvec)
-    do iRow = 1, C%mb
+      
+    !$omp parallel private(bvec)
+    
+      if (any(shape(diag) /= [C%slowBlockDim, C%nb])) stop __LINE__ ! multiply diag(::) to the fast dimensions
+      
       bvec(:) = 0
-      do Cind = C%bsrRowPtr(iRow), C _bsrEndPtr(iRow) ; jCol = C%bsrColInd(Cind)
-
+      !$omp do private(iRow, jCol, Cind, islow, bvec)
+      do Cind = 1, C _bsrEndPtr(C%mb) ; jCol = C%bsrColInd(Cind)
+#ifdef BSRX
+#warning   'Gaps in the BSRX format be ignored!'
+#endif
           do islow = 1, C%slowBlockDim
             if (present(Bval)) bvec(:) = Bval(:,islow,Cind)
-            Cval(:,islow,Cind) = Aval(:,islow,Cind)*diag(:,jCol) + bvec(:)
+            Cval(:,islow,Cind) = Aval(:,islow,Cind)*diag(islow,jCol) + bvec(:)
           enddo ! islow
 
       enddo ! Cind
-    enddo ! iRow
+      !$omp end do
+
+!     !!! multiplying diag from the other side:
+!
+!     if (any(shape(diag) /= [C%fastBlockDim, C%mb])) stop __LINE__ ! multiply diag(::) to the slow dimensions
+!    
+!     !$omp do private(iRow, Cind, islow, bvec)
+!     do iRow = 1, C%mb
+!       bvec(:) = 0
+!       do Cind = C%bsrRowPtr(iRow), C _bsrEndPtr(iRow)
+! 
+!         do islow = 1, C%slowBlockDim
+!           if (present(Bval)) bvec(:) = Bval(:,islow,Cind)
+!           Cval(:,islow,Cind) = Aval(:,islow,Cind)*diag(:,iRow) + bvec(:)
+!         enddo ! islow
+! 
+!       enddo ! Cind
+!     enddo ! iRow
     !$omp end do
-    
+
     !$omp end parallel
-    
+
     if (present(GiFlop)) GiFlop = C%fastBlockDim*8.*C%slowBlockDim*.5d0**30*C%nnzb ! assume a complex data_t, so each FMA has 8 Flop
   endsubroutine ! fusedMultiplyAdd
  
@@ -269,18 +291,22 @@ module BlockSparseRow_mod
   
   subroutine create_multBRSplan(p, A, B, C, GiFlop)
     type(MultBSRplan), intent(inout) :: p !> plan
-    type(BlockSparseRow), intent(in) :: A !< Green function
-    type(BlockSparseRow), intent(in) :: B !< Matrix to be inverted 
+    type(BlockSparseRow), intent(in) :: A !< Matrix to be inverted 
+    type(BlockSparseRow), intent(in) :: B !< Green function
     type(BlockSparseRow), intent(in) :: C !< Result operator
     real, intent(out), optional :: GiFlop
 
     ! .. locals ..
-    integer :: iRow, jCol, kCol, Bind, Cind, Aind, i01, ist, Nelem, nCij, Start
+    integer :: iRow, kCol, jCol, Bind, Cind, Aind, i01, ist, Nelem, nCij, Start
     integer(kind=8) :: nBlockOps
 
     p%M = A%fastBlockDim
-    p%N = B%fastBlockDim
+    p%N = B%slowBlockDim
     p%K = p%N
+    
+    p%Annzb = A%nnzb
+    p%Bnnzb = B%nnzb
+    p%Cnnzb = C%nnzb
 
     deallocate(p%CindNelemStart, stat=ist)
     allocate(p%CindNelemStart(4,C%nnzb))
@@ -293,33 +319,33 @@ module BlockSparseRow_mod
       nCij = 0
 
       do iRow = 1, C%mb
-        do Cind = C%bsrRowPtr(iRow), C _bsrEndPtr(iRow) ; kCol = C%bsrColInd(Cind)
-          ! update matrix block element C_full(kCol,iRow)
+        do Cind = C%bsrRowPtr(iRow), C _bsrEndPtr(iRow) ; jCol = C%bsrColInd(Cind)
+          ! update matrix block element C_full[iRow,jCol]
           
           nCij = nCij + 1
           Nelem = 0
           
-          do Bind = B%bsrRowPtr(iRow), B _bsrEndPtr(iRow) ; jCol = B%bsrColInd(Bind)
-            ! for each matrix block element B_full(jCol,iRow)
+          do Aind = A%bsrRowPtr(iRow), A _bsrEndPtr(iRow) ; kCol = A%bsrColInd(Aind)
+            ! for each matrix block element A_full[iRow,kCol]
 
-#define     jRow jCol
-            ! find out, if A_full(jRow,kCol) exists
-            Aind = exists(A, jRow, kCol) ! find out, if A_full(jRow,kCol) exists
-            if (Aind > -1) then ! yes
+#define     kRow kCol
+            ! find out, if B_full[kRow,jCol] exists
+            Bind = exists(B, kRow, jCol) ! find out, if B_full[kRow,jCol] exists
+            if (Bind > -1) then ! yes
 
-              if(Aind > A%nnzb) stop 'Aind too large' ! DEBUG
+              if(Bind > B%nnzb) stop 'Bind too large' ! DEBUG
               
-              ! now: Cval(:,:,Cind) = one*Cval(:,:,Cind) + Aval(:,:,Aind) .times. Aval(:,:,Bind) 
-              ! use gemm('n', 'n', M, N, K, 1., A(1:M,1:K,Aind), M, B(1:K,1:N,Bind), K, 1., C(1:M,1:N,Cind), M)
+              ! now: Cval(:,:,Cind) += Aval(:,:,Aind) .times. Bval(:,:,Bind) 
+              ! use gemm('n', 'n', M, N, K, 1., A(m,k,Aind), M, B(k,n,Bind), K, 1., C(m,n,Cind), M)
 
               Nelem = Nelem + 1
               if (i01 > 0) p%AindBind(:,Start + Nelem) = [Aind, Bind]
               nBlockOps = nBlockOps + 1
 
-            endif ! A(jRow,kCol) exists
-#undef      jRow
+            endif ! B_full[kRow,jCol] exists
+#undef      kRow
 
-          enddo ! Bind
+          enddo ! Aind
           
           p%CindNelemStart(:,nCij) = [nCij, Nelem, Start, 0]
           Start = Start + Nelem
@@ -334,11 +360,11 @@ module BlockSparseRow_mod
         deallocate(p%AindBind, stat=ist)
         allocate(p%AindBind(2,p%nBlockOps))
         p%AindBind(:,:) = 0 ! init
-      else
-        if (p%nBlockOps /= nBlockOps) stop 'fatal counting error!'
       endif
 
     enddo ! i01
+    if (p%nCij      /= nCij     ) stop 'fatal counting error! (nCij)'
+    if (p%nBlockOps /= nBlockOps) stop 'fatal counting error! (nBlockOps)'
     if (present(GiFlop)) GiFlop = nBlockOps*(p%M*8.*p%N*.5d0**30*p%K) ! assume a complex data_t, so each FMA has 8 Flop
   endsubroutine ! create
 
@@ -395,9 +421,9 @@ module BlockSparseRow_mod
   subroutine createBSR_from_full(self, values, bsrVal)
     !! get the data from a dense block-matrix
     type(BlockSparseRow), intent(inout) :: self
-    complex_data_t, intent(in) :: values(:,:,:,:) !< dim(N,nb,M,mb)
-    complex_data_t, allocatable, intent(inout), optional :: bsrVal(:,:,:) !< dim(N,M,nnz) ! warning: allocation inside this routine
-    
+    complex_data_t, intent(in) :: values(:,:,:,:) !< dim(fast,nb,slow,mb)
+    complex_data_t, allocatable, intent(inout), optional :: bsrVal(:,:,:) !< dim(fast,slow,nnzb) ! warning: allocation inside this routine
+
     integer :: ist, iRow, Bind, jCol
     logical(kind=1), allocatable :: nz(:,:)
     
@@ -411,9 +437,9 @@ module BlockSparseRow_mod
 
     if (present(bsrVal)) then
       deallocate(bsrVal, stat=ist)
-      allocate(bsrVal(self%fastBlockDim,self%fastBlockDim,self%nnzb), stat=ist)
+      allocate(bsrVal(self%fastBlockDim,self%slowBlockDim,self%nnzb), stat=ist)
     endif
-    
+
     allocate(self%bsrColInd(self%nnzb), self%bsrRowPtr(self%mb+1), stat=ist)
 
     Bind = 0
@@ -467,16 +493,16 @@ program test_bsr
   use BlockSparseRow_mod !, only:
 implicit none
   character(len=8) :: CLarg(0:3)
-  integer, parameter :: ShowC=0, ShowA=0, ShowB=0, Bfill=16, N = 1 ! BlockSize
+  integer, parameter :: ShowC=0, ShowA=0, ShowB=0, Afill=16, N = 1 ! BlockSize
   integer :: ilen, ios, iarg, Nrows, Mcols, iRow, jCol, Cind, kCol, ip, nerror(19)=0
-  double precision, parameter :: Afill=0.5, point=.5d0**10
+  double precision, parameter :: Bfill=0.5, point=.5d0**10
   double precision :: col, elem
 #define real_data_t double precision
 #define gemm DGEMM
   external :: gemm ! BLAS matrix matrix multiplication
   real_data_t, parameter :: one = 1.0, zero = 0.0
-  real_data_t, allocatable :: Bfull(:,:), Afull(:,:), Cfull(:,:)
-  complex_data_t, allocatable :: Cval(:,:,:), Aval(:,:,:), Bval(:,:,:)
+  real_data_t,    allocatable :: Afull(:,:),  Bfull(:,:),  Cfull(:,:)
+  complex_data_t, allocatable :: Aval(:,:,:), Bval(:,:,:), Cval(:,:,:)
   type(BlockSparseRow) :: A, B!,C==A operators
   real :: GiFlop
   
@@ -489,54 +515,60 @@ implicit none
   read(unit=CLarg(2), fmt=*) Mcols
 
 #define Krows Nrows
-  allocate(Cfull(Mcols,Nrows), Afull(Mcols,Krows), Bfull(Krows,Nrows)) ! C:=A*B
-  Bfull = zero ; Afull = zero ; Cfull = zero
-  
+#define Kcols Krows
+  allocate(Afull(Mcols,Krows), Bfull(Kcols,Nrows), Cfull(Mcols,Nrows)) ! C:=A*B
+  Afull = zero ; Bfull = zero ; Cfull = zero
+
   do iRow = 1, Nrows
-    ! fill H
-    do while(count(Bfull(:,iRow) /= 0) < min(Bfill, Nrows))
-      call random_number(col) ; jCol = ceiling(col*Krows)
-!     if(ShowB>0) write(*, fmt="(A,9I6)") 'rand B',jCol,iRow
-      Bfull(jCol,iRow) = jCol + point * iRow
-    enddo ! while
-    if(ShowB>0) write(*, fmt="(A,I4,99F9.4)") 'B',jCol,Bfull(1:min(Krows, 8),jCol)
-    ! fill G
-    do while(count(Afull(:,iRow) /= 0) < Afill*Mcols)
+    ! fill A (Hamiltonian)
+    do while(count(Afull(:,iRow) /= 0) < min(Afill, Mcols))
       call random_number(col) ; jCol = ceiling(col*Mcols)
-!     if(ShowA>0) write(*, fmt="(A,9I6)") 'rand G',jCol,iRow
+!     if(ShowA>0) write(*, fmt="(A,9I6)") 'rand G',iRow,jCol
       Afull(jCol,iRow) = jCol + point * iRow
     enddo ! while
     if(ShowA>0) write(*, fmt="(A,I4,99F9.4)") 'A',iRow,Afull(1:min(Mcols, 8),iRow)
+    ! fill B (Green function)
+    do while(count(Bfull(:,iRow) /= 0) < Bfill*Kcols)
+      call random_number(col) ; jCol = ceiling(col*Kcols)
+!     if(ShowB>0) write(*, fmt="(A,9I6)") 'rand B',iRow,jCol
+      Bfull(jCol,iRow) = jCol + point * iRow
+    enddo ! while
+    if(ShowB>0) write(*, fmt="(A,I4,99F9.4)") 'B',iRow,Bfull(1:min(Kcols, 8),iRow)
   enddo ! iCol
 
   ! create reference A an m x k matrix, B a k x n matrix and C an m x n matrix
-  !                   M      N      K           A             B                   C
+  !                   M      N      K           A             B                   C             ! GEMM:  C(m,n) += A(m,k)*B(k,n)
   call gemm('n', 'n', Mcols, Nrows, Krows, one, Afull, Mcols, Bfull, Krows, zero, Cfull, Mcols) ! BLAS routine
-  !!! do j = 1, n ;  do l = 1, k ;  do i = 1, m ;   c(i,j) = c(i,j) + b(l,j)*a(i,l)   ; enddo ; enddo ; enddo
-  ! do j = 1, Nrows ;  do l = 1, Nrows ;  do i = 1, Mcols ; Cfull(i,j) = Cfull(i,j) + Bfull(l,j)*Afull(i,l) ; enddo ; enddo ; enddo
+
+! #ifdef FULL_DEBUG
+#if 1
+!+full_debug
 
   nerror = 0
   do iRow = 1, Nrows
     if(ShowC>0) write(*, fmt="(A,I4,99F9.4)") 'R',iRow,Cfull(1:min(Mcols, 8),iRow)/Nrows
     do kCol = 1, Mcols
-      elem = dot_product(Bfull(:,iRow), Afull(kCol,:)) ! simple evaluation of a single element of a matrix-matrix product
+      elem = dot_product(Bfull(:,iRow), Afull(kCol,:)) ! simple evaluation of a single element of a matrix-matrix product, but very slow
       do ip = 1, ubound(nerror, 1)
         if (abs(elem - Cfull(kCol,iRow)) > .1d0**ip) nerror(ip) = nerror(ip) + 1  
       enddo ! ip
     enddo ! kCol
   enddo ! iRow
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(Mcols*.01*Nrows)
+  
+!-full_debug
+#endif 
 
   call create(A, dcmplx(reshape(Afull, [1,Mcols,1,Krows])), bsrVal=Aval)
   call create(B, dcmplx(reshape(Bfull, [1,Krows,1,Nrows])), bsrVal=Bval)
-
-  !! use the sparse structure of A for C
-#define C A
+  
+  !! use the sparse structure of B for C
+#define C B
   allocate(Cval(1,1,C%nnzb))
   Cval = 0
 
-  ! API: multiply(A, Aval, G, Aval, Cval, GiFlop)
-  call multiply(A, Aval, B, Bval, Cval, GiFlop=GiFlop)
+  ! API: multiply(A, Aval, G, Aval, C, Cval, GiFlop)
+  call multiply(A, Aval, B, Bval, C, Cval, GiFlop=GiFlop)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop'
 
   nerror = 0
@@ -551,6 +583,8 @@ implicit none
   enddo ! iRow
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(Mcols*.01*Nrows)
 
+  stop
+  
   !============================
   Cval = 0
   
@@ -579,6 +613,7 @@ implicit none
   call destroy(B)
   call destroy(A)
 #undef Krows
+#undef Kcols
 endprogram ! test
 
 !- TESTMAIN_BlockSparseRow
