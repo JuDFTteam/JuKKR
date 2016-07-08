@@ -37,9 +37,9 @@
   \and
   Roman Kovacik\inst{2}
   \and
-  Markus Eisenbach\inst{1}
-  \and
   Khorgolkhuu Odbadrakh\inst{4}
+  \and
+  Markus Eisenbach\inst{1}
 }
 
 \institute{ 
@@ -73,8 +73,6 @@ Oak Ridge, Tennessee 37831, USA
 This document describes the framework of a newly-established strong collaboration
 between the Oak Ridge National Laboratory (ORNL) represented by Dr. Markus Eisenbach
 and Forschungszentrum J\"ulich GmbH (FZJ) represented by Dr. Rudolf Zeller.
-A Memorandum of Understanding between the two research facilities has been set in place 20?? 
-that fosters such direct collaborations on a scientific level.
 The aim of the collaboration is to promote the development of multiple scattering methods
 for scalable high performance calculations in the framework of density functional theory
 and related approaches towards the electronics and magentic structure of materials.
@@ -94,7 +92,7 @@ In the following section \ref{section:apps}, a short description of the code pac
 Then common features and major differences between the two implementations are pointed out in section \ref{section:differ}.
 We identify common goals for the future of the two applications in section \ref{section:common}
 and highlight selected technical challenges that have to be overcome for reaching these goals in section \ref{section:tech}.
-Finally, we summarize the aim of this collaboration in section \ref{section:summary}.
+Finally, we summarize the contents of this collaboration in section \ref{section:summary}.
 
 % ==================================================================================================
 \section{Applications} \label{section:apps}
@@ -107,7 +105,7 @@ These implementations, the \LSMS{} code and \KKRnano{} from ORNL and FZJ, respec
 % ..................................................................................................
 \subsection{KKRnano} \label{section:kkrnano}
 % ..................................................................................................
-\KKRnano{} is an implementation of the Korringa-Kohn-Rostoker multiple scattering method \cite{korringa, kohn-rostoker}
+\KKRnano{} is an implementation of the Korringa-Kohn-Rostoker multiple scattering method \cite{PhysRevB.52.8807,PhysRevB.85.235103}
 that allows to solve for the Green function of a system consisting of many atoms.
 The decomposition of the simulation volume into Voronoi cells has shown to be a good
 approach for a precise description of relevant physical quantities on radial grids within each cell.
@@ -135,14 +133,14 @@ of atoms inside a given radius that defines the interaction zone. This reduces t
 complexity for the solution of the Dyson equation from quadratic to linear.
 Parallel processing is implemented for distributed memory (MPI) and on a thread level (OpenMP).
 Both paradigms may be activated at the same time so that huge levels of concurrency 
-(> 1M) can be exploited to reduce the time-to-solution.
+($> \,$1M) can be exploited to reduce the time-to-solution.
 
 % ..................................................................................................
 \subsection{LSMS} \label{section:lsms}
 % ..................................................................................................
 %\todo[inline]{to be written}
 
-\LSMS{}\cite{Wang1995}, like \KKRnano{} implements the multiple
+\LSMS{}\cite{PhysRevLett.75.2867}, like \KKRnano{} implements the multiple
 scattering KKR formalism in real space to calculate the Green's
 function of condensed matter systems and it follows the same
 fundamental decomposition of space into atomic cells and empty cells
@@ -152,7 +150,7 @@ calculation of the scattering path matrix, which limits the size of
 the local interaction zone to $O(100)$ scattering sites.
 
 In addition of non relativistic and scalar relativistic
-calculations,\LSMS{} allows the solution of the fully relativistic
+calculations, \LSMS{} allows the solution of the fully relativistic
 Dirac equation for electron scattering. Thus all relativistic effects
 including spin-orbit interactions are accounted for, which allows the
 calculation of magnetocrystaline anisotropy energies and
@@ -376,6 +374,6 @@ We thank Jack Wells and Tjerk Straatsma from ORNL and Dirk Pleiter and Stefan Bl
 for their efforts making this collaboration possible.
 
 % ==================================================================================================
-% \bibliographystyle{plain} \bibliography{KKR} %% KKR.bib file
+\bibliographystyle{plain} \bibliography{KKR} %% KKR.bib file
 % ==================================================================================================
 \end{document}
