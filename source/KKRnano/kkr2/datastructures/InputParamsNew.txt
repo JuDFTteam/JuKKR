@@ -1,56 +1,91 @@
-i fred 1
-i icst 4
-i kpre 0
+#### lattice parameter in units of the Bohr radius
+d alat 1.0
+### bravais vectors
 dv bravais_a 3
 dv bravais_b 3
 dv bravais_c 3
+### t = use Cartesian coordinates, f = use lattice coordinates
+l cartesian .TRUE.
+### number of k-points in each direction
+iv bzdivide 3 8
+### reference cluster radius
+d rclust 1.5
+### valence energy contour
+### lower energy of contour, unit: Rydberg 
+d emin
+### upper energy of contour (only for DOS calculation)
+d emax
+### Number of Matsubara poles, npol=0 triggers DOS calculation
+i npol
+### number of points starting at emin, parallel to imaginary axis 
+i npnt1
+### number of points parallel to real axis starting from emin + imag part. 
+i npnt2
+### number of points parallel to real axis in interval (E_F - 30*k*T + imag, E_F + imag) 
+i npnt3
+### artificial temperature (Kelvin) for energy broadening, determines together with npol the distance from real axis
+d tempr 800.0
+### semicore contour 
+### lower energy of contour, unit: Rydberg 
+d ebotsemi 0.0
+### upper energy of contour
+d emusemi  0.0
+### semicore charge renormalization factor (default=1.0)
+d fsemicore 1.0
+### number of points in semicore contour as 3d-vector, e.g. (2,10,2)
+iv npntsemi 3 0
+### solver mode: 3=iterative(default), 4=direct, 5=GPU
+i solver 3
+### number of self-consistency steps
+i scfsteps
+### mixing method (0,1=straight mixing; 4=Broyden's 2nd method, 5=gen. Anderson mixing,
+### 6=Broyden's 2nd method for >1 atom per process)
+i imix 0
+### straight mixing parameter
+d mixing
+### mix (V_up - V_down) with a mixing parameter 'fcm' times larger than 'mixing'
+d fcm 20.0
+### abort self-consistency loop when target_rms error has been reached
+d target_rms 1.0D-8
+### Ewald sum cutoff in reciprocal/real space
 d gmax
 d rmax
-d qmrbound 1.0D-6
-#i kvrel use nsra instead
-i nsra 2
+### XC functional: LDA-VWN (Vosko-Wilk-Nusair) = 2, GGA-PW91 = 3, GGA-PBE = 4, GGA-PBEsol = 5
 i kxc 2
-d tempr 800.0
-d alat 1.0
-d rclust 1.5
-d mixing
-d fcm 20.0
-i scfsteps
+### for TFQMR solver: convergence reached if relative residual is smaller than 'qmrbound'
+d qmrbound 1.0D-6
+### single site solver (0/1 -> Fredholm/Volterra)
+i volterra 0
+## num. Born iterations for non-spherical potential
+i icst 4
+### print more information
+i kpre 0
+### 1=calculate forces
 i kforce 1
-d emin
-d emax
-l jij .FALSE.
+### use LDA+U
 l ldau .FALSE.
-l cartesian .TRUE.
-d rcutjij 2.30
+### 1=non-scalar-relativistic 2=scalar-relativistic
+i nsra 2
+### 1=calculate energies, -1 = total energy only, less I/O
 i kte 1
-i imix 0
-iv bzdivide 3 8
-i npol
-i npnt1
-i npnt2
-i npnt3
-# new parameters for shapefunctions
+### calculate exchange couplings
+l jij .FALSE.
+### calculate exchange coupling constants with sites within this radius
+d rcutjij 2.30
+### radius of cluster used for internal Voronoi
 d rclust_voronoi
+### minimum number of points per panel in internal Voronoi
 i nmin_panel 7
+### number of points for 'muffin-tinization', create shape-function for num_MT_points in MT region, used to restrict core wavefunction to MT region
 i num_MT_points 10
+### determines how to set new MT-radius, choose 0.0 < MT_scale < 1.0 as factor to scale maximal MT radius to new MT radius
 d MT_scale 0.98
+### # Reference potential, Radius of repulsive reference potential, RMT_ref_scale <= 0.0: use same radius as for muffin-tin sphere, otherwise use RMT_ref_scale * (max. possible muffin tin radius)
 d RMT_ref_scale 0.995
 ### distance truncation is expressed as radius for lmax (in alat units)
 d cutoff_radius -1.d0
 ### l-dependent distance truncation is expressed as radii for s,p,d,f,g,h (alat units)
 dv lcutoff_radii 9 0.d0
-### solver mode: 3=iterative(default), 4=direct
-i solver 3
-### semicore contour
-d ebotsemi 0.0
-d emusemi  0.0
-d fsemicore 1.0
-iv npntsemi 3 0
-### single site solver
-i volterra 0
-### other
-d target_rms 1.0D-8
 ### near field corrections (default = 0)
 i near_field 0
 ### activate Voronano feature
@@ -61,6 +96,7 @@ i write_shapes 0
 d mt_zero_shift 0.0
 ### DEBUG: replace calculated charge densities with Morgan test charge density
 i DEBUG_morgan_electrostatics 0
+### use full Brillouin zone
 l fullbz .FALSE.
 ### repulsive reference potential
 d vref 8.d0

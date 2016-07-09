@@ -130,7 +130,7 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer::IEND
   integer::NSPIN !in
   integer::NSRA  !in
-  integer::FRED  !in
+!  integer::FRED  !in
   double complex :: WEZRN(IEMXD,2)  ! out
   double precision::RNORM(IEMXD,2)  !out
   double complex :: GMATN((LMAX+1)**2, (LMAX+1)**2, IEMXD, NSPIN) ! inout?

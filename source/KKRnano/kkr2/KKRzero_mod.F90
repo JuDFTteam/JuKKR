@@ -189,7 +189,7 @@ module KKRzero_mod
 ! ======================================================================
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
-                 arrays%dsymll, params%bzdivide, emesh%ielast, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
+                 arrays%dsymll, params%bzdivide, emesh%ielast, emesh%iesemicore, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
                  dims%lmaxd, krel, dims%ekmd, params%fullbz, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
     
 !   Conversion of rmax and gmax to atomic units

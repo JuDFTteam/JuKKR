@@ -52,7 +52,7 @@ module BrillouinZone_mod
   
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
-                     dsymll, intervxyz, ielast, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, fullbz, nowrite, kpms)
+                     dsymll, intervxyz, ielast, iesemicore, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, fullbz, nowrite, kpms)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh!, create, load, store, destroy
 
@@ -62,7 +62,7 @@ module BrillouinZone_mod
     logical, intent(in)  :: fullbz
     integer, intent(in)  :: naez, krel, lmax, iemxd
     integer, intent(out) :: nsymat, maxmesh
-    integer, intent(in)  :: intervxyz(3), ielast
+    integer, intent(in)  :: intervxyz(3), ielast, iesemicore
     double complex, intent(out) :: dsymll((lmax+1)**2,(lmax+1)**2,nsymaxd) ! (lmmaxd,lmmaxd,nsymaxd)
     double complex, intent(in) :: ez(iemxd)
     double precision, intent(in) :: bravais(3,3), rbasis(3,naez), recbv(3,3)
@@ -98,7 +98,7 @@ module BrillouinZone_mod
     endif ! full Brillouin zone
 
     ! generate Brillouin zone k-meshes
-    call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
+    call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, iesemicore, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
 
     call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
 
@@ -106,9 +106,9 @@ module BrillouinZone_mod
   endsubroutine ! bzkint0
 
       
-  subroutine bzkmesh(nbxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
+  subroutine bzkmesh(nbxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, iesemicore, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, store, destroy
-    integer, intent(in) :: iemxd, nbxyz(3), nsymat, iprint, ielast
+    integer, intent(in) :: iemxd, nbxyz(3), nsymat, iprint, ielast, iesemicore
     logical, intent(in) :: lirr, nowrite
     double precision, intent(in) :: bravais(3,3), recbv(3,3), rsymat(64,3,3)
     integer, intent(in) :: isymindex(:) !< dim(nsymaxd)
@@ -130,7 +130,11 @@ module BrillouinZone_mod
       warn(6, "kmesh fixed to"+nbxyz)
     else
       do ie = 1, ielast
-        n = int(1.001d0 + log(dimag(ez(ie))/dimag(ez(ielast)))/log(2.d0)) ! ToDo: there is a more accurate formula
+        if (ie <= iesemicore) then !TEST: set kmesh=4 for all semicore contour points
+          n = 4
+        else
+          n = int(1.001d0 + log(dimag(ez(ie))/dimag(ez(ielast)))/log(2.d0)) ! ToDo: there is a more accurate formula
+        endif
         kmesh(ie) = max(1, n)
         maxmesh = max(maxmesh, kmesh(ie))
 !       write(*, '(a,f16.6,f12.6,9(a,i0))') 'renormalized energy:',ez(ie)/dimag(ez(ielast)),'  n=',n,'  kmesh(',ie,')=',kmesh(ie),'  max=',maxmesh
