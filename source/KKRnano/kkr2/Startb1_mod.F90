@@ -226,7 +226,7 @@ module Startb1_mod
       irid = sfile%mesh(cell_index)%meshn
 
       call create(atom, iatom, lpot, nspin, irmind, irmd) ! createBasisAtom
-      call create(meshdata, irmd, ipand, irid, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
+      call create(mesh, irmd, ipand, irid, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
 
       ! set potential
       do ispin = 1, nspin
@@ -236,7 +236,7 @@ module Startb1_mod
       enddo ! ispin
 
       ! initialise radial mesh
-      call initRadialMesh(meshdata, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, &
+      call initRadialMesh(mesh, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, &
                           sfile%mesh(cell_index)%nm, irmd-irid, irns, &
                           irid, sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, &
                           sfile%shapes(cell_index)%thetas)

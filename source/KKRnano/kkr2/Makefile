@@ -282,7 +282,6 @@ strmat_new.o: Exceptions_mod.o
 one_sided_commZ_mod.o: ChunkIndex_mod.o 
 one_sided_commI_mod.o: ChunkIndex_mod.o 
 one_sided_commD_mod.o: ChunkIndex_mod.o 
-ClusterInfo_mod.o: one_sided_commI_mod.o
 RadialMeshData_mod.o: Exceptions_mod.o
 read_formatted_mod.o: Exceptions_mod.o
 BrillouinZone_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o 
