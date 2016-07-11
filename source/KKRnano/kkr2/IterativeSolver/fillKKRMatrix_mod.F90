@@ -178,7 +178,7 @@ module fillKKRMatrix_mod
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: atom_indices(:)
     integer, intent(in) :: kvstr(:)
-    double complex, intent(in) :: tmatLL(lmmaxd,lmmaxd,*)
+    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*)
 
     integer :: start, ii, num_atoms, atom_index, lm1, lm2, lmmax1, lmmax2 
 
