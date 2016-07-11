@@ -526,13 +526,14 @@ program test_bsr
 implicit none
   character(len=8) :: CLarg(0:3)
   integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16
-  integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, ii, jj, jb, ib, Rind, nerror(19)=0, fi, si, bs=2 ! BlockSize
+  integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, nn, mm, kk, bm, bn, bk, Rind, nerror(19)=0, fi, si, bs=2 ! BlockSize
   double precision, parameter :: Gfill=0.5, pointG=.5d0**8, pointH=.5d0**11
   double precision :: elem, tick, tock
   external :: zgemm ! BLAS matrix matrix multiplication
   complex_data_t, parameter :: one = 1.0, zero = 0.0
   complex_data_t, allocatable :: Hfull(:,:),  Gfull(:,:),  Rfull(:,:),  Rfill(:,:)
   complex_data_t, allocatable :: Hval(:,:,:), Gval(:,:,:), Rval(:,:,:)
+  logical(kind=1), allocatable :: Hnz(:,:), Gnz(:,:)
   type(BlockSparseRow) :: H, G!,R==G operators
   real :: GiFlop, GiByte
   type(MultBSRplan) :: plan
@@ -552,31 +553,48 @@ implicit none
   
   tick = Wtime() ! start time
   
-  allocate(Hfull(M,K), Gfull(K,N), Rfull(M,N)) ! H*G=R
-  Hfull = zero ; Gfull = zero ; Rfull = zero
+  allocate(Hfull(M,K), Hnz(mb,kb), Gfull(K,N), Gnz(kb,nb), Rfull(M,N)) ! H*G=R
   
   tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for allocation ',tock-tick,' sec' ; tick = tock
 
-  do ii = 1, size(Hfull, 2) ! fill H (Hamiltonian)
-    do while(count(Hfull(:,ii) /= 0) < min(Hfill, size(Hfull, 1)))
-      call random_number(elem) ; jj = ceiling(elem*size(Hfull, 1))
-!     if(ShowH>0) write(*, fmt="(A,9I6)") 'rand H',ii,jj !!! DEBUG
-      Hfull(jj,ii) = dcmplx(jj + pointH*ii, jj*pointH*ii)
+  Hfull = zero ; Hnz = .false.
+  do bk = 1, size(Hfull, 2)/bs ! fill H (Hamiltonian)
+    do while(count(Hnz(:,bk)) < min(Hfill, size(Hfull, 1)/bs))
+      call random_number(elem) ; bm = ceiling(size(Hfull, 1)*elem/bs)
+!     if(ShowH>0) write(*, fmt="(A,9I6)") 'rand H',bk,bm !!! DEBUG
+      do   si = 1, bs ; kk = bs*bk - bs + si
+        do fi = 1, bs ; mm = bs*bm - bs + fi
+          Hfull(mm,kk) = dcmplx(mm + pointH*kk, mm + pointH*kk)
+        enddo ! fi
+      enddo ! si
+      Hnz(bm,bk) = .true.
     enddo ! while
-    if(ShowH>0) write(*, fmt="(A,I4,99F9.4)") 'H',ii,Hfull(1:min(size(Hfull, 1), 8),ii)
-  enddo ! ii
+    if(ShowH>0) write(*, fmt="(A,I4,99F9.4)") 'H',bk,Hfull(1:min(size(Hfull, 1), 8),bk)
+  enddo ! bk
+  write(*, fmt="(9(A,F0.3))") 'BSRtest: H  ',count(Hnz)*bs*bs*100./size(Hfull)," % =  ",count(Hnz)/1024.," ki of  ",size(Hfull)/(bs*1024.*bs*1024.)," Mi"
 
-  do ii = 1, size(Gfull, 2) ! fill G (Green function)
-    do while(count(Gfull(:,ii) /= 0) < Gfill*size(Gfull, 1))
-      call random_number(elem) ; jj = ceiling(elem*size(Gfull, 1))
-!     if(ShowG>0) write(*, fmt="(A,9I6)") 'rand G',ii,jj !!! DEBUG
-      Gfull(jj,ii) = dcmplx(jj + pointG*ii, -ii*pointG*jj)
+  Gfull = zero
+  do bn = 1, size(Gfull, 2)/bs ! fill G (Green function)
+    do while(count(Gnz(:,bn)) < Gfill*size(Gfull, 1)/bs)
+      call random_number(elem) ; bm = ceiling(size(Gfull, 1)*elem/bs)
+!     if(ShowG>0) write(*, fmt="(A,9I6)") 'rand G',bn,bm !!! DEBUG
+      do   si = 1, bs ; nn = bs*bn - bs + si
+        do fi = 1, bs ; mm = bs*bm - bs + fi
+          Gfull(mm,nn) = dcmplx(mm + pointG*nn, -nn + pointG*mm)
+        enddo ! fi
+      enddo ! si
+      Gnz(bm,bn) = .true.
     enddo ! while
-    if(ShowG>0) write(*, fmt="(A,I4,99F9.4)") 'G',ii,Gfull(1:min(size(Gfull, 1), 8),ii)
-  enddo ! ii
+    if(ShowG>0) write(*, fmt="(A,I4,99F9.4)") 'G',bn,Gfull(1:min(size(Gfull, 1), 8),bn)
+  enddo ! nn
+  write(*, fmt="(9(A,F0.3))") 'BSRtest: G  ',count(Gnz)*bs*bs*100./size(Gfull)," % =  ",count(Gnz)/1024.," ki of  ",size(Gfull)/(bs*1024.*bs)," ki"
+
+  deallocate(Hnz, Gnz)
+
+  Rfull = zero
 
   tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for array filling ',tock-tick,' sec' ; tick = tock
-  
+
   GiByte = (M*16.*K + K*16.*N + M*16.*N)*.5d0**30
   GiFlop = M*8.*K*.5d0**30*N
   write(*,"(9(A,F0.6))") "Dense  matrix-matrix  multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
@@ -590,13 +608,13 @@ implicit none
 !+full_debug
 
   nerror = 0
-  do ii = 1, size(Rfull, 2)
-    if(ShowR>0) write(*, fmt="(A,I4,99F9.4)") 'R',ii,Rfull(1:min(size(Rfull, 1), 8),ii)/K
-    do jj = 1, size(Rfull, 1)
-      elem = dot_product(Hfull(jj,:), Gfull(:,ii)) ! simple evaluation of a single element of a matrix-matrix product, but VERY SLOW
-      call compare(elem, Rfull(jj,ii), nerror)
-    enddo ! jj
-  enddo ! ii
+  do nn = 1, size(Rfull, 2)
+    if(ShowR>0) write(*, fmt="(A,I4,99F9.4)") 'R',nn,Rfull(1:min(size(Rfull, 1), 8),nn)/K
+    do mm = 1, size(Rfull, 1)
+      elem = dot_product(Hfull(mm,:), Gfull(:,nn)) ! simple evaluation of a single element of a matrix-matrix product, but VERY SLOW
+      call compare(elem, Rfull(mm,nn), nerror)
+    enddo ! mm
+  enddo ! nn
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
 
   tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for dot_product ',tock-tick,' sec' ; tick = tock
@@ -624,13 +642,15 @@ implicit none
   tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for spontaneous BSR x BSR ',tock-tick,' sec' ; tick = tock
   
   nerror = 0
-  do ib = 1, R%mb
-    do Rind = R%bsrRowPtr(ib), R _bsrEndPtr(ib) ; jb = R%bsrColInd(Rind)
-      do si = 1, bs ; do fi = 1, bs
-          call compare(Rval(fi,si,Rind), Rfull(ib*bs+fi-bs,jb*bs-bs+si), nerror)
-      enddo ; enddo ! fi si
+  do bm = 1, R%mb
+    do Rind = R%bsrRowPtr(bm), R _bsrEndPtr(bm) ; bn = R%bsrColInd(Rind)
+      do   si = 1, bs ; nn = bs*bn - bs + si 
+        do fi = 1, bs ; mm = bs*bm - bs + fi
+          call compare(Rval(fi,si,Rind), Rfull(mm,nn), nerror)
+        enddo ! fi
+      enddo ! si
     enddo ! Rind
-  enddo ! ib
+  enddo ! bm
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
   
   !============================
@@ -651,13 +671,15 @@ implicit none
   tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planned ',tock-tick,' sec' ; tick = tock
   
   nerror = 0
-  do ib = 1, R%mb
-    do Rind = R%bsrRowPtr(ib), R _bsrEndPtr(ib) ; jb = R%bsrColInd(Rind)
-      do si = 1, bs ; do fi = 1, bs
-          call compare(Rval(fi,si,Rind), Rfull(ib*bs-bs+fi,jb*bs-bs+si), nerror)
-      enddo ; enddo ! fi si
+  do bm = 1, R%mb
+    do Rind = R%bsrRowPtr(bm), R _bsrEndPtr(bm) ; bn = R%bsrColInd(Rind)
+      do   si = 1, bs ; nn = bs*bn - bs + si 
+        do fi = 1, bs ; mm = bs*bm - bs + fi
+          call compare(Rval(fi,si,Rind), Rfull(mm,nn), nerror)
+        enddo ! fi
+      enddo ! si
     enddo ! Rind
-  enddo ! ib
+  enddo ! bm
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
 
   call destroy(plan)
