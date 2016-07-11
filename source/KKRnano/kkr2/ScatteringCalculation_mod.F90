@@ -209,7 +209,7 @@ implicit none
         enddo ! ila
 #endif
   !------------------------------------------------------------------------------
-        !$omp parallel do private(ila, kkr)
+        !$omp parallel do private(ila)
         do ila = 1, num_local_atoms
           
           call GREF(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &

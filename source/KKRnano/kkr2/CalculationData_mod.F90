@@ -407,7 +407,7 @@ module CalculationData_mod
       ! Then interpolate potential to the new mesh
 
       ! load the input data unless it is a voronano run
-      if(.NOT. voronano) then
+      if (voronano == 0) then
         call load(old_atom_a(ila), "atoms", "vpotnew.0", atom_id)
 
         call load(old_mesh_a(ila), "meshes.0", atom_id)
@@ -429,7 +429,7 @@ module CalculationData_mod
 #endif
 
     ! interpolate to new mesh
-    if (.NOT. voronano) then
+    if (voronano == 0) then
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
 

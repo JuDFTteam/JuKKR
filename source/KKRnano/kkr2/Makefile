@@ -95,8 +95,8 @@ FC += mpixlf77_r
 FC90 += mpixlf90_r
 #FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
-FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-D USE_VOROWEIGHTS
-FCFLAGS += -D ell_int_t=integer
+FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I.  -WF,-DUSE_VOROWEIGHTS
+#FCFLAGS += -WF,-Dell_int_t=integer
 #LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
 LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 #-lfftw3

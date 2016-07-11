@@ -39,13 +39,14 @@ module TEST_lcutoff_mod
     double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
     integer :: naez, lmax, atomindex, ila, num_local_atoms, ist, nradii, l
     ell_int_t, allocatable :: lmax_atom(:,:), lmax_full(:)
-    ell_int_t :: l_lim(9)
+    ell_int_t :: l_lim(9), ellmax
     double precision :: r2lim(9)   
  
     cutoffmode = solver_type
 
     lmax = 0; do while ((lmax + 1)**2 < arrays%lmmaxd); lmax = lmax + 1; enddo ! find back global lmax
-  
+    ellmax = lmax  
+
     l_lim = -1
     nradii = 0 ! 0:no truncation
     if (cutoff_radius > R_active) then ! a single cutoff radius is active
@@ -80,7 +81,7 @@ module TEST_lcutoff_mod
 
         ! compute truncation zones
         call calcCutoffarray(lmax_atom(:,ila), arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, nradii, l_lim, r2lim)
-        lmax_atom(:,ila) = min(lmax_atom(:,ila), lmax)
+        lmax_atom(:,ila) = min(lmax_atom(:,ila), ellmax)
         lmax_atom(atomindex,ila) = lmax ! diagonal element is full always
       else
         lmax_atom(:,ila) = lmax ! init as full interaction, no truncation
