@@ -111,12 +111,12 @@ implicit none
 
     
     allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for t-matrices
-    allocate(dtmatLL(lmmaxd,lmmaxd,trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
+    allocate(dtmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
     allocate(Tref_local(lmmaxd,lmmaxd,num_local_atoms)) ! allocate buffers for reference t-matrices
     allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms))
-    allocate(DGrefN_buffer(lmmaxd,lmmaxd,clusters%naclsd,num_local_atoms)) ! LLY
+    allocate(DGrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms)) ! LLY
     allocate(atom_indices(num_local_atoms))
 
     if (params%jij  .and. num_local_atoms > 1) stop "Jij and num_local_atoms > 1 not supported."

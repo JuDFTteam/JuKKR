@@ -21,6 +21,7 @@ module KKROperator_mod
     integer :: naez
     type(SparseMatrixDescription) :: sparse
     double complex, allocatable :: GLLh(:)
+    double complex, allocatable :: dGLLh(:)
     double complex, allocatable :: mat_B(:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
     double complex, allocatable :: mat_X(:,:)
     integer, allocatable :: atom_indices(:) !< a copy of the atom indices
@@ -72,6 +73,7 @@ module KKROperator_mod
     allocate(self%mat_B(nRows,nCols))
     allocate(self%mat_X(nRows,nCols))
     allocate(self%GLLh(getNNZ(self%sparse))) ! allocate memory for sparse matrix
+    allocate(self%dGLLh(getNNZ(self%sparse))) ! allocate memory for derivative
     
   endsubroutine ! create
 
@@ -83,6 +85,7 @@ module KKROperator_mod
     integer :: ist ! ignore status
     
     deallocate(self%GLLh, stat=ist)
+    deallocate(self%dGLLh, stat=ist)
     deallocate(self%mat_X, stat=ist)
     deallocate(self%mat_B, stat=ist)
 

@@ -21,7 +21,7 @@ module kkrmat_mod
   public :: kkrmat01
 
   double complex, allocatable :: full(:,:)
-  double complex, parameter :: zero=(0.d0, 0.d0)
+  double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
 
   contains
 
@@ -112,13 +112,13 @@ module kkrmat_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
-    #define Ginp Gref_buffer
-!    if (lly == 1) then ! LLY
-!      call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
-!    endif ! LLY
-!    #define dginp DGref_buffer
+! #define Ginp Gref_buffer
+!     if (lly == 1) then ! LLY
+!       call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
+!     endif ! LLY
+! #define dginp DGref_buffer
 #endif
-    
+   
     !==============================================================================
     do ikpoint = 1, nkpoints ! K-POINT-LOOP
     !==============================================================================
@@ -129,7 +129,7 @@ module kkrmat_mod
       call iguess_set_k_ind(iguess_data, ikpoint)
 
       ! Get the scattering path operator for k-point kpoints(:,ikpoint)
-      ! output: ms%mat_X
+      ! output: op%mat_X
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, &
                      mssq, dtde, dginp, bztr2, volcub, ikpoint, &
@@ -227,7 +227,7 @@ module kkrmat_mod
   !> op%atom_indices(:)
   subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, &
                        mssq, dtde, dginp, bztr2, volcub, ikpoint, &
-                       global_atom_idx_lly ,lly) !LLY
+                       global_atom_idx_lly, lly) !LLY
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
@@ -253,7 +253,7 @@ module kkrmat_mod
     integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     type(InitialGuess), intent(inout) :: iguess_data
     ! LLY
-    double complex, intent(in)         :: mssq (:,:,:)    !< inverted T-matrix
+    double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
     double complex, intent(in)         :: dginp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
     double complex, intent(out)        :: bztr2
@@ -280,7 +280,7 @@ module kkrmat_mod
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
     
 #define cluster op%cluster_info
-
+    lmmaxd = op%lmmaxd
     naez = op%naez
     nacls = cluster%naclsd
     alm = naez*lmmaxd
@@ -347,36 +347,36 @@ module kkrmat_mod
 
    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
-   if (lly == 1) then ! LLY
+    if (lly == 1) then ! LLY
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-      call referenceFourier_com(ms%DGLLh, ms%sparse, kpoint, alat, &
+      call referenceFourier_com(op%DGLLh, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, DGinp, global_atom_id, communicator)
 #else
-      call referenceFourier_part2(ms%DGLLh, ms%sparse, kpoint, alat, &
+      call referenceFourier_part2(op%DGLLh, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, DGinp)
 #endif
 
-      TESTARRAYLOG(3, ms%DGLLh)
+      TESTARRAYLOG(3, op%DGLLh)
 
-      call convertToFullMatrix(ms%GLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
-                           ms%sparse%kvstr, ms%sparse%kvstr, GLLKE_X)
-      call convertToFullMatrix(ms%DGLLH, ms%sparse%ia, ms%sparse%ja, ms%sparse%ka, &
-                           ms%sparse%kvstr, ms%sparse%kvstr, DGDE) 
+      call convertToFullMatrix(op%GLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
+                           op%sparse%kvstr, op%sparse%kvstr, GLLKE_X)
+      call convertToFullMatrix(op%DGLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
+                           op%sparse%kvstr, op%sparse%kvstr, DGDE) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
   
-      matrix_index=(global_atom_idx_lly-1)*lmmaxd+1
+      matrix_index = (global_atom_idx_lly-1)*lmmaxd+1
 
-      gllke_x_t=transpose(gllke_x)
-      dgde_t=transpose(dgde)
+      gllke_x_t = transpose(gllke_x)
+      dgde_t = transpose(dgde)
 
-      gllke_x2=gllke_x_t(:, matrix_index:matrix_index+lmmaxd)
-      dgde2=dgde_t(:, matrix_index:matrix_index+lmmaxd)
+      gllke_x2 = gllke_x_t(:, matrix_index:matrix_index+lmmaxd)
+      dgde2 = dgde_t(:, matrix_index:matrix_index+lmmaxd)
 
       call cinit(naez*lmmaxd*lmmaxd,dpde_local)
 
@@ -390,7 +390,7 @@ module kkrmat_mod
                   dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dpde_local,alm)
       !--------------------------------------------------------
  
-   endif ! LLY
+    endif ! LLY
     
     ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
@@ -411,8 +411,8 @@ module kkrmat_mod
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
 
-    call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
-    !call buildRightHandSide(ms%mat_B, lmmaxd, ms%atom_indices, ms%sparse%kvstr) ! construct RHS as negative unity
+    call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
+    ! call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr) ! construct RHS as unity
 
     if (iguess_data%iguess == 1) then
       solver%initial_zero = .false.
@@ -429,11 +429,11 @@ module kkrmat_mod
 
       if (DEBUG_dump_matrix) then
         call dump(op%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
-        call dump(op%GLLh,  "matrix.unf", formatted=.false.)
+        call dump(op%GLLh,  "bin.matrix", formatted=.false.)
         call dump(op%GLLh,  "matrix_form.dat", formatted=.true.)
-        call dump(op%mat_X, "solution.unf", formatted=.false.)
+        call dump(op%mat_X, "bin.solution", formatted=.false.)
         call dump(op%mat_X, "solution_form.dat", formatted=.true.)
-        call dump(op%mat_B, "rhs.unf", formatted=.false.)
+        call dump(op%mat_B, "bin.rhs", formatted=.false.)
         call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
       endif ! DEBUG_dump_matrix
       
@@ -463,29 +463,28 @@ module kkrmat_mod
 
 
     if (lly == 1) then ! LLY
-    !--------------------------------------------------------
-    !                /  -1    dM  \
-    ! calculate  Tr  | M   * ---- | 
-    !                \        dE  /
-   
-    tracek=zero
+      !--------------------------------------------------------
+      !                /  -1    dM  \
+      ! calculate  Tr  | M   * ---- | 
+      !                \        dE  /
+    
+      tracek=zero
 
-    do lm1=1,lmmaxd
-      do lm2=1,lmmaxd
-        gtdpde = zero
-        do il1 = 1,naez*lmmaxd
-          gtdpde = gtdpde + ms%mat_x(il1,lm2)*dpde_local(il1,lm1)
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
+          gtdpde = zero
+          do il1 = 1, naez*lmmaxd
+            gtdpde = gtdpde + op%mat_x(il1,lm2)*dpde_local(il1,lm1)
+          enddo
+          tracek = tracek + mssq(lm1,lm2,1)*gtdpde
         enddo
-        tracek = tracek + mssq(lm1,lm2,1)*gtdpde
       enddo
-    enddo
 
-    bztr2 = bztr2 + tracek*volcub(ikpoint)
-    !--------------------------------------------------------
+      bztr2 = bztr2 + tracek*volcub(ikpoint)
+      !--------------------------------------------------------
     endif ! LLY
 
 #undef cluster
-#undef ms
   endsubroutine ! kloopbody
 
 

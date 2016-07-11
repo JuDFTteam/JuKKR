@@ -51,8 +51,8 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
     ! calculations is lly_grdt_all
 
     call lloyd0_new(emesh%ez,emesh%wez,gaunts%cleb,mesh%drdi,mesh%r,mesh%irmin, &
-                    atomdata%potential%vins,atomdata%potential%visp,cell%shdata%theta,atomdata%z_nuclear,gaunts%icleb, &
-                    cell%shdata%ifunm,mesh%ipan,mesh%ircut,cell%shdata%lmsp, &
+                    atomdata%potential%vins,atomdata%potential%visp,cell%theta,atomdata%z_nuclear,gaunts%icleb, &
+                    cell%ifunm,mesh%ipan,mesh%ircut,cell%lmsp, &
                     gaunts%jend,gaunts%loflm,icst,ielast,gaunts%iend,nspind,nsra, &
                     emesh%wezrn,rnorm, &
                     gmatn, &

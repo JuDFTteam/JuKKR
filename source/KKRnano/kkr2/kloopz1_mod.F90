@@ -73,14 +73,26 @@ module kloopz1_mod
     integer :: num_local_atoms, ila
     double complex, allocatable :: GS(:,:,:)
     integer, allocatable :: ipvt(:), info(:,:) ! work array for LAPACK
-    double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:) ! effective (site-dependent) delta_t^(-1) matrix
+    double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
 
     integer :: N
     N = lmmaxd ! abbrev.
 
     num_local_atoms = size(op%atom_indices)
 
-
+    allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), ipvt(N), info(2,num_local_atoms), temp(N*N), stat=ist)
+    if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
+    
+    do ila = 1, num_local_atoms
+      mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila))
+      ! inversion:
+      !     The (local) Delta_t matrix is inverted and stored in mssq
+      call zgetrf(N,N,mssq(:,:,ila),N,ipvt,info(1,ila)) ! LU-factorize
+      call zgetri(N,mssq(:,:,ila),N,ipvt,temp,N*N,info(2,ila)) ! compute inverse
+    enddo ! ila    
+    if (any(info /= 0)) write(*, '(a,999("  f",i0," i",i0))') "zgetrf or zgetri returned an error:", info ! warn
+    deallocate(ipvt, temp, info, stat=ist)    
+    
 !     rfctor=A/(2*PI) conversion factor to p.u.
     mrfctori = -(2.d0*pi)/alat ! = inverse of -alat/(2*PI)
 
@@ -88,8 +100,6 @@ module kloopz1_mod
 !     Note: the actual k-loop is in kkrmat01 (it is not parallelized)
 !     The integration over k is also performed in kkrmat01
     
-    allocate(GS(N,N,num_local_atoms), stat=ist)
-    if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
     
     
     ! 3 T-matrix cutoff with new solver
@@ -107,7 +117,7 @@ module kloopz1_mod
 !      Note: the symmetry operations apply on the (LL')-space
     tauvBZ = 1.d0/volBZ
 
-    allocate(gll(N,N), tpg(N,N), xc(N,N), temp(N*N), ipvt(N), info(2,num_local_atoms), mssq(N,N), stat=ist)
+    allocate(gll(N,N), tpg(N,N), xc(N,N), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error2, failure to allocate memory, probably out of memory."
     
     do ila = 1, num_local_atoms
@@ -130,16 +140,10 @@ module kloopz1_mod
       enddo ! isym
       gll(:,:) = gll(:,:)*tauvBZ
 
-      mssq(:,:) = tmatLL(1:N,1:N,op%atom_indices(ila))
-
-      ! inversion:
-      !     The (local) Delta_t matrix is inverted and stored in mssq
-      call zgetrf(N,N,mssq(:,:),N,ipvt,info(1,ila)) ! LU-factorize
-      call zgetri(N,mssq(:,:),N,ipvt,temp,N*N,info(2,ila)) ! compute inverse
 
 !     xc = Delta_t^(-1) * gll
 
-      call zgemm('n','n',N,N,N,CONE,mssq(:,:),N,gll(:,:),N,ZERO,xc(:,:),N)
+      call zgemm('n','n',N,N,N,CONE,mssq(:,:,ila),N,gll(:,:),N,ZERO,xc(:,:),N)
 
   !       gll is overwritten with the following expression:
   !       (for the in configuration space diagonal structural Green's
@@ -162,7 +166,7 @@ module kloopz1_mod
 
   !   Gmatn = GMATLL = gll/rfctor...............rescaled and copied into output array
 
-      Gmatn(1:N,1:N,ila) = (mssq(:,:) + xc(:,:))*mrfctori
+      Gmatn(1:N,1:N,ila) = (mssq(:,:,ila) + xc(:,:))*mrfctori
 
     enddo ! ila
 
@@ -175,9 +179,7 @@ module kloopz1_mod
                   op%cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
     endif ! jij
 
-    if (any(info /= 0)) write(*, '(a,999("  f",i0," i",i0))') "zgetrf or zgetri returned an error:", info ! warn
-
-    deallocate(GS, mssq, gll, tpg, xc, temp, ipvt, info, stat=ist)
+    deallocate(GS, mssq, gll, tpg, xc, stat=ist)
 
   endsubroutine ! kloopz1
 
