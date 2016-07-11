@@ -347,7 +347,7 @@ module kkrmat_mod
 
    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
-   if (lly == 1) then ! LLY
+    if (lly == 1) then ! LLY
 #ifndef SPLIT_REFERENCE_FOURIER_COM
       call referenceFourier_com(op%DGLLh, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
@@ -390,7 +390,7 @@ module kkrmat_mod
                   dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dpde_local,alm)
       !--------------------------------------------------------
  
-   endif ! LLY
+    endif ! LLY
     
     ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
@@ -412,7 +412,7 @@ module kkrmat_mod
     !    the solution X is the scattering path operator
 
     call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
-    !call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr) ! construct RHS as negative unity
+    ! call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr) ! construct RHS as unity
 
     if (iguess_data%iguess == 1) then
       solver%initial_zero = .false.
@@ -485,7 +485,6 @@ module kkrmat_mod
     endif ! LLY
 
 #undef cluster
-#undef ms
   endsubroutine ! kloopbody
 
 
