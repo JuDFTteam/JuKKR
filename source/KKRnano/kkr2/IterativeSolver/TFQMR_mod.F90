@@ -47,59 +47,29 @@ module TFQMR_mod
     !!  vP is only accessed when preconditioning is active
 
     ! optional args
-    integer, intent(out), optional :: iterations_needed
+    integer,          intent(out), optional :: iterations_needed
     double precision, intent(out), optional :: largest_residual
     
-    !----------------- local variables --------------------------------------------
+    ! locals
 
     integer, parameter :: MaxIterations = 2000 ! limit of max. 2000 iterations
     integer :: iteration, probe, icol
 
-    ! local arrays ..
-
     !     small, local arrays with dimension ncol
-    double complex   :: ZTMP(ncol)
-    double precision :: DTMP(ncol)
+    double complex,   dimension(ncol) :: ZTMP, RHO, ETA, BETA, mALPHA ! -alpha
+    double precision, dimension(ncol) :: residual_upper_bound, DTMP, COSI, TAU, VAR, RESN, R0, N2B  ! norm of right-hand side
 
-    double complex :: RHO(ncol)
-    double complex :: ETA(ncol)
-    double complex :: BETA(ncol)
-    double complex :: mALPHA(ncol) ! -alpha
-
-    double precision :: R0(ncol)
-    double precision :: N2B(ncol)  ! norm of right-hand side
-    double precision :: RESN(ncol)
-    double precision :: VAR(ncol)
-    double precision :: TAU(ncol)
-    double precision :: COSI(ncol)
-    double precision :: residual_upper_bound(ncol)
-
-    ! 0 = not converged, negative = breakdown
-    ! 1 = converged
-    integer :: tfqmr_status(ncol)
-
-    ! stores iteration where calculation converged
-    ! 0 = never converged
-    integer :: converged_at(ncol)
-
+    integer :: tfqmr_status(ncol) ! 0 = not converged, negative = breakdown, 1 = converged
+    integer :: converged_at(ncol) ! stores iteration where calculation converged, 0 = never converged
     logical :: isDone
 
     !------------ convergence parameters-----------
-    double precision :: max_residual
-    double precision :: target_upper_bound
-    double precision :: max_upper_bound
-    double precision, parameter :: TEST_FACTOR = 100.d0
-    double precision :: EPSILON_DP
+    double precision :: max_residual, target_upper_bound, max_upper_bound
+    double precision, parameter :: TEST_FACTOR = 100.d0, EPSILON_DP = tiny(0.d0)
 
     !------------- diagnostic variables -------------
-    integer :: sparse_mult_count
-    integer :: res_probe_count     ! count number of residual calculations
-
-    !=======================================================================
-    ! INITIALIZATION
-    !=======================================================================
+    integer :: sparse_mult_count, res_probe_count ! count number of residual calculations
     
-    EPSILON_DP = tiny(0.d0)
     tfqmr_status = 0
     converged_at = 0
 
@@ -432,11 +402,11 @@ module TFQMR_mod
     ncol = size(norms)
     nrow = size(vectors, 1)
 
-    !$omp parallel do private(col)
+    !$omp do private(col)
     do col = 1, ncol
       norms(col) = DZNRM2(nrow, vectors(:,col), 1)
     enddo ! col
-    !$omp end parallel do
+    !$omp end do
     
   endsubroutine ! norms
 
@@ -452,12 +422,12 @@ module TFQMR_mod
     ncol = size(vectorsv, 2)
     nrow = size(vectorsv, 1)
 
-    !$omp parallel do private(col)
+    !$omp do private(col)
     do col = 1, ncol
       dots(col) = ZDOTU(nrow, vectorsv(:,col), 1, vectorsw(:,col), 1)
     enddo ! col
-    !$omp end parallel do
-    
+    !$omp end do
+
   endsubroutine ! dots
 
 
@@ -472,11 +442,11 @@ module TFQMR_mod
     ncol = size(factors)
     nrow = size(xvector, 1)
 
-    !$omp parallel do private(col)
+    !$omp do private(col)
     do col = 1, ncol
       yvector(:,col) = factors(col) * xvector(:,col) + yvector(:,col)
     enddo ! col
-    !$omp end parallel do
+    !$omp end do
 
   endsubroutine ! y := a*x+y
 
@@ -491,11 +461,11 @@ module TFQMR_mod
     ncol = size(factors)
     nrow = size(xvector, 1)
 
-    !$omp parallel do private(col)
+    !$omp do private(col)
     do col = 1, ncol
       yvector(:,col) = xvector(:,col) + factors(col) * yvector(:,col)
     enddo ! col
-    !$omp end parallel do
+    !$omp end do
     
   endsubroutine ! y := x+a*y
 
