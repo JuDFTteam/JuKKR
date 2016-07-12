@@ -33,7 +33,7 @@ module LDAUData_mod
     integer :: irmd
     integer :: lmaxd1
     integer :: nspind
-  end type LDAUData
+  endtype
 
   interface create
     module procedure createLDAUData
@@ -53,7 +53,7 @@ module LDAUData_mod
   !> @param[in]    mmaxd
   !> @param[in]    nspind
   subroutine createLDAUData(self, ldau, irmd, lmaxd, nspind)
-    type (LDAUData), intent(inout) :: self
+    type(LDAUData), intent(inout) :: self
     integer, intent(in) ::  irmd
     integer, intent(in) ::  nspind
     integer, intent(in) :: lmaxd
@@ -62,12 +62,12 @@ module LDAUData_mod
     integer :: mmaxd
     integer :: lmaxd1
 
-    double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+    double complex, parameter :: CZERO = (0.d0, 0.d0)
 
     integer :: memory_stat
 
     lmaxd1 = lmaxd + 1
-    mmaxd = 2* lmaxd + 1
+    mmaxd = 2*lmaxd + 1
 
     self%irmd = irmd
     self%lmaxd1 = lmaxd1
@@ -84,16 +84,16 @@ module LDAUData_mod
     ALLOCATECHECK(self%lldau(lmaxd1))
 
     self%NLDAU = 0
-    self%EULDAU = 0.0d0
-    self%EDCLDAU = 0.0d0
-    self%EREFLDAU = 0.0d0
+    self%EULDAU = 0.d0
+    self%EDCLDAU = 0.d0
+    self%EREFLDAU = 0.d0
 
     self%phildau = CZERO
     self%dmatldau = CZERO
-    self%uldau = 0.0d0
-    self%jldau = 0.0d0
-    self%umldau = 0.0d0
-    self%wmldau = 0.0d0
+    self%uldau = 0.d0
+    self%jldau = 0.d0
+    self%umldau = 0.d0
+    self%wmldau = 0.d0
     self%lldau = 0
 
   endsubroutine ! create
@@ -102,7 +102,7 @@ module LDAUData_mod
   !> Destroys a LDAUData object.
   !> @param[inout] self    The LDAUData object to destroy.
   subroutine destroyLDAUData(self)
-    type (LDAUData), intent(inout) :: self
+    type(LDAUData), intent(inout) :: self
 
     integer :: memory_stat
 

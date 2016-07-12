@@ -77,6 +77,8 @@ module kloopz1_mod
 
     integer :: N
     N = lmmaxd ! abbrev.
+    
+    if (any(shape(dsymll) < [N,N,nsymat])) stop 'shape(dsymll) unexpected!'
 
     num_local_atoms = size(op%atom_indices)
 
@@ -122,7 +124,7 @@ module kloopz1_mod
     
     do ila = 1, num_local_atoms
 
-      gll(:,:) = GS(1:N,1:N,ila) ! 1st symmetry matrix is the unity operation
+      gll(:,:) = GS(:N,:N,ila) ! 1st symmetry matrix is the unity operation
       do isym = 2, nsymat
 
     !     gll = sum(i=1,iumax)(tauvBZ * DLL(i) * GS * DLL(i)^H)
@@ -130,19 +132,18 @@ module kloopz1_mod
 
         !       tpg = tauvBZ * DLL * GS
 
-        call zgemm('n','n',N,N,N,CONE,dsymll(:,:,isym),N,GS(:,:,ila),N,ZERO,tpg(:,:),N)
+        call zgemm('n','n',N,N,N,CONE,dsymll(:,:,isym),size(dsymll, 1),GS(:,:,ila),N,ZERO,tpg(:,:),N)
 
         !     gll = gll + tpg * DLL(i)^H
         !                           C  ! dsymll might be complex in REL case
 
-        call zgemm('n','c',N,N,N,CONE,tpg(:,:),N,dsymll(:,:,isym),N,CONE,gll(:,:),N)
+        call zgemm('n','c',N,N,N,CONE,tpg(:,:),N,dsymll(:,:,isym),size(dsymll, 1),CONE,gll(:,:),N)
 
       enddo ! isym
       gll(:,:) = gll(:,:)*tauvBZ
 
 
 !     xc = Delta_t^(-1) * gll
-
       call zgemm('n','n',N,N,N,CONE,mssq(:,:,ila),N,gll(:,:),N,ZERO,xc(:,:),N)
 
   !       gll is overwritten with the following expression:
@@ -152,21 +153,20 @@ module kloopz1_mod
   !   gll = - Delta_t^(-1) - Delta_t^(-1) * gll * Delta_t^(-1)
 
   !       copy overwrite gll with content of mssq
-!       gll(:,:) = mssq(:,:,ila) ! call ZCOPY(N**2,mssq(:,:),1,gll,1)
+      gll(:,:) = mssq(:,:,ila) ! call ZCOPY(N*N,mssq(:,1),1,gll,1)
 
 
   !       gll = (-1) * xc                     *    mssq     + (-1) * gll
   !                    |                            |                 |
   !            Delta_t^-1 * scat. path op.      Delta_t^-1    Delta_t^-1
 
+      call zgemm('n','n',N,N,N,CONE,xc,N,mssq(:,:,ila),N,CONE,gll,N)
 
-!       call zgemm('n','n',N,N,N,-CONE,xc,N, mssq(:,:),N,-CONE,gll,N)
+!       gll(:,:) = xc(:,:) + gll(:,:)
 
-!       gll(:,:) = - xc(:,:) - gll(:,:)
+  !   Gmatn = GMATLL = -gll/rfctor...............rescaled and copied into output array
 
-  !   Gmatn = GMATLL = gll/rfctor...............rescaled and copied into output array
-
-      Gmatn(1:N,1:N,ila) = (mssq(:,:,ila) + xc(:,:))*mrfctori
+      Gmatn(:N,:N,ila) = gll(:,:)*mrfctori
 
     enddo ! ila
 

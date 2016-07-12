@@ -1,6 +1,8 @@
 #include "DebugHelpers/test_macros.h"
 
 module lloyd0_new_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 implicit none
   private
   public :: lloyd0_wrapper_com
@@ -10,7 +12,7 @@ implicit none
 !----------------------------------------------------------------------------
 !> Lloyd's formula.
 !> @param[in,out] emesh Energy mesh. Renormalized energy weights are updated
-subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, ICST, NSRA, GMATN, gaunts, ldau_data, method)
+subroutine lloyd0_wrapper_com(atomdata, communicator, lly_grdt, emesh, rnorm, lly, icst, nsra, gmatn, gaunts, ldau_data, method)
   use BasisAtom_mod, only: BasisAtom
   use GauntCoefficients_mod, only: GauntCoefficients
   use EnergyMesh_mod, only: EnergyMesh
@@ -22,12 +24,12 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
   double complex, intent(in) :: lly_grdt(:,:) ! in
 
   double complex, intent(in) :: gmatn(:,:,:,:) !in
-  type(basisatom), intent(inout) :: atomdata !in or inout?
-  type(gauntcoefficients), intent(in) :: gaunts
-  type(energymesh), intent(inout) :: emesh !inout or in?
-  type(ldaudata), intent(inout) :: ldau_data ! inout?
+  type(BasisAtom), intent(inout) :: atomdata !in or inout?
+  type(GauntCoefficients), intent(in) :: gaunts
+  type(EnergyMesh), intent(inout) :: emesh !inout or in?
+  type(LDAUData), intent(inout) :: ldau_data ! inout?
   double precision, intent(inout) :: rnorm(:,:)  !out
-  integer, intent(in) :: mpi_comm
+  integer, intent(in) :: communicator
   integer, intent(in) :: method !< single site method
 
   integer :: nspind, irmind, irnsd, lmaxd, ielast, ie
@@ -46,7 +48,7 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
 
   ielast = emesh%ielast
 
-  if (lly==1) then
+  if (lly == 1) then
     ! get wezrn and rnorm, the important input from previous
     ! calculations is lly_grdt_all
 
@@ -58,44 +60,44 @@ subroutine lloyd0_wrapper_com(atomdata, mpi_comm, LLY_GRDT, emesh, RNORM, LLY, I
                     gmatn, &
                     lly_grdt, &
                     ldau_data%ldau,ldau_data%nldau,ldau_data%lldau,ldau_data%phildau,ldau_data%wmldau,ldau_data%dmatldau, &
-                    mpi_comm, &
+                    communicator, &
                     lmaxd, mesh%irmd, irnsd, ielast, &
                     cell%irid, cell%nfund, mesh%ipand, gaunts%ncleb, method)
 
   else ! no lloyd
 
-    do ie=1,ielast
+    do ie = 1, ielast
       emesh%wezrn(ie,1) = emesh%wez(ie)
       emesh%wezrn(ie,2) = emesh%wez(ie)
-    enddo
+    enddo ! ie
+    
   endif
 
 #undef  mesh
 #undef  cell
-
 endsubroutine
 
-!> This routine uses the previously calculated Lloyd's formula terms
-!> to calculate the correction to the DOS and renormalized weights for
+!> this routine uses the previously calculated lloyd's formula terms
+!> to calculate the correction to the dos and renormalized weights for
 !> the energy integration.
 !>
 !> the routine uses communication
-!> TODO: split, simplify, extract communication
-subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
-                  VINS,VISP,THETAS,ZAT,ICLEB, &
-                  IFUNM1,IPAN,IRCUT,LMSP1,JEND,LOFLM,ICST, &
-                  IELAST,IEND,NSPIN,NSRA, &
-                  WEZRN,RNORM, &                                     ! <
-                  GMATN, &                                           ! >
-                  LLY_GRDT, &                                        ! >
-                  LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &                 ! >
-                  DMATLDAU, &                                        ! <
+!> todo: split, simplify, extract communication
+subroutine lloyd0_new(ez,wez,cleb,drdi,r,irmin, &
+                  vins,visp,thetas,zat,icleb, &
+                  ifunm1,ipan,ircut,lmsp1,jend,loflm,icst, &
+                  ielast,iend,nspin,nsra, &
+                  wezrn,rnorm, &                                     ! <
+                  gmatn, &                                           ! >
+                  lly_grdt, &                                        ! >
+                  ldau,nldau,lldau,phildau,wmldau, &                 ! >
+                  dmatldau, &                                        ! <
                   communicator, &                         ! >
                   lmax, irmd, irnsd, iemxd, &
                   irid, nfund, ipand, ncleb, method)
-  use ValenceDensity_mod, only: RHOVAL, RHOVAL0
+  use ValenceDensity_mod, only: rhoval, rhoval0
 
-  !USE_ARRAYTEST_MOD
+  !use_arraytest_mod
 
   integer :: lmax
   integer :: irmd
@@ -106,83 +108,74 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer :: ipand
   integer :: ncleb
 
-  double complex :: EZ(IEMXD)  ! in
-  double complex :: WEZ(IEMXD) ! in
-  double precision::CLEB(NCLEB,2)   !in
-  double precision::DRDI(IRMD) !in
-  double precision::R(IRMD)    !in
-  integer::IRMIN !in
-  double precision::VINS((IRMD-IRNSD):IRMD,(2*LMAX+1)**2, 2)  !in?
-  double precision::VISP(IRMD,2) ! in?
-  double precision::THETAS(IRID,NFUND) !in
-  double precision::ZAT !in
-  integer::ICLEB(NCLEB,3)
-  !integer::IFUNM1(LMXSPD,NAEZ) (2*LPOTD+1)**2
-  integer::IFUNM1((4*LMAX+1)**2) !in?
-  integer::IPAN !in
-  integer::IRCUT(0:IPAND) !in
-  !integer::LMSP1(LMXSPD,NAEZD)
-  integer::LMSP1((4*LMAX+1)**2) !in
-  integer::JEND((LMAX+1)**2, 0:LMAX, 0:LMAX) !in
-  integer::LOFLM((2*LMAX+1)**2) !in
-  integer::ICST
-  integer::IELAST
-  integer::IEND
-  integer::NSPIN !in
-  integer::NSRA  !in
-!  integer::FRED  !in
-  double complex :: WEZRN(IEMXD,2)  ! out
-  double precision::RNORM(IEMXD,2)  !out
-  double complex :: GMATN((LMAX+1)**2, (LMAX+1)**2, IEMXD, NSPIN) ! inout?
-  double complex :: LLY_GRDT(IEMXD,NSPIN) ! in
+  double complex :: ez(iemxd)  ! in
+  double complex :: wez(iemxd) ! in
+  double precision::cleb(ncleb,2)   !in
+  double precision::drdi(irmd) !in
+  double precision::r(irmd)    !in
+  integer::irmin !in
+  double precision::vins((irmd-irnsd):irmd,(2*lmax+1)**2, 2)  !in?
+  double precision::visp(irmd,2) ! in?
+  double precision::thetas(irid,nfund) !in
+  double precision::zat !in
+  integer::icleb(ncleb,3)
+  !integer::ifunm1(lmxspd,naez) (2*lpotd+1)**2
+  integer::ifunm1((4*lmax+1)**2) !in?
+  integer::ipan !in
+  integer::ircut(0:ipand) !in
+  !integer::lmsp1(lmxspd,naezd)
+  integer::lmsp1((4*lmax+1)**2) !in
+  integer::jend((lmax+1)**2, 0:lmax, 0:lmax) !in
+  integer::loflm((2*lmax+1)**2) !in
+  integer::icst
+  integer::ielast
+  integer::iend
+  integer::nspin !in
+  integer::nsra  !in
+!  integer::fred  !in
+  double complex :: wezrn(iemxd,2)  ! out
+  double precision::rnorm(iemxd,2)  !out
+  double complex :: gmatn((lmax+1)**2, (lmax+1)**2, iemxd, nspin) ! inout?
+  double complex :: lly_grdt(iemxd,nspin) ! in
 
-  ! -------------- LDA+U --------------------------------------------
-  !double complex :: DMATLDAU(MMAXD,MMAXD,NSPIND,LMAXD1)
-  double complex :: DMATLDAU(2*LMAX+1,2*LMAX+1,NSPIN,LMAX+1)  ! out
-  double complex :: PHILDAU(IRMD,LMAX+1) !in?
-  double precision::WMLDAU(2*LMAX+1,2*LMAX+1,LMAX+1,NSPIN) !in?
-  integer::NLDAU !in
-  logical::LDAU  !in
-  integer::LLDAU(LMAX+1) !in?
+  ! -------------- lda+u --------------------------------------------
+  !double complex :: dmatldau(mmaxd,mmaxd,nspind,lmaxd1)
+  double complex :: dmatldau(2*lmax+1,2*lmax+1,nspin,lmax+1)  ! out
+  double complex :: phildau(irmd,lmax+1) !in?
+  double precision::wmldau(2*lmax+1,2*lmax+1,lmax+1,nspin) !in?
+  integer::nldau !in
+  logical::ldau  !in
+  integer::lldau(lmax+1) !in?
   !------------------------------------------------------------------
 
   integer, intent(in) :: communicator
   integer, intent(in) :: method
 
-!---------------- Local variables -----------------------------------
+!---------------- local variables -----------------------------------
 
-!  !     .. Parameters ..
+  double complex, parameter :: czero=(0.d0, 0.d0)
+  integer :: ie, ispin, l
 
-  DOUBLE COMPLEX      CZERO
-  PARAMETER          (CZERO=(0.0D0,0.0D0))
-  !     ..
-  !     .. Scalars ..
-  integer::IE
+  !     dynamically allocated arrays
+  !double complex :: work1(4*iemxd)
+  !double complex :: work2(4*iemxd)
+  !double complex :: dos(iemxd,2) ! local
+  !double complex :: dos0(iemxd)  ! loc
+  !double complex :: dos1(iemxd)  ! loc
+  !double complex :: den0(0:lmax+1,iemxd,nspin) ! loc
+  !double precision::rho2n1(irmd,lmpotd,2)
+  !double precision::rho2n1(irmd,(2*lmax+1)**2, 2)   ! loc
+  !double precision::rho2n2(irmd,lmpotd,2)
+  !double precision::rho2n2(irmd,(2*lmax+1)**2, 2)   ! loc
+  !double precision::espv(0:lmax+1,nspin) ! loc
 
-  integer::ISPIN
-  integer::L
-  !     ..
-
-  !     Dynamically allocated arrays
-  !double complex :: WORK1(4*IEMXD)
-  !double complex :: WORK2(4*IEMXD)
-  !double complex :: DOS(IEMXD,2) ! local
-  !double complex :: DOS0(IEMXD)  ! loc
-  !double complex :: DOS1(IEMXD)  ! loc
-  !double complex :: DEN0(0:LMAX+1,IEMXD,NSPIN) ! loc
-  !double precision::RHO2N1(IRMD,LMPOTD,2)
-  !double precision::RHO2N1(IRMD,(2*LMAX+1)**2, 2)   ! loc
-  !double precision::RHO2N2(IRMD,LMPOTD,2)
-  !double precision::RHO2N2(IRMD,(2*LMAX+1)**2, 2)   ! loc
-  !double precision::ESPV(0:LMAX+1,NSPIN) ! loc
-
-  double complex, allocatable :: DOS(:,:)
-  double complex, allocatable :: DOS0(:)
-  double complex, allocatable :: DOS1(:)
-  double complex, allocatable :: DEN0(:,:,:)
-  double precision, allocatable :: RHO2N1(:,:,:)
-  double precision, allocatable :: RHO2N2(:,:,:)
-  double precision, allocatable :: ESPV(:,:)
+  double complex, allocatable :: dos(:,:)
+  double complex, allocatable :: dos0(:)
+  double complex, allocatable :: dos1(:)
+  double complex, allocatable :: den0(:,:,:)
+  double precision, allocatable :: rho2n1(:,:,:)
+  double precision, allocatable :: rho2n2(:,:,:)
+  double precision, allocatable :: espv(:,:)
 
   integer :: lmaxd
   integer :: nspind
@@ -190,229 +183,170 @@ subroutine LLOYD0_NEW(EZ,WEZ,CLEB,DRDI,R,IRMIN, &
   integer :: lmaxd1
   integer :: lmpotd
 
-  integer :: memory_stat
-  logical :: memory_fail
+  integer :: ist
 
   lmaxd = lmax
   nspind = nspin
   irmind = irmd - irnsd
   lmaxd1 = lmax + 1
-  lmpotd = (2*LMAX+1)**2
+  lmpotd = (2*lmax+1)**2
 
-  if (ielast /= iemxd) then !assertion
-    write(*,*) "lloyd0_new: ielast /= iemxd"
-    stop
-  endif
+  if (ielast /= iemxd) die_here("ielast /= iemxd")
 
-  ! ----------- allocate work arrays ----------------------------------
-  memory_fail = .false.
-
-  allocate(DOS(IEMXD,2), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(DOS0(IEMXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(DOS1(IEMXD), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(DEN0(0:LMAX+1,IEMXD,NSPIN), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(RHO2N1(IRMD,LMPOTD,2), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(RHO2N2(IRMD,LMPOTD,2), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-  allocate(ESPV(0:LMAX+1,NSPIN), stat = memory_stat)
-  if (memory_stat /= 0) memory_fail = .true.
-
-  if (memory_fail .eqv. .true.) then
-    write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
-    write(*,*) "        Probably out of memory."
-    stop
-  endif
-  ! -------------------------------------------------------------------
+  allocate(dos(iemxd,2), dos0(iemxd), dos1(iemxd), den0(0:lmax+1,iemxd,nspin), &
+           rho2n1(irmd,lmpotd,2), rho2n2(irmd,lmpotd,2), espv(0:lmax+1,nspin), stat=ist)
+  if (ist /= 0) die_here("fatal error, failure to allocate memory. Probably out of memory.")
 
   ! initialise
-  RNORM = 1.D0
-  DOS0 = CZERO
-  DOS1 = CZERO
-  DOS  = CZERO
-  DEN0 = CZERO
+  rnorm = 1.d0
+  dos0 = czero
+  dos1 = czero
+  dos  = czero
+  den0 = czero
 
   !=================================================================
-  !==  calculate DOS  ==============================================
+  !==  calculate dos  ==============================================
   !=================================================================
 
-      do ISPIN = 1,NSPIN
+  do ispin = 1, nspin
 
-        call RHOVAL(.false.,ICST,IELAST,NSRA, &
-                    ISPIN,NSPIN, &
-                    EZ,WEZ,DRDI,R,IRMIN, &
-                    VINS(IRMIND,1,ISPIN),VISP(1,ISPIN), &
-                    ZAT,IPAN,IRCUT, &
-                    THETAS,IFUNM1, &
-                    LMSP1, &
-                    RHO2N1,RHO2N2,DEN0(0,1,ISPIN),ESPV(0,ISPIN), &
-                    CLEB,LOFLM,ICLEB,IEND,JEND, &
-                    GMATN, &
-                    LDAU,NLDAU,LLDAU,PHILDAU,WMLDAU, &
-                    DMATLDAU, &
-                    iemxd, &
-                    lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb, method)
+    call rhoval(.false.,icst,ielast,nsra, &
+                ispin,nspin, &
+                ez,wez,drdi,r,irmin, &
+                vins(irmind,1,ispin),visp(1,ispin), &
+                zat,ipan,ircut, &
+                thetas,ifunm1, &
+                lmsp1, &
+                rho2n1,rho2n2,den0(0,1,ispin),espv(0,ispin), &
+                cleb,loflm,icleb,iend,jend, &
+                gmatn, &
+                ldau,nldau,lldau,phildau,wmldau, &
+                dmatldau, &
+                iemxd, &
+                lmaxd, irmd, irnsd, irid, ipand, nfund, ncleb, method)
 
-        ! result: DEN0
+    ! result: den0
 
-        do IE = 1,IELAST
-          do L = 0,LMAXD1
-            DOS(IE,ISPIN) = DOS(IE,ISPIN) + WEZ(IE)*DEN0(L,IE,ISPIN)
-          enddo
-        enddo
+    do ie = 1, ielast
+      do l = 0, lmaxd1
+        dos(ie,ispin) = dos(ie,ispin) + wez(ie)*den0(l,ie,ispin)
+      enddo ! l
+    enddo ! ie
 
-      enddo
+  enddo ! ispin
 
-      do IE = 1,IELAST
-        call RHOVAL0(EZ(IE),WEZ(IE),DRDI,R, &
-                     IPAN,IRCUT, &
-                     THETAS, &
-                     DOS0(IE),DOS1(IE), &
-                     lmaxd, irmd, irid, ipand, nfund)
-      enddo
+  do ie = 1, ielast
+    call rhoval0(ez(ie),wez(ie),drdi,r, ipan,ircut, thetas, dos0(ie),dos1(ie), lmaxd, irmd, irid, ipand, nfund)
+  enddo ! ie
 
-  ! communicate the DOS results
-  call lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
-  call lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
+  ! communicate the dos results
+  call lloyd_communicate(dos, dos0, dos1, iemxd, communicator)
+  call lloyd_calcrenormalisation(dos, dos0, dos1, lly_grdt, rnorm, wez, wezrn, nspin, ielast, iemxd)
 
-  ! ----------- deallocate work arrays ----------------------------------
-  deallocate(DOS)
-  deallocate(DOS0)
-  deallocate(DOS1)
-  deallocate(DEN0)
-  deallocate(RHO2N1)
-  deallocate(RHO2N2)
-  deallocate(ESPV)
-  ! -------------------------------------------------------------------
+  deallocate(dos, dos0, dos1, den0, rho2n1, rho2n2, espv, stat=ist) ! deallocate work arrays 
 
-endsubroutine LLOYD0_NEW
+endsubroutine ! lloyd0_new
 
 !------------------------------------------------------------------------------
-subroutine lloyd_calcRenormalisation(DOS, DOS0, DOS1, LLY_GRDT, RNORM, WEZ, WEZRN, NSPIN, IELAST, iemxd)
-  integer :: iemxd
-  integer :: NSPIN
+subroutine lloyd_calcrenormalisation(dos, dos0, dos1, lly_grdt, rnorm, wez, wezrn, nspin, ielast, iemxd)
 
-  double complex :: DOS(IEMXD,2)
-  double complex :: DOS0(IEMXD)
-  double complex :: DOS1(IEMXD)
+  double complex, intent(in) :: dos(iemxd,2)
+  double complex, intent(in) :: dos0(iemxd)
+  double complex, intent(in) :: dos1(iemxd)
+  double complex, intent(in) :: lly_grdt(iemxd,nspin)
+  double precision, intent(out) :: rnorm(iemxd,2)
+  double complex, intent(in) :: wez(iemxd)
+  double complex, intent(out) :: wezrn(iemxd,2)
+  integer, intent(in) :: nspin, ielast, iemxd
 
-  doublecomplex :: LLY_GRDT(IEMXD,NSPIN)
-  double precision :: RNORM(IEMXD,2)
-  double complex :: WEZ(IEMXD)
-  double complex :: WEZRN(IEMXD,2)
+  integer :: ie, ispin
 
-  integer :: IE
-  integer :: IELAST
-  integer :: ISPIN
-
-  double precision :: D0LOC
-  double precision :: D0LOCINT
-  double precision :: D1LOC
-  double precision :: D1LOCINT
-  double precision :: DLOC
-  double precision :: DLOYD
-  double precision :: DLOYDINT
+  double precision :: d0loc, d0locint
+  double precision :: d1loc, d1locint
+  double precision :: dloyd, dloydint
+  double precision :: dloc
   ! ======================================================================
 
-  do ISPIN=1,NSPIN
+  do ispin = 1, nspin
 
-    D0LOCINT=0.0D0
-    D1LOCINT=0.0D0
-    DLOYDINT=0.0D0
-    do IE=1,IELAST
+    d0locint = 0.d0
+    d1locint = 0.d0
+    dloydint = 0.d0
+    do ie = 1, ielast
 
-      DLOYD=DIMAG(WEZ(IE)*LLY_GRDT(IE,ISPIN))
+      dloyd = dimag(wez(ie)*lly_grdt(ie,ispin))
 
-      DLOC=DIMAG(DOS(IE,ISPIN))
-      D0LOC=DIMAG(DOS0(IE))
-      D1LOC=DIMAG(DOS1(IE))
+      dloc  = dimag(dos(ie,ispin))
+      d0loc = dimag(dos0(ie))
+      d1loc = dimag(dos1(ie))
 
-      RNORM(IE,ISPIN) = (DLOYD+D0LOC)/DLOC
+      rnorm(ie,ispin) = (dloyd + d0loc)/dloc
 
-      D0LOCINT=D0LOCINT+D0LOC
-      D1LOCINT=D1LOCINT+D1LOC
-      DLOYDINT=DLOYDINT+DLOYD
+      d0locint = d0locint + d0loc
+      d1locint = d1locint + d1loc
+      dloydint = dloydint + dloyd
 
-      WEZRN(IE,ISPIN) = WEZ(IE)*RNORM(IE,ISPIN)
+      wezrn(ie,ispin) = wez(ie)*rnorm(ie,ispin)
 
-    enddo
+    enddo ! ie
 
-    do IE=1,IELAST
-      WEZRN(IE,ISPIN) = WEZRN(IE,ISPIN)* &
-      (DLOYDINT+D0LOCINT-D1LOCINT)/(DLOYDINT+D0LOCINT)
-      RNORM(IE,ISPIN) = RNORM(IE,ISPIN)* &
-      (DLOYDINT+D0LOCINT-D1LOCINT)/(DLOYDINT+D0LOCINT)
-    enddo
+    do ie = 1, ielast
+      wezrn(ie,ispin) = wezrn(ie,ispin)*(dloydint + d0locint - d1locint)/(dloydint + d0locint)
+      rnorm(ie,ispin) = rnorm(ie,ispin)*(dloydint + d0locint - d1locint)/(dloydint + d0locint)
+    enddo ! ie
 
   enddo
 endsubroutine
 
 
 !------------------------------------------------------------------------------
-subroutine lloyd_communicate(DOS, DOS0, DOS1, iemxd, communicator)
+subroutine lloyd_communicate(dos, dos0, dos1, iemxd, communicator)
   include 'mpif.h'
 
-  double complex, intent(inout) :: DOS(IEMXD,2)
-  double complex, intent(inout) :: DOS0(IEMXD)
-  double complex, intent(inout) :: DOS1(IEMXD)
+  double complex, intent(inout) :: dos(iemxd,2)
+  double complex, intent(inout) :: dos0(iemxd)
+  double complex, intent(inout) :: dos1(iemxd)
   integer, intent(in) :: iemxd
   integer, intent(in) :: communicator
 
-  integer :: IERR
-  double complex, allocatable :: WORK1(:), WORK2(:)
-  double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+  integer :: ierr
+  double complex, allocatable :: work1(:), work2(:)
+  double complex, parameter :: czero = (0.d0, 0.d0)
 
-  integer :: memory_stat
+  integer :: ist
 
-  allocate(WORK1(4*IEMXD), stat = memory_stat)
+  allocate(work1(4*iemxd), work2(4*iemxd), stat=ist)
   
-  if (memory_stat /= 0) then
-    write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
-    write(*,*) "        Probably out of memory."
-    stop
-  endif
+  if (ist /= 0) stop "lloyd0: fatal error, failure to allocate memory. probably out of memory."
 
-  allocate(WORK2(4*IEMXD), stat = memory_stat)
+  work1 = czero
+  work2 = czero
 
-  if (memory_stat /= 0) then
-    write(*,*) "LLOYD0: FATAL Error, failure to allocate memory."
-    write(*,*) "        Probably out of memory."
-    stop
-  endif
+  !==  allreduce dos  ==============================================
 
-  WORK1 = CZERO
-  WORK2 = CZERO
+  ! call zcopy(iemxd,dos0,1,work1,1)
+  ! call zcopy(iemxd,dos1,1,work1(iemxd+1),1)
+  ! call zcopy(2*iemxd,dos,1,work1(2*iemxd+1),1)
 
-  !==  allreduce DOS  ==============================================
+  ! pack
+  work1(1:iemxd) = dos0
+  work1(iemxd+1:2*iemxd) = dos1
+  work1(2*iemxd+1:3*iemxd) = dos(:,1)
+  work1(3*iemxd+1:4*iemxd) = dos(:,2)
 
-  !call ZCOPY(IEMXD,DOS0,1,WORK1,1)
-  !call ZCOPY(IEMXD,DOS1,1,WORK1(IEMXD+1),1)
-  !call ZCOPY(2*IEMXD,DOS,1,WORK1(2*IEMXD+1),1)
+  call mpi_allreduce(work1, work2, 4*iemxd, mpi_double_complex, mpi_sum, communicator, ierr)
 
-  WORK1(1:IEMXD) = DOS0
-  WORK1(IEMXD+1:2*IEMXD) = DOS1
-  WORK1(2*IEMXD+1:3*IEMXD) = DOS(:,1)
-  WORK1(3*IEMXD+1:4*IEMXD) = DOS(:,2)
+  ! unpack
+  dos0 = work2(1:iemxd)
+  dos1 = work2(iemxd+1:2*iemxd)
+  dos(:,1) = work2(2*iemxd+1:3*iemxd)
+  dos(:,2) = work2(3*iemxd+1:4*iemxd)
 
-  call MPI_ALLREDUCE(WORK1,WORK2,4*IEMXD, &
-  MPI_DOUBLE_COMPLEX,MPI_SUM,communicator, &
-  IERR)
+  ! call zcopy(iemxd,work2,1,dos0,1)
+  ! call zcopy(iemxd,work2(iemxd+1),1,dos1,1)
+  ! call zcopy(2*iemxd,work2(2*iemxd+1),1,dos,1)
 
-  DOS0 = WORK2(1:IEMXD)
-  DOS1 = WORK2(IEMXD+1:2*IEMXD)
-  DOS(:,1) = WORK2(2*IEMXD+1:3*IEMXD)
-  DOS(:,2) = WORK2(3*IEMXD+1:4*IEMXD)
-
-  !call ZCOPY(IEMXD,WORK2,1,DOS0,1)
-  !call ZCOPY(IEMXD,WORK2(IEMXD+1),1,DOS1,1)
-  !call ZCOPY(2*IEMXD,WORK2(2*IEMXD+1),1,DOS,1)
-
-  deallocate(WORK1)
-  deallocate(WORK2)
+  deallocate(work1, work2)
 endsubroutine
 
-endmodule
+endmodule ! lloyd
