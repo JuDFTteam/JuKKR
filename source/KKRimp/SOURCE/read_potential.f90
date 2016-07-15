@@ -314,7 +314,10 @@ DO IATOM= 1, NATOM
 !       READ(UNIT=ifile_pot,FMT=*) CLINE                               ! skip line
       READ(UNIT=ifile_pot,FMT=*) CELL(IATOM)%RMT, ALAT_TEMP, CELL(IATOM)%RCORE     ! muffin tin and core radius
 !        write(*,*) alat, alat_temp
-      IF (ABS(ALAT-ALAT_TEMP)>10D-14) STOP '[read_potential] error ALAT value in potential is does not match'
+      IF (ABS(ALAT-ALAT_TEMP)>10D-14) then
+         write(*,*) alat, alat_temp
+         STOP '[read_potential] error ALAT value in potential is does not match'
+      end if
       READ(UNIT=ifile_pot,FMT=*) ZATOMPOT                            ! atomic charge
       IF (ZATOM(IATOM)/=ZATOMPOT) THEN
          WRITE(*,*) 'ZATOM(',IATOM,')  is   ',ZATOM(IATOM), ' ZATOMPOT  is',ZATOMPOT
