@@ -32,7 +32,8 @@ mpitrace:  FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
 gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
 pg:         FC = pgf90 
-hybrid:     FC= mpiifort -traceback 
+hybrid:     FC= mpiifort
+#hybrid:     FC= $(MPIFC) 
 
 
 # default
@@ -108,7 +109,7 @@ mpidebug:      CPP = -D MPI
 mpitrace:      CPP = -D MPI
 mpi:      CPP = -D MPI
 gfort:    CPP = -D GFORT
-hybrid:   CPP = -D MPI
+hybrid:   CPP = -D MPI -D CPP_HYBRID
 
 ####################################################
 # Compiler flags                                   #

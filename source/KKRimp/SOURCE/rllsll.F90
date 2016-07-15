@@ -271,49 +271,6 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 
-
-if(.not.allocated(ull)) allocate ( ull(lmsize2,lmsize,nrmax) )
-
-if ( use_sratrick==0 ) then
-  if(.not.allocated(slv)) allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
-elseif ( use_sratrick==1 ) then
-  if(.not.allocated(work2)) allocate ( work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize) )
-  if(.not.allocated(slv1)) allocate ( slv1(0:ncheb,lmsize,0:ncheb,lmsize), srv1(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv2)) allocate ( slv2(0:ncheb,lmsize,0:ncheb,lmsize), srv2(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv3)) allocate ( slv3(0:ncheb,lmsize,0:ncheb,lmsize), srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(yill1)) allocate ( yill1(0:ncheb,lmsize,lmsize), zill1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll1)) allocate ( yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yill2)) allocate ( yill2(0:ncheb,lmsize,lmsize), zill2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll2)) allocate ( yrll2(0:ncheb,lmsize,lmsize), zrll2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrlltmp)) allocate ( yrlltmp(0:ncheb,lmsize,lmsize)  )
-else
-  stop '[rllsll] error with testflag sph'
-end if
-
-if(.not.allocated(work)) allocate( work(lmsize,lmsize) )
-if(.not.allocated(allp)) allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(cllp)) allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(mrnvy)) allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-if(.not.allocated(mrjvy)) allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-if(.not.allocated(mihvy)) allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-if(.not.allocated(mijvy)) allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
-if(.not.allocated(yill)) allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(yrll)) allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(vjlr)) allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
-if(.not.allocated(vjli)) allocate( vjli(lmsize,lmsize2,0:ncheb), vhli(lmsize,lmsize2,0:ncheb) )
-
-yrll=(0.0d0,0.0d0)
-zill=(0.0d0,0.0d0)
-yrll=(0.0d0,0.0d0)
-zill=(0.0d0,0.0d0)
-
-if(.not.allocated(yif)) allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(yrf)) allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zif)) allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
-
-
-
 #ifdef CPP_hybrid
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
@@ -323,45 +280,45 @@ if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 thread_id = omp_get_thread_num()
 #endif
 
-if(.not.allocated(ull)) allocate ( ull(lmsize2,lmsize,nrmax) )
+allocate ( ull(lmsize2,lmsize,nrmax) )
 
 if ( use_sratrick==0 ) then
-  if(.not.allocated(slv)) allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
+  allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
 elseif ( use_sratrick==1 ) then
-  if(.not.allocated(work2)) allocate ( work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize) )
-  if(.not.allocated(slv1)) allocate ( slv1(0:ncheb,lmsize,0:ncheb,lmsize), srv1(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv2)) allocate ( slv2(0:ncheb,lmsize,0:ncheb,lmsize), srv2(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv3)) allocate ( slv3(0:ncheb,lmsize,0:ncheb,lmsize), srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(yill1)) allocate ( yill1(0:ncheb,lmsize,lmsize), zill1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll1)) allocate ( yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yill2)) allocate ( yill2(0:ncheb,lmsize,lmsize), zill2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll2)) allocate ( yrll2(0:ncheb,lmsize,lmsize), zrll2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrlltmp)) allocate ( yrlltmp(0:ncheb,lmsize,lmsize)  )
+  allocate ( work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize) )
+  allocate ( slv1(0:ncheb,lmsize,0:ncheb,lmsize), srv1(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate ( slv2(0:ncheb,lmsize,0:ncheb,lmsize), srv2(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate ( slv3(0:ncheb,lmsize,0:ncheb,lmsize), srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate ( yill1(0:ncheb,lmsize,lmsize), zill1(0:ncheb,lmsize,lmsize) )
+  allocate ( yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize) )
+  allocate ( yill2(0:ncheb,lmsize,lmsize), zill2(0:ncheb,lmsize,lmsize) )
+  allocate ( yrll2(0:ncheb,lmsize,lmsize), zrll2(0:ncheb,lmsize,lmsize) )
+  allocate ( yrlltmp(0:ncheb,lmsize,lmsize)  )
 else
   stop '[rllsll] error with testflag sph'
 end if
 
-if(.not.allocated(work)) allocate( work(lmsize,lmsize) )
-if(.not.allocated(allp)) allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(cllp)) allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(mrnvy)) allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-if(.not.allocated(mrjvy)) allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-if(.not.allocated(mihvy)) allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-if(.not.allocated(mijvy)) allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
-if(.not.allocated(yill)) allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(yrll)) allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(vjlr)) allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
-if(.not.allocated(vjli)) allocate( vjli(lmsize,lmsize2,0:ncheb), vhli(lmsize,lmsize2,0:ncheb) )
+allocate( work(lmsize,lmsize) )
+allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
+allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
+allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
+allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
+allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
+allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
+allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
+allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
+allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
+allocate( vjli(lmsize,lmsize2,0:ncheb), vhli(lmsize,lmsize2,0:ncheb) )
 
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 
-if(.not.allocated(yif)) allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(yrf)) allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zif)) allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 
 if (idotime==1) call timing_start('local')
 
@@ -872,36 +829,14 @@ if (idotime==1) call timing_stop('local3')
 if (idotime==1) call timing_stop('rllsll')
 
 if ( use_sratrick==0 ) then
-  if(allocated(slv)) deallocate ( slv,srv )
+  deallocate ( slv,srv, stat=ierror )
 elseif ( use_sratrick==1 ) then
-  if(allocated(work2)) deallocate ( work2, ipiv2 )
-  if(allocated(slv1)) deallocate ( slv1, srv1 )
-  if(allocated(slv2)) deallocate ( slv2, srv2 )
-  if(allocated(slv3)) deallocate ( slv3, srv3 )
-  if(allocated(yill1)) deallocate ( yill1, zill1 )
-  if(allocated(yrll1)) deallocate ( yrll1, zrll1 )
-  if(allocated(yill2)) deallocate ( yill2, zill2 )
-  if(allocated(yrll2)) deallocate ( yrll2, zrll2 )
-  if(allocated(yrlltmp)) deallocate ( yrlltmp )
+  deallocate ( work2, ipiv2, slv1, srv1, slv2, srv2 , slv3, srv3, yill1, zill1 , yrll1, zrll1 , yill2, zill2 , yrll2, zrll2, yrlltmp, stat=ierror  )
 end if
+if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 
-if(allocated(work)) deallocate( work )
-if(allocated(allp)) deallocate( allp, bllp )
-if(allocated(cllp)) deallocate( cllp, dllp )
-if(allocated(mrnvy)) deallocate( mrnvy, mrnvz )
-if(allocated(mrjvy)) deallocate( mrjvy, mrjvz )
-if(allocated(mihvy)) deallocate( mihvy, mihvz )
-if(allocated(mijvy)) deallocate( mijvy, mijvz )
-if(allocated(yill)) deallocate( yill, zill )
-if(allocated(yrll)) deallocate( yrll, zrll )
-if(allocated(vjlr)) deallocate( vjlr, vhlr )
-if(allocated(vjli)) deallocate( vjli, vhli )
-
-if(allocated(yif)) deallocate( yif )
-if(allocated(yrf)) deallocate( yrf )
-if(allocated(zif)) deallocate( zif )
-if(allocated(zrf)) deallocate( zrf )
-
+deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yill, zill , yrll, zrll, vjlr, vhlr, vjli, vhli ,yif,yrf,zif,zrf, stat=ierror )
+if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end subroutine
 
 
