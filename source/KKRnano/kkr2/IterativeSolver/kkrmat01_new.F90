@@ -263,15 +263,8 @@ module kkrmat_mod
     integer, intent(in)                :: lly             !< LLY=1/0, turns Lloyd's formula on/off
 
     ! Local LLY
-    double complex, allocatable :: dpde_local(:,:)
-    double complex, allocatable :: gllke_x(:,:)
-    double complex, allocatable :: dgde(:,:)
-    double complex, allocatable :: gllke_x_t(:,:)
-    double complex, allocatable :: dgde_t(:,:)
-    double complex, allocatable :: gllke_x2(:,:)
-    double complex, allocatable :: dgde2(:,:)
-    double complex :: tracek
-    double complex :: gtdpde
+    double complex, allocatable :: dpde_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:)
+    double complex :: tracek, gtdpde
     
     integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, il1
     logical :: initial_zero
@@ -286,28 +279,13 @@ module kkrmat_mod
     alm = naez*lmmaxd
 
     ! Allocate additional arrays for Lloyd's formula    
-    if (.not. allocated(gllke_x)) then
-      allocate(gllke_x(naez*lmmaxd, nacls*lmmaxd))
-    end if
-    if (.not. allocated(dgde)) then
-      allocate(dgde(naez*lmmaxd, nacls*lmmaxd))
-    end if
-    if (.not. allocated(gllke_x_t)) then
-      allocate(gllke_x_t(nacls*lmmaxd, naez*lmmaxd))
-    end if
-    if (.not. allocated(dgde_t)) then
-      allocate(dgde_t(nacls*lmmaxd, naez*lmmaxd))
-    end if
-    if (.not. allocated(gllke_x2)) then
-      allocate(gllke_x2(naez*lmmaxd,lmmaxd))
-    end if
-    if (.not. allocated(dgde2)) then
-      allocate(dgde2(naez*lmmaxd,lmmaxd))
-    end if
-    if (.not. allocated(dpde_local)) then
-      allocate(dpde_local(naez*lmmaxd,lmmaxd))
-    end if
-    
+    allocate(gllke_x(naez*lmmaxd,nacls*lmmaxd))
+    allocate(dgde(naez*lmmaxd,nacls*lmmaxd))
+    allocate(gllke_x_t(nacls*lmmaxd,naez*lmmaxd))
+    allocate(dgde_t(nacls*lmmaxd,naez*lmmaxd))
+    allocate(gllke_x2(naez*lmmaxd,lmmaxd))
+    allocate(dgde2(naez*lmmaxd,lmmaxd))
+    allocate(dpde_local(naez*lmmaxd,lmmaxd))
     
 
     !=======================================================================
@@ -380,14 +358,9 @@ module kkrmat_mod
 
       call cinit(naez*lmmaxd*lmmaxd,dpde_local)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone,&
-                  dgde2,alm,&
-                  tmatll(1,1,global_atom_idx_lly),lmmaxd,zero,&
-                  dpde_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatll(1,1,global_atom_idx_lly),lmmaxd,zero, dpde_local,alm)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv,&
-                  gllke_x2,alm,&
-                  dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dpde_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dpde_local,alm)
       !--------------------------------------------------------
  
     endif ! LLY
@@ -669,12 +642,13 @@ module kkrmat_mod
     naclsd = size(Ginp, 3)
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
-    if (any(shape(Gref_buffer) /= [lmmaxd,lmmaxd,naclsd,naez])) deallocate(Gref_buffer, stat=ist)
-    
-    ! Note: some MPI implementations might need the use of MPI_Alloc_mem
-    allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,naez), stat=ist)
-    if (ist /= 0) stop 'failed to allocate Gref_buffer in referenceFourier_com_part1!'
-    
+    if (any(shape(Gref_buffer) /= [lmmaxd,lmmaxd,naclsd,naez])) then
+      deallocate(Gref_buffer, stat=ist)
+      allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd,naez), stat=ist)
+      ! Note: some MPI implementations might need the use of MPI_Alloc_mem
+      if (ist /= 0) stop 'failed to allocate Gref_buffer in referenceFourier_com_part1!'
+    endif ! shape matches
+   
     if (num_local_atoms == 1) then
       ! this version using point-to-point MPI communication is so far only implemented for 1 atom per process
       call referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)

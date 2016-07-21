@@ -27,11 +27,11 @@ module ClusterInfo_mod
   type ClusterInfo
     integer :: naclsd !< maximal number of cluster atoms
     integer :: naez_trc
-    integer, allocatable :: nacls_trc(:)
-    integer, allocatable :: numn0_trc(:)
-    integer, allocatable :: indn0_trc(:,:)
-    integer, allocatable :: atom_trc(:,:)
-    integer, allocatable :: ezoa_trc(:,:)
+    integer, allocatable :: nacls_trc(:) !> dim(naez_trc) number of target atoms in local interaction cluster
+    integer, allocatable :: numn0_trc(:) !> dim(naez_trc) 
+    integer, allocatable :: indn0_trc(:,:) !> dim(naez_trc,naclsd) ! why transposed?
+    integer, allocatable :: atom_trc(:,:) !> dim(naclsd,naez_trc)
+    integer, allocatable :: ezoa_trc(:,:) !> dim(naclsd,naez_trc)
   endtype
 
   interface create
@@ -83,14 +83,14 @@ module ClusterInfo_mod
     self%naez_trc = naez_trc
 
     ALLOCATECHECK(self%nacls_trc(naez_trc))
-    self%nacls_trc = 0
     ALLOCATECHECK(self%numn0_trc(naez_trc))
-    self%numn0_trc = 0
     ALLOCATECHECK(self%indn0_trc(naez_trc,naclsd))
-    self%indn0_trc = -1
     ALLOCATECHECK(self%atom_trc(naclsd,naez_trc))
-    self%atom_trc = 0
     ALLOCATECHECK(self%ezoa_trc(naclsd,naez_trc))
+    self%nacls_trc = 0
+    self%numn0_trc = 0
+    self%indn0_trc = -1
+    self%atom_trc = 0
     self%ezoa_trc = -1
 
     blocksize = 3*naclsd+4

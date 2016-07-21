@@ -32,7 +32,7 @@
       enddo ! l
 
       l = 0
-        write(6, fmt='(8x,i5,2x,a4,2(f14.8),2x,f8.4)') i1, textell(l), charge(l,1:2), muspin(l)
+        write(6, fmt='(i13,2x,a4,2(f14.8),2x,f8.4)') i1, textell(l), charge(l,1:2), muspin(l)
       do l = 1, lmax
         write(6, fmt='(15x,a4,2(f14.8),2x,f8.4)') textell(l), charge(l,1:2), muspin(l)
       enddo ! l

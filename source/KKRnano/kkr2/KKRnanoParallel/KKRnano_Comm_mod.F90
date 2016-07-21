@@ -106,7 +106,7 @@ module KKRnano_Comm_mod
     ASSERT(nspind <= 2)
 
     ! TODO: check allocate
-    ALLOCATECHECK(owning_ranks(iemxd * nspind))
+    ALLOCATECHECK(owning_ranks(iemxd*nspind))
 
     do ispin = 1, nspind
       spin_id = getResponsibleSpinId(mp, ispin)
