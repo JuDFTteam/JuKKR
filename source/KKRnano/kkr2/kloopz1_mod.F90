@@ -9,7 +9,7 @@ module kloopz1_mod
   contains
 
   subroutine kloopz1(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
-                         nsymat, dsymll, tmatLL, lmmaxd, trunc2atom_index, communicator, iguess_data, &
+                         nsymat, dsymll, tmatLL, lmmaxd, global_atom_id, communicator, iguess_data, &
                          DGinp_local, dtde, tr_alph, lly_grdt, &
                          global_atom_idx_lly, lly) ! LLY 
 
@@ -41,7 +41,7 @@ module kloopz1_mod
 
     integer, intent(in) :: lmmaxd
     !> mapping trunc. index -> atom index
-    integer, intent(in) :: trunc2atom_index(:)
+    integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
     double precision, intent(in) :: alat
@@ -106,7 +106,7 @@ module kloopz1_mod
     
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
-    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, trunc2atom_index, communicator, iguess_data, &
+    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, global_atom_id, communicator, iguess_data, &
                       mssq, DGinp_local, dtde, tr_alph, lly_grdt, k_point_weights, volBZ, global_atom_idx_lly, lly) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 

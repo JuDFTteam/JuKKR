@@ -138,7 +138,7 @@ module BCPOperator_mod
     double complex :: gllh(lmmaxd,blocks_per_row*lmmaxd,naez)
     double complex :: gllhblck(natbld*lmmaxd,natbld*xdim*ydim*zdim*lmmaxd)
 
-    integer, intent(in) :: indn0(blocks_per_row,naez)
+    integer(kind=2), intent(in) :: indn0(blocks_per_row,naez)
     integer, intent(in) :: numn0(naez)
 
     
@@ -267,7 +267,7 @@ module BCPOperator_mod
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: natbld
     integer, intent(in) :: blocks_per_row
-    integer, intent(in) :: indn0(blocks_per_row,naez)
+    integer(kind=2), intent(in) :: indn0(blocks_per_row,naez)
     integer, intent(in) :: numn0(naez)
     double complex, intent(in) :: gllh(lmmaxd,lmmaxd*blocks_per_row,naez)
     double complex, intent(inout) :: blav(lmmaxd*natbld,lmmaxd*natbld)

@@ -98,7 +98,7 @@ module RefCluster_mod
 
     integer, intent(out) :: nacls
     double precision, allocatable, intent(out) :: rcls(:,:) !< dim(3,nacls) real space position of atom in cluster
-    integer(kind=4), allocatable, intent(out) :: atom(:)  !< dim(nacls) index to atom in elem/cell at site in cluster
+    integer(kind=4), allocatable, intent(out) :: atom(:)  !< dim(nacls) global atom id of the target atom in cluster
     integer(kind=2), allocatable, intent(out) :: ezoa(:)  !< dim(nacls) index to bravais lattice vector at site in cluster
     integer, intent(out) :: numn0
     integer(kind=4), allocatable, intent(out) :: indn0(:) !< dim(numn0)
@@ -114,63 +114,69 @@ module RefCluster_mod
     integer :: naez  !< number of atoms in ez
     integer :: nr    !< number of lattice vectors rr
     
-    integer(kind=4), allocatable :: indni(:), iatom(:), isort(:) ! dim(naez) dim(macls) dim(macls)
+    integer(kind=4), allocatable :: indni(:), iatom(:), iperm(:) ! dim(naez) dim(macls) dim(macls)
     integer(kind=2), allocatable :: iezoa(:) ! dim(macls)
-    double precision, allocatable :: rsort(:), rg(:,:) ! dim(macls) and dim(3,macls)
+    real(kind=8), allocatable     :: rsort(:) ! dim(macls) ! this could be float32 if sorting routine available, ToDo: check influence
+    integer, parameter :: ConstructVectorsOnce = 0 ! 1 or 0, 0:saves memory
+    double precision, allocatable :: rg(:,:) ! dim(3,macls)
 
+    if (ConstructVectorsOnce**2 /= ConstructVectorsOnce) stop 'RefCluster: internal error!' ! must be 0 or 1
+    
+    deallocate(rcls, atom, ezoa, indn0, stat=ist) ! ignore status
+    
     naez = size(rbasis, 2)
     nr = size(rr, 2)
-
+    
     rcut2 = (rcut + epsshl)**2
 #ifdef CYLINDRICAL_CLUSTERS
     rcutxy = rcut ! with this configuration, rcutxy == rcut, the cluster becomes spherical anyway
     rcutxy2 = (rcutxy + epsshl)**2
 #endif
 
-    macls = naez*nr
-    allocate(rsort(macls), rg(3,macls), iatom(macls), iezoa(macls), isort(macls), indni(naez), stat=ist)
-    if (ist /= 0) stop 'RefCluster: gen: allocation of [rsort, rg, iatom, iezoa, isort, indni] failed!'
-    
+    macls = naez*nr ! this can be very large, can we use less?
+    allocate(rsort(macls), rg(3,1+(macls-1)*ConstructVectorsOnce), iatom(macls), iezoa(macls), indni(naez), stat=ist)
+    if (ist /= 0) stop 'RefCluster: gen: allocation of [rsort, rg, iatom, iezoa, indni] failed!'
+
     numn0 = 0 ! counter for inequivalent atoms in cluster
     nacls = 0 ! counter for atoms in cluster
-    do iat = 1, naez  ! loop in all atoms
+    do iat = 1, naez ! loop in all global atom ids of target atoms
       couplmat = .false.
       
       do n = 0, nr-1 ! loop in all selected periodic images
-        tmp(1:3) = rr(1:3,n) + rbasis(1:3,iat) - rbasis(1:3,atom_id)
-        
-#ifdef CYLINDRICAL_CLUSTERS
+        tmp(1:3) = position_vector(n, iat, atom_id) ! == rr(1:3,n) + rbasis(1:3,iat) - rbasis(1:3,atom_id)
+
+#ifndef CYLINDRICAL_CLUSTERS
+        r2 = tmp(1)*tmp(1) + tmp(2)*tmp(2) + tmp(3)*tmp(3)
+        if (r2 <= rcut2) then
+#else
         rxy2 = tmp(1)*tmp(1) + tmp(2)*tmp(2) ! prepare for a cylindrical cluster construction with the cylinder in z-direction
         r2   = tmp(3)*tmp(3) + rxy2
         if (rxy2 <= rcutxy2 .and. r2 <= rcut2) then
-#else
-        r2 = tmp(1)*tmp(1) + tmp(2)*tmp(2) + tmp(3)*tmp(3)
-        if (r2 <= rcut2) then
 #endif
           nacls = nacls + 1
           iatom(nacls) = iat ! store the atom in elem cell
           iezoa(nacls) = n ! store the lattice vector (an integer multiple of Bravais vectors)
-          rg(1:3,nacls) = tmp(1:3)
-          rsort(nacls) = 1.d9*sqrt(r2) + dot_product([1.d6, 1.d3, 1.d0], tmp)
+          if (ConstructVectorsOnce == 1) rg(1:3,nacls) = tmp(1:3)
+          rsort(nacls) = 1.d9*sqrt(r2) + dot_product([1.d6, 1.d3, 1.d0], tmp) ! the sqrt is not needed for sorting, ToDo: remove and check influence
           couplmat = .true.
         endif ! inside
       enddo ! n loop in bravais
 
       if (couplmat) then ! atom iat is in the cluster with at least one periodic image 
         numn0 = numn0 + 1
-        indni(numn0) = iat ! indn0 is an array of ordered global atom indices
+        indni(numn0) = iat ! indn0 becomes an array of ordered global atom indices
         ! write(6,*) 'atom_id,numn0,indn0',atom_id,numn0(atom_id),iat
       endif ! couplmat
 
     enddo ! iat loop in naez
 
-    call dsort(rsort(1:nacls), isort(1:nacls), nacls)
-    
-    deallocate(rsort, rcls, atom, indn0, ezoa, stat=ist) ! ignore status
-    
-    allocate(indn0(numn0), stat=ist) ! todo: check status
-    if (ist /= 0) stop 'RefCluster: gen: allocation of [indn0] failed!'
+    allocate(iperm(nacls), stat=ist) ; if (ist /= 0) stop 'RefCluster: gen: allocation of [iperm] failed!'
 
+    call dsort(rsort(1:nacls), iperm, nacls)
+
+    deallocate(rsort, stat=ist) ! ignore status
+
+    allocate(indn0(numn0), stat=ist) ; if (ist /= 0) stop 'RefCluster: gen: allocation of [indn0] failed!'
     indn0(:) = indni(1:numn0)
     deallocate(indni, stat=ist) ! ignore status
     
@@ -179,19 +185,34 @@ module RefCluster_mod
     
     ! now apply the correct order
     do ia = 1, nacls
-      ib = isort(ia)
-      rcls(1:3,ia) = rg(1:3,ib)
+      ib = iperm(ia)
       atom(ia) = iatom(ib)
       ezoa(ia) = iezoa(ib)
+      if (ConstructVectorsOnce == 1) then 
+        rcls(1:3,ia) = rg(1:3,ib) ! take the preconstructed and stored vector
+      else
+        n = ezoa(ia)
+        rcls(1:3,ia) = position_vector(n, atom(ia), atom_id) ! == rr(1:3,n) + rbasis(1:3,iat) - rbasis(1:3,atom_id)
+      endif
     enddo ! ia
-    
-    deallocate(rg, iatom, iezoa, isort, stat=ist) ! ignore status
 
+    deallocate(rg, iatom, iezoa, iperm, stat=ist) ! ignore status
+    
 #ifdef DEBUG  
     write(*,'(a,2(i0,a),9999(" ",i0))') 'for atom #',atom_id,'  indn0(1:',numn0,') =',indn0(1:numn0)
     write(*,'(a,3F16.12)') 'rcls(:,1) = ',rcls(:,1)
 #endif
     ! todo: display some statistics
+    
+  contains 
+  
+    function position_vector(peridic_image_index, target_atom_id, source_atom_id) result(v)
+      double precision :: v(1:3)
+      integer, intent(in) :: peridic_image_index, target_atom_id, source_atom_id
+      
+      v(1:3) = rr(1:3,peridic_image_index) + rbasis(1:3,target_atom_id) - rbasis(1:3,source_atom_id) ! construct the vector
+    endfunction
+    
   endsubroutine ! clsgen99
 
 endmodule ! RefCluster_mod

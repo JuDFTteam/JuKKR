@@ -28,10 +28,10 @@ module ClusterInfo_mod
     integer :: naclsd !< maximal number of cluster atoms
     integer :: naez_trc
     integer, allocatable :: nacls_trc(:) !> dim(naez_trc) number of target atoms in local interaction cluster
-    integer, allocatable :: numn0_trc(:) !> dim(naez_trc) 
-    integer, allocatable :: indn0_trc(:,:) !> dim(naclsd,naez_trc)
-    integer, allocatable :: atom_trc(:,:) !> dim(naclsd,naez_trc)
-    integer, allocatable :: ezoa_trc(:,:) !> dim(naclsd,naez_trc)
+    integer, allocatable :: numn0_trc(:) !> dim(naez_trc) number of inequivent target atoms
+    integer(kind=2), allocatable :: indn0_trc(:,:) !> dim(naclsd,naez_trc) ! can be stored in 16bit since it encodes only cluster indices
+    integer(kind=2), allocatable ::  atom_trc(:,:) !> dim(naclsd,naez_trc)
+    integer(kind=2), allocatable ::  ezoa_trc(:,:) !> dim(naclsd,naez_trc)
   endtype
 
   interface create
@@ -66,17 +66,22 @@ module ClusterInfo_mod
     type(TruncationZone), intent(in)    :: trunc_zone
     integer, intent(in)                 :: communicator
 
-    integer :: ii, jj, cnt, ind
+    integer :: ii, jj, cnt, ila
+    integer :: OFFSET_INDN, OFFSET_ATOM, OFFSET_EZOA
     integer :: nacls, numn0, naclsd, naez_trc, num_local_atoms, blocksize
     integer :: memory_stat ! needed in allocatecheck
     integer :: ierr
-    integer, allocatable :: send_buf(:,:), recv_buf(:,:)
+    integer(kind=2) :: ind ! local atom index
+    integer(kind=4) :: atom_id, atom, indn0 ! global atom ids
+    integer(kind=4), allocatable :: send_buf(:,:), recv_buf(:,:) ! global atom ids, require more than 16bit
 
     num_local_atoms = size(ref_clusters)
 
     nacls = maxval(ref_clusters(:)%nacls) ! find maximum for locally stored clusters
     ! determine global maximal number of cluster atoms
     call MPI_Allreduce(nacls, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    ! here, additional alignment could be imposed into naclsd, e.g. this: 
+    !   naclsd = 4*((naclsd - 1)/4 + 1)
     self%naclsd = naclsd
 
     naez_trc = trunc_zone%naez_trc
@@ -93,73 +98,82 @@ module ClusterInfo_mod
     self%atom_trc = 0
     self%ezoa_trc = -1
 
-    blocksize = 3*naclsd+4
+    OFFSET_INDN = 0*naclsd + 3
+    OFFSET_ATOM = 1*naclsd + 3
+    OFFSET_EZOA = 2*naclsd + 3
+    blocksize   = 3*naclsd + 3 + 1
+    
     ALLOCATECHECK(send_buf(blocksize,num_local_atoms))
-    send_buf(:,:) = -1
+    send_buf(:,:) = -1 ! init
 
-    do ii = 1, num_local_atoms
-      nacls = ref_clusters(ii)%nacls
-      numn0 = ref_clusters(ii)%numn0
+    do ila = 1, num_local_atoms
+      nacls = ref_clusters(ila)%nacls
+      numn0 = ref_clusters(ila)%numn0
       CHECKASSERT( nacls <= naclsd )
-      send_buf(1,ii) = ref_clusters(ii)%atom_id ! global atom index
-      send_buf(2,ii) = ref_clusters(ii)%nacls
-      send_buf(3,ii) = ref_clusters(ii)%numn0
-      send_buf(0*naclsd+3+1:0*naclsd+3+numn0,ii) = ref_clusters(ii)%indn0(:) ! indn0 has dim(numn0) now, however, numn0 <= nacls holds
-      send_buf(1*naclsd+3+1:1*naclsd+3+nacls,ii) = ref_clusters(ii)%atom(:)
-      send_buf(2*naclsd+3+1:2*naclsd+3+nacls,ii) = ref_clusters(ii)%ezoa(:)
-      send_buf(3*naclsd+3+1,ii) = MAGIC
-    enddo ! ii
+      CHECKASSERT( numn0 <= nacls )
+      send_buf(1,ila) = ref_clusters(ila)%atom_id ! global atom index
+      send_buf(2,ila) = nacls
+      send_buf(3,ila) = numn0
+      send_buf(OFFSET_INDN + 1:numn0 + OFFSET_INDN,ila) = ref_clusters(ila)%indn0(:) ! indn0 has dim(numn0) now, however, numn0 <= nacls holds
+      send_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,ila) = ref_clusters(ila)%atom(:)
+      send_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ila) = ref_clusters(ila)%ezoa(:)
+      send_buf(blocksize,ila) = MAGIC
+    enddo ! ila
 
     ALLOCATECHECK(recv_buf(blocksize,naez_trc))
 
-    call copyFromI_com(recv_buf, send_buf, trunc_zone%trunc2atom_index, blocksize, num_local_atoms, communicator)
+    call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
+
+    DEALLOCATECHECK(send_buf)
 
     do ii = 1, naez_trc
-      CHECKASSERT( recv_buf(1,ii) == trunc_zone%trunc2atom_index(ii) ) ! check if send_buf from right atom was received
+      atom_id = recv_buf(1,ii)
+      CHECKASSERT( atom_id == trunc_zone%global_atom_id(ii) ) ! check if send_buf from right atom was received
 
       numn0 = recv_buf(3,ii)
       ! indn0 and atom have to be transformed to 'truncation-zone-indices'
       cnt = 0
       do jj = 1, numn0
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(3+jj,ii)
 
-        ind = trunc_zone%index_map(recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
+        indn0 = recv_buf(OFFSET_INDN + jj,ii) ! indn0 received
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',indn0
+        ind = trunc_zone%local_atom_idx(indn0)
 
-        ! ind = -1 means that this atom is outside of truncation zone
-        if (ind > 0) then
+        if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
-          self%indn0_trc(cnt,ii) = ind ! indn0 translated into indices of the trunc_zone
+          self%indn0_trc(cnt,ii) = ind ! indn0 translated into local indices of the trunc_zone
         endif ! ind > 0
       enddo ! jj
 
-      CHECKASSERT( 0 < cnt .and. cnt <= naclsd )
+      CHECKASSERT( 0 < cnt .and. cnt <= numn0 )
       self%numn0_trc(ii) = cnt
 
       nacls = recv_buf(2,ii)
       cnt = 0
       do jj = 1, nacls
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(naclsd+3+jj,ii)
 
-        ind = trunc_zone%index_map(recv_buf(1*naclsd+3+jj,ii)) ! atom received
+        atom = recv_buf(OFFSET_ATOM + jj,ii) ! atom received
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',atom
+        ind = trunc_zone%local_atom_idx(atom)
 
-        if (ind > 0) then
+        if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
-          self%atom_trc(cnt,ii) = ind
+          self%atom_trc(cnt,ii) = ind ! atom translated into local indices of the trunc_zone
         endif ! ind > 0
       enddo ! jj
 
-      CHECKASSERT( 0 < cnt .and. cnt <= naclsd )
+      CHECKASSERT( 0 < cnt .and. cnt <= nacls )
       self%nacls_trc(ii) = cnt
 
 ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' naclsd=',naclsd
 
-      self%ezoa_trc(:,ii) = recv_buf(2*naclsd+4:3*naclsd+3,ii)
+      self%ezoa_trc(1:nacls,ii) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ii)
+      ! ToDo: discuss if we have to treat ezoa_trc in sync with atom_trc concerning the (ind == -1) case
 
-      CHECKASSERT( recv_buf(3*naclsd+4,ii) == MAGIC ) ! check if end of send_buf is correct
+      CHECKASSERT( recv_buf(blocksize,ii) == MAGIC ) ! check if the end of send_buf seems correct
     enddo ! ii
 
     DEALLOCATECHECK(recv_buf)
-    DEALLOCATECHECK(send_buf)
   endsubroutine ! create
   
   elemental subroutine destroyClusterInfo(self)

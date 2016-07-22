@@ -150,7 +150,7 @@ implicit none
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
-      atom_indices(ila) = calc%trunc_zone%index_map(calc%atom_ids(ila)) ! get global atom_id from local index)
+      atom_indices(ila) = calc%trunc_zone%local_atom_idx(calc%atom_ids(ila)) ! get global atom_id from local index)
       CHECKASSERT(atom_indices(ila) > 0)
     enddo ! ila
 
@@ -293,7 +293,7 @@ implicit none
                     calc%lattice_vectors%RR, & ! periodic images
                     GrefN_buffer, arrays%NSYMAT, arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
-                    calc%trunc_zone%trunc2atom_index, mp%mySEComm, &
+                    calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, &
                     DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
                    
@@ -604,8 +604,8 @@ implicit none
       dtsst_local(:,:,ila) = kkr(ila)%dtde(:,:,ispin) ! LLY
     enddo ! ila
 
-    call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
-    call copyFromZ_com(dtde, dtsst_local, calc%trunc_zone%trunc2atom_index, chunk_size, num_local_atoms, communicator)
+    call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
+    call copyFromZ_com(dtde, dtsst_local, calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
 
     deallocate(tsst_local)
     deallocate(dtsst_local)

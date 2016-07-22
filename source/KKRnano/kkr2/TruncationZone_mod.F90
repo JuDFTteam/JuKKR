@@ -18,8 +18,8 @@ module TruncationZone_mod
   type TruncationZone
     integer :: naez_trc = 0 !> number of atoms in truncation zone
     integer :: naez_all = 0 !> number of all atoms
-    integer(kind=2), allocatable :: index_map(:) !> map atom index to truncation zone atom index (-1 = not in trunc. zone = OUTSIDE)
-    integer(kind=4), allocatable :: trunc2atom_index(:) !> map truncation zone atom index to atom index ("inverse" of index_map)
+    integer(kind=2), allocatable :: local_atom_idx(:) !> map atom index to truncation zone atom index (-1 == not in truncation zone == OUTSIDE)
+    integer(kind=4), allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of local_atom_idx)
   endtype
 
   interface create
@@ -49,26 +49,27 @@ module TruncationZone_mod
     self%naez_trc = count(mask >= 0)
 
     ! setup index map from global indices to a process local view
-    ALLOCATECHECK(self%index_map(OUTSIDE:self%naez_all))
-    ALLOCATECHECK(self%trunc2atom_index(self%naez_trc)) ! setup "inverse" of index_map
+    ALLOCATECHECK(self%local_atom_idx(OUTSIDE:self%naez_all))
+    ALLOCATECHECK(self%global_atom_id(self%naez_trc)) ! setup "inverse" of local_atom_idx
 
-    self%index_map(OUTSIDE:0) = OUTSIDE
-    
+    self%local_atom_idx(OUTSIDE:0) = OUTSIDE
+
     ind = 0
     do ii = 1, self%naez_all
       if (mask(ii) >= 0) then
         ind = ind + 1
-        self%index_map(ii) = ind
-        self%trunc2atom_index(ind) = ii ! inverse means that all(self%index_map(self%trunc2atom_index(:)) == [1, 2, 3, ..., naez_trc])
+        self%local_atom_idx(ii) = ind
+        self%global_atom_id(ind) = ii ! quasi inverse
+        ! inverse means that all(self%local_atom_idx(self%global_atom_id(:)) == [1, 2, 3, ..., naez_trc])
       else
-        self%index_map(ii) = OUTSIDE ! atom not in truncation cluster
+        self%local_atom_idx(ii) = OUTSIDE ! atom not in truncation cluster
       endif
     enddo ! ii
 
     if (ind >= 2**15) stop 'integer(kind=2) not sufficient in TruncationZone_mod.F90!' ! value range exceeded 
 
     if (.not. present(masks)) return
-    
+
     ! this must hold: (mask(:) >= 0) .eqv. any(masks >= 0, dim=2)
     !
     ! ToDo: use masks to determine more
@@ -79,7 +80,7 @@ module TruncationZone_mod
     type(TruncationZone), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%index_map, self%trunc2atom_index, stat=ist)
+    deallocate(self%local_atom_idx, self%global_atom_id, stat=ist)
     self%naez_all = 0
     self%naez_trc = 0
   endsubroutine ! destroy

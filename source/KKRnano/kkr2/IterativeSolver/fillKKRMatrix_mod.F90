@@ -29,7 +29,7 @@ module fillKKRMatrix_mod
 
     integer(kind=1), intent(in) :: lmax_array(:) !< lmax each row, dim(nrows)
     integer, intent(in) :: numn0(:) !< dim(nrows)
-    integer, intent(in) :: indn0(:,:) !< dim(maxval(numn0),nrows)
+    integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nrows)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
     integer :: nnzb, nrows, ij, irow, icol, start_address, lm_max

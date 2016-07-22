@@ -111,12 +111,12 @@ module TEST_lcutoff_mod
     call create(trunc_zone, mask=lmax_full, masks=lmax_atom)
 
     allocate(lmax_array(trunc_zone%naez_trc)) ! lmax_array is never deallocated - who cares
-    lmax_array(:) = lmax_full(trunc_zone%trunc2atom_index(:)) ! compression to cluster atoms only
+    lmax_array(:) = lmax_full(trunc_zone%global_atom_id(:)) ! compression to cluster atoms only
 
     ! also store the information for each local atom in module vars
     allocate(lmax_a_array(trunc_zone%naez_trc,num_local_atoms)) ! todo: deallocate somewhen
     do ila = 1, num_local_atoms
-      lmax_a_array(:,ila) = lmax_atom(trunc_zone%trunc2atom_index(:),ila) ! compression to cluster atoms only
+      lmax_a_array(:,ila) = lmax_atom(trunc_zone%global_atom_id(:),ila) ! compression to cluster atoms only
     enddo ! ila
 
     deallocate(lmax_atom, lmax_full, stat=ist)

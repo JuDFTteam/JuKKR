@@ -503,11 +503,11 @@ module kkrmat_mod
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls(:)
-    integer, intent(in) :: atom(:,:)
+    integer(kind=2), intent(in) :: atom(:,:)
     integer, intent(in) :: numn0(:)
-    integer, intent(in) :: indn0(:,:)
+    integer(kind=2), intent(in) :: indn0(:,:)
     double precision, intent(in) :: rr(:,0:)
-    integer, intent(in) :: ezoa(:,:)
+    integer(kind=2), intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Ginp(:,:,:,:)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
     integer, intent(in) :: communicator
@@ -712,11 +712,11 @@ module kkrmat_mod
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls(:)
-    integer, intent(in) :: atom(:,:)
+    integer(kind=2), intent(in) :: atom(:,:)
     integer, intent(in) :: numn0(:)
-    integer, intent(in) :: indn0(:,:)
+    integer(kind=2), intent(in) :: indn0(:,:)
     double precision, intent(in) :: rr(:,0:)
-    integer, intent(in) :: ezoa(:,:)
+    integer(kind=2), intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Gref_buffer(:,:,:,:)
 
     ! locals
@@ -763,11 +763,11 @@ module kkrmat_mod
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls(:)
-    integer, intent(in) :: atom(:,:)
+    integer(kind=2), intent(in) :: atom(:,:)
     integer, intent(in) :: numn0(:)
-    integer, intent(in) :: indn0(:,:)
+    integer(kind=2), intent(in) :: indn0(:,:)
     double precision, intent(in) :: rr(:,0:)
-    integer, intent(in) :: ezoa(:,:)
+    integer(kind=2), intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Ginp(:,:,:,:)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
     integer, intent(in) :: comm
@@ -946,7 +946,7 @@ module kkrmat_mod
     ! ----------------------------------------------------------------------
     double precision, intent(in) :: alat
     integer, intent(in) :: nacls !< number of vectors in the cluster
-    integer, intent(in) :: ezoa(1:) !< index list of periodic image vector
+    integer(kind=2), intent(in) :: ezoa(1:) !< index list of periodic image vector
     double precision, intent(in) :: kpoint(1:3) !< k-point (vector in the Brillouin zone)
     double precision, intent(in) :: RR(1:,0:) !< dim(1:3,0:) periodic image vectors
     double complex, intent(out) :: eikrp(:), eikrm(:) !< dim(nacls)
@@ -991,25 +991,25 @@ module kkrmat_mod
   
   subroutine dlke0_smat(smat, ind, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-  ! assume a variable block row sparse matrix description
+    ! assume a variable block row sparse matrix description
     double complex, intent(inout) :: smat(:)
-    integer, intent(in) :: ind !> site_index
+    integer, intent(in) :: ind !> local_atom_idx of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are real
     integer, intent(in) :: nacls !< number of atoms in the cluster around site ind
-    integer, intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
+    integer(kind=2), intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
     integer, intent(in) :: numn0(:) !< dim(naez)
-    integer, intent(in) :: indn0(:,:) !< dims(nacls,naez)
+    integer(kind=2), intent(in) :: indn0(:,:) !< dims(nacls,naez)
     double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
 
     integer :: jat, iacls, ni, jnd, ist, gint_iacls
     double complex, allocatable :: GinT(:,:) ! (size(Ginp, 2),size(Ginp, 1)) !< dims(lmmaxd,lmmaxd)
 
-    gint_iacls = -1
+    gint_iacls = -1 ! init
 
-    do iacls = 1, nacls
-      jat = atom(iacls)
-      if (jat < 1) cycle
+    do iacls = 1, nacls ! loop over all atoms in the reference cluster around ind
+      jat = atom(iacls) ! local_atom_idx of the target atom
+      if (jat < 1) cycle ! does this happen at all? ToDo: check
 
       do ni = 1, numn0(ind)
         jnd = indn0(ni,ind)
@@ -1021,7 +1021,7 @@ module kkrmat_mod
             gint_iacls = iacls
           endif
 
-          ist = modify_smat(sparse, ind, jnd, ni, eikrm(iacls), GinT(:,:), smat)
+          ist = modify_smat(sparse, ind, jnd, ni, eikrm(iacls), GinT, smat)
 
         endif ! jat == jnd
       enddo ! ni
@@ -1054,10 +1054,10 @@ module kkrmat_mod
 
     lmmax1 = sparse%kvstr(ind+1) - sparse%kvstr(ind)
     lmmax2 = sparse%kvstr(jnd+1) - sparse%kvstr(jnd)
-    
+
     do lm2 = 1, lmmax2
       is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
-      
+
       smat(is0 + 1:lmmax1 + is0) = smat(is0 + 1:lmmax1 + is0) + eikr * Gin(1:lmmax1,lm2)
 
     enddo ! lm2
