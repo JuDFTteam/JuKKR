@@ -57,8 +57,8 @@ module KKROperator_mod
     self%cluster_info => cluster_info
 
     sum_cluster = sum(cluster_info%numn0_trc)
-    self%naez = size(cluster_info%indn0_trc, 1) ! why transposed?
-!   naclsd = size(cluster_info%indn0_trc, 2) ! not used  ! why transposed?
+    self%naez = size(cluster_info%indn0_trc, 2)
+!   naclsd = size(cluster_info%indn0_trc, 1) ! not used
     self%lmmaxd = lmmaxd
 
     allocate(self%atom_indices, source=atom_indices)

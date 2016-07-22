@@ -1,8 +1,6 @@
-!> Definitions
-!>
 !> LatticeVectors: linear combinations of Bravais vectors with integer coefficients
-!>
 !> Note: if N (=number of atoms) reference clusters are created, then this algorithm scales as O(N**2)
+
 ! #define DEBUG
 
 module LatticeVectors_mod
@@ -33,17 +31,17 @@ module LatticeVectors_mod
   !> lattice vectors has to be created.
   !> Several different reference clusters can (and should) share
   !> the same lattice vectors.
-  subroutine createLatticeVectors(lattice_vectors, bravais, rmax)
-    type(LatticeVectors), intent(inout) :: lattice_vectors
+  subroutine createLatticeVectors(self, bravais, rmax)
+    type(LatticeVectors), intent(inout) :: self
     double precision, intent(in) :: bravais(3,3)
     double precision, intent(in), optional :: rmax
     
     double precision :: rmx
     rmx = 5.d0; if (present(rmax)) rmx = rmax
      
-    call rrgen(bravais, rmx, lattice_vectors%rr, lattice_vectors%nrd)
+    self%nrd = rrgen(bravais, rmx, self%rr)
 #ifdef DEBUG  
-    write(*,*) "Num. real space vectors: ", lattice_vectors%nrd
+    write(*,*) "Num. real space vectors: ", self%nrd
 #endif
   endsubroutine ! create
 
@@ -58,21 +56,20 @@ module LatticeVectors_mod
   endsubroutine ! destroy
 
   !------------------------------------------------------------------------------
-  subroutine rrgen(bv, rmax, rr, nr)
-    !> generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms in routine CLSGEN99
+  integer function rrgen(bv, rmax, rr) result(nr)
+    !> generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms in routine clsgen99
     use Sorting_mod, only: dsort
     
     double precision, intent(in) :: bv(3,3) ! bravais vectors or matrix
     double precision, intent(in) :: rmax ! radius
     double precision, allocatable, intent(out) :: rr(:,:) ! (3,0:nr)
-    integer, intent(out) :: nr
     
     !    .. Locals
     double precision :: r, rr2, rs
     integer :: i, i1, i2, i3, nn(1:3), mr
     double precision :: v(3)
     double precision, allocatable :: rabs2(:), rr1(:,:) 
-    integer, allocatable :: ind(:)!(nr) ! permutation for sorting
+    integer, allocatable :: ind(:) ! permutation for sorting
     double precision, parameter :: epsshl = 1.d-5
 #ifdef DEBUG
     character(len=*), parameter :: F8='(10x,i6,3f24.12,f15.4)' ! DEBUG
@@ -110,17 +107,15 @@ module LatticeVectors_mod
     do i1 = -nn(1), nn(1)
       do i2 = -nn(2), nn(2)
         do i3 = -nn(3), nn(3)
+        
           v(1:3) = i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3)
           rr2 = sum(v(1:3)*v(1:3))
-                  
-          ! todo: verify that v(1:3) == i1*bv(1:3,1) + i2*bv(1:3,2) + i3*bv(1:3,3) 
-          !       ... and then get rid of the vector-subroutines vmul, vadd, veq
-        
           if ((rr2 <= rs .or. abs(i1)+abs(i2)+abs(i3) <= 6) .and. rr2 > epsshl) then
             nr = nr + 1
             rr1(1:3,nr) = v(1:3)
             rabs2(nr) = rr2
           endif
+
         enddo ! i3
       enddo ! i2
     enddo ! i1
@@ -132,8 +127,8 @@ module LatticeVectors_mod
     deallocate(rr, stat=i) ! ignore status
     allocate(rr(1:3,0:nr), ind(nr))
     
-    rr = 0.d0 ! init
-    rr(1:3,0) = 0.d0 ! init
+    rr = 0.d0 ! init all
+    rr(1:3,0) = 0.d0 ! init 1st entry
 
     !!! for an OpenMP implementation, one could not treat the origin separatly, i.e. we can skip the (rr2 > epsshl) condition
     !!! and simply create a list of all nrd vectors (we also do need to increase nr automically since we can compute nr from nn and [i1,i2,i3]
@@ -161,6 +156,6 @@ module LatticeVectors_mod
     
     if (iprint > 0)  write(6, fmt="(10x,60('+'))")
     
-  endsubroutine ! rrgen
+  endfunction ! rrgen
 
 endmodule ! LatticeVectors_mod

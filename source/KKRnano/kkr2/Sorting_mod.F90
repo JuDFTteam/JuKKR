@@ -88,62 +88,59 @@ implicit none
   
   recursive function sort(na, lst) result(srt)
     type(ord)             :: srt(na) !! result
-    integer  , intent(in) :: na !! number of elements
+    integer  , intent(in) :: na !! number of all elements
     type(ord), intent(in) :: lst(na) !! values to be ordered
 
-    type(ord)   :: l1(na/2+1), l2(na/2)
-    integer     :: i, n1, n2, i1, i2
-    logical     :: t1f2
+    type(ord) :: l0((na+1)/2), l1(na/2)
+    integer   :: i, n0, n1, i0, i1, take
 
     selectcase(na)
     case(1) ! a list of a single element is always ordered
       srt(1) = lst(1) ! copy
       return
     case(2:) ! split list
-      n2 = na/2 ! the "smaller half"
-      n1 = na - n2 ! the other part
+      n1 = na/2 ! the "smaller half"
+      n0 = na - n1 ! the other part
       ! recursive invocation of this function
-      l1(1:n1) = sort(n1, lst(  1:n1)) ! 1st "half"
-      l2(1:n2) = sort(n2, lst(n1+1:na)) ! 2nd "half"
+      l0(1:n0) = sort(n0, lst(   1:n0   )) ! lower "half"
+      l1(1:n1) = sort(n1, lst(n0+1:n1+n0)) ! upper "half"
       ! merge sorted partial lists
-      i1 = 1 ; i2 = 1 ! init
+      i0 = 1 ; i1 = 1 ! init
       do i = 1, na
 #ifdef DEBUG
-        if (i1+i2 /= i+1) stop 'DSP sort: fatal error: number of used indices is wrong!'
+        if (i0 + i1 /= i + 1) stop 'DSP sort: fatal error: number of used indices is wrong!'
 #endif
-        if (i1 <= n1) then ! can take from list l1
-          if (i2 <= n2) then ! can take from list l2
-
+        if (i0 <= n0) then ! can take from list l0
+          if (i1 <= n1) then ! can take from list l1
             ! decide from which list to take by comparing the two
-            if (l1(i1)%r <= l2(i2)%r) then
-              t1f2 = .true.  ! take from list l1
+            if (l0(i0)%r <= l1(i1)%r) then
+              take = 0 ! take from list l0
             else
-              t1f2 = .false. ! take from list l2
+              take = 1 ! take from list l1
             endif
-
-          else ! cannot take from list l2
-            t1f2 = .true.    ! take from list l1
-          endif ! i2 <= n2
-        else ! cannot take from list l1
+          else ! cannot take from list l1
+            take = 0 ! take from list l0
+          endif ! i1 <= n1
+        else ! cannot take from list l0
 #ifdef DEBUG
-          if (i2 > n2) stop 'DSP sort: fatal error: both lists exhausted at a time!'
+          if (i1 > n1) stop 'DSP sort: fatal error: both lists exhausted at a time!'
 #endif
-          t1f2 = .false.     ! take from list l2
-        endif ! i1 <= n1
+          take = 1 ! take from list l1
+        endif ! i0 <= n0
 
-        if (t1f2) then
+        if (take == 1) then
           srt(i) = l1(i1) ! take from list l1
-          i1 = i1+1 ! count up list1 counter
-        else  ! t1f2
-          srt(i) = l2(i2) ! take from list l2
-          i2 = i2+1 ! count up list2 counter
-        endif ! t1f2
+          i1 = i1 + 1 ! count up list1 counter
+        else  ! take
+          srt(i) = l0(i0) ! take from list l0
+          i0 = i0 + 1 ! count up list0 counter
+        endif ! take
       enddo ! i
 #ifdef DEBUG
       ! additional check
-      if (i1 /= n1+1) stop 'DSP sort: i1 did not count up to n1!'
-      if (i2 /= n2+1) stop 'DSP sort: i2 did not count up to n2!'
-    case default !; stop 'DSP sort: case 0 or less should never happen!'
+      if (i0 /= n0 + 1) stop 'DSP sort: i0 did not count up to n0!'
+      if (i1 /= n1 + 1) stop 'DSP sort: i1 did not count up to n1!'
+    case default ; stop 'DSP sort: case 0 or less should never happen!'
 #endif
     endselect ! na
 
@@ -161,7 +158,7 @@ implicit none
     integer, intent(out) :: ind(:)
     integer, intent(out), optional :: pos
     
-    double precision, parameter :: bound = 1.0d-12
+    double precision, parameter :: bound = 1.d-12
     double precision :: diff
     integer :: i, ii, j, jj, k
 

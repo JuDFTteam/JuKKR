@@ -29,7 +29,7 @@ module ClusterInfo_mod
     integer :: naez_trc
     integer, allocatable :: nacls_trc(:) !> dim(naez_trc) number of target atoms in local interaction cluster
     integer, allocatable :: numn0_trc(:) !> dim(naez_trc) 
-    integer, allocatable :: indn0_trc(:,:) !> dim(naez_trc,naclsd) ! why transposed?
+    integer, allocatable :: indn0_trc(:,:) !> dim(naclsd,naez_trc)
     integer, allocatable :: atom_trc(:,:) !> dim(naclsd,naez_trc)
     integer, allocatable :: ezoa_trc(:,:) !> dim(naclsd,naez_trc)
   endtype
@@ -84,7 +84,7 @@ module ClusterInfo_mod
 
     ALLOCATECHECK(self%nacls_trc(naez_trc))
     ALLOCATECHECK(self%numn0_trc(naez_trc))
-    ALLOCATECHECK(self%indn0_trc(naez_trc,naclsd)) ! why transposed?
+    ALLOCATECHECK(self%indn0_trc(naclsd,naez_trc))
     ALLOCATECHECK(self%atom_trc(naclsd,naez_trc))
     ALLOCATECHECK(self%ezoa_trc(naclsd,naez_trc))
     self%nacls_trc = 0
@@ -101,7 +101,7 @@ module ClusterInfo_mod
       nacls = ref_clusters(ii)%nacls
       numn0 = ref_clusters(ii)%numn0
       CHECKASSERT( nacls <= naclsd )
-      send_buf(1,ii) = ref_clusters(ii)%atom_index ! global atom index
+      send_buf(1,ii) = ref_clusters(ii)%atom_id ! global atom index
       send_buf(2,ii) = ref_clusters(ii)%nacls
       send_buf(3,ii) = ref_clusters(ii)%numn0
       send_buf(0*naclsd+3+1:0*naclsd+3+numn0,ii) = ref_clusters(ii)%indn0(:) ! indn0 has dim(numn0) now, however, numn0 <= nacls holds
@@ -121,14 +121,14 @@ module ClusterInfo_mod
       ! indn0 and atom have to be transformed to 'truncation-zone-indices'
       cnt = 0
       do jj = 1, numn0
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(3+jj,ii)   
-!       ind = translateInd(trunc_zone, recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(3+jj,ii)
+
         ind = trunc_zone%index_map(recv_buf(0*naclsd+3+jj,ii)) ! indn0 received
 
         ! ind = -1 means that this atom is outside of truncation zone
         if (ind > 0) then
           cnt = cnt + 1
-          self%indn0_trc(ii,cnt) = ind ! why transposed?
+          self%indn0_trc(cnt,ii) = ind ! indn0 translated into indices of the trunc_zone
         endif ! ind > 0
       enddo ! jj
 
@@ -139,7 +139,7 @@ module ClusterInfo_mod
       cnt = 0
       do jj = 1, nacls
 ! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',recv_buf(naclsd+3+jj,ii)
-!       ind = translateInd(trunc_zone, recv_buf(1*naclsd+3+jj,ii)) ! atom received
+
         ind = trunc_zone%index_map(recv_buf(1*naclsd+3+jj,ii)) ! atom received
 
         if (ind > 0) then

@@ -88,7 +88,7 @@ module BCPOperator_mod
     naezd = self%cluster_info%naez_trc
     blocks_per_row = self%cluster_info%numn0_trc(1)
 
-    call bcpwupper(GLLH, self%GLLHBLCK, NAEZD, self%cluster_info%NUMN0_trc, self%cluster_info%INDN0_trc, &
+    call bcpwupper(GLLH, self%GLLHBLCK, naezd, self%cluster_info%numn0_trc, self%cluster_info%indn0_trc, &
                    self%lmmaxd, self%natbld, &
                    self%xyzdim(1), self%xyzdim(2), self%xyzdim(3), &
                    blocks_per_row)
@@ -138,7 +138,7 @@ module BCPOperator_mod
     double complex :: gllh(lmmaxd,blocks_per_row*lmmaxd,naez)
     double complex :: gllhblck(natbld*lmmaxd,natbld*xdim*ydim*zdim*lmmaxd)
 
-    integer, intent(in) :: indn0(naez,blocks_per_row) ! why transposed?
+    integer, intent(in) :: indn0(blocks_per_row,naez)
     integer, intent(in) :: numn0(naez)
 
     
@@ -262,15 +262,15 @@ module BCPOperator_mod
 
   endsubroutine ! bcpwupper
 
-  subroutine genblav(gllh, blav, i, j, indn0, numn0, naez, lmmaxd, natbld, blocks_per_row )
+  subroutine genblav(gllh, blav, i, j, indn0, numn0, naez, lmmaxd, natbld, blocks_per_row)
     integer, intent(in) :: naez
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: natbld
     integer, intent(in) :: blocks_per_row
-    integer, intent(in) :: indn0(naez,*) ! why transposed?
+    integer, intent(in) :: indn0(blocks_per_row,naez)
     integer, intent(in) :: numn0(naez)
-    double complex, intent(in) :: gllh(lmmaxd,blocks_per_row*lmmaxd,naez)
-    double complex, intent(inout) :: blav(natbld*lmmaxd,natbld*lmmaxd)
+    double complex, intent(in) :: gllh(lmmaxd,lmmaxd*blocks_per_row,naez)
+    double complex, intent(inout) :: blav(lmmaxd*natbld,lmmaxd*natbld)
 
     integer :: i, j, i1, i2, lm1, lm2, il1, il2, il2b, isrh
 
@@ -280,7 +280,7 @@ module BCPOperator_mod
         il2b = 0
 
         do isrh = 1, numn0((i-1)*natbld+i1)
-          if (indn0((i-1)*natbld+i1,isrh) == (j-1)*natbld+i2) il2b = isrh  ! why transposed?
+          if (indn0(isrh,(i-1)*natbld+i1) == (j-1)*natbld+i2) il2b = isrh
         enddo ! isrh
 !
 ! also a pointer array pointto(naezd,naezd) could come up for this job
