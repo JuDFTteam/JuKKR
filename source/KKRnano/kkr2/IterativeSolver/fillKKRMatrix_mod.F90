@@ -29,7 +29,7 @@ module fillKKRMatrix_mod
 
     integer(kind=1), intent(in) :: lmax_array(:) !< lmax each row, dim(nrows)
     integer, intent(in) :: numn0(:) !< dim(nrows)
-    integer, intent(in) :: indn0(:,:) !< dim(nrows,maxval(numn0))
+    integer, intent(in) :: indn0(:,:) !< dim(nrows,maxval(numn0)) ! why transposed?
     type(SparseMatrixDescription), intent(inout) :: sparse
 
     integer :: nnzb, nrows, ij, irow, icol, start_address, lm_max
@@ -37,7 +37,7 @@ module fillKKRMatrix_mod
     nrows = size(lmax_array)
 
     ASSERT(size(numn0) == nrows)
-    ASSERT(size(indn0, 1) == nrows)
+    ASSERT(size(indn0, 1) == nrows) ! why transposed?
     ASSERT(size(sparse%ia) == nrows+1)
     ASSERT(size(sparse%kvstr) == nrows+1)
 
@@ -62,10 +62,10 @@ module fillKKRMatrix_mod
       sparse%ia(irow) = ij
       do icol = 1, numn0(irow) ! square matrix
       
-        ASSERT(icol <= size(indn0, 2))
+        ASSERT(icol <= size(indn0, 2)) ! why transposed?
         ASSERT(ij <= nnzb)
         
-        sparse%ja(ij) = indn0(irow,icol)
+        sparse%ja(ij) = indn0(irow,icol) ! why transposed?
         
         ij = ij + 1
       enddo ! icol
@@ -79,9 +79,9 @@ module fillKKRMatrix_mod
       do icol = 1, numn0(irow)
         sparse%ka(ij) = start_address
 
-        ASSERT( 1 <= indn0(irow,icol) .and. indn0(irow,icol) <= nrows )
+        ASSERT( 1 <= indn0(irow,icol) .and. indn0(irow,icol) <= nrows ) ! why transposed?
 
-        start_address = start_address + lm_max*(lmax_array(indn0(irow,icol)) + 1)**2
+        start_address = start_address + lm_max*(lmax_array(indn0(irow,icol)) + 1)**2 ! why transposed?
         
         ij = ij + 1
       enddo ! icol

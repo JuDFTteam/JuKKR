@@ -358,7 +358,7 @@ module CalculationData_mod
     ! TODO: This is overdimensioned when l-cutoff is used!!!
     if (num_truncated(dims%lmaxd) /= dims%naez) &
       warn(6, "The memory proportions for iGuess are overdimensioned when l-dependent truncation is applied!")
-      
+
     ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
     blocksize = self%trunc_zone%naez_trc * self%num_local_atoms * dims%lmmaxd**2
 

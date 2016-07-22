@@ -43,14 +43,14 @@
       write(6,'(23(1h-))')
       write(6, fmt='(15x,a4,2(f14.8),2x,f8.4)') ' TOT', sumch(1:2), muspin(lmaxp1+1)
       write(6,'(33x,f14.8)') sumch(1) + sumch(2)
-      
+
       if (last) then ! last atom
         write(6,'(/,78(1h#))')
         write(6, *)
       else  ! last atom
         write(6, '(9x,49(1h=))') ! separation line
       endif ! last atom
-    
+
     else
 
       if (first) then ! first atom

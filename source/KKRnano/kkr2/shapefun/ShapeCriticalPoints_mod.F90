@@ -491,28 +491,28 @@ module ShapeCriticalPoints_mod
     !       a unit vector parallel to the first vector (new 1st component) and
     !       a third unit vector that is orthogonal to these two.
     use Constants_mod, only: pi
-    
+
     double precision, intent(in) :: abg(3) ! former alpha, beta, gamma
     integer, intent(in) :: nvert
-    double precision, intent(in) :: v(3,*) ! (3,nvertd)
+    double precision, intent(in)  ::  v(3,*) ! (3,nvertd)
     double precision, intent(out) :: vz(3,*) ! (3,nvertd)
 
     integer :: j, ivert
     double precision :: sn(3), cs(3), a(3,3)
 
-    cs = cos(abg(1:3))
-    sn = sin(abg(1:3))
-    
-    a(1,1) = cs(1)*cs(2)*cs(3) - sn(1)*sn(3)
-    a(2,1) = sn(1)*cs(2)*cs(3) + cs(1)*sn(3)
+    cs(1:3) = cos(abg(1:3))
+    sn(1:3) = sin(abg(1:3))
+
+    a(1,1) =  cs(1)*cs(2)*cs(3) - sn(1)*sn(3)
+    a(2,1) =  sn(1)*cs(2)*cs(3) + cs(1)*sn(3)
     a(3,1) = -sn(2)*cs(3)
     a(1,2) = -cs(1)*cs(2)*sn(3) - sn(1)*cs(3)
     a(2,2) = -sn(1)*cs(2)*sn(3) + cs(1)*cs(3)
-    a(3,2) = sn(2)*sn(3)
-    a(1,3) = cs(1)*sn(2)
-    a(2,3) = sn(1)*sn(2)
-    a(3,3) = cs(2)
-    
+    a(3,2) =  sn(2)*sn(3)
+    a(1,3) =  cs(1)*sn(2)
+    a(2,3) =  sn(1)*sn(2)
+    a(3,3) =  cs(2)
+
     do ivert = 1, nvert
       vz(1:3,ivert) = 0.d0
       do j = 1, 3

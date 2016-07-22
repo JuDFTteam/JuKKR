@@ -84,7 +84,7 @@ module ClusterInfo_mod
 
     ALLOCATECHECK(self%nacls_trc(naez_trc))
     ALLOCATECHECK(self%numn0_trc(naez_trc))
-    ALLOCATECHECK(self%indn0_trc(naez_trc,naclsd))
+    ALLOCATECHECK(self%indn0_trc(naez_trc,naclsd)) ! why transposed?
     ALLOCATECHECK(self%atom_trc(naclsd,naez_trc))
     ALLOCATECHECK(self%ezoa_trc(naclsd,naez_trc))
     self%nacls_trc = 0
@@ -104,7 +104,7 @@ module ClusterInfo_mod
       send_buf(1,ii) = ref_clusters(ii)%atom_index ! global atom index
       send_buf(2,ii) = ref_clusters(ii)%nacls
       send_buf(3,ii) = ref_clusters(ii)%numn0
-      send_buf(0*naclsd+3+1:0*naclsd+3+numn0,ii) = ref_clusters(ii)%indn0(:) ! indn0 is dim(numn0) now, however, numn0 <= nacls holds
+      send_buf(0*naclsd+3+1:0*naclsd+3+numn0,ii) = ref_clusters(ii)%indn0(:) ! indn0 has dim(numn0) now, however, numn0 <= nacls holds
       send_buf(1*naclsd+3+1:1*naclsd+3+nacls,ii) = ref_clusters(ii)%atom(:)
       send_buf(2*naclsd+3+1:2*naclsd+3+nacls,ii) = ref_clusters(ii)%ezoa(:)
       send_buf(3*naclsd+3+1,ii) = MAGIC
@@ -128,7 +128,7 @@ module ClusterInfo_mod
         ! ind = -1 means that this atom is outside of truncation zone
         if (ind > 0) then
           cnt = cnt + 1
-          self%indn0_trc(ii,cnt) = ind
+          self%indn0_trc(ii,cnt) = ind ! why transposed?
         endif ! ind > 0
       enddo ! jj
 

@@ -32,7 +32,7 @@ module PositionReader_mod
   
   integer(kind=1), parameter :: & ! enum-replacement
     MODIFIED_INITIALIZED  = 0,  & ! set to zero
-    MODIFIED_AUTO_DEFAULT = 1,  & ! use hard coded default values for elements
+    MODIFIED_AUTO_DEFAULT = 1,  & ! use automatic default values for elements
     MODIFIED_ELEM_DEFAULT = 2,  & ! use hard coded default values for elements
     MODIFIED_CONF_DEFAULT = 3,  & ! use default values for elements which have been adjusted in the input file
     MODIFIED_SAME_DEFAULT = 4,  & ! values given in the .xyz file have the same value as the MODIFIED_CONF_DEFAULT level
@@ -59,8 +59,8 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
     integer,          parameter :: nKeys=6, nDoF=12
     character(len=*), parameter :: keywords(nKeys) = ['Z=    ','Vw=   ','rMT=  ','Mag=  ','core= ','start='] ! all strings need to tail with '='
     integer         , parameter :: ikeypos(nKeys)  = [ 0,       4,       5,       6,       7,       11     ] ! position in params(0:)
-    double precision :: z_defaults(0:nDoF-1,-1:116)
-    integer(kind=1)  :: z_modified(0:nDoF-1,-1:116)
+    double precision :: z_defaults(0:nDoF-1,lbound(PSE, 1):ubound(PSE, 1))
+    integer(kind=1)  :: z_modified(0:nDoF-1,lbound(PSE, 1):ubound(PSE, 1))
     integer :: iZ
     
 !   type(ConfigReader) :: cr
@@ -68,15 +68,15 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
     character(len=256) :: configuration_line, elem_file
     integer(kind=1), parameter :: mdst(2) = [MODIFIED_ELEM_DEFAULT, MODIFIED_CONF_DEFAULT]
 
-    z_defaults(:,:) = 0.d0; z_modified(:,:) = MODIFIED_INITIALIZED
+    z_defaults(:,:) = 0.d0 ; z_modified(:,:) = MODIFIED_INITIALIZED
     
     elem_file = 'elem' ! try to find the element configurations in the .xyz-file
     
 !     call create(cr)
 !     if (parseFile(cr, elem_file) /= 0) die_here('parsing file "'-elem_file-'" failed!')
     
-    do iZ = -1, 116
-      z_defaults(0,iZ) = dble(iZ); z_modified(0,iZ) = MODIFIED_AUTO_DEFAULT
+    do iZ = lbound(PSE, 1), ubound(PSE, 1)
+      z_defaults(0,iZ) = dble(iZ) ; z_modified(0,iZ) = MODIFIED_AUTO_DEFAULT
       ! add more default functions of iZ here
       ! ...
       write(unit=element_keyword, fmt='(9a)') 'element-',PSE(iZ)
@@ -107,7 +107,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
     integer         , intent(in) :: ikeypos(:)  ! e.g. [ 0,    4,     5,     6,      7,      11  ] ! position in params(0:)
     
     integer, parameter :: FU=23
-    integer, parameter :: L=128
+    integer, parameter :: L=128, SourceLine2AdjustL = __LINE__
     character(len=L) :: line
     character(len=L+32) :: longline
     character(len=4)   :: symbol ! chemical symbol
@@ -154,7 +154,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
     if (MPI_master(comm)) then
       
       allocate(modified(0:ndof-1,natoms), stat=ist)
-      pos(:,:) = 0.d0; modified(:,:) = MODIFIED_INITIALIZED
+      pos(:,:) = 0.d0 ; modified(:,:) = MODIFIED_INITIALIZED
 
       do ia = 1, natoms
         longline = ''
@@ -165,7 +165,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
         if (line /= adjustl(longline)) then
           write(0,'(a,i0,9a)') 'Warning: line #',ia+2,' in file "',trim(filename),'" was truncated!' ! DEBUG
           n_warn_line_truncated = n_warn_line_truncated + 1
-        endif
+        endif ! line was trunctated
         
         symbol = ''
         xyz = 0.d0
@@ -194,14 +194,15 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
           return ! error
         endif
         
-        pos(1:3,ia) = xyz(1:3); modified(1:3,ia) = MODIFIED_SPECIALIZED ! set Cartesian positions
+        pos(1:3,ia) = xyz(1:3) ; modified(1:3,ia) = MODIFIED_SPECIALIZED ! set Cartesian positions
 
 !       write(*, '(i0,99("  ",f0.2))') ia, pos(:,ia) ! show all params  
         
       enddo ! ia
 
-      if (n_warn_line_truncated > 0) warn(6, 'in file "'-filename-'",'+n_warn_line_truncated+'lines have been truncated!')
       if (n_warn_ignored_param  > 0) warn(6, 'in file "'-filename-'",'+n_warn_ignored_param+'expressions have been ignored!')
+      if (n_warn_line_truncated > 0) warn(6, 'in file "'-filename-'",'+n_warn_line_truncated+ &
+                                             'lines have been truncated! increate line length in'+__FILE__-':'-SourceLine2AdjustL)
       
       if (checks) then
         nadd = 0
@@ -213,7 +214,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
         enddo ! ia
         if (nadd > 0) warn(6, 'at least'+nadd+'additional lines in file "'-filename-'" seem to be valid atom entries!')
       endif ! checks
-      
+
       close(FU, iostat=ist) ! ignore status
       if(o>0) write(o,'(9a)') 'file "',trim(filename),'" has been read in.' ! success message, todo suppress according to verbosity level
       
@@ -225,7 +226,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
       endif ! output
       deallocate(modified, stat=ist)
       
-    else
+    else  ! master
       pos = IMPOSSIBLE_VALUE ! DEBUG
     endif ! master
     
@@ -251,7 +252,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
     integer :: ieq(size(keyw)), ii, ik, jc, nk
     integer(kind=1) :: ms(1:2)
 
-    ms(1:2) = [4, 5]; if (present(modify_states)) ms = modify_states
+    ms(1:2) = [MODIFIED_SAME_DEFAULT, MODIFIED_SPECIALIZED]; if (present(modify_states)) ms = modify_states
     
     nk = size(keyw)
     assert( nk == size(ikey) ) ! the same number has to be passed
@@ -271,7 +272,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
           bad = adjustl((line(max(1, ii-7):min(ii+7, len(line)))))
           write(*, fmt='(3a,i0)') '  found in file "',trim(filename),'" at line #',linenumber
           die_here('value cannot be parsed at "...'-bad-'..." in line #'-linenumber+'in file "'-filename-'"!')
-          return ! if error was treated as soft error
+          return ! only if error was treated as soft error
         endif
 !!!     write(*, fmt='(a,f0.3)') trim(keyw(ik)), value ! show found values
         modi(ikey(ik)) = ms(2)

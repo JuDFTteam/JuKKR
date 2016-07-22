@@ -1,9 +1,9 @@
-#include "macros.h"
 !> Module for interstitial mesh generation given critical points
 !> (= panel positions).
 
 module ShapeStandardMesh_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+#include "macros.h"
   implicit none
   private
   public :: mesh
@@ -32,7 +32,7 @@ module ShapeStandardMesh_mod
   !> @param[in]     npand  dimension of nm array
   !> @param[in]     verbosity  0=no screen output, 1=output info about radial mesh
   subroutine mesh(crt, npan, nm, xrn, drn, meshn, npoi, keypan, nmin, meshnd, npand, verbosity)
-    integer, intent(in) :: meshnd, npand, verbosity, npan, npoi, keypan, nmin
+    integer, intent(in) :: meshnd, npand, npan, npoi, keypan, nmin, verbosity
     integer, intent(out) :: meshn
     integer, intent(inout) :: nm(npand) ! if keypan /= 0, there could be an intent(in) here
     double precision, intent(inout) :: crt(npand) ! reordered on exit
@@ -80,9 +80,8 @@ module ShapeStandardMesh_mod
 
     if (verbosity > 0) write(6,fmt="(50('-'))")
 
-  endsubroutine mesh
+  endsubroutine ! mesh
 
-!------------------------------------------------------------------------------
   subroutine mesh0(crt, npan, naprox, nmin, nm)
     ! ***********************************************************
     ! *  this subroutine calculates an appropriate mesh for
@@ -118,6 +117,7 @@ module ShapeStandardMesh_mod
       endif
     enddo ! i
     nm(1) = nm(1) + ntot
-  endsubroutine mesh0
+    
+  endsubroutine ! mesh0
 
-endmodule ShapeStandardMesh_mod
+endmodule ! ShapeStandardMesh_mod

@@ -138,7 +138,7 @@ module BCPOperator_mod
     double complex :: gllh(lmmaxd,blocks_per_row*lmmaxd,naez)
     double complex :: gllhblck(natbld*lmmaxd,natbld*xdim*ydim*zdim*lmmaxd)
 
-    integer, intent(in) :: indn0(naez,blocks_per_row)
+    integer, intent(in) :: indn0(naez,blocks_per_row) ! why transposed?
     integer, intent(in) :: numn0(naez)
 
     
@@ -267,7 +267,7 @@ module BCPOperator_mod
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: natbld
     integer, intent(in) :: blocks_per_row
-    integer, intent(in) :: indn0(naez,*)
+    integer, intent(in) :: indn0(naez,*) ! why transposed?
     integer, intent(in) :: numn0(naez)
     double complex, intent(in) :: gllh(lmmaxd,blocks_per_row*lmmaxd,naez)
     double complex, intent(inout) :: blav(natbld*lmmaxd,natbld*lmmaxd)
@@ -280,7 +280,7 @@ module BCPOperator_mod
         il2b = 0
 
         do isrh = 1, numn0((i-1)*natbld+i1)
-          if (indn0((i-1)*natbld+i1,isrh) == (j-1)*natbld+i2) il2b = isrh
+          if (indn0((i-1)*natbld+i1,isrh) == (j-1)*natbld+i2) il2b = isrh  ! why transposed?
         enddo ! isrh
 !
 ! also a pointer array pointto(naezd,naezd) could come up for this job

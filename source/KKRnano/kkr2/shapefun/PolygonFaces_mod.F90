@@ -19,7 +19,7 @@ module PolygonFaces_mod
     double precision :: Euler(1:3) !< Euler angles alpha beta gamma to rotate faces perpendicular to z-axis
     type(TetrahedronAngles), allocatable :: ta(:)
   endtype
-  
+
   interface destroy
     module procedure destroyPolygonFace, destroyTetrahedronAngles
   endinterface  
@@ -29,10 +29,10 @@ module PolygonFaces_mod
   elemental subroutine destroyPolygonFace(self)
     type(PolygonFace), intent(inout) :: self
     integer :: ist
-    if (allocated(self%ta)) call destroy(self%ta) 
+    call destroy(self%ta) 
     deallocate(self%ta, stat=ist)
   endsubroutine ! destroy
-  
+
   elemental subroutine destroyTetrahedronAngles(self)
     type(TetrahedronAngles), intent(in) :: self
     ! nothing to be deallocated   

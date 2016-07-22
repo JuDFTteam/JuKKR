@@ -6,9 +6,9 @@ module Voronoi_mod
   private
   public :: Voronoi_construction
 
-  interface normal_plane
-    module procedure normal_plane0f, normal_planef
-  endinterface
+!   interface normal_plane
+!     module procedure normal_plane0f, normal_planef
+!   endinterface
   
   contains
   
@@ -73,30 +73,34 @@ module Voronoi_mod
   !
   ! Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
   subroutine Voronoi_construction(nvec, rvec, nvertmax, nfaced, weight0, weights, tolvdist, tolarea, &
-     rmt, rout, volume, nface, planes, nvert, vert, atom_id, output)
+     rmt, rout, volume, nface, planes, nvert, vert, atom_id)
     use Sorting_mod, only: dsort
 
     integer, intent(in) :: nvec, nvertmax, nfaced
-    double precision, intent(in) :: rvec(:,:) ! cluster positions without the origin among them
-    double precision, intent(in) :: weight0, weights(:)  ! Weight of central atom, and of all others (dimensioned as RVEC). 
-    double precision, intent(in) :: tolvdist ! Max. tolerance for distance of two vertices
-    double precision, intent(in) :: tolarea  ! Max. tolerance for area of polygon face
-    integer, intent(in) :: atom_id
-    logical, intent(in) :: output ! test output
-
-    integer, intent(out) :: nface, nvert(:)
-    double precision, intent(out) :: volume, rmt, rout
-    double precision, intent(out) :: planes(0:,:)
-    double precision, intent(out) :: vert(:,:,:) ! (3,nvertmax,nfaced) ! vertices
+    double precision, intent(in) :: rvec(:,:) !> cluster positions without the origin among them
+    double precision, intent(in) :: weight0, weights(:) !> Weight of central atom, and of all others (dimensioned as RVEC). 
+    double precision, intent(in) :: tolvdist !> Max. tolerance for distance of two vertices
+    double precision, intent(in) :: tolarea  !> Max. tolerance for area of polygon face
+    integer, intent(in) :: atom_id !> global atom id passed for more helpful error messages
+    integer, intent(out) :: nface !> number of faces
+    integer, intent(out) :: nvert(:) !> number of vertices
+    double precision, intent(out) :: volume !> volume of the Voronoi cell
+    double precision, intent(out) :: rmt !> smallest distance of a plane
+    double precision, intent(out) :: rout !> largest distance of a plane contributing
+    double precision, intent(out) :: planes(0:,:) !> planes
+    double precision, intent(out) :: vert(:,:,:) ! (3,nvertmax,nfaced) !> vertices
     
-    integer :: ivec, iface, ivert, i, nplane
-    double precision :: tetrvol, rsq, tau, v1(3), v2(3), v3(3), rout2, dist
-    double precision :: facearea(nfaced), trianglearea   
-    integer :: isort(nfaced) ! Index for sorting
-    double precision :: rsort(nfaced)              ! Aux. function for sorting
+    ! locals
+#ifdef DEBUGSHAPEFUNCTIONS
+    logical, parameter :: output = .true. !> activates logging for debug
+#else
+    logical, parameter :: output = .false. !> deactivates logging for debug
+#endif
+    integer :: ivec, iface, ivert, i, nplane, isort(nfaced)
+    double precision :: tetrvol, rsq, tau, rout2, dist, trianglearea
+    double precision :: facearea(nfaced), rsort(nfaced), v1(3), v2(3), v3(3)
     double precision, allocatable :: ptmp(:,:), vtmp(:,:,:) ! For sorting
-    integer, allocatable :: ntmp(:)                        ! For sorting
-
+    integer, allocatable :: ntmp(:) ! For sorting
 
     ! Check that the origin is not included in RVEC.
     do ivec = 1, nvec
@@ -128,14 +132,14 @@ module Voronoi_mod
       v1(1:3) = vert(1:3,1,iface)
       facearea(iface) = 0.d0
       do ivert = 2, nvert(iface)-1
-          v2(1:3) = vert(1:3,ivert,iface)
+          v2(1:3) = vert(1:3,ivert  ,iface)
           v3(1:3) = vert(1:3,ivert+1,iface)
-          tetrvol = v1(1)*(v2(2)*v3(3)-v3(2)*v2(3))+v2(1)*(v3(2)*v1(3)-v1(2)*v3(3))+v3(1)*(v1(2)*v2(3)-v2(2)*v1(3))
+          tetrvol = v1(1)*(v2(2)*v3(3) - v3(2)*v2(3)) + v2(1)*(v3(2)*v1(3) - v1(2)*v3(3)) + v3(1)*(v1(2)*v2(3) - v2(2)*v1(3))
           volume = volume + abs(tetrvol)
           trianglearea = 0.5d0 * sqrt( &
-                ( v1(1)*v2(2) + v2(1)*v3(2) + v3(1)*v1(2) - v2(2)*v3(1) - v3(2)*v1(1) - v1(2)*v2(1))**2 &
-              + ( v1(2)*v2(3) + v2(2)*v3(3) + v3(2)*v1(3) - v2(3)*v3(2) - v3(3)*v1(2) - v1(3)*v2(2))**2 &
-              + ( v1(3)*v2(1) + v2(3)*v3(1) + v3(3)*v1(1) - v2(1)*v3(3) - v3(1)*v1(3) - v1(1)*v2(3))**2 )
+                ( v1(1)*v2(2) + v2(1)*v3(2) + v3(1)*v1(2) - v2(2)*v3(1) - v3(2)*v1(1) - v1(2)*v2(1) )**2 &
+              + ( v1(2)*v2(3) + v2(2)*v3(3) + v3(2)*v1(3) - v2(3)*v3(2) - v3(3)*v1(2) - v1(3)*v2(2) )**2 &
+              + ( v1(3)*v2(1) + v2(3)*v3(1) + v3(3)*v1(1) - v2(1)*v3(3) - v3(1)*v1(3) - v1(1)*v2(3) )**2 )
           facearea(iface) = facearea(iface) + trianglearea
       enddo ! ivert
     enddo ! iface
@@ -155,7 +159,7 @@ module Voronoi_mod
     endif ! output
     
     ! Fint rout, the largest radius of all vertices
-    rout2 = 0.d0
+    rout2 = 0.d0 ! init with zero
     do iface = 1, nface
       do ivert = 1, nvert(iface)
         rout2 = max(rout2, sum(vert(1:3,ivert,iface)**2))
@@ -171,23 +175,21 @@ module Voronoi_mod
       rmt = min(rmt, dist)
     enddo ! iface
 
-    if (output) &
-      write(*, fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %, atom #',i0)") rmt,rout,rmt*100/rout,atom_id
+    if (output) write(*, fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %, atom #',i0)") rmt,rout,rmt*100/rout,atom_id
     
     call dsort(rsort, isort, nface)
     ! Rearrange using a temporary arrays ptmp, vtmp, ntmp
     allocate(ptmp(0:3,nface), vtmp(3,nvertmax,nface), ntmp(nface))
     ptmp(0:3,:) = planes(0:3,1:nface)
-    vtmp(:,:,:) = vert(:,:,1:nface)
-    ntmp(:)     = nvert(1:nface)
+    vtmp(:,:,:) = vert(:,:,  1:nface)
+    ntmp    (:) = nvert     (1:nface)
     do iface = 1, nface
       i = isort(iface)
-      planes(:,i) = ptmp(:,  iface) ! (0:3, ...)
-      vert(:,:,i) = vtmp(:,:,iface) ! (1:3,:, ...)
-      nvert   (i) = ntmp    (iface)
-    enddo ! iface
-    
-    deallocate(ptmp, vtmp, ntmp)
+      planes(:,i) = ptmp(:,  iface) ! (0:3,  ...)
+      vert(:,:,i) = vtmp(:,:,iface) ! (1:3,:,...)
+      nvert   (i) = ntmp    (iface) ! (      ...)
+    enddo ! iface    
+    deallocate(ptmp, vtmp, ntmp, stat=i) ! ignore status
 
   endsubroutine ! Voronoi_construction
   
@@ -228,7 +230,6 @@ module Voronoi_mod
   endsubroutine ! polyhedron08
 
 
-    !***********************************************************************
   subroutine vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, output)
     ! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
     ! a convex part of space (the minimal one containing the origin, 
@@ -402,7 +403,6 @@ module Voronoi_mod
     
     endsubroutine ! vertex3d
 
-    !------------------------------------------------------------------------------
     subroutine analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
     ! analyze the faces and vertices of the polyhedron.
     ! use criteria for rejecting faces that are too small or vertices that are too close to each other.
@@ -447,7 +447,7 @@ module Voronoi_mod
     ! stop loop as soon as the acceptable next vertex is found.
         do while (.not. lfoundnext .and. ivert2 <= nvert(iplane))
           dv(1:3) = vert(1:3,ivert2,iplane) - vert(1:3,ivert,iplane)
-          vdist2 = dv(1)**2 + dv(2)**2 + dv(3)**2
+          vdist2 = dv(1)*dv(1) + dv(2)*dv(2) + dv(3)*dv(3)
 !             vdist = sqrt(vdist2)
 
           if (vdist2 >= tolvdist2) then
@@ -470,7 +470,7 @@ module Voronoi_mod
       ivert = 1
       ivert2 = nvert(iplane)
       dv(1:3) = vert(1:3,ivert2,iplane) - vert(1:3,ivert,iplane)
-      vdist2 = dv(1)**2 + dv(2)**2 + dv(3)**2
+      vdist2 = dv(1)*dv(1) + dv(2)*dv(2) + dv(3)*dv(3)
 !     vdist = sqrt(vdist2)
       if (vdist2 >= tolvdist2) then
         lacceptvert(ivert2) = .true.        ! vertex is to be accepted
@@ -478,7 +478,6 @@ module Voronoi_mod
         lacceptvert(ivert2) = .false.       ! remember that vertex is to be rejected later
         lacctot = .false.                   ! remember that at least one vertex has to be rejected.
       endif ! vdist > tolvdist
-
 
       ! reject vertices which were found inappropriate and re-index vertices in each plane:
       if (.not. lacctot) then
@@ -495,8 +494,6 @@ module Voronoi_mod
       endif ! not lacctot
 
     enddo ! iplane
-
-
 
     ! now analyze faces, reject faces with less than three vertices and faces of very small area.
     do iplane = 1, nplane
@@ -525,7 +522,6 @@ module Voronoi_mod
       endif
 
     enddo ! iplane
-
 
     ! re-order the faces so that the accepted ones are in the first nface positions (nface is recalculated);
     ! the rest of the array entries are not taken care of, and can contain garbage.
@@ -560,7 +556,7 @@ module Voronoi_mod
 
   endsubroutine ! analyzevert3d
 
-!   !***********************************************************************
+  
 !   logical function halfspace(a,b,c,d,x,y,z)
 !   ! given a plane a*x+b*y+c*z=d, and a point (x,y,z) in space, this 
 !   ! function takes the value true if (x,y,z) lies in the half-space 
@@ -577,18 +573,17 @@ module Voronoi_mod
 !     halfspace = (d*(a*x + b*y + c*z) <= d*d) !!! re-checked 31may2008 FM
 ! 
 !   endfunction ! halfspace
-  
-  logical function half_space(plane, vec)
-    double precision, intent(in) :: plane(0:3), vec(1:3)
-!   half_space = halfspace(plane(1), plane(2), plane(3), plane(0), vec(1), vec(2), vec(3))
-    if (sum(abs(plane(1:3))) < 1.d-80) die_here('halfspace: a,b,c too small.')
 
-    half_space = (plane(0)*dot_product(plane(1:3), vec(1:3)) <= plane(0)**2) !!! re-checked 31may2008 FM
+  logical function half_space(p, v)
+    double precision, intent(in) :: p(0:3), v(1:3)
+#ifndef NDEBUG
+    if (sum(abs(p(1:3))) < 1.d-80) die_here('halfspace: a,b,c too small.')
+#endif
+    half_space = (p(0)*(p(1)*v(1) + p(2)*v(2) + p(3)*v(3)) <= p(0)*p(0))
   endfunction ! halfspace
   
-  
-  function normal_plane0f(v1, tau) result(plane)
-    double precision :: plane(0:3) ! former [d,a,b,c]
+  function normal_plane(v1, tau) result(p)
+    double precision :: p(0:3) ! result, former [d,a,b,c]
     double precision, intent(in) :: v1(3), tau
 !     ! given a point in space, r1=(v1(1),v1(2),v1(3)), this
 !     ! subroutine returns the coefficients defining a plane through the 
@@ -600,32 +595,12 @@ module Voronoi_mod
 !     ! if tau=0 (plane passes through the origin), then d=0.
 
     if (tau /= 0.d0) then
-      plane(1:3) = tau*v1(1:3)
-      plane(0) = sum(plane(1:3)**2)
+      p(1:3) = tau*v1(1:3)
+      p(0)   = p(1)*p(1) + p(2)*p(2) + p(3)*p(3)
     else
-      plane(1:3) = v1(1:3)
-      plane(0) = 0.d0
+      p(0)   = 0.d0
+      p(1:3) = v1(1:3)
     endif
-
-  endfunction ! normal_plane
-  
-  function normal_planef(v1, v2, tau) result(plane)
-    double precision :: plane(0:3) ! former [d,a,b,c]
-    double precision, intent(in) :: v1(3), v2(3), tau
-    ! given two points in space, r1=(v1(1),v1(2),v1(3)) and r2=(v2(1),v2(2),v2(3)), this
-    ! subroutine returns the coefficients defining a plane through the 
-    ! equation a*x+b*y+c*z=d, which is normal to the vector r2-r1 and passes
-    ! through the point (1.-tau)*r1 + tau*r2 (tau thus being a parameter
-    ! defining how close the plane is to each of the two points).
-    
-    ! the plane is defined as 
-    ! (a,b,c)*(x-v1(1),y-v1(2),z-v1(3))=const=
-    !                         =(distance from r1 to (1.-tau)*r1 + tau*r2)**2
-    ! so a,b,c are the coords. of a vector connecting the point r1 to
-    ! the point (1.-tau)*r1 + tau*r2.
-
-    plane(1:3) = (1.d0 - tau)*v1(1:3) + tau*v2(1:3)
-    plane(0) = dot_product(plane(1:3), plane(1:3) + v1(1:3))
 
   endfunction ! normal_plane
   
@@ -636,22 +611,19 @@ module Voronoi_mod
     ! on output, arrays s, x, y, and z return sorted.
     integer, intent(in) :: n
     double precision, intent(inout) :: s(:), xyz(:,:)
-    double precision :: tmp(0:3)
+    double precision :: sxyz(0:3) ! temp. swap
     integer :: i, j
 
     outer: do j = 2, n
-      tmp = [s(j), xyz(1,j), xyz(2,j), xyz(3,j)]
+      sxyz(0) = s(j) ; sxyz(1:3) = xyz(1:3,j)
       do i = j-1, 1, -1
-        if (s(i) <= tmp(0)) then
-          s(i+1) = tmp(0)
-          xyz(1:3,i+1) = tmp(1:3)
+        if (s(i) <= sxyz(0)) then
+          s(i+1) = sxyz(0) ; xyz(1:3,i+1) = sxyz(1:3)
           cycle outer
         endif
-        s(i+1) = s(i)
-        xyz(1:3,i+1) = xyz(1:3,i)
+        s(i+1) = s(i) ; xyz(1:3,i+1) = xyz(1:3,i)
       enddo ! i
-      s(1) = tmp(0)
-      xyz(1:3,1) = tmp(1:3)
+      s(1) = sxyz(0) ; xyz(1:3,1) = sxyz(1:3)
     enddo outer ! j
 
   endsubroutine ! sort vertices
@@ -666,14 +638,14 @@ module Voronoi_mod
   endfunction ! crospr
 
  
-  double precision function dist_plane(dabc)
+  double precision function dist_plane(p)
     ! returns the distance of a plane a*x+b*y+c*z=d to the origin.
-    double precision, intent(in) :: dabc(0:3)
-    double precision :: abcsq
+    double precision, intent(in) :: p(0:3)
+    double precision :: d2
 
-    abcsq = sum(dabc(1:3)**2)
-    assert(abcsq >= 1.d-100)
-    dist_plane = sqrt(dabc(0)**2/abcsq)  
+    d2 = p(1)*p(1) + p(2)*p(2) + p(3)*p(3)
+    assert(d2 >= 1.d-100)
+    dist_plane = abs(p(0))/sqrt(d2)
 
   endfunction ! dist_plane
 

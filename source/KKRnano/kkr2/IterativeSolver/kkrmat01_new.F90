@@ -505,7 +505,7 @@ module kkrmat_mod
     integer, intent(in) :: nacls(:)
     integer, intent(in) :: atom(:,:)
     integer, intent(in) :: numn0(:)
-    integer, intent(in) :: indn0(:,:)
+    integer, intent(in) :: indn0(:,:) ! why transposed?
     double precision, intent(in) :: rr(:,0:)
     integer, intent(in) :: ezoa(:,:)
     double complex, intent(in) :: Ginp(:,:,:,:)
@@ -999,7 +999,7 @@ module kkrmat_mod
     integer, intent(in) :: nacls !< number of atoms in the cluster around site ind
     integer, intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
     integer, intent(in) :: numn0(:) !< dim(naez)
-    integer, intent(in) :: indn0(:,:) !< dims(naez,nacls)
+    integer, intent(in) :: indn0(:,:) !< dims(naez,nacls) ! why transposed?
     double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
 
     integer :: jat, iacls, ni, jnd, ist, gint_iacls
@@ -1012,7 +1012,7 @@ module kkrmat_mod
       if (jat < 1) cycle
 
       do ni = 1, numn0(ind)
-        jnd = indn0(ind,ni)
+        jnd = indn0(ind,ni) ! why transposed?
         if (jat == jnd) then
 
           if (gint_iacls /= iacls) then
@@ -1027,7 +1027,7 @@ module kkrmat_mod
       enddo ! ni
 
       do ni = 1, numn0(jat)
-        jnd = indn0(jat,ni)
+        jnd = indn0(jat,ni) ! why transposed?
         if (ind == jnd) then
 
           ist = modify_smat(sparse, jat, jnd, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
@@ -1039,7 +1039,7 @@ module kkrmat_mod
     
     deallocate(GinT, stat=ist) ! ignore status
   endsubroutine ! dlke0_smat
-  
+
   
   integer function modify_smat(sparse, ind, jnd, ni, eikr, Gin, smat) result(nOps)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription

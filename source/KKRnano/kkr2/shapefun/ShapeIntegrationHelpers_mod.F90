@@ -19,12 +19,11 @@ module ShapeIntegrationHelpers_mod
     integer(kind=1), intent(in) :: isi ! sign
     integer, intent(in) :: itype ! itype in [0, 1]
     double precision, intent(out) :: s(-lmax:lmax,0:lmax) ! uses more memory than needed, about 55% used
-    
+
+    ! locals
     integer :: n, k
     double precision :: theta, w1, w2
     double precision, allocatable :: xx(:), ww(:) ! formerly (ndim)
-
-!-----------------------------------------------------------------------
   
     s = 0.d0
     if (x1 == x2) return ! 0.d0 if the integration range is zero
@@ -47,9 +46,8 @@ module ShapeIntegrationHelpers_mod
       deallocate(xx, ww, stat=k)
     endif ! itype == 0
     
-  endsubroutine pintg
+  endsubroutine ! pintg
 
-!======================================================================
 
 !-----------------------------------------------------------------------
 !>    this routine is used to perform the fi-integration of real sphe-
@@ -64,9 +62,7 @@ module ShapeIntegrationHelpers_mod
     integer :: m, i
     double precision :: ol0, ol, el0, el, c1, c2, ss, cc
     double precision :: c01(lmax), c02(lmax), ssa(lmax+2), cca(lmax+2)
-!-----------------------------------------------------------------------
 #define  PREPARE_INTEGER_INVERSE
-
 #ifdef   PREPARE_INTEGER_INVERSE
     double precision :: inv(1:lmax+9)
     do i = 1, lmax+9
@@ -176,7 +172,7 @@ module ShapeIntegrationHelpers_mod
       el0 =  (m+2)*el0 INV(m+4)
     enddo ! m
     
-  endsubroutine recur
+  endsubroutine ! recur
 
 ! =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  = 
 
@@ -302,7 +298,7 @@ module ShapeIntegrationHelpers_mod
       el0 =  (m+2)*el0 INV(m+4)
     enddo ! m
 #undef INV      
-  endsubroutine recur0
+  endsubroutine ! recur0
 
 !======================================================================
 
@@ -312,14 +308,13 @@ module ShapeIntegrationHelpers_mod
 !>    of length n, containing the abscissas and weights of the  gauss
 !>    legendre n-point quadrature formula (numerical recipes,2nd ed.).
 !     ----------------------------------------------------------------
-  subroutine gauleg(x1,x2,x,w,n)
+  subroutine gauleg(x1, x2, x, w, n)
     use Constants_mod, only: pi
-    
     integer, intent(in) :: n
     double precision, intent(in) :: x1, x2
     double precision, intent(out) :: x(1:), w(1:) ! (1:n)
 
-!----------------------------------------------------------------
+    ! locals
     integer :: i, j, m
     double precision :: p1, p2, p3, pp, xl, xm, z, z1
 
@@ -347,7 +342,7 @@ module ShapeIntegrationHelpers_mod
       w(n+1-i) = w(i)
     enddo ! i
     
-  endsubroutine gauleg
+  endsubroutine ! gauleg
 
 !-----------------------------------------------------------------------
 !>    this routine calculates the coefficients of a polynomial expansion
@@ -357,23 +352,20 @@ module ShapeIntegrationHelpers_mod
 !-----------------------------------------------------------------------
   subroutine ccoef(lmax, cl_table, c_table)
     integer, intent(in) :: lmax
-!     double precision, intent(out) :: cl(1:) ! (icd) ! warning: old m-ordering: ???
-!     double precision, intent(out) :: coe(1:) ! (iecd) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
     double precision, intent(out) :: cl_table(0:lmax,0:lmax,0:lmax)
     double precision, intent(out) :: c_table(0:lmax,0:lmax)
     
-!       integer, parameter :: lma2d=lmaxd1/2+1
     integer, parameter :: ifmx=25
     integer, parameter :: primes(ifmx) = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
     
     double precision :: cl((((2*lmax+15)*lmax+34)*lmax)/24+1) ! (icd)
     double precision :: coe(((lmax+1)*(lmax+2))/2) ! (iecd) ! warning: old m-ordering: ((m, m=l...0), l=0,lmax)
     
-    integer :: icmax, l, ice, ic, i, m, k, k0, isi, ire, ir, ic1, ic2, la, lb, ieupsq, ieint, icd, mp, lp!, iecd
+    integer :: icmax, l, ice, ic, i, m, k, k0, isi, ire, ir, ic1, ic2, la, lb, ieupsq, ieint, icd, mp, lp
     double precision :: up, down, upsq
-    integer :: ied(ifmx), ie(ifmx,1+lmax/2) !, ie(ifmx,lma2d)
-    integer, dimension(ifmx) :: l1st, l2st, l1, l2, jm0, iea, ieb, il2p
-!-----------------------------------------------------------------------
+    integer :: ie(ifmx,1+lmax/2)
+    integer, dimension(ifmx) :: l1st, l2st, l1, l2, jm0, iea, ieb, il2p, ied
+
     icmax = sum([( (lmax+1-l)*(l/2+1), l=0,lmax)])
     icd = size(cl)
     if (icmax > icd) then
@@ -493,7 +485,7 @@ module ShapeIntegrationHelpers_mod
       enddo ! mp
     enddo ! l
     
-  endsubroutine ccoef
+  endsubroutine ! ccoef
 
 
 !-----------------------------------------------------------------------
@@ -531,7 +523,7 @@ module ShapeIntegrationHelpers_mod
     write(*,fmt="(3x,i15,'  cannot be reduced in the basis of first numbers given'/20x,'increase the basis of first numbers')") nmbr
     stop
       
-  endsubroutine factorize
+  endsubroutine ! factorize
 
 !------------------------------------------------------------------
 !>    this routine computes transformation matrices associated to
@@ -612,7 +604,7 @@ module ShapeIntegrationHelpers_mod
       enddo ! m
     enddo ! l
 !     isum = isu ! unused: export the minimal value for isumd
-  endsubroutine d_real
+  endsubroutine ! d_real
 
 !-----------------------------------------------------------------------
 !>    calculation of d coefficient according to rose, elementary theory angular momentum,j.wiley & sons ,1957 , eq. (4.13).
@@ -622,11 +614,9 @@ module ShapeIntegrationHelpers_mod
 !>    angular momentum,j.wiley & sons ,1957 , eq. (4.13).
 !-----------------------------------------------------------------------
   double precision function drot(l, mp, m, beta)
-    
     integer, intent(in) :: l, m ,mp
     double precision, intent(in) :: beta
-
-!-----------------------------------------------------------------------
+    ! locals
     integer :: i, kmin, kmax, ltrm, n, k, nf(4)
     double precision :: cosb, sinb, term, ff
     
@@ -697,6 +687,6 @@ module ShapeIntegrationHelpers_mod
       nf(1:3) = nf(1:3) + [-1,-1,1]
     enddo ! k
       
-  endfunction drot
+  endfunction ! drot
 
-endmodule ShapeIntegrationHelpers_mod
+endmodule ! ShapeIntegrationHelpers_mod

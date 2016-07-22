@@ -37,9 +37,9 @@ module ConstructShapes_mod
   !------------------------------------------------------------------------------
   !> Reads Voronoi weights from file 'voro_weights'
   !> this is kind of a hack and does not scale well.
-  subroutine read_voro_weights(weights, atom_index, num_atoms)
+  subroutine read_voro_weights(weights, atom_indicies, num_atoms)
     double precision, intent(inout) :: weights(:)
-    integer, intent(in) :: atom_index(:) ! index table
+    integer, intent(in) :: atom_indicies(:) ! index table
     integer, intent(in) :: num_atoms
 
     integer :: ii, ios
@@ -57,8 +57,8 @@ module ConstructShapes_mod
     enddo ! ii
     close(32, iostat=ios)
 
-    do ii = 1, size(atom_index)
-      weights(ii) = weight_table(atom_index(ii))
+    do ii = 1, size(atom_indicies)
+      weights(ii) = weight_table(atom_indicies(ii))
     enddo ! ii
     
   endsubroutine ! read_voro_weights
@@ -86,7 +86,7 @@ module ConstructShapes_mod
     double precision, intent(in) :: rbasis(:,:)
     double precision, intent(in) :: bravais(3,3)
     integer, intent(in)          :: center_ind
-    double precision, intent(in) :: rcluster
+    double precision, intent(in) :: rcluster !> radius to create the cluster
     integer, intent(in) :: lmax_shape
     integer, intent(in) :: npoints_min
     integer, intent(in) :: nmin_panel
@@ -96,35 +96,36 @@ module ConstructShapes_mod
     integer, intent(in) :: atom_id
 
     type(LatticeVectors) :: lattice_vectors
-    type(RefCluster) :: ref_cluster
+    type(RefCluster) :: cluster
     double precision, allocatable :: weights(:)
     integer :: ist
 
     call create(lattice_vectors, bravais)
-    call create(ref_cluster, lattice_vectors%rr, rbasis, rcluster, center_ind)
+    call create(cluster, lattice_vectors%rr, rbasis, rcluster, center_ind)
 
-    allocate(weights(size(ref_cluster%rcls, 2)))
+    allocate(weights(size(cluster%rcls, 2)))
     weights = 1.d0 ! all weights are the same, so their differences are zero 
     ! --> planes cut space in the exact center between two atomic cores
 
 #ifdef USE_VOROWEIGHTS
+    if (cluster%atom(1) /= atom_id) stop 'ConstructShapes_mod.F90:111 Index error!'
     ! HACK: Read voronoi weights from file - this does not scale well!
-    call read_voro_weights(weights, ref_cluster%atom, size(rbasis, 2))
+    call read_voro_weights(weights, cluster%atom, size(rbasis, 2))
 #endif
 
-    ! the cluster positions are in ref_cluster%rcls
+    ! the cluster positions are in cluster%rcls
     ! they are sorted by distance from center
     ! the voronoi routine expects array without position (0,0,0) -> pass rcls(:,2:)
     ! therfore check if the first index of %rcls is the origin
 
-    if (any(abs(ref_cluster%rcls(:,1)) > 1.d-8)) stop "Expected origin in ref_cluster%rcls(:,1)"
+    if (any(abs(cluster%rcls(:,1)) > 1.d-8)) stop "Expected origin in cluster%rcls(:,1)"
 
-    call constructFromCluster(self, inter_mesh, ref_cluster%rcls(:,2:), weights, &
+    call constructFromCluster(self, inter_mesh, cluster%rcls(:,2:), weights, &
                               lmax_shape, npoints_min, nmin_panel, &
                               num_MT_points, new_MT_radius, MT_scale, atom_id)
 
     call destroy(lattice_vectors)
-    call destroy(ref_cluster)
+    call destroy(cluster)
     
     deallocate(weights, stat=ist)
 
@@ -188,12 +189,7 @@ module ConstructShapes_mod
     allocate(nvertices(nfaced), vert(3,nvertmax,nfaced))
     nvertices = 0
 
-    call Voronoi_construction(nfaced, rvec, nvertmax, nfaced, weights(1), weights(2:), tolvdist, tolvarea, rmt, rout, volume, nface, planes, nvertices, vert, &
-#ifdef DEBUGSHAPEFUNCTIONS
-         atom_id, output=.true.) ! for debug
-#else
-         atom_id, output=.false.)
-#endif
+    call Voronoi_construction(nfaced, rvec, nvertmax, nfaced, weights(1), weights(2:), tolvdist, tolvarea, rmt, rout, volume, nface, planes, nvertices, vert, atom_id)
          
     npand = sum(nvertices) + nface + 1  ! +1 for possible muffin-tinisation
     meshnd = max(npoints_min, npand*nmin) + num_mt_points
