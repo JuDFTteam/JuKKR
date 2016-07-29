@@ -54,7 +54,7 @@ module kkrmat_mod
     double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
     double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms)
-    double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez)
+    double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez_trc)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation
     double precision, intent(in) :: RR(:,0:)
@@ -194,7 +194,7 @@ module kkrmat_mod
   subroutine getGreenDiag(G_diag, mat_X, atom_index, kvstr, local_atom_index)
     double complex, intent(out) :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
     double complex, intent(in) :: mat_X(:,:)
-    integer, intent(in) :: atom_index 
+    integer(kind=2), intent(in) :: atom_index 
     integer, intent(in) :: kvstr(:)
     integer, intent(in) :: local_atom_index 
 
@@ -368,7 +368,7 @@ module kkrmat_mod
     ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
-    call buildKKRCoeffMatrix(op%GLLh, tmatLL, op%lmmaxd, naez, op%sparse)
+    call buildKKRCoeffMatrix(op%GLLh, tmatLL, op%sparse)
     !----------------------------------------------------------------------------
 
     TESTARRAYLOG(3, op%GLLh)
@@ -996,7 +996,7 @@ module kkrmat_mod
     integer, intent(in) :: ind !> local_atom_idx of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are real
-    integer, intent(in) :: nacls !< number of atoms in the cluster around site ind
+    integer, intent(in) :: nacls !< number of atoms in the cluster around site ind == nacls(ind)
     integer(kind=2), intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
     integer, intent(in) :: numn0(:) !< dim(naez)
     integer(kind=2), intent(in) :: indn0(:,:) !< dims(nacls+,naez)
@@ -1009,8 +1009,11 @@ module kkrmat_mod
 
     do iacls = 1, nacls ! loop over all atoms in the reference cluster around ind
       jat = atom(iacls) ! local_atom_idx of the target atom
-      if (jat < 1) cycle ! does this happen at all? ToDo: check
-
+      if (jat < 1) then
+        write(*,*) __FILE__,__LINE__
+        cycle ! does this happen at all? ToDo: check
+      endif
+        
       do ni = 1, numn0(ind)
         jnd = indn0(ni,ind)
         if (jat == jnd) then

@@ -24,7 +24,7 @@ module KKROperator_mod
     double complex, allocatable :: dGLLh(:)
     double complex, allocatable :: mat_B(:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
     double complex, allocatable :: mat_X(:,:)
-    integer, allocatable :: atom_indices(:) !< a copy of the atom indices
+    integer(kind=2), allocatable :: atom_indices(:) !< a copy of the atom indices
     type(ClusterInfo), pointer :: cluster_info
   endtype
 
@@ -50,7 +50,7 @@ module KKROperator_mod
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster_info
     integer, intent(in) :: lmmaxd
-    integer, intent(in) :: atom_indices(:)
+    integer(kind=2), intent(in) :: atom_indices(:)
 
     integer :: sum_cluster, nCols, nRows
 
@@ -61,7 +61,7 @@ module KKROperator_mod
 !   naclsd = size(cluster_info%indn0_trc, 1) ! not used
     self%lmmaxd = lmmaxd
 
-    allocate(self%atom_indices, source=atom_indices)
+    allocate(self%atom_indices, source=atom_indices) ! local truncation zone indices of the source atoms
 
     call create(self%sparse, self%naez, sum_cluster)
 

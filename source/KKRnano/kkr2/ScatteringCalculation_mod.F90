@@ -84,7 +84,7 @@ implicit none
     double complex, parameter :: ZERO = (0.d0, 0.d0)
     type(TimerMpi) :: mult_scattering_timer, single_site_timer
     double complex :: JSCAL ! scaling factor for Jij calculation
-    integer, allocatable :: atom_indices(:)
+    integer(kind=2), allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
     integer :: i1, ila, num_local_atoms
     integer :: lmmaxd
@@ -92,8 +92,8 @@ implicit none
 
     double complex, allocatable :: Tref_local(:,:,:)  !< local tref-matrices
     double complex, allocatable :: dTref_local(:,:,:) !< local deriv. tref-matrices
-    double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices
-    double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices
+    double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices inside the truncation zone
+    double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
     double complex, allocatable :: GrefN_buffer(:,:,:,:) !< GrefN for all local atoms
     double complex, allocatable :: DGrefN_buffer(:,:,:,:) !< DGrefN for all local atoms, LLY
@@ -150,7 +150,7 @@ implicit none
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
-      atom_indices(ila) = calc%trunc_zone%local_atom_idx(calc%atom_ids(ila)) ! get global atom_id from local index)
+      atom_indices(ila) = calc%trunc_zone%local_atom_idx(calc%atom_ids(ila)) ! get global local truncation zone indices from global atom_ids 
       CHECKASSERT(atom_indices(ila) > 0)
     enddo ! ila
 
@@ -434,7 +434,7 @@ implicit none
     type(ClusterInfo), intent(in) :: cluster_info
     integer, intent(in) :: lmmaxd
     double precision, intent(in) :: qmrbound
-    integer, intent(in) :: atom_indices(:) !< indices of atoms treated at once
+    integer(kind=2), intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
     call create(kkr_op, cluster_info, lmmaxd, atom_indices)
     

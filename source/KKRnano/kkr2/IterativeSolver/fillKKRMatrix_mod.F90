@@ -93,20 +93,24 @@ module fillKKRMatrix_mod
   !> @param sparse  sparse matrix description
   !> ia    for each row give index of first non-zero block in ja
   !> ja    column index array of non-zero blocks
-  subroutine buildKKRCoeffMatrix(smat, tmatLL, lmmaxd, num_atoms, sparse)
+  subroutine buildKKRCoeffMatrix(smat, tmatLL, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
     double complex, intent(inout) :: smat(:)
-    double complex, intent(in) :: tmatLL(lmmaxd,lmmaxd,num_atoms)
-    integer, intent(in) :: lmmaxd, num_atoms
+    double complex, intent(in) :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,naez_trc)
     type(SparseMatrixDescription), intent(in) :: sparse
 
-    double complex :: temp(lmmaxd)
+    double complex :: temp(size(tmatLL, 1))
+    integer :: lmmaxd, naez_trc
     integer :: block_row, block_col, start, lm2, lm3, lmmax1, lmmax2, lmmax3
     integer :: istart_row, istop_row, istart_col, istop_col, ind_ia
 
+    lmmaxd = size(tmatLL, 1)
+    ASSERT( size(tmatLL, 2) == lmmaxd )
+    naez_trc = size(tmatLL, 3)
+    
     start = 0
-    do block_row = 1, num_atoms
+    do block_row = 1, naez_trc
       istart_row = sparse%kvstr(block_row)
       istop_row  = sparse%kvstr(block_row+1)
       do ind_ia = sparse%ia(block_row), sparse%ia(block_row+1)-1
@@ -117,12 +121,12 @@ module fillKKRMatrix_mod
         istop_col  = sparse%kvstr(block_col+1)
 
 #ifndef NDEBUG
-        if (1 > block_row .or. block_row > num_atoms) then
+        if (1 > block_row .or. block_row > naez_trc) then
           write (*,*) "buildKKRCoeffMatrix: invalid block_row", block_row
           stop
         endif
 
-        if (1 > block_col .or. block_col > num_atoms) then
+        if (1 > block_col .or. block_col > naez_trc) then
           write (*,*) "buildKKRCoeffMatrix: invalid block_col", block_col
           stop
         endif
@@ -166,13 +170,13 @@ module fillKKRMatrix_mod
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
   subroutine buildRightHandSide(mat_B, lmmaxd, atom_indices, kvstr, tmatLL)
-    double complex, intent(inout) :: mat_B(:,:)
+    double complex, intent(out) :: mat_B(:,:)
     integer, intent(in) :: lmmaxd
-    integer, intent(in) :: atom_indices(:)
+    integer(kind=2), intent(in) :: atom_indices(:) ! truncation zone indices of the local atoms
     integer, intent(in) :: kvstr(:)
-    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*)
+    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*) !< dim(lmmaxd,lmmaxd,naez_trc)
 
-    integer :: start, ii, num_atoms, atom_index, lm1, lm2, lmmax1, lmmax2 
+    integer :: start, ii, num_atoms, atom_index, lm2, lmmax1, lmmax2 
 
     mat_B = ZERO
 
@@ -200,12 +204,9 @@ module fillKKRMatrix_mod
       start = kvstr(atom_index) - 1
       do lm2 = 1, lmmax2
         if (present(tmatLL)) then
-          do lm1 = 1, lmmax1
-            ! TODO: WHY DO I NEED A MINUS SIGN HERE? CHECK
-            mat_B(start+lm1,lm2+lmmax2*(ii-1)) = tmatLL(lm1,lm2,atom_index)
-          enddo ! lm1
+          mat_B(start+ 1:lmmax1 + start,lm2+lmmax2*(ii-1)) = tmatLL(1:lmmax1,lm2,atom_index)
         else
-          mat_B(start+lm2,lm2+lmmax2*(ii-1)) = CONE
+          mat_B(start+lm2,lm2+lmmax2*(ii-1)) = CONE ! set the block to a unity matrix
         endif
       enddo ! lm2
 

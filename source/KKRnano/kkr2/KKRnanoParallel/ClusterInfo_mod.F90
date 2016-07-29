@@ -71,7 +71,7 @@ module ClusterInfo_mod
     integer :: nacls, numn0, naclsd, naez_trc, num_local_atoms, blocksize
     integer :: memory_stat ! needed in allocatecheck
     integer :: ierr
-    integer(kind=2) :: ind ! local atom index
+    integer(kind=2) :: ezoa, ind ! local atom index
     integer(kind=4) :: atom_id, atom, indn0 ! global atom ids
     integer(kind=4), allocatable :: send_buf(:,:), recv_buf(:,:) ! global atom ids, require more than 16bit
 
@@ -153,12 +153,14 @@ module ClusterInfo_mod
       do jj = 1, nacls
 
         atom = recv_buf(OFFSET_ATOM + jj,ii) ! atom received
+        ! ezoa = recv_buf(OFFSET_EZOA + jj,ii) ! ezoa received (proposed new code)
 ! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',atom
         ind = trunc_zone%local_atom_idx(atom)
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
           self%atom_trc(cnt,ii) = ind ! atom translated into local indices of the trunc_zone
+          ! self%ezoa_trc(cnt,ii) = ezoa ! does not need translation (proposed new code)
         endif ! ind > 0
       enddo ! jj
 
@@ -167,8 +169,8 @@ module ClusterInfo_mod
 
 ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' naclsd=',naclsd
 
-      self%ezoa_trc(1:nacls,ii) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ii)
-      ! ToDo: discuss if we have to treat ezoa_trc in sync with atom_trc concerning the (ind == -1) case
+!!    ! ToDo: discuss if we have to treat ezoa_trc in sync with atom_trc concerning the (ind == -1) case
+      self%ezoa_trc(1:nacls,ii) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ii) ! (old code)
 
       CHECKASSERT( recv_buf(blocksize,ii) == MAGIC ) ! check if the end of send_buf seems correct
     enddo ! ii
