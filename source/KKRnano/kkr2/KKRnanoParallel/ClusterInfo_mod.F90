@@ -142,6 +142,7 @@ module ClusterInfo_mod
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
           self%indn0_trc(cnt,ii) = ind ! indn0 translated into local indices of the trunc_zone
+          ! if trunc_zone%global_atom_id(:) is in ascending order (strictly monotonous), also indn0_trc will get that property
         endif ! ind > 0
       enddo ! jj
 

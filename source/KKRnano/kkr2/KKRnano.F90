@@ -66,7 +66,13 @@ program KKRnano
 
   external :: MPI_Init
   character(len=16) :: arg
+#ifdef PRINT_MTRADII
   character(len=40) :: num 
+#else  
+#ifdef USE_MTRADII
+  character(len=40) :: num 
+#endif
+#endif
  
   call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   

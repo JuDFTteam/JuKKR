@@ -21,7 +21,7 @@ module RefCluster_mod
     integer(kind=2), allocatable :: ezoa(:)  !< dim(nacls) points into lattice_vectors%rr, which periodic image
     double precision, allocatable :: rcls(:,:) !< dim(3,nacls) positions relative to center
     integer :: numn0 !< number of inequivalent cluster atoms
-    integer(kind=4), allocatable :: indn0(:) !< dim(numn0) indices of inequivalent cluster atoms
+    integer(kind=4), allocatable :: indn0(:) !< dim(numn0) indices of inequivalent cluster atoms, ascending order
   endtype
 
   interface create

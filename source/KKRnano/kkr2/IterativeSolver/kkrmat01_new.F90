@@ -39,7 +39,7 @@ module kkrmat_mod
     USE_ARRAYLOG_MOD
     use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
     use jij_calc_mod, only: global_jij_data, kkrjij
-    use SolverStats_mod, only: SolverStats, reset
+    use SolverStats_mod, only: reset !, SolverStats 
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
@@ -79,7 +79,7 @@ module kkrmat_mod
     double complex :: G_diag(LMMAXD,LMMAXD)
     double complex :: bztr2, trace ! LLY
     integer :: site_lm_size, num_local_atoms, naclsd, naez, ikpoint, ila, ierr
-    type(SolverStats) :: stats
+!   type(SolverStats) :: stats
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
 !    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
@@ -147,7 +147,8 @@ module kkrmat_mod
       ! TODO: use mat_X to calculate Jij
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
-        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, op%atom_indices(1), &
+        ila = op%atom_indices(1) ! convert to default integer kind
+        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, ila, &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
                     op%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
       endif ! jij
@@ -267,7 +268,6 @@ module kkrmat_mod
     double complex :: tracek, gtdpde
     
     integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, il1
-    logical :: initial_zero
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
@@ -989,53 +989,45 @@ module kkrmat_mod
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(smat, ind, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
+  subroutine dlke0_smat(smat, iat, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     ! assume a variable block row sparse matrix description
     double complex, intent(inout) :: smat(:)
-    integer, intent(in) :: ind !> local_atom_idx of the source atom
+    integer, intent(in) :: iat !> local_atom_idx of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are real
-    integer, intent(in) :: nacls !< number of atoms in the cluster around site ind == nacls(ind)
-    integer(kind=2), intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
+    integer, intent(in) :: nacls !< number of atoms in the cluster around site iat == nacls(iat)
+    integer(kind=2), intent(in) :: atom(:) !< dim(nacls) == atom(:,iat)
     integer, intent(in) :: numn0(:) !< dim(naez)
     integer(kind=2), intent(in) :: indn0(:,:) !< dims(nacls+,naez)
     double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
 
-    integer :: jat, iacls, ni, jnd, ist, gint_iacls
+    integer :: jat, iacls, ni, ind, ist
     double complex, allocatable :: GinT(:,:) ! (size(Ginp, 2),size(Ginp, 1)) !< dims(lmmaxd,lmmaxd)
+    
+    allocate(GinT(size(Ginp, 2),size(Ginp, 1)))
 
-    gint_iacls = -1 ! init
-
-    do iacls = 1, nacls ! loop over all atoms in the reference cluster around ind
+    do iacls = 1, nacls ! loop over all atoms in the reference cluster around iat
       jat = atom(iacls) ! local_atom_idx of the target atom
-      if (jat < 1) then
-        write(*,*) __FILE__,__LINE__
-        cycle ! does this happen at all? ToDo: check
-      endif
-        
-      do ni = 1, numn0(ind)
-        jnd = indn0(ni,ind)
-        if (jat == jnd) then
+      ASSERT( jat > 0 ) 
 
-          if (gint_iacls /= iacls) then
-            if (gint_iacls == -1) allocate(GinT(size(Ginp, 2),size(Ginp, 1)))
-            GinT = transpose(Ginp(:,:,iacls))
-            gint_iacls = iacls
-          endif
+      do ni = 1, numn0(iat) ! loop over the set of inequivalent atoms in the reference cluster around iat
+        ind = indn0(ni,iat)
+        if (ind == jat) then ! see which one of the inequivalent atoms is hit (should only be true once)
 
-          ist = modify_smat(sparse, ind, jnd, ni, eikrm(iacls), GinT, smat)
+          GinT = transpose(Ginp(:,:,iacls))
+          ist = modify_smat(sparse, iat, ind, ni, eikrm(iacls), GinT, smat)
 
-        endif ! jat == jnd
+        endif ! jat == ind
       enddo ! ni
 
-      do ni = 1, numn0(jat)
-        jnd = indn0(ni,jat)
-        if (ind == jnd) then
+      do ni = 1, numn0(jat) ! loop over the set of inequivalent atoms in the reference cluster around jat
+        ind = indn0(ni,jat)
+        if (ind == iat) then ! see which one of the inequivalent atoms is hit (should only be true once)
+ 
+          ist = modify_smat(sparse, jat, ind, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
 
-          ist = modify_smat(sparse, jat, jnd, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
-
-        endif ! ind == jnd
+        endif ! iat == ind
       enddo ! ni
 
     enddo ! iacls
@@ -1061,7 +1053,8 @@ module kkrmat_mod
     do lm2 = 1, lmmax2
       is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
 
-      smat(is0 + 1:lmmax1 + is0) = smat(is0 + 1:lmmax1 + is0) + eikr * Gin(1:lmmax1,lm2)
+      smat(is0 + 1:lmmax1 + is0) = &
+      smat(is0 + 1:lmmax1 + is0) + eikr * Gin(1:lmmax1,lm2)
 
     enddo ! lm2
 
