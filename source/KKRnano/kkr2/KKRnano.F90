@@ -49,7 +49,7 @@ program KKRnano
   type(TimerMpi) :: iteration_timer
   type(EBalanceHandler) :: ebalance_handler
 
-  integer :: ITER, I1, ila, num_local_atoms, flag, ios, ilen, voronano
+  integer :: ITER, global_atom_id, ila, num_local_atoms, flag, ios, ilen, voronano
   double precision  :: ebot 
 
   type(KKRnanoParallel) :: mp
@@ -197,15 +197,15 @@ program KKRnano
     call init(ebalance_handler, mp)
     call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
-    ! here, we comunicate the rMTref values early, so we can compute tref and dtrefdE locally for each atom inside the reference cluster 
+    ! here, we communicate the rMTref values early, so we could compute tref and dtrefdE locally for each atom inside the reference cluster 
     do ila = 1, num_local_atoms
       atomdata => getAtomdata(calc_data, ila)
 #ifdef DEBUG_NO_VINS
       atomdata%potential%VINS = 0.0   
 #endif
-      I1 = calc_data%atom_ids(ila) ! get global atom_id from local index
+      global_atom_id = calc_data%atom_ids(ila) ! get global atom_id from local index
 #ifdef PRINT_MTRADII
-      write(unit=num, '(A,I7.7)') "mtradii_out.",I1
+      write(unit=num, '(A,I7.7)') "mtradii_out.",global_atom_id
       open(20, file=num)
       write(20,*) atomdata%rMTref
       write(20,*) atomdata%radius_muffin_tin
@@ -213,14 +213,14 @@ program KKRnano
       close(20)
 #endif
 #ifdef USE_MTRADII
-      write(unit=num, '(A,I7.7)') "mtradii_in.",I1
+      write(unit=num, '(A,I7.7)') "mtradii_in.",global_atom_id
       open(20, file=num)
       read(20,*) atomdata%rMTref
       read(20,*) atomdata%radius_muffin_tin
       endfile(20)
       close(20)
 #endif
-
+      ! this only works if all process enter the following subroutine the same number of times, so num_local_atoms may not differ among the processes
       call gatherrMTref_com(rMTref_local=calc_data%atomdata_a(:)%rMTref, rMTref=calc_data%kkr_a(ila)%rMTref(:), &
                             ref_cluster=calc_data%ref_cluster_a(ila), communicator=mp%mySEComm)
     enddo ! ila
@@ -267,12 +267,12 @@ program KKRnano
 
         atomdata  => getAtomData(calc_data, 1)
         ldau_data => getLDAUData(calc_data, 1)
-        I1 =  calc_data%atom_ids(1) ! get global atom_id from local index
+        global_atom_id = calc_data%atom_ids(1) ! get global atom_id from local index
 
         ldau_data%EREFLDAU = emesh%EFERMI
         ldau_data%EREFLDAU = 0.48 ! ???
 
-        call LDAUINIT(I1,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU, &
+        call LDAUINIT(global_atom_id,ITER,params%NSRA,ldau_data%NLDAU,ldau_data%LLDAU, &
                       ldau_data%ULDAU,ldau_data%JLDAU,ldau_data%EREFLDAU, &
                       atomdata%potential%VISP,ldau_data%NSPIND,mesh%R,mesh%DRDI, &
                       atomdata%Z_nuclear,mesh%IPAN,mesh%IRCUT, &

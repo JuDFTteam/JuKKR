@@ -86,7 +86,7 @@ implicit none
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer(kind=2), allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
-    integer :: i1, ila, num_local_atoms
+    integer :: i1, ila, num_local_atoms, iacls
     integer :: lmmaxd
     logical :: xccpl
 
@@ -172,7 +172,7 @@ implicit none
 
         ! if we had rMTref given for all atoms inside the reference cluster radius
         !   we could compute the Tref on the fly
-!#define COMPUTE_tref_LOCALLY
+! #define COMPUTE_tref_LOCALLY
 #ifndef COMPUTE_tref_LOCALLY       
          Tref_local = ZERO
         dTref_local = ZERO
@@ -182,26 +182,27 @@ implicit none
           atomdata => getAtomData(calc, ila)
 
           call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, atomdata%rMTref, &
-                    Tref_local(:,:,ila), dTref_local(:,:,ila), derive=(dims%Lly > 0))
+                    Tref_local(:,:,ila), dTref_local(:,:,ila), derive=(dims%Lly > 0)) ! ToDo: combine Tref and dTref in one array
 
         enddo  ! ila
         !$omp endparallel do
   !------------------------------------------------------------------------------
 
         ! Note: ref. system has to be recalculated at each iteration since energy mesh changes
-        ! Note: TrefLL is diagonal - however full matrix is stored
+        ! Note: TrefLL is diagonal - however, a full block matrix is stored
         ! Note: Gref is calculated in real space - usually only a few shells
 
-        ! Exchange the reference t-matrices within the reference calc%clusters
+        ! Exchange the reference t-matrices within the reference clusters
         ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
         do ila = 1, num_local_atoms
-          call gatherTrefMatrices_com( Tref_local,  kkr(ila)%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
+          call gatherTrefMatrices_com( Tref_local,  kkr(ila)%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm) ! ToDo: combine Tref and dTref in one array
           call gatherTrefMatrices_com(dTref_local, kkr(ila)%dTrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
         enddo ! ila
 #else
-        !$omp parallel do private(ila, atomdata)
+        !$omp parallel do private(ila, iacls)
         do ila = 1, num_local_atoms
-          do iacls = 1, kkr(ila)%naclsd         
+          do iacls = 1, kkr(ila)%naclsd
+            ! this calls tref several times with the same parameters if the local atoms are close to each other
             call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
                       kkr(ila)%TrefLL(:,:,iacls), kkr(ila)%dTrefLL(:,:,iacls), derive=(dims%Lly > 0))
           enddo ! iacls

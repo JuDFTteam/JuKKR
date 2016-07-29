@@ -3,11 +3,170 @@ module SingleSiteRef_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: gll95, gref, tref
+  public :: gref, tref
 
   double complex, parameter :: cone=(1.d0,0.d0), zero=(0.d0,0.d0), ci=(0.d0,1.d0), cmone=(-1.d0,0.d0)
 
   contains
+  
+!-----------------------------------------------------------------------
+!>    Calculate reference system's T-matrix.
+!>    @param     e complex energy
+!>    @param     vref repulsive reference potential field strength
+!>    @param     lmax angular momentum cutoff
+!>    @param     rMTref repulsive reference potential muffin-tin radius
+!>    @param     trefLL reference system t-matrix
+!>    @param     dtrefLL energy derivative of reference system t-matrix only calculated if Lly=1
+!>    @param     Lly do lloyd's formula calculation 0=no/1=yes
+  subroutine tref(e, vref, lmax, rMTref, trefLL, dtrefLL, derive)
+    use SingleSiteHelpers_mod, only: bessel
+    integer, intent(in) :: lmax
+    double complex, intent(in) :: e
+    double precision, intent(in) :: rMTref, vref
+    double complex, intent(out) ::  trefLL((lmax+1)**2,(lmax+1)**2)
+    double complex, intent(out), optional :: dtrefLL((lmax+1)**2,(lmax+1)**2)
+    logical, intent(in) :: derive
+
+    integer :: m, l, lm
+    double complex :: a1, b1, da1, db1, sqEmV, sqE
+    double complex, dimension(0:lmax+1) :: Bjw1, Bjw2, Byw1, Byw2, Hws1, Hws2, dBjw1, dBjw2, dHws1
+    integer :: lmaxd, lmgf0d
+
+    !-----------------------------------------------------------------------
+    !---- t-matrix and derivative of t-matrix of the reference system
+
+    !     the analytical formula for the derivative of spherical Bel
+    !     functions is used:
+
+    !     d                     l+1
+    !     --  j (x) = j   (x) - --- j (x)
+    !     dx   l       l-1       x   l
+
+    !     d
+    !     --  j (x) = - j (x)
+    !     dx   0         1
+
+    !     which for x = sqrt(E0)*r leads to
+
+    !      d          r*r             (l+1)
+    !     --- j (x) = --- ( j   (x) - ----- j (x) )
+    !     dE0  l      2 x    l-1        x    l
+
+    !      d            r*r
+    !     --- j (x) = - --- j (x)
+    !     dE0  0        2 x  1
+
+    !-----------------------------------------------------------------------
+
+    lmaxd = lmax
+    lmgf0d = (lmaxd+1)**2
+
+    sqE = sqrt(e)
+    sqEmV = sqrt(e - vref)
+    
+    a1 = rMTref*sqE
+    b1 = rMTref*sqEmV
+    call bessel(Bjw1, Byw1, Hws1, a1, lmaxd+1)
+    call bessel(Bjw2, Byw2, Hws2, b1, lmaxd+1)
+
+    ! trefLL could be initalized to zero here !!! PFB
+    
+    if (derive) then
+    
+      if (present(dtrefLL)) then
+      
+        dtrefLL = zero ! clear
+        
+        ! derivative of the J0(x/a) = -J1(x/a)/a 
+        dBjw1(0) = -Bjw1(1)/a1
+        dBjw2(0) = -Bjw2(1)/b1
+        dHws1(0) = -Hws1(1)/a1
+
+        do l = 1, lmax+1
+          ! recursion formulae
+          dBjw1(l) = (Bjw1(l-1) - (l+1)*Bjw1(l)/a1)/a1
+          dBjw2(l) = (Bjw2(l-1) - (l+1)*Bjw2(l)/b1)/b1
+          dHws1(l) = (Hws1(l-1) - (l+1)*Hws1(l)/a1)/a1
+        enddo ! l
+
+        ! scale
+        dBjw1(:) = dBjw1(:)*0.5d0*rMTref**2
+        dBjw2(:) = dBjw2(:)*0.5d0*rMTref**2
+        dHws1(:) = dHws1(:)*0.5d0*rMTref**2
+
+        do l = 0, lmax
+          a1 = sqE*Bjw1(l+1)*Bjw2(l) - sqEmV*Bjw1(l)*Bjw2(l+1)
+
+          da1 = 0.5d0/sqE*Bjw1(l+1)*Bjw2(l) - 0.5d0/sqEmV*Bjw1(l)*Bjw2(l+1) + sqE*dBjw1(l+1)*Bjw2(l) &
+                    - sqEmV*dBjw1(l)*Bjw2(l+1) + sqE*Bjw1(l+1)*dBjw2(l) - sqEmV*Bjw1(l)*dBjw2(l+1)
+
+          b1 = sqE*Hws1(l+1)*Bjw2(l) - sqEmV*Hws1(l)*Bjw2(l+1)
+
+          db1 = 0.5d0/sqE*Hws1(l+1)*Bjw2(l) - 0.5d0/sqEmV*Hws1(l)*Bjw2(l+1) + sqE*dHws1(l+1)*Bjw2(l) &
+                    - sqEmV*dHws1(l)*Bjw2(l+1) + sqE*Hws1(l+1)*dBjw2(l) - sqEmV*Hws1(l)*dBjw2(l+1)
+
+          do m = -l, l
+            lm = l*l + l + m + 1
+            dtrefLL(lm,lm) = 0.5d0/sqE**3*a1/b1 - 1.d0/sqE*(da1/b1 - a1*db1/b1**2) ! add lm-diagonal, m-degenerate part
+          enddo ! m
+
+        enddo ! l
+      else
+        warn(6, "in the calculation of tref, the derivative was required but no array dtrefLL was passed!")
+      endif ! present dtrefLL
+
+    endif ! derive for Lloyd's formula
+    
+    ! regular reference t matrix
+    do l = 0, lmax
+      a1 = sqE*Bjw1(l+1)*Bjw2(l) - sqEmV*Bjw1(l)*Bjw2(l+1)
+      b1 = sqE*Hws1(l+1)*Bjw2(l) - sqEmV*Hws1(l)*Bjw2(l+1)
+
+      do m = -l, l
+        lm = l*l + l + m + 1
+        trefLL(lm,lm) = -1.d0/sqE*a1/b1 ! add lm-diagonal, m-degenerate part
+      enddo ! m
+
+    enddo ! l
+
+  endsubroutine ! tref
+
+
+!------------------------------------------------------------------------------
+  subroutine gref(e, alatc, iend, cleb, rcls, icleb, loflm, nacls, trefLL, dtrefLL, grefn, dgrefn, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+    integer, intent(in) :: lmaxd, naclsd, ncleb, Lly
+    double complex, intent(in) :: e
+    double precision, intent(in) :: alatc
+    integer, intent(in) :: iend
+    double precision, intent(in) :: cleb(ncleb,2), rcls(3,naclsd)
+    integer, intent(in) :: icleb(ncleb,3)
+    integer, intent(in) :: loflm((2*lmaxd+1)**2)
+    integer, intent(in) :: nacls
+    double complex, intent(out) :: Lly_g0tr
+    double complex, intent(in)  :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd),   grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+    
+    integer :: ig, ig1, lm1, lm2, lmmaxd
+    double complex ::  ginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
+    double complex :: dginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
+
+    call gll95(e, cleb(1,2), icleb, loflm, iend, trefLL, dtrefLL, rcls, nacls, alatc, ginp, dginp, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+
+    lmmaxd = (lmaxd+1)**2
+
+    do ig = 1, naclsd
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
+          ig1 = (ig - 1)*lmmaxd + lm2
+           grefn(lm2,lm1,ig) =  ginp(ig1,lm1)
+          dgrefn(lm2,lm1,ig) = dginp(ig1,lm1)
+        enddo ! lm2
+      enddo ! lm1
+    enddo ! ig
+
+  endsubroutine ! gref
+  
+  
 
 !**********************************************************************
 !> @param e complex energy
@@ -200,164 +359,6 @@ module SingleSiteRef_mod
     
   endsubroutine ! calcFreeGreens
 
-  
-  
-!-----------------------------------------------------------------------
-!>    Calculate reference system's T-matrix.
-!>    @param     e complex energy
-!>    @param     vref repulsive reference potential field strength
-!>    @param     lmax angular momentum cutoff
-!>    @param     rMTref repulsive reference potential muffin-tin radius
-!>    @param     trefLL reference system t-matrix
-!>    @param     dtrefLL energy derivative of reference system t-matrix only calculated if Lly=1
-!>    @param     Lly do lloyd's formula calculation 0=no/1=yes
-  subroutine tref(e, vref, lmax, rMTref, trefLL, dtrefLL, derive)
-    use SingleSiteHelpers_mod, only: bessel
-    integer, intent(in) :: lmax
-    double complex, intent(in) :: e
-    double precision, intent(in) :: rMTref, vref
-    double complex, intent(out) ::  trefLL((lmax+1)**2,(lmax+1)**2)
-    double complex, intent(out), optional :: dtrefLL((lmax+1)**2,(lmax+1)**2)
-    logical, intent(in) :: derive
-
-    integer :: m, l, lm
-    double complex :: a1, b1, da1, db1, sqEmV, sqE
-    double complex, dimension(0:lmax+1) :: Bjw1, Bjw2, Byw1, Byw2, Hws1, Hws2, dBjw1, dBjw2, dHws1
-    integer :: lmaxd, lmgf0d
-
-    !-----------------------------------------------------------------------
-    !---- t-matrix and derivative of t-matrix of the reference system
-
-    !     the analytical formula for the derivative of spherical Bel
-    !     functions is used:
-
-    !     d                     l+1
-    !     --  j (x) = j   (x) - --- j (x)
-    !     dx   l       l-1       x   l
-
-    !     d
-    !     --  j (x) = - j (x)
-    !     dx   0         1
-
-    !     which for x = sqrt(E0)*r leads to
-
-    !      d          r*r             (l+1)
-    !     --- j (x) = --- ( j   (x) - ----- j (x) )
-    !     dE0  l      2 x    l-1        x    l
-
-    !      d            r*r
-    !     --- j (x) = - --- j (x)
-    !     dE0  0        2 x  1
-
-    !-----------------------------------------------------------------------
-
-    lmaxd = lmax
-    lmgf0d = (lmaxd+1)**2
-
-    sqE = sqrt(e)
-    sqEmV = sqrt(e - vref)
-    
-    a1 = rMTref*sqE
-    b1 = rMTref*sqEmV
-    call bessel(Bjw1, Byw1, Hws1, a1, lmaxd+1)
-    call bessel(Bjw2, Byw2, Hws2, b1, lmaxd+1)
-
-    ! trefLL could be initalized to zero here !!! PFB
-    
-    if (derive) then
-    
-      if (present(dtrefLL)) then
-      
-        dtrefLL = zero ! clear
-        
-        ! derivative of the J0(x/a) = -J1(x/a)/a 
-        dBjw1(0) = -Bjw1(1)/a1
-        dBjw2(0) = -Bjw2(1)/b1
-        dHws1(0) = -Hws1(1)/a1
-
-        do l = 1, lmax+1
-          ! recursion formulae
-          dBjw1(l) = (Bjw1(l-1) - (l+1)*Bjw1(l)/a1)/a1
-          dBjw2(l) = (Bjw2(l-1) - (l+1)*Bjw2(l)/b1)/b1
-          dHws1(l) = (Hws1(l-1) - (l+1)*Hws1(l)/a1)/a1
-        enddo ! l
-
-        ! scale
-        dBjw1(:) = dBjw1(:)*0.5d0*rMTref**2
-        dBjw2(:) = dBjw2(:)*0.5d0*rMTref**2
-        dHws1(:) = dHws1(:)*0.5d0*rMTref**2
-
-        do l = 0, lmax
-          a1 = sqE*Bjw1(l+1)*Bjw2(l) - sqEmV*Bjw1(l)*Bjw2(l+1)
-
-          da1 = 0.5d0/sqE*Bjw1(l+1)*Bjw2(l) - 0.5d0/sqEmV*Bjw1(l)*Bjw2(l+1) + sqE*dBjw1(l+1)*Bjw2(l) &
-                    - sqEmV*dBjw1(l)*Bjw2(l+1) + sqE*Bjw1(l+1)*dBjw2(l) - sqEmV*Bjw1(l)*dBjw2(l+1)
-
-          b1 = sqE*Hws1(l+1)*Bjw2(l) - sqEmV*Hws1(l)*Bjw2(l+1)
-
-          db1 = 0.5d0/sqE*Hws1(l+1)*Bjw2(l) - 0.5d0/sqEmV*Hws1(l)*Bjw2(l+1) + sqE*dHws1(l+1)*Bjw2(l) &
-                    - sqEmV*dHws1(l)*Bjw2(l+1) + sqE*Hws1(l+1)*dBjw2(l) - sqEmV*Hws1(l)*dBjw2(l+1)
-
-          do m = -l, l
-            lm = l*l + l + m + 1
-            dtrefLL(lm,lm) = 0.5d0/sqE**3*a1/b1 - 1.d0/sqE*(da1/b1 - a1*db1/b1**2) ! add lm-diagonal, m-degenerate part
-          enddo ! m
-
-        enddo ! l
-      else
-        warn(6, "in the calculation of tref, the derivative was required but no array dtrefLL was passed!")
-      endif ! present dtrefLL
-
-    endif ! derive for Lloyd's formula
-    
-    ! regular reference t matrix
-    do l = 0, lmax
-      a1 = sqE*Bjw1(l+1)*Bjw2(l) - sqEmV*Bjw1(l)*Bjw2(l+1)
-      b1 = sqE*Hws1(l+1)*Bjw2(l) - sqEmV*Hws1(l)*Bjw2(l+1)
-
-      do m = -l, l
-        lm = l*l + l + m + 1
-        trefLL(lm,lm) = -1.d0/sqE*a1/b1 ! add lm-diagonal, m-degenerate part
-      enddo ! m
-
-    enddo ! l
-
-  endsubroutine ! tref
-
-
-!------------------------------------------------------------------------------
-  subroutine gref(e, alatc, iend, cleb, rcls, icleb, loflm, nacls, trefLL, dtrefLL, grefn, dgrefn, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
-    integer, intent(in) :: lmaxd, naclsd, ncleb, Lly
-    double complex, intent(in) :: e
-    double precision, intent(in) :: alatc
-    integer, intent(in) :: iend
-    double precision, intent(in) :: cleb(ncleb,2), rcls(3,naclsd)
-    integer, intent(in) :: icleb(ncleb,3)
-    integer, intent(in) :: loflm((2*lmaxd+1)**2)
-    integer, intent(in) :: nacls
-    double complex, intent(out) :: Lly_g0tr
-    double complex, intent(in)  :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
-    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd),   grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
-    
-    integer :: ig, ig1, lm1, lm2, lmmaxd
-    double complex ::  ginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
-    double complex :: dginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2)
-
-    call gll95(e, cleb(1,2), icleb, loflm, iend, trefLL, dtrefLL, rcls, nacls, alatc, ginp, dginp, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
-
-    lmmaxd = (lmaxd+1)**2
-
-    do ig = 1, naclsd
-      do lm1 = 1, lmmaxd
-        do lm2 = 1, lmmaxd
-          ig1 = (ig - 1)*lmmaxd + lm2
-           grefn(lm2,lm1,ig) =  ginp(ig1,lm1)
-          dgrefn(lm2,lm1,ig) = dginp(ig1,lm1)
-        enddo ! lm2
-      enddo ! lm1
-    enddo ! ig
-
-  endsubroutine ! gref
   
 
 !>    Solves (1 - g0 \Delta t) G_ref = g0 for G_ref (Full inversion).
