@@ -32,65 +32,56 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nrows)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    integer :: nnzb, nrows, ij, irow, icol, start_address, row_block, col_block
+    integer :: nnzb, nrows, ncols, ij, irow, icol, jcol, start_address, row_block, col_block
 
     nrows = size(lmax_array)
+    ncols = nrows ! a logical square matrix
 
-    ASSERT( size(numn0) == nrows )
-    ASSERT( size(indn0, 2) == nrows )
+    ASSERT( size(numn0) >= nrows )
+    ASSERT( size(indn0, 2) >= nrows )
     ASSERT( size(sparse%ia) == 1 + nrows )
     ASSERT( size(sparse%kvstr) == 1 + nrows )
 
-    sparse%ia = 0
-    sparse%ja = 0
-    sparse%ka = 0
-    sparse%kvstr = 0 ! init block start indices
-
     nnzb = sum(numn0(1:nrows)) ! number of non-zero blocks
 
-    ASSERT( nnzb <= size(sparse%ja) )
-    ASSERT( nnzb + 1 <= size(sparse%ka) )
+    ASSERT( size(sparse%ja) >= nnzb )
+    ASSERT( size(sparse%ka) >= 1 + nnzb )
 
+    sparse%ia = 0
+    sparse%ja = 0 ! init block number
+    sparse%ka = 0 ! init block start address into data array
+    sparse%kvstr = 0 ! init block start indices
+    sparse%max_blockdim = 0
+    sparse%max_blocks_per_row = 0
+
+    start_address = 1
     sparse%kvstr(1) = 1
+    ij = 1
     do irow = 1, nrows
       row_block = (lmax_array(irow) + 1)**2
       sparse%kvstr(irow+1) = sparse%kvstr(irow) + row_block
-    enddo ! irow
-
-    ij = 1
-    do irow = 1, nrows
-      sparse%ia(irow) = ij
+      sparse%ia(irow) = ij ! start indices into ja
+      sparse%max_blockdim = max(sparse%max_blockdim, row_block)
+      sparse%max_blocks_per_row = max(sparse%max_blocks_per_row, numn0(irow))
       do icol = 1, numn0(irow)
-      
-        ASSERT( icol <= size(indn0, 1) )
         ASSERT( ij <= nnzb )
+        sparse%ka(ij) = start_address ! start indices into the data array
 
-        sparse%ja(ij) = indn0(icol,irow)
-        
-        ij = ij + 1
-      enddo ! icol
-    enddo ! irow
-    sparse%ia(nrows+1) = ij ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
+        ASSERT( icol <= size(indn0, 1) )
+        jcol = indn0(icol,irow)
+        ASSERT( 1 <= jcol .and. jcol <= ncols )
 
-    start_address = 1
-    ij = 1
-    do irow = 1, nrows
-      row_block = (lmax_array(irow) + 1)**2
-      do icol = 1, numn0(irow)
-        sparse%ka(ij) = start_address
+        sparse%ja(ij) = jcol
 
-        ASSERT( 1 <= indn0(icol,irow) .and. indn0(icol,irow) <= nrows )
-
-        col_block = (lmax_array(indn0(icol,irow)) + 1)**2
+        col_block = (lmax_array(jcol) + 1)**2
         start_address = start_address + row_block*col_block
-        
+
         ij = ij + 1
       enddo ! icol
     enddo ! irow
     sparse%ka(ij) = start_address
-
-    sparse%max_blockdim = (maxval(lmax_array) + 1)**2
-    sparse%max_blocks_per_row = maxval(numn0)
+    sparse%ia(nrows+1) = ij ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
+    ASSERT( ij == 1 + nnzb ) ! check
 
   endsubroutine ! getKKRMatrixStructure
 
