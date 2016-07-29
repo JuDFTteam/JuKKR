@@ -32,14 +32,14 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nrows)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    integer :: nnzb, nrows, ij, irow, icol, start_address, lm_max
+    integer :: nnzb, nrows, ij, irow, icol, start_address, row_block, col_block
 
     nrows = size(lmax_array)
 
-    ASSERT(size(numn0) == nrows)
-    ASSERT(size(indn0, 2) == nrows)
-    ASSERT(size(sparse%ia) == nrows+1)
-    ASSERT(size(sparse%kvstr) == nrows+1)
+    ASSERT( size(numn0) == nrows )
+    ASSERT( size(indn0, 2) == nrows )
+    ASSERT( size(sparse%ia) == 1 + nrows )
+    ASSERT( size(sparse%kvstr) == 1 + nrows )
 
     sparse%ia = 0
     sparse%ja = 0
@@ -48,23 +48,23 @@ module fillKKRMatrix_mod
 
     nnzb = sum(numn0(1:nrows)) ! number of non-zero blocks
 
-    ASSERT(nnzb <= size(sparse%ja))
-    ASSERT(nnzb + 1 <= size(sparse%ka))
+    ASSERT( nnzb <= size(sparse%ja) )
+    ASSERT( nnzb + 1 <= size(sparse%ka) )
 
     sparse%kvstr(1) = 1
-    do ij = 1, nrows
-      lm_max = (lmax_array(ij) + 1)**2
-      sparse%kvstr(ij+1) = sparse%kvstr(ij) + lm_max
-    enddo ! ij
+    do irow = 1, nrows
+      row_block = (lmax_array(irow) + 1)**2
+      sparse%kvstr(irow+1) = sparse%kvstr(irow) + row_block
+    enddo ! irow
 
     ij = 1
     do irow = 1, nrows
       sparse%ia(irow) = ij
-      do icol = 1, numn0(irow) ! square matrix
+      do icol = 1, numn0(irow)
       
-        ASSERT(icol <= size(indn0, 1))
-        ASSERT(ij <= nnzb)
-        
+        ASSERT( icol <= size(indn0, 1) )
+        ASSERT( ij <= nnzb )
+
         sparse%ja(ij) = indn0(icol,irow)
         
         ij = ij + 1
@@ -75,13 +75,14 @@ module fillKKRMatrix_mod
     start_address = 1
     ij = 1
     do irow = 1, nrows
-      lm_max = (lmax_array(irow) + 1)**2
+      row_block = (lmax_array(irow) + 1)**2
       do icol = 1, numn0(irow)
         sparse%ka(ij) = start_address
 
         ASSERT( 1 <= indn0(icol,irow) .and. indn0(icol,irow) <= nrows )
 
-        start_address = start_address + lm_max*(lmax_array(indn0(icol,irow)) + 1)**2
+        col_block = (lmax_array(indn0(icol,irow)) + 1)**2
+        start_address = start_address + row_block*col_block
         
         ij = ij + 1
       enddo ! icol
@@ -157,7 +158,7 @@ module fillKKRMatrix_mod
 
           temp(:) = ZERO
           do lm3 = 1, lmmax3
-            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1)) !  T*G
+            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1)) ! T*G
           enddo ! lm3
           
           if (block_row == block_col) temp(lm2) = temp(lm2) - CONE ! subtract 1.0 from the diagonal

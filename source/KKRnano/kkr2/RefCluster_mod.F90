@@ -119,6 +119,7 @@ module RefCluster_mod
     real(kind=8), allocatable     :: rsort(:) ! dim(macls) ! this could be float32 if sorting routine available, ToDo: check influence
     integer, parameter :: ConstructVectorsOnce = 0 ! 1 or 0, 0:saves memory
     double precision, allocatable :: rg(:,:) ! dim(3,macls)
+    double precision, parameter :: LiftDegeneracy(3) = [1.d5, 1.d2, 1.d0] ! equivalent to JM code
 
     if (ConstructVectorsOnce**2 /= ConstructVectorsOnce) stop 'RefCluster: internal error!' ! must be 0 or 1
     
@@ -157,7 +158,7 @@ module RefCluster_mod
           iatom(nacls) = iat ! store the atom in elem cell
           iezoa(nacls) = n ! store the lattice vector (an integer multiple of Bravais vectors)
           if (ConstructVectorsOnce == 1) rg(1:3,nacls) = tmp(1:3)
-          rsort(nacls) = 1.d9*sqrt(r2) + dot_product([1.d6, 1.d3, 1.d0], tmp) ! the sqrt is not needed for sorting, ToDo: remove and check influence
+          rsort(nacls) = 1.d9*sqrt(r2) + dot_product(LiftDegeneracy, tmp) ! the sqrt is not needed for sorting, ToDo: remove and check influence
           couplmat = .true.
         endif ! inside
       enddo ! n loop in bravais

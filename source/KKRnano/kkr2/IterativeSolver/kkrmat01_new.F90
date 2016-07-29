@@ -999,7 +999,7 @@ module kkrmat_mod
     integer, intent(in) :: nacls !< number of atoms in the cluster around site ind
     integer(kind=2), intent(in) :: atom(:) !< dim(nacls) == atom(:,ind)
     integer, intent(in) :: numn0(:) !< dim(naez)
-    integer(kind=2), intent(in) :: indn0(:,:) !< dims(nacls,naez)
+    integer(kind=2), intent(in) :: indn0(:,:) !< dims(nacls+,naez)
     double complex, intent(in) :: Ginp(:,:,:) !< dims(lmmaxd,lmmaxd,nacls)
 
     integer :: jat, iacls, ni, jnd, ist, gint_iacls
