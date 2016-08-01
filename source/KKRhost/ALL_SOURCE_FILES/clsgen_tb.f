@@ -357,6 +357,9 @@
             RCLS1(1:3,IA) = RG(1:3,IB)
             ATOM(IA,JATOM) = IATOM(IB)
             EZOA(IA,JATOM) = IEZOA(IB) 
+!             write(*,'(A,1000I9)') 'ezoa',jatom,ia,number,
+!      &                            ATOM(IA,JATOM),EZOA(IA,JATOM)
+
          END DO
 !     
 !     Now the clusters have a unique sorting and can be compared with

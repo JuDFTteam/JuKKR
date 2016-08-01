@@ -198,7 +198,8 @@ c
 c---  >read muffin-tin radius , lattice constant and new muffin radius
 c      (new mt radius is adapted to the given radial mesh)
 c
-            READ (IFILE,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
+            READ (IFILE,*) RMT(IH),ALAT,RMTNEW(IH)
+            !READ (IFILE,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
 c
 c---> read nuclear charge , lmax of the core states ,
 c     wigner seitz radius , fermi energy and energy difference

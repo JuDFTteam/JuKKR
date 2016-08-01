@@ -144,6 +144,7 @@ C
 C
                   ATOM(NUMBER,JATOM) = NA ! store the atom in elem cell
                   EZOA(NUMBER,JATOM) = N ! store the bravais vector
+                  write(*,'(A,4I9)') 'ezoa',jatom,na,n,number
                   DO I=1,3
                      RCLS1(I,NUMBER) = TMP(I)
                   END DO

@@ -164,6 +164,8 @@ C     ..
 #ifdef CPP_MPI
       integer :: ie_start, mytot, ierr
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+      integer :: ihelp
+      double complex, allocatable :: work(:,:)
 #endif
       integer :: ie_num, ie_end
 C     ..
@@ -218,6 +220,16 @@ C -------------------------------------------------------------- input1b
      &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
      &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD)
+     
+     
+       if(test('rhoqtest')) then
+        write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
+      open(9889, access='direct', file='tau0_k', 
+     &form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
+!      &form='unformatted', recl=(LMMAXD*LMMAXD)*4*4) ! lm blocks
+!      &form='unformatted', recl=(LMMAXD*LMMAXD+2)*4) ! lm blocks
+
+       end if
      
      
       IF (TEST('gmatasci'))
@@ -760,28 +772,31 @@ c construct t matrix for reference system (now is always double matrix)
          DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
         ENDDO
         
+     
+     
+
 !             
             if(test('rhoqtest')) then
               if(i1==1) then
-              open(9999, file='refinfo')
-              write(9999,'(2I9)') NREF, NATYP
-              write(9999, '(1000I9)') refpot(1:NATYP)
-              close(9999)
+              open(99991, file='refinfo')
+              write(99991,'(2I9)') NREF, NATYP
+              write(99991, '(1000I9)') refpot(1:NATYP)
+              close(99991)
               write(*,*) myrank, 'opening tref', WLENGTH*4*lmmaxd**2
-              open(9999, file='tref', access='direct', 
+              open(99992, file='tref', access='direct', 
      &             recl=WLENGTH*4*lmmaxd**2, form='unformatted')
               end if
               irec = ie + ielast*(i1-1)
               write(*,*) 'writeing tref', myrank, i1, ie, irec
-              write(9999, rec=irec) trefll(:,:,i1)
+              write(99992, rec=irec) trefll(:,:,i1)
               
-              write(999,'(2ES15.7)') trefll(:,:,i1)
+              !write(999,'(2ES15.7)') trefll(:,:,i1)
               
-              if(i1==nref) then
-                call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-                close(9999)
-                stop 'finished with rhoq output'
-              end if
+!               if(i1==nref) then
+!                 call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+!                 close(99992)
+!                 stop 'finished with rhoq output'
+!               end if
             end if ! rhoqtest
 !             
         
@@ -987,7 +1002,18 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
 
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
          if(t_lloyd%cdos_diff_lly_to_file) then
-            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            if(myrank==master) then
+               OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            endif
+#ifdef CPP_MPI
+            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            allocate(work(ielast,nspin))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+            deallocate(work)
+#endif
          end if
          
          IF (.NOT.OPT('NEWSOSOL')) THEN
@@ -1001,7 +1027,7 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
            DO IE = 1,IELAST                                              ! LLY
             ie_num = ie
 #endif
-            if(t_lloyd%cdos_diff_lly_to_file) then
+            if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
                WRITE(701,FMT='(10E25.16)') EZ(IE),
      &          CDOS_LLY(IE,ISPIN),
      &          TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                     ! LLY
@@ -1020,7 +1046,7 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
            DO IE = 1,IELAST                                              ! LLY
             ie_num = ie
 #endif
-            if(t_lloyd%cdos_diff_lly_to_file) then
+            if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
               WRITE(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),     
      &                                    TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
             else
@@ -1072,6 +1098,17 @@ C
      &         '  CPA-cycle ',/,1X,79('*'),/)
 
 
+                
+           if(test('rhoqtest')) then     
+      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+      close(9889) ! tau0_k file
+      
+                call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+                close(99992)
+                call timing_stop('Time in Iteration')
+                stop 'finished with rhoq output'
+                
+                end if
 
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP)
 

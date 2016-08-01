@@ -16,7 +16,8 @@ c     IREFPOT:    Type of reference potential
       INTEGER IC1,N1,IC2,N2,IAT1,IAT2,N,I
       REAL*8  RD,TOL
       LOGICAL LREFLOG
-      TOL = 1.D-5
+      TOL = 1.D-4
+      !TOL = 1.D-5
       CLUSTCOMP_TB = .FALSE.
       LREFLOG = .TRUE.
       IF (N1.EQ.N2) THEN

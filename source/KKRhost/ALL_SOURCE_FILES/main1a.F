@@ -357,11 +357,11 @@ C
       end if
       
       
-       if(test('rhoqtest')) then
-!           call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!           stop 'finished with rhoq output'
-          LREFSYS=0
-       end if
+!        if(test('rhoqtest')) then
+! !           call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+! !           stop 'finished with rhoq output'
+!           LREFSYS=0
+!        end if
       
       if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
       

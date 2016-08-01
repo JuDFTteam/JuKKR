@@ -126,6 +126,7 @@ c        write(6,*) BZKP(1),ARG(1),BZKP(2),ARG(2),BZKP(3),ARG(3)
 c        write(6,*) BZKP(4),BZKP(5),BZKP(6)
 c        write(6,*) 'm,atom(m),tt',m,atom(m),tt
 c
+!         EIKR = (1.0d0, 0.0d0)    ! convert to p.u.
         EIKR = EXP(TT) * CONVPU    ! convert to p.u.
 
 c        write(6,*) 'eikr',eikr

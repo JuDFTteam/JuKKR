@@ -214,6 +214,9 @@ C
             ENDDO                                              ! LLY Lloyd
          ENDIF                                                 ! LLY Lloyd
 C ----------------------------------------------------------------------
+
+!          if(test('rhoqtest')) GINP = (1.0d0, 0.0d0)
+
          if (t_tgmat%gref_to_file) then
 #ifdef CPP_MPI
            !make sure only one processor writes for one energy point

@@ -4,7 +4,7 @@
      &                    NSH1,NSH2,GINP,RBASIS,RCLS,
      &                    TINVBUP,TINVBDOWN,VACFLAG,NLBASIS,NRBASIS,
      &                    FACTL,ICHECK,INVMOD,IDECI,SRREL,IRREL,NRREL,
-     &          DTREFLL,DTMATLL,DGINP,REFPOT,LLY_GRTR,TRACET,CFCTOR,LLY)   ! LLY
+     &     DTREFLL,DTMATLL,DGINP,REFPOT,LLY_GRTR,TRACET,CFCTOR,LLY, ie)   ! LLY
 ! **********************************************************************
 ! * Performs k-space integration, determines scattering path operator  *
 ! *                tau = (g(k,e)-t**-1)**-1                            *
@@ -125,7 +125,7 @@
       integer :: ntot1, mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
-      integer :: i1_start, i1_end
+      integer :: k_start, k_end
 #endif
 
 
@@ -139,6 +139,10 @@
 !     ..
       DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
       INTEGER IERR,IWORK
+      
+      
+      integer :: ix,jx, mu, irec, nscoef, imin, ie
+      integer, allocatable :: iatomimp(:)
 !     ..
 
 !      NDIM=LMGF0D*NAEZ
@@ -174,6 +178,42 @@
 
 !-----------------------------------------------------------------------
 
+
+      if(test('rhoqtest')) then
+
+      if(myrank==master) then
+        open(8888,file='mu0',form='formatted')
+        read(8888,*) mu, nscoef
+        allocate(iatomimp(nscoef))
+        do i1=1,nscoef
+          read(8888,*) iatomimp(i1)
+        end do
+        close(8888)
+      end if
+      
+      call MPI_Bcast(mu, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'Error Bcast mu0'
+      call MPI_Bcast(nscoef,1,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+      if(ierr/=MPI_SUCCESS) stop 'Error Bcast nscoef'
+      if(.not.allocated(iatomimp)) allocate(iatomimp(nscoef))
+      call MPI_Bcast(iatomimp, nscoef, MPI_INTEGER, master, 
+     &               MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'Error Bcast iatomimp'
+      
+      
+      !find imin
+      imin = 1000
+      do i1=1,nscoef
+        if(iatomimp(i1)<imin) imin = iatomimp(i1)
+      end do
+      nscoef = nscoef-1
+
+        
+!       open(9889, access='direct', file='tau0_k', &
+!      &form='unformatted', recl=(LMMAXD*LMMAXD+2)*4) ! lm blocks
+
+      end if
+
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
 #ifdef CPP_MPI
 ! MPI:     
@@ -183,24 +223,32 @@
      &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                           master,ntot1,ntot_pT,ioff_pT,.true.)
 
-      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+      k_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+      k_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &           ntot_pT(t_mpi_c_grid%myrank_ie)
       t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
       t_mpi_c_grid%ntot_pT1 = ntot_pT
       t_mpi_c_grid%ioff_pT1 = ioff_pT
       
-      if(test('rhoqtest')) then
-         i1_start = 1
-         i1_end = NOFKS
-      end if
+!       if(test('rhoqtest')) then
+!          k_start = 1
+!          k_end = NOFKS
+!       end if
       
-      
-      DO KPT = i1_start,i1_end
 #else
-      DO KPT = 1,NOFKS 
+      k_start = 1
+      k_end = NOFKS 
 #endif
+
+        !print header of statusbar
+        if(test('rhoqtest')) then
+        write(6,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
+     &      0, 20, 40, 60, 80, 100
+        write(6,FMT=190) !beginning of statusbar
+        end if
+      
+      DO KPT = k_start,k_end
          GLLKE(:,:) = CZERO
          IF (LLY.NE.0) DGLLKE(:,:) = CZERO
          KP(1:3) = BZKP(1:3,KPT)
@@ -284,6 +332,7 @@
 
                DO I2=1,ALMGF0
                   DO I1=1,ALMGF0
+!                      GLLKEN(I1,I2)=(GLLKEN(I1,I2))! + GLLKEM(I2,I1))*0.5D0  
                      GLLKEN(I1,I2)=(GLLKEN(I1,I2) + GLLKEM(I2,I1))*0.5D0  
                      IF (LLY.NE.0)  DGLLKEN(I1,I2) =                      ! LLY Lloyd
      &                     ( DGLLKEN(I1,I2) + DGLLKEM(I2,I1) )*0.5D0      ! LLY Lloyd
@@ -539,12 +588,6 @@ c            DEALLOCATE(GLLKE0)
             DO LM = 1,LMMAXD
                CALL ZCOPY(LMMAXD,GLLKE(ILM,JLM+LM),1,G(1,LM),1)
             END DO
-!             if(i==7 .and. j==7) then
-!                if(kpt==1) open(9999, file='kkr_tau0')
-!                write(9999,'(200000ES15.7)') kp(1:3),G!(ILM:ILM+LMMAXD,JLM:JLM+LMMAXD)
-!                if(kpt==NOFKS) close(9999)
-!                if(kpt==NOFKS) stop
-!             end if
             ! ----------------------------------------------------------------------
             DO ISYM = 1,NSYMAT
                DO LM2=1,LMMAXD
@@ -553,7 +596,53 @@ c            DEALLOCATE(GLLKE0)
      &                                   + ETAIKR(ISYM,NS) * G(LM1,LM2)
                   END DO
                END DO
+
+!            write(*,*) 'write rhoq?',myrank, test('rhoqtest')
+         if(test('rhoqtest')) then
+         
+!            write(*,'(9I9)') myrank, ie, nscoef, nofks, kpt, mu, i,j, 
+!      &       lmmaxd
+         
+
+           irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+           if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
+             ix=0
+             jx=0
+             lm1 = 1
+             do while (ix==0 .and. lm1<=nscoef)
+               if(iatomimp(lm1)==j) ix = j - imin + 1
+               lm1 = lm1 + 1
+             end do
+             irec = irec + nscoef + ix
+!              write(*,'(A,2I9,1000000ES15.7)') 'wrt',myrank, 
+!      &  irec, kp(1:2), GLLKE(ILM+1:ILM+LMMAXD,JLM+LM+1:JLM+LM+LMMAXD)!g(1:LMMAXD,1:LMMAXD)
+!              write(9889,rec=irec) G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+             write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+             write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+           end if
+         
+           irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+           if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
+             ix=0
+             jx=0
+             lm1 = 1
+             do while (jx==0 .and. lm1<=nscoef+1)
+               if(iatomimp(lm1)==i) jx = i - imin + 1
+               lm1 = lm1 + 1
+             end do
+             irec = irec + jx
+!              write(*,'(A,2I9,1000ES15.7)') 'wrt',myrank, 
+!      &                             irec, kp(1:2), g(1:LMMAXD,1:LMMAXD)
+!              write(9889,rec=irec) g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+             write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+             write(998888,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+           end if ! iii==mu ...
+
+         end if ! rhoqtest
+           
             END DO
+            
+            
             ! ----------------------------------------------------------------------
          END DO
          ! ======================================================================
@@ -561,8 +650,22 @@ c            DEALLOCATE(GLLKE0)
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
          
 
+        if(test('rhoqtest')) then
+         if(k_end>=50) then
+           if(mod(KPT-k_start,k_end/50)==0) write(6,FMT=200)
+         else
+           write(6,FMT=200)
+         end if
+        end if
 
       END DO ! KPT = 1,NOFKS   end K-points loop
+         
+      if(test('rhoqtest')) then
+190   FORMAT('                 |'$)   ! status bar
+200   FORMAT('|'$)                    ! status bar
+      write(6,*)                      ! status bar
+      ! finished kpts status bar
+      end if
 
       TRACET = CZERO
       IF (LLY.EQ.2) THEN 

@@ -604,9 +604,27 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
 C =====================================================================
       VXCM(:,:,:) = 0.D0 
+!      write(66666,*) !'line1',EXC,KTE,KXC,LPOT,
+!     +               'line1',RHO2NS,
+!     +               'line2',VXCM,
+!     +               'line3',R,
+!     +               'line4',DRDI
+!     +               'line2',NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI,
+!     +               'line3',A,IRWS,IRCUT,IPAN,NTCELL,
+!     +               'line4',KSHAPE,GSH,ILM,IMAXSH,IFUNM,
+!     +               'line5',THETAS,LMSP
       CALL VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI,
      +            A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM,IMAXSH,IFUNM,
      +            THETAS,LMSP)
+!      write(77777,*) !'line1',EXC,KTE,KXC,LPOT,
+!     +               'line1',RHO2NS,
+!     +               'line2',VXCM,
+!     +               'line3',R,
+!     +               'line4',DRDI
+!     +               'line2',NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI,
+!     +               'line3',A,IRWS,IRCUT,IPAN,NTCELL,
+!     +               'line4',KSHAPE,GSH,ILM,IMAXSH,IFUNM,
+!     +               'line5',THETAS,LMSP
 
         IF ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOTD,1:NPOTD) = 0.D0
 
@@ -847,6 +865,25 @@ C ..................
 C ---------------------------------------------------------------------
 C
 C -->   final construction of the potentials (straight mixing)
+!test
+!      write(8888,*)
+!     +            'line1',FCM,
+!     +            'line2',IRC,
+!     +            'line3',IRMIN,
+!     +            'line4',R,
+!     +            'line5',DRDI,
+!     +            'line6',VONS,
+!     +            'line7',VSPSMDUM,
+!     +            'line8',VSPSMDUM,
+!     +            'line9',LSMEAR
+!      write(8888,*)'line1',RMSAVQ,RMSAVM,INS,LPOT,LMPOT,0,NSHELL,
+!     +            'line2',1,NATYP,CONC,NSPIN,
+!     +            'line3',ITSCF,RFPI,FPI,IPF,
+!     +            'line4',MIX,
+!     +            'line5',FCM,IRC,IRMIN,R,DRDI,VONS,
+!     +            'line6',VISP,VINS,
+!     +            'line7',VSPSMDUM,VSPSMDUM,LSMEAR
+!test
 C
       MIX = MIXING
       IF (TEST('alt mix ')) MIX = MIXING/DBLE(1+MOD(ITSCF,2))

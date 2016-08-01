@@ -69,8 +69,9 @@ C     ..
       INTEGER LRECTMT,LRECTMT2
       PARAMETER (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
 !     ..
-      DOUBLE COMPLEX CZERO
+      DOUBLE COMPLEX CZERO, CONE
       PARAMETER (CZERO=(0.D0,0.D0))
+      PARAMETER (CONE=(1.D0,0.D0))
 !     ..
       INTEGER LLY ! LLY <> 0 : apply Lloyd's formula
 
@@ -367,25 +368,31 @@ c calculate contribution from free space
          ENDDO                                                             ! LLY Lloyd
          CLOSE(701)                                                        ! LLY Lloyd
          end if ! myrank==master
-         CDOS_LLY(1:IEMXD,1:NSPIND) = CZERO                                ! LLY Lloyd
+         CDOS_LLY(1:IELAST,1:NSPIN) = CZERO                                ! LLY Lloyd
          IF (.NOT.OPT('NEWSOSOL')) THEN
          if(t_lloyd%cdos_diff_lly_to_file) then
-            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
-            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-               DO IE = 1,IELAST                                               ! LLY Lloyd
-                  READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
-               ENDDO                                                          ! LLY Lloyd
-            ENDDO                                                             ! LLY Lloyd
-            CLOSE(701)                                                        ! LLY Lloyd
-         else   !(t_lloyd%cdos_diff_lly_to_file)
-            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+            if(myrank==master) then
+              OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
+              DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+                 DO IE = 1,IELAST                                               ! LLY Lloyd
+                    READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
+                 ENDDO                                                          ! LLY Lloyd
+              ENDDO                                                             ! LLY Lloyd
+              CLOSE(701)                                                        ! LLY Lloyd
+            end if
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-               ie_start = 0
-               ie_end = IELAST
+            call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX,
+     &                     master, t_mpi_c_grid%myMPI_comm_at, ierr)
 #endif
+         else   !(t_lloyd%cdos_diff_lly_to_file)
+#ifdef CPP_MPI
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+            ie_start = 0
+            ie_end = IELAST
+#endif
+            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
                DO ie_num=1,ie_end
                   IE = ie_start+ie_num
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
@@ -395,10 +402,10 @@ c calculate contribution from free space
             ! MPI gather cdos_lly on all processors
             ihelp      = IELAST*NSPIN  !IELAST*NSPIN
             allocate(work(ielast,nspin))
-            work = (0.d0, 0.d0)
-            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+            work = CZERO
+            CALL MPI_ALLREDUCE(cdos_lly(1:IELAST,1:NSPIN),work,ihelp,
      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
-            call zcopy(ihelp,work,1,cdos_lly,1)
+            cdos_lly(1:IELAST,1:NSPIN) = work(:,:)
             deallocate(work)
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)
@@ -444,11 +451,11 @@ c calculate contribution from free space
             CLOSE(701)                                                     ! LLY
           else  !(t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-               ie_start = 0
-               ie_end = IELAST
+            ie_start = 0
+            ie_end = IELAST
 #endif
             DO ie_num=1,ie_end
                IE = ie_start+ie_num

@@ -376,6 +376,12 @@ C-----------------------------------------------------------------------
 C     .. Dummy variables needed only in IMPURITY program 
       DOUBLE PRECISION, allocatable :: THESME(:,:,:)
 
+
+
+!       integer :: thrid, nthrd
+      integer :: mu, nscoef
+      integer, allocatable :: iatomimp(:)
+
 C
 C-----------------------------------------------------------------------
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -863,6 +869,27 @@ C
 C ======================================================================
 C
 C
+      if(test('rhoqtest')) then
+
+        open(8888,file='mu0',form='formatted')
+        read(8888,*) mu, nscoef
+        nscoef = nscoef-1
+        allocate(iatomimp(nscoef))
+        do i1=1,nscoef
+          read(8888,*) iatomimp(i1)
+        end do
+        close(8888)
+        
+        ! save shell info
+        open(8888, file='shellinfo.txt')
+        write(8888,'(2I9)') NSHELL(0), mu, nscoef
+        write(8888,'(1000I9)') (iatomimp(i1), i1=1,nscoef)
+        write(8888,'(20000I9)') NSH1(1:NSHELL(0)), NSH2(1:NSHELL(0))
+        close(8888)
+
+        deallocate(iatomimp)
+
+      end if
 ! fivos write out nshell and nsh1,nsh2 into standard output and in file shells.dat
       IF (ICC.NE.0 .and. .not.OPT('KKRFLEX ')) THEN
          OPEN(58,FILE='shells.dat')
