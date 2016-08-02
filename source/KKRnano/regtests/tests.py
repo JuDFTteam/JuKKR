@@ -14,8 +14,8 @@ DEFAULT_lmax = 3
 DEFAULT_solver = 3 ## solver=3 is iterative while solver=4 is direct
 DEFAULT_lly = 0 ## lly=0/1 deactivate/activate Lloyd's formula
 ShowMD5 = True
-AllMPIs = True
-HighLmax = True
+AllMPIs = False#True
+HighLmax = False#True
 
 def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""

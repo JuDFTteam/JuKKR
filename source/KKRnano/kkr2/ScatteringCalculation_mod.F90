@@ -61,7 +61,7 @@ implicit none
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
 
-    use SingleSiteRef_mod, only: TREF, GREF
+    use SingleSiteRef_mod, only: tref, gref
     
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
@@ -90,8 +90,11 @@ implicit none
     integer :: lmmaxd
     logical :: xccpl
 
+#define COMPUTE_tref_LOCALLY
+#ifndef COMPUTE_tref_LOCALLY
     double complex, allocatable :: Tref_local(:,:,:)  !< local tref-matrices
     double complex, allocatable :: dTref_local(:,:,:) !< local deriv. tref-matrices
+#endif    
     double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
@@ -112,8 +115,10 @@ implicit none
     
     allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for t-matrices
     allocate(dtmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
+#ifndef COMPUTE_tref_LOCALLY       
     allocate(Tref_local(lmmaxd,lmmaxd,num_local_atoms)) ! allocate buffers for reference t-matrices
     allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
+#endif    
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms))
     allocate(DGrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms)) ! LLY
@@ -172,7 +177,6 @@ implicit none
 
         ! if we had rMTref given for all atoms inside the reference cluster radius
         !   we could compute the Tref on the fly
-#define COMPUTE_tref_LOCALLY
 #ifndef COMPUTE_tref_LOCALLY       
          Tref_local = ZERO
         dTref_local = ZERO
@@ -181,7 +185,7 @@ implicit none
         do ila = 1, num_local_atoms
           atomdata => getAtomData(calc, ila)
 
-          call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, atomdata%rMTref, &
+          call tref(emesh%EZ(IE), params%vref, dims%lmaxd, atomdata%rMTref, &
                     Tref_local(:,:,ila), dTref_local(:,:,ila), derive=(dims%Lly > 0)) ! ToDo: combine Tref and dTref in one array
 
         enddo  ! ila
@@ -190,7 +194,7 @@ implicit none
 
         ! Note: ref. system has to be recalculated at each iteration since energy mesh changes
         ! Note: TrefLL is diagonal - however, a full block matrix is stored
-        ! Note: Gref is calculated in real space - usually only a few shells
+        ! Note: gref is calculated in real space - usually only a few shells
 
         ! Exchange the reference t-matrices within the reference clusters
         ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
@@ -203,8 +207,8 @@ implicit none
         do ila = 1, num_local_atoms
           do iacls = 1, kkr(ila)%naclsd
             ! this calls tref several times with the same parameters if the local atoms are close to each other
-            call TREF(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
-                      kkr(ila)%TrefLL(:,:,iacls), kkr(ila)%dTrefLL(:,:,iacls), derive=(dims%Lly > 0))
+            call tref(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
+                      kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
           enddo ! iacls
         enddo ! ila
 #endif
@@ -212,10 +216,10 @@ implicit none
         !$omp parallel do private(ila)
         do ila = 1, num_local_atoms
           
-          call GREF(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
+          call gref(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%NACLS, &
-                    kkr(ila)%TrefLL, kkr(ila)%dTrefLL, GrefN_buffer(:,:,:,ila), &
+                    kkr(ila)%Tref_ell, kkr(ila)%dTref_ell, GrefN_buffer(:,:,:,ila), &
                     DGrefN_buffer(:,:,:,ila), kkr(ila)%Lly_G0Tr(IE), &
                     dims%lmaxd, kkr(ila)%naclsd, calc%gaunts%ncleb, &
                     dims%Lly)
@@ -250,10 +254,10 @@ implicit none
               call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTdE, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
 
               ! t_ref-matrix of central cluster atom has index 1
-              call substractReferenceTmatrix(kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%TrefLL(:,:,1), kkr(ila)%TmatN(:,:,ISPIN))
+              call substractReferenceTmatrix(dims%lmaxd, kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%Tref_ell(:,1), kkr(ila)%TmatN(:,:,ISPIN))
               
               ! do the same for derivative of T-matrix
-              call substractReferenceTmatrix(kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%dTrefLL(:,:,1), kkr(ila)%dTdE(:,:,ISPIN))
+              call substractReferenceTmatrix(dims%lmaxd, kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%dTref_ell(:,1), kkr(ila)%dTdE(:,:,ISPIN))
 
               ! TmatN now contains Delta t = t - t_ref !!!
               ! dTdE now contains Delta dt !!!
@@ -489,23 +493,29 @@ implicit none
   !----------------------------------------------------------------------------
   !> Substract diagonal reference T matrix of certain spin channel
   !> from real system's T matrix.
-  subroutine substractReferenceTmatrix(lmmaxd, nsymat, dsymll, TrefLL, TmatN)
+  subroutine substractReferenceTmatrix(lmax, lmmaxd, nsymat, dsymll, TrefLL, TmatN)
+    integer, intent(in) :: lmax
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(:,:,:) !> dim(lmmaxd,lmmaxd,nsymat)
-    double complex, intent(in) :: TrefLL(:,:) !> dim(lmmaxd,lmmaxd)
+    double complex, intent(in) :: TrefLL(0:) !> dim(0:lmax) ! m-degenerate and diagonal
     double complex, intent(inout) :: TmatN(:,:) !> dim(lmmaxd,lmmaxd)
     
     double complex :: uTu_sum(lmmaxd,lmmaxd), uT(lmmaxd,lmmaxd)
     double precision :: denom
-    integer :: isym, lm
+    integer :: isym, lm, l, m
    
     double complex, parameter :: cone=(1.d0, 0.d0), zero=(0.d0, 0.d0)
  
     ! note: TrefLL is diagonal due to a spherical reference potential, therefore, we only subtract the diagonal elements
-    do lm = 1, lmmaxd
-      TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(lm,lm)
-    enddo ! lm
+    ASSERT( (lmax + 1)**2 == lmmaxd )
+    
+    do l = 0, lmax
+      do m = -l, l
+        lm = l*l + l + m + 1
+        TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(l) ! Tref is stored m-degenerate and diagonal
+      enddo ! m
+    enddo ! l
 
     !------------------------------------------------- SYMMETRISE TMATN
     uTu_sum(:,:) = TmatN(:,:) ! copy, the 1st entry is the unity operation

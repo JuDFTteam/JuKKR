@@ -21,8 +21,10 @@ module KKRresults_mod
     double precision, allocatable :: rMTref(:)
     double complex, allocatable :: tmatN(:,:,:)  
     double complex, allocatable :: dtdE(:,:,:)  
-    double complex, allocatable :: trefLL(:,:,:)  
-    double complex, allocatable :: dtrefLL(:,:,:)  
+!     double complex, allocatable :: trefLL(:,:,:)  
+!     double complex, allocatable :: dtrefLL(:,:,:)  
+    double complex, allocatable :: tref_ell(:,:) !< dim(0:lmax,1:)
+    double complex, allocatable :: dtref_ell(:,:)  !< dim(0:lmax,1:)
     double complex, allocatable :: dGrefN(:,:,:,:)
     double complex, allocatable :: GmatN(:,:,:,:)
     double complex, allocatable :: Lly_G0Tr(:)   
@@ -61,7 +63,7 @@ module KKRresults_mod
     type(DimParams),  intent(in)    :: dims
     integer, intent(in)              :: naclsd
 
-    call createKKRresultsImpl(self, dims%lmmaxd, dims%nspind, naclsd, dims%iemxd, dims%nguessd, dims%ekmd, dims%smpid)
+    call createKKRresultsImpl(self, dims%lmaxd, dims%lmmaxd, dims%nspind, naclsd, dims%iemxd, dims%nguessd, dims%ekmd, dims%smpid)
   endsubroutine ! create
 
   !-----------------------------------------------------------------------------
@@ -71,8 +73,9 @@ module KKRresults_mod
   !> @param[in]    nspind
   !> @param[in]    naclsd
   !> @param[in]    iemxd
-  subroutine createKKRresultsImpl(self, lmmaxd, nspind, naclsd, iemxd, nguessd, ekmd, smpid)
+  subroutine createKKRresultsImpl(self, lmaxd, lmmaxd, nspind, naclsd, iemxd, nguessd, ekmd, smpid)
     type(KKRresults), intent(inout) :: self
+    integer, intent(in) :: lmaxd
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: nspind
     integer, intent(in) :: naclsd
@@ -100,8 +103,10 @@ module KKRresults_mod
     ALLOCATECHECK(self%rMTref(naclsd))
     ALLOCATECHECK(self%tmatN(LMMAXD,LMMAXD,nspind))
     ALLOCATECHECK(self%dtdE(LMMAXD,LMMAXD,nspind))
-    ALLOCATECHECK(self%trefLL(LMMAXD,LMMAXD,naclsd))
-    ALLOCATECHECK(self%dtrefLL(LMMAXD,LMMAXD,naclsd))
+!     ALLOCATECHECK(self%trefLL(LMMAXD,LMMAXD,naclsd))
+!     ALLOCATECHECK(self%dtrefLL(LMMAXD,LMMAXD,naclsd))
+    ALLOCATECHECK(self%tref_ell(0:lmaxd,naclsd))
+    ALLOCATECHECK(self%dtref_ell(0:lmaxd,naclsd))
     ALLOCATECHECK(self%dGrefN(LMMAXD,LMMAXD,naclsd,1))
     ALLOCATECHECK(self%GmatN(LMMAXD,LMMAXD,iemxd,nspind))
     ALLOCATECHECK(self%Lly_G0Tr(iemxd))
@@ -110,8 +115,8 @@ module KKRresults_mod
 
     self%noiter = 0
 
-    self%trefLL  = CZERO
-    self%dtrefLL = CZERO
+!     self%trefLL  = CZERO
+!     self%dtrefLL = CZERO
 
     ! use garbage values for initialisation
     self%GmatN    = dcmplx(9e9, 9e9)
@@ -129,8 +134,10 @@ module KKRresults_mod
     DEALLOCATECHECK(self%rMTref)
     DEALLOCATECHECK(self%tmatN)
     DEALLOCATECHECK(self%dtdE)
-    DEALLOCATECHECK(self%trefLL)
-    DEALLOCATECHECK(self%dtrefLL)
+!     DEALLOCATECHECK(self%trefLL)
+!     DEALLOCATECHECK(self%dtrefLL)
+    DEALLOCATECHECK(self%tref_ell)
+    DEALLOCATECHECK(self%dtref_ell)
     DEALLOCATECHECK(self%dGrefN)
     DEALLOCATECHECK(self%GmatN)
     DEALLOCATECHECK(self%Lly_G0Tr)
