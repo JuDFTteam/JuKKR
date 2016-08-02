@@ -196,6 +196,7 @@ module SingleSite_mod
     
     external :: zgetrf ! from BLAS
     double complex  :: ar((lmaxd+1)**2,(lmaxd+1)**2)
+    ! ToDo: make these variables allocatable so we do not run into problems with stacksize 
     double complex  :: cmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
     double complex  :: dmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
     double complex  :: efac((lmaxd+1)**2)

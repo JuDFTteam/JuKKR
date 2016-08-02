@@ -374,7 +374,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, atom_indices, DGrefN_buffer, GrefN_buffer, GmatN_buffer, dTref_local, Tref_local, stat=ist)
+    deallocate(tmatLL, atom_indices, DGrefN_buffer, GrefN_buffer, GmatN_buffer, stat=ist)
 
   endsubroutine ! energyLoop
 
